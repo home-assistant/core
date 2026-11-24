@@ -3366,6 +3366,11 @@ async def test_three_adapters_one_missing(
     assert not await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
     assert entry.state is ConfigEntryState.SETUP_RETRY
+    assert entry.reason == "Bluetooth adapter with address 00:00:00:00:00:03 not found"
+    assert entry.error_reason_translation_key == "adapter_not_found"
+    assert entry.error_reason_translation_placeholders == {
+        "address": "00:00:00:00:00:03"
+    }
 
 
 @pytest.mark.usefixtures("one_adapter")

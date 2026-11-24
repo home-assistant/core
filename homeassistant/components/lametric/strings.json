@@ -30,7 +30,7 @@
       },
       "cloud_select_device": {
         "data": {
-          "device": "Device"
+          "device": "[%key:common::config_flow::data::device%]"
         },
         "data_description": {
           "device": "Select the LaMetric device to add"

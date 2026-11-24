@@ -3,6 +3,10 @@
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
+from apyhiveapi.helper.hive_exceptions import (
+    HiveInvalidDeviceAuthentication,
+    HiveReauthRequired,
+)
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
@@ -10,7 +14,7 @@ from homeassistant.components.binary_sensor import BinarySensorDeviceClass
 from homeassistant.components.hive.const import DOMAIN
 from homeassistant.components.hive.services import HiveService
 from homeassistant.components.sensor import ATTR_STATE_CLASS, SensorStateClass
-from homeassistant.config_entries import ConfigEntryState
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.const import ATTR_DEVICE_CLASS, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -265,6 +269,43 @@ async def test_glass_break_device_class(
     state = hass.states.get(entity_id)
     assert state
     assert state.attributes[ATTR_DEVICE_CLASS] == BinarySensorDeviceClass.GLASS_BREAK
+
+
+@pytest.mark.parametrize(
+    "exception",
+    [
+        pytest.param(HiveReauthRequired, id="reauth_required"),
+        pytest.param(HiveInvalidDeviceAuthentication, id="device_not_registered"),
+    ],
+)
+async def test_auth_failure_starts_reauth(
+    hass: HomeAssistant, exception: type[Exception]
+) -> None:
+    """An auth failure during setup starts a reauth flow."""
+    entry = MockConfigEntry(domain=DOMAIN, data=_ENTRY_DATA)
+    entry.add_to_hass(hass)
+
+    mock_hive = _make_mock_hive({})
+    mock_hive.session.startSession.side_effect = exception
+
+    with (
+        patch(
+            "homeassistant.components.hive.Hive",
+            return_value=mock_hive,
+        ),
+        # Stop the reauth flow at its 2FA step.
+        patch(
+            "homeassistant.components.hive.config_flow.Auth.login",
+            return_value={"ChallengeName": "SMS_MFA"},
+        ),
+    ):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.SETUP_ERROR
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 1
+    assert flows[0]["context"]["source"] == SOURCE_REAUTH
 
 
 async def test_all_platforms_forwarded_without_devices(

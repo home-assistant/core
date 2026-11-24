@@ -63,6 +63,7 @@ AGENTS.md @home-assistant/core
 /homeassistant/components/adguard/ @frenck
 /tests/components/adguard/ @frenck
 /homeassistant/components/ads/ @mrpasztoradam
+/tests/components/ads/ @mrpasztoradam
 /homeassistant/components/advantage_air/ @Bre77
 /tests/components/advantage_air/ @Bre77
 /homeassistant/components/aemet/ @Noltari
@@ -531,8 +532,8 @@ AGENTS.md @home-assistant/core
 /tests/components/emulated_kasa/ @kbickar
 /homeassistant/components/energenie_power_sockets/ @gnumpi
 /tests/components/energenie_power_sockets/ @gnumpi
-/homeassistant/components/energieleser/ @AjinkyaGokhale @NiccoFink
-/tests/components/energieleser/ @AjinkyaGokhale @NiccoFink
+/homeassistant/components/energieleser/ @AjinkyaGokhale @NiccoFink @rohit0407org
+/tests/components/energieleser/ @AjinkyaGokhale @NiccoFink @rohit0407org
 /homeassistant/components/energy/ @home-assistant/core
 /tests/components/energy/ @home-assistant/core
 /homeassistant/components/energyid/ @JrtPec @Molier
@@ -1030,6 +1031,7 @@ AGENTS.md @home-assistant/core
 /homeassistant/components/karakeep/ @sli-cka
 /tests/components/karakeep/ @sli-cka
 /homeassistant/components/keba/ @dannerph
+/tests/components/keba/ @dannerph
 /homeassistant/components/keenetic_ndms2/ @foxel
 /tests/components/keenetic_ndms2/ @foxel
 /homeassistant/components/kef/ @basnijholt
@@ -1273,8 +1275,8 @@ AGENTS.md @home-assistant/core
 /tests/components/motion_blinds/ @starkillerOG
 /homeassistant/components/motionblinds_ble/ @LennP @jerrybboy
 /tests/components/motionblinds_ble/ @LennP @jerrybboy
-/homeassistant/components/motioneye/ @dermotduffy
-/tests/components/motioneye/ @dermotduffy
+/homeassistant/components/motioneye/ @dermotduffy @mkrawcz1
+/tests/components/motioneye/ @dermotduffy @mkrawcz1
 /homeassistant/components/motionmount/ @Wernes-vogels
 /tests/components/motionmount/ @Wernes-vogels
 /homeassistant/components/mqtt/ @emontnemery @jbouwh @bdraco

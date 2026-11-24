@@ -372,3 +372,53 @@ async def test_motion_detector2_binary_sensors(
     state = hass.states.get(entity_id)
     assert state is not None
     assert state.state == expected
+
+
+SMOKE_ALARM_ENTITY_ID = "binary_sensor.smoke_detection_system_smoke"
+
+
+@pytest.mark.parametrize(
+    ("alarm", "expected"),
+    [
+        (SurveillanceAlarmService.State.ALARM_OFF, STATE_OFF),
+        (SurveillanceAlarmService.State.PRE_ALARM, STATE_ON),
+        (SurveillanceAlarmService.State.ALARM_ON, STATE_ON),
+        (SurveillanceAlarmService.State.ALARM_MUTED, STATE_ON),
+    ],
+)
+async def test_smoke_detection_system_state(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_session: MagicMock,
+    alarm: SurveillanceAlarmService.State,
+    expected: str,
+) -> None:
+    """The system sensor is on for every alarm state except off."""
+    mock_session.device_helper.smoke_detection_system = smoke_detection_system_device(
+        alarm=alarm
+    )
+    await setup_integration(hass, mock_config_entry)
+
+    state = hass.states.get(SMOKE_ALARM_ENTITY_ID)
+    assert state is not None
+    assert state.state == expected
+
+
+async def test_smoke_detection_system_push_update(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_session: MagicMock,
+) -> None:
+    """A pushed alarm change updates the sensor."""
+    system = smoke_detection_system_device(
+        alarm=SurveillanceAlarmService.State.ALARM_OFF
+    )
+    mock_session.device_helper.smoke_detection_system = system
+    await setup_integration(hass, mock_config_entry)
+    assert hass.states.get(SMOKE_ALARM_ENTITY_ID).state == STATE_OFF
+
+    system.alarm = SurveillanceAlarmService.State.ALARM_ON
+    _fire_alarm_update(mock_session)
+    await hass.async_block_till_done()
+
+    assert hass.states.get(SMOKE_ALARM_ENTITY_ID).state == STATE_ON

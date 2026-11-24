@@ -64,10 +64,10 @@ PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(
+async def async_setup_platform(
     hass: HomeAssistant,
     config: ConfigType,
-    add_entities: AddEntitiesCallback,
+    async_add_entities: AddEntitiesCallback,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up an ADS sensor device."""
@@ -92,7 +92,7 @@ def setup_platform(
         unit_of_measurement,
     )
 
-    add_entities([entity])
+    async_add_entities([entity])
 
 
 class AdsSensor(AdsEntity, SensorEntity):

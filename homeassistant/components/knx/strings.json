@@ -1,5 +1,8 @@
 {
   "config": {
+    "abort": {
+      "keyring_required": "The current connection uses the keyring file for KNX IP Secure. Reconfigure the connection with manual credentials or another connection type before removing it."
+    },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_backbone_key": "Invalid backbone key. 32 hexadecimal digits expected.",
@@ -52,12 +55,17 @@
         "title": "Tunnel settings"
       },
       "reconfigure": {
-        "description": "Current connection: `{current_connection}`\n\nImported keyring: {keyring_project}",
+        "description": "Current connection: `{current_connection}`\n\nImported keyring: {keyring_project}\nKNX Data Secure group addresses: {data_secure_count}",
         "menu_options": {
           "connection_type": "Reconfigure KNX connection",
+          "remove_knxkeys": "Remove KNX keyring file",
           "secure_knxkeys": "Import KNX keyring file"
         },
         "title": "KNX connection settings"
+      },
+      "remove_knxkeys": {
+        "description": "The imported `.knxkeys` file of project `{keyring_project}` will be deleted. It currently provides KNX Data Secure keys for {data_secure_count} group addresses. KNX IP Secure and KNX Data Secure keys from this file will no longer be available.",
+        "title": "Remove KNX keyring"
       },
       "routing": {
         "data": {
@@ -1636,6 +1644,12 @@
     },
     "llm_tool_failed": {
       "message": "KNX tool call failed: {error}"
+    },
+    "project_data_incompatible": {
+      "message": "The KNX project data is for xknxproject {version}, which is not compatible with the installed xknxproject {installed_version}."
+    },
+    "project_data_invalid": {
+      "message": "Invalid KNX project data: {error}"
     },
     "service_event_register_ga_not_found": {
       "message": "Could not find registered event for `{group_addresses}` to remove."
