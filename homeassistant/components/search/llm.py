@@ -94,21 +94,24 @@ def _disabled_entities(
             )
 
 
-def _entities(hass: HomeAssistant) -> Iterator[_Item]:
+def _entities(hass: HomeAssistant, include_disabled: bool) -> Iterator[_Item]:
     """Yield the entities that are not automations, scripts or scenes."""
     ent_reg = er.async_get(hass)
     for state in hass.states.async_all():
         if state.domain not in _OWN_TYPE_DOMAINS:
             yield _entity_item(hass, ent_reg, state)
-    yield from _disabled_entities(
-        hass, ent_reg, lambda domain: domain not in _OWN_TYPE_DOMAINS
-    )
+    if include_disabled:
+        yield from _disabled_entities(
+            hass, ent_reg, lambda domain: domain not in _OWN_TYPE_DOMAINS
+        )
 
 
-def _devices(hass: HomeAssistant) -> Iterator[_Item]:
+def _devices(hass: HomeAssistant, include_disabled: bool) -> Iterator[_Item]:
     """Yield the devices, including child devices."""
     dev_reg = dr.async_get(hass)
     for device in chain(dev_reg.devices, dev_reg.child_devices):
+        if device.disabled and not include_disabled:
+            continue
         yield (
             device.id,
             device.name_by_user or device.name,
@@ -121,33 +124,36 @@ def _devices(hass: HomeAssistant) -> Iterator[_Item]:
         )
 
 
-def _areas(hass: HomeAssistant) -> Iterator[_Item]:
+def _areas(hass: HomeAssistant, include_disabled: bool) -> Iterator[_Item]:
     """Yield the areas."""
     for area in ar.async_get(hass).async_list_areas():
         yield area.id, area.name, (area.name,), area.aliases, ()
 
 
-def _floors(hass: HomeAssistant) -> Iterator[_Item]:
+def _floors(hass: HomeAssistant, include_disabled: bool) -> Iterator[_Item]:
     """Yield the floors."""
     for floor in fr.async_get(hass).async_list_floors():
         yield floor.floor_id, floor.name, (floor.name,), floor.aliases, ()
 
 
-def _labels(hass: HomeAssistant) -> Iterator[_Item]:
+def _labels(hass: HomeAssistant, include_disabled: bool) -> Iterator[_Item]:
     """Yield the labels."""
     for label in lr.async_get(hass).async_list_labels():
         yield label.label_id, label.name, (label.name,), (), ()
 
 
-def _domain_entities(domain: str, hass: HomeAssistant) -> Iterator[_Item]:
+def _domain_entities(
+    domain: str, hass: HomeAssistant, include_disabled: bool
+) -> Iterator[_Item]:
     """Yield the entities of a domain."""
     ent_reg = er.async_get(hass)
     for state in hass.states.async_all(domain):
         yield _entity_item(hass, ent_reg, state)
-    yield from _disabled_entities(hass, ent_reg, domain.__eq__)
+    if include_disabled:
+        yield from _disabled_entities(hass, ent_reg, domain.__eq__)
 
 
-_ITEMS: dict[str, Callable[[HomeAssistant], Iterator[_Item]]] = {
+_ITEMS: dict[str, Callable[[HomeAssistant, bool], Iterator[_Item]]] = {
     "entity": _entities,
     "device": _devices,
     "area": _areas,
@@ -185,9 +191,8 @@ class SearchTool(Tool):
     name = "search__search"
     title = "Search Home Assistant"
     description = (
-        "Search entities, devices, areas, floors, labels, automations, scripts "
-        "and scenes by name, also disabled entities and devices. Returns the ID "
-        "and name of each match, grouped by type."
+        "Search entities, devices, areas, floors, labels, automations, scripts and "
+        "scenes by name. Returns the ID and name of each match, grouped by type."
     )
     annotations = ToolAnnotations(
         read_only=True, destructive=False, idempotent=True, open_world=False
@@ -209,6 +214,11 @@ class SearchTool(Tool):
                 ),
                 default=0,
             ): probatio.All(probatio.Coerce(int), probatio.Range(min=0)),
+            probatio.Optional(
+                "include_disabled",
+                description="Also return disabled entities and devices.",
+                default=False,
+            ): probatio.All(probatio.Boolean(), bool),
         }
     )
 
@@ -221,6 +231,7 @@ class SearchTool(Tool):
         query: str = args["query"].casefold()
         item_type: str | None = args.get("type")
         offset: int = args["offset"]
+        include_disabled: bool = args["include_disabled"]
 
         if offset and item_type is None:
             return ToolResult(
@@ -231,7 +242,9 @@ class SearchTool(Tool):
         result: JsonObjectType = {}
         has_more = False
         for type_ in [item_type] if item_type else _ITEMS:
-            total, results = _search(_ITEMS[type_](hass), query, offset)
+            total, results = _search(
+                _ITEMS[type_](hass, include_disabled), query, offset
+            )
             if not total:
                 continue
             group: JsonObjectType = {"total": total, "results": results}

@@ -199,9 +199,16 @@ def test_parameters_openapi(snapshot: SnapshotAssertion) -> None:
         pytest.param({"query": "counter"}, id="partial_alias"),
         pytest.param({"query": "cooking lights"}, id="automation_alias"),
         pytest.param({"query": "kitchen_lights"}, id="entity_id"),
-        pytest.param({"query": "kitchen oven"}, id="disabled_entity"),
-        pytest.param({"query": "kitchen disabled"}, id="disabled_device"),
-        pytest.param({"query": "evening news"}, id="disabled_script"),
+        pytest.param(
+            {"query": "kitchen oven", "include_disabled": True}, id="disabled_entity"
+        ),
+        pytest.param(
+            {"query": "kitchen disabled", "include_disabled": True},
+            id="disabled_device",
+        ),
+        pytest.param(
+            {"query": "evening news", "include_disabled": True}, id="disabled_script"
+        ),
         pytest.param({"query": "nothing"}, id="no_match"),
     ],
 )

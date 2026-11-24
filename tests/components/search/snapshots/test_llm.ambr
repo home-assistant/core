@@ -3,6 +3,11 @@
   dict({
     'additionalProperties': False,
     'properties': dict({
+      'include_disabled': dict({
+        'default': False,
+        'description': 'Also return disabled entities and devices.',
+        'type': 'boolean',
+      }),
       'offset': dict({
         'default': 0,
         'description': 'Number of results to skip. Requires type. Use the next_offset of the previous result.',
@@ -57,10 +62,6 @@
     'device': dict({
       'results': list([
         list([
-          '<disabled device>',
-          'Kitchen disabled',
-        ]),
-        list([
           '<sensor device>',
           'Kitchen sensor',
         ]),
@@ -73,7 +74,7 @@
           'Main hub',
         ]),
       ]),
-      'total': 4,
+      'total': 3,
     }),
     'entity': dict({
       'next_offset': 5,
@@ -99,7 +100,7 @@
           'Kitchen 4',
         ]),
       ]),
-      'total': 10,
+      'total': 7,
     }),
     'instructions': 'Each type shows at most 5 results. To get the next results of one type, call this tool again with the same query, set type to that type, and set offset to its next_offset.',
     'label': dict({
@@ -170,10 +171,6 @@
     'device': dict({
       'results': list([
         list([
-          '<disabled device>',
-          'Kitchen disabled',
-        ]),
-        list([
           '<sensor device>',
           'Kitchen sensor',
         ]),
@@ -186,7 +183,7 @@
           'Main hub',
         ]),
       ]),
-      'total': 4,
+      'total': 3,
     }),
   })
 # ---
@@ -288,20 +285,8 @@
           'light.kitchen_6',
           'Kitchen 6',
         ]),
-        list([
-          'sensor.kitchen_oven',
-          'Kitchen oven',
-        ]),
-        list([
-          'light.disabled',
-          'Kitchen sensor',
-        ]),
-        list([
-          'light.child_disabled',
-          'Kitchen sensor Kitchen speaker',
-        ]),
       ]),
-      'total': 10,
+      'total': 7,
     }),
   })
 # ---
@@ -331,7 +316,7 @@
           'Kitchen 4',
         ]),
       ]),
-      'total': 10,
+      'total': 7,
     }),
   })
 # ---
