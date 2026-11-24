@@ -617,6 +617,7 @@ class InfluxThread(threading.Thread):
 
         count = 0
         json = []
+        done_events: list[threading.Event] = []
 
         dropped = 0
 
@@ -638,12 +639,12 @@ class InfluxThread(threading.Thread):
                     else:
                         dropped += 1
                 elif isinstance(item, threading.Event):
-                    item.set()
+                    done_events.append(item)
 
         if dropped:
             _LOGGER.warning(CATCHING_UP_MESSAGE, dropped)
 
-        return count, json
+        return count, json, done_events
 
     def write_to_influxdb(self, json):
         """Write preprocessed events to influxdb, with retry."""
@@ -672,9 +673,14 @@ class InfluxThread(threading.Thread):
     def run(self):
         """Process incoming events."""
         while not self._shutdown:
-            _, json = self.get_events_json()
-            if json:
-                self.write_to_influxdb(json)
+            _, json, done_events = self.get_events_json()
+            try:
+                if json:
+                    self.write_to_influxdb(json)
+            finally:
+                # Set the events of block_till_done only after the batch is written
+                for done_event in done_events:
+                    done_event.set()
 
     def block_till_done(self):
         """Block till all events processed.

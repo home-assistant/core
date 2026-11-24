@@ -1,7 +1,6 @@
 """Config flow for Govee light local."""
 
 import asyncio
-from contextlib import suppress
 import logging
 
 from govee_local_api import GoveeController
@@ -17,7 +16,7 @@ from .const import (
     DISCOVERY_TIMEOUT,
     DOMAIN,
 )
-from .coordinator import log_bound_addresses
+from .coordinator import async_cleanup_controller, log_bound_addresses
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -58,11 +57,10 @@ async def _async_has_devices(hass: HomeAssistant) -> bool:
                 await asyncio.sleep(delay=1)
     except TimeoutError:
         _LOGGER.debug("No devices found")
-
-    devices_count = len(controller.devices)
-    cleanup_complete: asyncio.Event = controller.cleanup()
-    with suppress(TimeoutError):
-        await asyncio.wait_for(cleanup_complete.wait(), 1)
+    finally:
+        # cleanup() clears the device registry, so count before tearing down.
+        devices_count = len(controller.devices)
+        await async_cleanup_controller(controller)
 
     return devices_count > 0
 
