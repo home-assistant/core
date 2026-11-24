@@ -2321,3 +2321,50 @@ async def test_aac_transcode_follows_stream_source(
 
     assert rest_client.streams.add.call_count == 2
     assert aac in rest_client.streams.add.call_args[0][1]
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_aac_transcode_kept_for_restream_readers(
+    init_test_integration: MockCamera,
+    rest_client: AsyncMock,
+) -> None:
+    """Test the AAC transcode stays while FFmpeg may still read the restream."""
+    camera = init_test_integration
+    provider = camera.webrtc_provider
+    assert isinstance(provider, WebRTCProvider)
+    identifier = get_camera_identifier(camera)
+    aac = f"ffmpeg:{identifier}#audio=aac#query=log_level=debug"
+
+    with patch.object(camera, "webrtc_source", return_value="rtsp://native"):
+        camera.set_stream_source(None)
+        assert await provider.async_get_stream_source(camera)
+        assert aac in rest_client.streams.add.call_args[0][1]
+
+        # The camera gains a source of its own, but a running stream worker
+        # only switches to it when the camera is next asked for a stream
+        camera.set_stream_source("rtsp://native")
+        rest_client.streams.list.return_value = {}
+        await provider._update_stream_source(camera)
+
+    assert aac in rest_client.streams.add.call_args[0][1]
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_aac_transcode_for_empty_stream_source(
+    init_test_integration: MockCamera,
+    rest_client: AsyncMock,
+) -> None:
+    """Test an empty stream source counts as none, as for camera streams."""
+    camera = init_test_integration
+    provider = camera.webrtc_provider
+    assert isinstance(provider, WebRTCProvider)
+    identifier = get_camera_identifier(camera)
+
+    camera.set_stream_source("")
+    with patch.object(camera, "webrtc_source", return_value="rtsp://native"):
+        await provider._update_stream_source(camera)
+
+    assert (
+        f"ffmpeg:{identifier}#audio=aac#query=log_level=debug"
+        in rest_client.streams.add.call_args[0][1]
+    )
