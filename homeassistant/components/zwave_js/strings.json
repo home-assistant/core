@@ -117,6 +117,7 @@
       "not_zwave_js_addon": "Discovered app is not the official Z-Wave JS app.",
       "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
       "reset_failed": "Failed to reset adapter.",
+      "serial_proxy_not_supported": "Z-Wave JS can't use an ESPHome serial proxy. Use the ESPHome Z-Wave proxy instead.",
       "usb_ports_failed": "Failed to get USB devices."
     },
     "error": {
@@ -382,6 +383,12 @@
       },
       "timeout_response": {
         "name": "Timed out responses"
+      }
+    },
+    "update": {
+      "release_notes_messages": {
+        "sleeping_device": "This is a battery powered sleeping device. You may need to wake it up manually for the update to begin.",
+        "sleeping_device_wakeup": "This is a battery powered sleeping device. You may need to wake it up manually for the update to begin. To wake up this device:\n\n{wakeup_instructions}"
       }
     }
   },

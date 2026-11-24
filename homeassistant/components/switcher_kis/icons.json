@@ -20,6 +20,9 @@
       },
       "remaining_time": {
         "default": "mdi:av-timer"
+      },
+      "shutdown_time": {
+        "default": "mdi:av-timer"
       }
     },
     "switch": {

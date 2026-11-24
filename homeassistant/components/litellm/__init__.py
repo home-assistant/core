@@ -5,7 +5,7 @@ from homeassistant.core import HomeAssistant
 
 from .coordinator import LiteLLMConfigEntry, LiteLLMDataUpdateCoordinator
 
-PLATFORMS = [Platform.CONVERSATION, Platform.STT]
+PLATFORMS = [Platform.CONVERSATION, Platform.STT, Platform.TTS]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: LiteLLMConfigEntry) -> None:

@@ -40,7 +40,7 @@
           "data": {
             "departure_type": "Departure type",
             "direction": "Direction",
-            "name": "Name",
+            "name": "[%key:common::config_flow::data::name%]",
             "stop_id": "Stop ID"
           },
           "data_description": {
