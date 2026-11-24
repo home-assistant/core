@@ -203,11 +203,10 @@ class GoogleWifiSensor(CoordinatorEntity[GoogleWifiCoordinator], SensorEntity):
         super().__init__(coordinator)
         self.entity_description = description
         entry = coordinator.config_entry
-        hardware_id = entry.unique_id or entry.entry_id
-        self._attr_unique_id = f"{hardware_id}_{description.key}"
+        self._attr_unique_id = f"{coordinator.hardware_id}_{description.key}"
         status = coordinator.data
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, hardware_id)},
+            identifiers={(DOMAIN, coordinator.hardware_id)},
             name=entry.title,
             manufacturer="Google",
             configuration_url=f"http://{entry.data[CONF_HOST]}",

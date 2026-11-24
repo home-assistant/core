@@ -66,18 +66,6 @@ class GoogleWifiConfigFlow(ConfigFlow, domain=DOMAIN):
         if entry is not None and entry.title == entry.data[CONF_HOST]:
             self.hass.config_entries.async_update_entry(entry, title=host)
 
-    def _import_title(self, name: str, host: str) -> str:
-        """Pick a title that does not collide with an existing entry."""
-        titles = {
-            entry.title for entry in self.hass.config_entries.async_entries(DOMAIN)
-        }
-        if name not in titles:
-            return name
-        titled = f"{name} {host}"
-        if titled not in titles:
-            return titled
-        return host
-
     async def _async_handle_host(self, host: str) -> tuple[str | None, dict[str, str]]:
         """Validate a host and return its hardware id or a form error."""
         try:
@@ -163,7 +151,4 @@ class GoogleWifiConfigFlow(ConfigFlow, domain=DOMAIN):
         await self.async_set_unique_id(hardware_id)
         self._abort_if_unique_id_configured(updates={CONF_HOST: host})
         name = (import_data.get(CONF_NAME) or "").strip() or host
-        return self.async_create_entry(
-            title=self._import_title(name, host),
-            data={CONF_HOST: host},
-        )
+        return self.async_create_entry(title=name, data={CONF_HOST: host})

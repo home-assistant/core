@@ -84,6 +84,26 @@ async def test_sensors_expose_router_data(
     )
     assert device is not None
     assert device.name == "Test Wifi"
+    assert device.sw_version == "softwareVersion"
+
+
+@pytest.mark.usefixtures("mock_success")
+async def test_device_software_version_follows_firmware_update(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+    aioclient_mock: AiohttpClientMocker,
+) -> None:
+    """Test the device registry shows the firmware version after an update."""
+    await setup_integration(hass, mock_config_entry)
+
+    aioclient_mock.clear_requests()
+    aioclient_mock.get(RESOURCE_URL, json=UPDATED_RESPONSE)
+    await fire_polling_update(hass, 31)
+
+    device = device_registry.async_get_device(identifiers={(DOMAIN, HARDWARE_ID)})
+    assert device is not None
+    assert device.sw_version == "newVersion"
 
 
 @pytest.mark.usefixtures("mock_unreachable")
@@ -259,6 +279,31 @@ async def test_yaml_import_supports_multiple_devices(
     assert hass.states.get("sensor.living_room_local_ip") is not None
     assert hass.states.get("sensor.office_local_ip") is not None
     assert hass.states.get("sensor.basement_local_ip") is not None
+
+
+async def test_yaml_import_duplicate_names_keep_legacy_entity_ids(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
+    """Test devices sharing a YAML name get the suffixed entity IDs they had before."""
+    mock_device(aioclient_mock, "192.168.86.1", hardware_id="hardware-1")
+    mock_device(aioclient_mock, "192.168.86.2", hardware_id="hardware-2")
+
+    assert await async_setup_component(
+        hass,
+        "sensor",
+        {
+            "sensor": [
+                {"platform": DOMAIN, CONF_HOST: "192.168.86.1"},
+                {"platform": DOMAIN, CONF_HOST: "192.168.86.2"},
+            ]
+        },
+    )
+    await hass.async_block_till_done()
+
+    entries = hass.config_entries.async_entries(DOMAIN)
+    assert [entry.title for entry in entries] == ["google_wifi", "google_wifi"]
+    assert hass.states.get("sensor.google_wifi_status") is not None
+    assert hass.states.get("sensor.google_wifi_status_2") is not None
 
 
 @pytest.mark.usefixtures("mock_unreachable")
