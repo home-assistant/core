@@ -27,8 +27,9 @@ class SuggestionFilter:
         default=None,
         metadata={
             "description": (
-                "Only suggestions of this group - for suggestions from project data "
-                'the individual address of the device, e.g. "1.1.5".'
+                "Only suggestions of this group - for suggestions from functional "
+                'blocks the individual address of the device, e.g. "1.1.5", for '
+                "suggestions from building functions the identifier of their space."
             )
         },
     )
@@ -38,6 +39,16 @@ class SuggestionFilter:
             "description": (
                 "Include suggestions whose group addresses are already used by an "
                 "existing entity."
+            )
+        },
+    )
+    include_superseded: bool = field(
+        default=True,
+        metadata={
+            "description": (
+                "Include suggestions that a returned suggestion of a more reliable "
+                "source describes as well. Disable to get every suggested entity "
+                "only once."
             )
         },
     )
@@ -82,6 +93,27 @@ class ProviderSuggestion(TypedDict):
     metadata: dict[str, Any]
 
 
+class DuplicateSuggestion(TypedDict):
+    """A suggestion of another provider for the same thing.
+
+    Carries what a caller needs to combine both - eg. the configuration of one
+    with the name and room of the other - even if the other suggestion is not
+    part of a filtered response.
+    """
+
+    # id of the other suggestion
+    id: str
+    # provider id the other suggestion originates from
+    source: str
+    suggested_name: str
+    group_id: str
+    group_name: str
+    # platforms both suggestions can be created as with shared group addresses
+    platforms: list[str]
+    # group addresses identifying both suggestions as the same thing
+    group_addresses: list[str]
+
+
 class EntitySuggestion(ProviderSuggestion):
     """A provider suggestion completed with information common to all providers.
 
@@ -92,6 +124,10 @@ class EntitySuggestion(ProviderSuggestion):
     source: str
     # entities already using one of the matched group addresses
     existing_entity_ids: list[str]
+    # suggestions of other providers for the same thing - most reliable first
+    duplicates: list[DuplicateSuggestion]
+    # id of the most reliable duplicate from a provider preferred over `source`
+    superseded_by: str | None
 
 
 class ProviderResult(TypedDict):

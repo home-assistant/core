@@ -17,6 +17,8 @@ class SuggestionProvider(ABC):
     Providers gather their data sources themselves (eg. project data
     or existing entity configurations) and report source specific
     information for empty result hints in `ProviderResult["hints"]`.
+    They don't care about what other providers suggest - suggestions of
+    different providers for the same thing are linked by the common code.
     """
 
     @property

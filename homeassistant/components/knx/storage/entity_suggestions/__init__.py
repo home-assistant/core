@@ -1,27 +1,38 @@
 """Entity suggestions from KNX data sources."""
 
+from collections import defaultdict
 from typing import TYPE_CHECKING
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from ...const import DOMAIN
+from ..const import CONF_GA_STATE, CONF_GA_WRITE
 from .base import SuggestionProvider
 from .const import (
+    DuplicateSuggestion,
     EntitySuggestion,
     EntitySuggestionsResult,
+    PlatformSuggestion,
     ProviderSuggestion,
     SuggestionFilter,
 )
 from .existing_config import ExistingConfigSuggestionProvider
 from .functional_blocks import FunctionalBlockSuggestionProvider
+from .functions import FunctionSuggestionProvider
+from .ga_config import iter_ga_configs
 
 if TYPE_CHECKING:
     from ...knx_module import KNXModule
 
+# Ordered by how much a provider is to be trusted, most reliable first: a
+# configuration the user already made, then device semantics, then building
+# functions. The order ranks suggestions of different providers for the same
+# thing - see `_link_duplicates` - and is the order of the response.
 SUGGESTION_PROVIDERS: list[SuggestionProvider] = [
-    FunctionalBlockSuggestionProvider(),
     ExistingConfigSuggestionProvider(),
+    FunctionalBlockSuggestionProvider(),
+    FunctionSuggestionProvider(),
 ]
 
 
@@ -61,6 +72,105 @@ def _existing_entity_ids(
     )
 
 
+def _identifying_addresses(platform_suggestion: PlatformSuggestion) -> set[str]:
+    """Return the group addresses telling what a suggested entity controls.
+
+    These are the addresses it writes to: two entities of a platform sending
+    to the same address are the same thing, while a state address may be shared
+    - eg. a common feedback. A suggestion that writes nothing, like a sensor,
+    is identified by the addresses it reads. Passive addresses and addresses a
+    provider doesn't report as matched - eg. ones shared with other channels -
+    are not considered.
+    """
+    matched = {
+        group_address["address"]
+        for group_address in platform_suggestion["matched_group_addresses"]
+    }
+    ga_configs = [
+        ga_config for _, ga_config in iter_ga_configs(platform_suggestion["knx"])
+    ]
+    for slot in (CONF_GA_WRITE, CONF_GA_STATE):
+        if addresses := {
+            address
+            for ga_config in ga_configs
+            if (address := ga_config.get(slot)) in matched
+        }:
+            return addresses
+    return set()
+
+
+def _link_duplicates(suggestions: list[EntitySuggestion]) -> None:
+    """Link suggestions of different providers for the same thing.
+
+    `suggestions` are ordered by the rank of their provider. Two suggestions
+    are duplicates if they share an identifying group address on a platform
+    both can be created as. Suggestions of the same provider are not linked: a
+    provider may offer alternatives on purpose. Links are pairwise - if A and
+    C both duplicate B, A and C are not necessarily duplicates of each other.
+    """
+    # (platform, group address) -> indexes of the suggestions identified by it
+    by_address: defaultdict[tuple[str, str], list[int]] = defaultdict(list)
+    for index, suggestion in enumerate(suggestions):
+        for platform, platform_suggestion in suggestion["suggestions"].items():
+            for address in _identifying_addresses(platform_suggestion):
+                by_address[(platform, address)].append(index)
+
+    # index of a suggestion -> index of a duplicate -> shared (platform, address)
+    shared: defaultdict[int, defaultdict[int, list[tuple[str, str]]]] = defaultdict(
+        lambda: defaultdict(list)
+    )
+    for key, indexes in by_address.items():
+        for index in indexes:
+            for other in indexes:
+                if suggestions[index]["source"] != suggestions[other]["source"]:
+                    shared[index][other].append(key)
+
+    for index, duplicates in shared.items():
+        suggestion = suggestions[index]
+        # sorted by index is sorted by provider rank
+        for other, keys in sorted(duplicates.items()):
+            duplicate = suggestions[other]
+            suggestion["duplicates"].append(
+                DuplicateSuggestion(
+                    id=duplicate["id"],
+                    source=duplicate["source"],
+                    suggested_name=duplicate["suggested_name"],
+                    group_id=duplicate["group_id"],
+                    group_name=duplicate["group_name"],
+                    platforms=[
+                        platform
+                        for platform in suggestion["platform_options"]
+                        if any(platform == key[0] for key in keys)
+                    ],
+                    group_addresses=sorted({address for _, address in keys}),
+                )
+            )
+        if (best := min(duplicates)) < index:
+            suggestion["superseded_by"] = suggestions[best]["id"]
+
+
+def _drop_superseded(suggestions: list[EntitySuggestion]) -> list[EntitySuggestion]:
+    """Drop suggestions a duplicate of a preferred provider in the list stands for.
+
+    A suggestion is only dropped in favor of one that is returned - a filter
+    never hides something without showing its replacement.
+    """
+    rank = {
+        provider.provider_id: index
+        for index, provider in enumerate(SUGGESTION_PROVIDERS)
+    }
+    returned = {suggestion["id"] for suggestion in suggestions}
+    return [
+        suggestion
+        for suggestion in suggestions
+        if not any(
+            duplicate["id"] in returned
+            and rank[duplicate["source"]] < rank[suggestion["source"]]
+            for duplicate in suggestion["duplicates"]
+        )
+    ]
+
+
 def _matches(suggestion: EntitySuggestion, suggestion_filter: SuggestionFilter) -> bool:
     """Check a suggestion against a filter."""
     if (
@@ -83,14 +193,18 @@ async def async_get_entity_suggestions(
 ) -> EntitySuggestionsResult:
     """Generate entity suggestions from all providers.
 
-    Providers generate everything they know about. Duplicate detection and
-    filtering are done here so they behave the same for every source.
+    Providers generate everything they know about. Duplicate detection - against
+    existing entities and between providers - and filtering are done here so
+    they behave the same for every source. Duplicates are linked before
+    filtering, so a filtered response still reports them.
+    Suggestions are returned in the order of `SUGGESTION_PROVIDERS`.
     Results are not windowed - a caller that has to bound its response
     applies its own limit.
     """
     suggestion_filter = suggestion_filter or SuggestionFilter()
     entity_ids_by_group_address = _entity_ids_by_group_address(hass, knx)
     result = EntitySuggestionsResult(suggestions=[], providers={})
+    suggestions: list[EntitySuggestion] = []
     for provider in SUGGESTION_PROVIDERS:
         provider_result = await provider.async_get_suggestions(hass, knx)
         result["providers"][provider.provider_id] = provider_result["hints"]
@@ -102,7 +216,17 @@ async def async_get_entity_suggestions(
                 "existing_entity_ids": _existing_entity_ids(
                     provider_suggestion, entity_ids_by_group_address
                 ),
+                "duplicates": [],
+                "superseded_by": None,
             }
-            if _matches(suggestion, suggestion_filter):
-                result["suggestions"].append(suggestion)
+            suggestions.append(suggestion)
+    _link_duplicates(suggestions)
+    suggestions = [
+        suggestion
+        for suggestion in suggestions
+        if _matches(suggestion, suggestion_filter)
+    ]
+    if not suggestion_filter.include_superseded:
+        suggestions = _drop_superseded(suggestions)
+    result["suggestions"] = suggestions
     return result
