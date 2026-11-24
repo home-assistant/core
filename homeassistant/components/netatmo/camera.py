@@ -1,5 +1,6 @@
 """Support for the Netatmo cameras."""
 
+import asyncio
 import logging
 from typing import Any, cast, override
 
@@ -302,6 +303,15 @@ class NetatmoCamera(NetatmoBaseCamera):
 
     _override_on: bool | None = None
 
+    def __init__(
+        self,
+        netatmo_device: NetatmoDevice,
+    ) -> None:
+        """Initialize the camera."""
+        super().__init__(netatmo_device)
+        # Serialize async_turn_on and async_turn_off to prevent races on monitoring state and _override_on
+        self._lock = asyncio.Lock()
+
     @override
     async def async_added_to_hass(self) -> None:
         """Entity created."""
@@ -437,26 +447,28 @@ class NetatmoCamera(NetatmoBaseCamera):
     @override
     async def async_turn_off(self) -> None:
         """Turn off camera."""
-        if not self.is_on:
-            return
-        try:
-            await self.device.async_monitoring_off()
-            self._override_on = False
-            self.async_write_ha_state()
-        except CAMERA_ERRORS as err:
-            raise HomeAssistantError(f"Could not turn off camera: {err}") from err
+        async with self._lock:
+            if not self.is_on:
+                return
+            try:
+                await self.device.async_monitoring_off()
+                self._override_on = False
+                self.async_write_ha_state()
+            except CAMERA_ERRORS as err:
+                raise HomeAssistantError(f"Could not turn off camera: {err}") from err
 
     @override
     async def async_turn_on(self) -> None:
         """Turn on camera."""
-        if self.is_on:
-            return
-        try:
-            await self.device.async_monitoring_on()
-            self._override_on = True
-            self.async_write_ha_state()
-        except CAMERA_ERRORS as err:
-            raise HomeAssistantError(f"Could not turn on camera: {err}") from err
+        async with self._lock:
+            if self.is_on:
+                return
+            try:
+                await self.device.async_monitoring_on()
+                self._override_on = True
+                self.async_write_ha_state()
+            except CAMERA_ERRORS as err:
+                raise HomeAssistantError(f"Could not turn on camera: {err}") from err
 
 
 class NetatmoDoorbell(NetatmoBaseCamera):
