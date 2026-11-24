@@ -131,7 +131,7 @@ async def async_set_project(hass: HomeAssistant, project: Mapping[str, Any]) -> 
     """
     knx_module = get_knx_module(hass)
     data = validate_project_data(project)
-    await knx_module.project.async_store_project(knx_module.xknx, data)
+    await knx_module.project.async_store_project(data)
 
 
 @dataclass
@@ -173,9 +173,11 @@ class KNXProject:
         self,
         hass: HomeAssistant,
         entry: ConfigEntry,
+        xknx: XKNX,
     ) -> None:
         """Initialize project data."""
         self.hass = hass
+        self.xknx = xknx
         self._store = Store[KNXProjectModel](hass, STORAGE_VERSION, STORAGE_KEY)
         # Serializes the cached project against upload and removal, so a load
         # in flight cannot resurrect a project that was replaced or removed.
@@ -191,15 +193,16 @@ class KNXProject:
         self.info = None
         self._project = None
 
-    async def load_project(
-        self, xknx: XKNX, data: KNXProjectModel | None = None
-    ) -> None:
-        """Load project data from storage."""
+    async def load_project(self, data: KNXProjectModel | None = None) -> None:
+        """Load project data from storage.
+
+        Also sets the address format xknx shows group addresses in, for the
+        whole process: the project's, or the 3-level format without a project.
+        """
         if project := data or await self._store.async_load():
             self.devices = project["devices"]
             self.info = project["info"]
-            GroupAddress.address_format = self.get_address_format()
-            xknx.group_address_dpt.clear()
+            self.xknx.group_address_dpt.clear()
             xknx_ga_dict: dict[DeviceAddressableType, DPTType] = {}
             # Replace rather than extend: addresses of a previous project don't stay.
             group_addresses: dict[str, GroupAddressInfo] = {}
@@ -210,7 +213,7 @@ class KNXProject:
                 if (dpt_model := ga_model.get("dpt")) is not None:
                     xknx_ga_dict[ga_model["address"]] = dpt_model
 
-            xknx.group_address_dpt.set(xknx_ga_dict)
+            self.xknx.group_address_dpt.set(xknx_ga_dict)
             self.group_addresses = group_addresses
 
             _LOGGER.debug(
@@ -218,10 +221,9 @@ class KNXProject:
                 len(self.group_addresses),
             )
             self.loaded = True
+        GroupAddress.address_format = self.get_address_format()
 
-    async def process_project_file(
-        self, xknx: XKNX, file_id: str, password: str
-    ) -> None:
+    async def process_project_file(self, file_id: str, password: str) -> None:
         """Process an uploaded project file."""
 
         def _parse_project() -> KNXProjectModel:
@@ -234,16 +236,16 @@ class KNXProject:
                 return xknxproj.parse()
 
         project = await self.hass.async_add_executor_job(_parse_project)
-        await self.async_store_project(xknx, project)
+        await self.async_store_project(project)
 
-    async def async_store_project(self, xknx: XKNX, project: KNXProjectModel) -> None:
+    async def async_store_project(self, project: KNXProjectModel) -> None:
         """Store and load parsed project data, replacing the current project."""
         async with self._project_lock:
             await self._store.async_save(project)
             # Invalidate rather than populate: whether the full project is held
             # is left to whoever asks for it.
             self._project = None
-            await self.load_project(xknx, data=project)
+            await self.load_project(data=project)
 
     async def remove_project_file(self) -> None:
         """Remove project file from storage."""

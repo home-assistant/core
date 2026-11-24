@@ -15,7 +15,7 @@ from unittest.mock import patch
 
 import pytest
 from pytest_homeassistant.typing import WebSocketGenerator
-from xknx.telegram.address import GroupAddress
+from xknx.telegram.address import GroupAddress, GroupAddressType
 
 from homeassistant.components.knx import async_set_project
 from homeassistant.components.knx.const import KNX_MODULE_KEY
@@ -145,6 +145,20 @@ async def test_new_project_replaces_group_addresses(
     assert "0/0/2" in project.group_addresses
     assert xknx.group_address_dpt.get(GroupAddress("0/0/1")) is None
     assert xknx.group_address_dpt.get(GroupAddress("0/0/2")) is not None
+
+
+async def test_project_without_data(
+    hass: HomeAssistant, knx: KNXTestKit, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Without project data, group addresses are shown in the 3-level format."""
+    # a format left by another project; monkeypatch restores it on teardown
+    monkeypatch.setattr(GroupAddress, "address_format", GroupAddressType.SHORT)
+    await knx.setup_integration()
+    knx_module = hass.data[KNX_MODULE_KEY]
+
+    assert knx_module.project.xknx is knx_module.xknx
+    assert not knx_module.project.loaded
+    assert GroupAddress.address_format is GroupAddressType.LONG
 
 
 @pytest.mark.usefixtures("load_knxproj")
