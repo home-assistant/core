@@ -651,9 +651,9 @@ async def test_service_play_media_failure_availability(
     with pytest.raises(expected_error) as exc_info:
         await hass.services.async_call(
             MP_DOMAIN,
-            SERVICE_PLAY_MEDIA,
+            MediaPlayerService.PLAY_MEDIA,
             {
-                ATTR_ENTITY_ID: ENTITY_ID,
+                TargetKey.ENTITY_ID: ENTITY_ID,
                 "media_content_id": "Abbey Road",
                 "media_content_type": MediaType.MUSIC,
             },
@@ -665,8 +665,8 @@ async def test_service_play_media_failure_availability(
 
     await hass.services.async_call(
         MP_DOMAIN,
-        SERVICE_VOLUME_SET,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_MEDIA_VOLUME_LEVEL: 0.75},
+        MediaPlayerService.VOLUME_SET,
+        {TargetKey.ENTITY_ID: ENTITY_ID, MediaPlayerServiceArgument.VOLUME_LEVEL: 0.75},
         blocking=True,
     )
 
