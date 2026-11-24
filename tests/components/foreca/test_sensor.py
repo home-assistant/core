@@ -4,6 +4,7 @@ from unittest.mock import MagicMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 from pyforeca import (
+    AirQualityForecast,
     CurrentWeather,
     ForecaAuthError,
     ForecaConnectionError,
@@ -39,6 +40,7 @@ from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
 
 from . import init_integration, load_observation
 
+AIR_QUALITY_INDEX = "sensor.helsinki_air_quality_index"
 HOURLY_PRECIPITATION = "sensor.helsinki_observed_hourly_precipitation"
 OBSERVED_TEMPERATURE = "sensor.helsinki_observed_temperature"
 PRECIPITATION_TYPE = "sensor.helsinki_observed_precipitation_type"
@@ -76,6 +78,12 @@ async def test_sensors_disabled_by_default(
         if entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
     }
     assert disabled == {
+        "sensor.helsinki_carbon_monoxide_index",
+        "sensor.helsinki_nitrogen_dioxide_index",
+        "sensor.helsinki_ozone_index",
+        "sensor.helsinki_pm10_index",
+        "sensor.helsinki_pm2_5_index",
+        "sensor.helsinki_sulphur_dioxide_index",
         "sensor.helsinki_observation_time",
         "sensor.helsinki_observed_apparent_temperature",
         "sensor.helsinki_observed_condition",
@@ -91,10 +99,10 @@ async def test_sensors_disabled_by_default(
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 @pytest.mark.parametrize(
-    "observation",
+    ("observation", "air_quality"),
     [
-        pytest.param(None, id="no_station_nearby"),
-        pytest.param(Observation(), id="empty_observation"),
+        pytest.param(None, [], id="no_station_or_air_quality_nearby"),
+        pytest.param(Observation(), [AirQualityForecast()], id="empty_values"),
     ],
 )
 async def test_sensors_without_values(
@@ -102,15 +110,17 @@ async def test_sensors_without_values(
     mock_config_entry: MockConfigEntry,
     mock_foreca_client: MagicMock,
     observation: Observation | None,
+    air_quality: list[AirQualityForecast],
 ) -> None:
     """Test sensors are unknown when the API leaves their value out."""
     mock_foreca_client.current.return_value = CurrentWeather()
     mock_foreca_client.observation_latest.return_value = observation
+    mock_foreca_client.air_quality_hourly.return_value = air_quality
     with patch("homeassistant.components.foreca.PLATFORMS", [Platform.SENSOR]):
         await init_integration(hass, mock_config_entry)
 
     states = hass.states.async_all(Platform.SENSOR)
-    assert len(states) == 17
+    assert len(states) == 25
     assert {state.state for state in states} == {STATE_UNKNOWN}
 
 
@@ -153,64 +163,116 @@ async def test_observed_visibility_in_miles(
     assert float(state.state) == pytest.approx(12.43, abs=0.01)
 
 
-async def test_failed_observation_leaves_other_entities_available(
+def _unavailable(hass: HomeAssistant) -> set[str]:
+    """Return the entities that are unavailable."""
+    return {
+        state.entity_id
+        for state in hass.states.async_all()
+        if state.state == STATE_UNAVAILABLE
+    }
+
+
+@pytest.mark.parametrize(
+    ("method", "unavailable"),
+    [
+        pytest.param(
+            "observation_latest",
+            {
+                "sensor.helsinki_observation_station",
+                HOURLY_PRECIPITATION,
+                "sensor.helsinki_observed_humidity",
+                OBSERVED_TEMPERATURE,
+            },
+            id="observation",
+        ),
+        pytest.param(
+            "air_quality_hourly",
+            {AIR_QUALITY_INDEX, "sensor.helsinki_dominant_pollutant"},
+            id="air_quality",
+        ),
+    ],
+)
+async def test_failed_request_leaves_other_entities_available(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_foreca_client: MagicMock,
     freezer: FrozenDateTimeFactory,
+    method: str,
+    unavailable: set[str],
 ) -> None:
-    """Test a failing observation request makes only its sensors unavailable."""
-    mock_foreca_client.observation_latest.side_effect = ForecaConnectionError("Timeout")
+    """Test a failing station or air quality request makes only its sensors unavailable."""
+    getattr(mock_foreca_client, method).side_effect = ForecaConnectionError("Timeout")
     await init_integration(hass, mock_config_entry)
 
-    assert mock_config_entry.state is ConfigEntryState.LOADED
-    assert hass.states.get(OBSERVED_TEMPERATURE).state == STATE_UNAVAILABLE
-    assert hass.states.get(PRECIPITATION_PROBABILITY).state == "5"
-    assert hass.states.get("weather.helsinki").state == "partlycloudy"
+    assert _unavailable(hass) == unavailable
 
     freezer.tick(UPDATE_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
-    assert hass.states.get(OBSERVED_TEMPERATURE).state == STATE_UNAVAILABLE
-    assert hass.states.get(PRECIPITATION_PROBABILITY).state == "5"
+    assert _unavailable(hass) == unavailable
 
-    mock_foreca_client.observation_latest.side_effect = None
+    getattr(mock_foreca_client, method).side_effect = None
     freezer.tick(UPDATE_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    assert hass.states.get(OBSERVED_TEMPERATURE).state == "5.6"
-    assert mock_foreca_client.observation_latest.await_count == 3
+    assert _unavailable(hass) == set()
+    assert getattr(mock_foreca_client, method).await_count == 3
 
 
-async def test_rejected_key_on_the_station_request_keeps_the_entry_loaded(
+async def test_air_quality_update_error_is_translated(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_foreca_client: MagicMock,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test a failing air quality request logs the translated error."""
+    mock_foreca_client.air_quality_hourly.side_effect = ForecaConnectionError("Timeout")
+    await init_integration(hass, mock_config_entry)
+
+    assert "Error fetching the air quality" in caplog.text
+
+
+@pytest.mark.parametrize(
+    ("method", "entity_id", "value"),
+    [
+        pytest.param(
+            "observation_latest", OBSERVED_TEMPERATURE, "5.6", id="observation"
+        ),
+        pytest.param("air_quality_hourly", AIR_QUALITY_INDEX, "31", id="air_quality"),
+    ],
+)
+async def test_rejected_key_on_a_sensor_request_keeps_the_entry_loaded(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_foreca_client: MagicMock,
     freezer: FrozenDateTimeFactory,
+    method: str,
+    entity_id: str,
+    value: str,
 ) -> None:
-    """Test a key rejected only by the station request leaves the rest running.
+    """Test a key rejected only by a sensor request leaves the rest running.
 
-    The station keeps being polled, so its sensors recover once the API
-    accepts the request again.
+    The request keeps being polled, so its sensors recover once the API
+    accepts it again.
     """
     await init_integration(hass, mock_config_entry)
 
-    mock_foreca_client.observation_latest.side_effect = ForecaAuthError
+    getattr(mock_foreca_client, method).side_effect = ForecaAuthError
     freezer.tick(UPDATE_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
     assert mock_config_entry.state is ConfigEntryState.LOADED
-    assert hass.states.get(OBSERVED_TEMPERATURE).state == STATE_UNAVAILABLE
+    assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
     assert hass.states.get("weather.helsinki").state == "partlycloudy"
 
-    mock_foreca_client.observation_latest.side_effect = None
+    getattr(mock_foreca_client, method).side_effect = None
     freezer.tick(UPDATE_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    assert hass.states.get(OBSERVED_TEMPERATURE).state == "5.6"
+    assert hass.states.get(entity_id).state == value
 
 
 async def test_observations_missing_from_plan_keep_the_entry_loaded(
@@ -226,6 +288,22 @@ async def test_observations_missing_from_plan_keep_the_entry_loaded(
     assert hass.config_entries.flow.async_progress() == []
     assert hass.states.get(OBSERVED_TEMPERATURE).state == STATE_UNAVAILABLE
     assert hass.states.get("weather.helsinki").state == "partlycloudy"
+
+
+async def test_unknown_pollutant(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_foreca_client: MagicMock,
+) -> None:
+    """Test a pollutant name outside the documented set reads as unknown."""
+    mock_foreca_client.air_quality_hourly.return_value = [
+        AirQualityForecast(pollutant="Pollen", aqi=12)
+    ]
+    with patch("homeassistant.components.foreca.PLATFORMS", [Platform.SENSOR]):
+        await init_integration(hass, mock_config_entry)
+
+    assert hass.states.get("sensor.helsinki_dominant_pollutant").state == STATE_UNKNOWN
+    assert hass.states.get(AIR_QUALITY_INDEX).state == "12"
 
 
 async def test_observation_request(

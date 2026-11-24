@@ -11,13 +11,13 @@ from homeassistant.const import (
     CONF_PORT,
     EVENT_HOMEASSISTANT_STOP,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import Event, HomeAssistant
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
 from .const import DATA_ADS, DOMAIN
 from .hub import AdsHub
-from .services import setup_services
+from .services import async_setup_services
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -36,9 +36,9 @@ CONFIG_SCHEMA = probatio.Schema(
 )
 
 
-def setup(hass: HomeAssistant, config: ConfigType) -> bool:
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the ADS component."""
-    setup_services(hass)
+    async_setup_services(hass)
 
     conf = config[DOMAIN]
 
@@ -49,7 +49,7 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     client = pyads.Connection(net_id, port, ip_address)
 
     try:
-        ads = AdsHub(client)
+        ads = await hass.async_add_executor_job(AdsHub, client)
     except pyads.ADSError:
         _LOGGER.error(
             "Could not connect to ADS host (netid=%s, ip=%s, port=%s)",
@@ -60,6 +60,10 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
         return False
 
     hass.data[DATA_ADS] = ads
-    hass.bus.listen(EVENT_HOMEASSISTANT_STOP, ads.shutdown)
+
+    async def _async_shutdown(event: Event) -> None:
+        await hass.async_add_executor_job(ads.shutdown)
+
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _async_shutdown)
 
     return True

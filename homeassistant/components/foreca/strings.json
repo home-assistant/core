@@ -58,6 +58,35 @@
   },
   "entity": {
     "sensor": {
+      "aqi_co": {
+        "name": "Carbon monoxide index"
+      },
+      "aqi_no2": {
+        "name": "Nitrogen dioxide index"
+      },
+      "aqi_o3": {
+        "name": "Ozone index"
+      },
+      "aqi_pm10": {
+        "name": "PM10 index"
+      },
+      "aqi_pm25": {
+        "name": "PM2.5 index"
+      },
+      "aqi_so2": {
+        "name": "Sulphur dioxide index"
+      },
+      "dominant_pollutant": {
+        "name": "Dominant pollutant",
+        "state": {
+          "carbon_monoxide": "[%key:component::sensor::entity_component::carbon_monoxide::name%]",
+          "nitrogen_dioxide": "[%key:component::sensor::entity_component::nitrogen_dioxide::name%]",
+          "ozone": "[%key:component::sensor::entity_component::ozone::name%]",
+          "pm10": "[%key:component::sensor::entity_component::pm10::name%]",
+          "pm25": "[%key:component::sensor::entity_component::pm25::name%]",
+          "sulphur_dioxide": "[%key:component::sensor::entity_component::sulphur_dioxide::name%]"
+        }
+      },
       "observation_station": {
         "name": "Observation station"
       },
@@ -128,6 +157,9 @@
     }
   },
   "exceptions": {
+    "air_quality_update_error": {
+      "message": "Error fetching the air quality."
+    },
     "fifteen_minute_forecast_error": {
       "message": "Error fetching the 15-minute forecast."
     },

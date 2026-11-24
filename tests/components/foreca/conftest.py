@@ -4,6 +4,7 @@ from collections.abc import Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from pyforeca import (
+    AirQualityForecast,
     CurrentWeather,
     DailyForecast,
     FifteenMinuteForecast,
@@ -194,6 +195,22 @@ LOCATION = Location(
 )
 
 
+AIR_QUALITY = AirQualityForecast.from_api(
+    {
+        "time": "2026-11-05T10:00+02:00",
+        "pollutant": "Ozone",
+        "pollutantPhrase": "Ozone",
+        "AQI": 31,
+        "AQI_CO": 1,
+        "AQI_NO2": 3,
+        "AQI_O3": 31,
+        "AQI_SO2": 0,
+        "AQI_PM10": 4,
+        "AQI_PM2P5": 8,
+    }
+)
+
+
 @pytest.fixture
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
@@ -236,6 +253,7 @@ def mock_foreca_client() -> Generator[MagicMock]:
                 "observation_hourly_precipitation_helsinki.json"
             )
         )
+        client.air_quality_hourly = AsyncMock(return_value=[AIR_QUALITY])
         yield client
 
 
