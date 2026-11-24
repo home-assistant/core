@@ -845,7 +845,9 @@ class HomematicipFloorTerminalBlockMechanicChannelValve(
         """Return the floor terminal block valve position."""
         if self._adaption_pending():
             return None
-        return round(self._valve_channel().valvePosition * 100)
+        if (valve_position := self._valve_channel().valvePosition) is None:
+            return None
+        return round(valve_position * 100)
 
     def _valve_channel(self) -> FunctionalChannel:
         return next(
