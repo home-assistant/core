@@ -64,7 +64,7 @@ class HusqvarnaConfigFlowHandler(
                     )
                 return self.async_abort(
                     reason="reauth_successful",
-                    translation_domain=DOMAIN,
+                    translation_domain="homeassistant",
                 )
             return self.async_update_reload_and_abort(reauth_entry, data=data)
 

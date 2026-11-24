@@ -562,7 +562,6 @@
   },
   "issues": {
     "migrate_could_not_auth": {
-      "description": "The integration could not finish loading because its Husqvarna authorization failed during migration. Run this repair to authorize Husqvarna again; Home Assistant will then retry the migration.",
       "fix_flow": {
         "abort": {
           "reauth_started": "Husqvarna reauthentication has been started. The repair remains available until authentication succeeds."
