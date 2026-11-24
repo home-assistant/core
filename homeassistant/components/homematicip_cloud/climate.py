@@ -241,13 +241,7 @@ class HomematicipHeatingGroup(HomematicipGenericEntity, ClimateEntity):
     @override
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
-        if (temperature := kwargs.get(ATTR_TEMPERATURE)) is None:
-            return None
-
-        if self.min_temp <= temperature <= self.max_temp:
-            return await self._device.set_point_temperature_async(temperature)
-
-        return None
+        return await self._device.set_point_temperature_async(kwargs[ATTR_TEMPERATURE])
 
     @handle_errors
     @override

@@ -55,8 +55,6 @@ async def test_hmip_heating_group_heat(
         hass, mock_hap, entity_id, entity_name, device_model
     )
 
-    service_call_counter = len(hmip_device.mock_calls)
-
     assert ha_state.state == HVACMode.AUTO
     assert ha_state.attributes["current_temperature"] == 23.8
     assert ha_state.attributes["min_temp"] == 5.0
@@ -86,7 +84,6 @@ async def test_hmip_heating_group_heat(
     ha_state = hass.states.get(entity_id)
     assert ha_state.attributes[ATTR_CURRENT_TEMPERATURE] == 22.5
 
-    # Temperature is below the minimum.
     # Temperature is below the minimum.
     with pytest.raises(ServiceValidationError):
         await hass.services.async_call(
