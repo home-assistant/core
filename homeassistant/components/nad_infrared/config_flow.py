@@ -4,12 +4,8 @@ from typing import Any, override
 
 import probatio
 
-from homeassistant.components.infrared import (
-    DOMAIN as INFRARED_DOMAIN,
-    async_get_emitters,
-)
-from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
-from homeassistant.helpers.selector import EntitySelector, EntitySelectorConfig
+from homeassistant.components.infrared import InfraredConsumerConfigFlow
+from homeassistant.config_entries import ConfigFlowResult
 
 from .const import (
     CONF_DEVICE_TYPE,
@@ -20,18 +16,18 @@ from .const import (
 )
 
 
-class NadIrConfigFlow(ConfigFlow, domain=DOMAIN):
+class NadIrConfigFlow(InfraredConsumerConfigFlow, domain=DOMAIN):
     """Handle config flow for NAD Infrared."""
 
     VERSION = 1
+    INFRARED_EMITTER_KEY = CONF_INFRARED_ENTITY_ID
 
     @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle device type selection."""
-        if not async_get_emitters(self.hass):
-            return self.async_abort(reason="no_infrared_emitters")
+        self._async_abort_if_no_infrared_emitters()
 
         return self.async_show_menu(
             step_id="user",
@@ -67,20 +63,20 @@ class NadIrConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Select the emitter for a device type and create the entry."""
         if user_input is not None:
+            self._async_abort_infrared_entities_match(
+                user_input, {CONF_DEVICE_TYPE: device_type}
+            )
             data = {CONF_DEVICE_TYPE: device_type, **user_input}
-            self._async_abort_entries_match(data)
-            return self.async_create_entry(title=DEVICE_NAMES[device_type], data=data)
+            return self.async_create_entry(
+                title=await self._async_infrared_entry_title(data), data=data
+            )
 
         return self.async_show_form(
             step_id=device_type.value,
-            data_schema=probatio.Schema(
-                {
-                    probatio.Required(CONF_INFRARED_ENTITY_ID): EntitySelector(
-                        EntitySelectorConfig(
-                            domain=INFRARED_DOMAIN,
-                            include_entities=async_get_emitters(self.hass),
-                        )
-                    ),
-                }
-            ),
+            data_schema=probatio.Schema(self._async_infrared_entity_fields()),
         )
+
+    @override
+    async def _async_infrared_entry_title(self, user_input: dict[str, Any]) -> str:
+        """Return the title of a new entry."""
+        return DEVICE_NAMES[user_input[CONF_DEVICE_TYPE]]
