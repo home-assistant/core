@@ -353,20 +353,51 @@ async def test_write_during_poll_of_other_camera(
     assert hass.states.get(OTHER_ENTITY_ID).state == "80"
 
 
-async def test_removed_cameras_are_forgotten_by_the_audio_tracking(
+async def test_removed_camera_is_logged_again_when_it_returns(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
+    mock_list_cameras: AsyncMock,
+    mock_account_states: AsyncMock,
+    mock_get_audio_settings: AsyncMock,
+    mock_set_audio_settings: AsyncMock,
+    caplog: pytest.LogCaptureFixture,
     freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Test the write counters and unreachable marks of removed cameras are pruned."""
+    """Test a removed camera loses its unreachable mark and is logged anew."""
+    other = Camera(
+        OTHER_ID, "Patio", "HOME_Eyes_Indoor", CameraModel.EYES_INDOOR_II, "9"
+    )
+    both = [*CAMERAS, other]
+    states = {
+        CAMERA_ID: CameraAccountStates(False, None),
+        OTHER_ID: CameraAccountStates(False, None),
+    }
+    mock_list_cameras.return_value = both
+    mock_account_states.return_value = states
     await setup_integration(hass, mock_config_entry)
-    coordinator = mock_config_entry.runtime_data
-    coordinator._audio_unreachable.add("removed")
-    coordinator._audio_writes["removed"] = 3
+    await hass.services.async_call(
+        NUMBER_DOMAIN,
+        SERVICE_SET_VALUE,
+        {ATTR_ENTITY_ID: OTHER_ENTITY_ID, ATTR_VALUE: 5},
+        blocking=True,
+    )
 
-    freezer.tick(SCAN_INTERVAL)
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    async def other_down(
+        session: object, token: object, camera_id: str, **kwargs: object
+    ) -> AudioSettings:
+        if camera_id == OTHER_ID:
+            raise BoschCameraConnectionError("down")
+        return AudioSettings(True, 40, 60, {})
 
-    assert "removed" not in coordinator._audio_unreachable
-    assert "removed" not in coordinator._audio_writes
+    mock_get_audio_settings.side_effect = other_down
+    message = "The audio settings of Patio are unreachable"
+    await _poll(hass, freezer)
+    assert caplog.text.count(message) == 1
+
+    mock_list_cameras.return_value = list(CAMERAS)
+    await _poll(hass, freezer)
+    assert hass.states.get(OTHER_ENTITY_ID) is None
+
+    mock_list_cameras.return_value = both
+    await _poll(hass, freezer)
+    assert caplog.text.count(message) == 2
