@@ -25,7 +25,8 @@ ACTIVE_DATASET = ActiveDataSet(
 )
 
 
-@pytest.mark.usefixtures("otbr_config_entry_thread")
+# The timeout patch must be active before the entry fixture starts discovery
+@pytest.mark.usefixtures("fast_border_agent_discovery", "otbr_config_entry_thread")
 @pytest.mark.parametrize(
     "coprocessor_version_side_effect",
     [

@@ -6,7 +6,6 @@ from typing import TYPE_CHECKING, Final
 import probatio
 
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.deprecation import EnumWithDeprecatedMembers
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.util.hass_dict import HassKey
 
@@ -72,13 +71,7 @@ INTENT_SET_VOLUME_RELATIVE = "HassSetVolumeRelative"
 INTENT_MEDIA_SEARCH_AND_PLAY = "HassMediaSearchAndPlay"
 
 
-class MediaPlayerState(
-    StrEnum,
-    metaclass=EnumWithDeprecatedMembers,
-    deprecated={
-        "STANDBY": ("MediaPlayerState.OFF or MediaPlayerState.IDLE", "2026.8.0"),
-    },
-):
+class MediaPlayerState(StrEnum):
     """State of media player entities."""
 
     OFF = "off"
@@ -86,7 +79,6 @@ class MediaPlayerState(
     IDLE = "idle"
     PLAYING = "playing"
     PAUSED = "paused"
-    STANDBY = "standby"
     BUFFERING = "buffering"
 
 

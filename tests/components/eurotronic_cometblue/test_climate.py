@@ -15,7 +15,6 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.climate import (
     ATTR_CURRENT_TEMPERATURE,
-    ATTR_HVAC_MODE,
     ATTR_PRESET_MODE,
     DOMAIN as CLIMATE_DOMAIN,
     PRESET_AWAY,
@@ -23,16 +22,15 @@ from homeassistant.components.climate import (
     PRESET_COMFORT,
     PRESET_ECO,
     PRESET_NONE,
-    SERVICE_SET_HVAC_MODE,
-    SERVICE_SET_PRESET_MODE,
-    SERVICE_SET_TEMPERATURE,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
+    ClimateService,
+    ClimateServiceArgument,
     HVACMode,
 )
 from homeassistant.components.eurotronic_cometblue.climate import MAX_TEMP, MIN_TEMP
 from homeassistant.components.eurotronic_cometblue.coordinator import SCAN_INTERVAL
-from homeassistant.const import ATTR_ENTITY_ID, ATTR_TEMPERATURE, Platform
+from homeassistant.const import ATTR_ENTITY_ID, ATTR_TEMPERATURE, Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er
@@ -97,8 +95,8 @@ async def test_set_temperature(
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_TEMPERATURE,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_TEMPERATURE: 21.0},
+        ClimateService.SET_TEMPERATURE,
+        {TargetKey.ENTITY_ID: ENTITY_ID, ClimateServiceArgument.TEMPERATURE: 21.0},
         blocking=True,
     )
 
@@ -134,8 +132,8 @@ async def test_climate_preset_away_active(
     ):
         await hass.services.async_call(
             CLIMATE_DOMAIN,
-            SERVICE_SET_TEMPERATURE,
-            {ATTR_ENTITY_ID: ENTITY_ID, ATTR_TEMPERATURE: 21.0},
+            ClimateService.SET_TEMPERATURE,
+            {TargetKey.ENTITY_ID: ENTITY_ID, ClimateServiceArgument.TEMPERATURE: 21.0},
             blocking=True,
         )
 
@@ -160,8 +158,11 @@ async def test_set_preset_mode(
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_PRESET_MODE,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_PRESET_MODE: preset_mode},
+        ClimateService.SET_PRESET_MODE,
+        {
+            TargetKey.ENTITY_ID: ENTITY_ID,
+            ClimateServiceArgument.PRESET_MODE: preset_mode,
+        },
         blocking=True,
     )
     assert (state := hass.states.get(ENTITY_ID))
@@ -190,8 +191,11 @@ async def test_set_preset_mode_display_only_raises(
     with pytest.raises(ServiceValidationError) as err:
         await hass.services.async_call(
             CLIMATE_DOMAIN,
-            SERVICE_SET_PRESET_MODE,
-            {ATTR_ENTITY_ID: ENTITY_ID, ATTR_PRESET_MODE: preset_mode},
+            ClimateService.SET_PRESET_MODE,
+            {
+                TargetKey.ENTITY_ID: ENTITY_ID,
+                ClimateServiceArgument.PRESET_MODE: preset_mode,
+            },
             blocking=True,
         )
     assert err.value.translation_key == exc_translation_key
@@ -217,8 +221,8 @@ async def test_set_hvac_mode(
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_HVAC_MODE,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_HVAC_MODE: hvac_mode},
+        ClimateService.SET_HVAC_MODE,
+        {TargetKey.ENTITY_ID: ENTITY_ID, ClimateServiceArgument.HVAC_MODE: hvac_mode},
         blocking=True,
     )
 
@@ -284,8 +288,8 @@ async def test_set_temperature_errors(
     ):
         await hass.services.async_call(
             CLIMATE_DOMAIN,
-            SERVICE_SET_TEMPERATURE,
-            {ATTR_ENTITY_ID: ENTITY_ID, ATTR_TEMPERATURE: 21.0},
+            ClimateService.SET_TEMPERATURE,
+            {TargetKey.ENTITY_ID: ENTITY_ID, ClimateServiceArgument.TEMPERATURE: 21.0},
             blocking=True,
         )
 

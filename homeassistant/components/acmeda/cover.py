@@ -11,10 +11,10 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import AcmedaConfigEntry
 from .const import ACMEDA_HUB_UPDATE
 from .entity import AcmedaEntity
 from .helpers import async_add_acmeda_entities
+from .hub import AcmedaConfigEntry
 
 
 async def async_setup_entry(

@@ -31,8 +31,9 @@ from homeassistant.const import (
     STATE_ON,
     UnitOfTemperature,
 )
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_validation as cv
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers import config_validation as cv, issue_registry as ir
 from homeassistant.helpers.entity_platform import (
     AddConfigEntryEntitiesCallback,
     AddEntitiesCallback,
@@ -50,6 +51,8 @@ from .const import (
 )
 from .coordinator import VenstarConfigEntry, VenstarDataUpdateCoordinator
 from .entity import VenstarEntity
+
+INTEGRATION_TITLE = "Venstar"
 
 PLATFORM_SCHEMA = CLIMATE_PLATFORM_SCHEMA.extend(
     {
@@ -89,20 +92,54 @@ async def async_setup_platform(
     add_entities: AddEntitiesCallback,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
-    """Set up the Venstar thermostat platform.
-
-    Venstar uses config flow for configuration now. If an entry exists in
-    configuration.yaml, the import flow will attempt to import it and create
-    a config entry.
-    """
-    LOGGER.warning(
-        "Loading venstar via platform config is deprecated; The configuration"
-        " has been migrated to a config entry and can be safely removed"
-    )
-    # Trigger the import flow for this YAML entry; duplicates by host are
-    # aborted in the import step so each configured device is imported.
-    await hass.config_entries.flow.async_init(
+    """Set up the Venstar thermostat platform."""
+    result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_IMPORT}, data=config
+    )
+    if (
+        result["type"] is FlowResultType.ABORT
+        and result["reason"] != "already_configured"
+    ):
+        ir.async_create_issue(
+            hass,
+            DOMAIN,
+            f"deprecated_yaml_import_issue_{result['reason']}",
+            breaks_in_ha_version="2027.6.0",
+            is_fixable=False,
+            issue_domain=DOMAIN,
+            severity=ir.IssueSeverity.WARNING,
+            translation_key=f"deprecated_yaml_import_issue_{result['reason']}",
+            translation_placeholders={
+                "domain": DOMAIN,
+                "integration_title": INTEGRATION_TITLE,
+            },
+        )
+        # The shared issue tells users to remove all YAML, which would drop this one.
+        ir.async_delete_issue(hass, HOMEASSISTANT_DOMAIN, f"deprecated_yaml_{DOMAIN}")
+        return
+
+    # Each thermostat imports on its own, so another one may already have failed.
+    if any(
+        issue.active
+        and issue.domain == DOMAIN
+        and issue.issue_id.startswith("deprecated_yaml_import_issue_")
+        for issue in ir.async_get(hass).issues.values()
+    ):
+        return
+
+    ir.async_create_issue(
+        hass,
+        HOMEASSISTANT_DOMAIN,
+        f"deprecated_yaml_{DOMAIN}",
+        breaks_in_ha_version="2027.6.0",
+        is_fixable=False,
+        issue_domain=DOMAIN,
+        severity=ir.IssueSeverity.WARNING,
+        translation_key="deprecated_yaml",
+        translation_placeholders={
+            "domain": DOMAIN,
+            "integration_title": INTEGRATION_TITLE,
+        },
     )
 
 

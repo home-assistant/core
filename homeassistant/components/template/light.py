@@ -37,6 +37,7 @@ from homeassistant.const import (
     CONF_RGB,
     CONF_STATE,
     CONF_XY,
+    Platform,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
@@ -49,7 +50,7 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import color as color_util
 
 from . import validators as tcv
-from .const import DOMAIN
+from .const import DEFAULT_NAMES, DOMAIN
 from .coordinator import TriggerUpdateCoordinator
 from .entity import AbstractTemplateEntity
 from .helpers import (
@@ -92,7 +93,7 @@ CONF_XY_ACTION = "set_xy"
 DEFAULT_MIN_MIREDS = 153
 DEFAULT_MAX_MIREDS = 500
 
-DEFAULT_NAME = "Template Light"
+DEFAULT_NAME = DEFAULT_NAMES[Platform.LIGHT]
 
 SCRIPT_FIELDS = (
     CONF_EFFECT_ACTION,

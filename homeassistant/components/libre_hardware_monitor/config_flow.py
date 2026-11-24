@@ -16,13 +16,13 @@ import probatio
 from homeassistant.config_entries import (
     SOURCE_REAUTH,
     SOURCE_RECONFIGURE,
-    ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
 )
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNAME
 
 from .const import DEFAULT_HOST, DEFAULT_PORT, DOMAIN
+from .coordinator import LibreHardwareMonitorConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -125,7 +125,7 @@ class LibreHardwareMonitorConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
 
         # we use this step both for initial auth and for re-auth / re-config
-        reauth_entry: ConfigEntry | None = None
+        reauth_entry: LibreHardwareMonitorConfigEntry | None = None
         if self.source == SOURCE_REAUTH:
             reauth_entry = self._get_reauth_entry()
             self._host = reauth_entry.data[CONF_HOST]

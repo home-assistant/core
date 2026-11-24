@@ -10,7 +10,7 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import MusicAssistantConfigEntry
+from . import MusicAssistantConfigEntry, PlatformHandlers
 from .entity import MusicAssistantPlayerOptionEntity
 from .helpers import catch_musicassistant_error
 
@@ -27,13 +27,16 @@ async def async_setup_entry(
 ) -> None:
     """Set up Music Assistant text Entities (Player Options) from Config Entry."""
     mass = entry.runtime_data.mass
+    # player_id -> keys of the player options that got an entity
+    added_option_keys_by_player: dict[str, set[str]] = {}
 
-    def add_player(player_id: str) -> None:
-        """Handle add player."""
+    def add_player_options(player_id: str) -> None:
+        """Add entities for the player options that do not have one yet."""
         player = mass.players.get(player_id)
         if player is None:
             return
         entities: list[MusicAssistantPlayerConfigText] = []
+        added_option_keys = added_option_keys_by_player.setdefault(player_id, set())
         for player_option in player.options:
             if (
                 not player_option.read_only
@@ -41,8 +44,12 @@ async def async_setup_entry(
                 and not player_option.options  # these we map to select
             ):
                 # we ignore entities with unknown translation keys.
-                if player_option.translation_key not in PLAYER_OPTIONS_TEXT:
+                if (
+                    player_option.translation_key not in PLAYER_OPTIONS_TEXT
+                    or player_option.key in added_option_keys
+                ):
                     continue
+                added_option_keys.add(player_option.key)
 
                 entities.append(
                     MusicAssistantPlayerConfigText(
@@ -60,8 +67,18 @@ async def async_setup_entry(
                 )
         async_add_entities(entities)
 
-    # register callback to add players when they are discovered
-    entry.runtime_data.platform_handlers.setdefault(Platform.TEXT, add_player)
+    def remove_player(player_id: str) -> None:
+        """Forget the option keys of a removed player."""
+        added_option_keys_by_player.pop(player_id, None)
+
+    entry.runtime_data.platform_handlers.setdefault(
+        Platform.TEXT,
+        PlatformHandlers(
+            add_player=add_player_options,
+            remove_player=remove_player,
+            update_player_options=add_player_options,
+        ),
+    )
 
 
 class MusicAssistantPlayerConfigText(MusicAssistantPlayerOptionEntity, TextEntity):

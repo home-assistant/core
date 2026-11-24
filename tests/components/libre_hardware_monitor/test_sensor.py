@@ -31,9 +31,11 @@ from homeassistant.components.libre_hardware_monitor.const import (
     DOMAIN,
 )
 from homeassistant.components.libre_hardware_monitor.sensor import (
+    DEVICE_CLASSES,
     MISSING_SENSOR_REMOVAL_UPDATES,
     STATE_MAX_VALUE,
     STATE_MIN_VALUE,
+    TRANSLATION_KEYS,
 )
 from homeassistant.components.sensor import SensorDeviceClass
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
@@ -429,7 +431,7 @@ async def test_sensor_invalid_auth_during_startup(
     await init_integration(hass, mock_config_entry)
 
     assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
-    assert mock_config_entry.reason == "Authentication failed"
+    assert mock_config_entry.error_reason_translation_key == "invalid_auth"
     assert all(state.state == STATE_UNAVAILABLE for state in hass.states.async_all())
 
 
@@ -466,6 +468,15 @@ async def test_sensors_are_updated(
     state = hass.states.get(entity_id)
     assert state
     assert state.state == state_value
+
+
+async def test_all_sensor_types_have_a_translation_key() -> None:
+    """Test that all sensor types have a translation key."""
+    types_with_translation_keys = DEVICE_CLASSES.keys() | TRANSLATION_KEYS.keys()
+
+    for sensor_type in SensorType:
+        if sensor_type not in types_with_translation_keys:
+            raise AssertionError(f"Sensor type {sensor_type} has no translation key")
 
 
 async def test_integration_dynamically_adds_new_devices(

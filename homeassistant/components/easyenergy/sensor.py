@@ -6,7 +6,6 @@ from datetime import datetime, timedelta
 from typing import override
 
 from homeassistant.components.sensor import (
-    DOMAIN as SENSOR_DOMAIN,
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
@@ -234,9 +233,6 @@ class EasyEnergySensorEntity(
         """Initialize easyEnergy sensor."""
         super().__init__(coordinator=coordinator)
         self.entity_description = description
-        self.entity_id = (
-            f"{SENSOR_DOMAIN}.{DOMAIN}_{description.service_type}_{description.key}"
-        )
         self._attr_unique_id = (
             f"{coordinator.config_entry.entry_id}"
             f"_{description.service_type}_{description.key}"

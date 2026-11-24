@@ -13,11 +13,11 @@ from pytest_homeassistant.common import (
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.number import (
-    ATTR_VALUE,
     DOMAIN as NUMBER_DOMAIN,
-    SERVICE_SET_VALUE,
+    NumberService,
+    NumberServiceArgument,
 )
-from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE, Platform
+from homeassistant.const import STATE_UNAVAILABLE, Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -37,9 +37,9 @@ async def test_number(
     entity_id = "number.mock_title_max_output"
     await hass.services.async_call(
         NUMBER_DOMAIN,
-        SERVICE_SET_VALUE,
-        service_data={ATTR_VALUE: 50.1},
-        target={ATTR_ENTITY_ID: entity_id},
+        NumberService.SET_VALUE,
+        service_data={NumberServiceArgument.VALUE: 50.1},
+        target={TargetKey.ENTITY_ID: entity_id},
         blocking=True,
     )
     mock_apsystems.set_max_power.assert_called_once_with(50)
@@ -52,9 +52,9 @@ async def test_number(
     mock_apsystems.get_max_power.side_effect = TimeoutError()
     await hass.services.async_call(
         NUMBER_DOMAIN,
-        SERVICE_SET_VALUE,
-        service_data={ATTR_VALUE: 50.1},
-        target={ATTR_ENTITY_ID: entity_id},
+        NumberService.SET_VALUE,
+        service_data={NumberServiceArgument.VALUE: 50.1},
+        target={TargetKey.ENTITY_ID: entity_id},
         blocking=True,
     )
     await hass.async_block_till_done()

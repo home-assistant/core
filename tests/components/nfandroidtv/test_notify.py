@@ -13,29 +13,18 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components import media_source
 from homeassistant.components.nfandroidtv.const import (
-    ATTR_BGCOLOR,
-    ATTR_DURATION,
-    ATTR_FONTSIZE,
-    ATTR_IMAGE,
-    ATTR_INTERACTIVE,
-    ATTR_POSITION,
-    ATTR_TRANSPARENCY,
     DOMAIN,
+    NFAndroidTVService,
+    NFAndroidTVServiceArgument,
 )
 from homeassistant.components.notify import (
     ATTR_MESSAGE,
-    ATTR_TITLE,
     DOMAIN as NOTIFY_DOMAIN,
-    SERVICE_SEND_MESSAGE,
+    NotifyService,
+    NotifyServiceArgument,
 )
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    ATTR_ICON,
-    CONF_NAME,
-    STATE_UNKNOWN,
-    Platform,
-)
+from homeassistant.const import CONF_NAME, STATE_UNKNOWN, Platform, TargetKey
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er, issue_registry as ir
@@ -75,11 +64,20 @@ async def test_notify_platform(
     await snapshot_platform(hass, entity_registry, snapshot, config_entry.entry_id)
 
 
+@pytest.mark.parametrize(
+    ("message_to_send", "displayed_message"),
+    [
+        ("Hello", "Hello"),
+        ("Hello\nWorld", "Hello<br>World"),
+    ],
+)
 @pytest.mark.freeze_time("1970-01-01T00:00:00+00:00")
 async def test_send_message(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     mock_notifications_android_tv: AsyncMock,
+    message_to_send: str,
+    displayed_message: str,
 ) -> None:
     """Test sending a message."""
 
@@ -95,11 +93,11 @@ async def test_send_message(
 
     await hass.services.async_call(
         NOTIFY_DOMAIN,
-        SERVICE_SEND_MESSAGE,
+        NotifyService.SEND_MESSAGE,
         {
-            ATTR_ENTITY_ID: ENTITY_ID,
-            ATTR_MESSAGE: "Hello",
-            ATTR_TITLE: "World",
+            TargetKey.ENTITY_ID: ENTITY_ID,
+            NotifyServiceArgument.MESSAGE: message_to_send,
+            NotifyServiceArgument.TITLE: "World",
         },
         blocking=True,
     )
@@ -109,7 +107,7 @@ async def test_send_message(
     assert state.state == "1970-01-01T00:00:00+00:00"
 
     mock_notifications_android_tv.send.assert_called_once_with(
-        message="Hello", title="World"
+        message=displayed_message, title="World"
     )
 
 
@@ -131,11 +129,11 @@ async def test_send_message_exception(
     with pytest.raises(HomeAssistantError) as err:
         await hass.services.async_call(
             NOTIFY_DOMAIN,
-            SERVICE_SEND_MESSAGE,
+            NotifyService.SEND_MESSAGE,
             {
-                ATTR_ENTITY_ID: ENTITY_ID,
-                ATTR_MESSAGE: "Hello",
-                ATTR_TITLE: "World",
+                TargetKey.ENTITY_ID: ENTITY_ID,
+                NotifyServiceArgument.MESSAGE: "Hello",
+                NotifyServiceArgument.TITLE: "World",
             },
             blocking=True,
         )
@@ -182,11 +180,20 @@ async def test_legacy_send_message_invalid_data(
     mock_notifications_android_tv.send.assert_not_called()
 
 
+@pytest.mark.parametrize(
+    ("message_to_send", "displayed_message"),
+    [
+        ("Hello", "Hello"),
+        ("Hello\nWorld", "Hello<br>World"),
+    ],
+)
 @pytest.mark.freeze_time("1970-01-01T00:00:00+00:00")
 async def test_nfandroidtv_send_message(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     mock_notifications_android_tv: AsyncMock,
+    message_to_send: str,
+    displayed_message: str,
 ) -> None:
     """Test sending a message via nfandroidtv.send_message action."""
 
@@ -202,23 +209,23 @@ async def test_nfandroidtv_send_message(
 
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_SEND_MESSAGE,
+        NFAndroidTVService.SEND_MESSAGE,
         {
-            ATTR_ENTITY_ID: ENTITY_ID,
-            ATTR_MESSAGE: "Hello",
-            ATTR_TITLE: "World",
-            ATTR_POSITION: "center",
-            ATTR_DURATION: {"seconds": 30},
-            ATTR_INTERACTIVE: True,
-            ATTR_BGCOLOR: "teal",
-            ATTR_FONTSIZE: "large",
-            ATTR_TRANSPARENCY: "75%",
+            TargetKey.ENTITY_ID: ENTITY_ID,
+            NFAndroidTVServiceArgument.MESSAGE: message_to_send,
+            NFAndroidTVServiceArgument.TITLE: "World",
+            NFAndroidTVServiceArgument.POSITION: "center",
+            NFAndroidTVServiceArgument.DURATION: {"seconds": 30},
+            NFAndroidTVServiceArgument.INTERACTIVE: True,
+            NFAndroidTVServiceArgument.BACKGROUND_COLOR: "teal",
+            NFAndroidTVServiceArgument.FONTSIZE: "large",
+            NFAndroidTVServiceArgument.TRANSPARENCY: "75%",
         },
         blocking=True,
     )
 
     mock_notifications_android_tv.send.assert_called_once_with(
-        message="Hello",
+        message=displayed_message,
         title="World",
         position="center",
         fontsize="large",
@@ -258,12 +265,12 @@ async def test_nfandroidtv_send_message_camera_snapshot(
     ):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_SEND_MESSAGE,
+            NFAndroidTVService.SEND_MESSAGE,
             {
-                ATTR_ENTITY_ID: ENTITY_ID,
-                ATTR_MESSAGE: "Hello",
-                ATTR_TITLE: "World",
-                ATTR_IMAGE: {
+                TargetKey.ENTITY_ID: ENTITY_ID,
+                NFAndroidTVServiceArgument.MESSAGE: "Hello",
+                NFAndroidTVServiceArgument.TITLE: "World",
+                NFAndroidTVServiceArgument.IMAGE: {
                     "media_content_id": "media-source://camera/camera.demo_camera",
                     "media_content_type": "image/jpeg",
                 },
@@ -306,12 +313,12 @@ async def test_nfandroidtv_send_message_image_snapshot(
     ) as mock_get_image:
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_SEND_MESSAGE,
+            NFAndroidTVService.SEND_MESSAGE,
             {
-                ATTR_ENTITY_ID: ENTITY_ID,
-                ATTR_MESSAGE: "Hello",
-                ATTR_TITLE: "World",
-                ATTR_ICON: {
+                TargetKey.ENTITY_ID: ENTITY_ID,
+                NFAndroidTVServiceArgument.MESSAGE: "Hello",
+                NFAndroidTVServiceArgument.TITLE: "World",
+                NFAndroidTVServiceArgument.ICON: {
                     "media_content_id": "media-source://image/image.test",
                     "media_content_type": "image/png",
                 },
@@ -349,12 +356,12 @@ async def test_nfandroidtv_send_message_local_media_source(
 
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_SEND_MESSAGE,
+        NFAndroidTVService.SEND_MESSAGE,
         {
-            ATTR_ENTITY_ID: ENTITY_ID,
-            ATTR_MESSAGE: "Hello",
-            ATTR_TITLE: "World",
-            ATTR_ICON: {
+            TargetKey.ENTITY_ID: ENTITY_ID,
+            NFAndroidTVServiceArgument.MESSAGE: "Hello",
+            NFAndroidTVServiceArgument.TITLE: "World",
+            NFAndroidTVServiceArgument.ICON: {
                 "media_content_id": "media-source://media_source/local/screenshot.jpg",
                 "media_content_type": "image/jpeg",
             },
@@ -402,12 +409,12 @@ async def test_nfandroidtv_send_message_unsupported_source(
     ):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_SEND_MESSAGE,
+            NFAndroidTVService.SEND_MESSAGE,
             {
-                ATTR_ENTITY_ID: ENTITY_ID,
-                ATTR_MESSAGE: "Hello",
-                ATTR_TITLE: "World",
-                ATTR_IMAGE: {
+                TargetKey.ENTITY_ID: ENTITY_ID,
+                NFAndroidTVServiceArgument.MESSAGE: "Hello",
+                NFAndroidTVServiceArgument.TITLE: "World",
+                NFAndroidTVServiceArgument.IMAGE: {
                     "media_content_id": "media-source://media_source/local/screenshot.png",
                     "media_content_type": "image/png",
                 },
@@ -446,12 +453,12 @@ async def test_nfandroidtv_send_message_media_not_readable(
     ):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_SEND_MESSAGE,
+            NFAndroidTVService.SEND_MESSAGE,
             {
-                ATTR_ENTITY_ID: ENTITY_ID,
-                ATTR_MESSAGE: "Hello",
-                ATTR_TITLE: "World",
-                ATTR_IMAGE: {
+                TargetKey.ENTITY_ID: ENTITY_ID,
+                NFAndroidTVServiceArgument.MESSAGE: "Hello",
+                NFAndroidTVServiceArgument.TITLE: "World",
+                NFAndroidTVServiceArgument.IMAGE: {
                     "media_content_id": "media-source://media_source/local/screenshot.jpg",
                     "media_content_type": "image/jpeg",
                 },
@@ -492,11 +499,11 @@ async def test_nfandroidtv_send_message_exception(
     with pytest.raises(HomeAssistantError) as err:
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_SEND_MESSAGE,
+            NFAndroidTVService.SEND_MESSAGE,
             {
-                ATTR_ENTITY_ID: ENTITY_ID,
-                ATTR_MESSAGE: "Hello",
-                ATTR_TITLE: "World",
+                TargetKey.ENTITY_ID: ENTITY_ID,
+                NFAndroidTVServiceArgument.MESSAGE: "Hello",
+                NFAndroidTVServiceArgument.TITLE: "World",
             },
             blocking=True,
         )

@@ -98,6 +98,7 @@ PLATFORMS: Final = [
     Platform.CLIMATE,
     Platform.COVER,
     Platform.EVENT,
+    Platform.FAN,
     Platform.INFRARED,
     Platform.LIGHT,
     Platform.MEDIA_PLAYER,

@@ -2,6 +2,7 @@
 
 from dataclasses import asdict
 from datetime import UTC, datetime, time
+from enum import StrEnum
 import logging
 from typing import TYPE_CHECKING, Any, cast
 from uuid import UUID, uuid4
@@ -25,8 +26,6 @@ from habiticalib import (
 )
 import probatio
 
-from homeassistant.components.todo import ATTR_RENAME
-from homeassistant.const import ATTR_DATE, ATTR_NAME
 from homeassistant.core import (
     HomeAssistant,
     ServiceCall,
@@ -39,100 +38,110 @@ from homeassistant.helpers import config_validation as cv, service
 from homeassistant.helpers.selector import ConfigEntrySelector
 from homeassistant.util import dt as dt_util
 
-from .const import (
-    ATTR_ADD_CHECKLIST_ITEM,
-    ATTR_ALIAS,
-    ATTR_CLEAR_DATE,
-    ATTR_CLEAR_REMINDER,
-    ATTR_COLLAPSE_CHECKLIST,
-    ATTR_CONFIG_ENTRY,
-    ATTR_COST,
-    ATTR_COUNTER_DOWN,
-    ATTR_COUNTER_UP,
-    ATTR_DIRECTION,
-    ATTR_FREQUENCY,
-    ATTR_INTERVAL,
-    ATTR_ITEM,
-    ATTR_KEYWORD,
-    ATTR_NOTES,
-    ATTR_PRIORITY,
-    ATTR_REMINDER,
-    ATTR_REMOVE_CHECKLIST_ITEM,
-    ATTR_REMOVE_REMINDER,
-    ATTR_REMOVE_TAG,
-    ATTR_REPEAT,
-    ATTR_REPEAT_MONTHLY,
-    ATTR_SCORE_CHECKLIST_ITEM,
-    ATTR_SKILL,
-    ATTR_START_DATE,
-    ATTR_STREAK,
-    ATTR_TAG,
-    ATTR_TARGET,
-    ATTR_TASK,
-    ATTR_TYPE,
-    ATTR_UNSCORE_CHECKLIST_ITEM,
-    ATTR_UP_DOWN,
-    DOMAIN,
-    SERVICE_ABORT_QUEST,
-    SERVICE_ACCEPT_QUEST,
-    SERVICE_CANCEL_QUEST,
-    SERVICE_CAST_SKILL,
-    SERVICE_CREATE_DAILY,
-    SERVICE_CREATE_HABIT,
-    SERVICE_CREATE_REWARD,
-    SERVICE_CREATE_TODO,
-    SERVICE_GET_TASKS,
-    SERVICE_LEAVE_QUEST,
-    SERVICE_REJECT_QUEST,
-    SERVICE_SCORE_HABIT,
-    SERVICE_SCORE_REWARD,
-    SERVICE_START_QUEST,
-    SERVICE_TRANSFORMATION,
-    SERVICE_UPDATE_DAILY,
-    SERVICE_UPDATE_HABIT,
-    SERVICE_UPDATE_REWARD,
-    SERVICE_UPDATE_TODO,
-    WEEK_DAYS,
-)
+from .const import DOMAIN, WEEK_DAYS
 from .coordinator import HabiticaConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
 
+class HabiticaService(StrEnum):
+    """Store keys for Habitica services."""
+
+    CAST_SKILL = "cast_skill"
+    ACCEPT_QUEST = "accept_quest"
+    REJECT_QUEST = "reject_quest"
+    START_QUEST = "start_quest"
+    CANCEL_QUEST = "cancel_quest"
+    ABORT_QUEST = "abort_quest"
+    LEAVE_QUEST = "leave_quest"
+    SCORE_HABIT = "score_habit"
+    SCORE_REWARD = "score_reward"
+    TRANSFORMATION = "transformation"
+    GET_TASKS = "get_tasks"
+    UPDATE_REWARD = "update_reward"
+    CREATE_REWARD = "create_reward"
+    UPDATE_HABIT = "update_habit"
+    CREATE_HABIT = "create_habit"
+    UPDATE_TODO = "update_todo"
+    CREATE_TODO = "create_todo"
+    UPDATE_DAILY = "update_daily"
+    CREATE_DAILY = "create_daily"
+
+
+class HabiticaServiceArgument(StrEnum):
+    """Store keys for Habitica service arguments."""
+
+    CONFIG_ENTRY = "config_entry"
+    SKILL = "skill"
+    TASK = "task"
+    DIRECTION = "direction"
+    ITEM = "item"
+    TARGET = "target"
+    TYPE = "type"
+    PRIORITY = "priority"
+    TAG = "tag"
+    KEYWORD = "keyword"
+    RENAME = "rename"
+    NOTES = "notes"
+    COST = "cost"
+    REMOVE_TAG = "remove_tag"
+    ALIAS = "alias"
+    NAME = "name"
+    UP_DOWN = "up_down"
+    FREQUENCY = "frequency"
+    COUNTER_UP = "counter_up"
+    COUNTER_DOWN = "counter_down"
+    ADD_CHECKLIST_ITEM = "add_checklist_item"
+    REMOVE_CHECKLIST_ITEM = "remove_checklist_item"
+    SCORE_CHECKLIST_ITEM = "score_checklist_item"
+    UNSCORE_CHECKLIST_ITEM = "unscore_checklist_item"
+    COLLAPSE_CHECKLIST = "collapse_checklist"
+    DATE = "date"
+    CLEAR_DATE = "clear_date"
+    REMINDER = "reminder"
+    REMOVE_REMINDER = "remove_reminder"
+    CLEAR_REMINDER = "clear_reminder"
+    START_DATE = "start_date"
+    EVERY_X = "every_x"
+    REPEAT = "repeat"
+    REPEAT_MONTHLY = "repeat_monthly"
+    STREAK = "streak"
+
+
 SERVICE_CAST_SKILL_SCHEMA = probatio.Schema(
     {
-        probatio.Required(ATTR_CONFIG_ENTRY): ConfigEntrySelector(
+        probatio.Required(HabiticaServiceArgument.CONFIG_ENTRY): ConfigEntrySelector(
             {"integration": DOMAIN}
         ),
-        probatio.Required(ATTR_SKILL): cv.string,
-        probatio.Optional(ATTR_TASK): cv.string,
+        probatio.Required(HabiticaServiceArgument.SKILL): cv.string,
+        probatio.Optional(HabiticaServiceArgument.TASK): cv.string,
     }
 )
 
 SERVICE_MANAGE_QUEST_SCHEMA = probatio.Schema(
     {
-        probatio.Required(ATTR_CONFIG_ENTRY): ConfigEntrySelector(
+        probatio.Required(HabiticaServiceArgument.CONFIG_ENTRY): ConfigEntrySelector(
             {"integration": DOMAIN}
         ),
     }
 )
 SERVICE_SCORE_TASK_SCHEMA = probatio.Schema(
     {
-        probatio.Required(ATTR_CONFIG_ENTRY): ConfigEntrySelector(
+        probatio.Required(HabiticaServiceArgument.CONFIG_ENTRY): ConfigEntrySelector(
             {"integration": DOMAIN}
         ),
-        probatio.Required(ATTR_TASK): cv.string,
-        probatio.Optional(ATTR_DIRECTION): cv.string,
+        probatio.Required(HabiticaServiceArgument.TASK): cv.string,
+        probatio.Optional(HabiticaServiceArgument.DIRECTION): cv.string,
     }
 )
 
 SERVICE_TRANSFORMATION_SCHEMA = probatio.Schema(
     {
-        probatio.Required(ATTR_CONFIG_ENTRY): ConfigEntrySelector(
+        probatio.Required(HabiticaServiceArgument.CONFIG_ENTRY): ConfigEntrySelector(
             {"integration": DOMAIN}
         ),
-        probatio.Required(ATTR_ITEM): cv.string,
-        probatio.Required(ATTR_TARGET): cv.string,
+        probatio.Required(HabiticaServiceArgument.ITEM): cv.string,
+        probatio.Required(HabiticaServiceArgument.TARGET): cv.string,
     }
 )
 
@@ -143,73 +152,93 @@ COLLAPSE_CHECKLIST_MAP = {
 
 BASE_TASK_SCHEMA = probatio.Schema(
     {
-        probatio.Required(ATTR_CONFIG_ENTRY): ConfigEntrySelector(),
-        probatio.Optional(ATTR_RENAME): cv.string,
-        probatio.Optional(ATTR_NOTES): cv.string,
-        probatio.Optional(ATTR_TAG): probatio.All(probatio.EnsureList(), [str]),
-        probatio.Optional(ATTR_ALIAS): probatio.All(
+        probatio.Required(HabiticaServiceArgument.CONFIG_ENTRY): ConfigEntrySelector(),
+        probatio.Optional(HabiticaServiceArgument.RENAME): cv.string,
+        probatio.Optional(HabiticaServiceArgument.NOTES): cv.string,
+        probatio.Optional(HabiticaServiceArgument.TAG): probatio.All(
+            probatio.EnsureList(), [str]
+        ),
+        probatio.Optional(HabiticaServiceArgument.ALIAS): probatio.All(
             cv.string, cv.matches_regex("^[a-zA-Z0-9-_]*$")
         ),
-        probatio.Optional(ATTR_COST): probatio.All(
+        probatio.Optional(HabiticaServiceArgument.COST): probatio.All(
             probatio.Coerce(float), probatio.Range(0)
         ),
-        probatio.Optional(ATTR_PRIORITY): probatio.All(
+        probatio.Optional(HabiticaServiceArgument.PRIORITY): probatio.All(
             probatio.Upper, probatio.In(TaskPriority._member_names_)
         ),
-        probatio.Optional(ATTR_UP_DOWN): probatio.All(probatio.EnsureList(), [str]),
-        probatio.Optional(ATTR_COUNTER_UP): probatio.All(int, probatio.Range(0)),
-        probatio.Optional(ATTR_COUNTER_DOWN): probatio.All(int, probatio.Range(0)),
-        probatio.Optional(ATTR_FREQUENCY): probatio.Coerce(Frequency),
-        probatio.Optional(ATTR_DATE): cv.date,
-        probatio.Optional(ATTR_CLEAR_DATE): cv.boolean,
-        probatio.Optional(ATTR_REMINDER): probatio.All(
+        probatio.Optional(HabiticaServiceArgument.UP_DOWN): probatio.All(
+            probatio.EnsureList(), [str]
+        ),
+        probatio.Optional(HabiticaServiceArgument.COUNTER_UP): probatio.All(
+            int, probatio.Range(0)
+        ),
+        probatio.Optional(HabiticaServiceArgument.COUNTER_DOWN): probatio.All(
+            int, probatio.Range(0)
+        ),
+        probatio.Optional(HabiticaServiceArgument.FREQUENCY): probatio.Coerce(
+            Frequency
+        ),
+        probatio.Optional(HabiticaServiceArgument.DATE): cv.date,
+        probatio.Optional(HabiticaServiceArgument.CLEAR_DATE): cv.boolean,
+        probatio.Optional(HabiticaServiceArgument.REMINDER): probatio.All(
             probatio.EnsureList(), [probatio.Any(cv.datetime, cv.time)]
         ),
-        probatio.Optional(ATTR_REMOVE_REMINDER): probatio.All(
+        probatio.Optional(HabiticaServiceArgument.REMOVE_REMINDER): probatio.All(
             probatio.EnsureList(), [probatio.Any(cv.datetime, cv.time)]
         ),
-        probatio.Optional(ATTR_CLEAR_REMINDER): cv.boolean,
-        probatio.Optional(ATTR_ADD_CHECKLIST_ITEM): probatio.All(
+        probatio.Optional(HabiticaServiceArgument.CLEAR_REMINDER): cv.boolean,
+        probatio.Optional(HabiticaServiceArgument.ADD_CHECKLIST_ITEM): probatio.All(
             probatio.EnsureList(), [str]
         ),
-        probatio.Optional(ATTR_REMOVE_CHECKLIST_ITEM): probatio.All(
+        probatio.Optional(HabiticaServiceArgument.REMOVE_CHECKLIST_ITEM): probatio.All(
             probatio.EnsureList(), [str]
         ),
-        probatio.Optional(ATTR_SCORE_CHECKLIST_ITEM): probatio.All(
+        probatio.Optional(HabiticaServiceArgument.SCORE_CHECKLIST_ITEM): probatio.All(
             probatio.EnsureList(), [str]
         ),
-        probatio.Optional(ATTR_UNSCORE_CHECKLIST_ITEM): probatio.All(
+        probatio.Optional(HabiticaServiceArgument.UNSCORE_CHECKLIST_ITEM): probatio.All(
             probatio.EnsureList(), [str]
         ),
-        probatio.Optional(ATTR_COLLAPSE_CHECKLIST): probatio.In(COLLAPSE_CHECKLIST_MAP),
-        probatio.Optional(ATTR_START_DATE): cv.date,
-        probatio.Optional(ATTR_INTERVAL): probatio.All(int, probatio.Range(0)),
-        probatio.Optional(ATTR_REPEAT): probatio.All(
+        probatio.Optional(HabiticaServiceArgument.COLLAPSE_CHECKLIST): probatio.In(
+            COLLAPSE_CHECKLIST_MAP
+        ),
+        probatio.Optional(HabiticaServiceArgument.START_DATE): cv.date,
+        probatio.Optional(HabiticaServiceArgument.EVERY_X): probatio.All(
+            int, probatio.Range(0)
+        ),
+        probatio.Optional(HabiticaServiceArgument.REPEAT): probatio.All(
             probatio.EnsureList(), [probatio.In(WEEK_DAYS)]
         ),
-        probatio.Optional(ATTR_REPEAT_MONTHLY): probatio.All(
+        probatio.Optional(HabiticaServiceArgument.REPEAT_MONTHLY): probatio.All(
             cv.string, probatio.In({"day_of_month", "day_of_week"})
         ),
-        probatio.Optional(ATTR_STREAK): probatio.All(int, probatio.Range(0)),
+        probatio.Optional(HabiticaServiceArgument.STREAK): probatio.All(
+            int, probatio.Range(0)
+        ),
     }
 )
 
 SERVICE_UPDATE_TASK_SCHEMA = BASE_TASK_SCHEMA.extend(
     {
-        probatio.Required(ATTR_TASK): cv.string,
-        probatio.Optional(ATTR_REMOVE_TAG): probatio.All(probatio.EnsureList(), [str]),
+        probatio.Required(HabiticaServiceArgument.TASK): cv.string,
+        probatio.Optional(HabiticaServiceArgument.REMOVE_TAG): probatio.All(
+            probatio.EnsureList(), [str]
+        ),
     }
 )
 
 SERVICE_CREATE_TASK_SCHEMA = BASE_TASK_SCHEMA.extend(
     {
-        probatio.Required(ATTR_NAME): cv.string,
+        probatio.Required(HabiticaServiceArgument.NAME): cv.string,
     }
 )
 
 SERVICE_DAILY_SCHEMA = {
-    probatio.Optional(ATTR_REMINDER): probatio.All(probatio.EnsureList(), [cv.time]),
-    probatio.Optional(ATTR_REMOVE_REMINDER): probatio.All(
+    probatio.Optional(HabiticaServiceArgument.REMINDER): probatio.All(
+        probatio.EnsureList(), [cv.time]
+    ),
+    probatio.Optional(HabiticaServiceArgument.REMOVE_REMINDER): probatio.All(
         probatio.EnsureList(), [cv.time]
     ),
 }
@@ -217,20 +246,24 @@ SERVICE_DAILY_SCHEMA = {
 
 SERVICE_GET_TASKS_SCHEMA = probatio.Schema(
     {
-        probatio.Required(ATTR_CONFIG_ENTRY): ConfigEntrySelector(
+        probatio.Required(HabiticaServiceArgument.CONFIG_ENTRY): ConfigEntrySelector(
             {"integration": DOMAIN}
         ),
-        probatio.Optional(ATTR_TYPE): probatio.All(
+        probatio.Optional(HabiticaServiceArgument.TYPE): probatio.All(
             probatio.EnsureList(),
             [probatio.All(probatio.Upper, probatio.In({x.name for x in TaskType}))],
         ),
-        probatio.Optional(ATTR_PRIORITY): probatio.All(
+        probatio.Optional(HabiticaServiceArgument.PRIORITY): probatio.All(
             probatio.EnsureList(),
             [probatio.All(probatio.Upper, probatio.In({x.name for x in TaskPriority}))],
         ),
-        probatio.Optional(ATTR_TASK): probatio.All(probatio.EnsureList(), [str]),
-        probatio.Optional(ATTR_TAG): probatio.All(probatio.EnsureList(), [str]),
-        probatio.Optional(ATTR_KEYWORD): cv.string,
+        probatio.Optional(HabiticaServiceArgument.TASK): probatio.All(
+            probatio.EnsureList(), [str]
+        ),
+        probatio.Optional(HabiticaServiceArgument.TAG): probatio.All(
+            probatio.EnsureList(), [str]
+        ),
+        probatio.Optional(HabiticaServiceArgument.KEYWORD): cv.string,
     }
 )
 
@@ -255,38 +288,41 @@ ITEMID_MAP = {
 
 
 SERVICE_TASK_TYPE_MAP = {
-    SERVICE_UPDATE_REWARD: TaskType.REWARD,
-    SERVICE_CREATE_REWARD: TaskType.REWARD,
-    SERVICE_UPDATE_HABIT: TaskType.HABIT,
-    SERVICE_CREATE_HABIT: TaskType.HABIT,
-    SERVICE_UPDATE_TODO: TaskType.TODO,
-    SERVICE_CREATE_TODO: TaskType.TODO,
-    SERVICE_UPDATE_DAILY: TaskType.DAILY,
-    SERVICE_CREATE_DAILY: TaskType.DAILY,
+    HabiticaService.UPDATE_REWARD: TaskType.REWARD,
+    HabiticaService.CREATE_REWARD: TaskType.REWARD,
+    HabiticaService.UPDATE_HABIT: TaskType.HABIT,
+    HabiticaService.CREATE_HABIT: TaskType.HABIT,
+    HabiticaService.UPDATE_TODO: TaskType.TODO,
+    HabiticaService.CREATE_TODO: TaskType.TODO,
+    HabiticaService.UPDATE_DAILY: TaskType.DAILY,
+    HabiticaService.CREATE_DAILY: TaskType.DAILY,
 }
 
 
 async def _cast_skill(call: ServiceCall) -> ServiceResponse:
     """Skill action."""
     entry: HabiticaConfigEntry = service.async_get_config_entry(
-        call.hass, DOMAIN, call.data[ATTR_CONFIG_ENTRY]
+        call.hass, DOMAIN, call.data[HabiticaServiceArgument.CONFIG_ENTRY]
     )
     coordinator = entry.runtime_data
 
-    skill = SKILL_MAP[call.data[ATTR_SKILL]]
-    cost = COST_MAP[call.data[ATTR_SKILL]]
+    skill = SKILL_MAP[call.data[HabiticaServiceArgument.SKILL]]
+    cost = COST_MAP[call.data[HabiticaServiceArgument.SKILL]]
 
     try:
         task_id = next(
             task.id
             for task in coordinator.data.tasks
-            if call.data[ATTR_TASK] in (str(task.id), task.alias, task.text)
+            if call.data[HabiticaServiceArgument.TASK]
+            in (str(task.id), task.alias, task.text)
         )
     except StopIteration as e:
         raise ServiceValidationError(
             translation_domain=DOMAIN,
             translation_key="task_not_found",
-            translation_placeholders={"task": f"'{call.data[ATTR_TASK]}'"},
+            translation_placeholders={
+                "task": f"'{call.data[HabiticaServiceArgument.TASK]}'"
+            },
         ) from e
 
     try:
@@ -313,7 +349,9 @@ async def _cast_skill(call: ServiceCall) -> ServiceResponse:
         raise ServiceValidationError(
             translation_domain=DOMAIN,
             translation_key="skill_not_found",
-            translation_placeholders={"skill": call.data[ATTR_SKILL]},
+            translation_placeholders={
+                "skill": call.data[HabiticaServiceArgument.SKILL]
+            },
         ) from e
     except HabiticaException as e:
         raise HomeAssistantError(
@@ -335,20 +373,20 @@ async def _cast_skill(call: ServiceCall) -> ServiceResponse:
 async def _manage_quests(call: ServiceCall) -> ServiceResponse:
     """Accept, reject, start, leave or cancel quests."""
     entry: HabiticaConfigEntry = service.async_get_config_entry(
-        call.hass, DOMAIN, call.data[ATTR_CONFIG_ENTRY]
+        call.hass, DOMAIN, call.data[HabiticaServiceArgument.CONFIG_ENTRY]
     )
     coordinator = entry.runtime_data
 
     func_map = {
-        SERVICE_ABORT_QUEST: coordinator.habitica.abort_quest,
-        SERVICE_ACCEPT_QUEST: coordinator.habitica.accept_quest,
-        SERVICE_CANCEL_QUEST: coordinator.habitica.cancel_quest,
-        SERVICE_LEAVE_QUEST: coordinator.habitica.leave_quest,
-        SERVICE_REJECT_QUEST: coordinator.habitica.reject_quest,
-        SERVICE_START_QUEST: coordinator.habitica.start_quest,
+        HabiticaService.ABORT_QUEST: coordinator.habitica.abort_quest,
+        HabiticaService.ACCEPT_QUEST: coordinator.habitica.accept_quest,
+        HabiticaService.CANCEL_QUEST: coordinator.habitica.cancel_quest,
+        HabiticaService.LEAVE_QUEST: coordinator.habitica.leave_quest,
+        HabiticaService.REJECT_QUEST: coordinator.habitica.reject_quest,
+        HabiticaService.START_QUEST: coordinator.habitica.start_quest,
     }
 
-    func = func_map[call.service]
+    func = func_map[HabiticaService(call.service)]
 
     try:
         response = await func()
@@ -385,24 +423,29 @@ async def _manage_quests(call: ServiceCall) -> ServiceResponse:
 async def _score_task(call: ServiceCall) -> ServiceResponse:
     """Score a task action."""
     entry: HabiticaConfigEntry = service.async_get_config_entry(
-        call.hass, DOMAIN, call.data[ATTR_CONFIG_ENTRY]
+        call.hass, DOMAIN, call.data[HabiticaServiceArgument.CONFIG_ENTRY]
     )
     coordinator = entry.runtime_data
 
     direction = (
-        Direction.DOWN if call.data.get(ATTR_DIRECTION) == "down" else Direction.UP
+        Direction.DOWN
+        if call.data.get(HabiticaServiceArgument.DIRECTION) == "down"
+        else Direction.UP
     )
     try:
         task_id, task_value = next(
             (task.id, task.value)
             for task in coordinator.data.tasks
-            if call.data[ATTR_TASK] in (str(task.id), task.alias, task.text)
+            if call.data[HabiticaServiceArgument.TASK]
+            in (str(task.id), task.alias, task.text)
         )
     except StopIteration as e:
         raise ServiceValidationError(
             translation_domain=DOMAIN,
             translation_key="task_not_found",
-            translation_placeholders={"task": f"'{call.data[ATTR_TASK]}'"},
+            translation_placeholders={
+                "task": f"'{call.data[HabiticaServiceArgument.TASK]}'"
+            },
         ) from e
 
     if TYPE_CHECKING:
@@ -451,13 +494,13 @@ async def _transformation(call: ServiceCall) -> ServiceResponse:
     """User a transformation item on a player character."""
 
     entry: HabiticaConfigEntry = service.async_get_config_entry(
-        call.hass, DOMAIN, call.data[ATTR_CONFIG_ENTRY]
+        call.hass, DOMAIN, call.data[HabiticaServiceArgument.CONFIG_ENTRY]
     )
     coordinator = entry.runtime_data
 
-    item = ITEMID_MAP[call.data[ATTR_ITEM]]
+    item = ITEMID_MAP[call.data[HabiticaServiceArgument.ITEM]]
     # check if target is self
-    if call.data[ATTR_TARGET] in (
+    if call.data[HabiticaServiceArgument.TARGET] in (
         str(coordinator.data.user.id),
         coordinator.data.user.profile.name,
         coordinator.data.user.auth.local.username,
@@ -489,7 +532,7 @@ async def _transformation(call: ServiceCall) -> ServiceResponse:
                 member.id
                 for member in party.data
                 if member.id
-                and call.data[ATTR_TARGET].lower()
+                and call.data[HabiticaServiceArgument.TARGET].lower()
                 in (
                     str(member.id),
                     str(member.auth.local.username).lower(),
@@ -500,7 +543,9 @@ async def _transformation(call: ServiceCall) -> ServiceResponse:
             raise ServiceValidationError(
                 translation_domain=DOMAIN,
                 translation_key="target_not_found",
-                translation_placeholders={"target": f"'{call.data[ATTR_TARGET]}'"},
+                translation_placeholders={
+                    "target": f"'{call.data[HabiticaServiceArgument.TARGET]}'"
+                },
             ) from e
     try:
         response = await coordinator.habitica.cast_skill(item, target_id)
@@ -514,7 +559,7 @@ async def _transformation(call: ServiceCall) -> ServiceResponse:
         raise ServiceValidationError(
             translation_domain=DOMAIN,
             translation_key="item_not_found",
-            translation_placeholders={"item": call.data[ATTR_ITEM]},
+            translation_placeholders={"item": call.data[HabiticaServiceArgument.ITEM]},
         ) from e
     except HabiticaException as e:
         raise HomeAssistantError(
@@ -536,25 +581,27 @@ async def _get_tasks(call: ServiceCall) -> ServiceResponse:
     """Get tasks action."""
 
     entry: HabiticaConfigEntry = service.async_get_config_entry(
-        call.hass, DOMAIN, call.data[ATTR_CONFIG_ENTRY]
+        call.hass, DOMAIN, call.data[HabiticaServiceArgument.CONFIG_ENTRY]
     )
     coordinator = entry.runtime_data
     response: list[TaskData] = coordinator.data.tasks
 
-    if types := {TaskType[x] for x in call.data.get(ATTR_TYPE, [])}:
+    if types := {TaskType[x] for x in call.data.get(HabiticaServiceArgument.TYPE, [])}:
         response = [task for task in response if task.Type in types]
 
-    if priority := {TaskPriority[x] for x in call.data.get(ATTR_PRIORITY, [])}:
+    if priority := {
+        TaskPriority[x] for x in call.data.get(HabiticaServiceArgument.PRIORITY, [])
+    }:
         response = [task for task in response if task.priority in priority]
 
-    if tasks := call.data.get(ATTR_TASK):
+    if tasks := call.data.get(HabiticaServiceArgument.TASK):
         response = [
             task
             for task in response
             if str(task.id) in tasks or task.alias in tasks or task.text in tasks
         ]
 
-    if tags := call.data.get(ATTR_TAG):
+    if tags := call.data.get(HabiticaServiceArgument.TAG):
         tag_ids = {
             tag.id
             for tag in coordinator.data.user.tags
@@ -568,7 +615,7 @@ async def _get_tasks(call: ServiceCall) -> ServiceResponse:
             for task in response
             if any(tag_id in task.tags for tag_id in tag_ids if task.tags)
         ]
-    if keyword := call.data.get(ATTR_KEYWORD):
+    if keyword := call.data.get(HabiticaServiceArgument.KEYWORD):
         keyword = keyword.lower()
         response = [
             task
@@ -587,17 +634,17 @@ async def _get_tasks(call: ServiceCall) -> ServiceResponse:
 async def _create_or_update_task(call: ServiceCall) -> ServiceResponse:  # noqa: C901
     """Create or update task action."""
     entry: HabiticaConfigEntry = service.async_get_config_entry(
-        call.hass, DOMAIN, call.data[ATTR_CONFIG_ENTRY]
+        call.hass, DOMAIN, call.data[HabiticaServiceArgument.CONFIG_ENTRY]
     )
     coordinator = entry.runtime_data
     await coordinator.async_refresh()
     is_update = call.service in (
-        SERVICE_UPDATE_HABIT,
-        SERVICE_UPDATE_REWARD,
-        SERVICE_UPDATE_TODO,
-        SERVICE_UPDATE_DAILY,
+        HabiticaService.UPDATE_HABIT,
+        HabiticaService.UPDATE_REWARD,
+        HabiticaService.UPDATE_TODO,
+        HabiticaService.UPDATE_DAILY,
     )
-    task_type = SERVICE_TASK_TYPE_MAP[call.service]
+    task_type = SERVICE_TASK_TYPE_MAP[HabiticaService(call.service)]
     current_task = None
 
     if is_update:
@@ -605,14 +652,17 @@ async def _create_or_update_task(call: ServiceCall) -> ServiceResponse:  # noqa:
             current_task = next(
                 task
                 for task in coordinator.data.tasks
-                if call.data[ATTR_TASK] in (str(task.id), task.alias, task.text)
+                if call.data[HabiticaServiceArgument.TASK]
+                in (str(task.id), task.alias, task.text)
                 and task.Type is task_type
             )
         except StopIteration as e:
             raise ServiceValidationError(
                 translation_domain=DOMAIN,
                 translation_key="task_not_found",
-                translation_placeholders={"task": f"'{call.data[ATTR_TASK]}'"},
+                translation_placeholders={
+                    "task": f"'{call.data[HabiticaServiceArgument.TASK]}'"
+                },
             ) from e
 
     data = Task()
@@ -620,14 +670,16 @@ async def _create_or_update_task(call: ServiceCall) -> ServiceResponse:  # noqa:
     if not is_update:
         data["type"] = task_type
 
-    if (text := call.data.get(ATTR_RENAME)) or (text := call.data.get(ATTR_NAME)):
+    if (text := call.data.get(HabiticaServiceArgument.RENAME)) or (
+        text := call.data.get(HabiticaServiceArgument.NAME)
+    ):
         data["text"] = text
 
-    if (notes := call.data.get(ATTR_NOTES)) is not None:
+    if (notes := call.data.get(HabiticaServiceArgument.NOTES)) is not None:
         data["notes"] = notes
 
-    tags = cast(list[str], call.data.get(ATTR_TAG))
-    remove_tags = cast(list[str], call.data.get(ATTR_REMOVE_TAG))
+    tags = cast(list[str], call.data.get(HabiticaServiceArgument.TAG))
+    remove_tags = cast(list[str], call.data.get(HabiticaServiceArgument.REMOVE_TAG))
 
     if tags or remove_tags:
         update_tags = set(current_task.tags) if current_task else set()
@@ -682,55 +734,61 @@ async def _create_or_update_task(call: ServiceCall) -> ServiceResponse:  # noqa:
 
         data["tags"] = list(update_tags)
 
-    if (alias := call.data.get(ATTR_ALIAS)) is not None:
+    if (alias := call.data.get(HabiticaServiceArgument.ALIAS)) is not None:
         data["alias"] = alias
 
-    if (cost := call.data.get(ATTR_COST)) is not None:
+    if (cost := call.data.get(HabiticaServiceArgument.COST)) is not None:
         data["value"] = cost
 
-    if priority := call.data.get(ATTR_PRIORITY):
+    if priority := call.data.get(HabiticaServiceArgument.PRIORITY):
         data["priority"] = TaskPriority[priority]
 
-    if frequency := call.data.get(ATTR_FREQUENCY):
+    if frequency := call.data.get(HabiticaServiceArgument.FREQUENCY):
         data["frequency"] = frequency
     else:
         frequency = current_task.frequency if current_task else Frequency.WEEKLY
 
-    if up_down := call.data.get(ATTR_UP_DOWN):
+    if up_down := call.data.get(HabiticaServiceArgument.UP_DOWN):
         data["up"] = "up" in up_down
         data["down"] = "down" in up_down
 
-    if counter_up := call.data.get(ATTR_COUNTER_UP):
+    if counter_up := call.data.get(HabiticaServiceArgument.COUNTER_UP):
         data["counterUp"] = counter_up
 
-    if counter_down := call.data.get(ATTR_COUNTER_DOWN):
+    if counter_down := call.data.get(HabiticaServiceArgument.COUNTER_DOWN):
         data["counterDown"] = counter_down
 
-    if due_date := call.data.get(ATTR_DATE):
+    if due_date := call.data.get(HabiticaServiceArgument.DATE):
         data["date"] = datetime.combine(due_date, time())
 
-    if call.data.get(ATTR_CLEAR_DATE):
+    if call.data.get(HabiticaServiceArgument.CLEAR_DATE):
         data["date"] = None
 
     checklist = current_task.checklist if current_task else []
 
-    if add_checklist_item := call.data.get(ATTR_ADD_CHECKLIST_ITEM):
+    if add_checklist_item := call.data.get(HabiticaServiceArgument.ADD_CHECKLIST_ITEM):
         checklist.extend(
             Checklist(completed=False, id=uuid4(), text=item)
             for item in add_checklist_item
             if not any(i.text == item for i in checklist)
         )
-    if remove_checklist_item := call.data.get(ATTR_REMOVE_CHECKLIST_ITEM):
+    if remove_checklist_item := call.data.get(
+        HabiticaServiceArgument.REMOVE_CHECKLIST_ITEM
+    ):
         checklist = [
             item for item in checklist if item.text not in remove_checklist_item
         ]
 
-    if score_checklist_item := call.data.get(ATTR_SCORE_CHECKLIST_ITEM):
+    if score_checklist_item := call.data.get(
+        HabiticaServiceArgument.SCORE_CHECKLIST_ITEM
+    ):
         for item in checklist:
             if item.text in score_checklist_item:
                 item.completed = True
 
-    if unscore_checklist_item := call.data.get(ATTR_UNSCORE_CHECKLIST_ITEM):
+    if unscore_checklist_item := call.data.get(
+        HabiticaServiceArgument.UNSCORE_CHECKLIST_ITEM
+    ):
         for item in checklist:
             if item.text in unscore_checklist_item:
                 item.completed = False
@@ -742,12 +800,12 @@ async def _create_or_update_task(call: ServiceCall) -> ServiceResponse:  # noqa:
     ):
         data["checklist"] = checklist
 
-    if collapse_checklist := call.data.get(ATTR_COLLAPSE_CHECKLIST):
+    if collapse_checklist := call.data.get(HabiticaServiceArgument.COLLAPSE_CHECKLIST):
         data["collapseChecklist"] = COLLAPSE_CHECKLIST_MAP[collapse_checklist]
 
     reminders = current_task.reminders if current_task else []
 
-    if add_reminders := call.data.get(ATTR_REMINDER):
+    if add_reminders := call.data.get(HabiticaServiceArgument.REMINDER):
         if task_type is TaskType.TODO:
             existing_reminder_datetimes = {
                 r.time.replace(tzinfo=None) for r in reminders
@@ -772,7 +830,7 @@ async def _create_or_update_task(call: ServiceCall) -> ServiceResponse:  # noqa:
                 if r not in existing_reminder_times
             )
 
-    if remove_reminder := call.data.get(ATTR_REMOVE_REMINDER):
+    if remove_reminder := call.data.get(HabiticaServiceArgument.REMOVE_REMINDER):
         if task_type is TaskType.TODO:
             reminders = list(
                 filter(
@@ -791,13 +849,13 @@ async def _create_or_update_task(call: ServiceCall) -> ServiceResponse:  # noqa:
                 )
             )
 
-    if clear_reminders := call.data.get(ATTR_CLEAR_REMINDER):
+    if clear_reminders := call.data.get(HabiticaServiceArgument.CLEAR_REMINDER):
         reminders = []
 
     if add_reminders or remove_reminder or clear_reminders:
         data["reminders"] = reminders
 
-    if start_date := call.data.get(ATTR_START_DATE):
+    if start_date := call.data.get(HabiticaServiceArgument.START_DATE):
         data["startDate"] = datetime.combine(start_date, time())
     else:
         start_date = (
@@ -805,7 +863,7 @@ async def _create_or_update_task(call: ServiceCall) -> ServiceResponse:  # noqa:
             if current_task and current_task.startDate
             else dt_util.start_of_local_day()
         )
-    if repeat := call.data.get(ATTR_REPEAT):
+    if repeat := call.data.get(HabiticaServiceArgument.REPEAT):
         if frequency is Frequency.WEEKLY:
             data["repeat"] = Repeat(**{d: d in repeat for d in WEEK_DAYS})
         else:
@@ -813,7 +871,7 @@ async def _create_or_update_task(call: ServiceCall) -> ServiceResponse:  # noqa:
                 translation_domain=DOMAIN,
                 translation_key="frequency_not_weekly",
             )
-    if repeat_monthly := call.data.get(ATTR_REPEAT_MONTHLY):
+    if repeat_monthly := call.data.get(HabiticaServiceArgument.REPEAT_MONTHLY):
         if frequency is not Frequency.MONTHLY:
             raise ServiceValidationError(
                 translation_domain=DOMAIN,
@@ -832,10 +890,10 @@ async def _create_or_update_task(call: ServiceCall) -> ServiceResponse:  # noqa:
             data["daysOfMonth"] = [start_date.day]
             data["weeksOfMonth"] = []
 
-    if (interval := call.data.get(ATTR_INTERVAL)) is not None:
+    if (interval := call.data.get(HabiticaServiceArgument.EVERY_X)) is not None:
         data["everyX"] = interval
 
-    if (streak := call.data.get(ATTR_STREAK)) is not None:
+    if (streak := call.data.get(HabiticaServiceArgument.STREAK)) is not None:
         data["streak"] = streak
 
     try:
@@ -877,12 +935,12 @@ def async_setup_services(hass: HomeAssistant) -> None:
     """Set up services for Habitica integration."""
 
     for service_name in (
-        SERVICE_ABORT_QUEST,
-        SERVICE_ACCEPT_QUEST,
-        SERVICE_CANCEL_QUEST,
-        SERVICE_LEAVE_QUEST,
-        SERVICE_REJECT_QUEST,
-        SERVICE_START_QUEST,
+        HabiticaService.ABORT_QUEST,
+        HabiticaService.ACCEPT_QUEST,
+        HabiticaService.CANCEL_QUEST,
+        HabiticaService.LEAVE_QUEST,
+        HabiticaService.REJECT_QUEST,
+        HabiticaService.START_QUEST,
     ):
         hass.services.async_register(
             DOMAIN,
@@ -893,10 +951,10 @@ def async_setup_services(hass: HomeAssistant) -> None:
         )
 
     for service_name in (
-        SERVICE_UPDATE_DAILY,
-        SERVICE_UPDATE_HABIT,
-        SERVICE_UPDATE_REWARD,
-        SERVICE_UPDATE_TODO,
+        HabiticaService.UPDATE_DAILY,
+        HabiticaService.UPDATE_HABIT,
+        HabiticaService.UPDATE_REWARD,
+        HabiticaService.UPDATE_TODO,
     ):
         hass.services.async_register(
             DOMAIN,
@@ -906,10 +964,10 @@ def async_setup_services(hass: HomeAssistant) -> None:
             supports_response=SupportsResponse.OPTIONAL,
         )
     for service_name in (
-        SERVICE_CREATE_DAILY,
-        SERVICE_CREATE_HABIT,
-        SERVICE_CREATE_REWARD,
-        SERVICE_CREATE_TODO,
+        HabiticaService.CREATE_DAILY,
+        HabiticaService.CREATE_HABIT,
+        HabiticaService.CREATE_REWARD,
+        HabiticaService.CREATE_TODO,
     ):
         hass.services.async_register(
             DOMAIN,
@@ -921,7 +979,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
 
     hass.services.async_register(
         DOMAIN,
-        SERVICE_CAST_SKILL,
+        HabiticaService.CAST_SKILL,
         _cast_skill,
         schema=SERVICE_CAST_SKILL_SCHEMA,
         supports_response=SupportsResponse.OPTIONAL,
@@ -929,14 +987,14 @@ def async_setup_services(hass: HomeAssistant) -> None:
 
     hass.services.async_register(
         DOMAIN,
-        SERVICE_SCORE_HABIT,
+        HabiticaService.SCORE_HABIT,
         _score_task,
         schema=SERVICE_SCORE_TASK_SCHEMA,
         supports_response=SupportsResponse.OPTIONAL,
     )
     hass.services.async_register(
         DOMAIN,
-        SERVICE_SCORE_REWARD,
+        HabiticaService.SCORE_REWARD,
         _score_task,
         schema=SERVICE_SCORE_TASK_SCHEMA,
         supports_response=SupportsResponse.OPTIONAL,
@@ -944,14 +1002,14 @@ def async_setup_services(hass: HomeAssistant) -> None:
 
     hass.services.async_register(
         DOMAIN,
-        SERVICE_TRANSFORMATION,
+        HabiticaService.TRANSFORMATION,
         _transformation,
         schema=SERVICE_TRANSFORMATION_SCHEMA,
         supports_response=SupportsResponse.OPTIONAL,
     )
     hass.services.async_register(
         DOMAIN,
-        SERVICE_GET_TASKS,
+        HabiticaService.GET_TASKS,
         _get_tasks,
         schema=SERVICE_GET_TASKS_SCHEMA,
         supports_response=SupportsResponse.ONLY,

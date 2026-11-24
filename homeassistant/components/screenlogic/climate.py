@@ -24,8 +24,8 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 
+from .coordinator import ScreenLogicConfigEntry
 from .entity import ScreenLogicPushEntity, ScreenLogicPushEntityDescription
-from .types import ScreenLogicConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 

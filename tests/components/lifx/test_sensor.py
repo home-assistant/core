@@ -18,7 +18,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from . import SERIAL, async_setup_lifx_entry, async_trigger_update
-from .helpers import create_mock_light
+from .helpers import create_mock_light, set_connectivity
 
 
 @pytest.mark.parametrize(
@@ -70,7 +70,7 @@ async def test_rssi_signal_is_not_read_while_the_sensor_is_disabled(
 ) -> None:
     """Test the signal is left out of the poll until the sensor is enabled."""
     device = create_mock_light()
-    device.connectivity = connectivity
+    set_connectivity(device, connectivity)
 
     await async_setup_lifx_entry(hass, device)
 
@@ -92,7 +92,7 @@ async def test_thread_rssi_sensor(
         suggested_object_id="my_group_my_bulb_rssi",
     )
     device = create_mock_light()
-    device.connectivity = Connectivity.THREAD
+    set_connectivity(device, Connectivity.THREAD)
     device.state.wifi_info = WifiInfo(0.00001, FirmwareInfo(0, 2, 77))
 
     entry = await async_setup_lifx_entry(hass, device)

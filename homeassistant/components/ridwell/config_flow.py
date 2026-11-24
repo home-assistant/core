@@ -85,7 +85,7 @@ class RidwellConfigFlow(ConfigFlow, domain=DOMAIN):
                 step_id=error_step_id,
                 data_schema=error_schema,
                 errors=errors,
-                description_placeholders={CONF_USERNAME: self._username},
+                description_placeholders={"username": self._username},
             )
 
         if existing_entry := await self.async_set_unique_id(self._username):
@@ -139,7 +139,7 @@ class RidwellConfigFlow(ConfigFlow, domain=DOMAIN):
             return self.async_show_form(
                 step_id="reauth_confirm",
                 data_schema=STEP_REAUTH_CONFIRM_DATA_SCHEMA,
-                description_placeholders={CONF_USERNAME: self._username},
+                description_placeholders={"username": self._username},
             )
 
         self._password = user_input[CONF_PASSWORD]

@@ -44,7 +44,7 @@ rules:
     comment: OMIE API is public data service that doesn't require authentication.
   test-coverage: done
   # Gold
-  devices: todo
+  devices: done
   diagnostics: todo
   discovery: todo
   discovery-update-info: todo

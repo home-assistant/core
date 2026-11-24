@@ -3,6 +3,7 @@
   "name": "Raw Serial",
   "categories": ["diy_makers.boards_hardware"],
   "codeowners": ["@fabaff"],
+  "connectivity": ["serial"],
   "documentation": "https://www.home-assistant.io/integrations/serial",
   "iot_class": "local_polling",
   "requirements": ["serialx==1.15.1"]

@@ -242,14 +242,10 @@ class NordPoolDataUpdateCoordinator(DataUpdateCoordinator[DeliveryPeriodsData]):
     def has_current_day_data(self) -> bool:
         """Return True if current day's data is available."""
         current_day = get_nordpool_current_time().date()
-        if self.data and self.data.entries:
-            return current_day in self.data.entries
-        return False
+        return current_day in self.data.entries
 
     @property
     def has_tomorrow_data(self) -> bool:
         """Return True if tomorrow's data is available."""
         tomorrow = get_nordpool_current_time().date() + timedelta(days=1)
-        if self.data and self.data.entries:
-            return tomorrow in self.data.entries
-        return False
+        return tomorrow in self.data.entries
