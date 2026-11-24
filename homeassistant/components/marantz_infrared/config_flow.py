@@ -4,15 +4,10 @@ from typing import Any, override
 
 import probatio
 
-from homeassistant.components.infrared import (
-    DOMAIN as INFRARED_DOMAIN,
-    async_get_emitters,
-)
-from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.components.infrared import InfraredConsumerConfigFlow
 from homeassistant.const import CONF_MODEL
+from homeassistant.core import callback
 from homeassistant.helpers.selector import (
-    EntitySelector,
-    EntitySelectorConfig,
     SelectOptionDict,
     SelectSelector,
     SelectSelectorConfig,
@@ -22,50 +17,39 @@ from homeassistant.helpers.selector import (
 from .const import CONF_INFRARED_EMITTER_ENTITY_ID, DOMAIN, MODELS
 
 
-class MarantzIrConfigFlow(ConfigFlow, domain=DOMAIN):
+class MarantzIrConfigFlow(InfraredConsumerConfigFlow, domain=DOMAIN):
     """Handle config flow for Marantz IR."""
 
     VERSION = 1
+    INFRARED_EMITTER_KEY = CONF_INFRARED_EMITTER_ENTITY_ID
 
     @override
-    async def async_step_user(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Handle the initial step."""
-        emitter_entity_ids = async_get_emitters(self.hass)
-        if not emitter_entity_ids:
-            return self.async_abort(reason="no_emitters")
-
-        if user_input is not None:
-            entity_id = user_input[CONF_INFRARED_EMITTER_ENTITY_ID]
-            model = user_input[CONF_MODEL]
-
-            await self.async_set_unique_id(f"{model}_{entity_id}")
-            self._abort_if_unique_id_configured()
-
-            return self.async_create_entry(title=MODELS[model].name, data=user_input)
-
+    @callback
+    def _async_infrared_schema(self) -> probatio.Schema:
+        """Return the model and emitter selection schema."""
         model_options = [
             SelectOptionDict(value=slug, label=model.name)
             for slug, model in MODELS.items()
         ]
-
-        return self.async_show_form(
-            step_id="user",
-            data_schema=probatio.Schema(
-                {
-                    probatio.Required(CONF_MODEL): SelectSelector(
-                        SelectSelectorConfig(
-                            options=model_options,
-                            mode=SelectSelectorMode.DROPDOWN,
-                        )
-                    ),
-                    probatio.Required(CONF_INFRARED_EMITTER_ENTITY_ID): EntitySelector(
-                        EntitySelectorConfig(
-                            domain=INFRARED_DOMAIN,
-                            include_entities=emitter_entity_ids,
-                        )
-                    ),
-                }
-            ),
+        return probatio.Schema(
+            {
+                probatio.Required(CONF_MODEL): SelectSelector(
+                    SelectSelectorConfig(
+                        options=model_options,
+                        mode=SelectSelectorMode.DROPDOWN,
+                    )
+                ),
+                **self._async_infrared_entity_fields(),
+            }
         )
+
+    @override
+    @callback
+    def _async_infrared_match_dict(self, user_input: dict[str, Any]) -> dict[str, Any]:
+        """Return the model, so each model can use the same emitter."""
+        return {CONF_MODEL: user_input[CONF_MODEL]}
+
+    @override
+    async def _async_infrared_entry_title(self, user_input: dict[str, Any]) -> str:
+        """Return the title of a new entry."""
+        return MODELS[user_input[CONF_MODEL]].name
