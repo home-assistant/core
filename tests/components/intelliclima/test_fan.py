@@ -307,16 +307,16 @@ async def test_fan_turn_on_during_boost_keeps_commanded_speed(
 @pytest.mark.parametrize(
     ("service", "data", "method", "args"),
     [
-        pytest.param(SERVICE_TURN_OFF, {}, "turn_off", ("AABBCCDD",), id="off"),
+        pytest.param("turn_off", {}, "turn_off", ("AABBCCDD",), id="off"),
         pytest.param(
-            SERVICE_SET_PRESET_MODE,
+            "set_preset_mode",
             {ATTR_PRESET_MODE: "auto"},
             "set_mode_speed_auto",
             ("AABBCCDD",),
             id="auto",
         ),
         pytest.param(
-            SERVICE_SET_PERCENTAGE,
+            "set_percentage",
             {ATTR_PERCENTAGE: 75},
             "set_mode_speed",
             ("AABBCCDD", FanMode.sensor, FanSpeed.medium),
@@ -355,7 +355,7 @@ async def test_eco3_turn_on_preserves_commanded_speed(
     await async_poll(hass, freezer)
 
     await hass.services.async_call(
-        FAN_DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: "fan.test_vmc_3"}, blocking=True
+        FAN_DOMAIN, "turn_on", {ATTR_ENTITY_ID: "fan.test_vmc_3"}, blocking=True
     )
     mock_cloud_interface.ecocomfort3.set_mode_speed.assert_awaited_once_with(
         "AABBCCDD", FanMode.sensor, FanSpeed.low
