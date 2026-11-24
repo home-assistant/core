@@ -141,6 +141,40 @@ async def test_setup_with_working_holiday(
     assert state.state == "on"
 
 
+@pytest.mark.parametrize(
+    ("country", "include_sundays", "expected_state"),
+    [
+        pytest.param("SE", True, "off", id="sundays_included"),
+        pytest.param("SE", False, "on", id="sundays_not_included"),
+        pytest.param("DE", True, "on", id="option_not_supported_by_country"),
+    ],
+)
+async def test_setup_country_options(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    country: str,
+    include_sundays: bool,
+    expected_state: str,
+) -> None:
+    """Test country specific options are only used when the country supports them."""
+    freezer.move_to(datetime(2024, 11, 17, 12, tzinfo=UTC))  # Sunday
+    await init_integration(
+        hass,
+        {
+            "country": country,
+            "excludes": ["holiday"],
+            "days_offset": DEFAULT_OFFSET,
+            "workdays": ["mon", "tue", "wed", "thu", "fri", "sat", "sun"],
+            "custom_holidays": {"add_holidays": [], "remove_holidays": []},
+            "country_settings": {"include_sundays": include_sundays},
+        },
+    )
+
+    state = hass.states.get(f"binary_sensor.workday_sensor_{country.lower()}")
+    assert state is not None
+    assert state.state == expected_state
+
+
 async def test_setup_add_holiday(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,

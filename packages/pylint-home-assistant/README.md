@@ -1213,13 +1213,19 @@ self.context["title_placeholders"] = {"host": discovery_info.host}
 ## `home_assistant_target_key` checker
 
 Checks the target keys of `hass.services.async_call` calls: the keys of a
-`target=` dict literal, including the keys of its `exclude` dict literal.
+`target=` dict literal, including the keys of its `exclude` dict literal, and the
+`entity_id` key of a data dict literal.
 
 ### `C7465`: `home-assistant-action-target-key`
 
 Target keys select what the action applies to, so they use `TargetKey`: every
 constant key of the `target=` dict, such as `ATTR_ENTITY_ID`, `ATTR_AREA_ID` or
 `CommonServiceArgument.DEVICE_ID`, should be the matching `TargetKey` member.
+
+This also applies to the `entity_id` key of the data, when the action is a
+`<Prefix>Service` enum member which declares a `target` in its `services.yaml`.
+`CommonServiceArgument.ENTITY_ID` is for actions with their own `entity_id`
+field.
 
 ```python
 # Bad
@@ -1230,6 +1236,16 @@ await hass.services.async_call(
 # Good
 await hass.services.async_call(
     LIGHT_DOMAIN, LightService.TURN_ON, target={TargetKey.AREA_ID: "kitchen"}
+)
+
+# Bad
+await hass.services.async_call(
+    LIGHT_DOMAIN, LightService.TURN_ON, {ATTR_ENTITY_ID: "light.kitchen"}
+)
+
+# Good
+await hass.services.async_call(
+    LIGHT_DOMAIN, LightService.TURN_ON, {TargetKey.ENTITY_ID: "light.kitchen"}
 )
 ```
 
