@@ -13,7 +13,10 @@ from google_health_api.model import (
     ActiveMinutesRollupValue,
     ActiveZoneMinutesRollupValue,
     AltitudeRollupValue,
+    DailyHeartRateVariability,
     DailyRollupDataPoint,
+    DataPoint,
+    Date,
     ListDataPointResult,
     ListPairedDevicesResult,
     NutrientQuantityRollup,
@@ -145,6 +148,45 @@ async def test_sensor_empty_body(
         "sensor.google_health_height": STATE_UNKNOWN,
         "sensor.google_health_body_mass_index": STATE_UNKNOWN,
         "sensor.google_health_vo2_max": STATE_UNKNOWN,
+    }
+    assert {
+        entity_id: getattr(hass.states.get(entity_id), "state", None)
+        for entity_id in expected_states
+    } == expected_states
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_sensor_body_partial_data(
+    hass: HomeAssistant,
+    mock_google_health_client: AsyncMock,
+    integration_setup: Callable[[], Awaitable[bool]],
+) -> None:
+    """Test body sensors when height is missing and HRV average is None."""
+    mock_google_health_client.height.list.return_value = ListDataPointResult(
+        _ListDataPointsModel(data_points=[])
+    )
+    mock_google_health_client.daily_heart_rate_variability.list.return_value = (
+        ListDataPointResult(
+            _ListDataPointsModel(
+                data_points=[
+                    DataPoint(
+                        data=DailyHeartRateVariability(
+                            date=Date(year=2026, month=6, day=29),
+                        )
+                    )
+                ]
+            )
+        )
+    )
+
+    assert await integration_setup()
+
+    mock_google_health_client.height.list.assert_called_once()
+    expected_states = {
+        "sensor.google_health_weight": "80.0",
+        "sensor.google_health_height": STATE_UNKNOWN,
+        "sensor.google_health_body_mass_index": STATE_UNKNOWN,
+        "sensor.google_health_heart_rate_variability": STATE_UNKNOWN,
     }
     assert {
         entity_id: getattr(hass.states.get(entity_id), "state", None)

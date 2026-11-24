@@ -315,6 +315,7 @@ class GoogleHealthBodyCoordinator(
         # The Google Health API returns data points sorted by interval start time
         # in descending order (newest first). Querying with page_size=1 and grabbing
         # the first element is sufficient to fetch the most recent measurement.
+        # Nested gathers keep mypy tuple types inferred (overloads stop at 6).
         (
             (weight_result, height_result, hr_result, body_fat_result),
             (hrv_result, spo2_result, respiratory_rate_result, vo2_max_result),

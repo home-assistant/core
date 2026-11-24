@@ -265,7 +265,6 @@ BODY_SENSORS: list[
         translation_key="heart_rate_variability",
         native_unit_of_measurement=UnitOfTime.MILLISECONDS,
         suggested_display_precision=0,
-        device_class=SensorDeviceClass.DURATION,
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda data: (
             data.heart_rate_variability.average_heart_rate_variability_milliseconds
