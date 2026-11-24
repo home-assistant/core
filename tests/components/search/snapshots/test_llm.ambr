@@ -56,6 +56,10 @@
     'device': dict({
       'results': list([
         list([
+          '<disabled device>',
+          'Kitchen disabled',
+        ]),
+        list([
           '<sensor device>',
           'Kitchen sensor',
         ]),
@@ -68,7 +72,7 @@
           'Main hub',
         ]),
       ]),
-      'total': 3,
+      'total': 4,
     }),
     'entity': dict({
       'next_offset': 5,
@@ -94,7 +98,7 @@
           'Kitchen 4',
         ]),
       ]),
-      'total': 7,
+      'total': 10,
     }),
     'instructions': 'Each type shows at most 5 results. To get the next results of one type, call this tool again with the same query, set type to that type, and set offset to its next_offset.',
     'label': dict({
@@ -165,6 +169,10 @@
     'device': dict({
       'results': list([
         list([
+          '<disabled device>',
+          'Kitchen disabled',
+        ]),
+        list([
           '<sensor device>',
           'Kitchen sensor',
         ]),
@@ -177,7 +185,33 @@
           'Main hub',
         ]),
       ]),
-      'total': 3,
+      'total': 4,
+    }),
+  })
+# ---
+# name: test_search[disabled_device]
+  dict({
+    'device': dict({
+      'results': list([
+        list([
+          '<disabled device>',
+          'Kitchen disabled',
+        ]),
+      ]),
+      'total': 1,
+    }),
+  })
+# ---
+# name: test_search[disabled_entity]
+  dict({
+    'entity': dict({
+      'results': list([
+        list([
+          'sensor.kitchen_oven',
+          'Kitchen oven',
+        ]),
+      ]),
+      'total': 1,
     }),
   })
 # ---
@@ -227,8 +261,20 @@
           'light.kitchen_6',
           'Kitchen 6',
         ]),
+        list([
+          'sensor.kitchen_oven',
+          'Kitchen oven',
+        ]),
+        list([
+          'light.disabled',
+          'Kitchen sensor',
+        ]),
+        list([
+          'light.child_disabled',
+          'Kitchen sensor Kitchen speaker',
+        ]),
       ]),
-      'total': 7,
+      'total': 10,
     }),
   })
 # ---
@@ -258,7 +304,7 @@
           'Kitchen 4',
         ]),
       ]),
-      'total': 7,
+      'total': 10,
     }),
   })
 # ---

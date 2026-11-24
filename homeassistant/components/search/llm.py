@@ -71,19 +71,34 @@ def _entity_item(
 
 
 def _entities(hass: HomeAssistant) -> Iterator[_Item]:
-    """Yield the entities that are not automations, scripts or scenes."""
+    """Yield the entities that are not automations, scripts or scenes.
+
+    Disabled entities have no state, so they come from the entity registry.
+    """
     ent_reg = er.async_get(hass)
     for state in hass.states.async_all():
         if state.domain not in _OWN_TYPE_DOMAINS:
             yield _entity_item(hass, ent_reg, state)
+    for entry in ent_reg.entities.values():
+        if (
+            entry.disabled
+            and entry.domain not in _OWN_TYPE_DOMAINS
+            and hass.states.get(entry.entity_id) is None
+        ):
+            name = er.async_get_full_entity_name(hass, entry) or None
+            yield (
+                entry.entity_id,
+                name,
+                _set(name),
+                er.async_get_entity_aliases(hass, entry),
+                (entry.entity_id,),
+            )
 
 
 def _devices(hass: HomeAssistant) -> Iterator[_Item]:
-    """Yield the enabled devices, including child devices."""
+    """Yield the devices, including child devices."""
     dev_reg = dr.async_get(hass)
     for device in chain(dev_reg.devices, dev_reg.child_devices):
-        if device.disabled:
-            continue
         yield (
             device.id,
             device.name_by_user or device.name,
@@ -153,7 +168,8 @@ class SearchTool(Tool):
     title = "Search Home Assistant"
     description = (
         "Search entities, devices, areas, labels, automations, scripts and scenes "
-        "by name. Returns the ID and name of each match, grouped by type."
+        "by name, also disabled entities and devices. Returns the ID and name of "
+        "each match, grouped by type."
     )
     annotations = ToolAnnotations(
         read_only=True, destructive=False, idempotent=True, open_world=False
