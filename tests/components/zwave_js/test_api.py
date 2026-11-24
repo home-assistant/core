@@ -1870,6 +1870,47 @@ async def test_provision_smart_start_node(
     assert msg["error"]["code"] == ERR_NOT_LOADED
 
 
+async def test_provision_smart_start_node_unknown_area(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    integration,
+    client,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test provisioning with an unknown area creates no device and sends nothing."""
+    entry = integration
+    ws_client = await hass_ws_client(hass)
+
+    await ws_client.send_json_auto_id(
+        {
+            TYPE: "zwave_js/provision_smart_start_node",
+            ENTRY_ID: entry.entry_id,
+            QR_PROVISIONING_INFORMATION: {
+                VERSION: 1,
+                SECURITY_CLASSES: [0],
+                DSK: "test",
+                GENERIC_DEVICE_CLASS: 1,
+                SPECIFIC_DEVICE_CLASS: 1,
+                INSTALLER_ICON_TYPE: 1,
+                MANUFACTURER_ID: 1,
+                PRODUCT_TYPE: 1,
+                PRODUCT_ID: 1,
+                APPLICATION_VERSION: "test",
+            },
+            DEVICE_NAME: "test_name",
+            AREA_ID: "unknown",
+        }
+    )
+    msg = await ws_client.receive_json()
+
+    assert not msg["success"]
+    assert msg["error"]["code"] == ERR_NOT_FOUND
+    assert not device_registry.async_get_device_by_identifier(
+        (DOMAIN, "provision_test"), entry.entry_id
+    )
+    client.async_send_command.assert_not_called()
+
+
 async def test_unprovision_smart_start_node(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
