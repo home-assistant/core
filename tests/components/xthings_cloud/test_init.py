@@ -2,6 +2,7 @@
 
 from unittest.mock import AsyncMock
 
+from pytest_homeassistant.common import MockConfigEntry
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.xthings_cloud.const import DOMAIN
@@ -10,7 +11,6 @@ from homeassistant.helpers import device_registry as dr
 
 from . import setup_integration
 
-from pytest_homeassistant.common import MockConfigEntry
 
 
 async def test_devices(

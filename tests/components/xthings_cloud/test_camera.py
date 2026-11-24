@@ -6,6 +6,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 from aiohttp import ClientError
 from ha_xthings_cloud import XthingsCloudApiError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 from webrtc_models import RTCIceCandidateInit
 
@@ -22,7 +23,6 @@ from homeassistant.helpers import entity_registry as er
 
 from . import get_device_by_id, setup_integration
 
-from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 
 
 async def setup_camera_integration(

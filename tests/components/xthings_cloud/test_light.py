@@ -3,6 +3,7 @@
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.light import (
@@ -25,7 +26,6 @@ from homeassistant.helpers import entity_registry as er
 
 from . import get_device_by_id, setup_integration
 
-from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 
 
 async def test_lights(
