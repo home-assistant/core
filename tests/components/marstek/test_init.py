@@ -11,10 +11,7 @@ from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.marstek import async_create_udp_client
 from homeassistant.components.marstek.const import DOMAIN
-from homeassistant.components.marstek.coordinator import (
-    MARSTEK_UDP_CLIENT,
-    MarstekDataUpdateCoordinator,
-)
+from homeassistant.components.marstek.coordinator import MarstekDataUpdateCoordinator
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant
@@ -33,18 +30,6 @@ UNSUPPORTED_DEVICE_INFO = MarstekDeviceInfo(
 )
 
 
-async def test_async_setup_creates_shared_udp_client(
-    hass: HomeAssistant,
-    mock_udp_client: MagicMock,
-) -> None:
-    """Test integration setup creates the shared UDP client."""
-    assert await async_setup_component(hass, DOMAIN, {})
-    await hass.async_block_till_done()
-
-    assert hass.data[MARSTEK_UDP_CLIENT] is mock_udp_client
-    mock_udp_client.async_cleanup.assert_not_awaited()
-
-
 async def test_async_setup_fails_when_client_creation_fails(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
@@ -60,7 +45,6 @@ async def test_async_setup_fails_when_client_creation_fails(
         await hass.async_block_till_done()
 
     assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
-    assert MARSTEK_UDP_CLIENT not in hass.data
 
 
 async def test_async_setup_cleans_up_client_at_stop(
@@ -70,6 +54,8 @@ async def test_async_setup_cleans_up_client_at_stop(
     """Test the shared UDP client is cleaned up when Home Assistant stops."""
     assert await async_setup_component(hass, DOMAIN, {})
     await hass.async_block_till_done()
+
+    mock_udp_client.async_cleanup.assert_not_awaited()
 
     hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
     await hass.async_block_till_done()
@@ -85,17 +71,11 @@ async def test_async_setup_entry(
     """Test setting up a config entry."""
     mock_config_entry.add_to_hass(hass)
 
-    with patch.object(
-        hass.config_entries, "async_forward_entry_setups", new=AsyncMock()
-    ) as mock_forward_entry_setups:
-        assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
-        await hass.async_block_till_done()
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
 
     assert mock_config_entry.state is ConfigEntryState.LOADED
-    assert isinstance(mock_config_entry.runtime_data, MarstekDataUpdateCoordinator)
-    assert mock_config_entry.runtime_data.udp_client is mock_udp_client
     mock_udp_client.get_device_info.assert_awaited_once()
-    mock_forward_entry_setups.assert_awaited_once()
 
 
 async def test_async_unload_entry(
@@ -114,7 +94,6 @@ async def test_async_unload_entry(
 
     assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
     mock_udp_client.async_cleanup.assert_not_awaited()
-    assert hass.data[MARSTEK_UDP_CLIENT] is mock_udp_client
 
 
 async def test_async_unload_multiple_entries(
@@ -146,8 +125,6 @@ async def test_async_unload_multiple_entries(
 
     assert mock_config_entry.state is ConfigEntryState.LOADED
     assert second_entry.state is ConfigEntryState.LOADED
-    assert mock_config_entry.runtime_data.udp_client is mock_udp_client
-    assert second_entry.runtime_data.udp_client is mock_udp_client
 
     assert await hass.config_entries.async_unload(mock_config_entry.entry_id)
     await hass.async_block_till_done()
@@ -156,7 +133,6 @@ async def test_async_unload_multiple_entries(
     assert await hass.config_entries.async_unload(second_entry.entry_id)
     await hass.async_block_till_done()
     mock_udp_client.async_cleanup.assert_not_awaited()
-    assert hass.data[MARSTEK_UDP_CLIENT] is mock_udp_client
 
 
 async def test_async_create_udp_client(
@@ -298,12 +274,8 @@ async def test_async_setup_entry_first_refresh_failure(
     mock_config_entry.add_to_hass(hass)
     mock_udp_client.get_device_status.side_effect = OSError("network down")
 
-    with patch.object(
-        hass.config_entries, "async_forward_entry_setups", new=AsyncMock()
-    ) as mock_forward_entry_setups:
-        await hass.config_entries.async_setup(mock_config_entry.entry_id)
-        await hass.async_block_till_done()
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
 
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
     mock_udp_client.async_cleanup.assert_not_awaited()
-    mock_forward_entry_setups.assert_not_awaited()

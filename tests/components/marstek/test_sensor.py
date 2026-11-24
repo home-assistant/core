@@ -13,6 +13,7 @@ from pytest_homeassistant.common import (
 )
 from syrupy.assertion import SnapshotAssertion
 
+from homeassistant.components.marstek.coordinator import SCAN_INTERVAL
 from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers import entity_registry as er
@@ -75,13 +76,13 @@ async def test_polling_failure_recovers(
         MOCK_DEVICE_STATUS,
     ]
 
-    freezer.tick(mock_config_entry.runtime_data.update_interval)
+    freezer.tick(SCAN_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
     assert _get_state(hass, BATTERY_LEVEL_ENTITY_ID).state == STATE_UNAVAILABLE
 
-    freezer.tick(mock_config_entry.runtime_data.update_interval)
+    freezer.tick(SCAN_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
