@@ -95,7 +95,12 @@ class TwinklyLight(TwinklyEntity, LightEntity):
 
         if ATTR_BRIGHTNESS in kwargs:
             await self.client.set_brightness(
-                max(1, round(brightness_to_value(BRIGHTNESS_SCALE, kwargs[ATTR_BRIGHTNESS])))
+                max(
+                    1,
+                    round(
+                        brightness_to_value(BRIGHTNESS_SCALE, kwargs[ATTR_BRIGHTNESS])
+                    ),
+                )
             )
 
         if (
