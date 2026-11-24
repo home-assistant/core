@@ -4,7 +4,11 @@ from typing import Any, override
 
 from infrared_protocols.commands.nec import NECCommand
 
-from homeassistant.components.fan import FanEntity, FanEntityFeature
+from homeassistant.components.fan import (
+    FanEntity,
+    FanEntityDescription,
+    FanEntityFeature,
+)
 from homeassistant.components.infrared import InfraredEmitterConsumerEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -23,6 +27,8 @@ from .const import (
 )
 
 PARALLEL_UPDATES = 0
+
+INFRARED_FAN = FanEntityDescription(key="infrared_fan", name=None)
 
 
 async def async_setup_entry(
@@ -51,8 +57,8 @@ async def async_setup_entry(
 class DemoInfraredFan(InfraredEmitterConsumerEntity, FanEntity):
     """Representation of a demo infrared fan entity."""
 
+    entity_description = INFRARED_FAN
     _attr_has_entity_name = True
-    _attr_name = None
     _attr_assumed_state = True
     _attr_speed_count = 3
     _attr_supported_features = (

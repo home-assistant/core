@@ -5,19 +5,17 @@ from dataclasses import dataclass
 from enum import IntEnum
 from typing import override
 
-from sofar_modbus.model import CorrectedTotal
-from sofar_modbus.modern.battery_pack import BatteryPack
-from sofar_modbus.modern.device import (
+from sofar_modbus import (
     BATTERY_PACKS,
     BATTERY_STRING_COMPONENTS,
     PV_STRING_COMPONENTS,
-    SofarInverter,
-)
-from sofar_modbus.modern.enums import (
-    BatConfigCellType,
-    BatConfigProtocol,
-    FeedinLimitationMode,
+    BatteryConfigCellType,
+    BatteryConfigProtocol,
+    BatteryPack,
+    CorrectedTotal,
+    FeedInLimitationMode,
     PassiveModeTimeoutAction,
+    SofarInverter,
     SyncRtcResult,
     SystemState,
 )
@@ -1641,7 +1639,7 @@ ENUM_SENSOR_DESCRIPTIONS: tuple[SofarEnumSensorDescription, ...] = (
         component="battery_config_id",
         translation_key="bat_config_protocol",
         device_class=SensorDeviceClass.ENUM,
-        options=enum_options(BatConfigProtocol),
+        options=enum_options(BatteryConfigProtocol),
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
         value_fn=lambda device: device.battery_config_id.bat_config_protocol,
@@ -1651,7 +1649,7 @@ ENUM_SENSOR_DESCRIPTIONS: tuple[SofarEnumSensorDescription, ...] = (
         component="battery_config",
         translation_key="bat_config_cell_type",
         device_class=SensorDeviceClass.ENUM,
-        options=enum_options(BatConfigCellType),
+        options=enum_options(BatteryConfigCellType),
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
         value_fn=lambda device: device.battery_config.bat_config_cell_type,
@@ -1670,7 +1668,7 @@ ENUM_SENSOR_DESCRIPTIONS: tuple[SofarEnumSensorDescription, ...] = (
         component="feed_in",
         translation_key="feedin_limitation_mode",
         device_class=SensorDeviceClass.ENUM,
-        options=enum_options(FeedinLimitationMode),
+        options=enum_options(FeedInLimitationMode),
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
         value_fn=lambda device: device.feed_in.feedin_limitation_mode,

@@ -284,16 +284,26 @@ class WebDavTodoListEntity(TodoListEntity):
         ) as err:
             raise HomeAssistantError(f"CalDAV lookup error: {err}") from err
 
-        # Run serially as some CalDAV servers do not support concurrent modifications
-        for item in items:
-            try:
-                await self.hass.async_add_executor_job(item.delete)
-            except (
-                caldav_requests.exceptions.ConnectionError,
-                caldav_requests.exceptions.Timeout,
-                DAVError,
-            ) as err:
-                raise HomeAssistantError(f"CalDAV delete error: {err}") from err
-            self._writes += 1
+        deleted = 0
+
+        def delete_items() -> None:
+            """Delete the items one by one."""
+            nonlocal deleted
+            # Run serially as some CalDAV servers do not support concurrent modifications
+            for item in items:
+                item.delete()
+                deleted += 1
+
+        try:
+            await self.hass.async_add_executor_job(delete_items)
+        except (
+            caldav_requests.exceptions.ConnectionError,
+            caldav_requests.exceptions.Timeout,
+            DAVError,
+        ) as err:
+            raise HomeAssistantError(f"CalDAV delete error: {err}") from err
+        finally:
+            # A delete that fails part-way still changed the list
+            self._writes += deleted
         # refreshing async otherwise it would take too much time
         self.hass.async_create_task(self.async_update_ha_state(force_refresh=True))

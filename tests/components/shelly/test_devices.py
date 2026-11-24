@@ -611,6 +611,7 @@ async def test_blu_trv_device_info(
     [
         "cury_gen4",
         "duo_bulb_gen3",
+        "ev_charger_gen4",
         "power_strip_gen4",
         "presence_gen4",
         "pro1cb_gen2",

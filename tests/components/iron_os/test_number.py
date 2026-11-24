@@ -25,7 +25,7 @@ from homeassistant.components.number import (
     NumberServiceArgument,
 )
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE, Platform
+from homeassistant.const import STATE_UNAVAILABLE, Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import entity_registry as er
@@ -217,7 +217,7 @@ async def test_set_value(
         NUMBER_DOMAIN,
         NumberService.SET_VALUE,
         service_data={NumberServiceArgument.VALUE: value},
-        target={ATTR_ENTITY_ID: entity_id},
+        target={TargetKey.ENTITY_ID: entity_id},
         blocking=True,
     )
     assert len(mock_pynecil.write.mock_calls) == 1
@@ -248,7 +248,7 @@ async def test_set_value_exception(
             NUMBER_DOMAIN,
             NumberService.SET_VALUE,
             service_data={NumberServiceArgument.VALUE: 300},
-            target={ATTR_ENTITY_ID: "number.pinecil_setpoint_temperature"},
+            target={TargetKey.ENTITY_ID: "number.pinecil_setpoint_temperature"},
             blocking=True,
         )
 

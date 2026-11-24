@@ -319,8 +319,11 @@ def gather_recursive_requirements(
     )
     integration.load_manifest()
     reqs = {x for x in integration.requirements if x not in CONSTRAINT_BASE}
-    for dep_domain in integration.dependencies:
-        reqs.update(gather_recursive_requirements(dep_domain, seen))
+    for dep_domain in integration.dependencies + integration.manifest.get(
+        "after_dependencies", []
+    ):
+        if dep_domain not in seen:
+            reqs.update(gather_recursive_requirements(dep_domain, seen))
     return reqs
 
 

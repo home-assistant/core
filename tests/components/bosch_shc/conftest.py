@@ -273,6 +273,9 @@ def outdoor_siren_device(
     name: str = "Outdoor Siren",
     sound_level: OutdoorSirenService.SoundLevel = OutdoorSirenService.SoundLevel.MEDIUM,
     power_supply: OutdoorSirenPowerSupplyService | None = None,
+    acoustic_alarm_on: bool = False,
+    visual_alarm_on: bool = False,
+    tamper_activated: bool = False,
 ) -> SHCOutdoorSiren:
     """Build a minimal device double for the outdoor_sirens bucket."""
     device = create_autospec(SHCOutdoorSiren, instance=True, spec_set=True)
@@ -287,6 +290,9 @@ def outdoor_siren_device(
     device.status = "AVAILABLE"
     siren_service = create_autospec(OutdoorSirenService, instance=True)
     siren_service.sound_level = sound_level
+    siren_service.acoustic_alarm_on = acoustic_alarm_on
+    siren_service.visual_alarm_on = visual_alarm_on
+    siren_service.tamper_activated = tamper_activated
     device.siren = siren_service
     device.supports_power_supply = power_supply is not None
     device.power_supply = power_supply
@@ -616,6 +622,8 @@ def micromodule_dimmer_device(
     edge_phase_control_mode: DimmerConfigurationService.EdgePhaseControlMode
     | None = None,
     dimming_speed: int | None = 5,
+    min_brightness: int = 0,
+    max_brightness: int = 100,
 ) -> SHCMicromoduleDimmer:
     """Build a minimal device double for the micromodule_dimmers bucket."""
     device = create_autospec(SHCMicromoduleDimmer, instance=True, spec_set=True)
@@ -633,6 +641,11 @@ def micromodule_dimmer_device(
     device.supports_dimmer_configuration = supports_dimmer_configuration
     device.edge_phase_control_mode = edge_phase_control_mode
     device.dimming_speed = dimming_speed
+    device.dimmer_configuration = (
+        SimpleNamespace(min_brightness=min_brightness, max_brightness=max_brightness)
+        if supports_dimmer_configuration
+        else None
+    )
     return device
 
 
@@ -908,6 +921,8 @@ def motion_detector2_device(
     binaryswitch: bool = False,
     multi_level_switch: int = 0,
     long_poll_interval: PollControlService.PollControlState = PollControlService.PollControlState.LONG,
+    occupied: bool = False,
+    was_tampered: bool = False,
 ) -> SHCMotionDetector2:
     """Build a minimal device double for the motion_detectors2 bucket."""
     device = create_autospec(SHCMotionDetector2, instance=True, spec_set=True)
@@ -926,6 +941,8 @@ def motion_detector2_device(
     device.smart_sensitivity_enabled = smart_sensitivity_enabled
     device.supports_tamper_reset = supports_tamper_reset
     device.latestmotion = latestmotion
+    device.occupied = occupied
+    device.was_tampered = was_tampered
     device.get_smart_sensitivity.side_effect = lambda context: (
         {"context": context.value, "manualLevel": smart_sensitivity[context.value]}
         if smart_sensitivity
