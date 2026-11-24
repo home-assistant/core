@@ -27,6 +27,9 @@
       }),
       'required': list([
         'flow_id',
+      ]),
+      'type': 'object',
+    }),
     'config__create_label': dict({
       'additionalProperties': False,
       'properties': dict({
@@ -52,9 +55,6 @@
       }),
       'required': list([
         'name',
-      ]),
-      'type': 'object',
-    }),
       ]),
       'type': 'object',
     }),

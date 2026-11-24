@@ -37,6 +37,7 @@ from homeassistant.helpers.llm import (
     ToolResult,
 )
 from homeassistant.helpers.network import NoURLAvailableError, get_url
+from homeassistant.helpers.typing import VolDictType
 from homeassistant.loader import (
     IntegrationNotFound,
     async_get_integration,
