@@ -5013,6 +5013,9 @@
           "integration_type": "device",
           "config_flow": true,
           "iot_class": "assumed_state",
+          "categories": [
+            "climate.heat_pumps_air_conditioning"
+          ],
           "name": "Fujitsu Infrared"
         }
       }
@@ -9218,8 +9221,8 @@
           "name": "Azure Storage"
         },
         "microsoft": {
-          "integration_type": "hub",
-          "config_flow": false,
+          "integration_type": "service",
+          "config_flow": true,
           "iot_class": "cloud_push",
           "categories": [
             "ai_voice.speech"

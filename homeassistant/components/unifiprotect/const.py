@@ -98,6 +98,7 @@ DISPATCH_ADD = "add_device"
 DISPATCH_ADOPT = "adopt_device"
 DISPATCH_CHANNELS = "new_camera_channels"
 DISPATCH_CHIMES = "new_chime_ring_settings"
+DISPATCH_EXTERNAL_ARM = "external_arm_profiles"
 DISPATCH_RELAYS = "new_relay_channels"
 DISPATCH_PUBLIC_ADD = "public_add_device"
 

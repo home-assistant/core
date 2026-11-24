@@ -91,6 +91,9 @@ DEVICE_FIXTURES: dict[str, list[tuple[str, str, str]]] = {
     "Humidifier 6000s": [
         ("post", "/cloud/v2/deviceManaged/bypassV2", "humidifier-6000s-detail.json")
     ],
+    "Humidifier Sprout": [
+        ("post", "/cloud/v2/deviceManaged/bypassV2", "humidifier-sprout-detail.json")
+    ],
     "CS158-AF Air Fryer Standby": [
         (
             "post",
