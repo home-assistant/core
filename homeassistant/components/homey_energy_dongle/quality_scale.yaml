@@ -53,7 +53,9 @@ rules:
 
   # Gold
   devices: done
-  diagnostics: done
+  diagnostics:
+    status: todo
+    comment: Download diagnostics is added in a follow-up. A new integration may only include one platform.
   discovery-update-info: done
   discovery: done
   docs-data-update: done
