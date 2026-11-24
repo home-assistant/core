@@ -94,6 +94,7 @@ async def async_setup_entry(
                 100,
                 device_class=CoverDeviceClass.BLIND,
                 open_tilt_position=50,
+                closed_tilt_positions=[0, 100],
                 tilt_start_angle=-90,
                 tilt_end_angle=90,
             ),
@@ -119,7 +120,8 @@ class DemoCover(CoverEntity):
         supported_features: CoverEntityFeature | None = None,
         supported_speeds: list[str] | None = None,
         translation_key: str | None = None,
-        open_tilt_position: int | None = None,
+        open_tilt_position: int = 100,
+        closed_tilt_positions: list[int] | None = None,
         tilt_start_angle: int | None = None,
         tilt_end_angle: int | None = None,
     ) -> None:
@@ -131,15 +133,15 @@ class DemoCover(CoverEntity):
         self._attr_supported_features = supported_features
         self._attr_supported_speeds = supported_speeds
         self._attr_translation_key = translation_key
-        self._attr_open_tilt_position = open_tilt_position
+        self._open_tilt_position = open_tilt_position
+        self._closed_tilt_positions = closed_tilt_positions or [0]
+        self._attr_open_tilt_position = self._open_tilt_position
+        self._attr_closed_tilt_positions = self._closed_tilt_positions
         self._attr_tilt_start_angle = tilt_start_angle
         self._attr_tilt_end_angle = tilt_end_angle
         self._set_position: int | None = None
         self._set_tilt_position: int | None = None
         self._tilt_position = tilt_position
-        self._open_tilt_position = (
-            100 if open_tilt_position is None else open_tilt_position
-        )
         self._requested_closing = True
         self._requested_closing_tilt = True
         self._unsub_listener_cover: CALLBACK_TYPE | None = None
@@ -184,10 +186,7 @@ class DemoCover(CoverEntity):
     def is_closed(self) -> bool:
         """Return if the cover is closed."""
         if self._position is None and self._tilt_position is not None:
-            return (
-                self._tilt_position in (0, 100)
-                and self._tilt_position != self._open_tilt_position
-            )
+            return self._tilt_position in self._closed_tilt_positions
         return self._closed
 
     @property
@@ -221,12 +220,16 @@ class DemoCover(CoverEntity):
     @override
     async def async_close_cover_tilt(self, **kwargs: Any) -> None:
         """Close the cover tilt."""
-        if self._tilt_position in (0, None):
+        tilt = self._tilt_position
+        if tilt is None or tilt in self._closed_tilt_positions:
             return
 
-        self._set_tilt_position = None
+        closed_position = min(
+            self._closed_tilt_positions, key=lambda position: abs(position - tilt)
+        )
+        self._set_tilt_position = closed_position
         self._listen_cover_tilt()
-        self._requested_closing_tilt = True
+        self._requested_closing_tilt = closed_position < tilt
         self._update_tilt_moving_state()
         self.async_write_ha_state()
 

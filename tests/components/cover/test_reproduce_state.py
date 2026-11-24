@@ -1,5 +1,7 @@
 """Test reproduce state for Cover."""
 
+from typing import Any
+
 import pytest
 from pytest_homeassistant.common import async_mock_service
 
@@ -618,84 +620,68 @@ async def test_reproducing_states(
         valid_position_tilt_calls.remove(call.data)
 
 
+OPEN_AT_50 = {
+    CoverEntityCapabilityAttribute.OPEN_TILT_POSITION: 50,
+    CoverEntityCapabilityAttribute.CLOSED_TILT_POSITIONS: [0, 100],
+}
+OPEN_AT_0 = {
+    CoverEntityCapabilityAttribute.OPEN_TILT_POSITION: 0,
+    CoverEntityCapabilityAttribute.CLOSED_TILT_POSITIONS: [100],
+}
+
+
 @pytest.mark.parametrize(
-    ("open_tilt_position", "target_state", "expected_tilt_position"),
+    (
+        "current_state",
+        "current_tilt",
+        "tilt_attributes",
+        "target_state",
+        "expected_tilt_positions",
+    ),
     [
-        pytest.param(50, CoverState.OPEN, 50, id="open_in_the_middle"),
-        pytest.param(50, CoverState.CLOSED, 0, id="close_from_the_middle"),
-        pytest.param(0, CoverState.OPEN, 0, id="open_at_0"),
-        pytest.param(0, CoverState.CLOSED, 100, id="close_when_open_at_0"),
+        pytest.param(
+            CoverState.CLOSED, 0, OPEN_AT_50, CoverState.OPEN, [50], id="open_at_50"
+        ),
+        pytest.param(
+            CoverState.OPEN, 30, OPEN_AT_50, CoverState.CLOSED, [0], id="close_from_30"
+        ),
+        pytest.param(
+            CoverState.OPEN, 100, OPEN_AT_50, CoverState.CLOSED, [], id="closed_at_100"
+        ),
+        pytest.param(
+            CoverState.CLOSED, 100, OPEN_AT_0, CoverState.OPEN, [0], id="open_at_0"
+        ),
+        pytest.param(
+            CoverState.OPEN, 0, OPEN_AT_0, CoverState.CLOSED, [100], id="close_at_100"
+        ),
+        pytest.param(
+            CoverState.CLOSED, 0, {}, CoverState.OPEN, [100], id="default_open"
+        ),
+        pytest.param(
+            CoverState.OPEN, 50, {}, CoverState.CLOSED, [0], id="default_close"
+        ),
     ],
 )
-async def test_reproducing_open_tilt_position(
+async def test_reproducing_state_with_tilt_positions(
     hass: HomeAssistant,
-    open_tilt_position: int,
+    current_state: CoverState,
+    current_tilt: int,
+    tilt_attributes: dict[str, Any],
     target_state: CoverState,
-    expected_tilt_position: int,
+    expected_tilt_positions: list[int],
 ) -> None:
-    """Test reproducing a state uses the open tilt position of the cover."""
+    """Test a state without tilt uses the open and closed tilt positions."""
     hass.states.async_set(
         "cover.entity",
-        CoverState.OPEN,
+        current_state,
         {
-            ATTR_CURRENT_TILT_POSITION: 30,
+            ATTR_CURRENT_TILT_POSITION: current_tilt,
             ATTR_SUPPORTED_FEATURES: CoverEntityFeature.SET_TILT_POSITION,
-            CoverEntityCapabilityAttribute.OPEN_TILT_POSITION: open_tilt_position,
+            **tilt_attributes,
         },
     )
     calls = async_mock_service(hass, DOMAIN, SERVICE_SET_COVER_TILT_POSITION)
 
     await async_reproduce_state(hass, [State("cover.entity", target_state)])
 
-    assert len(calls) == 1
-    assert calls[0].data == {
-        "entity_id": "cover.entity",
-        ATTR_TILT_POSITION: expected_tilt_position,
-    }
-
-
-@pytest.mark.parametrize(
-    ("open_tilt_position", "target_tilt_position", "expected_service"),
-    [
-        pytest.param(50, 50, SERVICE_OPEN_COVER_TILT, id="open_in_the_middle"),
-        pytest.param(50, 0, SERVICE_CLOSE_COVER_TILT, id="close_from_the_middle"),
-        pytest.param(50, 100, SERVICE_CLOSE_COVER_TILT, id="close_at_the_other_end"),
-        pytest.param(0, 0, SERVICE_OPEN_COVER_TILT, id="open_at_0"),
-        pytest.param(0, 100, SERVICE_CLOSE_COVER_TILT, id="close_when_open_at_0"),
-    ],
-)
-async def test_reproducing_tilt_position_with_open_and_close_tilt_only(
-    hass: HomeAssistant,
-    open_tilt_position: int,
-    target_tilt_position: int,
-    expected_service: str,
-) -> None:
-    """Test a cover that cannot set its tilt opens at its open tilt position."""
-    hass.states.async_set(
-        "cover.entity",
-        CoverState.OPEN,
-        {
-            ATTR_CURRENT_TILT_POSITION: 30,
-            ATTR_SUPPORTED_FEATURES: CoverEntityFeature.OPEN_TILT
-            | CoverEntityFeature.CLOSE_TILT,
-            CoverEntityCapabilityAttribute.OPEN_TILT_POSITION: open_tilt_position,
-        },
-    )
-    calls = {
-        service: async_mock_service(hass, DOMAIN, service)
-        for service in (SERVICE_OPEN_COVER_TILT, SERVICE_CLOSE_COVER_TILT)
-    }
-
-    await async_reproduce_state(
-        hass,
-        [
-            State(
-                "cover.entity",
-                CoverState.OPEN,
-                {ATTR_CURRENT_TILT_POSITION: target_tilt_position},
-            )
-        ],
-    )
-
-    assert len(calls[expected_service]) == 1
-    assert sum(len(service_calls) for service_calls in calls.values()) == 1
+    assert [call.data[ATTR_TILT_POSITION] for call in calls] == expected_tilt_positions
