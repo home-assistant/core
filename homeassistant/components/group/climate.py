@@ -152,7 +152,10 @@ def _mean(*args: float) -> float:
 
 
 def _most_frequent_attribute(states: list[State], key: str) -> Any | None:
-    """Return the most frequent attribute value, the first member wins a tie."""
+    """Return the most frequent attribute value.
+
+    A tie goes to the tied value that comes first in the member list.
+    """
     if counts := Counter(find_state_attributes(states, key)).most_common(1):
         return counts[0][0]
     return None
