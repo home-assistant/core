@@ -43,7 +43,6 @@ SENSORS: tuple[SensorEntityDescription, ...] = (
     ),
     SensorEntityDescription(
         key="pm4",
-        translation_key="pm4",
         device_class=SensorDeviceClass.PM4,
         native_unit_of_measurement=UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
     ),

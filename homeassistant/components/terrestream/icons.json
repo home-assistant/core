@@ -4,9 +4,6 @@
       "nox_index": {
         "default": "mdi:molecule"
       },
-      "pm4": {
-        "default": "mdi:blur"
-      },
       "voc_index": {
         "default": "mdi:molecule"
       }
