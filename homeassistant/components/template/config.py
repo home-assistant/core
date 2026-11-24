@@ -1,6 +1,6 @@
 """Template config validator."""
 
-from collections.abc import Callable, Collection, Mapping
+from collections.abc import Callable
 from contextlib import suppress
 import itertools
 import logging
@@ -81,12 +81,10 @@ from . import (
     weather as weather_platform,
 )
 from .const import (
-    CONF_ATTRIBUTES,
     CONF_TRIGGER_VARIABLES,
-    DEPRECATED_ATTRIBUTES,
+    DEPRECATED_TEMPLATE_OPTIONS,
     DOMAIN,
     PLATFORMS,
-    WEATHER_DEPRECATED_TEMPLATE_OPTIONS,
     TemplateConfig,
     TemplateConfigSections,
 )
@@ -430,50 +428,21 @@ async def _async_validate_triggers_and_conditions(
             raise
 
 
-# Deprecated options per platform whose file and line are kept for repairs
-DEPRECATED_OPTIONS_WITH_LOCATIONS: dict[str, Collection[str]] = {
-    WEATHER_DOMAIN: WEATHER_DEPRECATED_TEMPLATE_OPTIONS,
-}
-
-
-def _get_key_locations(
-    options: Mapping[Any, Any], keys: Collection[str]
-) -> dict[str, tuple[str, int]]:
-    """Return the file and line of the keys loaded from YAML."""
-    return {
-        key: (key.__config_file__, key.__line__)
-        for key in options
-        if key in keys and hasattr(key, "__config_file__")
-    }
-
-
 def _get_option_locations(
     config: TemplateConfig,
 ) -> dict[str, list[dict[str, tuple[str, int]]]]:
     """Return the file and line of the deprecated entity options loaded from YAML."""
     return {
-        platform: [
-            _get_key_locations(entity_config, options)
-            for entity_config in config[platform]
+        deprecation.platform: [
+            {
+                key: (key.__config_file__, key.__line__)
+                for key in deprecation.options_config(entity_config)
+                if key in deprecation.options and hasattr(key, "__config_file__")
+            }
+            for entity_config in config[deprecation.platform]
         ]
-        for platform, options in DEPRECATED_OPTIONS_WITH_LOCATIONS.items()
-        if platform in config
-    }
-
-
-def _get_attribute_locations(
-    config: TemplateConfig,
-) -> dict[str, list[dict[str, tuple[str, int]]]]:
-    """Return the file and line of the deprecated attributes loaded from YAML."""
-    return {
-        platform: [
-            _get_key_locations(attributes, options)
-            if isinstance(attributes := entity_config.get(CONF_ATTRIBUTES), dict)
-            else {}
-            for entity_config in config[platform]
-        ]
-        for platform, options in DEPRECATED_ATTRIBUTES.items()
-        if platform in config
+        for deprecation in DEPRECATED_TEMPLATE_OPTIONS
+        if deprecation.platform in config
     }
 
 
@@ -522,7 +491,6 @@ async def async_validate_config(hass: HomeAssistant, config: ConfigType) -> Conf
             continue
 
         template_config.option_locations = _get_option_locations(template_config)
-        template_config.attribute_locations = _get_attribute_locations(template_config)
         config_sections.append(template_config)
 
     # Create a copy of the configuration with all config for current

@@ -19,10 +19,6 @@ from pytest_homeassistant.plugins import WebSocketGenerator
 
 from homeassistant.components import template
 from homeassistant.components.device_automation import toggle_entity
-from homeassistant.components.template.repairs import (
-    DEPRECATED_ATTRIBUTES_BREAKS_IN,
-    DEPRECATED_ATTRIBUTES_ISSUE_ID,
-)
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.core import HomeAssistant, ServiceCall, State
 from homeassistant.data_entry_flow import FlowResultType
@@ -742,22 +738,3 @@ def get_issues_with_prefix(
         for (domain, issue_id), issue in issue_registry.issues.items()
         if domain == template.DOMAIN and issue_id.startswith(f"{issue_id_prefix}_")
     ]
-
-
-def assert_deprecated_attributes_issue(
-    issue_registry: ir.IssueRegistry,
-    platform: str,
-    identifier: str,
-    options: str,
-) -> None:
-    """Assert a single deprecated attributes issue exists."""
-    issues = get_issues_with_prefix(issue_registry, DEPRECATED_ATTRIBUTES_ISSUE_ID)
-    assert len(issues) == 1
-    assert issues[0].breaks_in_ha_version == DEPRECATED_ATTRIBUTES_BREAKS_IN
-    assert issues[0].severity == ir.IssueSeverity.WARNING
-    assert issues[0].translation_key == DEPRECATED_ATTRIBUTES_ISSUE_ID
-    assert issues[0].translation_placeholders == {
-        "platform": platform,
-        "identifier": identifier,
-        "options": options,
-    }

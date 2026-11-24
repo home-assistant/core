@@ -18,10 +18,14 @@ from homeassistant.components.template.config import (
     async_validate_config,
     async_validate_config_section,
 )
-from homeassistant.components.template.const import PLATFORMS, TemplateService
-from homeassistant.components.template.repairs import (
-    DEPRECATED_ATTRIBUTES_ISSUE_ID,
-    DEPRECATED_TEMPLATE_OPTIONS_ISSUE_ID,
+from homeassistant.components.template.const import (
+    BINARY_SENSOR_DEPRECATED_ATTRIBUTES,
+    EVENT_DEPRECATED_ATTRIBUTES,
+    PLATFORMS,
+    SENSOR_DEPRECATED_ATTRIBUTES,
+    VACUUM_DEPRECATED_ATTRIBUTES,
+    WEATHER_DEPRECATED_OPTIONS,
+    TemplateService,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import (
@@ -40,7 +44,6 @@ from .conftest import (
     ConfigurationStyle,
     TemplatePlatformSetup,
     assert_action,
-    assert_deprecated_attributes_issue,
     async_trigger,
     get_issues_with_prefix,
     make_mock_device_actions,
@@ -1516,7 +1519,7 @@ async def test_deprecated_template_options_issue_file_and_line(
     await async_setup_yaml_config(hass, yaml_config_dir, WEATHER_LEGACY_YAML)
 
     issues = get_issues_with_prefix(
-        issue_registry, DEPRECATED_TEMPLATE_OPTIONS_ISSUE_ID
+        issue_registry, WEATHER_DEPRECATED_OPTIONS.translation_key
     )
     assert [issue.translation_placeholders for issue in issues] == [
         {"identifier": "name: Test", "options": legacy_options(4)},
@@ -1529,7 +1532,9 @@ async def test_deprecated_template_options_issue_file_and_line(
     )
 
     assert (
-        get_issues_with_prefix(issue_registry, DEPRECATED_TEMPLATE_OPTIONS_ISSUE_ID)
+        get_issues_with_prefix(
+            issue_registry, WEATHER_DEPRECATED_OPTIONS.translation_key
+        )
         == []
     )
 
@@ -1552,7 +1557,7 @@ async def test_deprecated_template_options_issue_per_entity(
     )
 
     issues = get_issues_with_prefix(
-        issue_registry, DEPRECATED_TEMPLATE_OPTIONS_ISSUE_ID
+        issue_registry, WEATHER_DEPRECATED_OPTIONS.translation_key
     )
     assert [issue.translation_placeholders for issue in issues] == [
         {"identifier": "name: Test", "options": legacy_options(4)},
@@ -1568,7 +1573,7 @@ async def test_deprecated_template_options_issue_one_entity_fixed(
         hass, yaml_config_dir, WEATHER_LEGACY_YAML + WEATHER_SECOND_LEGACY_YAML
     )
     issues = get_issues_with_prefix(
-        issue_registry, DEPRECATED_TEMPLATE_OPTIONS_ISSUE_ID
+        issue_registry, WEATHER_DEPRECATED_OPTIONS.translation_key
     )
     assert [issue.translation_placeholders for issue in issues] == [
         {"identifier": "name: Test", "options": legacy_options(4)},
@@ -1585,7 +1590,7 @@ async def test_deprecated_template_options_issue_one_entity_fixed(
     )
 
     assert get_issues_with_prefix(
-        issue_registry, DEPRECATED_TEMPLATE_OPTIONS_ISSUE_ID
+        issue_registry, WEATHER_DEPRECATED_OPTIONS.translation_key
     ) == [second_issue]
 
 
@@ -1608,7 +1613,7 @@ template:
     )
 
     issues = get_issues_with_prefix(
-        issue_registry, DEPRECATED_TEMPLATE_OPTIONS_ISSUE_ID
+        issue_registry, WEATHER_DEPRECATED_OPTIONS.translation_key
     )
     assert [issue.translation_placeholders for issue in issues] == [
         {"identifier": "unique_id: kitchen", "options": legacy_options(5)},
@@ -1639,7 +1644,7 @@ template:
     )
 
     issues = get_issues_with_prefix(
-        issue_registry, DEPRECATED_TEMPLATE_OPTIONS_ISSUE_ID
+        issue_registry, WEATHER_DEPRECATED_OPTIONS.translation_key
     )
     assert [issue.translation_placeholders for issue in issues] == [
         {"identifier": "name: Test", "options": legacy_options(5)},
@@ -1668,7 +1673,7 @@ template:
     )
 
     assert get_issues_with_prefix(
-        issue_registry, DEPRECATED_TEMPLATE_OPTIONS_ISSUE_ID
+        issue_registry, WEATHER_DEPRECATED_OPTIONS.translation_key
     ) == [second_issue]
 
 
@@ -1678,7 +1683,7 @@ async def test_deprecated_template_options_issue_dismissed(
     """Test a dismissed repair stays dismissed until the configuration changes."""
     await async_setup_yaml_config(hass, yaml_config_dir, WEATHER_LEGACY_YAML)
     issues = get_issues_with_prefix(
-        issue_registry, DEPRECATED_TEMPLATE_OPTIONS_ISSUE_ID
+        issue_registry, WEATHER_DEPRECATED_OPTIONS.translation_key
     )
     assert len(issues) == 1
     dismissed_issue_id = issues[0].issue_id
@@ -1688,7 +1693,7 @@ async def test_deprecated_template_options_issue_dismissed(
     await async_reload_yaml_config(hass, yaml_config_dir, "\n" + WEATHER_LEGACY_YAML)
 
     issues = get_issues_with_prefix(
-        issue_registry, DEPRECATED_TEMPLATE_OPTIONS_ISSUE_ID
+        issue_registry, WEATHER_DEPRECATED_OPTIONS.translation_key
     )
     assert len(issues) == 1
     assert issues[0].issue_id == dismissed_issue_id
@@ -1699,7 +1704,7 @@ async def test_deprecated_template_options_issue_dismissed(
     )
 
     issues = get_issues_with_prefix(
-        issue_registry, DEPRECATED_TEMPLATE_OPTIONS_ISSUE_ID
+        issue_registry, WEATHER_DEPRECATED_OPTIONS.translation_key
     )
     assert len(issues) == 1
     assert issues[0].issue_id != dismissed_issue_id
@@ -1712,7 +1717,7 @@ async def test_deprecated_template_options_issue_not_changed_by_config_check(
     """Test validating the configuration without reloading keeps the repair."""
     await async_setup_yaml_config(hass, yaml_config_dir, WEATHER_LEGACY_YAML)
     issues = get_issues_with_prefix(
-        issue_registry, DEPRECATED_TEMPLATE_OPTIONS_ISSUE_ID
+        issue_registry, WEATHER_DEPRECATED_OPTIONS.translation_key
     )
     assert len(issues) == 1
 
@@ -1725,7 +1730,9 @@ async def test_deprecated_template_options_issue_not_changed_by_config_check(
     await async_validate_config(hass, fixed_config)
 
     assert (
-        get_issues_with_prefix(issue_registry, DEPRECATED_TEMPLATE_OPTIONS_ISSUE_ID)
+        get_issues_with_prefix(
+            issue_registry, WEATHER_DEPRECATED_OPTIONS.translation_key
+        )
         == issues
     )
 
@@ -1757,7 +1764,7 @@ async def test_deprecated_template_options_issue_kept_with_invalid_section(
     """Test an invalid section doesn't delete repairs or their ignore flag."""
     await async_setup_yaml_config(hass, yaml_config_dir, WEATHER_LEGACY_YAML)
     issues = get_issues_with_prefix(
-        issue_registry, DEPRECATED_TEMPLATE_OPTIONS_ISSUE_ID
+        issue_registry, WEATHER_DEPRECATED_OPTIONS.translation_key
     )
     assert len(issues) == 1
     issue_registry.async_ignore(DOMAIN, issues[0].issue_id, True)
@@ -1766,13 +1773,13 @@ async def test_deprecated_template_options_issue_kept_with_invalid_section(
     await async_reload_yaml_config(hass, yaml_config_dir, invalid_yaml)
 
     assert get_issues_with_prefix(
-        issue_registry, DEPRECATED_TEMPLATE_OPTIONS_ISSUE_ID
+        issue_registry, WEATHER_DEPRECATED_OPTIONS.translation_key
     ) == [issue]
 
     await async_reload_yaml_config(hass, yaml_config_dir, WEATHER_LEGACY_YAML)
 
     assert get_issues_with_prefix(
-        issue_registry, DEPRECATED_TEMPLATE_OPTIONS_ISSUE_ID
+        issue_registry, WEATHER_DEPRECATED_OPTIONS.translation_key
     ) == [issue]
 
 
@@ -1781,12 +1788,16 @@ async def test_deprecated_template_options_issue_removed_without_template_config
 ) -> None:
     """Test the repair is removed when the template configuration is removed."""
     await async_setup_yaml_config(hass, yaml_config_dir, WEATHER_LEGACY_YAML)
-    assert get_issues_with_prefix(issue_registry, DEPRECATED_TEMPLATE_OPTIONS_ISSUE_ID)
+    assert get_issues_with_prefix(
+        issue_registry, WEATHER_DEPRECATED_OPTIONS.translation_key
+    )
 
     await async_reload_yaml_config(hass, yaml_config_dir, "homeassistant:\n")
 
     assert (
-        get_issues_with_prefix(issue_registry, DEPRECATED_TEMPLATE_OPTIONS_ISSUE_ID)
+        get_issues_with_prefix(
+            issue_registry, WEATHER_DEPRECATED_OPTIONS.translation_key
+        )
         == []
     )
 
@@ -1813,7 +1824,7 @@ template:
     )
 
     issues = get_issues_with_prefix(
-        issue_registry, DEPRECATED_TEMPLATE_OPTIONS_ISSUE_ID
+        issue_registry, WEATHER_DEPRECATED_OPTIONS.translation_key
     )
     assert [issue.translation_placeholders for issue in issues] == [
         {
@@ -1843,7 +1854,7 @@ template:
     )
 
     remaining = get_issues_with_prefix(
-        issue_registry, DEPRECATED_TEMPLATE_OPTIONS_ISSUE_ID
+        issue_registry, WEATHER_DEPRECATED_OPTIONS.translation_key
     )
     assert [
         (issue.issue_id, issue.dismissed_version, issue.translation_placeholders)
@@ -1884,7 +1895,9 @@ async def test_deprecated_template_options_issue_blueprint(
     await hass.async_block_till_done()
 
     assert (
-        get_issues_with_prefix(issue_registry, DEPRECATED_TEMPLATE_OPTIONS_ISSUE_ID)
+        get_issues_with_prefix(
+            issue_registry, WEATHER_DEPRECATED_OPTIONS.translation_key
+        )
         == snapshot
     )
 
@@ -1901,6 +1914,17 @@ async def test_option_locations_only_deprecated_options(
   - sensor:
       - name: Sensor
         state: "{{ 1 }}"
+        attributes:
+          device_class: energy
+          other: "{{ 2 }}"
+      - name: Template
+        state: "{{ 1 }}"
+        attributes: "{{ {'device_class': 'energy'} }}"
+  - switch:
+      - name: Switch
+        state: "{{ True }}"
+        turn_on: []
+        turn_off: []
 """,
     )
     config = await hass.async_add_executor_job(load_yaml_dict, yaml_path)
@@ -1917,6 +1941,7 @@ async def test_option_locations_only_deprecated_options(
                 }
             ]
         },
+        {"sensor": [{"device_class": (str(yaml_path), 11)}, {}]},
         {},
     ]
 
@@ -1932,113 +1957,32 @@ template:
 """
 
 
+def get_deprecated_sensor_attributes_issues(
+    issue_registry: ir.IssueRegistry,
+) -> list[ir.IssueEntry]:
+    """Return the deprecated sensor attributes issues."""
+    return get_issues_with_prefix(
+        issue_registry, SENSOR_DEPRECATED_ATTRIBUTES.translation_key
+    )
+
+
 async def test_deprecated_attributes_issue_file_and_line(
     hass: HomeAssistant, issue_registry: ir.IssueRegistry, yaml_config_dir: Path
 ) -> None:
-    """Test the repair lists the file and line of each attribute."""
+    """Test the repair lists file and line, and is removed after a fix."""
     await async_setup_yaml_config(
         hass, yaml_config_dir, DEPRECATED_ATTRIBUTES_SENSOR_YAML
     )
 
-    assert_deprecated_attributes_issue(
-        issue_registry,
-        "sensor",
-        "name: Test",
-        "- `configuration.yaml:6`: `attributes: device_class` → `device_class`",
-    )
-
-
-@pytest.mark.parametrize(
-    "config",
-    [
-        pytest.param(
-            {
-                "sensor": {
-                    "state": "{{ 1 }}",
-                    "attributes": {"options": "{{ ['a'] }}", "other": "{{ 2 }}"},
-                }
-            },
-            id="allowed_attributes",
-        ),
-        pytest.param(
-            {
-                "sensor": {
-                    "state": "{{ 1 }}",
-                    "attributes": "{{ {'device_class': 'energy'} }}",
-                }
-            },
-            id="attributes_template",
-        ),
-        pytest.param(
-            {
-                "switch": {
-                    "state": "{{ True }}",
-                    "turn_on": [],
-                    "turn_off": [],
-                    "attributes": {"fan_speed": "{{ 'low' }}"},
-                }
-            },
-            id="other_platform",
-        ),
-    ],
-)
-async def test_no_deprecated_attributes_issue(
-    hass: HomeAssistant, issue_registry: ir.IssueRegistry, config: ConfigType
-) -> None:
-    """Test no repair is created when attributes do not set an option."""
-    assert await async_setup_component(hass, DOMAIN, {DOMAIN: [config]})
-    await hass.async_block_till_done()
-
-    assert get_issues_with_prefix(issue_registry, DEPRECATED_ATTRIBUTES_ISSUE_ID) == []
-
-
-async def test_deprecated_attributes_issue_per_platform(
-    hass: HomeAssistant, issue_registry: ir.IssueRegistry, yaml_config_dir: Path
-) -> None:
-    """Test entities of different platforms with the same config have own repairs."""
-    await async_setup_yaml_config(
-        hass,
-        yaml_config_dir,
-        DEPRECATED_ATTRIBUTES_SENSOR_YAML
-        + """\
-  - binary_sensor:
-      - name: Test
-        state: "{{ True }}"
-        attributes:
-          device_class: energy
-          other: "{{ 2 }}"
-""",
-    )
-
-    issues = get_issues_with_prefix(issue_registry, DEPRECATED_ATTRIBUTES_ISSUE_ID)
+    issues = get_deprecated_sensor_attributes_issues(issue_registry)
     assert [issue.translation_placeholders for issue in issues] == [
         {
-            "platform": "sensor",
             "identifier": "name: Test",
             "options": (
                 "- `configuration.yaml:6`: `attributes: device_class` → `device_class`"
             ),
-        },
-        {
-            "platform": "binary sensor",
-            "identifier": "name: Test",
-            "options": (
-                "- `configuration.yaml:12`: `attributes: device_class` → `device_class`"
-            ),
-        },
+        }
     ]
-
-
-async def test_deprecated_attributes_issue_removed(
-    hass: HomeAssistant, issue_registry: ir.IssueRegistry, yaml_config_dir: Path
-) -> None:
-    """Test the repair is removed after the configuration is fixed."""
-    await async_setup_yaml_config(
-        hass, yaml_config_dir, DEPRECATED_ATTRIBUTES_SENSOR_YAML
-    )
-    assert (
-        len(get_issues_with_prefix(issue_registry, DEPRECATED_ATTRIBUTES_ISSUE_ID)) == 1
-    )
 
     await async_reload_yaml_config(
         hass,
@@ -2049,27 +1993,27 @@ async def test_deprecated_attributes_issue_removed(
         ),
     )
 
-    assert get_issues_with_prefix(issue_registry, DEPRECATED_ATTRIBUTES_ISSUE_ID) == []
+    assert get_deprecated_sensor_attributes_issues(issue_registry) == []
 
 
 async def test_deprecated_attributes_issue_dismissed(
     hass: HomeAssistant, issue_registry: ir.IssueRegistry, yaml_config_dir: Path
 ) -> None:
-    """Test a dismissed repair stays dismissed until the configuration changes."""
+    """Test a dismissed repair stays dismissed until the attribute changes."""
     await async_setup_yaml_config(
         hass, yaml_config_dir, DEPRECATED_ATTRIBUTES_SENSOR_YAML
     )
-    issues = get_issues_with_prefix(issue_registry, DEPRECATED_ATTRIBUTES_ISSUE_ID)
+    issues = get_deprecated_sensor_attributes_issues(issue_registry)
     assert len(issues) == 1
     dismissed_issue_id = issues[0].issue_id
     issue_registry.async_ignore(DOMAIN, dismissed_issue_id, True)
 
-    # Moving the options to other lines is not a configuration change
+    # Moving the attributes to other lines is not a configuration change
     await async_reload_yaml_config(
         hass, yaml_config_dir, "\n" + DEPRECATED_ATTRIBUTES_SENSOR_YAML
     )
 
-    issues = get_issues_with_prefix(issue_registry, DEPRECATED_ATTRIBUTES_ISSUE_ID)
+    issues = get_deprecated_sensor_attributes_issues(issue_registry)
     assert len(issues) == 1
     assert issues[0].issue_id == dismissed_issue_id
     assert issues[0].dismissed_version is not None
@@ -2080,38 +2024,78 @@ async def test_deprecated_attributes_issue_dismissed(
         DEPRECATED_ATTRIBUTES_SENSOR_YAML.replace("energy", "power"),
     )
 
-    issues = get_issues_with_prefix(issue_registry, DEPRECATED_ATTRIBUTES_ISSUE_ID)
+    issues = get_deprecated_sensor_attributes_issues(issue_registry)
     assert len(issues) == 1
     assert issues[0].issue_id != dismissed_issue_id
     assert issues[0].dismissed_version is None
 
 
-async def test_attribute_locations_only_deprecated_attributes(
-    hass: HomeAssistant, yaml_config_dir: Path
+async def test_no_deprecated_attributes_issue_other_platform(
+    hass: HomeAssistant, issue_registry: ir.IssueRegistry
 ) -> None:
-    """Test only the deprecated attributes of opted in platforms keep a location."""
-    yaml_path = yaml_config_dir / "configuration.yaml"
-    await hass.async_add_executor_job(
-        yaml_path.write_text,
-        DEPRECATED_ATTRIBUTES_SENSOR_YAML
-        + """\
-      - name: Template
-        state: "{{ 1 }}"
-        attributes: "{{ {'device_class': 'energy'} }}"
-  - switch:
-      - name: Switch
-        state: "{{ True }}"
-        turn_on: []
-        turn_off: []
-        attributes:
-          fan_speed: low
-""",
+    """Test attributes of platforms without deprecated attributes create no repair."""
+    assert await async_setup_component(
+        hass,
+        DOMAIN,
+        {
+            DOMAIN: [
+                {
+                    "switch": {
+                        "state": "{{ True }}",
+                        "turn_on": [],
+                        "turn_off": [],
+                        "attributes": {"fan_speed": "{{ 'low' }}"},
+                    }
+                }
+            ]
+        },
     )
-    config = await hass.async_add_executor_job(load_yaml_dict, yaml_path)
+    await hass.async_block_till_done()
 
-    validated = await async_validate_config(hass, config)
+    for deprecation in (
+        BINARY_SENSOR_DEPRECATED_ATTRIBUTES,
+        EVENT_DEPRECATED_ATTRIBUTES,
+        SENSOR_DEPRECATED_ATTRIBUTES,
+        VACUUM_DEPRECATED_ATTRIBUTES,
+    ):
+        assert get_issues_with_prefix(issue_registry, deprecation.translation_key) == []
 
-    assert [section.attribute_locations for section in validated[DOMAIN]] == [
-        {"sensor": [{"device_class": (str(yaml_path), 6)}, {}]},
-        {},
-    ]
+
+async def test_deprecated_attributes_issue_blueprint(
+    hass: HomeAssistant, issue_registry: ir.IssueRegistry
+) -> None:
+    """Test all instances of a sensor blueprint share one repair."""
+    assert await async_setup_component(
+        hass,
+        DOMAIN,
+        {
+            DOMAIN: [
+                {
+                    "use_blueprint": {
+                        "path": "test_sensor_with_deprecated_attributes.yaml",
+                        "input": {"sensor": sensor},
+                    },
+                    "name": name,
+                }
+                for sensor, name in (
+                    ("sensor.first", "First"),
+                    ("sensor.second", "Second"),
+                )
+            ]
+        },
+    )
+    await hass.async_block_till_done()
+
+    issues = get_deprecated_sensor_attributes_issues(issue_registry)
+    assert len(issues) == 1
+    assert (
+        issues[0].translation_key
+        == SENSOR_DEPRECATED_ATTRIBUTES.blueprint_translation_key
+    )
+    assert issues[0].translation_placeholders == {
+        "blueprint": "test_sensor_with_deprecated_attributes.yaml",
+        "options": (
+            "- `blueprints/template/test_sensor_with_deprecated_attributes.yaml:17`: "
+            "`attributes: device_class` → `device_class`"
+        ),
+    }

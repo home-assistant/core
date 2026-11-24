@@ -14,6 +14,7 @@ from pytest_homeassistant.typing import WebSocketGenerator
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components import template, vacuum
+from homeassistant.components.template.const import VACUUM_DEPRECATED_ATTRIBUTES
 from homeassistant.components.template.vacuum import CONF_CLEAN_SEGMENTS, CONF_SEGMENTS
 from homeassistant.components.vacuum import (
     ATTR_FAN_SPEED,
@@ -42,12 +43,12 @@ from .conftest import (
     TemplatePlatformSetup,
     assert_action,
     assert_attributes_template,
-    assert_deprecated_attributes_issue,
     assert_invalid_config_entry_actions_do_not_create_entities,
     assert_invalid_yaml_actions_do_not_create_entities,
     assert_state_and_attributes,
     async_get_flow_preview_state,
     async_trigger,
+    get_issues_with_prefix,
     make_test_action,
     make_test_trigger,
     setup_and_test_nested_unique_id,
@@ -1603,19 +1604,30 @@ async def test_attributes_template_with_blocked_attributes(
     assert error in caplog.text
 
 
+def get_deprecated_attributes_issues(
+    issue_registry: ir.IssueRegistry,
+) -> list[ir.IssueEntry]:
+    """Return the deprecated attributes issues."""
+    return get_issues_with_prefix(
+        issue_registry, VACUUM_DEPRECATED_ATTRIBUTES.translation_key
+    )
+
+
 @pytest.mark.parametrize(
-    ("count", "vacuum_config"),
+    ("count", "vacuum_config", "options"),
     [
-        (
+        pytest.param(
             1,
-            {
-                **START_ACTION,
-                "attributes": {
-                    "fan_speed": "{{ 'low' }}",
-                    "fan_speed_list": "{{ ['low'] }}",
-                },
-            },
-        )
+            {**START_ACTION, "attributes": {"fan_speed": "{{ 'low' }}"}},
+            "- `attributes: fan_speed` → `fan_speed`",
+            id="fan_speed",
+        ),
+        pytest.param(
+            1,
+            {**START_ACTION, "attributes": {"fan_speed_list": "{{ ['low'] }}"}},
+            "- `attributes: fan_speed_list` → `fan_speeds`",
+            id="fan_speed_list",
+        ),
     ],
 )
 @pytest.mark.parametrize(
@@ -1623,15 +1635,45 @@ async def test_attributes_template_with_blocked_attributes(
 )
 @pytest.mark.usefixtures("setup_vacuum")
 async def test_deprecated_attributes_issue(
+    hass: HomeAssistant, issue_registry: ir.IssueRegistry, options: str
+) -> None:
+    """Test a repair issue is created for attributes that have a dedicated option."""
+    issues = get_deprecated_attributes_issues(issue_registry)
+    assert len(issues) == 1
+    assert issues[0].breaks_in_ha_version == "2027.6.0"
+    assert issues[0].is_fixable is False
+    assert issues[0].severity == ir.IssueSeverity.WARNING
+    assert issues[0].learn_more_url == (
+        "https://www.home-assistant.io/integrations/template/#vacuum"
+    )
+    assert issues[0].translation_key == VACUUM_DEPRECATED_ATTRIBUTES.translation_key
+    assert issues[0].translation_placeholders == {
+        "identifier": f"name: {TEST_VACUUM.object_id}",
+        "options": options,
+    }
+
+
+@pytest.mark.parametrize(
+    ("count", "vacuum_config"),
+    [
+        pytest.param(
+            1,
+            {**START_ACTION, "fan_speeds": ["low"], "attributes": {"other": "{{ 1 }}"}},
+            id="dedicated_option",
+        ),
+        pytest.param(
+            1,
+            {**START_ACTION, "attributes": "{{ {'fan_speed': 'low'} }}"},
+            id="attributes_template",
+        ),
+    ],
+)
+@pytest.mark.parametrize(
+    "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
+)
+@pytest.mark.usefixtures("setup_vacuum")
+async def test_no_deprecated_attributes_issue(
     hass: HomeAssistant, issue_registry: ir.IssueRegistry
 ) -> None:
-    """Test a repair is created for attributes that have a dedicated option."""
-    assert_deprecated_attributes_issue(
-        issue_registry,
-        "vacuum",
-        f"name: {TEST_VACUUM.object_id}",
-        (
-            "- `attributes: fan_speed` → `fan_speed`\n"
-            "- `attributes: fan_speed_list` → `fan_speeds`"
-        ),
-    )
+    """Test no repair issue is created for dedicated options or allowed attributes."""
+    assert get_deprecated_attributes_issues(issue_registry) == []
