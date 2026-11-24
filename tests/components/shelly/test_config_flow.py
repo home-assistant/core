@@ -2441,6 +2441,32 @@ async def test_zeroconf(
     assert len(mock_setup_entry.mock_calls) == 1
 
 
+@pytest.mark.usefixtures("mock_rpc_device")
+async def test_zeroconf_xmod_device(hass: HomeAssistant) -> None:
+    """Test zeroconf discovery of an XMOD device shows the XMOD model name."""
+    with patch(
+        "homeassistant.components.shelly.config_flow.get_info",
+        return_value={
+            "mac": "AABBCCDDEEFF",
+            "model": "S3XT-0S",
+            "auth": False,
+            "gen": 3,
+            "jwt": {"n": "Irrigation controller FK-06X"},
+        },
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            data=DISCOVERY_INFO,
+            context={"source": config_entries.SOURCE_ZEROCONF},
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "confirm_discovery"
+    assert result["description_placeholders"]["model"] == (
+        "Irrigation controller FK-06X"
+    )
+
+
 @pytest.mark.parametrize(
     ("gen", "model", "get_info"),
     [

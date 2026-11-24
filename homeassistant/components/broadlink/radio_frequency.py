@@ -4,7 +4,7 @@ import logging
 from typing import override
 
 from broadlink_async.exceptions import BroadlinkException
-from broadlink_async.remote import TICK
+from broadlink_async.remote import TICK, pulses_to_rm4_rf
 from rf_protocols import RadioFrequencyCommand
 
 from homeassistant.components.radio_frequency import RadioFrequencyTransmitterEntity
@@ -24,6 +24,11 @@ PARALLEL_UPDATES = 0
 # The device's timing unit in microseconds, taken from the library so the
 # IR and RF paths on the same hardware always agree.
 _TICK_US = TICK
+
+_MAX_TICKS = 0xFFFF  # About 2 s
+
+# Off time after a frame that ends on a pulse, as in a learned RM4 Pro code.
+_RM4_RF_GAP_US = 12_881
 
 _RF_433_TYPE_BYTE = 0xB2
 _RF_315_TYPE_BYTE = 0xB4
@@ -65,11 +70,18 @@ def encode_rf_packet(
 
     Each pulse is expressed as multiples of the Broadlink timing unit
     (about 30.45 µs, ``broadlink_async.remote.TICK``), which is the timing
-    resolution of the RF front-end.
+    resolution of the RF front-end. A duration shorter than half a unit is
+    written as one unit, since a lone 0x00 would be read as an escape.
     """
     buf = bytearray([type_byte, repeat_count, 0, 0])
     for duration in timings_us:
-        ticks = round(abs(duration) / _TICK_US)
+        ticks = max(round(abs(duration) / _TICK_US), 1)
+        if ticks > _MAX_TICKS:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="timing_too_long",
+                translation_placeholders={"duration": f"{abs(duration) / 1_000_000:g}"},
+            )
         div, mod = divmod(ticks, 256)
         if div:
             buf.append(0x00)
@@ -79,6 +91,31 @@ def encode_rf_packet(
     buf[2] = payload_len & 0xFF
     buf[3] = (payload_len >> 8) & 0xFF
     return bytes(buf)
+
+
+def encode_rm4_rf_packet(
+    *,
+    frequency: int,
+    repeat_count: int,
+    timings_us: list[int],
+) -> bytes:
+    """Encode raw OOK timings as an RM4 Pro RF packet that carries its frequency.
+
+    The frame is written out ``repeat_count + 1`` times.
+    """
+    gap_us = _RM4_RF_GAP_US if timings_us and timings_us[-1] > 0 else None
+    try:
+        return pulses_to_rm4_rf(
+            timings_us,
+            frequency / 1_000_000,
+            frames=repeat_count + 1,
+            gap_us=gap_us,
+        )
+    except ValueError as err:
+        raise HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key="invalid_rf_timings",
+        ) from err
 
 
 async def async_setup_entry(
@@ -111,12 +148,18 @@ class BroadlinkRadioFrequency(BroadlinkEntity, RadioFrequencyTransmitterEntity):
     @override
     async def async_send_command(self, command: RadioFrequencyCommand) -> None:
         """Encode an OOK command and transmit it via the Broadlink device."""
-        type_byte = _type_byte_for_frequency(command.frequency)
-        packet = encode_rf_packet(
-            type_byte=type_byte,
-            repeat_count=command.repeat_count,
-            timings_us=command.get_raw_timings(),
-        )
+        if self._device.api.type == "RM4PRO":
+            packet = encode_rm4_rf_packet(
+                frequency=command.frequency,
+                repeat_count=command.repeat_count,
+                timings_us=command.get_raw_timings(),
+            )
+        else:
+            packet = encode_rf_packet(
+                type_byte=_type_byte_for_frequency(command.frequency),
+                repeat_count=command.repeat_count,
+                timings_us=command.get_raw_timings(),
+            )
         _LOGGER.debug(
             "Transmitting RF packet: %d bytes on %d Hz (repeat=%d)",
             len(packet),

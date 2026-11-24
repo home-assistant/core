@@ -842,8 +842,8 @@ class BrSensor(SensorEntity):
                     _LOGGER.warning("No forecast for fcday=%s", fcday)
                     return False
 
-                if self.state is not None:
-                    self._attr_native_value = round(self.state * 3.6, 1)
+                if self._attr_native_value is not None:
+                    self._attr_native_value = round(self._attr_native_value * 3.6, 1)
                 return True
 
             # update all other sensors
@@ -898,8 +898,8 @@ class BrSensor(SensorEntity):
         if sensor_type == VISIBILITY:
             # hass wants visibility in km (not m), so convert:
             self._attr_native_value = data.get(sensor_type)
-            if self.state is not None:
-                self._attr_native_value = round(self.state / 1000, 1)
+            if self._attr_native_value is not None:
+                self._attr_native_value = round(self._attr_native_value / 1000, 1)
             return True
 
         # update all other sensors

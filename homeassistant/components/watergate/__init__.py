@@ -2,6 +2,7 @@
 
 import asyncio
 from collections.abc import Awaitable, Callable
+from functools import partial
 from http import HTTPStatus
 import logging
 
@@ -72,6 +73,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: WatergateConfigEntry) ->
     async_register(
         hass, DOMAIN, "Watergate", webhook_id, get_webhook_handler(coordinator)
     )
+    entry.async_on_unload(partial(async_unregister, hass, webhook_id))
 
     _LOGGER.debug("Registered webhook: %s", webhook_id)
 
@@ -86,8 +88,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: WatergateConfigEntry) ->
 
 async def async_unload_entry(hass: HomeAssistant, entry: WatergateConfigEntry) -> None:
     """Unload a config entry."""
-    webhook_id = entry.data[CONF_WEBHOOK_ID]
-    async_unregister(hass, webhook_id)
     await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
     # Best effort: an unreachable device must not block the unload.
     try:
@@ -151,6 +151,11 @@ def get_webhook_handler(
             )
 
         coordinator.async_set_updated_data(coordinator_data)
+
+        if isinstance(data, PowerSupplyChangedEventData):
+            # A battery may have been inserted or removed, which changes whether
+            # (and what) /power reports.
+            await coordinator.async_request_refresh()
 
         return HomeAssistantView.json(result="OK", status_code=HTTPStatus.OK)
 

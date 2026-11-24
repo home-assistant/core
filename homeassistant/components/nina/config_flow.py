@@ -81,8 +81,8 @@ def prepare_user_input(
         if val in compact:
             # Abenberg, St + Abenberger Wald
             compact[val] = f"{compact[val]} + {key}"
-            break
-        compact[val] = key
+        else:
+            compact[val] = key
 
     user_input[CONF_REGIONS] = compact
 

@@ -236,6 +236,8 @@ async def _async_validate_config_item(
         probatio.Invalid,
         HomeAssistantError,
     ) as err:
+        if isinstance(err, probatio.Invalid):
+            err.prepend([CONF_SEQUENCE])
         _log_invalid_script(
             err, script_name, "failed to setup sequence", validated_config
         )

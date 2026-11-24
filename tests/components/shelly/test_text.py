@@ -8,12 +8,12 @@ import pytest
 
 from homeassistant.components.shelly.const import DOMAIN
 from homeassistant.components.text import (
-    ATTR_VALUE,
     DOMAIN as TEXT_DOMAIN,
-    SERVICE_SET_VALUE,
+    TextService,
+    TextServiceArgument,
 )
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
-from homeassistant.const import ATTR_ENTITY_ID, Platform
+from homeassistant.const import Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import DeviceRegistry
@@ -73,8 +73,8 @@ async def test_rpc_device_virtual_text(
     monkeypatch.setitem(mock_rpc_device.status["text:203"], "value", "sed do eiusmod")
     await hass.services.async_call(
         TEXT_DOMAIN,
-        SERVICE_SET_VALUE,
-        {ATTR_ENTITY_ID: entity_id, ATTR_VALUE: "sed do eiusmod"},
+        TextService.SET_VALUE,
+        {TargetKey.ENTITY_ID: entity_id, TextServiceArgument.VALUE: "sed do eiusmod"},
         blocking=True,
     )
     mock_rpc_device.mock_update()
@@ -183,10 +183,10 @@ async def test_text_set_exc(
     with pytest.raises(HomeAssistantError, match=error):
         await hass.services.async_call(
             TEXT_DOMAIN,
-            SERVICE_SET_VALUE,
+            TextService.SET_VALUE,
             {
-                ATTR_ENTITY_ID: f"{TEXT_DOMAIN}.test_name_text_203",
-                ATTR_VALUE: "new value",
+                TargetKey.ENTITY_ID: f"{TEXT_DOMAIN}.test_name_text_203",
+                TextServiceArgument.VALUE: "new value",
             },
             blocking=True,
         )
@@ -215,10 +215,10 @@ async def test_text_set_reauth_error(
 
     await hass.services.async_call(
         TEXT_DOMAIN,
-        SERVICE_SET_VALUE,
+        TextService.SET_VALUE,
         {
-            ATTR_ENTITY_ID: f"{TEXT_DOMAIN}.test_name_text_203",
-            ATTR_VALUE: "new value",
+            TargetKey.ENTITY_ID: f"{TEXT_DOMAIN}.test_name_text_203",
+            TextServiceArgument.VALUE: "new value",
         },
         blocking=True,
     )

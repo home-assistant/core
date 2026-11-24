@@ -6,7 +6,7 @@ from devolo_home_control_api.devices.zwave import Zwave
 from devolo_home_control_api.exceptions import SwitchingProtected
 from devolo_home_control_api.homecontrol import HomeControl
 
-from homeassistant.components.light import ATTR_BRIGHTNESS, ColorMode, LightEntity
+from homeassistant.components.light import ColorMode, LightEntity, LightServiceArgument
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -71,8 +71,10 @@ class DevoloLightDeviceEntity(DevoloMultiLevelSwitchDeviceEntity, LightEntity):
     @override
     def turn_on(self, **kwargs: Any) -> None:
         """Turn device on."""
-        if kwargs.get(ATTR_BRIGHTNESS) is not None:
-            self._set_brightness(round(kwargs[ATTR_BRIGHTNESS] / 255 * 100))
+        if kwargs.get(LightServiceArgument.BRIGHTNESS) is not None:
+            self._set_brightness(
+                round(kwargs[LightServiceArgument.BRIGHTNESS] / 255 * 100)
+            )
         else:
             # Turn on the light device to the latest known
             # value. The value is known by the device itself.

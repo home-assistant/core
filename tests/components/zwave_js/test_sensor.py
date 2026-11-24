@@ -2,10 +2,14 @@
 
 import copy
 from datetime import timedelta
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 import pytest
-from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_capture_events,
+    async_fire_time_changed,
+)
 from zwave_js_server.const.command_class.meter import MeterType
 from zwave_js_server.event import Event
 from zwave_js_server.exceptions import FailedZWaveCommand
@@ -19,10 +23,9 @@ from homeassistant.components.sensor import (
 from homeassistant.components.zwave_js.const import (
     ATTR_METER_TYPE,
     ATTR_METER_TYPE_NAME,
-    ATTR_VALUE,
     DOMAIN,
-    SERVICE_REFRESH_VALUE,
-    SERVICE_RESET_METER,
+    ZWaveJSService,
+    ZWaveJSServiceArgument,
 )
 from homeassistant.components.zwave_js.helpers import get_valueless_base_unique_id
 from homeassistant.components.zwave_js.sensor import (
@@ -32,12 +35,13 @@ from homeassistant.components.zwave_js.sensor import (
 from homeassistant.config_entries import RELOAD_AFTER_UPDATE_DELAY
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
-    ATTR_ENTITY_ID,
     ATTR_UNIT_OF_MEASUREMENT,
+    EVENT_STATE_CHANGED,
     PERCENTAGE,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
     UV_INDEX,
+    CommonServiceArgument,
     EntityCategory,
     Platform,
     UnitOfElectricCurrent,
@@ -498,9 +502,9 @@ async def test_node_status_sensor_not_ready(
 
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_REFRESH_VALUE,
+        ZWaveJSService.REFRESH_VALUE,
         {
-            ATTR_ENTITY_ID: node_status_entity_id,
+            CommonServiceArgument.ENTITY_ID: node_status_entity_id,
         },
         blocking=True,
     )
@@ -529,9 +533,9 @@ async def test_reset_meter(
     # Test successful meter reset call
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_RESET_METER,
+        ZWaveJSService.RESET_METER,
         {
-            ATTR_ENTITY_ID: entity_id,
+            CommonServiceArgument.ENTITY_ID: entity_id,
         },
         blocking=True,
     )
@@ -548,11 +552,11 @@ async def test_reset_meter(
     # Test successful meter reset call with options
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_RESET_METER,
+        ZWaveJSService.RESET_METER,
         {
-            ATTR_ENTITY_ID: entity_id,
-            ATTR_METER_TYPE: 1,
-            ATTR_VALUE: 2,
+            CommonServiceArgument.ENTITY_ID: entity_id,
+            ZWaveJSServiceArgument.METER_TYPE: 1,
+            ZWaveJSServiceArgument.VALUE: 2,
         },
         blocking=True,
     )
@@ -573,8 +577,8 @@ async def test_reset_meter(
     with pytest.raises(HomeAssistantError) as err:
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_RESET_METER,
-            {ATTR_ENTITY_ID: entity_id},
+            ZWaveJSService.RESET_METER,
+            {CommonServiceArgument.ENTITY_ID: entity_id},
             blocking=True,
         )
 
@@ -825,24 +829,16 @@ async def test_unit_change(hass: HomeAssistant, zp3111, client, integration) -> 
     assert state.attributes[ATTR_DEVICE_CLASS] == SensorDeviceClass.TEMPERATURE
 
 
-async def test_new_sensor_invalid_scale(
-    hass: HomeAssistant, multisensor_6, client, integration
-) -> None:
-    """Test new-style numeric sensor handles UnknownValueData from invalid scale."""
-    entity_id = AIR_TEMPERATURE_SENSOR
-    state = hass.states.get(entity_id)
-    assert state
-    assert state.state == "9.0"
-    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == UnitOfTemperature.CELSIUS
-
-    # Update the metadata to an invalid scale (255) to trigger UnknownValueData
-    # in _get_scale_type on the next value update
-    event = Event(
+def _air_temperature_metadata_updated_event(
+    node: Node, scale: int, unit: str | None
+) -> Event:
+    """Return a metadata updated event for the air temperature value."""
+    return Event(
         "metadata updated",
         {
             "source": "node",
             "event": "metadata updated",
-            "nodeId": multisensor_6.node_id,
+            "nodeId": node.node_id,
             "args": {
                 "commandClassName": "Multilevel Sensor",
                 "commandClass": 49,
@@ -853,45 +849,145 @@ async def test_new_sensor_invalid_scale(
                     "readable": True,
                     "writeable": False,
                     "label": "Air temperature",
-                    "ccSpecific": {"sensorType": 1, "scale": 255},
-                    "unit": None,
+                    "ccSpecific": {"sensorType": 1, "scale": scale},
+                    "unit": unit,
                 },
                 "propertyName": "Air temperature",
-                "nodeId": multisensor_6.node_id,
+                "nodeId": node.node_id,
             },
         },
     )
-    multisensor_6.receive_event(event)
-    await hass.async_block_till_done()
 
-    # Fire a value updated event to trigger on_value_update which calls
-    # _get_scale_type - the invalid scale should raise UnknownValueData
-    # which is caught and returns None, triggering a reload since
-    # None != original TemperatureScale.CELSIUS
+
+def _air_temperature_value_updated_event(
+    node: Node, new_value: float, prev_value: float
+) -> Event:
+    """Return a value updated event for the air temperature value."""
+    return Event(
+        "value updated",
+        {
+            "source": "node",
+            "event": "value updated",
+            "nodeId": node.node_id,
+            "args": {
+                "commandClassName": "Multilevel Sensor",
+                "commandClass": 49,
+                "endpoint": 0,
+                "property": "Air temperature",
+                "newValue": new_value,
+                "prevValue": prev_value,
+                "propertyName": "Air temperature",
+            },
+        },
+    )
+
+
+@pytest.mark.parametrize(
+    ("scale", "unit", "expected_state", "expected_unit"),
+    [
+        # The metric test unit system converts the native °F to °C: 68 °F is 20 °C.
+        pytest.param(1, "°F", "20.0", UnitOfTemperature.CELSIUS, id="fahrenheit"),
+        # An invalid scale makes _get_scale_type catch UnknownValueData and return
+        # None, and the value is rediscovered as a numeric sensor without a unit.
+        pytest.param(255, None, "68.0", None, id="invalid_scale"),
+    ],
+)
+async def test_new_sensor_scale_change_rediscovers_entity(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    client: MagicMock,
+    multisensor_6: Node,
+    integration: MockConfigEntry,
+    scale: int,
+    unit: str | None,
+    expected_state: str,
+    expected_unit: str | None,
+) -> None:
+    """Test a scale change rediscovers the new-style sensor without a reload."""
+    entity_id = AIR_TEMPERATURE_SENSOR
+    entity_entry = entity_registry.async_get(entity_id)
+    assert entity_entry
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == "9.0"
+    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == UnitOfTemperature.CELSIUS
+    state_changed_events = async_capture_events(hass, EVENT_STATE_CHANGED)
+
+    # Let a scheduled reload run, so other entities would become unavailable.
+    with patch.object(
+        hass.config_entries,
+        "async_schedule_reload",
+        wraps=hass.config_entries.async_schedule_reload,
+    ) as mock_schedule_reload:
+        multisensor_6.receive_event(
+            _air_temperature_metadata_updated_event(multisensor_6, scale, unit)
+        )
+        await hass.async_block_till_done()
+        # Rediscovery waits for the value update that follows the metadata update.
+        state = hass.states.get(entity_id)
+        assert state
+        assert state.state == "9.0"
+        multisensor_6.receive_event(
+            _air_temperature_value_updated_event(multisensor_6, 68, 9)
+        )
+        await hass.async_block_till_done()
+
+    mock_schedule_reload.assert_not_called()
+    client.disconnect.assert_not_called()
+    new_entity_entry = entity_registry.async_get(entity_id)
+    assert new_entity_entry
+    assert new_entity_entry.id == entity_entry.id
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == expected_state
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == expected_unit
+    # Neither the old value in the new scale nor the new value in the old scale
+    # is reported in between.
+    assert [
+        event.data["new_state"].state
+        for event in state_changed_events
+        if event.data["entity_id"] == entity_id
+    ] == [STATE_UNAVAILABLE, expected_state]
+    assert not [
+        event.data["entity_id"]
+        for event in state_changed_events
+        if event.data["entity_id"] != entity_id
+        and event.data["new_state"].state == STATE_UNAVAILABLE
+    ]
+
+
+async def test_new_sensor_no_rediscovery_without_scale_change(
+    hass: HomeAssistant,
+    multisensor_6: Node,
+    integration: MockConfigEntry,
+) -> None:
+    """Test the new-style sensor is not rediscovered when the scale is unchanged."""
+    entity_id = AIR_TEMPERATURE_SENSOR
+    state_changed_events = async_capture_events(hass, EVENT_STATE_CHANGED)
+
     with patch.object(
         hass.config_entries, "async_schedule_reload"
     ) as mock_schedule_reload:
-        event = Event(
-            "value updated",
-            {
-                "source": "node",
-                "event": "value updated",
-                "nodeId": multisensor_6.node_id,
-                "args": {
-                    "commandClassName": "Multilevel Sensor",
-                    "commandClass": 49,
-                    "endpoint": 0,
-                    "property": "Air temperature",
-                    "newValue": 68,
-                    "prevValue": 9,
-                    "propertyName": "Air temperature",
-                },
-            },
+        multisensor_6.receive_event(
+            _air_temperature_metadata_updated_event(multisensor_6, 0, "°C")
         )
-        multisensor_6.receive_event(event)
+        await hass.async_block_till_done()
+        multisensor_6.receive_event(
+            _air_temperature_value_updated_event(multisensor_6, 20, 9)
+        )
         await hass.async_block_till_done()
 
-    mock_schedule_reload.assert_called_once_with(integration.entry_id)
+    # Removing the entity for rediscovery would write an unavailable state in between.
+    assert [
+        event.data["new_state"].state
+        for event in state_changed_events
+        if event.data["entity_id"] == entity_id
+    ] == ["20.0"]
+    mock_schedule_reload.assert_not_called()
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == "20.0"
+    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == UnitOfTemperature.CELSIUS
 
 
 CONTROLLER_STATISTICS_ENTITY_PREFIX = "sensor.z_stick_gen5_usb_controller_"
@@ -1120,8 +1216,8 @@ async def test_statistics_sensors(
 
             await hass.services.async_call(
                 DOMAIN,
-                SERVICE_REFRESH_VALUE,
-                {ATTR_ENTITY_ID: entity_id},
+                ZWaveJSService.REFRESH_VALUE,
+                {CommonServiceArgument.ENTITY_ID: entity_id},
                 blocking=True,
             )
     await hass.async_block_till_done()
