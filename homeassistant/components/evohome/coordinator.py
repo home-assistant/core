@@ -185,14 +185,14 @@ class EvoAccountCoordinator(_EvoCoordinator[_HighPrecisionTemps]):
             await self.client.setup()  # only config for now
 
         except ec2.ApiConnectionFailedError as err:
-            self.logger.debug("The request to the vendor's API failed: %s", err)
+            _log_api_call_failure(self.logger, err)
             raise UpdateFailedUnreachable(
                 translation_domain=DOMAIN,
                 translation_key=_api_call_error_key(err),
             ) from err
 
         except ec2.ApiCallFailedError as err:
-            self.logger.debug("The request to the vendor's API failed: %s", err)
+            _log_api_call_failure(self.logger, err)
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key=_api_call_error_key(err),
