@@ -14,7 +14,11 @@ from duosida_ev import (
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.helpers.update_coordinator import (
+    DataUpdateCoordinator,
+    UpdateFailed,
+    UpdateFailedUnreachable,
+)
 
 from .const import DOMAIN
 
@@ -62,9 +66,11 @@ class DuosidaCoordinator(DataUpdateCoordinator[ChargerStatus]):
         finally:
             self._closing = False
 
-    def _update_failed(self, translation_key: str) -> UpdateFailed:
+    def _update_failed(
+        self, error_class: type[UpdateFailed], translation_key: str
+    ) -> UpdateFailed:
         """Return an update error that also spaces out the setup retries."""
-        return UpdateFailed(
+        return error_class(
             translation_domain=DOMAIN,
             translation_key=translation_key,
             retry_after=WATCHDOG_INTERVAL.total_seconds(),
@@ -77,10 +83,12 @@ class DuosidaCoordinator(DataUpdateCoordinator[ChargerStatus]):
             # Returns at once while the session is open.
             info = await self.client.connect()
         except DuosidaError as err:
-            raise self._update_failed("cannot_connect") from err
+            raise self._update_failed(
+                UpdateFailedUnreachable, "cannot_connect"
+            ) from err
         if info.device_id != self.config_entry.unique_id:
             await self._async_close_session()
-            raise self._update_failed("unexpected_device")
+            raise self._update_failed(UpdateFailed, "unexpected_device")
         self.info = info
         try:
             return await self.client.get_status(timeout=STATUS_TIMEOUT)
@@ -88,9 +96,11 @@ class DuosidaCoordinator(DataUpdateCoordinator[ChargerStatus]):
             # The heartbeats can hold a session open after the status pushes
             # stopped; closing it lets the next refresh reconnect.
             await self._async_close_session()
-            raise self._update_failed("no_status") from err
+            raise self._update_failed(UpdateFailed, "no_status") from err
         except DuosidaError as err:
-            raise self._update_failed("connection_lost") from err
+            raise self._update_failed(
+                UpdateFailedUnreachable, "connection_lost"
+            ) from err
 
     @callback
     def _handle_client_update(self) -> None:
@@ -104,7 +114,9 @@ class DuosidaCoordinator(DataUpdateCoordinator[ChargerStatus]):
         if self.data is None or not self.last_update_success or self._closing:
             return
         if not self.client.connected:
-            self.async_set_update_error(self._update_failed("connection_lost"))
+            self.async_set_update_error(
+                self._update_failed(UpdateFailedUnreachable, "connection_lost")
+            )
         elif (status := self.client.status) is not None and status is not self.data:
             self.async_set_updated_data(status)
 

@@ -194,39 +194,62 @@ async def test_reconnect_after_connection_lost(
 
 
 @pytest.mark.parametrize(
-    ("side_effect", "message", "disconnects"),
+    ("method", "side_effect", "message", "level", "disconnects"),
     [
+        pytest.param(
+            "connect",
+            DuosidaConnectionError,
+            "Cannot connect to the charger",
+            logging.INFO,
+            0,
+            id="cannot_connect",
+        ),
+        pytest.param(
+            "connect",
+            [OTHER_CHARGER],
+            "Another charger answered at this address",
+            logging.ERROR,
+            1,
+            id="unexpected_device",
+        ),
         # Heartbeats can hold a session open after the status pushes stop.
         pytest.param(
+            "get_status",
             DuosidaTimeoutError,
             "The charger did not send its status",
+            logging.ERROR,
             1,
             id="silent_session_closed",
         ),
         pytest.param(
+            "get_status",
             DuosidaConnectionError,
             "The connection to the charger was lost",
+            logging.INFO,
             0,
             id="connection_error",
         ),
     ],
 )
-async def test_refresh_without_status(
+async def test_refresh_failed(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_duosida_client: MagicMock,
     freezer: FrozenDateTimeFactory,
     caplog: pytest.LogCaptureFixture,
-    side_effect: type[Exception],
+    method: str,
+    side_effect: type[Exception] | list[ChargerInfo],
     message: str,
+    level: int,
     disconnects: int,
 ) -> None:
-    """Test the entities go unavailable when the watchdog gets no status."""
+    """Test a failed watchdog refresh makes the entities unavailable."""
     await setup_integration(hass, mock_config_entry)
-    mock_duosida_client.get_status.side_effect = side_effect
+    getattr(mock_duosida_client, method).side_effect = side_effect
 
     await _fire_watchdog(hass, freezer)
 
     assert hass.states.get(POWER_ENTITY_ID).state == STATE_UNAVAILABLE
-    assert message in caplog.text
+    records = [record for record in caplog.records if message in record.getMessage()]
+    assert [record.levelno for record in records] == [level]
     assert mock_duosida_client.disconnect.await_count == disconnects
