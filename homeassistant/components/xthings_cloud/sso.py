@@ -1,7 +1,5 @@
 """Xthings Cloud browser SSO callback."""
 
-from __future__ import annotations
-
 import json
 import time
 from collections.abc import Mapping
@@ -41,6 +39,7 @@ class XthingsSsoManager:
     """Exchange Cloud SSO codes and create short-lived HA sessions."""
 
     def __init__(self, hass: HomeAssistant, entry: ConfigEntry, client: XthingsCloudApiClient) -> None:
+        """Initialize the SSO manager."""
         self.hass = hass
         self.entry = entry
         self.client = client
@@ -146,7 +145,22 @@ class XthingsSsoView(HomeAssistantView):
     async def get(self, request: web.Request) -> web.Response:
         """Handle a browser callback from Xthings Cloud."""
         hass = request.app[KEY_HASS]
-        manager: XthingsSsoManager | None = hass.data.get(DOMAIN, {}).get("sso")
+        manager: XthingsSsoManager | None = None
+        for entry in hass.config_entries.async_entries(DOMAIN):
+            if entry.runtime_data and entry.runtime_data.sso_manager:
+                manager = entry.runtime_data.sso_manager
+                break
         if manager is None:
-            return XthingsSsoManager._error(web.HTTPServiceUnavailable, "SSO unavailable")
+            return error_response(web.HTTPServiceUnavailable, "SSO unavailable")
         return await manager.async_create_bridge(request, request.query.get("code", ""))
+
+
+def error_response(
+    error_type: type[web.HTTPException], message: str
+) -> web.Response:
+    """Return a non-cacheable error response."""
+    return web.Response(
+        status=error_type.status_code,
+        text=message,
+        headers={"Cache-Control": "no-store"},
+    )

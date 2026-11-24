@@ -19,7 +19,7 @@ from .const import (
     MOCK_USER_ID,
 )
 
-from tests.common import MockConfigEntry
+from pytest_homeassistant.common import MockConfigEntry
 
 
 async def test_user_flow_success(

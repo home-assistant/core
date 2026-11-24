@@ -1,7 +1,5 @@
 """Remote access management via FRP."""
 
-from __future__ import annotations
-
 import asyncio
 import configparser
 import json
@@ -220,7 +218,7 @@ async def _async_start_frpc(
     """Start frpc with the generated configuration."""
     config_path = _get_frpc_config_path(hass)
     if not config_path.exists():
-        LOGGER.error("frpc config not found: %s", config_path)
+        LOGGER.error("Frpc config not found: %s", config_path)
         return None
 
     await hass.async_add_executor_job(_ensure_executable, frpc_path)
@@ -238,8 +236,8 @@ async def _async_start_frpc(
         LOGGER.error("Failed to start frpc: %s", err)
         return None
 
-    LOGGER.info("frpc started (pid=%s)", process.pid)
-    asyncio.create_task(_async_log_frpc_output(process))
+    LOGGER.info("Frpc started (pid=%s)", process.pid)
+    hass.async_create_task(_async_log_frpc_output(process))
     return process
 
 
@@ -254,9 +252,9 @@ async def _async_log_frpc_output(process: asyncio.subprocess.Process) -> None:
     except (OSError, asyncio.CancelledError):
         return
     if returncode:
-        LOGGER.error("frpc exited unexpectedly with code %s", returncode)
+        LOGGER.error("Frpc exited unexpectedly with code %s", returncode)
     else:
-        LOGGER.info("frpc exited")
+        LOGGER.info("Frpc exited")
 
 
 async def _async_stop_frpc(hass: HomeAssistant) -> None:
