@@ -73,12 +73,8 @@ rules:
     status: exempt
     comment: Each config entry represents a single Tile.
   entity-category: done
-  entity-device-class:
-    status: exempt
-    comment: The device tracker has no device class.
-  entity-disabled-by-default:
-    status: exempt
-    comment: All entities are useful for every Tile.
+  entity-device-class: done
+  entity-disabled-by-default: done
   entity-translations: done
   exception-translations: done
   icon-translations: done
