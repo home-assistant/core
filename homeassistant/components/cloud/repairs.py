@@ -1,10 +1,8 @@
 """Repairs implementation for the cloud integration."""
 
 import asyncio
-from typing import override
 
 from hass_nabucasa.payments_api import SubscriptionInfo
-from hass_nabucasa.remote import REPAIR_CLIENT_CERTIFICATE_ERROR
 import probatio
 
 from homeassistant.components.repairs import (
@@ -21,8 +19,6 @@ from .subscription import async_migrate_paypal_agreement, async_subscription_inf
 
 BACKOFF_TIME = 5
 MAX_RETRIES = 60  # This allows for 10 minutes of retries
-
-ISSUE_CLIENT_CERTIFICATE_NOT_ENFORCED = "remote_client_certificate_not_enforced"
 
 
 @callback
@@ -46,42 +42,6 @@ def async_manage_legacy_subscription_issue(
         )
         return
     ir.async_delete_issue(hass=hass, domain=DOMAIN, issue_id="legacy_subscription")
-
-
-@callback
-def async_manage_client_certificate_issue(
-    hass: HomeAssistant, require_client_certificate: bool
-) -> None:
-    """Raise an issue if client certificates are required but can't be enforced."""
-    if require_client_certificate and hass.http.ssl_peer_certificate is None:
-        ir.async_create_issue(
-            hass=hass,
-            domain=DOMAIN,
-            issue_id=ISSUE_CLIENT_CERTIFICATE_NOT_ENFORCED,
-            is_fixable=True,
-            severity=ir.IssueSeverity.ERROR,
-            translation_key=ISSUE_CLIENT_CERTIFICATE_NOT_ENFORCED,
-        )
-        return
-    ir.async_delete_issue(
-        hass=hass, domain=DOMAIN, issue_id=ISSUE_CLIENT_CERTIFICATE_NOT_ENFORCED
-    )
-
-
-class RemoteClientCertificateRepairFlow(ConfirmRepairFlow):
-    """Handler to stop requiring client certificates on remote access."""
-
-    @override
-    async def async_step_confirm(
-        self, user_input: dict[str, str] | None = None
-    ) -> RepairsFlowResult:
-        """Handle the confirm step of a fix flow."""
-        if user_input is not None:
-            cloud = self.hass.data[DATA_CLOUD]
-            await cloud.client.prefs.async_update(
-                remote_require_client_certificate=False
-            )
-        return await super().async_step_confirm(user_input)
 
 
 class LegacySubscriptionRepairFlow(RepairsFlow):
@@ -162,9 +122,4 @@ async def async_create_fix_flow(
     """Create flow."""
     if issue_id == "legacy_subscription":
         return LegacySubscriptionRepairFlow()
-    if issue_id in (
-        REPAIR_CLIENT_CERTIFICATE_ERROR,
-        ISSUE_CLIENT_CERTIFICATE_NOT_ENFORCED,
-    ):
-        return RemoteClientCertificateRepairFlow()
     return ConfirmRepairFlow()

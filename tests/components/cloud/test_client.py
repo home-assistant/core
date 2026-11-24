@@ -14,7 +14,6 @@ from pytest_homeassistant.common import async_fire_time_changed
 from homeassistant.components import webhook
 from homeassistant.components.cloud import DOMAIN
 from homeassistant.components.cloud.client import (
-    FIXABLE_REPAIR_TRANSLATION_KEYS,
     VALID_REPAIR_TRANSLATION_KEYS,
     CloudClient,
 )
@@ -470,6 +469,17 @@ async def test_system_msg(hass: HomeAssistant) -> None:
     assert cloud.client.relayer_region == "xx-earth-616"
 
 
+@pytest.mark.parametrize("ssl_peer_certificate", [None, "/ssl/client_ca.pem"])
+async def test_remote_ssl_peer_certificate(
+    hass: HomeAssistant, ssl_peer_certificate: str | None
+) -> None:
+    """Test the remote connection requires the certificate the HTTP config sets."""
+    hass.http = Mock(remote_ssl_peer_certificate=ssl_peer_certificate)
+    client = CloudClient(hass, MagicMock(), None, {}, {})
+
+    assert client.remote_ssl_peer_certificate == ssl_peer_certificate
+
+
 async def test_cloud_connection_info(hass: HomeAssistant) -> None:
     """Test connection info msg."""
     with (
@@ -498,29 +508,6 @@ async def test_cloud_connection_info(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize(
-    ("require_client_certificate", "ssl_peer_certificate", "expected"),
-    [
-        (False, None, None),
-        (False, "/config/ssl/client_ca.pem", None),
-        (True, None, None),
-        (True, "/config/ssl/client_ca.pem", "/config/ssl/client_ca.pem"),
-    ],
-)
-async def test_remote_ssl_peer_certificate(
-    hass: HomeAssistant,
-    require_client_certificate: bool,
-    ssl_peer_certificate: str | None,
-    expected: str | None,
-) -> None:
-    """Test the remote connection only requires client certificates when opted in."""
-    hass.http = Mock(ssl_peer_certificate=ssl_peer_certificate)
-    prefs = MagicMock(remote_require_client_certificate=require_client_certificate)
-    client = CloudClient(hass, prefs, None, {}, {})
-
-    assert client.remote_ssl_peer_certificate == expected
-
-
-@pytest.mark.parametrize(
     "translation_key",
     sorted(VALID_REPAIR_TRANSLATION_KEYS),
 )
@@ -544,7 +531,6 @@ async def test_async_create_repair_issue_known(
     )
     issue = issue_registry.async_get_issue(domain=DOMAIN, issue_id=identifier)
     assert issue is not None
-    assert issue.is_fixable is (translation_key in FIXABLE_REPAIR_TRANSLATION_KEYS)
 
 
 async def test_async_create_repair_issue_unknown(

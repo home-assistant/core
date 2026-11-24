@@ -35,7 +35,6 @@ from homeassistant.components.cloud.const import (
     PREF_ALEXA_SETTINGS_VERSION,
     PREF_CLOUDHOOKS,
     PREF_GOOGLE_SETTINGS_VERSION,
-    PREF_REMOTE_REQUIRE_CLIENT_CERTIFICATE,
 )
 from homeassistant.components.cloud.prefs import (
     ALEXA_SETTINGS_VERSION,
@@ -50,7 +49,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import Context, CoreState, HomeAssistant, callback
 from homeassistant.exceptions import Unauthorized
-from homeassistant.helpers import entity_registry as er, issue_registry as ir
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.setup import async_setup_component
 from homeassistant.util.dt import utcnow
@@ -120,60 +119,6 @@ async def test_disabling_remote_without_backend(
 
     assert not prefs.remote_enabled
     assert "RemoteNotConnected" not in caplog.text
-
-
-@pytest.mark.usefixtures("mock_cloud_fixture")
-async def test_toggling_remote_client_certificate(hass: HomeAssistant) -> None:
-    """Test toggling client certificates restarts the remote tunnel."""
-    cl = hass.data[DATA_CLOUD]
-    prefs = cl.client.prefs
-
-    with (
-        patch.object(hass.http, "ssl_peer_certificate", "/ssl/client_ca.pem"),
-        patch.object(cl, "started", True),
-        patch.object(cl.remote, "stop") as stop,
-        patch.object(cl.remote, "start") as start,
-    ):
-        await prefs.async_update(remote_require_client_certificate=True)
-        await hass.async_block_till_done()
-
-        assert cl.client.remote_ssl_peer_certificate == "/ssl/client_ca.pem"
-        assert stop.call_count == 1
-        assert start.call_count == 1
-
-        await prefs.async_update(alexa_enabled=False)
-        await hass.async_block_till_done()
-
-        assert stop.call_count == 1
-        assert start.call_count == 1
-
-        await prefs.async_update(remote_require_client_certificate=False)
-        await hass.async_block_till_done()
-
-        assert cl.client.remote_ssl_peer_certificate is None
-        assert stop.call_count == 2
-        assert start.call_count == 2
-
-
-@pytest.mark.parametrize("started", [None, False])
-@pytest.mark.usefixtures("mock_cloud_fixture")
-async def test_toggling_remote_client_certificate_without_remote(
-    hass: HomeAssistant, started: bool | None
-) -> None:
-    """Test toggling client certificates does not start remote if cloud isn't started."""
-    cl = hass.data[DATA_CLOUD]
-
-    with (
-        patch.object(hass.http, "ssl_peer_certificate", "/ssl/client_ca.pem"),
-        patch.object(cl, "started", started),
-        patch.object(cl.remote, "stop") as stop,
-        patch.object(cl.remote, "start") as start,
-    ):
-        await cl.client.prefs.async_update(remote_require_client_certificate=True)
-        await hass.async_block_till_done()
-
-    stop.assert_not_called()
-    start.assert_not_called()
 
 
 @pytest.mark.usefixtures("mock_cloud_fixture")
@@ -805,55 +750,6 @@ async def test_assistant_settings_migrated_at_startup(
 
     assert prefs.alexa_settings_version == ALEXA_SETTINGS_VERSION
     assert prefs.google_settings_version == GOOGLE_SETTINGS_VERSION
-
-
-@pytest.mark.parametrize(
-    ("ssl_peer_certificate", "issue_expected"),
-    [
-        pytest.param(None, True, id="no_ca"),
-        pytest.param("/ssl/client_ca.pem", False, id="ca"),
-    ],
-)
-async def test_require_client_certificate_issue_without_ca(
-    hass: HomeAssistant,
-    hass_storage: dict[str, Any],
-    issue_registry: ir.IssueRegistry,
-    ssl_peer_certificate: str | None,
-    issue_expected: bool,
-) -> None:
-    """Test an issue is raised when client certificates can't be enforced."""
-    hass_storage[STORAGE_KEY] = {
-        "version": 1,
-        "minor_version": 4,
-        "data": {
-            PREF_ALEXA_SETTINGS_VERSION: ALEXA_SETTINGS_VERSION,
-            PREF_GOOGLE_SETTINGS_VERSION: GOOGLE_SETTINGS_VERSION,
-            PREF_REMOTE_REQUIRE_CLIENT_CERTIFICATE: True,
-        },
-    }
-    assert await async_setup_component(hass, "homeassistant", {})
-    assert await async_setup_component(hass, "http", {})
-
-    with (
-        patch.object(hass.http, "ssl_peer_certificate", ssl_peer_certificate),
-        patch("hass_nabucasa.Cloud.initialize"),
-    ):
-        assert await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
-
-    prefs = hass.data[DATA_CLOUD].client.prefs
-    # The preference is kept so it applies again once a CA is configured
-    assert prefs.remote_require_client_certificate is True
-    issue = issue_registry.async_get_issue(
-        DOMAIN, "remote_client_certificate_not_enforced"
-    )
-    assert (issue is not None) is issue_expected
-
-    await prefs.async_update(remote_require_client_certificate=False)
-    await hass.async_block_till_done()
-
-    assert not issue_registry.async_get_issue(
-        DOMAIN, "remote_client_certificate_not_enforced"
-    )
 
 
 @pytest.mark.parametrize(

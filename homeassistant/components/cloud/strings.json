@@ -46,26 +46,8 @@
       "title": "No subscription detected"
     },
     "remote_client_certificate_error": {
-      "fix_flow": {
-        "step": {
-          "confirm": {
-            "description": "Remote access through Home Assistant Link is off because the client certificate authority file ({ca_file}) could not be loaded. Submit to stop requiring client certificates and start remote access again. Once the file is fixed, you can turn **Require client certificates** back on in the remote access settings.",
-            "title": "Stop requiring client certificates"
-          }
-        }
-      },
+      "description": "Remote access through Home Assistant Link is off because the client certificate authority file ({ca_file}) could not be loaded. Fix the file or update the SSL peer certificate in the network settings, then restart Home Assistant.",
       "title": "Remote access client certificate authority could not be loaded"
-    },
-    "remote_client_certificate_not_enforced": {
-      "fix_flow": {
-        "step": {
-          "confirm": {
-            "description": "**Require client certificates** is turned on for remote access through Home Assistant Link, but no SSL peer certificate is configured in the network settings. Until one is configured, remote access accepts devices without a client certificate.\n\nTo enforce client certificates again, set the SSL peer certificate in the network settings and restart Home Assistant. If you no longer want to require client certificates, submit to turn the option off.",
-            "title": "Stop requiring client certificates"
-          }
-        }
-      },
-      "title": "Remote access does not enforce client certificates"
     },
     "reset_bad_custom_domain_configuration": {
       "description": "The DNS configuration for your custom domain ({custom_domains}) is not correct. This domain has now been ignored and will not be used for Home Assistant Link. If you want to use this domain, please fix the DNS configuration and restart Home Assistant. If you do not need this anymore, you can remove it from the account page.",

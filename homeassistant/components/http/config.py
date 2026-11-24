@@ -31,6 +31,7 @@ from .const import (
     CONF_SSL_CERTIFICATE,
     CONF_SSL_KEY,
     CONF_SSL_PEER_CERTIFICATE,
+    CONF_SSL_PEER_CERTIFICATE_REMOTE,
     CONF_SSL_PROFILE,
     CONF_TRUSTED_PROXIES,
     CONF_USE_X_FORWARDED_FOR,
@@ -73,7 +74,7 @@ def default_server_port() -> int:
 
 STORAGE_KEY: Final = DOMAIN
 STORAGE_VERSION: Final = 3
-STORAGE_MINOR_VERSION: Final = 1
+STORAGE_MINOR_VERSION: Final = 2
 
 KEY_STABLE: Final = "stable"
 KEY_PENDING: Final = "pending"
@@ -101,6 +102,7 @@ class ConfData(TypedDict, total=False):
     server_port: int
     ssl_certificate: str
     ssl_peer_certificate: str
+    ssl_peer_certificate_remote: bool
     ssl_key: str
     cors_allowed_origins: list[str]
     use_x_forwarded_for: bool
@@ -149,6 +151,7 @@ HTTP_STORAGE_SCHEMA: Final = probatio.Schema(
         ): probatio.Port(),
         probatio.Optional(CONF_SSL_CERTIFICATE): cv.isfile,
         probatio.Optional(CONF_SSL_PEER_CERTIFICATE): cv.isfile,
+        probatio.Optional(CONF_SSL_PEER_CERTIFICATE_REMOTE, default=False): cv.boolean,
         probatio.Optional(CONF_SSL_KEY): cv.isfile,
         probatio.Optional(CONF_CORS_ORIGINS, default=DEFAULT_CORS): probatio.All(
             probatio.EnsureList(), [cv.string]
@@ -726,4 +729,9 @@ class _HTTPStore(Store[_HTTPStoreData]):
             _migrate_ssl_profile(old_data[KEY_STABLE])
             if old_data[KEY_PENDING] is not None:
                 _migrate_ssl_profile(old_data[KEY_PENDING])
+        if (old_major_version, old_minor_version) < (3, 2):
+            # 3.2 added requiring the peer certificate on remote access.
+            old_data[KEY_STABLE][CONF_SSL_PEER_CERTIFICATE_REMOTE] = False
+            if old_data[KEY_PENDING] is not None:
+                old_data[KEY_PENDING][CONF_SSL_PEER_CERTIFICATE_REMOTE] = False
         return old_data

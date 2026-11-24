@@ -82,10 +82,7 @@ from .const import (
 from .helpers import FixedSizeQueueLogHandler
 from .models import auto_login_failure_key
 from .prefs import CloudPreferences
-from .repairs import (
-    async_manage_client_certificate_issue,
-    async_manage_legacy_subscription_issue,
-)
+from .repairs import async_manage_legacy_subscription_issue
 from .services import async_setup_services
 from .subscription import async_subscription_info
 
@@ -365,8 +362,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     prefs = CloudPreferences(hass)
     await prefs.async_initialize()
 
-    async_manage_client_certificate_issue(hass, prefs.remote_require_client_certificate)
-
     # Initialize Cloud
     websession = async_get_clientsession(hass)
     client = CloudClient(hass, prefs, websession, alexa_conf, google_conf)
@@ -538,35 +533,19 @@ async def _async_remove_config_entry(hass: HomeAssistant) -> None:
 def _handle_prefs_updated(hass: HomeAssistant, cloud: Cloud[CloudClient]) -> None:
     """Register handler for cloud preferences updates."""
     cur_remote_enabled = cloud.client.prefs.remote_enabled
-    cur_remote_ssl_peer_certificate = cloud.client.remote_ssl_peer_certificate
     cur_cloudhooks = cloud.client.prefs.cloudhooks
     lock = asyncio.Lock()
 
     async def on_prefs_updated(prefs: CloudPreferences) -> None:
         """Handle cloud preferences updates."""
         nonlocal cur_remote_enabled
-        nonlocal cur_remote_ssl_peer_certificate
         nonlocal cur_cloudhooks
-
-        async_manage_client_certificate_issue(
-            hass, prefs.remote_require_client_certificate
-        )
 
         # Lock protects cur_ state variables from concurrent updates
         async with lock:
             if cur_cloudhooks != prefs.cloudhooks:
                 cur_cloudhooks = prefs.cloudhooks
                 async_dispatcher_send(hass, _SIGNAL_CLOUDHOOKS_UPDATED, cur_cloudhooks)
-
-            remote_ssl_peer_certificate = cloud.client.remote_ssl_peer_certificate
-            if remote_ssl_peer_certificate != cur_remote_ssl_peer_certificate:
-                cur_remote_ssl_peer_certificate = remote_ssl_peer_certificate
-                if cloud.started:
-                    await cloud.remote.stop()
-                    # Start waits until the backend is loaded, which can take a while
-                    hass.async_create_background_task(
-                        cloud.remote.start(), "cloud remote start"
-                    )
 
             if prefs.remote_enabled == cur_remote_enabled:
                 return

@@ -52,7 +52,6 @@ VALID_REPAIR_TRANSLATION_KEYS = {
     "subscription_expired",
     "warn_bad_custom_domain_configuration",
 }
-FIXABLE_REPAIR_TRANSLATION_KEYS = {REPAIR_CLIENT_CERTIFICATE_ERROR}
 
 
 class CloudClient(Interface):
@@ -125,9 +124,7 @@ class CloudClient(Interface):
     @override
     def remote_ssl_peer_certificate(self) -> str | None:
         """Return CA file used to require client certificates on remote access."""
-        if not self._prefs.remote_require_client_certificate:
-            return None
-        return self._hass.http.ssl_peer_certificate
+        return self._hass.http.remote_ssl_peer_certificate
 
     @property
     @override
@@ -480,7 +477,7 @@ class CloudClient(Interface):
             translation_key=translation_key,
             translation_placeholders=placeholders,
             severity=IssueSeverity(severity),
-            is_fixable=translation_key in FIXABLE_REPAIR_TRANSLATION_KEYS,
+            is_fixable=False,
         )
 
     @override
