@@ -476,8 +476,14 @@ async def test_options_flow_hides_members(
 
 
 CLIMATE_ATTRS = [
-    {"hvac_modes": [], "max_temp": 35, "min_temp": 7, "supported_features": 0},
-    {"current_temperature": None, "temperature_unit": "°C"},
+    {
+        "hvac_modes": [],
+        "max_temp": 35,
+        "min_temp": 7,
+        "supported_features": 0,
+        "temperature_unit": "°C",
+    },
+    {"current_temperature": None},
 ]
 COVER_ATTRS = [{"supported_features": 0}, {"is_closed": False}]
 EVENT_ATTRS = [{"event_types": []}, {"event_type": None}]
