@@ -151,13 +151,12 @@ def test_interpolate_covers_a_full_day() -> None:
     values = []
     for minutes in range(0, 24 * 60, 37):
         value = interpolate(transition, start + minutes * 60000)
-        if value is None:
-            break
+        assert value is not None
         assert 100 <= value <= 600
         values.append(value)
 
-    assert len(values) > 30
     assert max(values) - min(values) > 100
+    assert interpolate(transition, start + 25 * 3600 * 1000) is None
 
 
 def test_interpolate_returns_none_past_the_end() -> None:
@@ -509,9 +508,8 @@ async def test_a_schedule_written_to_the_service_does_not_switch_the_light_off(
     assert hass.states.get("light.demo").state == STATE_ON
 
 
-async def test_the_same_value_is_not_sent_twice(
-    hass: HomeAssistant, hk_driver, freezer: FrozenDateTimeFactory
-) -> None:
+@pytest.mark.usefixtures("freezer")
+async def test_the_same_value_is_not_sent_twice(hass: HomeAssistant, hk_driver) -> None:
     """Only a changed colour temperature reaches the light."""
     acc = await _setup_light(hass, hk_driver)
     call_turn_on = async_mock_service(hass, LIGHT_DOMAIN, "turn_on")
@@ -833,8 +831,7 @@ def test_interpolate_point_interpolates_the_brightness_factor() -> None:
     previous: tuple[float, float] | None = None
     for minutes in range(24 * 60):
         point = interpolate_point(transition, start + minutes * 60000)
-        if point is None:
-            break
+        assert point is not None
         temperature, factor = point
         if previous is not None:
             shift = abs(
