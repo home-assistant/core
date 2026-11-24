@@ -1786,6 +1786,7 @@ async def test_resource_metadata_unexpected_fetch_result(
     assert result["reason"] == "cannot_connect"
     assert "Unexpected fetch result: CancelledError" in caplog.text
 
+
 def _enable_my_home_assistant(hass: HomeAssistant) -> None:
     """Mark My Home Assistant as loaded.
 
@@ -1872,6 +1873,7 @@ async def test_client_metadata_document_creates_an_entry(
     result = await hass.config_entries.flow.async_configure(result["flow_id"])
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == TEST_API_NAME
+    assert result["result"].unique_id is None
     assert result["data"]["auth_implementation"] == CIMD_AUTH_IMPLEMENTATION
     assert result["data"][CONF_URL] == MCP_SERVER_URL
     assert result["data"][CONF_SCOPE] == ["read", "write"]
@@ -1966,7 +1968,9 @@ async def test_credentials_choice_without_client_metadata(
 ) -> None:
     """The metadata client is only offered when the server supports it."""
     _enable_my_home_assistant(hass)
-    result = await _start_oauth_discovery(hass, mock_mcp_client, _oauth_server_metadata())
+    result = await _start_oauth_discovery(
+        hass, mock_mcp_client, _oauth_server_metadata()
+    )
     assert result["type"] is FlowResultType.MENU
     assert result["step_id"] == "credentials_choice"
     assert result["menu_options"] == ["pick_implementation", "new_credentials"]
