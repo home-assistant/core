@@ -31,7 +31,7 @@ permissions:
   copilot-requests: write
 engine:
   id: copilot
-  model: claude-opus-5.5
+  model: "opus?effort=high"
   # One agent run per pull request at a time. Newer runs wait instead of
   # cancelling the running one. Every waiting run is kept: without the queue,
   # GitHub keeps only the newest waiting one, which may be for an older commit.
@@ -218,11 +218,12 @@ When `task.review` is false, post nothing, call `noop` with a one-line reason, a
     - On a re-review: the numbered list holds the earlier requested changes still open and the new findings not in an inline comment; the fixed ones go in a separate list, without `[CRITICAL]` or `[PROBLEM]`.
   - Without: `LGTM.` and no summary, also on a re-review: no list of fixed changes. Add a short note after it only for something the maintainer should know, such as the code doing something the PR body doesn't say.
   - Nits not in an inline comment go last, in a list, each starting with `nit: `, with file and line.
-  - Close it with this exact block, without the code fence. It marks the review as finished:
+  - Close it with this block, without the code fence, with `<model>` replaced by the ID of the model you run on. It marks the review as finished:
 
     ```markdown
     <details><summary>Review state</summary>
 
     completed_review: true
+    model: <model>
     </details>
     ```
