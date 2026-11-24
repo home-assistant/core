@@ -6,14 +6,8 @@ from pydanfossair.commands import UpdateCommand
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
-    STATE_OFF,
-    STATE_ON,
-)
+from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN, SwitchService
+from homeassistant.const import STATE_OFF, STATE_ON, TargetKey
 from homeassistant.core import HomeAssistant
 
 from . import setup_integration
@@ -43,42 +37,42 @@ async def test_switch_state(
     [
         pytest.param(
             ENTITY_BOOST,
-            SERVICE_TURN_ON,
+            SwitchService.TURN_ON,
             UpdateCommand.boost_activate,
             STATE_ON,
             id="boost-on",
         ),
         pytest.param(
             ENTITY_BOOST,
-            SERVICE_TURN_OFF,
+            SwitchService.TURN_OFF,
             UpdateCommand.boost_deactivate,
             STATE_OFF,
             id="boost-off",
         ),
         pytest.param(
             ENTITY_BYPASS,
-            SERVICE_TURN_ON,
+            SwitchService.TURN_ON,
             UpdateCommand.bypass_activate,
             STATE_ON,
             id="bypass-on",
         ),
         pytest.param(
             ENTITY_BYPASS,
-            SERVICE_TURN_OFF,
+            SwitchService.TURN_OFF,
             UpdateCommand.bypass_deactivate,
             STATE_OFF,
             id="bypass-off",
         ),
         pytest.param(
             ENTITY_AUTOMATIC_BYPASS,
-            SERVICE_TURN_ON,
+            SwitchService.TURN_ON,
             UpdateCommand.automatic_bypass_activate,
             STATE_ON,
             id="automatic-bypass-on",
         ),
         pytest.param(
             ENTITY_AUTOMATIC_BYPASS,
-            SERVICE_TURN_OFF,
+            SwitchService.TURN_OFF,
             UpdateCommand.automatic_bypass_deactivate,
             STATE_OFF,
             id="automatic-bypass-off",
@@ -89,7 +83,7 @@ async def test_switch_commands(
     hass: HomeAssistant,
     mock_danfoss_client: MagicMock,
     entity_id: str,
-    service: str,
+    service: SwitchService,
     command: UpdateCommand,
     expected_state: str,
 ) -> None:
@@ -97,7 +91,7 @@ async def test_switch_commands(
     await setup_integration(hass)
 
     await hass.services.async_call(
-        SWITCH_DOMAIN, service, {ATTR_ENTITY_ID: entity_id}, blocking=True
+        SWITCH_DOMAIN, service, {TargetKey.ENTITY_ID: entity_id}, blocking=True
     )
     await hass.async_block_till_done()
 
