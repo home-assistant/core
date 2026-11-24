@@ -194,9 +194,7 @@
       None,
     ]),
     'area_id': None,
-    'capabilities': dict({
-      <CoverEntityCapabilityAttribute.OPEN_TILT_POSITION: 'open_tilt_position'>: 100,
-    }),
+    'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': None,
     'device_class': None,
@@ -234,7 +232,6 @@
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'blind',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Jaloezie',
       <CoverEntityStateAttribute.IS_CLOSED: 'is_closed'>: None,
-      <CoverEntityCapabilityAttribute.OPEN_TILT_POSITION: 'open_tilt_position'>: 100,
       <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CoverEntityFeature: 123>,
     }),
     'context': <ANY>,
@@ -251,9 +248,7 @@
       None,
     ]),
     'area_id': None,
-    'capabilities': dict({
-      <CoverEntityCapabilityAttribute.OPEN_TILT_POSITION: 'open_tilt_position'>: 100,
-    }),
+    'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': None,
     'device_class': None,
@@ -291,7 +286,6 @@
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'blind',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Kitchen Sheer Screen',
       <CoverEntityStateAttribute.IS_CLOSED: 'is_closed'>: None,
-      <CoverEntityCapabilityAttribute.OPEN_TILT_POSITION: 'open_tilt_position'>: 100,
       <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CoverEntityFeature: 123>,
     }),
     'context': <ANY>,
@@ -415,9 +409,7 @@
       None,
     ]),
     'area_id': None,
-    'capabilities': dict({
-      <CoverEntityCapabilityAttribute.OPEN_TILT_POSITION: 'open_tilt_position'>: 100,
-    }),
+    'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': None,
     'device_class': None,
@@ -455,7 +447,6 @@
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'blind',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Office Venetian Blind',
       <CoverEntityStateAttribute.IS_CLOSED: 'is_closed'>: None,
-      <CoverEntityCapabilityAttribute.OPEN_TILT_POSITION: 'open_tilt_position'>: 100,
       <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CoverEntityFeature: 123>,
     }),
     'context': <ANY>,
@@ -905,6 +896,9 @@
     ]),
     'area_id': None,
     'capabilities': dict({
+      <CoverEntityCapabilityAttribute.CLOSED_TILT_POSITIONS: 'closed_tilt_positions'>: list([
+        0,
+      ]),
       <CoverEntityCapabilityAttribute.OPEN_TILT_POSITION: 'open_tilt_position'>: 100,
     }),
     'config_entry_id': <ANY>,
@@ -940,6 +934,9 @@
 # name: test_cover_entities_snapshot[cloud_somfy_tahoma_switch_sc_europe.json][cover.veranda_basement_roller_shutter-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      <CoverEntityCapabilityAttribute.CLOSED_TILT_POSITIONS: 'closed_tilt_positions'>: list([
+        0,
+      ]),
       <CoverEntityStateAttribute.CURRENT_POSITION: 'current_position'>: 80,
       <CoverEntityStateAttribute.CURRENT_TILT_POSITION: 'current_tilt_position'>: 100,
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'shutter',
@@ -963,6 +960,9 @@
     ]),
     'area_id': None,
     'capabilities': dict({
+      <CoverEntityCapabilityAttribute.CLOSED_TILT_POSITIONS: 'closed_tilt_positions'>: list([
+        0,
+      ]),
       <CoverEntityCapabilityAttribute.OPEN_TILT_POSITION: 'open_tilt_position'>: 100,
     }),
     'config_entry_id': <ANY>,
@@ -998,6 +998,9 @@
 # name: test_cover_entities_snapshot[cloud_somfy_tahoma_switch_sc_europe.json][cover.veranda_veranda_roller_shutter-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      <CoverEntityCapabilityAttribute.CLOSED_TILT_POSITIONS: 'closed_tilt_positions'>: list([
+        0,
+      ]),
       <CoverEntityStateAttribute.CURRENT_POSITION: 'current_position'>: 0,
       <CoverEntityStateAttribute.CURRENT_TILT_POSITION: 'current_tilt_position'>: 100,
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'shutter',
@@ -1506,6 +1509,9 @@
     ]),
     'area_id': None,
     'capabilities': dict({
+      <CoverEntityCapabilityAttribute.CLOSED_TILT_POSITIONS: 'closed_tilt_positions'>: list([
+        0,
+      ]),
       <CoverEntityCapabilityAttribute.OPEN_TILT_POSITION: 'open_tilt_position'>: 100,
     }),
     'config_entry_id': <ANY>,
@@ -1541,6 +1547,9 @@
 # name: test_cover_entities_snapshot[cloud_somfy_tahoma_v2_europe.json][cover.living_room_bioclimatic_pergola-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      <CoverEntityCapabilityAttribute.CLOSED_TILT_POSITIONS: 'closed_tilt_positions'>: list([
+        0,
+      ]),
       <CoverEntityStateAttribute.CURRENT_TILT_POSITION: 'current_tilt_position'>: 11,
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'awning',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bioclimatic Pergola',
@@ -2365,6 +2374,9 @@
     ]),
     'area_id': None,
     'capabilities': dict({
+      <CoverEntityCapabilityAttribute.CLOSED_TILT_POSITIONS: 'closed_tilt_positions'>: list([
+        0,
+      ]),
       <CoverEntityCapabilityAttribute.OPEN_TILT_POSITION: 'open_tilt_position'>: 100,
     }),
     'config_entry_id': <ANY>,
@@ -2400,6 +2412,9 @@
 # name: test_cover_entities_snapshot[cloud_somfy_tahoma_v2_europe.json][cover.main_bedroom_bedroom_venetian_blind-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      <CoverEntityCapabilityAttribute.CLOSED_TILT_POSITIONS: 'closed_tilt_positions'>: list([
+        0,
+      ]),
       <CoverEntityStateAttribute.CURRENT_POSITION: 'current_position'>: 0,
       <CoverEntityStateAttribute.CURRENT_TILT_POSITION: 'current_tilt_position'>: 62,
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'blind',
@@ -2639,6 +2654,9 @@
     ]),
     'area_id': None,
     'capabilities': dict({
+      <CoverEntityCapabilityAttribute.CLOSED_TILT_POSITIONS: 'closed_tilt_positions'>: list([
+        0,
+      ]),
       <CoverEntityCapabilityAttribute.OPEN_TILT_POSITION: 'open_tilt_position'>: 100,
     }),
     'config_entry_id': <ANY>,
@@ -2674,6 +2692,9 @@
 # name: test_cover_entities_snapshot[local_somfy_tahoma_switch_europe.json][cover.bathroom_blinds-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      <CoverEntityCapabilityAttribute.CLOSED_TILT_POSITIONS: 'closed_tilt_positions'>: list([
+        0,
+      ]),
       <CoverEntityStateAttribute.CURRENT_POSITION: 'current_position'>: 0,
       <CoverEntityStateAttribute.CURRENT_TILT_POSITION: 'current_tilt_position'>: 68,
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'blind',
@@ -2697,6 +2718,9 @@
     ]),
     'area_id': None,
     'capabilities': dict({
+      <CoverEntityCapabilityAttribute.CLOSED_TILT_POSITIONS: 'closed_tilt_positions'>: list([
+        0,
+      ]),
       <CoverEntityCapabilityAttribute.OPEN_TILT_POSITION: 'open_tilt_position'>: 100,
     }),
     'config_entry_id': <ANY>,
@@ -2732,6 +2756,9 @@
 # name: test_cover_entities_snapshot[local_somfy_tahoma_switch_europe.json][cover.bedroom_blinds-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      <CoverEntityCapabilityAttribute.CLOSED_TILT_POSITIONS: 'closed_tilt_positions'>: list([
+        0,
+      ]),
       <CoverEntityStateAttribute.CURRENT_POSITION: 'current_position'>: 0,
       <CoverEntityStateAttribute.CURRENT_TILT_POSITION: 'current_tilt_position'>: 68,
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'blind',
@@ -2755,6 +2782,9 @@
     ]),
     'area_id': None,
     'capabilities': dict({
+      <CoverEntityCapabilityAttribute.CLOSED_TILT_POSITIONS: 'closed_tilt_positions'>: list([
+        0,
+      ]),
       <CoverEntityCapabilityAttribute.OPEN_TILT_POSITION: 'open_tilt_position'>: 100,
     }),
     'config_entry_id': <ANY>,
@@ -2790,6 +2820,9 @@
 # name: test_cover_entities_snapshot[local_somfy_tahoma_switch_europe.json][cover.dining_room_blinds-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      <CoverEntityCapabilityAttribute.CLOSED_TILT_POSITIONS: 'closed_tilt_positions'>: list([
+        0,
+      ]),
       <CoverEntityStateAttribute.CURRENT_POSITION: 'current_position'>: 0,
       <CoverEntityStateAttribute.CURRENT_TILT_POSITION: 'current_tilt_position'>: 69,
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'blind',
@@ -2813,6 +2846,9 @@
     ]),
     'area_id': None,
     'capabilities': dict({
+      <CoverEntityCapabilityAttribute.CLOSED_TILT_POSITIONS: 'closed_tilt_positions'>: list([
+        0,
+      ]),
       <CoverEntityCapabilityAttribute.OPEN_TILT_POSITION: 'open_tilt_position'>: 100,
     }),
     'config_entry_id': <ANY>,
@@ -2848,6 +2884,9 @@
 # name: test_cover_entities_snapshot[local_somfy_tahoma_switch_europe.json][cover.garage_blinds-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      <CoverEntityCapabilityAttribute.CLOSED_TILT_POSITIONS: 'closed_tilt_positions'>: list([
+        0,
+      ]),
       <CoverEntityStateAttribute.CURRENT_POSITION: 'current_position'>: 0,
       <CoverEntityStateAttribute.CURRENT_TILT_POSITION: 'current_tilt_position'>: 69,
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'blind',
@@ -2871,6 +2910,9 @@
     ]),
     'area_id': None,
     'capabilities': dict({
+      <CoverEntityCapabilityAttribute.CLOSED_TILT_POSITIONS: 'closed_tilt_positions'>: list([
+        0,
+      ]),
       <CoverEntityCapabilityAttribute.OPEN_TILT_POSITION: 'open_tilt_position'>: 100,
     }),
     'config_entry_id': <ANY>,
@@ -2906,6 +2948,9 @@
 # name: test_cover_entities_snapshot[local_somfy_tahoma_switch_europe.json][cover.guest_room_blinds-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      <CoverEntityCapabilityAttribute.CLOSED_TILT_POSITIONS: 'closed_tilt_positions'>: list([
+        0,
+      ]),
       <CoverEntityStateAttribute.CURRENT_POSITION: 'current_position'>: 0,
       <CoverEntityStateAttribute.CURRENT_TILT_POSITION: 'current_tilt_position'>: 68,
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'blind',
@@ -2929,6 +2974,9 @@
     ]),
     'area_id': None,
     'capabilities': dict({
+      <CoverEntityCapabilityAttribute.CLOSED_TILT_POSITIONS: 'closed_tilt_positions'>: list([
+        0,
+      ]),
       <CoverEntityCapabilityAttribute.OPEN_TILT_POSITION: 'open_tilt_position'>: 100,
     }),
     'config_entry_id': <ANY>,
@@ -2964,6 +3012,9 @@
 # name: test_cover_entities_snapshot[local_somfy_tahoma_switch_europe.json][cover.hallway_blinds-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      <CoverEntityCapabilityAttribute.CLOSED_TILT_POSITIONS: 'closed_tilt_positions'>: list([
+        0,
+      ]),
       <CoverEntityStateAttribute.CURRENT_POSITION: 'current_position'>: 0,
       <CoverEntityStateAttribute.CURRENT_TILT_POSITION: 'current_tilt_position'>: 68,
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'blind',
@@ -2987,6 +3038,9 @@
     ]),
     'area_id': None,
     'capabilities': dict({
+      <CoverEntityCapabilityAttribute.CLOSED_TILT_POSITIONS: 'closed_tilt_positions'>: list([
+        0,
+      ]),
       <CoverEntityCapabilityAttribute.OPEN_TILT_POSITION: 'open_tilt_position'>: 100,
     }),
     'config_entry_id': <ANY>,
@@ -3022,6 +3076,9 @@
 # name: test_cover_entities_snapshot[local_somfy_tahoma_switch_europe.json][cover.kitchen_blinds-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      <CoverEntityCapabilityAttribute.CLOSED_TILT_POSITIONS: 'closed_tilt_positions'>: list([
+        0,
+      ]),
       <CoverEntityStateAttribute.CURRENT_POSITION: 'current_position'>: 0,
       <CoverEntityStateAttribute.CURRENT_TILT_POSITION: 'current_tilt_position'>: 68,
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'blind',
@@ -3045,6 +3102,9 @@
     ]),
     'area_id': None,
     'capabilities': dict({
+      <CoverEntityCapabilityAttribute.CLOSED_TILT_POSITIONS: 'closed_tilt_positions'>: list([
+        0,
+      ]),
       <CoverEntityCapabilityAttribute.OPEN_TILT_POSITION: 'open_tilt_position'>: 100,
     }),
     'config_entry_id': <ANY>,
@@ -3080,6 +3140,9 @@
 # name: test_cover_entities_snapshot[local_somfy_tahoma_switch_europe.json][cover.living_room_blinds-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      <CoverEntityCapabilityAttribute.CLOSED_TILT_POSITIONS: 'closed_tilt_positions'>: list([
+        0,
+      ]),
       <CoverEntityStateAttribute.CURRENT_POSITION: 'current_position'>: 0,
       <CoverEntityStateAttribute.CURRENT_TILT_POSITION: 'current_tilt_position'>: 68,
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'blind',
@@ -3103,6 +3166,9 @@
     ]),
     'area_id': None,
     'capabilities': dict({
+      <CoverEntityCapabilityAttribute.CLOSED_TILT_POSITIONS: 'closed_tilt_positions'>: list([
+        0,
+      ]),
       <CoverEntityCapabilityAttribute.OPEN_TILT_POSITION: 'open_tilt_position'>: 100,
     }),
     'config_entry_id': <ANY>,
@@ -3138,6 +3204,9 @@
 # name: test_cover_entities_snapshot[local_somfy_tahoma_switch_europe.json][cover.master_bedroom_blinds-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      <CoverEntityCapabilityAttribute.CLOSED_TILT_POSITIONS: 'closed_tilt_positions'>: list([
+        0,
+      ]),
       <CoverEntityStateAttribute.CURRENT_POSITION: 'current_position'>: 0,
       <CoverEntityStateAttribute.CURRENT_TILT_POSITION: 'current_tilt_position'>: 68,
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'blind',
@@ -3161,6 +3230,9 @@
     ]),
     'area_id': None,
     'capabilities': dict({
+      <CoverEntityCapabilityAttribute.CLOSED_TILT_POSITIONS: 'closed_tilt_positions'>: list([
+        0,
+      ]),
       <CoverEntityCapabilityAttribute.OPEN_TILT_POSITION: 'open_tilt_position'>: 100,
     }),
     'config_entry_id': <ANY>,
@@ -3196,6 +3268,9 @@
 # name: test_cover_entities_snapshot[local_somfy_tahoma_switch_europe.json][cover.nursery_blinds-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      <CoverEntityCapabilityAttribute.CLOSED_TILT_POSITIONS: 'closed_tilt_positions'>: list([
+        0,
+      ]),
       <CoverEntityStateAttribute.CURRENT_POSITION: 'current_position'>: 0,
       <CoverEntityStateAttribute.CURRENT_TILT_POSITION: 'current_tilt_position'>: 69,
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'blind',
@@ -3219,6 +3294,9 @@
     ]),
     'area_id': None,
     'capabilities': dict({
+      <CoverEntityCapabilityAttribute.CLOSED_TILT_POSITIONS: 'closed_tilt_positions'>: list([
+        0,
+      ]),
       <CoverEntityCapabilityAttribute.OPEN_TILT_POSITION: 'open_tilt_position'>: 100,
     }),
     'config_entry_id': <ANY>,
@@ -3254,6 +3332,9 @@
 # name: test_cover_entities_snapshot[local_somfy_tahoma_switch_europe.json][cover.office_blinds-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      <CoverEntityCapabilityAttribute.CLOSED_TILT_POSITIONS: 'closed_tilt_positions'>: list([
+        0,
+      ]),
       <CoverEntityStateAttribute.CURRENT_POSITION: 'current_position'>: 15,
       <CoverEntityStateAttribute.CURRENT_TILT_POSITION: 'current_tilt_position'>: 68,
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'blind',
@@ -3277,6 +3358,9 @@
     ]),
     'area_id': None,
     'capabilities': dict({
+      <CoverEntityCapabilityAttribute.CLOSED_TILT_POSITIONS: 'closed_tilt_positions'>: list([
+        0,
+      ]),
       <CoverEntityCapabilityAttribute.OPEN_TILT_POSITION: 'open_tilt_position'>: 100,
     }),
     'config_entry_id': <ANY>,
@@ -3312,6 +3396,9 @@
 # name: test_cover_entities_snapshot[local_somfy_tahoma_switch_europe.json][cover.study_blinds-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      <CoverEntityCapabilityAttribute.CLOSED_TILT_POSITIONS: 'closed_tilt_positions'>: list([
+        0,
+      ]),
       <CoverEntityStateAttribute.CURRENT_POSITION: 'current_position'>: 0,
       <CoverEntityStateAttribute.CURRENT_TILT_POSITION: 'current_tilt_position'>: 72,
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'blind',
@@ -4098,6 +4185,9 @@
     ]),
     'area_id': None,
     'capabilities': dict({
+      <CoverEntityCapabilityAttribute.CLOSED_TILT_POSITIONS: 'closed_tilt_positions'>: list([
+        0,
+      ]),
       <CoverEntityCapabilityAttribute.OPEN_TILT_POSITION: 'open_tilt_position'>: 100,
       <CoverEntityCapabilityAttribute.TILT_END_ANGLE: 'tilt_end_angle'>: 60,
       <CoverEntityCapabilityAttribute.TILT_START_ANGLE: 'tilt_start_angle'>: -90,
@@ -4135,6 +4225,9 @@
 # name: test_cover_entities_snapshot[local_somfy_tahoma_v2_europe.json][cover.garden_pergola-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      <CoverEntityCapabilityAttribute.CLOSED_TILT_POSITIONS: 'closed_tilt_positions'>: list([
+        0,
+      ]),
       <CoverEntityStateAttribute.CURRENT_TILT_POSITION: 'current_tilt_position'>: 0,
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'awning',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Garden Pergola',
@@ -4267,6 +4360,9 @@
     ]),
     'area_id': None,
     'capabilities': dict({
+      <CoverEntityCapabilityAttribute.CLOSED_TILT_POSITIONS: 'closed_tilt_positions'>: list([
+        0,
+      ]),
       <CoverEntityCapabilityAttribute.OPEN_TILT_POSITION: 'open_tilt_position'>: 100,
     }),
     'config_entry_id': <ANY>,
@@ -4302,6 +4398,9 @@
 # name: test_cover_entities_snapshot[local_somfy_tahoma_v2_europe.json][cover.living_room_venetian_blind-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      <CoverEntityCapabilityAttribute.CLOSED_TILT_POSITIONS: 'closed_tilt_positions'>: list([
+        0,
+      ]),
       <CoverEntityStateAttribute.CURRENT_POSITION: 'current_position'>: 0,
       <CoverEntityStateAttribute.CURRENT_TILT_POSITION: 'current_tilt_position'>: 100,
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'blind',

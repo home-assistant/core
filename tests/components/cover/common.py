@@ -102,6 +102,11 @@ class MockCover(MockEntity, CoverEntity):
         return self._handle("open_tilt_position")
 
     @property
+    def closed_tilt_positions(self):
+        """Return the closed tilt positions of cover."""
+        return self._handle("closed_tilt_positions")
+
+    @property
     def tilt_start_angle(self):
         """Return the angle of the slats at tilt 0."""
         return self._handle("tilt_start_angle")

@@ -162,6 +162,9 @@
             ]),
             'area_id': None,
             'capabilities': dict({
+              'closed_tilt_positions': list([
+                0,
+              ]),
               'open_tilt_position': 100,
             }),
             'categories': dict({
@@ -192,6 +195,9 @@
             'state': dict({
               'attributes': dict({
                 'assumed_state': True,
+                'closed_tilt_positions': list([
+                  0,
+                ]),
                 'current_position': 0,
                 'current_tilt_position': 0,
                 'device_class': 'shade',
@@ -504,6 +510,9 @@
             ]),
             'area_id': None,
             'capabilities': dict({
+              'closed_tilt_positions': list([
+                0,
+              ]),
               'open_tilt_position': 100,
             }),
             'categories': dict({
@@ -534,6 +543,9 @@
             'state': dict({
               'attributes': dict({
                 'assumed_state': True,
+                'closed_tilt_positions': list([
+                  0,
+                ]),
                 'current_position': 0,
                 'current_tilt_position': 0,
                 'device_class': 'shade',
@@ -846,6 +858,9 @@
             ]),
             'area_id': None,
             'capabilities': dict({
+              'closed_tilt_positions': list([
+                0,
+              ]),
               'open_tilt_position': 100,
             }),
             'categories': dict({
@@ -876,6 +891,9 @@
             'state': dict({
               'attributes': dict({
                 'assumed_state': True,
+                'closed_tilt_positions': list([
+                  0,
+                ]),
                 'current_position': 0,
                 'current_tilt_position': 0,
                 'device_class': 'shade',
@@ -1188,6 +1206,9 @@
             ]),
             'area_id': None,
             'capabilities': dict({
+              'closed_tilt_positions': list([
+                0,
+              ]),
               'open_tilt_position': 100,
             }),
             'categories': dict({
@@ -1218,6 +1239,9 @@
             'state': dict({
               'attributes': dict({
                 'assumed_state': True,
+                'closed_tilt_positions': list([
+                  0,
+                ]),
                 'current_position': 0,
                 'current_tilt_position': 0,
                 'device_class': 'shade',
@@ -2517,6 +2541,9 @@
           ]),
           'area_id': None,
           'capabilities': dict({
+            'closed_tilt_positions': list([
+              0,
+            ]),
             'open_tilt_position': 100,
           }),
           'categories': dict({
@@ -2547,6 +2574,9 @@
           'state': dict({
             'attributes': dict({
               'assumed_state': True,
+              'closed_tilt_positions': list([
+                0,
+              ]),
               'current_position': 0,
               'current_tilt_position': 0,
               'device_class': 'shade',

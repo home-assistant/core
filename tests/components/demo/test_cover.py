@@ -294,35 +294,52 @@ async def test_open_cover_tilt(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize(
-    ("entity_id", "open_tilt_position", "tilt_start_angle", "tilt_end_angle"),
+    ("entity_id", "expected"),
     [
-        pytest.param("cover.living_room_window", 100, None, None, id="default"),
-        pytest.param("cover.office_blind", 50, -90, 90, id="angles"),
-        pytest.param("cover.pergola_roof", 60, -90, 60, id="tilt_only"),
+        pytest.param(
+            "cover.living_room_window",
+            {
+                CoverEntityCapabilityAttribute.OPEN_TILT_POSITION: 100,
+                CoverEntityCapabilityAttribute.CLOSED_TILT_POSITIONS: [0],
+            },
+            id="default",
+        ),
+        pytest.param(
+            "cover.office_blind",
+            {
+                CoverEntityCapabilityAttribute.OPEN_TILT_POSITION: 50,
+                CoverEntityCapabilityAttribute.CLOSED_TILT_POSITIONS: [0, 100],
+                CoverEntityCapabilityAttribute.TILT_START_ANGLE: -90,
+                CoverEntityCapabilityAttribute.TILT_END_ANGLE: 90,
+            },
+            id="angles",
+        ),
+        pytest.param(
+            "cover.pergola_roof",
+            {
+                CoverEntityCapabilityAttribute.OPEN_TILT_POSITION: 60,
+                CoverEntityCapabilityAttribute.CLOSED_TILT_POSITIONS: [0],
+                CoverEntityCapabilityAttribute.TILT_START_ANGLE: -90,
+                CoverEntityCapabilityAttribute.TILT_END_ANGLE: 60,
+            },
+            id="tilt_only",
+        ),
     ],
 )
 async def test_tilt_capability_attributes(
     hass: HomeAssistant,
     entity_id: str,
-    open_tilt_position: int,
-    tilt_start_angle: int | None,
-    tilt_end_angle: int | None,
+    expected: dict[CoverEntityCapabilityAttribute, int | list[int]],
 ) -> None:
     """Test the tilt capability attributes."""
     state = hass.states.get(entity_id)
     assert state
-    attributes = state.attributes
-    assert (
-        attributes[CoverEntityCapabilityAttribute.OPEN_TILT_POSITION]
-        == open_tilt_position
-    )
-    assert (
-        attributes.get(CoverEntityCapabilityAttribute.TILT_START_ANGLE)
-        == tilt_start_angle
-    )
-    assert (
-        attributes.get(CoverEntityCapabilityAttribute.TILT_END_ANGLE) == tilt_end_angle
-    )
+    assert {
+        attribute: state.attributes[attribute]
+        for attribute in CoverEntityCapabilityAttribute
+        if attribute in state.attributes
+        and attribute is not CoverEntityCapabilityAttribute.SUPPORTED_SPEEDS
+    } == expected
 
 
 @pytest.mark.parametrize(
@@ -330,7 +347,7 @@ async def test_tilt_capability_attributes(
     [
         pytest.param(CoverService.OPEN_TILT, 50, id="open"),
         pytest.param(CoverService.TOGGLE_TILT, 50, id="toggle"),
-        pytest.param(CoverService.CLOSE_TILT, 0, id="close"),
+        pytest.param(CoverService.CLOSE_TILT, 100, id="close_when_closed"),
     ],
 )
 async def test_tilt_with_open_position_in_the_middle(
@@ -446,6 +463,49 @@ async def test_open_tilt_stops_at_the_open_position(hass: HomeAssistant) -> None
     assert state
     assert state.state == CoverState.OPEN
     assert state.attributes[ATTR_CURRENT_TILT_POSITION] == 50
+
+
+@pytest.mark.parametrize(
+    ("start_tilt_position", "closed_tilt_position"),
+    [
+        pytest.param(70, 100, id="nearest_is_100"),
+        pytest.param(30, 0, id="nearest_is_0"),
+        pytest.param(50, 0, id="from_the_open_position"),
+    ],
+)
+async def test_close_tilt_goes_to_the_nearest_closed_position(
+    hass: HomeAssistant, start_tilt_position: int, closed_tilt_position: int
+) -> None:
+    """Test closing the tilt of a cover that is closed at both ends."""
+    entity_id = "cover.office_blind"
+    await hass.services.async_call(
+        COVER_DOMAIN,
+        CoverService.SET_TILT_POSITION,
+        {
+            TargetKey.ENTITY_ID: entity_id,
+            CoverServiceArgument.TILT_POSITION: start_tilt_position,
+        },
+        blocking=True,
+    )
+    for _ in range(10):
+        future = dt_util.utcnow() + timedelta(seconds=1)
+        async_fire_time_changed(hass, future)
+        await hass.async_block_till_done()
+
+    await hass.services.async_call(
+        COVER_DOMAIN,
+        CoverService.CLOSE_TILT,
+        {TargetKey.ENTITY_ID: entity_id},
+        blocking=True,
+    )
+    for _ in range(10):
+        future = dt_util.utcnow() + timedelta(seconds=1)
+        async_fire_time_changed(hass, future)
+        await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.attributes[ATTR_CURRENT_TILT_POSITION] == closed_tilt_position
 
 
 async def test_tilt_only_cover_state(hass: HomeAssistant) -> None:
