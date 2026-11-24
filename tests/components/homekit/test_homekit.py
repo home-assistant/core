@@ -8,11 +8,7 @@ from uuid import uuid1
 from pyhap.accessory import Accessory
 from pyhap.const import CATEGORY_CAMERA, CATEGORY_TELEVISION
 import pytest
-from pytest_homeassistant.common import (
-    MockConfigEntry,
-    async_capture_events,
-    get_fixture_path,
-)
+from pytest_homeassistant.common import MockConfigEntry, get_fixture_path
 
 from homeassistant import config as hass_config
 from homeassistant.components import homekit as homekit_base, zeroconf
@@ -56,7 +52,6 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_PORT,
     EVENT_HOMEASSISTANT_STARTED,
-    EVENT_STATE_CHANGED,
     STATE_ON,
     CommonServiceArgument,
     EntityCategory,
@@ -1125,7 +1120,6 @@ async def test_homekit_reload_accessory_same_class(
         await hass.async_block_till_done()
         assert homekit.status == STATUS_RUNNING
         homekit.driver.aio_stop_event = MagicMock()
-        state_events = async_capture_events(hass, EVENT_STATE_CHANGED)
         hass.states.async_set(
             entity_id,
             "on",
@@ -1148,7 +1142,6 @@ async def test_homekit_reload_accessory_same_class(
         assert hasattr(light_accessory_color_and_temp, "char_color_temp"), (
             f"same_object={light_accessory_color_and_temp is light_accessory_color} "
             f"n_accessories={len(bridge.accessories)} "
-            f"state_events={len(state_events)} "
             f"state={hass.states.get(entity_id)}"
         )
 
