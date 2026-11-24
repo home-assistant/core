@@ -137,6 +137,20 @@ async def test_update_dataset(hass: HomeAssistant) -> None:
     assert entry.preferred_extended_address == "8877665544332211"
 
 
+async def test_get_dataset_id(hass: HomeAssistant) -> None:
+    """The ID of a network's stored dataset is found by its extended PAN ID."""
+    assert await dataset_store.async_get_dataset_id(hass, "abcdef0123456789") is None
+
+    await dataset_store.async_add_dataset(hass, "source", DATASET_1_LETTERS)
+    store = await dataset_store.async_get_store(hass)
+    dataset_id = next(iter(store.datasets))
+    for extended_pan_id in ("abcdef0123456789", "ABCDEF0123456789"):
+        assert (
+            await dataset_store.async_get_dataset_id(hass, extended_pan_id)
+            == dataset_id
+        )
+
+
 async def test_get_dataset_source(hass: HomeAssistant) -> None:
     """The source of a network's stored dataset is found by its extended PAN ID."""
     assert (

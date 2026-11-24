@@ -4372,6 +4372,56 @@
     'state': 'off',
   })
 # ---
+# name: test_binary_sensors[thread_border_router][binary_sensor.border_router_thread_migration_pending-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-000000000000005A-MatterNodeDevice')]>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.border_router_thread_migration_pending',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Thread migration pending',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Thread migration pending',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'thread_migration_pending',
+    'unique_id': '00000000000004D2-000000000000005A-MatterNodeDevice-1-ThreadMigrationPending-1106-5',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_binary_sensors[thread_border_router][binary_sensor.border_router_thread_migration_pending-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Border Router Thread migration pending',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.border_router_thread_migration_pending',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
 # name: test_binary_sensors[wago_home_blind_control][binary_sensor.home_blind_wi_fi_configuration_status-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([

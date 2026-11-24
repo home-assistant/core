@@ -45,6 +45,8 @@ class MatterService(StrEnum):
     GET_LOCK_CREDENTIAL_STATUS = "get_lock_credential_status"
     GET_LOCK_INFO = "get_lock_info"
     GET_LOCK_USERS = "get_lock_users"
+    GET_THREAD_DATASET = "get_thread_dataset"
+    PUSH_THREAD_DATASET = "push_thread_dataset"
     SET_LOCK_CREDENTIAL = "set_lock_credential"
     SET_LOCK_USER = "set_lock_user"
     SET_WIFI_CREDENTIALS = "set_wifi_credentials"
@@ -67,6 +69,7 @@ class MatterServiceArgument(StrEnum):
     TEMPORARY_SETPOINT = "temporary_setpoint"
     SSID = "ssid"
     PASSWORD = "password"
+    DATASET_ID = "dataset_id"
 
 
 # --- Lock domain constants ---

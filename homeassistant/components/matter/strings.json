@@ -171,6 +171,9 @@
       "thermostat_remote_sensing_outdoor_temperature": {
         "name": "Outdoor temperature remote sensing"
       },
+      "thread_migration_pending": {
+        "name": "Thread migration pending"
+      },
       "valve_fault_blocked": {
         "name": "Valve blocked"
       },
@@ -188,6 +191,9 @@
       }
     },
     "button": {
+      "adopt_thread_network": {
+        "name": "Adopt preferred Thread network"
+      },
       "cancel_boost": {
         "name": "Cancel boost"
       },
@@ -943,14 +949,38 @@
     "invalid_credential_data": {
       "message": "Invalid credential data: {reason}."
     },
+    "invalid_device": {
+      "message": "Device {device_id} is not a Matter device."
+    },
     "matter_not_set_up": {
       "message": "The Matter integration is not set up."
+    },
+    "matter_unloaded": {
+      "message": "The Matter integration was unloaded before the device was done."
+    },
+    "no_preferred_dataset": {
+      "message": "No dataset was given and there is no preferred Thread network."
+    },
+    "node_reconfiguring": {
+      "message": "The device is being reconfigured already. Try again once that is done."
+    },
+    "not_a_border_router": {
+      "message": "The selected device is not a Matter Thread border router."
     },
     "set_credential_failed": {
       "message": "Failed to set credential: lock returned status `{status}`."
     },
+    "thread_adoption_unconfirmed": {
+      "message": "The border router did not confirm the adoption and may have taken the Thread network nonetheless. Get Thread network from border router shows whether it has."
+    },
     "thread_dataset_not_newer": {
       "message": "Home Assistant already has a different Thread dataset with the same or a newer active timestamp for the network of this border router, so nothing was imported."
+    },
+    "thread_dataset_pending": {
+      "message": "The border router has a pending Thread network change already. Try again once it has taken effect."
+    },
+    "thread_dataset_push_failed": {
+      "message": "Could not hand the Thread network to the border router: {error}."
     },
     "thread_dataset_read_failed": {
       "message": "Could not read the Thread dataset of the border router: {error}."
@@ -960,6 +990,15 @@
     },
     "thread_network_missing": {
       "message": "The border router has no Thread network."
+    },
+    "thread_network_present": {
+      "message": "The border router has a Thread network already, which the button would move as a whole. Use the Push Thread network to border router action for that."
+    },
+    "thread_pan_change_unsupported": {
+      "message": "The border router cannot change the Thread network it runs."
+    },
+    "unknown_dataset": {
+      "message": "Home Assistant stores no Thread dataset with ID {dataset_id}."
     },
     "wifi_credentials_import_failed": {
       "message": "Could not import the Wi-Fi credentials of the network manager: {error}."
@@ -1038,6 +1077,16 @@
       "description": "Returns all users configured on a lock with their credentials.",
       "name": "Get lock users"
     },
+    "get_thread_dataset": {
+      "description": "Reads the Thread networks of a Matter border router: the active one, and the pending one while a migration is scheduled, each with its name, extended PAN ID, PAN ID, channel, timestamp and the ID of the dataset Home Assistant stores for it. The network key is not returned.",
+      "fields": {
+        "device_id": {
+          "description": "The Matter border router to read from.",
+          "name": "Border router"
+        }
+      },
+      "name": "Get Thread network from border router"
+    },
     "open_commissioning_window": {
       "description": "Allows adding one of your devices to another Matter network by opening the commissioning window for this Matter device for 60 seconds.",
       "fields": {
@@ -1047,6 +1096,20 @@
         }
       },
       "name": "Open commissioning window"
+    },
+    "push_thread_dataset": {
+      "description": "Hands a Thread network to a Matter border router. A border router without a network is adopted into it. One with a network receives it as a pending dataset, which moves that whole Thread network, with every device on it, after five minutes.",
+      "fields": {
+        "dataset_id": {
+          "description": "ID of a Thread dataset stored in Home Assistant. Defaults to the preferred network from the Thread settings.",
+          "name": "Dataset ID"
+        },
+        "device_id": {
+          "description": "The Matter border router to configure.",
+          "name": "Border router"
+        }
+      },
+      "name": "Push Thread network to border router"
     },
     "set_lock_credential": {
       "description": "Adds or updates a credential on a lock.",

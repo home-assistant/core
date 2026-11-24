@@ -6,13 +6,17 @@ the router's button; the stored dataset of a network imported that way is kept
 in step with its border routers.
 """
 
+import asyncio
 from base64 import b64decode
-from collections.abc import Callable
+from collections.abc import AsyncIterator, Callable, Coroutine
+import contextlib
+from contextlib import asynccontextmanager
 from dataclasses import dataclass
 from datetime import datetime
 from typing import TYPE_CHECKING, Any
 
 from chip.clusters import Objects as clusters
+from chip.clusters.Types import NullValue
 from matter_server.client.exceptions import MatterClientException
 from matter_server.common.errors import MatterError, NodeNotExists
 from matter_server.common.helpers.util import create_attribute_path
@@ -30,6 +34,7 @@ from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.event import async_call_later
+from homeassistant.util.hass_dict import HassKey
 
 from .const import BORDER_ROUTER_DEVICE_TYPES, DOMAIN, LOGGER
 
@@ -43,6 +48,14 @@ THREAD_DATASET_RETRY_DELAY = 30  # seconds
 THREAD_DATASET_READ_ATTEMPTS = 3
 # Once the quick attempts are used up
 THREAD_DATASET_SLOW_RETRY_DELAY = 900  # seconds
+# Fail-safe armed while an unprovisioned router is adopted
+ADOPTION_FAIL_SAFE_EXPIRY = 120  # seconds
+# Before a pending dataset replaces the active one; the otbr integration's
+# channel change waits as long
+PENDING_DATASET_DELAY = 300_000  # milliseconds
+
+# Nodes under a fail-safe transaction started here
+_RECONFIGURING: HassKey[set[int]] = HassKey(f"{DOMAIN}_reconfiguring")
 
 
 def get_dataset_attribute_paths(endpoint: MatterEndpoint) -> list[str]:
@@ -119,15 +132,279 @@ def _dataset_from_response(response: Any) -> bytes:
 
 
 async def async_read_dataset(
-    matter_client: MatterClient, endpoint: MatterEndpoint
+    matter_client: MatterClient, endpoint: MatterEndpoint, *, pending: bool = False
 ) -> bytes:
-    """Read the active dataset from a border router; empty when it has none."""
+    """Read the active or pending dataset from a border router; empty when it has none."""
+    commands = clusters.ThreadBorderRouterManagement.Commands
     response: Any = await matter_client.send_device_command(
         node_id=endpoint.node.node_id,
         endpoint_id=endpoint.endpoint_id,
-        command=clusters.ThreadBorderRouterManagement.Commands.GetActiveDatasetRequest(),
+        command=(
+            commands.GetPendingDatasetRequest()
+            if pending
+            else commands.GetActiveDatasetRequest()
+        ),
     )
     return _dataset_from_response(response)
+
+
+def check_commissioning_response(
+    response: Any, command: str, translation_key: str
+) -> None:
+    """Raise when ArmFailSafe or CommissioningComplete reports an error.
+
+    Both carry the error in the response, so a failed step reads as success
+    otherwise.
+    """
+    if isinstance(response, dict) and (code := response.get("errorCode")):
+        detail = f"{command} returned error {code} {response.get('debugText') or ''}"
+        raise HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key=translation_key,
+            translation_placeholders={"error": detail.strip()},
+        )
+
+
+@asynccontextmanager
+async def async_reconfiguring(
+    hass: HomeAssistant, node_id: int
+) -> AsyncIterator[Callable[[float], None]]:
+    """Hold a node for one fail-safe transaction; refuse a second one meanwhile.
+
+    Two transactions on one node would share its single fail-safe, so one
+    could complete or roll back what the other staged. The context hands out
+    a function to keep the node held until a loop time: a transaction that
+    armed the fail-safe holds the node until it expires, unless completion
+    or a rollback has been confirmed.
+    """
+    nodes = hass.data.setdefault(_RECONFIGURING, set())
+    if node_id in nodes:
+        raise HomeAssistantError(
+            translation_domain=DOMAIN, translation_key="node_reconfiguring"
+        )
+    nodes.add(node_id)
+    release_at = 0.0
+
+    def keep_until(loop_time: float) -> None:
+        nonlocal release_at
+        release_at = loop_time
+
+    @callback
+    def release(_: datetime | None = None) -> None:
+        nodes.discard(node_id)
+
+    try:
+        yield keep_until
+    finally:
+        if (delay := release_at - hass.loop.time()) > 0:
+            async_call_later(hass, delay, release)
+        else:
+            release()
+
+
+async def async_run_on_entry[_R](
+    hass: HomeAssistant,
+    entry: MatterConfigEntry,
+    target: Coroutine[Any, Any, _R],
+    name: str,
+) -> _R:
+    """Run a transaction as a task of the entry, which unloading it cancels.
+
+    A cancellation by the unload is reported as an error to the caller,
+    whose own cancellation still propagates.
+    """
+    task = entry.async_create_background_task(hass, target, name)
+    try:
+        return await task
+    except asyncio.CancelledError:
+        if (current := asyncio.current_task()) is not None and current.cancelling():
+            raise
+        raise HomeAssistantError(
+            translation_domain=DOMAIN, translation_key="matter_unloaded"
+        ) from None
+
+
+def _as_pending(dataset: bytes, active_timestamp: Any) -> bytes:
+    """Return a dataset as the pending dataset for a router with a network.
+
+    The router takes it over when the delay timer expires, which needs an
+    active timestamp newer than the router's. The dataset's own is kept
+    when it is newer already.
+    """
+    tlvs = tlv_parser.parse_tlv(dataset.hex())
+    current = active_timestamp if isinstance(active_timestamp, int) else 0
+    active = tlvs.get(tlv_parser.MeshcopTLVType.ACTIVETIMESTAMP)
+    if (
+        not isinstance(active, tlv_parser.Timestamp)
+        or int.from_bytes(active.data, "big") <= current
+    ):
+        active = tlv_parser.Timestamp.from_values(
+            tlv_parser.MeshcopTLVType.ACTIVETIMESTAMP, seconds=(current >> 16) + 1
+        )
+    tlvs[tlv_parser.MeshcopTLVType.ACTIVETIMESTAMP] = active
+    tlvs[tlv_parser.MeshcopTLVType.PENDINGTIMESTAMP] = tlv_parser.Timestamp(
+        tlv_parser.MeshcopTLVType.PENDINGTIMESTAMP, active.data
+    )
+    tlvs[tlv_parser.MeshcopTLVType.DELAYTIMER] = (
+        tlv_parser.DelayTimer.from_milliseconds(PENDING_DATASET_DELAY)
+    )
+    return bytes.fromhex(tlv_parser.encode_tlv(tlvs))
+
+
+async def async_read_dataset_timestamps(
+    matter_client: MatterClient, endpoint: MatterEndpoint
+) -> tuple[Any, Any]:
+    """Read a router's active and pending dataset timestamps from it.
+
+    Never from the cache: it lags a dataset just written, and another
+    controller may have scheduled a change the router has not reported yet.
+    """
+    attributes = clusters.ThreadBorderRouterManagement.Attributes
+    paths = [
+        create_attribute_path(
+            endpoint.endpoint_id,
+            clusters.ThreadBorderRouterManagement.id,
+            attribute.attribute_id,
+        )
+        for attribute in (
+            attributes.ActiveDatasetTimestamp,
+            attributes.PendingDatasetTimestamp,
+        )
+    ]
+    values = await matter_client.read_attribute(endpoint.node.node_id, paths)
+    return values.get(paths[0]), values.get(paths[1])
+
+
+def _supports_pan_change(endpoint: MatterEndpoint) -> bool:
+    """Return whether a router takes a pending dataset for its running network."""
+    feature_map = endpoint.get_attribute_value(
+        None, clusters.ThreadBorderRouterManagement.Attributes.FeatureMap
+    )
+    return isinstance(feature_map, int) and bool(
+        feature_map & clusters.ThreadBorderRouterManagement.Bitmaps.Feature.kPANChange
+    )
+
+
+async def async_push_dataset(
+    hass: HomeAssistant,
+    matter_client: MatterClient,
+    endpoint: MatterEndpoint,
+    dataset: bytes,
+    *,
+    adopt_only: bool = False,
+) -> None:
+    """Hand a Thread network to a border router.
+
+    A router without a network is adopted under its fail-safe, disarmed again
+    if the write or the completion fails, so it ends provisioned or
+    untouched. A router with a network gets the dataset as pending, which
+    Thread applies to its whole network after the delay timer, unless
+    `adopt_only`; one with a pending dataset already is left alone, since a
+    second one would race the first on the devices that hold it.
+    """
+    commissioning = clusters.GeneralCommissioning.Commands
+    management = clusters.ThreadBorderRouterManagement.Commands
+
+    def push_failed(err: MatterError | MatterClientException) -> HomeAssistantError:
+        return HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key="thread_dataset_push_failed",
+            translation_placeholders={"error": str(err) or err.__class__.__name__},
+        )
+
+    async def send(endpoint_id: int, command: Any) -> Any:
+        try:
+            return await matter_client.send_device_command(
+                node_id=endpoint.node.node_id,
+                endpoint_id=endpoint_id,
+                command=command,
+            )
+        except (MatterError, MatterClientException) as err:
+            raise push_failed(err) from err
+
+    async with async_reconfiguring(hass, endpoint.node.node_id) as keep_until:
+        # A write goes by what the router says, never by the cache: another
+        # controller may have scheduled a change it has not reported yet.
+        try:
+            active, pending = await async_read_dataset_timestamps(
+                matter_client, endpoint
+            )
+        except (MatterError, MatterClientException) as err:
+            raise push_failed(err) from err
+        if pending not in (None, NullValue):
+            raise HomeAssistantError(
+                translation_domain=DOMAIN, translation_key="thread_dataset_pending"
+            )
+        if active not in (None, NullValue):
+            if adopt_only:
+                raise HomeAssistantError(
+                    translation_domain=DOMAIN,
+                    translation_key="thread_network_present",
+                )
+            if not _supports_pan_change(endpoint):
+                raise HomeAssistantError(
+                    translation_domain=DOMAIN,
+                    translation_key="thread_pan_change_unsupported",
+                )
+            await send(
+                endpoint.endpoint_id,
+                management.SetPendingDatasetRequest(
+                    pendingDataset=_as_pending(dataset, active)
+                ),
+            )
+            return
+
+        # Held while the fail-safe may be armed, whatever ends this, from
+        # when the arm attempt ends: one whose answer got lost or came late
+        # may have taken until then.
+        try:
+            response = await send(
+                0,
+                commissioning.ArmFailSafe(
+                    expiryLengthSeconds=ADOPTION_FAIL_SAFE_EXPIRY
+                ),
+            )
+        finally:
+            keep_until(hass.loop.time() + ADOPTION_FAIL_SAFE_EXPIRY)
+        try:
+            check_commissioning_response(
+                response, "ArmFailSafe", "thread_dataset_push_failed"
+            )
+        except HomeAssistantError:
+            # Refused: nothing is armed.
+            keep_until(0)
+            raise
+        completing = False
+        try:
+            await send(
+                endpoint.endpoint_id,
+                management.SetActiveDatasetRequest(activeDataset=dataset),
+            )
+            completing = True
+            response = await send(0, commissioning.CommissioningComplete())
+            completing = False
+            check_commissioning_response(
+                response, "CommissioningComplete", "thread_dataset_push_failed"
+            )
+        except HomeAssistantError as err:
+            # Reverts the router now rather than at expiry.
+            with contextlib.suppress(HomeAssistantError):
+                response = await send(
+                    0, commissioning.ArmFailSafe(expiryLengthSeconds=0)
+                )
+                check_commissioning_response(
+                    response, "ArmFailSafe", "thread_dataset_push_failed"
+                )
+                keep_until(0)
+            if completing:
+                # The answer may be lost with the completion taken, which no
+                # rollback undoes.
+                raise HomeAssistantError(
+                    translation_domain=DOMAIN,
+                    translation_key="thread_adoption_unconfirmed",
+                ) from err
+            raise
+        keep_until(0)
 
 
 async def async_ensure_thread_setup(hass: HomeAssistant) -> None:

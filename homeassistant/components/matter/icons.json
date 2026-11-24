@@ -6,6 +6,9 @@
       }
     },
     "button": {
+      "adopt_thread_network": {
+        "default": "mdi:router-wireless"
+      },
       "import_thread_network": {
         "default": "mdi:download-network"
       },
@@ -229,6 +232,12 @@
     },
     "get_lock_users": {
       "service": "mdi:account-multiple"
+    },
+    "get_thread_dataset": {
+      "service": "mdi:download-network"
+    },
+    "push_thread_dataset": {
+      "service": "mdi:router-wireless"
     },
     "set_lock_credential": {
       "service": "mdi:key-plus"

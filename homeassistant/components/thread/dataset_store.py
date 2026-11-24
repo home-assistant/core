@@ -698,6 +698,19 @@ async def async_get_dataset_source(
     )
 
 
+async def async_get_dataset_id(hass: HomeAssistant, extended_pan_id: str) -> str | None:
+    """Return the ID of a network's stored dataset, None when none is stored."""
+    store = await async_get_store(hass)
+    return next(
+        (
+            entry.id
+            for entry in store.datasets.values()
+            if entry.extended_pan_id.lower() == extended_pan_id.lower()
+        ),
+        None,
+    )
+
+
 async def async_get_dataset(hass: HomeAssistant, dataset_id: str) -> str | None:
     """Get a dataset."""
     store = await async_get_store(hass)

@@ -59,6 +59,17 @@ class MatterBinarySensor(MatterEntity, BinarySensorEntity):
         self._attr_is_on = value
 
 
+class MatterThreadMigrationPendingBinarySensor(MatterBinarySensor):
+    """On while a border router has a pending dataset."""
+
+    @callback
+    @override
+    def _update_from_device(self) -> None:
+        """Update from device."""
+        value = self.get_matter_attribute_value(self._entity_info.primary_attribute)
+        self._attr_is_on = value not in (None, NullValue)
+
+
 _PUMP_STATUS = clusters.PumpConfigurationAndControl.Bitmaps.PumpStatusBitmap
 _VALVE_FAULT = clusters.ValveConfigurationAndControl.Bitmaps.ValveFaultBitmap
 
@@ -598,6 +609,20 @@ DISCOVERY_SCHEMAS = [
         required_attributes=(
             clusters.GeneralDiagnostics.Attributes.ActiveNetworkFaults,
         ),
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.BINARY_SENSOR,
+        entity_description=MatterBinarySensorEntityDescription(
+            key="ThreadMigrationPending",
+            translation_key="thread_migration_pending",
+            entity_category=EntityCategory.DIAGNOSTIC,
+        ),
+        entity_class=MatterThreadMigrationPendingBinarySensor,
+        required_attributes=(
+            clusters.ThreadBorderRouterManagement.Attributes.PendingDatasetTimestamp,
+        ),
+        # Null while no migration is scheduled
+        allow_none_value=True,
     ),
     MatterDiscoverySchema(
         platform=Platform.BINARY_SENSOR,

@@ -15,7 +15,7 @@ from homeassistant.auth.const import GROUP_ID_USER
 from homeassistant.components.matter import DOMAIN
 from homeassistant.components.matter.discovery import async_discover_entities
 from homeassistant.components.matter.models import MatterEntityInfo
-from homeassistant.components.thread import dataset_store
+from homeassistant.components.thread import async_add_dataset, dataset_store
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 
@@ -23,6 +23,8 @@ from .common import (
     setup_integration_with_node_fixture,
     setup_integration_with_node_fixtures,
 )
+
+from tests.components.thread import DATASET_2
 
 MOCK_FABRIC_ID = 12341234
 MOCK_COMPR_FABRIC_ID = 1234
@@ -136,6 +138,18 @@ def short_border_agent_discovery_timeout() -> Generator[None]:
 def mock_thread_discovery(mock_async_zeroconf: MagicMock) -> MagicMock:
     """Adding a Thread dataset starts Thread discovery, which would open a real socket."""
     return mock_async_zeroconf
+
+
+@pytest.fixture(name="stored_dataset")
+async def stored_dataset_fixture(hass: HomeAssistant) -> str:
+    """Store DATASET_2 in the Thread store and return its ID."""
+    await async_add_dataset(hass, "test", DATASET_2)
+    store = await dataset_store.async_get_store(hass)
+    return next(
+        entry.id
+        for entry in store.datasets.values()
+        if entry.extended_pan_id == "1111111122222233"
+    )
 
 
 @pytest.fixture
