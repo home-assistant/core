@@ -455,7 +455,7 @@ async def test_sensor_only_in_progress_sleep(
             METRIC_SYSTEM,
             {
                 "sensor.google_health_weight": (pytest.approx(80.0), "kg"),
-                "sensor.google_health_height": (pytest.approx(180.0), "cm"),
+                "sensor.google_health_height": (pytest.approx(1.8), "m"),
                 "sensor.google_health_distance": (pytest.approx(5.0), "km"),
                 "sensor.google_health_elevation": (pytest.approx(150.0), "m"),
                 "sensor.google_health_water_intake": (pytest.approx(2.5), "L"),
@@ -467,7 +467,7 @@ async def test_sensor_only_in_progress_sleep(
             US_CUSTOMARY_SYSTEM,
             {
                 "sensor.google_health_weight": (pytest.approx(176.37, abs=1e-2), "lb"),
-                "sensor.google_health_height": (pytest.approx(70.87, abs=1e-2), "in"),
+                "sensor.google_health_height": (pytest.approx(5.91, abs=1e-2), "ft"),
                 "sensor.google_health_distance": (
                     pytest.approx(3.11, abs=1e-2),
                     "mi",

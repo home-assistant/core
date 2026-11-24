@@ -300,13 +300,14 @@ BODY_SENSORS: list[
     GoogleHealthSensorEntityDescription[GoogleHealthBodyCoordinator, float | None](
         key="height",
         translation_key="height",
-        native_unit_of_measurement=UnitOfLength.CENTIMETERS,
-        suggested_display_precision=1,
+        # Meters auto-convert to feet in US customary
+        native_unit_of_measurement=UnitOfLength.METERS,
+        suggested_display_precision=2,
         device_class=SensorDeviceClass.DISTANCE,
         state_class=SensorStateClass.MEASUREMENT,
         entity_registry_enabled_default=False,
         value_fn=lambda data: (
-            data.height.height_millimeters / 10.0 if data and data.height else None
+            data.height.height_millimeters / 1000.0 if data and data.height else None
         ),
     ),
     GoogleHealthSensorEntityDescription[GoogleHealthBodyCoordinator, float | None](
