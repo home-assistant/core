@@ -1644,6 +1644,15 @@
     <ClimateEntityStateAttribute.TARGET_TEMPERATURE: 'temperature'>: 95,
   })
 # ---
+# name: test_us_customary_system[climate.evol_beer_wine_jc_115]
+  ReadOnlyDict({
+    <ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: 52,
+    <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 68,
+    <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 41,
+    <ClimateEntityCapabilityAttribute.TARGET_TEMP_STEP: 'target_temp_step'>: 1.0,
+    <ClimateEntityStateAttribute.TARGET_TEMPERATURE: 'temperature'>: 52,
+  })
+# ---
 # name: test_us_customary_system[climate.floor_thermostat_kitchen]
   ReadOnlyDict({
     <ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: -4,
