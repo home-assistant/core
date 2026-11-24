@@ -20,7 +20,12 @@ from hassil.intents import (
     WildcardSlotList,
 )
 from hassil.models import MatchEntity
-from hassil.recognize import MISSING_ENTITY, RecognizeResult, recognize_all
+from hassil.recognize import (
+    MISSING_ENTITY,
+    RecognizeResult,
+    recognize_all,
+    recognize_ranked,
+)
 from hassil.string_matcher import UnmatchedRangeEntity, UnmatchedTextEntity
 from hassil.util import merge_dict, remove_punctuation
 from home_assistant_intents import (
@@ -1736,29 +1741,22 @@ def _recognize_strict(
     language: str,
 ) -> list[RecognizeResult]:
     """Search intents for strict matches to user input, in the order to try them."""
-    results = list(
-        recognize_all(
-            user_input.text,
-            lang_intents.intents,
-            slot_lists=slot_lists,
-            intent_context=intent_context,
-            language=language,
-        )
+    results = recognize_ranked(
+        user_input.text,
+        lang_intents.intents,
+        slot_lists=slot_lists,
+        intent_context=intent_context,
+        language=language,
+        best_metadata_key=METADATA_CUSTOM_SENTENCE,
+        best_slot_name="name",
     )
-
-    if custom_results := [
-        result
-        for result in results
-        if result.intent_metadata
-        and result.intent_metadata.get(METADATA_CUSTOM_SENTENCE)
-    ]:
-        results = custom_results
-
     if not results:
         return []
 
-    results.sort(key=_result_sort_key)
     top_result = results[0]
+    if _is_custom_sentence(top_result):
+        # A built-in sentence must not take over from a custom one
+        results = [result for result in results if _is_custom_sentence(result)]
 
     # A matched name normally beats a domain or area match. Try such an
     # alternative first if the name is not where the sentence points, and keep
@@ -1828,25 +1826,10 @@ def _get_area_ids(entity: MatchEntity | None) -> set[str] | None:
     return entity.metadata.get(_METADATA_AREA_IDS)
 
 
-def _result_sort_key(
-    result: RecognizeResult,
-) -> tuple[bool, int, int, int, int, str]:
-    """Prefer a longer name, fewer wildcards, more literal text, less wildcard text."""
-    name = _get_matched_name(result)
-    num_wildcards = 0
-    wildcard_text_len = 0
-    for entity in result.entities_list:
-        if entity.is_wildcard:
-            num_wildcards += 1
-            wildcard_text_len += len(entity.text or "")
-
-    return (
-        name is None,
-        -len(name.text) if name is not None else 0,
-        num_wildcards,
-        -result.text_chunks_matched,
-        wildcard_text_len,
-        result.intent.name,
+def _is_custom_sentence(result: RecognizeResult) -> bool:
+    """Check if a result was matched by a custom sentence."""
+    return bool(
+        result.intent_metadata and result.intent_metadata.get(METADATA_CUSTOM_SENTENCE)
     )
 
 
