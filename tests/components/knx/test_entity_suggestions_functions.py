@@ -177,6 +177,14 @@ def test_stored_and_inferred_roles() -> None:
     # a role of another type on an address without DPT: nothing is inferred
     function = _function("Socket", "FT-10", "P-2", ("6/0/1", "MoveUpDown"))
     assert _function_roles(TEST_PROJECT, function).addresses == {}
+    # a role of another type on an address with a fitting DPT is its purpose: the
+    # address is left unmatched, not given a role of this type
+    function = _function(
+        "Socket", "FT-10", "P-2", ("1/0/2", "InfoOnOff"), ("1/0/1", "ValveSwitch")
+    )
+    roles = _function_roles(TEST_PROJECT, function)
+    assert roles.addresses == {"InfoOnOff": "1/0/2"}
+    assert roles.inferred == set()
     # a stored role is the user's statement, also without a DPT
     function = _function("Socket", "FT-10", "P-2", ("6/0/1", "SwitchOnOff"))
     roles = _function_roles(TEST_PROJECT, function)

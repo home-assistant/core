@@ -337,7 +337,8 @@ def _function_roles(
     address; a further group address stored with the same role is left
     unmatched, so a second status address never becomes a command. A group
     address without a stored role gets one only when its DPT fits a single free
-    function point that no other such address fits.
+    function point that no other such address fits. One stored with a role the
+    function type doesn't have is left unmatched: it was given another purpose.
     """
     if linked is None:
         linked = _linked_objects(project)
@@ -366,9 +367,11 @@ def _function_roles(
     without_role: list[str] = []
     for ref in function["group_addresses"].values():
         role, address = ref["role"], ref["address"]
-        if role not in point_dpts:
+        if not role:
             without_role.append(address)
-        elif role not in roles.addresses and takes(address, role):
+        elif (
+            role in point_dpts and role not in roles.addresses and takes(address, role)
+        ):
             roles.addresses[role] = address
 
     free = [role for role in point_dpts if role not in roles.addresses]
