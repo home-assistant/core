@@ -51,47 +51,39 @@ async def test_entities(
 
 
 @pytest.mark.parametrize(
-    ("entity_id", "expected_code"),
-    [
-        ("button.nad_receiver_cursor_up", NADAmplifierCode.CURSOR_UP),
-        ("button.nad_receiver_a_v_preset_1", NADAmplifierCode.AV_PRESET_1),
-        ("button.nad_receiver_speaker_b", NADAmplifierCode.SPEAKER_B),
-        ("button.nad_receiver_subwoofer_volume_up", NADAmplifierCode.SUB_VOLUME_UP),
-        ("button.nad_receiver_menu", NADAmplifierCode.MENU),
-        ("button.nad_receiver_test_tone", NADAmplifierCode.TEST),
-        ("button.nad_receiver_delete_preset", NADTunerCode.DELETE),
-    ],
-)
-@pytest.mark.parametrize("device_type", [NADDeviceType.RECEIVER], indirect=True)
-@pytest.mark.usefixtures("init_integration")
-async def test_button_press_sends_correct_code(
-    hass: HomeAssistant,
-    mock_infrared_emitter_entity: MockInfraredEmitterEntity,
-    entity_id: str,
-    expected_code: NADAmplifierCode | NADTunerCode | NADCDCode | NADTapeCode,
-) -> None:
-    """Test pressing a button sends the correct IR code."""
-    await hass.services.async_call(
-        BUTTON_DOMAIN,
-        SERVICE_PRESS,
-        {ATTR_ENTITY_ID: entity_id},
-        blocking=True,
-    )
-
-    assert mock_infrared_emitter_entity.send_command_calls == [expected_code]
-
-
-@pytest.mark.usefixtures("init_integration")
-async def test_button_availability_follows_ir_entity(hass: HomeAssistant) -> None:
-    """Test button becomes unavailable when IR entity is unavailable."""
-    await assert_availability_follows_source_entity(
-        hass, "button.nad_receiver_display", [MOCK_INFRARED_EMITTER_ENTITY_ID]
-    )
-
-
-@pytest.mark.parametrize(
     ("device_type", "entity_id", "expected_code"),
     [
+        (
+            NADDeviceType.RECEIVER,
+            "button.nad_receiver_cursor_up",
+            NADAmplifierCode.CURSOR_UP,
+        ),
+        (
+            NADDeviceType.RECEIVER,
+            "button.nad_receiver_a_v_preset_1",
+            NADAmplifierCode.AV_PRESET_1,
+        ),
+        (
+            NADDeviceType.RECEIVER,
+            "button.nad_receiver_speaker_b",
+            NADAmplifierCode.SPEAKER_B,
+        ),
+        (
+            NADDeviceType.RECEIVER,
+            "button.nad_receiver_subwoofer_volume_up",
+            NADAmplifierCode.SUB_VOLUME_UP,
+        ),
+        (NADDeviceType.RECEIVER, "button.nad_receiver_menu", NADAmplifierCode.MENU),
+        (
+            NADDeviceType.RECEIVER,
+            "button.nad_receiver_test_tone",
+            NADAmplifierCode.TEST,
+        ),
+        (
+            NADDeviceType.RECEIVER,
+            "button.nad_receiver_delete_preset",
+            NADTunerCode.DELETE,
+        ),
         (
             NADDeviceType.CD_PLAYER,
             "button.nad_cd_player_open_close",
@@ -122,13 +114,13 @@ async def test_button_availability_follows_ir_entity(hass: HomeAssistant) -> Non
     indirect=["device_type"],
 )
 @pytest.mark.usefixtures("init_integration")
-async def test_other_device_button_press_sends_correct_code(
+async def test_button_press_sends_correct_code(
     hass: HomeAssistant,
     mock_infrared_emitter_entity: MockInfraredEmitterEntity,
     entity_id: str,
     expected_code: NADAmplifierCode | NADTunerCode | NADCDCode | NADTapeCode,
 ) -> None:
-    """Test buttons of the other device types send the correct IR code."""
+    """Test pressing a button sends the correct IR code."""
     await hass.services.async_call(
         BUTTON_DOMAIN,
         SERVICE_PRESS,
@@ -137,6 +129,14 @@ async def test_other_device_button_press_sends_correct_code(
     )
 
     assert mock_infrared_emitter_entity.send_command_calls == [expected_code]
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_button_availability_follows_ir_entity(hass: HomeAssistant) -> None:
+    """Test button becomes unavailable when IR entity is unavailable."""
+    await assert_availability_follows_source_entity(
+        hass, "button.nad_receiver_display", [MOCK_INFRARED_EMITTER_ENTITY_ID]
+    )
 
 
 @pytest.mark.parametrize(
