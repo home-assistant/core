@@ -9,6 +9,7 @@ from pytest_homeassistant.common import MockConfigEntry
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, ButtonService
 from homeassistant.const import Platform, TargetKey
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 
 from .conftest import (
     micromodule_dimmer_device,
@@ -171,7 +172,7 @@ async def test_reset_energy_summation_button_press(
     ],
     indirect=True,
 )
-@pytest.mark.usefixtures("mock_session")
+@pytest.mark.usefixtures("mock_session", "entity_registry_enabled_by_default")
 @pytest.mark.parametrize(
     ("entity_id", "method"),
     [
@@ -220,3 +221,32 @@ async def test_dimmer_without_configuration_has_no_preview_buttons(
     await setup_integration(hass, mock_config_entry)
 
     assert hass.states.get("button.dimmer_preview_max_brightness") is None
+
+
+@pytest.mark.parametrize(
+    "device_buckets",
+    [
+        {
+            "micromodule_dimmers": [
+                micromodule_dimmer_device(supports_dimmer_configuration=True)
+            ]
+        }
+    ],
+    indirect=True,
+)
+@pytest.mark.usefixtures("mock_session")
+async def test_dimmer_preview_buttons_disabled_by_default(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """The preview buttons are only used during setup, so they start disabled."""
+    await setup_integration(hass, mock_config_entry)
+
+    for entity_id in (
+        "button.dimmer_preview_max_brightness",
+        "button.dimmer_preview_min_brightness",
+    ):
+        entry = entity_registry.async_get(entity_id)
+        assert entry is not None
+        assert entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION

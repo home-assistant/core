@@ -81,6 +81,7 @@ PREVIEW_MAX_BRIGHTNESS_DESCRIPTION = SHCButtonEntityDescription[SHCMicromoduleDi
     key="preview_max_brightness",
     translation_key="preview_max_brightness",
     entity_category=EntityCategory.CONFIG,
+    entity_registry_enabled_default=False,
     press_fn=_preview_max_brightness,
 )
 
@@ -88,6 +89,7 @@ PREVIEW_MIN_BRIGHTNESS_DESCRIPTION = SHCButtonEntityDescription[SHCMicromoduleDi
     key="preview_min_brightness",
     translation_key="preview_min_brightness",
     entity_category=EntityCategory.CONFIG,
+    entity_registry_enabled_default=False,
     press_fn=_preview_min_brightness,
 )
 
