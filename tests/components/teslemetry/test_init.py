@@ -3610,6 +3610,33 @@ async def test_paired_site_local_gap_keeps_cloud_value(
     assert hass.states.get("sensor.energy_site_battery_power").state == "3.0"
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+@pytest.mark.parametrize(
+    ("local_load_power", "expected"),
+    [
+        pytest.param(-1500, "0.0", id="negative_clamped_to_zero"),
+        pytest.param(4000, "4.0", id="positive_unchanged"),
+    ],
+)
+async def test_paired_site_local_load_power_clamped_at_zero(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_powerwall_live_status: AsyncMock,
+    local_load_power: int,
+    expected: str,
+) -> None:
+    """A negative local load_power is clamped at 0 and a positive one is kept."""
+    local = deepcopy(_LOCAL_LIVE_STATUS)
+    local["response"]["load_power"] = local_load_power
+    mock_powerwall_live_status.side_effect = lambda: deepcopy(local)
+    await _setup_energy_site_entry(hass, _entry_with_powerwall(), [Platform.SENSOR])
+
+    await _tick_local_live(hass, freezer, 1)
+
+    assert hass.states.get("sensor.energy_site_load_power").state == expected
+    assert hass.states.get("sensor.energy_site_battery_power").state == "3.0"
+
+
 async def test_paired_site_config_reads_merge_over_cloud(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
