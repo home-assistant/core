@@ -6,7 +6,7 @@ from datetime import datetime, timedelta
 import logging
 from typing import cast, override
 
-from aiohomeconnect.model import ApplianceType, EventKey, StatusKey
+from aiohomeconnect.model import ApplianceType, Event, EventKey, StatusKey
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -755,7 +755,8 @@ class HomeConnectProgramSensor(HomeConnectSensor):
 class HomeConnectProgramFinishTimeSensor(HomeConnectProgramSensor):
     """Sensor class for Home Connect program finish time."""
 
-    _time_to_finish: float | None = None
+    # The events the finish time was calculated from
+    _calculated_from: tuple[Event, Event | None] | None = None
 
     @override
     async def async_added_to_hass(self) -> None:
@@ -769,36 +770,52 @@ class HomeConnectProgramFinishTimeSensor(HomeConnectProgramSensor):
             )
         )
 
+    @callback
+    @override
+    def _handle_operation_state_event(self) -> None:
+        """Update the finish time when the operation state changes."""
+        # Entering or leaving the delayed start changes the time to finish
+        self.update_native_value()
+        super()._handle_operation_state_event()
+
     @override
     def update_native_value(self) -> None:
         """Update the program finish time."""
         events = self.appliance.events
         remaining = events.get(EventKey.BSH_COMMON_OPTION_REMAINING_PROGRAM_TIME)
         if remaining is None or not isinstance(remaining.value, (int, float)):
-            self._time_to_finish = None
+            self._calculated_from = None
             self._attr_native_value = None
             return
-        time_to_finish = float(remaining.value)
+        start = None
         operation_state = self.appliance.status.get(
             StatusKey.BSH_COMMON_OPERATION_STATE
         )
         if (
             operation_state is not None
             and operation_state.value == BSH_OPERATION_STATE_DELAYED_START
-            and (start := events.get(EventKey.BSH_COMMON_OPTION_START_IN_RELATIVE))
-            and isinstance(start.value, (int, float))
+            and (
+                start_event := events.get(EventKey.BSH_COMMON_OPTION_START_IN_RELATIVE)
+            )
+            and isinstance(start_event.value, (int, float))
         ):
             # While waiting for the delayed start,
             # the remaining program time is the duration of the whole program
-            time_to_finish += start.value
+            start = start_event
         if (
-            time_to_finish == self._time_to_finish
-            and self._attr_native_value is not None
+            self._attr_native_value is not None
+            and self._calculated_from is not None
+            and remaining is self._calculated_from[0]
+            and start is self._calculated_from[1]
         ):
-            # Nothing new has been reported, calculating the finish time again
-            # would shift it by the time elapsed since the last report
+            # Nothing new has been reported (e.g. all the entities are updated
+            # after a reconnection), calculating the finish time again would
+            # shift it by the time elapsed since the last report
             return
-        self._time_to_finish = time_to_finish
+        self._calculated_from = (remaining, start)
+        time_to_finish = float(remaining.value)
+        if start is not None:
+            time_to_finish += cast(float, start.value)
         self._attr_native_value = dt_util.utcnow() + timedelta(seconds=time_to_finish)
 
 

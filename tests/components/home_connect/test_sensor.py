@@ -1511,7 +1511,7 @@ async def test_program_running_time(
 
 
 @pytest.mark.parametrize("appliance", [ApplianceType.OVEN], indirect=True)
-async def test_program_finish_time_not_shifted_without_new_remaining_time(
+async def test_program_finish_time_only_calculated_on_new_reports(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
     client: MagicMock,
@@ -1519,7 +1519,7 @@ async def test_program_finish_time_not_shifted_without_new_remaining_time(
     integration_setup: Callable[[MagicMock], Awaitable[bool]],
     appliance: HomeAppliance,
 ) -> None:
-    """Test the finish time is only recalculated when a new remaining time is known.
+    """Test the finish time is only calculated again when a new report arrives.
 
     Updating all the entities (e.g. after a disconnection) must not
     add the time elapsed since the last remaining time event to the finish time.
@@ -1569,8 +1569,9 @@ async def test_program_finish_time_not_shifted_without_new_remaining_time(
         ]
     )
     await hass.async_block_till_done()
-    # The remaining time is the same, so the finish time is kept
-    assert hass.states.is_state(OVEN_FINISH_TIME_ENTITY_ID, "2021-01-09T12:30:00+00:00")
+    # A new report counts from now, even if the remaining time is the same
+    # (e.g. after the program was paused)
+    assert hass.states.is_state(OVEN_FINISH_TIME_ENTITY_ID, "2021-01-09T12:31:00+00:00")
 
     await client.add_events(
         [
@@ -1664,3 +1665,59 @@ async def test_program_finish_time_with_delayed_start(
     )
     await hass.async_block_till_done()
     assert hass.states.is_state(entity_id, "2021-01-09T15:59:00+00:00")
+
+
+@pytest.mark.parametrize("appliance", [ApplianceType.DISHWASHER], indirect=True)
+async def test_program_finish_time_delayed_start_reported_after_times(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    client: MagicMock,
+    config_entry: MockConfigEntry,
+    integration_setup: Callable[[MagicMock], Awaitable[bool]],
+    appliance: HomeAppliance,
+) -> None:
+    """Test the finish time when the delayed start is reported after the times."""
+    entity_id = "sensor.dishwasher_program_finish_time"
+    freezer.move_to(PROGRAM_TIMES_TEST_START)
+    client.get_status = AsyncMock(
+        return_value=create_operation_state_status(BSH_OPERATION_STATE_READY)
+    )
+    assert await integration_setup(client)
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    await client.add_events(
+        [
+            create_event_message(
+                appliance.ha_id,
+                EventType.NOTIFY,
+                {
+                    EventKey.BSH_COMMON_OPTION_START_IN_RELATIVE: 3600,
+                    EventKey.BSH_COMMON_OPTION_REMAINING_PROGRAM_TIME: 7200,
+                },
+            ),
+            create_event_message(
+                appliance.ha_id,
+                EventType.STATUS,
+                {
+                    EventKey.BSH_COMMON_STATUS_OPERATION_STATE: (
+                        BSH_OPERATION_STATE_DELAYED_START
+                    )
+                },
+            ),
+        ]
+    )
+    await hass.async_block_till_done()
+    assert hass.states.is_state(entity_id, "2021-01-09T15:00:00+00:00")
+
+    # Once the program runs, the time until the start is no longer added
+    await client.add_events(
+        [
+            create_event_message(
+                appliance.ha_id,
+                EventType.STATUS,
+                {EventKey.BSH_COMMON_STATUS_OPERATION_STATE: BSH_OPERATION_STATE_RUN},
+            ),
+        ]
+    )
+    await hass.async_block_till_done()
+    assert hass.states.is_state(entity_id, "2021-01-09T14:00:00+00:00")
