@@ -14,6 +14,7 @@ from pyimouapi.exceptions import (
 from pyimouapi.openapi import ImouOpenApiClient
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.selector import (
     SelectSelector,
     SelectSelectorConfig,
@@ -65,12 +66,13 @@ class ImouConfigFlow(ConfigFlow, domain=DOMAIN):
     MINOR_VERSION = 2
 
     async def _validate_input(self, user_input: dict[str, Any]) -> dict[str, str]:
-        """Validate credentials and close the temporary client."""
+        """Validate credentials with Home Assistant's shared client session."""
         errors: dict[str, str] = {}
         api_client = ImouOpenApiClient(
             user_input[CONF_APP_ID],
             user_input[CONF_APP_SECRET],
             API_URLS[user_input[CONF_API_URL]],
+            session=async_get_clientsession(self.hass),
         )
         try:
             await api_client.async_get_token()

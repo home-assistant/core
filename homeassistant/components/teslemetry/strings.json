@@ -1393,6 +1393,9 @@
     "update_failed_insufficient_credits": {
       "message": "Teslemetry account has insufficient command credits, pausing updates until credits are added"
     },
+    "update_failed_missing_scopes": {
+      "message": "Tesla authorization is missing the permissions to read vehicle data"
+    },
     "wake_up_failed": {
       "message": "Failed to wake up vehicle: {message}"
     },
@@ -1434,12 +1437,16 @@
         },
         "step": {
           "confirm": {
-            "description": "Home Assistant cannot send commands to {vehicle} because the Teslemetry virtual key is not paired with the vehicle. Until it is paired, commands such as locking, climate control and charging will not work.\n\n1. Open {link}.\n2. Follow the prompts to add the virtual key to {vehicle}.\n3. Select **Submit** below to re-check.",
+            "description": "Home Assistant cannot receive data from or send commands to {vehicle} because the Teslemetry virtual key is not paired with the vehicle. Until it is paired, the vehicle's data will not update and commands such as locking, climate control and charging will not work.\n\n1. Open {link}.\n2. Follow the prompts to add the virtual key to {vehicle}.\n3. Select **Submit** below to re-check.",
             "title": "[%key:component::teslemetry::issues::key::title%]"
           }
         }
       },
       "title": "Pair the virtual key for {vehicle}"
+    },
+    "missing_scopes": {
+      "description": "Tesla is refusing to share vehicle data with Teslemetry because your Tesla authorization is missing the required permissions. Select **Learn more** to sign in with Tesla again and grant the missing permissions, including Vehicle Information, then reload the integration.",
+      "title": "Tesla authorization is missing permissions"
     },
     "streaming_toggle": {
       "fix_flow": {

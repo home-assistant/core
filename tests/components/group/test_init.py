@@ -888,6 +888,7 @@ async def test_is_on_and_state_mixed_domains(
 
 async def test_reloading_groups(hass: HomeAssistant) -> None:
     """Test reloading the group config."""
+    initial_listeners = hass.bus.async_listeners().get(EVENT_STATE_CHANGED, 0)
     assert await async_setup_component(
         hass,
         DOMAIN,
@@ -921,7 +922,7 @@ async def test_reloading_groups(hass: HomeAssistant) -> None:
         "group.second_group",
         "group.test_group",
     ]
-    assert hass.bus.async_listeners()["state_changed"] == 1
+    assert hass.bus.async_listeners()[EVENT_STATE_CHANGED] == initial_listeners + 1
 
     with patch(
         "homeassistant.config.load_yaml_config_file",
@@ -936,7 +937,7 @@ async def test_reloading_groups(hass: HomeAssistant) -> None:
         "group.all_tests",
         "group.hello",
     ]
-    assert hass.bus.async_listeners()["state_changed"] == 1
+    assert hass.bus.async_listeners()[EVENT_STATE_CHANGED] == initial_listeners + 1
 
 
 async def test_modify_group(hass: HomeAssistant) -> None:
@@ -2412,3 +2413,57 @@ async def test_entity_platforms_with_multiple_on_states_with_state_match(
         group_state2,
         grouped_groups,
     )
+
+
+@pytest.mark.parametrize(
+    ("options", "expected_options"),
+    [
+        pytest.param(
+            {"group_type": "sensor", "type": "sum"},
+            {"group_type": "sensor", "type": "sum", "ignore_non_numeric": True},
+            id="sensor_without_option",
+        ),
+        pytest.param(
+            {"group_type": "sensor", "type": "sum", "ignore_non_numeric": False},
+            {"group_type": "sensor", "type": "sum", "ignore_non_numeric": False},
+            id="sensor_with_option",
+        ),
+        pytest.param(
+            {"group_type": "switch", "all": False},
+            {"group_type": "switch", "all": False},
+            id="other_group_type",
+        ),
+    ],
+)
+async def test_migrate_entry_to_minor_version_2(
+    hass: HomeAssistant,
+    options: dict[str, Any],
+    expected_options: dict[str, Any],
+) -> None:
+    """Test sensor groups without ignore_non_numeric keep ignoring non-numeric."""
+    config_entry = MockConfigEntry(
+        data={},
+        domain=DOMAIN,
+        options={
+            "entities": [],
+            "hide_members": False,
+            "name": "My group",
+            **options,
+        },
+        title="My group",
+        version=1,
+        minor_version=1,
+    )
+    config_entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert config_entry.version == 1
+    assert config_entry.minor_version == 2
+    assert config_entry.options == {
+        "entities": [],
+        "hide_members": False,
+        "name": "My group",
+        **expected_options,
+    }

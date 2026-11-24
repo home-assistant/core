@@ -3,6 +3,8 @@
 from datetime import timedelta
 from typing import Any, NamedTuple, override
 
+from pytouchline_extended import TouchlineError
+
 from homeassistant.components.climate import (
     PRESET_AWAY,
     PRESET_NONE,
@@ -81,7 +83,6 @@ class Touchline(ClimateEntity):
         )
         self._attr_native_current_temperature = self.unit.get_current_temperature()
         self._attr_native_target_temperature = self.unit.get_target_temperature()
-        self._current_operation_mode = HVACMode.HEAT
         self._attr_preset_mode = TOUCHLINE_HA_PRESETS.get(
             (self.unit.get_operation_mode(), self.unit.get_week_program())
         )
@@ -107,15 +108,17 @@ class Touchline(ClimateEntity):
                 raise HomeAssistantError(
                     translation_domain=DOMAIN, translation_key="error_set_preset"
                 )
-        except (OSError, ConnectionError) as err:
+        except TouchlineError as err:
             raise HomeAssistantError(
                 translation_domain=DOMAIN, translation_key="error_set_preset"
             ) from err
 
     @override
     def set_hvac_mode(self, hvac_mode: HVACMode) -> None:
-        """Set new target hvac mode."""
-        self._current_operation_mode = HVACMode.HEAT
+        """Set new target hvac mode.
+
+        Heat is the only supported mode, so there is nothing to change.
+        """
 
     @override
     def set_temperature(self, **kwargs: Any) -> None:
@@ -128,7 +131,7 @@ class Touchline(ClimateEntity):
                 raise HomeAssistantError(
                     translation_domain=DOMAIN, translation_key="error_set_temperature"
                 )
-        except (OSError, ConnectionError) as err:
+        except TouchlineError as err:
             raise HomeAssistantError(
                 translation_domain=DOMAIN, translation_key="error_set_temperature"
             ) from err

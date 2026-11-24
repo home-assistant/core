@@ -405,6 +405,56 @@
     }),
   })
 # ---
+# name: test_minute_forecast[metric]
+  dict({
+    'weather.helsinki': dict({
+      'forecast': list([
+        dict({
+          'datetime': '2026-09-01T17:01:00+03:00',
+          'precipitation': 0.0,
+        }),
+        dict({
+          'datetime': '2026-09-01T17:02:00+03:00',
+          'precipitation': 0.4,
+        }),
+        dict({
+          'datetime': '2026-09-01T17:03:00+03:00',
+          'precipitation': 1.27,
+        }),
+        dict({
+          'datetime': '2026-09-01T17:04:00+03:00',
+          'precipitation': None,
+        }),
+      ]),
+      'resolution': 1,
+    }),
+  })
+# ---
+# name: test_minute_forecast[us_customary]
+  dict({
+    'weather.helsinki': dict({
+      'forecast': list([
+        dict({
+          'datetime': '2026-09-01T17:01:00+03:00',
+          'precipitation': 0.0,
+        }),
+        dict({
+          'datetime': '2026-09-01T17:02:00+03:00',
+          'precipitation': 0.015748031496062992,
+        }),
+        dict({
+          'datetime': '2026-09-01T17:03:00+03:00',
+          'precipitation': 0.05,
+        }),
+        dict({
+          'datetime': '2026-09-01T17:04:00+03:00',
+          'precipitation': None,
+        }),
+      ]),
+      'resolution': 1,
+    }),
+  })
+# ---
 # name: test_weather[weather.helsinki-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([

@@ -303,6 +303,7 @@ def run_worker(
     stream: Stream,
     stream_source: str,
     stream_settings: StreamSettings | None = None,
+    quit_event: threading.Event | None = None,
 ) -> None:
     """Run the stream worker under test."""
     stream_state = StreamState(hass, stream.outputs, stream._diagnostics)
@@ -312,7 +313,7 @@ def run_worker(
         stream_settings or hass.data[DOMAIN][ATTR_SETTINGS],
         stream_state,
         KeyFrameConverter(hass, stream_settings, dynamic_stream_settings()),
-        stream._thread_quit,
+        quit_event or threading.Event(),
     )
 
 
@@ -530,16 +531,18 @@ async def test_stop_while_reading_packets(hass: HomeAssistant, stop_index: int) 
         dynamic_stream_settings(),
     )
 
+    quit_event = threading.Event()
+
     def packet_source() -> Iterator:
         yield from packets[:stop_index]
-        stream._thread_quit.set()
+        quit_event.set()
         yield from packets[stop_index:]
 
     source = packet_source()
     py_av = MockPyAv()
     py_av.container.packets = source
     with patch("av.open", new=py_av.open):
-        run_worker(hass, stream, STREAM_SOURCE)
+        run_worker(hass, stream, STREAM_SOURCE, quit_event=quit_event)
     # Only one packet was read after the stop request
     assert next(source, None) is packets[stop_index + 1]
 

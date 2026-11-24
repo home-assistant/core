@@ -72,7 +72,7 @@
 # name: test_ctl_set_hvac_mode[sys_006]
   list([
     tuple(
-      <SystemMode.OFF: 'off'>,
+      <SystemMode.HEATING_OFF: 'heating_off'>,
     ),
     tuple(
       <SystemMode.AUTO: 'auto'>,
@@ -131,7 +131,7 @@
 # name: test_ctl_turn_off[sys_006]
   list([
     tuple(
-      <SystemMode.OFF: 'off'>,
+      <SystemMode.HEATING_OFF: 'heating_off'>,
     ),
   ])
 # ---

@@ -94,6 +94,14 @@ class DiscordNotificationService(BaseNotificationService):
             return False
         return True
 
+    def _get_existing_images(self, images: list[str]) -> list[tuple[str, str]]:
+        """Return the path and filename of each image that exists on disk."""
+        return [
+            (image, os.path.basename(image))
+            for image in images
+            if self.file_exists(image)
+        ]
+
     async def async_get_file_from_url(
         self, url: str, verify_ssl: bool, max_file_size: int
     ) -> bytearray | None:
@@ -145,7 +153,7 @@ class DiscordNotificationService(BaseNotificationService):
         """Login to Discord, send message to channel(s) and log out."""
         nextcord.VoiceClient.warn_nacl = False
         discord_bot = nextcord.Client()
-        images = []
+        images: list[tuple[BytesIO | str, str]] = []
         embedding = None
 
         if ATTR_TARGET not in kwargs:
@@ -180,15 +188,11 @@ class DiscordNotificationService(BaseNotificationService):
                 embeds.append(embed)
 
         if ATTR_IMAGES in data:
-            for image in data.get(ATTR_IMAGES, []):
-                image_exists = await self.hass.async_add_executor_job(
-                    self.file_exists, image
+            images.extend(
+                await self.hass.async_add_executor_job(
+                    self._get_existing_images, data.get(ATTR_IMAGES, [])
                 )
-
-                filename = os.path.basename(image)
-
-                if image_exists:
-                    images.append((image, filename))
+            )
 
         if ATTR_URLS in data:
             for url in data.get(ATTR_URLS, []):
