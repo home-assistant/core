@@ -249,10 +249,14 @@ class Camera(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
             self._create_stream_lock = asyncio.Lock()
         async with self._create_stream_lock:
             if self.stream and self._stream_from_webrtc_provider:
-                # The provider may have lost the restream, e.g. when its server
+                # The camera may have a source of its own by now. If not, the
+                # provider may have lost the restream, e.g. when its server
                 # restarted, so let it set the restream up again
                 async with asyncio.timeout(CAMERA_STREAM_SOURCE_TIMEOUT):
-                    source = await self._async_get_webrtc_provider_stream_source()
+                    if source := await self.stream_source():
+                        self._stream_from_webrtc_provider = False
+                    else:
+                        source = await self._async_get_webrtc_provider_stream_source()
                 if not source:
                     # Stops the outputs but keeps the stream: a preloaded worker
                     # keeps running, so it resumes with the restream later

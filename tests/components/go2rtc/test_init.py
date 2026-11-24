@@ -2021,3 +2021,77 @@ async def test_provider_managed(
 
     entry = hass.config_entries.async_entries(DOMAIN)[0]
     assert entry.runtime_data._managed is managed
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_restreams_restore_single_attempt(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    init_test_integration: MockCamera,
+    rest_client: AsyncMock,
+) -> None:
+    """Test a second restart replaces a running restore, so one retry loop runs."""
+    camera = init_test_integration
+    assert isinstance(camera.webrtc_provider, WebRTCProvider)
+    camera.set_stream_source(None)
+    release = asyncio.Event()
+
+    async def add_stream(name: str, sources: list[str]) -> None:
+        await release.wait()
+        raise Go2RtcClientError
+
+    with patch.object(camera, "webrtc_source", return_value="rtsp://native"):
+        rest_client.streams.add.side_effect = None
+        await camera.webrtc_provider.async_get_stream_source(camera)
+        rest_client.streams.add.side_effect = add_stream
+        rest_client.streams.add.reset_mock()
+
+        # The first restore is still waiting on go2rtc when the second starts
+        async_dispatcher_send(hass, SIGNAL_SERVER_RESTARTED)
+        async with asyncio.timeout(1):
+            while not rest_client.streams.add.call_count:
+                await asyncio.sleep(0)
+        async_dispatcher_send(hass, SIGNAL_SERVER_RESTARTED)
+        release.set()
+        await hass.async_block_till_done()
+        assert rest_client.streams.add.call_count == 2
+
+        # One retry per delay, not one per restart
+        freezer.tick(5)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+        assert rest_client.streams.add.call_count == 3
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_restreams_restore_cancelled_on_unload(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    init_test_integration: MockCamera,
+    rest_client: AsyncMock,
+) -> None:
+    """Test unloading go2rtc cancels a restore still waiting on the server."""
+    camera = init_test_integration
+    assert isinstance(camera.webrtc_provider, WebRTCProvider)
+    camera.set_stream_source(None)
+    waiting = asyncio.Event()
+
+    async def add_stream(name: str, sources: list[str]) -> None:
+        waiting.set()
+        await asyncio.Event().wait()
+
+    with patch.object(camera, "webrtc_source", return_value="rtsp://native"):
+        await camera.webrtc_provider.async_get_stream_source(camera)
+        rest_client.streams.add.side_effect = add_stream
+        rest_client.streams.add.reset_mock()
+        async_dispatcher_send(hass, SIGNAL_SERVER_RESTARTED)
+        await waiting.wait()
+
+        entry = hass.config_entries.async_entries(DOMAIN)[0]
+        await hass.config_entries.async_unload(entry.entry_id)
+        freezer.tick(300)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+
+    # The cancelled restore scheduled no retry
+    assert rest_client.streams.add.call_count == 1

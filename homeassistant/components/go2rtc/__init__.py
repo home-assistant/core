@@ -1,5 +1,7 @@
 """The go2rtc component."""
 
+import asyncio
+from contextlib import suppress
 from dataclasses import dataclass
 from datetime import datetime
 import logging
@@ -336,6 +338,7 @@ class WebRTCProvider(CameraWebRTCProvider):
         self._added_stream_sources: dict[str, str] = {}
         self._restreamed_cameras: dict[str, Camera] = {}
         self._restore_attempt = 0
+        self._restore_task: asyncio.Task[None] | None = None
         self._cancel_restore_retry: CALLBACK_TYPE | None = None
 
     @property
@@ -471,26 +474,32 @@ class WebRTCProvider(CameraWebRTCProvider):
     @callback
     def async_restore_restreams(self) -> None:
         """Restore the restreams after the managed server restarted."""
-        self._stop_restore_retry()
         self._restore_attempt = 0
-        self._hass.async_create_task(
-            self._async_restore_restreams(), "go2rtc restore restreams"
-        )
+        self._start_restore()
 
     @callback
     def _async_retry_restore(self, _now: datetime) -> None:
         """Retry restoring the restreams."""
         self._cancel_restore_retry = None
-        self._hass.async_create_task(
+        self._start_restore()
+
+    @callback
+    def _start_restore(self) -> None:
+        """Start restoring the restreams, in place of any earlier attempt."""
+        self._stop_restore()
+        self._restore_task = self._hass.async_create_task(
             self._async_restore_restreams(), "go2rtc restore restreams"
         )
 
     @callback
-    def _stop_restore_retry(self) -> None:
-        """Cancel a pending retry of restoring the restreams."""
+    def _stop_restore(self) -> None:
+        """Cancel a running or pending attempt to restore the restreams."""
         if self._cancel_restore_retry:
             self._cancel_restore_retry()
             self._cancel_restore_retry = None
+        if self._restore_task:
+            self._restore_task.cancel()
+            self._restore_task = None
 
     async def _async_restore_restreams(self) -> None:
         """Add the restreamed cameras' streams again to a restarted server.
@@ -499,13 +508,17 @@ class WebRTCProvider(CameraWebRTCProvider):
         again, so a failure is retried until it succeeds.
         """
         failed: list[str] = []
-        for camera in list(self._restreamed_cameras.values()):
+        for identifier, camera in list(self._restreamed_cameras.items()):
+            if identifier not in self._restreamed_cameras:
+                # Unregistered while an earlier camera was restored
+                continue
             try:
                 await self._update_stream_source(camera)
             except Go2RtcClientError, HomeAssistantError:
                 # Not logged, as the error can carry the source's credentials
                 failed.append(camera.entity_id)
         if not failed:
+            self._restore_task = None
             if self._restore_attempt:
                 _LOGGER.info("Restored the restreams in go2rtc")
             self._restore_attempt = 0
@@ -519,6 +532,7 @@ class WebRTCProvider(CameraWebRTCProvider):
             min(self._restore_attempt, len(_RESTORE_RETRY_DELAYS) - 1)
         ]
         self._restore_attempt += 1
+        self._restore_task = None
         self._cancel_restore_retry = async_call_later(
             self._hass, delay, self._async_retry_restore
         )
@@ -643,7 +657,11 @@ class WebRTCProvider(CameraWebRTCProvider):
 
     async def teardown(self) -> None:
         """Tear down the provider."""
-        self._stop_restore_retry()
+        task = self._restore_task
+        self._stop_restore()
+        if task:
+            with suppress(asyncio.CancelledError):
+                await task
         while self._sessions:
             _, session_info = self._sessions.popitem()
             await session_info.ws_client.close()
