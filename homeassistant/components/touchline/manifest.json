@@ -9,5 +9,6 @@
   "integration_type": "hub",
   "iot_class": "local_polling",
   "loggers": ["pytouchline_extended"],
-  "requirements": ["pytouchline_extended==1.2.1"]
+  "quality_scale": "bronze",
+  "requirements": ["pytouchline_extended==1.3.1"]
 }

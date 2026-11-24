@@ -2175,7 +2175,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'humidity',
+    'translation_key': None,
     'unique_id': '0123456-relativehumidity',
     'unit_of_measurement': '%',
   })
@@ -2559,7 +2559,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'pressure',
+    'translation_key': None,
     'unique_id': '0123456-pressure',
     'unit_of_measurement': <UnitOfPressure.HPA: 'hPa'>,
   })
@@ -4744,7 +4744,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'temperature',
+    'translation_key': None,
     'unique_id': '0123456-temperature',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })

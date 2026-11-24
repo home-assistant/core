@@ -1,8 +1,9 @@
 """Module to coordinate llm tools."""
 
 from abc import ABC, abstractmethod
-from collections.abc import Callable, Iterable
+from collections.abc import Callable, Iterable, Mapping
 from dataclasses import dataclass, field as dc_field
+import re
 from typing import Any, override
 
 import probatio
@@ -890,3 +891,24 @@ class ActionTool(Tool):
         )
 
         return ToolResult(data={"result": result})
+
+
+_PLACEHOLDER_RE = re.compile(r"{([^{}]+)}")
+
+
+def substitute_translation_placeholders(
+    text: str | None, placeholders: Mapping[str, Any] | None
+) -> str | None:
+    """Replace {key} placeholders in a translated string using a single pass.
+
+    Leaves unknown placeholders intact and avoids re-expanding placeholder
+    syntax contained inside replacement values.
+    """
+    if not text or not placeholders:
+        return text
+    return _PLACEHOLDER_RE.sub(
+        lambda match: (
+            str(val) if (val := placeholders.get(match[1])) is not None else match[0]
+        ),
+        text,
+    )
