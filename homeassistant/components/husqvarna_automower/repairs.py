@@ -34,7 +34,11 @@ class MigrationRepairFlow(RepairsFlow):
             self.entry.async_start_reauth(self.hass)
             return self.async_abort(reason="reauth_started")
 
-        return self.async_show_form(step_id="confirm", data_schema=probatio.Schema({}))
+        return self.async_show_form(
+            step_id="confirm",
+            data_schema=probatio.Schema({}),
+            description_placeholders={"title": self.entry.title},
+        )
 
 
 async def async_create_fix_flow(

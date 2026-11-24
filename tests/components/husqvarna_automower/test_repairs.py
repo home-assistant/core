@@ -44,6 +44,7 @@ async def test_migration_repair_starts_reauth(
     result = await start_repair_fix_flow(client, DOMAIN, issue_id)
     assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "confirm"
+    assert result["description_placeholders"]["title"] == legacy_mock_config_entry.title
 
     result = await process_repair_fix_flow(client, result["flow_id"], json={})
     assert result["type"] == FlowResultType.ABORT

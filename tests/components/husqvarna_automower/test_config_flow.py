@@ -245,6 +245,19 @@ async def test_reauth(
 
 
 @pytest.mark.usefixtures("current_request_with_host")
+@pytest.mark.parametrize(
+    ("retry_side_effect", "expected_reason", "expected_state", "issue_remains"),
+    [
+        (None, "reauth_successful", config_entries.ConfigEntryState.LOADED, False),
+        (
+            AuthError(),
+            "migration_failed",
+            config_entries.ConfigEntryState.MIGRATION_ERROR,
+            True,
+        ),
+    ],
+    ids=["migration_succeeds", "migration_auth_fails_again"],
+)
 async def test_reauth_retries_failed_migration(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
@@ -252,8 +265,12 @@ async def test_reauth_retries_failed_migration(
     legacy_mock_config_entry: MockConfigEntry,
     mock_automower_client: AsyncMock,
     issue_registry: ir.IssueRegistry,
+    retry_side_effect: Exception | None,
+    expected_reason: str,
+    expected_state: config_entries.ConfigEntryState,
+    issue_remains: bool,
 ) -> None:
-    """Test successful reauthentication retries a failed migration."""
+    """Test reauthentication retries a failed migration."""
     legacy_mock_config_entry.add_to_hass(hass)
     mock_automower_client.get_status.side_effect = AuthError
     await hass.config_entries.async_setup(legacy_mock_config_entry.entry_id)
@@ -263,7 +280,7 @@ async def test_reauth_retries_failed_migration(
         is config_entries.ConfigEntryState.MIGRATION_ERROR
     )
 
-    mock_automower_client.get_status.side_effect = None
+    mock_automower_client.get_status.side_effect = retry_side_effect
     legacy_mock_config_entry.async_start_reauth(hass)
     await hass.async_block_till_done()
     result = hass.config_entries.flow.async_progress()[0]
@@ -301,9 +318,9 @@ async def test_reauth_retries_failed_migration(
         result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
     assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "reauth_successful"
-    assert legacy_mock_config_entry.minor_version == 2
-    assert legacy_mock_config_entry.state is config_entries.ConfigEntryState.LOADED
+    assert result["reason"] == expected_reason
+    assert legacy_mock_config_entry.minor_version == (1 if issue_remains else 2)
+    assert legacy_mock_config_entry.state is expected_state
     assert (
         legacy_mock_config_entry.data["token"]["access_token"] == "mock-updated-token"
     )
@@ -312,8 +329,8 @@ async def test_reauth_retries_failed_migration(
             DOMAIN,
             f"migrate_could_not_auth_{legacy_mock_config_entry.entry_id}",
         )
-        is None
-    )
+        is not None
+    ) is issue_remains
 
 
 @pytest.mark.parametrize(
