@@ -20,7 +20,6 @@ from aioesphomeapi import (
     VoiceAssistantEventType,
     VoiceAssistantExternalWakeWord,
     VoiceAssistantFeature,
-    VoiceAssistantTimerEventType,
     VoiceAssistantWakeWordAudio,
 )
 import probatio
@@ -36,11 +35,6 @@ from homeassistant.components.assist_pipeline import (
     async_get_pipeline,
 )
 from homeassistant.components.http import StaticPathConfig
-from homeassistant.components.intent import (
-    TimerEventType,
-    TimerInfo,
-    async_register_timer_handler,
-)
 from homeassistant.components.media_player import async_process_play_media_url
 from homeassistant.components.tts import TextToSpeechCommonOption
 from homeassistant.const import Platform
@@ -54,6 +48,7 @@ from homeassistant.util.hass_dict import HassKey
 from .const import (
     ASSIST_SATELLITE_KEY,
     DOMAIN,
+    TIMER_LIST_KEY,
     WAKE_WORDS_API_PATH,
     WAKE_WORDS_DIR_NAME,
 )
@@ -105,25 +100,6 @@ _VOICE_ASSISTANT_EVENT_TYPES: EsphomeEnumMapper[
             PipelineEventType.STT_VAD_END
         ),
     }
-)
-
-_TIMER_EVENT_TYPES: EsphomeEnumMapper[VoiceAssistantTimerEventType, TimerEventType] = (
-    EsphomeEnumMapper(
-        {
-            VoiceAssistantTimerEventType.VOICE_ASSISTANT_TIMER_STARTED: (
-                TimerEventType.STARTED
-            ),
-            VoiceAssistantTimerEventType.VOICE_ASSISTANT_TIMER_UPDATED: (
-                TimerEventType.UPDATED
-            ),
-            VoiceAssistantTimerEventType.VOICE_ASSISTANT_TIMER_CANCELLED: (
-                TimerEventType.CANCELLED
-            ),
-            VoiceAssistantTimerEventType.VOICE_ASSISTANT_TIMER_FINISHED: (
-                TimerEventType.FINISHED
-            ),
-        }
-    )
 )
 
 _ANNOUNCEMENT_TIMEOUT_SEC = 5 * 60  # 5 minutes
@@ -191,14 +167,16 @@ class EsphomeAssistSatellite(
         self._audio_channel_fixed = False
         self._has_multi_channel_audio = False
 
-    def _get_entity_id(self, suffix: str) -> str | None:
+    def _get_entity_id(
+        self, suffix: str, platform: Platform = Platform.SELECT
+    ) -> str | None:
         """Return the entity id for pipeline select, etc."""
         if self._entry_data.device_info is None:
             return None
 
         ent_reg = er.async_get(self.hass)
         return ent_reg.async_get_entity_id(
-            Platform.SELECT,
+            platform,
             DOMAIN,
             f"{self._entry_data.device_info.mac_address}-{suffix}",
         )
@@ -224,6 +202,12 @@ class EsphomeAssistSatellite(
     def vad_sensitivity_entity_id(self) -> str | None:
         """Return the entity ID of the VAD sensitivity for the next conversation."""
         return self._get_entity_id("vad_sensitivity")
+
+    @property
+    @override
+    def timer_list_entity_id(self) -> str | None:
+        """Return the entity ID of the timer list that holds the device's timers."""
+        return self._get_entity_id(TIMER_LIST_KEY, Platform.TIMER_LIST)
 
     @callback
     @override
@@ -365,17 +349,6 @@ class EsphomeAssistSatellite(
                     handle_start=self.handle_pipeline_start,
                     handle_stop=self.handle_pipeline_stop,
                     handle_announcement_finished=self.handle_announcement_finished,
-                )
-            )
-
-        if feature_flags & VoiceAssistantFeature.TIMERS:
-            # Device supports timers
-            assert (self.registry_entry is not None) and (
-                self.registry_entry.device_id is not None
-            )
-            self.async_on_remove(
-                async_register_timer_handler(
-                    self.hass, self.registry_entry.device_id, self.handle_timer_event
                 )
             )
 
@@ -788,25 +761,6 @@ class EsphomeAssistSatellite(
         self._stop_udp_server()
         self._active_pipeline_index = 0
         _LOGGER.debug("Pipeline finished")
-
-    def handle_timer_event(
-        self, event_type: TimerEventType, timer_info: TimerInfo
-    ) -> None:
-        """Handle timer events."""
-        try:
-            native_event_type = _TIMER_EVENT_TYPES.from_hass(event_type)
-        except KeyError:
-            _LOGGER.debug("Received unknown timer event type: %s", event_type)
-            return
-
-        self.cli.send_voice_assistant_timer_event(
-            native_event_type,
-            timer_info.id,
-            timer_info.name,
-            timer_info.created_seconds,
-            timer_info.seconds_left,
-            timer_info.is_active,
-        )
 
     async def handle_announcement_finished(
         self, announce_finished: VoiceAssistantAnnounceFinished
