@@ -401,7 +401,7 @@ async def test_set_tilt_position_moving_state(
 async def test_tilt_moving_state_across_the_open_position(
     hass: HomeAssistant,
 ) -> None:
-    """Test the tilt opens up to the open position and closes after it."""
+    """Test a move between two closed positions reports closing all the way."""
     entity_id = "cover.office_blind"
     await hass.services.async_call(
         COVER_DOMAIN,
@@ -411,7 +411,7 @@ async def test_tilt_moving_state_across_the_open_position(
     )
     state = hass.states.get(entity_id)
     assert state
-    assert state.state == CoverState.OPENING
+    assert state.state == CoverState.CLOSING
 
     for _ in range(5):
         future = dt_util.utcnow() + timedelta(seconds=1)
