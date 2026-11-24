@@ -152,3 +152,34 @@ async def test_reconnect_after_failed_power_query(
         blocking=True,
     )
     assert writes[-1] == command.Power(Zone.MAIN, command.Power.Param.STANDBY)
+
+
+async def test_backoff_survives_close_without_status(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_connect: AsyncMock,
+    mock_receiver: AsyncMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Keep backing off when a retry connects but closes before any status."""
+    disconnected_receiver = AsyncMock(spec=Receiver)
+    disconnected_receiver.write.side_effect = OnkyoConnectionError("Connection reset")
+    closed_receiver = AsyncMock(spec=Receiver)
+    closed_receiver.read.return_value = None
+    mock_connect.side_effect = [
+        disconnected_receiver,
+        closed_receiver,
+        disconnected_receiver,
+        mock_receiver,
+    ]
+
+    await setup_integration(hass, mock_config_entry)
+
+    # The delays are one, two and four seconds, with no immediate reconnect.
+    for attempts in (2, 2, 3, 3, 3, 3, 4):
+        freezer.tick(timedelta(seconds=1))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+        assert mock_connect.await_count == attempts
+
+    assert hass.states.get("media_player.tx_nr7100").state == STATE_ON

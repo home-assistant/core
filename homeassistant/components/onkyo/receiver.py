@@ -106,7 +106,8 @@ class ReceiverManager:
                         # A receiver can repeatedly accept TCP and drop the first query.
                         retry_delay = min(max(1, retry_delay * 2), 30)
                     else:
-                        retry_delay = 0
+                        # Closed without a status: stay on the backoff, if any.
+                        retry_delay = min(retry_delay * 2, 30)
             finally:
                 self.connected = False
                 if not unavailable_logged:
