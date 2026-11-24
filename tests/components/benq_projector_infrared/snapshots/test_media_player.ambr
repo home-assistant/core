@@ -1,0 +1,83 @@
+# serializer version: 1
+# name: test_entities[media_player.benq_projector-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <MediaPlayerEntityCapabilityAttribute.INPUT_SOURCE_LIST: 'source_list'>: list([
+        'hdmi_1',
+        'hdmi_2',
+        'pc_1',
+        'pc_2',
+        'component_1',
+        'component_2',
+        'video_1',
+        'video_2',
+        's_video_1',
+        's_video_2',
+        'dvi_d',
+        'usb_reader',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('benq_projector_infrared', '01JTEST0000000000000000000')]>,
+    'disabled_by': None,
+    'domain': 'media_player',
+    'entity_category': None,
+    'entity_id': 'media_player.benq_projector',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+    }),
+    'original_device_class': <MediaPlayerDeviceClass.PROJECTOR: 'projector'>,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'benq_projector_infrared',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <MediaPlayerEntityFeature: 3464>,
+    'translation_key': 'projector',
+    'unique_id': '01JTEST0000000000000000000_media_player',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[media_player.benq_projector-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.ASSUMED_STATE: 'assumed_state'>: True,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'projector',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'BenQ projector',
+      <MediaPlayerEntityCapabilityAttribute.INPUT_SOURCE_LIST: 'source_list'>: list([
+        'hdmi_1',
+        'hdmi_2',
+        'pc_1',
+        'pc_2',
+        'component_1',
+        'component_2',
+        'video_1',
+        'video_2',
+        's_video_1',
+        's_video_2',
+        'dvi_d',
+        'usb_reader',
+      ]),
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <MediaPlayerEntityFeature: 3464>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'media_player.benq_projector',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---

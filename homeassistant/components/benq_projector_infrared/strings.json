@@ -1,0 +1,52 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "A BenQ projector has already been configured with this infrared emitter.",
+      "no_infrared_emitters": "[%key:component::infrared::common::no_infrared_emitters%]"
+    },
+    "step": {
+      "user": {
+        "data": {
+          "infrared_entity_id": "[%key:component::infrared::common::infrared_entity_id%]"
+        },
+        "data_description": {
+          "infrared_entity_id": "[%key:component::infrared::common::infrared_entity_id_description%]"
+        },
+        "description": "Select the infrared emitter to use for controlling your BenQ projector.",
+        "title": "Set up BenQ projector"
+      }
+    }
+  },
+  "entity": {
+    "media_player": {
+      "projector": {
+        "state_attributes": {
+          "source": {
+            "state": {
+              "component_1": "Component 1",
+              "component_2": "Component 2",
+              "dvi_d": "DVI-D",
+              "hdmi_1": "HDMI 1",
+              "hdmi_2": "HDMI 2",
+              "pc_1": "PC 1",
+              "pc_2": "PC 2",
+              "s_video_1": "S-Video 1",
+              "s_video_2": "S-Video 2",
+              "usb_reader": "USB reader",
+              "video_1": "Video 1",
+              "video_2": "Video 2"
+            }
+          }
+        }
+      }
+    }
+  },
+  "exceptions": {
+    "emitter_not_found": {
+      "message": "The infrared emitter used by this BenQ projector no longer exists. Remove this device and set it up again with another emitter."
+    },
+    "invalid_source": {
+      "message": "Cannot select input source {invalid_source}. Valid sources: {valid_sources}."
+    }
+  }
+}

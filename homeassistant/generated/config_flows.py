@@ -107,6 +107,7 @@ FLOWS = {
         "balboa",
         "bang_olufsen",
         "bayesian",
+        "benq_projector_infrared",
         "besen",
         "bitcoin",
         "bitvis",
