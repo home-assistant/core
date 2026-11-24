@@ -788,6 +788,7 @@ async def test_level_action_no_template(
         (255, "{{255}}", ColorMode.BRIGHTNESS),
         (None, "{{256}}", ColorMode.BRIGHTNESS),
         (None, "{{x - 12}}", ColorMode.BRIGHTNESS),
+        (None, "{{ '1' * 400 }}", ColorMode.BRIGHTNESS),
         (None, "{{ none }}", ColorMode.BRIGHTNESS),
         (None, "", ColorMode.BRIGHTNESS),
         (
@@ -1883,6 +1884,7 @@ async def test_effect_template(
     ("expected_max_kelvin", "attribute_template"),
     [
         (8474, "{{118}}"),
+        (6535, "{{ 1000001 }}"),
         (6535, "{{ 0 }}"),
         (6535, "{{ -5 }}"),
         (6535, "{{ 'nan' | float }}"),
@@ -1917,6 +1919,8 @@ async def test_min_mireds_template(
     ("expected_min_kelvin", "attribute_template"),
     [
         (2049, "{{488}}"),
+        (1, "{{ 1000000 }}"),
+        (2000, "{{ 1000001 }}"),
         (2000, "{{ 0 }}"),
         (2000, "{{ -5 }}"),
         (2000, "{{ 'nan' | float }}"),

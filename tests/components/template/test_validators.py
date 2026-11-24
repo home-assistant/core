@@ -613,6 +613,7 @@ async def test_number_as_float(
         (0.0, 0),
         (-324.4564, -324),
         (1, 1),
+        pytest.param(10**400, 10**400, id="huge_int"),
         *expect_none(
             None,
             "al;dfj",

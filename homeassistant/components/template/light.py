@@ -97,6 +97,9 @@ CONF_XY_ACTION = "set_xy"
 
 DEPRECATED_TEMPERATURE_ISSUE_ID = "deprecated_light_temperature"
 
+# Above this, the mireds convert to 0 kelvin
+MAX_MIREDS = 1_000_000
+
 
 DEFAULT_NAME = DEFAULT_NAMES[Platform.LIGHT]
 
@@ -453,7 +456,7 @@ class AbstractTemplateLight(AbstractTemplateEntity, LightEntity, RestoreEntity):
         self.setup_template(
             CONF_MAX_MIREDS,
             "_attr_min_color_temp_kelvin",
-            tcv.number(self, CONF_MAX_MIREDS, 1),
+            tcv.number(self, CONF_MAX_MIREDS, 1, MAX_MIREDS),
             partial(
                 self._update_min_kelvin,
                 convert=color_util.color_temperature_mired_to_kelvin,
@@ -463,7 +466,7 @@ class AbstractTemplateLight(AbstractTemplateEntity, LightEntity, RestoreEntity):
         self.setup_template(
             CONF_MIN_MIREDS,
             "_attr_max_color_temp_kelvin",
-            tcv.number(self, CONF_MIN_MIREDS, 1),
+            tcv.number(self, CONF_MIN_MIREDS, 1, MAX_MIREDS),
             partial(
                 self._update_max_kelvin,
                 convert=color_util.color_temperature_mired_to_kelvin,

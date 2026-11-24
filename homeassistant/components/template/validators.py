@@ -336,7 +336,7 @@ def number(
                 return None
 
         # int() raises on NaN and infinity
-        if not math.isfinite(value):
+        if isinstance(value, float) and not math.isfinite(value):
             log_validation_result_error(entity, attribute, result, message)
             return None
 
