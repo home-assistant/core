@@ -12,6 +12,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr, discovery_flow
 
 from .const import DISCOVER_SCAN_TIMEOUT, DOMAIN
+from .models import ElkM1ConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -23,7 +24,7 @@ def _short_mac(mac_address: str) -> str:
 @callback
 def async_update_entry_from_discovery(
     hass: HomeAssistant,
-    entry: config_entries.ConfigEntry,
+    entry: ElkM1ConfigEntry,
     device: ElkSystem,
 ) -> bool:
     """Update a config entry from a discovery."""

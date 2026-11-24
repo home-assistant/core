@@ -11,7 +11,7 @@
       ]),
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
     'device_id': <DeviceEntry identifiers=[('saunum', '01K98T2T85R5GN0ZHYV25VFMMA')]>,
     'disabled_by': None,

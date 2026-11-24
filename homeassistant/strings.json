@@ -27,8 +27,6 @@
         "cloud_not_connected": "Not connected to Home Assistant Cloud.",
         "no_compatible_radio_frequency_transmitters": "No radio frequency transmitter supports {frequency} {modulation} transmissions. Please add a compatible transmitter first.",
         "no_devices_found": "No devices found on the network",
-        "no_infrared_emitters": "No infrared emitter entities found. Please set up an infrared device first.",
-        "no_infrared_entities": "No infrared entities found. Please set up an infrared device first.",
         "no_radio_frequency_transmitters": "No radio frequency transmitters are available. Please set up a device first.",
         "oauth2_authorize_url_timeout": "Timeout while generating an authorization URL.",
         "oauth2_error": "Received invalid token data.",
@@ -59,12 +57,10 @@
         "email": "Email",
         "host": "Host",
         "implementation": "Application credentials",
-        "infrared_entity_id": "Infrared emitter",
-        "infrared_receiver_entity_id": "Infrared receiver",
         "ip": "IP address",
         "language": "Language",
         "latitude": "Latitude",
-        "llm_hass_api": "Control Home Assistant",
+        "llm_hass_api": "AI tools",
         "location": "Location",
         "longitude": "Longitude",
         "mode": "Mode",
@@ -82,7 +78,7 @@
         "verify_ssl": "Verify SSL certificate"
       },
       "data_description": {
-        "infrared_entity_id": "The infrared emitter entity to use for sending commands.",
+        "llm_hass_api": "**Device control** only accesses the entities you expose to voice assistants. **Home Assistant** accesses everything and only works for administrators, not voice assistant devices.",
         "radio_frequency_transmitter": "The radio frequency transmitter to use for sending commands."
       },
       "description": {

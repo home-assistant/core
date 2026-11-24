@@ -10,6 +10,7 @@ from .const import DOMAIN
 from .coordinator import (
     ZonneplanBatteryControlCoordinator,
     ZonneplanBatteryCoordinator,
+    ZonneplanBatterySettingsCoordinator,
     ZonneplanChargePointCoordinator,
     ZonneplanCoordinator,
 )
@@ -40,6 +41,7 @@ class ZonneplanContractEntity[
     _CoordinatorT: ZonneplanBatteryCoordinator
     | ZonneplanBatteryControlCoordinator
     | ZonneplanChargePointCoordinator
+    | ZonneplanBatterySettingsCoordinator
 ](CoordinatorEntity[_CoordinatorT]):
     """Base entity on the device of a Zonneplan contract, like a home battery."""
 

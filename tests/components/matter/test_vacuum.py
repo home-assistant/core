@@ -22,6 +22,12 @@ from .common import (
 )
 
 
+@pytest.fixture
+def platform() -> Platform:
+    """Return the platform under test."""
+    return Platform.VACUUM
+
+
 @pytest.mark.usefixtures("matter_devices")
 async def test_vacuum(
     hass: HomeAssistant,

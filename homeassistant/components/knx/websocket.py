@@ -25,7 +25,7 @@ from homeassistant.const import CONF_ENTITY_ID, CONF_PLATFORM, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.typing import UNDEFINED
+from homeassistant.helpers.typing import Undefined
 from homeassistant.util import dt as dt_util
 from homeassistant.util.ulid import ulid_now
 
@@ -50,10 +50,15 @@ from .storage.entity_store_validation import (
     EntityStoreValidationSuccess,
     validate_entity_data,
 )
+from .storage.entity_suggestions import async_get_entity_suggestions
+from .storage.entity_suggestions.const import SuggestionFilter
 from .storage.expose_controller import validate_expose_data
 from .storage.serialize import get_serialized_schema
 from .storage.time_server import validate_time_server_data
 from .telegrams import TelegramDict
+
+# Websocket error code while the telegram store is still being initialized.
+ERR_TELEGRAM_STORE_INITIALIZING = "telegram_store_initializing"
 
 if TYPE_CHECKING:
     from .knx_module import KNXModule
@@ -71,6 +76,7 @@ async def register_panel(hass: HomeAssistant) -> None:
     websocket_api.async_register_command(hass, ws_query_telegrams)
     websocket_api.async_register_command(hass, ws_subscribe_telegram)
     websocket_api.async_register_command(hass, ws_get_knx_project)
+    websocket_api.async_register_command(hass, ws_get_entity_suggestions)
     websocket_api.async_register_command(hass, ws_validate_entity)
     websocket_api.async_register_command(hass, ws_create_entity)
     websocket_api.async_register_command(hass, ws_update_entity)
@@ -257,6 +263,36 @@ async def ws_get_knx_project(
 @websocket_api.require_admin
 @websocket_api.websocket_command(
     {
+        probatio.Required("type"): "knx/get_entity_suggestions",
+        probatio.Optional("platform"): probatio.In(SUPPORTED_PLATFORMS_UI),
+        probatio.Optional("group_id"): str,
+        probatio.Optional("include_configured", default=True): bool,
+    }
+)
+@websocket_api.async_response
+@provide_knx
+async def ws_get_entity_suggestions(
+    hass: HomeAssistant,
+    knx: KNXModule,
+    connection: websocket_api.ActiveConnection,
+    msg: dict,
+) -> None:
+    """Handle get entity suggestions."""
+    result = await async_get_entity_suggestions(
+        hass,
+        knx,
+        SuggestionFilter(
+            platform=msg.get("platform"),
+            group_id=msg.get("group_id"),
+            include_configured=msg["include_configured"],
+        ),
+    )
+    connection.send_result(msg["id"], result)
+
+
+@websocket_api.require_admin
+@websocket_api.websocket_command(
+    {
         probatio.Required("type"): "knx/project_file_process",
         probatio.Required("file_id"): str,
         probatio.Required("password"): str,
@@ -326,6 +362,16 @@ async def ws_group_monitor_info(
 
     query = TelegramQuery(start_time=start_time, order_descending=True)
     if knx.telegrams.store is None:
+        if knx.telegrams.store_initializing:
+            connection.send_result(
+                msg["id"],
+                {
+                    "project_loaded": knx.project.loaded,
+                    "telegram_store_status": "initializing",
+                    "recent_telegrams": [],
+                },
+            )
+            return
         connection.send_error(
             msg["id"],
             websocket_api.const.ERR_HOME_ASSISTANT_ERROR,
@@ -347,6 +393,7 @@ async def ws_group_monitor_info(
         msg["id"],
         {
             "project_loaded": knx.project.loaded,
+            "telegram_store_status": "ready",
             "recent_telegrams": [
                 knx.telegrams.model_to_dict(t) for t in result.telegrams
             ],
@@ -430,6 +477,13 @@ async def ws_query_telegrams(
         order_descending=msg.get("order_descending", True),
     )
     if knx.telegrams.store is None:
+        if knx.telegrams.store_initializing:
+            connection.send_error(
+                msg["id"],
+                ERR_TELEGRAM_STORE_INITIALIZING,
+                "Telegram storage backend is still initializing.",
+            )
+            return
         connection.send_error(
             msg["id"],
             websocket_api.const.ERR_HOME_ASSISTANT_ERROR,
@@ -716,7 +770,7 @@ def ws_create_device(
     )
     device_registry.async_update_device(
         _device.id,
-        area_id=msg.get("area_id") or UNDEFINED,
+        area_id=msg.get("area_id") or Undefined,
         configuration_url=f"homeassistant://knx/entities/view?device_id={_device.id}",
     )
     connection.send_result(msg["id"], _device.dict_repr)

@@ -26,6 +26,7 @@ from homeassistant.helpers.llm import (
     ToolAnnotations,
     ToolInput,
     ToolResult,
+    rank_name_match,
 )
 from homeassistant.util.json import JsonObjectType
 
@@ -41,33 +42,6 @@ _INSTRUCTIONS = (
 
 type _Item = tuple[str, str | None, Iterable[str], Iterable[str], Iterable[str]]
 """ID, display name, names, aliases and other fields of an item."""
-
-
-def _rank(
-    query: str, names: Iterable[str], aliases: Iterable[str], other: Iterable[str]
-) -> int | None:
-    """Return the rank of an item for the query, or None if it does not match.
-
-    Rank 0 is an exact name match, rank 1 an exact alias match, rank 2 a
-    partial name match and rank 3 a partial alias match or a match on another
-    field. Each field is only read when it can still improve the rank.
-    """
-    rank = None
-    for name in names:
-        folded = name.casefold()
-        if folded == query:
-            return 0
-        if query in folded:
-            rank = 2
-    for alias in aliases:
-        folded = alias.casefold()
-        if folded == query:
-            return 1
-        if rank is None and query in folded:
-            rank = 3
-    if rank is None and any(query in value.casefold() for value in other):
-        rank = 3
-    return rank
 
 
 def _set(*values: str | None) -> Iterator[str]:
@@ -164,7 +138,7 @@ def _search(
     def matches() -> Iterator[tuple[int, str, str, str | None]]:
         nonlocal total
         for item_id, name, names, aliases, other in items:
-            if (rank := _rank(query, names, aliases, other)) is not None:
+            if (rank := rank_name_match(query, names, aliases, other)) is not None:
                 total += 1
                 yield rank, (name or "").casefold(), item_id, name
 

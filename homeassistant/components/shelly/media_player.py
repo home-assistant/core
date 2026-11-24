@@ -27,7 +27,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 import homeassistant.util.dt as dt_util
 
 from .const import DOMAIN
-from .coordinator import ShellyConfigEntry, ShellyRpcCoordinator
+from .coordinator import ShellyConfigEntry
 from .entity import (
     RpcEntityDescription,
     ShellyRpcAttributeEntity,
@@ -56,12 +56,13 @@ class RpcMediaPlayerDescription(RpcEntityDescription, MediaPlayerEntityDescripti
     """Class to describe a Shelly RPC media player entity."""
 
 
-RPC_MEDIA_PLAYER_ENTITIES: Final = {
-    "media": RpcMediaPlayerDescription(
+RPC_MEDIA_PLAYER_ENTITIES: Final = (
+    RpcMediaPlayerDescription(
         key="media",
+        components=("media",),
         device_class=MediaPlayerDeviceClass.SPEAKER,
     ),
-}
+)
 
 
 async def async_setup_entry(
@@ -114,16 +115,6 @@ class ShellyRpcMediaPlayer(ShellyRpcAttributeEntity, MediaPlayerEntity):
 
     _cached_thumb: str | None = None
     _cached_thumb_result: tuple[bytes, str] | None = None
-
-    def __init__(
-        self,
-        coordinator: ShellyRpcCoordinator,
-        key: str,
-        attribute: str,
-        description: RpcMediaPlayerDescription,
-    ) -> None:
-        """Initialize Shelly RPC media player."""
-        super().__init__(coordinator, key, attribute, description)
 
     @property
     def _media_meta(self) -> dict[str, Any]:

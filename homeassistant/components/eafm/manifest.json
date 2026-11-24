@@ -4,6 +4,7 @@
   "categories": ["weather_alerts.public_warnings"],
   "codeowners": ["@Jc2k"],
   "config_flow": true,
+  "connectivity": ["cloud"],
   "documentation": "https://www.home-assistant.io/integrations/eafm",
   "integration_type": "service",
   "iot_class": "cloud_polling",

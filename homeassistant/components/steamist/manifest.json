@@ -4,6 +4,7 @@
   "categories": ["water.pools_spas"],
   "codeowners": ["@bdraco"],
   "config_flow": true,
+  "connectivity": ["network"],
   "dependencies": ["network"],
   "dhcp": [
     {

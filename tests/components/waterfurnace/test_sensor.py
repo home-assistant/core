@@ -95,3 +95,12 @@ async def test_availability(
     state = hass.states.get(entity_id)
     assert state
     assert state.state == "1500"
+
+
+@pytest.mark.parametrize("device_fixture", ["device_data_dhw.json"])
+@pytest.mark.usefixtures("seed_statistics", "init_integration")
+async def test_hardware_specific_sensors(hass: HomeAssistant) -> None:
+    """Test sensors only some hardware reports are created when reported."""
+    assert hass.states.get("sensor.test_abc_type_load_tank_temperature")
+    assert hass.states.get("sensor.test_abc_type_hot_water_temperature")
+    assert hass.states.get("sensor.test_abc_type_hot_water_setpoint")

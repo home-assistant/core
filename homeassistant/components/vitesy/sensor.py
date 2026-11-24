@@ -1,11 +1,12 @@
 """Sensor platform for the Vitesy integration."""
 
-from collections.abc import Callable
+from collections.abc import Callable, Iterable
 from dataclasses import dataclass
 from datetime import datetime
 from typing import override
 
 from aiovitesy.api import VitesyDevice
+from aiovitesy.const import PROGRAM_LEVELS
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -16,6 +17,8 @@ from homeassistant.components.sensor import (
 from homeassistant.const import (
     PERCENTAGE,
     EntityCategory,
+    UnitOfDensity,
+    UnitOfRatio,
     UnitOfTemperature,
     UnitOfTime,
 )
@@ -26,7 +29,7 @@ from homeassistant.util import dt as dt_util
 
 from .const import LOGGER
 from .coordinator import VitesyConfigEntry, VitesyDataUpdateCoordinator
-from .entity import VitesyEntity
+from .entity import VitesyEntity, async_add_device_entities
 
 PARALLEL_UPDATES = 0
 
@@ -40,8 +43,13 @@ _DOOR_OPENINGS = "DOC-SY"
 _DOOR_OPEN_DURATION = "DOT-SY"
 _BATTERY = "battery"
 
-# Levels used by the fan and power fields of a program's metadata.
-PROGRAM_LEVELS = ["low", "mid", "high"]
+# Sensor types of a device's readings (Natede, Eteria).
+_TEMPERATURE = "tmp"
+_HUMIDITY = "hum"
+_VOC = "voc"
+_CO2 = "co2"
+_CO = "co"
+_PM25 = "pm25"
 
 
 def _reading(device: VitesyDevice, group: str, reading_id: str) -> float | None:
@@ -88,6 +96,27 @@ def _last_update(device: VitesyDevice) -> datetime | None:
     return _parse_timestamp(device, "measurement timestamp", timestamp)
 
 
+def _has_reading(sensor_type: str) -> Callable[[VitesyDevice], bool]:
+    """Return an exists function for a reading of the given sensor type."""
+
+    def _exists(device: VitesyDevice) -> bool:
+        reading = device.readings.get(sensor_type)
+        # Shelfy's fridge temperature is already its own sensor.
+        return reading is not None and reading.sensor_id != _FRIDGE_TEMPERATURE
+
+    return _exists
+
+
+def _reading_value(sensor_type: str) -> Callable[[VitesyDevice], float | None]:
+    """Return a value function for a reading of the given sensor type."""
+
+    def _value(device: VitesyDevice) -> float | None:
+        reading = device.readings.get(sensor_type)
+        return reading.value if reading is not None else None
+
+    return _value
+
+
 def _maintenance_due(component: str) -> Callable[[VitesyDevice], datetime | None]:
     """Return a value function for a maintenance component's due date."""
 
@@ -125,6 +154,7 @@ class VitesySensorEntityDescription(SensorEntityDescription):
     """Describes a Vitesy sensor entity."""
 
     value_fn: Callable[[VitesyDevice], StateType | datetime]
+    exists_fn: Callable[[VitesyDevice], bool] | None = None
 
 
 SENSORS: tuple[VitesySensorEntityDescription, ...] = (
@@ -159,6 +189,54 @@ SENSORS: tuple[VitesySensorEntityDescription, ...] = (
         value_fn=lambda device: _reading(device, _SENSORS_DATA, _DOOR_OPEN_DURATION),
     ),
     VitesySensorEntityDescription(
+        key="temperature",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        state_class=SensorStateClass.MEASUREMENT,
+        exists_fn=_has_reading(_TEMPERATURE),
+        value_fn=_reading_value(_TEMPERATURE),
+    ),
+    VitesySensorEntityDescription(
+        key="humidity",
+        device_class=SensorDeviceClass.HUMIDITY,
+        native_unit_of_measurement=PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+        exists_fn=_has_reading(_HUMIDITY),
+        value_fn=_reading_value(_HUMIDITY),
+    ),
+    VitesySensorEntityDescription(
+        key="volatile_organic_compounds",
+        device_class=SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS_PARTS,
+        native_unit_of_measurement=UnitOfRatio.PARTS_PER_MILLION,
+        state_class=SensorStateClass.MEASUREMENT,
+        exists_fn=_has_reading(_VOC),
+        value_fn=_reading_value(_VOC),
+    ),
+    VitesySensorEntityDescription(
+        key="carbon_dioxide",
+        device_class=SensorDeviceClass.CO2,
+        native_unit_of_measurement=UnitOfRatio.PARTS_PER_MILLION,
+        state_class=SensorStateClass.MEASUREMENT,
+        exists_fn=_has_reading(_CO2),
+        value_fn=_reading_value(_CO2),
+    ),
+    VitesySensorEntityDescription(
+        key="carbon_monoxide",
+        device_class=SensorDeviceClass.CO,
+        native_unit_of_measurement=UnitOfRatio.PARTS_PER_MILLION,
+        state_class=SensorStateClass.MEASUREMENT,
+        exists_fn=_has_reading(_CO),
+        value_fn=_reading_value(_CO),
+    ),
+    VitesySensorEntityDescription(
+        key="pm25",
+        device_class=SensorDeviceClass.PM25,
+        native_unit_of_measurement=UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
+        state_class=SensorStateClass.MEASUREMENT,
+        exists_fn=_has_reading(_PM25),
+        value_fn=_reading_value(_PM25),
+    ),
+    VitesySensorEntityDescription(
         key="battery",
         device_class=SensorDeviceClass.BATTERY,
         native_unit_of_measurement=PERCENTAGE,
@@ -171,7 +249,7 @@ SENSORS: tuple[VitesySensorEntityDescription, ...] = (
         translation_key="fan_speed",
         device_class=SensorDeviceClass.ENUM,
         entity_category=EntityCategory.DIAGNOSTIC,
-        options=PROGRAM_LEVELS,
+        options=list(PROGRAM_LEVELS),
         value_fn=_program_level("fan"),
     ),
     VitesySensorEntityDescription(
@@ -179,7 +257,7 @@ SENSORS: tuple[VitesySensorEntityDescription, ...] = (
         translation_key="power_level",
         device_class=SensorDeviceClass.ENUM,
         entity_category=EntityCategory.DIAGNOSTIC,
-        options=PROGRAM_LEVELS,
+        options=list(PROGRAM_LEVELS),
         value_fn=_program_level("power"),
     ),
     VitesySensorEntityDescription(
@@ -187,6 +265,7 @@ SENSORS: tuple[VitesySensorEntityDescription, ...] = (
         translation_key="last_update",
         device_class=SensorDeviceClass.TIMESTAMP,
         entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
         value_fn=_last_update,
     ),
     VitesySensorEntityDescription(
@@ -213,12 +292,19 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Vitesy sensors from a config entry."""
     coordinator = entry.runtime_data
-    async_add_entities(
-        VitesySensor(coordinator, device_id, description)
-        for device_id, device in coordinator.data.items()
-        for description in SENSORS
-        if description.value_fn(device) is not None
-    )
+
+    def _entities(device_id: str, device: VitesyDevice) -> Iterable[VitesySensor]:
+        return (
+            VitesySensor(coordinator, device_id, description)
+            for description in SENSORS
+            if (
+                description.exists_fn(device)
+                if description.exists_fn
+                else description.value_fn(device) is not None
+            )
+        )
+
+    async_add_device_entities(coordinator, async_add_entities, _entities)
 
 
 class VitesySensor(VitesyEntity, SensorEntity):

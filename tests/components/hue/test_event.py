@@ -2,7 +2,10 @@
 
 from unittest.mock import Mock
 
-from homeassistant.components.event import ATTR_EVENT_TYPE, ATTR_EVENT_TYPES
+from homeassistant.components.event import (
+    EventEntityCapabilityAttribute,
+    EventEntityStateAttribute,
+)
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -27,7 +30,7 @@ async def test_event(
     assert state.state == "unknown"
     assert state.name == "Hue Dimmer switch with 4 controls Button 1"
     # check event_types
-    assert state.attributes[ATTR_EVENT_TYPES] == [
+    assert state.attributes[EventEntityCapabilityAttribute.EVENT_TYPES] == [
         "initial_press",
         "repeat",
         "short_release",
@@ -49,7 +52,7 @@ async def test_event(
     mock_bridge_v2.api.emit_event("update", btn_event)
     await hass.async_block_till_done()
     state = hass.states.get("event.hue_dimmer_switch_with_4_controls_button_1")
-    assert state.attributes[ATTR_EVENT_TYPE] == "initial_press"
+    assert state.attributes[EventEntityStateAttribute.EVENT_TYPE] == "initial_press"
     # trigger firing 'long_release' event from the device
     btn_event = {
         "button": {
@@ -65,7 +68,7 @@ async def test_event(
     mock_bridge_v2.api.emit_event("update", btn_event)
     await hass.async_block_till_done()
     state = hass.states.get("event.hue_dimmer_switch_with_4_controls_button_1")
-    assert state.attributes[ATTR_EVENT_TYPE] == "long_release"
+    assert state.attributes[EventEntityStateAttribute.EVENT_TYPE] == "long_release"
 
 
 async def test_sensor_add_update(hass: HomeAssistant, mock_bridge_v2: Mock) -> None:
@@ -88,7 +91,10 @@ async def test_sensor_add_update(hass: HomeAssistant, mock_bridge_v2: Mock) -> N
     assert state.state == "unknown"
     assert state.name == "Hue mocked device Rotary"
     # check event_types
-    assert state.attributes[ATTR_EVENT_TYPES] == ["clock_wise", "counter_clock_wise"]
+    assert state.attributes[EventEntityCapabilityAttribute.EVENT_TYPES] == [
+        "clock_wise",
+        "counter_clock_wise",
+    ]
 
     # test update of entity works on incoming event
     btn_event = {
@@ -109,7 +115,9 @@ async def test_sensor_add_update(hass: HomeAssistant, mock_bridge_v2: Mock) -> N
     mock_bridge_v2.api.emit_event("update", btn_event)
     await hass.async_block_till_done()
     state = hass.states.get(test_entity_id)
-    assert state.attributes[ATTR_EVENT_TYPE] == "counter_clock_wise"
+    assert (
+        state.attributes[EventEntityStateAttribute.EVENT_TYPE] == "counter_clock_wise"
+    )
     assert state.attributes["action"] == "repeat"
     assert state.attributes["steps"] == 60
     assert state.attributes["duration"] == 400
@@ -141,7 +149,7 @@ async def test_button_without_device(
     assert entity_id
     state = hass.states.get(entity_id)
     assert state
-    assert state.attributes[ATTR_EVENT_TYPES] == [
+    assert state.attributes[EventEntityCapabilityAttribute.EVENT_TYPES] == [
         "initial_press",
         "repeat",
         "short_release",

@@ -62,7 +62,7 @@ def get_supported_thinking_types(
     thinking = capabilities.thinking
     return [
         value
-        for value in ("disabled", "enabled", "adaptive")
+        for value in ("disabled", "enabled", "adaptive", "between_tools")
         if (value == "disabled" or thinking.supported)
         and getattr(thinking.types, value).supported
     ]
@@ -86,9 +86,14 @@ def is_effort_compatible_with_thinking(
     """Return whether the effort is compatible with the selected thinking type."""
     # The Models API does not describe restrictions between supported parameters.
     return not (
-        model_alias(model_info.id) in ("claude-haiku-5-5", "claude-opus-5")
-        and thinking_type == "disabled"
-        and effort in ("xhigh", "max")
+        effort in ("xhigh", "max")
+        and (
+            thinking_type == "between_tools"
+            or (
+                model_alias(model_info.id) in ("claude-haiku-5-5", "claude-opus-5")
+                and thinking_type == "disabled"
+            )
+        )
     )
 
 
@@ -114,7 +119,12 @@ def reconcile_model_options(options: dict[str, Any], model_info: ModelInfo) -> N
         if options.get(CONF_THINKING_TYPE) not in thinking_types:
             thinking_type = next(
                 value
-                for value in (DEFAULT[CONF_THINKING_TYPE], "enabled", "disabled")
+                for value in (
+                    DEFAULT[CONF_THINKING_TYPE],
+                    "enabled",
+                    "disabled",
+                    "between_tools",
+                )
                 if value in thinking_types
             )
             if (

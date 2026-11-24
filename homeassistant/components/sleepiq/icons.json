@@ -1,6 +1,9 @@
 {
   "entity": {
     "sensor": {
+      "bedtime": {
+        "default": "mdi:bed-clock"
+      },
       "heart_rate_avg": {
         "default": "mdi:heart-pulse"
       },
@@ -15,6 +18,9 @@
       },
       "sleep_score": {
         "default": "mdi:sleep"
+      },
+      "wake_time": {
+        "default": "mdi:alarm"
       }
     }
   }

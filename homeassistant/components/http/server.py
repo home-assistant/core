@@ -21,6 +21,7 @@ from aiohttp.streams import StreamReader
 from aiohttp.typedefs import JSONDecoder, StrOrURL
 from aiohttp.web_exceptions import HTTPMovedPermanently, HTTPRedirection
 from aiohttp.web_protocol import RequestHandler
+from aiohttp.web_urldispatcher import AbstractResource
 from cryptography import x509
 from cryptography.hazmat.primitives import hashes, serialization
 from cryptography.hazmat.primitives.asymmetric import rsa
@@ -89,6 +90,18 @@ _STATIC_CLASSES = {
 }
 
 
+def _comparable_config(conf: ConfData) -> ConfData:
+    """Return the config without metadata, and without the SSL profile if unused.
+
+    Without a certificate the profile has no effect, so a default config
+    persisted with an earlier default profile is still the default config.
+    """
+    conf = _strip_meta(conf)
+    if CONF_SSL_CERTIFICATE not in conf:
+        conf.pop(CONF_SSL_PROFILE, None)
+    return conf
+
+
 def make_server(
     hass: HomeAssistant,
     conf: ConfData,
@@ -111,11 +124,10 @@ def make_server(
         ssl_profile=conf[CONF_SSL_PROFILE],
         supervisor_unix_socket_path=supervisor_unix_socket_path,
         # Only the unconfigured default config on the new Supervisor default
-        # port bridges the previous one; compare without metadata so a default
-        # config reloaded from disk still matches.
+        # port bridges the previous one.
         port_transition=(
             ENV_SUPERVISOR in os.environ
-            and _strip_meta(conf) == _strip_meta(_DEFAULT_CONFIG)
+            and _comparable_config(conf) == _comparable_config(_DEFAULT_CONFIG)
             and conf[CONF_SERVER_PORT] != SERVER_PORT
         ),
     )
@@ -289,6 +301,7 @@ class HomeAssistantHTTP:
         self._port_transition = port_transition
         self._legacy_redirect_runner: web.AppRunner | None = None
         self._legacy_redirect_server: asyncio.Server | None = None
+        self._requires_auth_resources: set[AbstractResource] = set()
 
     async def async_bind(self) -> None:
         """Create the SSL context and the server, binding its sockets.
@@ -380,7 +393,22 @@ class HomeAssistantHTTP:
             class_name = view.__class__.__name__
             raise AttributeError(f'{class_name} missing required attribute "name"')
 
-        view.register(self.hass, self.app, self.app.router)
+        routes = view.register(self.hass, self.app, self.app.router)
+        if view.requires_auth and routes:
+            self._requires_auth_resources.update(
+                route.resource for route in routes if route.resource is not None
+            )
+
+    async def async_path_requires_auth(
+        self, request: web.Request, raw_path: str
+    ) -> bool:
+        """Return whether raw_path resolves to a registered view requiring auth."""
+        probe_request = request.clone(rel_url=URL.build(path=raw_path, encoded=True))
+        for resource in self._requires_auth_resources:
+            _, allowed_methods = await resource.resolve(probe_request)
+            if allowed_methods:
+                return True
+        return False
 
     def register_redirect(
         self,
