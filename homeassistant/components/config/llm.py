@@ -25,6 +25,7 @@ from homeassistant.helpers import (
     area_registry as ar,
     config_validation as cv,
     entity_registry as er,
+    floor_registry as fr,
     label_registry as lr,
     translation,
 )
@@ -1267,6 +1268,162 @@ class RemoveEntityTool(Tool):
         return ToolResult(data={"result": {"entity_id": entity_id}})
 
 
+def _get_floor(hass: HomeAssistant, floor_id: str) -> fr.FloorEntry:
+    """Return a floor."""
+    if (floor := fr.async_get(hass).async_get_floor(floor_id)) is None:
+        raise HomeAssistantError(f"Floor '{floor_id}' not found.")
+    return floor
+
+
+def _format_floor_settings(floor: fr.FloorEntry) -> JsonObjectType:
+    """Format the settings of a floor for LLM consumption."""
+    return {
+        "floor_id": floor.floor_id,
+        "name": floor.name,
+        "aliases": list[JsonValueType](sorted(floor.aliases)),
+        "icon": floor.icon,
+        "level": floor.level,
+    }
+
+
+_FLOOR_SETTINGS = {
+    probatio.Optional(
+        "aliases",
+        description=(
+            "Other names that voice assistants know the floor by. This replaces "
+            "all aliases."
+        ),
+    ): [_NON_EMPTY_STRING],
+    probatio.Optional(
+        "icon", description="The icon, like 'mdi:home-floor-1'. null removes it."
+    ): probatio.Any(None, probatio.All(str, cv.icon)),
+    probatio.Optional(
+        "level",
+        description=(
+            "The level of the floor, to sort floors. 0 is the ground floor, -1 the "
+            "floor below it. null removes it."
+        ),
+    ): probatio.Any(None, int),
+}
+
+
+class GetFloorSettingsTool(Tool):
+    """LLM Tool to get the settings of a floor."""
+
+    name = "config__get_floor_settings"
+    title = "Get floor settings"
+    description = (
+        "Get the settings of the floor with the given floor_id. Use search__search "
+        "to find the floor_id."
+    )
+    annotations = ToolAnnotations(
+        read_only=True, destructive=False, idempotent=True, open_world=False
+    )
+    integration = DOMAIN
+    parameters = probatio.Schema({probatio.Required("floor_id"): _NON_EMPTY_STRING})
+
+    @override
+    async def async_call(
+        self, hass: HomeAssistant, tool_input: ToolInput, llm_context: LLMContext
+    ) -> ToolResult:
+        """Return the settings of the floor."""
+        args = self.parameters(tool_input.tool_args)
+        floor = _get_floor(hass, args["floor_id"])
+        return ToolResult(data={"result": _format_floor_settings(floor)})
+
+
+class UpdateFloorSettingsTool(Tool):
+    """LLM Tool to update the settings of a floor."""
+
+    name = "config__update_floor_settings"
+    title = "Update floor settings"
+    description = (
+        "Update the settings of the floor with the given floor_id. Only the given "
+        "settings change. Returns the new settings."
+    )
+    annotations = ToolAnnotations(
+        read_only=False, destructive=True, idempotent=True, open_world=False
+    )
+    integration = DOMAIN
+    parameters = probatio.Schema(
+        {
+            probatio.Required("floor_id"): _NON_EMPTY_STRING,
+            probatio.Optional("name"): _NON_EMPTY_STRING,
+            **_FLOOR_SETTINGS,
+        }
+    )
+
+    @override
+    async def async_call(
+        self, hass: HomeAssistant, tool_input: ToolInput, llm_context: LLMContext
+    ) -> ToolResult:
+        """Update the settings of the floor and return the new settings."""
+        settings = self.parameters(tool_input.tool_args)
+        floor_id = settings.pop("floor_id")
+        _get_floor(hass, floor_id)
+        if "aliases" in settings:
+            settings["aliases"] = set(settings["aliases"])
+        try:
+            floor = fr.async_get(hass).async_update(floor_id, **settings)
+        except ValueError as err:
+            raise HomeAssistantError(str(err)) from err
+        return ToolResult(data={"result": _format_floor_settings(floor)})
+
+
+class CreateFloorTool(Tool):
+    """LLM Tool to create a floor."""
+
+    name = "config__create_floor"
+    title = "Create floor"
+    description = "Create a floor. Returns the settings of the new floor."
+    annotations = ToolAnnotations(
+        read_only=False, destructive=False, idempotent=False, open_world=False
+    )
+    integration = DOMAIN
+    parameters = probatio.Schema(
+        {probatio.Required("name"): _NON_EMPTY_STRING, **_FLOOR_SETTINGS}
+    )
+
+    @override
+    async def async_call(
+        self, hass: HomeAssistant, tool_input: ToolInput, llm_context: LLMContext
+    ) -> ToolResult:
+        """Create the floor and return its settings."""
+        settings = self.parameters(tool_input.tool_args)
+        if "aliases" in settings:
+            settings["aliases"] = set(settings["aliases"])
+        try:
+            floor = fr.async_get(hass).async_create(**settings)
+        except ValueError as err:
+            raise HomeAssistantError(str(err)) from err
+        return ToolResult(data={"result": _format_floor_settings(floor)})
+
+
+class DeleteFloorTool(Tool):
+    """LLM Tool to delete a floor."""
+
+    name = "config__delete_floor"
+    title = "Delete floor"
+    description = (
+        "Delete the floor with the given floor_id. Its areas stay, without a floor."
+    )
+    annotations = ToolAnnotations(
+        read_only=False, destructive=True, idempotent=True, open_world=False
+    )
+    integration = DOMAIN
+    parameters = probatio.Schema({probatio.Required("floor_id"): _NON_EMPTY_STRING})
+
+    @override
+    async def async_call(
+        self, hass: HomeAssistant, tool_input: ToolInput, llm_context: LLMContext
+    ) -> ToolResult:
+        """Delete the floor."""
+        floor_id = self.parameters(tool_input.tool_args)["floor_id"]
+        _get_floor(hass, floor_id)
+        fr.async_get(hass).async_delete(floor_id)
+        return ToolResult(data={"result": {"floor_id": floor_id}})
+
+
 @callback
 def async_get_tools(
     hass: HomeAssistant, llm_context: LLMContext, api_id: str
@@ -1288,5 +1445,9 @@ def async_get_tools(
             GetEntitySettingsTool(),
             UpdateEntitySettingsTool(),
             RemoveEntityTool(),
+            GetFloorSettingsTool(),
+            UpdateFloorSettingsTool(),
+            CreateFloorTool(),
+            DeleteFloorTool(),
         ]
     )
