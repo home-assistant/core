@@ -2,9 +2,12 @@
 
 from collections.abc import Awaitable, Callable
 from functools import partial
+import io
 from pathlib import Path
 from typing import TYPE_CHECKING, override
 from urllib.parse import quote
+import zipfile
+import zlib
 
 from homeassistant.components import lovelace
 from homeassistant.components.frontend import DATA_EXTRA_MODULE_URL
@@ -14,23 +17,33 @@ from ..const import (
     DASHBOARD_RESOURCE_BASE,
     DOMAIN,
     LEGACY_DASHBOARD_RESOURCE_BASE,
+    MAX_DOWNLOAD_SIZE,
     RESTART_ISSUE_PREFIX,
 )
 from ..enums import RepositoryCategory
 from ..exceptions import CatalogContentUnresolvedError, MarketplaceError
 from ..utils.decorator import concurrent
+from ..utils.file_system import async_run_to_completion
+from ..utils.path import resolve_in_directory
 from ..utils.tree import (
     tree_entry_directory,
     tree_entry_filename,
     tree_entry_is_directory,
 )
 from ..utils.url import github_release_asset, ref_version
-from .base import FileInformation, Repository
+from .base import FileInformation, Repository, _check_archive_size
 
 if TYPE_CHECKING:
     from aiogithubapi.models.release import GitHubReleaseAssetModel
 
     from ..base import MarketplaceManager
+
+
+def _archive_name(filename: str) -> str | None:
+    """Return the name of the ZIP release asset a dashboard resource can ship as."""
+    if not filename.endswith(".js"):
+        return None
+    return f"{filename.removesuffix('.js')}.zip"
 
 
 class PluginRepository(Repository):
@@ -76,13 +89,108 @@ class PluginRepository(Repository):
     def _find_target_asset(
         self, assets: list[GitHubReleaseAssetModel] | None
     ) -> GitHubReleaseAssetModel | None:
-        """Find the asset that is downloaded, for a ZIP release the archive."""
-        # The file name is the resource extracted from the archive, not an asset
-        if self._zip_release:
+        """Find the asset that is downloaded, the ZIP of the resource if there is one."""
+        # Counted before the refresh resolves the file name, so taken from the assets
+        names = {asset.name for asset in assets or []}
+        if (filename := self._release_resource_filename(names)) and (
+            archive_name := _archive_name(filename)
+        ):
             for asset in assets or []:
-                if asset.name == self.repository_manifest.filename:
+                if asset.name == archive_name:
                     return asset
         return super()._find_target_asset(assets)
+
+    @override
+    async def _async_download_files(self, contents: list[FileInformation]) -> None:
+        """Download the files, a ZIP of the resource instead of the release assets."""
+        if (remaining := await self._async_try_resource_archive(contents)) is not None:
+            await super()._async_download_files(remaining)
+
+    async def _async_try_resource_archive(
+        self, contents: list[FileInformation]
+    ) -> list[FileInformation] | None:
+        """Install the ZIP of the resource, return what is left to download if not."""
+        archive_name = _archive_name(self.data.file_name or "")
+        if self.content.path.remote != "release" or not archive_name:
+            return contents
+
+        for archive in contents:
+            if archive.name != archive_name:
+                continue
+            remaining = [content for content in contents if content is not archive]
+            try:
+                await self._async_install_resource_archive(archive)
+            except MarketplaceError as err:
+                if not any(
+                    content.name == self.data.file_name for content in remaining
+                ):
+                    raise
+                self.logger.warning(
+                    "%s %s is not usable, installing %s instead: %s",
+                    self.string,
+                    archive.name,
+                    self.data.file_name,
+                    err,
+                )
+                return remaining
+            return None
+        return contents
+
+    async def _async_install_resource_archive(self, archive: FileInformation) -> None:
+        """Download the ZIP of the resource and extract it."""
+        if not (
+            filecontent := await self.marketplace.async_download_file(
+                archive.download_url, limit=MAX_DOWNLOAD_SIZE
+            )
+        ):
+            raise MarketplaceError(
+                translation_domain=DOMAIN,
+                translation_key="file_not_downloaded",
+                translation_placeholders={"file": archive.name},
+            )
+        await self._async_extract_resource_archive(archive.name, filecontent)
+
+    async def _async_extract_resource_archive(
+        self, name: str, filecontent: bytes
+    ) -> None:
+        """Extract the ZIP of the resource into the local path."""
+        try:
+            await async_run_to_completion(
+                self.marketplace.hass,
+                partial(self._extract_resource_archive, name, filecontent),
+            )
+        except zipfile.BadZipFile as err:
+            raise MarketplaceError(
+                translation_domain=DOMAIN,
+                translation_key="resource_archive_unusable",
+                translation_placeholders={"file": name},
+            ) from err
+        self.logger.info("%s Download of %s completed", self.string, name)
+
+    def _extract_resource_archive(self, name: str, filecontent: bytes) -> None:
+        """Extract the ZIP of the resource into the local path, this does I/O."""
+        with zipfile.ZipFile(io.BytesIO(filecontent)) as archive:
+            _check_archive_size(archive)
+            if self.data.file_name not in archive.namelist():
+                raise MarketplaceError(
+                    translation_domain=DOMAIN,
+                    translation_key="resource_archive_without_resource",
+                    translation_placeholders={
+                        "file": name,
+                        "resource": self.data.file_name,
+                    },
+                )
+            # Read first, a broken member must not leave half an extraction behind
+            try:
+                bad_member = archive.testzip()
+            except (NotImplementedError, RuntimeError, zlib.error) as err:
+                # Unsupported compression, encrypted members, damaged compressed data
+                raise zipfile.BadZipFile(str(err)) from err
+            if bad_member:
+                raise zipfile.BadZipFile(f"Bad CRC-32 for {bad_member}")
+            for member in archive.namelist():
+                resolve_in_directory(self.content.path.local, member)
+            archive.extractall(self.content.path.local)
 
     @override
     def gather_tree_files_to_download(self) -> list[FileInformation]:
@@ -131,54 +239,9 @@ class PluginRepository(Repository):
                     },
                 )
 
-    @property
-    def _zip_release(self) -> bool:
-        """Return if the content is a ZIP release asset hacs.json names."""
-        manifest = self.repository_manifest
-        return manifest.zip_release and bool(manifest.filename)
-
-    def _zip_resource_filenames(self) -> tuple[str, ...]:
-        """Return the file names the dashboard resource in a ZIP release can have."""
-        archive = self.repository_manifest.filename or ""
-        return tuple(
-            dict.fromkeys(
-                (f"{archive.removesuffix('.zip')}.js", *self._default_filenames())
-            )
-        )
-
-    def _find_extracted_resource(self) -> str | None:
-        """Return the dashboard resource the ZIP release extracted, this does I/O."""
-        local = Path(self.content.path.local)
-        for filename in self._zip_resource_filenames():
-            # hacs.json is remote input, the resource has to be in the root
-            if "/" not in filename and (local / filename).is_file():
-                return filename
-        return None
-
-    async def _async_find_extracted_resource(self) -> str:
-        """Return the dashboard resource the ZIP release extracted."""
-        if not (
-            filename := await self.marketplace.hass.async_add_executor_job(
-                self._find_extracted_resource
-            )
-        ):
-            raise MarketplaceError(
-                translation_domain=DOMAIN,
-                translation_key="zip_resource_missing",
-                translation_placeholders={
-                    "file": str(self.repository_manifest.filename),
-                    "names": ", ".join(self._zip_resource_filenames()),
-                },
-            )
-        return filename
-
     @override
     async def async_check_written_content(self) -> None:
         """Refuse an install without the dashboard resource it is used by."""
-        if self._zip_release:
-            await self._async_find_extracted_resource()
-            return
-
         if not self.data.file_name:
             return
 
@@ -193,9 +256,6 @@ class PluginRepository(Repository):
     @override
     async def async_post_installation(self) -> None:
         """Run post installation steps."""
-        # Set only after a successful write, a rollback restores the files but not this
-        if self._zip_release:
-            self.data.file_name = await self._async_find_extracted_resource()
         self.data.directory = self.directory
         await self.update_dashboard_resources()
 
@@ -290,31 +350,44 @@ class PluginRepository(Repository):
         self, version: str, *, commit: bool
     ) -> Callable[[], Awaitable[None]]:
         """Resolve the dashboard resource of a catalog version."""
-        if self._zip_release:
-            if commit:
-                raise CatalogContentUnresolvedError(
-                    translation_domain=DOMAIN,
-                    translation_key="catalog_zip_release_without_release",
-                )
-            self.content.path.remote = "release"
-            return partial(self.download_zip_files, self.validate)
-
         if not commit and not self.repository_manifest.content_in_root:
             # Without the prefix to strip, the first two names are the same
-            for filename in dict.fromkeys(self._valid_filenames()):
-                if filecontent := await self.marketplace.async_download_file(
-                    github_release_asset(
-                        repository=self.data.full_name,
-                        version=version,
-                        filename=filename,
-                    ),
-                    nolog=True,
+            filenames = dict.fromkeys(self._valid_filenames())
+            for filename in filenames:
+                if filecontent := await self._async_probe_release_asset(
+                    version, filename
                 ):
                     return await self._async_resolve_release_assets(
                         version, filename, filecontent
                     )
+            for filename in filenames:
+                if (archive_name := _archive_name(filename)) and (
+                    filecontent := await self._async_probe_release_asset(
+                        version, archive_name
+                    )
+                ):
+                    self.data.file_name = filename
+                    self.content.path.remote = "release"
+                    self.content.single = True
+                    return partial(
+                        self._async_extract_resource_archive,
+                        archive_name,
+                        filecontent,
+                    )
 
         return await super()._async_resolve_catalog_content(version, commit=commit)
+
+    async def _async_probe_release_asset(
+        self, version: str, filename: str
+    ) -> bytes | None:
+        """Download a release asset without the API, if the release has it."""
+        return await self.marketplace.async_download_file(
+            github_release_asset(
+                repository=self.data.full_name, version=version, filename=filename
+            ),
+            nolog=True,
+            limit=MAX_DOWNLOAD_SIZE,
+        )
 
     async def _async_resolve_release_assets(
         self, version: str, filename: str, filecontent: bytes
@@ -341,8 +414,12 @@ class PluginRepository(Repository):
         self, contents: list[FileInformation], filename: str, filecontent: bytes
     ) -> None:
         """Download the release assets, the resource itself came with the probe."""
+        # Before the probe is written, its .gz would outlive the resource from the ZIP
+        if (remaining := await self._async_try_resource_archive(contents)) is None:
+            return
+
         other_assets: list[FileInformation] = []
-        for content in contents:
+        for content in remaining:
             if content.name == filename:
                 await self._async_write_file(content, filecontent)
             else:
@@ -356,10 +433,6 @@ class PluginRepository(Repository):
         if specific_filename := self.repository_manifest.filename:
             return (specific_filename,)
 
-        return self._default_filenames()
-
-    def _default_filenames(self) -> tuple[str, ...]:
-        """Return the file names the dashboard resource has by its name."""
         name = self.data.name or ""
         return (
             f"{name.replace('lovelace-', '')}.js",
@@ -378,19 +451,23 @@ class PluginRepository(Repository):
         name its file otherwise.
         """
         contents = await super().release_contents(version)
-        names = {content.name for content in contents or []}
-        for filename in self._valid_filenames():
-            if filename in names:
-                self.data.file_name = filename
-                break
+        if filename := self._release_resource_filename(
+            {content.name for content in contents or []}
+        ):
+            self.data.file_name = filename
         return contents
+
+    def _release_resource_filename(self, asset_names: set[str]) -> str | None:
+        """Return the resource the release assets have, as a file or a ZIP."""
+        for filename in self._valid_filenames():
+            if filename in asset_names or _archive_name(filename) in asset_names:
+                return filename
+        return None
 
     @override
     def update_filenames(self) -> None:
         """Get the filename to target."""
-        if self._zip_release:
-            self._update_filenames_from_zip_release()
-        elif not self._update_filenames_from_release():
+        if not self._update_filenames_from_release():
             self._update_filenames_from_tree()
 
     def _update_filenames_from_release(self) -> bool:
@@ -399,28 +476,14 @@ class PluginRepository(Repository):
             return False
 
         release = self.releases.objects[0]
-        if release.assets:
-            if assetnames := [
-                filename
-                for filename in self._valid_filenames()
-                for asset in release.assets
-                if filename == asset.name
-            ]:
-                self.data.file_name = assetnames[0]
-                self.content.path.remote = "release"
-                return True
+        if filename := self._release_resource_filename(
+            {asset.name for asset in release.assets or []}
+        ):
+            self.data.file_name = filename
+            self.content.path.remote = "release"
+            return True
 
         return False
-
-    def _update_filenames_from_zip_release(self) -> None:
-        """Target the ZIP asset hacs.json names, the resource is in it."""
-        if not self.releases.objects:
-            return
-
-        # Which file is the resource is only known once the archive is extracted
-        if not self.data.installed:
-            self.data.file_name = ""
-        self.content.path.remote = "release"
 
     def _update_filenames_from_tree(self) -> None:
         """Target a file in the root or the dist directory of the tree."""

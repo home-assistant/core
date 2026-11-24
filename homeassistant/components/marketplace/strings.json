@@ -100,9 +100,6 @@
     "catalog_zip_release": {
       "message": "A ZIP release can not be installed from the catalog."
     },
-    "catalog_zip_release_without_release": {
-      "message": "This version ships as a ZIP release asset, which a commit does not have."
-    },
     "content_empty": {
       "message": "There is no content to download."
     },
@@ -274,6 +271,12 @@
     "requires_newer_home_assistant": {
       "message": "This version requires Home Assistant {version} or newer."
     },
+    "resource_archive_unusable": {
+      "message": "{file} is not a valid ZIP archive."
+    },
+    "resource_archive_without_resource": {
+      "message": "{file} has no {resource} in its root."
+    },
     "restore_failed": {
       "message": "Could not read the stored data of the Marketplace."
     },
@@ -324,9 +327,6 @@
     },
     "warning_not_accepted": {
       "message": "Open the Marketplace and read the warning first, installing and updating work once it is accepted."
-    },
-    "zip_resource_missing": {
-      "message": "{file} has no dashboard resource in its root, it needs one of {names}."
     }
   },
   "issues": {
