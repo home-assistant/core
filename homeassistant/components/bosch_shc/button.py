@@ -5,6 +5,7 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING, override
 
 from boschshcpy import (
+    SHCMicromoduleDimmer,
     SHCMotionDetector2,
     SHCOutdoorSiren,
     SHCSmartPlug,
@@ -62,6 +63,35 @@ RESET_ENERGY_DESCRIPTION = SHCButtonEntityDescription[
 )
 
 
+def _preview_max_brightness(device: SHCMicromoduleDimmer) -> None:
+    """Flash the dimmer's load at maximum brightness."""
+    if TYPE_CHECKING:
+        assert device.dimmer_configuration is not None
+    device.dimmer_configuration.preview_max_brightness()
+
+
+def _preview_min_brightness(device: SHCMicromoduleDimmer) -> None:
+    """Flash the dimmer's load at minimum brightness."""
+    if TYPE_CHECKING:
+        assert device.dimmer_configuration is not None
+    device.dimmer_configuration.preview_min_brightness()
+
+
+PREVIEW_MAX_BRIGHTNESS_DESCRIPTION = SHCButtonEntityDescription[SHCMicromoduleDimmer](
+    key="preview_max_brightness",
+    translation_key="preview_max_brightness",
+    entity_category=EntityCategory.CONFIG,
+    press_fn=_preview_max_brightness,
+)
+
+PREVIEW_MIN_BRIGHTNESS_DESCRIPTION = SHCButtonEntityDescription[SHCMicromoduleDimmer](
+    key="preview_min_brightness",
+    translation_key="preview_min_brightness",
+    entity_category=EntityCategory.CONFIG,
+    press_fn=_preview_min_brightness,
+)
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: BoschConfigEntry,
@@ -116,6 +146,21 @@ async def async_setup_entry(
         for plug in (
             *session.device_helper.smart_plugs,
             *session.device_helper.smart_plugs_compact,
+        )
+    )
+    entities.extend(
+        SHCButton(
+            hass=hass,
+            device=dimmer,
+            parent_id=shc_info.unique_id,
+            entry_id=config_entry.entry_id,
+            description=description,
+        )
+        for dimmer in session.device_helper.micromodule_dimmers
+        if dimmer.supports_dimmer_configuration
+        for description in (
+            PREVIEW_MAX_BRIGHTNESS_DESCRIPTION,
+            PREVIEW_MIN_BRIGHTNESS_DESCRIPTION,
         )
     )
     async_add_entities(entities)
