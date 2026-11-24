@@ -7,9 +7,10 @@ import upcloud_api
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from .const import DEFAULT_SCAN_INTERVAL
+from .const import DEFAULT_SCAN_INTERVAL, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -42,9 +43,15 @@ class UpCloudDataUpdateCoordinator(
 
     @override
     async def _async_update_data(self) -> dict[str, upcloud_api.Server]:
-        return {
-            x.uuid: x
-            for x in await self.hass.async_add_executor_job(
+        try:
+            servers = await self.hass.async_add_executor_job(
                 self.cloud_manager.get_servers
             )
-        }
+        except upcloud_api.UpCloudAPIError as err:
+            if err.error_code == "AUTHENTICATION_FAILED":
+                raise ConfigEntryAuthFailed(
+                    translation_domain=DOMAIN,
+                    translation_key="authentication_failed",
+                ) from err
+            raise
+        return {x.uuid: x for x in servers}
