@@ -1,21 +1,33 @@
 {
   "config": {
     "abort": {
-      "already_configured": "This device has already been configured with this transmitter.",
-      "no_emitters": "No infrared transmitter entities found. Please set up an infrared device first."
+      "already_configured": "This device has already been configured with this infrared emitter.",
+      "no_emitters": "[%key:component::infrared::common::no_infrared_emitters%]"
     },
     "step": {
-      "user": {
+      "reconfigure": {
         "data": {
           "device_type": "Device type",
-          "infrared_emitter_entity_id": "Infrared transmitter"
+          "infrared_emitter_entity_id": "[%key:component::infrared::common::infrared_entity_id%]"
         },
         "data_description": {
           "device_type": "The type of device to control.",
-          "infrared_emitter_entity_id": "The infrared transmitter entity to use for sending commands."
+          "infrared_emitter_entity_id": "[%key:component::infrared::common::infrared_entity_id_description%]"
         },
-        "description": "Select the device type and the infrared transmitter entity to use for controlling your device.",
-        "title": "Set up Infrared Remote"
+        "description": "Select the infrared emitter entity to use for controlling your device.",
+        "title": "Reconfigure infrared remote"
+      },
+      "user": {
+        "data": {
+          "device_type": "[%key:component::samsung_infrared::config::step::reconfigure::data::device_type%]",
+          "infrared_emitter_entity_id": "[%key:component::infrared::common::infrared_entity_id%]"
+        },
+        "data_description": {
+          "device_type": "[%key:component::samsung_infrared::config::step::reconfigure::data_description::device_type%]",
+          "infrared_emitter_entity_id": "[%key:component::infrared::common::infrared_entity_id_description%]"
+        },
+        "description": "Select the device type and the infrared emitter entity to use for controlling your device.",
+        "title": "Set up infrared remote"
       }
     }
   },

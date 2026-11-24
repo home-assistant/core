@@ -1,13 +1,24 @@
 """Test MatrixBot._login."""
 
+from copy import deepcopy
 from dataclasses import dataclass
 
 import pytest
 
 from homeassistant.components.matrix import MatrixBot
-from homeassistant.exceptions import ConfigEntryAuthFailed, HomeAssistantError
+from homeassistant.components.matrix.const import DOMAIN
+from homeassistant.const import CONF_PASSWORD
+from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
+from homeassistant.setup import async_setup_component
 
-from .conftest import TEST_DEVICE_ID, TEST_MXID, TEST_PASSWORD, TEST_TOKEN
+from .conftest import (
+    MOCK_CONFIG_DATA,
+    TEST_DEVICE_ID,
+    TEST_MXID,
+    TEST_PASSWORD,
+    TEST_TOKEN,
+)
 
 
 @dataclass
@@ -18,7 +29,6 @@ class LoginTestParameters:
     access_token: dict[str, str]
     expected_login_state: bool
     expected_caplog_messages: set[str]
-    expected_expection: type[Exception] | None = None
 
 
 good_password_missing_token = LoginTestParameters(
@@ -61,8 +71,8 @@ bad_password_bad_access_token = LoginTestParameters(
         " M_UNKNOWN_TOKEN, Invalid access token passed.",
         "Logging in using password",
         "Login by password failed: status_code, LoginError",
+        "Login failed, both token and username/password are invalid",
     },
-    expected_expection=ConfigEntryAuthFailed,
 )
 
 bad_password_missing_access_token = LoginTestParameters(
@@ -72,8 +82,8 @@ bad_password_missing_access_token = LoginTestParameters(
     expected_caplog_messages={
         "Logging in using password",
         "Login by password failed: status_code, LoginError",
+        "Login failed, both token and username/password are invalid",
     },
-    expected_expection=ConfigEntryAuthFailed,
 )
 
 
@@ -95,13 +105,26 @@ async def test_login(
     matrix_bot._password = params.password
     matrix_bot._access_tokens = params.access_token
 
-    if params.expected_expection:
-        with pytest.raises(params.expected_expection):
-            await matrix_bot._login()
-    else:
-        await matrix_bot._login()
+    assert await matrix_bot._login() == params.expected_login_state
     assert matrix_bot._client.logged_in == params.expected_login_state
     assert set(caplog.messages).issuperset(params.expected_caplog_messages)
+
+
+@pytest.mark.usefixtures("mock_client", "mock_save_json")
+async def test_startup_login_failed(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test startup stops when the login fails."""
+    config = deepcopy(MOCK_CONFIG_DATA)
+    config[DOMAIN][CONF_PASSWORD] = "WrongPassword"
+    assert await async_setup_component(hass, DOMAIN, config)
+    matrix_bot = hass.data[DOMAIN]
+
+    await hass.async_start()
+    await hass.async_block_till_done()
+
+    assert "Login failed, both token and username/password are invalid" in caplog.text
+    assert matrix_bot._listening_rooms == {}
 
 
 async def test_get_auth_tokens(matrix_bot: MatrixBot, mock_load_json) -> None:

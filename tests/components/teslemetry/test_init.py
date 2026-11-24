@@ -183,6 +183,7 @@ CONNECTION_ERRORS = [
 VEHICLE_ERRORS = [
     *ERRORS,
     (InsufficientCredits, ConfigEntryState.SETUP_RETRY),
+    (Forbidden, ConfigEntryState.SETUP_RETRY),
 ]
 
 
@@ -1257,6 +1258,39 @@ async def test_insufficient_credits_backs_off_polling(
     coordinator = entry.runtime_data.vehicles[0].coordinator
     assert isinstance(coordinator.last_exception, UpdateFailed)
     assert coordinator.last_exception.retry_after == INSUFFICIENT_CREDITS_RETRY_AFTER
+
+
+async def test_vehicle_data_missing_scopes_repair(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    issue_registry: ir.IssueRegistry,
+    mock_vehicle_data: AsyncMock,
+    mock_legacy: AsyncMock,
+) -> None:
+    """Missing scopes raise a repair that clears once vehicle data is readable."""
+    entry = await setup_platform(hass)
+    assert entry.state is ConfigEntryState.LOADED
+    issue_id = f"missing_scopes_{entry.entry_id}"
+
+    mock_vehicle_data.side_effect = Forbidden
+    freezer.tick(VEHICLE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.LOADED
+    assert hass.states.get("sensor.test_battery_level").state == STATE_UNAVAILABLE
+    issue = issue_registry.async_get_issue(DOMAIN, issue_id)
+    assert issue is not None
+    assert (
+        issue.learn_more_url == "https://teslemetry.com/login?prompt_missing_scopes=1"
+    )
+
+    mock_vehicle_data.side_effect = None
+    freezer.tick(VEHICLE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert issue_registry.async_get_issue(DOMAIN, issue_id) is None
 
 
 def _oauth_session(hass: HomeAssistant, entry: MockConfigEntry) -> OAuth2Session:
@@ -3576,6 +3610,33 @@ async def test_paired_site_local_gap_keeps_cloud_value(
     assert hass.states.get("sensor.energy_site_battery_power").state == "3.0"
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+@pytest.mark.parametrize(
+    ("local_load_power", "expected"),
+    [
+        pytest.param(-1500, "0.0", id="negative_clamped_to_zero"),
+        pytest.param(4000, "4.0", id="positive_unchanged"),
+    ],
+)
+async def test_paired_site_local_load_power_clamped_at_zero(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_powerwall_live_status: AsyncMock,
+    local_load_power: int,
+    expected: str,
+) -> None:
+    """A negative local load_power is clamped at 0 and a positive one is kept."""
+    local = deepcopy(_LOCAL_LIVE_STATUS)
+    local["response"]["load_power"] = local_load_power
+    mock_powerwall_live_status.side_effect = lambda: deepcopy(local)
+    await _setup_energy_site_entry(hass, _entry_with_powerwall(), [Platform.SENSOR])
+
+    await _tick_local_live(hass, freezer, 1)
+
+    assert hass.states.get("sensor.energy_site_load_power").state == expected
+    assert hass.states.get("sensor.energy_site_battery_power").state == "3.0"
+
+
 async def test_paired_site_config_reads_merge_over_cloud(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
@@ -3998,6 +4059,7 @@ async def test_cloud_owned_command_value_held_until_cloud_site_info(
     freezer: FrozenDateTimeFactory,
     mock_site_info: AsyncMock,
     mock_energy_info_stream: MagicMock,
+    mock_energy_tariff_stream: MagicMock,
     entry_factory: Callable[[], MockConfigEntry],
     release: Callable[[HomeAssistant, MagicMock, str], Awaitable[None]],
     platform: Platform,
@@ -4007,7 +4069,7 @@ async def test_cloud_owned_command_value_held_until_cloud_site_info(
     commanded: str,
     confirmed: str,
 ) -> None:
-    """A cloud-owned command value holds through LAN polls until the next cloud site_info."""
+    """A cloud-owned command value holds through other updates until the next cloud site_info."""
     site_info = deepcopy(SITE_INFO)
     site_info["response"]["off_grid_vehicle_charging_reserve_percent"] = 20
     mock_site_info.side_effect = lambda: deepcopy(site_info)
@@ -4028,6 +4090,11 @@ async def test_cloud_owned_command_value_held_until_cloud_site_info(
     assert hass.states.get(entity_id).state == commanded
 
     await _tick(hass, freezer, ENERGY_CONFIG_INTERVAL)
+    assert hass.states.get(entity_id).state == commanded
+
+    # A tariff push republishes the coordinator view without a new site_info.
+    mock_energy_tariff_stream.send(None)
+    await hass.async_block_till_done()
     assert hass.states.get(entity_id).state == commanded
 
     # The cloud has not taken the command, and the off-grid reserve moved.

@@ -8,14 +8,13 @@ from pytest_homeassistant.common import MockConfigEntry
 from pytest_unordered import unordered
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.light import ATTR_BRIGHTNESS, DOMAIN as LIGHT_DOMAIN
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
-    STATE_OFF,
-    STATE_ON,
+from homeassistant.components.light import (
+    ATTR_BRIGHTNESS,
+    DOMAIN as LIGHT_DOMAIN,
+    LightService,
+    LightServiceArgument,
 )
+from homeassistant.const import STATE_OFF, STATE_ON, TargetKey
 from homeassistant.core import HomeAssistant
 
 
@@ -70,20 +69,26 @@ async def test_light_service_calls(
     assert hass.states.async_entity_ids("light") == unordered([entity_id])
 
     await hass.services.async_call(
-        LIGHT_DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: entity_id}, blocking=True
+        LIGHT_DOMAIN,
+        LightService.TURN_OFF,
+        {TargetKey.ENTITY_ID: entity_id},
+        blocking=True,
     )
     mock_controller.fade_dim.assert_called_with(0.0, 1.0, 0, "[02:08:01:01]")
 
     # The light's brightness is unknown, turning it on should set it to max
     await hass.services.async_call(
-        LIGHT_DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: entity_id}, blocking=True
+        LIGHT_DOMAIN,
+        LightService.TURN_ON,
+        {TargetKey.ENTITY_ID: entity_id},
+        blocking=True,
     )
     mock_controller.fade_dim.assert_called_with(100.0, 1.0, 0, "[02:08:01:01]")
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: entity_id, ATTR_BRIGHTNESS: 127},
+        LightService.TURN_ON,
+        {TargetKey.ENTITY_ID: entity_id, LightServiceArgument.BRIGHTNESS: 127},
         blocking=True,
     )
     mock_controller.fade_dim.assert_called_with(
@@ -117,7 +122,10 @@ async def test_light_restore_brightness(
     assert state.attributes[ATTR_BRIGHTNESS] == 127
 
     await hass.services.async_call(
-        LIGHT_DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: entity_id}, blocking=True
+        LIGHT_DOMAIN,
+        LightService.TURN_ON,
+        {TargetKey.ENTITY_ID: entity_id},
+        blocking=True,
     )
     mock_controller.fade_dim.assert_called_with(
         pytest.approx(49.8, abs=0.1), 1.0, 0, "[02:08:01:01]"
