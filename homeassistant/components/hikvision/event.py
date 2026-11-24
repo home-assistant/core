@@ -126,7 +126,7 @@ class HikvisionEvent(HikvisionEntity, EventEntity):
 
         # pyhik routes an update to the callbacks registered under this exact
         # identifier and passes it back as the callback's message.
-        self._callback_id = f"{self._data.device_id}.{sensor_type}.{channel}"
+        self._callback_id = f"{self._data.stream_id}.{sensor_type}.{channel}"
 
         # An event already active at startup must not be replayed as new.
         self._is_on = self._get_sensor_attributes()[0]
