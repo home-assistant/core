@@ -19,7 +19,6 @@ from homeassistant.components.fan import (
     FanServiceArgument,
 )
 from homeassistant.const import (
-    ATTR_ENTITY_ID,
     STATE_OFF,
     STATE_ON,
     STATE_UNAVAILABLE,
@@ -173,7 +172,7 @@ async def test_fan_turn_on_defaulting_behavior(
     expected_speed: FanSpeed,
 ) -> None:
     """turn_on defaults percentage/preset as expected."""
-    data = {ATTR_ENTITY_ID: FAN_ENTITY_ID} | service_data
+    data = {TargetKey.ENTITY_ID: FAN_ENTITY_ID} | service_data
 
     await hass.services.async_call(
         FAN_DOMAIN,
@@ -306,17 +305,17 @@ async def test_fan_turn_on_during_boost_keeps_commanded_speed(
 @pytest.mark.parametrize(
     ("service", "data", "method", "args"),
     [
-        pytest.param(SERVICE_TURN_OFF, {}, "turn_off", ("AABBCCDD",), id="off"),
+        pytest.param(FanService.TURN_OFF, {}, "turn_off", ("AABBCCDD",), id="off"),
         pytest.param(
-            SERVICE_SET_PRESET_MODE,
-            {ATTR_PRESET_MODE: "auto"},
+            FanService.SET_PRESET_MODE,
+            {FanServiceArgument.PRESET_MODE: "auto"},
             "set_mode_speed_auto",
             ("AABBCCDD",),
             id="auto",
         ),
         pytest.param(
-            SERVICE_SET_PERCENTAGE,
-            {ATTR_PERCENTAGE: 75},
+            FanService.SET_PERCENTAGE,
+            {FanServiceArgument.PERCENTAGE: 75},
             "set_mode_speed",
             ("AABBCCDD", FanMode.sensor, FanSpeed.medium),
             id="speed",
@@ -326,14 +325,17 @@ async def test_fan_turn_on_during_boost_keeps_commanded_speed(
 async def test_eco3_commands_use_own_api(
     hass: HomeAssistant,
     mock_cloud_interface: AsyncMock,
-    service: str,
+    service: FanService,
     data: dict[str, str | int],
     method: str,
     args: tuple[str | FanMode | FanSpeed, ...],
 ) -> None:
     """Route ECO3 fan commands to its API without commanding the ECO2 unit."""
     await hass.services.async_call(
-        FAN_DOMAIN, service, {ATTR_ENTITY_ID: "fan.test_vmc_3"} | data, blocking=True
+        FAN_DOMAIN,
+        service,
+        {TargetKey.ENTITY_ID: "fan.test_vmc_3"} | data,
+        blocking=True,
     )
     getattr(mock_cloud_interface.ecocomfort3, method).assert_awaited_once_with(*args)
     mock_cloud_interface.ecocomfort2.turn_off.assert_not_awaited()
@@ -354,7 +356,10 @@ async def test_eco3_turn_on_preserves_commanded_speed(
     await async_poll(hass, freezer)
 
     await hass.services.async_call(
-        FAN_DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: "fan.test_vmc_3"}, blocking=True
+        FAN_DOMAIN,
+        FanService.TURN_ON,
+        {TargetKey.ENTITY_ID: "fan.test_vmc_3"},
+        blocking=True,
     )
     mock_cloud_interface.ecocomfort3.set_mode_speed.assert_awaited_once_with(
         "AABBCCDD", FanMode.sensor, FanSpeed.low
