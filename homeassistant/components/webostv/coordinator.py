@@ -1,7 +1,7 @@
 """Coordinator for the LG webOS TV integration."""
 
 from datetime import timedelta
-from typing import override
+from typing import cast, override
 
 from aiowebostv import WebOsClient, WebOsTvPairError, WebOsTvState
 
@@ -9,6 +9,7 @@ from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.const import CONF_CLIENT_SECRET, CONF_HOST
 from homeassistant.core import CoreState, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.trigger import PluggableAction
 from homeassistant.helpers.update_coordinator import (
     DataUpdateCoordinator,
@@ -73,6 +74,40 @@ class WebOsTvDataUpdateCoordinator(DataUpdateCoordinator[None]):
             ) from error
         else:
             update_client_key(self.hass, self.config_entry, self.client)
+            dr.async_get(self.hass).async_get_or_create_from_info(
+                config_entry_id=self.config_entry.entry_id,
+                device_info=self.device_info,
+            )
+
+    @property
+    def device_info(self) -> dr.DeviceInfo:
+        """Return the device info from the TV info received on connect."""
+        tv_info = self.client.tv_info
+        device_info = dr.DeviceInfo(
+            identifiers={(DOMAIN, cast(str, self.config_entry.unique_id))},
+            manufacturer="LG",
+            name=self.config_entry.title,
+        )
+
+        maj_v = tv_info.software.get("major_ver")
+        min_v = tv_info.software.get("minor_ver")
+        if maj_v and min_v:
+            device_info.sw_version = f"{maj_v}.{min_v}"
+
+        if model := tv_info.system.get("modelName"):
+            device_info.model = model
+
+        if serial_number := tv_info.system.get("serialNumber"):
+            device_info.serial_number = serial_number
+
+        if connections := {
+            (dr.CONNECTION_NETWORK_MAC, dr.format_mac(mac))
+            for key in ("wiredInfo", "wifiInfo")
+            if (mac := tv_info.connection.get(key, {}).get("macAddress"))
+        }:
+            device_info.connections = connections
+
+        return device_info
 
     @callback
     def _async_turn_on_changed(self) -> None:

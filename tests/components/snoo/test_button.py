@@ -6,7 +6,7 @@ from pytest_homeassistant.common import snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, ButtonService
-from homeassistant.const import CommonServiceArgument, Platform
+from homeassistant.const import Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -35,7 +35,7 @@ async def test_button_starts_snoo(hass: HomeAssistant, bypass_api: AsyncMock) ->
     await hass.services.async_call(
         BUTTON_DOMAIN,
         ButtonService.PRESS,
-        {CommonServiceArgument.ENTITY_ID: "button.test_snoo_start"},
+        {TargetKey.ENTITY_ID: "button.test_snoo_start"},
         blocking=True,
     )
 

@@ -10,5 +10,5 @@
   "iot_class": "local_polling",
   "loggers": ["aioftp"],
   "quality_scale": "legacy",
-  "requirements": ["aioftp==0.21.3"]
+  "requirements": ["aioftp==0.28.3"]
 }

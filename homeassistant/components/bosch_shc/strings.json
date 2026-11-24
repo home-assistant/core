@@ -55,6 +55,12 @@
       "schedule_override_active": {
         "name": "Schedule override active"
       },
+      "siren_acoustic_alarm": {
+        "name": "Acoustic alarm"
+      },
+      "siren_visual_alarm": {
+        "name": "Visual alarm"
+      },
       "summer_mode": {
         "name": "Heating break"
       },
@@ -63,6 +69,9 @@
       }
     },
     "button": {
+      "reset_energy_summation": {
+        "name": "Reset consumption value"
+      },
       "reset_tamper": {
         "name": "Reset tamper"
       },
@@ -98,6 +107,15 @@
       "bypass_timeout": {
         "name": "Break function timeout"
       },
+      "comfort_temperature": {
+        "name": "Comfort temperature"
+      },
+      "dimmer_max": {
+        "name": "Maximum brightness"
+      },
+      "dimmer_min": {
+        "name": "Minimum brightness"
+      },
       "dimmer_speed": {
         "name": "Dimming speed"
       },
@@ -106,6 +124,9 @@
       },
       "display_on_time": {
         "name": "Display on-time"
+      },
+      "eco_temperature": {
+        "name": "Eco temperature"
       },
       "energy_saving_enter_duration": {
         "name": "Energy-saving enter duration"
@@ -401,6 +422,11 @@
         "name": "Vibration detection"
       }
     },
+    "update": {
+      "controller_update": {
+        "name": "Software update"
+      }
+    },
     "valve": {
       "valve": {
         "name": "Valve"
@@ -410,6 +436,12 @@
   "exceptions": {
     "unsupported_hvac_mode": {
       "message": "This entity does not support the HVAC mode {hvac_mode}."
+    },
+    "update_install_failed": {
+      "message": "Failed to start the firmware update on {name}"
+    },
+    "update_not_ready": {
+      "message": "Firmware update for {name} cannot be activated right now (current state: {state})."
     }
   }
 }

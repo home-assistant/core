@@ -5,7 +5,7 @@ from unittest.mock import Mock
 from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.scene import DOMAIN as SCENE_DOMAIN, SceneService
-from homeassistant.const import CommonServiceArgument
+from homeassistant.const import TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -73,9 +73,7 @@ async def test_activate_scene(
     await hass.services.async_call(
         SCENE_DOMAIN,
         SceneService.TURN_ON,
-        {
-            CommonServiceArgument.ENTITY_ID: "scene.my_fibaro_home_center_room_1_test_scene"
-        },
+        {TargetKey.ENTITY_ID: "scene.my_fibaro_home_center_room_1_test_scene"},
         blocking=True,
     )
     # Assert

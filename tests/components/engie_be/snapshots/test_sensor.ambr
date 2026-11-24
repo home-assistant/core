@@ -43,14 +43,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by ENGIE Belgium',
-      'daily_peaks': list([
-        dict({
-          'end': '2026-10-15T18:15:00+02:00',
-          'energy_kwh': 1.05,
-          'power_kw': 4.2,
-          'start': '2026-10-15T18:00:00+02:00',
-        }),
-      ]),
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Main street 1, 1000 Brussels Capacity tariff daily power peak',
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfPower.KILO_WATT: 'kW'>,
@@ -269,8 +261,6 @@
       <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by ENGIE Belgium',
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Main street 1, 1000 Brussels Capacity tariff monthly power peak',
-      'peak_is_fallback': False,
-      'peak_month': '2026-10',
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfPower.KILO_WATT: 'kW'>,
     }),
     'context': <ANY>,
@@ -1191,6 +1181,122 @@
     'state': '0.116468',
   })
 # ---
+# name: test_epex_sensors_snapshot[sensor.main_street_1_1000_brussels_gas_offtake_price_per_m3-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('engie_be', '000000000001')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.main_street_1_1000_brussels_gas_offtake_price_per_m3',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Gas offtake price per m³',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 6,
+      }),
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Gas offtake price per m³',
+    'platform': 'engie_be',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'gas_price_offtake_per_m3',
+    'unique_id': '000000000001_541448820000000001_ID1_offtake_TOTAL_HOURS_per_m3',
+    'unit_of_measurement': 'EUR/m³',
+  })
+# ---
+# name: test_epex_sensors_snapshot[sensor.main_street_1_1000_brussels_gas_offtake_price_per_m3-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by ENGIE Belgium',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Main street 1, 1000 Brussels Gas offtake price per m³',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'EUR/m³',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.main_street_1_1000_brussels_gas_offtake_price_per_m3',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '1.419744',
+  })
+# ---
+# name: test_epex_sensors_snapshot[sensor.main_street_1_1000_brussels_gas_offtake_price_per_m3_excl_vat-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('engie_be', '000000000001')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.main_street_1_1000_brussels_gas_offtake_price_per_m3_excl_vat',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Gas offtake price per m³ excl. VAT',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 6,
+      }),
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Gas offtake price per m³ excl. VAT',
+    'platform': 'engie_be',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'gas_price_offtake_per_m3_excl_vat',
+    'unique_id': '000000000001_541448820000000001_ID1_offtake_TOTAL_HOURS_per_m3_excl_vat',
+    'unit_of_measurement': 'EUR/m³',
+  })
+# ---
+# name: test_epex_sensors_snapshot[sensor.main_street_1_1000_brussels_gas_offtake_price_per_m3_excl_vat-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by ENGIE Belgium',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Main street 1, 1000 Brussels Gas offtake price per m³ excl. VAT',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'EUR/m³',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.main_street_1_1000_brussels_gas_offtake_price_per_m3_excl_vat',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '1.339382',
+  })
+# ---
 # name: test_sensors[Main street 1, 1000 Brussels-device]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
@@ -1265,14 +1371,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by ENGIE Belgium',
-      'daily_peaks': list([
-        dict({
-          'end': '2026-11-15T18:15:00+01:00',
-          'energy_kwh': 1.05,
-          'power_kw': 4.2,
-          'start': '2026-11-15T18:00:00+01:00',
-        }),
-      ]),
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Main street 1, 1000 Brussels Capacity tariff daily power peak',
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfPower.KILO_WATT: 'kW'>,
@@ -1491,8 +1589,6 @@
       <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by ENGIE Belgium',
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Main street 1, 1000 Brussels Capacity tariff monthly power peak',
-      'peak_is_fallback': False,
-      'peak_month': '2026-11',
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfPower.KILO_WATT: 'kW'>,
     }),
     'context': <ANY>,
@@ -1965,5 +2061,121 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.116468',
+  })
+# ---
+# name: test_sensors[sensor.main_street_1_1000_brussels_gas_offtake_price_per_m3-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('engie_be', '000000000001')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.main_street_1_1000_brussels_gas_offtake_price_per_m3',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Gas offtake price per m³',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 6,
+      }),
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Gas offtake price per m³',
+    'platform': 'engie_be',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'gas_price_offtake_per_m3',
+    'unique_id': '000000000001_541448820000000001_ID1_offtake_TOTAL_HOURS_per_m3',
+    'unit_of_measurement': 'EUR/m³',
+  })
+# ---
+# name: test_sensors[sensor.main_street_1_1000_brussels_gas_offtake_price_per_m3-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by ENGIE Belgium',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Main street 1, 1000 Brussels Gas offtake price per m³',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'EUR/m³',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.main_street_1_1000_brussels_gas_offtake_price_per_m3',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '1.419744',
+  })
+# ---
+# name: test_sensors[sensor.main_street_1_1000_brussels_gas_offtake_price_per_m3_excl_vat-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('engie_be', '000000000001')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.main_street_1_1000_brussels_gas_offtake_price_per_m3_excl_vat',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Gas offtake price per m³ excl. VAT',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 6,
+      }),
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Gas offtake price per m³ excl. VAT',
+    'platform': 'engie_be',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'gas_price_offtake_per_m3_excl_vat',
+    'unique_id': '000000000001_541448820000000001_ID1_offtake_TOTAL_HOURS_per_m3_excl_vat',
+    'unit_of_measurement': 'EUR/m³',
+  })
+# ---
+# name: test_sensors[sensor.main_street_1_1000_brussels_gas_offtake_price_per_m3_excl_vat-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by ENGIE Belgium',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Main street 1, 1000 Brussels Gas offtake price per m³ excl. VAT',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'EUR/m³',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.main_street_1_1000_brussels_gas_offtake_price_per_m3_excl_vat',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '1.339382',
   })
 # ---

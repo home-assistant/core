@@ -9,7 +9,7 @@ from syrupy.assertion import SnapshotAssertion
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, ButtonService
 from homeassistant.components.fritzbox.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import CONF_DEVICES, CommonServiceArgument, Platform
+from homeassistant.const import CONF_DEVICES, Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util import dt as dt_util
@@ -50,7 +50,7 @@ async def test_apply_template(hass: HomeAssistant, fritz: Mock) -> None:
     await hass.services.async_call(
         BUTTON_DOMAIN,
         ButtonService.PRESS,
-        {CommonServiceArgument.ENTITY_ID: ENTITY_ID},
+        {TargetKey.ENTITY_ID: ENTITY_ID},
         True,
     )
     assert fritz().apply_template.call_count == 1

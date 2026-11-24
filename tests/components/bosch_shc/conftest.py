@@ -24,6 +24,7 @@ from boschshcpy import (
     SHCCameraOutdoorGen2,
     SHCClimateControl,
     SHCHeatingCircuit,
+    SHCInformation,
     SHCIntrusionSystem,
     SHCLightSwitchBSM,
     SHCMicromoduleBlinds,
@@ -157,7 +158,8 @@ def mock_session(device_buckets: dict[str, Any]) -> Generator[MagicMock]:
     """Mock SHCSession, patched in for the duration of the test."""
     session = MagicMock()
     session.information.unique_id = "test-mac"
-    session.information.updateState.name = "UP_TO_DATE"
+    session.information.updateState = SHCInformation.UpdateState.NO_UPDATE_AVAILABLE
+    session.information.available_version = None
     session.information.version = "2.0"
     session.device_helper = SimpleNamespace(**device_buckets)
     session.intrusion_system = intrusion_system_device()
@@ -273,6 +275,9 @@ def outdoor_siren_device(
     name: str = "Outdoor Siren",
     sound_level: OutdoorSirenService.SoundLevel = OutdoorSirenService.SoundLevel.MEDIUM,
     power_supply: OutdoorSirenPowerSupplyService | None = None,
+    acoustic_alarm_on: bool = False,
+    visual_alarm_on: bool = False,
+    tamper_activated: bool = False,
 ) -> SHCOutdoorSiren:
     """Build a minimal device double for the outdoor_sirens bucket."""
     device = create_autospec(SHCOutdoorSiren, instance=True, spec_set=True)
@@ -287,6 +292,9 @@ def outdoor_siren_device(
     device.status = "AVAILABLE"
     siren_service = create_autospec(OutdoorSirenService, instance=True)
     siren_service.sound_level = sound_level
+    siren_service.acoustic_alarm_on = acoustic_alarm_on
+    siren_service.visual_alarm_on = visual_alarm_on
+    siren_service.tamper_activated = tamper_activated
     device.siren = siren_service
     device.supports_power_supply = power_supply is not None
     device.power_supply = power_supply
@@ -461,6 +469,10 @@ def heating_circuit_device(
     operation_mode: HeatingCircuitService.OperationMode = HeatingCircuitService.OperationMode.AUTOMATIC,
     on: bool = False,
     setpoint_temperature_range: tuple[float, float] | None = (5.0, 30.0),
+    eco_temperature: float | None = 18.0,
+    comfort_temperature: float | None = 21.0,
+    eco_temperature_range: tuple[float, float] | None = (5.0, 30.0),
+    comfort_temperature_range: tuple[float, float] | None = (5.0, 30.0),
 ) -> SHCHeatingCircuit:
     """Build a minimal device double for the heating_circuits bucket."""
     device = create_autospec(SHCHeatingCircuit, instance=True, spec_set=True)
@@ -477,6 +489,10 @@ def heating_circuit_device(
     device.operation_mode = operation_mode
     device.on = on
     device.setpoint_temperature_range = setpoint_temperature_range
+    device.setpoint_temperature_eco = eco_temperature
+    device.setpoint_temperature_comfort = comfort_temperature
+    device.eco_temperature_range = eco_temperature_range
+    device.comfort_temperature_range = comfort_temperature_range
     return device
 
 
@@ -616,6 +632,8 @@ def micromodule_dimmer_device(
     edge_phase_control_mode: DimmerConfigurationService.EdgePhaseControlMode
     | None = None,
     dimming_speed: int | None = 5,
+    min_brightness: int = 0,
+    max_brightness: int = 100,
 ) -> SHCMicromoduleDimmer:
     """Build a minimal device double for the micromodule_dimmers bucket."""
     device = create_autospec(SHCMicromoduleDimmer, instance=True, spec_set=True)
@@ -633,6 +651,11 @@ def micromodule_dimmer_device(
     device.supports_dimmer_configuration = supports_dimmer_configuration
     device.edge_phase_control_mode = edge_phase_control_mode
     device.dimming_speed = dimming_speed
+    device.dimmer_configuration = (
+        SimpleNamespace(min_brightness=min_brightness, max_brightness=max_brightness)
+        if supports_dimmer_configuration
+        else None
+    )
     return device
 
 
@@ -811,16 +834,19 @@ class FakeLatestMotionService:
     def __init__(self) -> None:
         """Initialize the fake service's callback registry."""
         self._event_callbacks: dict[str, Any] = {}
+        self.callbacks: dict[Any, Any] = {}
 
     def register_event(self, event: str, callback: Any) -> None:
         """Register a callback for the given device id."""
         self._event_callbacks[event] = callback
 
     def subscribe_callback(self, entity: Any, callback: Any) -> None:
-        """No-op: SHCEntity subscribes to every device service's generic callback."""
+        """Record the generic callback SHCEntity subscribes per service."""
+        self.callbacks[entity] = callback
 
-    def unsubscribe_callback(self, entity: Any) -> None:
-        """No-op counterpart to subscribe_callback."""
+    def unsubscribe_callback(self, entity: Any, callback: Any = None) -> None:
+        """Drop the recorded callback."""
+        self.callbacks.pop(entity, None)
 
 
 class FakeAlarmService:
@@ -839,7 +865,7 @@ class FakeAlarmService:
     def subscribe_callback(self, entity: Any, callback: Any) -> None:
         """No-op: SHCEntity subscribes to every device service's generic callback."""
 
-    def unsubscribe_callback(self, entity: Any) -> None:
+    def unsubscribe_callback(self, entity: Any, callback: Any = None) -> None:
         """No-op counterpart to subscribe_callback."""
 
 
@@ -856,7 +882,7 @@ class FakeSurveillanceAlarmService:
         """Remember the callback so tests can fire it."""
         self.callbacks[entity] = callback
 
-    def unsubscribe_callback(self, entity: Any) -> None:
+    def unsubscribe_callback(self, entity: Any, callback: Any = None) -> None:
         """Forget the callback."""
         self.callbacks.pop(entity, None)
 
@@ -867,6 +893,13 @@ def smoke_detection_system_device(
     """Build a minimal double of the smoke detection system."""
     system = MagicMock()
     system.id = "hdm:ZigBee:smokedetectionsystem"
+    system.name = "Smoke Detection System"
+    system.root_device_id = "test-mac"
+    system.serial = "serial-smokedetectionsystem"
+    system.manufacturer = "Bosch"
+    system.device_model = "SMOKE_DETECTION_SYSTEM"
+    system.deleted = False
+    system.status = "AVAILABLE"
     system.alarm = alarm
     system.device_services = [FakeSurveillanceAlarmService()]
     system.triggered_device_ids.return_value = triggered or set()
@@ -908,6 +941,9 @@ def motion_detector2_device(
     binaryswitch: bool = False,
     multi_level_switch: int = 0,
     long_poll_interval: PollControlService.PollControlState = PollControlService.PollControlState.LONG,
+    occupied: bool = False,
+    was_tampered: bool = False,
+    temperature: float = 21.5,
 ) -> SHCMotionDetector2:
     """Build a minimal device double for the motion_detectors2 bucket."""
     device = create_autospec(SHCMotionDetector2, instance=True, spec_set=True)
@@ -926,6 +962,9 @@ def motion_detector2_device(
     device.smart_sensitivity_enabled = smart_sensitivity_enabled
     device.supports_tamper_reset = supports_tamper_reset
     device.latestmotion = latestmotion
+    device.occupied = occupied
+    device.was_tampered = was_tampered
+    device.temperature = temperature
     device.get_smart_sensitivity.side_effect = lambda context: (
         {"context": context.value, "manualLevel": smart_sensitivity[context.value]}
         if smart_sensitivity

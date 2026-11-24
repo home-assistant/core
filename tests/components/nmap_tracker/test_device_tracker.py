@@ -1,24 +1,13 @@
 """Tests for the nmap_tracker device tracker."""
 
-from collections.abc import Generator
 from datetime import timedelta
-from typing import Any
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
-from homeassistant.components.nmap_tracker.const import (
-    CONF_HOME_INTERVAL,
-    CONF_HOSTS_EXCLUDE,
-    CONF_HOSTS_LIST,
-    CONF_MAC_EXCLUDE,
-    CONF_OPTIONS,
-    DEFAULT_OPTIONS,
-    DOMAIN,
-    TRACKER_SCAN_INTERVAL,
-)
+from homeassistant.components.nmap_tracker.const import DOMAIN, TRACKER_SCAN_INTERVAL
 from homeassistant.const import (
     ATTR_FRIENDLY_NAME,
     EVENT_HOMEASSISTANT_STARTED,
@@ -28,67 +17,10 @@ from homeassistant.const import (
 from homeassistant.core import CoreState, HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
-CLIENT_MAC = "aa:bb:cc:dd:ee:ff"
-CLIENT_IP = "192.168.1.2"
+from . import CLIENT_MAC, scan_result
+
 ENTITY_ID = "device_tracker.phone"
 RESTORED_ENTITY_ID = "device_tracker.restored"
-
-
-def _scan_result(hostname: str | None) -> dict[str, Any]:
-    """Return an nmap scan result with the client up.
-
-    Without a hostname, nmap reports no hostnames at all.
-    """
-    return {
-        "scan": {
-            CLIENT_IP: {
-                "status": {"state": "up", "reason": "arp-response"},
-                "addresses": {"mac": CLIENT_MAC.upper()},
-                "hostnames": []
-                if hostname is None
-                else [{"name": hostname, "type": "PTR"}],
-                "vendor": {CLIENT_MAC.upper(): "Vendor"},
-            }
-        }
-    }
-
-
-@pytest.fixture
-def mock_port_scanner() -> Generator[MagicMock]:
-    """Mock the nmap port scanner."""
-    with (
-        patch("homeassistant.components.nmap_tracker.PortScanner") as mock_scanner,
-        patch(
-            "homeassistant.components.nmap_tracker.aiooui.is_loaded",
-            return_value=True,
-        ),
-        patch(
-            "homeassistant.components.nmap_tracker.aiooui.get_vendor",
-            return_value="Vendor",
-        ),
-    ):
-        scanner = mock_scanner.return_value
-        scanner.scan.return_value = _scan_result("phone.lan")
-        yield scanner
-
-
-@pytest.fixture
-def mock_config_entry(hass: HomeAssistant) -> MockConfigEntry:
-    """Return the default mocked config entry."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        options={
-            CONF_HOSTS_LIST: ["192.168.1.0/24"],
-            CONF_HOSTS_EXCLUDE: [],
-            CONF_MAC_EXCLUDE: [],
-            CONF_HOME_INTERVAL: 0,
-            CONF_OPTIONS: DEFAULT_OPTIONS,
-        },
-        version=1,
-        minor_version=2,
-    )
-    entry.add_to_hass(hass)
-    return entry
 
 
 async def _async_setup_at_startup(hass: HomeAssistant, entry: MockConfigEntry) -> None:
@@ -131,7 +63,7 @@ async def test_hostname_change_renames_device(
     assert device.connections == {(dr.CONNECTION_NETWORK_MAC, CLIENT_MAC)}
     assert hass.states.get(ENTITY_ID).attributes[ATTR_FRIENDLY_NAME] == "phone"
 
-    mock_port_scanner.scan.return_value = _scan_result("laptop.lan")
+    mock_port_scanner.scan.return_value = scan_result("laptop.lan")
     freezer.tick(timedelta(seconds=TRACKER_SCAN_INTERVAL))
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
@@ -144,7 +76,7 @@ async def test_hostname_change_renames_device(
     assert device.name == "laptop"
 
     # A missing hostname does not replace the name of the device
-    mock_port_scanner.scan.return_value = _scan_result(no_hostname)
+    mock_port_scanner.scan.return_value = scan_result(no_hostname)
     freezer.tick(timedelta(seconds=TRACKER_SCAN_INTERVAL))
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
@@ -166,7 +98,7 @@ async def test_client_without_hostname(
     no_hostname: str | None,
 ) -> None:
     """Test a client without a hostname names its device by vendor."""
-    mock_port_scanner.scan.return_value = _scan_result(no_hostname)
+    mock_port_scanner.scan.return_value = scan_result(no_hostname)
     await _async_setup_at_startup(hass, mock_config_entry)
 
     entity_id = "device_tracker.vendor_dd_ee_ff"
@@ -205,7 +137,7 @@ async def test_startup_without_hostname_keeps_device_name(
         config_entry=mock_config_entry,
         device_id=device.id,
     )
-    mock_port_scanner.scan.return_value = _scan_result(no_hostname)
+    mock_port_scanner.scan.return_value = scan_result(no_hostname)
 
     await _async_setup_at_startup(hass, mock_config_entry)
 
