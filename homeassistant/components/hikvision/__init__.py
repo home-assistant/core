@@ -648,6 +648,8 @@ class _ImageDiscovery:
         self._close = close
         # What failed and may work later, to read again.
         self.retries: list[_Probe] = []
+        # Found to be a recorder: set up again as one, nothing more is read.
+        self._recorder = False
 
     def _retry(self, probe: _Probe) -> None:
         """Read this again later."""
@@ -720,7 +722,43 @@ class _ImageDiscovery:
             return False
         return True
 
+    async def _async_detections_only(
+        self,
+        found: list[HikvisionImageCoordinator],
+        channel: int | None,
+        what: str,
+    ) -> HikvisionImageCoordinator | None:
+        """Find the detections of a camera whose image settings were not found.
+
+        Its detections can still be turned on and off. None if it has none.
+        """
+        coordinator = HikvisionImageCoordinator(
+            self._hass, self._entry, self._shared, [], channel
+        )
+        data = self._entry.runtime_data
+        # During its first refresh: a 401 there stops the others too.
+        data.image_coordinators = [*found, coordinator]
+        try:
+            await coordinator.async_config_entry_first_refresh()
+        except ConfigEntryNotReady as err:
+            _LOGGER.debug("Unable to read the detections of %s: %s", what, err)
+            return None
+        finally:
+            data.image_coordinators = found
+        return coordinator if coordinator.detections else None
+
     async def async_camera(self) -> list[HikvisionImageCoordinator]:
+        """Discover the image settings and detections of a standalone camera."""
+        coordinators = await self._async_camera_image_settings()
+        if coordinators or self._recorder:
+            return coordinators
+        if (
+            coordinator := await self._async_detections_only([], None, self._host)
+        ) is None:
+            return []
+        return [coordinator]
+
+    async def _async_camera_image_settings(self) -> list[HikvisionImageCoordinator]:
         """Discover the image settings of a standalone camera."""
         host = self._host
         try:
@@ -744,6 +782,7 @@ class _ImageDiscovery:
             # list the cameras attached to them on the NVR's.
             if await self._async_list_image_channels(quiet=True):
                 self._async_set_up_as_a_recorder()
+                self._recorder = True
                 return []
             if isinstance(err, ISAPINotSupportedError):
                 _LOGGER.debug("%s does not support image settings", host)
@@ -810,41 +849,64 @@ class _ImageDiscovery:
         ]
 
     async def async_nvr_cameras(self) -> list[HikvisionImageCoordinator]:
-        """Discover the image settings of the cameras attached to an NVR."""
+        """Discover the image settings of the cameras attached to an NVR.
+
+        And the detections of each, also of a camera whose image settings were not
+        found.
+        """
         host = self._host
-        client = self._shared.client
         coordinators: list[HikvisionImageCoordinator] = []
-        for image_channel in await self._async_list_image_channels(quiet=False):
-            channel = image_channel.id
+        listed = [
+            image_channel.id
+            for image_channel in await self._async_list_image_channels(quiet=False)
+        ]
+        # Without a list of its cameras, the video channels of the NVR: their
+        # detections can still be turned on and off.
+        for channel in listed or sorted(self._entry.runtime_data.channels):
             what = f"channel {channel} of {host}"
-            try:
-                settings = await self._async_send(
-                    partial(client.get_image_settings, channel, proxy=True)
+            coordinator = None
+            if channel in listed:
+                coordinator = await self._async_channel_image_settings(
+                    coordinators, channel, what
                 )
-            except ISAPINotSupportedError:
-                # The NVR may list a camera that it cannot proxy.
-                _LOGGER.debug("%s has no image settings", what)
-                continue
-            except ISAPIError as err:
-                if isinstance(err, ISAPIAuthError) and err.status_code == 401:
-                    raise await self._async_rejected() from err
-                _LOGGER.warning(
-                    "Unable to read the image settings of %s: %s", what, err
+            if coordinator is None:
+                coordinator = await self._async_detections_only(
+                    coordinators, channel, what
                 )
-                if _may_work_later(err):
-                    self._retry(read_channel(channel))
-                continue
-            coordinator = HikvisionImageCoordinator(
-                self._hass, self._entry, self._shared, settings, channel
-            )
-            # Before its first refresh: a 401 there stops the others too.
-            self._entry.runtime_data.image_coordinators = [*coordinators, coordinator]
-            if await self._async_first_refresh(
-                coordinator, what, read_channel(channel)
-            ):
+            if coordinator is not None:
                 coordinators.append(coordinator)
         self._entry.runtime_data.image_coordinators = coordinators
         return coordinators
+
+    async def _async_channel_image_settings(
+        self, found: list[HikvisionImageCoordinator], channel: int, what: str
+    ) -> HikvisionImageCoordinator | None:
+        """Discover the image settings of a camera attached to an NVR."""
+        client = self._shared.client
+        try:
+            settings = await self._async_send(
+                partial(client.get_image_settings, channel, proxy=True)
+            )
+        except ISAPINotSupportedError:
+            # The NVR may list a camera that it cannot proxy.
+            _LOGGER.debug("%s has no image settings", what)
+            return None
+        except ISAPIError as err:
+            if isinstance(err, ISAPIAuthError) and err.status_code == 401:
+                raise await self._async_rejected() from err
+            _LOGGER.warning("Unable to read the image settings of %s: %s", what, err)
+            if _may_work_later(err):
+                self._retry(read_channel(channel))
+            return None
+        coordinator = HikvisionImageCoordinator(
+            self._hass, self._entry, self._shared, settings, channel
+        )
+        # Before its first refresh: a 401 there stops the others too.
+        self._entry.runtime_data.image_coordinators = [*found, coordinator]
+        if await self._async_first_refresh(coordinator, what, read_channel(channel)):
+            return coordinator
+        self._entry.runtime_data.image_coordinators = found
+        return None
 
 
 async def _async_close_image_settings(data: HikvisionData) -> None:

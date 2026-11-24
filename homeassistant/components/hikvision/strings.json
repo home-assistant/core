@@ -866,20 +866,44 @@
       "image_stabilization": {
         "name": "Image stabilization"
       },
+      "intrusion_detection": {
+        "name": "Intrusion detection"
+      },
       "lens_distortion_correction": {
         "name": "Lens distortion correction"
       },
       "lens_initialization": {
         "name": "Lens initialization"
       },
+      "line_crossing_detection": {
+        "name": "Line crossing detection"
+      },
+      "motion_detection": {
+        "name": "Motion detection"
+      },
       "proportional_pan": {
         "name": "Proportional pan"
+      },
+      "region_entrance_detection": {
+        "name": "Region entrance detection"
+      },
+      "region_exiting_detection": {
+        "name": "Region exiting detection"
       },
       "rotate": {
         "name": "Rotate"
       },
+      "scene_change_detection": {
+        "name": "Scene change detection"
+      },
       "smart_supplement_light": {
         "name": "Smart supplement light"
+      },
+      "video_loss_detection": {
+        "name": "Video loss detection"
+      },
+      "video_tampering_detection": {
+        "name": "Video tampering detection"
       }
     }
   },

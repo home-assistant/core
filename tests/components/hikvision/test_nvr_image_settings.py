@@ -1065,6 +1065,10 @@ async def test_recorder_that_reports_a_camera_type_is_set_up_as_an_nvr(
     assert [c.channel for c in data.image_coordinators] == [1, 2]
     # The second setup reads the channels as for an NVR.
     mock_hik_get_channels.assert_called_once()
+    # The first, as a camera, did not look for the camera's detections: it is set
+    # up again at once. Only the channels' are asked for.
+    asked = mock_nvr_image_settings.get_detection_enabled.call_args_list
+    assert sorted(call.args[1] for call in asked) == [1] * 8 + [2] * 8
     entity = entity_registry.async_get(HLC_1)
     assert entity.unique_id == f"{TEST_DEVICE_ID}_1_image_highlight_compensation"
     device = device_registry.async_get(entity.device_id)

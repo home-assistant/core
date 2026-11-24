@@ -31,6 +31,13 @@
       'version': 1,
     }),
     'image_settings': dict({
+      'detections': dict({
+        'fieldDetection': 'true',
+        'lineDetection': 'true',
+        'motionDetection': 'true',
+        'sceneChangeDetection': 'false',
+        'tamperDetection': 'false',
+      }),
       'other_values': dict({
         'PTZ/enabled': 'false',
         'enabled': 'true',

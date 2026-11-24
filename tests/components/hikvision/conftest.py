@@ -49,6 +49,10 @@ def mock_isapi_client() -> Generator[MagicMock]:
         client = isapi_mock.return_value
         client.get_image_settings.side_effect = ISAPINotSupportedError("not supported")
         client.get_image_channels.side_effect = ISAPINotSupportedError("not supported")
+        # Nor detections: see the detections fixture.
+        client.get_detection_enabled.side_effect = ISAPINotSupportedError(
+            "not supported"
+        )
         yield isapi_mock
 
 
@@ -78,6 +82,41 @@ async def mock_image_settings(
     client.set_image_setting.return_value = ImageWriteResult(True, 200, "ok")
     client.set_image_linked_setting.return_value = ImageWriteResult(True, 200, "ok")
     return client
+
+
+@pytest.fixture
+def detections() -> dict[str, bool]:
+    """Return the detections of the test camera, on or off, as read from a camera.
+
+    Region entrance and exiting, and video loss, it does not have.
+    """
+    return {
+        "motionDetection": True,
+        "lineDetection": True,
+        "fieldDetection": True,
+        "tamperDetection": False,
+        "sceneChangeDetection": False,
+    }
+
+
+@pytest.fixture
+def mock_detections(
+    mock_image_settings: MagicMock, detections: dict[str, bool]
+) -> dict[str, bool]:
+    """Make the mocked camera have the detections, and keep what is written."""
+
+    def _get(detection: str, channel: int | str = 1) -> bool:
+        if detection not in detections:
+            raise ISAPINotSupportedError("not supported", 403, "notSupport")
+        return detections[detection]
+
+    def _set(detection: str, enabled: bool, channel: int | str = 1) -> ImageWriteResult:
+        detections[detection] = enabled
+        return ImageWriteResult(True, 200, "ok")
+
+    mock_image_settings.get_detection_enabled.side_effect = _get
+    mock_image_settings.set_detection_enabled.side_effect = _set
+    return detections
 
 
 @pytest.fixture

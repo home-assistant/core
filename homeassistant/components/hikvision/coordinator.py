@@ -11,7 +11,14 @@ import threading
 from typing import TYPE_CHECKING, Any, override
 
 from pyhik.image import PRIVILEGE_SUB_STATUSES, ImageSetting, ImageWriteResult
-from pyhik.isapi import ISAPIAuthError, ISAPIClient, ISAPIConnectionError, ISAPIError
+from pyhik.isapi import (
+    DETECTIONS,
+    ISAPIAuthError,
+    ISAPIClient,
+    ISAPIConnectionError,
+    ISAPIError,
+    ISAPINotSupportedError,
+)
 
 from homeassistant.config_entries import SOURCE_RECONFIGURE, ConfigEntryState
 from homeassistant.const import (
@@ -364,6 +371,16 @@ class HikvisionImageClient:
     closed: bool = False
 
 
+# What the stored value of a detection is kept under, next to the image settings:
+# no image setting path has a colon.
+_DETECTION_PREFIX = "detection:"
+
+
+def detection_path(detection: str) -> str:
+    """Return the key of a detection's stored value: "true" or "false"."""
+    return f"{_DETECTION_PREFIX}{detection}"
+
+
 def _describe(updates: dict[str, str]) -> str:
     """Return the settings of a write as the logs give them."""
     return ", ".join(f"{path} to {value}" for path, value in updates.items())
@@ -411,6 +428,13 @@ class HikvisionImageCoordinator(DataUpdateCoordinator[dict[str, str]]):
         self._target: dict[str, Any] = (
             {} if channel is None else {"channel": channel, "proxy": True}
         )
+        # The video channel of the detections: a camera's own, or the NVR's
+        # channel of an attached camera.
+        self._detection_channel = 1 if channel is None else channel
+        # The detections the camera has, found by the first poll: it answers the
+        # others with "not supported", and they are not asked again until the entry
+        # is set up again.
+        self.detections: list[str] | None = None
         # The camera may spell a path in its values otherwise than in its
         # capabilities, which the entities and the writes use: the values are
         # stored under that spelling, so that each setting has one value.
@@ -465,11 +489,16 @@ class HikvisionImageCoordinator(DataUpdateCoordinator[dict[str, str]]):
 
     @property
     def unique_id_prefix(self) -> str:
+        """Return what the unique IDs of this camera's image entities start with."""
+        return f"{self.device_unique_id_prefix}image_"
+
+    @property
+    def device_unique_id_prefix(self) -> str:
         """Return what the unique IDs of this camera's entities start with."""
         device_id = self.config_entry.runtime_data.device_id
         if self.channel is None:
-            return f"{device_id}_image_"
-        return f"{device_id}_{self.channel}_image_"
+            return f"{device_id}_"
+        return f"{device_id}_{self.channel}_"
 
     @override
     async def _async_update_data(self) -> dict[str, str]:
@@ -488,11 +517,7 @@ class HikvisionImageCoordinator(DataUpdateCoordinator[dict[str, str]]):
                     raise ConfigEntryAuthFailed(
                         translation_domain=DOMAIN, translation_key="invalid_auth"
                     )
-                return self._as_settings_spell(
-                    await self._async_send(
-                        partial(self.client.get_image_values, **self._target)
-                    )
-                )
+                return await self._async_read()
         except ISAPIError as err:
             if (
                 isinstance(err, ISAPIAuthError)
@@ -512,6 +537,70 @@ class HikvisionImageCoordinator(DataUpdateCoordinator[dict[str, str]]):
                 translation_domain=DOMAIN,
                 translation_key="image_settings_update_failed",
             ) from err
+
+    async def _async_read(self) -> dict[str, str]:
+        """Read the current values. The caller holds the lock.
+
+        A camera whose image settings could not be found has only its detections.
+        """
+        values: dict[str, str] = {}
+        if self.settings:
+            values = self._as_settings_spell(
+                await self._async_send(
+                    partial(self.client.get_image_values, **self._target)
+                )
+            )
+        return values | await self._async_read_detections()
+
+    async def _async_read_detections(self) -> dict[str, str]:
+        """Read which detections are on. The caller holds the lock.
+
+        A detection that cannot be read now has no value: its entity is unavailable
+        until it can. A rejected password stops the poll, as for the image settings.
+        """
+        discovering = self.detections is None
+        found: list[str] = []
+        states: dict[str, str] = {}
+        for detection in DETECTIONS if self.detections is None else self.detections:
+            try:
+                enabled = await self._async_send(
+                    partial(
+                        self.client.get_detection_enabled,
+                        detection,
+                        self._detection_channel,
+                    )
+                )
+            except ISAPINotSupportedError:
+                continue
+            except ISAPIAuthError as err:
+                if err.status_code == 401:
+                    raise
+                # Not allowed for this user: as if the camera did not have it.
+                _LOGGER.debug(
+                    "%s: %s not allowed: %s", self._device_name, detection, err
+                )
+                continue
+            except ISAPIConnectionError as err:
+                # Not known to have it: found again by the setup that follows a
+                # camera coming back.
+                _LOGGER.debug(
+                    "%s: unable to reach for %s: %s", self._device_name, detection, err
+                )
+                if not discovering:
+                    found.append(detection)
+                continue
+            except ISAPIError as err:
+                # The camera has it, but did not answer now.
+                _LOGGER.debug(
+                    "%s: unable to read %s: %s", self._device_name, detection, err
+                )
+                found.append(detection)
+                continue
+            found.append(detection)
+            states[detection_path(detection)] = "true" if enabled else "false"
+        if discovering:
+            self.detections = found
+        return states
 
     def _as_settings_spell(self, values: dict[str, str]) -> dict[str, str]:
         """Return the values with each path spelled as its setting spells it.
@@ -819,6 +908,19 @@ class HikvisionImageCoordinator(DataUpdateCoordinator[dict[str, str]]):
             (setting, value),
             setting.path,
             updates,
+            context,
+        )
+
+    async def async_set_detection(
+        self, detection: str, enabled: bool, context: Context | None = None
+    ) -> None:
+        """Turn a detection on or off, and update its stored value."""
+        path = detection_path(detection)
+        await self._async_write(
+            partial(self.client.set_detection_enabled, channel=self._detection_channel),
+            (detection, enabled),
+            path,
+            {path: "true" if enabled else "false"},
             context,
         )
 

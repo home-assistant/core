@@ -26,6 +26,19 @@ class ImageSwitchSetting:
     enabled_by_default: bool = False
 
 
+# The detections that get a switch, by their pyHik names, with their keys: the
+# camera's "Enable" checkbox of each. The regions or lines inside keep their own.
+DETECTION_KEYS: dict[str, str] = {
+    "motionDetection": "motion_detection",
+    "lineDetection": "line_crossing_detection",
+    "fieldDetection": "intrusion_detection",
+    "regionEntrance": "region_entrance_detection",
+    "regionExiting": "region_exiting_detection",
+    "tamperDetection": "video_tampering_detection",
+    "sceneChangeDetection": "scene_change_detection",
+    "videoLoss": "video_loss_detection",
+}
+
 # The switch platform makes a switch of each of these, and the sensor platform a
 # read-only sensor when the camera offers only one of the two values. The
 # translation key is the key.

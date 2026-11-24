@@ -19,7 +19,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 
 from . import HikvisionConfigEntry
-from .coordinator import HikvisionImageCoordinator
+from .coordinator import HikvisionImageCoordinator, detection_path
 
 TO_REDACT = {CONF_HOST, CONF_PASSWORD, CONF_USERNAME, "title", "unique_id"}
 
@@ -170,6 +170,10 @@ async def _async_describe(coordinator: HikvisionImageCoordinator) -> dict[str, A
         if path is not None
     }
     values_by_path = {path.lower(): value for path, value in values.items()}
+    detections = {
+        detection_path(detection): detection
+        for detection in coordinator.detections or ()
+    }
     return {
         "values_source": values_source,
         "settings": {
@@ -184,7 +188,13 @@ async def _async_describe(coordinator: HikvisionImageCoordinator) -> dict[str, A
         "other_values": {
             path: value
             for path, value in values.items()
-            if path.lower() not in discovered
+            if path.lower() not in discovered and path not in detections
+        },
+        # The detections the camera has, as the last poll found them: on, off, or
+        # None if it could not read them.
+        "detections": {
+            detection: (coordinator.data or {}).get(path)
+            for path, detection in detections.items()
         },
         "raw_documents": await _async_read_raw_documents(coordinator),
     }

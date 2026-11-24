@@ -46,7 +46,9 @@ async def raw_documents(
     return documents
 
 
-@pytest.mark.usefixtures("raw_documents", "mock_hikcamera", "mock_image_settings")
+@pytest.mark.usefixtures(
+    "raw_documents", "mock_hikcamera", "mock_image_settings", "mock_detections"
+)
 async def test_entry_diagnostics(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
@@ -580,3 +582,26 @@ async def test_cached_values_are_reported_if_the_camera_cannot_be_read(
 
     assert result["image_settings"]["values_source"] == "cached"
     assert result["image_settings"]["settings"]["Gain/GainLevel"]["value"] == "50"
+
+
+@pytest.mark.usefixtures("raw_documents", "mock_hikcamera", "mock_detections")
+async def test_cached_detections_are_not_other_values(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    mock_config_entry: MockConfigEntry,
+    mock_image_settings: MagicMock,
+) -> None:
+    """Test the stored detections are reported as detections, not unknown values."""
+    await setup_integration(hass, mock_config_entry)
+    mock_image_settings.get_image_values.side_effect = ISAPIConnectionError("Timeout")
+
+    result = await get_diagnostics_for_config_entry(
+        hass, hass_client, mock_config_entry
+    )
+
+    image_settings = result["image_settings"]
+    assert image_settings["values_source"] == "cached"
+    assert not any(
+        path.startswith("detection:") for path in image_settings["other_values"]
+    )
+    assert image_settings["detections"]["fieldDetection"] == "true"
