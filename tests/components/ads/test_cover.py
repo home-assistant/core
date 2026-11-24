@@ -106,7 +106,7 @@ async def test_available_with_either_value(
     del mock_ads_device.values[silent_var]
 
     assert await async_run_past_first_update(
-        hass, setup_ads_platform(hass, COVER_DOMAIN, POSITION_CONFIG)
+        hass, mock_ads_device, setup_ads_platform(hass, COVER_DOMAIN, POSITION_CONFIG)
     )
 
     state = hass.states.get(ENTITY_ID)
