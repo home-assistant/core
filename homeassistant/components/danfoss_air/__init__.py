@@ -44,6 +44,7 @@ class DanfossAir:
     def __init__(self, host):
         """Initialize the Danfoss Air CCM connection."""
         self._data = {}
+        self.available = True
 
         self._client = DanfossClient(host)
 
@@ -60,6 +61,22 @@ class DanfossAir:
         """Use the data from Danfoss Air API."""
         _LOGGER.debug("Fetching data from Danfoss Air CCM module")
 
+        try:
+            self._fetch()
+        except OSError as err:
+            if self.available:
+                _LOGGER.warning("Lost connection to Danfoss Air CCM module: %s", err)
+            self.available = False
+            return
+
+        if not self.available:
+            _LOGGER.info("Connection to Danfoss Air CCM module restored")
+        self.available = True
+
+        _LOGGER.debug("Done fetching data from Danfoss Air CCM module")
+
+    def _fetch(self) -> None:
+        """Read all values from the Danfoss Air CCM module."""
         self._data[ReadCommand.exhaustTemperature] = self._client.command(
             ReadCommand.exhaustTemperature
         )
@@ -97,5 +114,3 @@ class DanfossAir:
         self._data[ReadCommand.automatic_bypass] = self._client.command(
             ReadCommand.automatic_bypass
         )
-
-        _LOGGER.debug("Done fetching data from Danfoss Air CCM module")
