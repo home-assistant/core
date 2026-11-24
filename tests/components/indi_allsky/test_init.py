@@ -8,6 +8,7 @@ from aioindiallsky import (
     ExposureData,
     IndiAllSkyAuthError,
     IndiAllSkyConnectionError,
+    MediaData,
     SensorData,
 )
 from freezegun.api import FrozenDateTimeFactory
@@ -247,21 +248,26 @@ async def test_manual_refresh_clears_sensor_fetch_failure(
     )
     await hass.async_block_till_done(wait_background_tasks=True)
 
-    for cb in mock_indi_allsky_client.callbacks["sensor_update"]:
+    initial_keogram = hass.states.get("image.indi_allsky_latest_keogram")
+    assert initial_keogram is not None
+    initial_keogram_state = initial_keogram.state
+
+    for cb in mock_indi_allsky_client.callbacks["keogram_complete"]:
         cb(
-            SensorData(
-                last_update="2026-08-13 23:13:41",
-                sensors={},
-                raw_user=[],
-                raw_temp=[],
-                dew_heater=42.0,
+            MediaData(
+                media_type="keogram",
+                filename="keogram_20260813.jpg",
+                day_date="2026-08-13",
+                night=True,
+                camera_id=1,
             )
         )
     await hass.async_block_till_done(wait_background_tasks=True)
 
-    sensor_state = hass.states.get("sensor.indi_allsky_dew_heater_duty_cycle")
-    assert sensor_state is not None
-    assert sensor_state.state == "42.0"
+    keogram_state = hass.states.get("image.indi_allsky_latest_keogram")
+    assert keogram_state is not None
+    assert keogram_state.state != STATE_UNAVAILABLE
+    assert keogram_state.state != initial_keogram_state
 
 
 async def test_websocket_sensor_update_clears_sensor_fetch_failure(
