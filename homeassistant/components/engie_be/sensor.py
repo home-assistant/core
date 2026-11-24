@@ -81,7 +81,7 @@ async def async_setup_entry(
     def _async_add_new_entities() -> None:
         """Add price sensors for any household/EAN/slot combination not yet known."""
         new_entities: list[EngieBePriceSensor] = []
-        for ban, household in runtime_data.households.items():
+        for household in runtime_data.households.values():
             prices_data: EngieBePricesData | None = household.prices.data
             if prices_data is None:
                 continue
@@ -102,7 +102,6 @@ async def async_setup_entry(
                 ):
                     entity = EngieBePriceSensor(
                         household.prices,
-                        business_agreement_number=ban,
                         ean=ean,
                         direction=direction,
                         slot_code=slot_code,
@@ -144,11 +143,10 @@ async def async_setup_entry(
     async_add_entities(
         EngieBePeaksSensor(
             household.peaks,
-            ban=ban,
             device_info=household.prices.device_info,
             description=description,
         )
-        for ban, household in runtime_data.households.items()
+        for household in runtime_data.households.values()
         for description in _CAPACITY_TARIFF_SENSORS
     )
 
@@ -166,7 +164,6 @@ class EngieBePriceSensor(CoordinatorEntity[EngieBePricesCoordinator], SensorEnti
         self,
         coordinator: EngieBePricesCoordinator,
         *,
-        business_agreement_number: str,
         ean: str,
         direction: str,
         slot_code: str,
@@ -184,7 +181,7 @@ class EngieBePriceSensor(CoordinatorEntity[EngieBePricesCoordinator], SensorEnti
         self._excl_vat = excl_vat
         self._per_cubic_meter = per_cubic_meter
 
-        unique_id = f"{business_agreement_number}_{ean}_{direction}_{slot_code}"
+        unique_id = f"{coordinator.ban}_{ean}_{direction}_{slot_code}"
         if per_cubic_meter:
             unique_id = f"{unique_id}_per_m3"
             self._attr_native_unit_of_measurement = _UNIT_PER_CUBIC_METER
@@ -458,7 +455,6 @@ class EngieBePeaksSensor(CoordinatorEntity[EngieBePeaksCoordinator], SensorEntit
         self,
         coordinator: EngieBePeaksCoordinator,
         *,
-        ban: str,
         device_info: DeviceInfo,
         description: EngieBePeaksSensorEntityDescription,
     ) -> None:
@@ -466,7 +462,7 @@ class EngieBePeaksSensor(CoordinatorEntity[EngieBePeaksCoordinator], SensorEntit
         super().__init__(coordinator)
         self.entity_description = description
         self._attr_device_info = device_info
-        self._attr_unique_id = f"{ban}_{description.key}"
+        self._attr_unique_id = f"{coordinator.ban}_{description.key}"
 
     @property
     @override
