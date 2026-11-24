@@ -11,9 +11,13 @@ from pytest_homeassistant.common import (
 from pytest_homeassistant.components.common import (
     assert_availability_follows_source_entity,
 )
-from pytest_homeassistant.components.infrared.common import MockInfraredEmitterEntity
+from pytest_homeassistant.components.infrared.common import (
+    MockInfraredEmitterEntity,
+    MockInfraredReceiverEntity,
+)
 from syrupy.assertion import SnapshotAssertion
 
+from homeassistant.components.infrared import InfraredReceivedSignal
 from homeassistant.components.media_player import (
     ATTR_INPUT_SOURCE,
     ATTR_INPUT_SOURCE_LIST,
@@ -37,11 +41,12 @@ from homeassistant.core import HomeAssistant, State
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import entity_registry as er
 
-from .conftest import MOCK_INFRARED_EMITTER_ENTITY_ID
+from .conftest import MOCK_INFRARED_EMITTER_ENTITY_ID, MOCK_INFRARED_RECEIVER_ENTITY_ID
 
 MEDIA_PLAYER_ENTITY_ID = "media_player.benq_projector"
 
 
+@pytest.mark.parametrize("has_receiver_entity", [False, True])
 @pytest.mark.usefixtures("init_integration")
 async def test_entities(
     hass: HomeAssistant,
@@ -301,3 +306,153 @@ async def test_turn_on_sends_benq_nec_frame(
     assert len(mock_infrared_emitter_entity.send_command_calls) == 1
     timings = mock_infrared_emitter_entity.send_command_calls[0].get_raw_timings()
     assert timings == NECCommand(address=0x3000, command=0x4F).get_raw_timings()
+
+
+def _receive(
+    receiver: MockInfraredReceiverEntity, command: int, address: int = 0x3000
+) -> None:
+    """Feed a NEC frame from the physical remote into the receiver."""
+    receiver._handle_received_signal(
+        InfraredReceivedSignal(
+            timings=NECCommand(address=address, command=command).get_raw_timings()
+        )
+    )
+
+
+@pytest.mark.parametrize(
+    ("initial_state", "command", "expected_state"),
+    [
+        (MediaPlayerState.OFF, 0x4F, MediaPlayerState.ON),
+        (MediaPlayerState.ON, 0x4E, MediaPlayerState.OFF),
+        (MediaPlayerState.ON, 0x02, MediaPlayerState.OFF),
+        (MediaPlayerState.OFF, 0x02, MediaPlayerState.ON),
+    ],
+)
+@pytest.mark.parametrize("has_receiver_entity", [True])
+@pytest.mark.usefixtures("mock_infrared_emitter_entity", "mock_benq_to_command")
+async def test_receiver_power_codes_update_state(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_infrared_receiver_entity: MockInfraredReceiverEntity,
+    initial_state: MediaPlayerState,
+    command: int,
+    expected_state: MediaPlayerState,
+) -> None:
+    """Power codes from the physical remote update the assumed power state."""
+    mock_restore_cache_with_extra_data(
+        hass,
+        [
+            (
+                State(MEDIA_PLAYER_ENTITY_ID, initial_state),
+                {"power_state": initial_state, "source": None},
+            )
+        ],
+    )
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    _receive(mock_infrared_receiver_entity, command)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(MEDIA_PLAYER_ENTITY_ID)
+    assert state is not None
+    assert state.state == expected_state
+
+
+@pytest.mark.parametrize("has_receiver_entity", [True])
+@pytest.mark.usefixtures("init_integration")
+async def test_receiver_power_toggle_ignored_when_state_unknown(
+    hass: HomeAssistant,
+    mock_infrared_receiver_entity: MockInfraredReceiverEntity,
+) -> None:
+    """The power toggle cannot be followed when the power state is unknown."""
+    _receive(mock_infrared_receiver_entity, 0x02)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(MEDIA_PLAYER_ENTITY_ID)
+    assert state is not None
+    assert state.state == STATE_UNKNOWN
+
+
+@pytest.mark.parametrize("has_receiver_entity", [True])
+@pytest.mark.usefixtures("init_integration")
+async def test_receiver_source_codes_update_source(
+    hass: HomeAssistant,
+    mock_infrared_emitter_entity: MockInfraredEmitterEntity,
+    mock_infrared_receiver_entity: MockInfraredReceiverEntity,
+) -> None:
+    """Input keys set the source, and the cycling source key clears it."""
+    await hass.services.async_call(
+        MEDIA_PLAYER_DOMAIN,
+        MediaPlayerService.TURN_ON,
+        {TargetKey.ENTITY_ID: MEDIA_PLAYER_ENTITY_ID},
+        blocking=True,
+    )
+
+    _receive(mock_infrared_receiver_entity, 0x59)
+    await hass.async_block_till_done()
+    state = hass.states.get(MEDIA_PLAYER_ENTITY_ID)
+    assert state is not None
+    assert state.attributes[ATTR_INPUT_SOURCE] == "hdmi_2"
+
+    _receive(mock_infrared_receiver_entity, 0x04)
+    await hass.async_block_till_done()
+    state = hass.states.get(MEDIA_PLAYER_ENTITY_ID)
+    assert state is not None
+    assert ATTR_INPUT_SOURCE not in state.attributes
+
+    # Receiving only updates the state; nothing is sent back.
+    assert mock_infrared_emitter_entity.send_command_calls == [
+        BenQProjectorCode.POWER_ON
+    ]
+
+
+@pytest.mark.parametrize(
+    "timings",
+    [
+        pytest.param(
+            NECCommand(address=0x7C87, command=0x4F).get_raw_timings(),
+            id="other_address",
+        ),
+        pytest.param(
+            NECCommand(address=0x3000, command=0x01).get_raw_timings(),
+            id="unknown_command",
+        ),
+        pytest.param(
+            NECCommand(address=0x3000, command=0x82).get_raw_timings(),
+            id="untracked_command",
+        ),
+        pytest.param([1, 2, 3, 4], id="not_nec"),
+    ],
+)
+@pytest.mark.parametrize("has_receiver_entity", [True])
+@pytest.mark.usefixtures("init_integration")
+async def test_receiver_ignores_other_signals(
+    hass: HomeAssistant,
+    mock_infrared_receiver_entity: MockInfraredReceiverEntity,
+    timings: list[int],
+) -> None:
+    """Signals that are not BenQ power or source codes leave the state alone."""
+    mock_infrared_receiver_entity._handle_received_signal(
+        InfraredReceivedSignal(timings=timings)
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get(MEDIA_PLAYER_ENTITY_ID)
+    assert state is not None
+    assert state.state == STATE_UNKNOWN
+    assert state.attributes.get(ATTR_INPUT_SOURCE) is None
+
+
+@pytest.mark.parametrize("has_receiver_entity", [True])
+@pytest.mark.usefixtures("init_integration")
+async def test_media_player_availability_follows_receiver(
+    hass: HomeAssistant,
+) -> None:
+    """With a receiver configured, the media player also follows its availability."""
+    await assert_availability_follows_source_entity(
+        hass,
+        MEDIA_PLAYER_ENTITY_ID,
+        [MOCK_INFRARED_EMITTER_ENTITY_ID, MOCK_INFRARED_RECEIVER_ENTITY_ID],
+    )

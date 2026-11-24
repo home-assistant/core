@@ -8,12 +8,17 @@ import pytest
 from pytest_homeassistant.common import MockConfigEntry
 from pytest_homeassistant.components.infrared import (
     EMITTER_ENTITY_ID as MOCK_INFRARED_EMITTER_ENTITY_ID,
+    RECEIVER_ENTITY_ID as MOCK_INFRARED_RECEIVER_ENTITY_ID,
 )
-from pytest_homeassistant.components.infrared.common import MockInfraredEmitterEntity
+from pytest_homeassistant.components.infrared.common import (
+    MockInfraredEmitterEntity,
+    MockInfraredReceiverEntity,
+)
 
 from homeassistant.components.benq_projector_infrared import PLATFORMS
 from homeassistant.components.benq_projector_infrared.const import (
     CONF_INFRARED_ENTITY_ID,
+    CONF_INFRARED_RECEIVER_ENTITY_ID,
     DEVICE_NAME,
     DOMAIN,
 )
@@ -22,13 +27,23 @@ from homeassistant.core import HomeAssistant
 
 
 @pytest.fixture
-def mock_config_entry() -> MockConfigEntry:
+def has_receiver_entity() -> bool:
+    """Return whether the mock config entry has a receiver entity."""
+    return False
+
+
+@pytest.fixture
+def mock_config_entry(has_receiver_entity: bool) -> MockConfigEntry:
     """Return a mock config entry."""
+    data = {CONF_INFRARED_ENTITY_ID: MOCK_INFRARED_EMITTER_ENTITY_ID}
+    if has_receiver_entity:
+        data[CONF_INFRARED_RECEIVER_ENTITY_ID] = MOCK_INFRARED_RECEIVER_ENTITY_ID
+
     return MockConfigEntry(
         domain=DOMAIN,
         entry_id="01JTEST0000000000000000000",
         title=DEVICE_NAME,
-        data={CONF_INFRARED_ENTITY_ID: MOCK_INFRARED_EMITTER_ENTITY_ID},
+        data=data,
     )
 
 
@@ -55,6 +70,7 @@ async def init_integration(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_infrared_emitter_entity: MockInfraredEmitterEntity,
+    mock_infrared_receiver_entity: MockInfraredReceiverEntity,
     mock_benq_to_command: MagicMock,
     platforms: list[Platform],
 ) -> MockConfigEntry:

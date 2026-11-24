@@ -1,24 +1,34 @@
 """BenQ Projector Infrared integration for Home Assistant."""
 
-from homeassistant.components.infrared import async_get_emitters
+from homeassistant.components.infrared import async_get_emitters, async_get_receivers
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryError
 from homeassistant.helpers import entity_registry as er
 
-from .const import CONF_INFRARED_ENTITY_ID, DOMAIN
+from .const import CONF_INFRARED_ENTITY_ID, CONF_INFRARED_RECEIVER_ENTITY_ID, DOMAIN
 
 PLATFORMS = [Platform.MEDIA_PLAYER]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Set up BenQ Projector Infrared from a config entry."""
-    if er.async_get(hass).async_get(
-        entry.data[CONF_INFRARED_ENTITY_ID]
-    ) is None and entry.data[CONF_INFRARED_ENTITY_ID] not in async_get_emitters(hass):
+    entity_registry = er.async_get(hass)
+    emitter_entity_id = entry.data[CONF_INFRARED_ENTITY_ID]
+    if entity_registry.async_get(
+        emitter_entity_id
+    ) is None and emitter_entity_id not in async_get_emitters(hass):
         raise ConfigEntryError(
             translation_domain=DOMAIN, translation_key="emitter_not_found"
+        )
+    if (
+        (receiver_entity_id := entry.data.get(CONF_INFRARED_RECEIVER_ENTITY_ID))
+        and entity_registry.async_get(receiver_entity_id) is None
+        and receiver_entity_id not in async_get_receivers(hass)
+    ):
+        raise ConfigEntryError(
+            translation_domain=DOMAIN, translation_key="receiver_not_found"
         )
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 

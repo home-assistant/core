@@ -1,10 +1,19 @@
 """Media player platform for BenQ Projector Infrared integration."""
 
 from dataclasses import dataclass
+import logging
 from typing import Any, override
 
-from infrared_protocols.codes.benq.projector import BenQProjectorCode
+from infrared_protocols.codes.benq.projector import (
+    BENQ_PROJECTOR_ADDRESS,
+    BenQProjectorCode,
+)
+from infrared_protocols.commands.nec import NECCommand
 
+from homeassistant.components.infrared import (
+    InfraredReceivedSignal,
+    InfraredReceiverConsumerEntity,
+)
 from homeassistant.components.media_player import (
     MediaPlayerDeviceClass,
     MediaPlayerEntity,
@@ -12,13 +21,15 @@ from homeassistant.components.media_player import (
     MediaPlayerState,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.restore_state import ExtraStoredData, RestoreEntity
 
-from .const import DOMAIN
+from .const import CONF_INFRARED_RECEIVER_ENTITY_ID, DOMAIN
 from .entity import BenQProjectorIrEntity
+
+_LOGGER = logging.getLogger(__name__)
 
 PARALLEL_UPDATES = 1
 
@@ -35,6 +46,10 @@ SOURCE_TO_CODE: dict[str, BenQProjectorCode] = {
     "s_video_2": BenQProjectorCode.S_VIDEO_2,
     "dvi_d": BenQProjectorCode.DVI_D,
     "usb_reader": BenQProjectorCode.USB_READER,
+}
+
+CODE_TO_SOURCE: dict[BenQProjectorCode, str] = {
+    code: source for source, code in SOURCE_TO_CODE.items()
 }
 
 
@@ -64,7 +79,12 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up BenQ Projector Infrared media player from config entry."""
-    async_add_entities([BenQProjectorIrMediaPlayer(entry)])
+    if receiver_entity_id := entry.data.get(CONF_INFRARED_RECEIVER_ENTITY_ID):
+        async_add_entities(
+            [BenQProjectorIrMediaPlayerWithReceiver(entry, receiver_entity_id)]
+        )
+    else:
+        async_add_entities([BenQProjectorIrMediaPlayer(entry)])
 
 
 class BenQProjectorIrMediaPlayer(
@@ -158,4 +178,54 @@ class BenQProjectorIrMediaPlayer(
             )
         await self._send_benq_command(code)
         self._attr_source = source
+        self.async_write_ha_state()
+
+
+class BenQProjectorIrMediaPlayerWithReceiver(
+    BenQProjectorIrMediaPlayer, InfraredReceiverConsumerEntity
+):
+    """BenQ Projector Infrared media player that follows the physical remote."""
+
+    def __init__(self, entry: ConfigEntry, receiver_entity_id: str) -> None:
+        """Initialize BenQ Projector Infrared media player with a receiver."""
+        super().__init__(entry)
+        self._infrared_receiver_entity_id = receiver_entity_id
+
+    @override
+    @callback
+    def _handle_signal(self, signal: InfraredReceivedSignal) -> None:
+        """Update the assumed state from a command sent by the physical remote."""
+        nec_command = NECCommand.from_raw_timings(signal.timings)
+        if nec_command is None or nec_command.address != BENQ_PROJECTOR_ADDRESS:
+            return
+
+        try:
+            code = BenQProjectorCode(nec_command.command)
+        except ValueError:
+            _LOGGER.debug(
+                "Ignoring unknown BenQ infrared command: 0x%02X", nec_command.command
+            )
+            return
+
+        _LOGGER.debug("Received BenQ infrared command: %s", code.name)
+
+        if code is BenQProjectorCode.POWER_ON:
+            self._attr_state = MediaPlayerState.ON
+        elif code is BenQProjectorCode.POWER_OFF:
+            self._attr_state = MediaPlayerState.OFF
+        elif code is BenQProjectorCode.POWER:
+            if self._attr_state is MediaPlayerState.ON:
+                self._attr_state = MediaPlayerState.OFF
+            elif self._attr_state is MediaPlayerState.OFF:
+                self._attr_state = MediaPlayerState.ON
+            else:
+                return
+        elif code is BenQProjectorCode.SOURCE:
+            # The source key cycles through the inputs, so the new one is unknown.
+            self._attr_source = None
+        elif (source := CODE_TO_SOURCE.get(code)) is not None:
+            self._attr_source = source
+        else:
+            return
+
         self.async_write_ha_state()

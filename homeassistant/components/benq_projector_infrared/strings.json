@@ -7,12 +7,14 @@
     "step": {
       "user": {
         "data": {
-          "infrared_entity_id": "[%key:component::infrared::common::infrared_entity_id%]"
+          "infrared_entity_id": "[%key:component::infrared::common::infrared_entity_id%]",
+          "infrared_receiver_entity_id": "[%key:component::infrared::common::infrared_receiver_entity_id%]"
         },
         "data_description": {
-          "infrared_entity_id": "[%key:component::infrared::common::infrared_entity_id_description%]"
+          "infrared_entity_id": "[%key:component::infrared::common::infrared_entity_id_description%]",
+          "infrared_receiver_entity_id": "Optional. Keeps the state up to date when the projector's own remote is used."
         },
-        "description": "Select the infrared emitter to use for controlling your BenQ projector.",
+        "description": "Select the infrared emitter to use for controlling your BenQ projector. Optionally select a receiver to follow commands sent by the projector's own remote.",
         "title": "Set up BenQ projector"
       }
     }
@@ -47,6 +49,9 @@
     },
     "invalid_source": {
       "message": "Cannot select input source {invalid_source}. Valid sources: {valid_sources}."
+    },
+    "receiver_not_found": {
+      "message": "The infrared receiver used by this BenQ projector no longer exists. Remove this device and set it up again with another receiver."
     }
   }
 }
