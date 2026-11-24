@@ -142,6 +142,18 @@
       },
       "offset": {
         "name": "Temperature offset"
+      },
+      "siren_alarm_delay": {
+        "name": "Siren alarm delay"
+      },
+      "siren_alarm_duration": {
+        "name": "Siren alarm duration"
+      },
+      "siren_flash_delay": {
+        "name": "Flashing light alarm delay"
+      },
+      "siren_flash_duration": {
+        "name": "Flashing light alarm duration"
       }
     },
     "select": {
