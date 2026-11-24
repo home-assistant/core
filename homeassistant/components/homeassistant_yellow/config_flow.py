@@ -29,7 +29,6 @@ from homeassistant.components.homeassistant_hardware.util import (
 )
 from homeassistant.config_entries import (
     SOURCE_HARDWARE,
-    ConfigEntry,
     ConfigEntryBaseFlow,
     ConfigFlowResult,
     OptionsFlow,
@@ -37,6 +36,7 @@ from homeassistant.config_entries import (
 from homeassistant.core import HomeAssistant, async_get_hass, callback
 from homeassistant.helpers import discovery_flow, selector
 
+from . import HomeAssistantYellowConfigEntry
 from .const import (
     DOMAIN,
     FIRMWARE,
@@ -129,7 +129,7 @@ class HomeAssistantYellowConfigFlow(
     @callback
     @override
     def async_get_options_flow(
-        config_entry: ConfigEntry,
+        config_entry: HomeAssistantYellowConfigEntry,
     ) -> OptionsFlow:
         """Return the options flow."""
         firmware_type = ApplicationType(config_entry.data[FIRMWARE])

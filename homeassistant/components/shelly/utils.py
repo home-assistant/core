@@ -28,12 +28,12 @@ from aioshelly.const import (
 from aioshelly.exceptions import NotInitialized
 from aioshelly.rpc_device import RpcDevice, WsServer
 from aioshelly.rpc_device.models import ShellyLedStripEffect
+from awesomeversion import AwesomeVersion
 from yarl import URL
 
 from homeassistant.components import network
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.components.network import async_get_source_ip
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_MODEL, CONF_PORT, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.helpers import (
@@ -78,8 +78,12 @@ from .const import (
     SHIX3_1_INPUTS_EVENTS_TYPES,
     VIRTUAL_COMPONENTS,
     WALL_DISPLAY_RELEASE_URL,
+    WALL_DISPLAY_UI_MIN_FIRMWARE,
     All_LIGHT_TYPES,
 )
+
+if TYPE_CHECKING:
+    from .coordinator import ShellyConfigEntry, ShellyRpcCoordinator
 
 
 @callback
@@ -318,6 +322,8 @@ def get_info_gen(info: dict[str, Any]) -> int:
 def get_model_name(info: dict[str, Any]) -> str:
     """Return the device model name."""
     if get_info_gen(info) in RPC_GENERATIONS:
+        if xmod_name := (info.get("jwt") or {}).get("n"):
+            return cast(str, xmod_name)
         return cast(str, MODEL_NAMES.get(info[CONF_MODEL], info[CONF_MODEL]))
 
     return cast(str, MODEL_NAMES.get(info["type"], info["type"]))
@@ -366,6 +372,21 @@ def get_shelly_model_name(
 
     # Use the model name from aioshelly
     return cast(str, MODEL_NAMES.get(model))
+
+
+def get_shelly_manufacturer(device: BlockDevice | RpcDevice) -> str:
+    """Get Shelly device manufacturer.
+
+    Sleeping devices are not initialized during setup and are all made by Shelly.
+    """
+    if (
+        isinstance(device, RpcDevice)
+        and device.initialized
+        and (manufacturer := device.xmod_info.get("m"))
+    ):
+        return cast(str, manufacturer)
+
+    return "Shelly"
 
 
 def get_rpc_key(value: str) -> tuple[bool, str, str]:
@@ -459,7 +480,7 @@ def get_rpc_sub_device_name(
     return f"{component.title()} {component_id}"
 
 
-def get_device_entry_gen(entry: ConfigEntry) -> int:
+def get_device_entry_gen(entry: ShellyConfigEntry) -> int:
     """Return the device generation from config entry."""
     return entry.data.get(CONF_GEN, 1)  # type: ignore[no-any-return]
 
@@ -470,9 +491,6 @@ def get_rpc_key_instances(
     """Return list of key instances for RPC device from a dict."""
     if key in keys_dict:
         return [key]
-
-    if key == "switch" and "cover:0" in keys_dict:
-        key = "cover"
 
     if key in All_LIGHT_TYPES and all_lights:
         return [k for k in keys_dict if k.startswith(All_LIGHT_TYPES)]
@@ -547,7 +565,7 @@ def get_rpc_input_triggers(device: RpcDevice) -> list[tuple[str, str]]:
 
 @callback
 def update_device_fw_info(
-    hass: HomeAssistant, shellydevice: BlockDevice | RpcDevice, entry: ConfigEntry
+    hass: HomeAssistant, shellydevice: BlockDevice | RpcDevice, entry: ShellyConfigEntry
 ) -> None:
     """Update the firmware version information in the device registry."""
     assert entry.unique_id
@@ -569,6 +587,19 @@ def update_device_fw_info(
 def brightness_to_percentage(brightness: int) -> int:
     """Convert brightness level to percentage."""
     return int(100 * (brightness + 1) / 255)
+
+
+def is_rpc_wall_display_brightness_supported(
+    coordinator: ShellyRpcCoordinator,
+) -> bool:
+    """Return true if the device has a supported Wall Display brightness config."""
+    device = coordinator.device
+    return (
+        coordinator.model.startswith(SHELLY_WALL_DISPLAY_MODEL_PREFIX)
+        and "brightness" in device.config.get("ui", {})
+        and AwesomeVersion(device.shelly["ver"])
+        >= AwesomeVersion(WALL_DISPLAY_UI_MIN_FIRMWARE)
+    )
 
 
 def percentage_to_brightness(percentage: int) -> int:
@@ -654,6 +685,15 @@ def async_remove_shelly_rpc_entities(
             entity_reg.async_remove(entity_id)
 
 
+def get_virtual_component_view(component_config: dict[str, Any]) -> str:
+    """Return the view of a virtual component, the platform follows from it."""
+    # The Wall Display sends no meta and firmware 2.2.0 can leave out the view;
+    # without one only a button component gets an entity
+    ui = (component_config.get("meta") or {}).get("ui") or {}
+    view: str = ui.get("view", "button")
+    return view
+
+
 def get_virtual_component_ids(config: dict[str, Any], platform: str) -> list[str]:
     """Return a list of virtual component IDs for a platform."""
     component = DYNAMIC_COMPONENTS_MAP[platform]
@@ -665,9 +705,7 @@ def get_virtual_component_ids(config: dict[str, Any], platform: str) -> list[str
             k
             for k, v in config.items()
             if k.startswith(comp_type)
-            # default to button view if not set, workaround for Wall Display
-            and v.get("meta", {"ui": {"view": "button"}})["ui"]["view"]
-            in component["modes"]
+            and get_virtual_component_view(v) in component["modes"]
         )
 
     return ids
@@ -676,8 +714,7 @@ def get_virtual_component_ids(config: dict[str, Any], platform: str) -> list[str
 def is_view_for_platform(config: dict[str, Any], key: str, platform: str) -> bool:
     """Return true if the virtual component view match the platform."""
     component = DYNAMIC_COMPONENTS_MAP[platform]
-    view = config[key]["meta"]["ui"]["view"]
-    return view in component["modes"]
+    return get_virtual_component_view(config[key]) in component["modes"]
 
 
 def get_virtual_component_unit(config: dict[str, Any]) -> str | None:
@@ -941,7 +978,7 @@ def get_block_device_info(
 
 @callback
 def remove_stale_blu_trv_devices(
-    hass: HomeAssistant, rpc_device: RpcDevice, entry: ConfigEntry
+    hass: HomeAssistant, rpc_device: RpcDevice, entry: ShellyConfigEntry
 ) -> None:
     """Remove stale BLU TRV devices."""
     dev_reg = dr.async_get(hass)
@@ -972,7 +1009,7 @@ def remove_stale_blu_trv_devices(
 
 
 @callback
-def remove_empty_sub_devices(hass: HomeAssistant, entry: ConfigEntry) -> None:
+def remove_empty_sub_devices(hass: HomeAssistant, entry: ShellyConfigEntry) -> None:
     """Remove sub devices without entities."""
     dev_reg = dr.async_get(hass)
     entity_reg = er.async_get(hass)
@@ -1055,9 +1092,9 @@ def async_migrate_rpc_virtual_components_unique_ids(
     return None
 
 
-def is_rpc_ble_scanner_supported(entry: ConfigEntry) -> bool:
+def is_rpc_ble_scanner_supported(entry: ShellyConfigEntry) -> bool:
     """Return true if BLE scanner is supported."""
-    return (
+    return bool(
         entry.runtime_data.rpc_supports_scripts
         and not entry.runtime_data.rpc_zigbee_firmware
     )
@@ -1098,7 +1135,7 @@ async def check_coiot_config(device: BlockDevice, hass: HomeAssistant) -> bool:
 
 
 async def async_manage_coiot_issues_task(
-    hass: HomeAssistant, entry: ConfigEntry
+    hass: HomeAssistant, entry: ShellyConfigEntry
 ) -> None:
     """CoIoT configuration or push updates issues task."""
     config_issue_id = COIOT_UNCONFIGURED_ISSUE_ID.format(unique=entry.unique_id)

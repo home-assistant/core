@@ -74,6 +74,19 @@ def mock_yardian_client() -> Generator[AsyncMock]:
 
 
 @pytest.fixture
+def mock_yardian_client_create(
+    mock_yardian_client: AsyncMock,
+) -> Generator[AsyncMock]:
+    """Mock the network factory separately from the returned client."""
+    with patch(
+        "homeassistant.components.yardian.AsyncYardianClient.create",
+        new_callable=AsyncMock,
+        return_value=mock_yardian_client,
+    ) as create:
+        yield create
+
+
+@pytest.fixture
 def sensor_platform_only() -> Generator[None]:
     """Limit the integration setup to the sensor platform for faster tests."""
     with patch("homeassistant.components.yardian.PLATFORMS", [Platform.SENSOR]):

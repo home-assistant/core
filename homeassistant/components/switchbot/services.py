@@ -1,26 +1,50 @@
 """Services for the SwitchBot integration."""
 
-import probatio
+from enum import StrEnum
 
-from homeassistant.const import ATTR_DEVICE_ID, CONF_SENSOR_TYPE
-from homeassistant.core import HomeAssistant, ServiceCall, callback
-from homeassistant.exceptions import ServiceValidationError
+import probatio
+from switchbot import SwitchbotOperationError
+
+from homeassistant.const import CONF_SENSOR_TYPE, CommonServiceArgument
+from homeassistant.core import (
+    HomeAssistant,
+    ServiceCall,
+    ServiceResponse,
+    SupportsResponse,
+    callback,
+)
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import config_validation as cv, service
 
 from .const import DOMAIN, SupportedModels
 from .coordinator import SwitchbotConfigEntry, SwitchbotDataUpdateCoordinator
 
-SERVICE_ADD_PASSWORD = "add_password"
 
-ATTR_PASSWORD = "password"
+class SwitchbotService(StrEnum):
+    """Store keys for SwitchBot services."""
+
+    ADD_PASSWORD = "add_password"
+    GET_KEYPAD_INFO = "get_keypad_info"
+
+
+class SwitchbotServiceArgument(StrEnum):
+    """Store keys for SwitchBot service arguments."""
+
+    PASSWORD = "password"
+
 
 _PASSWORD_VALIDATOR = probatio.All(cv.string, cv.matches_regex(r"^\d{6,12}$"))
 
 SCHEMA_ADD_PASSWORD_SERVICE = probatio.Schema(
     {
-        probatio.Required(ATTR_DEVICE_ID): cv.string,
-        probatio.Required(ATTR_PASSWORD): _PASSWORD_VALIDATOR,
+        probatio.Required(CommonServiceArgument.DEVICE_ID): cv.string,
+        probatio.Required(SwitchbotServiceArgument.PASSWORD): _PASSWORD_VALIDATOR,
     },
+    extra=probatio.ALLOW_EXTRA,
+)
+
+SCHEMA_GET_KEYPAD_INFO_SERVICE = probatio.Schema(
+    {probatio.Required(CommonServiceArgument.DEVICE_ID): cv.string},
     extra=probatio.ALLOW_EXTRA,
 )
 
@@ -61,12 +85,46 @@ def _async_target(
 
 async def async_add_password(call: ServiceCall) -> None:
     """Add a password to a SwitchBot keypad device."""
-    password: str = call.data[ATTR_PASSWORD]
-    device_id = call.data[ATTR_DEVICE_ID]
+    password: str = call.data[SwitchbotServiceArgument.PASSWORD]
+    device_id = call.data[CommonServiceArgument.DEVICE_ID]
 
     coordinator = _async_target(call.hass, device_id)
 
     await coordinator.device.add_password(password)
+
+
+async def async_get_keypad_info(call: ServiceCall) -> ServiceResponse:
+    """Get keypad settings, versions, and credential counts."""
+    device_id = call.data[CommonServiceArgument.DEVICE_ID]
+    coordinator = _async_target(call.hass, device_id)
+
+    try:
+        basic_info = await coordinator.device.get_basic_info()
+        credential_counts = await coordinator.device.get_password_count()
+    except SwitchbotOperationError as error:
+        raise HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key="operation_error",
+            translation_placeholders={"error": str(error)},
+        ) from error
+    if basic_info is None or credential_counts is None:
+        raise HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key="keypad_info_unavailable",
+        )
+
+    return {
+        "basic_info": {
+            "firmware": basic_info["firmware"],
+            "hardware": basic_info["hardware"],
+            "support_fingerprint": basic_info["support_fingerprint"],
+            "lock_button_enabled": basic_info["lock_button_enabled"],
+            "backlight_enabled": basic_info["backlight_enabled"],
+            "backlight_level": basic_info["backlight_level"],
+            "prompt_tone_enabled": basic_info["prompt_tone_enabled"],
+        },
+        "credential_counts": credential_counts,
+    }
 
 
 @callback
@@ -74,7 +132,14 @@ def async_setup_services(hass: HomeAssistant) -> None:
     """Set up the services for the SwitchBot integration."""
     hass.services.async_register(
         DOMAIN,
-        SERVICE_ADD_PASSWORD,
+        SwitchbotService.ADD_PASSWORD,
         async_add_password,
         schema=SCHEMA_ADD_PASSWORD_SERVICE,
+    )
+    hass.services.async_register(
+        DOMAIN,
+        SwitchbotService.GET_KEYPAD_INFO,
+        async_get_keypad_info,
+        schema=SCHEMA_GET_KEYPAD_INFO_SERVICE,
+        supports_response=SupportsResponse.ONLY,
     )

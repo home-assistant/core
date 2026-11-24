@@ -67,10 +67,12 @@ class SonosHouseholdCoordinator:
         return type(self).__name__
 
     async def _async_poll(self) -> None:
-        """Poll any known speaker."""
+        """Poll any known speaker in this household."""
         discovered = self.config_entry.runtime_data.discovered
 
         for uid, speaker in discovered.items():
+            if speaker.household_id != self.household_id:
+                continue
             _LOGGER.debug("Polling %s using %s", self.class_type, speaker.soco)
             try:
                 await self.async_update_entities(speaker.soco)

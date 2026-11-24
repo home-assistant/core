@@ -9,12 +9,15 @@ from unittest.mock import MagicMock, Mock, patch
 
 import pytest
 from pytest_homeassistant.common import async_fire_time_changed
-from soco.exceptions import SoCoException, SoCoUPnPException
+from soco.exceptions import SoCoUPnPException
 
 from homeassistant.components.sonos.const import (
     DATA_SONOS_DISCOVERY_MANAGER,
+    DOMAIN,
     MODEL_SONOS_ARC_ULTRA,
+    SCAN_INTERVAL,
 )
+from homeassistant.components.sonos.services import SonosService, SonosServiceArgument
 from homeassistant.components.sonos.switch import (
     ATTR_DURATION,
     ATTR_ID,
@@ -28,7 +31,7 @@ from homeassistant.components.sonos.switch import (
     ATTR_VOLUME,
 )
 from homeassistant.components.ssdp import SsdpChange
-from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
+from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN, SwitchService
 from homeassistant.config_entries import RELOAD_AFTER_UPDATE_DELAY
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -38,6 +41,7 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
     STATE_UNAVAILABLE,
+    TargetKey,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -54,13 +58,16 @@ from .conftest import (
     create_rendering_control_event,
 )
 
+ALARM_14_UNIQUE_ID = "alarm-test_household_id:14"
+ALARM_15_UNIQUE_ID = "alarm-test_household_id:15"
+
 
 async def test_entity_registry(
     hass: HomeAssistant, async_autosetup_sonos, entity_registry: er.EntityRegistry
 ) -> None:
     """Test sonos device with alarm registered in the device registry."""
     assert "media_player.zone_a" in entity_registry.entities
-    assert "switch.sonos_alarm_14" in entity_registry.entities
+    assert "switch.zone_a_daily_alarm_07_00" in entity_registry.entities
     assert "switch.zone_a_status_light" in entity_registry.entities
     assert "switch.zone_a_loudness" in entity_registry.entities
     assert "switch.zone_a_night_sound" in entity_registry.entities
@@ -78,7 +85,7 @@ async def test_switch_attributes(
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test for correct Sonos switch states."""
-    alarm = entity_registry.entities["switch.sonos_alarm_14"]
+    alarm = entity_registry.entities["switch.zone_a_daily_alarm_07_00"]
     alarm_state = hass.states.get(alarm.entity_id)
     assert alarm_state.state == STATE_ON
     assert alarm_state.attributes.get(ATTR_TIME) == "07:00:00"
@@ -199,8 +206,8 @@ async def test_switch_speech_enhancement(
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: entity_id},
+        SwitchService.TURN_ON,
+        {TargetKey.ENTITY_ID: entity_id},
         blocking=True,
     )
     assert getattr(soco, attribute) is True
@@ -224,7 +231,10 @@ async def test_switch_alarm_turn_on(
     await async_setup_sonos()
 
     await hass.services.async_call(
-        SWITCH_DOMAIN, service, {ATTR_ENTITY_ID: "switch.sonos_alarm_14"}, blocking=True
+        SWITCH_DOMAIN,
+        service,
+        {ATTR_ENTITY_ID: "switch.zone_a_daily_alarm_07_00"},
+        blocking=True,
     )
 
     assert soco.alarmClock.UpdateAlarm.call_count == 1
@@ -248,8 +258,12 @@ async def test_alarm_create_delete(
 
     await async_setup_sonos()
 
-    assert "switch.sonos_alarm_14" in entity_registry.entities
-    assert "switch.sonos_alarm_15" not in entity_registry.entities
+    assert entity_registry.async_get_entity_id(
+        SWITCH_DOMAIN, DOMAIN, ALARM_14_UNIQUE_ID
+    )
+    assert not entity_registry.async_get_entity_id(
+        SWITCH_DOMAIN, DOMAIN, ALARM_15_UNIQUE_ID
+    )
 
     subscription = alarm_clock.subscribe.return_value
     sub_callback = subscription.callback
@@ -261,8 +275,12 @@ async def test_alarm_create_delete(
     sub_callback(event=alarm_event)
     await hass.async_block_till_done(wait_background_tasks=True)
 
-    assert "switch.sonos_alarm_14" in entity_registry.entities
-    assert "switch.sonos_alarm_15" in entity_registry.entities
+    assert entity_registry.async_get_entity_id(
+        SWITCH_DOMAIN, DOMAIN, ALARM_14_UNIQUE_ID
+    )
+    assert entity_registry.async_get_entity_id(
+        SWITCH_DOMAIN, DOMAIN, ALARM_15_UNIQUE_ID
+    )
 
     one_alarm["CurrentAlarmListVersion"] = alarm_event.increment_variable(
         "alarm_list_version"
@@ -273,8 +291,12 @@ async def test_alarm_create_delete(
     sub_callback(event=alarm_event)
     await hass.async_block_till_done(wait_background_tasks=True)
 
-    assert "switch.sonos_alarm_14" in entity_registry.entities
-    assert "switch.sonos_alarm_15" not in entity_registry.entities
+    assert entity_registry.async_get_entity_id(
+        SWITCH_DOMAIN, DOMAIN, ALARM_14_UNIQUE_ID
+    )
+    assert not entity_registry.async_get_entity_id(
+        SWITCH_DOMAIN, DOMAIN, ALARM_15_UNIQUE_ID
+    )
 
 
 async def test_alarm_change_device(
@@ -297,7 +319,7 @@ async def test_alarm_change_device(
 
     await async_setup_sonos()
 
-    entity_id = "switch.sonos_alarm_14"
+    entity_id = "switch.zone_a_daily_alarm_07_00"
 
     # Verify the alarm starts on the initially discovered speaker.
     assert entity_id in entity_registry.entities
@@ -366,8 +388,8 @@ async def test_tv_autoplay_switch(
     # Turn off: should call SetAutoplayRoomUUID with empty RoomUUID
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: entity_id},
+        SwitchService.TURN_OFF,
+        {TargetKey.ENTITY_ID: entity_id},
         blocking=True,
     )
     soco.deviceProperties.SetAutoplayRoomUUID.assert_called_once_with(
@@ -378,8 +400,8 @@ async def test_tv_autoplay_switch(
     # Turn on: should call SetAutoplayRoomUUID with speaker's own UID
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: entity_id},
+        SwitchService.TURN_ON,
+        {TargetKey.ENTITY_ID: entity_id},
         blocking=True,
     )
     soco.deviceProperties.SetAutoplayRoomUUID.assert_called_once_with(
@@ -504,8 +526,8 @@ async def test_tv_autoplay_toggle_failure_raises(
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             SWITCH_DOMAIN,
-            SERVICE_TURN_ON,
-            {ATTR_ENTITY_ID: entity_id},
+            SwitchService.TURN_ON,
+            {TargetKey.ENTITY_ID: entity_id},
             blocking=True,
         )
 
@@ -540,8 +562,8 @@ async def test_tv_ungroup_autoplay_switch(
     # Turn off: should send IncludeLinkedZones=1 (include group = stop ungrouping)
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: entity_id},
+        SwitchService.TURN_OFF,
+        {TargetKey.ENTITY_ID: entity_id},
         blocking=True,
     )
     soco.deviceProperties.SetAutoplayLinkedZones.assert_called_once_with(
@@ -552,8 +574,8 @@ async def test_tv_ungroup_autoplay_switch(
     # Turn on: should send IncludeLinkedZones=0 (don't include group = ungroup)
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: entity_id},
+        SwitchService.TURN_ON,
+        {TargetKey.ENTITY_ID: entity_id},
         blocking=True,
     )
     soco.deviceProperties.SetAutoplayLinkedZones.assert_called_once_with(
@@ -665,8 +687,8 @@ async def test_tv_ungroup_autoplay_toggle_failure_raises(
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             SWITCH_DOMAIN,
-            SERVICE_TURN_OFF,
-            {ATTR_ENTITY_ID: entity_id},
+            SwitchService.TURN_OFF,
+            {TargetKey.ENTITY_ID: entity_id},
             blocking=True,
         )
 
@@ -686,27 +708,91 @@ async def test_tv_ungroup_autoplay_not_created_for_non_ht(
     assert entity_id not in entity_registry.entities
 
 
-async def test_alarm_update_exception_logs_warning(
+async def test_alarms_multiple_households(
     hass: HomeAssistant,
-    async_setup_sonos,
+    async_setup_sonos: Callable[[], Coroutine[Any, Any, None]],
+    soco_factory: SoCoMockFactory,
+    alarm_clock: SonosMockAlarmClock,
+    discover: MagicMock,
     entity_registry: er.EntityRegistry,
-    soco: MockSoCo,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Test household mismatch logs warning and alarm update/setup is skipped."""
-    with patch(
-        "homeassistant.components.sonos.alarms.Alarms.update",
-        side_effect=SoCoException(
-            "Alarm list UID RINCON_0001234567890:31"
-            " does not match RINCON_000E987654321:0"
-        ),
-    ):
-        await async_setup_sonos()
-        await hass.async_block_till_done()
+    """Test alarms with the same ID in two households are kept separate."""
+    soco_b = soco_factory.cache_mock(MockSoCo(), "10.10.10.2", "Bedroom")
+    soco_b.household_id = "household_b"
+    soco_b.alarmClock = SonosMockAlarmClock(
+        {
+            "CurrentAlarmListVersion": f"{soco_b.uid}:3",
+            "CurrentAlarmList": "<Alarms>"
+            '<Alarm ID="14" StartTime="08:00:00" Duration="02:00:00" '
+            f'Recurrence="DAILY" Enabled="0" RoomUUID="{soco_b.uid}" '
+            'ProgramURI="x-rincon-buzzer:0" ProgramMetaData="" '
+            'PlayMode="SHUFFLE_NOREPEAT" Volume="25" IncludeLinkedZones="0"/>'
+            "</Alarms>",
+        },
+        soco_b.ip_address,
+    )
+    await async_setup_sonos()
 
-    # Alarm should not be set up due to household mismatch
-    assert "switch.sonos_alarm_14" not in entity_registry.entities
-    assert "cannot be updated due to a household mismatch" in caplog.text
+    discover.call_args.args[1](
+        SsdpServiceInfo(
+            ssdp_location=f"http://{soco_b.ip_address}/",
+            ssdp_st="urn:schemas-upnp-org:device:ZonePlayer:1",
+            ssdp_usn=f"uuid:{soco_b.uid}_MR::urn:schemas-upnp-org:service:GroupRenderingControl:1",
+            upnp={ATTR_UPNP_UDN: f"uuid:{soco_b.uid}"},
+        ),
+        SsdpChange.ALIVE,
+    )
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert entity_registry.async_get_entity_id(
+        SWITCH_DOMAIN, DOMAIN, ALARM_14_UNIQUE_ID
+    )
+    assert entity_registry.async_get_entity_id(
+        SWITCH_DOMAIN, DOMAIN, "alarm-household_b:14"
+    )
+    assert hass.states.get("switch.zone_a_daily_alarm_07_00").state == STATE_ON
+    assert hass.states.get("switch.bedroom_daily_alarm_08_00").state == STATE_OFF
+
+    # When subscriptions fail, each household only polls its own speakers.
+    alarm_clock.ListAlarms.reset_mock()
+    soco_b.alarmClock.ListAlarms.reset_mock()
+    caplog.clear()
+    async_fire_time_changed(hass, dt_util.utcnow() + SCAN_INTERVAL)
+    await hass.async_block_till_done(wait_background_tasks=True)
+    # Let the debounced household poll run.
+    async_fire_time_changed(hass, dt_util.utcnow() + SCAN_INTERVAL * 2)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    alarm_clock.ListAlarms.assert_called_once()
+    soco_b.alarmClock.ListAlarms.assert_called_once()
+    assert "Could not refresh" not in caplog.text
+
+    # update_alarm works for each household, and toggling that household's
+    # alarm switch keeps the updated time.
+    for media_player, switch, alarm_clock_mock in (
+        ("media_player.zone_a", "switch.zone_a_daily_alarm_07_00", alarm_clock),
+        ("media_player.bedroom", "switch.bedroom_daily_alarm_08_00", soco_b.alarmClock),
+    ):
+        await hass.services.async_call(
+            DOMAIN,
+            SonosService.UPDATE_ALARM,
+            {
+                TargetKey.ENTITY_ID: media_player,
+                SonosServiceArgument.ALARM_ID: 14,
+                SonosServiceArgument.TIME: "09:30:00",
+            },
+            blocking=True,
+        )
+        await hass.services.async_call(
+            SWITCH_DOMAIN,
+            SwitchService.TOGGLE,
+            {ATTR_ENTITY_ID: switch},
+            blocking=True,
+        )
+        assert alarm_clock_mock.UpdateAlarm.call_count == 2
+        sent = dict(alarm_clock_mock.UpdateAlarm.call_args.args[0])
+        assert sent["StartLocalTime"] == "09:30:00"
 
 
 async def test_alarm_setup_for_undiscovered_speaker(
@@ -728,7 +814,7 @@ async def test_alarm_setup_for_undiscovered_speaker(
     await async_setup_sonos()
 
     # Switch should not be created since the speaker isn't discovered yet
-    assert "switch.sonos_alarm_14" not in entity_registry.entities
+    assert "switch.bedroom_daily_alarm_07_00" not in entity_registry.entities
 
     # Simulate discovery of the bedroom speaker
     discover.call_args.args[1](
@@ -742,4 +828,4 @@ async def test_alarm_setup_for_undiscovered_speaker(
     )
     await hass.async_block_till_done(wait_background_tasks=True)
 
-    assert "switch.sonos_alarm_14" in entity_registry.entities
+    assert "switch.bedroom_daily_alarm_07_00" in entity_registry.entities

@@ -38,6 +38,21 @@
         },
         "description": "The access token of this Seafile account is no longer valid. Log in again to create a new one."
       },
+      "reconfigure": {
+        "data": {
+          "password": "[%key:common::config_flow::data::password%]",
+          "url": "[%key:common::config_flow::data::url%]",
+          "username": "[%key:common::config_flow::data::username%]",
+          "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
+        },
+        "data_description": {
+          "password": "[%key:component::seafile::config::step::user::data_description::password%]",
+          "url": "[%key:component::seafile::config::step::user::data_description::url%]",
+          "username": "[%key:component::seafile::config::step::user::data_description::username%]",
+          "verify_ssl": "[%key:component::seafile::config::step::user::data_description::verify_ssl%]"
+        },
+        "description": "Log in again to change the address of the Seafile server, the username or the password. This creates a new access token and revokes the old one."
+      },
       "user": {
         "data": {
           "password": "[%key:common::config_flow::data::password%]",
@@ -98,6 +113,11 @@
         "name": "Empty trash"
       }
     },
+    "number": {
+      "history_days": {
+        "name": "History days"
+      }
+    },
     "select": {
       "history": {
         "name": "History",
@@ -139,6 +159,19 @@
     },
     "timeout_connect": {
       "message": "Timed out while connecting to the Seafile server."
+    }
+  },
+  "issues": {
+    "library_deleted": {
+      "fix_flow": {
+        "step": {
+          "confirm": {
+            "description": "The library \"{name}\" no longer exists on the Seafile server, or this account no longer has access to it. Its entities are unavailable and it can no longer be used as a backup location.\n\nSelect **Submit** to remove the library and its device from Home Assistant. If the library comes back, for example because it was shared again, this issue is resolved automatically.",
+            "title": "[%key:component::seafile::issues::library_deleted::title%]"
+          }
+        }
+      },
+      "title": "Seafile library \"{name}\" not found"
     }
   }
 }

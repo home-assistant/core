@@ -13,6 +13,8 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import (
+    CLEANUP_TIMEOUT,
+    CLEANUP_WAIT_TIMEOUT,
     CONF_DISCOVERY_INTERVAL_DEFAULT,
     CONF_LISTENING_PORT_DEFAULT,
     CONF_MULTICAST_ADDRESS_DEFAULT,
@@ -43,6 +45,19 @@ def log_bound_addresses(controller: GoveeController) -> None:
     # The library already warns per failed bind; keep this at debug for the full picture.
     for address, error in controller.bind_failures:
         _LOGGER.debug("Not listening on %s: %s", address, error.strerror or error)
+
+
+async def async_cleanup_controller(controller: GoveeController) -> None:
+    """Close the controller's sockets and wait for the listening port to be released."""
+
+    cleanup_complete = controller.cleanup(timeout=CLEANUP_TIMEOUT)
+    try:
+        async with asyncio.timeout(CLEANUP_WAIT_TIMEOUT):
+            await cleanup_complete.wait()
+    except TimeoutError:
+        _LOGGER.warning(
+            "Timed out waiting for port %d to be released", CONF_LISTENING_PORT_DEFAULT
+        )
 
 
 class GoveeLocalApiCoordinator(DataUpdateCoordinator[list[GoveeDevice]]):
@@ -95,10 +110,12 @@ class GoveeLocalApiCoordinator(DataUpdateCoordinator[list[GoveeDevice]]):
 
         self._controller.set_device_discovered_callback(discovery_callback)
 
-    def cleanup(self) -> asyncio.Event:
-        """Stop and cleanup the coordinator."""
+    async def async_cleanup(self) -> None:
+        """Stop the controller and wait for its sockets to close."""
 
-        return self._controller.cleanup()
+        # Wait for a running rebind, so cleanup() does not race a bind in flight.
+        await self.async_wait_rebind()
+        await async_cleanup_controller(self._controller)
 
     async def turn_on(self, device: GoveeDevice) -> None:
         """Turn on the light."""

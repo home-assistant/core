@@ -14,7 +14,7 @@ from homeassistant.components.bluetooth import (
     async_discovered_service_info,
 )
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
-from homeassistant.const import CONF_ADDRESS, CONF_NAME
+from homeassistant.const import CONF_ADDRESS
 
 from .const import AVEA_SERVICE_UUID, DOMAIN, UNKNOWN_NAME
 
@@ -200,18 +200,6 @@ class AveaConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="user",
             data_schema=data_schema,
             errors=errors,
-        )
-
-    async def async_step_import(self, import_data: dict[str, Any]) -> ConfigFlowResult:
-        """Handle import from YAML."""
-        address = import_data[CONF_ADDRESS]
-
-        await self.async_set_unique_id(address, raise_on_progress=False)
-        self._abort_if_unique_id_configured()
-
-        return self.async_create_entry(
-            title=import_data.get(CONF_NAME, address),
-            data={CONF_ADDRESS: address},
         )
 
 

@@ -4,7 +4,7 @@ from abc import abstractmethod
 import asyncio
 from collections.abc import AsyncIterable
 import contextlib
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from enum import StrEnum
 import logging
 from typing import Any, Literal, final, override
@@ -131,6 +131,7 @@ class AssistSatelliteEntity(entity.Entity):
     _attr_supported_features = AssistSatelliteEntityFeature(0)
     _attr_pipeline_entity_id: str | None = None
     _attr_vad_sensitivity_entity_id: str | None = None
+    _attr_timer_list_entity_id: str | None = None
 
     _conversation_id: str | None = None
 
@@ -160,6 +161,11 @@ class AssistSatelliteEntity(entity.Entity):
     def vad_sensitivity_entity_id(self) -> str | None:
         """Entity ID of the VAD sensitivity to use for the next conversation."""
         return self._attr_vad_sensitivity_entity_id
+
+    @property
+    def timer_list_entity_id(self) -> str | None:
+        """Entity ID of the timer list that holds the satellite's timers."""
+        return self._attr_timer_list_entity_id
 
     @property
     def tts_options(self) -> dict[str, Any] | None:
@@ -448,8 +454,14 @@ class AssistSatelliteEntity(entity.Entity):
         wake_word_phrase: str | None = None,
         *,
         context: Context | None = None,
+        audio_settings: AudioSettings | None = None,
+        wake_word_audio_ms: int | None = None,
     ) -> None:
-        """Triggers an Assist pipeline in Home Assistant from a satellite."""
+        """Triggers an Assist pipeline in Home Assistant from a satellite.
+
+        silence_seconds in audio_settings is always taken from the satellite's
+        VAD sensitivity.
+        """
         await self._cancel_running_pipeline()
 
         # Consume system prompt in first pipeline
@@ -528,8 +540,10 @@ class AssistSatelliteEntity(entity.Entity):
                         satellite_id=self.entity_id,
                         tts_audio_output=self.tts_options,
                         wake_word_phrase=wake_word_phrase,
-                        audio_settings=AudioSettings(
-                            silence_seconds=self._resolve_vad_sensitivity()
+                        wake_word_audio_ms=wake_word_audio_ms,
+                        audio_settings=replace(
+                            audio_settings or AudioSettings(),
+                            silence_seconds=self._resolve_vad_sensitivity(),
                         ),
                         start_stage=start_stage,
                         end_stage=end_stage,
