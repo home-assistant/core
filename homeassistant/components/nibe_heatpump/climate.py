@@ -123,8 +123,7 @@ class NibeClimateEntity(CoordinatorEntity[CoilCoordinator], ClimateEntity):
         self._coil_use_room_sensor = _get(climate.use_room_sensor)
         self._coil_cooling_with_room_sensor = _get(unit.cooling_with_room_sensor)
 
-        if self._coil_current:
-            self._attr_native_temperature_unit = self._coil_current.unit
+        self._attr_native_temperature_unit = self._coil_current.unit
 
     @callback
     @override

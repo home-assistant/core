@@ -14,9 +14,9 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.switch import (
     DOMAIN as SWITCH_DOMAIN,
-    SERVICE_TOGGLE,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
+    SwitchService,
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -24,6 +24,7 @@ from homeassistant.const import (
     STATE_ON,
     STATE_UNAVAILABLE,
     Platform,
+    TargetKey,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, HomeAssistantError
@@ -204,9 +205,9 @@ async def test_switch_toggle(
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        SERVICE_TOGGLE,
+        SwitchService.TOGGLE,
         {
-            ATTR_ENTITY_ID: entity,
+            TargetKey.ENTITY_ID: entity,
         },
         blocking=True,
     )
@@ -239,9 +240,9 @@ async def test_switch_toggle_returns_false(
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             SWITCH_DOMAIN,
-            SERVICE_TOGGLE,
+            SwitchService.TOGGLE,
             {
-                ATTR_ENTITY_ID: entity,
+                TargetKey.ENTITY_ID: entity,
             },
             blocking=True,
         )
@@ -331,8 +332,8 @@ async def test_switch_toggle_raises_error(
     with pytest.raises(expected_ha_error):
         await hass.services.async_call(
             SWITCH_DOMAIN,
-            SERVICE_TOGGLE,
-            {ATTR_ENTITY_ID: entity},
+            SwitchService.TOGGLE,
+            {TargetKey.ENTITY_ID: entity},
             blocking=True,
         )
     client_method.assert_awaited_once_with(*expected_args)

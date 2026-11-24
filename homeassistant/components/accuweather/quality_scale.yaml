@@ -69,17 +69,12 @@ rules:
     status: exempt
     comment: This integration has a fixed single service device per config entry.
   entity-category: done
-  entity-device-class: todo
+  entity-device-class: done
   entity-disabled-by-default: done
   entity-translations: done
   exception-translations: done
   icon-translations: done
-  reconfiguration-flow:
-    status: exempt
-    comment: |
-      The API key can be changed in the reauthentication flow. Changing the
-      location changes the unique ID (location key), so it requires a new
-      config entry.
+  reconfiguration-flow: done
   repair-issues:
     status: exempt
     comment: This integration doesn't have any cases where raising an issue is needed.

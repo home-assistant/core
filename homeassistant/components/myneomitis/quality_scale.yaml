@@ -50,7 +50,7 @@ rules:
   test-coverage: done
 
   # Gold tier rules
-  devices: todo
+  devices: done
   diagnostics: todo
   discovery-update-info:
     status: exempt

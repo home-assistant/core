@@ -36,6 +36,12 @@
             'value': -6.0,
           }),
           dict({
+            'key': 'balance',
+            'read_only': False,
+            'type': 'integer',
+            'value': 0,
+          }),
+          dict({
             'key': 'treble_ro',
             'read_only': True,
             'type': 'integer',
@@ -46,6 +52,12 @@
             'read_only': False,
             'type': 'boolean',
             'value': False,
+          }),
+          dict({
+            'key': 'status_light',
+            'read_only': False,
+            'type': 'boolean',
+            'value': True,
           }),
           dict({
             'key': 'enhancer_ro',

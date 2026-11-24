@@ -13,7 +13,8 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import config_validation as cv, device_registry as dr
+from homeassistant.helpers.typing import ConfigType
 
 from .const import (
     CONF_CONNECTION_TYPE,
@@ -28,11 +29,15 @@ from .const import (
     DOMAIN,
 )
 from .coordinator import CoilCoordinator, NibeHeatpumpConfigEntry
+from .http import LogSetView
+
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 PLATFORMS: list[Platform] = [
     Platform.BINARY_SENSOR,
     Platform.BUTTON,
     Platform.CLIMATE,
+    Platform.IMAGE,
     Platform.NUMBER,
     Platform.SELECT,
     Platform.SENSOR,
@@ -40,6 +45,12 @@ PLATFORMS: list[Platform] = [
     Platform.WATER_HEATER,
 ]
 COIL_READ_RETRIES = 5
+
+
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up the Nibe Heat Pump integration."""
+    hass.http.register_view(LogSetView)
+    return True
 
 
 async def async_setup_entry(

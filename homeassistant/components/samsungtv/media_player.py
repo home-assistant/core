@@ -231,8 +231,13 @@ class SamsungTVDevice(SamsungTVEntity, MediaPlayerEntity):
     async def async_set_volume_level(self, volume: float) -> None:
         """Set volume level on the media player."""
         if self._dmr is None:
-            LOGGER.warning("Upnp services are not available on %s", self._host)
-            return
+            if TYPE_CHECKING:
+                assert self._host is not None
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="upnp_not_available",
+                translation_placeholders={"host": self._host},
+            )
         await self._dmr.async_set_volume_level(volume)
 
     @override

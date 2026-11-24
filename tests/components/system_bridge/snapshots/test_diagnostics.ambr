@@ -82,6 +82,16 @@
         'time_remaining': 12,
         'voltage': 12.6,
       }),
+      'commands': dict({
+        'backup': dict({
+          'arguments': '**REDACTED**',
+          'command': '**REDACTED**',
+          'id': 'backup',
+          'name': 'Back up',
+          'prefab': '',
+          'workingDir': '**REDACTED**',
+        }),
+      }),
       'cpu': dict({
         'count': 4,
         'family': 'family',

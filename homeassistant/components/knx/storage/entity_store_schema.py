@@ -109,7 +109,23 @@ class BinarySensorKnxConfig:
     """UI configuration of a KNX binary sensor."""
 
     ga_sensor: Annotated[
-        GroupAddressConfig, ga(write=False, state_required=True, valid_dpt="1")
+        GroupAddressConfig,
+        ga(
+            write=False,
+            state_required=True,
+            valid_dpt="1",
+            dpa_state=[
+                dpa.FB343.WINDOW_STATUS,
+                dpa.FB344.DEW_POINT_STATUS,
+                dpa.FB345.PRESENCE_STATUS,
+                dpa.FB802.WIND_ALARM,
+                dpa.FB803.RAIN_ALARM,
+                dpa.FB804.FROST_ALARM,
+                dpa.FB1002.IN_ALARM,
+                dpa.FB1014.DIGITAL_INPUT_VALUE,
+                dpa.FB1021.LOCK,
+            ],
+        ),
     ]
     invert: Annotated[bool, selector.BooleanSelector()] = False
     section_advanced_options: Annotated[
@@ -632,7 +648,15 @@ NOTIFY_KNX_SCHEMA = probatio.DataclassSchema(NotifyKnxConfig)
 class NumberKnxConfig:
     """UI configuration of a KNX number entity."""
 
-    ga_sensor: Annotated[GroupAddressConfig, ga(write_required=True, dpt=["numeric"])]
+    ga_sensor: Annotated[
+        GroupAddressConfig,
+        ga(
+            write_required=True,
+            dpt=["numeric"],
+            dpa_write=[dpa.FB1019.ANALOG_OUT_SETP],
+            dpa_state=[dpa.FB1019.STATUS_ANALOG_OUTPUT],
+        ),
+    ]
     respond_to_read: Annotated[bool, selector.BooleanSelector()] = False
     section_advanced_options: Annotated[
         None, Key(remove=True), KNXSectionFlat(collapsible=True)
@@ -899,8 +923,8 @@ class SwitchKnxConfig:
         ga(
             write_required=True,
             valid_dpt="1",
-            dpa_write=[dpa.FB417.SWITCH_ON_OFF],
-            dpa_state=[dpa.FB417.INFO_ON_OFF],
+            dpa_write=[dpa.FB417.SWITCH_ON_OFF, dpa.FB1018.DIGITAL_OUT_SETP],
+            dpa_state=[dpa.FB417.INFO_ON_OFF, dpa.FB1018.STATUS_DIGITAL_OUTPUT],
         ),
     ]
     invert: Annotated[bool, selector.BooleanSelector()] = False
@@ -971,7 +995,16 @@ class ClimateTargetTemperature:
     """Target temperature set directly."""
 
     ga_temperature_target: Annotated[
-        GroupAddressConfig, ga(write_required=True, valid_dpt="9.001")
+        GroupAddressConfig,
+        ga(
+            write_required=True,
+            valid_dpt="9.001",
+            dpa_write=[dpa.FB398.TEMP_ROOM_SETP_USER_ABS],
+            dpa_state=[
+                dpa.FB399.TEMP_ROOM_SETP_ACT,
+                dpa.FB398.TEMP_ROOM_SETP_USER_ABS_EFF,
+            ],
+        ),
     ]
     min_temp: Annotated[
         float,
@@ -1035,10 +1068,18 @@ class ClimateKnxConfig:
     """UI configuration of a KNX climate entity."""
 
     ga_temperature_current: Annotated[
-        GroupAddressConfig, ga(write=False, state_required=True, valid_dpt="9.001")
+        GroupAddressConfig,
+        ga(
+            write=False,
+            state_required=True,
+            valid_dpt="9.001",
+            # the room temperature input of a controller carries the same value
+            dpa_state=[dpa.FB321.TEMP_ROOM, dpa.FB399.TEMP_ROOM],
+        ),
     ]
     ga_humidity_current: Annotated[
-        GroupAddressConfig | None, ga(write=False, valid_dpt="9.007")
+        GroupAddressConfig | None,
+        ga(write=False, valid_dpt="9.007", dpa_state=[dpa.FB337.HUM_REL_ROOM]),
     ] = None
     target_temperature: Annotated[
         ClimateTargetTemperature | ClimateSetpointShift,
@@ -1055,14 +1096,27 @@ class ClimateKnxConfig:
         None
     )
     ga_valve: Annotated[
-        GroupAddressConfig | None, ga(write=False, valid_dpt="5.001")
+        GroupAddressConfig | None,
+        ga(
+            write=False,
+            valid_dpt="5.001",
+            dpa_state=[
+                dpa.FB399.ACT_TARGET_POS_HEAT_STAGE_A,
+                dpa.FB399.ACT_TARGET_POS_COOL_STAGE_A,
+            ],
+        ),
     ] = None
     section_operation_mode: Annotated[
         None, Key(remove=True), KNXSectionFlat(collapsible=True)
     ] = None
-    ga_operation_mode: Annotated[GroupAddressConfig | None, ga(valid_dpt="20.102")] = (
-        None
-    )
+    ga_operation_mode: Annotated[
+        GroupAddressConfig | None,
+        ga(
+            valid_dpt="20.102",
+            dpa_write=[dpa.FB398.HVAC_MODE_USER],
+            dpa_state=[dpa.FB399.HVAC_MODE_ACT, dpa.FB398.HVAC_MODE_EFF],
+        ),
+    ] = None
     ignore_auto_mode: Annotated[bool, selector.BooleanSelector()] = False
     section_operation_mode_individual: Annotated[
         None, Key(remove=True), KNXSectionFlat(collapsible=True)
@@ -1082,7 +1136,14 @@ class ClimateKnxConfig:
     section_heat_cool: Annotated[
         None, Key(remove=True), KNXSectionFlat(collapsible=True)
     ] = None
-    ga_heat_cool: Annotated[GroupAddressConfig | None, ga(valid_dpt="1.100")] = None
+    ga_heat_cool: Annotated[
+        GroupAddressConfig | None,
+        ga(
+            valid_dpt="1.100",
+            dpa_write=[dpa.FB399.CHANGE_OVER_STATUS],
+            dpa_state=[dpa.FB399.HEAT_COOL_MODE_ACT],
+        ),
+    ] = None
     section_on_off: Annotated[
         None, Key(remove=True), KNXSectionFlat(collapsible=True)
     ] = None
@@ -1091,9 +1152,14 @@ class ClimateKnxConfig:
     section_controller_mode: Annotated[
         None, Key(remove=True), KNXSectionFlat(collapsible=True)
     ] = None
-    ga_controller_mode: Annotated[GroupAddressConfig | None, ga(valid_dpt="20.105")] = (
-        None
-    )
+    ga_controller_mode: Annotated[
+        GroupAddressConfig | None,
+        ga(
+            valid_dpt="20.105",
+            dpa_write=[dpa.FB399.CONTR_MODE],
+            dpa_state=[dpa.FB399.CONTR_MODE_ACT],
+        ),
+    ] = None
     ga_controller_status: Annotated[GroupAddressConfig | None, ga(write=False)] = None
     default_controller_mode: Annotated[
         str,
@@ -1109,7 +1175,12 @@ class ClimateKnxConfig:
         None
     )
     ga_fan_speed: Annotated[
-        GroupAddressConfig | None, ga(dpt=ConfClimateFanSpeedMode)
+        GroupAddressConfig | None,
+        ga(
+            dpt=ConfClimateFanSpeedMode,
+            dpa_write=[dpa.FB399.FAN_SPEED_USER, dpa.FB399.FAN_STEP_USER],
+            dpa_state=[dpa.FB399.ACT_TARGET_FAN_SPEED],
+        ),
     ] = None
     fan_max_step: Annotated[
         int,
@@ -1143,7 +1214,46 @@ class SensorKnxConfig:
 
     ga_sensor: Annotated[
         GroupAddressConfig,
-        ga(write=False, state_required=True, dpt=["numeric", "string"]),
+        ga(
+            write=False,
+            state_required=True,
+            dpt=["numeric", "string"],
+            dpa_state=[
+                dpa.FB180.TEMP_DHW,
+                dpa.FB187.TEMP_COLLECTOR,
+                dpa.FB320.TEMP_OUTSIDE,
+                dpa.FB321.TEMP_ROOM,
+                dpa.FB322.TEMP_SUPPLY_AIR,
+                dpa.FB323.TEMP_RETURN_AIR,
+                dpa.FB324.TEMP_FLOW_WATER,
+                dpa.FB325.TEMP_RETURN_WATER,
+                dpa.FB326.TEMP_FLOW_WATER_COND,
+                dpa.FB327.TEMP_RETURN_WATER_COND,
+                dpa.FB328.TEMP_DISCHARGE_AIR,
+                dpa.FB329.TEMP_FLOOR,
+                dpa.FB330.AQ_OUTSIDE,
+                dpa.FB331.AQ_ROOM,
+                dpa.FB332.AQ_SUPPLY_AIR,
+                dpa.FB333.AQ_RETURN_AIR,
+                dpa.FB336.HUM_REL_OUTSIDE,
+                dpa.FB337.HUM_REL_ROOM,
+                dpa.FB338.HUM_REL_SUPPLY_AIR,
+                dpa.FB339.HUM_REL_RETURN_AIR,
+                dpa.FB348.SUN_INTENSITY,
+                dpa.FB409.ROOM_ILLUMINATION,
+                dpa.FB410.INDOOR_LUMINANCE,
+                dpa.FB1013.ATMOSPHERIC_PRESSURE_ABS,
+                dpa.FB1015.ANALOG_INPUT_VALUE,
+                dpa.FB1016.TEMP_VALUE,
+                # meters: the consumption is the main value of the channel
+                dpa.FB1101.CURRENT_ENERGY_CONSUMPTION,
+                dpa.FB1102.CURRENT_ENERGY_CONSUMPTION,
+                dpa.FB1103.CURRENT_VOLUME_CONSUMPTION,
+                dpa.FB1104.CURRENT_ENERGY_CONSUMPTION,
+                dpa.FB1105.CURRENT_VOLUME_CONSUMPTION,
+                dpa.FB1110.CURRENT_ENERGY_CONSUMPTION,
+            ],
+        ),
     ]
     section_advanced_options: Annotated[
         None, Key(remove=True), KNXSectionFlat(collapsible=True)

@@ -7,9 +7,9 @@ from pytest_homeassistant.common import MockConfigEntry
 from pytest_homeassistant.components.bluetooth import inject_bluetooth_service_info
 
 from homeassistant import config_entries
-from homeassistant.components.snooz.const import DOMAIN
+from homeassistant.components.snooz.const import CONF_FIRMWARE_VERSION, DOMAIN
 from homeassistant.config_entries import SOURCE_IGNORE
-from homeassistant.const import CONF_ADDRESS, CONF_TOKEN
+from homeassistant.const import CONF_ADDRESS, CONF_MODEL, CONF_TOKEN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -21,6 +21,8 @@ from . import (
     SNOOZ_SERVICE_INFO_PAIRING,
     TEST_ADDRESS,
     TEST_BREEZ_DISPLAY_NAME,
+    TEST_FIRMWARE_VERSION,
+    TEST_MODEL,
     TEST_PAIRING_TOKEN,
     TEST_SNOOZ_DISPLAY_NAME,
 )
@@ -396,5 +398,8 @@ async def _test_setup_entry(
     assert result["data"] == {
         CONF_ADDRESS: TEST_ADDRESS,
         CONF_TOKEN: TEST_PAIRING_TOKEN,
+        CONF_MODEL: TEST_MODEL,
+        CONF_FIRMWARE_VERSION: TEST_FIRMWARE_VERSION,
     }
     assert result["result"].unique_id == TEST_ADDRESS
+    assert result["result"].minor_version == 2
