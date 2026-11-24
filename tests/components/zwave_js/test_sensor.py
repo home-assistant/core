@@ -2,6 +2,7 @@
 
 import copy
 from datetime import timedelta
+from typing import Any
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -37,6 +38,7 @@ from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_UNIT_OF_MEASUREMENT,
     EVENT_STATE_CHANGED,
+    LIGHT_LUX,
     PERCENTAGE,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
@@ -194,6 +196,14 @@ async def test_numeric_sensor(
     assert ATTR_DEVICE_CLASS not in state.attributes
     assert state.attributes[ATTR_STATE_CLASS] == SensorStateClass.MEASUREMENT
 
+    state = hass.states.get("sensor.multisensor_6_illuminance")
+
+    assert state
+    assert state.state == "0.0"
+    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == LIGHT_LUX
+    assert state.attributes[ATTR_DEVICE_CLASS] == SensorDeviceClass.ILLUMINANCE
+    assert state.attributes[ATTR_STATE_CLASS] == SensorStateClass.MEASUREMENT
+
     state = hass.states.get("sensor.basement_hsm200_illuminance")
 
     assert state
@@ -225,6 +235,135 @@ async def test_numeric_sensor(
     state = hass.states.get("sensor.basement_hsm200_illuminance")
     assert state
     assert state.state == STATE_UNKNOWN
+
+
+@pytest.mark.parametrize(
+    (
+        "property_",
+        "entity_id",
+        "old_scale",
+        "old_unit",
+        "new_scale",
+        "new_unit",
+        "unit_of_measurement",
+    ),
+    [
+        pytest.param(
+            "Humidity",
+            HUMIDITY_SENSOR,
+            1,
+            "g/m³",
+            0,
+            "%",
+            PERCENTAGE,
+            id="humidity",
+        ),
+        pytest.param(
+            "Illuminance",
+            "sensor.multisensor_6_illuminance",
+            0,
+            "%",
+            1,
+            "Lux",
+            LIGHT_LUX,
+            id="illuminance",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("integration")
+async def test_legacy_multilevel_sensor_scale_change(
+    hass: HomeAssistant,
+    client: MagicMock,
+    multisensor_6_state: dict[str, Any],
+    property_: str,
+    entity_id: str,
+    old_scale: int,
+    old_unit: str,
+    new_scale: int,
+    new_unit: str,
+    unit_of_measurement: str,
+) -> None:
+    """Test a legacy multilevel sensor that changes to a migrated scale."""
+    node_state = copy.deepcopy(multisensor_6_state)
+    value = next(
+        value
+        for value in node_state["values"]
+        if value["commandClass"] == 49 and value["property"] == property_
+    )
+    value["metadata"]["ccSpecific"]["scale"] = old_scale
+    value["metadata"]["unit"] = old_unit
+    sensor_type = value["metadata"]["ccSpecific"]["sensorType"]
+
+    event = Event(
+        "node added",
+        {
+            "source": "controller",
+            "event": "node added",
+            "node": node_state,
+            "result": {},
+        },
+    )
+    client.driver.controller.receive_event(event)
+    await hass.async_block_till_done()
+    node = client.driver.controller.nodes[node_state["nodeId"]]
+
+    state = hass.states.get(entity_id)
+    assert state
+    assert ATTR_DEVICE_CLASS not in state.attributes
+    assert state.attributes[ATTR_STATE_CLASS] == SensorStateClass.MEASUREMENT
+    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == old_unit
+
+    event = Event(
+        "metadata updated",
+        {
+            "source": "node",
+            "event": "metadata updated",
+            "nodeId": node.node_id,
+            "args": {
+                "commandClassName": "Multilevel Sensor",
+                "commandClass": 49,
+                "endpoint": 0,
+                "property": property_,
+                "metadata": {
+                    "type": "number",
+                    "readable": True,
+                    "writeable": False,
+                    "label": property_,
+                    "ccSpecific": {"sensorType": sensor_type, "scale": new_scale},
+                    "unit": new_unit,
+                },
+                "propertyName": property_,
+                "nodeId": node.node_id,
+            },
+        },
+    )
+    node.receive_event(event)
+    event = Event(
+        "value updated",
+        {
+            "source": "node",
+            "event": "value updated",
+            "nodeId": node.node_id,
+            "args": {
+                "commandClassName": "Multilevel Sensor",
+                "commandClass": 49,
+                "endpoint": 0,
+                "property": property_,
+                "newValue": 50,
+                "prevValue": value["value"],
+                "propertyName": property_,
+            },
+        },
+    )
+    node.receive_event(event)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == "50.0"
+    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == unit_of_measurement
+    # The cached device class is not updated by the in-place description swap.
+    assert ATTR_DEVICE_CLASS not in state.attributes
 
 
 async def test_invalid_multilevel_sensor_scale(

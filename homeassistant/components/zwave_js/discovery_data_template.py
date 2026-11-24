@@ -78,7 +78,6 @@ from zwave_js_server.const.command_class.multilevel_sensor import (
     UNIT_RSSI,
     UNIT_SECOND,
     UNIT_SYSTOLIC,
-    UNIT_UV_INDEX,
     UNIT_VOLT as SENSOR_UNIT_VOLT,
     UNIT_WATT as SENSOR_UNIT_WATT,
     UNIT_WATT_PER_SQUARE_METER,
@@ -105,7 +104,6 @@ from homeassistant.const import (
     DEGREE,
     LIGHT_LUX,
     SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
-    UV_INDEX,
     UnitOfDensity,
     UnitOfElectricCurrent,
     UnitOfElectricPotential,
@@ -147,7 +145,6 @@ from .const import (
     ENTITY_DESC_KEY_SIGNAL_STRENGTH,
     ENTITY_DESC_KEY_TARGET_TEMPERATURE,
     ENTITY_DESC_KEY_TOTAL_INCREASING,
-    ENTITY_DESC_KEY_UV_INDEX,
     ENTITY_DESC_KEY_VOLTAGE,
 )
 from .models import BaseDiscoverySchemaDataTemplate, ZwaveValueID
@@ -182,7 +179,6 @@ MULTILEVEL_SENSOR_DEVICE_CLASS_MAP: dict[str, list[MultilevelSensorType]] = {
     ENTITY_DESC_KEY_PRESSURE: PRESSURE_SENSORS,
     ENTITY_DESC_KEY_SIGNAL_STRENGTH: SIGNAL_STRENGTH_SENSORS,
     ENTITY_DESC_KEY_VOLTAGE: VOLTAGE_SENSORS,
-    ENTITY_DESC_KEY_UV_INDEX: [MultilevelSensorType.ULTRAVIOLET],
 }
 
 ENERGY_PRODUCTION_UNIT_MAP: dict[str, list[EnergyProductionScaleType]] = {
@@ -247,7 +243,6 @@ MULTILEVEL_SENSOR_UNIT_MAP: dict[str, list[MultilevelSensorScaleType]] = {
     UnitOfElectricPotential.VOLT: SENSOR_UNIT_VOLT,
     UnitOfPower.WATT: SENSOR_UNIT_WATT,
     UnitOfIrradiance.WATTS_PER_SQUARE_METER: UNIT_WATT_PER_SQUARE_METER,
-    UV_INDEX: UNIT_UV_INDEX,
 }
 
 _LOGGER = logging.getLogger(__name__)
