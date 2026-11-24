@@ -118,6 +118,9 @@
     "air_quality_forecast_error": {
       "message": "Error fetching the air quality forecast."
     },
+    "fifteen_minute_forecast_error": {
+      "message": "Error fetching the 15-minute forecast."
+    },
     "minute_forecast_error": {
       "message": "Error fetching the minute forecast."
     },
@@ -134,6 +137,10 @@
     }
   },
   "services": {
+    "get_15_minute_forecast": {
+      "description": "Retrieves the forecast in 15-minute steps for the next three hours, in the weather entity's units. Every call makes a request to the Foreca Weather API and counts toward the daily limit of your plan.",
+      "name": "Get 15-minute forecast"
+    },
     "get_3_hour_forecast": {
       "description": "Retrieves the forecast in 3-hour steps for the next 14 days, in the weather entity's units, with the values weather.get_forecasts has no place for. Every call makes a request to the Foreca Weather API and counts toward the daily limit of your plan.",
       "name": "Get 3-hour forecast"

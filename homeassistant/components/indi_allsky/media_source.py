@@ -37,9 +37,9 @@ CATEGORY_VIDEOS = "videos"
 CATEGORY_IMAGES = "images"
 
 CATEGORY_NAMES = {
-    CATEGORY_LATEST: "Latest Media",
-    CATEGORY_VIDEOS: "Timelapses & Generated Media",
-    CATEGORY_IMAGES: "Captured Images History",
+    CATEGORY_LATEST: "Latest media",
+    CATEGORY_VIDEOS: "Timelapses & generated media",
+    CATEGORY_IMAGES: "Captured images history",
 }
 
 MEDIA_PROXY_URL = "/api/indi_allsky/media/{entry_id}/{path}"
@@ -464,7 +464,7 @@ class IndiAllSkyMediaSource(MediaSource):
                 identifier=f"{entry.entry_id}#media#latestimage",
                 media_class=MediaClass.IMAGE,
                 media_content_type=MediaType.IMAGE,
-                title="Latest Snapshot",
+                title="Latest snapshot",
                 can_play=True,
                 can_expand=False,
                 thumbnail=_build_media_proxy_path(entry.entry_id, "latestimage"),
@@ -474,7 +474,7 @@ class IndiAllSkyMediaSource(MediaSource):
                 identifier=f"{entry.entry_id}#media#latestkeogram",
                 media_class=MediaClass.IMAGE,
                 media_content_type=MediaType.IMAGE,
-                title="Latest Keogram",
+                title="Latest keogram",
                 can_play=True,
                 can_expand=False,
                 thumbnail=_build_media_proxy_path(entry.entry_id, "latestkeogram"),
@@ -484,7 +484,7 @@ class IndiAllSkyMediaSource(MediaSource):
                 identifier=f"{entry.entry_id}#media#lateststartrail",
                 media_class=MediaClass.IMAGE,
                 media_content_type=MediaType.IMAGE,
-                title="Latest Star Trail",
+                title="Latest star trail",
                 can_play=True,
                 can_expand=False,
                 thumbnail=_build_media_proxy_path(entry.entry_id, "lateststartrail"),
@@ -494,7 +494,7 @@ class IndiAllSkyMediaSource(MediaSource):
                 identifier=f"{entry.entry_id}#media#latesttimelapse",
                 media_class=MediaClass.VIDEO,
                 media_content_type=MediaType.VIDEO,
-                title="Latest Timelapse",
+                title="Latest timelapse",
                 can_play=True,
                 can_expand=False,
             ),
@@ -588,7 +588,7 @@ class IndiAllSkyMediaSource(MediaSource):
                         identifier=f"{entry.entry_id}#media#{vid.url}",
                         media_class=MediaClass.VIDEO,
                         media_content_type=MediaType.VIDEO,
-                        title=f"{tod_str} Timelapse - {date_str}",
+                        title=f"{tod_str} timelapse - {date_str}",
                         can_play=True,
                         can_expand=False,
                     )
@@ -603,7 +603,7 @@ class IndiAllSkyMediaSource(MediaSource):
                         identifier=f"{entry.entry_id}#media#{vid.keogram_url}",
                         media_class=MediaClass.IMAGE,
                         media_content_type=MediaType.IMAGE,
-                        title=f"{tod_str} Keogram - {date_str}",
+                        title=f"{tod_str} keogram - {date_str}",
                         can_play=True,
                         can_expand=False,
                         thumbnail=_build_media_proxy_path(entry.entry_id, keo_thumb)
@@ -621,7 +621,7 @@ class IndiAllSkyMediaSource(MediaSource):
                         identifier=f"{entry.entry_id}#media#{vid.startrail_url}",
                         media_class=MediaClass.IMAGE,
                         media_content_type=MediaType.IMAGE,
-                        title=f"{tod_str} Star Trail - {date_str}",
+                        title=f"{tod_str} star trail - {date_str}",
                         can_play=True,
                         can_expand=False,
                         thumbnail=_build_media_proxy_path(entry.entry_id, st_thumb)
