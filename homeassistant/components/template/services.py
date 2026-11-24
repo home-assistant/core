@@ -9,7 +9,7 @@ from homeassistant.loader import async_get_integration
 
 from .const import DOMAIN, PLATFORMS, TemplateService
 from .helpers import async_get_blueprints, process_config
-from .weather import async_update_deprecated_template_options_issues
+from .repairs import async_update_deprecated_template_options_issues
 
 
 async def _async_reload_config(call: ServiceCall) -> None:

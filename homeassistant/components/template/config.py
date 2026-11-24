@@ -1,6 +1,6 @@
 """Template config validator."""
 
-from collections.abc import Callable
+from collections.abc import Callable, Collection
 from contextlib import suppress
 import itertools
 import logging
@@ -84,6 +84,7 @@ from .const import (
     CONF_TRIGGER_VARIABLES,
     DOMAIN,
     PLATFORMS,
+    WEATHER_DEPRECATED_TEMPLATE_OPTIONS,
     TemplateConfig,
     TemplateConfigSections,
 )
@@ -427,20 +428,26 @@ async def _async_validate_triggers_and_conditions(
             raise
 
 
+# Deprecated options per platform whose file and line are kept for repairs
+DEPRECATED_OPTIONS_WITH_LOCATIONS: dict[str, Collection[str]] = {
+    WEATHER_DOMAIN: WEATHER_DEPRECATED_TEMPLATE_OPTIONS,
+}
+
+
 def _get_option_locations(
     config: TemplateConfig,
 ) -> dict[str, list[dict[str, tuple[str, int]]]]:
-    """Return the file and line of each entity option loaded from YAML."""
+    """Return the file and line of the deprecated entity options loaded from YAML."""
     return {
         platform: [
             {
                 key: (key.__config_file__, key.__line__)
                 for key in entity_config
-                if hasattr(key, "__config_file__")
+                if key in options and hasattr(key, "__config_file__")
             }
             for entity_config in config[platform]
         ]
-        for platform in PLATFORMS
+        for platform, options in DEPRECATED_OPTIONS_WITH_LOCATIONS.items()
         if platform in config
     }
 

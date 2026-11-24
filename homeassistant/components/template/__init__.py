@@ -12,8 +12,8 @@ from homeassistant.helpers.typing import ConfigType
 
 from .const import CONF_ADDITIONAL_OPTIONS, CONF_MAX, CONF_MIN, CONF_STEP, DOMAIN
 from .helpers import async_get_blueprints, process_config
+from .repairs import async_update_deprecated_template_options_issues
 from .services import async_setup_services
-from .weather import async_update_deprecated_template_options_issues
 
 _LOGGER = logging.getLogger(__name__)
 

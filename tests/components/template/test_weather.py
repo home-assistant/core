@@ -15,10 +15,10 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components import template
 from homeassistant.components.template.const import CONF_PICTURE, DOMAIN
-from homeassistant.components.template.weather import (
-    DEFAULT_NAME,
+from homeassistant.components.template.repairs import (
     DEPRECATED_TEMPLATE_OPTIONS_ISSUE_ID,
 )
+from homeassistant.components.template.weather import DEFAULT_NAME
 from homeassistant.components.weather import (
     DOMAIN as WEATHER_DOMAIN,
     Forecast,

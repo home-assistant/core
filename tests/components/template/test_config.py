@@ -19,7 +19,7 @@ from homeassistant.components.template.config import (
     async_validate_config_section,
 )
 from homeassistant.components.template.const import PLATFORMS, TemplateService
-from homeassistant.components.template.weather import (
+from homeassistant.components.template.repairs import (
     DEPRECATED_TEMPLATE_OPTIONS_ISSUE_ID,
 )
 from homeassistant.core import HomeAssistant
@@ -1616,7 +1616,7 @@ template:
 async def test_deprecated_template_options_issue_same_name(
     hass: HomeAssistant, issue_registry: ir.IssueRegistry, yaml_config_dir: Path
 ) -> None:
-    """Test entities sharing a name but not a unique_id get separate repairs."""
+    """Test entities sharing a name but not a unique_id have separate repairs."""
     await async_setup_yaml_config(
         hass,
         yaml_config_dir,
@@ -1643,6 +1643,31 @@ template:
         {"identifier": "name: Test", "options": legacy_options(5)},
         {"identifier": "name: Test", "options": legacy_options(10)},
     ]
+    issue_registry.async_ignore(DOMAIN, issues[1].issue_id, True)
+    second_issue = issue_registry.async_get_issue(DOMAIN, issues[1].issue_id)
+
+    await async_reload_yaml_config(
+        hass,
+        yaml_config_dir,
+        """\
+template:
+  - weather:
+      - name: Test
+        unique_id: first
+        condition: sunny
+        temperature: "{{ 20 }}"
+        humidity: "{{ 25 }}"
+      - name: Test
+        unique_id: second
+        condition_template: sunny
+        temperature_template: "{{ 20 }}"
+        humidity_template: "{{ 25 }}"
+""",
+    )
+
+    assert get_issues_with_prefix(
+        issue_registry, DEPRECATED_TEMPLATE_OPTIONS_ISSUE_ID
+    ) == [second_issue]
 
 
 async def test_deprecated_template_options_issue_dismissed(
@@ -1767,7 +1792,7 @@ async def test_deprecated_template_options_issue_removed_without_template_config
 async def test_deprecated_template_options_issue_identical_entities(
     hass: HomeAssistant, issue_registry: ir.IssueRegistry, yaml_config_dir: Path
 ) -> None:
-    """Test identical entities without a unique_id get separate repairs."""
+    """Test identical entities without a unique_id share one repair."""
     await async_setup_yaml_config(
         hass,
         yaml_config_dir,
@@ -1789,8 +1814,44 @@ template:
         issue_registry, DEPRECATED_TEMPLATE_OPTIONS_ISSUE_ID
     )
     assert [issue.translation_placeholders for issue in issues] == [
-        {"identifier": "name: Test", "options": legacy_options(4)},
-        {"identifier": "name: Test", "options": legacy_options(8)},
+        {
+            "identifier": "name: Test",
+            "options": f"{legacy_options(4)}\n{legacy_options(8)}",
+        },
+    ]
+    issue_registry.async_ignore(DOMAIN, issues[0].issue_id, True)
+    dismissed_issue = issue_registry.async_get_issue(DOMAIN, issues[0].issue_id)
+    assert dismissed_issue is not None
+
+    await async_reload_yaml_config(
+        hass,
+        yaml_config_dir,
+        """\
+template:
+  - weather:
+      - name: Test
+        condition: sunny
+        temperature: "{{ 20 }}"
+        humidity: "{{ 25 }}"
+      - name: Test
+        condition_template: sunny
+        temperature_template: "{{ 20 }}"
+        humidity_template: "{{ 25 }}"
+""",
+    )
+
+    remaining = get_issues_with_prefix(
+        issue_registry, DEPRECATED_TEMPLATE_OPTIONS_ISSUE_ID
+    )
+    assert [
+        (issue.issue_id, issue.dismissed_version, issue.translation_placeholders)
+        for issue in remaining
+    ] == [
+        (
+            dismissed_issue.issue_id,
+            dismissed_issue.dismissed_version,
+            {"identifier": "name: Test", "options": legacy_options(8)},
+        )
     ]
 
 
@@ -1824,3 +1885,35 @@ async def test_deprecated_template_options_issue_blueprint(
         get_issues_with_prefix(issue_registry, DEPRECATED_TEMPLATE_OPTIONS_ISSUE_ID)
         == snapshot
     )
+
+
+async def test_option_locations_only_deprecated_options(
+    hass: HomeAssistant, yaml_config_dir: Path
+) -> None:
+    """Test only the deprecated options of opted in platforms keep a location."""
+    yaml_path = yaml_config_dir / "configuration.yaml"
+    await hass.async_add_executor_job(
+        yaml_path.write_text,
+        WEATHER_LEGACY_YAML
+        + """\
+  - sensor:
+      - name: Sensor
+        state: "{{ 1 }}"
+""",
+    )
+    config = await hass.async_add_executor_job(load_yaml_dict, yaml_path)
+
+    validated = await async_validate_config(hass, config)
+
+    assert [section.option_locations for section in validated[DOMAIN]] == [
+        {
+            "weather": [
+                {
+                    "condition_template": (str(yaml_path), 4),
+                    "temperature_template": (str(yaml_path), 5),
+                    "humidity_template": (str(yaml_path), 6),
+                }
+            ]
+        },
+        {},
+    ]
