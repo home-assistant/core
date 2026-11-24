@@ -8,6 +8,7 @@ from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.homekit.const import (
     BRIDGE_NAME,
+    CONF_ADAPTIVE_LIGHTING,
     CONF_AUDIO_CODEC,
     CONF_AUDIO_MAP,
     CONF_AUDIO_PACKET_SIZE,
@@ -23,6 +24,7 @@ from homeassistant.components.homekit.const import (
     CONF_MAX_FPS,
     CONF_MAX_HEIGHT,
     CONF_MAX_WIDTH,
+    CONF_MIN_COLOR_TEMP_KELVIN,
     CONF_RGB_BELOW_KELVIN,
     CONF_STREAM_COUNT,
     CONF_SUPPORT_AUDIO,
@@ -586,3 +588,14 @@ def test_validate_entity_config_warm_rgb_color() -> None:
     ):
         with pytest.raises(probatio.Invalid):
             vec({"light.demo": config})
+
+
+def test_validate_entity_config_light_options_only_on_lights() -> None:
+    """Light-only options are rejected on other domains."""
+    for entity, config in (
+        ("switch.demo", {CONF_ADAPTIVE_LIGHTING: True}),
+        ("sensor.demo", {CONF_MIN_COLOR_TEMP_KELVIN: 3000}),
+        ("light.demo", {CONF_FLOOR_RGB_COLOR: [255, 130, 30]}),
+    ):
+        with pytest.raises(probatio.Invalid):
+            vec({entity: config})

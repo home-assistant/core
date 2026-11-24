@@ -25,6 +25,7 @@ from homeassistant.components.event import DOMAIN as EVENT_DOMAIN
 from homeassistant.components.fan import DOMAIN as FAN_DOMAIN
 from homeassistant.components.humidifier import DOMAIN as HUMIDIFIER_DOMAIN
 from homeassistant.components.input_number import DOMAIN as INPUT_NUMBER_DOMAIN
+from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
 from homeassistant.components.lock import DOMAIN as LOCK_DOMAIN
 from homeassistant.components.media_player import (
     DOMAIN as MEDIA_PLAYER_DOMAIN,
@@ -164,16 +165,6 @@ VALID_AUDIO_CODECS = [AUDIO_CODEC_OPUS, VIDEO_CODEC_COPY]
 BASIC_INFO_SCHEMA = probatio.Schema(
     {
         probatio.Optional(CONF_NAME): cv.string,
-        probatio.Optional(CONF_ADAPTIVE_LIGHTING): cv.boolean,
-        probatio.Optional(CONF_MIN_COLOR_TEMP_KELVIN): cv.positive_int,
-        probatio.Optional(CONF_MAX_COLOR_TEMP_KELVIN): cv.positive_int,
-        probatio.Inclusive(CONF_RGB_BELOW_KELVIN, "warm_rgb"): cv.positive_int,
-        probatio.Inclusive(CONF_WARM_RGB_COLOR, "warm_rgb"): probatio.All(
-            probatio.Coerce(tuple), probatio.ExactSequence((cv.byte,) * 3)
-        ),
-        probatio.Optional(CONF_FLOOR_RGB_COLOR): probatio.All(
-            probatio.Coerce(tuple), probatio.ExactSequence((cv.byte,) * 3)
-        ),
         probatio.Optional(CONF_LINKED_BATTERY_SENSOR): cv.entity_domain(SENSOR_DOMAIN),
         probatio.Optional(CONF_LINKED_BATTERY_CHARGING_SENSOR): cv.entity_domain(
             BINARY_SENSOR_DOMAIN
@@ -182,6 +173,34 @@ BASIC_INFO_SCHEMA = probatio.Schema(
             CONF_LOW_BATTERY_THRESHOLD, default=DEFAULT_LOW_BATTERY_THRESHOLD
         ): cv.positive_int,
     }
+)
+
+
+def _validate_floor_rgb_color(values: dict) -> dict:
+    """The floor colour only applies to the warm blend below rgb_below_kelvin."""
+    if CONF_FLOOR_RGB_COLOR in values and CONF_RGB_BELOW_KELVIN not in values:
+        raise probatio.Invalid(
+            f"{CONF_FLOOR_RGB_COLOR} requires {CONF_RGB_BELOW_KELVIN}"
+        )
+    return values
+
+
+LIGHT_SCHEMA = probatio.All(
+    BASIC_INFO_SCHEMA.extend(
+        {
+            probatio.Optional(CONF_ADAPTIVE_LIGHTING): cv.boolean,
+            probatio.Optional(CONF_MIN_COLOR_TEMP_KELVIN): cv.positive_int,
+            probatio.Optional(CONF_MAX_COLOR_TEMP_KELVIN): cv.positive_int,
+            probatio.Inclusive(CONF_RGB_BELOW_KELVIN, "warm_rgb"): cv.positive_int,
+            probatio.Inclusive(CONF_WARM_RGB_COLOR, "warm_rgb"): probatio.All(
+                probatio.Coerce(tuple), probatio.ExactSequence((cv.byte,) * 3)
+            ),
+            probatio.Optional(CONF_FLOOR_RGB_COLOR): probatio.All(
+                probatio.Coerce(tuple), probatio.ExactSequence((cv.byte,) * 3)
+            ),
+        }
+    ),
+    _validate_floor_rgb_color,
 )
 
 FEATURE_SCHEMA = BASIC_INFO_SCHEMA.extend(
@@ -442,6 +461,9 @@ def validate_entity_config(values: dict) -> dict[str, dict]:
 
         elif domain == VALVE_DOMAIN:
             config = VALVE_SCHEMA(config)
+
+        elif domain == LIGHT_DOMAIN:
+            config = LIGHT_SCHEMA(config)
 
         else:
             config = BASIC_INFO_SCHEMA(config)

@@ -517,11 +517,12 @@ class AdaptiveLightingController:
         self.char_control.set_value("")
 
     def _schedule(self, coro: Any) -> None:
-        """Run a coroutine on the event loop from any thread.
+        """Run a coroutine on the event loop.
 
-        pyhap calls the setter callbacks and Accessory.run from its own thread.
+        The accessory driver shares the Home Assistant loop, so the setter
+        callbacks and Accessory.run already run on it.
         """
-        self.hass.loop.call_soon_threadsafe(self.hass.async_create_task, coro)
+        self.hass.async_create_task(coro)
 
     @callback
     def _handle_transition_control_write(self, value: str) -> str | None:
@@ -836,7 +837,7 @@ class AdaptiveLightingController:
         )
 
         state = self.hass.states.get(self.entity_id)
-        if state is None or state.state != "on":
+        if state is None or state.state != STATE_ON:
             # Writing colour to a light that is off would turn it on.
             return
         # Compare against what we sent: the bulb reports back a slightly
