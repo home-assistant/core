@@ -63,6 +63,7 @@ async def test_sensor(
 @pytest.mark.parametrize(
     ("adstype", "payload", "expected"),
     [
+        # The value is shown as is, so a BOOL sensor reads "True" or "False".
         pytest.param("bool", b"\x01", "True", id="bool"),
         pytest.param("byte", struct.pack("<B", 200), "200", id="byte"),
         pytest.param("usint", struct.pack("<B", 200), "200", id="usint"),
@@ -117,17 +118,28 @@ async def test_state_follows_the_plc(
     assert hass.states.get(ENTITY_ID).state == "-4.0"
 
 
+@pytest.mark.parametrize(
+    "adstype",
+    [
+        pytest.param("string", id="not_for_sensors"),
+        pytest.param("nonsense", id="unknown"),
+    ],
+)
 async def test_invalid_config(
-    hass: HomeAssistant, mock_ads_device: MockAdsDevice
+    hass: HomeAssistant,
+    mock_ads_device: MockAdsDevice,
+    caplog: pytest.LogCaptureFixture,
+    adstype: str,
 ) -> None:
     """Test a sensor with an unsupported ADS type is not created."""
     await setup_ads_platform(
         hass,
         SENSOR_DOMAIN,
-        {"adsvar": ADS_VAR, "name": "Temperature", "adstype": "string"},
+        {"adsvar": ADS_VAR, "name": "Temperature", "adstype": adstype},
     )
 
     assert hass.states.get(ENTITY_ID) is None
+    assert "Invalid config for 'sensor' from integration 'ads'" in caplog.text
 
 
 # The division by zero happens in the pyads callback thread.
