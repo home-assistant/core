@@ -1,5 +1,6 @@
 """Tests for the Touchline climate platform."""
 
+from dataclasses import replace
 import logging
 from unittest.mock import MagicMock
 
@@ -14,12 +15,13 @@ from pytouchline_extended import TouchlineConnectionError
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.climate import (
+    ATTR_CURRENT_TEMPERATURE,
     ClimateService,
     ClimateServiceArgument,
     HVACMode,
 )
 from homeassistant.components.touchline.coordinator import UPDATE_INTERVAL
-from homeassistant.const import STATE_UNAVAILABLE, TargetKey
+from homeassistant.const import ATTR_TEMPERATURE, STATE_UNAVAILABLE, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
@@ -244,3 +246,68 @@ async def test_unavailable_when_thermostat_removed(
     await hass.async_block_till_done()
 
     assert hass.states.get(ENTITY_ID).state == HVACMode.HEAT
+
+
+async def test_thermostat_identity_after_reindexing(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_config_entry: MockConfigEntry,
+    mock_touchline_controller: MagicMock,
+) -> None:
+    """Test entities follow their thermostat by ID when the controller reindexes."""
+    second_room = replace(
+        ROOM_STATUS,
+        index=1,
+        device_id=5,
+        unique_id="1-5",
+        name="Zone 2",
+        temperature=19.0,
+        target_temperature=20.0,
+    )
+    mock_touchline_controller.fetch_async.return_value = make_state(
+        ROOM_STATUS, second_room
+    )
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    # The first thermostat is unpaired and the second one moves to another slot.
+    mock_touchline_controller.fetch_async.return_value = make_state(
+        replace(second_room, index=2)
+    )
+    freezer.tick(UPDATE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert hass.states.get(ENTITY_ID).state == STATE_UNAVAILABLE
+    state = hass.states.get("climate.zone_2")
+    assert state.state == HVACMode.HEAT
+    assert state.attributes[ATTR_CURRENT_TEMPERATURE] == 19.0
+    assert state.attributes[ATTR_TEMPERATURE] == 20.0
+
+    await hass.services.async_call(
+        "climate",
+        ClimateService.SET_TEMPERATURE,
+        {
+            TargetKey.ENTITY_ID: "climate.zone_2",
+            ClimateServiceArgument.TEMPERATURE: 21.0,
+        },
+        blocking=True,
+    )
+    await hass.services.async_call(
+        "climate",
+        ClimateService.SET_PRESET_MODE,
+        {
+            TargetKey.ENTITY_ID: "climate.zone_2",
+            ClimateServiceArgument.PRESET_MODE: "sleep",
+        },
+        blocking=True,
+    )
+
+    mock_touchline_controller.set_room_target_temperature_async.assert_called_once_with(
+        2, 21.0
+    )
+    mock_touchline_controller.set_room_operation_mode_async.assert_called_once_with(
+        2, 1
+    )
+    mock_touchline_controller.set_room_week_program_async.assert_called_once_with(2, 0)
