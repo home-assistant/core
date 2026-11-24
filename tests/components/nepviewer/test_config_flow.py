@@ -1,9 +1,10 @@
 """Test the NEPViewer config flow."""
 
-from unittest.mock import MagicMock
+from unittest.mock import AsyncMock, MagicMock
 
 from aionepviewer import NepAuthError, NepConnectionError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries
 from homeassistant.components.nepviewer.const import DOMAIN
@@ -11,16 +12,19 @@ from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from tests.common import MockConfigEntry
-
 USER_INPUT = {
     CONF_EMAIL: "test@example.com",
     CONF_PASSWORD: "test_password",
 }
 
+pytestmark = pytest.mark.usefixtures("mock_setup_entry")
 
-async def test_form_shows_user_step(hass: HomeAssistant) -> None:
-    """Test that the user form is shown correctly."""
+
+@pytest.mark.usefixtures("mock_nepviewer_config_flow")
+async def test_form_creates_entry(
+    hass: HomeAssistant, mock_setup_entry: AsyncMock
+) -> None:
+    """Test that a valid login creates a config entry."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -28,14 +32,6 @@ async def test_form_shows_user_step(hass: HomeAssistant) -> None:
     assert result["step_id"] == "user"
     assert result["errors"] == {}
 
-
-async def test_form_creates_entry(
-    hass: HomeAssistant, mock_nepviewer_config_flow: MagicMock
-) -> None:
-    """Test that a valid login creates a config entry."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], USER_INPUT
     )
@@ -43,6 +39,8 @@ async def test_form_creates_entry(
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == USER_INPUT[CONF_EMAIL]
     assert result["data"] == USER_INPUT
+    assert result["result"].unique_id == "test_uid"
+    assert len(mock_setup_entry.mock_calls) == 1
 
 
 @pytest.mark.parametrize(
@@ -80,16 +78,12 @@ async def test_form_errors(
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
+@pytest.mark.usefixtures("mock_nepviewer_config_flow")
 async def test_duplicate_entry_aborts(
-    hass: HomeAssistant, mock_nepviewer_config_flow: MagicMock
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
 ) -> None:
     """Test that duplicate entries are rejected."""
-    existing = MockConfigEntry(
-        domain=DOMAIN,
-        unique_id="test_uid",
-        data=USER_INPUT,
-    )
-    existing.add_to_hass(hass)
+    mock_config_entry.add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -102,10 +96,9 @@ async def test_duplicate_entry_aborts(
     assert result["reason"] == "already_configured"
 
 
+@pytest.mark.usefixtures("mock_nepviewer_config_flow")
 async def test_reauth_flow_success(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_nepviewer_config_flow: MagicMock,
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
 ) -> None:
     """Test that the reauth flow succeeds with a valid new password."""
     mock_config_entry.add_to_hass(hass)
@@ -120,6 +113,7 @@ async def test_reauth_flow_success(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"
+    assert mock_config_entry.data[CONF_PASSWORD] == "new_password"
 
 
 @pytest.mark.parametrize(
@@ -156,3 +150,4 @@ async def test_reauth_flow_errors(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"
+    assert mock_config_entry.data[CONF_PASSWORD] == "new_password"

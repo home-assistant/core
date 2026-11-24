@@ -2,10 +2,9 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import override
 
-from aionepviewer.models.device import Device, DeviceStatisticsOverview
-from aionepviewer.models.module import Module
-from aionepviewer.models.site import Site, SiteOverview
+from aionepviewer import Device, DeviceStatisticsOverview, Module, Site, SiteOverview
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -15,13 +14,13 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.const import UnitOfEnergy, UnitOfPower
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
+from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import NepViewerConfigEntry
 from .const import DOMAIN
-from .coordinator import NepViewerCoordinator
+from .coordinator import NepViewerConfigEntry, NepViewerCoordinator
 
 PARALLEL_UPDATES = 0
 
@@ -182,22 +181,15 @@ class NepViewerSiteSensorEntity(CoordinatorEntity[NepViewerCoordinator], SensorE
         self.entity_description = description
         self._site = site
         self._attr_unique_id = f"{site.sid}_{description.key}"
-        site_detail = coordinator.data.site_details.get(site.sid)
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, site.sid)},
-            name=site.site_name,
-            entry_type=DeviceEntryType.SERVICE,
-            manufacturer=(site_detail and site_detail.company_name) or "NEP",
-            serial_number=(site_detail and site_detail.project_reference_id) or None,
-        )
+        self._attr_device_info = DeviceInfo(identifiers={(DOMAIN, site.sid)})
 
     @property
-    def native_value(self) -> float | None:
+    @override
+    def native_value(self) -> float:
         """Return the sensor value."""
-        overview = self.coordinator.data.site_overviews.get(self._site.sid)
-        if overview is None:
-            return None
-        return self.entity_description.value_fn(overview)
+        return self.entity_description.value_fn(
+            self.coordinator.data.site_overviews[self._site.sid]
+        )
 
 
 class NepViewerDeviceSensorEntity(
@@ -219,26 +211,15 @@ class NepViewerDeviceSensorEntity(
         self.entity_description = description
         self._device = device
         self._attr_unique_id = f"{device.sn}_{description.key}"
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, device.sn)},
-            name=device.alias or device.sn,
-            manufacturer="NEP",
-            model=device.model_name or None,
-            serial_number=device.sn,
-            sw_version=" / ".join(
-                filter(None, [device.cpu_version, device.wifi_version])
-            )
-            or None,
-            via_device=(DOMAIN, device.sid),
-        )
+        self._attr_device_info = DeviceInfo(identifiers={(DOMAIN, device.sn)})
 
     @property
-    def native_value(self) -> float | None:
+    @override
+    def native_value(self) -> float:
         """Return the sensor value."""
-        overview = self.coordinator.data.device_overviews.get(self._device.sn)
-        if overview is None:
-            return None
-        return self.entity_description.value_fn(overview)
+        return self.entity_description.value_fn(
+            self.coordinator.data.device_overviews[self._device.sn]
+        )
 
 
 class NepViewerModuleSensorEntity(
@@ -266,18 +247,32 @@ class NepViewerModuleSensorEntity(
         site_detail = coordinator.data.site_details.get(device.sid)
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, module.plc_sn)},
-            name=f"Panel {panel_num}",
+            translation_key="panel",
+            translation_placeholders={"number": str(panel_num)},
             manufacturer=(site_detail and site_detail.pv_remark) or None,
             model=(site_detail and site_detail.panel_model) or None,
             serial_number=module.plc_sn,
-            via_device=(DOMAIN, device.sn),
+            via_device_id=dr.async_get_device_id_by_identifier(
+                coordinator.hass,
+                (DOMAIN, device.sn),
+                config_entry_id=coordinator.config_entry.entry_id,
+            ),
         )
 
     @property
-    def native_value(self) -> float | None:
+    @override
+    def available(self) -> bool:
+        """Return if the panel is still reported by the API."""
+        return (
+            super().available
+            and self._module.plc_sn
+            in self.coordinator.data.device_modules.get(self._device.sn, {})
+        )
+
+    @property
+    @override
+    def native_value(self) -> float:
         """Return the sensor value."""
-        device_modules = self.coordinator.data.device_modules.get(self._device.sn, {})
-        module = device_modules.get(self._module.plc_sn)
-        if module is None:
-            return None
-        return self.entity_description.value_fn(module)
+        return self.entity_description.value_fn(
+            self.coordinator.data.device_modules[self._device.sn][self._module.plc_sn]
+        )

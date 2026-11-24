@@ -3,16 +3,20 @@
 from collections.abc import Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from aionepviewer.models.auth import AuthData
-from aionepviewer.models.device import Device, DeviceStatisticsOverview
-from aionepviewer.models.module import SiteModulesData
-from aionepviewer.models.site import Site, SiteDetail, SiteOverview
+from aionepviewer import (
+    AuthData,
+    Device,
+    DeviceStatisticsOverview,
+    Site,
+    SiteDetail,
+    SiteModulesData,
+    SiteOverview,
+)
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.nepviewer.const import DOMAIN
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture
@@ -26,6 +30,15 @@ def mock_config_entry() -> MockConfigEntry:
         },
         unique_id="test_uid",
     )
+
+
+@pytest.fixture
+def mock_setup_entry() -> Generator[AsyncMock]:
+    """Override async_setup_entry."""
+    with patch(
+        "homeassistant.components.nepviewer.async_setup_entry", return_value=None
+    ) as mock_setup_entry:
+        yield mock_setup_entry
 
 
 @pytest.fixture

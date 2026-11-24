@@ -1,12 +1,24 @@
 """Tests for NEPViewer sensor platform."""
 
+from unittest.mock import MagicMock
+
+from aionepviewer import NepConnectionError, SiteModulesData
+from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 
+from homeassistant.components.nepviewer.coordinator import SCAN_INTERVAL
+from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from tests.common import MockConfigEntry
+SITE_ENTITY_ID = "sensor.test_site_current_power"
+PANEL_ENTITY_ID = "sensor.panel_1_current_power"
 
 
 @pytest.mark.usefixtures("mock_nepviewer")
@@ -21,10 +33,49 @@ async def test_sensors(
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    entity_entries = er.async_entries_for_config_entry(
-        entity_registry, mock_config_entry.entry_id
-    )
+    await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
-    assert entity_entries == snapshot
-    for entity_entry in entity_entries:
-        assert hass.states.get(entity_entry.entity_id) == snapshot
+
+async def test_update_failed(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_nepviewer: MagicMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test that sensors become unavailable when the API cannot be reached."""
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert hass.states.get(SITE_ENTITY_ID).state == "1500.0"
+
+    mock_nepviewer.get_site_overview.side_effect = NepConnectionError
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert hass.states.get(SITE_ENTITY_ID).state == STATE_UNAVAILABLE
+
+    mock_nepviewer.get_site_overview.side_effect = None
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert hass.states.get(SITE_ENTITY_ID).state == "1500.0"
+
+
+async def test_missing_panel(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_nepviewer: MagicMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test that only the panel becomes unavailable when it is no longer reported."""
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert hass.states.get(PANEL_ENTITY_ID).state == "750.0"
+
+    mock_nepviewer.get_site_modules.return_value = SiteModulesData({"list": []})
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert hass.states.get(PANEL_ENTITY_ID).state == STATE_UNAVAILABLE
+    assert hass.states.get(SITE_ENTITY_ID).state == "1500.0"
