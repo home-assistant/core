@@ -56,7 +56,7 @@ def _connect(url: str) -> concord232_client.Client:
     return client
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: Concord232ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: Concord232ConfigEntry) -> None:
     """Set up Concord232 from a config entry."""
     url = build_url(entry.data[CONF_HOST], entry.data[CONF_PORT])
     try:
@@ -66,7 +66,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: Concord232ConfigEntry) -
 
     entry.async_on_unload(entry.add_update_listener(_async_update_listener))
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-    return True
 
 
 async def _async_update_listener(
@@ -76,6 +75,6 @@ async def _async_update_listener(
     await hass.config_entries.async_reload(entry.entry_id)
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: Concord232ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: Concord232ConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
