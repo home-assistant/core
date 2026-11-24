@@ -199,6 +199,37 @@ async def test_user_flow_ignores_lamp_that_stopped_answering(
     assert result["reason"] == "no_devices_found"
 
 
+async def test_user_flow_offers_only_answering_lamps(
+    hass: HomeAssistant, mock_govee_api: AsyncMock, freezer: FrozenDateTimeFactory
+) -> None:
+    """Test a dismissed lamp that went silent is not offered with the answering ones."""
+
+    await setup_light(hass, mock_govee_api)
+    silent_device = create_device(
+        mock_govee_api, ip="192.168.1.101", fingerprint="silent", sku="H615B"
+    )
+    scan_reply(mock_govee_api, silent_device)
+    await hass.async_block_till_done()
+    (flow,) = hass.config_entries.flow.async_progress_by_handler(DOMAIN)
+    hass.config_entries.flow.async_abort(flow["flow_id"])
+
+    freezer.tick(60)
+    answer_scans(
+        mock_govee_api,
+        create_device(
+            mock_govee_api, ip="192.168.1.102", fingerprint="other", sku="H615C"
+        ),
+    )
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    await hass.async_block_till_done()
+
+    assert result["reason"] == "discovery_started"
+    flows = hass.config_entries.flow.async_progress_by_handler(DOMAIN)
+    assert [flow["context"]["unique_id"] for flow in flows] == ["other"]
+
+
 async def test_user_flow_counts_lamps_set_up_during_the_scan(
     hass: HomeAssistant, mock_govee_api: AsyncMock, freezer: FrozenDateTimeFactory
 ) -> None:

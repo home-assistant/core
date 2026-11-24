@@ -205,6 +205,7 @@ class GoveeLocalApiCoordinator(DataUpdateCoordinator[list[GoveeDevice]]):
         self._rebind_lock = asyncio.Lock()
         self._unsub_rebind: CALLBACK_TYPE | None = None
         self._waiters: dict[str, asyncio.Future[GoveeDevice]] = {}
+        self._entries: dict[str, GoveeLocalConfigEntry] = {}
         self.ref_count = 0
 
     async def async_start(self) -> None:
@@ -268,27 +269,29 @@ class GoveeLocalApiCoordinator(DataUpdateCoordinator[list[GoveeDevice]]):
             self._async_create_flow(device)
         return True
 
-    @property
-    def unconfigured_devices(self) -> list[GoveeDevice]:
-        """Return the tracked lamps that have no config entry."""
-        return [
-            device
-            for device in self._controller.devices
+    @callback
+    def async_offer_devices(self, devices: list[GoveeDevice]) -> bool:
+        """Offer the lamps a scan found; return if any is offered or set up.
+
+        A scan reply by itself only offers a lamp the first time it is heard.
+        """
+        found = False
+        for device in devices:
             if self.hass.config_entries.async_entry_for_domain_unique_id(
                 DOMAIN, device.fingerprint
-            )
-            is None
-        ]
+            ):
+                # It got its entry while the scan was still running.
+                found = True
+            elif self._async_create_flow(device):
+                found = True
+        return found
 
     @callback
-    def async_offer_unconfigured(self) -> None:
-        """Offer the lamps without a config entry; a scan reply only does it once."""
-        for device in self.unconfigured_devices:
-            self._async_create_flow(device)
+    def _async_create_flow(self, device: GoveeDevice) -> bool:
+        """Offer a lamp to the user, or add it right away if it was set up before.
 
-    @callback
-    def _async_create_flow(self, device: GoveeDevice) -> None:
-        """Offer a lamp to the user, or add it right away if it was set up before."""
+        Return False if the lamp is left to the entry that had set it up.
+        """
         device_registry = dr.async_get(self.hass)
         owner = next(
             (
@@ -302,7 +305,7 @@ class GoveeLocalApiCoordinator(DataUpdateCoordinator[list[GoveeDevice]]):
         )
         if owner is not None and (owner.disabled_by or _is_legacy_entry(owner)):
             # Its entry is disabled, or adds its lamps itself once it is split.
-            return
+            return False
         discovery_flow.async_create_flow(
             self.hass,
             DOMAIN,
@@ -315,6 +318,7 @@ class GoveeLocalApiCoordinator(DataUpdateCoordinator[list[GoveeDevice]]):
                 CONF_MODEL: device.sku,
             },
         )
+        return True
 
     async def async_wait_for_device(
         self, fingerprint: str, ip: str | None
@@ -410,14 +414,22 @@ class GoveeLocalApiCoordinator(DataUpdateCoordinator[list[GoveeDevice]]):
         async with self._rebind_lock:
             pass
 
+    @callback
+    def async_add_entry(self, entry: GoveeLocalConfigEntry) -> CALLBACK_TYPE:
+        """Take the polling preference of a set up entry into account."""
+        self._entries[entry.entry_id] = entry
+
+        @callback
+        def remove_entry() -> None:
+            del self._entries[entry.entry_id]
+            if self._polling_disabled():
+                self._async_unsub_refresh()
+
+        return remove_entry
+
     def _polling_disabled(self) -> bool:
-        """Return if every lamp's entry has polling disabled."""
-        return all(
-            entry.pref_disable_polling
-            for entry in self.hass.config_entries.async_entries(
-                DOMAIN, include_ignore=False, include_disabled=False
-            )
-        )
+        """Return if every set up lamp's entry has polling disabled."""
+        return all(entry.pref_disable_polling for entry in self._entries.values())
 
     @override
     @callback

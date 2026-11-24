@@ -20,7 +20,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 async def _async_discover_devices(hass: HomeAssistant) -> bool:
-    """Offer the answering lamps that have no config entry; return if there are any."""
+    """Offer the lamps answering a scan; return if any is offered or was set up."""
 
     # A second controller would take replies away from the one the set up
     # entries share, so the scan goes through that one.
@@ -34,9 +34,7 @@ async def _async_discover_devices(hass: HomeAssistant) -> bool:
         return False
 
     try:
-        devices = await coordinator.async_scan()
-        coordinator.async_offer_unconfigured()
-        return bool(devices)
+        return coordinator.async_offer_devices(await coordinator.async_scan())
     finally:
         await async_release_coordinator(hass, coordinator)
 

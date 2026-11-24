@@ -73,6 +73,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: GoveeLocalConfigEntry) -
             translation_key="device_not_responding",
         )
     entry.async_on_unload(partial(coordinator.remove_device, device))
+    entry.async_on_unload(coordinator.async_add_entry(entry))
     if device.ip != entry.data[CONF_IP_ADDRESS]:
         hass.config_entries.async_update_entry(entry, data={CONF_IP_ADDRESS: device.ip})
 
@@ -135,7 +136,7 @@ async def _async_convert_legacy_entry(
         if not registered or device.fingerprint in registered
     ]
     if not candidates:
-        coordinator.async_offer_unconfigured()
+        coordinator.async_offer_devices(devices)
         raise ConfigEntryNotReady(
             translation_domain=DOMAIN, translation_key="no_devices_found"
         )
@@ -146,7 +147,7 @@ async def _async_convert_legacy_entry(
         title=device.sku,
         data={CONF_IP_ADDRESS: device.ip},
     )
-    coordinator.async_offer_unconfigured()
+    coordinator.async_offer_devices(devices)
     # The lamps that did not answer get their entry too, so that they do not
     # stay with the entry of another lamp.
     answering = {device.fingerprint for device in devices}
@@ -194,6 +195,10 @@ def _async_adopt_registry_entries(
                 entity_registry.async_update_entity(
                     entity_entry.entity_id, config_entry_id=entry.entry_id
                 )
+
+        hass.config_entries.async_update_entry(
+            entry, pref_disable_polling=other_entry.pref_disable_polling
+        )
         device_registry.async_update_device(
             device_entry.id, new_config_entry_id=entry.entry_id
         )
