@@ -40,6 +40,7 @@ from .const import (
     ATTR_PROVIDER,
     ATTR_QUEUE_ID,
     ATTR_QUEUE_ITEM_ID,
+    ATTR_QUEUE_ITEMS,
     ATTR_RADIO,
     ATTR_REPEAT_MODE,
     ATTR_SAMPLE_RATE,
@@ -223,5 +224,6 @@ QUEUE_DETAILS_SCHEMA = probatio.Schema(
         probatio.Required(ATTR_ELAPSED_TIME): probatio.Coerce(int),
         probatio.Required(ATTR_CURRENT_ITEM): probatio.Any(None, QUEUE_ITEM_SCHEMA),
         probatio.Required(ATTR_NEXT_ITEM): probatio.Any(None, QUEUE_ITEM_SCHEMA),
+        probatio.Optional(ATTR_QUEUE_ITEMS): [QUEUE_ITEM_SCHEMA],
     }
 )

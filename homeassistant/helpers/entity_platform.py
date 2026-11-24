@@ -1346,10 +1346,11 @@ class EntityPlatform:
                 # If we know we will update sequentially, we want to avoid scheduling
                 # the coroutines as tasks that will wait on the semaphore lock.
                 for entity in list(self.entities.values()):
-                    # If the entity is removed from hass during the previous
-                    # entity being updated, we need to skip updating the
-                    # entity.
-                    if entity.should_poll and entity.hass:
+                    # Skip entities removed while a previous entity was updating
+                    if (
+                        entity.should_poll
+                        and self.entities.get(entity.entity_id) is entity
+                    ):
                         await entity.async_update_ha_state(True)
                 return
 

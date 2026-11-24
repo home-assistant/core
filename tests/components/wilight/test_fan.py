@@ -11,16 +11,10 @@ from homeassistant.components.fan import (
     DIRECTION_FORWARD,
     DIRECTION_REVERSE,
     DOMAIN as FAN_DOMAIN,
-    SERVICE_SET_DIRECTION,
-    SERVICE_SET_PERCENTAGE,
+    FanService,
+    FanServiceArgument,
 )
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
-    STATE_OFF,
-    STATE_ON,
-)
+from homeassistant.const import STATE_OFF, STATE_ON, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -86,8 +80,8 @@ async def test_on_off_fan_state(
     # Turn on
     await hass.services.async_call(
         FAN_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "fan.wl000000000099_2"},
+        FanService.TURN_ON,
+        {TargetKey.ENTITY_ID: "fan.wl000000000099_2"},
         blocking=True,
     )
 
@@ -99,8 +93,11 @@ async def test_on_off_fan_state(
     # Turn on with speed
     await hass.services.async_call(
         FAN_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_PERCENTAGE: 30, ATTR_ENTITY_ID: "fan.wl000000000099_2"},
+        FanService.TURN_ON,
+        {
+            FanServiceArgument.PERCENTAGE: 30,
+            TargetKey.ENTITY_ID: "fan.wl000000000099_2",
+        },
         blocking=True,
     )
 
@@ -113,8 +110,8 @@ async def test_on_off_fan_state(
     # Turn off
     await hass.services.async_call(
         FAN_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: "fan.wl000000000099_2"},
+        FanService.TURN_OFF,
+        {TargetKey.ENTITY_ID: "fan.wl000000000099_2"},
         blocking=True,
     )
 
@@ -133,8 +130,11 @@ async def test_speed_fan_state(
     # Set speed Low
     await hass.services.async_call(
         FAN_DOMAIN,
-        SERVICE_SET_PERCENTAGE,
-        {ATTR_PERCENTAGE: 30, ATTR_ENTITY_ID: "fan.wl000000000099_2"},
+        FanService.SET_PERCENTAGE,
+        {
+            FanServiceArgument.PERCENTAGE: 30,
+            TargetKey.ENTITY_ID: "fan.wl000000000099_2",
+        },
         blocking=True,
     )
 
@@ -146,8 +146,11 @@ async def test_speed_fan_state(
     # Set speed Medium
     await hass.services.async_call(
         FAN_DOMAIN,
-        SERVICE_SET_PERCENTAGE,
-        {ATTR_PERCENTAGE: 50, ATTR_ENTITY_ID: "fan.wl000000000099_2"},
+        FanService.SET_PERCENTAGE,
+        {
+            FanServiceArgument.PERCENTAGE: 50,
+            TargetKey.ENTITY_ID: "fan.wl000000000099_2",
+        },
         blocking=True,
     )
 
@@ -159,8 +162,11 @@ async def test_speed_fan_state(
     # Set speed High
     await hass.services.async_call(
         FAN_DOMAIN,
-        SERVICE_SET_PERCENTAGE,
-        {ATTR_PERCENTAGE: 90, ATTR_ENTITY_ID: "fan.wl000000000099_2"},
+        FanService.SET_PERCENTAGE,
+        {
+            FanServiceArgument.PERCENTAGE: 90,
+            TargetKey.ENTITY_ID: "fan.wl000000000099_2",
+        },
         blocking=True,
     )
 
@@ -179,8 +185,11 @@ async def test_direction_fan_state(
     # Set direction Forward
     await hass.services.async_call(
         FAN_DOMAIN,
-        SERVICE_SET_DIRECTION,
-        {ATTR_DIRECTION: DIRECTION_FORWARD, ATTR_ENTITY_ID: "fan.wl000000000099_2"},
+        FanService.SET_DIRECTION,
+        {
+            FanServiceArgument.DIRECTION: DIRECTION_FORWARD,
+            TargetKey.ENTITY_ID: "fan.wl000000000099_2",
+        },
         blocking=True,
     )
 
@@ -193,8 +202,11 @@ async def test_direction_fan_state(
     # Set direction Reverse
     await hass.services.async_call(
         FAN_DOMAIN,
-        SERVICE_SET_DIRECTION,
-        {ATTR_DIRECTION: DIRECTION_REVERSE, ATTR_ENTITY_ID: "fan.wl000000000099_2"},
+        FanService.SET_DIRECTION,
+        {
+            FanServiceArgument.DIRECTION: DIRECTION_REVERSE,
+            TargetKey.ENTITY_ID: "fan.wl000000000099_2",
+        },
         blocking=True,
     )
 

@@ -58,6 +58,11 @@
       }
     }
   },
+  "device": {
+    "business_agreement": {
+      "name": "Business agreement {ban}"
+    }
+  },
   "entity": {
     "binary_sensor": {
       "epex_tomorrow_available": {
