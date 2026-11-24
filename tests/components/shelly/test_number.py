@@ -378,6 +378,41 @@ async def test_rpc_device_virtual_number(
     assert state.state == "56.7"
 
 
+async def test_rpc_virtual_number_without_view(
+    hass: HomeAssistant,
+    mock_rpc_device: Mock,
+    monkeypatch: pytest.MonkeyPatch,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test a virtual number without a view does not break the other ones."""
+    config = deepcopy(mock_rpc_device.config)
+    # Firmware 2.2.0 can send the ui settings without a view
+    config["number:200"] = {
+        "name": None,
+        "min": 0,
+        "max": 100,
+        "meta": {"ui": {"step": 1, "unit": ""}},
+    }
+    config["number:203"] = {
+        "name": None,
+        "min": 0,
+        "max": 100,
+        "meta": {"ui": {"step": 1, "unit": "", "view": "field"}},
+    }
+    monkeypatch.setattr(mock_rpc_device, "config", config)
+
+    status = deepcopy(mock_rpc_device.status)
+    status["number:200"] = {"value": 12}
+    status["number:203"] = {"value": 34}
+    monkeypatch.setattr(mock_rpc_device, "status", status)
+
+    await init_integration(hass, 3)
+
+    assert "Error while setting up" not in caplog.text
+    assert hass.states.get("number.test_name_number_203")
+    assert hass.states.get("number.test_name_number_200") is None
+
+
 @pytest.mark.usefixtures("disable_async_remove_shelly_rpc_entities")
 async def test_rpc_remove_virtual_number_when_mode_label(
     hass: HomeAssistant,

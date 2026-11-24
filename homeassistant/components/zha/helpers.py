@@ -457,13 +457,16 @@ class ZHADeviceProxy(EventBase):
         self._unsubs.append(self.device.on_all_events(self._handle_event_protocol))
 
     @callback
-    def async_rebind_device(self, device: BaseDevice) -> None:
-        """Repoint this proxy to a replacement device object after a re-interview."""
+    def async_cleanup_handles(self) -> None:
+        """Unsubscribe from device events."""
         for unsub in self._unsubs:
             unsub()
-
         self._unsubs.clear()
 
+    @callback
+    def async_rebind_device(self, device: BaseDevice) -> None:
+        """Repoint this proxy to a replacement device object after a re-interview."""
+        self.async_cleanup_handles()
         self.device = device
         self._unsubs.append(self.device.on_all_events(self._handle_event_protocol))
         self.attach_event_handlers()
@@ -877,7 +880,7 @@ class ZHAGatewayProxy(EventBase):
         entity_refs = self._ha_entity_refs.pop(event.device_info.ieee, None)
         if zha_device_proxy is not None:
             device_info = zha_device_proxy.zha_device_info
-            # zha_device_proxy.async_cleanup_handles()
+            zha_device_proxy.async_cleanup_handles()
             async_dispatcher_send(
                 self.hass,
                 f"{SIGNAL_REMOVE_ENTITIES}_{zha_device_proxy.device.ieee!s}",
@@ -1038,6 +1041,9 @@ class ZHAGatewayProxy(EventBase):
         """Shutdown the gateway proxy."""
         for unsub in self._unsubs:
             unsub()
+        self._unsubs.clear()
+        for device_proxy in self.device_proxies.values():
+            device_proxy.async_cleanup_handles()
         await self.gateway.shutdown()
 
     def get_device_proxy(self, ieee: EUI64) -> ZHADeviceProxy | None:

@@ -1085,7 +1085,7 @@ class Entity(
     @callback
     def _async_write_ha_state_from_call_soon_threadsafe(self) -> None:
         """Write the state to the state machine from the event loop thread."""
-        if not self.hass or not self._verified_state_writable:
+        if self.hass is None or not self._verified_state_writable:
             self._async_verify_state_writable()
         self._async_write_ha_state()
 
@@ -1097,7 +1097,7 @@ class Entity(
         Note: Integrations which need to customize state write should
         override _async_write_ha_state, not this method.
         """
-        if not self.hass or not self._verified_state_writable:
+        if self.hass is None or not self._verified_state_writable:
             self._async_verify_state_writable()
         if self.hass.loop_thread_id != threading.get_ident():
             report_non_thread_safe_operation("async_write_ha_state")
