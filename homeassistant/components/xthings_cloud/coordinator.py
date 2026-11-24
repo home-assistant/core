@@ -18,6 +18,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import CONF_REFRESH_TOKEN, DEFAULT_SCAN_INTERVAL, DOMAIN, LOGGER
+from .sso import XthingsSsoManager
 
 type XthingsCloudConfigEntry = ConfigEntry[XthingsCloudCoordinator]
 
@@ -42,6 +43,7 @@ class XthingsCloudCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             config_entry=entry,
         )
         self.client = client
+        self.sso_manager = XthingsSsoManager(hass, entry, client)
         self.websocket: XthingsCloudWebSocket | None = None
 
     async def _async_ensure_token_valid(self) -> None:

@@ -22,7 +22,7 @@ from homeassistant.helpers import entity_registry as er
 
 from . import get_device_by_id, setup_integration
 
-from tests.common import MockConfigEntry, snapshot_platform
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 
 
 async def setup_camera_integration(

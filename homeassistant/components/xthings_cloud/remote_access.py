@@ -3,13 +3,14 @@
 import asyncio
 from pathlib import Path
 
-import yaml
 from ha_xthings_cloud import (
     XthingsCloudApiClient,
     async_start_frpc,
     async_stop_frpc,
     remove_frpc_config,
 )
+import yaml
+
 from homeassistant.core import HomeAssistant
 
 from .const import DOMAIN, LOGGER

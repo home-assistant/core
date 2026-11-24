@@ -1,17 +1,18 @@
 """Xthings Cloud browser SSO callback."""
 
-import json
-import time
 from collections.abc import Mapping
 from datetime import timedelta
+import json
+import time
 from typing import Any
 from urllib.parse import urlsplit, urlunsplit
 
 from aiohttp import web
 from ha_xthings_cloud import XthingsCloudApiClient, XthingsCloudApiError
+
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.components.http.auth_util import async_user_not_allowed_do_auth
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.http import KEY_HASS
 from homeassistant.helpers.instance_id import async_get as async_get_instance_id
@@ -151,7 +152,8 @@ class XthingsSsoView(HomeAssistantView):
     async def get(self, request: web.Request) -> web.Response:
         """Handle a browser callback from Xthings Cloud."""
         hass = request.app[KEY_HASS]
-        manager: XthingsSsoManager | None = hass.data.get(DOMAIN, {}).get("sso")
-        if manager is None:
+        entries = hass.config_entries.async_entries(DOMAIN)
+        if not entries or entries[0].state is not ConfigEntryState.LOADED:
             return _error(web.HTTPServiceUnavailable, "SSO unavailable")
+        manager: XthingsSsoManager = entries[0].runtime_data.sso_manager
         return await manager.async_create_bridge(request, request.query.get("code", ""))
