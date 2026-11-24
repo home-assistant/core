@@ -196,7 +196,7 @@ async def test_camera_stream_refresh_timeout(
         assert await camera.async_create_stream() is stream
         with (
             patch.object(camera, "stream_source", side_effect=stalled_source),
-            patch("homeassistant.components.tuya.camera.STREAM_SOURCE_TIMEOUT", 0.05),
+            patch("homeassistant.components.tuya.camera._STREAM_SOURCE_TIMEOUT", 0.05),
             pytest.raises(TimeoutError),
         ):
             await camera.async_create_stream()

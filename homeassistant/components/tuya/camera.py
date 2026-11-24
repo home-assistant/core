@@ -21,9 +21,11 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import STREAM_SOURCE_TIMEOUT, TUYA_DISCOVERY_NEW, DeviceCategory
+from .const import TUYA_DISCOVERY_NEW, DeviceCategory
 from .coordinator import TuyaConfigEntry
 from .entity import TuyaEntity, TuyaEntityDescription
+
+_STREAM_SOURCE_TIMEOUT = 10
 
 
 @dataclass(frozen=True)
@@ -116,7 +118,7 @@ class TuyaCameraEntity(TuyaEntity, CameraEntity):
             if stream.outputs() and stream.available:
                 return stream
 
-            async with asyncio.timeout(STREAM_SOURCE_TIMEOUT):
+            async with asyncio.timeout(_STREAM_SOURCE_TIMEOUT):
                 source = await self.stream_source()
             if not source:
                 return None
