@@ -25,6 +25,7 @@ from homeassistant.components.fritz.const import (
     SCAN_INTERVAL,
 )
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_HOST, STATE_UNAVAILABLE, STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -367,6 +368,45 @@ async def test_sensor_addon_infos_not_supported(
         "sensor.mock_title_gb_received",
     ):
         assert not entity_registry.async_is_registered(entity_id)
+    assert "Error adding entity" not in caplog.text
+
+
+@pytest.mark.parametrize(
+    "fc_data",
+    [
+        {
+            **MOCK_FB_SERVICES,
+            "WANCommonIFC1": {
+                **MOCK_FB_SERVICES["WANCommonIFC1"],
+                "GetAddonInfos": FritzConnectionException("Not available Action"),
+            },
+        }
+    ],
+)
+@pytest.mark.usefixtures("fc_class_mock", "fh_class_mock", "fs_class_mock")
+async def test_registered_sensor_not_kept_when_not_supported(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test a registered traffic sensor is not created when not supported."""
+    entity_id = "sensor.mock_title_upload_throughput"
+    entry = MockConfigEntry(domain=DOMAIN, data=MOCK_USER_DATA)
+    entry.add_to_hass(hass)
+    entity_registry.async_get_or_create(
+        SENSOR_DOMAIN,
+        DOMAIN,
+        f"{MOCK_SERIAL_NUMBER}-kb_s_sent",
+        config_entry=entry,
+        suggested_object_id="mock_title_upload_throughput",
+    )
+
+    with patch("homeassistant.components.fritz.PLATFORMS", [Platform.SENSOR]):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.LOADED
+    assert hass.states.get(entity_id) is None
     assert "Error adding entity" not in caplog.text
 
 

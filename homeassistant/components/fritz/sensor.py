@@ -174,6 +174,7 @@ class FritzConnectionSensorEntityDescription(
     """Describes Fritz connection sensor entity."""
 
     is_suitable: Callable[[ConnectionInfo], bool] = lambda info: info.wan_enabled
+    keep_if_registered: bool = False
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -183,6 +184,7 @@ class FritzDeviceSensorEntityDescription(
     """Describes Fritz device sensor entity."""
 
     is_suitable: Callable[[FritzStatus], bool] = lambda status: True
+    keep_if_registered: bool = False
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -206,6 +208,7 @@ CONNECTION_SENSOR_TYPES: tuple[FritzConnectionSensorEntityDescription, ...] = (
         translation_key="external_ipv6",
         value_fn=_retrieve_external_ipv6_state,
         is_suitable=lambda info: info.ipv6_active,
+        keep_if_registered=True,
     ),
     FritzConnectionSensorEntityDescription(
         key="connection_uptime",
@@ -334,6 +337,7 @@ DEVICE_SENSOR_TYPES: tuple[FritzDeviceSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=_retrieve_cpu_temperature_state,
         is_suitable=_is_suitable_cpu_temperature,
+        keep_if_registered=True,
     ),
 )
 
@@ -393,10 +397,15 @@ LINK_SENSOR_TYPES: tuple[FritzLinkSensorEntityDescription, ...] = (
 def _async_registered_keys(avm_wrapper: AvmWrapper) -> set[str]:
     """Return keys of sensors already registered, kept while the device boots."""
     entity_registry = er.async_get(avm_wrapper.hass)
+    descriptions: tuple[
+        FritzConnectionSensorEntityDescription | FritzDeviceSensorEntityDescription,
+        ...,
+    ] = (*CONNECTION_SENSOR_TYPES, *DEVICE_SENSOR_TYPES)
     return {
         description.key
-        for description in (*CONNECTION_SENSOR_TYPES, *DEVICE_SENSOR_TYPES)
-        if entity_registry.async_get_entity_id(
+        for description in descriptions
+        if description.keep_if_registered
+        and entity_registry.async_get_entity_id(
             SENSOR_DOMAIN, DOMAIN, f"{avm_wrapper.unique_id}-{description.key}"
         )
     }
