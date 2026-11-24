@@ -818,7 +818,9 @@ async def test_disconnected_tracker_handed_to_other_entry_on_removal(
     assert entity_registry.async_get(handed_over).config_entry_id == entry_b.entry_id
     state = hass.states.get(handed_over)
     assert state is not None
-    assert state.state == STATE_NOT_HOME
+    # Entry A's records went with its removal, and router B has never
+    # seen the client, so no healthy router can report it.
+    assert state.state == STATE_UNAVAILABLE
     assert "source" not in state.attributes
     assert device_registry.async_get_device_by_connection(
         (dr.CONNECTION_NETWORK_MAC, MAC_PHONE), entry_b.entry_id
@@ -1137,6 +1139,61 @@ async def test_tracker_unavailable_while_all_routers_unreachable(
     assert state.attributes["source"] == MOCK_HOST_B
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default", "two_router_entries")
+async def test_tracker_unavailable_while_sole_reporter_unreachable(
+    hass: HomeAssistant,
+    mock_ubus_by_host: tuple[MagicMock, dict[str, MagicMock]],
+    entity_registry: er.EntityRegistry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a tracker is unavailable while only its reporting router is down.
+
+    A healthy router which never saw the client holds no evidence about
+    it, so the tracker is unavailable rather than not home while the
+    reporting router misses polls.
+    """
+    _mock, ubus = mock_ubus_by_host
+
+    # The device is on router B only, so entry B is its sole reporter.
+    ubus[MOCK_HOST_B].get_hostapd_clients.return_value = {
+        "clients": {MAC_PHONE: {"authorized": True}}
+    }
+    freezer.tick(timedelta(seconds=30))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    entity_id = entity_registry.async_get_entity_id(
+        DEVICE_TRACKER_DOMAIN, DOMAIN, MAC_PHONE
+    )
+    assert entity_id is not None
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == STATE_HOME
+    assert state.attributes["source"] == MOCK_HOST_B
+
+    # Router B misses a poll while router A stays reachable but has never
+    # seen the device, so no healthy router can report it.
+    ubus[MOCK_HOST_B].get_hostapd_clients.side_effect = ConnectionError
+    freezer.tick(timedelta(seconds=30))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == STATE_UNAVAILABLE
+
+    # Router B recovers and reports the device again.
+    ubus[MOCK_HOST_B].get_hostapd_clients.side_effect = None
+    freezer.tick(timedelta(seconds=30))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == STATE_HOME
+    assert state.attributes["source"] == MOCK_HOST_B
+
+
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_tracker_unavailable_while_entry_in_setup_retry(
     hass: HomeAssistant,
@@ -1146,8 +1203,8 @@ async def test_tracker_unavailable_while_entry_in_setup_retry(
 ) -> None:
     """Test an entry in setup retry counts as an unreachable router.
 
-    The unavailable tracker recovers when the router's setup retry
-    succeeds.
+    The unavailable tracker becomes home when the router's setup retry
+    succeeds and the router reports the device.
     """
     _mock, ubus = mock_ubus_by_host
     entry_a = MockConfigEntry(domain=DOMAIN, data=MOCK_CONFIG, title=MOCK_HOST)
@@ -1211,9 +1268,12 @@ async def test_tracker_unavailable_while_entry_in_setup_retry(
     assert state is not None
     assert state.state == STATE_UNAVAILABLE
 
-    # Router B recovers with no clients; the tracker becomes available
+    # Router B recovers and reports the device; the tracker re-evaluates
     # without waiting for router A's next poll.
     router_b.connect.side_effect = _connect
+    ubus[MOCK_HOST_B].get_hostapd_clients.return_value = {
+        "clients": {MAC_PHONE: {"authorized": True}}
+    }
     freezer.tick(timedelta(seconds=90))
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
@@ -1221,7 +1281,8 @@ async def test_tracker_unavailable_while_entry_in_setup_retry(
 
     state = hass.states.get(entity_id)
     assert state is not None
-    assert state.state == STATE_NOT_HOME
+    assert state.state == STATE_HOME
+    assert state.attributes["source"] == MOCK_HOST_B
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default", "two_router_entries")
@@ -1276,10 +1337,21 @@ async def test_tracker_available_after_unreachable_router_recovers(
     assert state is not None
     assert state.state == STATE_UNAVAILABLE
 
-    # Router B recovers with no clients; the tracker becomes available
-    # without router A reporting anything new.
+    # Router B recovers with no clients; since no healthy router has seen
+    # the device, the tracker stays unavailable.
     router_b.get_hostapd_clients.side_effect = None
     freezer.tick(timedelta(seconds=30))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == STATE_UNAVAILABLE
+
+    # Router A recovers once its stamp has aged out; the stale stamp
+    # makes the tracker available again, reporting not home.
+    freezer.tick(DEFAULT_CONSIDER_HOME)
+    ubus[MOCK_HOST].get_hostapd_clients.side_effect = None
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
 

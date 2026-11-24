@@ -55,8 +55,8 @@ class UbusSharedState:
     last update.
 
     A client is home while its most recent stamp from a healthy entry is
-    within ``DEFAULT_CONSIDER_HOME``. It is unavailable while every entry
-    is unhealthy.
+    within ``DEFAULT_CONSIDER_HOME``. It is unavailable while no healthy
+    entry has stamped it.
     """
 
     presence: dict[str, dict[str, ClientStamp]]
@@ -104,6 +104,12 @@ class UbusSharedState:
         if dt_util.utcnow() - stamp.last_seen > DEFAULT_CONSIDER_HOME:
             return None
         return entry_id, stamp
+
+    def has_healthy_stamp(self, mac: str) -> bool:
+        """Return whether any healthy entry has stamped this client."""
+        return any(
+            self.health.get(entry, True) for entry in self.presence.get(mac.lower(), {})
+        )
 
     @callback
     def remove_entry(self, entry_id: str) -> None:

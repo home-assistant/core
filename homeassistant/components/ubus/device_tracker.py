@@ -420,19 +420,9 @@ class UbusScannerEntity(CoordinatorEntity[UbusDataUpdateCoordinator], ScannerEnt
     @property
     @override
     def available(self) -> bool:
-        """Return whether the device state is reported by any ubus router."""
+        """Return whether any healthy ubus router has seen the device."""
         shared: UbusSharedState = self.hass.data[DOMAIN]
-        return any(
-            shared.health.get(entry.entry_id, True)
-            for entry in self.hass.config_entries.async_entries(DOMAIN)
-            if entry.state
-            in (
-                ConfigEntryState.LOADED,
-                ConfigEntryState.FAILED_UNLOAD,
-                ConfigEntryState.SETUP_IN_PROGRESS,
-                ConfigEntryState.SETUP_RETRY,
-            )
-        )
+        return shared.has_healthy_stamp(self._mac)
 
     @property
     @override
