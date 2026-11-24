@@ -117,10 +117,11 @@ async def test_setup_schedules_and_unload_cancels_expiration_issue(
     """Test setup schedules the expiration issue and unload cancels it."""
     await hass.config.async_set_time_zone("UTC")
     freezer.move_to("2026-01-01 00:00:00+00:00")
+    expiration = datetime(2026, 3, 1, tzinfo=UTC)
     entry = await async_init_integration(
         hass,
         data={
-            CONF_API_KEY: _create_api_key(datetime(2026, 3, 1, tzinfo=UTC)),
+            CONF_API_KEY: _create_api_key(expiration),
         },
     )
 
@@ -128,6 +129,12 @@ async def test_setup_schedules_and_unload_cancels_expiration_issue(
 
     await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
+
+    freezer.move_to(expiration - timedelta(days=API_KEY_EXPIRATION_WARNING_DAYS))
+    async_fire_time_changed(hass, dt_util.utcnow())
+    await hass.async_block_till_done()
+
+    assert issue_registry.async_get_issue(DOMAIN, _issue_id(entry)) is None
 
 
 async def test_schedule_expiration_issue_with_non_string_key(
