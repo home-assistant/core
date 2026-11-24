@@ -44,7 +44,7 @@ EVENT_AREA_REGISTRY_UPDATED: EventType[EventAreaRegistryUpdatedData] = EventType
 )
 STORAGE_KEY = "core.area_registry"
 STORAGE_VERSION_MAJOR = 1
-STORAGE_VERSION_MINOR = 11
+STORAGE_VERSION_MINOR = 10
 
 
 class _AreaStoreData(TypedDict):
@@ -171,13 +171,9 @@ class AreaRegistryStore(Store[AreasRegistryStoreData]):
                 )
 
             if old_minor_version < 10:
-                # Version 1.10 adds co2_entity_id
+                # Version 1.10 adds co2_entity_id and normalizes sensor entity IDs
                 for area in old_data["areas"]:
                     area.setdefault("co2_entity_id", None)
-
-            if old_minor_version < 11:
-                # Version 1.11 normalizes sensor entity IDs
-                for area in old_data["areas"]:
                     for entity_id_key in (
                         "co2_entity_id",
                         "humidity_entity_id",
