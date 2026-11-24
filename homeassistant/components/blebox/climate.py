@@ -14,7 +14,7 @@ from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import BleBoxConfigEntry
+from .coordinator import BleBoxConfigEntry
 from .entity import BleBoxEntity
 from .util import blebox_command
 

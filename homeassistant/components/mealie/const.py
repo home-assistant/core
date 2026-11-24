@@ -8,19 +8,6 @@ DOMAIN = "mealie"
 
 LOGGER = logging.getLogger(__package__)
 
-ATTR_START_DATE = "start_date"
-ATTR_END_DATE = "end_date"
-ATTR_MEALPLAN_ID = "mealplan_id"
-ATTR_RECIPE_ID = "recipe_id"
-ATTR_URL = "url"
-ATTR_INCLUDE_TAGS = "include_tags"
-ATTR_ENTRY_TYPE = "entry_type"
-ATTR_NOTE_TITLE = "note_title"
-ATTR_NOTE_TEXT = "note_text"
-ATTR_SEARCH_TERMS = "search_terms"
-ATTR_RESULT_LIMIT = "result_limit"
-ATTR_INGREDIENT = "ingredient"
-
 CONF_PARSE_TODO_NEW = "parse_todo_new"
 CONF_PARSE_TODO_EDIT = "parse_todo_edit"
 CONF_PARSER = "parser"

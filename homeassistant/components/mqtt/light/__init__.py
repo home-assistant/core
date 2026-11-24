@@ -7,8 +7,9 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
+from ..const import CONF_SCHEMA
 from ..entity import async_setup_entity_entry_helper
-from .schema import CONF_SCHEMA, MQTT_LIGHT_SCHEMA_SCHEMA
+from .schema import MQTT_LIGHT_SCHEMA_SCHEMA
 from .schema_basic import (
     DISCOVERY_SCHEMA_BASIC,
     PLATFORM_SCHEMA_MODERN_BASIC,

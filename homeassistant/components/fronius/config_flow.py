@@ -4,8 +4,8 @@ import asyncio
 import logging
 from typing import Any, Final, override
 
+from fronius_solarapi import FroniusError, FroniusSolarApi
 import probatio
-from pyfronius import Fronius, FroniusError
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST
@@ -20,6 +20,7 @@ from .const import (
     DEFAULT_MODBUS_PORT,
     DOMAIN,
     FroniusConfigEntryData,
+    host_from_config,
 )
 
 _LOGGER: Final = logging.getLogger(__name__)
@@ -50,16 +51,14 @@ async def validate_host(
     auto_revert_power_limit: bool = False,
 ) -> tuple[str, FroniusConfigEntryData]:
     """Validate the user input allows us to connect."""
-    fronius = Fronius(async_get_clientsession(hass, verify_ssl=False), host)
+    fronius = FroniusSolarApi(async_get_clientsession(hass, verify_ssl=False), host)
 
     try:
-        datalogger_info: dict[str, Any]
-        datalogger_info = await fronius.current_logger_info()
+        logger_info = await fronius.logger_info()
     except FroniusError as err:
         _LOGGER.debug(err)
     else:
-        logger_uid: str = datalogger_info["unique_identifier"]["value"]
-        return logger_uid, FroniusConfigEntryData(
+        return logger_info.data.unique_id, FroniusConfigEntryData(
             host=host,
             is_logger=True,
             modbus_port=modbus_port,
@@ -68,12 +67,11 @@ async def validate_host(
     # Gen24 devices don't provide GetLoggerInfo
     try:
         inverter_info = await fronius.inverter_info()
-        first_inverter = next(inverter for inverter in inverter_info["inverters"])
+        first_inverter = next(iter(inverter_info.data.values()))
     except (FroniusError, StopIteration) as err:
         _LOGGER.debug(err)
         raise CannotConnect from err
-    first_inverter_uid: str = first_inverter["unique_id"]["value"]
-    return first_inverter_uid, FroniusConfigEntryData(
+    return first_inverter.unique_id, FroniusConfigEntryData(
         host=host,
         is_logger=False,
         modbus_port=modbus_port,
@@ -130,11 +128,9 @@ class FroniusConfigFlow(ConfigFlow, domain=DOMAIN):
         self, discovery_info: DhcpServiceInfo
     ) -> ConfigFlowResult:
         """Handle a flow initiated by the DHCP client."""
+        discovered_hosts = {discovery_info.ip, discovery_info.hostname.lower()}
         for entry in self._async_current_entries(include_ignore=False):
-            if entry.data[CONF_HOST].removeprefix("http://").rstrip("/").lower() in (
-                discovery_info.ip,
-                discovery_info.hostname,
-            ):
+            if host_from_config(entry.data[CONF_HOST]) in discovered_hosts:
                 return self.async_abort(reason="already_configured")
         # Symo Datalogger devices need up to 1 minute at boot from DHCP request
         # to respond to API requests (connection refused until then)
@@ -157,7 +153,6 @@ class FroniusConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             return self.async_create_entry(title=title, data=self.info)
 
-        self._set_confirm_only()
         self.context.update({"title_placeholders": {"device": title}})
         return self.async_show_form(
             step_id="confirm_discovery",

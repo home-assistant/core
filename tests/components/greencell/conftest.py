@@ -8,6 +8,7 @@ from pytest_homeassistant.common import MockConfigEntry
 from pytest_homeassistant.typing import MqttMockHAClient
 
 from homeassistant.components import mqtt as real_mqtt
+from homeassistant.components.greencell import PLATFORMS
 from homeassistant.components.greencell.const import (
     CONF_SERIAL_NUMBER,
     DOMAIN,
@@ -15,6 +16,7 @@ from homeassistant.components.greencell.const import (
     GREENCELL_DISC_TOPIC,
 )
 from homeassistant.components.mqtt import ReceiveMessage
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.service_info.mqtt import MqttServiceInfo
 
@@ -102,9 +104,15 @@ def mock_setup_entry():
     """Override async_setup_entry to prevent the integration from starting."""
     with patch(
         "homeassistant.components.greencell.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ) as mock_setup:
         yield mock_setup
+
+
+@pytest.fixture
+def platforms() -> list[Platform]:
+    """Return the platforms to load, overridable per test via parametrize."""
+    return PLATFORMS
 
 
 @pytest.fixture
@@ -112,6 +120,7 @@ async def setup_integration(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mqtt_mock: MqttMockHAClient,
+    platforms: list[Platform],
 ) -> MockConfigEntry:
     """Set up the greencell integration with device-ready fired synchronously."""
 
@@ -136,9 +145,12 @@ async def setup_integration(
             hass_arg, topic, msg_callback, *args, **kwargs
         )
 
-    with patch(
-        "homeassistant.components.greencell.mqtt.async_subscribe",
-        side_effect=_mock_init_subscribe,
+    with (
+        patch(
+            "homeassistant.components.greencell.mqtt.async_subscribe",
+            side_effect=_mock_init_subscribe,
+        ),
+        patch("homeassistant.components.greencell.PLATFORMS", platforms),
     ):
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()

@@ -4,6 +4,7 @@
   "categories": ["messaging_notifications.email_sms_calls"],
   "codeowners": ["@tkdrob"],
   "config_flow": true,
+  "connectivity": ["serial"],
   "dependencies": ["usb"],
   "documentation": "https://www.home-assistant.io/integrations/modem_callerid",
   "integration_type": "device",

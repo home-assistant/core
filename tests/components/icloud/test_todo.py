@@ -1,6 +1,7 @@
 """Tests for the iCloud to-do platform."""
 
-from datetime import date, datetime
+from datetime import UTC, date, datetime
+import logging
 from unittest.mock import MagicMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
@@ -16,8 +17,10 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.icloud.const import CONF_INCLUDE_COMPLETED, DOMAIN
 from homeassistant.components.icloud.coordinator import (
+    MISSING_ZONE_SCAN_INTERVAL,
     REMINDERS_SCAN_INTERVAL,
     UNDECODED_TITLE,
+    _is_zone_not_found_error,
 )
 from homeassistant.components.todo import (
     ATTR_DESCRIPTION,
@@ -71,6 +74,22 @@ def _list(
     reminder_list.is_group = is_group
     reminder_list.deleted = deleted
     return reminder_list
+
+
+def _zone_not_found_error() -> RemindersApiError:
+    """Build the error pyicloud raises when the Reminders zone is missing."""
+    return RemindersApiError(
+        "Zone changes failed: ZONE_NOT_FOUND (Zone does not exist)",
+        payload={
+            "zones": [
+                {
+                    "zoneID": {"zoneName": "Reminders", "owner": "_defaultOwner"},
+                    "serverErrorCode": "ZONE_NOT_FOUND",
+                    "reason": "Zone does not exist",
+                }
+            ]
+        },
+    )
 
 
 @pytest.fixture(name="reminders")
@@ -191,6 +210,41 @@ async def test_deleted_lists_skipped(
     assert [entity.entity_id for entity in entities] == [ENTITY_ID]
 
 
+async def test_list_entity_removed_when_list_disappears(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    reminders: MagicMock,
+    freezer: FrozenDateTimeFactory,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test that the entity of a list iCloud no longer returns is removed.
+
+    The duplicate of a shared list is registered as an ordinary entity, so
+    dropping it from the fetch has to remove that entity rather than leave an
+    unavailable empty list behind.
+    """
+    reminders.lists.return_value = [
+        _list("list1", "Groceries"),
+        _list("list2", "Family"),
+    ]
+    await _setup(hass, config_entry)
+    assert hass.states.get("todo.test_icloud_account_family") is not None
+
+    reminders.lists.return_value = [_list("list1", "Groceries")]
+    freezer.tick(REMINDERS_SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    # The scheduled refresh runs as a background task of the config entry.
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert hass.states.get("todo.test_icloud_account_family") is None
+    assert (
+        entity_registry.async_get_entity_id(
+            TODO_DOMAIN, DOMAIN, "test_account_id_list2"
+        )
+        is None
+    )
+
+
 async def test_subtasks_follow_their_parent(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
@@ -244,6 +298,7 @@ async def test_create_item(
         desc="a dozen",
         due_date=datetime(2024, 5, 1),
         all_day=True,
+        time_zone=None,
     )
 
 
@@ -401,9 +456,12 @@ async def test_update_item_with_datetime_due(
     reminders: MagicMock,
 ) -> None:
     """Test that a timed due value clears the all-day flag."""
-    existing = _reminder("r1", "Milk")
+    await hass.config.async_set_time_zone("UTC")
+    existing = _reminder("r1", "Milk", due=datetime(2024, 5, 1, 9, 30, tzinfo=UTC))
     existing.all_day = True
+    existing.time_zone = "America/New_York"
     reminders.get.return_value = existing
+    reminders.list_reminders.return_value = MagicMock(reminders=[existing])
 
     await _setup(hass, config_entry)
 
@@ -422,6 +480,161 @@ async def test_update_item_with_datetime_due(
     # Home Assistant hands the platform a timezone-aware value.
     assert existing.due_date.tzinfo is not None
     assert existing.due_date.replace(tzinfo=None) == datetime(2024, 5, 1, 9, 30)
+    assert existing.time_zone == "UTC"
+
+
+@pytest.mark.parametrize(
+    ("due_data", "expected_due", "all_day", "time_zone"),
+    [
+        pytest.param(
+            {ATTR_DUE_DATETIME: "2026-10-09T13:50:00+02:00"},
+            datetime(2026, 10, 9, 11, 50, tzinfo=UTC),
+            False,
+            "Europe/Paris",
+            id="summer",
+        ),
+        pytest.param(
+            {ATTR_DUE_DATETIME: "2026-12-09T13:50:00+01:00"},
+            datetime(2026, 12, 9, 12, 50, tzinfo=UTC),
+            False,
+            "Europe/Paris",
+            id="winter",
+        ),
+        pytest.param(
+            {ATTR_DUE_DATETIME: "2026-10-08T23:50:00Z"},
+            datetime(2026, 10, 8, 23, 50, tzinfo=UTC),
+            False,
+            "Europe/Paris",
+            id="utc-previous-day",
+        ),
+        pytest.param(
+            {ATTR_DUE_DATE: "2026-10-09"},
+            datetime(2026, 10, 9),
+            True,
+            None,
+            id="all-day",
+        ),
+        pytest.param(
+            {ATTR_DUE_DATETIME: None},
+            None,
+            False,
+            None,
+            id="no-due-date",
+        ),
+    ],
+)
+async def test_item_due_time_zone(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    reminders: MagicMock,
+    due_data: dict[str, str | None],
+    expected_due: datetime | None,
+    all_day: bool,
+    time_zone: str | None,
+) -> None:
+    """Test that writes pair due timestamps with the Home Assistant time zone."""
+    await hass.config.async_set_time_zone("Europe/Paris")
+    existing = _reminder("r1", "Milk", due=datetime(2026, 10, 1, tzinfo=UTC))
+    existing.time_zone = "America/New_York"
+    reminders.get.return_value = existing
+    reminders.list_reminders.return_value = MagicMock(reminders=[existing])
+    await _setup(hass, config_entry)
+
+    await hass.services.async_call(
+        TODO_DOMAIN,
+        TodoServices.ADD_ITEM,
+        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_ITEM: "Eggs", **due_data},
+        blocking=True,
+    )
+
+    reminders.create.assert_called_once_with(
+        list_id="list1",
+        title="Eggs",
+        desc="",
+        due_date=expected_due,
+        all_day=all_day,
+        time_zone=time_zone,
+    )
+
+    await hass.services.async_call(
+        TODO_DOMAIN,
+        TodoServices.UPDATE_ITEM,
+        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_ITEM: "Milk", **due_data},
+        blocking=True,
+    )
+
+    reminders.update.assert_called_once_with(existing)
+    assert existing.due_date == expected_due
+    assert existing.all_day is all_day
+    assert existing.time_zone == time_zone
+
+
+@pytest.mark.parametrize(
+    ("update_data", "due"),
+    [
+        pytest.param(
+            {ATTR_RENAME: "Oat milk"},
+            datetime(2026, 10, 9, 11, 50, tzinfo=UTC),
+            id="rename",
+        ),
+        pytest.param(
+            {ATTR_STATUS: "completed"},
+            datetime(2026, 10, 9, 11, 50, tzinfo=UTC),
+            id="status",
+        ),
+        pytest.param(
+            {ATTR_DESCRIPTION: "One bottle"},
+            datetime(2026, 10, 9, 11, 50, tzinfo=UTC),
+            id="description",
+        ),
+        pytest.param(
+            {ATTR_DUE_DATETIME: "2026-10-09T13:50:00+02:00"},
+            datetime(2026, 10, 9, 11, 50, tzinfo=UTC),
+            id="same-instant-different-offset",
+        ),
+        pytest.param(
+            {ATTR_DUE_DATETIME: "2026-10-25T02:30:00+01:00"},
+            datetime(2026, 10, 25, 1, 30, tzinfo=UTC),
+            id="same-instant-dst-fallback",
+        ),
+    ],
+)
+@pytest.mark.parametrize(
+    ("time_zone", "expected_time_zone"),
+    [
+        pytest.param("America/New_York", "America/New_York", id="preserve-zone"),
+        pytest.param(None, None, id="missing-zone"),
+    ],
+)
+async def test_update_item_with_unchanged_due_time_zone(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    reminders: MagicMock,
+    update_data: dict[str, str],
+    due: datetime,
+    time_zone: str | None,
+    expected_time_zone: str | None,
+) -> None:
+    """Test unchanged due values retain their original datetime and time zone."""
+    await hass.config.async_set_time_zone("Europe/Paris")
+    existing = _reminder("r1", "Milk", due=due)
+    existing.time_zone = time_zone
+    reminders.get.return_value = existing
+    reminders.list_reminders.return_value = MagicMock(reminders=[existing])
+    await _setup(hass, config_entry)
+
+    await hass.services.async_call(
+        TODO_DOMAIN,
+        TodoServices.UPDATE_ITEM,
+        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_ITEM: "Milk", **update_data},
+        blocking=True,
+    )
+
+    reminders.update.assert_called_once_with(existing)
+    assert existing.due_date == due
+    assert existing.due_date.tzinfo is UTC
+    assert existing.all_day is False
+    assert existing.time_zone == expected_time_zone
 
 
 async def test_nested_subtasks_follow_their_parent(
@@ -635,3 +848,168 @@ async def test_entry_loads_when_reminders_fail(
 
     assert config_entry.state is ConfigEntryState.LOADED
     assert hass.states.get(ENTITY_ID) is None
+
+
+async def test_zone_not_found_is_tolerated(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    reminders: MagicMock,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test that an account with no Reminders zone is not an error.
+
+    The account has simply never used Reminders, so there is nothing to
+    fetch and nothing to repair: the entry loads without to-do entities
+    and the state is reported once at info level.
+    """
+    caplog.set_level(logging.INFO)
+    reminders.lists.side_effect = _zone_not_found_error()
+
+    await _setup(hass, config_entry)
+
+    assert config_entry.state is ConfigEntryState.LOADED
+    assert hass.states.get(ENTITY_ID) is None
+    assert "Error fetching" not in caplog.text
+    assert "has no Reminders data" in caplog.text
+
+
+async def test_zone_not_found_logged_once(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    reminders: MagicMock,
+    freezer: FrozenDateTimeFactory,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test that the missing zone is reported once, not on every poll."""
+    caplog.set_level(logging.INFO)
+    reminders.lists.side_effect = _zone_not_found_error()
+
+    await _setup(hass, config_entry)
+    assert caplog.text.count("has no Reminders data") == 1
+
+    freezer.tick(MISSING_ZONE_SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert caplog.text.count("has no Reminders data") == 1
+
+
+async def test_zone_not_found_backs_off_polling(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    reminders: MagicMock,
+) -> None:
+    """Test that a missing zone slows the polls down instead of failing."""
+    reminders.lists.side_effect = _zone_not_found_error()
+
+    await _setup(hass, config_entry)
+
+    coordinator = config_entry.runtime_data.reminders_coordinator
+    assert coordinator is not None
+    assert coordinator.update_interval == MISSING_ZONE_SCAN_INTERVAL
+
+
+async def test_zone_not_found_recovers(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    reminders: MagicMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test that lists appear by themselves once Reminders is enabled."""
+    reminders.lists.side_effect = _zone_not_found_error()
+
+    await _setup(hass, config_entry)
+    assert hass.states.get(ENTITY_ID) is None
+
+    reminders.lists.side_effect = None
+    freezer.tick(MISSING_ZONE_SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    coordinator = config_entry.runtime_data.reminders_coordinator
+    assert coordinator is not None
+    assert coordinator.update_interval == REMINDERS_SCAN_INTERVAL
+    assert hass.states.get(ENTITY_ID) is not None
+
+
+async def test_zone_not_found_keeps_existing_entities(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    reminders: MagicMock,
+    entity_registry: er.EntityRegistry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test that a missing zone never removes lists that already exist."""
+    await _setup(hass, config_entry)
+    assert hass.states.get(ENTITY_ID) is not None
+
+    reminders.lists.side_effect = _zone_not_found_error()
+    freezer.tick(REMINDERS_SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert entity_registry.async_get_entity_id(
+        TODO_DOMAIN, DOMAIN, f"{config_entry.unique_id}_list1"
+    )
+    assert hass.states.get(ENTITY_ID) is not None
+
+    items = await hass.services.async_call(
+        TODO_DOMAIN,
+        TodoServices.GET_ITEMS,
+        {ATTR_ENTITY_ID: ENTITY_ID},
+        blocking=True,
+        return_response=True,
+    )
+    assert [item["summary"] for item in items[ENTITY_ID]["items"]] == [
+        "Milk",
+        "Bread",
+    ]
+
+
+@pytest.mark.parametrize(
+    ("err", "expected"),
+    [
+        pytest.param(
+            RemindersApiError(
+                "Zone changes failed: ZONE_NOT_FOUND (Zone does not exist)",
+                payload={
+                    "zones": [
+                        {
+                            "zoneID": {"zoneName": "Reminders"},
+                            "serverErrorCode": "ZONE_NOT_FOUND",
+                            "reason": "Zone does not exist",
+                        }
+                    ]
+                },
+            ),
+            True,
+            id="zone_not_found",
+        ),
+        pytest.param(
+            RemindersApiError(
+                "Zone changes failed: THROTTLED",
+                payload={"zones": [{"serverErrorCode": "THROTTLED"}]},
+            ),
+            False,
+            id="other_zone_error",
+        ),
+        pytest.param(
+            RemindersApiError("HTTP 429: rate limited", payload={"retry_after": 30}),
+            False,
+            id="rate_limited",
+        ),
+        pytest.param(
+            RemindersApiError(
+                "Fetch reminder lists failed for 1 record(s)",
+                payload=[{"recordName": "r1", "serverErrorCode": "BAD_REQUEST"}],
+            ),
+            False,
+            id="record_errors",
+        ),
+        pytest.param(RemindersApiError("no payload"), False, id="none_payload"),
+        pytest.param(LookupError("gone"), False, id="no_payload_attribute"),
+    ],
+)
+def test_zone_not_found_payload_detection(err: Exception, expected: bool) -> None:
+    """Test that only the zone-not-found payload is reclassified."""
+    assert _is_zone_not_found_error(err) is expected

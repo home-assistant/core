@@ -3,10 +3,17 @@
 import logging
 from typing import override
 
-from pyheltycloud import HeltyCloud, HeltyCloudError, HeltyDevice, HeltyState
+from pyheltycloud import (
+    HeltyCloud,
+    HeltyCloudAuthError,
+    HeltyCloudError,
+    HeltyDevice,
+    HeltyState,
+)
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN, SCAN_INTERVAL
@@ -57,6 +64,10 @@ class HeltyCloudDataUpdateCoordinator(DataUpdateCoordinator[HeltyState]):
         """
         try:
             return await self.client.get_last_telemetry(self.device.serial_number)
+        except HeltyCloudAuthError as err:
+            raise ConfigEntryAuthFailed(
+                translation_domain=DOMAIN, translation_key="invalid_auth"
+            ) from err
         except HeltyCloudError as err:
             raise UpdateFailed(
                 translation_domain=DOMAIN,

@@ -6,19 +6,15 @@ import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.climate import (
-    ATTR_HVAC_MODE,
     ATTR_PRESET_MODE,
     ATTR_TEMPERATURE,
     DOMAIN as CLIMATE_DOMAIN,
-    SERVICE_SET_HVAC_MODE,
-    SERVICE_SET_PRESET_MODE,
-    SERVICE_SET_TEMPERATURE,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
+    ClimateService,
+    ClimateServiceArgument,
     HVACMode,
 )
 from homeassistant.components.tessie.const import TessieClimateKeeper
-from homeassistant.const import ATTR_ENTITY_ID, Platform
+from homeassistant.const import Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
@@ -63,8 +59,11 @@ async def test_climate(
     ) as mock_set:
         await hass.services.async_call(
             CLIMATE_DOMAIN,
-            SERVICE_SET_HVAC_MODE,
-            {ATTR_ENTITY_ID: [entity_id], ATTR_HVAC_MODE: HVACMode.HEAT_COOL},
+            ClimateService.SET_HVAC_MODE,
+            {
+                TargetKey.ENTITY_ID: [entity_id],
+                ClimateServiceArgument.HVAC_MODE: HVACMode.HEAT_COOL,
+            },
             blocking=True,
         )
         mock_set.assert_called_once()
@@ -84,11 +83,11 @@ async def test_climate(
     ):
         await hass.services.async_call(
             CLIMATE_DOMAIN,
-            SERVICE_SET_TEMPERATURE,
+            ClimateService.SET_TEMPERATURE,
             {
-                ATTR_ENTITY_ID: [entity_id],
-                ATTR_HVAC_MODE: HVACMode.HEAT_COOL,
-                ATTR_TEMPERATURE: 20,
+                TargetKey.ENTITY_ID: [entity_id],
+                ClimateServiceArgument.HVAC_MODE: HVACMode.HEAT_COOL,
+                ClimateServiceArgument.TEMPERATURE: 20,
             },
             blocking=True,
         )
@@ -104,8 +103,11 @@ async def test_climate(
     ) as mock_set:
         await hass.services.async_call(
             CLIMATE_DOMAIN,
-            SERVICE_SET_PRESET_MODE,
-            {ATTR_ENTITY_ID: [entity_id], ATTR_PRESET_MODE: TessieClimateKeeper.ON},
+            ClimateService.SET_PRESET_MODE,
+            {
+                TargetKey.ENTITY_ID: [entity_id],
+                ClimateServiceArgument.PRESET_MODE: TessieClimateKeeper.ON,
+            },
             blocking=True,
         )
         mock_set.assert_called_once()
@@ -119,8 +121,11 @@ async def test_climate(
     ) as mock_set:
         await hass.services.async_call(
             CLIMATE_DOMAIN,
-            SERVICE_SET_HVAC_MODE,
-            {ATTR_ENTITY_ID: [entity_id], ATTR_HVAC_MODE: HVACMode.OFF},
+            ClimateService.SET_HVAC_MODE,
+            {
+                TargetKey.ENTITY_ID: [entity_id],
+                ClimateServiceArgument.HVAC_MODE: HVACMode.OFF,
+            },
             blocking=True,
         )
         mock_set.assert_called_once()
@@ -148,8 +153,11 @@ async def test_climate_cop(
     ) as mock_set:
         await hass.services.async_call(
             CLIMATE_DOMAIN,
-            SERVICE_SET_HVAC_MODE,
-            {ATTR_ENTITY_ID: [entity_id], ATTR_HVAC_MODE: HVACMode.OFF},
+            ClimateService.SET_HVAC_MODE,
+            {
+                TargetKey.ENTITY_ID: [entity_id],
+                ClimateServiceArgument.HVAC_MODE: HVACMode.OFF,
+            },
             blocking=True,
         )
         mock_set.assert_called_once()
@@ -163,8 +171,11 @@ async def test_climate_cop(
     ) as mock_set:
         await hass.services.async_call(
             CLIMATE_DOMAIN,
-            SERVICE_SET_HVAC_MODE,
-            {ATTR_ENTITY_ID: [entity_id], ATTR_HVAC_MODE: HVACMode.COOL},
+            ClimateService.SET_HVAC_MODE,
+            {
+                TargetKey.ENTITY_ID: [entity_id],
+                ClimateServiceArgument.HVAC_MODE: HVACMode.COOL,
+            },
             blocking=True,
         )
         mock_set.assert_called_once()
@@ -178,8 +189,8 @@ async def test_climate_cop(
     ) as mock_set:
         await hass.services.async_call(
             CLIMATE_DOMAIN,
-            SERVICE_TURN_ON,
-            {ATTR_ENTITY_ID: [entity_id]},
+            ClimateService.TURN_ON,
+            {TargetKey.ENTITY_ID: [entity_id]},
             blocking=True,
         )
         mock_set.assert_called_once()
@@ -193,8 +204,8 @@ async def test_climate_cop(
     ) as mock_set:
         await hass.services.async_call(
             CLIMATE_DOMAIN,
-            SERVICE_TURN_OFF,
-            {ATTR_ENTITY_ID: [entity_id]},
+            ClimateService.TURN_OFF,
+            {TargetKey.ENTITY_ID: [entity_id]},
             blocking=True,
         )
         mock_set.assert_called_once()
@@ -219,8 +230,8 @@ async def test_errors(hass: HomeAssistant) -> None:
     ):
         await hass.services.async_call(
             CLIMATE_DOMAIN,
-            SERVICE_TURN_OFF,
-            {ATTR_ENTITY_ID: [entity_id]},
+            ClimateService.TURN_OFF,
+            {TargetKey.ENTITY_ID: [entity_id]},
             blocking=True,
         )
     mock_set.assert_called_once()
@@ -238,8 +249,8 @@ async def test_errors(hass: HomeAssistant) -> None:
     ):
         await hass.services.async_call(
             CLIMATE_DOMAIN,
-            SERVICE_TURN_OFF,
-            {ATTR_ENTITY_ID: [entity_id]},
+            ClimateService.TURN_OFF,
+            {TargetKey.ENTITY_ID: [entity_id]},
             blocking=True,
         )
     mock_set.assert_called_once()
@@ -257,8 +268,11 @@ async def test_errors(hass: HomeAssistant) -> None:
     ):
         await hass.services.async_call(
             CLIMATE_DOMAIN,
-            SERVICE_SET_HVAC_MODE,
-            {ATTR_ENTITY_ID: [entity_id], ATTR_HVAC_MODE: HVACMode.HEAT_COOL},
+            ClimateService.SET_HVAC_MODE,
+            {
+                TargetKey.ENTITY_ID: [entity_id],
+                ClimateServiceArgument.HVAC_MODE: HVACMode.HEAT_COOL,
+            },
             blocking=True,
         )
     mock_set.assert_called_once()
@@ -285,8 +299,11 @@ async def test_climate_cop_errors(
     ):
         await hass.services.async_call(
             CLIMATE_DOMAIN,
-            SERVICE_SET_HVAC_MODE,
-            {ATTR_ENTITY_ID: [entity_id], ATTR_HVAC_MODE: HVACMode.OFF},
+            ClimateService.SET_HVAC_MODE,
+            {
+                TargetKey.ENTITY_ID: [entity_id],
+                ClimateServiceArgument.HVAC_MODE: HVACMode.OFF,
+            },
             blocking=True,
         )
     mock_set.assert_called_once()
@@ -301,8 +318,11 @@ async def test_climate_cop_errors(
     ):
         await hass.services.async_call(
             CLIMATE_DOMAIN,
-            SERVICE_SET_HVAC_MODE,
-            {ATTR_ENTITY_ID: [entity_id], ATTR_HVAC_MODE: HVACMode.COOL},
+            ClimateService.SET_HVAC_MODE,
+            {
+                TargetKey.ENTITY_ID: [entity_id],
+                ClimateServiceArgument.HVAC_MODE: HVACMode.COOL,
+            },
             blocking=True,
         )
     mock_set.assert_called_once()

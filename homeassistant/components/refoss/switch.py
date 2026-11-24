@@ -9,8 +9,9 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .bridge import RefossConfigEntry, RefossDataUpdateCoordinator
+from .bridge import RefossConfigEntry
 from .const import DISPATCH_DEVICE_DISCOVERED, LOGGER
+from .coordinator import RefossDataUpdateCoordinator
 from .entity import RefossEntity
 
 

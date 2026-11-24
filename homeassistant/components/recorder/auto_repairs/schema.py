@@ -9,9 +9,10 @@ from sqlalchemy.exc import OperationalError
 from sqlalchemy.orm import DeclarativeBase
 from sqlalchemy.orm.attributes import InstrumentedAttribute
 
+from homeassistant.helpers.recorder import session_scope
+
 from ..const import SupportedDialect
 from ..db_schema import DOUBLE_PRECISION_TYPE_SQL, DOUBLE_TYPE, MYSQL_COLLATE
-from ..util import session_scope
 
 if TYPE_CHECKING:
     from .. import Recorder

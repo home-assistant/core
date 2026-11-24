@@ -49,7 +49,7 @@ from .const import (
     LearningScheduleEventType,
     YearlyCalendarEventType,
 )
-from .entity import JewishCalendarConfigEntry
+from .coordinator import JewishCalendarConfigEntry
 
 OPTIONS_SCHEMA = probatio.Schema(
     {

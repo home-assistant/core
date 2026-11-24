@@ -185,7 +185,7 @@ async def test_setup_dashboard_fails_when_already_setup(
             side_effect=TimeoutError,
         ) as mock_get_devices,
         patch(
-            "homeassistant.components.esphome.async_setup_entry", return_value=True
+            "homeassistant.components.esphome.async_setup_entry", return_value=None
         ) as mock_setup,
     ):
         await dashboard.async_set_dashboard_info(hass, "test-slug", "test-host", 6052)
@@ -256,7 +256,7 @@ async def test_new_dashboard_fix_reauth(
             return_value=VALID_NOISE_PSK,
         ) as mock_get_encryption_key,
         patch(
-            "homeassistant.components.esphome.async_setup_entry", return_value=True
+            "homeassistant.components.esphome.async_setup_entry", return_value=None
         ) as mock_setup,
     ):
         await dashboard.async_set_dashboard_info(hass, "test-slug", "test-host", 6052)

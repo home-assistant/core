@@ -103,7 +103,6 @@ async def async_setup_entry(
 class SnapcastClientDevice(SnapcastCoordinatorEntity, MediaPlayerEntity):
     """Representation of a Snapcast client device."""
 
-    _attr_should_poll = False
     _attr_supported_features = (
         MediaPlayerEntityFeature.VOLUME_MUTE
         | MediaPlayerEntityFeature.VOLUME_SET

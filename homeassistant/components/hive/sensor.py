@@ -41,6 +41,7 @@ SENSOR_TYPES: tuple[HiveSensorEntityDescription, ...] = (
     HiveSensorEntityDescription(
         key="Battery",
         native_unit_of_measurement=PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.BATTERY,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),

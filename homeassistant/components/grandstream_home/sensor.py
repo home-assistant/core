@@ -16,8 +16,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import GrandstreamConfigEntry
-from .coordinator import GrandstreamCoordinator
+from .coordinator import GrandstreamConfigEntry, GrandstreamCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 

@@ -42,8 +42,9 @@ async def async_setup_entry(
             if description.coordinator in vehicle.coordinators
         )
 
-    for vehicle in config_entry.runtime_data.vehicles.values():
-        _async_add_vehicle(vehicle)
+    config_entry.async_on_unload(
+        config_entry.runtime_data.async_add_vehicle_listener(_async_add_vehicle)
+    )
 
 
 class RenaultDeviceTracker(

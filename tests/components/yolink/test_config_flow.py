@@ -92,7 +92,7 @@ async def test_full_flow(
     with (
         patch("homeassistant.components.yolink.api.ConfigEntryAuth"),
         patch(
-            "homeassistant.components.yolink.async_setup_entry", return_value=True
+            "homeassistant.components.yolink.async_setup_entry", return_value=None
         ) as mock_setup,
     ):
         result = await hass.config_entries.flow.async_configure(result["flow_id"])
@@ -200,7 +200,7 @@ async def test_reauthentication(
     with (
         patch("homeassistant.components.yolink.api.ConfigEntryAuth"),
         patch(
-            "homeassistant.components.yolink.async_setup_entry", return_value=True
+            "homeassistant.components.yolink.async_setup_entry", return_value=None
         ) as mock_setup,
     ):
         result = await hass.config_entries.flow.async_configure(result["flow_id"])

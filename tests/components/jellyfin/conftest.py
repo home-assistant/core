@@ -37,7 +37,7 @@ def mock_config_entry() -> MockConfigEntry:
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Mock setting up a config entry."""
     with patch(
-        "homeassistant.components.jellyfin.async_setup_entry", return_value=True
+        "homeassistant.components.jellyfin.async_setup_entry", return_value=None
     ) as setup_mock:
         yield setup_mock
 
@@ -77,6 +77,7 @@ def mock_api() -> MagicMock:
     jf_api.user_items.side_effect = api_user_items_side_effect
     jf_api.get_item.side_effect = api_get_item_side_effect
     jf_api.get_media_folders.return_value = load_json_fixture("get-media-folders.json")
+    jf_api.get_album_artists.return_value = {"Items": []}
     jf_api.user_items.side_effect = api_user_items_side_effect
     jf_api.search_media_items.return_value = load_json_fixture("user-items.json")
 

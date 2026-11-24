@@ -52,10 +52,11 @@ from .exceptions import (
     ReolinkSetupException,
     UserNotAdmin,
 )
+from .hls import async_remove_leftover_hls_files
 from .host import ReolinkHost
 from .services import async_setup_services
 from .util import ReolinkConfigEntry, ReolinkData, get_device_uid_and_ch, get_store
-from .views import PlaybackProxyView
+from .views import PlaybackProxyView, ThumbnailView
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -81,6 +82,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up Reolink shared code."""
 
     async_setup_services(hass)
+    await async_remove_leftover_hls_files(hass)
     return True
 
 
@@ -264,6 +266,7 @@ async def async_setup_entry(
     migrate_entity_ids(hass, config_entry.entry_id, host)
 
     hass.http.register_view(PlaybackProxyView(hass))
+    hass.http.register_view(ThumbnailView(hass))
 
     await register_callbacks(host, device_coordinator, hass)
 
@@ -277,7 +280,7 @@ async def async_setup_entry(
 
     if host.api.is_nvr and host.api.model in DUAL_LENS_DUAL_MOTION_MODELS:
         # ensure the camera devices are setup before
-        # the lens sub-devices that use via_device
+        # their lens child devices
         for channel in host.api.stream_channels:
             if host.api.supported(channel, "UID"):
                 camera_dev_id = f"{host.unique_id}_{host.api.camera_uid(channel)}"
@@ -389,7 +392,7 @@ async def async_remove_config_entry_device(
 ) -> bool:
     """Remove a device from a config entry."""
     if not isinstance(device, dr.DeviceEntry):
-        # This integration does not create child devices.
+        # Lens child devices are removed together with their parent device
         return False
     host: ReolinkHost = config_entry.runtime_data.host
     (_device_uid, ch, is_chime) = get_device_uid_and_ch(device.identifiers, host)

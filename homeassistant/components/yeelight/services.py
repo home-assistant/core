@@ -1,65 +1,74 @@
 """Services for the Yeelight integration."""
 
+from enum import StrEnum
+
 import probatio
 from yeelight import Flow
 from yeelight.enums import PowerMode, SceneClass
 
-from homeassistant.components.light import (
-    ATTR_BRIGHTNESS,
-    ATTR_HS_COLOR,
-    ATTR_RGB_COLOR,
-    DOMAIN as LIGHT_DOMAIN,
-)
-from homeassistant.const import ATTR_ENTITY_ID, ATTR_MODE
+from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
+from homeassistant.const import CommonServiceArgument
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, service
 from homeassistant.helpers.typing import VolDictType
 
-from .const import (
-    ATTR_ACTION,
-    ATTR_COUNT,
-    ATTR_MODE_MUSIC,
-    ATTR_TRANSITIONS,
-    DOMAIN,
-    YEELIGHT_FLOW_TRANSITION_SCHEMA,
-)
+from .const import DOMAIN, YEELIGHT_FLOW_TRANSITION_SCHEMA
 from .helpers import transitions_config_parser
 
 _EXAMPLES_URL = "https://yeelight.readthedocs.io/en/stable/flow.html"
 
-ATTR_MINUTES = "minutes"
-ATTR_KELVIN = "kelvin"
 
-SERVICE_SET_MODE = "set_mode"
-SERVICE_SET_MUSIC_MODE = "set_music_mode"
-SERVICE_START_FLOW = "start_flow"
-SERVICE_SET_COLOR_SCENE = "set_color_scene"
-SERVICE_SET_HSV_SCENE = "set_hsv_scene"
-SERVICE_SET_COLOR_TEMP_SCENE = "set_color_temp_scene"
-SERVICE_SET_COLOR_FLOW_SCENE = "set_color_flow_scene"
-SERVICE_SET_AUTO_DELAY_OFF_SCENE = "set_auto_delay_off_scene"
+class YeelightService(StrEnum):
+    """Store keys for Yeelight services."""
+
+    SET_MODE = "set_mode"
+    SET_COLOR_SCENE = "set_color_scene"
+    SET_HSV_SCENE = "set_hsv_scene"
+    SET_COLOR_TEMP_SCENE = "set_color_temp_scene"
+    SET_COLOR_FLOW_SCENE = "set_color_flow_scene"
+    SET_AUTO_DELAY_OFF_SCENE = "set_auto_delay_off_scene"
+    START_FLOW = "start_flow"
+    SET_MUSIC_MODE = "set_music_mode"
+
+
+class YeelightServiceArgument(StrEnum):
+    """Store keys for Yeelight service arguments."""
+
+    MODE = "mode"
+    RGB_COLOR = "rgb_color"
+    BRIGHTNESS = "brightness"
+    HS_COLOR = "hs_color"
+    KELVIN = "kelvin"
+    COUNT = "count"
+    ACTION = "action"
+    TRANSITIONS = "transitions"
+    MINUTES = "minutes"
+    MUSIC_MODE = "music_mode"
+
 
 VALID_BRIGHTNESS = probatio.All(probatio.Coerce(int), probatio.Range(min=1, max=100))
 
 SERVICE_SCHEMA_SET_MODE: VolDictType = {
-    probatio.Required(ATTR_MODE): probatio.In([mode.name.lower() for mode in PowerMode])
+    probatio.Required(YeelightServiceArgument.MODE): probatio.In(
+        [mode.name.lower() for mode in PowerMode]
+    )
 }
 
 SERVICE_SCHEMA_SET_MUSIC_MODE: VolDictType = {
-    probatio.Required(ATTR_MODE_MUSIC): cv.boolean
+    probatio.Required(YeelightServiceArgument.MUSIC_MODE): cv.boolean
 }
 
 SERVICE_SCHEMA_START_FLOW = YEELIGHT_FLOW_TRANSITION_SCHEMA
 
 SERVICE_SCHEMA_SET_COLOR_SCENE: VolDictType = {
-    probatio.Required(ATTR_RGB_COLOR): probatio.All(
+    probatio.Required(YeelightServiceArgument.RGB_COLOR): probatio.All(
         probatio.Coerce(tuple), probatio.ExactSequence((cv.byte, cv.byte, cv.byte))
     ),
-    probatio.Required(ATTR_BRIGHTNESS): VALID_BRIGHTNESS,
+    probatio.Required(YeelightServiceArgument.BRIGHTNESS): VALID_BRIGHTNESS,
 }
 
 SERVICE_SCHEMA_SET_HSV_SCENE: VolDictType = {
-    probatio.Required(ATTR_HS_COLOR): probatio.All(
+    probatio.Required(YeelightServiceArgument.HS_COLOR): probatio.All(
         probatio.Coerce(tuple),
         probatio.ExactSequence(
             (
@@ -68,62 +77,66 @@ SERVICE_SCHEMA_SET_HSV_SCENE: VolDictType = {
             )
         ),
     ),
-    probatio.Required(ATTR_BRIGHTNESS): VALID_BRIGHTNESS,
+    probatio.Required(YeelightServiceArgument.BRIGHTNESS): VALID_BRIGHTNESS,
 }
 
 SERVICE_SCHEMA_SET_COLOR_TEMP_SCENE: VolDictType = {
-    probatio.Required(ATTR_KELVIN): probatio.All(
+    probatio.Required(YeelightServiceArgument.KELVIN): probatio.All(
         probatio.Coerce(int), probatio.Range(min=1700, max=6500)
     ),
-    probatio.Required(ATTR_BRIGHTNESS): VALID_BRIGHTNESS,
+    probatio.Required(YeelightServiceArgument.BRIGHTNESS): VALID_BRIGHTNESS,
 }
 
 SERVICE_SCHEMA_SET_COLOR_FLOW_SCENE = YEELIGHT_FLOW_TRANSITION_SCHEMA
 
 SERVICE_SCHEMA_SET_AUTO_DELAY_OFF_SCENE: VolDictType = {
-    probatio.Required(ATTR_MINUTES): probatio.All(
+    probatio.Required(YeelightServiceArgument.MINUTES): probatio.All(
         probatio.Coerce(int), probatio.Range(min=1, max=60)
     ),
-    probatio.Required(ATTR_BRIGHTNESS): VALID_BRIGHTNESS,
+    probatio.Required(YeelightServiceArgument.BRIGHTNESS): VALID_BRIGHTNESS,
 }
 
 
 async def _async_start_flow(entity, service_call):
     params = {**service_call.data}
-    params.pop(ATTR_ENTITY_ID)
-    params[ATTR_TRANSITIONS] = transitions_config_parser(params[ATTR_TRANSITIONS])
+    params.pop(CommonServiceArgument.ENTITY_ID)
+    params[YeelightServiceArgument.TRANSITIONS] = transitions_config_parser(
+        params[YeelightServiceArgument.TRANSITIONS]
+    )
     await entity.async_start_flow(**params)
 
 
 async def _async_set_color_scene(entity, service_call):
     await entity.async_set_scene(
         SceneClass.COLOR,
-        *service_call.data[ATTR_RGB_COLOR],
-        service_call.data[ATTR_BRIGHTNESS],
+        *service_call.data[YeelightServiceArgument.RGB_COLOR],
+        service_call.data[YeelightServiceArgument.BRIGHTNESS],
     )
 
 
 async def _async_set_hsv_scene(entity, service_call):
     await entity.async_set_scene(
         SceneClass.HSV,
-        *service_call.data[ATTR_HS_COLOR],
-        service_call.data[ATTR_BRIGHTNESS],
+        *service_call.data[YeelightServiceArgument.HS_COLOR],
+        service_call.data[YeelightServiceArgument.BRIGHTNESS],
     )
 
 
 async def _async_set_color_temp_scene(entity, service_call):
     await entity.async_set_scene(
         SceneClass.CT,
-        service_call.data[ATTR_KELVIN],
-        service_call.data[ATTR_BRIGHTNESS],
+        service_call.data[YeelightServiceArgument.KELVIN],
+        service_call.data[YeelightServiceArgument.BRIGHTNESS],
     )
 
 
 async def _async_set_color_flow_scene(entity, service_call):
     flow = Flow(
-        count=service_call.data[ATTR_COUNT],
-        action=Flow.actions[service_call.data[ATTR_ACTION]],
-        transitions=transitions_config_parser(service_call.data[ATTR_TRANSITIONS]),
+        count=service_call.data[YeelightServiceArgument.COUNT],
+        action=Flow.actions[service_call.data[YeelightServiceArgument.ACTION]],
+        transitions=transitions_config_parser(
+            service_call.data[YeelightServiceArgument.TRANSITIONS]
+        ),
     )
     await entity.async_set_scene(SceneClass.CF, flow)
 
@@ -131,8 +144,8 @@ async def _async_set_color_flow_scene(entity, service_call):
 async def _async_set_auto_delay_off_scene(entity, service_call):
     await entity.async_set_scene(
         SceneClass.AUTO_DELAY_OFF,
-        service_call.data[ATTR_BRIGHTNESS],
-        service_call.data[ATTR_MINUTES],
+        service_call.data[YeelightServiceArgument.BRIGHTNESS],
+        service_call.data[YeelightServiceArgument.MINUTES],
     )
 
 
@@ -142,7 +155,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
     service.async_register_platform_entity_service(
         hass,
         DOMAIN,
-        SERVICE_SET_MODE,
+        YeelightService.SET_MODE,
         entity_domain=LIGHT_DOMAIN,
         schema=SERVICE_SCHEMA_SET_MODE,
         func="async_set_mode",
@@ -150,7 +163,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
     service.async_register_platform_entity_service(
         hass,
         DOMAIN,
-        SERVICE_START_FLOW,
+        YeelightService.START_FLOW,
         entity_domain=LIGHT_DOMAIN,
         schema=SERVICE_SCHEMA_START_FLOW,
         func=_async_start_flow,
@@ -162,7 +175,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
     service.async_register_platform_entity_service(
         hass,
         DOMAIN,
-        SERVICE_SET_COLOR_SCENE,
+        YeelightService.SET_COLOR_SCENE,
         entity_domain=LIGHT_DOMAIN,
         schema=SERVICE_SCHEMA_SET_COLOR_SCENE,
         func=_async_set_color_scene,
@@ -170,7 +183,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
     service.async_register_platform_entity_service(
         hass,
         DOMAIN,
-        SERVICE_SET_HSV_SCENE,
+        YeelightService.SET_HSV_SCENE,
         entity_domain=LIGHT_DOMAIN,
         schema=SERVICE_SCHEMA_SET_HSV_SCENE,
         func=_async_set_hsv_scene,
@@ -178,7 +191,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
     service.async_register_platform_entity_service(
         hass,
         DOMAIN,
-        SERVICE_SET_COLOR_TEMP_SCENE,
+        YeelightService.SET_COLOR_TEMP_SCENE,
         entity_domain=LIGHT_DOMAIN,
         schema=SERVICE_SCHEMA_SET_COLOR_TEMP_SCENE,
         func=_async_set_color_temp_scene,
@@ -186,7 +199,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
     service.async_register_platform_entity_service(
         hass,
         DOMAIN,
-        SERVICE_SET_COLOR_FLOW_SCENE,
+        YeelightService.SET_COLOR_FLOW_SCENE,
         entity_domain=LIGHT_DOMAIN,
         schema=SERVICE_SCHEMA_SET_COLOR_FLOW_SCENE,
         func=_async_set_color_flow_scene,
@@ -195,7 +208,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
     service.async_register_platform_entity_service(
         hass,
         DOMAIN,
-        SERVICE_SET_AUTO_DELAY_OFF_SCENE,
+        YeelightService.SET_AUTO_DELAY_OFF_SCENE,
         entity_domain=LIGHT_DOMAIN,
         schema=SERVICE_SCHEMA_SET_AUTO_DELAY_OFF_SCENE,
         func=_async_set_auto_delay_off_scene,
@@ -203,7 +216,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
     service.async_register_platform_entity_service(
         hass,
         DOMAIN,
-        SERVICE_SET_MUSIC_MODE,
+        YeelightService.SET_MUSIC_MODE,
         entity_domain=LIGHT_DOMAIN,
         schema=SERVICE_SCHEMA_SET_MUSIC_MODE,
         func="async_set_music_mode",

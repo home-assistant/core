@@ -12,12 +12,20 @@ from .connection import DATA_REGISTRY, ConnectionRegistry, async_register_connec
 from .const import DOMAIN
 from .device_manager import DeviceManager, device_identifier
 from .entity import LoRaWANEntity
+from .validation import (
+    NoConnectionsError,
+    NoSupportedDevicesError,
+    async_validate_devices,
+)
 
 __all__ = [
     "DeviceManager",
     "LoRaWANDiscoveryInfo",
     "LoRaWANEntity",
+    "NoConnectionsError",
+    "NoSupportedDevicesError",
     "async_register_connection",
+    "async_validate_devices",
     "device_identifier",
 ]
 

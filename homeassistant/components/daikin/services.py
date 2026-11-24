@@ -1,8 +1,10 @@
 """Services for the Daikin integration."""
 
+from enum import StrEnum
+
 import probatio
 
-from homeassistant.const import ATTR_DEVICE_ID, ATTR_MODE
+from homeassistant.const import CommonServiceArgument
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import config_validation as cv
@@ -11,26 +13,37 @@ from homeassistant.helpers.service import async_extract_config_entry_ids
 from .const import DOMAIN
 from .coordinator import DaikinConfigEntry
 
-SERVICE_SET_DEMAND_CONTROL = "set_demand_control"
-ATTR_EN_DEMAND = "en_demand"
-ATTR_MAX_POW = "max_pow"
 
-ATTR_MODE_MANUAL = "manual"
-ATTR_MODE_AUTO = "auto"
+class DaikinService(StrEnum):
+    """Store keys for Daikin services."""
+
+    SET_DEMAND_CONTROL = "set_demand_control"
+
+
+class DaikinServiceArgument(StrEnum):
+    """Store keys for Daikin service arguments."""
+
+    EN_DEMAND = "en_demand"
+    MAX_POW = "max_pow"
+    MODE = "mode"
+
+
+MODE_MANUAL = "manual"
+MODE_AUTO = "auto"
 
 DAIKIN_DEMAND_CONTROL_MODES: dict[str, int] = {
-    ATTR_MODE_MANUAL: 0,
-    ATTR_MODE_AUTO: 2,
+    MODE_MANUAL: 0,
+    MODE_AUTO: 2,
 }
 
 SET_DEMAND_CONTROL_SCHEMA = probatio.Schema(
     {
-        probatio.Required(ATTR_DEVICE_ID): cv.string,
-        probatio.Required(ATTR_EN_DEMAND): bool,
-        probatio.Optional(ATTR_MAX_POW, default=100): probatio.All(
+        probatio.Required(CommonServiceArgument.DEVICE_ID): cv.string,
+        probatio.Required(DaikinServiceArgument.EN_DEMAND): bool,
+        probatio.Optional(DaikinServiceArgument.MAX_POW, default=100): probatio.All(
             probatio.Coerce(int), probatio.Range(min=40, max=100)
         ),
-        probatio.Optional(ATTR_MODE, default=ATTR_MODE_MANUAL): probatio.In(
+        probatio.Optional(DaikinServiceArgument.MODE, default=MODE_MANUAL): probatio.In(
             DAIKIN_DEMAND_CONTROL_MODES
         ),
     }
@@ -63,9 +76,9 @@ async def async_set_demand_control(call: ServiceCall) -> None:
             translation_key="demand_control_unsupported",
         )
     await device.set_demand_control(
-        en_demand="on" if call.data[ATTR_EN_DEMAND] else "off",
-        max_pow=call.data[ATTR_MAX_POW],
-        mode=DAIKIN_DEMAND_CONTROL_MODES[call.data[ATTR_MODE]],
+        en_demand="on" if call.data[DaikinServiceArgument.EN_DEMAND] else "off",
+        max_pow=call.data[DaikinServiceArgument.MAX_POW],
+        mode=DAIKIN_DEMAND_CONTROL_MODES[call.data[DaikinServiceArgument.MODE]],
     )
     await entry.runtime_data.async_refresh()
 
@@ -75,7 +88,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
     """Set up the Daikin services."""
     hass.services.async_register(
         DOMAIN,
-        SERVICE_SET_DEMAND_CONTROL,
+        DaikinService.SET_DEMAND_CONTROL,
         async_set_demand_control,
         SET_DEMAND_CONTROL_SCHEMA,
     )

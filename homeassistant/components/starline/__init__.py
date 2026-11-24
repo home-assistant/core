@@ -1,13 +1,12 @@
 """The StarLine component."""
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_SCAN_INTERVAL
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.typing import ConfigType
 
-from .account import StarlineAccount
+from .account import StarlineAccount, StarlineConfigEntry
 from .const import (
     CONF_SCAN_OBD_INTERVAL,
     DEFAULT_SCAN_INTERVAL,
@@ -16,8 +15,6 @@ from .const import (
     PLATFORMS,
 )
 from .services import async_setup_services
-
-type StarlineConfigEntry = ConfigEntry[StarlineAccount]
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
@@ -40,8 +37,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: StarlineConfigEntry) -> 
 
     device_registry = dr.async_get(hass)
     for device in account.api.devices.values():
-        device_registry.async_get_or_create(
-            config_entry_id=entry.entry_id, **account.device_info(device)
+        device_registry.async_get_or_create_from_info(
+            config_entry_id=entry.entry_id, device_info=account.device_info(device)
         )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)

@@ -7,7 +7,7 @@ from datetime import datetime, timedelta
 import logging
 from typing import Any, override
 
-from aiomelcloudhome import ATAUnit, ATWUnit, MELCloudHome, UserContext
+from aiomelcloudhome import ATAUnit, ATWUnit, MELCloudHome, UnitStateDelta, UserContext
 from aiomelcloudhome.exceptions import (
     MelCloudHomeAuthenticationError,
     MelCloudHomeConnectionError,
@@ -22,11 +22,12 @@ from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util.dt import utcnow
 
-from .const import DOMAIN
+from .const import DEVICE_ATA, DEVICE_ATW, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
 UPDATE_INTERVAL = timedelta(seconds=60)
+LIVE_UPDATE_INTERVAL = timedelta(minutes=10)
 TELEMETRY_UPDATE_INTERVAL = timedelta(minutes=15)
 
 # ATA telemetry reports Wh, ATW telemetry kWh per interval
@@ -65,21 +66,19 @@ class MelCloudHomeCoordinator(DataUpdateCoordinator[UserContext]):
             update_interval=UPDATE_INTERVAL,
         )
         self.client = client
+        self.websocket = client.websocket()
         self.ata_units: dict[str, ATAUnit] = {}
         self.atw_units: dict[str, ATWUnit] = {}
         self.known_ata: set[str] = set()
         self.known_atw: set[str] = set()
         self.new_ata_callbacks: list[Callable[[list[ATAUnit]], None]] = []
         self.new_atw_callbacks: list[Callable[[list[ATWUnit]], None]] = []
+        self._deltas_during_fetch: list[UnitStateDelta] | None = None
 
-    def _async_sync_units(self, data: UserContext) -> None:
+    def _async_sync_units(self) -> None:
         """Add entities for new units and remove devices of units that are gone."""
-        current_ata = [
-            unit for building in data.buildings for unit in building.air_to_air_units
-        ]
-        current_atw_units = [
-            unit for building in data.buildings for unit in building.air_to_water_units
-        ]
+        current_ata = list(self.ata_units.values())
+        current_atw_units = list(self.atw_units.values())
         if not current_ata and not current_atw_units:
             # An empty context is more likely an API glitch than every unit removed
             _LOGGER.debug("No units in the account, skipping stale device removal")
@@ -124,6 +123,8 @@ class MelCloudHomeCoordinator(DataUpdateCoordinator[UserContext]):
     @override
     async def _async_update_data(self) -> UserContext:
         """Fetch data from the MELCloud Home API."""
+        deltas: list[UnitStateDelta] = []
+        self._deltas_during_fetch = deltas
         try:
             data = await self.client.get_context()
         except MelCloudHomeAuthenticationError as err:
@@ -146,6 +147,8 @@ class MelCloudHomeCoordinator(DataUpdateCoordinator[UserContext]):
                 translation_domain=DOMAIN,
                 translation_key="api_error",
             ) from err
+        finally:
+            self._deltas_during_fetch = None
 
         self.ata_units = {
             unit.id: unit
@@ -157,6 +160,9 @@ class MelCloudHomeCoordinator(DataUpdateCoordinator[UserContext]):
             for building in data.buildings
             for unit in building.air_to_water_units
         }
+        # The snapshot can predate deltas that arrived while it was fetched
+        for delta in deltas:
+            self._apply_delta(delta)
 
         return data
 
@@ -165,7 +171,78 @@ class MelCloudHomeCoordinator(DataUpdateCoordinator[UserContext]):
     def _async_refresh_finished(self) -> None:
         """Notify entity callbacks after coordinator data has been updated."""
         if self.data is not None:
-            self._async_sync_units(self.data)
+            self._async_sync_units()
+
+    @callback
+    def async_start_live_updates(self) -> None:
+        """Receive live updates until the config entry unloads."""
+        entry = self.config_entry
+        # Unload callbacks run in reverse, so the socket closes after unregistering
+        entry.async_on_unload(self.websocket.close)
+        entry.async_on_unload(
+            self.websocket.register_delta_callback(self.async_handle_delta)
+        )
+        entry.async_on_unload(
+            self.websocket.register_connection_callback(self.async_handle_connection)
+        )
+        entry.async_create_background_task(
+            self.hass, self._async_listen(), f"{DOMAIN}_websocket"
+        )
+
+    async def _async_listen(self) -> None:
+        """Receive live updates until the websocket is closed."""
+        try:
+            await self.websocket.listen()
+        except MelCloudHomeAuthenticationError:
+            self.config_entry.async_start_reauth(self.hass)
+
+    @callback
+    def async_handle_delta(self, delta: UnitStateDelta) -> None:
+        """Apply a websocket delta to the cached unit."""
+        _LOGGER.debug("Received websocket delta: %s", delta)
+        if self._deltas_during_fetch is not None:
+            self._deltas_during_fetch.append(delta)
+        if not self._apply_delta(delta):
+            return
+        # An in-flight fetch decides availability when it finishes
+        if self._deltas_during_fetch is None:
+            self.last_update_success = True
+        self.async_update_listeners()
+
+    def _apply_delta(self, delta: UnitStateDelta) -> bool:
+        """Apply a delta to the cached unit of its type; return whether it changed."""
+        if delta.unit_type == DEVICE_ATA:
+            return _apply_unit_delta(self.ata_units, delta)
+        if delta.unit_type == DEVICE_ATW:
+            return _apply_unit_delta(self.atw_units, delta)
+        return False
+
+    @callback
+    def async_handle_connection(self, connected: bool) -> None:
+        """Poll less often while live updates arrive."""
+        _LOGGER.debug("Live updates %s", "connected" if connected else "disconnected")
+        if connected:
+            self.update_interval = LIVE_UPDATE_INTERVAL
+            return
+        self.update_interval = UPDATE_INTERVAL
+        # Shutdown would wait for this request
+        if self.hass.is_stopping:
+            return
+        # Catches up on missed changes and reschedules polling at the shorter interval
+        self.config_entry.async_create_task(self.hass, self.async_request_refresh())
+
+
+def _apply_unit_delta[_UnitT: (ATAUnit, ATWUnit)](
+    units: dict[str, _UnitT], delta: UnitStateDelta
+) -> bool:
+    """Apply a websocket delta to a cached unit; return whether it changed."""
+    # Unknown units are discovered by the regular poll
+    if (unit := units.get(delta.unit_id)) is None:
+        return False
+    if (updated := delta.apply_to(unit)) is unit:
+        return False
+    units[delta.unit_id] = updated
+    return True
 
 
 @dataclass(kw_only=True, frozen=True)

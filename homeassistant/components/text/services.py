@@ -8,7 +8,7 @@ from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import config_validation as cv
 
-from .const import ATTR_VALUE, DATA_COMPONENT, DOMAIN, SERVICE_SET_VALUE
+from .const import DATA_COMPONENT, DOMAIN, TextService, TextServiceArgument
 
 if TYPE_CHECKING:
     from .entity import TextEntity
@@ -16,7 +16,7 @@ if TYPE_CHECKING:
 
 async def _async_set_value(entity: TextEntity, service_call: ServiceCall) -> None:
     """Service call wrapper to set a new value."""
-    value = service_call.data[ATTR_VALUE]
+    value = service_call.data[TextServiceArgument.VALUE]
     if len(value) < entity.min:
         raise ServiceValidationError(
             translation_domain=DOMAIN,
@@ -54,7 +54,7 @@ async def _async_set_value(entity: TextEntity, service_call: ServiceCall) -> Non
 def async_setup_services(hass: HomeAssistant) -> None:
     """Register the text services."""
     hass.data[DATA_COMPONENT].async_register_entity_service(
-        SERVICE_SET_VALUE,
-        {probatio.Required(ATTR_VALUE): cv.string},
+        TextService.SET_VALUE,
+        {probatio.Required(TextServiceArgument.VALUE): cv.string},
         _async_set_value,
     )

@@ -6,11 +6,7 @@ import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.devolo_home_control.const import DOMAIN
-from homeassistant.components.siren import (
-    DOMAIN as SIREN_DOMAIN,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
-)
+from homeassistant.components.siren import DOMAIN as SIREN_DOMAIN, SirenService
 from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -73,7 +69,7 @@ async def test_siren_switching(
     ) as property_set:
         await hass.services.async_call(
             SIREN_DOMAIN,
-            SERVICE_TURN_ON,
+            SirenService.TURN_ON,
             {"entity_id": f"{SIREN_DOMAIN}.test_test"},
             blocking=True,
         )
@@ -89,7 +85,7 @@ async def test_siren_switching(
     ) as property_set:
         await hass.services.async_call(
             SIREN_DOMAIN,
-            SERVICE_TURN_OFF,
+            SirenService.TURN_OFF,
             {"entity_id": f"{SIREN_DOMAIN}.test_test"},
             blocking=True,
         )
@@ -110,7 +106,7 @@ async def test_siren_switching(
     ):
         await hass.services.async_call(
             SIREN_DOMAIN,
-            SERVICE_TURN_OFF,
+            SirenService.TURN_OFF,
             {"entity_id": f"{SIREN_DOMAIN}.test_test"},
             blocking=True,
         )
@@ -142,7 +138,7 @@ async def test_siren_change_default_tone(
         test_gateway.publisher.dispatch("Test", ("mss:Test", 2))
         await hass.services.async_call(
             SIREN_DOMAIN,
-            SERVICE_TURN_ON,
+            SirenService.TURN_ON,
             {"entity_id": f"{SIREN_DOMAIN}.test_test"},
             blocking=True,
         )

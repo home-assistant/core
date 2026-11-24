@@ -5,10 +5,9 @@ from http import HTTPStatus
 from typing import Any
 from unittest.mock import AsyncMock, patch
 
+from httpx import HTTPStatusError, Request, Response  # SDK 4.0.1 uses httpx
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
-from requests.exceptions import HTTPError
-from requests.models import Response
 from todoist_api_python.api_async import TodoistAPIAsync
 from todoist_api_python.models import Collaborator, Due, Label, Project, Section, Task
 
@@ -67,7 +66,7 @@ def make_api_due(
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
-        "homeassistant.components.todoist.async_setup_entry", return_value=True
+        "homeassistant.components.todoist.async_setup_entry", return_value=None
     ) as mock_setup_entry:
         yield mock_setup_entry
 
@@ -179,9 +178,11 @@ def mock_api_side_effect(
 ) -> MockConfigEntry:
     """Mock todoist configuration."""
     if todoist_api_status:
-        response = Response()
-        response.status_code = todoist_api_status
-        api.get_tasks.side_effect = HTTPError(response=response)
+        request = Request("GET", "https://api.todoist.com/api/v1/tasks")
+        response = Response(todoist_api_status, request=request)
+        api.get_tasks.side_effect = HTTPStatusError(
+            "API error", request=request, response=response
+        )
 
 
 @pytest.fixture(name="todoist_config_entry")

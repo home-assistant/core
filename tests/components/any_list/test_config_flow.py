@@ -1,10 +1,11 @@
 """Tests for the AnyList config flow."""
 
 from collections.abc import Generator
+from dataclasses import replace
 from unittest.mock import AsyncMock, MagicMock, patch
 import uuid
 
-from aioanylist import AuthenticationError, TransportError
+from aioanylist import AuthenticationError, AuthTokens, TransportError
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
@@ -39,7 +40,7 @@ PASSWORD = "secret-password"
 def mock_setup_entry_fixture() -> Generator[AsyncMock]:
     """Mock runtime setup during config flow tests."""
     with patch(
-        "homeassistant.components.any_list.async_setup_entry", return_value=True
+        "homeassistant.components.any_list.async_setup_entry", return_value=None
     ) as mock_setup:
         yield mock_setup
 
@@ -140,3 +141,100 @@ async def test_duplicate_account(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
+
+
+async def test_reauth_flow(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_setup_entry: AsyncMock,
+    mock_anylist_client: MagicMock,
+) -> None:
+    """Test reauthentication updates the tokens of the entry."""
+    mock_config_entry.add_to_hass(hass)
+    mock_anylist_client.sign_in.return_value = AuthTokens(
+        user_id=USER_ID,
+        access_token="new-access-token",
+        refresh_token="new-refresh-token",
+        user_locale="de-DE",
+    )
+
+    result = await mock_config_entry.start_reauth_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_PASSWORD: PASSWORD}
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+    assert mock_config_entry.data == {
+        CONF_EMAIL: EMAIL,
+        CONF_CLIENT_ID: CLIENT_ID,
+        CONF_ACCESS_TOKEN: "new-access-token",
+        CONF_REFRESH_TOKEN: "new-refresh-token",
+        CONF_USER_LOCALE: "de-DE",
+    }
+    mock_anylist_client.sign_in.assert_awaited_once_with(EMAIL, PASSWORD)
+    mock_anylist_client.close.assert_awaited_once()
+    assert mock_setup_entry.call_count == 1
+
+
+@pytest.mark.parametrize(
+    ("error", "expected_error"),
+    [
+        (AuthenticationError(), "invalid_auth"),
+        (TransportError(), "cannot_connect"),
+        (TimeoutError(), "cannot_connect"),
+        (ValueError(), "unknown"),
+    ],
+)
+async def test_reauth_flow_errors_and_recovery(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_setup_entry: AsyncMock,
+    mock_anylist_client: MagicMock,
+    error: Exception,
+    expected_error: str,
+) -> None:
+    """Test reauthentication errors and recovery."""
+    mock_config_entry.add_to_hass(hass)
+    result = await mock_config_entry.start_reauth_flow(hass)
+    mock_anylist_client.sign_in.side_effect = error
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_PASSWORD: PASSWORD}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": expected_error}
+
+    mock_anylist_client.sign_in.side_effect = None
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_PASSWORD: PASSWORD}
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+
+
+async def test_reauth_flow_wrong_account(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_anylist_client: MagicMock,
+) -> None:
+    """Test reauthentication aborts for a different AnyList account."""
+    mock_config_entry.add_to_hass(hass)
+    mock_anylist_client.sign_in.return_value = replace(
+        mock_anylist_client.sign_in.return_value, user_id="other-user"
+    )
+
+    result = await mock_config_entry.start_reauth_flow(hass)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_PASSWORD: PASSWORD}
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "wrong_account"
+    assert mock_config_entry.data[CONF_ACCESS_TOKEN] == ACCESS_TOKEN

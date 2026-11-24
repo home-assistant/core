@@ -10,6 +10,9 @@ from homeassistant.components.device_automation import (
 from homeassistant.components.homeassistant.triggers import (
     numeric_state as numeric_state_trigger,
 )
+from homeassistant.components.homeassistant.triggers.numeric_state import (
+    NumericStateTriggerArgument,
+)
 from homeassistant.const import (
     CONF_ABOVE,
     CONF_BELOW,
@@ -243,16 +246,16 @@ async def async_attach_trigger(
     trigger_info: TriggerInfo,
 ) -> CALLBACK_TYPE:
     """Listen for state changes based on configuration."""
-    numeric_state_config = {
-        numeric_state_trigger.CONF_PLATFORM: "numeric_state",
-        numeric_state_trigger.CONF_ENTITY_ID: config[CONF_ENTITY_ID],
+    numeric_state_config: ConfigType = {
+        NumericStateTriggerArgument.PLATFORM: "numeric_state",
+        NumericStateTriggerArgument.ENTITY_ID: config[CONF_ENTITY_ID],
     }
     if CONF_ABOVE in config:
-        numeric_state_config[numeric_state_trigger.CONF_ABOVE] = config[CONF_ABOVE]
+        numeric_state_config[NumericStateTriggerArgument.ABOVE] = config[CONF_ABOVE]
     if CONF_BELOW in config:
-        numeric_state_config[numeric_state_trigger.CONF_BELOW] = config[CONF_BELOW]
+        numeric_state_config[NumericStateTriggerArgument.BELOW] = config[CONF_BELOW]
     if CONF_FOR in config:
-        numeric_state_config[CONF_FOR] = config[CONF_FOR]
+        numeric_state_config[NumericStateTriggerArgument.FOR] = config[CONF_FOR]
 
     numeric_state_config = await numeric_state_trigger.async_validate_trigger_config(
         hass, numeric_state_config

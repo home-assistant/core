@@ -60,7 +60,7 @@ async def test_invalid_login_error(hass: HomeAssistant) -> None:
 
     with (
         patch("pyvesync.vesync.VeSync.login"),
-        patch("homeassistant.components.vesync.async_setup_entry", return_value=True),
+        patch("homeassistant.components.vesync.async_setup_entry", return_value=None),
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],

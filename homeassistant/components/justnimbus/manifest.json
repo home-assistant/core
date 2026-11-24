@@ -4,6 +4,7 @@
   "categories": ["water"],
   "codeowners": ["@kvanzuijlen"],
   "config_flow": true,
+  "connectivity": ["cloud"],
   "documentation": "https://www.home-assistant.io/integrations/justnimbus",
   "integration_type": "device",
   "iot_class": "cloud_polling",

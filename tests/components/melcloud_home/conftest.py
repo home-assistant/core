@@ -3,7 +3,7 @@
 from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 
-from aiomelcloudhome import MELCloudHome, UserContext
+from aiomelcloudhome import MELCloudHome, MELCloudHomeWebSocket, UserContext
 from aiomelcloudhome.models.telemetry import TelemetryValue
 import pytest
 from pytest_homeassistant.common import (
@@ -30,15 +30,22 @@ MOCK_REAUTH_INPUT = {
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
-        "homeassistant.components.melcloud_home.async_setup_entry", return_value=True
+        "homeassistant.components.melcloud_home.async_setup_entry", return_value=None
     ) as mock_setup_entry:
         yield mock_setup_entry
 
 
 @pytest.fixture
-def mock_melcloud_client() -> Generator[AsyncMock]:
+def mock_websocket() -> AsyncMock:
+    """Mock the MELCloud Home websocket."""
+    return AsyncMock(MELCloudHomeWebSocket)
+
+
+@pytest.fixture
+def mock_melcloud_client(mock_websocket: AsyncMock) -> Generator[AsyncMock]:
     """Mock MELCloud Home client."""
     client = AsyncMock(MELCloudHome)
+    client.websocket.return_value = mock_websocket
     client.get_context.return_value = UserContext.model_validate(
         load_json_object_fixture("context.json", DOMAIN)
     )

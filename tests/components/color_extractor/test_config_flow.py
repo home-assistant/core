@@ -21,7 +21,7 @@ async def test_full_user_flow(hass: HomeAssistant) -> None:
 
     with patch(
         "homeassistant.components.color_extractor.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ) as mock_setup_entry:
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],

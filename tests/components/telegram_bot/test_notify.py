@@ -8,12 +8,11 @@ from telegram import Chat, Message
 from telegram.constants import ChatType, ParseMode
 
 from homeassistant.components.notify import (
-    ATTR_MESSAGE,
-    ATTR_TITLE,
     DOMAIN as NOTIFY_DOMAIN,
-    SERVICE_SEND_MESSAGE,
+    NotifyService,
+    NotifyServiceArgument,
 )
-from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.const import TargetKey
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.util import dt as dt_util
 
@@ -40,11 +39,11 @@ async def test_send_message(
     ) as mock_send_message:
         await hass.services.async_call(
             NOTIFY_DOMAIN,
-            SERVICE_SEND_MESSAGE,
+            NotifyService.SEND_MESSAGE,
             {
-                ATTR_ENTITY_ID: "notify.mock_chat",
-                ATTR_MESSAGE: "mock message",
-                ATTR_TITLE: "mock title",
+                TargetKey.ENTITY_ID: "notify.mock_chat",
+                NotifyServiceArgument.MESSAGE: "mock message",
+                NotifyServiceArgument.TITLE: "mock title",
             },
             blocking=True,
             context=context,
@@ -59,7 +58,6 @@ async def test_send_message(
             disable_notification=False,
             reply_to_message_id=None,
             reply_markup=None,
-            read_timeout=None,
             message_thread_id=None,
         )
 

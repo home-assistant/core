@@ -6,17 +6,12 @@ from typing import Any, override
 from lektricowifi import Device, DeviceConnectionError
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    ATTR_HW_VERSION,
-    ATTR_SERIAL_NUMBER,
-    CONF_HOST,
-    CONF_TYPE,
-)
+from homeassistant.const import CONF_HOST, CONF_TYPE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.httpx_client import get_async_client
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import LOGGER
+from .const import CONF_HW_VERSION, CONF_SERIAL_NUMBER, LOGGER
 
 SCAN_INTERVAL = timedelta(seconds=10)
 
@@ -34,15 +29,15 @@ class LektricoDeviceDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]])
             hass,
             LOGGER,
             config_entry=config_entry,
-            name=f"{config_entry.data[CONF_TYPE]}_{config_entry.data[ATTR_SERIAL_NUMBER]}",
+            name=f"{config_entry.data[CONF_TYPE]}_{config_entry.data[CONF_SERIAL_NUMBER]}",
             update_interval=SCAN_INTERVAL,
         )
         self.device = Device(
             self.config_entry.data[CONF_HOST],
             asyncClient=get_async_client(hass),
         )
-        self.serial_number: str = self.config_entry.data[ATTR_SERIAL_NUMBER]
-        self.board_revision: str = self.config_entry.data[ATTR_HW_VERSION]
+        self.serial_number: str = self.config_entry.data[CONF_SERIAL_NUMBER]
+        self.board_revision: str = self.config_entry.data[CONF_HW_VERSION]
         self.device_type: str = self.config_entry.data[CONF_TYPE]
 
     @override

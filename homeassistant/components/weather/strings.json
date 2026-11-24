@@ -82,19 +82,6 @@
       "message": "Weather entity {entity_id} does not support the {forecast_type} forecast type."
     }
   },
-  "issues": {
-    "deprecated_service_weather_get_forecast": {
-      "fix_flow": {
-        "step": {
-          "confirm": {
-            "description": "Use `weather.get_forecasts` instead which supports multiple entities.\n\nPlease replace this action and adjust your automations and scripts and select **Submit** to close this issue.",
-            "title": "[%key:component::weather::issues::deprecated_service_weather_get_forecast::title%]"
-          }
-        }
-      },
-      "title": "Detected use of deprecated action weather.get_forecast"
-    }
-  },
   "selector": {
     "forecast_type": {
       "options": {
@@ -105,16 +92,6 @@
     }
   },
   "services": {
-    "get_forecast": {
-      "description": "Retrieves the forecast from a weather service.",
-      "fields": {
-        "type": {
-          "description": "[%key:component::weather::services::get_forecasts::fields::type::description%]",
-          "name": "[%key:component::weather::services::get_forecasts::fields::type::name%]"
-        }
-      },
-      "name": "Get weather forecast"
-    },
     "get_forecasts": {
       "description": "Retrieves the forecasts from one or more weather services.",
       "fields": {

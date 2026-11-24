@@ -13,7 +13,7 @@ from pytest_homeassistant.common import (
 )
 
 from homeassistant import setup
-from homeassistant.components.trend.const import DOMAIN
+from homeassistant.components.trend.const import DOMAIN, TrendEntityStateAttribute
 from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -261,7 +261,7 @@ async def test_max_samples(
 
     assert (state := hass.states.get("binary_sensor.test_trend_sensor"))
     assert state.state == "on"
-    assert state.attributes["sample_count"] == 3
+    assert state.attributes[TrendEntityStateAttribute.SAMPLE_COUNT] == 3
 
 
 async def test_non_numeric(

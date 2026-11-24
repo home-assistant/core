@@ -1,3 +1,26 @@
+add_ingredient:
+  target:
+    entity:
+      integration: mealie
+      domain: todo
+  fields:
+    food_id:
+      selector:
+        text:
+    note:
+      selector:
+        text:
+    unit_id:
+      selector:
+        text:
+    quantity:
+      default: 0
+      selector:
+        number:
+          min: 0
+          step: any
+          mode: box
+
 delete_mealplan:
   fields:
     config_entry_id:
@@ -98,9 +121,11 @@ set_random_mealplan:
         config_entry:
           integration: mealie
     date:
+      required: true
       selector:
         date:
     entry_type:
+      required: true
       selector:
         select:
           options:
@@ -121,9 +146,11 @@ set_mealplan:
         config_entry:
           integration: mealie
     date:
+      required: true
       selector:
         date:
     entry_type:
+      required: true
       selector:
         select:
           options:
@@ -157,9 +184,11 @@ update_mealplan:
       selector:
         text:
     date:
+      required: true
       selector:
         date:
     entry_type:
+      required: true
       selector:
         select:
           options:

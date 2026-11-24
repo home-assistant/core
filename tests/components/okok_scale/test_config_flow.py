@@ -152,6 +152,27 @@ async def test_async_step_bluetooth_already_in_progress(hass: HomeAssistant) -> 
     assert result["reason"] == "already_in_progress"
 
 
+async def test_async_step_bluetooth_device_added_before_confirm(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
+    """Test confirming a discovery aborts if the device was added in the meantime."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_BLUETOOTH},
+        data=OKOK_F0_SERVICE_INFO,
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "bluetooth_confirm"
+
+    mock_config_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={}
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+
+
 async def test_async_step_user_device_added_between_steps(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
@@ -204,7 +225,6 @@ async def test_async_step_user_replace_ignored(
     assert result["result"].title == OKOK_F0_TITLE
 
 
-@pytest.mark.usefixtures("mock_bluetooth")
 async def test_async_step_user_takes_precedence_over_discovery(
     hass: HomeAssistant, mock_setup_entry: AsyncMock
 ) -> None:
