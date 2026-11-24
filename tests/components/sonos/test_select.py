@@ -15,6 +15,7 @@ from homeassistant.components.select import (
 from homeassistant.components.sonos.const import (
     ATTR_DIALOG_LEVEL,
     MODEL_SONOS_ARC_ULTRA,
+    MODEL_SONOS_BEAM_ULTRA,
     SCAN_INTERVAL,
 )
 from homeassistant.const import STATE_UNKNOWN, Platform, TargetKey
@@ -157,13 +158,36 @@ async def test_select_dialog_level_set(
     assert soco.dialog_level == result
 
 
-async def test_select_dialog_level_only_arc_ultra(
+@pytest.mark.parametrize(
+    "model", [MODEL_SONOS_ARC_ULTRA.lower(), MODEL_SONOS_BEAM_ULTRA.lower()]
+)
+async def test_select_dialog_level_ultra_soundbars(
+    hass: HomeAssistant,
+    async_setup_sonos,
+    soco,
+    entity_registry: er.EntityRegistry,
+    speaker_info: dict[str, str],
+    model: str,
+) -> None:
+    """Test the dialog level select is created for Ultra soundbars."""
+
+    speaker_info["model_name"] = model
+    soco.get_speaker_info.return_value = speaker_info
+    soco.dialog_level = 2
+
+    await async_setup_sonos()
+
+    dialog_level_select = entity_registry.entities[SELECT_DIALOG_LEVEL_ENTITY]
+    assert hass.states.get(dialog_level_select.entity_id).state == "medium"
+
+
+async def test_select_dialog_level_only_ultra_soundbars(
     hass: HomeAssistant,
     async_setup_sonos,
     entity_registry: er.EntityRegistry,
     speaker_info: dict[str, str],
 ) -> None:
-    """Test the dialog level select is only created for Sonos Arc Ultra."""
+    """Test the dialog level select is only created for Ultra soundbars."""
 
     speaker_info["model_name"] = "Sonos S1"
     await async_setup_sonos()

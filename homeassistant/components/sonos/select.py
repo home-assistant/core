@@ -12,7 +12,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from .const import (
     ATTR_DIALOG_LEVEL,
     ATTR_DIALOG_LEVEL_ENUM,
-    MODEL_SONOS_ARC_ULTRA,
+    MODELS_ULTRA_SOUNDBARS,
     SONOS_CREATE_SELECTS,
     SPEECH_DIALOG_LEVEL,
 )
@@ -27,7 +27,7 @@ class SonosSelectEntityDescription(SelectEntityDescription):
 
     soco_attribute: str
     speaker_attribute: str
-    speaker_model: str
+    speaker_models: tuple[str, ...]
 
 
 SELECT_TYPES: list[SonosSelectEntityDescription] = [
@@ -36,7 +36,7 @@ SELECT_TYPES: list[SonosSelectEntityDescription] = [
         translation_key=SPEECH_DIALOG_LEVEL,
         soco_attribute=ATTR_DIALOG_LEVEL,
         speaker_attribute=ATTR_DIALOG_LEVEL_ENUM,
-        speaker_model=MODEL_SONOS_ARC_ULTRA,
+        speaker_models=MODELS_ULTRA_SOUNDBARS,
         options=["off", "low", "medium", "high", "max"],
     ),
 ]
@@ -56,7 +56,7 @@ async def async_setup_entry(
     ) -> list[SonosSelectEntityDescription]:
         features: list[SonosSelectEntityDescription] = []
         for select_data in SELECT_TYPES:
-            if select_data.speaker_model == speaker.model_name.upper():
+            if speaker.model_name.upper() in select_data.speaker_models:
                 if (
                     speaker.update_soco_int_attribute(
                         select_data.soco_attribute, select_data.speaker_attribute

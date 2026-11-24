@@ -20,7 +20,7 @@ from .alarms import SonosAlarms
 from .const import (
     ATTR_SPEECH_ENHANCEMENT_ENABLED,
     DOMAIN,
-    MODEL_SONOS_ARC_ULTRA,
+    MODELS_ULTRA_SOUNDBARS,
     SONOS_ALARMS_UPDATED,
     SONOS_CREATE_ALARM,
     SONOS_CREATE_SWITCHES,
@@ -79,9 +79,8 @@ _TV_SOURCE = (("Source", SOURCE_TV),)
 # Mapping of model names to feature attributes that need to be substituted.
 # This is used to handle differences in attributes across Sonos models.
 MODEL_FEATURE_SUBSTITUTIONS: dict[str, dict[str, str]] = {
-    MODEL_SONOS_ARC_ULTRA: {
-        ATTR_SPEECH_ENHANCEMENT: ATTR_SPEECH_ENHANCEMENT_ENABLED,
-    },
+    model: {ATTR_SPEECH_ENHANCEMENT: ATTR_SPEECH_ENHANCEMENT_ENABLED}
+    for model in MODELS_ULTRA_SOUNDBARS
 }
 
 
