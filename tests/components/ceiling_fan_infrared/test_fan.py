@@ -263,3 +263,69 @@ async def test_fan_unavailable_when_emitter_is(
 
     assert (state := hass.states.get(entity_id)) is not None
     assert state.state != STATE_UNAVAILABLE
+
+
+@pytest.mark.usefixtures("infrared_codes")
+async def test_state_restored_after_a_reload_while_the_emitter_is_unavailable(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    mock_infrared_emitter_entity: MockInfraredEmitterEntity,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test the assumed state survives a reload while the emitter is unavailable.
+
+    The entity state is unavailable whenever the emitter is, so restoring from
+    it alone would lose the assumed state and the next turn_on would toggle an
+    already running fan off.
+    """
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    entity_id = entity_registry.async_get_entity_id(
+        FAN_DOMAIN, "ceiling_fan_infrared", config_entry.entry_id
+    )
+    assert entity_id is not None
+
+    await hass.services.async_call(
+        FAN_DOMAIN,
+        SERVICE_SET_PERCENTAGE,
+        {ATTR_ENTITY_ID: entity_id, ATTR_PERCENTAGE: 66},
+        blocking=True,
+    )
+    assert (state := hass.states.get(entity_id)) is not None
+    assert state.state == STATE_ON
+    assert state.attributes[ATTR_PERCENTAGE] == 66
+
+    hass.states.async_set(
+        mock_infrared_emitter_entity.entity_id,
+        STATE_UNAVAILABLE,
+        force_update=True,
+    )
+    await hass.async_block_till_done()
+    assert (state := hass.states.get(entity_id)) is not None
+    assert state.state == STATE_UNAVAILABLE
+
+    await hass.config_entries.async_reload(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    hass.states.async_set(
+        mock_infrared_emitter_entity.entity_id,
+        STATE_ON,
+        force_update=True,
+    )
+    await hass.async_block_till_done()
+
+    assert (state := hass.states.get(entity_id)) is not None
+    assert state.state == STATE_ON
+    assert state.attributes[ATTR_PERCENTAGE] == 66
+
+    # The fan is known to be running, so turning it on must not toggle it off.
+    mock_infrared_emitter_entity.send_command_calls.clear()
+    await hass.services.async_call(
+        FAN_DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: entity_id},
+        blocking=True,
+    )
+    assert mock_infrared_emitter_entity.send_command_calls == []

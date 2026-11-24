@@ -1,7 +1,7 @@
 """Fan platform for the Ceiling Fan Infrared integration."""
 
 import math
-from typing import Any, override
+from typing import Any, Self, override
 
 from infrared_protocols.codes.generic.e27_fan_light import E27FanLightCode
 
@@ -15,7 +15,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.helpers.restore_state import RestoreEntity
+from homeassistant.helpers.restore_state import ExtraStoredData, RestoreEntity
 from homeassistant.util.percentage import (
     percentage_to_ranged_value,
     ranged_value_to_percentage,
@@ -44,6 +44,38 @@ async def async_setup_entry(
     async_add_entities(
         [CeilingFanIrFanEntity(entry, entry.data[CONF_INFRARED_ENTITY_ID])]
     )
+
+
+class CeilingFanIrRestoreData(ExtraStoredData):
+    """Assumed state of the fan, stored independently of its availability.
+
+    The state of the entity is ``unavailable`` while the emitter is, which
+    would otherwise be all that is left to restore after a reload.
+    """
+
+    def __init__(self, is_on: bool | None, percentage: int | None) -> None:
+        """Initialize the stored state."""
+        self.is_on = is_on
+        self.percentage = percentage
+
+    @override
+    def as_dict(self) -> dict[str, Any]:
+        """Return a dict representation of the stored state."""
+        return {"is_on": self.is_on, "percentage": self.percentage}
+
+    @classmethod
+    def from_dict(cls, restored: dict[str, Any]) -> Self | None:
+        """Initialize the stored state from a dict."""
+        try:
+            is_on = restored["is_on"]
+            percentage = restored["percentage"]
+        except KeyError:
+            return None
+        if is_on is not None and not isinstance(is_on, bool):
+            return None
+        if percentage is not None and not isinstance(percentage, int):
+            return None
+        return cls(is_on, percentage)
 
 
 class CeilingFanIrFanEntity(
@@ -83,8 +115,18 @@ class CeilingFanIrFanEntity(
         ``turn_on`` from sending a second toggle. It is restored across a
         reload, which happens when the emitter is renamed, and across a
         restart.
+
+        The state is read from the extra stored data first, because the entity
+        state itself is ``unavailable`` whenever the emitter is, and the
+        assumed state is still known in that case.
         """
         await super().async_added_to_hass()
+        if (extra_data := await self.async_get_last_extra_data()) is not None:
+            restored = CeilingFanIrRestoreData.from_dict(extra_data.as_dict())
+            if restored is not None:
+                self._attr_is_on = restored.is_on
+                self._attr_percentage = restored.percentage
+                return
         if (last_state := await self.async_get_last_state()) is None:
             return
         if last_state.state not in (STATE_ON, STATE_OFF):
@@ -97,6 +139,12 @@ class CeilingFanIrFanEntity(
             int,
         ):
             self._attr_percentage = percentage
+
+    @property
+    @override
+    def extra_restore_state_data(self) -> CeilingFanIrRestoreData:
+        """Return the assumed state to restore, whatever the availability is."""
+        return CeilingFanIrRestoreData(self._attr_is_on, self._attr_percentage)
 
     @property
     @override
