@@ -30,7 +30,11 @@ from homeassistant.util.color import (
 )
 
 from .accessories import TYPES, HomeAccessory
-from .adaptive_lighting import ADAPTIVE_LIGHTING_CHARS, AdaptiveLightingController
+from .adaptive_lighting import (
+    ADAPTIVE_LIGHTING_CHARS,
+    AdaptiveLightingController,
+    async_delete_stored_schedule,
+)
 from .const import (
     CHAR_BRIGHTNESS,
     CHAR_COLOR_TEMPERATURE,
@@ -173,6 +177,14 @@ class Light(HomeAccessory):
             self.adaptive_lighting = AdaptiveLightingController(
                 self, serv_light, self.entity_id
             )
+        elif self.driver.entry_id:
+            # A schedule stored for this entity is orphaned once the option is
+            # gone; drop it so it cannot resurrect on a later re-enable.
+            self.hass.async_create_task(
+                async_delete_stored_schedule(
+                    self.hass, self.driver.entry_id, self.entity_id
+                )
+            )
 
         self.async_update_state(state)
         serv_light.setter_callback = self._set_chars
@@ -189,7 +201,11 @@ class Light(HomeAccessory):
     @override
     @callback
     def async_stop(self) -> None:
-        """Cancel subscriptions and the adaptive lighting timers."""
+        """Cancel subscriptions, the pending coalesced write and adaptive timers."""
+        if self._event_timer:
+            self._event_timer()
+            self._event_timer = None
+        self._pending_events = {}
         super().async_stop()
         if self.adaptive_lighting:
             self.adaptive_lighting.stop()

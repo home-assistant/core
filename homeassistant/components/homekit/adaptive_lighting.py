@@ -359,7 +359,7 @@ def interpolate(transition: ActiveTransition, now_millis: int) -> float | None:
 
 
 STORAGE_KEY = "homekit.adaptive_lighting"
-STORAGE_VERSION = 1
+STORAGE_VERSION = 2
 DATA_STORE = "homekit_adaptive_lighting_store"
 
 
@@ -401,6 +401,11 @@ def _transition_from_dict(data: dict[str, Any]) -> ActiveTransition:
     )
 
 
+def _store_key(entry_id: str, entity_id: str) -> str:
+    """Schedules are scoped to the HomeKit config entry that owns the accessory."""
+    return f"{entry_id}/{entity_id}"
+
+
 class _TransitionStore:
     """One store shared by every adaptive lighting accessory."""
 
@@ -409,21 +414,42 @@ class _TransitionStore:
         self._store: Store[dict[str, Any]] = Store(hass, STORAGE_VERSION, STORAGE_KEY)
         self._data: dict[str, Any] | None = None
 
-    async def async_get(self, entity_id: str) -> dict[str, Any] | None:
-        """Return the stored transition for an entity, if any."""
+    async def _async_load(self) -> dict[str, Any]:
+        """Load the stored transitions once, keeping concurrent waiters on one dict."""
         if self._data is None:
-            self._data = await self._store.async_load() or {}
-        return self._data.get(entity_id)
+            data = await self._store.async_load() or {}
+            if self._data is None:
+                self._data = data
+        return self._data
 
-    async def async_set(self, entity_id: str, data: dict[str, Any] | None) -> None:
+    async def async_get(self, entry_id: str, entity_id: str) -> dict[str, Any] | None:
+        """Return the stored transition for an entity, if any."""
+        return (await self._async_load()).get(_store_key(entry_id, entity_id))
+
+    async def async_set(
+        self, entry_id: str, entity_id: str, data: dict[str, Any] | None
+    ) -> None:
         """Store or drop the transition of an entity."""
-        if self._data is None:
-            self._data = await self._store.async_load() or {}
+        transitions = await self._async_load()
+        key = _store_key(entry_id, entity_id)
         if data is None:
-            self._data.pop(entity_id, None)
+            transitions.pop(key, None)
         else:
-            self._data[entity_id] = data
-        await self._store.async_save(self._data)
+            transitions[key] = data
+        await self._store.async_save(transitions)
+
+    async def async_delete_entry(self, entry_id: str) -> None:
+        """Drop every stored transition of a removed HomeKit config entry."""
+        transitions = await self._async_load()
+        prefix = f"{entry_id}/"
+        kept = {
+            key: value
+            for key, value in transitions.items()
+            if not key.startswith(prefix)
+        }
+        if len(kept) != len(transitions):
+            self._data = kept
+            await self._store.async_save(kept)
 
 
 def _get_store(hass: HomeAssistant) -> _TransitionStore:
@@ -432,6 +458,21 @@ def _get_store(hass: HomeAssistant) -> _TransitionStore:
         hass.data[DATA_STORE] = _TransitionStore(hass)
     store: _TransitionStore = hass.data[DATA_STORE]
     return store
+
+
+async def async_delete_stored_schedule(
+    hass: HomeAssistant, entry_id: str, entity_id: str
+) -> None:
+    """Drop a persisted schedule for an entity no longer using adaptive lighting."""
+    store = _get_store(hass)
+    if await store.async_get(entry_id, entity_id) is not None:
+        await store.async_set(entry_id, entity_id, None)
+
+
+async def async_delete_entry_schedules(hass: HomeAssistant, entry_id: str) -> None:
+    """Drop every persisted schedule of a removed HomeKit config entry."""
+    if DATA_STORE in hass.data:
+        await _get_store(hass).async_delete_entry(entry_id)
 
 
 class AdaptiveLightingController:
@@ -446,8 +487,10 @@ class AdaptiveLightingController:
         self.accessory = accessory
         self.hass = accessory.hass
         self.entity_id = entity_id
+        self._entry_id = accessory.driver.entry_id
         self.transition: ActiveTransition | None = None
         self.applying = False
+        self._stopped = False
         self._last_applied: int | None = None
         self._cancel_updates: Any = None
         self._cancel_state: Any = None
@@ -617,6 +660,7 @@ class AdaptiveLightingController:
     @callback
     def _arm(self, transition: ActiveTransition, persist: bool = True) -> None:
         """Start applying a schedule, whether it just arrived or was restored."""
+        self._stopped = False
         self.transition = transition
         self.char_active_count.set_value(1)
         self.char_control.value = self._build_control_response()
@@ -643,7 +687,9 @@ class AdaptiveLightingController:
         if persist:
             self._schedule(
                 _get_store(self.hass).async_set(
-                    self.entity_id, _transition_as_dict(transition)
+                    self._entry_id,
+                    self.entity_id,
+                    _transition_as_dict(transition),
                 )
             )
 
@@ -653,21 +699,24 @@ class AdaptiveLightingController:
 
     async def async_restore(self) -> None:
         """Resume the schedule saved before the last restart."""
-        if self.transition or not (
-            stored := await _get_store(self.hass).async_get(self.entity_id)
-        ):
+        if self._stopped or self.transition:
+            return
+        stored = await _get_store(self.hass).async_get(self._entry_id, self.entity_id)
+        # The accessory may have been stopped or re-armed while the store
+        # was loading; a pending restore must not override either.
+        if self._stopped or self.transition or stored is None:
             return
         try:
             transition = _transition_from_dict(stored)
         except KeyError, TypeError, ValueError:
             _LOGGER.warning("%s: stored transition is unreadable", self.entity_id)
-            await _get_store(self.hass).async_set(self.entity_id, None)
+            await _get_store(self.hass).async_set(self._entry_id, self.entity_id, None)
             return
 
         if interpolate(transition, int(time.time() * 1000)) is None:
             # The schedule only covers 24 hours; the Home app sends a new one.
             _LOGGER.debug("%s: stored transition expired", self.entity_id)
-            await _get_store(self.hass).async_set(self.entity_id, None)
+            await _get_store(self.hass).async_set(self._entry_id, self.entity_id, None)
             return
 
         _LOGGER.debug("%s: restoring adaptive lighting after restart", self.entity_id)
@@ -709,7 +758,9 @@ class AdaptiveLightingController:
         self.stop()
         self.char_active_count.set_value(0)
         self.char_control.value = ""
-        self._schedule(_get_store(self.hass).async_set(self.entity_id, None))
+        self._schedule(
+            _get_store(self.hass).async_set(self._entry_id, self.entity_id, None)
+        )
 
     @callback
     def stop(self) -> None:
@@ -718,6 +769,7 @@ class AdaptiveLightingController:
         Called when the accessory is torn down on a bridge reload. Without it
         the old controller keeps writing with the old colour range forever.
         """
+        self._stopped = True
         if self._cancel_updates:
             self._cancel_updates()
             self._cancel_updates = None
@@ -758,7 +810,7 @@ class AdaptiveLightingController:
 
     async def _async_update(self, _now: Any = None) -> None:
         """Apply the point of the curve that belongs to this minute."""
-        if not (transition := self.transition):
+        if self._stopped or not (transition := self.transition):
             return
 
         point = interpolate_point(transition, int(time.time() * 1000))

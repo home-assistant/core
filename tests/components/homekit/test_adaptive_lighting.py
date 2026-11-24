@@ -257,7 +257,7 @@ async def test_a_schedule_applies_a_colour_temperature(
     assert len(call_turn_on) == 1
     assert ATTR_COLOR_TEMP_KELVIN in call_turn_on[0].data
     # The schedule is stored so it survives a restart.
-    assert "light.demo" in hass_storage["homekit.adaptive_lighting"]["data"]
+    assert "/light.demo" in hass_storage["homekit.adaptive_lighting"]["data"]
 
 
 async def test_a_control_read_reports_the_running_transition(
@@ -350,7 +350,7 @@ async def test_a_read_request_answers_without_disarming(
     # The schedule keeps running and the stored copy is untouched.
     assert controller.transition is not None
     assert controller.char_active_count.value == 1
-    assert await _get_store(hass).async_get("light.demo") is not None
+    assert await _get_store(hass).async_get("", "light.demo") is not None
 
     # The response echoes the configuration back under the read tag.
     assert response is not None
@@ -511,7 +511,7 @@ async def test_a_schedule_is_restored_after_a_restart(
     async_mock_service(hass, LIGHT_DOMAIN, "turn_on")
     await _write_control(hass, acc, TRANSITION_CONTROL_WRITE)
     assert acc.adaptive_lighting is not None
-    stored = await _get_store(hass).async_get("light.demo")
+    stored = await _get_store(hass).async_get("", "light.demo")
     assert stored is not None
 
     # A restart builds a new accessory against the same store.
@@ -546,7 +546,7 @@ async def test_stopping_the_accessory_cancels_the_updates(
 
     assert len(call_turn_on) == 1
     # The schedule is kept for the accessory that replaces this one.
-    assert await _get_store(hass).async_get("light.demo") is not None
+    assert await _get_store(hass).async_get("", "light.demo") is not None
 
 
 async def test_an_expired_schedule_is_dropped_on_restart(
@@ -557,27 +557,29 @@ async def test_an_expired_schedule_is_dropped_on_restart(
     assert transition is not None
     expired = _transition_as_dict(transition)
     expired["time_millis_offset"] = int(time.time() * 1000)
-    await _get_store(hass).async_set("light.demo", expired)
+    await _get_store(hass).async_set("", "light.demo", expired)
 
     acc = await _setup_light(hass, hk_driver)
 
     assert acc.adaptive_lighting is not None
     assert acc.adaptive_lighting.transition is None
-    assert await _get_store(hass).async_get("light.demo") is None
+    assert await _get_store(hass).async_get("", "light.demo") is None
 
 
 async def test_an_unreadable_stored_schedule_is_dropped(
     hass: HomeAssistant, hk_driver, caplog: pytest.LogCaptureFixture
 ) -> None:
     """A stored schedule from an older version does not break the accessory."""
-    await _get_store(hass).async_set("light.demo", {"transition_id": "not a schedule"})
+    await _get_store(hass).async_set(
+        "", "light.demo", {"transition_id": "not a schedule"}
+    )
 
     acc = await _setup_light(hass, hk_driver)
 
     assert acc.adaptive_lighting is not None
     assert acc.adaptive_lighting.transition is None
     assert "stored transition is unreadable" in caplog.text
-    assert await _get_store(hass).async_get("light.demo") is None
+    assert await _get_store(hass).async_get("", "light.demo") is None
 
 
 async def test_brightness_shifts_the_colour_temperature(

@@ -86,6 +86,7 @@ from .accessories import (
     async_resolve_accessory_type,
     get_accessory,
 )
+from .adaptive_lighting import async_delete_entry_schedules
 from .aidmanager import AccessoryAidStorage
 from .const import (
     ATTR_HW_VERSION,
@@ -325,6 +326,7 @@ async def async_remove_entry(hass: HomeAssistant, entry: HomeKitConfigEntry) -> 
     await hass.async_add_executor_job(
         remove_state_files_for_entry_id, hass, entry.entry_id
     )
+    await async_delete_entry_schedules(hass, entry.entry_id)
 
 
 @callback
