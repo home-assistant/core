@@ -94,6 +94,8 @@ async def test_update_failure_and_recovery(
     hass: HomeAssistant, freezer: FrozenDateTimeFactory
 ) -> None:
     """Test the entity is unavailable after a failed update and recovers."""
+    # Outside the hour buienradar.nl updates its forecast, when failures keep the data.
+    freezer.move_to("2026-01-14T12:00:00+00:00")
     await setup_integration(hass)
     assert hass.states.get(WEATHER_ENTITY).state != STATE_UNAVAILABLE
 
