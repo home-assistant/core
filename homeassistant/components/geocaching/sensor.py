@@ -110,9 +110,16 @@ async def async_setup_entry(
     def _async_add_tracked_entities() -> None:
         """Add entities for configured caches once available.
 
-        Coordinator refreshes do not rerun platform setup, so this also runs
-        on every update to pick up configured codes that were missing from
-        the data at setup time or an earlier refresh.
+        This listener is not needed for subentry changes: adding or
+        removing a tracked cache always reloads the config entry, which
+        reruns platform setup. It is needed because a successful batch
+        API response can still omit a reference code that is already
+        configured (see GeocachingApi._update_tracked_caches), without
+        raising an error or failing the refresh. Registering this as a
+        coordinator listener lets entities be added as soon as such a
+        cache becomes resolvable, without waiting for a reload. A fully
+        failed update (connection error, rate limit, ...) is handled
+        separately by the coordinator and keeps the previous data.
         """
         if coordinator.data is None:
             # DataUpdateCoordinator.data is typed as non-optional, but it can
