@@ -13,9 +13,14 @@ from neopool_modbus.capabilities import (
     is_ph_module_present,
     is_redox_module_present,
 )
-from neopool_modbus.registers import HIDRO_COVER_ENABLE_BIT, is_valid_relay_gpio
+from neopool_modbus.registers import (
+    HIDRO_COVER_ENABLE_BIT,
+    aux_relay_available,
+    is_valid_relay_gpio,
+)
 
 from homeassistant.components.binary_sensor import (
+    DOMAIN as BINARY_SENSOR_DOMAIN,
     BinarySensorDeviceClass,
     BinarySensorEntity,
     BinarySensorEntityDescription,
@@ -34,6 +39,7 @@ from .const import (
 )
 from .coordinator import NeoPoolConfigEntry, NeoPoolCoordinator
 from .entity import NeoPoolEntity
+from .helpers import cleanup_occupied_aux_entities
 
 PARALLEL_UPDATES = 0
 
@@ -100,24 +106,28 @@ BINARY_SENSOR_DESCRIPTIONS: dict[str, NeoPoolBinarySensorEntityDescription] = {
         translation_key="aux",
         translation_placeholders={"number": "1"},
         device_class=BinarySensorDeviceClass.POWER,
+        supported_fn=lambda data: aux_relay_available(1, data),
     ),
     "AUX2": NeoPoolBinarySensorEntityDescription(
         key="AUX2",
         translation_key="aux",
         translation_placeholders={"number": "2"},
         device_class=BinarySensorDeviceClass.POWER,
+        supported_fn=lambda data: aux_relay_available(2, data),
     ),
     "AUX3": NeoPoolBinarySensorEntityDescription(
         key="AUX3",
         translation_key="aux",
         translation_placeholders={"number": "3"},
         device_class=BinarySensorDeviceClass.POWER,
+        supported_fn=lambda data: aux_relay_available(3, data),
     ),
     "AUX4": NeoPoolBinarySensorEntityDescription(
         key="AUX4",
         translation_key="aux",
         translation_placeholders={"number": "4"},
         device_class=BinarySensorDeviceClass.POWER,
+        supported_fn=lambda data: aux_relay_available(4, data),
     ),
     "pH module control status": NeoPoolBinarySensorEntityDescription(
         key="pH module control status",
@@ -357,6 +367,10 @@ async def async_setup_entry(
     coordinator = entry.runtime_data
     options = entry.options
 
+    cleanup_occupied_aux_entities(
+        hass, entry.entry_id, BINARY_SENSOR_DOMAIN, coordinator.data
+    )
+
     async_add_entities(
         NeoPoolBinarySensor(coordinator, key, desc)
         for key, desc in BINARY_SENSOR_DESCRIPTIONS.items()
@@ -385,6 +399,15 @@ class NeoPoolBinarySensor(NeoPoolEntity, BinarySensorEntity):
         self._key = key
         self._attr_unique_id = (
             f"{self.coordinator.config_entry.unique_id}_{key.lower()}"
+        )
+
+    @property
+    @override
+    def available(self) -> bool:
+        """Return False when the relay becomes occupied after setup."""
+        desc = self.entity_description
+        return super().available and (
+            desc.supported_fn is None or desc.supported_fn(self.coordinator.data)
         )
 
     @property
