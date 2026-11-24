@@ -46,7 +46,7 @@
   "entity": {
     "binary_sensor": {
       "scan_status": {
-        "name": "Scan status"
+        "name": "DALI scan status"
       }
     },
     "sensor": {

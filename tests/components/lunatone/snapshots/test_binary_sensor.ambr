@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_setup[binary_sensor.dali_line_0_scan_status-entry]
+# name: test_setup[binary_sensor.dali_line_0_dali_scan_status-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -13,7 +13,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'binary_sensor.dali_line_0_scan_status',
+    'entity_id': 'binary_sensor.dali_line_0_dali_scan_status',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -21,12 +21,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Scan status',
+    'object_id_base': 'DALI scan status',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.RUNNING: 'running'>,
     'original_icon': None,
-    'original_name': 'Scan status',
+    'original_name': 'DALI scan status',
     'platform': 'lunatone',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -36,21 +36,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_setup[binary_sensor.dali_line_0_scan_status-state]
+# name: test_setup[binary_sensor.dali_line_0_dali_scan_status-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'running',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'DALI line 0 Scan status',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'DALI line 0 DALI scan status',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.dali_line_0_scan_status',
+    'entity_id': 'binary_sensor.dali_line_0_dali_scan_status',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_setup[binary_sensor.dali_line_1_scan_status-entry]
+# name: test_setup[binary_sensor.dali_line_1_dali_scan_status-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -64,7 +64,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'binary_sensor.dali_line_1_scan_status',
+    'entity_id': 'binary_sensor.dali_line_1_dali_scan_status',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -72,12 +72,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Scan status',
+    'object_id_base': 'DALI scan status',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.RUNNING: 'running'>,
     'original_icon': None,
-    'original_name': 'Scan status',
+    'original_name': 'DALI scan status',
     'platform': 'lunatone',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -87,21 +87,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_setup[binary_sensor.dali_line_1_scan_status-state]
+# name: test_setup[binary_sensor.dali_line_1_dali_scan_status-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'running',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'DALI line 1 Scan status',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'DALI line 1 DALI scan status',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.dali_line_1_scan_status',
+    'entity_id': 'binary_sensor.dali_line_1_dali_scan_status',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_setup[binary_sensor.test_scan_status-entry]
+# name: test_setup[binary_sensor.test_dali_scan_status-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -115,7 +115,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'binary_sensor.test_scan_status',
+    'entity_id': 'binary_sensor.test_dali_scan_status',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -123,12 +123,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Scan status',
+    'object_id_base': 'DALI scan status',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.RUNNING: 'running'>,
     'original_icon': None,
-    'original_name': 'Scan status',
+    'original_name': 'DALI scan status',
     'platform': 'lunatone',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -138,14 +138,14 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_setup[binary_sensor.test_scan_status-state]
+# name: test_setup[binary_sensor.test_dali_scan_status-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'running',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Scan status',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test DALI scan status',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.test_scan_status',
+    'entity_id': 'binary_sensor.test_dali_scan_status',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
