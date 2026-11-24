@@ -200,7 +200,9 @@ class LunatoneSensor(
             and self.sensor.data.dali_sensor_address
         ):
             self._line_id = self.sensor.data.dali_sensor_address.line
-            linked_device_unique_id = f"{config_entry_unique_id}-line{self._line_id}"
+            linked_device_unique_id = format_device_identifier(
+                config_entry_unique_id, self._line_id
+            )
             device_info = dr.DeviceInfo(
                 identifiers={
                     (
@@ -220,7 +222,7 @@ class LunatoneSensor(
             with contextlib.suppress(ValueError):
                 device_info.via_device_id = dr.async_get_device_id_by_identifier(
                     self.coordinator.hass,
-                    (DOMAIN, f"{linked_device_unique_id}"),
+                    (DOMAIN, linked_device_unique_id),
                     config_entry_id=self.coordinator.config_entry.entry_id,
                 )
         self._attr_device_info = device_info
@@ -244,11 +246,17 @@ class LunatoneSensor(
     @callback
     def _handle_info_update(self) -> None:
         assert self._line_id is not None
+        assert self.coordinator.config_entry.unique_id is not None
 
         config_entry_id = self.coordinator.config_entry.entry_id
         device_registry = dr.async_get(self.hass)
         linked_device = device_registry.async_get_device_by_identifier(
-            (DOMAIN, f"{self.coordinator.config_entry.unique_id}-line{self._line_id}"),
+            (
+                DOMAIN,
+                format_device_identifier(
+                    self.coordinator.config_entry.unique_id, self._line_id
+                ),
+            ),
             config_entry_id,
         )
 

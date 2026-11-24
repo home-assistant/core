@@ -30,7 +30,7 @@ from .coordinator import (
     LunatoneDevicesDataUpdateCoordinator,
     LunatoneInfoDataUpdateCoordinator,
 )
-from .helpers import add_entities_from_builder
+from .helpers import add_entities_from_builder, format_device_identifier
 
 PARALLEL_UPDATES = 0
 
@@ -53,9 +53,7 @@ async def async_setup_entry(
     def _check_broadcast_entities() -> None:
         entity_builder: dict[str, Callable[[], LightEntity]] = {}
         for line_id in map(int, coordinator_info.data.lines):
-            unique_id = LunatoneLineBroadcastLight.construct_unique_id(
-                config_entry_unique_id, line_id
-            )
+            unique_id = format_device_identifier(config_entry_unique_id, line_id)
             entity_builder[unique_id] = partial(
                 LunatoneLineBroadcastLight,
                 coordinator_devices,
@@ -140,7 +138,7 @@ class LunatoneLight(
         with contextlib.suppress(ValueError):
             device_info.via_device_id = dr.async_get_device_id_by_identifier(
                 self.coordinator.hass,
-                (DOMAIN, f"{config_entry_unique_id}-line{line_id}"),
+                (DOMAIN, format_device_identifier(config_entry_unique_id, line_id)),
                 config_entry_id=self.coordinator.config_entry.entry_id,
             )
 
@@ -162,10 +160,17 @@ class LunatoneLight(
 
     @callback
     def _handle_info_update(self) -> None:
+        assert self.coordinator.config_entry.unique_id is not None
+
         config_entry_id = self.coordinator.config_entry.entry_id
         device_registry = dr.async_get(self.hass)
         linked_device = device_registry.async_get_device_by_identifier(
-            (DOMAIN, f"{self.coordinator.config_entry.unique_id}-line{self._line_id}"),
+            (
+                DOMAIN,
+                format_device_identifier(
+                    self.coordinator.config_entry.unique_id, self._line_id
+                ),
+            ),
             config_entry_id,
         )
 
@@ -347,14 +352,9 @@ class LunatoneLineBroadcastLight(
 
         assert broadcast.line is not None
 
-        unique_id = self.construct_unique_id(config_entry_unique_id, broadcast.line)
+        unique_id = format_device_identifier(config_entry_unique_id, broadcast.line)
         self._attr_device_info = dr.DeviceInfo(identifiers={(DOMAIN, unique_id)})
         self._attr_unique_id = unique_id
-
-    @staticmethod
-    def construct_unique_id(config_entry_unique_id: str, line_id: int) -> str:
-        """Returns the unique_id for a device ID."""
-        return f"{config_entry_unique_id}-line{line_id}"
 
     @override
     async def async_added_to_hass(self) -> None:
