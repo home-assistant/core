@@ -2,6 +2,7 @@
 
 import base64
 from datetime import timedelta
+import math
 import struct
 import time
 from typing import Any
@@ -855,6 +856,84 @@ def test_the_duration_belongs_to_the_previous_curve_point() -> None:
     # the shift the value would already be interpolating towards the second.
     base = transition.start_millis + transition.time_millis_offset
     assert interpolate_point(transition, base + 15_000) == (300.0, -10.0)
+
+
+def _curve_write(
+    entries: list[bytes], extra_config: list[int | bytes] | None = None
+) -> str:
+    """Build a minimal update write around the given curve entries."""
+    config: list[int | bytes] = [
+        TAG_CFG_PARAMETERS,
+        tlv_encode(
+            TAG_PARAM_TRANSITION_ID,
+            b"\x00" * 16,
+            TAG_PARAM_START_TIME,
+            (1_700_000_000_000).to_bytes(8, "little"),
+        ),
+        TAG_CFG_UNKNOWN_3,
+        b"\x01",
+        TAG_CFG_CURVE,
+        tlv_encode_list(TAG_CURVE_ENTRY, entries),
+    ]
+    if extra_config:
+        config += extra_config
+    return base64.b64encode(
+        tlv_encode(
+            TAG_UPDATE_TRANSITION,
+            tlv_encode(0x01, tlv_encode(*config)),
+        )
+    ).decode()
+
+
+def _curve_point(
+    temperature: float,
+    factor: float,
+    offset: int = 0,
+    duration: int | None = None,
+) -> bytes:
+    """Build one curve entry for _curve_write."""
+    args: list[int | bytes] = [
+        TAG_ENTRY_ADJUSTMENT_FACTOR,
+        struct.pack("<f", factor),
+        TAG_ENTRY_VALUE,
+        struct.pack("<f", temperature),
+        TAG_ENTRY_TRANSITION_OFFSET,
+        write_variable_uint_le(offset),
+    ]
+    if duration is not None:
+        args += [TAG_ENTRY_DURATION, write_variable_uint_le(duration)]
+    return tlv_encode(*args)
+
+
+def test_a_zero_update_interval_is_clamped() -> None:
+    """A zero interval would busy-loop the timer, so it is raised to the minimum."""
+    write = _curve_write(
+        [_curve_point(300.0, -10.0), _curve_point(400.0, -20.0, 60_000)],
+        [TAG_CFG_UPDATE_INTERVAL, write_variable_uint_le(0)],
+    )
+
+    transition = parse_transition_control(write)
+    assert transition is not None
+    assert transition.update_interval == 1000
+
+
+def test_a_non_finite_curve_value_is_rejected() -> None:
+    """NaN or infinite curve values would crash the update task on round()."""
+    write = _curve_write(
+        [
+            _curve_point(math.nan, -10.0),
+            _curve_point(400.0, -20.0, 60_000),
+        ]
+    )
+
+    with pytest.raises(ValueError, match="not finite"):
+        parse_transition_control(write)
+
+
+def test_tlv_decode_rejects_a_truncated_value() -> None:
+    """A declared length past the buffer end is an error, not a short read."""
+    with pytest.raises(ValueError, match="longer than the remaining buffer"):
+        tlv_decode(b"\x01\x05\x00")
 
 
 def test_an_incomplete_curve_entry_is_skipped() -> None:

@@ -133,13 +133,17 @@ class Light(HomeAccessory):
         if CHAR_COLOR_TEMPERATURE in self.chars:
             # Some bulbs report a wider range than the hardware accepts and go
             # dark instead of clamping, so the range can be overridden per entity.
-            min_mireds = color_temperature_kelvin_to_mired(
-                self.config.get(CONF_MAX_COLOR_TEMP_KELVIN)
-                or attributes.get(
-                    LightEntityCapabilityAttribute.MAX_COLOR_TEMP_KELVIN,
-                    DEFAULT_MAX_COLOR_TEMP,
+            if max_kelvin := self.config.get(CONF_MAX_COLOR_TEMP_KELVIN):
+                # The configured maximum is a ceiling: ceil keeps the mired
+                # bound from converting back above it.
+                min_mireds = -(-1_000_000 // max_kelvin)
+            else:
+                min_mireds = color_temperature_kelvin_to_mired(
+                    attributes.get(
+                        LightEntityCapabilityAttribute.MAX_COLOR_TEMP_KELVIN,
+                        DEFAULT_MAX_COLOR_TEMP,
+                    )
                 )
-            )
             max_mireds = color_temperature_kelvin_to_mired(
                 self.config.get(CONF_MIN_COLOR_TEMP_KELVIN)
                 or attributes.get(

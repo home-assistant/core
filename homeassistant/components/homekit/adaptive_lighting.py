@@ -10,6 +10,7 @@ import base64
 from dataclasses import dataclass
 from datetime import timedelta
 import logging
+import math
 import struct
 import time
 from typing import TYPE_CHECKING, Any
@@ -87,6 +88,9 @@ TAG_STATUS_TIME_SINCE_START = 0x03
 # HAP timestamps count from 2001-01-01, the Unix epoch counts from 1970-01-01.
 EPOCH_MILLIS_2001 = 978307200000
 
+# An update interval of zero would reschedule the timer immediately forever.
+MIN_UPDATE_INTERVAL = 1000
+
 
 def write_variable_uint_le(value: int) -> bytes:
     """Encode an unsigned int in the smallest little-endian width HAP accepts."""
@@ -144,6 +148,8 @@ def tlv_decode(buffer: bytes) -> list[tuple[int, bytes]]:
     while index + 1 < len(buffer):
         tag = buffer[index]
         length = buffer[index + 1]
+        if index + 2 + length > len(buffer):
+            raise ValueError("TLV value is longer than the remaining buffer")
         value = buffer[index + 2 : index + 2 + length]
         index += 2 + length
         if (
@@ -245,7 +251,12 @@ def parse_transition_update(update: bytes) -> ActiveTransition | None:
         factor = tlv_first(entry, TAG_ENTRY_ADJUSTMENT_FACTOR)
         value_raw = tlv_first(entry, TAG_ENTRY_VALUE)
         if not factor or not value_raw:
+            _LOGGER.warning("Adaptive lighting curve entry is incomplete")
             continue
+        temperature = struct.unpack("<f", value_raw)[0]
+        adjustment_factor = struct.unpack("<f", factor)[0]
+        if not math.isfinite(temperature) or not math.isfinite(adjustment_factor):
+            raise ValueError("adaptive lighting curve entry is not finite")
         offset_raw = tlv_first(entry, TAG_ENTRY_TRANSITION_OFFSET)
         duration_raw = tlv_first(entry, TAG_ENTRY_DURATION)
         # On the wire the duration of an entry is the hold time of the
@@ -254,8 +265,8 @@ def parse_transition_update(update: bytes) -> ActiveTransition | None:
             curve[-1].duration = read_variable_uint_le(duration_raw)
         curve.append(
             CurveEntry(
-                temperature=struct.unpack("<f", value_raw)[0],
-                brightness_adjustment_factor=struct.unpack("<f", factor)[0],
+                temperature=temperature,
+                brightness_adjustment_factor=adjustment_factor,
                 transition_time=read_variable_uint_le(offset_raw) if offset_raw else 0,
                 duration=0,
             )
@@ -282,7 +293,9 @@ def parse_transition_update(update: bytes) -> ActiveTransition | None:
         time_millis_offset=now_millis - start_millis,
         curve=curve,
         update_interval=(
-            read_variable_uint_le(update_interval_raw) if update_interval_raw else 60000
+            max(MIN_UPDATE_INTERVAL, read_variable_uint_le(update_interval_raw))
+            if update_interval_raw
+            else 60000
         ),
         notify_threshold=(
             read_variable_uint_le(notify_threshold_raw)

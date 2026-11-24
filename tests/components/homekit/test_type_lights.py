@@ -12,6 +12,7 @@ from homeassistant.components.homekit.const import (
     ATTR_VALUE,
     CONF_ADAPTIVE_LIGHTING,
     CONF_FLOOR_RGB_COLOR,
+    CONF_MAX_COLOR_TEMP_KELVIN,
     CONF_RGB_BELOW_KELVIN,
     CONF_WARM_RGB_COLOR,
     PROP_MAX_VALUE,
@@ -425,6 +426,32 @@ async def test_colour_only_write_does_not_turn_on_an_off_light(
     set_chars([colour_write])
     await _wait_for_light_coalesce(hass)
     assert len(call_turn_on) == 2
+
+
+async def test_max_color_temp_kelvin_override_rounds_inward(
+    hass: HomeAssistant, hk_driver
+) -> None:
+    """The configured cool end never advertises a temperature above the ceiling."""
+    entity_id = "light.demo"
+
+    hass.states.async_set(
+        entity_id,
+        STATE_ON,
+        {ATTR_SUPPORTED_COLOR_MODES: ["color_temp"]},
+    )
+    await hass.async_block_till_done()
+    acc = Light(
+        hass,
+        hk_driver,
+        "Light",
+        entity_id,
+        1,
+        {CONF_MAX_COLOR_TEMP_KELVIN: 6500},
+    )
+
+    # 1e6 / 6500 = 153.8 mireds: floor would advertise 153 (6535 K, above the
+    # configured ceiling), ceil advertises 154 (6493 K).
+    assert acc.char_color_temp.properties[PROP_MIN_VALUE] == 154
 
 
 async def test_colour_only_write_turns_on_a_light_without_adaptive(
