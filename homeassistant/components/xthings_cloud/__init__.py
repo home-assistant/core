@@ -57,7 +57,7 @@ async def async_setup_entry(
         LOGGER.info("Unbinding Home Assistant instance %s from Xthings Cloud", instance_id)
         try:
             await client.async_unbind(instance_id)
-        except (XthingsCloudApiError, TimeoutError):
+        except XthingsCloudApiError, TimeoutError:
             LOGGER.exception("Failed to unbind Home Assistant device")
         else:
             LOGGER.info("Home Assistant instance %s unbound from Xthings Cloud", instance_id)
@@ -109,7 +109,7 @@ async def async_unload_entry(
     instance_id = await async_get_instance_id(hass)
     try:
         await client.async_unbind(instance_id)
-    except (XthingsCloudApiError, TimeoutError):
+    except XthingsCloudApiError, TimeoutError:
         LOGGER.exception("Failed to unbind Home Assistant during unload")
     sso_manager = hass.data.get(DOMAIN, {}).pop("sso", None)
     if isinstance(sso_manager, XthingsSsoManager):
@@ -132,7 +132,7 @@ async def async_remove_config_entry_device(
     instance_id = await async_get_instance_id(hass)
     try:
         await client.async_unbind(instance_id)
-    except (XthingsCloudApiError, TimeoutError):
+    except XthingsCloudApiError, TimeoutError:
         LOGGER.exception("Failed to unbind Home Assistant before device removal")
     return True
 
@@ -148,7 +148,7 @@ async def _async_options_updated(hass: HomeAssistant, entry: ConfigEntry) -> Non
         instance_id = await async_get_instance_id(hass)
         try:
             await client.async_unbind(instance_id)
-        except (XthingsCloudApiError, TimeoutError):
+        except XthingsCloudApiError, TimeoutError:
             LOGGER.exception("FRP stopped, but failed to unbind Home Assistant")
 
 
@@ -165,7 +165,7 @@ async def _async_bind_and_enable_remote_access(
             instance_id,
             sso_ha_user_id=owner.id,
         )
-    except (XthingsCloudApiError, TimeoutError):
+    except XthingsCloudApiError, TimeoutError:
         await async_disable_remote_access(hass)
         LOGGER.exception("Failed to bind Home Assistant; remote access is stopped")
         return

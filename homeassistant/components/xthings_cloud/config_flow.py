@@ -119,7 +119,6 @@ class XthingsCloudOptionsFlow(OptionsFlow):
         """Initialize the options flow."""
         self._config_entry = config_entry
 
-    @override
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

@@ -66,7 +66,7 @@ class XthingsSsoManager:
         instance_id = await async_get_instance_id(self.hass)
         try:
             exchange = await self.client.async_exchange_sso_code(code, instance_id)
-        except (XthingsCloudApiError, TimeoutError):
+        except XthingsCloudApiError, TimeoutError:
             LOGGER.warning("Xthings SSO code exchange failed")
             return _error(web.HTTPUnauthorized, "Invalid SSO code")
         if (
