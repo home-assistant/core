@@ -6,6 +6,7 @@
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_channel_range": "The first channel must not be higher than the last channel.",
+      "not_whole_number": "The system and the channels must be whole numbers.",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "step": {

@@ -111,23 +111,33 @@ async def test_user_form_error(
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
-async def test_user_invalid_channel_range(
+@pytest.mark.parametrize(
+    ("override", "error"),
+    [
+        ({CONF_FIRST_CHANNEL: 9.0, CONF_LAST_CHANNEL: 8.0}, "invalid_channel_range"),
+        ({CONF_SYSTEM: 1.9}, "not_whole_number"),
+        ({CONF_FIRST_CHANNEL: 1.5}, "not_whole_number"),
+        ({CONF_LAST_CHANNEL: 7.5}, "not_whole_number"),
+    ],
+)
+async def test_user_invalid_numbers(
     hass: HomeAssistant,
     mock_connection: MockConnection,
     mock_setup_entry: AsyncMock,
+    override: dict[str, float],
+    error: str,
 ) -> None:
-    """Test a first channel above the last channel is refused."""
+    """Test a reversed channel range or a fractional number is refused."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
 
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {**USER_INPUT, CONF_FIRST_CHANNEL: 9.0, CONF_LAST_CHANNEL: 8.0},
+        result["flow_id"], {**USER_INPUT, **override}
     )
 
     assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {"base": "invalid_channel_range"}
+    assert result["errors"] == {"base": error}
     mock_connection.connect.assert_not_awaited()
 
     result = await hass.config_entries.flow.async_configure(

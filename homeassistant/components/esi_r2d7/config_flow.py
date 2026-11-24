@@ -23,6 +23,8 @@ from .const import (
     LOGGER,
 )
 
+NUMBER_KEYS = (CONF_SYSTEM, CONF_FIRST_CHANNEL, CONF_LAST_CHANNEL)
+
 
 def _number(minimum: int, maximum: int) -> NumberSelector:
     """Return a whole-number box for the given range."""
@@ -67,14 +69,15 @@ class EsiR2D7ConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
 
         if user_input is not None:
+            self._async_abort_entries_match({CONF_DEVICE: user_input[CONF_DEVICE]})
             data = {
                 CONF_DEVICE: user_input[CONF_DEVICE],
-                CONF_SYSTEM: int(user_input[CONF_SYSTEM]),
-                CONF_FIRST_CHANNEL: int(user_input[CONF_FIRST_CHANNEL]),
-                CONF_LAST_CHANNEL: int(user_input[CONF_LAST_CHANNEL]),
+                **{key: int(user_input[key]) for key in NUMBER_KEYS},
             }
-            self._async_abort_entries_match({CONF_DEVICE: data[CONF_DEVICE]})
-            if data[CONF_FIRST_CHANNEL] > data[CONF_LAST_CHANNEL]:
+            # The number selector checks the range, not that a value is whole.
+            if any(user_input[key] != data[key] for key in NUMBER_KEYS):
+                errors["base"] = "not_whole_number"
+            elif data[CONF_FIRST_CHANNEL] > data[CONF_LAST_CHANNEL]:
                 errors["base"] = "invalid_channel_range"
             elif not (
                 error := await _async_attempt_connect(

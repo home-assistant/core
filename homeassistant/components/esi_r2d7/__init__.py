@@ -36,6 +36,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: R2D7ConfigEntry) -> None
         ) from None
 
     entry.runtime_data = connection
+    # An unload callback also runs when setup fails after this point, so the
+    # port is closed in both cases. It is added first, so it runs last.
+    entry.async_on_unload(connection.disconnect)
 
     @callback
     def _check_link() -> None:
@@ -54,5 +57,3 @@ async def async_setup_entry(hass: HomeAssistant, entry: R2D7ConfigEntry) -> None
 async def async_unload_entry(hass: HomeAssistant, entry: R2D7ConfigEntry) -> None:
     """Unload a config entry."""
     await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
-
-    await entry.runtime_data.disconnect()

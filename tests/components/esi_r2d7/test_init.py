@@ -38,6 +38,25 @@ async def test_setup_and_unload(
     mock_connection.disconnect.assert_awaited_once()
 
 
+async def test_failed_platform_setup_closes_port(
+    hass: HomeAssistant,
+    mock_connection: MockConnection,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test the port is closed when setup fails after it opened."""
+    with patch.object(
+        hass.config_entries,
+        "async_forward_entry_setups",
+        side_effect=RuntimeError("boom"),
+    ):
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
+    mock_connection.connect.assert_awaited_once()
+    mock_connection.disconnect.assert_awaited_once()
+
+
 @pytest.mark.parametrize(
     "exception",
     [
