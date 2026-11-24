@@ -591,17 +591,16 @@ async def test_delete_segments_changed_issue(
     mock_vacuum.async_delete_segments_issue()
     assert issue_registry.async_get_issue(DOMAIN, issue_id) is None
 
-    entity_registry.async_update_entity_options(
-        mock_vacuum.entity_id,
+    # Simulates an issue left open by an entity instance removed in a reload
+    ir.async_create_issue(
+        hass,
         DOMAIN,
-        {
-            "area_mapping": {"area_1": ["seg_1"]},
-            "last_seen_segments": [asdict(segment) for segment in mock_vacuum.segments],
-        },
+        issue_id,
+        is_fixable=False,
+        severity=ir.IssueSeverity.WARNING,
+        translation_key="segments_changed",
+        translation_placeholders={"entity_id": mock_vacuum.entity_id},
     )
-    await hass.async_block_till_done()
-
-    mock_vacuum.async_create_segments_issue()
     assert issue_registry.async_get_issue(DOMAIN, issue_id) is not None
 
     mock_vacuum.async_delete_segments_issue()
