@@ -7,7 +7,7 @@ from switchbot_api import Device, SwitchBotAPI
 
 from homeassistant.components.select import DOMAIN as SELECT_DOMAIN, SelectService
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import CommonServiceArgument
+from homeassistant.const import TargetKey
 from homeassistant.core import HomeAssistant
 
 from . import configure_integration
@@ -96,7 +96,7 @@ async def test_night_light_options(
         await hass.services.async_call(
             SELECT_DOMAIN,
             SelectService.SELECT_OPTION,
-            {CommonServiceArgument.ENTITY_ID: entity_id, "option": key_type},
+            {TargetKey.ENTITY_ID: entity_id, "option": key_type},
             blocking=True,
         )
 

@@ -17,7 +17,7 @@ from homeassistant.components.number import (
     NumberServiceArgument,
 )
 from homeassistant.components.zinvolt.const import DOMAIN
-from homeassistant.const import CommonServiceArgument, Platform
+from homeassistant.const import Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -74,7 +74,7 @@ async def test_set_max_charge_power(
         NUMBER_DOMAIN,
         NumberService.SET_VALUE,
         {
-            CommonServiceArgument.ENTITY_ID: "number.zinvolt_batterij_maximum_charge_power",
+            TargetKey.ENTITY_ID: "number.zinvolt_batterij_maximum_charge_power",
             NumberServiceArgument.VALUE: 1500,
         },
         blocking=True,

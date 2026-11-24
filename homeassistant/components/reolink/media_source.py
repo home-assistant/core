@@ -4,10 +4,9 @@ import datetime as dt
 import logging
 from typing import override
 
-from reolink_aio.enums import VodRequestType
 from reolink_aio.typings import VOD_trigger
 
-from homeassistant.components.camera import DOMAIN as CAM_DOMAIN, DynamicStreamSettings
+from homeassistant.components.camera import DOMAIN as CAM_DOMAIN
 from homeassistant.components.media_player import MediaClass, MediaType
 from homeassistant.components.media_source import (
     BrowseMediaSource,
@@ -16,17 +15,17 @@ from homeassistant.components.media_source import (
     PlayMedia,
     Unresolvable,
 )
-from homeassistant.components.stream import create_stream
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from .const import DOMAIN
 from .util import get_host
-from .views import async_generate_playback_proxy_url
+from .views import async_generate_playback_proxy_url, async_generate_thumbnail_url
 
 _LOGGER = logging.getLogger(__name__)
 
 VOD_SPLIT_TIME = dt.timedelta(minutes=5)
+THUMBNAIL_OFFSET = dt.timedelta(seconds=5)
 
 
 async def async_get_media_source(hass: HomeAssistant) -> ReolinkVODMediaSource:
@@ -70,50 +69,25 @@ class ReolinkVODMediaSource(MediaSource):
                 translation_placeholders={"identifier": str(item.identifier)},
             )
 
-        _, config_entry_id, channel_str, stream_res, filename, start_time, end_time = (
+        _, config_entry_id, channel_str, stream_res, _, start_time, end_time = (
             identifier
         )
         channel = int(channel_str)
 
         host = get_host(self.hass, config_entry_id)
 
-        def get_vod_type() -> VodRequestType:
-            if host.api.is_nvr:
-                return VodRequestType.NVR_DOWNLOAD
-            if filename.endswith((".mp4", ".vref")):
-                return VodRequestType.PLAYBACK
-            return VodRequestType.RTMP
-
-        vod_type = get_vod_type()
-
-        if vod_type is VodRequestType.NVR_DOWNLOAD:
-            filename = f"{start_time}_{end_time}"
-
-        if vod_type in {
-            VodRequestType.DOWNLOAD,
-            VodRequestType.NVR_DOWNLOAD,
-            VodRequestType.PLAYBACK,
-        }:
-            proxy_url = async_generate_playback_proxy_url(
-                config_entry_id, channel, filename, stream_res, vod_type.value
-            )
-            return PlayMedia(proxy_url, "video/mp4")
-
-        mime_type, url = await host.api.get_vod_source(
-            channel, filename, stream_res, vod_type
+        start = dt.datetime.strptime(start_time, "%Y%m%d%H%M%S")
+        end = dt.datetime.strptime(end_time, "%Y%m%d%H%M%S")
+        _LOGGER.debug(
+            "Opening recording playback of %s: %s stream from %s to %s",
+            host.api.camera_name(channel),
+            stream_res,
+            start,
+            end,
         )
-        if _LOGGER.isEnabledFor(logging.DEBUG):
-            _LOGGER.debug(
-                "Opening VOD stream from %s: %s",
-                host.api.camera_name(channel),
-                host.api.hide_password(url),
-            )
-
-        stream = create_stream(self.hass, url, {}, DynamicStreamSettings())
-        stream.add_provider("hls", timeout=3600)
-        stream_url: str = stream.endpoint_url("hls")
-        stream_url = stream_url.replace("master_", "")
-        return PlayMedia(stream_url, mime_type)
+        playback = await host.async_start_hls_playback(channel, stream_res, start, end)
+        proxy_url = async_generate_playback_proxy_url(config_entry_id, playback.token)
+        return PlayMedia(proxy_url, "application/x-mpegURL")
 
     @override
     async def async_browse_media(
@@ -408,12 +382,20 @@ class ReolinkVODMediaSource(MediaSource):
                 for trigger in triggers
             )
 
+        # A battery camera starts recording at the event, without pre-recording.
+        thumbnail_offset = (
+            dt.timedelta()
+            if host.api.supported(channel, "battery")
+            else THUMBNAIL_OFFSET
+        )
+
         for file in vod_files:
             file_name = f"{file.start_time.time()} {file.duration}"
             if file.triggers != file.triggers.NONE:
                 file_name += " " + " ".join(
                     str(trigger.name).title() for trigger in file.triggers
                 )
+            thumbnail_time = file.start_time + min(thumbnail_offset, file.duration / 2)
 
             children.append(
                 BrowseMediaSource(
@@ -424,6 +406,12 @@ class ReolinkVODMediaSource(MediaSource):
                     title=file_name,
                     can_play=True,
                     can_expand=False,
+                    thumbnail=async_generate_thumbnail_url(
+                        config_entry_id,
+                        channel,
+                        stream,
+                        thumbnail_time.strftime("%Y%m%d%H%M%S"),
+                    ),
                 )
             )
 

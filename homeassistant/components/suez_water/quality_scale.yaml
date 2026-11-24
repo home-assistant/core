@@ -58,13 +58,18 @@ rules:
   entity-device-class: done
   devices:
     status: todo
-    comment: see https://github.com/home-assistant/core/pull/134027#discussion_r1898732463
+    comment: |
+      The water counter is entered in the config flow and used as the
+      config entry. Counters should be discovered from the account and
+      added as devices instead, which needs a new unique ID.
   entity-category:
     status: done
     comment: default class is fine
   entity-disabled-by-default:
     status: todo
-    comment: price can always be disabled and yesterday usage after https://github.com/home-assistant/core/pull/131166
+    comment: |
+      The water price sensor and, now that history is imported into
+      statistics, the yesterday usage sensor can be disabled by default.
   discovery:
     status: exempt
     comment: api only, nothing on local network to discover services

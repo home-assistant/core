@@ -28,6 +28,7 @@ from aioshelly.const import (
 from aioshelly.exceptions import NotInitialized
 from aioshelly.rpc_device import RpcDevice, WsServer
 from aioshelly.rpc_device.models import ShellyLedStripEffect
+from awesomeversion import AwesomeVersion
 from yarl import URL
 
 from homeassistant.components import network
@@ -77,11 +78,12 @@ from .const import (
     SHIX3_1_INPUTS_EVENTS_TYPES,
     VIRTUAL_COMPONENTS,
     WALL_DISPLAY_RELEASE_URL,
+    WALL_DISPLAY_UI_MIN_FIRMWARE,
     All_LIGHT_TYPES,
 )
 
 if TYPE_CHECKING:
-    from .coordinator import ShellyConfigEntry
+    from .coordinator import ShellyConfigEntry, ShellyRpcCoordinator
 
 
 @callback
@@ -320,6 +322,8 @@ def get_info_gen(info: dict[str, Any]) -> int:
 def get_model_name(info: dict[str, Any]) -> str:
     """Return the device model name."""
     if get_info_gen(info) in RPC_GENERATIONS:
+        if xmod_name := (info.get("jwt") or {}).get("n"):
+            return cast(str, xmod_name)
         return cast(str, MODEL_NAMES.get(info[CONF_MODEL], info[CONF_MODEL]))
 
     return cast(str, MODEL_NAMES.get(info["type"], info["type"]))
@@ -488,9 +492,6 @@ def get_rpc_key_instances(
     if key in keys_dict:
         return [key]
 
-    if key == "switch" and "cover:0" in keys_dict:
-        key = "cover"
-
     if key in All_LIGHT_TYPES and all_lights:
         return [k for k in keys_dict if k.startswith(All_LIGHT_TYPES)]
 
@@ -588,6 +589,19 @@ def brightness_to_percentage(brightness: int) -> int:
     return int(100 * (brightness + 1) / 255)
 
 
+def is_rpc_wall_display_brightness_supported(
+    coordinator: ShellyRpcCoordinator,
+) -> bool:
+    """Return true if the device has a supported Wall Display brightness config."""
+    device = coordinator.device
+    return (
+        coordinator.model.startswith(SHELLY_WALL_DISPLAY_MODEL_PREFIX)
+        and "brightness" in device.config.get("ui", {})
+        and AwesomeVersion(device.shelly["ver"])
+        >= AwesomeVersion(WALL_DISPLAY_UI_MIN_FIRMWARE)
+    )
+
+
 def percentage_to_brightness(percentage: int) -> int:
     """Convert percentage to brightness level."""
     return round(255 * percentage / 100)
@@ -671,6 +685,15 @@ def async_remove_shelly_rpc_entities(
             entity_reg.async_remove(entity_id)
 
 
+def get_virtual_component_view(component_config: dict[str, Any]) -> str:
+    """Return the view of a virtual component, the platform follows from it."""
+    # The Wall Display sends no meta and firmware 2.2.0 can leave out the view;
+    # without one only a button component gets an entity
+    ui = (component_config.get("meta") or {}).get("ui") or {}
+    view: str = ui.get("view", "button")
+    return view
+
+
 def get_virtual_component_ids(config: dict[str, Any], platform: str) -> list[str]:
     """Return a list of virtual component IDs for a platform."""
     component = DYNAMIC_COMPONENTS_MAP[platform]
@@ -682,9 +705,7 @@ def get_virtual_component_ids(config: dict[str, Any], platform: str) -> list[str
             k
             for k, v in config.items()
             if k.startswith(comp_type)
-            # default to button view if not set, workaround for Wall Display
-            and v.get("meta", {"ui": {"view": "button"}})["ui"]["view"]
-            in component["modes"]
+            and get_virtual_component_view(v) in component["modes"]
         )
 
     return ids
@@ -693,8 +714,7 @@ def get_virtual_component_ids(config: dict[str, Any], platform: str) -> list[str
 def is_view_for_platform(config: dict[str, Any], key: str, platform: str) -> bool:
     """Return true if the virtual component view match the platform."""
     component = DYNAMIC_COMPONENTS_MAP[platform]
-    view = config[key]["meta"]["ui"]["view"]
-    return view in component["modes"]
+    return get_virtual_component_view(config[key]) in component["modes"]
 
 
 def get_virtual_component_unit(config: dict[str, Any]) -> str | None:

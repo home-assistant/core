@@ -13,7 +13,7 @@ from homeassistant.components.time import (
     TimeService,
     TimeServiceArgument,
 )
-from homeassistant.const import CommonServiceArgument, Platform
+from homeassistant.const import Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util import dt as dt_util
@@ -84,14 +84,17 @@ async def test_set_value_action(
         TIME_DOMAIN,
         TimeService.SET_VALUE,
         {
-            CommonServiceArgument.ENTITY_ID: ENTITY_ID,
+            TargetKey.ENTITY_ID: ENTITY_ID,
             TimeServiceArgument.TIME: value,
         },
         blocking=True,
     )
 
     music_assistant_client.send_command.assert_called_once_with(
-        "players/sleep_timer/set", player_id=MASS_PLAYER_ID, seconds=expected_seconds
+        "players/sleep_timer/set",
+        player_id=MASS_PLAYER_ID,
+        seconds=expected_seconds,
+        require_schema=None,
     )
 
 
