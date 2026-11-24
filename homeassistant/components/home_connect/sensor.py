@@ -56,9 +56,6 @@ BSH_PROGRAM_SENSORS = (
         key=EventKey.BSH_COMMON_OPTION_REMAINING_PROGRAM_TIME,
         device_class=SensorDeviceClass.TIMESTAMP,
         translation_key="program_finish_time",
-        value_fn=lambda remaining: (
-            dt_util.utcnow() + timedelta(seconds=cast(float, remaining))
-        ),
         appliance_types=(
             ApplianceType.COFFEE_MAKER,
             ApplianceType.COOK_PROCESSOR,
@@ -615,7 +612,11 @@ def _get_entities_for_appliance(
             and appliance_coordinator.data.info.type in description.appliance_types
         ],
         *[
-            HomeConnectProgramSensor(appliance_coordinator, desc)
+            (
+                HomeConnectProgramFinishTimeSensor
+                if desc.key == EventKey.BSH_COMMON_OPTION_REMAINING_PROGRAM_TIME
+                else HomeConnectProgramSensor
+            )(appliance_coordinator, desc)
             for desc in BSH_PROGRAM_SENSORS
             if desc.appliance_types
             and appliance_coordinator.data.info.type in desc.appliance_types
@@ -749,6 +750,56 @@ class HomeConnectProgramSensor(HomeConnectSensor):
         """Update the program sensor's status."""
         event = self.appliance.events.get(cast(EventKey, self.bsh_key))
         self._update_native_value(event.value if event else None)
+
+
+class HomeConnectProgramFinishTimeSensor(HomeConnectProgramSensor):
+    """Sensor class for Home Connect program finish time."""
+
+    _time_to_finish: float | None = None
+
+    @override
+    async def async_added_to_hass(self) -> None:
+        """Register listener."""
+        await super().async_added_to_hass()
+        # While waiting for a delayed start, the finish time depends on the start
+        self.async_on_remove(
+            self.coordinator.async_add_listener(
+                self._handle_coordinator_update,
+                EventKey.BSH_COMMON_OPTION_START_IN_RELATIVE,
+            )
+        )
+
+    @override
+    def update_native_value(self) -> None:
+        """Update the program finish time."""
+        events = self.appliance.events
+        remaining = events.get(EventKey.BSH_COMMON_OPTION_REMAINING_PROGRAM_TIME)
+        if remaining is None or not isinstance(remaining.value, (int, float)):
+            self._time_to_finish = None
+            self._attr_native_value = None
+            return
+        time_to_finish = float(remaining.value)
+        operation_state = self.appliance.status.get(
+            StatusKey.BSH_COMMON_OPERATION_STATE
+        )
+        if (
+            operation_state is not None
+            and operation_state.value == BSH_OPERATION_STATE_DELAYED_START
+            and (start := events.get(EventKey.BSH_COMMON_OPTION_START_IN_RELATIVE))
+            and isinstance(start.value, (int, float))
+        ):
+            # While waiting for the delayed start,
+            # the remaining program time is the duration of the whole program
+            time_to_finish += start.value
+        if (
+            time_to_finish == self._time_to_finish
+            and self._attr_native_value is not None
+        ):
+            # Nothing new has been reported, calculating the finish time again
+            # would shift it by the time elapsed since the last report
+            return
+        self._time_to_finish = time_to_finish
+        self._attr_native_value = dt_util.utcnow() + timedelta(seconds=time_to_finish)
 
 
 class HomeConnectEventSensor(HomeConnectSensor):

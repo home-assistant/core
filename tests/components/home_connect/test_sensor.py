@@ -1,6 +1,7 @@
 """Tests for home_connect sensor entities."""
 
 from collections.abc import Awaitable, Callable
+from datetime import timedelta
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock
 
@@ -41,6 +42,7 @@ from homeassistant.components.home_connect.const import (
     BSH_EVENT_PRESENT_STATE_CONFIRMED,
     BSH_EVENT_PRESENT_STATE_OFF,
     BSH_EVENT_PRESENT_STATE_PRESENT,
+    BSH_OPERATION_STATE_DELAYED_START,
     BSH_OPERATION_STATE_PAUSE,
     BSH_OPERATION_STATE_READY,
     BSH_OPERATION_STATE_RUN,
@@ -1506,3 +1508,159 @@ async def test_program_running_time(
         )
         await hass.async_block_till_done()
         assert hass.states.is_state(OVEN_RUNNING_TIME_ENTITY_ID, expected_state)
+
+
+@pytest.mark.parametrize("appliance", [ApplianceType.OVEN], indirect=True)
+async def test_program_finish_time_not_shifted_without_new_remaining_time(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    client: MagicMock,
+    config_entry: MockConfigEntry,
+    integration_setup: Callable[[MagicMock], Awaitable[bool]],
+    appliance: HomeAppliance,
+) -> None:
+    """Test the finish time is only recalculated when a new remaining time is known.
+
+    Updating all the entities (e.g. after a disconnection) must not
+    add the time elapsed since the last remaining time event to the finish time.
+    """
+    freezer.move_to(PROGRAM_TIMES_TEST_START)
+    client.get_status = AsyncMock(
+        return_value=create_operation_state_status(BSH_OPERATION_STATE_RUN)
+    )
+    assert await integration_setup(client)
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    await client.add_events(
+        [
+            create_event_message(
+                appliance.ha_id,
+                EventType.NOTIFY,
+                {EventKey.BSH_COMMON_OPTION_REMAINING_PROGRAM_TIME: 1800},
+            )
+        ]
+    )
+    await hass.async_block_till_done()
+    assert hass.states.is_state(OVEN_FINISH_TIME_ENTITY_ID, "2021-01-09T12:30:00+00:00")
+
+    freezer.tick(timedelta(seconds=45))
+    await client.add_events(
+        [
+            EventMessage(appliance.ha_id, EventType.DISCONNECTED, ArrayOfEvents([])),
+            # The first event after a disconnection updates all the entities.
+            create_event_message(
+                appliance.ha_id,
+                EventType.STATUS,
+                {EventKey.BSH_COMMON_STATUS_OPERATION_STATE: BSH_OPERATION_STATE_RUN},
+            ),
+        ]
+    )
+    await hass.async_block_till_done()
+    assert hass.states.is_state(OVEN_FINISH_TIME_ENTITY_ID, "2021-01-09T12:30:00+00:00")
+
+    freezer.tick(timedelta(seconds=15))
+    await client.add_events(
+        [
+            create_event_message(
+                appliance.ha_id,
+                EventType.NOTIFY,
+                {EventKey.BSH_COMMON_OPTION_REMAINING_PROGRAM_TIME: 1800},
+            )
+        ]
+    )
+    await hass.async_block_till_done()
+    # The remaining time is the same, so the finish time is kept
+    assert hass.states.is_state(OVEN_FINISH_TIME_ENTITY_ID, "2021-01-09T12:30:00+00:00")
+
+    await client.add_events(
+        [
+            create_event_message(
+                appliance.ha_id,
+                EventType.NOTIFY,
+                {EventKey.BSH_COMMON_OPTION_REMAINING_PROGRAM_TIME: 1500},
+            )
+        ]
+    )
+    await hass.async_block_till_done()
+    assert hass.states.is_state(OVEN_FINISH_TIME_ENTITY_ID, "2021-01-09T12:26:00+00:00")
+
+
+@pytest.mark.parametrize("appliance", [ApplianceType.DISHWASHER], indirect=True)
+async def test_program_finish_time_with_delayed_start(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    client: MagicMock,
+    config_entry: MockConfigEntry,
+    integration_setup: Callable[[MagicMock], Awaitable[bool]],
+    appliance: HomeAppliance,
+) -> None:
+    """Test the finish time includes the time until the delayed start."""
+    entity_id = "sensor.dishwasher_program_finish_time"
+    freezer.move_to(PROGRAM_TIMES_TEST_START)
+    client.get_status = AsyncMock(
+        return_value=create_operation_state_status(BSH_OPERATION_STATE_DELAYED_START)
+    )
+    assert await integration_setup(client)
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    # While waiting for the delayed start, the remaining program time
+    # is the duration of the whole program.
+    await client.add_events(
+        [
+            create_event_message(
+                appliance.ha_id,
+                EventType.NOTIFY,
+                {
+                    EventKey.BSH_COMMON_OPTION_START_IN_RELATIVE: 3600,
+                    EventKey.BSH_COMMON_OPTION_REMAINING_PROGRAM_TIME: 7200,
+                },
+            )
+        ]
+    )
+    await hass.async_block_till_done()
+    assert hass.states.is_state(entity_id, "2021-01-09T15:00:00+00:00")
+
+    freezer.tick(timedelta(minutes=1))
+    await client.add_events(
+        [
+            create_event_message(
+                appliance.ha_id,
+                EventType.NOTIFY,
+                {EventKey.BSH_COMMON_OPTION_START_IN_RELATIVE: 3540},
+            )
+        ]
+    )
+    await hass.async_block_till_done()
+    assert hass.states.is_state(entity_id, "2021-01-09T15:00:00+00:00")
+
+    # The start time is postponed while waiting for the delayed start
+    await client.add_events(
+        [
+            create_event_message(
+                appliance.ha_id,
+                EventType.NOTIFY,
+                {EventKey.BSH_COMMON_OPTION_START_IN_RELATIVE: 7140},
+            )
+        ]
+    )
+    await hass.async_block_till_done()
+    assert hass.states.is_state(entity_id, "2021-01-09T16:00:00+00:00")
+
+    # Once the program runs, the start in relative value is no longer used
+    freezer.move_to("2021-01-09 14:00:00+00:00")
+    await client.add_events(
+        [
+            create_event_message(
+                appliance.ha_id,
+                EventType.STATUS,
+                {EventKey.BSH_COMMON_STATUS_OPERATION_STATE: BSH_OPERATION_STATE_RUN},
+            ),
+            create_event_message(
+                appliance.ha_id,
+                EventType.NOTIFY,
+                {EventKey.BSH_COMMON_OPTION_REMAINING_PROGRAM_TIME: 7140},
+            ),
+        ]
+    )
+    await hass.async_block_till_done()
+    assert hass.states.is_state(entity_id, "2021-01-09T15:59:00+00:00")
