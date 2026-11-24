@@ -1,8 +1,5 @@
 """Support for Homekit cameras."""
 
-import asyncio
-from datetime import datetime
-import logging
 from typing import override
 
 from aiohomekit.model import Accessory, Transport
@@ -16,10 +13,8 @@ from homeassistant.components.camera import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
-from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.typing import ConfigType
 
 from .connection import HKDevice
@@ -28,10 +23,6 @@ from .entity import AccessoryEntity
 
 DEFAULT_IMAGE_WIDTH = 640
 DEFAULT_IMAGE_HEIGHT = 480
-
-_LOGGER = logging.getLogger(__name__)
-# Seconds before each retry of an address update, the last repeating
-_ADDRESS_RETRY_DELAYS = (5, 15, 30, 60, 300)
 
 
 def _address(entry: ConfigEntry) -> tuple[str | None, int | None]:
@@ -48,9 +39,6 @@ class HomeKitCamera(AccessoryEntity, Camera):
         """Initialise the camera."""
         super().__init__(accessory, devinfo)
         self._address = _address(accessory.config_entry)
-        self._address_attempt = 0
-        self._address_task: asyncio.Task[None] | None = None
-        self._cancel_address_retry: CALLBACK_TYPE | None = None
         # go2rtc's homekit:// source streams from IP accessories with aid 1
         if accessory.pairing.transport is Transport.IP and self._aid == 1:
             self._attr_supported_features = CameraEntityFeature.STREAM
@@ -72,79 +60,18 @@ class HomeKitCamera(AccessoryEntity, Camera):
                     self._async_entry_updated
                 )
             )
-            self.async_on_remove(self._stop_address_update)
 
     async def _async_entry_updated(
         self, hass: HomeAssistant, entry: ConfigEntry
     ) -> None:
-        """Update go2rtc's stream when discovery changed the camera's address."""
-        if _address(entry) == self._address:
-            return
-        self._address_attempt = 0
-        self._start_address_update()
+        """Pass a new address from discovery on to the WebRTC provider.
 
-    @callback
-    def _async_retry_address_update(self, _now: datetime) -> None:
-        """Retry giving go2rtc the camera's new address."""
-        self._cancel_address_retry = None
-        self._start_address_update()
-
-    @callback
-    def _start_address_update(self) -> None:
-        """Start an address update, in place of any earlier attempt."""
-        self._stop_address_update()
-        self._address_task = self.hass.async_create_task(
-            self._async_update_address(), f"{self.entity_id} address update"
-        )
-
-    @callback
-    def _stop_address_update(self) -> None:
-        """Cancel a running or pending address update."""
-        if self._cancel_address_retry:
-            self._cancel_address_retry()
-            self._cancel_address_retry = None
-        if self._address_task:
-            self._address_task.cancel()
-            self._address_task = None
-
-    async def _async_update_address(self) -> None:
-        """Give go2rtc the camera's current address, retrying until it has it.
-
-        HLS and recording keep reading go2rtc's restream without asking for it
-        again, so its source must follow the address.
+        HLS and recording keep reading the provider's restream without asking
+        for it again, so the restream must follow the address.
         """
-        address = _address(self._accessory.config_entry)
-        if (lock := self._create_stream_lock) and lock.locked():
-            # A stream being created may have resolved the old address
-            async with lock:
-                pass
-        if self.stream:
-            try:
-                await self.async_create_stream()
-            except HomeAssistantError, TimeoutError:
-                # Not logged, as the error can carry the source's credentials
-                if not self._address_attempt:
-                    _LOGGER.warning(
-                        "Unable to update the stream of %s to its new address,"
-                        " retrying",
-                        self.entity_id,
-                    )
-                delay = _ADDRESS_RETRY_DELAYS[
-                    min(self._address_attempt, len(_ADDRESS_RETRY_DELAYS) - 1)
-                ]
-                self._address_attempt += 1
-                self._address_task = None
-                self._cancel_address_retry = async_call_later(
-                    self.hass, delay, self._async_retry_address_update
-                )
-                return
-            if self._address_attempt:
-                _LOGGER.info(
-                    "Updated the stream of %s to its new address", self.entity_id
-                )
-        self._address = address
-        self._address_attempt = 0
-        self._address_task = None
+        if (address := _address(entry)) != self._address:
+            self._address = address
+            self.async_webrtc_source_changed()
 
     @override
     def get_characteristic_types(self) -> list[str]:
