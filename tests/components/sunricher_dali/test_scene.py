@@ -10,7 +10,7 @@ from pytest_homeassistant.common import (
 )
 
 from homeassistant.components.scene import DOMAIN as SCENE_DOMAIN, SceneService
-from homeassistant.const import CommonServiceArgument, Platform
+from homeassistant.const import Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
@@ -64,7 +64,7 @@ async def test_activate_scenes(
     await hass.services.async_call(
         SCENE_DOMAIN,
         SceneService.TURN_ON,
-        {CommonServiceArgument.ENTITY_ID: TEST_SCENE_1_ENTITY_ID},
+        {TargetKey.ENTITY_ID: TEST_SCENE_1_ENTITY_ID},
         blocking=True,
     )
     mock_scenes[0].activate.assert_called_once()
@@ -73,7 +73,7 @@ async def test_activate_scenes(
         SCENE_DOMAIN,
         SceneService.TURN_ON,
         {
-            CommonServiceArgument.ENTITY_ID: [
+            TargetKey.ENTITY_ID: [
                 TEST_SCENE_1_ENTITY_ID,
                 TEST_SCENE_2_ENTITY_ID,
             ]

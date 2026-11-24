@@ -12,7 +12,7 @@ from homeassistant.components.number import (
     NumberServiceArgument,
 )
 from homeassistant.components.plugwise.const import DOMAIN
-from homeassistant.const import CommonServiceArgument
+from homeassistant.const import TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import entity_registry as er, issue_registry as ir
@@ -42,7 +42,7 @@ async def test_adam_temperature_offset_change(
         NUMBER_DOMAIN,
         NumberService.SET_VALUE,
         {
-            CommonServiceArgument.ENTITY_ID: "number.zone_thermostat_jessie_temperature_offset",
+            TargetKey.ENTITY_ID: "number.zone_thermostat_jessie_temperature_offset",
             NumberServiceArgument.VALUE: 1.0,
         },
         blocking=True,
@@ -64,7 +64,7 @@ async def test_adam_temperature_offset_out_of_bounds_change(
             NUMBER_DOMAIN,
             NumberService.SET_VALUE,
             {
-                CommonServiceArgument.ENTITY_ID: "number.zone_thermostat_jessie_temperature_offset",
+                TargetKey.ENTITY_ID: "number.zone_thermostat_jessie_temperature_offset",
                 NumberServiceArgument.VALUE: 3.0,
             },
             blocking=True,
@@ -79,7 +79,7 @@ async def test_adam_preset_temperature_change(
         NUMBER_DOMAIN,
         NumberService.SET_VALUE,
         {
-            CommonServiceArgument.ENTITY_ID: "number.badkamer_home_preset_temperature",
+            TargetKey.ENTITY_ID: "number.badkamer_home_preset_temperature",
             NumberServiceArgument.VALUE: 20.5,
         },
         blocking=True,
@@ -104,7 +104,7 @@ async def test_adam_preset_temperature_out_of_bounds_change(
             NUMBER_DOMAIN,
             NumberService.SET_VALUE,
             {
-                CommonServiceArgument.ENTITY_ID: "number.badkamer_home_preset_temperature",
+                TargetKey.ENTITY_ID: "number.badkamer_home_preset_temperature",
                 NumberServiceArgument.VALUE: 31.0,
             },
             blocking=True,
@@ -138,7 +138,7 @@ async def test_adam_preset_cooling_temperature_change(
         NUMBER_DOMAIN,
         NumberService.SET_VALUE,
         {
-            CommonServiceArgument.ENTITY_ID: "number.living_room_away_preset_cooling_temperature",
+            TargetKey.ENTITY_ID: "number.living_room_away_preset_cooling_temperature",
             NumberServiceArgument.VALUE: 24.0,
         },
         blocking=True,
@@ -186,7 +186,7 @@ async def test_adam_dhw_setpoint_change(
         NUMBER_DOMAIN,
         NumberService.SET_VALUE,
         {
-            CommonServiceArgument.ENTITY_ID: "number.opentherm_domestic_hot_water_setpoint",
+            TargetKey.ENTITY_ID: "number.opentherm_domestic_hot_water_setpoint",
             NumberServiceArgument.VALUE: 55,
         },
         blocking=True,
@@ -247,7 +247,7 @@ async def test_anna_boiler_temperature_change(
         NUMBER_DOMAIN,
         NumberService.SET_VALUE,
         {
-            CommonServiceArgument.ENTITY_ID: "number.opentherm_maximum_boiler_temperature_setpoint",
+            TargetKey.ENTITY_ID: "number.opentherm_maximum_boiler_temperature_setpoint",
             NumberServiceArgument.VALUE: 65,
         },
         blocking=True,
@@ -269,7 +269,7 @@ async def test_anna_preset_temperature_change(
         NUMBER_DOMAIN,
         NumberService.SET_VALUE,
         {
-            CommonServiceArgument.ENTITY_ID: "number.anna_home_preset_temperature",
+            TargetKey.ENTITY_ID: "number.anna_home_preset_temperature",
             NumberServiceArgument.VALUE: 20.5,
         },
         blocking=True,
@@ -294,7 +294,7 @@ async def test_anna_preset_cooling_temperature_change(
         NUMBER_DOMAIN,
         NumberService.SET_VALUE,
         {
-            CommonServiceArgument.ENTITY_ID: "number.anna_away_preset_cooling_temperature",
+            TargetKey.ENTITY_ID: "number.anna_away_preset_cooling_temperature",
             NumberServiceArgument.VALUE: 26.0,
         },
         blocking=True,

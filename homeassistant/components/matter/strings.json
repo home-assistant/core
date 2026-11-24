@@ -524,6 +524,9 @@
           "not_charging": "Not charging"
         }
       },
+      "battery_quantity": {
+        "name": "Battery quantity"
+      },
       "battery_replacement_description": {
         "name": "Battery type"
       },

@@ -2,7 +2,6 @@
 
 import asyncio
 from collections.abc import Mapping
-from functools import partial
 import logging
 from typing import Any
 
@@ -47,22 +46,9 @@ async def async_setup_entry(
 
     zeroconf_instance = await zeroconf.async_get_instance(hass)
     entry.runtime_data = []
-    offline_gateways = 0
-    for gateway_id in gateway_ids:
-        try:
-            entry.runtime_data.append(
-                await hass.async_add_executor_job(
-                    partial(
-                        HomeControl,
-                        gateway_id=gateway_id,
-                        mydevolo_instance=mydevolo,
-                        zeroconf_instance=zeroconf_instance,
-                    )
-                )
-            )
-        except GatewayOfflineError:
-            offline_gateways += 1
-            _LOGGER.info("Central unit %s cannot be reached locally", gateway_id)
+    offline_gateways = await hass.async_add_executor_job(
+        connect_gateways, entry.runtime_data, gateway_ids, mydevolo, zeroconf_instance
+    )
     if len(gateway_ids) == offline_gateways:
         raise ConfigEntryNotReady(
             translation_domain=DOMAIN,
@@ -121,3 +107,30 @@ def check_mydevolo_and_get_gateway_ids(mydevolo: Mydevolo) -> list[str]:
         )
 
     return mydevolo.get_gateway_ids()
+
+
+def connect_gateways(
+    gateways: list[HomeControl],
+    gateway_ids: list[str],
+    mydevolo: Mydevolo,
+    zeroconf_instance: zeroconf.HaZeroconf,
+) -> int:
+    """Connect to the gateways and return the number of offline gateways.
+
+    Each connected gateway is added to *gateways* right away, so a shutdown
+    during setup can disconnect it.
+    """
+    offline_gateways = 0
+    for gateway_id in gateway_ids:
+        try:
+            gateways.append(
+                HomeControl(
+                    gateway_id=gateway_id,
+                    mydevolo_instance=mydevolo,
+                    zeroconf_instance=zeroconf_instance,
+                )
+            )
+        except GatewayOfflineError:
+            offline_gateways += 1
+            _LOGGER.info("Central unit %s cannot be reached locally", gateway_id)
+    return offline_gateways

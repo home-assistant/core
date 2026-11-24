@@ -14,6 +14,7 @@ from homeassistant.components.imou.const import (
 )
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import CONFIG_ENTRY_DATA
 
@@ -54,6 +55,7 @@ async def test_migrate_swapped_region_keeps_previous_host(
         CONFIG_ENTRY_DATA[CONF_APP_ID],
         CONFIG_ENTRY_DATA[CONF_APP_SECRET],
         kept_host,
+        session=async_get_clientsession(hass),
     )
 
 
@@ -85,6 +87,7 @@ async def test_migrate_unchanged_region_only_bumps_version(
         CONFIG_ENTRY_DATA[CONF_APP_ID],
         CONFIG_ENTRY_DATA[CONF_APP_SECRET],
         API_URLS[region],
+        session=async_get_clientsession(hass),
     )
 
 
@@ -112,4 +115,5 @@ async def test_current_region_entry_is_not_swapped(hass: HomeAssistant) -> None:
         CONFIG_ENTRY_DATA[CONF_APP_ID],
         CONFIG_ENTRY_DATA[CONF_APP_SECRET],
         API_URLS["eu"],
+        session=async_get_clientsession(hass),
     )

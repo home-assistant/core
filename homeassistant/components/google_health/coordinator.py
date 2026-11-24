@@ -2,7 +2,7 @@
 
 import asyncio
 from dataclasses import dataclass
-from datetime import timedelta
+from datetime import datetime, timedelta
 import logging
 from typing import TYPE_CHECKING, override
 
@@ -14,6 +14,9 @@ from google_health_api.exceptions import (
 )
 from google_health_api.model import (
     ActiveEnergyBurnedRollupValue,
+    ActiveMinutesRollupValue,
+    ActiveZoneMinutesRollupValue,
+    AltitudeRollupValue,
     BodyFat,
     DailyRestingHeartRate,
     DistanceRollupValue,
@@ -21,6 +24,7 @@ from google_health_api.model import (
     HydrationLogRollupValue,
     NutritionLogRollupValue,
     PairedDevice,
+    SedentaryPeriodRollupValue,
     Sleep,
     StepsRollupValue,
     TotalCaloriesRollupValue,
@@ -30,6 +34,7 @@ from google_health_api.model import (
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.util import dt as dt_util
 
 from .const import DOMAIN
 
@@ -54,6 +59,87 @@ class GoogleHealthActivityData:
     active_energy_burned: ActiveEnergyBurnedRollupValue | None = None
     total_calories: TotalCaloriesRollupValue | None = None
     floors: FloorsRollupValue | None = None
+    altitude: AltitudeRollupValue | None = None
+    active_minutes: ActiveMinutesRollupValue | None = None
+    active_zone_minutes: ActiveZoneMinutesRollupValue | None = None
+    sedentary_period: SedentaryPeriodRollupValue | None = None
+    rollup_start: datetime | None = None
+
+    @property
+    def altitude_gain_millimeters(self) -> int | None:
+        """Return daily elevation gain in millimeters."""
+        return self.altitude.gain_millimeters_sum if self.altitude else None
+
+    def _active_minutes_for(self, level: str) -> int | None:
+        """Return daily active duration in minutes for an activity level."""
+        if not self.active_minutes:
+            return None
+        return next(
+            (
+                item.active_minutes_sum
+                for item in self.active_minutes.active_minutes_rollup_by_activity_level
+                if item.activity_level == level and item.active_minutes_sum is not None
+            ),
+            None,
+        )
+
+    @property
+    def light_activity_minutes(self) -> int | None:
+        """Return daily light activity duration in minutes."""
+        return self._active_minutes_for("LIGHT")
+
+    @property
+    def moderate_activity_minutes(self) -> int | None:
+        """Return daily moderate activity duration in minutes."""
+        return self._active_minutes_for("MODERATE")
+
+    @property
+    def vigorous_activity_minutes(self) -> int | None:
+        """Return daily vigorous activity duration in minutes."""
+        return self._active_minutes_for("VIGOROUS")
+
+    @property
+    def fat_burn_active_zone_minutes(self) -> int | None:
+        """Return daily fat burn active zone minutes."""
+        return (
+            self.active_zone_minutes.sum_in_fat_burn_heart_zone
+            if self.active_zone_minutes
+            else None
+        )
+
+    @property
+    def cardio_active_zone_minutes(self) -> int | None:
+        """Return daily cardio active zone minutes."""
+        return (
+            self.active_zone_minutes.sum_in_cardio_heart_zone
+            if self.active_zone_minutes
+            else None
+        )
+
+    @property
+    def peak_active_zone_minutes(self) -> int | None:
+        """Return daily peak active zone minutes."""
+        return (
+            self.active_zone_minutes.sum_in_peak_heart_zone
+            if self.active_zone_minutes
+            else None
+        )
+
+    @property
+    def total_active_zone_minutes(self) -> int | None:
+        """Return total daily active zone minutes across all heart rate zones."""
+        if self.active_zone_minutes is None:
+            return None
+        return (
+            (self.fat_burn_active_zone_minutes or 0)
+            + (self.cardio_active_zone_minutes or 0)
+            + (self.peak_active_zone_minutes or 0)
+        )
+
+    @property
+    def sedentary_duration(self) -> timedelta | None:
+        """Return daily sedentary duration."""
+        return self.sedentary_period.duration_sum if self.sedentary_period else None
 
 
 @dataclass
@@ -133,23 +219,31 @@ class GoogleHealthActivityCoordinator(
     async def _async_fetch_data(self) -> GoogleHealthActivityData:
         """Fetch activity rollups for today.
 
-        Queries the daily rollup endpoints in parallel using Home Assistant's
-        local time zone to aggregate steps, distance, active calories, total
-        calories, and floors. If no data points exist for today yet, the API
-        returns None, which the sensors default to 0.
+        Queries the daily rollup endpoints using Home Assistant's local time
+        zone. If no data points exist for today yet, the API returns None,
+        which the sensors default to 0.
         """
+        rollup_start = dt_util.start_of_local_day()
         (
             steps_rollup,
             distance_rollup,
             active_energy_rollup,
             total_calories_rollup,
             floors_rollup,
+            altitude_rollup,
+            active_minutes_rollup,
+            active_zone_minutes_rollup,
+            sedentary_period_rollup,
         ) = await asyncio.gather(
             self.api.steps.today(self.hass.config.time_zone),
             self.api.distance.today(self.hass.config.time_zone),
             self.api.active_energy_burned.today(self.hass.config.time_zone),
             self.api.total_calories.today(self.hass.config.time_zone),
             self.api.floors.today(self.hass.config.time_zone),
+            self.api.altitude.today(self.hass.config.time_zone),
+            self.api.active_minutes.today(self.hass.config.time_zone),
+            self.api.active_zone_minutes.today(self.hass.config.time_zone),
+            self.api.sedentary_period.today(self.hass.config.time_zone),
         )
 
         steps = steps_rollup.data if steps_rollup else None
@@ -159,6 +253,14 @@ class GoogleHealthActivityCoordinator(
         )
         total_calories = total_calories_rollup.data if total_calories_rollup else None
         floors = floors_rollup.data if floors_rollup else None
+        altitude = altitude_rollup.data if altitude_rollup else None
+        active_minutes = active_minutes_rollup.data if active_minutes_rollup else None
+        active_zone_minutes = (
+            active_zone_minutes_rollup.data if active_zone_minutes_rollup else None
+        )
+        sedentary_period = (
+            sedentary_period_rollup.data if sedentary_period_rollup else None
+        )
 
         return GoogleHealthActivityData(
             steps=steps,
@@ -166,6 +268,11 @@ class GoogleHealthActivityCoordinator(
             active_energy_burned=active_energy_burned,
             total_calories=total_calories,
             floors=floors,
+            altitude=altitude,
+            active_minutes=active_minutes,
+            active_zone_minutes=active_zone_minutes,
+            sedentary_period=sedentary_period,
+            rollup_start=rollup_start,
         )
 
 
@@ -287,7 +394,7 @@ class GoogleHealthSleepCoordinator(
 
         # Find the first session with a sleep summary
         for data_point in sleep_result.data_points or ():
-            if data_point.data and data_point.data.summary:
+            if data_point.data.summary:
                 return GoogleHealthSleepData(sleep=data_point.data)
 
         # No sessions or current session still in progress

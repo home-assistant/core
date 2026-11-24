@@ -5,7 +5,7 @@ from unittest.mock import ANY, AsyncMock, Mock, patch
 from pytest_unordered import unordered
 
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, ButtonService
-from homeassistant.const import CommonServiceArgument
+from homeassistant.const import TargetKey
 from homeassistant.core import HomeAssistant
 
 from .common import setup_platform
@@ -28,7 +28,7 @@ async def test_reboot(hass: HomeAssistant, router: Mock) -> None:
             BUTTON_DOMAIN,
             ButtonService.PRESS,
             service_data={
-                CommonServiceArgument.ENTITY_ID: "button.freebox_server_r2_restart",
+                TargetKey.ENTITY_ID: "button.freebox_server_r2_restart",
             },
             blocking=True,
         )
@@ -54,7 +54,7 @@ async def test_mark_calls_as_read(hass: HomeAssistant, router: Mock) -> None:
             BUTTON_DOMAIN,
             ButtonService.PRESS,
             service_data={
-                CommonServiceArgument.ENTITY_ID: "button.freebox_server_r2_mark_calls_as_read",
+                TargetKey.ENTITY_ID: "button.freebox_server_r2_mark_calls_as_read",
             },
             blocking=True,
         )
