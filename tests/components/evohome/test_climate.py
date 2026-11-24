@@ -21,6 +21,7 @@ from homeassistant.components.climate import (
 from homeassistant.const import TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
+from homeassistant.helpers import entity_registry as er
 
 from .conftest import setup_evohome
 from .const import TEST_INSTALLS
@@ -491,3 +492,16 @@ async def test_zone_turn_on(
         )
 
         mock_fcn.assert_awaited_once_with()
+
+
+@pytest.mark.parametrize("install", ["default"])
+@pytest.mark.usefixtures("evohome")
+async def test_ctl_translation_key(
+    entity_registry: er.EntityRegistry,
+    ctl_id: str,
+) -> None:
+    """Test the controller has the translation_key that its icon is keyed by."""
+
+    entry = entity_registry.async_get(ctl_id)
+    assert entry is not None
+    assert entry.translation_key == "controller"
