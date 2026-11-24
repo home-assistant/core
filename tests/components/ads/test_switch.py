@@ -7,14 +7,8 @@ import pyads
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
-    STATE_OFF,
-    STATE_ON,
-)
+from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN, SwitchService
+from homeassistant.const import STATE_OFF, STATE_ON, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -67,8 +61,8 @@ async def test_state_follows_the_plc(
 @pytest.mark.parametrize(
     ("initial", "service", "written"),
     [
-        pytest.param(BOOL_FALSE, SERVICE_TURN_ON, True, id="turn_on"),
-        pytest.param(BOOL_TRUE, SERVICE_TURN_OFF, False, id="turn_off"),
+        pytest.param(BOOL_FALSE, SwitchService.TURN_ON, True, id="turn_on"),
+        pytest.param(BOOL_TRUE, SwitchService.TURN_OFF, False, id="turn_off"),
     ],
 )
 async def test_actions_write_to_the_plc(
@@ -85,7 +79,7 @@ async def test_actions_write_to_the_plc(
     state = hass.states.get(ENTITY_ID).state
 
     await hass.services.async_call(
-        SWITCH_DOMAIN, service, {ATTR_ENTITY_ID: ENTITY_ID}, blocking=True
+        SWITCH_DOMAIN, service, {TargetKey.ENTITY_ID: ENTITY_ID}, blocking=True
     )
 
     mock_pyads_connection.return_value.write_by_name.assert_called_once_with(
@@ -109,7 +103,10 @@ async def test_write_error(
     )
 
     await hass.services.async_call(
-        SWITCH_DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: ENTITY_ID}, blocking=True
+        SWITCH_DOMAIN,
+        SwitchService.TURN_ON,
+        {TargetKey.ENTITY_ID: ENTITY_ID},
+        blocking=True,
     )
 
     assert f"Error writing {ADS_VAR}: ADSError: timeout elapsed (1861)" in caplog.text
