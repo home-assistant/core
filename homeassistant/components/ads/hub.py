@@ -27,12 +27,15 @@ class AdsHub:
         # All ADS devices are registered here
         self._devices = []
         self._notification_items = {}
+        self._closed = False
         self._lock = threading.Lock()
 
     def shutdown(self, *args, **kwargs):
         """Shutdown ADS connection."""
 
         _LOGGER.debug("Shutting down ADS")
+        with self._lock:
+            self._closed = True
         for notification_item in self._notification_items.values():
             _LOGGER.debug(
                 "Deleting device notification %d, %d",
@@ -58,6 +61,11 @@ class AdsHub:
         """Write a value to the device."""
 
         with self._lock:
+            # The lock is released again before the client is closed, so I/O
+            # started after shutdown began would race the teardown.
+            if self._closed:
+                _LOGGER.debug("Not writing %s, the hub is shut down", name)
+                return None
             try:
                 return self._client.write_by_name(name, value, plc_datatype)
             except pyads.ADSError as err:
@@ -67,6 +75,9 @@ class AdsHub:
         """Read a value from the device."""
 
         with self._lock:
+            if self._closed:
+                _LOGGER.debug("Not reading %s, the hub is shut down", name)
+                return None
             try:
                 return self._client.read_by_name(name, plc_datatype)
             except pyads.ADSError as err:
@@ -78,13 +89,23 @@ class AdsHub:
         attr = pyads.NotificationAttrib(ctypes.sizeof(plc_datatype))
 
         with self._lock:
+            if self._closed:
+                _LOGGER.debug("Not subscribing to %s, the hub is shut down", name)
+                return
             try:
-                hnotify, huser = self._client.add_device_notification(
+                handles = self._client.add_device_notification(
                     name, attr, self._device_notification_callback
                 )
             except pyads.ADSError as err:
                 _LOGGER.error("Error subscribing to %s: %s", name, err)
             else:
+                if handles is None:
+                    # pyads returns None instead of raising once the port is closed.
+                    _LOGGER.debug(
+                        "Not subscribing to %s, the connection is closed", name
+                    )
+                    return
+                hnotify, huser = handles
                 hnotify = int(hnotify)
                 self._notification_items[hnotify] = NotificationItem(
                     hnotify, huser, name, plc_datatype, callback
