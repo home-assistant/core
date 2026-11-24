@@ -31,6 +31,11 @@ POSITION_MIDDLE = 0x04
 POSITION_ROW = 0x05
 POSITION_COLUMN = 0x06
 
+# Basic Information SpecificationVersion of Matter 1.3. From 1.3, sibling
+# endpoints of a device type without its own disambiguation method must be told
+# apart by their TagList. Older devices don't have the attribute.
+SPECIFICATION_VERSION_1_3 = 0x01030000
+
 # Common Number namespace tags are the number itself, from Zero to Thirty.
 MAX_COMMON_NUMBER = 0x1E
 
@@ -212,8 +217,13 @@ def _vendor_label_names(
 
     All labels being numbers, or all being position words, gives translated
     names; otherwise every label is used as a literal name. So all endpoints of
-    a group get the same kind of name.
+    a group get the same kind of name. Only used for devices built for a Matter
+    version before 1.3, which must use tags instead.
     """
+    if (device_info := endpoints[0].node.device_info) is not None and (
+        device_info.specificationVersion or 0
+    ) >= SPECIFICATION_VERSION_1_3:
+        return None
     labels: dict[int, str] = {}
     for endpoint in endpoints:
         if (label := _vendor_label(endpoint)) is None:
@@ -255,7 +265,8 @@ def _per_endpoint(
 
 # Name sources in order of preference. Semantic tags are the standard source,
 # but a Common Number tag only tells which output comes first, so the curated
-# vendor labels come before it. Free text manufacturer tag labels come last.
+# vendor labels of devices before Matter 1.3 come before it. Free text
+# manufacturer tag labels come last.
 NAME_SOURCES: tuple[
     Callable[[Sequence[MatterEndpoint]], dict[int, ChildDeviceName] | None], ...
 ] = (

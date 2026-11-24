@@ -273,22 +273,71 @@ def test_position_tags_before_vendor_labels() -> None:
     }
 
 
-def test_vendor_labels_before_common_number() -> None:
-    """Test curated vendor labels win over Common Number tags."""
+@pytest.mark.parametrize(
+    ("specification_version", "expected"),
+    [
+        pytest.param(
+            0,
+            {1: _key("position_top"), 2: _key("position_bottom")},
+            id="unknown_version",
+        ),
+        pytest.param(
+            0x01020000,
+            {1: _key("position_top"), 2: _key("position_bottom")},
+            id="matter_1_2",
+        ),
+        pytest.param(0x01030000, {1: _channel("1"), 2: _channel("2")}, id="matter_1_3"),
+        pytest.param(
+            0x01040200, {1: _channel("1"), 2: _channel("2")}, id="matter_1_4_2"
+        ),
+    ],
+)
+def test_vendor_labels_before_matter_1_3(
+    specification_version: int, expected: dict[int, ChildDeviceName]
+) -> None:
+    """Test curated vendor labels are only used before Matter 1.3.
+
+    Before 1.3 they win over Common Number tags; from 1.3 they are ignored.
+    """
     node = create_node_from_fixture(
         NODE_FIXTURE,
         {
             **TP_LINK_DUAL_OUTDOOR_PLUG,
+            "0/40/21": specification_version,
             "1/29/4": _number(1),
             "2/29/4": _number(2),
             "1/64/0": _fixed_label("Position", "Top"),
             "2/64/0": _fixed_label("Position", "Bottom"),
         },
     )
-    assert get_child_device_names(node) == {
-        1: _key("position_top"),
-        2: _key("position_bottom"),
-    }
+    assert get_child_device_names(node) == expected
+
+
+@pytest.mark.parametrize(
+    ("specification_version", "expected"),
+    [
+        pytest.param(
+            0x01020000,
+            {1: _channel("1"), 2: _channel("2")},
+            id="matter_1_2",
+        ),
+        pytest.param(0x01030000, {}, id="matter_1_3"),
+    ],
+)
+def test_vendor_labels_ignored_without_tags_from_matter_1_3(
+    specification_version: int, expected: dict[int, ChildDeviceName]
+) -> None:
+    """Test a Matter 1.3 device with only vendor labels doesn't split."""
+    node = create_node_from_fixture(
+        NODE_FIXTURE,
+        {
+            **TP_LINK_DUAL_OUTDOOR_PLUG,
+            "0/40/21": specification_version,
+            "1/64/0": _fixed_label("Position", "1"),
+            "2/64/0": _fixed_label("Position", "2"),
+        },
+    )
+    assert get_child_device_names(node) == expected
 
 
 def test_position_and_row_not_combined() -> None:
