@@ -112,6 +112,16 @@ BROADLINK_DEVICES = {
         57,
         5,
     ),
+    "Air purifier": (
+        "192.168.0.18",
+        "34ea34b61d30",
+        "LM05",
+        "LIFAair",
+        "LIFAAIR",
+        0x4EC2,
+        10026,
+        5,
+    ),
 }
 
 

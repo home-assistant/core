@@ -7,7 +7,7 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import Platform
+from homeassistant.const import EntityCategory, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -25,7 +25,12 @@ async def async_setup_entry(
     device = hass.data[BROADLINK_DATA].devices[config_entry.entry_id]
 
     if device.api.type in DOMAINS_AND_TYPES[Platform.BINARY_SENSOR]:
-        async_add_entities([BroadlinkThermostatHeating(device)])
+        entities: list[BinarySensorEntity] = []
+        if device.api.type == "HYS":
+            entities.append(BroadlinkThermostatHeating(device))
+        elif device.api.type == "LIFAAIR":
+            entities.append(BroadlinkLifaAirOnline(device))
+        async_add_entities(entities)
 
 
 class BroadlinkThermostatHeating(BroadlinkEntity, BinarySensorEntity):
@@ -44,3 +49,22 @@ class BroadlinkThermostatHeating(BroadlinkEntity, BinarySensorEntity):
     def _update_state(self, data: dict[str, Any]) -> None:
         """Update the state of the entity."""
         self._attr_is_on = bool(data["active"])
+
+
+class BroadlinkLifaAirOnline(BroadlinkEntity, BinarySensorEntity):
+    """Representation of the LIFAair purifier connectivity."""
+
+    _attr_device_class = BinarySensorDeviceClass.CONNECTIVITY
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
+    _attr_has_entity_name = True
+    _attr_translation_key = "purifier_online"
+
+    def __init__(self, device: BroadlinkDevice) -> None:
+        """Initialize the binary sensor."""
+        super().__init__(device)
+        self._attr_unique_id = f"{device.unique_id}-purifier_online"
+
+    @override
+    def _update_state(self, data: dict[str, Any]) -> None:
+        """Update the state of the entity."""
+        self._attr_is_on = data["purifier_online"]

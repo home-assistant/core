@@ -45,6 +45,24 @@
     "binary_sensor": {
       "heating": {
         "name": "[%key:component::climate::entity_component::_::state_attributes::hvac_action::state::heating%]"
+      },
+      "purifier_online": {
+        "name": "Purifier online"
+      }
+    },
+    "fan": {
+      "lifaair": {
+        "state_attributes": {
+          "preset_mode": {
+            "state": {
+              "anti_allergy": "Anti-Allergy",
+              "auto": "Auto",
+              "manual": "Manual",
+              "night": "Night",
+              "turbo": "Turbo"
+            }
+          }
+        }
       }
     },
     "infrared": {
@@ -80,6 +98,9 @@
       }
     },
     "sensor": {
+      "formaldehyde": {
+        "name": "Formaldehyde"
+      },
       "light": {
         "name": "[%key:component::sensor::entity_component::illuminance::name%]"
       },
