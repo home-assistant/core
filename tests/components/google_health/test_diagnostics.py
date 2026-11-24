@@ -57,15 +57,17 @@ async def test_diagnostics_empty_data(
     mock_google_health_client.active_zone_minutes.today.return_value = None
     mock_google_health_client.sedentary_period.today.return_value = None
 
-    mock_google_health_client.weight.list.return_value = ListDataPointResult(
-        _ListDataPointsModel(data_points=[])
+    empty_list = ListDataPointResult(_ListDataPointsModel(data_points=[]))
+    mock_google_health_client.weight.list.return_value = empty_list
+    mock_google_health_client.height.list.return_value = empty_list
+    mock_google_health_client.daily_resting_heart_rate.list.return_value = empty_list
+    mock_google_health_client.body_fat.list.return_value = empty_list
+    mock_google_health_client.daily_heart_rate_variability.list.return_value = (
+        empty_list
     )
-    mock_google_health_client.daily_resting_heart_rate.list.return_value = (
-        ListDataPointResult(_ListDataPointsModel(data_points=[]))
-    )
-    mock_google_health_client.body_fat.list.return_value = ListDataPointResult(
-        _ListDataPointsModel(data_points=[])
-    )
+    mock_google_health_client.daily_oxygen_saturation.list.return_value = empty_list
+    mock_google_health_client.daily_respiratory_rate.list.return_value = empty_list
+    mock_google_health_client.daily_vo2_max.list.return_value = empty_list
 
     mock_google_health_client.sleep.list.return_value = ListDataPointResult(
         _ListDataPointsModel(data_points=[])
