@@ -198,7 +198,13 @@ def _async_update_data_default(hass, device):
         async def _async_fetch_data():
             """Fetch data from the device."""
             async with asyncio.timeout(POLLING_TIMEOUT_SEC):
-                state = await hass.async_add_executor_job(device.status)
+                try:
+                    state = await hass.async_add_executor_job(device.status)
+                except TimeoutError:
+                    # TimeoutError is an OSError, keep the coordinator's timeout log
+                    raise
+                except OSError as ex:
+                    raise UpdateFailed(ex) from ex
                 _LOGGER.debug("Got new state: %s", state)
                 return state
 
@@ -287,7 +293,13 @@ def _async_update_data_vacuum(
 
         async def execute_update() -> VacuumCoordinatorData:
             async with asyncio.timeout(POLLING_TIMEOUT_SEC):
-                state = await hass.async_add_executor_job(update)
+                try:
+                    state = await hass.async_add_executor_job(update)
+                except TimeoutError:
+                    # TimeoutError is an OSError, keep the coordinator's timeout log
+                    raise
+                except OSError as ex:
+                    raise UpdateFailed(ex) from ex
                 _LOGGER.debug("Got new vacuum state: %s", state)
                 return state
 
