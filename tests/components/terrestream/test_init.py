@@ -9,7 +9,6 @@ from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 from terrestream_local.errors import AuthenticationError, ClientError
 from terrestream_local.models import Snapshot
 
-from homeassistant.components.terrestream.coordinator import TerrestreamCoordinator
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant
@@ -132,22 +131,47 @@ async def test_unload_cancels_delayed_release(
     assert config_entry.state is ConfigEntryState.NOT_LOADED
 
 
-async def test_unload_times_out_waiting_for_refresh_lock(
+async def test_unload_times_out_waiting_for_refresh_cancellation(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     mock_client: MagicMock,
+    freezer: FrozenDateTimeFactory,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """Abandon release if a refresh holds the lock past the deadline."""
+    """Skip release when a scheduled refresh takes too long to cancel."""
     monkeypatch.setattr(
         "homeassistant.components.terrestream.coordinator._LEASE_RELEASE_TIMEOUT", 0
     )
     assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
-    coordinator: TerrestreamCoordinator = config_entry.runtime_data
+    refresh_started = asyncio.Event()
+    refresh_cancelled = asyncio.Event()
+    finish_refresh = asyncio.Event()
 
-    async with coordinator._debounced_refresh.async_lock(), asyncio.timeout(1):
-        assert await hass.config_entries.async_unload(config_entry.entry_id)
+    async def blocked_refresh() -> Snapshot:
+        refresh_started.set()
+        try:
+            await asyncio.Future()
+        except asyncio.CancelledError:
+            refresh_cancelled.set()
+            await finish_refresh.wait()
+            raise
+
+    mock_client.refresh.side_effect = blocked_refresh
+    freezer.tick(31)
+    async_fire_time_changed(hass)
+
+    async with asyncio.timeout(1):
+        await refresh_started.wait()
+        unload = asyncio.create_task(
+            hass.config_entries.async_unload(config_entry.entry_id)
+        )
+        try:
+            await refresh_cancelled.wait()
+        finally:
+            # The zero-second lease deadline fires before cancellation is observed.
+            finish_refresh.set()
+        assert await unload
 
     mock_client.command.assert_not_awaited()
     assert config_entry.state is ConfigEntryState.NOT_LOADED
