@@ -43,7 +43,7 @@ def mock_setup_entry() -> Generator[AsyncMock]:
 
 @pytest.fixture
 def mock_nepviewer() -> Generator[MagicMock]:
-    """Return a mock NepViewer client patched in __init__."""
+    """Return a mock NepViewer client."""
 
     mock_auth_data = AuthData(
         {
@@ -95,37 +95,18 @@ def mock_nepviewer() -> Generator[MagicMock]:
         }
     )
 
-    with patch(
-        "homeassistant.components.nepviewer.NepViewer", autospec=True
-    ) as mock_cls:
+    with (
+        patch(
+            "homeassistant.components.nepviewer.NepViewer", autospec=True
+        ) as mock_cls,
+        patch("homeassistant.components.nepviewer.config_flow.NepViewer", new=mock_cls),
+    ):
         mock_client = mock_cls.return_value
-        mock_client.authenticate = AsyncMock(return_value=mock_auth_data)
-        mock_client.get_sites = AsyncMock(return_value=[mock_site])
-        mock_client.get_devices = AsyncMock(return_value=[mock_device])
-        mock_client.get_site_overview = AsyncMock(return_value=mock_site_overview)
-        mock_client.get_device_statistics_overview = AsyncMock(
-            return_value=mock_device_overview
-        )
-        mock_client.get_site_modules = AsyncMock(return_value=mock_site_modules)
-        mock_client.get_site_detail = AsyncMock(return_value=mock_site_detail)
-        yield mock_client
-
-
-@pytest.fixture
-def mock_nepviewer_config_flow() -> Generator[MagicMock]:
-    """Return a mock NepViewer client patched in config_flow."""
-
-    mock_auth_data = AuthData(
-        {
-            "userInfo": {"uid": "test_uid", "email": "test@example.com"},
-            "tokenInfo": {"token": "test_token", "expiresAt": 9999999999},
-            "siteCount": 1,
-        }
-    )
-
-    with patch(
-        "homeassistant.components.nepviewer.config_flow.NepViewer", autospec=True
-    ) as mock_cls:
-        mock_client = mock_cls.return_value
-        mock_client.authenticate = AsyncMock(return_value=mock_auth_data)
+        mock_client.authenticate.return_value = mock_auth_data
+        mock_client.get_sites.return_value = [mock_site]
+        mock_client.get_devices.return_value = [mock_device]
+        mock_client.get_site_overview.return_value = mock_site_overview
+        mock_client.get_device_statistics_overview.return_value = mock_device_overview
+        mock_client.get_site_modules.return_value = mock_site_modules
+        mock_client.get_site_detail.return_value = mock_site_detail
         yield mock_client

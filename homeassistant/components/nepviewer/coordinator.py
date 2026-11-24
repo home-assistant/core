@@ -42,13 +42,10 @@ type NepViewerConfigEntry = ConfigEntry[NepViewerCoordinator]
 class NepViewerData:
     """Data returned by a single coordinator refresh."""
 
-    sites: list[Site]
-    devices: list[Device]
     site_overviews: dict[str, SiteOverview]
     device_overviews: dict[str, DeviceStatisticsOverview]
-    # Outer key: device sn (uppercase). Inner key: module plc_sn.
+    # Outer key: device sn. Inner key: module plc_sn.
     device_modules: dict[str, dict[str, Module]]
-    site_details: dict[str, SiteDetail]
 
 
 @contextmanager
@@ -81,7 +78,7 @@ class NepViewerCoordinator(DataUpdateCoordinator[NepViewerData]):
         entry: NepViewerConfigEntry,
         client: NepViewer,
     ) -> None:
-        """Initialise the coordinator."""
+        """Initialize the coordinator."""
         super().__init__(
             hass,
             _LOGGER,
@@ -90,24 +87,24 @@ class NepViewerCoordinator(DataUpdateCoordinator[NepViewerData]):
             update_interval=SCAN_INTERVAL,
         )
         self._client = client
-        self._sites: list[Site] = []
-        self._devices: list[Device] = []
-        self._site_details: dict[str, SiteDetail] = {}
+        self.sites: list[Site] = []
+        self.devices: list[Device] = []
+        self.site_details: dict[str, SiteDetail] = {}
 
     @override
     async def _async_setup(self) -> None:
         """Fetch the initial site and device lists (called once on first refresh)."""
         with _translate_errors():
-            self._sites = await self._client.get_sites()
-            self._devices = await self._client.get_devices()
+            self.sites = await self._client.get_sites()
+            self.devices = await self._client.get_devices()
 
-            for site in self._sites:
+            for site in self.sites:
                 try:
                     detail = await self._client.get_site_detail(site.sid)
                 except NepConnectionError, NepApiError:
                     _LOGGER.debug("Could not fetch site detail for %s", site.sid)
                 else:
-                    self._site_details[site.sid] = detail
+                    self.site_details[site.sid] = detail
 
     @override
     async def _async_update_data(self) -> NepViewerData:
@@ -115,14 +112,14 @@ class NepViewerCoordinator(DataUpdateCoordinator[NepViewerData]):
         with _translate_errors():
             site_overviews = {
                 site.sid: await self._client.get_site_overview(site.sid)
-                for site in self._sites
+                for site in self.sites
             }
             device_overviews = {
                 device.sn: await self._client.get_device_statistics_overview(device.sn)
-                for device in self._devices
+                for device in self.devices
             }
             device_modules: dict[str, dict[str, Module]] = {}
-            for site in self._sites:
+            for site in self.sites:
                 modules_data = await self._client.get_site_modules(site.sid)
                 for device_entry in modules_data.devices:
                     device_modules[device_entry.sn] = {
@@ -130,10 +127,7 @@ class NepViewerCoordinator(DataUpdateCoordinator[NepViewerData]):
                     }
 
         return NepViewerData(
-            sites=self._sites,
-            devices=self._devices,
             site_overviews=site_overviews,
             device_overviews=device_overviews,
             device_modules=device_modules,
-            site_details=self._site_details,
         )

@@ -27,8 +27,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: NepViewerConfigEntry) ->
     # Parent devices must exist before via_device_id can refer to them
     device_registry = dr.async_get(hass)
     site_device_ids: dict[str, str] = {}
-    for site in coordinator.data.sites:
-        site_detail = coordinator.data.site_details.get(site.sid)
+    for site in coordinator.sites:
+        site_detail = coordinator.site_details.get(site.sid)
         site_device = device_registry.async_get_or_create(
             config_entry_id=entry.entry_id,
             identifiers={(DOMAIN, site.sid)},
@@ -38,7 +38,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: NepViewerConfigEntry) ->
             serial_number=(site_detail and site_detail.project_reference_id) or None,
         )
         site_device_ids[site.sid] = site_device.id
-    for device in coordinator.data.devices:
+    for device in coordinator.devices:
         device_registry.async_get_or_create(
             config_entry_id=entry.entry_id,
             identifiers={(DOMAIN, device.sn)},
