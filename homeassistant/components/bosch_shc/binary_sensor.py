@@ -14,6 +14,7 @@ from boschshcpy import (
     SHCOutdoorSiren,
     SHCShutterContact,
     SHCShutterContact2Plus,
+    SHCShutterControl,
     SHCSmokeDetectionSystem,
     SHCTwinguard,
     ShutterContactService,
@@ -182,6 +183,16 @@ SHUTTER_CONTACT2_PLUS_DESCRIPTION: SHCBinarySensorEntityDescription[
     ),
 )
 
+SHUTTER_CONTROL_DESCRIPTION: SHCBinarySensorEntityDescription[SHCShutterControl] = (
+    SHCBinarySensorEntityDescription(
+        key="shutter_calibration_required",
+        translation_key="shutter_calibration_required",
+        device_class=BinarySensorDeviceClass.PROBLEM,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        is_on_fn=lambda device: not device.calibrated,
+    )
+)
+
 SHUTTER_CONTACT_DESCRIPTION = SHCShutterContactSensorEntityDescription(
     key="shutter_contact",
     is_on_fn=lambda device: device.state is ShutterContactService.State.OPEN,
@@ -244,6 +255,21 @@ async def async_setup_entry(
         )
         for device in session.device_helper.shutter_contacts2
         if isinstance(device, SHCShutterContact2Plus)
+    )
+
+    entities.extend(
+        SHCBinarySensor(
+            hass=hass,
+            device=device,
+            parent_id=shc_info.unique_id,
+            entry_id=config_entry.entry_id,
+            entity_description=SHUTTER_CONTROL_DESCRIPTION,
+        )
+        for device in (
+            *session.device_helper.shutter_controls,
+            *session.device_helper.micromodule_shutter_controls,
+            *session.device_helper.micromodule_blinds,
+        )
     )
 
     if (
