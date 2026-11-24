@@ -221,7 +221,11 @@ class DemoCover(CoverEntity):
     async def async_close_cover_tilt(self, **kwargs: Any) -> None:
         """Close the cover tilt."""
         tilt = self._tilt_position
-        if tilt is None or tilt in self._closed_tilt_positions:
+        if tilt is None:
+            return
+        if tilt in self._closed_tilt_positions:
+            self._stop_tilt()
+            self.async_write_ha_state()
             return
 
         closed_position = min(
@@ -230,7 +234,7 @@ class DemoCover(CoverEntity):
         self._set_tilt_position = closed_position
         self._listen_cover_tilt()
         self._requested_closing_tilt = closed_position < tilt
-        self._update_tilt_moving_state()
+        self._set_tilt_moving_state(closed_position)
         self.async_write_ha_state()
 
     @override
@@ -263,7 +267,7 @@ class DemoCover(CoverEntity):
         self._set_tilt_position = open_position
         self._listen_cover_tilt()
         self._requested_closing_tilt = open_position < self._tilt_position
-        self._update_tilt_moving_state()
+        self._set_tilt_moving_state(open_position)
         self.async_write_ha_state()
 
     @override
@@ -295,7 +299,7 @@ class DemoCover(CoverEntity):
         self._requested_closing_tilt = (
             self._tilt_position is not None and tilt_position < self._tilt_position
         )
-        self._update_tilt_moving_state()
+        self._set_tilt_moving_state(self._set_tilt_position)
         self.async_write_ha_state()
 
     @override
@@ -332,15 +336,12 @@ class DemoCover(CoverEntity):
             self._set_tilt_position = None
 
     @callback
-    def _update_tilt_moving_state(self) -> None:
-        """Report opening while the tilt moves toward its open position."""
+    def _set_tilt_moving_state(self, target: int) -> None:
+        """Report opening when the move ends nearer to the open tilt position."""
         if (tilt := self._tilt_position) is None:
             return
-        next_tilt = tilt - 10 if self._requested_closing_tilt else tilt + 10
         open_position = self._open_tilt_position
-        self._is_opening_tilt = abs(next_tilt - open_position) < abs(
-            tilt - open_position
-        )
+        self._is_opening_tilt = abs(target - open_position) < abs(tilt - open_position)
         self._is_closing_tilt = not self._is_opening_tilt
 
     @callback
@@ -385,7 +386,6 @@ class DemoCover(CoverEntity):
         else:
             self._tilt_position += 10
 
-        self._update_tilt_moving_state()
         if self._tilt_position in (100, 0, self._set_tilt_position):
             self._stop_tilt()
 
