@@ -56,6 +56,7 @@ TAG_UPDATE_TRANSITION = 0x02
 # ValueTransitionConfiguration
 TAG_CFG_IID = 0x01
 TAG_CFG_PARAMETERS = 0x02
+TAG_CFG_UNKNOWN_3 = 0x03
 TAG_CFG_CURVE = 0x05
 TAG_CFG_UPDATE_INTERVAL = 0x06
 TAG_CFG_NOTIFY_THRESHOLD = 0x08
@@ -217,7 +218,11 @@ def parse_transition_control(value: str) -> ActiveTransition | None:
     update = tlv_first(tlv_decode(base64.b64decode(value)), TAG_UPDATE_TRANSITION)
     if not update:
         return None
+    return parse_transition_update(update)
 
+
+def parse_transition_update(update: bytes) -> ActiveTransition | None:
+    """Parse the VALUE_TRANSITION_CONFIGURATION payload of an update write."""
     configuration = tlv_decode(tlv_decode(update)[0][1])
     parameters_raw = tlv_first(configuration, TAG_CFG_PARAMETERS)
     curve_raw = tlv_first(configuration, TAG_CFG_CURVE)
@@ -457,25 +462,140 @@ class AdaptiveLightingController:
         self.hass.loop.call_soon_threadsafe(self.hass.async_create_task, coro)
 
     @callback
-    def _handle_transition_control_write(self, value: str) -> None:
-        """Start, renew or stop the schedule the Home app just wrote."""
+    def _handle_transition_control_write(self, value: str) -> str | None:
+        """Start, renew or stop the schedule the Home app just wrote.
+
+        Returns the base64 TLV8 acknowledgement the controller expects back.
+        """
         if not value:
             self.disable("Home app cleared the transition")
-            return
+            return None
 
         try:
-            transition = parse_transition_control(value)
+            request = tlv_decode(base64.b64decode(value))
+        except ValueError:
+            _LOGGER.exception(
+                "%s: could not decode the transition request", self.entity_id
+            )
+            return None
+
+        responses: list[bytes] = []
+        for tag, raw in request:
+            if tag == TAG_READ_CURRENT_TRANSITION:
+                if response := self._build_read_response(raw):
+                    responses.append(tlv_encode(TAG_READ_CURRENT_TRANSITION, response))
+            elif (
+                tag == TAG_UPDATE_TRANSITION
+                and (response := self._handle_update_write(raw)) is not None
+            ):
+                responses.append(response)
+
+        # client_update_value stored the raw request as the characteristic
+        # value; put the status of the running transition back.
+        self.char_control.value = self._build_control_response()
+        if not responses:
+            return None
+        return base64.b64encode(b"".join(responses)).decode()
+
+    @callback
+    def _handle_update_write(self, update: bytes) -> bytes | None:
+        """Arm, renew or disable the schedule carried by an update write."""
+        try:
+            configuration = tlv_decode(tlv_decode(update)[0][1])
+        except IndexError, ValueError, struct.error:
+            _LOGGER.exception("%s: malformed transition update", self.entity_id)
+            return None
+
+        unknown_3 = tlv_first(configuration, TAG_CFG_UNKNOWN_3)
+        if not unknown_3 or unknown_3[0] == 0:
+            # Like the reference implementation, an update without the
+            # always-one marker is how the Home app disables adaptive
+            # lighting.
+            self.disable("Home app sent no transition configuration")
+            return tlv_encode(TAG_UPDATE_TRANSITION, b"")
+
+        try:
+            transition = parse_transition_update(update)
         except ValueError, struct.error, IndexError:
             _LOGGER.exception(
                 "%s: could not parse the transition schedule", self.entity_id
             )
-            return
+            return None
 
         if transition is None:
-            self.disable("Home app sent no transition configuration")
-            return
+            _LOGGER.warning(
+                "%s: transition schedule is incomplete, keeping the current one",
+                self.entity_id,
+            )
+            return None
 
         self._arm(transition)
+        return tlv_encode(TAG_UPDATE_TRANSITION, self._status_tlv())
+
+    def _build_read_response(self, read_request: bytes) -> bytes | None:
+        """Rebuild the stored schedule for a read-current-transition request."""
+        transition = self.transition
+        if transition is None:
+            return None
+
+        read_entries = tlv_decode(read_request)
+        if not read_entries:
+            return None
+        if (
+            requested_iid := tlv_first(read_entries, TAG_CHARACTERISTIC_IID)
+        ) is not None:
+            if (
+                read_variable_uint_le(requested_iid)
+                != self.char_color_temp.to_HAP()["iid"]
+            ):
+                _LOGGER.warning(
+                    "%s: read request for an unknown characteristic iid",
+                    self.entity_id,
+                )
+                return None
+
+        curve_entries = []
+        previous_duration = 0
+        for entry in transition.curve:
+            curve_entries.append(
+                tlv_encode(
+                    TAG_ENTRY_ADJUSTMENT_FACTOR,
+                    struct.pack("<f", entry.brightness_adjustment_factor),
+                    TAG_ENTRY_VALUE,
+                    struct.pack("<f", entry.temperature),
+                    TAG_ENTRY_TRANSITION_OFFSET,
+                    write_variable_uint_le(entry.transition_time),
+                    TAG_ENTRY_DURATION,
+                    write_variable_uint_le(previous_duration),
+                )
+            )
+            previous_duration = entry.duration
+
+        return tlv_encode(
+            TAG_CFG_IID,
+            write_variable_uint_le(self.char_color_temp.to_HAP()["iid"]),
+            TAG_CFG_PARAMETERS,
+            transition.parameters,
+            TAG_CFG_UNKNOWN_3,
+            b"\x01",
+            TAG_CFG_CURVE,
+            tlv_encode_list(TAG_CURVE_ENTRY, curve_entries)
+            + tlv_encode(
+                TAG_CURVE_ADJUSTMENT_IID,
+                write_variable_uint_le(self.char_brightness.to_HAP()["iid"]),
+                TAG_CURVE_MULTIPLIER_RANGE,
+                tlv_encode(
+                    TAG_RANGE_MIN,
+                    write_variable_uint_le(transition.min_multiplier),
+                    TAG_RANGE_MAX,
+                    write_variable_uint_le(transition.max_multiplier),
+                ),
+            ),
+            TAG_CFG_UPDATE_INTERVAL,
+            write_variable_uint_le(transition.update_interval),
+            TAG_CFG_NOTIFY_THRESHOLD,
+            write_variable_uint_le(transition.notify_threshold),
+        )
 
     @callback
     def _arm(self, transition: ActiveTransition, persist: bool = True) -> None:
@@ -536,28 +656,30 @@ class AdaptiveLightingController:
         _LOGGER.debug("%s: restoring adaptive lighting after restart", self.entity_id)
         self._arm(transition, persist=False)
 
-    def _build_control_response(self) -> str:
-        """Answer a control read with the status of the running transition."""
+    def _status_tlv(self) -> bytes:
+        """The ValueTransitionConfigurationResponse TLV of the running transition."""
         if not (transition := self.transition):
-            return ""
+            return b""
         elapsed = (
             int(time.time() * 1000)
             - transition.time_millis_offset
             - transition.start_millis
         )
-        return base64.b64encode(
+        return tlv_encode(
+            TAG_RESPONSE_STATUS,
             tlv_encode(
-                TAG_RESPONSE_STATUS,
-                tlv_encode(
-                    TAG_STATUS_IID,
-                    write_variable_uint_le(self.char_color_temp.to_HAP()["iid"]),
-                    TAG_STATUS_PARAMETERS,
-                    transition.parameters,
-                    TAG_STATUS_TIME_SINCE_START,
-                    write_variable_uint_le(max(0, elapsed)),
-                ),
-            )
-        ).decode()
+                TAG_STATUS_IID,
+                write_variable_uint_le(self.char_color_temp.to_HAP()["iid"]),
+                TAG_STATUS_PARAMETERS,
+                transition.parameters,
+                TAG_STATUS_TIME_SINCE_START,
+                write_variable_uint_le(max(0, elapsed)),
+            ),
+        )
+
+    def _build_control_response(self) -> str:
+        """Answer a control read with the status of the running transition."""
+        return base64.b64encode(self._status_tlv()).decode()
 
     @callback
     def disable(self, reason: str) -> None:

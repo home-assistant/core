@@ -14,12 +14,16 @@ from homeassistant.components.homekit.adaptive_lighting import (
     DATA_STORE,
     TAG_CFG_CURVE,
     TAG_CFG_IID,
+    TAG_CFG_NOTIFY_THRESHOLD,
     TAG_CFG_PARAMETERS,
+    TAG_CFG_UPDATE_INTERVAL,
+    TAG_CHARACTERISTIC_IID,
     TAG_CURVE_ENTRY,
     TAG_ENTRY_ADJUSTMENT_FACTOR,
     TAG_ENTRY_VALUE,
     TAG_PARAM_START_TIME,
     TAG_PARAM_TRANSITION_ID,
+    TAG_READ_CURRENT_TRANSITION,
     TAG_UPDATE_TRANSITION,
     _get_store,
     _transition_as_dict,
@@ -299,18 +303,86 @@ async def test_clearing_the_control_stops_adaptive_lighting(
 async def test_a_write_without_a_configuration_stops_adaptive_lighting(
     hass: HomeAssistant, hk_driver
 ) -> None:
-    """A write that carries no configuration disarms rather than raising."""
+    """An update carrying only the characteristic IID disables adaptive lighting."""
     acc = await _setup_light(hass, hk_driver)
     async_mock_service(hass, LIGHT_DOMAIN, "turn_on")
     await _write_control(hass, acc, TRANSITION_CONTROL_WRITE)
 
-    # Tag 0x01 is a read request, not an update.
-    await _write_control(
-        hass, acc, base64.b64encode(tlv_encode(0x01, b"\x00")).decode()
-    )
+    iid = acc.adaptive_lighting.char_color_temp.to_HAP()["iid"]
+    disable_write = base64.b64encode(
+        tlv_encode(
+            TAG_UPDATE_TRANSITION,
+            tlv_encode(0x01, tlv_encode(TAG_CFG_IID, write_variable_uint_le(iid))),
+        )
+    ).decode()
+    await _write_control(hass, acc, disable_write)
 
     assert acc.adaptive_lighting is not None
     assert acc.adaptive_lighting.transition is None
+
+
+async def test_a_read_request_answers_without_disarming(
+    hass: HomeAssistant, hk_driver
+) -> None:
+    """Tag 0x01 asks for the running transition's status, it is not a disable."""
+    acc = await _setup_light(hass, hk_driver)
+    async_mock_service(hass, LIGHT_DOMAIN, "turn_on")
+    await _write_control(hass, acc, TRANSITION_CONTROL_WRITE)
+    assert acc.adaptive_lighting.transition is not None
+
+    iid = acc.adaptive_lighting.char_color_temp.to_HAP()["iid"]
+    read_write = base64.b64encode(
+        tlv_encode(
+            TAG_READ_CURRENT_TRANSITION,
+            tlv_encode(TAG_CHARACTERISTIC_IID, write_variable_uint_le(iid)),
+        )
+    ).decode()
+
+    controller = acc.adaptive_lighting
+    response = controller.char_control.client_update_value(read_write)
+    await hass.async_block_till_done()
+
+    # The schedule keeps running and the stored copy is untouched.
+    assert controller.transition is not None
+    assert controller.char_active_count.value == 1
+    assert await _get_store(hass).async_get("light.demo") is not None
+
+    # The response echoes the configuration back under the read tag.
+    assert response is not None
+    answer = tlv_decode(base64.b64decode(response))
+    assert [tag for tag, _ in answer] == [TAG_READ_CURRENT_TRANSITION]
+    configuration = tlv_decode(answer[0][1])
+    config_tags = {tag for tag, _ in configuration}
+    assert {
+        TAG_CFG_IID,
+        TAG_CFG_PARAMETERS,
+        TAG_CFG_CURVE,
+        TAG_CFG_UPDATE_INTERVAL,
+        TAG_CFG_NOTIFY_THRESHOLD,
+    } <= config_tags
+
+
+async def test_a_read_request_for_an_unknown_iid_is_ignored(
+    hass: HomeAssistant, hk_driver
+) -> None:
+    """A read for a different characteristic does not disturb the schedule."""
+    acc = await _setup_light(hass, hk_driver)
+    async_mock_service(hass, LIGHT_DOMAIN, "turn_on")
+    await _write_control(hass, acc, TRANSITION_CONTROL_WRITE)
+
+    read_write = base64.b64encode(
+        tlv_encode(
+            TAG_READ_CURRENT_TRANSITION,
+            tlv_encode(TAG_CHARACTERISTIC_IID, write_variable_uint_le(0x7FFF)),
+        )
+    ).decode()
+
+    controller = acc.adaptive_lighting
+    response = controller.char_control.client_update_value(read_write)
+    await hass.async_block_till_done()
+
+    assert controller.transition is not None
+    assert response is None
 
 
 async def test_an_unparsable_write_is_ignored(
@@ -327,6 +399,8 @@ async def test_an_unparsable_write_is_ignored(
             tlv_encode(
                 0x02,
                 tlv_encode(0x01, b"\x01" * 16, 0x02, b"\x00\x00"),
+                0x03,
+                b"\x01",
                 0x05,
                 tlv_encode(0x01, b"\x00"),
             ),
