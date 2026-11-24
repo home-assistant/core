@@ -129,7 +129,9 @@ class ForecaObservationCoordinator(ForecaCoordinator[Observation | None]):
     async def _async_update_data(self) -> Observation | None:
         """Fetch the latest observation, or None where no station reports nearby."""
         try:
-            return await self.client.observation_latest(self.location)
+            return await self.client.observation_latest(
+                self.location, precipitation="hourly", rounding=0
+            )
         except ForecaError as err:
             raise UpdateFailed(
                 f"Error communicating with the Foreca API: {err}"
