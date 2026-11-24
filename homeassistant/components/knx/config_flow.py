@@ -135,7 +135,7 @@ CONF_KNX_TUNNELING_TYPE_LABELS: Final = {
     CONF_KNX_TUNNELING_TCP_SECURE: "Secure Tunneling (TCP)",
 }
 
-OPTION_MANUAL_TUNNEL: Final = "Manual"
+OPTION_MANUAL_TUNNEL: Final = "manual"
 
 CONF_KNX_SECURE_KEY_SOURCE: Final = "key_source"
 KEY_SOURCE_KNXKEYS_EXISTING: Final = "knxkeys_existing"
@@ -486,9 +486,7 @@ class KNXConfigFlow(ConfigFlow, domain=DOMAIN):
             for tunnel in self._found_tunnels
         ]
         tunnel_options.append(
-            selector.SelectOptionDict(
-                value=OPTION_MANUAL_TUNNEL, label=OPTION_MANUAL_TUNNEL
-            )
+            selector.SelectOptionDict(value=OPTION_MANUAL_TUNNEL, label="Manual")
         )
         default_tunnel = next(
             (
@@ -505,6 +503,7 @@ class KNXConfigFlow(ConfigFlow, domain=DOMAIN):
                 selector.SelectSelectorConfig(
                     options=tunnel_options,
                     mode=selector.SelectSelectorMode.LIST,
+                    translation_key="tunnel_gateway",
                 )
             )
         }
@@ -535,9 +534,7 @@ class KNXConfigFlow(ConfigFlow, domain=DOMAIN):
             return self.finish_flow()
 
         tunnel_endpoint_options = [
-            selector.SelectOptionDict(
-                value=CONF_KNX_AUTOMATIC, label=CONF_KNX_AUTOMATIC.capitalize()
-            )
+            selector.SelectOptionDict(value=CONF_KNX_AUTOMATIC, label="Automatic")
         ]
         _current_ia = self._xknx.current_address
         tunnel_endpoint_options.extend(
@@ -568,6 +565,7 @@ class KNXConfigFlow(ConfigFlow, domain=DOMAIN):
                         selector.SelectSelectorConfig(
                             options=tunnel_endpoint_options,
                             mode=selector.SelectSelectorMode.LIST,
+                            translation_key="tunnel_endpoint",
                         )
                     ),
                 }
@@ -1055,9 +1053,7 @@ class KNXConfigFlow(ConfigFlow, domain=DOMAIN):
             self._tunnel_endpoints = self._keyring.interfaces
 
         tunnel_endpoint_options = [
-            selector.SelectOptionDict(
-                value=CONF_KNX_AUTOMATIC, label=CONF_KNX_AUTOMATIC.capitalize()
-            )
+            selector.SelectOptionDict(value=CONF_KNX_AUTOMATIC, label="Automatic")
         ]
         tunnel_endpoint_options.extend(
             selector.SelectOptionDict(
@@ -1083,6 +1079,7 @@ class KNXConfigFlow(ConfigFlow, domain=DOMAIN):
                         selector.SelectSelectorConfig(
                             options=tunnel_endpoint_options,
                             mode=selector.SelectSelectorMode.LIST,
+                            translation_key="tunnel_endpoint",
                         )
                     ),
                 }
