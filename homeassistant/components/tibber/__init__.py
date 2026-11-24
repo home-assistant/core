@@ -8,7 +8,12 @@ from typing import Final
 import aiohttp
 import tibber
 
-from homeassistant.const import CONF_ACCESS_TOKEN, EVENT_HOMEASSISTANT_STOP, Platform
+from homeassistant.const import (
+    CONF_ACCESS_TOKEN,
+    CONF_TOKEN,
+    EVENT_HOMEASSISTANT_STOP,
+    Platform,
+)
 from homeassistant.core import Event, HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import (
@@ -24,7 +29,13 @@ from homeassistant.helpers.config_entry_oauth2_flow import (
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import dt as dt_util, ssl as ssl_util
 
-from .const import AUTH_IMPLEMENTATION, DATA_HASS_CONFIG, DOMAIN, TibberConfigEntry
+from .const import (
+    AUTH_IMPLEMENTATION,
+    DATA_API_PRICES_SCOPE,
+    DATA_HASS_CONFIG,
+    DOMAIN,
+    TibberConfigEntry,
+)
 from .coordinator import (
     TibberDataAPICoordinator,
     TibberDataCoordinator,
@@ -187,6 +198,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: TibberConfigEntry) -> No
     # Added in 2026.1 to migrate existing users to OAuth2 (Tibber Data API).
     # Can be removed after 2026.7
     if AUTH_IMPLEMENTATION not in entry.data:
+        raise ConfigEntryAuthFailed(
+            translation_domain=DOMAIN,
+            translation_key="data_api_reauth_required",
+        )
+
+    # Tokens without a scope list are left alone, as their scopes are unknown.
+    if (scope := entry.data[CONF_TOKEN].get("scope")) is not None and (
+        DATA_API_PRICES_SCOPE not in scope.split()
+    ):
         raise ConfigEntryAuthFailed(
             translation_domain=DOMAIN,
             translation_key="data_api_reauth_required",

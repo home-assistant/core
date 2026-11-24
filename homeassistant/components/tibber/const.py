@@ -14,6 +14,7 @@ AUTH_IMPLEMENTATION = "auth_implementation"
 DATA_HASS_CONFIG = "tibber_hass_config"
 DOMAIN = "tibber"
 MANUFACTURER = "Tibber"
+DATA_API_PRICES_SCOPE = "data-api-prices-read"
 DATA_API_DEFAULT_SCOPES = [
     "openid",
     "profile",
@@ -26,4 +27,5 @@ DATA_API_DEFAULT_SCOPES = [
     "data-api-thermostats-read",
     "data-api-vehicles-read",
     "data-api-inverters-read",
+    DATA_API_PRICES_SCOPE,
 ]

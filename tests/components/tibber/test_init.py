@@ -10,7 +10,11 @@ from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.recorder import Recorder
 from homeassistant.components.tibber import DOMAIN
-from homeassistant.components.tibber.const import AUTH_IMPLEMENTATION
+from homeassistant.components.tibber.const import (
+    AUTH_IMPLEMENTATION,
+    DATA_API_DEFAULT_SCOPES,
+    DATA_API_PRICES_SCOPE,
+)
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.const import CONF_ACCESS_TOKEN
 from homeassistant.core import HomeAssistant
@@ -141,6 +145,57 @@ async def test_setup_missing_access_token_triggers_reauth(
     flows = hass.config_entries.flow.async_progress()
     assert len(flows) == 1
     assert flows[0]["context"]["source"] == SOURCE_REAUTH
+
+
+@pytest.mark.usefixtures("recorder_mock", "tibber_mock", "setup_credentials")
+@pytest.mark.parametrize(
+    ("scopes", "expected_state", "expected_flow_sources"),
+    [
+        pytest.param(
+            DATA_API_DEFAULT_SCOPES, ConfigEntryState.LOADED, [], id="with_prices"
+        ),
+        pytest.param(
+            [
+                scope
+                for scope in DATA_API_DEFAULT_SCOPES
+                if scope != DATA_API_PRICES_SCOPE
+            ],
+            ConfigEntryState.SETUP_ERROR,
+            [SOURCE_REAUTH],
+            id="without_prices",
+        ),
+    ],
+)
+async def test_setup_requires_prices_scope(
+    hass: HomeAssistant,
+    scopes: list[str],
+    expected_state: ConfigEntryState,
+    expected_flow_sources: list[str],
+) -> None:
+    """Ensure a token without the prices scope triggers reauthentication."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            AUTH_IMPLEMENTATION: DOMAIN,
+            "token": {
+                "access_token": "test-token",
+                "refresh_token": "refresh-token",
+                "token_type": "Bearer",
+                "expires_at": time.time() + 3600,
+                "scope": " ".join(scopes),
+            },
+        },
+        unique_id="tibber",
+    )
+    entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert entry.state is expected_state
+    assert [
+        flow["context"]["source"] for flow in hass.config_entries.flow.async_progress()
+    ] == expected_flow_sources
 
 
 async def test_setup_requires_data_api_reauth(hass: HomeAssistant) -> None:
