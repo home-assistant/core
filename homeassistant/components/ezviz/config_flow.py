@@ -18,7 +18,6 @@ from pyezvizapi.test_cam_rtsp import TestRTSPAuth
 from homeassistant.config_entries import (
     SOURCE_REAUTH,
     SOURCE_RECONFIGURE,
-    ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
     OptionsFlowWithReload,
@@ -98,7 +97,7 @@ class EzvizConfigFlow(ConfigFlow, domain=DOMAIN):
     password: str | None
     unique_id: str
     _ezviz_client: EzvizClient
-    _reauth_entry: ConfigEntry
+    _reauth_entry: EzvizConfigEntry
 
     def _create_cloud_client(self, data: dict[str, Any]) -> None:
         """Create the cloud client, kept for the verification code step."""

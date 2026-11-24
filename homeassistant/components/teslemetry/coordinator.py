@@ -8,7 +8,6 @@ from functools import partial
 import logging
 from typing import TYPE_CHECKING, Any, override
 
-from aiopowerwall import PowerwallClient, PowerwallEnergySite, PowerwallError
 from tesla_fleet_api.const import VehicleDataEndpoint
 from tesla_fleet_api.exceptions import (
     GatewayTimeout,
@@ -26,6 +25,11 @@ from tesla_fleet_api.router import (
     merge_live_status,
     merge_site_info,
 )
+from tesla_fleet_api.tesla.powerwall import (
+    PowerwallClient,
+    PowerwallEnergySite,
+    PowerwallError,
+)
 from tesla_fleet_api.teslemetry import EnergySite, Teslemetry, Vehicle
 from teslemetry_stream.const import EnergyTotalsEvent, WallConnectorTotalsEvent
 
@@ -36,11 +40,11 @@ from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
 
-if TYPE_CHECKING:
-    from .models import TeslemetryConfigEntry
-
 from .const import DOMAIN, LOGGER
 from .helpers import async_update_device_sw_version, flatten, gateway_issue_id
+
+if TYPE_CHECKING:
+    from .models import TeslemetryConfigEntry
 
 RETRY_EXCEPTIONS = (
     InvalidResponse,
@@ -444,15 +448,13 @@ class TeslemetryEnergySiteInfoCoordinator(DataUpdateCoordinator[dict[str, Any]])
             self._local_poll_in_progress = False
 
     def async_set_command_value(self, key: str, value: Any) -> None:
-        """Hold a paired site's successful command value until its source next reports.
+        """Hold a successful command value until its source next reports.
 
-        A locally-owned key is held until a LAN poll reports it, and every key
-        until the next cloud site_info, so neither a poll in between nor a
-        failed LAN poll can revert it.
+        Every key is held until the next cloud site_info, and on a paired site
+        a locally-owned key also until a LAN poll reports it, so no update in
+        between can revert it.
         """
-        if self._local is None:
-            return
-        if key in LOCAL_SITE_INFO_KEYS:
+        if self._local is not None and key in LOCAL_SITE_INFO_KEYS:
             self._local_config = {**(self._local_config or {}), key: value}
             self._local_config_generation += 1
         self._cloud_optimistic[key] = value

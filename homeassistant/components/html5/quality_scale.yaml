@@ -50,7 +50,7 @@ rules:
   test-coverage: done
 
   # Gold
-  devices: todo
+  devices: done
   diagnostics:
     status: exempt
     comment: No runtime data available and configuration contains only sensitive information.

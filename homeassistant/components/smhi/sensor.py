@@ -5,6 +5,8 @@ from dataclasses import dataclass
 from datetime import datetime
 from typing import override
 
+from pysmhi import SMHIRadar
+
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
@@ -17,6 +19,7 @@ from homeassistant.const import (
     CONF_LONGITUDE,
     PERCENTAGE,
     UnitOfSpeed,
+    UnitOfVolumetricFlux,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -26,6 +29,7 @@ from .coordinator import (
     SMHIConfigEntry,
     SMHIDataUpdateCoordinator,
     SMHIFireDataUpdateCoordinator,
+    SMHIRadarDataUpdateCoordinator,
 )
 from .entity import SmhiEntity
 
@@ -110,6 +114,13 @@ class SMHIFireEntityDescription(SensorEntityDescription):
     """Describes SMHI fire entity."""
 
     value_fn: Callable[[SMHIFireSensor], StateType | datetime]
+
+
+@dataclass(frozen=True, kw_only=True)
+class SMHIRadarEntityDescription(SensorEntityDescription):
+    """Describes SMHI radar entity."""
+
+    value_fn: Callable[[SMHIRadar], StateType]
 
 
 WEATHER_SENSOR_DESCRIPTIONS: tuple[SMHIWeatherEntityDescription, ...] = (
@@ -248,6 +259,27 @@ FIRE_SENSOR_DESCRIPTIONS: tuple[SMHIFireEntityDescription, ...] = (
         entity_registry_enabled_default=False,
     ),
 )
+RADAR_SENSOR_DESCRIPTIONS: tuple[SMHIRadarEntityDescription, ...] = (
+    SMHIRadarEntityDescription(
+        key="radar_precipitation_intensity",
+        translation_key="radar_precipitation_intensity",
+        value_fn=lambda data: data["precipitation"],
+        device_class=SensorDeviceClass.PRECIPITATION_INTENSITY,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfVolumetricFlux.MILLIMETERS_PER_HOUR,
+        suggested_display_precision=1,
+        entity_registry_enabled_default=False,
+    ),
+    SMHIRadarEntityDescription(
+        key="radar_reflectivity",
+        translation_key="radar_reflectivity",
+        value_fn=lambda data: data["dbz"],
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement="dBZ",
+        suggested_display_precision=1,
+        entity_registry_enabled_default=False,
+    ),
+)
 
 
 async def async_setup_entry(
@@ -259,8 +291,9 @@ async def async_setup_entry(
 
     coordinator = entry.runtime_data.coordinator
     fire_coordinator = entry.runtime_data.fire_coordinator
+    radar_coordinator = entry.runtime_data.radar_coordinator
     location = entry.data
-    entities: list[SMHIWeatherSensor | SMHIFireSensor] = []
+    entities: list[SMHIWeatherSensor | SMHIFireSensor | SMHIRadarSensor] = []
     entities.extend(
         SMHIWeatherSensor(
             location[CONF_LOCATION][CONF_LATITUDE],
@@ -278,6 +311,15 @@ async def async_setup_entry(
             entity_description=description,
         )
         for description in FIRE_SENSOR_DESCRIPTIONS
+    )
+    entities.extend(
+        SMHIRadarSensor(
+            location[CONF_LOCATION][CONF_LATITUDE],
+            location[CONF_LOCATION][CONF_LONGITUDE],
+            coordinator=radar_coordinator,
+            entity_description=description,
+        )
+        for description in RADAR_SENSOR_DESCRIPTIONS
     )
 
     async_add_entities(entities)
@@ -337,3 +379,32 @@ class SMHIFireSensor(SmhiEntity[SMHIFireDataUpdateCoordinator], SensorEntity):
         """Refresh the entity data."""
         if self.coordinator.data.fire_daily:
             self._attr_native_value = self.entity_description.value_fn(self)
+
+
+class SMHIRadarSensor(SmhiEntity[SMHIRadarDataUpdateCoordinator], SensorEntity):
+    """Representation of a SMHI Radar Sensor."""
+
+    entity_description: SMHIRadarEntityDescription
+
+    def __init__(
+        self,
+        latitude: str,
+        longitude: str,
+        coordinator: SMHIRadarDataUpdateCoordinator,
+        entity_description: SMHIRadarEntityDescription,
+    ) -> None:
+        """Initiate SMHI Radar Sensor."""
+        self.entity_description = entity_description
+        super().__init__(
+            latitude,
+            longitude,
+            coordinator,
+        )
+        self._attr_unique_id = f"{latitude}, {longitude}-{entity_description.key}"
+
+    @override
+    def update_entity_data(self) -> None:
+        """Refresh the entity data."""
+        self._attr_native_value = self.entity_description.value_fn(
+            self.coordinator.data
+        )

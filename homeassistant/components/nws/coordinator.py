@@ -20,9 +20,6 @@ from homeassistant.helpers.update_coordinator import (
 from homeassistant.util import location as location_util
 from homeassistant.util.dt import utcnow
 
-if TYPE_CHECKING:
-    from . import NWSConfigEntry
-
 from .const import (
     CONF_STATION,
     DEBOUNCE_TIME,
@@ -34,6 +31,9 @@ from .const import (
     RETRY_STOP,
     UPDATE_TIME_PERIOD,
 )
+
+if TYPE_CHECKING:
+    from . import NWSConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
