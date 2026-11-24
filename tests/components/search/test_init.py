@@ -6,6 +6,7 @@ from pytest_homeassistant.common import MockConfigEntry
 from pytest_homeassistant.typing import WebSocketGenerator
 from pytest_unordered import unordered
 
+from homeassistant.components import automation, script
 from homeassistant.components.search import DOMAIN, ItemType, Searcher
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import (
@@ -1464,3 +1465,49 @@ async def test_search_related_include_disabled_entities_websocket(
 
     assert response["success"]
     assert response["result"][ItemType.ENTITY] == unordered(list(expected))
+
+
+@pytest.mark.parametrize(
+    ("item_type", "extractor_name"),
+    [
+        (ItemType.AUTOMATION, "entities_in_automation"),
+        (ItemType.SCRIPT, "entities_in_script"),
+    ],
+)
+async def test_search_related_resolves_entity_registry_ids(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    hass_ws_client: WebSocketGenerator,
+    monkeypatch: pytest.MonkeyPatch,
+    item_type: ItemType,
+    extractor_name: str,
+) -> None:
+    """Related search resolves registry IDs from automations and scripts."""
+    entity = entity_registry.async_get_or_create(
+        "light", "test", "search-reference", suggested_object_id="reference"
+    )
+    module = automation if item_type == ItemType.AUTOMATION else script
+    monkeypatch.setattr(
+        module,
+        extractor_name,
+        lambda *_: [entity.id, entity.entity_id, "light.missing", "0" * 32],
+    )
+
+    assert await async_setup_component(hass, DOMAIN, {})
+
+    result = Searcher(hass, {}).async_search(item_type, f"{item_type}.test")
+    assert result[ItemType.ENTITY] == {entity.entity_id, "light.missing"}
+
+    client = await hass_ws_client(hass)
+    await client.send_json_auto_id(
+        {
+            "type": "search/related",
+            "item_type": item_type,
+            "item_id": f"{item_type}.test",
+        }
+    )
+    response = await client.receive_json()
+    assert response["success"]
+    assert response["result"][ItemType.ENTITY] == unordered(
+        [entity.entity_id, "light.missing"]
+    )
