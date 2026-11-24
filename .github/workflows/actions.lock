@@ -61,7 +61,6 @@ workflows:
         - 'pnpm/action-setup@v6.1.1'
     '.github/workflows/lock.yml':
         - 'dessant/lock-threads@v6.0.2'
-    '.github/workflows/pr-reviewer-trigger.yml': []
     '.github/workflows/pr-reviewer.lock.yml':
         - 'actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9'
         - 'actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1'
