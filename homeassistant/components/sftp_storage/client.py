@@ -137,8 +137,12 @@ class BackupAgentClient:
 
     async def __aenter__(self) -> Self:
         """Async context manager entrypoint."""
-
-        return await self.open()
+        try:
+            return await self.open()
+        except BaseException:
+            # `__aexit__` is not called when entering fails
+            await self.close()
+            raise
 
     async def __aexit__(
         self,

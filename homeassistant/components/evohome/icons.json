@@ -10,6 +10,11 @@
       "reset_system_mode": {
         "default": "mdi:thermostat-box-auto"
       }
+    },
+    "climate": {
+      "controller": {
+        "default": "mdi:thermostat-box"
+      }
     }
   },
   "services": {

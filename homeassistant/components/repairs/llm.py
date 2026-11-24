@@ -1,6 +1,5 @@
 """LLM tools for the repairs integration."""
 
-import re
 from typing import TYPE_CHECKING, override
 
 import probatio
@@ -19,6 +18,7 @@ from homeassistant.helpers.llm import (
     ToolAnnotations,
     ToolInput,
     ToolResult,
+    substitute_translation_placeholders,
 )
 from homeassistant.util.json import JsonObjectType, JsonValueType
 
@@ -47,12 +47,10 @@ def _format_issue(issue: ir.IssueEntry, translations: dict[str, str]) -> JsonObj
     key_prefix = f"component.{issue.domain}.issues.{issue.translation_key}"
     placeholders = issue.translation_placeholders or {}
     for field in ("title", "description"):
-        if value := translations.get(f"{key_prefix}.{field}"):
-            result[field] = re.sub(
-                r"{([^{}]+)}",
-                lambda match: placeholders.get(match[1], match[0]),
-                value,
-            )
+        if value := substitute_translation_placeholders(
+            translations.get(f"{key_prefix}.{field}"), placeholders
+        ):
+            result[field] = value
     if issue.breaks_in_ha_version:
         result["breaks_in_ha_version"] = issue.breaks_in_ha_version
     if issue.learn_more_url:
