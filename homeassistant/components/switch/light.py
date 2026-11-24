@@ -10,11 +10,11 @@ from homeassistant.components.light import (
     LightEntity,
 )
 from homeassistant.const import (
-    ATTR_ENTITY_ID,
     CONF_ENTITY_ID,
     CONF_NAME,
     STATE_ON,
     STATE_UNAVAILABLE,
+    TargetKey,
 )
 from homeassistant.core import Event, EventStateChangedData, HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, entity_registry as er
@@ -75,7 +75,7 @@ class LightSwitch(LightEntity):
         await self.hass.services.async_call(
             DOMAIN,
             SwitchService.TURN_ON,
-            {ATTR_ENTITY_ID: self._switch_entity_id},
+            {TargetKey.ENTITY_ID: self._switch_entity_id},
             blocking=True,
             context=self._context,
         )
@@ -86,7 +86,7 @@ class LightSwitch(LightEntity):
         await self.hass.services.async_call(
             DOMAIN,
             SwitchService.TURN_OFF,
-            {ATTR_ENTITY_ID: self._switch_entity_id},
+            {TargetKey.ENTITY_ID: self._switch_entity_id},
             blocking=True,
             context=self._context,
         )

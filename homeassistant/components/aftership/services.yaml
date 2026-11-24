@@ -24,6 +24,7 @@ remove_tracking:
       selector:
         text:
     slug:
+      required: true
       example: "USPS"
       selector:
         text:

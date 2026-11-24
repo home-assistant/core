@@ -7,17 +7,12 @@ import pywilight
 
 from homeassistant.components.cover import (
     ATTR_CURRENT_POSITION,
-    ATTR_POSITION,
     DOMAIN as COVER_DOMAIN,
+    CoverService,
+    CoverServiceArgument,
     CoverState,
 )
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    SERVICE_CLOSE_COVER,
-    SERVICE_OPEN_COVER,
-    SERVICE_SET_COVER_POSITION,
-    SERVICE_STOP_COVER,
-)
+from homeassistant.const import TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -83,8 +78,8 @@ async def test_open_close_cover_state(
     # Open
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_OPEN_COVER,
-        {ATTR_ENTITY_ID: "cover.wl000000000099_1"},
+        CoverService.OPEN,
+        {TargetKey.ENTITY_ID: "cover.wl000000000099_1"},
         blocking=True,
     )
 
@@ -96,8 +91,8 @@ async def test_open_close_cover_state(
     # Close
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_CLOSE_COVER,
-        {ATTR_ENTITY_ID: "cover.wl000000000099_1"},
+        CoverService.CLOSE,
+        {TargetKey.ENTITY_ID: "cover.wl000000000099_1"},
         blocking=True,
     )
 
@@ -109,8 +104,11 @@ async def test_open_close_cover_state(
     # Set position
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_SET_COVER_POSITION,
-        {ATTR_POSITION: 50, ATTR_ENTITY_ID: "cover.wl000000000099_1"},
+        CoverService.SET_POSITION,
+        {
+            CoverServiceArgument.POSITION: 50,
+            TargetKey.ENTITY_ID: "cover.wl000000000099_1",
+        },
         blocking=True,
     )
 
@@ -123,8 +121,8 @@ async def test_open_close_cover_state(
     # Stop
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_STOP_COVER,
-        {ATTR_ENTITY_ID: "cover.wl000000000099_1"},
+        CoverService.STOP,
+        {TargetKey.ENTITY_ID: "cover.wl000000000099_1"},
         blocking=True,
     )
 

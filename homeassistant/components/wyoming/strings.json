@@ -6,11 +6,18 @@
       "no_services": "No services found at endpoint"
     },
     "error": {
-      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "no_services": "[%key:component::wyoming::config::abort::no_services%]"
     },
     "step": {
       "hassio_confirm": {
         "description": "Do you want to configure Home Assistant to connect to the Wyoming service provided by the app: {addon}?"
+      },
+      "reconfigure": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "port": "[%key:common::config_flow::data::port%]"
+        }
       },
       "user": {
         "data": {

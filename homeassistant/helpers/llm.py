@@ -1,8 +1,9 @@
 """Module to coordinate llm tools."""
 
 from abc import ABC, abstractmethod
-from collections.abc import Callable
+from collections.abc import Callable, Iterable, Mapping
 from dataclasses import dataclass, field as dc_field
+import re
 from typing import Any, override
 
 import probatio
@@ -359,6 +360,33 @@ def async_get_match_preferences(
         area_id=area.id if area else None,
         floor_id=floor.floor_id if floor else None,
     )
+
+
+def rank_name_match(
+    query: str, names: Iterable[str], aliases: Iterable[str], other: Iterable[str]
+) -> int | None:
+    """Return the rank of an item for a casefolded query, or None if no match.
+
+    Rank 0 is an exact name match, rank 1 an exact alias match, rank 2 a
+    partial name match and rank 3 a partial alias match or a match on another
+    field. Each field is only read when it can still improve the rank.
+    """
+    rank = None
+    for name in names:
+        folded = name.casefold()
+        if folded == query:
+            return 0
+        if query in folded:
+            rank = 2
+    for alias in aliases:
+        folded = alias.casefold()
+        if folded == query:
+            return 1
+        if rank is None and query in folded:
+            rank = 3
+    if rank is None and any(query in value.casefold() for value in other):
+        rank = 3
+    return rank
 
 
 class IntentTool(Tool):
@@ -863,3 +891,24 @@ class ActionTool(Tool):
         )
 
         return ToolResult(data={"result": result})
+
+
+_PLACEHOLDER_RE = re.compile(r"{([^{}]+)}")
+
+
+def substitute_translation_placeholders(
+    text: str | None, placeholders: Mapping[str, Any] | None
+) -> str | None:
+    """Replace {key} placeholders in a translated string using a single pass.
+
+    Leaves unknown placeholders intact and avoids re-expanding placeholder
+    syntax contained inside replacement values.
+    """
+    if not text or not placeholders:
+        return text
+    return _PLACEHOLDER_RE.sub(
+        lambda match: (
+            str(val) if (val := placeholders.get(match[1])) is not None else match[0]
+        ),
+        text,
+    )

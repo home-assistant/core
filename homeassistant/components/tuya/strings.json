@@ -36,8 +36,14 @@
   },
   "entity": {
     "binary_sensor": {
+      "arrear_outage": {
+        "name": "Arrear outage"
+      },
       "bag_full": {
         "name": "Bag full"
+      },
+      "battery_alarm": {
+        "name": "Battery alarm"
       },
       "carbon_dioxide": {
         "name": "Carbon dioxide"
@@ -47,6 +53,9 @@
       },
       "coil_freeze": {
         "name": "Coil freeze/defrost"
+      },
+      "cover_alarm": {
+        "name": "Cover alarm"
       },
       "cover_off": {
         "name": "Cover off"
@@ -108,6 +117,9 @@
       "magnetic_interference": {
         "name": "Magnetic interference"
       },
+      "meter_hardware_alarm": {
+        "name": "Meter hardware alarm"
+      },
       "methane": {
         "name": "Methane"
       },
@@ -126,6 +138,9 @@
       "overload": {
         "name": "Overload"
       },
+      "overpower": {
+        "name": "Overpower"
+      },
       "overpower_early_warning": {
         "name": "Overpower early warning"
       },
@@ -135,11 +150,32 @@
       "overvoltage_early_warning": {
         "name": "Overvoltage early warning"
       },
+      "phase_a_overpower": {
+        "name": "Phase A overpower"
+      },
+      "phase_a_underpower": {
+        "name": "Phase A underpower"
+      },
+      "phase_b_overpower": {
+        "name": "Phase B overpower"
+      },
+      "phase_b_underpower": {
+        "name": "Phase B underpower"
+      },
+      "phase_c_overpower": {
+        "name": "Phase C overpower"
+      },
+      "phase_c_underpower": {
+        "name": "Phase C underpower"
+      },
       "phase_loss": {
         "name": "Phase loss"
       },
       "pm25": {
         "name": "PM2.5"
+      },
+      "power_factor_abnormal": {
+        "name": "Power factor abnormal"
       },
       "power_outage": {
         "name": "Power outage"
@@ -165,8 +201,17 @@
       "temperature_difference": {
         "name": "Temperature difference fault"
       },
+      "terminal_alarm": {
+        "name": "Terminal alarm"
+      },
       "tilt": {
         "name": "Tilt"
+      },
+      "total_overpower": {
+        "name": "Total overpower"
+      },
+      "total_underpower": {
+        "name": "Total underpower"
       },
       "undervoltage": {
         "name": "Undervoltage"
@@ -903,6 +948,9 @@
       "indexed_temperature_external": {
         "name": "Probe temperature channel {index}"
       },
+      "inlet_temperature": {
+        "name": "Inlet temperature"
+      },
       "inverter_output_power": {
         "name": "Inverter output power"
       },
@@ -979,6 +1027,9 @@
           "standby": "[%key:common::state::standby%]",
           "work": "Working"
         }
+      },
+      "outlet_temperature": {
+        "name": "Outlet temperature"
       },
       "outside_temperature": {
         "name": "Outside temperature"
@@ -1066,6 +1117,9 @@
       },
       "pv_channel_power": {
         "name": "PV channel {index} power"
+      },
+      "reactive_power": {
+        "name": "[%key:component::sensor::entity_component::reactive_power::name%]"
       },
       "remaining_time": {
         "name": "Remaining time"
@@ -1380,8 +1434,20 @@
     "action_dpcode_not_found": {
       "message": "Unable to process action as the device does not provide a corresponding function code (expected one of {expected} in {available})."
     },
+    "command_not_accepted": {
+      "message": "The Tuya cloud does not accept this command or value for this device (error {code})."
+    },
+    "command_rate_limited": {
+      "message": "The Tuya cloud is limiting requests, try again later."
+    },
     "command_rejected": {
       "message": "The Tuya cloud rejected the command."
+    },
+    "command_rejected_with_reason": {
+      "message": "The Tuya cloud rejected the command (error {code})."
+    },
+    "command_sign_invalid": {
+      "message": "The Tuya cloud rejected the command because the request signature is invalid."
     },
     "device_not_found": {
       "message": "Feeder with ID {device_id} could not be found."

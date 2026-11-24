@@ -6,7 +6,7 @@ from typing import Any, override
 from pyvesync.base_devices.bulb_base import VeSyncBulb
 from pyvesync.base_devices.humidifier_base import VeSyncHumidifier
 from pyvesync.base_devices.switch_base import VeSyncSwitch
-from pyvesync.const import NightlightStatus
+from pyvesync.const import DeviceStatus, NightlightStatus
 
 from homeassistant.components.light import ColorMode, LightEntity, LightServiceArgument
 from homeassistant.core import HomeAssistant, callback
@@ -86,7 +86,7 @@ class VeSyncBaseLightHA(VeSyncBaseEntity[VeSyncSwitch | VeSyncBulb], LightEntity
     @override
     def is_on(self) -> bool:
         """Return True if device is on."""
-        return self.device.state.device_status == "on"
+        return self.device.state.device_status == DeviceStatus.ON
 
     @property
     @override

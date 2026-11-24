@@ -7,6 +7,7 @@ from aiolibresync import (
     DeviceState,
     DiscoveredDevice,
     LibreSyncClient,
+    LssdpInfo,
     NowPlaying,
     PlayState,
     Source,
@@ -54,6 +55,24 @@ FOUND = DiscoveredDevice(
     manufacturer="LibreWireless",
     description_url=f"http://{HOST}:38400/description.xml",
 )
+
+
+LS9 = LssdpInfo(
+    module="LS9", model="Stereo Hub", firmware="p15262.515.0", media_port=7777
+)
+
+
+@pytest.fixture(autouse=True)
+def mock_lssdp() -> Generator[AsyncMock]:
+    """Mock the LSSDP query, answered by the original Stereo Hub."""
+    lssdp = AsyncMock(return_value=LS9)
+    with (
+        patch("homeassistant.components.libresync.async_query_lssdp", lssdp),
+        patch(
+            "homeassistant.components.libresync.config_flow.async_query_lssdp", lssdp
+        ),
+    ):
+        yield lssdp
 
 
 @pytest.fixture

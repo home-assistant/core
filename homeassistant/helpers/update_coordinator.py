@@ -8,7 +8,7 @@ from functools import partial
 import logging
 from random import randint
 from time import monotonic
-from typing import Any, Generic, Protocol, TypeVar, override
+from typing import Any, Generic, Protocol, TypeVar, final, override
 import urllib.error
 
 import aiohttp
@@ -19,6 +19,7 @@ from homeassistant import config_entries
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import (
     CALLBACK_TYPE,
+    DOMAIN as HOMEASSISTANT_DOMAIN,
     Event,
     HassJob,
     HassJobType,
@@ -65,6 +66,26 @@ class UpdateFailedUnreachable(UpdateFailed):
     Use for any device or service that cannot be reached, e.g. a device that
     was turned off. The failure is logged at info level instead of error.
     """
+
+
+def _setup_retry_translation_key(cause: BaseException | None) -> str | None:
+    """Return the translation key for a setup retry caused by a generic error."""
+    # Timeouts first: some timeouts are also client or request errors
+    if isinstance(cause, (TimeoutError, requests.exceptions.Timeout)) or (
+        isinstance(cause, urllib.error.URLError)
+        and (isinstance(cause.reason, TimeoutError) or cause.reason == "timed out")
+    ):
+        return "update_failed_timeout"
+    if isinstance(
+        cause,
+        (
+            aiohttp.ClientError,
+            requests.exceptions.RequestException,
+            urllib.error.URLError,
+        ),
+    ):
+        return "update_failed"
+    return None
 
 
 class BaseDataUpdateCoordinatorProtocol(Protocol):
@@ -130,6 +151,7 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
         # to make sure the first update was successful.
         # Set type to just T to remove annoying checks that data is not None
         # when it was already checked during setup.
+        # Use data_or_none where data can be read before the first update.
         self.data: _DataT = None  # type: ignore[assignment]
 
         # Pick a random microsecond in range 0.05..0.50 to stagger the refreshes
@@ -252,6 +274,19 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
         if self._unsub_shutdown:
             self._unsub_shutdown()
             self._unsub_shutdown = None
+
+    @final
+    @property
+    def data_or_none(self) -> _DataT | None:
+        """Return the data, or None before the first successful update.
+
+        `data` is annotated as `_DataT` rather than `_DataT | None`, so that
+        entities set up after `async_config_entry_first_refresh` need no checks.
+        Use this instead in code that can run before the first successful
+        update, for example `_async_update_data` reusing the previous data, or
+        entities of a coordinator that is refreshed in the background after setup.
+        """
+        return self.data
 
     @property
     def update_interval(self) -> timedelta | None:
@@ -379,9 +414,16 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
             if self.last_update_success:
                 return
         cause = self.last_exception
+        translation_domain = getattr(cause, "translation_domain", None)
+        translation_key = getattr(cause, "translation_key", None)
+        # Errors the coordinator handles itself have no translation of their own
+        if translation_key is None and (
+            translation_key := _setup_retry_translation_key(cause)
+        ):
+            translation_domain = HOMEASSISTANT_DOMAIN
         ex = ConfigEntryNotReady(
-            translation_domain=getattr(cause, "translation_domain", None),
-            translation_key=getattr(cause, "translation_key", None),
+            translation_domain=translation_domain,
+            translation_key=translation_key,
             translation_placeholders=getattr(cause, "translation_placeholders", None),
             retry_after=getattr(cause, "retry_after", None),
         )

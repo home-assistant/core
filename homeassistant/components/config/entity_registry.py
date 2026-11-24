@@ -14,6 +14,10 @@ from homeassistant.helpers import (
     entity_registry as er,
     label_registry as lr,
 )
+from homeassistant.helpers.entityfilter import (
+    INCLUDE_EXCLUDE_BASE_FILTER_SCHEMA,
+    convert_include_exclude_filter,
+)
 from homeassistant.helpers.json import json_dumps
 from homeassistant.helpers.typing import Undefined
 
@@ -68,7 +72,11 @@ _ENTITY_CATEGORIES_JSON = json_dumps(er.ENTITY_CATEGORY_INDEX_TO_VALUE)
 
 
 @websocket_api.websocket_command(
-    {probatio.Required("type"): "config/entity_registry/list_for_display"}
+    {
+        probatio.Required("type"): "config/entity_registry/list_for_display",
+        probatio.Optional("entity_ids"): cv.entity_ids,
+        **INCLUDE_EXCLUDE_BASE_FILTER_SCHEMA.schema,
+    }
 )
 @callback
 def websocket_list_entities_for_display(
@@ -78,19 +86,35 @@ def websocket_list_entities_for_display(
 ) -> None:
     """Handle list registry entries command."""
     registry = er.async_get(hass)
+    entity_ids = set(msg.get("entity_ids", [])) or None
+    _filter = convert_include_exclude_filter(msg)
+    entity_filter = None if _filter.empty_filter else _filter.get_filter()
     # Build start of response message
     msg_json_prefix = (
         f'{{"id":{msg["id"]},"type":"{websocket_api.TYPE_RESULT}","success":true,'
         f'"result":{{"entity_categories":{_ENTITY_CATEGORIES_JSON},"entities":['
     ).encode()
     # Concatenate cached entity registry item JSON serializations
-    inner = b",".join(
-        [
-            entry.display_json_repr
-            for entry in registry.entities.values()
-            if entry.disabled_by is None and entry.display_json_repr is not None
-        ]
-    )
+    if entity_ids or entity_filter:
+        inner = b",".join(
+            [
+                entry.display_json_repr
+                for entry in registry.entities.values()
+                if entry.disabled_by is None
+                and entry.display_json_repr is not None
+                and (not entity_ids or entry.entity_id in entity_ids)
+                and (not entity_filter or entity_filter(entry.entity_id))
+            ]
+        )
+    else:
+        # Fast path when not filtering
+        inner = b",".join(
+            [
+                entry.display_json_repr
+                for entry in registry.entities.values()
+                if entry.disabled_by is None and entry.display_json_repr is not None
+            ]
+        )
     msg_json = b"".join((msg_json_prefix, inner, b"]}}"))
     connection.send_message(msg_json)
 
