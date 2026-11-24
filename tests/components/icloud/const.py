@@ -164,3 +164,23 @@ DEVICE_WITH_HALF_A_LOCATION = {
     "lowPowerMode": False,
     "location": {"latitude": 60.2, "longitude": None},
 }
+
+
+STORAGE = {
+    "storageUsageInfo": {
+        "totalStorageInBytes": 100_000_000_000,
+        "usedStorageInBytes": 40_000_000_000,
+    },
+    "storageUsageByMedia": [
+        {
+            "mediaKey": "photos",
+            "displayLabel": "Photos",
+            "usageInBytes": 30_000_000_000,
+        },
+        {
+            "mediaKey": "backup",
+            "displayLabel": "Backups",
+            "usageInBytes": 10_000_000_000,
+        },
+    ],
+}

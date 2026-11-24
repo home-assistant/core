@@ -10,6 +10,7 @@ from pyicloud.exceptions import PyiCloudException
 from pyicloud.services.calendar import CalendarService, EventObject
 from pyicloud.services.reminders.client import RemindersApiError, RemindersAuthError
 from pyicloud.services.reminders.service import RemindersService
+from requests.exceptions import RequestException
 
 from homeassistant.components.calendar import CalendarEvent
 from homeassistant.const import CONF_USERNAME
@@ -437,3 +438,72 @@ def _as_reminder(reminder) -> IcloudReminder:
         completed_at=reminder.completed_date,
         parent_uid=reminder.parent_reminder_id,
     )
+
+
+@dataclass(slots=True)
+class IcloudStorageData:
+    """A snapshot of iCloud storage usage in bytes."""
+
+    total: int | None
+    used: int | None
+    media: dict[str, int | None]
+    labels: dict[str, str]
+
+    @property
+    def free(self) -> int | None:
+        """Return remaining storage when both usage and capacity are known."""
+        if self.total is None or self.used is None:
+            return None
+        return self.total - self.used
+
+    @property
+    def percentage(self) -> float | None:
+        """Return utilization when capacity is greater than zero."""
+        if not self.total or self.used is None:
+            return None
+        return self.used / self.total * 100
+
+
+class IcloudStorageCoordinator(DataUpdateCoordinator[IcloudStorageData]):
+    """Fetch account storage independently of device location updates."""
+
+    def __init__(self, hass: HomeAssistant, entry: IcloudConfigEntry) -> None:
+        """Initialize the coordinator."""
+        super().__init__(
+            hass,
+            _LOGGER,
+            config_entry=entry,
+            name=f"{DOMAIN} storage",
+            update_interval=timedelta(hours=1),
+            always_update=False,
+        )
+        self.account = entry.runtime_data
+
+    def _fetch(self) -> IcloudStorageData:
+        """Fetch a fresh storage snapshot in the executor."""
+        if (api := self.account.api) is None:
+            raise UpdateFailed("iCloud account is not authenticated")
+        storage = api.account.refresh_storage()
+        return IcloudStorageData(
+            total=storage.usage.usage_data.get("totalStorageInBytes"),
+            used=storage.usage.usage_data.get("usedStorageInBytes"),
+            media={
+                key: media.usage_data.get("usageInBytes")
+                for key, media in storage.usages_by_media.items()
+            },
+            labels={
+                key: media.usage_data.get("displayLabel") or key
+                for key, media in storage.usages_by_media.items()
+            },
+        )
+
+    @override
+    async def _async_update_data(self) -> IcloudStorageData:
+        """Fetch storage without affecting the other iCloud platforms."""
+        try:
+            async with asyncio.timeout(FETCH_TIMEOUT):
+                return await self.hass.async_add_executor_job(self._fetch)
+        except (PyiCloudException, RequestException, ValueError) as err:
+            raise UpdateFailed(f"Error fetching storage: {err}") from err
+        except TimeoutError as err:
+            raise UpdateFailed("Timed out fetching storage") from err
