@@ -14,6 +14,7 @@ from starlink_grpc import (
     LocationDict,
     ObstructionDict,
     PowerDict,
+    SoftwareUpdateDict,
     StatusDict,
     UsageDict,
     get_sleep_config,
@@ -46,6 +47,7 @@ class StarlinkData:
     status: StatusDict
     obstruction: ObstructionDict
     alert: AlertDict
+    software_update: SoftwareUpdateDict
     usage: UsageDict
     consumption: PowerDict
 
@@ -74,7 +76,7 @@ class StarlinkUpdateCoordinator(DataUpdateCoordinator[StarlinkData]):
         context = self.channel_context
         location = location_data(context)
         sleep = get_sleep_config(context)
-        status, obstruction, alert = status_data(context)
+        status, obstruction, alert, software_update = status_data(context)
         index, _, _, _, _, usage, consumption, *_ = history_stats(
             parse_samples=-1 if self.history_stats_start is not None else 1,
             start=self.history_stats_start,
@@ -82,7 +84,14 @@ class StarlinkUpdateCoordinator(DataUpdateCoordinator[StarlinkData]):
         )
         self.history_stats_start = index["end_counter"]
         return StarlinkData(
-            location, sleep, status, obstruction, alert, usage, consumption
+            location,
+            sleep,
+            status,
+            obstruction,
+            alert,
+            software_update,
+            usage,
+            consumption,
         )
 
     @override
