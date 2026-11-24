@@ -70,8 +70,10 @@ class FlowHandler(
         if self.source == SOURCE_REAUTH:
             reauth_entry = self._get_reauth_entry()
             self._abort_if_unique_id_mismatch(reason="wrong_account")
-            if reason := await self._async_test_api_access(access_token):
-                return self.async_abort(reason=reason)
+            if (
+                reason := await self._async_test_api_access(access_token)
+            ) == "invalid_auth":
+                return self.async_abort(reason="invalid_auth")
             return self.async_update_reload_and_abort(reauth_entry, data=data)
 
         self._abort_if_unique_id_configured()
