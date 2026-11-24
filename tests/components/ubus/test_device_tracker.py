@@ -395,6 +395,66 @@ async def test_duplicate_mac_case_trackers_merged(
     assert state.state == STATE_HOME
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_enabled_tracker_wins_over_disabled_duplicate(
+    hass: HomeAssistant,
+    mock_ubus_by_host: tuple[MagicMock, dict[str, MagicMock]],
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test an enabled tracker wins over a disabled duplicate of the other case.
+
+    The established, enabled tracker keeps its entity id and settings,
+    while the disabled duplicate created in the other MAC case is removed.
+    """
+    _mock, _ = mock_ubus_by_host
+    entry_a = MockConfigEntry(domain=DOMAIN, data=MOCK_CONFIG, title=MOCK_HOST)
+    entry_a.add_to_hass(hass)
+
+    # The established tracker exists under the normalized unique id and is
+    # enabled with a user-provided name.
+    device = device_registry.async_get_or_create(
+        config_entry_id=entry_a.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, MAC_PHONE)},
+    )
+    established = entity_registry.async_get_or_create(
+        DEVICE_TRACKER_DOMAIN,
+        DOMAIN,
+        MAC_PHONE,
+        config_entry=entry_a,
+        device_id=device.id,
+        disabled_by=None,
+    )
+    entity_registry.async_update_entity(established.entity_id, name="Phone")
+    # A duplicate in the raw case was created later and is disabled.
+    duplicate = entity_registry.async_get_or_create(
+        DEVICE_TRACKER_DOMAIN,
+        DOMAIN,
+        MAC_PHONE.upper(),
+        config_entry=entry_a,
+        device_id=device.id,
+        disabled_by=er.RegistryEntryDisabler.INTEGRATION,
+    )
+
+    router = _mock(f"http://{MOCK_HOST}/ubus", "root", "password", verify=True)
+    router.get_hostapd_clients.return_value = {
+        "clients": {MAC_PHONE: {"authorized": True}}
+    }
+    assert await hass.config_entries.async_setup(entry_a.entry_id)
+    await hass.async_block_till_done()
+
+    # The enabled tracker kept its entity id and settings; the disabled
+    # duplicate is gone.
+    assert entity_registry.async_get(established.entity_id) is not None
+    assert entity_registry.async_get(established.entity_id).disabled_by is None
+    assert entity_registry.async_get(established.entity_id).name == "Phone"
+    assert entity_registry.async_get(duplicate.entity_id) is None
+
+    state = hass.states.get(established.entity_id)
+    assert state is not None
+    assert state.state == STATE_HOME
+
+
 @pytest.mark.usefixtures("entity_registry_enabled_by_default", "two_router_entries")
 async def test_roaming_device_stays_on_single_tracker(
     hass: HomeAssistant,

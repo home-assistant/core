@@ -213,26 +213,32 @@ def _async_migrate_unique_ids(entity_registry: er.EntityRegistry) -> None:
     case; re-pointing the unique id reuses the entity, with its entity
     id and customizations, instead of creating a duplicate.
     """
-    for registry_entry in list(entity_registry.entities.values()):
+    by_mac: dict[str, list[er.RegistryEntry]] = {}
+    for registry_entry in entity_registry.entities.values():
         if (
-            registry_entry.domain != DEVICE_TRACKER_DOMAIN
-            or registry_entry.platform != DOMAIN
-            or registry_entry.unique_id is None
+            registry_entry.domain == DEVICE_TRACKER_DOMAIN
+            and registry_entry.platform == DOMAIN
+            and registry_entry.unique_id is not None
         ):
-            continue
-        if (unique_id := registry_entry.unique_id.lower()) == registry_entry.unique_id:
-            continue
-        if (
-            duplicate := entity_registry.async_get_entity_id(
-                DEVICE_TRACKER_DOMAIN, DOMAIN, unique_id
+            by_mac.setdefault(registry_entry.unique_id.lower(), []).append(
+                registry_entry
             )
-        ) is not None and duplicate != registry_entry.entity_id:
-            # A normalized tracker already exists; keep the pre-
-            # normalization one, which carries the established entity id.
-            entity_registry.async_remove(duplicate)
-        entity_registry.async_update_entity(
-            registry_entry.entity_id, new_unique_id=unique_id
-        )
+    for entries in by_mac.values():
+        if len(entries) == 1 and entries[0].unique_id == entries[0].unique_id.lower():
+            continue
+        # An enabled tracker is the established one over a disabled
+        # duplicate; between equally established trackers the oldest wins.
+        candidates = [
+            entry for entry in entries if entry.disabled_by is None
+        ] or entries
+        survivor = min(candidates, key=lambda entry: entry.created_at)
+        for entry in entries:
+            if entry is not survivor:
+                entity_registry.async_remove(entry.entity_id)
+        if survivor.unique_id != survivor.unique_id.lower():
+            entity_registry.async_update_entity(
+                survivor.entity_id, new_unique_id=survivor.unique_id.lower()
+            )
 
 
 async def async_setup_entry(
