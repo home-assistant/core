@@ -77,10 +77,10 @@ rules:
       This integration does not fetch data from devices.
   docs-examples: done
   docs-known-limitations: done
-  docs-supported-devices: done
+  docs-supported-devices: todo
   docs-supported-functions: done
   docs-troubleshooting: done
-  docs-use-cases: done
+  docs-use-cases: todo
   dynamic-devices:
     status: exempt
     comment: |
