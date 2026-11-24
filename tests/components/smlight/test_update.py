@@ -528,6 +528,8 @@ async def test_update_firmware_failed(
     assert state.attributes[ATTR_IN_PROGRESS] is False
     assert state.attributes[ATTR_UPDATE_PERCENTAGE] is None
 
+    # Only callbacks registered by the retry may complete it.
+    mock_smlight_client.sse.register_callback.reset_mock()
     install_task = hass.async_create_task(
         hass.services.async_call(
             UPDATE_DOMAIN,
@@ -574,7 +576,6 @@ async def test_update_firmware_failed_during_version_check(
     )
     mock_smlight_client.fw_update.assert_awaited_once()
 
-    # Absolute times, unlike freezer ticks, can fire the poll without the timeout.
     async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=10, seconds=1))
     await asyncio.sleep(0)
     assert mock_config_entry.runtime_data.firmware.in_progress is True
@@ -712,6 +713,67 @@ async def test_update_timeout(
     assert state.attributes[ATTR_IN_PROGRESS] is False
     assert state.attributes[ATTR_UPDATE_PERCENTAGE] is None
     assert mock_smlight_client.sse.register_callback.return_value.call_count == 3
+
+
+@pytest.mark.parametrize(
+    ("message", "wait"),
+    [
+        pytest.param(
+            MOCK_FIRMWARE_PROGRESS,
+            timedelta(minutes=10, seconds=1),
+            id="no-completion-event",
+        ),
+        pytest.param(MOCK_FIRMWARE_DONE, timedelta(0), id="reboot"),
+    ],
+)
+async def test_update_version_seen_at_deadline(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_config_entry: MockConfigEntry,
+    mock_smlight_client: MagicMock,
+    message: MessageEvent,
+    wait: timedelta,
+) -> None:
+    """The install succeeds if the last poll before the deadline sees the new version."""
+    await setup_integration(hass, mock_config_entry)
+    entity_id = "update.mock_title_core_firmware"
+
+    install_task = hass.async_create_task(
+        hass.services.async_call(
+            UPDATE_DOMAIN,
+            UpdateService.INSTALL,
+            {TargetKey.ENTITY_ID: entity_id},
+            blocking=True,
+        )
+    )
+    mock_smlight_client.fw_update.assert_awaited_once()
+    event_function = get_mock_event_function(
+        mock_smlight_client, SmEvents[message.type]
+    )
+    event_function(message)
+    await asyncio.sleep(0)
+
+    freezer.tick(wait)
+    async_fire_time_changed(hass)
+    await asyncio.sleep(0)
+
+    mock_smlight_client.get_info.side_effect = None
+    mock_smlight_client.get_info.return_value = Info(sw_version="v2.7.5")
+    freezer.tick(timedelta(minutes=2, seconds=59))
+    async_fire_time_changed(hass)
+    await asyncio.sleep(0)
+    assert hass.states.get(entity_id).attributes[ATTR_INSTALLED_VERSION] == "v2.7.5"
+    assert mock_config_entry.runtime_data.firmware.in_progress is True
+
+    # The deadline expires during the sleep after the poll that saw the new version.
+    freezer.tick(timedelta(seconds=1))
+    async_fire_time_changed(hass)
+    await asyncio.sleep(0)
+    await install_task
+
+    state = hass.states.get(entity_id)
+    assert state.state == STATE_OFF
+    assert state.attributes[ATTR_IN_PROGRESS] is False
 
 
 @pytest.mark.parametrize(

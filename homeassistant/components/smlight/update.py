@@ -311,6 +311,9 @@ class SmUpdateEntity(SmEntity, UpdateEntity):
                         raise self._firmware_update_error(
                             "firmware_update_failed"
                         ) from err
+                    # The last poll can see the new version just before the deadline.
+                    if self.installed_version == firmware.ver:
+                        return
                     if not self._finished_event.is_set():
                         raise self._firmware_update_error(
                             "firmware_update_timeout"
