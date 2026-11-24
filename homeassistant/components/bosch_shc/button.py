@@ -97,6 +97,7 @@ PREVIEW_MIN_BRIGHTNESS_DESCRIPTION = SHCButtonEntityDescription[SHCMicromoduleDi
 WALK_TEST_START_DESCRIPTION = SHCButtonEntityDescription[SHCMotionDetector2](
     key="walk_test",
     translation_key="function_test_start",
+    entity_category=EntityCategory.DIAGNOSTIC,
     press_fn=lambda device: device.set_walk_state_request(
         WalkTestService.WalkStateRequest.WALK_STATE_START
     ),
@@ -105,6 +106,7 @@ WALK_TEST_START_DESCRIPTION = SHCButtonEntityDescription[SHCMotionDetector2](
 WALK_TEST_STOP_DESCRIPTION = SHCButtonEntityDescription[SHCMotionDetector2](
     key="walk_test_stop",
     translation_key="function_test_stop",
+    entity_category=EntityCategory.DIAGNOSTIC,
     press_fn=lambda device: device.set_walk_state_request(
         WalkTestService.WalkStateRequest.WALK_STATE_STOP
     ),
@@ -113,6 +115,7 @@ WALK_TEST_STOP_DESCRIPTION = SHCButtonEntityDescription[SHCMotionDetector2](
 DETECTION_TEST_START_DESCRIPTION = SHCButtonEntityDescription[SHCMotionDetector2](
     key="detection_test",
     translation_key="function_test_start",
+    entity_category=EntityCategory.DIAGNOSTIC,
     press_fn=lambda device: device.set_detection_state_request(
         DetectionTestService.DetectionStateRequest.DETECTION_STATE_START
     ),
@@ -121,6 +124,7 @@ DETECTION_TEST_START_DESCRIPTION = SHCButtonEntityDescription[SHCMotionDetector2
 DETECTION_TEST_STOP_DESCRIPTION = SHCButtonEntityDescription[SHCMotionDetector2](
     key="detection_test_stop",
     translation_key="function_test_stop",
+    entity_category=EntityCategory.DIAGNOSTIC,
     press_fn=lambda device: device.set_detection_state_request(
         DetectionTestService.DetectionStateRequest.DETECTION_STATE_STOP
     ),
