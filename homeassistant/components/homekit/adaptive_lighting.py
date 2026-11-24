@@ -248,12 +248,16 @@ def parse_transition_update(update: bytes) -> ActiveTransition | None:
             continue
         offset_raw = tlv_first(entry, TAG_ENTRY_TRANSITION_OFFSET)
         duration_raw = tlv_first(entry, TAG_ENTRY_DURATION)
+        # On the wire the duration of an entry is the hold time of the
+        # *previous* curve point, matching the reference implementation.
+        if curve and duration_raw:
+            curve[-1].duration = read_variable_uint_le(duration_raw)
         curve.append(
             CurveEntry(
                 temperature=struct.unpack("<f", value_raw)[0],
                 brightness_adjustment_factor=struct.unpack("<f", factor)[0],
                 transition_time=read_variable_uint_le(offset_raw) if offset_raw else 0,
-                duration=read_variable_uint_le(duration_raw) if duration_raw else 0,
+                duration=0,
             )
         )
     if len(curve) < 2:

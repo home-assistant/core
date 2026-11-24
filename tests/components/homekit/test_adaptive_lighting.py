@@ -2,6 +2,7 @@
 
 import base64
 from datetime import timedelta
+import struct
 import time
 from typing import Any
 
@@ -16,10 +17,13 @@ from homeassistant.components.homekit.adaptive_lighting import (
     TAG_CFG_IID,
     TAG_CFG_NOTIFY_THRESHOLD,
     TAG_CFG_PARAMETERS,
+    TAG_CFG_UNKNOWN_3,
     TAG_CFG_UPDATE_INTERVAL,
     TAG_CHARACTERISTIC_IID,
     TAG_CURVE_ENTRY,
     TAG_ENTRY_ADJUSTMENT_FACTOR,
+    TAG_ENTRY_DURATION,
+    TAG_ENTRY_TRANSITION_OFFSET,
     TAG_ENTRY_VALUE,
     TAG_PARAM_START_TIME,
     TAG_PARAM_TRANSITION_ID,
@@ -794,6 +798,63 @@ def test_interpolate_point_interpolates_the_brightness_factor() -> None:
         previous = point
         assert interpolate(transition, start + minutes * 60000) == temperature
     assert previous is not None
+
+
+def test_the_duration_belongs_to_the_previous_curve_point() -> None:
+    """A wire entry's duration holds the previous point, like HAP-NodeJS."""
+
+    def point(
+        temperature: float, factor: float, offset: int, duration: int | None
+    ) -> bytes:
+        args: list[int | bytes] = [
+            TAG_ENTRY_ADJUSTMENT_FACTOR,
+            struct.pack("<f", factor),
+            TAG_ENTRY_VALUE,
+            struct.pack("<f", temperature),
+            TAG_ENTRY_TRANSITION_OFFSET,
+            write_variable_uint_le(offset),
+        ]
+        if duration is not None:
+            args += [TAG_ENTRY_DURATION, write_variable_uint_le(duration)]
+        return tlv_encode(*args)
+
+    write = base64.b64encode(
+        tlv_encode(
+            TAG_UPDATE_TRANSITION,
+            tlv_encode(
+                0x01,
+                tlv_encode(
+                    TAG_CFG_PARAMETERS,
+                    tlv_encode(
+                        TAG_PARAM_TRANSITION_ID,
+                        b"\x00" * 16,
+                        TAG_PARAM_START_TIME,
+                        (1_700_000_000_000).to_bytes(8, "little"),
+                    ),
+                    TAG_CFG_UNKNOWN_3,
+                    b"\x01",
+                    TAG_CFG_CURVE,
+                    tlv_encode_list(
+                        TAG_CURVE_ENTRY,
+                        [
+                            point(300.0, -10.0, 0, None),
+                            point(400.0, -20.0, 60_000, 30_000),
+                        ],
+                    ),
+                ),
+            ),
+        )
+    ).decode()
+
+    transition = parse_transition_control(write)
+    assert transition is not None
+    assert transition.curve[0].duration == 30_000
+    assert transition.curve[1].duration == 0
+
+    # Inside the hold window the first point still applies exactly; without
+    # the shift the value would already be interpolating towards the second.
+    base = transition.start_millis + transition.time_millis_offset
+    assert interpolate_point(transition, base + 15_000) == (300.0, -10.0)
 
 
 def test_an_incomplete_curve_entry_is_skipped() -> None:
