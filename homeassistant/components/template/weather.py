@@ -1,6 +1,7 @@
 """Template platform that aggregates meteorological data."""
 
-from collections.abc import Callable, Iterable
+from collections import Counter
+from collections.abc import Callable
 from dataclasses import asdict, dataclass
 import hashlib
 import logging
@@ -9,6 +10,7 @@ from typing import Any, Literal, Self, override
 
 import probatio
 
+from homeassistant.components.blueprint import CONF_USE_BLUEPRINT
 from homeassistant.components.weather import (
     ATTR_CONDITION_CLEAR_NIGHT,
     ATTR_CONDITION_CLOUDY,
@@ -41,6 +43,7 @@ from homeassistant.const import (
     CONF_ICON,
     CONF_ICON_TEMPLATE,
     CONF_NAME,
+    CONF_PATH,
     CONF_TEMPERATURE_UNIT,
     CONF_UNIQUE_ID,
     Platform,
@@ -71,6 +74,7 @@ from .const import (
     CONF_PICTURE,
     DEFAULT_NAMES,
     DOMAIN,
+    TemplateConfigSections,
 )
 from .coordinator import TriggerUpdateCoordinator
 from .entity import AbstractTemplateEntity
@@ -185,6 +189,9 @@ LEGACY_OPTIONS = {
 }
 
 DEPRECATED_TEMPLATE_OPTIONS_ISSUE_ID = "deprecated_weather_template_options"
+DEPRECATED_TEMPLATE_OPTIONS_BLUEPRINT_TRANSLATION_KEY = (
+    "deprecated_weather_template_options_blueprint"
+)
 DEPRECATED_TEMPLATE_OPTIONS_BREAKS_IN = "2027.6.0"
 
 WEATHER_COMMON_LEGACY_SCHEMA = probatio.Schema(
@@ -312,75 +319,109 @@ def rewrite_legacy_options_to_modern_options(
     return entity_cfg
 
 
+def _format_deprecated_options(
+    hass: HomeAssistant,
+    deprecated: list[str],
+    locations: dict[str, tuple[str, int]],
+) -> str:
+    """Return the deprecated options and their replacements as a markdown list."""
+    changes: list[str] = []
+    for key in deprecated:
+        change = f"`{key}` → `{DEPRECATED_TEMPLATE_OPTIONS[key]}`"
+        if (location := locations.get(key)) is not None:
+            path = os.path.relpath(location[0], hass.config.config_dir)
+            change = f"`{path}:{location[1]}`: {change}"
+        changes.append(f"- {change}")
+    return "\n".join(changes)
+
+
 @callback
 def async_update_deprecated_template_options_issues(
-    hass: HomeAssistant, config_sections: Iterable[ConfigType]
+    hass: HomeAssistant, config_sections: TemplateConfigSections | None
 ) -> None:
-    """Create an issue per weather entity using *_template options."""
-    issue_ids: set[str] = set()
-    for section_unique_id, weather_config in (
-        (section.get(CONF_UNIQUE_ID), weather_config)
-        for section in config_sections
-        for weather_config in section.get(WEATHER_DOMAIN, [])
-    ):
-        deprecated = [
-            key for key in weather_config if key in DEPRECATED_TEMPLATE_OPTIONS
-        ]
-        if not deprecated:
-            continue
+    """Create an issue per weather entity or blueprint using *_template options."""
+    refresh = ir.async_refresh_issues(
+        hass, DOMAIN, issue_id_pattern=f"{DEPRECATED_TEMPLATE_OPTIONS_ISSUE_ID}_"
+    )
+    fingerprints: Counter[str] = Counter()
+    for section in config_sections or []:
+        blueprint_path: str | None = None
+        if section.raw_blueprint_inputs is not None:
+            blueprint_path = section.raw_blueprint_inputs[CONF_USE_BLUEPRINT][CONF_PATH]
 
-        identifier = tcv.entity_config_repair_identifier(
-            Platform.WEATHER, weather_config, section_unique_id
-        )
-        # The id only changes with the configuration, so a dismissed issue stays
-        # dismissed until the configuration changes
-        fingerprint = "\n".join(
-            [
-                identifier,
-                *(
-                    f"{key}={getattr(weather_config[key], 'template', weather_config[key])}"
-                    for key in sorted(deprecated)
-                ),
+        for index, weather_config in enumerate(section.get(WEATHER_DOMAIN, [])):
+            deprecated = [
+                key for key in weather_config if key in DEPRECATED_TEMPLATE_OPTIONS
             ]
-        )
-        issue_id = (
-            f"{DEPRECATED_TEMPLATE_OPTIONS_ISSUE_ID}_"
-            f"{hashlib.sha256(fingerprint.encode()).hexdigest()[:16]}"
-        )
-        issue_ids.add(issue_id)
+            if not deprecated:
+                continue
 
-        changes: list[str] = []
-        for key in deprecated:
-            change = f"`{key}` → `{DEPRECATED_TEMPLATE_OPTIONS[key]}`"
-            # Keys loaded from YAML carry the file and line they were defined on
-            if (config_file := getattr(key, "__config_file__", None)) is not None:
-                path = os.path.relpath(config_file, hass.config.config_dir)
-                change = f"`{path}:{getattr(key, '__line__', '?')}`: {change}"
-            changes.append(f"- {change}")
+            # The id only changes with the configuration, so a dismissed issue stays
+            # dismissed until the configuration changes
+            if blueprint_path is not None:
+                # The fix belongs in the blueprint, one issue covers all its instances
+                fingerprint = "\n".join(
+                    [f"blueprint: {blueprint_path}", *sorted(deprecated)]
+                )
+                if fingerprints[fingerprint]:
+                    continue
+            else:
+                fingerprint = "\n".join(
+                    [
+                        tcv.entity_config_repair_identifier(
+                            Platform.WEATHER,
+                            weather_config,
+                            section.get(CONF_UNIQUE_ID),
+                        ),
+                        *(
+                            f"{key}="
+                            f"{getattr(weather_config[key], 'template', weather_config[key])}"
+                            for key in sorted(deprecated)
+                        ),
+                    ]
+                )
+            fingerprints[fingerprint] += 1
+            # Identical entities without a unique_id share a fingerprint
+            if (occurrence := fingerprints[fingerprint]) > 1:
+                fingerprint = f"{fingerprint}\n#{occurrence}"
 
-        ir.async_create_issue(
-            hass,
-            DOMAIN,
-            issue_id,
-            breaks_in_ha_version=DEPRECATED_TEMPLATE_OPTIONS_BREAKS_IN,
-            is_fixable=False,
-            severity=ir.IssueSeverity.WARNING,
-            translation_key=DEPRECATED_TEMPLATE_OPTIONS_ISSUE_ID,
-            translation_placeholders={
-                "identifier": identifier,
-                "breaks_in_ha_version": DEPRECATED_TEMPLATE_OPTIONS_BREAKS_IN,
-                "options": "\n".join(changes),
-            },
-            learn_more_url="https://www.home-assistant.io/integrations/template/#weather",
-        )
+            placeholders = {
+                "options": _format_deprecated_options(
+                    hass,
+                    deprecated,
+                    section.option_locations[WEATHER_DOMAIN][index]
+                    if section.option_locations
+                    else {},
+                ),
+            }
+            if blueprint_path is not None:
+                translation_key = DEPRECATED_TEMPLATE_OPTIONS_BLUEPRINT_TRANSLATION_KEY
+                placeholders["blueprint"] = blueprint_path
+            else:
+                translation_key = DEPRECATED_TEMPLATE_OPTIONS_ISSUE_ID
+                placeholders["identifier"] = tcv.entity_config_identifier(
+                    Platform.WEATHER, weather_config
+                )
 
-    for domain, issue_id in list(ir.async_get(hass).issues):
-        if (
-            domain == DOMAIN
-            and issue_id.startswith(f"{DEPRECATED_TEMPLATE_OPTIONS_ISSUE_ID}_")
-            and issue_id not in issue_ids
-        ):
-            ir.async_delete_issue(hass, DOMAIN, issue_id)
+            ir.async_create_issue(
+                hass,
+                DOMAIN,
+                f"{DEPRECATED_TEMPLATE_OPTIONS_ISSUE_ID}_"
+                f"{hashlib.sha256(fingerprint.encode()).hexdigest()[:16]}",
+                breaks_in_ha_version=DEPRECATED_TEMPLATE_OPTIONS_BREAKS_IN,
+                is_fixable=False,
+                severity=ir.IssueSeverity.WARNING,
+                translation_key=translation_key,
+                translation_placeholders=placeholders,
+                learn_more_url="https://www.home-assistant.io/integrations/template/#weather",
+            )
+
+    # Repairs of entities in invalid sections can't be told apart from stale ones,
+    # keep them all so the ignore flag survives until the section is fixed
+    if config_sections is not None and config_sections.has_invalid_sections:
+        refresh.async_cancel()
+    else:
+        refresh.async_finish()
 
 
 async def async_setup_platform(

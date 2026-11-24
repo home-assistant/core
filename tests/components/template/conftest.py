@@ -732,7 +732,7 @@ async def assert_attributes_template(
 def get_issues_with_prefix(
     issue_registry: ir.IssueRegistry, issue_id_prefix: str
 ) -> list[ir.IssueEntry]:
-    """Return the template issues whose id starts with the prefix."""
+    """Return the template issues whose id is the prefix followed by an underscore."""
     return [
         issue
         for (domain, issue_id), issue in issue_registry.issues.items()

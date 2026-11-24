@@ -76,6 +76,16 @@ class TemplateConfig(dict):
 
     raw_config: ConfigType | None = None
     raw_blueprint_inputs: ConfigType | None = None
+    # The file and line annotations are dropped from the config after validation,
+    # keep them per platform and entity for repairs
+    option_locations: dict[str, list[dict[str, tuple[str, int]]]] | None = None
+
+
+class TemplateConfigSections(list[TemplateConfig]):
+    """Validated template config sections."""
+
+    # Sections which failed validation are left out of the list
+    has_invalid_sections: bool = False
 
 
 class TemplateService(StrEnum):

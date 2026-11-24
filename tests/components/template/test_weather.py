@@ -1128,39 +1128,21 @@ async def test_attributes_template_with_blocked_attributes(
 @pytest.mark.parametrize(
     "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
 )
-@pytest.mark.parametrize("config", [TEST_LEGACY_REQUIRED])
+@pytest.mark.parametrize(
+    "config",
+    [
+        pytest.param(TEST_LEGACY_REQUIRED, id="deprecated"),
+        pytest.param(TEST_MODERN_REQUIRED, id="modern"),
+    ],
+)
 @pytest.mark.usefixtures("setup_weather")
 async def test_deprecated_template_options_issue(
-    hass: HomeAssistant, issue_registry: ir.IssueRegistry
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+    snapshot: SnapshotAssertion,
 ) -> None:
-    """Test a repair issue is created for deprecated *_template options."""
-    issues = get_issues_with_prefix(
-        issue_registry, DEPRECATED_TEMPLATE_OPTIONS_ISSUE_ID
-    )
-    assert len(issues) == 1
-    assert issues[0].breaks_in_ha_version == "2027.6.0"
-    assert issues[0].translation_key == DEPRECATED_TEMPLATE_OPTIONS_ISSUE_ID
-    assert issues[0].translation_placeholders == {
-        "identifier": "name: template_weather",
-        "breaks_in_ha_version": "2027.6.0",
-        "options": (
-            "- `condition_template` → `condition`\n"
-            "- `temperature_template` → `temperature`\n"
-            "- `humidity_template` → `humidity`"
-        ),
-    }
-
-
-@pytest.mark.parametrize(
-    "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
-)
-@pytest.mark.parametrize("config", [TEST_MODERN_REQUIRED])
-@pytest.mark.usefixtures("setup_weather")
-async def test_no_deprecated_template_options_issue(
-    hass: HomeAssistant, issue_registry: ir.IssueRegistry
-) -> None:
-    """Test no repair issue is created for modern options."""
+    """Test a repair issue is created only for deprecated *_template options."""
     assert (
         get_issues_with_prefix(issue_registry, DEPRECATED_TEMPLATE_OPTIONS_ISSUE_ID)
-        == []
+        == snapshot
     )
