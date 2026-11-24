@@ -686,7 +686,7 @@ async def test_config_flow_helper_edge_cases() -> None:
     assert removed_records
 
     class _BadStore:
-        def __class_getitem__(cls, _item: object) -> type["_BadStore"]:
+        def __class_getitem__(cls, _item: object) -> type[_BadStore]:
             return cls
 
         def __init__(self, *_a: object, **_kw: object) -> None:
