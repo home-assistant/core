@@ -5,9 +5,9 @@ Only ``hass.services.async_call`` calls are checked: every constant key of
 their ``target=`` dict literal is a target key, and so is every constant key of
 its ``exclude`` dict literal.
 
-In tests, the ``entity_id`` key of their data dict literal is checked too, when
-the action is a ``<Prefix>Service`` enum member which declares a ``target`` in
-its ``services.yaml``.
+The ``entity_id`` key of their data dict literal is checked too, when the action
+is a ``<Prefix>Service`` enum member which declares a ``target`` in its
+``services.yaml``.
 
 - ``C7465``: Target key of an action call should use ``TargetKey``
 """
@@ -23,7 +23,6 @@ from pylint.lint import PyLinter
 import yaml
 
 from pylint_home_assistant.helpers.integration import get_integration_dir
-from pylint_home_assistant.helpers.module_info import is_test_module
 
 _ENTITY_ID_KEYS = {
     "ATTR_ENTITY_ID",
@@ -116,19 +115,13 @@ class TargetKeyChecker(BaseChecker):
         "C7465": (
             "Target key %s should be %s",
             "home-assistant-action-target-key",
-            "Used when the target dict of an action call, or in tests the data "
-            "dict of an action which declares a target, uses a constant other "
-            "than TargetKey as target key. Target keys select what the "
-            "action applies to, not fields of the action, so they use TargetKey.",
+            "Used when the target dict of an action call, or the data dict of an "
+            "action which declares a target, uses a constant other than "
+            "TargetKey as target key. Target keys select what the action "
+            "applies to, not fields of the action, so they use TargetKey.",
         ),
     }
     options = ()
-
-    _in_test_module: bool
-
-    def visit_module(self, node: nodes.Module) -> None:
-        """Visit Module node."""
-        self._in_test_module = is_test_module(node.name)
 
     def visit_call(self, node: nodes.Call) -> None:
         """Check the target keys of hass.services.async_call."""
@@ -137,8 +130,7 @@ class TargetKeyChecker(BaseChecker):
         target = _keyword_value(node, "target")
         if isinstance(target, nodes.Dict):
             self._check_target(target)
-        if self._in_test_module:
-            self._check_data(node)
+        self._check_data(node)
 
     def _check_data(self, node: nodes.Call) -> None:
         """Report the entity_id key of the data of an action with a target."""

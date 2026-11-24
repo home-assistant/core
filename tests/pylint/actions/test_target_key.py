@@ -206,6 +206,10 @@ def test_message(
 
 
 @pytest.mark.parametrize(
+    "module_name",
+    ["tests.components.light.test_init", "homeassistant.components.group.light"],
+)
+@pytest.mark.parametrize(
     ("code", "key"),
     [
         pytest.param(
@@ -255,9 +259,10 @@ def test_data_message(
     target_key_checker: TargetKeyChecker,
     code: str,
     key: str,
+    module_name: str,
 ) -> None:
     """Test target keys in the data of an action call that are reported."""
-    root_node = astroid.parse(_ENUM_IMPORTS + code, "tests.components.light.test_init")
+    root_node = astroid.parse(_ENUM_IMPORTS + code, module_name)
     key_node = next(
         node
         for node in root_node.nodes_of_class(
@@ -281,7 +286,7 @@ def test_data_message(
 
 
 @pytest.mark.parametrize(
-    ("code", "module_name"),
+    "code",
     [
         pytest.param(
             """
@@ -289,14 +294,12 @@ hass.services.async_call(
     "light", LightService.TURN_ON, {TargetKey.ENTITY_ID: "light.kitchen"}
 )
 """,
-            "tests.components.light.test_init",
             id="target_key",
         ),
         pytest.param(
             """
 hass.services.async_call("light", LightService.TURN_ON, {"entity_id": "light.kitchen"})
 """,
-            "tests.components.light.test_init",
             id="string_literal",
         ),
         pytest.param(
@@ -307,60 +310,44 @@ hass.services.async_call(
     {CommonServiceArgument.ENTITY_ID: "lock.front_door"},
 )
 """,
-            "tests.components.zwave_js.test_services",
             id="real_entity_id_field",
         ),
         pytest.param(
             """
 hass.services.async_call("light", "turn_on", {ATTR_ENTITY_ID: "light.kitchen"})
 """,
-            "tests.components.light.test_init",
             id="action_not_an_enum_member",
         ),
         pytest.param(
             """
 hass.services.async_call("light", LightService.UNKNOWN, {ATTR_ENTITY_ID: "light.kitchen"})
 """,
-            "tests.components.light.test_init",
             id="unknown_enum_member",
         ),
         pytest.param(
             """
 hass.services.async_call("light", LightService.TURN_ON, {"brightness": ATTR_ENTITY_ID})
 """,
-            "tests.components.light.test_init",
             id="constant_in_value",
         ),
         pytest.param(
             """
 hass.services.async_call("light", LightService.TURN_ON, data)
 """,
-            "tests.components.light.test_init",
             id="data_not_a_dict",
         ),
         pytest.param(
             """
 hass.services.async_call("light", LightService.TURN_ON, {**data})
 """,
-            "tests.components.light.test_init",
             id="dict_unpack",
-        ),
-        pytest.param(
-            """
-hass.services.async_call("light", LightService.TURN_ON, {ATTR_ENTITY_ID: "light.kitchen"})
-""",
-            "homeassistant.components.google_assistant.trait",
-            id="integration_code",
         ),
     ],
 )
 def test_data_no_message(
-    linter: UnittestLinter,
-    target_key_checker: TargetKeyChecker,
-    code: str,
-    module_name: str,
+    linter: UnittestLinter, target_key_checker: TargetKeyChecker, code: str
 ) -> None:
     """Test data of action calls that is not reported."""
-    root_node = astroid.parse(_ENUM_IMPORTS + code, module_name)
+    root_node = astroid.parse(_ENUM_IMPORTS + code, "tests.components.light.test_init")
     with assert_no_messages(linter):
         walk_checker(linter, target_key_checker, root_node)
