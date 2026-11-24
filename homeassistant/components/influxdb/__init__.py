@@ -12,7 +12,7 @@ from typing import Any, override
 
 from influxdb import InfluxDBClient, exceptions
 from influxdb_client import InfluxDBClient as InfluxDBClientV2
-from influxdb_client.client.write_api import ASYNCHRONOUS, SYNCHRONOUS
+from influxdb_client.client.write_api import SYNCHRONOUS
 from influxdb_client.rest import ApiException
 import probatio
 import requests.exceptions
@@ -391,8 +391,8 @@ def get_influx_connection(  # noqa: C901
         bucket = conf.get(CONF_BUCKET)
         influx = InfluxDBClientV2(**kwargs)
         query_api = influx.query_api()
-        initial_write_mode = SYNCHRONOUS if test_write else ASYNCHRONOUS
-        write_api = influx.write_api(write_options=initial_write_mode)
+        # Asynchronous writes hide errors from the retry logic of InfluxThread
+        write_api = influx.write_api(write_options=SYNCHRONOUS)
 
         def write_v2(json):
             """Write data to V2 influx."""
@@ -431,7 +431,6 @@ def get_influx_connection(  # noqa: C901
             # Then invalid inputs is returned. Anything else is a broken config
             with suppress(ValueError):
                 write_v2(b"")
-            write_api = influx.write_api(write_options=ASYNCHRONOUS)
 
         if test_read:
             tables = query_v2(TEST_QUERY_V2)
