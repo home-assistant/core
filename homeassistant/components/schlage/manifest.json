@@ -9,5 +9,6 @@
   "integration_type": "hub",
   "iot_class": "cloud_polling",
   "loggers": ["pyschlage"],
+  "quality_scale": "bronze",
   "requirements": ["pyschlage==2026.11.0"]
 }
