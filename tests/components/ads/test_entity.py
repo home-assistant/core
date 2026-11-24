@@ -197,3 +197,39 @@ async def test_hub_refuses_io_after_shutdown(
 
     getattr(mock_pyads_connection.return_value, method).assert_not_called()
     assert message in caplog.text
+
+
+async def test_shutdown_waits_for_a_removal(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_pyads_connection: MagicMock,
+    mock_ads_device: MockAdsDevice,
+) -> None:
+    """Test shutdown does not close the connection while a removal is deleting."""
+    mock_ads_device.values[ADS_VAR] = BOOL_TRUE
+    assert await setup_ads_platform(hass, SWITCH_DOMAIN, PLATFORM_CONFIG)
+    client = mock_pyads_connection.return_value
+    deleting = threading.Event()
+    release = threading.Event()
+
+    def del_device_notification(*args: Any) -> None:
+        deleting.set()
+        release.wait()
+
+    client.del_device_notification.side_effect = del_device_notification
+    entity_registry.async_remove(ENTITY_ID)
+    await hass.async_add_executor_job(deleting.wait)
+
+    shutdown = hass.async_add_executor_job(hass.data[DATA_ADS].shutdown)
+    try:
+        await asyncio.sleep(0.05)
+        client.close.assert_not_called()
+    finally:
+        # Never leave the delete blocked, or a failure hangs the test run.
+        release.set()
+        await shutdown
+    await hass.async_block_till_done()
+
+    # The removal deleted the notification, so shutdown had nothing left to delete.
+    client.del_device_notification.assert_called_once_with(1, 1)
+    client.close.assert_called_once()

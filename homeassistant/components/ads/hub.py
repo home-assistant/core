@@ -29,33 +29,38 @@ class AdsHub:
         self._notification_items = {}
         self._closed = False
         self._lock = threading.Lock()
+        # Held across a notification delete, so shutdown cannot close the
+        # client while a dispatcher is still registered. Callbacks never take
+        # it, so holding it while a delete waits for them cannot deadlock.
+        self._teardown_lock = threading.Lock()
 
     def shutdown(self, *args, **kwargs):
         """Shutdown ADS connection."""
 
         _LOGGER.debug("Shutting down ADS")
-        with self._lock:
-            self._closed = True
-            notification_items = list(self._notification_items.values())
-            self._notification_items.clear()
-        # Deleting a notification waits for its in-flight callbacks, which take
-        # the lock themselves, so this has to run unlocked.
-        for notification_item in notification_items:
-            _LOGGER.debug(
-                "Deleting device notification %d, %d",
-                notification_item.hnotify,
-                notification_item.huser,
-            )
-            try:
-                self._client.del_device_notification(
-                    notification_item.hnotify, notification_item.huser
+        with self._teardown_lock:
+            with self._lock:
+                self._closed = True
+                notification_items = list(self._notification_items.values())
+                self._notification_items.clear()
+            # Deleting a notification waits for its in-flight callbacks, which
+            # take self._lock themselves, so this has to run outside it.
+            for notification_item in notification_items:
+                _LOGGER.debug(
+                    "Deleting device notification %d, %d",
+                    notification_item.hnotify,
+                    notification_item.huser,
                 )
+                try:
+                    self._client.del_device_notification(
+                        notification_item.hnotify, notification_item.huser
+                    )
+                except pyads.ADSError as err:
+                    _LOGGER.error(err)
+            try:
+                self._client.close()
             except pyads.ADSError as err:
                 _LOGGER.error(err)
-        try:
-            self._client.close()
-        except pyads.ADSError as err:
-            _LOGGER.error(err)
 
     def register_device(self, device):
         """Register a new device."""
@@ -119,20 +124,21 @@ class AdsHub:
     def delete_device_notification(self, hnotify: int) -> None:
         """Delete a single device notification."""
 
-        with self._lock:
-            notification_item = self._notification_items.pop(hnotify, None)
-        if notification_item is None:
-            # Already gone, most likely torn down by shutdown().
-            return
-        _LOGGER.debug("Deleting device notification %d", hnotify)
-        # Deleting waits for in-flight callbacks, which take the lock
-        # themselves, so this has to run unlocked.
-        try:
-            self._client.del_device_notification(
-                notification_item.hnotify, notification_item.huser
-            )
-        except pyads.ADSError as err:
-            _LOGGER.error(err)
+        with self._teardown_lock:
+            with self._lock:
+                notification_item = self._notification_items.pop(hnotify, None)
+            if notification_item is None:
+                # Already gone, most likely torn down by shutdown().
+                return
+            _LOGGER.debug("Deleting device notification %d", hnotify)
+            # Deleting waits for in-flight callbacks, which take self._lock
+            # themselves, so this has to run outside it.
+            try:
+                self._client.del_device_notification(
+                    notification_item.hnotify, notification_item.huser
+                )
+            except pyads.ADSError as err:
+                _LOGGER.error(err)
 
     def _device_notification_callback(self, notification, name):
         """Handle device notifications."""
