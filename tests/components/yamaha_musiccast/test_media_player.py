@@ -17,7 +17,6 @@ from homeassistant.components.media_player import (
 from homeassistant.components.yamaha_musiccast.const import DEFAULT_ZONE, DOMAIN
 from homeassistant.const import Platform, TargetKey
 from homeassistant.core import HomeAssistant
-from homeassistant.core_config import async_process_ha_core_config
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
@@ -43,9 +42,7 @@ async def media_dir(hass: HomeAssistant) -> None:
 
     It has test.mp3, a video, an image and a text file.
     """
-    await async_process_ha_core_config(
-        hass, {"internal_url": "http://example.local:8123"}
-    )
+    await hass.config.async_update(internal_url="http://example.local:8123")
     assert await async_setup_component(hass, "media_source", {})
 
 
@@ -377,9 +374,7 @@ async def test_play_url(
     url: str,
 ) -> None:
     """Test playing a URL; relative URLs get Home Assistant's address."""
-    await async_process_ha_core_config(
-        hass, {"internal_url": "http://example.local:8123"}
-    )
+    await hass.config.async_update(internal_url="http://example.local:8123")
 
     await _play(hass, entity_id, content_id)
 
