@@ -13,16 +13,19 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.const import CURRENCY_EURO, UnitOfEnergy, UnitOfPower, UnitOfVolume
-from homeassistant.core import HomeAssistant
+from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .coordinator import (
     PowerfoxBaseCoordinator,
     PowerfoxConfigEntry,
+    PowerfoxCoordinator,
     PowerfoxDataUpdateCoordinator,
     PowerfoxReportDataUpdateCoordinator,
 )
 from .entity import PowerfoxEntity
+
+PARALLEL_UPDATES = 0
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -242,51 +245,87 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Powerfox sensors based on a config entry."""
-    entities: list[SensorEntity] = []
     for coordinator in entry.runtime_data:
-        if isinstance(coordinator, PowerfoxReportDataUpdateCoordinator):
-            gas_report = coordinator.data.gas
-            if gas_report is None:
-                continue
-            entities.extend(
-                PowerfoxGasSensorEntity(
-                    coordinator=coordinator,
-                    description=description,
-                    device=coordinator.device,
-                )
-                for description in SENSORS_GAS
-                if description.value_fn(gas_report) is not None
+        _async_add_sensors_when_available(entry, coordinator, async_add_entities)
+
+
+@callback
+def _async_add_sensors_when_available(
+    entry: PowerfoxConfigEntry,
+    coordinator: PowerfoxCoordinator,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
+    """Add the sensors of a device, waiting for its data if necessary."""
+    if entities := _create_sensors(coordinator):
+        async_add_entities(entities)
+        return
+
+    remove_listener: CALLBACK_TYPE | None = None
+
+    @callback
+    def _async_stop_waiting() -> None:
+        nonlocal remove_listener
+        if remove_listener:
+            remove_listener()
+            remove_listener = None
+
+    @callback
+    def _async_add_sensors() -> None:
+        if entities := _create_sensors(coordinator):
+            _async_stop_waiting()
+            async_add_entities(entities)
+
+    remove_listener = coordinator.async_add_listener(_async_add_sensors)
+    entry.async_on_unload(_async_stop_waiting)
+
+
+def _create_sensors(coordinator: PowerfoxCoordinator) -> list[SensorEntity]:
+    """Create the sensors supported by the current data of a device."""
+    if not coordinator.last_update_success:
+        return []
+    if isinstance(coordinator, PowerfoxReportDataUpdateCoordinator):
+        gas_report = coordinator.data.gas
+        if gas_report is None:
+            return []
+        return [
+            PowerfoxGasSensorEntity(
+                coordinator=coordinator,
+                description=description,
+                device=coordinator.device,
             )
-            continue
-        if isinstance(coordinator.data, PowerMeter):
-            entities.extend(
-                PowerfoxSensorEntity(
-                    coordinator=coordinator,
-                    description=description,
-                    device=coordinator.device,
-                )
-                for description in SENSORS_POWER
-                if description.value_fn(coordinator.data) is not None
+            for description in SENSORS_GAS
+            if description.value_fn(gas_report) is not None
+        ]
+    entities: list[SensorEntity] = []
+    if isinstance(coordinator.data, PowerMeter):
+        entities.extend(
+            PowerfoxSensorEntity(
+                coordinator=coordinator,
+                description=description,
+                device=coordinator.device,
             )
-        if isinstance(coordinator.data, WaterMeter):
-            entities.extend(
-                PowerfoxSensorEntity(
-                    coordinator=coordinator,
-                    description=description,
-                    device=coordinator.device,
-                )
-                for description in SENSORS_WATER
+            for description in SENSORS_POWER
+            if description.value_fn(coordinator.data) is not None
+        )
+    if isinstance(coordinator.data, WaterMeter):
+        entities.extend(
+            PowerfoxSensorEntity(
+                coordinator=coordinator,
+                description=description,
+                device=coordinator.device,
             )
-        if isinstance(coordinator.data, HeatMeter):
-            entities.extend(
-                PowerfoxSensorEntity(
-                    coordinator=coordinator,
-                    description=description,
-                    device=coordinator.device,
-                )
-                for description in SENSORS_HEAT
+            for description in SENSORS_WATER
+        )
+    if isinstance(coordinator.data, HeatMeter):
+        entities.extend(
+            PowerfoxSensorEntity(
+                coordinator=coordinator,
+                description=description,
+                device=coordinator.device,
             )
-    async_add_entities(entities)
+            for description in SENSORS_HEAT
+        )
+    return entities
 
 
 class BasePowerfoxSensorEntity[CoordinatorT: PowerfoxBaseCoordinator[Any]](
