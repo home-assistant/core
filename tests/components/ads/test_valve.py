@@ -76,7 +76,7 @@ async def test_unavailable_until_the_first_value(
 ) -> None:
     """Test the valve is unavailable until the PLC delivers a value."""
     assert await async_run_past_first_update(
-        hass, setup_ads_platform(hass, VALVE_DOMAIN, PLATFORM_CONFIG)
+        hass, mock_ads_device, setup_ads_platform(hass, VALVE_DOMAIN, PLATFORM_CONFIG)
     )
     assert hass.states.get(ENTITY_ID).state == STATE_UNAVAILABLE
 
