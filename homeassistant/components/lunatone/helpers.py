@@ -1,12 +1,9 @@
 """Shared helpers for Lunatone entities."""
 
-from collections.abc import Callable
-from typing import TypeVar
+from collections.abc import Callable, Mapping
 
 from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-
-_EntityT = TypeVar("_EntityT", bound=Entity)
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 
 def format_device_identifier(
@@ -18,9 +15,9 @@ def format_device_identifier(
 
 
 def add_entities_from_builder(
-    entity_builder: dict[str, Callable[[], _EntityT]],
+    entity_builder: Mapping[str, Callable[[], Entity]],
     known_entities: set[str],
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Add newly discovered entities and track their unique IDs."""
     current_entities = entity_builder.keys()

@@ -32,7 +32,7 @@ from .coordinator import (
     LunatoneInfoDataUpdateCoordinator,
     LunatoneSensorsDataUpdateCoordinator,
 )
-from .entity import add_entities_from_builder, format_device_identifier
+from .helpers import add_entities_from_builder, format_device_identifier
 
 DALI_LINE_STATUS_SENSOR_MAPPING: dict[str, str] = {
     LineStatus.LOW_POWER: "low_power",
