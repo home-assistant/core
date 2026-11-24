@@ -102,7 +102,7 @@ class EzvizSirenEntity(EzvizBaseEntity, SirenEntity, RestoreEntity):
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on camera siren."""
         try:
-            result = self.hass.async_add_executor_job(
+            result = await self.hass.async_add_executor_job(
                 self.coordinator.ezviz_client.sound_alarm, self._serial, 2
             )
 

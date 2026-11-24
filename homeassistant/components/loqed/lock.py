@@ -1,18 +1,18 @@
 """LOQED lock integration for Home Assistant."""
 
-import logging
 from typing import Any, override
 
+import aiohttp
+
 from homeassistant.components.lock import LockEntity, LockEntityFeature
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .coordinator import LoqedConfigEntry, LoqedDataCoordinator
 from .entity import LoqedEntity
 
 WEBHOOK_API_ENDPOINT = "/api/loqed/webhook"
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
@@ -72,23 +72,23 @@ class LoqedLock(LoqedEntity, LockEntity):
     @override
     async def async_lock(self, **kwargs: Any) -> None:
         """Lock the lock."""
-        await self._lock.lock()
+        try:
+            await self._lock.lock()
+        except (TimeoutError, aiohttp.ClientError) as ex:
+            raise HomeAssistantError(f"Failed to lock {self._lock.id}") from ex
 
     @override
     async def async_unlock(self, **kwargs: Any) -> None:
         """Unlock the lock."""
-        await self._lock.unlock()
+        try:
+            await self._lock.unlock()
+        except (TimeoutError, aiohttp.ClientError) as ex:
+            raise HomeAssistantError(f"Failed to unlock {self._lock.id}") from ex
 
     @override
     async def async_open(self, **kwargs: Any) -> None:
         """Open the door latch."""
-        await self._lock.open()
-
-    @callback
-    @override
-    def _handle_coordinator_update(self) -> None:
-        """Handle updated data from the coordinator."""
-        _LOGGER.debug(self.coordinator.data)
-        if "bolt_state" in self.coordinator.data:
-            self._lock.updateState(self.coordinator.data["bolt_state"]).close()
-            self.async_write_ha_state()
+        try:
+            await self._lock.open()
+        except (TimeoutError, aiohttp.ClientError) as ex:
+            raise HomeAssistantError(f"Failed to open {self._lock.id}") from ex

@@ -1,26 +1,20 @@
 """The tests for Cover."""
 
 import pytest
+from pytest_homeassistant.common import setup_test_component_platform
 
 from homeassistant.components import cover
-from homeassistant.components.cover import ATTR_SPEED, CoverState
-from homeassistant.components.cover.const import ATTR_POSITION
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    CONF_PLATFORM,
-    SERVICE_CLOSE_COVER,
-    SERVICE_OPEN_COVER,
-    SERVICE_SET_COVER_POSITION,
-    SERVICE_TOGGLE,
+from homeassistant.components.cover import (
+    CoverService,
+    CoverServiceArgument,
+    CoverState,
 )
+from homeassistant.const import CONF_PLATFORM, TargetKey
 from homeassistant.core import HomeAssistant, ServiceResponse
-from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.entity import Entity
 from homeassistant.setup import async_setup_component
 
 from .common import MockCover
-
-from tests.common import setup_test_component_platform
 
 
 async def test_services(
@@ -52,12 +46,12 @@ async def test_services(
     assert is_open(hass, ent6)
 
     # call basic toggle services
-    await call_service(hass, SERVICE_TOGGLE, ent1)
-    await call_service(hass, SERVICE_TOGGLE, ent2)
-    await call_service(hass, SERVICE_TOGGLE, ent3)
-    await call_service(hass, SERVICE_TOGGLE, ent4)
-    await call_service(hass, SERVICE_TOGGLE, ent5)
-    await call_service(hass, SERVICE_TOGGLE, ent6)
+    await call_service(hass, CoverService.TOGGLE, ent1)
+    await call_service(hass, CoverService.TOGGLE, ent2)
+    await call_service(hass, CoverService.TOGGLE, ent3)
+    await call_service(hass, CoverService.TOGGLE, ent4)
+    await call_service(hass, CoverService.TOGGLE, ent5)
+    await call_service(hass, CoverService.TOGGLE, ent6)
 
     # entities should be either closed or closing,
     # depending on if they report transitional states
@@ -69,14 +63,14 @@ async def test_services(
     assert is_closing(hass, ent6)
 
     # call basic toggle services and set different cover position states
-    await call_service(hass, SERVICE_TOGGLE, ent1)
+    await call_service(hass, CoverService.TOGGLE, ent1)
     set_cover_position(ent2, 0)
-    await call_service(hass, SERVICE_TOGGLE, ent2)
-    await call_service(hass, SERVICE_TOGGLE, ent3)
-    await call_service(hass, SERVICE_TOGGLE, ent4)
+    await call_service(hass, CoverService.TOGGLE, ent2)
+    await call_service(hass, CoverService.TOGGLE, ent3)
+    await call_service(hass, CoverService.TOGGLE, ent4)
     set_cover_position(ent5, 15)
-    await call_service(hass, SERVICE_TOGGLE, ent5)
-    await call_service(hass, SERVICE_TOGGLE, ent6)
+    await call_service(hass, CoverService.TOGGLE, ent5)
+    await call_service(hass, CoverService.TOGGLE, ent6)
 
     # entities should be in correct state depending on
     # the SUPPORT_STOP feature and cover position
@@ -88,12 +82,12 @@ async def test_services(
     assert is_opening(hass, ent6)
 
     # call basic toggle services
-    await call_service(hass, SERVICE_TOGGLE, ent1)
-    await call_service(hass, SERVICE_TOGGLE, ent2)
-    await call_service(hass, SERVICE_TOGGLE, ent3)
-    await call_service(hass, SERVICE_TOGGLE, ent4)
-    await call_service(hass, SERVICE_TOGGLE, ent5)
-    await call_service(hass, SERVICE_TOGGLE, ent6)
+    await call_service(hass, CoverService.TOGGLE, ent1)
+    await call_service(hass, CoverService.TOGGLE, ent2)
+    await call_service(hass, CoverService.TOGGLE, ent3)
+    await call_service(hass, CoverService.TOGGLE, ent4)
+    await call_service(hass, CoverService.TOGGLE, ent5)
+    await call_service(hass, CoverService.TOGGLE, ent6)
 
     # entities should be in correct state depending on
     # the SUPPORT_STOP feature and cover position
@@ -106,25 +100,58 @@ async def test_services(
 
     # Without STOP but still reports opening/closing has a 4th possible toggle state
     set_state(ent6, CoverState.CLOSED)
-    await call_service(hass, SERVICE_TOGGLE, ent6)
+    await call_service(hass, CoverService.TOGGLE, ent6)
     assert is_opening(hass, ent6)
 
     # After the unusual state transition: closing -> fully open, toggle should close
     set_state(ent5, CoverState.OPEN)
-    await call_service(hass, SERVICE_TOGGLE, ent5)  # Start closing
+    await call_service(hass, CoverService.TOGGLE, ent5)  # Start closing
     assert is_closing(hass, ent5, 15)
     set_state(
         ent5, CoverState.OPEN
     )  # Unusual state transition from closing -> fully open
     set_cover_position(ent5, 100)
-    await call_service(hass, SERVICE_TOGGLE, ent5)  # Should close, not open
+    await call_service(hass, CoverService.TOGGLE, ent5)  # Should close, not open
     assert is_closing(hass, ent5, 100)
+
+
+async def test_toggle_after_opened_outside_home_assistant(
+    hass: HomeAssistant,
+    mock_cover_entities: list[MockCover],
+) -> None:
+    """Test toggle closes a cover that opened without reporting opening."""
+    setup_test_component_platform(hass, cover.DOMAIN, mock_cover_entities)
+
+    assert await async_setup_component(
+        hass, cover.DOMAIN, {cover.DOMAIN: {CONF_PLATFORM: "test"}}
+    )
+    await hass.async_block_till_done()
+
+    # ent6 = cover with only open/close, but also reports opening/closing,
+    # like a garage door opener with a contact sensor
+    ent6 = mock_cover_entities[5]
+
+    # Closed by Home Assistant: it reports closing, then closed
+    await call_service(hass, CoverService.TOGGLE, ent6)
+    assert is_closing(hass, ent6)
+    set_state(ent6, CoverState.CLOSED)
+    ent6.async_write_ha_state()
+    assert is_closed(hass, ent6)
+
+    # Opened outside Home Assistant (a wall button or remote): straight to open
+    set_state(ent6, CoverState.OPEN)
+    ent6.async_write_ha_state()
+    assert is_open(hass, ent6)
+
+    # Toggle should close it, not send open to an open cover
+    await call_service(hass, CoverService.TOGGLE, ent6)
+    assert is_closing(hass, ent6)
 
 
 def call_service(hass: HomeAssistant, service: str, ent: Entity) -> ServiceResponse:
     """Call any service on entity."""
     return hass.services.async_call(
-        cover.DOMAIN, service, {ATTR_ENTITY_ID: ent.entity_id}, blocking=True
+        cover.DOMAIN, service, {TargetKey.ENTITY_ID: ent.entity_id}, blocking=True
     )
 
 
@@ -208,7 +235,7 @@ async def test_services_with_speed(
     hass: HomeAssistant,
     mock_cover_entities: list[MockCover],
 ) -> None:
-    """Test speed validation in cover services."""
+    """Test the speed argument in cover services."""
     setup_test_component_platform(hass, cover.DOMAIN, mock_cover_entities)
 
     assert await async_setup_component(
@@ -223,13 +250,16 @@ async def test_services_with_speed(
     ent1, ent2, _, _, _, _, speed_cover = mock_cover_entities
 
     state = hass.states.get(speed_cover.entity_id)
-    assert state.attributes["supported_speeds"] == ["slow", "fast", "default"]
+    assert state.attributes["supported_speeds"] == ["slow", "medium", "fast"]
 
     speed_cover.last_kwargs = None
     await hass.services.async_call(
         cover.DOMAIN,
-        SERVICE_OPEN_COVER,
-        {ATTR_ENTITY_ID: speed_cover.entity_id, ATTR_SPEED: "fast"},
+        CoverService.OPEN,
+        {
+            TargetKey.ENTITY_ID: speed_cover.entity_id,
+            CoverServiceArgument.SPEED: "fast",
+        },
         blocking=True,
     )
     assert speed_cover.last_kwargs == {"speed": "fast"}
@@ -238,8 +268,11 @@ async def test_services_with_speed(
     speed_cover.last_kwargs = None
     await hass.services.async_call(
         cover.DOMAIN,
-        SERVICE_CLOSE_COVER,
-        {ATTR_ENTITY_ID: speed_cover.entity_id, ATTR_SPEED: "slow"},
+        CoverService.CLOSE,
+        {
+            TargetKey.ENTITY_ID: speed_cover.entity_id,
+            CoverServiceArgument.SPEED: "slow",
+        },
         blocking=True,
     )
     assert speed_cover.last_kwargs == {"speed": "slow"}
@@ -248,55 +281,60 @@ async def test_services_with_speed(
     speed_cover.last_kwargs = None
     await hass.services.async_call(
         cover.DOMAIN,
-        SERVICE_SET_COVER_POSITION,
+        CoverService.SET_POSITION,
         {
-            ATTR_ENTITY_ID: speed_cover.entity_id,
-            ATTR_POSITION: 75,
-            ATTR_SPEED: "default",
+            TargetKey.ENTITY_ID: speed_cover.entity_id,
+            CoverServiceArgument.POSITION: 75,
+            CoverServiceArgument.SPEED: "medium",
         },
         blocking=True,
     )
-    assert speed_cover.last_kwargs == {"position": 75, "speed": "default"}
+    assert speed_cover.last_kwargs == {"position": 75, "speed": "medium"}
+
+    # A speed the cover does not list is dropped and the cover still moves
+    speed_cover.last_kwargs = None
+    await hass.services.async_call(
+        cover.DOMAIN,
+        CoverService.OPEN,
+        {
+            TargetKey.ENTITY_ID: speed_cover.entity_id,
+            CoverServiceArgument.SPEED: "default",
+        },
+        blocking=True,
+    )
+    assert speed_cover.last_kwargs == {}
+    assert is_opening(hass, speed_cover, 50)
 
     speed_cover.last_kwargs = None
-    with pytest.raises(ServiceValidationError) as exc:
-        await hass.services.async_call(
-            cover.DOMAIN,
-            SERVICE_OPEN_COVER,
-            {ATTR_ENTITY_ID: speed_cover.entity_id, ATTR_SPEED: "invalid"},
-            blocking=True,
-        )
-    assert speed_cover.last_kwargs is None
-    assert exc.value.translation_key == "not_valid_speed"
+    await hass.services.async_call(
+        cover.DOMAIN,
+        CoverService.CLOSE,
+        {
+            TargetKey.ENTITY_ID: speed_cover.entity_id,
+            CoverServiceArgument.SPEED: "invalid",
+        },
+        blocking=True,
+    )
+    assert speed_cover.last_kwargs == {}
+    assert is_closing(hass, speed_cover, 50)
 
-    with pytest.raises(ServiceValidationError) as exc:
-        await hass.services.async_call(
-            cover.DOMAIN,
-            SERVICE_CLOSE_COVER,
-            {ATTR_ENTITY_ID: speed_cover.entity_id, ATTR_SPEED: "invalid"},
-            blocking=True,
-        )
-    assert speed_cover.last_kwargs is None
-    assert exc.value.translation_key == "not_valid_speed"
-
-    with pytest.raises(ServiceValidationError) as exc:
-        await hass.services.async_call(
-            cover.DOMAIN,
-            SERVICE_SET_COVER_POSITION,
-            {
-                ATTR_ENTITY_ID: speed_cover.entity_id,
-                ATTR_POSITION: 50,
-                ATTR_SPEED: "invalid",
-            },
-            blocking=True,
-        )
-    assert speed_cover.last_kwargs is None
-    assert exc.value.translation_key == "not_valid_speed"
+    speed_cover.last_kwargs = None
+    await hass.services.async_call(
+        cover.DOMAIN,
+        CoverService.SET_POSITION,
+        {
+            TargetKey.ENTITY_ID: speed_cover.entity_id,
+            CoverServiceArgument.POSITION: 50,
+            CoverServiceArgument.SPEED: "invalid",
+        },
+        blocking=True,
+    )
+    assert speed_cover.last_kwargs == {"position": 50}
 
     await hass.services.async_call(
         cover.DOMAIN,
-        SERVICE_OPEN_COVER,
-        {ATTR_ENTITY_ID: ent1.entity_id, ATTR_SPEED: "ignore"},
+        CoverService.OPEN,
+        {TargetKey.ENTITY_ID: ent1.entity_id, CoverServiceArgument.SPEED: "ignore"},
         blocking=True,
     )
     assert is_open(hass, ent1)
@@ -305,8 +343,8 @@ async def test_services_with_speed(
     ent1.last_kwargs = None
     await hass.services.async_call(
         cover.DOMAIN,
-        SERVICE_CLOSE_COVER,
-        {ATTR_ENTITY_ID: ent1.entity_id, ATTR_SPEED: "ignore"},
+        CoverService.CLOSE,
+        {TargetKey.ENTITY_ID: ent1.entity_id, CoverServiceArgument.SPEED: "ignore"},
         blocking=True,
     )
     assert is_closed(hass, ent1)
@@ -315,8 +353,12 @@ async def test_services_with_speed(
     ent2.last_kwargs = None
     await hass.services.async_call(
         cover.DOMAIN,
-        SERVICE_SET_COVER_POSITION,
-        {ATTR_ENTITY_ID: ent2.entity_id, ATTR_POSITION: 49, ATTR_SPEED: "ignore"},
+        CoverService.SET_POSITION,
+        {
+            TargetKey.ENTITY_ID: ent2.entity_id,
+            CoverServiceArgument.POSITION: 49,
+            CoverServiceArgument.SPEED: "ignore",
+        },
         blocking=True,
     )
     assert ent2.last_kwargs == {"position": 49}

@@ -18,7 +18,7 @@ https://developers.google.com/nest/device-access/api/camera#handle_camera_events
 
 from collections.abc import Mapping
 from dataclasses import dataclass
-import datetime
+import datetime as dt
 import logging
 import os
 import pathlib
@@ -77,7 +77,7 @@ MEDIA_CACHE_PATH = "event_media"
 DISK_READ_LRU_MAX_SIZE = 32
 
 # Remove orphaned media files that are older than this age
-ORPHANED_MEDIA_AGE_CUTOFF = datetime.timedelta(days=7)
+ORPHANED_MEDIA_AGE_CUTOFF = dt.timedelta(days=7)
 
 
 async def async_get_media_event_store(
@@ -157,7 +157,7 @@ class NestEventMediaStore(EventMediaStore):
             async_track_time_interval(
                 hass,
                 self.async_remove_orphaned_media,
-                datetime.timedelta(days=1),
+                dt.timedelta(days=1),
             )
         )
 
@@ -295,7 +295,7 @@ class NestEventMediaStore(EventMediaStore):
                 devices[device.name] = device_entry.id
         return devices
 
-    async def async_remove_orphaned_media(self, now: datetime.datetime) -> None:
+    async def async_remove_orphaned_media(self, now: dt.datetime) -> None:
         """Remove orphaned media files not referenced by active event data.
 
         The event media store handles garbage collection, but
@@ -351,11 +351,7 @@ class NestEventMediaStore(EventMediaStore):
             if (device_events := event_data.get(nest_device_id, {})) is None:
                 continue
             valid_device_timestamps[device_id] = {
-                int(
-                    datetime.datetime.fromisoformat(
-                        camera_event["timestamp"]
-                    ).timestamp()
-                )
+                int(dt.datetime.fromisoformat(camera_event["timestamp"]).timestamp())
                 for events in device_events
                 for camera_event in events["events"].values()
             }

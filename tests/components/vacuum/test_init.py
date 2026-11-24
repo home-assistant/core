@@ -4,6 +4,13 @@ from dataclasses import asdict
 from typing import Any
 
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    MockEntity,
+    MockModule,
+    mock_integration,
+    setup_test_component_platform,
+)
 
 from homeassistant.components.vacuum import (
     DOMAIN,
@@ -30,14 +37,6 @@ from . import (
     MockVacuumWithCleanArea,
     help_async_setup_entry_init,
     help_async_unload_entry,
-)
-
-from tests.common import (
-    MockConfigEntry,
-    MockEntity,
-    MockModule,
-    mock_integration,
-    setup_test_component_platform,
 )
 
 

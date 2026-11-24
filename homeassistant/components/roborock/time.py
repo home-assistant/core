@@ -2,7 +2,7 @@
 
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
-import datetime
+import datetime as dt
 from datetime import time
 import logging
 from typing import Any, override
@@ -37,10 +37,10 @@ class RoborockTimeDescription(TimeEntityDescription):
     trait: Callable[[Any], Any | None]
     """Function to determine if time entity is supported by the device."""
 
-    get_value: Callable[[Any], datetime.time | None]
+    get_value: Callable[[Any], dt.time | None]
     """Function to get the value from the trait."""
 
-    update_value: Callable[[Any, datetime.time], Coroutine[Any, Any, None]]
+    update_value: Callable[[Any, dt.time], Coroutine[Any, Any, None]]
     """Function to set the value on the trait."""
 
 

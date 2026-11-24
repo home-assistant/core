@@ -14,6 +14,15 @@
       },
       "radon_longterm_level": {
         "default": "mdi:radioactive"
+      },
+      "radon_month_level": {
+        "default": "mdi:radioactive"
+      },
+      "radon_week_level": {
+        "default": "mdi:radioactive"
+      },
+      "radon_year_level": {
+        "default": "mdi:radioactive"
       }
     }
   }

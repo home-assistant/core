@@ -16,9 +16,11 @@ from homeassistant.components.media_player import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import SourceType
+from .const import DOMAIN, SourceType
 from .coordinator import BraviaTVConfigEntry
 from .entity import BraviaTVEntity
+
+PARALLEL_UPDATES = 1
 
 
 async def async_setup_entry(
@@ -178,7 +180,15 @@ class BraviaTVMediaPlayer(BraviaTVEntity, MediaPlayerEntity):
         if path[0] == "channels":
             return await self.async_browse_media_channels(True)
 
-        raise BrowseError(f"Media not found: {media_content_type} / {media_content_id}")
+        raise BrowseError(
+            translation_domain=DOMAIN,
+            translation_key="media_not_found",
+            translation_placeholders={
+                "device": self.coordinator.config_entry.title,
+                "media_content_type": str(media_content_type),
+                "media_content_id": media_content_id,
+            },
+        )
 
     async def async_browse_media_root(self) -> BrowseMedia:
         """Return root media objects."""

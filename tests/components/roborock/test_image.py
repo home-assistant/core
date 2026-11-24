@@ -8,6 +8,8 @@ from unittest.mock import patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
+from pytest_homeassistant.typing import ClientSessionGenerator
 from roborock import MultiMapsList, RoborockException
 from roborock.data import CombinedMapInfo, RoborockStateCode
 from roborock.devices.traits.v1.map_content import MapContent
@@ -27,9 +29,6 @@ from .mock_data import (
     ROOM_MAPPING,
     STATUS,
 )
-
-from tests.common import MockConfigEntry, async_fire_time_changed
-from tests.typing import ClientSessionGenerator
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -461,7 +460,7 @@ async def test_q7_map_initial_fetch_exception(
     fake_q7_vacuum: FakeDevice,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Test Q7 map initial fetch handles RoborockException gracefully."""
+    """Test Q7 map initial fetch handles a refresh failure gracefully."""
     caplog.set_level(logging.DEBUG, logger="homeassistant.components.roborock")
     assert fake_q7_vacuum.b01_q7_properties is not None
 
@@ -472,4 +471,4 @@ async def test_q7_map_initial_fetch_exception(
 
     assert mock_roborock_entry.state is ConfigEntryState.LOADED
     assert hass.states.get("image.roborock_q7_map") is not None
-    assert "Initial Q7 map fetch failed (will retry on next poll)" in caplog.text
+    assert "Failed to refresh Q7 map: boom" in caplog.text

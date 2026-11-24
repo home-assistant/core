@@ -7,7 +7,7 @@ from typing import override
 
 from fing_agent_api import FingAgent
 from fing_agent_api.models import AgentInfoResponse, Device
-import httpx
+import httpx2
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_KEY, CONF_IP_ADDRESS, CONF_PORT
@@ -63,23 +63,23 @@ class FingDataUpdateCoordinator(DataUpdateCoordinator[FingDataObject]):
             if self._upnp_available:
                 agent_info_response = await self._fing.get_agent_info()
 
-        except httpx.NetworkError as err:
+        except httpx2.NetworkError as err:
             raise UpdateFailed("Failed to connect") from err
-        except httpx.TimeoutException as err:
+        except httpx2.TimeoutException as err:
             raise UpdateFailed("Timeout establishing connection") from err
-        except httpx.HTTPStatusError as err:
+        except httpx2.HTTPStatusError as err:
             if err.response.status_code == 401:
                 raise UpdateFailed("Invalid API key") from err
             raise UpdateFailed(
                 f"Http request failed -> {err.response.status_code}"
                 f" - {err.response.reason_phrase}"
             ) from err
-        except httpx.InvalidURL as err:
+        except httpx2.InvalidURL as err:
             raise UpdateFailed("Invalid hostname or IP address") from err
         except (
-            httpx.HTTPError,
-            httpx.CookieConflict,
-            httpx.StreamError,
+            httpx2.HTTPError,
+            httpx2.CookieConflict,
+            httpx2.StreamError,
         ) as err:
             raise UpdateFailed("Unexpected error from HTTP request") from err
         else:

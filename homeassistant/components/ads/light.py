@@ -45,10 +45,10 @@ PLATFORM_SCHEMA = LIGHT_PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(
+async def async_setup_platform(
     hass: HomeAssistant,
     config: ConfigType,
-    add_entities: AddEntitiesCallback,
+    async_add_entities: AddEntitiesCallback,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the light platform for ADS."""
@@ -61,7 +61,7 @@ def setup_platform(
     max_color_temp_kelvin: int | None = config.get(CONF_MAX_COLOR_TEMP_KELVIN)
     name: str = config[CONF_NAME]
 
-    add_entities(
+    async_add_entities(
         [
             AdsLight(
                 ads_hub,

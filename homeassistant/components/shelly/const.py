@@ -36,7 +36,6 @@ PROVISIONING_TIMEOUT: Final = 35  # 35 seconds to wait for device to connect to 
 CONF_SSID: Final = "ssid"
 
 CONF_COAP_PORT: Final = "coap_port"
-FIRMWARE_PATTERN: Final = re.compile(r"^(\d{8})")
 
 # max BLOCK light transition time in milliseconds (min=0)
 BLOCK_MAX_TRANSITION_TIME_MS: Final = 5000
@@ -89,6 +88,9 @@ REST_SENSORS_UPDATE_INTERVAL: Final = 60
 
 # Refresh interval for RPC polling sensors
 RPC_SENSORS_POLLING_INTERVAL: Final = 60
+
+# Interval for checking the BLU TRV firmware repository for a newer version
+BLU_TRV_UPDATE_CHECK_INTERVAL: Final = 24 * 3600
 
 CONF_SLEEP_PERIOD: Final = "sleep_period"
 
@@ -248,6 +250,10 @@ OUTBOUND_WEBSOCKET_INCORRECTLY_ENABLED_ISSUE_ID = (
 DEPRECATED_FIRMWARE_ISSUE_ID = "deprecated_firmware_{unique}"
 OPEN_WIFI_AP_ISSUE_ID = "open_wifi_ap_{unique}"
 RTSP_DISABLED_ISSUE_ID = "rtsp_disabled_{unique}"
+IR_RAW_RECEIVE_DISABLED_ISSUE_ID = "ir_raw_receive_disabled_{unique}"
+IR_RAW_RECEIVE_MIN_FIRMWARE = 20260903
+# Older firmware reports the brightness level as the 0-255 backlight value
+WALL_DISPLAY_UI_MIN_FIRMWARE = "2.6.2"
 COIOT_UNCONFIGURED_ISSUE_ID = "coiot_unconfigured_{unique}"
 
 
@@ -281,6 +287,14 @@ OTA_SUCCESS = "ota_success"
 # Time allowed for a device to come back online after a firmware update
 OTA_REBOOT_TIMEOUT: Final = 300
 
+# BLU TRV firmware is first downloaded by the host device and then sent to the TRV,
+# each phase reports its own progress
+OTA_MSG_UPDATING = "Updating"
+
+# The host device reports BLU TRV OTA events on the BTHome device component
+# paired with the BLU TRV component
+BTHOME_DEVICE_IDENTIFIER = "bthomedevice"
+
 GEN1_RELEASE_URL = "https://shelly-api-docs.shelly.cloud/gen1/#changelog"
 GEN2_RELEASE_URL = "https://shelly-api-docs.shelly.cloud/gen2/changelog/"
 GEN2_BETA_RELEASE_URL = f"{GEN2_RELEASE_URL}#unreleased"
@@ -294,9 +308,9 @@ DEVICES_WITHOUT_FIRMWARE_CHANGELOG = (
 CONF_GEN = "gen"
 
 VIRTUAL_COMPONENTS = ("boolean", "button", "enum", "number", "text")
-VIRTUAL_COMPONENTS_MAP = {
+DYNAMIC_COMPONENTS_MAP = {
     "binary_sensor": {"types": ["boolean"], "modes": ["label"]},
-    "button": {"types": ["button"], "modes": ["button"]},
+    "button": {"types": ["button", "ircode"], "modes": ["button"]},
     "number": {"types": ["number"], "modes": ["field", "slider"]},
     "select": {"types": ["enum"], "modes": ["dropdown"]},
     "sensor": {"types": ["enum", "number", "text"], "modes": ["label"]},
@@ -314,6 +328,9 @@ API_WS_URL = "/api/shelly/ws"
 
 COMPONENT_ID_PATTERN = re.compile(r"[a-z\d]+:\d+")
 
+# Firmware ID looks like "20260724-105432/v1.5.0@aa8644cc"
+FW_ID_VERSION_PATTERN = re.compile(r"/(?P<version>[^@]+)")
+
 # Mapping for units that require conversion to a Home Assistant recognized unit
 # e.g. "m3/min" to "m³/min"
 DEVICE_UNIT_MAP = {
@@ -324,14 +341,13 @@ DEVICE_UNIT_MAP = {
 # so that the integration startup remains fast.
 MAX_SCRIPT_SIZE = 5120
 
-All_LIGHT_TYPES = ("cct", "light", "rgb", "rgbw")
+All_LIGHT_TYPES = ("cct", "ledstrip", "light", "rgb", "rgbw")
 
 # Shelly-X specific models
 MODEL_NEO_WATER_VALVE = "NeoWaterValve"
 MODEL_FRANKEVER_WATER_VALVE = "WaterValve"
 MODEL_LINKEDGO_ST802_THERMOSTAT = "ST-802"
 MODEL_LINKEDGO_ST1820_THERMOSTAT = "ST1820"
-MODEL_TOP_EV_CHARGER_EVE01 = "EVE01"
 MODEL_FRANKEVER_IRRIGATION_CONTROLLER = "Irrigation"
 
 ROLE_GENERIC = "generic"
@@ -340,7 +356,24 @@ RPC_ERROR_CODE_REMOTE_DISABLED = -110
 
 TRV_CHANNEL = 0
 
-ATTR_KEY = "key"
-ATTR_VALUE = "value"
-
 DRIVER_MISSING_ERROR = "Sensor driver missing from firmware"
+
+
+class ShellyService(StrEnum):
+    """Store keys for Shelly services."""
+
+    COMMAND = "command"
+    GET_KVS_VALUE = "get_kvs_value"
+    SET_KVS_VALUE = "set_kvs_value"
+    SET_COVER_POSITION_AND_TILT = "set_cover_position_and_tilt"
+
+
+class ShellyServiceArgument(StrEnum):
+    """Store keys for Shelly service arguments."""
+
+    COMMAND = "command"
+    KEY = "key"
+    PARAMS = "params"
+    VALUE = "value"
+    POSITION = "position"
+    TILT_POSITION = "tilt_position"

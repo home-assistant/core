@@ -1,8 +1,12 @@
 """Unit tests for platform/plant.py."""
 
-from datetime import datetime, timedelta
+from datetime import UTC, datetime, timedelta
+
+from pytest_homeassistant.components.recorder.common import async_wait_recording_done
 
 from homeassistant.components import plant
+from homeassistant.components.plant.const import ATTR_MAX_BRIGHTNESS_HISTORY
+from homeassistant.components.plant.entity import DailyHistory
 from homeassistant.components.recorder import Recorder
 from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
@@ -13,9 +17,9 @@ from homeassistant.const import (
     UnitOfConductivity,
 )
 from homeassistant.core import HomeAssistant, State
+from homeassistant.helpers.entity_component import DATA_INSTANCES
 from homeassistant.setup import async_setup_component
-
-from tests.components.recorder.common import async_wait_recording_done
+from homeassistant.util import dt as dt_util
 
 GOOD_DATA = {
     "moisture": 50,
@@ -113,6 +117,27 @@ async def test_update_states(hass: HomeAssistant) -> None:
     assert state.attributes[plant.READING_MOISTURE] == 5
 
 
+async def test_state_tracking_stops_after_removal(hass: HomeAssistant) -> None:
+    """Test a removed plant no longer processes sensor state changes."""
+    plant_name = "some_plant"
+    entity_id = f"plant.{plant_name}"
+    assert await async_setup_component(
+        hass, plant.DOMAIN, {plant.DOMAIN: {plant_name: GOOD_CONFIG}}
+    )
+    hass.states.async_set(MOISTURE_ENTITY, 50)
+    await hass.async_block_till_done()
+    entity = hass.data[DATA_INSTANCES][plant.DOMAIN].get_entity(entity_id)
+    assert entity.extra_state_attributes[plant.READING_MOISTURE] == 50
+
+    await entity.async_remove()
+    assert hass.states.get(entity_id) is None
+
+    hass.states.async_set(MOISTURE_ENTITY, 5)
+    await hass.async_block_till_done()
+    assert entity.extra_state_attributes[plant.READING_MOISTURE] == 50
+    assert hass.states.get(entity_id) is None
+
+
 async def test_unavailable_state(hass: HomeAssistant) -> None:
     """Test updating the state with unavailable.
 
@@ -184,7 +209,7 @@ async def test_load_from_db(recorder_mock: Recorder, hass: HomeAssistant) -> Non
 
     state = hass.states.get(f"plant.{plant_name}")
     assert state.state == STATE_PROBLEM
-    max_brightness = state.attributes.get(plant.ATTR_MAX_BRIGHTNESS_HISTORY)
+    max_brightness = state.attributes.get(ATTR_MAX_BRIGHTNESS_HISTORY)
     assert max_brightness == 30
 
 
@@ -212,13 +237,13 @@ async def test_brightness_history(hass: HomeAssistant) -> None:
 
 def test_daily_history_no_data(hass: HomeAssistant) -> None:
     """Test with empty history."""
-    dh = plant.DailyHistory(3)
+    dh = DailyHistory(3)
     assert dh.max is None
 
 
 def test_daily_history_one_day(hass: HomeAssistant) -> None:
     """Test storing data for the same day."""
-    dh = plant.DailyHistory(3)
+    dh = DailyHistory(3)
     values = [-2, 10, 0, 5, 20]
     for i, value in enumerate(values):
         dh.add_measurement(value)
@@ -229,8 +254,8 @@ def test_daily_history_one_day(hass: HomeAssistant) -> None:
 
 def test_daily_history_multiple_days(hass: HomeAssistant) -> None:
     """Test storing data for different days."""
-    dh = plant.DailyHistory(3)
-    today = datetime.now()  # pylint: disable=home-assistant-enforce-naive-now
+    dh = DailyHistory(3)
+    today = dt_util.now()
     today_minus_1 = today - timedelta(days=1)
     today_minus_2 = today_minus_1 - timedelta(days=1)
     today_minus_3 = today_minus_2 - timedelta(days=1)
@@ -241,3 +266,22 @@ def test_daily_history_multiple_days(hass: HomeAssistant) -> None:
     for i, value in enumerate(days):
         dh.add_measurement(values[i], value)
         assert max_values[i] == dh.max
+
+
+async def test_daily_history_timezone_date_boundaries(hass: HomeAssistant) -> None:
+    """Test UTC timestamps are grouped by local date."""
+    await hass.config.async_set_time_zone("America/New_York")
+    dh = DailyHistory(2)
+
+    dh.add_measurement(10, datetime(2026, 1, 1, 23, 0, tzinfo=UTC))
+    dh.add_measurement(25, datetime(2026, 1, 2, 3, 0, tzinfo=UTC))
+    assert len(dh._days) == 1
+    assert dh.max == 25
+
+    dh.add_measurement(15, datetime(2026, 1, 2, 6, 0, tzinfo=UTC))
+    assert len(dh._days) == 2
+    assert dh.max == 25
+
+    dh.add_measurement(12, datetime(2026, 1, 3, 6, 0, tzinfo=UTC))
+    assert len(dh._days) == 2
+    assert dh.max == 15

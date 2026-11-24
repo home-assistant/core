@@ -4,32 +4,15 @@ import logging
 from typing import Any, override
 
 from orvibo.s20 import S20, S20Exception
-import probatio
 
-from homeassistant import config_entries
-from homeassistant.components.switch import (
-    PLATFORM_SCHEMA as SWITCH_PLATFORM_SCHEMA,
-    SwitchEntity,
-)
-from homeassistant.const import (
-    CONF_DISCOVERY,
-    CONF_HOST,
-    CONF_MAC,
-    CONF_NAME,
-    CONF_SWITCHES,
-)
+from homeassistant.components.switch import SwitchEntity
+from homeassistant.const import CONF_HOST, CONF_MAC
 from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import config_validation as cv, issue_registry as ir
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
-from homeassistant.helpers.entity_platform import (
-    AddConfigEntryEntitiesCallback,
-    AddEntitiesCallback,
-)
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DEFAULT_NAME, DOMAIN
+from .const import DOMAIN
 from .models import S20ConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
@@ -39,76 +22,6 @@ DEFAULT_DISCOVERY = False
 # Library is not thread safe and uses global variables,
 # so we limit to 1 update at a time
 PARALLEL_UPDATES = 1
-
-PLATFORM_SCHEMA = SWITCH_PLATFORM_SCHEMA.extend(
-    {
-        probatio.Required(CONF_SWITCHES, default=[]): probatio.All(
-            probatio.EnsureList(),
-            [
-                {
-                    probatio.Required(CONF_HOST): cv.string,
-                    probatio.Optional(CONF_MAC): cv.string,
-                    probatio.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-                }
-            ],
-        ),
-        probatio.Optional(CONF_DISCOVERY, default=DEFAULT_DISCOVERY): cv.boolean,
-    }
-)
-
-
-async def async_setup_platform(
-    hass: HomeAssistant,
-    config: ConfigType,
-    add_entities_callback: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
-) -> None:
-    """Set up the integration from configuration.yaml."""
-    for switch in config.get(CONF_SWITCHES, []):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_IMPORT},
-            data=switch,
-        )
-
-        if (
-            result.get("type") is FlowResultType.ABORT
-            and result.get("reason") != "already_configured"
-        ):
-            ir.async_create_issue(
-                hass,
-                DOMAIN,
-                f"yaml_deprecation_import_issue_{switch.get('host')}"
-                f"_{(switch.get('mac') or 'unknown_mac').replace(':', '').lower()}",
-                breaks_in_ha_version="2026.9.0",
-                is_fixable=False,
-                is_persistent=False,
-                issue_domain=DOMAIN,
-                severity=ir.IssueSeverity.WARNING,
-                translation_key="yaml_deprecation_import_issue",
-                translation_placeholders={
-                    "reason": str(result.get("reason")),
-                    "host": switch.get("host"),
-                    "mac": switch.get("mac", ""),
-                },
-            )
-            continue
-
-        ir.async_create_issue(
-            hass,
-            DOMAIN,
-            f"yaml_deprecation_{switch.get('host')}"
-            f"_{(switch.get('mac') or 'unknown_mac').replace(':', '').lower()}",
-            breaks_in_ha_version="2026.9.0",
-            is_fixable=False,
-            is_persistent=False,
-            severity=ir.IssueSeverity.WARNING,
-            translation_key="yaml_deprecation",
-            translation_placeholders={
-                "host": switch.get("host"),
-                "mac": switch.get("mac") or "Unknown MAC",
-            },
-        )
 
 
 async def async_setup_entry(

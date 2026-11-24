@@ -8,6 +8,11 @@ from unittest.mock import call, patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 from vizaio import AppConfig, RemoteKey, VizioConnectionError, VizioNotFoundError
 from vizaio.apps import BUNDLED_APPS, UNKNOWN_APP, is_app_input
@@ -33,6 +38,8 @@ from homeassistant.components.media_player import (
     SERVICE_VOLUME_UP,
     MediaPlayerDeviceClass,
     MediaPlayerEntityFeature,
+    MediaPlayerService,
+    MediaPlayerServiceArgument,
 )
 from homeassistant.components.vizio.const import (
     CONF_ADDITIONAL_CONFIGS,
@@ -41,10 +48,7 @@ from homeassistant.components.vizio.const import (
     DEFAULT_VOLUME_STEP,
     DOMAIN,
 )
-from homeassistant.components.vizio.services import (
-    SERVICE_SEND_TEXT,
-    SERVICE_UPDATE_SETTING,
-)
+from homeassistant.components.vizio.services import VizioService
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -54,6 +58,7 @@ from homeassistant.const import (
     STATE_ON,
     STATE_UNAVAILABLE,
     Platform,
+    TargetKey,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
@@ -84,8 +89,6 @@ from .const import (
     VOLUME_STEP,
     audio_setting,
 )
-
-from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 
 @pytest.fixture(autouse=True)
@@ -536,7 +539,7 @@ async def test_services(
         hass,
         DOMAIN,
         "set_setting",
-        SERVICE_UPDATE_SETTING,
+        VizioService.UPDATE_SETTING,
         {"setting_type": "Audio", "setting_name": "AV Delay", "new_value": "0"},
         "audio",
         "av_delay",
@@ -546,7 +549,7 @@ async def test_services(
         hass,
         DOMAIN,
         "set_setting",
-        SERVICE_UPDATE_SETTING,
+        VizioService.UPDATE_SETTING,
         {"setting_type": "Audio", "setting_name": "EQ", "new_value": "Music"},
         "audio",
         "eq",
@@ -764,8 +767,11 @@ async def test_setup_with_apps_additional_apps_config(
     ):
         await hass.services.async_call(
             MP_DOMAIN,
-            SERVICE_SELECT_SOURCE,
-            service_data={ATTR_ENTITY_ID: ENTITY_ID, ATTR_INPUT_SOURCE: "_"},
+            MediaPlayerService.SELECT_SOURCE,
+            service_data={
+                TargetKey.ENTITY_ID: ENTITY_ID,
+                MediaPlayerServiceArgument.SOURCE: "_",
+            },
             blocking=True,
         )
     assert not service_call1.called
@@ -1038,8 +1044,11 @@ async def test_select_invalid_sound_mode(
     ):
         await hass.services.async_call(
             MP_DOMAIN,
-            SERVICE_SELECT_SOUND_MODE,
-            service_data={ATTR_ENTITY_ID: ENTITY_ID, ATTR_SOUND_MODE: "invalid"},
+            MediaPlayerService.SELECT_SOUND_MODE,
+            service_data={
+                TargetKey.ENTITY_ID: ENTITY_ID,
+                MediaPlayerServiceArgument.SOUND_MODE: "invalid",
+            },
             blocking=True,
         )
     set_setting.assert_not_called()
@@ -1061,8 +1070,8 @@ async def test_command_error_raises(
     ):
         await hass.services.async_call(
             MP_DOMAIN,
-            SERVICE_TURN_ON,
-            service_data={ATTR_ENTITY_ID: ENTITY_ID},
+            MediaPlayerService.TURN_ON,
+            service_data={TargetKey.ENTITY_ID: ENTITY_ID},
             blocking=True,
         )
 
@@ -1077,8 +1086,8 @@ async def test_send_text(
     with patch("homeassistant.components.vizio.Vizio.send_text") as mock_send_text:
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_SEND_TEXT,
-            {ATTR_ENTITY_ID: ENTITY_ID, "text": "stranger things"},
+            VizioService.SEND_TEXT,
+            {TargetKey.ENTITY_ID: ENTITY_ID, "text": "stranger things"},
             blocking=True,
         )
     mock_send_text.assert_called_once_with("stranger things")
@@ -1100,7 +1109,7 @@ async def test_send_text_device_error(
     ):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_SEND_TEXT,
-            {ATTR_ENTITY_ID: ENTITY_ID, "text": "abc"},
+            VizioService.SEND_TEXT,
+            {TargetKey.ENTITY_ID: ENTITY_ID, "text": "abc"},
             blocking=True,
         )

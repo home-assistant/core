@@ -1,22 +1,22 @@
 """Provides device automations for Water Heater."""
 
+from typing import Any
+
 import probatio
 
 from homeassistant.components.device_automation import async_validate_entity_schema
 from homeassistant.const import (
-    ATTR_ENTITY_ID,
     CONF_DEVICE_ID,
     CONF_DOMAIN,
     CONF_ENTITY_ID,
     CONF_TYPE,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
+    TargetKey,
 )
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.typing import ConfigType, TemplateVarsType
 
-from .const import DOMAIN
+from .const import DOMAIN, WaterHeaterService
 
 ACTION_TYPES = {"turn_on", "turn_off"}
 
@@ -65,12 +65,12 @@ async def async_call_action_from_config(
     context: Context | None,
 ) -> None:
     """Execute a device action."""
-    service_data = {ATTR_ENTITY_ID: config[CONF_ENTITY_ID]}
+    service_data: dict[str, Any] = {TargetKey.ENTITY_ID: config[CONF_ENTITY_ID]}
 
     if config[CONF_TYPE] == "turn_on":
-        service = SERVICE_TURN_ON
+        service = WaterHeaterService.TURN_ON
     elif config[CONF_TYPE] == "turn_off":
-        service = SERVICE_TURN_OFF
+        service = WaterHeaterService.TURN_OFF
 
     await hass.services.async_call(
         DOMAIN, service, service_data, blocking=True, context=context

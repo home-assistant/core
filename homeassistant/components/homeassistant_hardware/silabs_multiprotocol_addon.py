@@ -116,20 +116,22 @@ class MultiprotocolAddonManager(WaitingAddonManager):
         """Register a multipan platform."""
         self._platforms[integration_domain] = platform
 
-        channel = await platform.async_get_channel(hass)
         using_multipan = await platform.async_using_multipan(hass)
 
         _LOGGER.info(
-            "Registering new multipan platform '%s', using multipan: %s, channel: %s",
+            "Registering new multipan platform '%s', using multipan: %s",
             integration_domain,
             using_multipan,
-            channel,
         )
 
         if self._channel is not None or not using_multipan:
             return
 
-        if channel is None:
+        # Reading the channel can be expensive, e.g. ZHA opens its database for it
+        channel = await platform.async_get_channel(hass)
+
+        # Another platform may have imported the channel while we were waiting
+        if self._channel is not None or channel is None:
             return
 
         _LOGGER.info(
@@ -831,6 +833,7 @@ async def check_multi_pan_addon(hass: HomeAssistant) -> None:
     try:
         addon_info: AddonInfo = await multipan_manager.async_get_addon_info()
     except AddonError as err:
+        # pylint: disable-next=home-assistant-log-and-raise
         _LOGGER.error(err)
         raise HomeAssistantError from err
 

@@ -29,6 +29,8 @@
     'id': '1296269',
     'installed': False,
     'installed_version': '',
+    'integration_categories': list([
+    ]),
     'issues': 0,
     'last_updated': '2011-01-26T19:06:43Z',
     'name': 'Proxy manifest',

@@ -50,6 +50,14 @@ class PlayMedia:
     path: Path | None = field(kw_only=True, default=None)
 
 
+@dataclass(slots=True)
+class MediaImage:
+    """Represents a single image of a media item."""
+
+    content: bytes
+    mime_type: str
+
+
 class BrowseMediaSource(BrowseMedia):
     """Represent a browsable media file."""
 
@@ -145,6 +153,13 @@ class MediaSourceItem:
         source = await self._async_media_source()
         return await source.async_resolve_media(self)
 
+    async def async_get_image(self) -> MediaImage | None:
+        """Return a single image of this item if the source supports it."""
+        if self.domain is None:
+            return None
+        source = await self._async_media_source()
+        return await source.async_get_media_image(self)
+
     async def _async_media_source(self) -> MediaSource:
         """Return media source that owns this item."""
         if TYPE_CHECKING:
@@ -182,6 +197,14 @@ class MediaSource:
     async def async_resolve_media(self, item: MediaSourceItem) -> PlayMedia:
         """Resolve a media item to a playable item."""
         raise NotImplementedError
+
+    async def async_get_media_image(self, item: MediaSourceItem) -> MediaImage | None:
+        """Return a single image of a media item.
+
+        Sources whose resolved media is a stream of images (e.g. MJPEG) should
+        implement this, so consumers can fetch a single image instead.
+        """
+        return None
 
     async def async_browse_media(self, item: MediaSourceItem) -> BrowseMediaSource:
         """Browse media."""

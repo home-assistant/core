@@ -1,6 +1,7 @@
 """The tests for Arcam FMJ Receiver control device triggers."""
 
 from arcam.fmj.state import State
+from pytest_homeassistant.common import MockConfigEntry, async_get_device_automations
 
 from homeassistant.components import automation
 from homeassistant.components.arcam_fmj.const import DOMAIN
@@ -10,8 +11,6 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
 
 from .conftest import MOCK_ENTITY_ID
-
-from tests.common import MockConfigEntry, async_get_device_automations
 
 
 async def test_get_triggers(

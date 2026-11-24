@@ -5,7 +5,6 @@ from typing import override
 
 from haffmpeg.camera import CameraMjpeg
 from onvif.exceptions import ONVIFError
-import probatio
 from yarl import URL
 
 from homeassistant.components import ffmpeg
@@ -18,34 +17,11 @@ from homeassistant.components.stream import (
 )
 from homeassistant.const import HTTP_BASIC_AUTHENTICATION
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_validation as cv, entity_platform
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_aiohttp_proxy_stream
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import (
-    ABSOLUTE_MOVE,
-    ATTR_CONTINUOUS_DURATION,
-    ATTR_DISTANCE,
-    ATTR_MOVE_MODE,
-    ATTR_PAN,
-    ATTR_PRESET,
-    ATTR_SPEED,
-    ATTR_TILT,
-    ATTR_ZOOM,
-    CONF_SNAPSHOT_AUTH,
-    CONTINUOUS_MOVE,
-    DIR_DOWN,
-    DIR_LEFT,
-    DIR_RIGHT,
-    DIR_UP,
-    GOTOPRESET_MOVE,
-    LOGGER,
-    RELATIVE_MOVE,
-    SERVICE_PTZ,
-    STOP_MOVE,
-    ZOOM_IN,
-    ZOOM_OUT,
-)
+from .const import CONF_SNAPSHOT_AUTH, LOGGER
 from .device import ONVIFConfigEntry, ONVIFDevice
 from .entity import ONVIFBaseEntity
 from .models import Profile
@@ -57,32 +33,6 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the ONVIF camera video stream."""
-    platform = entity_platform.async_get_current_platform()
-
-    # Create PTZ service
-    platform.async_register_entity_service(
-        SERVICE_PTZ,
-        {
-            probatio.Optional(ATTR_PAN): probatio.In([DIR_LEFT, DIR_RIGHT]),
-            probatio.Optional(ATTR_TILT): probatio.In([DIR_UP, DIR_DOWN]),
-            probatio.Optional(ATTR_ZOOM): probatio.In([ZOOM_OUT, ZOOM_IN]),
-            probatio.Optional(ATTR_DISTANCE, default=0.1): cv.small_float,
-            probatio.Optional(ATTR_SPEED): cv.small_float,
-            probatio.Optional(ATTR_MOVE_MODE, default=RELATIVE_MOVE): probatio.In(
-                [
-                    CONTINUOUS_MOVE,
-                    RELATIVE_MOVE,
-                    ABSOLUTE_MOVE,
-                    GOTOPRESET_MOVE,
-                    STOP_MOVE,
-                ]
-            ),
-            probatio.Optional(ATTR_CONTINUOUS_DURATION, default=0.5): cv.small_float,
-            probatio.Optional(ATTR_PRESET, default="0"): cv.string,
-        },
-        "async_perform_ptz",
-    )
-
     device = config_entry.runtime_data
     async_add_entities(
         [ONVIFCameraEntity(device, profile) for profile in device.profiles]
@@ -191,22 +141,37 @@ class ONVIFCameraEntity(ONVIFBaseEntity, Camera):
         """Return the stream URI."""
         if self._stream_uri:
             return self._stream_uri
-        if self._stream_uri_future:
-            return await self._stream_uri_future
+        if future := self._stream_uri_future:
+            # Not awaited directly: a cancelled waiting call must not cancel
+            # the request that the other calls are waiting for.
+            await asyncio.wait((future,))
+            return future.result()
         loop = asyncio.get_running_loop()
-        self._stream_uri_future = loop.create_future()
+        self._stream_uri_future = future = loop.create_future()
         try:
             uri_no_auth = await self.device.async_get_stream_uri(self.profile)
+        except asyncio.CancelledError:
+            # The caller gave up, e.g. on a timeout. Calls waiting for the same
+            # request get an error instead of waiting forever; the next call
+            # asks the camera again.
+            self._stream_uri_future = None
+            future.set_exception(
+                HomeAssistantError("Request for the stream URI was cancelled")
+            )
+            future.exception()
+            raise
         except (TimeoutError, Exception) as err:
             LOGGER.error("Failed to get stream uri: %s", err)
-            if self._stream_uri_future:
-                self._stream_uri_future.set_exception(err)
+            self._stream_uri_future = None
+            future.set_exception(err)
+            # Nothing may be awaiting the future, mark the exception as retrieved
+            future.exception()
             raise
         url = URL(uri_no_auth)
         url = url.with_user(self.device.username)
         url = url.with_password(self.device.password)
         self._stream_uri = str(url)
-        self._stream_uri_future.set_result(self._stream_uri)
+        future.set_result(self._stream_uri)
         return self._stream_uri
 
     async def async_perform_ptz(

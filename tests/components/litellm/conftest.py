@@ -8,6 +8,7 @@ from openai.types import CompletionUsage, Model
 from openai.types.chat import ChatCompletion, ChatCompletionMessage
 from openai.types.chat.chat_completion import Choice
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.litellm.const import CONF_PROMPT, DOMAIN
 from homeassistant.config_entries import ConfigSubentryData
@@ -15,8 +16,6 @@ from homeassistant.const import CONF_API_KEY, CONF_LLM_HASS_API, CONF_MODEL, CON
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import llm
 from homeassistant.setup import async_setup_component
-
-from tests.common import MockConfigEntry
 
 TEST_URL = "http://localhost:4000/v1"
 
@@ -32,7 +31,7 @@ def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
         "homeassistant.components.litellm.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ) as mock_setup_entry:
         yield mock_setup_entry
 
@@ -115,14 +114,36 @@ async def mock_openai_client() -> AsyncGenerator[AsyncMock]:
 
 
 @pytest.fixture
-def mock_models() -> Generator[AsyncMock]:
+def proxy_models() -> tuple[str, ...]:
+    """Return the model names the proxy lists on `/v1/models`."""
+    return ("gpt-3.5-turbo", "gpt-4")
+
+
+@pytest.fixture
+def proxy_model_modes() -> dict[str, str | None]:
+    """Return the LiteLLM mode of each model the proxy reports on `/model/info`."""
+    return {}
+
+
+@pytest.fixture
+def mock_models(
+    proxy_models: tuple[str, ...], proxy_model_modes: dict[str, str | None]
+) -> Generator[AsyncMock]:
     """Mock the OpenAI client the config flow uses to list proxy models."""
     with patch(
         "homeassistant.components.litellm.config_flow.AsyncOpenAI"
     ) as mock_client:
-        client = mock_client.return_value
-        client.with_options.return_value.models.list.side_effect = (
-            lambda *args, **kwargs: models_response("gpt-3.5-turbo", "gpt-4")
+        client = mock_client.return_value.with_options.return_value
+        client.models.list.side_effect = lambda *args, **kwargs: models_response(
+            *proxy_models
+        )
+        client.get = AsyncMock(
+            return_value={
+                "data": [
+                    {"model_name": model, "model_info": {"mode": mode}}
+                    for model, mode in proxy_model_modes.items()
+                ]
+            }
         )
         yield client
 

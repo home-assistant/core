@@ -10,6 +10,11 @@ from aiomelcloudhome.exceptions import (
     MelCloudHomeTimeoutError,
 )
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_load_json_object_fixture,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.melcloud_home.const import DOMAIN
@@ -23,19 +28,21 @@ from homeassistant.components.water_heater import (
     SERVICE_SET_TEMPERATURE,
     STATE_HEAT_PUMP,
     STATE_HIGH_DEMAND,
+    WaterHeaterService,
+    WaterHeaterServiceArgument,
 )
-from homeassistant.const import ATTR_ENTITY_ID, ATTR_TEMPERATURE, STATE_OFF, Platform
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    ATTR_TEMPERATURE,
+    STATE_OFF,
+    Platform,
+    TargetKey,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
-
-from tests.common import (
-    MockConfigEntry,
-    async_load_json_object_fixture,
-    snapshot_platform,
-)
 
 ENTITY_ID = "water_heater.heat_pump_hot_water"
 ATW_UNIT_ID = "atw-unit-uuid-1"
@@ -69,8 +76,8 @@ async def test_set_temperature(
 
     await hass.services.async_call(
         WATER_HEATER_DOMAIN,
-        SERVICE_SET_TEMPERATURE,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_TEMPERATURE: 55},
+        WaterHeaterService.SET_TEMPERATURE,
+        {TargetKey.ENTITY_ID: ENTITY_ID, WaterHeaterServiceArgument.TEMPERATURE: 55},
         blocking=True,
     )
 
@@ -98,8 +105,11 @@ async def test_set_operation_mode(
 
     await hass.services.async_call(
         WATER_HEATER_DOMAIN,
-        SERVICE_SET_OPERATION_MODE,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_OPERATION_MODE: operation_mode},
+        WaterHeaterService.SET_OPERATION_MODE,
+        {
+            TargetKey.ENTITY_ID: ENTITY_ID,
+            WaterHeaterServiceArgument.OPERATION_MODE: operation_mode,
+        },
         blocking=True,
     )
 

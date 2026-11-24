@@ -4,14 +4,13 @@ from unittest.mock import AsyncMock
 
 from huum.exceptions import Forbidden
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries
 from homeassistant.components.huum.const import DOMAIN
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-
-from tests.common import MockConfigEntry
 
 TEST_USERNAME = "huum@sauna.org"
 TEST_PASSWORD = "ukuuku"

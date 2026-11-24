@@ -1,10 +1,16 @@
 """Test the Husqvarna Automower Diagnostics."""
 
-import datetime
+import datetime as dt
 from unittest.mock import AsyncMock
 import zoneinfo
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.components.diagnostics import (
+    get_diagnostics_for_config_entry,
+    get_diagnostics_for_device,
+)
+from pytest_homeassistant.typing import ClientSessionGenerator
 from syrupy.assertion import SnapshotAssertion
 from syrupy.filters import props
 
@@ -14,16 +20,9 @@ from homeassistant.helpers import device_registry as dr
 
 from .const import TEST_MOWER_ID
 
-from tests.common import MockConfigEntry
-from tests.components.diagnostics import (
-    get_diagnostics_for_config_entry,
-    get_diagnostics_for_device,
-)
-from tests.typing import ClientSessionGenerator
-
 
 @pytest.mark.freeze_time(
-    datetime.datetime(2023, 6, 5, tzinfo=zoneinfo.ZoneInfo("Europe/Berlin"))
+    dt.datetime(2023, 6, 5, tzinfo=zoneinfo.ZoneInfo("Europe/Berlin"))
 )
 async def test_entry_diagnostics(
     hass: HomeAssistant,
@@ -44,7 +43,7 @@ async def test_entry_diagnostics(
 
 
 @pytest.mark.freeze_time(
-    datetime.datetime(2023, 6, 5, tzinfo=zoneinfo.ZoneInfo("Europe/Berlin"))
+    dt.datetime(2023, 6, 5, tzinfo=zoneinfo.ZoneInfo("Europe/Berlin"))
 )
 async def test_device_diagnostics(
     hass: HomeAssistant,
@@ -66,4 +65,33 @@ async def test_device_diagnostics(
     result = await get_diagnostics_for_device(
         hass, hass_client, mock_config_entry, reg_device
     )
+    assert result == snapshot
+
+
+@pytest.mark.freeze_time(
+    dt.datetime(2023, 6, 5, tzinfo=zoneinfo.ZoneInfo("Europe/Berlin"))
+)
+async def test_child_device_diagnostics(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    snapshot: SnapshotAssertion,
+    mock_automower_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test device diagnostics for a child device."""
+
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    child_devices = dr.async_child_entries_for_config_entry(
+        device_registry, mock_config_entry.entry_id
+    )
+    assert child_devices
+
+    result = await get_diagnostics_for_device(
+        hass, hass_client, mock_config_entry, child_devices[0]
+    )
+
     assert result == snapshot

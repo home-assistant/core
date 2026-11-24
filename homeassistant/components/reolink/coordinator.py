@@ -3,20 +3,27 @@
 import asyncio
 from datetime import timedelta
 import logging
-from typing import override
+from typing import TYPE_CHECKING, override
 
 from reolink_aio.exceptions import (
+    ApiError,
     CredentialsInvalidError,
     LoginPrivacyModeError,
+    ReolinkConnectionError,
     ReolinkError,
+    ReolinkTimeoutError,
 )
 
-from homeassistant.config_entries import ConfigEntry, ConfigEntryState
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
+from .const import DOMAIN
 from .host import ReolinkHost
+
+if TYPE_CHECKING:
+    from .util import ReolinkConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -25,16 +32,22 @@ NUM_CRED_ERRORS = 3
 DEVICE_UPDATE_INTERVAL_MIN = timedelta(seconds=60)
 DEVICE_UPDATE_INTERVAL_PER_CAM = timedelta(seconds=10)
 
+_UPDATE_ERROR_TRANSLATION_KEY: dict[type[ReolinkError], str] = {
+    ApiError: "update_api_error",
+    ReolinkConnectionError: "update_connection_error",
+    ReolinkTimeoutError: "update_timeout",
+}
+
 
 class ReolinkCoordinator(DataUpdateCoordinator[None]):
     """Coordinator for Reolink."""
 
-    config_entry: ConfigEntry
+    config_entry: ReolinkConfigEntry
 
     def __init__(
         self,
         hass: HomeAssistant,
-        config_entry: ConfigEntry,
+        config_entry: ReolinkConfigEntry,
         host: ReolinkHost,
         name: str,
         *,
@@ -59,7 +72,7 @@ class ReolinkDeviceCoordinator(ReolinkCoordinator):
     def __init__(
         self,
         hass: HomeAssistant,
-        config_entry: ConfigEntry,
+        config_entry: ReolinkConfigEntry,
         host: ReolinkHost,
         *,
         min_timeout: float,
@@ -90,16 +103,33 @@ class ReolinkDeviceCoordinator(ReolinkCoordinator):
                 self._host.credential_errors += 1
                 if self._host.credential_errors >= NUM_CRED_ERRORS:
                     await self._host.stop()
-                    # pylint: disable-next=home-assistant-exception-not-translated
-                    raise ConfigEntryAuthFailed(err) from err
-                # pylint: disable-next=home-assistant-exception-not-translated
-                raise UpdateFailed(str(err)) from err
+                    raise ConfigEntryAuthFailed(
+                        translation_domain=DOMAIN,
+                        translation_key="authentication_failed",
+                        translation_placeholders={"host": self._host.api.host},
+                    ) from err
+                raise UpdateFailed(
+                    translation_domain=DOMAIN,
+                    translation_key="authentication_failed",
+                    translation_placeholders={"host": self._host.api.host},
+                ) from err
             except LoginPrivacyModeError:
                 pass  # HTTP API is shutdown when privacy mode is active
             except ReolinkError as err:
                 self._host.credential_errors = 0
-                # pylint: disable-next=home-assistant-exception-not-translated
-                raise UpdateFailed(str(err)) from err
+                translation_key = next(
+                    (
+                        key
+                        for err_type, key in _UPDATE_ERROR_TRANSLATION_KEY.items()
+                        if isinstance(err, err_type)
+                    ),
+                    "update_failed",
+                )
+                raise UpdateFailed(
+                    translation_domain=DOMAIN,
+                    translation_key=translation_key,
+                    translation_placeholders={"host": self._host.api.host},
+                ) from err
 
         self._host.credential_errors = 0
 
@@ -143,7 +173,7 @@ class ReolinkFirmwareCoordinator(ReolinkCoordinator):
     def __init__(
         self,
         hass: HomeAssistant,
-        config_entry: ConfigEntry,
+        config_entry: ReolinkConfigEntry,
         host: ReolinkHost,
         *,
         min_timeout: float,
@@ -173,12 +203,10 @@ class ReolinkFirmwareCoordinator(ReolinkCoordinator):
                     )
                     return
 
-                # pylint: disable-next=home-assistant-exception-not-translated
                 raise UpdateFailed(
-                    "Error checking Reolink firmware update"
-                    f" from {self._host.api.nvr_name}, "
-                    "if the camera is blocked from accessing the internet, "
-                    "disable the update entity"
+                    translation_domain=DOMAIN,
+                    translation_key="firmware_check_failed",
+                    translation_placeholders={"name": self._host.api.nvr_name},
                 ) from err
             finally:
                 self._host.starting = False

@@ -4,12 +4,11 @@ from typing import Any
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.ukraine_alarm.const import DOMAIN
 from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers import entity_registry as er
-
-from tests.common import MockConfigEntry
 
 REGION_ID = "2.1"
 

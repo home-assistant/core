@@ -8,7 +8,7 @@ from typing import override
 from rflink.protocol import ProtocolBase
 
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_STATE, STATE_ON
-from homeassistant.core import callback
+from homeassistant.core import CALLBACK_TYPE, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
@@ -38,6 +38,7 @@ class RflinkDevice(Entity):
 
     _state: bool | None = None
     _attr_should_poll = False
+    _unsub_handle_event: CALLBACK_TYPE | None = None
 
     def __init__(
         self,
@@ -105,6 +106,40 @@ class RflinkDevice(Entity):
         return self._state is None
 
     @callback
+    def _async_subscribe_handle_event(self) -> None:
+        """Subscribe to events dispatched to the current entity_id."""
+        self._async_unsubscribe_handle_event()
+        self._unsub_handle_event = async_dispatcher_connect(
+            self.hass,
+            SIGNAL_HANDLE_EVENT.format(self.entity_id),
+            self.handle_event_callback,
+        )
+
+    @callback
+    def _async_unsubscribe_handle_event(self) -> None:
+        """Unsubscribe from events dispatched to the entity."""
+        if self._unsub_handle_event:
+            self._unsub_handle_event()
+            self._unsub_handle_event = None
+
+    @callback
+    @override
+    def async_entity_id_changed(self, old_entity_id: str) -> None:
+        """Route events to the new entity_id."""
+        super().async_entity_id_changed(old_entity_id)
+        for lookup in (
+            self.hass.data[DATA_ENTITY_LOOKUP],
+            self.hass.data[DATA_ENTITY_GROUP_LOOKUP],
+        ):
+            for entity_ids_by_event_id in lookup.values():
+                for entity_ids in entity_ids_by_event_id.values():
+                    entity_ids[:] = [
+                        self.entity_id if entity_id == old_entity_id else entity_id
+                        for entity_id in entity_ids
+                    ]
+        self._async_subscribe_handle_event()
+
+    @callback
     def _availability_callback(self, availability):
         """Update availability state."""
         self._attr_available = availability
@@ -115,13 +150,12 @@ class RflinkDevice(Entity):
         self, lookup: defaultdict[str, list[str]], event_id: str
     ) -> None:
         """Route events for event_id to this entity until it is removed."""
-        entity_id = self.entity_id
-        lookup[event_id].append(entity_id)
+        lookup[event_id].append(self.entity_id)
 
         @callback
         def _async_unregister() -> None:
             entity_ids = lookup[event_id]
-            entity_ids.remove(entity_id)
+            entity_ids.remove(self.entity_id)
             if not entity_ids:
                 del lookup[event_id]
 
@@ -131,6 +165,22 @@ class RflinkDevice(Entity):
     async def async_added_to_hass(self) -> None:
         """Register update callback."""
         await super().async_added_to_hass()
+        self._async_register_lookups()
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass, SIGNAL_AVAILABILITY, self._availability_callback
+            )
+        )
+        self._async_subscribe_handle_event()
+        self.async_on_remove(self._async_unsubscribe_handle_event)
+
+        # Process the initial event now that the entity is created
+        if self._initial_event:
+            self.handle_event_callback(self._initial_event)
+
+    @callback
+    def _async_register_lookups(self) -> None:
+        """Route command events for the device id and aliases to this entity."""
         # Remove temporary bogus entity_id if added
         tmp_entity = TMP_ENTITY.format(self._device_id)
         if (
@@ -160,22 +210,6 @@ class RflinkDevice(Entity):
         if self._nogroup_aliases:
             for _id in self._nogroup_aliases:
                 self._async_register_lookup(lookup, _id)
-        self.async_on_remove(
-            async_dispatcher_connect(
-                self.hass, SIGNAL_AVAILABILITY, self._availability_callback
-            )
-        )
-        self.async_on_remove(
-            async_dispatcher_connect(
-                self.hass,
-                SIGNAL_HANDLE_EVENT.format(self.entity_id),
-                self.handle_event_callback,
-            )
-        )
-
-        # Process the initial event now that the entity is created
-        if self._initial_event:
-            self.handle_event_callback(self._initial_event)
 
 
 class RflinkCommand(RflinkDevice):

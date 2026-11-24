@@ -1,6 +1,7 @@
 """Test KNX switch."""
 
 import pytest
+from pytest_homeassistant.common import mock_restore_cache
 
 from homeassistant.components.knx.const import (
     CONF_RESPOND_TO_READ,
@@ -14,8 +15,6 @@ from homeassistant.core import HomeAssistant, State
 
 from . import KnxEntityGenerator
 from .conftest import KNXTestKit
-
-from tests.common import mock_restore_cache
 
 
 async def test_switch_simple(hass: HomeAssistant, knx: KNXTestKit) -> None:

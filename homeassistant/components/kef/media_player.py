@@ -7,7 +7,6 @@ import logging
 from typing import Any, override
 
 from aiokef import AsyncKefSpeaker
-from aiokef.aiokef import DSP_OPTION_MAPPING
 from getmac import get_mac_address
 import probatio
 
@@ -20,10 +19,12 @@ from homeassistant.components.media_player import (
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT, CONF_TYPE
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import PlatformNotReady
-from homeassistant.helpers import config_validation as cv, entity_platform
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -33,8 +34,6 @@ DEFAULT_MAX_VOLUME = 0.5
 DEFAULT_VOLUME_STEP = 0.05
 DEFAULT_INVERSE_SPEAKER_MODE = False
 DEFAULT_SUPPORTS_ON = True
-
-DOMAIN = "kef"
 
 SCAN_INTERVAL = timedelta(seconds=30)
 
@@ -46,15 +45,6 @@ CONF_VOLUME_STEP = "volume_step"
 CONF_INVERSE_SPEAKER_MODE = "inverse_speaker_mode"
 CONF_SUPPORTS_ON = "supports_on"
 CONF_STANDBY_TIME = "standby_time"
-
-SERVICE_MODE = "set_mode"
-SERVICE_DESK_DB = "set_desk_db"
-SERVICE_WALL_DB = "set_wall_db"
-SERVICE_TREBLE_DB = "set_treble_db"
-SERVICE_HIGH_HZ = "set_high_hz"
-SERVICE_LOW_HZ = "set_low_hz"
-SERVICE_SUB_DB = "set_sub_db"
-SERVICE_UPDATE_DSP = "update_dsp"
 
 DSP_SCAN_INTERVAL = timedelta(seconds=3600)
 
@@ -147,44 +137,6 @@ async def async_setup_platform(
     else:
         hass.data[DOMAIN][host] = media_player
         async_add_entities([media_player], update_before_add=True)
-
-    platform = entity_platform.async_get_current_platform()
-
-    platform.async_register_entity_service(
-        SERVICE_MODE,
-        {
-            probatio.Optional("desk_mode"): cv.boolean,
-            probatio.Optional("wall_mode"): cv.boolean,
-            probatio.Optional("phase_correction"): cv.boolean,
-            probatio.Optional("high_pass"): cv.boolean,
-            probatio.Optional("sub_polarity"): probatio.In(["-", "+"]),
-            probatio.Optional("bass_extension"): probatio.In(
-                ["Less", "Standard", "Extra"]
-            ),
-        },
-        "set_mode",
-    )
-    platform.async_register_entity_service(SERVICE_UPDATE_DSP, None, "update_dsp")
-
-    def add_service(name, which, option):
-        options = DSP_OPTION_MAPPING[which]
-        dtype = type(options[0])  # int or float
-        platform.async_register_entity_service(
-            name,
-            {
-                probatio.Required(option): probatio.All(
-                    probatio.Coerce(float), probatio.Coerce(dtype), probatio.In(options)
-                )
-            },
-            f"set_{which}",
-        )
-
-    add_service(SERVICE_DESK_DB, "desk_db", "db_value")
-    add_service(SERVICE_WALL_DB, "wall_db", "db_value")
-    add_service(SERVICE_TREBLE_DB, "treble_db", "db_value")
-    add_service(SERVICE_HIGH_HZ, "high_hz", "hz_value")
-    add_service(SERVICE_LOW_HZ, "low_hz", "hz_value")
-    add_service(SERVICE_SUB_DB, "sub_db", "db_value")
 
 
 class KefMediaPlayer(MediaPlayerEntity):
