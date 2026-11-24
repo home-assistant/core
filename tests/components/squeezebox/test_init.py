@@ -1,14 +1,17 @@
 """Test squeezebox initialization."""
 
+import asyncio
+from datetime import timedelta
 from http import HTTPStatus
 from unittest.mock import MagicMock, patch
 
+from freezegun.api import FrozenDateTimeFactory
 import pytest
-from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.squeezebox import async_remove_config_entry_device
-from homeassistant.components.squeezebox.const import DOMAIN
+from homeassistant.components.squeezebox.const import DISCOVERY_INTERVAL, DOMAIN
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
@@ -108,6 +111,104 @@ async def test_init_missing_uuid(
         mock_async_query.assert_called_once_with(
             "serverstatus", "-", "-", "prefs:libraryname"
         )
+
+
+async def test_player_discovery_does_not_accumulate_unload_callbacks(
+    hass: HomeAssistant,
+    setup_squeezebox: MockConfigEntry,
+    lms: MagicMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test repeated discovery uses a single unload callback."""
+    await hass.async_block_till_done(wait_background_tasks=True)
+    assert setup_squeezebox._on_unload is not None
+    callback_count = len(setup_squeezebox._on_unload)
+    lms.async_get_players.assert_awaited_once()
+
+    for expected_calls in range(2, 5):
+        freezer.tick(timedelta(seconds=DISCOVERY_INTERVAL))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+        assert lms.async_get_players.await_count == expected_calls
+        assert len(setup_squeezebox._on_unload) == callback_count
+
+    assert await hass.config_entries.async_unload(setup_squeezebox.entry_id)
+    freezer.tick(timedelta(seconds=DISCOVERY_INTERVAL))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert lms.async_get_players.await_count == 4
+
+
+async def test_player_discovery_does_not_reschedule_after_unload(
+    hass: HomeAssistant,
+    setup_squeezebox: MockConfigEntry,
+    lms: MagicMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test unloading while a discovery is in flight."""
+    await hass.async_block_till_done(wait_background_tasks=True)
+    started = asyncio.Event()
+    release = asyncio.Event()
+
+    async def delayed_discovery() -> list[MagicMock]:
+        started.set()
+        await release.wait()
+        return []
+
+    lms.async_get_players.side_effect = delayed_discovery
+    freezer.tick(timedelta(seconds=DISCOVERY_INTERVAL))
+    async_fire_time_changed(hass)
+    await started.wait()
+
+    assert await hass.config_entries.async_unload(setup_squeezebox.entry_id)
+    release.set()
+    await hass.async_block_till_done()
+
+    freezer.tick(timedelta(seconds=DISCOVERY_INTERVAL))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert lms.async_get_players.await_count == 2
+    assert not setup_squeezebox._on_unload
+
+
+async def test_player_discovery_waits_until_previous_discovery_finishes(
+    hass: HomeAssistant,
+    setup_squeezebox: MockConfigEntry,
+    lms: MagicMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test discovery is rescheduled only after the previous run finishes."""
+    await hass.async_block_till_done(wait_background_tasks=True)
+    started = asyncio.Event()
+    release = asyncio.Event()
+
+    async def delayed_discovery() -> list[MagicMock]:
+        started.set()
+        await release.wait()
+        return []
+
+    lms.async_get_players.side_effect = delayed_discovery
+    freezer.tick(timedelta(seconds=DISCOVERY_INTERVAL))
+    async_fire_time_changed(hass)
+    await started.wait()
+
+    freezer.tick(timedelta(seconds=DISCOVERY_INTERVAL * 2))
+    async_fire_time_changed(hass)
+    await asyncio.sleep(0)
+    assert lms.async_get_players.await_count == 2
+
+    lms.async_get_players.side_effect = None
+    release.set()
+    await hass.async_block_till_done()
+    freezer.tick(timedelta(seconds=DISCOVERY_INTERVAL - 1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert lms.async_get_players.await_count == 2
+
+    freezer.tick(timedelta(seconds=1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert lms.async_get_players.await_count == 3
 
 
 async def test_device_registry(
