@@ -43,6 +43,7 @@ from .coordinator import (
     GoogleHealthDataUpdateCoordinator,
     GoogleHealthDeviceCoordinator,
     GoogleHealthNutritionCoordinator,
+    GoogleHealthNutritionData,
     GoogleHealthSleepCoordinator,
     GoogleHealthSleepData,
 )
@@ -71,6 +72,20 @@ def _sleep_stage_minutes(
     )
 
 
+def _nutrient_grams(data: GoogleHealthNutritionData | None, nutrient: str) -> float:
+    """Return daily intake in grams for a nutrient type."""
+    if not data or not data.nutrition:
+        return 0.0
+    return next(
+        (
+            item.quantity.grams_sum
+            for item in data.nutrition.nutrients
+            if item.nutrient == nutrient
+        ),
+        0.0,
+    )
+
+
 @dataclass(frozen=True, kw_only=True)
 class GoogleHealthSensorEntityDescription[
     _CoordinatorT: GoogleHealthDataUpdateCoordinator[Any],
@@ -80,6 +95,7 @@ class GoogleHealthSensorEntityDescription[
 
     value_fn: Callable[[Any], _ValueT]
     suggested_unit_fn: Callable[[UnitSystem], str | None] | None = None
+    last_reset_fn: Callable[[Any], datetime | None] | None = None
 
 
 ACTIVITY_SENSORS: list[
@@ -132,6 +148,79 @@ ACTIVITY_SENSORS: list[
         translation_key="floors",
         state_class=SensorStateClass.TOTAL_INCREASING,
         value_fn=lambda data: data.floors.count_sum if data and data.floors else 0,
+    ),
+    GoogleHealthSensorEntityDescription[GoogleHealthActivityCoordinator, float](
+        key="elevation",
+        translation_key="elevation",
+        native_unit_of_measurement=UnitOfLength.METERS,
+        device_class=SensorDeviceClass.DISTANCE,
+        state_class=SensorStateClass.TOTAL,
+        value_fn=lambda data: (data.altitude_gain_millimeters or 0) / 1000.0,
+        last_reset_fn=lambda data: data.rollup_start,
+    ),
+    GoogleHealthSensorEntityDescription[GoogleHealthActivityCoordinator, int](
+        key="light_activity",
+        translation_key="light_activity",
+        native_unit_of_measurement=UnitOfTime.MINUTES,
+        device_class=SensorDeviceClass.DURATION,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        value_fn=lambda data: data.light_activity_minutes or 0,
+    ),
+    GoogleHealthSensorEntityDescription[GoogleHealthActivityCoordinator, int](
+        key="moderate_activity",
+        translation_key="moderate_activity",
+        native_unit_of_measurement=UnitOfTime.MINUTES,
+        device_class=SensorDeviceClass.DURATION,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        value_fn=lambda data: data.moderate_activity_minutes or 0,
+    ),
+    GoogleHealthSensorEntityDescription[GoogleHealthActivityCoordinator, int](
+        key="vigorous_activity",
+        translation_key="vigorous_activity",
+        native_unit_of_measurement=UnitOfTime.MINUTES,
+        device_class=SensorDeviceClass.DURATION,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        value_fn=lambda data: data.vigorous_activity_minutes or 0,
+    ),
+    GoogleHealthSensorEntityDescription[GoogleHealthActivityCoordinator, int](
+        key="active_zone_minutes",
+        translation_key="active_zone_minutes",
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        value_fn=lambda data: data.total_active_zone_minutes or 0,
+    ),
+    GoogleHealthSensorEntityDescription[GoogleHealthActivityCoordinator, float](
+        key="sedentary_time",
+        translation_key="sedentary_time",
+        native_unit_of_measurement=UnitOfTime.SECONDS,
+        suggested_unit_of_measurement=UnitOfTime.HOURS,
+        suggested_display_precision=1,
+        device_class=SensorDeviceClass.DURATION,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        entity_registry_enabled_default=False,
+        value_fn=lambda data: (
+            data.sedentary_duration.total_seconds() if data.sedentary_duration else 0.0
+        ),
+    ),
+    GoogleHealthSensorEntityDescription[GoogleHealthActivityCoordinator, int](
+        key="fat_burn_active_zone_minutes",
+        translation_key="fat_burn_active_zone_minutes",
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        entity_registry_enabled_default=False,
+        value_fn=lambda data: data.fat_burn_active_zone_minutes or 0,
+    ),
+    GoogleHealthSensorEntityDescription[GoogleHealthActivityCoordinator, int](
+        key="cardio_active_zone_minutes",
+        translation_key="cardio_active_zone_minutes",
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        entity_registry_enabled_default=False,
+        value_fn=lambda data: data.cardio_active_zone_minutes or 0,
+    ),
+    GoogleHealthSensorEntityDescription[GoogleHealthActivityCoordinator, int](
+        key="peak_active_zone_minutes",
+        translation_key="peak_active_zone_minutes",
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        entity_registry_enabled_default=False,
+        value_fn=lambda data: data.peak_active_zone_minutes or 0,
     ),
 ]
 
@@ -316,6 +405,85 @@ NUTRITION_SENSORS: list[
             else 0.0
         ),
     ),
+    GoogleHealthSensorEntityDescription[GoogleHealthNutritionCoordinator, float](
+        key="total_fat",
+        translation_key="total_fat",
+        native_unit_of_measurement=UnitOfMass.GRAMS,
+        suggested_display_precision=1,
+        device_class=SensorDeviceClass.WEIGHT,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        value_fn=lambda data: (
+            data.nutrition.total_fat.grams_sum
+            if data and data.nutrition and data.nutrition.total_fat
+            else 0.0
+        ),
+    ),
+    GoogleHealthSensorEntityDescription[GoogleHealthNutritionCoordinator, float](
+        key="total_carbohydrate",
+        translation_key="total_carbohydrate",
+        native_unit_of_measurement=UnitOfMass.GRAMS,
+        suggested_display_precision=1,
+        device_class=SensorDeviceClass.WEIGHT,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        value_fn=lambda data: (
+            data.nutrition.total_carbohydrate.grams_sum
+            if data and data.nutrition and data.nutrition.total_carbohydrate
+            else 0.0
+        ),
+    ),
+    GoogleHealthSensorEntityDescription[GoogleHealthNutritionCoordinator, float](
+        key="protein",
+        translation_key="protein",
+        native_unit_of_measurement=UnitOfMass.GRAMS,
+        suggested_display_precision=1,
+        device_class=SensorDeviceClass.WEIGHT,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        value_fn=lambda data: _nutrient_grams(data, "PROTEIN"),
+    ),
+    GoogleHealthSensorEntityDescription[GoogleHealthNutritionCoordinator, float](
+        key="dietary_fiber",
+        translation_key="dietary_fiber",
+        native_unit_of_measurement=UnitOfMass.GRAMS,
+        suggested_display_precision=1,
+        device_class=SensorDeviceClass.WEIGHT,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        entity_registry_enabled_default=False,
+        value_fn=lambda data: _nutrient_grams(data, "DIETARY_FIBER"),
+    ),
+    GoogleHealthSensorEntityDescription[GoogleHealthNutritionCoordinator, float](
+        key="sugar",
+        translation_key="sugar",
+        native_unit_of_measurement=UnitOfMass.GRAMS,
+        suggested_display_precision=1,
+        device_class=SensorDeviceClass.WEIGHT,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        entity_registry_enabled_default=False,
+        value_fn=lambda data: _nutrient_grams(data, "SUGAR"),
+    ),
+    GoogleHealthSensorEntityDescription[GoogleHealthNutritionCoordinator, float](
+        key="sodium",
+        translation_key="sodium",
+        native_unit_of_measurement=UnitOfMass.GRAMS,
+        suggested_unit_of_measurement=UnitOfMass.MILLIGRAMS,
+        suggested_display_precision=0,
+        device_class=SensorDeviceClass.WEIGHT,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        entity_registry_enabled_default=False,
+        value_fn=lambda data: _nutrient_grams(data, "SODIUM"),
+    ),
+    GoogleHealthSensorEntityDescription[GoogleHealthNutritionCoordinator, float](
+        key="calories_from_fat",
+        translation_key="calories_from_fat",
+        native_unit_of_measurement=UnitOfEnergy.KILO_CALORIE,
+        device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        entity_registry_enabled_default=False,
+        value_fn=lambda data: (
+            data.nutrition.energy_from_fat.kcal_sum
+            if data and data.nutrition and data.nutrition.energy_from_fat
+            else 0.0
+        ),
+    ),
 ]
 
 
@@ -461,6 +629,15 @@ class GoogleHealthSensor[_CoordinatorT: GoogleHealthDataUpdateCoordinator[Any]](
             return suggested_unit_fn(self.hass.config.units)
 
         return super().suggested_unit_of_measurement
+
+    @property
+    @override
+    def last_reset(self) -> datetime | None:
+        """Return the time when the sensor was last reset, if any."""
+        if (last_reset_fn := self.entity_description.last_reset_fn) is not None:
+            return last_reset_fn(self.coordinator.data)
+
+        return super().last_reset
 
 
 class GoogleHealthDeviceSensor(

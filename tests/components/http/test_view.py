@@ -16,6 +16,7 @@ from aiohttp.web_exceptions import (
 import probatio
 import pytest
 from pytest_homeassistant.typing import ClientSessionGenerator
+from yarl import URL
 
 from homeassistant.components.http import KEY_HASS
 from homeassistant.components.http.request_context import current_request
@@ -31,7 +32,9 @@ from homeassistant.helpers.network import NoURLAvailableError
 @pytest.fixture
 def mock_request() -> Mock:
     """Mock a request."""
-    return Mock(app={KEY_HASS: Mock(is_stopping=False)}, match_info={})
+    return Mock(
+        app={KEY_HASS: Mock(is_stopping=False)}, match_info={}, rel_url=URL("/")
+    )
 
 
 @pytest.fixture
@@ -107,11 +110,24 @@ async def test_invalid_handler(mock_request: Mock) -> None:
         )(mock_request)
 
 
+@pytest.mark.parametrize(
+    ("raw_url", "expected_suffix"),
+    [
+        pytest.param("/", "", id="root"),
+        pytest.param("/api/mcp", "/api/mcp", id="subpath"),
+        pytest.param("/api/", "/api/", id="trailing_slash"),
+        pytest.param('/api/mcp/foo"bar', "/api/mcp/foo%22bar", id="encoded_chars"),
+        pytest.param("/api/mcp?foo=bar", "/api/mcp", id="query_stripped"),
+    ],
+)
 async def test_requires_auth_includes_www_authenticate(
     mock_request: Mock,
+    raw_url: str,
+    expected_suffix: str,
 ) -> None:
     """Test that 401 responses include WWW-Authenticate header per RFC9728."""
     mock_request.get = Mock(return_value=False)
+    mock_request.rel_url = URL(raw_url)
     with (
         patch(
             "homeassistant.helpers.network.get_url",
@@ -126,7 +142,7 @@ async def test_requires_auth_includes_www_authenticate(
         )(mock_request)
     assert exc_info.value.headers["WWW-Authenticate"] == (
         "Bearer resource_metadata="
-        '"https://example.com/.well-known/oauth-protected-resource"'
+        f'"https://example.com/.well-known/oauth-protected-resource{expected_suffix}"'
     )
 
 

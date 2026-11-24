@@ -10,6 +10,7 @@ from boschshcpy import (
     BatteryLevelService,
     SHCBatteryDevice,
     SHCClimateControl,
+    SHCMotionDetector2,
     SHCOutdoorSiren,
     SHCShutterContact,
     SHCSmokeDetectionSystem,
@@ -99,6 +100,22 @@ OUTDOOR_SIREN_DESCRIPTIONS: tuple[
         device_class=BinarySensorDeviceClass.TAMPER,
         entity_category=EntityCategory.DIAGNOSTIC,
         is_on_fn=lambda device: device.siren.tamper_activated,
+    ),
+)
+
+MOTION_DETECTOR2_DESCRIPTIONS: tuple[
+    SHCBinarySensorEntityDescription[SHCMotionDetector2], ...
+] = (
+    SHCBinarySensorEntityDescription(
+        key="occupancy",
+        device_class=BinarySensorDeviceClass.OCCUPANCY,
+        is_on_fn=lambda device: device.occupied,
+    ),
+    SHCBinarySensorEntityDescription(
+        key="tamper",
+        device_class=BinarySensorDeviceClass.TAMPER,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        is_on_fn=lambda device: device.was_tampered,
     ),
 )
 
@@ -193,6 +210,18 @@ async def async_setup_entry(
         for siren in session.device_helper.outdoor_sirens
         if siren.siren is not None
         for description in OUTDOOR_SIREN_DESCRIPTIONS
+    )
+
+    entities.extend(
+        SHCBinarySensor(
+            hass=hass,
+            device=device,
+            parent_id=shc_info.unique_id,
+            entry_id=config_entry.entry_id,
+            entity_description=description,
+        )
+        for device in session.device_helper.motion_detectors2
+        for description in MOTION_DETECTOR2_DESCRIPTIONS
     )
 
     async_add_entities(entities)

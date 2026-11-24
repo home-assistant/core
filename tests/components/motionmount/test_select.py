@@ -12,7 +12,7 @@ from homeassistant.components.select import (
     SelectService,
     SelectServiceArgument,
 )
-from homeassistant.const import CommonServiceArgument
+from homeassistant.const import TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 
@@ -43,7 +43,7 @@ async def test_select_option(
         SELECT_DOMAIN,
         SelectService.SELECT_OPTION,
         {
-            CommonServiceArgument.ENTITY_ID: PRESET_ENTITY_ID,
+            TargetKey.ENTITY_ID: PRESET_ENTITY_ID,
             SelectServiceArgument.OPTION: "Couch",
         },
         blocking=True,
@@ -78,7 +78,7 @@ async def test_select_option_communication_error(
             SELECT_DOMAIN,
             SelectService.SELECT_OPTION,
             {
-                CommonServiceArgument.ENTITY_ID: PRESET_ENTITY_ID,
+                TargetKey.ENTITY_ID: PRESET_ENTITY_ID,
                 SelectServiceArgument.OPTION: "Couch",
             },
             blocking=True,

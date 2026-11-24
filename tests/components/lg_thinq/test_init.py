@@ -194,6 +194,9 @@ async def test_device_not_connected(
 
     assert mock_config_entry.state is ConfigEntryState.LOADED
     assert "Error fetching" not in caplog.text
+    assert (
+        "is unavailable: Device is not connected to the LG ThinQ cloud" in caplog.text
+    )
 
     entity_id = "switch.test_washer_power"
     state = hass.states.get(entity_id)

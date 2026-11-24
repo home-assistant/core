@@ -18,8 +18,8 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
     STATE_UNAVAILABLE,
-    CommonServiceArgument,
     Platform,
+    TargetKey,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -57,9 +57,7 @@ async def test_installing_update(
     await hass.services.async_call(
         UPDATE_DOMAIN,
         UpdateService.INSTALL,
-        {
-            CommonServiceArgument.ENTITY_ID: "update.theater_front_door_open_closed_sensor_firmware"
-        },
+        {TargetKey.ENTITY_ID: "update.theater_front_door_open_closed_sensor_firmware"},
         blocking=True,
     )
     devices.execute_device_command.assert_called_once_with(
