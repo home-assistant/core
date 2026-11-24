@@ -32,6 +32,8 @@ async def async_get_config_entry_diagnostics(
 ) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
 
+    aux_data = config_entry.runtime_data.aux_coordinator.data
+    filling_levels = aux_data.filling_levels if aux_data else {}
     miele_data: dict[str, Any] = {
         "devices": redact_identifiers(
             {
@@ -44,9 +46,7 @@ async def async_get_config_entry_diagnostics(
         "filling_levels": redact_identifiers(
             {
                 device_id: filling_level_data.raw
-                for device_id, filling_level_data in (
-                    config_entry.runtime_data.aux_coordinator.data.filling_levels.items()
-                )
+                for device_id, filling_level_data in filling_levels.items()
             }
         ),
         "actions": redact_identifiers(
@@ -90,11 +90,15 @@ async def async_get_device_diagnostics(
         "devices": {
             hash_identifier(device_id): coordinator.data.devices[device_id].raw
         },
-        "filling_levels": {
-            hash_identifier(device_id): aux_coordinator.data.filling_levels[
-                device_id
-            ].raw
-        },
+        "filling_levels": (
+            {
+                hash_identifier(device_id): aux_coordinator.data.filling_levels[
+                    device_id
+                ].raw
+            }
+            if aux_coordinator.data
+            else {}
+        ),
         "actions": {
             hash_identifier(device_id): coordinator.data.actions[device_id].raw
         },

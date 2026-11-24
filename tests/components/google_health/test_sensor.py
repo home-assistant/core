@@ -1,6 +1,7 @@
 """Tests for Google Health sensor platform."""
 
 from collections.abc import Awaitable, Callable
+from datetime import timedelta
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
@@ -8,9 +9,15 @@ from freezegun.api import FrozenDateTimeFactory
 from google_health_api.const import HealthApiScope
 from google_health_api.model import (
     SLEEP,
+    ActiveMinutesRollupByActivityLevel,
+    ActiveMinutesRollupValue,
+    ActiveZoneMinutesRollupValue,
+    AltitudeRollupValue,
+    DailyRollupDataPoint,
     ListPairedDevicesResult,
     NutrientQuantityRollup,
     NutritionLogRollupValue,
+    SedentaryPeriodRollupValue,
     StageSummary,
     WeightQuantityRollup,
     _ListPairedDevicesModel,
@@ -24,10 +31,15 @@ from pytest_homeassistant.common import (
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.google_health.const import DOMAIN
-from homeassistant.components.google_health.coordinator import DEVICE_POLLING_INTERVAL
+from homeassistant.components.google_health.coordinator import (
+    DEVICE_POLLING_INTERVAL,
+    POLLING_INTERVAL,
+)
+from homeassistant.components.sensor import ATTR_LAST_RESET
 from homeassistant.const import ATTR_UNIT_OF_MEASUREMENT, STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.util import dt as dt_util
 from homeassistant.util.unit_system import (
     METRIC_SYSTEM,
     US_CUSTOMARY_SYSTEM,
@@ -37,6 +49,7 @@ from homeassistant.util.unit_system import (
 from .conftest import _list_fixture, _rollup_fixture, paired_devices_fixture
 
 
+@pytest.mark.freeze_time("2026-06-28 12:00:00+00:00")
 @pytest.mark.usefixtures(
     "entity_registry_enabled_by_default", "mock_google_health_client"
 )
@@ -67,6 +80,16 @@ async def test_sensor_disabled_by_default(
 
     entries = er.async_entries_for_config_entry(entity_registry, config_entry.entry_id)
     expected_disabled = {
+        "sensor.google_health_sedentary_time": er.RegistryEntryDisabler.INTEGRATION,
+        "sensor.google_health_fat_burn_active_zone_minutes": (
+            er.RegistryEntryDisabler.INTEGRATION
+        ),
+        "sensor.google_health_cardio_active_zone_minutes": (
+            er.RegistryEntryDisabler.INTEGRATION
+        ),
+        "sensor.google_health_peak_active_zone_minutes": (
+            er.RegistryEntryDisabler.INTEGRATION
+        ),
         "sensor.google_health_dietary_fiber": er.RegistryEntryDisabler.INTEGRATION,
         "sensor.google_health_sugar": er.RegistryEntryDisabler.INTEGRATION,
         "sensor.google_health_sodium": er.RegistryEntryDisabler.INTEGRATION,
@@ -94,6 +117,10 @@ async def test_sensor_empty_rollup(
     mock_google_health_client.active_energy_burned.today.return_value = None
     mock_google_health_client.total_calories.today.return_value = None
     mock_google_health_client.floors.today.return_value = None
+    mock_google_health_client.altitude.today.return_value = None
+    mock_google_health_client.active_minutes.today.return_value = None
+    mock_google_health_client.active_zone_minutes.today.return_value = None
+    mock_google_health_client.sedentary_period.today.return_value = None
     mock_google_health_client.hydration_log.today.return_value = None
     mock_google_health_client.nutrition_log.today.return_value = None
 
@@ -105,6 +132,15 @@ async def test_sensor_empty_rollup(
         "sensor.google_health_active_calories": "0.0",
         "sensor.google_health_total_calories": "0.0",
         "sensor.google_health_floors": "0",
+        "sensor.google_health_elevation": "0.0",
+        "sensor.google_health_light_activity": "0",
+        "sensor.google_health_moderate_activity": "0",
+        "sensor.google_health_vigorous_activity": "0",
+        "sensor.google_health_active_zone_minutes": "0",
+        "sensor.google_health_sedentary_time": "0.0",
+        "sensor.google_health_fat_burn_active_zone_minutes": "0",
+        "sensor.google_health_cardio_active_zone_minutes": "0",
+        "sensor.google_health_peak_active_zone_minutes": "0",
         "sensor.google_health_water_intake": "0.0",
         "sensor.google_health_calories_consumed": "0.0",
         "sensor.google_health_total_fat": "0.0",
@@ -119,6 +155,97 @@ async def test_sensor_empty_rollup(
         entity_id: getattr(hass.states.get(entity_id), "state", None)
         for entity_id in expected_states
     } == expected_states
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_sensor_activity_partial_rollup(
+    hass: HomeAssistant,
+    mock_google_health_client: AsyncMock,
+    integration_setup: Callable[[], Awaitable[bool]],
+) -> None:
+    """Test activity sensors when rollups contain only a subset of fields and levels."""
+    mock_google_health_client.altitude.today.return_value = DailyRollupDataPoint(
+        data=AltitudeRollupValue(), civil_start_time=None, civil_end_time=None
+    )
+    mock_google_health_client.active_minutes.today.return_value = DailyRollupDataPoint(
+        data=ActiveMinutesRollupValue(
+            active_minutes_rollup_by_activity_level=[
+                ActiveMinutesRollupByActivityLevel(
+                    activity_level="MODERATE",
+                    active_minutes_sum=20,
+                )
+            ]
+        ),
+        civil_start_time=None,
+        civil_end_time=None,
+    )
+    mock_google_health_client.active_zone_minutes.today.return_value = (
+        DailyRollupDataPoint(
+            data=ActiveZoneMinutesRollupValue(sum_in_fat_burn_heart_zone=12),
+            civil_start_time=None,
+            civil_end_time=None,
+        )
+    )
+    mock_google_health_client.sedentary_period.today.return_value = (
+        DailyRollupDataPoint(
+            data=SedentaryPeriodRollupValue(),
+            civil_start_time=None,
+            civil_end_time=None,
+        )
+    )
+
+    assert await integration_setup()
+
+    expected_states = {
+        "sensor.google_health_elevation": "0.0",
+        "sensor.google_health_light_activity": "0",
+        "sensor.google_health_moderate_activity": "20",
+        "sensor.google_health_vigorous_activity": "0",
+        "sensor.google_health_active_zone_minutes": "12",
+        "sensor.google_health_sedentary_time": "0.0",
+        "sensor.google_health_fat_burn_active_zone_minutes": "12",
+        "sensor.google_health_cardio_active_zone_minutes": "0",
+        "sensor.google_health_peak_active_zone_minutes": "0",
+    }
+    assert {
+        entity_id: getattr(hass.states.get(entity_id), "state", None)
+        for entity_id in expected_states
+    } == expected_states
+
+
+@pytest.mark.freeze_time("2026-06-28 23:55:00-07:00")
+async def test_sensor_elevation_negative_and_reset(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_google_health_client: AsyncMock,
+    integration_setup: Callable[[], Awaitable[bool]],
+) -> None:
+    """Test elevation supports negative daily totals and updates last_reset at midnight."""
+    mock_google_health_client.altitude.today.return_value = DailyRollupDataPoint(
+        data=AltitudeRollupValue(gain_millimeters_sum=-40000),
+        civil_start_time=None,
+        civil_end_time=None,
+    )
+
+    assert await integration_setup()
+
+    elevation = hass.states.get("sensor.google_health_elevation")
+    assert elevation is not None
+    assert elevation.state == "-40.0"
+    first_reset = elevation.attributes[ATTR_LAST_RESET]
+    assert first_reset == dt_util.start_of_local_day().isoformat()
+
+    mock_google_health_client.altitude.today.return_value = None
+    freezer.tick(POLLING_INTERVAL + timedelta(seconds=1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    elevation = hass.states.get("sensor.google_health_elevation")
+    assert elevation is not None
+    assert elevation.state == "0.0"
+    second_reset = elevation.attributes[ATTR_LAST_RESET]
+    assert second_reset == dt_util.start_of_local_day().isoformat()
+    assert second_reset != first_reset
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
@@ -282,6 +409,7 @@ async def test_sensor_only_in_progress_sleep(
             {
                 "sensor.google_health_weight": (pytest.approx(80.0), "kg"),
                 "sensor.google_health_distance": (pytest.approx(5.0), "km"),
+                "sensor.google_health_elevation": (pytest.approx(150.0), "m"),
                 "sensor.google_health_water_intake": (pytest.approx(2.5), "L"),
                 "sensor.google_health_total_fat": (pytest.approx(65.0), "g"),
             },
@@ -294,6 +422,10 @@ async def test_sensor_only_in_progress_sleep(
                 "sensor.google_health_distance": (
                     pytest.approx(3.11, abs=1e-2),
                     "mi",
+                ),
+                "sensor.google_health_elevation": (
+                    pytest.approx(492.13, abs=1e-2),
+                    "ft",
                 ),
                 "sensor.google_health_water_intake": (
                     pytest.approx(84.54, abs=1e-1),
