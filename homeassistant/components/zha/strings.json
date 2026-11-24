@@ -167,8 +167,20 @@
     }
   },
   "device": {
+    "bottom": {
+      "name": "Bottom"
+    },
     "channel": {
       "name": "Channel {index}"
+    },
+    "left": {
+      "name": "Left"
+    },
+    "right": {
+      "name": "Right"
+    },
+    "top": {
+      "name": "Top"
     }
   },
   "device_automation": {
@@ -444,18 +456,6 @@
       "reset_total_energy": {
         "name": "Reset total energy"
       },
-      "reset_total_energy_bottom": {
-        "name": "Reset bottom total energy"
-      },
-      "reset_total_energy_left": {
-        "name": "Reset left total energy"
-      },
-      "reset_total_energy_right": {
-        "name": "Reset right total energy"
-      },
-      "reset_total_energy_top": {
-        "name": "Reset top total energy"
-      },
       "restart_device": {
         "name": "Restart device"
       },
@@ -641,32 +641,8 @@
       "countdown_to_turn_off": {
         "name": "Countdown to turn off"
       },
-      "countdown_to_turn_off_bottom": {
-        "name": "Countdown to turn off bottom"
-      },
-      "countdown_to_turn_off_left": {
-        "name": "Countdown to turn off left"
-      },
-      "countdown_to_turn_off_right": {
-        "name": "Countdown to turn off right"
-      },
-      "countdown_to_turn_off_top": {
-        "name": "Countdown to turn off top"
-      },
       "countdown_to_turn_on": {
         "name": "Countdown to turn on"
-      },
-      "countdown_to_turn_on_bottom": {
-        "name": "Countdown to turn on bottom"
-      },
-      "countdown_to_turn_on_left": {
-        "name": "Countdown to turn on left"
-      },
-      "countdown_to_turn_on_right": {
-        "name": "Countdown to turn on right"
-      },
-      "countdown_to_turn_on_top": {
-        "name": "Countdown to turn on top"
       },
       "deadzone_temperature": {
         "name": "Deadzone temperature"

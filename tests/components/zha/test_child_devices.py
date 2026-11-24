@@ -187,6 +187,10 @@ async def test_not_allowlisted(
     [
         # Translated in HA
         ("channel", {"index": "7"}, "Channel 7"),
+        ("left", None, "Left"),
+        ("right", None, "Right"),
+        ("top", None, "Top"),
+        ("bottom", None, "Bottom"),
         # A custom quirk with a new translation key uses the fallback name
         ("custom_key", None, "Fallback"),
         (None, None, "Fallback"),
