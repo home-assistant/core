@@ -937,8 +937,12 @@ async def test_webrtc_source_changed(hass: HomeAssistant) -> None:
         def async_refresh_stream_source(self, camera: Camera) -> None:
             refresh(camera)
 
-    # Nothing to tell without a provider
-    camera.async_webrtc_source_changed()
+    # Without a provider, the camera picks one again, as it may have had no
+    # source when it last did
+    with patch.object(camera, "async_refresh_providers") as refresh_providers:
+        camera.async_webrtc_source_changed()
+        await hass.async_block_till_done()
+    refresh_providers.assert_awaited_once()
 
     unregister = async_register_webrtc_provider(hass, RefreshProvider())
     await hass.async_block_till_done()
