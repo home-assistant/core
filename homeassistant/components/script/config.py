@@ -157,28 +157,24 @@ async def _async_validate_config_item(
     def _set_validation_status(
         script_config: ScriptConfig,
         validation_status: ValidationStatus,
-        validation_error: Exception,
-        config: ConfigType,
+        validation_error: str,
     ) -> None:
         """Set validation status."""
         if uses_blueprint:
             validation_status = ValidationStatus.FAILED_BLUEPRINT
         script_config.validation_status = validation_status
-        script_config.validation_error = _humanize(validation_error, config)
+        script_config.validation_error = validation_error
 
     def _minimal_config(
         validation_status: ValidationStatus,
-        validation_error: Exception,
-        config: ConfigType,
+        validation_error: str,
     ) -> ScriptConfig:
         """Try validating id, alias and description."""
         minimal_config = _MINIMAL_SCRIPT_ENTITY_SCHEMA(config)
         script_config = ScriptConfig(minimal_config)
         script_config.raw_blueprint_inputs = raw_blueprint_inputs
         script_config.raw_config = raw_config
-        _set_validation_status(
-            script_config, validation_status, validation_error, config
-        )
+        _set_validation_status(script_config, validation_status, validation_error)
         return script_config
 
     if is_blueprint_instance_config(config):
@@ -194,7 +190,7 @@ async def _async_validate_config_item(
                 )
             if raise_on_errors:
                 raise
-            return _minimal_config(ValidationStatus.FAILED_BLUEPRINT, err, config)
+            return _minimal_config(ValidationStatus.FAILED_BLUEPRINT, str(err))
 
         raw_blueprint_inputs = blueprint_inputs.config_with_inputs
 
@@ -211,7 +207,7 @@ async def _async_validate_config_item(
                 )
             if raise_on_errors:
                 raise HomeAssistantError(err) from err
-            return _minimal_config(ValidationStatus.FAILED_BLUEPRINT, err, config)
+            return _minimal_config(ValidationStatus.FAILED_BLUEPRINT, str(err))
 
     script_name = f"Script with object id '{object_id}'"
     if isinstance(config, Mapping):
@@ -229,7 +225,7 @@ async def _async_validate_config_item(
         _log_invalid_script(err, script_name, "could not be validated", config)
         if raise_on_errors:
             raise
-        return _minimal_config(ValidationStatus.FAILED_SCHEMA, err, config)
+        return _minimal_config(ValidationStatus.FAILED_SCHEMA, _humanize(err, config))
 
     script_config = ScriptConfig(validated_config)
     script_config.raw_blueprint_inputs = raw_blueprint_inputs
@@ -251,7 +247,9 @@ async def _async_validate_config_item(
         if raise_on_errors:
             raise
         _set_validation_status(
-            script_config, ValidationStatus.FAILED_SEQUENCE, err, validated_config
+            script_config,
+            ValidationStatus.FAILED_SEQUENCE,
+            _humanize(err, validated_config),
         )
         return script_config
 
