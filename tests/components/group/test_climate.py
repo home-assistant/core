@@ -212,6 +212,15 @@ async def test_combined_ranges(hass: HomeAssistant) -> None:
         pytest.param(
             ClimateService.SET_TEMPERATURE,
             {
+                ClimateServiceArgument.TEMPERATURE: 22,
+                ClimateServiceArgument.TARGET_TEMP_LOW: 18,
+                ClimateServiceArgument.TARGET_TEMP_HIGH: 26,
+            },
+            id="set_temperature_and_range",
+        ),
+        pytest.param(
+            ClimateService.SET_TEMPERATURE,
+            {
                 ClimateServiceArgument.TEMPERATURE: 25,
                 ClimateServiceArgument.HVAC_MODE: "cool",
             },
