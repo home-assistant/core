@@ -39,7 +39,6 @@ from .const import (
     DOMAIN,
     FRITZ_EXCEPTIONS,
     LOGGER,
-    MeshRoles,
 )
 from .coordinator import FritzConfigEntry
 
@@ -190,11 +189,6 @@ async def _async_get_mesh_info(service_call: ServiceCall) -> ServiceResponse:
         )
 
     avm_wrapper = target_entry.runtime_data
-    if avm_wrapper.mesh_role == MeshRoles.SLAVE:
-        raise HomeAssistantError(
-            translation_domain=DOMAIN,
-            translation_key="service_mesh_info_slave_node",
-        )
 
     # Not cached by the coordinator if device tracking or mesh discovery is disabled
     if (mesh_topology := avm_wrapper.mesh_topology_raw) is None:

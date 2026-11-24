@@ -1,6 +1,7 @@
 """Tests for Fritz!Tools services."""
 
-from unittest.mock import PropertyMock, patch
+from copy import deepcopy
+from unittest.mock import MagicMock, PropertyMock, patch
 
 from fritzconnection.core.exceptions import (
     FritzActionError,
@@ -613,6 +614,42 @@ async def test_get_mesh_info_allowed(
     }
 
 
+@pytest.mark.usefixtures("fc_class_mock", "fs_class_mock")
+async def test_get_mesh_info_slave_role_with_cached_topology(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    fh_class_mock: MagicMock,
+) -> None:
+    """Test get_mesh_info returns the cached topology when the box reports a slave role."""
+    slave_mesh_data = deepcopy(MOCK_MESH_DATA)
+    slave_mesh_data["nodes"][0]["mesh_role"] = MeshRoles.SLAVE
+    fh_class_mock.get_mesh_topology.return_value = slave_mesh_data
+
+    entry = MockConfigEntry(domain=DOMAIN, data=MOCK_USER_DATA)
+    entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+    assert entry.state is ConfigEntryState.LOADED
+    assert entry.runtime_data.mesh_role == MeshRoles.SLAVE
+
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, MOCK_SERIAL_NUMBER), entry.entry_id
+    )
+    assert device
+
+    result = await hass.services.async_call(
+        DOMAIN,
+        FritzService.GET_MESH_INFO,
+        {"device_id": device.id},
+        blocking=True,
+        return_response=True,
+    )
+    assert result == {
+        "mesh_topology": slave_mesh_data,
+        "hosts_attributes": MOCK_HOST_ATTRIBUTES_DATA,
+    }
+
+
 async def test_get_mesh_info_service_raises_on_invalid_entry(
     hass: HomeAssistant,
 ) -> None:
@@ -635,7 +672,6 @@ async def test_get_mesh_info_service_raises_on_invalid_entry(
         "mesh_topology",
         "hosts_attributes",
         "has_mesh_support",
-        "mesh_role",
         "mesh_side_effect",
         "hosts_side_effect",
         "expected_key",
@@ -645,7 +681,6 @@ async def test_get_mesh_info_service_raises_on_invalid_entry(
             None,
             MOCK_HOST_ATTRIBUTES_DATA,
             False,
-            MeshRoles.NONE,
             None,
             None,
             "service_mesh_info_no_mesh_support",
@@ -655,17 +690,6 @@ async def test_get_mesh_info_service_raises_on_invalid_entry(
             None,
             MOCK_HOST_ATTRIBUTES_DATA,
             True,
-            MeshRoles.SLAVE,
-            None,
-            None,
-            "service_mesh_info_slave_node",
-            id="slave_node",
-        ),
-        pytest.param(
-            None,
-            MOCK_HOST_ATTRIBUTES_DATA,
-            True,
-            MeshRoles.NONE,
             FritzActionError("boom"),
             None,
             "service_mesh_info_slave_node",
@@ -675,7 +699,6 @@ async def test_get_mesh_info_service_raises_on_invalid_entry(
             None,
             MOCK_HOST_ATTRIBUTES_DATA,
             True,
-            MeshRoles.NONE,
             FritzConnectionException("boom"),
             None,
             "service_mesh_info_fetch_failed",
@@ -685,7 +708,6 @@ async def test_get_mesh_info_service_raises_on_invalid_entry(
             None,
             MOCK_HOST_ATTRIBUTES_DATA,
             True,
-            MeshRoles.NONE,
             [{}],
             None,
             "service_mesh_info_fetch_failed",
@@ -695,7 +717,6 @@ async def test_get_mesh_info_service_raises_on_invalid_entry(
             MOCK_MESH_DATA,
             None,
             True,
-            MeshRoles.MASTER,
             None,
             FritzConnectionException("boom"),
             "service_hosts_info_fetch_failed",
@@ -710,7 +731,6 @@ async def test_get_mesh_info_raises_on_missing_data(
     mesh_topology: dict | None,
     hosts_attributes: list | None,
     has_mesh_support: bool,
-    mesh_role: MeshRoles,
     mesh_side_effect: Exception | list[dict] | None,
     hosts_side_effect: Exception | None,
     expected_key: str,
@@ -726,7 +746,6 @@ async def test_get_mesh_info_raises_on_missing_data(
     await hass.async_block_till_done()
     assert entry.state is ConfigEntryState.LOADED
     avm_wrapper = entry.runtime_data
-    avm_wrapper.mesh_role = mesh_role
     device = device_registry.async_get_device_by_identifier(
         (DOMAIN, MOCK_SERIAL_NUMBER), entry.entry_id
     )
