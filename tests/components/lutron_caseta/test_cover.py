@@ -403,6 +403,10 @@ async def test_tilt_only_blind_open_tilt_position(hass: HomeAssistant) -> None:
     assert state.state == CoverState.CLOSED
     assert state.attributes[ATTR_CURRENT_TILT_POSITION] == 100
     assert state.attributes[CoverEntityCapabilityAttribute.OPEN_TILT_POSITION] == 50
+    assert state.attributes[CoverEntityCapabilityAttribute.CLOSED_TILT_POSITIONS] == [
+        0,
+        100,
+    ]
 
     await hass.services.async_call(
         COVER_DOMAIN,
