@@ -42,8 +42,8 @@
       "session_energy": {
         "name": "Session energy"
       },
-      "session_time": {
-        "name": "Session time"
+      "session_start": {
+        "name": "Session start"
       },
       "status": {
         "name": "Status",

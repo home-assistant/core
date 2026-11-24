@@ -2,6 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from datetime import datetime
 from typing import override
 
 from duosida_ev import ChargerState, ChargerStatus
@@ -19,7 +20,6 @@ from homeassistant.const import (
     UnitOfEnergy,
     UnitOfPower,
     UnitOfTemperature,
-    UnitOfTime,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -49,7 +49,7 @@ STATUS_OPTIONS: dict[ChargerState, str] = {
 class DuosidaSensorEntityDescription(SensorEntityDescription):
     """Describes a Duosida sensor entity."""
 
-    value_fn: Callable[[ChargerStatus], StateType]
+    value_fn: Callable[[ChargerStatus], StateType | datetime]
 
 
 SENSORS: tuple[DuosidaSensorEntityDescription, ...] = (
@@ -98,16 +98,10 @@ SENSORS: tuple[DuosidaSensorEntityDescription, ...] = (
         value_fn=lambda status: status.total_energy,
     ),
     DuosidaSensorEntityDescription(
-        key="session_time",
-        translation_key="session_time",
-        native_unit_of_measurement=UnitOfTime.MINUTES,
-        suggested_unit_of_measurement=UnitOfTime.HOURS,
-        device_class=SensorDeviceClass.DURATION,
-        value_fn=lambda status: (
-            None
-            if (duration := status.session_duration) is None
-            else duration.total_seconds() / 60
-        ),
+        key="session_start",
+        translation_key="session_start",
+        device_class=SensorDeviceClass.TIMESTAMP,
+        value_fn=lambda status: status.session_start,
     ),
     DuosidaSensorEntityDescription(
         key="temperature",
@@ -158,6 +152,6 @@ class DuosidaSensor(DuosidaEntity, SensorEntity):
 
     @property
     @override
-    def native_value(self) -> StateType:
+    def native_value(self) -> StateType | datetime:
         """Return the state of the sensor."""
         return self.entity_description.value_fn(self.coordinator.data)

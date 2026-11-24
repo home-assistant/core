@@ -1,5 +1,6 @@
 """Tests for the Duosida EV Charger sensors."""
 
+from datetime import datetime, timedelta
 from unittest.mock import MagicMock
 
 from duosida_ev import ChargerState
@@ -12,10 +13,10 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from . import push_update, setup_integration
-from .conftest import charger_status
+from .conftest import CHARGER_STATUS, charger_status
 
 STATUS_ENTITY_ID = "sensor.duosida_ev_charger_status"
-SESSION_TIME_ENTITY_ID = "sensor.duosida_ev_charger_session_time"
+SESSION_START_ENTITY_ID = "sensor.duosida_ev_charger_session_start"
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default", "mock_duosida_client")
@@ -56,15 +57,31 @@ async def test_status(
     assert hass.states.get(STATUS_ENTITY_ID).state == expected
 
 
-async def test_session_time_without_session(
+@pytest.mark.parametrize(
+    ("session_start", "expected"),
+    [
+        pytest.param(None, STATE_UNKNOWN, id="no_session"),
+        pytest.param(
+            CHARGER_STATUS.session_start,
+            "2026-11-07T00:22:00+00:00",
+            id="same_session",
+        ),
+    ],
+)
+async def test_session_start(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_duosida_client: MagicMock,
+    session_start: datetime | None,
+    expected: str,
 ) -> None:
-    """Test the session time is unknown while there is no session."""
+    """Test the session start follows the charger, not the time of the push."""
     await setup_integration(hass, mock_config_entry)
 
-    mock_duosida_client.status = charger_status(session_start=None)
+    mock_duosida_client.status = charger_status(
+        session_start=session_start,
+        received_at=CHARGER_STATUS.received_at + timedelta(minutes=30),
+    )
     push_update(mock_duosida_client)
 
-    assert hass.states.get(SESSION_TIME_ENTITY_ID).state == STATE_UNKNOWN
+    assert hass.states.get(SESSION_START_ENTITY_ID).state == expected
