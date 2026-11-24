@@ -12,8 +12,12 @@ import probatio
 from yarl import URL
 
 from homeassistant.components.application_credentials import AuthorizationServer
-from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlowResult
-from homeassistant.const import CONF_ACCESS_TOKEN, CONF_TOKEN, CONF_URL
+from homeassistant.config_entries import (
+    SOURCE_REAUTH,
+    ConfigEntryState,
+    ConfigFlowResult,
+)
+from homeassistant.const import CONF_ACCESS_TOKEN, CONF_API_TOKEN, CONF_TOKEN, CONF_URL
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, UnknownImplementationError
 from homeassistant.helpers import config_validation as cv
@@ -27,7 +31,13 @@ from . import async_get_config_entry_implementation
 from .application_credentials import authorization_server_context
 from .auth import AuthenticateHeader
 from .const import CONF_AUTHORIZATION_URL, CONF_SCOPE, CONF_SLUG, CONF_TOKEN_URL, DOMAIN
-from .coordinator import TokenManager, create_mcp_httpx_client, mcp_client
+from .coordinator import (
+    TIMEOUT,
+    TokenManager,
+    create_mcp_httpx_client,
+    mcp_client,
+    static_token_manager,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -77,10 +87,10 @@ async def async_discover_authorization_server(
         str(parsed_url.with_path(path))
         for path in _authorization_server_discovery_paths(parsed_url)
     ]
-    # Pick any successful response and propagate exceptions except for
-    # 404 where we fall back to assuming some default paths.
+    # The first successful response follows the discovery priority order.
+    # A 404 from every URL falls back to the default paths.
     try:
-        response = await _async_fetch_any(hass, urls_to_try)
+        response = (await _async_fetch_any(hass, urls_to_try))[0]
     except NotFoundError:
         _LOGGER.info("Authorization Server Metadata not found, using default paths")
         return OAuthConfig(
@@ -119,16 +129,17 @@ async def validate_input(
     except probatio.Invalid as error:
         raise InvalidUrl from error
     try:
-        async with mcp_client(hass, url, token_manager=token_manager) as (
-            _session,
-            response,
-        ):
-            if not response.capabilities.tools:
-                raise MissingCapabilities(
-                    f"MCP Server {url} does not support 'Tools' capability"
-                )
-            return {"title": response.server_info.name}
-    except httpx2.TimeoutException as error:
+        async with asyncio.timeout(TIMEOUT):
+            async with mcp_client(hass, url, token_manager=token_manager) as (
+                _session,
+                response,
+            ):
+                if not response.capabilities.tools:
+                    raise MissingCapabilities(
+                        f"MCP Server {url} does not support 'Tools' capability"
+                    )
+                return {"title": response.server_info.name}
+    except (httpx2.TimeoutException, TimeoutError) as error:
         _LOGGER.info("Timeout connecting to MCP server: %s", error)
         raise TimeoutConnectError from error
     except httpx2.HTTPStatusError as error:
@@ -209,10 +220,35 @@ class ModelContextProtocolConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
             )
             return self.async_abort(reason="invalid_discovery_info")
 
-        await self.async_set_unique_id(discovery_info.uuid)
-        self._abort_if_unique_id_configured(updates={CONF_URL: url})
+        updates = {CONF_URL: url}
+        # Stored apart from the OAuth token dict, which uses CONF_TOKEN
+        if token := discovery_info.config.get(CONF_TOKEN):
+            updates[CONF_API_TOKEN] = token
+
+        entry = await self.async_set_unique_id(discovery_info.uuid)
+        if entry is None:
+            # A discovery gets a new uuid when its app removes and sends it again
+            for app_entry in self._async_current_entries(include_ignore=False):
+                if app_entry.data.get(CONF_SLUG) == discovery_info.slug:
+                    self.hass.config_entries.async_update_entry(
+                        app_entry, unique_id=discovery_info.uuid
+                    )
+                    entry = app_entry
+                    break
+        # The unique ID check below only reloads loaded entries or ones waiting
+        # to retry, so a setup that fails on the old token would never retry
+        if (
+            entry is not None
+            and entry.state
+            in (ConfigEntryState.SETUP_ERROR, ConfigEntryState.SETUP_IN_PROGRESS)
+            and self.hass.config_entries.async_update_entry(
+                entry, data={**entry.data, **updates}
+            )
+        ):
+            self.hass.config_entries.async_schedule_reload(entry.entry_id)
+        self._abort_if_unique_id_configured(updates=updates)
         self._async_abort_entries_match({CONF_URL: url})
-        self.data[CONF_URL] = url
+        self.data.update(updates)
         self.data[CONF_SLUG] = discovery_info.slug
         self.addon_name = discovery_info.name
         self.context["title_placeholders"] = {"name": self.addon_name}
@@ -228,8 +264,11 @@ class ModelContextProtocolConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
                 description_placeholders={"addon": self.addon_name},
             )
 
+        token_manager = None
+        if CONF_API_TOKEN in self.data:
+            token_manager = static_token_manager(self.data[CONF_API_TOKEN])
         try:
-            info = await validate_input(self.hass, self.data)
+            info = await validate_input(self.hass, self.data, token_manager)
         except TimeoutConnectError:
             return self.async_abort(reason="timeout_connect")
         except CannotConnect:
@@ -431,13 +470,19 @@ class ModelContextProtocolConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
 async def _async_fetch_any(
     hass: HomeAssistant,
     urls: Iterable[str],
-) -> httpx2.Response:
-    """Fetch all URLs concurrently and return the first successful response."""
+) -> list[httpx2.Response]:
+    """Fetch URLs and return each successful response, in request order.
+
+    Per-URL failures stay here. A 404 is ignored when another URL succeeds.
+    When none succeed, a transport or HTTP error is raised ahead of a 404.
+    """
 
     async def fetch(url: str) -> httpx2.Response:
         _LOGGER.debug("Fetching URL %s", url)
         try:
-            async with create_mcp_httpx_client() as client:
+            async with create_mcp_httpx_client(
+                timeout=httpx2.Timeout(TIMEOUT)
+            ) as client:
                 response = await client.get(url)
                 response.raise_for_status()
                 return response
@@ -453,22 +498,61 @@ async def _async_fetch_any(
             _LOGGER.debug("Cannot fetch URL %s: %s", url, error)
             raise CannotConnect from error
 
-    tasks = [asyncio.create_task(fetch(url)) for url in urls]
-    return_err: Exception | None = None
+    url_list = list(urls)
+    tasks = [asyncio.create_task(fetch(url)) for url in url_list]
     try:
-        for future in asyncio.as_completed(tasks):
-            try:
-                return await future
-            except Exception as err:  # noqa: BLE001
-                _LOGGER.debug("Fetch failed: %s", err)
-                if return_err is None:
-                    return_err = err
-                continue
+        results = await asyncio.gather(*tasks, return_exceptions=True)
     finally:
         for task in tasks:
             task.cancel()
 
-    raise return_err or CannotConnect("No responses received from any URL")
+    if responses := [r for r in results if isinstance(r, httpx2.Response)]:
+        return responses
+    not_found = False
+    transport_error: TimeoutConnectError | CannotConnect | None = None
+    other_error: Exception | None = None
+    for result in results:
+        if isinstance(result, NotFoundError):
+            _LOGGER.debug("Fetch failed: %s", result)
+            not_found = True
+        elif isinstance(result, (TimeoutConnectError, CannotConnect)):
+            _LOGGER.debug("Fetch failed: %s", result)
+            if transport_error is None:
+                transport_error = result
+        elif isinstance(result, Exception):
+            _LOGGER.debug("Fetch failed: %s", result)
+            if other_error is None:
+                other_error = result
+        else:
+            _LOGGER.warning("Unexpected fetch result: %s", type(result).__name__)
+    # A 404 is not the failure when another URL had a transport error.
+    if transport_error is not None:
+        raise transport_error
+    if not_found:
+        raise NotFoundError("No responses received from any URL")
+    raise other_error or CannotConnect("No responses received from any URL")
+
+
+def _resource_metadata_from_response(
+    response: httpx2.Response, mcp_server_url: str
+) -> ResourceMetadata | None:
+    """Build resource metadata when the document describes this MCP server."""
+    try:
+        data = response.json()
+    except ValueError:
+        return None
+    if (
+        isinstance(data, dict)
+        and (authorization_servers := data.get("authorization_servers"))
+        and isinstance(authorization_servers, list)
+        and data.get("resource") == mcp_server_url
+    ):
+        return ResourceMetadata(
+            authorization_servers=authorization_servers,
+            supported_scopes=data.get("scopes_supported"),
+        )
+    _LOGGER.debug("Ignoring OAuth resource metadata from %s", response.url)
+    return None
 
 
 async def async_discover_protected_resource(
@@ -483,38 +567,35 @@ async def async_discover_protected_resource(
     from the WWW-Authenticate header to fetch the resource metadata
     implementing RFC9728.
 
-    For the url https://example.com/public/mcp we attempt these urls:
+    The WWW-Authenticate resource_metadata URL is tried first. For
+    https://example.com/public/mcp the fallbacks are:
     - https://example.com/.well-known/oauth-protected-resource/public/mcp
     - https://example.com/.well-known/oauth-protected-resource
+
+    A document whose resource is not this MCP server is skipped, so a root
+    document for another path cannot win ahead of the header URL.
     """
     parsed_url = URL(mcp_server_url)
-    urls_to_try = {
-        auth_url,
-        str(
-            parsed_url.with_path(
-                f"{OAUTH_PROTECTED_RESOURCE_ENDPOINT}{parsed_url.path}"
-            )
-        ),
-        str(parsed_url.with_path(OAUTH_PROTECTED_RESOURCE_ENDPOINT)),
-    }
-
-    response = await _async_fetch_any(hass, list(urls_to_try))
-
-    # Parse the OAuth Authorization Protected Resource Metadata (rfc9728). We
-    # expect to find at least one authorization server in the response and
-    # a valid resource field that matches the MCP server URL.
-    data = response.json()
-    if (
-        not (authorization_servers := data.get("authorization_servers"))
-        or not (resource := data.get("resource"))
-        or (resource != mcp_server_url)
-    ):
-        _LOGGER.error("Invalid OAuth resource metadata: %s", data)
-        raise CannotConnect("OAuth resource metadata is invalid")
-    return ResourceMetadata(
-        authorization_servers=authorization_servers,
-        supported_scopes=data.get("scopes_supported"),
+    # Ordered so the header URL is tried first, without duplicates.
+    urls_to_try = dict.fromkeys(
+        [
+            auth_url,
+            str(
+                parsed_url.with_path(
+                    f"{OAUTH_PROTECTED_RESOURCE_ENDPOINT}{parsed_url.path}"
+                )
+            ),
+            str(parsed_url.with_path(OAUTH_PROTECTED_RESOURCE_ENDPOINT)),
+        ]
     )
+
+    for response in await _async_fetch_any(hass, urls_to_try):
+        if (
+            metadata := _resource_metadata_from_response(response, mcp_server_url)
+        ) is not None:
+            return metadata
+    _LOGGER.error("Invalid OAuth resource metadata for %s", mcp_server_url)
+    raise CannotConnect("OAuth resource metadata is invalid")
 
 
 def _authorization_server_discovery_paths(auth_server_url: URL) -> list[str]:

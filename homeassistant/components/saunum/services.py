@@ -1,6 +1,7 @@
 """Define services for the Saunum integration."""
 
 from datetime import timedelta
+from enum import StrEnum
 
 import probatio
 from pysaunum import (
@@ -19,11 +20,19 @@ from homeassistant.helpers import config_validation as cv, service
 
 from .const import DOMAIN
 
-ATTR_DURATION = "duration"
-ATTR_TARGET_TEMPERATURE = "target_temperature"
-ATTR_FAN_DURATION = "fan_duration"
 
-SERVICE_START_SESSION = "start_session"
+class LeilSaunaService(StrEnum):
+    """Store keys for Saunum services."""
+
+    START_SESSION = "start_session"
+
+
+class LeilSaunaServiceArgument(StrEnum):
+    """Store keys for Saunum service arguments."""
+
+    DURATION = "duration"
+    TARGET_TEMPERATURE = "target_temperature"
+    FAN_DURATION = "fan_duration"
 
 
 @callback
@@ -32,11 +41,12 @@ def async_setup_services(hass: HomeAssistant) -> None:
     service.async_register_platform_entity_service(
         hass,
         DOMAIN,
-        SERVICE_START_SESSION,
+        LeilSaunaService.START_SESSION,
         entity_domain=CLIMATE_DOMAIN,
         schema={
             probatio.Optional(
-                ATTR_DURATION, default=timedelta(minutes=DEFAULT_DURATION)
+                LeilSaunaServiceArgument.DURATION,
+                default=timedelta(minutes=DEFAULT_DURATION),
             ): probatio.All(
                 cv.time_period,
                 probatio.Range(
@@ -45,13 +55,14 @@ def async_setup_services(hass: HomeAssistant) -> None:
                 ),
             ),
             probatio.Optional(
-                ATTR_TARGET_TEMPERATURE, default=DEFAULT_TEMPERATURE
+                LeilSaunaServiceArgument.TARGET_TEMPERATURE, default=DEFAULT_TEMPERATURE
             ): probatio.All(
                 cv.positive_int,
                 probatio.Range(min=MIN_TEMPERATURE, max=MAX_TEMPERATURE),
             ),
             probatio.Optional(
-                ATTR_FAN_DURATION, default=timedelta(minutes=DEFAULT_FAN_DURATION)
+                LeilSaunaServiceArgument.FAN_DURATION,
+                default=timedelta(minutes=DEFAULT_FAN_DURATION),
             ): probatio.All(
                 cv.time_period,
                 probatio.Range(

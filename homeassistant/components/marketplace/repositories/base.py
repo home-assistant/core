@@ -1015,6 +1015,7 @@ class Repository:
 
         self.data.installed_version = None
         self.data.installed_commit = None
+        self._clear_readme_cache()
         self.async_dispatch_changed("uninstall")
 
         await self.async_remove_entity_device()
@@ -1179,7 +1180,18 @@ class Repository:
         """Forget the version picked for the install and end its progress."""
         self.data.selected_tag = None
         self.force_branch = False
+        # Clear it first, the panel asks for the page right after it hears of the end
+        self._clear_readme_cache()
         self._async_dispatch_install_progress(False)
+
+    def _clear_readme_cache(self) -> None:
+        """Clear the cached README, so the next info request fetches it again.
+
+        The cached README is of the version installed before, whose addresses
+        can point at files the version installed now no longer has.
+        """
+        self.additional_info = ""
+        self.updated_info = False
 
     async def async_post_installation(self) -> None:
         """Run post install steps."""
@@ -2184,7 +2196,17 @@ class Repository:
 
         self._check_minimum_version(manifest)
 
-        previous_manifest = self.repository_manifest
+        # The GitHub API path may find the repository unchanged and skip
+        # resolving it again, so it needs exactly what was there before
+        previous_state = (
+            self.repository_manifest,
+            self.ref,
+            self.content.path.remote,
+            self.content.single,
+            self.tree,
+            self.tree_ref,
+            self.treefiles,
+        )
         self.repository_manifest = manifest
         self.ref = version if commit else f"tags/{version}"
         self.content.path.remote = self.remote_path
@@ -2193,9 +2215,15 @@ class Repository:
         try:
             return await self._async_resolve_catalog_content(version, commit=commit)
         except MarketplaceError:
-            self.repository_manifest = previous_manifest
-            self.content.path.remote = self.remote_path
-            self.content.single = self.single_file
+            (
+                self.repository_manifest,
+                self.ref,
+                self.content.path.remote,
+                self.content.single,
+                self.tree,
+                self.tree_ref,
+                self.treefiles,
+            ) = previous_state
             raise
 
     async def _async_resolve_catalog_content(

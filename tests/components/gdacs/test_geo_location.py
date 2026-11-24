@@ -20,17 +20,12 @@ from homeassistant.components.gdacs.geo_location import (
     ATTR_TO_DATE,
     ATTR_VULNERABILITY,
 )
-from homeassistant.components.geo_location import ATTR_SOURCE
+from homeassistant.components.geo_location import GeolocationEntityStateAttribute
 from homeassistant.const import (
-    ATTR_ATTRIBUTION,
-    ATTR_FRIENDLY_NAME,
-    ATTR_ICON,
-    ATTR_LATITUDE,
-    ATTR_LONGITUDE,
-    ATTR_UNIT_OF_MEASUREMENT,
     CONF_LOCATION,
     CONF_RADIUS,
     EVENT_HOMEASSISTANT_START,
+    EntityStateAttribute,
     UnitOfLength,
 )
 from homeassistant.core import HomeAssistant
@@ -121,12 +116,12 @@ async def test_setup(
         assert state.name == "Drought: Name 1"
         assert state.attributes == {
             ATTR_EXTERNAL_ID: "1234",
-            ATTR_LATITUDE: 38.0,
-            ATTR_LONGITUDE: -3.0,
-            ATTR_FRIENDLY_NAME: "Drought: Name 1",
+            EntityStateAttribute.LATITUDE: 38.0,
+            EntityStateAttribute.LONGITUDE: -3.0,
+            EntityStateAttribute.FRIENDLY_NAME: "Drought: Name 1",
             ATTR_DESCRIPTION: "Description 1",
             ATTR_COUNTRY: "Country 1",
-            ATTR_ATTRIBUTION: "Attribution 1",
+            EntityStateAttribute.ATTRIBUTION: "Attribution 1",
             ATTR_FROM_DATE: dt.datetime(2020, 1, 10, 8, 0, tzinfo=dt.UTC),
             ATTR_TO_DATE: dt.datetime(2020, 1, 20, 8, 0, tzinfo=dt.UTC),
             ATTR_DURATION_IN_WEEK: 1,
@@ -135,9 +130,9 @@ async def test_setup(
             ATTR_EVENT_TYPE: "Drought",
             ATTR_SEVERITY: "Severity 1",
             ATTR_VULNERABILITY: "Vulnerability 1",
-            ATTR_UNIT_OF_MEASUREMENT: UnitOfLength.KILOMETERS,
-            ATTR_SOURCE: "gdacs",
-            ATTR_ICON: "mdi:water-off",
+            EntityStateAttribute.UNIT_OF_MEASUREMENT: UnitOfLength.KILOMETERS,
+            GeolocationEntityStateAttribute.SOURCE: "gdacs",
+            EntityStateAttribute.ICON: "mdi:water-off",
         }
         assert float(state.state) == 15.5
 
@@ -146,14 +141,14 @@ async def test_setup(
         assert state.name == "Tropical Cyclone: Name 2"
         assert state.attributes == {
             ATTR_EXTERNAL_ID: "2345",
-            ATTR_LATITUDE: 38.1,
-            ATTR_LONGITUDE: -3.1,
-            ATTR_FRIENDLY_NAME: "Tropical Cyclone: Name 2",
+            EntityStateAttribute.LATITUDE: 38.1,
+            EntityStateAttribute.LONGITUDE: -3.1,
+            EntityStateAttribute.FRIENDLY_NAME: "Tropical Cyclone: Name 2",
             ATTR_DESCRIPTION: "Description 2",
             ATTR_EVENT_TYPE: "Tropical Cyclone",
-            ATTR_UNIT_OF_MEASUREMENT: UnitOfLength.KILOMETERS,
-            ATTR_SOURCE: "gdacs",
-            ATTR_ICON: "mdi:weather-hurricane",
+            EntityStateAttribute.UNIT_OF_MEASUREMENT: UnitOfLength.KILOMETERS,
+            GeolocationEntityStateAttribute.SOURCE: "gdacs",
+            EntityStateAttribute.ICON: "mdi:weather-hurricane",
         }
         assert float(state.state) == 20.5
 
@@ -162,15 +157,15 @@ async def test_setup(
         assert state.name == "Tropical Cyclone: Name 3"
         assert state.attributes == {
             ATTR_EXTERNAL_ID: "3456",
-            ATTR_LATITUDE: 38.2,
-            ATTR_LONGITUDE: -3.2,
-            ATTR_FRIENDLY_NAME: "Tropical Cyclone: Name 3",
+            EntityStateAttribute.LATITUDE: 38.2,
+            EntityStateAttribute.LONGITUDE: -3.2,
+            EntityStateAttribute.FRIENDLY_NAME: "Tropical Cyclone: Name 3",
             ATTR_DESCRIPTION: "Description 3",
             ATTR_EVENT_TYPE: "Tropical Cyclone",
             ATTR_COUNTRY: "Country 2",
-            ATTR_UNIT_OF_MEASUREMENT: UnitOfLength.KILOMETERS,
-            ATTR_SOURCE: "gdacs",
-            ATTR_ICON: "mdi:weather-hurricane",
+            EntityStateAttribute.UNIT_OF_MEASUREMENT: UnitOfLength.KILOMETERS,
+            GeolocationEntityStateAttribute.SOURCE: "gdacs",
+            EntityStateAttribute.ICON: "mdi:weather-hurricane",
         }
         assert float(state.state) == 25.5
 

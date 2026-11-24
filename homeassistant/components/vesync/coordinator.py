@@ -6,13 +6,14 @@ import time
 from typing import override
 
 from pyvesync import VeSync
-from pyvesync.utils.errors import VeSyncError
+from pyvesync.utils.errors import VeSyncError, VeSyncLoginError
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import UPDATE_INTERVAL, UPDATE_INTERVAL_ENERGY
+from .const import DOMAIN, UPDATE_INTERVAL, UPDATE_INTERVAL_ENERGY
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -56,5 +57,9 @@ class VeSyncDataCoordinator(DataUpdateCoordinator[None]):
                 self.update_time = time.time()
                 for outlet in self.manager.devices.outlets:
                     await outlet.update_energy()
+        except VeSyncLoginError as err:
+            raise ConfigEntryAuthFailed(
+                translation_domain=DOMAIN, translation_key="invalid_auth"
+            ) from err
         except VeSyncError as err:
             raise UpdateFailed(f"The service is unavailable: {err}") from err
