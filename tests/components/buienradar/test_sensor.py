@@ -70,6 +70,8 @@ async def test_sensor_unavailable_and_recovery(
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test sensors are unavailable after a failed update and recover."""
+    # Outside the hour buienradar.nl updates its forecast, when failures keep the data.
+    freezer.move_to("2026-01-14T12:00:00+00:00")
     with patch("homeassistant.components.buienradar.PLATFORMS", [Platform.SENSOR]):
         await setup_integration(hass)
     entity_id = entity_registry.async_get_entity_id(
