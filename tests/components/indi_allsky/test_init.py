@@ -8,6 +8,7 @@ from aioindiallsky import (
     ExposureData,
     IndiAllSkyAuthError,
     IndiAllSkyConnectionError,
+    SensorData,
 )
 from freezegun.api import FrozenDateTimeFactory
 import pytest
@@ -239,20 +240,18 @@ async def test_manual_refresh_clears_sensor_fetch_failure(
     await mock_config_entry.runtime_data.async_refresh()
     await hass.async_block_till_done(wait_background_tasks=True)
 
-    for cb in mock_indi_allsky_client.callbacks["exposure_complete"]:
+    for cb in mock_indi_allsky_client.callbacks["sensor_update"]:
         cb(
-            ExposureData(
-                filename="recovered.jpg",
-                create_date="2026-08-13 23:13:41",
-                exposure=1.0,
-                gain=100.0,
-                binmode=1,
-                night=True,
-                camera_id=1,
+            SensorData(
+                last_update="2026-08-13 23:13:41",
+                sensors={},
+                raw_user=[],
+                raw_temp=[],
+                dew_heater=42.0,
             )
         )
     await hass.async_block_till_done(wait_background_tasks=True)
 
-    state = hass.states.get("binary_sensor.indi_allsky_night")
-    assert state is not None
-    assert state.state == "on"
+    sensor_state = hass.states.get("sensor.indi_allsky_dew_heater_duty_cycle")
+    assert sensor_state is not None
+    assert sensor_state.state == "42.0"
