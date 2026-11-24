@@ -2,13 +2,16 @@
 
 from typing import override
 
+from pyschlage.exceptions import Error as SchlageError
 from pyschlage.lock import AUTO_LOCK_TIMES
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
+from .const import DOMAIN
 from .coordinator import LockData, SchlageConfigEntry, SchlageDataUpdateCoordinator
 from .entity import SchlageEntity
 
@@ -68,4 +71,9 @@ class SchlageSelect(SchlageEntity, SelectEntity):
     @override
     def select_option(self, option: str) -> None:
         """Set the current option."""
-        self._lock.set_auto_lock_time(int(option))
+        try:
+            self._lock.set_auto_lock_time(int(option))
+        except SchlageError as ex:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN, translation_key="schlage_set_setting_failed"
+            ) from ex

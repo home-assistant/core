@@ -69,13 +69,23 @@ class SchlageLockEntity(SchlageEntity, LockEntity):
     @override
     async def async_lock(self, **kwargs: Any) -> None:
         """Lock the device."""
-        await self.hass.async_add_executor_job(self._lock.lock)
+        try:
+            await self.hass.async_add_executor_job(self._lock.lock)
+        except SchlageError as ex:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN, translation_key="schlage_lock_failed"
+            ) from ex
         await self.coordinator.async_request_refresh()
 
     @override
     async def async_unlock(self, **kwargs: Any) -> None:
         """Unlock the device."""
-        await self.hass.async_add_executor_job(self._lock.unlock)
+        try:
+            await self.hass.async_add_executor_job(self._lock.unlock)
+        except SchlageError as ex:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN, translation_key="schlage_unlock_failed"
+            ) from ex
         await self.coordinator.async_request_refresh()
 
     @staticmethod

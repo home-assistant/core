@@ -103,6 +103,36 @@ async def test_lock_services(
     await hass.config_entries.async_unload(mock_added_config_entry.entry_id)
 
 
+@pytest.mark.parametrize(
+    ("service", "method", "translation_key"),
+    [
+        pytest.param(LockService.LOCK, "lock", "schlage_lock_failed", id="lock"),
+        pytest.param(
+            LockService.UNLOCK, "unlock", "schlage_unlock_failed", id="unlock"
+        ),
+    ],
+)
+@pytest.mark.usefixtures("mock_added_config_entry")
+async def test_lock_services_api_error(
+    hass: HomeAssistant,
+    mock_lock: Mock,
+    service: LockService,
+    method: str,
+    translation_key: str,
+) -> None:
+    """Test lock services raise HomeAssistantError on API failure."""
+    getattr(mock_lock, method).side_effect = SchlageError("API error")
+
+    with pytest.raises(HomeAssistantError) as exc_info:
+        await hass.services.async_call(
+            LOCK_DOMAIN,
+            service,
+            service_data={TargetKey.ENTITY_ID: "lock.vault_door"},
+            blocking=True,
+        )
+    assert exc_info.value.translation_key == translation_key
+
+
 async def test_changed_by(
     hass: HomeAssistant,
     mock_lock: Mock,
