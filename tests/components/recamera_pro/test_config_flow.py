@@ -686,6 +686,9 @@ async def test_config_flow_helper_edge_cases() -> None:
     assert removed_records
 
     class _BadStore:
+        def __class_getitem__(cls, _item: object) -> type["_BadStore"]:
+            return cls
+
         def __init__(self, *_a: object, **_kw: object) -> None:
             pass
 
@@ -737,10 +740,7 @@ async def test_user_reauth_reconfigure_and_options_forms() -> None:
 
     no_id_probe = RecameraProbeResult(
         info=RecameraDeviceInfo(
-            device_name="reCamera",
             base_plate_model="reCamera Pro",
-            sensor_model="imx",
-            hardware_version="1.0",
             firmware_version="V1.3.0",
             serial_number=None,
             mac_address=None,
@@ -928,10 +928,7 @@ async def test_zeroconf_and_discovery_refresh_branches() -> None:
     # zeroconf_confirm identity_unavailable then recovery
     no_id_probe = RecameraProbeResult(
         info=RecameraDeviceInfo(
-            device_name="reCamera",
             base_plate_model="reCamera Pro",
-            sensor_model="imx",
-            hardware_version="1.0",
             firmware_version="V1.3.0",
             serial_number=None,
             mac_address=None,
