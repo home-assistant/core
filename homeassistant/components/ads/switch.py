@@ -28,10 +28,10 @@ PLATFORM_SCHEMA = SWITCH_PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(
+async def async_setup_platform(
     hass: HomeAssistant,
     config: ConfigType,
-    add_entities: AddEntitiesCallback,
+    async_add_entities: AddEntitiesCallback,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up switch platform for ADS."""
@@ -40,7 +40,7 @@ def setup_platform(
     name: str = config[CONF_NAME]
     ads_var: str = config[CONF_ADS_VAR]
 
-    add_entities([AdsSwitch(ads_hub, name, ads_var)])
+    async_add_entities([AdsSwitch(ads_hub, name, ads_var)])
 
 
 class AdsSwitch(AdsEntity, SwitchEntity):

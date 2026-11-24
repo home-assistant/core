@@ -176,6 +176,7 @@ class IotaWattSensor(CoordinatorEntity[IotawattUpdater], SensorEntity):
                 model="IoTaWatt",
             )
         self.entity_description = entity_description
+        self._update_last_reset()
 
     @property
     def _sensor_data(self) -> Sensor:
@@ -199,12 +200,15 @@ class IotaWattSensor(CoordinatorEntity[IotawattUpdater], SensorEntity):
                 self.hass.async_create_task(self.async_remove())
             return
 
+        self._update_last_reset()
+        super()._handle_coordinator_update()
+
+    def _update_last_reset(self) -> None:
+        """Set last_reset from the start of the IoTaWatt query period."""
         if (begin := self._sensor_data.getBegin()) and (
             last_reset := dt_util.parse_datetime(begin)
         ):
             self._attr_last_reset = last_reset
-
-        super()._handle_coordinator_update()
 
     @property
     @override

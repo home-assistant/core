@@ -18,7 +18,11 @@ from roborock.device_features import RoborockDockFeatures
 from roborock.roborock_message import RoborockDataProtocol, RoborockZeoProtocol
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.switch import SERVICE_TURN_OFF, SERVICE_TURN_ON
+from homeassistant.components.switch import (
+    SERVICE_TURN_OFF,
+    SERVICE_TURN_ON,
+    SwitchService,
+)
 from homeassistant.const import ATTR_ASSUMED_STATE, STATE_ON, STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant, State
 from homeassistant.exceptions import HomeAssistantError
@@ -69,7 +73,7 @@ async def test_update_success(
     assert hass.states.get(entity_id) is not None
     await hass.services.async_call(
         "switch",
-        SERVICE_TURN_OFF,
+        SwitchService.TURN_OFF,
         service_data=None,
         blocking=True,
         target={"entity_id": entity_id},
@@ -83,7 +87,7 @@ async def test_update_success(
     assert hass.states.get(entity_id) is not None
     await hass.services.async_call(
         "switch",
-        SERVICE_TURN_ON,
+        SwitchService.TURN_ON,
         service_data=None,
         blocking=True,
         target={"entity_id": entity_id},
@@ -423,7 +427,7 @@ async def test_a01_switch_success(
     # Turn on the switch
     await hass.services.async_call(
         "switch",
-        SERVICE_TURN_ON,
+        SwitchService.TURN_ON,
         service_data=None,
         blocking=True,
         target={"entity_id": entity_id},
@@ -434,7 +438,7 @@ async def test_a01_switch_success(
     # Turn off the switch
     await hass.services.async_call(
         "switch",
-        SERVICE_TURN_OFF,
+        SwitchService.TURN_OFF,
         service_data=None,
         blocking=True,
         target={"entity_id": entity_id},
@@ -539,7 +543,7 @@ async def test_q10_switch_success(
 
     await hass.services.async_call(
         "switch",
-        SERVICE_TURN_OFF,
+        SwitchService.TURN_OFF,
         service_data=None,
         blocking=True,
         target={"entity_id": entity_id},
@@ -550,7 +554,7 @@ async def test_q10_switch_success(
 
     await hass.services.async_call(
         "switch",
-        SERVICE_TURN_ON,
+        SwitchService.TURN_ON,
         service_data=None,
         blocking=True,
         target={"entity_id": entity_id},
@@ -590,7 +594,7 @@ async def test_q10_switch_failure(
     with pytest.raises(HomeAssistantError, match="Failed to update Roborock options"):
         await hass.services.async_call(
             "switch",
-            SERVICE_TURN_ON,
+            SwitchService.TURN_ON,
             service_data=None,
             blocking=True,
             target={"entity_id": entity_id},
@@ -613,7 +617,7 @@ async def test_q10_button_light_switch(
 
     await hass.services.async_call(
         "switch",
-        SERVICE_TURN_ON,
+        SwitchService.TURN_ON,
         service_data=None,
         blocking=True,
         target={"entity_id": entity_id},
@@ -624,7 +628,7 @@ async def test_q10_button_light_switch(
 
     await hass.services.async_call(
         "switch",
-        SERVICE_TURN_OFF,
+        SwitchService.TURN_OFF,
         service_data=None,
         blocking=True,
         target={"entity_id": entity_id},
@@ -671,7 +675,7 @@ async def test_q10_button_light_switch_failure(
     with pytest.raises(HomeAssistantError, match="Failed to update Roborock options"):
         await hass.services.async_call(
             "switch",
-            SERVICE_TURN_ON,
+            SwitchService.TURN_ON,
             service_data=None,
             blocking=True,
             target={"entity_id": entity_id},

@@ -9,11 +9,10 @@ from syrupy.assertion import SnapshotAssertion
 from homeassistant.components.fan import (
     ATTR_PERCENTAGE,
     DOMAIN as FAN_DOMAIN,
-    SERVICE_SET_PERCENTAGE,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
+    FanService,
+    FanServiceArgument,
 )
-from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON, Platform
+from homeassistant.const import STATE_OFF, STATE_ON, Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -63,8 +62,8 @@ async def test_fan_services(
     # Turn on (defaults to medium - 67%)
     await hass.services.async_call(
         FAN_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: entity_id},
+        FanService.TURN_ON,
+        {TargetKey.ENTITY_ID: entity_id},
         blocking=True,
     )
     assert fan.level == 67
@@ -72,8 +71,8 @@ async def test_fan_services(
     # Turn off
     await hass.services.async_call(
         FAN_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: entity_id},
+        FanService.TURN_OFF,
+        {TargetKey.ENTITY_ID: entity_id},
         blocking=True,
     )
     assert fan.level == 0
@@ -81,8 +80,8 @@ async def test_fan_services(
     # Set percentage
     await hass.services.async_call(
         FAN_DOMAIN,
-        SERVICE_SET_PERCENTAGE,
-        {ATTR_ENTITY_ID: entity_id, ATTR_PERCENTAGE: 33},
+        FanService.SET_PERCENTAGE,
+        {TargetKey.ENTITY_ID: entity_id, FanServiceArgument.PERCENTAGE: 33},
         blocking=True,
     )
     assert fan.level == 33

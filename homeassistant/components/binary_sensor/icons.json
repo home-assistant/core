@@ -172,9 +172,9 @@
       }
     },
     "window": {
-      "default": "mdi:window-closed",
+      "default": "mdi:window-closed-variant",
       "state": {
-        "on": "mdi:window-open"
+        "on": "mdi:window-open-variant"
       }
     }
   }

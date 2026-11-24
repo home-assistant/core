@@ -113,6 +113,9 @@
     "invalid_command": {
       "message": "Invalid command: {error}"
     },
+    "invalid_rf_timings": {
+      "message": "Broadlink devices cannot transmit these RF timings"
+    },
     "learn_command_failed": {
       "message": "Failed to learn command {command}: {error}"
     },
@@ -130,6 +133,9 @@
     },
     "setup_failed": {
       "message": "Failed to set up the device at {host}"
+    },
+    "timing_too_long": {
+      "message": "Broadlink devices cannot transmit an RF timing of {duration} s; the maximum is about 2 s"
     },
     "transmit_failed": {
       "message": "Failed to transmit RF command: {error}"
