@@ -18,7 +18,7 @@ from homeassistant.components.select import (
     SelectService,
     SelectServiceArgument,
 )
-from homeassistant.const import CommonServiceArgument
+from homeassistant.const import TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
@@ -52,7 +52,7 @@ async def test_steam_boiler_level(
         SELECT_DOMAIN,
         SelectService.SELECT_OPTION,
         {
-            CommonServiceArgument.ENTITY_ID: f"select.{serial_number}_steam_level",
+            TargetKey.ENTITY_ID: f"select.{serial_number}_steam_level",
             SelectServiceArgument.OPTION: "2",
         },
         blocking=True,
@@ -107,7 +107,7 @@ async def test_pre_brew_infusion_select(
         SELECT_DOMAIN,
         SelectService.SELECT_OPTION,
         {
-            CommonServiceArgument.ENTITY_ID: f"select.{serial_number}_prebrew_infusion_mode",
+            TargetKey.ENTITY_ID: f"select.{serial_number}_prebrew_infusion_mode",
             SelectServiceArgument.OPTION: "prebrew",
         },
         blocking=True,
@@ -158,7 +158,7 @@ async def test_smart_standby_mode(
         SELECT_DOMAIN,
         SelectService.SELECT_OPTION,
         {
-            CommonServiceArgument.ENTITY_ID: f"select.{serial_number}_smart_standby_mode",
+            TargetKey.ENTITY_ID: f"select.{serial_number}_smart_standby_mode",
             SelectServiceArgument.OPTION: "last_brewing",
         },
         blocking=True,
@@ -197,7 +197,7 @@ async def test_select_errors(
             SELECT_DOMAIN,
             SelectService.SELECT_OPTION,
             {
-                CommonServiceArgument.ENTITY_ID: f"select.{serial_number}_prebrew_infusion_mode",
+                TargetKey.ENTITY_ID: f"select.{serial_number}_prebrew_infusion_mode",
                 SelectServiceArgument.OPTION: "prebrew",
             },
             blocking=True,
@@ -231,7 +231,7 @@ async def test_bbw_dose_mode(
         SELECT_DOMAIN,
         SelectService.SELECT_OPTION,
         {
-            CommonServiceArgument.ENTITY_ID: f"select.{serial_number}_brew_by_weight_dose_mode",
+            TargetKey.ENTITY_ID: f"select.{serial_number}_brew_by_weight_dose_mode",
             SelectServiceArgument.OPTION: "dose2",
         },
         blocking=True,

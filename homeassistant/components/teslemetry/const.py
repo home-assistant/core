@@ -32,6 +32,7 @@ CONF_SITE_ID = "site_id"
 POWERWALL_KEY_FILE = "tesla_powerwall.key"
 RSA_PARENT_KEY = f"{DOMAIN}_rsa_parent"
 ISSUE_GATEWAY_NOT_FOUND = "gateway_not_found"
+ISSUE_ENERGY_SITE_NOT_PAIRED = "energy_site_not_paired"
 
 ENERGY_HISTORY_FIELDS = [
     "solar_energy_exported",
@@ -58,11 +59,13 @@ ENERGY_HISTORY_FIELDS = [
 ]
 
 
+VEHICLE_ISSUE_KEY = "key"
+
 # Vehicle metadata "issue" values that map to an actionable repair issue, with
 # an optional "learn more" URL the user can visit to resolve it. The "no_data"
 # issue is intentionally ignored as it is not user-actionable.
 VEHICLE_ISSUE_LEARN_MORE: dict[str, str | None] = {
-    "key": "https://teslemetry.com/key",
+    VEHICLE_ISSUE_KEY: "https://teslemetry.com/key",
     "streaming_toggle": None,
 }
 

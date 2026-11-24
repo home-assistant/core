@@ -4,7 +4,7 @@ from copy import deepcopy
 from typing import Any
 from unittest.mock import AsyncMock, Mock
 
-from aioshelly.const import MODEL_BLU_GATEWAY_G3
+from aioshelly.const import MODEL_BLU_GATEWAY_G3, MODEL_PLUS_2PM, MODEL_WALL_DISPLAY
 from aioshelly.exceptions import DeviceConnectionError, InvalidAuthError, RpcCallError
 import pytest
 from pytest_homeassistant.common import mock_restore_cache_with_extra_data
@@ -26,8 +26,8 @@ from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
-    CommonServiceArgument,
     Platform,
+    TargetKey,
 )
 from homeassistant.core import HomeAssistant, State
 from homeassistant.exceptions import HomeAssistantError
@@ -36,6 +36,7 @@ from homeassistant.helpers.entity_registry import EntityRegistry
 
 from . import (
     init_integration,
+    inject_rpc_device_event,
     mutate_rpc_device_status,
     patch_platforms,
     register_device,
@@ -49,6 +50,10 @@ from .conftest import (
 
 DEVICE_BLOCK_ID = 4
 LEDSTRIP_ENTITY_ID = f"{NUMBER_DOMAIN}.test_name_effect_speed"
+DISPLAY_BRIGHTNESS_ENTITY_ID = f"{NUMBER_DOMAIN}.test_name_display_brightness"
+MIN_AUTO_DISPLAY_BRIGHTNESS_ENTITY_ID = (
+    f"{NUMBER_DOMAIN}.test_name_minimum_auto_display_brightness"
+)
 
 
 @pytest.fixture(autouse=True)
@@ -203,7 +208,7 @@ async def test_block_number_set_value(
         NUMBER_DOMAIN,
         NumberService.SET_VALUE,
         {
-            CommonServiceArgument.ENTITY_ID: "number.test_name_valve_position",
+            TargetKey.ENTITY_ID: "number.test_name_valve_position",
             NumberServiceArgument.VALUE: 30,
         },
         blocking=True,
@@ -240,7 +245,7 @@ async def test_block_set_value_connection_error(
             NUMBER_DOMAIN,
             NumberService.SET_VALUE,
             {
-                CommonServiceArgument.ENTITY_ID: "number.test_name_valve_position",
+                TargetKey.ENTITY_ID: "number.test_name_valve_position",
                 NumberServiceArgument.VALUE: 30,
             },
             blocking=True,
@@ -273,7 +278,7 @@ async def test_block_set_value_auth_error(
         NUMBER_DOMAIN,
         NumberService.SET_VALUE,
         {
-            CommonServiceArgument.ENTITY_ID: "number.test_name_valve_position",
+            TargetKey.ENTITY_ID: "number.test_name_valve_position",
             NumberServiceArgument.VALUE: 30,
         },
         blocking=True,
@@ -363,7 +368,7 @@ async def test_rpc_device_virtual_number(
     await hass.services.async_call(
         NUMBER_DOMAIN,
         NumberService.SET_VALUE,
-        {CommonServiceArgument.ENTITY_ID: entity_id, NumberServiceArgument.VALUE: 56.7},
+        {TargetKey.ENTITY_ID: entity_id, NumberServiceArgument.VALUE: 56.7},
         blocking=True,
     )
     mock_rpc_device.mock_update()
@@ -371,6 +376,41 @@ async def test_rpc_device_virtual_number(
 
     assert (state := hass.states.get(entity_id))
     assert state.state == "56.7"
+
+
+async def test_rpc_virtual_number_without_view(
+    hass: HomeAssistant,
+    mock_rpc_device: Mock,
+    monkeypatch: pytest.MonkeyPatch,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test a virtual number without a view does not break the other ones."""
+    config = deepcopy(mock_rpc_device.config)
+    # Firmware 2.2.0 can send the ui settings without a view
+    config["number:200"] = {
+        "name": None,
+        "min": 0,
+        "max": 100,
+        "meta": {"ui": {"step": 1, "unit": ""}},
+    }
+    config["number:203"] = {
+        "name": None,
+        "min": 0,
+        "max": 100,
+        "meta": {"ui": {"step": 1, "unit": "", "view": "field"}},
+    }
+    monkeypatch.setattr(mock_rpc_device, "config", config)
+
+    status = deepcopy(mock_rpc_device.status)
+    status["number:200"] = {"value": 12}
+    status["number:203"] = {"value": 34}
+    monkeypatch.setattr(mock_rpc_device, "status", status)
+
+    await init_integration(hass, 3)
+
+    assert "Error while setting up" not in caplog.text
+    assert hass.states.get("number.test_name_number_203")
+    assert hass.states.get("number.test_name_number_200") is None
 
 
 @pytest.mark.usefixtures("disable_async_remove_shelly_rpc_entities")
@@ -476,7 +516,7 @@ async def test_blu_trv_ext_temp_set_value(
         NUMBER_DOMAIN,
         NumberService.SET_VALUE,
         {
-            CommonServiceArgument.ENTITY_ID: entity_id,
+            TargetKey.ENTITY_ID: entity_id,
             NumberServiceArgument.VALUE: 22.2,
         },
         blocking=True,
@@ -509,7 +549,7 @@ async def test_blu_trv_valve_pos_set_value(
         NUMBER_DOMAIN,
         NumberService.SET_VALUE,
         {
-            CommonServiceArgument.ENTITY_ID: entity_id,
+            TargetKey.ENTITY_ID: entity_id,
             NumberServiceArgument.VALUE: 20.0,
         },
         blocking=True,
@@ -552,7 +592,7 @@ async def test_blu_trv_number_exc(
             NUMBER_DOMAIN,
             NumberService.SET_VALUE,
             {
-                CommonServiceArgument.ENTITY_ID: f"{NUMBER_DOMAIN}.trv_name_external_temperature",
+                TargetKey.ENTITY_ID: f"{NUMBER_DOMAIN}.trv_name_external_temperature",
                 NumberServiceArgument.VALUE: 20.0,
             },
             blocking=True,
@@ -573,7 +613,7 @@ async def test_blu_trv_number_reauth_error(
         NUMBER_DOMAIN,
         NumberService.SET_VALUE,
         {
-            CommonServiceArgument.ENTITY_ID: f"{NUMBER_DOMAIN}.trv_name_external_temperature",
+            TargetKey.ENTITY_ID: f"{NUMBER_DOMAIN}.trv_name_external_temperature",
             NumberServiceArgument.VALUE: 20.0,
         },
         blocking=True,
@@ -634,7 +674,7 @@ async def test_cury_number_entity(
         NUMBER_DOMAIN,
         NumberService.SET_VALUE,
         {
-            CommonServiceArgument.ENTITY_ID: "number.test_name_left_slot_intensity",
+            TargetKey.ENTITY_ID: "number.test_name_left_slot_intensity",
             NumberServiceArgument.VALUE: 80.0,
         },
         blocking=True,
@@ -676,7 +716,7 @@ async def test_rpc_ledstrip_number(
     await hass.services.async_call(
         NUMBER_DOMAIN,
         NumberService.SET_VALUE,
-        {CommonServiceArgument.ENTITY_ID: entity_id, NumberServiceArgument.VALUE: 80.0},
+        {TargetKey.ENTITY_ID: entity_id, NumberServiceArgument.VALUE: 80.0},
         blocking=True,
     )
     mock_ledstrip_rpc_device.ledstrip_set.assert_called_once_with(0, {control: 80})
@@ -748,3 +788,147 @@ async def test_rpc_ledstrip_speed_number_availability(
 
     assert (state := hass.states.get(LEDSTRIP_ENTITY_ID))
     assert state.state == expected_state
+
+
+async def test_rpc_wall_display_brightness_numbers(
+    hass: HomeAssistant,
+    mock_rpc_device: Mock,
+    entity_registry: EntityRegistry,
+    snapshot: SnapshotAssertion,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test RPC Wall Display brightness numbers."""
+    monkeypatch.setitem(mock_rpc_device.shelly, "ver", "2.8.5")
+    monkeypatch.setitem(
+        mock_rpc_device.config,
+        "ui",
+        {"brightness": {"auto": False, "level": 40, "min_level": 3}},
+    )
+    await init_integration(hass, 2, model=MODEL_WALL_DISPLAY)
+
+    for entity_id in (
+        DISPLAY_BRIGHTNESS_ENTITY_ID,
+        MIN_AUTO_DISPLAY_BRIGHTNESS_ENTITY_ID,
+    ):
+        assert (state := hass.states.get(entity_id))
+        assert state == snapshot(name=f"{entity_id}-state")
+
+        assert (entry := entity_registry.async_get(entity_id))
+        assert entry == snapshot(name=f"{entity_id}-entry")
+
+    await hass.services.async_call(
+        NUMBER_DOMAIN,
+        NumberService.SET_VALUE,
+        {
+            TargetKey.ENTITY_ID: DISPLAY_BRIGHTNESS_ENTITY_ID,
+            NumberServiceArgument.VALUE: 55,
+        },
+        blocking=True,
+    )
+    mock_rpc_device.wall_display_ui_setconfig.assert_called_once_with(
+        {"brightness": {"level": 55}}
+    )
+
+    mock_rpc_device.wall_display_ui_setconfig.reset_mock()
+    await hass.services.async_call(
+        NUMBER_DOMAIN,
+        NumberService.SET_VALUE,
+        {
+            TargetKey.ENTITY_ID: MIN_AUTO_DISPLAY_BRIGHTNESS_ENTITY_ID,
+            NumberServiceArgument.VALUE: 10,
+        },
+        blocking=True,
+    )
+    mock_rpc_device.wall_display_ui_setconfig.assert_called_once_with(
+        {"brightness": {"min_level": 10}}
+    )
+
+    # The device ignores the level while auto brightness is on
+    def _update_component_config(key: str) -> set[str]:
+        mock_rpc_device.config[key]["brightness"].update(auto=True, min_level=10)
+        return {"brightness"}
+
+    mock_rpc_device.update_component_config.side_effect = _update_component_config
+    inject_rpc_device_event(
+        monkeypatch,
+        mock_rpc_device,
+        {
+            "events": [
+                {
+                    "component": "ui",
+                    "event": "config_changed",
+                    "restart_required": False,
+                    "ts": 1668522399.2,
+                    "cfg_rev": 16,
+                },
+            ],
+            "ts": 1668522399.2,
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert (state := hass.states.get(DISPLAY_BRIGHTNESS_ENTITY_ID))
+    assert state.state == STATE_UNAVAILABLE
+    assert (state := hass.states.get(MIN_AUTO_DISPLAY_BRIGHTNESS_ENTITY_ID))
+    assert state.state == "10"
+
+
+@pytest.mark.parametrize(
+    ("model", "firmware", "ui_config", "has_level", "has_min_level"),
+    [
+        pytest.param(
+            MODEL_WALL_DISPLAY,
+            "2.6.2",
+            {"brightness": {"auto": True, "level": 40, "min_level": 3}},
+            True,
+            True,
+            id="min_firmware",
+        ),
+        pytest.param(
+            MODEL_WALL_DISPLAY,
+            "2.6.2",
+            {"brightness": {"auto": True, "level": 40}},
+            True,
+            False,
+            id="no_min_level",
+        ),
+        pytest.param(
+            MODEL_WALL_DISPLAY,
+            "2.6.1",
+            {"brightness": {"auto": True, "level": 40, "min_level": 3}},
+            False,
+            False,
+            id="old_firmware",
+        ),
+        pytest.param(
+            MODEL_WALL_DISPLAY, "2.8.5", {}, False, False, id="no_brightness_config"
+        ),
+        pytest.param(
+            MODEL_PLUS_2PM,
+            "2.8.5",
+            {"brightness": {"auto": True, "level": 40, "min_level": 3}},
+            False,
+            False,
+            id="not_wall_display",
+        ),
+    ],
+)
+async def test_rpc_wall_display_brightness_numbers_supported(
+    hass: HomeAssistant,
+    mock_rpc_device: Mock,
+    monkeypatch: pytest.MonkeyPatch,
+    model: str,
+    firmware: str,
+    ui_config: dict[str, Any],
+    has_level: bool,
+    has_min_level: bool,
+) -> None:
+    """Test RPC Wall Display brightness numbers depend on model, firmware and config."""
+    monkeypatch.setitem(mock_rpc_device.shelly, "ver", firmware)
+    monkeypatch.setitem(mock_rpc_device.config, "ui", ui_config)
+    await init_integration(hass, 2, model=model)
+
+    assert (hass.states.get(DISPLAY_BRIGHTNESS_ENTITY_ID) is not None) is has_level
+    assert (
+        hass.states.get(MIN_AUTO_DISPLAY_BRIGHTNESS_ENTITY_ID) is not None
+    ) is has_min_level

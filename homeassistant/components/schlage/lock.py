@@ -21,6 +21,8 @@ from .const import DOMAIN
 from .coordinator import LockData, SchlageConfigEntry, SchlageDataUpdateCoordinator
 from .entity import SchlageEntity
 
+PARALLEL_UPDATES = 1
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -148,7 +150,15 @@ class SchlageLockEntity(SchlageEntity, LockEntity):
                     translation_domain=DOMAIN,
                     translation_key="schlage_start_after_end",
                 )
-            schedule = TemporarySchedule(start=start_utc, end=end_utc)
+            try:
+                schedule = TemporarySchedule.from_aware(
+                    start_utc, end_utc, dt_util.get_default_time_zone()
+                )
+            except ValueError as ex:
+                raise ServiceValidationError(
+                    translation_domain=DOMAIN,
+                    translation_key="schlage_invalid_schedule_timezone",
+                ) from ex
 
         codes = await self._async_fetch_access_codes()
         self._validate_code_name(codes, name)

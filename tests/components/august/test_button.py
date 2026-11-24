@@ -1,7 +1,7 @@
 """The button tests for the august platform."""
 
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, ButtonService
-from homeassistant.const import CommonServiceArgument
+from homeassistant.const import TargetKey
 from homeassistant.core import HomeAssistant
 
 from .mocks import _create_august_api_with_devices, _mock_lock_from_fixture
@@ -20,7 +20,7 @@ async def test_wake_lock(hass: HomeAssistant) -> None:
     await hass.services.async_call(
         BUTTON_DOMAIN,
         ButtonService.PRESS,
-        {CommonServiceArgument.ENTITY_ID: entity_id},
+        {TargetKey.ENTITY_ID: entity_id},
         blocking=True,
     )
     api_instance.async_status_async.assert_called_once()
