@@ -23,7 +23,6 @@ from homeassistant.components.frontend import async_panel_exists
 from homeassistant.components.http import StaticPathConfig
 from homeassistant.const import CONF_ENTITY_ID, CONF_PLATFORM, Platform
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.typing import Undefined
@@ -276,12 +275,13 @@ async def ws_set_knx_project(
     connection: websocket_api.ActiveConnection,
     msg: dict,
 ) -> None:
-    """Replace the KNX project with project data in the format of xknxproject."""
-    try:
-        await async_set_project(hass, msg["project"])
-    except HomeAssistantError as err:
-        connection.async_handle_exception(msg, err)
-        return
+    """Replace the KNX project with project data in the format of xknxproject.
+
+    The whole project is one message, so it is limited by the maximum message
+    size of the WebSocket API (4 MiB): a larger message closes the connection.
+    Larger project data can be set with `async_set_project` from Python.
+    """
+    await async_set_project(hass, msg["project"])
     connection.send_result(msg["id"])
 
 

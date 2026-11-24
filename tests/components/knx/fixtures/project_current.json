@@ -1,116 +1,1295 @@
 {
   "info": {
-    "project_id": "P-0123",
-    "name": "Current",
-    "last_modified": "2026-11-13T10:00:00.0000000Z",
+    "project_id": "P-0242",
+    "name": "xknx test project",
+    "last_modified": "2024-02-16T18:17:22.3052256Z",
     "group_address_style": "ThreeLevel",
-    "guid": "0b1e1d7a-3c40-4a5e-9a51-0e3c8a2a6f10",
-    "created_by": "XKNX Editor",
-    "schema_version": "23",
-    "tool_version": "0.13.0",
-    "xknxproject_version": "3.10.0",
-    "language_code": "de-DE"
+    "guid": "7aceb083-274e-4568-806f-b8f9df992873",
+    "created_by": "ETS5",
+    "schema_version": "20",
+    "tool_version": "5.7.1428.39779",
+    "xknxproject_version": "3.11.1",
+    "language_code": null
   },
   "communication_objects": {
-    "1.1.1/O-0_R-1": {
-      "name": "Switching",
-      "number": 0,
-      "text": "Switching",
-      "function_text": "Channel A",
+    "1.1.5/O-40_R-1433": {
+      "name": "Ausgang B",
+      "number": 40,
+      "text": "Output B",
+      "function_text": "Move blinds/shutter up-down",
       "description": "",
-      "device_address": "1.1.1",
-      "device_application": "M-0083_A-00B0-32-0DFC",
-      "module": null,
-      "channel": "CH-1",
-      "dpts": [{ "main": 1, "sub": 1 }],
+      "device_address": "1.1.5",
+      "device_application": "M-0002_A-A066-14-550B",
+      "module_def": null,
+      "channel": null,
+      "dpts": [
+        {
+          "main": 1,
+          "sub": null
+        }
+      ],
       "object_size": "1 Bit",
-      "group_address_links": ["0/0/1"],
       "flags": {
         "read": false,
         "write": true,
         "communication": true,
-        "transmit": false,
         "update": false,
-        "read_on_init": false
+        "read_on_init": false,
+        "transmit": false
       },
-      "dpas": null
+      "group_address_links": [
+        "1/0/5"
+      ],
+      "dpas": null,
+      "text_parameter": null
     },
-    "1.1.1/O-1_R-2": {
-      "name": "Status",
-      "number": 1,
-      "text": "Status",
-      "function_text": "Channel A",
+    "1.1.5/O-41_R-1434": {
+      "name": "Ausgang B",
+      "number": 41,
+      "text": "Output B",
+      "function_text": "Slat adjustm./stop up-down",
       "description": "",
-      "device_address": "1.1.1",
-      "device_application": "M-0083_A-00B0-32-0DFC",
-      "module": {
-        "definition": "M-0083_A-00B0-32-0DFC_MD-1",
-        "root_number": 0
-      },
-      "channel": "CH-1",
-      "dpts": [{ "main": 1, "sub": 1 }],
+      "device_address": "1.1.5",
+      "device_application": "M-0002_A-A066-14-550B",
+      "module_def": null,
+      "channel": null,
+      "dpts": [
+        {
+          "main": 1,
+          "sub": null
+        }
+      ],
       "object_size": "1 Bit",
-      "group_address_links": ["0/0/2"],
+      "flags": {
+        "read": false,
+        "write": true,
+        "communication": true,
+        "update": false,
+        "read_on_init": false,
+        "transmit": false
+      },
+      "group_address_links": [
+        "1/0/4"
+      ],
+      "dpas": null,
+      "text_parameter": null
+    },
+    "1.1.5/O-70_R-1505": {
+      "name": "Ausgang C",
+      "number": 70,
+      "text": "Output C",
+      "function_text": "Move blinds/shutter up-down",
+      "description": "",
+      "device_address": "1.1.5",
+      "device_application": "M-0002_A-A066-14-550B",
+      "module_def": null,
+      "channel": null,
+      "dpts": [
+        {
+          "main": 1,
+          "sub": 8
+        }
+      ],
+      "object_size": "1 Bit",
+      "flags": {
+        "read": false,
+        "write": true,
+        "communication": true,
+        "update": false,
+        "read_on_init": false,
+        "transmit": false
+      },
+      "group_address_links": [
+        "1/0/3"
+      ],
+      "dpas": null,
+      "text_parameter": null
+    },
+    "1.1.5/O-71_R-1506": {
+      "name": "Ausgang C",
+      "number": 71,
+      "text": "Output C",
+      "function_text": "Slat adjustm./stop up-down",
+      "description": "",
+      "device_address": "1.1.5",
+      "device_application": "M-0002_A-A066-14-550B",
+      "module_def": null,
+      "channel": null,
+      "dpts": [
+        {
+          "main": 1,
+          "sub": 8
+        }
+      ],
+      "object_size": "1 Bit",
+      "flags": {
+        "read": false,
+        "write": true,
+        "communication": true,
+        "update": false,
+        "read_on_init": false,
+        "transmit": false
+      },
+      "group_address_links": [
+        "1/0/2"
+      ],
+      "dpas": null,
+      "text_parameter": null
+    },
+    "1.1.5/O-100_R-1577": {
+      "name": "Ausgang D",
+      "number": 100,
+      "text": "Output D",
+      "function_text": "Move blinds/shutter up-down",
+      "description": "",
+      "device_address": "1.1.5",
+      "device_application": "M-0002_A-A066-14-550B",
+      "module_def": null,
+      "channel": null,
+      "dpts": [
+        {
+          "main": 1,
+          "sub": null
+        }
+      ],
+      "object_size": "1 Bit",
+      "flags": {
+        "read": false,
+        "write": true,
+        "communication": true,
+        "update": false,
+        "read_on_init": false,
+        "transmit": false
+      },
+      "group_address_links": [
+        "1/0/1"
+      ],
+      "dpas": null,
+      "text_parameter": null
+    },
+    "1.1.5/O-101_R-1578": {
+      "name": "Ausgang D",
+      "number": 101,
+      "text": "Output D",
+      "function_text": "Slat adjustm./stop up-down",
+      "description": "",
+      "device_address": "1.1.5",
+      "device_application": "M-0002_A-A066-14-550B",
+      "module_def": null,
+      "channel": null,
+      "dpts": [
+        {
+          "main": 1,
+          "sub": 8
+        }
+      ],
+      "object_size": "1 Bit",
+      "flags": {
+        "read": false,
+        "write": true,
+        "communication": true,
+        "update": false,
+        "read_on_init": false,
+        "transmit": false
+      },
+      "group_address_links": [
+        "1/0/0"
+      ],
+      "dpas": null,
+      "text_parameter": null
+    },
+    "1.1.5/O-4_R-1417": {
+      "name": "Ausgang A-X",
+      "number": 4,
+      "text": "Output A-X",
+      "function_text": "Wind alarm no. 1",
+      "description": "",
+      "device_address": "1.1.5",
+      "device_application": "M-0002_A-A066-14-550B",
+      "module_def": null,
+      "channel": null,
+      "dpts": [
+        {
+          "main": 1,
+          "sub": 1
+        }
+      ],
+      "object_size": "1 Bit",
+      "flags": {
+        "read": false,
+        "write": true,
+        "communication": true,
+        "update": true,
+        "read_on_init": false,
+        "transmit": true
+      },
+      "group_address_links": [
+        "2/0/6"
+      ],
+      "dpas": null,
+      "text_parameter": null
+    },
+    "1.1.6/O-0_R-665": {
+      "name": "Kanal A",
+      "number": 0,
+      "text": "ChannelA",
+      "function_text": "Output value",
+      "description": "2-byte generic",
+      "device_address": "1.1.6",
+      "device_application": "M-0002_A-A01B-14-1B7C",
+      "module_def": null,
+      "channel": null,
+      "dpts": [],
+      "object_size": "2 Bytes",
       "flags": {
         "read": true,
         "write": false,
         "communication": true,
-        "transmit": true,
         "update": false,
-        "read_on_init": false
+        "read_on_init": false,
+        "transmit": true
       },
-      "dpas": null
+      "group_address_links": [
+        "2/1/22"
+      ],
+      "dpas": null,
+      "text_parameter": null
+    },
+    "1.1.6/O-20_R-8108": {
+      "name": "Kanal C",
+      "number": 20,
+      "text": "ChannelC",
+      "function_text": "Measured value outside range",
+      "description": "1-bit undefined DPT",
+      "device_address": "1.1.6",
+      "device_application": "M-0002_A-A01B-14-1B7C",
+      "module_def": null,
+      "channel": null,
+      "dpts": [
+        {
+          "main": 1,
+          "sub": null
+        }
+      ],
+      "object_size": "1 Bit",
+      "flags": {
+        "read": true,
+        "write": false,
+        "communication": true,
+        "update": false,
+        "read_on_init": false,
+        "transmit": true
+      },
+      "group_address_links": [
+        "2/1/10"
+      ],
+      "dpas": null,
+      "text_parameter": null
+    },
+    "1.1.6/O-9_R-9073": {
+      "name": "Kanal B",
+      "number": 9,
+      "text": "ChannelB",
+      "function_text": "Output value",
+      "description": "2-byte DPT 9 any",
+      "device_address": "1.1.6",
+      "device_application": "M-0002_A-A01B-14-1B7C",
+      "module_def": null,
+      "channel": null,
+      "dpts": [
+        {
+          "main": 9,
+          "sub": null
+        },
+        {
+          "main": 9,
+          "sub": 1
+        },
+        {
+          "main": 9,
+          "sub": 2
+        },
+        {
+          "main": 9,
+          "sub": 3
+        },
+        {
+          "main": 9,
+          "sub": 4
+        },
+        {
+          "main": 9,
+          "sub": 5
+        },
+        {
+          "main": 9,
+          "sub": 6
+        },
+        {
+          "main": 9,
+          "sub": 7
+        },
+        {
+          "main": 9,
+          "sub": 8
+        },
+        {
+          "main": 9,
+          "sub": 9
+        },
+        {
+          "main": 9,
+          "sub": 10
+        },
+        {
+          "main": 9,
+          "sub": 11
+        },
+        {
+          "main": 9,
+          "sub": 20
+        },
+        {
+          "main": 9,
+          "sub": 21
+        },
+        {
+          "main": 9,
+          "sub": 22
+        },
+        {
+          "main": 9,
+          "sub": 23
+        },
+        {
+          "main": 9,
+          "sub": 24
+        },
+        {
+          "main": 9,
+          "sub": 25
+        },
+        {
+          "main": 9,
+          "sub": 26
+        },
+        {
+          "main": 9,
+          "sub": 27
+        },
+        {
+          "main": 9,
+          "sub": 28
+        },
+        {
+          "main": 9,
+          "sub": 29
+        },
+        {
+          "main": 9,
+          "sub": 30
+        },
+        {
+          "main": 9,
+          "sub": 31
+        }
+      ],
+      "object_size": "2 Bytes",
+      "flags": {
+        "read": true,
+        "write": false,
+        "communication": true,
+        "update": false,
+        "read_on_init": false,
+        "transmit": true
+      },
+      "group_address_links": [
+        "2/1/21",
+        "2/1/22",
+        "2/1/23"
+      ],
+      "dpas": null,
+      "text_parameter": null
+    },
+    "1.1.6/O-18_R-7994": {
+      "name": "Kanal C",
+      "number": 18,
+      "text": "ChannelC",
+      "function_text": "Output value",
+      "description": "2-byte DPT 9 generic",
+      "device_address": "1.1.6",
+      "device_application": "M-0002_A-A01B-14-1B7C",
+      "module_def": null,
+      "channel": null,
+      "dpts": [
+        {
+          "main": 9,
+          "sub": null
+        }
+      ],
+      "object_size": "2 Bytes",
+      "flags": {
+        "read": true,
+        "write": false,
+        "communication": true,
+        "update": false,
+        "read_on_init": false,
+        "transmit": true
+      },
+      "group_address_links": [
+        "2/1/23",
+        "7/1/2"
+      ],
+      "dpas": null,
+      "text_parameter": null
+    },
+    "1.1.7/MD-2_M-20_MI-1_O-2-2_R-3": {
+      "name": "RTR1 - 2 - Controller",
+      "number": 935,
+      "text": "RTR 1 (name in application) - Ausgang",
+      "function_text": "Command value - Heating",
+      "description": "",
+      "device_address": "1.1.7",
+      "device_application": "M-0008_A-20E0-21-9997-O000A",
+      "module_def": {
+        "definition": "MD-2",
+        "root_number": 2
+      },
+      "channel": "MD-2_M-20_MI-1_CH-81",
+      "dpts": [
+        {
+          "main": 5,
+          "sub": 1
+        }
+      ],
+      "object_size": "1 Byte",
+      "flags": {
+        "read": true,
+        "write": false,
+        "communication": true,
+        "update": true,
+        "read_on_init": false,
+        "transmit": true
+      },
+      "group_address_links": [
+        "7/1/1"
+      ],
+      "dpas": null,
+      "text_parameter": {
+        "identifier": "MD-2_M-20_MI-1_P-15_R-17",
+        "value": "name in application"
+      }
+    },
+    "1.1.7/MD-2_M-20_MI-1_O-5-0_R-17": {
+      "name": "RTR1 - 0 - RSM",
+      "number": 333,
+      "text": "RTR 1 (name in application) - Eingang",
+      "function_text": "Setpoint temperature - Active operating mode",
+      "description": "",
+      "device_address": "1.1.7",
+      "device_application": "M-0008_A-20E0-21-9997-O000A",
+      "module_def": {
+        "definition": "MD-2",
+        "root_number": 0
+      },
+      "channel": "MD-2_M-20_MI-1_CH-81",
+      "dpts": [
+        {
+          "main": 9,
+          "sub": 1
+        }
+      ],
+      "object_size": "2 Bytes",
+      "flags": {
+        "read": false,
+        "write": true,
+        "communication": true,
+        "update": true,
+        "read_on_init": false,
+        "transmit": false
+      },
+      "group_address_links": [
+        "7/1/0"
+      ],
+      "dpas": null,
+      "text_parameter": {
+        "identifier": "MD-2_M-20_MI-1_P-15_R-17",
+        "value": "name in application"
+      }
+    },
+    "1.1.7/MD-2_M-20_MI-1_O-5-10_R-18": {
+      "name": "RTR1 - 10 - RSM",
+      "number": 343,
+      "text": "RTR 1 (name in application) - Ausgang",
+      "function_text": "Setpoint temperature - Active operating mode - Status",
+      "description": "",
+      "device_address": "1.1.7",
+      "device_application": "M-0008_A-20E0-21-9997-O000A",
+      "module_def": {
+        "definition": "MD-2",
+        "root_number": 10
+      },
+      "channel": "MD-2_M-20_MI-1_CH-81",
+      "dpts": [
+        {
+          "main": 9,
+          "sub": 1
+        }
+      ],
+      "object_size": "2 Bytes",
+      "flags": {
+        "read": true,
+        "write": false,
+        "communication": true,
+        "update": true,
+        "read_on_init": false,
+        "transmit": true
+      },
+      "group_address_links": [
+        "7/0/0"
+      ],
+      "dpas": null,
+      "text_parameter": {
+        "identifier": "MD-2_M-20_MI-1_P-15_R-17",
+        "value": "name in application"
+      }
+    },
+    "1.1.7/MD-2_M-20_MI-1_O-7-1_R-45": {
+      "name": "RTR1 - 1 - Sensor",
+      "number": 1438,
+      "text": "RTR 1 (name in application) - Eingang",
+      "function_text": "Room temperature - Measured value 1",
+      "description": "",
+      "device_address": "1.1.7",
+      "device_application": "M-0008_A-20E0-21-9997-O000A",
+      "module_def": {
+        "definition": "MD-2",
+        "root_number": 1
+      },
+      "channel": "MD-2_M-20_MI-1_CH-81",
+      "dpts": [
+        {
+          "main": 9,
+          "sub": 1
+        }
+      ],
+      "object_size": "2 Bytes",
+      "flags": {
+        "read": false,
+        "write": true,
+        "communication": true,
+        "update": true,
+        "read_on_init": false,
+        "transmit": true
+      },
+      "group_address_links": [
+        "7/1/2"
+      ],
+      "dpas": null,
+      "text_parameter": {
+        "identifier": "MD-2_M-20_MI-1_P-15_R-17",
+        "value": "name in application"
+      }
+    },
+    "1.1.7/MD-2_M-4_MI-1_O-7-1_R-45": {
+      "name": "RTR1 - 1 - Sensor",
+      "number": 1448,
+      "text": "RTR 2 (...) - Eingang",
+      "function_text": "Room temperature - Measured value 1",
+      "description": "",
+      "device_address": "1.1.7",
+      "device_application": "M-0008_A-20E0-21-9997-O000A",
+      "module_def": {
+        "definition": "MD-2",
+        "root_number": 1
+      },
+      "channel": "MD-2_M-4_MI-1_CH-81",
+      "dpts": [
+        {
+          "main": 9,
+          "sub": 1
+        }
+      ],
+      "object_size": "2 Bytes",
+      "flags": {
+        "read": false,
+        "write": true,
+        "communication": true,
+        "update": true,
+        "read_on_init": false,
+        "transmit": true
+      },
+      "group_address_links": [
+        "2/0/1"
+      ],
+      "dpas": null,
+      "text_parameter": {
+        "identifier": "MD-2_M-4_MI-1_P-15_R-17",
+        "value": null
+      }
+    },
+    "1.1.7/O-3_R-3": {
+      "name": "Objekt",
+      "number": 3,
+      "text": "Manual operation - Input/Output",
+      "function_text": "Temporary status indication",
+      "description": "no-channel GO",
+      "device_address": "1.1.7",
+      "device_application": "M-0008_A-20E0-21-9997-O000A",
+      "module_def": null,
+      "channel": null,
+      "dpts": [
+        {
+          "main": 1,
+          "sub": 2
+        }
+      ],
+      "object_size": "1 Bit",
+      "flags": {
+        "read": true,
+        "write": true,
+        "communication": true,
+        "update": true,
+        "read_on_init": false,
+        "transmit": true
+      },
+      "group_address_links": [
+        "2/0/0"
+      ],
+      "dpas": null,
+      "text_parameter": null
     }
   },
-  "devices": {
-    "1.1.1": {
-      "name": "Switch actuator",
-      "hardware_name": "AKS-0416.03",
-      "order_number": "AKS-0416.03",
-      "description": "",
-      "manufacturer_name": "MDT technologies",
-      "individual_address": "1.1.1",
-      "application": "M-0083_A-00B0-32-0DFC",
-      "project_uid": 7,
-      "communication_object_ids": ["1.1.1/O-0_R-1", "1.1.1/O-1_R-2"],
-      "channels": {
-        "CH-1": {
-          "identifier": "CH-1",
-          "name": "Channel A",
-          "communication_object_ids": ["1.1.1/O-0_R-1", "1.1.1/O-1_R-2"],
-          "functional_blocks": null
+  "topology": {
+    "0": {
+      "name": "Backbone Bereich",
+      "description": null,
+      "lines": {
+        "0": {
+          "name": "Bereichslinie",
+          "description": null,
+          "devices": [],
+          "medium_type": "KNXnet/IP (IP)"
+        }
+      }
+    },
+    "1": {
+      "name": "Neuer Bereich",
+      "description": null,
+      "lines": {
+        "0": {
+          "name": "Hauptlinie",
+          "description": null,
+          "devices": [],
+          "medium_type": "KNXnet/IP (IP)"
+        },
+        "1": {
+          "name": "Neue Linie",
+          "description": null,
+          "devices": [
+            "1.1.0",
+            "1.1.5",
+            "1.1.6",
+            "1.1.7"
+          ],
+          "medium_type": "Twisted Pair (TP)"
         }
       }
     }
   },
-  "topology": {},
-  "locations": {},
+  "devices": {
+    "1.1.0": {
+      "name": "SCN-IP100.03 IP Router with Secure",
+      "hardware_name": "SCN-IP100.03 IP Router with Secure",
+      "order_number": "SCN-IP100.03",
+      "description": "",
+      "manufacturer_name": "MDT technologies",
+      "individual_address": "1.1.0",
+      "application": "M-0083_A-0139-22-F35B-O0072",
+      "project_uid": 25,
+      "product_id": "M-0083_H-136-5-O0072_P-SCN.2DIP100.2E03",
+      "hardware_id": "M-0083_H-136-5-O0072",
+      "hardware_program_id": "M-0083_H-136-5-O0072_HP-0139-22-F35B-O0072",
+      "space_id": null,
+      "trade_id": null,
+      "communication_object_ids": [],
+      "channels": {},
+      "group_object_tree": [],
+      "serial_number": "AIN6QBMW",
+      "last_download": null,
+      "individual_address_loaded": false,
+      "application_program_loaded": false,
+      "communication_part_loaded": false,
+      "medium_config_loaded": false,
+      "parameters_loaded": false
+    },
+    "1.1.5": {
+      "name": "JRA/S4.230.2.1 Blind/RollerShutterAct,M,4f,230V",
+      "hardware_name": "JRA/S4.230.2.1 Blind/RollerShutterAct,M,4f,230V",
+      "order_number": "2CDG 110 121 R0011",
+      "description": "",
+      "manufacturer_name": "ABB",
+      "individual_address": "1.1.5",
+      "application": "M-0002_A-A066-14-550B",
+      "project_uid": 31,
+      "product_id": "M-0002_H-2CDG.20110.20121.20R0011-1_P-2CDG.20110.20121.20R0011",
+      "hardware_id": "M-0002_H-2CDG.20110.20121.20R0011-1",
+      "hardware_program_id": "M-0002_H-2CDG.20110.20121.20R0011-1_HP-A066-14-550B",
+      "space_id": null,
+      "trade_id": null,
+      "communication_object_ids": [
+        "1.1.5/O-40_R-1433",
+        "1.1.5/O-41_R-1434",
+        "1.1.5/O-70_R-1505",
+        "1.1.5/O-71_R-1506",
+        "1.1.5/O-100_R-1577",
+        "1.1.5/O-101_R-1578",
+        "1.1.5/O-4_R-1417"
+      ],
+      "channels": {},
+      "group_object_tree": [],
+      "serial_number": "",
+      "last_download": null,
+      "individual_address_loaded": false,
+      "application_program_loaded": false,
+      "communication_part_loaded": false,
+      "medium_config_loaded": false,
+      "parameters_loaded": false
+    },
+    "1.1.6": {
+      "name": "AE/S4.2 Analogue Input,4-fold,MDRC",
+      "hardware_name": "AE/S4.2 Analogue Input,4-fold,MDRC",
+      "order_number": "2CDG 110 030 R0011",
+      "description": "",
+      "manufacturer_name": "ABB",
+      "individual_address": "1.1.6",
+      "application": "M-0002_A-A01B-14-1B7C",
+      "project_uid": 49,
+      "product_id": "M-0002_H-2CDG.20110.20030.20R0011-1_P-2CDG.20110.20030.20R0011",
+      "hardware_id": "M-0002_H-2CDG.20110.20030.20R0011-1",
+      "hardware_program_id": "M-0002_H-2CDG.20110.20030.20R0011-1_HP-A01B-14-1B7C",
+      "space_id": null,
+      "trade_id": null,
+      "communication_object_ids": [
+        "1.1.6/O-0_R-665",
+        "1.1.6/O-20_R-8108",
+        "1.1.6/O-9_R-9073",
+        "1.1.6/O-18_R-7994"
+      ],
+      "channels": {},
+      "group_object_tree": [],
+      "serial_number": "",
+      "last_download": null,
+      "individual_address_loaded": false,
+      "application_program_loaded": false,
+      "communication_part_loaded": false,
+      "medium_config_loaded": false,
+      "parameters_loaded": false
+    },
+    "1.1.7": {
+      "name": "Custom name prefix - Heizungsaktor 6fach mit Regler",
+      "hardware_name": "Heating actuator 6-gang with controller",
+      "order_number": "2139 00",
+      "description": "",
+      "manufacturer_name": "GIRA Giersiepen",
+      "individual_address": "1.1.7",
+      "application": "M-0008_A-20E0-21-9997-O000A",
+      "project_uid": 60,
+      "product_id": "M-0008_H-8.20.2F.2F.202139.2000-0-O000A_P-2139.2000",
+      "hardware_id": "M-0008_H-8.20.2F.2F.202139.2000-0-O000A",
+      "hardware_program_id": "M-0008_H-8.20.2F.2F.202139.2000-0-O000A_HP-20E0-21-9997-O000A",
+      "space_id": null,
+      "trade_id": null,
+      "communication_object_ids": [
+        "1.1.7/MD-2_M-20_MI-1_O-2-2_R-3",
+        "1.1.7/MD-2_M-20_MI-1_O-5-0_R-17",
+        "1.1.7/MD-2_M-20_MI-1_O-5-10_R-18",
+        "1.1.7/MD-2_M-20_MI-1_O-7-1_R-45",
+        "1.1.7/MD-2_M-4_MI-1_O-7-1_R-45",
+        "1.1.7/O-3_R-3"
+      ],
+      "channels": {
+        "MD-2_M-20_MI-1_CH-81": {
+          "identifier": "MD-2_M-20_MI-1_CH-81",
+          "name": "Raumtemperaturregler 1 (name in application)",
+          "communication_object_ids": [
+            "1.1.7/MD-2_M-20_MI-1_O-2-2_R-3",
+            "1.1.7/MD-2_M-20_MI-1_O-5-0_R-17",
+            "1.1.7/MD-2_M-20_MI-1_O-5-10_R-18",
+            "1.1.7/MD-2_M-20_MI-1_O-7-1_R-45"
+          ],
+          "functional_blocks": null
+        },
+        "MD-2_M-4_MI-1_CH-81": {
+          "identifier": "MD-2_M-4_MI-1_CH-81",
+          "name": "channel name in properties",
+          "communication_object_ids": [
+            "1.1.7/MD-2_M-4_MI-1_O-7-1_R-45"
+          ],
+          "functional_blocks": null
+        }
+      },
+      "group_object_tree": [
+        {
+          "type": "Channel",
+          "identifier": "MD-2_M-20_MI-1_CH-81",
+          "name": "Raumtemperaturregler 1 (name in application)",
+          "communication_object_ids": [
+            "1.1.7/MD-2_M-20_MI-1_O-2-2_R-3",
+            "1.1.7/MD-2_M-20_MI-1_O-5-0_R-17",
+            "1.1.7/MD-2_M-20_MI-1_O-5-10_R-18",
+            "1.1.7/MD-2_M-20_MI-1_O-7-1_R-45"
+          ],
+          "nodes": []
+        },
+        {
+          "type": "Channel",
+          "identifier": "MD-2_M-4_MI-1_CH-81",
+          "name": "channel name in properties",
+          "communication_object_ids": [
+            "1.1.7/MD-2_M-4_MI-1_O-7-1_R-45"
+          ],
+          "nodes": []
+        }
+      ],
+      "serial_number": "",
+      "last_download": null,
+      "individual_address_loaded": false,
+      "application_program_loaded": false,
+      "communication_part_loaded": false,
+      "medium_config_loaded": false,
+      "parameters_loaded": false
+    }
+  },
   "group_addresses": {
-    "0/0/1": {
-      "name": "Light",
+    "1/0/0": {
+      "name": "Test",
       "identifier": "GA-1",
-      "raw_address": 1,
-      "address": "0/0/1",
-      "project_uid": 10,
-      "dpt": { "main": 1, "sub": 1 },
+      "raw_address": 2048,
+      "address": "1/0/0",
+      "project_uid": 34,
+      "dpt": {
+        "main": 1,
+        "sub": 8
+      },
       "data_secure": false,
-      "communication_object_ids": ["1.1.1/O-0_R-1"],
+      "communication_object_ids": [
+        "1.1.5/O-101_R-1578"
+      ],
       "description": "",
       "comment": ""
     },
-    "0/0/2": {
-      "name": "Light status",
+    "1/0/1": {
+      "name": "Behang D auf/ab",
       "identifier": "GA-2",
-      "raw_address": 2,
-      "address": "0/0/2",
-      "project_uid": 11,
-      "dpt": { "main": 1, "sub": 1 },
+      "raw_address": 2049,
+      "address": "1/0/1",
+      "project_uid": 35,
+      "dpt": {
+        "main": 1,
+        "sub": null
+      },
       "data_secure": false,
-      "communication_object_ids": ["1.1.1/O-1_R-2"],
+      "communication_object_ids": [
+        "1.1.5/O-100_R-1577"
+      ],
+      "description": "",
+      "comment": ""
+    },
+    "1/0/2": {
+      "name": "Lamelle C auf/ab",
+      "identifier": "GA-3",
+      "raw_address": 2050,
+      "address": "1/0/2",
+      "project_uid": 36,
+      "dpt": {
+        "main": 1,
+        "sub": 8
+      },
+      "data_secure": false,
+      "communication_object_ids": [
+        "1.1.5/O-71_R-1506"
+      ],
+      "description": "",
+      "comment": ""
+    },
+    "1/0/3": {
+      "name": "Behang C auf/ab",
+      "identifier": "GA-4",
+      "raw_address": 2051,
+      "address": "1/0/3",
+      "project_uid": 37,
+      "dpt": {
+        "main": 1,
+        "sub": 8
+      },
+      "data_secure": false,
+      "communication_object_ids": [
+        "1.1.5/O-70_R-1505"
+      ],
+      "description": "",
+      "comment": ""
+    },
+    "1/0/4": {
+      "name": "Lamelle B auf/ab",
+      "identifier": "GA-5",
+      "raw_address": 2052,
+      "address": "1/0/4",
+      "project_uid": 38,
+      "dpt": {
+        "main": 1,
+        "sub": null
+      },
+      "data_secure": false,
+      "communication_object_ids": [
+        "1.1.5/O-41_R-1434"
+      ],
+      "description": "",
+      "comment": ""
+    },
+    "1/0/5": {
+      "name": "BehangB auf/ab",
+      "identifier": "GA-6",
+      "raw_address": 2053,
+      "address": "1/0/5",
+      "project_uid": 39,
+      "dpt": {
+        "main": 1,
+        "sub": null
+      },
+      "data_secure": false,
+      "communication_object_ids": [
+        "1.1.5/O-40_R-1433"
+      ],
+      "description": "",
+      "comment": ""
+    },
+    "2/0/0": {
+      "name": "channel-test",
+      "identifier": "GA-19",
+      "raw_address": 4096,
+      "address": "2/0/0",
+      "project_uid": 66,
+      "dpt": {
+        "main": 1,
+        "sub": 2
+      },
+      "data_secure": true,
+      "communication_object_ids": [
+        "1.1.7/O-3_R-3"
+      ],
+      "description": "",
+      "comment": ""
+    },
+    "2/0/1": {
+      "name": "Temperature",
+      "identifier": "GA-18",
+      "raw_address": 4097,
+      "address": "2/0/1",
+      "project_uid": 65,
+      "dpt": {
+        "main": 9,
+        "sub": 1
+      },
+      "data_secure": true,
+      "communication_object_ids": [
+        "1.1.7/MD-2_M-4_MI-1_O-7-1_R-45"
+      ],
+      "description": "",
+      "comment": ""
+    },
+    "2/0/6": {
+      "name": "Windalarm",
+      "identifier": "GA-7",
+      "raw_address": 4102,
+      "address": "2/0/6",
+      "project_uid": 42,
+      "dpt": {
+        "main": 1,
+        "sub": 1
+      },
+      "data_secure": false,
+      "communication_object_ids": [
+        "1.1.5/O-4_R-1417"
+      ],
+      "description": "",
+      "comment": ""
+    },
+    "2/1/1": {
+      "name": "Not linked to a comm object",
+      "identifier": "GA-8",
+      "raw_address": 4353,
+      "address": "2/1/1",
+      "project_uid": 43,
+      "dpt": null,
+      "data_secure": false,
+      "communication_object_ids": [],
+      "description": "no dpt",
+      "comment": ""
+    },
+    "2/1/2": {
+      "name": "Not linked to a comm object 2",
+      "identifier": "GA-11",
+      "raw_address": 4354,
+      "address": "2/1/2",
+      "project_uid": 47,
+      "dpt": {
+        "main": 9,
+        "sub": 1
+      },
+      "data_secure": false,
+      "communication_object_ids": [],
+      "description": "temperature",
+      "comment": ""
+    },
+    "2/1/10": {
+      "name": "generic 1-bit",
+      "identifier": "GA-13",
+      "raw_address": 4362,
+      "address": "2/1/10",
+      "project_uid": 50,
+      "dpt": {
+        "main": 1,
+        "sub": null
+      },
+      "data_secure": false,
+      "communication_object_ids": [
+        "1.1.6/O-20_R-8108"
+      ],
+      "description": "",
+      "comment": ""
+    },
+    "2/1/21": {
+      "name": "No DPT in GA",
+      "identifier": "GA-12",
+      "raw_address": 4373,
+      "address": "2/1/21",
+      "project_uid": 48,
+      "dpt": {
+        "main": 9,
+        "sub": null
+      },
+      "data_secure": false,
+      "communication_object_ids": [
+        "1.1.6/O-9_R-9073"
+      ],
+      "description": "multiple DPT 9 in 1 CO",
+      "comment": ""
+    },
+    "2/1/22": {
+      "name": "No DPT in GA 2",
+      "identifier": "GA-9",
+      "raw_address": 4374,
+      "address": "2/1/22",
+      "project_uid": 44,
+      "dpt": {
+        "main": 9,
+        "sub": null
+      },
+      "data_secure": false,
+      "communication_object_ids": [
+        "1.1.6/O-0_R-665",
+        "1.1.6/O-9_R-9073"
+      ],
+      "description": "multiple DPT 9 and not defined in COs",
+      "comment": ""
+    },
+    "2/1/23": {
+      "name": "No DPT in GA 3",
+      "identifier": "GA-10",
+      "raw_address": 4375,
+      "address": "2/1/23",
+      "project_uid": 45,
+      "dpt": {
+        "main": 9,
+        "sub": null
+      },
+      "data_secure": false,
+      "communication_object_ids": [
+        "1.1.6/O-9_R-9073",
+        "1.1.6/O-18_R-7994"
+      ],
+      "description": "DPT 9 generic and multiple in COs",
+      "comment": ""
+    },
+    "7/0/0": {
+      "name": "ds 0",
+      "identifier": "GA-15",
+      "raw_address": 14336,
+      "address": "7/0/0",
+      "project_uid": 58,
+      "dpt": {
+        "main": 9,
+        "sub": 1
+      },
+      "data_secure": false,
+      "communication_object_ids": [
+        "1.1.7/MD-2_M-20_MI-1_O-5-10_R-18"
+      ],
+      "description": "security: off (inherited from middle group)",
+      "comment": ""
+    },
+    "7/1/0": {
+      "name": "ds 1",
+      "identifier": "GA-14",
+      "raw_address": 14592,
+      "address": "7/1/0",
+      "project_uid": 57,
+      "dpt": {
+        "main": 9,
+        "sub": 1
+      },
+      "data_secure": true,
+      "communication_object_ids": [
+        "1.1.7/MD-2_M-20_MI-1_O-5-0_R-17"
+      ],
+      "description": "security: auto",
+      "comment": ""
+    },
+    "7/1/1": {
+      "name": "ds 2",
+      "identifier": "GA-16",
+      "raw_address": 14593,
+      "address": "7/1/1",
+      "project_uid": 59,
+      "dpt": {
+        "main": 5,
+        "sub": 1
+      },
+      "data_secure": true,
+      "communication_object_ids": [
+        "1.1.7/MD-2_M-20_MI-1_O-2-2_R-3"
+      ],
+      "description": "security: on",
+      "comment": ""
+    },
+    "7/1/2": {
+      "name": "ds + non ds",
+      "identifier": "GA-17",
+      "raw_address": 14594,
+      "address": "7/1/2",
+      "project_uid": 64,
+      "dpt": {
+        "main": 9,
+        "sub": 1
+      },
+      "data_secure": false,
+      "communication_object_ids": [
+        "1.1.6/O-18_R-7994",
+        "1.1.7/MD-2_M-20_MI-1_O-7-1_R-45"
+      ],
       "description": "",
       "comment": ""
     }
   },
-  "group_ranges": {},
+  "group_ranges": {
+    "1": {
+      "name": "Neue Hauptgruppe",
+      "address_start": 2048,
+      "address_end": 4095,
+      "group_addresses": [],
+      "comment": "",
+      "group_ranges": {
+        "1/0": {
+          "name": "Neue Mittelgruppe",
+          "address_start": 2048,
+          "address_end": 2303,
+          "group_addresses": [
+            "1/0/0",
+            "1/0/1",
+            "1/0/2",
+            "1/0/3",
+            "1/0/4",
+            "1/0/5"
+          ],
+          "comment": "",
+          "group_ranges": {}
+        }
+      }
+    },
+    "2": {
+      "name": "Neue Hauptgruppe",
+      "address_start": 4096,
+      "address_end": 6143,
+      "group_addresses": [],
+      "comment": "",
+      "group_ranges": {
+        "2/0": {
+          "name": "Neue Mittelgruppe",
+          "address_start": 4096,
+          "address_end": 4351,
+          "group_addresses": [
+            "2/0/6",
+            "2/0/1",
+            "2/0/0"
+          ],
+          "comment": "",
+          "group_ranges": {}
+        },
+        "2/1": {
+          "name": "DPT tests",
+          "address_start": 4352,
+          "address_end": 4607,
+          "group_addresses": [
+            "2/1/1",
+            "2/1/22",
+            "2/1/23",
+            "2/1/2",
+            "2/1/21",
+            "2/1/10"
+          ],
+          "comment": "",
+          "group_ranges": {}
+        }
+      }
+    },
+    "7": {
+      "name": "DataSecureTest",
+      "address_start": 14336,
+      "address_end": 16383,
+      "group_addresses": [],
+      "comment": "",
+      "group_ranges": {
+        "7/0": {
+          "name": "Non-DS",
+          "address_start": 14336,
+          "address_end": 14591,
+          "group_addresses": [
+            "7/0/0"
+          ],
+          "comment": "",
+          "group_ranges": {}
+        },
+        "7/1": {
+          "name": "DS-Auto",
+          "address_start": 14592,
+          "address_end": 14847,
+          "group_addresses": [
+            "7/1/0",
+            "7/1/1",
+            "7/1/2"
+          ],
+          "comment": "",
+          "group_ranges": {}
+        }
+      }
+    }
+  },
+  "locations": {
+    "Test (1)": {
+      "type": "Building",
+      "identifier": "P-0242-0_BP-1",
+      "name": "Test (1)",
+      "usage_id": null,
+      "usage_text": "",
+      "number": "",
+      "description": "",
+      "project_uid": 6,
+      "devices": [],
+      "spaces": {},
+      "functions": []
+    }
+  },
+  "trades": [],
   "functions": {}
 }

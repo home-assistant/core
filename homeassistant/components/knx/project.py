@@ -29,7 +29,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.storage import Store
 
-from .const import DOMAIN, KNX_MODULE_KEY
+from .const import DOMAIN
+from .services import get_knx_module
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -66,44 +67,22 @@ PROJECT_DATA_SCHEMA: Final = probatio.TypedDictSchema(
 )
 
 
-def _address_in_style(raw: int, style: str) -> str:
-    """Return a group address as xknx shows it in a project of `style`."""
-    if style == XknxProjectGroupAddressStyle.FREE.value:
-        return str(raw)
-    main = (raw >> 11) & GroupAddress.MAX_MAIN
-    if style == XknxProjectGroupAddressStyle.TWOLEVEL.value:
-        return f"{main}/{raw & GroupAddress.MAX_SUB_SHORT}"
-    middle = (raw >> 8) & GroupAddress.MAX_MIDDLE
-    return f"{main}/{middle}/{raw & GroupAddress.MAX_SUB_LONG}"
-
-
-def _check_address_style(project: KNXProjectModel) -> None:
-    """Validate that the group addresses are written in the project's style.
-
-    The integration looks addresses up as xknx shows them in that style.
-    """
-    style = project["info"]["group_address_style"]
-    for key, group_address in project["group_addresses"].items():
-        address = group_address["address"]
-        if _address_in_style(GroupAddress(address).raw, style) != address:
-            raise probatio.Invalid(
-                f"group address `{address}` is not written in the {style} style "
-                f"at 'group_addresses['{key}'].address'"
-            )
-
-
 def _check_parser_version(project: Any) -> None:
-    """Refuse data of a major version of xknxproject other than the installed one.
+    """Refuse data of a minor version of xknxproject other than the installed one.
 
-    Data without a version is left to the schema to report.
+    A minor version can add required keys, which the schema would only report
+    as missing. Data without a version is left to the schema to report.
     """
     info = project.get("info") if isinstance(project, Mapping) else None
     version = info.get("xknxproject_version") if isinstance(info, Mapping) else None
     if not isinstance(version, str):
         return
     try:
-        compatible = (
-            AwesomeVersion(version).major == AwesomeVersion(XKNXPROJECT_VERSION).major
+        data_version = AwesomeVersion(version)
+        installed_version = AwesomeVersion(XKNXPROJECT_VERSION)
+        compatible = (data_version.major, data_version.minor) == (
+            installed_version.major,
+            installed_version.minor,
         )
     except AwesomeVersionException:
         compatible = False
@@ -121,13 +100,12 @@ def _check_parser_version(project: Any) -> None:
 def validate_project_data(project: Any) -> KNXProjectModel:
     """Validate project data in the format of the installed xknxproject.
 
-    Raises HomeAssistantError when the data was created for another major
+    Raises HomeAssistantError when the data was created for another minor
     version of xknxproject, or doesn't have its format.
     """
     _check_parser_version(project)
     try:
         data = PROJECT_DATA_SCHEMA(project)
-        _check_address_style(data)
     except probatio.Invalid as err:
         raise HomeAssistantError(
             translation_domain=DOMAIN,
@@ -145,13 +123,13 @@ async def async_set_project(hass: HomeAssistant, project: Mapping[str, Any]) -> 
     edited. The data is validated first; it is stored and loaded as an uploaded
     project file is.
 
+    Each call writes the whole project to storage and reloads its group
+    addresses. Debouncing frequent updates is left to the caller.
+
     Raises HomeAssistantError when the KNX integration is not loaded, or the
     data is invalid or incompatible. The current project is kept then.
     """
-    if (knx_module := hass.data.get(KNX_MODULE_KEY)) is None:
-        raise HomeAssistantError(
-            translation_domain=DOMAIN, translation_key="integration_not_loaded"
-        )
+    knx_module = get_knx_module(hass)
     data = validate_project_data(project)
     await knx_module.project.async_store_project(knx_module.xknx, data)
 
