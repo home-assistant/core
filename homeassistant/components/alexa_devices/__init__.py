@@ -9,7 +9,12 @@ from aioamazondevices.api import SETTINGS_FILENAME
 from homeassistant.const import CONF_COUNTRY, EVENT_HOMEASSISTANT_STOP, Platform
 from homeassistant.core import Event, HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers import aiohttp_client, config_validation as cv, httpx_client
+from homeassistant.helpers import (
+    aiohttp_client,
+    config_validation as cv,
+    httpx_client,
+    issue_registry as ir,
+)
 from homeassistant.helpers.storage import STORAGE_DIR
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util.ssl import SSL_ALPN_HTTP11_HTTP2
@@ -153,3 +158,8 @@ async def async_migrate_entry(hass: HomeAssistant, entry: AmazonConfigEntry) -> 
 async def async_unload_entry(hass: HomeAssistant, entry: AmazonConfigEntry) -> None:
     """Unload a config entry."""
     await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
+
+
+async def async_remove_entry(hass: HomeAssistant, entry: AmazonConfigEntry) -> None:
+    """Remove the repair issue of a deleted entry."""
+    ir.async_delete_issue(hass, DOMAIN, f"no_online_devices_{entry.entry_id}")
