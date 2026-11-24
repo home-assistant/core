@@ -1,0 +1,18 @@
+{
+  "entity": {
+    "sensor": {
+      "fan_1_speed": {
+        "default": "mdi:fan"
+      },
+      "fan_2_speed": {
+        "default": "mdi:fan"
+      },
+      "state": {
+        "default": "mdi:air-filter"
+      },
+      "target_airflow": {
+        "default": "mdi:fan"
+      }
+    }
+  }
+}

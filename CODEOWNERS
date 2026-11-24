@@ -2174,6 +2174,8 @@ AGENTS.md @home-assistant/core
 /tests/components/volumio/ @OnFreund
 /homeassistant/components/volvo/ @thomasddn
 /tests/components/volvo/ @thomasddn
+/homeassistant/components/wafe/ @bzumik1
+/tests/components/wafe/ @bzumik1
 /homeassistant/components/wake_word/ @home-assistant/core @synesthesiam
 /tests/components/wake_word/ @home-assistant/core @synesthesiam
 /homeassistant/components/wallbox/ @hesselonline

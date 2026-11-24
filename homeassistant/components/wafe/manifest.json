@@ -1,0 +1,15 @@
+{
+  "domain": "wafe",
+  "name": "WAFE",
+  "categories": ["climate.fans_ventilation"],
+  "codeowners": ["@bzumik1"],
+  "config_flow": true,
+  "connectivity": ["modbus"],
+  "dependencies": ["modbus"],
+  "documentation": "https://www.home-assistant.io/integrations/wafe",
+  "integration_type": "device",
+  "iot_class": "local_polling",
+  "loggers": ["modbus_connection", "tmodbus", "wafe_modbus"],
+  "quality_scale": "bronze",
+  "requirements": ["wafe-modbus==0.1.0"]
+}

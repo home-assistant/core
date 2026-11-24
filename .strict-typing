@@ -698,6 +698,7 @@ homeassistant.components.vlc_telnet.*
 homeassistant.components.vodafone_station.*
 homeassistant.components.voice_support.*
 homeassistant.components.volvo.*
+homeassistant.components.wafe.*
 homeassistant.components.wake_on_lan.*
 homeassistant.components.wake_word.*
 homeassistant.components.wallbox.*

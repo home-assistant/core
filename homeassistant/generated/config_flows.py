@@ -933,6 +933,7 @@ FLOWS = {
         "volkszaehler",
         "volumio",
         "volvo",
+        "wafe",
         "wake_on_lan",
         "wallbox",
         "waqi",
