@@ -118,9 +118,6 @@
     "air_quality_forecast_error": {
       "message": "Error fetching the air quality forecast."
     },
-    "air_quality_not_on_plan": {
-      "message": "The plan of this API key does not include air quality."
-    },
     "minute_forecast_error": {
       "message": "Error fetching the minute forecast."
     },

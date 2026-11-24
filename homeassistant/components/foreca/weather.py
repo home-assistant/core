@@ -8,7 +8,6 @@ from pyforeca import (
     AirQualityForecast,
     DailyForecast,
     ForecaError,
-    ForecaProductUnavailableError,
     HourlyForecast,
 )
 
@@ -127,10 +126,6 @@ async def _fetch_air_quality[T](request: Awaitable[T]) -> T:
     """Await an air quality request, raising translated errors."""
     try:
         return await request
-    except ForecaProductUnavailableError as err:
-        raise HomeAssistantError(
-            translation_domain=DOMAIN, translation_key="air_quality_not_on_plan"
-        ) from err
     except ForecaError as err:
         raise HomeAssistantError(
             translation_domain=DOMAIN,
