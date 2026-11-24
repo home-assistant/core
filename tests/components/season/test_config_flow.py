@@ -1,14 +1,13 @@
 """Tests for the Season config flow."""
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.season.const import DOMAIN, TYPE_ASTRONOMICAL
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_TYPE
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-
-from tests.common import MockConfigEntry
 
 
 @pytest.mark.usefixtures("mock_setup_entry")
@@ -29,6 +28,7 @@ async def test_full_user_flow(hass: HomeAssistant) -> None:
     assert result2.get("type") is FlowResultType.CREATE_ENTRY
     assert result2.get("title") == "Season"
     assert result2.get("data") == {CONF_TYPE: TYPE_ASTRONOMICAL}
+    assert result2["result"].unique_id == TYPE_ASTRONOMICAL
 
 
 async def test_single_instance_allowed(

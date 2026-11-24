@@ -5,6 +5,7 @@ from unittest.mock import MagicMock, patch
 
 from jvcprojector import Command, JvcProjectorTimeoutError, command as cmd
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.jvc_projector.const import DOMAIN
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT
@@ -12,8 +13,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import format_mac
 
 from . import MOCK_HOST, MOCK_MAC, MOCK_MODEL, MOCK_PASSWORD, MOCK_PORT
-
-from tests.common import MockConfigEntry
 
 FIXTURES: dict[str, dict[type[Command], str | type[Exception]]] = {
     "standby": {

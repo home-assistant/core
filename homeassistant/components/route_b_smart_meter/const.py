@@ -5,6 +5,10 @@ from datetime import timedelta
 DOMAIN = "route_b_smart_meter"
 ENTRY_TITLE = "Route B Smart Meter"
 DEFAULT_SCAN_INTERVAL = timedelta(seconds=300)
+# Seconds to wait before momonga rebuilds a lost session during a poll
+REOPEN_DELAYS = (10,)
+# Scan and join attempts per session; the library default of 3 is often too few
+CONNECT_RETRIES = 10
 
 ATTR_API_INSTANTANEOUS_POWER = "instantaneous_power"
 ATTR_API_TOTAL_CONSUMPTION = "total_consumption"

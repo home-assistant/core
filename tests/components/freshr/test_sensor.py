@@ -7,6 +7,11 @@ from freezegun.api import FrozenDateTimeFactory
 from pyfreshr.exceptions import ApiResponseError
 from pyfreshr.models import DeviceReadings, DeviceSummary
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.freshr.const import DOMAIN
@@ -18,8 +23,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from .conftest import DEVICE_ID, MOCK_DEVICE_CURRENT
-
-from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default", "init_integration")

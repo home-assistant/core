@@ -14,12 +14,14 @@ from starlink_grpc import (
     LocationDict,
     ObstructionDict,
     PowerDict,
+    SoftwareUpdateDict,
     StatusDict,
     UsageDict,
     get_sleep_config,
     history_stats,
     location_data,
     reboot,
+    set_gps_config,
     set_sleep_config,
     set_stow_state,
     status_data,
@@ -45,6 +47,7 @@ class StarlinkData:
     status: StatusDict
     obstruction: ObstructionDict
     alert: AlertDict
+    software_update: SoftwareUpdateDict
     usage: UsageDict
     consumption: PowerDict
 
@@ -73,7 +76,7 @@ class StarlinkUpdateCoordinator(DataUpdateCoordinator[StarlinkData]):
         context = self.channel_context
         location = location_data(context)
         sleep = get_sleep_config(context)
-        status, obstruction, alert = status_data(context)
+        status, obstruction, alert, software_update = status_data(context)
         index, _, _, _, _, usage, consumption, *_ = history_stats(
             parse_samples=-1 if self.history_stats_start is not None else 1,
             start=self.history_stats_start,
@@ -81,7 +84,14 @@ class StarlinkUpdateCoordinator(DataUpdateCoordinator[StarlinkData]):
         )
         self.history_stats_start = index["end_counter"]
         return StarlinkData(
-            location, sleep, status, obstruction, alert, usage, consumption
+            location,
+            sleep,
+            status,
+            obstruction,
+            alert,
+            software_update,
+            usage,
+            consumption,
         )
 
     @override
@@ -107,6 +117,16 @@ class StarlinkUpdateCoordinator(DataUpdateCoordinator[StarlinkData]):
         async with asyncio.timeout(4):
             try:
                 await self.hass.async_add_executor_job(reboot, self.channel_context)
+            except GrpcError as exc:
+                raise HomeAssistantError from exc
+
+    async def async_set_gps_enabled(self, enable: bool) -> None:
+        """Set whether Starlink system uses GPS for position data."""
+        async with asyncio.timeout(4):
+            try:
+                await self.hass.async_add_executor_job(
+                    set_gps_config, enable, self.channel_context
+                )
             except GrpcError as exc:
                 raise HomeAssistantError from exc
 

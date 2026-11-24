@@ -1,12 +1,12 @@
 """Tests for analytics platform."""
 
+from pytest_homeassistant.common import MockConfigEntry
+
 from homeassistant.components.analytics import async_devices_payload
 from homeassistant.components.wled import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 from homeassistant.setup import async_setup_component
-
-from tests.common import MockConfigEntry
 
 
 async def test_analytics(

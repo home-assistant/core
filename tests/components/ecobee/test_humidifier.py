@@ -16,22 +16,19 @@ from homeassistant.components.humidifier import (
     DEFAULT_MIN_HUMIDITY,
     DOMAIN as HUMIDIFIER_DOMAIN,
     MODE_AUTO,
-    SERVICE_SET_HUMIDITY,
-    SERVICE_SET_MODE,
     HumidifierAction,
     HumidifierDeviceClass,
     HumidifierEntityFeature,
+    HumidifierService,
+    HumidifierServiceArgument,
 )
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
-    ATTR_ENTITY_ID,
     ATTR_FRIENDLY_NAME,
-    ATTR_MODE,
     ATTR_SUPPORTED_FEATURES,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
     STATE_OFF,
     STATE_ON,
+    TargetKey,
 )
 from homeassistant.core import HomeAssistant
 
@@ -68,8 +65,8 @@ async def test_turn_on(hass: HomeAssistant) -> None:
 
         await hass.services.async_call(
             HUMIDIFIER_DOMAIN,
-            SERVICE_TURN_ON,
-            {ATTR_ENTITY_ID: DEVICE_ID},
+            HumidifierService.TURN_ON,
+            {TargetKey.ENTITY_ID: DEVICE_ID},
             blocking=True,
         )
         await hass.async_block_till_done()
@@ -83,8 +80,8 @@ async def test_turn_off(hass: HomeAssistant) -> None:
 
         await hass.services.async_call(
             HUMIDIFIER_DOMAIN,
-            SERVICE_TURN_OFF,
-            {ATTR_ENTITY_ID: DEVICE_ID},
+            HumidifierService.TURN_OFF,
+            {TargetKey.ENTITY_ID: DEVICE_ID},
             blocking=True,
         )
         await hass.async_block_till_done()
@@ -98,8 +95,8 @@ async def test_set_mode(hass: HomeAssistant) -> None:
 
         await hass.services.async_call(
             HUMIDIFIER_DOMAIN,
-            SERVICE_SET_MODE,
-            {ATTR_ENTITY_ID: DEVICE_ID, ATTR_MODE: MODE_AUTO},
+            HumidifierService.SET_MODE,
+            {TargetKey.ENTITY_ID: DEVICE_ID, HumidifierServiceArgument.MODE: MODE_AUTO},
             blocking=True,
         )
         await hass.async_block_till_done()
@@ -107,8 +104,11 @@ async def test_set_mode(hass: HomeAssistant) -> None:
 
         await hass.services.async_call(
             HUMIDIFIER_DOMAIN,
-            SERVICE_SET_MODE,
-            {ATTR_ENTITY_ID: DEVICE_ID, ATTR_MODE: MODE_MANUAL},
+            HumidifierService.SET_MODE,
+            {
+                TargetKey.ENTITY_ID: DEVICE_ID,
+                HumidifierServiceArgument.MODE: MODE_MANUAL,
+            },
             blocking=True,
         )
         await hass.async_block_till_done()
@@ -117,8 +117,11 @@ async def test_set_mode(hass: HomeAssistant) -> None:
         with pytest.raises(ValueError):
             await hass.services.async_call(
                 HUMIDIFIER_DOMAIN,
-                SERVICE_SET_MODE,
-                {ATTR_ENTITY_ID: DEVICE_ID, ATTR_MODE: "ModeThatDoesntExist"},
+                HumidifierService.SET_MODE,
+                {
+                    TargetKey.ENTITY_ID: DEVICE_ID,
+                    HumidifierServiceArgument.MODE: "ModeThatDoesntExist",
+                },
                 blocking=True,
             )
 
@@ -130,8 +133,8 @@ async def test_set_humidity(hass: HomeAssistant) -> None:
 
         await hass.services.async_call(
             HUMIDIFIER_DOMAIN,
-            SERVICE_SET_HUMIDITY,
-            {ATTR_ENTITY_ID: DEVICE_ID, ATTR_HUMIDITY: 60},
+            HumidifierService.SET_HUMIDITY,
+            {TargetKey.ENTITY_ID: DEVICE_ID, HumidifierServiceArgument.HUMIDITY: 60},
             blocking=True,
         )
         await hass.async_block_till_done()

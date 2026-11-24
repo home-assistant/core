@@ -5,6 +5,8 @@ from typing import Any
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, MockModule, mock_integration
+from pytest_homeassistant.typing import MockHAClientWebSocket, WebSocketGenerator
 from pytest_unordered import unordered
 
 from homeassistant.components.config import DOMAIN, device_registry
@@ -13,9 +15,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, label_registry as lr
 from homeassistant.setup import async_setup_component
 from homeassistant.util.dt import utcnow
-
-from tests.common import MockConfigEntry, MockModule, mock_integration
-from tests.typing import MockHAClientWebSocket, WebSocketGenerator
 
 
 @pytest.fixture(name="client")
@@ -78,6 +77,7 @@ async def test_list_devices(
             "modified_at": utcnow().timestamp(),
             "name_by_user": None,
             "name": None,
+            "next_name_part": None,
             "parent_device_id": None,
             "primary_config_entry": entry.entry_id,
             "serial_number": None,
@@ -104,6 +104,7 @@ async def test_list_devices(
             "modified_at": utcnow().timestamp(),
             "name_by_user": None,
             "name": None,
+            "next_name_part": None,
             "parent_device_id": None,
             "primary_config_entry": entry.entry_id,
             "serial_number": None,
@@ -143,6 +144,7 @@ async def test_list_devices(
             "modified_at": utcnow().timestamp(),
             "name_by_user": None,
             "name": None,
+            "next_name_part": None,
             "parent_device_id": None,
             "primary_config_entry": entry.entry_id,
             "serial_number": None,
@@ -1074,6 +1076,7 @@ async def test_list_devices_with_child_devices(
             "modified_at": parent.modified_at.timestamp(),
             "name_by_user": None,
             "name": "Power strip",
+            "next_name_part": None,
             "parent_device_id": None,
             "primary_config_entry": entry.entry_id,
             "serial_number": None,
@@ -1092,6 +1095,7 @@ async def test_list_devices_with_child_devices(
             "modified_at": child_device.modified_at.timestamp(),
             "name_by_user": None,
             "name": "Outlet 1",
+            "next_name_part": "parent_device",
             "parent_device_id": parent.id,
         },
     ]

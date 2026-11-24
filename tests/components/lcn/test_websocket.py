@@ -4,6 +4,7 @@ from typing import Any
 
 from pypck.lcn_addr import LcnAddr
 import pytest
+from pytest_homeassistant.typing import WebSocketGenerator
 
 from homeassistant.components.lcn import AddressType
 from homeassistant.components.lcn.const import CONF_DOMAIN_DATA
@@ -19,8 +20,6 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 
 from .conftest import MockConfigEntry, init_integration
-
-from tests.typing import WebSocketGenerator
 
 DEVICES_PAYLOAD = {CONF_TYPE: "lcn/devices", "entry_id": ""}
 ENTITIES_PAYLOAD = {

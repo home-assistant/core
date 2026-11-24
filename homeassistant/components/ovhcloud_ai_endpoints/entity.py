@@ -212,10 +212,12 @@ class OVHcloudAIEndpointsEntity(Entity):
             try:
                 result = await client.chat.completions.create(**model_args)
             except openai.OpenAIError as err:
+                # pylint: disable-next=home-assistant-log-and-raise
                 LOGGER.error("Error talking to API: %s", err)
                 raise HomeAssistantError("Error talking to API") from err
 
             if not result.choices:
+                # pylint: disable-next=home-assistant-log-and-raise
                 LOGGER.error("API returned empty choices")
                 raise HomeAssistantError("API returned empty response")
 

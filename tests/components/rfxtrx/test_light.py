@@ -3,14 +3,13 @@
 from unittest.mock import call
 
 import pytest
+from pytest_homeassistant.common import mock_restore_cache
 
 from homeassistant.components.light import ATTR_BRIGHTNESS
 from homeassistant.const import STATE_UNKNOWN
 from homeassistant.core import HomeAssistant, State
 
 from .conftest import create_rfx_test_entry
-
-from tests.common import mock_restore_cache
 
 
 async def test_one_light(hass: HomeAssistant, rfxtrx) -> None:

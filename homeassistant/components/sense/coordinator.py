@@ -15,9 +15,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-if TYPE_CHECKING:
-    from . import SenseConfigEntry
-
 from .const import (
     ACTIVE_UPDATE_RATE,
     SENSE_CONNECT_EXCEPTIONS,
@@ -25,6 +22,9 @@ from .const import (
     SENSE_WEBSOCKET_EXCEPTIONS,
     TREND_UPDATE_RATE,
 )
+
+if TYPE_CHECKING:
+    from . import SenseConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -72,7 +72,6 @@ class SenseTrendCoordinator(SenseCoordinator):
         try:
             await self._gateway.update_trend_data()
         except (SenseAuthenticationException, SenseMFARequiredException) as err:
-            _LOGGER.warning("Sense authentication expired")
             raise ConfigEntryAuthFailed(err) from err
         except SENSE_CONNECT_EXCEPTIONS as err:
             raise UpdateFailed(err) from err

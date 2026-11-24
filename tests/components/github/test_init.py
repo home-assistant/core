@@ -2,6 +2,8 @@
 
 from unittest.mock import AsyncMock
 
+from pytest_homeassistant.common import MockConfigEntry
+
 from homeassistant.components.github import CONF_REPOSITORY
 from homeassistant.components.github.const import CONF_REPOSITORIES, DOMAIN
 from homeassistant.const import CONF_ACCESS_TOKEN
@@ -10,8 +12,6 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er, 
 
 from . import setup_integration
 from .const import MOCK_ACCESS_TOKEN
-
-from tests.common import MockConfigEntry
 
 
 async def test_device_registry_cleanup(

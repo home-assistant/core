@@ -1,12 +1,12 @@
 """Enforce that the integration raises correctly during initialisation.
 
-https://developers.home-assistant.io/docs/core/integration-quality-scale/rules/test-before-setup/
+https://contributors.home-assistant.io/core/quality-scale/test-before-setup/
 """
 
 import ast
 
-from script.hassfest import ast_parse_module
-from script.hassfest.model import Config, Integration
+from hassfest import ast_parse_module
+from hassfest.model import Config, Integration
 
 _VALID_EXCEPTIONS = {
     "ConfigEntryNotReady",

@@ -18,6 +18,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
+from .const import DOMAIN
 from .coordinator import WatergateConfigEntry, WatergateDataCoordinator
 from .entity import WatergateEntity
 
@@ -102,5 +103,8 @@ class SonicAutoShutOffThreshold(WatergateEntity, NumberEntity):
         try:
             await self.entity_description.set_fn(self._api_client, round(value))
         except WatergateApiException as exc:
-            raise HomeAssistantError("Failed to update auto shut-off") from exc
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="auto_shut_off_update_failed",
+            ) from exc
         await self.coordinator.async_request_refresh()

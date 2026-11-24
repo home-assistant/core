@@ -2,7 +2,9 @@
 
 from typing import Any, Final, override
 
+from aioairzone.common import EcoAdapt
 from aioairzone.const import (
+    AZD_ECO_ADAPT,
     AZD_HOT_WATER,
     AZD_HUMIDITY,
     AZD_TEMP,
@@ -20,7 +22,6 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     PERCENTAGE,
     SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
@@ -78,6 +79,13 @@ ZONE_SENSOR_TYPES: Final[tuple[SensorEntityDescription, ...]] = (
         key=AZD_THERMOSTAT_BATTERY,
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
+    ),
+    SensorEntityDescription(
+        device_class=SensorDeviceClass.ENUM,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        key=AZD_ECO_ADAPT,
+        options=[option.value for option in EcoAdapt],
+        translation_key="eco_adapt",
     ),
     SensorEntityDescription(
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -178,7 +186,7 @@ class AirzoneHotWaterSensor(AirzoneHotWaterEntity, AirzoneSensor):
         self,
         coordinator: AirzoneUpdateCoordinator,
         description: SensorEntityDescription,
-        entry: ConfigEntry,
+        entry: AirzoneConfigEntry,
     ) -> None:
         """Initialize."""
         super().__init__(coordinator, entry)
@@ -200,7 +208,7 @@ class AirzoneWebServerSensor(AirzoneWebServerEntity, AirzoneSensor):
         self,
         coordinator: AirzoneUpdateCoordinator,
         description: SensorEntityDescription,
-        entry: ConfigEntry,
+        entry: AirzoneConfigEntry,
     ) -> None:
         """Initialize."""
         super().__init__(coordinator, entry)
@@ -216,7 +224,7 @@ class AirzoneZoneSensor(AirzoneZoneEntity, AirzoneSensor):
         self,
         coordinator: AirzoneUpdateCoordinator,
         description: SensorEntityDescription,
-        entry: ConfigEntry,
+        entry: AirzoneConfigEntry,
         system_zone_id: str,
         zone_data: dict[str, Any],
     ) -> None:

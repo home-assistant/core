@@ -1,13 +1,12 @@
 """Switch entity representing a Squeezebox alarm."""
 
-import datetime
+import datetime as dt
 import logging
 from typing import Any, cast, override
 
 from pysqueezebox.player import Alarm
 
 from homeassistant.components.switch import SwitchEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -16,6 +15,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.event import async_track_time_change
 
+from . import SqueezeboxConfigEntry
 from .const import ATTR_ALARM_ID, DOMAIN, SIGNAL_PLAYER_DISCOVERED
 from .coordinator import SqueezeBoxPlayerUpdateCoordinator
 from .entity import SqueezeboxEntity
@@ -27,7 +27,7 @@ PARALLEL_UPDATES = 0
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: SqueezeboxConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Squeezebox alarm switch."""
@@ -121,7 +121,7 @@ class SqueezeBoxAlarmEntity(SqueezeboxEntity, SwitchEntity):
         """Set up alarm switch when added to hass."""
         await super().async_added_to_hass()
 
-        async def async_write_state_daily(now: datetime.datetime) -> None:
+        async def async_write_state_daily(now: dt.datetime) -> None:
             """Update alarm state attributes each calendar day."""
             _LOGGER.debug("Updating state attributes for %s", self.name)
             self.async_write_ha_state()

@@ -8,16 +8,23 @@ import probatio
 from pybraendstofpriser import Braendstofpriser
 
 from homeassistant.config_entries import (
-    ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
     ConfigSubentryFlow,
     SubentryFlowResult,
 )
 from homeassistant.const import CONF_API_KEY
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.aiohttp_client import SERVER_SOFTWARE
 
-from .const import CONF_COMPANY, CONF_STATION, DOMAIN, WEBSITE_URL
+from . import FuelpricesDkConfigEntry
+from .const import (
+    CONF_COMPANY,
+    CONF_STATION,
+    DOMAIN,
+    SUBENTRY_TYPE_STATION,
+    WEBSITE_URL,
+)
 
 
 def _get_api_error_key(exc: ClientResponseError) -> str:
@@ -29,6 +36,16 @@ def _get_api_error_key(exc: ClientResponseError) -> str:
     return "cannot_connect"
 
 
+@callback
+def _async_station_is_configured(hass: HomeAssistant, station_id: int) -> bool:
+    """Return whether this station is configured under any API key."""
+    return any(
+        subentry.data[CONF_STATION]["id"] == station_id
+        for entry in hass.config_entries.async_entries(DOMAIN, include_ignore=False)
+        for subentry in entry.get_subentries_of_type(SUBENTRY_TYPE_STATION)
+    )
+
+
 class FuelpricesDkConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Fuelprices.dk."""
 
@@ -38,7 +55,7 @@ class FuelpricesDkConfigFlow(ConfigFlow, domain=DOMAIN):
     @callback
     @override
     def async_get_supported_subentry_types(
-        cls, config_entry: ConfigEntry
+        cls, config_entry: FuelpricesDkConfigEntry
     ) -> dict[str, type[ConfigSubentryFlow]]:
         """Return subentries supported by this handler."""
         return {"station": FuelpricesDkStationSubentryFlow}
@@ -55,7 +72,7 @@ class FuelpricesDkConfigFlow(ConfigFlow, domain=DOMAIN):
         self, api_key: str
     ) -> tuple[Braendstofpriser | None, list[dict[str, Any]], str | None]:
         """Validate the API key and fetch available companies."""
-        api = Braendstofpriser(api_key)
+        api = Braendstofpriser(api_key, user_agent=SERVER_SOFTWARE)
         try:
             companies = await api.list_companies()
         except ClientResponseError as exc:
@@ -117,7 +134,7 @@ class FuelpricesDkConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="user",
             data_schema=probatio.Schema(
                 {
-                    probatio.Required(CONF_API_KEY): str,
+                    probatio.Required(probatio.Secret(CONF_API_KEY)): str,
                 }
             ),
             errors=errors,
@@ -147,11 +164,14 @@ class FuelpricesDkConfigFlow(ConfigFlow, domain=DOMAIN):
             self.stations = stations
 
         if user_input is not None:
+            entry_data = {CONF_API_KEY: self.user_input[CONF_API_KEY]}
+            self._async_abort_entries_match(entry_data)
             user_input[CONF_STATION] = self.stations.find(
                 "name", user_input[CONF_STATION]
             )
+            if _async_station_is_configured(self.hass, user_input[CONF_STATION]["id"]):
+                return self.async_abort(reason="station_already_configured")
 
-            # Create the main config entry with the first station subentry
             self.user_input.update(user_input)
             unique_id = (
                 f"{self.user_input[CONF_COMPANY]}_{self.user_input[CONF_STATION]['id']}"
@@ -162,7 +182,7 @@ class FuelpricesDkConfigFlow(ConfigFlow, domain=DOMAIN):
             )
             return self.async_create_entry(
                 title="Fuelprices.dk",
-                data={CONF_API_KEY: self.user_input[CONF_API_KEY]},
+                data=entry_data,
                 subentries=[
                     {
                         "subentry_type": "station",
@@ -200,27 +220,27 @@ class FuelpricesDkConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
 
         if user_input is not None:
-            api = Braendstofpriser(user_input[CONF_API_KEY])
+            api = Braendstofpriser(user_input[CONF_API_KEY], user_agent=SERVER_SOFTWARE)
             try:
                 await api.list_companies()
             except ClientResponseError as exc:
                 errors["base"] = _get_api_error_key(exc)
 
             if not errors:
-                entry = self.hass.config_entries.async_get_entry(
-                    self.context["entry_id"]
+                self._async_abort_entries_match(user_input)
+                entry = self._get_reauth_entry()
+                self.hass.config_entries.async_update_entry(
+                    entry,
+                    data={CONF_API_KEY: user_input[CONF_API_KEY]},
                 )
-                if entry is not None:
-                    self.hass.config_entries.async_update_entry(
-                        entry,
-                        data={CONF_API_KEY: user_input[CONF_API_KEY]},
-                    )
-                    self.hass.config_entries.async_schedule_reload(entry.entry_id)
+                self.hass.config_entries.async_schedule_reload(entry.entry_id)
                 return self.async_abort(reason="reauth_successful")
 
         return self.async_show_form(
             step_id="reauth_confirm",
-            data_schema=probatio.Schema({probatio.Required(CONF_API_KEY): str}),
+            data_schema=probatio.Schema(
+                {probatio.Required(probatio.Secret(CONF_API_KEY)): str}
+            ),
             errors=errors,
         )
 
@@ -281,7 +301,7 @@ class FuelpricesDkStationSubentryFlow(ConfigSubentryFlow):
         """Initialize API client and fetch companies."""
         entry = self._get_entry()
         api_key = entry.data[CONF_API_KEY]
-        self.api = Braendstofpriser(api_key)
+        self.api = Braendstofpriser(api_key, user_agent=SERVER_SOFTWARE)
         try:
             self.companies = await self.api.list_companies()
         except ClientResponseError as exc:
@@ -322,16 +342,9 @@ class FuelpricesDkStationSubentryFlow(ConfigSubentryFlow):
                 "name", user_input[CONF_STATION]
             )
 
-            # Set UniqueID and abort if already existing
-            unique_id = (
-                f"{self.user_input[CONF_COMPANY]}_{user_input[CONF_STATION]['id']}"
-            )
-            entry = self._get_entry()
-            for subentry in entry.subentries.values():
-                if subentry.unique_id == unique_id:
-                    return self.async_abort(reason="station_already_configured")
+            if _async_station_is_configured(self.hass, user_input[CONF_STATION]["id"]):
+                return self.async_abort(reason="station_already_configured")
 
-            # Process the user input and show next selection form
             self.user_input.update(user_input)
             return await self._async_create_or_update_subentry()
 

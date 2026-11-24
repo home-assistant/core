@@ -12,6 +12,7 @@ from aiohttp import ClientSession, UnixConnector, web
 from aiohttp.hdrs import X_FORWARDED_FOR, X_FORWARDED_HOST, X_FORWARDED_PROTO
 from aiohttp.test_utils import make_mocked_request
 import pytest
+from pytest_homeassistant.typing import ClientSessionGenerator
 from pytest_socket import socket_allow_hosts
 import urllib3
 
@@ -21,7 +22,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from tests.test_util import mock_real_ip
-from tests.typing import ClientSessionGenerator
 
 
 @pytest.fixture

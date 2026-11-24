@@ -7,12 +7,15 @@ from typing import TYPE_CHECKING, Any, override
 from boschshcpy import (
     SHCLightSwitchBSM,
     SHCMicromoduleShutterControl,
+    SHCOutdoorSiren,
+    SHCRoomThermostat2,
     SHCSession,
     SHCSmartPlug,
     SHCSmartPlugCompact,
     SHCThermostat,
     SHCTwinguard,
     SHCWallThermostat,
+    TerminalConfiguration,
 )
 from boschshcpy.device import SHCDevice
 
@@ -52,7 +55,7 @@ class SHCSensorEntityDescription[_DeviceT: SHCDevice](SensorEntityDescription):
     attributes_fn: Callable[[_DeviceT], dict[str, Any]] | None = None
 
 
-_PowerMeterDevice = SHCSmartPlug | SHCLightSwitchBSM | SHCMicromoduleShutterControl
+type _PowerMeterDevice = SHCSmartPlug | SHCLightSwitchBSM | SHCMicromoduleShutterControl
 
 TEMPERATURE_SENSOR = "temperature"
 HUMIDITY_SENSOR = "humidity"
@@ -66,6 +69,17 @@ PURITY_RATING_SENSOR = "purity_rating"
 POWER_SENSOR = "power"
 ENERGY_SENSOR = "energy"
 COMMUNICATION_QUALITY_SENSOR = "communication_quality"
+FLOOR_TEMPERATURE_SENSOR = "floor_temperature"
+SIREN_BATTERY_SENSOR = "siren_battery"
+SIREN_MAIN_POWER_SENSOR = "siren_main_power"
+SIREN_SOLAR_CHARGING_SENSOR = "siren_solar_charging"
+
+_FLOOR_SENSOR_TERMINAL_TYPES = {
+    TerminalConfiguration.Type.FLOOR_SENSOR_CONNECTED,
+    TerminalConfiguration.Type.FLOOR_SENSOR_USED_FOR_REGULATION,
+    TerminalConfiguration.Type.FLOOR_SENSOR_DISPLAYED,
+    TerminalConfiguration.Type.FLOOR_SENSOR_DISPLAYED_AND_USED_FOR_REGULATION,
+}
 
 
 def _valve_tappet_state_value(device: SHCThermostat) -> str | None:
@@ -144,8 +158,19 @@ _WALLTHERMOSTAT_HUMIDITY_DESCRIPTION: SHCSensorEntityDescription[SHCWallThermost
     SHCSensorEntityDescription(
         key=HUMIDITY_SENSOR,
         device_class=SensorDeviceClass.HUMIDITY,
+        state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
         value_fn=lambda device: device.humidity,
+    )
+)
+_FLOOR_TEMPERATURE_DESCRIPTION: SHCSensorEntityDescription[SHCRoomThermostat2] = (
+    SHCSensorEntityDescription(
+        key=FLOOR_TEMPERATURE_SENSOR,
+        translation_key=FLOOR_TEMPERATURE_SENSOR,
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        value_fn=lambda device: device.terminal_temperature,
     )
 )
 _TWINGUARD_TEMPERATURE_DESCRIPTION: SHCSensorEntityDescription[SHCTwinguard] = (
@@ -161,6 +186,7 @@ _TWINGUARD_HUMIDITY_DESCRIPTION: SHCSensorEntityDescription[SHCTwinguard] = (
     SHCSensorEntityDescription(
         key=HUMIDITY_SENSOR,
         device_class=SensorDeviceClass.HUMIDITY,
+        state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
         value_fn=lambda device: device.humidity,
     )
@@ -247,6 +273,51 @@ _COMMUNICATION_QUALITY_DESCRIPTION: SHCSensorEntityDescription[SHCSmartPlugCompa
 )
 
 
+_SIREN_BATTERY_DESCRIPTION: SHCSensorEntityDescription[SHCOutdoorSiren] = (
+    SHCSensorEntityDescription(
+        key=SIREN_BATTERY_SENSOR,
+        translation_key=SIREN_BATTERY_SENSOR,
+        device_class=SensorDeviceClass.BATTERY,
+        native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=lambda device: (
+            device.power_supply.battery_percentage_remaining
+            if device.power_supply
+            else None
+        ),
+    )
+)
+_SIREN_MAIN_POWER_DESCRIPTION: SHCSensorEntityDescription[SHCOutdoorSiren] = (
+    SHCSensorEntityDescription(
+        key=SIREN_MAIN_POWER_SENSOR,
+        translation_key=SIREN_MAIN_POWER_SENSOR,
+        device_class=SensorDeviceClass.ENUM,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        options=["battery", "solar", "v12", "v230", "unknown"],
+        value_fn=lambda device: (
+            device.power_supply.main_power_supply.name.lower()
+            if device.power_supply
+            else None
+        ),
+    )
+)
+_SIREN_SOLAR_CHARGING_DESCRIPTION: SHCSensorEntityDescription[SHCOutdoorSiren] = (
+    SHCSensorEntityDescription(
+        key=SIREN_SOLAR_CHARGING_SENSOR,
+        translation_key=SIREN_SOLAR_CHARGING_SENSOR,
+        device_class=SensorDeviceClass.ENUM,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        options=["bad", "medium", "good", "unknown"],
+        value_fn=lambda device: (
+            device.power_supply.solar_charging_score.name.lower()
+            if device.power_supply
+            else None
+        ),
+    )
+)
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: BoschConfigEntry,
@@ -289,6 +360,28 @@ async def async_setup_entry(
             _WALLTHERMOSTAT_HUMIDITY_DESCRIPTION,
         )
     )
+
+    for room_thermostat in session.device_helper.roomthermostats:
+        room_thermostat_descriptions: list[SHCSensorEntityDescription[Any]] = [
+            _WALLTHERMOSTAT_TEMPERATURE_DESCRIPTION
+        ]
+        if room_thermostat.supports_humidity:
+            room_thermostat_descriptions.append(_WALLTHERMOSTAT_HUMIDITY_DESCRIPTION)
+        if (
+            room_thermostat.terminal_type in _FLOOR_SENSOR_TERMINAL_TYPES
+            and room_thermostat.terminal_temperature is not None
+        ):
+            room_thermostat_descriptions.append(_FLOOR_TEMPERATURE_DESCRIPTION)
+        entities.extend(
+            SHCSensor(
+                hass,
+                room_thermostat,
+                description,
+                shc_info.unique_id,
+                config_entry.entry_id,
+            )
+            for description in room_thermostat_descriptions
+        )
 
     entities.extend(
         SHCSensor(
@@ -341,6 +434,23 @@ async def async_setup_entry(
             _COMPACT_POWER_DESCRIPTION,
             _COMPACT_ENERGY_DESCRIPTION,
             _COMMUNICATION_QUALITY_DESCRIPTION,
+        )
+    )
+
+    entities.extend(
+        SHCSensor(
+            hass,
+            device,
+            description,
+            shc_info.unique_id,
+            config_entry.entry_id,
+        )
+        for device in session.device_helper.outdoor_sirens
+        if device.supports_power_supply
+        for description in (
+            _SIREN_BATTERY_DESCRIPTION,
+            _SIREN_MAIN_POWER_DESCRIPTION,
+            _SIREN_SOLAR_CHARGING_DESCRIPTION,
         )
     )
 

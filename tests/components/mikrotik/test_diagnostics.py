@@ -1,15 +1,14 @@
 """Tests for Mikrotik diagnostics platform."""
 
 import pytest
+from pytest_homeassistant.components.diagnostics import get_diagnostics_for_config_entry
+from pytest_homeassistant.typing import ClientSessionGenerator
 from syrupy.assertion import SnapshotAssertion
 from syrupy.filters import props
 
 from homeassistant.core import HomeAssistant
 
 from . import setup_mikrotik_entry
-
-from tests.components.diagnostics import get_diagnostics_for_config_entry
-from tests.typing import ClientSessionGenerator
 
 
 @pytest.mark.freeze_time("2026-01-01T12:00:00+00:00")

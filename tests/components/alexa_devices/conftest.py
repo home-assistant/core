@@ -1,11 +1,12 @@
 """Alexa Devices tests configuration."""
 
 import asyncio
-from collections.abc import Generator
+from collections.abc import Awaitable, Callable, Generator
 from copy import deepcopy
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.alexa_devices.const import (
     CONF_LOGIN_DATA,
@@ -16,14 +17,23 @@ from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 
 from .const import (
     TEST_DEVICE_1,
+    TEST_DEVICE_1_SENSORS,
     TEST_DEVICE_1_SN,
+    TEST_DEVICE_2_SENSORS,
+    TEST_DEVICE_2_SN,
+    TEST_DEVICE_AQM_SENSORS,
+    TEST_DEVICE_AQM_SN,
+    TEST_DEVICE_GLOW_SENSORS,
+    TEST_DEVICE_GLOW_SN,
+    TEST_DEVICE_PLUG_SENSORS,
+    TEST_DEVICE_PLUG_SN,
+    TEST_DEVICE_THERMOSTAT_SENSORS,
+    TEST_DEVICE_THERMOSTAT_SN,
     TEST_PASSWORD,
     TEST_USER_ID,
     TEST_USERNAME,
     TEST_VOCAL_RECORD_INITIAL,
 )
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture
@@ -31,7 +41,7 @@ def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
         "homeassistant.components.alexa_devices.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ) as mock_setup_entry:
         yield mock_setup_entry
 
@@ -58,6 +68,14 @@ def mock_amazon_devices_client() -> Generator[AsyncMock]:
         client.get_devices_data.return_value = {
             TEST_DEVICE_1_SN: deepcopy(TEST_DEVICE_1)
         }
+        client.sensors = {
+            TEST_DEVICE_1_SN: deepcopy(TEST_DEVICE_1_SENSORS),
+            TEST_DEVICE_2_SN: deepcopy(TEST_DEVICE_2_SENSORS),
+            TEST_DEVICE_AQM_SN: deepcopy(TEST_DEVICE_AQM_SENSORS),
+            TEST_DEVICE_GLOW_SN: deepcopy(TEST_DEVICE_GLOW_SENSORS),
+            TEST_DEVICE_THERMOSTAT_SN: deepcopy(TEST_DEVICE_THERMOSTAT_SENSORS),
+            TEST_DEVICE_PLUG_SN: deepcopy(TEST_DEVICE_PLUG_SENSORS),
+        }
         client.get_default_device = AsyncMock(return_value=deepcopy(TEST_DEVICE_1))
         client.routines = ["Test Routine"]
         client.sync_history_state = AsyncMock(
@@ -67,6 +85,22 @@ def mock_amazon_devices_client() -> Generator[AsyncMock]:
         client.on_volume_state_event = MagicMock()
         client.on_media_state_event = MagicMock()
         client.on_todo_event = MagicMock()
+        client.on_dnd_event = MagicMock()
+        client.on_sensor_event = MagicMock()
+        dnd_event_handler: list[Callable[[dict[str, bool]], Awaitable[None]]] = []
+        client.on_dnd_event.append.side_effect = dnd_event_handler.append
+
+        async def _sync_dnd_state() -> None:
+            assert dnd_event_handler, "on_dnd_event handler was not registered"
+            await dnd_event_handler[0](
+                {
+                    serial_num: False
+                    for serial_num, device in client.get_devices_data.return_value.items()
+                    if device.voice_control_supported
+                }
+            )
+
+        client.sync_dnd_state = AsyncMock(side_effect=_sync_dnd_state)
 
         async def _start_http2_processing(*_args, **_kwargs) -> asyncio.Task[None]:
             async def _completed_task() -> None:
@@ -92,9 +126,15 @@ def mock_config_entry() -> MockConfigEntry:
             CONF_LOGIN_DATA: {
                 "session": "test-session",
                 CONF_SITE: "https://www.amazon.com",
+                "account_customer_id": "fake_customer_id",
+                "customer_info": {
+                    "given_name": "Fake",
+                    "user_id": TEST_USER_ID,
+                },
+                "device_info": {"device_serial_number": "fake_serial_number"},
             },
         },
         unique_id=TEST_USER_ID,
         version=1,
-        minor_version=3,
+        minor_version=4,
     )

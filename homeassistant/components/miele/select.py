@@ -7,6 +7,7 @@ import logging
 from typing import Final, override
 
 from aiohttp import ClientResponseError
+from pymiele import MieleDevice
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
 from homeassistant.core import HomeAssistant
@@ -16,7 +17,7 @@ from homeassistant.helpers.typing import StateType
 
 from .const import DOMAIN, MieleAppliance
 from .coordinator import MieleConfigEntry
-from .entity import MieleDevice, MieleEntity
+from .entity import MieleEntity
 
 PARALLEL_UPDATES = 1
 

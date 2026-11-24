@@ -1,9 +1,11 @@
 """Test KNX date."""
 
+from pytest_homeassistant.common import mock_restore_cache
+
 from homeassistant.components.date import (
-    ATTR_DATE,
     DOMAIN as DATE_DOMAIN,
-    SERVICE_SET_VALUE,
+    DateService,
+    DateServiceArgument,
 )
 from homeassistant.components.knx.const import (
     CONF_RESPOND_TO_READ,
@@ -16,8 +18,6 @@ from homeassistant.core import HomeAssistant, State
 
 from . import KnxEntityGenerator
 from .conftest import KNXTestKit
-
-from tests.common import mock_restore_cache
 
 
 async def test_date(hass: HomeAssistant, knx: KNXTestKit) -> None:
@@ -34,8 +34,8 @@ async def test_date(hass: HomeAssistant, knx: KNXTestKit) -> None:
     # set value
     await hass.services.async_call(
         DATE_DOMAIN,
-        SERVICE_SET_VALUE,
-        {"entity_id": "date.test", ATTR_DATE: "1999-03-31"},
+        DateService.SET_VALUE,
+        {"entity_id": "date.test", DateServiceArgument.DATE: "1999-03-31"},
         blocking=True,
     )
     await knx.assert_write(

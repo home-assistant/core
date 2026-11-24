@@ -5,7 +5,12 @@ from dataclasses import dataclass
 import logging
 from typing import Any, Final, override
 
-from pyvesync.base_devices import VeSyncBaseDevice, VeSyncHumidifier
+from pyvesync.base_devices import (
+    VeSyncBaseDevice,
+    VeSyncFanBase,
+    VeSyncHumidifier,
+    VeSyncPurifier,
+)
 from pyvesync.const import DeviceStatus
 from pyvesync.device_container import DeviceContainer
 
@@ -20,7 +25,14 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .common import is_humidifier, is_outlet, is_wall_switch, rgetattr
+from .common import (
+    is_fan,
+    is_humidifier,
+    is_outlet,
+    is_purifier,
+    is_wall_switch,
+    rgetattr,
+)
 from .const import VS_DEVICES, VS_DISCOVERY
 from .coordinator import VesyncConfigEntry, VeSyncDataCoordinator
 from .entity import VeSyncBaseEntity
@@ -73,6 +85,26 @@ def _toggle_drying_mode_on_power_off(
             raise HomeAssistantError("Device does not support toggling drying mode.")
 
 
+def _toggle_light_detection(device: VeSyncBaseDevice, target: bool) -> Awaitable[bool]:
+    """Toggle light detection on purifier devices."""
+    match device:
+        case VeSyncPurifier() as sw if hasattr(sw, "toggle_light_detection"):
+            return sw.toggle_light_detection(target)
+        case _:
+            raise HomeAssistantError(
+                "Device does not support toggling light detection."
+            )
+
+
+def _toggle_mute(device: VeSyncBaseDevice, target: bool) -> Awaitable[bool]:
+    """Toggle mute on fan devices."""
+    match device:
+        case VeSyncFanBase() as sw if hasattr(sw, "toggle_mute"):
+            return sw.toggle_mute(target)
+        case _:
+            raise HomeAssistantError("Device does not support toggling mute.")
+
+
 @dataclass(frozen=True, kw_only=True)
 class VeSyncSwitchEntityDescription(SwitchEntityDescription):
     """A class that describes custom switch entities."""
@@ -86,7 +118,7 @@ class VeSyncSwitchEntityDescription(SwitchEntityDescription):
 SENSOR_DESCRIPTIONS: Final[tuple[VeSyncSwitchEntityDescription, ...]] = (
     VeSyncSwitchEntityDescription(
         key="device_status",
-        is_on=lambda device: device.state.device_status == "on",
+        is_on=lambda device: device.state.device_status == DeviceStatus.ON,
         # Other types of wall switches support dimming.  Those use light.py platform.
         exists_fn=lambda device: is_wall_switch(device) or is_outlet(device),
         name=None,
@@ -95,11 +127,12 @@ SENSOR_DESCRIPTIONS: Final[tuple[VeSyncSwitchEntityDescription, ...]] = (
     ),
     VeSyncSwitchEntityDescription(
         key="display",
-        is_on=lambda device: device.state.display_set_status == "on",
+        is_on=lambda device: device.state.display_set_status == DeviceStatus.ON,
         exists_fn=(
             lambda device: rgetattr(device, "state.display_set_status") is not None
         ),
         translation_key="display",
+        entity_category=EntityCategory.CONFIG,
         on_fn=lambda device: _toggle_display(device, True),
         off_fn=lambda device: _toggle_display(device, False),
     ),
@@ -108,6 +141,7 @@ SENSOR_DESCRIPTIONS: Final[tuple[VeSyncSwitchEntityDescription, ...]] = (
         is_on=lambda device: device.state.child_lock,
         exists_fn=(lambda device: rgetattr(device, "state.child_lock") is not None),
         translation_key="child_lock",
+        entity_category=EntityCategory.CONFIG,
         on_fn=lambda device: _toggle_child_lock(device, True),
         off_fn=lambda device: _toggle_child_lock(device, False),
     ),
@@ -118,6 +152,7 @@ SENSOR_DESCRIPTIONS: Final[tuple[VeSyncSwitchEntityDescription, ...]] = (
             lambda device: rgetattr(device, "state.automatic_stop_config") is not None
         ),
         translation_key="auto_off_config",
+        entity_category=EntityCategory.CONFIG,
         on_fn=lambda device: _toggle_auto_stop(device, True),
         off_fn=lambda device: _toggle_auto_stop(device, False),
     ),
@@ -130,6 +165,26 @@ SENSOR_DESCRIPTIONS: Final[tuple[VeSyncSwitchEntityDescription, ...]] = (
         translation_key="drying_mode_power_off",
         on_fn=lambda device: _toggle_drying_mode_on_power_off(device, True),
         off_fn=lambda device: _toggle_drying_mode_on_power_off(device, False),
+        entity_category=EntityCategory.CONFIG,
+    ),
+    VeSyncSwitchEntityDescription(
+        key="light_detection",
+        is_on=lambda device: device.state.light_detection_switch == DeviceStatus.ON,
+        exists_fn=(
+            lambda device: is_purifier(device) and device.supports_light_detection
+        ),
+        translation_key="light_detection",
+        on_fn=lambda device: _toggle_light_detection(device, True),
+        off_fn=lambda device: _toggle_light_detection(device, False),
+        entity_category=EntityCategory.CONFIG,
+    ),
+    VeSyncSwitchEntityDescription(
+        key="mute",
+        is_on=lambda device: device.state.mute_status == DeviceStatus.ON,
+        exists_fn=lambda device: is_fan(device) and device.supports_mute,
+        translation_key="mute",
+        on_fn=lambda device: _toggle_mute(device, True),
+        off_fn=lambda device: _toggle_mute(device, False),
         entity_category=EntityCategory.CONFIG,
     ),
 )

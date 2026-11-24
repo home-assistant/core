@@ -12,11 +12,11 @@ from homeassistant.auth.permissions.const import POLICY_READ
 from homeassistant.components import frontend
 from homeassistant.components.http import KEY_HASS, KEY_HASS_USER, HomeAssistantView
 from homeassistant.components.recorder import get_instance, history
-from homeassistant.components.recorder.util import session_scope
 from homeassistant.const import CONF_EXCLUDE, CONF_INCLUDE
 from homeassistant.core import HomeAssistant, valid_entity_id
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entityfilter import INCLUDE_EXCLUDE_BASE_FILTER_SCHEMA
+from homeassistant.helpers.recorder import session_scope
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import dt as dt_util
 
@@ -116,7 +116,7 @@ class HistoryPeriodView(HomeAssistantView):
             # has_states_before will return True if there are states older than
             # end_time. If it's false, we know there are no states in the
             # database up until end_time.
-            (end_time and not has_states_before(hass, end_time))
+            not has_states_before(hass, end_time)
             or (
                 not include_start_time_state
                 and entity_ids

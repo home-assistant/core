@@ -7,14 +7,13 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 from pyomie.model import OMIEResults, SpotData
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.omie.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
 
 from . import price_enc, spot_price_fetcher
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture
@@ -30,7 +29,7 @@ def mock_config_entry() -> MockConfigEntry:
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
-        "homeassistant.components.omie.async_setup_entry", return_value=True
+        "homeassistant.components.omie.async_setup_entry", return_value=None
     ) as mock_setup_entry:
         yield mock_setup_entry
 

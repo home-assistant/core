@@ -10,8 +10,8 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.restore_state import RestoreEntity
 
-from . import DeviceTuple
-from .const import ATTR_EVENT, COMMAND_GROUP_LIST, DATA_RFXOBJECT, DOMAIN, SIGNAL_EVENT
+from . import DeviceTuple, RfxtrxConfigEntry
+from .const import ATTR_EVENT, COMMAND_GROUP_LIST, DOMAIN, SIGNAL_EVENT
 
 
 class RfxtrxEntity(RestoreEntity):
@@ -30,15 +30,16 @@ class RfxtrxEntity(RestoreEntity):
         self,
         device: rfxtrxmod.RFXtrxDevice,
         device_id: DeviceTuple,
+        subentry_id: str,
         event: rfxtrxmod.RFXtrxEvent | None = None,
     ) -> None:
         """Initialize the device."""
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, device_id.unique_id)},
+            identifiers={(DOMAIN, subentry_id)},
             model=device.type_string,
             name=f"{device.type_string} {device_id.id_string}",
         )
-        self._attr_unique_id = device_id.unique_id
+        self._attr_unique_id = subentry_id
         self._device = device
         self._event = event
         self._device_id = device_id
@@ -104,15 +105,15 @@ class RfxtrxCommandEntity(RfxtrxEntity):
         self,
         device: rfxtrxmod.RFXtrxDevice,
         device_id: DeviceTuple,
+        subentry_id: str,
         event: rfxtrxmod.RFXtrxEvent | None = None,
     ) -> None:
         """Initialzie a switch or light device."""
-        super().__init__(device, device_id, event=event)
+        super().__init__(device, device_id, subentry_id, event=event)
 
     async def _async_send[*_Ts](
         self, fun: Callable[[rfxtrxmod.PySerialTransport, *_Ts], None], *args: *_Ts
     ) -> None:
-        # Uses legacy hass.data[DOMAIN] pattern
-        # pylint: disable-next=home-assistant-use-runtime-data
-        rfx_object: rfxtrxmod.Connect = self.hass.data[DOMAIN][DATA_RFXOBJECT]
+        config_entry = cast(RfxtrxConfigEntry, self.platform.config_entry)
+        rfx_object = config_entry.runtime_data
         await self.hass.async_add_executor_job(fun, rfx_object.transport, *args)

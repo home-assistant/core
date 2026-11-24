@@ -29,10 +29,7 @@ rules:
   entity-event-setup: done
   entity-unique-id: done
   has-entity-name: done
-  runtime-data:
-    status: exempt
-    comment: |
-      This integration does not store runtime data.
+  runtime-data: done
   test-before-configure:
     status: exempt
     comment: |
@@ -46,10 +43,7 @@ rules:
       entity, so there is no separate connection to validate during setup.
   unique-config-entry: done
   # Silver
-  action-exceptions:
-    status: exempt
-    comment: |
-      This integration does not register custom actions.
+  action-exceptions: done
   config-entry-unloading: done
   docs-configuration-parameters: done
   docs-installation-parameters: done
@@ -64,7 +58,7 @@ rules:
   test-coverage: done
   # Gold
   devices: done
-  diagnostics: todo
+  diagnostics: done
   discovery-update-info:
     status: exempt
     comment: |
@@ -77,12 +71,12 @@ rules:
     status: exempt
     comment: |
       This integration does not fetch data from devices.
-  docs-examples: todo
+  docs-examples: done
   docs-known-limitations: done
   docs-supported-devices: done
   docs-supported-functions: done
-  docs-troubleshooting: todo
-  docs-use-cases: todo
+  docs-troubleshooting: done
+  docs-use-cases: done
   dynamic-devices:
     status: exempt
     comment: |
@@ -98,11 +92,8 @@ rules:
     status: exempt
     comment: |
       This integration does not raise exceptions.
-  icon-translations:
-    status: exempt
-    comment: |
-      This integration does not use custom icons.
-  reconfiguration-flow: todo
+  icon-translations: done
+  reconfiguration-flow: done
   repair-issues:
     status: exempt
     comment: |

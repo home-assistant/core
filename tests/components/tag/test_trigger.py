@@ -4,6 +4,7 @@ from typing import Any
 
 import attr
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components import automation
 from homeassistant.components.tag import async_scan_tag
@@ -12,8 +13,6 @@ from homeassistant.const import ATTR_ENTITY_ID, SERVICE_TURN_OFF
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import device_registry as dr
 from homeassistant.setup import async_setup_component
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture

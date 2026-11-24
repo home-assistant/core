@@ -2,6 +2,7 @@
   "domain": "trend",
   "name": "Trend",
   "after_dependencies": ["sensor", "counter"],
+  "categories": ["helpers.calculate_value"],
   "codeowners": ["@jpbede"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/trend",

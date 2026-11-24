@@ -22,7 +22,7 @@ from homeassistant.config_entries import (
     OptionsFlow,
 )
 from homeassistant.const import CONF_DEVICE, CONF_HOST
-from homeassistant.core import callback
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, callback
 from homeassistant.data_entry_flow import AbortFlow
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.dispatcher import async_dispatcher_send
@@ -156,7 +156,9 @@ class FluxLedConfigFlow(ConfigFlow, domain=DOMAIN):
         host = device[ATTR_IPADDR]
         self.host = host
         if self.hass.config_entries.flow.async_has_matching_flow(self):
-            return self.async_abort(reason="already_in_progress")
+            return self.async_abort(
+                reason="already_in_progress", translation_domain=HOMEASSISTANT_DOMAIN
+            )
         if not device[ATTR_MODEL_DESCRIPTION]:
             mac_address = device[ATTR_ID]
             assert mac_address is not None
@@ -193,7 +195,6 @@ class FluxLedConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             return self._async_create_entry_from_device(self._discovered_device)
 
-        self._set_confirm_only()
         placeholders = {
             "model": device[ATTR_MODEL_DESCRIPTION]
             or device[ATTR_MODEL]
@@ -245,6 +246,41 @@ class FluxLedConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="user",
             data_schema=probatio.Schema(
                 {probatio.Optional(CONF_HOST, default=""): str}
+            ),
+            errors=errors,
+        )
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle reconfiguration of the device host."""
+        errors = {}
+        entry = self._get_reconfigure_entry()
+        if user_input is not None:
+            try:
+                device = await self._async_try_connect(user_input[CONF_HOST], None)
+            except FLUX_LED_EXCEPTIONS:
+                errors["base"] = "cannot_connect"
+            else:
+                if (mac_address := device[ATTR_ID]) is not None:
+                    mac = dr.format_mac(mac_address)
+                    if entry.unique_id:
+                        # Some devices report a MAC address that is one off
+                        if not mac_matches_by_one(mac, entry.unique_id):
+                            return self.async_abort(reason="unique_id_mismatch")
+                    # The reload would assign this MAC as unique_id to the entry
+                    elif mac in self._async_current_ids():
+                        return self.async_abort(reason="already_configured")
+                result = self.async_update_and_abort(entry, data_updates=user_input)
+                # The update listener only handles options, so reload explicitly
+                self.hass.config_entries.async_schedule_reload(entry.entry_id)
+                return result
+
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=self.add_suggested_values_to_schema(
+                probatio.Schema({probatio.Required(CONF_HOST): str}),
+                user_input or entry.data,
             ),
             errors=errors,
         )
@@ -305,6 +341,8 @@ class FluxLedConfigFlow(ConfigFlow, domain=DOMAIN):
             # identifying the device as the chip model number
             # AKA `HF-LPB100-ZJ200`
             return device
+        # Keep the MAC address from a partial UDP response
+        discovery = discovery or device
         bulb = async_wifi_bulb_for_host(host, discovery=device)
         bulb.discovery = discovery
         try:

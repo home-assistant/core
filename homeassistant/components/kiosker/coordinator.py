@@ -95,6 +95,7 @@ class KioskerDataUpdateCoordinator(DataUpdateCoordinator[KioskerData]):
         except (OSError, TimeoutError) as exc:
             raise UpdateFailed(f"Connection timeout: {exc}") from exc
         except Exception as exc:
+            # pylint: disable-next=home-assistant-log-and-raise
             _LOGGER.exception("Unexpected error updating Kiosker data")
             raise UpdateFailed(f"Unexpected error: {exc}") from exc
 

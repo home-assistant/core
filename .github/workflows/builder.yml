@@ -14,7 +14,8 @@ env:
   UV_HTTP_TIMEOUT: 60
   UV_SYSTEM_PYTHON: "true"
   # Base image version from https://github.com/home-assistant/docker
-  BASE_IMAGE_VERSION: "2026.07.0"
+  # If python version changes in the base image, update .python-version accordingly to match the new Python version.
+  BASE_IMAGE_VERSION: "2026.10.3"
   ARCHITECTURES: '["amd64", "aarch64"]'
   MACHINES: >-
     ["generic-x86-64", "khadas-vim3", "odroid-c2", "odroid-c4", "odroid-m1",
@@ -31,7 +32,7 @@ jobs:
   init:
     name: Initialize build
     if: github.repository_owner == 'home-assistant'
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     permissions:
       contents: read # To check out the repository
     outputs:
@@ -43,23 +44,23 @@ jobs:
       base_image_version: ${{ env.BASE_IMAGE_VERSION }}
     steps:
       - name: Checkout the repository
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        uses: actions/checkout@v7.0.1
         with:
           persist-credentials: false
 
       - name: Set up Python
-        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        uses: actions/setup-python@v7.1.0
         with:
           python-version-file: ".python-version"
 
       - name: Get version
         id: version
-        uses: home-assistant/actions/helpers/version@master # zizmor: ignore[unpinned-uses]
+        uses: home-assistant/actions/helpers/version@2026.11.0
         with:
           type: ${{ env.BUILD_TYPE }}
 
       - name: Verify version
-        uses: home-assistant/actions/helpers/verify-version@master # zizmor: ignore[unpinned-uses]
+        uses: home-assistant/actions/helpers/verify-version@2026.11.0
         with:
           ignore-dev: true
 
@@ -81,7 +82,7 @@ jobs:
         run: find ./homeassistant/components/*/translations -name "*.json" | tar zcvf translations.tar.gz -T -
 
       - name: Upload translations
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@v7.0.2
         with:
           name: translations
           path: translations.tar.gz
@@ -102,18 +103,18 @@ jobs:
         arch: ${{ fromJson(needs.init.outputs.architectures) }}
         include:
           - arch: amd64
-            os: ubuntu-24.04
+            os: ubuntu-26.04
           - arch: aarch64
-            os: ubuntu-24.04-arm
+            os: ubuntu-26.04-arm
     steps:
       - name: Checkout the repository
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        uses: actions/checkout@v7.0.1
         with:
           persist-credentials: false
 
       - name: Download nightly wheels of frontend
         if: needs.init.outputs.channel == 'dev'
-        uses: dawidd6/action-download-artifact@d63b86af1b34672e53c440b1b83979861906bad7 # v24
+        uses: dawidd6/action-download-artifact@v28
         with:
           github_token: ${{secrets.GITHUB_TOKEN}}
           repo: home-assistant/frontend
@@ -124,7 +125,7 @@ jobs:
 
       - name: Download nightly wheels of intents
         if: needs.init.outputs.channel == 'dev'
-        uses: dawidd6/action-download-artifact@d63b86af1b34672e53c440b1b83979861906bad7 # v24
+        uses: dawidd6/action-download-artifact@v28
         with:
           github_token: ${{secrets.GITHUB_TOKEN}}
           repo: OHF-Voice/intents-package
@@ -135,7 +136,7 @@ jobs:
 
       - name: Set up Python
         if: needs.init.outputs.channel == 'dev'
-        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        uses: actions/setup-python@v7.1.0
         with:
           python-version-file: ".python-version"
 
@@ -183,7 +184,7 @@ jobs:
           fi
 
       - name: Download translations
-        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        uses: actions/download-artifact@v8.0.2
         with:
           name: translations
 
@@ -198,7 +199,7 @@ jobs:
           echo "${GITHUB_SHA};${GITHUB_REF};${GITHUB_EVENT_NAME};${GITHUB_ACTOR}" > rootfs/OFFICIAL_IMAGE
 
       - name: Build base image
-        uses: home-assistant/builder/actions/build-image@7412f0023ea9b6e58e8bb5059f1660f51376f49a # 2026.09.0
+        uses: home-assistant/builder/actions/build-image@2026.09.0
         with:
           arch: ${{ matrix.arch }}
           build-args: |
@@ -227,17 +228,17 @@ jobs:
         include:
           # Default: aarch64 on native ARM runner
           - arch: aarch64
-            runs-on: ubuntu-24.04-arm
+            runs-on: ubuntu-26.04-arm
           # Overrides for amd64 machines
           - machine: generic-x86-64
             arch: amd64
-            runs-on: ubuntu-24.04
+            runs-on: ubuntu-26.04
           - machine: qemux86-64
             arch: amd64
-            runs-on: ubuntu-24.04
+            runs-on: ubuntu-26.04
     steps:
       - name: Checkout the repository
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        uses: actions/checkout@v7.0.1
         with:
           persist-credentials: false
 
@@ -256,7 +257,7 @@ jobs:
           fi
 
       - name: Build machine image
-        uses: home-assistant/builder/actions/build-image@7412f0023ea9b6e58e8bb5059f1660f51376f49a # 2026.09.0
+        uses: home-assistant/builder/actions/build-image@2026.09.0
         with:
           arch: ${{ matrix.arch }}
           build-args: |
@@ -297,24 +298,24 @@ jobs:
     environment: ${{ needs.init.outputs.channel }}
     if: github.repository_owner == 'home-assistant'
     needs: ["init", "build_machine", "run_e2e_tests_machine"]
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     permissions:
       contents: read
     steps:
       - name: Checkout the repository
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        uses: actions/checkout@v7.0.1
         with:
           persist-credentials: false
 
       - name: Initialize git
-        uses: home-assistant/actions/helpers/git-init@master # zizmor: ignore[unpinned-uses]
+        uses: home-assistant/actions/helpers/git-init@2026.11.0
         with:
           name: ${{ secrets.GIT_NAME }}
           email: ${{ secrets.GIT_EMAIL }}
           token: ${{ secrets.GIT_TOKEN }}
 
       - name: Update version file
-        uses: home-assistant/actions/helpers/version-push@master # zizmor: ignore[unpinned-uses]
+        uses: home-assistant/actions/helpers/version-push@2026.11.0
         with:
           key: "homeassistant[]"
           key-description: "Home Assistant Core"
@@ -324,7 +325,7 @@ jobs:
 
       - name: Update version file (stable -> beta)
         if: needs.init.outputs.channel == 'stable'
-        uses: home-assistant/actions/helpers/version-push@master # zizmor: ignore[unpinned-uses]
+        uses: home-assistant/actions/helpers/version-push@2026.11.0
         with:
           key: "homeassistant[]"
           key-description: "Home Assistant Core"
@@ -337,7 +338,7 @@ jobs:
     environment: ${{ needs.init.outputs.channel }}
     if: github.repository_owner == 'home-assistant'
     needs: ["init", "build_base", "run_e2e_tests_base"]
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     permissions:
       contents: read # To check out the repository
       packages: write # To push to GHCR
@@ -348,17 +349,17 @@ jobs:
         registry: ["ghcr.io/home-assistant", "docker.io/homeassistant"]
     steps:
       - name: Install Cosign
-        uses: sigstore/cosign-installer@6f9f17788090df1f26f669e9d70d6ae9567deba6 # v4.1.2
+        uses: sigstore/cosign-installer@v4.1.3
 
       - name: Login to DockerHub
         if: matrix.registry == 'docker.io/homeassistant'
-        uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4.6.0
+        uses: docker/login-action@v4.8.0
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
       - name: Login to GitHub Container Registry
-        uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4.6.0
+        uses: docker/login-action@v4.8.0
         with:
           registry: ghcr.io
           username: ${{ github.repository_owner }}
@@ -388,7 +389,7 @@ jobs:
       #   2025.12.0.dev202511250240 -> tags: 2025.12.0.dev202511250240, dev
       - name: Generate Docker metadata
         id: meta
-        uses: docker/metadata-action@dc802804100637a589fabce1cb79ff13a1411302 # v6.2.0
+        uses: docker/metadata-action@v6.2.0
         with:
           images: ${{ matrix.registry }}/home-assistant
           sep-tags: ","
@@ -402,7 +403,7 @@ jobs:
             type=semver,pattern={{major}}.{{minor}},value=${{ needs.init.outputs.version }},enable=${{ !contains(needs.init.outputs.version, 'd') && !contains(needs.init.outputs.version, 'b') }}
 
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@37fe631027851001ddb9b187196cc803df7f5f0e # v4.3.0
+        uses: docker/setup-buildx-action@v4.4.1
 
       - name: Copy architecture images to DockerHub
         if: matrix.registry == 'docker.io/homeassistant'
@@ -472,24 +473,24 @@ jobs:
     name: Build PyPi package
     environment: ${{ needs.init.outputs.channel }}
     needs: ["init", "build_base", "run_e2e_tests_base"]
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     permissions:
       contents: read # To check out the repository
       id-token: write # For PyPI trusted publishing
     if: github.repository_owner == 'home-assistant' && needs.init.outputs.publish == 'true'
     steps:
       - name: Checkout the repository
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        uses: actions/checkout@v7.0.1
         with:
           persist-credentials: false
 
       - name: Set up Python
-        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        uses: actions/setup-python@v7.1.0
         with:
           python-version-file: ".python-version"
 
       - name: Download translations
-        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        uses: actions/download-artifact@v8.0.2
         with:
           name: translations
 
@@ -505,15 +506,17 @@ jobs:
           # when build locally for testing!
           pip install build
           python -m build
+          python3 -m packages.package_release
+          python -m build packages/pytest-homeassistant --outdir dist
 
       - name: Upload package to PyPI
-        uses: pypa/gh-action-pypi-publish@dc37677b2e1c63e2034f94d8a5b11f265b73ba33 # v1.14.2
+        uses: pypa/gh-action-pypi-publish@v1.14.3
         with:
           skip-existing: true
 
   hassfest-image:
     name: Build and test hassfest image
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     permissions:
       contents: read # To check out the repository
       packages: write # To push to GHCR
@@ -526,19 +529,19 @@ jobs:
       HASSFEST_IMAGE_TAG: ghcr.io/home-assistant/hassfest:${{ needs.init.outputs.version }}
     steps:
       - name: Checkout repository
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        uses: actions/checkout@v7.0.1
         with:
           persist-credentials: false
 
       - name: Login to GitHub Container Registry
-        uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4.6.0
+        uses: docker/login-action@v4.8.0
         with:
           registry: ghcr.io
           username: ${{ github.repository_owner }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build Docker image
-        uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a # v7.3.0
+        uses: docker/build-push-action@v7.4.0
         with:
           context: . # So action will not pull the repository again
           file: ./script/hassfest/docker/Dockerfile
@@ -551,7 +554,7 @@ jobs:
       - name: Push Docker image
         if: needs.init.outputs.channel != 'dev' && needs.init.outputs.publish == 'true'
         id: push
-        uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a # v7.3.0
+        uses: docker/build-push-action@v7.4.0
         with:
           context: . # So action will not pull the repository again
           file: ./script/hassfest/docker/Dockerfile
@@ -560,7 +563,7 @@ jobs:
 
       - name: Generate artifact attestation
         if: needs.init.outputs.channel != 'dev' && needs.init.outputs.publish == 'true'
-        uses: actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6 # v4.2.2
+        uses: actions/attest@v4.2.2
         with:
           subject-name: ${{ env.HASSFEST_IMAGE_NAME }}
           subject-digest: ${{ steps.push.outputs.digest }}

@@ -4,13 +4,12 @@ from collections.abc import AsyncGenerator, Callable, Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.remember_the_milk.const import DOMAIN
 from homeassistant.core import HomeAssistant
 
 from .const import CREATE_ENTRY_DATA, PROFILE, TOKEN_RESPONSE
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture
@@ -160,6 +159,6 @@ def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
         "homeassistant.components.remember_the_milk.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ) as mock_setup_entry:
         yield mock_setup_entry

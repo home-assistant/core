@@ -15,15 +15,9 @@ from homeassistant.components.climate import (
     ClimateEntityFeature,
     HVACMode,
 )
-from homeassistant.const import (
-    ATTR_NAME,
-    PRECISION_TENTHS,
-    PRECISION_WHOLE,
-    UnitOfTemperature,
-)
+from homeassistant.const import PRECISION_TENTHS, PRECISION_WHOLE, UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import dt as dt_util
 
@@ -101,7 +95,7 @@ class NoboZone(NoboBaseEntity, ClimateEntity):
     _attr_hvac_mode = HVACMode.AUTO
     _attr_preset_modes = PRESET_MODES
     _attr_supported_features = SUPPORT_FLAGS
-    _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_native_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_target_temperature_step = PRECISION_WHOLE
     # Need to poll to get preset change when in HVACMode.AUTO
     _attr_should_poll = True
@@ -119,13 +113,7 @@ class NoboZone(NoboBaseEntity, ClimateEntity):
         self._id = zone_id
         self._attr_unique_id = f"{hub.hub_serial}:{zone_id}"
         self._override_type = override_type
-        zone_name = hub.zones[zone_id][ATTR_NAME]
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, self._attr_unique_id)},
-            name=zone_name,
-            via_device_id=self._hub_device_id,
-            suggested_area=zone_name,
-        )
+        self._attr_device_info = self._zone_device_info(zone_id)
         self._read_state()
 
     @override
@@ -214,12 +202,12 @@ class NoboZone(NoboBaseEntity, ClimateEntity):
             self._attr_hvac_mode = HVACMode.HEAT
 
         current_temperature = self._nobo.get_current_zone_temperature(self._id)
-        self._attr_current_temperature = (
+        self._attr_native_current_temperature = (
             None if current_temperature is None else float(current_temperature)
         )
-        self._attr_target_temperature_high = int(
+        self._attr_native_target_temperature_high = int(
             self._nobo.zones[self._id][ATTR_TEMP_COMFORT_C]
         )
-        self._attr_target_temperature_low = int(
+        self._attr_native_target_temperature_low = int(
             self._nobo.zones[self._id][ATTR_TEMP_ECO_C]
         )

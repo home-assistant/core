@@ -23,13 +23,15 @@ from pynecil import (
     TipType,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.components.bluetooth import (
+    generate_advertisement_data,
+    generate_ble_device,
+)
 
 from homeassistant.components.iron_os import DOMAIN
 from homeassistant.config_entries import SOURCE_IGNORE
 from homeassistant.const import CONF_ADDRESS
-
-from tests.common import MockConfigEntry
-from tests.components.bluetooth import generate_advertisement_data, generate_ble_device
 
 USER_INPUT = {CONF_ADDRESS: "c0:ff:ee:c0:ff:ee"}
 DEFAULT_NAME = "Pinecil-C0FFEEE"
@@ -85,7 +87,7 @@ def mock_bluetooth(enable_bluetooth: None) -> None:
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
-        "homeassistant.components.iron_os.async_setup_entry", return_value=True
+        "homeassistant.components.iron_os.async_setup_entry", return_value=None
     ) as mock_setup_entry:
         yield mock_setup_entry
 

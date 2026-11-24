@@ -1,6 +1,6 @@
 """The tests for the recorder filter matching the EntityFilter component."""
 
-import datetime
+import datetime as dt
 import importlib
 import sys
 import threading
@@ -10,6 +10,15 @@ import uuid
 
 from freezegun import freeze_time
 import pytest
+from pytest_homeassistant.common import async_test_home_assistant
+from pytest_homeassistant.components.recorder.common import (
+    async_attach_db_engine,
+    async_drop_index,
+    async_recorder_block_till_done,
+    async_wait_recording_done,
+    get_patched_live_version,
+)
+from pytest_homeassistant.typing import RecorderInstanceContextManager
 from sqlalchemy import create_engine, inspect
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
@@ -44,20 +53,10 @@ from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
 from homeassistant.util.ulid import bytes_to_ulid, ulid_at_time, ulid_to_bytes
 
-from .common import (
-    async_attach_db_engine,
-    async_drop_index,
-    async_recorder_block_till_done,
-    async_wait_recording_done,
-    get_patched_live_version,
-)
 from .conftest import instrument_migration
 
-from tests.common import async_test_home_assistant
-from tests.typing import RecorderInstanceContextManager
-
 CREATE_ENGINE_TARGET = "homeassistant.components.recorder.core.create_engine"
-SCHEMA_MODULE_32 = "tests.components.recorder.db_schema_32"
+SCHEMA_MODULE_32 = "pytest_homeassistant.components.recorder.db_schema_32"
 
 
 @pytest.fixture
@@ -1501,9 +1500,9 @@ async def test_stats_timestamp_conversion_is_reentrant(
     importlib.import_module(SCHEMA_MODULE_32)
     old_db_schema = sys.modules[SCHEMA_MODULE_32]
     now = dt_util.utcnow()
-    one_year_ago = now - datetime.timedelta(days=365)
-    six_months_ago = now - datetime.timedelta(days=180)
-    one_month_ago = now - datetime.timedelta(days=30)
+    one_year_ago = now - dt.timedelta(days=365)
+    six_months_ago = now - dt.timedelta(days=180)
+    one_month_ago = now - dt.timedelta(days=30)
 
     def _do_migration():
         migration._migrate_statistics_columns_to_timestamp_removing_duplicates(
@@ -1524,7 +1523,7 @@ async def test_stats_timestamp_conversion_is_reentrant(
                 )
             )
 
-    def _insert_pre_timestamp_stat(date_time: datetime.datetime) -> None:
+    def _insert_pre_timestamp_stat(date_time: dt.datetime) -> None:
         with session_scope(hass=hass) as session:
             session.add(
                 old_db_schema.StatisticsShortTerm(
@@ -1539,7 +1538,7 @@ async def test_stats_timestamp_conversion_is_reentrant(
                 )
             )
 
-    def _insert_post_timestamp_stat(date_time: datetime.datetime) -> None:
+    def _insert_post_timestamp_stat(date_time: dt.datetime) -> None:
         with session_scope(hass=hass) as session:
             session.add(
                 db_schema.StatisticsShortTerm(
@@ -1657,9 +1656,9 @@ async def test_stats_timestamp_with_one_by_one(
     importlib.import_module(SCHEMA_MODULE_32)
     old_db_schema = sys.modules[SCHEMA_MODULE_32]
     now = dt_util.utcnow()
-    one_year_ago = now - datetime.timedelta(days=365)
-    six_months_ago = now - datetime.timedelta(days=180)
-    one_month_ago = now - datetime.timedelta(days=30)
+    one_year_ago = now - dt.timedelta(days=365)
+    six_months_ago = now - dt.timedelta(days=180)
+    one_month_ago = now - dt.timedelta(days=30)
 
     def _do_migration():
         with patch.object(
@@ -1685,7 +1684,7 @@ async def test_stats_timestamp_with_one_by_one(
                 )
             )
 
-    def _insert_pre_timestamp_stat(date_time: datetime.datetime) -> None:
+    def _insert_pre_timestamp_stat(date_time: dt.datetime) -> None:
         with session_scope(hass=hass) as session:
             session.add_all(
                 (
@@ -1712,7 +1711,7 @@ async def test_stats_timestamp_with_one_by_one(
                 )
             )
 
-    def _insert_post_timestamp_stat(date_time: datetime.datetime) -> None:
+    def _insert_post_timestamp_stat(date_time: dt.datetime) -> None:
         with session_scope(hass=hass) as session:
             session.add_all(
                 (
@@ -1883,9 +1882,9 @@ async def test_stats_timestamp_with_one_by_one_removes_duplicates(
     importlib.import_module(SCHEMA_MODULE_32)
     old_db_schema = sys.modules[SCHEMA_MODULE_32]
     now = dt_util.utcnow()
-    one_year_ago = now - datetime.timedelta(days=365)
-    six_months_ago = now - datetime.timedelta(days=180)
-    one_month_ago = now - datetime.timedelta(days=30)
+    one_year_ago = now - dt.timedelta(days=365)
+    six_months_ago = now - dt.timedelta(days=180)
+    one_month_ago = now - dt.timedelta(days=30)
 
     def _do_migration():
         with (
@@ -1918,7 +1917,7 @@ async def test_stats_timestamp_with_one_by_one_removes_duplicates(
                 )
             )
 
-    def _insert_pre_timestamp_stat(date_time: datetime.datetime) -> None:
+    def _insert_pre_timestamp_stat(date_time: dt.datetime) -> None:
         with session_scope(hass=hass) as session:
             session.add_all(
                 (
@@ -1945,7 +1944,7 @@ async def test_stats_timestamp_with_one_by_one_removes_duplicates(
                 )
             )
 
-    def _insert_post_timestamp_stat(date_time: datetime.datetime) -> None:
+    def _insert_post_timestamp_stat(date_time: dt.datetime) -> None:
         with session_scope(hass=hass) as session:
             session.add_all(
                 (
@@ -2254,12 +2253,12 @@ async def test_cleanup_unmigrated_state_timestamps(
         with session_scope(hass=hass) as session:
             state1 = old_db_schema.States(
                 entity_id="state.test_state1",
-                last_updated=datetime.datetime(
-                    2016, 10, 28, 20, 13, 52, 452529, tzinfo=datetime.UTC
+                last_updated=dt.datetime(
+                    2016, 10, 28, 20, 13, 52, 452529, tzinfo=dt.UTC
                 ),
                 last_updated_ts=None,
-                last_changed=datetime.datetime(
-                    2016, 10, 28, 20, 13, 52, 452529, tzinfo=datetime.UTC
+                last_changed=dt.datetime(
+                    2016, 10, 28, 20, 13, 52, 452529, tzinfo=dt.UTC
                 ),
                 last_changed_ts=None,
                 context_id=uuid_hex,
@@ -2271,12 +2270,12 @@ async def test_cleanup_unmigrated_state_timestamps(
             )
             state2 = old_db_schema.States(
                 entity_id="state.test_state2",
-                last_updated=datetime.datetime(
-                    2016, 10, 28, 20, 13, 52, 552529, tzinfo=datetime.UTC
+                last_updated=dt.datetime(
+                    2016, 10, 28, 20, 13, 52, 552529, tzinfo=dt.UTC
                 ),
                 last_updated_ts=None,
-                last_changed=datetime.datetime(
-                    2016, 10, 28, 20, 13, 52, 452529, tzinfo=datetime.UTC
+                last_changed=dt.datetime(
+                    2016, 10, 28, 20, 13, 52, 452529, tzinfo=dt.UTC
                 ),
                 last_changed_ts=None,
                 context_id=None,
