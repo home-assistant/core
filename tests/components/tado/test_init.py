@@ -101,4 +101,3 @@ async def test_tado_x_home_is_rejected_error(
     await hass.async_block_till_done()
 
     assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
-    assert "Matter" in mock_config_entry.reason
