@@ -6,7 +6,6 @@ import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries
-from homeassistant.components.owntracks import config_flow
 from homeassistant.components.owntracks.config_flow import CONF_CLOUDHOOK, CONF_SECRET
 from homeassistant.components.owntracks.const import DOMAIN
 from homeassistant.const import CONF_WEBHOOK_ID
@@ -50,26 +49,24 @@ def mock_not_supports_encryption():
         yield
 
 
-async def init_config_flow(hass: HomeAssistant) -> config_flow.OwnTracksFlow:
+async def init_config_flow(hass: HomeAssistant) -> config_entries.ConfigFlowResult:
     """Init a configuration flow."""
     await async_process_ha_core_config(
         hass,
         {"external_url": BASE_URL},
     )
-    flow = config_flow.OwnTracksFlow()
-    flow.hass = hass
-    return flow
+    return await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
 
 
 async def test_user(hass: HomeAssistant, webhook_id, secret) -> None:
     """Test user step."""
-    flow = await init_config_flow(hass)
-
-    result = await flow.async_step_user()
+    result = await init_config_flow(hass)
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
 
-    result = await flow.async_step_user({})
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "OwnTracks"
     assert result["data"][CONF_WEBHOOK_ID] == WEBHOOK_ID
@@ -109,9 +106,9 @@ async def test_user_not_supports_encryption(
     hass: HomeAssistant, not_supports_encryption
 ) -> None:
     """Test user step."""
-    flow = await init_config_flow(hass)
+    result = await init_config_flow(hass)
 
-    result = await flow.async_step_user({})
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert (
         result["description_placeholders"]["secret"]

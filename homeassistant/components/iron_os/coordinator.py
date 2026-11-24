@@ -112,7 +112,7 @@ class IronOSLiveDataCoordinator(IronOSBaseCoordinator[LiveDataResponse]):
 
         except CommunicationError:
             _LOGGER.debug("Cannot connect to device", exc_info=True)
-            return self.data or LiveDataResponse()
+            return self.data_or_none or LiveDataResponse()
 
     @property
     def has_tip(self) -> bool:

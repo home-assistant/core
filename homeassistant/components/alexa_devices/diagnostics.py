@@ -17,11 +17,16 @@ TO_REDACT = {
     CONF_PASSWORD,
     CONF_USERNAME,
     "access_token",
+    "account_customer_id",
     "adp_token",
     "device_private_key",
+    "device_serial_number",
+    "given_name",
     "refresh_token",
     "store_authentication_cookie",
     "title",
+    "unique_id",
+    "user_id",
     "website_cookies",
 }
 

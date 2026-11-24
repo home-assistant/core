@@ -14,7 +14,9 @@ from .const import DOMAIN
 class ForecaService(StrEnum):
     """Foreca actions."""
 
+    GET_3_HOUR_FORECAST = "get_3_hour_forecast"
     GET_FORECASTS_EXTRA = "get_forecasts_extra"
+    GET_MINUTE_FORECAST = "get_minute_forecast"
 
 
 class ForecaServiceArgument(StrEnum):
@@ -37,5 +39,23 @@ def async_setup_services(hass: HomeAssistant) -> None:
             )
         },
         func="async_get_forecasts_extra",
+        supports_response=SupportsResponse.ONLY,
+    )
+    service.async_register_platform_entity_service(
+        hass,
+        DOMAIN,
+        ForecaService.GET_3_HOUR_FORECAST,
+        entity_domain=WEATHER_DOMAIN,
+        schema=None,
+        func="async_get_3_hour_forecast",
+        supports_response=SupportsResponse.ONLY,
+    )
+    service.async_register_platform_entity_service(
+        hass,
+        DOMAIN,
+        ForecaService.GET_MINUTE_FORECAST,
+        entity_domain=WEATHER_DOMAIN,
+        schema=None,
+        func="async_get_minute_forecast",
         supports_response=SupportsResponse.ONLY,
     )

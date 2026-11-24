@@ -25,6 +25,11 @@
         "default": "mdi:power-sleep"
       }
     },
+    "event": {
+      "notification": {
+        "default": "mdi:message-badge"
+      }
+    },
     "media_player": {
       "audio": {
         "default": "mdi:speaker"
@@ -230,6 +235,9 @@
     },
     "send_keypress": {
       "service": "mdi:keyboard"
+    },
+    "send_message": {
+      "service": "mdi:message-badge"
     },
     "send_text": {
       "service": "mdi:keyboard"

@@ -1,7 +1,7 @@
 """Support for Meteo-France raining forecast sensor."""
 
 from dataclasses import dataclass
-from typing import Any, override
+from typing import TYPE_CHECKING, Any, override
 
 from meteofrance_api.helpers import readable_phenomenons_dict
 from meteofrance_api.model.forecast import Forecast
@@ -179,7 +179,7 @@ async def async_setup_entry(
     coordinator_alert = entry.runtime_data.alert_coordinator
 
     entities: list[MeteoFranceSensor[Any]] = [
-        MeteoFranceSensor(coordinator_forecast, description)
+        MeteoFrancePositionSensor(coordinator_forecast, description)
         for description in SENSOR_TYPES
     ]
     # Add rain forecast entity only if location support this feature
@@ -202,7 +202,7 @@ async def async_setup_entry(
     if coordinator_forecast.data.probability_forecast:
         entities.extend(
             [
-                MeteoFranceSensor(coordinator_forecast, description)
+                MeteoFrancePositionSensor(coordinator_forecast, description)
                 for description in SENSOR_TYPES_PROBABILITY
             ]
         )
@@ -227,16 +227,14 @@ class MeteoFranceSensor[_DataT: Rain | Forecast | CurrentPhenomenons](
         """Initialize the Meteo-France sensor."""
         super().__init__(coordinator)
         self.entity_description = description
-        if hasattr(coordinator.data, "position"):
-            pos = coordinator.data.position
-            self._attr_unique_id = f"{pos['lat']},{pos['lon']}_{description.key}"
 
     @property
     @override
     def device_info(self) -> DeviceInfo:
         """Return the device info."""
         entry = self.platform.config_entry
-        assert entry and entry.unique_id
+        if TYPE_CHECKING:
+            assert entry and entry.unique_id
         forecast = entry.runtime_data.forecast_coordinator.data
         return DeviceInfo(
             entry_type=DeviceEntryType.SERVICE,
@@ -275,7 +273,21 @@ class MeteoFranceSensor[_DataT: Rain | Forecast | CurrentPhenomenons](
         return value
 
 
-class MeteoFranceRainSensor(MeteoFranceSensor[Rain]):
+class MeteoFrancePositionSensor[_DataT: Rain | Forecast](MeteoFranceSensor[_DataT]):
+    """Representation of a Meteo-France sensor of a position."""
+
+    def __init__(
+        self,
+        coordinator: DataUpdateCoordinator[_DataT],
+        description: MeteoFranceSensorEntityDescription,
+    ) -> None:
+        """Initialize the Meteo-France sensor."""
+        super().__init__(coordinator, description)
+        pos = coordinator.data.position
+        self._attr_unique_id = f"{pos['lat']},{pos['lon']}_{description.key}"
+
+
+class MeteoFranceRainSensor(MeteoFrancePositionSensor[Rain]):
     """Representation of a Meteo-France rain sensor."""
 
     @property

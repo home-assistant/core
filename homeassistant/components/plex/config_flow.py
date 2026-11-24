@@ -55,7 +55,7 @@ from .const import (
     X_PLEX_PRODUCT,
     X_PLEX_VERSION,
 )
-from .errors import NoServersFound, ServerNotSpecified
+from .errors import NoServersFound, ServerNotFound, ServerNotSpecified
 from .helpers import PlexConfigEntry, get_plex_server
 from .server import PlexServer
 
@@ -196,6 +196,11 @@ class PlexFlowHandler(ConfigFlow, domain=DOMAIN):
         except NoServersFound:
             _LOGGER.error("No servers linked to Plex account")
             errors["base"] = "no_servers"
+        except ServerNotFound:
+            _LOGGER.debug(
+                "Plex server not found on Plex account: %s", plex_server.server_choice
+            )
+            errors["base"] = "server_not_found"
         except plexapi.exceptions.BadRequest, plexapi.exceptions.Unauthorized:
             _LOGGER.error("Invalid credentials provided, config not created")
             errors[CONF_TOKEN] = "faulty_credentials"
