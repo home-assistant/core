@@ -82,7 +82,12 @@ class ControllerUpdate(UpdateEntity):
 
     def update(self) -> None:
         """Refresh the software update state of the controller."""
-        self._information.refresh()
+        try:
+            self._information.refresh()
+        except SHCException:
+            self._attr_available = False
+        else:
+            self._attr_available = True
 
     @override
     def install(self, version: str | None, backup: bool, **kwargs: Any) -> None:

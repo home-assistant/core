@@ -13,7 +13,13 @@ from homeassistant.components.update import (
     UpdateEntityStateAttribute,
     UpdateService,
 )
-from homeassistant.const import STATE_OFF, STATE_ON, Platform, TargetKey
+from homeassistant.const import (
+    STATE_OFF,
+    STATE_ON,
+    STATE_UNAVAILABLE,
+    Platform,
+    TargetKey,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 
@@ -54,6 +60,21 @@ async def test_up_to_date(
     assert state.attributes[UpdateEntityStateAttribute.INSTALLED_VERSION] == "2.0"
     assert state.attributes[UpdateEntityStateAttribute.LATEST_VERSION] == "2.0"
     mock_session.information.refresh.assert_called()
+
+
+@pytest.mark.usefixtures("mock_session")
+async def test_refresh_failure_on_setup(
+    hass: HomeAssistant,
+    mock_session: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """A failing refresh on setup still creates the entity, unavailable."""
+    mock_session.information.refresh.side_effect = SHCException("offline")
+    await setup_integration(hass, mock_config_entry)
+
+    state = hass.states.get(ENTITY_ID)
+    assert state is not None
+    assert state.state == STATE_UNAVAILABLE
 
 
 @pytest.mark.parametrize(
