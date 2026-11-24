@@ -3,6 +3,8 @@
     "infrared_entity_id": "Infrared emitter",
     "infrared_entity_id_description": "The infrared emitter entity to use for sending commands.",
     "infrared_receiver_entity_id": "Infrared receiver",
+    "infrared_receiver_entity_id_description": "The infrared receiver entity to use for receiving signals.",
+    "missing_infrared_entity": "Select an infrared emitter or receiver.",
     "no_infrared_emitters": "No infrared emitter entities found. Please set up an infrared device first.",
     "no_infrared_entities": "No infrared entities found. Please set up an infrared device first."
   },
