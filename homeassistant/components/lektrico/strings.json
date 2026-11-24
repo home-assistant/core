@@ -168,6 +168,9 @@
       "authentication": {
         "name": "Authentication"
       },
+      "compatibility_mode": {
+        "name": "Compatibility mode"
+      },
       "force_single_phase": {
         "name": "Force single phase"
       },
