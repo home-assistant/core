@@ -1,0 +1,30 @@
+name: Search Issue 194159 static checks
+
+on:
+  push:
+    branches:
+      - fix/194159-search-related-registry-ids
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    name: Ruff and syntax verification
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Ruff (repository pinned version)
+        uses: astral-sh/ruff-action@v3
+        with:
+          version: "0.17.5"
+          args: "--version"
+      - name: Ruff lint (both changed files)
+        run: ruff check homeassistant/components/search/__init__.py tests/components/search/test_init.py
+      - name: Ruff format (both changed files)
+        run: ruff format --check homeassistant/components/search/__init__.py tests/components/search/test_init.py
+      - name: Python syntax check of changed files
+        run: |
+          python -m py_compile homeassistant/components/search/__init__.py tests/components/search/test_init.py
