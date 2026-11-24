@@ -1411,26 +1411,25 @@ async def test_commodity_price_sensor(
     assert state.state == "0.25"
     assert state.attributes["unit_of_measurement"] == "EUR/kWh"
 
-    # Null CurrentPrice: keep the last known value
+    # Null CurrentPrice: the price is unknown
     set_node_attribute(matter_node, 3, 149, 2, None)
 
     await trigger_subscription_callback(hass, matter_client)
 
     state = hass.states.get(entity_id)
     assert state
-    assert state.state == "0.25"
+    assert state.state == STATE_UNKNOWN
     assert state.attributes["unit_of_measurement"] == "EUR/kWh"
 
-    # CurrentPrice without Price
+    # CurrentPrice without Price: the price is unknown
     set_node_attribute(
         matter_node,
         3,
         149,
         2,
         {
-            0: None,
-            1: None,
-            3: 2,
+            0: 784976400,
+            1: 784980000,
         },
     )
 
@@ -1438,7 +1437,7 @@ async def test_commodity_price_sensor(
 
     state = hass.states.get(entity_id)
     assert state
-    assert state.state == "0.25"
+    assert state.state == STATE_UNKNOWN
 
 
 @pytest.mark.parametrize("node_fixture", ["mock_electrical_utility_meter"])
