@@ -36,7 +36,7 @@ from homeassistant.util.percentage import (
 
 from . import FullDevice, SmartThingsConfigEntry
 from .const import MAIN
-from .entity import SmartThingsEntity
+from .entity import SmartThingsEntity, translate_api_errors
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -374,13 +374,14 @@ class SmartThingsLamp(SmartThingsEntity, LightEntity):
 
     async def async_execute_hood_option(self, option: str) -> None:
         """Set a hood option through the execute capability of the cooktop."""
-        await self.client.execute_device_command(
-            self.device.device.device_id,
-            Capability.EXECUTE,
-            Command.EXECUTE,
-            MAIN,
-            argument=[COOKTOP_HOOD_MODE_HREF, {COOKTOP_HOOD_OPTIONS: [option]}],
-        )
+        with translate_api_errors(self):
+            await self.client.execute_device_command(
+                self.device.device.device_id,
+                Capability.EXECUTE,
+                Command.EXECUTE,
+                MAIN,
+                argument=[COOKTOP_HOOD_MODE_HREF, {COOKTOP_HOOD_OPTIONS: [option]}],
+            )
 
     async def async_set_level(self, brightness: int) -> None:
         """Set lamp brightness via supported levels."""

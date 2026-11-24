@@ -4,7 +4,13 @@ import logging
 from typing import Any
 from unittest.mock import AsyncMock, call
 
-from pysmartthings import Attribute, Capability, Command
+from pysmartthings import (
+    Attribute,
+    Capability,
+    Command,
+    SmartThingsForbiddenError,
+    SmartThingsQuotaExceededError,
+)
 from pysmartthings.models import HealthStatus
 import pytest
 from pytest_homeassistant.common import (
@@ -29,7 +35,8 @@ from homeassistant.components.light import (
     LightService,
     LightServiceArgument,
 )
-from homeassistant.components.smartthings.const import MAIN
+from homeassistant.components.smartthings.const import DOMAIN, MAIN, MANAGE_PLANS_URL
+from homeassistant.config_entries import SOURCE_REAUTH
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     SERVICE_TURN_OFF,
@@ -42,6 +49,7 @@ from homeassistant.const import (
     TargetKey,
 )
 from homeassistant.core import HomeAssistant, State
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
 from . import (
@@ -653,6 +661,60 @@ async def test_cooktop_hood_lamp_state(
     )
 
     assert hass.states.get("light.table_de_cuisson_light").state == STATE_ON
+
+
+@pytest.mark.parametrize("device_fixture", ["da_ks_cooktop_000001"])
+async def test_cooktop_hood_lamp_quota_exceeded(
+    hass: HomeAssistant,
+    devices: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test a quota exceeded error of the cooktop hood lamp is translated."""
+    connect_cooktop_hood(devices)
+    await setup_integration(hass, mock_config_entry)
+    devices.execute_device_command.side_effect = SmartThingsQuotaExceededError
+
+    with pytest.raises(HomeAssistantError) as exc_info:
+        await hass.services.async_call(
+            LIGHT_DOMAIN,
+            SERVICE_TURN_ON,
+            {ATTR_ENTITY_ID: "light.table_de_cuisson_light"},
+            blocking=True,
+        )
+
+    assert exc_info.value.translation_domain == DOMAIN
+    assert exc_info.value.translation_key == "quota_exceeded"
+    assert exc_info.value.translation_placeholders == {
+        "manage_plans_url": MANAGE_PLANS_URL
+    }
+
+
+@pytest.mark.parametrize("device_fixture", ["da_ks_cooktop_000001"])
+async def test_cooktop_hood_lamp_forbidden(
+    hass: HomeAssistant,
+    devices: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test a forbidden cooktop hood lamp command starts reauth."""
+    connect_cooktop_hood(devices)
+    await setup_integration(hass, mock_config_entry)
+    devices.execute_device_command.side_effect = SmartThingsForbiddenError
+
+    with pytest.raises(HomeAssistantError) as exc_info:
+        await hass.services.async_call(
+            LIGHT_DOMAIN,
+            SERVICE_TURN_OFF,
+            {ATTR_ENTITY_ID: "light.table_de_cuisson_light"},
+            blocking=True,
+        )
+
+    assert exc_info.value.translation_domain == DOMAIN
+    assert exc_info.value.translation_key == "entitlement_required"
+    await hass.async_block_till_done()
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 1
+    assert flows[0]["context"]["source"] == SOURCE_REAUTH
+    assert flows[0]["context"]["entry_id"] == mock_config_entry.entry_id
 
 
 @pytest.mark.parametrize("device_fixture", ["da_ks_hood_01001"])
