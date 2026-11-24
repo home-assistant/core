@@ -22,6 +22,7 @@ from pyportainer import (
     PortainerEventListenerResult,
     PortainerTimeoutError,
 )
+from pyportainer.exceptions import PortainerNotFoundError
 from pyportainer.models.docker import (
     DockerContainer,
     DockerContainerStats,
@@ -672,7 +673,12 @@ class PortainerCoordinator(
                 )
                 return local_image
 
-        local_image = await self.portainer.get_image(endpoint_id, image)
+        try:
+            local_image = await self.portainer.get_image(endpoint_id, image)
+        except PortainerNotFoundError:
+            # A container can outlive its image; not cached, so the next poll retries
+            _LOGGER.debug("Image %s not found on endpoint %d", image, endpoint_id)
+            return LocalImageInformation(id=image)
         self._image_cache[(endpoint_id, image)] = (
             time.monotonic(),
             local_image,
