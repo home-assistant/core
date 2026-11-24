@@ -12,7 +12,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import DOMAIN, WithingsConfigEntry
+from . import WithingsConfigEntry
+from .const import DOMAIN
 from .coordinator import WithingsWorkoutDataUpdateCoordinator
 from .entity import WithingsEntity
 

@@ -5,9 +5,9 @@ from typing import Any
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import async_fire_time_changed
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.workday.binary_sensor import SERVICE_CHECK_DATE
 from homeassistant.components.workday.const import (
     DEFAULT_EXCLUDES,
     DEFAULT_NAME,
@@ -15,6 +15,7 @@ from homeassistant.components.workday.const import (
     DEFAULT_WORKDAYS,
     DOMAIN,
 )
+from homeassistant.components.workday.services import WorkdayService
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.setup import async_setup_component
@@ -52,8 +53,6 @@ from . import (
     init_integration,
 )
 
-from tests.common import async_fire_time_changed
-
 
 @pytest.mark.parametrize(
     ("config", "expected_state", "expected_state_weekend"),
@@ -88,8 +87,8 @@ async def test_setup(
     name = "Workday Sensor"
     if config.get("country"):
         name += f" {config['country']}"
-    if config.get("province"):
-        name += f" {config['province']}"
+    if province := config.get("country_settings", {}).get("province"):
+        name += f" {province}"
     slug_name = slugify(name)
 
     state = hass.states.get(f"binary_sensor.{slug_name}")
@@ -359,7 +358,7 @@ async def test_check_date_service(
 
     response = await hass.services.async_call(
         DOMAIN,
-        SERVICE_CHECK_DATE,
+        WorkdayService.CHECK_DATE,
         {
             "entity_id": "binary_sensor.workday_sensor_de_bw",
             "check_date": date(2022, 12, 25),  # Christmas Day
@@ -371,7 +370,7 @@ async def test_check_date_service(
 
     response = await hass.services.async_call(
         DOMAIN,
-        SERVICE_CHECK_DATE,
+        WorkdayService.CHECK_DATE,
         {
             "entity_id": "binary_sensor.workday_sensor_de_bw",
             "check_date": date(2022, 12, 23),  # Normal Friday
@@ -383,7 +382,7 @@ async def test_check_date_service(
 
     response = await hass.services.async_call(
         DOMAIN,
-        SERVICE_CHECK_DATE,
+        WorkdayService.CHECK_DATE,
         {
             "entity_id": "binary_sensor.workday_sensor_de_bw",
             "check_date": date(2022, 12, 17),  # Saturday (no workday)
@@ -449,13 +448,17 @@ async def test_only_repairs_for_current_next_year(
     config = {
         "name": DEFAULT_NAME,
         "country": "DE",
-        "province": "BW",
+        "country_settings": {
+            "province": "BW",
+            "language": "de",
+        },
         "excludes": DEFAULT_EXCLUDES,
         "days_offset": DEFAULT_OFFSET,
         "workdays": DEFAULT_WORKDAYS,
-        "add_holidays": [],
-        "remove_holidays": remove_dates,
-        "language": "de",
+        "custom_holidays": {
+            "add_holidays": [],
+            "remove_holidays": remove_dates,
+        },
     }
     entry = await init_integration(hass, config)
 
@@ -473,17 +476,21 @@ async def test_missing_language(
 ) -> None:
     """Test when language exist but is empty."""
     config = {
-        "add_holidays": [],
+        "custom_holidays": {
+            "add_holidays": [],
+            "remove_holidays": [
+                "Labour Day",
+            ],
+        },
         "country": "AU",
         "days_offset": 0,
         "excludes": ["sat", "sun", "holiday"],
-        "language": None,
+        "country_settings": {
+            "language": None,
+            "province": "QLD",
+        },
         "name": "Workday Sensor",
         "platform": "workday",
-        "province": "QLD",
-        "remove_holidays": [
-            "Labour Day",
-        ],
         "workdays": ["mon", "tue", "wed", "thu", "fri"],
     }
     await init_integration(hass, config)
@@ -496,17 +503,21 @@ async def test_incorrect_english_variant(
 ) -> None:
     """Test when language exist but is empty."""
     config = {
-        "add_holidays": [],
+        "custom_holidays": {
+            "add_holidays": [],
+            "remove_holidays": [
+                "Labour Day",
+            ],
+        },
         "country": "AU",
         "days_offset": 0,
         "excludes": ["sat", "sun", "holiday"],
-        "language": "en_UK",  # Incorrect variant
+        "country_settings": {
+            "language": "en_UK",
+            "province": "QLD",
+        },
         "name": "Workday Sensor",
         "platform": "workday",
-        "province": "QLD",
-        "remove_holidays": [
-            "Labour Day",
-        ],
         "workdays": ["mon", "tue", "wed", "thu", "fri"],
     }
     await init_integration(hass, config)

@@ -13,10 +13,13 @@ from aiohttp.client_exceptions import ClientError
 from freezegun.api import FrozenDateTimeFactory
 import probatio
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 
+from homeassistant.components.calendar import CalendarService
 from homeassistant.components.google import DOMAIN
 from homeassistant.components.google.const import CONF_CALENDAR_ACCESS
-from homeassistant.components.google.services import SERVICE_CREATE_EVENT
+from homeassistant.components.google.services import GoogleCalendarService
 from homeassistant.components.google.store import STORAGE_SAVE_DELAY_SECONDS
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
@@ -43,9 +46,6 @@ from .conftest import (
     ComponentSetup,
 )
 
-from tests.common import MockConfigEntry, async_fire_time_changed
-from tests.test_util.aiohttp import AiohttpClientMocker
-
 EXPIRED_TOKEN_TIMESTAMP = dt.datetime(2022, 4, 8).timestamp()
 
 # Typing helpers
@@ -70,13 +70,13 @@ def assert_state(actual: State | None, expected: State | None) -> None:
     params=[
         (
             DOMAIN,
-            SERVICE_CREATE_EVENT,
+            GoogleCalendarService.CREATE_EVENT,
             {},
             {"entity_id": TEST_API_ENTITY},
         ),
         (
             "calendar",
-            SERVICE_CREATE_EVENT,
+            CalendarService.CREATE_EVENT,
             {},
             {"entity_id": TEST_API_ENTITY},
         ),
@@ -988,3 +988,41 @@ async def test_oauth_implementation_not_available(
         await hass.async_block_till_done()
 
     assert config_entry.state is ConfigEntryState.SETUP_RETRY
+
+
+async def test_store_migration_from_v1(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    mock_calendars_list: ApiResult,
+    component_setup: ComponentSetup,
+    test_api_calendar: dict[str, Any],
+    mock_events_list: ApiResult,
+    hass_storage: dict[str, Any],
+) -> None:
+    """Test v1 entity-scoped store data is discarded on migration to v2."""
+    storage_key = f"google.{config_entry.entry_id}"
+    hass_storage[storage_key] = {
+        "version": 1,
+        "minor_version": 1,
+        "key": storage_key,
+        "data": {
+            f"{EMAIL_ADDRESS}-{CALENDAR_ID}": {
+                "event_sync": {
+                    CALENDAR_ID: {"items": {"old-event": {}}, "sync_token": "old"}
+                }
+            },
+            f"{EMAIL_ADDRESS}-{CALENDAR_ID}-birthdays": {
+                "event_sync": {
+                    CALENDAR_ID: {"items": {"old-event": {}}, "sync_token": "old"}
+                }
+            },
+        },
+    }
+    mock_calendars_list({"items": [test_api_calendar]})
+    mock_events_list({})
+    assert await component_setup()
+
+    store_data = await config_entry.runtime_data.store.async_load()
+    assert store_data is not None
+    assert list(store_data) == ["event_sync"]
+    assert list(store_data["event_sync"]) == [CALENDAR_ID]

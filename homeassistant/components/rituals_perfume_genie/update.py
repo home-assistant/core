@@ -20,7 +20,7 @@ from homeassistant.helpers.event import async_call_later
 
 from .const import DOMAIN
 from .coordinator import RitualsConfigEntry
-from .entity import DiffuserEntity
+from .entity import DiffuserEntity, async_add_diffusers
 
 PARALLEL_UPDATES = 1
 
@@ -43,9 +43,13 @@ async def async_setup_entry(
     """Set up the diffuser firmware updates."""
     hubs = config_entry.runtime_data.hubs
 
-    async_add_entities(
-        RitualsUpdateEntity(hubs, hublot, ENTITY_DESCRIPTION) for hublot in hubs.data
-    )
+    @callback
+    def add_diffusers(hublots: list[str]) -> None:
+        async_add_entities(
+            RitualsUpdateEntity(hubs, hublot, ENTITY_DESCRIPTION) for hublot in hublots
+        )
+
+    async_add_diffusers(config_entry, add_diffusers)
 
 
 def _version(firmware: RitualsGenieFirmware, current: bool) -> str | None:

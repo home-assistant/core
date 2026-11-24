@@ -11,7 +11,7 @@ from homeassistant.components import persistent_notification
 from homeassistant.const import CONF_SCAN_INTERVAL
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryError
-from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.typing import ConfigType
 
@@ -101,6 +101,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: BlinkConfigEntry) -> Non
 
     await coordinator.async_config_entry_first_refresh()
 
+    # Auth.startup() renews the token without invoking the callback
+    _async_update_entry_data(hass, entry, blink)
+
     entry.runtime_data = coordinator
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
@@ -111,7 +114,10 @@ def _async_update_entry_data(
     hass: HomeAssistant, entry: BlinkConfigEntry, blink: Blink
 ) -> None:
     """Update the config entry data after token refresh."""
-    hass.config_entries.async_update_entry(entry, data=blink.auth.login_attributes)
+    # A copy, BlinkPy changes the dict it returns in place on every refresh
+    hass.config_entries.async_update_entry(
+        entry, data=dict(blink.auth.login_attributes)
+    )
 
 
 @callback
@@ -129,3 +135,17 @@ def _async_import_options_from_data_if_missing(
 async def async_unload_entry(hass: HomeAssistant, entry: BlinkConfigEntry) -> None:
     """Unload Blink entry."""
     await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
+
+
+async def async_remove_config_entry_device(
+    hass: HomeAssistant, entry: BlinkConfigEntry, device_entry: dr.AnyDeviceEntry
+) -> bool:
+    """Allow removal of a device that is no longer on the Blink account."""
+    blink = entry.runtime_data.api
+    serials = {camera.serial for camera in blink.cameras.values()} | {
+        sync_module.serial for sync_module in blink.sync.values()
+    }
+    return not any(
+        identifier[0] == DOMAIN and identifier[1] in serials
+        for identifier in device_entry.identifiers
+    )

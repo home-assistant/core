@@ -4,6 +4,7 @@
   "categories": ["presence_location.phones_companion_apps"],
   "codeowners": [],
   "config_flow": true,
+  "connectivity": ["cloud", "network"],
   "dependencies": ["webhook"],
   "documentation": "https://www.home-assistant.io/integrations/gpslogger",
   "iot_class": "cloud_push"

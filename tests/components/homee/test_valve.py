@@ -4,24 +4,23 @@ from collections.abc import AsyncGenerator
 from unittest.mock import MagicMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.valve import (
     DOMAIN as VALVE_DOMAIN,
-    SERVICE_SET_VALVE_POSITION,
     STATE_CLOSED,
     STATE_CLOSING,
     STATE_OPEN,
     STATE_OPENING,
     ValveEntityFeature,
+    ValveService,
 )
-from homeassistant.const import ATTR_ENTITY_ID, Platform
+from homeassistant.const import Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from . import build_mock_node, setup_integration
-
-from tests.common import MockConfigEntry, snapshot_platform
 
 
 @pytest.fixture(autouse=True)
@@ -43,8 +42,8 @@ async def test_valve_set_position(
 
     await hass.services.async_call(
         VALVE_DOMAIN,
-        SERVICE_SET_VALVE_POSITION,
-        {ATTR_ENTITY_ID: "valve.test_valve_valve_position", "position": 100},
+        ValveService.SET_POSITION,
+        {TargetKey.ENTITY_ID: "valve.test_valve_valve_position", "position": 100},
     )
     mock_homee.set_value.assert_called_once_with(1, 1, 100)
 

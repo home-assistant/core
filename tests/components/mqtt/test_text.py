@@ -4,15 +4,8 @@ from typing import Any
 from unittest.mock import patch
 
 import pytest
-
-from homeassistant.components import text
-from homeassistant.components.mqtt.const import DOMAIN
-from homeassistant.const import ATTR_ASSUMED_STATE, ATTR_ENTITY_ID, STATE_UNKNOWN
-from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ServiceValidationError
-from homeassistant.helpers import entity_registry as er
-
-from .common import (
+from pytest_homeassistant.common import async_fire_mqtt_message
+from pytest_homeassistant.components.mqtt.common import (
     help_custom_config,
     help_test_availability_when_connection_lost,
     help_test_availability_without_topic,
@@ -42,9 +35,19 @@ from .common import (
     help_test_update_with_json_attrs_bad_json,
     help_test_update_with_json_attrs_not_dict,
 )
+from pytest_homeassistant.typing import MqttMockHAClientGenerator, MqttMockPahoClient
 
-from tests.common import async_fire_mqtt_message
-from tests.typing import MqttMockHAClientGenerator, MqttMockPahoClient
+from homeassistant.components import text
+from homeassistant.components.mqtt.const import DOMAIN
+from homeassistant.components.text import (
+    TextEntityCapabilityAttribute,
+    TextService,
+    TextServiceArgument,
+)
+from homeassistant.const import ATTR_ASSUMED_STATE, STATE_UNKNOWN, TargetKey
+from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ServiceValidationError
+from homeassistant.helpers import entity_registry as er
 
 DEFAULT_CONFIG = {
     DOMAIN: {text.DOMAIN: {"name": "test", "command_topic": "test-topic"}}
@@ -57,8 +60,8 @@ async def async_set_value(
     """Set input_text to value."""
     await hass.services.async_call(
         text.DOMAIN,
-        text.SERVICE_SET_VALUE,
-        {ATTR_ENTITY_ID: entity_id, text.ATTR_VALUE: value},
+        TextService.SET_VALUE,
+        {TargetKey.ENTITY_ID: entity_id, TextServiceArgument.VALUE: value},
         blocking=True,
     )
 
@@ -86,7 +89,7 @@ async def test_controlling_state_via_topic(
 
     state = hass.states.get("text.test")
     assert state.state == STATE_UNKNOWN
-    assert state.attributes[text.ATTR_MODE] == "password"
+    assert state.attributes[TextEntityCapabilityAttribute.MODE] == "password"
     assert not state.attributes.get(ATTR_ASSUMED_STATE)
 
     async_fire_mqtt_message(hass, "state-topic", "some state")
@@ -190,7 +193,7 @@ async def test_controlling_validation_state_via_topic(
 
     state = hass.states.get("text.test")
     assert state.state == STATE_UNKNOWN
-    assert state.attributes[text.ATTR_MODE] == "text"
+    assert state.attributes[TextEntityCapabilityAttribute.MODE] == "text"
 
     async_fire_mqtt_message(hass, "state-topic", "yes")
     state = hass.states.get("text.test")
@@ -734,9 +737,9 @@ async def test_entity_debug_info_message(
     ("service", "topic", "parameters", "payload", "template"),
     [
         (
-            text.SERVICE_SET_VALUE,
+            TextService.SET_VALUE,
             "command_topic",
-            {text.ATTR_VALUE: "some text"},
+            {TextServiceArgument.VALUE: "some text"},
             "some text",
             "command_template",
         ),

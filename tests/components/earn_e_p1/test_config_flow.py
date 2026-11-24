@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 from earn_e_p1 import EarnEP1Device
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries
 from homeassistant.components.earn_e_p1.const import CONF_SERIAL
@@ -22,8 +23,6 @@ from .conftest import (
     MOCK_NEW_HOST,
     MOCK_SERIAL,
 )
-
-from tests.common import MockConfigEntry
 
 DISCOVER_PATH = "homeassistant.components.earn_e_p1.config_flow.discover"
 VALIDATE_PATH = "homeassistant.components.earn_e_p1.config_flow.validate"

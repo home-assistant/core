@@ -4,6 +4,7 @@ from typing import Any
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.met.const import (
     CONF_TRACK_HOME,
@@ -13,13 +14,17 @@ from homeassistant.components.met.const import (
     HOME_LOCATION_NAME,
 )
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import CONF_ELEVATION, CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME
+from homeassistant.const import (
+    CONF_ELEVATION,
+    CONF_LATITUDE,
+    CONF_LOCATION,
+    CONF_LONGITUDE,
+    CONF_NAME,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.core_config import async_process_ha_core_config
 
 from . import init_integration
-
-from tests.common import MockConfigEntry
 
 
 async def test_unload_entry(hass: HomeAssistant) -> None:
@@ -65,7 +70,10 @@ async def test_fail_default_home_entry(hass: HomeAssistant) -> None:
                 CONF_ELEVATION: 1.0,
             },
             "Somewhere",
-            {CONF_LATITUDE: 0, CONF_LONGITUDE: 1.0, CONF_ELEVATION: 1.0},
+            {
+                CONF_LOCATION: {CONF_LATITUDE: 0, CONF_LONGITUDE: 1.0},
+                CONF_ELEVATION: 1.0,
+            },
             "Somewhere",
             id="name_removed_title_kept",
         ),
@@ -101,6 +109,7 @@ async def test_migrate_entry(
         await hass.async_block_till_done()
 
     assert entry.state is ConfigEntryState.LOADED
-    assert entry.minor_version == 2
+    assert entry.version == 2
+    assert entry.minor_version == 1
     assert entry.data == expected_data
     assert entry.title == expected_title

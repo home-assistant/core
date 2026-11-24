@@ -78,10 +78,61 @@ SELECTS: dict[DeviceCategory, tuple[TuyaSelectEntityDescription, ...]] = {
             translation_key="odor_elimination_mode",
         ),
     ),
+    DeviceCategory.CZ: (
+        TuyaSelectEntityDescription(
+            key=DPCode.RELAY_STATUS,
+            entity_category=EntityCategory.CONFIG,
+            translation_key="power_on_behavior",
+        ),
+        TuyaSelectEntityDescription(
+            key=DPCode.LIGHT_MODE,
+            entity_category=EntityCategory.CONFIG,
+            translation_key="light_mode",
+        ),
+    ),
+    DeviceCategory.DGHSXJ: (
+        TuyaSelectEntityDescription(
+            key=DPCode.IPC_WORK_MODE,
+            entity_category=EntityCategory.CONFIG,
+            translation_key="ipc_work_mode",
+        ),
+        TuyaSelectEntityDescription(
+            key=DPCode.DECIBEL_SENSITIVITY,
+            entity_category=EntityCategory.CONFIG,
+            translation_key="decibel_sensitivity",
+        ),
+        TuyaSelectEntityDescription(
+            key=DPCode.RECORD_MODE,
+            entity_category=EntityCategory.CONFIG,
+            translation_key="record_mode",
+        ),
+        TuyaSelectEntityDescription(
+            key=DPCode.BASIC_NIGHTVISION,
+            entity_category=EntityCategory.CONFIG,
+            translation_key="basic_nightvision",
+        ),
+        TuyaSelectEntityDescription(
+            key=DPCode.BASIC_ANTI_FLICKER,
+            entity_category=EntityCategory.CONFIG,
+            translation_key="basic_anti_flicker",
+        ),
+        TuyaSelectEntityDescription(
+            key=DPCode.MOTION_SENSITIVITY,
+            entity_category=EntityCategory.CONFIG,
+            translation_key="motion_sensitivity",
+        ),
+    ),
     DeviceCategory.DGNBJ: (
         TuyaSelectEntityDescription(
             key=DPCode.ALARM_VOLUME,
             translation_key="volume",
+            entity_category=EntityCategory.CONFIG,
+        ),
+    ),
+    DeviceCategory.DLQ: (
+        TuyaSelectEntityDescription(
+            key=DPCode.RELAY_STATUS,
+            translation_key="power_on_behavior",
             entity_category=EntityCategory.CONFIG,
         ),
     ),
@@ -183,7 +234,7 @@ SELECTS: dict[DeviceCategory, tuple[TuyaSelectEntityDescription, ...]] = {
         TuyaSelectEntityDescription(
             key=DPCode.RELAY_STATUS,
             entity_category=EntityCategory.CONFIG,
-            translation_key="relay_status",
+            translation_key="power_on_behavior",
         ),
         TuyaSelectEntityDescription(
             key=DPCode.LIGHT_MODE,
@@ -208,6 +259,18 @@ SELECTS: dict[DeviceCategory, tuple[TuyaSelectEntityDescription, ...]] = {
             key=DPCode.COUNTDOWN_SET,
             entity_category=EntityCategory.CONFIG,
             translation_key="countdown",
+        ),
+    ),
+    DeviceCategory.PC: (
+        TuyaSelectEntityDescription(
+            key=DPCode.RELAY_STATUS,
+            entity_category=EntityCategory.CONFIG,
+            translation_key="power_on_behavior",
+        ),
+        TuyaSelectEntityDescription(
+            key=DPCode.LIGHT_MODE,
+            entity_category=EntityCategory.CONFIG,
+            translation_key="light_mode",
         ),
     ),
     DeviceCategory.QCCDZ: (
@@ -319,7 +382,7 @@ SELECTS: dict[DeviceCategory, tuple[TuyaSelectEntityDescription, ...]] = {
         TuyaSelectEntityDescription(
             key=DPCode.RELAY_STATUS,
             entity_category=EntityCategory.CONFIG,
-            translation_key="relay_status",
+            translation_key="power_on_behavior",
         ),
         TuyaSelectEntityDescription(
             key=DPCode.LIGHT_MODE,
@@ -331,7 +394,7 @@ SELECTS: dict[DeviceCategory, tuple[TuyaSelectEntityDescription, ...]] = {
         TuyaSelectEntityDescription(
             key=DPCode.RELAY_STATUS,
             entity_category=EntityCategory.CONFIG,
-            translation_key="relay_status",
+            translation_key="power_on_behavior",
         ),
         TuyaSelectEntityDescription(
             key=DPCode.LIGHT_MODE,
@@ -381,7 +444,7 @@ SELECTS: dict[DeviceCategory, tuple[TuyaSelectEntityDescription, ...]] = {
     DeviceCategory.ZNJDQ: (
         TuyaSelectEntityDescription(
             key=DPCode.RELAY_STATUS,
-            translation_key="relay_status",
+            translation_key="power_on_behavior",
             entity_category=EntityCategory.CONFIG,
         ),
         TuyaSelectEntityDescription(
@@ -391,15 +454,6 @@ SELECTS: dict[DeviceCategory, tuple[TuyaSelectEntityDescription, ...]] = {
         ),
     ),
 }
-
-# Socket (duplicate of `kg`)
-SELECTS[DeviceCategory.CZ] = SELECTS[DeviceCategory.KG]
-
-# Smart Camera - Low power consumption camera (duplicate of `sp`)
-SELECTS[DeviceCategory.DGHSXJ] = SELECTS[DeviceCategory.SP]
-
-# Power Socket (duplicate of `kg`)
-SELECTS[DeviceCategory.PC] = SELECTS[DeviceCategory.KG]
 
 
 async def async_setup_entry(

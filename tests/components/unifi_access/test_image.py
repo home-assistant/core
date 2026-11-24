@@ -5,6 +5,8 @@ from http import HTTPStatus
 from unittest.mock import MagicMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
+from pytest_homeassistant.typing import ClientSessionGenerator
 from syrupy.assertion import SnapshotAssertion
 from unifi_access_api import ApiNotFoundError
 from unifi_access_api.models.websocket import (
@@ -19,9 +21,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
-
-from tests.common import MockConfigEntry, snapshot_platform
-from tests.typing import ClientSessionGenerator
 
 FRONT_DOOR_IMAGE = "image.front_door_thumbnail"
 BACK_DOOR_IMAGE = "image.back_door_thumbnail"

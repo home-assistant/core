@@ -11,11 +11,10 @@ from pyscorpiontrack import (
     ScorpionTrackVehicle,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.scorpiontrack.const import CONF_SHARE_TOKEN, DOMAIN
 from homeassistant.util import dt as dt_util
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture

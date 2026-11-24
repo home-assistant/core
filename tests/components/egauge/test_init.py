@@ -11,12 +11,11 @@ from egauge_async.exceptions import (
 from freezegun.api import FrozenDateTimeFactory
 from httpx2 import ConnectError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components.egauge.const import COORDINATOR_UPDATE_INTERVAL_SECONDS
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 async def test_setup_success(

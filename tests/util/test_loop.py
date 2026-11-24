@@ -6,11 +6,10 @@ import threading
 from unittest.mock import Mock, patch
 
 import pytest
+from pytest_homeassistant.common import extract_stack_to_frame
 
 from homeassistant.core import HomeAssistant
 from homeassistant.util import loop as haloop
-
-from tests.common import extract_stack_to_frame
 
 
 def banned_function():

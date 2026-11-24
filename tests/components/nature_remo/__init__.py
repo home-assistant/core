@@ -1,11 +1,10 @@
 """Tests for the Nature Remo integration."""
 
 from freezegun.api import FrozenDateTimeFactory
+from pytest_homeassistant.common import async_fire_time_changed
 
 from homeassistant.components.nature_remo.const import UPDATE_INTERVAL
 from homeassistant.core import HomeAssistant
-
-from tests.common import async_fire_time_changed
 
 
 async def async_poll(hass: HomeAssistant, freezer: FrozenDateTimeFactory) -> None:

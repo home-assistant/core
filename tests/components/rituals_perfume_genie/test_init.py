@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 from ritualsgenie import (
     RitualsGenieAuthenticationError,
     RitualsGenieConnectionError,
@@ -26,8 +27,6 @@ from .common import (
     mock_diffuser,
     mock_diffuser_v1_battery_cartridge,
 )
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 async def test_migration_v1_to_v2(

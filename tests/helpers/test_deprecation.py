@@ -8,6 +8,11 @@ from unittest.mock import MagicMock, Mock, patch
 
 from propcache.api import cached_property
 import pytest
+from pytest_homeassistant.common import (
+    MockModule,
+    extract_stack_to_frame,
+    mock_integration,
+)
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.deprecation import (
@@ -28,8 +33,6 @@ from homeassistant.helpers.deprecation import (
 )
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.frame import MissingIntegrationFrame, ReportBehavior
-
-from tests.common import MockModule, extract_stack_to_frame, mock_integration
 
 
 class MockBaseClassDeprecatedProperty:

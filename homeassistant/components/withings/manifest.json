@@ -5,6 +5,7 @@
   "categories": ["health_wellbeing"],
   "codeowners": ["@joostlek"],
   "config_flow": true,
+  "connectivity": ["cloud"],
   "dependencies": ["application_credentials", "http", "webhook"],
   "dhcp": [
     {
@@ -18,5 +19,5 @@
   "integration_type": "hub",
   "iot_class": "cloud_push",
   "loggers": ["aiowithings"],
-  "requirements": ["aiowithings==3.1.6"]
+  "requirements": ["aiowithings==4.0.1"]
 }

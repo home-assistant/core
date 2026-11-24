@@ -8,6 +8,7 @@ from unittest.mock import MagicMock
 
 from marantz_rs232 import V2007ReceiverState, V2007Source
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.marantz_rs232.media_player import INPUT_SOURCE_TO_HA
@@ -17,6 +18,8 @@ from homeassistant.components.media_player import (
     ATTR_MEDIA_VOLUME_MUTED,
     DOMAIN as MP_DOMAIN,
     SERVICE_SELECT_SOURCE,
+    MediaPlayerService,
+    MediaPlayerServiceArgument,
 )
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
@@ -31,13 +34,12 @@ from homeassistant.const import (
     STATE_ON,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
+    TargetKey,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util.json import load_json
-
-from tests.common import MockConfigEntry, snapshot_platform
 
 MAIN = "media_player.marantz_receiver"
 MULTI = "media_player.marantz_receiver_multi_room"
@@ -249,8 +251,11 @@ async def test_invalid_source(hass: HomeAssistant) -> None:
     ) as err:
         await hass.services.async_call(
             MP_DOMAIN,
-            SERVICE_SELECT_SOURCE,
-            {ATTR_ENTITY_ID: MAIN, ATTR_INPUT_SOURCE: "nonexistent"},
+            MediaPlayerService.SELECT_SOURCE,
+            {
+                TargetKey.ENTITY_ID: MAIN,
+                MediaPlayerServiceArgument.SOURCE: "nonexistent",
+            },
             blocking=True,
         )
 
@@ -318,8 +323,8 @@ async def test_other_model_sources(
     assert source in hass.states.get(entity_id).attributes["source_list"]
     await hass.services.async_call(
         MP_DOMAIN,
-        SERVICE_SELECT_SOURCE,
-        {ATTR_ENTITY_ID: entity_id, ATTR_INPUT_SOURCE: source},
+        MediaPlayerService.SELECT_SOURCE,
+        {TargetKey.ENTITY_ID: entity_id, MediaPlayerServiceArgument.SOURCE: source},
         blocking=True,
     )
     getattr(mock_receiver, zone).select_source.assert_awaited_once_with(

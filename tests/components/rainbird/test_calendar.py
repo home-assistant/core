@@ -9,6 +9,9 @@ from zoneinfo import ZoneInfo
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMockResponse
+from pytest_homeassistant.typing import ClientSessionGenerator
 
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import Platform
@@ -16,10 +19,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from .conftest import CONFIG_ENTRY_DATA_OLD_FORMAT, mock_response, mock_response_error
-
-from tests.common import MockConfigEntry
-from tests.test_util.aiohttp import AiohttpClientMockResponse
-from tests.typing import ClientSessionGenerator
 
 TEST_ENTITY = "calendar.rain_bird_controller"
 type GetEventsFn = Callable[[str, str], Awaitable[dict[str, Any]]]

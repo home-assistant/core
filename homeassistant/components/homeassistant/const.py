@@ -33,6 +33,16 @@ class HomeAssistantService(StrEnum):
     UPDATE_ENTITY = "update_entity"
 
 
+class HomeAssistantServiceArgument(StrEnum):
+    """Store keys for Home Assistant service arguments."""
+
+    ELEVATION = "elevation"
+    ENTRY_ID = "entry_id"
+    LATITUDE = "latitude"
+    LONGITUDE = "longitude"
+    SAFE_MODE = "safe_mode"
+
+
 # To be deprecated at a later stage, replaced by HomeAssistantService
 SERVICE_HOMEASSISTANT_STOP: Final = HomeAssistantService.STOP.value
 SERVICE_HOMEASSISTANT_RESTART: Final = HomeAssistantService.RESTART.value

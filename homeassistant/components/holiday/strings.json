@@ -7,20 +7,32 @@
       "options": {
         "data": {
           "categories": "Categories",
+          "hindu_show_estimated": "Mark estimated Hindu holidays",
+          "include_sundays": "Include Sundays as holidays",
+          "islamic_show_estimated": "Mark estimated Islamic holidays",
           "province": "Province"
         },
         "data_description": {
           "categories": "Optionally choose additional holiday categories, public holidays are already included",
+          "hindu_show_estimated": "Add \"estimated\" to the name of Hindu holidays with an estimated date",
+          "include_sundays": "Add all Sundays to the holidays of the country",
+          "islamic_show_estimated": "Add \"estimated\" to the name of Islamic holidays with an estimated date",
           "province": "Optionally choose a province / subdivision of {country}"
         }
       },
       "reconfigure": {
         "data": {
           "categories": "[%key:component::holiday::config::step::options::data::categories%]",
+          "hindu_show_estimated": "[%key:component::holiday::config::step::options::data::hindu_show_estimated%]",
+          "include_sundays": "[%key:component::holiday::config::step::options::data::include_sundays%]",
+          "islamic_show_estimated": "[%key:component::holiday::config::step::options::data::islamic_show_estimated%]",
           "province": "[%key:component::holiday::config::step::options::data::province%]"
         },
         "data_description": {
           "categories": "[%key:component::holiday::config::step::options::data_description::categories%]",
+          "hindu_show_estimated": "[%key:component::holiday::config::step::options::data_description::hindu_show_estimated%]",
+          "include_sundays": "[%key:component::holiday::config::step::options::data_description::include_sundays%]",
+          "islamic_show_estimated": "[%key:component::holiday::config::step::options::data_description::islamic_show_estimated%]",
           "province": "[%key:component::holiday::config::step::options::data_description::province%]"
         }
       },
@@ -37,21 +49,27 @@
   "options": {
     "abort": {
       "already_configured": "[%key:component::holiday::config::abort::already_configured%]",
-      "no_categories": "The country has no additional categories to configure."
+      "no_categories": "The country has no additional categories or options to configure."
     },
     "step": {
       "init": {
         "data": {
-          "categories": "[%key:component::holiday::config::step::options::data::categories%]"
+          "categories": "[%key:component::holiday::config::step::options::data::categories%]",
+          "hindu_show_estimated": "[%key:component::holiday::config::step::options::data::hindu_show_estimated%]",
+          "include_sundays": "[%key:component::holiday::config::step::options::data::include_sundays%]",
+          "islamic_show_estimated": "[%key:component::holiday::config::step::options::data::islamic_show_estimated%]"
         },
         "data_description": {
-          "categories": "[%key:component::holiday::config::step::options::data_description::categories%]"
+          "categories": "[%key:component::holiday::config::step::options::data_description::categories%]",
+          "hindu_show_estimated": "[%key:component::holiday::config::step::options::data_description::hindu_show_estimated%]",
+          "include_sundays": "[%key:component::holiday::config::step::options::data_description::include_sundays%]",
+          "islamic_show_estimated": "[%key:component::holiday::config::step::options::data_description::islamic_show_estimated%]"
         }
       }
     }
   },
   "selector": {
-    "device_class": {
+    "categories": {
       "options": {
         "albanian": "Albanian",
         "armed_forces": "Armed forces",
@@ -68,6 +86,7 @@
         "hindu": "Hindu",
         "islamic": "Islamic",
         "optional": "Optional",
+        "optional_women": "Optional for women",
         "orthodox": "Orthodox",
         "protestant": "Protestant",
         "public": "Public",

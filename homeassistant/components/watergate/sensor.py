@@ -16,6 +16,7 @@ from homeassistant.components.sensor import (
 from homeassistant.const import (
     SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
     EntityCategory,
+    UnitOfElectricPotential,
     UnitOfPressure,
     UnitOfTemperature,
     UnitOfTime,
@@ -60,8 +61,8 @@ class WatergateSensorEntityDescription(SensorEntityDescription):
 DESCRIPTIONS: list[WatergateSensorEntityDescription] = [
     WatergateSensorEntityDescription(
         value_fn=lambda data: (
-            data.state.water_meter.volume
-            if data.state and data.state.water_meter
+            data.state.water_meter_positive.volume
+            if data.state and data.state.water_meter_positive
             else None
         ),
         translation_key="water_meter_volume",
@@ -72,12 +73,36 @@ DESCRIPTIONS: list[WatergateSensorEntityDescription] = [
     ),
     WatergateSensorEntityDescription(
         value_fn=lambda data: (
-            data.state.water_meter.duration
-            if data.state and data.state.water_meter
+            data.state.water_meter_positive.duration
+            if data.state and data.state.water_meter_positive
             else None
         ),
         translation_key="water_meter_duration",
         key="water_meter_duration",
+        native_unit_of_measurement=UnitOfTime.MINUTES,
+        device_class=SensorDeviceClass.DURATION,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+    ),
+    WatergateSensorEntityDescription(
+        value_fn=lambda data: (
+            data.state.water_meter_negative.volume
+            if data.state and data.state.water_meter_negative
+            else None
+        ),
+        translation_key="water_meter_negative_volume",
+        key="water_meter_negative_volume",
+        native_unit_of_measurement=UnitOfVolume.LITERS,
+        device_class=SensorDeviceClass.WATER,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+    ),
+    WatergateSensorEntityDescription(
+        value_fn=lambda data: (
+            data.state.water_meter_negative.duration
+            if data.state and data.state.water_meter_negative
+            else None
+        ),
+        translation_key="water_meter_negative_duration",
+        key="water_meter_negative_duration",
         native_unit_of_measurement=UnitOfTime.MINUTES,
         device_class=SensorDeviceClass.DURATION,
         state_class=SensorStateClass.TOTAL_INCREASING,
@@ -159,6 +184,17 @@ DESCRIPTIONS: list[WatergateSensorEntityDescription] = [
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
         device_class=SensorDeviceClass.TIMESTAMP,
+    ),
+    WatergateSensorEntityDescription(
+        value_fn=lambda data: data.power.batteries_voltage if data.power else None,
+        translation_key="battery_voltage",
+        key="battery_voltage",
+        native_unit_of_measurement=UnitOfElectricPotential.MILLIVOLT,
+        suggested_unit_of_measurement=UnitOfElectricPotential.VOLT,
+        suggested_display_precision=2,
+        device_class=SensorDeviceClass.VOLTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
     WatergateSensorEntityDescription(
         value_fn=lambda data: (

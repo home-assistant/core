@@ -16,7 +16,7 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.const import CONF_NAME, EntityCategory, UnitOfInformation
+from homeassistant.const import EntityCategory, UnitOfInformation
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -80,7 +80,9 @@ class XboxStorageDeviceSensorEntityDescription(
     value_fn: Callable[[StorageDevice], StateType]
 
 
-def now_playing_attributes(person: Person, title: Title | None) -> dict[str, Any]:
+def now_playing_attributes(
+    person: Person, title: Title | None, total_achievements: int | None
+) -> dict[str, Any]:
     """Attributes of the currently played title."""
     attributes: dict[str, Any] = {
         "short_description": None,
@@ -143,7 +145,7 @@ def now_playing_attributes(person: Person, title: Title | None) -> dict[str, Any
             {
                 "achievements": (
                     f"{achievement.current_achievements}"
-                    f" / {achievement.total_achievements}"
+                    f" / {total_achievements or achievement.total_achievements}"
                 ),
                 "gamerscore": (
                     f"{achievement.current_gamerscore} / {achievement.total_gamerscore}"
@@ -364,7 +366,7 @@ class XboxStorageDeviceSensorEntity(
             f"{console.id}_{storage_device.storage_device_id}_{entity_description.key}"
         )
         self._attr_translation_placeholders = {
-            CONF_NAME: storage_device.storage_device_name
+            "name": storage_device.storage_device_name
         }
 
         self._attr_device_info = DeviceInfo(

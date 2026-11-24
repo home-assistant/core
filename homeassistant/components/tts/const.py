@@ -1,5 +1,6 @@
 """Text-to-speech constants."""
 
+from enum import StrEnum
 from typing import TYPE_CHECKING, Final
 
 from homeassistant.util.hass_dict import HassKey
@@ -34,3 +35,33 @@ MEDIA_SOURCE_STREAM_PATH = "-stream-"
 SERVICE_CLEAR_CACHE = "clear_cache"
 
 type TtsAudioType = tuple[str | None, bytes | None]
+
+
+class TextToSpeechCommonOption(StrEnum):
+    """Store keys for the text-to-speech options common to all engines."""
+
+    AUDIO_OUTPUT = "audio_output"
+    PREFERRED_BITRATE = "preferred_bitrate"
+    PREFERRED_FORMAT = "preferred_format"
+    PREFERRED_SAMPLE_BYTES = "preferred_sample_bytes"
+    PREFERRED_SAMPLE_CHANNELS = "preferred_sample_channels"
+    PREFERRED_SAMPLE_RATE = "preferred_sample_rate"
+    VOICE = "voice"
+
+
+class TextToSpeechService(StrEnum):
+    """Store keys for text-to-speech services."""
+
+    CLEAR_CACHE = "clear_cache"
+    SPEAK = "speak"
+
+
+class TextToSpeechServiceArgument(StrEnum):
+    """Store keys for text-to-speech service arguments."""
+
+    CACHE = "cache"
+    DAYS = "days"
+    LANGUAGE = "language"
+    MEDIA_PLAYER_ENTITY_ID = "media_player_entity_id"
+    MESSAGE = "message"
+    OPTIONS = "options"

@@ -18,6 +18,7 @@ from .const import (
     LOGGER_LOGS,
     LOGSEVERITY,
     SERVICE_SET_LEVEL,
+    LoggerService,
 )
 from .helpers import (
     DATA_LOGGER,
@@ -53,6 +54,7 @@ __all__ = [
     "DOMAIN",
     "LOGSEVERITY",
     "SERVICE_SET_LEVEL",
+    "LoggerService",
 ]
 
 

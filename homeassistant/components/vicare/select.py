@@ -3,8 +3,7 @@
 from contextlib import suppress
 from typing import override
 
-from PyViCare.PyViCareDevice import Device as PyViCareDevice
-from PyViCare.PyViCareDeviceConfig import PyViCareDeviceConfig
+from PyViCare.PyViCareHeatingDevice import HeatingCircuit as PyViCareHeatingCircuit
 from PyViCare.PyViCareUtils import PyViCareNotSupportedFeatureError
 
 from homeassistant.components.select import SelectEntity
@@ -14,7 +13,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .entity import ViCareEntity
 from .types import ViCareConfigEntry, ViCareDevice
-from .utils import is_supported
+from .utils import get_circuits, is_supported
 
 # Map API values to snake_case for HA, and back
 DHW_MODE_API_TO_HA: dict[str, str] = {
@@ -24,16 +23,29 @@ DHW_MODE_API_TO_HA: dict[str, str] = {
 }
 DHW_MODE_HA_TO_API: dict[str, str] = {v: k for k, v in DHW_MODE_API_TO_HA.items()}
 
+CIRCUIT_MODE_API_TO_HA: dict[str, str] = {
+    "cooling": "cooling",
+    "dhw": "dhw",
+    "dhwAndHeating": "dhw_and_heating",
+    "dhwAndHeatingCooling": "dhw_and_heating_cooling",
+    "forcedNormal": "forced_normal",
+    "forcedReduced": "forced_reduced",
+    "heating": "heating",
+    "heatingCooling": "heating_cooling",
+    "standby": "standby",
+}
+CIRCUIT_MODE_HA_TO_API: dict[str, str] = {
+    v: k for k, v in CIRCUIT_MODE_API_TO_HA.items()
+}
+
 
 def _build_entities(
     device_list: list[ViCareDevice],
-) -> list[ViCareDHWOperatingModeSelect]:
+) -> list[SelectEntity]:
     """Create ViCare select entities for a device."""
-    return [
+    entities: list[SelectEntity] = [
         ViCareDHWOperatingModeSelect(
-            device.serial,
-            device.config,
-            device.api,
+            device,
         )
         for device in device_list
         if is_supported(
@@ -42,6 +54,16 @@ def _build_entities(
             device.api,
         )
     ]
+    entities.extend(
+        ViCareCircuitOperatingModeSelect(
+            device,
+            circuit,
+        )
+        for device in device_list
+        for circuit in get_circuits(device.api)
+        if is_supported("operating_mode", lambda api: api.getActiveMode(), circuit)
+    )
+    return entities
 
 
 async def async_setup_entry(
@@ -66,17 +88,15 @@ class ViCareDHWOperatingModeSelect(ViCareEntity, SelectEntity):
 
     def __init__(
         self,
-        device_serial: str | None,
-        device_config: PyViCareDeviceConfig,
-        device: PyViCareDevice,
+        device: ViCareDevice,
     ) -> None:
         """Initialize the DHW operating mode select entity."""
-        super().__init__("dhw_operating_mode", device_serial, device_config, device)
+        super().__init__("dhw_operating_mode", device)
         self._attr_options = [
             DHW_MODE_API_TO_HA.get(mode, mode)
-            for mode in device.getDomesticHotWaterOperatingModes()
+            for mode in device.api.getDomesticHotWaterOperatingModes()
         ]
-        active = device.getDomesticHotWaterActiveOperatingMode()
+        active = device.api.getDomesticHotWaterActiveOperatingMode()
         self._attr_current_option = DHW_MODE_API_TO_HA.get(active, active)
 
     def update(self) -> None:
@@ -97,5 +117,44 @@ class ViCareDHWOperatingModeSelect(ViCareEntity, SelectEntity):
         """Set the DHW operating mode."""
         api_mode = DHW_MODE_HA_TO_API.get(option, option)
         self._api.setDomesticHotWaterOperatingMode(api_mode)
+        self._attr_current_option = option
+        self.schedule_update_ha_state()
+
+
+class ViCareCircuitOperatingModeSelect(ViCareEntity, SelectEntity):
+    """Representation of the operating mode of a ViCare heating circuit."""
+
+    _attr_translation_key = "operating_mode"
+
+    def __init__(
+        self,
+        device: ViCareDevice,
+        circuit: PyViCareHeatingCircuit,
+    ) -> None:
+        """Initialize the operating mode select entity."""
+        super().__init__("operating_mode", device, circuit)
+        self._attr_options = [
+            CIRCUIT_MODE_API_TO_HA.get(mode, mode) for mode in circuit.getModes()
+        ]
+        active = circuit.getActiveMode()
+        self._attr_current_option = CIRCUIT_MODE_API_TO_HA.get(active, active)
+
+    def update(self) -> None:
+        """Update state from the ViCare API."""
+        with self.vicare_api_handler():
+            with suppress(PyViCareNotSupportedFeatureError):
+                self._attr_options = [
+                    CIRCUIT_MODE_API_TO_HA.get(mode, mode)
+                    for mode in self._api.getModes()
+                ]
+
+            with suppress(PyViCareNotSupportedFeatureError):
+                active = self._api.getActiveMode()
+                self._attr_current_option = CIRCUIT_MODE_API_TO_HA.get(active, active)
+
+    @override
+    def select_option(self, option: str) -> None:
+        """Set the operating mode of the heating circuit."""
+        self._api.setMode(CIRCUIT_MODE_HA_TO_API.get(option, option))
         self._attr_current_option = option
         self.schedule_update_ha_state()

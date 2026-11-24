@@ -5,6 +5,11 @@ from unittest.mock import patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import (
+    assert_setup_component,
+    async_fire_time_changed,
+    mock_component,
+)
 
 from homeassistant.components import automation
 from homeassistant.components.homeassistant.triggers import state as state_trigger
@@ -18,8 +23,6 @@ from homeassistant.core import Context, HomeAssistant, ServiceCall
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
-
-from tests.common import assert_setup_component, async_fire_time_changed, mock_component
 
 
 @pytest.fixture(autouse=True)

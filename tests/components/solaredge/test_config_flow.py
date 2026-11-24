@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock, Mock
 
 from aiohttp import ClientError, ClientResponseError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, get_schema_suggested_value
 
 from homeassistant.components.recorder import Recorder
 from homeassistant.components.solaredge.const import (
@@ -20,8 +21,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from .conftest import API_KEY, PASSWORD, SITE_ID, USERNAME
-
-from tests.common import MockConfigEntry, get_schema_suggested_value
 
 NAME = "solaredge site 1 2 3"
 

@@ -5,6 +5,7 @@ from datetime import datetime
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import async_load_fixture
 from renault_api.exceptions import RenaultException
 from renault_api.kamereon import schemas
 from renault_api.kamereon.models import ChargeSchedule, HvacSchedule
@@ -19,8 +20,6 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import device_registry as dr
-
-from tests.common import async_load_fixture
 
 pytestmark = pytest.mark.usefixtures("patch_renault_account", "patch_get_vehicles")
 

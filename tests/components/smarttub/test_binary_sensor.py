@@ -3,13 +3,12 @@
 from unittest.mock import MagicMock, create_autospec
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 import smarttub
 
 from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
-
-from tests.common import MockConfigEntry
 
 
 async def test_binary_sensors(spa, setup_entry, hass: HomeAssistant) -> None:

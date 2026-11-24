@@ -9,12 +9,14 @@ from aiohttp import ClientError
 from PyViCare.PyViCare import PyViCare
 from PyViCare.PyViCareDeviceConfig import PyViCareDeviceConfig
 from PyViCare.PyViCareOAuthManager import obtain_token_via_basic_auth_pkce
+from PyViCare.PyViCareRoomControl import RoomControl
 from PyViCare.PyViCareUtils import (
     PyViCareDeviceCommunicationError,
     PyViCareInternalServerError,
     PyViCareInvalidConfigurationError,
     PyViCareInvalidCredentialsError,
     PyViCareInvalidDataError,
+    PyViCareNotSupportedFeatureError,
     PyViCareRateLimitError,
 )
 import requests
@@ -56,7 +58,7 @@ from .const import (
 from .coordinator import ViCareCoordinator
 from .services import async_setup_services
 from .types import ViCareConfigEntry, ViCareData, ViCareDevice
-from .utils import get_device_serial
+from .utils import get_device_identifier, get_device_serial, get_rooms
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -88,8 +90,13 @@ async def async_migrate_entry(
         )
         _LOGGER.debug("Imported configured client_id as application credential")
 
+        token_path = hass.config.path(STORAGE_DIR, VICARE_TOKEN_FILENAME)
         token = await hass.async_add_executor_job(
-            obtain_token_via_basic_auth_pkce, client_id, username, password
+            _obtain_token_and_remove_token_file,
+            client_id,
+            username,
+            password,
+            token_path,
         )
 
         data.pop(CONF_USERNAME)
@@ -98,9 +105,6 @@ async def async_migrate_entry(
 
         data["auth_implementation"] = DOMAIN
         data[CONF_TOKEN] = token
-
-        token_path = hass.config.path(STORAGE_DIR, VICARE_TOKEN_FILENAME)
-        await hass.async_add_executor_job(_remove_token_file, token_path)
 
         hass.config_entries.async_update_entry(
             config_entry, data=data, version=2, minor_version=1
@@ -117,6 +121,7 @@ async def async_migrate_entry(
             hass,
             DOMAIN,
             "update_redirect_uri",
+            config_entry_id=config_entry.entry_id,
             is_fixable=False,
             severity=ir.IssueSeverity.WARNING,
             translation_key="update_redirect_uri",
@@ -218,6 +223,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ViCareConfigEntry) -> No
         await coordinator.async_config_entry_first_refresh()
 
     await _async_register_zigbee_gateway_devices(hass, entry)
+    await _async_register_room_control_devices(hass, entry)
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
@@ -252,10 +258,40 @@ async def _async_register_zigbee_gateway_devices(
         )
 
 
+async def _async_register_room_control_devices(
+    hass: HomeAssistant, entry: ViCareConfigEntry
+) -> None:
+    """Register room controls, which may have no entity, before their rooms."""
+    device_registry = dr.async_get(hass)
+    for device in entry.runtime_data.devices:
+        if not isinstance(device.api, RoomControl):
+            continue
+        if not await hass.async_add_executor_job(get_rooms, device.api):
+            continue
+        model = device.config.getModel().replace("_", " ")
+        device_registry.async_get_or_create(
+            config_entry_id=entry.entry_id,
+            identifiers={(DOMAIN, get_device_identifier(device.config, device.serial))},
+            name=model,
+            manufacturer="Viessmann",
+            model=model,
+            configuration_url=VIESSMANN_DEVELOPER_PORTAL,
+        )
+
+
 def _remove_token_file(token_path: str) -> None:
     """Remove legacy token file if it exists."""
     with suppress(FileNotFoundError):
         os.remove(token_path)
+
+
+def _obtain_token_and_remove_token_file(
+    client_id: str, username: str, password: str, token_path: str
+) -> dict[str, object]:
+    """Obtain an OAuth token and remove the legacy token file."""
+    token = obtain_token_via_basic_auth_pkce(client_id, username, password)
+    _remove_token_file(token_path)
+    return token
 
 
 def _setup_vicare_api(
@@ -269,16 +305,16 @@ def _setup_vicare_api(
     client.initWithExternalOAuth(auth)
 
     device_config_list = get_supported_devices(client.devices)
+    probed: dict[str, bool] = {}
 
     # In viaGateway mode each gateway is one bulk fetch per cycle, so the rate
-    # limit scales with the number of gateways, not devices. Offline gateways
-    # are never fetched, and are skipped below, so they must not count here
-    # either; this has to match the grouping in async_setup_entry.
+    # limit scales with the number of gateways, not devices. Unreachable
+    # gateways are skipped below, so they must not count here either; this has
+    # to match the grouping in async_setup_entry.
     gateway_count = len(
         {
             config.getConfig().serial
-            for config in device_config_list
-            if config.isOnline()
+            for config in _reachable_devices(device_config_list, probed)
         }
     )
     if gateway_count > 1:
@@ -302,9 +338,7 @@ def _setup_vicare_api(
         )
 
     devices = []
-    for device_config in device_config_list:
-        if not bool(device_config.isOnline()):
-            continue
+    for device_config in _reachable_devices(device_config_list, probed):
         api = device_config.asAutoDetectDevice()
         devices.append(
             ViCareDevice(config=device_config, api=api, serial=get_device_serial(api))
@@ -313,6 +347,35 @@ def _setup_vicare_api(
         # Offline devices get no entities, and nothing would set them up later.
         raise ConfigEntryNotReady("No ViCare device is online")
     return ViCareData(client=client, devices=devices)
+
+
+def _reachable_devices(
+    device_config_list: list[PyViCareDeviceConfig], probed: dict[str, bool]
+) -> list[PyViCareDeviceConfig]:
+    """Return the devices to set up, probing each gateway reported offline once.
+
+    The API's online flag is not reliable: a device can be reported offline
+    while its gateway keeps delivering current data.
+    """
+    reachable = []
+    for config in device_config_list:
+        if not config.isOnline():
+            serial = config.getConfig().serial
+            if serial not in probed:
+                probed[serial] = _gateway_delivers_data(config)
+            if not probed[serial]:
+                continue
+        reachable.append(config)
+    return reachable
+
+
+def _gateway_delivers_data(config: PyViCareDeviceConfig) -> bool:
+    """Return whether a fetch from the device's gateway succeeds."""
+    try:
+        config.asAutoDetectDevice().service.fetch_all_features(config.getConfig())
+    except PyViCareDeviceCommunicationError, PyViCareNotSupportedFeatureError:
+        return False
+    return True
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ViCareConfigEntry) -> None:

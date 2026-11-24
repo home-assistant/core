@@ -1,16 +1,18 @@
 """Tests for the client validator."""
 
 import asyncio
+from collections.abc import Callable
 import json
 from unittest.mock import patch
 
 import aiohttp
+from aiohttp import web
+from aiohttp.test_utils import TestServer
 import pytest
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 
 from homeassistant.components.auth import indieauth
 from homeassistant.core import HomeAssistant
-
-from tests.test_util.aiohttp import AiohttpClientMocker
 
 REQUEST_SCHEME = "https"
 REQUEST_NETLOC = "homeassistant.example"
@@ -1122,3 +1124,27 @@ async def test_verify_redirect_uri_android_ios(client_id) -> None:
                 request_scheme=REQUEST_SCHEME,
                 request_netloc=REQUEST_NETLOC,
             )
+
+
+@pytest.mark.usefixtures("socket_enabled")
+async def test_fetch_redirect_uris_large_response_header(
+    hass: HomeAssistant, aiohttp_server: Callable[[], TestServer]
+) -> None:
+    """Test a client_id page with a header over the aiohttp default limit."""
+
+    async def client_id_page(request: web.Request) -> web.Response:
+        return web.Response(
+            text='<link rel="redirect_uri" href="/callback">',
+            content_type="text/html",
+            # cursor.com sends a Content-Security-Policy of about 14 kB
+            headers={"Content-Security-Policy": "default-src 'self'; " * 700},
+        )
+
+    app = web.Application()
+    app.router.add_get("/", client_id_page)
+    server = await aiohttp_server(app)
+    client_id = str(server.make_url("/"))
+
+    assert await indieauth.fetch_redirect_uris(hass, client_id) == [
+        str(server.make_url("/callback"))
+    ]

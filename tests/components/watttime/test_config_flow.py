@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock, patch
 
 from aiowatttime.errors import CoordinatesNotFoundError, InvalidCredentialsError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries
 from homeassistant.components.watttime.config_flow import (
@@ -25,8 +26,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-
-from tests.common import MockConfigEntry
 
 
 @pytest.mark.parametrize(
@@ -168,7 +167,7 @@ async def test_duplicate_error(
 async def test_options_flow(hass: HomeAssistant, config_entry: MockConfigEntry) -> None:
     """Test config flow options."""
     with patch(
-        "homeassistant.components.watttime.async_setup_entry", return_value=True
+        "homeassistant.components.watttime.async_setup_entry", return_value=None
     ):
         await hass.config_entries.async_setup(config_entry.entry_id)
         result = await hass.config_entries.options.async_init(config_entry.entry_id)
@@ -232,7 +231,7 @@ async def test_step_reauth(hass: HomeAssistant, config_entry: MockConfigEntry) -
     result = await config_entry.start_reauth_flow(hass)
     with patch(
         "homeassistant.components.watttime.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],

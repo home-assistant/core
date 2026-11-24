@@ -9,6 +9,12 @@ from pathlib import Path
 from unittest.mock import MagicMock
 
 import pytest
+from pytest_homeassistant.common import (
+    MockModule,
+    mock_config_flow,
+    mock_integration,
+    mock_platform,
+)
 
 from homeassistant.config_entries import ConfigFlow
 from homeassistant.core import HomeAssistant
@@ -23,8 +29,6 @@ from .common import (
     mock_config_entry_setup,
     mock_setup,
 )
-
-from tests.common import MockModule, mock_config_flow, mock_integration, mock_platform
 
 
 @pytest.hookimpl(tryfirst=True, hookwrapper=True)

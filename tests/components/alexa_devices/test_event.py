@@ -4,6 +4,7 @@ from unittest.mock import AsyncMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.alexa_devices.const import DOMAIN
@@ -21,8 +22,6 @@ from .const import (
     TEST_DEVICE_AQM_SN,
     TEST_VOCAL_RECORD_EVENT,
 )
-
-from tests.common import MockConfigEntry, snapshot_platform
 
 ENTITY_ID = "event.echo_test_voice_event"
 
@@ -60,6 +59,25 @@ async def test_history_event_is_fired(
 
     assert (state := hass.states.get(ENTITY_ID))
     assert state.attributes == snapshot
+
+
+async def test_initial_vocal_record_not_fired(
+    hass: HomeAssistant,
+    mock_amazon_devices_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test the vocal record loaded at setup does not fire on the next update."""
+    with patch("homeassistant.components.alexa_devices.PLATFORMS", [Platform.EVENT]):
+        await setup_integration(hass, mock_config_entry)
+
+    # An unrelated push update must not replay the record loaded at setup
+    coordinator = mock_config_entry.runtime_data
+    await coordinator.history_state_event_handler({})
+    await hass.async_block_till_done()
+
+    assert (state := hass.states.get(ENTITY_ID))
+    assert state.state == STATE_UNKNOWN
+    assert state.attributes.get("event_type") is None
 
 
 async def test_no_vocal_record_skips_event_trigger(

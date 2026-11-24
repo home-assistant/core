@@ -3,7 +3,7 @@
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': <ConfigSubentry subentry_type='conversation' title='OpenAI Conversation'>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -14,7 +14,7 @@
     'labels': set({
     }),
     'manufacturer': 'OpenAI',
-    'model': 'gpt-4o-mini',
+    'model': 'gpt-6-luna',
     'model_id': None,
     'name': 'OpenAI Conversation',
     'name_by_user': None,
@@ -27,7 +27,7 @@
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': <ConfigSubentry subentry_type='conversation' title='OpenAI Conversation'>,
     'configuration_url': None,
     'connections': set({
     }),

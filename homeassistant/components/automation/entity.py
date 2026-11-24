@@ -56,7 +56,6 @@ from homeassistant.util.dt import parse_datetime
 from .config import ValidationStatus
 from .const import (
     ATTR_SOURCE,
-    CONF_STOP_ACTIONS,
     DEFAULT_INITIAL_STATE,
     DEFAULT_STOP_ACTIONS,
     DOMAIN,
@@ -64,6 +63,7 @@ from .const import (
     LOGGER,
     AutomationEntityCapabilityAttribute,
     AutomationEntityStateAttribute,
+    AutomationServiceArgument,
 )
 from .trace import trace_automation
 
@@ -211,6 +211,11 @@ class UnavailableAutomationEntity(BaseAutomationEntity):
         """Return the repair issue id for the entity_id."""
         return f"{entity_id}_validation_{self._validation_status}"
 
+    @property
+    def repair_issue_id(self) -> str:
+        """Return the id of the repair issue."""
+        return self._issue_id(self.entity_id)
+
     @callback
     def _async_create_issue(self) -> None:
         """Create a repair issue to notify the user the automation has errors."""
@@ -247,7 +252,9 @@ class UnavailableAutomationEntity(BaseAutomationEntity):
     async def async_will_remove_from_hass(self) -> None:
         """Run when entity will be removed from hass."""
         await super().async_will_remove_from_hass()
-        async_delete_issue(self.hass, DOMAIN, self._issue_id(self.entity_id))
+        async_delete_issue(
+            self.hass, DOMAIN, self.repair_issue_id, defer_to_refresh=True
+        )
 
     @override
     async def async_trigger(
@@ -449,8 +456,8 @@ class AutomationEntity(BaseAutomationEntity, RestoreEntity):
     @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
-        if CONF_STOP_ACTIONS in kwargs:
-            await self._async_disable(kwargs[CONF_STOP_ACTIONS])
+        if AutomationServiceArgument.STOP_ACTIONS in kwargs:
+            await self._async_disable(kwargs[AutomationServiceArgument.STOP_ACTIONS])
         else:
             await self._async_disable()
         self.async_write_ha_state()

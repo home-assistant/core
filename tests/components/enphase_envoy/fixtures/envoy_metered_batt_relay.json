@@ -688,6 +688,70 @@
       "serial_number": "482523040549",
       "dmir_version": "0.1.20-D1"
     },
+    "generator": {
+      "admin_state": "open",
+      "oper_state": "open",
+      "admin_mode": 2,
+      "schedule": 1,
+      "start_soc": 100,
+      "stop_soc": -1,
+      "exc_on": 0,
+      "present": true,
+      "type": 1
+    },
+    "generator_config": {
+      "max_cont_gen_amps": 60.0,
+      "min_gen_loading_perc": 5,
+      "max_gen_efficiency_perc": 100,
+      "name_plate_rating_wat": 22.0,
+      "start_method": "auto",
+      "warm_up_mins": 5,
+      "cool_down_mins": 5,
+      "gen_type": "Standby",
+      "model": "G007042-3, G007043-3 (22kW)",
+      "manufacturer": "Generac",
+      "last_updated_by": "ITK",
+      "generator_id": "3019990001",
+      "charge_from_generator": true
+    },
+    "generator_schedule": {
+      "exercise_freq_in_weeks": 1,
+      "exercise_start": 810,
+      "exercise_duration": 10,
+      "exercise_day": "Thu",
+      "default_start_soc": 30,
+      "default_stop_soc": 70,
+      "last_updated_by": "ITK",
+      "schedule": {
+        "default": [
+          {
+            "id": "always_on",
+            "start": "1/1",
+            "end": "12/31",
+            "days": [
+              {
+                "id": "all_days",
+                "week_days": "Mon,Tue,Wed,Thu,Fri,Sat,Sun",
+                "periods": [
+                  {
+                    "id": "normal_1",
+                    "start": 0.0,
+                    "duration": 1440.0,
+                    "start_soc": 100.0,
+                    "stop_soc": -1.0,
+                    "setting": "AON"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    },
+    "generator_mode": {
+      "gen_cmd": "on",
+      "last_updated_by": "ITK"
+    },
     "inverters": {
       "1": {
         "serial_number": "1",

@@ -5,6 +5,8 @@ import re
 from typing import Any
 
 import pytest
+from pytest_homeassistant.common import CLIENT_ID, MockUser
+from pytest_homeassistant.typing import MockHAClientWebSocket, WebSocketGenerator
 
 from homeassistant.components.debug_console.const import (
     CONF_WARNING_ACCEPTED,
@@ -16,9 +18,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from . import CONSOLE_COMMANDS
-
-from tests.common import CLIENT_ID, MockUser
-from tests.typing import MockHAClientWebSocket, WebSocketGenerator
 
 SESSION_ID = "test-session"
 EXECUTE = {"type": "debug_console/execute", "session_id": SESSION_ID, "code": "1"}

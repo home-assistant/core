@@ -11,6 +11,8 @@ from homeassistant.components.device_automation import (
     InvalidDeviceAutomationConfig,
 )
 from homeassistant.components.homeassistant.triggers import event, state
+from homeassistant.components.homeassistant.triggers.event import EventTriggerArgument
+from homeassistant.components.homeassistant.triggers.state import StateTriggerArgument
 from homeassistant.const import (
     CONF_DEVICE_ID,
     CONF_DOMAIN,
@@ -57,6 +59,7 @@ from .helpers import (
     async_get_node_from_device_id,
     async_get_node_status_sensor_entity_id,
     copy_available_params,
+    get_endpoint_indices_from_child_device,
     get_value_state_schema,
     get_zwave_value_from_config,
     remove_keys_with_empty_values,
@@ -150,9 +153,9 @@ BASE_STATE_SCHEMA = DEVICE_TRIGGER_BASE_SCHEMA.extend(
 NODE_STATUS_SCHEMA = BASE_STATE_SCHEMA.extend(
     {
         probatio.Required(CONF_TYPE): NODE_STATUS,
-        probatio.Optional(state.CONF_FROM): probatio.In(NODE_STATUSES),
-        probatio.Optional(state.CONF_TO): probatio.In(NODE_STATUSES),
-        probatio.Optional(state.CONF_FOR): cv.positive_time_period_dict,
+        probatio.Optional(StateTriggerArgument.FROM): probatio.In(NODE_STATUSES),
+        probatio.Optional(StateTriggerArgument.TO): probatio.In(NODE_STATUSES),
+        probatio.Optional(StateTriggerArgument.FOR): cv.positive_time_period_dict,
     }
 )
 
@@ -230,6 +233,22 @@ async def async_validate_trigger_config(
         except probatio.Invalid as err:
             raise InvalidDeviceAutomationConfig(err.msg) from err
 
+        # On an endpoint child device, the configured endpoint must be one the child
+        # covers. The capabilities form already pins this, but a manually authored
+        # trigger would otherwise listen to an unrelated endpoint while reporting the
+        # child device's id.
+        device = dr.async_get(hass).async_get(config[CONF_DEVICE_ID])
+        if (
+            trigger_type == VALUE_VALUE_UPDATED
+            and isinstance(device, dr.ChildDeviceEntry)
+            and (endpoints := get_endpoint_indices_from_child_device(device, node))
+            and config[ATTR_ENDPOINT] not in endpoints
+        ):
+            raise InvalidDeviceAutomationConfig(
+                f"Endpoint {config[ATTR_ENDPOINT]} is not covered by device "
+                f"{config[CONF_DEVICE_ID]}"
+            )
+
     return config
 
 
@@ -258,6 +277,13 @@ async def async_get_triggers(
     node = async_get_node_from_device_id(hass, device_id)
 
     if node.client.driver and node.client.driver.controller.own_node == node:
+        return triggers
+
+    # Endpoint child devices only support the generic value-updated trigger. Node-based
+    # event triggers (notifications, value notifications, node status) always fire with
+    # the parent node's device_id, so they would never match a child device.
+    if isinstance(dev_reg.async_get(device_id), dr.ChildDeviceEntry):
+        triggers.append({**base_trigger, CONF_TYPE: VALUE_VALUE_UPDATED})
         return triggers
 
     # We can add a node status trigger if the node status sensor is enabled
@@ -376,19 +402,19 @@ async def async_attach_trigger(
     # attaching to
     if trigger_platform == "event":
         event_data = {CONF_DEVICE_ID: config[CONF_DEVICE_ID]}
-        event_config = {
-            event.CONF_PLATFORM: "event",
-            event.CONF_EVENT_DATA: event_data,
+        event_config: ConfigType = {
+            EventTriggerArgument.PLATFORM: "event",
+            EventTriggerArgument.EVENT_DATA: event_data,
         }
 
         if ATTR_COMMAND_CLASS in config:
             event_data[ATTR_COMMAND_CLASS] = config[ATTR_COMMAND_CLASS]
 
         if trigger_type == ENTRY_CONTROL_NOTIFICATION:
-            event_config[event.CONF_EVENT_TYPE] = ZWAVE_JS_NOTIFICATION_EVENT
+            event_config[EventTriggerArgument.EVENT_TYPE] = ZWAVE_JS_NOTIFICATION_EVENT
             copy_available_params(config, event_data, [ATTR_EVENT_TYPE, ATTR_DATA_TYPE])
         elif trigger_type == NOTIFICATION_NOTIFICATION:
-            event_config[event.CONF_EVENT_TYPE] = ZWAVE_JS_NOTIFICATION_EVENT
+            event_config[EventTriggerArgument.EVENT_TYPE] = ZWAVE_JS_NOTIFICATION_EVENT
             copy_available_params(
                 config, event_data, [ATTR_LABEL, ATTR_EVENT_LABEL, ATTR_EVENT]
             )
@@ -399,7 +425,9 @@ async def async_attach_trigger(
             CENTRAL_SCENE_VALUE_NOTIFICATION,
             SCENE_ACTIVATION_VALUE_NOTIFICATION,
         ):
-            event_config[event.CONF_EVENT_TYPE] = ZWAVE_JS_VALUE_NOTIFICATION_EVENT
+            event_config[EventTriggerArgument.EVENT_TYPE] = (
+                ZWAVE_JS_VALUE_NOTIFICATION_EVENT
+            )
             copy_available_params(
                 config, event_data, [ATTR_PROPERTY, ATTR_PROPERTY_KEY, ATTR_ENDPOINT]
             )
@@ -415,11 +443,17 @@ async def async_attach_trigger(
 
     if trigger_platform == "state":
         if trigger_type == NODE_STATUS:
-            state_config = {state.CONF_PLATFORM: "state"}
+            state_config: ConfigType = {StateTriggerArgument.PLATFORM: "state"}
 
-            state_config[state.CONF_ENTITY_ID] = config[CONF_ENTITY_ID]
+            state_config[StateTriggerArgument.ENTITY_ID] = config[CONF_ENTITY_ID]
             copy_available_params(
-                config, state_config, [state.CONF_FOR, state.CONF_FROM, state.CONF_TO]
+                config,
+                state_config,
+                [
+                    StateTriggerArgument.FOR,
+                    StateTriggerArgument.FROM,
+                    StateTriggerArgument.TO,
+                ],
             )
         else:
             raise HomeAssistantError(f"Unhandled trigger type {trigger_type}")
@@ -512,9 +546,15 @@ async def async_get_trigger_capabilities(
         return {
             "extra_fields": probatio.Schema(
                 {
-                    probatio.Optional(state.CONF_FROM): probatio.In(NODE_STATUSES),
-                    probatio.Optional(state.CONF_TO): probatio.In(NODE_STATUSES),
-                    probatio.Optional(state.CONF_FOR): cv.positive_time_period_dict,
+                    probatio.Optional(StateTriggerArgument.FROM): probatio.In(
+                        NODE_STATUSES
+                    ),
+                    probatio.Optional(StateTriggerArgument.TO): probatio.In(
+                        NODE_STATUSES
+                    ),
+                    probatio.Optional(
+                        StateTriggerArgument.FOR
+                    ): cv.positive_time_period_dict,
                 }
             )
         }
@@ -550,27 +590,41 @@ async def async_get_trigger_capabilities(
         }
 
     if trigger_type == VALUE_VALUE_UPDATED:
-        # Only show command classes on this node and exclude Configuration CC since it
-        # is already covered
-        return {
-            "extra_fields": probatio.Schema(
-                {
-                    probatio.Required(ATTR_COMMAND_CLASS): probatio.In(
-                        {
-                            str(CommandClass(cc.id).value): cc.name
-                            for cc in sorted(
-                                node.command_classes, key=lambda cc: cc.name
-                            )
-                            if cc.id != CommandClass.CONFIGURATION
-                        }
-                    ),
-                    probatio.Required(ATTR_PROPERTY): cv.string,
-                    probatio.Optional(ATTR_PROPERTY_KEY): cv.string,
-                    probatio.Optional(ATTR_ENDPOINT): cv.string,
-                    probatio.Optional(ATTR_FROM): cv.string,
-                    probatio.Optional(ATTR_TO): cv.string,
-                }
+        # On an endpoint child device, restrict the command classes and endpoint to the
+        # endpoint(s) the child covers, so a trigger created there matches the child's own
+        # values and can't be retargeted at the node's root or an unrelated endpoint.
+        device = dr.async_get(hass).async_get(config[CONF_DEVICE_ID])
+        if isinstance(device, dr.ChildDeviceEntry) and (
+            endpoints := get_endpoint_indices_from_child_device(device, node)
+        ):
+            command_classes = {
+                command_class
+                for endpoint in endpoints
+                for command_class in node.endpoints[endpoint].command_classes
+            }
+            endpoint_field: Any = probatio.Required(ATTR_ENDPOINT)
+            endpoint_schema: Any = probatio.In(
+                [str(endpoint) for endpoint in endpoints]
             )
+        else:
+            command_classes = set(node.command_classes)
+            endpoint_field = probatio.Optional(ATTR_ENDPOINT)
+            endpoint_schema = cv.string
+        # Exclude Configuration CC since it is already covered by its own trigger.
+        extra_fields: dict[Any, Any] = {
+            probatio.Required(ATTR_COMMAND_CLASS): probatio.In(
+                {
+                    str(CommandClass(cc.id).value): cc.name
+                    for cc in sorted(command_classes, key=lambda cc: cc.name)
+                    if cc.id != CommandClass.CONFIGURATION
+                }
+            ),
+            probatio.Required(ATTR_PROPERTY): cv.string,
+            probatio.Optional(ATTR_PROPERTY_KEY): cv.string,
+            endpoint_field: endpoint_schema,
+            probatio.Optional(ATTR_FROM): cv.string,
+            probatio.Optional(ATTR_TO): cv.string,
         }
+        return {"extra_fields": probatio.Schema(extra_fields)}
 
     return {}

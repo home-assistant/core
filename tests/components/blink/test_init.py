@@ -1,20 +1,24 @@
 """Test the Blink init."""
 
 from datetime import timedelta
+from typing import Any
 from unittest.mock import AsyncMock, MagicMock
 
 from aiohttp import ClientError
 from blinkpy.auth import LoginError
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
+from pytest_homeassistant.typing import WebSocketGenerator
 
+from homeassistant.components import blink
 from homeassistant.components.blink.const import DOMAIN
 from homeassistant.components.blink.coordinator import SCAN_INTERVAL
-from homeassistant.components.blink.services import SERVICE_SAVE_VIDEO
+from homeassistant.components.blink.services import BlinkService
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry, async_fire_time_changed
+from homeassistant.helpers import device_registry as dr
+from homeassistant.setup import async_setup_component
 
 CAMERA_NAME = "Camera 1"
 FILENAME = "blah"
@@ -76,7 +80,7 @@ async def test_unload_entry(
     assert mock_config_entry.state is ConfigEntryState.LOADED
     assert await hass.config_entries.async_unload(mock_config_entry.entry_id)
     assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
-    assert hass.services.has_service(DOMAIN, SERVICE_SAVE_VIDEO)
+    assert hass.services.has_service(DOMAIN, BlinkService.SAVE_VIDEO)
 
 
 async def test_scheduled_refresh_is_not_forced(
@@ -101,6 +105,60 @@ async def test_scheduled_refresh_is_not_forced(
     await hass.async_block_till_done(wait_background_tasks=True)
 
     mock_blink_api.refresh.assert_awaited_once_with()
+
+
+async def test_every_token_refresh_is_stored(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    mock_blink_api: MagicMock,
+    mock_blink_auth_api: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test each token refresh reaches storage, not only the first one."""
+    mock_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    # BlinkPy updates its own dict in place and returns that same dict
+    login_attributes = mock_blink_auth_api.login_attributes
+    token_refreshed = blink.Auth.call_args.kwargs["callback"]
+
+    for token in ("first_token", "second_token"):
+        login_attributes["token"] = token
+        token_refreshed()
+        freezer.tick(timedelta(seconds=5))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+
+        (stored_entry,) = hass_storage["core.config_entries"]["data"]["entries"]
+        assert stored_entry["data"]["token"] == token
+
+
+async def test_token_renewed_during_startup_is_stored(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    mock_blink_api: MagicMock,
+    mock_blink_auth_api: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a token renewed by Auth.startup() reaches storage without a callback."""
+
+    async def start() -> None:
+        # BlinkPy renews the token in startup() without invoking the callback
+        mock_blink_auth_api.login_attributes["token"] = "startup_token"
+
+    mock_blink_api.start = AsyncMock(side_effect=start)
+    mock_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    freezer.tick(timedelta(seconds=5))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    (stored_entry,) = hass_storage["core.config_entries"]["data"]["entries"]
+    assert stored_entry["data"]["token"] == "startup_token"
 
 
 async def test_migrate_V0(
@@ -222,3 +280,43 @@ async def test_migrate_v4_keeps_valid_hardware_id(
     assert entry.state is ConfigEntryState.LOADED
     assert entry.version == 5
     assert entry.data["hardware_id"] == "some-valid-uuid"
+
+
+@pytest.mark.usefixtures("mock_blink_auth_api")
+@pytest.mark.parametrize(
+    ("serial", "removed"),
+    [
+        pytest.param("12345", False, id="camera_on_account"),
+        pytest.param("54321", False, id="sync_module_on_account"),
+        pytest.param("67890", True, id="camera_removed_from_account"),
+    ],
+)
+async def test_remove_device(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    device_registry: dr.DeviceRegistry,
+    mock_blink_api: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    serial: str,
+    removed: bool,
+) -> None:
+    """Test only devices no longer on the Blink account can be removed."""
+    mock_blink_api.sync = {
+        "Sync module": MagicMock(
+            serial="54321", version="1.0", attributes={}, cameras={}, arm=True
+        )
+    }
+    assert await async_setup_component(hass, "config", {})
+    mock_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    device_entry = device_registry.async_get_or_create(
+        config_entry_id=mock_config_entry.entry_id,
+        identifiers={(DOMAIN, serial)},
+    )
+    client = await hass_ws_client(hass)
+    response = await client.remove_device(device_entry.id)
+
+    assert response["success"] is removed
+    assert (device_registry.async_get(device_entry.id) is None) is removed

@@ -17,6 +17,8 @@ from async_upnp_client.exceptions import (
 from async_upnp_client.profiles.dlna import PlayMode, TransportState
 from didl_lite import didl_lite
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.typing import WebSocketGenerator
 
 from homeassistant import const as ha_const
 from homeassistant.components import media_player as mp, ssdp
@@ -63,9 +65,6 @@ from .conftest import (
     MOCK_MAC_ADDRESS,
     NEW_DEVICE_LOCATION,
 )
-
-from tests.common import MockConfigEntry
-from tests.typing import WebSocketGenerator
 
 # Auto-use the domain_data_mock fixture for every test in this module
 pytestmark = pytest.mark.usefixtures("domain_data_mock")

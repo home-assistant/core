@@ -47,6 +47,8 @@ async def async_setup_entry(
         coordinator=coordinator,
         telemetry_coordinator=telemetry_coordinator,
     )
+    coordinator.async_start_live_updates()
+
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
 

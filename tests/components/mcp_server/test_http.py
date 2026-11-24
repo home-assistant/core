@@ -17,6 +17,9 @@ from mcp.shared.exceptions import MCPError
 import probatio
 import pydantic
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, setup_test_component_platform
+from pytest_homeassistant.typing import ClientSessionGenerator
+from yarl import URL
 
 from homeassistant.components.conversation import DOMAIN as CONVERSATION_DOMAIN
 from homeassistant.components.homeassistant.exposed_entities import async_expose_entity
@@ -48,9 +51,7 @@ from homeassistant.util.json import JsonObjectType
 
 from .conftest import TEST_LLM_API_ID, MockLLMAPI
 
-from tests.common import MockConfigEntry, setup_test_component_platform
 from tests.components.light.common import MockLight
-from tests.typing import ClientSessionGenerator
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -338,6 +339,7 @@ async def test_options_flow_closes_sessions(
     assert "Could not find session ID" in response_data
 
 
+@pytest.mark.usefixtures("setup_integration")
 @pytest.mark.parametrize(
     ("method", "path"),
     [
@@ -353,17 +355,31 @@ async def test_options_flow_closes_sessions(
 )
 async def test_http_requires_authentication(
     hass: HomeAssistant,
-    setup_integration: None,
     hass_client_no_auth: ClientSessionGenerator,
     method: str,
     path: str,
 ) -> None:
-    """Test every MCP endpoint requires authentication."""
-
+    """Test every MCP endpoint requires authentication and advertises RFC9728 metadata."""
+    assert await async_setup_component(hass, "auth", {})
     client = await hass_client_no_auth()
+    base_url = f"http://{client.host}:{client.port}"
+    hass.config.internal_url = base_url
 
     response = await client.request(method, path)
     assert response.status == HTTPStatus.UNAUTHORIZED
+    expected_metadata_url = f"{base_url}/.well-known/oauth-protected-resource{path}"
+    assert (
+        response.headers["WWW-Authenticate"]
+        == f'Bearer resource_metadata="{expected_metadata_url}"'
+    )
+
+    metadata_response = await client.get(f"/.well-known/oauth-protected-resource{path}")
+    assert metadata_response.status == HTTPStatus.OK
+    assert await metadata_response.json() == {
+        "resource": str(client.make_url(path)),
+        "authorization_servers": [base_url],
+        "resource_documentation": "https://contributors.home-assistant.io/core/internals/auth-api/",
+    }
 
 
 @pytest.fixture(params=["sse", "streamable"])
@@ -430,6 +446,45 @@ def mcp_client_fixture(mcp_protocol: str) -> Any:
     if mcp_protocol == "streamable":
         return mcp_streamable_session
     raise ValueError(f"Unknown MCP protocol: {mcp_protocol}")
+
+
+async def test_server_icons(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    mcp_protocol: str,
+    mcp_client: MCPClientFactory,
+    hass_supervisor_access_token: str,
+) -> None:
+    """Advertise a frontend icon that can be fetched without authentication."""
+    assert await async_setup_component(hass, "frontend", {})
+    client = await hass_client()
+    mcp_url = str(
+        client.make_url({"sse": SSE_API, "streamable": STREAMABLE_API}[mcp_protocol])
+    )
+    base_url = str(URL(mcp_url).origin())
+    # The icon URL follows the origin of the request, not the configured URLs
+    hass.config.internal_url = "http://homeassistant.local:8123"
+    hass.config.external_url = "https://example.com"
+
+    async with mcp_client(hass, mcp_url, hass_supervisor_access_token) as session:
+        assert session.server_info is not None
+        assert session.server_info.icons == [
+            mcp.types.Icon(
+                src=f"{base_url}/static/icons/favicon-192x192.png",
+                mime_type="image/png",
+                sizes=["192x192"],
+            )
+        ]
+
+        async with (
+            aiohttp.ClientSession() as icon_client,
+            icon_client.get(
+                session.server_info.icons[0].src, allow_redirects=False
+            ) as response,
+        ):
+            assert response.status == HTTPStatus.OK
+            assert response.content_type == "image/png"
+            assert (await response.read()).startswith(b"\x89PNG\r\n\x1a\n")
 
 
 @pytest.mark.parametrize(
@@ -714,8 +769,58 @@ async def test_mcp_tools_list_all_llm_apis(
         result = await session.list_tools()
 
     tool_names = {tool.name for tool in result.tools}
-    assert "device-control__homeassistant__GetLiveContext" in tool_names
-    assert "test-api__test_tool" in tool_names
+    assert "homeassistant__GetLiveContext" in tool_names
+    assert "assist__homeassistant__GetLiveContext" not in tool_names
+    assert "device-control__homeassistant__GetLiveContext" not in tool_names
+    assert "test_tool" in tool_names
+    assert [tool.name for tool in result.tools].count("llm__GetDateTime") == 1
+
+
+@pytest.mark.parametrize("llm_hass_api", [[llm.LLM_API_ASSIST, TEST_LLM_API_ID]])
+async def test_mcp_merged_live_context(
+    hass: HomeAssistant,
+    setup_integration: None,
+    mcp_url: str,
+    mcp_client: MCPClientFactory,
+    hass_supervisor_access_token: str,
+) -> None:
+    """Call live context with its unchanged name in a merged API."""
+    llm.async_register_api(
+        hass, MockLLMAPI(hass=hass, id=TEST_LLM_API_ID, name="Test API")
+    )
+
+    async with mcp_client(hass, mcp_url, hass_supervisor_access_token) as session:
+        result = await session.call_tool(
+            name="homeassistant__GetLiveContext", arguments={"domain": "light"}
+        )
+
+    assert not result.is_error
+    assert "Kitchen Light" in result.content[0].text
+
+
+@pytest.mark.parametrize("llm_hass_api", [[llm.LLM_API_ASSIST, TEST_LLM_API_ID]])
+@pytest.mark.parametrize("read_only", [True])
+async def test_mcp_merged_read_only_blocks_write_tools(
+    hass: HomeAssistant,
+    setup_integration: None,
+    mcp_url: str,
+    mcp_client: MCPClientFactory,
+    hass_supervisor_access_token: str,
+) -> None:
+    """Merged write tools are excluded by the read-only tool filter."""
+    llm.async_register_api(
+        hass, MockLLMAPI(hass=hass, id=TEST_LLM_API_ID, name="Test API")
+    )
+
+    async with mcp_client(hass, mcp_url, hass_supervisor_access_token) as session:
+        result = await session.call_tool(
+            name="intent__HassTurnOn",
+            arguments={"name": "kitchen light"},
+        )
+
+    assert result.is_error
+    assert 'Tool "intent__HassTurnOn" not found' in result.content[0].text
+    assert hass.states.get(TEST_ENTITY).state == STATE_OFF
 
 
 @pytest.mark.usefixtures("setup_integration")

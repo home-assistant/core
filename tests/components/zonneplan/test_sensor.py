@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.sensor import ATTR_LAST_RESET
@@ -14,8 +15,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from .conftest import MOCK_ACCOUNT
-
-from tests.common import MockConfigEntry, snapshot_platform
 
 BATTERY_STATE_ENTITY_ID = "sensor.thuisbatterij_battery_state"
 INVERTER_STATE_ENTITY_ID = "sensor.thuisbatterij_inverter_state"

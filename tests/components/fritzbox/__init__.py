@@ -3,6 +3,8 @@
 from typing import Any
 from unittest.mock import Mock
 
+from pytest_homeassistant.common import MockConfigEntry
+
 from homeassistant.components.fritzbox.const import DOMAIN
 from homeassistant.core import HomeAssistant
 
@@ -12,8 +14,6 @@ from .const import (
     CONF_FAKE_NAME,
     CONF_FAKE_PRODUCTNAME,
 )
-
-from tests.common import MockConfigEntry
 
 
 async def setup_config_entry(

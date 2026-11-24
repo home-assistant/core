@@ -4,6 +4,7 @@ from unittest.mock import Mock, patch
 
 from pynetgear import DEFAULT_USER
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.netgear.const import (
     CONF_CONSIDER_HOME,
@@ -28,8 +29,6 @@ from homeassistant.helpers.service_info.ssdp import (
     ATTR_UPNP_SERIAL,
     SsdpServiceInfo,
 )
-
-from tests.common import MockConfigEntry
 
 URL = "http://routerlogin.net"
 URL_SSL = "https://routerlogin.net"
@@ -74,7 +73,7 @@ SSDP_URL_SLL = f"https://{HOST}:{PORT}/rootDesc.xml"
 def mock_controller_service():
     """Mock a successful service."""
     with (
-        patch("homeassistant.components.netgear.async_setup_entry", return_value=True),
+        patch("homeassistant.components.netgear.async_setup_entry", return_value=None),
         patch("homeassistant.components.netgear.router.Netgear") as service_mock,
     ):
         service_mock.return_value.get_info = Mock(return_value=ROUTER_INFOS)

@@ -17,11 +17,11 @@ from homeassistant.components.backup import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.aiohttp_client import ChunkAsyncStreamIterator
 from homeassistant.util import slugify
 
-from . import DATA_BACKUP_AGENT_LISTENERS, GoogleDriveConfigEntry
+from . import DATA_BACKUP_AGENT_LISTENERS
 from .const import DOMAIN
+from .coordinator import GoogleDriveConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -161,8 +161,7 @@ class GoogleDriveBackupAgent(BackupAgent):
             file_id = await self._client.async_get_backup_file_id(backup_id)
             if file_id:
                 _LOGGER.debug("Downloading file_id: %s", file_id)
-                stream = await self._client.async_download(file_id)
-                return ChunkAsyncStreamIterator(stream)
+                return await self._client.async_download(file_id)
         except (GoogleDriveApiError, HomeAssistantError, TimeoutError) as err:
             _LOGGER.error("Failed to download backup: %s", err)
             raise BackupAgentError(

@@ -3,6 +3,7 @@
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from pytest_homeassistant.common import Mock, MockConfigEntry
 
 from homeassistant.components.collection_image.const import DOMAIN
 from homeassistant.components.collection_image.image import CollectionImageImageEntity
@@ -11,15 +12,18 @@ from homeassistant.components.collection_image.services import (
     CollectionImageServiceArgument,
 )
 from homeassistant.components.media_source import PlayMedia
-from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE, STATE_UNKNOWN
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
+    TargetKey,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 
 from .conftest import MediaSourceMocks, MediaSourceState
 from .const import DEFAULT_ENTITY_ID, MOCK_MEDIA_DIR_URI_1, MOCK_MEDIA_IMAGE_URI_2
 from .helpers import directory, image
-
-from tests.common import Mock, MockConfigEntry
 
 
 async def _setup_integration(
@@ -222,7 +226,7 @@ async def test_first_unavailable(
         await hass.services.async_call(
             DOMAIN,
             CollectionImageService.SELECT_FIRST,
-            {ATTR_ENTITY_ID: DEFAULT_ENTITY_ID},
+            {TargetKey.ENTITY_ID: DEFAULT_ENTITY_ID},
             blocking=True,
         )
     state = hass.states.get(DEFAULT_ENTITY_ID)
@@ -241,7 +245,7 @@ async def test_select_image(
         DOMAIN,
         CollectionImageService.SELECT_IMAGE,
         {
-            ATTR_ENTITY_ID: DEFAULT_ENTITY_ID,
+            TargetKey.ENTITY_ID: DEFAULT_ENTITY_ID,
             CollectionImageServiceArgument.IMAGE: {
                 "media_content_id": MOCK_MEDIA_IMAGE_URI_2,
                 "media_content_type": "image/png",
@@ -275,7 +279,7 @@ async def test_select_image_invalid_media_type(
             DOMAIN,
             CollectionImageService.SELECT_IMAGE,
             {
-                ATTR_ENTITY_ID: DEFAULT_ENTITY_ID,
+                TargetKey.ENTITY_ID: DEFAULT_ENTITY_ID,
                 CollectionImageServiceArgument.IMAGE: {
                     "media_content_id": MOCK_MEDIA_IMAGE_URI_2,
                     "media_content_type": "image/png",

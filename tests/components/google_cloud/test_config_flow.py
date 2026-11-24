@@ -5,6 +5,8 @@ from pathlib import Path
 from unittest.mock import AsyncMock, MagicMock, patch
 from uuid import uuid4
 
+from pytest_homeassistant.common import MockConfigEntry
+
 from homeassistant import config_entries
 from homeassistant.components import tts
 from homeassistant.components.google_cloud.config_flow import UPLOADED_KEY_FILE
@@ -20,8 +22,6 @@ from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.setup import async_setup_component
 
 from .conftest import VALID_SERVICE_ACCOUNT_INFO
-
-from tests.common import MockConfigEntry
 
 
 async def test_user_flow_success(

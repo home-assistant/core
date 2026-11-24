@@ -104,9 +104,9 @@ class OneWireHub:
                     (DOMAIN, device.parent_id),
                     config_entry_id=self._config_entry.entry_id,
                 )
-            device_registry.async_get_or_create(
+            device_registry.async_get_or_create_from_info(
                 config_entry_id=self._config_entry.entry_id,
-                **device.device_info,
+                device_info=device.device_info,
             )
 
     @callback

@@ -5,6 +5,7 @@ from typing import Any
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, get_sensor_display_state
 
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.components.subaru.const import DOMAIN, VEHICLE_STATUS
@@ -29,8 +30,6 @@ from .conftest import (
     advance_time_to_next_fetch,
     setup_subaru_config_entry,
 )
-
-from tests.common import MockConfigEntry, get_sensor_display_state
 
 
 async def test_sensors_ev_metric(hass: HomeAssistant, ev_entry) -> None:

@@ -6,19 +6,18 @@ from typing import Any
 from unittest.mock import AsyncMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.tesla_fleet.coordinator import VEHICLE_INTERVAL
 from homeassistant.components.tesla_fleet.update import INSTALLING, SCHEDULED
-from homeassistant.components.update import DOMAIN as UPDATE_DOMAIN, SERVICE_INSTALL
-from homeassistant.const import ATTR_ENTITY_ID, STATE_ON, Platform
+from homeassistant.components.update import DOMAIN as UPDATE_DOMAIN, UpdateService
+from homeassistant.const import STATE_ON, Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from . import assert_entities, setup_platform
 from .const import COMMAND_OK, VEHICLE_DATA, VEHICLE_DATA_ALT
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 def _get_software_update(data: dict[str, Any]) -> dict[str, Any]:
@@ -71,8 +70,8 @@ async def test_update_services(
     ) as call:
         await hass.services.async_call(
             UPDATE_DOMAIN,
-            SERVICE_INSTALL,
-            {ATTR_ENTITY_ID: entity_id},
+            UpdateService.INSTALL,
+            {TargetKey.ENTITY_ID: entity_id},
             blocking=True,
         )
         call.assert_called_once()

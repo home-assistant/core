@@ -4,27 +4,29 @@ import datetime as dt
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.typing import WebSocketGenerator
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.met_eireann.const import DOMAIN
 from homeassistant.components.met_eireann.coordinator import UPDATE_INTERVAL
-from homeassistant.components.weather import (
-    DOMAIN as WEATHER_DOMAIN,
-    SERVICE_GET_FORECASTS,
-)
+from homeassistant.components.weather import DOMAIN as WEATHER_DOMAIN, WeatherService
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_LOCATION
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
-
-from tests.common import MockConfigEntry
-from tests.typing import WebSocketGenerator
 
 
 async def setup_config_entry(hass: HomeAssistant) -> ConfigEntry:
     """Create a mock configuration for testing."""
     mock_data = MockConfigEntry(
         domain=DOMAIN,
-        data={"name": "Somewhere", "latitude": 10, "longitude": 20, "elevation": 0},
+        data={
+            "name": "Somewhere",
+            CONF_LOCATION: {"latitude": 10, "longitude": 20},
+            "elevation": 0,
+        },
+        version=2,
     )
     mock_data.add_to_hass(hass)
 
@@ -64,7 +66,7 @@ async def test_weather(hass: HomeAssistant, mock_weather) -> None:
 
 @pytest.mark.parametrize(
     ("service"),
-    [SERVICE_GET_FORECASTS],
+    [WeatherService.GET_FORECASTS],
 )
 async def test_forecast_service(
     hass: HomeAssistant,

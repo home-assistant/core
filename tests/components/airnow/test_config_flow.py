@@ -5,14 +5,29 @@ from unittest.mock import AsyncMock
 
 from pyairnow.errors import AirNowError, EmptyResponseError, InvalidKeyError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_load_json_array_fixture
 
 from homeassistant import config_entries
 from homeassistant.components.airnow.const import DOMAIN
-from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE, CONF_RADIUS
+from homeassistant.const import (
+    CONF_API_KEY,
+    CONF_LATITUDE,
+    CONF_LOCATION,
+    CONF_LONGITUDE,
+    CONF_RADIUS,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from tests.common import MockConfigEntry, async_load_json_array_fixture
+from .conftest import TEST_API_KEY, TEST_LATITUDE, TEST_LONGITUDE
+
+USER_INPUT = {
+    CONF_API_KEY: TEST_API_KEY,
+    CONF_LOCATION: {
+        CONF_LATITUDE: TEST_LATITUDE,
+        CONF_LONGITUDE: TEST_LONGITUDE,
+    },
+}
 
 
 @pytest.mark.usefixtures("setup_airnow")
@@ -29,7 +44,9 @@ async def test_form(
         "api_key_url": "https://docs.airnowapi.org/account/request/"
     }
 
-    result2 = await hass.config_entries.flow.async_configure(result["flow_id"], config)
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=USER_INPUT
+    )
     assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["data"] == config
     assert result2["options"] == options
@@ -38,14 +55,14 @@ async def test_form(
 
 @pytest.mark.parametrize("mock_api_get", [AsyncMock(side_effect=InvalidKeyError)])
 @pytest.mark.usefixtures("setup_airnow")
-async def test_form_invalid_auth(
-    hass: HomeAssistant, config: dict[str, Any], mock_api_get: AsyncMock
-) -> None:
+async def test_form_invalid_auth(hass: HomeAssistant, mock_api_get: AsyncMock) -> None:
     """Test we handle invalid auth."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    result2 = await hass.config_entries.flow.async_configure(result["flow_id"], config)
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=USER_INPUT
+    )
     assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "invalid_auth"}
 
@@ -53,20 +70,24 @@ async def test_form_invalid_auth(
     mock_api_get.return_value = await async_load_json_array_fixture(
         hass, "response.json", DOMAIN
     )
-    result3 = await hass.config_entries.flow.async_configure(result["flow_id"], config)
+    result3 = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=USER_INPUT
+    )
     assert result3["type"] is FlowResultType.CREATE_ENTRY
 
 
 @pytest.mark.parametrize("data", [{}])
 @pytest.mark.usefixtures("setup_airnow")
 async def test_form_invalid_location(
-    hass: HomeAssistant, config: dict[str, Any], mock_api_get: AsyncMock
+    hass: HomeAssistant, mock_api_get: AsyncMock
 ) -> None:
     """Test we handle invalid location."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    result2 = await hass.config_entries.flow.async_configure(result["flow_id"], config)
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=USER_INPUT
+    )
     assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "invalid_location"}
 
@@ -74,20 +95,24 @@ async def test_form_invalid_location(
     mock_api_get.return_value = await async_load_json_array_fixture(
         hass, "response.json", DOMAIN
     )
-    result3 = await hass.config_entries.flow.async_configure(result["flow_id"], config)
+    result3 = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=USER_INPUT
+    )
     assert result3["type"] is FlowResultType.CREATE_ENTRY
 
 
 @pytest.mark.parametrize("mock_api_get", [AsyncMock(side_effect=AirNowError)])
 @pytest.mark.usefixtures("setup_airnow")
 async def test_form_cannot_connect(
-    hass: HomeAssistant, config: dict[str, Any], mock_api_get: AsyncMock
+    hass: HomeAssistant, mock_api_get: AsyncMock
 ) -> None:
     """Test we handle cannot connect error."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    result2 = await hass.config_entries.flow.async_configure(result["flow_id"], config)
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=USER_INPUT
+    )
     assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "cannot_connect"}
 
@@ -95,20 +120,22 @@ async def test_form_cannot_connect(
     mock_api_get.return_value = await async_load_json_array_fixture(
         hass, "response.json", DOMAIN
     )
-    result3 = await hass.config_entries.flow.async_configure(result["flow_id"], config)
+    result3 = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=USER_INPUT
+    )
     assert result3["type"] is FlowResultType.CREATE_ENTRY
 
 
 @pytest.mark.parametrize("mock_api_get", [AsyncMock(side_effect=EmptyResponseError)])
 @pytest.mark.usefixtures("setup_airnow")
-async def test_form_empty_result(
-    hass: HomeAssistant, config: dict[str, Any], mock_api_get: AsyncMock
-) -> None:
+async def test_form_empty_result(hass: HomeAssistant, mock_api_get: AsyncMock) -> None:
     """Test we handle empty response error."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    result2 = await hass.config_entries.flow.async_configure(result["flow_id"], config)
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=USER_INPUT
+    )
     assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "invalid_location"}
 
@@ -116,20 +143,22 @@ async def test_form_empty_result(
     mock_api_get.return_value = await async_load_json_array_fixture(
         hass, "response.json", DOMAIN
     )
-    result3 = await hass.config_entries.flow.async_configure(result["flow_id"], config)
+    result3 = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=USER_INPUT
+    )
     assert result3["type"] is FlowResultType.CREATE_ENTRY
 
 
 @pytest.mark.parametrize("mock_api_get", [AsyncMock(side_effect=RuntimeError)])
 @pytest.mark.usefixtures("setup_airnow")
-async def test_form_unexpected(
-    hass: HomeAssistant, config: dict[str, Any], mock_api_get: AsyncMock
-) -> None:
+async def test_form_unexpected(hass: HomeAssistant, mock_api_get: AsyncMock) -> None:
     """Test we handle an unexpected error."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    result2 = await hass.config_entries.flow.async_configure(result["flow_id"], config)
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=USER_INPUT
+    )
     assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "unknown"}
 
@@ -137,19 +166,21 @@ async def test_form_unexpected(
     mock_api_get.return_value = await async_load_json_array_fixture(
         hass, "response.json", DOMAIN
     )
-    result3 = await hass.config_entries.flow.async_configure(result["flow_id"], config)
+    result3 = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=USER_INPUT
+    )
     assert result3["type"] is FlowResultType.CREATE_ENTRY
 
 
 @pytest.mark.usefixtures("config_entry")
-async def test_entry_already_exists(
-    hass: HomeAssistant, config: dict[str, Any]
-) -> None:
+async def test_entry_already_exists(hass: HomeAssistant) -> None:
     """Test that the form aborts if the Lat/Lng is already configured."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    result2 = await hass.config_entries.flow.async_configure(result["flow_id"], config)
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=USER_INPUT
+    )
     assert result2["type"] is FlowResultType.ABORT
     assert result2["reason"] == "already_configured"
 

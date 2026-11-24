@@ -3,6 +3,7 @@
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from pytest_homeassistant.common import async_load_json_object_fixture
 from sfrbox_api.exceptions import SFRBoxAuthenticationError, SFRBoxError
 from sfrbox_api.models import SystemInfo
 
@@ -12,8 +13,6 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-
-from tests.common import async_load_json_object_fixture
 
 pytestmark = pytest.mark.usefixtures("mock_setup_entry")
 

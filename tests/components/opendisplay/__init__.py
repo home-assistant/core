@@ -1,5 +1,6 @@
 """Tests for the OpenDisplay integration."""
 
+import struct
 from time import time
 
 from bleak.backends.scanner import AdvertisementData
@@ -10,15 +11,15 @@ from opendisplay import (
     DataExtended,
     DisplayConfig,
     GlobalConfig,
+    LengthPrefixedPacket,
     ManufacturerData,
     PowerOption,
     SecurityConfig,
     SystemConfig,
 )
+from pytest_homeassistant.components.bluetooth import generate_ble_device
 
 from homeassistant.components.bluetooth import BluetoothServiceInfoBleak
-
-from tests.components.bluetooth import generate_ble_device
 
 OPENDISPLAY_MANUFACTURER_ID = 9286  # 0x2446
 
@@ -101,6 +102,29 @@ DEVICE_CONFIG = GlobalConfig(
         reset_pin=0xFF,
         reserved=b"\x00" * 43,
     ),
+    findmy_config_raw=b"\x00\x2d" + b"\x11" * 128,
+    length_prefixed_packets=[
+        LengthPrefixedPacket(
+            0,
+            0xAE,
+            struct.pack(
+                "<BB12sBBbbB8s8sH",
+                0,
+                0,
+                b"full",
+                1,
+                1,
+                0,
+                50,
+                0,
+                b"\x00" + b"\xff" * 7,
+                bytes(8),
+                3,
+            )
+            + b"\x01\x12\x00",
+        ),
+        LengthPrefixedPacket(1, 0xF0, b"\x22" * 8),
+    ],
     data_extended=DataExtended.from_strings(
         manufacturer_name="Seeed Studio",
         model_name="XIAO EN04(NRF52840)",

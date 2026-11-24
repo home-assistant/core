@@ -4,25 +4,30 @@ from asyncio import timeout
 from collections.abc import Mapping
 from typing import TYPE_CHECKING, Any, override
 
-from accuweather import AccuWeather, ApiError, InvalidApiKeyError, RequestsExceededError
+from accuweather import AccuWeather
+from accuweather.exceptions import ApiError, InvalidApiKeyError, RequestsExceededError
 from aiohttp import ClientError
 from aiohttp.client_exceptions import ClientConnectorError
 import probatio
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
-from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE
-from homeassistant.helpers import config_validation as cv
+from homeassistant.const import (
+    CONF_API_KEY,
+    CONF_LATITUDE,
+    CONF_LOCATION,
+    CONF_LONGITUDE,
+)
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.selector import LocationSelector, LocationSelectorConfig
 
 from .const import DOMAIN
+from .coordinator import AccuWeatherConfigEntry
 
 
 class AccuWeatherFlowHandler(ConfigFlow, domain=DOMAIN):
     """Config flow for AccuWeather."""
 
     VERSION = 1
-    _latitude: float | None = None
-    _longitude: float | None = None
 
     @override
     async def async_step_user(
@@ -38,8 +43,8 @@ class AccuWeatherFlowHandler(ConfigFlow, domain=DOMAIN):
                     accuweather = AccuWeather(
                         user_input[CONF_API_KEY],
                         websession,
-                        latitude=user_input[CONF_LATITUDE],
-                        longitude=user_input[CONF_LONGITUDE],
+                        latitude=user_input[CONF_LOCATION][CONF_LATITUDE],
+                        longitude=user_input[CONF_LOCATION][CONF_LONGITUDE],
                     )
                     await accuweather.async_get_location()
             except ApiError, ClientConnectorError, TimeoutError, ClientError:
@@ -57,22 +62,29 @@ class AccuWeatherFlowHandler(ConfigFlow, domain=DOMAIN):
                 if TYPE_CHECKING:
                     assert accuweather.location_name is not None
 
+                location: dict[str, Any] = user_input.pop(CONF_LOCATION)
                 return self.async_create_entry(
-                    title=accuweather.location_name, data=user_input
+                    title=accuweather.location_name, data={**user_input, **location}
                 )
 
         return self.async_show_form(
             step_id="user",
-            data_schema=probatio.Schema(
-                {
-                    probatio.Required(probatio.Secret(CONF_API_KEY)): str,
-                    probatio.Optional(
-                        CONF_LATITUDE, default=self.hass.config.latitude
-                    ): cv.latitude,
-                    probatio.Optional(
-                        CONF_LONGITUDE, default=self.hass.config.longitude
-                    ): cv.longitude,
-                }
+            data_schema=self.add_suggested_values_to_schema(
+                probatio.Schema(
+                    {
+                        probatio.Required(probatio.Secret(CONF_API_KEY)): str,
+                        probatio.Required(CONF_LOCATION): LocationSelector(
+                            LocationSelectorConfig(radius=False)
+                        ),
+                    }
+                ),
+                user_input
+                or {
+                    CONF_LOCATION: {
+                        CONF_LATITUDE: self.hass.config.latitude,
+                        CONF_LONGITUDE: self.hass.config.longitude,
+                    }
+                },
             ),
             errors=errors,
         )
@@ -81,15 +93,31 @@ class AccuWeatherFlowHandler(ConfigFlow, domain=DOMAIN):
         self, entry_data: Mapping[str, Any]
     ) -> ConfigFlowResult:
         """Handle configuration by re-auth."""
-        self._latitude = entry_data[CONF_LATITUDE]
-        self._longitude = entry_data[CONF_LONGITUDE]
-
         return await self.async_step_reauth_confirm()
 
     async def async_step_reauth_confirm(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Dialog that informs the user that reauth is required."""
+        return await self._async_update_api_key(
+            "reauth_confirm", self._get_reauth_entry(), user_input
+        )
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle a reconfiguration flow initialized by the user."""
+        return await self._async_update_api_key(
+            "reconfigure", self._get_reconfigure_entry(), user_input
+        )
+
+    async def _async_update_api_key(
+        self,
+        step_id: str,
+        entry: AccuWeatherConfigEntry,
+        user_input: dict[str, Any] | None,
+    ) -> ConfigFlowResult:
+        """Validate a new API key against the entry's location and update the entry."""
         errors: dict[str, str] = {}
 
         if user_input is not None:
@@ -99,8 +127,8 @@ class AccuWeatherFlowHandler(ConfigFlow, domain=DOMAIN):
                     accuweather = AccuWeather(
                         user_input[CONF_API_KEY],
                         websession,
-                        latitude=self._latitude,
-                        longitude=self._longitude,
+                        latitude=entry.data[CONF_LATITUDE],
+                        longitude=entry.data[CONF_LONGITUDE],
                     )
                     await accuweather.async_get_location()
             except ApiError, ClientConnectorError, TimeoutError, ClientError:
@@ -111,11 +139,11 @@ class AccuWeatherFlowHandler(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "requests_exceeded"
             else:
                 return self.async_update_reload_and_abort(
-                    self._get_reauth_entry(), data_updates=user_input
+                    entry, data_updates=user_input
                 )
 
         return self.async_show_form(
-            step_id="reauth_confirm",
+            step_id=step_id,
             data_schema=probatio.Schema(
                 {probatio.Required(probatio.Secret(CONF_API_KEY)): str}
             ),

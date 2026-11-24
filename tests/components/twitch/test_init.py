@@ -5,6 +5,8 @@ import time
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 from twitchAPI.object.api import TwitchUser
 
 from homeassistant.components.twitch.const import DOMAIN, OAUTH2_TOKEN
@@ -16,9 +18,6 @@ from homeassistant.helpers.config_entry_oauth2_flow import (
 )
 
 from . import get_generator, setup_integration
-
-from tests.common import MockConfigEntry
-from tests.test_util.aiohttp import AiohttpClientMocker
 
 
 async def test_setup_success(

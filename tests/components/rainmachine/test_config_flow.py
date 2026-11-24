@@ -4,6 +4,7 @@ from ipaddress import ip_address
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from regenmaschine.errors import RainMachineError
 
 from homeassistant import config_entries, setup
@@ -18,8 +19,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
-
-from tests.common import MockConfigEntry
 
 
 @pytest.mark.usefixtures("config_entry")
@@ -66,7 +65,7 @@ async def test_invalid_password(hass: HomeAssistant, client: AsyncMock) -> None:
 
     with (
         patch(
-            "homeassistant.components.rainmachine.async_setup_entry", return_value=True
+            "homeassistant.components.rainmachine.async_setup_entry", return_value=None
         ),
         patch(
             "homeassistant.components.rainmachine.config_flow.Client",
@@ -129,7 +128,7 @@ async def test_migrate_1_2(
 
     with (
         patch(
-            "homeassistant.components.rainmachine.async_setup_entry", return_value=True
+            "homeassistant.components.rainmachine.async_setup_entry", return_value=None
         ),
         patch(
             "homeassistant.components.rainmachine.config_flow.Client",
@@ -148,7 +147,7 @@ async def test_migrate_1_2(
 async def test_options_flow(hass: HomeAssistant, config_entry: MockConfigEntry) -> None:
     """Test config flow options."""
     with patch(
-        "homeassistant.components.rainmachine.async_setup_entry", return_value=True
+        "homeassistant.components.rainmachine.async_setup_entry", return_value=None
     ):
         await hass.config_entries.async_setup(config_entry.entry_id)
         result = await hass.config_entries.options.async_init(config_entry.entry_id)
@@ -297,7 +296,7 @@ async def test_step_homekit_zeroconf_new_controller_when_some_exist(
 
     with (
         patch(
-            "homeassistant.components.rainmachine.async_setup_entry", return_value=True
+            "homeassistant.components.rainmachine.async_setup_entry", return_value=None
         ),
         patch(
             "homeassistant.components.rainmachine.config_flow.Client",

@@ -7,7 +7,6 @@ import os
 from typing import TYPE_CHECKING, Any, override
 
 from music_assistant_client.helpers import LinkedUser
-from music_assistant_models.auth import AuthProviderType
 from music_assistant_models.constants import PLAYER_CONTROL_NONE
 from music_assistant_models.enums import (
     DashboardType,
@@ -48,7 +47,7 @@ from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util.dt import utc_from_timestamp
 
-from . import MusicAssistantConfigEntry
+from . import MusicAssistantConfigEntry, PlatformHandlers
 from .const import (
     ATTR_ACTIVE,
     ATTR_ACTIVE_QUEUE,
@@ -59,6 +58,7 @@ from .const import (
     ATTR_MASS_PLAYER_TYPE,
     ATTR_NEXT_ITEM,
     ATTR_QUEUE_ID,
+    ATTR_QUEUE_ITEMS,
     ATTR_RADIO_MODE,
     ATTR_REPEAT_MODE,
     ATTR_SHUFFLE_ENABLED,
@@ -70,6 +70,7 @@ from .helpers import (
     catch_musicassistant_error,
     catch_user_not_found,
     dashboard_identifier,
+    user_from_context,
 )
 from .media_browser import async_browse_media, async_search_media
 from .schemas import QUEUE_DETAILS_SCHEMA, queue_item_dict_from_mass_item
@@ -183,7 +184,9 @@ async def async_setup_entry(
         async_add_entities([MusicAssistantPlayer(mass, player_id)])
 
     # register callback to add players when they are discovered
-    entry.runtime_data.platform_handlers.setdefault(Platform.MEDIA_PLAYER, add_player)
+    entry.runtime_data.platform_handlers.setdefault(
+        Platform.MEDIA_PLAYER, PlatformHandlers(add_player=add_player)
+    )
 
     # known_dashboard_ids is scoped to this setup call, so a reload starts
     # fresh and re-adds whatever is in the dashboard cache.
@@ -543,20 +546,15 @@ class MusicAssistantPlayer(MusicAssistantEntity, MediaPlayerEntity):
         media_type: str | None = None,
         username: str | None = None,
         start_item: str | None = None,
+        shuffle: bool | None = None,
     ) -> None:
         """Send the play_media command to the media player."""
         # An explicit username impersonates that Music Assistant user (the server rejects an
         # unknown name). When omitted, default playback to the Home Assistant user that made
-        # the call: the server resolves them by provider link, or plays as the default
-        # account (required=False) when that Home Assistant user has no linked account.
-        user: str | LinkedUser | None = username
-        ha_user_id = self._context.user_id if self._context is not None else None
-        if username is None and ha_user_id is not None:
-            user = LinkedUser(
-                provider=AuthProviderType.HOME_ASSISTANT,
-                user_id=ha_user_id,
-                required=False,
-            )
+        # the call.
+        user: str | LinkedUser | None = (
+            username if username is not None else user_from_context(self._context)
+        )
 
         media_uris: list[str] = []
         item: MediaItemType | ItemMapping | None = None
@@ -633,6 +631,7 @@ class MusicAssistantPlayer(MusicAssistantEntity, MediaPlayerEntity):
                 option=self._convert_queueoption_to_media_player_enqueue(enqueue),
                 radio_mode=radio_mode or False,
                 start_item=start_item,
+                shuffle=shuffle,
                 user=user,
             )
 
@@ -700,13 +699,39 @@ class MusicAssistantPlayer(MusicAssistantEntity, MediaPlayerEntity):
         )
 
     @catch_musicassistant_error
-    async def _async_handle_get_queue(self) -> ServiceResponse:
+    async def _async_handle_get_queue(
+        self, limit: int, offset: int, username: str | None = None
+    ) -> ServiceResponse:
         """Handle get_queue action."""
+        if offset and not limit:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN, translation_key="offset_needs_limit"
+            )
         if not self.active_queue:
-            raise HomeAssistantError("No active queue found")
+            raise HomeAssistantError(
+                translation_domain=DOMAIN, translation_key="no_active_queue"
+            )
         active_queue = self.active_queue
+        details: dict[str, Any] = {}
+        # the items are opt-in, so a call without a limit stays a cache-only read
+        if limit:
+            with catch_user_not_found(username):
+                queue_items = await self.mass.player_queues.get_queue_items(
+                    active_queue.queue_id,
+                    limit,
+                    offset,
+                    user=(
+                        username
+                        if username is not None
+                        else user_from_context(self._context)
+                    ),
+                )
+            details[ATTR_QUEUE_ITEMS] = [
+                queue_item_dict_from_mass_item(self.mass, item) for item in queue_items
+            ]
         response: ServiceResponse = QUEUE_DETAILS_SCHEMA(
             {
+                **details,
                 ATTR_QUEUE_ID: active_queue.queue_id,
                 ATTR_ACTIVE: active_queue.active,
                 ATTR_NAME: active_queue.display_name,
@@ -743,8 +768,7 @@ class MusicAssistantPlayer(MusicAssistantEntity, MediaPlayerEntity):
     async def async_search_media(self, query: SearchMediaQuery) -> SearchMedia:
         """Search media."""
         return await async_search_media(
-            self.mass,
-            query,
+            self.mass, query, user_from_context(self._context)
         )
 
     def _update_media_image_url(self, player: Player) -> None:

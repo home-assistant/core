@@ -13,8 +13,7 @@ from homeassistant.const import PERCENTAGE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import AirPatrolConfigEntry
-from .coordinator import AirPatrolDataUpdateCoordinator
+from .coordinator import AirPatrolConfigEntry, AirPatrolDataUpdateCoordinator
 from .entity import AirPatrolEntity
 
 PARALLEL_UPDATES = 0

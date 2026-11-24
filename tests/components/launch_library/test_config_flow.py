@@ -2,12 +2,12 @@
 
 from unittest.mock import patch
 
+from pytest_homeassistant.common import MockConfigEntry
+
 from homeassistant.components.launch_library.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-
-from tests.common import MockConfigEntry
 
 
 async def test_create_entry(hass: HomeAssistant) -> None:
@@ -21,7 +21,7 @@ async def test_create_entry(hass: HomeAssistant) -> None:
     assert result["step_id"] == "user"
 
     with patch(
-        "homeassistant.components.launch_library.async_setup_entry", return_value=True
+        "homeassistant.components.launch_library.async_setup_entry", return_value=None
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],

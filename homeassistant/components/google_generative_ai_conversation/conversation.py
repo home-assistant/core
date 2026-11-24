@@ -3,18 +3,19 @@
 from typing import Literal, override
 
 from homeassistant.components import conversation
-from homeassistant.config_entries import ConfigEntry, ConfigSubentry
+from homeassistant.config_entries import ConfigSubentry
 from homeassistant.const import CONF_LLM_HASS_API, CONF_PROMPT, MATCH_ALL
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
+from . import GoogleGenerativeAIConfigEntry
 from .const import DOMAIN
 from .entity import GoogleGenerativeAILLMBaseEntity
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: GoogleGenerativeAIConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up conversation entities."""
@@ -37,7 +38,9 @@ class GoogleGenerativeAIConversationEntity(
 
     _attr_supports_streaming = True
 
-    def __init__(self, entry: ConfigEntry, subentry: ConfigSubentry) -> None:
+    def __init__(
+        self, entry: GoogleGenerativeAIConfigEntry, subentry: ConfigSubentry
+    ) -> None:
         """Initialize the agent."""
         super().__init__(entry, subentry)
         if self.subentry.data.get(CONF_LLM_HASS_API):

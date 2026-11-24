@@ -3,10 +3,9 @@
 from typing import Any
 
 import pytest
+from pytest_homeassistant.typing import MockHAClientWebSocket
 
 from homeassistant.components.websocket_api import TYPE_RESULT
-
-from tests.typing import MockHAClientWebSocket
 
 SESSION_ID = "test-session"
 

@@ -137,15 +137,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: NutConfigEntry) -> None:
         coordinator, data, unique_id, user_available_commands
     )
 
-    connections: set[tuple[str, str]] | None = None
-    if data.device_info.mac_address is not None:
-        connections = {(CONNECTION_NETWORK_MAC, data.device_info.mac_address)}
-
-    device_registry = dr.async_get(hass)
-    device_registry.async_get_or_create(
-        config_entry_id=entry.entry_id,
+    device_info = dr.DeviceInfo(
         identifiers={(DOMAIN, unique_id)},
-        connections=connections,
         name=data.name.title(),
         manufacturer=data.device_info.manufacturer,
         model=data.device_info.model,
@@ -153,6 +146,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: NutConfigEntry) -> None:
         sw_version=data.device_info.firmware,
         serial_number=data.device_info.serial,
         suggested_area=data.device_info.device_location,
+    )
+    if data.device_info.mac_address is not None:
+        device_info.connections = {
+            (CONNECTION_NETWORK_MAC, data.device_info.mac_address)
+        }
+
+    device_registry = dr.async_get(hass)
+    device_registry.async_get_or_create_from_info(
+        config_entry_id=entry.entry_id, device_info=device_info
     )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)

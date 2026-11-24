@@ -14,6 +14,12 @@ from lorawan_connection import (
 )
 from lorawan_connection.mock import MockConnection
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    MockUser,
+    async_fire_time_changed,
+)
+from pytest_homeassistant.typing import WebSocketGenerator
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.lorawan import async_register_connection
@@ -26,9 +32,6 @@ from homeassistant.util import dt as dt_util
 
 from .conftest import RegisterBackend
 from .helpers import DESCRIPTOR
-
-from tests.common import MockConfigEntry, MockUser, async_fire_time_changed
-from tests.typing import WebSocketGenerator
 
 
 async def test_device_observations(

@@ -23,8 +23,7 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import DOMAIN
-from .const import CONFIG_URL, MANUFACTURER, UNASSIGNED_AREA
+from .const import CONFIG_URL, DOMAIN, MANUFACTURER, UNASSIGNED_AREA
 from .entity import LutronCasetaEntity
 from .models import LutronCasetaConfigEntry, LutronCasetaData
 from .util import area_name_from_id

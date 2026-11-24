@@ -3,6 +3,7 @@
 from unittest.mock import AsyncMock
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.elevenlabs.const import (
     CONF_CONFIGURE_VOICE,
@@ -25,8 +26,6 @@ from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_API_KEY, CONF_MODEL
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-
-from tests.common import MockConfigEntry
 
 
 async def test_user_step(
@@ -67,6 +66,16 @@ async def test_user_step(
     [
         pytest.param(
             "mock_async_client_api_error", "invalid_api_key", id="invalid_api_key"
+        ),
+        pytest.param(
+            "mock_async_client_api_key_id_error",
+            "api_key_id_used",
+            id="api_key_id_used",
+        ),
+        pytest.param(
+            "mock_async_client_invalid_key_code_error",
+            "invalid_api_key",
+            id="invalid_api_key_code",
         ),
         pytest.param(
             "mock_async_client_connect_error", "cannot_connect", id="cannot_connect"
@@ -304,6 +313,50 @@ async def test_options_flow_voice_settings_default(
 
 
 @pytest.mark.usefixtures("mock_setup_entry", "mock_async_client")
+async def test_options_flow_keeps_voice_settings(
+    hass: HomeAssistant, mock_entry: MockConfigEntry
+) -> None:
+    """Test the options flow keeps the voice settings when they are not configured."""
+    mock_entry.add_to_hass(hass)
+    hass.config_entries.async_update_entry(
+        mock_entry,
+        options={
+            **mock_entry.options,
+            CONF_STABILITY: 0.2,
+            CONF_SIMILARITY: 0.9,
+            CONF_STYLE: 0.3,
+            CONF_USE_SPEAKER_BOOST: False,
+        },
+    )
+    assert await hass.config_entries.async_setup(mock_entry.entry_id)
+    await hass.async_block_till_done()
+
+    result = await hass.config_entries.options.async_init(mock_entry.entry_id)
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_MODEL: "model1",
+            CONF_VOICE: "voice1",
+            CONF_STT_MODEL: "scribe_v1_experimental",
+            CONF_STT_AUTO_LANGUAGE: True,
+            CONF_CONFIGURE_VOICE: False,
+        },
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert mock_entry.options == {
+        CONF_MODEL: "model1",
+        CONF_VOICE: "voice1",
+        CONF_STT_MODEL: "scribe_v1_experimental",
+        CONF_STT_AUTO_LANGUAGE: True,
+        CONF_STABILITY: 0.2,
+        CONF_SIMILARITY: 0.9,
+        CONF_STYLE: 0.3,
+        CONF_USE_SPEAKER_BOOST: False,
+    }
+
+
+@pytest.mark.usefixtures("mock_setup_entry", "mock_async_client")
 async def test_reauth_flow(
     hass: HomeAssistant,
     mock_entry: MockConfigEntry,
@@ -329,6 +382,16 @@ async def test_reauth_flow(
     [
         pytest.param(
             "mock_async_client_api_error", "invalid_api_key", id="invalid_api_key"
+        ),
+        pytest.param(
+            "mock_async_client_api_key_id_error",
+            "api_key_id_used",
+            id="api_key_id_used",
+        ),
+        pytest.param(
+            "mock_async_client_invalid_key_code_error",
+            "invalid_api_key",
+            id="invalid_api_key_code",
         ),
         pytest.param("mock_async_client_voices_error", "unknown", id="unknown"),
         pytest.param(

@@ -6,14 +6,13 @@ from typing import Any
 from unittest.mock import Mock, call, patch
 
 import pytest
+from pytest_homeassistant.common import MockModule, mock_integration
 
 from homeassistant import loader
 from homeassistant.const import EVENT_CORE_CONFIG_UPDATE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import translation
 from homeassistant.setup import async_setup_component
-
-from tests.common import MockModule, mock_integration
 
 
 @pytest.fixture(autouse=True)

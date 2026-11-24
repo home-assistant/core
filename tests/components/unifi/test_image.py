@@ -8,6 +8,8 @@ from unittest.mock import patch
 
 from aiounifi.models.message import MessageKey
 import pytest
+from pytest_homeassistant.common import async_fire_time_changed, snapshot_platform
+from pytest_homeassistant.typing import ClientSessionGenerator
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.image import DOMAIN as IMAGE_DOMAIN
@@ -23,9 +25,6 @@ from .conftest import (
     WebsocketMessageMock,
     WebsocketStateManager,
 )
-
-from tests.common import async_fire_time_changed, snapshot_platform
-from tests.typing import ClientSessionGenerator
 
 
 @pytest.fixture(autouse=True)

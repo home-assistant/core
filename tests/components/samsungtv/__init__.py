@@ -3,12 +3,12 @@
 from collections.abc import Mapping
 from typing import Any
 
+from pytest_homeassistant.common import MockConfigEntry
+
 from homeassistant.components.samsungtv.const import DOMAIN, METHOD_LEGACY
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_METHOD
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry
 
 
 async def setup_samsungtv_entry(

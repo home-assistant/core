@@ -8,6 +8,12 @@ from unittest.mock import patch
 from airpatrol.api import AirPatrolAPI
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    SnapshotAssertion,
+    async_fire_time_changed,
+    snapshot_platform,
+)
 
 from homeassistant.components.airpatrol.climate import (
     HA_TO_AP_FAN_MODES,
@@ -15,37 +21,19 @@ from homeassistant.components.airpatrol.climate import (
     HA_TO_AP_SWING_MODES,
 )
 from homeassistant.components.climate import (
-    ATTR_FAN_MODE,
-    ATTR_HVAC_MODE,
-    ATTR_SWING_MODE,
     DOMAIN as CLIMATE_DOMAIN,
     FAN_HIGH,
     FAN_LOW,
-    SERVICE_SET_FAN_MODE,
-    SERVICE_SET_HVAC_MODE,
-    SERVICE_SET_SWING_MODE,
-    SERVICE_SET_TEMPERATURE,
     SWING_OFF,
     SWING_ON,
     ClimateEntityStateAttribute,
+    ClimateService,
+    ClimateServiceArgument,
     HVACMode,
 )
-from homeassistant.const import (
-    ATTR_TEMPERATURE,
-    CONF_ENTITY_ID,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
-    Platform,
-)
+from homeassistant.const import Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
-
-from tests.common import (
-    MockConfigEntry,
-    SnapshotAssertion,
-    async_fire_time_changed,
-    snapshot_platform,
-)
 
 
 @pytest.fixture(autouse=True)
@@ -128,10 +116,10 @@ async def test_climate_set_temperature(
     climate_data["ParametersData"]["PumpTemp"] = f"{TARGET_TEMP:.3f}"
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_TEMPERATURE,
+        ClimateService.SET_TEMPERATURE,
         {
-            CONF_ENTITY_ID: state.entity_id,
-            ATTR_TEMPERATURE: TARGET_TEMP,
+            TargetKey.ENTITY_ID: state.entity_id,
+            ClimateServiceArgument.TEMPERATURE: TARGET_TEMP,
         },
     )
 
@@ -155,10 +143,10 @@ async def test_climate_set_hvac_mode(
     climate_data["ParametersData"]["PumpMode"] = HA_TO_AP_HVAC_MODES[HVACMode.HEAT]
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_HVAC_MODE,
+        ClimateService.SET_HVAC_MODE,
         {
-            CONF_ENTITY_ID: state.entity_id,
-            ATTR_HVAC_MODE: HVACMode.HEAT,
+            TargetKey.ENTITY_ID: state.entity_id,
+            ClimateServiceArgument.HVAC_MODE: HVACMode.HEAT,
         },
     )
 
@@ -180,10 +168,10 @@ async def test_climate_set_fan_mode(
     climate_data["ParametersData"]["FanSpeed"] = HA_TO_AP_FAN_MODES[FAN_LOW]
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_FAN_MODE,
+        ClimateService.SET_FAN_MODE,
         {
-            CONF_ENTITY_ID: state.entity_id,
-            ATTR_FAN_MODE: FAN_LOW,
+            TargetKey.ENTITY_ID: state.entity_id,
+            ClimateServiceArgument.FAN_MODE: FAN_LOW,
         },
     )
 
@@ -205,10 +193,10 @@ async def test_climate_set_swing_mode(
     climate_data["ParametersData"]["Swing"] = HA_TO_AP_SWING_MODES[SWING_ON]
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_SWING_MODE,
+        ClimateService.SET_SWING_MODE,
         {
-            CONF_ENTITY_ID: state.entity_id,
-            ATTR_SWING_MODE: SWING_ON,
+            TargetKey.ENTITY_ID: state.entity_id,
+            ClimateServiceArgument.SWING_MODE: SWING_ON,
         },
     )
 
@@ -247,9 +235,9 @@ async def test_climate_turn_on(
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_TURN_ON,
+        ClimateService.TURN_ON,
         {
-            CONF_ENTITY_ID: state.entity_id,
+            TargetKey.ENTITY_ID: state.entity_id,
         },
     )
 
@@ -272,9 +260,9 @@ async def test_climate_turn_off(
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_TURN_OFF,
+        ClimateService.TURN_OFF,
         {
-            CONF_ENTITY_ID: state.entity_id,
+            TargetKey.ENTITY_ID: state.entity_id,
         },
     )
 
@@ -322,10 +310,10 @@ async def test_climate_set_temperature_api_error(
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_TEMPERATURE,
+        ClimateService.SET_TEMPERATURE,
         {
-            CONF_ENTITY_ID: state.entity_id,
-            ATTR_TEMPERATURE: 25.0,
+            TargetKey.ENTITY_ID: state.entity_id,
+            ClimateServiceArgument.TEMPERATURE: 25.0,
         },
     )
 

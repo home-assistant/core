@@ -6,6 +6,8 @@ from unittest.mock import patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import CLIENT_ID, async_fire_time_changed
+from pytest_homeassistant.typing import MockHAClientWebSocket, WebSocketGenerator
 
 from homeassistant.components.debug_console.const import SESSION_TIMEOUT
 from homeassistant.components.debug_console.session import DATA_SESSIONS
@@ -14,9 +16,6 @@ from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant
 
 from . import SESSION_ID, async_execute, async_send
-
-from tests.common import CLIENT_ID, async_fire_time_changed
-from tests.typing import MockHAClientWebSocket, WebSocketGenerator
 
 WAIT_FOREVER = "import asyncio\nawait asyncio.Event().wait()"
 

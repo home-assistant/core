@@ -4,29 +4,12 @@ import ast
 from pathlib import Path
 import re
 
-from homeassistant.util.yaml import load_yaml_dict
+from hassfest.model import Config, Integration, IntegrationType
 
-from .model import Config, Integration, IntegrationType
+from homeassistant.util.yaml import load_yaml_dict
 
 # Non-entity-platform components that belong in base_platforms
 EXTRA_BASE_PLATFORMS = {"diagnostics"}
-
-# Core integrations that do not define __all__ yet.
-# These need to be fixed; do not add new entries to this list.
-MISSING_ALL = {
-    "blueprint",
-    "configurator",
-    "group",
-    "input_boolean",
-    "input_select",
-    "llm",
-    "network",
-    "person",
-    "shopping_list",
-    "sun",
-    "timer",
-    "zone",
-}
 
 _COMPONENT_RE = re.compile(r"homeassistant/components/([^/]+)/\*\*")
 
@@ -58,16 +41,7 @@ def _validate_public_names(
         init_file = integration.path / "__init__.py"
         if not init_file.is_file():
             continue
-        defines_all = _defines_all(init_file)
-        if domain in MISSING_ALL:
-            if defines_all:
-                config.add_error(
-                    "core_files",
-                    f"Core integration '{domain}' defines `__all__` "
-                    "but is still listed in MISSING_ALL",
-                )
-            continue
-        if not defines_all:
+        if not _defines_all(init_file):
             config.add_error(
                 "core_files",
                 f"Core integration '{domain}' must define `__all__` "

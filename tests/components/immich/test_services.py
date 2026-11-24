@@ -7,17 +7,16 @@ from unittest.mock import Mock, patch
 
 from aioimmich.exceptions import ImmichError, ImmichNotFoundError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.immich.const import DOMAIN
-from homeassistant.components.immich.services import SERVICE_UPLOAD_FILE
+from homeassistant.components.immich.services import ImmichService
 from homeassistant.components.media_source import PlayMedia
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
-
-from tests.common import MockConfigEntry
 
 
 async def test_setup_services(
@@ -30,7 +29,7 @@ async def test_setup_services(
 
     services = hass.services.async_services_for_domain(DOMAIN)
     assert services
-    assert SERVICE_UPLOAD_FILE in services
+    assert ImmichService.UPLOAD_FILE in services
 
 
 async def test_upload_file(
@@ -43,7 +42,7 @@ async def test_upload_file(
     await setup_integration(hass, mock_config_entry)
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_UPLOAD_FILE,
+        ImmichService.UPLOAD_FILE,
         {
             "config_entry_id": mock_config_entry.entry_id,
             "file": {
@@ -70,7 +69,7 @@ async def test_upload_file_to_album(
 
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_UPLOAD_FILE,
+        ImmichService.UPLOAD_FILE,
         {
             "config_entry_id": mock_config_entry.entry_id,
             "file": {
@@ -102,7 +101,7 @@ async def test_upload_file_config_entry_not_found(
     with pytest.raises(ServiceValidationError) as err:
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_UPLOAD_FILE,
+            ImmichService.UPLOAD_FILE,
             {
                 "config_entry_id": "unknown_entry",
                 "file": {
@@ -127,7 +126,7 @@ async def test_upload_file_config_entry_not_loaded(
     with pytest.raises(ServiceValidationError) as err:
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_UPLOAD_FILE,
+            ImmichService.UPLOAD_FILE,
             {
                 "config_entry_id": mock_config_entry.entry_id,
                 "file": {
@@ -164,7 +163,7 @@ async def test_upload_file_only_local_media_supported(
     ):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_UPLOAD_FILE,
+            ImmichService.UPLOAD_FILE,
             {
                 "config_entry_id": mock_config_entry.entry_id,
                 "file": {
@@ -200,7 +199,7 @@ async def test_upload_file_album_not_found(
     ):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_UPLOAD_FILE,
+            ImmichService.UPLOAD_FILE,
             {
                 "config_entry_id": mock_config_entry.entry_id,
                 "file": {
@@ -239,7 +238,7 @@ async def test_upload_file_upload_failed(
     ):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_UPLOAD_FILE,
+            ImmichService.UPLOAD_FILE,
             {
                 "config_entry_id": mock_config_entry.entry_id,
                 "file": {
@@ -277,7 +276,7 @@ async def test_upload_file_read_error(
     with pytest.raises(HomeAssistantError) as exc_info:
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_UPLOAD_FILE,
+            ImmichService.UPLOAD_FILE,
             {
                 "config_entry_id": mock_config_entry.entry_id,
                 "file": {
@@ -315,7 +314,7 @@ async def test_upload_file_to_album_upload_failed(
     ):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_UPLOAD_FILE,
+            ImmichService.UPLOAD_FILE,
             {
                 "config_entry_id": mock_config_entry.entry_id,
                 "file": {

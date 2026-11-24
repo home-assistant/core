@@ -1,7 +1,7 @@
 """The Global Disaster Alert and Coordination System (GDACS) integration."""
 
 from collections.abc import Callable
-from datetime import datetime, timedelta
+from datetime import datetime
 import logging
 
 from aio_georss_client.status_update import StatusUpdate
@@ -11,9 +11,9 @@ from aio_georss_gdacs.feed_entry import FeedEntry
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_LATITUDE,
+    CONF_LOCATION,
     CONF_LONGITUDE,
     CONF_RADIUS,
-    CONF_SCAN_INTERVAL,
     UnitOfLength,
 )
 from homeassistant.core import HomeAssistant, callback
@@ -23,7 +23,7 @@ from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.util.unit_conversion import DistanceConverter
 from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
 
-from .const import CONF_CATEGORIES, DEFAULT_SCAN_INTERVAL, PLATFORMS  # noqa: F401
+from .const import CONF_CATEGORIES, DEFAULT_SCAN_INTERVAL, PLATFORMS
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -34,13 +34,9 @@ async def async_setup_entry(
     hass: HomeAssistant, config_entry: GdacsConfigEntry
 ) -> None:
     """Set up the GDACS component as config entry."""
-    radius = config_entry.data[CONF_RADIUS]
-    if hass.config.units is US_CUSTOMARY_SYSTEM:
-        radius = DistanceConverter.convert(
-            radius, UnitOfLength.MILES, UnitOfLength.KILOMETERS
-        )
+
     # Create feed entity manager for all platforms.
-    manager = GdacsFeedEntityManager(hass, config_entry, radius)
+    manager = GdacsFeedEntityManager(hass, config_entry)
     config_entry.runtime_data = manager
     _LOGGER.debug("Feed entity manager added for %s", config_entry.entry_id)
     await manager.async_init()
@@ -55,17 +51,15 @@ async def async_unload_entry(hass: HomeAssistant, entry: GdacsConfigEntry) -> No
 class GdacsFeedEntityManager:
     """Feed Entity Manager for GDACS feed."""
 
-    def __init__(
-        self, hass: HomeAssistant, config_entry: GdacsConfigEntry, radius_in_km: float
-    ) -> None:
+    def __init__(self, hass: HomeAssistant, config_entry: GdacsConfigEntry) -> None:
         """Initialize the Feed Entity Manager."""
         self._hass = hass
         self._config_entry = config_entry
+        location = config_entry.data[CONF_LOCATION]
         coordinates = (
-            config_entry.data[CONF_LATITUDE],
-            config_entry.data[CONF_LONGITUDE],
+            location[CONF_LATITUDE],
+            location[CONF_LONGITUDE],
         )
-        categories = config_entry.data[CONF_CATEGORIES]
         websession = aiohttp_client.async_get_clientsession(hass)
         self._feed_manager = GdacsFeedManager(
             websession,
@@ -73,12 +67,11 @@ class GdacsFeedEntityManager:
             self._update_entity,
             self._remove_entity,
             coordinates,
-            filter_radius=radius_in_km,
-            filter_categories=categories,
+            filter_radius=location[CONF_RADIUS] / 1000,
+            filter_categories=config_entry.data.get(CONF_CATEGORIES),
             status_async_callback=self._status_update,
         )
         self._config_entry_id = config_entry.entry_id
-        self._scan_interval = timedelta(seconds=config_entry.data[CONF_SCAN_INTERVAL])
         self._track_time_remove_callback: Callable[[], None] | None = None
         self._status_info: StatusUpdate | None = None
         self.listeners: list[Callable[[], None]] = []
@@ -96,7 +89,7 @@ class GdacsFeedEntityManager:
 
         # Trigger updates at regular intervals.
         self._track_time_remove_callback = async_track_time_interval(
-            self._hass, update, self._scan_interval
+            self._hass, update, DEFAULT_SCAN_INTERVAL
         )
 
         _LOGGER.debug("Feed entity manager initialized")
@@ -151,3 +144,28 @@ class GdacsFeedEntityManager:
         _LOGGER.debug("Status update received: %s", status_info)
         self._status_info = status_info
         async_dispatcher_send(self._hass, f"gdacs_status_{self._config_entry_id}")
+
+
+async def async_migrate_entry(hass: HomeAssistant, entry: GdacsConfigEntry) -> None:
+    """Migrate entry."""
+
+    if entry.version < 2:
+        radius = DistanceConverter.convert(
+            entry.data[CONF_RADIUS],
+            UnitOfLength.MILES
+            if hass.config.units is US_CUSTOMARY_SYSTEM
+            else UnitOfLength.KILOMETERS,
+            UnitOfLength.METERS,
+        )
+        hass.config_entries.async_update_entry(
+            entry,
+            data={
+                CONF_CATEGORIES: entry.data[CONF_CATEGORIES],
+                CONF_LOCATION: {
+                    CONF_LATITUDE: entry.data[CONF_LATITUDE],
+                    CONF_LONGITUDE: entry.data[CONF_LONGITUDE],
+                    CONF_RADIUS: radius,
+                },
+            },
+            version=2,
+        )

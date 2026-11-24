@@ -4,6 +4,7 @@ from collections.abc import Callable
 from unittest.mock import MagicMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.media_player import (
     ATTR_SOUND_MODE,
@@ -19,8 +20,6 @@ from homeassistant.components.tonewinner.media_player import (
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
-
-from tests.common import MockConfigEntry
 
 ENTITY_ID = "media_player.at_500"
 

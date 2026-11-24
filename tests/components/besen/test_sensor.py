@@ -12,6 +12,7 @@ from besen.const import (
 )
 from besen.models import ChargeStatus
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.besen.sensor import (
@@ -33,8 +34,6 @@ from homeassistant.helpers import entity_registry as er
 
 from . import publish_besen_state
 from .conftest import charger_state, setup_integration
-
-from tests.common import MockConfigEntry, snapshot_platform
 
 POWER_ENTITY_ID = "sensor.garage_charging_power"
 CHARGING_STATUS_ENTITY_ID = "sensor.garage_charging_status"

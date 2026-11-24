@@ -11,11 +11,14 @@ CONF_DEVICE_DESCRIPTOR: Final = "device_descriptor"
 CONF_DEVICE_UNIQ: Final = "device_uniq"
 
 CONF_KEY_TYPES: Final = "key_types"
+# Whether to grab the device, so that no other program receives its events
+CONF_EXCLUSIVE: Final = "exclusive"
 CONF_EMULATE_KEY_HOLD: Final = "emulate_key_hold"
 CONF_EMULATE_KEY_HOLD_DELAY: Final = "emulate_key_hold_delay"
 CONF_EMULATE_KEY_HOLD_REPEAT: Final = "emulate_key_hold_repeat"
 
 DEFAULT_KEY_TYPES: Final = ["key_up"]
+DEFAULT_EXCLUSIVE: Final = True
 DEFAULT_EMULATE_KEY_HOLD: Final = False
 DEFAULT_EMULATE_KEY_HOLD_DELAY: Final = 0.250
 DEFAULT_EMULATE_KEY_HOLD_REPEAT: Final = 0.033
