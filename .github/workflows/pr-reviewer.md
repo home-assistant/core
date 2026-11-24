@@ -201,7 +201,6 @@ When `task.review` is false, post nothing, call `noop` with a one-line reason, a
   - Do the steps they hand to subagents yourself.
   - Skip the quality scale verification: the quality scale reviewer workflow covers it.
   - Use the `ha-pr-comment-audit` results only to skip points already raised and to check your earlier requested changes. Don't post the audit.
-  - Architecture discussion: when one is required and the PR body links none, flag it. Never check whether a linked one is approved or matches the implementation, and never say it isn't approved.
   - Tag every finding. Post those tagged `[CRITICAL]`, `[PROBLEM]` or `[NIT]`; drop any tagged `[SUGGESTION]` or `[PRE-EXISTING]`, even with another tag.
 - Read the surrounding code in the workspace.
 - Read the existing reviews and comments. Skip points already raised.
