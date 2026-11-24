@@ -33,7 +33,15 @@ def has_receiver_entity() -> bool:
 
 
 @pytest.fixture
-def mock_config_entry(has_receiver_entity: bool) -> MockConfigEntry:
+def config_entry_options() -> dict[str, int]:
+    """Return the options of the mock config entry."""
+    return {}
+
+
+@pytest.fixture
+def mock_config_entry(
+    has_receiver_entity: bool, config_entry_options: dict[str, int]
+) -> MockConfigEntry:
     """Return a mock config entry."""
     data = {CONF_INFRARED_ENTITY_ID: MOCK_INFRARED_EMITTER_ENTITY_ID}
     if has_receiver_entity:
@@ -44,6 +52,7 @@ def mock_config_entry(has_receiver_entity: bool) -> MockConfigEntry:
         entry_id="01JTEST0000000000000000000",
         title=DEVICE_NAME,
         data=data,
+        options=config_entry_options,
     )
 
 

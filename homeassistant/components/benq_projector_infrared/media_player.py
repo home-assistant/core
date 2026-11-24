@@ -22,13 +22,13 @@ from homeassistant.components.media_player import (
     MediaPlayerEntityFeature,
     MediaPlayerState,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.restore_state import ExtraStoredData, RestoreEntity
 from homeassistant.util import dt as dt_util
 
+from . import BenQProjectorIrConfigEntry
 from .const import (
     CONF_INFRARED_RECEIVER_ENTITY_ID,
     DOMAIN,
@@ -83,7 +83,7 @@ class _BenQProjectorExtraData(ExtraStoredData):
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: BenQProjectorIrConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up BenQ Projector Infrared media player from config entry."""
@@ -113,7 +113,7 @@ class BenQProjectorIrMediaPlayer(
         | MediaPlayerEntityFeature.SELECT_SOURCE
     )
 
-    def __init__(self, entry: ConfigEntry) -> None:
+    def __init__(self, entry: BenQProjectorIrConfigEntry) -> None:
         """Initialize BenQ Projector Infrared media player."""
         super().__init__(entry, unique_id_suffix="media_player")
 
@@ -140,11 +140,22 @@ class BenQProjectorIrMediaPlayer(
             if (source := data.get("source")) in SOURCE_TO_CODE:
                 self._attr_source = source
 
+    @callback
+    def _async_set_power_state(self, state: MediaPlayerState) -> None:
+        """Set the power state, starting the warm-up or cool-down on a change."""
+        if self._attr_state is state:
+            return
+        self._attr_state = state
+        if state is MediaPlayerState.ON:
+            self._power_state.start_warm_up()
+        else:
+            self._power_state.start_cool_down()
+
     @override
     async def async_turn_on(self) -> None:
         """Send discrete power-on command."""
         await self._send_benq_command(BenQProjectorCode.POWER_ON)
-        self._attr_state = MediaPlayerState.ON
+        self._async_set_power_state(MediaPlayerState.ON)
         self.async_write_ha_state()
 
     @override
@@ -153,7 +164,7 @@ class BenQProjectorIrMediaPlayer(
         await self._send_benq_command(BenQProjectorCode.POWER_OFF)
         await asyncio.sleep(POWER_OFF_CONFIRM_DELAY)
         await self._send_benq_command(BenQProjectorCode.POWER_OFF)
-        self._attr_state = MediaPlayerState.OFF
+        self._async_set_power_state(MediaPlayerState.OFF)
         self.async_write_ha_state()
 
     @override
@@ -196,7 +207,9 @@ class BenQProjectorIrMediaPlayerWithReceiver(
 ):
     """BenQ Projector Infrared media player that follows the physical remote."""
 
-    def __init__(self, entry: ConfigEntry, receiver_entity_id: str) -> None:
+    def __init__(
+        self, entry: BenQProjectorIrConfigEntry, receiver_entity_id: str
+    ) -> None:
         """Initialize BenQ Projector Infrared media player with a receiver."""
         super().__init__(entry)
         self._infrared_receiver_entity_id = receiver_entity_id
@@ -220,17 +233,21 @@ class BenQProjectorIrMediaPlayerWithReceiver(
 
         _LOGGER.debug("Received BenQ infrared command: %s", code.name)
 
+        if self._projector_busy:
+            # The projector ignores the remote too while it warms up or cools down.
+            return
+
         if code is BenQProjectorCode.POWER_ON or (
             code is BenQProjectorCode.POWER and self._attr_state is MediaPlayerState.OFF
         ):
             self._power_off_requested_at = None
-            self._attr_state = MediaPlayerState.ON
+            self._async_set_power_state(MediaPlayerState.ON)
         elif code is BenQProjectorCode.POWER_OFF or (
             code is BenQProjectorCode.POWER and self._attr_state is MediaPlayerState.ON
         ):
             if not self._async_power_off_confirmed():
                 return
-            self._attr_state = MediaPlayerState.OFF
+            self._async_set_power_state(MediaPlayerState.OFF)
         elif code is BenQProjectorCode.POWER:
             return
         elif code is BenQProjectorCode.SOURCE:

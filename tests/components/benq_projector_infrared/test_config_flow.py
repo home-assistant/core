@@ -4,8 +4,10 @@ import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.benq_projector_infrared.const import (
+    CONF_COOL_DOWN_TIME,
     CONF_INFRARED_ENTITY_ID,
     CONF_INFRARED_RECEIVER_ENTITY_ID,
+    CONF_WARM_UP_TIME,
     DOMAIN,
 )
 from homeassistant.config_entries import SOURCE_USER
@@ -91,3 +93,25 @@ async def test_user_flow_no_emitters(hass: HomeAssistant) -> None:
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "no_infrared_emitters"
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_options_flow(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
+    """Test the warm-up and cool-down times can be changed."""
+    result = await hass.config_entries.options.async_init(mock_config_entry.entry_id)
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "init"
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={CONF_WARM_UP_TIME: 30, CONF_COOL_DOWN_TIME: 90},
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert mock_config_entry.options == {
+        CONF_WARM_UP_TIME: 30,
+        CONF_COOL_DOWN_TIME: 90,
+    }

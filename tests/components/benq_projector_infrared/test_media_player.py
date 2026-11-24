@@ -41,7 +41,7 @@ from homeassistant.const import (
     TargetKey,
 )
 from homeassistant.core import HomeAssistant, State
-from homeassistant.exceptions import ServiceValidationError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er
 
 from .conftest import MOCK_INFRARED_EMITTER_ENTITY_ID, MOCK_INFRARED_RECEIVER_ENTITY_ID
@@ -179,6 +179,7 @@ async def test_select_invalid_source(
 @pytest.mark.usefixtures("init_integration")
 async def test_turn_on_off_update_assumed_state(
     hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
     mock_infrared_emitter_entity: MockInfraredEmitterEntity,
 ) -> None:
     """Turn-off and turn-on update the assumed state."""
@@ -191,6 +192,8 @@ async def test_turn_on_off_update_assumed_state(
     state = hass.states.get(MEDIA_PLAYER_ENTITY_ID)
     assert state is not None
     assert state.state == MediaPlayerState.OFF
+
+    freezer.tick(timedelta(seconds=60))
 
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
@@ -401,6 +404,7 @@ async def test_receiver_power_off_confirmation_expires(
         {TargetKey.ENTITY_ID: MEDIA_PLAYER_ENTITY_ID},
         blocking=True,
     )
+    freezer.tick(timedelta(seconds=60))
 
     _receive(mock_infrared_receiver_entity, 0x4E)
     freezer.tick(timedelta(seconds=6))
@@ -438,6 +442,7 @@ async def test_receiver_power_toggle_ignored_when_state_unknown(
 @pytest.mark.usefixtures("init_integration")
 async def test_receiver_source_codes_update_source(
     hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
     mock_infrared_emitter_entity: MockInfraredEmitterEntity,
     mock_infrared_receiver_entity: MockInfraredReceiverEntity,
 ) -> None:
@@ -448,6 +453,7 @@ async def test_receiver_source_codes_update_source(
         {TargetKey.ENTITY_ID: MEDIA_PLAYER_ENTITY_ID},
         blocking=True,
     )
+    freezer.tick(timedelta(seconds=60))
 
     _receive(mock_infrared_receiver_entity, 0x59)
     await hass.async_block_till_done()
@@ -515,3 +521,202 @@ async def test_media_player_availability_follows_receiver(
         MEDIA_PLAYER_ENTITY_ID,
         [MOCK_INFRARED_EMITTER_ENTITY_ID, MOCK_INFRARED_RECEIVER_ENTITY_ID],
     )
+
+
+async def _call(hass: HomeAssistant, service: str, **service_data: str | bool) -> None:
+    """Call a media player action on the projector."""
+    await hass.services.async_call(
+        MEDIA_PLAYER_DOMAIN,
+        service,
+        {TargetKey.ENTITY_ID: MEDIA_PLAYER_ENTITY_ID, **service_data},
+        blocking=True,
+    )
+
+
+@pytest.mark.parametrize(
+    ("service", "service_data"),
+    [
+        (MediaPlayerService.TURN_ON, {}),
+        (MediaPlayerService.TURN_OFF, {}),
+        (MediaPlayerService.VOLUME_UP, {}),
+        (MediaPlayerService.VOLUME_DOWN, {}),
+        (MediaPlayerService.VOLUME_MUTE, {"is_volume_muted": True}),
+        (MediaPlayerService.SELECT_SOURCE, {"source": "hdmi_1"}),
+    ],
+)
+@pytest.mark.usefixtures("init_integration")
+async def test_commands_refused_while_warming_up(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_infrared_emitter_entity: MockInfraredEmitterEntity,
+    service: str,
+    service_data: dict[str, str | bool],
+) -> None:
+    """Commands raise an error and send nothing while the projector warms up."""
+    await _call(hass, MediaPlayerService.TURN_ON)
+    freezer.tick(timedelta(seconds=50))
+
+    with pytest.raises(HomeAssistantError) as exc_info:
+        await _call(hass, service, **service_data)
+
+    assert exc_info.value.translation_key == "warming_up"
+    assert exc_info.value.translation_placeholders == {"seconds": "10"}
+    assert mock_infrared_emitter_entity.send_command_calls == [
+        BenQProjectorCode.POWER_ON
+    ]
+    state = hass.states.get(MEDIA_PLAYER_ENTITY_ID)
+    assert state is not None
+    assert state.state == MediaPlayerState.ON
+    assert state.attributes.get(ATTR_INPUT_SOURCE) is None
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_commands_accepted_after_warm_up(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_infrared_emitter_entity: MockInfraredEmitterEntity,
+) -> None:
+    """Commands are sent again once the warm-up has passed."""
+    await _call(hass, MediaPlayerService.TURN_ON)
+    freezer.tick(timedelta(seconds=60))
+    await _call(hass, MediaPlayerService.VOLUME_UP)
+
+    assert mock_infrared_emitter_entity.send_command_calls == [
+        BenQProjectorCode.POWER_ON,
+        BenQProjectorCode.VOLUME_UP,
+    ]
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_commands_refused_while_cooling_down(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_infrared_emitter_entity: MockInfraredEmitterEntity,
+) -> None:
+    """Turning on raises an error while the projector cools down."""
+    await _call(hass, MediaPlayerService.TURN_OFF)
+    freezer.tick(timedelta(seconds=59, milliseconds=500))
+
+    with pytest.raises(HomeAssistantError) as exc_info:
+        await _call(hass, MediaPlayerService.TURN_ON)
+
+    assert exc_info.value.translation_key == "cooling_down"
+    assert exc_info.value.translation_placeholders == {"seconds": "1"}
+    state = hass.states.get(MEDIA_PLAYER_ENTITY_ID)
+    assert state is not None
+    assert state.state == MediaPlayerState.OFF
+
+    freezer.tick(timedelta(milliseconds=500))
+    await _call(hass, MediaPlayerService.TURN_ON)
+
+    assert mock_infrared_emitter_entity.send_command_calls == [
+        BenQProjectorCode.POWER_OFF,
+        BenQProjectorCode.POWER_OFF,
+        BenQProjectorCode.POWER_ON,
+    ]
+
+
+@pytest.mark.parametrize(
+    "config_entry_options", [{"warm_up_time": 10, "cool_down_time": 20}]
+)
+@pytest.mark.usefixtures("init_integration")
+async def test_warm_up_and_cool_down_times_from_options(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_infrared_emitter_entity: MockInfraredEmitterEntity,
+) -> None:
+    """The warm-up and cool-down times come from the options."""
+    await _call(hass, MediaPlayerService.TURN_ON)
+    freezer.tick(timedelta(seconds=10))
+    await _call(hass, MediaPlayerService.TURN_OFF)
+    freezer.tick(timedelta(seconds=19))
+    with pytest.raises(HomeAssistantError):
+        await _call(hass, MediaPlayerService.TURN_ON)
+    freezer.tick(timedelta(seconds=1))
+    await _call(hass, MediaPlayerService.TURN_ON)
+
+    assert mock_infrared_emitter_entity.send_command_calls == [
+        BenQProjectorCode.POWER_ON,
+        BenQProjectorCode.POWER_OFF,
+        BenQProjectorCode.POWER_OFF,
+        BenQProjectorCode.POWER_ON,
+    ]
+
+
+@pytest.mark.usefixtures("mock_infrared_emitter_entity", "mock_benq_to_command")
+async def test_turn_on_when_on_does_not_start_warm_up(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_infrared_emitter_entity: MockInfraredEmitterEntity,
+) -> None:
+    """Turning on a projector that is already on does not block commands."""
+    mock_restore_cache_with_extra_data(
+        hass,
+        [
+            (
+                State(MEDIA_PLAYER_ENTITY_ID, MediaPlayerState.ON),
+                {"power_state": MediaPlayerState.ON, "source": None},
+            )
+        ],
+    )
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    await _call(hass, MediaPlayerService.TURN_ON)
+    await _call(hass, MediaPlayerService.VOLUME_UP)
+
+    assert mock_infrared_emitter_entity.send_command_calls == [
+        BenQProjectorCode.POWER_ON,
+        BenQProjectorCode.VOLUME_UP,
+    ]
+
+
+@pytest.mark.parametrize("has_receiver_entity", [True])
+@pytest.mark.usefixtures("init_integration")
+async def test_receiver_ignored_while_warming_up(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_infrared_receiver_entity: MockInfraredReceiverEntity,
+) -> None:
+    """Remote presses during the warm-up do not change the state."""
+    await _call(hass, MediaPlayerService.TURN_ON)
+
+    _receive(mock_infrared_receiver_entity, 0x4E)
+    _receive(mock_infrared_receiver_entity, 0x4E)
+    _receive(mock_infrared_receiver_entity, 0x58)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(MEDIA_PLAYER_ENTITY_ID)
+    assert state is not None
+    assert state.state == MediaPlayerState.ON
+    assert state.attributes.get(ATTR_INPUT_SOURCE) is None
+
+    freezer.tick(timedelta(seconds=60))
+    _receive(mock_infrared_receiver_entity, 0x58)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(MEDIA_PLAYER_ENTITY_ID)
+    assert state is not None
+    assert state.attributes[ATTR_INPUT_SOURCE] == "hdmi_1"
+
+
+@pytest.mark.parametrize("has_receiver_entity", [True])
+@pytest.mark.usefixtures("init_integration")
+async def test_received_power_on_starts_warm_up(
+    hass: HomeAssistant,
+    mock_infrared_emitter_entity: MockInfraredEmitterEntity,
+    mock_infrared_receiver_entity: MockInfraredReceiverEntity,
+) -> None:
+    """Turning on with the physical remote also starts the warm-up."""
+    _receive(mock_infrared_receiver_entity, 0x4F)
+    await hass.async_block_till_done()
+
+    with pytest.raises(HomeAssistantError) as exc_info:
+        await _call(hass, MediaPlayerService.VOLUME_UP)
+
+    assert exc_info.value.translation_key == "warming_up"
+    state = hass.states.get(MEDIA_PLAYER_ENTITY_ID)
+    assert state is not None
+    assert state.state == MediaPlayerState.ON
+    assert mock_infrared_emitter_entity.send_command_calls == []
