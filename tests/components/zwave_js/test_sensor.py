@@ -245,8 +245,8 @@ async def test_numeric_sensor(
         "old_unit",
         "old_state_class",
         "new_scale",
-        "new_unit",
-        "unit_of_measurement",
+        "new_metadata_unit",
+        "expected_unit",
     ),
     [
         pytest.param(
@@ -295,8 +295,8 @@ async def test_legacy_multilevel_sensor_scale_change(
     old_unit: str | None,
     old_state_class: SensorStateClass | None,
     new_scale: int,
-    new_unit: str | None,
-    unit_of_measurement: str,
+    new_metadata_unit: str | None,
+    expected_unit: str,
 ) -> None:
     """Test a legacy multilevel sensor that changes to a migrated scale."""
     node_state = copy.deepcopy(multisensor_6_state)
@@ -345,7 +345,7 @@ async def test_legacy_multilevel_sensor_scale_change(
                     "writeable": False,
                     "label": property_,
                     "ccSpecific": {"sensorType": sensor_type, "scale": new_scale},
-                    "unit": new_unit,
+                    "unit": new_metadata_unit,
                 },
                 "propertyName": property_,
                 "nodeId": node.node_id,
@@ -376,9 +376,10 @@ async def test_legacy_multilevel_sensor_scale_change(
     state = hass.states.get(entity_id)
     assert state
     assert state.state == "50.0"
-    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == unit_of_measurement
-    # The cached device class is not updated by the in-place description swap.
+    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == expected_unit
+    # The cached device and state class are not updated on a scale change.
     assert ATTR_DEVICE_CLASS not in state.attributes
+    assert state.attributes.get(ATTR_STATE_CLASS) == old_state_class
 
 
 async def test_invalid_multilevel_sensor_scale(
