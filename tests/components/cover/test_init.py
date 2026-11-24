@@ -226,9 +226,9 @@ def _angles(start: int, end: int) -> dict[str, int]:
             id="closed_positions_set",
         ),
         pytest.param(
-            {"closed_tilt_positions": [10]},
-            {"open_tilt_position": 100, "closed_tilt_positions": [10]},
-            id="closed_position_inside_the_scale",
+            {"open_tilt_position": 50, "closed_tilt_positions": [10, 100]},
+            {"open_tilt_position": 50, "closed_tilt_positions": [100]},
+            id="closed_position_inside_the_scale_is_dropped",
         ),
         pytest.param(
             {"closed_tilt_positions": [0, 100]},
@@ -241,9 +241,9 @@ def _angles(start: int, end: int) -> dict[str, int]:
             id="closed_positions_empty",
         ),
         pytest.param(
-            {"open_tilt_position": 50, "closed_tilt_positions": [100, 10, 0]},
-            {"open_tilt_position": 50, "closed_tilt_positions": [0, 10]},
-            id="more_than_two_closed_positions",
+            {"closed_tilt_positions": [10]},
+            {"open_tilt_position": 100, "closed_tilt_positions": [0]},
+            id="only_closed_position_inside_the_scale",
         ),
         pytest.param(
             _angles(-90, 90),
@@ -430,8 +430,8 @@ async def test_tilt_capability_attributes_unchanged(
         ),
         pytest.param(
             {"current_cover_tilt_position": 10, "closed_tilt_positions": [10]},
-            "open",
-            id="closed_inside_the_scale",
+            "close",
+            id="closed_inside_the_scale_is_ignored",
         ),
         pytest.param(
             {"current_cover_tilt_position": 100} | _angles(-90, 90),
