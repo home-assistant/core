@@ -39,8 +39,8 @@ async def test_eco3_select_uses_own_api(
     }
     await hass.services.async_call(
         SELECT_DOMAIN,
-        "select_option",
-        {"entity_id": "select.test_vmc_3_fan_direction_mode", "option": option},
+        SERVICE_SELECT_OPTION,
+        {ATTR_ENTITY_ID: "select.test_vmc_3_fan_direction_mode", ATTR_OPTION: option},
         blocking=True,
     )
     mock_cloud_interface.ecocomfort3.set_mode_speed.assert_awaited_once_with(
