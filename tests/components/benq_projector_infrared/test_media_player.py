@@ -1,5 +1,8 @@
 """Tests for the BenQ Projector Infrared media player platform."""
 
+from datetime import timedelta
+
+from freezegun.api import FrozenDateTimeFactory
 from infrared_protocols.codes.benq.projector import BenQProjectorCode
 from infrared_protocols.commands.nec import NECCommand
 import pytest
@@ -59,14 +62,19 @@ async def test_entities(
 
 
 @pytest.mark.parametrize(
-    ("service", "service_data", "expected_code"),
+    ("service", "service_data", "expected_codes"),
     [
-        (SERVICE_TURN_ON, {}, BenQProjectorCode.POWER_ON),
-        (SERVICE_TURN_OFF, {}, BenQProjectorCode.POWER_OFF),
-        (SERVICE_VOLUME_UP, {}, BenQProjectorCode.VOLUME_UP),
-        (SERVICE_VOLUME_DOWN, {}, BenQProjectorCode.VOLUME_DOWN),
-        (SERVICE_VOLUME_MUTE, {"is_volume_muted": True}, BenQProjectorCode.MUTE),
-        (SERVICE_VOLUME_MUTE, {"is_volume_muted": False}, BenQProjectorCode.MUTE),
+        (SERVICE_TURN_ON, {}, [BenQProjectorCode.POWER_ON]),
+        # The projector only powers off when the command is confirmed.
+        (
+            SERVICE_TURN_OFF,
+            {},
+            [BenQProjectorCode.POWER_OFF, BenQProjectorCode.POWER_OFF],
+        ),
+        (SERVICE_VOLUME_UP, {}, [BenQProjectorCode.VOLUME_UP]),
+        (SERVICE_VOLUME_DOWN, {}, [BenQProjectorCode.VOLUME_DOWN]),
+        (SERVICE_VOLUME_MUTE, {"is_volume_muted": True}, [BenQProjectorCode.MUTE]),
+        (SERVICE_VOLUME_MUTE, {"is_volume_muted": False}, [BenQProjectorCode.MUTE]),
     ],
 )
 @pytest.mark.usefixtures("init_integration")
@@ -75,9 +83,9 @@ async def test_media_player_action_sends_correct_code(
     mock_infrared_emitter_entity: MockInfraredEmitterEntity,
     service: str,
     service_data: dict[str, bool],
-    expected_code: BenQProjectorCode,
+    expected_codes: list[BenQProjectorCode],
 ) -> None:
-    """Test each media player action sends the correct IR code."""
+    """Test each media player action sends the correct IR codes."""
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
         service,
@@ -85,7 +93,7 @@ async def test_media_player_action_sends_correct_code(
         blocking=True,
     )
 
-    assert mock_infrared_emitter_entity.send_command_calls == [expected_code]
+    assert mock_infrared_emitter_entity.send_command_calls == expected_codes
 
 
 @pytest.mark.parametrize(
@@ -195,6 +203,7 @@ async def test_turn_on_off_update_assumed_state(
     assert state.state == MediaPlayerState.ON
 
     assert mock_infrared_emitter_entity.send_command_calls == [
+        BenQProjectorCode.POWER_OFF,
         BenQProjectorCode.POWER_OFF,
         BenQProjectorCode.POWER_ON,
     ]
@@ -320,12 +329,26 @@ def _receive(
 
 
 @pytest.mark.parametrize(
-    ("initial_state", "command", "expected_state"),
+    ("initial_state", "commands", "expected_state"),
     [
-        (MediaPlayerState.OFF, 0x4F, MediaPlayerState.ON),
-        (MediaPlayerState.ON, 0x4E, MediaPlayerState.OFF),
-        (MediaPlayerState.ON, 0x02, MediaPlayerState.OFF),
-        (MediaPlayerState.OFF, 0x02, MediaPlayerState.ON),
+        pytest.param(MediaPlayerState.OFF, [0x4F], MediaPlayerState.ON, id="on"),
+        pytest.param(MediaPlayerState.OFF, [0x02], MediaPlayerState.ON, id="toggle_on"),
+        pytest.param(
+            MediaPlayerState.ON, [0x4E], MediaPlayerState.ON, id="off_unconfirmed"
+        ),
+        pytest.param(MediaPlayerState.ON, [0x4E, 0x4E], MediaPlayerState.OFF, id="off"),
+        pytest.param(
+            MediaPlayerState.ON,
+            [0x02, 0x02],
+            MediaPlayerState.OFF,
+            id="toggle_off",
+        ),
+        pytest.param(
+            MediaPlayerState.ON,
+            [0x4E, 0x4F, 0x4E],
+            MediaPlayerState.ON,
+            id="off_cancelled_by_on",
+        ),
     ],
 )
 @pytest.mark.parametrize("has_receiver_entity", [True])
@@ -335,10 +358,13 @@ async def test_receiver_power_codes_update_state(
     mock_config_entry: MockConfigEntry,
     mock_infrared_receiver_entity: MockInfraredReceiverEntity,
     initial_state: MediaPlayerState,
-    command: int,
+    commands: list[int],
     expected_state: MediaPlayerState,
 ) -> None:
-    """Power codes from the physical remote update the assumed power state."""
+    """Power codes from the physical remote update the assumed power state.
+
+    Powering off takes a second off press to confirm the first.
+    """
     mock_restore_cache_with_extra_data(
         hass,
         [
@@ -352,12 +378,45 @@ async def test_receiver_power_codes_update_state(
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    _receive(mock_infrared_receiver_entity, command)
+    for command in commands:
+        _receive(mock_infrared_receiver_entity, command)
     await hass.async_block_till_done()
 
     state = hass.states.get(MEDIA_PLAYER_ENTITY_ID)
     assert state is not None
     assert state.state == expected_state
+
+
+@pytest.mark.parametrize("has_receiver_entity", [True])
+@pytest.mark.usefixtures("init_integration")
+async def test_receiver_power_off_confirmation_expires(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_infrared_receiver_entity: MockInfraredReceiverEntity,
+) -> None:
+    """A second off press after the confirmation window starts a new request."""
+    await hass.services.async_call(
+        MEDIA_PLAYER_DOMAIN,
+        MediaPlayerService.TURN_ON,
+        {TargetKey.ENTITY_ID: MEDIA_PLAYER_ENTITY_ID},
+        blocking=True,
+    )
+
+    _receive(mock_infrared_receiver_entity, 0x4E)
+    freezer.tick(timedelta(seconds=6))
+    _receive(mock_infrared_receiver_entity, 0x4E)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(MEDIA_PLAYER_ENTITY_ID)
+    assert state is not None
+    assert state.state == MediaPlayerState.ON
+
+    _receive(mock_infrared_receiver_entity, 0x4E)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(MEDIA_PLAYER_ENTITY_ID)
+    assert state is not None
+    assert state.state == MediaPlayerState.OFF
 
 
 @pytest.mark.parametrize("has_receiver_entity", [True])

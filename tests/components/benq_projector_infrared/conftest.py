@@ -47,6 +47,17 @@ def mock_config_entry(has_receiver_entity: bool) -> MockConfigEntry:
     )
 
 
+@pytest.fixture(autouse=True)
+def mock_power_off_confirm_delay() -> Generator[None]:
+    """Skip the delay between the two power-off commands."""
+    with patch(
+        "homeassistant.components.benq_projector_infrared.media_player."
+        "POWER_OFF_CONFIRM_DELAY",
+        0,
+    ):
+        yield
+
+
 @pytest.fixture
 def platforms() -> list[Platform]:
     """Return platforms to set up."""

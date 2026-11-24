@@ -1,6 +1,8 @@
 """Media player platform for BenQ Projector Infrared integration."""
 
+import asyncio
 from dataclasses import dataclass
+from datetime import datetime
 import logging
 from typing import Any, override
 
@@ -25,8 +27,14 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.restore_state import ExtraStoredData, RestoreEntity
+from homeassistant.util import dt as dt_util
 
-from .const import CONF_INFRARED_RECEIVER_ENTITY_ID, DOMAIN
+from .const import (
+    CONF_INFRARED_RECEIVER_ENTITY_ID,
+    DOMAIN,
+    POWER_OFF_CONFIRM_DELAY,
+    POWER_OFF_CONFIRM_WINDOW,
+)
 from .entity import BenQProjectorIrEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -141,7 +149,9 @@ class BenQProjectorIrMediaPlayer(
 
     @override
     async def async_turn_off(self) -> None:
-        """Send discrete power-off command."""
+        """Send discrete power-off command, confirmed by sending it again."""
+        await self._send_benq_command(BenQProjectorCode.POWER_OFF)
+        await asyncio.sleep(POWER_OFF_CONFIRM_DELAY)
         await self._send_benq_command(BenQProjectorCode.POWER_OFF)
         self._attr_state = MediaPlayerState.OFF
         self.async_write_ha_state()
@@ -190,6 +200,7 @@ class BenQProjectorIrMediaPlayerWithReceiver(
         """Initialize BenQ Projector Infrared media player with a receiver."""
         super().__init__(entry)
         self._infrared_receiver_entity_id = receiver_entity_id
+        self._power_off_requested_at: datetime | None = None
 
     @override
     @callback
@@ -209,17 +220,19 @@ class BenQProjectorIrMediaPlayerWithReceiver(
 
         _LOGGER.debug("Received BenQ infrared command: %s", code.name)
 
-        if code is BenQProjectorCode.POWER_ON:
+        if code is BenQProjectorCode.POWER_ON or (
+            code is BenQProjectorCode.POWER and self._attr_state is MediaPlayerState.OFF
+        ):
+            self._power_off_requested_at = None
             self._attr_state = MediaPlayerState.ON
-        elif code is BenQProjectorCode.POWER_OFF:
+        elif code is BenQProjectorCode.POWER_OFF or (
+            code is BenQProjectorCode.POWER and self._attr_state is MediaPlayerState.ON
+        ):
+            if not self._async_power_off_confirmed():
+                return
             self._attr_state = MediaPlayerState.OFF
         elif code is BenQProjectorCode.POWER:
-            if self._attr_state is MediaPlayerState.ON:
-                self._attr_state = MediaPlayerState.OFF
-            elif self._attr_state is MediaPlayerState.OFF:
-                self._attr_state = MediaPlayerState.ON
-            else:
-                return
+            return
         elif code is BenQProjectorCode.SOURCE:
             # The source key cycles through the inputs, so the new one is unknown.
             self._attr_source = None
@@ -229,3 +242,17 @@ class BenQProjectorIrMediaPlayerWithReceiver(
             return
 
         self.async_write_ha_state()
+
+    @callback
+    def _async_power_off_confirmed(self) -> bool:
+        """Return whether a power-off press confirms an earlier one.
+
+        The first press only shows the confirmation prompt on the projector.
+        """
+        now = dt_util.utcnow()
+        requested_at = self._power_off_requested_at
+        if requested_at is not None and now - requested_at <= POWER_OFF_CONFIRM_WINDOW:
+            self._power_off_requested_at = None
+            return True
+        self._power_off_requested_at = now
+        return False
