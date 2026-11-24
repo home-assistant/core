@@ -1,7 +1,7 @@
 """Test Tuya camera platform."""
 
 import asyncio
-from threading import Event, Thread
+from threading import Event
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
@@ -179,70 +179,33 @@ async def test_stream_source_refresh_reuses_registered_stream(
 
 
 @pytest.mark.parametrize("mock_device_code", ["sp_rudejjigkywujjvs"])
-async def test_failed_preloaded_stream_worker_is_stopped_before_refresh(
+@pytest.mark.parametrize("preload", [False, True])
+async def test_running_stream_refresh_preserves_viewers(
     hass: HomeAssistant,
     mock_manager: Manager,
     mock_config_entry: MockConfigEntry,
     mock_device: CustomerDevice,
+    preload: bool,
 ) -> None:
-    """Stop the actual worker even if Stream.stop would keep it running."""
+    """Refresh a running worker without replacing its HLS provider or token."""
     await initialize_entry(hass, mock_manager, mock_config_entry, mock_device)
     camera = get_camera_from_entity_id(hass, "camera.burocam")
     mock_manager.get_device_stream_allocate.side_effect = [
         "rtsps://example.com/first",
         "rtsps://example.com/second",
     ]
-    stream = _test_stream(hass, "rtsps://example.com/first", preload=True)
-
-    with patch(
-        "homeassistant.components.camera.entity.create_stream",
-        return_value=stream,
-    ):
-        assert await camera.async_create_stream() is stream
-
-        # A preloaded stream may have an active worker retrying an expired URL.
-        # Run a real thread that waits for the worker's shutdown signal.
-        stream._outputs["hls"] = MagicMock()
-        worker = Thread(target=stream._thread_quit.wait, daemon=True)
-        stream._thread = worker
-        worker.start()
-        stream._available = False
-
-        try:
-            assert await camera.async_create_stream() is stream
-            assert not worker.is_alive()
-            assert stream._thread is None
-            assert stream.source == "rtsps://example.com/second"
-            assert stream.dynamic_stream_settings.preload_stream
-        finally:
-            stream._thread_quit.set()
-            await hass.async_add_executor_job(worker.join)
-
-    assert mock_manager.get_device_stream_allocate.call_count == 2
-
-
-@pytest.mark.parametrize("mock_device_code", ["sp_rudejjigkywujjvs"])
-async def test_refreshed_stream_worker_stops_without_restarting(
-    hass: HomeAssistant,
-    mock_manager: Manager,
-    mock_config_entry: MockConfigEntry,
-    mock_device: CustomerDevice,
-) -> None:
-    """A refreshed stream must not reopen the single-use URL while stopping."""
-    await initialize_entry(hass, mock_manager, mock_config_entry, mock_device)
-    camera = get_camera_from_entity_id(hass, "camera.burocam")
-    mock_manager.get_device_stream_allocate.side_effect = [
-        "rtsps://example.com/first",
-        "rtsps://example.com/second",
-    ]
-    stream = _test_stream(hass, "rtsps://example.com/first")
+    stream = _test_stream(hass, "rtsps://example.com/first", preload=preload)
     worker_started = Event()
-    sources: list[str] = []
+    worker_refreshed = Event()
+    opened_sources: list[str] = []
 
     def fake_stream_worker(source: str, *args: Any) -> None:
-        sources.append(source)
-        worker_started.set()
-        args[-1].wait(1)
+        opened_sources.append(source)
+        if source.endswith("/first"):
+            worker_started.set()
+        else:
+            worker_refreshed.set()
+        args[-1].wait(3)
 
     with (
         patch(
@@ -255,18 +218,58 @@ async def test_refreshed_stream_worker_stops_without_restarting(
         patch("homeassistant.components.stream._should_retry", return_value=False),
     ):
         assert await camera.async_create_stream() is stream
-        assert await camera.async_create_stream() is stream
-        assert stream.source == "rtsps://example.com/second"
-        assert not stream._fast_restart_once
+        provider = MagicMock()
+        stream._outputs["hls"] = provider
+        stream.access_token = "existing-token"
 
-        await stream.start()
         try:
+            await stream.start()
             assert await hass.async_add_executor_job(worker_started.wait, 3)
+            stream._available = False
+
+            assert await camera.async_create_stream() is stream
+            assert await hass.async_add_executor_job(worker_refreshed.wait, 3)
+            assert stream.source == "rtsps://example.com/second"
+            assert stream.outputs()["hls"] is provider
+            assert stream.access_token == "existing-token"
+            assert opened_sources == [
+                "rtsps://example.com/first",
+                "rtsps://example.com/second",
+            ]
         finally:
+            stream.dynamic_stream_settings.preload_stream = False
             await asyncio.wait_for(stream.stop(), timeout=4)
 
-    assert stream._thread is None
-    assert sources == ["rtsps://example.com/second"]
+    assert mock_manager.get_device_stream_allocate.call_count == 2
+
+
+@pytest.mark.parametrize("mock_device_code", ["sp_rudejjigkywujjvs"])
+async def test_refresh_without_new_source(
+    hass: HomeAssistant,
+    mock_manager: Manager,
+    mock_config_entry: MockConfigEntry,
+    mock_device: CustomerDevice,
+) -> None:
+    """Return None rather than reusing a consumed URL after a cloud failure."""
+    await initialize_entry(hass, mock_manager, mock_config_entry, mock_device)
+    camera = get_camera_from_entity_id(hass, "camera.burocam")
+    mock_manager.get_device_stream_allocate.side_effect = [
+        "rtsps://example.com/first",
+        None,
+        "rtsps://example.com/second",
+    ]
+    stream = _test_stream(hass, "rtsps://example.com/first")
+
+    with patch(
+        "homeassistant.components.camera.entity.create_stream", return_value=stream
+    ):
+        assert await camera.async_create_stream() is stream
+        assert await camera.async_create_stream() is None
+        assert stream.source == "rtsps://example.com/first"
+        assert await camera.async_create_stream() is stream
+        assert stream.source == "rtsps://example.com/second"
+
+    assert mock_manager.get_device_stream_allocate.call_count == 3
 
 
 @pytest.mark.parametrize("mock_device_code", ["sp_rudejjigkywujjvs"])

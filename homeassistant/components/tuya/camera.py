@@ -119,12 +119,12 @@ class TuyaCameraEntity(TuyaEntity, CameraEntity):
 
             async with asyncio.timeout(CAMERA_STREAM_SOURCE_TIMEOUT):
                 source = await self.stream_source()
-            if source:
-                # Stop the old worker even when preloading is enabled.
-                await stream._stop()  # noqa: SLF001
-                # The worker has stopped; update_source() would leave a
-                # spurious restart request armed for the next worker.
-                stream.source = source
+            if not source:
+                return None
+
+            # Keep existing viewers and providers while restarting the worker
+            # with a new single-use Tuya source.
+            stream.update_source(source)
             return stream
 
     @override
