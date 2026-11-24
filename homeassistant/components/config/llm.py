@@ -1,16 +1,15 @@
 """LLM tools for the config integration."""
 
 from collections import defaultdict
-from collections.abc import Iterable, Iterator, Mapping
+from collections.abc import Iterable, Iterator
 from contextlib import suppress
 import heapq
-import re
-from typing import TYPE_CHECKING, Any, Literal, cast, override
+from typing import Any, Literal, cast, override
 
 import probatio
 
 from homeassistant import config_entries, data_entry_flow
-from homeassistant.components.llm import LLMTools
+from homeassistant.components.llm import LLMTools, flow as llm_flow
 from homeassistant.config_entries import (
     ConfigEntry,
     ConfigEntryState,
@@ -18,10 +17,17 @@ from homeassistant.config_entries import (
     ConfigFlowResult,
     OptionsFlow,
 )
+from homeassistant.const import ATTR_RESTORED
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import DependencyError, HomeAssistantError
 from homeassistant.generated.integration_categories import INTEGRATION_CATEGORIES
-from homeassistant.helpers import config_validation as cv, translation
+from homeassistant.helpers import (
+    area_registry as ar,
+    config_validation as cv,
+    entity_registry as er,
+    label_registry as lr,
+    translation,
+)
 from homeassistant.helpers.llm import (
     LLM_API_HOME_ASSISTANT,
     LLMContext,
@@ -434,25 +440,6 @@ class SearchIntegrationsTool(Tool):
         return ToolResult(data=result)
 
 
-_PLACEHOLDER_RE = re.compile(r"\{([^}]+)\}")
-
-
-def _interpolate_placeholders(
-    text: str | None, placeholders: Mapping[str, Any] | None
-) -> str | None:
-    """Replace {key} placeholders in text using a single regex pass."""
-    if not text or not placeholders:
-        return text
-    return _PLACEHOLDER_RE.sub(
-        lambda m: (
-            str(val)
-            if (val := placeholders.get(m.group(1))) is not None
-            else m.group(0)
-        ),
-        text,
-    )
-
-
 def _resolve_short_flow_id(
     hass: HomeAssistant, flow_id: str
 ) -> ConfigFlow | OptionsFlow:
@@ -480,39 +467,6 @@ def _resolve_short_flow_id(
         raise HomeAssistantError(f"Flow '{flow_id}' not found.")
 
     return matches[0]
-
-
-def _enrich_schema_fields(
-    fields: list[dict[str, Any]],
-    trans: dict[str, str],
-    prefix: str,
-    placeholders: Mapping[str, Any] | None,
-) -> list[JsonValueType]:
-    """Enrich probatio.to_field_list items with resolved translations."""
-    for field in fields:
-        name: str = field["name"]
-
-        if (desc_meta := field.pop("description", None)) is not None and (
-            suggested_value := desc_meta.get("suggested_value")
-        ) is not None:
-            field["suggested_value"] = suggested_value
-
-        if field.get("type") == "expandable":
-            sec_prefix = f"{prefix}.sections.{name}"
-            label_key, desc_key = f"{sec_prefix}.name", f"{sec_prefix}.description"
-            _enrich_schema_fields(field["schema"], trans, sec_prefix, placeholders)
-        else:
-            label_key, desc_key = (
-                f"{prefix}.data.{name}",
-                f"{prefix}.data_description.{name}",
-            )
-
-        if label := _interpolate_placeholders(trans.get(label_key), placeholders):
-            field["label"] = label
-        if description := _interpolate_placeholders(trans.get(desc_key), placeholders):
-            field["description"] = description
-
-    return fields  # type: ignore[return-value]
 
 
 def _build_external_step_error(domain: str, *, is_new_entry: bool = True) -> ToolResult:
@@ -571,97 +525,38 @@ async def _async_finalize_flow_step(
         hass, lang, "title", {domain}
     )
     base_prefix = f"component.{trans_domain}.{flow_category}"
-    placeholders: Mapping[str, Any] | None = result.get("description_placeholders")
-    formatted: JsonObjectType = {
-        "flow_id": f"{domain}:{result['flow_id'][-_MIN_SHORT_ID_LEN:]}",
-        "type": str(flow_type),
-    }
 
-    if (step_id := result.get("step_id")) is not None:
-        formatted["step_id"] = step_id
-        step_prefix = f"{base_prefix}.step.{step_id}"
-        if title := _interpolate_placeholders(
-            trans.get(f"{step_prefix}.title")
-            or title_trans.get(f"component.{domain}.title"),
-            placeholders,
-        ):
-            formatted["title"] = title
-        if description := _interpolate_placeholders(
-            trans.get(f"{step_prefix}.description"), placeholders
-        ):
-            formatted["description"] = description
-
-        if flow_type is data_entry_flow.FlowResultType.FORM:
-            if (last_step := result.get("last_step")) is not None:
-                formatted["last_step"] = last_step
-            raw_fields: list[dict[str, Any]] = []
-            if (schema := result.get("data_schema")) is not None:
-                raw_fields = probatio.to_field_list(  # type: ignore[assignment]
-                    schema, custom_serializer=cv.custom_serializer
-                )
-                data_entry_flow.add_visible_conditions_to_serialized_schema(
-                    schema, raw_fields
-                )
-            formatted["fields"] = _enrich_schema_fields(
-                raw_fields, trans, step_prefix, placeholders
-            )
-            if err_source := result.get("errors"):
-                formatted["errors"] = {
-                    err_field: (
-                        _interpolate_placeholders(
-                            trans.get(f"{base_prefix}.error.{err_val}", err_val),
-                            placeholders,
-                        )
-                        or err_val
-                    )
-                    for err_field, err_val in err_source.items()
-                }
-        elif flow_type is data_entry_flow.FlowResultType.MENU:
-            raw_opts: Any = result.get("menu_options", [])
-            formatted["menu_options"] = {
-                opt: (
-                    _interpolate_placeholders(
-                        trans.get(f"{step_prefix}.menu_options.{opt}")
-                        or (raw_opts[opt] if isinstance(raw_opts, dict) else opt),
-                        placeholders,
-                    )
-                    or opt
-                )
-                for opt in raw_opts
-            }
-        elif flow_type is data_entry_flow.FlowResultType.SHOW_PROGRESS:
-            progress_action = result["progress_action"]
-            formatted["progress_action"] = progress_action
-            if description := _interpolate_placeholders(
-                trans.get(f"{base_prefix}.progress.{progress_action}"), placeholders
-            ):
-                formatted["description"] = description
-
-    elif flow_type is data_entry_flow.FlowResultType.CREATE_ENTRY:
-        if title := result.get("title"):
-            formatted["title"] = title
-        desc_key = result.get("description") or "default"
-        if desc := _interpolate_placeholders(
-            trans.get(f"{base_prefix}.create_entry.{desc_key}"), placeholders
-        ):
-            formatted["description"] = desc
-        if (created_entry := result.get("result")) is not None:
-            formatted["entry_id"] = _format_short_entry_ids(
-                hass.config_entries.async_entries(created_entry.domain)
-            )[created_entry.entry_id]
-
-    elif flow_type is data_entry_flow.FlowResultType.ABORT:
+    fallback_abort: str | None = None
+    if flow_type is data_entry_flow.FlowResultType.ABORT:
         reason = result["reason"]
-        formatted["reason"] = reason
-        abort_msg = trans.get(f"{base_prefix}.abort.{reason}")
-        if not abort_msg:
-            if flow_category != "config":
-                trans = await translation.async_get_translations(
+        if not trans.get(f"{base_prefix}.abort.{reason}"):
+            abort_trans = (
+                trans
+                if flow_category == "config"
+                else await translation.async_get_translations(
                     hass, lang, "config", {"homeassistant"}
                 )
-            abort_msg = trans.get(f"component.homeassistant.config.abort.{reason}")
-        if abort_text := _interpolate_placeholders(abort_msg, placeholders):
-            formatted["description"] = abort_text
+            )
+            fallback_abort = abort_trans.get(
+                f"component.homeassistant.config.abort.{reason}"
+            )
+
+    flow_id = f"{domain}:{result['flow_id'][-_MIN_SHORT_ID_LEN:]}"
+    formatted = llm_flow.format_result(
+        result,
+        trans,
+        base_prefix,
+        flow_id=flow_id,
+        fallback_title=title_trans.get(f"component.{domain}.title"),
+        fallback_abort_description=fallback_abort,
+    )
+    if (
+        flow_type is data_entry_flow.FlowResultType.CREATE_ENTRY
+        and (created_entry := result.get("result")) is not None
+    ):
+        formatted["entry_id"] = _format_short_entry_ids(
+            hass.config_entries.async_entries(created_entry.domain)
+        )[created_entry.entry_id]
 
     return ToolResult(data={"result": formatted})
 
@@ -959,21 +854,13 @@ class ConfigureFlowTool(Tool):
         next_step_id: str | None = args.get("next_step_id")
         abort: bool = args["abort"]
 
-        if user_input is not None and next_step_id is not None:
-            return _error_result("Cannot specify both 'user_input' and 'next_step_id'.")
-        if user_input is not None and "next_step_id" in user_input:
-            return _error_result(
-                "Use the 'next_step_id' parameter instead of 'user_input' "
-                "to select a menu option."
-            )
-
         try:
             flow_handler = _resolve_short_flow_id(hass, short_flow_id)
         except HomeAssistantError as err:
             return _error_result(str(err))
 
         if isinstance(flow_handler, OptionsFlow):
-            flow_mgr: data_entry_flow.FlowManager[Any, Any] = (
+            flow_mgr: data_entry_flow.FlowManager[Any, Any, Any] = (
                 hass.config_entries.options
             )
             domain = flow_handler.config_entry.domain
@@ -988,68 +875,28 @@ class ConfigureFlowTool(Tool):
                 config_entries.SOURCE_RECONFIGURE,
             )
 
-        flow_id = flow_handler.flow_id
-        cur_step = flow_handler.cur_step
-        if TYPE_CHECKING:
-            assert cur_step is not None
+        try:
+            step_result = await llm_flow.async_configure_step(
+                flow_mgr,
+                flow_handler.flow_id,
+                display_flow_id=short_flow_id,
+                user_input=user_input,
+                next_step_id=next_step_id,
+                abort=abort,
+            )
+        except RuntimeError as err:
+            if str(err) not in _OAUTH_RUNTIME_ERRORS:
+                raise
+            flow_mgr.async_abort(flow_handler.flow_id)
+            return _build_external_step_error(domain, is_new_entry=is_new_entry)
 
-        if abort:
-            flow_mgr.async_abort(flow_id)
-            return ToolResult(
-                data={
-                    "result": {
-                        "flow_id": short_flow_id,
-                        "type": "abort",
-                        "reason": "aborted",
-                    }
-                }
-            )
-
-        cur_type = cur_step.get("type")
-        if cur_type is data_entry_flow.FlowResultType.MENU and user_input is not None:
-            return _error_result(
-                "Current step is a 'menu' step; pass the chosen option in "
-                "'next_step_id' instead of 'user_input'."
-            )
-        if cur_type is data_entry_flow.FlowResultType.FORM and next_step_id is not None:
-            return _error_result(
-                "Current step is a 'form' step; pass field values in "
-                "'user_input' instead of 'next_step_id'."
-            )
-        if cur_type not in (
-            data_entry_flow.FlowResultType.FORM,
-            data_entry_flow.FlowResultType.MENU,
-        ) and (user_input is not None or next_step_id is not None):
-            return _error_result(
-                f"Current step has type '{cur_type}' and does not accept input."
-            )
-
-        if (
-            cur_type is data_entry_flow.FlowResultType.SHOW_PROGRESS
-            and (progress_task := flow_handler.async_get_progress_task()) is not None
-            and not progress_task.done()
-        ):
-            result = cur_step
-        else:
-            flow_input: dict[str, Any] | None = (
-                {"next_step_id": next_step_id}
-                if next_step_id is not None
-                else user_input
-            )
-            try:
-                result = await flow_mgr.async_configure(flow_id, flow_input)
-            except data_entry_flow.InvalidData as err:
-                return _error_result(f"Invalid input: {err.schema_errors}")
-            except RuntimeError as err:
-                if str(err) not in _OAUTH_RUNTIME_ERRORS:
-                    raise
-                flow_mgr.async_abort(flow_id)
-                return _build_external_step_error(domain, is_new_entry=is_new_entry)
+        if isinstance(step_result, ToolResult):
+            return step_result
 
         return await _async_finalize_flow_step(
             hass,
             flow_mgr,
-            result,
+            step_result,
             domain,
             llm_context.language,
             flow_category=flow_category,
@@ -1195,6 +1042,231 @@ class UpdateCoreConfigTool(Tool):
         return ToolResult(data={"result": _format_core_config(hass)})
 
 
+def _get_entity_entry(hass: HomeAssistant, entity_id: str) -> er.RegistryEntry:
+    """Return the registry entry of an entity."""
+    if (entry := er.async_get(hass).async_get(entity_id)) is None:
+        raise HomeAssistantError(
+            f"Entity '{entity_id}' not found. Entities without a unique ID have "
+            "no settings."
+        )
+    return entry
+
+
+def _format_entity_settings(
+    hass: HomeAssistant, entry: er.RegistryEntry
+) -> JsonObjectType:
+    """Format the settings of an entity for LLM consumption."""
+    return {
+        "entity_id": entry.entity_id,
+        "full_name": er.async_get_full_entity_name(hass, entry),
+        "name": entry.name,
+        "original_name": entry.original_name,
+        "icon": entry.icon,
+        "area_id": entry.area_id,
+        "device_id": entry.device_id,
+        "device_class": entry.device_class,
+        "original_device_class": entry.original_device_class,
+        "disabled_by": entry.disabled_by,
+        "hidden_by": entry.hidden_by,
+        "aliases": [None if a is er.COMPUTED_NAME else a for a in entry.aliases],
+        "labels": list[JsonValueType](sorted(entry.labels)),
+        "platform": entry.platform,
+    }
+
+
+_NULLABLE_STRING = probatio.Any(None, _NON_EMPTY_STRING)
+
+
+class GetEntitySettingsTool(Tool):
+    """LLM Tool to get the settings of an entity."""
+
+    name = "config__get_entity_settings"
+    title = "Get entity settings"
+    description = (
+        "Get the settings of the entity with the given entity_id. Use "
+        "search__search to find the entity_id."
+    )
+    annotations = ToolAnnotations(
+        read_only=True, destructive=False, idempotent=True, open_world=False
+    )
+    integration = DOMAIN
+    parameters = probatio.Schema({probatio.Required("entity_id"): _NON_EMPTY_STRING})
+
+    @override
+    async def async_call(
+        self, hass: HomeAssistant, tool_input: ToolInput, llm_context: LLMContext
+    ) -> ToolResult:
+        """Return the settings of the entity."""
+        args = self.parameters(tool_input.tool_args)
+        entry = _get_entity_entry(hass, args["entity_id"])
+        return ToolResult(data={"result": _format_entity_settings(hass, entry)})
+
+
+class UpdateEntitySettingsTool(Tool):
+    """LLM Tool to update the settings of an entity."""
+
+    name = "config__update_entity_settings"
+    title = "Update entity settings"
+    description = (
+        "Update the settings of the entity with the given entity_id. Only the "
+        "given settings change. Returns the new settings."
+    )
+    annotations = ToolAnnotations(
+        read_only=False, destructive=True, idempotent=True, open_world=False
+    )
+    integration = DOMAIN
+    parameters = probatio.Schema(
+        {
+            probatio.Required("entity_id"): _NON_EMPTY_STRING,
+            probatio.Optional(
+                "name",
+                description=(
+                    "The name of the entity. null uses the name from the "
+                    "integration. An empty string names the entity after its "
+                    "device only."
+                ),
+            ): probatio.Any(None, probatio.All(str, probatio.Strip)),
+            probatio.Optional(
+                "icon",
+                description=(
+                    "The icon, like 'mdi:lamp'. null uses the icon from the "
+                    "integration."
+                ),
+            ): probatio.Any(None, probatio.All(str, cv.icon)),
+            probatio.Optional(
+                "area_id",
+                description="The area_id. null uses the area of the device.",
+            ): _NULLABLE_STRING,
+            probatio.Optional(
+                "device_class",
+                description=(
+                    "The device class, like 'outlet' for a switch. null uses the "
+                    "device class from the integration."
+                ),
+            ): _NULLABLE_STRING,
+            probatio.Optional(
+                "new_entity_id",
+                description=(
+                    "A new entity_id. Automations and scripts that use the old one "
+                    "are not updated."
+                ),
+            ): probatio.All(str, cv.entity_id),
+            probatio.Optional(
+                "disabled_by",
+                description=(
+                    "'user' disables the entity, null enables it. A disabled "
+                    "entity has no state."
+                ),
+            ): probatio.Any(None, er.RegistryEntryDisabler.USER.value),
+            probatio.Optional(
+                "hidden_by",
+                description=(
+                    "'user' hides the entity from auto-populated dashboards, null "
+                    "shows it."
+                ),
+            ): probatio.Any(None, er.RegistryEntryHider.USER.value),
+            probatio.Optional(
+                "aliases",
+                description=(
+                    "The names that voice assistants know the entity by. This "
+                    "replaces all aliases. null stands for the name of the entity."
+                ),
+            ): [_NULLABLE_STRING],
+            probatio.Optional(
+                "labels",
+                description="The label_ids. This replaces all labels.",
+            ): [_NON_EMPTY_STRING],
+        }
+    )
+
+    @override
+    async def async_call(
+        self, hass: HomeAssistant, tool_input: ToolInput, llm_context: LLMContext
+    ) -> ToolResult:
+        """Update the settings of the entity and return the new settings."""
+        settings = self.parameters(tool_input.tool_args)
+        entity_id = settings.pop("entity_id")
+        entry = _get_entity_entry(hass, entity_id)
+        if (area_id := settings.get("area_id")) and ar.async_get(hass).async_get_area(
+            area_id
+        ) is None:
+            raise HomeAssistantError(f"Area '{area_id}' not found.")
+        if "labels" in settings:
+            settings["labels"] = set(settings["labels"])
+            if missing := lr.async_get_missing_label_ids(hass, settings["labels"]):
+                raise HomeAssistantError(
+                    f"Labels not found: {', '.join(sorted(missing))}"
+                )
+        if settings.get("disabled_by"):
+            settings["disabled_by"] = er.RegistryEntryDisabler.USER
+        if settings.get("hidden_by"):
+            settings["hidden_by"] = er.RegistryEntryHider.USER
+        if "aliases" in settings:
+            settings["aliases"] = [
+                er.COMPUTED_NAME if alias is None else alias
+                for alias in settings["aliases"]
+            ]
+
+        was_disabled = entry.disabled_by is not None
+        try:
+            entry = er.async_get(hass).async_update_entity(entity_id, **settings)
+        except ValueError as err:
+            raise HomeAssistantError(str(err)) from err
+
+        result = _format_entity_settings(hass, entry)
+        if was_disabled and entry.disabled_by is None:
+            # The integration adds an enabled entity only when its config entry reloads
+            if not (config_entry_id := entry.config_entry_id) or (
+                (config_entry := hass.config_entries.async_get_entry(config_entry_id))
+                and not config_entry.supports_unload
+            ):
+                result["note"] = "Home Assistant must restart to add the entity."
+            else:
+                result["note"] = (
+                    "The integration reloads in "
+                    f"{config_entries.RELOAD_AFTER_UPDATE_DELAY} seconds to add "
+                    "the entity."
+                )
+        return ToolResult(data={"result": result})
+
+
+class RemoveEntityTool(Tool):
+    """LLM Tool to remove an entity that its integration no longer provides."""
+
+    name = "config__remove_entity"
+    title = "Remove entity"
+    description = (
+        "Remove an entity that its integration no longer provides, like the entity "
+        "of a removed device. To stop using an entity that is still provided, "
+        "disable it with config__update_entity_settings."
+    )
+    annotations = ToolAnnotations(
+        read_only=False, destructive=True, idempotent=True, open_world=False
+    )
+    integration = DOMAIN
+    parameters = probatio.Schema({probatio.Required("entity_id"): _NON_EMPTY_STRING})
+
+    @override
+    async def async_call(
+        self, hass: HomeAssistant, tool_input: ToolInput, llm_context: LLMContext
+    ) -> ToolResult:
+        """Remove the entity."""
+        entity_id = self.parameters(tool_input.tool_args)["entity_id"]
+        _get_entity_entry(hass, entity_id)
+        # Like the UI, only a restored state shows that the integration no longer
+        # provides the entity. A disabled entity has no state at all.
+        if (state := hass.states.get(entity_id)) is None or not state.attributes.get(
+            ATTR_RESTORED
+        ):
+            raise HomeAssistantError(
+                f"Entity '{entity_id}' is still provided by its integration, or is "
+                "disabled. Only entities that their integration no longer provides "
+                "can be removed."
+            )
+        er.async_get(hass).async_remove(entity_id)
+        return ToolResult(data={"result": {"entity_id": entity_id}})
+
+
 @callback
 def async_get_tools(
     hass: HomeAssistant, llm_context: LLMContext, api_id: str
@@ -1213,5 +1285,8 @@ def async_get_tools(
             ConfigureFlowTool(),
             GetCoreConfigTool(),
             UpdateCoreConfigTool(),
+            GetEntitySettingsTool(),
+            UpdateEntitySettingsTool(),
+            RemoveEntityTool(),
         ]
     )
