@@ -1167,6 +1167,69 @@ async def test_climate_service_uses_advertised_native_hvac_mode(
     assert operation_mode.value == "heatingNight"
 
 
+async def test_climate_service_sets_operation_mode_off_without_power_control(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    mock_onecta_client: MockOnectaClient,
+) -> None:
+    """Use operationMode to turn off and on when there is no power control."""
+    (
+        entity_id,
+        gateway_id,
+        management_point,
+        coordinator,
+    ) = await _async_setup_climate_service_fixture(hass, config_entry, entity_registry)
+    climate_control = management_point.climate_control
+    assert climate_control is not None
+    replacement = replace(management_point, on_off_mode=None)
+    _replace_test_management_point(
+        coordinator.data[gateway_id], management_point, replacement
+    )
+    management_point = replacement
+    climate_control = management_point.climate_control
+    assert climate_control is not None
+    assert climate_control.operation_mode is not None
+    climate_control.operation_mode.value = "heating"
+    climate_control.operation_mode.values = ["cooling", "heating", "off"]
+    coordinator.async_update_listeners()
+
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_HVAC_MODE,
+        {ATTR_ENTITY_ID: entity_id, "hvac_mode": HVACMode.OFF},
+        blocking=True,
+    )
+
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == HVACMode.OFF
+    assert mock_onecta_client.patch_characteristic.await_args_list[-1].args == (
+        gateway_id,
+        management_point.embedded_id,
+        "operationMode",
+        "off",
+    )
+
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_HVAC_MODE,
+        {ATTR_ENTITY_ID: entity_id, "hvac_mode": HVACMode.HEAT},
+        blocking=True,
+    )
+
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == HVACMode.HEAT
+    assert mock_onecta_client.patch_characteristic.await_args_list[-1].args == (
+        gateway_id,
+        management_point.embedded_id,
+        "operationMode",
+        "heating",
+    )
+    assert mock_onecta_client.patch_characteristic.await_count == 2
+
+
 async def test_climate_service_rejects_unknown_native_mode(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
@@ -2019,11 +2082,6 @@ async def test_climate_service_does_not_enable_boost_when_turn_on_fails(
     [
         (SERVICE_TURN_ON, {}, "off"),
         (SERVICE_TURN_OFF, {}, "on"),
-        (
-            SERVICE_SET_HVAC_MODE,
-            {ClimateServiceArgument.HVAC_MODE: HVACMode.OFF},
-            "on",
-        ),
     ],
 )
 @pytest.mark.parametrize(
@@ -2075,6 +2133,42 @@ async def test_climate_service_rejects_unavailable_power(
             CLIMATE_DOMAIN,
             service,
             {ATTR_ENTITY_ID: entity_id, **service_data},
+            blocking=True,
+        )
+
+    assert err.value.translation_key == "climate_power_unavailable"
+    mock_onecta_client.patch_characteristic.assert_not_awaited()
+
+
+async def test_climate_service_rejects_read_only_power_when_turning_off(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    mock_onecta_client: MockOnectaClient,
+) -> None:
+    """Reject turning off when the power characteristic is read-only."""
+    await _async_setup_fixture(hass, config_entry, "ururu")
+    coordinator = config_entry.runtime_data
+    assert coordinator.data is not None
+    device = next(iter(coordinator.data.values()))
+    point = device.management_point("climateControl")
+    assert point is not None
+    assert point.on_off_mode is not None
+    point.on_off_mode.value = "on"
+    point.on_off_mode.settable = False
+    assert point.operation_mode is not None
+    point.operation_mode.values = [*(point.operation_mode.values or []), "off"]
+    coordinator.async_update_listeners()
+    entity_id = entity_registry.async_get_entity_id(
+        Platform.CLIMATE, DOMAIN, f"{device.id}_climateControl_roomTemperature"
+    )
+    assert entity_id is not None
+
+    with pytest.raises(ServiceValidationError) as err:
+        await hass.services.async_call(
+            CLIMATE_DOMAIN,
+            SERVICE_SET_HVAC_MODE,
+            {ATTR_ENTITY_ID: entity_id, "hvac_mode": HVACMode.OFF},
             blocking=True,
         )
 
