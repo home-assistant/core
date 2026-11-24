@@ -217,9 +217,7 @@ class UnifiFirewallPolicyCommand:
             policy = policies[obj_id]
             schedule = None
             if schedule_fn is not None:
-                # aiounifi types the schedule as always present; read it as optional.
-                raw: Mapping[str, Any] = policy.raw
-                schedule = schedule_fn(raw.get("schedule", {}))
+                schedule = schedule_fn(policy.schedule or {})
             response = await policies.save(policy, enabled=enabled, schedule=schedule)
             if not response.get("data"):
                 # The controller accepted the change without sending the policy
