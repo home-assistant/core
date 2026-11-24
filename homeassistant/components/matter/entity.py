@@ -107,9 +107,6 @@ class MatterEntity(Entity):
         self._attr_unique_id = get_entity_unique_id(
             node_device_id, endpoint, entity_info
         )
-        # Entities of a split endpoint, its parts and its Power Topology
-        # measurement endpoint go to the split endpoint's child device, apart
-        # from those of a vendor cluster that covers the whole node.
         self._child_device_endpoint = get_entity_child_device_owner(
             endpoint, entity_info.primary_attribute
         )

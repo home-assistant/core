@@ -27,15 +27,8 @@ if TYPE_CHECKING:
     from .models import MatterEntityInfo
 
 
-# Application (output) device types that each represent an independent physical
-# sub-unit of a node. When a node exposes the same one of these on more than one
-# endpoint (e.g. the sockets of a multi-socket plug), and semantic tags or vendor
-# labels name each such endpoint, each one becomes its own child device instead
-# of collapsing onto the node device with a numeric entity name suffix.
-# Stateless controls (Generic Switch) and utility endpoints (Power Source,
-# Electrical Sensor, ...) are deliberately excluded.
-# The allowlist is intentionally limited to device types we have test fixtures
-# for; it can be extended (e.g. lights, covers) as fixtures become available.
+# Output device types whose named sibling endpoints split into child devices.
+# Limited to the types we have multi-endpoint fixtures for.
 CHILD_DEVICE_TYPES: set[type[DeviceType]] = {
     OnOffPlugInUnit,
 }
@@ -334,27 +327,24 @@ def node_from_ha_device_id(hass: HomeAssistant, ha_device_id: str) -> MatterNode
     return get_node_from_device_entry(hass, device)
 
 
+def get_device_id_from_identifiers(device: dr.AnyDeviceEntry) -> str | None:
+    """Return the Matter device id in the identifiers of a device entry."""
+    prefix = f"{ID_TYPE_DEVICE_ID}_"
+    for domain, value in device.identifiers:
+        if domain == DOMAIN and value.startswith(prefix):
+            return value.removeprefix(prefix)
+    return None
+
+
 @callback
 def get_node_from_device_entry(
     hass: HomeAssistant, device: dr.AnyDeviceEntry
 ) -> MatterNode | None:
     """Return MatterNode from device entry."""
     matter = get_matter(hass)
-    device_id_type_prefix = f"{ID_TYPE_DEVICE_ID}_"
-    device_id_full = next(
-        (
-            identifier[1]
-            for identifier in device.identifiers
-            if identifier[0] == DOMAIN
-            and identifier[1].startswith(device_id_type_prefix)
-        ),
-        None,
-    )
-
-    if device_id_full is None:
+    if (device_id := get_device_id_from_identifiers(device)) is None:
         return None
 
-    device_id = device_id_full.lstrip(device_id_type_prefix)
     matter_client = matter.matter_client
     server_info = matter_client.server_info
 

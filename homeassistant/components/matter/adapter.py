@@ -23,6 +23,7 @@ from .helpers import (
     get_child_device_owner,
     get_device_endpoint,
     get_device_id,
+    get_device_id_from_identifiers,
     get_discovery_key,
     get_entity_unique_id,
     get_legacy_device_id,
@@ -105,25 +106,16 @@ def _get_unique_id_prefixes(
     )
 
 
-def _child_device_id(child_device: dr.ChildDeviceEntry) -> str | None:
-    """Return the device id in a child device's Matter identifier."""
-    prefix = f"{ID_TYPE_DEVICE_ID}_"
-    for domain, value in child_device.identifiers:
-        if domain == DOMAIN and value.startswith(prefix):
-            return value.removeprefix(prefix)
-    return None
-
-
 def _child_device_unique_id_prefix(child_device: dr.ChildDeviceEntry) -> str | None:
     """Return the unique_id prefix of the entities of a child device's endpoint."""
-    if (device_id := _child_device_id(child_device)) is None:
+    if (device_id := get_device_id_from_identifiers(child_device)) is None:
         return None
     return f"{device_id}-"
 
 
 def _child_device_endpoint_id(child_device: dr.ChildDeviceEntry) -> int | None:
     """Return the endpoint id encoded in a child device's Matter identifier."""
-    if (device_id := _child_device_id(child_device)) is None:
+    if (device_id := get_device_id_from_identifiers(child_device)) is None:
         return None
     endpoint_part = device_id.rsplit("-", 1)[-1]
     return int(endpoint_part) if endpoint_part.isdigit() else None
@@ -172,13 +164,9 @@ class MatterAdapter:
         self.hass = hass
         self.config_entry = config_entry
         self.platform_handlers: dict[Platform, AddEntitiesCallback] = {}
-        # Discovery keys already turned into entities, grouped by their
-        # (node_id, endpoint_id) so they can be dropped when an endpoint is
-        # removed, letting its entities be rediscovered if it reappears.
+        # Kept per endpoint so a re-added endpoint's entities are rediscovered.
         self.discovered_entities: dict[tuple[int, int], set[str]] = {}
-        # The endpoint whose child device holds the entities of an endpoint, and
-        # the child's name, as decided when they were created, grouped like
-        # discovered_entities.
+        # Placement at entity creation, compared later to detect a needed reload.
         self._child_device_owners: dict[tuple[int, int], ChildDevicePlacement] = {}
         self._reload_scheduled = False
 
@@ -443,6 +431,10 @@ class MatterAdapter:
         other_endpoint_ids = (
             _get_child_device_endpoint_ids(node, endpoint.endpoint_id) - endpoint_ids
         )
+        other_unique_id_prefixes = {
+            other_id: _get_unique_id_prefixes(server_info, node, (other_id,))
+            for other_id in other_endpoint_ids
+        }
         if node_device := device_registry.async_get_device_by_identifier(
             get_node_device_identifier(server_info, node.node_id),
             self.config_entry.entry_id,
@@ -459,10 +451,8 @@ class MatterAdapter:
                     if entity_entry.disabled_by is None:
                         live_endpoint_ids.update(
                             other_id
-                            for other_id in other_endpoint_ids
-                            if entity_entry.unique_id.startswith(
-                                _get_unique_id_prefixes(server_info, node, (other_id,))
-                            )
+                            for other_id, prefixes in other_unique_id_prefixes.items()
+                            if entity_entry.unique_id.startswith(prefixes)
                         )
             self._set_moved_to_node_device(
                 node.node_id, other_endpoint_ids - live_endpoint_ids
