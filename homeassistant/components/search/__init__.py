@@ -251,6 +251,10 @@ class Searcher:
         for entity_id in automation.entities_in_automation(
             self.hass, automation_entity_id
         ):
+            # Device actions may reference entities by their registry IDs.
+            entity_id = er.async_resolve_entity_id(self._entity_registry, entity_id)
+            if entity_id is None:
+                continue
             self._add(ItemType.ENTITY, entity_id)
             self._async_resolve_up_entity(entity_id)
 
@@ -587,6 +591,10 @@ class Searcher:
 
         # Entities referenced in this script
         for entity_id in script.entities_in_script(self.hass, script_entity_id):
+            # Device actions may reference entities by their registry IDs.
+            entity_id = er.async_resolve_entity_id(self._entity_registry, entity_id)
+            if entity_id is None:
+                continue
             self._add(ItemType.ENTITY, entity_id)
             self._async_resolve_up_entity(entity_id)
 
