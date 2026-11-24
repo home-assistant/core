@@ -9,6 +9,7 @@ from aioshelly.exceptions import DeviceConnectionError, InvalidAuthError, RpcCal
 from awesomeversion import AwesomeVersion, AwesomeVersionStrategy
 
 from homeassistant.components.update import (
+    RELEASE_NOTES_MESSAGE_DO_NOT_INTERRUPT,
     UpdateDeviceClass,
     UpdateEntity,
     UpdateEntityDescription,
@@ -49,9 +50,9 @@ from .utils import get_device_entry_gen, get_release_url, get_version_from_fw_id
 
 PARALLEL_UPDATES = 0
 
-RELEASE_NOTES_MESSAGE_DO_NOT_UNPLUG = UpdateReleaseNotesMessage(
+RELEASE_NOTES_MESSAGE_MULTI_STEP_UPDATE = UpdateReleaseNotesMessage(
     translation_domain=DOMAIN,
-    translation_key="do_not_unplug",
+    translation_key="multi_step_update",
     severity=UpdateReleaseNotesMessageSeverity.WARNING,
 )
 
@@ -419,8 +420,11 @@ def _async_setup_rpc_entry(
 class RestUpdateEntity(ShellyRestAttributeEntity, UpdateEntity):
     """Represent a REST update entity."""
 
+    _attr_release_notes_messages = (RELEASE_NOTES_MESSAGE_DO_NOT_INTERRUPT,)
     _attr_supported_features = (
-        UpdateEntityFeature.INSTALL | UpdateEntityFeature.PROGRESS
+        UpdateEntityFeature.INSTALL
+        | UpdateEntityFeature.PROGRESS
+        | UpdateEntityFeature.RELEASE_NOTES
     )
     entity_description: RestUpdateDescription
 
@@ -462,6 +466,11 @@ class RestUpdateEntity(ShellyRestAttributeEntity, UpdateEntity):
     def in_progress(self) -> bool:
         """Update installation in progress."""
         return self._in_progress_old_version == self.installed_version
+
+    @override
+    async def async_release_notes(self) -> str | None:
+        """Return no release notes, Shelly only provides a release URL."""
+        return None
 
     @override
     async def async_install(
@@ -599,14 +608,11 @@ class RpcUpdateEntity(ShellyRpcAttributeEntity, UpdateEntity):
     @override
     def release_notes_messages(self) -> tuple[UpdateReleaseNotesMessage, ...]:
         """Messages shown before the release notes."""
-        installed_version = AwesomeVersion(
-            self.coordinator.device.shelly["ver"],
-            find_first_match=True,
-            ensure_strategy=[AwesomeVersionStrategy.SEMVER],
-        )
-        if installed_version.section(0) >= 2:
-            return (RELEASE_NOTES_MESSAGE_DO_NOT_UNPLUG,)
-        return ()
+        channel = "beta" if self.entity_description.beta else "stable"
+        # nsteps marks an update that may install in two steps (repartitioning)
+        if "nsteps" in self.sub_status.get(channel, {}):
+            return (RELEASE_NOTES_MESSAGE_MULTI_STEP_UPDATE,)
+        return (RELEASE_NOTES_MESSAGE_DO_NOT_INTERRUPT,)
 
     @override
     async def async_release_notes(self) -> str | None:

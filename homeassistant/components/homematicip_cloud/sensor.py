@@ -863,7 +863,9 @@ class HomematicipFloorTerminalBlockMechanicChannelValve(
         """Return the floor terminal block valve position."""
         if self._adaption_pending():
             return None
-        return round(self._valve_channel().valvePosition * 100)
+        if (valve_position := self._valve_channel().valvePosition) is None:
+            return None
+        return round(valve_position * 100)
 
     def _valve_channel(self) -> FunctionalChannel:
         return next(
@@ -1001,6 +1003,7 @@ class HmipEsiGasCurrentGasFlow(HmipEsiSensorEntity):
     _attr_device_class = SensorDeviceClass.VOLUME_FLOW_RATE
     _attr_native_unit_of_measurement = UnitOfVolumeFlowRate.CUBIC_METERS_PER_HOUR
     _attr_state_class = SensorStateClass.MEASUREMENT
+    _attr_suggested_display_precision = 2
 
     def __init__(self, hap: HomematicipHAP, device) -> None:
         """Initialize the device."""

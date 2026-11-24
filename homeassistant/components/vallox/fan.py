@@ -14,12 +14,9 @@ from homeassistant.helpers.typing import StateType
 
 from .const import (
     DOMAIN,
-    METRIC_KEY_MODE,
     METRIC_KEY_PROFILE_FAN_SPEED_AWAY,
     METRIC_KEY_PROFILE_FAN_SPEED_BOOST,
     METRIC_KEY_PROFILE_FAN_SPEED_HOME,
-    MODE_OFF,
-    MODE_ON,
     PRESET_MODE_TO_VALLOX_PROFILE,
     VALLOX_PROFILE_TO_PRESET_MODE,
 )
@@ -94,9 +91,7 @@ class ValloxFanEntity(ValloxEntity, FanEntity):
     @override
     def is_on(self) -> bool | None:
         """Return if device is on."""
-        if (mode := self.coordinator.data.get(METRIC_KEY_MODE)) is None:
-            return None
-        return mode == MODE_ON
+        return self.coordinator.data.is_switched_on
 
     @property
     @override
@@ -184,11 +179,12 @@ class ValloxFanEntity(ValloxEntity, FanEntity):
         await self._async_set_percentage_internal(percentage)
         await self.coordinator.async_request_refresh()
 
-    async def _async_set_power(self, mode: bool) -> None:
+    async def _async_set_power(self, on: bool) -> None:
         try:
-            await self.coordinator.client.set_values(
-                {METRIC_KEY_MODE: MODE_ON if mode else MODE_OFF}
-            )
+            if on:
+                await self.coordinator.client.switch_on()
+            else:
+                await self.coordinator.client.switch_off()
         except ValloxApiException as err:
             raise HomeAssistantError("Failed to set power mode") from err
 

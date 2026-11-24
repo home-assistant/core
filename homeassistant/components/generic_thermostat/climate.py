@@ -551,6 +551,11 @@ class GenericThermostat(RestoreClimate):
             self._cancel_timers()
         self.async_write_ha_state()
 
+        if old_state is None:
+            # Control was skipped while the heater had no state, resume it now.
+            # Done last so the timers it schedules are not cleared above.
+            self.hass.async_create_task(self._async_control_heating(), eager_start=True)
+
     @callback
     def _async_update_temp(self, state: State) -> None:
         """Update thermostat with latest state from sensor."""
@@ -584,6 +589,12 @@ class GenericThermostat(RestoreClimate):
                 )
 
             if not self._active or self._hvac_mode == HVACMode.OFF:
+                return
+
+            if self._is_device_active is None:
+                # The heater has no state yet, e.g. its integration is still
+                # starting. Its real state is unknown, so don't send a command.
+                # Control resumes once the heater gets its first state.
                 return
 
             if force and called_by_timer and self.max_cycle_duration:

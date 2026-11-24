@@ -116,6 +116,7 @@ async def test_bad_country_none(
     data = await process_repair_fix_flow(client, flow_id, json={})
 
     assert data["type"] == "create_entry"
+    assert entry.options["country_settings"]["province"] is None
     await hass.async_block_till_done()
 
     state = hass.states.get("binary_sensor.workday_sensor_zz")
@@ -221,6 +222,7 @@ async def test_bad_province(
     data = await process_repair_fix_flow(client, flow_id, json={"province": "BW"})
 
     assert data["type"] == "create_entry"
+    assert entry.options["country_settings"]["province"] == "BW"
     await hass.async_block_till_done()
 
     state = hass.states.get("binary_sensor.workday_sensor_de_zz")
@@ -275,6 +277,7 @@ async def test_bad_province_none(
     data = await process_repair_fix_flow(client, flow_id, json={})
 
     assert data["type"] == "create_entry"
+    assert entry.options["country_settings"]["province"] is None
     await hass.async_block_till_done()
 
     state = hass.states.get("binary_sensor.workday_sensor_de_zz")
