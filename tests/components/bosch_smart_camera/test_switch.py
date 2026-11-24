@@ -40,6 +40,7 @@ pytestmark = pytest.mark.usefixtures("setup_credentials")
 
 ENTITY_ID = "switch.garden_privacy_mode"
 MOTION_ID = "switch.garden_motion_detection"
+PORCH_ID = "22222222-2222-2222-2222-222222222222"
 
 
 async def test_privacy_mode_switch(
@@ -517,20 +518,49 @@ async def test_motion_failed_poll_without_write(
     assert hass.states.get(MOTION_ID).state == STATE_UNAVAILABLE
 
 
-async def test_removed_cameras_are_forgotten_by_the_motion_tracking(
+async def test_removed_camera_is_logged_unreachable_again_after_return(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
+    mock_list_cameras: AsyncMock,
+    mock_set_motion_enabled: AsyncMock,
+    mock_get_motion_settings: AsyncMock,
     freezer: FrozenDateTimeFactory,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Test the write counters and unreachable marks of removed cameras are pruned."""
+    """Test a camera that is removed and discovered again starts with a clean slate."""
+    porch = Camera(
+        PORCH_ID, "Porch", "HOME_Eyes_Outdoor", CameraModel.EYES_OUTDOOR_II, "9.40.25"
+    )
+    mock_list_cameras.return_value = [*CAMERAS, porch]
     await setup_integration(hass, mock_config_entry)
-    coordinator = mock_config_entry.runtime_data
-    coordinator._motion_unreachable.add("removed")
-    coordinator._motion_writes["removed"] = 3
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: "switch.porch_motion_detection"},
+        blocking=True,
+    )
 
-    freezer.tick(SCAN_INTERVAL)
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    async def unreachable_porch(*args: object, **kwargs: object) -> MotionSettings:
+        if args[-1] == PORCH_ID:
+            raise BoschCameraConnectionError("down")
+        return MotionSettings(enabled=False, sensitivity="MEDIUM")
 
-    assert "removed" not in coordinator._motion_unreachable
-    assert "removed" not in coordinator._motion_writes
+    mock_get_motion_settings.side_effect = unreachable_porch
+
+    async def poll() -> None:
+        freezer.tick(SCAN_INTERVAL)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+
+    await poll()
+    assert hass.states.get("switch.porch_motion_detection").state == STATE_UNAVAILABLE
+    assert caplog.text.count("The motion detection of Porch is unreachable") == 1
+
+    mock_list_cameras.return_value = list(CAMERAS)
+    await poll()
+    assert hass.states.get("switch.porch_motion_detection") is None
+
+    mock_list_cameras.return_value = [*CAMERAS, porch]
+    await poll()
+    assert hass.states.get("switch.porch_motion_detection").state == STATE_UNAVAILABLE
+    assert caplog.text.count("The motion detection of Porch is unreachable") == 2
