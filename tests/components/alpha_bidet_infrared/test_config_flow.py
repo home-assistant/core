@@ -54,7 +54,7 @@ async def test_user_flow_success(hass: HomeAssistant) -> None:
         CONF_INFRARED_EMITTER_ENTITY_ID: MOCK_INFRARED_EMITTER_ENTITY_ID,
         CONF_MODEL: AlphaBidetModel.JX2.value,
     }
-    assert result["result"].unique_id == MOCK_INFRARED_EMITTER_ENTITY_ID
+    assert result["result"].unique_id is None
 
 
 @pytest.mark.usefixtures("mock_infrared_emitter_entity")
@@ -90,7 +90,7 @@ async def test_user_flow_no_emitters(hass: HomeAssistant) -> None:
     )
 
     assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "no_emitters"
+    assert result["reason"] == "no_infrared_emitters"
 
 
 @pytest.mark.usefixtures("mock_infrared_emitter_entity")
@@ -123,7 +123,7 @@ async def test_reconfigure_flow_suggests_current_emitter(
 async def test_reconfigure_flow(
     hass: HomeAssistant, init_integration: MockConfigEntry, emitter_entity_id: str
 ) -> None:
-    """Test reconfiguring updates the emitter and unique ID and reloads the entry."""
+    """Test reconfiguring updates the emitter and reloads the entry."""
     result = await init_integration.start_reconfigure_flow(hass)
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -137,7 +137,6 @@ async def test_reconfigure_flow(
         CONF_INFRARED_EMITTER_ENTITY_ID: emitter_entity_id,
         CONF_MODEL: AlphaBidetModel.JX2.value,
     }
-    assert init_integration.unique_id == emitter_entity_id
     assert init_integration.state is ConfigEntryState.LOADED
 
 
@@ -168,7 +167,6 @@ async def test_reconfigure_flow_already_configured(
         mock_config_entry.data[CONF_INFRARED_EMITTER_ENTITY_ID]
         == MOCK_INFRARED_EMITTER_ENTITY_ID
     )
-    assert mock_config_entry.unique_id == MOCK_INFRARED_EMITTER_ENTITY_ID
 
 
 @pytest.mark.usefixtures("init_infrared")
@@ -181,4 +179,4 @@ async def test_reconfigure_flow_no_emitters(
     result = await mock_config_entry.start_reconfigure_flow(hass)
 
     assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "no_emitters"
+    assert result["reason"] == "no_infrared_emitters"
