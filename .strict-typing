@@ -26,6 +26,7 @@ homeassistant.helpers.script_variables
 homeassistant.helpers.singleton
 homeassistant.helpers.sun
 homeassistant.helpers.translation
+homeassistant.helpers.validation_errors
 homeassistant.loader
 homeassistant.requirements
 homeassistant.runner

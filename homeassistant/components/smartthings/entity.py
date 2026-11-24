@@ -1,5 +1,7 @@
 """Support for SmartThings Cloud."""
 
+from collections.abc import Generator
+from contextlib import contextmanager
 from typing import Any, override
 
 from pysmartthings import (
@@ -10,14 +12,36 @@ from pysmartthings import (
     DeviceEvent,
     DeviceHealthEvent,
     SmartThings,
+    SmartThingsForbiddenError,
+    SmartThingsQuotaExceededError,
 )
 from pysmartthings.models import HealthStatus
 
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity
 
 from . import FullDevice
-from .const import DOMAIN, MAIN
+from .const import DOMAIN, MAIN, MANAGE_PLANS_URL
+
+
+@contextmanager
+def translate_api_errors(entity: Entity) -> Generator[None]:
+    """Translate SmartThings quota and entitlement errors raised by an action."""
+    try:
+        yield
+    except SmartThingsQuotaExceededError as err:
+        raise HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key="quota_exceeded",
+            translation_placeholders={"manage_plans_url": MANAGE_PLANS_URL},
+        ) from err
+    except SmartThingsForbiddenError as err:
+        if (entry := entity.platform.config_entry) is not None:
+            entry.async_start_reauth_if_available(entity.hass)
+        raise HomeAssistantError(
+            translation_domain=DOMAIN, translation_key="entitlement_required"
+        ) from err
 
 
 class SmartThingsEntity(Entity):
@@ -105,6 +129,11 @@ class SmartThingsEntity(Entity):
         kwargs = {}
         if argument is not None:
             kwargs["argument"] = argument
-        await self.client.execute_device_command(
-            self.device.device.device_id, capability, command, self.component, **kwargs
-        )
+        with translate_api_errors(self):
+            await self.client.execute_device_command(
+                self.device.device.device_id,
+                capability,
+                command,
+                self.component,
+                **kwargs,
+            )

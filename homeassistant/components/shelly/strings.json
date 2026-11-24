@@ -75,7 +75,7 @@
       },
       "user": {
         "data": {
-          "device": "Device"
+          "device": "[%key:common::config_flow::data::device%]"
         },
         "data_description": {
           "device": "Select a discovered device or enter an address manually."

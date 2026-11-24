@@ -1,14 +1,23 @@
 {
   "config": {
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]"
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]"
     },
     "step": {
+      "reauth_confirm": {
+        "data": {
+          "nymo_client_secret": "[%key:component::solyx_energy_cloud::config::step::user::data::nymo_client_secret%]"
+        },
+        "data_description": {
+          "nymo_client_secret": "[%key:component::solyx_energy_cloud::config::step::user::data_description::nymo_client_secret%]"
+        },
+        "description": "Solyx Energy Cloud rejected the client secret of client ID {client_id}. Enter a new client secret from the Solyx Energy app.",
+        "title": "[%key:common::config_flow::title::reauth%]"
+      },
       "user": {
         "data": {
           "nymo_client_id": "Client ID",
