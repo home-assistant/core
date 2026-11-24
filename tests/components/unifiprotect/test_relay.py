@@ -26,7 +26,7 @@ from homeassistant.const import (
     STATE_ON,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
-    CommonServiceArgument,
+    TargetKey,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -654,7 +654,7 @@ async def test_relay_readopted_with_new_id(
     await hass.services.async_call(
         SWITCH_DOMAIN,
         SwitchService.TURN_OFF,
-        {CommonServiceArgument.ENTITY_ID: SWITCH_ENTITY_ID},
+        {TargetKey.ENTITY_ID: SWITCH_ENTITY_ID},
         blocking=True,
     )
     readopted.activate_output.assert_awaited_once_with(OUTPUT_ID, state="off")
@@ -683,7 +683,7 @@ async def test_relay_readopted_during_websocket_outage(
     await hass.services.async_call(
         SWITCH_DOMAIN,
         SwitchService.TURN_OFF,
-        {CommonServiceArgument.ENTITY_ID: SWITCH_ENTITY_ID},
+        {TargetKey.ENTITY_ID: SWITCH_ENTITY_ID},
         blocking=True,
     )
     readopted.activate_output.assert_awaited_once_with(OUTPUT_ID, state="off")
@@ -735,7 +735,7 @@ async def test_relay_switch_turn_on_off(
     await hass.services.async_call(
         SWITCH_DOMAIN,
         SwitchService.TURN_ON,
-        {CommonServiceArgument.ENTITY_ID: SWITCH_ENTITY_ID},
+        {TargetKey.ENTITY_ID: SWITCH_ENTITY_ID},
         blocking=True,
     )
     relay.activate_output.assert_awaited_once_with(output_id, state="on")
@@ -744,7 +744,7 @@ async def test_relay_switch_turn_on_off(
     await hass.services.async_call(
         SWITCH_DOMAIN,
         SwitchService.TURN_OFF,
-        {CommonServiceArgument.ENTITY_ID: SWITCH_ENTITY_ID},
+        {TargetKey.ENTITY_ID: SWITCH_ENTITY_ID},
         blocking=True,
     )
     relay.activate_output.assert_awaited_once_with(output_id, state="off")
@@ -771,7 +771,7 @@ async def test_relay_switch_command_error_raises(
         await hass.services.async_call(
             SWITCH_DOMAIN,
             SwitchService.TURN_ON,
-            {CommonServiceArgument.ENTITY_ID: SWITCH_ENTITY_ID},
+            {TargetKey.ENTITY_ID: SWITCH_ENTITY_ID},
             blocking=True,
         )
 
@@ -806,7 +806,7 @@ async def test_relay_switch_command_without_output_raises(
         await hass.services.async_call(
             SWITCH_DOMAIN,
             SwitchService.TURN_ON,
-            {CommonServiceArgument.ENTITY_ID: SWITCH_ENTITY_ID},
+            {TargetKey.ENTITY_ID: SWITCH_ENTITY_ID},
             blocking=True,
         )
     relay.activate_output.assert_not_awaited()
@@ -935,7 +935,7 @@ async def test_relay_switch_public_only(
     await hass.services.async_call(
         SWITCH_DOMAIN,
         SwitchService.TURN_OFF,
-        {CommonServiceArgument.ENTITY_ID: SWITCH_ENTITY_ID},
+        {TargetKey.ENTITY_ID: SWITCH_ENTITY_ID},
         blocking=True,
     )
     relay.activate_output.assert_awaited_once_with(OUTPUT_ID, state="off")

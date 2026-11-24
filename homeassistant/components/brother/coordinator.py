@@ -1,6 +1,5 @@
 """Coordinator for Brother integration."""
 
-from asyncio import timeout
 import logging
 from typing import override
 
@@ -45,8 +44,7 @@ class BrotherDataUpdateCoordinator(DataUpdateCoordinator[BrotherSensors]):
     async def _async_update_data(self) -> BrotherSensors:
         """Update data via library."""
         try:
-            async with timeout(20):
-                data = await self.brother.async_update()
+            data = await self.brother.async_update()
         except (ConnectionError, TimeoutError) as error:
             raise UpdateFailedUnreachable(
                 translation_domain=DOMAIN,

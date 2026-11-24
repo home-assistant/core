@@ -69,7 +69,9 @@ rules:
   exception-translations: done
   icon-translations: done
   reconfiguration-flow: done
-  repair-issues: todo
+  repair-issues:
+    status: exempt
+    comment: The integration has no user-fixable issues beyond reauthentication.
   stale-devices: todo
 
   # Platinum

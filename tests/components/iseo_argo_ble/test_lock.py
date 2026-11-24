@@ -18,8 +18,8 @@ from homeassistant.components.lock import DOMAIN as LOCK_DOMAIN, LockService, Lo
 from homeassistant.const import (
     ATTR_ASSUMED_STATE,
     STATE_UNAVAILABLE,
-    CommonServiceArgument,
     Platform,
+    TargetKey,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -40,7 +40,7 @@ async def _unlock(hass: HomeAssistant) -> None:
     await hass.services.async_call(
         LOCK_DOMAIN,
         LockService.UNLOCK,
-        {CommonServiceArgument.ENTITY_ID: ENTITY_ID},
+        {TargetKey.ENTITY_ID: ENTITY_ID},
         blocking=True,
     )
 
@@ -291,7 +291,7 @@ async def test_lock_action_is_not_supported(
         await hass.services.async_call(
             LOCK_DOMAIN,
             LockService.LOCK,
-            {CommonServiceArgument.ENTITY_ID: ENTITY_ID},
+            {TargetKey.ENTITY_ID: ENTITY_ID},
             blocking=True,
         )
 

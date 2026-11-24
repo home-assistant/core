@@ -558,6 +558,9 @@ class SmartThingsAirConditioner(SmartThingsEntity, ClimateEntity):
             Capability.DEMAND_RESPONSE_LOAD_CONTROL,
             Attribute.DEMAND_RESPONSE_LOAD_CONTROL_STATUS,
         )
+        if drlc_status is None:
+            return None
+
         res = {}
         for key in ("duration", "start", "override", "drlcLevel"):
             if key in drlc_status:

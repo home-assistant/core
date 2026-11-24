@@ -26,6 +26,7 @@ from homeassistant.const import (
     STATE_ON,
     STATE_UNAVAILABLE,
     Platform,
+    TargetKey,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -127,7 +128,7 @@ async def test_tunable_light_turn_on(
         LIGHT_DOMAIN,
         LightService.TURN_ON,
         {
-            ATTR_ENTITY_ID: entity_id,
+            TargetKey.ENTITY_ID: entity_id,
             LightServiceArgument.COLOR_TEMP_KELVIN: 6500,
             LightServiceArgument.BRIGHTNESS: 128,
         },
@@ -176,7 +177,7 @@ async def test_dimmable_light_turn_on_and_off(
     await hass.services.async_call(
         LIGHT_DOMAIN,
         LightService.TURN_ON,
-        {ATTR_ENTITY_ID: entity_id, LightServiceArgument.BRIGHTNESS: 1},
+        {TargetKey.ENTITY_ID: entity_id, LightServiceArgument.BRIGHTNESS: 1},
         blocking=True,
     )
     bulb.set_brightness.assert_awaited_once_with(1)
@@ -184,7 +185,7 @@ async def test_dimmable_light_turn_on_and_off(
     await hass.services.async_call(
         LIGHT_DOMAIN,
         LightService.TURN_ON,
-        {ATTR_ENTITY_ID: entity_id},
+        {TargetKey.ENTITY_ID: entity_id},
         blocking=True,
     )
     bulb.turn_on.assert_awaited_once_with()
@@ -192,7 +193,7 @@ async def test_dimmable_light_turn_on_and_off(
     await hass.services.async_call(
         LIGHT_DOMAIN,
         LightService.TURN_OFF,
-        {ATTR_ENTITY_ID: entity_id},
+        {TargetKey.ENTITY_ID: entity_id},
         blocking=True,
     )
     bulb.turn_off.assert_awaited_once_with()
@@ -315,7 +316,7 @@ async def test_rgb_nightlight_turn_on(
     await hass.services.async_call(
         LIGHT_DOMAIN,
         LightService.TURN_ON,
-        {ATTR_ENTITY_ID: entity_id, **data},
+        {TargetKey.ENTITY_ID: entity_id, **data},
         blocking=True,
     )
     brightness, red, green, blue = expected
@@ -337,7 +338,10 @@ async def test_rgb_nightlight_turn_off(
         hass, config_entry, manager, entity_registry, rgb_humidifier
     )
     await hass.services.async_call(
-        LIGHT_DOMAIN, LightService.TURN_OFF, {ATTR_ENTITY_ID: entity_id}, blocking=True
+        LIGHT_DOMAIN,
+        LightService.TURN_OFF,
+        {TargetKey.ENTITY_ID: entity_id},
+        blocking=True,
     )
     rgb_humidifier.set_rgb_nightlight.assert_awaited_once_with(power=False)
     rgb_humidifier.turn_off.assert_not_called()
@@ -398,7 +402,7 @@ async def test_rgb_nightlight_commands_update_state(
     await hass.services.async_call(
         LIGHT_DOMAIN,
         LightService.TURN_ON,
-        {ATTR_ENTITY_ID: entity_id, **data},
+        {TargetKey.ENTITY_ID: entity_id, **data},
         blocking=True,
     )
     assert (state := hass.states.get(entity_id)) is not None
@@ -407,13 +411,19 @@ async def test_rgb_nightlight_commands_update_state(
     assert state.attributes[LightEntityStateAttribute.RGB_COLOR] == expected_color
 
     await hass.services.async_call(
-        LIGHT_DOMAIN, LightService.TURN_OFF, {ATTR_ENTITY_ID: entity_id}, blocking=True
+        LIGHT_DOMAIN,
+        LightService.TURN_OFF,
+        {TargetKey.ENTITY_ID: entity_id},
+        blocking=True,
     )
     assert (state := hass.states.get(entity_id)) is not None
     assert state.state == STATE_OFF
 
     await hass.services.async_call(
-        LIGHT_DOMAIN, LightService.TURN_ON, {ATTR_ENTITY_ID: entity_id}, blocking=True
+        LIGHT_DOMAIN,
+        LightService.TURN_ON,
+        {TargetKey.ENTITY_ID: entity_id},
+        blocking=True,
     )
     assert (state := hass.states.get(entity_id)) is not None
     assert state.state == STATE_ON
@@ -442,7 +452,7 @@ async def test_rgb_nightlight_restore_brightness(
         LIGHT_DOMAIN,
         LightService.TURN_ON,
         {
-            ATTR_ENTITY_ID: entity_id,
+            TargetKey.ENTITY_ID: entity_id,
             LightServiceArgument.BRIGHTNESS: state.attributes[
                 LightEntityStateAttribute.BRIGHTNESS
             ],

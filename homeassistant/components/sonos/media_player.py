@@ -5,10 +5,11 @@ from functools import partial
 import logging
 import os
 from typing import TYPE_CHECKING, Any, override
-from urllib.parse import urlparse
+from urllib.parse import quote, urlparse
 
-from soco import SoCo, alarms
+from soco import SoCo
 from soco.core import (
+    MUSIC_SRC_LIBRARY,
     MUSIC_SRC_LINE_IN,
     MUSIC_SRC_RADIO,
     PLAY_MODE_BY_MEANING,
@@ -807,11 +808,9 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
         include_linked_zones: bool | None = None,
     ) -> None:
         """Set the alarm clock on the player."""
-        alarm: alarms.Alarm | None = None
-        for one_alarm in alarms.get_alarms(self.coordinator.soco):
-            if one_alarm.alarm_id == str(alarm_id):
-                alarm = one_alarm
-        if alarm is None:
+        household_alarms = self.speaker.alarms.alarms
+        household_alarms.update(self.coordinator.soco)
+        if (alarm := household_alarms.get(str(alarm_id))) is None:
             raise ServiceValidationError(
                 translation_domain=DOMAIN,
                 translation_key="invalid_alarm_id",
@@ -887,6 +886,17 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
             )
             if image_url := getattr(item, "album_art_uri", None):
                 return await self._async_fetch_image(image_url)
+        elif media_content_type == MediaType.TRACK and media_content_id:
+            # The speaker serves a track's art from its URI; music service
+            # tracks need s=1, local library tracks must not have it.
+            is_library = (
+                SoCo.music_source_from_uri(media_content_id) == MUSIC_SRC_LIBRARY
+            )
+            service = "" if is_library else "s=1&"
+            image_url = self.media.library.build_album_art_full_uri(
+                f"/getaa?{service}u={quote(media_content_id, safe='')}"
+            )
+            return await self._async_fetch_image(image_url)
 
         return (None, None)
 

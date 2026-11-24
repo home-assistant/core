@@ -7,9 +7,13 @@ from aioabrp import AbrpClient, TelemetryStream
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP, Platform
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers import config_entry_oauth2_flow, device_registry as dr
+from homeassistant.helpers import (
+    config_entry_oauth2_flow,
+    config_validation as cv,
+    device_registry as dr,
+)
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.typing import Undefined
+from homeassistant.helpers.typing import ConfigType, Undefined
 
 from .auth import AbrpAuth
 from .const import ABRP_APP_KEY, DOMAIN
@@ -19,10 +23,19 @@ from .coordinator import (
     AbrpGarageCoordinator,
     AbrpTelemetryCoordinator,
 )
+from .services import async_setup_services
 
 _LOGGER = logging.getLogger(__name__)
 
 PLATFORMS: list[Platform] = [Platform.DEVICE_TRACKER, Platform.SENSOR]
+
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
+
+
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up the A Better Routeplanner actions."""
+    async_setup_services(hass)
+    return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: AbrpConfigEntry) -> None:
@@ -109,6 +122,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: AbrpConfigEntry) -> None
     )
 
     entry.runtime_data = AbrpData(
+        client=client,
         garage_coordinator=garage_coordinator,
         telemetry_coordinator=telemetry_coordinator,
     )

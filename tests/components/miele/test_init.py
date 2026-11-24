@@ -290,6 +290,35 @@ async def test_load_entry_with_action_error(
     assert mock_miele_client.get_actions.call_count == 5
 
 
+@pytest.mark.parametrize(
+    "side_effect",
+    [
+        ClientResponseError(Mock(), Mock(), status=http.HTTPStatus.SERVICE_UNAVAILABLE),
+        TimeoutError,
+    ],
+    ids=[
+        "ClientResponseError",
+        "TimeoutError",
+    ],
+)
+async def test_load_entry_with_filling_levels_error(
+    hass: HomeAssistant,
+    mock_miele_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    side_effect: Exception,
+) -> None:
+    """Test that a failing filling levels endpoint does not block setup."""
+    mock_miele_client.get_filling_levels.side_effect = side_effect
+    await setup_integration(hass, mock_config_entry)
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    assert hass.states.get("sensor.freezer_temperature").state == "-18.0"
+    assert hass.states.get("sensor.washing_machine_twindos_1_level") is None
+
+    await hass.config_entries.async_unload(mock_config_entry.entry_id)
+    assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
+
+
 async def test_oauth_implementation_not_available(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry
 ) -> None:

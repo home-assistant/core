@@ -72,7 +72,7 @@
       'options': dict({
       }),
       'original_device_class': None,
-      'original_icon': 'mdi:brightness-6',
+      'original_icon': None,
       'original_name': 'Night light level',
       'platform': 'vesync',
       'previous_unique_id': None,
@@ -88,7 +88,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Air Purifier 200s Night light level',
-      <EntityStateAttribute.ICON: 'icon'>: 'mdi:brightness-6',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'off',
         'dim',
@@ -184,7 +183,7 @@
       'options': dict({
       }),
       'original_device_class': None,
-      'original_icon': 'mdi:brightness-6',
+      'original_icon': None,
       'original_name': 'Night light level',
       'platform': 'vesync',
       'previous_unique_id': None,
@@ -259,7 +258,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Air Purifier Sprout Night light level',
-      <EntityStateAttribute.ICON: 'icon'>: 'mdi:brightness-6',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'off',
         'dim',

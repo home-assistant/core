@@ -40,30 +40,6 @@ def no_sensor():
         yield mock_setup_entry
 
 
-@pytest.fixture
-async def wavertree_data(
-    hass: HomeAssistant, requests_mock: requests_mock.Mocker
-) -> dict[str, _Matcher]:
-    """Mock data for the Wavertree location."""
-    # all metoffice test data encapsulated in here
-    mock_json = await async_load_json_object_fixture(hass, "metoffice.json", DOMAIN)
-    wavertree_hourly = json.dumps(mock_json["wavertree_hourly"])
-    wavertree_daily = json.dumps(mock_json["wavertree_daily"])
-
-    wavertree_hourly_mock = requests_mock.get(
-        "https://data.hub.api.metoffice.gov.uk/sitespecific/v0/point/hourly",
-        text=wavertree_hourly,
-    )
-    wavertree_daily_mock = requests_mock.get(
-        "https://data.hub.api.metoffice.gov.uk/sitespecific/v0/point/daily",
-        text=wavertree_daily,
-    )
-    return {
-        "wavertree_hourly_mock": wavertree_hourly_mock,
-        "wavertree_daily_mock": wavertree_daily_mock,
-    }
-
-
 @pytest.mark.freeze_time(dt.datetime(2024, 11, 23, 12, tzinfo=dt.UTC))
 async def test_site_cannot_connect(
     hass: HomeAssistant,
