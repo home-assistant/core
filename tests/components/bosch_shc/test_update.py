@@ -9,13 +9,11 @@ import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.update import (
-    ATTR_IN_PROGRESS,
-    ATTR_INSTALLED_VERSION,
-    ATTR_LATEST_VERSION,
     DOMAIN as UPDATE_DOMAIN,
-    SERVICE_INSTALL,
+    UpdateEntityStateAttribute,
+    UpdateService,
 )
-from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON, Platform
+from homeassistant.const import STATE_OFF, STATE_ON, Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 
@@ -53,8 +51,8 @@ async def test_up_to_date(
     state = hass.states.get(ENTITY_ID)
     assert state is not None
     assert state.state == STATE_OFF
-    assert state.attributes[ATTR_INSTALLED_VERSION] == "2.0"
-    assert state.attributes[ATTR_LATEST_VERSION] == "2.0"
+    assert state.attributes[UpdateEntityStateAttribute.INSTALLED_VERSION] == "2.0"
+    assert state.attributes[UpdateEntityStateAttribute.LATEST_VERSION] == "2.0"
     mock_session.information.refresh.assert_called()
 
 
@@ -80,8 +78,8 @@ async def test_update_available(
     state = hass.states.get(ENTITY_ID)
     assert state is not None
     assert state.state == STATE_ON
-    assert state.attributes[ATTR_LATEST_VERSION] == "2.1"
-    assert state.attributes[ATTR_IN_PROGRESS] is in_progress
+    assert state.attributes[UpdateEntityStateAttribute.LATEST_VERSION] == "2.1"
+    assert state.attributes[UpdateEntityStateAttribute.IN_PROGRESS] is in_progress
 
 
 @pytest.mark.usefixtures("mock_session")
@@ -95,7 +93,10 @@ async def test_install(
     await setup_integration(hass, mock_config_entry)
 
     await hass.services.async_call(
-        UPDATE_DOMAIN, SERVICE_INSTALL, {ATTR_ENTITY_ID: ENTITY_ID}, blocking=True
+        UPDATE_DOMAIN,
+        UpdateService.INSTALL,
+        {TargetKey.ENTITY_ID: ENTITY_ID},
+        blocking=True,
     )
 
     mock_session.information.start_software_update.assert_called_once_with()
@@ -114,8 +115,8 @@ async def test_install_not_ready(
     with pytest.raises(HomeAssistantError, match="cannot be activated"):
         await hass.services.async_call(
             UPDATE_DOMAIN,
-            SERVICE_INSTALL,
-            {ATTR_ENTITY_ID: ENTITY_ID},
+            UpdateService.INSTALL,
+            {TargetKey.ENTITY_ID: ENTITY_ID},
             blocking=True,
         )
 
@@ -136,7 +137,7 @@ async def test_install_failure(
     with pytest.raises(HomeAssistantError, match="Failed to start"):
         await hass.services.async_call(
             UPDATE_DOMAIN,
-            SERVICE_INSTALL,
-            {ATTR_ENTITY_ID: ENTITY_ID},
+            UpdateService.INSTALL,
+            {TargetKey.ENTITY_ID: ENTITY_ID},
             blocking=True,
         )
