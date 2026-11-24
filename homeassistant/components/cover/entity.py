@@ -219,17 +219,33 @@ class CoverEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
 
     @final
     def _tilt_angles(self) -> tuple[int, int] | None:
-        """Return the start and end angles of the tilt, if both are set."""
+        """Return the start and end angles of the tilt, if set."""
         start = self.tilt_start_angle
         end = self.tilt_end_angle
-        if start is None or end is None or start == end:
+        if start is None and end is None:
             return None
+        if (
+            not isinstance(start, int)
+            or not isinstance(end, int)
+            or not -90 <= start <= 90
+            or not -90 <= end <= 90
+            or start == end
+        ):
+            raise ValueError(
+                f"Entity {self.entity_id} ({type(self)}) has invalid tilt angles "
+                f"{start} and {end}, expected two different integers from -90 to 90"
+            )
         return start, end
 
     @final
     def _resolved_open_tilt_position(self) -> int:
         """Return the open tilt position, with the default applied."""
         if (position := self.open_tilt_position) is not None:
+            if not isinstance(position, int) or not 0 <= position <= 100:
+                raise ValueError(
+                    f"Entity {self.entity_id} ({type(self)}) has an invalid open tilt "
+                    f"position {position}, expected an integer from 0 to 100"
+                )
             return position
         if (angles := self._tilt_angles()) is None:
             return 100
@@ -240,21 +256,30 @@ class CoverEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     def _resolved_closed_tilt_positions(self) -> list[int]:
         """Return the closed tilt positions, with the default applied."""
         open_position = self._resolved_open_tilt_position()
-        positions: set[int] = set()
         if (closed := self.closed_tilt_positions) is not None:
-            positions = {0, 100}.intersection(closed)
+            positions = list(closed)
+            if positions not in ([0], [100], [0, 100], [100, 0]):
+                raise ValueError(
+                    f"Entity {self.entity_id} ({type(self)}) has invalid closed tilt "
+                    f"positions {closed}, expected 0, 100 or both"
+                )
+            positions.sort()
         elif (angles := self._tilt_angles()) is not None:
             # The ends where the slats lie the flattest, usually at 90 degrees
             flattest = max(abs(angle) for angle in angles)
-            positions = {
+            positions = [
                 position
                 for position, angle in zip((0, 100), angles, strict=True)
                 if abs(angle) == flattest
-            }
-        positions.discard(open_position)
-        if not positions:
-            return [100 if open_position == 0 else 0]
-        return sorted(positions)
+            ]
+        else:
+            positions = [100 if open_position == 0 else 0]
+        if open_position in positions:
+            raise ValueError(
+                f"Entity {self.entity_id} ({type(self)}) has the open tilt position "
+                f"{open_position} in its closed tilt positions {positions}"
+            )
+        return positions
 
     @final
     def _is_tilt_closed(self) -> bool:
