@@ -9,6 +9,16 @@
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "step": {
+      "reauth_confirm": {
+        "data": {
+          "api_key": "[%key:common::config_flow::data::api_key%]"
+        },
+        "data_description": {
+          "api_key": "[%key:component::foreca::config::step::user::data_description::api_key%]"
+        },
+        "description": "The Foreca API rejected the API key. Enter a new key from the My API page.",
+        "title": "[%key:common::config_flow::title::reauth%]"
+      },
       "user": {
         "data": {
           "api_key": "[%key:common::config_flow::data::api_key%]"

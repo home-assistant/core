@@ -74,12 +74,7 @@ rules:
   entity-translations: done
   exception-translations: done
   icon-translations: done
-  reconfiguration-flow:
-    status: exempt
-    comment: |
-      The API key can be changed in the reauthentication flow. Changing the
-      location changes the unique ID (location key), so it requires a new
-      config entry.
+  reconfiguration-flow: done
   repair-issues:
     status: exempt
     comment: This integration doesn't have any cases where raising an issue is needed.

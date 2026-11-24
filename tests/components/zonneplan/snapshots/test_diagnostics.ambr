@@ -247,9 +247,12 @@
           'charge_on_solar_active': False,
           'charge_on_solar_enabled': False,
           'charge_point_session': dict({
+            'active_vehicle_uuid': None,
             'charged_distance_in_kilometers': 60,
             'start_time': '2026-09-29T10:00:00+00:00',
           }),
+          'charge_schedules': list([
+          ]),
           'charging_automatically': True,
           'charging_manually': False,
           'connectivity_state': True,

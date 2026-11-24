@@ -8,7 +8,7 @@ from pytest_homeassistant.components.recorder.common import async_wait_recording
 from homeassistant.components import siren
 from homeassistant.components.recorder import Recorder
 from homeassistant.components.recorder.history import get_significant_states
-from homeassistant.components.siren import ATTR_AVAILABLE_TONES
+from homeassistant.components.siren import SirenEntityCapabilityAttribute
 from homeassistant.const import ATTR_FRIENDLY_NAME
 from homeassistant.core import HomeAssistant, split_entity_id
 from homeassistant.setup import async_setup_component
@@ -36,5 +36,5 @@ async def test_exclude_attributes(recorder_mock: Recorder, hass: HomeAssistant) 
         for state in entity_states
         if split_entity_id(state.entity_id)[0] == siren.DOMAIN
     ):
-        assert ATTR_AVAILABLE_TONES not in state.attributes
+        assert SirenEntityCapabilityAttribute.AVAILABLE_TONES not in state.attributes
         assert ATTR_FRIENDLY_NAME in state.attributes

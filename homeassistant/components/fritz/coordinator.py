@@ -19,7 +19,6 @@ import xmltodict
 from homeassistant.components.device_tracker import (
     CONF_CONSIDER_HOME,
     DEFAULT_CONSIDER_HOME,
-    DOMAIN as DEVICE_TRACKER_DOMAIN,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -832,12 +831,14 @@ class FritzBoxTools(DataUpdateCoordinator[UpdateCoordinatorDataType]):
         entities: list[er.RegistryEntry] = er.async_entries_for_config_entry(
             entity_reg, config_entry.entry_id
         )
+        # Legacy guest Wi-Fi image unique_ids are lowercase until migrated on platform setup
+        box_prefix = self.unique_id.lower()
         for entity in entities:
+            if entity.unique_id.lower().startswith(box_prefix):
+                continue
             entry_mac = entity.unique_id.split("_")[0]
-            if (
-                entity.domain == DEVICE_TRACKER_DOMAIN
-                or "_internet_access" in entity.unique_id
-            ) and entry_mac not in device_hosts:
+            # The box lists its own MAC in the Hosts table, but never tracks itself
+            if entry_mac not in device_hosts or dr.format_mac(entry_mac) == self.mac:
                 LOGGER.debug("Removing orphan entity entry %s", entity.entity_id)
                 entity_reg.async_remove(entity.entity_id)
 

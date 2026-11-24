@@ -34,7 +34,7 @@
       },
       "user": {
         "data": {
-          "password": "Password",
+          "password": "[%key:common::config_flow::data::password%]",
           "username": "Vistapool Username"
         },
         "data_description": {
