@@ -13,6 +13,7 @@ from daikin_onecta.models import (
     GatewayDevice,
     ManagementPoint,
 )
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
 from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
@@ -72,7 +73,11 @@ from homeassistant.util.unit_system import (
 )
 
 from .conftest import DOMAIN, MockOnectaClient
-from .platform_helpers import _async_setup_fixture, _load_gateway_devices
+from .platform_helpers import (
+    _async_fire_coordinator_update,
+    _async_setup_fixture,
+    _load_gateway_devices,
+)
 
 DRY_FIXED_DIRECTION_GATEWAY_ID = "00000000-0000-4000-8000-000000000108"
 
@@ -283,6 +288,47 @@ async def test_leaving_water_offset_climate_entity_ownership(
         f"{gateway.id}_{point.embedded_id}_{LEAVING_WATER_OFFSET}",
     )
     assert (entity_id is not None) is has_offset_climate
+
+
+async def test_offset_climate_becomes_unavailable_when_another_target_appears(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    freezer: FrozenDateTimeFactory,
+    mock_onecta_client: MockOnectaClient,
+) -> None:
+    """Hide the offset climate entity if another target appears after setup."""
+    gateway, point = _offset_gateway_and_point("altherma3m")
+    await _async_setup_fixture(hass, config_entry, "altherma3m")
+    coordinator = config_entry.runtime_data
+    offset_entity_id = entity_registry.async_get_entity_id(
+        CLIMATE_DOMAIN,
+        DOMAIN,
+        f"{gateway.id}_{point.embedded_id}_{LEAVING_WATER_OFFSET}",
+    )
+    assert offset_entity_id is not None
+
+    updated_gateway = _load_gateway_devices("altherma3m")[0]
+    updated_point = updated_gateway.management_point(point.embedded_id)
+    assert updated_point is not None and updated_point.temperature_control is not None
+    operation_modes = updated_point.temperature_control.value.operation_modes
+    offset = operation_modes["heating"].setpoints[LEAVING_WATER_OFFSET]
+    for operation_mode in operation_modes.values():
+        operation_mode.setpoints["leavingWaterTemperature"] = replace(offset, value=45)
+
+    mock_onecta_client.get_gateway_devices.return_value = [updated_gateway]
+    await _async_fire_coordinator_update(hass, coordinator, freezer)
+
+    state = hass.states.get(offset_entity_id)
+    assert state is not None and state.state == "unavailable"
+    assert (
+        entity_registry.async_get_entity_id(
+            CLIMATE_DOMAIN,
+            DOMAIN,
+            f"{gateway.id}_{point.embedded_id}_leavingWaterTemperature",
+        )
+        is not None
+    )
 
 
 @pytest.mark.parametrize(

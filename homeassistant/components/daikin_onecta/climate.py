@@ -81,6 +81,15 @@ HA_PRESET_TO_DAIKIN = {
 }
 
 
+def _has_other_climate_setpoint(climate_control: ClimateControl) -> bool:
+    """Return whether the point has a non-offset climate target."""
+    return any(
+        setpoint_type != LEAVING_WATER_OFFSET
+        and setpoint_type in CLIMATE_ENTITY_DESCRIPTIONS
+        for setpoint_type in climate_control.setpoint_types
+    )
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: DaikinOnectaConfigEntry,
@@ -120,11 +129,7 @@ def _create_climate_entities(
         if climate_control is None:
             continue
         setpoint_types = climate_control.setpoint_types
-        has_other_climate_setpoint = any(
-            setpoint_type != LEAVING_WATER_OFFSET
-            and setpoint_type in CLIMATE_ENTITY_DESCRIPTIONS
-            for setpoint_type in setpoint_types
-        )
+        has_other_climate_setpoint = _has_other_climate_setpoint(climate_control)
         for setpoint_type in setpoint_types:
             if setpoint_type == LEAVING_WATER_OFFSET and has_other_climate_setpoint:
                 continue
@@ -270,6 +275,10 @@ class DaikinClimate(DaikinManagementPointEntity, ClimateEntity):
             super().available
             and (climate_control := self._climate_control()) is not None
             and self._setpoint in climate_control.setpoint_types
+            and not (
+                self._setpoint == LEAVING_WATER_OFFSET
+                and _has_other_climate_setpoint(climate_control)
+            )
         )
 
     def _climate_control(self) -> ClimateControl | None:
