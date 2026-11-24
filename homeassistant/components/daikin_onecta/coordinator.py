@@ -51,6 +51,7 @@ from homeassistant.util import dt as dt_util
 
 from .const import DOMAIN
 from .device import DaikinOnectaDevice, management_point_device_info
+from .utils import management_point_unique_id
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -421,7 +422,7 @@ class OnectaDataUpdateCoordinator(DataUpdateCoordinator[dict[str, DaikinOnectaDe
             target_device_id = climate_point_device_ids.get(
                 management_point.embedded_id, gateway_entry.id
             )
-            unique_id_prefix = f"{device.id}_{management_point.embedded_id}_"
+            unique_id_prefix = f"{management_point_unique_id(device.id, management_point.embedded_id)}_"
             for entity_entry in entity_entries:
                 if (
                     entity_entry.unique_id.startswith(unique_id_prefix)
@@ -525,6 +526,7 @@ class OnectaDataUpdateCoordinator(DataUpdateCoordinator[dict[str, DaikinOnectaDe
                         retry_after=retry_after.total_seconds(),
                     )
             else:
+                self._cancel_post_write_refresh()
                 cloud_device_ids = {device.id for device in cloud_devices}
                 for device_id, device in devices.items():
                     if device_id not in cloud_device_ids:

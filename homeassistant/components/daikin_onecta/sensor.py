@@ -31,9 +31,8 @@ from .entity import (
     EntityIdChecker,
     add_entities_on_coordinator_update,
     iter_management_points,
-    management_point_unique_id,
 )
-from .utils import enum_value_to_state
+from .utils import enum_value_to_state, management_point_unique_id
 
 PARALLEL_UPDATES = 1
 SENSORY_DATA_SENSOR_TYPES = (

@@ -21,6 +21,11 @@ def account_device_identifier(account_id: str) -> str:
     return f"account_{account_id}"
 
 
+def management_point_unique_id(gateway_id: str, embedded_id: str, *suffix: str) -> str:
+    """Return a stable identifier for a management point or its entity."""
+    return "_".join((gateway_id, embedded_id, *suffix))
+
+
 def temperature_unit_or_celsius(unit: str | None) -> UnitOfTemperature:
     """Return Daikin's temperature unit, defaulting invalid or missing values to Celsius."""
     try:

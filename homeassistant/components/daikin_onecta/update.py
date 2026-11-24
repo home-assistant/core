@@ -24,8 +24,8 @@ from .entity import (
     EntityIdChecker,
     add_entities_on_coordinator_update,
     iter_management_points,
-    management_point_unique_id,
 )
+from .utils import management_point_unique_id
 
 PARALLEL_UPDATES = 1
 

@@ -23,6 +23,7 @@ from .platform_helpers import (
 )
 
 TEST_LIVING_ROOM_STREAMER_MODE_ENTITY_ID = "switch.test_living_room_streamer_mode"
+TEST_LIVING_ROOM_GATEWAY_ID = "00000000-0000-4000-8000-000000000107"
 
 
 async def test_switch_service_updates_cached_state(
@@ -54,6 +55,26 @@ async def test_switch_service_updates_cached_state(
         blocking=True,
     )
     assert hass.states.get(state.entity_id).state == "on"
+
+
+async def test_switch_unknown_value_has_unknown_state(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+) -> None:
+    """Do not expose unexpected switch values as off."""
+    await _async_setup_fixture(hass, config_entry, "altherma")
+    coordinator = config_entry.runtime_data
+    device = coordinator.data[TEST_LIVING_ROOM_GATEWAY_ID]
+    management_point = device.management_point("climateControl")
+    assert management_point is not None
+    characteristic = management_point.scalar_characteristic("streamerMode")
+    assert characteristic is not None
+    characteristic.value = "unexpected"
+    coordinator.async_update_listeners()
+
+    state = hass.states.get(TEST_LIVING_ROOM_STREAMER_MODE_ENTITY_ID)
+    assert state is not None
+    assert state.state == "unknown"
 
 
 async def test_econo_mode_is_only_exposed_as_climate_preset(

@@ -41,11 +41,11 @@ from .entity import (
     DaikinManagementPointEntity,
     EntityIdChecker,
     add_entities_on_coordinator_update,
-    management_point_unique_id,
     present_devices,
 )
 from .utils import (
     fixed_positions,
+    management_point_unique_id,
     round_temperature_to_step,
     set_optional_temperature_bound,
     temperature_unit_or_celsius,
@@ -228,12 +228,12 @@ class DaikinClimate(DaikinManagementPointEntity, ClimateEntity):
         current_mode, fixed = state
         if fixed is None:
             self._raise_service_validation_error(unavailable_key)
-        if current_mode.value == FANMODE_FIXED and fixed.value == target:
+        if current_mode.value.lower() == FANMODE_FIXED and fixed.value == target:
             return
         if not fixed.settable:
             self._raise_service_validation_error(unavailable_key)
 
-        if current_mode.value != FANMODE_FIXED:
+        if current_mode.value.lower() != FANMODE_FIXED:
             if not current_mode.settable:
                 self._raise_service_validation_error(unavailable_key)
             await self._async_execute_sub_client_command(
@@ -294,47 +294,55 @@ class DaikinClimate(DaikinManagementPointEntity, ClimateEntity):
             self._publish_write_update()
 
     def _operation_mode(
-        self, climate_control: ClimateControl | None = None
+        self, climate_control: ClimateControl | None
     ) -> Characteristic[str] | None:
         """Return the operation-mode characteristic."""
-        cc = climate_control or self._climate_control()
-        return cc.operation_mode if cc is not None else None
+        return climate_control.operation_mode if climate_control is not None else None
 
     def _fan_operation(
         self,
+        climate_control: ClimateControl | None,
         operation_mode: str | None = None,
-        climate_control: ClimateControl | None = None,
     ) -> FanOperationMode | None:
         """Return fan controls for an operation mode."""
-        cc = climate_control or self._climate_control()
-        return cc.fan_operation(operation_mode) if cc is not None else None
+        return (
+            climate_control.fan_operation(operation_mode)
+            if climate_control is not None
+            else None
+        )
 
     def _preset_characteristic(
-        self, daikin_mode: str, climate_control: ClimateControl | None = None
+        self, daikin_mode: str, climate_control: ClimateControl | None
     ) -> Characteristic[Any] | None:
         """Return a preset characteristic by Daikin API name."""
-        cc = climate_control or self._climate_control()
-        return cc.mode_characteristic(daikin_mode) if cc is not None else None
+        return (
+            climate_control.mode_characteristic(daikin_mode)
+            if climate_control is not None
+            else None
+        )
 
     def _get_setpoint(
         self,
+        climate_control: ClimateControl | None,
         operation_mode: str | None = None,
-        climate_control: ClimateControl | None = None,
     ) -> Setpoint | None:
         """Return a setpoint for an operation mode."""
-        cc = climate_control or self._climate_control()
-        return cc.setpoint(self._setpoint, operation_mode) if cc is not None else None
+        return (
+            climate_control.setpoint(self._setpoint, operation_mode)
+            if climate_control is not None
+            else None
+        )
 
     def _get_target_setpoint(
-        self, climate_control: ClimateControl | None = None
+        self, climate_control: ClimateControl | None
     ) -> Setpoint | None:
         """Return the setpoint exposed as the climate target temperature."""
         if self._setpoint == LEAVING_WATER_OFFSET:
             return None
-        return self._get_setpoint(climate_control=climate_control)
+        return self._get_setpoint(climate_control)
 
     def _get_supported_features(
-        self, climate_control: ClimateControl | None = None
+        self, climate_control: ClimateControl | None
     ) -> ClimateEntityFeature:
         """Return the features supported by this climate entity."""
         supported_features = ClimateEntityFeature(0)
@@ -344,7 +352,7 @@ class DaikinClimate(DaikinManagementPointEntity, ClimateEntity):
             supported_features |= ClimateEntityFeature.TARGET_TEMPERATURE
         if self._attr_preset_modes and len(self._attr_preset_modes) > 1:
             supported_features |= ClimateEntityFeature.PRESET_MODE
-        cc = climate_control or self._climate_control()
+        cc = climate_control
         if cc is not None:
             if cc.on_off_mode is not None and cc.on_off_mode.settable:
                 supported_features |= (
@@ -359,11 +367,9 @@ class DaikinClimate(DaikinManagementPointEntity, ClimateEntity):
 
         return supported_features
 
-    def _fan_mode_is_settable(
-        self, climate_control: ClimateControl | None = None
-    ) -> bool:
+    def _fan_mode_is_settable(self, climate_control: ClimateControl | None) -> bool:
         """Return whether any fan mode control is writable."""
-        fan_operation = self._fan_operation(climate_control=climate_control)
+        fan_operation = self._fan_operation(climate_control)
         fan_speed = fan_operation.fan_speed if fan_operation is not None else None
         if fan_speed is None:
             return False
@@ -373,18 +379,18 @@ class DaikinClimate(DaikinManagementPointEntity, ClimateEntity):
         return fixed is not None and fixed.settable
 
     def _get_current_temperature(
-        self, climate_control: ClimateControl | None = None
+        self, climate_control: ClimateControl | None
     ) -> float | None:
         """Return the current temperature for this setpoint."""
-        cc = climate_control or self._climate_control()
+        cc = climate_control
         return cc.current_temperature(self._setpoint) if cc is not None else None
 
     def _get_native_temperature_unit(
-        self, climate_control: ClimateControl | None = None
+        self, climate_control: ClimateControl | None
     ) -> UnitOfTemperature:
         """Return the Daikin temperature unit, defaulting to Celsius."""
-        cc = climate_control or self._climate_control()
-        setpoint = self._get_setpoint(climate_control=cc)
+        cc = climate_control
+        setpoint = self._get_setpoint(cc)
         unit = setpoint.unit if setpoint is not None else None
         if unit is None:
             sensory_target = (
@@ -396,9 +402,7 @@ class DaikinClimate(DaikinManagementPointEntity, ClimateEntity):
             unit = sensory_data.unit if sensory_data is not None else None
         return temperature_unit_or_celsius(unit)
 
-    def _get_max_temp(
-        self, climate_control: ClimateControl | None = None
-    ) -> float | None:
+    def _get_max_temp(self, climate_control: ClimateControl | None) -> float | None:
         """Return the maximum configurable temperature, if provided."""
         setpoint = self._get_target_setpoint(climate_control)
         return (
@@ -407,9 +411,7 @@ class DaikinClimate(DaikinManagementPointEntity, ClimateEntity):
             else None
         )
 
-    def _get_min_temp(
-        self, climate_control: ClimateControl | None = None
-    ) -> float | None:
+    def _get_min_temp(self, climate_control: ClimateControl | None) -> float | None:
         """Return the minimum configurable temperature, if provided."""
         setpoint = self._get_target_setpoint(climate_control)
         return (
@@ -419,7 +421,7 @@ class DaikinClimate(DaikinManagementPointEntity, ClimateEntity):
         )
 
     def _get_target_temperature(
-        self, climate_control: ClimateControl | None = None
+        self, climate_control: ClimateControl | None
     ) -> float | None:
         """Return the configured target temperature."""
         value: float | None = None
@@ -428,7 +430,7 @@ class DaikinClimate(DaikinManagementPointEntity, ClimateEntity):
         return value
 
     def _get_target_temperature_step(
-        self, climate_control: ClimateControl | None = None
+        self, climate_control: ClimateControl | None
     ) -> float | None:
         """Return the target temperature increment."""
         setpoint = self._get_target_setpoint(climate_control)
@@ -437,21 +439,23 @@ class DaikinClimate(DaikinManagementPointEntity, ClimateEntity):
     @override
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set the HVAC mode and/or target temperature."""
-        if ClimateServiceArgument.HVAC_MODE in kwargs:
-            await self.async_handle_set_hvac_mode_service(
-                kwargs[ClimateServiceArgument.HVAC_MODE]
-            )
+        hvac_mode = kwargs.get(ClimateServiceArgument.HVAC_MODE)
+        # Keep the unit on while applying a setpoint that accompanies a power-off
+        # request; some units reject setpoint writes after they have been turned off.
+        if hvac_mode is not None and hvac_mode != HVACMode.OFF:
+            await self.async_handle_set_hvac_mode_service(hvac_mode)
 
         if ClimateServiceArgument.TEMPERATURE in kwargs:
             target_temperature = float(kwargs[ClimateServiceArgument.TEMPERATURE])
             # Validate controllability before checking whether rounding is a no-op.
-            operationmode = self._operation_mode()
+            climate_control = self._climate_control()
+            operationmode = self._operation_mode(climate_control)
             if operationmode is None:
                 self._raise_service_validation_error(
                     "climate_operation_mode_unavailable"
                 )
             omv = operationmode.value
-            setpoint = self._get_setpoint(omv)
+            setpoint = self._get_setpoint(climate_control, omv)
             if setpoint is None or not setpoint.settable:
                 self._raise_service_validation_error("climate_temperature_unavailable")
 
@@ -470,16 +474,17 @@ class DaikinClimate(DaikinManagementPointEntity, ClimateEntity):
                     lambda climate: climate.set_temperature(omv, self._setpoint, value),
                     "set_temperature_failed",
                 )
-                setpointdict = self._get_setpoint(omv)
+                setpointdict = self._get_setpoint(self._climate_control(), omv)
                 if setpointdict is not None:
                     setpointdict.value = value
                     self._publish_write_update()
 
-    def _get_hvac_mode(
-        self, climate_control: ClimateControl | None = None
-    ) -> HVACMode | None:
+        if hvac_mode is not None:
+            await self.async_handle_set_hvac_mode_service(hvac_mode)
+
+    def _get_hvac_mode(self, climate_control: ClimateControl | None) -> HVACMode | None:
         """Return current HVAC mode."""
-        cc = climate_control or self._climate_control()
+        cc = climate_control
         if cc is None:
             return None
         if (onoff := cc.on_off_mode) is not None:
@@ -492,12 +497,10 @@ class DaikinClimate(DaikinManagementPointEntity, ClimateEntity):
             return None
         return DAIKIN_HVAC_TO_HA.get(operation_mode.value)
 
-    def _get_hvac_modes(
-        self, climate_control: ClimateControl | None = None
-    ) -> list[HVACMode]:
+    def _get_hvac_modes(self, climate_control: ClimateControl | None) -> list[HVACMode]:
         """Return the list of available HVAC modes."""
         modes: list[HVACMode] = []
-        cc = climate_control or self._climate_control()
+        cc = climate_control
         if (
             cc is not None
             and cc.on_off_mode is not None
@@ -517,9 +520,11 @@ class DaikinClimate(DaikinManagementPointEntity, ClimateEntity):
                 modes.append(ha_currentmode)
         return modes
 
-    def _native_hvac_mode(self, hvac_mode: HVACMode) -> str | None:
+    def _native_hvac_mode(
+        self, hvac_mode: HVACMode, climate_control: ClimateControl | None
+    ) -> str | None:
         """Return an advertised native mode for a requested HVAC mode."""
-        operation_mode = self._operation_mode()
+        operation_mode = self._operation_mode(climate_control)
         if operation_mode is None:
             return None
 
@@ -551,7 +556,7 @@ class DaikinClimate(DaikinManagementPointEntity, ClimateEntity):
 
         operation_mode = None
         if hvac_mode != HVACMode.OFF:
-            operation_mode = self._native_hvac_mode(hvac_mode)
+            operation_mode = self._native_hvac_mode(hvac_mode, cc)
             if operation_mode is None:
                 self._raise_service_validation_error("climate_hvac_mode_unavailable")
 
@@ -589,11 +594,9 @@ class DaikinClimate(DaikinManagementPointEntity, ClimateEntity):
             # which we couldn't set with a previous HVAC mode.
             self._publish_write_update()
 
-    def _get_fan_mode(
-        self, climate_control: ClimateControl | None = None
-    ) -> str | None:
+    def _get_fan_mode(self, climate_control: ClimateControl | None) -> str | None:
         """Return the active fan mode."""
-        fan_operation = self._fan_operation(climate_control=climate_control)
+        fan_operation = self._fan_operation(climate_control)
         if fan_operation is None or fan_operation.fan_speed is None:
             return None
         fan_speed = fan_operation.fan_speed
@@ -614,11 +617,9 @@ class DaikinClimate(DaikinManagementPointEntity, ClimateEntity):
             mode = str(fixed_speed)
         return mode
 
-    def _get_fan_modes(
-        self, climate_control: ClimateControl | None = None
-    ) -> list[str]:
+    def _get_fan_modes(self, climate_control: ClimateControl | None) -> list[str]:
         """Return available fan modes."""
-        fan_operation = self._fan_operation(climate_control=climate_control)
+        fan_operation = self._fan_operation(climate_control)
         if fan_operation is None or fan_operation.fan_speed is None:
             return []
         fan_speed = fan_operation.fan_speed
@@ -652,8 +653,8 @@ class DaikinClimate(DaikinManagementPointEntity, ClimateEntity):
     async def async_set_fan_mode(self, fan_mode: str) -> None:
         """Set the fan mode."""
         fan_mode = str(fan_mode)
-        fan_operation = self._fan_operation()
         cc = self._climate_control()
+        fan_operation = self._fan_operation(cc)
         if (
             fan_operation is None
             or fan_operation.fan_speed is None
@@ -661,7 +662,7 @@ class DaikinClimate(DaikinManagementPointEntity, ClimateEntity):
             or cc.operation_mode is None
         ):
             self._raise_service_validation_error("fan_control_unavailable")
-        if fan_mode not in self._get_fan_modes():
+        if fan_mode not in self._get_fan_modes(cc):
             self._raise_service_validation_error("fan_mode_unavailable")
         fan_speed = fan_operation.fan_speed
         operation_mode = cc.operation_mode.value
@@ -669,7 +670,9 @@ class DaikinClimate(DaikinManagementPointEntity, ClimateEntity):
 
             def get_fixed_speed_state() -> FixedFanControlState | None:
                 if (
-                    fan_operation := self._fan_operation(operation_mode)
+                    fan_operation := self._fan_operation(
+                        self._climate_control(), operation_mode
+                    )
                 ) is None or fan_operation.fan_speed is None:
                     return None
                 fan_speed = fan_operation.fan_speed
@@ -696,7 +699,7 @@ class DaikinClimate(DaikinManagementPointEntity, ClimateEntity):
                 lambda climate: climate.set_fan_mode(operation_mode, fan_mode),
                 "set_fan_mode_failed",
             )
-            fan_operation = self._fan_operation(operation_mode)
+            fan_operation = self._fan_operation(self._climate_control(), operation_mode)
             if fan_operation is None or fan_operation.fan_speed is None:
                 return
             fan_speed = fan_operation.fan_speed
@@ -707,10 +710,10 @@ class DaikinClimate(DaikinManagementPointEntity, ClimateEntity):
     def _get_swing_mode_for_direction(
         self,
         direction: Literal["vertical", "horizontal"],
-        climate_control: ClimateControl | None = None,
+        climate_control: ClimateControl | None,
     ) -> str | None:
         """Return current swing mode for an axis."""
-        axis = self._fan_direction_axis(direction, climate_control=climate_control)
+        axis = self._fan_direction_axis(climate_control, direction)
         if axis is None:
             return None
         if (value := cast("str | None", axis.current_mode.value)) is None:
@@ -730,14 +733,12 @@ class DaikinClimate(DaikinManagementPointEntity, ClimateEntity):
             return mode if mode in swing_modes else None
         return _DAIKIN_SWING_TO_HA.get(mode, mode)
 
-    def _get_swing_mode(
-        self, climate_control: ClimateControl | None = None
-    ) -> str | None:
+    def _get_swing_mode(self, climate_control: ClimateControl | None) -> str | None:
         """Return the vertical swing mode."""
         return self._get_swing_mode_for_direction("vertical", climate_control)
 
     def _get_swing_horizontal_mode(
-        self, climate_control: ClimateControl | None = None
+        self, climate_control: ClimateControl | None
     ) -> str | None:
         """Return the horizontal swing mode."""
         return self._get_swing_mode_for_direction("horizontal", climate_control)
@@ -745,10 +746,10 @@ class DaikinClimate(DaikinManagementPointEntity, ClimateEntity):
     def _get_swing_modes_for_direction(
         self,
         direction: Literal["vertical", "horizontal"],
-        climate_control: ClimateControl | None = None,
+        climate_control: ClimateControl | None,
     ) -> list[str]:
         """Return supported swing modes for an axis."""
-        axis = self._fan_direction_axis(direction, climate_control=climate_control)
+        axis = self._fan_direction_axis(climate_control, direction)
         if axis is None:
             return []
         # Daikin also exposes comfort and floor-heating airflow direction modes.
@@ -761,7 +762,7 @@ class DaikinClimate(DaikinManagementPointEntity, ClimateEntity):
                     fixed is not None
                     and fixed.settable
                     and (
-                        axis.current_mode.value == FANMODE_FIXED
+                        axis.current_mode.value.lower() == FANMODE_FIXED
                         or axis.current_mode.settable
                     )
                     and positions is not None
@@ -772,26 +773,24 @@ class DaikinClimate(DaikinManagementPointEntity, ClimateEntity):
                 swing_modes.append(_DAIKIN_SWING_TO_HA.get(mode.lower(), mode.lower()))
         return swing_modes
 
-    def _get_swing_modes(
-        self, climate_control: ClimateControl | None = None
-    ) -> list[str]:
+    def _get_swing_modes(self, climate_control: ClimateControl | None) -> list[str]:
         """Return the supported vertical swing modes."""
         return self._get_swing_modes_for_direction("vertical", climate_control)
 
     def _get_swing_horizontal_modes(
-        self, climate_control: ClimateControl | None = None
+        self, climate_control: ClimateControl | None
     ) -> list[str]:
         """Return the supported horizontal swing modes."""
         return self._get_swing_modes_for_direction("horizontal", climate_control)
 
     def _fan_direction_axis(
         self,
+        climate_control: ClimateControl | None,
         direction: Literal["vertical", "horizontal"],
         operation_mode: str | None = None,
-        climate_control: ClimateControl | None = None,
     ) -> FanDirectionAxis | None:
         """Return one fan-direction axis for the current or given mode."""
-        fan_operation = self._fan_operation(operation_mode, climate_control)
+        fan_operation = self._fan_operation(climate_control, operation_mode)
         if fan_operation is None or fan_operation.fan_direction is None:
             return None
         return cast(
@@ -805,7 +804,7 @@ class DaikinClimate(DaikinManagementPointEntity, ClimateEntity):
         cc = self._climate_control()
         if cc is None or cc.operation_mode is None:
             self._raise_service_validation_error("swing_control_unavailable")
-        axis = self._fan_direction_axis(direction)
+        axis = self._fan_direction_axis(cc, direction)
         if axis is None:
             self._raise_service_validation_error("swing_control_unavailable")
         operation_mode = cc.operation_mode.value
@@ -813,7 +812,9 @@ class DaikinClimate(DaikinManagementPointEntity, ClimateEntity):
         if swing_mode.isnumeric():
 
             def get_fixed_direction_state() -> FixedFanControlState | None:
-                axis = self._fan_direction_axis(direction, operation_mode)
+                axis = self._fan_direction_axis(
+                    self._climate_control(), direction, operation_mode
+                )
                 if axis is None:
                     return None
                 fixed = axis.modes.get(FANMODE_FIXED) if axis.modes else None
@@ -853,14 +854,16 @@ class DaikinClimate(DaikinManagementPointEntity, ClimateEntity):
             ),
             "set_swing_mode_failed",
         )
-        axis = self._fan_direction_axis(direction, operation_mode)
+        axis = self._fan_direction_axis(
+            self._climate_control(), direction, operation_mode
+        )
         if axis is not None:
             axis.current_mode.value = new_mode
 
     @override
     async def async_set_swing_mode(self, swing_mode: str) -> None:
         """Set the vertical swing mode."""
-        if swing_mode not in self._get_swing_modes():
+        if swing_mode not in self._get_swing_modes(self._climate_control()):
             self._raise_service_validation_error("swing_control_unavailable")
         if self.swing_mode != swing_mode:
             await self._async_set_swing("vertical", swing_mode)
@@ -869,25 +872,20 @@ class DaikinClimate(DaikinManagementPointEntity, ClimateEntity):
     @override
     async def async_set_swing_horizontal_mode(self, swing_horizontal_mode: str) -> None:
         """Set the horizontal swing mode."""
-        if swing_horizontal_mode not in self._get_swing_horizontal_modes():
+        if swing_horizontal_mode not in self._get_swing_horizontal_modes(
+            self._climate_control()
+        ):
             self._raise_service_validation_error("swing_control_unavailable")
         if self.swing_horizontal_mode != swing_horizontal_mode:
             await self._async_set_swing("horizontal", swing_horizontal_mode)
             self._publish_write_update()
 
-    def _get_preset_mode(self, active_modes: list[str] | None = None) -> str:
+    def _get_preset_mode(self, active_modes: list[str]) -> str:
         """Return the active preset mode."""
-        return next(
-            iter(
-                active_modes
-                if active_modes is not None
-                else self._get_active_preset_modes()
-            ),
-            PRESET_NONE,
-        )
+        return next(iter(active_modes), PRESET_NONE)
 
     def _get_active_preset_modes(
-        self, climate_control: ClimateControl | None = None
+        self, climate_control: ClimateControl | None
     ) -> list[str]:
         """Return every preset reported as active by Daikin."""
         active_modes = []
@@ -919,7 +917,7 @@ class DaikinClimate(DaikinManagementPointEntity, ClimateEntity):
                 lambda climate: climate.set_mode_characteristic(daikin_mode, False),
                 "set_preset_mode_failed",
             )
-        preset = self._preset_characteristic(daikin_mode)
+        preset = self._preset_characteristic(daikin_mode, self._climate_control())
         if preset_mode == PRESET_AWAY and preset is not None:
             preset.value.enabled = False
         elif preset is not None:
@@ -949,7 +947,7 @@ class DaikinClimate(DaikinManagementPointEntity, ClimateEntity):
                 lambda climate: climate.set_mode_characteristic(daikin_mode, True),
                 "set_preset_mode_failed",
             )
-        preset = self._preset_characteristic(daikin_mode)
+        preset = self._preset_characteristic(daikin_mode, self._climate_control())
         if preset_mode == PRESET_AWAY and preset is not None:
             preset.value.enabled = True
         elif preset is not None:
@@ -958,17 +956,20 @@ class DaikinClimate(DaikinManagementPointEntity, ClimateEntity):
     @override
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set the active preset mode."""
-        if preset_mode not in self._get_preset_modes():
+        climate_control = self._climate_control()
+        active_presets = self._get_active_preset_modes(climate_control)
+        if preset_mode not in self._get_preset_modes(climate_control, active_presets):
             self._raise_service_validation_error("preset_mode_unavailable")
         if preset_mode == self.preset_mode:
             return
 
-        active_presets = self._get_active_preset_modes()
         presets_to_disable = []
         for current_preset in active_presets:
             if current_preset == preset_mode:
                 continue
-            preset = self._preset_characteristic(HA_PRESET_TO_DAIKIN[current_preset])
+            preset = self._preset_characteristic(
+                HA_PRESET_TO_DAIKIN[current_preset], climate_control
+            )
             if preset is None:
                 self._raise_service_validation_error("preset_mode_unavailable")
             if not preset.settable:
@@ -984,12 +985,10 @@ class DaikinClimate(DaikinManagementPointEntity, ClimateEntity):
 
     def _get_preset_modes(
         self,
-        climate_control: ClimateControl | None = None,
-        active_modes: list[str] | None = None,
+        climate_control: ClimateControl | None,
+        active_modes: list[str],
     ) -> list[str]:
         """Return supported preset modes."""
-        if active_modes is None:
-            active_modes = self._get_active_preset_modes(climate_control)
         return [
             PRESET_NONE,
             *sorted(

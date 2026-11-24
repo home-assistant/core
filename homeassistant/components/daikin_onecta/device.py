@@ -5,6 +5,7 @@ from daikin_onecta.models import GatewayDevice, ManagementPoint
 from homeassistant.helpers.device_registry import ChildDeviceInfo, DeviceInfo
 
 from .const import DOMAIN
+from .utils import management_point_unique_id
 
 MANAGEMENT_POINT_DEVICE_TRANSLATION_KEYS = {
     "climateControl": "climate_zone",
@@ -30,7 +31,7 @@ def management_point_device_info(
     if management_point_type == "gateway":
         return _gateway_device_info(device)
 
-    identifier = f"{device.id}_{embedded_id}"
+    identifier = management_point_unique_id(device.id, embedded_id)
     if management_point_type == "climateControl":
         if len(gateway.management_points_by_type("climateControl")) <= 1:
             return _gateway_device_info(device)

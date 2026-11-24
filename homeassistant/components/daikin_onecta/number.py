@@ -24,9 +24,12 @@ from .entity import (
     EntityIdChecker,
     add_entities_on_coordinator_update,
     iter_management_points,
-    management_point_unique_id,
 )
-from .utils import round_temperature_to_step, temperature_unit_or_celsius
+from .utils import (
+    management_point_unique_id,
+    round_temperature_to_step,
+    temperature_unit_or_celsius,
+)
 
 PARALLEL_UPDATES = 1
 

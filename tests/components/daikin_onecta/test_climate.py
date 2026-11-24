@@ -2117,10 +2117,10 @@ async def test_native_temperature_unit(
     entity = hass.data[CLIMATE_DOMAIN].get_entity(climate_entry.entity_id)
     assert isinstance(entity, DaikinClimate)
 
-    setpoint = entity._get_setpoint()
     cc = entity._climate_control()
-    assert setpoint is not None
     assert cc is not None
+    setpoint = entity._get_setpoint(cc)
+    assert setpoint is not None
     setpoint.unit = setpoint_unit
     sensory_target = {
         "leavingWaterOffset": "leavingWaterTemperature",
@@ -2558,6 +2558,52 @@ async def test_climate_temperature_rounding_is_anchored_to_minimum(
         18.2,
         path="/operationModes/heating/setpoints/roomTemperature",
     )
+
+
+async def test_climate_set_temperature_with_off_writes_target_before_power_off(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    mock_onecta_client: MockOnectaClient,
+) -> None:
+    """Apply a target temperature before powering the unit off."""
+    (
+        entity_id,
+        gateway_id,
+        point,
+        coordinator,
+    ) = await _async_setup_climate_service_fixture(hass, config_entry, entity_registry)
+    assert point.climate_control is not None
+    assert point.climate_control.on_off_mode is not None
+    point.climate_control.on_off_mode.value = "on"
+    setpoint = point.climate_control.setpoint("roomTemperature", "heating")
+    assert setpoint is not None
+    setpoint.value = 20
+    coordinator.async_update_listeners()
+    await hass.async_block_till_done()
+    mock_onecta_client.patch_characteristic.reset_mock()
+
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_TEMPERATURE,
+        {
+            ATTR_ENTITY_ID: entity_id,
+            ClimateServiceArgument.HVAC_MODE: HVACMode.OFF,
+            ClimateServiceArgument.TEMPERATURE: 22,
+        },
+        blocking=True,
+    )
+
+    assert mock_onecta_client.patch_characteristic.await_args_list == [
+        call(
+            gateway_id,
+            point.embedded_id,
+            "temperatureControl",
+            22,
+            path="/operationModes/heating/setpoints/roomTemperature",
+        ),
+        call(gateway_id, point.embedded_id, "onOffMode", "off", path=None),
+    ]
 
 
 async def test_climate_negative_half_step_rounds_away_from_zero(

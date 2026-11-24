@@ -17,7 +17,11 @@ from homeassistant.helpers.device_registry import AnyDeviceEntry, ChildDeviceEnt
 from .const import DOMAIN
 from .coordinator import DaikinOnectaConfigEntry, OnectaDataUpdateCoordinator
 from .device import DaikinOnectaDevice
-from .utils import account_device_identifier, account_identifier
+from .utils import (
+    account_device_identifier,
+    account_identifier,
+    management_point_unique_id,
+)
 
 PLATFORMS = [
     Platform.BINARY_SENSOR,
@@ -104,7 +108,7 @@ async def async_remove_config_entry_device(
         parent_gateway_id = _daikin_device_identifier(parent_device)
         if parent_gateway_id is None:
             return False
-        child_prefix = f"{parent_gateway_id}_"
+        child_prefix = management_point_unique_id(parent_gateway_id, "")
         if not gateway_id.startswith(child_prefix):
             return False
         embedded_id = gateway_id[len(child_prefix) :]

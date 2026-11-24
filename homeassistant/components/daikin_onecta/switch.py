@@ -16,9 +16,8 @@ from .entity import (
     EntityIdChecker,
     add_entities_on_coordinator_update,
     iter_management_points,
-    management_point_unique_id,
 )
-from .utils import is_on_off_value
+from .utils import is_on_off_value, management_point_unique_id
 
 PARALLEL_UPDATES = 1
 
@@ -99,7 +98,9 @@ class DaikinSwitch(DaikinManagementPointEntity, SwitchEntity):
         """Refresh the state and platform exposure from current device data."""
         characteristic = self._characteristic(self.entity_description.key)
         result = characteristic.value if characteristic is not None else None
-        self._attr_is_on = result == "on" if isinstance(result, str) else None
+        self._attr_is_on = (
+            True if result == "on" else False if result == "off" else None
+        )
         self._is_exposed_on_platform = (
             characteristic is not None
             and characteristic.settable

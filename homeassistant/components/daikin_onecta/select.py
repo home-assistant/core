@@ -17,8 +17,8 @@ from .entity import (
     EntityIdChecker,
     add_entities_on_coordinator_update,
     iter_management_points,
-    management_point_unique_id,
 )
+from .utils import management_point_unique_id
 
 SELECT_DESCRIPTIONS = {
     "schedule": SelectEntityDescription(key="schedule", translation_key="schedule")
@@ -94,7 +94,7 @@ class DaikinScheduleSelect(DaikinManagementPointEntity, SelectEntity):
             self._schedule_options(selection) if selection is not None else []
         )
         self._attr_options = self.get_options()
-        self._attr_current_option = self.get_current_option()
+        self._attr_current_option = self.get_current_option(selection)
 
     def selection(self) -> ScheduleSelection | None:
         """Return the schedule selection for the current schedule mode."""
@@ -127,9 +127,8 @@ class DaikinScheduleSelect(DaikinManagementPointEntity, SelectEntity):
             and bool(self._cached_schedule_options)
         )
 
-    def get_current_option(self) -> str | None:
+    def get_current_option(self, selection: ScheduleSelection | None) -> str | None:
         """Return the selected schedule name."""
-        selection = self.selection()
         if selection is None:
             return None
         if not selection.enabled:
@@ -152,7 +151,7 @@ class DaikinScheduleSelect(DaikinManagementPointEntity, SelectEntity):
         options = self.get_options()
         if option not in options:
             self._raise_service_validation_error("schedule_selection_unavailable")
-        if option == self.get_current_option():
+        if option == self.get_current_option(selection):
             return
 
         schedule_id = selection.selected

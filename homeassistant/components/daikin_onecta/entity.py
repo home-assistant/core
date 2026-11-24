@@ -23,7 +23,11 @@ from .const import DOMAIN
 from .coordinator import DaikinOnectaConfigEntry, OnectaDataUpdateCoordinator
 from .device import DaikinOnectaDevice, management_point_device_info
 from .discovery import scalar_platform_for_point
-from .utils import account_device_identifier, account_identifier
+from .utils import (
+    account_device_identifier,
+    account_identifier,
+    management_point_unique_id,
+)
 
 EntityIdChecker = Callable[[Platform, str], bool]
 
@@ -104,11 +108,6 @@ def iter_management_points(
     for device in present_devices(coordinator):
         for management_point in device.device.management_points:
             yield device, management_point
-
-
-def management_point_unique_id(gateway_id: str, embedded_id: str, *suffix: str) -> str:
-    """Return a stable unique ID for a management-point entity."""
-    return "_".join((gateway_id, embedded_id, *suffix))
 
 
 class DaikinOnectaEntity(_DaikinOnectaCoordinatorEntity):

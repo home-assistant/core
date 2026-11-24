@@ -1030,6 +1030,29 @@ class TestOnectaDataUpdateCoordinator:
         assert not coordinator.last_update_success
         assert hass.states.get(entity_id).state == "unavailable"
 
+    async def test_successful_poll_cancels_pending_post_write_refresh(
+        self,
+        hass: HomeAssistant,
+        config_entry: MockConfigEntry,
+        freezer: FrozenDateTimeFactory,
+        mock_onecta_client: MockOnectaClient,
+    ) -> None:
+        """A normal poll at cooldown expiry consumes the pending refresh."""
+        await _async_setup_fixture(hass, config_entry, "minimal_data")
+        coordinator = config_entry.runtime_data
+        coordinator.schedule_post_write_refresh()
+        mock_onecta_client.get_gateway_devices.reset_mock()
+        mock_onecta_client.get_gateway_devices.return_value = _load_gateway_devices(
+            "minimal_data"
+        )
+
+        freezer.tick(timedelta(seconds=30))
+        await coordinator.async_refresh()
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+        mock_onecta_client.get_gateway_devices.assert_awaited_once_with()
+
     async def test_poll_rechecks_backoff_after_acquiring_cloud_lock(
         self,
         hass: HomeAssistant,

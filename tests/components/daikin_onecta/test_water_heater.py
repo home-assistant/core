@@ -691,12 +691,12 @@ async def test_water_heater_set_temperature_applies_temperature_before_off(
     ]
 
 
-async def test_water_heater_rejects_temperature_when_off_target_is_off(
+async def test_water_heater_sets_temperature_when_already_off(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     mock_onecta_client: MockOnectaClient,
 ) -> None:
-    """Do not write the temperature when the heater is already off."""
+    """Set the target before confirming the heater is off."""
     await _async_setup_fixture(hass, config_entry, "altherma_boost")
     coordinator = config_entry.runtime_data
     execute = _execute_typed_command(config_entry, mock_onecta_client)
@@ -711,20 +711,26 @@ async def test_water_heater_rejects_temperature_when_off_target_is_off(
     coordinator.async_update_listeners()
     await hass.async_block_till_done()
 
-    with pytest.raises(HomeAssistantError) as err:
-        await hass.services.async_call(
-            WATER_HEATER_DOMAIN,
-            WATER_HEATER_SERVICE_SET_TEMPERATURE,
-            {
-                ATTR_ENTITY_ID: ALTHERMA_WATER_HEATER_ENTITY_ID,
-                WaterHeaterServiceArgument.OPERATION_MODE: STATE_OFF,
-                WaterHeaterServiceArgument.TEMPERATURE: 50,
-            },
-            blocking=True,
-        )
+    await hass.services.async_call(
+        WATER_HEATER_DOMAIN,
+        WATER_HEATER_SERVICE_SET_TEMPERATURE,
+        {
+            ATTR_ENTITY_ID: ALTHERMA_WATER_HEATER_ENTITY_ID,
+            WaterHeaterServiceArgument.OPERATION_MODE: STATE_OFF,
+            WaterHeaterServiceArgument.TEMPERATURE: 50,
+        },
+        blocking=True,
+    )
 
-    assert err.value.translation_key == "water_heater_off"
-    execute.assert_not_awaited()
+    assert mock_onecta_client.patch_characteristic.await_args_list == [
+        call(
+            gateway.id,
+            point.embedded_id,
+            "temperatureControl",
+            50,
+            path="/operationModes/heating/setpoints/domesticHotWaterTemperature",
+        )
+    ]
 
 
 async def test_water_heater_rejects_invalid_combined_mode_before_temperature_write(

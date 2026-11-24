@@ -26,10 +26,9 @@ from .entity import (
     DaikinManagementPointEntity,
     EntityIdChecker,
     add_entities_on_coordinator_update,
-    management_point_unique_id,
     present_devices,
 )
-from .utils import enum_value_to_state, fixed_positions
+from .utils import enum_value_to_state, fixed_positions, management_point_unique_id
 
 PARALLEL_UPDATES = 1
 
