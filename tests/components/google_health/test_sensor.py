@@ -13,13 +13,18 @@ from google_health_api.model import (
     ActiveMinutesRollupValue,
     ActiveZoneMinutesRollupValue,
     AltitudeRollupValue,
+    DailyHeartRateVariability,
     DailyRollupDataPoint,
+    DataPoint,
+    Date,
+    ListDataPointResult,
     ListPairedDevicesResult,
     NutrientQuantityRollup,
     NutritionLogRollupValue,
     SedentaryPeriodRollupValue,
     StageSummary,
     WeightQuantityRollup,
+    _ListDataPointsModel,
     _ListPairedDevicesModel,
 )
 import pytest
@@ -50,19 +55,21 @@ from .conftest import _list_fixture, _rollup_fixture, paired_devices_fixture
 
 
 @pytest.mark.freeze_time("2026-06-28 12:00:00+00:00")
-@pytest.mark.usefixtures(
-    "entity_registry_enabled_by_default", "mock_google_health_client"
-)
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_all_entities(
     hass: HomeAssistant,
     snapshot: SnapshotAssertion,
     entity_registry: er.EntityRegistry,
     config_entry: MockConfigEntry,
+    mock_google_health_client: AsyncMock,
     integration_setup: Callable[[], Awaitable[bool]],
 ) -> None:
     """Test all sensor entities."""
     with patch("homeassistant.components.google_health._PLATFORMS", [Platform.SENSOR]):
         assert await integration_setup()
+
+    mock_google_health_client.weight.list.assert_called_once()
+    mock_google_health_client.height.list.assert_called_once()
 
     await snapshot_platform(hass, entity_registry, snapshot, config_entry.entry_id)
 
@@ -90,6 +97,9 @@ async def test_sensor_disabled_by_default(
         "sensor.google_health_peak_active_zone_minutes": (
             er.RegistryEntryDisabler.INTEGRATION
         ),
+        "sensor.google_health_height": er.RegistryEntryDisabler.INTEGRATION,
+        "sensor.google_health_body_mass_index": er.RegistryEntryDisabler.INTEGRATION,
+        "sensor.google_health_vo2_max": er.RegistryEntryDisabler.INTEGRATION,
         "sensor.google_health_dietary_fiber": er.RegistryEntryDisabler.INTEGRATION,
         "sensor.google_health_sugar": er.RegistryEntryDisabler.INTEGRATION,
         "sensor.google_health_sodium": er.RegistryEntryDisabler.INTEGRATION,
@@ -103,6 +113,85 @@ async def test_sensor_disabled_by_default(
     assert {
         entry.entity_id for entry in entries if hass.states.get(entry.entity_id) is None
     } == set(expected_disabled)
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_sensor_empty_body(
+    hass: HomeAssistant,
+    mock_google_health_client: AsyncMock,
+    integration_setup: Callable[[], Awaitable[bool]],
+) -> None:
+    """Test body sensors when the body measurement endpoints return no data."""
+    empty_list: ListDataPointResult[Any] = ListDataPointResult(
+        _ListDataPointsModel(data_points=[])
+    )
+    mock_google_health_client.weight.list.return_value = empty_list
+    mock_google_health_client.height.list.return_value = empty_list
+    mock_google_health_client.daily_resting_heart_rate.list.return_value = empty_list
+    mock_google_health_client.body_fat.list.return_value = empty_list
+    mock_google_health_client.daily_heart_rate_variability.list.return_value = (
+        empty_list
+    )
+    mock_google_health_client.daily_oxygen_saturation.list.return_value = empty_list
+    mock_google_health_client.daily_respiratory_rate.list.return_value = empty_list
+    mock_google_health_client.daily_vo2_max.list.return_value = empty_list
+
+    assert await integration_setup()
+
+    expected_states = {
+        "sensor.google_health_weight": STATE_UNKNOWN,
+        "sensor.google_health_resting_heart_rate": STATE_UNKNOWN,
+        "sensor.google_health_body_fat": STATE_UNKNOWN,
+        "sensor.google_health_heart_rate_variability": STATE_UNKNOWN,
+        "sensor.google_health_oxygen_saturation": STATE_UNKNOWN,
+        "sensor.google_health_respiratory_rate": STATE_UNKNOWN,
+        "sensor.google_health_height": STATE_UNKNOWN,
+        "sensor.google_health_body_mass_index": STATE_UNKNOWN,
+        "sensor.google_health_vo2_max": STATE_UNKNOWN,
+    }
+    assert {
+        entity_id: getattr(hass.states.get(entity_id), "state", None)
+        for entity_id in expected_states
+    } == expected_states
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_sensor_body_partial_data(
+    hass: HomeAssistant,
+    mock_google_health_client: AsyncMock,
+    integration_setup: Callable[[], Awaitable[bool]],
+) -> None:
+    """Test body sensors when height is missing and HRV average is None."""
+    mock_google_health_client.height.list.return_value = ListDataPointResult(
+        _ListDataPointsModel(data_points=[])
+    )
+    mock_google_health_client.daily_heart_rate_variability.list.return_value = (
+        ListDataPointResult(
+            _ListDataPointsModel(
+                data_points=[
+                    DataPoint(
+                        data=DailyHeartRateVariability(
+                            date=Date(year=2026, month=6, day=29),
+                        )
+                    )
+                ]
+            )
+        )
+    )
+
+    assert await integration_setup()
+
+    mock_google_health_client.height.list.assert_called_once()
+    expected_states = {
+        "sensor.google_health_weight": "80.0",
+        "sensor.google_health_height": STATE_UNKNOWN,
+        "sensor.google_health_body_mass_index": STATE_UNKNOWN,
+        "sensor.google_health_heart_rate_variability": STATE_UNKNOWN,
+    }
+    assert {
+        entity_id: getattr(hass.states.get(entity_id), "state", None)
+        for entity_id in expected_states
+    } == expected_states
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
@@ -408,6 +497,7 @@ async def test_sensor_only_in_progress_sleep(
             METRIC_SYSTEM,
             {
                 "sensor.google_health_weight": (pytest.approx(80.0), "kg"),
+                "sensor.google_health_height": (pytest.approx(1.8), "m"),
                 "sensor.google_health_distance": (pytest.approx(5.0), "km"),
                 "sensor.google_health_elevation": (pytest.approx(150.0), "m"),
                 "sensor.google_health_water_intake": (pytest.approx(2.5), "L"),
@@ -419,6 +509,7 @@ async def test_sensor_only_in_progress_sleep(
             US_CUSTOMARY_SYSTEM,
             {
                 "sensor.google_health_weight": (pytest.approx(176.37, abs=1e-2), "lb"),
+                "sensor.google_health_height": (pytest.approx(5.91, abs=1e-2), "ft"),
                 "sensor.google_health_distance": (
                     pytest.approx(3.11, abs=1e-2),
                     "mi",
@@ -437,7 +528,9 @@ async def test_sensor_only_in_progress_sleep(
         ),
     ],
 )
-@pytest.mark.usefixtures("mock_google_health_client")
+@pytest.mark.usefixtures(
+    "entity_registry_enabled_by_default", "mock_google_health_client"
+)
 async def test_sensor_unit_conversions(
     hass: HomeAssistant,
     integration_setup: Callable[[], Awaitable[bool]],
