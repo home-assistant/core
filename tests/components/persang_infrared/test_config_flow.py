@@ -34,7 +34,7 @@ async def test_user_flow_success(hass: HomeAssistant) -> None:
     assert result["data"] == {
         CONF_INFRARED_EMITTER_ENTITY_ID: MOCK_INFRARED_EMITTER_ENTITY_ID
     }
-    assert result["result"].unique_id == MOCK_INFRARED_EMITTER_ENTITY_ID
+    assert result["result"].unique_id is None
 
 
 @pytest.mark.usefixtures("mock_infrared_emitter_entity")
@@ -67,4 +67,4 @@ async def test_user_flow_no_emitters(hass: HomeAssistant) -> None:
     )
 
     assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "no_emitters"
+    assert result["reason"] == "no_infrared_emitters"

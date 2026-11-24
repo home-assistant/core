@@ -2,7 +2,7 @@
   "config": {
     "abort": {
       "already_configured": "This Persang speaker has already been configured with this infrared emitter.",
-      "no_emitters": "[%key:component::infrared::common::no_infrared_emitters%]"
+      "no_infrared_emitters": "[%key:component::infrared::common::no_infrared_emitters%]"
     },
     "step": {
       "user": {
