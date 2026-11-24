@@ -11,7 +11,8 @@ from unittest.mock import MagicMock, call
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 
-from homeassistant.components.keba.const import DOMAIN
+from homeassistant.components.keba.const import DOMAIN, KebaService
+from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
@@ -29,7 +30,7 @@ async def test_setup(hass: HomeAssistant, setup_keba: MagicMock) -> None:
     setup_keba.setup.assert_awaited_once_with(None)
     # The initial request during setup, then the first poll.
     assert setup_keba.request_data.await_count == 2
-    assert hass.services.has_service(DOMAIN, "request_data")
+    assert hass.services.has_service(DOMAIN, KebaService.REQUEST_DATA)
     assert hass.states.get("sensor.keba_p30_charging_power") is not None
 
 
@@ -45,7 +46,7 @@ async def test_setup_disables_failsafe_by_default(
     [
         {
             DOMAIN: {
-                "host": HOST,
+                CONF_HOST: HOST,
                 "failsafe": True,
                 "failsafe_timeout": 60,
                 "failsafe_fallback": 10,
@@ -63,7 +64,7 @@ async def test_setup_applies_configured_failsafe(
 
 @pytest.mark.parametrize(
     "keba_config",
-    [{DOMAIN: {"host": HOST, "failsafe": True, "failsafe_timeout": 5}}],
+    [{DOMAIN: {CONF_HOST: HOST, "failsafe": True, "failsafe_timeout": 5}}],
 )
 async def test_setup_failsafe_out_of_range_currently_unchecked(
     hass: HomeAssistant, setup_keba: MagicMock
@@ -118,7 +119,7 @@ async def test_setup_without_serial(
 
     assert f"Could not find a charging station at {HOST}" in caplog.text
     mock_keba.set_failsafe.assert_not_awaited()
-    assert not hass.services.has_service(DOMAIN, "request_data")
+    assert not hass.services.has_service(DOMAIN, KebaService.REQUEST_DATA)
     await async_advance(hass, freezer, 60)
     assert mock_keba.request_data.await_count == 1
 
@@ -144,7 +145,7 @@ async def test_refresh_interval_has_a_floor(
 ) -> None:
     """Test the polling interval is the configured one, but never under 5 seconds."""
     assert await async_setup_component(
-        hass, DOMAIN, {DOMAIN: {"host": HOST, "refresh_interval": refresh_interval}}
+        hass, DOMAIN, {DOMAIN: {CONF_HOST: HOST, "refresh_interval": refresh_interval}}
     )
     await async_settle(hass)
 
@@ -159,7 +160,7 @@ async def test_command_switches_to_fast_polling(
     """Test a command polls at once, then four times 2 seconds apart, then every 5."""
     polls_before = setup_keba.request_data.await_count
 
-    await hass.services.async_call(DOMAIN, "enable", blocking=True)
+    await hass.services.async_call(DOMAIN, KebaService.ENABLE, blocking=True)
     await async_settle(hass)
 
     assert setup_keba.enable.await_args_list == [call(True)]

@@ -7,10 +7,8 @@ listeners) runs for real, and the library methods it calls are mocks.
 ``get_value`` reads a dict holding what keba-kecontact 1.3.0 returns for a real
 station. The dicts in ``fixtures/`` were made by feeding report datagrams
 captured from a KC-P30 (firmware P30 v 3.10.53) through the library's own
-parser: ``p30.json`` (the default) is idle with the cable plugged in at the
-station only, ``p30_plugged.json`` is plugged into a car but not yet enabled,
-and ``p30_charging.json`` is charging. The serial is replaced with
-``12345678`` and the RFID fields with zeros.
+parser: ``p30.json`` is idle with the cable plugged in at the station only.
+The serial is replaced with ``12345678`` and the RFID fields with zeros.
 
 The integration's polling loop sleeps with ``asyncio.sleep``; tests move time
 forward with ``freezer`` and ``async_fire_time_changed``.
@@ -31,6 +29,7 @@ from pytest_homeassistant.common import (
 )
 
 from homeassistant.components.keba.const import DOMAIN
+from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
@@ -92,7 +91,7 @@ def mock_keba(
 @pytest.fixture
 def keba_config() -> dict[str, Any]:
     """Return the YAML configuration for the integration."""
-    return {DOMAIN: {"host": HOST}}
+    return {DOMAIN: {CONF_HOST: HOST}}
 
 
 @pytest.fixture
