@@ -4,6 +4,8 @@ import asyncio
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
+from aioesphomeapi import APIClient, DeviceCapabilities, DeviceInfo
+from aioesphomeapi.model import SendspinFeature
 from music_assistant_client.exceptions import (
     CannotConnect,
     ConnectionFailed,
@@ -18,6 +20,12 @@ import pytest
 from pytest_homeassistant.common import MockConfigEntry
 from pytest_homeassistant.typing import WebSocketGenerator
 
+# Simulate a firmware capability report without opening an ESPHome API connection.
+# pylint: disable-next=home-assistant-component-root-import
+from homeassistant.components.esphome.entry_data import ESPHomeStorage, RuntimeEntryData
+
+# pylint: disable-next=home-assistant-component-root-import
+from homeassistant.components.esphome.sendspin import async_sendspin_on_connect
 from homeassistant.components.hassio import HassioNotReadyError
 from homeassistant.components.music_assistant.const import (
     ATTR_CONF_EXPOSE_PLAYER_TO_HA,
@@ -28,6 +36,7 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_URL
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import (
+    area_registry as ar,
     device_registry as dr,
     entity_registry as er,
     issue_registry as ir,
@@ -580,6 +589,121 @@ async def test_player_added_event(
         (DOMAIN, player.player_id), config_entry.entry_id
     )
     assert (device_entry is not None) is expected_added
+
+
+@pytest.mark.parametrize(
+    ("esphome_first", "provider_domain", "player_id", "client_id", "linked"),
+    [
+        pytest.param(True, "sendspin", "client", "client", True, id="esphome-first"),
+        pytest.param(False, "sendspin", "client", "client", True, id="player-first"),
+        pytest.param(
+            False, "sendspin", PLAYER_1_ID, "client", False, id="mac-is-not-a-match"
+        ),
+        pytest.param(False, "other", "client", "client", False, id="not-sendspin"),
+    ],
+)
+async def test_link_sendspin_device(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    area_registry: ar.AreaRegistry,
+    music_assistant_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    hass_ws_client: WebSocketGenerator,
+    esphome_first: bool,
+    provider_domain: str,
+    player_id: str,
+    client_id: str,
+    linked: bool,
+) -> None:
+    """Link devices by the advertised ID, not by the MAC or another provider's ID."""
+    assert await async_setup_component(hass, "homeassistant", {})
+    player = create_players_from_fixture()[0]
+    player.player_id = player_id
+    music_assistant_client.players._players = {player.player_id: player}
+    music_assistant_client.get_provider.return_value.domain = provider_domain
+    mock_config_entry.add_to_hass(hass)
+
+    async def connect_esphome() -> dr.DeviceEntry:
+        assert await async_setup_component(hass, "esphome", {})
+        entry = MockConfigEntry(domain="esphome")
+        entry.add_to_hass(hass)
+        device = device_registry.async_get_or_create(
+            config_entry_id=entry.entry_id,
+            connections={(dr.CONNECTION_NETWORK_MAC, PLAYER_1_ID)},
+            name="Satellite",
+            suggested_area="Kitchen",
+        )
+        entry.runtime_data = RuntimeEntryData(
+            entry.entry_id,
+            entry.title,
+            MagicMock(spec=APIClient),
+            MagicMock(spec=ESPHomeStorage),
+            device_info=DeviceInfo(mac_address=PLAYER_1_ID),
+            device_capabilities=DeviceCapabilities.from_dict(
+                {
+                    "sendspin": {
+                        "feature_flags": SendspinFeature.PAIRING_TOKEN,
+                        "client_id": client_id,
+                    }
+                }
+            ),
+            main_device_entry_id=device.id,
+        )
+        async_sendspin_on_connect(hass, entry.runtime_data)
+        await hass.async_block_till_done()
+        return device
+
+    if esphome_first:
+        satellite = await connect_esphome()
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    if not esphome_first:
+        satellite = await connect_esphome()
+
+    assert (
+        device := device_registry.async_get_device_by_identifier(
+            (DOMAIN, player.player_id), mock_config_entry.entry_id
+        )
+    ) is not None
+    assert device.id != satellite.id
+    assert satellite.area_id is not None
+    assert device.area_id == (satellite.area_id if linked else None)
+    assert device.connections == (satellite.connections if linked else set())
+
+    assert await async_setup_component(hass, "config", {})
+    client = await hass_ws_client()
+    for source, target in ((device, satellite), (satellite, device)):
+        await client.send_json_auto_id(
+            {
+                "type": "config/device_registry/list_linked_devices",
+                "device_id": source.id,
+            }
+        )
+        response = await client.receive_json()
+        assert response["success"]
+        assert response["result"]["linked_devices"] == ([target.id] if linked else [])
+
+    office = area_registry.async_create("Office")
+    device_registry.async_update_device(device.id, area_id=office.id)
+    entity_id = entity_registry.async_get_entity_id("media_player", DOMAIN, player_id)
+    assert entity_id is not None
+    assert (entity := entity_registry.async_get(entity_id)) is not None
+    await hass.async_block_till_done()
+    assert (updated_satellite := device_registry.async_get(satellite.id)) is not None
+    assert updated_satellite.area_id == satellite.area_id
+
+    living_room = area_registry.async_create("Living room")
+    device_registry.async_update_device(satellite.id, area_id=living_room.id)
+    await hass.async_block_till_done()
+    assert (updated := device_registry.async_get(device.id)) is not None
+    assert updated.area_id == (living_room.id if linked else office.id)
+    assert er.async_get_effective_area_id(hass, entity) == updated.area_id
+
+    device_registry.async_update_device(satellite.id, area_id=None)
+    await hass.async_block_till_done()
+    assert (updated := device_registry.async_get(device.id)) is not None
+    assert updated.area_id == (None if linked else office.id)
 
 
 @pytest.mark.parametrize(

@@ -31,6 +31,11 @@ from .manager import (
     async_get_manufacturer_model,
     cleanup_instance,
 )
+from .sendspin import (
+    async_get_sendspin_device as async_get_sendspin_device,
+    async_sendspin_client_ids as async_sendspin_client_ids,
+    async_subscribe_sendspin_clients as async_subscribe_sendspin_clients,
+)
 from .websocket_api import async_setup as async_setup_websocket_api
 
 _LOGGER = logging.getLogger(__name__)

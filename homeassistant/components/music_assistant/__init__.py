@@ -41,6 +41,7 @@ from homeassistant.helpers.issue_registry import (
 from .app import async_check_app_running
 from .const import ATTR_CONF_EXPOSE_PLAYER_TO_HA, DASHBOARD_ID_PREFIX, DOMAIN, LOGGER
 from .helpers import get_music_assistant_client
+from .sendspin import async_link_sendspin_player, async_setup_sendspin_links
 from .services import async_setup_services
 
 if TYPE_CHECKING:
@@ -89,6 +90,7 @@ class MusicAssistantEntryData:
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Music Assistant component."""
     async_setup_services(hass)
+    async_setup_sendspin_links(hass)
 
     return True
 
@@ -212,6 +214,7 @@ async def async_setup_entry(  # noqa: C901
     def add_player(player: Player) -> None:
         """Handle adding Player from MA as HA device + entities."""
         entry.runtime_data.discovered_players.add(player.player_id)
+        async_link_sendspin_player(hass, entry, player)
         # run callback for each platform
         for handlers in entry.runtime_data.platform_handlers.values():
             handlers.add_player(player.player_id)

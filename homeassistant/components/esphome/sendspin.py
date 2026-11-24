@@ -15,6 +15,7 @@ from aioesphomeapi import APIConnectionError, DeviceCapabilities
 from aioesphomeapi.model import SendspinFeature
 
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.event import async_call_later
 
 from .domain_data import DomainData
@@ -55,6 +56,23 @@ def async_sendspin_entry_data(
         return None
     entry = cast(ESPHomeConfigEntry, hass.config_entries.async_get_entry(entry_id))
     return entry.runtime_data
+
+
+@callback
+def async_get_sendspin_device(
+    hass: HomeAssistant, client_id: str
+) -> dr.DeviceEntry | None:
+    """Return the registered ESPHome device reporting this Sendspin client ID."""
+    if (
+        (entry_data := async_sendspin_entry_data(hass, client_id)) is not None
+        and entry_data.main_device_entry_id is not None
+        and isinstance(
+            device := dr.async_get(hass).async_get(entry_data.main_device_entry_id),
+            dr.DeviceEntry,
+        )
+    ):
+        return device
+    return None
 
 
 @callback

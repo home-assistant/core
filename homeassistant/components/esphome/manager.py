@@ -781,7 +781,6 @@ class ESPHomeManager:
             except InvalidWizardError as err:
                 _LOGGER.warning("%s: Ignoring the device wizard: %s", self.host, err)
         entry_data.async_on_connect(hass, device_info, api_version)
-        async_sendspin_on_connect(hass, entry_data)
 
         await self._handle_dynamic_encryption_key(device_info)
 
@@ -798,6 +797,7 @@ class ESPHomeManager:
                 device_mac,
             )
         _async_setup_device_registry(hass, entry, entry_data)
+        async_sendspin_on_connect(hass, entry_data)
 
         entry_data.async_update_device_state()
         await entry_data.async_update_static_infos(
