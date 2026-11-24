@@ -13,6 +13,7 @@ from boschshcpy import (
     CameraFrontLightService,
     CameraLightService,
     CameraNotificationService,
+    CommunicationQualityService,
     HeatingCircuitService,
     PowerSwitchService,
     PrivacyModeService,
@@ -344,6 +345,9 @@ def micromodule_blinds_device(
     level: float = 1.0,
     current_angle: float = 0.0,
     operation_state: ShutterControlService.State = ShutterControlService.State.STOPPED,
+    communication_quality: CommunicationQualityService.State = (
+        CommunicationQualityService.State.GOOD
+    ),
 ) -> SHCMicromoduleBlinds:
     """Build a minimal device double for the micromodule_blinds bucket."""
     device = create_autospec(SHCMicromoduleBlinds, instance=True, spec_set=True)
@@ -359,6 +363,7 @@ def micromodule_blinds_device(
     device.level = level
     device.current_angle = current_angle
     device.operation_state = operation_state
+    device.communicationquality = communication_quality
     return device
 
 
@@ -410,6 +415,9 @@ def smart_plug_compact_device(
     state_after_power_outage: PowerSwitchConfigurationService.StateAfterPowerOutage
     | None = None,
     led_brightness: int | None = None,
+    communication_quality: CommunicationQualityService.State = (
+        CommunicationQualityService.State.GOOD
+    ),
 ) -> SHCSmartPlugCompact:
     """Build a minimal device double for the smart_plugs_compact bucket."""
     device = create_autospec(SHCSmartPlugCompact, instance=True, spec_set=True)
@@ -433,6 +441,7 @@ def smart_plug_compact_device(
     device.led_brightness_max = 100
     device.led_brightness_step = 1
     device.state_after_power_outage = state_after_power_outage
+    device.communicationquality = communication_quality
     return device
 
 
@@ -821,6 +830,9 @@ def shutter_contact2_device(
     bypass: BypassService.State = BypassService.State.BYPASS_INACTIVE,
     bypass_infinite: bool = False,
     bypass_timeout: int = 5,
+    communication_quality: CommunicationQualityService.State = (
+        CommunicationQualityService.State.GOOD
+    ),
 ) -> SHCShutterContact2:
     """Build a minimal device double for the shutter_contacts2 bucket."""
     device = create_autospec(SHCShutterContact2, instance=True, spec_set=True)
@@ -836,6 +848,7 @@ def shutter_contact2_device(
     device.bypass = bypass
     device.bypass_infinite = bypass_infinite
     device.bypass_timeout = bypass_timeout
+    device.communicationquality = communication_quality
     return device
 
 
@@ -850,6 +863,9 @@ def shutter_contact2_plus_device(
     ),
     sensitivity: VibrationSensorService.SensitivityState = (
         VibrationSensorService.SensitivityState.MEDIUM
+    ),
+    communication_quality: CommunicationQualityService.State = (
+        CommunicationQualityService.State.GOOD
     ),
 ) -> SHCShutterContact2Plus:
     """Build a minimal device double for a vibration-capable Door/Window Contact II Plus."""
@@ -868,6 +884,7 @@ def shutter_contact2_plus_device(
     device.vibrationsensor = vibrationsensor
     device.enabled = vibration_enabled
     device.sensitivity = sensitivity
+    device.communicationquality = communication_quality
     return device
 
 
