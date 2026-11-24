@@ -2,9 +2,10 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from enum import Enum
 from typing import Any, override
 
-from hinen_open_api import DeviceAlertStatus, DeviceStatus, HinenOpen
+from hinen_open_api import DeviceAlertStatus, DeviceStatus
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -26,7 +27,7 @@ from .const import (
     TOTAL_CHARGING_ENERGY,
     TOTAL_DISCHARGING_ENERGY,
 )
-from .coordinator import HinenDataUpdateCoordinator, HinenPowerConfigEntry
+from .coordinator import HinenPowerConfigEntry
 from .entity import HinenDeviceEntity
 
 
@@ -34,8 +35,29 @@ from .entity import HinenDeviceEntity
 class HinenSensorEntityDescription(SensorEntityDescription):
     """Describes Hinen sensor entity."""
 
-    available_fn: Callable[[Any], bool]
     value_fn: Callable[[Any], StateType]
+
+
+REPORTED_OPTIONS = {
+    DeviceAlertStatus: [
+        status.name.lower()
+        for status in DeviceAlertStatus
+        if status.name.lower() != "unknown"
+    ],
+    DeviceStatus: [
+        status.name.lower()
+        for status in DeviceStatus
+        if status.name.lower() != "unknown"
+    ],
+}
+
+
+def _enum_value(enum_cls: type[Enum], value: Any) -> StateType:
+    """Return the lowercased enum name, unknown values return None."""
+    if value is None:
+        return None
+    name = enum_cls(value).name.lower()
+    return None if name == "unknown" else name
 
 
 SENSOR_TYPES = [
@@ -43,28 +65,23 @@ SENSOR_TYPES = [
         key=ATTR_STATUS,
         translation_key=ATTR_STATUS,
         device_class=SensorDeviceClass.ENUM,
-        options=[status.name.lower() for status in DeviceStatus],
-        available_fn=lambda device_detail: device_detail[ATTR_STATUS] is not None,
-        value_fn=lambda device_detail: DeviceStatus(
-            device_detail[ATTR_STATUS]
-        ).name.lower(),
+        options=REPORTED_OPTIONS[DeviceStatus],
+        value_fn=lambda device_detail: _enum_value(
+            DeviceStatus, device_detail[ATTR_STATUS]
+        ),
     ),
     HinenSensorEntityDescription(
         key=ATTR_ALERT_STATUS,
         translation_key=ATTR_ALERT_STATUS,
         device_class=SensorDeviceClass.ENUM,
-        options=[status.name.lower() for status in DeviceAlertStatus],
-        available_fn=lambda device_detail: device_detail[ATTR_ALERT_STATUS] is not None,
-        value_fn=lambda device_detail: DeviceAlertStatus(
-            device_detail[ATTR_ALERT_STATUS]
-        ).name.lower(),
+        options=REPORTED_OPTIONS[DeviceAlertStatus],
+        value_fn=lambda device_detail: _enum_value(
+            DeviceAlertStatus, device_detail[ATTR_ALERT_STATUS]
+        ),
     ),
     HinenSensorEntityDescription(
         key=CUMULATIVE_CONSUMPTION,
         translation_key=CUMULATIVE_CONSUMPTION,
-        available_fn=lambda device_detail: (
-            device_detail[CUMULATIVE_CONSUMPTION] is not None
-        ),
         value_fn=lambda device_detail: device_detail[CUMULATIVE_CONSUMPTION],
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
@@ -73,9 +90,6 @@ SENSOR_TYPES = [
     HinenSensorEntityDescription(
         key=CUMULATIVE_PRODUCTION_ACTIVE,
         translation_key=CUMULATIVE_PRODUCTION_ACTIVE,
-        available_fn=lambda device_detail: (
-            device_detail[CUMULATIVE_PRODUCTION_ACTIVE] is not None
-        ),
         value_fn=lambda device_detail: device_detail[CUMULATIVE_PRODUCTION_ACTIVE],
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
@@ -84,9 +98,6 @@ SENSOR_TYPES = [
     HinenSensorEntityDescription(
         key=CUMULATIVE_GRID_FEED_IN,
         translation_key=CUMULATIVE_GRID_FEED_IN,
-        available_fn=lambda device_detail: (
-            device_detail[CUMULATIVE_GRID_FEED_IN] is not None
-        ),
         value_fn=lambda device_detail: device_detail[CUMULATIVE_GRID_FEED_IN],
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
@@ -95,9 +106,6 @@ SENSOR_TYPES = [
     HinenSensorEntityDescription(
         key=TOTAL_CHARGING_ENERGY,
         translation_key=TOTAL_CHARGING_ENERGY,
-        available_fn=lambda device_detail: (
-            device_detail[TOTAL_CHARGING_ENERGY] is not None
-        ),
         value_fn=lambda device_detail: device_detail[TOTAL_CHARGING_ENERGY],
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
@@ -106,9 +114,6 @@ SENSOR_TYPES = [
     HinenSensorEntityDescription(
         key=TOTAL_DISCHARGING_ENERGY,
         translation_key=TOTAL_DISCHARGING_ENERGY,
-        available_fn=lambda device_detail: (
-            device_detail[TOTAL_DISCHARGING_ENERGY] is not None
-        ),
         value_fn=lambda device_detail: device_detail[TOTAL_DISCHARGING_ENERGY],
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
@@ -123,11 +128,10 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Hinen sensor."""
-    coordinator: HinenDataUpdateCoordinator = entry.runtime_data.coordinator
-    hinen_open: HinenOpen = entry.runtime_data.auth.hinen_open
+    coordinator = entry.runtime_data.coordinator
 
-    entities: list = [
-        HinenSensor(coordinator, hinen_open, sensor_type, device_id)
+    entities: list[HinenSensor] = [
+        HinenSensor(coordinator, sensor_type, device_id)
         for device_id in coordinator.data
         for sensor_type in SENSOR_TYPES
     ]
@@ -144,18 +148,10 @@ class HinenSensor(HinenDeviceEntity, SensorEntity):
     @override
     def available(self) -> bool:
         """Return if the entity is available."""
-        device = self.coordinator.data.get(self._device_id)
-        return (
-            device is not None
-            and super().available
-            and self.entity_description.available_fn(device)
-        )
+        return super().available and self._device_id in self.coordinator.data
 
     @property
     @override
     def native_value(self) -> StateType:
         """Return the value reported by the sensor."""
-        device = self.coordinator.data.get(self._device_id)
-        if device is None:
-            return None
-        return self.entity_description.value_fn(device)
+        return self.entity_description.value_fn(self.coordinator.data[self._device_id])

@@ -1,12 +1,10 @@
 """Entity representing a Hinen Power."""
 
-from hinen_open_api import HinenOpen
-
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import ATTR_DEVICE_NAME, DOMAIN, MANUFACTURER
+from .const import ATTR_DEVICE_NAME, ATTR_SERIAL_NUMBER, DOMAIN, MANUFACTURER
 from .coordinator import HinenDataUpdateCoordinator
 
 
@@ -18,13 +16,11 @@ class HinenDeviceEntity(CoordinatorEntity[HinenDataUpdateCoordinator]):
     def __init__(
         self,
         coordinator: HinenDataUpdateCoordinator,
-        hinen_open: HinenOpen,
         description: EntityDescription,
         device_id: str,
     ) -> None:
         """Initialize a Hinen entity."""
         super().__init__(coordinator)
-        self.hinen_open = hinen_open
         self.entity_description = description
         self._attr_unique_id = (
             f"{coordinator.config_entry.unique_id}_{device_id}_{description.key}"
@@ -34,5 +30,6 @@ class HinenDeviceEntity(CoordinatorEntity[HinenDataUpdateCoordinator]):
             entry_type=DeviceEntryType.SERVICE,
             identifiers={(DOMAIN, f"{coordinator.config_entry.unique_id}_{device_id}")},
             manufacturer=MANUFACTURER,
-            name=coordinator.data[device_id][ATTR_DEVICE_NAME],
+            name=coordinator.data.get(device_id, {}).get(ATTR_DEVICE_NAME),
+            serial_number=coordinator.data.get(device_id, {}).get(ATTR_SERIAL_NUMBER),
         )

@@ -84,9 +84,8 @@ class HinenImplementation(AuthImplementation):
             authorization_server=authorization_server,
         )
 
-        self._language = language
-        self._region_code = region_code
-        self._name = client_credential.name
+        self.language = language
+        self.region_code = region_code
 
     @override
     async def async_generate_authorize_url(self, flow_id: str) -> str:
@@ -96,7 +95,7 @@ class HinenImplementation(AuthImplementation):
 
         # Extract state from standard URL
         state = URL(standard_url).query.get("state")
-        return f"{self.authorize_url}?state={state}&language={self._language}&key={self.client_id}&redirectUrl={self.redirect_uri}"
+        return f"{self.authorize_url}?state={state}&language={self.language}&key={self.client_id}&redirectUrl={self.redirect_uri}"
 
     @override
     async def async_resolve_external_data(self, external_data: Any) -> dict:
@@ -105,7 +104,7 @@ class HinenImplementation(AuthImplementation):
             "clientSecret": self.client_secret,
             "grantType": "1",
             "authorizationCode": external_data["code"],
-            "regionCode": self._region_code,
+            "regionCode": self.region_code,
         }
         request_data.update(self.extra_token_resolve_data)
         return await self._token_request(request_data)
@@ -166,11 +165,5 @@ class HinenImplementation(AuthImplementation):
                     domain=self.domain,
                 ) from None
             custom_token = cast(dict[str, Any], await resp.json()).get("data", {})
-            custom_token.update(
-                {
-                    "clientId": self.client_id,
-                    "clientSecret": self.client_secret,
-                    REGION_CODE: data.get(REGION_CODE),
-                }
-            )
+            custom_token.update({REGION_CODE: data.get(REGION_CODE)})
         return RespUtil.convert_to_snake_case(custom_token)

@@ -4,11 +4,10 @@ from collections.abc import AsyncGenerator
 from typing import Any
 
 from hinen_open_api.models import HinenDeviceControl, HinenDeviceDetail, HinenDeviceInfo
+from pytest_homeassistant.common import async_load_json_array_fixture
 
 from homeassistant.components.hinen_power.const import DOMAIN, PROPERTIES
 from homeassistant.core import HomeAssistant
-
-from tests.common import async_load_json_array_fixture
 
 
 class MockHinen:
@@ -20,12 +19,10 @@ class MockHinen:
         self,
         hass: HomeAssistant,
         devices_fixture: str = "get_devices.json",
-        device_detail_fixture: str = "get_device_detail.json",
     ) -> None:
         """Initialize MockHinen."""
         self.hass = hass
         self.device_fixture = devices_fixture
-        self.device_detail_fixture = device_detail_fixture
 
     async def set_user_authentication(
         self,
@@ -51,12 +48,9 @@ class MockHinen:
         device_ids: list[str],
     ) -> AsyncGenerator[HinenDeviceDetail]:
         """Mock get device details."""
-        if self.device_detail_fixture == "get_no_device_details.json":
-            return
-
         # Return mock device info
         device_detail = await async_load_json_array_fixture(
-            self.hass, self.device_detail_fixture, DOMAIN
+            self.hass, "get_device_detail.json", DOMAIN
         )
         for item in device_detail:
             yield HinenDeviceDetail(**item)

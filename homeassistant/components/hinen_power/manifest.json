@@ -1,6 +1,7 @@
 {
   "domain": "hinen_power",
   "name": "Hinen Power",
+  "categories": ["energy.solar_batteries"],
   "codeowners": ["@Hinen-WeiFeng"],
   "config_flow": true,
   "dependencies": ["application_credentials"],

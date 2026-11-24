@@ -1,35 +1,31 @@
 """Config flow for Hinen Power integration."""
 
-from collections.abc import Mapping
 import logging
 from typing import Any, override
 
 from hinen_open_api import HinenOpen, HinenPublic
 from hinen_open_api.exceptions import ForbiddenError, HinenAPIError
-from probatio import All, In, Length, Required, Schema
+from probatio import In, Required, Schema
 
-from homeassistant.components.application_credentials import ClientCredential
-from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlowResult, OptionsFlow
+from homeassistant.components.application_credentials import (
+    ClientCredential,
+    async_import_client_credential,
+)
+from homeassistant.config_entries import ConfigFlowResult
 from homeassistant.const import (
     CONF_ACCESS_TOKEN,
     CONF_CLIENT_ID,
     CONF_CLIENT_SECRET,
-    CONF_DEVICES,
     CONF_TOKEN,
 )
-from homeassistant.core import callback
 from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.selector import (
-    CountrySelector,
-    CountrySelectorConfig,
-    SelectOptionDict,
-    SelectSelector,
-    SelectSelectorConfig,
-)
+from homeassistant.helpers.selector import CountrySelector, CountrySelectorConfig
 
 from . import application_credentials
+from .auth_config import HinenImplementation
 from .const import (
+    ATTR_ACCOUNT_ID,
     ATTR_AUTH_LANGUAGE,
     ATTR_REGION_CODE,
     DOMAIN,
@@ -37,64 +33,8 @@ from .const import (
     LOGGER,
     SUPPORTED_LANGUAGES,
 )
-from .coordinator import HinenPowerConfigEntry
 
-
-class HinenOpenFlowHandler(OptionsFlow):
-    """Hinen Open Options flow handler."""
-
-    async def async_step_init(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Initialize form."""
-        if user_input is not None:
-            return self.async_create_entry(
-                title=self.config_entry.title,
-                data=user_input,
-            )
-
-        hinen_open = HinenOpen(
-            self.config_entry.data[CONF_TOKEN][HOST],
-            session=async_get_clientsession(self.hass),
-        )
-        await hinen_open.set_user_authentication(
-            self.config_entry.data[CONF_TOKEN][CONF_ACCESS_TOKEN],
-            self.config_entry.data[CONF_TOKEN]["refresh_token"],
-        )
-
-        # Get user's own devices
-        device_infos = [
-            device_info async for device_info in hinen_open.get_device_infos()
-        ]
-        if not device_infos:
-            return self.async_abort(
-                reason="no_device",
-            )
-
-        # Start with user's own channels
-        selectable_devices = [
-            SelectOptionDict(
-                value=str(device_info.id),
-                label=f"{device_info.device_name},{device_info.serial_number}",
-            )
-            for device_info in device_infos
-        ]
-
-        return self.async_show_form(
-            step_id="init",
-            data_schema=self.add_suggested_values_to_schema(
-                Schema(
-                    {
-                        Required(CONF_DEVICES): SelectSelector(
-                            SelectSelectorConfig(
-                                options=selectable_devices, multiple=True
-                            )
-                        ),
-                    }
-                ),
-                self.config_entry.options,
-            ),
-        )
+OAUTH_CREDENTIAL_NAME = "Hinen Power"
 
 
 class OAuth2FlowHandler(
@@ -107,20 +47,9 @@ class OAuth2FlowHandler(
     def __init__(self) -> None:
         """Initialize the flow handler."""
         super().__init__()
-        self._data: dict[str, Any] = {}
-        self._title: str = ""
         self._hinen_open: HinenOpen | None = None
         self._language: str | None = None
         self._region_code: str | None = None
-
-    @staticmethod
-    @callback
-    @override
-    def async_get_options_flow(
-        config_entry: HinenPowerConfigEntry,
-    ) -> HinenOpenFlowHandler:
-        """Get the options flow for this handler."""
-        return HinenOpenFlowHandler()
 
     @property
     @override
@@ -129,28 +58,53 @@ class OAuth2FlowHandler(
         return logging.getLogger(__name__)
 
     @override
-    async def async_step_user(self, user_input=None) -> ConfigFlowResult:
-        """Handle a flow start."""
+    async def async_step_auth(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle the OAuth2 authentication step."""
+        # The flow implementation is built from the application credentials
+        # storage. Carry the language and region selected in the user step into
+        # it before it is used to build the authorize URL and exchange the
+        # authorization code.
+        if isinstance(self.flow_impl, HinenImplementation):
+            self.flow_impl.language = self._language
+            self.flow_impl.region_code = self._region_code
+        return await super().async_step_auth(user_input)
+
+    @override
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle the pre-OAuth2 form for credentials, language and region."""
         if user_input is not None:
+            # Store the client credentials entered by the user in the
+            # application credentials storage, so the auth implementation can
+            # be read from there on setup instead of being kept in the entry
+            # data.
+            credential = ClientCredential(
+                user_input[CONF_CLIENT_ID],
+                user_input[CONF_CLIENT_SECRET],
+                name=OAUTH_CREDENTIAL_NAME,
+            )
+            await async_import_client_credential(
+                self.hass,
+                DOMAIN,
+                credential,
+                DOMAIN,
+            )
             self._language = user_input[ATTR_AUTH_LANGUAGE]
             self._region_code = user_input[ATTR_REGION_CODE]
-            credential: ClientCredential = ClientCredential(
-                user_input[CONF_CLIENT_ID], user_input[CONF_CLIENT_SECRET]
-            )
-
+            # Build the flow implementation directly from the entered
+            # credentials so the OAuth2 steps use exactly what the user
+            # provided.
             self.flow_impl = (
                 await application_credentials.async_get_auth_implementation(
                     self.hass,
                     DOMAIN,
                     credential,
-                    language=self._language,
-                    region_code=self._region_code,
                 )
             )
-            config_entry_oauth2_flow.async_register_implementation(
-                self.hass, DOMAIN, self.flow_impl
-            )
-            return await super().async_step_auth()
+            return await self.async_step_auth()
 
         default_language = SUPPORTED_LANGUAGES[0][0]
 
@@ -176,12 +130,6 @@ class OAuth2FlowHandler(
             ),
         )
 
-    async def async_step_reauth(
-        self, entry_data: Mapping[str, Any]
-    ) -> ConfigFlowResult:
-        """Handle initialization of re-authentication with the Hinen service."""
-        return await self.async_step_user()
-
     async def get_resource(self, token: str, host: str) -> HinenOpen:
         """Get Hinen Open resource async."""
         if self._hinen_open is None:
@@ -194,6 +142,7 @@ class OAuth2FlowHandler(
     @override
     async def async_oauth_create_entry(self, data: dict[str, Any]) -> ConfigFlowResult:
         """Create an entry for the flow, or update existing entry."""
+        title = self.flow_impl.name
         try:
             hinen_open = await self.get_resource(
                 data[CONF_TOKEN][CONF_ACCESS_TOKEN], data[CONF_TOKEN][HOST]
@@ -215,63 +164,10 @@ class OAuth2FlowHandler(
         if not device_infos:
             return self.async_abort(reason="no_device")
 
-        self._title = device_infos[0].device_name
-        self._data = data
+        await self.async_set_unique_id(str(data[CONF_TOKEN][ATTR_ACCOUNT_ID]))
+        self._abort_if_unique_id_configured()
 
-        await self.async_set_unique_id(str(device_infos[0].id))
-        if self.source != SOURCE_REAUTH:
-            self._abort_if_unique_id_configured()
-
-            return await self.async_step_devices()
-
-        self._abort_if_unique_id_mismatch(
-            reason="wrong_account",
-            description_placeholders={"title": self._title},
-        )
-
-        return self.async_update_reload_and_abort(self._get_reauth_entry(), data=data)
-
-    async def async_step_devices(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Select which device info to track."""
-        if user_input:
-            return self.async_create_entry(
-                title=self._title,
-                data=self._data,
-                options=user_input,
-            )
-        hinen_open = await self.get_resource(
-            self._data[CONF_TOKEN][CONF_ACCESS_TOKEN], self._data[CONF_TOKEN][HOST]
-        )
-
-        device_infos = [
-            device_info async for device_info in hinen_open.get_device_infos()
-        ]
-
-        selectable_devices = [
-            SelectOptionDict(
-                value=str(device_info.id),
-                label=f"{device_info.device_name},{device_info.serial_number}",
-            )
-            for device_info in device_infos
-        ]
-
-        return self.async_show_form(
-            step_id="devices",
-            data_schema=Schema(
-                {
-                    Required(CONF_DEVICES): All(
-                        SelectSelector(
-                            SelectSelectorConfig(
-                                options=selectable_devices, multiple=True
-                            )
-                        ),
-                        Length(min=1),
-                    )
-                }
-            ),
-        )
+        return self.async_create_entry(title=title, data=data)
 
     async def _get_country_list(self) -> list[str]:
         """Fetch the list of countries."""

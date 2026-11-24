@@ -4,40 +4,56 @@ from unittest.mock import patch
 
 from hinen_open_api.exceptions import ForbiddenError, HinenAPIError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries
+from homeassistant.components.application_credentials import DATA_COMPONENT
 from homeassistant.components.hinen_power.const import (
     ATTR_AUTH_LANGUAGE,
     ATTR_REGION_CODE,
     DOMAIN,
 )
-from homeassistant.const import CONF_DEVICES
+from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import config_entry_oauth2_flow
 
 from . import MockHinen
-from .conftest import AUTH_URL, CLIENT_ID, CLIENT_SECRET, HOST, PAGE_LANGUAGE, TITLE
+from .conftest import (
+    AUTH_URL,
+    CLIENT_ID,
+    CLIENT_SECRET,
+    HOST,
+    OAUTH_CREDENTIAL_NAME,
+    PAGE_LANGUAGE,
+)
 
-from tests.common import MockConfigEntry
-from tests.typing import ClientSessionGenerator
+USER_INPUT = {
+    CONF_CLIENT_ID: CLIENT_ID,
+    CONF_CLIENT_SECRET: CLIENT_SECRET,
+    ATTR_AUTH_LANGUAGE: PAGE_LANGUAGE,
+    ATTR_REGION_CODE: "CN",
+}
 
 
 @pytest.mark.usefixtures("current_request_with_host")
 async def test_full_flow(hass: HomeAssistant) -> None:
     """Check full flow."""
+    # Remove the credential imported by the setup_credentials fixture so the
+    # test verifies that the flow imports the entered credentials itself.
+    manager = hass.data[DATA_COMPONENT]
+    for item in manager.async_items():
+        await manager.async_delete_item(item["id"])
+
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        user_input={
-            ATTR_AUTH_LANGUAGE: PAGE_LANGUAGE,
-            ATTR_REGION_CODE: "CN",
-            "client_id": CLIENT_ID,
-            "client_secret": CLIENT_SECRET,
-        },
+        user_input=USER_INPUT,
     )
 
     state = config_entry_oauth2_flow._encode_jwt(
@@ -54,7 +70,7 @@ async def test_full_flow(hass: HomeAssistant) -> None:
 
     with (
         patch(
-            "homeassistant.components.hinen_power.async_setup_entry", return_value=True
+            "homeassistant.components.hinen_power.async_setup_entry", return_value=None
         ),
         patch(
             "homeassistant.components.hinen_power.config_flow.HinenOpen",
@@ -73,71 +89,29 @@ async def test_full_flow(hass: HomeAssistant) -> None:
         assert result["step_id"] == "creation"
 
         result = await hass.config_entries.flow.async_configure(result["flow_id"])
-        assert result["type"] is FlowResultType.FORM
-        assert result["step_id"] == "devices"
 
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            user_input={CONF_DEVICES: ["device_12345"]},
-        )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == OAUTH_CREDENTIAL_NAME
+    assert "result" in result
+    assert result["result"].unique_id == "12345678"
+    assert result["result"].data["token"]["account_id"] == 12345678
+    assert result["result"].data["token"]["access_token"] == "mock-access-token"
+    assert result["result"].data["token"]["refresh_token"] == "mock-refresh-token"
+    assert result["result"].data["token"]["host"] == HOST
+    assert result["result"].data["token"]["region_code"] == "CN"
+    assert CONF_CLIENT_ID not in result["result"].data["token"]
+    assert CONF_CLIENT_SECRET not in result["result"].data["token"]
 
-        assert result["type"] is FlowResultType.CREATE_ENTRY
-        assert result["title"] == TITLE
-        assert "result" in result
-        assert result["result"].unique_id == "device_12345"
-        assert result["result"].data["token"]["access_token"] == "mock-access-token"
-        assert result["result"].data["token"]["refresh_token"] == "mock-refresh-token"
-        assert result["result"].data["token"]["host"] == HOST
-        assert result["result"].data["token"]["region_code"] == "CN"
-        assert result["result"].data["token"]["client_secret"] == CLIENT_SECRET
-        assert result["options"] == {CONF_DEVICES: ["device_12345"]}
-
-
-@pytest.mark.usefixtures("current_request_with_host")
-async def test_options_flow(
-    hass: HomeAssistant,
-    config_entry: MockConfigEntry,
-) -> None:
-    """Test options flow."""
-    config_entry.add_to_hass(hass)
-
-    # Simulate successful setup
-    with (
-        patch(
-            "homeassistant.components.hinen_power.async_setup_entry", return_value=True
-        ),
-        patch(
-            "homeassistant.components.hinen_power.config_flow.HinenOpen",
-            return_value=MockHinen(hass),
-        ),
-    ):
-        await hass.config_entries.async_setup(config_entry.entry_id)
-        await hass.async_block_till_done()
-
-    # Initiate options flow
-    with patch(
-        "homeassistant.components.hinen_power.config_flow.HinenOpen",
-        return_value=MockHinen(hass),
-    ):
-        result = await hass.config_entries.options.async_init(config_entry.entry_id)
-
-        assert result["type"] is FlowResultType.FORM
-        assert result["step_id"] == "init"
-
-        # Submit options
-        result = await hass.config_entries.options.async_configure(
-            result["flow_id"],
-            user_input={CONF_DEVICES: ["device_12345"]},
-        )
-
-        assert result["type"] is FlowResultType.CREATE_ENTRY
-        assert config_entry.options == {CONF_DEVICES: ["device_12345"]}
+    credentials = manager.async_items()
+    assert len(credentials) == 1
+    assert credentials[0]["client_id"] == CLIENT_ID
+    assert credentials[0]["client_secret"] == CLIENT_SECRET
+    assert credentials[0]["name"] == OAUTH_CREDENTIAL_NAME
 
 
 @pytest.mark.usefixtures("current_request_with_host")
 async def test_no_device(
     hass: HomeAssistant,
-    hass_client_no_auth: ClientSessionGenerator,
 ) -> None:
     """Test flow when no device is found."""
     result = await hass.config_entries.flow.async_init(
@@ -146,12 +120,7 @@ async def test_no_device(
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        user_input={
-            ATTR_AUTH_LANGUAGE: PAGE_LANGUAGE,
-            ATTR_REGION_CODE: "CN",
-            "client_id": CLIENT_ID,
-            "client_secret": CLIENT_SECRET,
-        },
+        user_input=USER_INPUT,
     )
 
     # Mock Hinen service with no devices
@@ -187,12 +156,7 @@ async def test_forbidden_error(
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        user_input={
-            ATTR_AUTH_LANGUAGE: PAGE_LANGUAGE,
-            ATTR_REGION_CODE: "CN",
-            "client_id": CLIENT_ID,
-            "client_secret": CLIENT_SECRET,
-        },
+        user_input=USER_INPUT,
     )
 
     # Mock Hinen service that raises ForbiddenError
@@ -228,12 +192,7 @@ async def test_unknown_error(
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        user_input={
-            ATTR_AUTH_LANGUAGE: PAGE_LANGUAGE,
-            ATTR_REGION_CODE: "CN",
-            "client_id": CLIENT_ID,
-            "client_secret": CLIENT_SECRET,
-        },
+        user_input=USER_INPUT,
     )
     # Mock Hinen service that raises an unknown error
     with patch(
@@ -274,141 +233,34 @@ async def test_country_list_api_error(
 
 
 @pytest.mark.usefixtures("current_request_with_host")
-@pytest.mark.parametrize(
-    ("expected_reason", "device_fixture_name"),
-    [
-        ("reauth_successful", "get_devices.json"),
-        ("wrong_account", "get_different_device.json"),
-    ],
-    ids=["same_account", "different_account"],
-)
-async def test_reauth_flow(
-    hass: HomeAssistant,
-    config_entry: MockConfigEntry,
-    expected_reason: str,
-    device_fixture_name: str,
-) -> None:
-    """Test successful reauthentication and handling of wrong account mismatch."""
-    config_entry.add_to_hass(hass)
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            "source": config_entries.SOURCE_REAUTH,
-            "entry_id": config_entry.entry_id,
-        },
-    )
-
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        user_input={
-            ATTR_AUTH_LANGUAGE: PAGE_LANGUAGE,
-            ATTR_REGION_CODE: "CN",
-            "client_id": CLIENT_ID,
-            "client_secret": CLIENT_SECRET,
-        },
-    )
-
-    assert result["type"] is FlowResultType.EXTERNAL_STEP
-    assert "state=" in result["url"]
-
-    with (
-        patch(
-            "homeassistant.components.hinen_power.async_setup_entry", return_value=True
-        ),
-        patch(
-            "homeassistant.components.hinen_power.config_flow.HinenOpen",
-            return_value=MockHinen(hass, devices_fixture=device_fixture_name),
-        ),
-    ):
-        result = await hass.config_entries.flow.async_configure(result["flow_id"])
-        assert result["type"] is FlowResultType.EXTERNAL_STEP
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {"code": "mock-code"}
-        )
-        assert result["type"] is FlowResultType.EXTERNAL_STEP_DONE
-        result = await hass.config_entries.flow.async_configure(result["flow_id"])
-
-        assert result["type"] is FlowResultType.ABORT
-        assert result["reason"] == expected_reason
-
-
-@pytest.mark.usefixtures("current_request_with_host")
-async def test_options_flow_no_device(
+async def test_already_configured(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
 ) -> None:
-    """Test options flow aborts when no devices are available."""
+    """Test flow aborts when the account is already configured."""
     config_entry.add_to_hass(hass)
 
-    with (
-        patch(
-            "homeassistant.components.hinen_power.async_setup_entry", return_value=True
-        ),
-        patch(
-            "homeassistant.components.hinen_power.config_flow.HinenOpen",
-            return_value=MockHinen(hass),
-        ),
-    ):
-        await hass.config_entries.async_setup(config_entry.entry_id)
-        await hass.async_block_till_done()
-
-    with patch(
-        "homeassistant.components.hinen_power.config_flow.HinenOpen",
-        return_value=MockHinen(hass, devices_fixture="get_no_device.json"),
-    ):
-        result = await hass.config_entries.options.async_init(config_entry.entry_id)
-
-        assert result["type"] is FlowResultType.ABORT
-        assert result["reason"] == "no_device"
-
-
-@pytest.mark.usefixtures("current_request_with_host")
-async def test_device_selection_flow(
-    hass: HomeAssistant,
-    hass_client_no_auth: ClientSessionGenerator,
-) -> None:
-    """Test device selection flow."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        user_input={
-            ATTR_AUTH_LANGUAGE: PAGE_LANGUAGE,
-            ATTR_REGION_CODE: "CN",
-            "client_id": CLIENT_ID,
-            "client_secret": CLIENT_SECRET,
-        },
+        user_input=USER_INPUT,
     )
 
-    # Mock device selection flow
     with patch(
         "homeassistant.components.hinen_power.config_flow.HinenOpen",
         return_value=MockHinen(hass),
     ):
         result = await hass.config_entries.flow.async_configure(result["flow_id"])
         assert result["type"] is FlowResultType.EXTERNAL_STEP
-        assert result["step_id"] == "auth"
 
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], {"code": "mock-code"}
         )
         assert result["type"] is FlowResultType.EXTERNAL_STEP_DONE
-        assert result["step_id"] == "creation"
 
-        # Simulate the OAuth2 callback with authorization code
         result = await hass.config_entries.flow.async_configure(result["flow_id"])
-        assert result["type"] is FlowResultType.FORM
-        assert result["step_id"] == "devices"
 
-        # Test device selection with multiple devices
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            user_input={CONF_DEVICES: ["device_12345"]},
-        )
-
-        assert result["type"] is FlowResultType.CREATE_ENTRY
-        assert result["result"].unique_id == "device_12345"
-        assert result["options"] == {CONF_DEVICES: ["device_12345"]}
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"

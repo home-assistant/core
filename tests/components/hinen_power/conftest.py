@@ -6,6 +6,8 @@ from typing import Any
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 
 from homeassistant.components.application_credentials import (
     ClientCredential,
@@ -17,13 +19,11 @@ from homeassistant.setup import async_setup_component
 
 from . import MockHinen
 
-from tests.common import MockConfigEntry
-from tests.test_util.aiohttp import AiohttpClientMocker
-
 type ComponentSetup = Callable[[], Awaitable[MockHinen]]
 
 CLIENT_ID = "6liMmES7"
 CLIENT_SECRET = "test_client_secret"
+OAUTH_CREDENTIAL_NAME = "Hinen Power"
 PAGE_LANGUAGE = "en_US"
 AUTH_URL = "https://global.knowledge.celinksmart.com/#/auth"
 TOKEN_URL = (
@@ -42,7 +42,7 @@ async def setup_credentials(hass: HomeAssistant) -> None:
     await async_import_client_credential(
         hass,
         DOMAIN,
-        ClientCredential(CLIENT_ID, CLIENT_SECRET),
+        ClientCredential(CLIENT_ID, CLIENT_SECRET, name=TITLE),
         DOMAIN,
     )
 
@@ -59,7 +59,7 @@ def mock_config_entry(expires_at: int) -> MockConfigEntry:
     return MockConfigEntry(
         domain=DOMAIN,
         title=TITLE,
-        unique_id="device_12345",
+        unique_id="12345678",
         data={
             "auth_implementation": DOMAIN,
             "token": {
@@ -70,12 +70,9 @@ def mock_config_entry(expires_at: int) -> MockConfigEntry:
                 "expires_at": expires_at,
                 "access_token_expiration": 12345678,
                 "host": "https://dev-iot-api.celinksmart.cn",
-                "client_secret": "test_client_secret",
                 "region_code": "CN",
-                "client_id": "6liMmES7",
             },
         },
-        options={"devices": ["device_12345"]},
     )
 
 
@@ -86,14 +83,13 @@ def mock_connection(aioclient_mock: AiohttpClientMocker) -> None:
         TOKEN_URL,
         json={
             "data": {
-                "account_id": 12345678,
-                "access_token": "mock-access-token",
-                "refresh_token": "mock-refresh-token",
-                "expires_in": 6000,
-                "access_token_expiration": 12345678,
+                "accountId": 12345678,
+                "accessToken": "mock-access-token",
+                "refreshToken": "mock-refresh-token",
+                "expiresIn": 6000,
+                "accessTokenExpiration": 12345678,
                 "host": "https://dev-iot-api.celinksmart.cn",
-                "client_secret": "test_client_secret",
-                "region_code": "CN",
+                "regionCode": "CN",
             }
         },
     )
@@ -133,7 +129,7 @@ async def mock_setup_integration(
     await async_import_client_credential(
         hass,
         DOMAIN,
-        ClientCredential(CLIENT_ID, CLIENT_SECRET),
+        ClientCredential(CLIENT_ID, CLIENT_SECRET, name=TITLE),
         DOMAIN,
     )
 
