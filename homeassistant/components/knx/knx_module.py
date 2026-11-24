@@ -316,11 +316,12 @@ class KNXModule:
             )
         }
         for exposure in self.yaml_exposures:
-            if isinstance(exposure, KnxExposeEntity):
-                result.setdefault(exposure.entity_id, []).extend(
-                    ExposeGroupAddress(ga=ga, ui=False)
-                    for ga in exposure.group_addresses
-                )
+            if not isinstance(exposure, KnxExposeEntity):
+                # time, date and datetime exposes have no entity_id
+                continue
+            result.setdefault(exposure.entity_id, []).extend(
+                ExposeGroupAddress(ga=ga, ui=False) for ga in exposure.group_addresses
+            )
         return result
 
     def connection_state_changed_cb(self, state: XknxConnectionState) -> None:
