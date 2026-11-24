@@ -113,7 +113,6 @@ from homeassistant.util import dt as dt_util
 from homeassistant.util.json import JsonValueType, json_loads
 
 
-
 @pytest.fixture
 async def mock_recorder_before_hass(
     async_test_recorder: RecorderInstanceContextManager,
@@ -995,7 +994,10 @@ async def test_event_data_filter_scalar_types(
     )
 
     await hass.services.async_call(
-        DOMAIN, RecorderService.PURGE, {"keep_days": 10, "apply_filter": True}, blocking=True
+        DOMAIN,
+        RecorderService.PURGE,
+        {"keep_days": 10, "apply_filter": True},
+        blocking=True,
     )
     await async_wait_purge_done(hass)
 
@@ -1046,7 +1048,10 @@ async def test_event_data_filter_oversized_payload(
     )
 
     await hass.services.async_call(
-        DOMAIN, RecorderService.PURGE, {"keep_days": 10, "apply_filter": True}, blocking=True
+        DOMAIN,
+        RecorderService.PURGE,
+        {"keep_days": 10, "apply_filter": True},
+        blocking=True,
     )
     await async_wait_purge_done(hass)
 
