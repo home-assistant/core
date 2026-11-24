@@ -355,15 +355,16 @@ async def test_async_browse_media_root(
     assert len(res_root.children) == 1
     assert res_root.children[0].identifier == mock_config_entry.entry_id
 
-    # Instance level: Lists 3 categories (Latest Media, Videos, Images)
+    # Instance level: Lists 3 categories (Latest media, Videos, Images)
     res_instance = await async_browse_media(
         hass, f"{URI_SCHEME}{DOMAIN}/{mock_config_entry.entry_id}"
     )
     assert len(res_instance.children) == 3
-    cat_ids = [c.identifier for c in res_instance.children]
-    assert f"{mock_config_entry.entry_id}#latest" in cat_ids
-    assert f"{mock_config_entry.entry_id}#videos" in cat_ids
-    assert f"{mock_config_entry.entry_id}#images" in cat_ids
+    assert {c.identifier: c.title for c in res_instance.children} == {
+        f"{mock_config_entry.entry_id}#latest": "Latest media",
+        f"{mock_config_entry.entry_id}#videos": "Timelapses & generated media",
+        f"{mock_config_entry.entry_id}#images": "Captured images history",
+    }
 
     # Invalid category raises BrowseError
     with pytest.raises(BrowseError):
