@@ -221,7 +221,11 @@ class DemoCover(CoverEntity):
     async def async_close_cover_tilt(self, **kwargs: Any) -> None:
         """Close the cover tilt."""
         tilt = self._tilt_position
-        if tilt is None or tilt in self._closed_tilt_positions:
+        if tilt is None:
+            return
+        if tilt in self._closed_tilt_positions:
+            self._stop_tilt()
+            self.async_write_ha_state()
             return
 
         closed_position = min(
