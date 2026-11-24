@@ -12,7 +12,7 @@ from homeassistant.components.cover import (
     DOMAIN as COVER_DOMAIN,
     SERVICE_CLOSE_COVER,
     SERVICE_OPEN_COVER,
-    SERVICE_TOGGLE,
+    CoverService,
     CoverState,
 )
 from homeassistant.const import (
@@ -22,6 +22,7 @@ from homeassistant.const import (
     STATE_OPEN,
     STATE_OPENING,
     STATE_UNKNOWN,
+    TargetKey,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
@@ -114,8 +115,8 @@ async def test_cover_external_movement(
 @pytest.mark.parametrize(
     ("service", "moving_door_state", "moving_state", "final_door_state", "final_state"),
     [
-        (SERVICE_OPEN_COVER, 4, STATE_OPENING, 1, STATE_OPEN),
-        (SERVICE_CLOSE_COVER, 3, STATE_CLOSING, 0, STATE_CLOSED),
+        (CoverService.OPEN, 4, STATE_OPENING, 1, STATE_OPEN),
+        (CoverService.CLOSE, 3, STATE_CLOSING, 0, STATE_CLOSED),
     ],
     ids=["open", "close"],
 )
@@ -137,7 +138,7 @@ async def test_cover_command_from_stopped(
     await hass.services.async_call(
         COVER_DOMAIN,
         service,
-        {ATTR_ENTITY_ID: "cover.garage_abcdef"},
+        {TargetKey.ENTITY_ID: "cover.garage_abcdef"},
         blocking=True,
     )
     assert mock_opengarage.push_button.call_count == 1
@@ -153,10 +154,10 @@ async def test_cover_command_from_stopped(
 @pytest.mark.parametrize(
     ("door_state", "service", "moving_state", "door_state_name"),
     [
-        (2, SERVICE_OPEN_COVER, STATE_OPENING, STATE_OPEN),
-        (2, SERVICE_CLOSE_COVER, STATE_CLOSING, STATE_OPEN),
-        (0, SERVICE_OPEN_COVER, STATE_OPENING, STATE_CLOSED),
-        (1, SERVICE_CLOSE_COVER, STATE_CLOSING, STATE_OPEN),
+        (2, CoverService.OPEN, STATE_OPENING, STATE_OPEN),
+        (2, CoverService.CLOSE, STATE_CLOSING, STATE_OPEN),
+        (0, CoverService.OPEN, STATE_OPENING, STATE_CLOSED),
+        (1, CoverService.CLOSE, STATE_CLOSING, STATE_OPEN),
     ],
     ids=["open_from_stopped", "close_from_stopped", "open", "close"],
 )
@@ -177,7 +178,7 @@ async def test_cover_command_without_movement(
     await hass.services.async_call(
         COVER_DOMAIN,
         service,
-        {ATTR_ENTITY_ID: "cover.garage_abcdef"},
+        {TargetKey.ENTITY_ID: "cover.garage_abcdef"},
         blocking=True,
     )
     assert hass.states.get("cover.garage_abcdef").state == moving_state
@@ -203,8 +204,8 @@ async def test_cover_command_with_firmware_transition(
 
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_CLOSE_COVER,
-        {ATTR_ENTITY_ID: "cover.garage_abcdef"},
+        CoverService.CLOSE,
+        {TargetKey.ENTITY_ID: "cover.garage_abcdef"},
         blocking=True,
     )
     assert hass.states.get("cover.garage_abcdef").state == STATE_CLOSING
@@ -230,8 +231,8 @@ async def test_cover_position_during_transition(
     # Open the cover - will be in OPENING state before update
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_OPEN_COVER,
-        {ATTR_ENTITY_ID: "cover.garage_abcdef"},
+        CoverService.OPEN,
+        {TargetKey.ENTITY_ID: "cover.garage_abcdef"},
         blocking=True,
     )
 
@@ -276,8 +277,8 @@ async def test_toggle_cover(
 
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_TOGGLE,
-        {ATTR_ENTITY_ID: "cover.garage_abcdef"},
+        CoverService.TOGGLE,
+        {TargetKey.ENTITY_ID: "cover.garage_abcdef"},
         blocking=True,
     )
 
@@ -311,8 +312,8 @@ async def test_toggle_does_not_reuse_stale_close_direction(
     # Toggle while open should close, recording the close direction.
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_TOGGLE,
-        {ATTR_ENTITY_ID: "cover.garage_abcdef"},
+        CoverService.TOGGLE,
+        {TargetKey.ENTITY_ID: "cover.garage_abcdef"},
         blocking=True,
     )
     assert mock_opengarage.push_button.call_count == 1
@@ -341,8 +342,8 @@ async def test_toggle_does_not_reuse_stale_close_direction(
     # Toggling now must close again, not reuse the stale close direction.
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_TOGGLE,
-        {ATTR_ENTITY_ID: "cover.garage_abcdef"},
+        CoverService.TOGGLE,
+        {TargetKey.ENTITY_ID: "cover.garage_abcdef"},
         blocking=True,
     )
     assert mock_opengarage.push_button.call_count == 2

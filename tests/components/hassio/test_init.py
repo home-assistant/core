@@ -1187,95 +1187,58 @@ async def test_invalid_service_calls_folder_duplicates(hass: HomeAssistant) -> N
         )
 
 
-@pytest.mark.usefixtures("hassio_env")
-async def test_partial_backup_legacy_homeassistant_folder(
-    hass: HomeAssistant,
-    issue_registry: ir.IssueRegistry,
-    supervisor_client: AsyncMock,
-) -> None:
-    """Test legacy "homeassistant" folder is translated to homeassistant=True."""
-    assert await async_setup_component(hass, DOMAIN, {})
-    supervisor_client.backups.partial_backup.return_value = NewBackup(
-        job_id=uuid4(), slug="partial"
-    )
-
-    await hass.services.async_call(
-        DOMAIN,
-        HassioService.BACKUP_PARTIAL,
-        {
-            HassioServiceArgument.FOLDERS: ["homeassistant", "ssl"],
-            HassioServiceArgument.NAME: "test",
-        },
-        blocking=True,
-    )
-    supervisor_client.backups.partial_backup.assert_called_once_with(
-        PartialBackupOptions(
-            name="test",
-            homeassistant=True,
-            folders={Folder.SSL},
-        )
-    )
-    assert (
-        issue_registry.async_get_issue("hassio", "legacy_homeassistant_folder")
-        is not None
-    )
-
-
-@pytest.mark.usefixtures("hassio_env")
-async def test_partial_restore_legacy_homeassistant_folder(
-    hass: HomeAssistant, supervisor_client: AsyncMock
-) -> None:
-    """Test that the legacy "homeassistant" folder is translated for restore too."""
-    assert await async_setup_component(hass, DOMAIN, {})
-
-    await hass.services.async_call(
-        DOMAIN,
-        HassioService.RESTORE_PARTIAL,
-        {
-            HassioServiceArgument.SLUG: "test",
-            HassioServiceArgument.FOLDERS: ["homeassistant", "ssl"],
-        },
-        blocking=True,
-    )
-    supervisor_client.backups.partial_restore.assert_called_once_with(
-        "test",
-        PartialRestoreOptions(
-            homeassistant=True,
-            folders={Folder.SSL},
+@pytest.mark.parametrize(
+    ("service", "service_data"),
+    [
+        pytest.param(HassioService.BACKUP_PARTIAL, {}, id="backup"),
+        pytest.param(
+            HassioService.RESTORE_PARTIAL,
+            {HassioServiceArgument.SLUG: "test"},
+            id="restore",
         ),
+    ],
+)
+@pytest.mark.parametrize("folder", ["bogus", "homeassistant"])
+@pytest.mark.usefixtures("hassio_env", "supervisor_client")
+async def test_partial_invalid_folder(
+    hass: HomeAssistant,
+    service: HassioService,
+    service_data: dict[str, str],
+    folder: str,
+) -> None:
+    """Test that an unknown or the removed legacy folder name is rejected."""
+    assert await async_setup_component(hass, DOMAIN, {})
+
+    with pytest.raises(Invalid, match="expected Folder"):
+        await hass.services.async_call(
+            DOMAIN,
+            service,
+            {**service_data, HassioServiceArgument.FOLDERS: [folder]},
+        )
+
+
+@pytest.mark.parametrize(
+    "ignore_missing_translations",
+    ["component.hassio.issues.legacy_homeassistant_folder.title"],
+)
+@pytest.mark.usefixtures("hassio_env", "supervisor_client")
+async def test_legacy_homeassistant_folder_issue_removed(
+    hass: HomeAssistant, issue_registry: ir.IssueRegistry
+) -> None:
+    """Test the persistent issue of the removed legacy folder alias is deleted."""
+    ir.async_create_issue(
+        hass,
+        DOMAIN,
+        "legacy_homeassistant_folder",
+        is_fixable=True,
+        is_persistent=True,
+        severity=ir.IssueSeverity.WARNING,
+        translation_key="legacy_homeassistant_folder",
     )
 
-
-@pytest.mark.usefixtures("hassio_env", "supervisor_client")
-async def test_partial_backup_invalid_folder(hass: HomeAssistant) -> None:
-    """Test that an unknown folder name is rejected."""
     assert await async_setup_component(hass, DOMAIN, {})
 
-    with pytest.raises(Invalid, match="not a valid value"):
-        await hass.services.async_call(
-            DOMAIN,
-            HassioService.BACKUP_PARTIAL,
-            {HassioServiceArgument.FOLDERS: ["bogus"]},
-        )
-
-
-@pytest.mark.usefixtures("hassio_env", "supervisor_client")
-async def test_partial_backup_legacy_homeassistant_folder_conflict(
-    hass: HomeAssistant,
-) -> None:
-    """Reject combining homeassistant=False with the legacy "homeassistant" folder."""
-    assert await async_setup_component(hass, DOMAIN, {})
-
-    with pytest.raises(ServiceValidationError, match="conflicts"):
-        await hass.services.async_call(
-            DOMAIN,
-            HassioService.BACKUP_PARTIAL,
-            {
-                HassioServiceArgument.HOMEASSISTANT: False,
-                HassioServiceArgument.FOLDERS: ["homeassistant"],
-            },
-            blocking=True,
-        )
+    assert not issue_registry.async_get_issue(DOMAIN, "legacy_homeassistant_folder")
 
 
 @pytest.mark.usefixtures("addon_installed")

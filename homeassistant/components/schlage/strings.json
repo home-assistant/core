@@ -54,7 +54,9 @@
           "240": "4 minutes",
           "300": "5 minutes",
           "360": "6 minutes",
-          "600": "10 minutes"
+          "600": "10 minutes",
+          "900": "15 minutes",
+          "1800": "30 minutes"
         }
       }
     },
@@ -76,6 +78,9 @@
     },
     "schlage_delete_code_failed": {
       "message": "Failed to delete PIN code from the lock."
+    },
+    "schlage_invalid_schedule_timezone": {
+      "message": "Start or end datetime falls within an ambiguous or invalid daylight saving time transition."
     },
     "schlage_name_exists": {
       "message": "A PIN code with the name \"{name}\" already exists on the lock."
