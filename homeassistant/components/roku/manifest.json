@@ -4,6 +4,7 @@
   "categories": ["media_entertainment.tv_streaming"],
   "codeowners": ["@ctalkington"],
   "config_flow": true,
+  "connectivity": ["network"],
   "documentation": "https://www.home-assistant.io/integrations/roku",
   "homekit": {
     "models": ["3820X", "3810X", "4660X", "7820X", "C105X", "C135X"]

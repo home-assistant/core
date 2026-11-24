@@ -16,20 +16,12 @@ from syrupy.assertion import SnapshotAssertion
 from homeassistant.components.control4.coordinator import SCAN_INTERVAL
 from homeassistant.components.cover import (
     ATTR_CURRENT_POSITION,
-    ATTR_POSITION,
     DOMAIN as COVER_DOMAIN,
-    SERVICE_CLOSE_COVER,
-    SERVICE_OPEN_COVER,
-    SERVICE_SET_COVER_POSITION,
-    SERVICE_STOP_COVER,
+    CoverService,
+    CoverServiceArgument,
     CoverState,
 )
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    STATE_UNAVAILABLE,
-    STATE_UNKNOWN,
-    Platform,
-)
+from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN, Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -182,8 +174,8 @@ async def test_open_cover(
     """Test opening the cover dispatches to pyControl4."""
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_OPEN_COVER,
-        {ATTR_ENTITY_ID: ENTITY_ID},
+        CoverService.OPEN,
+        {TargetKey.ENTITY_ID: ENTITY_ID},
         blocking=True,
     )
     mock_c4_blind.open.assert_called_once_with()
@@ -202,8 +194,8 @@ async def test_close_cover(
     """Test closing the cover dispatches to pyControl4."""
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_CLOSE_COVER,
-        {ATTR_ENTITY_ID: ENTITY_ID},
+        CoverService.CLOSE,
+        {TargetKey.ENTITY_ID: ENTITY_ID},
         blocking=True,
     )
     mock_c4_blind.close.assert_called_once_with()
@@ -222,8 +214,8 @@ async def test_stop_cover(
     """Test stopping the cover dispatches to pyControl4."""
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_STOP_COVER,
-        {ATTR_ENTITY_ID: ENTITY_ID},
+        CoverService.STOP,
+        {TargetKey.ENTITY_ID: ENTITY_ID},
         blocking=True,
     )
     mock_c4_blind.stop.assert_called_once_with()
@@ -242,8 +234,8 @@ async def test_set_cover_position(
     """Test setting cover position calls set_level_target with the requested value."""
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_SET_COVER_POSITION,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_POSITION: 75},
+        CoverService.SET_POSITION,
+        {TargetKey.ENTITY_ID: ENTITY_ID, CoverServiceArgument.POSITION: 75},
         blocking=True,
     )
     mock_c4_blind.set_level_target.assert_called_once_with(75)

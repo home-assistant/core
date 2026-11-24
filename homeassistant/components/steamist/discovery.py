@@ -14,6 +14,7 @@ from homeassistant.helpers import device_registry as dr, discovery_flow
 from homeassistant.util.network import is_ip_address
 
 from .const import DATA_DISCOVERY, DISCOVER_SCAN_TIMEOUT, DOMAIN
+from .coordinator import SteamistConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -33,7 +34,7 @@ def async_is_steamist_device(device: Device30303) -> bool:
 @callback
 def async_update_entry_from_discovery(
     hass: HomeAssistant,
-    entry: config_entries.ConfigEntry,
+    entry: SteamistConfigEntry,
     device: Device30303,
 ) -> bool:
     """Update a config entry from a discovery."""

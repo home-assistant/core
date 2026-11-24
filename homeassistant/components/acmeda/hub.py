@@ -12,13 +12,15 @@ from homeassistant.helpers.dispatcher import async_dispatcher_send
 from .const import ACMEDA_HUB_UPDATE, LOGGER
 from .helpers import update_devices
 
+type AcmedaConfigEntry = ConfigEntry[PulseHub]
+
 
 class PulseHub:
     """Manages a single Pulse Hub."""
 
     api: aiopulse.Hub
 
-    def __init__(self, hass: HomeAssistant, config_entry: ConfigEntry) -> None:
+    def __init__(self, hass: HomeAssistant, config_entry: AcmedaConfigEntry) -> None:
         """Initialize the system."""
         self.config_entry = config_entry
         self.hass = hass

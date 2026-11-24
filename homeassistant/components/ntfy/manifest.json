@@ -4,6 +4,7 @@
   "categories": ["messaging_notifications.push_notifications"],
   "codeowners": ["@tr4nt0r"],
   "config_flow": true,
+  "connectivity": ["cloud", "network"],
   "documentation": "https://www.home-assistant.io/integrations/ntfy",
   "integration_type": "service",
   "iot_class": "cloud_push",

@@ -22,7 +22,6 @@ from homeassistant.components.weather import (
     Forecast,
     WeatherEntityFeature,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_LOCATION,
     UnitOfLength,
@@ -126,7 +125,7 @@ class NWSWeather(CoordinatorWeatherEntity[TimestampDataUpdateCoordinator[None]])
 
     def __init__(
         self,
-        entry: ConfigEntry,
+        entry: NWSConfigEntry,
         nws_data: NWSData,
     ) -> None:
         """Initialise the platform with a data instance and station name."""

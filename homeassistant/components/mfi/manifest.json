@@ -3,6 +3,7 @@
   "name": "Ubiquiti mFi mPort",
   "categories": ["plugs_switches", "sensors"],
   "codeowners": [],
+  "connectivity": ["network"],
   "documentation": "https://www.home-assistant.io/integrations/mfi",
   "iot_class": "local_polling",
   "loggers": ["mficlient"],

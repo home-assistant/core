@@ -17,7 +17,7 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.calendar import DOMAIN as CALENDAR_DOMAIN
 from homeassistant.components.icloud.coordinator import CALENDAR_SCAN_INTERVAL
-from homeassistant.const import ATTR_ENTITY_ID, Platform
+from homeassistant.const import Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
@@ -168,7 +168,7 @@ async def test_all_day_event_end_is_exclusive(
         CALENDAR_DOMAIN,
         "get_events",
         {
-            ATTR_ENTITY_ID: ENTITY_ID,
+            TargetKey.ENTITY_ID: ENTITY_ID,
             "start_date_time": datetime(2024, 4, 30),
             "end_date_time": datetime(2024, 5, 3),
         },
@@ -222,7 +222,7 @@ async def test_get_events_filters_to_the_requested_window(
         CALENDAR_DOMAIN,
         "get_events",
         {
-            ATTR_ENTITY_ID: ENTITY_ID,
+            TargetKey.ENTITY_ID: ENTITY_ID,
             "start_date_time": datetime(2024, 5, 1, 10, 0),
             "end_date_time": datetime(2024, 5, 1, 11, 0),
         },
@@ -268,7 +268,7 @@ async def test_get_events_error_raises(
             CALENDAR_DOMAIN,
             "get_events",
             {
-                ATTR_ENTITY_ID: ENTITY_ID,
+                TargetKey.ENTITY_ID: ENTITY_ID,
                 "start_date_time": datetime(2024, 4, 30),
                 "end_date_time": datetime(2024, 5, 3),
             },
@@ -304,7 +304,7 @@ async def test_event_uses_its_own_timezone(
         CALENDAR_DOMAIN,
         "get_events",
         {
-            ATTR_ENTITY_ID: ENTITY_ID,
+            TargetKey.ENTITY_ID: ENTITY_ID,
             "start_date_time": datetime(2024, 4, 30),
             "end_date_time": datetime(2024, 5, 3),
         },
@@ -355,7 +355,7 @@ async def test_datetime_dates_are_accepted(
         CALENDAR_DOMAIN,
         "get_events",
         {
-            ATTR_ENTITY_ID: ENTITY_ID,
+            TargetKey.ENTITY_ID: ENTITY_ID,
             "start_date_time": datetime(2024, 4, 30),
             "end_date_time": datetime(2024, 5, 3),
         },
@@ -392,7 +392,7 @@ async def test_unknown_event_timezone_falls_back(
         CALENDAR_DOMAIN,
         "get_events",
         {
-            ATTR_ENTITY_ID: ENTITY_ID,
+            TargetKey.ENTITY_ID: ENTITY_ID,
             "start_date_time": datetime(2024, 4, 30),
             "end_date_time": datetime(2024, 5, 3),
         },

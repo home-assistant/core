@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING
 
 from aiowaqi import WAQIClient
 
-from homeassistant.config_entries import ConfigEntry, ConfigSubentry
+from homeassistant.config_entries import ConfigSubentry
 from homeassistant.const import CONF_API_KEY, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import (
@@ -70,7 +70,7 @@ async def async_migrate_integration(hass: HomeAssistant) -> None:
     if not any(entry.version == 1 for entry in entries):
         return
 
-    api_keys_entries: dict[str, tuple[ConfigEntry, bool]] = {}
+    api_keys_entries: dict[str, tuple[WAQIConfigEntry, bool]] = {}
     entity_registry = er.async_get(hass)
     device_registry = dr.async_get(hass)
 

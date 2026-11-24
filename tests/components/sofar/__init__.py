@@ -2,8 +2,8 @@
 
 from datetime import datetime
 
-from modbus_connection import ModbusError
-from modbus_connection.mock import MockModbusUnit
+from modbus_connection import IllegalDataAddressError
+from modbus_connection.mock import MockModbusUnit, WriteEvent
 
 from homeassistant.components.sofar.const import (
     CONF_BAUDRATE,
@@ -39,6 +39,8 @@ MOCK_SERIAL_INPUT = {
 MOCK_SERIAL_ENTRY_DATA = {CONF_TYPE: TYPE_SERIAL, **MOCK_SERIAL_INPUT}
 
 FAULT_LOG_REGISTER = 0x1480
+PACK_SELECT_REGISTER = 0x9020
+ONLINE_GROUPS_REGISTER = 0x9022
 
 
 def _seed_string(unit: MockModbusUnit, address: int, words: int, text: str) -> None:
@@ -101,7 +103,7 @@ def deny_charge_cutoff(unit: MockModbusUnit) -> None:
 
 def refuse_battery_config_mask(unit: MockModbusUnit) -> None:
     """Seed a model that publishes no battery config mask."""
-    unit.fail_read(0x1040, ModbusError("illegal data address"))
+    unit.fail_read(0x1040, IllegalDataAddressError())
 
 
 def declare_pv_in_masks(unit: MockModbusUnit) -> None:
@@ -116,7 +118,7 @@ def declare_pv_in_masks(unit: MockModbusUnit) -> None:
 def seed_hybrid_inverter(
     unit: MockModbusUnit, serial: str = MOCK_HYBRID_SERIAL
 ) -> None:
-    """Seed a hybrid inverter with battery packs 1 and 3 wired, 2 absent."""
+    """Seed a hybrid inverter with battery strings 1 and 3 wired, 2 absent."""
     _seed_common(unit, serial)
     unit.holding[0x0604] = 520  # battery_voltage_1 -> 52.0 V
     unit.holding[0x0608] = 87  # battery_capacity_1 -> 87%
@@ -128,3 +130,37 @@ def seed_hybrid_inverter(
     unit.holding[0x1042] = 0x0800  # 0x105B, the charge cut-off, is served
     unit.holding[0x1043] = 0x000F
     unit.holding[0x105B] = 95  # charge cut-off -> 95%
+
+
+def seed_battery_tower(unit: MockModbusUnit, groups: int) -> None:
+    """Seed a BTS tower of one-pack groups that switches on selection."""
+    _seed_string(unit, 0x9007, 4, "BTS 5K")
+    unit.holding[0x900B] = 10033  # BMS version
+    unit.holding[0x900D] = groups << 8 | 1  # groups, one pack each
+    unit.holding[ONLINE_GROUPS_REGISTER] = (1 << groups) - 1
+
+    def serve(selection: int) -> None:
+        """Answer for the selected pack, each group a little different."""
+        group = selection >> 8
+        unit.holding[0x9044] = selection
+        _seed_string(unit, 0x9048, 9, f"PACK{group}")
+        for cell in range(16):
+            unit.holding[0x9051 + cell] = 3300 + cell  # 3.300 V and up
+        unit.holding[0x9069] = 3315  # highest cell -> 3.315 V
+        unit.holding[0x906A] = 3300  # lowest cell -> 3.300 V
+        for sensor, tenths in enumerate((294, 284, 279, 271)):
+            unit.holding[0x906B + sensor] = tenths
+        unit.holding[0x906F] = 443  # MOSFET -> 44.3 °C
+        unit.holding[0x9070] = 446  # internal -> 44.6 °C
+        unit.holding[0x9072] = 978 + group  # remaining -> 97.8 Ah and up
+        unit.holding[0x9073] = 1027  # full charge -> 102.7 Ah
+        unit.holding[0x9074] = 64 + group  # charge cycles
+        unit.holding[0x907C] = 16  # cells in series
+
+    def select(event: WriteEvent) -> None:
+        """Switch packs the way the tower does on an inquiry write."""
+        if event.address == PACK_SELECT_REGISTER:
+            serve(event.values[0])
+
+    serve(0)
+    unit.on_write(select)

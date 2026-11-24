@@ -86,6 +86,9 @@
           'feature_flags': 0,
           'mac_address': '',
         }),
+        'crash_report': dict({
+          'flags': 0,
+        }),
         'sendspin': dict({
           'client_id': '',
           'feature_flags': 0,
