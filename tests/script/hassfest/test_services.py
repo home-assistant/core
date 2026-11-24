@@ -135,6 +135,9 @@ def test_valid_visible(services_yaml: str) -> None:
             """
             record:
               fields:
+                mode:
+                  selector:
+                    text:
                 duration:
                   visible:
                     field: mode
