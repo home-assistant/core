@@ -1,11 +1,10 @@
 """Tests for the Fujitsu Infrared integration setup."""
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry
 
 
 @pytest.mark.usefixtures("init_integration")
