@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ImageChannel version="2.0" xmlns="http://www.hikvision.com/ver20/XMLSchema">
+<id>1</id>
+<enabled>true</enabled>
+<videoInputID>1</videoInputID>
+<ImageFlip>
+<enabled opt="true,false">false</enabled>
+<ImageFlipStyle opt="LEFTRIGHT,UPDOWN,CENTER"></ImageFlipStyle>
+</ImageFlip>
+<WDR>
+<mode opt="close,open,auto">close</mode>
+<WDRLevel min="0" max="100">41</WDRLevel>
+</WDR>
+<BLC>
+<enabled opt="true,false">true</enabled>
+<BLCMode opt="CLOSE,UP,DOWN,LEFT,RIGHT,CENTER,Region,AUTO">AUTO</BLCMode>
+<BLCRegionList>
+<BLCRegion>
+<id>1</id>
+<RegionCoordinatesList>
+<RegionCoordinates>
+<positionX>0</positionX>
+<positionY>0</positionY>
+</RegionCoordinates>
+</RegionCoordinatesList>
+</BLCRegion>
+</BLCRegionList>
+</BLC>
+<IrcutFilter>
+<IrcutFilterType opt="day,night,auto,schedule">night</IrcutFilterType>
+<nightToDayFilterLevel opt="0,1,2,3,4,5,6,7">4</nightToDayFilterLevel>
+<nightToDayFilterTime min="5" max="120">5</nightToDayFilterTime>
+<Schedule>
+<scheduleType>day</scheduleType>
+<TimeRange>
+<beginTime>00:00:00</beginTime>
+<endTime>00:00:00</endTime>
+</TimeRange>
+</Schedule>
+</IrcutFilter>
+<WhiteBalance>
+<WhiteBalanceStyle opt="manual,auto1,locked,daylightLamp,incandescentlight,warmlight,naturallight">auto1</WhiteBalanceStyle>
+<WhiteBalanceRed min="0" max="100">43</WhiteBalanceRed>
+<WhiteBalanceBlue min="0" max="100">47</WhiteBalanceBlue>
+</WhiteBalance>
+<Exposure>
+<ExposureType opt="manual">manual</ExposureType>
+<OverexposeSuppress>
+<enabled opt="true,false">false</enabled>
+<Type opt="AUTO,MANUAL">MANUAL</Type>
+<DistanceLevel min="1" max="100">100</DistanceLevel>
+</OverexposeSuppress>
+</Exposure>
+<Sharpness>
+<SharpnessLevel min="0" max="100">70</SharpnessLevel>
+</Sharpness>
+<Shutter>
+<ShutterLevel opt="1/3,1/6,1/12,1/30,1/60,1/120,1/150,1/200,1/250,1/500,1/750,1/1000,1/2000,1/4000,1/10000,1/100000">1/1000</ShutterLevel>
+</Shutter>
+<powerLineFrequency>
+<powerLineFrequencyMode opt="50hz,60hz">60hz</powerLineFrequencyMode>
+</powerLineFrequency>
+<Gain>
+<GainLevel min="0" max="100">45</GainLevel>
+</Gain>
+<Color>
+<brightnessLevel min="0" max="100">80</brightnessLevel>
+<contrastLevel min="0" max="100">45</contrastLevel>
+<saturationLevel min="0" max="100">72</saturationLevel>
+</Color>
+<NoiseReduce>
+<mode opt="close,general,advanced">general</mode>
+<GeneralMode>
+<generalLevel min="0" max="100">40</generalLevel>
+</GeneralMode>
+<AdvancedMode>
+<FrameNoiseReduceLevel min="0" max="100">19</FrameNoiseReduceLevel>
+<InterFrameNoiseReduceLevel min="0" max="100">50</InterFrameNoiseReduceLevel>
+</AdvancedMode>
+</NoiseReduce>
+<Scene>
+<mode opt="outdoor,indoor">outdoor</mode>
+</Scene>
+<HLC>
+<enabled opt="true,false">true</enabled>
+<HLCLevel min="0" max="100">50</HLCLevel>
+</HLC>
+<corridor>
+<enabled opt="true,false">false</enabled>
+</corridor>
+<isSupportLaserSpotManual>false</isSupportLaserSpotManual>
+</ImageChannel>
