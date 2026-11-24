@@ -530,11 +530,9 @@ BINARY_SENSORS: dict[DeviceCategory, tuple[TuyaBinarySensorEntityDescription, ..
                 ("no_balance_alarm", "no_credit"),
                 ("battery_alarm", "battery_alarm"),
                 ("meter_hardware_alarm", "meter_hardware_alarm"),
-                ("overdraft_unlim", "overdraft_unlimited"),
                 ("arrear_outage", "arrear_outage"),
-                ("overdraft_use", "overdraft_in_use"),
                 ("pf_abnormal", "power_factor_abnormal"),
-                ("ov_pwr", "high_power"),
+                ("ov_pwr", "overpower"),
             )
         ),
     ),

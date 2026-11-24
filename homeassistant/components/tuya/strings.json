@@ -135,14 +135,11 @@
       "overcurrent_early_warning": {
         "name": "Overcurrent early warning"
       },
-      "overdraft_in_use": {
-        "name": "Overdraft in use"
-      },
-      "overdraft_unlimited": {
-        "name": "Unlimited overdraft"
-      },
       "overload": {
         "name": "Overload"
+      },
+      "overpower": {
+        "name": "Overpower"
       },
       "overpower_early_warning": {
         "name": "Overpower early warning"

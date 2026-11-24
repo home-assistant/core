@@ -10910,7 +10910,7 @@
     'state': 'off',
   })
 # ---
-# name: test_platform_setup_and_discovery[binary_sensor.xoca_dac212xc_v2_s1_high_power-entry]
+# name: test_platform_setup_and_discovery[binary_sensor.xoca_dac212xc_v2_s1_overpower-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -10924,7 +10924,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'binary_sensor.xoca_dac212xc_v2_s1_high_power',
+    'entity_id': 'binary_sensor.xoca_dac212xc_v2_s1_overpower',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -10932,29 +10932,29 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'High power',
+    'object_id_base': 'Overpower',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
-    'original_name': 'High power',
+    'original_name': 'Overpower',
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'high_power',
+    'translation_key': 'overpower',
     'unique_id': 'tuya.9oh1h1uyalfykgg4bdnzfault_ov_pwr',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_platform_setup_and_discovery[binary_sensor.xoca_dac212xc_v2_s1_high_power-state]
+# name: test_platform_setup_and_discovery[binary_sensor.xoca_dac212xc_v2_s1_overpower-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'XOCA-DAC212XC V2-S1 High power',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'XOCA-DAC212XC V2-S1 Overpower',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.xoca_dac212xc_v2_s1_high_power',
+    'entity_id': 'binary_sensor.xoca_dac212xc_v2_s1_overpower',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -11210,57 +11210,6 @@
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.xoca_dac212xc_v2_s1_overcurrent',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'off',
-  })
-# ---
-# name: test_platform_setup_and_discovery[binary_sensor.xoca_dac212xc_v2_s1_overdraft_in_use-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': None,
-    'device_class': None,
-    'device_id': <DeviceEntry identifiers=[('tuya', '9oh1h1uyalfykgg4bdnz')]>,
-    'disabled_by': None,
-    'domain': 'binary_sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'binary_sensor.xoca_dac212xc_v2_s1_overdraft_in_use',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Overdraft in use',
-    'options': dict({
-    }),
-    'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
-    'original_icon': None,
-    'original_name': 'Overdraft in use',
-    'platform': 'tuya',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'overdraft_in_use',
-    'unique_id': 'tuya.9oh1h1uyalfykgg4bdnzfault_overdraft_use',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_platform_setup_and_discovery[binary_sensor.xoca_dac212xc_v2_s1_overdraft_in_use-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'XOCA-DAC212XC V2-S1 Overdraft in use',
-    }),
-    'context': <ANY>,
-    'entity_id': 'binary_sensor.xoca_dac212xc_v2_s1_overdraft_in_use',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -11567,57 +11516,6 @@
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.xoca_dac212xc_v2_s1_undervoltage',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'off',
-  })
-# ---
-# name: test_platform_setup_and_discovery[binary_sensor.xoca_dac212xc_v2_s1_unlimited_overdraft-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': None,
-    'device_class': None,
-    'device_id': <DeviceEntry identifiers=[('tuya', '9oh1h1uyalfykgg4bdnz')]>,
-    'disabled_by': None,
-    'domain': 'binary_sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'binary_sensor.xoca_dac212xc_v2_s1_unlimited_overdraft',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Unlimited overdraft',
-    'options': dict({
-    }),
-    'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
-    'original_icon': None,
-    'original_name': 'Unlimited overdraft',
-    'platform': 'tuya',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'overdraft_unlimited',
-    'unique_id': 'tuya.9oh1h1uyalfykgg4bdnzfault_overdraft_unlim',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_platform_setup_and_discovery[binary_sensor.xoca_dac212xc_v2_s1_unlimited_overdraft-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'XOCA-DAC212XC V2-S1 Unlimited overdraft',
-    }),
-    'context': <ANY>,
-    'entity_id': 'binary_sensor.xoca_dac212xc_v2_s1_unlimited_overdraft',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
