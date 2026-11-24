@@ -58,6 +58,7 @@ from .const import (
     CONF_DEVICE_ID,
     CONF_DISCOVERY_CANDIDATES,
     CONF_LANGUAGE,
+    CONF_MAC_ADDRESS,
     CONF_SW_VERSION,
     CONF_TRACKED_CLASSES,
     CONF_VISUAL_CONFIDENCE,
@@ -1281,6 +1282,20 @@ class RecameraCoordinator(DataUpdateCoordinator[RecameraRuntimeData]):
                 translation_placeholders={"error": str(info_result)},
             ) from info_result
         info = info_result
+        if info.mac_address is None and self.config_entry.data.get(CONF_MAC_ADDRESS):
+            with contextlib.suppress(RecameraError):
+                network_mac = await self.client.async_get_network_identity()
+                if network_mac:
+                    info = replace(info, mac_address=network_mac)
+        if probe_identity_mismatch(
+            self.config_entry.data,
+            self.config_entry.unique_id,
+            info,
+        ):
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="identity_mac_mismatch",
+            )
         capabilities = dict(previous.capabilities) if previous is not None else {}
         if isinstance(capabilities_result, RecameraAuthenticationError):
             raise ConfigEntryAuthFailed(
@@ -1394,6 +1409,8 @@ class RecameraCoordinator(DataUpdateCoordinator[RecameraRuntimeData]):
             latest.motion,
             installed=refreshed_motion.installed,
             running=refreshed_motion.running,
+            system_app=refreshed_motion.system_app,
+            system_source_confirmed=refreshed_motion.system_source_confirmed,
             motion=(latest.motion.motion if refreshed_motion.running else None),
             reason=refreshed_motion.reason,
             config=refreshed_motion.config,
@@ -2621,8 +2638,16 @@ class RecameraCoordinator(DataUpdateCoordinator[RecameraRuntimeData]):
         self._stale_task = None
         self._firmware_reboot_task = None
         await self.capture_controller.async_shutdown()
-        _cancel_pending_store_save(getattr(self, "_store", None))
+        store = getattr(self, "_store", None)
+        if store is not None and (
+            getattr(store, "_delay_listener", None) is not None
+            or getattr(store, "_unsub_final_write", None) is not None
+        ):
+            with contextlib.suppress(OSError):
+                await store.async_save(self._store_payload())
+        _cancel_pending_store_save(store)
         await self._close_websocket()
+        await super().async_shutdown()
         await self.client.async_close()
         self._client_session = None
 

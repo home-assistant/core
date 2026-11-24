@@ -89,6 +89,7 @@ class CaptureOperation:
     duration: int = 0
     overdue_checks: int = 0
     restored: bool = False
+    finalized: bool = False
     completion_event: asyncio.Event = field(
         default_factory=asyncio.Event,
         repr=False,
@@ -615,8 +616,9 @@ class CaptureController:
 
                 response = await self.client.async_stop_capture()
                 operation.stop_response = response
-                operation.state = CaptureState.COMPLETING
-                self._persist(operation)
+                if not operation.completion_event.is_set():
+                    operation.state = CaptureState.COMPLETING
+                    self._persist(operation)
             else:
                 response = operation.stop_response
 
@@ -663,6 +665,9 @@ class CaptureController:
 
     def _record_history(self, operation: CaptureOperation, *, success: bool) -> None:
         """Keep a bounded operation history for diagnostics."""
+        if operation.finalized:
+            return
+        operation.finalized = True
         capture = operation.capture
         terminal = success or operation.state == CaptureState.FAILED
         outcome = (

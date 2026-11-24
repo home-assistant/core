@@ -157,13 +157,12 @@ async def async_unload_entry(
     hass: HomeAssistant, config_entry: RecameraConfigEntry
 ) -> None:
     """Unload a reCamera Pro entry."""
-    unloaded = await hass.config_entries.async_unload_platforms(config_entry, PLATFORMS)
-    if unloaded:
-        coordinator: RecameraCoordinator | None = getattr(
-            config_entry, "runtime_data", None
-        )
-        if coordinator is not None:
-            await coordinator.async_shutdown()
+    await hass.config_entries.async_unload_platforms_or_raise(config_entry, PLATFORMS)
+    coordinator: RecameraCoordinator | None = getattr(
+        config_entry, "runtime_data", None
+    )
+    if coordinator is not None:
+        await coordinator.async_shutdown()
 
 
 async def async_remove_entry(

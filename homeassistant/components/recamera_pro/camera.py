@@ -6,6 +6,7 @@ import logging
 from pathlib import Path
 import time
 from typing import override
+import uuid
 
 from recamera_protocol import RecameraError
 
@@ -250,13 +251,21 @@ class RecameraCamera(RecameraEntity, Camera):
         """Return the selected device stream URL."""
         return self.coordinator.get_stream_url(self._stream_id)
 
+    async def _async_stream_off_image(self) -> bytes | None:
+        """Return the offline placeholder without blocking the event loop."""
+        if _load_stream_off_image.cache_info().currsize > 0:
+            return _load_stream_off_image()
+        if self.hass is not None:
+            return await self.hass.async_add_executor_job(_load_stream_off_image)
+        return _load_stream_off_image()
+
     @override
     async def async_camera_image(
         self, width: int | None = None, height: int | None = None
     ) -> bytes | None:
         """Return a current still or the offline placeholder when RTSP is off."""
         if not self.is_on:
-            return _load_stream_off_image()
+            return await self._async_stream_off_image()
         return await self._async_refresh_still(width, height)
 
     async def _async_refresh_still(
@@ -362,10 +371,8 @@ class RecameraCamera(RecameraEntity, Camera):
 
     @property
     def _service_request_id(self) -> str:
-        """Return the HA service-call context shared across target entities."""
-        request_id = str(
-            getattr(getattr(self, "_context", None), "id", None) or self.entity_id
-        )
+        """Return a unique request identifier for each service invocation."""
+        request_id = uuid.uuid4().hex
         _LOGGER.debug(
             "reCamera service request %s on %s",
             request_id,
