@@ -3,20 +3,26 @@
 import logging
 from typing import TYPE_CHECKING, Any, override
 
-from HueBLE import HueBleLight
+from HueBLE import EffectType, HueBleLight
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_COLOR_TEMP_KELVIN,
+    ATTR_EFFECT,
     ATTR_XY_COLOR,
+    EFFECT_OFF,
     ColorMode,
     LightEntity,
+    LightEntityFeature,
     filter_supported_color_modes,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.device_registry import CONNECTION_BLUETOOTH, DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import color as color_util
+
+from .const import EFFECT_SPEED
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -50,11 +56,36 @@ def get_available_color_modes(api: HueBleLight) -> set[ColorMode]:
     return filter_supported_color_modes(color_modes)
 
 
+def _get_effect_name(effect: EffectType | None) -> str | None:
+    """Return the effect name str or None from EffectType enum."""
+
+    if effect is None or effect is EffectType.NONE:
+        return EFFECT_OFF
+
+    return effect.name.lower()
+
+
+def _get_effect_type(effect_name: str | None) -> EffectType | None:
+    """Return the effect type from the effect name."""
+    try:
+        if effect_name is None:
+            return None
+
+        if effect_name == EFFECT_OFF:
+            return EffectType.NONE
+
+        return EffectType[effect_name.upper()]
+
+    except KeyError as e:
+        raise ServiceValidationError("Unknown effect") from e
+
+
 class HueBLELight(LightEntity):
     """Representation of a light."""
 
     _attr_has_entity_name = True
     _attr_name = None
+    _attr_translation_key = "hue_ble_light"
 
     def __init__(self, light: HueBleLight) -> None:
         """Initialize the light object. Does not connect."""
@@ -77,6 +108,11 @@ class HueBLELight(LightEntity):
             sw_version=light.firmware,
         )
         self._attr_supported_color_modes = get_available_color_modes(self._api)
+        if self._api.supports_effects and (
+            self._api.supports_colour_temp or self._api.supports_colour_xy
+        ):
+            self._attr_supported_features = LightEntityFeature.EFFECT
+            self._attr_effect_list = [str(_get_effect_name(e)) for e in EffectType]
         self._update_updatable_attributes()
 
     @override
@@ -91,6 +127,46 @@ class HueBLELight(LightEntity):
 
         self._api.remove_callback(self._state_change_callback)
 
+    async def _async_set_effect(
+        self,
+        **kwargs: Any,
+    ) -> None:
+        """Set a light state using the effect API."""
+
+        brightness = (
+            max(1, min(254, kwargs[ATTR_BRIGHTNESS]))
+            if kwargs.get(ATTR_BRIGHTNESS)
+            else self._api.brightness
+        )
+
+        colour = None
+        if ATTR_COLOR_TEMP_KELVIN in kwargs:
+            colour = color_util.color_temperature_kelvin_to_mired(
+                kwargs[ATTR_COLOR_TEMP_KELVIN]
+            )
+        elif ATTR_XY_COLOR in kwargs:
+            colour = kwargs[ATTR_XY_COLOR]
+        else:
+            colour = (
+                self._api.colour_temp
+                if self._api.colour_temp_mode
+                else self._api.colour_xy
+            )
+
+        effect = None
+        if ATTR_EFFECT in kwargs:
+            effect = _get_effect_type(kwargs[ATTR_EFFECT])
+        elif self._api.effect:
+            effect = self._api.effect[0]
+
+        await self._api.set_effect(
+            power=True,
+            brightness=brightness,
+            colour=colour,
+            effect=effect,
+            effect_speed=EFFECT_SPEED if effect else None,
+        )
+
     def _update_updatable_attributes(self) -> None:
         """Update this entities updatable attrs from the lights state."""
         self._attr_available = self._api.available
@@ -102,6 +178,9 @@ class HueBLELight(LightEntity):
             else None
         )
         self._attr_xy_color = self._api.colour_xy
+        self._attr_effect = (
+            _get_effect_name(self._api.effect[0]) if self._api.effect else None
+        )
 
     def _state_change_callback(self) -> None:
         """Run when light informs of state update. Updates local properties."""
@@ -117,7 +196,16 @@ class HueBLELight(LightEntity):
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Set properties then turn the light on."""
 
-        _LOGGER.debug("Turning light %s on with args %s", self.name, kwargs)
+        if self._api.supports_effects:
+            _LOGGER.debug(
+                "Turning light %s on with args %s using effects API", self.name, kwargs
+            )
+            await self._async_set_effect(**kwargs)
+            return
+
+        _LOGGER.debug(
+            "Turning light %s on with args %s using legacy API", self.name, kwargs
+        )
 
         if ATTR_BRIGHTNESS in kwargs:
             brightness = kwargs[ATTR_BRIGHTNESS]
