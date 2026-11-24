@@ -369,6 +369,75 @@ async def test_restore_unreadable_data(
     assert "Not valid JSON" in caplog.text
 
 
+@pytest.mark.parametrize("corrupt", ["common", "repositories"])
+@pytest.mark.usefixtures("init_integration")
+async def test_restore_file_moved_aside_as_corrupt(
+    marketplace: MarketplaceManager,
+    config_dir: Path,
+    caplog: pytest.LogCaptureFixture,
+    corrupt: str,
+) -> None:
+    """Test a storage file renamed as corrupt fails the restore.
+
+    The helper loads nothing for a renamed file, which would otherwise look
+    like a first setup, and the first save would make the loss permanent.
+    """
+    storage = config_dir / ".storage"
+    storage.mkdir(exist_ok=True)
+    corrupt_copy = storage / f"{DOMAIN}.{corrupt}.corrupt.2026-11-02T10:00:00+00:00"
+    corrupt_copy.write_text("{")
+    data = MarketplaceData(marketplace)
+
+    with patch(
+        "homeassistant.components.marketplace.utils.data.async_load_from_storage",
+        return_value={},
+    ):
+        assert not await data.restore()
+
+    assert str(corrupt_copy) in caplog.text
+    assert marketplace.status.new is False
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_restore_ignores_a_stale_corrupt_copy(
+    marketplace: MarketplaceManager,
+    config_dir: Path,
+) -> None:
+    """Test a corrupt copy only counts while the original file is missing."""
+    storage = config_dir / ".storage"
+    storage.mkdir(exist_ok=True)
+    for key in ("common", "repositories"):
+        (storage / f"{DOMAIN}.{key}").write_text("{}")
+        (storage / f"{DOMAIN}.{key}.corrupt.2026-11-02T10:00:00+00:00").write_text("{")
+    data = MarketplaceData(marketplace)
+
+    with patch(
+        "homeassistant.components.marketplace.utils.data.async_load_from_storage",
+        return_value={},
+    ):
+        assert await data.restore()
+
+    assert marketplace.status.new is True
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_restore_without_stored_data_is_a_first_setup(
+    marketplace: MarketplaceManager,
+    config_dir: Path,
+) -> None:
+    """Test no stored data and no corrupt copy is a first setup."""
+    (config_dir / ".storage").mkdir(exist_ok=True)
+    data = MarketplaceData(marketplace)
+
+    with patch(
+        "homeassistant.components.marketplace.utils.data.async_load_from_storage",
+        return_value={},
+    ):
+        assert await data.restore()
+
+    assert marketplace.status.new is True
+
+
 @pytest.mark.usefixtures("init_integration")
 async def test_restore_default_repositories(
     marketplace: MarketplaceManager,

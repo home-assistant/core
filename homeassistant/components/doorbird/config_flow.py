@@ -11,7 +11,6 @@ import probatio
 
 from homeassistant.config_entries import (
     SOURCE_IGNORE,
-    ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
     OptionsFlow,
@@ -32,6 +31,7 @@ from .const import (
     DOMAIN,
     DOORBIRD_OUI,
 )
+from .models import DoorBirdConfigEntry
 from .util import get_mac_address_from_door_station_info
 
 _LOGGER = logging.getLogger(__name__)
@@ -100,7 +100,7 @@ class DoorBirdConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    reauth_entry: ConfigEntry
+    reauth_entry: DoorBirdConfigEntry
 
     def __init__(self) -> None:
         """Initialize the DoorBird config flow."""
@@ -108,7 +108,7 @@ class DoorBirdConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def _async_verify_existing_device_for_discovery(
         self,
-        existing_entry: ConfigEntry,
+        existing_entry: DoorBirdConfigEntry,
         host: str,
         macaddress: str,
     ) -> None:
@@ -272,7 +272,7 @@ class DoorBirdConfigFlow(ConfigFlow, domain=DOMAIN):
     @callback
     @override
     def async_get_options_flow(
-        config_entry: ConfigEntry,
+        config_entry: DoorBirdConfigEntry,
     ) -> OptionsFlowHandler:
         """Get the options flow for this handler."""
         return OptionsFlowHandler()

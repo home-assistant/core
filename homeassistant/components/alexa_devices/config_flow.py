@@ -23,6 +23,7 @@ from homeassistant.helpers.selector import (
     TextSelectorConfig,
     TextSelectorType,
 )
+from homeassistant.helpers.storage import STORAGE_DIR
 
 from .const import CONF_LOGIN_DATA, DOMAIN
 
@@ -76,7 +77,7 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
         data[CONF_USERNAME],
         data[CONF_PASSWORD],
         save_data=AmazonSaveDataConfig(
-            path=Path(hass.config.path(DOMAIN)),
+            path=Path(hass.config.path(STORAGE_DIR, DOMAIN)),
         ),
     )
 
@@ -87,7 +88,7 @@ class AmazonDevicesConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Alexa Devices."""
 
     VERSION = 1
-    MINOR_VERSION = 3
+    MINOR_VERSION = 4
 
     _login_data: dict[str, Any]
 

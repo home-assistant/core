@@ -6,11 +6,7 @@ import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components import insteon
-from homeassistant.components.insteon.const import (
-    CONF_DEV_PATH,
-    DOMAIN,
-    SRV_PRINT_IM_ALDB,
-)
+from homeassistant.components.insteon.const import CONF_DEV_PATH, DOMAIN, InsteonService
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
@@ -104,4 +100,6 @@ async def test_action_not_loaded(hass: HomeAssistant) -> None:
     assert await async_setup_component(hass, DOMAIN, {})
 
     with pytest.raises(ServiceValidationError, match="Insteon is not loaded"):
-        await hass.services.async_call(DOMAIN, SRV_PRINT_IM_ALDB, {}, blocking=True)
+        await hass.services.async_call(
+            DOMAIN, InsteonService.PRINT_IM_ALL_LINK_DATABASE, {}, blocking=True
+        )

@@ -1,11 +1,13 @@
 """Services for the Immich integration."""
 
+from enum import StrEnum
 import logging
 
 from aioimmich.exceptions import ImmichError
 import probatio
 
 from homeassistant.components.media_source import async_resolve_media
+from homeassistant.const import CommonServiceArgument
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import service
@@ -17,16 +19,27 @@ from .coordinator import ImmichConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_ALBUM_ID = "album_id"
-CONF_CONFIG_ENTRY_ID = "config_entry_id"
-CONF_FILE = "file"
 
-SERVICE_UPLOAD_FILE = "upload_file"
+class ImmichService(StrEnum):
+    """Store keys for Immich services."""
+
+    UPLOAD_FILE = "upload_file"
+
+
+class ImmichServiceArgument(StrEnum):
+    """Store keys for Immich service arguments."""
+
+    FILE = "file"
+    ALBUM_ID = "album_id"
+
+
 SERVICE_SCHEMA_UPLOAD_FILE = probatio.Schema(
     {
-        probatio.Required(CONF_CONFIG_ENTRY_ID): str,
-        probatio.Required(CONF_FILE): MediaSelector({"accept": ["image/*", "video/*"]}),
-        probatio.Optional(CONF_ALBUM_ID): str,
+        probatio.Required(CommonServiceArgument.CONFIG_ENTRY_ID): str,
+        probatio.Required(ImmichServiceArgument.FILE): MediaSelector(
+            {"accept": ["image/*", "video/*"]}
+        ),
+        probatio.Optional(ImmichServiceArgument.ALBUM_ID): str,
     }
 )
 
@@ -40,9 +53,9 @@ async def _async_upload_file(service_call: ServiceCall) -> None:
     )
     hass = service_call.hass
     target_entry: ImmichConfigEntry = service.async_get_config_entry(
-        hass, DOMAIN, service_call.data[CONF_CONFIG_ENTRY_ID]
+        hass, DOMAIN, service_call.data[CommonServiceArgument.CONFIG_ENTRY_ID]
     )
-    source_media_id = service_call.data[CONF_FILE]["media_content_id"]
+    source_media_id = service_call.data[ImmichServiceArgument.FILE]["media_content_id"]
 
     media = await async_resolve_media(hass, source_media_id, None)
     if media.path is None:
@@ -52,7 +65,7 @@ async def _async_upload_file(service_call: ServiceCall) -> None:
 
     coordinator = target_entry.runtime_data
 
-    if target_album := service_call.data.get(CONF_ALBUM_ID):
+    if target_album := service_call.data.get(ImmichServiceArgument.ALBUM_ID):
         try:
             await coordinator.api.albums.async_get_album_info(target_album)
         except ImmichError as ex:
@@ -84,7 +97,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
 
     hass.services.async_register(
         DOMAIN,
-        SERVICE_UPLOAD_FILE,
+        ImmichService.UPLOAD_FILE,
         _async_upload_file,
         SERVICE_SCHEMA_UPLOAD_FILE,
     )

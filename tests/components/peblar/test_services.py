@@ -16,16 +16,7 @@ import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.peblar.const import DOMAIN
-from homeassistant.components.peblar.services import (
-    SERVICE_ADD_RFID_TOKEN,
-    SERVICE_ADD_VEHICLE_TOKEN,
-    SERVICE_AUTHORIZE_CHARGE_SESSION,
-    SERVICE_DELETE_RFID_TOKEN,
-    SERVICE_DELETE_VEHICLE_TOKEN,
-    SERVICE_GET_METER_HISTORY,
-    SERVICE_LIST_RFID_TOKENS,
-    SERVICE_LIST_VEHICLE_TOKENS,
-)
+from homeassistant.components.peblar.services import PeblarService
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
@@ -36,9 +27,9 @@ async def test_services_registered_on_setup(
     init_integration: MockConfigEntry,
 ) -> None:
     """Test that RFID services are registered when entry is loaded."""
-    assert hass.services.has_service(DOMAIN, SERVICE_LIST_RFID_TOKENS)
-    assert hass.services.has_service(DOMAIN, SERVICE_ADD_RFID_TOKEN)
-    assert hass.services.has_service(DOMAIN, SERVICE_DELETE_RFID_TOKEN)
+    assert hass.services.has_service(DOMAIN, PeblarService.LIST_RFID_TOKENS)
+    assert hass.services.has_service(DOMAIN, PeblarService.ADD_RFID_TOKEN)
+    assert hass.services.has_service(DOMAIN, PeblarService.DELETE_RFID_TOKEN)
 
 
 async def test_services_survive_entry_unload(
@@ -49,9 +40,9 @@ async def test_services_survive_entry_unload(
     await hass.config_entries.async_unload(init_integration.entry_id)
     await hass.async_block_till_done()
 
-    assert hass.services.has_service(DOMAIN, SERVICE_LIST_RFID_TOKENS)
-    assert hass.services.has_service(DOMAIN, SERVICE_ADD_RFID_TOKEN)
-    assert hass.services.has_service(DOMAIN, SERVICE_DELETE_RFID_TOKEN)
+    assert hass.services.has_service(DOMAIN, PeblarService.LIST_RFID_TOKENS)
+    assert hass.services.has_service(DOMAIN, PeblarService.ADD_RFID_TOKEN)
+    assert hass.services.has_service(DOMAIN, PeblarService.DELETE_RFID_TOKEN)
 
 
 async def test_list_rfid_tokens(
@@ -75,7 +66,7 @@ async def test_list_rfid_tokens(
 
     result = await hass.services.async_call(
         DOMAIN,
-        SERVICE_LIST_RFID_TOKENS,
+        PeblarService.LIST_RFID_TOKENS,
         {"config_entry_id": init_integration.entry_id},
         blocking=True,
         return_response=True,
@@ -98,7 +89,7 @@ async def test_add_rfid_token(
     """Test add_rfid_token calls library with correct args."""
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_ADD_RFID_TOKEN,
+        PeblarService.ADD_RFID_TOKEN,
         {
             "config_entry_id": init_integration.entry_id,
             "uid": "AA:BB:CC:DD",
@@ -121,7 +112,7 @@ async def test_delete_rfid_token(
     """Test delete_rfid_token calls library with correct args."""
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_DELETE_RFID_TOKEN,
+        PeblarService.DELETE_RFID_TOKEN,
         {
             "config_entry_id": init_integration.entry_id,
             "uid": "AA:BB:CC:DD",
@@ -154,7 +145,7 @@ async def test_unloaded_config_entry_raises(
     with pytest.raises(ServiceValidationError) as excinfo:
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_LIST_RFID_TOKENS,
+            PeblarService.LIST_RFID_TOKENS,
             {"config_entry_id": init_integration.entry_id},
             blocking=True,
             return_response=True,
@@ -164,23 +155,26 @@ async def test_unloaded_config_entry_raises(
 
 
 SERVICE_CALLS: list[tuple[str, str, dict[str, Any]]] = [
-    (SERVICE_LIST_RFID_TOKENS, "rfid_tokens", {}),
+    (PeblarService.LIST_RFID_TOKENS, "rfid_tokens", {}),
     (
-        SERVICE_ADD_RFID_TOKEN,
+        PeblarService.ADD_RFID_TOKEN,
         "add_rfid_token",
         {"uid": "AA:BB:CC:DD", "description": "My Card"},
     ),
-    (SERVICE_DELETE_RFID_TOKEN, "delete_rfid_token", {"uid": "AA:BB:CC:DD"}),
+    (PeblarService.DELETE_RFID_TOKEN, "delete_rfid_token", {"uid": "AA:BB:CC:DD"}),
 ]
 
 # The services that answer over the same error handling, whether or not
 # they touch the RFID list.
 FAILING_SERVICE_CALLS: list[tuple[str, str, dict[str, Any]]] = [
     *SERVICE_CALLS,
-    (SERVICE_GET_METER_HISTORY, "meter_history", {}),
+    (PeblarService.GET_METER_HISTORY, "meter_history", {}),
 ]
 
-RESPONDING_SERVICES = {SERVICE_LIST_RFID_TOKENS, SERVICE_GET_METER_HISTORY}
+RESPONDING_SERVICES = {
+    PeblarService.LIST_RFID_TOKENS,
+    PeblarService.GET_METER_HISTORY,
+}
 
 
 @pytest.mark.parametrize(
@@ -269,7 +263,7 @@ async def test_invalid_config_entry_raises(
     with pytest.raises(ServiceValidationError) as excinfo:
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_LIST_RFID_TOKENS,
+            PeblarService.LIST_RFID_TOKENS,
             {"config_entry_id": "nonexistent-entry-id"},
             blocking=True,
             return_response=True,
@@ -294,7 +288,7 @@ async def test_charger_without_rfid_reader(
             service,
             {"config_entry_id": init_integration.entry_id, **service_data},
             blocking=True,
-            return_response=service == SERVICE_LIST_RFID_TOKENS,
+            return_response=service == PeblarService.LIST_RFID_TOKENS,
         )
 
     assert excinfo.value.translation_domain == DOMAIN
@@ -314,7 +308,7 @@ async def test_list_vehicle_tokens(
 
     result = await hass.services.async_call(
         DOMAIN,
-        SERVICE_LIST_VEHICLE_TOKENS,
+        PeblarService.LIST_VEHICLE_TOKENS,
         {"config_entry_id": init_integration.entry_id},
         blocking=True,
         return_response=True,
@@ -337,7 +331,7 @@ async def test_add_vehicle_token(
     """Test add_vehicle_token calls the library with the right arguments."""
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_ADD_VEHICLE_TOKEN,
+        PeblarService.ADD_VEHICLE_TOKEN,
         {
             "config_entry_id": init_integration.entry_id,
             "evcc_id": "EVCC-1234",
@@ -360,7 +354,7 @@ async def test_delete_vehicle_token(
     """Test delete_vehicle_token calls the library with the right arguments."""
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_DELETE_VEHICLE_TOKEN,
+        PeblarService.DELETE_VEHICLE_TOKEN,
         {
             "config_entry_id": init_integration.entry_id,
             "evcc_id": "EVCC-1234",
@@ -372,9 +366,12 @@ async def test_delete_vehicle_token(
 
 
 AUTOCHARGE_CALLS: list[tuple[str, dict[str, Any]]] = [
-    (SERVICE_LIST_VEHICLE_TOKENS, {}),
-    (SERVICE_ADD_VEHICLE_TOKEN, {"evcc_id": "EVCC-1234", "alias": "The blue one"}),
-    (SERVICE_DELETE_VEHICLE_TOKEN, {"evcc_id": "EVCC-1234"}),
+    (PeblarService.LIST_VEHICLE_TOKENS, {}),
+    (
+        PeblarService.ADD_VEHICLE_TOKEN,
+        {"evcc_id": "EVCC-1234", "alias": "The blue one"},
+    ),
+    (PeblarService.DELETE_VEHICLE_TOKEN, {"evcc_id": "EVCC-1234"}),
 ]
 
 
@@ -397,7 +394,7 @@ async def test_autocharge_does_not_need_an_rfid_reader(
         service,
         {"config_entry_id": init_integration.entry_id, **service_data},
         blocking=True,
-        return_response=service == SERVICE_LIST_VEHICLE_TOKENS,
+        return_response=service == PeblarService.LIST_VEHICLE_TOKENS,
     )
 
 
@@ -422,7 +419,7 @@ async def test_autocharge_needs_power_line_communication(
             service,
             {"config_entry_id": init_integration.entry_id, **service_data},
             blocking=True,
-            return_response=service == SERVICE_LIST_VEHICLE_TOKENS,
+            return_response=service == PeblarService.LIST_VEHICLE_TOKENS,
         )
 
     assert excinfo.value.translation_domain == DOMAIN
@@ -447,7 +444,7 @@ async def test_authorize_charge_session(
     """Test the token can be presented by either of the two names for it."""
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_AUTHORIZE_CHARGE_SESSION,
+        PeblarService.AUTHORIZE_CHARGE_SESSION,
         {"config_entry_id": init_integration.entry_id, **service_data},
         blocking=True,
     )
@@ -475,7 +472,7 @@ async def test_authorize_charge_session_needs_exactly_one_token(
     with pytest.raises(probatio.Invalid):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_AUTHORIZE_CHARGE_SESSION,
+            PeblarService.AUTHORIZE_CHARGE_SESSION,
             {"config_entry_id": init_integration.entry_id, **service_data},
             blocking=True,
         )
@@ -507,7 +504,7 @@ async def test_authorize_charge_session_is_refused(
     with pytest.raises(ServiceValidationError) as excinfo:
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_AUTHORIZE_CHARGE_SESSION,
+            PeblarService.AUTHORIZE_CHARGE_SESSION,
             {
                 "config_entry_id": init_integration.entry_id,
                 "uid": "0123456789ABCD",
@@ -536,7 +533,7 @@ async def test_get_meter_history(
 
     result = await hass.services.async_call(
         DOMAIN,
-        SERVICE_GET_METER_HISTORY,
+        PeblarService.GET_METER_HISTORY,
         {"config_entry_id": init_integration.entry_id},
         blocking=True,
         return_response=True,
@@ -587,7 +584,7 @@ async def test_get_meter_history_without_every_checksum_outcome(
 
     result = await hass.services.async_call(
         DOMAIN,
-        SERVICE_GET_METER_HISTORY,
+        PeblarService.GET_METER_HISTORY,
         {"config_entry_id": init_integration.entry_id},
         blocking=True,
         return_response=True,
@@ -607,7 +604,7 @@ async def test_get_meter_history_needs_no_rfid_reader(
 
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_GET_METER_HISTORY,
+        PeblarService.GET_METER_HISTORY,
         {"config_entry_id": init_integration.entry_id},
         blocking=True,
         return_response=True,
@@ -642,7 +639,7 @@ async def test_get_meter_history_time_range(
 
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_GET_METER_HISTORY,
+        PeblarService.GET_METER_HISTORY,
         {
             "config_entry_id": init_integration.entry_id,
             "after": after,

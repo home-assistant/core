@@ -6,15 +6,10 @@ import json
 from homeassistant.components.fan import (
     ATTR_PERCENTAGE,
     DOMAIN as FAN_DOMAIN,
-    SERVICE_SET_PERCENTAGE,
+    FanService,
+    FanServiceArgument,
 )
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
-    STATE_OFF,
-    STATE_ON,
-)
+from homeassistant.const import STATE_OFF, STATE_ON, TargetKey
 from homeassistant.core import HomeAssistant
 
 from .helper import (
@@ -46,7 +41,7 @@ async def test_ventilation_fan(
     channel = hmip_device.functionalChannels[1]
 
     await hass.services.async_call(
-        FAN_DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: entity_id}, blocking=True
+        FAN_DOMAIN, FanService.TURN_OFF, {TargetKey.ENTITY_ID: entity_id}, blocking=True
     )
     assert channel.mock_calls[-1][0] == "async_set_ventilation_state"
     assert channel.mock_calls[-1][1] == ("NO_VENTILATION",)
@@ -57,15 +52,15 @@ async def test_ventilation_fan(
     assert hass.states.get(entity_id).state == STATE_OFF
 
     await hass.services.async_call(
-        FAN_DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: entity_id}, blocking=True
+        FAN_DOMAIN, FanService.TURN_ON, {TargetKey.ENTITY_ID: entity_id}, blocking=True
     )
     assert channel.mock_calls[-1][0] == "async_set_ventilation_state"
     assert channel.mock_calls[-1][1] == ("VENTILATION",)
 
     await hass.services.async_call(
         FAN_DOMAIN,
-        SERVICE_SET_PERCENTAGE,
-        {ATTR_ENTITY_ID: entity_id, ATTR_PERCENTAGE: 50},
+        FanService.SET_PERCENTAGE,
+        {TargetKey.ENTITY_ID: entity_id, FanServiceArgument.PERCENTAGE: 50},
         blocking=True,
     )
     assert channel.mock_calls[-1][0] == "async_set_ventilation_level"
@@ -96,8 +91,8 @@ async def test_ventilation_fan_percentage_zero_stops_ventilation(
 
     await hass.services.async_call(
         FAN_DOMAIN,
-        SERVICE_SET_PERCENTAGE,
-        {ATTR_ENTITY_ID: entity_id, ATTR_PERCENTAGE: 0},
+        FanService.SET_PERCENTAGE,
+        {TargetKey.ENTITY_ID: entity_id, FanServiceArgument.PERCENTAGE: 0},
         blocking=True,
     )
 
@@ -106,8 +101,8 @@ async def test_ventilation_fan_percentage_zero_stops_ventilation(
 
     await hass.services.async_call(
         FAN_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: entity_id, ATTR_PERCENTAGE: 0},
+        FanService.TURN_ON,
+        {TargetKey.ENTITY_ID: entity_id, FanServiceArgument.PERCENTAGE: 0},
         blocking=True,
     )
 
@@ -128,8 +123,8 @@ async def test_ventilation_fan_turn_on_with_percentage(
 
     await hass.services.async_call(
         FAN_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: entity_id, ATTR_PERCENTAGE: 40},
+        FanService.TURN_ON,
+        {TargetKey.ENTITY_ID: entity_id, FanServiceArgument.PERCENTAGE: 40},
         blocking=True,
     )
 

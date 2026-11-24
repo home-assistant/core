@@ -1,12 +1,10 @@
 """Support for the Amazon Polly text to speech service."""
 
-from collections import defaultdict
 from enum import StrEnum
 import logging
 from typing import Any, Final, override
 
-import boto3
-import botocore
+from botocore.exceptions import BotoCoreError, ClientError
 import probatio
 
 from homeassistant.components.tts import (
@@ -15,8 +13,13 @@ from homeassistant.components.tts import (
     TextToSpeechCommonOption,
     TtsAudioType,
 )
-from homeassistant.const import ATTR_CREDENTIALS, CONF_PROFILE_NAME
-from homeassistant.core import HomeAssistant
+from homeassistant.const import (
+    ATTR_CREDENTIALS,
+    CONF_PROFILE_NAME,
+    EVENT_HOMEASSISTANT_CLOSE,
+)
+from homeassistant.core import Event, HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.generated.amazon_polly import (
     SUPPORTED_ENGINES,
     SUPPORTED_REGIONS,
@@ -26,9 +29,6 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import (
-    AWS_CONF_CONNECT_TIMEOUT,
-    AWS_CONF_MAX_POOL_CONNECTIONS,
-    AWS_CONF_READ_TIMEOUT,
     CONF_ACCESS_KEY_ID,
     CONF_ENGINE,
     CONF_OUTPUT_FORMAT,
@@ -44,11 +44,13 @@ from .const import (
     DEFAULT_SAMPLE_RATES,
     DEFAULT_TEXT_TYPE,
     DEFAULT_VOICE,
+    DOMAIN,
     SUPPORTED_OUTPUT_FORMATS,
     SUPPORTED_SAMPLE_RATES,
     SUPPORTED_SAMPLE_RATES_MAP,
     SUPPORTED_TEXT_TYPES,
 )
+from .helpers import AmazonPollyData, CannotConnect, InvalidAuth, async_connect
 
 _LOGGER: Final = logging.getLogger(__name__)
 
@@ -88,7 +90,7 @@ PLATFORM_SCHEMA: Final = TTS_PLATFORM_SCHEMA.extend(
 )
 
 
-def get_engine(
+async def async_get_engine(
     hass: HomeAssistant,
     config: ConfigType,
     discovery_info: DiscoveryInfoType | None = None,
@@ -102,94 +104,57 @@ def get_engine(
         )
         return None
 
-    config[CONF_SAMPLE_RATE] = sample_rate
+    try:
+        data = await async_connect(
+            hass,
+            region=config[CONF_REGION],
+            access_key_id=config.get(CONF_ACCESS_KEY_ID),
+            secret_access_key=config.get(CONF_SECRET_ACCESS_KEY),
+            profile=config.get(CONF_PROFILE_NAME),
+        )
+    except (CannotConnect, InvalidAuth) as err:
+        _LOGGER.error("Unable to connect to Amazon Polly: %s", err)
+        return None
 
-    profile: str | None = config.get(CONF_PROFILE_NAME)
+    async def _async_close_client(_: Event) -> None:
+        await data.client.__aexit__(None, None, None)
 
-    if profile is not None:
-        boto3.setup_default_session(profile_name=profile)
+    # Legacy providers are never unloaded, so close the client on shutdown.
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_CLOSE, _async_close_client)
 
-    aws_config = {
-        CONF_REGION: config[CONF_REGION],
-        CONF_ACCESS_KEY_ID: config.get(CONF_ACCESS_KEY_ID),
-        CONF_SECRET_ACCESS_KEY: config.get(CONF_SECRET_ACCESS_KEY),
-        "config": botocore.config.Config(
-            connect_timeout=AWS_CONF_CONNECT_TIMEOUT,
-            read_timeout=AWS_CONF_READ_TIMEOUT,
-            max_pool_connections=AWS_CONF_MAX_POOL_CONNECTIONS,
-        ),
-    }
-
-    del config[CONF_REGION]
-    del config[CONF_ACCESS_KEY_ID]
-    del config[CONF_SECRET_ACCESS_KEY]
-
-    polly_client = boto3.client("polly", **aws_config)
-
-    supported_languages: list[str] = []
-
-    all_voices: dict[str, dict[str, str]] = {}
-
-    all_engines: dict[str, set[str]] = defaultdict(set)
-
-    all_voices_req = polly_client.describe_voices()
-
-    for voice in all_voices_req.get("Voices", []):
-        voice_id: str | None = voice.get("Id")
-        if voice_id is None:
-            continue
-        all_voices[voice_id] = voice
-        language_code: str | None = voice.get("LanguageCode")
-        if language_code is not None and language_code not in supported_languages:
-            supported_languages.append(language_code)
-        for engine in voice.get("SupportedEngines"):
-            all_engines[engine].add(voice_id)
-
-    return AmazonPollyProvider(
-        polly_client, config, supported_languages, all_voices, all_engines
-    )
+    return AmazonPollyProvider(data, config | {CONF_SAMPLE_RATE: sample_rate})
 
 
 class AmazonPollyProvider(Provider):
     """Amazon Polly speech api provider."""
 
-    def __init__(
-        self,
-        polly_client: boto3.client,
-        config: ConfigType,
-        supported_languages: list[str],
-        all_voices: dict[str, dict[str, str]],
-        all_engines: dict[str, set[str]],
-    ) -> None:
+    def __init__(self, data: AmazonPollyData, config: ConfigType) -> None:
         """Initialize Amazon Polly provider for TTS."""
-        self.client = polly_client
-        self.config = config
-        self.supported_langs = supported_languages
-        self.all_voices = all_voices
-        self.all_engines = all_engines
-        self.default_voice: str = self.config[CONF_VOICE]
-        self.default_engine: str = self.config[CONF_ENGINE]
+        self._data = data
+        self._config = config
+        self._default_voice: str = config[CONF_VOICE]
+        self._default_engine: str = config[CONF_ENGINE]
         self.name = "Amazon Polly"
 
     @property
     @override
     def supported_languages(self) -> list[str]:
         """Return a list of supported languages."""
-        return self.supported_langs
+        return self._data.languages
 
     @property
     @override
     def default_language(self) -> str | None:
         """Return the default language."""
-        return self.all_voices.get(self.default_voice, {}).get("LanguageCode")
+        return self._data.voices.get(self._default_voice, {}).get("LanguageCode")
 
     @property
     @override
     def default_options(self) -> dict[str, str]:
         """Return dict include default options."""
         return {
-            TextToSpeechCommonOption.VOICE: self.default_voice,
-            AmazonPollyTextToSpeechOption.ENGINE: self.default_engine,
+            TextToSpeechCommonOption.VOICE: self._default_voice,
+            AmazonPollyTextToSpeechOption.ENGINE: self._default_engine,
         }
 
     @property
@@ -199,36 +164,47 @@ class AmazonPollyProvider(Provider):
         return [TextToSpeechCommonOption.VOICE, AmazonPollyTextToSpeechOption.ENGINE]
 
     @override
-    def get_tts_audio(
-        self,
-        message: str,
-        language: str,
-        options: dict[str, Any],
+    async def async_get_tts_audio(
+        self, message: str, language: str, options: dict[str, Any]
     ) -> TtsAudioType:
         """Request TTS file from Polly."""
-        voice_id = options.get(TextToSpeechCommonOption.VOICE, self.default_voice)
-        voice_in_dict = self.all_voices[voice_id]
-        if language != voice_in_dict.get("LanguageCode"):
-            _LOGGER.error("%s does not support the %s language", voice_id, language)
-            return None, None
+        voice_id = options.get(TextToSpeechCommonOption.VOICE, self._default_voice)
+        if (voice := self._data.voices.get(voice_id)) is None:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="unknown_voice",
+                translation_placeholders={"voice": voice_id},
+            )
+        if language != voice.get("LanguageCode"):
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="language_not_supported",
+                translation_placeholders={"voice": voice_id, "language": language},
+            )
+        engine = options.get(AmazonPollyTextToSpeechOption.ENGINE, self._default_engine)
+        if voice_id not in self._data.engines.get(engine, set()):
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="engine_not_supported",
+                translation_placeholders={"voice": voice_id, "engine": engine},
+            )
 
-        engine = options.get(AmazonPollyTextToSpeechOption.ENGINE, self.default_engine)
-        if voice_id not in self.all_engines[engine]:
-            _LOGGER.error("%s does not support the %s engine", voice_id, engine)
-            return None, None
+        try:
+            response = await self._data.client.synthesize_speech(
+                Engine=engine,
+                OutputFormat=self._config[CONF_OUTPUT_FORMAT],
+                SampleRate=self._config[CONF_SAMPLE_RATE],
+                Text=message,
+                TextType=self._config[CONF_TEXT_TYPE],
+                VoiceId=voice_id,
+            )
+            async with response["AudioStream"] as stream:
+                audio: bytes = await stream.read()
+        except (BotoCoreError, ClientError) as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="synthesis_failed",
+                translation_placeholders={"error": str(err)},
+            ) from err
 
-        _LOGGER.debug("Requesting TTS file for text: %s", message)
-        resp = self.client.synthesize_speech(
-            Engine=engine,
-            OutputFormat=self.config[CONF_OUTPUT_FORMAT],
-            SampleRate=self.config[CONF_SAMPLE_RATE],
-            Text=message,
-            TextType=self.config[CONF_TEXT_TYPE],
-            VoiceId=voice_id,
-        )
-
-        _LOGGER.debug("Reply received for TTS: %s", message)
-        return (
-            CONTENT_TYPE_EXTENSIONS[resp.get("ContentType")],
-            resp.get("AudioStream").read(),
-        )
+        return CONTENT_TYPE_EXTENSIONS[response["ContentType"]], audio

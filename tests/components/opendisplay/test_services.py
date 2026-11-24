@@ -11,6 +11,7 @@ from opendisplay import (
     AuthenticationFailedError,
     AuthenticationRequiredError,
     BLEConnectionError,
+    DitherMode,
 )
 from PIL import Image as PILImage
 import probatio
@@ -88,6 +89,7 @@ async def test_upload_image_local_file(
     )
 
     mock_upload_device.upload_image.assert_called_once()
+    assert mock_upload_device.upload_image.call_args.kwargs["tone"] == 0.5
 
 
 async def test_upload_image_remote_url(
@@ -126,6 +128,7 @@ async def test_upload_image_remote_url(
         )
 
     mock_upload_device.upload_image.assert_called_once()
+    assert mock_upload_device.upload_image.call_args.kwargs["tone"] == 0.0
 
 
 @pytest.mark.parametrize(
@@ -287,6 +290,48 @@ async def test_upload_image_download_error(
             },
             blocking=True,
         )
+
+
+@pytest.mark.parametrize(
+    ("dither_mode", "expected"),
+    [
+        ("none", DitherMode.NONE),
+        ("burkes", DitherMode.BURKES),
+        ("ordered", DitherMode.ORDERED),
+        ("floyd_steinberg", DitherMode.FLOYD_STEINBERG),
+        ("atkinson", DitherMode.ATKINSON),
+        ("stucki", DitherMode.STUCKI),
+        ("sierra", DitherMode.SIERRA),
+        ("sierra_lite", DitherMode.SIERRA_LITE),
+        ("jarvis_judice_ninke", DitherMode.JARVIS_JUDICE_NINKE),
+    ],
+)
+async def test_upload_image_dither_modes(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_upload_device: MagicMock,
+    mock_resolve_media: MagicMock,
+    dither_mode: str,
+    expected: DitherMode,
+) -> None:
+    """Test that each dither mode offered in services.yaml reaches the device."""
+    device_id = _device_id(hass, mock_config_entry)
+
+    await hass.services.async_call(
+        DOMAIN,
+        "upload_image",
+        {
+            "device_id": device_id,
+            "image": {
+                "media_content_id": "media-source://local/test.png",
+                "media_content_type": "image/png",
+            },
+            "dither_mode": dither_mode,
+        },
+        blocking=True,
+    )
+
+    assert mock_upload_device.upload_image.call_args.kwargs["dither_mode"] is expected
 
 
 @pytest.mark.parametrize(

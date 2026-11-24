@@ -30,7 +30,6 @@ async def test_validation_grid_power_valid(
                 {
                     "type": "grid",
                     "stat_rate": "sensor.grid_power",
-                    "cost_adjustment_day": 0.0,
                 }
             ]
         }
@@ -50,6 +49,7 @@ async def test_validation_grid_power_valid(
         "energy_sources": [[]],
         "device_consumption": [],
         "device_consumption_water": [],
+        "device_consumption_gas": [],
     }
 
 
@@ -63,7 +63,6 @@ async def test_validation_grid_power_wrong_unit(
                 {
                     "type": "grid",
                     "stat_rate": "sensor.grid_power",
-                    "cost_adjustment_day": 0.0,
                 }
             ]
         }
@@ -91,6 +90,7 @@ async def test_validation_grid_power_wrong_unit(
         ],
         "device_consumption": [],
         "device_consumption_water": [],
+        "device_consumption_gas": [],
     }
 
 
@@ -167,6 +167,7 @@ async def test_validation_home_power(
         "energy_sources": [issues],
         "device_consumption": [],
         "device_consumption_water": [],
+        "device_consumption_gas": [],
     }
 
 
@@ -180,7 +181,6 @@ async def test_validation_grid_power_wrong_state_class(
                 {
                     "type": "grid",
                     "stat_rate": "sensor.grid_power",
-                    "cost_adjustment_day": 0.0,
                 }
             ]
         }
@@ -208,6 +208,7 @@ async def test_validation_grid_power_wrong_state_class(
         ],
         "device_consumption": [],
         "device_consumption_water": [],
+        "device_consumption_gas": [],
     }
 
 
@@ -221,7 +222,6 @@ async def test_validation_grid_power_entity_missing(
                 {
                     "type": "grid",
                     "stat_rate": "sensor.missing_power",
-                    "cost_adjustment_day": 0.0,
                 }
             ]
         }
@@ -245,6 +245,7 @@ async def test_validation_grid_power_entity_missing(
         ],
         "device_consumption": [],
         "device_consumption_water": [],
+        "device_consumption_gas": [],
     }
 
 
@@ -258,7 +259,6 @@ async def test_validation_grid_power_entity_unavailable(
                 {
                     "type": "grid",
                     "stat_rate": "sensor.unavailable_power",
-                    "cost_adjustment_day": 0.0,
                 }
             ]
         }
@@ -278,6 +278,7 @@ async def test_validation_grid_power_entity_unavailable(
         ],
         "device_consumption": [],
         "device_consumption_water": [],
+        "device_consumption_gas": [],
     }
 
 
@@ -291,7 +292,6 @@ async def test_validation_grid_power_entity_non_numeric(
                 {
                     "type": "grid",
                     "stat_rate": "sensor.non_numeric_power",
-                    "cost_adjustment_day": 0.0,
                 }
             ]
         }
@@ -319,6 +319,7 @@ async def test_validation_grid_power_entity_non_numeric(
         ],
         "device_consumption": [],
         "device_consumption_water": [],
+        "device_consumption_gas": [],
     }
 
 
@@ -332,7 +333,6 @@ async def test_validation_grid_power_wrong_device_class(
                 {
                     "type": "grid",
                     "stat_rate": "sensor.wrong_device_class_power",
-                    "cost_adjustment_day": 0.0,
                 }
             ]
         }
@@ -362,6 +362,7 @@ async def test_validation_grid_power_wrong_device_class(
         ],
         "device_consumption": [],
         "device_consumption_water": [],
+        "device_consumption_gas": [],
     }
 
 
@@ -376,12 +377,10 @@ async def test_validation_grid_power_different_units(
                 {
                     "type": "grid",
                     "stat_rate": "sensor.power_watt",
-                    "cost_adjustment_day": 0.0,
                 },
                 {
                     "type": "grid",
                     "stat_rate": "sensor.power_milliwatt",
-                    "cost_adjustment_day": 0.0,
                 },
             ]
         }
@@ -410,6 +409,7 @@ async def test_validation_grid_power_different_units(
         "energy_sources": [[], []],
         "device_consumption": [],
         "device_consumption_water": [],
+        "device_consumption_gas": [],
     }
 
 
@@ -425,7 +425,6 @@ async def test_validation_grid_power_external_statistics(
                 {
                     "type": "grid",
                     "stat_rate": "external:power_stat",
-                    "cost_adjustment_day": 0.0,
                 }
             ]
         }
@@ -444,6 +443,7 @@ async def test_validation_grid_power_external_statistics(
         ],
         "device_consumption": [],
         "device_consumption_water": [],
+        "device_consumption_gas": [],
     }
 
 
@@ -459,7 +459,6 @@ async def test_validation_grid_power_recorder_untracked(
                 {
                     "type": "grid",
                     "stat_rate": "sensor.untracked_power",
-                    "cost_adjustment_day": 0.0,
                 }
             ]
         }
@@ -478,4 +477,83 @@ async def test_validation_grid_power_recorder_untracked(
         ],
         "device_consumption": [],
         "device_consumption_water": [],
+        "device_consumption_gas": [],
     }
+
+
+@pytest.mark.usefixtures("mock_get_metadata")
+@pytest.mark.parametrize(
+    ("unit", "value", "issues"),
+    [
+        pytest.param(
+            "beers",
+            "1.5",
+            [
+                {
+                    "type": "entity_unexpected_unit_power",
+                    "affected_entities": {("sensor.battery_to_home_power", "beers")},
+                    "translation_placeholders": {"power_units": POWER_UNITS_STRING},
+                }
+            ],
+            id="wrong_unit",
+        ),
+        pytest.param(
+            UnitOfPower.WATT,
+            "-1.5",
+            [
+                {
+                    "type": "entity_negative_state",
+                    "affected_entities": {("sensor.battery_to_home_power", -1.5)},
+                    "translation_placeholders": None,
+                }
+            ],
+            id="negative",
+        ),
+        pytest.param(UnitOfPower.WATT, "1.5", [], id="valid"),
+    ],
+)
+async def test_validation_battery_direction_power(
+    hass: HomeAssistant,
+    mock_energy_manager: EnergyManager,
+    unit: str,
+    value: str,
+    issues: list[dict[str, Any]],
+) -> None:
+    """Test validating the power sensors of a battery measured per direction."""
+    await mock_energy_manager.async_update(
+        {
+            "energy_sources": [
+                {
+                    "type": "battery",
+                    "stat_energy_from_solar": "sensor.battery_from_solar",
+                    "stat_energy_to_home": "sensor.battery_to_home",
+                    "power_config": {
+                        "stat_rate_to_home": "sensor.battery_to_home_power"
+                    },
+                },
+                {"type": "solar", "stat_energy_from": "sensor.solar_production"},
+            ]
+        }
+    )
+    for entity_id in ("sensor.battery_from_solar", "sensor.battery_to_home"):
+        hass.states.async_set(
+            entity_id,
+            "10.10",
+            {
+                "device_class": "energy",
+                "unit_of_measurement": "kWh",
+                "state_class": "total_increasing",
+            },
+        )
+    hass.states.async_set(
+        "sensor.battery_to_home_power",
+        value,
+        {
+            "device_class": "power",
+            "unit_of_measurement": unit,
+            "state_class": "measurement",
+        },
+    )
+
+    result = (await validate.async_validate(hass)).as_dict()
+    assert result["energy_sources"][0] == issues

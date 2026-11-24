@@ -709,6 +709,7 @@ async def test_alerts_refresh(
             "issues": [
                 {
                     "config_entry_id": None,
+                    "config_subentry_id": None,
                     "created": "2022-07-19T09:41:13.746514+00:00",
                     "dismissed_version": "2022.6.0",
                     "domain": DOMAIN,
@@ -717,6 +718,7 @@ async def test_alerts_refresh(
                 },
                 {
                     "config_entry_id": None,
+                    "config_subentry_id": None,
                     "created": "2022-07-19T09:41:13.746514+00:00",
                     "dismissed_version": None,
                     "domain": DOMAIN,

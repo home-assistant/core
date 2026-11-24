@@ -7,12 +7,10 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, service
 from homeassistant.helpers.typing import VolDictType
 
-from .const import ATTR_DURATION, DOMAIN
-
-SERVICE_START_IRRIGATION = "start_irrigation"
+from .const import DOMAIN, RainbirdService, RainbirdServiceArgument
 
 SERVICE_SCHEMA_IRRIGATION: VolDictType = {
-    probatio.Required(ATTR_DURATION): cv.positive_float,
+    probatio.Required(RainbirdServiceArgument.DURATION): cv.positive_float,
 }
 
 
@@ -23,7 +21,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
     service.async_register_platform_entity_service(
         hass,
         DOMAIN,
-        SERVICE_START_IRRIGATION,
+        RainbirdService.START_IRRIGATION,
         entity_domain=SWITCH_DOMAIN,
         schema=SERVICE_SCHEMA_IRRIGATION,
         func="async_turn_on",

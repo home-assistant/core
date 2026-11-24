@@ -83,8 +83,8 @@ async def test_pool_cover_inverts_hardware_value(
 
     mock_neopool_client.async_read_all.return_value = {
         **MOCK_POOL_DATA,
+        "MBF_PAR_HIDRO_COVER_ENABLE": 1,
         "Pool Cover": True,
-        "Filtration Pump": True,
     }
     freezer.tick(timedelta(seconds=60))
     async_fire_time_changed(hass)
@@ -95,8 +95,8 @@ async def test_pool_cover_inverts_hardware_value(
 
     mock_neopool_client.async_read_all.return_value = {
         **MOCK_POOL_DATA,
+        "MBF_PAR_HIDRO_COVER_ENABLE": 1,
         "Pool Cover": False,
-        "Filtration Pump": True,
     }
     freezer.tick(timedelta(seconds=60))
     async_fire_time_changed(hass)
@@ -117,8 +117,8 @@ async def test_pool_cover_none_yields_unknown(
 
     mock_neopool_client.async_read_all.return_value = {
         **MOCK_POOL_DATA,
+        "MBF_PAR_HIDRO_COVER_ENABLE": 1,
         "Pool Cover": None,
-        "Filtration Pump": True,
     }
     freezer.tick(timedelta(seconds=60))
     async_fire_time_changed(hass)
@@ -128,25 +128,38 @@ async def test_pool_cover_none_yields_unknown(
     assert state.state == STATE_UNKNOWN
 
 
-@pytest.mark.parametrize("pump_state", [False, None])
-async def test_pool_cover_unknown_when_filtration_not_running(
+@pytest.mark.parametrize(
+    "overrides",
+    [
+        {"MBF_PAR_HIDRO_COVER_ENABLE": 0},
+        {"MBF_PAR_HIDRO_COVER_ENABLE": 0x2},
+        {},
+    ],
+)
+async def test_pool_cover_unknown_when_detection_disabled(
     hass: HomeAssistant,
     mock_config_entry_binary_sensor: MockConfigEntry,
     mock_neopool_client: MagicMock,
     freezer: FrozenDateTimeFactory,
-    pump_state: bool | None,
+    overrides: dict[str, int],
 ) -> None:
-    """Cover reads unknown unless the pump is confirmed running.
+    """Cover reads unknown when the cover-enable bit is clear or missing.
 
-    The device only reports the cover bit while filtration runs, so an idle
-    (False) or unknown (None) pump state must not surface a stale open/closed.
+    MBF_PAR_HIDRO_COVER_ENABLE packs the cover-detection flag and the
+    temperature-shutdown flag in one register. Only the cover-enable bit means
+    the controller is tracking the cover; a cleared register (0), the
+    temperature-shutdown bit alone (0x2) or a missing register must not surface
+    a stale open/closed state.
     """
     await setup_integration(hass, mock_config_entry_binary_sensor)
 
+    data = {
+        k: v for k, v in MOCK_POOL_DATA.items() if k != "MBF_PAR_HIDRO_COVER_ENABLE"
+    }
     mock_neopool_client.async_read_all.return_value = {
-        **MOCK_POOL_DATA,
+        **data,
         "Pool Cover": False,
-        "Filtration Pump": pump_state,
+        **overrides,
     }
     freezer.tick(timedelta(seconds=60))
     async_fire_time_changed(hass)

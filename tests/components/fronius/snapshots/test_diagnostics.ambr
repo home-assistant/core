@@ -415,11 +415,21 @@
             }),
             dict({
               'address': 40132,
+              'length': 30,
+              'model_id': 121,
+            }),
+            dict({
+              'address': 40164,
+              'length': 44,
+              'model_id': 122,
+            }),
+            dict({
+              'address': 40210,
               'length': 24,
               'model_id': 123,
             }),
             dict({
-              'address': 40158,
+              'address': 40236,
               'length': 28,
               'model_id': 160,
             }),
