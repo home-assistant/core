@@ -184,7 +184,9 @@ def async_setup_services(hass: HomeAssistant) -> None:
                 probatio.Coerce(int), probatio.Range(min=1, max=254)
             ),
             probatio.Required(ATTR_DAYS): probatio.All(
-                cv.ensure_list, [probatio.In(WEEKDAY_MAP)], probatio.Length(min=1)
+                probatio.EnsureList(),
+                [probatio.In(WEEKDAY_MAP)],
+                probatio.Length(min=1),
             ),
             probatio.Required(ATTR_START_TIME): cv.time,
             probatio.Required(ATTR_END_TIME): cv.time,
@@ -216,7 +218,8 @@ def async_setup_services(hass: HomeAssistant) -> None:
         entity_domain=LOCK_DOMAIN,
         schema={
             probatio.Required(ATTR_WEEK_DAY_INDEX): probatio.All(
-                probatio.Coerce(int), probatio.Range(min=1, max=SCHEDULE_CLEAR_ALL_INDEX)
+                probatio.Coerce(int),
+                probatio.Range(min=1, max=SCHEDULE_CLEAR_ALL_INDEX),
             ),
             probatio.Required(MatterServiceArgument.USER_INDEX): probatio.All(
                 probatio.Coerce(int),
@@ -233,14 +236,14 @@ def async_setup_services(hass: HomeAssistant) -> None:
         "set_year_day_schedule",
         entity_domain=LOCK_DOMAIN,
         schema={
-            vol.Required(ATTR_YEAR_DAY_INDEX): vol.All(
-                vol.Coerce(int), vol.Range(min=1, max=253)
+            probatio.Required(ATTR_YEAR_DAY_INDEX): probatio.All(
+                probatio.Coerce(int), probatio.Range(min=1, max=253)
             ),
-            vol.Required(ATTR_USER_INDEX): vol.All(
-                vol.Coerce(int), vol.Range(min=1, max=254)
+            probatio.Required(MatterServiceArgument.USER_INDEX): probatio.All(
+                probatio.Coerce(int), probatio.Range(min=1, max=254)
             ),
-            vol.Required(ATTR_START_DATE_TIME): cv.datetime,
-            vol.Required(ATTR_END_DATE_TIME): cv.datetime,
+            probatio.Required(ATTR_START_DATE_TIME): cv.datetime,
+            probatio.Required(ATTR_END_DATE_TIME): cv.datetime,
         },
         func="async_set_year_day_schedule",
     )
@@ -251,11 +254,11 @@ def async_setup_services(hass: HomeAssistant) -> None:
         "get_year_day_schedule",
         entity_domain=LOCK_DOMAIN,
         schema={
-            vol.Required(ATTR_YEAR_DAY_INDEX): vol.All(
-                vol.Coerce(int), vol.Range(min=1, max=253)
+            probatio.Required(ATTR_YEAR_DAY_INDEX): probatio.All(
+                probatio.Coerce(int), probatio.Range(min=1, max=253)
             ),
-            vol.Required(ATTR_USER_INDEX): vol.All(
-                vol.Coerce(int), vol.Range(min=1, max=254)
+            probatio.Required(MatterServiceArgument.USER_INDEX): probatio.All(
+                probatio.Coerce(int), probatio.Range(min=1, max=254)
             ),
         },
         func="async_get_year_day_schedule",
@@ -268,12 +271,13 @@ def async_setup_services(hass: HomeAssistant) -> None:
         "clear_year_day_schedule",
         entity_domain=LOCK_DOMAIN,
         schema={
-            vol.Required(ATTR_YEAR_DAY_INDEX): vol.All(
-                vol.Coerce(int), vol.Range(min=1, max=SCHEDULE_CLEAR_ALL_INDEX)
+            probatio.Required(ATTR_YEAR_DAY_INDEX): probatio.All(
+                probatio.Coerce(int),
+                probatio.Range(min=1, max=SCHEDULE_CLEAR_ALL_INDEX),
             ),
-            vol.Required(ATTR_USER_INDEX): vol.All(
-                vol.Coerce(int),
-                vol.Any(vol.Range(min=1, max=254), CLEAR_ALL_INDEX),
+            probatio.Required(MatterServiceArgument.USER_INDEX): probatio.All(
+                probatio.Coerce(int),
+                probatio.Any(probatio.Range(min=1, max=254), CLEAR_ALL_INDEX),
             ),
         },
         func="async_clear_year_day_schedule",
@@ -286,12 +290,12 @@ def async_setup_services(hass: HomeAssistant) -> None:
         "set_holiday_schedule",
         entity_domain=LOCK_DOMAIN,
         schema={
-            vol.Required(ATTR_HOLIDAY_INDEX): vol.All(
-                vol.Coerce(int), vol.Range(min=1, max=253)
+            probatio.Required(ATTR_HOLIDAY_INDEX): probatio.All(
+                probatio.Coerce(int), probatio.Range(min=1, max=253)
             ),
-            vol.Required(ATTR_START_DATE_TIME): cv.datetime,
-            vol.Required(ATTR_END_DATE_TIME): cv.datetime,
-            vol.Required(ATTR_OPERATING_MODE): vol.In(
+            probatio.Required(ATTR_START_DATE_TIME): cv.datetime,
+            probatio.Required(ATTR_END_DATE_TIME): cv.datetime,
+            probatio.Required(ATTR_OPERATING_MODE): probatio.In(
                 OPERATING_MODE_REVERSE_MAP.keys()
             ),
         },
@@ -304,8 +308,8 @@ def async_setup_services(hass: HomeAssistant) -> None:
         "get_holiday_schedule",
         entity_domain=LOCK_DOMAIN,
         schema={
-            vol.Required(ATTR_HOLIDAY_INDEX): vol.All(
-                vol.Coerce(int), vol.Range(min=1, max=253)
+            probatio.Required(ATTR_HOLIDAY_INDEX): probatio.All(
+                probatio.Coerce(int), probatio.Range(min=1, max=253)
             ),
         },
         func="async_get_holiday_schedule",
@@ -318,8 +322,9 @@ def async_setup_services(hass: HomeAssistant) -> None:
         "clear_holiday_schedule",
         entity_domain=LOCK_DOMAIN,
         schema={
-            vol.Required(ATTR_HOLIDAY_INDEX): vol.All(
-                vol.Coerce(int), vol.Range(min=1, max=SCHEDULE_CLEAR_ALL_INDEX)
+            probatio.Required(ATTR_HOLIDAY_INDEX): probatio.All(
+                probatio.Coerce(int),
+                probatio.Range(min=1, max=SCHEDULE_CLEAR_ALL_INDEX),
             ),
         },
         func="async_clear_holiday_schedule",

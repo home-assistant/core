@@ -451,7 +451,7 @@ class MatterLock(MatterEntity, LockEntity):
                 self.matter_client,
                 self._endpoint.node,
                 year_day_index=kwargs[ATTR_YEAR_DAY_INDEX],
-                user_index=kwargs[ATTR_USER_INDEX],
+                user_index=kwargs[MatterServiceArgument.USER_INDEX],
                 start_date_time=kwargs[ATTR_START_DATE_TIME],
                 end_date_time=kwargs[ATTR_END_DATE_TIME],
             )
@@ -467,7 +467,7 @@ class MatterLock(MatterEntity, LockEntity):
                 self.matter_client,
                 self._endpoint.node,
                 year_day_index=kwargs[ATTR_YEAR_DAY_INDEX],
-                user_index=kwargs[ATTR_USER_INDEX],
+                user_index=kwargs[MatterServiceArgument.USER_INDEX],
             )
         except MatterError as err:
             raise HomeAssistantError(
@@ -481,7 +481,7 @@ class MatterLock(MatterEntity, LockEntity):
                 self.matter_client,
                 self._endpoint.node,
                 year_day_index=kwargs[ATTR_YEAR_DAY_INDEX],
-                user_index=kwargs[ATTR_USER_INDEX],
+                user_index=kwargs[MatterServiceArgument.USER_INDEX],
             )
         except MatterError as err:
             raise HomeAssistantError(

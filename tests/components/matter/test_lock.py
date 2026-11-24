@@ -29,6 +29,7 @@ from homeassistant.components.matter.const import (
 )
 from homeassistant.const import (
     ATTR_CODE,
+    ATTR_ENTITY_ID,
     STATE_UNKNOWN,
     CommonServiceArgument,
     Platform,
@@ -3159,7 +3160,7 @@ async def test_set_year_day_schedule_service(
         {
             ATTR_ENTITY_ID: "lock.mock_door_lock",
             ATTR_YEAR_DAY_INDEX: 1,
-            ATTR_USER_INDEX: 2,
+            MatterServiceArgument.USER_INDEX: 2,
             ATTR_START_DATE_TIME: "2024-01-01 08:00:00",
             ATTR_END_DATE_TIME: "2024-06-01 18:00:00",
         },
@@ -3197,7 +3198,7 @@ async def test_set_year_day_schedule_invalid_time(
             {
                 ATTR_ENTITY_ID: "lock.mock_door_lock",
                 ATTR_YEAR_DAY_INDEX: 1,
-                ATTR_USER_INDEX: 2,
+                MatterServiceArgument.USER_INDEX: 2,
                 ATTR_START_DATE_TIME: "2024-06-01 18:00:00",
                 ATTR_END_DATE_TIME: "2024-01-01 08:00:00",
             },
@@ -3222,7 +3223,7 @@ async def test_year_day_schedule_services_on_lock_without_ydsch_feature(
             {
                 ATTR_ENTITY_ID: "lock.mock_door_lock",
                 ATTR_YEAR_DAY_INDEX: 1,
-                ATTR_USER_INDEX: 2,
+                MatterServiceArgument.USER_INDEX: 2,
                 ATTR_START_DATE_TIME: "2024-01-01 08:00:00",
                 ATTR_END_DATE_TIME: "2024-06-01 18:00:00",
             },
@@ -3236,7 +3237,7 @@ async def test_year_day_schedule_services_on_lock_without_ydsch_feature(
             {
                 ATTR_ENTITY_ID: "lock.mock_door_lock",
                 ATTR_YEAR_DAY_INDEX: 1,
-                ATTR_USER_INDEX: 2,
+                MatterServiceArgument.USER_INDEX: 2,
             },
             blocking=True,
         )
@@ -3266,7 +3267,7 @@ async def test_get_year_day_schedule_service(
         {
             ATTR_ENTITY_ID: "lock.mock_door_lock",
             ATTR_YEAR_DAY_INDEX: 1,
-            ATTR_USER_INDEX: 2,
+            MatterServiceArgument.USER_INDEX: 2,
         },
         blocking=True,
         return_response=True,
@@ -3299,7 +3300,7 @@ async def test_get_year_day_schedule_not_found(
         {
             ATTR_ENTITY_ID: "lock.mock_door_lock",
             ATTR_YEAR_DAY_INDEX: 1,
-            ATTR_USER_INDEX: 2,
+            MatterServiceArgument.USER_INDEX: 2,
         },
         blocking=True,
         return_response=True,
@@ -3333,7 +3334,7 @@ async def test_get_year_day_schedule_status_failure(
             {
                 ATTR_ENTITY_ID: "lock.mock_door_lock",
                 ATTR_YEAR_DAY_INDEX: 1,
-                ATTR_USER_INDEX: 2,
+                MatterServiceArgument.USER_INDEX: 2,
             },
             blocking=True,
             return_response=True,
@@ -3356,7 +3357,7 @@ async def test_clear_year_day_schedule_service(
         {
             ATTR_ENTITY_ID: "lock.mock_door_lock",
             ATTR_YEAR_DAY_INDEX: 1,
-            ATTR_USER_INDEX: 2,
+            MatterServiceArgument.USER_INDEX: 2,
         },
         blocking=True,
     )
@@ -3388,7 +3389,7 @@ async def test_clear_year_day_schedule_all_indices(
         {
             ATTR_ENTITY_ID: "lock.mock_door_lock",
             ATTR_YEAR_DAY_INDEX: 254,
-            ATTR_USER_INDEX: CLEAR_ALL_INDEX,
+            MatterServiceArgument.USER_INDEX: CLEAR_ALL_INDEX,
         },
         blocking=True,
     )
