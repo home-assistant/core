@@ -32,10 +32,10 @@ PLATFORM_SCHEMA = SELECT_PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(
+async def async_setup_platform(
     hass: HomeAssistant,
     config: ConfigType,
-    add_entities: AddEntitiesCallback,
+    async_add_entities: AddEntitiesCallback,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up an ADS select device."""
@@ -47,7 +47,7 @@ def setup_platform(
 
     entity = AdsSelect(ads_hub, ads_var, name, options)
 
-    add_entities([entity])
+    async_add_entities([entity])
 
 
 class AdsSelect(AdsEntity, SelectEntity):
