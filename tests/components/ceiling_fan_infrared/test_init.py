@@ -205,3 +205,54 @@ async def test_emitter_renamed_while_unloaded_is_followed_on_setup(
     assert fan_entity_id is not None
     assert (state := hass.states.get(fan_entity_id)) is not None
     assert state.state != STATE_UNAVAILABLE
+
+
+@pytest.mark.usefixtures("mock_infrared_emitter_entity")
+async def test_stale_emitter_uuid_is_refreshed(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test a stale emitter UUID is refreshed when its entity ID is reused.
+
+    When the original emitter is deleted and a replacement takes its entity ID,
+    the stored UUID still points to the deleted emitter. Without refreshing it,
+    a rename made while this entry is unloaded leaves both stored references
+    stale and the fan unavailable on the next setup.
+    """
+    registry_entry = entity_registry.async_get(EMITTER_ENTITY_ID)
+    assert registry_entry is not None
+    config_entry.add_to_hass(hass)
+    hass.config_entries.async_update_entry(
+        config_entry,
+        data={
+            CONF_INFRARED_ENTITY_ID: EMITTER_ENTITY_ID,
+            CONF_INFRARED_ENTITY_UUID: "deleted-emitter-uuid",
+        },
+    )
+
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert config_entry.data[CONF_INFRARED_ENTITY_UUID] == registry_entry.id
+
+    await hass.config_entries.async_unload(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    entity_registry.async_update_entity(
+        EMITTER_ENTITY_ID, new_entity_id=RENAMED_EMITTER_ENTITY_ID
+    )
+    await hass.async_block_till_done()
+
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.LOADED
+    assert config_entry.data[CONF_INFRARED_ENTITY_ID] == RENAMED_EMITTER_ENTITY_ID
+
+    fan_entity_id = entity_registry.async_get_entity_id(
+        FAN_DOMAIN, "ceiling_fan_infrared", config_entry.entry_id
+    )
+    assert fan_entity_id is not None
+    assert (state := hass.states.get(fan_entity_id)) is not None
+    assert state.state != STATE_UNAVAILABLE

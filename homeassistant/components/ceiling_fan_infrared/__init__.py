@@ -35,11 +35,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     data = {**entry.data, CONF_INFRARED_ENTITY_ID: emitter_entity_id}
 
     if (
-        CONF_INFRARED_ENTITY_UUID not in data
-        and (registry_entry := entity_registry.async_get(emitter_entity_id)) is not None
-    ):
+        registry_entry := entity_registry.async_get(emitter_entity_id)
+    ) is not None and data.get(CONF_INFRARED_ENTITY_UUID) != registry_entry.id:
         # Remember the emitter by its registry UUID, so a rename is followed
-        # even when it happens while this entry is unloaded.
+        # even when it happens while this entry is unloaded. Refresh a stored
+        # UUID that points to a deleted emitter whose entity ID was reused.
         data[CONF_INFRARED_ENTITY_UUID] = registry_entry.id
 
     if data != entry.data:
