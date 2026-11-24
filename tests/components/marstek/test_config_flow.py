@@ -651,7 +651,7 @@ async def test_discover_failed_when_client_setup_fails(
     """Test discovery recovers when the UDP client cannot be created."""
     with (
         patch(
-            "homeassistant.components.marstek.config_flow.async_create_udp_client",
+            "homeassistant.components.marstek.helpers.async_create_udp_client",
             side_effect=[OSError("network down"), mock_udp_client],
         ),
     ):

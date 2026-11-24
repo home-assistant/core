@@ -26,8 +26,7 @@ from .const import (
     DOMAIN,
     SUPPORTED_DEVICE_TYPES,
 )
-from .coordinator import MARSTEK_UDP_CLIENT
-from .helpers import async_create_udp_client
+from .helpers import async_get_udp_client
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -125,24 +124,12 @@ class MarstekConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self.discovered_devices = []
         self.discovery_error = None
         _LOGGER.debug("Starting device discovery")
-        udp_client = self.hass.data.get(MARSTEK_UDP_CLIENT)
-        own_client = False
-        if udp_client is None:
-            try:
-                udp_client = await async_create_udp_client(self.hass)
-            except TimeoutError, OSError, TypeError:
-                self.discovery_error = "discovery_failed"
-                return
-            own_client = True
-
         try:
+            udp_client = await async_get_udp_client(self.hass)
             discovered_devices = await udp_client.discover_devices()
         except TimeoutError, OSError, TypeError:
             self.discovery_error = "discovery_failed"
             return
-        finally:
-            if own_client:
-                await udp_client.async_cleanup()
 
         if not discovered_devices:
             self.discovery_error = "no_devices_found"
@@ -222,13 +209,8 @@ class MarstekConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def _async_get_device_from_host(self, host: str) -> MarstekDeviceInfo:
         """Fetch device information from a specific host."""
-        if (udp_client := self.hass.data.get(MARSTEK_UDP_CLIENT)) is not None:
-            return await udp_client.get_device_info(host)
-        udp_client = await async_create_udp_client(self.hass)
-        try:
-            return await udp_client.get_device_info(host)
-        finally:
-            await udp_client.async_cleanup()
+        udp_client = await async_get_udp_client(self.hass)
+        return await udp_client.get_device_info(host)
 
     async def _async_create_entry_from_device(
         self, device: MarstekDeviceInfo

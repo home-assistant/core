@@ -10,8 +10,8 @@ from aiomarstek import MarstekDeviceInfo
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
-from homeassistant.components.marstek import async_create_udp_client
 from homeassistant.components.marstek.coordinator import MarstekDataUpdateCoordinator
+from homeassistant.components.marstek.helpers import async_create_udp_client
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant
@@ -39,7 +39,7 @@ async def test_async_setup_entry_retries_when_client_creation_fails(
     mock_config_entry.add_to_hass(hass)
 
     with patch(
-        "homeassistant.components.marstek.async_create_udp_client",
+        "homeassistant.components.marstek.helpers.async_create_udp_client",
         side_effect=OSError("network down"),
     ):
         assert not await hass.config_entries.async_setup(mock_config_entry.entry_id)

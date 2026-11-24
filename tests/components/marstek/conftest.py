@@ -57,15 +57,9 @@ def mock_udp_client() -> Generator[MagicMock]:
     mock_client.get_device_info.return_value = MOCK_DEVICE_INFO
     mock_client.get_device_status.return_value = MOCK_DEVICE_STATUS
     mock_client.get_discovery_cache.return_value = None
-    with (
-        patch(
-            "homeassistant.components.marstek.async_create_udp_client",
-            return_value=mock_client,
-        ),
-        patch(
-            "homeassistant.components.marstek.config_flow.async_create_udp_client",
-            return_value=mock_client,
-        ),
+    with patch(
+        "homeassistant.components.marstek.helpers.async_create_udp_client",
+        return_value=mock_client,
     ):
         yield mock_client
 
