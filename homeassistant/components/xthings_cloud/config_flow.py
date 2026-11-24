@@ -2,12 +2,13 @@
 
 from typing import Any, override
 
-import probatio
 from ha_xthings_cloud import (
     XthingsCloudApiClient,
     XthingsCloudApiError,
     XthingsCloudAuthError,
 )
+import probatio
+
 from homeassistant.config_entries import (
     ConfigEntry,
     ConfigFlow,
@@ -19,12 +20,7 @@ from homeassistant.core import callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.instance_id import async_get as async_get_instance_id
 
-from .const import (
-    CONF_REFRESH_TOKEN,
-    CONF_REMOTE_ACCESS,
-    DOMAIN,
-    LOGGER,
-)
+from .const import CONF_REFRESH_TOKEN, CONF_REMOTE_ACCESS, DOMAIN, LOGGER
 
 ERROR_CODE_MAP: dict[int, str] = {
     20001: "token_invalid",

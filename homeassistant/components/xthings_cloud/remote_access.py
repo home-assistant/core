@@ -3,14 +3,15 @@
 import asyncio
 import configparser
 import json
+from pathlib import Path
 import platform
 import stat
-from pathlib import Path
 from typing import Any
 
 import aiohttp
-import yaml
 from ha_xthings_cloud import XthingsCloudApiClient
+import yaml
+
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
@@ -38,7 +39,9 @@ def _get_platform_key() -> str | None:
     """Get the download key for the current platform."""
     key = PLATFORM_MAP.get((platform.system(), platform.machine()))
     if not key:
-        LOGGER.error("Unsupported platform: %s %s", platform.system(), platform.machine())
+        LOGGER.error(
+            "Unsupported platform: %s %s", platform.system(), platform.machine()
+        )
     return key
 
 
@@ -69,10 +72,7 @@ async def _async_fetch_upgrade_info(
 
     parser = configparser.ConfigParser()
     parser.read_string("[frp]\n" + text)
-    return {
-        key: value.strip('"').strip("'")
-        for key, value in parser.items("frp")
-    }
+    return {key: value.strip('"').strip("'") for key, value in parser.items("frp")}
 
 
 async def _async_download_frpc(
@@ -92,10 +92,7 @@ async def _async_download_frpc(
     destination.parent.mkdir(parents=True, exist_ok=True)
     destination.write_bytes(content)
     destination.chmod(
-        destination.stat().st_mode
-        | stat.S_IXUSR
-        | stat.S_IXGRP
-        | stat.S_IXOTH
+        destination.stat().st_mode | stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH
     )
     LOGGER.info("Downloaded frpc to %s (%d bytes)", destination, len(content))
     return True
@@ -128,7 +125,9 @@ async def async_ensure_frpc(hass: HomeAssistant) -> Path | None:
     local_version = await hass.async_add_executor_job(_get_local_version, frp_dir)
     needs_download = not frpc_path.exists() or local_version != remote_version
     if needs_download:
-        if not await _async_download_frpc(async_get_clientsession(hass), remote_path, frpc_path):
+        if not await _async_download_frpc(
+            async_get_clientsession(hass), remote_path, frpc_path
+        ):
             return frpc_path if frpc_path.exists() else None
         await hass.async_add_executor_job(_save_local_version, frp_dir, remote_version)
 
@@ -249,7 +248,7 @@ async def _async_log_frpc_output(process: asyncio.subprocess.Process) -> None:
         while line := await process.stdout.readline():
             LOGGER.debug("frpc: %s", line.decode(errors="replace").rstrip())
         returncode = await process.wait()
-    except (OSError, asyncio.CancelledError):
+    except OSError, asyncio.CancelledError:
         return
     if returncode:
         LOGGER.error("Frpc exited unexpectedly with code %s", returncode)
@@ -306,7 +305,9 @@ def _ensure_http_proxy_config(hass: HomeAssistant) -> None:
     else:
         config["http"] = http_config
         config_path.write_text(
-            yaml.safe_dump(config, default_flow_style=False, allow_unicode=True, sort_keys=False),
+            yaml.safe_dump(
+                config, default_flow_style=False, allow_unicode=True, sort_keys=False
+            ),
             encoding="utf-8",
         )
 
