@@ -27,6 +27,8 @@ from .const import (
     TEST_DEVICE_GLOW_SN,
     TEST_DEVICE_PLUG_SENSORS,
     TEST_DEVICE_PLUG_SN,
+    TEST_DEVICE_THERMOSTAT_SENSORS,
+    TEST_DEVICE_THERMOSTAT_SN,
     TEST_PASSWORD,
     TEST_USER_ID,
     TEST_USERNAME,
@@ -71,6 +73,7 @@ def mock_amazon_devices_client() -> Generator[AsyncMock]:
             TEST_DEVICE_2_SN: deepcopy(TEST_DEVICE_2_SENSORS),
             TEST_DEVICE_AQM_SN: deepcopy(TEST_DEVICE_AQM_SENSORS),
             TEST_DEVICE_GLOW_SN: deepcopy(TEST_DEVICE_GLOW_SENSORS),
+            TEST_DEVICE_THERMOSTAT_SN: deepcopy(TEST_DEVICE_THERMOSTAT_SENSORS),
             TEST_DEVICE_PLUG_SN: deepcopy(TEST_DEVICE_PLUG_SENSORS),
         }
         client.get_default_device = AsyncMock(return_value=deepcopy(TEST_DEVICE_1))

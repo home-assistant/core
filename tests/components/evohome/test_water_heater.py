@@ -84,12 +84,12 @@ async def test_set_operation_mode(
     freezer: FrozenDateTimeFactory,
     snapshot: SnapshotAssertion,
 ) -> None:
-    """Test SERVICE_SET_OPERATION_MODE of an evohome DHW zone."""
+    """Test WaterHeaterService.SET_OPERATION_MODE of an evohome DHW zone."""
 
     freezer.move_to("2024-07-10T11:55:00Z")
     results = []
 
-    # SERVICE_SET_OPERATION_MODE: auto
+    # WaterHeaterService.SET_OPERATION_MODE: auto
     with patch("evohomeasync2.hotwater.HotWater.reset") as mock_fcn:
         await hass.services.async_call(
             WATER_HEATER_DOMAIN,
@@ -103,7 +103,7 @@ async def test_set_operation_mode(
 
         mock_fcn.assert_awaited_once_with()
 
-    # SERVICE_SET_OPERATION_MODE: off (until next scheduled setpoint)
+    # WaterHeaterService.SET_OPERATION_MODE: off (until next scheduled setpoint)
     with patch("evohomeasync2.hotwater.HotWater.set_off") as mock_fcn:
         await hass.services.async_call(
             WATER_HEATER_DOMAIN,
@@ -123,7 +123,7 @@ async def test_set_operation_mode(
 
         results.append(mock_fcn.await_args.kwargs)
 
-    # SERVICE_SET_OPERATION_MODE: on (until next scheduled setpoint)
+    # WaterHeaterService.SET_OPERATION_MODE: on (until next scheduled setpoint)
     with patch("evohomeasync2.hotwater.HotWater.set_on") as mock_fcn:
         await hass.services.async_call(
             WATER_HEATER_DOMAIN,
@@ -148,7 +148,7 @@ async def test_set_operation_mode(
 
 @pytest.mark.parametrize("install", TEST_INSTALLS_WITH_DHW)
 async def test_set_away_mode(hass: HomeAssistant, dhw_id: str) -> None:
-    """Test SERVICE_SET_AWAY_MODE of an evohome DHW zone."""
+    """Test WaterHeaterService.SET_AWAY_MODE of an evohome DHW zone."""
 
     # set_away_mode: off
     with patch("evohomeasync2.hotwater.HotWater.reset") as mock_fcn:
@@ -181,7 +181,7 @@ async def test_set_away_mode(hass: HomeAssistant, dhw_id: str) -> None:
 
 @pytest.mark.parametrize("install", TEST_INSTALLS_WITH_DHW)
 async def test_turn_off(hass: HomeAssistant, dhw_id: str) -> None:
-    """Test SERVICE_TURN_OFF of an evohome DHW zone."""
+    """Test WaterHeaterService.TURN_OFF of an evohome DHW zone."""
 
     # turn_off
     with patch("evohomeasync2.hotwater.HotWater.set_off") as mock_fcn:
@@ -199,7 +199,7 @@ async def test_turn_off(hass: HomeAssistant, dhw_id: str) -> None:
 
 @pytest.mark.parametrize("install", TEST_INSTALLS_WITH_DHW)
 async def test_turn_on(hass: HomeAssistant, dhw_id: str) -> None:
-    """Test SERVICE_TURN_ON of an evohome DHW zone."""
+    """Test WaterHeaterService.TURN_ON of an evohome DHW zone."""
 
     # turn_on
     with patch("evohomeasync2.hotwater.HotWater.set_on") as mock_fcn:
