@@ -2609,10 +2609,18 @@ async def test_purge_entity_removed_while_recording_disabled(
         assert session.query(States).count() == 0
 
 
-async def test_purge_finishes_when_kept_states_fill_the_batches(
-    hass: HomeAssistant, recorder_mock: Recorder
+@pytest.mark.parametrize(
+    "purge_before_days",
+    [
+        pytest.param([10], id="one_purge"),
+        # Purges with different cutoffs take turns, like requeued purge tasks do
+        pytest.param([10, 15], id="alternating_purges"),
+    ],
+)
+async def test_purge_finishes_in_small_batches(
+    hass: HomeAssistant, recorder_mock: Recorder, purge_before_days: list[int]
 ) -> None:
-    """Test the purge makes progress when the oldest batch only holds kept states."""
+    """Test purges that need several calls with one small batch each finish."""
     now = dt_util.utcnow()
     for days, entity_id in ((30, "sensor.a"), (29, "sensor.b")):
         with freeze_time(now - timedelta(days=days)):
@@ -2627,54 +2635,7 @@ async def test_purge_finishes_when_kept_states_fill_the_batches(
     await async_wait_recording_done(hass)
 
     # One batch of two states per purge call
-    with (
-        patch.object(recorder_mock, "max_bind_vars", 2),
-        patch.object(recorder_mock.database_engine, "max_bind_vars", 2),
-    ):
-        for _ in range(5):
-            if purge_old_data(
-                recorder_mock,
-                now - timedelta(days=10),
-                repack=False,
-                states_batch_size=1,
-                events_batch_size=1,
-            ):
-                break
-        else:
-            pytest.fail("The purge did not finish")
-
-    with session_scope(hass=hass) as session:
-        states = session.query(States.state).order_by(States.state_id)
-        assert [state for (state,) in states] == [
-            "old",
-            "old",
-            "18",
-            "new",
-            "new",
-            "new",
-        ]
-
-
-async def test_purge_finishes_when_two_purges_alternate(
-    hass: HomeAssistant, recorder_mock: Recorder
-) -> None:
-    """Test two purges with different cutoffs that take turns both finish."""
-    now = dt_util.utcnow()
-    for days, entity_id in ((30, "sensor.a"), (29, "sensor.b")):
-        with freeze_time(now - timedelta(days=days)):
-            hass.states.async_set(entity_id, "old")
-            await async_wait_recording_done(hass)
-    for days in (20, 19, 18):
-        with freeze_time(now - timedelta(days=days)):
-            hass.states.async_set("sensor.c", str(days))
-            await async_wait_recording_done(hass)
-    for entity_id in ("sensor.a", "sensor.b", "sensor.c"):
-        hass.states.async_set(entity_id, "new")
-    await async_wait_recording_done(hass)
-
-    # One batch of two states per purge call, the purges take turns like
-    # requeued purge tasks do
-    pending = [now - timedelta(days=10), now - timedelta(days=15)]
+    pending = [now - timedelta(days=days) for days in purge_before_days]
     with (
         patch.object(recorder_mock, "max_bind_vars", 2),
         patch.object(recorder_mock.database_engine, "max_bind_vars", 2),
@@ -2691,10 +2652,7 @@ async def test_purge_finishes_when_two_purges_alternate(
                     events_batch_size=1,
                 )
             ]
-            if not pending:
-                break
-        else:
-            pytest.fail("The purges did not finish")
+    assert not pending
 
     with session_scope(hass=hass) as session:
         states = session.query(States.state).order_by(States.state_id)

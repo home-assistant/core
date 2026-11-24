@@ -32,6 +32,10 @@ async def async_get_config_entry_diagnostics(
             "active_energy_burned": activity_data.active_energy_burned is not None,
             "total_calories": activity_data.total_calories is not None,
             "floors": activity_data.floors is not None,
+            "altitude": activity_data.altitude is not None,
+            "active_minutes": activity_data.active_minutes is not None,
+            "active_zone_minutes": activity_data.active_zone_minutes is not None,
+            "sedentary_period": activity_data.sedentary_period is not None,
         }
 
     body_diagnostics = None

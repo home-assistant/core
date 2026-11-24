@@ -5,7 +5,7 @@ from collections.abc import Iterable
 import logging
 from typing import Any
 
-from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON
+from homeassistant.const import STATE_OFF, STATE_ON, TargetKey
 from homeassistant.core import Context, HomeAssistant, State
 
 from . import (
@@ -65,7 +65,7 @@ async def _async_reproduce_state(
     ):
         return
 
-    service_data = {ATTR_ENTITY_ID: state.entity_id}
+    service_data: dict[str, Any] = {TargetKey.ENTITY_ID: state.entity_id}
 
     if state.state != cur_state.state:
         if state.state == STATE_ON:
@@ -90,7 +90,7 @@ async def _async_reproduce_state(
             DOMAIN,
             WaterHeaterService.SET_TEMPERATURE,
             {
-                ATTR_ENTITY_ID: state.entity_id,
+                TargetKey.ENTITY_ID: state.entity_id,
                 WaterHeaterServiceArgument.TEMPERATURE: state.attributes.get(
                     WaterHeaterStateAttribute.TARGET_TEMPERATURE
                 ),
@@ -108,7 +108,7 @@ async def _async_reproduce_state(
             DOMAIN,
             WaterHeaterService.SET_AWAY_MODE,
             {
-                ATTR_ENTITY_ID: state.entity_id,
+                TargetKey.ENTITY_ID: state.entity_id,
                 WaterHeaterServiceArgument.AWAY_MODE: state.attributes.get(
                     WaterHeaterStateAttribute.AWAY_MODE
                 ),

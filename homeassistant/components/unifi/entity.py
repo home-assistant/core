@@ -3,7 +3,8 @@
 from abc import abstractmethod
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, override
+from functools import partial
+from typing import TYPE_CHECKING, Literal, override
 
 import aiounifi
 from aiounifi.interfaces.api_handlers import (
@@ -17,9 +18,10 @@ from aiounifi.models.event import Event, EventKey
 
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.core import callback
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.device_registry import (
     CONNECTION_NETWORK_MAC,
+    ChildDeviceInfo,
     DeviceEntryType,
     DeviceInfo,
 )
@@ -118,6 +120,39 @@ def async_device_device_info_fn(hub: UnifiHub, obj_id: str) -> DeviceInfo:
 
 
 @callback
+def async_child_device_info_fn(
+    hub: UnifiHub, obj_id: str, *, kind: Literal["port", "outlet"]
+) -> ChildDeviceInfo:
+    """Create device information for a port or outlet."""
+    registry = dr.async_get(hub.hass)
+    parent = registry.async_get_device_by_connection(
+        (CONNECTION_NETWORK_MAC, obj_id.partition("_")[0]),
+        hub.config.entry.entry_id,
+    )
+    if parent is None:
+        parent = registry.async_get_or_create_from_info(
+            config_entry_id=hub.config.entry.entry_id,
+            device_info=async_device_device_info_fn(hub, obj_id),
+        )
+    child_info = ChildDeviceInfo(
+        identifiers={(DOMAIN, f"{kind}-{obj_id}")},
+        parent_device_id=parent.id,
+    )
+    if kind == "port":
+        child_info.name = hub.api.ports[obj_id].name
+    elif (outlet := hub.api.outlets[obj_id]).name:
+        child_info.name = outlet.name
+    else:
+        child_info.translation_key = "outlet"
+        child_info.translation_placeholders = {"index": str(outlet.index)}
+    return child_info
+
+
+async_port_device_info_fn = partial(async_child_device_info_fn, kind="port")
+async_outlet_device_info_fn = partial(async_child_device_info_fn, kind="outlet")
+
+
+@callback
 def async_wlan_device_info_fn(hub: UnifiHub, obj_id: str) -> DeviceInfo:
     """Create device registry entry for WLAN."""
     wlan = hub.api.wlans[obj_id]
@@ -161,7 +196,7 @@ class UnifiEntityDescription[HandlerT: APIHandler, ItemT: ApiItem](EntityDescrip
 
     api_handler_fn: Callable[[aiounifi.Controller], HandlerT]
     """Provide api_handler from api."""
-    device_info_fn: Callable[[UnifiHub, str], DeviceInfo | None]
+    device_info_fn: Callable[[UnifiHub, str], DeviceInfo | ChildDeviceInfo | None]
     """Provide device info object based on hub and obj_id."""
     object_fn: Callable[[aiounifi.Controller, str], ItemT]
     """Retrieve object based on api and obj_id."""
@@ -230,6 +265,12 @@ class UnifiEntity[HandlerT: APIHandler, ItemT: ApiItem](Entity):
                 description.translation_placeholders_fn(obj)
             )
         self.async_initiate_state()
+
+    @property
+    @override
+    def available(self) -> bool:
+        """Return whether the entity and its coordinator are available."""
+        return super().available and self.coordinator.last_update_success
 
     @override
     async def async_added_to_hass(self) -> None:
@@ -301,6 +342,9 @@ class UnifiEntity[HandlerT: APIHandler, ItemT: ApiItem](Entity):
     def _async_coordinator_updated(self) -> None:
         """Skip coordinator updates that changed a different object."""
         coordinator_data = self.coordinator.data
+        if coordinator_data is None and self.coordinator.supports_websocket:
+            self.async_write_ha_state()
+            return
         if coordinator_data is None:
             event = ItemEvent.CHANGED
             changed_obj_id = None
@@ -329,10 +373,7 @@ class UnifiEntity[HandlerT: APIHandler, ItemT: ApiItem](Entity):
             self.hass.async_create_task(self.remove_item({self._obj_id}))
             return
 
-        self._attr_available = (
-            description.available_fn(self.hub, self._obj_id)
-            and self.coordinator.last_update_success
-        )
+        self._attr_available = description.available_fn(self.hub, self._obj_id)
         self.async_update_state(event, self._obj_id)
         self.async_write_ha_state()
 
@@ -371,7 +412,10 @@ class UnifiEntity[HandlerT: APIHandler, ItemT: ApiItem](Entity):
 
     async def async_refresh_after_control(self) -> None:
         """Refresh handler data after a control call when polling."""
-        if self.coordinator.update_interval is not None:
+        if (
+            not self.coordinator.supports_websocket
+            and self.coordinator.update_interval is not None
+        ):
             await self.coordinator.async_refresh()
 
     @callback

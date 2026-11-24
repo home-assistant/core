@@ -155,6 +155,10 @@ class StatesManager:
         ):
             last_committed_ids.pop(last_committed_ids_reversed[purged_state_id], None)
 
+        # A pending last reported update of a purged state would match no row
+        for purged_state_id in purged_state_ids.intersection(self._last_reported):
+            del self._last_reported[purged_state_id]
+
     def evict_purged_entity_ids(self, purged_entity_ids: set[str]) -> None:
         """Evict purged entity_ids from the committed states.
 

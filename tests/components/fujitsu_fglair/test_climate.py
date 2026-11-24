@@ -8,17 +8,11 @@ from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.climate import (
-    ATTR_FAN_MODE,
-    ATTR_HVAC_MODE,
-    ATTR_SWING_MODE,
-    ATTR_TEMPERATURE,
     DOMAIN as CLIMATE_DOMAIN,
     FAN_AUTO,
-    SERVICE_SET_FAN_MODE,
-    SERVICE_SET_HVAC_MODE,
-    SERVICE_SET_SWING_MODE,
-    SERVICE_SET_TEMPERATURE,
     SWING_BOTH,
+    ClimateService,
+    ClimateServiceArgument,
     HVACMode,
 )
 from homeassistant.components.fujitsu_fglair.climate import (
@@ -67,8 +61,8 @@ async def test_set_attributes(
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_HVAC_MODE,
-        service_data={ATTR_HVAC_MODE: HVACMode.COOL},
+        ClimateService.SET_HVAC_MODE,
+        service_data={ClimateServiceArgument.HVAC_MODE: HVACMode.COOL},
         target={TargetKey.ENTITY_ID: entity_id(mock_devices[0])},
         blocking=True,
     )
@@ -78,8 +72,8 @@ async def test_set_attributes(
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_FAN_MODE,
-        service_data={ATTR_FAN_MODE: FAN_AUTO},
+        ClimateService.SET_FAN_MODE,
+        service_data={ClimateServiceArgument.FAN_MODE: FAN_AUTO},
         target={TargetKey.ENTITY_ID: entity_id(mock_devices[0])},
         blocking=True,
     )
@@ -89,8 +83,8 @@ async def test_set_attributes(
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_SWING_MODE,
-        service_data={ATTR_SWING_MODE: SWING_BOTH},
+        ClimateService.SET_SWING_MODE,
+        service_data={ClimateServiceArgument.SWING_MODE: SWING_BOTH},
         target={TargetKey.ENTITY_ID: entity_id(mock_devices[0])},
         blocking=True,
     )
@@ -100,8 +94,8 @@ async def test_set_attributes(
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_TEMPERATURE,
-        service_data={ATTR_TEMPERATURE: 23.0},
+        ClimateService.SET_TEMPERATURE,
+        service_data={ClimateServiceArgument.TEMPERATURE: 23.0},
         target={TargetKey.ENTITY_ID: entity_id(mock_devices[0])},
         blocking=True,
     )
