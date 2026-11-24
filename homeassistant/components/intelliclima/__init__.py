@@ -13,6 +13,7 @@ from .coordinator import (
     IntelliClimaData,
     IntelliClimaFilterCoordinator,
 )
+from .entity import eco_devices
 
 PLATFORMS = [Platform.BINARY_SENSOR, Platform.FAN, Platform.SELECT, Platform.SENSOR]
 
@@ -37,8 +38,7 @@ async def async_setup_entry(
 
     LOGGER.debug(
         "Discovered %d IntelliClima VMC device(s)",
-        len(devices_coordinator.data.ecocomfort2_devices)
-        + len(devices_coordinator.data.ecocomfort3_devices),
+        len(eco_devices(devices_coordinator.data)),
     )
 
     device_serials = [

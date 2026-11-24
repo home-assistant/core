@@ -1,6 +1,5 @@
 """Fan platform for IntelliClima VMC."""
 
-from itertools import chain
 import math
 from typing import Any, override
 
@@ -16,7 +15,7 @@ from homeassistant.util.percentage import (
 from homeassistant.util.scaling import int_states_in_range
 
 from .coordinator import IntelliClimaConfigEntry, IntelliClimaCoordinator
-from .entity import IntelliClimaECODevice, IntelliClimaECOEntity
+from .entity import IntelliClimaECODevice, IntelliClimaECOEntity, eco_devices
 
 # Coordinator is used to centralize the data updates
 PARALLEL_UPDATES = 0
@@ -35,10 +34,7 @@ async def async_setup_entry(
             coordinator=coordinator,
             device=device,
         )
-        for device in chain[IntelliClimaECODevice](
-            coordinator.data.ecocomfort2_devices.values(),
-            coordinator.data.ecocomfort3_devices.values(),
-        )
+        for device in eco_devices(coordinator.data)
     ]
 
     async_add_entities(entities)

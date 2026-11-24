@@ -2,7 +2,6 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from itertools import chain
 from typing import override
 
 from pyintelliclima import FanState, IntelliClimaECO2, IntelliClimaECO3
@@ -22,7 +21,12 @@ from .coordinator import (
     IntelliClimaCoordinator,
     IntelliClimaFilterCoordinator,
 )
-from .entity import IntelliClimaECODevice, IntelliClimaECOEntity, eco_device_info
+from .entity import (
+    IntelliClimaECODevice,
+    IntelliClimaECOEntity,
+    eco_device_info,
+    eco_devices,
+)
 
 # Coordinator is used to centralize the data updates
 PARALLEL_UPDATES = 0
@@ -93,9 +97,7 @@ async def async_setup_entry(
             device=device,
             description=description,
         )
-        for device in chain[IntelliClimaECODevice](
-            ecocomfort2_devices, ecocomfort3_devices
-        )
+        for device in eco_devices(data.devices_coordinator.data)
         for description in FAN_STATE_BINARY_SENSORS
     )
     async_add_entities(entities)

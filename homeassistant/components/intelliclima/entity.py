@@ -53,6 +53,15 @@ ECO_DESCRIPTIONS: dict[type[IntelliClimaECODevice], IntelliClimaECODescription] 
 }
 
 
+def eco_devices(data: IntelliClimaDevices) -> list[IntelliClimaECODevice]:
+    """Return devices from every supported ECOCOMFORT family."""
+    return [
+        device
+        for description in ECO_DESCRIPTIONS.values()
+        for device in description.devices_fn(data).values()
+    ]
+
+
 def eco_device_info(device: IntelliClimaECODevice) -> DeviceInfo:
     """Return the device info shared by all ECOCOMFORT entities."""
     return DeviceInfo(

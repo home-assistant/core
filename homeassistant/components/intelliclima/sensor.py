@@ -2,8 +2,9 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from itertools import chain
 from typing import override
+
+from pyintelliclima import IntelliClimaECO2, IntelliClimaECO3
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -16,7 +17,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .coordinator import IntelliClimaConfigEntry, IntelliClimaCoordinator
-from .entity import IntelliClimaECODevice, IntelliClimaECOEntity
+from .entity import IntelliClimaECODevice, IntelliClimaECOEntity, eco_devices
 
 # Coordinator is used to centralize the data updates
 PARALLEL_UPDATES = 0
@@ -27,6 +28,7 @@ class IntelliClimaSensorEntityDescription(SensorEntityDescription):
     """Describes a sensor entity."""
 
     value_fn: Callable[[IntelliClimaECODevice], int | float | str | None]
+    exists_fn: Callable[[IntelliClimaECODevice], bool] = lambda _: True
 
 
 def _reading(raw: str, sentinel: float) -> float | None:
@@ -56,6 +58,17 @@ INTELLICLIMA_SENSORS: tuple[IntelliClimaSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS_PARTS,
         native_unit_of_measurement=UnitOfRatio.PARTS_PER_MILLION,
         value_fn=lambda device_data: _reading(device_data.voc_state, 65535),
+        exists_fn=lambda device: isinstance(device, IntelliClimaECO2),
+    ),
+    IntelliClimaSensorEntityDescription(
+        key="co2",
+        translation_key="estimated_co2",
+        state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.CO2,
+        native_unit_of_measurement=UnitOfRatio.PARTS_PER_MILLION,
+        # ECO3 reports VOC-derived eCO2 here; the separate co2 field is unreliable.
+        value_fn=lambda device_data: _reading(device_data.voc_state, 65535),
+        exists_fn=lambda device: isinstance(device, IntelliClimaECO3),
     ),
 )
 
@@ -72,11 +85,9 @@ async def async_setup_entry(
         IntelliClimaSensor(
             coordinator=coordinator, device=device, description=description
         )
-        for device in chain[IntelliClimaECODevice](
-            coordinator.data.ecocomfort2_devices.values(),
-            coordinator.data.ecocomfort3_devices.values(),
-        )
+        for device in eco_devices(coordinator.data)
         for description in INTELLICLIMA_SENSORS
+        if description.exists_fn(device)
     ]
 
     async_add_entities(entities)

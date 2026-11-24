@@ -153,6 +153,19 @@ def single_eco3_device(single_eco_device: IntelliClimaDevices) -> IntelliClimaDe
 
 
 @pytest.fixture
+def mixed_eco_devices(
+    single_eco_device: IntelliClimaDevices,
+    single_eco3_device: IntelliClimaDevices,
+) -> IntelliClimaDevices:
+    """Create an account containing both supported ECOCOMFORT families."""
+    return IntelliClimaDevices(
+        ecocomfort2_devices=single_eco_device.ecocomfort2_devices,
+        ecocomfort3_devices=single_eco3_device.ecocomfort3_devices,
+        c800_devices={},
+    )
+
+
+@pytest.fixture
 def two_eco_devices() -> IntelliClimaDevices:
     """Create IntelliClimaDevices with two ECOCOMFORT 2.0 devices and no C800."""
     first = create_eco_device("56789", "11223344", "Test VMC")
