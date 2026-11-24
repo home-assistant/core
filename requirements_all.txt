@@ -1207,7 +1207,7 @@ google-cloud-texttospeech==2.37.0
 google-genai==2.25.0
 
 # homeassistant.components.google_health
-google-health-api==1.0.0
+google-health-api==1.1.0
 
 # homeassistant.components.nest
 google-nest-sdm==9.2.1
