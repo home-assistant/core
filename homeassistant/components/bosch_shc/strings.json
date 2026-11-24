@@ -104,6 +104,9 @@
       "bypass_timeout": {
         "name": "Break function timeout"
       },
+      "comfort_temperature": {
+        "name": "Comfort temperature"
+      },
       "dimmer_max": {
         "name": "Maximum brightness"
       },
@@ -118,6 +121,9 @@
       },
       "display_on_time": {
         "name": "Display on-time"
+      },
+      "eco_temperature": {
+        "name": "Eco temperature"
       },
       "energy_saving_enter_duration": {
         "name": "Energy-saving enter duration"
