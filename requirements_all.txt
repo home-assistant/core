@@ -99,7 +99,7 @@ PyTransportNSW==0.1.1
 PyTurboJPEG==1.8.3
 
 # homeassistant.components.vicare
-PyViCare==2.66.0
+PyViCare==2.67.0
 
 # homeassistant.components.xiaomi_aqara
 PyXiaomiGateway==0.14.3
@@ -479,7 +479,7 @@ aiosteamist==1.0.1
 aiostreammagic==2.13.2
 
 # homeassistant.components.switcher_kis
-aioswitcher==6.6.0
+aioswitcher==6.7.0
 
 # homeassistant.components.syncthing
 aiosyncthing==0.7.1
@@ -3577,7 +3577,7 @@ xiaomi-weather==0.1.0
 xknx==4.1.1
 
 # homeassistant.components.knx
-xknxproject==3.11.0
+xknxproject==3.11.1
 
 # homeassistant.components.fritz
 # homeassistant.components.rest

@@ -47,6 +47,8 @@ class MockAdsDevice:
         self._subscriptions: dict[
             str, list[tuple[int, Callable[[Any, str], None]]]
         ] = {}
+        # Threads delivering first values, so tests can wait for them.
+        self.deliveries: list[threading.Thread] = []
 
     def add_device_notification(
         self,
@@ -60,11 +62,13 @@ class MockAdsDevice:
         if name in self.values:
             # The hub registers the handle before releasing the lock the
             # callback takes, so the delivery cannot run ahead of it.
-            threading.Thread(
+            delivery = threading.Thread(
                 target=callback,
                 args=(build_notification(handle, self.values[name]), name),
                 daemon=True,
-            ).start()
+            )
+            self.deliveries.append(delivery)
+            delivery.start()
         return handle, handle
 
     async def async_push(self, hass: HomeAssistant, name: str, payload: bytes) -> None:
@@ -97,11 +101,14 @@ async def setup_ads_platform(
 
 
 async def async_run_past_first_update(
-    hass: HomeAssistant, setup: Coroutine[Any, Any, bool]
+    hass: HomeAssistant, device: MockAdsDevice, setup: Coroutine[Any, Any, bool]
 ) -> bool:
     """Run a setup whose entities wait out the first update timeout."""
     task = hass.async_create_task(setup)
     while not task.done():
+        # Let the first values arrive before the entities stop waiting for them.
+        while any(delivery.is_alive() for delivery in device.deliveries):
+            await asyncio.sleep(0.01)
         async_fire_time_changed(hass, dt_util.utcnow() + FIRST_UPDATE_TIMEOUT)
         await asyncio.sleep(0.01)
     return await task
