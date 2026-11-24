@@ -46,6 +46,7 @@ async def setup_integration(
     ("signal_quality", "expected_state"),
     [
         pytest.param(0.7, "70.0", id="reported"),
+        pytest.param(0.0, "0.0", id="zero"),
         pytest.param(None, STATE_UNKNOWN, id="not_reported"),
     ],
 )
