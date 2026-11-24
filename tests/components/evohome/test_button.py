@@ -153,3 +153,26 @@ async def test_button_press_api_call_failed(
         )
 
     assert exc_info.value.translation_key == "api_request_failed"
+
+
+@pytest.mark.parametrize("install", ["default"])
+@pytest.mark.parametrize(
+    ("button_fixture", "translation_key"),
+    [
+        pytest.param("system_button_id", "reset_system_mode", id="system"),
+        pytest.param("dhw_button_id", "clear_dhw_override", id="dhw"),
+        pytest.param("zone_button_id", "clear_zone_override", id="zone"),
+    ],
+)
+@pytest.mark.usefixtures("evohome")
+async def test_reset_button_translation_key(
+    entity_registry: er.EntityRegistry,
+    request: pytest.FixtureRequest,
+    button_fixture: str,
+    translation_key: str,
+) -> None:
+    """Test each reset button has the translation_key that its icon is keyed by."""
+
+    entry = entity_registry.async_get(request.getfixturevalue(button_fixture))
+    assert entry is not None
+    assert entry.translation_key == translation_key
