@@ -216,4 +216,7 @@ async def test_write_error(
     )
 
     assert f"Error writing {ADS_VAR}: ADSError: timeout elapsed (1861)" in caplog.text
-    assert write_by_name.call_count == 2
+    assert write_by_name.call_args_list == [
+        call(ADS_VAR, True, pyads.PLCTYPE_BOOL),
+        call(ADS_VAR_BRIGHTNESS, 200, pyads.PLCTYPE_UINT),
+    ]
