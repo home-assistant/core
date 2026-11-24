@@ -9,7 +9,7 @@ from homeassistant.const import TargetKey
 from homeassistant.core import Context, HomeAssistant, State
 
 from . import DOMAIN, VacuumActivity
-from .const import VacuumEntityStateAttribute, VacuumService
+from .const import VacuumEntityStateAttribute, VacuumService, VacuumServiceArgument
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -67,7 +67,7 @@ async def _async_reproduce_state(
         VacuumEntityStateAttribute.FAN_SPEED
     ) != state.attributes.get(VacuumEntityStateAttribute.FAN_SPEED):
         # Wrong fan speed
-        service_data["fan_speed"] = state.attributes[
+        service_data[VacuumServiceArgument.FAN_SPEED] = state.attributes[
             VacuumEntityStateAttribute.FAN_SPEED
         ]
         await hass.services.async_call(
