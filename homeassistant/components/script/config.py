@@ -289,18 +289,13 @@ async def _try_async_validate_config_item(
 
 
 async def _async_collect_errors(
-    hass: HomeAssistant, object_id: str, config: Any
+    hass: HomeAssistant, config: Any
 ) -> list[ValidationErrorInfo]:
     """Return all errors of a config item, located in the validated config.
 
     The errors of the schema come first. They are followed by the errors of
     the sequence which are not among them, also when the schema failed.
     """
-    try:
-        _SCRIPT_OBJECT_ID_SCHEMA(object_id)
-    except probatio.Invalid as err:
-        return list(iter_validation_errors(err))
-
     try:
         SCRIPT_ENTITY_SCHEMA(config)
     except probatio.Invalid as err:
@@ -340,7 +335,7 @@ async def async_validate_config_item(
     try:
         return await _async_validate_config_item(hass, object_id, config, True, False)
     except (probatio.Invalid, HomeAssistantError) as err:
-        fail_fast_error = err
+        fail_fast_errors = list(iter_validation_errors(err))
 
     # Not done in the except block: each error would be chained to the one above
     submitted_keys = set(config) if isinstance(config, dict) else set()
@@ -353,12 +348,16 @@ async def async_validate_config_item(
             config = blueprint_inputs.async_substitute()
         except BlueprintException, UndefinedSubstitution:
             # No config was generated, the error says why
-            raise ValidationErrors(iter_validation_errors(fail_fast_error)) from None
+            raise ValidationErrors(fail_fast_errors) from None
+
+    try:
+        _SCRIPT_OBJECT_ID_SCHEMA(object_id)
+    except probatio.Invalid as err:
+        # Not about the config, so not located at use_blueprint
+        raise ValidationErrors(iter_validation_errors(err)) from None
 
     # Keep the error if validating again does not give any
-    errors = await _async_collect_errors(hass, object_id, config) or list(
-        iter_validation_errors(fail_fast_error)
-    )
+    errors = await _async_collect_errors(hass, config) or fail_fast_errors
     if not uses_blueprint:
         raise ValidationErrors(errors)
     raise ValidationErrors(

@@ -5,6 +5,7 @@ import json
 from typing import Any
 from unittest.mock import patch
 
+import probatio
 import pytest
 from pytest_homeassistant.typing import ClientSessionGenerator
 from syrupy.assertion import SnapshotAssertion
@@ -18,6 +19,7 @@ from homeassistant.components.config import DOMAIN, automation
 from homeassistant.const import STATE_ON
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.validation_errors import ValidationErrors
 from homeassistant.setup import async_setup_component
 from homeassistant.util import yaml as yaml_util
 
@@ -505,6 +507,27 @@ async def test_update_automation_config_error_not_found_again(
             }
         ],
     }
+
+
+@pytest.mark.parametrize("automation_config", [{}])
+@pytest.mark.usefixtures("setup_automation")
+async def test_validate_config_item_clears_traceback(hass: HomeAssistant) -> None:
+    """Test the traceback of the first error is cleared when other errors are raised."""
+    fail_fast_error = probatio.Invalid("fail fast")
+
+    with (
+        patch(
+            "homeassistant.components.automation.config._async_validate_config_item",
+            side_effect=fail_fast_error,
+        ),
+        pytest.raises(ValidationErrors) as exc_info,
+    ):
+        await automation_validation.async_validate_config_item(
+            hass, "moon", {"triggers": [{"trigger": "state"}], "actions": []}
+        )
+
+    assert fail_fast_error not in [info.exception for info in exc_info.value.errors]
+    assert fail_fast_error.__traceback__ is None
 
 
 @pytest.mark.parametrize("automation_config", [{}])

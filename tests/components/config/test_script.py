@@ -5,6 +5,7 @@ import json
 from typing import Any
 from unittest.mock import patch
 
+import probatio
 import pytest
 from pytest_homeassistant.typing import ClientSessionGenerator
 from syrupy.assertion import SnapshotAssertion
@@ -18,6 +19,7 @@ from homeassistant.components.script import (
 from homeassistant.const import STATE_OFF, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.validation_errors import ValidationErrors
 from homeassistant.setup import async_setup_component
 from homeassistant.util import yaml as yaml_util
 
@@ -100,10 +102,26 @@ async def test_update_script_config(
 
 
 @pytest.mark.parametrize("script_config", [{}])
+@pytest.mark.parametrize(
+    "updated_config",
+    [
+        pytest.param({"alias": "Turn on", "sequence": []}, id="script"),
+        pytest.param(
+            {
+                "use_blueprint": {
+                    "path": "test_service.yaml",
+                    "input": {"service_to_call": "test.automation"},
+                },
+            },
+            id="blueprint",
+        ),
+    ],
+)
 async def test_invalid_object_id(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
     hass_config_store: dict[str, Any],
+    updated_config: dict[str, Any],
 ) -> None:
     """Test creating a script with an invalid object_id."""
     with patch.object(config, "SECTIONS", [script]):
@@ -117,7 +135,7 @@ async def test_invalid_object_id(
 
     resp = await client.post(
         "/api/config/script/config/turn_on",
-        data=json.dumps({"alias": "Turn on", "sequence": []}),
+        data=json.dumps(updated_config),
     )
     await hass.async_block_till_done()
     assert sorted(hass.states.async_entity_ids("script")) == []
@@ -461,7 +479,7 @@ async def test_update_script_config_error_not_found_again(
         )
 
     assert resp.status == HTTPStatus.BAD_REQUEST
-    # The path is the one in the validated config, except for a renamed key
+    # The path is the one in the validated config
     assert await resp.json() == {
         "message": (
             "Message malformed: Integration 'automation' does not provide trigger support at 'sequence[0].wait_for_trigger[0]'"
@@ -477,6 +495,26 @@ async def test_update_script_config_error_not_found_again(
             }
         ],
     }
+
+
+@pytest.mark.parametrize("script_config", [{}])
+async def test_validate_config_item_clears_traceback(hass: HomeAssistant) -> None:
+    """Test the traceback of the first error is cleared when other errors are raised."""
+    fail_fast_error = probatio.Invalid("fail fast")
+
+    with (
+        patch(
+            "homeassistant.components.script.config._async_validate_config_item",
+            side_effect=fail_fast_error,
+        ),
+        pytest.raises(ValidationErrors) as exc_info,
+    ):
+        await script_validation.async_validate_config_item(
+            hass, "moon", {"sequence": [{"wait_for_trigger": [{"trigger": "state"}]}]}
+        )
+
+    assert fail_fast_error not in [info.exception for info in exc_info.value.errors]
+    assert fail_fast_error.__traceback__ is None
 
 
 @pytest.mark.parametrize("script_config", [{}])

@@ -379,13 +379,13 @@ async def async_validate_config_item(
     try:
         return await _async_validate_config_item(hass, config, True, False)
     except (probatio.Invalid, HomeAssistantError) as err:
-        fail_fast_error = err
+        fail_fast_errors = list(iter_validation_errors(err))
 
     if any(
         old_key in submitted_keys and new_key in submitted_keys
         for new_key, old_key in _RENAMED_KEYS.items()
     ):
-        raise ValidationErrors(iter_validation_errors(fail_fast_error))
+        raise ValidationErrors(fail_fast_errors)
 
     # Not done in the except block: each error would be chained to the one above
     uses_blueprint = blueprint.is_blueprint_instance_config(config)
@@ -397,12 +397,10 @@ async def async_validate_config_item(
             config = blueprint_inputs.async_substitute()
         except blueprint.BlueprintException, UndefinedSubstitution:
             # No config was generated, the error says why
-            raise ValidationErrors(iter_validation_errors(fail_fast_error)) from None
+            raise ValidationErrors(fail_fast_errors) from None
 
     # Keep the error if validating again does not give any
-    errors = await _async_collect_errors(hass, config) or list(
-        iter_validation_errors(fail_fast_error)
-    )
+    errors = await _async_collect_errors(hass, config) or fail_fast_errors
     located: list[ValidationErrorInfo] = []
     for info in errors:
         path = info.path
