@@ -9,6 +9,7 @@ from pathlib import Path
 import re
 from typing import NamedTuple
 from unittest.mock import ANY, AsyncMock, Mock, patch
+from urllib.parse import quote
 
 from aiohttp import ClientResponseError, UnixConnector, encode_basic_auth
 from aiohttp.client_exceptions import ClientConnectionError, ServerConnectionError
@@ -54,7 +55,9 @@ from homeassistant.components.go2rtc.const import (
     CONF_DEBUG_UI,
     DEBUG_UI_URL_MESSAGE,
     DOMAIN,
+    HA_MANAGED_RTSP_PORT,
     RECOMMENDED_VERSION,
+    SIGNAL_SERVER_RESTARTED,
 )
 from homeassistant.components.go2rtc.util import (
     get_camera_identifier,
@@ -66,6 +69,7 @@ from homeassistant.const import CONF_PASSWORD, CONF_URL, CONF_USERNAME, TargetKe
 from homeassistant.core import EVENT_HOMEASSISTANT_STOP
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import issue_registry as ir
+from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.setup import async_setup_component
 
@@ -1772,5 +1776,186 @@ async def test_orientation_not_applied_to_native_source(
 
     rest_client.streams.add.assert_called_once_with(
         identifier,
-        ["rtsp://native", f"ffmpeg:{identifier}#audio=opus#query=log_level=debug"],
+        [
+            "rtsp://native",
+            f"ffmpeg:{identifier}#audio=opus#query=log_level=debug",
+            f"ffmpeg:{identifier}#audio=aac#query=log_level=debug",
+        ],
     )
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_provider_stream_source(
+    init_test_integration: MockCamera,
+    rest_client: AsyncMock,
+) -> None:
+    """Test the RTSP restream for a camera whose source FFmpeg can't open."""
+    camera = init_test_integration
+    assert isinstance(camera.webrtc_provider, WebRTCProvider)
+    identifier = get_camera_identifier(camera)
+
+    # The camera's only source is native to go2rtc
+    camera.set_stream_source(None)
+    with patch.object(camera, "webrtc_source", return_value="rtsp://native"):
+        source = await camera.webrtc_provider.async_get_stream_source(camera)
+
+    assert source == (
+        f"rtsp://127.0.0.1:{HA_MANAGED_RTSP_PORT}/"
+        f"{quote(identifier, safe='')}?video&audio=aac"
+    )
+    # AAC for the restream is transcoded only for such cameras
+    assert rest_client.streams.add.call_args[0] == (
+        identifier,
+        [
+            "rtsp://native",
+            f"ffmpeg:{identifier}#audio=opus#query=log_level=debug",
+            f"ffmpeg:{identifier}#audio=aac#query=log_level=debug",
+        ],
+    )
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_provider_stream_source_external_server(
+    init_test_integration: MockCamera,
+) -> None:
+    """Test only the managed server's restream address is known."""
+    camera = init_test_integration
+    assert isinstance(camera.webrtc_provider, WebRTCProvider)
+    camera.webrtc_provider._managed = False
+    assert not camera.webrtc_provider.async_supports_stream_source(camera)
+    assert await camera.webrtc_provider.async_get_stream_source(camera) is None
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_provider_stream_source_client_error(
+    init_test_integration: MockCamera,
+    rest_client: AsyncMock,
+) -> None:
+    """Test a go2rtc error on a restream is a Home Assistant error."""
+    camera = init_test_integration
+    assert isinstance(camera.webrtc_provider, WebRTCProvider)
+    camera.set_stream_source(None)
+    rest_client.streams.add.side_effect = Go2RtcClientError
+
+    with (
+        patch.object(camera, "webrtc_source", return_value="rtsp://native"),
+        pytest.raises(HomeAssistantError, match="Unable to update the stream"),
+    ):
+        await camera.webrtc_provider.async_get_stream_source(camera)
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_provider_restream_set_up_again_for_cached_stream(
+    init_test_integration: MockCamera,
+    rest_client: AsyncMock,
+) -> None:
+    """Test a cached stream gets the restream set up again, e.g. after a restart."""
+    camera = init_test_integration
+    camera.set_stream_source(None)
+    server_streams: dict[str, Stream] = {}
+
+    async def add_stream(name: str, sources: list[str]) -> None:
+        server_streams[name] = Stream([Producer(source) for source in sources])
+
+    rest_client.streams.add.side_effect = add_stream
+    rest_client.streams.list.side_effect = lambda: server_streams
+
+    with (
+        patch.object(camera, "webrtc_source", return_value="rtsp://native"),
+        patch("homeassistant.components.camera.entity.create_stream") as create,
+    ):
+        stream = await camera.async_create_stream()
+        assert stream is create.return_value
+        assert rest_client.streams.add.call_count == 1
+
+        # The stream is reused, and go2rtc still has the restream
+        assert await camera.async_create_stream() is stream
+        assert rest_client.streams.add.call_count == 1
+
+        # A restarted go2rtc server has no streams
+        server_streams.clear()
+        assert await camera.async_create_stream() is stream
+        assert rest_client.streams.add.call_count == 2
+
+    create.assert_called_once()
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_restreams_restored_after_server_restart(
+    hass: HomeAssistant,
+    init_test_integration: MockCamera,
+    rest_client: AsyncMock,
+) -> None:
+    """Test a restarted server gets the restreamed cameras' streams again."""
+    camera = init_test_integration
+    assert isinstance(camera.webrtc_provider, WebRTCProvider)
+    identifier = get_camera_identifier(camera)
+    camera.set_stream_source(None)
+    server_streams: dict[str, Stream] = {}
+
+    async def add_stream(name: str, sources: list[str]) -> None:
+        server_streams[name] = Stream([Producer(source) for source in sources])
+
+    rest_client.streams.add.side_effect = add_stream
+    rest_client.streams.list.side_effect = lambda: server_streams
+
+    with patch.object(camera, "webrtc_source", return_value="rtsp://native"):
+        await camera.webrtc_provider.async_get_stream_source(camera)
+        assert rest_client.streams.add.call_count == 1
+
+        server_streams.clear()
+        async_dispatcher_send(hass, SIGNAL_SERVER_RESTARTED)
+        await hass.async_block_till_done()
+
+    assert rest_client.streams.add.call_count == 2
+    assert identifier in server_streams
+
+    # An unregistered camera is no longer restored
+    await camera.webrtc_provider.async_unregister_camera(camera)
+    server_streams.clear()
+    async_dispatcher_send(hass, SIGNAL_SERVER_RESTARTED)
+    await hass.async_block_till_done()
+    assert rest_client.streams.add.call_count == 2
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_restreams_restore_error(
+    hass: HomeAssistant,
+    init_test_integration: MockCamera,
+    rest_client: AsyncMock,
+) -> None:
+    """Test a failure to restore a restream after a restart is not raised."""
+    camera = init_test_integration
+    assert isinstance(camera.webrtc_provider, WebRTCProvider)
+    camera.set_stream_source(None)
+
+    with patch.object(camera, "webrtc_source", return_value="rtsp://native"):
+        await camera.webrtc_provider.async_get_stream_source(camera)
+        rest_client.streams.add.side_effect = Go2RtcClientError
+        async_dispatcher_send(hass, SIGNAL_SERVER_RESTARTED)
+        await hass.async_block_till_done()
+
+    assert rest_client.streams.add.call_count == 2
+
+
+@pytest.mark.usefixtures("rest_client", "mock_is_docker_env", "mock_get_binary")
+@pytest.mark.parametrize(
+    ("config", "managed"),
+    [
+        ({DOMAIN: {}}, True),
+        # A server configured by URL is external, even at the managed address
+        ({DOMAIN: {CONF_URL: "http://localhost:11984/"}}, False),
+    ],
+)
+async def test_provider_managed(
+    hass: HomeAssistant,
+    server: Mock,
+    config: ConfigType,
+    managed: bool,
+) -> None:
+    """Test only the server Home Assistant manages is treated as managed."""
+    assert await async_setup_component(hass, DOMAIN, config)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    entry = hass.config_entries.async_entries(DOMAIN)[0]
+    assert entry.runtime_data._managed is managed

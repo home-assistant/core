@@ -167,6 +167,7 @@ class Camera(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         self.async_update_token()
         self._create_stream_lock: asyncio.Lock | None = None
         self._webrtc_provider: CameraWebRTCProvider | None = None
+        self._stream_from_webrtc_provider = False
         self._supports_hls = True
         self._supports_native_async_webrtc = (
             type(self).async_handle_async_webrtc_offer
@@ -247,9 +248,26 @@ class Camera(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         if not self._create_stream_lock:
             self._create_stream_lock = asyncio.Lock()
         async with self._create_stream_lock:
+            if self.stream and self._stream_from_webrtc_provider:
+                # The provider may have lost the restream, e.g. when its server
+                # restarted, so let it set the restream up again
+                async with asyncio.timeout(CAMERA_STREAM_SOURCE_TIMEOUT):
+                    source = await self._async_get_webrtc_provider_stream_source()
+                if not source:
+                    await self.stream.stop()
+                    self.stream = None
+                    return None
+                if source != self.stream.source:
+                    self.stream.update_source(source)
             if not self.stream:
                 async with asyncio.timeout(CAMERA_STREAM_SOURCE_TIMEOUT):
                     source = await self.stream_source()
+                    self._stream_from_webrtc_provider = False
+                    if not source:
+                        # A camera whose only source is native to its WebRTC
+                        # provider, which may restream it for FFmpeg
+                        source = await self._async_get_webrtc_provider_stream_source()
+                        self._stream_from_webrtc_provider = source is not None
                 if not source:
                     return None
                 self.stream = create_stream(
@@ -263,6 +281,14 @@ class Camera(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
                 )
                 self.stream.set_update_callback(self.async_write_ha_state)
             return self.stream
+
+    async def _async_get_webrtc_provider_stream_source(self) -> str | None:
+        """Return the WebRTC provider's restream of the camera, if any."""
+        # Only for a camera with its own webrtc_source, as for others a missing
+        # stream_source means the camera has no stream right now
+        if not self._webrtc_provider or not self._has_own_webrtc_source():
+            return None
+        return await self._webrtc_provider.async_get_stream_source(self)
 
     async def stream_source(self) -> str | None:
         """Return the source of the stream.
@@ -457,7 +483,7 @@ class Camera(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
             )
 
         old_supports_hls = self._supports_hls
-        self._supports_hls = await self._async_supports_hls()
+        self._supports_hls = await self._async_supports_hls(new_provider)
 
         if old_provider == new_provider:
             if write_state and self._supports_hls != old_supports_hls:
@@ -482,13 +508,17 @@ class Camera(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         if write_state:
             self.async_write_ha_state()
 
-    async def _async_supports_hls(self) -> bool:
-        """Return whether HLS can play the camera, which needs a stream_source."""
+    async def _async_supports_hls(self, provider: CameraWebRTCProvider | None) -> bool:
+        """Return if HLS can play the camera: it needs an FFmpeg source."""
         # Only a camera with its own webrtc_source may have no stream_source,
         # so other cameras aren't asked for theirs here
-        if getattr(self.webrtc_source, "__func__", None) is Camera.webrtc_source:
+        if not self._has_own_webrtc_source() or await self.stream_source():
             return True
-        return await self.stream_source() is not None
+        return provider is not None and provider.async_supports_stream_source(self)
+
+    def _has_own_webrtc_source(self) -> bool:
+        """Return if the camera overrides webrtc_source."""
+        return getattr(self.webrtc_source, "__func__", None) is not Camera.webrtc_source
 
     async def _async_get_supported_webrtc_provider[_T](
         self, fn: Callable[[HomeAssistant, Camera], Coroutine[None, None, _T | None]]

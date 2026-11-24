@@ -7,6 +7,7 @@ from secrets import token_hex
 import shutil
 from tempfile import mkdtemp
 from typing import override
+from urllib.parse import quote
 
 from aiohttp import ClientSession, UnixConnector, encode_basic_auth
 from aiohttp.client_exceptions import ClientConnectionError, ServerConnectionError
@@ -59,6 +60,7 @@ from homeassistant.helpers.aiohttp_client import (
     async_create_clientsession,
     async_get_clientsession,
 )
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util.hass_dict import HassKey
 from homeassistant.util.package import is_docker_env
@@ -67,8 +69,10 @@ from .const import (
     CONF_DEBUG_UI,
     DEBUG_UI_URL_MESSAGE,
     DOMAIN,
+    HA_MANAGED_RTSP_PORT,
     HA_MANAGED_URL,
     RECOMMENDED_VERSION,
+    SIGNAL_SERVER_RESTARTED,
 )
 from .server import Server
 from .util import get_camera_identifier, get_go2rtc_unix_socket_path
@@ -133,6 +137,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     url: str | None = None
     username: str | None = None
     password: str | None = None
+    managed = False
 
     if DOMAIN not in config and DEFAULT_CONFIG_DOMAIN not in config:
         await _remove_go2rtc_entries(hass)
@@ -193,6 +198,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         hass.bus.async_listen(EVENT_HOMEASSISTANT_STOP, on_stop)
 
         url = HA_MANAGED_URL
+        managed = True
     elif username and password:
         session = async_create_clientsession(
             hass, headers={"Authorization": encode_basic_auth(username, password)}
@@ -200,7 +206,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     else:
         session = async_get_clientsession(hass)
 
-    hass.data[_DATA_GO2RTC] = Go2RtcConfig(url, session)
+    hass.data[_DATA_GO2RTC] = Go2RtcConfig(url, session, managed)
     discovery_flow.async_create_flow(
         hass, DOMAIN, context={"source": SOURCE_SYSTEM}, data={}
     )
@@ -272,9 +278,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: Go2RtcConfigEntry) -> No
 
     ir.async_delete_issue(hass, DOMAIN, "unsupported_version")
 
-    provider = entry.runtime_data = WebRTCProvider(hass, url, session, client)
+    provider = entry.runtime_data = WebRTCProvider(
+        hass, url, session, client, managed=config.managed
+    )
     await provider.initialize()
     entry.async_on_unload(async_register_webrtc_provider(hass, provider))
+    if config.managed:
+        entry.async_on_unload(
+            async_dispatcher_connect(
+                hass, SIGNAL_SERVER_RESTARTED, provider.async_restore_restreams
+            )
+        )
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: Go2RtcConfigEntry) -> None:
@@ -304,15 +318,19 @@ class WebRTCProvider(CameraWebRTCProvider):
         url: str,
         session: ClientSession,
         rest_client: Go2RtcRestClient,
+        *,
+        managed: bool = False,
     ) -> None:
         """Initialize the WebRTC provider."""
         self._hass = hass
         self._url = url
+        self._managed = managed
         self._session = session
         self._rest_client = rest_client
         self._sessions: dict[str, _SessionInfo] = {}
         self._supported_schemes: set[str] = set()
         self._added_stream_sources: dict[str, str] = {}
+        self._restreamed_cameras: dict[str, Camera] = {}
 
     @property
     @override
@@ -415,6 +433,51 @@ class WebRTCProvider(CameraWebRTCProvider):
         except Go2RtcClientError as err:
             raise HomeAssistantError("Unable to get image from go2rtc") from err
 
+    @callback
+    @override
+    def async_supports_stream_source(self, camera: Camera) -> bool:
+        """Return if go2rtc can restream the camera, see async_get_stream_source."""
+        return self._managed
+
+    @override
+    async def async_get_stream_source(self, camera: Camera) -> str | None:
+        """Return go2rtc's RTSP restream of a camera without a stream source.
+
+        Only the go2rtc server Home Assistant manages has a known RTSP address.
+        The restream carries AAC audio, which HLS needs.
+        """
+        if not self._managed:
+            return None
+        try:
+            await self._update_stream_source(camera)
+        except Go2RtcClientError as err:
+            raise HomeAssistantError("Unable to update the stream in go2rtc") from err
+        identifier = get_camera_identifier(camera)
+        # A restarted server has lost the stream, but HLS and recording keep
+        # reading its address
+        self._restreamed_cameras[identifier] = camera
+        return (
+            f"rtsp://127.0.0.1:{HA_MANAGED_RTSP_PORT}/"
+            f"{quote(identifier, safe='')}?video&audio=aac"
+        )
+
+    @callback
+    def async_restore_restreams(self) -> None:
+        """Restore the restreams after the managed server restarted."""
+        self._hass.async_create_task(
+            self._async_restore_restreams(), "go2rtc restore restreams"
+        )
+
+    async def _async_restore_restreams(self) -> None:
+        """Add the restreamed cameras' streams again to a restarted server."""
+        for camera in list(self._restreamed_cameras.values()):
+            try:
+                await self._update_stream_source(camera)
+            except (Go2RtcClientError, HomeAssistantError) as err:
+                _LOGGER.warning(
+                    "Unable to restore the restream of %s: %s", camera.entity_id, err
+                )
+
     async def _update_stream_source(self, camera: Camera) -> None:
         """Update the stream source in go2rtc config if needed."""
         # Resolve each source once, as stream_source can be slow (e.g. it asks
@@ -471,24 +534,27 @@ class WebRTCProvider(CameraWebRTCProvider):
                 case Orientation.ROTATE_RIGHT:
                     stream_source += "#rotate=90"
 
-        streams = await self._rest_client.streams.list()
         identifier = get_camera_identifier(camera)
+        sources = [
+            stream_source,
+            # We are setting any ffmpeg rtsp related logs to debug
+            # Connection problems to the camera will be
+            # logged by the first stream
+            # Therefore setting it to debug will not hide any important logs
+            f"ffmpeg:{identifier}#audio=opus#query=log_level=debug",
+        ]
+        if ffmpeg_source is None:
+            # FFmpeg reads go2rtc's restream instead (async_get_stream_source),
+            # with AAC audio transcoded only while someone reads it
+            sources.append(f"ffmpeg:{identifier}#audio=aac#query=log_level=debug")
+
+        streams = await self._rest_client.streams.list()
 
         if (stream := streams.get(identifier)) is None or not any(
             self._is_added_stream_source(identifier, stream_source, producer.url)
             for producer in stream.producers
         ):
-            await self._rest_client.streams.add(
-                identifier,
-                [
-                    stream_source,
-                    # We are setting any ffmpeg rtsp related logs to debug
-                    # Connection problems to the camera will be
-                    # logged by the first stream
-                    # Therefore setting it to debug will not hide any important logs
-                    f"ffmpeg:{identifier}#audio=opus#query=log_level=debug",
-                ],
-            )
+            await self._rest_client.streams.add(identifier, sources)
             self._added_stream_sources[identifier] = stream_source
 
     def _is_added_stream_source(
@@ -553,6 +619,7 @@ class WebRTCProvider(CameraWebRTCProvider):
         await self._close_camera_sessions(camera)
         identifier = get_camera_identifier(camera)
         self._added_stream_sources.pop(identifier, None)
+        self._restreamed_cameras.pop(identifier, None)
         if identifier in await self._rest_client.preload.list():
             await self._rest_client.preload.disable(identifier)
 
@@ -571,3 +638,4 @@ class Go2RtcConfig:
 
     url: str
     session: ClientSession
+    managed: bool = False

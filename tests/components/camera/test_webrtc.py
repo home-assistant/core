@@ -826,3 +826,88 @@ async def test_webrtc_source_defaults_to_stream_source(hass: HomeAssistant) -> N
     """Test the WebRTC source defaults to the stream source."""
     camera = get_camera_from_entity_id(hass, "camera.demo_camera")
     assert await camera.webrtc_source() == STREAM_SOURCE
+
+
+@pytest.mark.usefixtures("mock_camera")
+async def test_provider_stream_source(hass: HomeAssistant) -> None:
+    """Test a provider restreams a camera without a stream source for FFmpeg."""
+    camera = get_camera_from_entity_id(hass, "camera.demo_camera")
+
+    restream: str | None = "rtsp://127.0.0.1:8554/camera"
+
+    class RestreamProvider(SomeTestProvider):
+        @callback
+        def async_supports_stream_source(self, camera: Camera) -> bool:
+            return True
+
+        async def async_get_stream_source(self, camera: Camera) -> str | None:
+            return restream
+
+    unregister = async_register_webrtc_provider(hass, RestreamProvider())
+    await hass.async_block_till_done()
+
+    assert await camera.stream_source() is None
+    with (
+        patch.object(camera, "webrtc_source", return_value="native://camera"),
+        patch(
+            "homeassistant.components.camera.entity.create_stream"
+        ) as mock_create_stream,
+    ):
+        await camera.async_refresh_providers()
+        assert camera.webrtc_provider is not None
+        # HLS plays the provider's restream
+        assert camera.camera_capabilities.frontend_stream_types == {
+            StreamType.HLS,
+            StreamType.WEB_RTC,
+        }
+
+        stream = await camera.async_create_stream()
+        assert stream is mock_create_stream.return_value
+        assert mock_create_stream.call_args[0][1] == "rtsp://127.0.0.1:8554/camera"
+
+        # The provider can't restream the camera anymore
+        stream.stop = AsyncMock()
+        restream = None
+        assert await camera.async_create_stream() is None
+        stream.stop.assert_awaited_once()
+        assert camera.stream is None
+
+    unregister()
+    await hass.async_block_till_done()
+
+
+@pytest.mark.usefixtures("mock_camera")
+async def test_no_provider_stream_source_without_webrtc_source(
+    hass: HomeAssistant,
+) -> None:
+    """Test a camera without its own WebRTC source doesn't get a restream.
+
+    Its stream_source may be missing only for now, e.g. after a template error.
+    """
+    camera = get_camera_from_entity_id(hass, "camera.demo_camera")
+    get_stream_source = AsyncMock(return_value="rtsp://127.0.0.1:8554/camera")
+
+    class RestreamProvider(SomeTestProvider):
+        async def async_get_stream_source(self, camera: Camera) -> str | None:
+            return await get_stream_source(camera)
+
+    unregister = async_register_webrtc_provider(hass, RestreamProvider())
+    await hass.async_block_till_done()
+
+    with patch(
+        "homeassistant.components.camera.Camera.stream_source",
+        side_effect=["rtsp://camera", None, None],
+    ):
+        await camera.async_refresh_providers()
+        assert camera.webrtc_provider is not None
+        assert await camera.async_create_stream() is None
+
+    get_stream_source.assert_not_called()
+
+    unregister()
+    await hass.async_block_till_done()
+
+
+async def test_provider_stream_source_default() -> None:
+    """Test providers return no stream source by default."""
+    assert await SomeTestProvider().async_get_stream_source(Mock()) is None
