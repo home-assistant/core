@@ -486,7 +486,7 @@ class Camera(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         """Return whether HLS can play the camera, which needs a stream_source."""
         # Only a camera with its own webrtc_source may have no stream_source,
         # so other cameras aren't asked for theirs here
-        if getattr(self.webrtc_source, "__func__", None) is Camera.webrtc_source:
+        if not _has_own_webrtc_source(self):
             return True
         return await self.stream_source() is not None
 
@@ -574,3 +574,11 @@ class Camera(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         ):
             self.__supports_stream = supports_stream
             self.hass.async_create_task(self.async_refresh_providers())
+
+
+def _has_own_webrtc_source(camera: Camera) -> bool:
+    """Return if the camera overrides webrtc_source.
+
+    Only such a camera may have a source FFmpeg can't open.
+    """
+    return getattr(camera.webrtc_source, "__func__", None) is not Camera.webrtc_source
