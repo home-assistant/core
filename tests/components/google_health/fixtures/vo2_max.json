@@ -1,0 +1,10 @@
+{
+  "dataPoints": [
+    {
+      "dailyVo2Max": {
+        "vo2Max": 45.3,
+        "date": { "year": 2026, "month": 6, "day": 29 }
+      }
+    }
+  ]
+}
