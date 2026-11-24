@@ -663,7 +663,7 @@ async def test_migration_from_1_1(
 async def test_migration_from_1_9(
     hass: HomeAssistant, hass_storage: dict[str, Any]
 ) -> None:
-    """Test migration from version 1.9 preserves sensor assignments."""
+    """Test migration from version 1.9 preserves temperature and humidity."""
     hass_storage[ar.STORAGE_KEY] = {
         "version": 1,
         "minor_version": 9,
@@ -681,7 +681,6 @@ async def test_migration_from_1_9(
                     "name": "AAA",
                     "picture": None,
                     "temperature_entity_id": "sensor.MOCK_temperature",
-                    "co2_entity_id": "sensor.mock_co2",
                 }
             ]
         },
@@ -694,12 +693,12 @@ async def test_migration_from_1_9(
     assert area is not None
     assert area.temperature_entity_id == "sensor.mock_temperature"
     assert area.humidity_entity_id == "sensor.mock_humidity"
-    assert area.co2_entity_id == "sensor.mock_co2"
+    assert area.co2_entity_id is None
 
     await flush_store(registry._store)
     assert hass_storage[ar.STORAGE_KEY]["data"]["areas"][0] == {
         "aliases": [],
-        "co2_entity_id": "sensor.mock_co2",
+        "co2_entity_id": None,
         "created_at": "1970-01-01T00:00:00+00:00",
         "floor_id": "floor",
         "humidity_entity_id": "sensor.mock_humidity",
