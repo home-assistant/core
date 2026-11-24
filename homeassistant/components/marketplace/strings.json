@@ -275,7 +275,7 @@
       "message": "{file} is not a valid ZIP archive."
     },
     "resource_archive_without_resource": {
-      "message": "{file} has no {resource} in its root."
+      "message": "{file} has no {resource} in its root or in a folder at its root."
     },
     "restore_failed": {
       "message": "Could not read the stored data of the Marketplace."

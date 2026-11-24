@@ -118,16 +118,19 @@ def _zip_bytes(files: dict[str, str]) -> bytes:
     return buffer.getvalue()
 
 
-def _damaged_zip_bytes(files: dict[str, str]) -> bytes:
+def _damaged_zip_bytes(
+    files: dict[str, str], compression: int = zipfile.ZIP_DEFLATED
+) -> bytes:
     """Return a zip archive whose compressed data can not be decompressed."""
     buffer = io.BytesIO()
-    with zipfile.ZipFile(buffer, "w", zipfile.ZIP_DEFLATED) as archive:
+    with zipfile.ZipFile(buffer, "w", compression) as archive:
         for name, content in files.items():
             archive.writestr(name, content * 1000)
         info = archive.infolist()[0]
     content = bytearray(buffer.getvalue())
-    data_start = info.header_offset + 30 + len(info.filename)
-    for index in range(data_start, data_start + 10):
+    # Past the LZMA properties header, into the compressed data itself
+    data_start = info.header_offset + 30 + len(info.filename) + 16
+    for index in range(data_start, data_start + 20):
         content[index] ^= 0xFF
     return bytes(content)
 
@@ -3600,10 +3603,37 @@ ZIP_FALLBACK_FILES = [
             id="zip",
         ),
         pytest.param(
-            {"content": _zip_bytes({"dist/plugin-basic.js": "from zip"})},
+            {
+                "content": _zip_bytes(
+                    {
+                        "dist/plugin-basic.js": "from zip",
+                        "dist/translations/en.json": "{}",
+                        "README.md": "",
+                    }
+                )
+            },
+            "from zip",
+            [
+                "www/community/plugin-basic/plugin-basic.js",
+                "www/community/plugin-basic/translations/en.json",
+            ],
+            id="zip_with_the_resource_in_a_folder",
+        ),
+        pytest.param(
+            {"content": _zip_bytes({"dist/card/plugin-basic.js": "from zip"})},
             "asset",
             ZIP_FALLBACK_FILES,
-            id="zip_without_the_resource_in_its_root",
+            id="zip_with_the_resource_too_deep",
+        ),
+        pytest.param(
+            {
+                "content": _zip_bytes(
+                    {"a/plugin-basic.js": "from zip", "b/plugin-basic.js": "from zip"}
+                )
+            },
+            "asset",
+            ZIP_FALLBACK_FILES,
+            id="zip_with_the_resource_in_two_folders",
         ),
         pytest.param(
             {"content": _zip_bytes({"plugin-basic.js": "", "../outside.js": ""})},
@@ -3614,11 +3644,22 @@ ZIP_FALLBACK_FILES = [
         pytest.param(
             {"content": b"not a zip"}, "asset", ZIP_FALLBACK_FILES, id="not_a_zip"
         ),
-        pytest.param(
-            {"content": _damaged_zip_bytes({"plugin-basic.js": "from zip"})},
-            "asset",
-            ZIP_FALLBACK_FILES,
-            id="damaged_zip",
+        *(
+            pytest.param(
+                {
+                    "content": _damaged_zip_bytes(
+                        {"plugin-basic.js": "from zip"}, compression
+                    )
+                },
+                "asset",
+                ZIP_FALLBACK_FILES,
+                id=f"damaged_{name}_zip",
+            )
+            for name, compression in (
+                ("deflate", zipfile.ZIP_DEFLATED),
+                ("bzip2", zipfile.ZIP_BZIP2),
+                ("lzma", zipfile.ZIP_LZMA),
+            )
         ),
         pytest.param(
             {"status": HTTPStatus.NOT_FOUND},
@@ -3796,6 +3837,51 @@ async def test_plugin_downloads_are_counted_from_the_resource_zip(
     assert repository.data.downloads == 300
 
 
+@pytest.mark.parametrize("github_token", [None])
+async def test_install_plugin_from_github_prefers_a_file_over_a_zip_of_another_name(
+    hass: HomeAssistant,
+    marketplace: MarketplaceManager,
+    hass_ws_client: WebSocketGenerator,
+    response_mocker: MarketplaceResponses,
+    config_dir: Path,
+) -> None:
+    """Test a ZIP named like another resource does not hide the resource file."""
+    repository = marketplace.repositories.get_by_full_name(REPOSITORY_PLUGIN)
+    repository.data.last_version = None
+    repository.data.last_commit = "abc1234"
+    assets = [
+        {
+            "name": f"plugin-basic{ext}",
+            "browser_download_url": f"{PLUGIN_ASSET_URL}{ext}",
+        }
+        for ext in (".umd.js", ".zip")
+    ]
+    releases_url = f"https://api.github.com/repos/{REPOSITORY_PLUGIN}/releases"
+    for url, response in (
+        (f"{PLUGIN_ASSET_URL}.umd.js", {"content": b"asset"}),
+        (f"{PLUGIN_ASSET_URL}.zip", {"content": _zip_bytes({"other.js": ""})}),
+        (
+            releases_url,
+            {
+                "json_content": [
+                    {"tag_name": "1.0.0", "prerelease": False, "assets": assets}
+                ]
+            },
+        ),
+        (f"{releases_url}/tags/1.0.0", {"json_content": {"assets": assets}}),
+    ):
+        response_mocker.add(url, mocked_response(url, **response), keep=True)
+
+    assert (await _install(hass, hass_ws_client, repository.data.id))["success"]
+
+    assert (
+        config_dir / "www/community/plugin-basic/plugin-basic.umd.js"
+    ).read_text() == "asset"
+    assert [
+        item["url"] for item in hass.data[LOVELACE_DATA].resources.async_items()
+    ] == [_plugin_resource_url("plugin-basic.umd.js")]
+
+
 def _serve_plugin_zip_alone(
     response_mocker: MarketplaceResponses, archive: bytes
 ) -> None:
@@ -3877,8 +3963,8 @@ async def test_install_plugin_with_only_a_zip(
     ("archive", "error"),
     [
         pytest.param(
-            _zip_bytes({"dist/plugin-basic.js": "from zip"}),
-            "plugin-basic.zip has no plugin-basic.js in its root",
+            _zip_bytes({"dist/card/plugin-basic.js": "from zip"}),
+            "plugin-basic.zip has no plugin-basic.js in its root or in a folder",
             id="without_the_resource",
         ),
         pytest.param(

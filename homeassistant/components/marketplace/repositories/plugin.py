@@ -3,6 +3,7 @@
 from collections.abc import Awaitable, Callable
 from functools import partial
 import io
+from lzma import LZMAError
 from pathlib import Path
 from typing import TYPE_CHECKING, override
 from urllib.parse import quote
@@ -31,7 +32,7 @@ from ..utils.tree import (
     tree_entry_is_directory,
 )
 from ..utils.url import github_release_asset, ref_version
-from .base import FileInformation, Repository, _check_archive_size
+from .base import FileInformation, Repository, _check_archive_size, _path_below
 
 if TYPE_CHECKING:
     from aiogithubapi.models.release import GitHubReleaseAssetModel
@@ -171,7 +172,7 @@ class PluginRepository(Repository):
         """Extract the ZIP of the resource into the local path, this does I/O."""
         with zipfile.ZipFile(io.BytesIO(filecontent)) as archive:
             _check_archive_size(archive)
-            if self.data.file_name not in archive.namelist():
+            if (folder := self._resource_folder(archive.namelist())) is None:
                 raise MarketplaceError(
                     translation_domain=DOMAIN,
                     translation_key="resource_archive_without_resource",
@@ -183,14 +184,41 @@ class PluginRepository(Repository):
             # Read first, a broken member must not leave half an extraction behind
             try:
                 bad_member = archive.testzip()
-            except (NotImplementedError, RuntimeError, zlib.error) as err:
+            except (
+                NotImplementedError,
+                RuntimeError,
+                EOFError,
+                OSError,
+                LZMAError,
+                zlib.error,
+            ) as err:
                 # Unsupported compression, encrypted members, damaged compressed data
                 raise zipfile.BadZipFile(str(err)) from err
             if bad_member:
                 raise zipfile.BadZipFile(f"Bad CRC-32 for {bad_member}")
-            for member in archive.namelist():
-                resolve_in_directory(self.content.path.local, member)
-            archive.extractall(self.content.path.local)
+            members: list[zipfile.ZipInfo] = []
+            for member in archive.infolist():
+                # The folder entry itself and anything next to the folder stay out
+                if not (relative := _path_below(member.filename, folder)):
+                    continue
+                member.filename = relative
+                resolve_in_directory(self.content.path.local, relative)
+                members.append(member)
+            archive.extractall(self.content.path.local, members)
+
+    def _resource_folder(self, names: list[str]) -> str | None:
+        """Return the folder of the ZIP with the resource, the root is an empty one."""
+        if self.data.file_name in names:
+            return ""
+        # Archives often wrap the content in a single folder, like dist
+        folders = [
+            folder
+            for name in names
+            if name.count("/") == 1
+            and (folder := name.split("/")[0])
+            and name == f"{folder}/{self.data.file_name}"
+        ]
+        return folders[0] if len(folders) == 1 else None
 
     @override
     def gather_tree_files_to_download(self) -> list[FileInformation]:
@@ -459,8 +487,13 @@ class PluginRepository(Repository):
 
     def _release_resource_filename(self, asset_names: set[str]) -> str | None:
         """Return the resource the release assets have, as a file or a ZIP."""
-        for filename in self._valid_filenames():
-            if filename in asset_names or _archive_name(filename) in asset_names:
+        # An unusable ZIP falls back to the file, so a file is the better match
+        filenames = self._valid_filenames()
+        for filename in filenames:
+            if filename in asset_names:
+                return filename
+        for filename in filenames:
+            if _archive_name(filename) in asset_names:
                 return filename
         return None
 
