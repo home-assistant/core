@@ -124,36 +124,6 @@ DAILY = [
     ),
 ]
 
-AIR_QUALITY = AirQualityForecast.from_api(
-    {
-        "time": "2026-11-05T10:00+02:00",
-        "pollutant": "Ozone",
-        "pollutantPhrase": "Ozone",
-        "AQI": 31,
-        "AQI_CO": 1,
-        "AQI_NO2": 3,
-        "AQI_O3": 31,
-        "AQI_SO2": 0,
-        "AQI_PM10": 4,
-        "AQI_PM2P5": 8,
-    }
-)
-
-AIR_QUALITY_DAILY = AirQualityDailyForecast.from_api(
-    {
-        "date": "2026-11-06",
-        "AQI": 26,
-        "pollutant": "Ozone",
-        "pollutantPhrase": "Ozone",
-        "AQI_CO": 2,
-        "AQI_NO2": 6,
-        "AQI_GO3": 26,
-        "AQI_SO2": 0,
-        "AQI_PM2P5": 8,
-        "AQI_PM10": 5,
-    }
-)
-
 MINUTELY = MinutelyForecastList(
     [
         MinutelyForecast(time="2026-09-01T17:01+03:00", precip_rate=0.0),
@@ -248,6 +218,37 @@ OBSERVATION = Observation.from_api(
 )
 
 
+AIR_QUALITY = AirQualityForecast.from_api(
+    {
+        "time": "2026-11-05T10:00+02:00",
+        "pollutant": "Ozone",
+        "pollutantPhrase": "Ozone",
+        "AQI": 31,
+        "AQI_CO": 1,
+        "AQI_NO2": 3,
+        "AQI_O3": 31,
+        "AQI_SO2": 0,
+        "AQI_PM10": 4,
+        "AQI_PM2P5": 8,
+    }
+)
+
+AIR_QUALITY_DAILY = AirQualityDailyForecast.from_api(
+    {
+        "date": "2026-11-06",
+        "AQI": 26,
+        "pollutant": "Ozone",
+        "pollutantPhrase": "Ozone",
+        "AQI_CO": 2,
+        "AQI_NO2": 6,
+        "AQI_GO3": 26,
+        "AQI_SO2": 0,
+        "AQI_PM2P5": 8,
+        "AQI_PM10": 5,
+    }
+)
+
+
 @pytest.fixture
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
@@ -283,11 +284,11 @@ def mock_foreca_client() -> Generator[MagicMock]:
                 ]
             ]
         )
-        client.air_quality_hourly = AsyncMock(return_value=[AIR_QUALITY])
-        client.air_quality_daily = AsyncMock(return_value=[AIR_QUALITY_DAILY])
         client.forecast_minutely = AsyncMock(return_value=MINUTELY)
         client.forecast_15minutely = AsyncMock(return_value=FIFTEEN_MINUTE)
         client.observation_latest = AsyncMock(return_value=OBSERVATION)
+        client.air_quality_hourly = AsyncMock(return_value=[AIR_QUALITY])
+        client.air_quality_daily = AsyncMock(return_value=[AIR_QUALITY_DAILY])
         yield client
 
 
