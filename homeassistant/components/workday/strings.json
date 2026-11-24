@@ -26,11 +26,17 @@
           "country_settings": {
             "data": {
               "category": "Additional category as holiday",
+              "hindu_show_estimated": "Mark estimated Hindu holidays",
+              "include_sundays": "Include Sundays as holidays",
+              "islamic_show_estimated": "Mark estimated Islamic holidays",
               "language": "Language for named holidays",
               "province": "Subdivision of country"
             },
             "data_description": {
               "category": "Select additional categories to include as holidays",
+              "hindu_show_estimated": "Add \"estimated\" to the name of Hindu holidays with an estimated date",
+              "include_sundays": "Add all Sundays to the holidays of the country",
+              "islamic_show_estimated": "Add \"estimated\" to the name of Islamic holidays with an estimated date",
               "language": "Language to use when configuring named holiday exclusions",
               "province": "State, territory, province or region of country"
             },
@@ -187,11 +193,17 @@
           "country_settings": {
             "data": {
               "category": "[%key:component::workday::config::step::options::sections::country_settings::data::category%]",
+              "hindu_show_estimated": "[%key:component::workday::config::step::options::sections::country_settings::data::hindu_show_estimated%]",
+              "include_sundays": "[%key:component::workday::config::step::options::sections::country_settings::data::include_sundays%]",
+              "islamic_show_estimated": "[%key:component::workday::config::step::options::sections::country_settings::data::islamic_show_estimated%]",
               "language": "[%key:component::workday::config::step::options::sections::country_settings::data::language%]",
               "province": "[%key:component::workday::config::step::options::sections::country_settings::data::province%]"
             },
             "data_description": {
               "category": "[%key:component::workday::config::step::options::sections::country_settings::data_description::category%]",
+              "hindu_show_estimated": "[%key:component::workday::config::step::options::sections::country_settings::data_description::hindu_show_estimated%]",
+              "include_sundays": "[%key:component::workday::config::step::options::sections::country_settings::data_description::include_sundays%]",
+              "islamic_show_estimated": "[%key:component::workday::config::step::options::sections::country_settings::data_description::islamic_show_estimated%]",
               "language": "[%key:component::workday::config::step::options::sections::country_settings::data_description::language%]",
               "province": "[%key:component::workday::config::step::options::sections::country_settings::data_description::province%]"
             },

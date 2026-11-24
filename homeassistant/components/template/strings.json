@@ -768,6 +768,14 @@
     "config_format_triggers": {
       "description": "A trigger template configuration needs a trigger and at least one domain when defining an entity. This will be a configuration validation error in Home Assistant Core 2026.5.\n\nPlease remove the orphaned trigger from the configuration.\n\n```\n{config}\n```",
       "title": "Incomplete template configuration"
+    },
+    "deprecated_weather_template_options": {
+      "description": "The template weather entity with `{identifier}` uses options ending in `_template`. These options are deprecated and will be removed in a future version of Home Assistant.\n\nUpdate your YAML configuration by renaming the following options:\n\n{options}\n\nAfter updating the configuration, reload the template entities or restart Home Assistant to fix this issue.",
+      "title": "Template weather entity uses deprecated options ({identifier})"
+    },
+    "deprecated_weather_template_options_blueprint": {
+      "description": "The template weather blueprint `{blueprint}` uses options ending in `_template`. These options are deprecated and will be removed in a future version of Home Assistant.\n\nUpdate the blueprint by renaming the following options:\n\n{options}\n\nIf the blueprint was imported, re-import it once its author has updated it instead. Then reload the template entities or restart Home Assistant to fix this issue.",
+      "title": "Template weather blueprint uses deprecated options ({blueprint})"
     }
   },
   "options": {
