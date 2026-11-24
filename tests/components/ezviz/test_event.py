@@ -1,18 +1,22 @@
 """Tests for EZVIZ event entities."""
 
+from collections.abc import Generator
 from datetime import timedelta
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 from pyezvizapi.exceptions import PyEzvizError
+import pytest
 from pytest_homeassistant.common import (
     MockConfigEntry,
     async_fire_time_changed,
     mock_restore_cache_with_extra_data,
+    snapshot_platform,
 )
+from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.event import ATTR_EVENT_TYPE
-from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN
+from homeassistant.components.ezviz.const import ATTR_TYPE_CAMERA, ATTR_TYPE_CLOUD
+from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN, Platform
 from homeassistant.core import (
     Event,
     EventStateChangedData,
@@ -20,6 +24,7 @@ from homeassistant.core import (
     State,
     callback,
 )
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.event import async_track_state_change_event
 
 from . import setup_integration
@@ -57,9 +62,36 @@ async def _refresh(
     await hass.async_block_till_done()
 
 
+@pytest.fixture
+def platforms() -> Generator[None]:
+    """Load only the event platform."""
+    with patch(
+        "homeassistant.components.ezviz.PLATFORMS_BY_TYPE",
+        {ATTR_TYPE_CAMERA: [], ATTR_TYPE_CLOUD: [Platform.EVENT]},
+    ):
+        yield
+
+
+@pytest.mark.usefixtures("platforms")
+async def test_entities(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
+    mock_config_entry: MockConfigEntry,
+    mock_ezviz_client: AsyncMock,
+) -> None:
+    """Test the event entities."""
+    mock_ezviz_client.load_cameras.return_value = _camera("2026-11-17 10:00:00")
+
+    await setup_integration(hass, mock_config_entry)
+
+    await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
+
+
 async def test_event_on_new_alarm(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
+    snapshot: SnapshotAssertion,
     mock_config_entry: MockConfigEntry,
     mock_ezviz_client: AsyncMock,
 ) -> None:
@@ -78,12 +110,7 @@ async def test_event_on_new_alarm(
     assert hass.states.get(ENTITY_ID).state == STATE_UNKNOWN
 
     await _refresh(hass, freezer, mock_ezviz_client, "2026-11-17 12:00:20")
-    state = hass.states.get(ENTITY_ID)
-    assert state.state == "2026-11-17T12:01:00.000+00:00"
-    assert state.attributes[ATTR_EVENT_TYPE] == "motion"
-    assert state.attributes["alarm_time"] == "2026-11-17 12:00:20"
-    assert state.attributes["alarm_type_code"] == "10079"
-    assert state.attributes["alarm_type_name"] == "Smart Detection Alarm"
+    assert hass.states.get(ENTITY_ID) == snapshot
 
     # A missing alarm time and the same alarm coming back do not fire again
     await _refresh(hass, freezer, mock_ezviz_client, None)
