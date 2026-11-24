@@ -20,8 +20,8 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
     STATE_UNAVAILABLE,
-    CommonServiceArgument,
     Platform,
+    TargetKey,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -35,10 +35,13 @@ from .const import (
     TEST_DEVICE_2_SN,
     TEST_DEVICE_AQM,
     TEST_DEVICE_AQM_SN,
+    TEST_DEVICE_PLUG,
+    TEST_DEVICE_PLUG_SN,
 )
 
 ENTITY_ID = "switch.echo_test_do_not_disturb"
 LED_ENTITY_ID = "switch.air_quality_monitor_test_led_indicator"
+PLUG_ENTITY_ID = "switch.smart_plug_test"
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
@@ -47,6 +50,7 @@ LED_ENTITY_ID = "switch.air_quality_monitor_test_led_indicator"
     [
         pytest.param({TEST_DEVICE_1_SN: TEST_DEVICE_1}, id="echo"),
         pytest.param({TEST_DEVICE_AQM_SN: TEST_DEVICE_AQM}, id="aqm"),
+        pytest.param({TEST_DEVICE_PLUG_SN: TEST_DEVICE_PLUG}, id="plug"),
     ],
 )
 async def test_all_entities(
@@ -80,7 +84,7 @@ async def test_switch_dnd(
     await hass.services.async_call(
         SWITCH_DOMAIN,
         SwitchService.TURN_ON,
-        {CommonServiceArgument.ENTITY_ID: ENTITY_ID},
+        {TargetKey.ENTITY_ID: ENTITY_ID},
         blocking=True,
     )
 
@@ -91,7 +95,7 @@ async def test_switch_dnd(
     await hass.services.async_call(
         SWITCH_DOMAIN,
         SwitchService.TURN_OFF,
-        {CommonServiceArgument.ENTITY_ID: ENTITY_ID},
+        {TargetKey.ENTITY_ID: ENTITY_ID},
         blocking=True,
     )
 
@@ -276,7 +280,7 @@ async def test_switch_communication(
     await hass.services.async_call(
         SWITCH_DOMAIN,
         SwitchService.TURN_OFF,
-        {CommonServiceArgument.ENTITY_ID: entity_id},
+        {TargetKey.ENTITY_ID: entity_id},
         blocking=True,
     )
 
@@ -303,7 +307,7 @@ async def test_switch_communication(
     await hass.services.async_call(
         SWITCH_DOMAIN,
         SwitchService.TURN_ON,
-        {CommonServiceArgument.ENTITY_ID: entity_id},
+        {TargetKey.ENTITY_ID: entity_id},
         blocking=True,
     )
     device_data.communication_settings = {
@@ -325,112 +329,173 @@ async def test_switch_communication(
     assert state.state == STATE_ON
 
 
-async def test_switch_led(
+FEATURE_SWITCHES = pytest.mark.parametrize(
+    ("device", "serial_num", "sensor_key", "entity_id"),
+    [
+        pytest.param(
+            TEST_DEVICE_AQM, TEST_DEVICE_AQM_SN, "aqm_led", LED_ENTITY_ID, id="aqm_led"
+        ),
+        pytest.param(
+            TEST_DEVICE_PLUG,
+            TEST_DEVICE_PLUG_SN,
+            "plug_power",
+            PLUG_ENTITY_ID,
+            id="plug_power",
+        ),
+    ],
+)
+
+
+@pytest.mark.parametrize(
+    ("device", "serial_num", "entity_id", "feature_name", "instance"),
+    [
+        pytest.param(
+            TEST_DEVICE_AQM,
+            TEST_DEVICE_AQM_SN,
+            LED_ENTITY_ID,
+            "toggle",
+            "11",
+            id="aqm_led",
+        ),
+        pytest.param(
+            TEST_DEVICE_PLUG,
+            TEST_DEVICE_PLUG_SN,
+            PLUG_ENTITY_ID,
+            "power",
+            None,
+            id="plug_power",
+        ),
+    ],
+)
+async def test_switch_feature(
     hass: HomeAssistant,
     mock_amazon_devices_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
+    device: AmazonDevice,
+    serial_num: str,
+    entity_id: str,
+    feature_name: str,
+    instance: str | None,
 ) -> None:
-    """Test switching the AQM LED updates state optimistically."""
+    """Test switching a feature switch updates state optimistically."""
     mock_amazon_devices_client.get_devices_data.return_value = {
-        TEST_DEVICE_AQM_SN: deepcopy(TEST_DEVICE_AQM)
+        serial_num: deepcopy(device)
     }
     await setup_integration(hass, mock_config_entry)
 
-    assert (state := hass.states.get(LED_ENTITY_ID))
+    assert (state := hass.states.get(entity_id))
     assert state.state == STATE_ON
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
         SwitchService.TURN_OFF,
-        {CommonServiceArgument.ENTITY_ID: LED_ENTITY_ID},
+        {TargetKey.ENTITY_ID: entity_id},
         blocking=True,
     )
 
     mock_amazon_devices_client.call_feature_operation.assert_called_once_with(
-        mock_amazon_devices_client.get_devices_data.return_value[TEST_DEVICE_AQM_SN],
-        "toggle",
+        mock_amazon_devices_client.get_devices_data.return_value[serial_num],
+        feature_name,
         "turnOff",
         command_payload=None,
-        instance="11",
+        instance=instance,
     )
-    assert (state := hass.states.get(LED_ENTITY_ID))
+    assert (state := hass.states.get(entity_id))
     assert state.state == STATE_OFF
 
     mock_amazon_devices_client.call_feature_operation.reset_mock()
     await hass.services.async_call(
         SWITCH_DOMAIN,
         SwitchService.TURN_ON,
-        {CommonServiceArgument.ENTITY_ID: LED_ENTITY_ID},
+        {TargetKey.ENTITY_ID: entity_id},
         blocking=True,
     )
 
     mock_amazon_devices_client.call_feature_operation.assert_called_once_with(
-        mock_amazon_devices_client.get_devices_data.return_value[TEST_DEVICE_AQM_SN],
-        "toggle",
+        mock_amazon_devices_client.get_devices_data.return_value[serial_num],
+        feature_name,
         "turnOn",
         command_payload=None,
-        instance="11",
+        instance=instance,
     )
-    assert (state := hass.states.get(LED_ENTITY_ID))
+    assert (state := hass.states.get(entity_id))
     assert state.state == STATE_ON
 
 
-async def test_switch_led_unavailable_on_sensor_error(
+@FEATURE_SWITCHES
+async def test_switch_feature_unavailable_on_sensor_error(
     hass: HomeAssistant,
     mock_amazon_devices_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
+    device: AmazonDevice,
+    serial_num: str,
+    sensor_key: str,
+    entity_id: str,
 ) -> None:
-    """Test the AQM LED switch is unavailable when its sensor reports an error."""
+    """Test a feature switch is unavailable when its sensor reports an error."""
     mock_amazon_devices_client.get_devices_data.return_value = {
-        TEST_DEVICE_AQM_SN: deepcopy(TEST_DEVICE_AQM)
+        serial_num: deepcopy(device)
     }
-    mock_amazon_devices_client.sensors[TEST_DEVICE_AQM_SN]["aqm_led"].error = True
+    mock_amazon_devices_client.sensors[serial_num][sensor_key].error = True
     await setup_integration(hass, mock_config_entry)
 
-    assert (state := hass.states.get(LED_ENTITY_ID))
+    assert (state := hass.states.get(entity_id))
     assert state.state == STATE_UNAVAILABLE
 
 
-async def test_switch_led_created_without_sensor_value(
+@FEATURE_SWITCHES
+async def test_switch_feature_created_without_sensor_value(
     hass: HomeAssistant,
     mock_amazon_devices_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
+    device: AmazonDevice,
+    serial_num: str,
+    sensor_key: str,
+    entity_id: str,
 ) -> None:
-    """Test the AQM LED switch is created from the feature before a value arrives."""
+    """Test a feature switch is created from the feature before a value arrives."""
     mock_amazon_devices_client.get_devices_data.return_value = {
-        TEST_DEVICE_AQM_SN: deepcopy(TEST_DEVICE_AQM)
+        serial_num: deepcopy(device)
     }
-    del mock_amazon_devices_client.sensors[TEST_DEVICE_AQM_SN]["aqm_led"]
+    del mock_amazon_devices_client.sensors[serial_num][sensor_key]
     await setup_integration(hass, mock_config_entry)
 
-    assert (state := hass.states.get(LED_ENTITY_ID))
+    assert (state := hass.states.get(entity_id))
     assert state.state == STATE_UNAVAILABLE
 
 
-async def test_switch_led_not_created_without_feature(
+@FEATURE_SWITCHES
+async def test_switch_feature_not_created_without_feature(
     hass: HomeAssistant,
     mock_amazon_devices_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
+    device: AmazonDevice,
+    serial_num: str,
+    sensor_key: str,
+    entity_id: str,
 ) -> None:
-    """Test the AQM LED switch is not created when the feature is unsupported."""
-    device = deepcopy(TEST_DEVICE_AQM)
+    """Test a feature switch is not created when the feature is unsupported."""
+    device = deepcopy(device)
     device.features = {}
-    mock_amazon_devices_client.get_devices_data.return_value = {
-        TEST_DEVICE_AQM_SN: device
-    }
+    mock_amazon_devices_client.get_devices_data.return_value = {serial_num: device}
     await setup_integration(hass, mock_config_entry)
 
-    assert hass.states.get(LED_ENTITY_ID) is None
+    assert hass.states.get(entity_id) is None
 
 
-async def test_switch_led_cannot_set_feature(
+@FEATURE_SWITCHES
+async def test_switch_feature_cannot_set_feature(
     hass: HomeAssistant,
     mock_amazon_devices_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
+    device: AmazonDevice,
+    serial_num: str,
+    sensor_key: str,
+    entity_id: str,
 ) -> None:
-    """Test a rejected LED command raises and keeps the current state."""
+    """Test a rejected feature command raises and keeps the current state."""
     mock_amazon_devices_client.get_devices_data.return_value = {
-        TEST_DEVICE_AQM_SN: deepcopy(TEST_DEVICE_AQM)
+        serial_num: deepcopy(device)
     }
     mock_amazon_devices_client.call_feature_operation.side_effect = CannotSetFeature
     await setup_integration(hass, mock_config_entry)
@@ -439,10 +504,10 @@ async def test_switch_led_cannot_set_feature(
         await hass.services.async_call(
             SWITCH_DOMAIN,
             SwitchService.TURN_OFF,
-            {CommonServiceArgument.ENTITY_ID: LED_ENTITY_ID},
+            {TargetKey.ENTITY_ID: entity_id},
             blocking=True,
         )
 
     assert exc_info.value.translation_key == "cannot_set_feature_with_error"
-    assert (state := hass.states.get(LED_ENTITY_ID))
+    assert (state := hass.states.get(entity_id))
     assert state.state == STATE_ON

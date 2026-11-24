@@ -8,6 +8,7 @@ from aioshelly.exceptions import DeviceConnectionError, InvalidAuthError, RpcCal
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from pytest_homeassistant.common import async_fire_time_changed, mock_restore_cache
+from pytest_homeassistant.typing import WebSocketGenerator
 
 from homeassistant.components.shelly.const import (
     BLU_TRV_UPDATE_CHECK_INTERVAL,
@@ -32,8 +33,8 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
     STATE_UNKNOWN,
-    CommonServiceArgument,
     Platform,
+    TargetKey,
 )
 from homeassistant.core import HomeAssistant, State
 from homeassistant.exceptions import HomeAssistantError
@@ -79,15 +80,16 @@ async def test_block_update(
     assert state.attributes[ATTR_LATEST_VERSION] == "2.0.0"
     assert state.attributes[ATTR_IN_PROGRESS] is False
     assert state.attributes[ATTR_UPDATE_PERCENTAGE] is None
-    assert (
-        state.attributes[ATTR_SUPPORTED_FEATURES]
-        == UpdateEntityFeature.INSTALL | UpdateEntityFeature.PROGRESS
+    assert state.attributes[ATTR_SUPPORTED_FEATURES] == (
+        UpdateEntityFeature.INSTALL
+        | UpdateEntityFeature.PROGRESS
+        | UpdateEntityFeature.RELEASE_NOTES
     )
 
     await hass.services.async_call(
         UPDATE_DOMAIN,
         UpdateService.INSTALL,
-        {CommonServiceArgument.ENTITY_ID: entity_id},
+        {TargetKey.ENTITY_ID: entity_id},
         blocking=True,
     )
     assert mock_block_device.trigger_ota_update.call_count == 1
@@ -153,7 +155,7 @@ async def test_block_beta_update(
     await hass.services.async_call(
         UPDATE_DOMAIN,
         UpdateService.INSTALL,
-        {CommonServiceArgument.ENTITY_ID: entity_id},
+        {TargetKey.ENTITY_ID: entity_id},
         blocking=True,
     )
     assert mock_block_device.trigger_ota_update.call_count == 1
@@ -204,7 +206,7 @@ async def test_block_update_connection_error(
         await hass.services.async_call(
             UPDATE_DOMAIN,
             UpdateService.INSTALL,
-            {CommonServiceArgument.ENTITY_ID: "update.test_name_firmware"},
+            {TargetKey.ENTITY_ID: "update.test_name_firmware"},
             blocking=True,
         )
 
@@ -230,7 +232,7 @@ async def test_block_update_auth_error(
     await hass.services.async_call(
         UPDATE_DOMAIN,
         UpdateService.INSTALL,
-        {CommonServiceArgument.ENTITY_ID: "update.test_name_firmware"},
+        {TargetKey.ENTITY_ID: "update.test_name_firmware"},
         blocking=True,
     )
 
@@ -295,6 +297,121 @@ async def test_block_version_compare(
     assert state.attributes[ATTR_LATEST_VERSION] == BETA
 
 
+DO_NOT_INTERRUPT_MESSAGE = {
+    "severity": "warning",
+    "message": (
+        "Do not restart, remove power from, or otherwise interrupt the device "
+        "while the update is in progress."
+    ),
+}
+MULTI_STEP_UPDATE_MESSAGE = {
+    "severity": "warning",
+    "message": (
+        "This update reorganizes the device memory and can run in two steps. "
+        "The device installs the update and restarts, and may come back still "
+        "reporting the previous firmware version. About a minute and a half later, "
+        "it downloads the update again and restarts once more on the new version. "
+        "Do not restart, remove power from, or otherwise interrupt the device until "
+        "it reports the new firmware version. If the device comes back on the "
+        "previous version and the second step does not start within a few minutes, "
+        "start the update again."
+    ),
+}
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_block_update_release_notes_messages(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    mock_block_device: Mock,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test the release notes messages shown before a block device update."""
+    monkeypatch.setitem(mock_block_device.status["update"], "old_version", "1.0.0")
+    monkeypatch.setitem(mock_block_device.status["update"], "new_version", "2.0.0")
+    await init_integration(hass, 1)
+
+    client = await hass_ws_client(hass)
+    await client.send_json_auto_id(
+        {"type": "update/release_notes", "entity_id": "update.test_name_firmware"}
+    )
+    result = await client.receive_json()
+
+    assert result["success"]
+    assert result["result"] == {
+        "release_notes": None,
+        "messages": [DO_NOT_INTERRUPT_MESSAGE],
+    }
+
+
+@pytest.mark.parametrize(
+    ("entity_id", "available_updates", "expected_message"),
+    [
+        pytest.param(
+            "update.test_name_firmware",
+            {"stable": {"version": "2.2.0"}},
+            DO_NOT_INTERRUPT_MESSAGE,
+            id="stable",
+        ),
+        pytest.param(
+            "update.test_name_firmware",
+            {"stable": {"version": "2.2.0", "nsteps": 1}},
+            MULTI_STEP_UPDATE_MESSAGE,
+            id="stable_multi_step_first",
+        ),
+        pytest.param(
+            "update.test_name_firmware",
+            {"stable": {"version": "2.2.0", "nsteps": 0}},
+            MULTI_STEP_UPDATE_MESSAGE,
+            id="stable_multi_step_last",
+        ),
+        pytest.param(
+            "update.test_name_firmware",
+            {
+                "stable": {"version": "2.2.0"},
+                "beta": {"version": "2.3.0-beta1", "nsteps": 1},
+            },
+            DO_NOT_INTERRUPT_MESSAGE,
+            id="stable_beta_multi_step",
+        ),
+        pytest.param(
+            "update.test_name_beta_firmware",
+            {"beta": {"version": "2.3.0-beta1", "nsteps": 1}},
+            MULTI_STEP_UPDATE_MESSAGE,
+            id="beta_multi_step",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_rpc_update_release_notes_messages(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    mock_rpc_device: Mock,
+    monkeypatch: pytest.MonkeyPatch,
+    entity_id: str,
+    available_updates: dict[str, dict[str, str | int]],
+    expected_message: dict[str, str],
+) -> None:
+    """Test the release notes messages shown before a RPC device update."""
+    monkeypatch.setitem(mock_rpc_device.shelly, "ver", "2.1.1")
+    monkeypatch.setitem(
+        mock_rpc_device.status["sys"], "available_updates", available_updates
+    )
+    await init_integration(hass, 2)
+
+    client = await hass_ws_client(hass)
+    await client.send_json_auto_id(
+        {"type": "update/release_notes", "entity_id": entity_id}
+    )
+    result = await client.receive_json()
+
+    assert result["success"]
+    assert result["result"] == {
+        "release_notes": None,
+        "messages": [expected_message],
+    }
+
+
 async def test_rpc_update(
     hass: HomeAssistant,
     mock_rpc_device: Mock,
@@ -320,12 +437,16 @@ async def test_rpc_update(
     assert state.attributes[ATTR_IN_PROGRESS] is False
     assert state.attributes[ATTR_UPDATE_PERCENTAGE] is None
     supported_feat = state.attributes[ATTR_SUPPORTED_FEATURES]
-    assert supported_feat == UpdateEntityFeature.INSTALL | UpdateEntityFeature.PROGRESS
+    assert supported_feat == (
+        UpdateEntityFeature.INSTALL
+        | UpdateEntityFeature.PROGRESS
+        | UpdateEntityFeature.RELEASE_NOTES
+    )
 
     await hass.services.async_call(
         UPDATE_DOMAIN,
         UpdateService.INSTALL,
-        {CommonServiceArgument.ENTITY_ID: entity_id},
+        {TargetKey.ENTITY_ID: entity_id},
         blocking=True,
     )
 
@@ -404,6 +525,64 @@ async def test_rpc_update(
 
     assert (entry := entity_registry.async_get(entity_id))
     assert entry.unique_id == "123456789ABC-sys-fwupdate"
+
+
+async def test_rpc_update_device_reconnect_without_final_ota_event(
+    hass: HomeAssistant,
+    mock_rpc_device: Mock,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test RPC update progress is cleared when the device reconnects."""
+    entity_id = "update.test_name_firmware"
+    monkeypatch.setitem(mock_rpc_device.shelly, "ver", "1")
+    monkeypatch.setitem(
+        mock_rpc_device.status["sys"],
+        "available_updates",
+        {
+            "stable": {"version": "2"},
+        },
+    )
+    await init_integration(hass, 2)
+
+    await hass.services.async_call(
+        UPDATE_DOMAIN,
+        UpdateService.INSTALL,
+        {TargetKey.ENTITY_ID: entity_id},
+        blocking=True,
+    )
+
+    inject_rpc_device_event(
+        monkeypatch,
+        mock_rpc_device,
+        {
+            "events": [
+                {
+                    "event": "ota_progress",
+                    "id": 1,
+                    "ts": 1668522399.2,
+                    "progress_percent": 96,
+                }
+            ],
+            "ts": 1668522399.2,
+        },
+    )
+
+    assert (state := hass.states.get(entity_id))
+    assert state.attributes[ATTR_IN_PROGRESS] is True
+    assert state.attributes[ATTR_UPDATE_PERCENTAGE] == 96
+
+    # Device reboots and rolls back without sending ota_success or ota_error
+    mock_rpc_device.mock_disconnected()
+    await hass.async_block_till_done()
+    mock_rpc_device.mock_initialized()
+    await hass.async_block_till_done()
+
+    assert (state := hass.states.get(entity_id))
+    assert state.state == STATE_ON
+    assert state.attributes[ATTR_INSTALLED_VERSION] == "1"
+    assert state.attributes[ATTR_LATEST_VERSION] == "2"
+    assert state.attributes[ATTR_IN_PROGRESS] is False
+    assert state.attributes[ATTR_UPDATE_PERCENTAGE] is None
 
 
 async def test_rpc_lora_update(
@@ -485,7 +664,7 @@ async def test_rpc_lora_update_in_progress(
     await hass.services.async_call(
         UPDATE_DOMAIN,
         UpdateService.INSTALL,
-        {CommonServiceArgument.ENTITY_ID: entity_id},
+        {TargetKey.ENTITY_ID: entity_id},
         blocking=True,
     )
 
@@ -590,7 +769,7 @@ async def test_rpc_lora_update_errors(
         await hass.services.async_call(
             UPDATE_DOMAIN,
             UpdateService.INSTALL,
-            {CommonServiceArgument.ENTITY_ID: "update.test_name_lora_add_on_firmware"},
+            {TargetKey.ENTITY_ID: "update.test_name_lora_add_on_firmware"},
             blocking=True,
         )
 
@@ -623,7 +802,7 @@ async def test_rpc_lora_update_auth_error(
     await hass.services.async_call(
         UPDATE_DOMAIN,
         UpdateService.INSTALL,
-        {CommonServiceArgument.ENTITY_ID: "update.test_name_lora_add_on_firmware"},
+        {TargetKey.ENTITY_ID: "update.test_name_lora_add_on_firmware"},
         blocking=True,
     )
 
@@ -849,7 +1028,7 @@ async def test_rpc_beta_update(
     await hass.services.async_call(
         UPDATE_DOMAIN,
         UpdateService.INSTALL,
-        {CommonServiceArgument.ENTITY_ID: entity_id},
+        {TargetKey.ENTITY_ID: entity_id},
         blocking=True,
     )
     inject_rpc_device_event(
@@ -966,7 +1145,7 @@ async def test_rpc_update_errors(
         await hass.services.async_call(
             UPDATE_DOMAIN,
             UpdateService.INSTALL,
-            {CommonServiceArgument.ENTITY_ID: "update.test_name_firmware"},
+            {TargetKey.ENTITY_ID: "update.test_name_firmware"},
             blocking=True,
         )
 
@@ -1000,7 +1179,7 @@ async def test_rpc_update_auth_error(
     await hass.services.async_call(
         UPDATE_DOMAIN,
         UpdateService.INSTALL,
-        {CommonServiceArgument.ENTITY_ID: "update.test_name_firmware"},
+        {TargetKey.ENTITY_ID: "update.test_name_firmware"},
         blocking=True,
     )
 
@@ -1047,7 +1226,7 @@ async def test_blu_trv_update(
     await hass.services.async_call(
         UPDATE_DOMAIN,
         UpdateService.INSTALL,
-        {CommonServiceArgument.ENTITY_ID: entity_id},
+        {TargetKey.ENTITY_ID: entity_id},
         blocking=True,
     )
 
@@ -1133,7 +1312,7 @@ async def test_blu_trv_update_progress(
     await hass.services.async_call(
         UPDATE_DOMAIN,
         UpdateService.INSTALL,
-        {CommonServiceArgument.ENTITY_ID: entity_id},
+        {TargetKey.ENTITY_ID: entity_id},
         blocking=True,
     )
 
@@ -1177,7 +1356,7 @@ async def test_blu_trv_update_refreshes_installed_version(
     await hass.services.async_call(
         UPDATE_DOMAIN,
         UpdateService.INSTALL,
-        {CommonServiceArgument.ENTITY_ID: entity_id},
+        {TargetKey.ENTITY_ID: entity_id},
         blocking=True,
     )
 
@@ -1206,7 +1385,7 @@ async def test_blu_trv_update_refresh_errors(
     await hass.services.async_call(
         UPDATE_DOMAIN,
         UpdateService.INSTALL,
-        {CommonServiceArgument.ENTITY_ID: entity_id},
+        {TargetKey.ENTITY_ID: entity_id},
         blocking=True,
     )
 
@@ -1383,7 +1562,7 @@ async def test_blu_trv_update_install_errors(
         await hass.services.async_call(
             UPDATE_DOMAIN,
             UpdateService.INSTALL,
-            {CommonServiceArgument.ENTITY_ID: entity_id},
+            {TargetKey.ENTITY_ID: entity_id},
             blocking=True,
         )
 
@@ -1406,7 +1585,7 @@ async def test_blu_trv_update_install_auth_error(
     await hass.services.async_call(
         UPDATE_DOMAIN,
         UpdateService.INSTALL,
-        {CommonServiceArgument.ENTITY_ID: "update.trv_name_firmware"},
+        {TargetKey.ENTITY_ID: "update.trv_name_firmware"},
         blocking=True,
     )
 

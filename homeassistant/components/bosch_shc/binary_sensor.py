@@ -10,6 +10,7 @@ from boschshcpy import (
     BatteryLevelService,
     SHCBatteryDevice,
     SHCClimateControl,
+    SHCMotionDetector2,
     SHCOutdoorSiren,
     SHCShutterContact,
     SHCSmokeDetectionSystem,
@@ -79,6 +80,16 @@ CLIMATE_CONTROL_DESCRIPTIONS: tuple[
     ),
 )
 
+SMOKE_DETECTION_SYSTEM_DESCRIPTION = SHCBinarySensorEntityDescription[
+    SHCSmokeDetectionSystem
+](
+    key="smoke_alarm",
+    device_class=BinarySensorDeviceClass.SMOKE,
+    is_on_fn=lambda device: (
+        device.alarm is not SurveillanceAlarmService.State.ALARM_OFF
+    ),
+)
+
 OUTDOOR_SIREN_DESCRIPTIONS: tuple[
     SHCBinarySensorEntityDescription[SHCOutdoorSiren], ...
 ] = (
@@ -99,6 +110,22 @@ OUTDOOR_SIREN_DESCRIPTIONS: tuple[
         device_class=BinarySensorDeviceClass.TAMPER,
         entity_category=EntityCategory.DIAGNOSTIC,
         is_on_fn=lambda device: device.siren.tamper_activated,
+    ),
+)
+
+MOTION_DETECTOR2_DESCRIPTIONS: tuple[
+    SHCBinarySensorEntityDescription[SHCMotionDetector2], ...
+] = (
+    SHCBinarySensorEntityDescription(
+        key="occupancy",
+        device_class=BinarySensorDeviceClass.OCCUPANCY,
+        is_on_fn=lambda device: device.occupied,
+    ),
+    SHCBinarySensorEntityDescription(
+        key="tamper",
+        device_class=BinarySensorDeviceClass.TAMPER,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        is_on_fn=lambda device: device.was_tampered,
     ),
 )
 
@@ -194,6 +221,31 @@ async def async_setup_entry(
         if siren.siren is not None
         for description in OUTDOOR_SIREN_DESCRIPTIONS
     )
+
+    entities.extend(
+        SHCBinarySensor(
+            hass=hass,
+            device=device,
+            parent_id=shc_info.unique_id,
+            entry_id=config_entry.entry_id,
+            entity_description=description,
+        )
+        for device in session.device_helper.motion_detectors2
+        for description in MOTION_DETECTOR2_DESCRIPTIONS
+    )
+
+    if (
+        smoke_detection_system := session.device_helper.smoke_detection_system
+    ) is not None:
+        entities.append(
+            SHCBinarySensor(
+                hass=hass,
+                device=smoke_detection_system,
+                parent_id=shc_info.unique_id,
+                entry_id=config_entry.entry_id,
+                entity_description=SMOKE_DETECTION_SYSTEM_DESCRIPTION,
+            )
+        )
 
     async_add_entities(entities)
 

@@ -49,6 +49,9 @@
     }
   },
   "services": {
+    "get_datapoints": {
+      "service": "mdi:download-outline"
+    },
     "set_datapoint": {
       "service": "mdi:cog-play-outline"
     }

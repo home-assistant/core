@@ -46,12 +46,7 @@ from homeassistant.components.number import (
     NumberService,
 )
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import (
-    ATTR_RESTORED,
-    STATE_UNAVAILABLE,
-    CommonServiceArgument,
-    Platform,
-)
+from homeassistant.const import ATTR_RESTORED, STATE_UNAVAILABLE, Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -355,7 +350,7 @@ async def test_number_entity_functionality(
         NUMBER_DOMAIN,
         NumberService.SET_VALUE,
         {
-            CommonServiceArgument.ENTITY_ID: entity_id,
+            TargetKey.ENTITY_ID: entity_id,
             SERVICE_ATTR_VALUE: value,
         },
     )
@@ -504,7 +499,7 @@ async def test_number_entity_error(
             NUMBER_DOMAIN,
             NumberService.SET_VALUE,
             {
-                CommonServiceArgument.ENTITY_ID: entity_id,
+                TargetKey.ENTITY_ID: entity_id,
                 SERVICE_ATTR_VALUE: DEFAULT_MIN_VALUE,
             },
             blocking=True,
@@ -629,7 +624,7 @@ async def test_options_functionality(
     await hass.services.async_call(
         NUMBER_DOMAIN,
         NumberService.SET_VALUE,
-        {CommonServiceArgument.ENTITY_ID: entity_id, SERVICE_ATTR_VALUE: 80},
+        {TargetKey.ENTITY_ID: entity_id, SERVICE_ATTR_VALUE: 80},
     )
     await hass.async_block_till_done()
 

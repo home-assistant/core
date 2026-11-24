@@ -10,6 +10,7 @@ from typing import TYPE_CHECKING, Any, override
 
 from tesla_fleet_api.const import VehicleDataEndpoint
 from tesla_fleet_api.exceptions import (
+    Forbidden,
     GatewayTimeout,
     InsufficientCredits,
     InvalidResponse,
@@ -83,6 +84,11 @@ WALL_CONNECTOR_TOTALS = "totals"
 # Keys within tariff_content_v2 kept as nested dicts rather than flattened,
 # since entities and calendars read them as whole structures.
 TARIFF_SKIP_KEYS = ["daily_charges", "demand_charges", "energy_charges", "seasons"]
+
+# Teslemetry's reauth keeps a valid Tesla grant, so only a fresh Tesla login
+# that re-asks for declined scopes can restore them.
+ISSUE_MISSING_SCOPES = "missing_scopes"
+MISSING_SCOPES_URL = "https://teslemetry.com/login?prompt_missing_scopes=1"
 
 # Insufficient credits will not resolve themselves quickly, so back off polling
 # instead of hammering the API at the coordinator's normal interval.
@@ -184,6 +190,21 @@ class TeslemetryVehicleDataCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 translation_key="update_failed_insufficient_credits",
                 retry_after=INSUFFICIENT_CREDITS_RETRY_AFTER,
             ) from e
+        except Forbidden as e:
+            ir.async_create_issue(
+                self.hass,
+                DOMAIN,
+                f"{ISSUE_MISSING_SCOPES}_{self.config_entry.entry_id}",
+                config_entry_id=self.config_entry.entry_id,
+                is_fixable=False,
+                severity=ir.IssueSeverity.ERROR,
+                translation_key=ISSUE_MISSING_SCOPES,
+                learn_more_url=MISSING_SCOPES_URL,
+            )
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="update_failed_missing_scopes",
+            ) from e
         except RETRY_EXCEPTIONS as e:
             raise UpdateFailed(
                 translation_domain=DOMAIN,
@@ -198,6 +219,9 @@ class TeslemetryVehicleDataCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 translation_placeholders={"message": e.message},
             ) from e
 
+        ir.async_delete_issue(
+            self.hass, DOMAIN, f"{ISSUE_MISSING_SCOPES}_{self.config_entry.entry_id}"
+        )
         data = flatten(data)
         if version := data.get("vehicle_state_car_version"):
             # Consume firmware opportunistically rather than through a listener
@@ -285,7 +309,7 @@ class TeslemetryEnergySiteLiveCoordinator(DataUpdateCoordinator[dict[str, Any]])
         self._local_poll_in_progress = True
         try:
             try:
-                self._local_live = (await local.live_status())["response"]
+                local_live = (await local.live_status())["response"]
             except PowerwallError as e:
                 self._local_live = None
                 LOGGER.log(
@@ -305,6 +329,11 @@ class TeslemetryEnergySiteLiveCoordinator(DataUpdateCoordinator[dict[str, Any]])
                         "Local live poll for %s recovered", self.api.energy_site_id
                     )
                 self._local_backoff_ticks = 1
+                # The gateway omits unmeasured AC-coupled solar, so its load can go
+                # negative; Tesla's cloud never reports a load below 0.
+                if (local_live.get("load_power") or 0) < 0:
+                    local_live = {**local_live, "load_power": 0}
+                self._local_live = local_live
                 if not self._local_reached:
                     self._local_reached = True
                     ir.async_delete_issue(
@@ -448,15 +477,13 @@ class TeslemetryEnergySiteInfoCoordinator(DataUpdateCoordinator[dict[str, Any]])
             self._local_poll_in_progress = False
 
     def async_set_command_value(self, key: str, value: Any) -> None:
-        """Hold a paired site's successful command value until its source next reports.
+        """Hold a successful command value until its source next reports.
 
-        A locally-owned key is held until a LAN poll reports it, and every key
-        until the next cloud site_info, so neither a poll in between nor a
-        failed LAN poll can revert it.
+        Every key is held until the next cloud site_info, and on a paired site
+        a locally-owned key also until a LAN poll reports it, so no update in
+        between can revert it.
         """
-        if self._local is None:
-            return
-        if key in LOCAL_SITE_INFO_KEYS:
+        if self._local is not None and key in LOCAL_SITE_INFO_KEYS:
             self._local_config = {**(self._local_config or {}), key: value}
             self._local_config_generation += 1
         self._cloud_optimistic[key] = value

@@ -775,6 +775,14 @@
     "deprecated_light_temperature": {
       "description": "The template light helper {name} defines its color temperature in mireds. This is deprecated and will stop working in Home Assistant Core {breaks_in_ha_version}.\n\nTo fix this issue, open the options of the template light helper and define the color temperature in kelvin.",
       "title": "Template light helper {name} uses a color temperature in mireds"
+    },
+    "deprecated_weather_template_options": {
+      "description": "The template weather entity with `{identifier}` uses options ending in `_template`. These options are deprecated and will be removed in a future version of Home Assistant.\n\nUpdate your YAML configuration by renaming the following options:\n\n{options}\n\nAfter updating the configuration, reload the template entities or restart Home Assistant to fix this issue.",
+      "title": "Template weather entity uses deprecated options ({identifier})"
+    },
+    "deprecated_weather_template_options_blueprint": {
+      "description": "The template weather blueprint `{blueprint}` uses options ending in `_template`. These options are deprecated and will be removed in a future version of Home Assistant.\n\nUpdate the blueprint by renaming the following options:\n\n{options}\n\nIf the blueprint was imported, re-import it once its author has updated it instead. Then reload the template entities or restart Home Assistant to fix this issue.",
+      "title": "Template weather blueprint uses deprecated options ({blueprint})"
     }
   },
   "options": {

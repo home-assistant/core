@@ -34,7 +34,7 @@ from homeassistant.components.todo import (
     TodoServices,
 )
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import ATTR_ENTITY_ID, Platform
+from homeassistant.const import Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er
@@ -96,7 +96,7 @@ async def test_todo_items(
         TODO_DOMAIN,
         TodoServices.GET_ITEMS,
         {},
-        target={ATTR_ENTITY_ID: entity_id},
+        target={TargetKey.ENTITY_ID: entity_id},
         blocking=True,
         return_response=True,
     )
@@ -133,7 +133,7 @@ async def test_complete_todo_item(
         TODO_DOMAIN,
         TodoServices.UPDATE_ITEM,
         {ATTR_ITEM: uid, ATTR_STATUS: "completed"},
-        target={ATTR_ENTITY_ID: entity_id},
+        target={TargetKey.ENTITY_ID: entity_id},
         blocking=True,
     )
 
@@ -173,7 +173,7 @@ async def test_uncomplete_todo_item(
         TODO_DOMAIN,
         TodoServices.UPDATE_ITEM,
         {ATTR_ITEM: uid, ATTR_STATUS: "needs_action"},
-        target={ATTR_ENTITY_ID: entity_id},
+        target={TargetKey.ENTITY_ID: entity_id},
         blocking=True,
     )
 
@@ -231,7 +231,7 @@ async def test_complete_todo_item_exception(
             TODO_DOMAIN,
             TodoServices.UPDATE_ITEM,
             {ATTR_ITEM: uid, ATTR_STATUS: status},
-            target={ATTR_ENTITY_ID: "todo.test_user_to_do_s"},
+            target={TargetKey.ENTITY_ID: "todo.test_user_to_do_s"},
             blocking=True,
         )
 
@@ -328,7 +328,7 @@ async def test_update_todo_item(
         TODO_DOMAIN,
         TodoServices.UPDATE_ITEM,
         service_data,
-        target={ATTR_ENTITY_ID: entity_id},
+        target={TargetKey.ENTITY_ID: entity_id},
         blocking=True,
     )
 
@@ -377,7 +377,7 @@ async def test_update_todo_item_exception(
                 ATTR_DESCRIPTION: "test-description",
                 ATTR_DUE_DATE: "2024-07-30",
             },
-            target={ATTR_ENTITY_ID: "todo.test_user_to_do_s"},
+            target={TargetKey.ENTITY_ID: "todo.test_user_to_do_s"},
             blocking=True,
         )
 
@@ -403,7 +403,7 @@ async def test_add_todo_item(
             ATTR_DESCRIPTION: "test-description",
             ATTR_DUE_DATE: "2024-07-30",
         },
-        target={ATTR_ENTITY_ID: "todo.test_user_to_do_s"},
+        target={TargetKey.ENTITY_ID: "todo.test_user_to_do_s"},
         blocking=True,
     )
 
@@ -463,7 +463,7 @@ async def test_add_todo_item_exception(
                 ATTR_DESCRIPTION: "test-description",
                 ATTR_DUE_DATE: "2024-07-30",
             },
-            target={ATTR_ENTITY_ID: "todo.test_user_to_do_s"},
+            target={TargetKey.ENTITY_ID: "todo.test_user_to_do_s"},
             blocking=True,
         )
 
@@ -486,7 +486,7 @@ async def test_delete_todo_item(
         TODO_DOMAIN,
         TodoServices.REMOVE_ITEM,
         {ATTR_ITEM: uid},
-        target={ATTR_ENTITY_ID: "todo.test_user_to_do_s"},
+        target={TargetKey.ENTITY_ID: "todo.test_user_to_do_s"},
         blocking=True,
     )
 
@@ -535,7 +535,7 @@ async def test_delete_todo_item_exception(
             TODO_DOMAIN,
             TodoServices.REMOVE_ITEM,
             {ATTR_ITEM: uid},
-            target={ATTR_ENTITY_ID: "todo.test_user_to_do_s"},
+            target={TargetKey.ENTITY_ID: "todo.test_user_to_do_s"},
             blocking=True,
         )
 
@@ -556,7 +556,7 @@ async def test_delete_completed_todo_items(
         TODO_DOMAIN,
         TodoServices.REMOVE_COMPLETED_ITEMS,
         {},
-        target={ATTR_ENTITY_ID: "todo.test_user_to_do_s"},
+        target={TargetKey.ENTITY_ID: "todo.test_user_to_do_s"},
         blocking=True,
     )
 
@@ -603,7 +603,7 @@ async def test_delete_completed_todo_items_exception(
             TODO_DOMAIN,
             TodoServices.REMOVE_COMPLETED_ITEMS,
             {},
-            target={ATTR_ENTITY_ID: "todo.test_user_to_do_s"},
+            target={TargetKey.ENTITY_ID: "todo.test_user_to_do_s"},
             blocking=True,
         )
 
@@ -764,6 +764,8 @@ async def test_move_todo_item_exception(
         ("duedate_fixture_7.json", None),
         ("duedate_fixture_8.json", None),
         ("duedate_fixture_9.json", None),
+        ("duedate_fixture_10.json", None),
+        ("duedate_fixture_11.json", None),
     ],
     ids=[
         "default",
@@ -775,6 +777,8 @@ async def test_move_todo_item_exception(
         "grey daily",
         "empty nextDue",
         "grey daily no weekdays",
+        "weekly with invalid second nextDue",
+        "invalid first nextDue",
     ],
 )
 @pytest.mark.usefixtures("set_tz")
@@ -806,7 +810,7 @@ async def test_next_due_date(
         TODO_DOMAIN,
         TodoServices.GET_ITEMS,
         {},
-        target={ATTR_ENTITY_ID: dailies_entity},
+        target={TargetKey.ENTITY_ID: dailies_entity},
         blocking=True,
         return_response=True,
     )

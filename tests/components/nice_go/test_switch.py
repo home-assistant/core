@@ -13,7 +13,7 @@ from homeassistant.components.switch import (
     SERVICE_TURN_ON,
     SwitchService,
 )
-from homeassistant.const import ATTR_ENTITY_ID, CommonServiceArgument, Platform
+from homeassistant.const import ATTR_ENTITY_ID, Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 
@@ -28,7 +28,7 @@ async def test_turn_on(
     await hass.services.async_call(
         SWITCH_DOMAIN,
         SwitchService.TURN_ON,
-        {CommonServiceArgument.ENTITY_ID: "switch.test_garage_1_vacation_mode"},
+        {TargetKey.ENTITY_ID: "switch.test_garage_1_vacation_mode"},
         blocking=True,
     )
     mock_nice_go.vacation_mode_on.assert_called_once_with("1")
@@ -42,7 +42,7 @@ async def test_turn_off(
     await hass.services.async_call(
         SWITCH_DOMAIN,
         SwitchService.TURN_OFF,
-        {CommonServiceArgument.ENTITY_ID: "switch.test_garage_2_vacation_mode"},
+        {TargetKey.ENTITY_ID: "switch.test_garage_2_vacation_mode"},
         blocking=True,
     )
     mock_nice_go.vacation_mode_off.assert_called_once_with("2")
@@ -120,7 +120,7 @@ async def test_auth_failed_error(
         await hass.services.async_call(
             SWITCH_DOMAIN,
             SwitchService.TURN_ON,
-            {CommonServiceArgument.ENTITY_ID: "switch.test_garage_1_vacation_mode"},
+            {TargetKey.ENTITY_ID: "switch.test_garage_1_vacation_mode"},
             blocking=True,
         )
 
@@ -131,7 +131,7 @@ async def test_auth_failed_error(
         await hass.services.async_call(
             SWITCH_DOMAIN,
             SwitchService.TURN_OFF,
-            {CommonServiceArgument.ENTITY_ID: "switch.test_garage_2_vacation_mode"},
+            {TargetKey.ENTITY_ID: "switch.test_garage_2_vacation_mode"},
             blocking=True,
         )
 
@@ -143,7 +143,7 @@ async def test_auth_failed_error(
     await hass.services.async_call(
         SWITCH_DOMAIN,
         SwitchService.TURN_ON,
-        {CommonServiceArgument.ENTITY_ID: "switch.test_garage_1_vacation_mode"},
+        {TargetKey.ENTITY_ID: "switch.test_garage_1_vacation_mode"},
         blocking=True,
     )
 
@@ -156,7 +156,7 @@ async def test_auth_failed_error(
         await hass.services.async_call(
             SWITCH_DOMAIN,
             SwitchService.TURN_ON,
-            {CommonServiceArgument.ENTITY_ID: "switch.test_garage_1_vacation_mode"},
+            {TargetKey.ENTITY_ID: "switch.test_garage_1_vacation_mode"},
             blocking=True,
         )
 
@@ -164,7 +164,7 @@ async def test_auth_failed_error(
         await hass.services.async_call(
             SWITCH_DOMAIN,
             SwitchService.TURN_OFF,
-            {CommonServiceArgument.ENTITY_ID: "switch.test_garage_2_vacation_mode"},
+            {TargetKey.ENTITY_ID: "switch.test_garage_2_vacation_mode"},
             blocking=True,
         )
 
