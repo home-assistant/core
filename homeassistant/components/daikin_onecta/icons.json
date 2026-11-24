@@ -50,6 +50,8 @@
     }
   },
   "services": {
-    "set_holiday_period": { "service": "mdi:calendar-range" }
+    "get_schedule_data": { "service": "mdi:download" },
+    "set_holiday_period": { "service": "mdi:calendar-range" },
+    "set_schedule_data": { "service": "mdi:upload" }
   }
 }

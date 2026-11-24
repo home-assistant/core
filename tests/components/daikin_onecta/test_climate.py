@@ -51,7 +51,11 @@ from homeassistant.components.daikin_onecta.coordinator import (
     OnectaDataUpdateCoordinator,
 )
 from homeassistant.components.daikin_onecta.device import DaikinOnectaDevice
-from homeassistant.components.daikin_onecta.services import SERVICE_SET_HOLIDAY_PERIOD
+from homeassistant.components.daikin_onecta.services import (
+    SERVICE_GET_SCHEDULE_DATA,
+    SERVICE_SET_HOLIDAY_PERIOD,
+    SERVICE_SET_SCHEDULE_DATA,
+)
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     SERVICE_TURN_OFF,
@@ -103,6 +107,31 @@ async def _async_setup_climate_service_fixture(
     )
     assert entity_id is not None
     return entity_id, gateway_id, management_point, coordinator
+
+
+async def _async_setup_schedule_service_fixture(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+) -> tuple[list[str], str, ManagementPoint]:
+    """Set up climate entities for a zone with a populated raw schedule."""
+    await _async_setup_fixture(hass, config_entry, "nomodel_id")
+    coordinator = config_entry.runtime_data
+    assert coordinator.data is not None
+    gateway_id, device = next(iter(coordinator.data.items()))
+    point = device.management_point("climateControlMainZone")
+    assert point is not None
+    entity_ids = [
+        entry.entity_id
+        for entry in er.async_entries_for_config_entry(
+            entity_registry, config_entry.entry_id
+        )
+        if entry.domain == CLIMATE_DOMAIN
+        and entry.unique_id.startswith(f"{gateway_id}_{point.embedded_id}_")
+        and entry.entity_id is not None
+    ]
+    assert entity_ids
+    return entity_ids, gateway_id, point
 
 
 async def test_target_temperature_step_clears_without_current_setpoint(
@@ -946,6 +975,128 @@ async def test_set_holiday_period_action_rejects_invalid_dates(
 
     assert err.value.translation_key == "holiday_period_invalid"
     mock_onecta_client.post_management_point.assert_not_awaited()
+
+
+async def test_get_schedule_data_action_returns_daikin_schedule_definitions(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Return complete schedule definitions, including action data."""
+    entity_ids, _gateway_id, point = await _async_setup_schedule_service_fixture(
+        hass, config_entry, entity_registry
+    )
+    assert point.schedule is not None
+    expected_schedules = {
+        mode: mode_data.raw_schedules
+        for mode, mode_data in point.schedule.value.modes.items()
+    }
+    assert expected_schedules["heating"]["scheduleHeatingRT1"]["actions"]["monday"]
+
+    response = await hass.services.async_call(
+        DOMAIN,
+        SERVICE_GET_SCHEDULE_DATA,
+        {ATTR_ENTITY_ID: entity_ids},
+        blocking=True,
+        return_response=True,
+    )
+
+    assert response == {
+        entity_ids[0]: {"schedules": expected_schedules},
+    }
+
+
+async def test_set_schedule_data_action_replaces_schedules_once_per_zone(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    mock_onecta_client: MockOnectaClient,
+) -> None:
+    """Use the documented schedule PUT once for each mode and zone."""
+    entity_ids, gateway_id, point = await _async_setup_schedule_service_fixture(
+        hass, config_entry, entity_registry
+    )
+    assert point.schedule is not None
+    mode_data = point.schedule.value.modes["heating"]
+    definition = mode_data.schedules["scheduleHeatingRT1"]
+    definition.settable = True
+    schedules = {
+        "heating": deepcopy(mode_data.raw_schedules),
+    }
+    schedules["heating"]["scheduleHeatingRT1"]["settable"] = True
+    schedules["heating"]["scheduleHeatingRT1"]["actions"]["monday"]["12:00:00"] = {
+        "operationMode": "off"
+    }
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SET_SCHEDULE_DATA,
+        {ATTR_ENTITY_ID: entity_ids, "schedules": schedules},
+        blocking=True,
+    )
+
+    mock_onecta_client.put_management_point.assert_awaited_once_with(
+        gateway_id,
+        point.embedded_id,
+        "schedule/heating/schedules",
+        schedules["heating"],
+    )
+
+
+async def test_set_schedule_data_action_rejects_unknown_schedule_ids(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    mock_onecta_client: MockOnectaClient,
+) -> None:
+    """Reject unknown schedule IDs before sending any replacement request."""
+    entity_ids, _gateway_id, _point = await _async_setup_schedule_service_fixture(
+        hass, config_entry, entity_registry
+    )
+
+    with pytest.raises(ServiceValidationError) as err:
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_SET_SCHEDULE_DATA,
+            {
+                ATTR_ENTITY_ID: entity_ids,
+                "schedules": {"heating": {"unknown": {"actions": {}}}},
+            },
+            blocking=True,
+        )
+
+    assert err.value.translation_key == "schedule_data_invalid"
+    mock_onecta_client.put_management_point.assert_not_awaited()
+
+
+async def test_set_schedule_data_action_keeps_read_only_schedules(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    mock_onecta_client: MockOnectaClient,
+) -> None:
+    """Do not let a schedule replacement delete read-only definitions."""
+    entity_ids, _gateway_id, point = await _async_setup_schedule_service_fixture(
+        hass, config_entry, entity_registry
+    )
+    assert point.schedule is not None
+    read_only_definition = deepcopy(
+        point.schedule.value.modes["heating"].raw_schedules["scheduleHeatingRT1"]
+    )
+
+    with pytest.raises(ServiceValidationError) as err:
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_SET_SCHEDULE_DATA,
+            {
+                ATTR_ENTITY_ID: entity_ids,
+                "schedules": {"heating": {"scheduleHeatingRT1": read_only_definition}},
+            },
+            blocking=True,
+        )
+
+    assert err.value.translation_key == "schedule_data_unavailable"
+    mock_onecta_client.put_management_point.assert_not_awaited()
 
 
 async def test_climate_service_clears_all_active_presets(

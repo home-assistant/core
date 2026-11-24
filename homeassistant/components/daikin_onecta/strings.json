@@ -554,6 +554,15 @@
     "refresh_deferred": {
       "message": "Refresh delayed while waiting to retry the Daikin API"
     },
+    "schedule_data_invalid": {
+      "message": "The schedule data is invalid for {device}"
+    },
+    "schedule_data_unavailable": {
+      "message": "Schedule editing is unavailable for {device}"
+    },
+    "schedule_data_update_failed": {
+      "message": "Failed to update the schedule data for {device}"
+    },
     "schedule_select_failed": {
       "message": "Failed to select schedule for {device}"
     },
@@ -622,6 +631,10 @@
     }
   },
   "services": {
+    "get_schedule_data": {
+      "description": "Return the raw Daikin schedule definitions grouped by climate entity and operation mode.",
+      "name": "Get schedule data"
+    },
     "set_holiday_period": {
       "description": "Enable holiday mode for a climate zone with a custom date range.",
       "fields": {
@@ -635,6 +648,16 @@
         }
       },
       "name": "Set holiday period"
+    },
+    "set_schedule_data": {
+      "description": "Replace schedules with edited raw definitions returned by Get schedule data.",
+      "fields": {
+        "schedules": {
+          "description": "Mapping from operation mode to schedule IDs and full schedule definitions.",
+          "name": "Schedules"
+        }
+      },
+      "name": "Set schedule data"
     }
   },
   "system_health": {

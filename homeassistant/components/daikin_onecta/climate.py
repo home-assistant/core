@@ -1,6 +1,7 @@
 """Support for the Daikin HVAC."""
 
 from collections.abc import Awaitable, Callable
+from copy import deepcopy
 from datetime import date, timedelta
 from typing import Any, Literal, cast, override
 
@@ -295,6 +296,74 @@ class DaikinClimate(DaikinManagementPointEntity, ClimateEntity):
         return (
             management_point.climate_control if management_point is not None else None
         )
+
+    def get_schedule_data(self) -> dict[str, dict[str, Any]]:
+        """Return the complete schedule definitions for this management point."""
+        point = self._management_point
+        schedule = point.schedule if point is not None else None
+        if schedule is None:
+            self._raise_service_validation_error("schedule_data_unavailable")
+        return {
+            mode: deepcopy(mode_data.raw_schedules)
+            for mode, mode_data in schedule.value.modes.items()
+        }
+
+    def validate_schedule_data(self, schedule_data: dict[str, Any]) -> None:
+        """Validate schedule modes and IDs before any cloud write is made."""
+        point = self._management_point
+        schedule = point.schedule if point is not None else None
+        if schedule is None or not schedule.settable:
+            self._raise_service_validation_error("schedule_data_unavailable")
+
+        for mode, schedules in schedule_data.items():
+            mode_data = schedule.value.modes.get(mode)
+            if (
+                mode_data is None
+                or not isinstance(schedules, dict)
+                or any(not isinstance(schedule_id, str) for schedule_id in schedules)
+                or any(
+                    not isinstance(definition, dict)
+                    for definition in schedules.values()
+                )
+            ):
+                self._raise_service_validation_error("schedule_data_invalid")
+            for schedule_id in schedules:
+                if schedule_id not in mode_data.schedules:
+                    self._raise_service_validation_error("schedule_data_invalid")
+            for schedule_id, definition in mode_data.schedules.items():
+                if definition.settable:
+                    continue
+                if schedule_id not in schedules or schedules[
+                    schedule_id
+                ] != mode_data.raw_schedules.get(schedule_id):
+                    self._raise_service_validation_error("schedule_data_unavailable")
+
+    async def async_set_schedule_data(self, schedule_data: dict[str, Any]) -> None:
+        """Replace editable schedules using Daikin's documented schedule PUT."""
+        self.validate_schedule_data(schedule_data)
+        for mode, schedules in schedule_data.items():
+            schedule_payload = deepcopy(schedules)
+
+            async def async_put_schedule_data(
+                client: OnectaClient,
+                *,
+                mode: str = mode,
+                schedule_payload: dict[str, Any] = schedule_payload,
+            ) -> None:
+                await client.put_management_point(
+                    self._device_id,
+                    self._embedded_id,
+                    f"schedule/{mode}/schedules",
+                    schedule_payload,
+                )
+
+            await self._async_execute_command(
+                async_put_schedule_data, "schedule_data_update_failed"
+            )
+            point = self._management_point
+            if point is not None and point.schedule is not None:
+                point.schedule.value.modes[mode].raw_schedules = schedule_payload
+            self.coordinator.schedule_post_write_refresh()
 
     async def _async_set_power(self, on: bool, translation_key: str) -> None:
         """Set the climate control's power state when it differs."""

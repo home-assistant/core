@@ -12,3 +12,21 @@ set_holiday_period:
       required: true
       selector:
         date:
+
+get_schedule_data:
+  target:
+    entity:
+      integration: daikin_onecta
+      domain: climate
+  fields: {}
+
+set_schedule_data:
+  target:
+    entity:
+      integration: daikin_onecta
+      domain: climate
+  fields:
+    schedules:
+      required: true
+      selector:
+        object:
