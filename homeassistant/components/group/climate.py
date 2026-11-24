@@ -221,8 +221,10 @@ class ClimateGroup(GroupEntity, ClimateEntity):
         if ClimateServiceArgument.TARGET_TEMP_LOW in kwargs:
             entity_ids &= self._climates[ClimateEntityFeature.TARGET_TEMPERATURE_RANGE]
         if (hvac_mode := kwargs.get(ClimateServiceArgument.HVAC_MODE)) is not None:
-            entity_ids = self._entities_with_mode(
-                entity_ids, ClimateEntityCapabilityAttribute.HVAC_MODES, hvac_mode
+            entity_ids = set(
+                self._entities_with_mode(
+                    entity_ids, ClimateEntityCapabilityAttribute.HVAC_MODES, hvac_mode
+                )
             )
         await self._async_call_supported_entities(
             ClimateService.SET_TEMPERATURE, entity_ids, kwargs
