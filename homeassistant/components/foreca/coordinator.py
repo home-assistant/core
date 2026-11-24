@@ -161,7 +161,8 @@ class ForecaAirQualityCoordinator(ForecaCoordinator[AirQualityForecast | None]):
             hours = await self.client.air_quality_hourly(self.location, periods=1)
         except ForecaError as err:
             raise UpdateFailed(
-                f"Error communicating with the Foreca API: {err}"
+                translation_domain=DOMAIN,
+                translation_key="air_quality_update_error",
             ) from err
         return hours[0] if hours else None
 

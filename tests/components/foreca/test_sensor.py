@@ -209,6 +209,19 @@ async def test_failed_request_leaves_other_entities_available(
     assert getattr(mock_foreca_client, method).await_count == 3
 
 
+async def test_air_quality_update_error_is_translated(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_foreca_client: MagicMock,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test a failing air quality request logs the translated error."""
+    mock_foreca_client.air_quality_hourly.side_effect = ForecaConnectionError("Timeout")
+    await init_integration(hass, mock_config_entry)
+
+    assert "Error fetching the air quality" in caplog.text
+
+
 @pytest.mark.parametrize(
     ("method", "entity_id", "value"),
     [

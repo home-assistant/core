@@ -144,6 +144,9 @@
     }
   },
   "exceptions": {
+    "air_quality_update_error": {
+      "message": "Error fetching the air quality."
+    },
     "fifteen_minute_forecast_error": {
       "message": "Error fetching the 15-minute forecast."
     },
