@@ -1,0 +1,211 @@
+# serializer version: 1
+# name: test_period_statistics_without_sum
+  defaultdict({
+    'anglian_water:171266493_testsn_usage': list([
+      dict({
+        'end': 1717268400.0,
+        'start': 1717264800.0,
+        'state': 0.01,
+        'sum': 10.0,
+      }),
+      dict({
+        'end': 1717272000.0,
+        'start': 1717268400.0,
+        'state': 0.015,
+        'sum': 25.0,
+      }),
+      dict({
+        'end': 1717275600.0,
+        'start': 1717272000.0,
+        'state': 0.025,
+        'sum': 50.0,
+      }),
+      dict({
+        'end': 1717279200.0,
+        'start': 1717275600.0,
+        'state': 0.02,
+        'sum': 70.0,
+      }),
+    ]),
+  })
+# ---
+# name: test_statistics_invalid_readings[invalid_first_timestamp]
+  defaultdict({
+    'anglian_water:171266493_testsn_usage': list([
+      dict({
+        'end': 1717268400.0,
+        'start': 1717264800.0,
+        'state': 0.01,
+        'sum': 10.0,
+      }),
+      dict({
+        'end': 1717272000.0,
+        'start': 1717268400.0,
+        'state': 0.015,
+        'sum': 25.0,
+      }),
+      dict({
+        'end': 1717275600.0,
+        'start': 1717272000.0,
+        'state': 0.025,
+        'sum': 50.0,
+      }),
+    ]),
+  })
+# ---
+# name: test_statistics_invalid_readings[invalid_later_timestamp]
+  defaultdict({
+    'anglian_water:171266493_testsn_usage': list([
+      dict({
+        'end': 1717268400.0,
+        'start': 1717264800.0,
+        'state': 0.01,
+        'sum': 10.0,
+      }),
+      dict({
+        'end': 1717272000.0,
+        'start': 1717268400.0,
+        'state': 0.015,
+        'sum': 25.0,
+      }),
+      dict({
+        'end': 1717275600.0,
+        'start': 1717272000.0,
+        'state': 0.025,
+        'sum': 50.0,
+      }),
+    ]),
+  })
+# ---
+# name: test_statistics_invalid_readings[no_readings]
+  defaultdict({
+    'anglian_water:171266493_testsn_usage': list([
+      dict({
+        'end': 1717268400.0,
+        'start': 1717264800.0,
+        'state': 0.01,
+        'sum': 10.0,
+      }),
+      dict({
+        'end': 1717272000.0,
+        'start': 1717268400.0,
+        'state': 0.015,
+        'sum': 25.0,
+      }),
+      dict({
+        'end': 1717275600.0,
+        'start': 1717272000.0,
+        'state': 0.025,
+        'sum': 50.0,
+      }),
+    ]),
+  })
+# ---
+# name: test_statistics_subsequent_run[corrected_reading]
+  defaultdict({
+    'anglian_water:171266493_testsn_usage': list([
+      dict({
+        'end': 1717268400.0,
+        'start': 1717264800.0,
+        'state': 0.01,
+        'sum': 10.0,
+      }),
+      dict({
+        'end': 1717272000.0,
+        'start': 1717268400.0,
+        'state': 0.015,
+        'sum': 25.0,
+      }),
+      dict({
+        'end': 1717275600.0,
+        'start': 1717272000.0,
+        'state': 0.035,
+        'sum': 70.0,
+      }),
+    ]),
+  })
+# ---
+# name: test_statistics_subsequent_run[new_and_updated_readings]
+  defaultdict({
+    'anglian_water:171266493_testsn_usage': list([
+      dict({
+        'end': 1717268400.0,
+        'start': 1717264800.0,
+        'state': 0.01,
+        'sum': 10.0,
+      }),
+      dict({
+        'end': 1717272000.0,
+        'start': 1717268400.0,
+        'state': 0.015,
+        'sum': 25.0,
+      }),
+      dict({
+        'end': 1717275600.0,
+        'start': 1717272000.0,
+        'state': 0.025,
+        'sum': 50.0,
+      }),
+      dict({
+        'end': 1717279200.0,
+        'start': 1717275600.0,
+        'state': 0.02,
+        'sum': 90.0,
+      }),
+    ]),
+  })
+# ---
+# name: test_statistics_subsequent_run[new_readings_only]
+  defaultdict({
+    'anglian_water:171266493_testsn_usage': list([
+      dict({
+        'end': 1717268400.0,
+        'start': 1717264800.0,
+        'state': 0.01,
+        'sum': 10.0,
+      }),
+      dict({
+        'end': 1717272000.0,
+        'start': 1717268400.0,
+        'state': 0.015,
+        'sum': 25.0,
+      }),
+      dict({
+        'end': 1717275600.0,
+        'start': 1717272000.0,
+        'state': 0.025,
+        'sum': 50.0,
+      }),
+      dict({
+        'end': 1717279200.0,
+        'start': 1717275600.0,
+        'state': 0.02,
+        'sum': 70.0,
+      }),
+    ]),
+  })
+# ---
+# name: test_statistics_subsequent_run[no_new_readings]
+  defaultdict({
+    'anglian_water:171266493_testsn_usage': list([
+      dict({
+        'end': 1717268400.0,
+        'start': 1717264800.0,
+        'state': 0.01,
+        'sum': 10.0,
+      }),
+      dict({
+        'end': 1717272000.0,
+        'start': 1717268400.0,
+        'state': 0.015,
+        'sum': 25.0,
+      }),
+      dict({
+        'end': 1717275600.0,
+        'start': 1717272000.0,
+        'state': 0.025,
+        'sum': 50.0,
+      }),
+    ]),
+  })
+# ---

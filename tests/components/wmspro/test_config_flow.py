@@ -7,7 +7,12 @@ import pytest
 from pytest_homeassistant.common import MockConfigEntry, async_load_json_object_fixture
 
 from homeassistant.components.wmspro.const import DOMAIN
-from homeassistant.config_entries import SOURCE_DHCP, SOURCE_USER, ConfigEntryState
+from homeassistant.config_entries import (
+    SOURCE_DHCP,
+    SOURCE_IGNORE,
+    SOURCE_USER,
+    ConfigEntryState,
+)
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -211,6 +216,32 @@ async def test_config_flow_from_dhcp_no_update(
     assert result.get("reason") == "already_configured"
     assert hass.config_entries.async_entries(DOMAIN)[0].unique_id == "00:11:22:33:44:55"
     assert hass.config_entries.async_entries(DOMAIN)[0].data[CONF_HOST] == "webcontrol"
+
+
+async def test_config_flow_from_dhcp_ignored_entry(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    mock_hub_refresh: AsyncMock,
+) -> None:
+    """Test DHCP discovery aborts when the device was ignored."""
+    ignored_entry = MockConfigEntry(
+        domain=DOMAIN,
+        source=SOURCE_IGNORE,
+        unique_id="00:11:22:33:44:55",
+        data={},
+    )
+    ignored_entry.add_to_hass(hass)
+
+    info = DhcpServiceInfo(
+        ip="1.2.3.4", hostname="webcontrol", macaddress="001122334455"
+    )
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_DHCP}, data=info
+    )
+    assert result.get("type") is FlowResultType.ABORT
+    assert result.get("reason") == "already_configured"
+    assert hass.config_entries.async_entries(DOMAIN)[0].data == {}
+    assert len(mock_setup_entry.mock_calls) == 0
 
 
 async def test_config_flow_ping_failed(

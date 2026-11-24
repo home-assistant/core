@@ -4,11 +4,11 @@ import probatio
 
 from homeassistant.components.device_automation import async_validate_entity_schema
 from homeassistant.const import (
-    ATTR_ENTITY_ID,
     CONF_DEVICE_ID,
     CONF_DOMAIN,
     CONF_ENTITY_ID,
     CONF_TYPE,
+    TargetKey,
 )
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.helpers import config_validation as cv, entity_registry as er
@@ -69,7 +69,7 @@ async def async_call_action_from_config(
         DOMAIN,
         NumberService.SET_VALUE,
         {
-            ATTR_ENTITY_ID: config[CONF_ENTITY_ID],
+            TargetKey.ENTITY_ID: config[CONF_ENTITY_ID],
             NumberServiceArgument.VALUE: config[ATTR_VALUE],
         },
         blocking=True,

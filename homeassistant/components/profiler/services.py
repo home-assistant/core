@@ -5,6 +5,7 @@ from collections.abc import Generator
 import contextlib
 from contextlib import suppress
 from datetime import timedelta
+from enum import StrEnum
 from functools import _lru_cache_wrapper
 import logging
 import reprlib
@@ -18,7 +19,6 @@ from lru import LRU
 import probatio
 
 from homeassistant.components import persistent_notification
-from homeassistant.const import CONF_ENABLED, CONF_SCAN_INTERVAL, CONF_TYPE
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
@@ -26,20 +26,6 @@ from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.service import async_register_admin_service
 
 from .const import DATA_PROFILER, DOMAIN
-
-SERVICE_START = "start"
-SERVICE_MEMORY = "memory"
-SERVICE_START_LOG_OBJECTS = "start_log_objects"
-SERVICE_STOP_LOG_OBJECTS = "stop_log_objects"
-SERVICE_START_LOG_OBJECT_SOURCES = "start_log_object_sources"
-SERVICE_STOP_LOG_OBJECT_SOURCES = "stop_log_object_sources"
-SERVICE_DUMP_LOG_OBJECTS = "dump_log_objects"
-SERVICE_DUMP_SOCKETS = "dump_sockets"
-SERVICE_LRU_STATS = "lru_stats"
-SERVICE_LOG_THREAD_FRAMES = "log_thread_frames"
-SERVICE_LOG_EVENT_LOOP_SCHEDULED = "log_event_loop_scheduled"
-SERVICE_SET_ASYNCIO_DEBUG = "set_asyncio_debug"
-SERVICE_LOG_CURRENT_TASKS = "log_current_tasks"
 
 _LRU_CACHE_WRAPPER_OBJECT = _lru_cache_wrapper.__name__
 _SQLALCHEMY_LRU_OBJECT = "LRUCache"
@@ -56,10 +42,35 @@ DEFAULT_SCAN_INTERVAL = timedelta(seconds=30)
 
 DEFAULT_MAX_OBJECTS = 5
 
-CONF_SECONDS = "seconds"
-CONF_MAX_OBJECTS = "max_objects"
-
 LOG_INTERVAL_SUB = "log_interval_subscription"
+
+
+class ProfilerService(StrEnum):
+    """Store keys for profiler services."""
+
+    START = "start"
+    MEMORY = "memory"
+    START_LOG_OBJECTS = "start_log_objects"
+    STOP_LOG_OBJECTS = "stop_log_objects"
+    DUMP_LOG_OBJECTS = "dump_log_objects"
+    START_LOG_OBJECT_SOURCES = "start_log_object_sources"
+    STOP_LOG_OBJECT_SOURCES = "stop_log_object_sources"
+    LRU_STATS = "lru_stats"
+    DUMP_SOCKETS = "dump_sockets"
+    LOG_THREAD_FRAMES = "log_thread_frames"
+    LOG_EVENT_LOOP_SCHEDULED = "log_event_loop_scheduled"
+    SET_ASYNCIO_DEBUG = "set_asyncio_debug"
+    LOG_CURRENT_TASKS = "log_current_tasks"
+
+
+class ProfilerServiceArgument(StrEnum):
+    """Store keys for profiler service arguments."""
+
+    SECONDS = "seconds"
+    SCAN_INTERVAL = "scan_interval"
+    TYPE = "type"
+    MAX_OBJECTS = "max_objects"
+    ENABLED = "enabled"
 
 
 _LOGGER = logging.getLogger(__name__)
@@ -94,7 +105,7 @@ def async_setup_services(hass: HomeAssistant) -> None:  # noqa: C901
         )
         await hass.async_add_executor_job(_log_objects)
         domain_data[LOG_INTERVAL_SUB] = async_track_time_interval(
-            hass, _log_objects, call.data[CONF_SCAN_INTERVAL]
+            hass, _log_objects, call.data[ProfilerServiceArgument.SCAN_INTERVAL]
         )
 
     async def _async_stop_log_objects(call: ServiceCall) -> None:
@@ -123,12 +134,17 @@ def async_setup_services(hass: HomeAssistant) -> None:  # noqa: C901
 
         async def _log_object_sources_with_max(*_: Any) -> None:
             await hass.async_add_executor_job(
-                _log_object_sources, call.data[CONF_MAX_OBJECTS], last_ids, last_stats
+                _log_object_sources,
+                call.data[ProfilerServiceArgument.MAX_OBJECTS],
+                last_ids,
+                last_stats,
             )
 
         await _log_object_sources_with_max()
         cancel_track = async_track_time_interval(
-            hass, _log_object_sources_with_max, call.data[CONF_SCAN_INTERVAL]
+            hass,
+            _log_object_sources_with_max,
+            call.data[ProfilerServiceArgument.SCAN_INTERVAL],
         )
 
         @callback
@@ -153,7 +169,7 @@ def async_setup_services(hass: HomeAssistant) -> None:  # noqa: C901
         # integration is used at a time
         import objgraph  # noqa: PLC0415
 
-        obj_type = call.data[CONF_TYPE]
+        obj_type = call.data[ProfilerServiceArgument.TYPE]
 
         for obj in objgraph.by_type(obj_type):
             _LOGGER.critical(
@@ -256,7 +272,7 @@ def async_setup_services(hass: HomeAssistant) -> None:  # noqa: C901
 
     async def _async_asyncio_debug(call: ServiceCall) -> None:
         """Enable or disable asyncio debug."""
-        enabled = call.data[CONF_ENABLED]
+        enabled = call.data[ProfilerServiceArgument.ENABLED]
         # Always log this at critical level so we know when
         # it's been changed when reviewing logs
         _LOGGER.critical("Setting asyncio debug to %s", enabled)
@@ -270,32 +286,40 @@ def async_setup_services(hass: HomeAssistant) -> None:  # noqa: C901
     async_register_admin_service(
         hass,
         DOMAIN,
-        SERVICE_START,
+        ProfilerService.START,
         _async_run_profile,
         schema=probatio.Schema(
-            {probatio.Optional(CONF_SECONDS, default=60.0): probatio.Coerce(float)}
+            {
+                probatio.Optional(
+                    ProfilerServiceArgument.SECONDS, default=60.0
+                ): probatio.Coerce(float)
+            }
         ),
     )
 
     async_register_admin_service(
         hass,
         DOMAIN,
-        SERVICE_MEMORY,
+        ProfilerService.MEMORY,
         _async_run_memory_profile,
         schema=probatio.Schema(
-            {probatio.Optional(CONF_SECONDS, default=60.0): probatio.Coerce(float)}
+            {
+                probatio.Optional(
+                    ProfilerServiceArgument.SECONDS, default=60.0
+                ): probatio.Coerce(float)
+            }
         ),
     )
 
     async_register_admin_service(
         hass,
         DOMAIN,
-        SERVICE_START_LOG_OBJECTS,
+        ProfilerService.START_LOG_OBJECTS,
         _async_start_log_objects,
         schema=probatio.Schema(
             {
                 probatio.Optional(
-                    CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL
+                    ProfilerServiceArgument.SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL
                 ): cv.time_period
             }
         ),
@@ -304,22 +328,22 @@ def async_setup_services(hass: HomeAssistant) -> None:  # noqa: C901
     async_register_admin_service(
         hass,
         DOMAIN,
-        SERVICE_STOP_LOG_OBJECTS,
+        ProfilerService.STOP_LOG_OBJECTS,
         _async_stop_log_objects,
     )
 
     async_register_admin_service(
         hass,
         DOMAIN,
-        SERVICE_START_LOG_OBJECT_SOURCES,
+        ProfilerService.START_LOG_OBJECT_SOURCES,
         _async_start_object_sources,
         schema=probatio.Schema(
             {
                 probatio.Optional(
-                    CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL
+                    ProfilerServiceArgument.SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL
                 ): cv.time_period,
                 probatio.Optional(
-                    CONF_MAX_OBJECTS, default=DEFAULT_MAX_OBJECTS
+                    ProfilerServiceArgument.MAX_OBJECTS, default=DEFAULT_MAX_OBJECTS
                 ): probatio.Range(min=1, max=1024),
             }
         ),
@@ -328,60 +352,64 @@ def async_setup_services(hass: HomeAssistant) -> None:  # noqa: C901
     async_register_admin_service(
         hass,
         DOMAIN,
-        SERVICE_STOP_LOG_OBJECT_SOURCES,
+        ProfilerService.STOP_LOG_OBJECT_SOURCES,
         _async_stop_object_sources,
     )
 
     async_register_admin_service(
         hass,
         DOMAIN,
-        SERVICE_DUMP_LOG_OBJECTS,
+        ProfilerService.DUMP_LOG_OBJECTS,
         _dump_log_objects,
-        schema=probatio.Schema({probatio.Required(CONF_TYPE): str}),
+        schema=probatio.Schema({probatio.Required(ProfilerServiceArgument.TYPE): str}),
     )
 
     async_register_admin_service(
         hass,
         DOMAIN,
-        SERVICE_DUMP_SOCKETS,
+        ProfilerService.DUMP_SOCKETS,
         _dump_sockets,
     )
 
     async_register_admin_service(
         hass,
         DOMAIN,
-        SERVICE_LRU_STATS,
+        ProfilerService.LRU_STATS,
         _lru_stats,
     )
 
     async_register_admin_service(
         hass,
         DOMAIN,
-        SERVICE_LOG_THREAD_FRAMES,
+        ProfilerService.LOG_THREAD_FRAMES,
         _async_dump_thread_frames,
     )
 
     async_register_admin_service(
         hass,
         DOMAIN,
-        SERVICE_LOG_EVENT_LOOP_SCHEDULED,
+        ProfilerService.LOG_EVENT_LOOP_SCHEDULED,
         _async_dump_scheduled,
     )
 
     async_register_admin_service(
         hass,
         DOMAIN,
-        SERVICE_SET_ASYNCIO_DEBUG,
+        ProfilerService.SET_ASYNCIO_DEBUG,
         _async_asyncio_debug,
         schema=probatio.Schema(
-            {probatio.Optional(CONF_ENABLED, default=True): cv.boolean}
+            {
+                probatio.Optional(
+                    ProfilerServiceArgument.ENABLED, default=True
+                ): cv.boolean
+            }
         ),
     )
 
     async_register_admin_service(
         hass,
         DOMAIN,
-        SERVICE_LOG_CURRENT_TASKS,
+        ProfilerService.LOG_CURRENT_TASKS,
         _async_dump_current_tasks,
     )
 
@@ -404,7 +432,7 @@ async def _async_generate_profile(hass: HomeAssistant, call: ServiceCall):
     )
     profiler = cProfile.Profile()
     profiler.enable()
-    await asyncio.sleep(float(call.data[CONF_SECONDS]))
+    await asyncio.sleep(float(call.data[ProfilerServiceArgument.SECONDS]))
     profiler.disable()
 
     cprofile_path = hass.config.path(f"profile.{start_time}.cprof")
@@ -441,7 +469,7 @@ async def _async_generate_memory_profile(hass: HomeAssistant, call: ServiceCall)
     )
     heap_profiler = hpy()
     heap_profiler.setref()
-    await asyncio.sleep(float(call.data[CONF_SECONDS]))
+    await asyncio.sleep(float(call.data[ProfilerServiceArgument.SECONDS]))
     heap = heap_profiler.heap()
 
     heap_path = hass.config.path(f"heap_profile.{start_time}.hpy")

@@ -45,6 +45,7 @@ from .const import (
     SLOPE_MODERATE,
     SLOPE_SLIGHT,
     SLOPE_STEEP,
+    RachioServiceArgument,
 )
 from .device import RachioConfigEntry
 from .entity import RachioDevice, RachioHoseTimerEntity
@@ -64,7 +65,6 @@ from .webhooks import (
 
 _LOGGER = logging.getLogger(__name__)
 
-ATTR_DURATION = "duration"
 ATTR_SCHEDULE_SUMMARY = "Summary"
 ATTR_SCHEDULE_ENABLED = "Enabled"
 ATTR_SCHEDULE_DURATION = "Duration"
@@ -330,8 +330,8 @@ class RachioZone(RachioSwitch):
         self.turn_off()
 
         # Start this zone
-        if ATTR_DURATION in kwargs:
-            manual_run_time = timedelta(minutes=kwargs[ATTR_DURATION])
+        if RachioServiceArgument.DURATION in kwargs:
+            manual_run_time = timedelta(minutes=kwargs[RachioServiceArgument.DURATION])
         else:
             manual_run_time = timedelta(
                 minutes=self._person.config_entry.options.get(
@@ -497,8 +497,8 @@ class RachioValve(RachioHoseTimerEntity, SwitchEntity):
     @override
     def turn_on(self, **kwargs: Any) -> None:
         """Turn on this valve."""
-        if ATTR_DURATION in kwargs:
-            manual_run_time = timedelta(minutes=kwargs[ATTR_DURATION])
+        if RachioServiceArgument.DURATION in kwargs:
+            manual_run_time = timedelta(minutes=kwargs[RachioServiceArgument.DURATION])
         else:
             manual_run_time = timedelta(
                 minutes=self._person.config_entry.options.get(

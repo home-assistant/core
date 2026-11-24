@@ -1,7 +1,9 @@
 """Tests for the Fumis integration."""
 
+import logging
 from unittest.mock import MagicMock
 
+from freezegun.api import FrozenDateTimeFactory
 from fumis import (
     FumisAuthenticationError,
     FumisConnectionError,
@@ -9,9 +11,9 @@ from fumis import (
     FumisStoveOfflineError,
 )
 import pytest
-from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
-from homeassistant.components.fumis.const import DOMAIN
+from homeassistant.components.fumis.const import DOMAIN, SCAN_INTERVAL
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.core import HomeAssistant
 
@@ -83,3 +85,35 @@ async def test_config_entry_authentication_failed(
     assert flow["handler"] == DOMAIN
     assert flow["context"].get("source") == SOURCE_REAUTH
     assert flow["context"].get("entry_id") == mock_config_entry.entry_id
+
+
+@pytest.mark.parametrize(
+    ("side_effect", "level"),
+    [
+        pytest.param(FumisStoveOfflineError, logging.INFO, id="stove_offline"),
+        pytest.param(FumisConnectionError, logging.ERROR, id="connection_error"),
+        pytest.param(FumisError, logging.ERROR, id="unknown_error"),
+    ],
+)
+@pytest.mark.usefixtures("init_integration")
+async def test_refresh_log_level(
+    hass: HomeAssistant,
+    mock_fumis: MagicMock,
+    freezer: FrozenDateTimeFactory,
+    caplog: pytest.LogCaptureFixture,
+    side_effect: type[Exception],
+    level: int,
+) -> None:
+    """Test an offline stove is logged at info level."""
+    mock_fumis.update_info.side_effect = side_effect
+
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert [
+        record.levelno
+        for record in caplog.records
+        if record.name == "homeassistant.components.fumis"
+        and record.levelno > logging.DEBUG
+    ] == [level]

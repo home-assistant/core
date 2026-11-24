@@ -15,8 +15,6 @@ ALL_MATCH_REGEX: str = ".*"
 
 SEVERITY_VALUES: list[str] = ["extreme", "severe", "moderate", "minor", "unknown"]
 
-SERVICE_GET_DETAILS: str = "get_details"
-
 SERVICE_DATA_HEADLINE: str = "headline"
 SERVICE_DATA_DESCRIPTION: str = "description"
 SERVICE_DATA_SENDER: str = "sender"

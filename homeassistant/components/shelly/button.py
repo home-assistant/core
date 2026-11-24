@@ -376,38 +376,44 @@ class RpcSleepingSmokeMuteButton(ShellySleepingRpcAttributeEntity, ButtonEntity)
         return False
 
 
-RPC_BUTTONS = {
-    "button_generic": RpcButtonDescription(
-        key="button",
+RPC_BUTTONS = (
+    RpcButtonDescription(
+        key="button_generic",
+        components=("button",),
         role=ROLE_GENERIC,
     ),
-    "button_open": RpcButtonDescription(
-        key="button",
+    RpcButtonDescription(
+        key="button_open",
+        components=("button",),
         translation_key="open",
         entity_registry_enabled_default=False,
         role="open",
         models={MODEL_FRANKEVER_WATER_VALVE},
     ),
-    "button_close": RpcButtonDescription(
-        key="button",
+    RpcButtonDescription(
+        key="button_close",
+        components=("button",),
         translation_key="close",
         entity_registry_enabled_default=False,
         role="close",
         models={MODEL_FRANKEVER_WATER_VALVE},
     ),
-    "calibrate": RpcButtonDescription(
-        key="blutrv",
+    RpcButtonDescription(
+        key="calibrate",
+        components=("blutrv",),
         translation_key="calibrate",
         entity_category=EntityCategory.CONFIG,
         entity_class=ShellyBluTrvButton,
     ),
-    "smoke_mute": RpcButtonDescription(
-        key="smoke",
+    RpcButtonDescription(
+        key="smoke_mute",
+        components=("smoke",),
         sub_key="mute",
         translation_key="mute_alarm",
     ),
-    "ircode": RpcButtonDescription(
+    RpcButtonDescription(
         key="ircode",
+        components=("ircode",),
         entity_class=RpcIrCodeButton,
     ),
-}
+)

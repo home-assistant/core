@@ -1575,21 +1575,25 @@ class EntityRegistry(BaseRegistry):
         self,
         entry: RegistryEntry,
         *,
+        area_id: str | Undefined | None = Undefined,
+        name: str | Undefined | None = Undefined,
         reserved_entity_ids: set[str] | None = None,
     ) -> str:
         """Regenerate an entity ID for an entry.
+
+        Pass `area_id` or `name` to preview the entity ID for unsaved changes.
 
         Entity ID conflicts are checked against registered and
         currently existing entities, as well as provided
         `reserved_entity_ids`.
         """
         return self._async_generate_entity_id(
-            area_id=entry.area_id,
+            area_id=entry.area_id if area_id is Undefined else area_id,
             current_entity_id=entry.entity_id,
             device_id=entry.device_id,
             domain=entry.domain,
             has_entity_name=entry.has_entity_name,
-            name=entry.name,
+            name=entry.name if name is Undefined else name,
             object_id_base=entry.object_id_base,
             platform=entry.platform,
             reserved_entity_ids=reserved_entity_ids,
