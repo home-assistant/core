@@ -1,13 +1,19 @@
 """Sensor for Last.fm account status."""
 
+from datetime import datetime, timedelta
+from functools import partial
 import hashlib
 from typing import Any, override
 
+from pylast import PyLastError
+
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
+from homeassistant.util import dt as dt_util
 
 from .const import (
     ATTR_LAST_PLAYED,
@@ -106,3 +112,47 @@ class LastFmSensor(CoordinatorEntity[LastFMDataUpdateCoordinator], SensorEntity)
             ATTR_LAST_PLAYED: last_track,
             ATTR_TOP_PLAYED: top_track,
         }
+
+    async def async_scrobble(
+        self,
+        artist: str,
+        title: str,
+        album: str | None = None,
+        timestamp: datetime | None = None,
+    ) -> None:
+        """Scrobble a track for this sensor's Last.fm user."""
+        client = self.coordinator.get_scrobble_client(self._username)
+        if client is None:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="user_not_authorized",
+                translation_placeholders={"username": self._username},
+            )
+
+        now = dt_util.utcnow()
+        if timestamp is None:
+            scrobble_time = now
+        else:
+            if timestamp.tzinfo is None:  # the datetime selector gives local time
+                timestamp = timestamp.replace(tzinfo=dt_util.get_default_time_zone())
+            scrobble_time = timestamp
+        if scrobble_time > now or scrobble_time < now - timedelta(days=14):
+            raise ServiceValidationError(
+                translation_domain=DOMAIN, translation_key="timestamp_out_of_range"
+            )
+
+        try:
+            await self.hass.async_add_executor_job(
+                partial(
+                    client.scrobble,
+                    artist=artist,
+                    title=title,
+                    timestamp=int(scrobble_time.timestamp()),
+                    album=album,
+                )
+            )
+        except PyLastError as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="scrobble_failed",
+            ) from err

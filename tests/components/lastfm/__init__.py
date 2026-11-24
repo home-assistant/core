@@ -10,8 +10,11 @@ from homeassistant.const import CONF_API_KEY
 from homeassistant.helpers.typing import Undefined
 
 API_KEY = "asdasdasdasdasd"
+API_SECRET = "lolololololol"
 USERNAME_1 = "testaccount1"
 USERNAME_2 = "testaccount2"
+AUTH_URL = f"https://www.last.fm/api/auth/?api_key={API_KEY}&token=token"
+SESSION_KEYS = {USERNAME_1: "sessionkey1", USERNAME_2: "sessionkey2"}
 
 CONF_DATA = {
     CONF_API_KEY: API_KEY,

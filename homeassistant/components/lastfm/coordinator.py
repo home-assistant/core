@@ -11,7 +11,14 @@ from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import CONF_USERS, DOMAIN, ERROR_CODE_LOGIN_REQUIRED, LOGGER
+from .const import (
+    CONF_API_SECRET,
+    CONF_SESSION_KEYS,
+    CONF_USERS,
+    DOMAIN,
+    ERROR_CODE_LOGIN_REQUIRED,
+    LOGGER,
+)
 
 type LastFMConfigEntry = ConfigEntry[LastFMDataUpdateCoordinator]
 
@@ -115,4 +122,17 @@ class LastFMDataUpdateCoordinator(DataUpdateCoordinator[dict[str, LastFMUserData
             now_playing,
             top_track,
             last_track,
+        )
+
+    def get_scrobble_client(self, username: str) -> LastFMNetwork | None:
+        """Return an authenticated client for a user."""
+        options = self.config_entry.options
+        api_secret = options.get(CONF_API_SECRET)
+        session_key = options.get(CONF_SESSION_KEYS, {}).get(username)
+        if not api_secret or not session_key:
+            return None
+        return LastFMNetwork(
+            api_key=options[CONF_API_KEY],
+            api_secret=api_secret,
+            session_key=session_key,
         )

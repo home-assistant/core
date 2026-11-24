@@ -7,12 +7,18 @@ from pylast import Track, WSError
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
-from homeassistant.components.lastfm.const import CONF_MAIN_USER, CONF_USERS, DOMAIN
+from homeassistant.components.lastfm.const import (
+    CONF_API_SECRET,
+    CONF_MAIN_USER,
+    CONF_SESSION_KEYS,
+    CONF_USERS,
+    DOMAIN,
+)
 from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
-from . import API_KEY, USERNAME_1, USERNAME_2, MockNetwork, MockUser
+from . import API_KEY, API_SECRET, USERNAME_1, USERNAME_2, MockNetwork, MockUser
 
 type ComponentSetup = Callable[[MockConfigEntry, MockUser], Awaitable[None]]
 
@@ -41,6 +47,22 @@ def mock_imported_config_entry() -> MockConfigEntry:
             CONF_API_KEY: API_KEY,
             CONF_MAIN_USER: None,
             CONF_USERS: [USERNAME_1, USERNAME_2],
+        },
+    )
+
+
+@pytest.fixture(name="scrobble_config_entry")
+def mock_scrobble_config_entry() -> MockConfigEntry:
+    """Create LastFM entry where both users can scrobble."""
+    return MockConfigEntry(
+        domain=DOMAIN,
+        data={},
+        options={
+            CONF_API_KEY: API_KEY,
+            CONF_MAIN_USER: USERNAME_1,
+            CONF_USERS: [USERNAME_1, USERNAME_2],
+            CONF_API_SECRET: API_SECRET,
+            CONF_SESSION_KEYS: {USERNAME_1: "oldkey1", USERNAME_2: "oldkey2"},
         },
     )
 

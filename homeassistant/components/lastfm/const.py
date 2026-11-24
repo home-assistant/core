@@ -10,6 +10,8 @@ DOMAIN: Final = "lastfm"
 PLATFORMS = [Platform.SENSOR]
 DEFAULT_NAME = "LastFM"
 
+CONF_API_SECRET = "api_secret"
+CONF_SESSION_KEYS = "session_keys"
 CONF_MAIN_USER = "main_user"
 CONF_USERS = "users"
 
@@ -21,3 +23,9 @@ ATTR_PLAY_COUNT = "play_count"
 ATTR_TOP_PLAYED = "top_played"
 
 STATE_NOT_SCROBBLING = "Not Scrobbling"
+
+SERVICE_SCROBBLE = "scrobble"
+ATTR_ARTIST = "artist"
+ATTR_TITLE = "title"
+ATTR_ALBUM = "album"
+ATTR_TIMESTAMP = "timestamp"
