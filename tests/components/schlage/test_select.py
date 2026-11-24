@@ -81,7 +81,7 @@ async def test_select_api_error(
             },
             blocking=True,
         )
-    assert exc_info.value.translation_key == "schlage_set_setting_failed"
+    assert exc_info.value.translation_key == "schlage_command_failed"
 
 
 async def test_auto_lock_time_translations(hass: HomeAssistant) -> None:

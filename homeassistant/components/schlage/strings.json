@@ -76,14 +76,14 @@
     "schlage_code_exists": {
       "message": "A PIN code with this value already exists on the lock."
     },
+    "schlage_command_failed": {
+      "message": "Failed to send the command to the lock."
+    },
     "schlage_delete_code_failed": {
       "message": "Failed to delete PIN code from the lock."
     },
     "schlage_invalid_schedule_timezone": {
       "message": "Start or end datetime falls within an ambiguous or invalid daylight saving time transition."
-    },
-    "schlage_lock_failed": {
-      "message": "Failed to lock the lock."
     },
     "schlage_name_exists": {
       "message": "A PIN code with the name \"{name}\" already exists on the lock."
@@ -91,17 +91,11 @@
     "schlage_refresh_failed": {
       "message": "Failed to refresh Schlage data."
     },
-    "schlage_set_setting_failed": {
-      "message": "Failed to change the lock setting."
-    },
     "schlage_start_after_end": {
       "message": "Start datetime must be before end datetime."
     },
     "schlage_temporary_dates_required": {
       "message": "Both start and end datetimes must be provided for a temporary PIN."
-    },
-    "schlage_unlock_failed": {
-      "message": "Failed to unlock the lock."
     }
   },
   "services": {

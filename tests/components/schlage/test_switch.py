@@ -115,4 +115,4 @@ async def test_switch_services_api_error(
             service_data={TargetKey.ENTITY_ID: entity_id},
             blocking=True,
         )
-    assert exc_info.value.translation_key == "schlage_set_setting_failed"
+    assert exc_info.value.translation_key == "schlage_command_failed"

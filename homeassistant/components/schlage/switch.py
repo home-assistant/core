@@ -2,10 +2,8 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from functools import partial
 from typing import Any, override
 
-from pyschlage.exceptions import Error as SchlageError
 from pyschlage.lock import Lock
 
 from homeassistant.components.switch import (
@@ -15,10 +13,8 @@ from homeassistant.components.switch import (
 )
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN
 from .coordinator import LockData, SchlageConfigEntry, SchlageDataUpdateCoordinator
 from .entity import SchlageEntity
 
@@ -102,25 +98,11 @@ class SchlageSwitch(SchlageEntity, SwitchEntity):
     @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
-        try:
-            await self.hass.async_add_executor_job(
-                partial(self.entity_description.on_fn, self._lock)
-            )
-        except SchlageError as ex:
-            raise HomeAssistantError(
-                translation_domain=DOMAIN, translation_key="schlage_set_setting_failed"
-            ) from ex
+        await self._async_send_command(self.entity_description.on_fn, self._lock)
         await self.coordinator.async_request_refresh()
 
     @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
-        try:
-            await self.hass.async_add_executor_job(
-                partial(self.entity_description.off_fn, self._lock)
-            )
-        except SchlageError as ex:
-            raise HomeAssistantError(
-                translation_domain=DOMAIN, translation_key="schlage_set_setting_failed"
-            ) from ex
+        await self._async_send_command(self.entity_description.off_fn, self._lock)
         await self.coordinator.async_request_refresh()

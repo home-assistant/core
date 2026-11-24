@@ -104,12 +104,10 @@ async def test_lock_services(
 
 
 @pytest.mark.parametrize(
-    ("service", "method", "translation_key"),
+    ("service", "method"),
     [
-        pytest.param(LockService.LOCK, "lock", "schlage_lock_failed", id="lock"),
-        pytest.param(
-            LockService.UNLOCK, "unlock", "schlage_unlock_failed", id="unlock"
-        ),
+        pytest.param(LockService.LOCK, "lock", id="lock"),
+        pytest.param(LockService.UNLOCK, "unlock", id="unlock"),
     ],
 )
 @pytest.mark.usefixtures("mock_added_config_entry")
@@ -118,7 +116,6 @@ async def test_lock_services_api_error(
     mock_lock: Mock,
     service: LockService,
     method: str,
-    translation_key: str,
 ) -> None:
     """Test lock services raise HomeAssistantError on API failure."""
     getattr(mock_lock, method).side_effect = SchlageError("API error")
@@ -130,7 +127,7 @@ async def test_lock_services_api_error(
             service_data={TargetKey.ENTITY_ID: "lock.vault_door"},
             blocking=True,
         )
-    assert exc_info.value.translation_key == translation_key
+    assert exc_info.value.translation_key == "schlage_command_failed"
 
 
 async def test_changed_by(
