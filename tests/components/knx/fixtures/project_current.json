@@ -37,9 +37,7 @@
         "read_on_init": false,
         "transmit": false
       },
-      "group_address_links": [
-        "1/0/5"
-      ],
+      "group_address_links": ["1/0/5"],
       "dpas": null,
       "text_parameter": null
     },
@@ -68,9 +66,7 @@
         "read_on_init": false,
         "transmit": false
       },
-      "group_address_links": [
-        "1/0/4"
-      ],
+      "group_address_links": ["1/0/4"],
       "dpas": null,
       "text_parameter": null
     },
@@ -99,9 +95,7 @@
         "read_on_init": false,
         "transmit": false
       },
-      "group_address_links": [
-        "1/0/3"
-      ],
+      "group_address_links": ["1/0/3"],
       "dpas": null,
       "text_parameter": null
     },
@@ -130,9 +124,7 @@
         "read_on_init": false,
         "transmit": false
       },
-      "group_address_links": [
-        "1/0/2"
-      ],
+      "group_address_links": ["1/0/2"],
       "dpas": null,
       "text_parameter": null
     },
@@ -161,9 +153,7 @@
         "read_on_init": false,
         "transmit": false
       },
-      "group_address_links": [
-        "1/0/1"
-      ],
+      "group_address_links": ["1/0/1"],
       "dpas": null,
       "text_parameter": null
     },
@@ -192,9 +182,7 @@
         "read_on_init": false,
         "transmit": false
       },
-      "group_address_links": [
-        "1/0/0"
-      ],
+      "group_address_links": ["1/0/0"],
       "dpas": null,
       "text_parameter": null
     },
@@ -223,9 +211,7 @@
         "read_on_init": false,
         "transmit": true
       },
-      "group_address_links": [
-        "2/0/6"
-      ],
+      "group_address_links": ["2/0/6"],
       "dpas": null,
       "text_parameter": null
     },
@@ -249,9 +235,7 @@
         "read_on_init": false,
         "transmit": true
       },
-      "group_address_links": [
-        "2/1/22"
-      ],
+      "group_address_links": ["2/1/22"],
       "dpas": null,
       "text_parameter": null
     },
@@ -280,9 +264,7 @@
         "read_on_init": false,
         "transmit": true
       },
-      "group_address_links": [
-        "2/1/10"
-      ],
+      "group_address_links": ["2/1/10"],
       "dpas": null,
       "text_parameter": null
     },
@@ -403,11 +385,7 @@
         "read_on_init": false,
         "transmit": true
       },
-      "group_address_links": [
-        "2/1/21",
-        "2/1/22",
-        "2/1/23"
-      ],
+      "group_address_links": ["2/1/21", "2/1/22", "2/1/23"],
       "dpas": null,
       "text_parameter": null
     },
@@ -436,10 +414,7 @@
         "read_on_init": false,
         "transmit": true
       },
-      "group_address_links": [
-        "2/1/23",
-        "7/1/2"
-      ],
+      "group_address_links": ["2/1/23", "7/1/2"],
       "dpas": null,
       "text_parameter": null
     },
@@ -471,9 +446,7 @@
         "read_on_init": false,
         "transmit": true
       },
-      "group_address_links": [
-        "7/1/1"
-      ],
+      "group_address_links": ["7/1/1"],
       "dpas": null,
       "text_parameter": {
         "identifier": "MD-2_M-20_MI-1_P-15_R-17",
@@ -508,9 +481,7 @@
         "read_on_init": false,
         "transmit": false
       },
-      "group_address_links": [
-        "7/1/0"
-      ],
+      "group_address_links": ["7/1/0"],
       "dpas": null,
       "text_parameter": {
         "identifier": "MD-2_M-20_MI-1_P-15_R-17",
@@ -545,9 +516,7 @@
         "read_on_init": false,
         "transmit": true
       },
-      "group_address_links": [
-        "7/0/0"
-      ],
+      "group_address_links": ["7/0/0"],
       "dpas": null,
       "text_parameter": {
         "identifier": "MD-2_M-20_MI-1_P-15_R-17",
@@ -582,9 +551,7 @@
         "read_on_init": false,
         "transmit": true
       },
-      "group_address_links": [
-        "7/1/2"
-      ],
+      "group_address_links": ["7/1/2"],
       "dpas": null,
       "text_parameter": {
         "identifier": "MD-2_M-20_MI-1_P-15_R-17",
@@ -619,9 +586,7 @@
         "read_on_init": false,
         "transmit": true
       },
-      "group_address_links": [
-        "2/0/1"
-      ],
+      "group_address_links": ["2/0/1"],
       "dpas": null,
       "text_parameter": {
         "identifier": "MD-2_M-4_MI-1_P-15_R-17",
@@ -653,9 +618,7 @@
         "read_on_init": false,
         "transmit": true
       },
-      "group_address_links": [
-        "2/0/0"
-      ],
+      "group_address_links": ["2/0/0"],
       "dpas": null,
       "text_parameter": null
     }
@@ -686,12 +649,7 @@
         "1": {
           "name": "Neue Linie",
           "description": null,
-          "devices": [
-            "1.1.0",
-            "1.1.5",
-            "1.1.6",
-            "1.1.7"
-          ],
+          "devices": ["1.1.0", "1.1.5", "1.1.6", "1.1.7"],
           "medium_type": "Twisted Pair (TP)"
         }
       }
@@ -823,9 +781,7 @@
         "MD-2_M-4_MI-1_CH-81": {
           "identifier": "MD-2_M-4_MI-1_CH-81",
           "name": "channel name in properties",
-          "communication_object_ids": [
-            "1.1.7/MD-2_M-4_MI-1_O-7-1_R-45"
-          ],
+          "communication_object_ids": ["1.1.7/MD-2_M-4_MI-1_O-7-1_R-45"],
           "functional_blocks": null
         }
       },
@@ -846,9 +802,7 @@
           "type": "Channel",
           "identifier": "MD-2_M-4_MI-1_CH-81",
           "name": "channel name in properties",
-          "communication_object_ids": [
-            "1.1.7/MD-2_M-4_MI-1_O-7-1_R-45"
-          ],
+          "communication_object_ids": ["1.1.7/MD-2_M-4_MI-1_O-7-1_R-45"],
           "nodes": []
         }
       ],
@@ -873,9 +827,7 @@
         "sub": 8
       },
       "data_secure": false,
-      "communication_object_ids": [
-        "1.1.5/O-101_R-1578"
-      ],
+      "communication_object_ids": ["1.1.5/O-101_R-1578"],
       "description": "",
       "comment": ""
     },
@@ -890,9 +842,7 @@
         "sub": null
       },
       "data_secure": false,
-      "communication_object_ids": [
-        "1.1.5/O-100_R-1577"
-      ],
+      "communication_object_ids": ["1.1.5/O-100_R-1577"],
       "description": "",
       "comment": ""
     },
@@ -907,9 +857,7 @@
         "sub": 8
       },
       "data_secure": false,
-      "communication_object_ids": [
-        "1.1.5/O-71_R-1506"
-      ],
+      "communication_object_ids": ["1.1.5/O-71_R-1506"],
       "description": "",
       "comment": ""
     },
@@ -924,9 +872,7 @@
         "sub": 8
       },
       "data_secure": false,
-      "communication_object_ids": [
-        "1.1.5/O-70_R-1505"
-      ],
+      "communication_object_ids": ["1.1.5/O-70_R-1505"],
       "description": "",
       "comment": ""
     },
@@ -941,9 +887,7 @@
         "sub": null
       },
       "data_secure": false,
-      "communication_object_ids": [
-        "1.1.5/O-41_R-1434"
-      ],
+      "communication_object_ids": ["1.1.5/O-41_R-1434"],
       "description": "",
       "comment": ""
     },
@@ -958,9 +902,7 @@
         "sub": null
       },
       "data_secure": false,
-      "communication_object_ids": [
-        "1.1.5/O-40_R-1433"
-      ],
+      "communication_object_ids": ["1.1.5/O-40_R-1433"],
       "description": "",
       "comment": ""
     },
@@ -975,9 +917,7 @@
         "sub": 2
       },
       "data_secure": true,
-      "communication_object_ids": [
-        "1.1.7/O-3_R-3"
-      ],
+      "communication_object_ids": ["1.1.7/O-3_R-3"],
       "description": "",
       "comment": ""
     },
@@ -992,9 +932,7 @@
         "sub": 1
       },
       "data_secure": true,
-      "communication_object_ids": [
-        "1.1.7/MD-2_M-4_MI-1_O-7-1_R-45"
-      ],
+      "communication_object_ids": ["1.1.7/MD-2_M-4_MI-1_O-7-1_R-45"],
       "description": "",
       "comment": ""
     },
@@ -1009,9 +947,7 @@
         "sub": 1
       },
       "data_secure": false,
-      "communication_object_ids": [
-        "1.1.5/O-4_R-1417"
-      ],
+      "communication_object_ids": ["1.1.5/O-4_R-1417"],
       "description": "",
       "comment": ""
     },
@@ -1053,9 +989,7 @@
         "sub": null
       },
       "data_secure": false,
-      "communication_object_ids": [
-        "1.1.6/O-20_R-8108"
-      ],
+      "communication_object_ids": ["1.1.6/O-20_R-8108"],
       "description": "",
       "comment": ""
     },
@@ -1070,9 +1004,7 @@
         "sub": null
       },
       "data_secure": false,
-      "communication_object_ids": [
-        "1.1.6/O-9_R-9073"
-      ],
+      "communication_object_ids": ["1.1.6/O-9_R-9073"],
       "description": "multiple DPT 9 in 1 CO",
       "comment": ""
     },
@@ -1087,10 +1019,7 @@
         "sub": null
       },
       "data_secure": false,
-      "communication_object_ids": [
-        "1.1.6/O-0_R-665",
-        "1.1.6/O-9_R-9073"
-      ],
+      "communication_object_ids": ["1.1.6/O-0_R-665", "1.1.6/O-9_R-9073"],
       "description": "multiple DPT 9 and not defined in COs",
       "comment": ""
     },
@@ -1105,10 +1034,7 @@
         "sub": null
       },
       "data_secure": false,
-      "communication_object_ids": [
-        "1.1.6/O-9_R-9073",
-        "1.1.6/O-18_R-7994"
-      ],
+      "communication_object_ids": ["1.1.6/O-9_R-9073", "1.1.6/O-18_R-7994"],
       "description": "DPT 9 generic and multiple in COs",
       "comment": ""
     },
@@ -1123,9 +1049,7 @@
         "sub": 1
       },
       "data_secure": false,
-      "communication_object_ids": [
-        "1.1.7/MD-2_M-20_MI-1_O-5-10_R-18"
-      ],
+      "communication_object_ids": ["1.1.7/MD-2_M-20_MI-1_O-5-10_R-18"],
       "description": "security: off (inherited from middle group)",
       "comment": ""
     },
@@ -1140,9 +1064,7 @@
         "sub": 1
       },
       "data_secure": true,
-      "communication_object_ids": [
-        "1.1.7/MD-2_M-20_MI-1_O-5-0_R-17"
-      ],
+      "communication_object_ids": ["1.1.7/MD-2_M-20_MI-1_O-5-0_R-17"],
       "description": "security: auto",
       "comment": ""
     },
@@ -1157,9 +1079,7 @@
         "sub": 1
       },
       "data_secure": true,
-      "communication_object_ids": [
-        "1.1.7/MD-2_M-20_MI-1_O-2-2_R-3"
-      ],
+      "communication_object_ids": ["1.1.7/MD-2_M-20_MI-1_O-2-2_R-3"],
       "description": "security: on",
       "comment": ""
     },
@@ -1218,11 +1138,7 @@
           "name": "Neue Mittelgruppe",
           "address_start": 4096,
           "address_end": 4351,
-          "group_addresses": [
-            "2/0/6",
-            "2/0/1",
-            "2/0/0"
-          ],
+          "group_addresses": ["2/0/6", "2/0/1", "2/0/0"],
           "comment": "",
           "group_ranges": {}
         },
@@ -1254,9 +1170,7 @@
           "name": "Non-DS",
           "address_start": 14336,
           "address_end": 14591,
-          "group_addresses": [
-            "7/0/0"
-          ],
+          "group_addresses": ["7/0/0"],
           "comment": "",
           "group_ranges": {}
         },
@@ -1264,11 +1178,7 @@
           "name": "DS-Auto",
           "address_start": 14592,
           "address_end": 14847,
-          "group_addresses": [
-            "7/1/0",
-            "7/1/1",
-            "7/1/2"
-          ],
+          "group_addresses": ["7/1/0", "7/1/1", "7/1/2"],
           "comment": "",
           "group_ranges": {}
         }
