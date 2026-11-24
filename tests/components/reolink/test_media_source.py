@@ -58,6 +58,7 @@ TEST_END = f"{TEST_YEAR}{TEST_MONTH}{TEST_DAY}{TEST_HOUR}{TEST_MINUTE + 5}"
 TEST_START_TIME = datetime(TEST_YEAR, TEST_MONTH, TEST_DAY, 0, 0)
 TEST_END_TIME = datetime(TEST_YEAR, TEST_MONTH, TEST_DAY, 23, 59, 59)
 TEST_FILE_NAME = f"{TEST_START}00"
+TEST_USER_NAME = "user_cam_name"
 TEST_THUMBNAIL_TIME = f"{TEST_YEAR}{TEST_MONTH}{TEST_DAY}000005"
 TEST_THUMBNAIL_TIME_BATTERY = f"{TEST_YEAR}{TEST_MONTH}{TEST_DAY}000000"
 TEST_STREAM = "main"
@@ -138,7 +139,8 @@ async def test_browsing(
 
     entries = dr.async_entries_for_config_entry(device_registry, entry_id)
     assert len(entries) > 0
-    device_registry.async_update_device(entries[0].id, name_by_user=TEST_CAM_NAME)
+    for device in entries:
+        device_registry.async_update_device(device.id, name_by_user=TEST_USER_NAME)
 
     # browse root
     browse = await async_browse_media(hass, f"{URI_SCHEME}{DOMAIN}")
@@ -148,7 +150,7 @@ async def test_browsing(
     assert browse.title == "Reolink"
     assert browse.identifier is None
     assert browse.children[0].identifier == browse_root_id
-    assert browse.children[0].title == f"{TEST_CAM_NAME} lens 0"
+    assert browse.children[0].title == f"{TEST_USER_NAME} lens 0"
 
     # browse resolution select
     browse = await async_browse_media(hass, f"{URI_SCHEME}{DOMAIN}/{browse_root_id}")
