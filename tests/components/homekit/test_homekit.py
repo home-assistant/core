@@ -1079,9 +1079,13 @@ async def test_homekit_reload_accessory_in_accessory_mode(
         hass.states.async_set(
             entity_id, "off", {ATTR_DEVICE_CLASS: SwitchDeviceClass.OUTLET}
         )
-        await hass.async_block_till_done()
-        await hass.async_block_till_done()
-        primary_accessory = homekit.driver.accessory
+        # The accessory reload hops through call_soon callbacks that
+        # async_block_till_done does not track; drain until it lands.
+        for _ in range(10):
+            await hass.async_block_till_done()
+            primary_accessory = homekit.driver.accessory
+            if type(primary_accessory).__name__ == "Outlet":
+                break
         assert type(primary_accessory).__name__ == "Outlet"
 
         await homekit.async_stop()
@@ -1124,9 +1128,17 @@ async def test_homekit_reload_accessory_same_class(
                 ATTR_COLOR_MODE: ColorMode.COLOR_TEMP,
             },
         )
-        await hass.async_block_till_done()
-        await hass.async_block_till_done()
-        light_accessory_color_and_temp = next(iter(bridge.accessories.values()))
+        # The accessory reload hops through call_soon callbacks that
+        # async_block_till_done does not track; drain until it lands.
+        for _ in range(10):
+            await hass.async_block_till_done()
+            light_accessory_color_and_temp = next(
+                iter(bridge.accessories.values()), None
+            )
+            if light_accessory_color_and_temp is not None and hasattr(
+                light_accessory_color_and_temp, "char_color_temp"
+            ):
+                break
         assert hasattr(light_accessory_color_and_temp, "char_color_temp")
 
         await homekit.async_stop()
