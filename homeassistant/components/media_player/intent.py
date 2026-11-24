@@ -18,8 +18,6 @@ from homeassistant.helpers.entity_component import EntityComponent
 from . import MediaPlayerEntity
 from .browse_media import SearchMedia
 from .const import (
-    ATTR_MEDIA_VOLUME_LEVEL,
-    ATTR_MEDIA_VOLUME_MUTED,
     DOMAIN,
     INTENT_MEDIA_NEXT,
     INTENT_MEDIA_PAUSE,
@@ -110,7 +108,7 @@ async def async_setup_intents(hass: HomeAssistant) -> None:
             required_domains={DOMAIN},
             required_features=MediaPlayerEntityFeature.VOLUME_SET,
             required_slots={
-                ATTR_MEDIA_VOLUME_LEVEL: intent.IntentSlotInfo(
+                MediaPlayerServiceArgument.VOLUME_LEVEL: intent.IntentSlotInfo(
                     description="The volume percentage of the media player",
                     value_schema=probatio.All(
                         probatio.Coerce(int),
@@ -243,7 +241,7 @@ class MediaPlayerMuteUnmuteHandler(intent.ServiceIntentHandler):
             required_domains={DOMAIN},
             required_features=MediaPlayerEntityFeature.VOLUME_MUTE,
             optional_slots={
-                ATTR_MEDIA_VOLUME_MUTED: intent.IntentSlotInfo(
+                MediaPlayerServiceArgument.IS_VOLUME_MUTED: intent.IntentSlotInfo(
                     description="Whether the media player should be muted or unmuted",
                     value_schema=probatio.Boolean(),
                 ),

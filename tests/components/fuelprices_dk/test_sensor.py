@@ -56,24 +56,33 @@ async def test_sensor_updates(
     assert hass.states.get("sensor.aarhus_c_blyfri95").state == "15.99"
 
 
-async def test_sensor_becomes_unavailable_when_product_missing(
+async def test_missing_product_price_recovers(
     hass: HomeAssistant,
     mock_braendstofpriser: AsyncMock,
     mock_config_entry: MockConfigEntry,
     freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Test a sensor becomes unavailable when its product is not returned."""
+    """Test a missing product price is unknown until the price returns."""
     await setup_integration(hass, mock_config_entry)
 
     assert hass.states.get("sensor.aarhus_c_blyfri95").state == "14.29"
 
-    del mock_braendstofpriser.get_prices_bulk.return_value[0]["prices"]["Blyfri95"]
+    prices = mock_braendstofpriser.get_prices_bulk.return_value[0]["prices"]
+    del prices["Blyfri95"]
 
     freezer.tick(3600)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    assert hass.states.get("sensor.aarhus_c_blyfri95").state == STATE_UNAVAILABLE
+    assert hass.states.get("sensor.aarhus_c_blyfri95").state == STATE_UNKNOWN
+    assert hass.states.get("sensor.aarhus_c_diesel").state == "12.99"
+
+    prices["Blyfri95"] = "15.99"
+    freezer.tick(3600)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert hass.states.get("sensor.aarhus_c_blyfri95").state == "15.99"
 
 
 async def test_sensor_ignores_non_numeric_price(
