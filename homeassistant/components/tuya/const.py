@@ -34,6 +34,8 @@ CONF_USER_CODE = "user_code"
 TUYA_CLIENT_ID = "HA_3y9q4ak7g4ephrvke"
 TUYA_SCHEMA = "haauthorize"
 
+STREAM_SOURCE_TIMEOUT = 10
+
 TUYA_DISCOVERY_NEW = "tuya_discovery_new"
 TUYA_HA_SIGNAL_UPDATE_ENTITY = "tuya_entry_update"
 
