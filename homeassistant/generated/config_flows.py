@@ -517,6 +517,7 @@ FLOWS = {
         "meteoclimatic",
         "metoffice",
         "microbees",
+        "microsoft",
         "midea",
         "miele",
         "mijn_farmad_apotheek",
