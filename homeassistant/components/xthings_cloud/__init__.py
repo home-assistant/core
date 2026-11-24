@@ -52,22 +52,30 @@ async def async_setup_entry(
             return
         unbind_requested = True
         instance_id = await async_get_instance_id(hass)
+        LOGGER.info("Unbinding Home Assistant instance %s from Xthings Cloud", instance_id)
         try:
             await client.async_unbind(instance_id)
         except (XthingsCloudApiError, TimeoutError):
             LOGGER.exception("Failed to unbind Home Assistant device")
+        else:
+            LOGGER.info("Home Assistant instance %s unbound from Xthings Cloud", instance_id)
 
     async def _async_device_registry_updated(event: Any) -> None:
         data = event.data
-        if data["action"] != "update":
-            return
-        if "disabled_by" not in data["changes"]:
+        if data["action"] != "update" or "disabled_by" not in data["changes"]:
             return
         device = dr.async_get(hass).async_get_device(data["device_id"])
-        if device is None or device.config_entry_id != entry.entry_id:
+        if device is None:
             return
-        if data["changes"]["disabled_by"] is None:
+        belongs_to_entry = entry.entry_id in device.config_entries
+        belongs_to_domain = any(
+            identifier[0] == DOMAIN for identifier in device.identifiers
+        )
+        if not (belongs_to_entry or belongs_to_domain):
             return
+        if data["changes"]["disabled_by"] is not None:
+            return
+        LOGGER.debug("Xthings Cloud device %s was disabled", data["device_id"])
         await _async_unbind_once()
 
     entry.async_on_unload(
@@ -94,6 +102,13 @@ async def async_unload_entry(
     """Unload config entry."""
     coordinator = entry.runtime_data
     await async_disable_remote_access(hass)
+    session = async_get_clientsession(hass)
+    client = XthingsCloudApiClient(session, token=entry.data[CONF_TOKEN])
+    instance_id = await async_get_instance_id(hass)
+    try:
+        await client.async_unbind(instance_id)
+    except (XthingsCloudApiError, TimeoutError):
+        LOGGER.exception("Failed to unbind Home Assistant during unload")
     sso_manager = hass.data.get(DOMAIN, {}).pop("sso", None)
     if isinstance(sso_manager, XthingsSsoManager):
         await sso_manager.async_revoke_sessions()
