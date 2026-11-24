@@ -11,5 +11,5 @@
   "iot_class": "local_polling",
   "loggers": ["modbus_connection", "tmodbus", "wafe_modbus"],
   "quality_scale": "bronze",
-  "requirements": ["wafe-modbus==0.1.0"]
+  "requirements": ["wafe-modbus==0.1.1"]
 }

@@ -3511,7 +3511,7 @@ vsure==2.10.0
 vtjp==0.2.1
 
 # homeassistant.components.wafe
-wafe-modbus==0.1.0
+wafe-modbus==0.1.1
 
 # homeassistant.components.wake_on_lan
 wakeonlan==3.3.0
