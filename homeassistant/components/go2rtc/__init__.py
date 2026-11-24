@@ -632,9 +632,10 @@ class WebRTCProvider(CameraWebRTCProvider):
             f"ffmpeg:{identifier}#audio=opus#query=log_level=debug",
         ]
         aac_source = f"ffmpeg:{identifier}#audio=aac#query=log_level=debug"
-        if ffmpeg_source is None:
-            # FFmpeg reads go2rtc's restream instead (async_get_stream_source),
-            # with AAC audio transcoded only while someone reads it
+        # FFmpeg reads go2rtc's restream instead (async_get_stream_source),
+        # with AAC audio transcoded only while someone reads it. A camera that
+        # gained a source of its own may still have a worker reading it.
+        if not ffmpeg_source or identifier in self._restreamed_cameras:
             sources.append(aac_source)
 
         streams = await self._rest_client.streams.list()
@@ -645,7 +646,7 @@ class WebRTCProvider(CameraWebRTCProvider):
                 self._is_added_stream_source(identifier, stream_source, producer.url)
                 for producer in stream.producers
             )
-            # The AAC transcode must follow whether FFmpeg reads the restream
+            # The AAC transcode must follow whether FFmpeg may read the restream
             or (aac_source in sources)
             != any(producer.url == aac_source for producer in stream.producers)
         ):
