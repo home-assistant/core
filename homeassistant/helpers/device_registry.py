@@ -4456,6 +4456,19 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
             )
             for name in ignored:
                 del forward[name]
+        # Validate every device before changing any, so a rejected update changes
+        # nothing
+        for underlying_id in underlying_ids:
+            old = self._devices[underlying_id]
+            _validate_area_and_labels(
+                self.hass,
+                {
+                    key: forward[key]
+                    for key in ("area_id", "labels")
+                    if key in forward and forward[key] != getattr(old, key)
+                },
+                old.labels,
+            )
         for underlying_id in underlying_ids:
             self.async_update_device(underlying_id, **forward)
         remaining = [

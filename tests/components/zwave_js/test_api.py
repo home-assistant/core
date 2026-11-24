@@ -105,7 +105,7 @@ from homeassistant.components.zwave_js.const import (
 )
 from homeassistant.components.zwave_js.helpers import get_device_id
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import area_registry as ar, device_registry as dr
 
 CONTROLLER_PATCH_PREFIX = "zwave_js_server.model.controller.Controller"
 
@@ -1695,6 +1695,7 @@ async def test_validate_dsk_and_enter_pin(
 
 async def test_provision_smart_start_node(
     hass: HomeAssistant,
+    area_registry: ar.AreaRegistry,
     device_registry: dr.DeviceRegistry,
     integration,
     client,
@@ -1747,6 +1748,7 @@ async def test_provision_smart_start_node(
     client.async_send_command.return_value = {"success": True}
 
     # Test QR provisioning information with device name and area
+    area_registry.async_create("test_area")
     await ws_client.send_json(
         {
             ID: 4,

@@ -2812,6 +2812,46 @@ async def test_async_update_device_fans_out_to_migration_composite(
     assert device_registry.async_get(device_2.id).name_by_user == "merged"
 
 
+async def test_async_update_device_composite_unknown_area_changes_nothing(
+    hass: HomeAssistant, device_registry: dr.DeviceRegistry
+) -> None:
+    """Test a composite update with an unknown area for one split changes nothing.
+
+    The first split already has the stale area, so only the second split rejects
+    it. The update must be rejected before any split changes.
+    """
+    entry_1 = MockConfigEntry(domain="test")
+    entry_1.add_to_hass(hass)
+    entry_2 = MockConfigEntry(domain="test")
+    entry_2.add_to_hass(hass)
+    device_1 = device_registry.async_get_or_create(
+        config_entry_id=entry_1.entry_id, identifiers={("test", "1")}
+    )
+    device_2 = device_registry.async_get_or_create(
+        config_entry_id=entry_2.entry_id, identifiers={("test", "2")}
+    )
+    old_id = "composite00000000000000000000ab"
+    # Simulate a migration split: both devices carry the pre-migration composite id,
+    # and the first one holds an area that no longer exists
+    device_1 = device_registry._devices[device_1.id] = attr.evolve(
+        device_1, composite_device_id=old_id, area_id="stale"
+    )
+    device_2 = device_registry._devices[device_2.id] = attr.evolve(
+        device_2, composite_device_id=old_id
+    )
+    events = async_capture_events(hass, dr.EVENT_DEVICE_REGISTRY_UPDATED)
+
+    with pytest.raises(ValueError, match="Area 'stale' not found."):
+        device_registry.async_update_device(
+            old_id, area_id="stale", name_by_user="merged"
+        )
+    await hass.async_block_till_done()
+
+    assert device_registry.async_get(device_1.id) == device_1
+    assert device_registry.async_get(device_2.id) == device_2
+    assert not events
+
+
 async def test_get_entry_by_connection_without_config_entry_scope(
     hass: HomeAssistant, device_registry: dr.DeviceRegistry
 ) -> None:
