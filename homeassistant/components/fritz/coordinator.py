@@ -168,7 +168,7 @@ class FritzBoxTools(DataUpdateCoordinator[UpdateCoordinatorDataType]):
         self.mesh_wifi_uplink = False
         self.device_conn_type: str | None = None
         self.device_is_router: bool = False
-        self.hosts: dict[str, Device] = {}
+        self.hosts: dict[str, Device] | None = None
         self.password = password
         self.port = port
         self.username = username
@@ -411,7 +411,7 @@ class FritzBoxTools(DataUpdateCoordinator[UpdateCoordinatorDataType]):
             "port_mappings": {},
         }
         self.connection.clear_cache()
-        self.hosts = {}
+        self.hosts = None
         try:
             await self.async_update_device_info()
 
@@ -825,6 +825,9 @@ class FritzBoxTools(DataUpdateCoordinator[UpdateCoordinatorDataType]):
         LOGGER.debug("Device tracker cleanup triggered")
         device_hosts = {self.mac: Device(True, "", "", "", "", None)}
         if self.device_discovery_enabled:
+            if self.hosts is None:
+                # Hosts were not fetched in this update, so clients can't be judged stale
+                return
             device_hosts.update(self.hosts)
         entity_reg: er.EntityRegistry = er.async_get(self.hass)
         config_entry = self.config_entry

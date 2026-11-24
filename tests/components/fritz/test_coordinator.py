@@ -802,6 +802,43 @@ async def test_hosts_not_fetched_without_mesh_topology_access(
     assert hass.states.async_entity_ids("device_tracker") == []
 
 
+@pytest.mark.usefixtures("fc_class_mock", "fs_class_mock")
+async def test_cleanup_keeps_clients_on_mesh_topology_error(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    freezer: FrozenDateTimeFactory,
+    fh_class_mock: type[FritzHosts],
+) -> None:
+    """Test a failing mesh topology fetch does not remove tracked clients."""
+    fh_class_mock.get_hosts_attributes.return_value = [
+        MOCK_HOST_PRINTER,
+        MOCK_HOST_FRITZBOX,
+    ]
+
+    entry = MockConfigEntry(domain=DOMAIN, data=MOCK_USER_DATA)
+    entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done(wait_background_tasks=True)
+    assert entry.state is ConfigEntryState.LOADED
+    assert entity_registry.async_get("device_tracker.printer")
+    assert hass.states.get("switch.printer_internet_access")
+
+    fh_class_mock.get_mesh_topology.side_effect = FritzActionError(
+        "Error 500: Device has no access to topology information."
+    )
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert device_registry.async_get_device_by_connection(
+        (dr.CONNECTION_NETWORK_MAC, "aa:bb:cc:00:11:22"), entry.entry_id
+    )
+    assert entity_registry.async_get("device_tracker.printer")
+    assert entity_registry.async_get("switch.printer_internet_access")
+    assert hass.states.get("switch.printer_internet_access")
+
+
 async def test_old_discovery_does_not_self_reference_box(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
