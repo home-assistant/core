@@ -71,11 +71,56 @@ DEFAULT_NAMES: dict[Platform, str] = {
 }
 
 
+# Legacy weather option to its replacement, deprecated in 2026.12
+WEATHER_DEPRECATED_TEMPLATE_OPTIONS = {
+    "apparent_temperature_template": "apparent_temperature",
+    "attribution_template": "attribution",
+    "cloud_coverage_template": "cloud_coverage",
+    "condition_template": "condition",
+    "dew_point_template": "dew_point",
+    "forecast_daily_template": "forecast_daily",
+    "forecast_hourly_template": "forecast_hourly",
+    "forecast_twice_daily_template": "forecast_twice_daily",
+    "humidity_template": "humidity",
+    "ozone_template": "ozone",
+    "pressure_template": "pressure",
+    "temperature_template": "temperature",
+    "uv_index_template": "uv_index",
+    "visibility_template": "visibility",
+    "wind_bearing_template": "wind_bearing",
+    "wind_gust_speed_template": "wind_gust_speed",
+    "wind_speed_template": "wind_speed",
+}
+
+# Attribute with a dedicated option to that option, deprecated in 2026.12
+DEPRECATED_ATTRIBUTES: dict[Platform, dict[str, str]] = {
+    Platform.BINARY_SENSOR: {"device_class": "device_class"},
+    Platform.EVENT: {"event_type": "event_type", "event_types": "event_types"},
+    Platform.SENSOR: {
+        "device_class": "device_class",
+        "state_class": "state_class",
+        "last_reset": "last_reset",
+    },
+    Platform.VACUUM: {"fan_speed": "fan_speed", "fan_speed_list": "fan_speeds"},
+}
+
+
 class TemplateConfig(dict):
     """Dummy class to allow adding attributes."""
 
     raw_config: ConfigType | None = None
     raw_blueprint_inputs: ConfigType | None = None
+    # The file and line annotations are dropped from the config after validation,
+    # keep them for the deprecated options per platform and entity for repairs
+    option_locations: dict[str, list[dict[str, tuple[str, int]]]] | None = None
+    attribute_locations: dict[str, list[dict[str, tuple[str, int]]]] | None = None
+
+
+class TemplateConfigSections(list[TemplateConfig]):
+    """Validated template config sections."""
+
+    # Sections which failed validation are left out of the list
+    has_invalid_sections: bool = False
 
 
 class TemplateService(StrEnum):

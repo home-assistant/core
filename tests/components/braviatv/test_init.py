@@ -283,6 +283,40 @@ async def test_update_error_reconnects(
 
 
 @pytest.mark.parametrize(
+    "exception", [BraviaConnectionError, BraviaConnectionTimeout, BraviaTurnedOff]
+)
+async def test_device_info_updated_after_tv_turns_on(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    device_registry: dr.DeviceRegistry,
+    mock_config_entry: MockConfigEntry,
+    mock_braviatv_client: AsyncMock,
+    exception: type[BraviaError],
+) -> None:
+    """Test the device info missing at setup is added once the TV is reachable."""
+    mock_braviatv_client.get_power_status.side_effect = exception
+    await init_integration(hass, mock_config_entry)
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, mock_config_entry.unique_id), mock_config_entry.entry_id
+    )
+    assert device is not None
+    assert device.model_id is None
+    assert device.hw_version is None
+    assert device.serial_number is None
+
+    mock_braviatv_client.get_power_status.side_effect = None
+    await tick_update(hass, freezer)
+
+    device = device_registry.async_get(device.id)
+    assert device is not None
+    assert device.model_id == "TV-Model"
+    assert device.hw_version == "5.2.0"
+    assert device.serial_number == "serial_number"
+
+
+@pytest.mark.parametrize(
     ("exception", "skipped_updates", "translation_key", "placeholders"),
     [
         (

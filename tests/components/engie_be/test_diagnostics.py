@@ -82,17 +82,25 @@ async def test_diagnostics_setup_retry(
 
 
 @pytest.mark.usefixtures("frozen_afternoon")
-async def test_diagnostics_prices_failure(
+@pytest.mark.parametrize(
+    "failing_method",
+    [
+        pytest.param("async_get_prices", id="prices"),
+        pytest.param("async_get_monthly_peaks", id="peaks"),
+    ],
+)
+async def test_diagnostics_fetch_failure(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
     mock_config_entry: MockConfigEntry,
     mock_engie_client: MagicMock,
     snapshot: SnapshotAssertion,
+    failing_method: str,
 ) -> None:
-    """Test the diagnostics of a household whose prices fetch failed."""
-    mock_engie_client.return_value.async_get_prices.side_effect = (
-        EngieBeCommunicationError("boom")
-    )
+    """Test the diagnostics of a household whose prices or peaks fetch failed."""
+    getattr(
+        mock_engie_client.return_value, failing_method
+    ).side_effect = EngieBeCommunicationError("boom")
     mock_config_entry.add_to_hass(hass)
 
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)

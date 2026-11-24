@@ -7,13 +7,15 @@ import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, ButtonService
-from homeassistant.const import CommonServiceArgument, Platform
+from homeassistant.const import Platform, TargetKey
 from homeassistant.core import HomeAssistant
 
 from .conftest import (
     motion_detector2_device,
     outdoor_siren_device,
     setup_integration,
+    smart_plug_compact_device,
+    smart_plug_device,
     smoke_detector_device,
 )
 
@@ -45,7 +47,7 @@ async def test_smoke_test_button_press(
     await hass.services.async_call(
         BUTTON_DOMAIN,
         ButtonService.PRESS,
-        {CommonServiceArgument.ENTITY_ID: ENTITY_ID},
+        {TargetKey.ENTITY_ID: ENTITY_ID},
         blocking=True,
     )
 
@@ -70,7 +72,7 @@ async def test_reset_tamper_button_press(
     await hass.services.async_call(
         BUTTON_DOMAIN,
         ButtonService.PRESS,
-        {CommonServiceArgument.ENTITY_ID: "button.motion_detector_reset_tamper"},
+        {TargetKey.ENTITY_ID: "button.motion_detector_reset_tamper"},
         blocking=True,
     )
 
@@ -111,8 +113,47 @@ async def test_siren_test_alarm_button_press(
     await hass.services.async_call(
         BUTTON_DOMAIN,
         ButtonService.PRESS,
-        {CommonServiceArgument.ENTITY_ID: "button.outdoor_siren_test_alarm"},
+        {TargetKey.ENTITY_ID: "button.outdoor_siren_test_alarm"},
         blocking=True,
     )
 
     device.trigger_test_alarm.assert_called_once_with()
+
+
+@pytest.mark.parametrize(
+    "device_buckets",
+    [
+        {
+            "smart_plugs": [smart_plug_device()],
+            "smart_plugs_compact": [smart_plug_compact_device()],
+        }
+    ],
+    indirect=True,
+)
+@pytest.mark.parametrize(
+    ("entity_id", "bucket"),
+    [
+        ("button.smart_plug_reset_consumption_value", "smart_plugs"),
+        ("button.smart_plug_compact_reset_consumption_value", "smart_plugs_compact"),
+    ],
+)
+@pytest.mark.usefixtures("mock_session")
+async def test_reset_energy_summation_button_press(
+    hass: HomeAssistant,
+    mock_session: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    entity_id: str,
+    bucket: str,
+) -> None:
+    """Pressing the button resets the accumulated energy counter."""
+    await setup_integration(hass, mock_config_entry)
+    device = getattr(mock_session.device_helper, bucket)[0]
+
+    await hass.services.async_call(
+        BUTTON_DOMAIN,
+        ButtonService.PRESS,
+        {TargetKey.ENTITY_ID: entity_id},
+        blocking=True,
+    )
+
+    device.reset_energy_summation.assert_called_once_with()

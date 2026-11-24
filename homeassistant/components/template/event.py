@@ -66,12 +66,6 @@ _BLOCKED_ATTRIBUTES = tcv.BlockedTemplateAttributes(
     )
 )
 
-# Attributes that are not blocked yet, mapped to the option that replaces them
-DEPRECATED_ATTRIBUTES: dict[str, str] = {
-    EventEntityStateAttribute.EVENT_TYPE: CONF_EVENT_TYPE,
-    EventEntityCapabilityAttribute.EVENT_TYPES: CONF_EVENT_TYPES,
-}
-
 EVENT_YAML_SCHEMA = EVENT_COMMON_SCHEMA.extend(
     make_template_entity_common_schema(EVENT_DOMAIN, DEFAULT_NAME).schema
 )

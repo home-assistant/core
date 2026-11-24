@@ -77,9 +77,6 @@ BINARY_SENSOR_COMMON_SCHEMA = probatio.Schema(
 
 _BLOCKED_ATTRIBUTES = tcv.BlockedTemplateAttributes(device_class=True)
 
-# Attributes that are not blocked yet, mapped to the option that replaces them
-DEPRECATED_ATTRIBUTES: dict[str, str] = {CONF_DEVICE_CLASS: CONF_DEVICE_CLASS}
-
 BINARY_SENSOR_YAML_SCHEMA = BINARY_SENSOR_COMMON_SCHEMA.extend(
     make_template_entity_common_schema(BINARY_SENSOR_DOMAIN, DEFAULT_NAME).schema
 )

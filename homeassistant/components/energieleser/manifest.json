@@ -2,7 +2,7 @@
   "domain": "energieleser",
   "name": "energieleser",
   "categories": ["energy.meters_monitoring", "water.meters_leak_detection"],
-  "codeowners": ["@AjinkyaGokhale", "@NiccoFink"],
+  "codeowners": ["@AjinkyaGokhale", "@NiccoFink", "@rohit0407org"],
   "config_flow": true,
   "connectivity": ["network"],
   "documentation": "https://www.home-assistant.io/integrations/energieleser",
