@@ -110,7 +110,7 @@ async def async_unload_entry(
     if sso_manager := coordinator.sso_manager:
         await sso_manager.async_revoke_sessions()
         coordinator.sso_manager = None
-    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
+    if await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
         await coordinator.async_stop_websocket()
 
 
