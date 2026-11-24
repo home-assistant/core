@@ -159,7 +159,9 @@ async def _async_convert_legacy_entry(
                 data={
                     CONF_IP_ADDRESS: None,
                     CONF_FINGERPRINT: fingerprint,
-                    CONF_MODEL: device_entry.model or fingerprint,
+                    CONF_MODEL: (
+                        device_entry.model_id or device_entry.model or fingerprint
+                    ),
                 },
             )
 
