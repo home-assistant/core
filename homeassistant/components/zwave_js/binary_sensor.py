@@ -90,6 +90,21 @@ HEAT_PRIMARY_DEVICE_CLASSES: set[str | int] = {
     "Alarm Sensor",
 }
 
+# Water Valve state keys can't be used to tell the variables apart:
+# zwave-js replaces the state id with the enum values for the operation
+# and current alarm variables.
+WATER_VALVE_OPERATION_PROPERTY_KEYS: set[str | int | None] = {
+    "Valve operation status",
+    "Master valve operation status",
+}
+WATER_VALVE_PROBLEM_PROPERTY_KEYS: set[str | int | None] = {
+    "Valve short circuit status",
+    "Master valve short circuit status",
+    "Valve current alarm status",
+    "Master valve current alarm status",
+    "Valve jammed status",
+}
+
 # Deprecated/legacy synthetic Access Control door state notification
 # event IDs that don't exist in zwave-js-server
 ACCESS_CONTROL_DOOR_STATE_OPEN_REGULAR = 5632
@@ -227,6 +242,7 @@ MIGRATED_NOTIFICATION_TYPES = {
     NotificationType.ACCESS_CONTROL,
     NotificationType.HEAT_ALARM,
     NotificationType.POWER_MANAGEMENT,
+    NotificationType.WATER_VALVE,
 }
 
 NOTIFICATION_SENSOR_MAPPINGS: tuple[NotificationZWaveJSEntityDescription, ...] = (
@@ -1738,6 +1754,64 @@ DISCOVERY_SCHEMAS: list[NewZWaveDiscoverySchema] = [
                 HeatAlarmNotificationEvent.DUST_IN_DEVICE_STATUS_MAINTENANCE_REQUIRED_DUST_IN_DEVICE,
                 HeatAlarmNotificationEvent.PERIODIC_INSPECTION_STATUS_MAINTENANCE_REQUIRED_PLANNED_PERIODIC_INSPECTION,
             },
+        ),
+        entity_class=ZWaveNotificationBinarySensor,
+    ),
+    NewZWaveDiscoverySchema(
+        platform=Platform.BINARY_SENSOR,
+        primary_value=ZWaveValueDiscoverySchema(
+            command_class={CommandClass.NOTIFICATION},
+            property={"Water Valve"},
+            property_key=WATER_VALVE_OPERATION_PROPERTY_KEYS,
+            type={ValueType.NUMBER},
+            any_available_cc_specific={
+                (CC_SPECIFIC_NOTIFICATION_TYPE, NotificationType.WATER_VALVE)
+            },
+        ),
+        allow_multi=True,
+        entity_description=NotificationZWaveJSEntityDescription(
+            # NotificationType 15: Water Valve - valve/master valve operation
+            key=NOTIFICATION_WATER_VALVE,
+        ),
+        entity_class=ZWaveNotificationBinarySensor,
+    ),
+    NewZWaveDiscoverySchema(
+        platform=Platform.BINARY_SENSOR,
+        primary_value=ZWaveValueDiscoverySchema(
+            command_class={CommandClass.NOTIFICATION},
+            property={"Water Valve"},
+            property_key=WATER_VALVE_PROBLEM_PROPERTY_KEYS,
+            type={ValueType.NUMBER},
+            any_available_cc_specific={
+                (CC_SPECIFIC_NOTIFICATION_TYPE, NotificationType.WATER_VALVE)
+            },
+        ),
+        allow_multi=True,
+        entity_description=NotificationZWaveJSEntityDescription(
+            # NotificationType 15: Water Valve - short circuit, current alarm, jammed
+            key=NOTIFICATION_WATER_VALVE,
+            device_class=BinarySensorDeviceClass.PROBLEM,
+            entity_category=EntityCategory.DIAGNOSTIC,
+        ),
+        entity_class=ZWaveNotificationBinarySensor,
+    ),
+    NewZWaveDiscoverySchema(
+        platform=Platform.BINARY_SENSOR,
+        primary_value=ZWaveValueDiscoverySchema(
+            command_class={CommandClass.NOTIFICATION},
+            property={"Water Valve"},
+            not_property_key=WATER_VALVE_OPERATION_PROPERTY_KEYS
+            | WATER_VALVE_PROBLEM_PROPERTY_KEYS,
+            type={ValueType.NUMBER},
+            any_available_cc_specific={
+                (CC_SPECIFIC_NOTIFICATION_TYPE, NotificationType.WATER_VALVE)
+            },
+        ),
+        allow_multi=True,
+        entity_description=NotificationZWaveJSEntityDescription(
+            # NotificationType 15: Water Valve - All other notification values
+            key=NOTIFICATION_WATER_VALVE,
+            entity_category=EntityCategory.DIAGNOSTIC,
         ),
         entity_class=ZWaveNotificationBinarySensor,
     ),

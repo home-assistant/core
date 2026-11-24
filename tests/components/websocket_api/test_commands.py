@@ -72,7 +72,14 @@ from homeassistant.helpers.event import (
     async_track_time_interval,
 )
 from homeassistant.loader import Integration, async_get_integration
-from homeassistant.setup import async_set_domains_to_be_loaded, async_setup_component
+from homeassistant.setup import (
+    BootstrapIntegrationsProgress,
+    BootstrapPhase,
+    BootstrapProgress,
+    _async_set_bootstrap_progress_source,
+    async_set_domains_to_be_loaded,
+    async_setup_component,
+)
 from homeassistant.util.json import json_loads
 from homeassistant.util.yaml.loader import JSON_TYPE, parse_yaml
 
@@ -2784,7 +2791,7 @@ async def test_subscribe_trigger(
             {"platform": "nonexistent"},
             {
                 "code": "invalid_format",
-                "message": "Invalid trigger 'nonexistent' specified",
+                "message": "Invalid trigger 'nonexistent' specified at 'trigger[0]'",
             },
         ),
         # Missing mandatory config for the trigger platform
@@ -2792,7 +2799,18 @@ async def test_subscribe_trigger(
             {"platform": "numeric_state"},
             {
                 "code": "invalid_format",
-                "message": "required key not provided at 'entity_id'",
+                "message": "required key not provided at 'trigger[0].entity_id'",
+            },
+        ),
+        # Unknown trigger platform in the second trigger
+        (
+            [
+                {"platform": "event", "event_type": "test_event"},
+                {"platform": "nonexistent"},
+            ],
+            {
+                "code": "invalid_format",
+                "message": "Invalid trigger 'nonexistent' specified at 'trigger[1]'",
             },
         ),
         # Unknown device, raised as a HomeAssistantError by the platform validator
@@ -2803,13 +2821,28 @@ async def test_subscribe_trigger(
                 "message": "Unknown device 'nonexistent'",
             },
         ),
+        # Empty device or domain of a device trigger, raised as probatio.Invalid
+        (
+            {"platform": "device", "domain": "", "device_id": "abc123"},
+            {
+                "code": "invalid_format",
+                "message": "required value is empty at 'trigger[0].domain'",
+            },
+        ),
+        (
+            {"platform": "device", "domain": "light", "device_id": ""},
+            {
+                "code": "invalid_format",
+                "message": "required value is empty at 'trigger[0].device_id'",
+            },
+        ),
     ],
 )
 async def test_subscribe_trigger_config_error(
     hass: HomeAssistant,
     websocket_client: MockHAClientWebSocket,
     caplog: pytest.LogCaptureFixture,
-    trigger: dict,
+    trigger: dict | list[dict],
     expected_error: dict,
 ) -> None:
     """Test trigger config errors are reported to the client without logging."""
@@ -3020,8 +3053,45 @@ async def test_test_condition_template_error(
             {
                 "code": "invalid_format",
                 "message": (
-                    "at least one of ['before', 'after'] is required at 'options'"
+                    "at least one of ['before', 'after'] is required"
+                    " at 'condition.options'"
                 ),
+            },
+        ),
+        # Unknown entity registry entry in a nested condition
+        (
+            {
+                "condition": "or",
+                "conditions": [
+                    {"condition": "state", "entity_id": "light.a", "state": "on"},
+                    {
+                        "condition": "state",
+                        "entity_id": "abcdabcdabcdabcdabcdabcdabcdabcd",
+                        "state": "on",
+                    },
+                ],
+            },
+            {
+                "code": "invalid_format",
+                "message": (
+                    "Unknown entity registry entry abcdabcdabcdabcdabcdabcdabcdabcd"
+                    " at 'condition.conditions[1]'"
+                ),
+            },
+        ),
+        # Empty device or domain of a device condition, raised as probatio.Invalid
+        (
+            {"condition": "device", "domain": "", "device_id": "abc123"},
+            {
+                "code": "invalid_format",
+                "message": "required value is empty at 'condition.domain'",
+            },
+        ),
+        (
+            {"condition": "device", "domain": "light", "device_id": ""},
+            {
+                "code": "invalid_format",
+                "message": "required value is empty at 'condition.device_id'",
             },
         ),
         # Failing enabled template, raised by async_condition_from_config
@@ -3450,8 +3520,45 @@ async def test_subscribe_condition_error(
             {
                 "code": "invalid_format",
                 "message": (
-                    "at least one of ['before', 'after'] is required at 'options'"
+                    "at least one of ['before', 'after'] is required"
+                    " at 'condition.options'"
                 ),
+            },
+        ),
+        # Unknown entity registry entry in a nested condition
+        (
+            {
+                "condition": "or",
+                "conditions": [
+                    {"condition": "state", "entity_id": "light.a", "state": "on"},
+                    {
+                        "condition": "state",
+                        "entity_id": "abcdabcdabcdabcdabcdabcdabcdabcd",
+                        "state": "on",
+                    },
+                ],
+            },
+            {
+                "code": "invalid_format",
+                "message": (
+                    "Unknown entity registry entry abcdabcdabcdabcdabcdabcdabcdabcd"
+                    " at 'condition.conditions[1]'"
+                ),
+            },
+        ),
+        # Empty device or domain of a device condition, raised as probatio.Invalid
+        (
+            {"condition": "device", "domain": "", "device_id": "abc123"},
+            {
+                "code": "invalid_format",
+                "message": "required value is empty at 'condition.domain'",
+            },
+        ),
+        (
+            {"condition": "device", "domain": "light", "device_id": ""},
+            {
+                "code": "invalid_format",
+                "message": "required value is empty at 'condition.device_id'",
             },
         ),
         # Failing enabled template, raised by async_condition_from_config
@@ -3700,6 +3807,58 @@ async def test_execute_script_with_dynamically_validated_action(
     module.async_call_action_from_config.assert_awaited_once()
 
 
+@pytest.mark.parametrize(
+    ("sequence", "expected_error"),
+    [
+        pytest.param(
+            [
+                {"event": "test_event"},
+                {
+                    "wait_for_trigger": [
+                        {"platform": "event", "event_type": "test_event"},
+                        {"platform": "nonexistent"},
+                    ]
+                },
+            ],
+            {
+                "code": "invalid_format",
+                "message": (
+                    "Invalid trigger 'nonexistent' specified at "
+                    "'sequence[1].wait_for_trigger[1]'. "
+                    "Got {'platform': 'nonexistent'}"
+                ),
+            },
+            id="invalid",
+        ),
+        pytest.param(
+            [
+                {"event": "test_event"},
+                {"device_id": "nonexistent", "domain": "light"},
+            ],
+            {
+                "code": "home_assistant_error",
+                "message": "Unknown device 'nonexistent'",
+            },
+            id="homeassistant_error",
+        ),
+    ],
+)
+async def test_execute_script_config_error(
+    websocket_client: MockHAClientWebSocket,
+    sequence: list[dict[str, Any]],
+    expected_error: dict[str, str],
+) -> None:
+    """Test the error when the sequence is rejected by a platform."""
+    await websocket_client.send_json_auto_id(
+        {"type": "execute_script", "sequence": sequence}
+    )
+
+    msg = await websocket_client.receive_json()
+    assert msg["type"] == const.TYPE_RESULT
+    assert not msg["success"]
+    assert msg["error"] == expected_error
+
+
 async def test_subscribe_unsubscribe_bootstrap_integrations(
     hass: HomeAssistant,
     websocket_client: MockHAClientWebSocket,
@@ -3722,6 +3881,54 @@ async def test_subscribe_unsubscribe_bootstrap_integrations(
     assert msg["id"] == subscription
     assert msg["type"] == "event"
     assert msg["event"] == message
+
+
+async def test_subscribe_bootstrap_progress(
+    hass: HomeAssistant,
+    websocket_client: MockHAClientWebSocket,
+) -> None:
+    """Test bootstrap progress updates are forwarded."""
+    await websocket_client.send_json_auto_id({"type": "subscribe_bootstrap_progress"})
+    msg = await websocket_client.receive_json()
+    subscription = msg["id"]
+    assert msg["success"]
+
+    message = BootstrapProgress(
+        phase=BootstrapPhase.SETUP,
+        elapsed=1.5,
+        integrations=BootstrapIntegrationsProgress(total=3, done=1, failed=["fail"]),
+        active={"slow": 1.0},
+    )
+    _async_set_bootstrap_progress_source(hass, lambda: message)
+    msg = await websocket_client.receive_json()
+    assert msg["id"] == subscription
+    assert msg["type"] == "event"
+    assert msg["event"] == {
+        "phase": "setup",
+        "elapsed": 1.5,
+        "integrations": {"total": 3, "done": 1, "failed": ["fail"]},
+        "active": {"slow": 1.0},
+    }
+
+
+async def test_subscribe_bootstrap_progress_sends_current_progress(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test a (re)connecting client gets the current progress right away."""
+    progress = {"phase": "setup"}
+    _async_set_bootstrap_progress_source(hass, progress.copy)
+    first = await hass_ws_client(hass)
+    await first.send_json_auto_id({"type": "subscribe_bootstrap_progress"})
+    assert (await first.receive_json())["success"]
+    assert (await first.receive_json())["event"] == {"phase": "setup"}
+    await first.close()
+
+    progress["phase"] = "wrap_up"
+    reconnected = await hass_ws_client(hass)
+    await reconnected.send_json_auto_id({"type": "subscribe_bootstrap_progress"})
+    assert (await reconnected.receive_json())["success"]
+    assert (await reconnected.receive_json())["event"] == {"phase": "wrap_up"}
 
 
 async def test_subscribe_system_state(
@@ -3856,62 +4063,217 @@ async def test_validate_config_works(
     msg = await websocket_client.receive_json()
     assert msg["type"] == const.TYPE_RESULT
     assert msg["success"]
-    assert msg["result"] == {key: {"valid": True, "error": None}}
+    assert msg["result"] == {key: {"valid": True, "error": None, "errors": []}}
+
+
+_UNKNOWN_DEVICE_CONDITION = {
+    "condition": "device",
+    "device_id": "a51a57e5af051eb403d56eb9e6fd691c",
+    "domain": "sensor",
+    "entity_id": "7d18a157b7c00adbf2982ea7de0d0362",
+    "type": "is_carbon_dioxide",
+    "above": 50,
+}
+_UNKNOWN_DEVICE_ACTION = {
+    "device_id": "a51a57e5af051eb403d56eb9e6fd691c",
+    "domain": "light",
+    "entity_id": "7d18a157b7c00adbf2982ea7de0d0362",
+    "type": "turn_on",
+}
+_UNKNOWN_TRIGGER = {"platform": "non_existing"}
+_VALID_TRIGGER = {"platform": "event", "event_type": "hello"}
+_VALID_ACTION = {"delay": 1}
 
 
 @pytest.mark.parametrize(
-    ("key", "config", "error"),
+    "config",
     [
-        # Raises probatio.Invalid
-        (
-            "triggers",
-            {"platform": "non_existing", "event_type": "hello"},
-            "Invalid trigger 'non_existing' specified",
+        pytest.param(
+            {"triggers": {"platform": "non_existing", "event_type": "hello"}},
+            id="single_trigger",
         ),
-        # Raises probatio.Invalid
-        (
-            "conditions",
+        pytest.param({"triggers": [5]}, id="trigger_list_not_a_mapping"),
+        pytest.param({"triggers": [_UNKNOWN_TRIGGER]}, id="trigger_list"),
+        pytest.param(
+            {"triggers": {"platform": "state"}},
+            id="single_trigger_with_path",
+        ),
+        pytest.param(
+            {"triggers": [{"platform": "state"}]},
+            id="trigger_list_with_path",
+        ),
+        pytest.param(
+            {"triggers": {"triggers": [_VALID_TRIGGER, {"platform": "x"}]}},
+            id="single_trigger_sublist",
+        ),
+        pytest.param(
             {
-                "condition": "non_existing",
-                "entity_id": "hello.world",
-                "state": "paulus",
+                "conditions": {
+                    "condition": "state",
+                    "entity_id": "abcd" * 8,
+                    "state": "on",
+                }
             },
-            'Invalid condition "non_existing" specified',
+            id="single_condition",
         ),
-        # Raises HomeAssistantError
-        (
-            "conditions",
+        pytest.param(
             {
-                "above": 50,
-                "condition": "device",
-                "device_id": "a51a57e5af051eb403d56eb9e6fd691c",
-                "domain": "sensor",
-                "entity_id": "7d18a157b7c00adbf2982ea7de0d0362",
-                "type": "is_carbon_dioxide",
+                "conditions": [
+                    {"condition": "state", "entity_id": "abcd" * 8, "state": "on"}
+                ]
             },
-            "Unknown device 'a51a57e5af051eb403d56eb9e6fd691c'",
+            id="condition_list",
         ),
-        # Raises probatio.Invalid
-        (
-            "actions",
-            {"non_existing": "domain_test.test_service"},
-            "Unable to determine action at '[0]'",
+        pytest.param(
+            {
+                "conditions": {
+                    "condition": "and",
+                    "conditions": {
+                        "condition": "state",
+                        "entity_id": "abcd" * 8,
+                        "state": "on",
+                    },
+                }
+            },
+            id="single_condition_nested_single_condition",
+        ),
+        pytest.param(
+            {"actions": {"wait_for_trigger": _UNKNOWN_TRIGGER}},
+            id="single_action_nested_single_trigger",
+        ),
+        pytest.param(
+            {"actions": [{"wait_for_trigger": [_UNKNOWN_TRIGGER]}]},
+            id="action_list",
+        ),
+        pytest.param(
+            {
+                "conditions": {
+                    "condition": "non_existing",
+                    "entity_id": "hello.world",
+                    "state": "paulus",
+                }
+            },
+            id="single_condition_unknown_condition",
+        ),
+        pytest.param(
+            {"conditions": _UNKNOWN_DEVICE_CONDITION},
+            id="single_condition_home_assistant_error",
+        ),
+        pytest.param(
+            {"actions": {"non_existing": "domain_test.test_service"}},
+            id="single_action_unknown_action",
+        ),
+        pytest.param(
+            {"actions": [_VALID_ACTION, {"delay": 1, "bogus": 2}, {"delay": "abc"}]},
+            id="schema_errors",
+        ),
+        pytest.param(
+            {
+                "triggers": [
+                    _VALID_TRIGGER,
+                    {"platform": "state"},
+                    _UNKNOWN_TRIGGER,
+                ]
+            },
+            id="platform_errors",
+        ),
+        pytest.param(
+            {"conditions": [_UNKNOWN_DEVICE_CONDITION]},
+            id="home_assistant_error",
+        ),
+        pytest.param(
+            {
+                "actions": [
+                    {
+                        "if": [_UNKNOWN_DEVICE_CONDITION],
+                        "then": [{"wait_for_trigger": [_UNKNOWN_TRIGGER]}],
+                        "else": [
+                            {
+                                "choose": [
+                                    {
+                                        "conditions": [_UNKNOWN_DEVICE_CONDITION],
+                                        "sequence": [
+                                            _VALID_ACTION,
+                                            _UNKNOWN_DEVICE_ACTION,
+                                        ],
+                                    }
+                                ],
+                                "default": [_UNKNOWN_DEVICE_ACTION],
+                            }
+                        ],
+                    }
+                ]
+            },
+            id="nested_blocks",
+        ),
+        pytest.param(
+            {"actions": {"repeat": {"count": 2, "sequence": _UNKNOWN_DEVICE_ACTION}}},
+            id="nested_single_items",
+        ),
+        pytest.param(
+            {
+                "conditions": [
+                    {"or": [_UNKNOWN_DEVICE_CONDITION]},
+                    {"not": _UNKNOWN_DEVICE_CONDITION},
+                ]
+            },
+            id="condition_shorthand",
+        ),
+        pytest.param(
+            {
+                "triggers": [
+                    _VALID_TRIGGER,
+                    {"triggers": [_VALID_TRIGGER, _UNKNOWN_TRIGGER]},
+                ]
+            },
+            id="trigger_sublist",
+        ),
+        pytest.param(
+            {
+                "actions": [
+                    {
+                        "parallel": [
+                            _UNKNOWN_DEVICE_ACTION,
+                            [_VALID_ACTION, _UNKNOWN_DEVICE_ACTION],
+                            {"sequence": [_UNKNOWN_DEVICE_ACTION]},
+                        ]
+                    }
+                ]
+            },
+            id="parallel",
+        ),
+        pytest.param(
+            {
+                "actions": [
+                    {"delay": 1, "bogus": 2},
+                    _UNKNOWN_DEVICE_ACTION,
+                    {"wait_for_trigger": [_UNKNOWN_TRIGGER]},
+                ]
+            },
+            id="schema_and_platform_errors",
+        ),
+        pytest.param(
+            {
+                "triggers": [_UNKNOWN_TRIGGER],
+                "conditions": [_UNKNOWN_DEVICE_CONDITION],
+                "actions": [_VALID_ACTION],
+            },
+            id="errors_in_two_keys",
         ),
     ],
 )
 async def test_validate_config_invalid(
     websocket_client: MockHAClientWebSocket,
-    key: str,
+    snapshot: SnapshotAssertion,
     config: dict[str, Any],
-    error: str,
 ) -> None:
-    """Test config validation."""
-    await websocket_client.send_json_auto_id({"type": "validate_config", key: config})
+    """Test the errors of each key are returned, with their paths."""
+    await websocket_client.send_json_auto_id({"type": "validate_config", **config})
 
     msg = await websocket_client.receive_json()
     assert msg["type"] == const.TYPE_RESULT
     assert msg["success"]
-    assert msg["result"] == {key: {"valid": False, "error": error}}
+    assert msg["result"] == snapshot
 
 
 async def test_message_coalescing(

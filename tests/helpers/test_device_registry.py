@@ -6,6 +6,7 @@ from copy import deepcopy
 from datetime import datetime, timedelta
 from functools import partial
 import json
+import operator
 import pathlib
 import time
 from typing import Any
@@ -4684,14 +4685,168 @@ def test_device_info_deprecated_parameters(parameter: str, value: Any) -> None:
     integration can still set them until they are removed. Passing them on to
     async_get_or_create is covered by its own deprecation tests.
     """
-    assert dict(dr.DeviceInfo(**{parameter: value})) == {parameter: value}
+    assert dr.DeviceInfo(**{parameter: value}).as_dict() == {parameter: value}
 
     device_info = dr.DeviceInfo()
-    device_info[parameter] = value
-    assert dict(device_info) == {parameter: value}
+    setattr(device_info, parameter, value)
+    assert device_info.as_dict() == {parameter: value}
 
 
-def test_device_info_membership() -> None:
+@pytest.mark.parametrize(
+    ("use", "what"),
+    [
+        pytest.param(
+            lambda device_info: device_info["name"],
+            "reads `DeviceInfo['name']`",
+            id="getitem",
+        ),
+        pytest.param(
+            lambda device_info: operator.setitem(device_info, "name", "new"),
+            "sets `DeviceInfo['name']`",
+            id="setitem",
+        ),
+        pytest.param(
+            lambda device_info: "name" in device_info,
+            "checks if 'name' is in a `DeviceInfo`",
+            id="contains",
+        ),
+        pytest.param(
+            lambda device_info: device_info == {"name": "name"},
+            "compares a `DeviceInfo` to a mapping",
+            id="compare_to_mapping",
+        ),
+        pytest.param(
+            lambda device_info: device_info.keys(),
+            "calls `DeviceInfo.keys()` or unpacks it",
+            id="keys",
+        ),
+        pytest.param(dict, "calls `DeviceInfo.keys()` or unpacks it", id="dict"),
+        pytest.param(
+            lambda device_info: device_info.items(),
+            "calls `DeviceInfo.items()`",
+            id="items",
+        ),
+        pytest.param(
+            lambda device_info: device_info.get("name"),
+            "calls `DeviceInfo.get('name')`",
+            id="get",
+        ),
+        pytest.param(
+            lambda device_info: device_info.update({"model": "model"}),
+            "calls `DeviceInfo.update()`",
+            id="update",
+        ),
+        pytest.param(
+            lambda device_info: type(device_info).__required_keys__,
+            "reads `DeviceInfo.__required_keys__`",
+            id="required_keys",
+        ),
+        pytest.param(
+            lambda device_info: type(device_info).__optional_keys__,
+            "reads `DeviceInfo.__optional_keys__`",
+            id="optional_keys",
+        ),
+    ],
+)
+@pytest.mark.parametrize(
+    ("integration_frame_path", "expectation", "expected_log"),
+    [
+        pytest.param(
+            "homeassistant/test_core", pytest.raises(RuntimeError), 0, id="core"
+        ),
+        pytest.param(
+            "homeassistant/components/test_integration",
+            nullcontext(),
+            1,
+            id="core integration",
+        ),
+        pytest.param(
+            "custom_components/test_integration",
+            nullcontext(),
+            1,
+            id="custom integration",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("hass", "mock_integration_frame")
+async def test_device_info_mapping_use_deprecated(
+    caplog: pytest.LogCaptureFixture,
+    use: Callable[[dr.DeviceInfo], Any],
+    what: str,
+    expectation: AbstractContextManager,
+    expected_log: int,
+) -> None:
+    """Test dict-style use of a device info is deprecated.
+
+    It logs for core and custom integrations, and raises for core.
+    """
+    device_info = dr.DeviceInfo(name="name")
+
+    with patch.object(frame, "_REPORTED_INTEGRATIONS", set()), expectation:
+        use(device_info)
+
+    assert caplog.text.count(what) == expected_log
+
+
+def test_device_info_mapping_use_without_frame_helper(
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test dict-style use of a device info logs before the frame helper is set up."""
+    device_info = dr.DeviceInfo(name="name")
+
+    with patch.object(frame._hass, "hass", None):
+        assert device_info["name"] == "name"
+
+    assert "Detected code that reads `DeviceInfo['name']`" in caplog.text
+
+
+@pytest.mark.parametrize(
+    "integration_frame_path", ["custom_components/test_integration"]
+)
+@pytest.mark.usefixtures("hass", "mock_integration_frame")
+async def test_device_info_mapping_access() -> None:
+    """Test reading and setting fields by key, until the deprecation ends."""
+    device_info = dr.DeviceInfo(name="name")
+
+    assert device_info["name"] == "name"
+    with pytest.raises(KeyError):
+        device_info["model"]
+    assert device_info.get("name") == "name"
+    assert device_info.get("model", "default") == "default"
+
+    device_info["model"] = "model"
+    assert device_info.model == "model"
+    assert device_info.keys() == ("model", "name")
+    assert device_info.items() == (("model", "model"), ("name", "name"))
+    assert dict(device_info) == {"model": "model", "name": "name"}
+    assert device_info == {"model": "model", "name": "name"}
+
+
+@pytest.mark.parametrize(
+    "integration_frame_path", ["custom_components/test_integration"]
+)
+@pytest.mark.usefixtures("hass", "mock_integration_frame")
+async def test_device_info_update() -> None:
+    """Test update sets the fields of a mapping or another device info."""
+    device_info = dr.DeviceInfo(name="name")
+
+    device_info.update({"model": "model"})
+    device_info.update(dr.DeviceInfo(manufacturer="manufacturer"))
+    assert device_info.as_dict() == {
+        "manufacturer": "manufacturer",
+        "model": "model",
+        "name": "name",
+    }
+
+    with pytest.raises(KeyError):
+        device_info.update({"config_entry_id": "entry_id"})
+
+
+@pytest.mark.parametrize(
+    "integration_frame_path", ["custom_components/test_integration"]
+)
+@pytest.mark.usefixtures("hass", "mock_integration_frame")
+async def test_device_info_membership() -> None:
     """Test `in` reports the set fields, while a device info is not iterable."""
     device_info = dr.DeviceInfo(name="name")
 
@@ -4702,7 +4857,11 @@ def test_device_info_membership() -> None:
         list(device_info)
 
 
-def test_device_info_typed_dict_keys() -> None:
+@pytest.mark.parametrize(
+    "integration_frame_path", ["custom_components/test_integration"]
+)
+@pytest.mark.usefixtures("hass", "mock_integration_frame")
+async def test_device_info_typed_dict_keys() -> None:
     """Test the TypedDict key attributes integrations read to check for a field."""
     assert dr.DeviceInfo.__required_keys__ == frozenset()
     assert "via_device_id" in dr.DeviceInfo.__optional_keys__
@@ -4716,7 +4875,11 @@ def test_device_info_typed_dict_keys() -> None:
     }
 
 
-def test_device_info_rejects_unknown_key() -> None:
+@pytest.mark.parametrize(
+    "integration_frame_path", ["custom_components/test_integration"]
+)
+@pytest.mark.usefixtures("hass", "mock_integration_frame")
+async def test_device_info_rejects_unknown_key() -> None:
     """Test a device info rejects setting a key which is not a field."""
     device_info = dr.DeviceInfo(name="name")
     with pytest.raises(KeyError):

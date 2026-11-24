@@ -36,7 +36,7 @@
         "data": {
           "password": "[%key:common::config_flow::data::password%]",
           "region": "[%key:component::growatt_server::config::step::password_auth::data::region%]",
-          "token": "[%key:component::growatt_server::config::step::token_auth::data::token%]",
+          "token": "[%key:common::config_flow::data::api_token%]",
           "username": "[%key:common::config_flow::data::username%]"
         },
         "data_description": {
@@ -52,7 +52,7 @@
         "data": {
           "password": "[%key:common::config_flow::data::password%]",
           "region": "[%key:component::growatt_server::config::step::password_auth::data::region%]",
-          "token": "[%key:component::growatt_server::config::step::token_auth::data::token%]",
+          "token": "[%key:common::config_flow::data::api_token%]",
           "username": "[%key:common::config_flow::data::username%]"
         },
         "data_description": {
@@ -67,7 +67,7 @@
       "token_auth": {
         "data": {
           "region": "[%key:component::growatt_server::config::step::password_auth::data::region%]",
-          "token": "API token"
+          "token": "[%key:common::config_flow::data::api_token%]"
         },
         "data_description": {
           "region": "[%key:component::growatt_server::config::step::password_auth::data_description::region%]",
@@ -590,9 +590,6 @@
     }
   },
   "exceptions": {
-    "api_error": {
-      "message": "Growatt API error: {error}"
-    },
     "api_error_with_code": {
       "message": "API error: {error} (Code: {code})"
     },

@@ -203,14 +203,7 @@ class Timer(collection.CollectionEntity, RestoreEntity):
                 translation_key="timer_not_running",
                 translation_placeholders={"entity_id": self.entity_id},
             )
-        # Check against new remaining time before checking boundaries
         new_remaining = (self._end + duration) - dt_util.utcnow().replace(microsecond=0)
-        if self._remaining and new_remaining > self._running_duration:
-            raise ServiceValidationError(
-                translation_domain=DOMAIN,
-                translation_key="change_beyond_duration",
-                translation_placeholders={"entity_id": self.entity_id},
-            )
         if self._remaining and (self._remaining + duration) < timedelta():
             raise ServiceValidationError(
                 translation_domain=DOMAIN,
@@ -221,6 +214,7 @@ class Timer(collection.CollectionEntity, RestoreEntity):
         self._listener()
         self._end += duration
         self._remaining = new_remaining
+        self._running_duration = max(self._running_duration, new_remaining)
         self._listener = async_track_point_in_utc_time(
             self.hass, self._async_finished, self._end
         )

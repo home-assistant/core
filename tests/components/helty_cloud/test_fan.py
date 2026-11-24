@@ -23,6 +23,7 @@ from homeassistant.components.fan import (
     DOMAIN as FAN_DOMAIN,
     SERVICE_SET_PERCENTAGE,
     SERVICE_SET_PRESET_MODE,
+    FanService,
 )
 from homeassistant.components.helty_cloud.const import SCAN_INTERVAL
 from homeassistant.components.helty_cloud.fan import SET_MODE_ATTEMPTS
@@ -34,6 +35,7 @@ from homeassistant.const import (
     STATE_ON,
     STATE_UNAVAILABLE,
     Platform,
+    TargetKey,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -138,8 +140,8 @@ async def test_set_mode_failure(
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             FAN_DOMAIN,
-            SERVICE_TURN_OFF,
-            {ATTR_ENTITY_ID: FAN_ENTITY},
+            FanService.TURN_OFF,
+            {TargetKey.ENTITY_ID: FAN_ENTITY},
             blocking=True,
         )
 

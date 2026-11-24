@@ -20,7 +20,6 @@ ATTR_HEIGHT = "height"
 ATTR_FPS = "fps"
 ATTR_BITRATE = "bitrate"
 ATTR_CHANNEL_ID = "channel_id"
-ATTR_MESSAGE = "message"
 ATTR_DURATION = "duration"
 
 CONF_DISABLE_RTSP = "disable_rtsp"

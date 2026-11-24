@@ -25,6 +25,7 @@ from .const import (
     CONF_TIME_FIXED,
     CONF_TIME_OFFSET,
     CONF_TIME_STATION,
+    CONF_TRANSPORTATIONS,
     CONF_VIA,
     DEFAULT_TIME_STATION,
     DOMAIN,
@@ -70,6 +71,7 @@ async def async_setup_entry(
         via=config.get(CONF_VIA),
         time=config.get(CONF_TIME_FIXED),
         isArrivalTime=config.get(CONF_TIME_STATION, DEFAULT_TIME_STATION) == "arrival",
+        transportations=config.get(CONF_TRANSPORTATIONS),
     )
     if time_offset:
         offset_opendata(opendata, time_offset)
