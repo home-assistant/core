@@ -121,8 +121,12 @@ class OmadaSiteController:
             for device in devices_to_process:
                 mac = device.mac
                 # The device list was built before this loop, so recheck: a
-                # concurrent task may have reserved the device in the meantime.
-                if mac in processed_devices:
+                # concurrent task may have reserved the device in the meantime,
+                # or a device removal may already have dropped it.
+                if (
+                    mac in processed_devices
+                    or mac not in (self._devices_coordinator.data or {})
+                ):
                     continue
                 # Reserve the device before awaiting so concurrent
                 # registrations do not process it twice.

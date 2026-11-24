@@ -240,6 +240,80 @@ async def test_remove_config_entry_device(
     assert not await async_remove_config_entry_device(hass, entry, controller_device)
 
 
+async def test_in_flight_registration_skips_removed_device(
+    hass: HomeAssistant,
+    mock_omada_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a callback finishing after removal cannot recreate the device."""
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    site_client = mock_omada_client.get_site_client.return_value
+    switch_mac = "54-AF-97-00-00-01"
+    original_get_devices = site_client.get_devices
+
+    # Remove the switch so its entities and registration state are gone.
+    site_client.get_devices = AsyncMock(
+        side_effect=partial(_get_devices_without, hass, switch_mac)
+    )
+    await _async_poll_devices(hass, freezer)
+    assert (
+        device_registry.async_get_device_by_identifier(
+            (DOMAIN, switch_mac), mock_config_entry.entry_id
+        )
+        is None
+    )
+
+    # Block the reappearance registration inside get_switch.
+    started = asyncio.Event()
+    release = asyncio.Event()
+    original_get_switch = site_client.get_switch
+
+    async def _slow_get_switch(device: OmadaListDevice) -> object:
+        started.set()
+        await release.wait()
+        return await original_get_switch(device)
+
+    site_client.get_switch = _slow_get_switch
+    site_client.get_devices = original_get_devices
+
+    freezer.tick(timedelta(seconds=POLL_CLIENTS + 1))
+    async_fire_time_changed(hass, dt_util.utcnow())
+    for _ in range(50):
+        if started.is_set():
+            break
+        await asyncio.sleep(0)
+    assert started.is_set()
+
+    # Remove the switch again while the callback is still awaiting the client.
+    site_client.get_devices = AsyncMock(
+        side_effect=partial(_get_devices_without, hass, switch_mac)
+    )
+    controller = mock_config_entry.runtime_data
+    freezer.tick(timedelta(seconds=POLL_CLIENTS + 1))
+    async_fire_time_changed(hass, dt_util.utcnow())
+    for _ in range(100):
+        if switch_mac not in (controller.devices_coordinator.data or {}):
+            break
+        await asyncio.sleep(0)
+    assert switch_mac not in (controller.devices_coordinator.data or {})
+
+    release.set()
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert hass.states.get("switch.test_poe_switch_port_1_poe") is None
+    assert (
+        device_registry.async_get_device_by_identifier(
+            (DOMAIN, switch_mac), mock_config_entry.entry_id
+        )
+        is None
+    )
+
+
 async def test_startup_cleanup_runs_before_platform_setup(
     hass: HomeAssistant,
     mock_omada_client: MagicMock,
@@ -560,8 +634,14 @@ async def test_cleanup_recreates_gateway_ports_after_successful_refresh(
             if entry.platform == DOMAIN
             and entry.domain in {"binary_sensor", "switch"}
             and entry.unique_id.startswith(f"{gateway_mac}_")
+            and "_vpn_" not in entry.unique_id
         ]
 
+    vpn_entity_ids = (
+        "switch.test_router_road_warriors",
+        "switch.test_router_branch_office",
+    )
+    assert all(hass.states.get(entity_id) is not None for entity_id in vpn_entity_ids)
     assert gateway_port_entities()
 
     site_client = mock_omada_client.get_site_client.return_value
@@ -579,9 +659,11 @@ async def test_cleanup_recreates_gateway_ports_after_successful_refresh(
         is None
     )
     assert not gateway_port_entities()
+    assert all(hass.states.get(entity_id) is None for entity_id in vpn_entity_ids)
 
     # The gateway returns, but its refresh fails: no port entities are built
-    # from the cached port lists, and registration stays retryable.
+    # from the cached port lists, and registration stays retryable. VPN policy
+    # switches are rebuilt because their coordinator data is still valid.
     site_client.get_gateway = AsyncMock(
         side_effect=OmadaClientException("gateway unavailable")
     )
@@ -592,6 +674,7 @@ async def test_cleanup_recreates_gateway_ports_after_successful_refresh(
     await _async_poll_devices(hass, freezer)
 
     assert not gateway_port_entities()
+    assert all(hass.states.get(entity_id) is not None for entity_id in vpn_entity_ids)
 
     # A successful refresh rebuilds the port entities.
     gateway_data = await async_load_json_object_fixture(

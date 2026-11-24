@@ -49,6 +49,8 @@ async def async_setup_entry(
         gateway = await controller.async_get_gateway(device.mac)
         if gateway is None:
             return False
+        if device.mac not in (controller.devices_coordinator.data or {}):
+            return False
 
         entities: list[Entity] = [
             OmadaGatewayPortBinarySensor(

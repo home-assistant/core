@@ -106,6 +106,8 @@ async def async_setup_entry(
         await coordinator.async_refresh()
         if not coordinator.last_update_success:
             return False
+        if device.mac not in (devices_coordinator.data or {}):
+            return False
 
         entities: list[Entity] = [
             OmadaSwitchPortSensor(
