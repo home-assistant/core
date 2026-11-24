@@ -2217,6 +2217,11 @@ async def test_update_entity_settings(
             "Entity with this ID is already registered",
             id="entity_id_taken",
         ),
+        pytest.param(
+            {"entity_id": "switch.coffee", "display_precision": 2},
+            "Only sensors have a unit and display precision, not 'switch.coffee'.",
+            id="sensor_option_not_sensor",
+        ),
     ],
 )
 async def test_update_entity_settings_errors(
@@ -2241,6 +2246,116 @@ async def test_update_entity_settings_errors(
     assert str(exc_info.value) == error
 
 
+async def test_update_sensor_settings(
+    hass: HomeAssistant,
+    llm_context: llm.LLMContext,
+    entity_registry: er.EntityRegistry,
+    entity_tools: dict[str, llm.Tool],
+) -> None:
+    """Test setting the unit and display precision of a sensor."""
+    entity_registry.async_get_or_create(
+        "sensor",
+        "test",
+        "1234",
+        suggested_object_id="outside",
+        original_device_class="temperature",
+    )
+    entity_registry.async_update_entity_options(
+        "sensor.outside", "sensor", {"suggested_display_precision": 1}
+    )
+    tool = entity_tools["config__update_entity_settings"]
+
+    result = await tool.async_call(
+        hass,
+        llm.ToolInput(
+            tool.name,
+            {
+                "entity_id": "sensor.outside",
+                "unit_of_measurement": "°F",
+                "display_precision": 2,
+            },
+        ),
+        llm_context,
+    )
+    assert result.data["result"]["unit_of_measurement"] == "°F"
+    assert result.data["result"]["display_precision"] == 2
+    assert entity_registry.async_get("sensor.outside").options["sensor"] == {
+        "suggested_display_precision": 1,
+        "unit_of_measurement": "°F",
+        "display_precision": 2,
+    }
+
+    result = await tool.async_call(
+        hass,
+        llm.ToolInput(
+            tool.name, {"entity_id": "sensor.outside", "unit_of_measurement": None}
+        ),
+        llm_context,
+    )
+    assert result.data["result"]["unit_of_measurement"] is None
+    assert entity_registry.async_get("sensor.outside").options["sensor"] == {
+        "suggested_display_precision": 1,
+        "display_precision": 2,
+    }
+
+    result = await entity_tools["config__get_entity_settings"].async_call(
+        hass,
+        llm.ToolInput("config__get_entity_settings", {"entity_id": "sensor.outside"}),
+        llm_context,
+    )
+    assert result.data["result"]["display_precision"] == 2
+
+    with pytest.raises(HomeAssistantError) as exc_info:
+        await tool.async_call(
+            hass,
+            llm.ToolInput(
+                tool.name, {"entity_id": "sensor.outside", "unit_of_measurement": "kWh"}
+            ),
+            llm_context,
+        )
+    assert str(exc_info.value) == (
+        "The unit of 'sensor.outside' cannot be 'kWh'. Allowed units: K, °C, °F."
+    )
+
+    # The device class in the same call decides which units are allowed
+    result = await tool.async_call(
+        hass,
+        llm.ToolInput(
+            tool.name,
+            {
+                "entity_id": "sensor.outside",
+                "device_class": "energy",
+                "unit_of_measurement": "kWh",
+            },
+        ),
+        llm_context,
+    )
+    assert result.data["result"]["unit_of_measurement"] == "kWh"
+
+
+async def test_update_sensor_settings_unit_not_convertible(
+    hass: HomeAssistant,
+    llm_context: llm.LLMContext,
+    entity_registry: er.EntityRegistry,
+    entity_tools: dict[str, llm.Tool],
+) -> None:
+    """Test that a sensor without a convertible device class keeps its unit."""
+    entity_registry.async_get_or_create(
+        "sensor", "test", "1234", suggested_object_id="count"
+    )
+    tool = entity_tools["config__update_entity_settings"]
+
+    with pytest.raises(HomeAssistantError) as exc_info:
+        await tool.async_call(
+            hass,
+            llm.ToolInput(
+                tool.name, {"entity_id": "sensor.count", "unit_of_measurement": "items"}
+            ),
+            llm_context,
+        )
+    assert str(exc_info.value) == "The unit of 'sensor.count' cannot be 'items'."
+
+
 @pytest.mark.parametrize(
     "invalid_args",
     [
@@ -2249,6 +2364,7 @@ async def test_update_entity_settings_errors(
         pytest.param({"entity_id": "switch.coffee", "icon": "lamp"}),
         pytest.param({"entity_id": "switch.coffee", "new_entity_id": "coffee"}),
         pytest.param({"entity_id": "switch.coffee", "unknown": "value"}),
+        pytest.param({"entity_id": "sensor.outside", "display_precision": -1}),
     ],
 )
 async def test_update_entity_settings_invalid_args(

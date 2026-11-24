@@ -302,6 +302,12 @@
           'nullable': True,
           'type': 'string',
         }),
+        'display_precision': dict({
+          'description': 'Only for sensors. The number of decimals to show. null uses the default.',
+          'minimum': 0,
+          'nullable': True,
+          'type': 'integer',
+        }),
         'entity_id': dict({
           'format': 'strip',
           'type': 'string',
@@ -336,6 +342,12 @@
         }),
         'new_entity_id': dict({
           'description': 'A new entity_id. Automations and scripts that use the old one are not updated.',
+          'type': 'string',
+        }),
+        'unit_of_measurement': dict({
+          'description': "Only for sensors. The unit to show the state in, like 'kWh'. null uses the unit from the integration.",
+          'format': 'strip',
+          'nullable': True,
           'type': 'string',
         }),
       }),
