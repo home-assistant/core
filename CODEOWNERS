@@ -1627,8 +1627,8 @@ AGENTS.md @home-assistant/core
 /tests/components/raspberry_pi/ @home-assistant/core
 /homeassistant/components/rdw/ @frenck @joostlek
 /tests/components/rdw/ @frenck @joostlek
-/homeassistant/components/recamera_pro/ @yyling0101-a11y
-/tests/components/recamera_pro/ @yyling0101-a11y
+/homeassistant/components/recamera_pro/ @zhousizhao
+/tests/components/recamera_pro/ @zhousizhao
 /homeassistant/components/recollect_waste/ @bachya
 /tests/components/recollect_waste/ @bachya
 /homeassistant/components/recorder/ @home-assistant/core

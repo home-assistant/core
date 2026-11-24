@@ -2,7 +2,7 @@
   "domain": "recamera_pro",
   "name": "reCamera Pro",
   "categories": ["security_safety"],
-  "codeowners": ["@yyling0101-a11y"],
+  "codeowners": ["@zhousizhao"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/recamera_pro",
   "integration_type": "device",
