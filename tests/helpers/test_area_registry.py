@@ -681,7 +681,7 @@ async def test_migration_from_1_9(
                     "name": "AAA",
                     "picture": None,
                     "temperature_entity_id": "sensor.MOCK_temperature",
-                    "co2_entity_id": "sensor.MOCK_CO2",
+                    "co2_entity_id": "sensor.mock_co2",
                 }
             ]
         },

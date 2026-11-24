@@ -171,11 +171,10 @@ class AreaRegistryStore(Store[AreasRegistryStoreData]):
                 )
 
             if old_minor_version < 10:
-                # Version 1.10 adds co2_entity_id and normalizes sensor entity IDs
+                # Version 1.10 adds co2_entity_id and normalizes temperature/humidity IDs
                 for area in old_data["areas"]:
                     area.setdefault("co2_entity_id", None)
                     for entity_id_key in (
-                        "co2_entity_id",
                         "humidity_entity_id",
                         "temperature_entity_id",
                     ):
