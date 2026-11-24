@@ -12,6 +12,7 @@ from pytest_homeassistant.typing import WebSocketGenerator
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.knx.const import (
+    CONF_KNX_EXPOSE,
     CONF_KNX_TELEGRAM_DB_BACKEND,
     CONF_KNX_TELEGRAM_DB_POSTGRES_DSN,
     KNX_ADDRESS,
@@ -21,7 +22,7 @@ from homeassistant.components.knx.const import (
 )
 from homeassistant.components.knx.project import STORAGE_KEY as KNX_PROJECT_STORAGE_KEY
 from homeassistant.components.knx.schema import SwitchSchema
-from homeassistant.const import CONF_NAME
+from homeassistant.const import CONF_ATTRIBUTE, CONF_ENTITY_ID, CONF_NAME, CONF_TYPE
 from homeassistant.core import HomeAssistant
 
 from .conftest import KNXTestKit
@@ -626,6 +627,41 @@ async def test_knx_get_expose_groups(
     await knx.setup_integration(
         config_store_fixture="config_store_expose.json",
     )
+    client = await hass_ws_client(hass)
+    await client.send_json_auto_id({"type": "knx/get_expose_groups"})
+    res = await client.receive_json()
+    assert res == snapshot
+
+
+@pytest.mark.freeze_time("2022-1-7 9:13:14")
+async def test_knx_get_expose_groups_yaml(
+    hass: HomeAssistant,
+    knx: KNXTestKit,
+    hass_ws_client: WebSocketGenerator,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test knx/get_expose_groups command including YAML exposes."""
+    await knx.setup_integration(
+        {
+            CONF_KNX_EXPOSE: [
+                {
+                    CONF_TYPE: "percent",
+                    KNX_ADDRESS: "3/3/3",
+                    CONF_ENTITY_ID: "cover.test",
+                    CONF_ATTRIBUTE: "current_tilt_position",
+                },
+                {
+                    CONF_TYPE: "temperature",
+                    KNX_ADDRESS: "4/4/4",
+                    CONF_ENTITY_ID: "sensor.yaml_only",
+                },
+                # time exposes have no entity_id and are not reported
+                {CONF_TYPE: "date", KNX_ADDRESS: "5/5/5"},
+            ]
+        },
+        config_store_fixture="config_store_expose.json",
+    )
+    await knx.assert_write("5/5/5", (0x07, 0x01, 0x16))
     client = await hass_ws_client(hass)
     await client.send_json_auto_id({"type": "knx/get_expose_groups"})
     res = await client.receive_json()

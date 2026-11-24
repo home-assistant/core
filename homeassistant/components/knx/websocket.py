@@ -795,8 +795,8 @@ def ws_get_expose_groups(
     connection: websocket_api.ActiveConnection,
     msg: dict,
 ) -> None:
-    """Get exposes from config store."""
-    connection.send_result(msg["id"], knx.config_store.get_expose_groups())
+    """Get group addresses of UI and YAML exposed entities."""
+    connection.send_result(msg["id"], knx.get_expose_groups())
 
 
 @websocket_api.require_admin

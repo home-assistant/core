@@ -49,6 +49,7 @@ from .const import (
     CONF_KNX_TUNNELING_TCP,
     CONF_KNX_TUNNELING_TCP_SECURE,
     KNX_ADDRESS,
+    ExposeGroupAddress,
     GroupAddressEntity,
     KNXConfigEntryOptions,
     KnxEntityIdentifier,
@@ -304,6 +305,22 @@ class KNXModule:
                 _add(ga, identifier, disabled=True)
         for entities in result.values():
             entities.sort(key=lambda entity: (entity["platform"], entity["unique_id"]))
+        return result
+
+    def get_expose_groups(self) -> dict[str, list[ExposeGroupAddress]]:
+        """Return the group addresses of each exposed entity, UI and YAML."""
+        result: dict[str, list[ExposeGroupAddress]] = {
+            entity_id: [ExposeGroupAddress(ga=ga, ui=True) for ga in group_addresses]
+            for entity_id, group_addresses in (
+                self.config_store.get_expose_groups().items()
+            )
+        }
+        for exposure in self.yaml_exposures:
+            if isinstance(exposure, KnxExposeEntity):
+                result.setdefault(exposure.entity_id, []).extend(
+                    ExposeGroupAddress(ga=ga, ui=False)
+                    for ga in exposure.group_addresses
+                )
         return result
 
     def connection_state_changed_cb(self, state: XknxConnectionState) -> None:
