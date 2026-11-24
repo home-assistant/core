@@ -19,12 +19,12 @@ from homeassistant.components.bluetti_modbus.const import (
     SETTINGS_SCAN_INTERVAL,
 )
 from homeassistant.components.number import (
-    ATTR_VALUE,
     DOMAIN as NUMBER_DOMAIN,
-    SERVICE_SET_VALUE,
+    NumberService,
+    NumberServiceArgument,
 )
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE, Platform
+from homeassistant.const import STATE_UNAVAILABLE, Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
@@ -63,8 +63,8 @@ async def test_number_writes_the_register(
 
     await hass.services.async_call(
         NUMBER_DOMAIN,
-        SERVICE_SET_VALUE,
-        {ATTR_ENTITY_ID: DISCHARGE_LIMIT_ENTITY, ATTR_VALUE: 20},
+        NumberService.SET_VALUE,
+        {TargetKey.ENTITY_ID: DISCHARGE_LIMIT_ENTITY, NumberServiceArgument.VALUE: 20},
         blocking=True,
     )
 
@@ -124,8 +124,11 @@ async def test_number_write_failure(
     with pytest.raises(HomeAssistantError, match="could not be written"):
         await hass.services.async_call(
             NUMBER_DOMAIN,
-            SERVICE_SET_VALUE,
-            {ATTR_ENTITY_ID: DISCHARGE_LIMIT_ENTITY, ATTR_VALUE: 20},
+            NumberService.SET_VALUE,
+            {
+                TargetKey.ENTITY_ID: DISCHARGE_LIMIT_ENTITY,
+                NumberServiceArgument.VALUE: 20,
+            },
             blocking=True,
         )
 
@@ -181,8 +184,11 @@ async def test_queued_write_is_dropped_for_another_device(
         first = hass.async_create_task(
             hass.services.async_call(
                 NUMBER_DOMAIN,
-                SERVICE_SET_VALUE,
-                {ATTR_ENTITY_ID: CHARGE_LIMIT_ENTITY, ATTR_VALUE: 95},
+                NumberService.SET_VALUE,
+                {
+                    TargetKey.ENTITY_ID: CHARGE_LIMIT_ENTITY,
+                    NumberServiceArgument.VALUE: 95,
+                },
                 blocking=True,
             )
         )
@@ -190,8 +196,11 @@ async def test_queued_write_is_dropped_for_another_device(
         second = hass.async_create_task(
             hass.services.async_call(
                 NUMBER_DOMAIN,
-                SERVICE_SET_VALUE,
-                {ATTR_ENTITY_ID: DISCHARGE_LIMIT_ENTITY, ATTR_VALUE: 20},
+                NumberService.SET_VALUE,
+                {
+                    TargetKey.ENTITY_ID: DISCHARGE_LIMIT_ENTITY,
+                    NumberServiceArgument.VALUE: 20,
+                },
                 blocking=True,
             )
         )
@@ -302,8 +311,8 @@ async def test_write_does_not_postpone_the_settings_poll(
     await hass.async_block_till_done(wait_background_tasks=True)
     await hass.services.async_call(
         NUMBER_DOMAIN,
-        SERVICE_SET_VALUE,
-        {ATTR_ENTITY_ID: CHARGE_LIMIT_ENTITY, ATTR_VALUE: 95},
+        NumberService.SET_VALUE,
+        {TargetKey.ENTITY_ID: CHARGE_LIMIT_ENTITY, NumberServiceArgument.VALUE: 95},
         blocking=True,
     )
 
