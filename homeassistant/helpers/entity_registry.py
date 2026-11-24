@@ -2217,6 +2217,11 @@ class EntityRegistry(BaseRegistry):
 
             if child_device is not None:
                 child_device_new_area_id = new.area_id
+                # Validate before committing, so a rejected area changes nothing
+                if child_device_new_area_id != child_device.area_id:
+                    _validate_area_and_labels(
+                        self.hass, {"area_id": child_device_new_area_id}, set()
+                    )
                 new = attr.evolve(new, area_id=None)
                 old_values.pop("area_id", None)
                 new_values.pop("area_id", None)
@@ -2898,7 +2903,7 @@ def _validate_area_and_labels(
         raise ValueError(f"Area '{area_id}' not found.")
     if "labels" in new_values and (
         missing := lr.async_get_missing_label_ids(
-            hass, new_values["labels"] - old_labels
+            hass, set(new_values["labels"]) - old_labels
         )
     ):
         raise ValueError(f"Labels not found: {', '.join(sorted(missing))}")

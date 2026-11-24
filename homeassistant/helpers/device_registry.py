@@ -2110,7 +2110,7 @@ def _validate_area_and_labels(
         raise ValueError(f"Area '{area_id}' not found.")
     if "labels" in new_values and (
         missing := lr.async_get_missing_label_ids(
-            hass, new_values["labels"] - old_labels
+            hass, set(new_values["labels"]) - old_labels
         )
     ):
         raise ValueError(f"Labels not found: {', '.join(sorted(missing))}")

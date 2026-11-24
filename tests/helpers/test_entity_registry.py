@@ -8690,3 +8690,53 @@ async def test_update_entity_keeps_stale_label(
         entry.entity_id, labels={stale.label_id, label.label_id}
     )
     assert entry.labels == {stale.label_id, label.label_id}
+
+
+async def test_move_to_child_device_unknown_own_area(
+    hass: HomeAssistant,
+    area_registry: ar.AreaRegistry,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test a move that hands an unknown area to a child device changes nothing."""
+    config_entry = MockConfigEntry(domain="light")
+    config_entry.add_to_hass(hass)
+    device_entry = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+    )
+    child_device = device_registry.async_get_or_create_child(
+        config_entry_id=config_entry.entry_id,
+        identifiers={("hue", "child")},
+        parent_device_id=device_entry.id,
+    )
+    entry = entity_registry.async_get_or_create(
+        "light",
+        "hue",
+        "5678",
+        config_entry=config_entry,
+        device_id=device_entry.id,
+        has_entity_name=True,
+        original_name="Light",
+    )
+    area = area_registry.async_create("Kitchen")
+    entry = entity_registry.async_update_entity(entry.entity_id, area_id=area.id)
+    # The area registry drops the area without the usual cleanup
+    del area_registry.areas[area.id]
+    events = async_capture_events(hass, er.EVENT_ENTITY_REGISTRY_UPDATED)
+
+    with pytest.raises(ValueError, match="Area 'kitchen' not found."):
+        entity_registry.async_get_or_create(
+            "light",
+            "hue",
+            "5678",
+            config_entry=config_entry,
+            device_id=child_device.id,
+            has_entity_name=True,
+            original_name=None,
+        )
+    await hass.async_block_till_done()
+
+    assert entity_registry.async_get(entry.entity_id) == entry
+    assert device_registry.async_get(child_device.id) == child_device
+    assert not events
