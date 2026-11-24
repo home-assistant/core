@@ -433,8 +433,11 @@ async def test_battery_circulator_fan_2_pro_set_percentage(
     with patch.object(SwitchBotAPI, "send_command") as mock_send_command:
         await hass.services.async_call(
             FAN_DOMAIN,
-            SERVICE_SET_PERCENTAGE,
-            {ATTR_ENTITY_ID: "fan.device_1", ATTR_PERCENTAGE: percentage},
+            FanService.SET_PERCENTAGE,
+            {
+                TargetKey.ENTITY_ID: "fan.device_1",
+                FanServiceArgument.PERCENTAGE: percentage,
+            },
             blocking=True,
         )
     mock_send_command.assert_awaited_once_with(*expected_call_args)
@@ -444,8 +447,8 @@ async def test_battery_circulator_fan_2_pro_set_percentage(
     ("mode", "service_data", "wind_mode", "wind_speed"),
     [
         ("direct", {}, "direct", 88),
-        ("direct", {ATTR_PERCENTAGE: 12}, "direct", 12),
-        ("baby", {ATTR_PERCENTAGE: 12}, "direct", 12),
+        ("direct", {FanServiceArgument.PERCENTAGE: 12}, "direct", 12),
+        ("baby", {FanServiceArgument.PERCENTAGE: 12}, "direct", 12),
         ("direct", {ATTR_PRESET_MODE: "baby"}, "baby", None),
     ],
 )
@@ -466,8 +469,8 @@ async def test_battery_circulator_fan_2_pro_turn_on(
     with patch.object(SwitchBotAPI, "send_command") as mock_send_command:
         await hass.services.async_call(
             FAN_DOMAIN,
-            SERVICE_TURN_ON,
-            {**service_data, ATTR_ENTITY_ID: "fan.device_1"},
+            FanService.TURN_ON,
+            {**service_data, TargetKey.ENTITY_ID: "fan.device_1"},
             blocking=True,
         )
     expected_calls = [
@@ -504,8 +507,8 @@ async def test_battery_circulator_fan_2_pro_turn_on_zero_percentage(
     with patch.object(SwitchBotAPI, "send_command") as mock_send_command:
         await hass.services.async_call(
             FAN_DOMAIN,
-            SERVICE_TURN_ON,
-            {ATTR_ENTITY_ID: "fan.device_1", ATTR_PERCENTAGE: 0},
+            FanService.TURN_ON,
+            {TargetKey.ENTITY_ID: "fan.device_1", FanServiceArgument.PERCENTAGE: 0},
             blocking=True,
         )
     mock_send_command.assert_awaited_once_with(
