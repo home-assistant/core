@@ -775,7 +775,7 @@ async def test_async_trigger_cleanup_preserves_fritz_device(
 
 
 @pytest.mark.usefixtures("fc_class_mock", "fs_class_mock")
-async def test_device_discovery_disabled_without_mesh_topology_access(
+async def test_hosts_not_fetched_without_mesh_topology_access(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
     fh_class_mock: type[FritzHosts],
@@ -796,9 +796,9 @@ async def test_device_discovery_disabled_without_mesh_topology_access(
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
 
-    # Neither scan nor cleanup fetches hosts, and the topology is not retried
+    # The topology is retried on every update, but hosts are never fetched
     fh_class_mock.get_hosts_attributes.assert_not_called()
-    fh_class_mock.get_mesh_topology.assert_called_once()
+    assert fh_class_mock.get_mesh_topology.call_count == 2
     assert hass.states.async_entity_ids("device_tracker") == []
 
 
