@@ -1536,6 +1536,18 @@
         "zigbee"
       ]
     },
+    "benq_projector_infrared": {
+      "name": "BenQ Projector Infrared",
+      "integration_type": "device",
+      "categories": [
+        "media_entertainment.tv_streaming"
+      ],
+      "connectivity": [
+        "infrared"
+      ],
+      "config_flow": true,
+      "iot_class": "assumed_state"
+    },
     "besen": {
       "name": "Besen",
       "integration_type": "device",
@@ -5008,6 +5020,15 @@
             "cloud"
           ],
           "name": "FGLair"
+        },
+        "fujitsu_infrared": {
+          "integration_type": "device",
+          "config_flow": true,
+          "iot_class": "assumed_state",
+          "categories": [
+            "climate.heat_pumps_air_conditioning"
+          ],
+          "name": "Fujitsu Infrared"
         }
       }
     },
@@ -9212,8 +9233,8 @@
           "name": "Azure Storage"
         },
         "microsoft": {
-          "integration_type": "hub",
-          "config_flow": false,
+          "integration_type": "service",
+          "config_flow": true,
           "iot_class": "cloud_push",
           "categories": [
             "ai_voice.speech"
@@ -17277,7 +17298,7 @@
       }
     },
     "xmpp": {
-      "name": "Jabber (XMPP)",
+      "name": "XMPP",
       "integration_type": "hub",
       "categories": [
         "messaging_notifications.chat_apps"

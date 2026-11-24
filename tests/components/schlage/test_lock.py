@@ -103,6 +103,33 @@ async def test_lock_services(
     await hass.config_entries.async_unload(mock_added_config_entry.entry_id)
 
 
+@pytest.mark.parametrize(
+    ("service", "method"),
+    [
+        pytest.param(LockService.LOCK, "lock", id="lock"),
+        pytest.param(LockService.UNLOCK, "unlock", id="unlock"),
+    ],
+)
+@pytest.mark.usefixtures("mock_added_config_entry")
+async def test_lock_services_api_error(
+    hass: HomeAssistant,
+    mock_lock: Mock,
+    service: LockService,
+    method: str,
+) -> None:
+    """Test lock services raise HomeAssistantError on API failure."""
+    getattr(mock_lock, method).side_effect = SchlageError("API error")
+
+    with pytest.raises(HomeAssistantError) as exc_info:
+        await hass.services.async_call(
+            LOCK_DOMAIN,
+            service,
+            service_data={TargetKey.ENTITY_ID: "lock.vault_door"},
+            blocking=True,
+        )
+    assert exc_info.value.translation_key == "schlage_command_failed"
+
+
 async def test_changed_by(
     hass: HomeAssistant,
     mock_lock: Mock,
@@ -517,9 +544,9 @@ _EXPECTED_EVENING_WINDOW = {
     "end_time": "22:45:00",
 }
 
-_TEMPORARY_START = datetime(2025, 1, 1, 8, 0, 0, tzinfo=UTC)
-_TEMPORARY_END = datetime(2025, 1, 1, 18, 0, 0, tzinfo=UTC)
-_LATER_TEMPORARY_START = datetime(2025, 1, 2, 8, 0, 0, tzinfo=UTC)
+_TEMPORARY_START = datetime(2025, 1, 1, 8, 0, 0)
+_TEMPORARY_END = datetime(2025, 1, 1, 18, 0, 0)
+_LATER_TEMPORARY_START = datetime(2025, 1, 2, 8, 0, 0)
 
 
 @pytest.mark.parametrize(
@@ -616,8 +643,8 @@ async def test_get_codes_service_temporary_schedule(
                 "access_code_id": "ac_001",
                 "schedule": {
                     "type": "temporary",
-                    "start_datetime": "2025-01-01T08:00:00+00:00",
-                    "end_datetime": "2025-01-01T18:00:00+00:00",
+                    "start_datetime": "2025-01-01T08:00:00",
+                    "end_datetime": "2025-01-01T18:00:00",
                 },
             }
         }
@@ -910,14 +937,14 @@ async def test_add_code_service_temporary_pin_non_utc_timezone(
     mock_lock: Mock,
     mock_added_config_entry: MockSchlageConfigEntry,
 ) -> None:
-    """Test add_code service converts naive non UTC datetimes to UTC."""
+    """Test add_code service converts aware datetimes to lock-local time."""
     await hass.config.async_set_time_zone("America/New_York")
     mock_lock.access_codes = {}
     mock_lock.add_access_code = Mock()
 
-    # September 2026 is EDT (UTC-4), so naive 08:00 is 12:00 UTC and 18:00 is 22:00 UTC.
-    start_naive = datetime(2026, 9, 1, 8, 0, 0)
-    end_naive = datetime(2026, 9, 1, 18, 0, 0)
+    # September 2026 is EDT (UTC-4), so 12:00 UTC is 08:00 local and 22:00 UTC is 18:00 local.
+    start_utc = datetime(2026, 9, 1, 12, 0, 0, tzinfo=UTC)
+    end_utc = datetime(2026, 9, 1, 22, 0, 0, tzinfo=UTC)
 
     await hass.services.async_call(
         DOMAIN,
@@ -926,8 +953,8 @@ async def test_add_code_service_temporary_pin_non_utc_timezone(
             "entity_id": "lock.vault_door",
             "name": "temp_user",
             "code": "1234",
-            "start_datetime": start_naive.isoformat(),
-            "end_datetime": end_naive.isoformat(),
+            "start_datetime": start_utc.isoformat(),
+            "end_datetime": end_utc.isoformat(),
         },
         blocking=True,
     )
@@ -936,5 +963,34 @@ async def test_add_code_service_temporary_pin_non_utc_timezone(
     mock_lock.add_access_code.assert_called_once()
     call_args = mock_lock.add_access_code.call_args[0][0]
     assert isinstance(call_args.schedule, TemporarySchedule)
-    assert call_args.schedule.start == datetime(2026, 9, 1, 12, 0, 0, tzinfo=UTC)
-    assert call_args.schedule.end == datetime(2026, 9, 1, 22, 0, 0, tzinfo=UTC)
+    assert call_args.schedule.start == datetime(2026, 9, 1, 8, 0, 0)
+    assert call_args.schedule.end == datetime(2026, 9, 1, 18, 0, 0)
+
+
+async def test_add_code_service_temporary_pin_ambiguous_dst(
+    hass: HomeAssistant,
+    mock_lock: Mock,
+    mock_added_config_entry: MockSchlageConfigEntry,
+) -> None:
+    """Test add_code service rejects datetimes during an ambiguous DST fall-back."""
+    await hass.config.async_set_time_zone("America/New_York")
+
+    # 2026-11-01 05:30:00 UTC is 01:30 EDT (first 1 AM hour before 2 AM fall-back).
+    start_utc = datetime(2026, 11, 1, 5, 30, 0, tzinfo=UTC)
+    end_utc = datetime(2026, 11, 1, 12, 0, 0, tzinfo=UTC)
+
+    with pytest.raises(ServiceValidationError) as exc_info:
+        await hass.services.async_call(
+            DOMAIN,
+            SchlageService.ADD_CODE,
+            service_data={
+                "entity_id": "lock.vault_door",
+                "name": "temp_user",
+                "code": "1234",
+                "start_datetime": start_utc.isoformat(),
+                "end_datetime": end_utc.isoformat(),
+            },
+            blocking=True,
+        )
+    assert exc_info.value.translation_key == "schlage_invalid_schedule_timezone"
+    mock_lock.refresh_access_codes.assert_not_called()

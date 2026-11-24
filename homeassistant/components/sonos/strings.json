@@ -145,6 +145,9 @@
     "invalid_sonos_playlist": {
       "message": "Could not find Sonos playlist: {name}"
     },
+    "join_different_household": {
+      "message": "Cannot join {entity_id} to {target_entity_id} because they belong to different Sonos households."
+    },
     "media_not_found": {
       "message": "Media not found: {media_content_type} / {media_content_id}"
     },
