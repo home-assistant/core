@@ -5,7 +5,6 @@ import enum
 import logging
 from typing import Any, override
 
-from pyControl4.error_handling import C4Exception
 from pyControl4.room import C4Room
 
 from homeassistant.components.media_player import (
@@ -18,36 +17,24 @@ from homeassistant.components.media_player import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.restore_state import ExtraStoredData, RestoreEntity
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from . import Control4ConfigEntry, Control4RuntimeData
-from .const import SCAN_INTERVAL
-from .director_utils import update_variables_for_config_entry
+from .const import (
+    CONTROL4_CURRENT_VIDEO_DEVICE,
+    CONTROL4_MEDIA_INFO,
+    CONTROL4_MUTED_STATE,
+    CONTROL4_PAUSED,
+    CONTROL4_PLAYING,
+    CONTROL4_POWER_STATE,
+    CONTROL4_STOPPED,
+    CONTROL4_VOLUME_STATE,
+)
+from .coordinator import Control4DataUpdateCoordinator
 from .entity import Control4Entity
 
 _LOGGER = logging.getLogger(__name__)
 
-CONTROL4_POWER_STATE = "POWER_STATE"
-CONTROL4_VOLUME_STATE = "CURRENT_VOLUME"
-CONTROL4_MUTED_STATE = "IS_MUTED"
-CONTROL4_CURRENT_VIDEO_DEVICE = "CURRENT_VIDEO_DEVICE"
-CONTROL4_PLAYING = "PLAYING"
-CONTROL4_PAUSED = "PAUSED"
-CONTROL4_STOPPED = "STOPPED"
-CONTROL4_MEDIA_INFO = "CURRENT MEDIA INFO"
-
 CONTROL4_PARENT_ID = "parentId"
-
-VARIABLES_OF_INTEREST = {
-    CONTROL4_POWER_STATE,
-    CONTROL4_VOLUME_STATE,
-    CONTROL4_MUTED_STATE,
-    CONTROL4_CURRENT_VIDEO_DEVICE,
-    CONTROL4_MEDIA_INFO,
-    CONTROL4_PLAYING,
-    CONTROL4_PAUSED,
-    CONTROL4_STOPPED,
-}
 
 
 class _SourceType(enum.Enum):
@@ -91,26 +78,7 @@ async def async_setup_entry(
     if not all_rooms:
         return
 
-    async def async_update_data() -> dict[int, dict[str, Any]]:
-        """Fetch data from Control4 director."""
-        try:
-            return await update_variables_for_config_entry(
-                hass, entry, VARIABLES_OF_INTEREST
-            )
-        except C4Exception as err:
-            raise UpdateFailed(f"Error communicating with API: {err}") from err
-
-    coordinator = DataUpdateCoordinator[dict[int, dict[str, Any]]](
-        hass,
-        _LOGGER,
-        name="room",
-        update_method=async_update_data,
-        update_interval=SCAN_INTERVAL,
-        config_entry=entry,
-    )
-
-    # Fetch initial data so we have data when entities subscribe
-    await coordinator.async_refresh()
+    coordinator = runtime_data.room_coordinator
 
     items_by_id = {item["id"]: item for item in runtime_data.director_all_items}
     item_to_parent_map = {
@@ -197,7 +165,7 @@ class Control4Room(Control4Entity, MediaPlayerEntity, RestoreEntity):
     def __init__(
         self,
         runtime_data: Control4RuntimeData,
-        coordinator: DataUpdateCoordinator[dict[int, dict[str, Any]]],
+        coordinator: Control4DataUpdateCoordinator,
         name: str,
         room_id: int,
         id_to_parent: dict[int, int],

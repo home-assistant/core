@@ -56,7 +56,6 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     LIGHT_LUX,
     SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
@@ -76,7 +75,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.helpers.typing import UNDEFINED, StateType
+from homeassistant.helpers.typing import StateType, Undefined
 
 from .binary_sensor import is_valid_notification_binary_sensor
 from .const import (
@@ -741,7 +740,7 @@ class ZwaveSensor(ZWaveBaseEntity, SensorEntity):
 
         # Entity class attributes
         self._attr_force_update = True
-        if not entity_description.name or entity_description.name is UNDEFINED:
+        if not entity_description.name or entity_description.name is Undefined:
             self._attr_name = self.generate_name(include_value_name=True)
 
     @property
@@ -808,14 +807,14 @@ class NewZWaveNumericSensor(ZWaveBaseEntity, SensorEntity):
 
     def __init__(
         self,
-        config_entry: ConfigEntry,
+        config_entry: ZwaveJSConfigEntry,
         driver: Driver,
         info: NewZwaveDiscoveryInfo,
     ) -> None:
         """Initialize the entity."""
         super().__init__(config_entry, driver, info)
         entity_description = info.entity_description
-        if not entity_description.name or entity_description.name is UNDEFINED:
+        if not entity_description.name or entity_description.name is Undefined:
             self._attr_name = self.generate_name(include_value_name=True)
         self._scale_type = self._get_scale_type()
 
@@ -844,11 +843,19 @@ class NewZWaveNumericSensor(ZWaveBaseEntity, SensorEntity):
     @callback
     @override
     def on_value_update(self) -> None:
-        """Handle scale changes for this value on value updated event."""
-        # TODO: Try to limit this to metadata updated event.  # pylint: disable=fixme
-        scale_type = self._get_scale_type()
-        if scale_type is not self._scale_type:
-            self.hass.config_entries.async_schedule_reload(self.config_entry.entry_id)
+        """Rediscover the entity when the scale has changed."""
+        # Wait for the value update that follows the scale's metadata update,
+        # so the rediscovered entity doesn't report the old value in the new scale.
+        # The eagerly started task removes this entity before its state is written.
+        if self._get_scale_type() is not self._scale_type:
+            LOGGER.debug(
+                "[%s] Scale changed for %s, removing for rediscovery",
+                self.entity_id,
+                self.info.primary_value.value_id,
+            )
+            self.config_entry.async_create_task(
+                self.hass, self._async_remove_and_rediscover(self.info.primary_value)
+            )
 
     @property
     @override

@@ -11,7 +11,7 @@ from aiohttp.client_exceptions import ClientError
 from freezegun.api import FrozenDateTimeFactory
 from gcal_sync.auth import API_BASE_URL
 import pytest
-from pytest_homeassistant.common import async_fire_time_changed
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 from pytest_homeassistant.typing import ClientSessionGenerator, WebSocketGenerator
 
@@ -26,6 +26,7 @@ from homeassistant.util import dt as dt_util
 
 from .conftest import (
     CALENDAR_ID,
+    EMAIL_ADDRESS,
     TEST_API_ENTITY,
     TEST_API_ENTITY_NAME,
     TEST_EVENT,
@@ -1809,3 +1810,185 @@ async def test_http_api_event_status(
     events = await response.json()
     assert len(events) == 1
     assert events[0]["status"] == expected_status
+
+
+@pytest.mark.parametrize("calendar_is_primary", [True])
+async def test_primary_and_virtual_calendars_share_sync_and_store(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    aioclient_mock: AiohttpClientMocker,
+    mock_events_list_items: Callable[[list[dict[str, Any]]], None],
+    component_setup: ComponentSetup,
+) -> None:
+    """Test primary and virtual calendars share a single sync and cache entry."""
+    default_event = {
+        **TEST_EVENT,
+        **upcoming(),
+        "id": "default-event",
+        "summary": "Default Event",
+        "transparency": "opaque",
+        "eventType": "default",
+    }
+    birthday_event = {
+        **TEST_EVENT,
+        **upcoming(),
+        "id": "birthday-event",
+        "summary": "Birthday Event",
+        "eventType": "birthday",
+    }
+    mock_events_list_items([default_event, birthday_event])
+    assert await component_setup()
+
+    # Only a single events sync call should be made for both enabled entities.
+    events_calls = [
+        call
+        for call in aioclient_mock.mock_calls
+        if call[1].path.endswith(f"/calendars/{CALENDAR_ID}/events")
+    ]
+    assert len(events_calls) == 1
+
+    # Store should contain only one cache scoped under event_sync/<calendar_id>.
+    store_data = await config_entry.runtime_data.store.async_load()
+    assert store_data is not None
+    assert list(store_data) == ["event_sync"]
+    assert list(store_data["event_sync"]) == [CALENDAR_ID]
+
+    primary_state = hass.states.get(TEST_ENTITY)
+    assert primary_state is not None
+    assert primary_state.attributes.get("message") == "Default Event"
+
+    birthday_state = hass.states.get("calendar.birthdays")
+    assert birthday_state is not None
+    assert birthday_state.attributes.get("message") == "Birthday Event"
+
+
+@pytest.mark.parametrize("calendar_is_primary", [True])
+async def test_virtual_calendar_syncs_when_primary_entity_disabled(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    aioclient_mock: AiohttpClientMocker,
+    mock_events_list_items: Callable[[list[dict[str, Any]]], None],
+    component_setup: ComponentSetup,
+) -> None:
+    """Test virtual calendar still syncs when the primary calendar entity is disabled."""
+    config_entry.add_to_hass(hass)
+    entity_registry.async_get_or_create(
+        Platform.CALENDAR,
+        DOMAIN,
+        f"{EMAIL_ADDRESS}-{CALENDAR_ID}",
+        config_entry=config_entry,
+        disabled_by=RegistryEntryDisabler.USER,
+    )
+    birthday_event = {
+        **TEST_EVENT,
+        **upcoming(),
+        "id": "birthday-event",
+        "summary": "Birthday Event",
+        "eventType": "birthday",
+    }
+    mock_events_list_items([birthday_event])
+    assert await component_setup()
+
+    assert hass.states.get(TEST_ENTITY) is None
+    birthday_state = hass.states.get("calendar.birthdays")
+    assert birthday_state is not None
+    assert birthday_state.attributes.get("message") == "Birthday Event"
+
+    events_calls = [
+        call
+        for call in aioclient_mock.mock_calls
+        if call[1].path.endswith(f"/calendars/{CALENDAR_ID}/events")
+    ]
+    assert len(events_calls) == 1
+
+
+@pytest.mark.parametrize("calendar_is_primary", [True])
+async def test_no_sync_when_all_calendar_entities_disabled(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    aioclient_mock: AiohttpClientMocker,
+    mock_events_list_items: Callable[[list[dict[str, Any]]], None],
+    component_setup: ComponentSetup,
+) -> None:
+    """Test no sync occurs when all entities for a calendar are disabled."""
+    config_entry.add_to_hass(hass)
+    for unique_id in (
+        f"{EMAIL_ADDRESS}-{CALENDAR_ID}",
+        f"{EMAIL_ADDRESS}-{CALENDAR_ID}-birthdays",
+    ):
+        entity_registry.async_get_or_create(
+            Platform.CALENDAR,
+            DOMAIN,
+            unique_id,
+            config_entry=config_entry,
+            disabled_by=RegistryEntryDisabler.USER,
+        )
+    mock_events_list_items([])
+    assert await component_setup()
+
+    events_calls = [
+        call
+        for call in aioclient_mock.mock_calls
+        if call[1].path.endswith(f"/calendars/{CALENDAR_ID}/events")
+    ]
+    assert len(events_calls) == 0
+
+
+async def test_multiple_calendars_persist_in_shared_store(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    aioclient_mock: AiohttpClientMocker,
+    test_api_calendar: dict[str, Any],
+    mock_calendars_list: ApiResult,
+    mock_events_list: Callable[..., None],
+    component_setup: ComponentSetup,
+) -> None:
+    """Test multiple distinct calendars syncing concurrently persist in the store."""
+    second_calendar_id = "second-calendar@group.calendar.google.com"
+    second_calendar = {
+        **test_api_calendar,
+        "id": second_calendar_id,
+        "summary": "Second Calendar",
+        "primary": False,
+    }
+    aioclient_mock.clear_requests()
+    mock_calendars_list({"items": [test_api_calendar, second_calendar]})
+    mock_events_list(
+        {
+            "items": [
+                {
+                    **TEST_EVENT,
+                    **upcoming(),
+                    "id": "cal-1-event",
+                    "summary": "Calendar 1 Event",
+                    "transparency": "opaque",
+                }
+            ]
+        },
+        calendar_id=CALENDAR_ID,
+    )
+    mock_events_list(
+        {
+            "items": [
+                {
+                    **TEST_EVENT,
+                    **upcoming(),
+                    "id": "cal-2-event",
+                    "summary": "Calendar 2 Event",
+                    "transparency": "opaque",
+                }
+            ]
+        },
+        calendar_id=second_calendar_id,
+    )
+    assert await component_setup()
+
+    store_data = await config_entry.runtime_data.store.async_load()
+    assert store_data is not None
+    assert set(store_data["event_sync"]) == {CALENDAR_ID, second_calendar_id}
+    assert list(store_data["event_sync"][CALENDAR_ID]["items"]) == ["cal-1-event"]
+    assert list(store_data["event_sync"][second_calendar_id]["items"]) == [
+        "cal-2-event"
+    ]

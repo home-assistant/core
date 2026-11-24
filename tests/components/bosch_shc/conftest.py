@@ -24,6 +24,7 @@ from boschshcpy import (
     SHCCameraOutdoorGen2,
     SHCClimateControl,
     SHCHeatingCircuit,
+    SHCInformation,
     SHCIntrusionSystem,
     SHCLightSwitchBSM,
     SHCMicromoduleBlinds,
@@ -50,10 +51,13 @@ from boschshcpy import (
     ThermostatService,
 )
 from boschshcpy.services_impl import (
+    DimmerConfigurationService,
     DisplayDirection,
     DisplayedTemperatureConfiguration,
+    OutdoorSirenPowerSupplyService,
     OutdoorSirenService,
     PirSensorConfigurationService,
+    PollControlService,
     PowerSwitchConfigurationService,
     PresenceSimulationConfigurationService,
     SmokeSensitivityService,
@@ -67,11 +71,12 @@ import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.bosch_shc.const import (
+    CONF_HOSTNAME,
     CONF_SSL_CERTIFICATE,
     CONF_SSL_KEY,
     DOMAIN,
 )
-from homeassistant.const import CONF_HOST
+from homeassistant.const import CONF_HOST, CONF_TOKEN
 from homeassistant.core import HomeAssistant
 
 
@@ -89,6 +94,8 @@ def mock_config_entry() -> MockConfigEntry:
             CONF_HOST: "1.1.1.1",
             CONF_SSL_CERTIFICATE: "cert",
             CONF_SSL_KEY: "key",
+            CONF_TOKEN: "token:hostname",
+            CONF_HOSTNAME: "hostname",
         },
         unique_id="test-mac",
     )
@@ -131,6 +138,7 @@ _EMPTY_DEVICE_BUCKETS: dict[str, Any] = {
     # Not a list bucket — presence_simulation_system is a single optional
     # device on device_helper, not a device_helper.<x> list of devices.
     "presence_simulation_system": None,
+    "smoke_detection_system": None,
 }
 
 
@@ -150,7 +158,8 @@ def mock_session(device_buckets: dict[str, Any]) -> Generator[MagicMock]:
     """Mock SHCSession, patched in for the duration of the test."""
     session = MagicMock()
     session.information.unique_id = "test-mac"
-    session.information.updateState.name = "UP_TO_DATE"
+    session.information.updateState = SHCInformation.UpdateState.NO_UPDATE_AVAILABLE
+    session.information.available_version = None
     session.information.version = "2.0"
     session.device_helper = SimpleNamespace(**device_buckets)
     session.intrusion_system = intrusion_system_device()
@@ -265,6 +274,10 @@ def outdoor_siren_device(
     device_id: str = "hdm:ZigBee:outdoorsiren1",
     name: str = "Outdoor Siren",
     sound_level: OutdoorSirenService.SoundLevel = OutdoorSirenService.SoundLevel.MEDIUM,
+    power_supply: OutdoorSirenPowerSupplyService | None = None,
+    acoustic_alarm_on: bool = False,
+    visual_alarm_on: bool = False,
+    tamper_activated: bool = False,
 ) -> SHCOutdoorSiren:
     """Build a minimal device double for the outdoor_sirens bucket."""
     device = create_autospec(SHCOutdoorSiren, instance=True, spec_set=True)
@@ -279,7 +292,12 @@ def outdoor_siren_device(
     device.status = "AVAILABLE"
     siren_service = create_autospec(OutdoorSirenService, instance=True)
     siren_service.sound_level = sound_level
+    siren_service.acoustic_alarm_on = acoustic_alarm_on
+    siren_service.visual_alarm_on = visual_alarm_on
+    siren_service.tamper_activated = tamper_activated
     device.siren = siren_service
+    device.supports_power_supply = power_supply is not None
+    device.power_supply = power_supply
     return device
 
 
@@ -415,6 +433,8 @@ def climate_control_device(
     supports_eco: bool = True,
     low: bool = False,
     has_demand: bool = False,
+    ventilation_mode: bool = False,
+    setpoint_temperature_offset_active: bool = False,
 ) -> SHCClimateControl:
     """Build a minimal device double for the climate_controls bucket."""
     device = create_autospec(SHCClimateControl, instance=True, spec_set=True)
@@ -439,6 +459,8 @@ def climate_control_device(
     device.supports_eco = supports_eco
     device.low = low
     device.has_demand = has_demand
+    device.ventilation_mode = ventilation_mode
+    device.setpoint_temperature_offset_active = setpoint_temperature_offset_active
     return device
 
 
@@ -516,6 +538,11 @@ def thermostat_gen2_device(
     valve_type: WallThermostatConfiguration.ValveType | None = None,
     heater_type: WallThermostatConfiguration.HeaterType | None = None,
     terminal_type: TerminalConfiguration.Type | None = None,
+    temperature: float = 21.0,
+    humidity: float | None = None,
+    terminal_temperature: float | None = None,
+    display_brightness: int | None = None,
+    display_on_time: int | None = None,
     spec: type[SHCThermostatGen2 | SHCRoomThermostat2] = SHCThermostatGen2,
 ) -> SHCThermostatGen2 | SHCRoomThermostat2:
     """Build a minimal device double for the thermostats/roomthermostats buckets (Gen2)."""
@@ -553,6 +580,18 @@ def thermostat_gen2_device(
     if spec is SHCRoomThermostat2:
         device.supports_terminal_configuration = terminal_type is not None
         device.terminal_type = terminal_type
+        device.temperature = temperature
+        device.supports_humidity = humidity is not None
+        device.humidity = humidity
+        device.terminal_temperature = terminal_temperature
+    device.display_brightness = display_brightness
+    device.display_on_time = display_on_time
+    device.display_brightness_min = 0
+    device.display_brightness_max = 100
+    device.display_brightness_step_size = 1
+    device.display_on_time_min = 0
+    device.display_on_time_max = 3600
+    device.display_on_time_step_size = 1
     return device
 
 
@@ -581,6 +620,12 @@ def micromodule_dimmer_device(
     name: str = "Dimmer",
     binarystate: bool = False,
     brightness: int = 50,
+    supports_dimmer_configuration: bool = False,
+    edge_phase_control_mode: DimmerConfigurationService.EdgePhaseControlMode
+    | None = None,
+    dimming_speed: int | None = 5,
+    min_brightness: int = 0,
+    max_brightness: int = 100,
 ) -> SHCMicromoduleDimmer:
     """Build a minimal device double for the micromodule_dimmers bucket."""
     device = create_autospec(SHCMicromoduleDimmer, instance=True, spec_set=True)
@@ -595,6 +640,14 @@ def micromodule_dimmer_device(
     device.status = "AVAILABLE"
     device.binarystate = binarystate
     device.brightness = brightness
+    device.supports_dimmer_configuration = supports_dimmer_configuration
+    device.edge_phase_control_mode = edge_phase_control_mode
+    device.dimming_speed = dimming_speed
+    device.dimmer_configuration = (
+        SimpleNamespace(min_brightness=min_brightness, max_brightness=max_brightness)
+        if supports_dimmer_configuration
+        else None
+    )
     return device
 
 
@@ -805,6 +858,36 @@ class FakeAlarmService:
         """No-op counterpart to subscribe_callback."""
 
 
+class FakeSurveillanceAlarmService:
+    """Minimal double of the SurveillanceAlarm DeviceService callback API."""
+
+    id = "SurveillanceAlarm"
+
+    def __init__(self) -> None:
+        """Initialize the fake service's callback registry."""
+        self.callbacks: dict[str, Any] = {}
+
+    def subscribe_callback(self, entity: Any, callback: Any) -> None:
+        """Remember the callback so tests can fire it."""
+        self.callbacks[entity] = callback
+
+    def unsubscribe_callback(self, entity: Any) -> None:
+        """Forget the callback."""
+        self.callbacks.pop(entity, None)
+
+
+def smoke_detection_system_device(
+    alarm: Any = None, triggered: set[str] | None = None
+) -> MagicMock:
+    """Build a minimal double of the smoke detection system."""
+    system = MagicMock()
+    system.id = "hdm:ZigBee:smokedetectionsystem"
+    system.alarm = alarm
+    system.device_services = [FakeSurveillanceAlarmService()]
+    system.triggered_device_ids.return_value = triggered or set()
+    return system
+
+
 def motion_detector_device(
     device_id: str = "hdm:HomeMaticIP:motion1",
     name: str = "Motion Detector",
@@ -837,6 +920,11 @@ def motion_detector2_device(
     motion_sensitivity: PirSensorConfigurationService.MotionSensitivity
     | None = PirSensorConfigurationService.MotionSensitivity.MIDDLE,
     smart_sensitivity: dict[str, str] | None = None,
+    binaryswitch: bool = False,
+    multi_level_switch: int = 0,
+    long_poll_interval: PollControlService.PollControlState = PollControlService.PollControlState.LONG,
+    occupied: bool = False,
+    was_tampered: bool = False,
 ) -> SHCMotionDetector2:
     """Build a minimal device double for the motion_detectors2 bucket."""
     device = create_autospec(SHCMotionDetector2, instance=True, spec_set=True)
@@ -855,11 +943,16 @@ def motion_detector2_device(
     device.smart_sensitivity_enabled = smart_sensitivity_enabled
     device.supports_tamper_reset = supports_tamper_reset
     device.latestmotion = latestmotion
+    device.occupied = occupied
+    device.was_tampered = was_tampered
     device.get_smart_sensitivity.side_effect = lambda context: (
         {"context": context.value, "manualLevel": smart_sensitivity[context.value]}
         if smart_sensitivity
         else None
     )
+    device.binaryswitch = binaryswitch
+    device.multi_level_switch = multi_level_switch
+    device.long_poll_interval = long_poll_interval
     if motion_sensitivity is None:
         del device.motion_sensitivity
     else:

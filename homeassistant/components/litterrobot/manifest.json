@@ -4,6 +4,7 @@
   "categories": ["pets"],
   "codeowners": ["@natekspencer", "@tkdrob"],
   "config_flow": true,
+  "connectivity": ["cloud"],
   "dhcp": [
     {
       "hostname": "litter-robot4"
@@ -17,5 +18,5 @@
   "iot_class": "cloud_push",
   "loggers": ["pylitterbot"],
   "quality_scale": "platinum",
-  "requirements": ["pylitterbot==2025.7.0"]
+  "requirements": ["pylitterbot==2025.8.0"]
 }

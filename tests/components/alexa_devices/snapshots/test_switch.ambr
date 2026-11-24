@@ -1,5 +1,55 @@
 # serializer version: 1
-# name: test_all_entities[switch.echo_test_announcements-entry]
+# name: test_all_entities[aqm][switch.air_quality_monitor_test_led_indicator-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('alexa_devices', 'aqm_test_serial_number')]>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'switch.air_quality_monitor_test_led_indicator',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'LED indicator',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'LED indicator',
+    'platform': 'alexa_devices',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'aqm_led',
+    'unique_id': 'aqm_test_serial_number-aqm_led',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[aqm][switch.air_quality_monitor_test_led_indicator-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Air Quality Monitor Test LED indicator',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.air_quality_monitor_test_led_indicator',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_all_entities[echo][switch.echo_test_announcements-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -36,7 +86,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[switch.echo_test_announcements-state]
+# name: test_all_entities[echo][switch.echo_test_announcements-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Echo Test Announcements',
@@ -49,7 +99,7 @@
     'state': 'on',
   })
 # ---
-# name: test_all_entities[switch.echo_test_communications-entry]
+# name: test_all_entities[echo][switch.echo_test_communications-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -86,7 +136,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[switch.echo_test_communications-state]
+# name: test_all_entities[echo][switch.echo_test_communications-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Echo Test Communications',
@@ -99,7 +149,7 @@
     'state': 'on',
   })
 # ---
-# name: test_all_entities[switch.echo_test_do_not_disturb-entry]
+# name: test_all_entities[echo][switch.echo_test_do_not_disturb-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -136,7 +186,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[switch.echo_test_do_not_disturb-state]
+# name: test_all_entities[echo][switch.echo_test_do_not_disturb-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Echo Test Do not disturb',
@@ -147,5 +197,56 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
+  })
+# ---
+# name: test_all_entities[plug][switch.smart_plug_test-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('alexa_devices', 'plug_test_serial_number')]>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': None,
+    'entity_id': 'switch.smart_plug_test',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+    }),
+    'original_device_class': <SwitchDeviceClass.OUTLET: 'outlet'>,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'alexa_devices',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'plug_test_serial_number-plug_power',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[plug][switch.smart_plug_test-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'outlet',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Smart Plug Test',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.smart_plug_test',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
   })
 # ---

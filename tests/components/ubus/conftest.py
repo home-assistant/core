@@ -11,7 +11,13 @@ from homeassistant.components.ubus.const import (
     DEFAULT_DHCP_SOFTWARE,
     DOMAIN,
 )
-from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import (
+    CONF_HOST,
+    CONF_PASSWORD,
+    CONF_SSL,
+    CONF_USERNAME,
+    CONF_VERIFY_SSL,
+)
 
 MOCK_HOST = "192.168.1.1"
 
@@ -19,6 +25,8 @@ MOCK_CONFIG = {
     CONF_HOST: MOCK_HOST,
     CONF_USERNAME: "root",
     CONF_PASSWORD: "password",
+    CONF_SSL: False,
+    CONF_VERIFY_SSL: True,
     CONF_DHCP_SOFTWARE: DEFAULT_DHCP_SOFTWARE,
 }
 

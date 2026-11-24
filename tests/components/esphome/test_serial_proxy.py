@@ -14,6 +14,7 @@ from aioesphomeapi.model import (
 )
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.typing import WebSocketGenerator
 import serialx
 from serialx.platforms.serial_esphome import InvalidSettingsError, SerialProxyModeName
 from yarl import URL
@@ -22,6 +23,7 @@ from homeassistant.components.esphome import _async_scan_serial_ports, serial_pr
 from homeassistant.components.esphome.const import DOMAIN
 from homeassistant.components.usb import SerialDevice, USBDevice
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr
 from homeassistant.setup import async_setup_component
 
 from .conftest import MockESPHomeDeviceType
@@ -181,6 +183,9 @@ async def test_scan_serial_ports_happy_path(
     mock_esphome_device: MockESPHomeDeviceType,
 ) -> None:
     """A loaded entry with serial proxies emits a SerialDevice per proxy."""
+    _mock_identities(
+        mock_client, [SerialProxyIdentity(instance=0), SerialProxyIdentity(instance=1)]
+    )
     device = await mock_esphome_device(
         mock_client=mock_client,
         device_info={
@@ -220,6 +225,7 @@ async def test_scan_serial_ports_uses_project_info(
     mock_esphome_device: MockESPHomeDeviceType,
 ) -> None:
     """Project information takes precedence over manufacturer and model."""
+    _mock_identities(mock_client, [SerialProxyIdentity(instance=0)])
     device = await mock_esphome_device(
         mock_client=mock_client,
         device_info={
@@ -252,6 +258,7 @@ async def test_scan_serial_ports_defaults_manufacturer(
     mock_esphome_device: MockESPHomeDeviceType,
 ) -> None:
     """A device without a manufacturer falls back to espressif."""
+    _mock_identities(mock_client, [SerialProxyIdentity(instance=0)])
     device = await mock_esphome_device(
         mock_client=mock_client,
         device_info={
@@ -315,6 +322,63 @@ async def test_scan_serial_ports_usb(
         1: EMPTY_SOCKET,
     }
     assert _async_scan_serial_ports(hass) == [_zbt2_port(device.entry.entry_id)]
+
+
+@pytest.mark.usefixtures("mock_zeroconf")
+async def test_scan_serial_ports_before_identity(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_esphome_device: MockESPHomeDeviceType,
+) -> None:
+    """A port is not listed until the device has sent its identity."""
+    callbacks = _mock_identities(mock_client, [])
+    device = await mock_esphome_device(
+        mock_client=mock_client,
+        device_info={"serial_proxies": USB_PROXIES},
+    )
+
+    assert _async_scan_serial_ports(hass) == []
+
+    callbacks[0](ZBT2)
+    assert _async_scan_serial_ports(hass) == [_zbt2_port(device.entry.entry_id)]
+
+
+@pytest.mark.usefixtures("mock_zeroconf")
+async def test_device_capabilities_match_scan(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    mock_client: APIClient,
+    mock_esphome_device: MockESPHomeDeviceType,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """The setup wizard gets the port URLs that the serial port scan lists."""
+    _mock_identities(mock_client, [ZBT2, EMPTY_SOCKET])
+    device = await mock_esphome_device(
+        mock_client=mock_client,
+        device_info={"serial_proxies": USB_PROXIES},
+        device_capabilities={"serial_proxies": USB_PROXIES},
+    )
+    entry_id = device.entry.entry_id
+    device_entry = device_registry.async_get_device_by_connection(
+        (dr.CONNECTION_NETWORK_MAC, device.device_info.mac_address), entry_id
+    )
+    assert device_entry is not None
+
+    websocket_client = await hass_ws_client()
+    await websocket_client.send_json_auto_id(
+        {"type": "esphome/get_device_capabilities", "device_id": device_entry.id}
+    )
+    response = await websocket_client.receive_json()
+
+    assert _async_scan_serial_ports(hass) == [_zbt2_port(entry_id)]
+    assert response["result"]["serial_proxies"] == [
+        {
+            "name": "USB (Zigbee)",
+            "port_type": "USB_SERIAL",
+            "url": _zbt2_port(entry_id).device,
+        },
+        {"name": "USB (Z-Wave)", "port_type": "USB_SERIAL", "url": None},
+    ]
 
 
 @pytest.mark.usefixtures("mock_zeroconf")

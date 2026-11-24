@@ -143,6 +143,9 @@
     "api_key_required": {
       "message": "An API key is required when more than one plane is configured"
     },
+    "connection_error": {
+      "message": "An error occurred while connecting to the Forecast.Solar API"
+    },
     "end_before_start": {
       "message": "The end time must be after the start time."
     },

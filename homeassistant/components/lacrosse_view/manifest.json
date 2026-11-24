@@ -4,6 +4,7 @@
   "categories": ["sensors.temperature_humidity"],
   "codeowners": ["@IceBotYT"],
   "config_flow": true,
+  "connectivity": ["cloud"],
   "documentation": "https://www.home-assistant.io/integrations/lacrosse_view",
   "integration_type": "hub",
   "iot_class": "cloud_polling",

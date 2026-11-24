@@ -14,7 +14,7 @@
     'identifiers': set({
       tuple(
         'onedrive',
-        'mock_drive_id',
+        'MOCK_DRIVE_ID',
       ),
     }),
     'labels': set({

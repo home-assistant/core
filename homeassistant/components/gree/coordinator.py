@@ -6,13 +6,14 @@ from datetime import datetime, timedelta
 import logging
 from typing import Any, override
 
-from greeclimate.device import Device, DeviceInfo
+from greeclimate.air_conditioner import AirConditionerDevice
+from greeclimate.device import DeviceInfo
 from greeclimate.discovery import Discovery, Listener
 from greeclimate.exceptions import DeviceNotBoundError, DeviceTimeoutError
 from greeclimate.network import Response
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
+from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.json import json_dumps
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
@@ -41,12 +42,15 @@ class GreeRuntimeData:
 
 
 class DeviceDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
-    """Manages polling for state changes from the device."""
+    """Poll Gree devices and publish state received in their replies."""
 
     config_entry: GreeConfigEntry
 
     def __init__(
-        self, hass: HomeAssistant, config_entry: GreeConfigEntry, device: Device
+        self,
+        hass: HomeAssistant,
+        config_entry: GreeConfigEntry,
+        device: AirConditionerDevice,
     ) -> None:
         """Initialize the data update coordinator."""
         super().__init__(
@@ -59,13 +63,24 @@ class DeviceDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         )
         self.device = device
         self.device.add_handler(Response.RESULT, self.device_state_updated)
+        self.device.add_handler(Response.DATA, self.device_state_updated)
 
         self._error_count: int = 0
         self._last_response_time: datetime = utcnow()
         self._last_error_time: datetime | None = None
 
+    @callback
+    @override
+    def async_add_listener(
+        self, update_callback: CALLBACK_TYPE, context: Any = None
+    ) -> CALLBACK_TYPE:
+        """Initialize a listener from cached state before subscribing it."""
+        if self.data is not None:
+            update_callback()
+        return super().async_add_listener(update_callback, context)
+
     def device_state_updated(self, *args: Any) -> None:
-        """Handle device state updates."""
+        """Publish a device reply and reset response freshness."""
         _LOGGER.debug("Device state updated: %s", json_dumps(args))
         self._error_count = 0
         self._last_response_time = utcnow()
@@ -87,7 +102,7 @@ class DeviceDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             self._error_count += 1
 
             # Under normal conditions GREE units timeout every once in a while
-            if self.last_update_success and self._error_count >= MAX_ERRORS:
+            if self._error_count >= MAX_ERRORS:
                 raise UpdateFailed(
                     f"Device {self.name} at {self.device.device_info.ip} is"
                     " unavailable, could not send update request"
@@ -113,13 +128,12 @@ class DeviceDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 )
             else:
                 self._error_count = 0
-            if self.last_update_success and self._error_count >= MAX_ERRORS:
+            if self._error_count >= MAX_ERRORS:
                 raise UpdateFailed(
                     f"Device {self.name} is unresponsive for"
                     " too long and now unavailable"
                 )
 
-        self._last_response_time = utcnow()
         return copy.deepcopy(self.device.raw_properties)
 
     async def push_state_update(self):
@@ -149,7 +163,7 @@ class DiscoveryService(Listener):
     async def device_found(self, device_info: DeviceInfo) -> None:
         """Handle new device found on the network."""
 
-        device = Device(device_info)
+        device = AirConditionerDevice(device_info)
         try:
             await device.bind()
         except DeviceNotBoundError:

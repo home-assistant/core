@@ -25,10 +25,6 @@ def mock_pytouchline() -> Generator[MagicMock]:
             "homeassistant.components.touchline.config_flow.PyTouchline",
             new=mock_class,
         ),
-        patch(
-            "homeassistant.components.touchline.climate.PyTouchline",
-            new=mock_class,
-        ),
     ):
         instance = mock_class.return_value
         instance.get_number_of_devices.return_value = 1

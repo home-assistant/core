@@ -29,21 +29,21 @@
   },
   "device_automation": {
     "trigger_subtype": {
-      "double_press": "Double Press",
-      "hold_press": "Hold Press",
-      "hold_release": "Hold Release",
-      "long_double_press": "Long Double Press",
-      "long_press": "Long Press",
-      "long_triple_press": "Long Triple Press",
+      "double_press": "Double press",
+      "hold_press": "Hold press",
+      "hold_release": "Hold release",
+      "long_double_press": "Long double press",
+      "long_press": "Long press",
+      "long_triple_press": "Long triple press",
       "off": "Off",
       "on": "On",
       "press": "Press",
-      "rotate_left": "Rotate Left",
-      "rotate_right": "Rotate Right",
-      "step_down": "Step Down",
-      "step_up": "Step Up",
+      "rotate_left": "Rotate left",
+      "rotate_right": "Rotate right",
+      "step_down": "Step down",
+      "step_up": "Step up",
       "toggle": "Toggle",
-      "triple_press": "Triple Press"
+      "triple_press": "Triple press"
     },
     "trigger_type": {
       "button": "Button \"{subtype}\"",

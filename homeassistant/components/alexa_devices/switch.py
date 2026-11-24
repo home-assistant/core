@@ -9,6 +9,7 @@ from aioamazondevices.structures import AmazonDevice
 
 from homeassistant.components.switch import (
     DOMAIN as SWITCH_DOMAIN,
+    SwitchDeviceClass,
     SwitchEntity,
     SwitchEntityDescription,
 )
@@ -44,6 +45,64 @@ def _update_communication_state(
     """Update the local communication settings state."""
     coordinator.data[serial_num].communication_settings[entity_description_key] = (
         "ON" if state else "OFF"
+    )
+
+
+def _feature_is_on(
+    coordinator: AmazonDevicesCoordinator,
+    serial_num: str,
+    entity_description_key: str,
+) -> bool:
+    """Return the feature sensor state."""
+    return coordinator.sensors[serial_num][entity_description_key].value == "ON"
+
+
+def _feature_is_available(
+    coordinator: AmazonDevicesCoordinator,
+    serial_num: str,
+    entity_description_key: str,
+) -> bool:
+    """Return if the feature sensor has a valid value."""
+    return (
+        sensor := coordinator.device_sensor(serial_num, entity_description_key)
+    ) is not None and sensor.error is False
+
+
+async def _set_feature_state(
+    coordinator: AmazonDevicesCoordinator,
+    device: AmazonDevice,
+    entity_description_key: str,
+    state: bool,
+) -> None:
+    """Turn the feature on or off."""
+    sensor = coordinator.sensors[device.serial_number][entity_description_key]
+    await coordinator.api.call_feature_operation(
+        device,
+        sensor.feature_name,
+        "turnOn" if state else "turnOff",
+        command_payload=None,
+        instance=sensor.instance or None,
+    )
+
+
+def _update_feature_state(
+    coordinator: AmazonDevicesCoordinator,
+    serial_num: str,
+    entity_description_key: str,
+    state: bool,
+) -> None:
+    """Optimistically update the feature sensor state until Amazon pushes it."""
+    coordinator.sensors[serial_num][entity_description_key].value = (
+        "ON" if state else "OFF"
+    )
+
+
+def _has_feature_sensor(device: AmazonDevice, sensor_key: str) -> bool:
+    """Return if a supported feature of the device provides the sensor."""
+    return any(
+        sensor_key in feature.sensor_keys.values()
+        for instances in device.features.values()
+        for feature in instances.values()
     )
 
 
@@ -105,6 +164,26 @@ COMMUNICATION_SWITCHES: Final = (
         update_state_fn=_update_communication_state,
     ),
 )
+FEATURE_SWITCHES: Final = (
+    AmazonSwitchEntityDescription(
+        key="aqm_led",
+        translation_key="aqm_led",
+        entity_category=EntityCategory.CONFIG,
+        is_on_fn=_feature_is_on,
+        is_available_fn=_feature_is_available,
+        method=_set_feature_state,
+        update_state_fn=_update_feature_state,
+    ),
+    AmazonSwitchEntityDescription(
+        key="plug_power",
+        name=None,
+        device_class=SwitchDeviceClass.OUTLET,
+        is_on_fn=_feature_is_on,
+        is_available_fn=_feature_is_available,
+        method=_set_feature_state,
+        update_state_fn=_update_feature_state,
+    ),
+)
 
 
 async def async_setup_entry(
@@ -158,6 +237,12 @@ async def async_setup_entry(
                 for serial_num in new_devices
                 if switch_desc.key
                 in coordinator.data[serial_num].communication_settings
+            ]
+            + [
+                AmazonSwitchEntity(coordinator, serial_num, switch_desc)
+                for switch_desc in FEATURE_SWITCHES
+                for serial_num in new_devices
+                if _has_feature_sensor(coordinator.data[serial_num], switch_desc.key)
             ]
         )
         known_dnd_devices.update(new_dnd_devices)

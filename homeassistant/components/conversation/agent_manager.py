@@ -15,7 +15,12 @@ from homeassistant.core import (
     callback,
 )
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import config_validation as cv, intent, singleton
+from homeassistant.helpers import (
+    chat_session,
+    config_validation as cv,
+    intent,
+    singleton,
+)
 
 from .chat_log import current_chat_log
 from .const import DATA_COMPONENT, HOME_ASSISTANT_AGENT, IntentSource
@@ -125,7 +130,15 @@ async def async_converse(
             )
         )
         try:
-            result = await method(conversation_input)
+            if isinstance(agent, ConversationEntity):
+                # The chat log keeps a failed turn, so return its ID on errors.
+                with chat_session.async_get_chat_session(
+                    hass, conversation_id, context=context
+                ) as session:
+                    conversation_input.conversation_id = session.conversation_id
+                    result = await method(conversation_input)
+            else:
+                result = await method(conversation_input)
         except HomeAssistantError as err:
             if (
                 chat_log := current_chat_log.get()
@@ -139,7 +152,7 @@ async def async_converse(
             )
             result = ConversationResult(
                 response=intent_response,
-                conversation_id=conversation_id,
+                conversation_id=conversation_input.conversation_id,
             )
 
         trace.set_result(**result.as_dict())

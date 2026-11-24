@@ -12,20 +12,17 @@ from aiontfy.exceptions import (
     NtfyTimeoutError,
 )
 
-from homeassistant.components.event import EventEntity, EventEntityDescription
+from homeassistant.components.event import (
+    DOMAIN as EVENT_DOMAIN,
+    EventEntity,
+    EventEntityDescription,
+)
 from homeassistant.config_entries import ConfigSubentry
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import issue_registry as ir
+from homeassistant.helpers import entity_registry as er, issue_registry as ir
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import (
-    CONF_MESSAGE,
-    CONF_PRIORITY,
-    CONF_TAGS,
-    CONF_TITLE,
-    CONF_TOPIC,
-    DOMAIN,
-)
+from .const import CONF_MESSAGE, CONF_PRIORITY, CONF_TAGS, CONF_TITLE, DOMAIN
 from .coordinator import NtfyConfigEntry
 from .entity import NtfyBaseEntity
 
@@ -42,10 +39,32 @@ async def async_setup_entry(
 ) -> None:
     """Set up the event platform."""
 
+    # Entities disabled while the entry was not loaded didn't delete their issue
+    for entity_entry in er.async_entries_for_config_entry(
+        er.async_get(hass), config_entry.entry_id
+    ):
+        if (
+            entity_entry.domain == EVENT_DOMAIN
+            and entity_entry.disabled
+            and entity_entry.config_subentry_id is not None
+        ):
+            ir.async_delete_issue(
+                hass,
+                DOMAIN,
+                _topic_protected_issue_id(
+                    config_entry.entry_id, entity_entry.config_subentry_id
+                ),
+            )
+
     for subentry_id, subentry in config_entry.subentries.items():
         async_add_entities(
             [NtfyEventEntity(config_entry, subentry)], config_subentry_id=subentry_id
         )
+
+
+def _topic_protected_issue_id(entry_id: str, subentry_id: str) -> str:
+    """Return the id of the protected topic issue of a topic subentry."""
+    return f"topic_protected_{entry_id}_{subentry_id}"
 
 
 class NtfyEventEntity(NtfyBaseEntity, EventEntity):
@@ -66,6 +85,9 @@ class NtfyEventEntity(NtfyBaseEntity, EventEntity):
         """Initialize the entity."""
         super().__init__(config_entry, subentry)
         self._ws: asyncio.Task | None = None
+        self._topic_protected_issue_id = _topic_protected_issue_id(
+            config_entry.entry_id, subentry.subentry_id
+        )
 
     @callback
     def _async_handle_event(self, notification: Notification) -> None:
@@ -92,6 +114,21 @@ class NtfyEventEntity(NtfyBaseEntity, EventEntity):
             "websocket_watchdog",
         )
 
+    @override
+    async def async_removed_from_registry(self) -> None:
+        """Run when entity has been removed from the entity registry."""
+        ir.async_delete_issue(self.hass, DOMAIN, self._topic_protected_issue_id)
+
+    @override
+    async def async_will_remove_from_hass(self) -> None:
+        """Run when entity will be removed from hass."""
+        # Core hides issues of a disabled config entry, keep them and their ignore
+        if self.registry_entry is not None and self.registry_entry.disabled_by not in (
+            None,
+            er.RegistryEntryDisabler.CONFIG_ENTRY,
+        ):
+            ir.async_delete_issue(self.hass, DOMAIN, self._topic_protected_issue_id)
+
     async def ws_connect(self) -> None:
         """Connect websocket."""
         while True:
@@ -100,6 +137,7 @@ class NtfyEventEntity(NtfyBaseEntity, EventEntity):
                     raise exc  # noqa: TRY301
             except asyncio.InvalidStateError:
                 self._attr_available = True
+                ir.async_delete_issue(self.hass, DOMAIN, self._topic_protected_issue_id)
             except asyncio.CancelledError:
                 self._attr_available = False
                 return
@@ -113,12 +151,21 @@ class NtfyEventEntity(NtfyBaseEntity, EventEntity):
                 ir.async_create_issue(
                     self.hass,
                     DOMAIN,
-                    f"topic_protected_{self.topic}",
+                    self._topic_protected_issue_id,
+                    config_entry_id=self.config_entry.entry_id,
+                    config_subentry_id=self.subentry.subentry_id,
                     is_fixable=True,
                     severity=ir.IssueSeverity.ERROR,
                     translation_key="topic_protected",
-                    translation_placeholders={CONF_TOPIC: self.topic},
-                    data={"unique_id": self.unique_id, "topic": self.topic},
+                    translation_placeholders={
+                        "topic": self.topic,
+                        "name": self.config_entry.title,
+                    },
+                    data={
+                        "unique_id": self.unique_id,
+                        "topic": self.topic,
+                        "name": self.config_entry.title,
+                    },
                 )
                 return
             except NtfyHTTPError as e:

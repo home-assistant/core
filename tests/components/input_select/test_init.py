@@ -19,7 +19,7 @@ from homeassistant.components.input_select.const import (
     InputSelectServiceArgument,
 )
 from homeassistant.components.select import SelectEntityCapabilityAttribute
-from homeassistant.const import ATTR_ENTITY_ID, CONF_NAME, EntityStateAttribute
+from homeassistant.const import CONF_NAME, EntityStateAttribute, TargetKey
 from homeassistant.core import Context, HomeAssistant, State
 from homeassistant.exceptions import ServiceValidationError, Unauthorized
 from homeassistant.helpers import entity_registry as er
@@ -90,7 +90,7 @@ async def test_select_option(hass: HomeAssistant) -> None:
         DOMAIN,
         InputSelectService.SELECT_OPTION,
         {
-            ATTR_ENTITY_ID: entity_id,
+            TargetKey.ENTITY_ID: entity_id,
             InputSelectServiceArgument.OPTION: "another option",
         },
         blocking=True,
@@ -106,7 +106,7 @@ async def test_select_option(hass: HomeAssistant) -> None:
             DOMAIN,
             InputSelectService.SELECT_OPTION,
             {
-                ATTR_ENTITY_ID: entity_id,
+                TargetKey.ENTITY_ID: entity_id,
                 InputSelectServiceArgument.OPTION: "non existing option",
             },
             blocking=True,
@@ -137,7 +137,7 @@ async def test_select_next(hass: HomeAssistant) -> None:
     await hass.services.async_call(
         DOMAIN,
         InputSelectService.SELECT_NEXT,
-        {ATTR_ENTITY_ID: entity_id},
+        {TargetKey.ENTITY_ID: entity_id},
         blocking=True,
     )
     state = hass.states.get(entity_id)
@@ -146,7 +146,7 @@ async def test_select_next(hass: HomeAssistant) -> None:
     await hass.services.async_call(
         DOMAIN,
         InputSelectService.SELECT_NEXT,
-        {ATTR_ENTITY_ID: entity_id},
+        {TargetKey.ENTITY_ID: entity_id},
         blocking=True,
     )
     state = hass.states.get(entity_id)
@@ -175,7 +175,7 @@ async def test_select_previous(hass: HomeAssistant) -> None:
     await hass.services.async_call(
         DOMAIN,
         InputSelectService.SELECT_PREVIOUS,
-        {ATTR_ENTITY_ID: entity_id},
+        {TargetKey.ENTITY_ID: entity_id},
         blocking=True,
     )
     state = hass.states.get(entity_id)
@@ -184,7 +184,7 @@ async def test_select_previous(hass: HomeAssistant) -> None:
     await hass.services.async_call(
         DOMAIN,
         InputSelectService.SELECT_PREVIOUS,
-        {ATTR_ENTITY_ID: entity_id},
+        {TargetKey.ENTITY_ID: entity_id},
         blocking=True,
     )
     state = hass.states.get(entity_id)
@@ -213,7 +213,7 @@ async def test_select_first_last(hass: HomeAssistant) -> None:
     await hass.services.async_call(
         DOMAIN,
         InputSelectService.SELECT_FIRST,
-        {ATTR_ENTITY_ID: entity_id},
+        {TargetKey.ENTITY_ID: entity_id},
         blocking=True,
     )
 
@@ -223,7 +223,7 @@ async def test_select_first_last(hass: HomeAssistant) -> None:
     await hass.services.async_call(
         DOMAIN,
         InputSelectService.SELECT_LAST,
-        {ATTR_ENTITY_ID: entity_id},
+        {TargetKey.ENTITY_ID: entity_id},
         blocking=True,
     )
 
@@ -298,7 +298,7 @@ async def test_set_options_service(hass: HomeAssistant) -> None:
         InputSelectService.SET_OPTIONS,
         {
             InputSelectServiceArgument.OPTIONS: ["first option", "middle option"],
-            ATTR_ENTITY_ID: entity_id,
+            TargetKey.ENTITY_ID: entity_id,
         },
         blocking=True,
     )
@@ -310,7 +310,7 @@ async def test_set_options_service(hass: HomeAssistant) -> None:
         InputSelectService.SET_OPTIONS,
         {
             InputSelectServiceArgument.OPTIONS: ["test1", "test2"],
-            ATTR_ENTITY_ID: entity_id,
+            TargetKey.ENTITY_ID: entity_id,
         },
         blocking=True,
     )
@@ -325,7 +325,7 @@ async def test_set_options_service(hass: HomeAssistant) -> None:
             DOMAIN,
             InputSelectService.SELECT_OPTION,
             {
-                ATTR_ENTITY_ID: entity_id,
+                TargetKey.ENTITY_ID: entity_id,
                 InputSelectServiceArgument.OPTION: "first option",
             },
             blocking=True,
@@ -336,7 +336,7 @@ async def test_set_options_service(hass: HomeAssistant) -> None:
     await hass.services.async_call(
         DOMAIN,
         InputSelectService.SELECT_OPTION,
-        {ATTR_ENTITY_ID: entity_id, InputSelectServiceArgument.OPTION: "test2"},
+        {TargetKey.ENTITY_ID: entity_id, InputSelectServiceArgument.OPTION: "test2"},
         blocking=True,
     )
     state = hass.states.get(entity_id)
@@ -383,7 +383,10 @@ async def test_set_options_service_duplicate(
         await hass.services.async_call(
             DOMAIN,
             InputSelectService.SET_OPTIONS,
-            {InputSelectServiceArgument.OPTIONS: options, ATTR_ENTITY_ID: entity_id},
+            {
+                InputSelectServiceArgument.OPTIONS: options,
+                TargetKey.ENTITY_ID: entity_id,
+            },
             blocking=True,
         )
     state = hass.states.get(entity_id)

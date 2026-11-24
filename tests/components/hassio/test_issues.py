@@ -1869,6 +1869,7 @@ async def test_stale_persisted_reason_issues_deleted_on_first_update(
     """Test issues stored before a restart are deleted once their reason is gone."""
     stored_issue = {
         "config_entry_id": None,
+        "config_subentry_id": None,
         "created": "2026-01-01T00:00:00+00:00",
         "domain": DOMAIN,
         "is_persistent": False,

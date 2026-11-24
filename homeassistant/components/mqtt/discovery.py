@@ -8,7 +8,7 @@ from itertools import chain
 import logging
 import re
 import time
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
 import probatio
 
@@ -901,9 +901,6 @@ async def async_start(  # noqa: C901
                 msg.payload,
             )
             return
-        if TYPE_CHECKING:
-            assert mqtt_data.data_config_flow_lock
-
         # Lock to prevent initiating many parallel config flows.
         # Note: The lock is not intended to prevent a race, only for performance
         async with mqtt_data.data_config_flow_lock:

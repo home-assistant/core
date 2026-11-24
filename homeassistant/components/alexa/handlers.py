@@ -1036,10 +1036,9 @@ async def async_api_previous(
 
 
 def temperature_from_object(
-    hass: ha.HomeAssistant, temp_obj: dict[str, Any], interval: bool = False
+    temp_obj: dict[str, Any], to_unit: str, interval: bool = False
 ) -> float:
     """Get temperature from Temperature object in requested unit."""
-    to_unit = hass.config.units.temperature_unit
     from_unit = UnitOfTemperature.CELSIUS
     temp = float(temp_obj["value"])
 
@@ -1067,16 +1066,16 @@ async def async_api_set_target_temp(
 
     min_temp = entity.attributes[MIN_MAX_TEMP[domain]["min_temp"]]
     max_temp = entity.attributes[ClimateEntityCapabilityAttribute.MAX_TEMP]
-    unit = hass.config.units.temperature_unit
+    unit = entity.attributes[ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT]
 
     data: dict[str, Any] = {ATTR_ENTITY_ID: entity.entity_id}
 
     payload = directive.payload
     response = directive.response()
     if "targetSetpoint" in payload:
-        temp = temperature_from_object(hass, payload["targetSetpoint"])
+        temp = temperature_from_object(payload["targetSetpoint"], unit)
         if temp < min_temp or temp > max_temp:
-            raise AlexaTempRangeError(hass, temp, min_temp, max_temp)
+            raise AlexaTempRangeError(unit, temp, min_temp, max_temp)
         data[ATTR_TEMPERATURE] = temp
         response.add_context_property(
             {
@@ -1086,9 +1085,9 @@ async def async_api_set_target_temp(
             }
         )
     if "lowerSetpoint" in payload:
-        temp_low = temperature_from_object(hass, payload["lowerSetpoint"])
+        temp_low = temperature_from_object(payload["lowerSetpoint"], unit)
         if temp_low < min_temp or temp_low > max_temp:
-            raise AlexaTempRangeError(hass, temp_low, min_temp, max_temp)
+            raise AlexaTempRangeError(unit, temp_low, min_temp, max_temp)
         data[ClimateServiceArgument.TARGET_TEMP_LOW] = temp_low
         response.add_context_property(
             {
@@ -1098,9 +1097,9 @@ async def async_api_set_target_temp(
             }
         )
     if "upperSetpoint" in payload:
-        temp_high = temperature_from_object(hass, payload["upperSetpoint"])
+        temp_high = temperature_from_object(payload["upperSetpoint"], unit)
         if temp_high < min_temp or temp_high > max_temp:
-            raise AlexaTempRangeError(hass, temp_high, min_temp, max_temp)
+            raise AlexaTempRangeError(unit, temp_high, min_temp, max_temp)
         data[ClimateServiceArgument.TARGET_TEMP_HIGH] = temp_high
         response.add_context_property(
             {
@@ -1138,10 +1137,10 @@ async def async_api_adjust_target_temp(
     domain = entity.domain
     min_temp = entity.attributes[MIN_MAX_TEMP[domain]["min_temp"]]
     max_temp = entity.attributes[MIN_MAX_TEMP[domain]["max_temp"]]
-    unit = hass.config.units.temperature_unit
+    unit = entity.attributes[ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT]
 
     temp_delta = temperature_from_object(
-        hass, directive.payload["targetSetpointDelta"], interval=True
+        directive.payload["targetSetpointDelta"], unit, interval=True
     )
 
     response = directive.response()
@@ -1155,11 +1154,11 @@ async def async_api_adjust_target_temp(
     if current_target_temp_high is not None and current_target_temp_low is not None:
         target_temp_high = float(current_target_temp_high) + temp_delta
         if target_temp_high < min_temp or target_temp_high > max_temp:
-            raise AlexaTempRangeError(hass, target_temp_high, min_temp, max_temp)
+            raise AlexaTempRangeError(unit, target_temp_high, min_temp, max_temp)
 
         target_temp_low = float(current_target_temp_low) + temp_delta
         if target_temp_low < min_temp or target_temp_low > max_temp:
-            raise AlexaTempRangeError(hass, target_temp_low, min_temp, max_temp)
+            raise AlexaTempRangeError(unit, target_temp_low, min_temp, max_temp)
 
         data = {
             ATTR_ENTITY_ID: entity.entity_id,
@@ -1193,7 +1192,7 @@ async def async_api_adjust_target_temp(
         target_temp = float(current_target_temp) + temp_delta
 
         if target_temp < min_temp or target_temp > max_temp:
-            raise AlexaTempRangeError(hass, target_temp, min_temp, max_temp)
+            raise AlexaTempRangeError(unit, target_temp, min_temp, max_temp)
 
         data = {ATTR_ENTITY_ID: entity.entity_id, ATTR_TEMPERATURE: target_temp}
         response.add_context_property(

@@ -58,13 +58,14 @@ class WiffiFlowHandler(ConfigFlow, domain=DOMAIN):
             server = WiffiTcpServer(user_input[CONF_PORT])
             await server.start_server()
             await server.close_server()
-            return self.async_create_entry(
-                title=f"Port {user_input[CONF_PORT]}", data=user_input
-            )
         except OSError as exc:
             if exc.errno == errno.EADDRINUSE:
                 return self.async_abort(reason="addr_in_use")
             return self.async_abort(reason="start_server_failed")
+        else:
+            return self.async_create_entry(
+                title=f"Port {user_input[CONF_PORT]}", data=user_input
+            )
 
     @callback
     def _async_show_form(self, errors=None):

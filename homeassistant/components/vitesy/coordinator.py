@@ -12,6 +12,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -76,7 +77,21 @@ class VitesyDataUpdateCoordinator(DataUpdateCoordinator[dict[str, VitesyDevice]]
         with _translate_errors():
             devices = await self.api.get_all_devices()
         self.mode_status = await self._async_get_mode_status(devices)
+        self._async_remove_stale_devices(devices)
         return devices
+
+    def _async_remove_stale_devices(self, devices: dict[str, VitesyDevice]) -> None:
+        """Remove devices that are no longer part of the account."""
+        device_registry = dr.async_get(self.hass)
+        entry_id = self.config_entry.entry_id
+        for device_entry in dr.async_entries_for_config_entry(
+            device_registry, entry_id
+        ):
+            if not any(
+                domain == DOMAIN and device_id in devices
+                for domain, device_id in device_entry.identifiers
+            ):
+                device_registry.async_remove_device(device_entry.id)
 
     async def _async_get_mode_status(
         self, devices: dict[str, VitesyDevice]
