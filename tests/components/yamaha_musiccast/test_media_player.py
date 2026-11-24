@@ -8,15 +8,14 @@ from pytest_homeassistant.typing import WebSocketGenerator
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.media_player import (
-    ATTR_MEDIA_CONTENT_ID,
-    ATTR_MEDIA_CONTENT_TYPE,
     DOMAIN as MEDIA_PLAYER_DOMAIN,
-    SERVICE_PLAY_MEDIA,
     MediaClass,
+    MediaPlayerService,
+    MediaPlayerServiceArgument,
     MediaType,
 )
 from homeassistant.components.yamaha_musiccast.const import DEFAULT_ZONE, DOMAIN
-from homeassistant.const import ATTR_ENTITY_ID, Platform
+from homeassistant.const import Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.core_config import async_process_ha_core_config
 from homeassistant.exceptions import HomeAssistantError
@@ -94,11 +93,11 @@ async def _play(hass: HomeAssistant, entity_id: str, content_id: str) -> None:
     """Play media through the media player service."""
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
-        SERVICE_PLAY_MEDIA,
+        MediaPlayerService.PLAY_MEDIA,
         {
-            ATTR_ENTITY_ID: entity_id,
-            ATTR_MEDIA_CONTENT_ID: content_id,
-            ATTR_MEDIA_CONTENT_TYPE: MediaType.MUSIC,
+            TargetKey.ENTITY_ID: entity_id,
+            MediaPlayerServiceArgument.MEDIA_CONTENT_ID: content_id,
+            MediaPlayerServiceArgument.MEDIA_CONTENT_TYPE: MediaType.MUSIC,
         },
         blocking=True,
     )
