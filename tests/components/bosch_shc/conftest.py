@@ -893,6 +893,13 @@ def smoke_detection_system_device(
     """Build a minimal double of the smoke detection system."""
     system = MagicMock()
     system.id = "hdm:ZigBee:smokedetectionsystem"
+    system.name = "Smoke Detection System"
+    system.root_device_id = "test-mac"
+    system.serial = "serial-smokedetectionsystem"
+    system.manufacturer = "Bosch"
+    system.device_model = "SMOKE_DETECTION_SYSTEM"
+    system.deleted = False
+    system.status = "AVAILABLE"
     system.alarm = alarm
     system.device_services = [FakeSurveillanceAlarmService()]
     system.triggered_device_ids.return_value = triggered or set()
