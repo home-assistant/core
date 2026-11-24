@@ -8,14 +8,13 @@ from unittest.mock import MagicMock, call
 import pyads
 import pytest
 
-from homeassistant.components.ads.const import DATA_ADS
 from homeassistant.components.select import DOMAIN as SELECT_DOMAIN
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
-from homeassistant.const import EVENT_HOMEASSISTANT_STOP, STATE_OFF
+from homeassistant.const import EVENT_HOMEASSISTANT_STOP, STATE_OFF, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from . import MockAdsDevice, build_notification, setup_ads_platform
+from . import MockAdsDevice, build_notification, get_hub, setup_ads_platform
 
 ADS_VAR = "GVL.pump"
 ENTITY_ID = "switch.pump"
@@ -71,6 +70,21 @@ async def test_select_removal_deletes_both_notifications(
 
     client = mock_pyads_connection.return_value
     assert client.del_device_notification.call_args_list == [call(1, 1), call(2, 2)]
+
+
+async def test_unavailable_after_shutdown(
+    hass: HomeAssistant, mock_ads_device: MockAdsDevice
+) -> None:
+    """Test an entity goes unavailable once its connection is shut down."""
+    mock_ads_device.values[ADS_VAR] = BOOL_TRUE
+    assert await setup_ads_platform(
+        hass, mock_ads_device, SWITCH_DOMAIN, PLATFORM_CONFIG
+    )
+
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
+    await hass.async_block_till_done()
+
+    assert hass.states.get(ENTITY_ID).state == STATE_UNAVAILABLE
 
 
 async def test_removal_after_shutdown(
@@ -227,7 +241,7 @@ async def test_shutdown_waits_for_a_removal(
     entity_registry.async_remove(ENTITY_ID)
     await hass.async_add_executor_job(deleting.wait)
 
-    shutdown = hass.async_add_executor_job(hass.data[DATA_ADS].shutdown)
+    shutdown = hass.async_add_executor_job(get_hub(hass).shutdown)
     try:
         await asyncio.sleep(0.05)
         client.close.assert_not_called()

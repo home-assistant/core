@@ -9,6 +9,8 @@ import pytest
 
 from homeassistant.components.ads.const import DOMAIN
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ServiceValidationError
+from homeassistant.setup import async_setup_component
 
 SERVICE_WRITE_DATA_BY_NAME = "write_data_by_name"
 ADS_VAR = "GVL.setpoint"
@@ -96,3 +98,19 @@ async def test_write_data_by_name_error(
     )
 
     assert f"Error writing {ADS_VAR}" in caplog.text
+
+
+async def test_write_data_by_name_not_loaded(hass: HomeAssistant) -> None:
+    """Test the write action is refused while no connection is set up."""
+    assert await async_setup_component(hass, DOMAIN, {})
+    await hass.async_block_till_done()
+
+    with pytest.raises(ServiceValidationError) as exc_info:
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_WRITE_DATA_BY_NAME,
+            {"adsvar": ADS_VAR, "adstype": "int", "value": 42},
+            blocking=True,
+        )
+
+    assert exc_info.value.translation_key == "not_loaded"

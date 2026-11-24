@@ -24,12 +24,11 @@ from .const import (
     CONF_ADS_FACTOR,
     CONF_ADS_TYPE,
     CONF_ADS_VAR,
-    DATA_ADS,
     STATE_KEY_STATE,
     AdsType,
 )
 from .entity import AdsEntity
-from .hub import AdsHub
+from .hub import AdsHub, async_get_hub
 
 DEFAULT_NAME = "ADS sensor"
 
@@ -71,7 +70,7 @@ async def async_setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up an ADS sensor device."""
-    ads_hub = hass.data[DATA_ADS]
+    ads_hub = async_get_hub(hass)
 
     ads_var: str = config[CONF_ADS_VAR]
     ads_type: AdsType = config[CONF_ADS_TYPE]

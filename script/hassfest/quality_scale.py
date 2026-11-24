@@ -113,7 +113,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "actiontec",
     "adax",
     "adguard",
-    "ads",
     "aemet",
     "aftership",
     "agent_dvr",

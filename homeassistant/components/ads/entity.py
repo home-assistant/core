@@ -6,6 +6,7 @@ from collections.abc import Callable
 import logging
 from typing import Any, override
 
+from homeassistant.core import callback
 from homeassistant.helpers.entity import Entity
 
 from .const import STATE_KEY_STATE
@@ -29,6 +30,10 @@ class AdsEntity(Entity):
         self._removed = False
         self._attr_unique_id = ads_var
         self._attr_name = name
+        ads_hub.register_device(self)
+        # Also runs when the entity platform refuses to add this entity, so a
+        # rejected one is not left behind on the hub.
+        self.async_on_remove(self._unregister_from_hub)
 
     async def async_initialize_device(
         self,
@@ -79,7 +84,6 @@ class AdsEntity(Entity):
             notification_callback,
         )
         if handle is None:
-            # No notification is registered, so no first update will arrive.
             return False
         if self._removed:
             # Removed while this was subscribing, so the removal has already
@@ -113,3 +117,24 @@ class AdsEntity(Entity):
             await self.hass.async_add_executor_job(
                 self._ads_hub.delete_device_notification, handle
             )
+
+    def mark_unavailable(self) -> None:
+        """Mark the entity unavailable after its hub connection is closed."""
+        # Notification callbacks add keys from another thread, so snapshot them.
+        for key in list(self._state_dict):
+            self._state_dict[key] = None
+        if self.hass is not None:
+            self.schedule_update_ha_state()
+
+    @callback
+    def _unregister_from_hub(self) -> None:
+        """Unregister this entity from its hub."""
+        self._ads_hub.unregister_device(self)
+
+    def rebind(self, ads_hub: AdsHub) -> None:
+        """Rebind this entity to a new hub after the entry is reloaded."""
+        self._ads_hub = ads_hub
+        # The old hub's handles died with its connection, and pyads can hand
+        # out the same numbers again on the new one.
+        self._notification_handles.clear()
+        ads_hub.register_device(self)
