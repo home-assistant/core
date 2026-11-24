@@ -3,7 +3,7 @@
 from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 
-from aioecosmart import Identity, Spot
+from aioecosmart import Forecast, Identity, Spot
 import pytest
 from pytest_homeassistant.common import MockConfigEntry, load_json_object_fixture
 
@@ -26,11 +26,16 @@ def load_spot(filename: str = "spot.json") -> Spot:
     return Spot.from_dict(load_json_object_fixture(filename, DOMAIN))
 
 
+def load_forecast(filename: str = "forecast.json") -> Forecast:
+    """Build a Forecast from a recorded, redacted fixture."""
+    return Forecast.from_dict(load_json_object_fixture(filename, DOMAIN))
+
+
 @pytest.fixture
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
-        "homeassistant.components.ecosmart.async_setup_entry", return_value=True
+        "homeassistant.components.ecosmart.async_setup_entry", return_value=None
     ) as mock_setup_entry:
         yield mock_setup_entry
 
@@ -50,6 +55,7 @@ def mock_ecosmart_client() -> Generator[AsyncMock]:
         client = mock_client.return_value
         client.me.return_value = load_identity()
         client.spot.return_value = load_spot()
+        client.forecast.return_value = load_forecast()
         yield client
 
 

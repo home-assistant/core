@@ -17,7 +17,7 @@ def mock_rpi_power():
     """Mock the rpi_power integration."""
     with patch(
         "homeassistant.components.rpi_power.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ):
         yield
 

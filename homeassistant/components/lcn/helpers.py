@@ -102,7 +102,7 @@ def get_resource(domain_name: str, domain_data: ConfigType) -> str:
     raise HomeAssistantError(
         translation_domain=DOMAIN,
         translation_key="invalid_domain",
-        translation_placeholders={CONF_DOMAIN: domain_name},
+        translation_placeholders={"domain": domain_name},
     )
 
 
@@ -192,14 +192,12 @@ def register_lcn_host_device(hass: HomeAssistant, config_entry: LcnConfigEntry) 
     """Register LCN host for given config_entry in device registry."""
     device_registry = dr.async_get(hass)
 
-    device_registry.async_get_or_create_device(
+    device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
-        device_info=dr.DeviceInfo(
-            identifiers={(DOMAIN, config_entry.entry_id)},
-            manufacturer="Issendorff",
-            name=config_entry.title,
-            model="LCN-PCHK",
-        ),
+        identifiers={(DOMAIN, config_entry.entry_id)},
+        manufacturer="Issendorff",
+        name=config_entry.title,
+        model="LCN-PCHK",
     )
 
 
@@ -234,16 +232,14 @@ def register_lcn_address_devices(
             device_model = f"{hardware_name}"
             sw_version = f"{device_config[CONF_SOFTWARE_SERIAL]:06X}"
 
-        device_entry = device_registry.async_get_or_create_device(
+        device_entry = device_registry.async_get_or_create(
             config_entry_id=config_entry.entry_id,
-            device_info=dr.DeviceInfo(
-                identifiers=identifiers,
-                via_device_id=host_device_id,
-                manufacturer="Issendorff",
-                sw_version=sw_version,
-                name=device_name,
-                model=device_model,
-            ),
+            identifiers=identifiers,
+            via_device_id=host_device_id,
+            manufacturer="Issendorff",
+            sw_version=sw_version,
+            name=device_name,
+            model=device_model,
         )
 
         config_entry.runtime_data.device_connections[device_entry.id] = (
@@ -309,7 +305,7 @@ async def async_update_config_entry(
 
 
 def get_device_config(
-    address: AddressType, config_entry: ConfigEntry
+    address: AddressType, config_entry: LcnConfigEntry
 ) -> ConfigType | None:
     """Return the device configuration for given address and ConfigEntry."""
     for device_config in config_entry.data[CONF_DEVICES]:

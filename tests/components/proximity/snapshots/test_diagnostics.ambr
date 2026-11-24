@@ -81,6 +81,13 @@
     }),
     'entry': dict({
       'data': dict({
+      }),
+      'disabled_by': None,
+      'discovery_keys': dict({
+      }),
+      'domain': 'proximity',
+      'minor_version': 1,
+      'options': dict({
         'ignored_zones': list([
         ]),
         'tolerance': 1,
@@ -92,13 +99,6 @@
         ]),
         'zone': 'zone.home',
       }),
-      'disabled_by': None,
-      'discovery_keys': dict({
-      }),
-      'domain': 'proximity',
-      'minor_version': 1,
-      'options': dict({
-      }),
       'pref_disable_new_entities': False,
       'pref_disable_polling': False,
       'source': 'user',
@@ -106,7 +106,7 @@
       ]),
       'title': 'home',
       'unique_id': 'proximity_home',
-      'version': 1,
+      'version': 2,
     }),
   })
 # ---

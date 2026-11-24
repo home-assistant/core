@@ -1,5 +1,10 @@
 {
   "entity": {
+    "image": {
+      "radar": {
+        "default": "mdi:radar"
+      }
+    },
     "sensor": {
       "build_up_index": {
         "default": "mdi:grass"
@@ -22,9 +27,6 @@
       "frozen_precipitation": {
         "default": "mdi:weather-snowy-rainy"
       },
-      "fwi": {
-        "default": "mdi:pine-tree-fire"
-      },
       "fwiindex": {
         "default": "mdi:pine-tree-fire"
       },
@@ -45,6 +47,9 @@
       },
       "precipitation_category": {
         "default": "mdi:weather-pouring"
+      },
+      "radar_reflectivity": {
+        "default": "mdi:radar"
       },
       "rate_of_spread": {
         "default": "mdi:grass"

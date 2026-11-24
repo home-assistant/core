@@ -9,10 +9,16 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from .const import CONF_VIN
 from .coordinator import SkodaConfigEntry, SkodaData, SkodaUpdateCoordinator
 
-_PLATFORMS: list[Platform] = [Platform.SENSOR]
+_PLATFORMS: list[Platform] = [
+    Platform.BINARY_SENSOR,
+    Platform.DEVICE_TRACKER,
+    Platform.NUMBER,
+    Platform.SENSOR,
+    Platform.SWITCH,
+]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: SkodaConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: SkodaConfigEntry) -> None:
     """Set up Škoda from a config entry."""
     vin: str = entry.data[CONF_VIN]
     api_key: str = entry.data[CONF_API_KEY]
@@ -37,9 +43,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: SkodaConfigEntry) -> boo
 
     await hass.config_entries.async_forward_entry_setups(entry, _PLATFORMS)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: SkodaConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: SkodaConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, _PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, _PLATFORMS)

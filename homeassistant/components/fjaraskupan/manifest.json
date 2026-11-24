@@ -10,6 +10,7 @@
   "categories": ["appliances_cleaning.cooking", "climate.fans_ventilation"],
   "codeowners": ["@elupus"],
   "config_flow": true,
+  "connectivity": ["bluetooth"],
   "dependencies": ["bluetooth_adapters"],
   "documentation": "https://www.home-assistant.io/integrations/fjaraskupan",
   "integration_type": "hub",

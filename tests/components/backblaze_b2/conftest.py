@@ -1,6 +1,7 @@
 """Common fixtures for the Backblaze B2 tests."""
 
 from collections.abc import Generator
+from dataclasses import replace
 import hashlib
 import io
 import json
@@ -28,13 +29,33 @@ from .const import BACKUP_METADATA, TEST_BACKUP, USER_INPUT
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
-        "homeassistant.components.backblaze_b2.async_setup_entry", return_value=True
+        "homeassistant.components.backblaze_b2.async_setup_entry", return_value=None
     ) as mock_setup_entry:
         yield mock_setup_entry
 
 
+@pytest.fixture
+def backup_data() -> bytes:
+    """Backup data, override in tests to change defaults."""
+    return b"This is the actual backup data for the tar file."
+
+
+@pytest.fixture
+def backup_protected() -> bool:
+    """Backup protected, override in tests to change defaults."""
+    return False
+
+
+@pytest.fixture
+def downloaded_responses() -> list[Mock]:
+    """Return the responses of downloaded backup archives."""
+    return []
+
+
 @pytest.fixture(autouse=True)
-def b2_fixture():
+def b2_fixture(
+    backup_data: bytes, backup_protected: bool, downloaded_responses: list[Mock]
+):
     """Create account and application keys."""
     sim = RawSimulator()
 
@@ -100,7 +121,13 @@ def b2_fixture():
 
         upload_url = sim.get_upload_url(api_url, auth_token, bucket["bucketId"])
 
-        test_backup_data = b"This is the actual backup data for the tar file."
+        test_backup_data = backup_data
+        backup_metadata = {
+            **BACKUP_METADATA,
+            "backup_metadata": replace(
+                TEST_BACKUP, protected=backup_protected
+            ).as_dict(),
+        }
         stream_backup = io.BytesIO(test_backup_data)
         stream_backup.seek(0)
 
@@ -114,11 +141,11 @@ def b2_fixture():
             len(test_backup_data),
             "application/octet-stream",
             sha1_backup,
-            {"backup_metadata": json.dumps(BACKUP_METADATA)},
+            {"backup_metadata": json.dumps(backup_metadata)},
             stream_backup,
         )
 
-        metadata_json_content_bytes = json.dumps(BACKUP_METADATA).encode("utf-8")
+        metadata_json_content_bytes = json.dumps(backup_metadata).encode("utf-8")
         stream_metadata = io.BytesIO(metadata_json_content_bytes)
         stream_metadata.seek(0)
 
@@ -144,17 +171,12 @@ def b2_fixture():
         class MockDownloadedFile:
             def __init__(self, content: bytes) -> None:
                 self._content = content
+                self.response = Mock(content=content)
+                self.response.iter_content.return_value = iter([content])
 
             @property
             def text_content(self) -> str:
                 return self._content.decode("utf-8")
-
-            @property
-            def response(self):
-                mock_response = Mock()
-                mock_response.iter_content.return_value = iter([self._content])
-                mock_response.content = self._content
-                return mock_response
 
         def mock_sim_download_file_by_id(
             file_id,
@@ -169,7 +191,9 @@ def b2_fixture():
                 ):
                     if file_data["fileName"].endswith(".metadata.json"):
                         return MockDownloadedFile(metadata_json_content_bytes)
-                    return MockDownloadedFile(test_backup_data)
+                    downloaded_file = MockDownloadedFile(test_backup_data)
+                    downloaded_responses.append(downloaded_file.response)
+                    return downloaded_file
             raise ValueError(
                 "Mocked download_file_by_id: "
                 f"File with id {file_id} or name "
@@ -258,15 +282,18 @@ def b2_fixture():
             file_name,
             content_type=None,
             file_info=None,
+            *,
+            progress_listener,
         ):
             """Mock upload_unbound_stream for backup uploads."""
-            # Read all data from the stream
+            # Read all data from the stream, reporting progress like b2sdk does
             data = b""
             while True:
                 chunk = stream_reader.read(8192)
                 if not chunk:
                     break
                 data += chunk
+                progress_listener.bytes_completed(len(data))
 
             stream = io.BytesIO(data)
             stream.seek(0)

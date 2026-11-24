@@ -2,12 +2,11 @@
 
 import probatio
 
-from homeassistant.components.button import SERVICE_PRESS
-from homeassistant.const import CONF_ID, SERVICE_RELOAD
+from homeassistant.const import CONF_ID
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.helpers.service import async_register_admin_service
 
-from .const import DATA_INPUT_BUTTON, DOMAIN
+from .const import DATA_INPUT_BUTTON, DOMAIN, InputButtonService
 
 RELOAD_SERVICE_SCHEMA = probatio.Schema({})
 
@@ -28,11 +27,11 @@ def async_setup_services(hass: HomeAssistant) -> None:
     async_register_admin_service(
         hass,
         DOMAIN,
-        SERVICE_RELOAD,
+        InputButtonService.RELOAD,
         _async_reload_service,
         schema=RELOAD_SERVICE_SCHEMA,
     )
 
     hass.data[DATA_INPUT_BUTTON].component.async_register_entity_service(
-        SERVICE_PRESS, None, "_async_press_action"
+        InputButtonService.PRESS, None, "_async_press_action"
     )

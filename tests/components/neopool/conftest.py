@@ -101,6 +101,7 @@ MOCK_POOL_DATA: dict[str, Any] = {
     "pH acid pump active": False,
     "Filtration Pump": False,
     "pH Acid Pump": False,
+    "pH Base Pump": False,
     # Measurement / module "active" bits. The controller keeps measuring the
     # probes regardless of filtration state, so these read True even though the
     # filtration pump above is off.
@@ -167,7 +168,7 @@ def _read_all_timers(
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
-        "homeassistant.components.neopool.async_setup_entry", return_value=True
+        "homeassistant.components.neopool.async_setup_entry", return_value=None
     ) as mock_setup_entry:
         yield mock_setup_entry
 

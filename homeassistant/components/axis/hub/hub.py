@@ -65,7 +65,17 @@ class AxisHub:
         cannot be used with weak references.
         """
         hub = config_entry.runtime_data
-        hub.config = AxisConfig.from_config_entry(config_entry)
+        config = AxisConfig.from_config_entry(config_entry)
+        if (
+            config.username != hub.config.username
+            or config.password != hub.config.password
+            or config.protocol != hub.config.protocol
+            or config.port != hub.config.port
+        ):
+            await hass.config_entries.async_reload(config_entry.entry_id)
+            return
+
+        hub.config = config
         hub.event_source.config_entry = config_entry
         hub.api.config.host = hub.config.host
         async_dispatcher_send(hass, hub.signal_new_address)
@@ -73,17 +83,15 @@ class AxisHub:
     async def async_update_device_registry(self) -> None:
         """Update device registry."""
         device_registry = dr.async_get(self.hass)
-        device_registry.async_get_or_create_device(
+        device_registry.async_get_or_create(
             config_entry_id=self.config.entry.entry_id,
-            device_info=dr.DeviceInfo(
-                configuration_url=self.api.config.url,
-                connections={(CONNECTION_NETWORK_MAC, self.unique_id)},
-                identifiers={(DOMAIN, self.unique_id)},
-                manufacturer=ATTR_MANUFACTURER,
-                model=f"{self.config.model} {self.product_type}",
-                name=self.config.name,
-                sw_version=self.fw_version,
-            ),
+            configuration_url=self.api.config.url,
+            connections={(CONNECTION_NETWORK_MAC, self.unique_id)},
+            identifiers={(DOMAIN, self.unique_id)},
+            manufacturer=ATTR_MANUFACTURER,
+            model=f"{self.config.model} {self.product_type}",
+            name=self.config.name,
+            sw_version=self.fw_version,
         )
 
     # Setup and teardown methods

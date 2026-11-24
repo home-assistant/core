@@ -7,7 +7,7 @@ from typing import Any, cast, override
 from soco.alarms import Alarm
 from soco.exceptions import SoCoSlaveException, SoCoUPnPException
 
-from homeassistant.components.switch import ENTITY_ID_FORMAT, SwitchEntity
+from homeassistant.components.switch import SwitchEntity
 from homeassistant.const import ATTR_TIME, EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
@@ -442,7 +442,6 @@ class SonosAlarmEntity(SonosEntity, SwitchEntity):
         self._attr_unique_id = f"alarm-{speaker.household_id}:{alarm_id}"
         self.alarm_id = alarm_id
         self.household_id = speaker.household_id
-        self.entity_id = ENTITY_ID_FORMAT.format(f"sonos_alarm_{self.alarm_id}")
 
     @override
     async def async_added_to_hass(self) -> None:
@@ -532,12 +531,10 @@ class SonosAlarmEntity(SonosEntity, SwitchEntity):
         if entity is None:
             raise RuntimeError("Alarm has been deleted by accident.")
 
-        new_device = device_registry.async_get_or_create_device(
+        new_device = device_registry.async_get_or_create(
             config_entry_id=cast(str, entity.config_entry_id),
-            device_info=dr.DeviceInfo(
-                identifiers={(DOMAIN, self.soco.uid)},
-                connections={(dr.CONNECTION_NETWORK_MAC, self.speaker.mac_address)},
-            ),
+            identifiers={(DOMAIN, self.soco.uid)},
+            connections={(dr.CONNECTION_NETWORK_MAC, self.speaker.mac_address)},
         )
         if (
             device := entity_registry.async_get(self.entity_id)

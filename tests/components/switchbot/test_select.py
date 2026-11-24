@@ -1,11 +1,12 @@
 """Tests for the switchbot select platform."""
 
 from collections.abc import Callable
+from datetime import timedelta
 from unittest.mock import AsyncMock, patch
 
 from bleak_retry_connector import BleakConnectionError
 import pytest
-from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 from pytest_homeassistant.components.bluetooth import (
     inject_bluetooth_service_info,
     inject_bluetooth_service_info_bleak,
@@ -14,17 +15,14 @@ from switchbot import NightLightState
 
 from homeassistant.components.bluetooth import BluetoothServiceInfoBleak
 from homeassistant.components.select import (
-    ATTR_OPTION,
     DOMAIN as SELECT_DOMAIN,
-    SERVICE_SELECT_OPTION,
+    SelectService,
+    SelectServiceArgument,
 )
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    EVENT_HOMEASSISTANT_STARTED,
-    STATE_UNKNOWN,
-)
+from homeassistant.const import EVENT_HOMEASSISTANT_STARTED, STATE_UNKNOWN, TargetKey
 from homeassistant.core import CoreState, HomeAssistant
 from homeassistant.setup import async_setup_component
+from homeassistant.util import dt as dt_util
 
 from . import (
     DOMAIN,
@@ -182,6 +180,44 @@ async def test_time_format_select_unreachable(
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_time_format_select_recovers_on_next_poll(
+    hass: HomeAssistant,
+    mock_entry_factory: Callable[[str], MockConfigEntry],
+) -> None:
+    """Test a failed first read of the time format is retried on the next poll."""
+    await async_setup_component(hass, DOMAIN, {})
+    inject_bluetooth_service_info(hass, WOMETERTHPC_SERVICE_INFO)
+
+    entry = mock_entry_factory("meter_pro_co2")
+    entry.add_to_hass(hass)
+
+    mock_get_datetime = AsyncMock(
+        side_effect=[
+            BleakConnectionError("no connectable Bluetooth adapters"),
+            DEVICE_DATETIME_24H,
+        ]
+    )
+    with (
+        patch("switchbot.SwitchbotMeterProCO2.get_datetime", mock_get_datetime),
+        patch(
+            "homeassistant.components.switchbot.select.SCAN_INTERVAL",
+            timedelta(minutes=1),
+        ),
+    ):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+        mock_get_datetime.assert_awaited_once()
+        assert hass.states.get(TIME_FORMAT_ENTITY_ID).state == STATE_UNKNOWN
+
+        async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=1))
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert mock_get_datetime.await_count == 2
+    assert hass.states.get(TIME_FORMAT_ENTITY_ID).state == "24h"
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 @pytest.mark.parametrize(
     ("origin_mode", "expected_state"),
     [
@@ -230,15 +266,17 @@ async def test_set_time_format(
 
         await hass.services.async_call(
             SELECT_DOMAIN,
-            SERVICE_SELECT_OPTION,
+            SelectService.SELECT_OPTION,
             {
-                ATTR_ENTITY_ID: TIME_FORMAT_ENTITY_ID,
-                ATTR_OPTION: expected_state,
+                TargetKey.ENTITY_ID: TIME_FORMAT_ENTITY_ID,
+                SelectServiceArgument.OPTION: expected_state,
             },
             blocking=True,
         )
 
         mock_set_time_display_format.assert_awaited_once_with(origin_mode)
+        # The value is read back from the device after it has been set.
+        assert mock_get_datetime.await_count == 2
 
         state = hass.states.get(TIME_FORMAT_ENTITY_ID)
         assert state is not None
@@ -279,8 +317,11 @@ async def test_standing_fan_night_light_select(
 
         await hass.services.async_call(
             SELECT_DOMAIN,
-            SERVICE_SELECT_OPTION,
-            {ATTR_ENTITY_ID: "select.test_name_night_light", ATTR_OPTION: option},
+            SelectService.SELECT_OPTION,
+            {
+                TargetKey.ENTITY_ID: "select.test_name_night_light",
+                SelectServiceArgument.OPTION: option,
+            },
             blocking=True,
         )
 

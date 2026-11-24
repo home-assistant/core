@@ -10,7 +10,7 @@ import probatio
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import Context, HomeAssistant, State
 
-from . import ATTR_VALUE, DOMAIN, SERVICE_SET_VALUE
+from .const import DOMAIN, InputNumberService, InputNumberServiceArgument
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -39,8 +39,11 @@ async def _async_reproduce_state(
     if cur_state.state == state.state:
         return
 
-    service = SERVICE_SET_VALUE
-    service_data = {ATTR_ENTITY_ID: state.entity_id, ATTR_VALUE: state.state}
+    service = InputNumberService.SET_VALUE
+    service_data = {
+        ATTR_ENTITY_ID: state.entity_id,
+        InputNumberServiceArgument.VALUE: state.state,
+    }
 
     try:
         await hass.services.async_call(

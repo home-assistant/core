@@ -12,7 +12,7 @@ from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 @pytest.fixture
 def mock_setup_entry():
     """Mock setting up a config entry."""
-    with patch("homeassistant.components.hanna.async_setup_entry", return_value=True):
+    with patch("homeassistant.components.hanna.async_setup_entry", return_value=None):
         yield
 
 

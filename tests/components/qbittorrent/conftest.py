@@ -1,6 +1,7 @@
 """Fixtures for testing qBittorrent component."""
 
 from collections.abc import Generator
+from typing import Any
 from unittest.mock import AsyncMock, patch
 
 import pytest
@@ -15,7 +16,7 @@ from homeassistant.const import CONF_PASSWORD, CONF_URL, CONF_USERNAME, CONF_VER
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Mock qbittorrent entry setup."""
     with patch(
-        "homeassistant.components.qbittorrent.async_setup_entry", return_value=True
+        "homeassistant.components.qbittorrent.async_setup_entry", return_value=None
     ) as mock_setup_entry:
         yield mock_setup_entry
 
@@ -31,15 +32,19 @@ def mock_api() -> Generator[requests_mock.Mocker]:
 
 
 @pytest.fixture
-def mock_qbittorrent() -> Generator[AsyncMock]:
+def sync_maindata() -> dict[str, Any]:
+    """Return the sync main data the qbittorrent client returns."""
+    return load_json_object_fixture("sync_maindata.json", DOMAIN)
+
+
+@pytest.fixture
+def mock_qbittorrent(sync_maindata: dict[str, Any]) -> Generator[AsyncMock]:
     """Mock qbittorrent client."""
     with patch(
         "homeassistant.components.qbittorrent.helpers.Client", autospec=True
     ) as mock_client:
         client = mock_client.return_value
-        client.sync_maindata.return_value = load_json_object_fixture(
-            "sync_maindata.json", DOMAIN
-        )
+        client.sync_maindata.return_value = sync_maindata
         yield client
 
 

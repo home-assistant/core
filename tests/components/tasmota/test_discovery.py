@@ -319,6 +319,37 @@ async def test_device_remove(
     assert device_entry is None
 
 
+async def test_device_discover_after_other_device_removed(
+    hass: HomeAssistant,
+    mqtt_mock: MqttMockHAClient,
+    entity_registry: er.EntityRegistry,
+    setup_tasmota,
+) -> None:
+    """Test discovering a device after another device was removed."""
+    config1 = copy.deepcopy(DEFAULT_CONFIG)
+    config2 = copy.deepcopy(DEFAULT_CONFIG)
+    config2["mac"] = "00000049A3BD"
+    config2["t"] = "tasmota_49A3BD"
+    config2["rl"][0] = 1
+
+    async_fire_mqtt_message(
+        hass, f"{DEFAULT_PREFIX}/{config1['mac']}/config", json.dumps(config1)
+    )
+    await hass.async_block_till_done()
+    # Removing the first device keeps an empty entry in the discovery data
+    async_fire_mqtt_message(hass, f"{DEFAULT_PREFIX}/{config1['mac']}/config", "")
+    await hass.async_block_till_done()
+
+    async_fire_mqtt_message(
+        hass, f"{DEFAULT_PREFIX}/{config2['mac']}/config", json.dumps(config2)
+    )
+    await hass.async_block_till_done()
+
+    assert entity_registry.async_get_entity_id(
+        "switch", "tasmota", f"{config2['mac']}_switch_relay_0"
+    )
+
+
 async def test_device_remove_multiple_config_entries_1(
     hass: HomeAssistant,
     mqtt_mock: MqttMockHAClient,

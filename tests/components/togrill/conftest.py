@@ -52,7 +52,7 @@ def mock_unload_entry() -> Generator[AsyncMock]:
     """Override async_unload_entry."""
     with patch(
         "homeassistant.components.togrill.async_unload_entry",
-        return_value=True,
+        return_value=None,
     ) as mock_unload_entry:
         yield mock_unload_entry
 
@@ -62,7 +62,7 @@ def mock_setup_entry(mock_unload_entry) -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
         "homeassistant.components.togrill.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ) as mock_setup_entry:
         yield mock_setup_entry
 

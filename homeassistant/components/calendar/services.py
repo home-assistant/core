@@ -17,25 +17,16 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.util import dt as dt_util
 
 from .const import (
-    CREATE_EVENT_SERVICE,
     DATA_COMPONENT,
-    EVENT_DESCRIPTION,
-    EVENT_DURATION,
     EVENT_END,
-    EVENT_END_DATE,
-    EVENT_END_DATETIME,
-    EVENT_IN,
     EVENT_IN_DAYS,
     EVENT_IN_WEEKS,
-    EVENT_LOCATION,
     EVENT_START,
-    EVENT_START_DATE,
-    EVENT_START_DATETIME,
-    EVENT_SUMMARY,
     EVENT_TIME_FIELDS,
     EVENT_TYPES,
-    SERVICE_GET_EVENTS,
     CalendarEntityFeature,
+    CalendarService,
+    CalendarServiceArgument,
 )
 from .helper import (
     MIN_NEW_EVENT_DURATION,
@@ -50,30 +41,44 @@ if TYPE_CHECKING:
     from .entity import CalendarEntity
 
 CREATE_EVENT_SCHEMA = probatio.All(
-    probatio.AtLeastOne(EVENT_START_DATE, EVENT_START_DATETIME, EVENT_IN),
-    probatio.AtMostOne(EVENT_START_DATE, EVENT_START_DATETIME, EVENT_IN),
+    probatio.AtLeastOne(
+        CalendarServiceArgument.START_DATE.value,
+        CalendarServiceArgument.START_DATE_TIME.value,
+        CalendarServiceArgument.IN.value,
+    ),
+    probatio.AtMostOne(
+        CalendarServiceArgument.START_DATE.value,
+        CalendarServiceArgument.START_DATE_TIME.value,
+        CalendarServiceArgument.IN.value,
+    ),
     cv.make_entity_service_schema(
         {
-            probatio.Required(EVENT_SUMMARY): cv.string,
-            probatio.Optional(EVENT_DESCRIPTION, default=""): cv.string,
-            probatio.Optional(EVENT_LOCATION): cv.string,
+            probatio.Required(CalendarServiceArgument.SUMMARY): cv.string,
+            probatio.Optional(
+                CalendarServiceArgument.DESCRIPTION, default=""
+            ): cv.string,
+            probatio.Optional(CalendarServiceArgument.LOCATION): cv.string,
             probatio.Inclusive(
-                EVENT_START_DATE, "dates", "Start and end dates must both be specified"
+                CalendarServiceArgument.START_DATE,
+                "dates",
+                "Start and end dates must both be specified",
             ): cv.date,
             probatio.Inclusive(
-                EVENT_END_DATE, "dates", "Start and end dates must both be specified"
+                CalendarServiceArgument.END_DATE,
+                "dates",
+                "Start and end dates must both be specified",
             ): cv.date,
             probatio.Inclusive(
-                EVENT_START_DATETIME,
+                CalendarServiceArgument.START_DATE_TIME,
                 "datetimes",
                 "Start and end datetimes must both be specified",
             ): cv.datetime,
             probatio.Inclusive(
-                EVENT_END_DATETIME,
+                CalendarServiceArgument.END_DATE_TIME,
                 "datetimes",
                 "Start and end datetimes must both be specified",
             ): cv.datetime,
-            probatio.Optional(EVENT_IN): probatio.Schema(
+            probatio.Optional(CalendarServiceArgument.IN): probatio.Schema(
                 {
                     probatio.Exclusive(EVENT_IN_DAYS, EVENT_TYPES): cv.positive_int,
                     probatio.Exclusive(EVENT_IN_WEEKS, EVENT_TYPES): cv.positive_int,
@@ -81,26 +86,48 @@ CREATE_EVENT_SCHEMA = probatio.All(
             ),
         },
     ),
-    has_consistent_timezone(EVENT_START_DATETIME, EVENT_END_DATETIME),
-    as_local_timezone(EVENT_START_DATETIME, EVENT_END_DATETIME),
-    has_min_duration(EVENT_START_DATE, EVENT_END_DATE, MIN_NEW_EVENT_DURATION),
-    has_min_duration(EVENT_START_DATETIME, EVENT_END_DATETIME, MIN_NEW_EVENT_DURATION),
+    has_consistent_timezone(
+        CalendarServiceArgument.START_DATE_TIME, CalendarServiceArgument.END_DATE_TIME
+    ),
+    as_local_timezone(
+        CalendarServiceArgument.START_DATE_TIME, CalendarServiceArgument.END_DATE_TIME
+    ),
+    has_min_duration(
+        CalendarServiceArgument.START_DATE,
+        CalendarServiceArgument.END_DATE,
+        MIN_NEW_EVENT_DURATION,
+    ),
+    has_min_duration(
+        CalendarServiceArgument.START_DATE_TIME,
+        CalendarServiceArgument.END_DATE_TIME,
+        MIN_NEW_EVENT_DURATION,
+    ),
 )
 
 
 SERVICE_GET_EVENTS_SCHEMA: Final = probatio.All(
-    probatio.AtLeastOne(EVENT_END_DATETIME, EVENT_DURATION),
-    probatio.AtMostOne(EVENT_END_DATETIME, EVENT_DURATION),
+    probatio.AtLeastOne(
+        CalendarServiceArgument.END_DATE_TIME.value,
+        CalendarServiceArgument.DURATION.value,
+    ),
+    probatio.AtMostOne(
+        CalendarServiceArgument.END_DATE_TIME.value,
+        CalendarServiceArgument.DURATION.value,
+    ),
     cv.make_entity_service_schema(
         {
-            probatio.Optional(EVENT_START_DATETIME): cv.datetime,
-            probatio.Optional(EVENT_END_DATETIME): cv.datetime,
-            probatio.Optional(EVENT_DURATION): probatio.All(
+            probatio.Optional(CalendarServiceArgument.START_DATE_TIME): cv.datetime,
+            probatio.Optional(CalendarServiceArgument.END_DATE_TIME): cv.datetime,
+            probatio.Optional(CalendarServiceArgument.DURATION): probatio.All(
                 cv.time_period, cv.positive_timedelta
             ),
         }
     ),
-    has_positive_interval(EVENT_START_DATETIME, EVENT_END_DATETIME, EVENT_DURATION),
+    has_positive_interval(
+        CalendarServiceArgument.START_DATE_TIME,
+        CalendarServiceArgument.END_DATE_TIME,
+        CalendarServiceArgument.DURATION,
+    ),
 )
 
 
@@ -118,7 +145,7 @@ def _validate_timespan(
     It also handles the other service call variations like "in days" as well.
     """
 
-    if event_in := values.get(EVENT_IN):
+    if event_in := values.get(CalendarServiceArgument.IN):
         days = event_in.get(EVENT_IN_DAYS, 7 * event_in.get(EVENT_IN_WEEKS, 0))
         today = dt_util.now().date()
         return (
@@ -126,11 +153,23 @@ def _validate_timespan(
             today + dt.timedelta(days=days + 1),
         )
 
-    if EVENT_START_DATE in values and EVENT_END_DATE in values:
-        return (values[EVENT_START_DATE], values[EVENT_END_DATE])
+    if (
+        CalendarServiceArgument.START_DATE in values
+        and CalendarServiceArgument.END_DATE in values
+    ):
+        return (
+            values[CalendarServiceArgument.START_DATE],
+            values[CalendarServiceArgument.END_DATE],
+        )
 
-    if EVENT_START_DATETIME in values and EVENT_END_DATETIME in values:
-        return (values[EVENT_START_DATETIME], values[EVENT_END_DATETIME])
+    if (
+        CalendarServiceArgument.START_DATE_TIME in values
+        and CalendarServiceArgument.END_DATE_TIME in values
+    ):
+        return (
+            values[CalendarServiceArgument.START_DATE_TIME],
+            values[CalendarServiceArgument.END_DATE_TIME],
+        )
 
     raise ValueError("Missing required fields to set start or end date/datetime")
 
@@ -151,11 +190,13 @@ async def async_get_events_service(
     calendar: CalendarEntity, service_call: ServiceCall
 ) -> ServiceResponse:
     """List events on a calendar during a time range."""
-    start = service_call.data.get(EVENT_START_DATETIME, dt_util.now())
-    if EVENT_DURATION in service_call.data:
-        end = start + service_call.data[EVENT_DURATION]
+    start = service_call.data.get(
+        CalendarServiceArgument.START_DATE_TIME, dt_util.now()
+    )
+    if CalendarServiceArgument.DURATION in service_call.data:
+        end = start + service_call.data[CalendarServiceArgument.DURATION]
     else:
-        end = service_call.data[EVENT_END_DATETIME]
+        end = service_call.data[CalendarServiceArgument.END_DATE_TIME]
 
     calendar_event_list = await calendar.async_get_events(
         calendar.hass, dt_util.as_local(start), dt_util.as_local(end)
@@ -174,13 +215,13 @@ def async_setup_services(hass: HomeAssistant) -> None:
     component = hass.data[DATA_COMPONENT]
 
     component.async_register_entity_service(
-        CREATE_EVENT_SERVICE,
+        CalendarService.CREATE_EVENT,
         CREATE_EVENT_SCHEMA,
         _async_create_event,
         required_features=[CalendarEntityFeature.CREATE_EVENT],
     )
     component.async_register_entity_service(
-        SERVICE_GET_EVENTS,
+        CalendarService.GET_EVENTS,
         SERVICE_GET_EVENTS_SCHEMA,
         async_get_events_service,
         supports_response=SupportsResponse.ONLY,

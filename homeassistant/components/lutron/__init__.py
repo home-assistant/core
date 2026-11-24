@@ -137,13 +137,11 @@ async def async_setup_entry(
                 config_entry.entry_id,
             )
 
-    device_registry.async_get_or_create_device(
+    device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
-        device_info=dr.DeviceInfo(
-            identifiers={(DOMAIN, lutron_client.guid)},
-            manufacturer="Lutron",
-            name="Main repeater",
-        ),
+        identifiers={(DOMAIN, lutron_client.guid)},
+        manufacturer="Lutron",
+        name="Main repeater",
     )
 
     config_entry.runtime_data = entry_data

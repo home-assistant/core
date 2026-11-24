@@ -20,8 +20,7 @@ from homeassistant.core import CALLBACK_TYPE, HomeAssistant
 from homeassistant.helpers.trigger import TriggerActionType, TriggerInfo
 from homeassistant.helpers.typing import ConfigType
 
-from . import DOMAIN
-from .const import EVENT_RFXTRX_EVENT
+from .const import DOMAIN, EVENT_RFXTRX_EVENT
 from .helpers import async_get_device_object
 
 CONF_SUBTYPE = "subtype"

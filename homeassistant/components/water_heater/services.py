@@ -4,41 +4,39 @@ from typing import TYPE_CHECKING
 
 import probatio
 
-from homeassistant.const import ATTR_TEMPERATURE, SERVICE_TURN_OFF, SERVICE_TURN_ON
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import VolDictType
 from homeassistant.util.unit_conversion import TemperatureConverter
 
 from .const import (
-    ATTR_AWAY_MODE,
-    ATTR_OPERATION_MODE,
     DATA_COMPONENT,
-    SERVICE_SET_AWAY_MODE,
-    SERVICE_SET_OPERATION_MODE,
-    SERVICE_SET_TEMPERATURE,
     WaterHeaterEntityFeature,
+    WaterHeaterService,
+    WaterHeaterServiceArgument,
 )
 
 if TYPE_CHECKING:
     from .entity import WaterHeaterEntity
 
-CONVERTIBLE_ATTRIBUTE = [ATTR_TEMPERATURE]
+CONVERTIBLE_ATTRIBUTE = [WaterHeaterServiceArgument.TEMPERATURE]
 
 
 SET_AWAY_MODE_SCHEMA: VolDictType = {
-    probatio.Required(ATTR_AWAY_MODE): cv.boolean,
+    probatio.Required(WaterHeaterServiceArgument.AWAY_MODE): cv.boolean,
 }
 
 
 SET_TEMPERATURE_SCHEMA: VolDictType = {
-    probatio.Required(ATTR_TEMPERATURE, "temperature"): probatio.Coerce(float),
-    probatio.Optional(ATTR_OPERATION_MODE): cv.string,
+    probatio.Required(
+        WaterHeaterServiceArgument.TEMPERATURE, "temperature"
+    ): probatio.Coerce(float),
+    probatio.Optional(WaterHeaterServiceArgument.OPERATION_MODE): cv.string,
 }
 
 
 SET_OPERATION_MODE_SCHEMA: VolDictType = {
-    probatio.Required(ATTR_OPERATION_MODE): cv.string,
+    probatio.Required(WaterHeaterServiceArgument.OPERATION_MODE): cv.string,
 }
 
 
@@ -46,7 +44,7 @@ async def _async_service_away_mode(
     entity: WaterHeaterEntity, service: ServiceCall
 ) -> None:
     """Handle away mode service."""
-    if service.data[ATTR_AWAY_MODE]:
+    if service.data[WaterHeaterServiceArgument.AWAY_MODE]:
         await entity.async_turn_away_mode_on()
     else:
         await entity.async_turn_away_mode_off()
@@ -78,25 +76,31 @@ def async_setup_services(hass: HomeAssistant) -> None:
     component = hass.data[DATA_COMPONENT]
 
     component.async_register_entity_service(
-        SERVICE_TURN_ON, None, "async_turn_on", [WaterHeaterEntityFeature.ON_OFF]
+        WaterHeaterService.TURN_ON,
+        None,
+        "async_turn_on",
+        [WaterHeaterEntityFeature.ON_OFF],
     )
     component.async_register_entity_service(
-        SERVICE_TURN_OFF, None, "async_turn_off", [WaterHeaterEntityFeature.ON_OFF]
+        WaterHeaterService.TURN_OFF,
+        None,
+        "async_turn_off",
+        [WaterHeaterEntityFeature.ON_OFF],
     )
     component.async_register_entity_service(
-        SERVICE_SET_AWAY_MODE,
+        WaterHeaterService.SET_AWAY_MODE,
         SET_AWAY_MODE_SCHEMA,
         _async_service_away_mode,
         [WaterHeaterEntityFeature.AWAY_MODE],
     )
     component.async_register_entity_service(
-        SERVICE_SET_TEMPERATURE,
+        WaterHeaterService.SET_TEMPERATURE,
         SET_TEMPERATURE_SCHEMA,
         _async_service_temperature_set,
         [WaterHeaterEntityFeature.TARGET_TEMPERATURE],
     )
     component.async_register_entity_service(
-        SERVICE_SET_OPERATION_MODE,
+        WaterHeaterService.SET_OPERATION_MODE,
         SET_OPERATION_MODE_SCHEMA,
         "async_handle_set_operation_mode",
         [WaterHeaterEntityFeature.OPERATION_MODE],

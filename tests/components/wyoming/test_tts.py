@@ -12,7 +12,9 @@ from wyoming.audio import AudioChunk, AudioStart, AudioStop
 from wyoming.error import Error
 from wyoming.tts import SynthesizeStopped
 
-from homeassistant.components import tts, wyoming
+from homeassistant.components import tts
+from homeassistant.components.tts import TextToSpeechCommonOption
+from homeassistant.components.wyoming import WyomingTextToSpeechOption
 from homeassistant.components.wyoming.coordinator import UPDATE_INTERVAL
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -33,9 +35,9 @@ async def test_support(hass: HomeAssistant, init_wyoming_tts) -> None:
 
     assert entity.supported_languages == ["en-US"]
     assert entity.supported_options == [
-        tts.ATTR_AUDIO_OUTPUT,
-        tts.ATTR_VOICE,
-        wyoming.ATTR_SPEAKER,
+        TextToSpeechCommonOption.AUDIO_OUTPUT,
+        TextToSpeechCommonOption.VOICE,
+        WyomingTextToSpeechOption.SPEAKER,
     ]
     voices = entity.async_get_supported_voices("en-US")
     assert len(voices) == 1
@@ -132,7 +134,10 @@ async def test_get_tts_audio(
         MockAsyncTcpClient(audio_events),
     ) as mock_client:
         stream = tts.async_create_stream(
-            hass, "tts.test_tts", "en-US", options={tts.ATTR_PREFERRED_FORMAT: "wav"}
+            hass,
+            "tts.test_tts",
+            "en-US",
+            options={TextToSpeechCommonOption.PREFERRED_FORMAT: "wav"},
         )
         stream.async_set_message("Hello world")
         data = b"".join([chunk async for chunk in stream.async_stream_result()])
@@ -172,9 +177,9 @@ async def test_get_tts_audio_different_formats(
             "tts.test_tts",
             "en-US",
             options={
-                tts.ATTR_PREFERRED_FORMAT: "wav",
-                tts.ATTR_PREFERRED_SAMPLE_RATE: 48000,
-                tts.ATTR_PREFERRED_SAMPLE_CHANNELS: 2,
+                TextToSpeechCommonOption.PREFERRED_FORMAT: "wav",
+                TextToSpeechCommonOption.PREFERRED_SAMPLE_RATE: 48000,
+                TextToSpeechCommonOption.PREFERRED_SAMPLE_CHANNELS: 2,
             },
         )
         stream.async_set_message("Hello world")
@@ -293,7 +298,7 @@ async def test_get_tts_audio_streaming_error_event(hass: HomeAssistant) -> None:
             hass,
             "tts.test_streaming_tts",
             "en-US",
-            options={tts.ATTR_PREFERRED_FORMAT: "wav"},
+            options={TextToSpeechCommonOption.PREFERRED_FORMAT: "wav"},
         )
         stream.async_set_message_stream(message_gen())
 
@@ -323,7 +328,10 @@ async def test_voice_speaker(
             hass,
             "tts.test_tts",
             "en-US",
-            options={tts.ATTR_VOICE: "voice1", wyoming.ATTR_SPEAKER: "speaker1"},
+            options={
+                TextToSpeechCommonOption.VOICE: "voice1",
+                WyomingTextToSpeechOption.SPEAKER: "speaker1",
+            },
         )
         stream.async_set_message("Hello world")
         async for _chunk in stream.async_stream_result():
@@ -362,7 +370,7 @@ async def test_get_tts_audio_streaming(
             hass,
             "tts.test_streaming_tts",
             "en-US",
-            options={tts.ATTR_PREFERRED_FORMAT: "wav"},
+            options={TextToSpeechCommonOption.PREFERRED_FORMAT: "wav"},
         )
         stream.async_set_message_stream(message_gen())
         data = b"".join([chunk async for chunk in stream.async_stream_result()])

@@ -63,6 +63,7 @@ async def test_device_config_file_changed_confirm_step(
     client: Client,
     multisensor_6_state: NodeDataType,
     integration: MockConfigEntry,
+    issue_registry: ir.IssueRegistry,
 ) -> None:
     """Test the device_config_file_changed issue confirm step."""
     node = await _trigger_repair_issue(hass, client, multisensor_6_state)
@@ -86,6 +87,10 @@ async def test_device_config_file_changed_confirm_step(
     issue = msg["result"]["issues"][0]
     assert issue["issue_id"] == issue_id
     assert issue["translation_placeholders"] == {"device_name": device.name}
+    assert (
+        issue_registry.async_get_issue(DOMAIN, issue_id).config_entry_id
+        == integration.entry_id
+    )
 
     data = await start_repair_fix_flow(http_client, DOMAIN, issue_id)
 
@@ -356,6 +361,7 @@ async def test_migrate_unique_id(
     device_registry: dr.DeviceRegistry,
     client: MagicMock,
     multisensor_6: Node,
+    issue_registry: ir.IssueRegistry,
 ) -> None:
     """Test the migrate unique id flow."""
     node = multisensor_6
@@ -400,6 +406,10 @@ async def test_migrate_unique_id(
     issue = msg["result"]["issues"][0]
     issue_id = issue["issue_id"]
     assert issue_id == f"migrate_unique_id.{config_entry.entry_id}"
+    assert (
+        issue_registry.async_get_issue(DOMAIN, issue_id).config_entry_id
+        == config_entry.entry_id
+    )
 
     data = await start_repair_fix_flow(http_client, DOMAIN, issue_id)
 
@@ -436,6 +446,7 @@ async def test_migrate_unique_id_missing_config_entry(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
     hass_ws_client: WebSocketGenerator,
+    issue_registry: ir.IssueRegistry,
 ) -> None:
     """Test the migrate unique id flow with missing config entry."""
     old_unique_id = "123456789"
@@ -462,6 +473,19 @@ async def test_migrate_unique_id_missing_config_entry(
     issue = msg["result"]["issues"][0]
     issue_id = issue["issue_id"]
     assert issue_id == f"migrate_unique_id.{config_entry.entry_id}"
+
+    # An issue raised before issues were linked to entries outlives its entry
+    issue_entry = issue_registry.async_get_issue(DOMAIN, issue_id)
+    assert issue_entry is not None
+    ir.async_create_issue(
+        hass,
+        DOMAIN,
+        issue_id,
+        data=issue_entry.data,
+        is_fixable=True,
+        severity=ir.IssueSeverity.ERROR,
+        translation_key="migrate_unique_id",
+    )
 
     await hass.config_entries.async_remove(config_entry.entry_id)
 

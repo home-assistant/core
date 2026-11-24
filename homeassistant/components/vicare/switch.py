@@ -4,7 +4,6 @@ from contextlib import suppress
 import enum
 from typing import Any, override
 
-from PyViCare.PyViCareDeviceConfig import PyViCareDeviceConfig
 from PyViCare.PyViCareUtils import (
     PyViCareCommandError,
     PyViCareNotSupportedFeatureError,
@@ -58,7 +57,7 @@ def _build_entities(
         with suppress(PyViCareNotSupportedFeatureError):
             available = device.api.getVentilationQuickmodes()
         entities.extend(
-            ViCareQuickmodeSwitch(quickmode, device.serial, device.config, device.api)
+            ViCareQuickmodeSwitch(quickmode, device)
             for quickmode in VentilationQuickmode
             if quickmode in available
         )
@@ -89,12 +88,10 @@ class ViCareQuickmodeSwitch(ViCareEntity, SwitchEntity):
     def __init__(
         self,
         quickmode: VentilationQuickmode,
-        device_serial: str | None,
-        device_config: PyViCareDeviceConfig,
-        device: PyViCareVentilationDevice,
+        device: ViCareDevice,
     ) -> None:
         """Initialize the switch."""
-        super().__init__(ENTITY_KEYS[quickmode], device_serial, device_config, device)
+        super().__init__(ENTITY_KEYS[quickmode], device)
         self._quickmode = quickmode
         self._attr_translation_key = ENTITY_KEYS[quickmode]
 

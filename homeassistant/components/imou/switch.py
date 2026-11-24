@@ -1,6 +1,6 @@
 """Support for Imou switch controls."""
 
-from typing import Any, override
+from typing import Any, cast, override
 
 from pyimouapi.const import PARAM_MOTION_DETECT, PARAM_STATE
 from pyimouapi.ha_device import ImouHaDevice
@@ -156,7 +156,7 @@ class ImouSwitch(ImouEntity, SwitchEntity):
     @override
     def is_on(self) -> bool | None:
         """Return True if the switch is on."""
-        return self.device.switches[self._entity_type][PARAM_STATE]
+        return cast(bool | None, self.device.switches[self._entity_type][PARAM_STATE])
 
     @override
     async def async_turn_on(self, **kwargs: Any) -> None:

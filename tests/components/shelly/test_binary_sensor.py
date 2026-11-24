@@ -37,9 +37,9 @@ from . import (
     mock_rest_update,
     mutate_rpc_device_status,
     patch_platforms,
+    register_child_device,
     register_device,
     register_entity,
-    register_sub_device,
 )
 
 RELAY_BLOCK_ID = 0
@@ -582,7 +582,7 @@ async def test_rpc_remove_virtual_binary_sensor_when_orphaned(
     )
 
     # create orphaned entity on sub device
-    sub_device_entry = register_sub_device(
+    sub_device_entry = register_child_device(
         device_registry,
         config_entry,
         "boolean:201-boolean_generic",

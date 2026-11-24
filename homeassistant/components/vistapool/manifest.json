@@ -4,6 +4,7 @@
   "categories": ["water.pools_spas"],
   "codeowners": ["@fdebrus"],
   "config_flow": true,
+  "connectivity": ["cloud"],
   "dhcp": [
     {
       "hostname": "sugarwifi"
@@ -14,5 +15,5 @@
   "iot_class": "cloud_push",
   "loggers": ["aioaquarite"],
   "quality_scale": "platinum",
-  "requirements": ["aioaquarite==0.13.1"]
+  "requirements": ["aioaquarite==0.13.2"]
 }

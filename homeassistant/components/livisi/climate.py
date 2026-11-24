@@ -9,7 +9,7 @@ from homeassistant.components.climate import (
     ClimateEntityFeature,
     HVACMode,
 )
-from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
+from homeassistant.const import ATTR_TEMPERATURE, TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -23,7 +23,6 @@ from .const import (
     MIN_TEMPERATURE,
     POINT_TEMPERATURE,
     SETPOINT_TEMPERATURE,
-    TEMPERATURE,
     VRCC_DEVICE_TYPE,
 )
 from .coordinator import LivisiConfigEntry, LivisiDataUpdateCoordinator
