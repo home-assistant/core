@@ -62,7 +62,9 @@ async def test_cover(
     """Test the cover is created from YAML with the PLC's values."""
     mock_ads_device.values.update(PLC_VALUES)
 
-    assert await setup_ads_platform(hass, COVER_DOMAIN, platform_config)
+    assert await setup_ads_platform(
+        hass, mock_ads_device, COVER_DOMAIN, platform_config
+    )
 
     assert entity_registry.async_get(entity_id) == snapshot(name="entry")
     assert hass.states.get(entity_id) == snapshot(name="state")
@@ -73,7 +75,9 @@ async def test_state_follows_the_plc(
 ) -> None:
     """Test the closed state and the position follow the PLC independently."""
     mock_ads_device.values.update(PLC_VALUES)
-    assert await setup_ads_platform(hass, COVER_DOMAIN, POSITION_CONFIG)
+    assert await setup_ads_platform(
+        hass, mock_ads_device, COVER_DOMAIN, POSITION_CONFIG
+    )
 
     await mock_ads_device.async_push(hass, ADS_VAR_POSITION, bytes([200]))
     state = hass.states.get(ENTITY_ID)
@@ -106,7 +110,9 @@ async def test_available_with_either_value(
     del mock_ads_device.values[silent_var]
 
     assert await async_run_past_first_update(
-        hass, mock_ads_device, setup_ads_platform(hass, COVER_DOMAIN, POSITION_CONFIG)
+        hass,
+        mock_ads_device,
+        setup_ads_platform(hass, mock_ads_device, COVER_DOMAIN, POSITION_CONFIG),
     )
 
     state = hass.states.get(ENTITY_ID)
@@ -178,7 +184,9 @@ async def test_actions_write_to_the_plc(
 ) -> None:
     """Test each action writes the variable it is configured with."""
     mock_ads_device.values.update(PLC_VALUES)
-    assert await setup_ads_platform(hass, COVER_DOMAIN, platform_config)
+    assert await setup_ads_platform(
+        hass, mock_ads_device, COVER_DOMAIN, platform_config
+    )
 
     await hass.services.async_call(
         COVER_DOMAIN, service, {TargetKey.ENTITY_ID: ENTITY_ID, **data}, blocking=True
@@ -195,7 +203,7 @@ async def test_write_error(
 ) -> None:
     """Test a failing write is logged instead of raised at the caller."""
     mock_ads_device.values.update(PLC_VALUES)
-    assert await setup_ads_platform(hass, COVER_DOMAIN, FULL_CONFIG)
+    assert await setup_ads_platform(hass, mock_ads_device, COVER_DOMAIN, FULL_CONFIG)
     mock_pyads_connection.return_value.write_by_name.side_effect = pyads.ADSError(
         err_code=1861
     )

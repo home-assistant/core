@@ -69,7 +69,9 @@ async def test_light(
     """Test the light is created from YAML with the PLC's values."""
     mock_ads_device.values.update(PLC_VALUES)
 
-    assert await setup_ads_platform(hass, LIGHT_DOMAIN, platform_config)
+    assert await setup_ads_platform(
+        hass, mock_ads_device, LIGHT_DOMAIN, platform_config
+    )
 
     assert entity_registry.async_get(entity_id) == snapshot(name="entry")
     assert hass.states.get(entity_id) == snapshot(name="state")
@@ -80,7 +82,9 @@ async def test_state_follows_the_plc(
 ) -> None:
     """Test the light follows the values the PLC pushes, brightness unscaled."""
     mock_ads_device.values.update(PLC_VALUES)
-    assert await setup_ads_platform(hass, LIGHT_DOMAIN, COLOR_TEMP_CONFIG)
+    assert await setup_ads_platform(
+        hass, mock_ads_device, LIGHT_DOMAIN, COLOR_TEMP_CONFIG
+    )
 
     await mock_ads_device.async_push(hass, ADS_VAR_BRIGHTNESS, struct.pack("<H", 1000))
     await mock_ads_device.async_push(hass, ADS_VAR_COLOR_TEMP, struct.pack("<H", 3000))
@@ -112,7 +116,9 @@ async def test_availability_follows_the_onoff_variable(
     del mock_ads_device.values[silent_var]
 
     assert await async_run_past_first_update(
-        hass, mock_ads_device, setup_ads_platform(hass, LIGHT_DOMAIN, BRIGHTNESS_CONFIG)
+        hass,
+        mock_ads_device,
+        setup_ads_platform(hass, mock_ads_device, LIGHT_DOMAIN, BRIGHTNESS_CONFIG),
     )
 
     state = hass.states.get(ENTITY_ID)
@@ -187,7 +193,9 @@ async def test_actions_write_to_the_plc(
 ) -> None:
     """Test the actions write the on/off variable first, then the values."""
     mock_ads_device.values.update(PLC_VALUES)
-    assert await setup_ads_platform(hass, LIGHT_DOMAIN, platform_config)
+    assert await setup_ads_platform(
+        hass, mock_ads_device, LIGHT_DOMAIN, platform_config
+    )
 
     await hass.services.async_call(
         LIGHT_DOMAIN, service, {TargetKey.ENTITY_ID: ENTITY_ID, **data}, blocking=True
@@ -204,7 +212,9 @@ async def test_write_error(
 ) -> None:
     """Test a failing write is logged, and the remaining writes still go out."""
     mock_ads_device.values.update(PLC_VALUES)
-    assert await setup_ads_platform(hass, LIGHT_DOMAIN, BRIGHTNESS_CONFIG)
+    assert await setup_ads_platform(
+        hass, mock_ads_device, LIGHT_DOMAIN, BRIGHTNESS_CONFIG
+    )
     write_by_name = mock_pyads_connection.return_value.write_by_name
     write_by_name.side_effect = pyads.ADSError(err_code=1861)
 

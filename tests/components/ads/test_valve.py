@@ -46,7 +46,9 @@ async def test_valve(
     """Test the valve is created from YAML."""
     mock_ads_device.values[ADS_VAR] = BOOL_TRUE
 
-    assert await setup_ads_platform(hass, VALVE_DOMAIN, platform_config)
+    assert await setup_ads_platform(
+        hass, mock_ads_device, VALVE_DOMAIN, platform_config
+    )
 
     assert entity_registry.async_get(entity_id) == snapshot(name="entry")
     assert hass.states.get(entity_id) == snapshot(name="state")
@@ -65,7 +67,9 @@ async def test_state_ignores_the_plc(
 ) -> None:
     """Test the valve reports closed whatever the PLC says."""
     mock_ads_device.values[ADS_VAR] = initial
-    assert await setup_ads_platform(hass, VALVE_DOMAIN, PLATFORM_CONFIG)
+    assert await setup_ads_platform(
+        hass, mock_ads_device, VALVE_DOMAIN, PLATFORM_CONFIG
+    )
 
     await mock_ads_device.async_push(hass, ADS_VAR, pushed)
 
@@ -77,7 +81,9 @@ async def test_unavailable_until_the_first_value(
 ) -> None:
     """Test the valve is unavailable until the PLC delivers a value."""
     assert await async_run_past_first_update(
-        hass, mock_ads_device, setup_ads_platform(hass, VALVE_DOMAIN, PLATFORM_CONFIG)
+        hass,
+        mock_ads_device,
+        setup_ads_platform(hass, mock_ads_device, VALVE_DOMAIN, PLATFORM_CONFIG),
     )
     assert hass.states.get(ENTITY_ID).state == STATE_UNAVAILABLE
 
@@ -101,7 +107,9 @@ async def test_actions_write_to_the_plc(
 ) -> None:
     """Test the actions write the variable."""
     mock_ads_device.values[ADS_VAR] = BOOL_FALSE
-    assert await setup_ads_platform(hass, VALVE_DOMAIN, PLATFORM_CONFIG)
+    assert await setup_ads_platform(
+        hass, mock_ads_device, VALVE_DOMAIN, PLATFORM_CONFIG
+    )
 
     await hass.services.async_call(
         VALVE_DOMAIN, service, {TargetKey.ENTITY_ID: ENTITY_ID}, blocking=True
@@ -117,7 +125,9 @@ async def test_state_is_assumed_from_the_actions(
 ) -> None:
     """Test the state follows the last action, once the PLC next sends anything."""
     mock_ads_device.values[ADS_VAR] = BOOL_FALSE
-    assert await setup_ads_platform(hass, VALVE_DOMAIN, PLATFORM_CONFIG)
+    assert await setup_ads_platform(
+        hass, mock_ads_device, VALVE_DOMAIN, PLATFORM_CONFIG
+    )
 
     await hass.services.async_call(
         VALVE_DOMAIN, ValveService.OPEN, {TargetKey.ENTITY_ID: ENTITY_ID}, blocking=True
@@ -144,7 +154,9 @@ async def test_write_error(
 ) -> None:
     """Test a failing write is logged instead of raised at the caller."""
     mock_ads_device.values[ADS_VAR] = BOOL_FALSE
-    assert await setup_ads_platform(hass, VALVE_DOMAIN, PLATFORM_CONFIG)
+    assert await setup_ads_platform(
+        hass, mock_ads_device, VALVE_DOMAIN, PLATFORM_CONFIG
+    )
     mock_pyads_connection.return_value.write_by_name.side_effect = pyads.ADSError(
         err_code=1861
     )
