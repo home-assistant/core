@@ -101,9 +101,10 @@ class HVVDeparturesConfigFlow(ConfigFlow, domain=DOMAIN):
             )
 
             self.stations = {
-                station.name: station
+                station.id: station
                 for station in (check_name.results or [])
                 if station.type == RegionalSDNameType.STATION
+                and station.id is not None
                 and station.name is not None
             }
 
@@ -126,7 +127,18 @@ class HVVDeparturesConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle the step where the user inputs his/her station."""
 
         schema = probatio.Schema(
-            {probatio.Required(CONF_STATION): probatio.In(list(self.stations))}
+            {
+                probatio.Required(CONF_STATION): probatio.In(
+                    {
+                        station_id: (
+                            f"{station.name} ({station.city})"
+                            if station.city
+                            else station.name
+                        )
+                        for station_id, station in self.stations.items()
+                    }
+                )
+            }
         )
 
         if user_input is None:

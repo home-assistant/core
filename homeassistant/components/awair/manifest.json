@@ -1,8 +1,10 @@
 {
   "domain": "awair",
   "name": "Awair",
+  "categories": ["sensors.air_quality"],
   "codeowners": ["@ahayworth", "@ricohageman"],
   "config_flow": true,
+  "connectivity": ["cloud", "network"],
   "documentation": "https://www.home-assistant.io/integrations/awair",
   "iot_class": "local_polling",
   "loggers": ["python_awair"],

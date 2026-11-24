@@ -30,6 +30,11 @@ CONFIG_SCHEMA = probatio.Schema(
     extra=probatio.ALLOW_EXTRA,
 )
 
+__all__ = [
+    "DOMAIN",
+    "get_client",
+]
+
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Twilio component."""
@@ -43,6 +48,11 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
+def get_client(hass: HomeAssistant) -> Client:
+    """Return the Twilio client."""
+    return hass.data[DATA_TWILIO]
+
+
 async def handle_webhook(
     hass: HomeAssistant, webhook_id: str, request: web.Request
 ) -> web.Response:
@@ -54,18 +64,16 @@ async def handle_webhook(
     return web.Response(text="")
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Configure based on config entry."""
     webhook.async_register(
         hass, DOMAIN, "Twilio", entry.data[CONF_WEBHOOK_ID], handle_webhook
     )
-    return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Unload a config entry."""
     webhook.async_unregister(hass, entry.data[CONF_WEBHOOK_ID])
-    return True
 
 
 async_remove_entry = config_entry_flow.webhook_async_remove_entry

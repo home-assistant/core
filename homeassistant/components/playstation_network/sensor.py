@@ -21,12 +21,11 @@ from homeassistant.util import dt as dt_util
 from .coordinator import (
     PlayStationNetworkBaseCoordinator,
     PlaystationNetworkConfigEntry,
-    PlaystationNetworkData,
     PlaystationNetworkFriendDataCoordinator,
     PlaystationNetworkUserDataCoordinator,
 )
 from .entity import PlaystationNetworkServiceEntity
-from .helpers import get_game_title_info
+from .helpers import PlaystationNetworkData, get_game_title_info
 
 PARALLEL_UPDATES = 0
 

@@ -6,7 +6,11 @@ from homeassistant.const import Platform, UnitOfDataRate
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
-from .const import DOMAIN, THROUGHPUT_UNIQUE_ID_FRAGMENT
+from .const import (
+    DOMAIN,
+    LEGACY_DATA_SIZE_UNIT_EQUIVALENTS,
+    THROUGHPUT_UNIQUE_ID_FRAGMENT,
+)
 from .coordinator import (
     LibreHardwareMonitorConfigEntry,
     LibreHardwareMonitorCoordinator,
@@ -19,7 +23,7 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_migrate_entry(
     hass: HomeAssistant, config_entry: LibreHardwareMonitorConfigEntry
-) -> bool:
+) -> None:
     """Migrate to current config flow version."""
     _LOGGER.debug(
         "Migrating from version %s.%s", config_entry.version, config_entry.minor_version
@@ -92,18 +96,34 @@ async def async_migrate_entry(
                 unit_of_measurement=UnitOfDataRate.KIBIBYTES_PER_SECOND,
             )
 
+        # Migrate binary Data units LHM labels MB and GB to MiB and GiB
+        for reg_entry in registry_entries:
+            if not (
+                data_size_unit := LEGACY_DATA_SIZE_UNIT_EQUIVALENTS.get(
+                    reg_entry.unit_of_measurement
+                )
+            ):
+                continue
+            _LOGGER.debug(
+                "Migrating entity %s unit from %s to %s",
+                reg_entry.entity_id,
+                reg_entry.unit_of_measurement,
+                data_size_unit,
+            )
+            entity_registry.async_update_entity(
+                reg_entry.entity_id, unit_of_measurement=data_size_unit
+            )
+
         hass.config_entries.async_update_entry(
             config_entry, data=config_entry.data, version=2, minor_version=2
         )
 
         _LOGGER.debug("Migration to version 2.2 successful")
 
-    return True
-
 
 async def async_setup_entry(
     hass: HomeAssistant, config_entry: LibreHardwareMonitorConfigEntry
-) -> bool:
+) -> None:
     """Set up LibreHardwareMonitor from a config entry."""
 
     lhm_coordinator = LibreHardwareMonitorCoordinator(hass, config_entry)
@@ -112,11 +132,9 @@ async def async_setup_entry(
     config_entry.runtime_data = lhm_coordinator
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
 
-    return True
-
 
 async def async_unload_entry(
     hass: HomeAssistant, config_entry: LibreHardwareMonitorConfigEntry
-) -> bool:
+) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(config_entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(config_entry, PLATFORMS)

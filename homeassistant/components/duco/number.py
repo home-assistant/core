@@ -1,7 +1,6 @@
 """Number platform for the Duco integration."""
 
 from dataclasses import replace
-import logging
 from typing import override
 
 from duco_connectivity import DucoError, DucoRateLimitError
@@ -20,8 +19,6 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from .const import BOX_NODE_ID, DOMAIN
 from .coordinator import DucoConfigEntry, DucoCoordinator
 from .entity import DucoEntity
-
-_LOGGER = logging.getLogger(__name__)
 
 PARALLEL_UPDATES = 1
 
@@ -147,10 +144,6 @@ class DucoBypassSupplyTemperatureTargetNumber(DucoEntity, NumberEntity):
                 },
             ) from err
         except DucoRateLimitError as err:
-            _LOGGER.warning(
-                "Duco write rate limit exceeded for bypass target zone %s",
-                self._zone_id,
-            )
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="rate_limit_exceeded",

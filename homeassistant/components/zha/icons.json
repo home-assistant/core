@@ -122,6 +122,9 @@
       "regulation_setpoint_offset": {
         "default": "mdi:thermostat"
       },
+      "reporting_interval": {
+        "default": "mdi:timer-sync-outline"
+      },
       "serving_size": {
         "default": "mdi:counter"
       },
@@ -236,6 +239,9 @@
       "linkage_alarm": {
         "default": "mdi:shield-link-variant"
       },
+      "power_outage_memory": {
+        "default": "mdi:restore"
+      },
       "prioritize_external_temperature_sensor": {
         "default": "mdi:thermometer"
       },
@@ -265,9 +271,6 @@
     },
     "permit": {
       "service": "mdi:cellphone-link"
-    },
-    "reconfigure_device": {
-      "service": "mdi:cellphone-cog"
     },
     "remove": {
       "service": "mdi:cellphone-remove"

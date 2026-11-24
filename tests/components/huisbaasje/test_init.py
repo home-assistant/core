@@ -3,6 +3,7 @@
 from unittest.mock import patch
 
 from energyflip import EnergyFlipException
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.huisbaasje.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
@@ -10,8 +11,6 @@ from homeassistant.const import CONF_ID, CONF_PASSWORD, CONF_USERNAME, STATE_UNA
 from homeassistant.core import HomeAssistant
 
 from .test_data import MOCK_CURRENT_MEASUREMENTS
-
-from tests.common import MockConfigEntry
 
 
 async def test_setup_entry(hass: HomeAssistant) -> None:
@@ -63,7 +62,8 @@ async def test_setup_entry_error_authenticate(hass: HomeAssistant) -> None:
     """Test for unsuccessfully setting a config entry, erroring on authenticate."""
     with (
         patch(
-            "energyflip.EnergyFlip.authenticate", side_effect=EnergyFlipException
+            "energyflip.EnergyFlip.authenticate",
+            side_effect=EnergyFlipException("Boom"),
         ) as mock_authenticate,
         patch(
             "energyflip.EnergyFlip.customer_overview",
@@ -89,6 +89,7 @@ async def test_setup_entry_error_authenticate(hass: HomeAssistant) -> None:
 
         # Assert integration is loaded with error
         assert config_entry.state is ConfigEntryState.SETUP_ERROR
+        assert config_entry.reason == "Authentication failed"
         assert DOMAIN not in hass.data
 
         # Assert entities are not loaded
@@ -110,7 +111,7 @@ async def test_setup_entry_error_customer_overview(hass: HomeAssistant) -> None:
         ) as mock_authenticate,
         patch(
             "energyflip.EnergyFlip.customer_overview",
-            side_effect=EnergyFlipException,
+            side_effect=EnergyFlipException("Boom"),
         ) as mock_customer_overview,
     ):
         config_entry = MockConfigEntry(
@@ -132,6 +133,7 @@ async def test_setup_entry_error_customer_overview(hass: HomeAssistant) -> None:
 
         # Assert integration is loaded with error
         assert config_entry.state is ConfigEntryState.SETUP_ERROR
+        assert config_entry.reason == "Getting customer ID failed"
         assert DOMAIN not in hass.data
 
         # Assert entities are not loaded

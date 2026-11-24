@@ -7,8 +7,9 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any, cast, override
 
 from aiohttp import ClientError
-from aiopowerwall import PowerwallAuthenticationError, PowerwallError
 from bleak.exc import BleakError
+from bleak_retry_connector import BleakNotFoundError, BleakOutOfConnectionSlotsError
+from habluetooth.const import STRONG_OWNER_STALE_RSSI
 import probatio
 from tesla_fleet_api.const import (
     AuthorizedClientKeyType,
@@ -32,6 +33,7 @@ from tesla_fleet_api.exceptions import (
     WhitelistOperationLocalEntityAuthFailedUIDenied,
 )
 from tesla_fleet_api.tesla import EnergySiteRouter
+from tesla_fleet_api.tesla.powerwall import PowerwallAuthenticationError, PowerwallError
 from tesla_fleet_api.tesla.vehicle.bluetooth import VehicleBluetooth
 from tesla_fleet_api.teslemetry import Teslemetry
 from tesla_fleet_api.teslemetry.energysite import AuthorizedClient, TeslemetryEnergySite
@@ -41,14 +43,18 @@ from homeassistant.components.application_credentials import (
     async_import_client_credential,
 )
 from homeassistant.components.bluetooth import (
+    BluetoothScanningMode,
+    BluetoothServiceInfoBleak,
+    async_current_scanners,
     async_discovered_service_info,
+    async_last_service_info,
+    async_register_advertisement_callback,
     async_request_active_scan,
     async_scanner_count,
 )
 from homeassistant.config_entries import (
     SOURCE_REAUTH,
     SOURCE_RECONFIGURE,
-    ConfigEntry,
     ConfigEntryState,
     ConfigFlowResult,
     ConfigSubentryFlow,
@@ -59,8 +65,9 @@ from homeassistant.core import callback
 from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from . import _BLE_KEY_ERRORS, TeslemetryConfigEntry
+from . import _BLE_KEY_ERRORS
 from .const import (
+    BLE_ADVERTISEMENT_TIMEOUT,
     CLIENT_ID,
     CONF_SITE_ID,
     CONF_VIN,
@@ -69,6 +76,7 @@ from .const import (
     POWERWALL_KEY_FILE,
     SUBENTRY_TYPE_ENERGY_SITE,
     SUBENTRY_TYPE_VEHICLE,
+    VEHICLE_KEY_FILE,
 )
 from .helpers import (
     PowerwallKeyRejectedError,
@@ -76,7 +84,7 @@ from .helpers import (
     async_verify_local_gateway,
     cloud_energy_site,
 )
-from .models import TeslemetryEnergyData
+from .models import TeslemetryConfigEntry, TeslemetryEnergyData
 
 
 class PowerwallSetupError(Exception):
@@ -111,7 +119,7 @@ class OAuth2FlowHandler(
     @callback
     @override
     def async_get_supported_subentry_types(
-        cls, config_entry: ConfigEntry
+        cls, config_entry: TeslemetryConfigEntry
     ) -> dict[str, type[ConfigSubentryFlow]]:
         """Return the subentry types supported by this integration."""
         return {
@@ -159,7 +167,7 @@ class OAuth2FlowHandler(
         )
 
     def _async_apply_token(
-        self, entry: ConfigEntry, data: dict[str, Any]
+        self, entry: TeslemetryConfigEntry, data: dict[str, Any]
     ) -> ConfigFlowResult:
         """Store the refreshed token and reload the entry exactly once."""
         if entry.state is not ConfigEntryState.LOADED:
@@ -246,13 +254,25 @@ class VehicleSubentryFlowHandler(ConfigSubentryFlow):
             for subentry in entry.get_subentries_of_type(SUBENTRY_TYPE_VEHICLE)
             if CONF_VIN in subentry.data
         }
+        vehicle_metadata = entry.runtime_data.metadata_coordinator.data["vehicles"]
         choices = {
-            vehicle.vin: vehicle.device["name"] or vehicle.vin
+            vehicle.vin: vehicle.device.name or vehicle.vin
             for vehicle in entry.runtime_data.vehicles
             if vehicle.vin not in already_added
+            # Vehicles without the command protocol (pre-2021 Model S/X) report
+            # False and cannot be controlled over Bluetooth; None or a VIN not
+            # yet in the metadata means unknown.
+            and vehicle_metadata.get(vehicle.vin, {}).get("proxy") is not False
         }
         if not choices:
-            return self.async_abort(reason="no_vehicles")
+            if not entry.runtime_data.vehicles:
+                return self.async_abort(reason="no_vehicles")
+            if any(
+                vehicle.vin not in already_added
+                for vehicle in entry.runtime_data.vehicles
+            ):
+                return self.async_abort(reason="no_supported_vehicles")
+            return self.async_abort(reason="all_vehicles_added")
 
         if user_input is not None:
             self._vin = user_input[CONF_VIN]
@@ -266,6 +286,15 @@ class VehicleSubentryFlowHandler(ConfigSubentryFlow):
             ),
         )
 
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> SubentryFlowResult:
+        """Re-run Bluetooth pairing for an already added vehicle."""
+        if not async_scanner_count(self.hass, connectable=True):
+            return self.async_abort(reason="bluetooth_not_available")
+        self._vin = self._get_reconfigure_subentry().data[CONF_VIN]
+        return await self.async_step_scan()
+
     async def async_step_scan(
         self, user_input: dict[str, Any] | None = None
     ) -> SubentryFlowResult:
@@ -273,45 +302,115 @@ class VehicleSubentryFlowHandler(ConfigSubentryFlow):
         if TYPE_CHECKING:
             assert self._vin is not None
         errors: dict[str, str] = {}
+        placeholders = {"vin": self._vin}
 
         if user_input is not None:
             try:
                 parent = await async_get_ble_parent(self.hass)
             except _BLE_KEY_ERRORS as err:
                 LOGGER.debug("Bluetooth key load failed: %s", err)
-                errors["base"] = "cannot_connect"
+                errors["base"] = "key_load_failed"
+                placeholders["key_file"] = self.hass.config.path(VEHICLE_KEY_FILE)
             else:
                 # The advertised BLE name is a hash of the VIN; match on its prefix.
                 expected = parent.get_name(self._vin)[:17]
-                device = None
-                # The name is only in scan responses, so an active scan may be needed to see it.
-                await async_request_active_scan(self.hass)
-                for info in async_discovered_service_info(self.hass, connectable=True):
-                    if info.name and info.name.startswith(expected):
-                        device = info.device
-                        self._address = info.address
-                        break
+                if (info := self._async_find_vehicle(expected)) is None:
+                    # The name is only in scan responses, so an active scan may be needed to see it.
+                    await async_request_active_scan(self.hass)
+                    if (info := self._async_find_vehicle(expected)) is None:
+                        LOGGER.debug(
+                            "No connectable advertisement matched Bluetooth name %s",
+                            expected,
+                        )
+                    else:
+                        # Ending the active scan drops the vehicle from a local adapter until its next advertisement.
+                        heard: asyncio.Future[BluetoothServiceInfoBleak] = (
+                            self.hass.loop.create_future()
+                        )
 
-                if device is None:
+                        @callback
+                        def _async_heard(
+                            service_info: BluetoothServiceInfoBleak,
+                        ) -> None:
+                            # An Auto scanner still in the scan's active window has yet to restart discovery.
+                            if (
+                                service_info.connectable
+                                and not heard.done()
+                                and not any(
+                                    scanner.requested_mode is BluetoothScanningMode.AUTO
+                                    and scanner.current_mode
+                                    is BluetoothScanningMode.ACTIVE
+                                    for scanner in async_current_scanners(self.hass)
+                                )
+                            ):
+                                heard.set_result(service_info)
+
+                        cancel = async_register_advertisement_callback(
+                            self.hass, _async_heard, info.address
+                        )
+                        try:
+                            async with asyncio.timeout(BLE_ADVERTISEMENT_TIMEOUT):
+                                info = await heard
+                        except TimeoutError:
+                            LOGGER.debug(
+                                "Vehicle not heard again after the active scan"
+                            )
+                        finally:
+                            cancel()
+
+                if info is None:
                     errors["base"] = "device_not_found"
                 else:
+                    self._address = info.address
                     # Uses default keepalive so the link survives the on-screen key-approval wait.
                     self._vehicle = parent.vehicles.createBluetooth(
-                        self._vin, device=device
+                        self._vin, device=info.device
                     )
                     try:
                         await self._vehicle.connect()
                     except (BleakError, TeslaFleetError, TimeoutError) as err:
                         LOGGER.error("Failed to connect over Bluetooth: %s", err)
                         await self._async_disconnect()
-                        errors["base"] = "cannot_connect"
+                        cause = err.__cause__
+                        last_info = async_last_service_info(
+                            self.hass, info.address, connectable=True
+                        )
+                        if not isinstance(
+                            cause, BleakNotFoundError | BleakOutOfConnectionSlotsError
+                        ):
+                            errors["base"] = "cannot_connect"
+                        # bleak-retry-connector also raises BleakNotFoundError from a final connect timeout.
+                        elif last_info is None or (
+                            isinstance(cause, BleakNotFoundError)
+                            and not isinstance(cause.__cause__, TimeoutError)
+                        ):
+                            errors["base"] = "device_not_found"
+                        elif isinstance(cause, BleakOutOfConnectionSlotsError):
+                            errors["base"] = "no_connection_slot"
+                        # habluetooth treats this signal as a close device, so the timeout is not about range.
+                        elif last_info.rssi >= STRONG_OWNER_STALE_RSSI:
+                            errors["base"] = "vehicle_busy"
+                        else:
+                            errors["base"] = "weak_signal"
                     else:
                         return await self.async_step_pair()
 
         return self.async_show_form(
             step_id="scan",
             errors=errors,
-            description_placeholders={"vin": self._vin},
+            description_placeholders=placeholders,
+        )
+
+    @callback
+    def _async_find_vehicle(self, name_prefix: str) -> BluetoothServiceInfoBleak | None:
+        """Return the discovered vehicle whose advertised name matches, if any."""
+        return next(
+            (
+                info
+                for info in async_discovered_service_info(self.hass, connectable=True)
+                if info.name and info.name.startswith(name_prefix)
+            ),
+            None,
         )
 
     async def async_step_pair(
@@ -327,6 +426,7 @@ class VehicleSubentryFlowHandler(ConfigSubentryFlow):
         except (BleakError, TeslaFleetError, TimeoutError) as err:
             LOGGER.error("Bluetooth security handshake failed: %s", err)
             # The scan step owns the form; re-show it so a retry redoes scan and connect.
+            # pylint: disable-next=home-assistant-step_id-match-method
             return self.async_show_form(
                 step_id="scan",
                 # The key is already on the vehicle; say so rather than prompt a re-pair.
@@ -342,6 +442,17 @@ class VehicleSubentryFlowHandler(ConfigSubentryFlow):
             assert self._address is not None
             assert self._vin is not None
         self._vehicle = None
+        if self.source == SOURCE_RECONFIGURE:
+            entry = self._get_entry()
+            result = self.async_update_and_abort(
+                entry,
+                self._get_reconfigure_subentry(),
+                data_updates={CONF_ADDRESS: self._address},
+            )
+            # Reload manually: the update listener only reloads on subentry add or
+            # remove, and async_update_reload_and_abort raises while a listener is set.
+            self.hass.config_entries.async_schedule_reload(entry.entry_id)
+            return result
         return self.async_create_entry(
             title=self._title or self._vin,
             data={CONF_VIN: self._vin, CONF_ADDRESS: self._address},
@@ -450,6 +561,12 @@ class VehicleSubentryFlowHandler(ConfigSubentryFlow):
             self.hass.async_create_task(self._async_disconnect())
 
 
+def _energy_site_name(energy_data: TeslemetryEnergyData) -> str | None:
+    """Return the name of an energy site, if it has one."""
+    name = energy_data.device.name
+    return name if isinstance(name, str) else None
+
+
 class EnergySiteSubentryFlowHandler(ConfigSubentryFlow):
     """Pair a local Powerwall gateway for TEDAPI v1r command routing."""
 
@@ -497,7 +614,7 @@ class EnergySiteSubentryFlowHandler(ConfigSubentryFlow):
         if user_input is not None:
             energy_data = available[user_input[CONF_SITE_ID]]
             self._site_id = energy_data.id
-            self._site_name = energy_data.device.get("name") or "Energy Site"
+            self._site_name = _energy_site_name(energy_data) or "Energy Site"
             try:
                 await self._prepare_energy_site(energy_data)
                 return await self._async_begin_pairing()
@@ -512,7 +629,7 @@ class EnergySiteSubentryFlowHandler(ConfigSubentryFlow):
                 {
                     probatio.Required(CONF_SITE_ID): probatio.In(
                         {
-                            site_id: energy_data.device.get("name") or site_id
+                            site_id: _energy_site_name(energy_data) or site_id
                             for site_id, energy_data in available.items()
                         }
                     )

@@ -3,6 +3,7 @@
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components import trend
 from homeassistant.components.trend.config_flow import ConfigFlowHandler
@@ -13,8 +14,6 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.event import async_track_entity_registry_updated_event
 
 from .conftest import ComponentSetup
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture

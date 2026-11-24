@@ -1,25 +1,37 @@
-"""Helper script to update supported languages for Microsoft text-to-speech (TTS)."""
+"""Helper script to update supported languages and regions for Microsoft text-to-speech (TTS)."""
 
 from pathlib import Path
 
+from hassfest.serializer import format_python_namespace
 from lxml import html
 import requests
 
-from .hassfest.serializer import format_python_namespace
+LANGUAGES_URL = "https://learn.microsoft.com/en-us/azure/ai-services/speech-service/language-support"
+LANGUAGES_XPATH_QUERY = "//section[@data-tab='tts']/table[1]/tbody/tr/td[1]/code/text()"
 
-URL = "https://docs.microsoft.com/en-us/azure/cognitive-services/speech-service/language-support"
-XPATH_QUERY = "//section[@data-tab='tts']/table[1]/tbody/tr/td[1]/code/text()"
+REGIONS_URL = (
+    "https://learn.microsoft.com/en-us/azure/ai-services/speech-service/regions"
+)
+REGIONS_XPATH_QUERY = (
+    "//section[@data-tab='geographies']/table[1]/tbody/tr/td[3]/code/text()"
+)
 
-req = requests.get(URL)
-req.raise_for_status()
-tree = html.fromstring(req.content)
-supported_languages_raw = tree.xpath(XPATH_QUERY)
-supported_languages = {s.lower() for s in supported_languages_raw}
+
+def query_documentation(url: str, xpath_query: str) -> set[str]:
+    """Return the lowercase results of an XPath query on a documentation page."""
+    req = requests.get(url)
+    req.raise_for_status()
+    tree = html.fromstring(req.content)
+    return {s.lower() for s in tree.xpath(xpath_query)}
+
 
 Path("homeassistant/generated/microsoft_tts.py").write_text(
     format_python_namespace(
         {
-            "SUPPORTED_LANGUAGES": supported_languages,
+            "SUPPORTED_LANGUAGES": query_documentation(
+                LANGUAGES_URL, LANGUAGES_XPATH_QUERY
+            ),
+            "SUPPORTED_REGIONS": query_documentation(REGIONS_URL, REGIONS_XPATH_QUERY),
         },
         generator="script.microsoft_tts",
     )

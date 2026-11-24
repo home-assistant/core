@@ -5,6 +5,7 @@ from unittest.mock import patch
 
 from aiovlc.exceptions import AuthError, ConnectError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries
 from homeassistant.components.vlc_telnet.const import DOMAIN
@@ -12,7 +13,12 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.hassio import HassioServiceInfo
 
-from tests.common import MockConfigEntry
+RECONFIGURE_ENTRY_DATA = {
+    "password": "old-password",
+    "host": "1.1.1.1",
+    "port": 8888,
+    "name": "custom name",
+}
 
 
 @pytest.mark.parametrize(
@@ -58,7 +64,7 @@ async def test_user_flow(
         patch("homeassistant.components.vlc_telnet.config_flow.Client.disconnect"),
         patch(
             "homeassistant.components.vlc_telnet.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
     ):
         result = await hass.config_entries.flow.async_configure(
@@ -67,6 +73,7 @@ async def test_user_flow(
         )
         await hass.async_block_till_done()
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == entry_data["host"]
     assert result["data"] == entry_data
@@ -138,6 +145,23 @@ async def test_errors(
     assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": error}
 
+    with (
+        patch("homeassistant.components.vlc_telnet.config_flow.Client.connect"),
+        patch("homeassistant.components.vlc_telnet.config_flow.Client.login"),
+        patch("homeassistant.components.vlc_telnet.config_flow.Client.disconnect"),
+        patch(
+            "homeassistant.components.vlc_telnet.async_setup_entry",
+            return_value=None,
+        ),
+    ):
+        result3 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {"password": "test-password"},
+        )
+        await hass.async_block_till_done()
+
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
+
 
 async def test_reauth_flow(hass: HomeAssistant) -> None:
     """Test successful reauth flow."""
@@ -159,7 +183,7 @@ async def test_reauth_flow(hass: HomeAssistant) -> None:
         patch("homeassistant.components.vlc_telnet.config_flow.Client.disconnect"),
         patch(
             "homeassistant.components.vlc_telnet.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
     ):
         result = await hass.config_entries.flow.async_configure(
@@ -222,6 +246,24 @@ async def test_reauth_errors(
     assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": error}
 
+    with (
+        patch("homeassistant.components.vlc_telnet.config_flow.Client.connect"),
+        patch("homeassistant.components.vlc_telnet.config_flow.Client.login"),
+        patch("homeassistant.components.vlc_telnet.config_flow.Client.disconnect"),
+        patch(
+            "homeassistant.components.vlc_telnet.async_setup_entry",
+            return_value=None,
+        ),
+    ):
+        result3 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {"password": "test-password"},
+        )
+        await hass.async_block_till_done()
+
+    assert result3["type"] is FlowResultType.ABORT
+    assert result3["reason"] == "reauth_successful"
+
 
 async def test_hassio_flow(hass: HomeAssistant) -> None:
     """Test successful hassio flow."""
@@ -231,7 +273,7 @@ async def test_hassio_flow(hass: HomeAssistant) -> None:
         patch("homeassistant.components.vlc_telnet.config_flow.Client.disconnect"),
         patch(
             "homeassistant.components.vlc_telnet.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
     ):
         test_data = HassioServiceInfo(
@@ -261,6 +303,7 @@ async def test_hassio_flow(hass: HomeAssistant) -> None:
         assert result2["type"] is FlowResultType.CREATE_ENTRY
         assert result2["title"] == test_data.config["name"]
         assert result2["data"] == test_data.config
+        assert result2["result"].unique_id == "hassio"
         assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -340,3 +383,188 @@ async def test_hassio_errors(
 
         assert result2["type"] is FlowResultType.ABORT
         assert result2["reason"] == error
+
+
+async def test_reconfigure_flow(hass: HomeAssistant) -> None:
+    """Test successful reconfigure flow."""
+    entry = MockConfigEntry(domain=DOMAIN, data=RECONFIGURE_ENTRY_DATA)
+    entry.add_to_hass(hass)
+
+    result = await entry.start_reconfigure_flow(hass)
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+
+    with (
+        patch("homeassistant.components.vlc_telnet.config_flow.Client.connect"),
+        patch("homeassistant.components.vlc_telnet.config_flow.Client.login"),
+        patch("homeassistant.components.vlc_telnet.config_flow.Client.disconnect"),
+        patch(
+            "homeassistant.components.vlc_telnet.async_setup_entry",
+            return_value=None,
+        ) as mock_setup_entry,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {"password": "new-password", "host": "2.2.2.2", "port": 9999},
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert len(mock_setup_entry.mock_calls) == 1
+    assert dict(entry.data) == {
+        "password": "new-password",
+        "host": "2.2.2.2",
+        "port": 9999,
+        "name": "custom name",
+    }
+
+
+@pytest.mark.parametrize(
+    ("error", "connect_side_effect", "login_side_effect"),
+    [
+        pytest.param("invalid_auth", None, AuthError, id="invalid_auth"),
+        pytest.param("cannot_connect", ConnectError, None, id="cannot_connect"),
+        pytest.param("unknown", Exception, None, id="unknown"),
+    ],
+)
+async def test_reconfigure_errors(
+    hass: HomeAssistant,
+    error: str,
+    connect_side_effect: type[Exception] | None,
+    login_side_effect: type[Exception] | None,
+) -> None:
+    """Test we handle reconfigure errors and can recover."""
+    entry = MockConfigEntry(domain=DOMAIN, data=RECONFIGURE_ENTRY_DATA)
+    entry.add_to_hass(hass)
+
+    result = await entry.start_reconfigure_flow(hass)
+
+    with (
+        patch(
+            "homeassistant.components.vlc_telnet.config_flow.Client.connect",
+            side_effect=connect_side_effect,
+        ),
+        patch(
+            "homeassistant.components.vlc_telnet.config_flow.Client.login",
+            side_effect=login_side_effect,
+        ),
+        patch("homeassistant.components.vlc_telnet.config_flow.Client.disconnect"),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {"password": "new-password", "host": "1.1.1.1", "port": 8888},
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+    assert result["errors"] == {"base": error}
+
+    with (
+        patch("homeassistant.components.vlc_telnet.config_flow.Client.connect"),
+        patch("homeassistant.components.vlc_telnet.config_flow.Client.login"),
+        patch("homeassistant.components.vlc_telnet.config_flow.Client.disconnect"),
+        patch(
+            "homeassistant.components.vlc_telnet.async_setup_entry",
+            return_value=None,
+        ),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {"password": "new-password", "host": "1.1.1.1", "port": 8888},
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert entry.data["password"] == "new-password"
+
+
+@pytest.mark.parametrize(
+    "other_entry_endpoint",
+    [
+        pytest.param({"host": "2.2.2.2", "port": 9999}, id="existing_duplicate"),
+        pytest.param(
+            {"host": "3.3.3.3", "port": 7777}, id="duplicate_during_validation"
+        ),
+    ],
+)
+async def test_reconfigure_already_configured(
+    hass: HomeAssistant, other_entry_endpoint: dict[str, Any]
+) -> None:
+    """Test reconfigure aborts when host and port belong to another entry."""
+    entry = MockConfigEntry(domain=DOMAIN, data=RECONFIGURE_ENTRY_DATA)
+    entry.add_to_hass(hass)
+    other_entry = MockConfigEntry(
+        domain=DOMAIN, data={"password": "other-password", **other_entry_endpoint}
+    )
+    other_entry.add_to_hass(hass)
+
+    async def move_other_entry() -> None:
+        # Simulate another flow saving the same endpoint while validating.
+        hass.config_entries.async_update_entry(
+            other_entry,
+            data={**other_entry.data, "host": "2.2.2.2", "port": 9999},
+        )
+
+    result = await entry.start_reconfigure_flow(hass)
+
+    with (
+        patch(
+            "homeassistant.components.vlc_telnet.config_flow.Client.connect",
+            side_effect=move_other_entry,
+        ),
+        patch("homeassistant.components.vlc_telnet.config_flow.Client.login"),
+        patch("homeassistant.components.vlc_telnet.config_flow.Client.disconnect"),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {"password": "new-password", "host": "2.2.2.2", "port": 9999},
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert dict(entry.data) == RECONFIGURE_ENTRY_DATA
+
+
+async def test_reconfigure_keeps_endpoint_defaults(hass: HomeAssistant) -> None:
+    """Test omitted host and port default to the existing entry values."""
+    entry = MockConfigEntry(domain=DOMAIN, data=RECONFIGURE_ENTRY_DATA)
+    entry.add_to_hass(hass)
+
+    result = await entry.start_reconfigure_flow(hass)
+
+    with (
+        patch("homeassistant.components.vlc_telnet.config_flow.Client.connect"),
+        patch("homeassistant.components.vlc_telnet.config_flow.Client.login"),
+        patch("homeassistant.components.vlc_telnet.config_flow.Client.disconnect"),
+        patch(
+            "homeassistant.components.vlc_telnet.async_setup_entry",
+            return_value=None,
+        ),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {"password": "new-password"}
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert dict(entry.data) == {**RECONFIGURE_ENTRY_DATA, "password": "new-password"}
+
+
+async def test_reconfigure_hassio_entry(hass: HomeAssistant) -> None:
+    """Test reconfigure aborts for entries managed by the Supervisor."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data=RECONFIGURE_ENTRY_DATA,
+        source=config_entries.SOURCE_HASSIO,
+        unique_id="hassio",
+    )
+    entry.add_to_hass(hass)
+
+    result = await entry.start_reconfigure_flow(hass)
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "addon_managed"

@@ -5,10 +5,10 @@ from typing import override
 
 from melnor_bluetooth.device import Device, Valve
 
-from homeassistant.components.number import EntityDescription
 from homeassistant.core import callback
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import CONNECTION_BLUETOOTH, DeviceInfo
+from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN

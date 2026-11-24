@@ -1,6 +1,5 @@
 """Fan platform for the Duco integration."""
 
-import logging
 from typing import override
 
 from duco_connectivity.exceptions import DucoError, DucoRateLimitError
@@ -15,8 +14,6 @@ from homeassistant.util.percentage import percentage_to_ordered_list_item
 from .const import BOX_NODE_ID, DOMAIN
 from .coordinator import DucoConfigEntry, DucoCoordinator
 from .entity import DucoEntity
-
-_LOGGER = logging.getLogger(__name__)
 
 PARALLEL_UPDATES = 1
 
@@ -132,7 +129,6 @@ class DucoVentilationFanEntity(DucoEntity, FanEntity):
         try:
             await self.coordinator.async_set_ventilation_state(self._node_id, state)
         except DucoRateLimitError as err:
-            _LOGGER.warning("Duco write rate limit exceeded for node %s", self._node_id)
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="rate_limit_exceeded",

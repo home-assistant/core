@@ -4,13 +4,12 @@ from unittest.mock import MagicMock
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import async_fire_time_changed
 
 from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 
 from . import UPDATE_DEBOUNCE_TIME, init_integration
-
-from tests.common import async_fire_time_changed
 
 EXPECTED_INITIAL_HEIGHT = "1"
 

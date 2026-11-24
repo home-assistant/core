@@ -8,14 +8,13 @@ from openai import AsyncOpenAI, AuthenticationError, OpenAIError, PermissionDeni
 import probatio
 
 from homeassistant.config_entries import (
-    ConfigEntry,
     ConfigEntryState,
     ConfigFlow,
     ConfigFlowResult,
     ConfigSubentryFlow,
     SubentryFlowResult,
 )
-from homeassistant.const import CONF_API_KEY, CONF_LLM_HASS_API, CONF_MODEL
+from homeassistant.const import CONF_API_KEY, CONF_LLM_HASS_API, CONF_MODEL, CONF_PROMPT
 from homeassistant.core import callback
 from homeassistant.helpers import llm
 from homeassistant.helpers.selector import (
@@ -26,8 +25,8 @@ from homeassistant.helpers.selector import (
     TemplateSelector,
 )
 
-from . import _create_client, _validate_api_key
-from .const import CONF_PROMPT, DOMAIN, RECOMMENDED_CONVERSATION_OPTIONS
+from . import OVHcloudAIEndpointsConfigEntry, _create_client, _validate_api_key
+from .const import DOMAIN, RECOMMENDED_CONVERSATION_OPTIONS
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -46,7 +45,7 @@ class OVHcloudAIEndpointsConfigFlow(ConfigFlow, domain=DOMAIN):
     @callback
     @override
     def async_get_supported_subentry_types(
-        cls, config_entry: ConfigEntry
+        cls, config_entry: OVHcloudAIEndpointsConfigEntry
     ) -> dict[str, type[ConfigSubentryFlow]]:
         """Return subentries supported by this handler."""
         return {"conversation": ConversationFlowHandler}
@@ -189,6 +188,14 @@ class ConversationFlowHandler(ConfigSubentryFlow):
             SelectOptionDict(label=api.name, value=api.id)
             for api in llm.async_get_apis(self.hass)
         ]
+        valid_api_ids = {api["value"] for api in hass_apis}
+        selected_apis = [
+            api
+            for api in existing.get(
+                CONF_LLM_HASS_API, RECOMMENDED_CONVERSATION_OPTIONS[CONF_LLM_HASS_API]
+            )
+            if api in valid_api_ids
+        ]
         return self.async_show_form(
             step_id="reconfigure",
             data_schema=probatio.Schema(
@@ -204,12 +211,13 @@ class ConversationFlowHandler(ConfigSubentryFlow):
                     ): TemplateSelector(),
                     probatio.Optional(
                         CONF_LLM_HASS_API,
-                        default=existing.get(
-                            CONF_LLM_HASS_API,
-                            RECOMMENDED_CONVERSATION_OPTIONS[CONF_LLM_HASS_API],
-                        ),
+                        default=selected_apis,
                     ): SelectSelector(
-                        SelectSelectorConfig(options=hass_apis, multiple=True)
+                        SelectSelectorConfig(
+                            options=hass_apis,
+                            multiple=True,
+                            mode=SelectSelectorMode.LIST,
+                        )
                     ),
                 }
             ),
@@ -276,7 +284,11 @@ class ConversationFlowHandler(ConfigSubentryFlow):
                             RECOMMENDED_CONVERSATION_OPTIONS[CONF_LLM_HASS_API],
                         ),
                     ): SelectSelector(
-                        SelectSelectorConfig(options=hass_apis, multiple=True)
+                        SelectSelectorConfig(
+                            options=hass_apis,
+                            multiple=True,
+                            mode=SelectSelectorMode.LIST,
+                        )
                     ),
                 }
             ),

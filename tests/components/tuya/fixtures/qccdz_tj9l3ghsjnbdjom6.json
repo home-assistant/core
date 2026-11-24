@@ -1,0 +1,301 @@
+{
+  "endpoint": "https://apigw.tuyaeu.com",
+  "mqtt_connected": true,
+  "disabled_by": null,
+  "disabled_polling": false,
+  "name": "Wallbox",
+  "category": "qccdz",
+  "product_id": "tj9l3ghsjnbdjom6",
+  "product_name": "AC charging post",
+  "online": true,
+  "sub": false,
+  "time_zone": "+01:00",
+  "active_time": "2026-11-13T06:46:17+00:00",
+  "create_time": "2026-11-13T06:46:17+00:00",
+  "update_time": "2026-11-13T06:46:17+00:00",
+  "function": {},
+  "local_strategy": {
+    "101": {
+      "value_convert": "enum",
+      "status_code": "work_state",
+      "config_item": {
+        "statusFormat": "{\"work_state\": \"$\"}",
+        "valueDesc": "{\"range\": [\"charger_free\", \"charger_insert\", \"charger_wait\", \"charger_charging\", \"charger_end\", \"charger_fault\"]}",
+        "valueType": "Enum",
+        "enumMappingMap": {
+          "no_connet": {
+            "value": "charger_free"
+          },
+          "connect": {
+            "value": "charger_insert"
+          },
+          "charing": {
+            "value": "charger_charging"
+          },
+          "wait_rfid": {
+            "value": "charger_wait"
+          },
+          "wait_charing": {
+            "value": "charger_wait"
+          },
+          "finish": {
+            "value": "charger_end"
+          },
+          "error": {
+            "value": "charger_fault"
+          },
+          "charger_free": {
+            "value": "charger_free"
+          },
+          "charger_insert": {
+            "value": "charger_insert"
+          },
+          "charger_wait": {
+            "value": "charger_wait"
+          },
+          "charger_charging": {
+            "value": "charger_charging"
+          },
+          "charger_end": {
+            "value": "charger_end"
+          },
+          "charger_fault": {
+            "value": "charger_fault"
+          }
+        },
+        "pid": "tj9l3ghsjnbdjom6"
+      }
+    },
+    "102": {
+      "value_convert": "default",
+      "status_code": "cur_voltage",
+      "config_item": {
+        "statusFormat": "{\"cur_voltage\": \"$\"}",
+        "valueDesc": "{\"unit\": \"V\", \"min\": 0, \"max\": 500, \"scale\": 0, \"step\": 1}",
+        "valueType": "Integer",
+        "enumMappingMap": {},
+        "pid": "tj9l3ghsjnbdjom6"
+      }
+    },
+    "105": {
+      "value_convert": "default",
+      "status_code": "cur_current",
+      "config_item": {
+        "statusFormat": "{\"cur_current\": \"$\"}",
+        "valueDesc": "{\"unit\": \"A\", \"min\": 0, \"max\": 1000, \"scale\": 1, \"step\": 1}",
+        "valueType": "Integer",
+        "enumMappingMap": {},
+        "pid": "tj9l3ghsjnbdjom6"
+      }
+    },
+    "109": {
+      "value_convert": "default",
+      "status_code": "power_total",
+      "config_item": {
+        "statusFormat": "{\"power_total\": \"$\"}",
+        "valueDesc": "{\"unit\": \"kW\", \"min\": 0, \"max\": 1000, \"scale\": 1, \"step\": 1}",
+        "valueType": "Integer",
+        "enumMappingMap": {},
+        "pid": "tj9l3ghsjnbdjom6"
+      }
+    },
+    "110": {
+      "value_convert": "default",
+      "status_code": "temp_current",
+      "config_item": {
+        "statusFormat": "{\"temp_current\": \"$\"}",
+        "valueDesc": "{\"unit\": \"\\u00b0C\", \"min\": -300, \"max\": 1050, \"scale\": 1, \"step\": 1}",
+        "valueType": "Integer",
+        "enumMappingMap": {},
+        "pid": "tj9l3ghsjnbdjom6"
+      }
+    },
+    "112": {
+      "value_convert": "default",
+      "status_code": "charge_energy_once",
+      "config_item": {
+        "statusFormat": "{\"charge_energy_once\": \"$\"}",
+        "valueDesc": "{\"unit\": \"kWh\", \"min\": 0, \"max\": 10000, \"scale\": 1, \"step\": 1}",
+        "valueType": "Integer",
+        "enumMappingMap": {},
+        "pid": "tj9l3ghsjnbdjom6"
+      }
+    },
+    "121": {
+      "value_convert": "default",
+      "status_code": "charge_time",
+      "config_item": {
+        "statusFormat": "{\"charge_time\": \"$\"}",
+        "valueDesc": "{\"unit\": \"h\", \"min\": 0, \"max\": 480, \"scale\": 1, \"step\": 1}",
+        "valueType": "Integer",
+        "enumMappingMap": {},
+        "pid": "tj9l3ghsjnbdjom6"
+      }
+    }
+  },
+  "status_range": {
+    "work_state": {
+      "type": "Enum",
+      "value": "{\"range\": [\"charger_free\", \"charger_insert\", \"charger_wait\", \"charger_charging\", \"charger_end\", \"charger_fault\"]}",
+      "report_type": null
+    },
+    "cur_voltage": {
+      "type": "Integer",
+      "value": "{\"unit\": \"V\", \"min\": 0, \"max\": 500, \"scale\": 0, \"step\": 1}",
+      "report_type": null
+    },
+    "cur_current": {
+      "type": "Integer",
+      "value": "{\"unit\": \"A\", \"min\": 0, \"max\": 1000, \"scale\": 1, \"step\": 1}",
+      "report_type": null
+    },
+    "power_total": {
+      "type": "Integer",
+      "value": "{\"unit\": \"kW\", \"min\": 0, \"max\": 1000, \"scale\": 1, \"step\": 1}",
+      "report_type": null
+    },
+    "temp_current": {
+      "type": "Integer",
+      "value": "{\"unit\": \"\\u00b0C\", \"min\": -300, \"max\": 1050, \"scale\": 1, \"step\": 1}",
+      "report_type": null
+    },
+    "charge_energy_once": {
+      "type": "Integer",
+      "value": "{\"unit\": \"kWh\", \"min\": 0, \"max\": 10000, \"scale\": 1, \"step\": 1}",
+      "report_type": null
+    },
+    "charge_time": {
+      "type": "Integer",
+      "value": "{\"unit\": \"h\", \"min\": 0, \"max\": 480, \"scale\": 1, \"step\": 1}",
+      "report_type": null
+    }
+  },
+  "status": {
+    "work_state": "charger_charging",
+    "cur_voltage": 410,
+    "cur_current": 153,
+    "power_total": 106,
+    "temp_current": 320,
+    "charge_energy_once": 22,
+    "charge_time": 2
+  },
+  "set_up": true,
+  "support_local": true,
+  "quirk": "/config/tuya_quirks/qccdz_tj9l3ghsjnbdjom6.py:22",
+  "warnings": null,
+  "original_category": "qccdz",
+  "original_function": {
+    "work_mode": {
+      "type": "Enum",
+      "value": "{\"range\":[\"charge_now\",\"charge_pct\",\"charge_energy\",\"charge_schedule\"]}"
+    },
+    "clear_energy": {
+      "type": "Boolean",
+      "value": "{}"
+    },
+    "switch": {
+      "type": "Boolean",
+      "value": "{}"
+    }
+  },
+  "original_local_strategy": {
+    "3": {
+      "value_convert": "default",
+      "status_code": "work_state",
+      "config_item": {
+        "statusFormat": "{\"work_state\":\"$\"}",
+        "valueDesc": "{\"range\":[\"charger_free\",\"charger_insert\",\"charger_free_fault\",\"charger_wait\",\"charger_charging\",\"charger_pause\",\"charger_end\",\"charger_fault\"]}",
+        "valueType": "Enum",
+        "enumMappingMap": {},
+        "pid": "tj9l3ghsjnbdjom6"
+      }
+    },
+    "14": {
+      "value_convert": "default",
+      "status_code": "work_mode",
+      "config_item": {
+        "statusFormat": "{\"work_mode\":\"$\"}",
+        "valueDesc": "{\"range\":[\"charge_now\",\"charge_pct\",\"charge_energy\",\"charge_schedule\"]}",
+        "valueType": "Enum",
+        "enumMappingMap": {},
+        "pid": "tj9l3ghsjnbdjom6"
+      }
+    },
+    "15": {
+      "value_convert": "default",
+      "status_code": "balance_energy",
+      "config_item": {
+        "statusFormat": "{\"balance_energy\":\"$\"}",
+        "valueDesc": "{\"unit\":\"kW·h\",\"min\":0,\"max\":99999999,\"scale\":3,\"step\":1}",
+        "valueType": "Integer",
+        "enumMappingMap": {},
+        "pid": "tj9l3ghsjnbdjom6"
+      }
+    },
+    "16": {
+      "value_convert": "default",
+      "status_code": "clear_energy",
+      "config_item": {
+        "statusFormat": "{\"clear_energy\":\"$\"}",
+        "valueDesc": "{}",
+        "valueType": "Boolean",
+        "enumMappingMap": {},
+        "pid": "tj9l3ghsjnbdjom6"
+      }
+    },
+    "18": {
+      "value_convert": "default",
+      "status_code": "switch",
+      "config_item": {
+        "statusFormat": "{\"switch\":\"$\"}",
+        "valueDesc": "{}",
+        "valueType": "Boolean",
+        "enumMappingMap": {},
+        "pid": "tj9l3ghsjnbdjom6"
+      }
+    },
+    "25": {
+      "value_convert": "default",
+      "status_code": "charge_energy_once",
+      "config_item": {
+        "statusFormat": "{\"charge_energy_once\":\"$\"}",
+        "valueDesc": "{\"unit\":\"kW·h\",\"min\":1,\"max\":999999,\"scale\":2,\"step\":1}",
+        "valueType": "Integer",
+        "enumMappingMap": {},
+        "pid": "tj9l3ghsjnbdjom6"
+      }
+    }
+  },
+  "original_status_range": {
+    "work_state": {
+      "type": "Enum",
+      "value": "{\"range\":[\"charger_free\",\"charger_insert\",\"charger_free_fault\",\"charger_wait\",\"charger_charging\",\"charger_pause\",\"charger_end\",\"charger_fault\"]}",
+      "report_type": null
+    },
+    "work_mode": {
+      "type": "Enum",
+      "value": "{\"range\":[\"charge_now\",\"charge_pct\",\"charge_energy\",\"charge_schedule\"]}",
+      "report_type": null
+    },
+    "balance_energy": {
+      "type": "Integer",
+      "value": "{\"unit\":\"kW·h\",\"min\":0,\"max\":99999999,\"scale\":3,\"step\":1}",
+      "report_type": null
+    },
+    "clear_energy": {
+      "type": "Boolean",
+      "value": "{}",
+      "report_type": null
+    },
+    "switch": {
+      "type": "Boolean",
+      "value": "{}",
+      "report_type": null
+    },
+    "charge_energy_once": {
+      "type": "Integer",
+      "value": "{\"unit\":\"kW·h\",\"min\":1,\"max\":999999,\"scale\":2,\"step\":1}",
+      "report_type": null
+    }
+  }
+}

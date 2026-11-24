@@ -3,6 +3,7 @@
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.climate import HVACMode
 from homeassistant.components.touchline_sl import DOMAIN
@@ -11,8 +12,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
 from .conftest import make_mock_module, make_mock_zone
-
-from tests.common import MockConfigEntry
 
 ENTITY_ID = "climate.zone_1_zone_1"
 

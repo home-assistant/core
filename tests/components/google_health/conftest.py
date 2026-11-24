@@ -11,6 +11,9 @@ from google_health_api.model import (
     SLEEP,
     WEIGHT,
     ActiveEnergyBurnedRollupValue,
+    ActiveMinutesRollupValue,
+    ActiveZoneMinutesRollupValue,
+    AltitudeRollupValue,
     DailyRollupDataPoint,
     DataPoint,
     DataType,
@@ -21,6 +24,7 @@ from google_health_api.model import (
     ListDataPointResult,
     ListPairedDevicesResult,
     NutritionLogRollupValue,
+    SedentaryPeriodRollupValue,
     StepsRollupValue,
     TotalCaloriesRollupValue,
     UserInfo,
@@ -28,6 +32,7 @@ from google_health_api.model import (
     _ListPairedDevicesModel,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, load_json_object_fixture
 
 from homeassistant.components.application_credentials import (
     DOMAIN as APPLICATION_CREDENTIALS_DOMAIN,
@@ -37,8 +42,6 @@ from homeassistant.components.application_credentials import (
 from homeassistant.components.google_health.const import DOMAIN, OAUTH_SCOPES
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
-
-from tests.common import MockConfigEntry, load_json_object_fixture
 
 CLIENT_ID = "1234"
 CLIENT_SECRET = "5678"
@@ -115,7 +118,7 @@ def mock_config_entry(token_entry: dict[str, Any]) -> MockConfigEntry:
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
-        "homeassistant.components.google_health.async_setup_entry", return_value=True
+        "homeassistant.components.google_health.async_setup_entry", return_value=None
     ) as mock_setup_entry:
         yield mock_setup_entry
 
@@ -158,6 +161,26 @@ def mock_google_health_client() -> Generator[AsyncMock]:
         client.floors = AsyncMock()
         client.floors.today.return_value = _rollup_fixture(
             "floors.json", FloorsRollupValue, "floors"
+        )
+        client.altitude = AsyncMock()
+        client.altitude.today.return_value = _rollup_fixture(
+            "altitude.json", AltitudeRollupValue, "altitude"
+        )
+        client.active_minutes = AsyncMock()
+        client.active_minutes.today.return_value = _rollup_fixture(
+            "active_minutes.json", ActiveMinutesRollupValue, "activeMinutes"
+        )
+        client.active_zone_minutes = AsyncMock()
+        client.active_zone_minutes.today.return_value = _rollup_fixture(
+            "active_zone_minutes.json",
+            ActiveZoneMinutesRollupValue,
+            "activeZoneMinutes",
+        )
+        client.sedentary_period = AsyncMock()
+        client.sedentary_period.today.return_value = _rollup_fixture(
+            "sedentary_period.json",
+            SedentaryPeriodRollupValue,
+            "sedentaryPeriod",
         )
         client.hydration_log = AsyncMock()
         client.hydration_log.today.return_value = _rollup_fixture(

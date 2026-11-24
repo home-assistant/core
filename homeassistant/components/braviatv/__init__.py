@@ -24,7 +24,7 @@ PLATFORMS: Final[list[Platform]] = [
 
 async def async_setup_entry(
     hass: HomeAssistant, config_entry: BraviaTVConfigEntry
-) -> bool:
+) -> None:
     """Set up a config entry."""
     host = config_entry.data[CONF_HOST]
     mac = config_entry.data[CONF_MAC]
@@ -39,7 +39,6 @@ async def async_setup_entry(
         config_entry=config_entry,
         client=client,
     )
-    config_entry.async_on_unload(config_entry.add_update_listener(update_listener))
 
     await coordinator.async_config_entry_first_refresh()
 
@@ -60,19 +59,17 @@ async def async_setup_entry(
         )
     )
 
-    return True
-
 
 async def async_unload_entry(
     hass: HomeAssistant, config_entry: BraviaTVConfigEntry
-) -> bool:
+) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(config_entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(config_entry, PLATFORMS)
 
 
 async def async_migrate_entry(
     hass: HomeAssistant, config_entry: BraviaTVConfigEntry
-) -> bool:
+) -> None:
     """Migrate an old config entry."""
     if config_entry.version == 1 and config_entry.minor_version == 1:
         # Old entries from a TV without CID have an empty unique ID
@@ -104,12 +101,3 @@ async def async_migrate_entry(
         hass.config_entries.async_update_entry(
             config_entry, unique_id=new_unique_id, minor_version=2
         )
-
-    return True
-
-
-async def update_listener(
-    hass: HomeAssistant, config_entry: BraviaTVConfigEntry
-) -> None:
-    """Handle options update."""
-    await hass.config_entries.async_reload(config_entry.entry_id)

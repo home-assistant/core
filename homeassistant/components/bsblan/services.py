@@ -1,13 +1,14 @@
 """Support for BSB-LAN services."""
 
 from datetime import time
+from enum import StrEnum
 import logging
 from typing import TYPE_CHECKING, Any, Final
 
-from bsblan import BSBLANError, DaySchedule, DHWSchedule, TimeSlot
+from bsblan import BSBLANError, DaySchedule, DHWSchedule, HeatingSchedule, TimeSlot
 import probatio
 
-from homeassistant.const import ATTR_DEVICE_ID
+from homeassistant.const import CommonServiceArgument
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import (
@@ -24,22 +25,35 @@ if TYPE_CHECKING:
 
 LOGGER = logging.getLogger(__name__)
 
-ATTR_MONDAY_SLOTS = "monday_slots"
-ATTR_TUESDAY_SLOTS = "tuesday_slots"
-ATTR_WEDNESDAY_SLOTS = "wednesday_slots"
-ATTR_THURSDAY_SLOTS = "thursday_slots"
-ATTR_FRIDAY_SLOTS = "friday_slots"
-ATTR_SATURDAY_SLOTS = "saturday_slots"
-ATTR_SUNDAY_SLOTS = "sunday_slots"
+
+class BSBLanService(StrEnum):
+    """Store keys for BSB-LAN services."""
+
+    SYNC_TIME = "sync_time"
+    SET_HOT_WATER_SCHEDULE = "set_hot_water_schedule"
+    SET_HEATING_SCHEDULE = "set_heating_schedule"
+
+
+class BSBLanServiceArgument(StrEnum):
+    """Store keys for BSB-LAN service arguments."""
+
+    MONDAY_SLOTS = "monday_slots"
+    TUESDAY_SLOTS = "tuesday_slots"
+    WEDNESDAY_SLOTS = "wednesday_slots"
+    THURSDAY_SLOTS = "thursday_slots"
+    FRIDAY_SLOTS = "friday_slots"
+    SATURDAY_SLOTS = "saturday_slots"
+    SUNDAY_SLOTS = "sunday_slots"
+
 
 _DAY_NAME_SLOT_ATTR_PAIRS: tuple[tuple[str, str], ...] = (
-    ("monday", ATTR_MONDAY_SLOTS),
-    ("tuesday", ATTR_TUESDAY_SLOTS),
-    ("wednesday", ATTR_WEDNESDAY_SLOTS),
-    ("thursday", ATTR_THURSDAY_SLOTS),
-    ("friday", ATTR_FRIDAY_SLOTS),
-    ("saturday", ATTR_SATURDAY_SLOTS),
-    ("sunday", ATTR_SUNDAY_SLOTS),
+    ("monday", BSBLanServiceArgument.MONDAY_SLOTS),
+    ("tuesday", BSBLanServiceArgument.TUESDAY_SLOTS),
+    ("wednesday", BSBLanServiceArgument.WEDNESDAY_SLOTS),
+    ("thursday", BSBLanServiceArgument.THURSDAY_SLOTS),
+    ("friday", BSBLanServiceArgument.FRIDAY_SLOTS),
+    ("saturday", BSBLanServiceArgument.SATURDAY_SLOTS),
+    ("sunday", BSBLanServiceArgument.SUNDAY_SLOTS),
 )
 
 
@@ -52,17 +66,34 @@ _SLOT_SCHEMA = probatio.Schema(
 )
 
 
+_MAX_TIME_SLOTS_PER_DAY = 3
+
+
 _WEEKLY_SCHEDULE_FIELDS: Final[dict[probatio.Marker, Any]] = {
-    probatio.Optional(slot_attr): probatio.All(probatio.EnsureList(), [_SLOT_SCHEMA])
+    probatio.Optional(slot_attr): probatio.All(
+        probatio.EnsureList(),
+        [_SLOT_SCHEMA],
+        probatio.Length(max=_MAX_TIME_SLOTS_PER_DAY),
+    )
     for _, slot_attr in _DAY_NAME_SLOT_ATTR_PAIRS
 }
 
 
-SERVICE_SET_HOT_WATER_SCHEDULE_SCHEMA = probatio.Schema(
-    {
-        probatio.Required(ATTR_DEVICE_ID): cv.string,
-        **_WEEKLY_SCHEDULE_FIELDS,
-    }
+_WEEKLY_SCHEDULE_SCHEMA: dict[probatio.Marker, Any] = {
+    probatio.Required(CommonServiceArgument.DEVICE_ID): cv.string,
+    **_WEEKLY_SCHEDULE_FIELDS,
+}
+
+
+SERVICE_SET_HOT_WATER_SCHEDULE_SCHEMA = probatio.All(
+    _WEEKLY_SCHEDULE_SCHEMA,
+    probatio.AtLeastOne(*(slot_attr for _, slot_attr in _DAY_NAME_SLOT_ATTR_PAIRS)),
+)
+
+
+SERVICE_SET_HEATING_SCHEDULE_SCHEMA = probatio.All(
+    _WEEKLY_SCHEDULE_SCHEMA,
+    probatio.AtLeastOne(*(slot_attr for _, slot_attr in _DAY_NAME_SLOT_ATTR_PAIRS)),
 )
 
 
@@ -131,7 +162,7 @@ def _resolve_config_entry(
     """Resolve device_id from a service call into a loaded BSBLAN config entry."""
     config_entry: BSBLanConfigEntry
     device, config_entry = service.async_get_device_and_config_entry(
-        service_call.hass, DOMAIN, service_call.data[ATTR_DEVICE_ID]
+        service_call.hass, DOMAIN, service_call.data[CommonServiceArgument.DEVICE_ID]
     )
     return config_entry, device
 
@@ -139,6 +170,21 @@ def _resolve_config_entry(
 def _device_name(device_entry: dr.AnyDeviceEntry) -> str:
     """Return the best available display name for a device."""
     return device_entry.name_by_user or device_entry.name or device_entry.id
+
+
+def _circuit_from_device(device_entry: dr.AnyDeviceEntry) -> int:
+    """Extract the heating circuit number from a sub-device identifier."""
+    for domain, identifier in device_entry.identifiers:
+        if domain != DOMAIN:
+            continue
+        prefix, separator, suffix = identifier.rpartition("-circuit-")
+        if separator and prefix and suffix.isdigit() and (circuit := int(suffix)) >= 1:
+            return circuit
+    raise ServiceValidationError(
+        translation_domain=DOMAIN,
+        translation_key="not_a_heating_circuit_device",
+        translation_placeholders={"device_name": _device_name(device_entry)},
+    )
 
 
 def _ensure_water_heater_device(device_entry: dr.AnyDeviceEntry) -> None:
@@ -172,9 +218,41 @@ async def set_hot_water_schedule(service_call: ServiceCall) -> None:
             translation_key="set_schedule_failed",
             translation_placeholders={"error": str(err)},
         ) from err
+    finally:
+        await entry.runtime_data.slow_coordinator.async_refresh_schedule_after_write()
 
-    # Refresh the slow coordinator to get the updated schedule
-    await entry.runtime_data.slow_coordinator.async_refresh_schedule_after_write()
+
+async def set_heating_schedule(service_call: ServiceCall) -> None:
+    """Set heating circuit schedule."""
+    entry, device_entry = _resolve_config_entry(service_call)
+    client = entry.runtime_data.client
+
+    circuit = _circuit_from_device(device_entry)
+    if circuit not in entry.runtime_data.available_circuits:
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="not_a_heating_circuit_device",
+            translation_placeholders={"device_name": _device_name(device_entry)},
+        )
+    days = _build_weekly_schedule_days(service_call)
+    heating_schedule = HeatingSchedule(**days)
+
+    LOGGER.debug(
+        "Setting heating schedule for circuit %d: %s", circuit, heating_schedule
+    )
+
+    try:
+        await client.set_heating_schedule(heating_schedule, circuit=circuit)
+    except BSBLANError as err:
+        raise HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key="set_heating_schedule_failed",
+            translation_placeholders={"error": str(err)},
+        ) from err
+    finally:
+        await entry.runtime_data.slow_coordinator.async_refresh_heating_schedule_after_write(
+            circuit
+        )
 
 
 async def async_sync_time(service_call: ServiceCall) -> None:
@@ -182,13 +260,13 @@ async def async_sync_time(service_call: ServiceCall) -> None:
     entry, device_entry = _resolve_config_entry(service_call)
     client = entry.runtime_data.client
     await async_sync_device_time(
-        client, device_entry.name or service_call.data[ATTR_DEVICE_ID]
+        client, device_entry.name or service_call.data[CommonServiceArgument.DEVICE_ID]
     )
 
 
 SYNC_TIME_SCHEMA = probatio.Schema(
     {
-        probatio.Required(ATTR_DEVICE_ID): cv.string,
+        probatio.Required(CommonServiceArgument.DEVICE_ID): cv.string,
     }
 )
 
@@ -198,14 +276,21 @@ def async_setup_services(hass: HomeAssistant) -> None:
     """Register the BSB-LAN services."""
     hass.services.async_register(
         DOMAIN,
-        "set_hot_water_schedule",
+        BSBLanService.SET_HOT_WATER_SCHEDULE,
         set_hot_water_schedule,
         schema=SERVICE_SET_HOT_WATER_SCHEDULE_SCHEMA,
     )
 
     hass.services.async_register(
         DOMAIN,
-        "sync_time",
+        BSBLanService.SET_HEATING_SCHEDULE,
+        set_heating_schedule,
+        schema=SERVICE_SET_HEATING_SCHEDULE_SCHEMA,
+    )
+
+    hass.services.async_register(
+        DOMAIN,
+        BSBLanService.SYNC_TIME,
         async_sync_time,
         schema=SYNC_TIME_SCHEMA,
     )

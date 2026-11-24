@@ -6,6 +6,7 @@ from unittest.mock import AsyncMock
 from linkplay.exceptions import LinkPlayRequestException
 from linkplay.manufacturers import MANUFACTURER_WIIM
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.linkplay.const import DOMAIN
 from homeassistant.config_entries import SOURCE_IGNORE, SOURCE_USER, SOURCE_ZEROCONF
@@ -15,8 +16,6 @@ from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from .conftest import HOST, HOST_REENTRY, NAME, UUID
-
-from tests.common import MockConfigEntry
 
 ZEROCONF_DISCOVERY = ZeroconfServiceInfo(
     ip_address=ip_address(HOST),

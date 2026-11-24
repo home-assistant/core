@@ -86,7 +86,8 @@ ENTITIES: tuple[LaMarzoccoSensorEntityDescription, ...] = (
         ),
         available_fn=(
             lambda coordinator: (
-                cast(
+                WidgetType.CM_STEAM_BOILER_LEVEL in coordinator.device.dashboard.config
+                and cast(
                     SteamBoilerLevel,
                     coordinator.device.dashboard.config[
                         WidgetType.CM_STEAM_BOILER_LEVEL

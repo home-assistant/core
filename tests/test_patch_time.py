@@ -1,7 +1,7 @@
 """Test the freezegun modifications in tests.patch_time."""
 
 from collections.abc import Generator
-import datetime
+import datetime as dt
 import sys
 import time
 import types
@@ -42,7 +42,7 @@ def test_freezing_time_rescans_a_changed_module(
     lazy_module: types.ModuleType,
 ) -> None:
     """Test an attribute set after the first freeze is patched by the next one."""
-    real_datetime = datetime.datetime
+    real_datetime = dt.datetime
 
     with freeze_time("2023-01-01"):
         pass
@@ -70,8 +70,8 @@ def test_time_is_readable_after_unfreeze() -> None:
         # freezegun's unpatching, so these stay patched after the freeze ends.
         with freeze_time("2023-01-01"):
             return (
-                datetime.datetime,
-                datetime.date,
+                dt.datetime,
+                dt.date,
                 time.time,
                 time.time_ns,
                 time.monotonic,

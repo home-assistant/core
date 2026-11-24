@@ -30,7 +30,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: GoogleMailConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: GoogleMailConfigEntry) -> None:
     """Set up Google Mail from a config entry."""
     implementation = await async_get_config_entry_implementation(hass, entry)
     session = OAuth2Session(hass, entry, implementation)
@@ -52,9 +52,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: GoogleMailConfigEntry) -
         entry, [platform for platform in PLATFORMS if platform != Platform.NOTIFY]
     )
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: GoogleMailConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: GoogleMailConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

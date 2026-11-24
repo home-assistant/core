@@ -19,8 +19,8 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import PooldoseConfigEntry
 from .const import UNIT_MAPPING
+from .coordinator import PooldoseConfigEntry
 from .entity import PooldoseEntity
 
 _LOGGER = logging.getLogger(__name__)

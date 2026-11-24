@@ -11,6 +11,11 @@
       "long_press": "Wemo button was pressed for 2 seconds"
     }
   },
+  "exceptions": {
+    "update_failed": {
+      "message": "WeMo update failed"
+    }
+  },
   "options": {
     "error": {
       "long_press_requires_subscription": "Local push update subscriptions must be enabled to use long-press events",

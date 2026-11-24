@@ -1,12 +1,12 @@
 """The tests for the Modbus climate component."""
 
 import pytest
+from pytest_homeassistant.common import mock_restore_cache_with_extra_data
 
 from homeassistant.components.climate import (
     ATTR_FAN_MODE,
     ATTR_FAN_MODES,
     ATTR_HVAC_ACTION,
-    ATTR_HVAC_MODE,
     ATTR_HVAC_MODES,
     ATTR_SWING_MODE,
     ATTR_SWING_MODES,
@@ -21,17 +21,13 @@ from homeassistant.components.climate import (
     FAN_OFF,
     FAN_ON,
     FAN_TOP,
-    SERVICE_SET_FAN_MODE,
-    SERVICE_SET_HVAC_MODE,
-    SERVICE_SET_SWING_MODE,
-    SERVICE_SET_TEMPERATURE,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
     SWING_BOTH,
     SWING_HORIZONTAL,
     SWING_OFF,
     SWING_ON,
     SWING_VERTICAL,
+    ClimateService,
+    ClimateServiceArgument,
     HVACAction,
     HVACMode,
 )
@@ -101,11 +97,15 @@ from homeassistant.const import (
     CONF_PLATFORM,
     CONF_SCAN_INTERVAL,
     CONF_SLAVE,
+    CONF_TEMPERATURE_UNIT,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
+    TargetKey,
+    UnitOfTemperature,
 )
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant, State
 from homeassistant.setup import async_setup_component
+from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
 
 from .conftest import TEST_ENTITY_NAME, ReadResult
 
@@ -467,8 +467,8 @@ async def test_hvac_onoff_values(hass: HomeAssistant, mock_modbus) -> None:
     """Run configuration test for On/Off register values."""
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: ENTITY_ID},
+        ClimateService.TURN_ON,
+        {TargetKey.ENTITY_ID: ENTITY_ID},
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -477,8 +477,8 @@ async def test_hvac_onoff_values(hass: HomeAssistant, mock_modbus) -> None:
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: ENTITY_ID},
+        ClimateService.TURN_OFF,
+        {TargetKey.ENTITY_ID: ENTITY_ID},
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -506,8 +506,8 @@ async def test_hvac_onoff_coil(hass: HomeAssistant, mock_modbus) -> None:
     """Run configuration test for On/Off coil values."""
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: ENTITY_ID},
+        ClimateService.TURN_ON,
+        {TargetKey.ENTITY_ID: ENTITY_ID},
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -516,8 +516,8 @@ async def test_hvac_onoff_coil(hass: HomeAssistant, mock_modbus) -> None:
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: ENTITY_ID},
+        ClimateService.TURN_OFF,
+        {TargetKey.ENTITY_ID: ENTITY_ID},
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -1372,10 +1372,10 @@ async def test_service_climate_set_temperature(
     mock_modbus_ha.read_holding_registers.return_value = ReadResult(result)
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_TEMPERATURE,
+        ClimateService.SET_TEMPERATURE,
         {
-            ATTR_ENTITY_ID: ENTITY_ID,
-            ATTR_TEMPERATURE: temperature,
+            TargetKey.ENTITY_ID: ENTITY_ID,
+            ClimateServiceArgument.TEMPERATURE: temperature,
         },
         blocking=True,
     )
@@ -1483,10 +1483,10 @@ async def test_service_set_hvac_mode(
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_HVAC_MODE,
+        ClimateService.SET_HVAC_MODE,
         {
-            ATTR_ENTITY_ID: ENTITY_ID,
-            ATTR_HVAC_MODE: hvac_mode,
+            TargetKey.ENTITY_ID: ENTITY_ID,
+            ClimateServiceArgument.HVAC_MODE: hvac_mode,
         },
         blocking=True,
     )
@@ -1546,10 +1546,10 @@ async def test_service_set_fan_mode(
     mock_modbus_ha.read_holding_registers.return_value = ReadResult(result)
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_FAN_MODE,
+        ClimateService.SET_FAN_MODE,
         {
-            ATTR_ENTITY_ID: ENTITY_ID,
-            ATTR_FAN_MODE: fan_mode,
+            TargetKey.ENTITY_ID: ENTITY_ID,
+            ClimateServiceArgument.FAN_MODE: fan_mode,
         },
         blocking=True,
     )
@@ -1609,10 +1609,10 @@ async def test_service_set_swing_mode(
     mock_modbus_ha.read_holding_registers.return_value = ReadResult(result)
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_SWING_MODE,
+        ClimateService.SET_SWING_MODE,
         {
-            ATTR_ENTITY_ID: ENTITY_ID,
-            ATTR_SWING_MODE: swing_mode,
+            TargetKey.ENTITY_ID: ENTITY_ID,
+            ClimateServiceArgument.SWING_MODE: swing_mode,
         },
         blocking=True,
     )
@@ -1654,6 +1654,190 @@ async def test_restore_state_climate(
     state = hass.states.get(ENTITY_ID)
     assert state.state == HVACMode.AUTO
     assert state.attributes[ATTR_TEMPERATURE] == 37
+
+
+@pytest.mark.parametrize(
+    ("mock_test_state", "do_config"),
+    [
+        pytest.param(
+            (
+                State(
+                    ENTITY_ID,
+                    HVACMode.AUTO,
+                    {
+                        ATTR_TEMPERATURE: 17,
+                        "temperature_unit": UnitOfTemperature.CELSIUS,
+                    },
+                ),
+            ),
+            {
+                CONF_CLIMATES: [
+                    {
+                        CONF_NAME: TEST_ENTITY_NAME,
+                        CONF_TARGET_TEMP: 117,
+                        CONF_ADDRESS: 117,
+                        CONF_TEMPERATURE_UNIT: "C",
+                    }
+                ],
+            },
+            id="celsius_to_celsius",
+        ),
+        pytest.param(
+            (
+                State(
+                    ENTITY_ID,
+                    HVACMode.AUTO,
+                    {
+                        ATTR_TEMPERATURE: 17,
+                        "temperature_unit": UnitOfTemperature.CELSIUS,
+                    },
+                ),
+            ),
+            {
+                CONF_CLIMATES: [
+                    {
+                        CONF_NAME: TEST_ENTITY_NAME,
+                        CONF_TARGET_TEMP: 117,
+                        CONF_ADDRESS: 117,
+                        CONF_TEMPERATURE_UNIT: "F",
+                    }
+                ],
+            },
+            id="celsius_to_fahrenheit",
+        ),
+        pytest.param(
+            (
+                State(
+                    ENTITY_ID,
+                    HVACMode.AUTO,
+                    {
+                        ATTR_TEMPERATURE: 63,
+                        "temperature_unit": UnitOfTemperature.FAHRENHEIT,
+                    },
+                ),
+            ),
+            {
+                CONF_CLIMATES: [
+                    {
+                        CONF_NAME: TEST_ENTITY_NAME,
+                        CONF_TARGET_TEMP: 117,
+                        CONF_ADDRESS: 117,
+                        CONF_TEMPERATURE_UNIT: "C",
+                    }
+                ],
+            },
+            id="fahrenheit_to_celsius",
+        ),
+        pytest.param(
+            (
+                State(
+                    ENTITY_ID,
+                    HVACMode.AUTO,
+                    {
+                        ATTR_TEMPERATURE: 63,
+                        "temperature_unit": UnitOfTemperature.FAHRENHEIT,
+                    },
+                ),
+            ),
+            {
+                CONF_CLIMATES: [
+                    {
+                        CONF_NAME: TEST_ENTITY_NAME,
+                        CONF_TARGET_TEMP: 117,
+                        CONF_ADDRESS: 117,
+                        CONF_TEMPERATURE_UNIT: "F",
+                    }
+                ],
+            },
+            id="fahrenheit_to_fahrenheit",
+        ),
+        pytest.param(
+            (State(ENTITY_ID, HVACMode.AUTO, {ATTR_TEMPERATURE: 17}),),
+            {
+                CONF_CLIMATES: [
+                    {
+                        CONF_NAME: TEST_ENTITY_NAME,
+                        CONF_TARGET_TEMP: 117,
+                        CONF_ADDRESS: 117,
+                        CONF_TEMPERATURE_UNIT: "C",
+                    }
+                ],
+            },
+            id="legacy_to_celsius",
+        ),
+        pytest.param(
+            (State(ENTITY_ID, HVACMode.AUTO, {ATTR_TEMPERATURE: 17}),),
+            {
+                CONF_CLIMATES: [
+                    {
+                        CONF_NAME: TEST_ENTITY_NAME,
+                        CONF_TARGET_TEMP: 117,
+                        CONF_ADDRESS: 117,
+                        CONF_TEMPERATURE_UNIT: "F",
+                    }
+                ],
+            },
+            id="legacy_to_fahrenheit",
+        ),
+    ],
+    indirect=["mock_test_state"],
+)
+@pytest.mark.usefixtures("mock_test_state", "mock_modbus_to_test_errors_config")
+async def test_restore_temperature_unit(hass: HomeAssistant) -> None:
+    """Test restoration uses the saved unit, falling back to the configured unit."""
+    # The fixture does not poll, so the restored target temperature is kept.
+    state = hass.states.get(ENTITY_ID)
+    assert state.attributes[ATTR_TEMPERATURE] == 17
+
+
+@pytest.fixture(name="stored_climate_data")
+def stored_climate_data_fixture(hass: HomeAssistant) -> None:
+    """Mock a last state with climate extra data on a Fahrenheit system."""
+    hass.config.units = US_CUSTOMARY_SYSTEM
+    mock_restore_cache_with_extra_data(
+        hass,
+        (
+            (
+                State(
+                    ENTITY_ID,
+                    HVACMode.AUTO,
+                    {
+                        ATTR_TEMPERATURE: 99,
+                        "temperature_unit": UnitOfTemperature.FAHRENHEIT,
+                    },
+                ),
+                {
+                    "native_current_temperature": None,
+                    "native_target_temperature": 25,
+                    "native_target_temperature_high": None,
+                    "native_target_temperature_low": None,
+                    "native_temperature_unit": UnitOfTemperature.CELSIUS,
+                },
+            ),
+        ),
+    )
+
+
+@pytest.mark.parametrize(
+    "do_config",
+    [
+        {
+            CONF_CLIMATES: [
+                {
+                    CONF_NAME: TEST_ENTITY_NAME,
+                    CONF_TARGET_TEMP: 117,
+                    CONF_ADDRESS: 117,
+                    CONF_TEMPERATURE_UNIT: "C",
+                }
+            ],
+        },
+    ],
+)
+@pytest.mark.usefixtures("stored_climate_data", "mock_modbus_to_test_errors_config")
+async def test_restore_temperature_from_extra_data(hass: HomeAssistant) -> None:
+    """Test the target temperature is restored from the stored native value."""
+    state = hass.states.get(ENTITY_ID)
+    assert state.attributes[ATTR_TEMPERATURE] == 77
 
 
 @pytest.mark.parametrize(

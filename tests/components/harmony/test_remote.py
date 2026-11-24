@@ -4,24 +4,23 @@ from datetime import timedelta
 from typing import Any
 
 from aioharmony.const import SendCommandDevice
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
-from homeassistant.components.harmony.const import (
-    DOMAIN,
-    SERVICE_CHANGE_CHANNEL,
-    SERVICE_SYNC,
+from homeassistant.components.harmony.const import DOMAIN
+from homeassistant.components.harmony.remote import ATTR_DELAY_SECS
+from homeassistant.components.harmony.services import (
+    HarmonyService,
+    HarmonyServiceArgument,
 )
-from homeassistant.components.harmony.remote import ATTR_CHANNEL, ATTR_DELAY_SECS
 from homeassistant.components.remote import (
-    ATTR_ACTIVITY,
     ATTR_COMMAND,
     ATTR_DEVICE,
     ATTR_NUM_REPEATS,
     DEFAULT_DELAY_SECS,
     DEFAULT_HOLD_SECS,
     DOMAIN as REMOTE_DOMAIN,
-    SERVICE_SEND_COMMAND,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
+    RemoteService,
+    RemoteServiceArgument,
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -30,14 +29,13 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
     STATE_UNAVAILABLE,
+    TargetKey,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.util import utcnow
 
 from .conftest import ACTIVITIES_TO_IDS, TV_DEVICE_ID, TV_DEVICE_NAME
 from .const import ENTITY_REMOTE, HUB_NAME
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 PLAY_COMMAND = "Play"
 STOP_COMMAND = "Stop"
@@ -101,8 +99,8 @@ async def test_remote_toggles(
     # turn off remote
     await hass.services.async_call(
         REMOTE_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: ENTITY_REMOTE},
+        RemoteService.TURN_OFF,
+        {TargetKey.ENTITY_ID: ENTITY_REMOTE},
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -114,8 +112,8 @@ async def test_remote_toggles(
     # turn on remote, restoring the last activity
     await hass.services.async_call(
         REMOTE_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: ENTITY_REMOTE},
+        RemoteService.TURN_ON,
+        {TargetKey.ENTITY_ID: ENTITY_REMOTE},
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -127,8 +125,11 @@ async def test_remote_toggles(
     # send new activity command, with activity name
     await hass.services.async_call(
         REMOTE_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: ENTITY_REMOTE, ATTR_ACTIVITY: "Play Music"},
+        RemoteService.TURN_ON,
+        {
+            TargetKey.ENTITY_ID: ENTITY_REMOTE,
+            RemoteServiceArgument.ACTIVITY: "Play Music",
+        },
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -140,8 +141,11 @@ async def test_remote_toggles(
     # send new activity command, with activity id
     await hass.services.async_call(
         REMOTE_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: ENTITY_REMOTE, ATTR_ACTIVITY: ACTIVITIES_TO_IDS["Watch TV"]},
+        RemoteService.TURN_ON,
+        {
+            TargetKey.ENTITY_ID: ENTITY_REMOTE,
+            RemoteServiceArgument.ACTIVITY: ACTIVITIES_TO_IDS["Watch TV"],
+        },
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -351,8 +355,11 @@ async def test_change_channel(
     # Tell the remote to change channels
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_CHANGE_CHANNEL,
-        {ATTR_ENTITY_ID: ENTITY_REMOTE, ATTR_CHANNEL: 100},
+        HarmonyService.CHANGE_CHANNEL,
+        {
+            TargetKey.ENTITY_ID: ENTITY_REMOTE,
+            HarmonyServiceArgument.CHANNEL: 100,
+        },
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -378,8 +385,8 @@ async def test_sync(
     # Tell the remote to change channels
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_SYNC,
-        {ATTR_ENTITY_ID: ENTITY_REMOTE},
+        HarmonyService.SYNC,
+        {TargetKey.ENTITY_ID: ENTITY_REMOTE},
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -393,7 +400,7 @@ async def _send_commands_and_wait(
 ) -> None:
     await hass.services.async_call(
         REMOTE_DOMAIN,
-        SERVICE_SEND_COMMAND,
+        RemoteService.SEND_COMMAND,
         service_data,
         blocking=True,
     )

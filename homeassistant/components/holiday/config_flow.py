@@ -3,7 +3,7 @@
 from typing import Any, override
 
 from babel import Locale, UnknownLocaleError
-from holidays import PUBLIC, country_holidays, list_supported_countries
+from holidays import PUBLIC, HolidayBase, country_holidays, list_supported_countries
 import probatio
 
 from homeassistant.config_entries import (
@@ -15,6 +15,7 @@ from homeassistant.config_entries import (
 from homeassistant.const import CONF_COUNTRY
 from homeassistant.core import callback
 from homeassistant.helpers.selector import (
+    BooleanSelector,
     CountrySelector,
     CountrySelectorConfig,
     SelectOptionDict,
@@ -22,14 +23,13 @@ from homeassistant.helpers.selector import (
     SelectSelectorConfig,
     SelectSelectorMode,
 )
-from homeassistant.util import dt as dt_util
 
-from .const import CONF_CATEGORIES, CONF_PROVINCE, DOMAIN
+from .const import CONF_CATEGORIES, CONF_PROVINCE, COUNTRY_OPTIONS, DOMAIN
 
 SUPPORTED_COUNTRIES = list_supported_countries(include_aliases=False)
 
 
-def get_optional_provinces(country: str) -> list[Any]:
+def get_optional_provinces(country_data: HolidayBase) -> list[Any]:
     """Return the country provinces (territories).
 
     Some territories can have extra or different holidays
@@ -38,8 +38,7 @@ def get_optional_provinces(country: str) -> list[Any]:
     """
     province_options: list[Any] = []
 
-    if provinces := SUPPORTED_COUNTRIES[country]:
-        country_data = country_holidays(country, years=dt_util.utcnow().year)
+    if provinces := SUPPORTED_COUNTRIES[country_data.country]:
         if country_data.subdivisions_aliases and (
             subdiv_aliases := country_data.get_subdivision_aliases()
         ):
@@ -53,30 +52,35 @@ def get_optional_provinces(country: str) -> list[Any]:
     return province_options
 
 
-def get_optional_categories(country: str) -> list[str]:
+def get_optional_categories(country_data: HolidayBase) -> list[str]:
     """Return the country categories.
 
     public holidays are always included so they
     don't need to be presented to the user.
     """
-    country_data = country_holidays(country, years=dt_util.utcnow().year)
     return [
         category for category in country_data.supported_categories if category != PUBLIC
     ]
 
 
-def get_options_schema(country: str) -> probatio.Schema:
-    """Return the options schema."""
-    schema = {}
-    if provinces := get_optional_provinces(country):
-        schema[probatio.Optional(CONF_PROVINCE)] = SelectSelector(
-            SelectSelectorConfig(
-                options=provinces,
-                mode=SelectSelectorMode.DROPDOWN,
-            )
-        )
-    if categories := get_optional_categories(country):
-        schema[probatio.Optional(CONF_CATEGORIES)] = SelectSelector(
+def get_country_options_schema(
+    country_data: HolidayBase,
+) -> dict[probatio.Optional, Any]:
+    """Return the schema for the country specific options of the holidays library."""
+    supported_options = country_data.get_supported_options()
+    return {
+        probatio.Optional(option, default=supported_options[option]): BooleanSelector()
+        for option in COUNTRY_OPTIONS
+        if option in supported_options
+    }
+
+
+def get_categories_schema(country_data: HolidayBase) -> dict[probatio.Optional, Any]:
+    """Return the schema for the additional categories."""
+    if not (categories := get_optional_categories(country_data)):
+        return {}
+    return {
+        probatio.Optional(CONF_CATEGORIES): SelectSelector(
             SelectSelectorConfig(
                 options=categories,
                 multiple=True,
@@ -84,7 +88,49 @@ def get_options_schema(country: str) -> probatio.Schema:
                 translation_key="categories",
             )
         )
-    return probatio.Schema(schema)
+    }
+
+
+def get_entry_options(user_input: dict[str, Any]) -> dict[str, Any]:
+    """Return the config entry options from the user input."""
+    options: dict[str, Any] = {
+        option: user_input[option] for option in COUNTRY_OPTIONS if option in user_input
+    }
+    if categories := user_input.get(CONF_CATEGORIES):
+        options[CONF_CATEGORIES] = categories
+    return options
+
+
+def get_options_schema(country: str) -> probatio.Schema:
+    """Return the options schema."""
+    # Without years, no holidays are calculated, but the metadata is available
+    country_data = country_holidays(country)
+    schema = {}
+    if provinces := get_optional_provinces(country_data):
+        schema[probatio.Optional(CONF_PROVINCE)] = SelectSelector(
+            SelectSelectorConfig(
+                options=provinces,
+                mode=SelectSelectorMode.DROPDOWN,
+            )
+        )
+    return probatio.Schema(
+        {
+            **schema,
+            **get_categories_schema(country_data),
+            **get_country_options_schema(country_data),
+        }
+    )
+
+
+def get_options_flow_schema(country: str) -> probatio.Schema:
+    """Return the schema of the options flow."""
+    country_data = country_holidays(country)
+    return probatio.Schema(
+        {
+            **get_categories_schema(country_data),
+            **get_country_options_schema(country_data),
+        }
+    )
 
 
 def get_entry_name(language: str, country: str, province: str | None) -> str:
@@ -104,6 +150,7 @@ class HolidayConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Holiday."""
 
     VERSION = 1
+    MINOR_VERSION = 2
 
     def __init__(self) -> None:
         """Initialize the config flow."""
@@ -155,7 +202,7 @@ class HolidayConfigFlow(ConfigFlow, domain=DOMAIN):
             }
         )
 
-        return self.async_show_form(data_schema=user_schema)
+        return self.async_show_form(step_id="user", data_schema=user_schema)
 
     async def async_step_options(
         self, user_input: dict[str, Any] | None = None
@@ -164,13 +211,11 @@ class HolidayConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             country = self.data[CONF_COUNTRY]
             data = {CONF_COUNTRY: country}
-            options: dict[str, Any] | None = None
             if province := user_input.get(CONF_PROVINCE):
                 data[CONF_PROVINCE] = province
-            if categories := user_input.get(CONF_CATEGORIES):
-                options = {CONF_CATEGORIES: categories}
+            options = get_entry_options(user_input)
 
-            self._async_abort_entries_match({**data, **(options or {})})
+            self._async_abort_entries_match({**data, **options})
 
             name = await self.hass.async_add_executor_job(
                 get_entry_name, self.hass.config.language, country, province
@@ -183,7 +228,7 @@ class HolidayConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="options",
             data_schema=options_schema,
-            description_placeholders={CONF_COUNTRY: self.data[CONF_COUNTRY]},
+            description_placeholders={"country": self.data[CONF_COUNTRY]},
         )
 
     async def async_step_reconfigure(
@@ -195,13 +240,11 @@ class HolidayConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             country = reconfigure_entry.data[CONF_COUNTRY]
             data = {CONF_COUNTRY: country}
-            options: dict[str, Any] | None = None
             if province := user_input.get(CONF_PROVINCE):
                 data[CONF_PROVINCE] = province
-            if categories := user_input.get(CONF_CATEGORIES):
-                options = {CONF_CATEGORIES: categories}
+            options = get_entry_options(user_input)
 
-            self._async_abort_entries_match({**data, **(options or {})})
+            self._async_abort_entries_match({**data, **options})
 
             name = await self.hass.async_add_executor_job(
                 get_entry_name, self.hass.config.language, country, province
@@ -220,10 +263,12 @@ class HolidayConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
         return self.async_show_form(
-            data_schema=options_schema,
-            description_placeholders={
-                CONF_COUNTRY: reconfigure_entry.data[CONF_COUNTRY]
-            },
+            step_id="reconfigure",
+            data_schema=self.add_suggested_values_to_schema(
+                options_schema,
+                {**reconfigure_entry.data, **reconfigure_entry.options},
+            ),
+            description_placeholders={"country": reconfigure_entry.data[CONF_COUNTRY]},
         )
 
 
@@ -235,32 +280,21 @@ class HolidayOptionsFlowHandler(OptionsFlowWithReload):
     ) -> ConfigFlowResult:
         """Manage Holiday options."""
         if user_input is not None:
+            self._async_abort_entries_match(
+                {**self.config_entry.data, **get_entry_options(user_input)}
+            )
             return self.async_create_entry(data=user_input)
 
-        categories = await self.hass.async_add_executor_job(
-            get_optional_categories, self.config_entry.data[CONF_COUNTRY]
+        schema = await self.hass.async_add_executor_job(
+            get_options_flow_schema, self.config_entry.data[CONF_COUNTRY]
         )
-        if not categories:
+        if not schema.schema:
             return self.async_abort(reason="no_categories")
 
-        schema = probatio.Schema(
-            {
-                probatio.Optional(CONF_CATEGORIES): SelectSelector(
-                    SelectSelectorConfig(
-                        options=categories,
-                        multiple=True,
-                        mode=SelectSelectorMode.DROPDOWN,
-                        translation_key="categories",
-                    )
-                )
-            }
-        )
-
         return self.async_show_form(
+            step_id="init",
             data_schema=self.add_suggested_values_to_schema(
                 schema, self.config_entry.options
             ),
-            description_placeholders={
-                CONF_COUNTRY: self.config_entry.data[CONF_COUNTRY]
-            },
+            description_placeholders={"country": self.config_entry.data[CONF_COUNTRY]},
         )

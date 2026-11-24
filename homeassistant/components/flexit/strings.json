@@ -10,29 +10,29 @@
     "step": {
       "reconfigure": {
         "data": {
-          "baudrate": "[%key:component::flexit::config::step::serial::data::baudrate%]",
-          "device": "[%key:component::flexit::config::step::serial::data::device%]",
+          "baudrate": "[%key:component::modbus::common::baud_rate%]",
+          "device": "[%key:component::modbus::common::serial_port%]",
           "host": "[%key:common::config_flow::data::host%]",
           "port": "[%key:common::config_flow::data::port%]",
           "unit": "Unit ID"
         },
         "data_description": {
-          "baudrate": "[%key:component::flexit::config::step::serial::data_description::baudrate%]",
-          "device": "[%key:component::flexit::config::step::serial::data_description::device%]",
+          "baudrate": "[%key:component::modbus::common::baud_rate_description%]",
+          "device": "[%key:component::modbus::common::serial_port_description%]",
           "host": "[%key:component::flexit::config::step::tcp::data_description::host%]",
-          "port": "[%key:component::flexit::config::step::tcp::data_description::port%]",
+          "port": "[%key:component::modbus::common::tcp_port_description%]",
           "unit": "[%key:component::flexit::config::step::tcp::data_description::unit%]"
         }
       },
       "serial": {
         "data": {
-          "baudrate": "Baud rate",
-          "device": "Serial device",
+          "baudrate": "[%key:component::modbus::common::baud_rate%]",
+          "device": "[%key:component::modbus::common::serial_port%]",
           "unit": "Unit ID"
         },
         "data_description": {
-          "baudrate": "The baud rate of the serial connection.",
-          "device": "The serial device your Flexit CI66 Modbus adapter is connected to.",
+          "baudrate": "[%key:component::modbus::common::baud_rate_description%]",
+          "device": "[%key:component::modbus::common::serial_port_description%]",
           "unit": "The Modbus unit ID of your Flexit AC unit."
         }
       },
@@ -44,14 +44,14 @@
         },
         "data_description": {
           "host": "The hostname or IP address of your Flexit CI66 Modbus bridge.",
-          "port": "The port of your Flexit CI66 Modbus bridge.",
+          "port": "[%key:component::modbus::common::tcp_port_description%]",
           "unit": "The Modbus unit ID of your Flexit AC unit."
         }
       },
       "user": {
         "menu_options": {
-          "serial": "Serial (Modbus RTU)",
-          "tcp": "Network (Modbus TCP) via Bridge"
+          "serial": "[%key:component::modbus::common::serial_rtu%]",
+          "tcp": "[%key:component::modbus::common::modbus_tcp%]"
         }
       }
     }

@@ -3,14 +3,13 @@
 from unittest.mock import MagicMock
 
 from PySrDaliGateway.exceptions import DaliGatewayError
+from pytest_homeassistant.common import MockConfigEntry
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.sunricher_dali.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
-
-from tests.common import MockConfigEntry
 
 
 async def test_setup_entry_success(

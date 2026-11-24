@@ -1,11 +1,10 @@
 """Fixtures for the solax integration tests."""
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.solax.const import DOMAIN
 from homeassistant.const import CONF_IP_ADDRESS, CONF_PASSWORD, CONF_PORT
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture

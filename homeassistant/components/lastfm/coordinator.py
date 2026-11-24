@@ -37,10 +37,10 @@ class LastFMUserData:
 class LastFMDataUpdateCoordinator(DataUpdateCoordinator[dict[str, LastFMUserData]]):
     """A LastFM Data Update Coordinator."""
 
-    config_entry: ConfigEntry
+    config_entry: LastFMConfigEntry
     _client: LastFMNetwork
 
-    def __init__(self, hass: HomeAssistant, config_entry: ConfigEntry) -> None:
+    def __init__(self, hass: HomeAssistant, config_entry: LastFMConfigEntry) -> None:
         """Initialize the LastFM data coordinator."""
         super().__init__(
             hass,
@@ -54,24 +54,32 @@ class LastFMDataUpdateCoordinator(DataUpdateCoordinator[dict[str, LastFMUserData
 
     @override
     async def _async_update_data(self) -> dict[str, LastFMUserData]:
+        res = await self.hass.async_add_executor_job(self._get_users_data)
+        if not res:
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="update_failed",
+            )
+        return res
+
+    def _get_users_data(self) -> dict[str, LastFMUserData]:
+        """Fetch the data of all users."""
         res = {}
         for username in self.config_entry.options[CONF_USERS]:
-            data = await self.hass.async_add_executor_job(self._get_user_data, username)
+            data = self._get_user_data(username)
             if data is not None:
                 res[username] = data
-        if not res:
-            raise UpdateFailed
         return res
 
     def _get_user_data(self, username: str) -> LastFMUserData | None:
         user = self._client.get_user(username)
         try:
-            play_count = user.get_playcount()
+            play_count = int(user.get_playcount())
             image = user.get_image()
             top_tracks = user.get_top_tracks(limit=1)
         except PyLastError as exc:
             if self.last_update_success:
-                LOGGER.error("LastFM update for %s failed: %r", username, exc)
+                LOGGER.error("LastFM update for %s failed: %s", username, exc)
             return None
         now_playing = None
         last_tracks = []
@@ -83,7 +91,7 @@ class LastFMDataUpdateCoordinator(DataUpdateCoordinator[dict[str, LastFMUserData
                 isinstance(exc, WSError) and exc.status == ERROR_CODE_LOGIN_REQUIRED
             ):
                 if self.last_update_success:
-                    LOGGER.error("LastFM update for %s failed: %r", username, exc)
+                    LOGGER.error("LastFM update for %s failed: %s", username, exc)
                 return None
             if username not in self._warned_hidden_users:
                 self._warned_hidden_users.add(username)

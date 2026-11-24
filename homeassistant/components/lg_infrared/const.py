@@ -14,3 +14,4 @@ class LGDeviceType(StrEnum):
 
     TV = "tv"
     AC = "ac"
+    HOME_THEATER = "home_theater"

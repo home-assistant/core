@@ -47,7 +47,7 @@ type GoogleHealthConfigEntry = ConfigEntry[GoogleHealthData]
 
 async def async_setup_entry(
     hass: HomeAssistant, entry: GoogleHealthConfigEntry
-) -> bool:
+) -> None:
     """Set up Google Health from a config entry."""
     implementation = await async_get_config_entry_implementation(hass, entry)
 
@@ -121,11 +121,9 @@ async def async_setup_entry(
 
     await hass.config_entries.async_forward_entry_setups(entry, _PLATFORMS)
 
-    return True
-
 
 async def async_unload_entry(
     hass: HomeAssistant, entry: GoogleHealthConfigEntry
-) -> bool:
+) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, _PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, _PLATFORMS)

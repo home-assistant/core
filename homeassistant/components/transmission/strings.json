@@ -33,7 +33,7 @@
           "password": "The password to authenticate with the Transmission instance, if set.",
           "path": "The RPC request target path, for example, `/transmission/rpc`.",
           "port": "The port number of the Transmission instance.",
-          "ssl": "Whether to verify SSL certificates. Disable this for self-signed certificates.",
+          "ssl": "Connect to the Transmission RPC interface using HTTPS.",
           "username": "The username to authenticate with the Transmission instance, if set."
         },
         "title": "Set up Transmission client"

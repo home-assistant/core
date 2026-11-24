@@ -12,7 +12,7 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import EVOHOME_DATA
-from .coordinator import EvoDataUpdateCoordinator
+from .coordinator import EvoLocationCoordinator
 from .entity import is_valid_zone, unique_zone_id
 
 
@@ -42,7 +42,7 @@ async def async_setup_platform(
     async_add_entities(entities)
 
 
-class EvoResetButtonBase(CoordinatorEntity[EvoDataUpdateCoordinator], ButtonEntity):
+class EvoResetButtonBase(CoordinatorEntity[EvoLocationCoordinator], ButtonEntity):
     """Base for Evohome's Button entities."""
 
     # for _attr_device_class, ButtonDeviceClass.RESET is not available
@@ -52,7 +52,7 @@ class EvoResetButtonBase(CoordinatorEntity[EvoDataUpdateCoordinator], ButtonEnti
 
     def __init__(
         self,
-        coordinator: EvoDataUpdateCoordinator,
+        coordinator: EvoLocationCoordinator,
         evo_device: evo.ControlSystem | evo.HotWater | evo.Zone,
     ) -> None:
         """Initialize an Evohome reset button entity."""
@@ -72,14 +72,6 @@ class EvoSystemResetButton(EvoResetButtonBase):
     """Button entity for system reset."""
 
     _evo_device: evo.ControlSystem
-
-    def __init__(
-        self,
-        coordinator: EvoDataUpdateCoordinator,
-        evo_device: evo.ControlSystem,
-    ) -> None:
-        """Initialize the system reset button."""
-        super().__init__(coordinator, evo_device)
 
     @property
     @override
@@ -107,7 +99,7 @@ class EvoZoneResetButton(EvoResetButtonBase):
 
     def __init__(
         self,
-        coordinator: EvoDataUpdateCoordinator,
+        coordinator: EvoLocationCoordinator,
         evo_device: evo.Zone,
     ) -> None:
         """Initialize the zone reset button."""

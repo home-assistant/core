@@ -5,6 +5,10 @@ from typing import Any
 
 from probatio.error import Invalid, MultipleInvalid
 import pytest
+from pytest_homeassistant.common import (
+    load_json_array_fixture,
+    load_json_object_fixture,
+)
 
 from homeassistant.components.marketplace.const import DOMAIN
 from homeassistant.components.marketplace.utils.validate import (
@@ -12,8 +16,6 @@ from homeassistant.components.marketplace.utils.validate import (
     VALIDATE_FETCHED_V2_REMOVED_REPO_SCHEMA,
     VALIDATE_FETCHED_V2_REPO_DATA,
 )
-
-from tests.common import load_json_array_fixture, load_json_object_fixture
 
 CATEGORIES = (
     "integration",
@@ -364,6 +366,16 @@ def test_common_repo_data_json_schema_bad_data(
             GOOD_INTEGRATION_DATA | {"extra": "key"},
             does_not_raise(),
             id="extra-key-is-discarded",
+        ),
+        pytest.param(
+            GOOD_INTEGRATION_DATA | {"categories": ["energy.ev_charging"]},
+            does_not_raise(),
+            id="categories",
+        ),
+        pytest.param(
+            GOOD_INTEGRATION_DATA | {"categories": "energy"},
+            does_not_raise(),
+            id="broken-categories-keep-the-repository",
         ),
     ],
 )

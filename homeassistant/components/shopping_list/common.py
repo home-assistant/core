@@ -8,13 +8,13 @@ import uuid
 import probatio
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_NAME
+from homeassistant.const import ATTR_NAME, EVENT_SHOPPING_LIST_UPDATED
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.helpers import service
 from homeassistant.helpers.json import save_json
 from homeassistant.util.json import JsonValueType, load_json_array
 
-from .const import DOMAIN, EVENT_SHOPPING_LIST_UPDATED
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 

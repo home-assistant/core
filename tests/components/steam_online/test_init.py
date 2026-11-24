@@ -3,6 +3,7 @@
 from unittest.mock import MagicMock
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 import steam.api
 from syrupy.assertion import SnapshotAssertion
 
@@ -17,8 +18,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from . import ACCOUNT_1, ACCOUNT_2, ACCOUNT_NAME_1, ACCOUNT_NAME_2, CONF_DATA
-
-from tests.common import MockConfigEntry
 
 
 @pytest.mark.usefixtures("steam_api")
