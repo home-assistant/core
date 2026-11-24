@@ -144,9 +144,9 @@ class SolarmanConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="discovery_confirm",
             description_placeholders={
-                CONF_MODEL: self.model,
-                CONF_SN: self.device_sn,
-                CONF_HOST: self.host,
-                CONF_MAC: self.mac or "",
+                "model": self.model,
+                "sn": self.device_sn,
+                "host": self.host,
+                "mac": self.mac or "",
             },
         )

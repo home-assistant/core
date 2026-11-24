@@ -1,13 +1,14 @@
 """UniFi Network services."""
 
 from collections.abc import Mapping
+from enum import StrEnum
 from typing import Any
 
 import aiounifi
 from aiounifi.models.client import ClientReconnectRequest, ClientRemoveRequest
 import probatio
 
-from homeassistant.const import ATTR_DEVICE_ID
+from homeassistant.const import CommonServiceArgument
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import device_registry as dr
@@ -15,17 +16,20 @@ from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 
 from .const import DOMAIN
 
-SERVICE_RECONNECT_CLIENT = "reconnect_client"
-SERVICE_REMOVE_CLIENTS = "remove_clients"
+
+class UnifiService(StrEnum):
+    """Store keys for UniFi services."""
+
+    RECONNECT_CLIENT = "reconnect_client"
+    REMOVE_CLIENTS = "remove_clients"
+
 
 SERVICE_RECONNECT_CLIENT_SCHEMA = probatio.All(
-    probatio.Schema({probatio.Required(ATTR_DEVICE_ID): str})
+    probatio.Schema({probatio.Required(CommonServiceArgument.DEVICE_ID): str})
 )
 
-SUPPORTED_SERVICES = (SERVICE_RECONNECT_CLIENT, SERVICE_REMOVE_CLIENTS)
-
 SERVICE_TO_SCHEMA = {
-    SERVICE_RECONNECT_CLIENT: SERVICE_RECONNECT_CLIENT_SCHEMA,
+    UnifiService.RECONNECT_CLIENT: SERVICE_RECONNECT_CLIENT_SCHEMA,
 }
 
 
@@ -34,15 +38,15 @@ def async_setup_services(hass: HomeAssistant) -> None:
     """Set up services for UniFi integration."""
 
     services = {
-        SERVICE_RECONNECT_CLIENT: async_reconnect_client,
-        SERVICE_REMOVE_CLIENTS: async_remove_clients,
+        UnifiService.RECONNECT_CLIENT: async_reconnect_client,
+        UnifiService.REMOVE_CLIENTS: async_remove_clients,
     }
 
     async def async_call_unifi_service(service_call: ServiceCall) -> None:
         """Call correct UniFi service."""
-        await services[service_call.service](hass, service_call.data)
+        await services[UnifiService(service_call.service)](hass, service_call.data)
 
-    for service in SUPPORTED_SERVICES:
+    for service in UnifiService:
         hass.services.async_register(
             DOMAIN,
             service,
@@ -55,7 +59,7 @@ async def async_reconnect_client(hass: HomeAssistant, data: Mapping[str, Any]) -
     """Try to get wireless client to reconnect to Wi-Fi."""
     device_registry = dr.async_get(hass)
     device_entry = device_registry.async_get(
-        data[ATTR_DEVICE_ID], include_child_devices=False
+        data[CommonServiceArgument.DEVICE_ID], include_child_devices=False
     )
 
     if device_entry is None:

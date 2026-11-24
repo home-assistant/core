@@ -1,6 +1,7 @@
 """Validate integration quality scale files."""
 
 from dataclasses import dataclass
+import re
 
 from hassfest.model import Config, Integration, IntegrationType, ScaledQualityScaleTiers
 import probatio
@@ -109,7 +110,6 @@ RULE_URL = (
 
 INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "abode",
-    "accuweather",
     "acmeda",
     "actiontec",
     "adax",
@@ -335,6 +335,7 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "fints",
     "fireservicerota",
     "firmata",
+    "fitbit",
     "fivem",
     "fixer",
     "fjaraskupan",
@@ -397,13 +398,11 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "google_sheets",
     "google_translate",
     "google_travel_time",
-    "google_wifi",
     "govee_ble",
     "govee_light_local",
     "gpsd",
     "gpslogger",
     "graphite",
-    "gree",
     "greeneye_monitor",
     "group",
     "gtfs",
@@ -469,7 +468,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "isy994",
     "itach",
     "itunes",
-    "izone",
     "jellyfin",
     "joaoapps_join",
     "juicenet",
@@ -489,7 +487,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "kitchen_sink",
     "kiwi",
     "kmtronic",
-    "kodi",
     "konnected",
     "kostal_plenticore",
     "kraken",
@@ -561,7 +558,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "met",
     "met_eireann",
     "meteo_france",
-    "meteoalarm",
     "meteoclimatic",
     "mfi",
     "microbees",
@@ -882,7 +878,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "tomorrowio",
     "toon",
     "torque",
-    "touchline",
     "touchline_sl",
     "tplink_lte",
     "traccar",
@@ -970,7 +965,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "yamaha_musiccast",
     "yandex_transport",
     "yandextts",
-    "yardian",
     "yeelight",
     "yeelightsunflower",
     "yi",
@@ -993,7 +987,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
 
 INTEGRATIONS_WITHOUT_SCALE = [
     "abode",
-    "accuweather",
     "acmeda",
     "actiontec",
     "adax",
@@ -1227,10 +1220,10 @@ INTEGRATIONS_WITHOUT_SCALE = [
     "file",
     "filesize",
     "filter",
-    "fitbit",
     "fints",
     "fireservicerota",
     "firmata",
+    "fitbit",
     "fivem",
     "fixer",
     "fjaraskupan",
@@ -1302,7 +1295,6 @@ INTEGRATIONS_WITHOUT_SCALE = [
     "gpsd",
     "gpslogger",
     "graphite",
-    "gree",
     "greeneye_monitor",
     "group",
     "gtfs",
@@ -1374,7 +1366,6 @@ INTEGRATIONS_WITHOUT_SCALE = [
     "isy994",
     "itach",
     "itunes",
-    "izone",
     "jellyfin",
     "jewish_calendar",
     "joaoapps_join",
@@ -1469,7 +1460,6 @@ INTEGRATIONS_WITHOUT_SCALE = [
     "met",
     "met_eireann",
     "meteo_france",
-    "meteoalarm",
     "meteoclimatic",
     "mfi",
     "microbees",
@@ -1555,7 +1545,6 @@ INTEGRATIONS_WITHOUT_SCALE = [
     "oncue",
     "ondilo_ico",
     "onvif",
-    "open_meteo",
     "openalpr_cloud",
     "openerz",
     "openexchangerates",
@@ -1581,7 +1570,6 @@ INTEGRATIONS_WITHOUT_SCALE = [
     "p1_monitor",
     "panasonic_bluray",
     "panasonic_viera",
-    "palazzetti",
     "panel_iframe",
     "peco",
     "pencom",
@@ -1678,7 +1666,6 @@ INTEGRATIONS_WITHOUT_SCALE = [
     "rympro",
     "saj",
     "sanix",
-    "schlage",
     "schluter",
     "scrape",
     "screenlogic",
@@ -1771,7 +1758,6 @@ INTEGRATIONS_WITHOUT_SCALE = [
     "synology_dsm",
     "synology_srm",
     "syslog",
-    "system_bridge",
     "systemmonitor",
     "tado",
     "tailscale",
@@ -1811,7 +1797,6 @@ INTEGRATIONS_WITHOUT_SCALE = [
     "toon",
     "totalconnect",
     "torque",
-    "touchline",
     "touchline_sl",
     "tplink_lte",
     "traccar",
@@ -2000,12 +1985,24 @@ NO_QUALITY_SCALE = [
     "trace",
     "usage_prediction",
     "vibration",
+    "voice_support",
     "web_rtc",
     "webhook",
     "websocket_api",
     "window",
     "zone",
 ]
+
+# Matches references to a specific pull request, like a GitHub pull request URL,
+# "owner/repo#123", "PR #123", "PR 123" or "#12345". A comment that points to a
+# pull request goes stale as soon as that pull request merges.
+PULL_REQUEST_REFERENCE = re.compile(
+    r"github\.com/[\w.-]+/[\w.-]+/pull/\d+"
+    r"|[\w.-]+/[\w.-]+#\d+"
+    r"|\bPR\s*#?\d+"
+    r"|(?<![\w&/])#\d{3,}\b",
+    re.IGNORECASE,
+)
 
 SCHEMA = probatio.Schema(
     {
@@ -2137,6 +2134,18 @@ def validate_iqs_file(config: Config, integration: Integration) -> None:
     rules_done = set[str]()
     rules_met = set[str]()
     for rule_name, rule_value in data.get("rules", {}).items():
+        if (
+            isinstance(rule_value, dict)
+            and isinstance(comment := rule_value.get("comment"), str)
+            and (match := PULL_REQUEST_REFERENCE.search(comment))
+        ):
+            integration.add_error(
+                "quality_scale",
+                f"[{rule_name}] The comment refers to a pull request"
+                f" ({match.group(0)}). Describe what is missing or why"
+                " the rule is exempt instead, and update the status in"
+                " the pull request that completes the rule.",
+            )
         status = rule_value["status"] if isinstance(rule_value, dict) else rule_value
         if status not in {"done", "exempt"}:
             continue

@@ -13,18 +13,14 @@ from homeassistant.components.climate import (
     DOMAIN as CLIMATE_DOMAIN,
     PRESET_ECO,
     PRESET_NONE,
-    SERVICE_SET_PRESET_MODE,
-    SERVICE_SET_TEMPERATURE,
     ClimateEntityFeature,
+    ClimateService,
+    ClimateServiceArgument,
     HVACAction,
     HVACMode,
 )
 from homeassistant.components.smarttub.const import DEFAULT_MAX_TEMP, DEFAULT_MIN_TEMP
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    ATTR_SUPPORTED_FEATURES,
-    ATTR_TEMPERATURE,
-)
+from homeassistant.const import ATTR_SUPPORTED_FEATURES, ATTR_TEMPERATURE, TargetKey
 from homeassistant.core import HomeAssistant
 
 from . import trigger_update
@@ -73,8 +69,8 @@ async def test_thermostat_set_temperature(
     entity_id = f"climate.{spa.brand}_{spa.model}_thermostat"
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_TEMPERATURE,
-        {ATTR_ENTITY_ID: entity_id, ATTR_TEMPERATURE: 37},
+        ClimateService.SET_TEMPERATURE,
+        {TargetKey.ENTITY_ID: entity_id, ClimateServiceArgument.TEMPERATURE: 37},
         blocking=True,
     )
     spa.set_temperature.assert_called_with(37)
@@ -87,8 +83,11 @@ async def test_thermostat_set_preset_mode(
     entity_id = f"climate.{spa.brand}_{spa.model}_thermostat"
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_PRESET_MODE,
-        {ATTR_ENTITY_ID: entity_id, ATTR_PRESET_MODE: PRESET_ECO},
+        ClimateService.SET_PRESET_MODE,
+        {
+            TargetKey.ENTITY_ID: entity_id,
+            ClimateServiceArgument.PRESET_MODE: PRESET_ECO,
+        },
         blocking=True,
     )
     spa.set_heat_mode.assert_called_with(smarttub.Spa.HeatMode.ECONOMY)

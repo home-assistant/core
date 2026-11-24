@@ -176,7 +176,7 @@ class NetatmoDataHandler:
         self.config_entry = config_entry
         self.auth = auth
         self.publisher: dict[str, NetatmoPublisher] = {}
-        self._queue: deque = deque()
+        self._queue: deque[NetatmoPublisher] = deque()
         self._webhook_delivering: bool = False
         self.webhook_registered: bool = False
         # Netatmo can hold a registration made before this load, so the first
@@ -260,20 +260,24 @@ class NetatmoDataHandler:
         We do up to BATCH_SIZE calls in one update in order
         to minimize the calls on the api service.
         """
-        for data_class in islice(self._queue, 0, BATCH_SIZE * self._interval_factor):
+        # Subscribing, unsubscribing and forced updates change the queue while a
+        # fetch is awaited
+        batch = list(islice(self._queue, 0, BATCH_SIZE * self._interval_factor))
+        for data_class in batch:
             if data_class.next_scan > time():
                 continue
 
-            if publisher := data_class.name:
-                error = await self.async_fetch_data(publisher)
+            # Unsubscribed while an earlier fetch of this batch was awaited
+            if self.publisher.get(data_class.name) is not data_class:
+                continue
 
-                if error:
-                    self.publisher[publisher].next_scan = time() + min(
-                        data_class.interval * 2 ** (data_class.error_count - 1),
-                        MAX_ERROR_BACKOFF,
-                    )
-                else:
-                    self.publisher[publisher].next_scan = time() + data_class.interval
+            if await self.async_fetch_data(data_class.name):
+                data_class.next_scan = time() + min(
+                    data_class.interval * 2 ** (data_class.error_count - 1),
+                    MAX_ERROR_BACKOFF,
+                )
+            else:
+                data_class.next_scan = time() + data_class.interval
 
         self._queue.rotate(BATCH_SIZE)
         cph = self._calls_in_the_last_hour()
@@ -353,12 +357,12 @@ class NetatmoDataHandler:
 
         # Tolerate transient backend errors before marking entities unavailable
         publisher.available = publisher.error_count < UNAVAILABLE_AFTER_ERRORS
-        self._notify_subscribers(signal_name)
+        self._notify_subscribers(publisher)
         return has_error
 
-    def _notify_subscribers(self, signal_name: str) -> None:
+    def _notify_subscribers(self, publisher: NetatmoPublisher) -> None:
         """Notify all subscribers of a publisher to update their state."""
-        for update_callback in self.publisher[signal_name].subscriptions:
+        for update_callback in publisher.subscriptions:
             if update_callback:
                 update_callback()
 

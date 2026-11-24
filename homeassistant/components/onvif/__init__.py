@@ -103,7 +103,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ONVIFConfigEntry) -> Non
     device.platforms = [Platform.BUTTON, Platform.CAMERA]
 
     if device.capabilities.events:
-        device.platforms += [Platform.BINARY_SENSOR, Platform.SENSOR]
+        device.platforms += [Platform.BINARY_SENSOR, Platform.EVENT, Platform.SENSOR]
 
     if device.capabilities.imaging:
         device.platforms += [Platform.SWITCH]

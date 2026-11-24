@@ -123,3 +123,30 @@ async def test_achievement_total_failure_keeps_entities_available(
     assert state
     assert state.state != "unavailable"
     assert state.attributes["achievements"] == "2 / 0"
+
+
+async def test_no_friend_polling_without_friend_subentries(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    xbox_live_client: AsyncMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Do not call the rate-limited friends endpoint without tracked friends."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title=config_entry.title,
+        data=config_entry.data,
+        unique_id=config_entry.unique_id,
+        minor_version=3,
+    )
+    entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+    xbox_live_client.people.get_friends_own.assert_not_awaited()
+    xbox_live_client.people.get_friend_by_xuid.assert_awaited()
+    assert hass.states.get("sensor.gsr_ae_now_playing") is not None
+
+    freezer.tick(PRESENCE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    xbox_live_client.people.get_friends_own.assert_not_awaited()

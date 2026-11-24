@@ -32,7 +32,7 @@ class GeoJsonFeedEntityManager:
     def __init__(
         self,
         hass: HomeAssistant,
-        config_entry: ConfigEntry,
+        config_entry: GeoJsonConfigEntry,
     ) -> None:
         """Initialize the GeoJSON Feed Manager."""
         self._hass: HomeAssistant = hass

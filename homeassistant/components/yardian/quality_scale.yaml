@@ -1,0 +1,96 @@
+rules:
+  # Bronze
+  action-setup: done
+  appropriate-polling: done
+  brands: done
+  common-modules: done
+  config-flow-test-coverage:
+    status: todo
+    comment: Add a test that verifies the flow aborts on duplicate setup.
+  config-flow:
+    status: todo
+    comment: The setup form needs a description for the access token field.
+  dependency-transparency:
+    status: todo
+    comment: pyyardian needs automated PyPI publishing from CI.
+  docs-actions: done
+  docs-conditions:
+    status: exempt
+    comment: Yardian does not provide custom conditions.
+  docs-high-level-description: done
+  docs-installation-instructions: done
+  docs-removal-instructions: todo
+  docs-triggers:
+    status: exempt
+    comment: Yardian does not provide custom triggers.
+  entity-event-setup: done
+  entity-unique-id: done
+  has-entity-name: done
+  runtime-data: done
+  test-before-configure: done
+  test-before-setup: done
+  unique-config-entry: done
+
+  # Silver
+  action-exceptions:
+    status: todo
+    comment: Control methods need to report client failures as Home Assistant errors.
+  config-entry-unloading: done
+  docs-configuration-parameters:
+    status: exempt
+    comment: Yardian has no options flow or configurable settings after setup.
+  docs-installation-parameters:
+    status: todo
+    comment: Describe what the host and access token fields mean and where to find each value.
+  entity-unavailable:
+    status: todo
+    comment: Report unknown when a successful poll omits the standby or freeze-prevention value.
+  integration-owner: done
+  log-when-unavailable:
+    status: todo
+    comment: Connection failures need to log once at info level when the controller becomes unavailable.
+  parallel-updates: todo
+  reauthentication-flow:
+    status: todo
+    comment: Reauthentication works on reload. During polling, pyyardian needs to raise an authentication error when the token is rejected.
+  test-coverage: done
+
+  # Gold
+  devices: done
+  diagnostics: todo
+  discovery-update-info: todo
+  discovery: todo
+  docs-data-update: todo
+  docs-examples: todo
+  docs-known-limitations: todo
+  docs-supported-devices: todo
+  docs-supported-functions:
+    status: todo
+    comment: The documentation is missing the sensor entities.
+  docs-troubleshooting: todo
+  docs-use-cases: todo
+  dynamic-devices:
+    status: exempt
+    comment: Each entry represents one controller and its fixed physical irrigation zones.
+  entity-category: done
+  entity-device-class: done
+  entity-disabled-by-default: done
+  entity-translations: done
+  exception-translations:
+    status: todo
+    comment: Action errors need translated messages.
+  icon-translations: done
+  reconfiguration-flow: todo
+  repair-issues:
+    status: exempt
+    comment: Home Assistant raises the repair for rejected credentials through reauthentication. There are no other known cases that require a repair.
+  stale-devices:
+    status: exempt
+    comment: Zone devices represent fixed controller terminals and are removed with the controller entry.
+
+  # Platinum
+  async-dependency: done
+  inject-websession: done
+  strict-typing:
+    status: todo
+    comment: Yardian needs strict mypy settings and typing support from pyyardian.
