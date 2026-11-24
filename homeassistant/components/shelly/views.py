@@ -12,10 +12,11 @@ from homeassistant.const import CONF_VERIFY_SSL
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import DOMAIN, LOGGER
-from .coordinator import ShellyConfigEntry
-from .utils import get_device_url, get_storage_coordinator
+from .const import DOMAIN, LOGGER, STORAGE_ID
+from .coordinator import ShellyConfigEntry, ShellyRpcCoordinator
+from .utils import get_device_url
 
+STORAGE_KEY = f"storage:{STORAGE_ID}"
 STORAGE_PREFIX = "/storage/"
 CHUNK_SIZE = 65536
 SAFE_SEGMENT = re.compile(r"[A-Za-z0-9_.-]+")
@@ -30,6 +31,17 @@ FORWARD_RESPONSE_HEADERS = (
 )
 # No total limit, recordings can take long to stream.
 UPSTREAM_TIMEOUT = ClientTimeout(total=None, sock_connect=10, sock_read=30)
+
+
+def get_storage_coordinator(entry: ShellyConfigEntry) -> ShellyRpcCoordinator | None:
+    """Return the RPC coordinator of a device with active storage."""
+    if (
+        (coordinator := entry.runtime_data.rpc) is None
+        or coordinator.sleep_period
+        or not coordinator.device.status.get(STORAGE_KEY, {}).get("active")
+    ):
+        return None
+    return coordinator
 
 
 @callback

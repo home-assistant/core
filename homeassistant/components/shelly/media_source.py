@@ -21,14 +21,11 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util import dt as dt_util
 
-from .const import DOMAIN
-from .coordinator import ShellyConfigEntry, ShellyRpcCoordinator
-from .utils import get_storage_coordinator
-from .views import async_generate_storage_proxy_url
+from .const import DOMAIN, STORAGE_ID
+from .coordinator import ShellyConfigEntry
+from .views import async_generate_storage_proxy_url, get_storage_coordinator
 
 MAX_ITEMS = 500
-STORAGE_ID = 0
-STORAGE_KEY = f"storage:{STORAGE_ID}"
 
 
 class MediaKind(NamedTuple):
@@ -48,11 +45,6 @@ MEDIA_KINDS: dict[str, MediaKind] = {
 async def async_get_media_source(hass: HomeAssistant) -> ShellyStorageMediaSource:
     """Set up Shelly storage media source."""
     return ShellyStorageMediaSource(hass)
-
-
-def _has_active_storage(coordinator: ShellyRpcCoordinator) -> bool:
-    """Return true if the device storage is mounted and ready."""
-    return bool(coordinator.device.status.get(STORAGE_KEY, {}).get("active"))
 
 
 class ShellyStorageMediaSource(MediaSource):
@@ -137,14 +129,13 @@ class ShellyStorageMediaSource(MediaSource):
             entry is None
             or entry.domain != DOMAIN
             or entry.state is not ConfigEntryState.LOADED
-            or (coordinator := get_storage_coordinator(entry)) is None
         ):
             raise error_cls(
                 translation_domain=DOMAIN,
                 translation_key="unexpected_identifier",
                 translation_placeholders={"identifier": identifier},
             )
-        if not _has_active_storage(coordinator):
+        if (coordinator := get_storage_coordinator(entry)) is None:
             raise error_cls(
                 translation_domain=DOMAIN,
                 translation_key="storage_unavailable",
@@ -180,8 +171,7 @@ class ShellyStorageMediaSource(MediaSource):
             children=[
                 self._async_storage_folder(entry)
                 for entry in self.hass.config_entries.async_loaded_entries(DOMAIN)
-                if (coordinator := get_storage_coordinator(entry)) is not None
-                and _has_active_storage(coordinator)
+                if get_storage_coordinator(entry) is not None
             ],
         )
 
