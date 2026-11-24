@@ -5,7 +5,7 @@ from collections.abc import Iterable, Mapping
 import logging
 from typing import Any, NamedTuple, cast
 
-from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON
+from homeassistant.const import STATE_OFF, STATE_ON, TargetKey
 from homeassistant.core import Context, HomeAssistant, State
 
 from . import ATTR_TRANSITION
@@ -117,7 +117,7 @@ async def _async_reproduce_state(
     ):
         return
 
-    service_data: dict[str, Any] = {ATTR_ENTITY_ID: state.entity_id}
+    service_data: dict[str, Any] = {TargetKey.ENTITY_ID: state.entity_id}
 
     if reproduce_options is not None and ATTR_TRANSITION in reproduce_options:
         service_data[LightServiceArgument.TRANSITION] = reproduce_options[

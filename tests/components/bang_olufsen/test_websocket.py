@@ -1,6 +1,5 @@
 """Test the Bang & Olufsen WebSocket listener."""
 
-import logging
 from unittest.mock import AsyncMock, Mock
 
 from mozart_api.models import (
@@ -45,8 +44,6 @@ async def test_connection(
     mock_mozart_client.websocket_connected = True
 
     connection_callback = mock_mozart_client.get_on_connection.call_args[0][0]
-
-    caplog.set_level(logging.DEBUG)
 
     mock_connection_callback = Mock()
 
@@ -386,8 +383,6 @@ async def test_on_all_notifications_raw(
         "serial_number": int(mock_config_entry.unique_id),
         **raw_notification,
     }
-
-    caplog.set_level(logging.DEBUG)
 
     mock_event_callback = Mock()
 

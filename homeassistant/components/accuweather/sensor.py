@@ -90,6 +90,7 @@ FORECAST_SENSOR_TYPES: tuple[AccuWeatherSensorDescription, ...] = (
     ),
     AccuWeatherSensorDescription(
         key="HoursOfSun",
+        device_class=SensorDeviceClass.DURATION,
         native_unit_of_measurement=UnitOfTime.HOURS,
         value_fn=lambda data: cast(float, data),
         translation_key="hours_of_sun",
@@ -297,7 +298,6 @@ SENSOR_TYPES: tuple[AccuWeatherSensorDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=PERCENTAGE,
         value_fn=lambda data: cast(int, data),
-        translation_key="humidity",
     ),
     AccuWeatherSensorDescription(
         key="Precipitation",
@@ -316,7 +316,6 @@ SENSOR_TYPES: tuple[AccuWeatherSensorDescription, ...] = (
         suggested_display_precision=0,
         native_unit_of_measurement=UnitOfPressure.HPA,
         value_fn=lambda data: cast(float, data[API_METRIC][ATTR_VALUE]),
-        translation_key="pressure",
     ),
     AccuWeatherSensorDescription(
         key="PressureTendency",
@@ -332,7 +331,6 @@ SENSOR_TYPES: tuple[AccuWeatherSensorDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         value_fn=lambda data: cast(float, data[API_METRIC][ATTR_VALUE]),
-        translation_key="temperature",
     ),
     AccuWeatherSensorDescription(
         key="UVIndex",

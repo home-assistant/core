@@ -27,7 +27,7 @@
     'verify_ssl': False,
   })
 # ---
-# name: test_user
+# name: test_user[all_provided]
   dict({
     'host': 'nas.meontheinternet.com',
     'mac': list([
@@ -41,7 +41,7 @@
     'verify_ssl': False,
   })
 # ---
-# name: test_user.1
+# name: test_user[no_port_no_ssl]
   dict({
     'host': 'nas.meontheinternet.com',
     'mac': list([

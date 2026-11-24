@@ -222,14 +222,14 @@ class SmFirmwareUpdateCoordinator(SmBaseDataUpdateCoordinator[SmFwData]):
         """Fetch data from the SMLIGHT device."""
         info = await self.client.get_info()
         # Defer cloud discovery until the platforms have loaded.
-        if not self.data:
+        if (data := self.data_or_none) is None:
             return SmFwData(info=info, esp_firmware=[], zb_firmware=[])
 
-        if self.in_progress and self.data:
+        if self.in_progress:
             return SmFwData(
                 info=info,
-                esp_firmware=self.data.esp_firmware,
-                zb_firmware=self.data.zb_firmware,
+                esp_firmware=data.esp_firmware,
+                zb_firmware=data.zb_firmware,
             )
 
         esp_firmware: FirmwareList = []

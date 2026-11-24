@@ -10,11 +10,7 @@ from pytest_homeassistant.common import MockConfigEntry
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.omie.const import DOMAIN
-from homeassistant.components.omie.services import (
-    ATTR_COUNTRIES,
-    SERVICE_GET_PRICES_FOR_DATE,
-)
-from homeassistant.const import ATTR_DATE
+from homeassistant.components.omie.services import OMIEService, OMIEServiceArgument
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 
@@ -48,8 +44,8 @@ async def test_get_prices_for_date(
 
     response = await hass.services.async_call(
         DOMAIN,
-        SERVICE_GET_PRICES_FOR_DATE,
-        {ATTR_DATE: TEST_DATE, ATTR_COUNTRIES: countries},
+        OMIEService.GET_PRICES_FOR_DATE,
+        {OMIEServiceArgument.DATE: TEST_DATE, OMIEServiceArgument.COUNTRIES: countries},
         blocking=True,
         return_response=True,
     )
@@ -71,8 +67,8 @@ async def test_get_prices_for_date_default_country(
 
     response = await hass.services.async_call(
         DOMAIN,
-        SERVICE_GET_PRICES_FOR_DATE,
-        {ATTR_DATE: TEST_DATE},
+        OMIEService.GET_PRICES_FOR_DATE,
+        {OMIEServiceArgument.DATE: TEST_DATE},
         blocking=True,
         return_response=True,
     )
@@ -94,8 +90,11 @@ async def test_get_prices_for_date_dst_fall_back(
 
     response = await hass.services.async_call(
         DOMAIN,
-        SERVICE_GET_PRICES_FOR_DATE,
-        {ATTR_DATE: TEST_DST_DATE, ATTR_COUNTRIES: ["es"]},
+        OMIEService.GET_PRICES_FOR_DATE,
+        {
+            OMIEServiceArgument.DATE: TEST_DST_DATE,
+            OMIEServiceArgument.COUNTRIES: ["es"],
+        },
         blocking=True,
         return_response=True,
     )
@@ -163,8 +162,8 @@ async def test_get_prices_for_date_errors(
     with pytest.raises(expected_exception) as err:
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_GET_PRICES_FOR_DATE,
-            {ATTR_DATE: TEST_DATE},
+            OMIEService.GET_PRICES_FOR_DATE,
+            {OMIEServiceArgument.DATE: TEST_DATE},
             blocking=True,
             return_response=True,
         )
@@ -183,8 +182,8 @@ async def test_get_prices_for_date_before_market_start(
     with pytest.raises(ServiceValidationError) as err:
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_GET_PRICES_FOR_DATE,
-            {ATTR_DATE: "2024-01-15"},
+            OMIEService.GET_PRICES_FOR_DATE,
+            {OMIEServiceArgument.DATE: "2024-01-15"},
             blocking=True,
             return_response=True,
         )
@@ -204,8 +203,8 @@ async def test_get_prices_for_date_unloaded_config_entry(
     with pytest.raises(ServiceValidationError) as err:
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_GET_PRICES_FOR_DATE,
-            {ATTR_DATE: TEST_DATE},
+            OMIEService.GET_PRICES_FOR_DATE,
+            {OMIEServiceArgument.DATE: TEST_DATE},
             blocking=True,
             return_response=True,
         )
