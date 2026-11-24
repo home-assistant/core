@@ -27,8 +27,9 @@ class SuggestionFilter:
         default=None,
         metadata={
             "description": (
-                "Only suggestions of this group - for suggestions from project data "
-                'the individual address of the device, e.g. "1.1.5".'
+                "Only suggestions of this group - for suggestions from functional "
+                'blocks the individual address of the device, e.g. "1.1.5", for '
+                "suggestions from building functions the identifier of their space."
             )
         },
     )

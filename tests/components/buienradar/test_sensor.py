@@ -14,7 +14,8 @@ from pytest_homeassistant.common import (
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.buienradar.const import DOMAIN
-from homeassistant.const import STATE_UNAVAILABLE, Platform
+from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
+from homeassistant.const import STATE_UNAVAILABLE, Platform, UnitOfLength, UnitOfSpeed
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -91,3 +92,35 @@ async def test_sensor_unavailable_and_recovery(
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
     assert hass.states.get(entity_id).state == "8.2"
+
+
+@pytest.mark.parametrize(
+    ("key", "unit", "expected"),
+    [
+        pytest.param("visibility", UnitOfLength.MILES, 14.54, id="visibility"),
+        pytest.param("windspeed", UnitOfSpeed.MILES_PER_HOUR, 9.20, id="windspeed"),
+        pytest.param(
+            "windspeed_1d", UnitOfSpeed.MILES_PER_HOUR, 8.08, id="windspeed_forecast"
+        ),
+    ],
+)
+@pytest.mark.usefixtures("entity_registry_enabled_by_default", "mock_buienradar_feeds")
+async def test_unit_override(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    key: str,
+    unit: str,
+    expected: float,
+) -> None:
+    """Test values are converted once when the unit is overridden."""
+    entity_id = entity_registry.async_get_or_create(
+        SENSOR_DOMAIN, DOMAIN, f"{TEST_LATITUDE:2.6f}{TEST_LONGITUDE:2.6f}{key}"
+    ).entity_id
+    entity_registry.async_update_entity_options(
+        entity_id, SENSOR_DOMAIN, {"unit_of_measurement": unit}
+    )
+
+    await setup_integration(hass)
+
+    state = hass.states.get(entity_id)
+    assert float(state.state) == pytest.approx(expected, abs=0.01)

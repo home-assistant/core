@@ -41,6 +41,7 @@ from .const import (
     CONF_STT_CUSTOM_PROMPT_KEYWORDS,
     CONF_STT_KEYWORDS,
     CONF_STT_PROMPT,
+    CONF_TTS_VOICE,
     DOMAIN,
     PLACEHOLDER_API_KEY,
     RECOMMENDED_CONVERSATION_OPTIONS,
@@ -48,6 +49,23 @@ from .const import (
 from .coordinator import LiteLLMConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
+
+OPENAI_VOICES = [
+    "alloy",
+    "ash",
+    "ballad",
+    "cedar",
+    "coral",
+    "echo",
+    "fable",
+    "marin",
+    "nova",
+    "onyx",
+    "sage",
+    "shimmer",
+    "verse",
+]
+DEFAULT_VOICE = "alloy"
 
 
 class CannotConnect(HomeAssistantError):
@@ -130,6 +148,7 @@ class LiteLLMConfigFlow(ConfigFlow, domain=DOMAIN):
         return {
             "conversation": ConversationFlowHandler,
             "stt": STTFlowHandler,
+            "tts": TTSFlowHandler,
         }
 
     async def _async_validate(self, url: str, api_key: str | None) -> dict[str, str]:
@@ -450,4 +469,87 @@ class STTFlowHandler(LiteLLMSubentryFlowHandler):
         return self.async_show_form(
             step_id="init",
             data_schema=probatio.Schema(schema),
+        )
+
+
+class TTSFlowHandler(LiteLLMSubentryFlowHandler):
+    """Handle TTS subentry flow."""
+
+    model_modes = frozenset({"audio_speech"})
+
+    def __init__(self) -> None:
+        """Initialize the subentry flow."""
+        super().__init__()
+        self.options: dict[str, Any] = {}
+
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> SubentryFlowResult:
+        """User flow to create a TTS entity."""
+        self.options = {CONF_TTS_VOICE: DEFAULT_VOICE}
+        return await self.async_step_init(user_input)
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> SubentryFlowResult:
+        """Handle reconfiguration of a TTS entity."""
+        self.options = self._get_reconfigure_subentry().data.copy()
+        return await self.async_step_init(user_input)
+
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> SubentryFlowResult:
+        """Manage TTS configuration."""
+        if self._get_entry().state is not ConfigEntryState.LOADED:
+            return self.async_abort(reason="entry_not_loaded")
+
+        if user_input is not None:
+            if self.source == SOURCE_USER:
+                return self.async_create_entry(
+                    title=user_input[CONF_MODEL], data=user_input
+                )
+            return self.async_update_and_abort(
+                self._get_entry(),
+                self._get_reconfigure_subentry(),
+                title=user_input[CONF_MODEL],
+                data=user_input,
+            )
+
+        try:
+            await self._fetch_models()
+        except InvalidAuth:
+            return self.async_abort(reason="invalid_auth")
+        except CannotConnect:
+            return self.async_abort(reason="cannot_connect")
+        except Exception:
+            _LOGGER.exception("Unexpected exception")
+            return self.async_abort(reason="unknown")
+
+        return self.async_show_form(
+            step_id="init",
+            data_schema=probatio.Schema(
+                {
+                    probatio.Required(
+                        CONF_MODEL, default=self.options.get(CONF_MODEL)
+                    ): SelectSelector(
+                        SelectSelectorConfig(
+                            options=[
+                                SelectOptionDict(value=model, label=model)
+                                for model in self.models
+                            ],
+                            mode=SelectSelectorMode.DROPDOWN,
+                            sort=True,
+                        )
+                    ),
+                    probatio.Required(
+                        CONF_TTS_VOICE, default=self.options[CONF_TTS_VOICE]
+                    ): SelectSelector(
+                        SelectSelectorConfig(
+                            options=OPENAI_VOICES,
+                            custom_value=True,
+                            mode=SelectSelectorMode.DROPDOWN,
+                        )
+                    ),
+                }
+            ),
         )
