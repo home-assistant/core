@@ -284,7 +284,6 @@ def build_monthly_peaks(
     *,
     peak: Peak | None = None,
     daily_peaks: tuple[Peak, ...] = (),
-    previous_peak: Peak | None = None,
 ) -> MonthlyPeaks:
     """Build a monthly peaks response for the given month."""
     return MonthlyPeaks(
@@ -292,7 +291,6 @@ def build_monthly_peaks(
         month=month,
         peak_of_the_month=peak,
         daily_peaks=daily_peaks,
-        previous_peak_of_the_month=previous_peak,
     )
 
 
