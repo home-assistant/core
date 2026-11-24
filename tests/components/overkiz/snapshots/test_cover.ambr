@@ -4188,7 +4188,7 @@
       <CoverEntityCapabilityAttribute.CLOSED_TILT_POSITIONS: 'closed_tilt_positions'>: list([
         0,
       ]),
-      <CoverEntityCapabilityAttribute.OPEN_TILT_POSITION: 'open_tilt_position'>: 100,
+      <CoverEntityCapabilityAttribute.OPEN_TILT_POSITION: 'open_tilt_position'>: 60,
       <CoverEntityCapabilityAttribute.TILT_END_ANGLE: 'tilt_end_angle'>: 60,
       <CoverEntityCapabilityAttribute.TILT_START_ANGLE: 'tilt_start_angle'>: -90,
     }),
@@ -4232,7 +4232,7 @@
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'awning',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Garden Pergola',
       <CoverEntityStateAttribute.IS_CLOSED: 'is_closed'>: True,
-      <CoverEntityCapabilityAttribute.OPEN_TILT_POSITION: 'open_tilt_position'>: 100,
+      <CoverEntityCapabilityAttribute.OPEN_TILT_POSITION: 'open_tilt_position'>: 60,
       <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CoverEntityFeature: 240>,
       <CoverEntityCapabilityAttribute.TILT_END_ANGLE: 'tilt_end_angle'>: 60,
       <CoverEntityCapabilityAttribute.TILT_START_ANGLE: 'tilt_start_angle'>: -90,
