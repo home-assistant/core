@@ -870,7 +870,13 @@ async def test_provider_stream_source(hass: HomeAssistant) -> None:
         restream = None
         assert await camera.async_create_stream() is None
         stream.stop.assert_awaited_once()
-        assert camera.stream is None
+        # Kept, as stop() leaves a preloaded worker running
+        assert camera.stream is stream
+
+        # The provider restreams the camera again, in the same stream
+        restream = "rtsp://127.0.0.1:8554/camera"
+        assert await camera.async_create_stream() is stream
+        mock_create_stream.assert_called_once()
 
     unregister()
     await hass.async_block_till_done()

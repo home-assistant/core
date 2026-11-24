@@ -1839,9 +1839,12 @@ async def test_provider_stream_source_client_error(
 
     with (
         patch.object(camera, "webrtc_source", return_value="rtsp://native"),
-        pytest.raises(HomeAssistantError, match="Unable to update the stream"),
+        pytest.raises(HomeAssistantError, match="Unable to update the stream") as exc,
     ):
         await camera.webrtc_provider.async_get_stream_source(camera)
+    # The client error can carry the source's credentials
+    assert exc.value.__cause__ is None
+    assert exc.value.__suppress_context__
 
 
 @pytest.mark.usefixtures("init_integration")
@@ -1919,12 +1922,64 @@ async def test_restreams_restored_after_server_restart(
 
 
 @pytest.mark.usefixtures("init_integration")
-async def test_restreams_restore_error(
+async def test_restreams_restore_retried(
     hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    init_test_integration: MockCamera,
+    rest_client: AsyncMock,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test a failed restore after a restart is retried until it succeeds.
+
+    The error isn't logged, as it can carry the source's credentials.
+    """
+    camera = init_test_integration
+    assert isinstance(camera.webrtc_provider, WebRTCProvider)
+    camera.set_stream_source(None)
+
+    with patch.object(
+        camera, "webrtc_source", return_value="rtsp://user:secret@native"
+    ):
+        await camera.webrtc_provider.async_get_stream_source(camera)
+        rest_client.streams.add.side_effect = Go2RtcClientError(
+            "rtsp://user:secret@native"
+        )
+        async_dispatcher_send(hass, SIGNAL_SERVER_RESTARTED)
+        await hass.async_block_till_done()
+        assert rest_client.streams.add.call_count == 2
+        assert f"Unable to restore the restreams of {camera.entity_id}" in caplog.text
+        assert "secret" not in caplog.text
+
+        # Retried after 5 s, then 15 s
+        for delay in (5, 15):
+            freezer.tick(delay)
+            async_fire_time_changed(hass)
+            await hass.async_block_till_done()
+        assert rest_client.streams.add.call_count == 4
+        assert caplog.text.count("Unable to restore") == 1
+
+        rest_client.streams.add.side_effect = None
+        freezer.tick(30)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+        assert rest_client.streams.add.call_count == 5
+        assert "Restored the restreams in go2rtc" in caplog.text
+
+        # No further retries once restored
+        freezer.tick(300)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+        assert rest_client.streams.add.call_count == 5
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_restreams_restore_retry_stopped_on_unload(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
     init_test_integration: MockCamera,
     rest_client: AsyncMock,
 ) -> None:
-    """Test a failure to restore a restream after a restart is not raised."""
+    """Test a pending retry is cancelled when go2rtc is unloaded."""
     camera = init_test_integration
     assert isinstance(camera.webrtc_provider, WebRTCProvider)
     camera.set_stream_source(None)
@@ -1933,6 +1988,13 @@ async def test_restreams_restore_error(
         await camera.webrtc_provider.async_get_stream_source(camera)
         rest_client.streams.add.side_effect = Go2RtcClientError
         async_dispatcher_send(hass, SIGNAL_SERVER_RESTARTED)
+        await hass.async_block_till_done()
+        assert rest_client.streams.add.call_count == 2
+
+        entry = hass.config_entries.async_entries(DOMAIN)[0]
+        await hass.config_entries.async_unload(entry.entry_id)
+        freezer.tick(300)
+        async_fire_time_changed(hass)
         await hass.async_block_till_done()
 
     assert rest_client.streams.add.call_count == 2

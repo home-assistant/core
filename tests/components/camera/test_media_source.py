@@ -184,3 +184,41 @@ async def test_get_media_image_camera_off(hass: HomeAssistant) -> None:
         await media_source.async_get_media_image(
             hass, "media-source://camera/camera.demo_camera"
         )
+
+
+@pytest.mark.usefixtures("mock_camera")
+async def test_webrtc_source_without_hls_uses_mjpeg(hass: HomeAssistant) -> None:
+    """Test a camera with its own WebRTC source and no HLS falls back to MJPEG.
+
+    E.g. its WebRTC provider is an external go2rtc server, which can't restream it.
+    """
+    hass.config.components.add("stream")
+
+    with (
+        patch(
+            "homeassistant.components.camera.Camera.webrtc_source",
+            return_value="native://camera",
+        ),
+        patch(
+            "homeassistant.components.camera.Camera.camera_capabilities",
+            new_callable=PropertyMock(
+                return_value=CameraCapabilities({StreamType.WEB_RTC})
+            ),
+        ),
+        patch(
+            "homeassistant.components.camera.Camera.stream_source", return_value=None
+        ),
+    ):
+        item = await media_source.async_browse_media(hass, "media-source://camera")
+        assert len(item.children) == 3
+        # Each through its MJPEG proxy, not HLS
+        assert FORMAT_CONTENT_TYPE["hls"] not in {
+            child.media_content_type for child in item.children
+        }
+
+        resolved = await media_source.async_resolve_media(
+            hass, "media-source://camera/camera.demo_camera", None
+        )
+
+    assert resolved.url == "/api/camera_proxy_stream/camera.demo_camera"
+    assert resolved.mime_type == "image/jpg"
