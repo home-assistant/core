@@ -14,6 +14,7 @@ from irm_kmi_api import (
 
 WEATHER_ENTITY_ID = "weather.brussels"
 RADAR_ENTITY_ID = "image.brussels_radar"
+RADAR_FRAME = b"\x89PNG\r\n\x1a\n" + bytes(1024)
 
 WARNING_ENTITY_ID = "binary_sensor.brussels_warning"
 

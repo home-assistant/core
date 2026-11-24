@@ -1,6 +1,7 @@
 """Fixtures for the IRM KMI integration tests."""
 
 from collections.abc import Generator
+import copy
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from irm_kmi_api import PollenParser
@@ -14,9 +15,15 @@ from homeassistant.const import (
     CONF_LONGITUDE,
     CONF_UNIQUE_ID,
 )
-from .const import ANIMATION, CURRENT_WEATHER, POLLEN, RADAR_FORECAST, WARNINGS
 
-RADAR_FRAME = b"\x89PNG\r\n\x1a\n" + bytes(1024)
+from .const import (
+    ANIMATION,
+    CURRENT_WEATHER,
+    POLLEN,
+    RADAR_FORECAST,
+    RADAR_FRAME,
+    WARNINGS,
+)
 
 
 @pytest.fixture
@@ -66,6 +73,7 @@ def mock_irm_kmi_api() -> Generator[MagicMock]:
         irm_kmi.get_warnings.return_value = WARNINGS
         irm_kmi.get_radar_forecast.return_value = RADAR_FORECAST
         irm_kmi.get_pollen.return_value = POLLEN
+        irm_kmi.get_animation_data.side_effect = lambda *args: copy.deepcopy(ANIMATION)
         yield irm_kmi
 
 

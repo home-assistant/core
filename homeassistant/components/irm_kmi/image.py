@@ -43,6 +43,7 @@ class IrmKmiRadarImage(IrmKmiBaseEntity, ImageEntity):
         ImageEntity.__init__(self, self.coordinator.hass)
         self._attr_unique_id = f"{entry.data[CONF_UNIQUE_ID]}-radar"
         self._style, self._dark_mode = radar_options(entry)
+        # Serialize cache misses so concurrent views share one render.
         self._lock = asyncio.Lock()
         self._animation = self.coordinator.data.animation
         self._attr_image_last_updated = self.coordinator.last_update_success_time

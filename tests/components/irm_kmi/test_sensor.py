@@ -110,7 +110,9 @@ async def test_current_condition_sensor_without_its_key(
     state = hass.states.get(entity_id)
     assert state
     assert state.state == STATE_UNKNOWN
-    assert hass.states.get(TEMPERATURE_ENTITY_ID).state == "7.2"
+    temperature_state = hass.states.get(TEMPERATURE_ENTITY_ID)
+    assert temperature_state is not None
+    assert temperature_state.state == "7.2"
 
 
 @pytest.mark.parametrize(

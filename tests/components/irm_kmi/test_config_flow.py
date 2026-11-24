@@ -119,6 +119,7 @@ async def test_flow_already_configured(
     assert result["reason"] == "already_configured"
 
 
+@pytest.mark.usefixtures("mock_irm_kmi_api")
 async def test_option_flow(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry
 ) -> None:
@@ -163,6 +164,7 @@ async def test_option_flow(
 
     result = await hass.config_entries.options.async_init(mock_config_entry.entry_id)
 
+    assert result["data_schema"] is not None
     assert {
         key.schema: key.description["suggested_value"]
         for key in result["data_schema"].schema

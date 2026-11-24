@@ -1,7 +1,7 @@
 """Tests for the IRM KMI weather platform."""
 
 from collections.abc import Generator
-from typing import Any
+from typing import Any, cast
 from unittest.mock import MagicMock, patch
 
 from irm_kmi_api import ExtendedForecast
@@ -46,7 +46,9 @@ async def _get_forecast(
         blocking=True,
         return_response=True,
     )
-    return response[WEATHER_ENTITY_ID]["forecast"]
+    assert response is not None
+    response_data = cast(dict[str, dict[str, list[dict[str, Any]]]], response)
+    return response_data[WEATHER_ENTITY_ID]["forecast"]
 
 
 @pytest.mark.usefixtures("mock_get_forecasts_coord")
@@ -172,6 +174,7 @@ async def test_forecast_language(
     device = device_registry.async_get_device_by_identifier(
         (DOMAIN, mock_config_entry.entry_id), mock_config_entry.entry_id
     )
+    assert device is not None
     assert device.manufacturer == expected_manufacturer
 
 
