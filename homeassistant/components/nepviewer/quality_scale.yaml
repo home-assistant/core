@@ -6,15 +6,11 @@ rules:
   appropriate-polling: done
   brands:
     status: exempt
-    comment: TODO
-  common-modules:
-    status: exempt
-    comment: Single platform integration, no shared modules needed.
+    comment: Not met yet, the brand images are missing.
+  common-modules: done
   config-flow-test-coverage: done
   config-flow: done
-  dependency-transparency:
-    status: exempt
-    comment: TODO
+  dependency-transparency: done
   docs-actions:
     status: exempt
     comment: This integration does not provide any actions.
@@ -23,13 +19,13 @@ rules:
     comment: This integration does not provide any conditions.
   docs-high-level-description:
     status: exempt
-    comment: TODO
+    comment: Not met yet, the documentation page is not published.
   docs-installation-instructions:
     status: exempt
-    comment: TODO
+    comment: Not met yet, the documentation page is not published.
   docs-removal-instructions:
     status: exempt
-    comment: TODO
+    comment: Not met yet, the documentation page is not published.
   docs-triggers:
     status: exempt
     comment: This integration does not provide any triggers.
@@ -48,14 +44,16 @@ rules:
     status: exempt
     comment: This integration does not provide any actions.
   config-entry-unloading: done
-  docs-configuration-parameters: todo
+  docs-configuration-parameters:
+    status: exempt
+    comment: This integration does not have an options flow.
   docs-installation-parameters: todo
-  entity-unavailable: todo
+  entity-unavailable: done
   integration-owner: done
-  log-when-unavailable: todo
+  log-when-unavailable: done
   parallel-updates: done
   reauthentication-flow: done
-  test-coverage: todo
+  test-coverage: done
 
   # Gold
   devices: todo
@@ -69,18 +67,26 @@ rules:
   docs-supported-functions: todo
   docs-troubleshooting: todo
   docs-use-cases: todo
-  dynamic-devices: todo
-  entity-category: todo
-  entity-device-class: todo
+  dynamic-devices:
+    status: todo
+    comment: New hardware is only added when the integration is set up.
+  entity-category:
+    status: exempt
+    comment: All entities are primary entities.
+  entity-device-class: done
   entity-disabled-by-default: todo
-  entity-translations: todo
-  exception-translations: todo
-  icon-translations: todo
+  entity-translations: done
+  exception-translations: done
+  icon-translations:
+    status: exempt
+    comment: All entities use the icon of their device class.
   reconfiguration-flow: todo
   repair-issues: todo
-  stale-devices: todo
+  stale-devices:
+    status: todo
+    comment: Hardware removed from the account is not removed.
 
   # Platinum
-  async-dependency: todo
-  inject-websession: todo
+  async-dependency: done
+  inject-websession: done
   strict-typing: todo
