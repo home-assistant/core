@@ -343,14 +343,18 @@ async def test_air_purifier_uses_discrete_speed_percentages(
     )
 
 
+@pytest.mark.parametrize(
+    "power_value",
+    [pytest.param(None, id="missing"), pytest.param("unexpected", id="unexpected")],
+)
 async def test_air_purifier_preserves_unknown_power_state(
-    hass: HomeAssistant, config_entry: MockConfigEntry
+    hass: HomeAssistant, config_entry: MockConfigEntry, power_value: str | None
 ) -> None:
-    """Do not interpret an omitted cloud power value as off in HA state."""
+    """Do not interpret missing or unexpected cloud power values as off."""
     await _async_setup_fixture(hass, config_entry, "mc80z")
     purification = _air_purification(config_entry)
     assert purification.power is not None
-    purification.power.value = None
+    purification.power.value = power_value
     config_entry.runtime_data.async_update_listeners()
     await hass.async_block_till_done()
 
@@ -381,20 +385,25 @@ async def test_air_purifier_preserves_unknown_fixed_speed(
 
 
 @pytest.mark.parametrize("service", [FAN_SERVICE_TURN_ON, FAN_SERVICE_TURN_OFF])
+@pytest.mark.parametrize(
+    "power_value",
+    [pytest.param(None, id="missing"), pytest.param("unexpected", id="unexpected")],
+)
 async def test_air_purifier_rejects_unknown_power_state(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     service: str,
+    power_value: str | None,
     mock_onecta_client: MockOnectaClient,
 ) -> None:
-    """Reject HA power services when Daikin omits its current value."""
+    """Reject HA power services when Daikin reports an unknown power value."""
     await _async_setup_fixture(hass, config_entry, "mc80z")
     coordinator = config_entry.runtime_data
     execute = _execute_typed_command(config_entry, mock_onecta_client)
     coordinator.async_execute_command = execute
     purification = _air_purification(config_entry)
     assert purification.power is not None
-    purification.power.value = None
+    purification.power.value = power_value
     coordinator.async_update_listeners()
     await hass.async_block_till_done()
 

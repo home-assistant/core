@@ -156,9 +156,7 @@ class DaikinAirPurifier(DaikinManagementPointEntity, FanEntity):
             return
         power = purification.power
         is_on = (
-            power.value == "on"
-            if power is not None and power.value is not None
-            else None
+            {"on": True, "off": False}.get(power.value) if power is not None else None
         )
         self._attr_is_on = is_on
         mode = purification.mode

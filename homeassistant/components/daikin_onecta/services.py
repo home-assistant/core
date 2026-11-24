@@ -1,6 +1,7 @@
 """Services for Daikin Onecta."""
 
 from datetime import date
+from enum import StrEnum
 from typing import Any, cast
 
 import probatio
@@ -19,9 +20,21 @@ from homeassistant.util.json import JsonObjectType
 from .climate import DaikinClimate
 from .const import DOMAIN
 
-SERVICE_SET_HOLIDAY_PERIOD = "set_holiday_period"
-SERVICE_GET_SCHEDULE_DATA = "get_schedule_data"
-SERVICE_SET_SCHEDULE_DATA = "set_schedule_data"
+
+class OnectaService(StrEnum):
+    """Store keys for Daikin Onecta services."""
+
+    GET_SCHEDULE_DATA = "get_schedule_data"
+    SET_HOLIDAY_PERIOD = "set_holiday_period"
+    SET_SCHEDULE_DATA = "set_schedule_data"
+
+
+class OnectaServiceArgument(StrEnum):
+    """Store keys for Daikin Onecta service arguments."""
+
+    END_DATE = "end_date"
+    SCHEDULES = "schedules"
+    START_DATE = "start_date"
 
 
 @callback
@@ -32,8 +45,8 @@ def async_setup_services(hass: HomeAssistant) -> None:
         entities: list[DaikinClimate], service_call: ServiceCall
     ) -> None:
         """Set a custom holiday period for each targeted climate zone."""
-        start_date: date = service_call.data["start_date"]
-        end_date: date = service_call.data["end_date"]
+        start_date: date = service_call.data[OnectaServiceArgument.START_DATE]
+        end_date: date = service_call.data[OnectaServiceArgument.END_DATE]
         climate_entities = _climate_entities_by_management_point(entities)
 
         # Validate every zone before issuing any cloud writes.
@@ -45,12 +58,12 @@ def async_setup_services(hass: HomeAssistant) -> None:
     service.async_register_batched_platform_entity_service(
         hass,
         DOMAIN,
-        SERVICE_SET_HOLIDAY_PERIOD,
+        OnectaService.SET_HOLIDAY_PERIOD,
         entity_domain=CLIMATE_DOMAIN,
         func=async_set_holiday_period,
         schema={
-            probatio.Required("start_date"): cv.date,
-            probatio.Required("end_date"): cv.date,
+            probatio.Required(OnectaServiceArgument.START_DATE): cv.date,
+            probatio.Required(OnectaServiceArgument.END_DATE): cv.date,
         },
     )
 
@@ -61,7 +74,8 @@ def async_setup_services(hass: HomeAssistant) -> None:
         climate_entities = _climate_entities_by_management_point(entities)
         return {
             entity.entity_id: cast(
-                JsonObjectType, {"schedules": entity.get_schedule_data()}
+                JsonObjectType,
+                {OnectaServiceArgument.SCHEDULES: entity.get_schedule_data()},
             )
             for entity in climate_entities.values()
             if entity.entity_id is not None
@@ -70,7 +84,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
     service.async_register_batched_platform_entity_service(
         hass,
         DOMAIN,
-        SERVICE_GET_SCHEDULE_DATA,
+        OnectaService.GET_SCHEDULE_DATA,
         entity_domain=CLIMATE_DOMAIN,
         func=async_get_schedule_data,
         schema={},
@@ -81,7 +95,9 @@ def async_setup_services(hass: HomeAssistant) -> None:
         entities: list[DaikinClimate], service_call: ServiceCall
     ) -> None:
         """Replace the schedules on each selected zone with supplied raw data."""
-        schedule_data: dict[str, Any] = service_call.data["schedules"]
+        schedule_data: dict[str, Any] = service_call.data[
+            OnectaServiceArgument.SCHEDULES
+        ]
         climate_entities = _climate_entities_by_management_point(entities)
         for entity in climate_entities.values():
             entity.validate_schedule_data(schedule_data)
@@ -91,10 +107,10 @@ def async_setup_services(hass: HomeAssistant) -> None:
     service.async_register_batched_platform_entity_service(
         hass,
         DOMAIN,
-        SERVICE_SET_SCHEDULE_DATA,
+        OnectaService.SET_SCHEDULE_DATA,
         entity_domain=CLIMATE_DOMAIN,
         func=async_set_schedule_data,
-        schema={probatio.Required("schedules"): dict},
+        schema={probatio.Required(OnectaServiceArgument.SCHEDULES): dict},
     )
 
 

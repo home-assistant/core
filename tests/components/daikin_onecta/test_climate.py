@@ -52,9 +52,8 @@ from homeassistant.components.daikin_onecta.coordinator import (
 )
 from homeassistant.components.daikin_onecta.device import DaikinOnectaDevice
 from homeassistant.components.daikin_onecta.services import (
-    SERVICE_GET_SCHEDULE_DATA,
-    SERVICE_SET_HOLIDAY_PERIOD,
-    SERVICE_SET_SCHEDULE_DATA,
+    OnectaService,
+    OnectaServiceArgument,
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -921,11 +920,11 @@ async def test_set_holiday_period_action(
 
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_SET_HOLIDAY_PERIOD,
+        OnectaService.SET_HOLIDAY_PERIOD,
         {
             ATTR_ENTITY_ID: climate_entity_ids,
-            "start_date": "2026-12-20",
-            "end_date": "2027-01-15",
+            OnectaServiceArgument.START_DATE: "2026-12-20",
+            OnectaServiceArgument.END_DATE: "2027-01-15",
         },
         blocking=True,
     )
@@ -964,11 +963,11 @@ async def test_set_holiday_period_action_rejects_invalid_dates(
     with pytest.raises(ServiceValidationError) as err:
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_SET_HOLIDAY_PERIOD,
+            OnectaService.SET_HOLIDAY_PERIOD,
             {
                 ATTR_ENTITY_ID: entity_id,
-                "start_date": "2027-01-15",
-                "end_date": "2026-12-20",
+                OnectaServiceArgument.START_DATE: "2027-01-15",
+                OnectaServiceArgument.END_DATE: "2026-12-20",
             },
             blocking=True,
         )
@@ -995,14 +994,14 @@ async def test_get_schedule_data_action_returns_daikin_schedule_definitions(
 
     response = await hass.services.async_call(
         DOMAIN,
-        SERVICE_GET_SCHEDULE_DATA,
+        OnectaService.GET_SCHEDULE_DATA,
         {ATTR_ENTITY_ID: entity_ids},
         blocking=True,
         return_response=True,
     )
 
     assert response == {
-        entity_ids[0]: {"schedules": expected_schedules},
+        entity_ids[0]: {OnectaServiceArgument.SCHEDULES: expected_schedules},
     }
 
 
@@ -1030,8 +1029,8 @@ async def test_set_schedule_data_action_replaces_schedules_once_per_zone(
 
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_SET_SCHEDULE_DATA,
-        {ATTR_ENTITY_ID: entity_ids, "schedules": schedules},
+        OnectaService.SET_SCHEDULE_DATA,
+        {ATTR_ENTITY_ID: entity_ids, OnectaServiceArgument.SCHEDULES: schedules},
         blocking=True,
     )
 
@@ -1057,10 +1056,12 @@ async def test_set_schedule_data_action_rejects_unknown_schedule_ids(
     with pytest.raises(ServiceValidationError) as err:
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_SET_SCHEDULE_DATA,
+            OnectaService.SET_SCHEDULE_DATA,
             {
                 ATTR_ENTITY_ID: entity_ids,
-                "schedules": {"heating": {"unknown": {"actions": {}}}},
+                OnectaServiceArgument.SCHEDULES: {
+                    "heating": {"unknown": {"actions": {}}}
+                },
             },
             blocking=True,
         )
@@ -1087,10 +1088,12 @@ async def test_set_schedule_data_action_keeps_read_only_schedules(
     with pytest.raises(ServiceValidationError) as err:
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_SET_SCHEDULE_DATA,
+            OnectaService.SET_SCHEDULE_DATA,
             {
                 ATTR_ENTITY_ID: entity_ids,
-                "schedules": {"heating": {"scheduleHeatingRT1": read_only_definition}},
+                OnectaServiceArgument.SCHEDULES: {
+                    "heating": {"scheduleHeatingRT1": read_only_definition}
+                },
             },
             blocking=True,
         )
