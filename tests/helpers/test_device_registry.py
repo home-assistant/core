@@ -37,6 +37,7 @@ from homeassistant.helpers import (
     device_registry as dr,
     entity_registry as er,
     frame,
+    label_registry as lr,
 )
 from homeassistant.helpers.typing import Undefined
 from homeassistant.util.dt import utcnow
@@ -45,6 +46,34 @@ VIA_DEVICE_DEPRECATION = (
     "calls `device_registry.async_get_or_create` with a deprecated `via_device` "
     "parameter"
 )
+
+
+@pytest.fixture
+def areas_and_labels(
+    area_registry: ar.AreaRegistry, label_registry: lr.LabelRegistry
+) -> None:
+    """Create the areas and labels that the tests assign to entries."""
+    for name in (
+        "12345a",
+        "12345b",
+        "attic",
+        "bedroom",
+        "garage",
+        "garden",
+        "kitchen",
+        "mock_area_id",
+    ):
+        area_registry.async_create(name)
+    for name in (
+        "label1",
+        "label2",
+        "label3",
+        "mock_label1",
+        "mock_label2",
+        "outdoor",
+        "xmas",
+    ):
+        label_registry.async_create(name)
 
 
 @pytest.fixture(autouse=True)
@@ -402,7 +431,7 @@ async def test_loading_from_storage(
             ],
             "devices": [
                 {
-                    "area_id": "12345A",
+                    "area_id": "12345a",
                     "config_entry_id": mock_config_entry.entry_id,
                     "config_subentry_id": None,
                     "composite_device_id": None,
@@ -432,7 +461,7 @@ async def test_loading_from_storage(
             ],
             "deleted_devices": [
                 {
-                    "area_id": "12345A",
+                    "area_id": "12345a",
                     "config_entry_id": mock_config_entry.entry_id,
                     "config_subentry_id": None,
                     "has_composite_identifiers": False,
@@ -466,7 +495,7 @@ async def test_loading_from_storage(
     assert loaded_child.identifiers == {("test", "strip_outlet_1")}
 
     assert registry._deleted_devices["bcdefghijklmn"] == dr.DeletedDeviceEntry(
-        area_id="12345A",
+        area_id="12345a",
         config_entry_id=mock_config_entry.entry_id,
         config_subentry_id=None,
         connections={("Zigbee", "23.45.67.89.01")},
@@ -488,7 +517,7 @@ async def test_loading_from_storage(
         model="model",
     )
     assert entry == dr.DeviceEntry(
-        area_id="12345A",
+        area_id="12345a",
         config_entry_id=mock_config_entry.entry_id,
         config_subentry_id=None,
         configuration_url="https://example.com/config",
@@ -522,7 +551,7 @@ async def test_loading_from_storage(
         model="model",
     )
     assert entry == dr.DeviceEntry(
-        area_id="12345A",
+        area_id="12345a",
         config_entry_id=mock_config_entry.entry_id,
         config_subentry_id=None,
         connections={("Zigbee", "23.45.67.89.01")},
@@ -2981,6 +3010,7 @@ async def test_add_current_config_entry_is_noop(
     ["light", None],
     ids=["explicit-domain", "auto-resolved-domain"],
 )
+@pytest.mark.usefixtures("areas_and_labels")
 async def test_reregister_restores_orphan(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
@@ -4033,6 +4063,7 @@ async def test_deleted_device_removing_config_subentries(
     )
 
 
+@pytest.mark.usefixtures("areas_and_labels")
 async def test_removing_area_id(
     device_registry: dr.DeviceRegistry, mock_config_entry: MockConfigEntry
 ) -> None:
@@ -4045,15 +4076,16 @@ async def test_removing_area_id(
         model="model",
     )
 
-    entry_w_area = device_registry.async_update_device(entry.id, area_id="12345A")
+    entry_w_area = device_registry.async_update_device(entry.id, area_id="12345a")
 
-    device_registry.async_clear_area_id("12345A")
+    device_registry.async_clear_area_id("12345a")
     entry_wo_area = device_registry.async_get_device(identifiers={("bridgeid", "0123")})
 
     assert not entry_wo_area.area_id
     assert entry_w_area != entry_wo_area
 
 
+@pytest.mark.usefixtures("areas_and_labels")
 async def test_removing_area_id_deleted_device(
     device_registry: dr.DeviceRegistry, mock_config_entry: MockConfigEntry
 ) -> None:
@@ -4073,13 +4105,13 @@ async def test_removing_area_id_deleted_device(
         model="model",
     )
 
-    entry1_w_area = device_registry.async_update_device(entry1.id, area_id="12345A")
-    entry2_w_area = device_registry.async_update_device(entry2.id, area_id="12345B")
+    entry1_w_area = device_registry.async_update_device(entry1.id, area_id="12345a")
+    entry2_w_area = device_registry.async_update_device(entry2.id, area_id="12345b")
 
     device_registry.async_remove_device(entry1.id)
     device_registry.async_remove_device(entry2.id)
 
-    device_registry.async_clear_area_id("12345A")
+    device_registry.async_clear_area_id("12345a")
     entry1_restored = device_registry.async_get_or_create(
         config_entry_id=mock_config_entry.entry_id,
         connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
@@ -4092,7 +4124,7 @@ async def test_removing_area_id_deleted_device(
     )
 
     assert not entry1_restored.area_id
-    assert entry2_restored.area_id == "12345B"
+    assert entry2_restored.area_id == "12345b"
     assert entry1_w_area != entry1_restored
     assert entry2_w_area != entry2_restored
 
@@ -5365,6 +5397,7 @@ async def test_via_device_prefers_same_domain(
     assert device.via_device_id == via_same_domain.id
 
 
+@pytest.mark.usefixtures("areas_and_labels")
 async def test_loading_saving_data(
     hass: HomeAssistant, device_registry: dr.DeviceRegistry
 ) -> None:
@@ -5460,9 +5493,9 @@ async def test_loading_saving_data(
 
     orig_via = device_registry.async_update_device(
         orig_via.id,
-        area_id="mock-area-id",
+        area_id="mock_area_id",
         name_by_user="mock-name-by-user",
-        labels={"mock-label1", "mock-label2"},
+        labels={"mock_label1", "mock_label2"},
     )
 
     # Now load written data in new registry
@@ -5550,6 +5583,7 @@ async def test_format_mac(
         assert list(invalid_mac_entry.connections)[0][1] == invalid
 
 
+@pytest.mark.usefixtures("areas_and_labels")
 async def test_update(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
@@ -5582,7 +5616,7 @@ async def test_update(
     with patch.object(device_registry, "async_schedule_save") as mock_save:
         updated_entry = device_registry.async_update_device(
             entry.id,
-            area_id="12345A",
+            area_id="12345a",
             configuration_url="https://example.com/config",
             disabled_by=dr.DeviceEntryDisabler.USER,
             entry_type=dr.DeviceEntryType.SERVICE,
@@ -5603,7 +5637,7 @@ async def test_update(
     assert mock_save.call_count == 1
     assert updated_entry != entry
     assert updated_entry == dr.DeviceEntry(
-        area_id="12345A",
+        area_id="12345a",
         config_entry_id=mock_config_entry.entry_id,
         config_subentry_id=None,
         configuration_url="https://example.com/config",
@@ -7094,8 +7128,9 @@ async def test_cleanup_entity_registry_change(
         assert len(mock_call.mock_calls) == 2
 
 
-@pytest.mark.parametrize("initial_area", [None, "12345A"])
+@pytest.mark.parametrize("initial_area", [None, "12345a"])
 @pytest.mark.usefixtures("freezer")
+@pytest.mark.usefixtures("areas_and_labels")
 async def test_restore_device(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
@@ -8051,6 +8086,7 @@ async def test_loading_invalid_configuration_url_from_storage(
     assert entry.configuration_url == "invalid"
 
 
+@pytest.mark.usefixtures("areas_and_labels")
 async def test_removing_labels(
     hass: HomeAssistant, device_registry: dr.DeviceRegistry
 ) -> None:
@@ -8082,6 +8118,7 @@ async def test_removing_labels(
     assert not entry_cleared_label2.labels
 
 
+@pytest.mark.usefixtures("areas_and_labels")
 async def test_removing_labels_deleted_device(
     hass: HomeAssistant, device_registry: dr.DeviceRegistry
 ) -> None:
@@ -8141,6 +8178,7 @@ async def test_removing_labels_deleted_device(
     assert entry2_restored.labels == {"label3"}
 
 
+@pytest.mark.usefixtures("areas_and_labels")
 async def test_entries_for_label(
     hass: HomeAssistant, device_registry: dr.DeviceRegistry
 ) -> None:
@@ -11208,6 +11246,7 @@ async def test_child_device_subentry(
     )
 
 
+@pytest.mark.usefixtures("areas_and_labels")
 async def test_child_device_update(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
@@ -11473,6 +11512,7 @@ async def test_remove_parent_cascades_to_children(
 
 
 @pytest.mark.usefixtures("hass")
+@pytest.mark.usefixtures("areas_and_labels")
 async def test_remove_child_device_and_restore(
     device_registry: dr.DeviceRegistry,
     mock_config_entry: MockConfigEntry,
@@ -11503,6 +11543,7 @@ async def test_remove_child_device_and_restore(
 
 
 @pytest.mark.usefixtures("hass")
+@pytest.mark.usefixtures("areas_and_labels")
 async def test_restore_child_deleted_via_parent_cascade(
     device_registry: dr.DeviceRegistry,
     mock_config_entry: MockConfigEntry,
@@ -11822,6 +11863,7 @@ async def test_move_parent_with_children_rejected(
     assert len(device_registry.child_devices) == 1
 
 
+@pytest.mark.usefixtures("areas_and_labels")
 async def test_convert_device_to_child_device(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
@@ -12136,6 +12178,7 @@ async def test_update_device_via_device_id_naming_child_raises(
 
 
 @pytest.mark.usefixtures("hass")
+@pytest.mark.usefixtures("areas_and_labels")
 async def test_deleted_device_restored_as_child_device(
     device_registry: dr.DeviceRegistry,
     mock_config_entry: MockConfigEntry,
@@ -12178,6 +12221,7 @@ async def test_deleted_device_restored_as_child_device(
     assert restored_device.area_id == "garden"
 
 
+@pytest.mark.usefixtures("areas_and_labels")
 async def test_child_device_orphan_restore(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
@@ -12211,6 +12255,7 @@ async def test_child_device_orphan_restore(
     assert restored.config_entry_id == new_entry.entry_id
 
 
+@pytest.mark.usefixtures("areas_and_labels")
 async def test_child_device_load_and_save(
     hass: HomeAssistant,
     hass_storage: dict[str, Any],
@@ -12247,6 +12292,7 @@ async def test_child_device_load_and_save(
     assert hass_storage[dr.STORAGE_KEY]["data"] == first_save
 
 
+@pytest.mark.usefixtures("areas_and_labels")
 async def test_child_device_stored_fragment(
     hass_storage: dict[str, Any],
     device_registry: dr.DeviceRegistry,
@@ -12459,6 +12505,7 @@ async def test_loading_drops_empty_deleted_devices(
     assert stored_ids == {"with_identifiers", "with_connections"}
 
 
+@pytest.mark.usefixtures("areas_and_labels")
 async def test_effective_area_id(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
@@ -12494,6 +12541,7 @@ async def test_effective_area_id(
 
 
 @pytest.mark.usefixtures("hass")
+@pytest.mark.usefixtures("areas_and_labels")
 async def test_next_name_part(
     device_registry: dr.DeviceRegistry,
     mock_config_entry: MockConfigEntry,
@@ -12518,6 +12566,7 @@ async def test_next_name_part(
 
 
 @pytest.mark.usefixtures("hass")
+@pytest.mark.usefixtures("areas_and_labels")
 async def test_entries_for_area_with_child_devices(
     device_registry: dr.DeviceRegistry,
     mock_config_entry: MockConfigEntry,
@@ -12551,6 +12600,7 @@ async def test_entries_for_area_with_child_devices(
 
 
 @pytest.mark.usefixtures("hass")
+@pytest.mark.usefixtures("areas_and_labels")
 async def test_clear_area_id_with_child_devices(
     device_registry: dr.DeviceRegistry,
     mock_config_entry: MockConfigEntry,
@@ -12575,6 +12625,7 @@ async def test_clear_area_id_with_child_devices(
 
 
 @pytest.mark.usefixtures("hass")
+@pytest.mark.usefixtures("areas_and_labels")
 async def test_clear_label_id_with_child_devices(
     device_registry: dr.DeviceRegistry,
     mock_config_entry: MockConfigEntry,
@@ -12597,6 +12648,7 @@ async def test_clear_label_id_with_child_devices(
 
 
 @pytest.mark.usefixtures("hass")
+@pytest.mark.usefixtures("areas_and_labels")
 async def test_entries_for_label_includes_child_devices(
     device_registry: dr.DeviceRegistry,
     mock_config_entry: MockConfigEntry,
@@ -13714,3 +13766,42 @@ async def test_get_or_create_from_info(
     assert same_device.id == device.id
     assert same_device.manufacturer == "Acme"
     assert same_device.name == "Power strip"
+
+
+async def test_update_device_unknown_area_or_label(
+    device_registry: dr.DeviceRegistry,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test an update with an unknown area or label raises and changes nothing."""
+    device = device_registry.async_get_or_create(
+        config_entry_id=mock_config_entry.entry_id,
+        identifiers={("bridgeid", "0123")},
+    )
+
+    with pytest.raises(ValueError, match="Area 'unknown' not found."):
+        device_registry.async_update_device(device.id, area_id="unknown")
+    with pytest.raises(ValueError, match="Labels not found: missing, unknown"):
+        device_registry.async_update_device(device.id, labels={"unknown", "missing"})
+    assert device_registry.async_get(device.id) == device
+
+
+async def test_update_child_device_unknown_area_or_label(
+    device_registry: dr.DeviceRegistry,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test a child device update with an unknown area or label raises."""
+    parent = device_registry.async_get_or_create(
+        config_entry_id=mock_config_entry.entry_id,
+        identifiers={("bridgeid", "0123")},
+    )
+    child = device_registry.async_get_or_create_child(
+        config_entry_id=mock_config_entry.entry_id,
+        identifiers={("bridgeid", "0123-1")},
+        parent_device_id=parent.id,
+    )
+
+    with pytest.raises(ValueError, match="Area 'unknown' not found."):
+        device_registry.async_update_child_device(child.id, area_id="unknown")
+    with pytest.raises(ValueError, match="Labels not found: unknown"):
+        device_registry.async_update_child_device(child.id, labels={"unknown"})
+    assert device_registry.async_get(child.id) == child

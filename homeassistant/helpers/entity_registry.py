@@ -2129,6 +2129,8 @@ class EntityRegistry(BaseRegistry):
                 new_values[attr_name] = value
                 old_values[attr_name] = getattr(old, attr_name)
 
+        _validate_area_and_labels(self.hass, new_values, old.labels)
+
         # Only validate if data has changed
         if new_values or new_unique_id is not Undefined:
             _validate_item(
@@ -2878,6 +2880,28 @@ def async_config_entry_disabled_by_changed(
         if disabled_by is entity.disabled_by:
             continue
         registry._async_update_entity(entity.entity_id, disabled_by=disabled_by)  # noqa: SLF001
+
+
+def _validate_area_and_labels(
+    hass: HomeAssistant, new_values: dict[str, Any], old_labels: set[str]
+) -> None:
+    """Raise ValueError if a new area or a newly added label does not exist.
+
+    Only new values are checked, so removing a label or an area still works
+    when the entry refers to one that no longer exists.
+    """
+    from . import label_registry as lr  # noqa: PLC0415
+
+    if (area_id := new_values.get("area_id")) is not None and ar.async_get(
+        hass
+    ).async_get_area(area_id) is None:
+        raise ValueError(f"Area '{area_id}' not found.")
+    if "labels" in new_values and (
+        missing := lr.async_get_missing_label_ids(
+            hass, new_values["labels"] - old_labels
+        )
+    ):
+        raise ValueError(f"Labels not found: {', '.join(sorted(missing))}")
 
 
 @callback

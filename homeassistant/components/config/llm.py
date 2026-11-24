@@ -22,10 +22,8 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import DependencyError, HomeAssistantError
 from homeassistant.generated.integration_categories import INTEGRATION_CATEGORIES
 from homeassistant.helpers import (
-    area_registry as ar,
     config_validation as cv,
     entity_registry as er,
-    label_registry as lr,
     translation,
 )
 from homeassistant.helpers.llm import (
@@ -1187,16 +1185,8 @@ class UpdateEntitySettingsTool(Tool):
         settings = self.parameters(tool_input.tool_args)
         entity_id = settings.pop("entity_id")
         entry = _get_entity_entry(hass, entity_id)
-        if (area_id := settings.get("area_id")) and ar.async_get(hass).async_get_area(
-            area_id
-        ) is None:
-            raise HomeAssistantError(f"Area '{area_id}' not found.")
         if "labels" in settings:
             settings["labels"] = set(settings["labels"])
-            if missing := lr.async_get_missing_label_ids(hass, settings["labels"]):
-                raise HomeAssistantError(
-                    f"Labels not found: {', '.join(sorted(missing))}"
-                )
         if settings.get("disabled_by"):
             settings["disabled_by"] = er.RegistryEntryDisabler.USER
         if settings.get("hidden_by"):
