@@ -576,9 +576,14 @@ class DaikinClimate(DaikinManagementPointEntity, ClimateEntity):
         ):
             self._raise_service_validation_error("climate_power_unavailable")
 
-        has_power_control = cc is not None and cc.on_off_mode is not None
+        has_power_control = (
+            cc is not None and cc.on_off_mode is not None and cc.on_off_mode.settable
+        )
+        current_hvac_mode = self.hvac_mode
         operation_mode = None
-        if hvac_mode != HVACMode.OFF or not has_power_control:
+        if hvac_mode != HVACMode.OFF or (
+            not has_power_control and current_hvac_mode != HVACMode.OFF
+        ):
             operation_mode = self._native_hvac_mode(hvac_mode, cc)
             if operation_mode is None:
                 self._raise_service_validation_error("climate_hvac_mode_unavailable")
@@ -586,9 +591,9 @@ class DaikinClimate(DaikinManagementPointEntity, ClimateEntity):
         # First determine the new settings for onOffMode/operationMode
         on_off_mode = None
         if has_power_control and hvac_mode == HVACMode.OFF:
-            if self.hvac_mode != HVACMode.OFF:
+            if current_hvac_mode != HVACMode.OFF:
                 on_off_mode = "off"
-        elif has_power_control and self.hvac_mode == HVACMode.OFF:
+        elif has_power_control and current_hvac_mode == HVACMode.OFF:
             on_off_mode = "on"
 
         # Only set the on/off to Daikin when we need to change it
