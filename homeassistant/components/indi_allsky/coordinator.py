@@ -414,6 +414,9 @@ class IndiAllSkyDataUpdateCoordinator(DataUpdateCoordinator[IndiAllSkyData]):
         else:
             self.latest_sensor = sensor
 
+        if self._sensor_fetch_failed:
+            self._sensor_fetch_failed = False
+            _LOGGER.info("Fetching %s data recovered", self.name)
         self._publish_data()
 
     @override

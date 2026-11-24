@@ -255,3 +255,45 @@ async def test_manual_refresh_clears_sensor_fetch_failure(
     sensor_state = hass.states.get("sensor.indi_allsky_dew_heater_duty_cycle")
     assert sensor_state is not None
     assert sensor_state.state == "42.0"
+
+
+async def test_websocket_sensor_update_clears_sensor_fetch_failure(
+    hass: HomeAssistant,
+    mock_indi_allsky_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test valid WebSocket sensor_update clears prior fetch failure and logs recovery."""
+    await setup_integration(hass, mock_config_entry)
+
+    mock_indi_allsky_client.fetch_sensors.side_effect = IndiAllSkyConnectionError(
+        "Connection lost"
+    )
+    freezer.tick(timedelta(minutes=10))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    state = hass.states.get("binary_sensor.indi_allsky_night")
+    assert state is not None
+    assert state.state == STATE_UNAVAILABLE
+
+    for cb in mock_indi_allsky_client.callbacks["sensor_update"]:
+        cb(
+            SensorData(
+                last_update="2026-08-13 23:13:41",
+                sensors={},
+                raw_user=[],
+                raw_temp=[],
+                dew_heater=55.0,
+            )
+        )
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    state = hass.states.get("binary_sensor.indi_allsky_night")
+    assert state is not None
+    assert state.state != STATE_UNAVAILABLE
+    sensor_state = hass.states.get("sensor.indi_allsky_dew_heater_duty_cycle")
+    assert sensor_state is not None
+    assert sensor_state.state == "55.0"
+    assert "Fetching indi_allsky data recovered" in caplog.text
