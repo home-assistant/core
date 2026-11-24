@@ -1,6 +1,7 @@
 """Test the ADS entity lifecycle."""
 
 import asyncio
+from collections.abc import Callable
 import threading
 from typing import Any
 from unittest.mock import MagicMock, call
@@ -8,7 +9,6 @@ from unittest.mock import MagicMock, call
 import pyads
 import pytest
 
-from homeassistant.components.ads.const import DATA_ADS
 from homeassistant.components.select import DOMAIN as SELECT_DOMAIN
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP, STATE_OFF
@@ -169,17 +169,35 @@ async def test_removal_while_subscribing(
     release.set()
     assert await setup
 
+    # Only the PLC side is checked: core still writes the state of an entity
+    # removed while its async_added_to_hass was awaiting.
     client.del_device_notification.assert_called_once_with(1, 1)
 
 
-@pytest.mark.parametrize("remove", [True, False], ids=["removal", "shutdown"])
+def _remove_entity(hass: HomeAssistant) -> None:
+    """Remove the entity from the registry."""
+    er.async_get(hass).async_remove(ENTITY_ID)
+
+
+def _stop_hass(hass: HomeAssistant) -> None:
+    """Stop Home Assistant, which shuts the hub down."""
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
+
+
+@pytest.mark.parametrize(
+    "delete",
+    [
+        pytest.param(_remove_entity, id="removal"),
+        pytest.param(_stop_hass, id="shutdown"),
+    ],
+)
 async def test_notification_while_deleting(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     mock_pyads_connection: MagicMock,
     mock_ads_device: MockAdsDevice,
     caplog: pytest.LogCaptureFixture,
-    remove: bool,
+    delete: Callable[[HomeAssistant], None],
 ) -> None:
     """Test a notification still in flight while it is deleted is not unknown."""
     mock_ads_device.values[ADS_VAR] = BOOL_TRUE
@@ -194,10 +212,7 @@ async def test_notification_while_deleting(
         router_callback(build_notification(hnotify, BOOL_FALSE), ADS_VAR)
 
     client.del_device_notification.side_effect = del_device_notification
-    if remove:
-        entity_registry.async_remove(ENTITY_ID)
-    else:
-        hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
+    delete(hass)
     await hass.async_block_till_done()
 
     client.del_device_notification.assert_called_once_with(1, 1)
@@ -227,14 +242,14 @@ async def test_shutdown_waits_for_a_removal(
     entity_registry.async_remove(ENTITY_ID)
     await hass.async_add_executor_job(deleting.wait)
 
-    shutdown = hass.async_add_executor_job(hass.data[DATA_ADS].shutdown)
+    # The stop listener runs the shutdown in the executor, next to the delete.
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
     try:
         await asyncio.sleep(0.05)
         client.close.assert_not_called()
     finally:
         # Never leave the delete blocked, or a failure hangs the test run.
         release.set()
-        await shutdown
     await hass.async_block_till_done()
 
     # The removal deleted the notification, so shutdown had nothing left to delete.
