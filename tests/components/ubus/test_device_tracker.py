@@ -530,6 +530,98 @@ async def test_enabled_tracker_on_disabled_entry_wins_over_disabled_duplicate(
     assert state.state == STATE_HOME
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_duplicate_device_merged_into_survivors_device(
+    hass: HomeAssistant,
+    mock_ubus_by_host: tuple[MagicMock, dict[str, MagicMock]],
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test the duplicate tracker's device is merged into the survivor's.
+
+    The duplicate's device is removed, so a later handoff attaches the
+    survivor to its own device, with its name, area and automation
+    references, rather than to the duplicate's device.
+    """
+    _mock, _ = mock_ubus_by_host
+    entry_a = MockConfigEntry(domain=DOMAIN, data=MOCK_CONFIG, title=MOCK_HOST)
+    entry_a.add_to_hass(hass)
+    entry_b = MockConfigEntry(
+        domain=DOMAIN,
+        data={**MOCK_CONFIG, CONF_HOST: MOCK_HOST_B},
+        title=MOCK_HOST_B,
+    )
+    entry_b.add_to_hass(hass)
+
+    # The established tracker and its device were created by the previous
+    # implementation under the raw-case unique id.
+    survivor_device = device_registry.async_get_or_create(
+        config_entry_id=entry_a.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, MAC_PHONE.upper())},
+        name="Phone",
+    )
+    survivor = entity_registry.async_get_or_create(
+        DEVICE_TRACKER_DOMAIN,
+        DOMAIN,
+        MAC_PHONE.upper(),
+        config_entry=entry_a,
+        device_id=survivor_device.id,
+    )
+    freezer.tick(timedelta(hours=1))
+    # The duplicate and its device were created under the normalized case
+    # on the other router.
+    duplicate_device = device_registry.async_get_or_create(
+        config_entry_id=entry_b.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, MAC_PHONE)},
+    )
+    entity_registry.async_get_or_create(
+        DEVICE_TRACKER_DOMAIN,
+        DOMAIN,
+        MAC_PHONE,
+        config_entry=entry_b,
+        device_id=duplicate_device.id,
+    )
+
+    router = _mock(f"http://{MOCK_HOST}/ubus", "root", "password", verify=True)
+    router.get_hostapd_clients.return_value = {
+        "clients": {MAC_PHONE: {"authorized": True}}
+    }
+    assert await hass.config_entries.async_setup(entry_a.entry_id)
+    await hass.async_block_till_done()
+
+    # The duplicate tracker and its device are gone; the survivor keeps
+    # its own device.
+    assert (
+        entity_registry.async_get_entity_id(
+            DEVICE_TRACKER_DOMAIN, DOMAIN, MAC_PHONE.upper()
+        )
+        is None
+    )
+    assert device_registry.async_get(duplicate_device.id) is None
+    assert entity_registry.async_get(survivor.entity_id).device_id == survivor_device.id
+
+    state = hass.states.get(survivor.entity_id)
+    assert state is not None
+    assert state.state == STATE_HOME
+
+    # Removing the survivor's router moves the tracker to the remaining
+    # router with its own device, not the duplicate's.
+    assert await hass.config_entries.async_remove(entry_a.entry_id)
+    await hass.async_block_till_done()
+
+    assert (
+        entity_registry.async_get(survivor.entity_id).config_entry_id
+        == entry_b.entry_id
+    )
+    assert entity_registry.async_get(survivor.entity_id).device_id == survivor_device.id
+    assert (
+        device_registry.async_get(survivor_device.id).config_entry_id
+        == entry_b.entry_id
+    )
+    assert device_registry.async_get(survivor_device.id).name == "Phone"
+
+
 @pytest.mark.usefixtures("entity_registry_enabled_by_default", "two_router_entries")
 async def test_roaming_device_stays_on_single_tracker(
     hass: HomeAssistant,

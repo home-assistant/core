@@ -206,12 +206,52 @@ def _async_rename_devices(
 
 
 @callback
-def _async_migrate_unique_ids(entity_registry: er.EntityRegistry) -> None:
+def _async_merge_device(
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    entry: er.RegistryEntry,
+    survivor: er.RegistryEntry,
+) -> None:
+    """Merge a duplicate tracker's device into the survivor's device.
+
+    Left behind, the duplicate's device is where a later handoff
+    attaches the survivor, and deleting the survivor's router then
+    drops the survivor's own device, with its area, name and
+    automation references.
+    """
+    dup_device = device_registry.async_get(entry.device_id) if entry.device_id else None
+    survivor_device = (
+        device_registry.async_get(survivor.device_id) if survivor.device_id else None
+    )
+    if dup_device is None or dup_device is survivor_device:
+        return
+    if survivor_device is None:
+        # The survivor has no device; keep the duplicate's, moved to the
+        # survivor's config entry.
+        if survivor.config_entry_id is None:
+            return
+        device_registry.async_update_device(
+            dup_device.id, new_config_entry_id=survivor.config_entry_id
+        )
+        entity_registry.async_update_entity(survivor.entity_id, device_id=dup_device.id)
+        return
+    for device_entry in er.async_entries_for_device(entity_registry, dup_device.id):
+        entity_registry.async_update_entity(
+            device_entry.entity_id, device_id=survivor_device.id
+        )
+    device_registry.async_remove_device(dup_device.id)
+
+
+@callback
+def _async_migrate_unique_ids(
+    device_registry: dr.DeviceRegistry, entity_registry: er.EntityRegistry
+) -> None:
     """Normalize pre-existing tracker unique ids to lowercase MACs.
 
     Trackers created before MACs were normalized keep the router's raw
     case; re-pointing the unique id reuses the entity, with its entity
-    id and customizations, instead of creating a duplicate.
+    id and customizations, instead of creating a duplicate. Duplicate
+    devices for the same client are merged into the survivor's device.
     """
     by_mac: dict[str, list[er.RegistryEntry]] = {}
     for registry_entry in entity_registry.entities.values():
@@ -243,6 +283,7 @@ def _async_migrate_unique_ids(entity_registry: er.EntityRegistry) -> None:
         for entry in entries:
             if entry is not survivor:
                 entity_registry.async_remove(entry.entity_id)
+                _async_merge_device(device_registry, entity_registry, entry, survivor)
         if survivor.unique_id != survivor.unique_id.lower():
             entity_registry.async_update_entity(
                 survivor.entity_id, new_unique_id=survivor.unique_id.lower()
@@ -262,7 +303,7 @@ async def async_setup_entry(
     entity_registry = er.async_get(hass)
     shared: UbusSharedState = hass.data[DOMAIN]
 
-    _async_migrate_unique_ids(entity_registry)
+    _async_migrate_unique_ids(device_registry, entity_registry)
 
     @callback
     def _async_take_over(mac: str, entity_id: str, previous_owner: str | None) -> None:
