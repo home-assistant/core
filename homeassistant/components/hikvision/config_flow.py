@@ -14,6 +14,7 @@ from homeassistant.const import (
     CONF_PORT,
     CONF_SSL,
     CONF_USERNAME,
+    CONF_VERIFY_SSL,
 )
 
 from .const import DEFAULT_PORT, DOMAIN
@@ -40,13 +41,14 @@ class HikvisionConfigFlow(ConfigFlow, domain=DOMAIN):
             username = user_input[CONF_USERNAME]
             password = user_input[CONF_PASSWORD]
             ssl = user_input[CONF_SSL]
+            verify_ssl = user_input[CONF_VERIFY_SSL]
 
             protocol = "https" if ssl else "http"
             url = f"{protocol}://{host}"
 
             try:
                 camera = await self.hass.async_add_executor_job(
-                    HikCamera, url, port, username, password, ssl
+                    HikCamera, url, port, username, password, verify_ssl
                 )
             except requests.exceptions.RequestException:
                 errors["base"] = "cannot_connect"
@@ -70,6 +72,7 @@ class HikvisionConfigFlow(ConfigFlow, domain=DOMAIN):
                             CONF_USERNAME: username,
                             CONF_PASSWORD: password,
                             CONF_SSL: ssl,
+                            CONF_VERIFY_SSL: verify_ssl,
                         },
                     )
 
@@ -82,6 +85,7 @@ class HikvisionConfigFlow(ConfigFlow, domain=DOMAIN):
                     probatio.Required(CONF_USERNAME): str,
                     probatio.Required(probatio.Secret(CONF_PASSWORD)): str,
                     probatio.Required(CONF_SSL, default=False): bool,
+                    probatio.Required(CONF_VERIFY_SSL, default=True): bool,
                 }
             ),
             errors=errors,

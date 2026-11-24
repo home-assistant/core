@@ -1,0 +1,139 @@
+# serializer version: 1
+# name: test_entity_state[media_player.main_musiccast-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <MediaPlayerEntityCapabilityAttribute.SOUND_MODE_LIST: 'sound_mode_list'>: list([
+        'music',
+        'movie',
+      ]),
+      <MediaPlayerEntityCapabilityAttribute.INPUT_SOURCE_LIST: 'source_list'>: list([
+        'NET RADIO',
+        'Bluetooth',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('yamaha_musiccast', '1234567890')]>,
+    'disabled_by': None,
+    'domain': 'media_player',
+    'entity_category': None,
+    'entity_id': 'media_player.main_musiccast',
+    'has_entity_name': False,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'MusicCast',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:speaker',
+    'original_name': 'MusicCast',
+    'platform': 'yamaha_musiccast',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <MediaPlayerEntityFeature: 1040317>,
+    'translation_key': 'zone',
+    'unique_id': '1234567890_main',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entity_state[media_player.main_musiccast-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: '/api/media_player_proxy/media_player.main_musiccast?token=mock_token&cache=e7be066da4ae39a8',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Main MusicCast',
+      <MediaPlayerEntityStateAttribute.GROUP_MEMBERS: 'group_members'>: list([
+        'media_player.main_musiccast',
+      ]),
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:speaker',
+      <MediaPlayerEntityStateAttribute.MEDIA_VOLUME_MUTED: 'is_volume_muted'>: False,
+      <MediaPlayerEntityStateAttribute.MEDIA_ARTIST: 'media_artist'>: 'Artist',
+      <MediaPlayerEntityStateAttribute.MEDIA_CONTENT_TYPE: 'media_content_type'>: <MediaType.MUSIC: 'music'>,
+      <MediaPlayerEntityStateAttribute.MEDIA_TITLE: 'media_title'>: 'Track',
+      <MediaPlayerEntityStateAttribute.MEDIA_REPEAT: 'repeat'>: <RepeatMode.OFF: 'off'>,
+      <MediaPlayerEntityStateAttribute.MEDIA_SHUFFLE: 'shuffle'>: False,
+      <MediaPlayerEntityStateAttribute.SOUND_MODE: 'sound_mode'>: 'music',
+      <MediaPlayerEntityCapabilityAttribute.SOUND_MODE_LIST: 'sound_mode_list'>: list([
+        'music',
+        'movie',
+      ]),
+      <MediaPlayerEntityStateAttribute.INPUT_SOURCE: 'source'>: 'NET RADIO',
+      <MediaPlayerEntityCapabilityAttribute.INPUT_SOURCE_LIST: 'source_list'>: list([
+        'NET RADIO',
+        'Bluetooth',
+      ]),
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <MediaPlayerEntityFeature: 1040317>,
+      <MediaPlayerEntityStateAttribute.MEDIA_VOLUME_LEVEL: 'volume_level'>: 0.5,
+    }),
+    'context': <ANY>,
+    'entity_id': 'media_player.main_musiccast',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'playing',
+  })
+# ---
+# name: test_entity_state[media_player.zone_2_musiccast_zone2-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('yamaha_musiccast', '1234567890_zone2')]>,
+    'disabled_by': None,
+    'domain': 'media_player',
+    'entity_category': None,
+    'entity_id': 'media_player.zone_2_musiccast_zone2',
+    'has_entity_name': False,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'MusicCast zone2',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:speaker',
+    'original_name': 'MusicCast zone2',
+    'platform': 'yamaha_musiccast',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <MediaPlayerEntityFeature: 887296>,
+    'translation_key': 'zone',
+    'unique_id': '1234567890_zone2',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entity_state[media_player.zone_2_musiccast_zone2-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Zone 2 MusicCast zone2',
+      <MediaPlayerEntityStateAttribute.GROUP_MEMBERS: 'group_members'>: list([
+        'media_player.zone_2_musiccast_zone2',
+      ]),
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:speaker',
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <MediaPlayerEntityFeature: 887296>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'media_player.zone_2_musiccast_zone2',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---

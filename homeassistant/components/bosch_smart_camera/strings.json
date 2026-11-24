@@ -22,6 +22,11 @@
     }
   },
   "entity": {
+    "light": {
+      "camera_light": {
+        "name": "Camera light"
+      }
+    },
     "switch": {
       "notifications": {
         "name": "Notifications"
@@ -37,6 +42,9 @@
     },
     "cannot_connect": {
       "message": "Unable to fetch the cameras from Bosch."
+    },
+    "light_failed": {
+      "message": "Unable to switch the camera light."
     },
     "notifications_failed": {
       "message": "Unable to change the notifications at Bosch."
