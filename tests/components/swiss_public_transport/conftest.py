@@ -1,6 +1,7 @@
 """Common fixtures for the swiss_public_transport tests."""
 
 from collections.abc import Generator
+from typing import Any
 from unittest.mock import AsyncMock, patch
 
 import pytest
@@ -43,16 +44,10 @@ def mock_opendata_client() -> Generator[AsyncMock]:
 @pytest.fixture
 def mock_stationboard_client() -> Generator[AsyncMock]:
     """Mock a Opendata stationboard client."""
-    with (
-        patch(
-            "homeassistant.components.swiss_public_transport.OpendataTransportStationboard",
-            autospec=True,
-        ) as mock_client,
-        patch(
-            "homeassistant.components.swiss_public_transport.config_flow.OpendataTransportStationboard",
-            new=mock_client,
-        ),
-    ):
+    with patch(
+        "homeassistant.components.swiss_public_transport.OpendataTransportStationboard",
+        autospec=True,
+    ) as mock_client:
         client = mock_client.return_value
         client.async_get_data.return_value = None
         client.journeys = load_json_array_fixture("departures.json", DOMAIN)
@@ -61,14 +56,21 @@ def mock_stationboard_client() -> Generator[AsyncMock]:
 
 @pytest.fixture
 def mock_location_client() -> Generator[AsyncMock]:
-    """Mock a Opendata location client."""
+    """Mock a Opendata location client, which finds a station for each query."""
     with patch(
         "homeassistant.components.swiss_public_transport.config_flow.OpendataTransportLocation",
         autospec=True,
     ) as mock_client:
         client = mock_client.return_value
         client.async_get_data.return_value = None
-        client.locations = [{"name": "Zug"}, {"name": "Zug, Bahnhofplatz"}]
+        # Queries which do not return the station they ask for
+        client.found = {"zug": [{"name": "Zug"}, {"name": "Zug, Bahnhofplatz"}]}
+
+        def create(session: Any, query: str) -> AsyncMock:
+            client.locations = client.found.get(query, [{"name": query}])
+            return client
+
+        mock_client.side_effect = create
         yield client
 
 

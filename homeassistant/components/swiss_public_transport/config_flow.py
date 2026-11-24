@@ -3,11 +3,7 @@
 import logging
 from typing import Any, override
 
-from opendata_transport import (
-    OpendataTransport,
-    OpendataTransportLocation,
-    OpendataTransportStationboard,
-)
+from opendata_transport import OpendataTransport, OpendataTransportLocation
 from opendata_transport.exceptions import (
     OpendataTransportConnectionError,
     OpendataTransportError,
@@ -177,15 +173,18 @@ class SwissPublicTransportConfigFlow(ConfigFlow, domain=DOMAIN):
         """Async step to set up the stationboard."""
         errors: dict[str, str] = {}
         if user_input is not None:
-            stations: list[str] = list(dict.fromkeys(user_input[CONF_STATIONS]))
-            if len(stations) > MAX_STATIONS:
+            entered: list[str] = user_input[CONF_STATIONS]
+            if not entered:
+                errors["base"] = "bad_config"
+            elif len(entered) > MAX_STATIONS:
                 errors["base"] = "too_many_stations"
-            elif err := await self.fetch_departures(stations):
-                errors["base"] = err
             else:
-                stops_at, err = await self.fetch_station_names(
-                    user_input.get(CONF_STOPS_AT, [])
-                )
+                stations, err = await self.fetch_station_names(entered)
+                stops_at: list[str] = []
+                if not err:
+                    stops_at, err = await self.fetch_station_names(
+                        user_input.get(CONF_STOPS_AT, [])
+                    )
                 if err:
                     errors["base"] = err
                 else:
@@ -282,27 +281,6 @@ class SwissPublicTransportConfigFlow(ConfigFlow, domain=DOMAIN):
         except Exception:
             _LOGGER.exception("Unknown error")
             return "unknown"
-        return None
-
-    async def fetch_departures(self, stations: list[str]) -> str | None:
-        """Fetch the departures of each station and return an error."""
-        if not stations:
-            return "bad_config"
-        session = async_get_clientsession(self.hass)
-        for station in stations:
-            opendata = OpendataTransportStationboard(station, session, limit=1)
-            try:
-                await opendata.async_get_data()
-            except OpendataTransportConnectionError:
-                return "cannot_connect"
-            except OpendataTransportError:
-                return "bad_config"
-            except Exception:
-                _LOGGER.exception("Unknown error")
-                return "unknown"
-            # Unknown stations return an empty stationboard
-            if not opendata.journeys:
-                return "bad_config"
         return None
 
     async def fetch_station_names(

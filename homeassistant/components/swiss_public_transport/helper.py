@@ -46,8 +46,11 @@ def title_from_stations(stations: list[str], stops_at: list[str]) -> str:
 
 def unique_id_from_stations(stations: list[str], stops_at: list[str]) -> str:
     """Build a unique id for a stationboard config entry."""
-    # The order of the stations does not change the stationboard
-    return f"stationboard {title_from_stations(sorted(stations), sorted(stops_at))}"
+    # The order of the stations does not change the stationboard, and their
+    # names contain commas
+    return f"stationboard {'; '.join(sorted(stations))}" + (
+        f" stops at {'; '.join(sorted(stops_at))}" if stops_at else ""
+    )
 
 
 def unique_id_from_config(config: Mapping[str, Any]) -> str:

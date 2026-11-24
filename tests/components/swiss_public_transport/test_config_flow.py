@@ -341,19 +341,19 @@ async def test_flow_user_init_data_already_configured(hass: HomeAssistant) -> No
                 CONF_STOPS_AT: [],
             },
             "Kriens, Mattenhof, Kriens Mattenhof",
-            "stationboard Kriens Mattenhof, Kriens, Mattenhof",
+            "stationboard Kriens Mattenhof; Kriens, Mattenhof",
             id="multiple_stations",
         ),
         pytest.param(
-            {CONF_STATIONS: ["Zürich HB", "Zürich HB"], CONF_STOPS_AT: ["zug", "Zug"]},
-            {CONF_STATIONS: ["Zürich HB"], CONF_STOPS_AT: ["Zug"]},
-            "Zürich HB stops at Zug",
-            "stationboard Zürich HB stops at Zug",
+            {CONF_STATIONS: ["zug", "Zug"], CONF_STOPS_AT: ["Luzern", "Bern"]},
+            {CONF_STATIONS: ["Zug"], CONF_STOPS_AT: ["Luzern", "Bern"]},
+            "Zug stops at Luzern, Bern",
+            "stationboard Zug stops at Bern; Luzern",
             id="stops_at_and_duplicates",
         ),
     ],
 )
-@pytest.mark.usefixtures("mock_stationboard_client", "mock_location_client")
+@pytest.mark.usefixtures("mock_location_client")
 async def test_flow_stationboard_success(
     hass: HomeAssistant,
     user_input: dict[str, list[str]],
@@ -384,25 +384,44 @@ async def test_flow_stationboard_success(
 
 
 @pytest.mark.parametrize(
-    ("raise_error", "journeys", "stations", "text_error"),
+    ("raise_error", "found", "user_input", "text_error"),
     [
         pytest.param(
             OpendataTransportConnectionError(),
-            [],
-            ["Zürich HB"],
+            {},
+            {CONF_STATIONS: ["Zürich HB"]},
             "cannot_connect",
             id="cannot_connect",
         ),
         pytest.param(
-            OpendataTransportError(), [], ["Zürich HB"], "bad_config", id="bad_data"
+            OpendataTransportError(),
+            {},
+            {CONF_STATIONS: ["Zürich HB"]},
+            "bad_config",
+            id="bad_data",
         ),
-        pytest.param(IndexError(), [], ["Zürich HB"], "unknown", id="unknown"),
-        pytest.param(None, [], ["Zürich HB"], "bad_config", id="unknown_station"),
-        pytest.param(None, [], [], "bad_config", id="no_station"),
+        pytest.param(
+            IndexError(), {}, {CONF_STATIONS: ["Zürich HB"]}, "unknown", id="unknown"
+        ),
         pytest.param(
             None,
-            [{"departure": "2024-01-06T18:03:00+0100"}],
-            [f"Station {i}" for i in range(MAX_STATIONS + 1)],
+            {"Zürich HB": []},
+            {CONF_STATIONS: ["Zürich HB"]},
+            "bad_config",
+            id="unknown_station",
+        ),
+        pytest.param(
+            None,
+            {"Zug": []},
+            {CONF_STATIONS: ["Zürich HB"], CONF_STOPS_AT: ["Zug"]},
+            "bad_config",
+            id="unknown_stops_at_station",
+        ),
+        pytest.param(None, {}, {CONF_STATIONS: []}, "bad_config", id="no_station"),
+        pytest.param(
+            None,
+            {},
+            {CONF_STATIONS: [f"Station {i}" for i in range(MAX_STATIONS + 1)]},
             "too_many_stations",
             id="too_many_stations",
         ),
@@ -410,10 +429,10 @@ async def test_flow_stationboard_success(
 )
 async def test_flow_stationboard_error_and_recover(
     hass: HomeAssistant,
-    mock_stationboard_client: AsyncMock,
+    mock_location_client: AsyncMock,
     raise_error: Exception | None,
-    journeys: list[dict[str, str]],
-    stations: list[str],
+    found: dict[str, list[dict[str, str]]],
+    user_input: dict[str, list[str]],
     text_error: str,
 ) -> None:
     """Test errors in the stationboard step."""
@@ -424,18 +443,17 @@ async def test_flow_stationboard_error_and_recover(
         result["flow_id"], {"next_step_id": "stationboard"}
     )
 
-    valid_journeys = mock_stationboard_client.journeys
-    mock_stationboard_client.async_get_data.side_effect = raise_error
-    mock_stationboard_client.journeys = journeys
+    mock_location_client.async_get_data.side_effect = raise_error
+    mock_location_client.found = found
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input={CONF_STATIONS: stations}
+        result["flow_id"], user_input=user_input
     )
 
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": text_error}
 
-    mock_stationboard_client.async_get_data.side_effect = None
-    mock_stationboard_client.journeys = valid_journeys
+    mock_location_client.async_get_data.side_effect = None
+    mock_location_client.found = {}
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input={CONF_STATIONS: ["Zürich HB"]}
     )
@@ -445,75 +463,37 @@ async def test_flow_stationboard_error_and_recover(
 
 
 @pytest.mark.parametrize(
-    ("raise_error", "locations", "text_error"),
+    ("stations", "result_type"),
     [
         pytest.param(
-            OpendataTransportConnectionError(),
-            [],
-            "cannot_connect",
-            id="cannot_connect",
+            ["Kriens, Mattenhof", "Zürich HB"],
+            FlowResultType.ABORT,
+            id="same_order",
         ),
-        pytest.param(OpendataTransportError(), [], "bad_config", id="bad_data"),
-        pytest.param(IndexError(), [], "unknown", id="unknown"),
-        pytest.param(None, [], "bad_config", id="unknown_station"),
+        pytest.param(
+            ["Zürich HB", "Kriens, Mattenhof"],
+            FlowResultType.ABORT,
+            id="reordered",
+        ),
+        pytest.param(
+            ["Kriens", "Mattenhof", "Zürich HB"],
+            FlowResultType.CREATE_ENTRY,
+            id="other_stations_with_the_same_words",
+        ),
     ],
 )
-@pytest.mark.usefixtures("mock_stationboard_client")
-async def test_flow_stationboard_stops_at_error_and_recover(
-    hass: HomeAssistant,
-    mock_location_client: AsyncMock,
-    raise_error: Exception | None,
-    locations: list[dict[str, str]],
-    text_error: str,
-) -> None:
-    """Test errors looking up the stations a departure must stop at."""
-    user_input = {CONF_STATIONS: ["Zürich HB"], CONF_STOPS_AT: ["Zug"]}
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": "user"}
-    )
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {"next_step_id": "stationboard"}
-    )
-
-    valid_locations = mock_location_client.locations
-    mock_location_client.async_get_data.side_effect = raise_error
-    mock_location_client.locations = locations
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input=user_input
-    )
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {"base": text_error}
-
-    mock_location_client.async_get_data.side_effect = None
-    mock_location_client.locations = valid_locations
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input=user_input
-    )
-
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["data"] == user_input
-
-
-@pytest.mark.parametrize(
-    "stations",
-    [
-        pytest.param(["Kriens Mattenhof", "Kriens, Mattenhof"], id="same_order"),
-        pytest.param(["Kriens, Mattenhof", "Kriens Mattenhof"], id="reordered"),
-    ],
-)
-@pytest.mark.usefixtures("mock_stationboard_client")
+@pytest.mark.usefixtures("mock_location_client")
 async def test_flow_stationboard_already_configured(
-    hass: HomeAssistant, stations: list[str]
+    hass: HomeAssistant, stations: list[str], result_type: FlowResultType
 ) -> None:
-    """Test we abort when the stationboard is already configured."""
+    """Test we only abort when the same stationboard is already configured."""
     MockConfigEntry(
         domain=DOMAIN,
         data={
-            CONF_STATIONS: ["Kriens Mattenhof", "Kriens, Mattenhof"],
+            CONF_STATIONS: ["Kriens, Mattenhof", "Zürich HB"],
             CONF_STOPS_AT: [],
         },
-        unique_id="stationboard Kriens Mattenhof, Kriens, Mattenhof",
+        unique_id="stationboard Kriens, Mattenhof; Zürich HB",
         version=3,
     ).add_to_hass(hass)
 
@@ -528,5 +508,4 @@ async def test_flow_stationboard_already_configured(
         user_input={CONF_STATIONS: stations},
     )
 
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "already_configured"
+    assert result["type"] is result_type
