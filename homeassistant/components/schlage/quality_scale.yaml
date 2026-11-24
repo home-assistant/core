@@ -11,11 +11,7 @@ rules:
   docs-conditions:
     status: exempt
     comment: This integration does not have any conditions.
-  docs-high-level-description:
-    status: todo
-    comment: |
-      The description does not explain what Schlage is or link to the
-      manufacturer.
+  docs-high-level-description: done
   docs-installation-instructions: done
   docs-removal-instructions: done
   docs-triggers:

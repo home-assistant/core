@@ -86,7 +86,7 @@ async def test_sensor_entities_battery_device(
         power_mode=PowerMode.BATTERY,
         capacity_estimator=1,  # LI_ION
     )
-    mock_opendisplay_device.config = device_config
+    mock_opendisplay_device.config.cached = device_config
 
     await setup_entry()
 
@@ -118,7 +118,7 @@ async def test_no_sensors_for_non_flex_devices(
     setup_entry: Callable[[], Awaitable[None]],
 ) -> None:
     """Test that no sensor entities are created for non-Flex devices."""
-    mock_opendisplay_device.is_flex = False
+    mock_opendisplay_device.legacy.is_flex = False
     await setup_entry()
 
     assert entity_registry.async_get("sensor.opendisplay_1234_temperature") is None
@@ -196,7 +196,7 @@ async def test_battery_sensor_defaults_to_liion_when_capacity_estimator_unset(
         power_mode=PowerMode.BATTERY,
         capacity_estimator=0,  # not configured — defaults to LI_ION in sensor.py
     )
-    mock_opendisplay_device.config = device_config
+    mock_opendisplay_device.config.cached = device_config
 
     await setup_entry()
     inject_bluetooth_service_info(hass, VALID_SERVICE_INFO)
