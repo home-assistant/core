@@ -3,10 +3,9 @@
 import asyncio
 from collections.abc import Generator
 from ipaddress import IPv4Network
-from unittest.mock import AsyncMock, MagicMock, PropertyMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 from govee_local_api import GoveeDevice, GoveeLightCapabilities, GoveeLightFeatures
-from govee_local_api.device_registry import DeviceRegistry
 from govee_local_api.light_capabilities import COMMON_FEATURES, SCENE_CODES
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
@@ -14,6 +13,7 @@ from pytest_homeassistant.common import MockConfigEntry
 from homeassistant.components.govee_light_local.const import DOMAIN
 from homeassistant.components.govee_light_local.coordinator import GoveeController
 from homeassistant.components.network import Adapter
+from homeassistant.const import CONF_IP_ADDRESS
 from homeassistant.core import HomeAssistant
 
 NETWORK_ADAPTERS: list[Adapter] = [
@@ -75,52 +75,10 @@ def fixture_mock_network_adapters() -> Generator[None]:
         yield
 
 
-def set_mocked_devices(mock_govee_api: AsyncMock, devices: list[GoveeDevice]) -> None:
-    """Update a mocked device."""
-    devices_dict = {device.fingerprint: device for device in devices}
-    devices_list = list(devices_dict.values())
-    mock_govee_api._registry._discovered_devices = devices_dict
-
-    type(mock_govee_api).devices = PropertyMock(return_value=devices_list)
-
-    mock_govee_api.get_device_by_ip.side_effect = lambda ip: next(
-        (device for device in mock_govee_api.devices if device.ip == ip), None
-    )
-
-    mock_govee_api.get_device_by_sku.side_effect = lambda sku: next(
-        (device for device in mock_govee_api.devices if device.sku == sku), None
-    )
-
-    mock_govee_api.get_device_by_fingerprint.side_effect = lambda fingerprint: next(
-        (
-            device
-            for device in mock_govee_api.devices
-            if device.fingerprint == fingerprint
-        ),
-        None,
-    )
-
-    # The removal listener drops devices and the reconcile listener then reads
-    # the remaining ones back, so this has to mutate the same lists rather than
-    # only record the call.
-    def _remove_device(device: str | GoveeDevice) -> None:
-        fingerprint = device.fingerprint if isinstance(device, GoveeDevice) else device
-        if removed := devices_dict.pop(fingerprint, None):
-            devices_list.remove(removed)
-
-    mock_govee_api.remove_device = MagicMock(side_effect=_remove_device)
-
-
 @pytest.fixture(name="mock_govee_api")
 def fixture_mock_govee_api() -> Generator[AsyncMock]:
     """Set up Govee Local API fixture."""
-
-    mock_registry = MagicMock(spec=DeviceRegistry)
-    mock_registry._discovered_devices = {}
-
     mock_api = AsyncMock(spec=GoveeController)
-    mock_api._registry = mock_registry
-
     mock_api.start = AsyncMock()
     mock_api.cleanup = MagicMock(return_value=asyncio.Event())
     mock_api.cleanup.return_value.set()
@@ -129,39 +87,6 @@ def fixture_mock_govee_api() -> Generator[AsyncMock]:
     mock_api.set_color = AsyncMock()
     mock_api.set_scene = AsyncMock()
     mock_api._async_update_data = AsyncMock()
-    mock_api.get_device_by_ip = MagicMock()
-    mock_api.get_device_by_sku = MagicMock()
-    mock_api.get_device_by_fingerprint = MagicMock()
-
-    # The reconcile listener reads and mutates the queue, so back it with a
-    # real set rather than a bare mock attribute.
-    discovery_queue: set[str] = set()
-
-    def _add_to_queue(ip: str) -> bool:
-        discovery_queue.add(ip)
-        return True
-
-    mock_api.add_device_to_discovery_queue = MagicMock(side_effect=_add_to_queue)
-
-    # Like the library, dequeuing an address also forgets a manual lamp cached
-    # there.
-    def _remove_from_queue(ip: str) -> bool:
-        if ip not in discovery_queue:
-            return False
-        discovery_queue.discard(ip)
-        device = mock_api.get_device_by_ip(ip)
-        if isinstance(device, GoveeDevice) and device.is_manual:
-            mock_api._registry._discovered_devices.pop(device.fingerprint, None)
-            mock_api.devices.remove(device)
-        return True
-
-    mock_api.remove_device_from_discovery_queue = MagicMock(
-        side_effect=_remove_from_queue
-    )
-    type(mock_api).discovery_queue = PropertyMock(side_effect=lambda: discovery_queue)
-
-    type(mock_api).devices = PropertyMock(return_value=[])
-
     # The library strips the mask off the address it stores, and keeps the
     # parsed network in a separate index-aligned list.
     mock_api.listening_addresses = ["10.0.0.7", "192.168.1.2"]
@@ -169,18 +94,53 @@ def fixture_mock_govee_api() -> Generator[AsyncMock]:
     mock_api.bind_failures = []
     mock_api.protocols = [MagicMock()]
     mock_api.rebind_failed = AsyncMock(return_value=[])
+    mock_api.devices = []
+    mock_api.answering_devices = []
+    mock_api.get_device_by_fingerprint = MagicMock(
+        side_effect=lambda fingerprint: next(
+            (
+                device
+                for device in mock_api.devices
+                if device.fingerprint == fingerprint
+            ),
+            None,
+        )
+    )
+    mock_api.get_device_by_ip = MagicMock(
+        side_effect=lambda ip: next(
+            (device for device in mock_api.devices if device.ip == ip), None
+        )
+    )
+    mock_api.remove_device = MagicMock(side_effect=mock_api.devices.remove)
+    mock_api.send_discovery_message = MagicMock(
+        side_effect=lambda: [
+            scan_reply(mock_api, device) for device in mock_api.answering_devices
+        ]
+    )
 
-    with (
-        patch(
-            "homeassistant.components.govee_light_local.coordinator.GoveeController",
-            return_value=mock_api,
-        ) as mock_controller,
-        patch(
-            "homeassistant.components.govee_light_local.config_flow.GoveeController",
-            return_value=mock_api,
-        ),
-    ):
+    with patch(
+        "homeassistant.components.govee_light_local.coordinator.GoveeController",
+        return_value=mock_api,
+    ) as mock_controller:
         yield mock_controller.return_value
+
+
+def scan_reply(mock_govee_api: AsyncMock, device: GoveeDevice) -> bool:
+    """Deliver a lamp's scan reply the way the library does.
+
+    The library only starts tracking a lamp the integration accepts.
+    """
+    discovered_callback = mock_govee_api.set_device_discovered_callback.call_args[0][0]
+    is_new = device not in mock_govee_api.devices
+    accepted: bool = discovered_callback(device, is_new)
+    if accepted and is_new:
+        mock_govee_api.devices.append(device)
+    return accepted
+
+
+def answer_scans(mock_govee_api: AsyncMock, *devices: GoveeDevice) -> None:
+    """Make the lamps answer every scan from now on."""
+    mock_govee_api.answering_devices.extend(devices)
 
 
 @pytest.fixture(name="mock_stuck_cleanup")
@@ -210,6 +170,44 @@ SCENE_CAPABILITIES: GoveeLightCapabilities = GoveeLightCapabilities(
 )
 
 
+def create_device(
+    mock_govee_api: AsyncMock,
+    capabilities: GoveeLightCapabilities = DEFAULT_CAPABILITIES,
+    *,
+    ip: str = "192.168.1.100",
+    fingerprint: str = "asdawdqwdqwd",
+    sku: str = "H615A",
+) -> GoveeDevice:
+    """Create a Govee light device."""
+    return GoveeDevice(
+        controller=mock_govee_api,
+        ip=ip,
+        fingerprint=fingerprint,
+        sku=sku,
+        capabilities=capabilities,
+    )
+
+
+def create_entry(hass: HomeAssistant, device: GoveeDevice) -> MockConfigEntry:
+    """Add the config entry of a single lamp."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        version=2,
+        title=device.sku,
+        unique_id=device.fingerprint,
+        data={CONF_IP_ADDRESS: device.ip},
+    )
+    entry.add_to_hass(hass)
+    return entry
+
+
+def create_legacy_entry(hass: HomeAssistant) -> MockConfigEntry:
+    """Add the single config entry that predates one entry per lamp."""
+    entry = MockConfigEntry(domain=DOMAIN, title="Govee light local", unique_id=DOMAIN)
+    entry.add_to_hass(hass)
+    return entry
+
+
 async def setup_light(
     hass: HomeAssistant,
     mock_govee_api: AsyncMock,
@@ -226,17 +224,11 @@ async def setup_light(
     ``GoveeDevice`` directly. Tests that only need the entry or neither can
     discard the unused half with ``_``.
     """
-    device = GoveeDevice(
-        controller=mock_govee_api,
-        ip=ip,
-        fingerprint=fingerprint,
-        sku=sku,
-        capabilities=capabilities,
+    device = create_device(
+        mock_govee_api, capabilities, ip=ip, fingerprint=fingerprint, sku=sku
     )
-    set_mocked_devices(mock_govee_api, [device])
-
-    entry = MockConfigEntry(domain=DOMAIN)
-    entry.add_to_hass(hass)
+    answer_scans(mock_govee_api, device)
+    entry = create_entry(hass, device)
 
     assert await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()

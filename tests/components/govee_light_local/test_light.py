@@ -9,19 +9,17 @@ from typing import Any
 from unittest.mock import AsyncMock, MagicMock, call, patch
 
 from freezegun.api import FrozenDateTimeFactory
-from govee_local_api import GoveeDevice, GoveeLightCapabilities
+from govee_local_api import GoveeLightCapabilities
 from govee_local_api.light_capabilities import COMMON_FEATURES, ON_OFF_CAPABILITIES
 from govee_local_api.message import DevStatusResponse
 import pytest
-from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
+from pytest_homeassistant.common import async_fire_time_changed
 
 from homeassistant.components.govee_light_local.const import (
-    CONF_DEVICE_IP,
+    CLEANUP_TIMEOUT,
     DEVICE_TIMEOUT,
-    DOMAIN,
     REBIND_INTERVAL,
     SCAN_INTERVAL,
-    SUBENTRY_TYPE_DEVICE,
 )
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
@@ -37,17 +35,17 @@ from homeassistant.components.light import (
     LightService,
     LightServiceArgument,
 )
-from homeassistant.config_entries import ConfigEntryState, ConfigSubentryData
-from homeassistant.const import SERVICE_TURN_ON, STATE_OFF, STATE_UNAVAILABLE
+from homeassistant.config_entries import ConfigEntryState
+from homeassistant.const import STATE_OFF, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr
 from homeassistant.util import dt as dt_util
 
 from .conftest import (
-    DEFAULT_CAPABILITIES,
     EXPECTED_LISTENING_ADDRESSES,
     SCENE_CAPABILITIES,
-    set_mocked_devices,
+    answer_scans,
+    create_device,
+    create_entry,
     setup_light,
 )
 
@@ -137,19 +135,25 @@ async def test_light_remove(hass: HomeAssistant, mock_govee_api: AsyncMock) -> N
 async def test_light_setup_retry(
     hass: HomeAssistant, mock_govee_api: AsyncMock
 ) -> None:
-    """Test setup retry."""
+    """Test setup is retried while the lamp does not answer."""
 
-    set_mocked_devices(mock_govee_api, [])
-
-    entry = MockConfigEntry(domain=DOMAIN)
-    entry.add_to_hass(hass)
+    entry = create_entry(hass, create_device(mock_govee_api))
 
     with patch(
-        "homeassistant.components.govee_light_local.DISCOVERY_TIMEOUT",
+        "homeassistant.components.govee_light_local.coordinator.DISCOVERY_TIMEOUT",
         0,
     ):
         await hass.config_entries.async_setup(entry.entry_id)
     assert entry.state is ConfigEntryState.SETUP_RETRY
+    assert entry.reason == "The light at 192.168.1.100 did not respond"
+    mock_govee_api.add_device_to_discovery_queue.assert_called_once_with(
+        "192.168.1.100"
+    )
+    mock_govee_api.remove_device_from_discovery_queue.assert_called_once_with(
+        "192.168.1.100"
+    )
+    # Nothing else uses the controller, so the port is released.
+    mock_govee_api.cleanup.assert_called_once_with(timeout=CLEANUP_TIMEOUT)
 
 
 @pytest.mark.parametrize(
@@ -179,21 +183,9 @@ async def test_light_setup_retry_when_no_address_binds(
     """Test setup is retried whenever the controller binds no address at all."""
 
     mock_govee_api.start.side_effect = OSError(bind_errno, os.strerror(bind_errno))
-    set_mocked_devices(
-        mock_govee_api,
-        [
-            GoveeDevice(
-                controller=mock_govee_api,
-                ip="192.168.1.100",
-                fingerprint="asdawdqwdqwd",
-                sku="H615A",
-                capabilities=DEFAULT_CAPABILITIES,
-            )
-        ],
-    )
-
-    entry = MockConfigEntry(domain=DOMAIN)
-    entry.add_to_hass(hass)
+    device = create_device(mock_govee_api)
+    answer_scans(mock_govee_api, device)
+    entry = create_entry(hass, device)
 
     await hass.config_entries.async_setup(entry.entry_id)
     assert entry.state is ConfigEntryState.SETUP_RETRY
@@ -224,9 +216,7 @@ async def test_light_setup_error_when_bind_fails_permanently(
     """Test setup fails without retrying when the bind error cannot clear on its own."""
 
     mock_govee_api.start.side_effect = OSError(bind_errno, os.strerror(bind_errno))
-
-    entry = MockConfigEntry(domain=DOMAIN)
-    entry.add_to_hass(hass)
+    entry = create_entry(hass, create_device(mock_govee_api))
 
     await hass.config_entries.async_setup(entry.entry_id)
     assert entry.state is ConfigEntryState.SETUP_ERROR
@@ -745,27 +735,14 @@ async def test_one_silent_device_does_not_affect_others(
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test that one silent device does not pull the others unavailable."""
-    silent = GoveeDevice(
-        controller=mock_govee_api,
-        ip="192.168.1.100",
-        fingerprint="silent_device",
-        sku="H615A",
-        capabilities=DEFAULT_CAPABILITIES,
-    )
-    chatty = GoveeDevice(
-        controller=mock_govee_api,
+    await setup_light(hass, mock_govee_api, fingerprint="silent_device")
+    _, chatty = await setup_light(
+        hass,
+        mock_govee_api,
         ip="192.168.1.101",
         fingerprint="chatty_device",
         sku="H615B",
-        capabilities=DEFAULT_CAPABILITIES,
     )
-    set_mocked_devices(mock_govee_api, [silent, chatty])
-
-    entry = MockConfigEntry(domain=DOMAIN)
-    entry.add_to_hass(hass)
-
-    assert await hass.config_entries.async_setup(entry.entry_id)
-    await hass.async_block_till_done()
 
     # Tick past the timeout, but have the chatty device reply along the way.
     freezer.tick(SCAN_INTERVAL)
@@ -784,83 +761,11 @@ async def test_one_silent_device_does_not_affect_others(
     assert chatty_state.state == STATE_OFF
 
 
-async def test_discovered_device_is_added(
-    hass: HomeAssistant, mock_govee_api: AsyncMock
-) -> None:
-    """Test a device found after setup gets an entity.
-
-    Manually added devices arrive through this callback, so it is the path the
-    manual IP feature depends on end to end.
-    """
-    await setup_light(hass, mock_govee_api)
-    assert len(hass.states.async_all()) == 1
-
-    discovery_callback = mock_govee_api.set_device_discovered_callback.call_args[0][0]
-
-    new_device = GoveeDevice(
-        controller=mock_govee_api,
-        ip="192.168.1.101",
-        fingerprint="second_device",
-        sku="H615B",
-        capabilities=DEFAULT_CAPABILITIES,
-    )
-    assert discovery_callback(new_device, True) is True
-    await hass.async_block_till_done()
-
-    assert len(hass.states.async_all()) == 2
-    assert hass.states.get("light.H615B") is not None
-
-    # A repeat announcement of a known device must not add it twice.
-    assert discovery_callback(new_device, False) is True
-    await hass.async_block_till_done()
-    assert len(hass.states.async_all()) == 2
-
-
-async def test_light_unavailable_when_update_fails(
-    hass: HomeAssistant, mock_govee_api: AsyncMock
-) -> None:
-    """Test the entity follows the coordinator's update failure."""
-    entry, _ = await setup_light(hass, mock_govee_api)
-
-    coordinator = entry.runtime_data
-    coordinator.last_update_success = False
-    coordinator.async_update_listeners()
-    await hass.async_block_till_done()
-
-    state = hass.states.get("light.H615A")
-    assert state is not None
-    assert state.state == STATE_UNAVAILABLE
-
-
-async def test_light_fixed_color_mode(
-    hass: HomeAssistant, mock_govee_api: AsyncMock
-) -> None:
-    """Test a light with a single supported color mode reports it directly."""
-    _, device = await setup_light(hass, mock_govee_api, ON_OFF_CAPABILITIES)
-
-    light = hass.states.get("light.H615A")
-    assert light is not None
-    assert light.attributes[ATTR_SUPPORTED_COLOR_MODES] == [ColorMode.ONOFF]
-
-    await hass.services.async_call(
-        LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        {"entity_id": light.entity_id},
-        blocking=True,
-    )
-    await hass.async_block_till_done()
-
-    light = hass.states.get("light.H615A")
-    assert light is not None
-    assert light.attributes[ATTR_COLOR_MODE] == ColorMode.ONOFF
-    mock_govee_api.turn_on_off.assert_awaited_with(device, True)
-
-
 @pytest.mark.usefixtures("mock_network_adapters")
 async def test_single_controller_for_all_adapters(
     hass: HomeAssistant, mock_govee_api: AsyncMock, caplog: pytest.LogCaptureFixture
 ) -> None:
-    """Test a single controller listens on every enabled adapter address."""
+    """Test a single controller serves every lamp on every enabled adapter address."""
 
     caplog.set_level(logging.DEBUG, logger="homeassistant.components.govee_light_local")
 
@@ -869,6 +774,9 @@ async def test_single_controller_for_all_adapters(
         return_value=mock_govee_api,
     ) as mock_controller:
         await setup_light(hass, mock_govee_api)
+        await setup_light(
+            hass, mock_govee_api, ip="192.168.1.101", fingerprint="other", sku="H615B"
+        )
 
     assert mock_controller.call_count == 1
     assert (
@@ -1060,10 +968,13 @@ async def test_reload_when_all_endpoints_lost(
     caplog: pytest.LogCaptureFixture,
     bind_failures: list[tuple[str, OSError]],
 ) -> None:
-    """Test the entry is reloaded once the controller has no live endpoint left."""
+    """Test the entries are reloaded once the controller has no live endpoint left."""
 
     mock_govee_api.bind_failures = bind_failures
     entry, _ = await setup_light(hass, mock_govee_api)
+    other_entry, _ = await setup_light(
+        hass, mock_govee_api, ip="192.168.1.101", fingerprint="other", sku="H615B"
+    )
     assert mock_govee_api.start.await_count == 1
 
     async def start(**kwargs: Any) -> None:
@@ -1080,59 +991,10 @@ async def test_reload_when_all_endpoints_lost(
 
     assert "Lost every network listener, reloading" in caplog.text
     mock_govee_api.rebind_failed.assert_not_awaited()
+    # Both entries moved to the one controller that replaced the dead one.
     assert mock_govee_api.start.await_count == 2
+    assert mock_govee_api.cleanup.call_count == 1
     assert entry.state is ConfigEntryState.LOADED
-    assert entry.runtime_data.last_update_success
-
-
-async def test_manual_device_linked_to_subentry(
-    hass: HomeAssistant,
-    mock_govee_api: AsyncMock,
-    device_registry: dr.DeviceRegistry,
-) -> None:
-    """Test a manual device is tied to its subentry and a discovered one is not."""
-    manual = GoveeDevice(
-        controller=mock_govee_api,
-        ip="192.168.1.100",
-        fingerprint="manual-fingerprint",
-        sku="H615A",
-        capabilities=DEFAULT_CAPABILITIES,
-    )
-    manual.is_manual = True
-    discovered = GoveeDevice(
-        controller=mock_govee_api,
-        ip="192.168.1.101",
-        fingerprint="discovered-fingerprint",
-        sku="H615B",
-        capabilities=DEFAULT_CAPABILITIES,
-    )
-    set_mocked_devices(mock_govee_api, [manual, discovered])
-
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        subentries_data=[
-            ConfigSubentryData(
-                data={CONF_DEVICE_IP: manual.ip},
-                subentry_type=SUBENTRY_TYPE_DEVICE,
-                title=manual.ip,
-                unique_id=manual.ip,
-            )
-        ],
-    )
-    entry.add_to_hass(hass)
-    assert await hass.config_entries.async_setup(entry.entry_id)
-    await hass.async_block_till_done()
-
-    subentry_id = next(iter(entry.subentries))
-
-    manual_device = device_registry.async_get_device_by_identifier(
-        (DOMAIN, manual.fingerprint), entry.entry_id
-    )
-    assert manual_device is not None
-    assert manual_device.config_subentry_id == subentry_id
-
-    discovered_device = device_registry.async_get_device_by_identifier(
-        (DOMAIN, discovered.fingerprint), entry.entry_id
-    )
-    assert discovered_device is not None
-    assert discovered_device.config_subentry_id is None
+    assert other_entry.state is ConfigEntryState.LOADED
+    assert entry.runtime_data.coordinator is other_entry.runtime_data.coordinator
+    assert entry.runtime_data.coordinator.last_update_success

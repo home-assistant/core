@@ -5,104 +5,189 @@ from errno import EADDRINUSE, EADDRNOTAVAIL
 from ipaddress import IPv4Network
 from unittest.mock import AsyncMock, patch
 
-from govee_local_api import GoveeDevice
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries
 from homeassistant.components.govee_light_local.const import (
     CLEANUP_TIMEOUT,
-    CONF_DEVICE_IP,
+    CONF_FINGERPRINT,
     DOMAIN,
-    SUBENTRY_TYPE_DEVICE,
 )
-from homeassistant.config_entries import ConfigSubentryData
+from homeassistant.const import CONF_IP_ADDRESS, CONF_MODEL
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from .conftest import (
-    DEFAULT_CAPABILITIES,
     DISABLED_NETWORK_ADAPTERS,
     EXPECTED_LISTENING_ADDRESSES,
-    set_mocked_devices,
+    answer_scans,
+    create_device,
+    create_entry,
+    setup_light,
 )
 
-
-def _get_devices(mock_govee_api: AsyncMock) -> list[GoveeDevice]:
-    return [
-        GoveeDevice(
-            controller=mock_govee_api,
-            ip="192.168.1.100",
-            fingerprint="asdawdqwdqwd1",
-            sku="H615A",
-            capabilities=DEFAULT_CAPABILITIES,
-        )
-    ]
+DISCOVERY_INFO = {
+    CONF_IP_ADDRESS: "192.168.1.100",
+    CONF_FINGERPRINT: "asdawdqwdqwd",
+    CONF_MODEL: "H615A",
+}
 
 
-async def test_abort_on_multiple_flows(hass: HomeAssistant) -> None:
-    """Test a second user flow is aborted while the first is still in progress."""
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "confirm"
-
-    result2 = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-
-    assert result2["type"] is FlowResultType.ABORT
-    assert result2["reason"] == "already_in_progress"
-
-
-async def test_integration_already_exists(hass: HomeAssistant) -> None:
-    """Test we only allow a single config flow."""
-    MockConfigEntry(domain=DOMAIN).add_to_hass(hass)
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "single_instance_allowed"
-
-
-async def test_creating_entry_has_no_devices(
+@pytest.mark.usefixtures("mock_network_adapters")
+async def test_user_flow(
     hass: HomeAssistant,
     mock_setup_entry: AsyncMock,
     mock_govee_api: AsyncMock,
 ) -> None:
-    """Test setting up Govee with no devices."""
+    """Test the lamps found on every enabled adapter are offered as discovered."""
 
-    set_mocked_devices(mock_govee_api, [])
+    answer_scans(
+        mock_govee_api,
+        create_device(mock_govee_api),
+        create_device(
+            mock_govee_api, ip="192.168.1.101", fingerprint="other", sku="H615B"
+        ),
+    )
 
     with patch(
-        "homeassistant.components.govee_light_local.config_flow.DISCOVERY_TIMEOUT",
+        "homeassistant.components.govee_light_local.coordinator.GoveeController",
+        return_value=mock_govee_api,
+    ) as mock_controller:
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "discovery_started"
+
+    assert mock_controller.call_count == 1
+    assert (
+        mock_controller.call_args.kwargs["listening_addresses"]
+        == EXPECTED_LISTENING_ADDRESSES
+    )
+    mock_govee_api.start.assert_awaited_once_with(require_all=False)
+    mock_govee_api.cleanup.assert_called_once_with(timeout=CLEANUP_TIMEOUT)
+
+    flows = hass.config_entries.flow.async_progress_by_handler(DOMAIN)
+    assert {flow["context"]["unique_id"] for flow in flows} == {
+        "asdawdqwdqwd",
+        "other",
+    }
+    assert {flow["step_id"] for flow in flows} == {"discovery_confirm"}
+
+    result = await hass.config_entries.flow.async_configure(
+        next(
+            flow["flow_id"] for flow in flows if flow["context"]["unique_id"] == "other"
+        ),
+        {},
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "H615B"
+    assert result["data"] == {CONF_IP_ADDRESS: "192.168.1.101"}
+    assert result["result"].unique_id == "other"
+    mock_setup_entry.assert_awaited_once()
+
+
+async def test_user_flow_no_devices(
+    hass: HomeAssistant, mock_setup_entry: AsyncMock, mock_govee_api: AsyncMock
+) -> None:
+    """Test the user flow aborts when no lamp answers."""
+
+    with patch(
+        "homeassistant.components.govee_light_local.coordinator.DISCOVERY_TIMEOUT",
         0,
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
-        assert result["type"] is FlowResultType.FORM
 
-        # Confirmation form
-        result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
-        assert result["type"] is FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "no_devices_found"
 
-        await hass.async_block_till_done()
-        mock_govee_api.start.assert_awaited_once()
-        mock_setup_entry.assert_not_called()
-        mock_govee_api.cleanup.assert_called_once_with(timeout=CLEANUP_TIMEOUT)
+    mock_govee_api.start.assert_awaited_once()
+    mock_setup_entry.assert_not_called()
+    mock_govee_api.cleanup.assert_called_once_with(timeout=CLEANUP_TIMEOUT)
 
 
-async def test_discovery_releases_port_when_cancelled(
+async def test_user_flow_with_devices_set_up(
     hass: HomeAssistant, mock_govee_api: AsyncMock
 ) -> None:
-    """Test the discovery controller releases the port when the flow is cancelled."""
+    """Test set up lamps are not offered, and their controller does the scan."""
 
-    set_mocked_devices(mock_govee_api, [])
+    await setup_light(hass, mock_govee_api)
+
+    with patch(
+        "homeassistant.components.govee_light_local.coordinator.DISCOVERY_TIMEOUT",
+        0,
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
+        )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "no_devices_found"
+
+    answer_scans(
+        mock_govee_api,
+        create_device(
+            mock_govee_api, ip="192.168.1.101", fingerprint="other", sku="H615B"
+        ),
+    )
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "discovery_started"
+    mock_govee_api.start.assert_awaited_once()
+    mock_govee_api.cleanup.assert_not_called()
+
+    flows = hass.config_entries.flow.async_progress_by_handler(DOMAIN)
+    assert [flow["context"]["unique_id"] for flow in flows] == ["other"]
+
+
+async def test_user_flow_offers_dismissed_device_again(
+    hass: HomeAssistant, mock_govee_api: AsyncMock
+) -> None:
+    """Test a lamp whose discovery the user dismissed is offered again."""
+
+    await setup_light(hass, mock_govee_api)
+    answer_scans(
+        mock_govee_api,
+        create_device(
+            mock_govee_api, ip="192.168.1.101", fingerprint="other", sku="H615B"
+        ),
+    )
+    mock_govee_api.send_discovery_message()
+    await hass.async_block_till_done()
+    (flow,) = hass.config_entries.flow.async_progress_by_handler(DOMAIN)
+    hass.config_entries.flow.async_abort(flow["flow_id"])
+
+    # Scan replies from a lamp that was seen before do not offer it again.
+    mock_govee_api.send_discovery_message()
+    await hass.async_block_till_done()
+    assert not hass.config_entries.flow.async_progress_by_handler(DOMAIN)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "discovery_started"
+    flows = hass.config_entries.flow.async_progress_by_handler(DOMAIN)
+    assert [flow["context"]["unique_id"] for flow in flows] == ["other"]
+
+
+async def test_user_flow_releases_port_when_cancelled(
+    hass: HomeAssistant, mock_govee_api: AsyncMock
+) -> None:
+    """Test the controller releases the port when the scan is cancelled."""
+
     started = asyncio.Event()
 
     async def _start(**kwargs: bool) -> None:
@@ -110,13 +195,10 @@ async def test_discovery_releases_port_when_cancelled(
 
     mock_govee_api.start.side_effect = _start
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-    assert result["type"] is FlowResultType.FORM
-
     task = hass.async_create_task(
-        hass.config_entries.flow.async_configure(result["flow_id"], {})
+        hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
+        )
     )
     await started.wait()
     # Yield once more so the flow parks in the discovery wait before we cancel it.
@@ -129,76 +211,36 @@ async def test_discovery_releases_port_when_cancelled(
     mock_govee_api.cleanup.assert_called_once_with(timeout=CLEANUP_TIMEOUT)
 
 
-@pytest.mark.usefixtures("mock_network_adapters")
-async def test_creating_entry_with_devices(
+async def test_user_flow_bind_error(
     hass: HomeAssistant,
     mock_setup_entry: AsyncMock,
     mock_govee_api: AsyncMock,
 ) -> None:
-    """Test a single controller listens on every enabled adapter address."""
+    """Test the user flow aborts when the listening port cannot be bound."""
 
-    set_mocked_devices(mock_govee_api, _get_devices(mock_govee_api))
-
-    with patch(
-        "homeassistant.components.govee_light_local.config_flow.GoveeController",
-        return_value=mock_govee_api,
-    ) as mock_controller:
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": config_entries.SOURCE_USER}
-        )
-        assert result["type"] is FlowResultType.FORM
-
-        # Confirmation form
-        result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
-        assert result["type"] is FlowResultType.CREATE_ENTRY
-        assert result["result"].unique_id == DOMAIN
-        # The options flow owns this setting, so it must be seeded into options
-        # rather than data, which an options flow can never write.
-        assert result["data"] == {}
-        assert result["options"] == {}
-
-        await hass.async_block_till_done()
-
-    assert mock_controller.call_count == 1
-    assert (
-        mock_controller.call_args.kwargs["listening_addresses"]
-        == EXPECTED_LISTENING_ADDRESSES
-    )
-    mock_govee_api.start.assert_awaited_once()
-    mock_setup_entry.assert_awaited_once()
-
-
-async def test_creating_entry_errno(
-    hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
-    mock_govee_api: AsyncMock,
-) -> None:
-    """Test setting up Govee with devices."""
-
-    e = OSError()
-    e.errno = EADDRINUSE
-    mock_govee_api.start.side_effect = e
-    set_mocked_devices(mock_govee_api, _get_devices(mock_govee_api))
+    mock_govee_api.start.side_effect = OSError(EADDRINUSE, "Address already in use")
+    answer_scans(mock_govee_api, create_device(mock_govee_api))
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] is FlowResultType.FORM
 
-    # Confirmation form
-    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
     assert result["type"] is FlowResultType.ABORT
-
-    await hass.async_block_till_done()
+    assert result["reason"] == "no_devices_found"
 
     assert mock_govee_api.start.call_count == 1
     mock_setup_entry.assert_not_awaited()
 
 
-async def test_discovery_without_listening_addresses(
-    hass: HomeAssistant, mock_govee_api: AsyncMock
+async def test_user_flow_no_listening_addresses(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    mock_govee_api: AsyncMock,
 ) -> None:
-    """Test discovery aborts when no enabled adapter provides an IPv4 address."""
+    """Test aborting when no enabled adapter provides an IPv4 address."""
+
+    answer_scans(mock_govee_api, create_device(mock_govee_api))
+
     with patch(
         "homeassistant.components.network.async_get_adapters",
         return_value=DISABLED_NETWORK_ADAPTERS,
@@ -206,15 +248,16 @@ async def test_discovery_without_listening_addresses(
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
-        result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "no_devices_found"
+
     mock_govee_api.start.assert_not_awaited()
+    mock_setup_entry.assert_not_called()
 
 
 @pytest.mark.usefixtures("mock_network_adapters")
-async def test_creating_entry_with_partial_bind(
+async def test_user_flow_with_partial_bind(
     hass: HomeAssistant,
     mock_setup_entry: AsyncMock,
     mock_govee_api: AsyncMock,
@@ -226,241 +269,99 @@ async def test_creating_entry_with_partial_bind(
     mock_govee_api.bind_failures = [
         ("10.0.0.7", OSError(EADDRNOTAVAIL, "Cannot assign requested address"))
     ]
-    set_mocked_devices(mock_govee_api, _get_devices(mock_govee_api))
+    answer_scans(mock_govee_api, create_device(mock_govee_api))
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] is FlowResultType.FORM
 
-    # Confirmation form
-    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["result"].unique_id == DOMAIN
-
-    await hass.async_block_till_done()
-
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "discovery_started"
     mock_govee_api.start.assert_awaited_once_with(require_all=False)
-    mock_setup_entry.assert_awaited_once()
+    mock_setup_entry.assert_not_called()
 
 
-async def test_add_device_subentry(hass: HomeAssistant) -> None:
-    """Test adding a manual device through the device subentry flow."""
-    config_entry = MockConfigEntry(domain=DOMAIN)
-    config_entry.add_to_hass(hass)
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_integration_discovery(hass: HomeAssistant) -> None:
+    """Test a discovered lamp is set up after the user confirms it."""
 
-    result = await hass.config_entries.subentries.async_init(
-        (config_entry.entry_id, SUBENTRY_TYPE_DEVICE),
-        context={"source": config_entries.SOURCE_USER},
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_INTEGRATION_DISCOVERY},
+        data=DISCOVERY_INFO,
     )
+
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "user"
+    assert result["step_id"] == "discovery_confirm"
+    assert result["description_placeholders"] == {
+        "model": "H615A",
+        "ip": "192.168.1.100",
+    }
 
-    result = await hass.config_entries.subentries.async_configure(
-        result["flow_id"], {CONF_DEVICE_IP: "192.168.1.100"}
+    # The same lamp answering again does not start a second flow.
+    duplicate = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_INTEGRATION_DISCOVERY},
+        data={**DISCOVERY_INFO, CONF_IP_ADDRESS: "192.168.1.150"},
     )
+    assert duplicate["type"] is FlowResultType.ABORT
+    assert duplicate["reason"] == "already_in_progress"
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "192.168.1.100"
-    assert result["unique_id"] == "192.168.1.100"
-    assert result["data"] == {CONF_DEVICE_IP: "192.168.1.100"}
-
-    subentry = next(iter(config_entry.subentries.values()))
-    assert subentry.subentry_type == SUBENTRY_TYPE_DEVICE
-    assert subentry.data == {CONF_DEVICE_IP: "192.168.1.100"}
-    assert subentry.unique_id == "192.168.1.100"
+    assert result["title"] == "H615A"
+    assert result["data"] == {CONF_IP_ADDRESS: "192.168.1.100"}
+    assert result["result"].unique_id == "asdawdqwdqwd"
 
 
-async def test_add_device_subentry_invalid_ip(hass: HomeAssistant) -> None:
-    """Test the device subentry flow rejects a malformed IP address."""
-    config_entry = MockConfigEntry(domain=DOMAIN)
-    config_entry.add_to_hass(hass)
+@pytest.mark.parametrize(
+    ("source", "onboarded"),
+    [
+        pytest.param(
+            config_entries.SOURCE_INTEGRATION_DISCOVERY, False, id="onboarding"
+        ),
+        pytest.param(config_entries.SOURCE_IMPORT, True, id="import"),
+    ],
+)
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_flow_without_confirmation(
+    hass: HomeAssistant, source: str, onboarded: bool
+) -> None:
+    """Test a lamp is set up without a prompt during onboarding or migration."""
 
-    result = await hass.config_entries.subentries.async_init(
-        (config_entry.entry_id, SUBENTRY_TYPE_DEVICE),
-        context={"source": config_entries.SOURCE_USER},
-    )
-
-    result = await hass.config_entries.subentries.async_configure(
-        result["flow_id"], {CONF_DEVICE_IP: "foo"}
-    )
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {"base": "invalid_ip"}
-    assert result["description_placeholders"] == {"ip": "foo"}
-
-    # The flow stays open, so a corrected address still completes.
-    result = await hass.config_entries.subentries.async_configure(
-        result["flow_id"], {CONF_DEVICE_IP: "192.168.1.100"}
-    )
+    with patch(
+        "homeassistant.components.onboarding.async_is_onboarded",
+        return_value=onboarded,
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": source}, data=DISCOVERY_INFO
+        )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["data"] == {CONF_DEVICE_IP: "192.168.1.100"}
+    assert result["title"] == "H615A"
+    assert result["data"] == {CONF_IP_ADDRESS: "192.168.1.100"}
+    assert result["result"].unique_id == "asdawdqwdqwd"
 
 
-async def test_add_device_subentry_duplicate(hass: HomeAssistant) -> None:
-    """Test the device subentry flow rejects an already configured IP."""
-    config_entry = MockConfigEntry(
-        domain=DOMAIN,
-        subentries_data=[
-            ConfigSubentryData(
-                data={CONF_DEVICE_IP: "192.168.1.100"},
-                subentry_type=SUBENTRY_TYPE_DEVICE,
-                title="192.168.1.100",
-                unique_id="192.168.1.100",
-            )
-        ],
-    )
-    config_entry.add_to_hass(hass)
+@pytest.mark.parametrize(
+    "source",
+    [config_entries.SOURCE_INTEGRATION_DISCOVERY, config_entries.SOURCE_IMPORT],
+)
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_flow_already_configured(
+    hass: HomeAssistant, mock_govee_api: AsyncMock, source: str
+) -> None:
+    """Test a configured lamp answering from a new address updates its entry."""
 
-    result = await hass.config_entries.subentries.async_init(
-        (config_entry.entry_id, SUBENTRY_TYPE_DEVICE),
-        context={"source": config_entries.SOURCE_USER},
-    )
+    entry: MockConfigEntry = create_entry(hass, create_device(mock_govee_api))
 
-    result = await hass.config_entries.subentries.async_configure(
-        result["flow_id"], {CONF_DEVICE_IP: "192.168.1.100"}
-    )
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {"base": "already_configured"}
-    assert len(config_entry.subentries) == 1
-
-    # The flow stays open, so a different address still completes.
-    result = await hass.config_entries.subentries.async_configure(
-        result["flow_id"], {CONF_DEVICE_IP: "192.168.1.101"}
-    )
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert len(config_entry.subentries) == 2
-
-
-async def test_reconfigure_device_subentry(hass: HomeAssistant) -> None:
-    """Test changing a manual device's IP address in place."""
-    config_entry = MockConfigEntry(
-        domain=DOMAIN,
-        subentries_data=[
-            ConfigSubentryData(
-                data={CONF_DEVICE_IP: "192.168.1.100"},
-                subentry_type=SUBENTRY_TYPE_DEVICE,
-                title="192.168.1.100",
-                unique_id="192.168.1.100",
-            )
-        ],
-    )
-    config_entry.add_to_hass(hass)
-    subentry_id = next(iter(config_entry.subentries))
-
-    result = await hass.config_entries.subentries.async_init(
-        (config_entry.entry_id, SUBENTRY_TYPE_DEVICE),
-        context={
-            "source": config_entries.SOURCE_RECONFIGURE,
-            "subentry_id": subentry_id,
-        },
-    )
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "reconfigure"
-
-    result = await hass.config_entries.subentries.async_configure(
-        result["flow_id"], {CONF_DEVICE_IP: "192.168.1.102"}
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": source},
+        data={**DISCOVERY_INFO, CONF_IP_ADDRESS: "192.168.1.150"},
     )
 
     assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "reconfigure_successful"
-
-    assert len(config_entry.subentries) == 1
-    subentry = config_entry.subentries[subentry_id]
-    assert subentry.data == {CONF_DEVICE_IP: "192.168.1.102"}
-    assert subentry.title == "192.168.1.102"
-    assert subentry.unique_id == "192.168.1.102"
-
-
-async def test_reconfigure_device_subentry_invalid_ip(hass: HomeAssistant) -> None:
-    """Test the reconfigure step rejects a malformed IP address."""
-    config_entry = MockConfigEntry(
-        domain=DOMAIN,
-        subentries_data=[
-            ConfigSubentryData(
-                data={CONF_DEVICE_IP: "192.168.1.100"},
-                subentry_type=SUBENTRY_TYPE_DEVICE,
-                title="192.168.1.100",
-                unique_id="192.168.1.100",
-            )
-        ],
-    )
-    config_entry.add_to_hass(hass)
-    subentry_id = next(iter(config_entry.subentries))
-
-    result = await hass.config_entries.subentries.async_init(
-        (config_entry.entry_id, SUBENTRY_TYPE_DEVICE),
-        context={
-            "source": config_entries.SOURCE_RECONFIGURE,
-            "subentry_id": subentry_id,
-        },
-    )
-
-    result = await hass.config_entries.subentries.async_configure(
-        result["flow_id"], {CONF_DEVICE_IP: "foo"}
-    )
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {"base": "invalid_ip"}
-    assert result["description_placeholders"] == {"ip": "foo"}
-
-    # The flow stays open, so a corrected address still completes.
-    result = await hass.config_entries.subentries.async_configure(
-        result["flow_id"], {CONF_DEVICE_IP: "192.168.1.102"}
-    )
-
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "reconfigure_successful"
-    assert config_entry.subentries[subentry_id].unique_id == "192.168.1.102"
-
-
-async def test_reconfigure_device_subentry_duplicate(hass: HomeAssistant) -> None:
-    """Test the reconfigure step rejects another subentry's IP but allows its own."""
-    config_entry = MockConfigEntry(
-        domain=DOMAIN,
-        subentries_data=[
-            ConfigSubentryData(
-                data={CONF_DEVICE_IP: "192.168.1.100"},
-                subentry_type=SUBENTRY_TYPE_DEVICE,
-                title="192.168.1.100",
-                unique_id="192.168.1.100",
-            ),
-            ConfigSubentryData(
-                data={CONF_DEVICE_IP: "192.168.1.101"},
-                subentry_type=SUBENTRY_TYPE_DEVICE,
-                title="192.168.1.101",
-                unique_id="192.168.1.101",
-            ),
-        ],
-    )
-    config_entry.add_to_hass(hass)
-    subentry_id = next(
-        subentry_id
-        for subentry_id, subentry in config_entry.subentries.items()
-        if subentry.unique_id == "192.168.1.100"
-    )
-
-    result = await hass.config_entries.subentries.async_init(
-        (config_entry.entry_id, SUBENTRY_TYPE_DEVICE),
-        context={
-            "source": config_entries.SOURCE_RECONFIGURE,
-            "subentry_id": subentry_id,
-        },
-    )
-
-    result = await hass.config_entries.subentries.async_configure(
-        result["flow_id"], {CONF_DEVICE_IP: "192.168.1.101"}
-    )
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {"base": "already_configured"}
-
-    # The subentry's own IP is not a conflict with itself.
-    result = await hass.config_entries.subentries.async_configure(
-        result["flow_id"], {CONF_DEVICE_IP: "192.168.1.100"}
-    )
-
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "reconfigure_successful"
+    assert result["reason"] == "already_configured"
+    assert entry.data == {CONF_IP_ADDRESS: "192.168.1.150"}

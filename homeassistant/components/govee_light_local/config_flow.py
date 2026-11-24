@@ -1,195 +1,96 @@
 """Config flow for Govee light local."""
 
-import asyncio
-from ipaddress import AddressValueError, IPv4Address
 import logging
 from typing import Any, override
 
-from govee_local_api import GoveeController
-import probatio
-
 from homeassistant.components import onboarding
-from homeassistant.config_entries import (
-    ConfigEntry,
-    ConfigFlow,
-    ConfigFlowResult,
-    ConfigSubentryFlow,
-    SubentryFlowResult,
-)
-from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import config_validation as cv
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.const import CONF_IP_ADDRESS, CONF_MODEL
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.typing import DiscoveryInfoType
 
-from . import async_get_listening_addresses
-from .const import (
-    CONF_DEVICE_IP,
-    CONF_LISTENING_PORT_DEFAULT,
-    CONF_MULTICAST_ADDRESS_DEFAULT,
-    CONF_TARGET_PORT_DEFAULT,
-    DISCOVERY_TIMEOUT,
-    DOMAIN,
-    SUBENTRY_TYPE_DEVICE,
+from .const import CONF_FINGERPRINT, DOMAIN
+from .coordinator import (
+    NoListeningAddressesError,
+    async_acquire_coordinator,
+    async_release_coordinator,
 )
-from .coordinator import async_cleanup_controller, log_bound_addresses
 
 _LOGGER = logging.getLogger(__name__)
 
 
-async def _async_has_devices(hass: HomeAssistant) -> bool:
-    """Return if there are devices that can be discovered."""
+async def _async_discover_devices(hass: HomeAssistant) -> bool:
+    """Offer the answering lamps that have no config entry; return if there are any."""
 
-    listening_addresses = await async_get_listening_addresses(hass)
-    if not listening_addresses:
+    # A second controller would take replies away from the one the set up
+    # entries share, so the scan goes through that one.
+    try:
+        coordinator = await async_acquire_coordinator(hass)
+    except NoListeningAddressesError:
         _LOGGER.debug("No enabled IPv4 addresses to listen on")
         return False
-
-    controller: GoveeController = GoveeController(
-        loop=hass.loop,
-        logger=_LOGGER,
-        listening_addresses=listening_addresses,
-        broadcast_address=CONF_MULTICAST_ADDRESS_DEFAULT,
-        broadcast_port=CONF_TARGET_PORT_DEFAULT,
-        listening_port=CONF_LISTENING_PORT_DEFAULT,
-        discovery_enabled=True,
-        discovery_interval=1,
-        update_enabled=False,
-    )
-
-    try:
-        _LOGGER.debug("Starting discovery on %s", listening_addresses)
-        # Probe through whichever adapters bind; only a total failure aborts.
-        await controller.start(require_all=False)
     except OSError as ex:
         _LOGGER.error("Start failed, errno: %d", ex.errno)
         return False
 
-    log_bound_addresses(controller)
-
     try:
-        async with asyncio.timeout(delay=DISCOVERY_TIMEOUT):
-            while not controller.devices:
-                await asyncio.sleep(delay=1)
-    except TimeoutError:
-        _LOGGER.debug("No devices found")
+        devices = await coordinator.async_scan()
+        coordinator.async_offer_unconfigured()
+        return bool(devices)
     finally:
-        # cleanup() clears the device registry, so count before tearing down.
-        devices_count = len(controller.devices)
-        await async_cleanup_controller(controller)
-
-    return devices_count > 0
+        await async_release_coordinator(hass, coordinator)
 
 
-class GoveeConfigFlowHandler(ConfigFlow, domain=DOMAIN):
+class GoveeConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Govee light local."""
 
-    VERSION = 1
+    VERSION = 2
+
+    _ip_address: str
+    _model: str
 
     @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Handle a flow initialized by the user."""
+        """Scan for lamps; each one found is offered as a discovered device."""
+        if not await _async_discover_devices(self.hass):
+            return self.async_abort(reason="no_devices_found")
+        return self.async_abort(reason="discovery_started")
 
-        await self.async_set_unique_id(DOMAIN)
-
-        return await self.async_step_confirm()
-
-    async def async_step_confirm(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Confirm setup."""
-        if user_input is not None or not onboarding.async_is_onboarded(self.hass):
-            if not await _async_has_devices(self.hass):
-                return self.async_abort(reason="no_devices_found")
-            return self.async_create_entry(title="", data={})
-
-        return self.async_show_form(step_id="confirm", last_step=True)
-
-    @classmethod
-    @callback
     @override
-    def async_get_supported_subentry_types(
-        cls, config_entry: ConfigEntry
-    ) -> dict[str, type[ConfigSubentryFlow]]:
-        """Return subentry types supported by this integration."""
-        return {SUBENTRY_TYPE_DEVICE: GoveeDeviceSubentryFlowHandler}
+    async def async_step_integration_discovery(
+        self, discovery_info: DiscoveryInfoType
+    ) -> ConfigFlowResult:
+        """Handle a lamp that answered the shared controller's scan."""
+        await self._async_set_device(discovery_info)
+        return await self.async_step_discovery_confirm()
 
-
-class GoveeDeviceSubentryFlowHandler(ConfigSubentryFlow):
-    """Handle adding a Govee light by IP address."""
-
-    def _validate_ip(self, user_ip: str, exclude_subentry_id: str | None) -> str | None:
-        """Return an error key if the IP is malformed or already configured."""
-        try:
-            IPv4Address(user_ip)
-        except AddressValueError:
-            return "invalid_ip"
-        if any(
-            subentry.unique_id == user_ip
-            and subentry.subentry_id != exclude_subentry_id
-            for subentry in self._get_entry().subentries.values()
-        ):
-            return "already_configured"
-        return None
-
-    async def async_step_user(
-        self, user_input: dict[str, Any] | None = None
-    ) -> SubentryFlowResult:
-        """Add a device by IP address."""
-        errors: dict[str, str] = {}
-        placeholders: dict[str, str] = {}
-
-        if user_input is not None:
-            user_ip = user_input[CONF_DEVICE_IP]
-            if error := self._validate_ip(user_ip, None):
-                errors["base"] = error
-                placeholders["ip"] = user_ip
-            else:
-                return self.async_create_entry(
-                    title=user_ip,
-                    data={CONF_DEVICE_IP: user_ip},
-                    unique_id=user_ip,
-                )
-
-        return self.async_show_form(
-            step_id="user",
-            data_schema=probatio.Schema({probatio.Required(CONF_DEVICE_IP): cv.string}),
-            errors=errors,
-            description_placeholders=placeholders,
-            last_step=True,
+    async def async_step_import(self, import_data: dict[str, Any]) -> ConfigFlowResult:
+        """Add a lamp that the entry for every lamp had already set up."""
+        await self._async_set_device(import_data)
+        return self.async_create_entry(
+            title=self._model, data={CONF_IP_ADDRESS: self._ip_address}
         )
 
-    async def async_step_reconfigure(
+    async def _async_set_device(self, discovery_info: dict[str, Any]) -> None:
+        """Identify the lamp, storing a new address if it is already configured."""
+        self._ip_address = discovery_info[CONF_IP_ADDRESS]
+        self._model = discovery_info[CONF_MODEL]
+        await self.async_set_unique_id(discovery_info[CONF_FINGERPRINT])
+        self._abort_if_unique_id_configured(updates={CONF_IP_ADDRESS: self._ip_address})
+
+    async def async_step_discovery_confirm(
         self, user_input: dict[str, Any] | None = None
-    ) -> SubentryFlowResult:
-        """Change the IP address of a configured device."""
-        errors: dict[str, str] = {}
-        placeholders: dict[str, str] = {}
-        subentry = self._get_reconfigure_subentry()
+    ) -> ConfigFlowResult:
+        """Confirm discovery."""
+        if user_input is not None or not onboarding.async_is_onboarded(self.hass):
+            return self.async_create_entry(
+                title=self._model, data={CONF_IP_ADDRESS: self._ip_address}
+            )
 
-        if user_input is not None:
-            user_ip = user_input[CONF_DEVICE_IP]
-            if error := self._validate_ip(user_ip, subentry.subentry_id):
-                errors["base"] = error
-                placeholders["ip"] = user_ip
-            else:
-                return self.async_update_and_abort(
-                    self._get_entry(),
-                    subentry,
-                    title=user_ip,
-                    data={CONF_DEVICE_IP: user_ip},
-                    unique_id=user_ip,
-                )
-
+        placeholders = {"model": self._model, "ip": self._ip_address}
+        self.context["title_placeholders"] = placeholders
         return self.async_show_form(
-            step_id="reconfigure",
-            data_schema=probatio.Schema(
-                {
-                    probatio.Required(
-                        CONF_DEVICE_IP, default=subentry.data[CONF_DEVICE_IP]
-                    ): cv.string
-                }
-            ),
-            errors=errors,
-            description_placeholders=placeholders,
-            last_step=True,
+            step_id="discovery_confirm", description_placeholders=placeholders
         )

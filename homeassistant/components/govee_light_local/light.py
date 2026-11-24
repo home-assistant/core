@@ -16,7 +16,7 @@ from homeassistant.components.light import (
     filter_supported_color_modes,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import dt as dt_util
@@ -36,26 +36,8 @@ async def async_setup_entry(
 ) -> None:
     """Govee light setup."""
 
-    coordinator = config_entry.runtime_data
-
-    def discovery_callback(device: GoveeDevice, is_new: bool) -> bool:
-        if is_new:
-            async_add_entities(
-                [GoveeLight(coordinator, device)],
-                config_subentry_id=coordinator.async_claim_subentry(device),
-            )
-        else:
-            # A scan reply from a known lamp proves its current address.
-            coordinator.async_adopt_device(device)
-        return True
-
-    for govee_device in coordinator.devices:
-        async_add_entities(
-            [GoveeLight(coordinator, govee_device)],
-            config_subentry_id=coordinator.async_claim_subentry(govee_device),
-        )
-
-    coordinator.set_discovery_callback(discovery_callback)
+    data = config_entry.runtime_data
+    async_add_entities([GoveeLight(data.coordinator, data.device)])
 
 
 class GoveeLight(CoordinatorEntity[GoveeLocalApiCoordinator], LightEntity):
@@ -88,7 +70,7 @@ class GoveeLight(CoordinatorEntity[GoveeLocalApiCoordinator], LightEntity):
         super().__init__(coordinator)
         self._device = device
 
-        self._attr_unique_id: str = device.fingerprint
+        self._attr_unique_id = device.fingerprint
 
         capabilities = device.capabilities
         color_modes = {ColorMode.ONOFF}
@@ -114,7 +96,7 @@ class GoveeLight(CoordinatorEntity[GoveeLocalApiCoordinator], LightEntity):
             # If the light supports only a single color mode, set it now
             self._fixed_color_mode = next(iter(self._attr_supported_color_modes))
 
-        self._attr_device_info = dr.DeviceInfo(
+        self._attr_device_info = DeviceInfo(
             identifiers={
                 # Serial numbers are unique identifiers within a specific domain
                 (DOMAIN, device.fingerprint)
@@ -122,7 +104,6 @@ class GoveeLight(CoordinatorEntity[GoveeLocalApiCoordinator], LightEntity):
             name=device.sku,
             manufacturer=MANUFACTURER,
             model_id=device.sku,
-            model=device.sku,
             serial_number=device.fingerprint,
         )
 
@@ -224,7 +205,7 @@ class GoveeLight(CoordinatorEntity[GoveeLocalApiCoordinator], LightEntity):
 
     @override
     async def async_added_to_hass(self) -> None:
-        """Register the update callback when the entity is added."""
+        """Register update callback when entity is added."""
         await super().async_added_to_hass()
         self._device.set_update_callback(self._update_callback)
 

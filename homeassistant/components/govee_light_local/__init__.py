@@ -1,25 +1,26 @@
 """The Govee Light local integration."""
 
-import asyncio
 from errno import EADDRINUSE, EADDRNOTAVAIL, EMFILE, ENETDOWN, ENETUNREACH, ENOBUFS
+from functools import partial
 import logging
 from typing import TYPE_CHECKING
 
 from govee_local_api.controller import LISTENING_PORT
 
-from homeassistant.components import network
-from homeassistant.const import Platform
-from homeassistant.core import Event, HomeAssistant, callback
+from homeassistant.const import CONF_IP_ADDRESS, Platform
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
-from homeassistant.helpers import device_registry as dr
-from homeassistant.helpers.device_registry import EventDeviceRegistryUpdatedData
-from homeassistant.helpers.event import async_track_time_interval
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 
-from .const import DISCOVERY_TIMEOUT, DOMAIN, REBIND_INTERVAL
+from .const import DOMAIN
 from .coordinator import (
-    GoveeLocalApiConfig,
     GoveeLocalApiCoordinator,
     GoveeLocalConfigEntry,
+    GoveeLocalRuntimeData,
+    NoListeningAddressesError,
+    async_acquire_coordinator,
+    async_get_legacy_entry,
+    async_release_coordinator,
 )
 
 PLATFORMS: list[Platform] = [Platform.LIGHT]
@@ -33,69 +34,56 @@ TRANSIENT_BIND_ERRNOS = frozenset(
 _LOGGER = logging.getLogger(__name__)
 
 
+async def async_migrate_entry(
+    hass: HomeAssistant, entry: GoveeLocalConfigEntry
+) -> None:
+    """Migrate a config entry to version 2."""
+    if entry.version == 1:
+        # Version 1 was a single entry for every lamp. Turning it into the
+        # entry of one lamp needs that lamp to answer a scan, so that happens
+        # during setup; the version only keeps older releases from loading
+        # version 2 entries.
+        hass.config_entries.async_update_entry(entry, version=2)
+
+
 async def async_setup_entry(hass: HomeAssistant, entry: GoveeLocalConfigEntry) -> None:
     """Set up Govee light local from a config entry."""
 
-    listening_addresses = await async_get_listening_addresses(hass)
-    _LOGGER.debug("Enabled listening addresses: %s", listening_addresses)
+    coordinator = await _async_acquire_coordinator(hass)
+    entry.async_on_unload(partial(async_release_coordinator, hass, coordinator))
 
-    if not listening_addresses:
+    if async_get_legacy_entry(hass) is entry:
+        await _async_convert_legacy_entry(hass, entry, coordinator)
+    if TYPE_CHECKING:
+        assert entry.unique_id is not None
+
+    _async_adopt_registry_entries(hass, entry)
+
+    device = await coordinator.async_wait_for_device(
+        entry.unique_id, entry.data[CONF_IP_ADDRESS]
+    )
+    if device is None:
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN,
+            translation_key="device_not_responding",
+            translation_placeholders={"ip": entry.data[CONF_IP_ADDRESS]},
+        )
+    entry.async_on_unload(partial(coordinator.remove_device, device))
+    if device.ip != entry.data[CONF_IP_ADDRESS]:
+        hass.config_entries.async_update_entry(entry, data={CONF_IP_ADDRESS: device.ip})
+
+    entry.runtime_data = GoveeLocalRuntimeData(coordinator, device)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+
+
+async def _async_acquire_coordinator(hass: HomeAssistant) -> GoveeLocalApiCoordinator:
+    """Acquire the shared coordinator, mapping failures to setup errors."""
+    try:
+        return await async_acquire_coordinator(hass)
+    except NoListeningAddressesError as ex:
         raise ConfigEntryNotReady(
             translation_domain=DOMAIN, translation_key="no_listening_addresses"
-        )
-
-    coordinator: GoveeLocalApiCoordinator = GoveeLocalApiCoordinator(
-        hass=hass, config_entry=entry, listening_addresses=listening_addresses
-    )
-    # Assigned before the update listener registers: a subentry changed while
-    # setup is still waiting for discovery must find the coordinator.
-    entry.runtime_data = coordinator
-
-    @callback
-    def _async_device_removed_filter(
-        event_data: EventDeviceRegistryUpdatedData,
-    ) -> bool:
-        """Filter for removals of this entry's devices."""
-        return (
-            event_data["action"] == "remove"
-            and event_data["device"]["config_entry_id"] == entry.entry_id
-        )
-
-    @callback
-    def _async_device_removed(event: Event[EventDeviceRegistryUpdatedData]) -> None:
-        """Make the controller forget a deleted device.
-
-        A device left in the controller answers the next scan as an already
-        known device, so the platform would never recreate its entity.
-        """
-        if TYPE_CHECKING:
-            # The event filter only lets removals through.
-            assert event.data["action"] == "remove"
-        device_info = event.data["device"]
-
-        fingerprints = {
-            identifier[1]
-            for identifier in device_info["identifiers"]
-            if identifier[0] == DOMAIN
-        }
-        for device in coordinator.devices:
-            if device.fingerprint in fingerprints:
-                coordinator.remove_device(device)
-
-    entry.async_on_unload(coordinator.async_cleanup)
-    entry.async_on_unload(entry.add_update_listener(update_listener))
-    entry.async_on_unload(
-        hass.bus.async_listen(
-            dr.EVENT_DEVICE_REGISTRY_UPDATED,
-            _async_device_removed,
-            event_filter=_async_device_removed_filter,
-        )
-    )
-
-    coordinator.async_reconcile_subentries()
-
-    try:
-        await coordinator.start()
+        ) from ex
     except OSError as ex:
         # No address bound. Adapters are enumerated once at startup, so retry
         # rather than fail: a late or stale adapter recovers on the next attempt.
@@ -117,63 +105,71 @@ async def async_setup_entry(hass: HomeAssistant, entry: GoveeLocalConfigEntry) -
             translation_placeholders={"error": ex.strerror or str(ex)},
         ) from ex
 
-    entry.async_on_unload(
-        async_track_time_interval(
-            hass,
-            coordinator.async_rebind_failed_addresses,
-            REBIND_INTERVAL,
-            name="Govee light local rebind",
-        )
-    )
 
-    await coordinator.async_config_entry_first_refresh()
+async def _async_convert_legacy_entry(
+    hass: HomeAssistant,
+    entry: GoveeLocalConfigEntry,
+    coordinator: GoveeLocalApiCoordinator,
+) -> None:
+    """Turn the entry for every lamp into the entry of one answering lamp.
 
-    try:
-        async with asyncio.timeout(delay=DISCOVERY_TIMEOUT):
-            while not coordinator.devices:
-                await asyncio.sleep(delay=1)
-    except TimeoutError as ex:
+    The other lamps it had set up get their own entry when they answer a scan.
+    """
+    devices = await coordinator.async_scan()
+    if not devices:
         raise ConfigEntryNotReady(
             translation_domain=DOMAIN, translation_key="no_devices_found"
-        ) from ex
-
-    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-
-
-async def update_listener(
-    hass: HomeAssistant, config_entry: GoveeLocalConfigEntry
-) -> None:
-    """Reconcile the controller with the configured subentries.
-
-    The device subentries describe the desired set of manual devices, so the
-    listener diffs them against what the controller currently tracks. This is
-    idempotent and never writes back to the entry.
-    """
-    coordinator: GoveeLocalApiCoordinator = config_entry.runtime_data
-    config: GoveeLocalApiConfig = GoveeLocalApiConfig.from_config_entry(config_entry)
-
-    coordinator.async_reconcile_subentries()
-
+        )
     device_registry = dr.async_get(hass)
-    # The difference is a new set, so removing entries below cannot mutate what
-    # we are iterating over.
-    for ip in coordinator.manual_device_ips - config.manual_devices:
-        if (
-            (device := coordinator.get_device_by_ip(ip)) is not None
-            and (
+    device = next(
+        (
+            device
+            for device in devices
+            if device_registry.async_get_device_by_identifier(
+                (DOMAIN, device.fingerprint), entry.entry_id
+            )
+        ),
+        devices[0],
+    )
+    hass.config_entries.async_update_entry(
+        entry,
+        unique_id=device.fingerprint,
+        title=device.sku,
+        data={CONF_IP_ADDRESS: device.ip},
+    )
+    coordinator.async_offer_unconfigured()
+
+
+@callback
+def _async_adopt_registry_entries(
+    hass: HomeAssistant, entry: GoveeLocalConfigEntry
+) -> None:
+    """Take over the lamp's device and entities from the entry it was split from."""
+    if TYPE_CHECKING:
+        assert entry.unique_id is not None
+    device_registry = dr.async_get(hass)
+    entity_registry = er.async_get(hass)
+    for other_entry in hass.config_entries.async_entries(DOMAIN):
+        if other_entry.entry_id == entry.entry_id or (
+            (
                 device_entry := device_registry.async_get_device_by_identifier(
-                    (DOMAIN, device.fingerprint), config_entry.entry_id
+                    (DOMAIN, entry.unique_id), other_entry.entry_id
                 )
             )
-            is not None
-            and device_entry.config_subentry_id in config_entry.subentries
+            is None
         ):
-            # The lamp's subentry survived, so its address was reconfigured and
-            # the lamp was not deleted. Keep it, with its registry entries and
-            # entity: the library updates its IP in place when it answers the
-            # probe at the new address.
             continue
-        coordinator.async_remove_manual_device(ip)
+        # Entities move first: moving the device removes the entities that
+        # still belong to its previous config entry.
+        for entity_entry in er.async_entries_for_device(
+            entity_registry, device_entry.id, include_disabled_entities=True
+        ):
+            entity_registry.async_update_entity(
+                entity_entry.entity_id, config_entry_id=entry.entry_id
+            )
+        device_registry.async_update_device(
+            device_entry.id, new_config_entry_id=entry.entry_id
+        )
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: GoveeLocalConfigEntry) -> None:
@@ -186,34 +182,5 @@ async def async_remove_config_entry_device(
     config_entry: GoveeLocalConfigEntry,
     device_entry: dr.AnyDeviceEntry,
 ) -> bool:
-    """Allow removing a device, dropping a manual device's configuration.
-
-    Handled here rather than in the registry event listener so it also works
-    when the lamp never answered or the entry is not loaded, and so internal
-    removals (reconfigure, subentry cascade) never touch other subentries.
-    """
-    if (
-        subentry_id := device_entry.config_subentry_id
-    ) is not None and subentry_id in config_entry.subentries:
-        hass.config_entries.async_remove_subentry(config_entry, subentry_id)
-    return True
-
-
-async def async_get_listening_addresses(hass: HomeAssistant) -> list[str]:
-    """Get the enabled IPv4 source addresses, with network mask, for Govee local."""
-    adapters = await network.async_get_adapters(hass)
-    for adapter in adapters:
-        _LOGGER.debug(
-            "Adapter %s (%s): %s",
-            adapter["name"],
-            "enabled" if adapter["enabled"] else "disabled",
-            [f"{ipv4['address']}/{ipv4['network_prefix']}" for ipv4 in adapter["ipv4"]],
-        )
-    return sorted(
-        {
-            f"{ipv4['address']}/{ipv4['network_prefix']}"
-            for adapter in adapters
-            if adapter["enabled"]
-            for ipv4 in adapter["ipv4"]
-        }
-    )
+    """Allow removing a lamp left over from the entry for every lamp."""
+    return (DOMAIN, config_entry.unique_id) not in device_entry.identifiers

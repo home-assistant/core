@@ -26,5 +26,4 @@ REBIND_INTERVAL = timedelta(minutes=5)
 CLEANUP_TIMEOUT = 2
 CLEANUP_WAIT_TIMEOUT = 3
 
-CONF_DEVICE_IP = "device_ip"
-SUBENTRY_TYPE_DEVICE = "device"
+CONF_FINGERPRINT = "fingerprint"

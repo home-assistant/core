@@ -1,46 +1,14 @@
 {
   "config": {
     "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "discovery_started": "Discovery has started. Your Govee lights will appear as discovered devices under Settings > Devices & services.",
       "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]"
     },
+    "flow_title": "{model} ({ip})",
     "step": {
-      "confirm": {
-        "description": "[%key:common::config_flow::description::confirm_setup%]"
-      }
-    }
-  },
-  "config_subentries": {
-    "device": {
-      "entry_type": "Device",
-      "error": {
-        "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
-        "invalid_ip": "{ip} is not a valid IP address"
-      },
-      "initiate_flow": {
-        "reconfigure": "Reconfigure device",
-        "user": "Add device"
-      },
-      "step": {
-        "reconfigure": {
-          "data": {
-            "device_ip": "[%key:common::config_flow::data::ip%]"
-          },
-          "data_description": {
-            "device_ip": "[%key:component::govee_light_local::config_subentries::device::step::user::data_description::device_ip%]"
-          },
-          "description": "Update the device's IP address",
-          "title": "Reconfigure device"
-        },
-        "user": {
-          "data": {
-            "device_ip": "[%key:common::config_flow::data::ip%]"
-          },
-          "data_description": {
-            "device_ip": "The IP address of the Govee light to add. Give the light a static IP address or a DHCP reservation so the address does not change."
-          },
-          "description": "Enter the device's IP address",
-          "title": "Add device"
-        }
+      "discovery_confirm": {
+        "description": "Do you want to set up {model} ({ip})?"
       }
     }
   },
@@ -195,6 +163,9 @@
   "exceptions": {
     "bind_failed": {
       "message": "Could not listen for Govee devices: {error}"
+    },
+    "device_not_responding": {
+      "message": "The light at {ip} did not respond"
     },
     "no_devices_found": {
       "message": "[%key:common::config_flow::abort::no_devices_found%]"

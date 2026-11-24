@@ -36,8 +36,4 @@ async def async_get_config_entry_diagnostics(
     hass: HomeAssistant, entry: GoveeLocalConfigEntry
 ) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
-    return {
-        "devices": [
-            _device_diagnostics(device) for device in entry.runtime_data.devices
-        ]
-    }
+    return {"devices": [_device_diagnostics(entry.runtime_data.device)]}

@@ -28,7 +28,6 @@ MISSING_INTEGRATION_TYPE = {
     "forked_daapd",
     "geniushub",
     "geofency",
-    "govee_light_local",
     "gpsd",
     "gpslogger",
     "gree",
