@@ -109,7 +109,7 @@ Every check has a code following the
 | `C7458` | [`home-assistant-logger-const-name`](#c7458-home-assistant-logger-const-name) | Logger in an integration's `const.py` should use `__package__` |
 | `C7459` | [`home-assistant-placeholder-key`](#c7459-home-assistant-placeholder-key) | Placeholder keys should be string literals, not constants such as `CONF_*` |
 | `C7464` | [`home-assistant-type-checking-block-position`](#c7464-home-assistant-type-checking-block-position) | `if TYPE_CHECKING:` block should come after all module-level imports |
-| `C7465` | [`home-assistant-action-target-key`](#c7465-home-assistant-action-target-key) | Target keys of action calls in tests should use `TargetKey` |
+| `C7465` | [`home-assistant-action-target-key`](#c7465-home-assistant-action-target-key) | Target keys of action calls should use `TargetKey` |
 | `E7401` | [`home-assistant-invalid-inheritance`](#e7401-home-assistant-invalid-inheritance) | Invalid entity class inheritance chain |
 | `E7402` | [`home-assistant-argument-type`](#e7402-home-assistant-argument-type) | Function argument should have the specified type hint |
 | `E7403` | [`home-assistant-return-type`](#e7403-home-assistant-return-type) | Function should have the specified return type hint |
@@ -1212,8 +1212,8 @@ self.context["title_placeholders"] = {"host": discovery_info.host}
 
 ## `home_assistant_target_key` checker
 
-Checks the target keys of `hass.services.async_call` calls in tests: the keys
-of a `target=` dict literal, including the keys of its `exclude` dict literal.
+Checks the target keys of `hass.services.async_call` calls: the keys of a
+`target=` dict literal, including the keys of its `exclude` dict literal.
 
 ### `C7465`: `home-assistant-action-target-key`
 

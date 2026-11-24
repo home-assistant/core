@@ -23,8 +23,8 @@ from pyzonneplan.const import BatteryMode
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.select import (
-    ATTR_OPTIONS,
     DOMAIN as SELECT_DOMAIN,
+    SelectEntityCapabilityAttribute,
     SelectService,
     SelectServiceArgument,
 )
@@ -101,7 +101,7 @@ async def test_select_options(
 
     assert (state := hass.states.get(CONTROL_MODE_ENTITY_ID))
     assert state.state == control_mode
-    assert state.attributes[ATTR_OPTIONS] == expected_options
+    assert state.attributes[SelectEntityCapabilityAttribute.OPTIONS] == expected_options
 
 
 @pytest.mark.usefixtures("init_integration")
@@ -302,7 +302,7 @@ async def test_select_control_mode_unavailable_at_setup(
 
     assert (state := hass.states.get(CONTROL_MODE_ENTITY_ID))
     assert state.state == "self_consumption"
-    assert state.attributes[ATTR_OPTIONS] == [
+    assert state.attributes[SelectEntityCapabilityAttribute.OPTIONS] == [
         "self_consumption",
         "home_optimization",
         "dynamic_charging",
