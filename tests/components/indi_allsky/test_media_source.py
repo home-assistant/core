@@ -438,10 +438,10 @@ async def test_async_browse_latest_media(
     )
     assert len(res_latest.children) == 4
     titles = [c.title for c in res_latest.children]
-    assert "Latest Snapshot" in titles
-    assert "Latest Keogram" in titles
-    assert "Latest Star Trail" in titles
-    assert "Latest Timelapse" in titles
+    assert "Latest snapshot" in titles
+    assert "Latest keogram" in titles
+    assert "Latest star trail" in titles
+    assert "Latest timelapse" in titles
     assert (
         res_latest.children[0].thumbnail
         == f"/api/indi_allsky/media/{mock_config_entry.entry_id}/bGF0ZXN0aW1hZ2U="
@@ -515,12 +515,12 @@ async def test_async_browse_videos_hierarchy(
     )
     assert len(res_videos.children) == 5
     titles = [c.title for c in res_videos.children]
-    assert "Night Timelapse - October 11, 2026" in titles
-    assert "Night Keogram - October 11, 2026" in titles
-    assert "Night Star Trail - October 11, 2026" in titles
-    assert "Day Timelapse - October 11, 2026" not in titles
-    assert "Day Keogram - October 11, 2026" in titles
-    assert "Day Star Trail - October 11, 2026" in titles
+    assert "Night timelapse - October 11, 2026" in titles
+    assert "Night keogram - October 11, 2026" in titles
+    assert "Night star trail - October 11, 2026" in titles
+    assert "Day timelapse - October 11, 2026" not in titles
+    assert "Day keogram - October 11, 2026" in titles
+    assert "Day star trail - October 11, 2026" in titles
     assert (
         res_videos.children[1].thumbnail
         == f"/api/indi_allsky/media/{mock_config_entry.entry_id}/aW1hZ2VzL2tlb2dyYW0yMDI2MTAxMS5qcGc="
