@@ -117,7 +117,6 @@ from .const import (
     ISSUE_MOUNT_MOUNT_FAILED,
     PLACEHOLDER_KEY_ADDON,
     PLACEHOLDER_KEY_ADDON_URL,
-    PLACEHOLDER_KEY_BREAKS_IN_HA_VERSION,
     PLACEHOLDER_KEY_FREE_SPACE,
     PLACEHOLDER_KEY_PORT,
     PLACEHOLDER_KEY_REASON,
@@ -430,14 +429,11 @@ class SupervisorIssuesCoordinator(DataUpdateCoordinator[SupervisorIssuesData]):
             else:
                 placeholders[PLACEHOLDER_KEY_FREE_SPACE] = "<2"
 
-        if breaks_in_ha_version := ISSUE_BREAKS_IN_HA_VERSION.get(issue.key):
-            placeholders[PLACEHOLDER_KEY_BREAKS_IN_HA_VERSION] = breaks_in_ha_version
-
         async_create_issue(
             self.hass,
             DOMAIN,
             issue.uuid.hex,
-            breaks_in_ha_version=breaks_in_ha_version,
+            breaks_in_ha_version=ISSUE_BREAKS_IN_HA_VERSION.get(issue.key),
             is_fixable=bool(presentable),
             learn_more_url=ISSUE_LEARN_MORE_URLS.get(issue.key),
             severity=IssueSeverity.WARNING,

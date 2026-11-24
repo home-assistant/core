@@ -187,7 +187,6 @@ PLACEHOLDER_KEY_ADDON = "addon"
 PLACEHOLDER_KEY_ADDON_INFO = "addon_info"
 PLACEHOLDER_KEY_ADDON_DOCUMENTATION = "addon_documentation"
 PLACEHOLDER_KEY_ADDON_URL = "addon_url"
-PLACEHOLDER_KEY_BREAKS_IN_HA_VERSION = "breaks_in_ha_version"
 PLACEHOLDER_KEY_REFERENCE = "reference"
 PLACEHOLDER_KEY_COMPONENTS = "components"
 PLACEHOLDER_KEY_FREE_SPACE = "free_space"
@@ -236,7 +235,7 @@ EXTRA_PLACEHOLDERS = {
     ISSUE_KEY_ADDON_DEPRECATED: APP_REMOVE_URLS,
     ISSUE_KEY_ADDON_DEPRECATED_ARCH: APP_REMOVE_URLS,
     ISSUE_KEY_CORE_DEPRECATED_TCP_API_REQUEST: {
-        "supervisor_token": "SUPERVISOR_TOKEN",
+        "supervisor_token": ENV_SUPERVISOR_TOKEN,
         "command_line_url": "https://www.home-assistant.io/integrations/command_line/",
         "shell_command_url": "https://www.home-assistant.io/integrations/shell_command/",
     },

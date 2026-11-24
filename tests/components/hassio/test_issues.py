@@ -1250,7 +1250,6 @@ async def test_supervisor_issues_deprecated_tcp_api_request(
             "supervisor_token": "SUPERVISOR_TOKEN",
             "command_line_url": "https://www.home-assistant.io/integrations/command_line/",
             "shell_command_url": "https://www.home-assistant.io/integrations/shell_command/",
-            "breaks_in_ha_version": "2027.6.0",
         },
         learn_more_url="https://www.home-assistant.io/more-info/supervisor-token",
         breaks_in_ha_version="2027.6.0",
