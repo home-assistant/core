@@ -443,6 +443,22 @@ class AreaRegistry(BaseRegistry[AreasRegistryStoreData]):
             if value is not Undefined and value != getattr(old, attr_name)
         }
 
+        for attr_name in (
+            "co2_entity_id",
+            "humidity_entity_id",
+            "temperature_entity_id",
+        ):
+            if attr_name not in new_values:
+                continue
+            new_entity_id = new_values[attr_name]
+            old_entity_id = getattr(old, attr_name)
+            if (
+                new_entity_id is not None
+                and old_entity_id is not None
+                and new_entity_id.lower() == old_entity_id.lower()
+            ):
+                del new_values[attr_name]
+
         if (
             validate
             and "humidity_entity_id" in new_values
@@ -465,12 +481,6 @@ class AreaRegistry(BaseRegistry[AreasRegistryStoreData]):
             new_values["co2_entity_id"] = _validate_co2_entity(
                 self.hass, new_values["co2_entity_id"]
             )
-
-        new_values = {
-            attr_name: value
-            for attr_name, value in new_values.items()
-            if value != getattr(old, attr_name)
-        }
 
         if name is not Undefined and name != old.name:
             new_values["name"] = name
@@ -677,46 +687,31 @@ def _validate_temperature_entity(hass: HomeAssistant, entity_id: str) -> str:
     """Validate temperature entity."""
     from homeassistant.components.sensor import SensorDeviceClass  # noqa: PLC0415
 
-    entity_id = entity_id.lower()
-    if not valid_entity_id(entity_id):
-        raise ValueError(f"Entity {entity_id} is not a valid entity ID")
-
-    if not (state := hass.states.get(entity_id)):
-        raise ValueError(f"Entity {entity_id} does not exist")
-
-    if (
-        state.domain != "sensor"
-        or state.attributes.get(EntityStateAttribute.DEVICE_CLASS)
-        != SensorDeviceClass.TEMPERATURE
-    ):
-        raise ValueError(f"Entity {entity_id} is not a temperature sensor")
-    return entity_id
+    return _validate_sensor_entity(
+        hass, entity_id, SensorDeviceClass.TEMPERATURE, "temperature"
+    )
 
 
 def _validate_humidity_entity(hass: HomeAssistant, entity_id: str) -> str:
     """Validate humidity entity."""
     from homeassistant.components.sensor import SensorDeviceClass  # noqa: PLC0415
 
-    entity_id = entity_id.lower()
-    if not valid_entity_id(entity_id):
-        raise ValueError(f"Entity {entity_id} is not a valid entity ID")
-
-    if not (state := hass.states.get(entity_id)):
-        raise ValueError(f"Entity {entity_id} does not exist")
-
-    if (
-        state.domain != "sensor"
-        or state.attributes.get(EntityStateAttribute.DEVICE_CLASS)
-        != SensorDeviceClass.HUMIDITY
-    ):
-        raise ValueError(f"Entity {entity_id} is not a humidity sensor")
-    return entity_id
+    return _validate_sensor_entity(
+        hass, entity_id, SensorDeviceClass.HUMIDITY, "humidity"
+    )
 
 
 def _validate_co2_entity(hass: HomeAssistant, entity_id: str) -> str:
     """Validate CO2 entity."""
     from homeassistant.components.sensor import SensorDeviceClass  # noqa: PLC0415
 
+    return _validate_sensor_entity(hass, entity_id, SensorDeviceClass.CO2, "CO2")
+
+
+def _validate_sensor_entity(
+    hass: HomeAssistant, entity_id: str, device_class: str, sensor_type: str
+) -> str:
+    """Validate a sensor entity and return its normalized entity ID."""
     entity_id = entity_id.lower()
     if not valid_entity_id(entity_id):
         raise ValueError(f"Entity {entity_id} is not a valid entity ID")
@@ -726,8 +721,7 @@ def _validate_co2_entity(hass: HomeAssistant, entity_id: str) -> str:
 
     if (
         state.domain != "sensor"
-        or state.attributes.get(EntityStateAttribute.DEVICE_CLASS)
-        != SensorDeviceClass.CO2
+        or state.attributes.get(EntityStateAttribute.DEVICE_CLASS) != device_class
     ):
-        raise ValueError(f"Entity {entity_id} is not a CO2 sensor")
+        raise ValueError(f"Entity {entity_id} is not a {sensor_type} sensor")
     return entity_id

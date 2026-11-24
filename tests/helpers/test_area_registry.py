@@ -158,6 +158,7 @@ async def test_create_area(
     ],
 )
 async def test_area_sensor_entity_ids_are_normalized(
+    hass: HomeAssistant,
     area_registry: ar.AreaRegistry,
     mock_temperature_humidity_co2_entity: None,
     attribute: str,
@@ -172,6 +173,15 @@ async def test_area_sensor_entity_ids_are_normalized(
         area_registry.async_create("update").id,
         **{attribute: mixed_case_entity_id},
     )
+    assert getattr(updated, attribute) == normalized_entity_id
+
+    hass.states.async_remove(normalized_entity_id)
+    updated = area_registry.async_update(
+        created.id,
+        name="renamed",
+        **{attribute: mixed_case_entity_id},
+    )
+    assert updated.name == "renamed"
     assert getattr(updated, attribute) == normalized_entity_id
 
 
