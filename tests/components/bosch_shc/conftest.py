@@ -26,6 +26,7 @@ from boschshcpy import (
     SHCHeatingCircuit,
     SHCInformation,
     SHCIntrusionSystem,
+    SHCLightControl,
     SHCLightSwitchBSM,
     SHCMicromoduleBlinds,
     SHCMicromoduleDimmer,
@@ -115,6 +116,7 @@ _EMPTY_DEVICE_BUCKETS: dict[str, Any] = {
         "micromodule_blinds",
         "micromodule_dimmers",
         "micromodule_impulse_relays",
+        "micromodule_light_controls",
         "micromodule_light_attached",
         "micromodule_relays",
         "micromodule_shutter_controls",
@@ -698,6 +700,28 @@ def micromodule_relay_device(
         )
     else:
         device.impulse_length = impulse_length
+    return device
+
+
+def light_control_device(
+    device_id: str = "hdm:ZigBee:lightcontrol1",
+    name: str = "Light Control",
+    power: float = 12.5,
+    energy: float = 3000.0,
+) -> SHCLightControl:
+    """Build a minimal device double for the micromodule_light_controls bucket."""
+    device = create_autospec(SHCLightControl, instance=True, spec_set=True)
+    device.name = name
+    device.id = device_id
+    device.root_device_id = "test-mac"
+    device.serial = f"serial-{device_id}"
+    device.manufacturer = "Bosch"
+    device.device_model = "MICROMODULE_LIGHT_CONTROL"
+    device.device_services = []
+    device.deleted = False
+    device.status = "AVAILABLE"
+    device.powerconsumption = power
+    device.energyconsumption = energy
     return device
 
 
