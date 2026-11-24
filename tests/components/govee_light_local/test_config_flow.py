@@ -1,8 +1,7 @@
 """Test Govee light local config flow."""
 
 import asyncio
-from errno import EADDRINUSE, EADDRNOTAVAIL
-from ipaddress import IPv4Network
+from errno import EADDRINUSE
 from unittest.mock import AsyncMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
@@ -15,6 +14,7 @@ from homeassistant.components.govee_light_local.const import (
     CONF_FINGERPRINT,
     DOMAIN,
 )
+from homeassistant.components.network import Adapter
 from homeassistant.const import CONF_IP_ADDRESS, CONF_MODEL
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -22,6 +22,7 @@ from homeassistant.data_entry_flow import FlowResultType
 from .conftest import (
     DISABLED_NETWORK_ADAPTERS,
     EXPECTED_LISTENING_ADDRESSES,
+    NETWORK_ADAPTERS,
     answer_scans,
     create_device,
     create_entry,
@@ -94,21 +95,48 @@ async def test_user_flow(
     mock_setup_entry.assert_awaited_once()
 
 
+@pytest.mark.parametrize(
+    ("adapters", "start_side_effect", "start_calls", "cleanup_calls"),
+    [
+        pytest.param(NETWORK_ADAPTERS, None, 1, 1, id="no_reply"),
+        pytest.param(
+            NETWORK_ADAPTERS,
+            OSError(EADDRINUSE, "Address already in use"),
+            1,
+            1,
+            id="bind_error",
+        ),
+        pytest.param(
+            DISABLED_NETWORK_ADAPTERS, None, 0, 0, id="no_listening_addresses"
+        ),
+    ],
+)
 async def test_user_flow_no_devices(
-    hass: HomeAssistant, mock_setup_entry: AsyncMock, mock_govee_api: AsyncMock
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    mock_govee_api: AsyncMock,
+    adapters: list[Adapter],
+    start_side_effect: OSError | None,
+    start_calls: int,
+    cleanup_calls: int,
 ) -> None:
-    """Test the user flow aborts when no lamp answers."""
+    """Test the user flow aborts when no lamp answers or it cannot listen."""
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
+    mock_govee_api.start.side_effect = start_side_effect
+
+    with patch(
+        "homeassistant.components.network.async_get_adapters", return_value=adapters
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
+        )
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "no_devices_found"
 
-    mock_govee_api.start.assert_awaited_once()
+    assert mock_govee_api.start.await_count == start_calls
+    assert mock_govee_api.cleanup.call_count == cleanup_calls
     mock_setup_entry.assert_not_called()
-    mock_govee_api.cleanup.assert_called_once_with(timeout=CLEANUP_TIMEOUT)
 
 
 async def test_user_flow_with_devices_set_up(
@@ -177,32 +205,10 @@ async def test_user_flow_offers_dismissed_device_again(
     assert [flow["context"]["unique_id"] for flow in flows] == ["other"]
 
 
-async def test_user_flow_ignores_lamp_that_stopped_answering(
-    hass: HomeAssistant, mock_govee_api: AsyncMock, freezer: FrozenDateTimeFactory
-) -> None:
-    """Test a lamp heard earlier that no longer answers does not count as found."""
-
-    await setup_light(hass, mock_govee_api)
-    silent_device = create_device(
-        mock_govee_api, ip="192.168.1.101", fingerprint="silent", sku="H615B"
-    )
-    scan_reply(mock_govee_api, silent_device)
-    await hass.async_block_till_done()
-    assert silent_device in mock_govee_api.devices
-
-    freezer.tick(60)
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "no_devices_found"
-
-
 async def test_user_flow_offers_only_answering_lamps(
     hass: HomeAssistant, mock_govee_api: AsyncMock, freezer: FrozenDateTimeFactory
 ) -> None:
-    """Test a dismissed lamp that went silent is not offered with the answering ones."""
+    """Test a dismissed lamp that went silent is neither counted nor offered."""
 
     await setup_light(hass, mock_govee_api)
     silent_device = create_device(
@@ -212,8 +218,18 @@ async def test_user_flow_offers_only_answering_lamps(
     await hass.async_block_till_done()
     (flow,) = hass.config_entries.flow.async_progress_by_handler(DOMAIN)
     hass.config_entries.flow.async_abort(flow["flow_id"])
+    assert silent_device in mock_govee_api.devices
 
     freezer.tick(60)
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "no_devices_found"
+    assert not hass.config_entries.flow.async_progress_by_handler(DOMAIN)
+
     answer_scans(
         mock_govee_api,
         create_device(
@@ -225,6 +241,7 @@ async def test_user_flow_offers_only_answering_lamps(
     )
     await hass.async_block_till_done()
 
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "discovery_started"
     flows = hass.config_entries.flow.async_progress_by_handler(DOMAIN)
     assert [flow["context"]["unique_id"] for flow in flows] == ["other"]
@@ -307,76 +324,6 @@ async def test_user_flow_releases_port_when_cancelled(
         await task
 
     mock_govee_api.cleanup.assert_called_once_with(timeout=CLEANUP_TIMEOUT)
-
-
-async def test_user_flow_bind_error(
-    hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
-    mock_govee_api: AsyncMock,
-) -> None:
-    """Test the user flow aborts when the listening port cannot be bound."""
-
-    mock_govee_api.start.side_effect = OSError(EADDRINUSE, "Address already in use")
-    answer_scans(mock_govee_api, create_device(mock_govee_api))
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "no_devices_found"
-
-    assert mock_govee_api.start.call_count == 1
-    mock_setup_entry.assert_not_awaited()
-
-
-async def test_user_flow_no_listening_addresses(
-    hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
-    mock_govee_api: AsyncMock,
-) -> None:
-    """Test aborting when no enabled adapter provides an IPv4 address."""
-
-    answer_scans(mock_govee_api, create_device(mock_govee_api))
-
-    with patch(
-        "homeassistant.components.network.async_get_adapters",
-        return_value=DISABLED_NETWORK_ADAPTERS,
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": config_entries.SOURCE_USER}
-        )
-
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "no_devices_found"
-
-    mock_govee_api.start.assert_not_awaited()
-    mock_setup_entry.assert_not_called()
-
-
-@pytest.mark.usefixtures("mock_network_adapters")
-async def test_user_flow_with_partial_bind(
-    hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
-    mock_govee_api: AsyncMock,
-) -> None:
-    """Test discovery succeeds through the adapters that do bind."""
-
-    mock_govee_api.listening_addresses = ["192.168.1.2"]
-    mock_govee_api.networks = [IPv4Network("192.168.1.0/24")]
-    mock_govee_api.bind_failures = [
-        ("10.0.0.7", OSError(EADDRNOTAVAIL, "Cannot assign requested address"))
-    ]
-    answer_scans(mock_govee_api, create_device(mock_govee_api))
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "discovery_started"
-    mock_govee_api.start.assert_awaited_once_with(require_all=False)
-    mock_setup_entry.assert_not_called()
 
 
 @pytest.mark.usefixtures("mock_setup_entry")

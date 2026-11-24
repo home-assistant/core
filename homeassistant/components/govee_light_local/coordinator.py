@@ -1,11 +1,10 @@
 """Coordinator for Govee light local."""
 
 import asyncio
-from collections.abc import Callable
 from dataclasses import dataclass, field
 from datetime import datetime
 import logging
-from typing import Any, override
+from typing import override
 
 from govee_local_api import GoveeController, GoveeDevice
 
@@ -187,7 +186,7 @@ class GoveeLocalApiCoordinator(DataUpdateCoordinator[list[GoveeDevice]]):
             logger=_LOGGER,
             config_entry=None,  # It is shared between every config entry
             name="GoveeLightLocalApi",
-            update_interval=SCAN_INTERVAL,
+            update_interval=None,  # Set by the entries' polling preference
         )
 
         self._controller = GoveeController(
@@ -418,37 +417,26 @@ class GoveeLocalApiCoordinator(DataUpdateCoordinator[list[GoveeDevice]]):
     def async_add_entry(self, entry: GoveeLocalConfigEntry) -> CALLBACK_TYPE:
         """Take the polling preference of a set up entry into account."""
         self._entries[entry.entry_id] = entry
+        self._async_update_polling()
 
         @callback
         def remove_entry() -> None:
             del self._entries[entry.entry_id]
-            if self._polling_disabled():
-                self._async_unsub_refresh()
+            self._async_update_polling()
 
         return remove_entry
 
-    def _polling_disabled(self) -> bool:
-        """Return if every set up lamp's entry has polling disabled."""
-        return all(entry.pref_disable_polling for entry in self._entries.values())
-
-    @override
     @callback
-    def _schedule_refresh(self) -> None:
-        # Shared between the entries, so the base class cannot check their preference.
-        if self._polling_disabled():
-            return
-        super()._schedule_refresh()
-
-    @override
-    @callback
-    def async_add_listener(
-        self, update_callback: CALLBACK_TYPE, context: Any = None
-    ) -> Callable[[], None]:
-        remove_listener = super().async_add_listener(update_callback, context)
-        # The base class only schedules for the first listener, which may
-        # belong to an entry with polling disabled.
-        self._schedule_refresh()
-        return remove_listener
+    def _async_update_polling(self) -> None:
+        """Poll only while a set up lamp's entry has polling enabled."""
+        polling = not all(
+            entry.pref_disable_polling for entry in self._entries.values()
+        )
+        resume = polling and self.update_interval is None
+        self.update_interval = SCAN_INTERVAL if polling else None
+        if resume:
+            # The base class only schedules for its first listener or after a refresh.
+            self.hass.async_create_task(self.async_request_refresh())
 
     @override
     async def _async_update_data(self) -> list[GoveeDevice]:

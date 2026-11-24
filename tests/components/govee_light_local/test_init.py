@@ -56,6 +56,17 @@ def _register_legacy_light(
     )
 
 
+NEW_LAMP_FLOWS = [(config_entries.SOURCE_INTEGRATION_DISCOVERY, "new_lamp")]
+
+
+def _flows_in_progress(hass: HomeAssistant) -> list[tuple[str, str]]:
+    """Return the source and unique ID of the flows in progress."""
+    return [
+        (flow["context"]["source"], flow["context"]["unique_id"])
+        for flow in hass.config_entries.flow.async_progress_by_handler(DOMAIN)
+    ]
+
+
 async def test_setup_without_listening_addresses(
     hass: HomeAssistant, mock_govee_api: AsyncMock
 ) -> None:
@@ -75,21 +86,6 @@ async def test_setup_without_listening_addresses(
         == "No enabled network adapter has an IPv4 address to listen on"
     )
     mock_govee_api.start.assert_not_awaited()
-
-
-@pytest.mark.usefixtures("mock_network_adapters")
-async def test_unload_releases_port(
-    hass: HomeAssistant, mock_govee_api: AsyncMock
-) -> None:
-    """Test unloading waits for the controller to release the listening port."""
-
-    entry, _ = await setup_light(hass, mock_govee_api)
-
-    assert await hass.config_entries.async_unload(entry.entry_id)
-    await hass.async_block_till_done()
-
-    assert entry.state is config_entries.ConfigEntryState.NOT_LOADED
-    mock_govee_api.cleanup.assert_called_once_with(timeout=CLEANUP_TIMEOUT)
 
 
 @pytest.mark.usefixtures("mock_network_adapters", "mock_stuck_cleanup")
@@ -171,6 +167,7 @@ async def test_controller_is_shared_between_entries(
     assert await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
 
+    assert entry.state is config_entries.ConfigEntryState.NOT_LOADED
     mock_govee_api.cleanup.assert_called_once_with(timeout=CLEANUP_TIMEOUT)
 
 
@@ -252,10 +249,7 @@ async def test_unknown_lamp_starts_discovery_flow(
     scan_reply(mock_govee_api, new_device)
     await hass.async_block_till_done()
 
-    flows = hass.config_entries.flow.async_progress_by_handler(DOMAIN)
-    assert len(flows) == 1
-    assert flows[0]["context"]["source"] == config_entries.SOURCE_INTEGRATION_DISCOVERY
-    assert flows[0]["context"]["unique_id"] == "new_lamp"
+    assert _flows_in_progress(hass) == NEW_LAMP_FLOWS
 
 
 @pytest.mark.parametrize(
@@ -370,6 +364,10 @@ async def test_polling_stops_when_last_polling_lamp_is_unloaded(
     )
 
     assert await hass.config_entries.async_unload(polling_entry.entry_id)
+    # The refresh that was already scheduled still runs; none follows it.
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
     mock_govee_api.send_update_message.reset_mock()
     freezer.tick(SCAN_INTERVAL)
     async_fire_time_changed(hass)
@@ -387,7 +385,8 @@ async def test_legacy_entry_is_split_per_lamp(
     """Test the entry for every lamp becomes one entry per lamp.
 
     Every lamp it had set up gets its own entry and keeps its registry
-    entries, also a lamp that is offline.
+    entries, also a lamp that is offline. A lamp it never set up is offered
+    like any newly discovered one.
     """
 
     legacy_entry = create_legacy_entry(hass)
@@ -419,7 +418,11 @@ async def test_legacy_entry_is_split_per_lamp(
         device_id=second_device.id,
     )
     hass.config_entries.async_update_entry(legacy_entry, pref_disable_polling=True)
-    answer_scans(mock_govee_api, first, second)
+    new_device = create_device(
+        mock_govee_api, ip="192.168.1.103", fingerprint="new_lamp", sku="H615D"
+    )
+    # The new lamp answers first, and is still not the one the entry turns into.
+    answer_scans(mock_govee_api, new_device, first, second)
 
     assert await hass.config_entries.async_setup(legacy_entry.entry_id)
     await hass.async_block_till_done()
@@ -452,7 +455,7 @@ async def test_legacy_entry_is_split_per_lamp(
 
     mock_govee_api.start.assert_awaited_once()
     assert len(hass.config_entries.async_entries(DOMAIN)) == 3
-    assert not hass.config_entries.flow.async_progress_by_handler(DOMAIN)
+    assert _flows_in_progress(hass) == NEW_LAMP_FLOWS
 
     for fingerprint, entry in (
         ("first", legacy_entry),
@@ -481,49 +484,7 @@ async def test_legacy_entry_is_split_per_lamp(
     assert offline_entry.state is config_entries.ConfigEntryState.LOADED
     assert offline_entry.data == {CONF_IP_ADDRESS: "192.168.1.102"}
     assert hass.states.get(entity_ids["offline"]).state == STATE_OFF
-    assert not hass.config_entries.flow.async_progress_by_handler(DOMAIN)
-
-
-async def test_legacy_entry_prefers_a_lamp_it_had_set_up(
-    hass: HomeAssistant,
-    mock_govee_api: AsyncMock,
-    device_registry: dr.DeviceRegistry,
-    entity_registry: er.EntityRegistry,
-) -> None:
-    """Test the legacy entry turns into a lamp it knows over a new one."""
-
-    legacy_entry = create_legacy_entry(hass)
-    new_device = create_device(mock_govee_api, fingerprint="new_lamp")
-    known_device = create_device(
-        mock_govee_api, ip="192.168.1.101", fingerprint="known", sku="H615B"
-    )
-    _register_legacy_light(device_registry, entity_registry, legacy_entry, known_device)
-    answer_scans(mock_govee_api, new_device, known_device)
-
-    assert await hass.config_entries.async_setup(legacy_entry.entry_id)
-    await hass.async_block_till_done()
-
-    assert legacy_entry.unique_id == "known"
-    # The lamp that was never set up is offered like any newly discovered one.
-    flows = hass.config_entries.flow.async_progress_by_handler(DOMAIN)
-    assert len(flows) == 1
-    assert flows[0]["context"]["source"] == config_entries.SOURCE_INTEGRATION_DISCOVERY
-    assert flows[0]["context"]["unique_id"] == "new_lamp"
-
-
-async def test_legacy_entry_without_registered_lamps(
-    hass: HomeAssistant, mock_govee_api: AsyncMock
-) -> None:
-    """Test a legacy entry that never set up a lamp takes the first one answering."""
-
-    legacy_entry = create_legacy_entry(hass)
-    answer_scans(mock_govee_api, create_device(mock_govee_api))
-
-    assert await hass.config_entries.async_setup(legacy_entry.entry_id)
-    await hass.async_block_till_done()
-
-    assert legacy_entry.unique_id == "asdawdqwdqwd"
-    assert hass.states.get("light.h615a").state == STATE_OFF
+    assert _flows_in_progress(hass) == NEW_LAMP_FLOWS
 
 
 async def test_legacy_entry_waits_for_a_lamp_it_had_set_up(
@@ -554,10 +515,7 @@ async def test_legacy_entry_waits_for_a_lamp_it_had_set_up(
     assert entity_registry.async_get(entity_entry.entity_id) is not None
     mock_govee_api.cleanup.assert_called_once_with(timeout=CLEANUP_TIMEOUT)
     # The new lamp is offered like any newly discovered one.
-    flows = hass.config_entries.flow.async_progress_by_handler(DOMAIN)
-    assert len(flows) == 1
-    assert flows[0]["context"]["source"] == config_entries.SOURCE_INTEGRATION_DISCOVERY
-    assert flows[0]["context"]["unique_id"] == "new_lamp"
+    assert _flows_in_progress(hass) == NEW_LAMP_FLOWS
 
 
 async def test_user_scan_leaves_lamps_to_the_pending_legacy_entry(
@@ -626,7 +584,7 @@ async def test_disabled_legacy_entry_keeps_its_lamps(
 async def test_scan_waits_for_late_replies(
     hass: HomeAssistant, mock_govee_api: AsyncMock, freezer: FrozenDateTimeFactory
 ) -> None:
-    """Test the legacy entry waits for lamps that take a moment to answer."""
+    """Test a legacy entry without lamps takes one that answers late in the scan."""
 
     legacy_entry = create_legacy_entry(hass)
     device = create_device(mock_govee_api)
@@ -654,6 +612,7 @@ async def test_scan_waits_for_late_replies(
     await hass.async_block_till_done()
 
     assert legacy_entry.unique_id == "asdawdqwdqwd"
+    assert hass.states.get("light.h615a").state == STATE_OFF
 
 
 async def test_remove_leftover_device(
