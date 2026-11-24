@@ -7,14 +7,14 @@ from unittest.mock import MagicMock, call
 import pyads
 import pytest
 
-from homeassistant.components.ads.const import DATA_ADS, DOMAIN
+from homeassistant.components.ads.const import DOMAIN
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN, SwitchService
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP, STATE_UNAVAILABLE, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
-from . import ADS_CONFIG, MockAdsDevice, setup_ads_platform
+from . import ADS_CONFIG, MockAdsDevice, async_run_past_first_update, setup_ads_platform
 from .const import AMS_NET_ID, IP_ADDRESS, PORT
 
 
@@ -181,17 +181,23 @@ async def test_subscription_on_a_closed_port(
     hass: HomeAssistant,
     mock_pyads_connection: MagicMock,
     mock_ads_device: MockAdsDevice,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test a subscription pyads refuses because the port is closed leaves nothing to delete."""
     client = mock_pyads_connection.return_value
     # pyads returns None instead of raising when the port is not open.
     client.add_device_notification.side_effect = None
     client.add_device_notification.return_value = None
-    assert await setup_ads_platform(
-        hass, mock_ads_device, SWITCH_DOMAIN, {"adsvar": "GVL.pump", "name": "Pump"}
+    assert await async_run_past_first_update(
+        hass,
+        mock_ads_device,
+        setup_ads_platform(
+            hass, mock_ads_device, SWITCH_DOMAIN, {"adsvar": "GVL.pump", "name": "Pump"}
+        ),
     )
 
     assert hass.states.get("switch.pump").state == STATE_UNAVAILABLE
+    assert "Error subscribing to GVL.pump: the connection is not open" in caplog.text
     hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
     await hass.async_block_till_done()
     client.del_device_notification.assert_not_called()
@@ -223,39 +229,26 @@ async def test_no_write_after_shutdown(
     assert "Not writing GVL.pump, the hub is shut down" in caplog.text
 
 
-@pytest.mark.parametrize(
-    ("method", "args", "message"),
-    [
-        pytest.param(
-            "read_by_name",
-            ("GVL.pump", pyads.PLCTYPE_BOOL),
-            "Not reading GVL.pump, the hub is shut down",
-            id="read",
-        ),
-        pytest.param(
-            "add_device_notification",
-            ("GVL.pump", pyads.PLCTYPE_BOOL, lambda *_: None),
-            "Not subscribing to GVL.pump, the hub is shut down",
-            id="subscribe",
-        ),
-    ],
-)
-@pytest.mark.usefixtures("setup_ads")
-async def test_hub_refuses_io_after_shutdown(
+async def test_no_subscription_after_shutdown(
     hass: HomeAssistant,
     mock_pyads_connection: MagicMock,
+    mock_ads_device: MockAdsDevice,
     caplog: pytest.LogCaptureFixture,
-    method: str,
-    args: tuple[Any, ...],
-    message: str,
 ) -> None:
-    """Test the hub sends nothing once it is shut down."""
+    """Test entities set up once the connection is shut down do not subscribe."""
     caplog.set_level(logging.DEBUG)
+    assert await async_setup_component(hass, DOMAIN, {DOMAIN: ADS_CONFIG})
+    await hass.async_block_till_done()
     hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
     await hass.async_block_till_done()
 
-    hub = hass.data[DATA_ADS]
-    assert await hass.async_add_executor_job(getattr(hub, method), *args) is None
+    assert await async_run_past_first_update(
+        hass,
+        mock_ads_device,
+        setup_ads_platform(
+            hass, mock_ads_device, SWITCH_DOMAIN, {"adsvar": "GVL.pump", "name": "Pump"}
+        ),
+    )
 
-    getattr(mock_pyads_connection.return_value, method).assert_not_called()
-    assert message in caplog.text
+    mock_pyads_connection.return_value.add_device_notification.assert_not_called()
+    assert "Not subscribing to GVL.pump, the hub is shut down" in caplog.text

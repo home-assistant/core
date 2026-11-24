@@ -100,9 +100,10 @@ class AdsHub:
                 _LOGGER.error("Error subscribing to %s: %s", name, err)
             else:
                 if handles is None:
-                    # pyads returns None instead of raising once the port is closed.
-                    _LOGGER.debug(
-                        "Not subscribing to %s, the connection is closed", name
+                    # pyads returns None instead of raising when the port is not
+                    # open. Shutdown is caught above, so this is unexpected.
+                    _LOGGER.error(
+                        "Error subscribing to %s: the connection is not open", name
                     )
                     return
                 hnotify, huser = handles
