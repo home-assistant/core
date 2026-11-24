@@ -164,12 +164,29 @@ class IndiAllSkyDataUpdateCoordinator(DataUpdateCoordinator[IndiAllSkyData]):
         while True:
             self._sensor_fetch_queued = False
             try:
+                was_unavailable = not self.last_update_success
                 try:
                     await self.client.fetch_sensors()
-                except IndiAllSkyAuthError:
+                except IndiAllSkyAuthError as err:
+                    self.async_set_update_error(err)
                     self.config_entry.async_start_reauth(self.hass)
-                except IndiAllSkyError:
-                    pass
+                except IndiAllSkyError as err:
+                    self.async_set_update_error(err)
+                else:
+                    if was_unavailable:
+                        _LOGGER.info("Fetching %s data recovered", self.name)
+                        self.async_set_updated_data(
+                            IndiAllSkyData(
+                                exposure=self.latest_exposure,
+                                latest_keogram=self.latest_keogram,
+                                latest_keogram_image=self.latest_keogram_image,
+                                latest_keogram_updated=self.latest_keogram_updated,
+                                latest_startrail=self.latest_startrail,
+                                latest_startrail_image=self.latest_startrail_image,
+                                latest_startrail_updated=self.latest_startrail_updated,
+                                sensor=self.latest_sensor,
+                            )
+                        )
             finally:
                 if not self._sensor_fetch_queued:
                     self._sensor_fetch_task = None

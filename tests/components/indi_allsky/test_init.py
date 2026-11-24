@@ -12,6 +12,7 @@ import yarl
 
 from homeassistant.components.indi_allsky.const import DOMAIN
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
+from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
 
@@ -145,14 +146,19 @@ async def test_background_sensor_fetch_auth_failure_triggers_reauth(
     assert flows[0]["context"]["entry_id"] == mock_config_entry.entry_id
 
 
-async def test_background_sensor_fetch_generic_error_ignored(
+async def test_background_sensor_fetch_unavailable_and_recovery(
     hass: HomeAssistant,
     mock_indi_allsky_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
     freezer: FrozenDateTimeFactory,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Test that generic error during background sensor fetch is suppressed."""
+    """Test background sensor fetch marks entities unavailable once and logs recovery."""
     await setup_integration(hass, mock_config_entry)
+
+    state = hass.states.get("binary_sensor.indi_allsky_night")
+    assert state is not None
+    assert state.state != STATE_UNAVAILABLE
 
     mock_indi_allsky_client.fetch_sensors.side_effect = IndiAllSkyConnectionError(
         "Connection lost"
@@ -161,3 +167,24 @@ async def test_background_sensor_fetch_generic_error_ignored(
     freezer.tick(timedelta(minutes=10))
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
+
+    state = hass.states.get("binary_sensor.indi_allsky_night")
+    assert state is not None
+    assert state.state == STATE_UNAVAILABLE
+    assert caplog.text.count("Error requesting indi_allsky data") == 1
+
+    freezer.tick(timedelta(minutes=10))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert caplog.text.count("Error requesting indi_allsky data") == 1
+
+    mock_indi_allsky_client.fetch_sensors.side_effect = None
+    freezer.tick(timedelta(minutes=10))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    state = hass.states.get("binary_sensor.indi_allsky_night")
+    assert state is not None
+    assert state.state != STATE_UNAVAILABLE
+    assert "Fetching indi_allsky data recovered" in caplog.text
