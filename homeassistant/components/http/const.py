@@ -27,6 +27,9 @@ CONF_SERVER_PORT: Final = "server_port"
 CONF_BASE_URL: Final = "base_url"
 CONF_SSL_CERTIFICATE: Final = "ssl_certificate"
 CONF_SSL_PEER_CERTIFICATE: Final = "ssl_peer_certificate"
+# Also require the peer certificate on remote access through Home Assistant
+# Cloud. Storage only, there is no YAML option for it.
+CONF_SSL_PEER_CERTIFICATE_REMOTE: Final = "ssl_peer_certificate_remote"
 CONF_SSL_KEY: Final = "ssl_key"
 CONF_CORS_ORIGINS: Final = "cors_allowed_origins"
 CONF_USE_X_FORWARDED_FOR: Final = "use_x_forwarded_for"

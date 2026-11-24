@@ -7,6 +7,7 @@ from typing import TYPE_CHECKING, Any, override
 from boschshcpy import (
     SHCLightSwitchBSM,
     SHCMicromoduleShutterControl,
+    SHCMotionDetector2,
     SHCOutdoorSiren,
     SHCRoomThermostat2,
     SHCSession,
@@ -98,6 +99,15 @@ _THERMOSTAT_TEMPERATURE_DESCRIPTION: SHCSensorEntityDescription[SHCThermostat] =
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         value_fn=lambda device: device.temperature,
     )
+)
+_MOTION_DETECTOR2_TEMPERATURE_DESCRIPTION: SHCSensorEntityDescription[
+    SHCMotionDetector2
+] = SHCSensorEntityDescription(
+    key=TEMPERATURE_SENSOR,
+    device_class=SensorDeviceClass.TEMPERATURE,
+    state_class=SensorStateClass.MEASUREMENT,
+    native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+    value_fn=lambda device: device.temperature,
 )
 _VALVE_TAPPET_DESCRIPTION: SHCSensorEntityDescription[SHCThermostat] = (
     SHCSensorEntityDescription(
@@ -452,6 +462,17 @@ async def async_setup_entry(
             _SIREN_MAIN_POWER_DESCRIPTION,
             _SIREN_SOLAR_CHARGING_DESCRIPTION,
         )
+    )
+
+    entities.extend(
+        SHCSensor(
+            hass,
+            device,
+            _MOTION_DETECTOR2_TEMPERATURE_DESCRIPTION,
+            shc_info.unique_id,
+            config_entry.entry_id,
+        )
+        for device in session.device_helper.motion_detectors2
     )
 
     async_add_entities(entities)

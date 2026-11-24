@@ -27,61 +27,6 @@
       }),
       'required': list([
         'flow_id',
-      ]),
-      'type': 'object',
-    }),
-    'config__create_area': dict({
-      'additionalProperties': False,
-      'properties': dict({
-        'aliases': dict({
-          'description': 'Other names that voice assistants know the area by. This replaces all aliases.',
-          'items': dict({
-            'format': 'strip',
-            'type': 'string',
-          }),
-          'type': 'array',
-        }),
-        'floor_id': dict({
-          'description': 'The floor_id. null removes the area from its floor.',
-          'format': 'strip',
-          'nullable': True,
-          'type': 'string',
-        }),
-        'humidity_entity_id': dict({
-          'description': 'The sensor that gives the humidity of the area. null removes it.',
-          'format': 'strip',
-          'nullable': True,
-          'type': 'string',
-        }),
-        'icon': dict({
-          'description': "The icon, like 'mdi:sofa'. null removes the icon.",
-          'nullable': True,
-          'type': 'string',
-        }),
-        'labels': dict({
-          'description': 'The label_ids. This replaces all labels.',
-          'items': dict({
-            'format': 'strip',
-            'type': 'string',
-          }),
-          'type': 'array',
-        }),
-        'name': dict({
-          'format': 'strip',
-          'type': 'string',
-        }),
-        'temperature_entity_id': dict({
-          'description': 'The sensor that gives the temperature of the area. null removes it.',
-          'format': 'strip',
-          'nullable': True,
-          'type': 'string',
-        }),
-      }),
-      'required': list([
-        'name',
-      ]),
-      'type': 'object',
-    }),
     'config__create_label': dict({
       'additionalProperties': False,
       'properties': dict({
@@ -110,16 +55,6 @@
       ]),
       'type': 'object',
     }),
-    'config__delete_area': dict({
-      'additionalProperties': False,
-      'properties': dict({
-        'area_id': dict({
-          'format': 'strip',
-          'type': 'string',
-        }),
-      }),
-      'required': list([
-        'area_id',
       ]),
       'type': 'object',
     }),
@@ -133,19 +68,6 @@
       }),
       'required': list([
         'label_id',
-      ]),
-      'type': 'object',
-    }),
-    'config__get_area_settings': dict({
-      'additionalProperties': False,
-      'properties': dict({
-        'area_id': dict({
-          'format': 'strip',
-          'type': 'string',
-        }),
-      }),
-      'required': list([
-        'area_id',
       ]),
       'type': 'object',
     }),
@@ -341,62 +263,6 @@
           'type': 'string',
         }),
       }),
-      'type': 'object',
-    }),
-    'config__update_area_settings': dict({
-      'additionalProperties': False,
-      'properties': dict({
-        'aliases': dict({
-          'description': 'Other names that voice assistants know the area by. This replaces all aliases.',
-          'items': dict({
-            'format': 'strip',
-            'type': 'string',
-          }),
-          'type': 'array',
-        }),
-        'area_id': dict({
-          'format': 'strip',
-          'type': 'string',
-        }),
-        'floor_id': dict({
-          'description': 'The floor_id. null removes the area from its floor.',
-          'format': 'strip',
-          'nullable': True,
-          'type': 'string',
-        }),
-        'humidity_entity_id': dict({
-          'description': 'The sensor that gives the humidity of the area. null removes it.',
-          'format': 'strip',
-          'nullable': True,
-          'type': 'string',
-        }),
-        'icon': dict({
-          'description': "The icon, like 'mdi:sofa'. null removes the icon.",
-          'nullable': True,
-          'type': 'string',
-        }),
-        'labels': dict({
-          'description': 'The label_ids. This replaces all labels.',
-          'items': dict({
-            'format': 'strip',
-            'type': 'string',
-          }),
-          'type': 'array',
-        }),
-        'name': dict({
-          'format': 'strip',
-          'type': 'string',
-        }),
-        'temperature_entity_id': dict({
-          'description': 'The sensor that gives the temperature of the area. null removes it.',
-          'format': 'strip',
-          'nullable': True,
-          'type': 'string',
-        }),
-      }),
-      'required': list([
-        'area_id',
-      ]),
       'type': 'object',
     }),
     'config__update_core_config': dict({
