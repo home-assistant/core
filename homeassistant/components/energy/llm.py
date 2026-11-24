@@ -274,13 +274,15 @@ class UpdatePreferencesTool(Tool):
                 return ToolResult(data={"error": str(err)}, error=True)
 
         await manager.async_update(cast(EnergyPreferencesUpdate, update))
+        # Validation reads the preferences before its first await, so these are
+        # the preferences it checks, even if another update follows.
+        preferences = manager.data
+        if TYPE_CHECKING:
+            assert preferences is not None
         # The issues hold sets of tuples, which plain JSON encoders reject
         validation = json_loads_object(
             json_dumps((await async_validate(hass)).as_dict())
         )
-        preferences = manager.data
-        if TYPE_CHECKING:
-            assert preferences is not None
         energy_validation = cast(list[Any], validation.pop("energy_sources"))
         return ToolResult(
             data={
