@@ -340,6 +340,7 @@ async def set_thermostat_preset(
 
             _validate_unique_preset_name(
                 current_presets,
+                preset_types,
                 preset_scenario,
                 resolved_name,
             )
@@ -383,6 +384,7 @@ async def set_thermostat_preset(
         if _normalize(edited_preset.name) != current_name:
             _validate_unique_preset_name(
                 current_presets,
+                preset_types,
                 edited_preset.presetScenario,
                 edited_preset.name,
                 exclude_handle=preset_handle,
@@ -398,6 +400,7 @@ async def set_thermostat_preset(
 
 def _validate_unique_preset_name(
     current_presets: list[Any],
+    preset_types: list[Any],
     scenario: int,
     name: str | None,
     exclude_handle: bytes | None = None,
@@ -412,8 +415,14 @@ def _validate_unique_preset_name(
         if exclude_handle is not None and preset.presetHandle == exclude_handle:
             continue
 
-        if _normalize(preset.name) == normalized_name:
+        if _normalize(preset.name) != normalized_name:
+            continue
+
+        if normalized_name is not None:
             raise InvalidPresetDataError("preset_name_not_unique")
+        if _preset_type_supports_names(preset_types, scenario):
+            raise InvalidPresetDataError("preset_name_missing")
+        raise InvalidPresetDataError("preset_scenario_names_unsupported")
 
 
 async def remove_thermostat_preset(

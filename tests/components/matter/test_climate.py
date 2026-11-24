@@ -130,33 +130,40 @@ def _eve_thermo_presets() -> list[clusters.Thermostat.Structs.PresetStruct]:
     ]
 
 
+_SUPPORTS_NAMES = clusters.Thermostat.Bitmaps.PresetTypeFeaturesBitmap.kSupportsNames
+
+
 @pytest.mark.parametrize(
-    ("presets", "scenario", "name", "exclude_handle", "raises"),
+    ("presets", "supports_names", "scenario", "name", "exclude_handle", "raises_key"),
     [
         # Duplicate name in the same scenario.
-        ([(1, "Home")], 1, "Home", None, True),
+        ([(1, "Home")], True, 1, "Home", None, "preset_name_not_unique"),
         # Same name in a different scenario.
-        ([(2, "Home")], 1, "Home", None, False),
-        # Null names are also unique within a scenario.
-        ([(1, None)], 1, None, None, True),
+        ([(2, "Home")], True, 1, "Home", None, None),
+        # Null names clash in a scenario that supports names.
+        ([(1, None)], True, 1, None, None, "preset_name_missing"),
+        # Null names clash in a scenario that does not support names.
+        ([(1, None)], False, 1, None, None, "preset_scenario_names_unsupported"),
         # The preset being edited must be excluded.
-        ([(1, "Home", b"\x01")], 1, "Home", b"\x01", False),
+        ([(1, "Home", b"\x01")], True, 1, "Home", b"\x01", None),
         # Another preset with the same name must still be detected.
         (
             [(1, "Home", b"\x01"), (1, "Away", b"\x02")],
+            True,
             1,
             "Away",
             b"\x01",
-            True,
+            "preset_name_not_unique",
         ),
     ],
 )
 def test_validate_unique_preset_name(
     presets: list[tuple],
+    supports_names: bool,
     scenario: int,
     name: str | None,
     exclude_handle: bytes | None,
-    raises: bool,
+    raises_key: str | None,
 ) -> None:
     """Validate preset name uniqueness within a scenario."""
     current_presets = [
@@ -170,14 +177,24 @@ def test_validate_unique_preset_name(
         )
         for index, preset in enumerate(presets)
     ]
+    preset_types = [
+        clusters.Thermostat.Structs.PresetTypeStruct(
+            presetScenario=scenario,
+            numberOfPresets=2,
+            presetTypeFeatures=_SUPPORTS_NAMES if supports_names else 0,
+        )
+    ]
 
-    if raises:
-        with pytest.raises(InvalidPresetDataError):
+    if raises_key is not None:
+        with pytest.raises(InvalidPresetDataError) as err:
             _validate_unique_preset_name(
-                current_presets, scenario, name, exclude_handle
+                current_presets, preset_types, scenario, name, exclude_handle
             )
+        assert err.value.translation_key == raises_key
     else:
-        _validate_unique_preset_name(current_presets, scenario, name, exclude_handle)
+        _validate_unique_preset_name(
+            current_presets, preset_types, scenario, name, exclude_handle
+        )
 
 
 def _wire_presets(

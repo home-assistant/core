@@ -844,6 +844,9 @@
     "preset_limit_reached": {
       "message": "The thermostat already has its maximum of {limit} presets."
     },
+    "preset_name_missing": {
+      "message": "Another preset of this scenario has no name. Give this one a name."
+    },
     "preset_name_not_unique": {
       "message": "Preset names must be unique within the same scenario."
     },
@@ -861,6 +864,9 @@
     },
     "preset_scenario_limit_reached": {
       "message": "The thermostat already has its maximum of {limit} presets for this scenario."
+    },
+    "preset_scenario_names_unsupported": {
+      "message": "This thermostat can't name presets of this scenario and already has an unnamed one."
     },
     "preset_scenario_not_editable": {
       "message": "The preset scenario cannot be changed on an existing preset."
