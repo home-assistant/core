@@ -34,3 +34,13 @@ def test_evict_purged_state_ids_drops_pending_last_reported() -> None:
     manager.evict_purged_state_ids({1, 3})
 
     assert manager.get_pending_last_reported_timestamp() == {2: 456.0}
+
+
+def test_reset_clears_linked_state_ids() -> None:
+    """Test reset() clears cached linked state ids."""
+    manager = StatesManager()
+    manager.linked_state_ids(100.0).add(1)
+
+    manager.reset()
+
+    assert not manager._linked_state_ids

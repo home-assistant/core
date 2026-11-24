@@ -2585,17 +2585,20 @@ async def test_purge_service_keeps_latest_state(
         assert states.all() == [("sensor.one", "2"), ("sensor.two", "1")]
 
 
-async def test_purge_entity_removed_while_recording_disabled(
+async def test_purge_after_changes_while_recording_disabled(
     hass: HomeAssistant, recorder_mock: Recorder
 ) -> None:
-    """Test purge removes an entity that was removed while recording was off."""
+    """Test purge only keeps entities unchanged while recording was off."""
     with freeze_time(dt_util.utcnow() - timedelta(days=11)):
         hass.states.async_set("sensor.removed", "1")
+        hass.states.async_set("sensor.changed", "1")
+        hass.states.async_set("sensor.unchanged", "1")
         await async_wait_recording_done(hass)
 
     await hass.services.async_call(DOMAIN, RecorderService.DISABLE, blocking=True)
     await async_wait_recording_done(hass)
     hass.states.async_remove("sensor.removed")
+    hass.states.async_set("sensor.changed", "2")
     await async_wait_recording_done(hass)
     await hass.services.async_call(DOMAIN, RecorderService.ENABLE, blocking=True)
     await async_wait_recording_done(hass)
@@ -2606,7 +2609,12 @@ async def test_purge_entity_removed_while_recording_disabled(
     assert finished
 
     with session_scope(hass=hass) as session:
-        assert session.query(States).count() == 0
+        states = (
+            session.query(StatesMeta.entity_id, States.state)
+            .join(StatesMeta, States.metadata_id == StatesMeta.metadata_id)
+            .order_by(States.state_id)
+        )
+        assert states.all() == [("sensor.unchanged", "1")]
 
 
 @pytest.mark.parametrize(
