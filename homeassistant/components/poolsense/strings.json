@@ -46,6 +46,9 @@
     }
   },
   "exceptions": {
+    "cannot_connect": {
+      "message": "Failed to connect to PoolSense"
+    },
     "invalid_auth": {
       "message": "Invalid authentication"
     }
