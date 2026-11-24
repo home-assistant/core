@@ -146,6 +146,15 @@ class BoschCameraCoordinator(DataUpdateCoordinator[dict[str, Camera]]):
             self._snapshots[camera_id] = (time.monotonic(), image)
             return image
 
+    def _written_state(self, camera_id: str) -> CameraAccountStates | None:
+        """Return the state to apply a write to, None if the camera was removed."""
+        if (state := self.account_states.get(camera_id)) is not None:
+            return state
+        # A poll may omit the state of a camera that is still listed.
+        if camera_id in self.data:
+            return CameraAccountStates(None, None)
+        return None
+
     async def async_set_privacy_mode(self, camera_id: str, enabled: bool) -> None:
         """Switch the privacy mode of a camera and update the cached state."""
         result = await self._client.set_privacy_mode(camera_id, enabled)
@@ -158,8 +167,7 @@ class BoschCameraCoordinator(DataUpdateCoordinator[dict[str, Camera]]):
             raise HomeAssistantError(
                 translation_domain=DOMAIN, translation_key="privacy_mode_failed"
             )
-        # The camera may have been removed while the write was running.
-        if (state := self.account_states.get(camera_id)) is None:
+        if (state := self._written_state(camera_id)) is None:
             return
         # The camera list is only polled every few minutes.
         self._write_seq += 1
@@ -179,8 +187,7 @@ class BoschCameraCoordinator(DataUpdateCoordinator[dict[str, Camera]]):
             raise HomeAssistantError(
                 translation_domain=DOMAIN, translation_key="notifications_failed"
             )
-        # The camera may have been removed while the write was running.
-        if (state := self.account_states.get(camera_id)) is None:
+        if (state := self._written_state(camera_id)) is None:
             return
         # The camera list is only polled every few minutes.
         self._write_seq += 1

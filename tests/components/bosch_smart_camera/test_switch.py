@@ -258,6 +258,35 @@ async def test_poll_omitting_a_written_camera_keeps_the_write(
     assert hass.states.get(NOTIFICATIONS_ID).state == STATE_OFF
 
 
+async def test_poll_omitting_a_camera_during_write_keeps_the_write(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_set_notifications: AsyncMock,
+    mock_account_states: AsyncMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a poll that completes before the write keeps the confirmed value."""
+    await setup_integration(hass, mock_config_entry)
+
+    async def poll_then_ok(*args: object) -> CloudPutResult:
+        mock_account_states.return_value = {}
+        freezer.tick(SCAN_INTERVAL)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+        return CloudPutResult(ok=True, status=204)
+
+    mock_set_notifications.side_effect = poll_then_ok
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        SERVICE_TURN_OFF,
+        {ATTR_ENTITY_ID: NOTIFICATIONS_ID},
+        blocking=True,
+    )
+
+    assert hass.states.get(NOTIFICATIONS_ID).state == STATE_OFF
+    assert hass.states.get(ENTITY_ID).state == STATE_UNAVAILABLE
+
+
 async def test_camera_removed_during_write(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
