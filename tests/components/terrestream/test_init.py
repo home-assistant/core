@@ -9,6 +9,7 @@ from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 from terrestream_local.errors import AuthenticationError, ClientError
 from terrestream_local.models import Snapshot
 
+from homeassistant.components.terrestream.coordinator import TerrestreamCoordinator
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant
@@ -97,6 +98,58 @@ async def test_unload_attempts_release(
     await hass.async_block_till_done()
 
     mock_client.command.assert_awaited_once_with("release")
+    assert config_entry.state is ConfigEntryState.NOT_LOADED
+
+
+async def test_unload_cancels_delayed_release(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    mock_client: MagicMock,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Cancel a stalled release before the config entry finishes unloading."""
+    monkeypatch.setattr(
+        "homeassistant.components.terrestream.coordinator._LEASE_RELEASE_TIMEOUT", 0
+    )
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+    release_cancelled = asyncio.Event()
+
+    async def delayed_release(name: str) -> None:
+        try:
+            await asyncio.Future()
+        except asyncio.CancelledError:
+            release_cancelled.set()
+            raise
+
+    mock_client.command.side_effect = delayed_release
+
+    async with asyncio.timeout(1):
+        assert await hass.config_entries.async_unload(config_entry.entry_id)
+
+    mock_client.command.assert_awaited_once_with("release")
+    assert release_cancelled.is_set()
+    assert config_entry.state is ConfigEntryState.NOT_LOADED
+
+
+async def test_unload_times_out_waiting_for_refresh_lock(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    mock_client: MagicMock,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Abandon release if a refresh holds the lock past the deadline."""
+    monkeypatch.setattr(
+        "homeassistant.components.terrestream.coordinator._LEASE_RELEASE_TIMEOUT", 0
+    )
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+    coordinator: TerrestreamCoordinator = config_entry.runtime_data
+
+    async with coordinator._debounced_refresh.async_lock(), asyncio.timeout(1):
+        assert await hass.config_entries.async_unload(config_entry.entry_id)
+
+    mock_client.command.assert_not_awaited()
     assert config_entry.state is ConfigEntryState.NOT_LOADED
 
 

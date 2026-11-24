@@ -1,5 +1,6 @@
 """Retrieve local measurements and maintain the controller lease."""
 
+from asyncio import timeout
 from datetime import timedelta
 import logging
 from typing import override
@@ -16,6 +17,9 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
+# Finish before config entry unload stops waiting for pending tasks.
+_LEASE_RELEASE_TIMEOUT = 5
+
 type TerrestreamConfigEntry = ConfigEntry[TerrestreamCoordinator]
 
 
@@ -61,8 +65,15 @@ class TerrestreamCoordinator(DataUpdateCoordinator[Snapshot]):
     async def async_release(self) -> None:
         """Release the lease after stopping polling; offline leases expire."""
         await self.async_shutdown()
-        async with self._debounced_refresh.async_lock():
-            try:
+        try:
+            async with (
+                timeout(_LEASE_RELEASE_TIMEOUT),
+                self._debounced_refresh.async_lock(),
+            ):
                 await self.client.command("release")
-            except ClientError:
-                _LOGGER.debug("Sensor unavailable while releasing controller lease")
+        except TimeoutError:
+            _LOGGER.debug(
+                "Controller lease release timed out; letting the lease expire"
+            )
+        except ClientError:
+            _LOGGER.debug("Sensor unavailable while releasing controller lease")
