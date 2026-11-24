@@ -10,11 +10,11 @@ from homeassistant.components.aerosmart.select import (
     VENTILATION_MODE_TO_OPTION,
 )
 from homeassistant.components.select import (
-    ATTR_OPTION,
     DOMAIN as SELECT_DOMAIN,
-    SERVICE_SELECT_OPTION,
+    SelectService,
+    SelectServiceArgument,
 )
-from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.const import TargetKey
 from homeassistant.core import HomeAssistant
 
 VENTILATION_MODE = "select.aerosmart_ventilation_mode"
@@ -36,8 +36,11 @@ async def test_ventilation_mode_select(
 
     await hass.services.async_call(
         SELECT_DOMAIN,
-        SERVICE_SELECT_OPTION,
-        {ATTR_ENTITY_ID: VENTILATION_MODE, ATTR_OPTION: "manual_1"},
+        SelectService.SELECT_OPTION,
+        {
+            TargetKey.ENTITY_ID: VENTILATION_MODE,
+            SelectServiceArgument.OPTION: "manual_1",
+        },
         blocking=True,
     )
 
