@@ -6,11 +6,11 @@ from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN, SwitchService
-from homeassistant.const import CommonServiceArgument, Platform
+from homeassistant.const import Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from . import init_integration
+from . import get_entity_id, init_integration
 
 
 async def test_entities(
@@ -47,14 +47,16 @@ async def test_switch_on_off(
     hass: HomeAssistant,
     mock_relay: AsyncMock,
     config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """Test switching relay on and off press."""
     await init_integration(hass, config_entry)
+    entity_id = get_entity_id(entity_registry, SWITCH_DOMAIN, "qwerty123-55")
     # turn off
     await hass.services.async_call(
         SWITCH_DOMAIN,
         SwitchService.TURN_OFF,
-        {CommonServiceArgument.ENTITY_ID: "switch.living_room_relayname"},
+        {TargetKey.ENTITY_ID: entity_id},
         blocking=True,
     )
     mock_relay.turn_off.assert_called_once_with()
@@ -62,7 +64,7 @@ async def test_switch_on_off(
     await hass.services.async_call(
         SWITCH_DOMAIN,
         SwitchService.TURN_ON,
-        {CommonServiceArgument.ENTITY_ID: "switch.living_room_relayname"},
+        {TargetKey.ENTITY_ID: entity_id},
         blocking=True,
     )
     mock_relay.turn_on.assert_called_once_with()

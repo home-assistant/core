@@ -32,14 +32,13 @@ from homeassistant.components.sharkiq.vacuum import (
 from homeassistant.components.vacuum import (
     ATTR_FAN_SPEED,
     ATTR_FAN_SPEED_LIST,
-    SERVICE_LOCATE,
     SERVICE_PAUSE,
     SERVICE_RETURN_TO_BASE,
-    SERVICE_SET_FAN_SPEED,
     SERVICE_START,
     SERVICE_STOP,
     VacuumActivity,
     VacuumEntityFeature,
+    VacuumService,
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -210,7 +209,7 @@ async def test_fan_speed(hass: HomeAssistant, fan_speed: str) -> None:
     """Test setting fan speeds."""
     service_data = {ATTR_ENTITY_ID: VAC_ENTITY_ID, ATTR_FAN_SPEED: fan_speed}
     await hass.services.async_call(
-        "vacuum", SERVICE_SET_FAN_SPEED, service_data, blocking=True
+        "vacuum", VacuumService.SET_FAN_SPEED, service_data, blocking=True
     )
     state = hass.states.get(VAC_ENTITY_ID)
     assert state.attributes.get(ATTR_FAN_SPEED) == fan_speed
@@ -262,7 +261,9 @@ async def test_locate(hass: HomeAssistant) -> None:
     """Test that the locate command works."""
     with patch.object(SharkIqVacuum, "async_find_device") as mock_locate:
         data = {ATTR_ENTITY_ID: VAC_ENTITY_ID}
-        await hass.services.async_call("vacuum", SERVICE_LOCATE, data, blocking=True)
+        await hass.services.async_call(
+            "vacuum", VacuumService.LOCATE, data, blocking=True
+        )
         mock_locate.assert_called_once()
 
 

@@ -25,8 +25,8 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
     STATE_UNAVAILABLE,
-    CommonServiceArgument,
     Platform,
+    TargetKey,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -279,7 +279,7 @@ async def test_install(
     await hass.services.async_call(
         UPDATE_DOMAIN,
         UpdateService.INSTALL,
-        {CommonServiceArgument.ENTITY_ID: "update.device_1_firmware"},
+        {TargetKey.ENTITY_ID: "update.device_1_firmware"},
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -327,7 +327,7 @@ async def test_install_request_failed(
         await hass.services.async_call(
             UPDATE_DOMAIN,
             UpdateService.INSTALL,
-            {CommonServiceArgument.ENTITY_ID: "update.device_1_firmware"},
+            {TargetKey.ENTITY_ID: "update.device_1_firmware"},
             blocking=True,
         )
     assert exc_info.value.translation_domain == DOMAIN

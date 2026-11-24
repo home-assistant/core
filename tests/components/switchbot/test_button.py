@@ -26,6 +26,7 @@ from homeassistant.const import (
     CONF_SENSOR_TYPE,
     CommonServiceArgument,
     EntityCategory,
+    TargetKey,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -144,7 +145,7 @@ async def test_meter_pro_sync_datetime_button(
         await hass.services.async_call(
             BUTTON_DOMAIN,
             ButtonService.PRESS,
-            {CommonServiceArgument.ENTITY_ID: "button.test_name_sync_date_and_time"},
+            {TargetKey.ENTITY_ID: "button.test_name_sync_date_and_time"},
             blocking=True,
         )
 
@@ -201,7 +202,7 @@ async def test_meter_pro_co2_sync_datetime_button_with_timezone(
         await hass.services.async_call(
             BUTTON_DOMAIN,
             ButtonService.PRESS,
-            {CommonServiceArgument.ENTITY_ID: "button.test_name_sync_date_and_time"},
+            {TargetKey.ENTITY_ID: "button.test_name_sync_date_and_time"},
             blocking=True,
         )
 
@@ -248,7 +249,7 @@ async def test_air_purifier_buttons(
         await hass.services.async_call(
             BUTTON_DOMAIN,
             ButtonService.PRESS,
-            {CommonServiceArgument.ENTITY_ID: entity_id},
+            {TargetKey.ENTITY_ID: entity_id},
             blocking=True,
         )
         mock_instance.assert_awaited_once()
@@ -299,7 +300,7 @@ async def test_air_purifier_reset_filter_usage(
         await hass.services.async_call(
             BUTTON_DOMAIN,
             ButtonService.PRESS,
-            {CommonServiceArgument.ENTITY_ID: entity_id},
+            {TargetKey.ENTITY_ID: entity_id},
             blocking=True,
         )
         reset_filter_usage.assert_awaited_once_with()
@@ -332,7 +333,7 @@ async def test_air_purifier_reset_filter_usage_failure(
         await hass.services.async_call(
             BUTTON_DOMAIN,
             ButtonService.PRESS,
-            {CommonServiceArgument.ENTITY_ID: entity_id},
+            {TargetKey.ENTITY_ID: entity_id},
             blocking=True,
         )
         assert hass.states.get(entity_id).attributes["last_run_success"] is True
@@ -341,7 +342,7 @@ async def test_air_purifier_reset_filter_usage_failure(
             await hass.services.async_call(
                 BUTTON_DOMAIN,
                 ButtonService.PRESS,
-                {CommonServiceArgument.ENTITY_ID: entity_id},
+                {TargetKey.ENTITY_ID: entity_id},
                 blocking=True,
             )
         assert reset_filter_usage.await_count == 2
@@ -391,7 +392,7 @@ async def test_lock_ultra_half_lock_button(
         await hass.services.async_call(
             BUTTON_DOMAIN,
             ButtonService.PRESS,
-            {CommonServiceArgument.ENTITY_ID: "button.test_name_half_lock"},
+            {TargetKey.ENTITY_ID: "button.test_name_half_lock"},
             blocking=True,
         )
 

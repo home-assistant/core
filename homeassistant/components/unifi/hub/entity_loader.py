@@ -13,7 +13,6 @@ from typing import TYPE_CHECKING, Any
 
 import aiounifi
 from aiounifi.interfaces.api_handlers import APIHandler, ItemEvent
-from aiounifi.models.api import ApiItem
 from aiounifi.models.client import Client
 
 from homeassistant.const import Platform
@@ -54,7 +53,9 @@ class UnifiEntityLoader:
             id(hub.api.dpi_apps): UnifiDataUpdateCoordinator(hub, hub.api.dpi_apps),
             id(hub.api.dpi_groups): UnifiDataUpdateCoordinator(hub, hub.api.dpi_groups),
             id(hub.api.firewall_policies): UnifiDataUpdateCoordinator(
-                hub, hub.api.firewall_policies
+                hub,
+                hub.api.firewall_policies,
+                disable_polling_on_endpoint_not_found=True,
             ),
             id(hub.api.object_oriented_network_configs): UnifiDataUpdateCoordinator(
                 hub,
@@ -65,10 +66,14 @@ class UnifiEntityLoader:
                 hub, hub.api.port_forwarding
             ),
             id(hub.api.traffic_rules): UnifiDataUpdateCoordinator(
-                hub, hub.api.traffic_rules
+                hub,
+                hub.api.traffic_rules,
+                disable_polling_on_endpoint_not_found=True,
             ),
             id(hub.api.traffic_routes): UnifiDataUpdateCoordinator(
-                hub, hub.api.traffic_routes
+                hub,
+                hub.api.traffic_routes,
+                disable_polling_on_endpoint_not_found=True,
             ),
             id(hub.api.wlans): UnifiDataUpdateCoordinator(hub, hub.api.wlans),
         }
@@ -380,7 +385,7 @@ class UnifiEntityLoader:
         )
 
     @callback
-    def get_data_update_coordinator[HandlerT: APIHandler[ApiItem]](
+    def get_data_update_coordinator[HandlerT: APIHandler](
         self, handler: HandlerT
     ) -> UnifiDataUpdateCoordinator[HandlerT]:
         """Return the data coordinator for a handler."""

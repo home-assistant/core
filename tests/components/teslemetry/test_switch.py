@@ -27,13 +27,7 @@ from homeassistant.components.teslemetry.const import (
     LABS_CHARGE_ON_SOLAR_FEATURE,
 )
 from homeassistant.components.teslemetry.coordinator import VEHICLE_INTERVAL
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    STATE_OFF,
-    STATE_ON,
-    CommonServiceArgument,
-    Platform,
-)
+from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON, Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
@@ -138,7 +132,7 @@ async def test_switch_services(
         await hass.services.async_call(
             SWITCH_DOMAIN,
             SwitchService.TURN_ON,
-            {CommonServiceArgument.ENTITY_ID: entity_id},
+            {TargetKey.ENTITY_ID: entity_id},
             blocking=True,
         )
         state = hass.states.get(entity_id)
@@ -152,7 +146,7 @@ async def test_switch_services(
         await hass.services.async_call(
             SWITCH_DOMAIN,
             SwitchService.TURN_OFF,
-            {CommonServiceArgument.ENTITY_ID: entity_id},
+            {TargetKey.ENTITY_ID: entity_id},
             blocking=True,
         )
         state = hass.states.get(entity_id)
@@ -177,7 +171,7 @@ async def test_switch_command_errors(hass: HomeAssistant, response: dict) -> Non
         await hass.services.async_call(
             SWITCH_DOMAIN,
             SwitchService.TURN_ON,
-            {CommonServiceArgument.ENTITY_ID: "switch.test_charge"},
+            {TargetKey.ENTITY_ID: "switch.test_charge"},
             blocking=True,
         )
 
@@ -280,7 +274,7 @@ async def test_switch_command_exception(
         await hass.services.async_call(
             SWITCH_DOMAIN,
             SwitchService.TURN_ON,
-            {CommonServiceArgument.ENTITY_ID: "switch.energy_site_storm_watch"},
+            {TargetKey.ENTITY_ID: "switch.energy_site_storm_watch"},
             blocking=True,
         )
 
@@ -410,7 +404,7 @@ async def test_charge_on_solar_switch_services_polling(
         await hass.services.async_call(
             SWITCH_DOMAIN,
             SwitchService.TURN_ON,
-            {CommonServiceArgument.ENTITY_ID: "switch.test_charge_on_solar"},
+            {TargetKey.ENTITY_ID: "switch.test_charge_on_solar"},
             blocking=True,
         )
         command.assert_called_once_with(
@@ -446,7 +440,7 @@ async def test_charge_on_solar_switch_services_old_firmware(
         await hass.services.async_call(
             SWITCH_DOMAIN,
             SwitchService.TURN_ON,
-            {CommonServiceArgument.ENTITY_ID: "switch.test_charge_on_solar"},
+            {TargetKey.ENTITY_ID: "switch.test_charge_on_solar"},
             blocking=True,
         )
         command.assert_called_once_with(
@@ -479,7 +473,7 @@ async def test_charge_on_solar_switch_uses_lower_limit_number(
         NUMBER_DOMAIN,
         NumberService.SET_VALUE,
         {
-            CommonServiceArgument.ENTITY_ID: "number.test_charge_on_solar_lower_limit",
+            TargetKey.ENTITY_ID: "number.test_charge_on_solar_lower_limit",
             NumberServiceArgument.VALUE: 40,
         },
         blocking=True,
@@ -492,7 +486,7 @@ async def test_charge_on_solar_switch_uses_lower_limit_number(
         await hass.services.async_call(
             SWITCH_DOMAIN,
             SwitchService.TURN_ON,
-            {CommonServiceArgument.ENTITY_ID: "switch.test_charge_on_solar"},
+            {TargetKey.ENTITY_ID: "switch.test_charge_on_solar"},
             blocking=True,
         )
         command.assert_called_once_with(
@@ -526,7 +520,7 @@ async def test_charge_on_solar_switch_turn_on_uses_restored_charge_limit(
             await hass.services.async_call(
                 SWITCH_DOMAIN,
                 SwitchService.TURN_ON,
-                {CommonServiceArgument.ENTITY_ID: "switch.test_charge_on_solar"},
+                {TargetKey.ENTITY_ID: "switch.test_charge_on_solar"},
                 blocking=True,
             )
             command.assert_called_once_with(
@@ -553,7 +547,7 @@ async def test_charge_on_solar_switch_uses_limit_when_number_disabled(
             NUMBER_DOMAIN,
             NumberService.SET_VALUE,
             {
-                CommonServiceArgument.ENTITY_ID: "number.test_charge_on_solar_lower_limit",
+                TargetKey.ENTITY_ID: "number.test_charge_on_solar_lower_limit",
                 NumberServiceArgument.VALUE: 35,
             },
             blocking=True,
@@ -576,7 +570,7 @@ async def test_charge_on_solar_switch_uses_limit_when_number_disabled(
         await hass.services.async_call(
             SWITCH_DOMAIN,
             SwitchService.TURN_ON,
-            {CommonServiceArgument.ENTITY_ID: "switch.test_charge_on_solar"},
+            {TargetKey.ENTITY_ID: "switch.test_charge_on_solar"},
             blocking=True,
         )
         command.assert_called_once_with(
@@ -626,7 +620,7 @@ async def test_charge_on_solar_switch_uses_stored_limit_when_number_disabled(
         await hass.services.async_call(
             SWITCH_DOMAIN,
             SwitchService.TURN_ON,
-            {CommonServiceArgument.ENTITY_ID: "switch.test_charge_on_solar"},
+            {TargetKey.ENTITY_ID: "switch.test_charge_on_solar"},
             blocking=True,
         )
         command.assert_called_once_with(
@@ -655,7 +649,7 @@ async def test_charge_on_solar_switch_turn_on_omits_unknown_charge_limit(
             await hass.services.async_call(
                 SWITCH_DOMAIN,
                 SwitchService.TURN_ON,
-                {CommonServiceArgument.ENTITY_ID: "switch.test_charge_on_solar"},
+                {TargetKey.ENTITY_ID: "switch.test_charge_on_solar"},
                 blocking=True,
             )
             command.assert_called_once_with(

@@ -7,21 +7,11 @@ import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.cover import (
-    ATTR_POSITION,
-    ATTR_TILT_POSITION,
     DOMAIN as COVER_DOMAIN,
+    CoverService,
+    CoverServiceArgument,
 )
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    SERVICE_CLOSE_COVER,
-    SERVICE_CLOSE_COVER_TILT,
-    SERVICE_OPEN_COVER,
-    SERVICE_OPEN_COVER_TILT,
-    SERVICE_SET_COVER_POSITION,
-    SERVICE_SET_COVER_TILT_POSITION,
-    SERVICE_STOP_COVER,
-    Platform,
-)
+from homeassistant.const import Platform, TargetKey
 from homeassistant.core import HomeAssistant
 
 from .conftest import (
@@ -60,32 +50,32 @@ async def test_bbl_shutter_control(
 
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_OPEN_COVER,
-        {ATTR_ENTITY_ID: "cover.shutter"},
+        CoverService.OPEN,
+        {TargetKey.ENTITY_ID: "cover.shutter"},
         blocking=True,
     )
     assert device.level == 1.0
 
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_CLOSE_COVER,
-        {ATTR_ENTITY_ID: "cover.shutter"},
+        CoverService.CLOSE,
+        {TargetKey.ENTITY_ID: "cover.shutter"},
         blocking=True,
     )
     assert device.level == 0.0
 
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_SET_COVER_POSITION,
-        {ATTR_ENTITY_ID: "cover.shutter", ATTR_POSITION: 42},
+        CoverService.SET_POSITION,
+        {TargetKey.ENTITY_ID: "cover.shutter", CoverServiceArgument.POSITION: 42},
         blocking=True,
     )
     assert device.level == pytest.approx(0.42)
 
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_STOP_COVER,
-        {ATTR_ENTITY_ID: "cover.shutter"},
+        CoverService.STOP,
+        {TargetKey.ENTITY_ID: "cover.shutter"},
         blocking=True,
     )
     device.stop.assert_called_once()
@@ -158,32 +148,32 @@ async def test_micromodule_blinds_tilt(
 
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_OPEN_COVER_TILT,
-        {ATTR_ENTITY_ID: "cover.blinds"},
+        CoverService.OPEN_TILT,
+        {TargetKey.ENTITY_ID: "cover.blinds"},
         blocking=True,
     )
     assert device.target_angle == 0.0
 
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_CLOSE_COVER_TILT,
-        {ATTR_ENTITY_ID: "cover.blinds"},
+        CoverService.CLOSE_TILT,
+        {TargetKey.ENTITY_ID: "cover.blinds"},
         blocking=True,
     )
     assert device.target_angle == 1.0
 
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_SET_COVER_TILT_POSITION,
-        {ATTR_ENTITY_ID: "cover.blinds", ATTR_TILT_POSITION: 30},
+        CoverService.SET_TILT_POSITION,
+        {TargetKey.ENTITY_ID: "cover.blinds", CoverServiceArgument.TILT_POSITION: 30},
         blocking=True,
     )
     assert device.target_angle == pytest.approx(0.7)
 
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_STOP_COVER,
-        {ATTR_ENTITY_ID: "cover.blinds"},
+        CoverService.STOP,
+        {TargetKey.ENTITY_ID: "cover.blinds"},
         blocking=True,
     )
     device.stop_blinds.assert_called_once()

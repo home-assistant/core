@@ -645,10 +645,10 @@ class EnergyCostSensor(RestoreSensor):
 
         """
 
-        if self._config["entity_energy_price"] is None:
+        if (entity_energy_price := self._config.get("entity_energy_price")) is None:
             return cast(float, self._config["number_energy_price"]), default_unit
 
-        energy_price_state = self.hass.states.get(self._config["entity_energy_price"])
+        energy_price_state = self.hass.states.get(entity_energy_price)
         if energy_price_state is None:
             raise EntityNotFoundError
 

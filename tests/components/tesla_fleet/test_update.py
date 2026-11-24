@@ -12,7 +12,7 @@ from syrupy.assertion import SnapshotAssertion
 from homeassistant.components.tesla_fleet.coordinator import VEHICLE_INTERVAL
 from homeassistant.components.tesla_fleet.update import INSTALLING, SCHEDULED
 from homeassistant.components.update import DOMAIN as UPDATE_DOMAIN, UpdateService
-from homeassistant.const import STATE_ON, CommonServiceArgument, Platform
+from homeassistant.const import STATE_ON, Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -71,7 +71,7 @@ async def test_update_services(
         await hass.services.async_call(
             UPDATE_DOMAIN,
             UpdateService.INSTALL,
-            {CommonServiceArgument.ENTITY_ID: entity_id},
+            {TargetKey.ENTITY_ID: entity_id},
             blocking=True,
         )
         call.assert_called_once()
