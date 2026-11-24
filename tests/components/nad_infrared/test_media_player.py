@@ -27,13 +27,13 @@ from homeassistant.components.media_player import (
     SERVICE_MEDIA_PLAY,
     SERVICE_MEDIA_PREVIOUS_TRACK,
     SERVICE_MEDIA_STOP,
-    SERVICE_SELECT_SOUND_MODE,
-    SERVICE_SELECT_SOURCE,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
     SERVICE_VOLUME_DOWN,
     SERVICE_VOLUME_MUTE,
     SERVICE_VOLUME_UP,
+    MediaPlayerService,
+    MediaPlayerServiceArgument,
     MediaPlayerState,
 )
 from homeassistant.components.nad_infrared.const import NADDeviceType
@@ -42,6 +42,7 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
     Platform,
+    TargetKey,
 )
 from homeassistant.core import HomeAssistant, State
 from homeassistant.exceptions import ServiceValidationError
@@ -132,8 +133,11 @@ async def test_media_player_select_source(
     """Test selecting a source sends the correct IR code and updates state."""
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
-        SERVICE_SELECT_SOURCE,
-        {ATTR_ENTITY_ID: MEDIA_PLAYER_ENTITY_ID, ATTR_INPUT_SOURCE: source},
+        MediaPlayerService.SELECT_SOURCE,
+        {
+            TargetKey.ENTITY_ID: MEDIA_PLAYER_ENTITY_ID,
+            MediaPlayerServiceArgument.SOURCE: source,
+        },
         blocking=True,
     )
 
@@ -164,8 +168,8 @@ async def test_turn_on_off_update_assumed_state(
     """Turn-off and turn-on update the assumed state."""
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: MEDIA_PLAYER_ENTITY_ID},
+        MediaPlayerService.TURN_OFF,
+        {TargetKey.ENTITY_ID: MEDIA_PLAYER_ENTITY_ID},
         blocking=True,
     )
     state = hass.states.get(MEDIA_PLAYER_ENTITY_ID)
@@ -174,8 +178,8 @@ async def test_turn_on_off_update_assumed_state(
 
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: MEDIA_PLAYER_ENTITY_ID},
+        MediaPlayerService.TURN_ON,
+        {TargetKey.ENTITY_ID: MEDIA_PLAYER_ENTITY_ID},
         blocking=True,
     )
     state = hass.states.get(MEDIA_PLAYER_ENTITY_ID)
@@ -232,8 +236,8 @@ async def test_restores_state_source_and_sound_mode(
 
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: MEDIA_PLAYER_ENTITY_ID},
+        MediaPlayerService.TURN_ON,
+        {TargetKey.ENTITY_ID: MEDIA_PLAYER_ENTITY_ID},
         blocking=True,
     )
     state = hass.states.get(MEDIA_PLAYER_ENTITY_ID)
@@ -260,8 +264,8 @@ async def test_amplifier_media_player_sends_correct_code(
     """The amplifier media player sends the same codes as the receiver."""
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "media_player.nad_amplifier"},
+        MediaPlayerService.TURN_ON,
+        {TargetKey.ENTITY_ID: "media_player.nad_amplifier"},
         blocking=True,
     )
 
@@ -277,8 +281,11 @@ async def test_select_invalid_source(
     with pytest.raises(ServiceValidationError) as exc_info:
         await hass.services.async_call(
             MEDIA_PLAYER_DOMAIN,
-            SERVICE_SELECT_SOURCE,
-            {ATTR_ENTITY_ID: MEDIA_PLAYER_ENTITY_ID, ATTR_INPUT_SOURCE: "input_8"},
+            MediaPlayerService.SELECT_SOURCE,
+            {
+                TargetKey.ENTITY_ID: MEDIA_PLAYER_ENTITY_ID,
+                MediaPlayerServiceArgument.SOURCE: "input_8",
+            },
             blocking=True,
         )
 
@@ -315,8 +322,11 @@ async def test_select_sound_mode(
     """Selecting a sound mode sends its code and updates the assumed state."""
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
-        SERVICE_SELECT_SOUND_MODE,
-        {ATTR_ENTITY_ID: MEDIA_PLAYER_ENTITY_ID, ATTR_SOUND_MODE: sound_mode},
+        MediaPlayerService.SELECT_SOUND_MODE,
+        {
+            TargetKey.ENTITY_ID: MEDIA_PLAYER_ENTITY_ID,
+            MediaPlayerServiceArgument.SOUND_MODE: sound_mode,
+        },
         blocking=True,
     )
 
@@ -348,8 +358,11 @@ async def test_select_invalid_sound_mode(
     with pytest.raises(ServiceValidationError) as exc_info:
         await hass.services.async_call(
             MEDIA_PLAYER_DOMAIN,
-            SERVICE_SELECT_SOUND_MODE,
-            {ATTR_ENTITY_ID: MEDIA_PLAYER_ENTITY_ID, ATTR_SOUND_MODE: "dolby_atmos"},
+            MediaPlayerService.SELECT_SOUND_MODE,
+            {
+                TargetKey.ENTITY_ID: MEDIA_PLAYER_ENTITY_ID,
+                MediaPlayerServiceArgument.SOUND_MODE: "dolby_atmos",
+            },
             blocking=True,
         )
 
@@ -404,8 +417,8 @@ async def test_turn_on_sends_nad_nec_frame(
 
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: MEDIA_PLAYER_ENTITY_ID},
+        MediaPlayerService.TURN_ON,
+        {TargetKey.ENTITY_ID: MEDIA_PLAYER_ENTITY_ID},
         blocking=True,
     )
 

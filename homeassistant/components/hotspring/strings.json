@@ -87,6 +87,33 @@
       "fwss_version": {
         "name": "FreshWater Salt System version"
       },
+      "heater_current": {
+        "name": "Heater current"
+      },
+      "heater_power": {
+        "name": "Heater power"
+      },
+      "jet1_jet2_blower_current": {
+        "name": "Jets 1, 2, and blower current"
+      },
+      "jet1_jet2_blower_power": {
+        "name": "Jets 1, 2, and blower apparent power"
+      },
+      "jet3_current": {
+        "name": "Jet 3 current"
+      },
+      "jet3_power": {
+        "name": "Jet 3 apparent power"
+      },
+      "small_loads_current": {
+        "name": "Small loads current"
+      },
+      "small_loads_power": {
+        "name": "Small loads apparent power"
+      },
+      "total_power": {
+        "name": "Total apparent power"
+      },
       "water_care_10_day_timer": {
         "name": "Salt 10-day check timer"
       },

@@ -3,7 +3,7 @@
 from pymodbus.exceptions import ModbusException
 import pytest
 
-from homeassistant.components.fan import DOMAIN as FAN_DOMAIN
+from homeassistant.components.fan import DOMAIN as FAN_DOMAIN, FanService
 from homeassistant.components.homeassistant import SERVICE_UPDATE_ENTITY
 from homeassistant.components.modbus.const import (
     CALL_TYPE_COIL,
@@ -28,11 +28,10 @@ from homeassistant.const import (
     CONF_PLATFORM,
     CONF_SCAN_INTERVAL,
     CONF_SLAVE,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
     STATE_OFF,
     STATE_ON,
     STATE_UNAVAILABLE,
+    TargetKey,
 )
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant, State
 from homeassistant.setup import async_setup_component
@@ -274,12 +273,12 @@ async def test_fan_service_turn(
 
     assert hass.states.get(ENTITY_ID).state == STATE_OFF
     await hass.services.async_call(
-        FAN_DOMAIN, SERVICE_TURN_ON, service_data={ATTR_ENTITY_ID: ENTITY_ID}
+        FAN_DOMAIN, FanService.TURN_ON, service_data={TargetKey.ENTITY_ID: ENTITY_ID}
     )
     await hass.async_block_till_done()
     assert hass.states.get(ENTITY_ID).state == STATE_ON
     await hass.services.async_call(
-        FAN_DOMAIN, SERVICE_TURN_OFF, service_data={ATTR_ENTITY_ID: ENTITY_ID}
+        FAN_DOMAIN, FanService.TURN_OFF, service_data={TargetKey.ENTITY_ID: ENTITY_ID}
     )
     await hass.async_block_till_done()
     assert hass.states.get(ENTITY_ID).state == STATE_OFF
@@ -287,26 +286,26 @@ async def test_fan_service_turn(
     mock_modbus.read_holding_registers.return_value = ReadResult([0x01])
     assert hass.states.get(ENTITY_ID2).state == STATE_OFF
     await hass.services.async_call(
-        FAN_DOMAIN, SERVICE_TURN_ON, service_data={ATTR_ENTITY_ID: ENTITY_ID2}
+        FAN_DOMAIN, FanService.TURN_ON, service_data={TargetKey.ENTITY_ID: ENTITY_ID2}
     )
     await hass.async_block_till_done()
     assert hass.states.get(ENTITY_ID2).state == STATE_ON
     mock_modbus.read_holding_registers.return_value = ReadResult([0x00])
     await hass.services.async_call(
-        FAN_DOMAIN, SERVICE_TURN_OFF, service_data={ATTR_ENTITY_ID: ENTITY_ID2}
+        FAN_DOMAIN, FanService.TURN_OFF, service_data={TargetKey.ENTITY_ID: ENTITY_ID2}
     )
     await hass.async_block_till_done()
     assert hass.states.get(ENTITY_ID2).state == STATE_OFF
 
     mock_modbus.write_register.side_effect = ModbusException("fail write_")
     await hass.services.async_call(
-        FAN_DOMAIN, SERVICE_TURN_ON, service_data={ATTR_ENTITY_ID: ENTITY_ID2}
+        FAN_DOMAIN, FanService.TURN_ON, service_data={TargetKey.ENTITY_ID: ENTITY_ID2}
     )
     await hass.async_block_till_done()
     assert hass.states.get(ENTITY_ID2).state == STATE_UNAVAILABLE
     mock_modbus.write_coil.side_effect = ModbusException("fail write_")
     await hass.services.async_call(
-        FAN_DOMAIN, SERVICE_TURN_OFF, service_data={ATTR_ENTITY_ID: ENTITY_ID}
+        FAN_DOMAIN, FanService.TURN_OFF, service_data={TargetKey.ENTITY_ID: ENTITY_ID}
     )
     await hass.async_block_till_done()
     assert hass.states.get(ENTITY_ID).state == STATE_UNAVAILABLE
