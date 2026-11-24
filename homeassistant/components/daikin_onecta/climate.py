@@ -1,7 +1,7 @@
 """Support for the Daikin HVAC."""
 
 from collections.abc import Awaitable, Callable
-from datetime import timedelta
+from datetime import date, timedelta
 from typing import Any, Literal, cast, override
 
 from daikin_onecta import ClimateControl, ClimateControlClient
@@ -1031,6 +1031,54 @@ class DaikinClimate(DaikinManagementPointEntity, ClimateEntity):
             preset.value.enabled = True
         elif preset is not None:
             preset.value = "on"
+
+    def validate_holiday_period(self, start_date: date, end_date: date) -> None:
+        """Validate a requested holiday period before writing to Daikin."""
+        if end_date < start_date:
+            self._raise_service_validation_error("holiday_period_invalid")
+        climate_control = self._climate_control()
+        holiday_mode = (
+            climate_control.mode_characteristic("holidayMode")
+            if climate_control is not None
+            else None
+        )
+        if holiday_mode is None or not holiday_mode.settable:
+            self._raise_service_validation_error("holiday_mode_unavailable")
+
+    async def async_set_holiday_period(self, start_date: date, end_date: date) -> None:
+        """Enable holiday mode with a user-selected date range."""
+        self.validate_holiday_period(start_date, end_date)
+        climate_control = self._climate_control()
+        holiday_mode = (
+            climate_control.mode_characteristic("holidayMode")
+            if climate_control is not None
+            else None
+        )
+        if holiday_mode is None:
+            self._raise_service_validation_error("holiday_mode_unavailable")
+        if (
+            holiday_mode.value.enabled
+            and holiday_mode.value.start_date == start_date.isoformat()
+            and holiday_mode.value.end_date == end_date.isoformat()
+        ):
+            return
+
+        await self._async_execute_sub_client_command(
+            OnectaClient.climate_control,
+            lambda climate: climate.set_holiday_mode(
+                True,
+                start_date=start_date,
+                end_date=end_date,
+            ),
+            "set_holiday_period_failed",
+        )
+        if (climate_control := self._climate_control()) is not None and (
+            holiday_mode := climate_control.mode_characteristic("holidayMode")
+        ) is not None:
+            holiday_mode.value.enabled = True
+            holiday_mode.value.start_date = start_date.isoformat()
+            holiday_mode.value.end_date = end_date.isoformat()
+        self._publish_write_update()
 
     @override
     async def async_set_preset_mode(self, preset_mode: str) -> None:

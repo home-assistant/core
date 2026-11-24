@@ -371,6 +371,12 @@
           "scheduled_reheat": "Scheduled reheat"
         }
       },
+      "holiday_end_date": {
+        "name": "Holiday end date"
+      },
+      "holiday_start_date": {
+        "name": "Holiday start date"
+      },
       "ipaddress": {
         "name": "IP address"
       },
@@ -527,6 +533,12 @@
     "firmware_install_unavailable": {
       "message": "Firmware installation is unavailable for {device}"
     },
+    "holiday_mode_unavailable": {
+      "message": "Holiday mode is unavailable for {device}"
+    },
+    "holiday_period_invalid": {
+      "message": "The holiday end date must be on or after the start date for {device}"
+    },
     "invalid_response": {
       "message": "Daikin API returned an invalid response"
     },
@@ -550,6 +562,9 @@
     },
     "set_fan_mode_failed": {
       "message": "Failed to set the fan mode for {device}"
+    },
+    "set_holiday_period_failed": {
+      "message": "Failed to set the holiday period for {device}"
     },
     "set_hvac_mode_failed": {
       "message": "Failed to set the HVAC mode for {device}"
@@ -604,6 +619,22 @@
     },
     "water_heater_turn_on_failed": {
       "message": "Failed to turn on {device}"
+    }
+  },
+  "services": {
+    "set_holiday_period": {
+      "description": "Enable holiday mode for a climate zone with a custom date range.",
+      "fields": {
+        "end_date": {
+          "description": "Last day of the holiday period.",
+          "name": "End date"
+        },
+        "start_date": {
+          "description": "First day of the holiday period.",
+          "name": "Start date"
+        }
+      },
+      "name": "Set holiday period"
     }
   },
   "system_health": {

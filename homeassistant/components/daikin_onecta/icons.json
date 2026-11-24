@@ -25,6 +25,8 @@
       "errorcode": { "default": "mdi:information-outline" },
       "fanmotorrotationspeed": { "default": "mdi:fan" },
       "heatupmode": { "default": "mdi:alphabetical" },
+      "holiday_end_date": { "default": "mdi:calendar-end" },
+      "holiday_start_date": { "default": "mdi:calendar-start" },
       "ipaddress": { "default": "mdi:ip-network" },
       "operationmode": { "default": "mdi:alphabetical" },
       "ratelimitremainingday": { "default": "mdi:information-outline" },
@@ -46,5 +48,8 @@
     "update": {
       "firmwareupdate": { "default": "mdi:update" }
     }
+  },
+  "services": {
+    "set_holiday_period": { "service": "mdi:calendar-range" }
   }
 }

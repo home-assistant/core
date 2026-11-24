@@ -26,6 +26,7 @@ from homeassistant.components.daikin_onecta.sensor import (
     _native_unit,
     add_energy_sensors,
 )
+from homeassistant.components.daikin_onecta.utils import management_point_unique_id
 from homeassistant.components.sensor import (
     DOMAIN as SENSOR_DOMAIN,
     SensorDeviceClass,
@@ -103,6 +104,45 @@ async def test_calculated_leaving_water_temperature_is_a_sensor(
     assert calculated_state is not None and calculated_state.state == "50"
     assert calculated_climate_entity is None
     assert leaving_water_climate_entity is not None
+
+
+async def test_holiday_date_sensors_are_unknown_when_holiday_mode_is_inactive(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Expose holiday dates only while Daikin holiday mode is enabled."""
+    await _async_setup_fixture(hass, config_entry, "holidaymode")
+    coordinator = config_entry.runtime_data
+    gateway = next(iter(coordinator.data.values()))
+    point = gateway.device.management_points_by_type("climateControl")[0]
+    holiday_mode = point.holiday_mode
+    assert holiday_mode is not None and holiday_mode.value.enabled
+
+    start_entity_id = entity_registry.async_get_entity_id(
+        SENSOR_DOMAIN,
+        DOMAIN,
+        management_point_unique_id(gateway.id, point.embedded_id, "holiday_start_date"),
+    )
+    end_entity_id = entity_registry.async_get_entity_id(
+        SENSOR_DOMAIN,
+        DOMAIN,
+        management_point_unique_id(gateway.id, point.embedded_id, "holiday_end_date"),
+    )
+    assert start_entity_id is not None and end_entity_id is not None
+    start_state = hass.states.get(start_entity_id)
+    end_state = hass.states.get(end_entity_id)
+    assert start_state is not None and start_state.state == "2024-03-21"
+    assert end_state is not None and end_state.state == "2024-03-22"
+
+    holiday_mode.value.enabled = False
+    coordinator.async_update_listeners()
+    await hass.async_block_till_done()
+
+    start_state = hass.states.get(start_entity_id)
+    end_state = hass.states.get(end_entity_id)
+    assert start_state is not None and start_state.state == "unknown"
+    assert end_state is not None and end_state.state == "unknown"
 
 
 @pytest.mark.parametrize(

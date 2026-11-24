@@ -184,6 +184,11 @@ class DaikinManagementPointEntity(DaikinOnectaEntity):
         self._embedded_id = embedded_id
 
     @property
+    def management_point_identity(self) -> tuple[str, str]:
+        """Return the gateway and management-point identifiers."""
+        return self._device_id, self._embedded_id
+
+    @property
     @override
     def _error_device_name(self) -> str:
         """Return the gateway and management-point name for error messages."""

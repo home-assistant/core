@@ -12,7 +12,10 @@ from homeassistant.components.daikin_onecta.binary_sensor import (
     BINARY_SENSOR_DESCRIPTIONS,
 )
 from homeassistant.components.daikin_onecta.select import SELECT_DESCRIPTIONS
-from homeassistant.components.daikin_onecta.sensor import SENSOR_DESCRIPTIONS
+from homeassistant.components.daikin_onecta.sensor import (
+    HOLIDAY_DATE_DESCRIPTIONS,
+    SENSOR_DESCRIPTIONS,
+)
 from homeassistant.components.daikin_onecta.switch import SWITCH_DESCRIPTIONS
 from homeassistant.components.daikin_onecta.update import UPDATE_DESCRIPTIONS
 from homeassistant.components.fan import (
@@ -91,6 +94,7 @@ async def test_account_entities_are_not_duplicated_for_multiple_gateways(
         BINARY_SENSOR_DESCRIPTIONS,
         SELECT_DESCRIPTIONS,
         SENSOR_DESCRIPTIONS,
+        HOLIDAY_DATE_DESCRIPTIONS,
         SWITCH_DESCRIPTIONS,
         UPDATE_DESCRIPTIONS,
     ],

@@ -1,0 +1,14 @@
+set_holiday_period:
+  target:
+    entity:
+      integration: daikin_onecta
+      domain: climate
+  fields:
+    start_date:
+      required: true
+      selector:
+        date:
+    end_date:
+      required: true
+      selector:
+        date:

@@ -51,6 +51,7 @@ from homeassistant.components.daikin_onecta.coordinator import (
     OnectaDataUpdateCoordinator,
 )
 from homeassistant.components.daikin_onecta.device import DaikinOnectaDevice
+from homeassistant.components.daikin_onecta.services import SERVICE_SET_HOLIDAY_PERIOD
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     SERVICE_TURN_OFF,
@@ -864,6 +865,87 @@ async def test_climate_service_toggles_presets(
         call_args.args[:3]
         for call_args in mock_onecta_client.patch_characteristic.await_args_list
     ] == expected_patch_prefix[native_characteristic]
+
+
+async def test_set_holiday_period_action(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    mock_onecta_client: MockOnectaClient,
+) -> None:
+    """Set a custom holiday period once for a zone with multiple climate entities."""
+    await _async_setup_fixture(hass, config_entry, "altherma")
+    coordinator = config_entry.runtime_data
+    assert coordinator.data is not None
+    gateway_id, device = next(iter(coordinator.data.items()))
+    point = device.management_point("climateControlMainZone")
+    assert point is not None
+    climate_entity_ids = [
+        entry.entity_id
+        for entry in er.async_entries_for_config_entry(
+            entity_registry, config_entry.entry_id
+        )
+        if entry.domain == CLIMATE_DOMAIN
+        and entry.unique_id.startswith(f"{gateway_id}_{point.embedded_id}_")
+    ]
+    assert len(climate_entity_ids) > 1
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SET_HOLIDAY_PERIOD,
+        {
+            ATTR_ENTITY_ID: climate_entity_ids,
+            "start_date": "2026-12-20",
+            "end_date": "2027-01-15",
+        },
+        blocking=True,
+    )
+
+    mock_onecta_client.post_management_point.assert_awaited_once_with(
+        gateway_id,
+        point.embedded_id,
+        "holiday-mode",
+        {
+            "enabled": True,
+            "startDate": "2026-12-20",
+            "endDate": "2027-01-15",
+        },
+    )
+    assert point.holiday_mode is not None
+    assert point.holiday_mode.value.enabled
+    assert point.holiday_mode.value.start_date == "2026-12-20"
+    assert point.holiday_mode.value.end_date == "2027-01-15"
+    mock_onecta_client.patch_characteristic.assert_not_awaited()
+
+
+async def test_set_holiday_period_action_rejects_invalid_dates(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    mock_onecta_client: MockOnectaClient,
+) -> None:
+    """Reject an invalid holiday period without calling Daikin."""
+    (
+        entity_id,
+        _gateway_id,
+        _point,
+        _coordinator,
+    ) = await _async_setup_climate_service_fixture(hass, config_entry, entity_registry)
+
+    with pytest.raises(ServiceValidationError) as err:
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_SET_HOLIDAY_PERIOD,
+            {
+                ATTR_ENTITY_ID: entity_id,
+                "start_date": "2027-01-15",
+                "end_date": "2026-12-20",
+            },
+            blocking=True,
+        )
+
+    assert err.value.translation_key == "holiday_period_invalid"
+    mock_onecta_client.post_management_point.assert_not_awaited()
 
 
 async def test_climate_service_clears_all_active_presets(

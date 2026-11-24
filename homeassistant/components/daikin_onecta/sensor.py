@@ -1,8 +1,9 @@
 """Support for Daikin AC sensors."""
 
 from dataclasses import dataclass, replace
+from datetime import date
 import logging
-from typing import cast, override
+from typing import Literal, cast, override
 
 from daikin_onecta.models import Characteristic, ManagementPoint, Setpoint
 
@@ -35,6 +36,7 @@ from .entity import (
 from .utils import enum_value_to_state, management_point_unique_id
 
 PARALLEL_UPDATES = 1
+_DISABLED_HOLIDAY_DATE = "2017-01-01"
 SENSORY_DATA_SENSOR_TYPES = (
     "roomTemperature",
     "outdoorTemperature",
@@ -56,6 +58,18 @@ SENSOR_DESCRIPTIONS: dict[str, SensorEntityDescription] = {
     )
     for metadata in ENTITY_METADATA
     if metadata.key in SENSOR_KEYS
+}
+HOLIDAY_DATE_DESCRIPTIONS = {
+    "holiday_start_date": SensorEntityDescription(
+        key="holiday_start_date",
+        translation_key="holiday_start_date",
+        device_class=SensorDeviceClass.DATE,
+    ),
+    "holiday_end_date": SensorEntityDescription(
+        key="holiday_end_date",
+        translation_key="holiday_end_date",
+        device_class=SensorDeviceClass.DATE,
+    ),
 }
 
 _LOGGER = logging.getLogger(__name__)
@@ -216,6 +230,38 @@ def add_management_point_sensors(
         device, coordinator, management_point, sensors, is_known
     )
     add_energy_sensors(coordinator, device, management_point, sensors, is_known)
+    add_holiday_date_sensors(coordinator, device, management_point, sensors, is_known)
+
+
+def add_holiday_date_sensors(
+    coordinator: OnectaDataUpdateCoordinator,
+    device: DaikinOnectaDevice,
+    management_point: ManagementPoint,
+    sensors: list[SensorEntity],
+    is_known: EntityIdChecker,
+) -> None:
+    """Add date sensors when a point exposes holiday-mode state."""
+    if management_point.holiday_mode is None:
+        return
+    date_fields: tuple[tuple[str, Literal["start_date", "end_date"]], ...] = (
+        ("holiday_start_date", "start_date"),
+        ("holiday_end_date", "end_date"),
+    )
+    for key, date_field in date_fields:
+        unique_id = management_point_unique_id(
+            device.id, management_point.embedded_id, key
+        )
+        if is_known(Platform.SENSOR, unique_id):
+            continue
+        sensors.append(
+            DaikinHolidayDateSensor(
+                device,
+                coordinator,
+                management_point.embedded_id,
+                HOLIDAY_DATE_DESCRIPTIONS[key],
+                date_field,
+            )
+        )
 
 
 def add_read_only_setpoint_sensors(
@@ -499,6 +545,56 @@ class DaikinValueSensor(DaikinManagementPointEntity, SensorEntity):
         if not super().available:
             return False
         return self._is_exposed_on_platform
+
+
+class DaikinHolidayDateSensor(DaikinManagementPointEntity, SensorEntity):
+    """Expose the configured date range while holiday mode is active."""
+
+    def __init__(
+        self,
+        device: DaikinOnectaDevice,
+        coordinator: OnectaDataUpdateCoordinator,
+        embedded_id: str,
+        description: SensorEntityDescription,
+        date_field: Literal["start_date", "end_date"],
+    ) -> None:
+        """Initialize a holiday-mode date sensor."""
+        super().__init__(device, coordinator, embedded_id)
+        self.entity_description = description
+        self._date_field = date_field
+        self._attr_unique_id = management_point_unique_id(
+            self._device_id, self._embedded_id, description.key
+        )
+        self.update_state()
+
+    @override
+    def update_state(self) -> None:
+        """Refresh the date, leaving it unknown when holiday mode is inactive."""
+        point = self._management_point
+        holiday_mode = point.holiday_mode if point is not None else None
+        holiday = holiday_mode.value if holiday_mode is not None else None
+        if holiday is None or not holiday.enabled:
+            self._attr_native_value = None
+            return
+        raw_date = (
+            holiday.start_date if self._date_field == "start_date" else holiday.end_date
+        )
+        if raw_date is None or raw_date == _DISABLED_HOLIDAY_DATE:
+            self._attr_native_value = None
+            return
+        try:
+            self._attr_native_value = date.fromisoformat(raw_date)
+        except ValueError:
+            self._attr_native_value = None
+
+    @property
+    @override
+    def available(self) -> bool:
+        """Return whether holiday-mode data is still provided by the point."""
+        point = self._management_point
+        return (
+            super().available and point is not None and point.holiday_mode is not None
+        )
 
 
 class DaikinLimitSensor(DaikinOnectaAccountEntity, SensorEntity):

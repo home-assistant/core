@@ -6,6 +6,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import (
     config_entry_oauth2_flow,
+    config_validation as cv,
     device_registry as dr,
     entity_registry as er,
 )
@@ -13,10 +14,12 @@ from homeassistant.helpers.config_entry_oauth2_flow import (
     ImplementationUnavailableError,
 )
 from homeassistant.helpers.device_registry import AnyDeviceEntry, ChildDeviceEntry
+from homeassistant.helpers.typing import ConfigType
 
 from .const import DOMAIN
 from .coordinator import DaikinOnectaConfigEntry, OnectaDataUpdateCoordinator
 from .device import DaikinOnectaDevice
+from .services import async_setup_services
 from .utils import (
     account_device_identifier,
     account_identifier,
@@ -34,6 +37,14 @@ PLATFORMS = [
     Platform.UPDATE,
     Platform.WATER_HEATER,
 ]
+
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
+
+
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up integration-wide actions."""
+    async_setup_services(hass)
+    return True
 
 
 async def async_setup_entry(

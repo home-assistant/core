@@ -1,7 +1,7 @@
 rules:
   action-setup:
-    status: exempt
-    comment: This integration does not register custom actions.
+    status: done
+    comment: Registers the holiday-period action during integration setup.
   appropriate-polling: done
   brands: done
   common-modules: done
@@ -9,8 +9,8 @@ rules:
   config-flow-test-coverage: done
   dependency-transparency: done
   docs-actions:
-    status: exempt
-    comment: This integration does not provide custom actions.
+    status: done
+    comment: The custom holiday-period action is described in services.yaml.
   docs-conditions:
     status: exempt
     comment: This integration does not provide custom conditions.
