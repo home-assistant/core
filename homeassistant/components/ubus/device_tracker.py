@@ -223,13 +223,21 @@ def _async_migrate_unique_ids(entity_registry: er.EntityRegistry) -> None:
             by_mac.setdefault(registry_entry.unique_id.lower(), []).append(
                 registry_entry
             )
+    # A tracker disabled only by its config entry or device is in a
+    # derived state which clears when those are re-enabled, so it still
+    # counts as an established tracker.
+    derived_disabled = (
+        None,
+        er.RegistryEntryDisabler.CONFIG_ENTRY,
+        er.RegistryEntryDisabler.DEVICE,
+    )
     for entries in by_mac.values():
         if len(entries) == 1 and entries[0].unique_id == entries[0].unique_id.lower():
             continue
         # An enabled tracker is the established one over a disabled
         # duplicate; between equally established trackers the oldest wins.
         candidates = [
-            entry for entry in entries if entry.disabled_by is None
+            entry for entry in entries if entry.disabled_by in derived_disabled
         ] or entries
         survivor = min(candidates, key=lambda entry: entry.created_at)
         for entry in entries:

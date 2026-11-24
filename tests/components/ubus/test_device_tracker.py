@@ -17,6 +17,7 @@ from homeassistant.components.ubus.device_tracker import UbusScannerEntity
 from homeassistant.config_entries import (
     SOURCE_IMPORT,
     ConfigEntries,
+    ConfigEntryDisabler,
     ConfigEntryError,
     ConfigEntryState,
 )
@@ -449,6 +450,80 @@ async def test_enabled_tracker_wins_over_disabled_duplicate(
     assert entity_registry.async_get(established.entity_id).disabled_by is None
     assert entity_registry.async_get(established.entity_id).name == "Phone"
     assert entity_registry.async_get(duplicate.entity_id) is None
+
+    state = hass.states.get(established.entity_id)
+    assert state is not None
+    assert state.state == STATE_HOME
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_enabled_tracker_on_disabled_entry_wins_over_disabled_duplicate(
+    hass: HomeAssistant,
+    mock_ubus_by_host: tuple[MagicMock, dict[str, MagicMock]],
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a tracker disabled only by its entry wins over a disabled duplicate.
+
+    A tracker the user enabled carries the disabled state of its
+    temporarily disabled config entry; the migration must not delete it in
+    favor of an older integration-disabled duplicate.
+    """
+    _mock, _ = mock_ubus_by_host
+    entry_a = MockConfigEntry(domain=DOMAIN, data=MOCK_CONFIG, title=MOCK_HOST)
+    entry_a.add_to_hass(hass)
+    entry_b = MockConfigEntry(
+        domain=DOMAIN,
+        data={**MOCK_CONFIG, CONF_HOST: MOCK_HOST_B},
+        title=MOCK_HOST_B,
+    )
+    entry_b.add_to_hass(hass)
+    entry_b.disabled_by = ConfigEntryDisabler.USER
+
+    # The older duplicate was created by the previous implementation under
+    # the raw-case unique id and is disabled by default.
+    device_a = device_registry.async_get_or_create(
+        config_entry_id=entry_a.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, MAC_PHONE.upper())},
+    )
+    duplicate = entity_registry.async_get_or_create(
+        DEVICE_TRACKER_DOMAIN,
+        DOMAIN,
+        MAC_PHONE.upper(),
+        config_entry=entry_a,
+        device_id=device_a.id,
+        disabled_by=er.RegistryEntryDisabler.INTEGRATION,
+    )
+    freezer.tick(timedelta(hours=1))
+    # The user enabled the normalized tracker on the other router, which is
+    # temporarily disabled, so the tracker inherits that disabled state.
+    device_b = device_registry.async_get_or_create(
+        config_entry_id=entry_b.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, MAC_PHONE)},
+    )
+    established = entity_registry.async_get_or_create(
+        DEVICE_TRACKER_DOMAIN,
+        DOMAIN,
+        MAC_PHONE,
+        config_entry=entry_b,
+        device_id=device_b.id,
+        disabled_by=None,
+    )
+    assert established.disabled_by is er.RegistryEntryDisabler.CONFIG_ENTRY
+
+    router = _mock(f"http://{MOCK_HOST}/ubus", "root", "password", verify=True)
+    router.get_hostapd_clients.return_value = {
+        "clients": {MAC_PHONE: {"authorized": True}}
+    }
+    assert await hass.config_entries.async_setup(entry_a.entry_id)
+    await hass.async_block_till_done()
+
+    # The user-enabled tracker survived despite inheriting the disabled
+    # state of its entry; the older disabled duplicate is gone.
+    assert entity_registry.async_get(duplicate.entity_id) is None
+    assert entity_registry.async_get(established.entity_id) is not None
+    assert entity_registry.async_get(established.entity_id).disabled_by is None
 
     state = hass.states.get(established.entity_id)
     assert state is not None
