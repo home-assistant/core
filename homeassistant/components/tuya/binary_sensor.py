@@ -408,6 +408,20 @@ BINARY_SENSORS: dict[DeviceCategory, tuple[TuyaBinarySensorEntityDescription, ..
         ),
         TAMPER_BINARY_SENSOR,
     ),
+    DeviceCategory.SP: (
+        TuyaBinarySensorEntityDescription(
+            # Pet feeders with a camera are reported as "sp"
+            key=DPCode.FEED_BLOCK_STATUS,
+            translation_key="feed_blocked",
+            device_class=BinarySensorDeviceClass.PROBLEM,
+        ),
+        TuyaBinarySensorEntityDescription(
+            # Pet feeders with a camera are reported as "sp"
+            key=DPCode.FEED_STUCK_STATUS,
+            translation_key="food_stuck",
+            device_class=BinarySensorDeviceClass.PROBLEM,
+        ),
+    ),
     DeviceCategory.VOC: (
         TuyaBinarySensorEntityDescription(
             key=DPCode.VOC_STATE,
@@ -482,6 +496,44 @@ BINARY_SENSORS: dict[DeviceCategory, tuple[TuyaBinarySensorEntityDescription, ..
             dpcode=DPCode.SHOCK_STATE,
             translation_key="tilt",
             on_value="tilt",
+        ),
+    ),
+    DeviceCategory.ZNDB: (
+        *(
+            TuyaBinarySensorEntityDescription(
+                key=f"{DPCode.FAULT}_{label}",
+                dpcode=DPCode.FAULT,
+                bitmap_key=label,
+                translation_key=translation_key,
+                device_class=BinarySensorDeviceClass.PROBLEM,
+                entity_category=EntityCategory.DIAGNOSTIC,
+            )
+            for label, translation_key in (
+                ("ov_pwr_t", "total_overpower"),
+                ("ov_pwr_a", "phase_a_overpower"),
+                ("ov_pwr_b", "phase_b_overpower"),
+                ("ov_pwr_c", "phase_c_overpower"),
+                ("un_pwr_t", "total_underpower"),
+                ("un_pwr_a", "phase_a_underpower"),
+                ("un_pwr_b", "phase_b_underpower"),
+                ("un_pwr_c", "phase_c_underpower"),
+                ("ov_cr", "overcurrent"),
+                ("unbalance_alarm", "current_unbalance"),
+                ("ov_vol", "overvoltage"),
+                ("undervoltage_alarm", "undervoltage"),
+                ("miss_phase_alarm", "phase_loss"),
+                ("outage_alarm", "power_outage"),
+                ("magnetism_alarm", "magnetic_interference"),
+                ("terminal_alarm", "terminal_alarm"),
+                ("cover_alarm", "cover_alarm"),
+                ("credit_alarm", "low_credit"),
+                ("no_balance_alarm", "no_credit"),
+                ("battery_alarm", "battery_alarm"),
+                ("meter_hardware_alarm", "meter_hardware_alarm"),
+                ("arrear_outage", "arrear_outage"),
+                ("pf_abnormal", "power_factor_abnormal"),
+                ("ov_pwr", "overpower"),
+            )
         ),
     ),
 }

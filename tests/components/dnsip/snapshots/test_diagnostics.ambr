@@ -1,0 +1,37 @@
+# serializer version: 1
+# name: test_diagnostics
+  dict({
+    'data': dict({
+      'hostname': '**REDACTED**',
+      'ipv4': True,
+      'ipv6': True,
+      'name': '**REDACTED**',
+    }),
+    'options': dict({
+      'port': 53,
+      'port_ipv6': 53,
+      'resolver': '208.67.222.222',
+      'resolver_ipv6': '2620:119:53::53',
+    }),
+    'sensors': list([
+      dict({
+        'attributes': dict({
+          'friendly_name': '**REDACTED**',
+          'ip_addresses': '**REDACTED**',
+          'querytype': 'A',
+          'resolver': '208.67.222.222',
+        }),
+        'available': True,
+      }),
+      dict({
+        'attributes': dict({
+          'friendly_name': '**REDACTED**',
+          'ip_addresses': '**REDACTED**',
+          'querytype': 'AAAA',
+          'resolver': '2620:119:53::53',
+        }),
+        'available': True,
+      }),
+    ]),
+  })
+# ---

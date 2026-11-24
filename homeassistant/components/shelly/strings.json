@@ -75,7 +75,7 @@
       },
       "user": {
         "data": {
-          "device": "Device"
+          "device": "[%key:common::config_flow::data::device%]"
         },
         "data_description": {
           "device": "Select a discovered device or enter an address manually."
@@ -350,6 +350,9 @@
       "current_limit": {
         "name": "Current limit"
       },
+      "display_brightness": {
+        "name": "Display brightness"
+      },
       "effect_intensity": {
         "name": "Effect intensity"
       },
@@ -361,6 +364,9 @@
       },
       "left_slot_intensity": {
         "name": "Left slot intensity"
+      },
+      "min_auto_display_brightness": {
+        "name": "Minimum auto display brightness"
       },
       "right_slot_intensity": {
         "name": "Right slot intensity"
@@ -803,6 +809,9 @@
       }
     },
     "switch": {
+      "auto_brightness": {
+        "name": "Auto display brightness"
+      },
       "boost": {
         "name": "Boost"
       },
@@ -823,6 +832,12 @@
       },
       "frost_protection": {
         "name": "[%key:component::shelly::entity::climate::thermostat::state_attributes::preset_mode::state::frost_protection%]"
+      },
+      "input_lock": {
+        "name": "Input lock"
+      },
+      "input_lock_with_channel_name": {
+        "name": "{channel_name} input lock"
       },
       "left_slot": {
         "name": "Left slot"
@@ -855,6 +870,9 @@
       },
       "lora_firmware": {
         "name": "LoRa add-on firmware"
+      },
+      "release_notes_messages": {
+        "do_not_unplug": "Do not unplug or power off the device during the update."
       }
     },
     "valve": {
@@ -869,6 +887,21 @@
     },
     "circuit_breaker_remote_disabled": {
       "message": "Circuit breaker for {entity} of {device} is tripped and cannot be turned on remotely"
+    },
+    "command_http_error": {
+      "message": "Command {command} failed for {device} with HTTP status {status}"
+    },
+    "command_invalid_params": {
+      "message": "Command parameters for {device} must be text, number or boolean values"
+    },
+    "command_not_allowed": {
+      "message": "Command {command} is not allowed for {device}"
+    },
+    "command_rpc_error": {
+      "message": "Command {command} failed for {device} with error {code}: {message}"
+    },
+    "command_sleeping_device": {
+      "message": "{device} is a sleeping device and does not support commands"
     },
     "custom_integration_entry": {
       "message": "The config entry {title} probably comes from a custom integration, please remove it if you want to use core Shelly integration"
@@ -918,14 +951,20 @@
     "update_error": {
       "message": "An error occurred while retrieving data from {device}"
     },
-    "update_error_device_disconnected": {
-      "message": "An error occurred while retrieving data from {device} because it is disconnected"
+    "update_error_disconnected": {
+      "message": "The device is disconnected"
     },
-    "update_error_reconnect_error": {
-      "message": "An error occurred while reconnecting to {device}"
+    "update_error_mac_mismatch": {
+      "message": "A different device responded at {host}"
+    },
+    "update_error_reconnect": {
+      "message": "The device could not be reconnected"
     },
     "update_error_sleeping_device": {
       "message": "Sleeping device {device} did not update within {period} seconds interval"
+    },
+    "update_error_unreachable": {
+      "message": "The device cannot be reached"
     }
   },
   "issues": {
@@ -1112,6 +1151,24 @@
     }
   },
   "services": {
+    "command": {
+      "description": "Sends a command to a Shelly device and returns the device response.",
+      "fields": {
+        "command": {
+          "description": "The RPC method for generation 2 and newer devices, for example `Switch.Set`, or the HTTP endpoint for generation 1 devices, for example `relay/0`.",
+          "name": "Command"
+        },
+        "device_id": {
+          "description": "The ID of the Shelly device to send the command to.",
+          "name": "Device"
+        },
+        "params": {
+          "description": "Optional parameters of the command in the format of key value pairs.",
+          "name": "Parameters"
+        }
+      },
+      "name": "Send command"
+    },
     "get_kvs_value": {
       "description": "Gets a value from a Shelly device's Key-Value Storage.",
       "fields": {

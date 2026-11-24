@@ -458,17 +458,29 @@ def add_parts_to_segment(segment, source):
     ]
 
 
+@pytest.mark.parametrize(
+    ("segment_2_stream_id", "recorded_segments"),
+    [
+        pytest.param(1, 2, id="discontinuity"),
+        # Same stream with repeated timestamps, so every dts goes backwards
+        pytest.param(0, 1, id="non_monotonic_dts"),
+    ],
+)
 async def test_recorder_discontinuity(
-    hass: HomeAssistant, filename: str, h264_video: BytesIO
+    hass: HomeAssistant,
+    filename: str,
+    h264_video: BytesIO,
+    segment_2_stream_id: int,
+    recorded_segments: int,
 ) -> None:
-    """Test recorder save across a discontinuity."""
+    """Test recorder save across a discontinuity or non monotonic timestamps."""
 
     # Run
     # The worker records the PTS - DTS of the first frame, 2 frames in h264_video
     segment_1 = Segment(sequence=1, stream_id=0, video_dts_shift=1024)
     add_parts_to_segment(segment_1, h264_video)
     segment_1.duration = 4
-    segment_2 = Segment(sequence=2, stream_id=1, video_dts_shift=1024)
+    segment_2 = Segment(sequence=2, stream_id=segment_2_stream_id, video_dts_shift=1024)
     add_parts_to_segment(segment_2, h264_video)
     segment_2.duration = 4
 
@@ -509,10 +521,19 @@ async def test_recorder_discontinuity(
     assert os.path.exists(filename)
     with av.open(filename) as recording:
         packets = [packet for packet in recording.demux(video=0) if packet.size]
-    # Each segment has 5 seconds of frames
-    first, second = packets[0], packets[len(packets) // 2]
-    assert (second.pts - first.pts) * first.time_base == 5
-    assert (second.dts - first.dts) * first.time_base == 5
+    # Each segment has 5 seconds of frames, rebased to follow the previous one
+    first, last = packets[0], packets[-1]
+    segment_starts = packets[:: len(packets) // recorded_segments]
+    expected_starts = [5 * index for index in range(recorded_segments)]
+    assert [
+        (packet.pts - first.pts) * first.time_base for packet in segment_starts
+    ] == expected_starts
+    assert [
+        (packet.dts - first.dts) * first.time_base for packet in segment_starts
+    ] == expected_starts
+    assert (last.dts + last.duration - first.dts) * first.time_base == (
+        5 * recorded_segments
+    )
 
 
 async def test_recorder_no_segments(hass: HomeAssistant, filename) -> None:

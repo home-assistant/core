@@ -28,9 +28,9 @@ from systembridgeconnector.models.settings import (
     SettingsCommands,
 )
 
-from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
+from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, ButtonService
 from homeassistant.components.system_bridge.const import DOMAIN
-from homeassistant.const import ATTR_ENTITY_ID, ATTR_FRIENDLY_NAME, Platform
+from homeassistant.const import ATTR_FRIENDLY_NAME, Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
@@ -83,8 +83,8 @@ async def test_power_button(
     """Test pressing a power button sends its power command."""
     await hass.services.async_call(
         BUTTON_DOMAIN,
-        SERVICE_PRESS,
-        {ATTR_ENTITY_ID: entity_id},
+        ButtonService.PRESS,
+        {TargetKey.ENTITY_ID: entity_id},
         blocking=True,
     )
 
@@ -111,13 +111,18 @@ async def test_power_button(
             "A connection error occurred",
             id="connection_closed",
         ),
+        pytest.param(
+            ConnectionResetError,
+            "A connection error occurred",
+            id="connection_reset",
+        ),
     ],
 )
 @pytest.mark.usefixtures("init_integration")
 async def test_power_button_failure(
     hass: HomeAssistant,
     mock_websocket_client: MagicMock,
-    side_effect: list[Response] | Exception,
+    side_effect: list[Response] | Exception | type[Exception],
     match: str,
 ) -> None:
     """Test a failed power command raises."""
@@ -126,8 +131,8 @@ async def test_power_button_failure(
     with pytest.raises(HomeAssistantError, match=match):
         await hass.services.async_call(
             BUTTON_DOMAIN,
-            SERVICE_PRESS,
-            {ATTR_ENTITY_ID: SHUTDOWN_ENTITY_ID},
+            ButtonService.PRESS,
+            {TargetKey.ENTITY_ID: SHUTDOWN_ENTITY_ID},
             blocking=True,
         )
 
@@ -140,8 +145,8 @@ async def test_command_button(
     """Test pressing a saved command's button runs it."""
     await hass.services.async_call(
         BUTTON_DOMAIN,
-        SERVICE_PRESS,
-        {ATTR_ENTITY_ID: COMMAND_ENTITY_ID},
+        ButtonService.PRESS,
+        {TargetKey.ENTITY_ID: COMMAND_ENTITY_ID},
         blocking=True,
     )
 
@@ -205,8 +210,8 @@ async def test_command_button_failure(
     with pytest.raises(HomeAssistantError, match=match):
         await hass.services.async_call(
             BUTTON_DOMAIN,
-            SERVICE_PRESS,
-            {ATTR_ENTITY_ID: COMMAND_ENTITY_ID},
+            ButtonService.PRESS,
+            {TargetKey.ENTITY_ID: COMMAND_ENTITY_ID},
             blocking=True,
         )
 

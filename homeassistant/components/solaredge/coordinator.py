@@ -711,14 +711,21 @@ class SolarEdgeModulesCoordinator(DataUpdateCoordinator[None]):
             len(statistic_ids),
             start_time,
         )
+        return await get_instance(self.hass).async_add_executor_job(
+            self._get_last_sums, statistic_ids, start_time
+        )
+
+    def _get_last_sums(
+        self, statistic_ids: set[str], start_time: datetime
+    ) -> dict[str, float]:
+        """Get the last sum before start_time for each statistic."""
         # The statistics are cumulative, so the sums must continue from the last
         # sum before the window. Taking it from the change of the first statistic
         # in the window works even when the previous statistics are older than
         # the window, and unlike the absolute last statistic it is not reset by
         # an earlier update that already wrote statistics inside the window.
         # See https://github.com/home-assistant/core/issues/186653 .
-        current_stats = await get_instance(self.hass).async_add_executor_job(
-            statistics_during_period,
+        current_stats = statistics_during_period(
             self.hass,
             start_time,
             None,
@@ -745,8 +752,7 @@ class SolarEdgeModulesCoordinator(DataUpdateCoordinator[None]):
                 # the last statistic before start_time. Fetch one more than the
                 # number of statistics in the window, since all of them can be
                 # missing a sum.
-                last_stats = await get_instance(self.hass).async_add_executor_job(
-                    get_last_statistics,
+                last_stats = get_last_statistics(
                     self.hass,
                     len(window_stats) + 1,
                     statistic_id,

@@ -4,12 +4,10 @@ from freezegun.api import FrozenDateTimeFactory
 from nexia.home import NexiaHome
 from pytest_homeassistant.common import async_fire_time_changed
 
-from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
+from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN, SwitchService
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     EVENT_HOMEASSISTANT_STOP,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
     STATE_OFF,
     STATE_ON,
     Platform,
@@ -48,11 +46,15 @@ async def test_nexia_sensor_switch(
     assert entity_state.state == STATE_ON
 
     # Turn switch off
-    await hass.services.async_call(SWITCH_DOMAIN, SERVICE_TURN_OFF, sw1, blocking=True)
+    await hass.services.async_call(
+        SWITCH_DOMAIN, SwitchService.TURN_OFF, sw1, blocking=True
+    )
     assert hass.states.get(sw1_id).state == STATE_OFF
 
     # Turn switch back on
-    await hass.services.async_call(SWITCH_DOMAIN, SERVICE_TURN_ON, sw1, blocking=True)
+    await hass.services.async_call(
+        SWITCH_DOMAIN, SwitchService.TURN_ON, sw1, blocking=True
+    )
     assert hass.states.get(sw1_id).state == STATE_ON
 
     # The other switch also starts out on
@@ -60,8 +62,12 @@ async def test_nexia_sensor_switch(
     assert entity_state.state == STATE_ON
 
     # Turn sw2 off as well — both off is an invalid combination
-    await hass.services.async_call(SWITCH_DOMAIN, SERVICE_TURN_OFF, sw1, blocking=True)
-    await hass.services.async_call(SWITCH_DOMAIN, SERVICE_TURN_OFF, sw2, blocking=True)
+    await hass.services.async_call(
+        SWITCH_DOMAIN, SwitchService.TURN_OFF, sw1, blocking=True
+    )
+    await hass.services.async_call(
+        SWITCH_DOMAIN, SwitchService.TURN_OFF, sw2, blocking=True
+    )
     assert hass.states.get(sw1_id).state == STATE_OFF
     assert hass.states.get(sw2_id).state == STATE_OFF
 
@@ -75,7 +81,9 @@ async def test_nexia_sensor_switch(
     assert hass.states.get(sw2_id).state == STATE_ON
 
     # Turn sw2 off
-    await hass.services.async_call(SWITCH_DOMAIN, SERVICE_TURN_OFF, sw2, blocking=True)
+    await hass.services.async_call(
+        SWITCH_DOMAIN, SwitchService.TURN_OFF, sw2, blocking=True
+    )
     assert hass.states.get(sw2_id).state == STATE_OFF
 
     # Firing HA stop should trigger the harmonizer shutdown, reverting state

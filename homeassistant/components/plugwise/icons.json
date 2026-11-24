@@ -131,11 +131,56 @@
       }
     },
     "sensor": {
+      "burner_operation_time": {
+        "default": "mdi:fire-circle"
+      },
+      "burner_starts": {
+        "default": "mdi:fire"
+      },
+      "dhw_burner_operation_time": {
+        "default": "mdi:fire-circle"
+      },
+      "dhw_burner_starts": {
+        "default": "mdi:fire"
+      },
+      "dhw_flow": {
+        "default": "mdi:water-pump"
+      },
+      "dhw_pump_operation_time": {
+        "default": "mdi:pump"
+      },
+      "dhw_pump_starts": {
+        "default": "mdi:pump"
+      },
+      "failed_burner_flame_ignitions": {
+        "default": "mdi:fire-alert"
+      },
+      "failed_burner_starts": {
+        "default": "mdi:fire-alert"
+      },
+      "fault_flags": {
+        "default": "mdi:alert-circle-outline"
+      },
       "gas_consumed_interval": {
         "default": "mdi:meter-gas"
       },
+      "heating_pump_operation_time": {
+        "default": "mdi:pump"
+      },
+      "heating_pump_starts": {
+        "default": "mdi:pump"
+      },
+      "maximum_modulation_level": {
+        "default": "mdi:percent"
+      },
       "modulation_level": {
         "default": "mdi:percent"
+      },
+      "oem_diagnostic_code": {
+        "default": "mdi:information-outline"
+      },
+      "oem_fault_code": {
+        "default": "mdi:alert-circle-outline"
       },
       "valve_position": {
         "default": "mdi:valve"
