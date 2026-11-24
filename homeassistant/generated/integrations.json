@@ -1530,6 +1530,18 @@
       "config_flow": false,
       "iot_class": "local_polling"
     },
+    "beatbot": {
+      "name": "Beatbot",
+      "integration_type": "hub",
+      "categories": [
+        "water.pools_spas"
+      ],
+      "connectivity": [
+        "cloud"
+      ],
+      "config_flow": true,
+      "iot_class": "cloud_push"
+    },
     "bega": {
       "name": "BEGA",
       "iot_standards": [
