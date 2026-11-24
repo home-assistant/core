@@ -105,10 +105,10 @@ async def test_select_schedule_thermostats(
     with pytest.raises(ServiceValidationError):
         await hass.services.async_call(
             SELECT_DOMAIN,
-            SERVICE_SELECT_OPTION,
+            SelectService.SELECT_OPTION,
             {
-                ATTR_ENTITY_ID: SELECT_ENTITY,
-                ATTR_OPTION: "Winter",
+                TargetKey.ENTITY_ID: SELECT_ENTITY,
+                SelectServiceArgument.OPTION: "Winter",
             },
             blocking=True,
         )
@@ -183,10 +183,10 @@ async def test_select_schedule_follows_temperature_control_mode(
     with patch("pyatmo.home.Home.async_switch_schedule") as mock_switch_home_schedule:
         await hass.services.async_call(
             SELECT_DOMAIN,
-            SERVICE_SELECT_OPTION,
+            SelectService.SELECT_OPTION,
             {
-                ATTR_ENTITY_ID: SELECT_ENTITY,
-                ATTR_OPTION: "Winter",
+                TargetKey.ENTITY_ID: SELECT_ENTITY,
+                SelectServiceArgument.OPTION: "Winter",
             },
             blocking=True,
         )
@@ -225,10 +225,10 @@ async def test_select_schedule_with_name_shared_across_modes(
     with patch("pyatmo.home.Home.async_switch_schedule") as mock_switch_home_schedule:
         await hass.services.async_call(
             SELECT_DOMAIN,
-            SERVICE_SELECT_OPTION,
+            SelectService.SELECT_OPTION,
             {
-                ATTR_ENTITY_ID: SELECT_ENTITY,
-                ATTR_OPTION: "Default",
+                TargetKey.ENTITY_ID: SELECT_ENTITY,
+                SelectServiceArgument.OPTION: "Default",
             },
             blocking=True,
         )
