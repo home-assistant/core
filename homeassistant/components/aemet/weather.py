@@ -33,6 +33,9 @@ from .const import CONDITIONS_MAP
 from .coordinator import AemetConfigEntry, WeatherUpdateCoordinator
 from .entity import AemetEntity
 
+# Coordinator is used to centralize the data updates
+PARALLEL_UPDATES = 0
+
 
 async def async_setup_entry(
     hass: HomeAssistant,

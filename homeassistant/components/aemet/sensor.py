@@ -87,6 +87,9 @@ from .const import (
 from .coordinator import AemetConfigEntry, WeatherUpdateCoordinator
 from .entity import AemetEntity
 
+# Coordinator is used to centralize the data updates
+PARALLEL_UPDATES = 0
+
 
 @dataclass(frozen=True, kw_only=True)
 class AemetSensorEntityDescription(SensorEntityDescription):

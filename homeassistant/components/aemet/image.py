@@ -12,6 +12,9 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from .coordinator import AemetConfigEntry, WeatherUpdateCoordinator
 from .entity import AemetEntity
 
+# Coordinator is used to centralize the data updates
+PARALLEL_UPDATES = 0
+
 AEMET_IMAGES: Final[tuple[ImageEntityDescription, ...]] = (
     ImageEntityDescription(
         key=AOD_RADAR,
