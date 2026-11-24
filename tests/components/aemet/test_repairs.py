@@ -167,6 +167,10 @@ async def test_repair_flow_replaces_api_key(
     flow.hass = hass
     flow.flow_id = "test"
 
+    result = await flow.async_step_init({"issue_id": issue_id})
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "init"
+
     with (
         patch(
             "homeassistant.components.aemet.repairs.async_validate_api_key",
@@ -188,12 +192,16 @@ async def test_repair_flow_replaces_api_key(
     assert issue_registry.async_get_issue(DOMAIN, issue_id) is None
 
 
-async def test_repair_flow_invalid_api_key(
+@pytest.mark.parametrize(
+    "error", ["invalid_api_key", "cannot_connect", "town_not_found"]
+)
+async def test_repair_flow_error(
     hass: HomeAssistant,
     issue_registry: ir.IssueRegistry,
     freezer: FrozenDateTimeFactory,
+    error: str,
 ) -> None:
-    """Test the repair flow keeps the issue on an invalid API key."""
+    """Test the repair flow keeps the issue on an API error."""
     await hass.config.async_set_time_zone("UTC")
     freezer.move_to("2026-01-15 00:00:00+00:00")
     entry = _create_entry(hass, _create_api_key(datetime(2026, 1, 20, tzinfo=UTC)))
@@ -206,12 +214,12 @@ async def test_repair_flow_invalid_api_key(
 
     with patch(
         "homeassistant.components.aemet.repairs.async_validate_api_key",
-        AsyncMock(return_value="invalid_api_key"),
+        AsyncMock(return_value=error),
     ):
         result = await flow.async_step_init({CONF_API_KEY: "invalid"})
 
     assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {"base": "invalid_api_key"}
+    assert result["errors"] == {"base": error}
     assert entry.data[CONF_API_KEY] != "invalid"
     assert issue_registry.async_get_issue(DOMAIN, issue_id) is not None
 

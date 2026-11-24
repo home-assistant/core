@@ -72,10 +72,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: AemetConfigEntry) -> Non
 
 async def async_unload_entry(hass: HomeAssistant, entry: AemetConfigEntry) -> None:
     """Unload a config entry."""
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
     if (runtime_data := getattr(entry, "runtime_data", None)) is not None:
         runtime_data.coordinator.async_cancel_api_key_expiration_repair()
     async_delete_api_key_expiration_issue(hass, entry)
-    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
 
 
 async def async_remove_entry(hass: HomeAssistant, entry: AemetConfigEntry) -> None:

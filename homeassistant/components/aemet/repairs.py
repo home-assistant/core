@@ -102,7 +102,7 @@ class AemetApiKeyExpiringRepairFlow(RepairsFlow):
         errors: dict[str, str] = {}
         entry = self.hass.config_entries.async_get_known_entry(self._entry_id)
 
-        if user_input is not None:
+        if user_input is not None and CONF_API_KEY in user_input:
             error = await async_validate_api_key(
                 self.hass,
                 user_input[CONF_API_KEY],
