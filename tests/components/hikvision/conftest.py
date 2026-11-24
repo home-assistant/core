@@ -1,10 +1,19 @@
 """Common fixtures for the Hikvision tests."""
 
 from collections.abc import AsyncGenerator, Generator
+from functools import partial
 from unittest.mock import MagicMock, patch
 
+from pyhik.image import ImageWriteResult, parse_image_capabilities, parse_image_values
+from pyhik.isapi import (
+    Holiday,
+    InputPort,
+    IOPortState,
+    ISAPINotSupportedError,
+    OutputPort,
+)
 import pytest
-from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.common import MockConfigEntry, async_load_fixture
 
 from homeassistant.components.hikvision import PLATFORMS
 from homeassistant.components.hikvision.const import DOMAIN
@@ -14,8 +23,10 @@ from homeassistant.const import (
     CONF_PORT,
     CONF_SSL,
     CONF_USERNAME,
+    CONF_VERIFY_SSL,
     Platform,
 )
+from homeassistant.core import HomeAssistant
 
 TEST_HOST = "192.168.1.100"
 TEST_PORT = 80
@@ -36,6 +47,187 @@ async def mock_patch_platforms(platforms: list[Platform]) -> AsyncGenerator[None
     """Fixture to set up platforms for tests."""
     with patch(f"homeassistant.components.{DOMAIN}.PLATFORMS", platforms):
         yield
+
+
+@pytest.fixture(autouse=True)
+def mock_isapi_client() -> Generator[MagicMock]:
+    """Return a mocked ISAPIClient that offers no image settings by default."""
+    with patch("homeassistant.components.hikvision.ISAPIClient") as isapi_mock:
+        client = isapi_mock.return_value
+        client.get_image_settings.side_effect = ISAPINotSupportedError("not supported")
+        client.get_image_channels.side_effect = ISAPINotSupportedError("not supported")
+        # Nor detections: see the detections fixture.
+        client.get_detection_enabled.side_effect = ISAPINotSupportedError(
+            "not supported"
+        )
+        # Nor alarm inputs and outputs, or holidays: see the device controls
+        # fixture.
+        client.get_output_ports.return_value = []
+        client.get_input_ports.return_value = []
+        client.get_io_status.side_effect = ISAPINotSupportedError("not supported")
+        client.get_holidays.return_value = []
+        yield isapi_mock
+
+
+@pytest.fixture
+async def image_values(hass: HomeAssistant) -> dict[str, str]:
+    """Return the current image setting values of the test camera."""
+    return parse_image_values(
+        await async_load_fixture(hass, "image_values.xml", DOMAIN)
+    )
+
+
+@pytest.fixture
+async def mock_image_settings(
+    hass: HomeAssistant,
+    mock_isapi_client: MagicMock,
+    image_values: dict[str, str],
+) -> MagicMock:
+    """Make the mocked camera offer the image settings of a real camera."""
+    capabilities = await async_load_fixture(hass, "image_capabilities.xml", DOMAIN)
+    values = await async_load_fixture(hass, "image_values.xml", DOMAIN)
+    client = mock_isapi_client.return_value
+    client.get_image_settings.side_effect = None
+    client.get_image_settings.return_value = parse_image_capabilities(
+        capabilities, values
+    )
+    client.get_image_values.return_value = image_values
+    client.set_image_setting.return_value = ImageWriteResult(True, 200, "ok")
+    client.set_image_linked_setting.return_value = ImageWriteResult(True, 200, "ok")
+    return client
+
+
+@pytest.fixture
+def detections() -> dict[str, bool]:
+    """Return the detections of the test camera, on or off, as read from a camera.
+
+    Region entrance and exiting, and video loss, it does not have.
+    """
+    return {
+        "motionDetection": True,
+        "lineDetection": True,
+        "fieldDetection": True,
+        "tamperDetection": False,
+        "sceneChangeDetection": False,
+    }
+
+
+@pytest.fixture
+def mock_detections(
+    mock_image_settings: MagicMock, detections: dict[str, bool]
+) -> dict[str, bool]:
+    """Make the mocked camera have the detections, and keep what is written."""
+
+    def _get(detection: str, channel: int | str = 1) -> bool:
+        if detection not in detections:
+            raise ISAPINotSupportedError("not supported", 403, "notSupport")
+        return detections[detection]
+
+    def _set(detection: str, enabled: bool, channel: int | str = 1) -> ImageWriteResult:
+        detections[detection] = enabled
+        return ImageWriteResult(True, 200, "ok")
+
+    mock_image_settings.get_detection_enabled.side_effect = _get
+    mock_image_settings.set_detection_enabled.side_effect = _set
+    return detections
+
+
+@pytest.fixture
+def device_controls() -> dict[str, dict[str, bool]]:
+    """Return the alarm outputs and inputs, and the holidays, of the device.
+
+    Inputs: whether each raises alarms; input states: whether its signal is on.
+    The ports of the cameras behind an NVR have IDs of channel x 100 + port.
+    """
+    return {
+        "outputs": {"1": False, "2": True},
+        "inputs": {"1": True},
+        "input_states": {"1": False},
+        "proxy_outputs": {},
+        "proxy_inputs": {},
+        "holidays": {"1": False},
+    }
+
+
+@pytest.fixture
+def status_list() -> bool:
+    """Return whether the device gives every port state in one request."""
+    return True
+
+
+HOLIDAY_DATES = {"1": ("Christmas", "date", "2026-12-24", "2026-12-26")}
+
+
+@pytest.fixture
+def mock_device_controls(
+    mock_isapi_client: MagicMock,
+    device_controls: dict[str, dict[str, bool]],
+    status_list: bool,
+) -> dict[str, dict[str, bool]]:
+    """Make the mocked device have the controls, and keep what is written."""
+    client = mock_isapi_client.return_value
+    controls = device_controls
+
+    def _outputs(proxy: bool = False) -> list[OutputPort]:
+        ports = controls["proxy_outputs" if proxy else "outputs"]
+        return [OutputPort(id=port_id, name=f"Output {port_id}") for port_id in ports]
+
+    def _inputs(proxy: bool = False) -> list[InputPort]:
+        ports = controls["proxy_inputs" if proxy else "inputs"]
+        return [
+            InputPort(id=port_id, name=f"Input {port_id}", enabled=enabled)
+            for port_id, enabled in ports.items()
+        ]
+
+    def _status(proxy: bool = False) -> list[IOPortState]:
+        if not status_list:
+            raise ISAPINotSupportedError("not supported", 403, "notSupport")
+        outputs = controls["proxy_outputs" if proxy else "outputs"]
+        inputs = controls["proxy_inputs" if proxy else "inputs"]
+        return [
+            IOPortState(id=port_id, type="output", active=active)
+            for port_id, active in outputs.items()
+        ] + [
+            IOPortState(
+                id=port_id,
+                type="input",
+                active=controls["input_states"].get(port_id, False),
+            )
+            for port_id in inputs
+        ]
+
+    def _get(kinds: tuple[str, ...], port_id: str) -> bool:
+        for kind in kinds:
+            if port_id in controls[kind]:
+                return controls[kind][port_id]
+        raise ISAPINotSupportedError("not supported", 403, "notSupport")
+
+    def _holidays() -> list[Holiday]:
+        holidays = []
+        for holiday_id, enabled in controls["holidays"].items():
+            name, mode, start, end = HOLIDAY_DATES.get(
+                holiday_id, (f"Holiday{holiday_id}", "week", None, None)
+            )
+            holidays.append(Holiday(holiday_id, name, enabled, mode, start, end))
+        return holidays
+
+    def _set(kinds: tuple[str, ...], port_id: str, value: bool) -> ImageWriteResult:
+        for kind in kinds:
+            if port_id in controls[kind]:
+                controls[kind][port_id] = value
+        return ImageWriteResult(True, 200, "ok")
+
+    client.get_output_ports.side_effect = _outputs
+    client.get_input_ports.side_effect = _inputs
+    client.get_io_status.side_effect = _status
+    client.get_output_active.side_effect = partial(_get, ("outputs", "proxy_outputs"))
+    client.get_input_enabled.side_effect = partial(_get, ("inputs", "proxy_inputs"))
+    client.get_input_active.side_effect = partial(_get, ("input_states",))
+    client.get_holidays.side_effect = _holidays
+    client.set_output_active.side_effect = partial(_set, ("outputs", "proxy_outputs"))
+    client.set_input_enabled.side_effect = partial(_set, ("inputs", "proxy_inputs"))
+    client.set_holiday_enabled.side_effect = partial(_set, ("holidays",))
+    return controls
 
 
 @pytest.fixture
@@ -61,6 +253,7 @@ def mock_config_entry() -> MockConfigEntry:
             CONF_USERNAME: TEST_USERNAME,
             CONF_PASSWORD: TEST_PASSWORD,
             CONF_SSL: False,
+            CONF_VERIFY_SSL: True,
         },
         unique_id=TEST_DEVICE_ID,
     )
@@ -111,6 +304,8 @@ def mock_hikcamera(mock_hik_get_channels: MagicMock) -> Generator[MagicMock]:
         camera.get_id = TEST_DEVICE_ID
         camera.get_name = TEST_DEVICE_NAME
         camera.get_type = "Camera"
+        camera.auth_failed = False
+        camera.stream_auth_failed = False
         camera.current_event_states = {
             "Motion": [(True, 1)],
             "Line Crossing": [(False, 1)],

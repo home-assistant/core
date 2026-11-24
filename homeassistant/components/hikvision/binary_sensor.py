@@ -1,4 +1,7 @@
-"""Support for Hikvision event stream events represented as binary sensors."""
+"""Support for Hikvision binary sensors.
+
+The events of the event stream, and the alarm inputs of the device.
+"""
 
 import logging
 from typing import Any, override
@@ -11,11 +14,14 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntityDescription,
 )
 from homeassistant.const import ATTR_LAST_TRIP_TIME, EntityCategory
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import HikvisionConfigEntry
-from .entity import HikvisionEntity
+from .const import SIGNAL_DEVICE_CONTROLS
+from .coordinator import DevicePort, HikvisionDeviceCoordinator, input_state_path
+from .entity import HikvisionDeviceEntity, HikvisionEntity
 
 # Keyed by the friendly names pyhik emits in `current_event_states`. Going
 # through SENSOR_MAP keeps each description attached to the right event if
@@ -153,6 +159,22 @@ async def async_setup_entry(
     data = entry.runtime_data
     camera = data.camera
 
+    @callback
+    def _async_add_alarm_inputs() -> None:
+        """Add the alarm inputs, once the device's controls are found."""
+        async_add_entities(
+            HikvisionAlarmInputSensor(coordinator, entry, port)
+            for coordinator in entry.runtime_data.image_coordinators
+            if isinstance(coordinator, HikvisionDeviceCoordinator)
+            for port in coordinator.input_states or ()
+        )
+
+    entry.async_on_unload(
+        async_dispatcher_connect(
+            hass, SIGNAL_DEVICE_CONTROLS.format(entry.entry_id), _async_add_alarm_inputs
+        )
+    )
+
     sensors = camera.current_event_states
     if sensors is None or not sensors:
         _LOGGER.warning(
@@ -222,7 +244,7 @@ class HikvisionBinarySensor(HikvisionEntity, BinarySensorEntity):
         self._attr_unique_id = f"{self._data.device_id}_{sensor_type}_{channel}"
 
         # Callback ID for pyhik
-        self._callback_id = f"{self._data.device_id}.{sensor_type}.{channel}"
+        self._callback_id = f"{self._data.stream_id}.{sensor_type}.{channel}"
 
     def _get_sensor_attributes(self) -> tuple[bool, Any, Any, Any]:
         """Get sensor attributes from camera."""
@@ -240,3 +262,32 @@ class HikvisionBinarySensor(HikvisionEntity, BinarySensorEntity):
         """Return the state attributes."""
         attrs = self._get_sensor_attributes()
         return {ATTR_LAST_TRIP_TIME: attrs[3]}
+
+
+class HikvisionAlarmInputSensor(HikvisionDeviceEntity, BinarySensorEntity):
+    """Whether an alarm input's signal is active now, as the device last said."""
+
+    def __init__(
+        self,
+        coordinator: HikvisionDeviceCoordinator,
+        entry: HikvisionConfigEntry,
+        port: DevicePort,
+    ) -> None:
+        """Initialize the sensor."""
+        super().__init__(
+            coordinator,
+            entry,
+            BinarySensorEntityDescription(
+                key=f"alarm_input_state_{port.id}", translation_key="alarm_input"
+            ),
+            input_state_path(port.id),
+            port,
+        )
+
+    @property
+    @override
+    def is_on(self) -> bool | None:
+        """Return whether the input is active."""
+        if (value := self._value) is None:
+            return None
+        return value == "true"

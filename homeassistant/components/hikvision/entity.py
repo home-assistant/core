@@ -2,13 +2,42 @@
 
 from typing import override
 
-from homeassistant.core import HomeAssistant
+from pyhik.image import ImageSetting
+
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity import Entity, EntityDescription
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
+from homeassistant.util import slugify
 
 from . import HikvisionConfigEntry
 from .const import DOMAIN
+from .coordinator import (
+    DevicePort,
+    HikvisionDeviceCoordinator,
+    HikvisionImageCoordinator,
+)
+
+
+def channel_device_info(
+    hass: HomeAssistant, entry: HikvisionConfigEntry, channel: int
+) -> DeviceInfo:
+    """Return the device of one NVR channel, linked to the NVR via via_device_id."""
+    data = entry.runtime_data
+    return DeviceInfo(
+        identifiers={(DOMAIN, f"{data.device_id}_{channel}")},
+        via_device_id=dr.async_get_device_id_by_identifier(
+            hass, (DOMAIN, data.device_id), config_entry_id=entry.entry_id
+        ),
+        translation_key="nvr_channel",
+        translation_placeholders={
+            "device_name": data.device_name,
+            "channel_number": str(channel),
+        },
+        manufacturer="Hikvision",
+        model="NVR channel",
+    )
 
 
 class HikvisionEntity(Entity):
@@ -34,21 +63,9 @@ class HikvisionEntity(Entity):
         self._camera = self._data.camera
         self._channel = channel
 
-        if self._data.device_type == "NVR":
+        if self._data.is_nvr:
             # NVR channels get their own device linked to the NVR via via_device_id
-            self._attr_device_info = DeviceInfo(
-                identifiers={(DOMAIN, f"{self._data.device_id}_{channel}")},
-                via_device_id=dr.async_get_device_id_by_identifier(
-                    hass, (DOMAIN, self._data.device_id), config_entry_id=entry.entry_id
-                ),
-                translation_key="nvr_channel",
-                translation_placeholders={
-                    "device_name": self._data.device_name,
-                    "channel_number": str(channel),
-                },
-                manufacturer="Hikvision",
-                model="NVR channel",
-            )
+            self._attr_device_info = channel_device_info(hass, entry, channel)
         else:
             # Single camera device
             self._attr_device_info = DeviceInfo(
@@ -83,3 +100,184 @@ class HikvisionEntity(Entity):
         schedule_update_ha_state which is thread-safe.
         """
         self.schedule_update_ha_state()
+
+
+class HikvisionImageEntity(CoordinatorEntity[HikvisionImageCoordinator]):
+    """Base class for the image setting entities of a camera."""
+
+    _attr_has_entity_name = True
+
+    def __init__(
+        self,
+        coordinator: HikvisionImageCoordinator,
+        entry: HikvisionConfigEntry,
+        description: EntityDescription,
+        path: str,
+    ) -> None:
+        """Initialize the entity.
+
+        The path is the camera's own spelling of the setting, used for requests.
+        """
+        super().__init__(coordinator)
+        data = entry.runtime_data
+        self.entity_description = description
+        self._path = path
+        # From the key of the description, not from the path: the firmware can spell
+        # or shape a path differently, and the entity must stay the same.
+        self._attr_unique_id = f"{coordinator.unique_id_prefix}{description.key}"
+        coordinator.entity_paths.add(path.lower())
+        if coordinator.channel is None:
+            self._attr_device_info = DeviceInfo(
+                identifiers={(DOMAIN, data.device_id)},
+                name=data.device_name,
+                manufacturer="Hikvision",
+                model=data.device_type,
+            )
+        else:
+            # A camera attached to an NVR is the device of its channel.
+            self._attr_device_info = channel_device_info(
+                coordinator.hass, entry, coordinator.channel
+            )
+
+    @property
+    @override
+    def available(self) -> bool:
+        """Return whether the camera reports the setting now.
+
+        Some settings only exist in one mode, like the levels of the advanced noise
+        reduction: the camera leaves them out while another mode is used, and
+        refuses to write them.
+        """
+        return super().available and self._reported
+
+    @property
+    def _reported(self) -> bool:
+        """Return whether the current values of the camera have the setting."""
+        return self._path in self.coordinator.data
+
+    @property
+    def _value(self) -> str | None:
+        """Return the current raw value of the setting."""
+        return self.coordinator.data.get(self._path)
+
+    @override
+    async def async_added_to_hass(self) -> None:
+        """Tell the coordinator which entity shows the setting, while it is added."""
+        await super().async_added_to_hass()
+        path = self._path.lower()
+        entity_ids = self.coordinator.entity_ids
+        entity_ids[path] = self.entity_id
+
+        @callback
+        def _forget() -> None:
+            if entity_ids.get(path) == self.entity_id:
+                del entity_ids[path]
+
+        self.async_on_remove(_forget)
+
+    @callback
+    @override
+    def async_entity_id_changed(self, old_entity_id: str) -> None:
+        """Keep the coordinator pointing at the entity once it is renamed."""
+        super().async_entity_id_changed(old_entity_id)
+        entity_ids = self.coordinator.entity_ids
+        path = self._path.lower()
+        if entity_ids.get(path) == old_entity_id:
+            entity_ids[path] = self.entity_id
+
+
+def image_option_map(setting: ImageSetting, translate: bool) -> dict[str, str] | None:
+    """Return the entity option for each value the camera accepts.
+
+    Returns None if two camera values would end up with the same option, or only
+    differ in case.
+    """
+    # Untranslated options are checked too: a camera can list the same value
+    # twice, which pyHik keeps.
+    options = {
+        slugify(option) if translate else option: option for option in setting.options
+    }
+    if len(options) != len(setting.options):
+        return None
+    # The camera's value is read in any case: values that only differ in case
+    # could not be told apart.
+    if len({value.lower() for value in setting.options}) != len(setting.options):
+        return None
+    return options
+
+
+class HikvisionImageChoiceEntity(HikvisionImageEntity):
+    """Base class for the entities of an image setting with a list of choices."""
+
+    def __init__(
+        self,
+        coordinator: HikvisionImageCoordinator,
+        entry: HikvisionConfigEntry,
+        description: EntityDescription,
+        setting: ImageSetting,
+        options: dict[str, str],
+    ) -> None:
+        """Initialize the entity."""
+        super().__init__(coordinator, entry, description, setting.path)
+        self._setting = setting
+        self._value_by_option = options
+        # The camera may report a value in another case than it lists it in
+        self._option_by_value = {
+            value.lower(): option for option, value in options.items()
+        }
+
+    @property
+    @override
+    def _reported(self) -> bool:
+        """Return whether the camera reports the mode, or the flag it is linked to.
+
+        The camera leaves the mode out while the flag is off.
+        """
+        enabled_path = self._setting.linked_enabled_path
+        return super()._reported or (
+            enabled_path is not None and enabled_path in self.coordinator.data
+        )
+
+    @property
+    def _current_option(self) -> str | None:
+        """Return the option of the current value, or None if it is not one."""
+        value = self._value
+        if (enabled_path := self._setting.linked_enabled_path) is not None:
+            # The mode is missing while the feature is off. A flag that the camera
+            # does not report, or reports as neither true nor false, says nothing:
+            # it must not hide an active mode.
+            enabled = self.coordinator.data.get(enabled_path)
+            if enabled is not None and enabled.lower() == "false":
+                value = self._setting.off_value
+        if value is None:
+            return None
+        return self._option_by_value.get(value.lower())
+
+
+class HikvisionDeviceEntity(HikvisionImageEntity):
+    """Base class for the entities of a device's own controls.
+
+    The alarm inputs and outputs of a camera behind an NVR are on the device of its
+    channel, named by the camera's own port number.
+    """
+
+    coordinator: HikvisionDeviceCoordinator
+
+    def __init__(
+        self,
+        coordinator: HikvisionDeviceCoordinator,
+        entry: HikvisionConfigEntry,
+        description: EntityDescription,
+        path: str,
+        port: DevicePort | None = None,
+    ) -> None:
+        """Initialize the entity."""
+        super().__init__(coordinator, entry, description, path)
+        # From the key of the description: not an image setting.
+        self._attr_unique_id = f"{coordinator.device_unique_id_prefix}{description.key}"
+        if port is not None:
+            self._attr_translation_placeholders = {"port": port.number}
+            if port.channel is not None:
+                self._attr_device_info = channel_device_info(
+                    coordinator.hass, entry, port.channel
+                )
