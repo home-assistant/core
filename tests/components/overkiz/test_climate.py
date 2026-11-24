@@ -531,17 +531,6 @@ async def test_heat_recovery_ventilation_without_ventilation_mode(
     )
 
 
-@pytest.fixture
-def no_cancel_settle_delay() -> Generator[None]:
-    """Skip the pause between a boost cancel and the next heating level."""
-    with patch(
-        "homeassistant.components.overkiz.climate."
-        "atlantic_electrical_towel_dryer_heating_level.CANCEL_SETTLE_DELAY",
-        0,
-    ):
-        yield
-
-
 def sent_commands(mock_client: MockOverkizClient) -> list[tuple[str, list[Any]]]:
     """Return every command sent to the towel dryer, one per action group."""
     commands = []

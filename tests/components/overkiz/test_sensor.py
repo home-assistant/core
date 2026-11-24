@@ -423,7 +423,7 @@ async def test_towel_dryer_boost_end(
     assert state.state == STATE_UNKNOWN
 
 
-@pytest.mark.usefixtures("climate_and_sensor_platforms")
+@pytest.mark.usefixtures("climate_and_sensor_platforms", "no_cancel_settle_delay")
 async def test_towel_dryer_boost_end_cancelled(
     hass: HomeAssistant,
     setup_overkiz_integration: SetupOverkizIntegration,
@@ -436,17 +436,12 @@ async def test_towel_dryer_boost_end_cancelled(
         {"entity_id": TOWEL_DRYER_CLIMATE_ENTITY_ID, "preset_mode": "boost"},
         blocking=True,
     )
-    with patch(
-        "homeassistant.components.overkiz.climate."
-        "atlantic_electrical_towel_dryer_heating_level.CANCEL_SETTLE_DELAY",
-        0,
-    ):
-        await hass.services.async_call(
-            "climate",
-            "set_preset_mode",
-            {"entity_id": TOWEL_DRYER_CLIMATE_ENTITY_ID, "preset_mode": "eco"},
-            blocking=True,
-        )
+    await hass.services.async_call(
+        "climate",
+        "set_preset_mode",
+        {"entity_id": TOWEL_DRYER_CLIMATE_ENTITY_ID, "preset_mode": "eco"},
+        blocking=True,
+    )
 
     state = hass.states.get(TOWEL_DRYER_BOOST_END.entity_id)
     assert state is not None
