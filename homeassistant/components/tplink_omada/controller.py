@@ -123,9 +123,8 @@ class OmadaSiteController:
                 # The device list was built before this loop, so recheck: a
                 # concurrent task may have reserved the device in the meantime,
                 # or a device removal may already have dropped it.
-                if (
-                    mac in processed_devices
-                    or mac not in (self._devices_coordinator.data or {})
+                if mac in processed_devices or mac not in (
+                    self._devices_coordinator.data or {}
                 ):
                     continue
                 # Reserve the device before awaiting so concurrent

@@ -617,7 +617,7 @@ async def test_cleanup_recreates_gateway_ports_after_successful_refresh(
     entity_registry: er.EntityRegistry,
     freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Test a returning gateway is not rebuilt from stale port data."""
+    """Test a returning gateway rebuilds only entities with valid data."""
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done(wait_background_tasks=True)
