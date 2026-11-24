@@ -995,7 +995,7 @@ async def test_event_data_filter_scalar_types(
     )
 
     await hass.services.async_call(
-        DOMAIN, SERVICE_PURGE, {"keep_days": 10, "apply_filter": True}, blocking=True
+        DOMAIN, RecorderService.PURGE, {"keep_days": 10, "apply_filter": True}, blocking=True
     )
     await async_wait_purge_done(hass)
 
@@ -1046,7 +1046,7 @@ async def test_event_data_filter_oversized_payload(
     )
 
     await hass.services.async_call(
-        DOMAIN, SERVICE_PURGE, {"keep_days": 10, "apply_filter": True}, blocking=True
+        DOMAIN, RecorderService.PURGE, {"keep_days": 10, "apply_filter": True}, blocking=True
     )
     await async_wait_purge_done(hass)
 

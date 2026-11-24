@@ -1577,7 +1577,7 @@ async def test_purge_filtered_event_data(
         ) as scan,
     ):
         await hass.services.async_call(
-            DOMAIN, SERVICE_PURGE, {"keep_days": 10, "apply_filter": True}
+            DOMAIN, RecorderService.PURGE, {"keep_days": 10, "apply_filter": True}
         )
         await async_recorder_block_till_done(hass)
         await async_wait_purge_done(hass, max_number=expected_scan_count)
@@ -1692,7 +1692,7 @@ async def test_purge_filtered_event_data_empty_payload(
         {"empty_event": ((("command", "match"),),)},
     ):
         await hass.services.async_call(
-            DOMAIN, SERVICE_PURGE, {"keep_days": 10, "apply_filter": True}
+            DOMAIN, RecorderService.PURGE, {"keep_days": 10, "apply_filter": True}
         )
         await async_wait_purge_done(hass)
 
@@ -1726,7 +1726,7 @@ async def test_purge_filtered_event_data_shared_payload(
         {"filtered_event": ((("command", match_value),),)},
     ):
         await hass.services.async_call(
-            DOMAIN, SERVICE_PURGE, {"keep_days": 10, "apply_filter": True}
+            DOMAIN, RecorderService.PURGE, {"keep_days": 10, "apply_filter": True}
         )
         await async_wait_purge_done(hass)
 
