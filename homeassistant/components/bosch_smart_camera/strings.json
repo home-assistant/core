@@ -22,6 +22,11 @@
     }
   },
   "entity": {
+    "light": {
+      "camera_light": {
+        "name": "Camera light"
+      }
+    },
     "switch": {
       "motion_detection": {
         "name": "Motion detection"
@@ -37,6 +42,9 @@
     },
     "cannot_connect": {
       "message": "Unable to fetch the cameras from Bosch."
+    },
+    "light_failed": {
+      "message": "Unable to switch the camera light."
     },
     "motion_detection_failed": {
       "message": "Unable to change the motion detection at Bosch."

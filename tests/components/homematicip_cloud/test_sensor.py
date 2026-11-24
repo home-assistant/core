@@ -731,6 +731,11 @@ async def test_hmip_floor_terminal_block_thermal_valve_position(
     # no valveState on these channels, so no adaption warning either
     assert ha_state.attributes["icon"] == "mdi:heating-coil"
 
+    await async_manipulate_test_data(
+        hass, hmip_device, "valvePosition", None, channel=0, channel_real_index=2
+    )
+    assert hass.states.get(entity_id).state == STATE_UNKNOWN
+
 
 async def test_hmip_esi_iec_current_power_consumption(
     hass: HomeAssistant, default_mock_hap_factory: HomeFactory
@@ -820,7 +825,9 @@ async def test_hmip_esi_iec_unknown_channel(
 
 
 async def test_hmip_esi_gas_current_gas_flow(
-    hass: HomeAssistant, default_mock_hap_factory: HomeFactory
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    default_mock_hap_factory: HomeFactory,
 ) -> None:
     """Test ESI-IEC CurrentGasFlow."""
     entity_id = "sensor.esi_gas_currentgasflow"
@@ -835,6 +842,8 @@ async def test_hmip_esi_gas_current_gas_flow(
     )
 
     assert ha_state.state == "1.03"
+    entry = entity_registry.async_get(entity_id)
+    assert entry.options["sensor"]["suggested_display_precision"] == 2
 
 
 async def test_hmip_esi_gas_gas_volume(

@@ -13,9 +13,15 @@ from bosch_shc_camera_client.cameras import (
     BoschCameraConnectionError,
     BoschCameraInvalidResponseError,
     Camera,
+    CameraModel,
 )
 from bosch_shc_camera_client.client import BoschCameraClient
-from bosch_shc_camera_client.states import CameraAccountStates
+from bosch_shc_camera_client.cloud import cloud_set_camera_light
+from bosch_shc_camera_client.states import (
+    CameraAccountStates,
+    LightState,
+    get_light_state,
+)
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ACCESS_TOKEN
@@ -61,6 +67,9 @@ class BoschCameraCoordinator(DataUpdateCoordinator[dict[str, Camera]]):
             update_interval=SCAN_INTERVAL,
         )
         self.account_states: dict[str, CameraAccountStates] = {}
+        self.light_states: dict[str, LightState] = {}
+        self._light_writes: defaultdict[str, int] = defaultdict(int)
+        self._light_unreachable: set[str] = set()
         self._write_seq = 0
         self._written_at: dict[str, int] = {}
         self.motion_states: dict[str, bool] = {}
@@ -113,6 +122,7 @@ class BoschCameraCoordinator(DataUpdateCoordinator[dict[str, Camera]]):
             if written > started
         }
         data = {camera.id: camera for camera in cameras}
+        await self._async_update_light_states(cameras)
         await self._async_update_motion_states(cameras)
         for camera_id in self._snapshots.keys() - data.keys():
             del self._snapshots[camera_id]
@@ -182,6 +192,88 @@ class BoschCameraCoordinator(DataUpdateCoordinator[dict[str, Camera]]):
                 ) from err
             self._snapshots[camera_id] = (time.monotonic(), image)
             return image
+
+    async def _async_update_light_states(self, cameras: list[Camera]) -> None:
+        """Poll the light of each Gen1 outdoor camera, isolating failures."""
+        # Forget removed cameras so a camera that comes back is logged again.
+        listed = {camera.id for camera in cameras}
+        self._light_unreachable &= listed
+        for camera_id in self._light_writes.keys() - listed:
+            del self._light_writes[camera_id]
+        polled: dict[str, tuple[int, LightState | None]] = {}
+        for camera in cameras:
+            if camera.model is not CameraModel.EYES_OUTDOOR:
+                continue
+            writes = self._light_writes[camera.id]
+            try:
+                state = await get_light_state(
+                    async_get_clientsession(self.hass),
+                    await self._async_get_token(),
+                    camera.id,
+                )
+            except BoschCameraAuthError as err:
+                raise ConfigEntryAuthFailed(
+                    translation_domain=DOMAIN, translation_key="auth_failed"
+                ) from err
+            except BoschCameraConnectionError, BoschCameraInvalidResponseError:
+                if camera.id not in self._light_unreachable:
+                    self._light_unreachable.add(camera.id)
+                    _LOGGER.info("The light of %s is unreachable", camera.title)
+                _LOGGER.debug("Unable to read the light of a camera", exc_info=True)
+                state = None
+            else:
+                if camera.id in self._light_unreachable:
+                    self._light_unreachable.discard(camera.id)
+                    _LOGGER.info("The light of %s is reachable again", camera.title)
+            polled[camera.id] = (writes, state)
+        # A write that finished while polling makes the polled state outdated,
+        # also for cameras polled before the write.
+        states: dict[str, LightState] = {}
+        for camera_id, (writes, state) in polled.items():
+            if writes != self._light_writes[camera_id]:
+                state = self.light_states.get(camera_id)
+            if state is not None:
+                states[camera_id] = state
+        self.light_states = states
+
+    async def async_set_light(self, camera_id: str, on: bool) -> None:
+        """Switch the light of a camera and remember the new state."""
+        known = self.light_states.get(camera_id)
+        intensity = known.front_light_intensity if known else None
+        try:
+            result = await cloud_set_camera_light(
+                async_get_clientsession(self.hass),
+                await self._async_get_token(),
+                camera_id,
+                on,
+                gen2=False,
+                last_front_intensity=intensity or 1.0,
+            )
+        except BoschCameraAuthError as err:
+            self.config_entry.async_start_reauth_if_available(self.hass)
+            raise HomeAssistantError(
+                translation_domain=DOMAIN, translation_key="auth_failed"
+            ) from err
+        except BoschCameraConnectionError as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN, translation_key="light_failed"
+            ) from err
+        if result.status in (401, 403):
+            self.config_entry.async_start_reauth_if_available(self.hass)
+            raise HomeAssistantError(
+                translation_domain=DOMAIN, translation_key="auth_failed"
+            )
+        if not result.ok:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN, translation_key="light_failed"
+            )
+        self._light_writes[camera_id] += 1
+        self.light_states[camera_id] = LightState(
+            front_light_on=on,
+            wallwasher_on=on,
+            front_light_intensity=intensity,
+        )
+        self.async_update_listeners()
 
     async def async_set_privacy_mode(self, camera_id: str, enabled: bool) -> None:
         """Switch the privacy mode of a camera and update the cached state."""
