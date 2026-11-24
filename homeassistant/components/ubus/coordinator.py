@@ -54,9 +54,9 @@ class UbusSharedState:
     entity; and ``health`` maps a config entry id to the success of its
     last update.
 
-    A client is home while its most recent stamp is within
-    ``DEFAULT_CONSIDER_HOME``, regardless of which entry stamped it. It is
-    unavailable only while every entry is unhealthy.
+    A client is home while its most recent stamp from a healthy entry is
+    within ``DEFAULT_CONSIDER_HOME``. It is unavailable while every entry
+    is unhealthy.
     """
 
     presence: dict[str, dict[str, ClientStamp]]
@@ -86,16 +86,24 @@ class UbusSharedState:
     def latest_stamp(self, mac: str) -> tuple[str, ClientStamp] | None:
         """Return the reporting entry id and most recent stamp of a client.
 
-        A client is present while its most recent stamp is within
-        ``DEFAULT_CONSIDER_HOME``, regardless of which entry stamped it.
+        Only stamps from healthy entries count, so a client is present
+        while its most recent healthy stamp is within
+        ``DEFAULT_CONSIDER_HOME``.
         """
         stamps = self.presence.get(mac.lower())
         if not stamps:
             return None
-        entry_id = max(stamps, key=lambda entry: stamps[entry].seq)
-        if dt_util.utcnow() - stamps[entry_id].last_seen > DEFAULT_CONSIDER_HOME:
+        entry_id = max(
+            (entry for entry in stamps if self.health.get(entry, True)),
+            key=lambda entry: stamps[entry].seq,
+            default=None,
+        )
+        if entry_id is None:
             return None
-        return entry_id, stamps[entry_id]
+        stamp = stamps[entry_id]
+        if dt_util.utcnow() - stamp.last_seen > DEFAULT_CONSIDER_HOME:
+            return None
+        return entry_id, stamp
 
     @callback
     def remove_entry(self, entry_id: str) -> None:

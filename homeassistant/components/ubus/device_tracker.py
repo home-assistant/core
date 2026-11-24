@@ -422,9 +422,6 @@ class UbusScannerEntity(CoordinatorEntity[UbusDataUpdateCoordinator], ScannerEnt
     def available(self) -> bool:
         """Return whether the device state is reported by any ubus router."""
         shared: UbusSharedState = self.hass.data[DOMAIN]
-        if shared.latest_stamp(self._mac) is not None:
-            return True
-        # A router which can't be read may still be connected to the device.
         return any(
             shared.health.get(entry.entry_id, True)
             for entry in self.hass.config_entries.async_entries(DOMAIN)

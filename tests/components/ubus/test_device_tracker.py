@@ -1064,10 +1064,11 @@ async def test_tracker_unavailable_while_all_routers_unreachable(
     entity_registry: er.EntityRegistry,
     freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Test the tracker is unavailable only while every router is unreachable.
+    """Test the tracker is unavailable while every router is unreachable.
 
-    A device stays home while its most recent stamp is within
-    CONSIDER_HOME, even when the reporting router is unreachable.
+    The tracker is unavailable at once when the last reachable router
+    fails, even while the client's stamps are still recent, and becomes
+    home again when a router recovers and reports the client.
     """
     _mock, ubus = mock_ubus_by_host
 
@@ -1107,24 +1108,16 @@ async def test_tracker_unavailable_while_all_routers_unreachable(
     await hass.async_block_till_done(wait_background_tasks=True)
 
     # Router A is still reachable, so the tracker is available, and the
-    # device stays home while the stamps are recent.
+    # device stays home on router A's recent stamp.
     state = hass.states.get(entity_id)
     assert state is not None
     assert state.state == STATE_HOME
+    assert state.attributes["source"] == MOCK_HOST
 
-    # Router A becomes unreachable too.
+    # Router A becomes unreachable too, so the tracker is unavailable at
+    # once, even though the stamps are still recent.
     ubus[MOCK_HOST].get_hostapd_clients.side_effect = ConnectionError
     freezer.tick(timedelta(seconds=30))
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done(wait_background_tasks=True)
-
-    state = hass.states.get(entity_id)
-    assert state is not None
-    assert state.state == STATE_HOME
-
-    # Once the stamps age out of CONSIDER_HOME, with no reachable router,
-    # the tracker is unavailable.
-    freezer.tick(DEFAULT_CONSIDER_HOME + timedelta(seconds=30))
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
 
@@ -1206,15 +1199,11 @@ async def test_tracker_unavailable_while_entry_in_setup_retry(
     assert state is not None
     assert state.state == STATE_HOME
 
-    # Router A becomes unreachable too.
+    # Router A becomes unreachable too; with router B stuck in setup
+    # retry, the tracker is unavailable at once, even though the stamp is
+    # still recent.
     ubus[MOCK_HOST].get_hostapd_clients.side_effect = ConnectionError
     freezer.tick(timedelta(seconds=30))
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done(wait_background_tasks=True)
-
-    # Once the stamp ages out, with both routers unreachable, the tracker
-    # is unavailable; router B, in setup retry, counts as unreachable.
-    freezer.tick(DEFAULT_CONSIDER_HOME + timedelta(seconds=30))
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
 
@@ -1276,15 +1265,10 @@ async def test_tracker_available_after_unreachable_router_recovers(
     assert state is not None
     assert state.state == STATE_HOME
 
-    # Router A becomes unreachable too.
+    # Router A becomes unreachable too, so the tracker is unavailable at
+    # once, even though the stamp is still recent.
     ubus[MOCK_HOST].get_hostapd_clients.side_effect = ConnectionError
     freezer.tick(timedelta(seconds=30))
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done(wait_background_tasks=True)
-
-    # Once the stamp ages out, with no reachable router, the tracker is
-    # unavailable.
-    freezer.tick(DEFAULT_CONSIDER_HOME + timedelta(seconds=30))
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
 
