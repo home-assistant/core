@@ -18,8 +18,8 @@ from homeassistant.const import (
     ATTR_LONGITUDE,
     STATE_HOME,
     STATE_NOT_HOME,
-    CommonServiceArgument,
     Platform,
+    TargetKey,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
@@ -63,7 +63,7 @@ async def test_set_tracker_location(hass: HomeAssistant) -> None:
         DOMAIN,
         KitchenSinkService.SET_TRACKER_LOCATION,
         {
-            CommonServiceArgument.ENTITY_ID: TRACKER_ENTITY_ID,
+            TargetKey.ENTITY_ID: TRACKER_ENTITY_ID,
             KitchenSinkServiceArgument.LATITUDE: 12.34,
             KitchenSinkServiceArgument.LONGITUDE: 56.78,
             KitchenSinkServiceArgument.ACCURACY: 42,
@@ -89,7 +89,7 @@ async def test_set_scanner_connected(hass: HomeAssistant) -> None:
         DOMAIN,
         KitchenSinkService.SET_SCANNER_CONNECTED,
         {
-            CommonServiceArgument.ENTITY_ID: SCANNER_ENTITY_ID,
+            TargetKey.ENTITY_ID: SCANNER_ENTITY_ID,
             KitchenSinkServiceArgument.CONNECTED: False,
         },
         blocking=True,
@@ -102,7 +102,7 @@ async def test_set_scanner_connected(hass: HomeAssistant) -> None:
         DOMAIN,
         KitchenSinkService.SET_SCANNER_CONNECTED,
         {
-            CommonServiceArgument.ENTITY_ID: SCANNER_ENTITY_ID,
+            TargetKey.ENTITY_ID: SCANNER_ENTITY_ID,
             KitchenSinkServiceArgument.CONNECTED: True,
         },
         blocking=True,
@@ -127,7 +127,7 @@ async def test_set_tracker_location_on_scanner_raises(hass: HomeAssistant) -> No
             DOMAIN,
             KitchenSinkService.SET_TRACKER_LOCATION,
             {
-                CommonServiceArgument.ENTITY_ID: SCANNER_ENTITY_ID,
+                TargetKey.ENTITY_ID: SCANNER_ENTITY_ID,
                 KitchenSinkServiceArgument.LATITUDE: 12.34,
                 KitchenSinkServiceArgument.LONGITUDE: 56.78,
                 KitchenSinkServiceArgument.ACCURACY: 42,
@@ -146,7 +146,7 @@ async def test_set_scanner_connected_on_tracker_raises(hass: HomeAssistant) -> N
             DOMAIN,
             KitchenSinkService.SET_SCANNER_CONNECTED,
             {
-                CommonServiceArgument.ENTITY_ID: TRACKER_ENTITY_ID,
+                TargetKey.ENTITY_ID: TRACKER_ENTITY_ID,
                 KitchenSinkServiceArgument.CONNECTED: False,
             },
             blocking=True,

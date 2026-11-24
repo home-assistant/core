@@ -46,6 +46,87 @@ open_url:
       example: "https://www.home-assistant.io"
       selector:
         text:
+send_message:
+  target:
+    entity:
+      domain: notify
+      integration: system_bridge
+  fields:
+    title:
+      required: false
+      example: Home Assistant
+      selector:
+        text:
+    message:
+      required: true
+      example: Hello World
+      selector:
+        text:
+          multiline: true
+    icon:
+      required: false
+      example: dialog-information
+      selector:
+        select:
+          options:
+            - dialog-information
+            - dialog-warning
+            - dialog-error
+            - dialog-question
+          mode: dropdown
+          custom_value: true
+          translation_key: icon
+          sort: false
+    urgency:
+      required: false
+      example: critical
+      selector:
+        select:
+          options:
+            - low
+            - normal
+            - critical
+          mode: dropdown
+          translation_key: urgency
+          sort: false
+    duration:
+      required: false
+      example: '{"seconds": 10}'
+      selector:
+        duration:
+    buttons:
+      required: false
+      selector:
+        object:
+          multiple: true
+          label_field: label
+          description_field: id
+          translation_key: buttons
+          fields:
+            id:
+              required: true
+              selector:
+                text:
+            label:
+              required: true
+              selector:
+                text:
+    sound:
+      required: false
+      example: /usr/share/sounds/freedesktop/stereo/message.oga
+      selector:
+        text:
+    url:
+      required: false
+      example: https://www.home-assistant.io
+      selector:
+        text:
+          type: url
+    path:
+      required: false
+      example: /home/user/Documents
+      selector:
+        text:
 send_keypress:
   fields:
     bridge:

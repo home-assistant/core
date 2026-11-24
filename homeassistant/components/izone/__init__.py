@@ -7,7 +7,11 @@ from homeassistant import config_entries
 from homeassistant.const import CONF_EXCLUDE, CONF_HOST, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
-from homeassistant.helpers import config_validation as cv, device_registry as dr
+from homeassistant.helpers import (
+    config_validation as cv,
+    device_registry as dr,
+    issue_registry as ir,
+)
 from homeassistant.helpers.typing import ConfigType
 
 from .const import DATA_CONFIG, DOMAIN
@@ -16,12 +20,18 @@ from .discovery import (
     async_discover_all_endpoints,
     async_discover_endpoint,
     async_ensure_discovery,
+    async_note_integration_discovery,
     async_stop_discovery,
     yaml_excluded_uids,
 )
 from .services import async_setup_services
 
-PLATFORMS = [Platform.CLIMATE, Platform.NUMBER, Platform.SENSOR]
+PLATFORMS = [
+    Platform.BINARY_SENSOR,
+    Platform.CLIMATE,
+    Platform.NUMBER,
+    Platform.SENSOR,
+]
 
 CONFIG_SCHEMA = probatio.Schema(
     {
@@ -40,8 +50,14 @@ CONFIG_SCHEMA = probatio.Schema(
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Register the iZone component config."""
     async_setup_services(hass)
+    # Pre-2026.8 HomeKit discovery ignores; they never migrate and match nothing.
+    for entry in hass.config_entries.async_entries(DOMAIN):
+        if entry.source == config_entries.SOURCE_IGNORE and entry.unique_id == DOMAIN:
+            await hass.config_entries.async_remove(entry.entry_id)
+
     if conf := config.get(DOMAIN):
         hass.data[DATA_CONFIG] = conf
+        _async_maybe_create_exclude_issue(hass)
 
         hass.async_create_task(
             hass.config_entries.flow.async_init(
@@ -126,6 +142,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: IZoneConfigEntry) -> Non
         model=controller.sys_type,
         name=f"iZone Controller {controller.device_uid}",
     )
+    zone_identifiers = {
+        (DOMAIN, controller.device_uid, zone.index) for zone in controller.zones
+    }
+    for device in dr.async_entries_for_config_entry(device_registry, entry.entry_id):
+        if any(
+            len(identifier) == 3 for identifier in device.identifiers
+        ) and device.identifiers.isdisjoint(zone_identifiers):
+            device_registry.async_remove_device(device.id)
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     # Platforms set up concurrently; re-push so controller climate can
@@ -160,12 +184,14 @@ async def async_migrate_entry(hass: HomeAssistant, entry: IZoneConfigEntry) -> N
                 if config_entry.entry_id != entry.entry_id
                 and config_entry.unique_id not in (None, DOMAIN)
             }
-            eligible = [
-                endpoint
-                for endpoint in endpoints.values()
-                if endpoint.uid not in excluded_uids
-                and endpoint.uid not in configured_uids
-            ]
+            eligible: list[pizone.ControllerEndpoint] = []
+            for endpoint in endpoints.values():
+                if endpoint.uid in configured_uids:
+                    continue
+                if endpoint.uid in excluded_uids:
+                    async_note_integration_discovery(hass, endpoint)
+                else:
+                    eligible.append(endpoint)
 
             if not eligible:
                 raise ConfigEntryNotReady(
@@ -219,6 +245,7 @@ async def async_migrate_entry(hass: HomeAssistant, entry: IZoneConfigEntry) -> N
             title=title,
             data=data,
         )
+        _async_maybe_create_exclude_issue(hass)
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: IZoneConfigEntry) -> None:
@@ -229,3 +256,21 @@ async def async_unload_entry(hass: HomeAssistant, entry: IZoneConfigEntry) -> No
     await coordinator.controller.close()
     if not hass.config_entries.async_loaded_entries(DOMAIN):
         await async_stop_discovery(hass)
+
+
+@callback
+def _async_maybe_create_exclude_issue(hass: HomeAssistant) -> None:
+    """Flag a YAML ``exclude`` once no legacy entry still needs it to migrate."""
+    if not yaml_excluded_uids(hass) or any(
+        entry.unique_id == DOMAIN
+        for entry in hass.config_entries.async_entries(DOMAIN, include_ignore=False)
+    ):
+        return
+    ir.async_create_issue(
+        hass,
+        DOMAIN,
+        "yaml_exclude_unused",
+        is_fixable=False,
+        severity=ir.IssueSeverity.WARNING,
+        translation_key="yaml_exclude_unused",
+    )

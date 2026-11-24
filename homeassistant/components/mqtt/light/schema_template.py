@@ -7,12 +7,6 @@ from typing import Any, override
 import probatio
 
 from homeassistant.components.light import (
-    ATTR_BRIGHTNESS,
-    ATTR_COLOR_TEMP_KELVIN,
-    ATTR_EFFECT,
-    ATTR_FLASH,
-    ATTR_HS_COLOR,
-    ATTR_TRANSITION,
     DEFAULT_MAX_KELVIN,
     DEFAULT_MIN_KELVIN,
     ENTITY_ID_FORMAT,
@@ -20,6 +14,7 @@ from homeassistant.components.light import (
     LightEntity,
     LightEntityFeature,
     LightEntityStateAttribute,
+    LightServiceArgument,
     filter_supported_color_modes,
 )
 from homeassistant.const import (
@@ -390,28 +385,30 @@ class MqttLightTemplate(MqttEntity, LightEntity, RestoreEntity):
         if self._optimistic:
             self._attr_is_on = True
 
-        if ATTR_BRIGHTNESS in kwargs:
-            values["brightness"] = int(kwargs[ATTR_BRIGHTNESS])
+        if LightServiceArgument.BRIGHTNESS in kwargs:
+            values["brightness"] = int(kwargs[LightServiceArgument.BRIGHTNESS])
 
             if self._optimistic:
-                self._attr_brightness = kwargs[ATTR_BRIGHTNESS]
+                self._attr_brightness = kwargs[LightServiceArgument.BRIGHTNESS]
 
-        if ATTR_COLOR_TEMP_KELVIN in kwargs:
+        if LightServiceArgument.COLOR_TEMP_KELVIN in kwargs:
             values["color_temp"] = (
-                kwargs[ATTR_COLOR_TEMP_KELVIN]
+                kwargs[LightServiceArgument.COLOR_TEMP_KELVIN]
                 if self._color_temp_kelvin
                 else color_util.color_temperature_kelvin_to_mired(
-                    kwargs[ATTR_COLOR_TEMP_KELVIN]
+                    kwargs[LightServiceArgument.COLOR_TEMP_KELVIN]
                 )
             )
 
             if self._optimistic:
-                self._attr_color_temp_kelvin = kwargs[ATTR_COLOR_TEMP_KELVIN]
+                self._attr_color_temp_kelvin = kwargs[
+                    LightServiceArgument.COLOR_TEMP_KELVIN
+                ]
                 self._attr_hs_color = None
                 self._update_color_mode()
 
-        if ATTR_HS_COLOR in kwargs:
-            hs_color = kwargs[ATTR_HS_COLOR]
+        if LightServiceArgument.HS_COLOR in kwargs:
+            hs_color = kwargs[LightServiceArgument.HS_COLOR]
 
             # If there's a brightness topic set, we don't want to scale the RGB
             # values given using the brightness.
@@ -419,7 +416,7 @@ class MqttLightTemplate(MqttEntity, LightEntity, RestoreEntity):
                 brightness = 255
             else:
                 brightness = kwargs.get(
-                    ATTR_BRIGHTNESS,
+                    LightServiceArgument.BRIGHTNESS,
                     self._attr_brightness if self._attr_brightness is not None else 255,
                 )
             rgb = color_util.color_hsv_to_RGB(
@@ -433,20 +430,20 @@ class MqttLightTemplate(MqttEntity, LightEntity, RestoreEntity):
 
             if self._optimistic:
                 self._attr_color_temp_kelvin = None
-                self._attr_hs_color = kwargs[ATTR_HS_COLOR]
+                self._attr_hs_color = kwargs[LightServiceArgument.HS_COLOR]
                 self._update_color_mode()
 
-        if ATTR_EFFECT in kwargs:
-            values["effect"] = kwargs.get(ATTR_EFFECT)
+        if LightServiceArgument.EFFECT in kwargs:
+            values["effect"] = kwargs.get(LightServiceArgument.EFFECT)
 
             if self._optimistic:
-                self._attr_effect = kwargs[ATTR_EFFECT]
+                self._attr_effect = kwargs[LightServiceArgument.EFFECT]
 
-        if ATTR_FLASH in kwargs:
-            values["flash"] = kwargs.get(ATTR_FLASH)
+        if LightServiceArgument.FLASH in kwargs:
+            values["flash"] = kwargs.get(LightServiceArgument.FLASH)
 
-        if ATTR_TRANSITION in kwargs:
-            values["transition"] = kwargs[ATTR_TRANSITION]
+        if LightServiceArgument.TRANSITION in kwargs:
+            values["transition"] = kwargs[LightServiceArgument.TRANSITION]
 
         await self.async_publish_with_config(
             str(self._topics[CONF_COMMAND_TOPIC]),
@@ -466,8 +463,8 @@ class MqttLightTemplate(MqttEntity, LightEntity, RestoreEntity):
         if self._optimistic:
             self._attr_is_on = False
 
-        if ATTR_TRANSITION in kwargs:
-            values["transition"] = kwargs[ATTR_TRANSITION]
+        if LightServiceArgument.TRANSITION in kwargs:
+            values["transition"] = kwargs[LightServiceArgument.TRANSITION]
 
         await self.async_publish_with_config(
             str(self._topics[CONF_COMMAND_TOPIC]),

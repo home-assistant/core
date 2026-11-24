@@ -11,19 +11,30 @@ from pysmhi import (
     SMHIForecast,
     SmhiForecastException,
     SMHIPointForecast,
+    SMHIRadar,
+    SmhiRadarException,
+    SMHIRadarImage,
 )
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_LATITUDE, CONF_LOCATION, CONF_LONGITUDE
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import aiohttp_client
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DEFAULT_SCAN_INTERVAL, DOMAIN, LOGGER, TIMEOUT
 
-type SMHIConfigEntry = ConfigEntry[
-    tuple[SMHIDataUpdateCoordinator, SMHIFireDataUpdateCoordinator]
-]
+type SMHIConfigEntry = ConfigEntry[SMHIRuntimeData]
+
+
+@dataclass
+class SMHIRuntimeData:
+    """Runtime data for the SMHI integration."""
+
+    coordinator: SMHIDataUpdateCoordinator
+    fire_coordinator: SMHIFireDataUpdateCoordinator
+    radar_coordinator: SMHIRadarDataUpdateCoordinator
 
 
 @dataclass
@@ -137,3 +148,47 @@ class SMHIFireDataUpdateCoordinator(DataUpdateCoordinator[SMHIFireForecastData])
     def fire_current(self) -> SMHIFireForecast:
         """Return the current fire metrics."""
         return self.data.fire_daily[0]
+
+
+class SMHIRadarDataUpdateCoordinator(DataUpdateCoordinator[SMHIRadar]):
+    """A SMHI Radar Data Update Coordinator."""
+
+    config_entry: SMHIConfigEntry
+
+    def __init__(self, hass: HomeAssistant, config_entry: SMHIConfigEntry) -> None:
+        """Initialize the SMHI radar coordinator."""
+        super().__init__(
+            hass,
+            LOGGER,
+            config_entry=config_entry,
+            name=DOMAIN,
+            update_interval=DEFAULT_SCAN_INTERVAL,
+        )
+        self._smhi_radar_api = SMHIRadarImage(
+            config_entry.data[CONF_LOCATION][CONF_LONGITUDE],
+            config_entry.data[CONF_LOCATION][CONF_LATITUDE],
+            session=aiohttp_client.async_get_clientsession(hass),
+        )
+
+    @override
+    async def _async_update_data(self) -> SMHIRadar:
+        """Fetch radar data from SMHI."""
+        try:
+            async with asyncio.timeout(TIMEOUT):
+                return await self._smhi_radar_api.async_get_radar()
+        except SmhiRadarException as ex:
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="radar_update_failed",
+            ) from ex
+
+    async def async_get_image(self) -> bytes:
+        """Fetch the radar image on a map with the location marked."""
+        try:
+            async with asyncio.timeout(TIMEOUT):
+                return await self._smhi_radar_api.async_get_image()
+        except SmhiRadarException as ex:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="radar_image_failed",
+            ) from ex

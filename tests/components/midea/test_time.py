@@ -10,8 +10,12 @@ import pytest
 from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.time import DOMAIN as TIME_DOMAIN, SERVICE_SET_VALUE
-from homeassistant.const import ATTR_ENTITY_ID, ATTR_TIME, Platform
+from homeassistant.components.time import (
+    DOMAIN as TIME_DOMAIN,
+    TimeService,
+    TimeServiceArgument,
+)
+from homeassistant.const import CommonServiceArgument, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -33,7 +37,7 @@ async def _assert_service_call(
     await hass.services.async_call(
         TIME_DOMAIN,
         service,
-        {ATTR_ENTITY_ID: entity_id, ATTR_TIME: time},
+        {CommonServiceArgument.ENTITY_ID: entity_id, TimeServiceArgument.TIME: time},
         blocking=True,
     )
     assert device.calls == expected_calls
@@ -156,7 +160,7 @@ async def test_ed_time_service(
         hass,
         entity_entry.entity_id,
         time(8, 56),
-        SERVICE_SET_VALUE,
+        TimeService.SET_VALUE,
         [
             ("set_attribute", EDAttributes.timing_regeneration_hour, 8),
             ("set_attribute", EDAttributes.timing_regeneration_min, 56),

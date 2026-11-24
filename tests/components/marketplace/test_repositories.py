@@ -214,6 +214,18 @@ def test_manifest_reads_unset_string_as_not_set(
     assert "Ignoring" not in caplog.text
 
 
+@pytest.mark.parametrize("value", [False, None])
+def test_manifest_reads_unset_hacs_version_as_not_set(
+    value: Any, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test false or null for the HACS version, which HACS accepted, is read as not set."""
+    manifest = RepositoryManifest.from_dict({"name": "TEST", "hacs": value})
+
+    assert manifest.manifest == {"name": "TEST"}
+    assert manifest.hacs is None
+    assert "Ignoring" not in caplog.text
+
+
 def test_manifest_with_legacy_values_from_issue() -> None:
     """Test the hacs.json values from the issue keep their HACS meaning."""
     manifest = RepositoryManifest.from_dict(
@@ -2949,6 +2961,48 @@ async def test_install_from_the_catalog_falls_back(
     assert repository.data.installed_version == "1.0.0"
     assert github_api_calls(aioclient_mock)
     assert _installed_files(config_dir) == expected_files
+
+
+@pytest.mark.parametrize("github_token", [None])
+@pytest.mark.parametrize(
+    "archive",
+    [
+        pytest.param(b"not a zip archive", id="broken-archive"),
+        pytest.param(
+            _archive_without_content(REPOSITORY_INTEGRATION),
+            id="integration-not-in-archive",
+        ),
+    ],
+)
+async def test_install_from_the_catalog_falls_back_after_a_refresh(
+    hass: HomeAssistant,
+    marketplace: MarketplaceManager,
+    hass_ws_client: WebSocketGenerator,
+    response_mocker: MarketplaceResponses,
+    config_dir: Path,
+    archive: bytes,
+) -> None:
+    """Test the GitHub API path writes to the content resolved before.
+
+    The repository page refreshes the repository first, after which the API
+    path finds the repository unchanged and does not resolve it again.
+    """
+    repository = marketplace.repositories.get_by_full_name(REPOSITORY_INTEGRATION)
+    await repository.update_repository(ignore_issues=True, force=True)
+    url = f"https://github.com/{REPOSITORY_INTEGRATION}/archive/refs/tags/1.0.0.zip"
+    response_mocker.add(url, mocked_response(url, content=archive))
+
+    client = await hass_ws_client(hass)
+    await client.send_json_auto_id(
+        {
+            "type": "marketplace/repository/install",
+            "repository": repository.data.id,
+            "version": "1.0.0",
+        }
+    )
+    assert (await client.receive_json())["success"]
+
+    assert _installed_files(config_dir) == ["custom_components/example/manifest.json"]
 
 
 @pytest.mark.parametrize("github_token", [None])

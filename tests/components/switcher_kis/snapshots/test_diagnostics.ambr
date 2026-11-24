@@ -26,6 +26,8 @@
     ]),
     'entry': dict({
       'data': dict({
+        'token': '**REDACTED**',
+        'username': '**REDACTED**',
       }),
       'disabled_by': None,
       'discovery_keys': dict({
