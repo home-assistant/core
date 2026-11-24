@@ -82,9 +82,7 @@ rules:
     status: exempt
     comment: |
       Every entity maps to a lock feature a user is expected to want.
-  entity-translations:
-    status: todo
-    comment: Switch names are not sentence cased.
+  entity-translations: done
   exception-translations: done
   icon-translations: done
   reconfiguration-flow: todo
