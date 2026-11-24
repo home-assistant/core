@@ -29,11 +29,6 @@ FULL_OPEN: Final = 100
 FULL_CLOSE: Final = 0
 
 
-def _closed_tilt_position(open_tilt_position: int) -> int:
-    """Return a closed end of the tilt scale."""
-    return FULL_OPEN if open_tilt_position == FULL_CLOSE else FULL_CLOSE
-
-
 def _determine_features(current_attrs: dict[str, Any]) -> CoverEntityFeature:
     """Determine supported features based on current attributes."""
     features = CoverEntityFeature(0)
@@ -85,7 +80,6 @@ async def _async_set_tilt_position(
     service_data: dict[str, Any],
     features: CoverEntityFeature,
     target_tilt_position: int,
-    open_tilt_position: int,
 ) -> bool:
     """Set the tilt position of the cover.
 
@@ -98,15 +92,10 @@ async def _async_set_tilt_position(
             service_data | {CoverServiceArgument.TILT_POSITION: target_tilt_position},
         )
     elif (
-        target_tilt_position in (FULL_CLOSE, FULL_OPEN)
-        and target_tilt_position != open_tilt_position
-        and CoverEntityFeature.CLOSE_TILT in features
+        target_tilt_position == FULL_CLOSE and CoverEntityFeature.CLOSE_TILT in features
     ):
         await service_call(CoverService.CLOSE_TILT, service_data)
-    elif (
-        target_tilt_position == open_tilt_position
-        and CoverEntityFeature.OPEN_TILT in features
-    ):
+    elif target_tilt_position == FULL_OPEN and CoverEntityFeature.OPEN_TILT in features:
         await service_call(CoverService.OPEN_TILT, service_data)
     else:
         # Requested a tilt position but the cover doesn't support it
@@ -120,7 +109,8 @@ async def _async_close_cover(
     features: CoverEntityFeature,
     set_position: bool,
     set_tilt: bool,
-    open_tilt_position: int,
+    current_tilt_position: int | None,
+    closed_tilt_positions: list[int],
 ) -> None:
     """Close the cover if it was not closed by setting the position."""
     if not set_position:
@@ -134,15 +124,14 @@ async def _async_close_cover(
     if not set_tilt:
         if CoverEntityFeature.CLOSE_TILT in features:
             await service_call(CoverService.CLOSE_TILT, service_data)
-        elif CoverEntityFeature.SET_TILT_POSITION in features:
+        elif (
+            CoverEntityFeature.SET_TILT_POSITION in features
+            and current_tilt_position not in closed_tilt_positions
+        ):
             await service_call(
                 CoverService.SET_TILT_POSITION,
                 service_data
-                | {
-                    CoverServiceArgument.TILT_POSITION: _closed_tilt_position(
-                        open_tilt_position
-                    )
-                },
+                | {CoverServiceArgument.TILT_POSITION: closed_tilt_positions[0]},
             )
 
 
@@ -231,19 +220,12 @@ async def _async_reproduce_state(
         blocking=True,
     )
     service_data = {ATTR_ENTITY_ID: entity_id}
-    open_tilt_position: int = current_attrs.get(
-        CoverEntityCapabilityAttribute.OPEN_TILT_POSITION, FULL_OPEN
-    )
 
     set_position = target_position is not None and await _async_set_position(
         service_call, service_data, features, target_position
     )
     set_tilt = target_tilt_position is not None and await _async_set_tilt_position(
-        service_call,
-        service_data,
-        features,
-        target_tilt_position,
-        open_tilt_position,
+        service_call, service_data, features, target_tilt_position
     )
 
     if target_state in CLOSING_STATES:
@@ -253,7 +235,10 @@ async def _async_reproduce_state(
             features,
             set_position,
             set_tilt,
-            open_tilt_position,
+            current_tilt_position,
+            current_attrs.get(
+                CoverEntityCapabilityAttribute.CLOSED_TILT_POSITIONS, [FULL_CLOSE]
+            ),
         )
 
     elif target_state in OPENING_STATES:
@@ -263,7 +248,9 @@ async def _async_reproduce_state(
             features,
             set_position,
             set_tilt,
-            open_tilt_position,
+            current_attrs.get(
+                CoverEntityCapabilityAttribute.OPEN_TILT_POSITION, FULL_OPEN
+            ),
         )
 
 
