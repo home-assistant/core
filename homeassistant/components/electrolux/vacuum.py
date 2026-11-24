@@ -10,6 +10,9 @@ from electrolux_group_developer_sdk.client.appliances.appliance_data import (
     ApplianceData,
 )
 from electrolux_group_developer_sdk.client.appliances.rvc_appliance import RVCAppliance
+from electrolux_group_developer_sdk.client.client_exception import (
+    ApplianceClientException,
+)
 
 from homeassistant.components.vacuum import (
     Segment,
@@ -441,9 +444,14 @@ class RvcEntity(ElectroluxBaseEntity[RVCAppliance], StateVacuumEntity):
         # CLEAN_AREA feature is only supported if vacuum has get_segments_fn and clean_segments_command_fn
         if TYPE_CHECKING:
             assert description.get_segments_fn is not None
-        segments = await description.get_segments_fn(
-            self.coordinator.client, self._appliance_id
-        )
+
+        try:
+            segments = await description.get_segments_fn(
+                self.coordinator.client, self._appliance_id
+            )
+        except ApplianceClientException:
+            _LOGGER.error("Failed to get segments for appliance %s", self._appliance_id)
+            return
 
         if not _is_same_segments(segments, self.last_seen_segments):
             self.async_create_segments_issue()
