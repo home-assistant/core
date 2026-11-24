@@ -68,7 +68,6 @@ class OverkizCoverDescription(CoverEntityDescription):
     close_tilt_command: OverkizCommand | None = None
     close_tilt_command_args: tuple[OverkizStateType, ...] = ()
     stop_tilt_command: OverkizCommand | None = None
-    open_tilt_position: int | None = None
     tilt_start_angle: int | None = None
     tilt_end_angle: int | None = None
 
@@ -234,7 +233,6 @@ COVER_DESCRIPTIONS: list[OverkizCoverDescription] = [
         open_tilt_command=OverkizCommand.OPEN_SLATS,
         close_tilt_command=OverkizCommand.CLOSE_SLATS,
         stop_tilt_command=OverkizCommand.STOP,
-        open_tilt_position=100,
         tilt_start_angle=-90,
         tilt_end_angle=60,
     ),
@@ -712,7 +710,6 @@ class OverkizCover(OverkizDescriptiveEntity, CoverEntity):
         # Use device url as unique ID for backwards compatibility
         self._attr_unique_id = self.device.device_url
 
-        self._attr_open_tilt_position = description.open_tilt_position
         self._attr_tilt_start_angle = description.tilt_start_angle
         self._attr_tilt_end_angle = description.tilt_end_angle
 
