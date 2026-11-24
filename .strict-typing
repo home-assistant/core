@@ -26,6 +26,7 @@ homeassistant.helpers.script_variables
 homeassistant.helpers.singleton
 homeassistant.helpers.sun
 homeassistant.helpers.translation
+homeassistant.helpers.validation_errors
 homeassistant.loader
 homeassistant.requirements
 homeassistant.runner
@@ -418,6 +419,7 @@ homeassistant.components.mealie.*
 homeassistant.components.media_extractor.*
 homeassistant.components.media_player.*
 homeassistant.components.media_source.*
+homeassistant.components.melcloud_home.*
 homeassistant.components.met_eireann.*
 homeassistant.components.metoffice.*
 homeassistant.components.midea.*

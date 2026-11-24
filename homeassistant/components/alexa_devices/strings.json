@@ -92,6 +92,14 @@
         "name": "Speak"
       }
     },
+    "number": {
+      "active_brightness": {
+        "name": "Active brightness"
+      },
+      "inactive_brightness": {
+        "name": "Inactive brightness"
+      }
+    },
     "select": {
       "default_device": {
         "name": "Default device"

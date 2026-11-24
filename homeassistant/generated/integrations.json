@@ -17289,7 +17289,7 @@
       }
     },
     "xmpp": {
-      "name": "Jabber (XMPP)",
+      "name": "XMPP",
       "integration_type": "hub",
       "categories": [
         "messaging_notifications.chat_apps"
