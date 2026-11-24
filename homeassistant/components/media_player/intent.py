@@ -509,5 +509,15 @@ class MediaSetVolumeRelativeHandler(intent.IntentHandler):
             ) from err
 
         response = intent_obj.create_response()
+        response.async_set_results(
+            success_results=[
+                intent.IntentResponseTarget(
+                    type=intent.IntentResponseTargetType.ENTITY,
+                    name=state.name,
+                    id=state.entity_id,
+                )
+                for state in match_result.states
+            ]
+        )
         response.async_set_states(match_result.states)
         return response

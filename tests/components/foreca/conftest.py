@@ -7,6 +7,7 @@ from pyforeca import (
     AirQualityForecast,
     CurrentWeather,
     DailyForecast,
+    FifteenMinuteForecast,
     HourlyForecast,
     Location,
     MinutelyForecast,
@@ -132,6 +133,57 @@ MINUTELY = MinutelyForecastList(
     resolution=1,
 )
 
+FIFTEEN_MINUTE = [
+    FifteenMinuteForecast.from_api(
+        {
+            "time": "2026-11-06T11:00+02:00",
+            "symbol": "d200",
+            "symbolPhrase": "partly cloudy",
+            "temperature": 3,
+            "feelsLikeTemp": -1,
+            "relHumidity": 77,
+            "dewPoint": -1,
+            "windDir": 325,
+            "windSpeed": 5,
+            "windGust": 8,
+            "windDirString": "NW",
+            "precipProb": 1,
+            "snowRate": 0,
+            "precipRate": 0,
+            "cloudiness": 66,
+            "thunderProb": 0,
+            "uvIndex": 0,
+            "pressure": 1026.04,
+            "visibility": 10000,
+            "precipType": "rain",
+        }
+    ),
+    FifteenMinuteForecast.from_api(
+        {
+            "time": "2026-11-06T11:15+02:00",
+            "symbol": "d322",
+            "symbolPhrase": "partly cloudy",
+            "temperature": 3,
+            "feelsLikeTemp": -1,
+            "relHumidity": 76,
+            "dewPoint": -1,
+            "windDir": 324,
+            "windSpeed": 4,
+            "windGust": 8,
+            "windDirString": "NW",
+            "precipProb": 70,
+            "snowRate": 0.8,
+            "precipRate": 1.2,
+            "cloudiness": 49,
+            "thunderProb": 0,
+            "uvIndex": 0,
+            "pressure": 1026.03,
+            "visibility": 11620,
+            "precipType": "snow",
+        }
+    ),
+]
+
 LOCATION = Location(
     id=100658225,
     name="Helsinki",
@@ -217,6 +269,7 @@ def mock_foreca_client() -> Generator[MagicMock]:
             ]
         )
         client.forecast_minutely = AsyncMock(return_value=MINUTELY)
+        client.forecast_15minutely = AsyncMock(return_value=FIFTEEN_MINUTE)
         client.observation_latest = AsyncMock(return_value=OBSERVATION)
         client.air_quality_hourly = AsyncMock(return_value=[AIR_QUALITY])
         yield client
