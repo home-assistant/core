@@ -398,7 +398,6 @@ class RvcEntity(ElectroluxBaseEntity[RVCAppliance], StateVacuumEntity):
 
     @override
     async def async_clean_segments(self, segment_ids: list[str], **kwargs: Any) -> None:
-        """Clean the specified segments."""
 
         description = self.entity_description
 
@@ -422,7 +421,7 @@ class RvcEntity(ElectroluxBaseEntity[RVCAppliance], StateVacuumEntity):
             if segment_id.startswith(f"{map_id}_")
         ]
 
-        if len(zone_ids) == 0:
+        if not zone_ids:
             return
 
         # CLEAN_AREA feature is only supported if vacuum has get_segments_fn and clean_segments_command_fn
@@ -435,7 +434,6 @@ class RvcEntity(ElectroluxBaseEntity[RVCAppliance], StateVacuumEntity):
         await self.coordinator.send_command(command)
 
     async def _check_for_segments_update(self) -> None:
-        """Check for updates to the segments for the vacuum cleaner."""
 
         if self.last_seen_segments is None:
             return
