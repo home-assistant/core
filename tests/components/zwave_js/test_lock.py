@@ -21,7 +21,7 @@ from homeassistant.components.zwave_js.const import (
     ZWaveJSServiceArgument,
 )
 from homeassistant.components.zwave_js.helpers import ZwaveValueMatcher
-from homeassistant.const import STATE_UNKNOWN, CommonServiceArgument
+from homeassistant.const import STATE_UNKNOWN, CommonServiceArgument, TargetKey
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, Unauthorized
 
@@ -46,7 +46,7 @@ async def test_door_lock(
     await hass.services.async_call(
         LOCK_DOMAIN,
         LockService.LOCK,
-        {CommonServiceArgument.ENTITY_ID: SCHLAGE_BE469_LOCK_ENTITY},
+        {TargetKey.ENTITY_ID: SCHLAGE_BE469_LOCK_ENTITY},
         blocking=True,
     )
 
@@ -93,7 +93,7 @@ async def test_door_lock(
     await hass.services.async_call(
         LOCK_DOMAIN,
         LockService.UNLOCK,
-        {CommonServiceArgument.ENTITY_ID: SCHLAGE_BE469_LOCK_ENTITY},
+        {TargetKey.ENTITY_ID: SCHLAGE_BE469_LOCK_ENTITY},
         blocking=True,
     )
 
@@ -115,7 +115,7 @@ async def test_door_lock(
         DOMAIN,
         ZWaveJSService.SET_LOCK_USERCODE,
         {
-            CommonServiceArgument.ENTITY_ID: SCHLAGE_BE469_LOCK_ENTITY,
+            TargetKey.ENTITY_ID: SCHLAGE_BE469_LOCK_ENTITY,
             ATTR_CODE_SLOT: 1,
             ATTR_USERCODE: "1234",
         },
@@ -140,7 +140,7 @@ async def test_door_lock(
     await hass.services.async_call(
         DOMAIN,
         ZWaveJSService.CLEAR_LOCK_USERCODE,
-        {CommonServiceArgument.ENTITY_ID: SCHLAGE_BE469_LOCK_ENTITY, ATTR_CODE_SLOT: 1},
+        {TargetKey.ENTITY_ID: SCHLAGE_BE469_LOCK_ENTITY, ATTR_CODE_SLOT: 1},
         blocking=True,
     )
 
@@ -172,7 +172,7 @@ async def test_door_lock(
             DOMAIN,
             ZWaveJSService.GET_LOCK_USERCODE,
             {
-                CommonServiceArgument.ENTITY_ID: SCHLAGE_BE469_LOCK_ENTITY,
+                TargetKey.ENTITY_ID: SCHLAGE_BE469_LOCK_ENTITY,
                 ATTR_CODE_SLOT: 1,
             },
             blocking=True,
@@ -200,7 +200,7 @@ async def test_door_lock(
         DOMAIN,
         ZWaveJSService.SET_LOCK_CONFIGURATION,
         {
-            CommonServiceArgument.ENTITY_ID: SCHLAGE_BE469_LOCK_ENTITY,
+            TargetKey.ENTITY_ID: SCHLAGE_BE469_LOCK_ENTITY,
             ZWaveJSServiceArgument.OPERATION_TYPE: "timed",
             ZWaveJSServiceArgument.LOCK_TIMEOUT: 1,
         },
@@ -245,7 +245,7 @@ async def test_door_lock(
         DOMAIN,
         ZWaveJSService.SET_LOCK_CONFIGURATION,
         {
-            CommonServiceArgument.ENTITY_ID: SCHLAGE_BE469_LOCK_ENTITY,
+            TargetKey.ENTITY_ID: SCHLAGE_BE469_LOCK_ENTITY,
             ZWaveJSServiceArgument.OPERATION_TYPE: "timed",
             ZWaveJSServiceArgument.LOCK_TIMEOUT: 1,
         },
@@ -290,7 +290,7 @@ async def test_door_lock(
             DOMAIN,
             ZWaveJSService.SET_LOCK_USERCODE,
             {
-                CommonServiceArgument.ENTITY_ID: SCHLAGE_BE469_LOCK_ENTITY,
+                TargetKey.ENTITY_ID: SCHLAGE_BE469_LOCK_ENTITY,
                 ATTR_CODE_SLOT: 1,
                 ATTR_USERCODE: "1234",
             },
@@ -303,7 +303,7 @@ async def test_door_lock(
             DOMAIN,
             ZWaveJSService.CLEAR_LOCK_USERCODE,
             {
-                CommonServiceArgument.ENTITY_ID: SCHLAGE_BE469_LOCK_ENTITY,
+                TargetKey.ENTITY_ID: SCHLAGE_BE469_LOCK_ENTITY,
                 ATTR_CODE_SLOT: 1,
             },
             blocking=True,
@@ -321,7 +321,7 @@ async def test_door_lock(
             DOMAIN,
             ZWaveJSService.GET_LOCK_USERCODE,
             {
-                CommonServiceArgument.ENTITY_ID: SCHLAGE_BE469_LOCK_ENTITY,
+                TargetKey.ENTITY_ID: SCHLAGE_BE469_LOCK_ENTITY,
                 ATTR_CODE_SLOT: 1,
             },
             blocking=True,
@@ -396,7 +396,7 @@ async def test_get_lock_usercode(
             DOMAIN,
             ZWaveJSService.GET_LOCK_USERCODE,
             {
-                CommonServiceArgument.ENTITY_ID: SCHLAGE_BE469_LOCK_ENTITY,
+                TargetKey.ENTITY_ID: SCHLAGE_BE469_LOCK_ENTITY,
                 ATTR_CODE_SLOT: 1,
             },
             blocking=True,
@@ -429,7 +429,7 @@ async def test_set_lock_usercode_error(
             DOMAIN,
             ZWaveJSService.SET_LOCK_USERCODE,
             {
-                CommonServiceArgument.ENTITY_ID: SCHLAGE_BE469_LOCK_ENTITY,
+                TargetKey.ENTITY_ID: SCHLAGE_BE469_LOCK_ENTITY,
                 ATTR_CODE_SLOT: 1,
                 ATTR_USERCODE: "1234",
             },
@@ -455,7 +455,7 @@ async def test_clear_lock_usercode_error(
             DOMAIN,
             ZWaveJSService.CLEAR_LOCK_USERCODE,
             {
-                CommonServiceArgument.ENTITY_ID: SCHLAGE_BE469_LOCK_ENTITY,
+                TargetKey.ENTITY_ID: SCHLAGE_BE469_LOCK_ENTITY,
                 ATTR_CODE_SLOT: 1,
             },
             blocking=True,
@@ -485,7 +485,7 @@ async def test_get_lock_usercode_error(
             DOMAIN,
             ZWaveJSService.GET_LOCK_USERCODE,
             {
-                CommonServiceArgument.ENTITY_ID: SCHLAGE_BE469_LOCK_ENTITY,
+                TargetKey.ENTITY_ID: SCHLAGE_BE469_LOCK_ENTITY,
                 ATTR_CODE_SLOT: 1,
             },
             blocking=True,
@@ -510,7 +510,7 @@ async def test_get_all_lock_usercodes(
         response = await hass.services.async_call(
             DOMAIN,
             ZWaveJSService.GET_LOCK_USERCODE,
-            {CommonServiceArgument.ENTITY_ID: SCHLAGE_BE469_LOCK_ENTITY},
+            {TargetKey.ENTITY_ID: SCHLAGE_BE469_LOCK_ENTITY},
             blocking=True,
             return_response=True,
         )

@@ -9,7 +9,7 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.fumis.const import DOMAIN
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN, SwitchService
-from homeassistant.const import CommonServiceArgument, Platform
+from homeassistant.const import Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
@@ -41,7 +41,7 @@ async def test_eco_mode_turn_on(
     await hass.services.async_call(
         SWITCH_DOMAIN,
         SwitchService.TURN_ON,
-        {CommonServiceArgument.ENTITY_ID: "switch.clou_duo_eco_mode"},
+        {TargetKey.ENTITY_ID: "switch.clou_duo_eco_mode"},
         blocking=True,
     )
 
@@ -57,7 +57,7 @@ async def test_eco_mode_turn_off(
     await hass.services.async_call(
         SWITCH_DOMAIN,
         SwitchService.TURN_OFF,
-        {CommonServiceArgument.ENTITY_ID: "switch.clou_duo_eco_mode"},
+        {TargetKey.ENTITY_ID: "switch.clou_duo_eco_mode"},
         blocking=True,
     )
 
@@ -73,7 +73,7 @@ async def test_timer_turn_on(
     await hass.services.async_call(
         SWITCH_DOMAIN,
         SwitchService.TURN_ON,
-        {CommonServiceArgument.ENTITY_ID: "switch.clou_duo_timer"},
+        {TargetKey.ENTITY_ID: "switch.clou_duo_timer"},
         blocking=True,
     )
 
@@ -89,7 +89,7 @@ async def test_timer_turn_off(
     await hass.services.async_call(
         SWITCH_DOMAIN,
         SwitchService.TURN_OFF,
-        {CommonServiceArgument.ENTITY_ID: "switch.clou_duo_timer"},
+        {TargetKey.ENTITY_ID: "switch.clou_duo_timer"},
         blocking=True,
     )
 
@@ -108,7 +108,7 @@ async def test_switch_error_handling(
         await hass.services.async_call(
             SWITCH_DOMAIN,
             SwitchService.TURN_ON,
-            {CommonServiceArgument.ENTITY_ID: "switch.clou_duo_eco_mode"},
+            {TargetKey.ENTITY_ID: "switch.clou_duo_eco_mode"},
             blocking=True,
         )
 

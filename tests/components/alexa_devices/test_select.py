@@ -22,7 +22,7 @@ from homeassistant.components.select import (
     SelectService,
     SelectServiceArgument,
 )
-from homeassistant.const import STATE_UNAVAILABLE, CommonServiceArgument, Platform
+from homeassistant.const import STATE_UNAVAILABLE, Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er
@@ -64,7 +64,7 @@ async def test_select_dropin_option(
         SELECT_DOMAIN,
         SelectService.SELECT_OPTION,
         {
-            CommonServiceArgument.ENTITY_ID: ENTITY_ID,
+            TargetKey.ENTITY_ID: ENTITY_ID,
             SelectServiceArgument.OPTION: "home",
         },
         blocking=True,
@@ -89,7 +89,7 @@ async def test_select_dropin_option(
         SELECT_DOMAIN,
         SelectService.SELECT_OPTION,
         {
-            CommonServiceArgument.ENTITY_ID: ENTITY_ID,
+            TargetKey.ENTITY_ID: ENTITY_ID,
             SelectServiceArgument.OPTION: "off",
         },
         blocking=True,
@@ -158,7 +158,7 @@ async def test_service_select_option(
         SELECT_DOMAIN,
         SelectService.SELECT_OPTION,
         {
-            CommonServiceArgument.ENTITY_ID: ENTITY_ID_2,
+            TargetKey.ENTITY_ID: ENTITY_ID_2,
             SelectServiceArgument.OPTION: TEST_DEVICE_2.account_name,
         },
         blocking=True,
@@ -189,7 +189,7 @@ async def test_service_select_option_state_persists_after_coordinator_update(
         SELECT_DOMAIN,
         SelectService.SELECT_OPTION,
         {
-            CommonServiceArgument.ENTITY_ID: ENTITY_ID_2,
+            TargetKey.ENTITY_ID: ENTITY_ID_2,
             SelectServiceArgument.OPTION: TEST_DEVICE_2.account_name,
         },
         blocking=True,
@@ -219,7 +219,7 @@ async def test_service_select_option_not_found(
             SELECT_DOMAIN,
             SelectService.SELECT_OPTION,
             {
-                CommonServiceArgument.ENTITY_ID: ENTITY_ID_2,
+                TargetKey.ENTITY_ID: ENTITY_ID_2,
                 SelectServiceArgument.OPTION: "Nonexistent Device",
             },
             blocking=True,

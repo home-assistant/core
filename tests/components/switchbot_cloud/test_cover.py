@@ -11,7 +11,7 @@ from switchbot_api import (
     RollerShadeCommands,
 )
 
-from homeassistant.components.cover import DOMAIN as COVER_DOMAIN
+from homeassistant.components.cover import DOMAIN as COVER_DOMAIN, CoverService
 from homeassistant.components.switchbot_cloud import SwitchBotAPI
 from homeassistant.components.switchbot_cloud.const import (
     CURTAIN_MODE_DEFAULT,
@@ -19,19 +19,7 @@ from homeassistant.components.switchbot_cloud.const import (
     CURTAIN_MODE_SILENT,
 )
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    SERVICE_CLOSE_COVER,
-    SERVICE_CLOSE_COVER_TILT,
-    SERVICE_OPEN_COVER,
-    SERVICE_OPEN_COVER_TILT,
-    SERVICE_SET_COVER_POSITION,
-    SERVICE_SET_COVER_TILT_POSITION,
-    SERVICE_STOP_COVER,
-    STATE_CLOSED,
-    STATE_OPEN,
-    STATE_UNKNOWN,
-)
+from homeassistant.const import STATE_CLOSED, STATE_OPEN, STATE_UNKNOWN, TargetKey
 from homeassistant.core import HomeAssistant
 
 from . import configure_integration
@@ -236,8 +224,8 @@ async def test_blind_tilt_features(
     with patch.object(SwitchBotAPI, "send_command") as mock_send_command:
         await hass.services.async_call(
             COVER_DOMAIN,
-            SERVICE_OPEN_COVER_TILT,
-            {ATTR_ENTITY_ID: cover_id},
+            CoverService.OPEN_TILT,
+            {TargetKey.ENTITY_ID: cover_id},
             blocking=True,
         )
     mock_send_command.assert_called_once_with(
@@ -247,8 +235,8 @@ async def test_blind_tilt_features(
     with patch.object(SwitchBotAPI, "send_command") as mock_send_command:
         await hass.services.async_call(
             COVER_DOMAIN,
-            SERVICE_CLOSE_COVER_TILT,
-            {ATTR_ENTITY_ID: cover_id},
+            CoverService.CLOSE_TILT,
+            {TargetKey.ENTITY_ID: cover_id},
             blocking=True,
         )
     mock_send_command.assert_called_once_with(
@@ -258,8 +246,8 @@ async def test_blind_tilt_features(
     with patch.object(SwitchBotAPI, "send_command") as mock_send_command:
         await hass.services.async_call(
             COVER_DOMAIN,
-            SERVICE_SET_COVER_TILT_POSITION,
-            {"tilt_position": 25, ATTR_ENTITY_ID: cover_id},
+            CoverService.SET_TILT_POSITION,
+            {"tilt_position": 25, TargetKey.ENTITY_ID: cover_id},
             blocking=True,
         )
     mock_send_command.assert_called_once_with(
@@ -292,8 +280,8 @@ async def test_blind_tilt_features_close_down(
     with patch.object(SwitchBotAPI, "send_command") as mock_send_command:
         await hass.services.async_call(
             COVER_DOMAIN,
-            SERVICE_CLOSE_COVER_TILT,
-            {ATTR_ENTITY_ID: cover_id},
+            CoverService.CLOSE_TILT,
+            {TargetKey.ENTITY_ID: cover_id},
             blocking=True,
         )
     mock_send_command.assert_called_once_with(
@@ -330,8 +318,8 @@ async def test_roller_shade_features(
     with patch.object(SwitchBotAPI, "send_command") as mock_send_command:
         await hass.services.async_call(
             COVER_DOMAIN,
-            SERVICE_OPEN_COVER,
-            {ATTR_ENTITY_ID: cover_id},
+            CoverService.OPEN,
+            {TargetKey.ENTITY_ID: cover_id},
             blocking=True,
         )
     mock_send_command.assert_called_once_with(
@@ -345,8 +333,8 @@ async def test_roller_shade_features(
     with patch.object(SwitchBotAPI, "send_command") as mock_send_command:
         await hass.services.async_call(
             COVER_DOMAIN,
-            SERVICE_CLOSE_COVER,
-            {ATTR_ENTITY_ID: cover_id},
+            CoverService.CLOSE,
+            {TargetKey.ENTITY_ID: cover_id},
             blocking=True,
         )
     mock_send_command.assert_called_once_with(
@@ -360,8 +348,8 @@ async def test_roller_shade_features(
     with patch.object(SwitchBotAPI, "send_command") as mock_send_command:
         await hass.services.async_call(
             COVER_DOMAIN,
-            SERVICE_SET_COVER_POSITION,
-            {"position": 50, ATTR_ENTITY_ID: cover_id},
+            CoverService.SET_POSITION,
+            {"position": 50, TargetKey.ENTITY_ID: cover_id},
             blocking=True,
         )
     mock_send_command.assert_called_once_with(
@@ -418,8 +406,8 @@ async def test_garage_door_features_close(
     with patch.object(SwitchBotAPI, "send_command") as mock_send_command:
         await hass.services.async_call(
             COVER_DOMAIN,
-            SERVICE_CLOSE_COVER,
-            {ATTR_ENTITY_ID: cover_id},
+            CoverService.CLOSE,
+            {TargetKey.ENTITY_ID: cover_id},
             blocking=True,
         )
     mock_send_command.assert_called_once_with(
@@ -460,8 +448,8 @@ async def test_garage_door_features_open(
     with patch.object(SwitchBotAPI, "send_command") as mock_send_command:
         await hass.services.async_call(
             COVER_DOMAIN,
-            SERVICE_OPEN_COVER,
-            {ATTR_ENTITY_ID: cover_id},
+            CoverService.OPEN,
+            {TargetKey.ENTITY_ID: cover_id},
             blocking=True,
         )
     mock_send_command.assert_called_once_with(

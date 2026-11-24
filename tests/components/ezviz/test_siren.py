@@ -6,8 +6,8 @@ from pyezvizapi import PyEzvizError, SupportExt
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
-from homeassistant.components.siren import DOMAIN as SIREN_DOMAIN, SERVICE_TURN_ON
-from homeassistant.const import ATTR_ENTITY_ID, STATE_ON
+from homeassistant.components.siren import DOMAIN as SIREN_DOMAIN, SirenService
+from homeassistant.const import STATE_ON, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 
@@ -36,7 +36,10 @@ async def test_turn_on(
     await setup_integration(hass, mock_config_entry)
 
     await hass.services.async_call(
-        SIREN_DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: ENTITY_ID}, blocking=True
+        SIREN_DOMAIN,
+        SirenService.TURN_ON,
+        {TargetKey.ENTITY_ID: ENTITY_ID},
+        blocking=True,
     )
 
     mock_ezviz_client.sound_alarm.assert_called_once_with("C123456789", 2)
@@ -59,7 +62,10 @@ async def test_turn_on_error(
 
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
-            SIREN_DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: ENTITY_ID}, blocking=True
+            SIREN_DOMAIN,
+            SirenService.TURN_ON,
+            {TargetKey.ENTITY_ID: ENTITY_ID},
+            blocking=True,
         )
 
     assert hass.states.get(ENTITY_ID).state != STATE_ON

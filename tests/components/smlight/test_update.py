@@ -35,8 +35,8 @@ from homeassistant.const import (
     STATE_ON,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
-    CommonServiceArgument,
     Platform,
+    TargetKey,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import (
@@ -351,7 +351,7 @@ async def test_update_firmware(
     await hass.services.async_call(
         UPDATE_DOMAIN,
         UpdateService.INSTALL,
-        {CommonServiceArgument.ENTITY_ID: entity_id},
+        {TargetKey.ENTITY_ID: entity_id},
         blocking=False,
     )
 
@@ -406,7 +406,7 @@ async def test_update_zigbee2_firmware(
     await hass.services.async_call(
         UPDATE_DOMAIN,
         UpdateService.INSTALL,
-        {CommonServiceArgument.ENTITY_ID: entity_id},
+        {TargetKey.ENTITY_ID: entity_id},
         blocking=False,
     )
 
@@ -451,7 +451,7 @@ async def test_update_legacy_firmware_v2(
     await hass.services.async_call(
         UPDATE_DOMAIN,
         UpdateService.INSTALL,
-        {CommonServiceArgument.ENTITY_ID: entity_id},
+        {TargetKey.ENTITY_ID: entity_id},
         blocking=False,
     )
 
@@ -492,7 +492,7 @@ async def test_update_firmware_failed(
     await hass.services.async_call(
         UPDATE_DOMAIN,
         UpdateService.INSTALL,
-        {CommonServiceArgument.ENTITY_ID: entity_id},
+        {TargetKey.ENTITY_ID: entity_id},
         blocking=False,
     )
 
@@ -547,7 +547,7 @@ async def test_update_install_command_error(
         await hass.services.async_call(
             UPDATE_DOMAIN,
             UpdateService.INSTALL,
-            {CommonServiceArgument.ENTITY_ID: entity_id},
+            {TargetKey.ENTITY_ID: entity_id},
             blocking=True,
         )
 
@@ -592,7 +592,7 @@ async def test_update_reboot_timeout(
             hass.services.async_call(
                 UPDATE_DOMAIN,
                 UpdateService.INSTALL,
-                {CommonServiceArgument.ENTITY_ID: entity_id},
+                {TargetKey.ENTITY_ID: entity_id},
                 blocking=True,
             )
         )
@@ -650,7 +650,7 @@ async def test_update_release_notes(
         }
     )
     result = await ws_client.receive_json()
-    assert result["result"] is not None
+    assert result["result"]["release_notes"] is not None
 
 
 async def test_update_blank_release_notes(
@@ -682,7 +682,7 @@ async def test_update_blank_release_notes(
     )
     result = await ws_client.receive_json()
     await hass.async_block_till_done()
-    assert result["result"] is None
+    assert result["result"]["release_notes"] is None
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default", "mock_ultima_client")
@@ -765,7 +765,7 @@ async def test_update_firmware_specific_version(
         UPDATE_DOMAIN,
         UpdateService.INSTALL,
         {
-            CommonServiceArgument.ENTITY_ID: entity_id,
+            TargetKey.ENTITY_ID: entity_id,
             UpdateServiceArgument.VERSION: version,
         },
         blocking=False,
@@ -815,7 +815,7 @@ async def test_update_firmware_specific_version_invalid(
             UPDATE_DOMAIN,
             UpdateService.INSTALL,
             {
-                CommonServiceArgument.ENTITY_ID: "update.mock_title_core_firmware",
+                TargetKey.ENTITY_ID: "update.mock_title_core_firmware",
                 UpdateServiceArgument.VERSION: version,
             },
             blocking=True,

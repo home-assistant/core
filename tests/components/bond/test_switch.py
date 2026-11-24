@@ -9,7 +9,7 @@ from pytest_homeassistant.common import async_fire_time_changed
 from homeassistant.components.bond.const import DOMAIN
 from homeassistant.components.bond.services import BondService, BondServiceArgument
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN, SwitchService
-from homeassistant.const import ATTR_ENTITY_ID, CommonServiceArgument
+from homeassistant.const import ATTR_ENTITY_ID, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
@@ -56,7 +56,7 @@ async def test_turn_on_switch(hass: HomeAssistant) -> None:
         await hass.services.async_call(
             SWITCH_DOMAIN,
             SwitchService.TURN_ON,
-            {CommonServiceArgument.ENTITY_ID: "switch.name_1"},
+            {TargetKey.ENTITY_ID: "switch.name_1"},
             blocking=True,
         )
         await hass.async_block_till_done()
@@ -74,7 +74,7 @@ async def test_turn_off_switch(hass: HomeAssistant) -> None:
         await hass.services.async_call(
             SWITCH_DOMAIN,
             SwitchService.TURN_OFF,
-            {CommonServiceArgument.ENTITY_ID: "switch.name_1"},
+            {TargetKey.ENTITY_ID: "switch.name_1"},
             blocking=True,
         )
         await hass.async_block_till_done()
