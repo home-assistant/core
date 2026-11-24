@@ -109,8 +109,8 @@ async def _async_close_cover(
     features: CoverEntityFeature,
     set_position: bool,
     set_tilt: bool,
-    current_tilt_position: int | None,
-    closed_tilt_positions: list[int],
+    tilt_is_closed: bool,
+    closed_tilt_position: int,
 ) -> None:
     """Close the cover if it was not closed by setting the position."""
     if not set_position:
@@ -121,17 +121,14 @@ async def _async_close_cover(
                 CoverService.SET_POSITION,
                 service_data | {CoverServiceArgument.POSITION: FULL_CLOSE},
             )
-    if not set_tilt:
+    if not set_tilt and not tilt_is_closed:
         if CoverEntityFeature.CLOSE_TILT in features:
             await service_call(CoverService.CLOSE_TILT, service_data)
-        elif (
-            CoverEntityFeature.SET_TILT_POSITION in features
-            and current_tilt_position not in closed_tilt_positions
-        ):
+        elif CoverEntityFeature.SET_TILT_POSITION in features:
             await service_call(
                 CoverService.SET_TILT_POSITION,
                 service_data
-                | {CoverServiceArgument.TILT_POSITION: closed_tilt_positions[0]},
+                | {CoverServiceArgument.TILT_POSITION: closed_tilt_position},
             )
 
 
@@ -229,16 +226,18 @@ async def _async_reproduce_state(
     )
 
     if target_state in CLOSING_STATES:
+        closed_tilt_positions: list[int] = current_attrs.get(
+            CoverEntityCapabilityAttribute.CLOSED_TILT_POSITIONS, [FULL_CLOSE]
+        )
         await _async_close_cover(
             service_call,
             service_data,
             features,
             set_position,
             set_tilt,
-            current_tilt_position,
-            current_attrs.get(
-                CoverEntityCapabilityAttribute.CLOSED_TILT_POSITIONS, [FULL_CLOSE]
-            ),
+            cur_state.state not in (CoverState.OPENING, CoverState.CLOSING)
+            and current_tilt_position in closed_tilt_positions,
+            closed_tilt_positions[0],
         )
 
     elif target_state in OPENING_STATES:
