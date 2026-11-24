@@ -68,6 +68,6 @@ class SchlageSelect(SchlageEntity, SelectEntity):
         return str(self._lock_data.lock.auto_lock_time)
 
     @override
-    def select_option(self, option: str) -> None:
+    async def async_select_option(self, option: str) -> None:
         """Set the current option."""
-        self._lock.set_auto_lock_time(int(option))
+        await self._async_send_command(self._lock.set_auto_lock_time, int(option))
