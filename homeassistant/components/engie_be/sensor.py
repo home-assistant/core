@@ -5,7 +5,7 @@ from collections.abc import Callable, Iterable, Mapping
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from itertools import product
-from typing import TYPE_CHECKING, Any, override
+from typing import TYPE_CHECKING, override
 
 from aioengiebelgium import EpexGranularity, EpexSlot, Peak, bare_ean
 
@@ -468,36 +468,3 @@ class EngieBePeaksSensor(CoordinatorEntity[EngieBePeaksCoordinator], SensorEntit
     def native_value(self) -> float | datetime | None:
         """Return the sensor value derived from the peaks data."""
         return self.entity_description.value_fn(self)
-
-    @property
-    @override
-    def extra_state_attributes(self) -> dict[str, Any]:
-        """Return peak provenance and daily peak details."""
-        data = self.coordinator.data
-        if self.entity_description.key == "capacity_tariff_monthly_power_peak":
-            attributes: dict[str, Any] = {
-                "peak_month": data.peak_month,
-                "peak_is_fallback": data.is_fallback,
-            }
-            previous = data.monthly.previous_peak_of_the_month
-            if previous is not None:
-                attributes["previous_peak"] = {
-                    "power_kw": previous.peak_kw,
-                    "energy_kwh": previous.peak_kwh,
-                    "start": previous.start.isoformat(),
-                    "end": previous.end.isoformat(),
-                }
-            return attributes
-        if self.entity_description.key == "capacity_tariff_daily_power_peak":
-            return {
-                "daily_peaks": [
-                    {
-                        "power_kw": peak.peak_kw,
-                        "energy_kwh": peak.peak_kwh,
-                        "start": peak.start.isoformat(),
-                        "end": peak.end.isoformat(),
-                    }
-                    for peak in data.monthly.daily_peaks
-                ]
-            }
-        return {}
