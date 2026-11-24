@@ -5,9 +5,15 @@ import time
 from typing import Any
 from unittest.mock import AsyncMock, patch
 
+from google_health_api.api import BmiSubApi
 from google_health_api.model import (
     BODY_FAT,
+    DAILY_HEART_RATE_VARIABILITY,
+    DAILY_OXYGEN_SATURATION,
+    DAILY_RESPIRATORY_RATE,
     DAILY_RESTING_HEART_RATE,
+    DAILY_VO2_MAX,
+    HEIGHT,
     SLEEP,
     WEIGHT,
     ActiveEnergyBurnedRollupValue,
@@ -198,12 +204,31 @@ def mock_google_health_client() -> Generator[AsyncMock]:
         client.weight.required_read_scopes = [
             "https://www.googleapis.com/auth/googlehealth.health_metrics_and_measurements.readonly"
         ]
+        client.height = AsyncMock()
+        client.height.list.return_value = _list_fixture("height.json", HEIGHT)
+        client.bmi = BmiSubApi(client)
         client.daily_resting_heart_rate = AsyncMock()
         client.daily_resting_heart_rate.list.return_value = _list_fixture(
             "resting_heart_rate.json", DAILY_RESTING_HEART_RATE
         )
         client.body_fat = AsyncMock()
         client.body_fat.list.return_value = _list_fixture("body_fat.json", BODY_FAT)
+        client.daily_heart_rate_variability = AsyncMock()
+        client.daily_heart_rate_variability.list.return_value = _list_fixture(
+            "heart_rate_variability.json", DAILY_HEART_RATE_VARIABILITY
+        )
+        client.daily_oxygen_saturation = AsyncMock()
+        client.daily_oxygen_saturation.list.return_value = _list_fixture(
+            "oxygen_saturation.json", DAILY_OXYGEN_SATURATION
+        )
+        client.daily_respiratory_rate = AsyncMock()
+        client.daily_respiratory_rate.list.return_value = _list_fixture(
+            "respiratory_rate.json", DAILY_RESPIRATORY_RATE
+        )
+        client.daily_vo2_max = AsyncMock()
+        client.daily_vo2_max.list.return_value = _list_fixture(
+            "vo2_max.json", DAILY_VO2_MAX
+        )
         client.paired_devices = AsyncMock()
         client.paired_devices.list.return_value = paired_devices_fixture(
             "paired_devices.json"

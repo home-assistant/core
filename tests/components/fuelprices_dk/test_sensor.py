@@ -1,7 +1,9 @@
 """Test sensor platform for Fuelprices.dk."""
 
+import logging
 from unittest.mock import AsyncMock, patch
 
+from aiohttp import ClientConnectionError
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from pytest_homeassistant.common import (
@@ -200,27 +202,51 @@ async def test_station_missing_at_setup(
 
 
 @pytest.mark.parametrize("mock_config_entry", [2], indirect=True)
-@pytest.mark.parametrize("status", [500, 429])
+@pytest.mark.parametrize(
+    "error",
+    [
+        pytest.param(client_error(500), id="server_error"),
+        pytest.param(client_error(429), id="rate_limit"),
+        pytest.param(ClientConnectionError("Connection failed"), id="connection"),
+        pytest.param(TimeoutError(), id="timeout"),
+    ],
+)
 async def test_failed_update_recovers(
     hass: HomeAssistant,
     mock_braendstofpriser: AsyncMock,
     mock_config_entry: MockConfigEntry,
     freezer: FrozenDateTimeFactory,
-    status: int,
+    caplog: pytest.LogCaptureFixture,
+    error: Exception,
 ) -> None:
     """Test a failed bulk request marks all stations unavailable until recovery."""
     mock_braendstofpriser.get_prices_bulk.return_value = (
         await async_load_json_array_fixture(hass, "bulk_prices.json", DOMAIN)
     )
     await setup_integration(hass, mock_config_entry)
+    logger = "homeassistant.components.fuelprices_dk.coordinator"
+    caplog.set_level(logging.INFO, logger=logger)
+    caplog.clear()
 
-    mock_braendstofpriser.get_prices_bulk.side_effect = client_error(status)
+    mock_braendstofpriser.get_prices_bulk.side_effect = error
     freezer.tick(3600)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
     assert hass.states.get("sensor.aarhus_c_blyfri95").state == STATE_UNAVAILABLE
     assert hass.states.get("sensor.aarhus_n_blyfri95").state == STATE_UNAVAILABLE
+
+    outage_logs = [record for record in caplog.records if record.name == logger]
+    assert len(outage_logs) == 1
+    assert outage_logs[0].levelno == logging.INFO
+    assert "is unavailable" in outage_logs[0].getMessage()
+    caplog.clear()
+
+    freezer.tick(3600)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert not [record for record in caplog.records if record.name == logger]
 
     mock_braendstofpriser.get_prices_bulk.side_effect = None
     freezer.tick(3600)
@@ -229,6 +255,9 @@ async def test_failed_update_recovers(
 
     assert hass.states.get("sensor.aarhus_c_blyfri95").state == "14.29"
     assert hass.states.get("sensor.aarhus_n_blyfri95").state == "15.29"
+    assert [record for record in caplog.record_tuples if record[0] == logger] == [
+        (logger, logging.INFO, f"Fetching {DOMAIN} data recovered")
+    ]
 
 
 @pytest.mark.parametrize("mock_config_entry", [2], indirect=True)
