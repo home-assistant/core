@@ -164,14 +164,14 @@ async def test_alert_withdrawn(
     "exception",
     [ServerError("500"), WrongCountry("no feed"), UnexpectedError("timeout")],
 )
-async def test_keeps_alert_until_expiry_when_update_fails(
+async def test_unavailable_when_update_fails(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_meteoalert: MagicMock,
     freezer: FrozenDateTimeFactory,
     exception: Exception,
 ) -> None:
-    """Test a current alert is kept until it expires when MeteoAlarm can't be reached."""
+    """Test the sensor becomes unavailable when MeteoAlarm can't be reached."""
     await _setup(hass, mock_config_entry)
 
     assert hass.states.get(ENTITY_ID).state == STATE_ON
@@ -181,43 +181,7 @@ async def test_keeps_alert_until_expiry_when_update_fails(
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
 
-    state = hass.states.get(ENTITY_ID)
-    assert state.state == STATE_ON
-    assert state.attributes["event"] == ALERT["event"]
-
-    # The alert expires at 18:00 while MeteoAlarm still can't be reached.
-    freezer.move_to("2026-01-01T18:00:01+00:00")
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done(wait_background_tasks=True)
-
     assert hass.states.get(ENTITY_ID).state == STATE_UNAVAILABLE
-
-
-async def test_unavailable_without_alert_when_update_fails(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_meteoalert: MagicMock,
-    freezer: FrozenDateTimeFactory,
-) -> None:
-    """Test the sensor becomes unavailable without a current alert when MeteoAlarm can't be reached."""
-    mock_meteoalert.return_value.get_alert.return_value = {}
-    await _setup(hass, mock_config_entry)
-
-    assert hass.states.get(ENTITY_ID).state == STATE_OFF
-
-    mock_meteoalert.return_value.get_alert.side_effect = ServerError("500")
-    freezer.tick(SCAN_INTERVAL)
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done(wait_background_tasks=True)
-
-    assert hass.states.get(ENTITY_ID).state == STATE_UNAVAILABLE
-
-    mock_meteoalert.return_value.get_alert.side_effect = None
-    freezer.tick(SCAN_INTERVAL)
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done(wait_background_tasks=True)
-
-    assert hass.states.get(ENTITY_ID).state == STATE_OFF
 
 
 async def test_yaml_import(

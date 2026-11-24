@@ -1,6 +1,5 @@
 """Binary sensor for MeteoAlarm.eu."""
 
-from datetime import datetime
 from typing import Any, override
 
 import probatio
@@ -12,12 +11,7 @@ from homeassistant.components.binary_sensor import (
 )
 from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import CONF_COUNTRY, CONF_LANGUAGE, CONF_NAME
-from homeassistant.core import (
-    CALLBACK_TYPE,
-    DOMAIN as HOMEASSISTANT_DOMAIN,
-    HomeAssistant,
-    callback,
-)
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import config_validation as cv, issue_registry as ir
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
@@ -25,7 +19,6 @@ from homeassistant.helpers.entity_platform import (
     AddConfigEntryEntitiesCallback,
     AddEntitiesCallback,
 )
-from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import dt as dt_util, slugify
@@ -136,62 +129,6 @@ class MeteoAlertBinarySensor(
             configuration_url="https://meteoalarm.org",
         )
 
-    _unsub_expiry: CALLBACK_TYPE | None = None
-
-    @override
-    async def async_added_to_hass(self) -> None:
-        """Update the state when the current alert expires."""
-        await super().async_added_to_hass()
-        self.async_on_remove(self._cancel_expiry)
-        self._schedule_expiry()
-
-    @callback
-    @override
-    def _handle_coordinator_update(self) -> None:
-        """Follow the expiry time of the newly fetched alert."""
-        self._schedule_expiry()
-        super()._handle_coordinator_update()
-
-    @callback
-    def _schedule_expiry(self) -> None:
-        """Write the state again when the current alert expires."""
-        self._cancel_expiry()
-        if (expires := self._expires(self._current_alert())) is not None:
-            self._unsub_expiry = async_track_point_in_utc_time(
-                self.hass, self._async_alert_expired, expires
-            )
-
-    @callback
-    def _cancel_expiry(self) -> None:
-        """Cancel the expiry timer."""
-        if self._unsub_expiry is not None:
-            self._unsub_expiry()
-            self._unsub_expiry = None
-
-    @callback
-    def _async_alert_expired(self, _now: datetime) -> None:
-        """Turn off, or become unavailable while MeteoAlarm can't be reached."""
-        self._unsub_expiry = None
-        self.async_write_ha_state()
-
-    @property
-    @override
-    def available(self) -> bool:
-        """Stay available with a current alert when MeteoAlarm can't be reached.
-
-        The issuer says how long a warning is valid, so a failed fetch doesn't
-        make it stale until it expires. Without a current alert, a failed fetch
-        can't confirm there is no new one.
-        """
-        return super().available or self._current_alert() is not None
-
-    @staticmethod
-    def _expires(alert: dict[str, Any] | None) -> datetime | None:
-        """Return when the alert expires, if it has a valid expiration time."""
-        if alert is None or (raw_expires := alert.get("expires")) is None:
-            return None
-        return dt_util.parse_datetime(raw_expires)
-
     def _current_alert(self) -> dict[str, Any] | None:
         """Return the alert if it hasn't expired yet.
 
@@ -200,9 +137,10 @@ class MeteoAlertBinarySensor(
         """
         if not (alert := self.coordinator.data):
             return None
-        if alert.get("expires") is None:
+        if (raw_expires := alert.get("expires")) is None:
             return alert
-        if (expires := self._expires(alert)) is None or expires <= dt_util.utcnow():
+        expires = dt_util.parse_datetime(raw_expires)
+        if expires is None or expires <= dt_util.utcnow():
             return None
         return alert
 
