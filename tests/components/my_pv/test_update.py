@@ -27,8 +27,8 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
     STATE_UNAVAILABLE,
-    CommonServiceArgument,
     Platform,
+    TargetKey,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, HomeAssistantError
@@ -104,7 +104,7 @@ async def test_update_install(
     await hass.services.async_call(
         UPDATE_DOMAIN,
         UpdateService.INSTALL,
-        {CommonServiceArgument.ENTITY_ID: "update.my_pv_ac_elwa_2_firmware"},
+        {TargetKey.ENTITY_ID: "update.my_pv_ac_elwa_2_firmware"},
         blocking=True,
     )
     mock_my_pv_client.update_firmware.assert_awaited_once_with()
@@ -170,7 +170,7 @@ async def test_update_in_progress_on_setup(
         await hass.services.async_call(
             UPDATE_DOMAIN,
             UpdateService.INSTALL,
-            {CommonServiceArgument.ENTITY_ID: "update.my_pv_ac_elwa_2_firmware"},
+            {TargetKey.ENTITY_ID: "update.my_pv_ac_elwa_2_firmware"},
             blocking=True,
         )
     mock_my_pv_client.update_firmware.assert_not_awaited()
@@ -189,7 +189,7 @@ async def test_update_install_firmware_returns_false(
         await hass.services.async_call(
             UPDATE_DOMAIN,
             UpdateService.INSTALL,
-            {CommonServiceArgument.ENTITY_ID: "update.my_pv_ac_elwa_2_firmware"},
+            {TargetKey.ENTITY_ID: "update.my_pv_ac_elwa_2_firmware"},
             blocking=True,
         )
     mock_my_pv_client.update_firmware.assert_awaited_once_with()
@@ -199,7 +199,7 @@ async def test_update_install_firmware_returns_false(
     await hass.services.async_call(
         UPDATE_DOMAIN,
         UpdateService.INSTALL,
-        {CommonServiceArgument.ENTITY_ID: "update.my_pv_ac_elwa_2_firmware"},
+        {TargetKey.ENTITY_ID: "update.my_pv_ac_elwa_2_firmware"},
         blocking=True,
     )
     mock_my_pv_client.update_firmware.assert_awaited_once_with()
@@ -228,7 +228,7 @@ async def test_update_install_firmware_raises_error(
         await hass.services.async_call(
             UPDATE_DOMAIN,
             UpdateService.INSTALL,
-            {CommonServiceArgument.ENTITY_ID: "update.my_pv_ac_elwa_2_firmware"},
+            {TargetKey.ENTITY_ID: "update.my_pv_ac_elwa_2_firmware"},
             blocking=True,
         )
     mock_my_pv_client.update_firmware.assert_awaited_once_with()
@@ -238,7 +238,7 @@ async def test_update_install_firmware_raises_error(
     await hass.services.async_call(
         UPDATE_DOMAIN,
         UpdateService.INSTALL,
-        {CommonServiceArgument.ENTITY_ID: "update.my_pv_ac_elwa_2_firmware"},
+        {TargetKey.ENTITY_ID: "update.my_pv_ac_elwa_2_firmware"},
         blocking=True,
     )
     mock_my_pv_client.update_firmware.assert_awaited_once_with()

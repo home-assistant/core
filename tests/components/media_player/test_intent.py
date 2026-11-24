@@ -1016,6 +1016,10 @@ async def test_volume_relative_media_player_intent(
     await hass.async_block_till_done()
 
     assert response.response_type is intent.IntentResponseType.ACTION_DONE
+    assert len(response.success_results) == 1
+    assert response.success_results[0].type is intent.IntentResponseTargetType.ENTITY
+    assert response.success_results[0].name == "Idle Media Player"
+    assert response.success_results[0].id == idle_entity.entity_id
     idle_expected_volume += volume_change
     assert math.isclose(idle_entity.volume_level, idle_expected_volume)
 
@@ -1047,6 +1051,10 @@ async def test_volume_relative_media_player_intent(
     await hass.async_block_till_done()
 
     assert response.response_type is intent.IntentResponseType.ACTION_DONE
+    assert len(response.success_results) == 1
+    assert response.success_results[0].type is intent.IntentResponseTargetType.ENTITY
+    assert response.success_results[0].name == "Playing Media Player"
+    assert response.success_results[0].id == playing_entity.entity_id
     playing_expected_volume += volume_change
     assert math.isclose(idle_entity.volume_level, idle_expected_volume)
     assert math.isclose(playing_entity.volume_level, playing_expected_volume)
@@ -1064,6 +1072,10 @@ async def test_volume_relative_media_player_intent(
     idle_expected_volume += volume_change
     assert math.isclose(idle_entity.volume_level, idle_expected_volume)
     assert math.isclose(playing_entity.volume_level, playing_expected_volume)
+    assert len(response.success_results) == 1
+    assert response.success_results[0].type is intent.IntentResponseTargetType.ENTITY
+    assert response.success_results[0].name == "Idle Media Player"
+    assert response.success_results[0].id == idle_entity.entity_id
 
     # Set relative volume by percent
     response = await intent.async_handle(
@@ -1078,6 +1090,10 @@ async def test_volume_relative_media_player_intent(
     playing_expected_volume += volume_change_int / 100
     assert math.isclose(idle_entity.volume_level, idle_expected_volume)
     assert math.isclose(playing_entity.volume_level, playing_expected_volume)
+    assert len(response.success_results) == 1
+    assert response.success_results[0].type is intent.IntentResponseTargetType.ENTITY
+    assert response.success_results[0].name == "Playing Media Player"
+    assert response.success_results[0].id == playing_entity.entity_id
 
     # Test error in method
     with (
@@ -1123,3 +1139,60 @@ async def test_volume_relative_media_player_intent(
             media_player_intent.INTENT_SET_VOLUME_RELATIVE,
             {"volume_step": {"value": direction}},
         )
+
+
+async def test_volume_relative_multiple_media_players_report_all_success(
+    hass: HomeAssistant,
+) -> None:
+    """Test relative volume reports every successfully targeted media player."""
+    assert await async_setup_component(hass, DOMAIN, {})
+    await media_player_intent.async_setup_intents(hass)
+
+    component: EntityComponent[MediaPlayerEntity] = hass.data[DOMAIN]
+
+    class VolumeTestMediaPlayer(MediaPlayerEntity):
+        _attr_supported_features = MediaPlayerEntityFeature.VOLUME_SET
+        _attr_volume_level = 0.5
+        _attr_volume_step = 0.1
+        _attr_state = MediaPlayerState.PLAYING
+
+        async def async_set_volume_level(self, volume):
+            self._attr_volume_level = volume
+
+    entities = []
+    for index in range(2):
+        entity = VolumeTestMediaPlayer()
+        entity.hass = hass
+        entity.platform = MockEntityPlatform(hass)
+        entity.entity_id = f"{DOMAIN}.playing_media_player_{index}"
+        entities.append(entity)
+
+    await component.async_add_entities(entities)
+
+    for index, entity in enumerate(entities):
+        hass.states.async_set(
+            entity.entity_id,
+            STATE_PLAYING,
+            attributes={
+                ATTR_SUPPORTED_FEATURES: MediaPlayerEntityFeature.VOLUME_SET,
+                ATTR_FRIENDLY_NAME: f"Playing Media Player {index}",
+            },
+        )
+
+    response = await intent.async_handle(
+        hass,
+        "test",
+        media_player_intent.INTENT_SET_VOLUME_RELATIVE,
+        {"volume_step": {"value": "up"}},
+    )
+    await hass.async_block_till_done()
+
+    assert response.response_type is intent.IntentResponseType.ACTION_DONE
+    assert len(response.success_results) == 2
+    assert all(
+        result.type is intent.IntentResponseTargetType.ENTITY
+        for result in response.success_results
+    )
+    assert {result.id for result in response.success_results} == {
+        entity.entity_id for entity in entities
+    }

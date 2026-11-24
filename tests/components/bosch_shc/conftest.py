@@ -622,6 +622,8 @@ def micromodule_dimmer_device(
     edge_phase_control_mode: DimmerConfigurationService.EdgePhaseControlMode
     | None = None,
     dimming_speed: int | None = 5,
+    min_brightness: int = 0,
+    max_brightness: int = 100,
 ) -> SHCMicromoduleDimmer:
     """Build a minimal device double for the micromodule_dimmers bucket."""
     device = create_autospec(SHCMicromoduleDimmer, instance=True, spec_set=True)
@@ -639,6 +641,11 @@ def micromodule_dimmer_device(
     device.supports_dimmer_configuration = supports_dimmer_configuration
     device.edge_phase_control_mode = edge_phase_control_mode
     device.dimming_speed = dimming_speed
+    device.dimmer_configuration = (
+        SimpleNamespace(min_brightness=min_brightness, max_brightness=max_brightness)
+        if supports_dimmer_configuration
+        else None
+    )
     return device
 
 
@@ -914,6 +921,8 @@ def motion_detector2_device(
     binaryswitch: bool = False,
     multi_level_switch: int = 0,
     long_poll_interval: PollControlService.PollControlState = PollControlService.PollControlState.LONG,
+    occupied: bool = False,
+    was_tampered: bool = False,
 ) -> SHCMotionDetector2:
     """Build a minimal device double for the motion_detectors2 bucket."""
     device = create_autospec(SHCMotionDetector2, instance=True, spec_set=True)
@@ -932,6 +941,8 @@ def motion_detector2_device(
     device.smart_sensitivity_enabled = smart_sensitivity_enabled
     device.supports_tamper_reset = supports_tamper_reset
     device.latestmotion = latestmotion
+    device.occupied = occupied
+    device.was_tampered = was_tampered
     device.get_smart_sensitivity.side_effect = lambda context: (
         {"context": context.value, "manualLevel": smart_sensitivity[context.value]}
         if smart_sensitivity

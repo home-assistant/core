@@ -4493,6 +4493,109 @@ async def test_via_device_relinks_after_parent_removed(
 
 
 @pytest.mark.parametrize(
+    "identifiers", [["sensor-id"], ["other-id", "sensor-id"]], ids=["single", "multi"]
+)
+async def test_self_referencing_via_device_is_ignored(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    caplog: pytest.LogCaptureFixture,
+    identifiers: list[str],
+) -> None:
+    """Test a via_device that references the device itself is ignored.
+
+    The device registry rejects a device being its own via device, which used to
+    abort adding the entity.
+    """
+    await mqtt_mock_entry()
+
+    config = {
+        "name": "Temperature",
+        "state_topic": "test-sensor-topic",
+        "unique_id": "sensor_unique",
+        "device": {"identifiers": identifiers, "via_device": "sensor-id"},
+    }
+    async_fire_mqtt_message(
+        hass, "homeassistant/sensor/sensor_unique/config", json.dumps(config)
+    )
+    await hass.async_block_till_done()
+
+    assert "Error adding entity" not in caplog.text
+    entity_id = entity_registry.async_get_entity_id("sensor", "mqtt", "sensor_unique")
+    assert entity_id is not None
+    assert hass.states.get(entity_id) is not None
+    device = device_registry.async_get_device_by_identifier(
+        ("mqtt", "sensor-id"), hass.config_entries.async_entries("mqtt")[0].entry_id
+    )
+    assert device is not None
+    assert device.via_device_id is None
+    assert "has via_device 'sensor-id' that references the device itself" in (
+        caplog.text
+    )
+
+
+@pytest.mark.parametrize(
+    ("first_device", "second_device"),
+    [
+        (
+            {"identifiers": ["old-id", "new-id"]},
+            {"identifiers": ["new-id"], "via_device": "old-id"},
+        ),
+        (
+            {"identifiers": ["old-id"], "connections": [["mac", "02:5b:26:a8:dc:12"]]},
+            {
+                "identifiers": ["new-id"],
+                "connections": [["mac", "02:5b:26:a8:dc:12"]],
+                "via_device": "old-id",
+            },
+        ),
+    ],
+    ids=["retained_identifier", "connection"],
+)
+async def test_via_device_resolving_to_device_itself_is_ignored(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    caplog: pytest.LogCaptureFixture,
+    first_device: dict[str, Any],
+    second_device: dict[str, Any],
+) -> None:
+    """Test a via_device that resolves to the device itself is ignored.
+
+    The via_device is not one of the announced identifiers, but resolves to the
+    registered device through an identifier retained from an earlier registration
+    or through a matching connection.
+    """
+    await mqtt_mock_entry()
+
+    for unique_id, device in (("first", first_device), ("second", second_device)):
+        config = {
+            "name": unique_id,
+            "state_topic": f"test-{unique_id}-topic",
+            "unique_id": unique_id,
+            "device": device,
+        }
+        async_fire_mqtt_message(
+            hass, f"homeassistant/sensor/{unique_id}/config", json.dumps(config)
+        )
+        await hass.async_block_till_done()
+
+    assert "Error adding entity" not in caplog.text
+    for unique_id in ("first", "second"):
+        entity_id = entity_registry.async_get_entity_id("sensor", "mqtt", unique_id)
+        assert entity_id is not None
+        assert hass.states.get(entity_id) is not None
+    device = device_registry.async_get_device_by_identifier(
+        ("mqtt", "old-id"), hass.config_entries.async_entries("mqtt")[0].entry_id
+    )
+    assert device is not None
+    assert device.via_device_id is None
+    assert "has via_device 'old-id' that references the device itself" in caplog.text
+
+
+@pytest.mark.parametrize(
     "mqtt_config_subentries_data",
     [
         (

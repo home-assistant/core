@@ -39,7 +39,7 @@ from homeassistant.const import (
     STATE_ON,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
-    CommonServiceArgument,
+    TargetKey,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -291,7 +291,7 @@ async def test_turn_on_success(
     await hass.services.async_call(
         SWITCH_DOMAIN,
         SwitchService.TURN_ON,
-        {CommonServiceArgument.ENTITY_ID: "switch.foo"},
+        {TargetKey.ENTITY_ID: "switch.foo"},
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -312,7 +312,7 @@ async def test_turn_on_status_not_ok(hass: HomeAssistant) -> None:
         await hass.services.async_call(
             SWITCH_DOMAIN,
             SwitchService.TURN_ON,
-            {CommonServiceArgument.ENTITY_ID: "switch.foo"},
+            {TargetKey.ENTITY_ID: "switch.foo"},
             blocking=True,
         )
 
@@ -334,7 +334,7 @@ async def test_turn_on_timeout(hass: HomeAssistant) -> None:
         await hass.services.async_call(
             SWITCH_DOMAIN,
             SwitchService.TURN_ON,
-            {CommonServiceArgument.ENTITY_ID: "switch.foo"},
+            {TargetKey.ENTITY_ID: "switch.foo"},
             blocking=True,
         )
 
@@ -355,7 +355,7 @@ async def test_turn_off_success(
     await hass.services.async_call(
         SWITCH_DOMAIN,
         SwitchService.TURN_OFF,
-        {CommonServiceArgument.ENTITY_ID: "switch.foo"},
+        {TargetKey.ENTITY_ID: "switch.foo"},
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -377,7 +377,7 @@ async def test_turn_off_status_not_ok(hass: HomeAssistant) -> None:
         await hass.services.async_call(
             SWITCH_DOMAIN,
             SwitchService.TURN_OFF,
-            {CommonServiceArgument.ENTITY_ID: "switch.foo"},
+            {TargetKey.ENTITY_ID: "switch.foo"},
             blocking=True,
         )
 
@@ -399,7 +399,7 @@ async def test_turn_off_timeout(hass: HomeAssistant) -> None:
         await hass.services.async_call(
             SWITCH_DOMAIN,
             SwitchService.TURN_OFF,
-            {CommonServiceArgument.ENTITY_ID: "switch.foo"},
+            {TargetKey.ENTITY_ID: "switch.foo"},
             blocking=True,
         )
 

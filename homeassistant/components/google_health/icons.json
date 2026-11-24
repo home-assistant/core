@@ -1,8 +1,20 @@
 {
   "entity": {
     "sensor": {
+      "active_zone_minutes": {
+        "default": "mdi:heart-flash"
+      },
+      "cardio_active_zone_minutes": {
+        "default": "mdi:heart-flash"
+      },
+      "fat_burn_active_zone_minutes": {
+        "default": "mdi:heart-flash"
+      },
       "last_sync_time": {
         "default": "mdi:sync"
+      },
+      "peak_active_zone_minutes": {
+        "default": "mdi:heart-flash"
       },
       "resting_heart_rate": {
         "default": "mdi:heart-pulse"
