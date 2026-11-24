@@ -199,6 +199,106 @@
     'state': 'off',
   })
 # ---
+# name: test_switches[aqara_thermostat_w500][switch.floor_heating_thermostat_child_lock-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-0000000000000064-MatterNodeDevice'), ('matter', 'serial_serial_100')]>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'switch.floor_heating_thermostat_child_lock',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Child lock',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Child lock',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'child_lock',
+    'unique_id': '00000000000004D2-0000000000000064-MatterNodeDevice-1-EveTrvChildLock-516-1',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_switches[aqara_thermostat_w500][switch.floor_heating_thermostat_child_lock-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Floor Heating Thermostat Child lock',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.floor_heating_thermostat_child_lock',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_switches[aqara_thermostat_w500_presets][switch.floor_heating_thermostat_child_lock_2-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-0000000000000041-MatterNodeDevice'), ('matter', 'serial_serial_65')]>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'switch.floor_heating_thermostat_child_lock_2',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Child lock',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Child lock',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'child_lock',
+    'unique_id': '00000000000004D2-0000000000000041-MatterNodeDevice-1-EveTrvChildLock-516-1',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_switches[aqara_thermostat_w500_presets][switch.floor_heating_thermostat_child_lock_2-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Floor Heating Thermostat Child lock',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.floor_heating_thermostat_child_lock_2',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
 # name: test_switches[aqara_u200][switch.aqara_smart_lock_u200_one_touch_locking-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -1564,6 +1664,56 @@
     'state': 'on',
   })
 # ---
+# name: test_switches[longan_link_thermostat][switch.longan_link_hvac_child_lock-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-0000000000000004-MatterNodeDevice'), ('matter', 'serial_serial_4')]>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'switch.longan_link_hvac_child_lock',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Child lock',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Child lock',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'child_lock',
+    'unique_id': '00000000000004D2-0000000000000004-MatterNodeDevice-1-EveTrvChildLock-516-1',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_switches[longan_link_thermostat][switch.longan_link_hvac_child_lock-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Longan link HVAC Child lock',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.longan_link_hvac_child_lock',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
 # name: test_switches[mock_cooktop][switch.mock_cooktop_power_1-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -2469,6 +2619,56 @@
     }),
     'context': <ANY>,
     'entity_id': 'switch.mock_switchunit',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_switches[mock_thermostat][switch.mock_thermostat_child_lock-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-0000000000000096-MatterNodeDevice'), ('matter', 'serial_serial_150')]>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'switch.mock_thermostat_child_lock',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Child lock',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Child lock',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'child_lock',
+    'unique_id': '00000000000004D2-0000000000000096-MatterNodeDevice-1-EveTrvChildLock-516-1',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_switches[mock_thermostat][switch.mock_thermostat_child_lock-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Thermostat Child lock',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.mock_thermostat_child_lock',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

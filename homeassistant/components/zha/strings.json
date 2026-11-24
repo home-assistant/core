@@ -2385,11 +2385,26 @@
       "window_open": {
         "name": "Window open"
       }
+    },
+    "update": {
+      "release_notes_messages": {
+        "battery_powered": "Battery powered devices can sometimes take multiple hours to update and you may need to wake the device for the update to begin.",
+        "network_reliability": "If you are having issues updating a specific device, make sure that you've eliminated [common environmental issues]({docs_url}) that could be affecting network reliability. OTA updates require a reliable network."
+      }
     }
   },
   "exceptions": {
+    "device_not_found": {
+      "message": "Device {ieee} was not found."
+    },
+    "group_not_found": {
+      "message": "Group {group_id} was not found."
+    },
     "no_gateway": {
       "message": "ZHA is not loaded, so this action cannot be performed."
+    },
+    "no_warning_device": {
+      "message": "Device {ieee} is not an IAS warning device, so this action cannot be performed."
     },
     "not_zigbee_device": {
       "message": "Device {ieee} is not a Zigbee device, so this action cannot be performed."

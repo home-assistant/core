@@ -13,12 +13,7 @@ import pytest
 
 from homeassistant.components.hdmi_cec import EVENT_HDMI_CEC_UNAVAILABLE
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN, SwitchService
-from homeassistant.const import (
-    STATE_OFF,
-    STATE_ON,
-    STATE_UNAVAILABLE,
-    CommonServiceArgument,
-)
+from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNAVAILABLE, TargetKey
 from homeassistant.core import HomeAssistant
 
 from . import MockHDMIDevice, assert_cec_command
@@ -86,7 +81,7 @@ async def test_service_on(
     await hass.services.async_call(
         SWITCH_DOMAIN,
         SwitchService.TURN_ON,
-        {CommonServiceArgument.ENTITY_ID: "switch.hdmi_3"},
+        {TargetKey.ENTITY_ID: "switch.hdmi_3"},
         blocking=True,
     )
 
@@ -111,7 +106,7 @@ async def test_service_off(
     await hass.services.async_call(
         SWITCH_DOMAIN,
         SwitchService.TURN_OFF,
-        {CommonServiceArgument.ENTITY_ID: "switch.hdmi_3"},
+        {TargetKey.ENTITY_ID: "switch.hdmi_3"},
         blocking=True,
     )
 

@@ -337,6 +337,10 @@ DHCP: Final[list[dict[str, str | bool]]] = [
     },
     {
         "domain": "earn_e_p1",
+        "hostname": "p1dongle-*",
+    },
+    {
+        "domain": "earn_e_p1",
         "registered_devices": True,
     },
     {

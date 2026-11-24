@@ -11,12 +11,7 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, ButtonService
 from homeassistant.components.smartthings import MAIN
-from homeassistant.const import (
-    STATE_UNAVAILABLE,
-    STATE_UNKNOWN,
-    CommonServiceArgument,
-    Platform,
-)
+from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN, Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import entity_registry as er
@@ -56,7 +51,7 @@ async def test_press(
     await hass.services.async_call(
         BUTTON_DOMAIN,
         ButtonService.PRESS,
-        {CommonServiceArgument.ENTITY_ID: "button.theater_microwave_stop"},
+        {TargetKey.ENTITY_ID: "button.theater_microwave_stop"},
         blocking=True,
     )
     devices.execute_device_command.assert_called_once_with(
@@ -124,7 +119,7 @@ async def test_turn_on_without_remote_control(
         await hass.services.async_call(
             BUTTON_DOMAIN,
             ButtonService.PRESS,
-            {CommonServiceArgument.ENTITY_ID: "button.dishwasher_1_start"},
+            {TargetKey.ENTITY_ID: "button.dishwasher_1_start"},
             blocking=True,
         )
     devices.execute_device_command.assert_not_called()
@@ -158,7 +153,7 @@ async def test_turn_on_with_wrong_dishwasher_machine_state(
         await hass.services.async_call(
             BUTTON_DOMAIN,
             ButtonService.PRESS,
-            {CommonServiceArgument.ENTITY_ID: "button.dishwasher_1_start"},
+            {TargetKey.ENTITY_ID: "button.dishwasher_1_start"},
             blocking=True,
         )
     devices.execute_device_command.assert_not_called()

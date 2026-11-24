@@ -6,7 +6,7 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.scene import DOMAIN as SCENE_DOMAIN, SceneService
 from homeassistant.components.velux import DOMAIN
-from homeassistant.const import CommonServiceArgument, Platform
+from homeassistant.const import Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
@@ -59,7 +59,7 @@ async def test_scene_activation(
     await hass.services.async_call(
         SCENE_DOMAIN,
         SceneService.TURN_ON,
-        {CommonServiceArgument.ENTITY_ID: "scene.klf_200_gateway_test_scene"},
+        {TargetKey.ENTITY_ID: "scene.klf_200_gateway_test_scene"},
         blocking=True,
     )
 

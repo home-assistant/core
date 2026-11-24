@@ -18,11 +18,7 @@ from homeassistant.components.number import (
     NumberService,
     NumberServiceArgument,
 )
-from homeassistant.const import (
-    EVENT_HOMEASSISTANT_STARTED,
-    STATE_UNKNOWN,
-    CommonServiceArgument,
-)
+from homeassistant.const import EVENT_HOMEASSISTANT_STARTED, STATE_UNKNOWN, TargetKey
 from homeassistant.core import CoreState, HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.setup import async_setup_component
@@ -248,7 +244,7 @@ async def test_meter_pro_co2_set_display_time_offset(
             NUMBER_DOMAIN,
             NumberService.SET_VALUE,
             {
-                CommonServiceArgument.ENTITY_ID: TIME_OFFSET_ENTITY_ID,
+                TargetKey.ENTITY_ID: TIME_OFFSET_ENTITY_ID,
                 NumberServiceArgument.VALUE: time_offset,
             },
             blocking=True,
@@ -310,7 +306,7 @@ async def test_set_display_time_offset_out_of_range(
                 NUMBER_DOMAIN,
                 NumberService.SET_VALUE,
                 {
-                    CommonServiceArgument.ENTITY_ID: TIME_OFFSET_ENTITY_ID,
+                    TargetKey.ENTITY_ID: TIME_OFFSET_ENTITY_ID,
                     NumberServiceArgument.VALUE: value,
                 },
                 blocking=True,
@@ -358,7 +354,7 @@ async def test_standing_fan_oscillation_angle_number(
             NUMBER_DOMAIN,
             NumberService.SET_VALUE,
             {
-                CommonServiceArgument.ENTITY_ID: entity_id,
+                TargetKey.ENTITY_ID: entity_id,
                 NumberServiceArgument.VALUE: 60,
             },
             blocking=True,
