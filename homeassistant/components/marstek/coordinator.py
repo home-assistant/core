@@ -72,6 +72,14 @@ class MarstekDataUpdateCoordinator(DataUpdateCoordinator[MarstekDeviceStatus]):
                 translation_placeholders={"host": self.device_ip},
             )
 
+        # The stored host can point to another device after a DHCP reassignment.
+        if device_info.stable_id != self.config_entry.unique_id:
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="device_mismatch",
+                translation_placeholders={"host": self.device_ip},
+            )
+
         if device_info.device_type not in SUPPORTED_DEVICE_TYPES:
             raise ConfigEntryError(
                 translation_domain=DOMAIN,

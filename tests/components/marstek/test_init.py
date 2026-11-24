@@ -1,5 +1,6 @@
 """Tests for the Marstek integration."""
 
+from dataclasses import replace
 from ipaddress import IPv4Address
 import logging
 from typing import cast
@@ -17,6 +18,8 @@ from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryError
 from homeassistant.setup import async_setup_component
+
+from .conftest import MOCK_DEVICE_INFO
 
 UNSUPPORTED_DEVICE_INFO = MarstekDeviceInfo(
     id=0,
@@ -118,6 +121,12 @@ async def test_async_unload_multiple_entries(
     )
     mock_config_entry.add_to_hass(hass)
     second_entry.add_to_hass(hass)
+    second_device_info = replace(
+        MOCK_DEVICE_INFO, ip="192.168.1.101", mac="AA:BB:CC:DD:EE:00"
+    )
+    mock_udp_client.get_device_info.side_effect = lambda host: (
+        second_device_info if host == "192.168.1.101" else MOCK_DEVICE_INFO
+    )
 
     # Setting up the component loads all of its config entries.
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
@@ -227,6 +236,30 @@ async def test_async_setup_entry_without_stable_id(
 
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
     mock_udp_client.async_cleanup.assert_not_awaited()
+
+
+async def test_async_setup_entry_device_mismatch(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_udp_client: MagicMock,
+) -> None:
+    """Test setup retries when another device answers at the configured host."""
+    mock_config_entry.add_to_hass(hass)
+    mock_udp_client.get_device_info.return_value = MarstekDeviceInfo(
+        id=0,
+        device_type="VenusE 3.0",
+        version=1,
+        wifi_name="TestWiFi",
+        ip="192.168.1.100",
+        wifi_mac="11:11:11:11:11:11",
+        ble_mac="22:22:22:22:22:22",
+        mac="11:11:11:11:11:11",
+    )
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
 async def test_async_setup_entry_unsupported_device_type(

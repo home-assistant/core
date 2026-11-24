@@ -105,6 +105,9 @@
     "device_connection_failed": {
       "message": "Unable to connect to the Marstek device at {host}."
     },
+    "device_mismatch": {
+      "message": "The Marstek device at {host} is not the configured device."
+    },
     "device_update_failed": {
       "message": "Unable to update the Marstek device at {host}."
     },
