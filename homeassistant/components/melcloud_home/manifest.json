@@ -10,5 +10,5 @@
   "iot_class": "cloud_push",
   "loggers": ["aiomelcloudhome"],
   "quality_scale": "platinum",
-  "requirements": ["aiomelcloudhome==0.3.1"]
+  "requirements": ["aiomelcloudhome==0.3.2"]
 }
