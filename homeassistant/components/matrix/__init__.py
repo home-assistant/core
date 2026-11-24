@@ -35,7 +35,7 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP,
 )
 from homeassistant.core import Event as HassEvent, HomeAssistant, ServiceCall
-from homeassistant.exceptions import ConfigEntryAuthFailed, HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.json import save_json
 from homeassistant.helpers.typing import ConfigType
@@ -195,7 +195,8 @@ class MatrixBot:
         async def handle_startup(event: HassEvent) -> None:
             """Run once when Home Assistant finished startup."""
             self._access_tokens = await self._get_auth_tokens()
-            await self._login()
+            if not await self._login():
+                return
             await self._resolve_room_aliases(listening_rooms)
             self._load_commands(commands)
             await self._join_rooms()
@@ -410,12 +411,11 @@ class MatrixBot:
             True,  # private=True
         )
 
-    async def _login(self) -> None:
-        """Log in to the Matrix homeserver.
+    async def _login(self) -> bool:
+        """Log in to the Matrix homeserver and return if it succeeded.
 
         Attempts to use the stored access token.
         If that fails, then tries using the password.
-        If that also fails, raises LocalProtocolError.
         """
 
         # If we have an access token
@@ -457,11 +457,11 @@ class MatrixBot:
                 )
 
         if not self._client.logged_in:
-            raise ConfigEntryAuthFailed(
-                "Login failed, both token and username/password are invalid"
-            )
+            _LOGGER.error("Login failed, both token and username/password are invalid")
+            return False
 
         await self._store_auth_token(self._client.access_token)
+        return True
 
     async def _handle_room_send(
         self, target_room: RoomAnyID, message_type: str, content: dict

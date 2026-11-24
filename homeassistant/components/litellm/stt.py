@@ -25,6 +25,7 @@ from .const import (
     CONF_STT_KEYWORDS,
     CONF_STT_PROMPT,
     LOGGER,
+    SUPPORTED_LANGUAGES,
 )
 from .coordinator import LiteLLMConfigEntry
 from .entity import LiteLLMEntity
@@ -51,70 +52,8 @@ class LiteLLMSTTEntity(LiteLLMEntity, stt.SpeechToTextEntity):
     @property
     @override
     def supported_languages(self) -> list[str]:
-        """Return supported languages.
-
-        LiteLLM does not expose model-specific language capabilities; the
-        selected backend may reject the advertised language.
-        """
-        return [
-            "af-ZA",  # Afrikaans
-            "ar-SA",  # Arabic
-            "hy-AM",  # Armenian
-            "az-AZ",  # Azerbaijani
-            "be-BY",  # Belarusian
-            "bs-BA",  # Bosnian
-            "bg-BG",  # Bulgarian
-            "ca-ES",  # Catalan
-            "zh-CN",  # Chinese (Mandarin)
-            "hr-HR",  # Croatian
-            "cs-CZ",  # Czech
-            "da-DK",  # Danish
-            "nl-NL",  # Dutch
-            "en-US",  # English
-            "et-EE",  # Estonian
-            "fi-FI",  # Finnish
-            "fr-FR",  # French
-            "gl-ES",  # Galician
-            "de-DE",  # German
-            "el-GR",  # Greek
-            "he-IL",  # Hebrew
-            "hi-IN",  # Hindi
-            "hu-HU",  # Hungarian
-            "is-IS",  # Icelandic
-            "id-ID",  # Indonesian
-            "it-IT",  # Italian
-            "ja-JP",  # Japanese
-            "kn-IN",  # Kannada
-            "kk-KZ",  # Kazakh
-            "ko-KR",  # Korean
-            "lv-LV",  # Latvian
-            "lt-LT",  # Lithuanian
-            "mk-MK",  # Macedonian
-            "ms-MY",  # Malay
-            "mr-IN",  # Marathi
-            "mi-NZ",  # Maori
-            "ne-NP",  # Nepali
-            "no-NO",  # Norwegian
-            "fa-IR",  # Persian
-            "pl-PL",  # Polish
-            "pt-PT",  # Portuguese
-            "ro-RO",  # Romanian
-            "ru-RU",  # Russian
-            "sr-RS",  # Serbian
-            "sk-SK",  # Slovak
-            "sl-SI",  # Slovenian
-            "es-ES",  # Spanish
-            "sw-KE",  # Swahili
-            "sv-SE",  # Swedish
-            "fil-PH",  # Tagalog (Filipino)
-            "ta-IN",  # Tamil
-            "th-TH",  # Thai
-            "tr-TR",  # Turkish
-            "uk-UA",  # Ukrainian
-            "ur-PK",  # Urdu
-            "vi-VN",  # Vietnamese
-            "cy-GB",  # Welsh
-        ]
+        """Return supported languages."""
+        return SUPPORTED_LANGUAGES
 
     @property
     @override
