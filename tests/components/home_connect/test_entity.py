@@ -31,16 +31,15 @@ from aiohomeconnect.model.program import (
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
-from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
+from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN, SwitchService
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    SERVICE_TURN_OFF,
     STATE_OFF,
     STATE_ON,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
     Platform,
+    TargetKey,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -471,5 +470,8 @@ async def test_option_entity_functionality_exception(
 
     with pytest.raises(HomeAssistantError, match=r"Error.*setting.*option.*"):
         await hass.services.async_call(
-            SWITCH_DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: entity_id}, blocking=True
+            SWITCH_DOMAIN,
+            SwitchService.TURN_OFF,
+            {TargetKey.ENTITY_ID: entity_id},
+            blocking=True,
         )

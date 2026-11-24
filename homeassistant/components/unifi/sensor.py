@@ -63,10 +63,13 @@ from .entity import (
     UnifiEntity,
     UnifiEntityDescription,
     async_client_device_info_fn,
+    async_client_ssid_allowed_fn,
     async_device_available_fn,
     async_device_device_info_fn,
     async_device_supported_fn,
     async_firewall_policy_supported_fn,
+    async_outlet_device_info_fn,
+    async_port_device_info_fn,
     async_unifi_network_device_info_fn,
     async_wlan_available_fn,
     async_wlan_device_info_fn,
@@ -96,6 +99,8 @@ class FirewallPolicyScheduleStatus(StrEnum):
 @callback
 def async_bandwidth_sensor_allowed_fn(hub: UnifiHub, obj_id: str) -> bool:
     """Check if client is allowed."""
+    if not async_client_ssid_allowed_fn(hub, obj_id):
+        return False
     if obj_id in hub.config.option_supported_clients:
         return True
     client = hub.api.clients[obj_id]
@@ -111,6 +116,8 @@ def async_bandwidth_sensor_allowed_fn(hub: UnifiHub, obj_id: str) -> bool:
 @callback
 def async_uptime_sensor_allowed_fn(hub: UnifiHub, obj_id: str) -> bool:
     """Check if client is allowed."""
+    if not async_client_ssid_allowed_fn(hub, obj_id):
+        return False
     if obj_id in hub.config.option_supported_clients:
         return True
     client = hub.api.clients[obj_id]
@@ -318,7 +325,8 @@ def async_device_wan_latency_discovery_fn(
     obj_id: str,
 ) -> bool:
     """Determine if an device have a latency monitor."""
-    if (device := hub.api.devices[obj_id]) and device.uptime_stats:
+    device = hub.api.devices[obj_id]
+    if device.uptime_stats:
         return _device_wan_latency_monitor(wan, monitor_target, device) is not None
     return False
 
@@ -424,10 +432,9 @@ def async_device_temperatures_discovery_fn(
     temperature_name: str, hub: UnifiHub, obj_id: str
 ) -> bool:
     """Determine if an device have a temperatures."""
-    if (device := hub.api.devices[obj_id]) and device.temperatures:
+    if temperatures := hub.api.devices[obj_id].temperatures:
         return any(
-            temperature_name in temperature["name"]
-            for temperature in device.temperatures
+            temperature_name in temperature["name"] for temperature in temperatures
         )
 
     return False
@@ -565,14 +572,13 @@ ENTITY_DESCRIPTIONS: tuple[UnifiSensorEntityDescription, ...] = (
         entity_registry_enabled_default=False,
         api_handler_fn=lambda api: api.ports,
         available_fn=async_device_available_fn,
-        device_info_fn=async_device_device_info_fn,
+        device_info_fn=async_port_device_info_fn,
         object_fn=lambda api, obj_id: api.ports[obj_id],
         discovery_fn=lambda hub, obj_id: bool(hub.api.ports[obj_id].port_poe),
         supported_fn=lambda hub, obj_id: (
             async_device_supported_fn(hub, obj_id)
             and hub.api.ports[obj_id].raw.get("port_poe") is not False
         ),
-        translation_placeholders_fn=lambda port: {"port_name": port.name},
         unique_id_fn=lambda hub, obj_id: f"poe_power-{obj_id}",
         value_fn=lambda _, obj: obj.poe_power if obj.poe_mode != "off" else "0",
     ),
@@ -588,10 +594,9 @@ ENTITY_DESCRIPTIONS: tuple[UnifiSensorEntityDescription, ...] = (
         allowed_fn=lambda hub, _: hub.config.option_allow_bandwidth_sensors,
         api_handler_fn=lambda api: api.ports,
         available_fn=async_device_available_fn,
-        device_info_fn=async_device_device_info_fn,
+        device_info_fn=async_port_device_info_fn,
         object_fn=lambda api, obj_id: api.ports[obj_id],
         supported_fn=async_device_supported_fn,
-        translation_placeholders_fn=lambda port: {"port_name": port.name},
         unique_id_fn=lambda hub, obj_id: f"port_rx-{obj_id}",
         value_fn=lambda hub, port: port.rx_bytes_r,
     ),
@@ -607,10 +612,9 @@ ENTITY_DESCRIPTIONS: tuple[UnifiSensorEntityDescription, ...] = (
         allowed_fn=lambda hub, _: hub.config.option_allow_bandwidth_sensors,
         api_handler_fn=lambda api: api.ports,
         available_fn=async_device_available_fn,
-        device_info_fn=async_device_device_info_fn,
+        device_info_fn=async_port_device_info_fn,
         object_fn=lambda api, obj_id: api.ports[obj_id],
         supported_fn=async_device_supported_fn,
-        translation_placeholders_fn=lambda port: {"port_name": port.name},
         unique_id_fn=lambda hub, obj_id: f"port_tx-{obj_id}",
         value_fn=lambda hub, port: port.tx_bytes_r,
     ),
@@ -624,13 +628,12 @@ ENTITY_DESCRIPTIONS: tuple[UnifiSensorEntityDescription, ...] = (
         entity_registry_enabled_default=False,
         api_handler_fn=lambda api: api.ports,
         available_fn=async_device_available_fn,
-        device_info_fn=async_device_device_info_fn,
+        device_info_fn=async_port_device_info_fn,
         object_fn=lambda api, obj_id: api.ports[obj_id],
         discovery_fn=lambda hub, obj_id: (
             (hub.api.ports[obj_id].raw.get("speed") or 0) > 0
         ),
         supported_fn=async_device_supported_fn,
-        translation_placeholders_fn=lambda port: {"port_name": port.name},
         unique_id_fn=lambda hub, obj_id: f"port_link_speed-{obj_id}",
         value_fn=lambda hub, port: port.raw.get("speed"),
     ),
@@ -685,7 +688,7 @@ ENTITY_DESCRIPTIONS: tuple[UnifiSensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfPower.WATT,
         api_handler_fn=lambda api: api.outlets,
         available_fn=async_device_available_fn,
-        device_info_fn=async_device_device_info_fn,
+        device_info_fn=async_outlet_device_info_fn,
         object_fn=lambda api, obj_id: api.outlets[obj_id],
         should_poll=True,
         discovery_fn=async_device_outlet_power_discovery_fn,
@@ -693,7 +696,6 @@ ENTITY_DESCRIPTIONS: tuple[UnifiSensorEntityDescription, ...] = (
             async_device_supported_fn(hub, obj_id)
             and hub.api.outlets[obj_id].has_metering is not False
         ),
-        translation_placeholders_fn=lambda outlet: {"outlet_name": outlet.name},
         unique_id_fn=lambda hub, obj_id: f"outlet_power-{obj_id}",
         value_fn=async_device_outlet_power_value_fn,
     ),
@@ -1053,11 +1055,13 @@ async def async_setup_entry(
             async_add_entities([UnifiSensorEntity(obj_id, hub, description)])
 
     for description in ENTITY_DESCRIPTIONS:
+        api_handler = description.api_handler_fn(hub.api)
         config_entry.async_on_unload(
-            description.api_handler_fn(hub.api).subscribe(
+            api_handler.subscribe(
                 partial(create_sensor, description),
                 (ItemEvent.ADDED, ItemEvent.CHANGED)
-                if description.discovery_fn is not None
+                if isinstance(api_handler, Clients)
+                or description.discovery_fn is not None
                 else ItemEvent.ADDED,
             )
         )

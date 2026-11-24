@@ -48,7 +48,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import CALLBACK_TYPE, Event, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.device_registry import CONNECTION_UPNP, DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.network import NoURLAvailableError, get_url, is_hass_url
@@ -331,7 +331,11 @@ class CastMediaPlayerEntity(CastDevice, MediaPlayerEntity):
 
         self._cast_view_remove_handler: CALLBACK_TYPE | None = None
         self._attr_unique_id = str(cast_info.uuid)
+        connections: set[tuple[str, str]] = set()
+        if not cast_info.is_audio_group:
+            connections.add((CONNECTION_UPNP, f"uuid:{cast_info.uuid}"))
         self._attr_device_info = DeviceInfo(
+            connections=connections,
             identifiers={(DOMAIN, str(cast_info.uuid).replace("-", ""))},
             manufacturer=str(cast_info.cast_info.manufacturer),
             model=cast_info.cast_info.model_name,

@@ -14,13 +14,11 @@ from syrupy.assertion import SnapshotAssertion
 from homeassistant.components.music_assistant.const import (
     ATTR_FAVORITE,
     ATTR_MEDIA_TYPE,
-    ATTR_SEARCH_NAME,
-    ATTR_USERNAME,
     DOMAIN,
 )
 from homeassistant.components.music_assistant.services import (
-    SERVICE_GET_LIBRARY,
-    SERVICE_SEARCH,
+    MusicAssistantService,
+    MusicAssistantServiceArgument,
 )
 from homeassistant.const import ATTR_CONFIG_ENTRY_ID
 from homeassistant.core import Context, HomeAssistant
@@ -46,10 +44,10 @@ async def test_search_action(
     )
     response = await hass.services.async_call(
         DOMAIN,
-        SERVICE_SEARCH,
+        MusicAssistantService.SEARCH,
         {
             ATTR_CONFIG_ENTRY_ID: entry.entry_id,
-            ATTR_SEARCH_NAME: "test",
+            MusicAssistantServiceArgument.NAME: "test",
         },
         blocking=True,
         return_response=True,
@@ -73,11 +71,11 @@ async def test_search_action_with_username(
     # valid user ok and forwarded
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_SEARCH,
+        MusicAssistantService.SEARCH,
         {
             ATTR_CONFIG_ENTRY_ID: entry.entry_id,
-            ATTR_SEARCH_NAME: "test",
-            ATTR_USERNAME: "user_user",
+            MusicAssistantServiceArgument.NAME: "test",
+            MusicAssistantServiceArgument.USERNAME: "user_user",
         },
         blocking=True,
         return_response=True,
@@ -111,7 +109,7 @@ async def test_search_action_with_username(
         pytest.param(None, {}, None, id="no calling user"),
         pytest.param(
             MOCK_USER_ID,
-            {ATTR_USERNAME: "user_user"},
+            {MusicAssistantServiceArgument.USERNAME: "user_user"},
             "user_user",
             id="explicit username wins",
         ),
@@ -130,10 +128,10 @@ async def test_search_action_acts_as_calling_user(
 
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_SEARCH,
+        MusicAssistantService.SEARCH,
         {
             ATTR_CONFIG_ENTRY_ID: entry.entry_id,
-            ATTR_SEARCH_NAME: "test",
+            MusicAssistantServiceArgument.NAME: "test",
             **extra_data,
         },
         blocking=True,
@@ -159,11 +157,11 @@ async def test_search_action_with_unknown_username(
     with pytest.raises(ServiceValidationError) as err:
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_SEARCH,
+            MusicAssistantService.SEARCH,
             {
                 ATTR_CONFIG_ENTRY_ID: entry.entry_id,
-                ATTR_SEARCH_NAME: "test",
-                ATTR_USERNAME: "nobody",
+                MusicAssistantServiceArgument.NAME: "test",
+                MusicAssistantServiceArgument.USERNAME: "nobody",
             },
             blocking=True,
             return_response=True,
@@ -207,10 +205,10 @@ async def test_search_action_invalid_config_entry(
     with pytest.raises(ServiceValidationError) as err:
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_SEARCH,
+            MusicAssistantService.SEARCH,
             {
                 ATTR_CONFIG_ENTRY_ID: config_entry_id,
-                ATTR_SEARCH_NAME: "test",
+                MusicAssistantServiceArgument.NAME: "test",
             },
             blocking=True,
             return_response=True,
@@ -240,7 +238,7 @@ async def test_get_library_action(
     entry = await setup_integration_from_fixtures(hass, music_assistant_client)
     response = await hass.services.async_call(
         DOMAIN,
-        SERVICE_GET_LIBRARY,
+        MusicAssistantService.GET_LIBRARY,
         {
             ATTR_CONFIG_ENTRY_ID: entry.entry_id,
             ATTR_MEDIA_TYPE: media_type,
@@ -269,7 +267,7 @@ async def test_get_library_action_favorite_filter(
 
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_GET_LIBRARY,
+        MusicAssistantService.GET_LIBRARY,
         data,
         blocking=True,
         return_response=True,
@@ -306,11 +304,11 @@ async def test_get_library_action_with_username(
     # an explicit username is forwarded to the server (which validates it)
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_GET_LIBRARY,
+        MusicAssistantService.GET_LIBRARY,
         {
             ATTR_CONFIG_ENTRY_ID: entry.entry_id,
             ATTR_MEDIA_TYPE: media_type,
-            ATTR_USERNAME: "user_user",
+            MusicAssistantServiceArgument.USERNAME: "user_user",
         },
         blocking=True,
         return_response=True,
@@ -332,11 +330,11 @@ async def test_get_library_action_with_unknown_username(
     with pytest.raises(ServiceValidationError) as err:
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_GET_LIBRARY,
+            MusicAssistantService.GET_LIBRARY,
             {
                 ATTR_CONFIG_ENTRY_ID: entry.entry_id,
                 ATTR_MEDIA_TYPE: "track",
-                ATTR_USERNAME: "nobody",
+                MusicAssistantServiceArgument.USERNAME: "nobody",
             },
             blocking=True,
             return_response=True,

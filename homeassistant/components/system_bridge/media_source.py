@@ -2,6 +2,12 @@
 
 from typing import override
 
+from systembridgeconnector.exceptions import (
+    AuthenticationException,
+    BadRequestException,
+    ConnectionErrorException,
+)
+from systembridgeconnector.http_client import HTTPClient
 from systembridgeconnector.models.media_directories import MediaDirectory
 from systembridgeconnector.models.media_files import MediaFile, MediaFiles
 from systembridgeconnector.models.media_get_files import MediaGetFiles
@@ -19,6 +25,7 @@ from homeassistant.components.media_source import (
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_HOST, CONF_PORT, CONF_TOKEN
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DOMAIN
 from .coordinator import SystemBridgeConfigEntry
@@ -71,10 +78,9 @@ class SystemBridgeSource(MediaSource):
         """Resolve media to a url."""
         entry_id, path, mime_type = item.identifier.split("~~", 2)
         entry = _get_loaded_entry(self.hass, entry_id, Unresolvable)
-        path_split = path.split("/", 1)
+        base, file_path = path.split("/", 1)
         return PlayMedia(
-            f"{_build_base_url(entry)}&base={path_split[0]}&path={path_split[1]}",
-            mime_type,
+            await _async_build_file_url(self.hass, entry, base, file_path), mime_type
         )
 
     @override
@@ -138,14 +144,32 @@ class SystemBridgeSource(MediaSource):
         )
 
 
-def _build_base_url(
-    entry: SystemBridgeConfigEntry,
+async def _async_build_file_url(
+    hass: HomeAssistant, entry: SystemBridgeConfigEntry, base: str, path: str
 ) -> str:
-    """Build base url for System Bridge media."""
-    return (
-        f"http://{entry.data[CONF_HOST]}:{entry.data[CONF_PORT]}"
-        f"/api/media/file/data?token={entry.data[CONF_TOKEN]}"
+    """Build the URL for a System Bridge media file.
+
+    The URL goes to players such as cast devices, so System Bridge signs it
+    for this file rather than it carrying the key.
+    """
+    http_client = HTTPClient(
+        entry.data[CONF_HOST],
+        entry.data[CONF_PORT],
+        entry.data[CONF_TOKEN],
+        session=async_get_clientsession(hass),
     )
+    try:
+        return await http_client.media_file_url(base, path)
+    except (
+        AuthenticationException,
+        BadRequestException,
+        ConnectionErrorException,
+    ) as exception:
+        raise Unresolvable(
+            translation_domain=DOMAIN,
+            translation_key="media_url_failed",
+            translation_placeholders={"path": path},
+        ) from exception
 
 
 def _build_root_paths(

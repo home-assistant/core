@@ -10,14 +10,15 @@ import pytest
 from pytest_homeassistant.common import async_fire_time_changed
 
 from homeassistant.components.litterrobot.coordinator import UPDATE_INTERVAL
-from homeassistant.components.litterrobot.services import SERVICE_SET_SLEEP_MODE
+from homeassistant.components.litterrobot.services import LitterRobotService
 from homeassistant.components.vacuum import (
     DOMAIN as VACUUM_DOMAIN,
     SERVICE_START,
     SERVICE_STOP,
     VacuumActivity,
+    VacuumService,
 )
-from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE
+from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er, issue_registry as ir
@@ -42,7 +43,7 @@ async def test_vacuum(
     assert ent_reg_entry.unique_id == VACUUM_UNIQUE_ID
 
     await setup_integration(hass, mock_account, VACUUM_DOMAIN)
-    assert hass.services.has_service(DOMAIN, SERVICE_SET_SLEEP_MODE)
+    assert hass.services.has_service(DOMAIN, LitterRobotService.SET_SLEEP_MODE)
 
     vacuum = hass.states.get(VACUUM_ENTITY_ID)
     assert vacuum
@@ -111,19 +112,19 @@ async def test_activities(
         (VACUUM_DOMAIN, SERVICE_STOP, "set_power_status", None),
         (
             DOMAIN,
-            SERVICE_SET_SLEEP_MODE,
+            LitterRobotService.SET_SLEEP_MODE,
             "set_sleep_mode",
             {"data": {"enabled": True, "start_time": "22:30"}},
         ),
         (
             DOMAIN,
-            SERVICE_SET_SLEEP_MODE,
+            LitterRobotService.SET_SLEEP_MODE,
             "set_sleep_mode",
             {"data": {"enabled": True}},
         ),
         (
             DOMAIN,
-            SERVICE_SET_SLEEP_MODE,
+            LitterRobotService.SET_SLEEP_MODE,
             "set_sleep_mode",
             {"data": {"enabled": False}},
         ),
@@ -170,8 +171,8 @@ async def test_vacuum_command_exception(
     with pytest.raises(HomeAssistantError, match="Invalid command: oops"):
         await hass.services.async_call(
             VACUUM_DOMAIN,
-            SERVICE_START,
-            {ATTR_ENTITY_ID: VACUUM_ENTITY_ID},
+            VacuumService.START,
+            {TargetKey.ENTITY_ID: VACUUM_ENTITY_ID},
             blocking=True,
         )
 

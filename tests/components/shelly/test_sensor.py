@@ -683,6 +683,38 @@ async def test_rpc_sleeping_sensor_with_channel_name(
     assert state.state == "23.4"
 
 
+async def test_rpc_restored_sleeping_sensor_legacy_id(
+    hass: HomeAssistant,
+    mock_rpc_device: Mock,
+    device_registry: DeviceRegistry,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test RPC restored sensor with a unique ID from a merged description."""
+    entry = await init_integration(hass, 2, sleep_period=1000, skip_setup=True)
+    device = register_device(device_registry, entry)
+    entity_id = register_entity(
+        hass,
+        SENSOR_DOMAIN,
+        "test_name_pm1_0_power",
+        "pm1:0-power_pm1",
+        entry,
+        device_id=device.id,
+    )
+    extra_data = {"native_value": "12.5", "native_unit_of_measurement": "W"}
+
+    mock_restore_cache_with_extra_data(hass, ((State(entity_id, ""), extra_data),))
+    type(mock_rpc_device).shelly = PropertyMock(side_effect=NotInitialized())
+    type(mock_rpc_device).config = PropertyMock(side_effect=NotInitialized())
+    type(mock_rpc_device).status = PropertyMock(side_effect=NotInitialized())
+    monkeypatch.setattr(mock_rpc_device, "initialized", False)
+
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert (state := hass.states.get(entity_id))
+    assert state.state == "12.5"
+
+
 async def test_rpc_restored_sleeping_sensor(
     hass: HomeAssistant,
     mock_rpc_device: Mock,
@@ -2497,6 +2529,33 @@ async def test_rpc_rgbcct_sensors(
     assert entry.unique_id == "123456789ABC-rgbcct:0-energy_rgbcct"
     assert entry.name is None
     assert entry.translation_key is None  # entity with device class and no channel name
+
+
+async def test_rpc_fan_energy_sensor(
+    hass: HomeAssistant,
+    entity_registry: EntityRegistry,
+    mock_rpc_device: Mock,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test energy sensor for fan component."""
+    config = deepcopy(mock_rpc_device.config)
+    config["fan:0"] = {"id": 0}
+    monkeypatch.setattr(mock_rpc_device, "config", config)
+
+    status = deepcopy(mock_rpc_device.status)
+    status["fan:0"] = {"id": 0, "aenergy": {"total": 12.828}}
+    monkeypatch.setattr(mock_rpc_device, "status", status)
+
+    await init_integration(hass, 2)
+
+    entity_id = "sensor.test_name_energy"
+
+    assert (state := hass.states.get(entity_id))
+    assert state.state == "0.012828"
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfEnergy.KILO_WATT_HOUR
+
+    assert (entry := entity_registry.async_get(entity_id))
+    assert entry.unique_id == "123456789ABC-fan:0-energy"
 
 
 async def test_rpc_sensor_driver_missing_error(

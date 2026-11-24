@@ -5,7 +5,7 @@ from collections.abc import Iterable
 import logging
 from typing import Any
 
-from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.const import TargetKey
 from homeassistant.core import Context, HomeAssistant, State
 
 from .const import (
@@ -45,7 +45,10 @@ async def _async_reproduce_state(
     await hass.services.async_call(
         DOMAIN,
         SelectService.SELECT_OPTION,
-        {ATTR_ENTITY_ID: state.entity_id, SelectServiceArgument.OPTION: state.state},
+        {
+            TargetKey.ENTITY_ID: state.entity_id,
+            SelectServiceArgument.OPTION: state.state,
+        },
         context=context,
         blocking=True,
     )

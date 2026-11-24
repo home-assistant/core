@@ -11,7 +11,7 @@ from uiprotect.data.public_devices import PublicDoorbellSettings, PublicLcdMessa
 from homeassistant.components.unifiprotect.const import DEFAULT_ATTRIBUTION, DOMAIN
 from homeassistant.components.unifiprotect.text import CAMERA
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import ATTR_ATTRIBUTION, ATTR_ENTITY_ID, Platform
+from homeassistant.const import ATTR_ATTRIBUTION, Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -91,7 +91,7 @@ async def test_text_camera_set(
         await hass.services.async_call(
             "text",
             "set_value",
-            {ATTR_ENTITY_ID: entity_id, "value": "Test test"},
+            {TargetKey.ENTITY_ID: entity_id, "value": "Test test"},
             blocking=True,
         )
 

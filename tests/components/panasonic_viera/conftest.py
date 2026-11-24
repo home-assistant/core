@@ -92,6 +92,7 @@ def get_mock_remote(
 
     mock_remote.send_key = Mock()
 
+    mock_remote.get_mute = Mock(return_value=False)
     mock_remote.get_volume = Mock(return_value=100)
 
     mock_remote.list_inputs = Mock(return_value=list(MOCK_INPUTS))

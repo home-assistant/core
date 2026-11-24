@@ -204,7 +204,6 @@ FORBIDDEN_PACKAGE_EXCEPTIONS: dict[str, dict[str, set[str]]] = {
     },
     "modern_forms": {"aiomodernforms": {"backoff"}},
     "monarch_money": {"gql": {"backoff"}},
-    "nibe_heatpump": {"nibe": {"async-timeout"}},
     "norway_air": {"pymetno": {"async-timeout"}},
     "opengarage": {"open-garage": {"async-timeout"}},
     "overkiz": {"pyoverkiz": {"backoff"}},
@@ -226,7 +225,6 @@ FORBIDDEN_PACKAGE_EXCEPTIONS: dict[str, dict[str, set[str]]] = {
     "toon": {"toonapi": {"backoff"}},
     "volkszaehler": {"volkszaehler": {"async-timeout"}},
     "weatherflow_cloud": {"weatherflow4py": {"dataclasses-json"}},
-    "whirlpool": {"whirlpool-sixth-sense": {"async-timeout"}},
     "zamg": {"zamg": {"async-timeout"}},
     "zha": {
         # https://github.com/waveform80/colorzero/issues/9

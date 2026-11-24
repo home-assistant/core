@@ -4,6 +4,7 @@ from collections import Counter
 from collections.abc import Callable, Iterable, Mapping
 from dataclasses import dataclass
 from datetime import datetime, timedelta
+from itertools import product
 from typing import TYPE_CHECKING, Any, override
 
 from aioengiebelgium import EpexGranularity, EpexSlot, Peak, bare_ean
@@ -14,16 +15,15 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.const import EntityCategory, UnitOfEnergy, UnitOfPower
+from homeassistant.const import EntityCategory, UnitOfEnergy, UnitOfPower, UnitOfVolume
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import dt as dt_util
 
-from .const import ATTRIBUTION
+from .const import ATTRIBUTION, BRUSSELS_TIME_ZONE
 from .coordinator import (
-    BRUSSELS_TIME_ZONE,
     EngieBeEpexCoordinator,
     EngieBePeaksCoordinator,
     EngieBePricesCoordinator,
@@ -40,6 +40,7 @@ if TYPE_CHECKING:
 PARALLEL_UPDATES = 0
 
 _UNIT = "EUR/kWh"
+_UNIT_PER_CUBIC_METER = f"EUR/{UnitOfVolume.CUBIC_METERS}"
 _SLOT_CODE_SUFFIXES = {
     "TOTAL_HOURS": "",
     "PEAK": "_peak",
@@ -79,7 +80,7 @@ async def async_setup_entry(
     def _async_add_new_entities() -> None:
         """Add price sensors for any household/EAN/slot combination not yet known."""
         new_entities: list[EngieBePriceSensor] = []
-        for ban, household in runtime_data.households.items():
+        for household in runtime_data.households.values():
             prices_data: EngieBePricesData | None = household.prices.data
             if prices_data is None:
                 continue
@@ -89,14 +90,22 @@ async def async_setup_entry(
             for ean, direction, slot_code in prices_data.slots:
                 type_key = _energy_type_key(ean, household.prices.ean_energy_types)
                 ean_suffix = bare_ean(ean)[-4:] if ean in duplicate_eans else ""
-                for excl_vat in (False, True):
+                per_cubic_meter_options = [False]
+                if (
+                    type_key == "gas"
+                    and bare_ean(ean) in prices_data.gas_conversion_coefficients
+                ):
+                    per_cubic_meter_options.append(True)
+                for per_cubic_meter, excl_vat in product(
+                    per_cubic_meter_options, (False, True)
+                ):
                     entity = EngieBePriceSensor(
                         household.prices,
-                        business_agreement_number=ban,
                         ean=ean,
                         direction=direction,
                         slot_code=slot_code,
                         excl_vat=excl_vat,
+                        per_cubic_meter=per_cubic_meter,
                         type_key=type_key,
                         ean_suffix=ean_suffix,
                     )
@@ -114,21 +123,9 @@ async def async_setup_entry(
         )
     _async_add_new_entities()
 
-    known_epex_bans: set[str] = set()
-
     @callback
-    def _async_add_epex_sensors() -> None:
-        """Add the EPEX price sensors for the dynamic households."""
-        if (epex := runtime_data.epex) is None:
-            return
-        new_bans = [
-            ban
-            for ban, household in runtime_data.households.items()
-            if household.is_dynamic and ban not in known_epex_bans
-        ]
-        if not new_bans:
-            return
-        known_epex_bans.update(new_bans)
+    def _async_add_epex_sensors(epex: EngieBeEpexCoordinator, bans: list[str]) -> None:
+        """Add the EPEX price sensors for the given households."""
         async_add_entities(
             EngieBeEpexPriceSensor(
                 epex,
@@ -136,21 +133,19 @@ async def async_setup_entry(
                 device_info=runtime_data.households[ban].prices.device_info,
                 description=description,
             )
-            for ban in new_bans
+            for ban in bans
             for description in _EPEX_SENSORS
         )
 
-    runtime_data.epex_ready_callbacks.append(_async_add_epex_sensors)
-    _async_add_epex_sensors()
+    runtime_data.async_add_epex_entities(_async_add_epex_sensors)
 
     async_add_entities(
         EngieBePeaksSensor(
             household.peaks,
-            ban=ban,
             device_info=household.prices.device_info,
             description=description,
         )
-        for ban, household in runtime_data.households.items()
+        for household in runtime_data.households.values()
         for description in _CAPACITY_TARIFF_SENSORS
     )
 
@@ -168,11 +163,11 @@ class EngieBePriceSensor(CoordinatorEntity[EngieBePricesCoordinator], SensorEnti
         self,
         coordinator: EngieBePricesCoordinator,
         *,
-        business_agreement_number: str,
         ean: str,
         direction: str,
         slot_code: str,
         excl_vat: bool,
+        per_cubic_meter: bool,
         type_key: str,
         ean_suffix: str,
     ) -> None:
@@ -183,13 +178,19 @@ class EngieBePriceSensor(CoordinatorEntity[EngieBePricesCoordinator], SensorEnti
         self._direction = direction
         self._slot_code = slot_code
         self._excl_vat = excl_vat
+        self._per_cubic_meter = per_cubic_meter
 
-        unique_id = f"{business_agreement_number}_{ean}_{direction}_{slot_code}"
+        unique_id = f"{coordinator.ban}_{ean}_{direction}_{slot_code}"
+        if per_cubic_meter:
+            unique_id = f"{unique_id}_per_m3"
+            self._attr_native_unit_of_measurement = _UNIT_PER_CUBIC_METER
         self._attr_unique_id = f"{unique_id}_excl_vat" if excl_vat else unique_id
 
         normalized_slot_code = normalize_slot_code(slot_code)
         suffix = _SLOT_CODE_SUFFIXES.get(normalized_slot_code, _FALLBACK_SLOT_SUFFIX)
         translation_key = f"{type_key}_price_{direction}{suffix}"
+        if per_cubic_meter:
+            translation_key = f"{translation_key}_per_m3"
         if excl_vat:
             translation_key = f"{translation_key}_excl_vat"
         if ean_suffix:
@@ -208,18 +209,26 @@ class EngieBePriceSensor(CoordinatorEntity[EngieBePricesCoordinator], SensorEnti
     @override
     def available(self) -> bool:
         """Return True only when this entity's slot is present in the current data."""
+        data = self.coordinator.data
         return (
             super().available
-            and (self._ean, self._direction, self._slot_code)
-            in self.coordinator.data.slots
+            and (self._ean, self._direction, self._slot_code) in data.slots
+            and (
+                not self._per_cubic_meter
+                or bare_ean(self._ean) in data.gas_conversion_coefficients
+            )
         )
 
     @property
     @override
     def native_value(self) -> float | None:
         """Return the current price."""
-        slot = self.coordinator.data.slots[self._ean, self._direction, self._slot_code]
-        return slot.price_value_excl_vat if self._excl_vat else slot.price_value
+        data = self.coordinator.data
+        slot = data.slots[self._ean, self._direction, self._slot_code]
+        price = slot.price_value_excl_vat if self._excl_vat else slot.price_value
+        if self._per_cubic_meter:
+            return price * data.gas_conversion_coefficients[bare_ean(self._ean)]
+        return price
 
 
 _EPEX_PRECISION = 4
@@ -445,7 +454,6 @@ class EngieBePeaksSensor(CoordinatorEntity[EngieBePeaksCoordinator], SensorEntit
         self,
         coordinator: EngieBePeaksCoordinator,
         *,
-        ban: str,
         device_info: DeviceInfo,
         description: EngieBePeaksSensorEntityDescription,
     ) -> None:
@@ -453,7 +461,7 @@ class EngieBePeaksSensor(CoordinatorEntity[EngieBePeaksCoordinator], SensorEntit
         super().__init__(coordinator)
         self.entity_description = description
         self._attr_device_info = device_info
-        self._attr_unique_id = f"{ban}_{description.key}"
+        self._attr_unique_id = f"{coordinator.ban}_{description.key}"
 
     @property
     @override
