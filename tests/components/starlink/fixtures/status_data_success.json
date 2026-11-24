@@ -69,5 +69,10 @@
     "alert_is_power_save_idle": false,
     "alert_moving_while_not_mobile": false,
     "alert_moving_fast_while_not_aviation": false
+  },
+  {
+    "software_update_progress": null,
+    "software_update_reboot_ready": null,
+    "seconds_until_software_update_reboot_possible": null
   }
 ]

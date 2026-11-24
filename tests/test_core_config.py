@@ -1036,9 +1036,17 @@ async def test_event_on_update(hass: HomeAssistant) -> None:
 
 
 async def test_bad_timezone_raises_value_error(hass: HomeAssistant) -> None:
-    """Test bad timezone raises ValueError."""
+    """Test bad timezone raises ValueError and changes nothing."""
+    events = async_capture_events(hass, EVENT_CORE_CONFIG_UPDATE)
+    country = hass.config.country
+    assert country != "NL"
+
     with pytest.raises(ValueError):
-        await hass.config.async_update(time_zone="not_a_timezone")
+        await hass.config.async_update(country="NL", time_zone="not_a_timezone")
+    await hass.async_block_till_done()
+
+    assert hass.config.country == country
+    assert events == []
 
 
 async def test_additional_data_in_core_config(

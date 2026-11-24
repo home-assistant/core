@@ -3,6 +3,7 @@
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime
+from itertools import product
 from typing import Any, override
 
 from aiowithings import (
@@ -721,6 +722,20 @@ def get_current_goals(goals: Goals) -> set[str]:
     return result
 
 
+def get_registered_measurements(
+    ent_reg: er.EntityRegistry, entry: WithingsConfigEntry
+) -> set[tuple[MeasurementType, MeasurementPosition | None]]:
+    """Return the measurements whose sensors are in the entity registry."""
+    return {
+        measurement
+        for measurement in product(MeasurementType, (None, *MeasurementPosition))
+        if (description := get_measurement_description(measurement)) is not None
+        and ent_reg.async_get_entity_id(
+            Platform.SENSOR, DOMAIN, f"withings_{entry.unique_id}_{description.key}"
+        )
+    }
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: WithingsConfigEntry,
@@ -733,14 +748,17 @@ async def async_setup_entry(
 
     measurement_coordinator = withings_data.measurement_coordinator
 
+    # The first refresh only looks back 14 days, so sensors set up before are
+    # added too; they stay unknown until their next reading.
+    current_measurement_types = set(measurement_coordinator.data)
+    current_measurement_types.update(get_registered_measurements(ent_reg, entry))
+
     entities: list[SensorEntity] = []
     entities.extend(
         WithingsMeasurementSensor(measurement_coordinator, description)
-        for measurement_type in measurement_coordinator.data
+        for measurement_type in current_measurement_types
         if (description := get_measurement_description(measurement_type)) is not None
     )
-
-    current_measurement_types = set(measurement_coordinator.data)
 
     def _async_measurement_listener() -> None:
         """Listen for new measurements and add sensors if they did not exist."""
@@ -964,26 +982,13 @@ class WithingsMeasurementSensor(
 
     @property
     @override
-    def native_value(self) -> float:
+    def native_value(self) -> float | None:
         """Return the state of the entity."""
-        return self.coordinator.data[
+        return self.coordinator.data.get(
             (
                 self.entity_description.measurement_type,
                 self.entity_description.measurement_position,
             )
-        ]
-
-    @property
-    @override
-    def available(self) -> bool:
-        """Return if the sensor is available."""
-        return (
-            super().available
-            and (
-                self.entity_description.measurement_type,
-                self.entity_description.measurement_position,
-            )
-            in self.coordinator.data
         )
 
 

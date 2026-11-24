@@ -18,6 +18,7 @@ from . import (
     METRICS_PROFILE_UNKNOWN,
     METRICS_UNIT_OFF,
     METRICS_UNIT_ON,
+    METRICS_UNIT_TESTING,
     setup_integration,
 )
 
@@ -100,7 +101,9 @@ async def test_current_profile_sensor(hass: HomeAssistant, expected_state: str) 
     [
         # The fan speeds come from metrics.json: 30%, 1310 rpm and 1270 rpm.
         pytest.param(METRICS_UNIT_ON, ("30", "1310", "1270"), id="unit_on"),
-        # The unit keeps reporting its last fan speeds after it is turned off.
+        pytest.param(METRICS_UNIT_TESTING, ("30", "1310", "1270"), id="testing"),
+        # The unit keeps reporting its last fan speeds after it is switched
+        # off, so the sensors report 0 instead.
         pytest.param(METRICS_UNIT_OFF, ("0", "0", "0"), id="unit_off"),
         # Without the power state, the reported fan speeds cannot be trusted.
         pytest.param(

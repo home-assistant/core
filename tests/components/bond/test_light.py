@@ -16,13 +16,13 @@ from homeassistant.components.light import (
     ATTR_SUPPORTED_COLOR_MODES,
     DOMAIN as LIGHT_DOMAIN,
     ColorMode,
+    LightService,
+    LightServiceArgument,
 )
 from homeassistant.const import (
     ATTR_ASSUMED_STATE,
     ATTR_ENTITY_ID,
     ATTR_SUPPORTED_FEATURES,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
     TargetKey,
 )
 from homeassistant.core import HomeAssistant
@@ -704,8 +704,8 @@ async def test_turn_on_light(hass: HomeAssistant) -> None:
     with patch_bond_action() as mock_turn_light_on, patch_bond_device_state():
         await hass.services.async_call(
             LIGHT_DOMAIN,
-            SERVICE_TURN_ON,
-            {ATTR_ENTITY_ID: "light.name_1"},
+            LightService.TURN_ON,
+            {TargetKey.ENTITY_ID: "light.name_1"},
             blocking=True,
         )
         await hass.async_block_till_done()
@@ -722,8 +722,8 @@ async def test_turn_off_light(hass: HomeAssistant) -> None:
     with patch_bond_action() as mock_turn_light_off, patch_bond_device_state():
         await hass.services.async_call(
             LIGHT_DOMAIN,
-            SERVICE_TURN_OFF,
-            {ATTR_ENTITY_ID: "light.name_1"},
+            LightService.TURN_OFF,
+            {TargetKey.ENTITY_ID: "light.name_1"},
             blocking=True,
         )
         await hass.async_block_till_done()
@@ -797,8 +797,8 @@ async def test_turn_on_light_with_brightness(hass: HomeAssistant) -> None:
     with patch_bond_action() as mock_set_brightness, patch_bond_device_state():
         await hass.services.async_call(
             LIGHT_DOMAIN,
-            SERVICE_TURN_ON,
-            {ATTR_ENTITY_ID: "light.name_1", ATTR_BRIGHTNESS: 128},
+            LightService.TURN_ON,
+            {TargetKey.ENTITY_ID: "light.name_1", LightServiceArgument.BRIGHTNESS: 128},
             blocking=True,
         )
         await hass.async_block_till_done()
@@ -850,11 +850,11 @@ async def test_turn_on_light_with_color(hass: HomeAssistant) -> None:
     with patch_bond_action() as mock_set_color, patch_bond_device_state():
         await hass.services.async_call(
             LIGHT_DOMAIN,
-            SERVICE_TURN_ON,
+            LightService.TURN_ON,
             {
-                ATTR_ENTITY_ID: "light.name_1",
-                ATTR_BRIGHTNESS: 128,
-                ATTR_COLOR_TEMP_KELVIN: 4000,
+                TargetKey.ENTITY_ID: "light.name_1",
+                LightServiceArgument.BRIGHTNESS: 128,
+                LightServiceArgument.COLOR_TEMP_KELVIN: 4000,
             },
             blocking=True,
         )
@@ -880,8 +880,8 @@ async def test_turn_on_up_light(hass: HomeAssistant) -> None:
     with patch_bond_action() as mock_turn_on, patch_bond_device_state():
         await hass.services.async_call(
             LIGHT_DOMAIN,
-            SERVICE_TURN_ON,
-            {ATTR_ENTITY_ID: "light.name_1_up_light"},
+            LightService.TURN_ON,
+            {TargetKey.ENTITY_ID: "light.name_1_up_light"},
             blocking=True,
         )
         await hass.async_block_till_done()
@@ -903,8 +903,8 @@ async def test_turn_off_up_light(hass: HomeAssistant) -> None:
     with patch_bond_action() as mock_turn_off, patch_bond_device_state():
         await hass.services.async_call(
             LIGHT_DOMAIN,
-            SERVICE_TURN_OFF,
-            {ATTR_ENTITY_ID: "light.name_1_up_light"},
+            LightService.TURN_OFF,
+            {TargetKey.ENTITY_ID: "light.name_1_up_light"},
             blocking=True,
         )
         await hass.async_block_till_done()
@@ -926,8 +926,8 @@ async def test_turn_on_down_light(hass: HomeAssistant) -> None:
     with patch_bond_action() as mock_turn_on, patch_bond_device_state():
         await hass.services.async_call(
             LIGHT_DOMAIN,
-            SERVICE_TURN_ON,
-            {ATTR_ENTITY_ID: "light.name_1_down_light"},
+            LightService.TURN_ON,
+            {TargetKey.ENTITY_ID: "light.name_1_down_light"},
             blocking=True,
         )
         await hass.async_block_till_done()
@@ -949,8 +949,8 @@ async def test_turn_off_down_light(hass: HomeAssistant) -> None:
     with patch_bond_action() as mock_turn_off, patch_bond_device_state():
         await hass.services.async_call(
             LIGHT_DOMAIN,
-            SERVICE_TURN_OFF,
-            {ATTR_ENTITY_ID: "light.name_1_down_light"},
+            LightService.TURN_OFF,
+            {TargetKey.ENTITY_ID: "light.name_1_down_light"},
             blocking=True,
         )
         await hass.async_block_till_done()
@@ -1035,8 +1035,8 @@ async def test_turn_on_fireplace_with_brightness(hass: HomeAssistant) -> None:
     with patch_bond_action() as mock_set_flame, patch_bond_device_state():
         await hass.services.async_call(
             LIGHT_DOMAIN,
-            SERVICE_TURN_ON,
-            {ATTR_ENTITY_ID: "light.name_1", ATTR_BRIGHTNESS: 128},
+            LightService.TURN_ON,
+            {TargetKey.ENTITY_ID: "light.name_1", LightServiceArgument.BRIGHTNESS: 128},
             blocking=True,
         )
         await hass.async_block_till_done()
@@ -1053,8 +1053,8 @@ async def test_turn_on_fireplace_without_brightness(hass: HomeAssistant) -> None
     with patch_bond_action() as mock_turn_on, patch_bond_device_state():
         await hass.services.async_call(
             LIGHT_DOMAIN,
-            SERVICE_TURN_ON,
-            {ATTR_ENTITY_ID: "light.name_1"},
+            LightService.TURN_ON,
+            {TargetKey.ENTITY_ID: "light.name_1"},
             blocking=True,
         )
         await hass.async_block_till_done()
@@ -1071,8 +1071,8 @@ async def test_turn_off_fireplace(hass: HomeAssistant) -> None:
     with patch_bond_action() as mock_turn_off, patch_bond_device_state():
         await hass.services.async_call(
             LIGHT_DOMAIN,
-            SERVICE_TURN_OFF,
-            {ATTR_ENTITY_ID: "light.name_1"},
+            LightService.TURN_OFF,
+            {TargetKey.ENTITY_ID: "light.name_1"},
             blocking=True,
         )
         await hass.async_block_till_done()
@@ -1121,8 +1121,11 @@ async def test_parse_color_temp(hass: HomeAssistant) -> None:
     with patch_bond_action() as mock_set_color, patch_bond_device_state():
         await hass.services.async_call(
             LIGHT_DOMAIN,
-            SERVICE_TURN_ON,
-            {ATTR_ENTITY_ID: "light.name_1", ATTR_COLOR_TEMP_KELVIN: 3250},
+            LightService.TURN_ON,
+            {
+                TargetKey.ENTITY_ID: "light.name_1",
+                LightServiceArgument.COLOR_TEMP_KELVIN: 3250,
+            },
             blocking=True,
         )
         await hass.async_block_till_done()

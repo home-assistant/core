@@ -39,10 +39,7 @@ from homeassistant.components.zha.helpers import (
     get_zha_gateway,
     get_zha_gateway_proxy,
 )
-from homeassistant.components.zha.update import (
-    OTA_MESSAGE_BATTERY_POWERED,
-    OTA_MESSAGE_RELIABILITY,
-)
+from homeassistant.components.zha.update import ZHA_DOCS_NETWORK_RELIABILITY
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     STATE_OFF,
@@ -651,7 +648,78 @@ async def test_update_release_notes(
 ) -> None:
     """Test ZHA update platform release notes."""
     await setup_zha()
-    zha_device, _, _, _ = await setup_test_data(hass, zigpy_device_mock)
+    zha_device, cluster, fw_image, installed_fw_version = await setup_test_data(
+        hass, zigpy_device_mock
+    )
+
+    entity_id = find_entity_id(Platform.UPDATE, zha_device, hass)
+    assert entity_id is not None
+
+    ws_client = await hass_ws_client(hass)
+
+    # No messages while no update is available
+    await ws_client.send_json(
+        {
+            "id": 1,
+            "type": "update/release_notes",
+            "entity_id": entity_id,
+        }
+    )
+    result = await ws_client.receive_json()
+    assert result["success"] is True
+    assert result["result"] == {"release_notes": None, "messages": []}
+
+    # Simulate an image available notification
+    await cluster._handle_query_next_image(
+        foundation.ZCLHeader.cluster(
+            tsn=0x12, command_id=general.Ota.ServerCommandDefs.query_next_image.id
+        ),
+        general.QueryNextImageCommand(
+            fw_image.firmware.header.field_control,
+            zha_device.device.manufacturer_code,
+            fw_image.firmware.header.image_type,
+            installed_fw_version,
+            fw_image.firmware.header.header_version,
+        ),
+    )
+    await hass.async_block_till_done()
+    assert hass.states.get(entity_id).state == STATE_ON
+
+    battery_message = {
+        "severity": "info",
+        "message": (
+            "Battery powered devices can sometimes take multiple hours to update and"
+            " you may need to wake the device for the update to begin."
+        ),
+    }
+    reliability_message = {
+        "severity": "info",
+        "message": (
+            "If you are having issues updating a specific device, make sure that"
+            " you've eliminated [common environmental issues]"
+            f"({ZHA_DOCS_NETWORK_RELIABILITY}) that could be affecting network"
+            " reliability. OTA updates require a reliable network."
+        ),
+    }
+
+    # An update without release notes of its own still gets the messages
+    with patch(
+        "zha.zigbee.device.ZigbeeDevice.is_mains_powered",
+        PropertyMock(return_value=True),
+    ):
+        await ws_client.send_json(
+            {
+                "id": 2,
+                "type": "update/release_notes",
+                "entity_id": entity_id,
+            }
+        )
+        result = await ws_client.receive_json()
+    assert result["success"] is True
+    assert result["result"] == {
+        "release_notes": None,
+        "messages": [reliability_message],
+    }
 
     zha_lib_entity = next(
         e
@@ -662,11 +730,6 @@ async def test_update_release_notes(
     zha_lib_entity.maybe_emit_state_changed_event()
     await hass.async_block_till_done()
 
-    entity_id = find_entity_id(Platform.UPDATE, zha_device, hass)
-    assert entity_id is not None
-
-    ws_client = await hass_ws_client(hass)
-
     # Mains-powered devices
     with patch(
         "zha.zigbee.device.ZigbeeDevice.is_mains_powered",
@@ -674,7 +737,7 @@ async def test_update_release_notes(
     ):
         await ws_client.send_json(
             {
-                "id": 1,
+                "id": 3,
                 "type": "update/release_notes",
                 "entity_id": entity_id,
             }
@@ -682,9 +745,10 @@ async def test_update_release_notes(
 
         result = await ws_client.receive_json()
         assert result["success"] is True
-        assert "Some lengthy release notes" in result["result"]
-        assert OTA_MESSAGE_RELIABILITY in result["result"]
-        assert OTA_MESSAGE_BATTERY_POWERED not in result["result"]
+        assert result["result"] == {
+            "release_notes": "Some lengthy release notes",
+            "messages": [reliability_message],
+        }
 
     # Battery-powered devices
     with patch(
@@ -693,7 +757,7 @@ async def test_update_release_notes(
     ):
         await ws_client.send_json(
             {
-                "id": 2,
+                "id": 4,
                 "type": "update/release_notes",
                 "entity_id": entity_id,
             }
@@ -701,9 +765,10 @@ async def test_update_release_notes(
 
         result = await ws_client.receive_json()
         assert result["success"] is True
-        assert "Some lengthy release notes" in result["result"]
-        assert OTA_MESSAGE_RELIABILITY in result["result"]
-        assert OTA_MESSAGE_BATTERY_POWERED in result["result"]
+        assert result["result"] == {
+            "release_notes": "Some lengthy release notes",
+            "messages": [battery_message, reliability_message],
+        }
 
 
 async def test_update_version_sync_device_registry(
