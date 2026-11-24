@@ -5,7 +5,7 @@ from collections.abc import Callable, Iterable, Mapping
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from itertools import product
-from typing import TYPE_CHECKING, Any, override
+from typing import TYPE_CHECKING, override
 
 from aioengiebelgium import EpexGranularity, EpexSlot, Peak, bare_ean
 
@@ -22,9 +22,8 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import dt as dt_util
 
-from .const import ATTRIBUTION
+from .const import ATTRIBUTION, BRUSSELS_TIME_ZONE
 from .coordinator import (
-    BRUSSELS_TIME_ZONE,
     EngieBeEpexCoordinator,
     EngieBePeaksCoordinator,
     EngieBePricesCoordinator,
@@ -81,7 +80,7 @@ async def async_setup_entry(
     def _async_add_new_entities() -> None:
         """Add price sensors for any household/EAN/slot combination not yet known."""
         new_entities: list[EngieBePriceSensor] = []
-        for ban, household in runtime_data.households.items():
+        for household in runtime_data.households.values():
             prices_data: EngieBePricesData | None = household.prices.data
             if prices_data is None:
                 continue
@@ -102,7 +101,6 @@ async def async_setup_entry(
                 ):
                     entity = EngieBePriceSensor(
                         household.prices,
-                        business_agreement_number=ban,
                         ean=ean,
                         direction=direction,
                         slot_code=slot_code,
@@ -125,21 +123,9 @@ async def async_setup_entry(
         )
     _async_add_new_entities()
 
-    known_epex_bans: set[str] = set()
-
     @callback
-    def _async_add_epex_sensors() -> None:
-        """Add the EPEX price sensors for the dynamic households."""
-        if (epex := runtime_data.epex) is None:
-            return
-        new_bans = [
-            ban
-            for ban, household in runtime_data.households.items()
-            if household.is_dynamic and ban not in known_epex_bans
-        ]
-        if not new_bans:
-            return
-        known_epex_bans.update(new_bans)
+    def _async_add_epex_sensors(epex: EngieBeEpexCoordinator, bans: list[str]) -> None:
+        """Add the EPEX price sensors for the given households."""
         async_add_entities(
             EngieBeEpexPriceSensor(
                 epex,
@@ -147,21 +133,19 @@ async def async_setup_entry(
                 device_info=runtime_data.households[ban].prices.device_info,
                 description=description,
             )
-            for ban in new_bans
+            for ban in bans
             for description in _EPEX_SENSORS
         )
 
-    runtime_data.epex_ready_callbacks.append(_async_add_epex_sensors)
-    _async_add_epex_sensors()
+    runtime_data.async_add_epex_entities(_async_add_epex_sensors)
 
     async_add_entities(
         EngieBePeaksSensor(
             household.peaks,
-            ban=ban,
             device_info=household.prices.device_info,
             description=description,
         )
-        for ban, household in runtime_data.households.items()
+        for household in runtime_data.households.values()
         for description in _CAPACITY_TARIFF_SENSORS
     )
 
@@ -179,7 +163,6 @@ class EngieBePriceSensor(CoordinatorEntity[EngieBePricesCoordinator], SensorEnti
         self,
         coordinator: EngieBePricesCoordinator,
         *,
-        business_agreement_number: str,
         ean: str,
         direction: str,
         slot_code: str,
@@ -197,7 +180,7 @@ class EngieBePriceSensor(CoordinatorEntity[EngieBePricesCoordinator], SensorEnti
         self._excl_vat = excl_vat
         self._per_cubic_meter = per_cubic_meter
 
-        unique_id = f"{business_agreement_number}_{ean}_{direction}_{slot_code}"
+        unique_id = f"{coordinator.ban}_{ean}_{direction}_{slot_code}"
         if per_cubic_meter:
             unique_id = f"{unique_id}_per_m3"
             self._attr_native_unit_of_measurement = _UNIT_PER_CUBIC_METER
@@ -471,7 +454,6 @@ class EngieBePeaksSensor(CoordinatorEntity[EngieBePeaksCoordinator], SensorEntit
         self,
         coordinator: EngieBePeaksCoordinator,
         *,
-        ban: str,
         device_info: DeviceInfo,
         description: EngieBePeaksSensorEntityDescription,
     ) -> None:
@@ -479,43 +461,10 @@ class EngieBePeaksSensor(CoordinatorEntity[EngieBePeaksCoordinator], SensorEntit
         super().__init__(coordinator)
         self.entity_description = description
         self._attr_device_info = device_info
-        self._attr_unique_id = f"{ban}_{description.key}"
+        self._attr_unique_id = f"{coordinator.ban}_{description.key}"
 
     @property
     @override
     def native_value(self) -> float | datetime | None:
         """Return the sensor value derived from the peaks data."""
         return self.entity_description.value_fn(self)
-
-    @property
-    @override
-    def extra_state_attributes(self) -> dict[str, Any]:
-        """Return peak provenance and daily peak details."""
-        data = self.coordinator.data
-        if self.entity_description.key == "capacity_tariff_monthly_power_peak":
-            attributes: dict[str, Any] = {
-                "peak_month": data.peak_month,
-                "peak_is_fallback": data.is_fallback,
-            }
-            previous = data.monthly.previous_peak_of_the_month
-            if previous is not None:
-                attributes["previous_peak"] = {
-                    "power_kw": previous.peak_kw,
-                    "energy_kwh": previous.peak_kwh,
-                    "start": previous.start.isoformat(),
-                    "end": previous.end.isoformat(),
-                }
-            return attributes
-        if self.entity_description.key == "capacity_tariff_daily_power_peak":
-            return {
-                "daily_peaks": [
-                    {
-                        "power_kw": peak.peak_kw,
-                        "energy_kwh": peak.peak_kwh,
-                        "start": peak.start.isoformat(),
-                        "end": peak.end.isoformat(),
-                    }
-                    for peak in data.monthly.daily_peaks
-                ]
-            }
-        return {}
