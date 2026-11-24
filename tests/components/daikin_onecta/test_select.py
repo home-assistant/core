@@ -78,7 +78,7 @@ async def test_schedule_select_ignores_current_option(
     execute_command.assert_not_awaited()
 
 
-async def test_schedule_select_preserves_read_only_disabled_state(
+async def test_schedule_select_is_unavailable_when_disabled_and_read_only(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     mock_onecta_client: MockOnectaClient,
@@ -90,19 +90,7 @@ async def test_schedule_select_preserves_read_only_disabled_state(
     coordinator.async_execute_command = execute_command
     state = hass.states.get("select.my_living_room_schedule")
     assert state is not None
-    assert state.state == "unknown"
-
-    with pytest.raises(ServiceValidationError):
-        await hass.services.async_call(
-            SELECT_DOMAIN,
-            SERVICE_SELECT_OPTION,
-            {
-                ATTR_ENTITY_ID: state.entity_id,
-                SelectServiceArgument.OPTION: "althermaClimateControl1",
-            },
-            blocking=True,
-        )
-
+    assert state.state == "unavailable"
     execute_command.assert_not_awaited()
     assert state.attributes["options"] == []
 
@@ -136,7 +124,7 @@ async def test_read_only_schedule_only_advertises_current_option(
     execute_command.assert_not_awaited()
 
 
-async def test_schedule_select_reports_unknown_for_read_only_disabled_schedule(
+async def test_schedule_select_is_unavailable_for_read_only_disabled_schedule(
     hass: HomeAssistant, config_entry: MockConfigEntry
 ) -> None:
     """Do not show a schedule as active when its read-only enabled flag is off."""
@@ -154,7 +142,8 @@ async def test_schedule_select_reports_unknown_for_read_only_disabled_schedule(
 
     state = hass.states.get(MASTER_SCHEDULE_ENTITY_ID)
     assert state is not None
-    assert state.state == "unknown"
+    assert state.state == "unavailable"
+    assert state.attributes["options"] == []
 
 
 async def test_schedule_select_rejects_missing_selection(

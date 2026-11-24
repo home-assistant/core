@@ -124,7 +124,7 @@ class DaikinScheduleSelect(DaikinManagementPointEntity, SelectEntity):
         return (
             super().available
             and self.selection() is not None
-            and bool(self._cached_schedule_options)
+            and bool(self._attr_options)
         )
 
     def get_current_option(self, selection: ScheduleSelection | None) -> str | None:
