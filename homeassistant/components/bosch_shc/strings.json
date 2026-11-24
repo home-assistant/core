@@ -55,8 +55,20 @@
       "schedule_override_active": {
         "name": "Schedule override active"
       },
+      "siren_ac_dc_error": {
+        "name": "AC/DC error"
+      },
       "siren_acoustic_alarm": {
         "name": "Acoustic alarm"
+      },
+      "siren_battery_defect": {
+        "name": "Battery defect"
+      },
+      "siren_battery_temperature_abnormal": {
+        "name": "Battery temperature abnormal"
+      },
+      "siren_primary_power_supply_outage": {
+        "name": "Primary power supply outage"
       },
       "siren_visual_alarm": {
         "name": "Visual alarm"
