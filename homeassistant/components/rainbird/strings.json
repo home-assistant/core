@@ -80,20 +80,6 @@
     }
   },
   "services": {
-    "set_rain_delay": {
-      "description": "Sets how long automatic irrigation is turned off.",
-      "fields": {
-        "config_entry_id": {
-          "description": "The configuration entry of the controller to adjust the setting.",
-          "name": "Rain Bird controller"
-        },
-        "duration": {
-          "description": "Duration for this system to be turned off.",
-          "name": "Duration"
-        }
-      },
-      "name": "Set rain delay"
-    },
     "start_irrigation": {
       "description": "Starts the irrigation.",
       "fields": {

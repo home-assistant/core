@@ -1,7 +1,6 @@
 """The Govee Light local integration."""
 
 import asyncio
-from contextlib import suppress
 from errno import EADDRINUSE, EADDRNOTAVAIL, EMFILE, ENETDOWN, ENETUNREACH, ENOBUFS
 import logging
 
@@ -11,8 +10,9 @@ from homeassistant.components import network
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
+from homeassistant.helpers.event import async_track_time_interval
 
-from .const import DISCOVERY_TIMEOUT, DOMAIN
+from .const import DISCOVERY_TIMEOUT, DOMAIN, REBIND_INTERVAL
 from .coordinator import GoveeLocalApiCoordinator, GoveeLocalConfigEntry
 
 PLATFORMS: list[Platform] = [Platform.LIGHT]
@@ -41,12 +41,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: GoveeLocalConfigEntry) -
         hass=hass, config_entry=entry, listening_addresses=listening_addresses
     )
 
-    async def await_cleanup() -> None:
-        cleanup_complete_event = coordinator.cleanup()
-        with suppress(TimeoutError):
-            await asyncio.wait_for(cleanup_complete_event.wait(), 1)
-
-    entry.async_on_unload(await_cleanup)
+    entry.async_on_unload(coordinator.async_cleanup)
 
     try:
         await coordinator.start()
@@ -70,6 +65,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: GoveeLocalConfigEntry) -
             translation_key="bind_failed",
             translation_placeholders={"error": ex.strerror or str(ex)},
         ) from ex
+
+    entry.async_on_unload(
+        async_track_time_interval(
+            hass,
+            coordinator.async_rebind_failed_addresses,
+            REBIND_INTERVAL,
+            name="Govee light local rebind",
+        )
+    )
 
     await coordinator.async_config_entry_first_refresh()
 

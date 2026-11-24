@@ -6,8 +6,10 @@ from typing import Any, Final, override
 from aioairzone.const import (
     AZD_AIR_DEMAND,
     AZD_BATTERY_LOW,
+    AZD_COLD_DEMAND,
     AZD_ERRORS,
     AZD_FLOOR_DEMAND,
+    AZD_HEAT_DEMAND,
     AZD_PROBLEMS,
     AZD_SYSTEMS,
     AZD_ZONES,
@@ -18,7 +20,6 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -57,8 +58,18 @@ ZONE_BINARY_SENSOR_TYPES: Final[tuple[AirzoneBinarySensorEntityDescription, ...]
     ),
     AirzoneBinarySensorEntityDescription(
         device_class=BinarySensorDeviceClass.RUNNING,
+        key=AZD_COLD_DEMAND,
+        translation_key="cold_demand",
+    ),
+    AirzoneBinarySensorEntityDescription(
+        device_class=BinarySensorDeviceClass.RUNNING,
         key=AZD_FLOOR_DEMAND,
         translation_key="floor_demand",
+    ),
+    AirzoneBinarySensorEntityDescription(
+        device_class=BinarySensorDeviceClass.RUNNING,
+        key=AZD_HEAT_DEMAND,
+        translation_key="heat_demand",
     ),
     AirzoneBinarySensorEntityDescription(
         attributes={
@@ -159,7 +170,7 @@ class AirzoneSystemBinarySensor(AirzoneSystemEntity, AirzoneBinarySensor):
         self,
         coordinator: AirzoneUpdateCoordinator,
         description: AirzoneBinarySensorEntityDescription,
-        entry: ConfigEntry,
+        entry: AirzoneConfigEntry,
         system_id: str,
         system_data: dict[str, Any],
     ) -> None:
@@ -177,7 +188,7 @@ class AirzoneZoneBinarySensor(AirzoneZoneEntity, AirzoneBinarySensor):
         self,
         coordinator: AirzoneUpdateCoordinator,
         description: AirzoneBinarySensorEntityDescription,
-        entry: ConfigEntry,
+        entry: AirzoneConfigEntry,
         system_zone_id: str,
         zone_data: dict[str, Any],
     ) -> None:

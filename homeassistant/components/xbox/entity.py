@@ -221,6 +221,7 @@ def check_deprecated_entity(
                     f"deprecated_entity_{xuid}_{entity_description.key}",
                     breaks_in_ha_version="2027.4.0",
                     config_entry_id=entity_entry.config_entry_id,
+                    config_subentry_id=entity_entry.config_subentry_id,
                     is_fixable=True,
                     severity=IssueSeverity.WARNING,
                     translation_key="deprecated_entity",

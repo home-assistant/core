@@ -3,7 +3,6 @@
 import probatio
 
 from homeassistant.components.notify import PLATFORM_SCHEMA as NOTIFY_PLATFORM_SCHEMA
-from homeassistant.const import CONF_URL
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
@@ -31,6 +30,6 @@ async def async_get_service(
         severity=ir.IssueSeverity.ERROR,
         translation_key="integration_removed",
         translation_placeholders={
-            CONF_URL: "https://www.home-assistant.io/integrations/telegram_bot#notifiers"
+            "url": "https://www.home-assistant.io/integrations/telegram_bot#notifiers"
         },
     )

@@ -36,6 +36,12 @@
       "cover": {
         "name": "Cover"
       },
+      "port_link": {
+        "name": "{port} link"
+      },
+      "port_link_unnamed": {
+        "name": "Port {port} link"
+      },
       "raid_degraded": {
         "name": "RAID array {id} degraded"
       }
@@ -46,11 +52,50 @@
       }
     },
     "sensor": {
+      "bandwidth_down": {
+        "name": "Download bandwidth"
+      },
+      "bandwidth_up": {
+        "name": "Upload bandwidth"
+      },
+      "connection_state": {
+        "name": "Connection state",
+        "state": {
+          "down": "Down",
+          "going_down": "Going down",
+          "going_up": "Going up",
+          "up": "Up"
+        }
+      },
+      "ipv4": {
+        "name": "WAN IPv4 address"
+      },
+      "ipv6": {
+        "name": "WAN IPv6 address"
+      },
       "missed": {
         "name": "Missed calls"
       },
       "partition_free_space": {
         "name": "{partition} free space"
+      },
+      "port_link_speed": {
+        "name": "{port} link speed"
+      },
+      "port_link_speed_unnamed": {
+        "name": "Port {port} link speed"
+      },
+      "port_rx_rate": {
+        "name": "{port} receive rate"
+      },
+      "port_rx_rate_unnamed": {
+        "name": "Port {port} receive rate"
+      },
+      "port_tx_rate": {
+        "name": "{port} transmit rate"
+      },
+      "port_tx_rate_unnamed": {
+        "name": "Port {port} transmit rate"
       },
       "rate_down": {
         "name": "Download speed"

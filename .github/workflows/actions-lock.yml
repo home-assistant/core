@@ -1,0 +1,54 @@
+name: Verify actions lockfile
+
+# yamllint disable-line rule:truthy
+on:
+  push:
+    branches:
+      - dev
+      - rc
+      - master
+    paths:
+      - ".github/actions/**"
+      - ".github/workflows/**"
+  pull_request:
+    branches:
+      - dev
+      - rc
+      - master
+
+permissions: {}
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    name: Verify actions lockfile
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read # To check out the repository and resolve the locked actions
+    env:
+      GH_ACTIONS_LOCK_VERSION: v0.5.0
+    steps:
+      - name: Check out code from GitHub
+        uses: actions/checkout@v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Check that branch refs are pinned to a commit
+        run: |
+          if grep -rnE 'uses:\s*[^ #]+@(main|master|dev)\b' .github/workflows .github/actions; then
+            echo "::error::Pin branch refs as @<sha> # <branch>, actions.lock would freeze them"
+            exit 1
+          fi
+
+      - name: Install gh-actions-lock
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh extension install github/gh-actions-lock --pin "${GH_ACTIONS_LOCK_VERSION}"
+
+      - name: Verify lockfile
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh actions-lock --verify

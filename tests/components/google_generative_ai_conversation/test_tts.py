@@ -21,12 +21,15 @@ from homeassistant.components.google_generative_ai_conversation.const import (
     DOMAIN,
     RECOMMENDED_TEMPERATURE,
 )
-from homeassistant.components.google_generative_ai_conversation.tts import ATTR_STYLE
+from homeassistant.components.google_generative_ai_conversation.tts import (
+    GoogleGenerativeAITextToSpeechOption,
+)
 from homeassistant.components.media_player import (
     ATTR_MEDIA_CONTENT_ID,
     DOMAIN as MP_DOMAIN,
     SERVICE_PLAY_MEDIA,
 )
+from homeassistant.components.tts import TextToSpeechCommonOption
 from homeassistant.config_entries import ConfigSubentry
 from homeassistant.const import ATTR_ENTITY_ID, CONF_API_KEY
 from homeassistant.core import HomeAssistant, ServiceCall
@@ -152,7 +155,7 @@ def config_fixture() -> dict[str, Any]:
             ATTR_ENTITY_ID: "tts.google_ai_tts",
             tts.ATTR_MEDIA_PLAYER_ENTITY_ID: "media_player.something",
             tts.ATTR_MESSAGE: "There is a person at the front door.",
-            tts.ATTR_OPTIONS: {tts.ATTR_VOICE: "voice2"},
+            tts.ATTR_OPTIONS: {TextToSpeechCommonOption.VOICE: "voice2"},
         },
     ],
 )
@@ -180,7 +183,9 @@ async def test_tts_service_speak(
         await retrieve_media(hass, hass_client, calls[0].data[ATTR_MEDIA_CONTENT_ID])
         == HTTPStatus.OK
     )
-    voice_id = service_data[tts.ATTR_OPTIONS].get(tts.ATTR_VOICE, "zephyr")
+    voice_id = service_data[tts.ATTR_OPTIONS].get(
+        TextToSpeechCommonOption.VOICE, "zephyr"
+    )
 
     tts_entity._genai_client.aio.models.generate_content.assert_called_once_with(
         model=TEST_CHAT_MODEL,
@@ -324,7 +329,7 @@ async def test_tts_service_speak_error(
         ATTR_ENTITY_ID: "tts.google_ai_tts",
         tts.ATTR_MEDIA_PLAYER_ENTITY_ID: "media_player.something",
         tts.ATTR_MESSAGE: "There is a person at the front door.",
-        tts.ATTR_OPTIONS: {tts.ATTR_VOICE: "voice1"},
+        tts.ATTR_OPTIONS: {TextToSpeechCommonOption.VOICE: "voice1"},
     }
     tts_entity = hass.data[tts.DOMAIN].get_entity(service_data[ATTR_ENTITY_ID])
     tts_entity._genai_client.aio.models.generate_content.reset_mock()
@@ -343,7 +348,7 @@ async def test_tts_service_speak_error(
         == HTTPStatus.INTERNAL_SERVER_ERROR
     )
 
-    voice_id = service_data[tts.ATTR_OPTIONS].get(tts.ATTR_VOICE)
+    voice_id = service_data[tts.ATTR_OPTIONS].get(TextToSpeechCommonOption.VOICE)
 
     tts_entity._genai_client.aio.models.generate_content.assert_called_once_with(
         model=TEST_CHAT_MODEL,
@@ -421,7 +426,7 @@ async def test_tts_wire_parameters(
         return_value=b"wav",
     ):
         assert await entity.async_get_tts_audio(
-            "Hello", "en-US", {tts.ATTR_VOICE: "zephyr"}
+            "Hello", "en-US", {TextToSpeechCommonOption.VOICE: "zephyr"}
         ) == ("wav", b"wav")
     config = mock_genai_transport.call_args.kwargs["http_request"].data[
         "generationConfig"
@@ -500,18 +505,30 @@ async def test_tts_audio_formats(
     ("model", "expected_options"),
     [
         pytest.param(
-            "gemini-3.8-flash-tts", [tts.ATTR_VOICE, ATTR_STYLE], id="flash_3_8"
+            "gemini-3.8-flash-tts",
+            [
+                TextToSpeechCommonOption.VOICE,
+                GoogleGenerativeAITextToSpeechOption.STYLE,
+            ],
+            id="flash_3_8",
         ),
         pytest.param(
             "models/gemini-3.8-flash-lite-tts",
-            [tts.ATTR_VOICE, ATTR_STYLE],
+            [
+                TextToSpeechCommonOption.VOICE,
+                GoogleGenerativeAITextToSpeechOption.STYLE,
+            ],
             id="flash_lite_3_8",
         ),
         pytest.param(
-            "gemini-3.1-flash-tts-preview", [tts.ATTR_VOICE], id="flash_3_1_preview"
+            "gemini-3.1-flash-tts-preview",
+            [TextToSpeechCommonOption.VOICE],
+            id="flash_3_1_preview",
         ),
         pytest.param(
-            "gemini-2.5-flash-preview-tts", [tts.ATTR_VOICE], id="flash_2_5_preview"
+            "gemini-2.5-flash-preview-tts",
+            [TextToSpeechCommonOption.VOICE],
+            id="flash_2_5_preview",
         ),
     ],
 )
@@ -550,7 +567,12 @@ async def test_tts_style_wire_parameters(
     entity = hass.data[tts.DOMAIN].get_entity("tts.google_ai_tts")
 
     await entity.async_get_tts_audio(
-        "Hello", "en-US", {tts.ATTR_VOICE: "zephyr", ATTR_STYLE: "cheerful"}
+        "Hello",
+        "en-US",
+        {
+            TextToSpeechCommonOption.VOICE: "zephyr",
+            GoogleGenerativeAITextToSpeechOption.STYLE: "cheerful",
+        },
     )
 
     body = mock_genai_transport.call_args.kwargs["http_request"].data
@@ -581,7 +603,9 @@ async def test_tts_style_not_supported_by_model(
                 ATTR_ENTITY_ID: "tts.google_ai_tts",
                 tts.ATTR_MEDIA_PLAYER_ENTITY_ID: "media_player.something",
                 tts.ATTR_MESSAGE: "Hello",
-                tts.ATTR_OPTIONS: {ATTR_STYLE: "cheerful"},
+                tts.ATTR_OPTIONS: {
+                    GoogleGenerativeAITextToSpeechOption.STYLE: "cheerful"
+                },
             },
             blocking=True,
         )

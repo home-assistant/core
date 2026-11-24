@@ -9,16 +9,15 @@ import pytest
 from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 
-from homeassistant.components.duckdns.const import (
-    ATTR_CONFIG_ENTRY,
-    ATTR_TXT,
-    DOMAIN,
-    SERVICE_SET_TXT,
-)
+from homeassistant.components.duckdns.const import DOMAIN
 from homeassistant.components.duckdns.coordinator import BACKOFF_INTERVALS
 from homeassistant.components.duckdns.helpers import UPDATE_URL
+from homeassistant.components.duckdns.services import (
+    DuckDnsService,
+    DuckDnsServiceArgument,
+)
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import CONF_ACCESS_TOKEN, CONF_DOMAIN
+from homeassistant.const import CONF_ACCESS_TOKEN, CONF_DOMAIN, CommonServiceArgument
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.util.dt import utcnow
@@ -125,10 +124,10 @@ async def test_service_set_txt(
 
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_SET_TXT,
+        DuckDnsService.SET_TXT,
         {
-            ATTR_CONFIG_ENTRY: "12345",
-            ATTR_TXT: "some-txt",
+            CommonServiceArgument.CONFIG_ENTRY_ID: "12345",
+            DuckDnsServiceArgument.TXT: "some-txt",
         },
         blocking=True,
     )
@@ -157,8 +156,8 @@ async def test_service_clear_txt(
     assert aioclient_mock.call_count == 0
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_SET_TXT,
-        {ATTR_CONFIG_ENTRY: "12345"},
+        DuckDnsService.SET_TXT,
+        {CommonServiceArgument.CONFIG_ENTRY_ID: "12345"},
         blocking=True,
     )
     assert aioclient_mock.call_count == 1
@@ -173,8 +172,8 @@ async def test_service_config_entry_not_found(
     with pytest.raises(ServiceValidationError) as e:
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_SET_TXT,
-            {ATTR_CONFIG_ENTRY: "1234"},
+            DuckDnsService.SET_TXT,
+            {CommonServiceArgument.CONFIG_ENTRY_ID: "1234"},
             blocking=True,
         )
     assert e.value.translation_key == "service_config_entry_not_found"
@@ -205,8 +204,8 @@ async def test_service_request_exception(
     ):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_SET_TXT,
-            {ATTR_CONFIG_ENTRY: config_entry.entry_id},
+            DuckDnsService.SET_TXT,
+            {CommonServiceArgument.CONFIG_ENTRY_ID: config_entry.entry_id},
             blocking=True,
         )
     assert e.value.translation_key == exception_msg
@@ -249,8 +248,8 @@ async def test_service_select_entry(
     assert aioclient_mock.call_count == 0
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_SET_TXT,
-        {ATTR_CONFIG_ENTRY: "67890"},
+        DuckDnsService.SET_TXT,
+        {CommonServiceArgument.CONFIG_ENTRY_ID: "67890"},
         blocking=True,
     )
     assert aioclient_mock.call_count == 1

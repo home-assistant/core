@@ -15,13 +15,7 @@ from homeassistant.components.vacuum import (
     VacuumEntityStateAttribute,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    ATTR_SUPPORTED_FEATURES,
-    CONF_NAME,
-    CONF_UNIQUE_ID,
-    STATE_IDLE,
-    STATE_PAUSED,
-)
+from homeassistant.const import CONF_NAME, CONF_UNIQUE_ID, STATE_IDLE, STATE_PAUSED
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -31,7 +25,12 @@ from homeassistant.util.json import json_loads_object
 
 from . import subscription
 from .config import MQTT_BASE_SCHEMA
-from .const import CONF_COMMAND_TOPIC, CONF_RETAIN, CONF_STATE_TOPIC
+from .const import (
+    CONF_COMMAND_TOPIC,
+    CONF_RETAIN,
+    CONF_STATE_TOPIC,
+    CONF_SUPPORTED_FEATURES,
+)
 from .entity import MqttEntity, async_setup_entity_entry_helper
 from .models import MqttCommandTemplate, ReceiveMessage
 from .schemas import MQTT_ENTITY_COMMON_SCHEMA
@@ -59,7 +58,6 @@ POSSIBLE_STATES: dict[str, VacuumActivity] = {
 
 CONF_CLEAN_SEGMENTS_COMMAND_TOPIC = "clean_segments_command_topic"
 CONF_CLEAN_SEGMENTS_COMMAND_TEMPLATE = "clean_segments_command_template"
-CONF_SUPPORTED_FEATURES = ATTR_SUPPORTED_FEATURES
 CONF_PAYLOAD_TURN_ON = "payload_turn_on"
 CONF_PAYLOAD_TURN_OFF = "payload_turn_off"
 CONF_PAYLOAD_RETURN_TO_BASE = "payload_return_to_base"

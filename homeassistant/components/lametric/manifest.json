@@ -4,6 +4,7 @@
   "categories": ["messaging_notifications.push_notifications"],
   "codeowners": ["@robbiet480", "@frenck", "@bachya"],
   "config_flow": true,
+  "connectivity": ["network"],
   "dependencies": ["application_credentials", "media_source"],
   "dhcp": [
     {

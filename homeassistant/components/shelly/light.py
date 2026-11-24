@@ -594,47 +594,54 @@ class RpcShellyRgbwLight(RpcShellyLightBase):
     _attr_supported_features = LightEntityFeature.TRANSITION
 
 
-LIGHTS: Final = {
-    "switch": RpcEntityDescription(
+LIGHTS: Final = (
+    RpcEntityDescription(
         key="switch",
+        components=("switch",),
         sub_key="output",
         removal_condition=lambda config, _status, key: (
             not is_rpc_channel_type_light(config, get_rpc_key_id(key))
         ),
         entity_class=RpcShellySwitchAsLight,
     ),
-    "light": RpcEntityDescription(
+    RpcEntityDescription(
         key="light",
+        components=("light",),
         sub_key="output",
         entity_class=RpcShellyLight,
     ),
-    "cct": RpcEntityDescription(
+    RpcEntityDescription(
         key="cct",
+        components=("cct",),
         sub_key="output",
         entity_class=RpcShellyCctLight,
     ),
-    "rgb": RpcEntityDescription(
+    RpcEntityDescription(
         key="rgb",
+        components=("rgb",),
         sub_key="output",
         entity_class=RpcShellyRgbLight,
     ),
-    "rgbcct": RpcEntityDescription(
+    RpcEntityDescription(
         key="rgbcct",
+        components=("rgbcct",),
         sub_key="output",
         entity_class=RpcShellyRgbCctLight,
     ),
-    "rgbw": RpcEntityDescription(
+    RpcEntityDescription(
         key="rgbw",
+        components=("rgbw",),
         sub_key="output",
         entity_class=RpcShellyRgbwLight,
     ),
-    "ledstrip": RpcEntityDescription(
+    RpcEntityDescription(
         key="ledstrip",
+        components=("ledstrip",),
         sub_key="on",
         translation_key="ledstrip",
         entity_class=RpcShellyLedStrip,
     ),
-}
+)
 
 
 @callback

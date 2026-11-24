@@ -100,6 +100,13 @@ async def _migrate_to_new_unique_id(
         old_unique_id = f"{avm_wrapper.unique_id}-{slugify(description)}"
         new_unique_id = f"{avm_wrapper.unique_id}-wi_fi_{network['switch_name']}"
 
+        if old_unique_id == new_unique_id:
+            LOGGER.debug(
+                "Skip migration of Wi-Fi switch for %s, as it already fits the new id",
+                description,
+            )
+            continue
+
         entity_id = entity_registry.async_get_entity_id(
             Platform.SWITCH, DOMAIN, old_unique_id
         )
@@ -513,7 +520,7 @@ class FritzBoxProfileSwitch(FritzBoxBaseCoordinatorSwitch):
     @override
     def available(self) -> bool:
         """Return availability of the switch."""
-        if self._device.wan_access is None:
+        if not self._device.ip_address:
             return False
         return self.coordinator.last_update_success
 

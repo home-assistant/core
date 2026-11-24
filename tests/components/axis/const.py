@@ -120,6 +120,18 @@ BASIC_DEVICE_INFO_RESPONSE = {
     },
 }
 
+COMPANION_FULL_NAME = "AXIS Companion Cube L Network Camera"
+
+BASIC_DEVICE_INFO_COMPANION_RESPONSE = {
+    **BASIC_DEVICE_INFO_RESPONSE,
+    "data": {
+        "propertyList": {
+            **BASIC_DEVICE_INFO_RESPONSE["data"]["propertyList"],
+            "ProdFullName": COMPANION_FULL_NAME,
+        }
+    },
+}
+
 
 MQTT_CLIENT_RESPONSE = {
     "method": "getClientStatus",
@@ -216,6 +228,10 @@ root.Brand.ProdType=Network Camera
 root.Brand.ProdVariant=
 root.Brand.WebURL=http://www.axis.com
 """
+
+BRAND_COMPANION_RESPONSE = BRAND_RESPONSE.replace(
+    "AXIS M1065-LW Network Camera", COMPANION_FULL_NAME
+)
 
 IMAGE_RESPONSE = """root.Image.I0.Enabled=yes
 root.Image.I0.Name=View Area 1
