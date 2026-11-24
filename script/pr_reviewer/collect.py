@@ -10,8 +10,8 @@ it defaults to the pull request's head. --set-outputs also writes `head_sha`
 to GITHUB_OUTPUT, or `skip=true` when there is nothing to review.
 
 The workflow keeps no state of its own and reads it back from the pull request:
-its reviews carry gh-aw's hidden marker, and its last review's commit is the
-reviewed head.
+its reviews carry gh-aw's hidden marker, and the commit of its last complete
+review is the reviewed head.
 """
 
 import argparse
@@ -28,6 +28,8 @@ from typing import Any
 BOT = "github-actions[bot]"
 # Part of the hidden marker gh-aw adds to this workflow's review bodies.
 MARKER = "workflow_id: pr-reviewer,"
+# Closes the body of a finished review: gh-aw also posts reviews cut short.
+COMPLETE_MARKER = "completed_review: true"
 MAX_CHANGED_LINES = 5000
 MAX_CHANGED_FILES = 100
 FILE_DIFF_START = re.compile(rb"^(?=diff --git )", re.MULTILINE)
@@ -170,6 +172,7 @@ def collect(
     ]
     for review in reviews:
         review["ours"] = review["user"] == BOT and MARKER in (review["body"] or "")
+        review["complete"] = review["ours"] and COMPLETE_MARKER in review["body"]
     write_json(out / "reviews.json", reviews)
     our_reviews = {review["id"] for review in reviews if review["ours"]}
 
@@ -260,11 +263,11 @@ def collect(
             f"#{number} changes {changed_lines} lines in {len(files)} files, above"
             f" the limit of {MAX_CHANGED_LINES} lines and {MAX_CHANGED_FILES} files"
         )
-    ours = sorted(
-        (review for review in reviews if review["ours"]),
+    complete = sorted(
+        (review for review in reviews if review["complete"]),
         key=lambda review: review["submitted_at"] or "",
     )
-    reviewed_head = ours[-1]["commit_id"] if ours else None
+    reviewed_head = complete[-1]["commit_id"] if complete else None
     if reviewed_head == head_sha:
         raise Skip(f"#{number} was already reviewed at {head_sha}")
 

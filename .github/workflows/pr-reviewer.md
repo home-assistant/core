@@ -181,12 +181,12 @@ Read these files in `/tmp/gh-aw/agent/` instead of calling GitHub for the same d
 
 - `task.json`: whether to review.
   - `review`: whether to review the PR. When false, the other files may be missing.
-  - `reviewed_head`: the commit of your last review, or null.
+  - `reviewed_head`: the commit of your last complete review, or null.
   - `reason`: why not to review, when set.
 - `pr.json`: number, title, body, author, head SHA, base branch and labels.
 - `pr.diff`: the PR diff, without test snapshot (`.ambr`) files.
 - `since-review.diff`: the changes on the PR branch since `reviewed_head`, in the files the PR changed then or changes now. Only when `review` is true and `reviewed_head` is set; missing when GitHub refused it. It also holds changes merged in from `dev` to those files: ignore those not in `pr.diff`.
-- `reviews.json`, `review-comments.json`, `issue-comments.json`: every review, review comment and PR conversation comment. In reviews and review comments, `ours: true` marks yours. A review comment's `thread` is the ID of its thread's first comment.
+- `reviews.json`, `review-comments.json`, `issue-comments.json`: every review, review comment and PR conversation comment. In reviews and review comments, `ours: true` marks yours. A review of yours with `complete: false` was cut short before its body was posted. A review comment's `thread` is the ID of its thread's first comment.
 - `threads.json`: the resolved and outdated state of each review thread, by `thread`.
 
 The workspace is the PR head, except that every Markdown file and the `.github`, `.claude` and other agent configuration folders are taken from `dev`: read the PR's changes to those in `pr.diff`. `git show dev:<path>` reads a file as on `dev`. The clone is shallow, so don't diff against `dev` locally.
@@ -204,10 +204,12 @@ When `task.review` is false, post nothing, call `noop` with a one-line reason, a
   - Tag every finding. Post those tagged `[CRITICAL]`, `[PROBLEM]` or `[NIT]`; drop any tagged `[SUGGESTION]` or `[PRE-EXISTING]`, even with another tag.
 - Read the surrounding code in the workspace.
 - Read the existing reviews and comments. Skip points already raised.
-- With a `reviewed_head`: check each change you requested earlier against the head, and review the changes in `since-review.diff` (all of `pr.diff` if it's missing).
+- With earlier reviews of yours, also cut short ones: check each change you requested in them against the head. This makes it a re-review.
+- With a `reviewed_head`: review the changes in `since-review.diff` (all of `pr.diff` if it's missing).
 
 ## Posting a review
 
+- Post nothing until the review is finished. Then post the inline comments and submit the review right after them.
 - Each finding on a line inside a hunk of `pr.diff` goes only in an inline comment: `create_pull_request_review_comment` with `path`, `line`, optional `start_line`, and `side: RIGHT`. No severity tag; start nits with `nit: `. Add a `suggestion` block when the fix is a small, exact replacement of those lines. At most 20 inline comments: put findings on other lines, and any beyond 20, in the body.
 - Then `submit_pull_request_review` with event `COMMENT`. Every review ends with it, also one without findings. This body:
   - With critical or problem findings:
@@ -216,3 +218,11 @@ When `task.review` is false, post nothing, call `noop` with a one-line reason, a
     - On a re-review: the numbered list holds the earlier requested changes still open and the new findings not in an inline comment; the fixed ones go in a separate list, without `[CRITICAL]` or `[PROBLEM]`.
   - Without: `LGTM.` and no summary, also on a re-review: no list of fixed changes. Add a short note after it only for something the maintainer should know, such as the code doing something the PR body doesn't say.
   - Nits not in an inline comment go last, in a list, each starting with `nit: `, with file and line.
+  - Close it with this exact block, without the code fence. It marks the review as finished:
+
+    ```markdown
+    <details><summary>Review state</summary>
+
+    completed_review: true
+    </details>
+    ```

@@ -36,7 +36,12 @@ MARKER = (
     "<!-- gh-aw-agentic-workflow: PR reviewer, workflow_id: pr-reviewer,"
     " run: https://github.com/home-assistant/core/actions/runs/1 -->"
 )
-OUR_REVIEW_BODY = f"A few suggestions.\n\n{MARKER}"
+COMPLETE_BLOCK = (
+    "<details><summary>Review state</summary>\n\ncompleted_review: true\n</details>"
+)
+OUR_REVIEW_BODY = f"A few suggestions.\n\n{COMPLETE_BLOCK}\n\n{MARKER}"
+# gh-aw posts the inline comments of a review cut short, with only its footer.
+CUT_SHORT_REVIEW_BODY = f"\n\n{MARKER}"
 OTHER_WORKFLOW_REVIEW_BODY = (
     "Quality scale review.\n\n<!-- gh-aw-agentic-workflow: Quality scale reviewer,"
     " workflow_id: quality-scale-reviewer,"
@@ -421,12 +426,17 @@ def test_pr_json(gh: FakeGh, collector: Collector) -> None:
 
 
 @pytest.mark.parametrize(
-    ("user", "body", "ours"),
+    ("user", "body", "ours", "complete"),
     [
-        pytest.param(BOT, OUR_REVIEW_BODY, True, id="bot-with-marker"),
-        pytest.param(BOT, OTHER_WORKFLOW_REVIEW_BODY, False, id="bot-without-marker"),
-        pytest.param(REVIEWER, OUR_REVIEW_BODY, False, id="other-user-with-marker"),
-        pytest.param(None, OUR_REVIEW_BODY, False, id="ghost"),
+        pytest.param(BOT, OUR_REVIEW_BODY, True, True, id="bot-with-marker"),
+        pytest.param(BOT, CUT_SHORT_REVIEW_BODY, True, False, id="bot-cut-short"),
+        pytest.param(
+            BOT, OTHER_WORKFLOW_REVIEW_BODY, False, False, id="bot-without-marker"
+        ),
+        pytest.param(
+            REVIEWER, OUR_REVIEW_BODY, False, False, id="other-user-with-marker"
+        ),
+        pytest.param(None, OUR_REVIEW_BODY, False, False, id="ghost"),
     ],
 )
 @pytest.mark.usefixtures("earlier_review")
@@ -436,13 +446,20 @@ def test_reviews_ours(
     user: dict[str, Any] | None,
     body: str,
     ours: bool,
+    complete: bool,
 ) -> None:
-    """Test only the bot's reviews with the workflow's marker are ours."""
+    """Test only the bot's reviews with the workflow's marker are ours.
+
+    Only ours with the complete marker are complete.
+    """
     gh.json(REVIEWS, [[review(1, user, body)]])
 
     collector.run()
 
-    assert [review["ours"] for review in collector.json("reviews.json")] == [ours]
+    assert [
+        (review["ours"], review["complete"])
+        for review in collector.json("reviews.json")
+    ] == [(ours, complete)]
 
 
 def test_review_comments_thread(gh: FakeGh, collector: Collector) -> None:
@@ -469,6 +486,12 @@ def test_review_comments_thread(gh: FakeGh, collector: Collector) -> None:
     [
         pytest.param(
             OUR_REVIEW_BODY, [review_comment(10, BOT, 1)], [True], id="our-review"
+        ),
+        pytest.param(
+            CUT_SHORT_REVIEW_BODY,
+            [review_comment(10, BOT, 1)],
+            [True],
+            id="our-review-cut-short",
         ),
         pytest.param(
             OTHER_WORKFLOW_REVIEW_BODY,
@@ -626,13 +649,14 @@ def test_size_over_limit(
 
 
 @pytest.mark.parametrize(
-    "reviews",
+    ("reviews", "reviewed_head"),
     [
         pytest.param(
             [
                 our_review(1, commit_id=OLDER, submitted_at="2026-11-01T10:00:00Z"),
                 our_review(2, commit_id=REVIEWED, submitted_at="2026-11-10T10:00:00Z"),
             ],
+            REVIEWED,
             id="latest-of-ours",
         ),
         pytest.param(
@@ -653,20 +677,43 @@ def test_size_over_limit(
                     submitted_at="2026-11-13T10:00:00Z",
                 ),
             ],
+            REVIEWED,
             id="newer-reviews-not-ours",
+        ),
+        pytest.param(
+            [
+                our_review(1),
+                review(
+                    2,
+                    BOT,
+                    CUT_SHORT_REVIEW_BODY,
+                    commit_id=HEAD,
+                    submitted_at="2026-11-12T10:00:00Z",
+                ),
+            ],
+            REVIEWED,
+            id="newer-review-cut-short",
+        ),
+        pytest.param(
+            [review(1, BOT, CUT_SHORT_REVIEW_BODY, commit_id=HEAD)],
+            None,
+            id="only-review-cut-short",
         ),
     ],
 )
 @pytest.mark.usefixtures("earlier_review")
 def test_reviewed_head(
-    gh: FakeGh, collector: Collector, reviews: list[dict[str, Any]]
+    gh: FakeGh,
+    collector: Collector,
+    reviews: list[dict[str, Any]],
+    reviewed_head: str | None,
 ) -> None:
-    """Test the reviewed head is the commit of our latest review."""
+    """Test the reviewed head is the commit of our latest complete review."""
     gh.json(REVIEWS, [reviews])
 
     collector.run()
 
-    collector.assert_reviewed(REVIEWED)
+    collector.assert_reviewed(reviewed_head)
 
 
 def test_already_reviewed(gh: FakeGh, collector: Collector) -> None:

@@ -79,7 +79,8 @@
           "body": "Ça a l'air bien 👍",
           "user": "reviewer",
           "user_type": "User",
-          "ours": false
+          "ours": false,
+          "complete": false
         }
       ]
   
