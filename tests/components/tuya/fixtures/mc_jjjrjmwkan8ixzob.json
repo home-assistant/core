@@ -1,0 +1,69 @@
+{
+  "endpoint": "https://apigw.tuyaeu.com",
+  "mqtt_connected": true,
+  "disabled_by": null,
+  "disabled_polling": false,
+  "name": "Door Sensor",
+  "category": "mc",
+  "product_id": "jjjrjmwkan8ixzob",
+  "product_name": "Door Sensor",
+  "online": true,
+  "sub": false,
+  "time_zone": "+10:00",
+  "active_time": "2026-11-19T05:49:09+00:00",
+  "create_time": "2026-11-19T05:49:09+00:00",
+  "update_time": "2026-11-19T05:49:09+00:00",
+  "function": {},
+  "local_strategy": {
+    "1": {
+      "value_convert": "enum",
+      "status_code": "doorcontact_state",
+      "config_item": {
+        "statusFormat": "{\"doorcontact_state\":\"$\"}",
+        "valueDesc": "{}",
+        "valueType": "Boolean",
+        "enumMappingMap": {
+          "closed": {
+            "code": "doorcontact_state",
+            "value": "false"
+          },
+          "opened": {
+            "code": "doorcontact_state",
+            "value": "true"
+          }
+        },
+        "pid": "jjjrjmwkan8ixzob"
+      }
+    },
+    "101": {
+      "value_convert": "enum",
+      "status_code": "battery_state",
+      "config_item": {
+        "statusFormat": "{\"battery_state\":\"$\"}",
+        "valueDesc": "{\"range\":[\"low\",\"middle\",\"high\"]}",
+        "valueType": "Enum",
+        "enumMappingMap": {},
+        "pid": "jjjrjmwkan8ixzob"
+      }
+    }
+  },
+  "status_range": {
+    "doorcontact_state": {
+      "type": "Boolean",
+      "value": "{}",
+      "report_type": null
+    },
+    "battery_state": {
+      "type": "Enum",
+      "value": "{\"range\":[\"low\",\"middle\",\"high\"]}",
+      "report_type": null
+    }
+  },
+  "status": {
+    "doorcontact_state": "false"
+  },
+  "set_up": true,
+  "support_local": true,
+  "quirk": null,
+  "warnings": null
+}
