@@ -14,7 +14,7 @@ from homeassistant.components.lock import (
     LockService,
     LockState,
 )
-from homeassistant.const import ATTR_ENTITY_ID, CommonServiceArgument, Platform
+from homeassistant.const import ATTR_ENTITY_ID, Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -91,7 +91,7 @@ async def test_lock_open_service(
     await hass.services.async_call(
         LOCK_DOMAIN,
         LockService.OPEN,
-        {CommonServiceArgument.ENTITY_ID: "lock.test_lock"},
+        {TargetKey.ENTITY_ID: "lock.test_lock"},
         blocking=True,
     )
     mock_homee.set_value.assert_called_once_with(1, 1, open_value)

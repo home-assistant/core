@@ -19,7 +19,6 @@ import xmltodict
 from homeassistant.components.device_tracker import (
     CONF_CONSIDER_HOME,
     DEFAULT_CONSIDER_HOME,
-    DOMAIN as DEVICE_TRACKER_DOMAIN,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -110,7 +109,7 @@ class FritzConnectionCached(FritzConnection):  # type: ignore[misc]
         **kwargs: Any,
     ) -> dict[str, Any]:
         """Call action with cached services. Only get actions are cached."""
-        if not action_name.lower().startswith("get"):
+        if not action_name.lower().startswith(("get", "x_avm-de_get")):
             return super().call_action(  # type: ignore[no-any-return]
                 service_name, action_name, arguments=arguments, **kwargs
             )
@@ -170,6 +169,7 @@ class FritzBoxTools(DataUpdateCoordinator[UpdateCoordinatorDataType]):
         self.mesh_wifi_uplink = False
         self.device_conn_type: str | None = None
         self.device_is_router: bool = False
+        self.hosts: dict[str, Device] = {}
         self.password = password
         self.port = port
         self.username = username
@@ -414,6 +414,7 @@ class FritzBoxTools(DataUpdateCoordinator[UpdateCoordinatorDataType]):
             "port_mappings": {},
         }
         self.connection.clear_cache()
+        self.hosts = {}
         try:
             await self.async_update_device_info()
 
@@ -703,7 +704,7 @@ class FritzBoxTools(DataUpdateCoordinator[UpdateCoordinatorDataType]):
             consider_home = _default_consider_home
 
         new_device = False
-        hosts = await self._async_update_hosts_info()
+        self.hosts = await self._async_update_hosts_info()
         self._mesh_topology_raw = None
 
         if not self.fritz_status.device_has_mesh_support or (
@@ -714,7 +715,7 @@ class FritzBoxTools(DataUpdateCoordinator[UpdateCoordinatorDataType]):
                 "Using old hosts discovery method. (Mesh not supported or user option)"
             )
             self.mesh_role = MeshRoles.NONE
-            for mac, info in hosts.items():
+            for mac, info in self.hosts.items():
                 # The box lists its own LAN MAC in the Hosts table; skip it so it
                 # is not tracked as a child of itself, as the mesh path does.
                 if dr.format_mac(mac) == self.mac:
@@ -769,10 +770,10 @@ class FritzBoxTools(DataUpdateCoordinator[UpdateCoordinatorDataType]):
             for interf in node["node_interfaces"]:
                 dev_mac = interf["mac_address"]
 
-                if dev_mac not in hosts:
+                if dev_mac not in self.hosts:
                     continue
 
-                dev_info: Device = hosts[dev_mac]
+                dev_info: Device = self.hosts[dev_mac]
 
                 for link in interf["node_links"]:
                     if link.get("state") != "CONNECTED":
@@ -840,19 +841,21 @@ class FritzBoxTools(DataUpdateCoordinator[UpdateCoordinatorDataType]):
         LOGGER.debug("Device tracker cleanup triggered")
         device_hosts = {self.mac: Device(True, "", "", "", "", None)}
         if self.device_discovery_enabled:
-            device_hosts.update(await self._async_update_hosts_info())
+            device_hosts.update(self.hosts)
         entity_reg: er.EntityRegistry = er.async_get(self.hass)
         config_entry = self.config_entry
 
         entities: list[er.RegistryEntry] = er.async_entries_for_config_entry(
             entity_reg, config_entry.entry_id
         )
+        # Legacy guest Wi-Fi image unique_ids are lowercase until migrated on platform setup
+        box_prefix = self.unique_id.lower()
         for entity in entities:
+            if entity.unique_id.lower().startswith(box_prefix):
+                continue
             entry_mac = entity.unique_id.split("_")[0]
-            if (
-                entity.domain == DEVICE_TRACKER_DOMAIN
-                or "_internet_access" in entity.unique_id
-            ) and entry_mac not in device_hosts:
+            # The box lists its own MAC in the Hosts table, but never tracks itself
+            if entry_mac not in device_hosts or dr.format_mac(entry_mac) == self.mac:
                 LOGGER.debug("Removing orphan entity entry %s", entity.entity_id)
                 entity_reg.async_remove(entity.entity_id)
 

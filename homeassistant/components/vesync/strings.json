@@ -112,6 +112,14 @@
       }
     },
     "select": {
+      "auto_preference": {
+        "name": "Auto mode preference",
+        "state": {
+          "default": "Default",
+          "efficient": "Efficient",
+          "quiet": "Quiet"
+        }
+      },
       "night_light_level": {
         "name": "Night light level",
         "state": {
@@ -129,6 +137,12 @@
       },
       "co2": {
         "name": "Carbon dioxide"
+      },
+      "cook_end_time": {
+        "name": "Cooking end"
+      },
+      "cook_end_time_basket": {
+        "name": "Basket {basket} cooking end"
       },
       "cook_set_temp": {
         "name": "Cooking set temperature"
@@ -201,11 +215,17 @@
       "filter_life": {
         "name": "Filter lifetime"
       },
+      "hepa_filter_life": {
+        "name": "HEPA filter lifetime"
+      },
       "preheat_set_time": {
         "name": "Preheating set time"
       },
       "preheat_set_time_basket": {
         "name": "Basket {basket} preheating set time"
+      },
+      "voc": {
+        "name": "Volatile organic compounds"
       }
     },
     "switch": {
@@ -232,6 +252,9 @@
   "exceptions": {
     "api_response_error": {
       "message": "Invalid response from the VeSync API"
+    },
+    "auto_preference_not_supported": {
+      "message": "This device does not support auto mode preferences"
     },
     "invalid_auth": {
       "message": "[%key:common::config_flow::error::invalid_auth%]"

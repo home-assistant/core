@@ -173,6 +173,10 @@ def async_setup_services(hass: HomeAssistant) -> None:
         ModbusService.STOP,
         _async_stop_hub,
         schema=probatio.Schema(
-            {probatio.Required(ModbusServiceArgument.HUB): cv.string}
+            {
+                probatio.Optional(
+                    ModbusServiceArgument.HUB, default=DEFAULT_HUB
+                ): cv.string
+            }
         ),
     )

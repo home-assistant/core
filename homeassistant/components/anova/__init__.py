@@ -13,7 +13,7 @@ from anova_wifi import (
 
 from homeassistant.const import CONF_DEVICES, CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import aiohttp_client
 
 from .const import DOMAIN
@@ -34,7 +34,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: AnovaConfigEntry) -> Non
     try:
         await api.authenticate()
     except InvalidLogin as err:
-        raise ConfigEntryError(
+        raise ConfigEntryAuthFailed(
             translation_domain=DOMAIN,
             translation_key="invalid_login",
         ) from err
