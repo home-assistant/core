@@ -4,7 +4,7 @@ from collections import defaultdict
 from collections.abc import Iterable, Iterator
 from contextlib import suppress
 import heapq
-from typing import Any, Literal, cast, override
+from typing import Any, Literal, override
 
 import probatio
 
@@ -13,11 +13,8 @@ from homeassistant.components.llm import LLMTools, flow as llm_flow
 from homeassistant.config_entries import (
     ConfigEntry,
     ConfigEntryState,
-    ConfigFlow,
     ConfigFlowResult,
     ConfigSubentry,
-    ConfigSubentryFlow,
-    OptionsFlow,
     SubentryFlowResult,
 )
 from homeassistant.core import HomeAssistant, callback
@@ -480,15 +477,22 @@ class SearchIntegrationsTool(Tool):
 
 def _resolve_short_flow_id(
     hass: HomeAssistant, flow_id: str
-) -> ConfigFlow | OptionsFlow | ConfigSubentryFlow:
+) -> tuple[
+    data_entry_flow.FlowManager[Any, Any, Any], ConfigFlowResult | SubentryFlowResult
+]:
     """Resolve an active flow from a '<domain>:<suffix>' short ID."""
     domain, sep, suffix = flow_id.partition(":")
     if not sep or not domain or len(suffix) < _MIN_SHORT_ID_LEN:
         raise HomeAssistantError(f"Flow '{flow_id}' not found.")
 
     flow_mgr = hass.config_entries.flow
-    matches: list[ConfigFlow | OptionsFlow | ConfigSubentryFlow] = [
-        cast(ConfigFlow, flow_mgr._progress[flw["flow_id"]])  # noqa: SLF001
+    matches: list[
+        tuple[
+            data_entry_flow.FlowManager[Any, Any, Any],
+            ConfigFlowResult | SubentryFlowResult,
+        ]
+    ] = [
+        (flow_mgr, flw)
         for flw in flow_mgr.async_progress_by_handler(domain)
         if flw["flow_id"].endswith(suffix)
     ]
@@ -498,18 +502,18 @@ def _resolve_short_flow_id(
     entry_ids = {entry.entry_id for entry in hass.config_entries.async_entries(domain)}
     for entry_id in entry_ids:
         matches.extend(
-            cast(OptionsFlow, options_mgr._progress[flw["flow_id"]])  # noqa: SLF001
+            (options_mgr, flw)
             for flw in options_mgr.async_progress_by_handler(entry_id)
             if flw["flow_id"].endswith(suffix)
         )
     matches.extend(
-        cast(ConfigSubentryFlow, subentry_mgr._progress[flw["flow_id"]])  # noqa: SLF001
+        (subentry_mgr, flw)
         for flw in subentry_mgr.async_progress()
         if flw["handler"][0] in entry_ids and flw["flow_id"].endswith(suffix)
     )
     if not matches:
         matches.extend(
-            cast(ConfigSubentryFlow, subentry_mgr._progress[flw["flow_id"]])  # noqa: SLF001
+            (subentry_mgr, flw)
             for flw in subentry_mgr.async_progress()
             if flw["flow_id"].endswith(suffix)
             and hass.config_entries.async_get_entry(flw["handler"][0]) is None
@@ -998,35 +1002,32 @@ class ConfigureFlowTool(Tool):
         abort: bool = args["abort"]
 
         try:
-            flow_handler = _resolve_short_flow_id(hass, short_flow_id)
+            flow_mgr, flw = _resolve_short_flow_id(hass, short_flow_id)
         except HomeAssistantError as err:
             return _error_result(str(err))
 
+        flow_id = flw["flow_id"]
+        handler = flw["handler"]
         subentry_type: str | None = None
-        if isinstance(flow_handler, OptionsFlow):
-            flow_mgr: data_entry_flow.FlowManager[Any, Any, Any] = (
-                hass.config_entries.options
-            )
-            domain = flow_handler.config_entry.domain
-            flow_category: _FlowCategory = "options"
-            is_new_entry = False
-        elif isinstance(flow_handler, ConfigSubentryFlow):
-            flow_mgr = hass.config_entries.subentries
-            entry_id, subentry_type = flow_handler.handler
+        if isinstance(handler, tuple):
+            entry_id, subentry_type = handler
             if (entry := hass.config_entries.async_get_entry(entry_id)) is None:
                 if not abort:
-                    flow_mgr.async_abort(flow_handler.flow_id)
+                    flow_mgr.async_abort(flow_id)
                     return _error_result("Config entry or subentry no longer exists.")
                 domain = ""
             else:
                 domain = entry.domain
-            flow_category = "config_subentries"
+            flow_category: _FlowCategory = "config_subentries"
+            is_new_entry = False
+        elif flow_mgr is hass.config_entries.options:
+            domain = hass.config_entries.async_get_known_entry(handler).domain
+            flow_category = "options"
             is_new_entry = False
         else:
-            flow_mgr = hass.config_entries.flow
-            domain = flow_handler.handler
+            domain = handler
             flow_category = "config"
-            is_new_entry = flow_handler.context.get("source") not in (
+            is_new_entry = flw["context"].get("source") not in (
                 config_entries.SOURCE_REAUTH,
                 config_entries.SOURCE_RECONFIGURE,
             )
@@ -1034,7 +1035,7 @@ class ConfigureFlowTool(Tool):
         try:
             step_result = await llm_flow.async_configure_step(
                 flow_mgr,
-                flow_handler.flow_id,
+                flow_id,
                 display_flow_id=short_flow_id,
                 user_input=user_input,
                 next_step_id=next_step_id,
@@ -1042,12 +1043,12 @@ class ConfigureFlowTool(Tool):
             )
         except config_entries.UnknownEntry, config_entries.UnknownSubEntry:
             with suppress(data_entry_flow.UnknownFlow):
-                flow_mgr.async_abort(flow_handler.flow_id)
+                flow_mgr.async_abort(flow_id)
             return _error_result("Config entry or subentry no longer exists.")
         except RuntimeError as err:
             if str(err) not in _OAUTH_RUNTIME_ERRORS:
                 raise
-            flow_mgr.async_abort(flow_handler.flow_id)
+            flow_mgr.async_abort(flow_id)
             return _build_external_step_error(domain, is_new_entry=is_new_entry)
 
         if isinstance(step_result, ToolResult):
