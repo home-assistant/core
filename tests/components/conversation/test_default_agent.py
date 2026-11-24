@@ -1,8 +1,8 @@
 """Test for the default agent."""
 
 from collections import defaultdict
-import os
-import tempfile
+from collections.abc import Callable, Generator
+from pathlib import Path
 from typing import Any
 from unittest.mock import AsyncMock, patch
 
@@ -102,6 +102,28 @@ async def init_components(hass: HomeAssistant) -> None:
     assert await async_setup_component(hass, TIMER_LIST_DOMAIN, {})
     assert await async_setup_component(hass, DOMAIN, {})
     assert await async_setup_component(hass, "intent", {})
+
+
+@pytest.fixture
+def set_custom_sentences(
+    hass: HomeAssistant, tmp_path: Path
+) -> Generator[Callable[[dict[str, Any]], None]]:
+    """Return a function that sets the intents of the English custom sentences."""
+    config_path = hass.config.path
+
+    def path(*parts: str) -> str:
+        if parts[:1] == ("custom_sentences",):
+            return str(tmp_path.joinpath(*parts[1:]))
+        return config_path(*parts)
+
+    def set_intents(intents: dict[str, Any]) -> None:
+        (tmp_path / "en").mkdir()
+        (tmp_path / "en" / "sentences.yaml").write_text(
+            yaml.dump({"language": "en", "intents": intents}), encoding="utf-8"
+        )
+
+    with patch.object(hass.config, "path", path):
+        yield set_intents
 
 
 @pytest.mark.parametrize(
@@ -3448,56 +3470,90 @@ async def test_name_match_fallback_empty_answer(
     ]
 
 
-@pytest.mark.usefixtures("init_components")
-async def test_fixed_name_slot_priority(hass: HomeAssistant) -> None:
+async def test_custom_sentences_priority(
+    hass: HomeAssistant,
+    hass_admin_user: MockUser,
+    snapshot: SnapshotAssertion,
+    set_custom_sentences: Callable[[dict[str, Any]], None],
+) -> None:
+    """Test custom_sentences have priority over builtins."""
+    # Add a custom sentence that would match a builtin sentence.
+    # Custom sentences have priority.
+    set_custom_sentences(
+        {"CustomIntent": {"data": [{"sentences": ["turn on the lamp"]}]}}
+    )
+
+    assert await async_setup_component(hass, "homeassistant", {})
+    assert await async_setup_component(hass, DOMAIN, {})
+    assert await async_setup_component(hass, "light", {})
+    assert await async_setup_component(hass, "intent", {})
+    assert await async_setup_component(
+        hass,
+        "intent_script",
+        {"intent_script": {"CustomIntent": {"speech": {"text": "custom response"}}}},
+    )
+
+    # Ensure that a "lamp" exists so that we can verify the custom intent
+    # overrides the builtin sentence.
+    hass.states.async_set("light.lamp", "off")
+
+    result = await conversation.async_converse(
+        hass,
+        "turn on the lamp",
+        None,
+        Context(),
+        language=hass.config.language,
+    )
+
+    data = result.as_dict()
+    assert data["response"]["response_type"] == "action_done"
+    assert data["response"]["speech"]["plain"]["speech"] == "custom response"
+
+
+async def test_fixed_name_slot_priority(
+    hass: HomeAssistant, set_custom_sentences: Callable[[dict[str, Any]], None]
+) -> None:
     """Test that a name from a sentence's fixed slots beats a match without a name."""
-    nameless_result = RecognizeResult(
-        intent=Intent("HassTurnOff"),
-        intent_data=IntentData([]),
-        entities={},
-        entities_list=[],
+    # Without the name, the first intent would win the tie on its name
+    set_custom_sentences(
+        {
+            "AaaNameless": {"data": [{"sentences": ["movie time"]}]},
+            "ZzzNamed": {
+                "data": [{"sentences": ["movie time"], "slots": {"name": "tv"}}]
+            },
+        }
     )
-    name = MatchEntity(name="name", value="test light", text="")
-    named_result = RecognizeResult(
-        intent=Intent("HassTurnOn"),
-        intent_data=IntentData([]),
-        entities={"name": name},
-        entities_list=[name],
-    )
+    assert await async_setup_component(hass, "homeassistant", {})
+    assert await async_setup_component(hass, DOMAIN, {})
 
-    # Patched below recognize_ranked, so hassil still ranks the results
-    with patch(
-        "hassil.recognize.recognize_all",
-        return_value=[nameless_result, named_result],
-    ):
-        results = await async_get_agent(hass).async_recognize_intents(
-            ConversationInput(
-                text="movie time",
-                context=Context(),
-                conversation_id=None,
-                device_id=None,
-                satellite_id=None,
-                language=hass.config.language,
-                agent_id=None,
-            )
+    [result] = await async_get_agent(hass).async_recognize_intents(
+        ConversationInput(
+            text="movie time",
+            context=Context(),
+            conversation_id=None,
+            device_id=None,
+            satellite_id=None,
+            language=hass.config.language,
+            agent_id=None,
         )
+    )
 
-    assert results == [named_result]
+    assert result.intent.name == "ZzzNamed"
 
 
 async def test_custom_sentence_name_outside_area(
     hass: HomeAssistant,
     area_registry: ar.AreaRegistry,
     entity_registry: er.EntityRegistry,
+    set_custom_sentences: Callable[[dict[str, Any]], None],
 ) -> None:
     """Test that a built-in sentence in the satellite area does not beat a custom one."""
+    set_custom_sentences(
+        {"CustomIntent": {"data": [{"sentences": ["turn on [the] {name}"]}]}}
+    )
     assert await async_setup_component(hass, "homeassistant", {})
     assert await async_setup_component(hass, "intent", {})
-    assert await async_setup_component(
-        hass,
-        DOMAIN,
-        {"conversation": {"intents": {"CustomIntent": ["turn on [the] {name}"]}}},
-    )
+    assert await async_setup_component(hass, DOMAIN, {})
     assert await async_setup_component(
         hass,
         "intent_script",
@@ -3536,63 +3592,6 @@ async def test_custom_sentence_name_outside_area(
 
     assert result.response.speech["plain"]["speech"] == "custom response"
     assert not turn_on_calls
-
-
-async def test_custom_sentences_priority(
-    hass: HomeAssistant,
-    hass_admin_user: MockUser,
-    snapshot: SnapshotAssertion,
-) -> None:
-    """Test custom_sentences have priority over builtins."""
-    with tempfile.NamedTemporaryFile(
-        mode="w+",
-        encoding="utf-8",
-        suffix=".yaml",
-        dir=os.path.join(hass.config.config_dir, "custom_sentences", "en"),
-    ) as custom_sentences_file:
-        # Add a custom sentence that would match a builtin sentence.
-        # Custom sentences have priority.
-        yaml.dump(
-            {
-                "language": "en",
-                "intents": {
-                    "CustomIntent": {"data": [{"sentences": ["turn on the lamp"]}]}
-                },
-            },
-            custom_sentences_file,
-        )
-        custom_sentences_file.flush()
-        custom_sentences_file.seek(0)
-
-        assert await async_setup_component(hass, "homeassistant", {})
-        assert await async_setup_component(hass, DOMAIN, {})
-        assert await async_setup_component(hass, "light", {})
-        assert await async_setup_component(hass, "intent", {})
-        assert await async_setup_component(
-            hass,
-            "intent_script",
-            {
-                "intent_script": {
-                    "CustomIntent": {"speech": {"text": "custom response"}}
-                }
-            },
-        )
-
-        # Ensure that a "lamp" exists so that we can verify the custom intent
-        # overrides the builtin sentence.
-        hass.states.async_set("light.lamp", "off")
-
-        result = await conversation.async_converse(
-            hass,
-            "turn on the lamp",
-            None,
-            Context(),
-            language=hass.config.language,
-        )
-
-        data = result.as_dict()
-        assert data["response"]["response_type"] == "action_done"
-        assert data["response"]["speech"]["plain"]["speech"] == "custom response"
 
 
 async def test_config_sentences_priority(
