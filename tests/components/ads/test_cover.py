@@ -8,19 +8,13 @@ import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.cover import (
-    ATTR_CURRENT_POSITION,
-    ATTR_POSITION,
     DOMAIN as COVER_DOMAIN,
+    CoverEntityStateAttribute,
+    CoverService,
+    CoverServiceArgument,
     CoverState,
 )
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    SERVICE_CLOSE_COVER,
-    SERVICE_OPEN_COVER,
-    SERVICE_SET_COVER_POSITION,
-    SERVICE_STOP_COVER,
-    STATE_UNKNOWN,
-)
+from homeassistant.const import STATE_UNKNOWN, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -84,13 +78,13 @@ async def test_state_follows_the_plc(
     await mock_ads_device.async_push(hass, ADS_VAR_POSITION, bytes([200]))
     state = hass.states.get(ENTITY_ID)
     assert state.state == CoverState.OPEN
-    assert state.attributes[ATTR_CURRENT_POSITION] == 200
+    assert state.attributes[CoverEntityStateAttribute.CURRENT_POSITION] == 200
 
     # A closed cover keeps reporting whatever position the PLC last sent.
     await mock_ads_device.async_push(hass, ADS_VAR, BOOL_TRUE)
     state = hass.states.get(ENTITY_ID)
     assert state.state == CoverState.CLOSED
-    assert state.attributes[ATTR_CURRENT_POSITION] == 200
+    assert state.attributes[CoverEntityStateAttribute.CURRENT_POSITION] == 200
 
 
 @pytest.mark.parametrize(
@@ -117,7 +111,10 @@ async def test_available_with_either_value(
 
     state = hass.states.get(ENTITY_ID)
     assert state.state == expected_state
-    assert state.attributes.get(ATTR_CURRENT_POSITION) == expected_position
+    assert (
+        state.attributes.get(CoverEntityStateAttribute.CURRENT_POSITION)
+        == expected_position
+    )
 
 
 @pytest.mark.parametrize(
@@ -125,49 +122,49 @@ async def test_available_with_either_value(
     [
         pytest.param(
             FULL_CONFIG,
-            SERVICE_OPEN_COVER,
+            CoverService.OPEN,
             {},
             [call(ADS_VAR_OPEN, True, pyads.PLCTYPE_BOOL)],
             id="open",
         ),
         pytest.param(
             FULL_CONFIG,
-            SERVICE_CLOSE_COVER,
+            CoverService.CLOSE,
             {},
             [call(ADS_VAR_CLOSE, True, pyads.PLCTYPE_BOOL)],
             id="close",
         ),
         pytest.param(
             FULL_CONFIG,
-            SERVICE_STOP_COVER,
+            CoverService.STOP,
             {},
             [call(ADS_VAR_STOP, True, pyads.PLCTYPE_BOOL)],
             id="stop",
         ),
         pytest.param(
             FULL_CONFIG,
-            SERVICE_SET_COVER_POSITION,
-            {ATTR_POSITION: 40},
+            CoverService.SET_POSITION,
+            {CoverServiceArgument.POSITION: 40},
             [call(ADS_VAR_SET_POSITION, 40, pyads.PLCTYPE_BYTE)],
             id="set_position",
         ),
         pytest.param(
             {**MINIMAL_CONFIG, "adsvar_set_position": ADS_VAR_SET_POSITION},
-            SERVICE_OPEN_COVER,
+            CoverService.OPEN,
             {},
             [call(ADS_VAR_SET_POSITION, 100, pyads.PLCTYPE_BYTE)],
             id="open_by_position",
         ),
         pytest.param(
             {**MINIMAL_CONFIG, "adsvar_set_position": ADS_VAR_SET_POSITION},
-            SERVICE_CLOSE_COVER,
+            CoverService.CLOSE,
             {},
             [call(ADS_VAR_SET_POSITION, 0, pyads.PLCTYPE_BYTE)],
             id="close_by_position",
         ),
         # Open and close are always offered, even with nothing to write them to.
-        pytest.param(MINIMAL_CONFIG, SERVICE_OPEN_COVER, {}, [], id="open_unwired"),
-        pytest.param(MINIMAL_CONFIG, SERVICE_CLOSE_COVER, {}, [], id="close_unwired"),
+        pytest.param(MINIMAL_CONFIG, CoverService.OPEN, {}, [], id="open_unwired"),
+        pytest.param(MINIMAL_CONFIG, CoverService.CLOSE, {}, [], id="close_unwired"),
     ],
 )
 async def test_actions_write_to_the_plc(
@@ -184,7 +181,7 @@ async def test_actions_write_to_the_plc(
     assert await setup_ads_platform(hass, COVER_DOMAIN, platform_config)
 
     await hass.services.async_call(
-        COVER_DOMAIN, service, {ATTR_ENTITY_ID: ENTITY_ID, **data}, blocking=True
+        COVER_DOMAIN, service, {TargetKey.ENTITY_ID: ENTITY_ID, **data}, blocking=True
     )
 
     assert mock_pyads_connection.return_value.write_by_name.call_args_list == writes
@@ -204,7 +201,7 @@ async def test_write_error(
     )
 
     await hass.services.async_call(
-        COVER_DOMAIN, SERVICE_OPEN_COVER, {ATTR_ENTITY_ID: ENTITY_ID}, blocking=True
+        COVER_DOMAIN, CoverService.OPEN, {TargetKey.ENTITY_ID: ENTITY_ID}, blocking=True
     )
 
     assert (
