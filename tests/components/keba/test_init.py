@@ -1,9 +1,4 @@
-"""Tests for setting up the KEBA charging station integration.
-
-These pin the behaviour of the YAML integration as it ships with
-keba-kecontact 1.3.0, including behaviour that looks wrong. Tests named
-``..._currently_...`` describe such behaviour.
-"""
+"""Tests for setting up the KEBA charging station integration."""
 
 from typing import Any
 from unittest.mock import MagicMock, call
@@ -16,13 +11,7 @@ from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
-from .conftest import (
-    HOST,
-    async_advance,
-    async_seconds_until_poll,
-    async_settle,
-    stop_polling,
-)
+from .conftest import HOST, async_advance, async_seconds_until_poll, async_settle
 
 
 async def test_setup(hass: HomeAssistant, setup_keba: MagicMock) -> None:
@@ -69,12 +58,7 @@ async def test_setup_applies_configured_failsafe(
 async def test_setup_failsafe_out_of_range_currently_unchecked(
     hass: HomeAssistant, setup_keba: MagicMock
 ) -> None:
-    """Test an out-of-range failsafe timeout is passed to the library unchecked.
-
-    The integration starts set_failsafe in a task and does not validate the
-    timeout itself. keba-kecontact 1.3.0 rejects 5 with ValueError, inside
-    that task, where the try/except around starting it cannot see it.
-    """
+    """Test an out-of-range failsafe timeout reaches the library unchecked."""
     setup_keba.set_failsafe.assert_awaited_once_with(5, 6, 0)
 
 
@@ -85,12 +69,7 @@ async def test_setup_unreachable_station_currently_raises(
     keba_config: dict[str, Any],
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Test a station that cannot be reached fails setup with an unhandled error.
-
-    keba-kecontact 1.3.0 raises ConnectionError when the station does not
-    answer. The integration does not catch it, so its own "Could not find a
-    charging station" message is not logged.
-    """
+    """Test an unreachable station fails setup with an unhandled error."""
     mock_keba.setup.side_effect = ConnectionError("no reply")
 
     assert not await async_setup_component(hass, DOMAIN, keba_config)
@@ -150,8 +129,6 @@ async def test_refresh_interval_has_a_floor(
     await async_settle(hass)
 
     assert await async_seconds_until_poll(hass, freezer, mock_keba) == expected_delay
-
-    await stop_polling(hass)
 
 
 async def test_command_switches_to_fast_polling(
