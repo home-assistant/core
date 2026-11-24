@@ -1216,8 +1216,22 @@ async def test_thermostat_hvac_action_boiler_and_cooler_status(
     assert state.attributes[ATTR_HVAC_ACTION] == expected
 
 
+@pytest.mark.parametrize(
+    ("setpoint_mode", "setpoint_temperature", "hvac_mode", "preset_mode"),
+    [
+        pytest.param("hg", 7, HVACMode.AUTO, PRESET_FROST_GUARD, id="frost_guard"),
+        pytest.param("home", 23, HVACMode.AUTO, PRESET_SCHEDULE, id="schedule"),
+        pytest.param("manual", 23.5, HVACMode.AUTO, "manual", id="manual"),
+        pytest.param("max", None, HVACMode.HEAT, PRESET_BOOST, id="boost"),
+    ],
+)
 async def test_thermostat_update_with_cooling_setpoint(
-    hass: HomeAssistant, config_entry: MockConfigEntry
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    setpoint_mode: str,
+    setpoint_temperature: float | None,
+    hvac_mode: HVACMode,
+    preset_mode: str,
 ) -> None:
     """Test thermostat setup for a home in cooling mode.
 
@@ -1236,8 +1250,8 @@ async def test_thermostat_update_with_cooling_setpoint(
             if room["id"] == "2746182631":
                 room.pop("therm_setpoint_mode", None)
                 room.pop("therm_setpoint_temperature", None)
-                room["cooling_setpoint_mode"] = "hg"
-                room["cooling_setpoint_temperature"] = 7
+                room["cooling_setpoint_mode"] = setpoint_mode
+                room["cooling_setpoint_temperature"] = setpoint_temperature
 
     async def fake_post(*args: Any, **kwargs: Any):
         """Return backend data for a home in cooling mode."""
@@ -1261,9 +1275,9 @@ async def test_thermostat_update_with_cooling_setpoint(
 
     state = hass.states.get("climate.livingroom_livingroom")
     assert state is not None
-    assert state.state == HVACMode.AUTO
-    assert state.attributes["preset_mode"] == PRESET_FROST_GUARD
-    assert state.attributes[ATTR_TEMPERATURE] == 7
+    assert state.state == hvac_mode
+    assert state.attributes[ATTR_PRESET_MODE] == preset_mode
+    assert state.attributes["temperature"] == setpoint_temperature
 
 
 async def test_webhook_set_point(

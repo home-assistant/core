@@ -385,9 +385,7 @@ class NetatmoThermostat(NetatmoRoomEntity, ClimateEntity):
         self._away_temperature = self.home.get_away_temp()
         self._hg_temperature = self.home.get_hg_temp()
         self._attr_native_current_temperature = self.device.therm_measured_temperature
-        # A home in cooling mode reports cooling_setpoint_* instead of
-        # therm_setpoint_*. Room.setpoint_temperature / Room.setpoint_mode pick
-        # whichever of the two the backend actually sent.
+        # Homes in cooling mode report cooling_setpoint_* instead of therm_setpoint_*
         self._attr_native_target_temperature = self.device.setpoint_temperature
 
         self._attr_preset_mode = NETATMO_MAP_PRESET.get(
