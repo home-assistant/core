@@ -430,10 +430,18 @@ class DaikinValueSensor(DaikinManagementPointEntity, SensorEntity):
     def update_state(self) -> None:
         """Refresh the state from the current device data."""
         characteristic = self._get_current_characteristic()
-        self._is_exposed_on_platform = characteristic is not None and (
-            self._sub_type is not None
-            or self._characteristic_exposed_on(self._value, Platform.SENSOR)
-        )
+        if self._sub_type == "setpoint":
+            point = self._management_point
+            climate_control = point.climate_control if point is not None else None
+            self._is_exposed_on_platform = climate_control is not None and any(
+                climate_control.setpoint(self._value, operation_mode) is not None
+                for operation_mode in climate_control.operation_modes
+            )
+        else:
+            self._is_exposed_on_platform = characteristic is not None and (
+                self._sub_type is not None
+                or self._characteristic_exposed_on(self._value, Platform.SENSOR)
+            )
         self._attr_native_value = self._sensor_value(characteristic)
         self._attr_native_unit_of_measurement = _native_unit(
             characteristic.unit if characteristic is not None else None,
@@ -449,21 +457,7 @@ class DaikinValueSensor(DaikinManagementPointEntity, SensorEntity):
             climate_control = point.climate_control
             if climate_control is None:
                 return None
-            if (setpoint := climate_control.setpoint(self._value)) is not None:
-                return setpoint
-            return next(
-                (
-                    setpoint
-                    for operation_mode in climate_control.operation_modes
-                    if (
-                        setpoint := climate_control.setpoint(
-                            self._value, operation_mode
-                        )
-                    )
-                    is not None
-                ),
-                None,
-            )
+            return climate_control.setpoint(self._value)
         return (
             point.sensory_characteristic(self._value)
             if self._sub_type == "sensoryData"

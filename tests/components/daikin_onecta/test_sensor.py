@@ -56,7 +56,7 @@ def _set_cooling_calculated_temperature(gateway: GatewayDevice) -> None:
 
 
 def _remove_cooling_calculated_temperature(gateway: GatewayDevice) -> None:
-    """Make the first mode the fallback when the current mode lacks a value."""
+    """Remove the calculated temperature from the current operation mode."""
     point = gateway.management_points_by_type("climateControl")[0]
     point.operation_mode = Characteristic(
         value="cooling", values=["auto", "cooling", "heating"]
@@ -115,12 +115,12 @@ async def test_calculated_leaving_water_temperature_is_a_sensor(
         ),
         pytest.param(
             _remove_cooling_calculated_temperature,
-            "45",
-            id="fallback-to-first-mode",
+            "unknown",
+            id="current-mode-setpoint-missing",
         ),
     ],
 )
-async def test_calculated_lwt_sensor_uses_current_mode_then_falls_back(
+async def test_calculated_lwt_sensor_uses_current_mode_only(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
@@ -129,7 +129,7 @@ async def test_calculated_lwt_sensor_uses_current_mode_then_falls_back(
     prepare_gateway: Callable[[GatewayDevice], None],
     expected_value: str,
 ) -> None:
-    """Prefer the current operation's calculated LWT and fall back if absent."""
+    """Use only the current operation's calculated leaving-water temperature."""
     await _async_setup_fixture(hass, config_entry, "gas")
     coordinator = config_entry.runtime_data
     devices = _load_gateway_devices("gas")
