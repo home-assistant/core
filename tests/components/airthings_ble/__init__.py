@@ -8,6 +8,11 @@ from airthings_ble import (
     AirthingsDeviceType,
 )
 from bleak.backends.device import BLEDevice
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.components.bluetooth import (
+    generate_advertisement_data,
+    generate_ble_device,
+)
 
 from homeassistant.components.airthings_ble.const import DOMAIN
 from homeassistant.components.bluetooth.models import BluetoothServiceInfoBleak
@@ -19,12 +24,9 @@ from homeassistant.helpers.device_registry import (
     DeviceRegistry,
 )
 
-from tests.common import MockConfigEntry
-from tests.components.bluetooth import generate_advertisement_data, generate_ble_device
 
-
-def patch_async_setup_entry(return_value=True):
-    """Patch async setup entry to return True."""
+def patch_async_setup_entry(return_value=None):
+    """Patch async setup entry to return None."""
     return patch(
         "homeassistant.components.airthings_ble.async_setup_entry",
         return_value=return_value,
@@ -290,7 +292,13 @@ CORENTIUM_HOME_2_DEVICE_INFO = AirthingsDevice(
         "temperature": 20.0,
         "humidity": 55.0,
         "radon_1day_avg": 45,
-        "radon_1day_level": "low",
+        "radon_1day_level": "good",
+        "radon_week_avg": 50,
+        "radon_week_level": "good",
+        "radon_month_avg": 110,
+        "radon_month_level": "fair",
+        "radon_year_avg": 160,
+        "radon_year_level": "poor",
     },
     address="cc:cc:cc:cc:cc:cc",
 )

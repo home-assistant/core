@@ -2,14 +2,15 @@
 
 from unittest.mock import Mock, patch
 
+import pytest
+from pytest_homeassistant.common import MockConfigEntry
+
 from homeassistant.components.climate import ClimateEntityFeature, HVACMode
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from .conftest import init_integration
-
-from tests.common import MockConfigEntry
 
 
 async def test_climate_setup(
@@ -30,7 +31,7 @@ async def test_climate_setup(
         # Act
         await init_integration(hass, mock_config_entry)
         # Assert
-        entry = entity_registry.async_get("climate.room_1_test_climate_13")
+        entry = entity_registry.async_get("climate.test_climate_room_1_test_climate")
         assert entry
         assert entry.unique_id == "hc2_111111.13"
         assert entry.original_name == "Room 1 Test climate"
@@ -63,9 +64,11 @@ async def test_climate_setup_2_quickapps(
         # Act
         await init_integration(hass, mock_config_entry)
         # Assert
-        entry1 = entity_registry.async_get("climate.room_1_test_climate_9")
+        entry1 = entity_registry.async_get("climate.test_climate_room_1_test_climate")
         assert entry1
-        entry2 = entity_registry.async_get("climate.room_1_test_climate_2_10")
+        entry2 = entity_registry.async_get(
+            "climate.test_climate_2_room_1_test_climate_2"
+        )
         assert entry2
 
 
@@ -86,7 +89,7 @@ async def test_hvac_mode_preset(
         # Act
         await init_integration(hass, mock_config_entry)
         # Assert
-        state = hass.states.get("climate.room_1_test_climate_13")
+        state = hass.states.get("climate.test_climate_room_1_test_climate")
         assert state.state == HVACMode.AUTO
         assert state.attributes["preset_mode"] == "CustomerSpecific"
 
@@ -109,7 +112,7 @@ async def test_hvac_mode_heat(
         # Act
         await init_integration(hass, mock_config_entry)
         # Assert
-        state = hass.states.get("climate.room_1_test_climate_13")
+        state = hass.states.get("climate.test_climate_room_1_test_climate")
         assert state.state == HVACMode.HEAT
         assert state.attributes["preset_mode"] is None
 
@@ -133,7 +136,10 @@ async def test_set_hvac_mode(
         await hass.services.async_call(
             "climate",
             "set_hvac_mode",
-            {"entity_id": "climate.room_1_test_climate_13", "hvac_mode": HVACMode.HEAT},
+            {
+                "entity_id": "climate.test_climate_room_1_test_climate",
+                "hvac_mode": HVACMode.HEAT,
+            },
             blocking=True,
         )
 
@@ -158,7 +164,7 @@ async def test_hvac_mode_with_operation_mode_support(
         # Act
         await init_integration(hass, mock_config_entry)
         # Assert
-        state = hass.states.get("climate.room_1_test_climate_6")
+        state = hass.states.get("climate.my_fibaro_home_center_room_1_test_climate")
         assert state.state == HVACMode.AUTO
 
 
@@ -181,7 +187,10 @@ async def test_set_hvac_mode_with_operation_mode_support(
         await hass.services.async_call(
             "climate",
             "set_hvac_mode",
-            {"entity_id": "climate.room_1_test_climate_6", "hvac_mode": HVACMode.HEAT},
+            {
+                "entity_id": "climate.my_fibaro_home_center_room_1_test_climate",
+                "hvac_mode": HVACMode.HEAT,
+            },
             blocking=True,
         )
 
@@ -212,7 +221,7 @@ async def test_fan_mode(
         # Act
         await init_integration(hass, mock_config_entry)
         # Assert
-        state = hass.states.get("climate.room_1_test_climate_6")
+        state = hass.states.get("climate.test_climate_room_1_test_climate")
         assert state.attributes["fan_mode"] == "low"
         assert state.attributes["fan_modes"] == ["off", "low", "auto_high"]
 
@@ -242,7 +251,10 @@ async def test_set_fan_mode(
         await hass.services.async_call(
             "climate",
             "set_fan_mode",
-            {"entity_id": "climate.room_1_test_climate_6", "fan_mode": "off"},
+            {
+                "entity_id": "climate.test_climate_room_1_test_climate",
+                "fan_mode": "off",
+            },
             blocking=True,
         )
 
@@ -273,7 +285,7 @@ async def test_target_temperature(
         # Act
         await init_integration(hass, mock_config_entry)
         # Assert
-        state = hass.states.get("climate.room_1_test_climate_6")
+        state = hass.states.get("climate.test_climate_room_1_test_climate")
         assert state.attributes["temperature"] == 23
 
 
@@ -302,9 +314,93 @@ async def test_set_target_temperature(
         await hass.services.async_call(
             "climate",
             "set_temperature",
-            {"entity_id": "climate.room_1_test_climate_6", "temperature": 25.5},
+            {
+                "entity_id": "climate.test_climate_room_1_test_climate",
+                "temperature": 25.5,
+            },
             blocking=True,
         )
 
         # Assert
         mock_thermostat_with_operating_mode.execute_action.assert_called_once()
+
+
+HVAC_SYSTEM_ENTITY_ID = "climate.test_climate_room_1_test_climate"
+
+
+@pytest.mark.parametrize(
+    ("thermostat_mode", "expected_current_temperature", "expected_target_temperature"),
+    [
+        pytest.param("Heat", 20.5, 21.5, id="heat"),
+        pytest.param("Cool", 25, 24, id="cool"),
+    ],
+)
+async def test_hvac_system_target_temperature(
+    hass: HomeAssistant,
+    mock_fibaro_client: Mock,
+    mock_config_entry: MockConfigEntry,
+    mock_thermostat_parent: Mock,
+    mock_hvac_system: Mock,
+    mock_room: Mock,
+    thermostat_mode: str,
+    expected_current_temperature: float,
+    expected_target_temperature: float,
+) -> None:
+    """Test that the target temperature follows the setpoint of the mode."""
+
+    # Arrange
+    mock_hvac_system.thermostat_mode = thermostat_mode
+    mock_fibaro_client.read_rooms.return_value = [mock_room]
+    mock_fibaro_client.read_devices.return_value = [
+        mock_thermostat_parent,
+        mock_hvac_system,
+    ]
+
+    with patch("homeassistant.components.fibaro.PLATFORMS", [Platform.CLIMATE]):
+        # Act
+        await init_integration(hass, mock_config_entry)
+        # Assert
+        state = hass.states.get(HVAC_SYSTEM_ENTITY_ID)
+        assert state.attributes["current_temperature"] == expected_current_temperature
+        assert state.attributes["temperature"] == expected_target_temperature
+
+
+@pytest.mark.parametrize(
+    ("thermostat_mode", "expected_action"),
+    [
+        pytest.param("Heat", "setHeatingThermostatSetpoint", id="heat"),
+        pytest.param("Cool", "setCoolingThermostatSetpoint", id="cool"),
+    ],
+)
+async def test_hvac_system_set_target_temperature(
+    hass: HomeAssistant,
+    mock_fibaro_client: Mock,
+    mock_config_entry: MockConfigEntry,
+    mock_thermostat_parent: Mock,
+    mock_hvac_system: Mock,
+    mock_room: Mock,
+    thermostat_mode: str,
+    expected_action: str,
+) -> None:
+    """Test that the setpoint of the current mode is set."""
+
+    # Arrange
+    mock_hvac_system.thermostat_mode = thermostat_mode
+    mock_fibaro_client.read_rooms.return_value = [mock_room]
+    mock_fibaro_client.read_devices.return_value = [
+        mock_thermostat_parent,
+        mock_hvac_system,
+    ]
+
+    with patch("homeassistant.components.fibaro.PLATFORMS", [Platform.CLIMATE]):
+        # Act
+        await init_integration(hass, mock_config_entry)
+        await hass.services.async_call(
+            "climate",
+            "set_temperature",
+            {"entity_id": HVAC_SYSTEM_ENTITY_ID, "temperature": 22},
+            blocking=True,
+        )
+
+        # Assert
+        mock_hvac_system.execute_action.assert_called_once_with(expected_action, [22])

@@ -1,6 +1,7 @@
 {
   "domain": "media_extractor",
   "name": "Media extractor",
+  "categories": ["media_entertainment"],
   "codeowners": ["@joostlek"],
   "config_flow": true,
   "dependencies": ["media_player"],

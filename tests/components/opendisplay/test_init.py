@@ -11,6 +11,7 @@ from opendisplay import (
     OpenDisplayError,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.opendisplay.const import CONF_ENCRYPTION_KEY, DOMAIN
 from homeassistant.config_entries import ConfigEntryState
@@ -18,8 +19,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
 from . import ENCRYPTION_KEY
-
-from tests.common import MockConfigEntry
 
 
 async def test_setup_and_unload(
@@ -115,6 +114,7 @@ async def test_setup_device_registered(
         device_registry, mock_config_entry.entry_id
     )
     assert len(devices) == 1
+    assert devices[0].model == '2.9" BWR'
 
 
 @pytest.mark.parametrize(

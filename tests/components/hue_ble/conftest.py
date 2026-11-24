@@ -4,20 +4,19 @@ from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.components.bluetooth import generate_ble_device
 
 from homeassistant.components.hue_ble.const import DOMAIN
 
 from . import TEST_DEVICE_MAC, TEST_DEVICE_NAME
-
-from tests.common import MockConfigEntry
-from tests.components.bluetooth import generate_ble_device
 
 
 @pytest.fixture
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
-        "homeassistant.components.hue_ble.async_setup_entry", return_value=True
+        "homeassistant.components.hue_ble.async_setup_entry", return_value=None
     ) as mock_setup_entry:
         yield mock_setup_entry
 
@@ -36,7 +35,7 @@ def mock_ble_device() -> Generator[AsyncMock]:
     """Override async_scanner_count."""
     with patch(
         "homeassistant.components.hue_ble.async_ble_device_from_address",
-        return_value=generate_ble_device(TEST_DEVICE_NAME, TEST_DEVICE_MAC),
+        return_value=generate_ble_device(TEST_DEVICE_MAC, TEST_DEVICE_NAME),
     ) as mock:
         yield mock
 

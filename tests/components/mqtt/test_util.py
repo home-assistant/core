@@ -9,6 +9,8 @@ import tempfile
 from unittest.mock import MagicMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
+from pytest_homeassistant.typing import MqttMockHAClient, MqttMockPahoClient
 
 from homeassistant.components import mqtt
 from homeassistant.components.mqtt.const import DOMAIN
@@ -18,9 +20,6 @@ from homeassistant.config_entries import ConfigEntryDisabler, ConfigEntryState
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import CoreState, HomeAssistant
 from homeassistant.util.dt import utcnow
-
-from tests.common import MockConfigEntry, async_fire_time_changed
-from tests.typing import MqttMockHAClient, MqttMockPahoClient
 
 
 async def test_canceling_debouncer_on_shutdown(

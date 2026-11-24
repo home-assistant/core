@@ -1,7 +1,9 @@
 {
   "domain": "blockchain",
   "name": "Blockchain.com",
+  "categories": ["finance"],
   "codeowners": [],
+  "connectivity": ["cloud"],
   "documentation": "https://www.home-assistant.io/integrations/blockchain",
   "iot_class": "cloud_polling",
   "loggers": ["pyblockchain"],

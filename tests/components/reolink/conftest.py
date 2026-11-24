@@ -4,6 +4,7 @@ from collections.abc import Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from reolink_aio.api import Chime
 from reolink_aio.enums import BatteryEnum, ConnectionEnum
 from reolink_aio.exceptions import ReolinkError
@@ -28,8 +29,6 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import format_mac
 
-from tests.common import MockConfigEntry
-
 TEST_HOST = "1.2.3.4"
 TEST_HOST2 = "4.5.6.7"
 TEST_USERNAME = "admin"
@@ -41,6 +40,7 @@ TEST_MAC2 = "ff:ee:dd:cc:bb:aa"
 TEST_MAC_CAM = "11:22:33:44:55:66"
 DHCP_FORMATTED_MAC = "aabbccddeeff"
 TEST_UID = "ABC1234567D89EFG"
+TEST_UID2 = "HGF9876543D21CBA"
 TEST_UID_CAM = "DEF7654321D89GHT"
 TEST_PORT = 1234
 TEST_NVR_NAME = "test_reolink_name"
@@ -60,7 +60,7 @@ TEST_BC_CON = ConnectionEnum.tcp.value
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
-        "homeassistant.components.reolink.async_setup_entry", return_value=True
+        "homeassistant.components.reolink.async_setup_entry", return_value=None
     ) as mock_setup_entry:
         yield mock_setup_entry
 
@@ -88,7 +88,6 @@ def _init_host_mock(host_mock: MagicMock) -> None:
     host_mock.set_whiteled = AsyncMock()
     host_mock.set_state_light = AsyncMock()
     host_mock.renew = AsyncMock()
-    host_mock.get_vod_source = AsyncMock()
     host_mock.request_vod_files = AsyncMock()
     host_mock.expire_session = AsyncMock()
     host_mock.set_volume = AsyncMock()

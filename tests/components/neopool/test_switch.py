@@ -16,10 +16,15 @@ from neopool_modbus.registers import (
     TimerRelayMode,
 )
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.neopool.const import FOLLOW_UP_REFRESH_DELAY
-from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
+from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN, SwitchService
 from homeassistant.const import (
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
@@ -34,13 +39,11 @@ from homeassistant.helpers import entity_registry as er
 from . import setup_integration
 from .conftest import MOCK_POOL_DATA
 
-from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
-
 
 async def _turn_on(hass: HomeAssistant, entity_id: str) -> None:
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        SERVICE_TURN_ON,
+        SwitchService.TURN_ON,
         {"entity_id": entity_id},
         blocking=True,
     )
@@ -49,7 +52,7 @@ async def _turn_on(hass: HomeAssistant, entity_id: str) -> None:
 async def _turn_off(hass: HomeAssistant, entity_id: str) -> None:
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        SERVICE_TURN_OFF,
+        SwitchService.TURN_OFF,
         {"entity_id": entity_id},
         blocking=True,
     )

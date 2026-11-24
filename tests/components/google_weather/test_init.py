@@ -4,13 +4,12 @@ from unittest.mock import AsyncMock
 
 from google_weather_api import GoogleWeatherApiAuthError, GoogleWeatherApiError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.google_weather.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry
 
 
 async def test_async_setup_entry(

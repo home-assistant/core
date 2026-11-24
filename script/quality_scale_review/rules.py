@@ -28,7 +28,7 @@ query {
 
 @dataclass(slots=True, frozen=True)
 class QualityScaleDocs:
-    """The quality scale documentation, as published for the developer docs."""
+    """The quality scale documentation, as published for the contributors docs."""
 
     tiers: dict[str, list[str]]
     rules: list[RuleDoc]

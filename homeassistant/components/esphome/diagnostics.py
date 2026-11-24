@@ -7,8 +7,7 @@ from homeassistant.components.diagnostics import async_redact_data
 from homeassistant.const import CONF_PASSWORD
 from homeassistant.core import HomeAssistant
 
-from . import CONF_NOISE_PSK
-from .const import CONF_DEVICE_NAME
+from .const import CONF_DEVICE_NAME, CONF_NOISE_PSK
 from .dashboard import async_get_dashboard
 from .entry_data import ESPHomeConfigEntry
 

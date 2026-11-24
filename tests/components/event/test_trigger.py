@@ -4,16 +4,8 @@ from typing import Any
 
 from freezegun import freeze_time
 import pytest
-
-from homeassistant.components.event import DOMAIN, EventEntity
-from homeassistant.components.event.const import ATTR_EVENT_TYPE
-from homeassistant.components.event.trigger import TRIGGERS
-from homeassistant.const import ATTR_FRIENDLY_NAME, STATE_UNAVAILABLE, STATE_UNKNOWN
-from homeassistant.core import HomeAssistant
-from homeassistant.setup import async_setup_component
-
-from tests.common import MockEntity, setup_test_component_platform
-from tests.components.common import (
+from pytest_homeassistant.common import MockEntity, setup_test_component_platform
+from pytest_homeassistant.components.common import (
     TargetSupport,
     TriggerStateDescription,
     arm_trigger,
@@ -23,6 +15,16 @@ from tests.components.common import (
     set_or_remove_state,
     target_entities,
 )
+
+from homeassistant.components.event import (
+    DOMAIN,
+    EventEntity,
+    EventEntityStateAttribute,
+)
+from homeassistant.components.event.trigger import TRIGGERS
+from homeassistant.const import ATTR_FRIENDLY_NAME, STATE_UNAVAILABLE, STATE_UNKNOWN
+from homeassistant.core import HomeAssistant
+from homeassistant.setup import async_setup_component
 
 
 class _MockEventEntity(MockEntity, EventEntity):
@@ -100,14 +102,18 @@ def test_trigger_target_support() -> None:
                 {
                     "included_state": {
                         "state": "2026-01-01T00:00:00.000+00:00",
-                        "attributes": {ATTR_EVENT_TYPE: "button_press"},
+                        "attributes": {
+                            EventEntityStateAttribute.EVENT_TYPE: "button_press"
+                        },
                     },
                     "count": 0,
                 },
                 {
                     "included_state": {
                         "state": "2026-01-01T00:00:01.000+00:00",
-                        "attributes": {ATTR_EVENT_TYPE: "button_press"},
+                        "attributes": {
+                            EventEntityStateAttribute.EVENT_TYPE: "button_press"
+                        },
                     },
                     "count": 1,
                 },
@@ -122,14 +128,18 @@ def test_trigger_target_support() -> None:
                 {
                     "included_state": {
                         "state": "2026-01-01T00:00:00.000+00:00",
-                        "attributes": {ATTR_EVENT_TYPE: "other_event"},
+                        "attributes": {
+                            EventEntityStateAttribute.EVENT_TYPE: "other_event"
+                        },
                     },
                     "count": 0,
                 },
                 {
                     "included_state": {
                         "state": "2026-01-01T00:00:01.000+00:00",
-                        "attributes": {ATTR_EVENT_TYPE: "button_press"},
+                        "attributes": {
+                            EventEntityStateAttribute.EVENT_TYPE: "button_press"
+                        },
                     },
                     "count": 1,
                 },
@@ -143,28 +153,36 @@ def test_trigger_target_support() -> None:
                 {
                     "included_state": {
                         "state": "2026-01-01T00:00:00.000+00:00",
-                        "attributes": {ATTR_EVENT_TYPE: "button_press"},
+                        "attributes": {
+                            EventEntityStateAttribute.EVENT_TYPE: "button_press"
+                        },
                     },
                     "count": 0,
                 },
                 {
                     "included_state": {
                         "state": "2026-01-01T00:00:01.000+00:00",
-                        "attributes": {ATTR_EVENT_TYPE: "button_long_press"},
+                        "attributes": {
+                            EventEntityStateAttribute.EVENT_TYPE: "button_long_press"
+                        },
                     },
                     "count": 1,
                 },
                 {
                     "included_state": {
                         "state": "2026-01-01T00:00:02.000+00:00",
-                        "attributes": {ATTR_EVENT_TYPE: "other_event"},
+                        "attributes": {
+                            EventEntityStateAttribute.EVENT_TYPE: "other_event"
+                        },
                     },
                     "count": 0,
                 },
                 {
                     "included_state": {
                         "state": "2026-01-01T00:00:03.000+00:00",
-                        "attributes": {ATTR_EVENT_TYPE: "button_press"},
+                        "attributes": {
+                            EventEntityStateAttribute.EVENT_TYPE: "button_press"
+                        },
                     },
                     "count": 1,
                 },
@@ -185,14 +203,18 @@ def test_trigger_target_support() -> None:
                 {
                     "included_state": {
                         "state": "2026-01-01T00:00:00.000+00:00",
-                        "attributes": {ATTR_EVENT_TYPE: "button_press"},
+                        "attributes": {
+                            EventEntityStateAttribute.EVENT_TYPE: "button_press"
+                        },
                     },
                     "count": 0,
                 },
                 {
                     "included_state": {
                         "state": "2026-01-01T00:00:01.000+00:00",
-                        "attributes": {ATTR_EVENT_TYPE: "button_press"},
+                        "attributes": {
+                            EventEntityStateAttribute.EVENT_TYPE: "button_press"
+                        },
                     },
                     "count": 1,
                 },
@@ -213,14 +235,18 @@ def test_trigger_target_support() -> None:
                 {
                     "included_state": {
                         "state": "2026-01-01T00:00:00.000+00:00",
-                        "attributes": {ATTR_EVENT_TYPE: "button_press"},
+                        "attributes": {
+                            EventEntityStateAttribute.EVENT_TYPE: "button_press"
+                        },
                     },
                     "count": 1,
                 },
                 {
                     "included_state": {
                         "state": "2026-01-01T00:00:01.000+00:00",
-                        "attributes": {ATTR_EVENT_TYPE: "button_press"},
+                        "attributes": {
+                            EventEntityStateAttribute.EVENT_TYPE: "button_press"
+                        },
                     },
                     "count": 1,
                 },
@@ -241,21 +267,27 @@ def test_trigger_target_support() -> None:
                 {
                     "included_state": {
                         "state": "2026-01-01T00:00:00.000+00:00",
-                        "attributes": {ATTR_EVENT_TYPE: "button_press"},
+                        "attributes": {
+                            EventEntityStateAttribute.EVENT_TYPE: "button_press"
+                        },
                     },
                     "count": 0,
                 },
                 {
                     "included_state": {
                         "state": "2026-01-01T00:00:01.000+00:00",
-                        "attributes": {ATTR_EVENT_TYPE: "button_press"},
+                        "attributes": {
+                            EventEntityStateAttribute.EVENT_TYPE: "button_press"
+                        },
                     },
                     "count": 1,
                 },
                 {
                     "included_state": {
                         "state": "2026-01-01T00:00:02.000+00:00",
-                        "attributes": {ATTR_EVENT_TYPE: "button_press"},
+                        "attributes": {
+                            EventEntityStateAttribute.EVENT_TYPE: "button_press"
+                        },
                     },
                     "count": 1,
                 },
@@ -270,7 +302,9 @@ def test_trigger_target_support() -> None:
                 {
                     "included_state": {
                         "state": "2026-01-01T00:00:00.000+00:00",
-                        "attributes": {ATTR_EVENT_TYPE: "button_press"},
+                        "attributes": {
+                            EventEntityStateAttribute.EVENT_TYPE: "button_press"
+                        },
                     },
                     "count": 0,
                 },
@@ -284,14 +318,18 @@ def test_trigger_target_support() -> None:
                 {
                     "included_state": {
                         "state": "2026-01-01T00:00:01.000+00:00",
-                        "attributes": {ATTR_EVENT_TYPE: "button_press"},
+                        "attributes": {
+                            EventEntityStateAttribute.EVENT_TYPE: "button_press"
+                        },
                     },
                     "count": 0,
                 },
                 {
                     "included_state": {
                         "state": "2026-01-01T00:00:02.000+00:00",
-                        "attributes": {ATTR_EVENT_TYPE: "button_press"},
+                        "attributes": {
+                            EventEntityStateAttribute.EVENT_TYPE: "button_press"
+                        },
                     },
                     "count": 1,
                 },

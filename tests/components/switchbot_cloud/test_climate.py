@@ -1,8 +1,13 @@
 """Test for the switchbot_cloud climate."""
 
+from typing import Any
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from pytest_homeassistant.common import (
+    mock_restore_cache,
+    mock_restore_cache_with_extra_data,
+)
 from switchbot_api import Device, Remote, SmartRadiatorThermostatCommands, SwitchBotAPI
 
 from homeassistant.components.climate import (
@@ -10,23 +15,21 @@ from homeassistant.components.climate import (
     ATTR_HVAC_MODE,
     ATTR_TEMPERATURE,
     DOMAIN as CLIMATE_DOMAIN,
-    SERVICE_SET_FAN_MODE,
-    SERVICE_SET_HVAC_MODE,
-    SERVICE_SET_PRESET_MODE,
-    SERVICE_SET_TEMPERATURE,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
+    ClimateService,
+    ClimateServiceArgument,
     HVACMode,
 )
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.const import TargetKey, UnitOfTemperature
 from homeassistant.core import HomeAssistant, State
 from homeassistant.exceptions import ServiceValidationError
-from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
+from homeassistant.util.unit_system import (
+    METRIC_SYSTEM,
+    US_CUSTOMARY_SYSTEM,
+    UnitSystem,
+)
 
 from . import configure_integration
-
-from tests.common import mock_restore_cache
 
 
 async def test_air_conditioner_set_hvac_mode(
@@ -50,8 +53,8 @@ async def test_air_conditioner_set_hvac_mode(
     with patch.object(SwitchBotAPI, "send_command") as mock_send_command:
         await hass.services.async_call(
             CLIMATE_DOMAIN,
-            SERVICE_SET_HVAC_MODE,
-            {ATTR_ENTITY_ID: entity_id, ATTR_HVAC_MODE: "cool"},
+            ClimateService.SET_HVAC_MODE,
+            {TargetKey.ENTITY_ID: entity_id, ClimateServiceArgument.HVAC_MODE: "cool"},
             blocking=True,
         )
         mock_send_command.assert_called_once()
@@ -63,8 +66,8 @@ async def test_air_conditioner_set_hvac_mode(
     with patch.object(SwitchBotAPI, "send_command") as mock_send_command:
         await hass.services.async_call(
             CLIMATE_DOMAIN,
-            SERVICE_SET_HVAC_MODE,
-            {ATTR_ENTITY_ID: entity_id, ATTR_HVAC_MODE: "off"},
+            ClimateService.SET_HVAC_MODE,
+            {TargetKey.ENTITY_ID: entity_id, ClimateServiceArgument.HVAC_MODE: "off"},
             blocking=True,
         )
         mock_send_command.assert_called_once()
@@ -93,8 +96,8 @@ async def test_air_conditioner_set_fan_mode(
     with patch.object(SwitchBotAPI, "send_command") as mock_send_command:
         await hass.services.async_call(
             CLIMATE_DOMAIN,
-            SERVICE_SET_FAN_MODE,
-            {ATTR_ENTITY_ID: entity_id, ATTR_FAN_MODE: "high"},
+            ClimateService.SET_FAN_MODE,
+            {TargetKey.ENTITY_ID: entity_id, ClimateServiceArgument.FAN_MODE: "high"},
             blocking=True,
         )
         mock_send_command.assert_called_once()
@@ -123,8 +126,8 @@ async def test_air_conditioner_set_temperature(
     with patch.object(SwitchBotAPI, "send_command") as mock_send_command:
         await hass.services.async_call(
             CLIMATE_DOMAIN,
-            SERVICE_SET_TEMPERATURE,
-            {ATTR_ENTITY_ID: entity_id, ATTR_TEMPERATURE: 25},
+            ClimateService.SET_TEMPERATURE,
+            {TargetKey.ENTITY_ID: entity_id, ClimateServiceArgument.TEMPERATURE: 25},
             blocking=True,
         )
         mock_send_command.assert_called_once()
@@ -178,8 +181,8 @@ async def test_air_conditioner_set_temperature_while_off(
     with patch.object(SwitchBotAPI, "send_command") as mock_send_command:
         await hass.services.async_call(
             CLIMATE_DOMAIN,
-            SERVICE_SET_TEMPERATURE,
-            {ATTR_ENTITY_ID: entity_id, **service_data},
+            ClimateService.SET_TEMPERATURE,
+            {TargetKey.ENTITY_ID: entity_id, **service_data},
             blocking=True,
         )
         mock_send_command.assert_called_once()
@@ -215,11 +218,11 @@ async def test_air_conditioner_set_temperature_unsupported_hvac_mode(
     ):
         await hass.services.async_call(
             CLIMATE_DOMAIN,
-            SERVICE_SET_TEMPERATURE,
+            ClimateService.SET_TEMPERATURE,
             {
-                ATTR_ENTITY_ID: entity_id,
-                ATTR_TEMPERATURE: 27,
-                ATTR_HVAC_MODE: HVACMode.AUTO,
+                TargetKey.ENTITY_ID: entity_id,
+                ClimateServiceArgument.TEMPERATURE: 27,
+                ClimateServiceArgument.HVAC_MODE: HVACMode.AUTO,
             },
             blocking=True,
         )
@@ -261,10 +264,24 @@ async def test_air_conditioner_restore_state(
 
 
 @pytest.mark.parametrize(
-    ("restored_temperature", "expected_temperature"),
+    ("restored_temperature", "extra_data", "expected_temperature"),
     [
-        pytest.param(75, 75, id="restored_as_published"),
-        pytest.param(19381607032619749376, 70, id="corrupted_falls_back_to_default"),
+        pytest.param(75, None, 75, id="restored_as_published"),
+        pytest.param(
+            19381607032619749376, None, 70, id="corrupted_falls_back_to_default"
+        ),
+        pytest.param(
+            99,
+            {
+                "native_current_temperature": None,
+                "native_target_temperature": 25,
+                "native_target_temperature_high": None,
+                "native_target_temperature_low": None,
+                "native_temperature_unit": UnitOfTemperature.CELSIUS,
+            },
+            77,
+            id="extra_data",
+        ),
     ],
 )
 async def test_air_conditioner_restore_state_in_fahrenheit(
@@ -272,6 +289,7 @@ async def test_air_conditioner_restore_state_in_fahrenheit(
     mock_list_devices: AsyncMock,
     mock_get_status: AsyncMock,
     restored_temperature: float,
+    extra_data: dict[str, Any] | None,
     expected_temperature: float,
 ) -> None:
     """Test the target temperature is restored in the unit it was published in."""
@@ -286,9 +304,16 @@ async def test_air_conditioner_restore_state_in_fahrenheit(
     ]
 
     entity_id = "climate.climate_1"
-    mock_restore_cache(
+    mock_restore_cache_with_extra_data(
         hass,
-        (State(entity_id, HVACMode.COOL, {ATTR_TEMPERATURE: restored_temperature}),),
+        (
+            (
+                State(
+                    entity_id, HVACMode.COOL, {ATTR_TEMPERATURE: restored_temperature}
+                ),
+                extra_data,
+            ),
+        ),
     )
 
     entry = await configure_integration(hass)
@@ -296,6 +321,81 @@ async def test_air_conditioner_restore_state_in_fahrenheit(
 
     state = hass.states.get(entity_id)
     assert state.attributes[ATTR_TEMPERATURE] == expected_temperature
+
+
+@pytest.mark.parametrize(
+    ("restored_attributes", "unit_system", "expected_temperature"),
+    [
+        pytest.param(
+            {ATTR_TEMPERATURE: 17, "temperature_unit": UnitOfTemperature.CELSIUS},
+            METRIC_SYSTEM,
+            17,
+            id="celsius_to_celsius",
+        ),
+        pytest.param(
+            {ATTR_TEMPERATURE: 17, "temperature_unit": UnitOfTemperature.CELSIUS},
+            US_CUSTOMARY_SYSTEM,
+            63,
+            id="celsius_to_fahrenheit",
+        ),
+        pytest.param(
+            {ATTR_TEMPERATURE: 63, "temperature_unit": UnitOfTemperature.FAHRENHEIT},
+            METRIC_SYSTEM,
+            17,
+            id="fahrenheit_to_celsius",
+        ),
+        pytest.param(
+            {ATTR_TEMPERATURE: 63, "temperature_unit": UnitOfTemperature.FAHRENHEIT},
+            US_CUSTOMARY_SYSTEM,
+            63,
+            id="fahrenheit_to_fahrenheit",
+        ),
+        pytest.param({ATTR_TEMPERATURE: 17}, METRIC_SYSTEM, 17, id="legacy_celsius"),
+        pytest.param(
+            {ATTR_TEMPERATURE: 63}, US_CUSTOMARY_SYSTEM, 63, id="legacy_fahrenheit"
+        ),
+    ],
+)
+async def test_air_conditioner_restore_temperature_unit(
+    hass: HomeAssistant,
+    mock_list_devices: AsyncMock,
+    mock_get_status: AsyncMock,
+    restored_attributes: dict[str, int | str],
+    unit_system: UnitSystem,
+    expected_temperature: int,
+) -> None:
+    """Test restoration uses the saved unit, falling back to the configured unit."""
+    hass.config.units = unit_system
+    mock_list_devices.return_value = [
+        Remote(
+            deviceId="ac-device-id-1",
+            deviceName="climate-1",
+            remoteType="Air Conditioner",
+            hubDeviceId="test-hub-id",
+        ),
+    ]
+
+    entity_id = "climate.climate_1"
+    mock_restore_cache(hass, (State(entity_id, HVACMode.COOL, restored_attributes),))
+
+    entry = await configure_integration(hass)
+    assert entry.state is ConfigEntryState.LOADED
+
+    state = hass.states.get(entity_id)
+    assert state.attributes[ATTR_TEMPERATURE] == expected_temperature
+
+    with patch.object(SwitchBotAPI, "send_command") as mock_send_command:
+        await hass.services.async_call(
+            CLIMATE_DOMAIN,
+            ClimateService.SET_HVAC_MODE,
+            {
+                TargetKey.ENTITY_ID: entity_id,
+                ClimateServiceArgument.HVAC_MODE: HVACMode.COOL,
+            },
+            blocking=True,
+        )
+    mock_send_command.assert_called_once()
+    assert "17,2,1,on" in str(mock_send_command.call_args)
 
 
 async def test_air_conditioner_no_last_state(
@@ -343,8 +443,8 @@ async def test_air_conditioner_turn_off(
     with patch.object(SwitchBotAPI, "send_command") as mock_send_command:
         await hass.services.async_call(
             CLIMATE_DOMAIN,
-            SERVICE_TURN_OFF,
-            {ATTR_ENTITY_ID: entity_id},
+            ClimateService.TURN_OFF,
+            {TargetKey.ENTITY_ID: entity_id},
             blocking=True,
         )
         mock_send_command.assert_called_once()
@@ -384,8 +484,8 @@ async def test_air_conditioner_turn_on(
     with patch.object(SwitchBotAPI, "send_command") as mock_turn_on_command:
         await hass.services.async_call(
             CLIMATE_DOMAIN,
-            SERVICE_TURN_ON,
-            {ATTR_ENTITY_ID: entity_id},
+            ClimateService.TURN_ON,
+            {TargetKey.ENTITY_ID: entity_id},
             blocking=True,
         )
         mock_turn_on_command.assert_called_once()
@@ -425,8 +525,8 @@ async def test_air_conditioner_turn_on_from_hvac_mode_off(
     with patch.object(SwitchBotAPI, "send_command") as mock_turn_on_command:
         await hass.services.async_call(
             CLIMATE_DOMAIN,
-            SERVICE_TURN_ON,
-            {ATTR_ENTITY_ID: entity_id},
+            ClimateService.TURN_ON,
+            {TargetKey.ENTITY_ID: entity_id},
             blocking=True,
         )
         mock_turn_on_command.assert_called_once()
@@ -471,8 +571,8 @@ async def test_smart_radiator_thermostat_set_temperature(
     with patch.object(SwitchBotAPI, "send_command") as mock_send_command:
         await hass.services.async_call(
             CLIMATE_DOMAIN,
-            SERVICE_SET_TEMPERATURE,
-            {ATTR_ENTITY_ID: entity_id, "temperature": 27},
+            ClimateService.SET_TEMPERATURE,
+            {TargetKey.ENTITY_ID: entity_id, "temperature": 27},
         )
     mock_send_command.assert_called_once_with(
         "ac-device-id-1",
@@ -518,8 +618,8 @@ async def test_smart_radiator_thermostat_set_preset_mode(
     with patch.object(SwitchBotAPI, "send_command") as mock_send_command:
         await hass.services.async_call(
             CLIMATE_DOMAIN,
-            SERVICE_SET_PRESET_MODE,
-            {ATTR_ENTITY_ID: entity_id, "preset_mode": "none"},
+            ClimateService.SET_PRESET_MODE,
+            {TargetKey.ENTITY_ID: entity_id, "preset_mode": "none"},
         )
     mock_send_command.assert_called_once_with(
         "ac-device-id-1",
@@ -531,8 +631,8 @@ async def test_smart_radiator_thermostat_set_preset_mode(
     with patch.object(SwitchBotAPI, "send_command") as mock_send_command:
         await hass.services.async_call(
             CLIMATE_DOMAIN,
-            SERVICE_SET_PRESET_MODE,
-            {ATTR_ENTITY_ID: entity_id, "preset_mode": "home"},
+            ClimateService.SET_PRESET_MODE,
+            {TargetKey.ENTITY_ID: entity_id, "preset_mode": "home"},
         )
     mock_send_command.assert_called_once_with(
         "ac-device-id-1",
@@ -578,8 +678,8 @@ async def test_smart_radiator_thermostat_set_hvac_mode(
     with patch.object(SwitchBotAPI, "send_command") as mock_send_command:
         await hass.services.async_call(
             CLIMATE_DOMAIN,
-            SERVICE_SET_HVAC_MODE,
-            {ATTR_ENTITY_ID: entity_id, "hvac_mode": HVACMode.OFF},
+            ClimateService.SET_HVAC_MODE,
+            {TargetKey.ENTITY_ID: entity_id, "hvac_mode": HVACMode.OFF},
         )
     mock_send_command.assert_called_once_with(
         "ac-device-id-1",
@@ -591,8 +691,8 @@ async def test_smart_radiator_thermostat_set_hvac_mode(
     with patch.object(SwitchBotAPI, "send_command") as mock_send_command:
         await hass.services.async_call(
             CLIMATE_DOMAIN,
-            SERVICE_SET_HVAC_MODE,
-            {ATTR_ENTITY_ID: entity_id, "hvac_mode": HVACMode.HEAT},
+            ClimateService.SET_HVAC_MODE,
+            {TargetKey.ENTITY_ID: entity_id, "hvac_mode": HVACMode.HEAT},
         )
     mock_send_command.assert_called_once_with(
         "ac-device-id-1",
@@ -600,3 +700,31 @@ async def test_smart_radiator_thermostat_set_hvac_mode(
         "command",
         5,
     )
+
+
+async def test_smart_radiator_thermostat_target_temperature(
+    hass: HomeAssistant, mock_list_devices, mock_get_status
+) -> None:
+    """Test smart radiator thermostat uses targetTemperature from coordinator data."""
+    mock_list_devices.return_value = [
+        Device(
+            version="V1.0",
+            deviceId="ac-device-id-1",
+            deviceName="climate-1",
+            deviceType="Smart Radiator Thermostat",
+            hubDeviceId="test-hub-id",
+        ),
+    ]
+
+    mock_get_status.return_value = {
+        "mode": 1,
+        "temperature": 23.5,
+        "targetTemperature": 20.0,
+    }
+    entry = await configure_integration(hass)
+    assert entry.state is ConfigEntryState.LOADED
+
+    state = hass.states.get("climate.climate_1")
+    assert state is not None
+    assert state.attributes["current_temperature"] == 23.5
+    assert state.attributes["temperature"] == 20.0

@@ -4,6 +4,10 @@ from collections.abc import Generator
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.components.infrared import (
+    EMITTER_ENTITY_ID as MOCK_INFRARED_ENTITY_ID,
+)
 
 from homeassistant.components.dyson_infrared import PLATFORMS
 from homeassistant.components.dyson_infrared.const import (
@@ -15,9 +19,6 @@ from homeassistant.components.dyson_infrared.const import (
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
-
-from tests.common import MockConfigEntry
-from tests.components.infrared import EMITTER_ENTITY_ID as MOCK_INFRARED_ENTITY_ID
 
 
 @pytest.fixture

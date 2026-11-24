@@ -26,10 +26,7 @@ from homeassistant.helpers.entity_platform import (
 )
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from .const import DEFAULT_MAX, DEFAULT_MIN
-
-ATTR_MAXIMUM = "maximum"
-ATTR_MINIMUM = "minimum"
+from .const import DEFAULT_MAX, DEFAULT_MIN, RandomEntityStateAttribute
 
 DEFAULT_NAME = "Random sensor"
 
@@ -71,7 +68,9 @@ class RandomSensor(SensorEntity):
     """Representation of a Random number sensor."""
 
     _attr_translation_key = "random"
-    _unrecorded_attributes = frozenset({ATTR_MAXIMUM, ATTR_MINIMUM})
+    _unrecorded_attributes = frozenset(
+        {RandomEntityStateAttribute.MAXIMUM, RandomEntityStateAttribute.MINIMUM}
+    )
 
     def __init__(self, config: Mapping[str, Any], entry_id: str | None = None) -> None:
         """Initialize the Random sensor."""
@@ -81,8 +80,8 @@ class RandomSensor(SensorEntity):
         self._attr_native_unit_of_measurement = config.get(CONF_UNIT_OF_MEASUREMENT)
         self._attr_device_class = config.get(CONF_DEVICE_CLASS)
         self._attr_extra_state_attributes = {
-            ATTR_MAXIMUM: self._maximum,
-            ATTR_MINIMUM: self._minimum,
+            RandomEntityStateAttribute.MAXIMUM: self._maximum,
+            RandomEntityStateAttribute.MINIMUM: self._minimum,
         }
         self._attr_unique_id = entry_id
 

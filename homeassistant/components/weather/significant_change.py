@@ -9,7 +9,7 @@ from homeassistant.helpers.significant_change import (
     check_valid_float,
 )
 
-from .const import WeatherEntityStateAttribute
+from .const import WeatherEntityCapabilityAttribute, WeatherEntityStateAttribute
 
 SIGNIFICANT_ATTRIBUTES: set[str] = {
     WeatherEntityStateAttribute.APPARENT_TEMPERATURE,
@@ -101,7 +101,7 @@ def async_check_significant_change(
             WeatherEntityStateAttribute.TEMPERATURE,
         ):
             if (
-                unit := new_attrs.get(WeatherEntityStateAttribute.TEMPERATURE_UNIT)
+                unit := new_attrs.get(WeatherEntityCapabilityAttribute.TEMPERATURE_UNIT)
             ) is not None and unit == UnitOfTemperature.FAHRENHEIT:
                 absolute_change = 1.0
             else:
@@ -112,7 +112,7 @@ def async_check_significant_change(
             WeatherEntityStateAttribute.WIND_SPEED,
         ):
             if (
-                unit := new_attrs.get(WeatherEntityStateAttribute.WIND_SPEED_UNIT)
+                unit := new_attrs.get(WeatherEntityCapabilityAttribute.WIND_SPEED_UNIT)
             ) is None or unit in (
                 UnitOfSpeed.KILOMETERS_PER_HOUR,
                 UnitOfSpeed.MILES_PER_HOUR,  # 1km/h = 0.62mi/s
@@ -138,7 +138,7 @@ def async_check_significant_change(
             attr_name == WeatherEntityStateAttribute.PRESSURE
         ):  # local variation of around 100 hpa
             if (
-                unit := new_attrs.get(WeatherEntityStateAttribute.PRESSURE_UNIT)
+                unit := new_attrs.get(WeatherEntityCapabilityAttribute.PRESSURE_UNIT)
             ) is None or unit in (
                 UnitOfPressure.HPA,
                 UnitOfPressure.MBAR,  # 1hPa = 1mbar

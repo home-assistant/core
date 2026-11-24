@@ -3,14 +3,14 @@
 from typing import Any
 from unittest.mock import Mock, patch
 
+from pytest_homeassistant.common import MockUser
+
 from homeassistant.components import onboarding
 from homeassistant.components.onboarding import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from . import mock_storage
-
-from tests.common import MockUser
 
 # Temporarily: if auth not active, always set onboarded=True
 

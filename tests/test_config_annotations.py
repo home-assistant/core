@@ -19,13 +19,12 @@ from probatio import (
     set_compile_policy,
 )
 import pytest
+from pytest_homeassistant.common import get_fixture_path
 
 from homeassistant import config as config_util
 from homeassistant.config import _get_annotation, find_annotation
 from homeassistant.core import HomeAssistant
 from homeassistant.util.yaml.objects import NodeDictClass
-
-from .common import get_fixture_path
 
 CONFIG_DIR = str(get_fixture_path("core/config/annotations/basic"))
 CONFIGURATION_YAML = os.path.join(CONFIG_DIR, "configuration.yaml")

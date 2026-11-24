@@ -9,7 +9,11 @@ from sqlalchemy.engine import Engine, Result
 from sqlalchemy.exc import MultipleResultsFound, NoSuchColumnError, SQLAlchemyError
 from sqlalchemy.orm import Session, scoped_session, sessionmaker
 
-from homeassistant.components.recorder import CONF_DB_URL, get_instance
+from homeassistant.components.recorder import (
+    CONF_DB_URL,
+    get_engine_db_url,
+    get_instance,
+)
 from homeassistant.components.sensor import CONF_STATE_CLASS
 from homeassistant.config_entries import (
     ConfigEntry,
@@ -93,7 +97,7 @@ def validate_db_connection(db_url: str) -> bool:
     engine: Engine | None = None
     sess: Session | None = None
     try:
-        engine = sqlalchemy.create_engine(db_url, future=True)
+        engine = sqlalchemy.create_engine(get_engine_db_url(db_url), future=True)
         sessmaker = scoped_session(sessionmaker(bind=engine, future=True))
         sess = sessmaker()
         sess.execute(sqlalchemy.text("select 1 as value"))
@@ -105,9 +109,8 @@ def validate_db_connection(db_url: str) -> bool:
             engine.dispose()
         raise
 
-    if sess:
-        sess.close()
-        engine.dispose()
+    sess.close()
+    engine.dispose()
 
     return True
 
@@ -115,7 +118,7 @@ def validate_db_connection(db_url: str) -> bool:
 def validate_query(db_url: str, query: str, column: str) -> bool:
     """Validate SQL query."""
 
-    engine = sqlalchemy.create_engine(db_url, future=True)
+    engine = sqlalchemy.create_engine(get_engine_db_url(db_url), future=True)
     sessmaker = scoped_session(sessionmaker(bind=engine, future=True))
     sess: Session = sessmaker()
 
@@ -123,25 +126,22 @@ def validate_query(db_url: str, query: str, column: str) -> bool:
         result: Result = sess.execute(sqlalchemy.text(query))
     except SQLAlchemyError as error:
         _LOGGER.debug("Execution error %s", error)
-        if sess:
-            sess.close()
-            engine.dispose()
+        sess.close()
+        engine.dispose()
         raise InvalidSqlQuery from error
 
     for res in result.mappings():
         if column not in res:
             _LOGGER.debug("Column `%s` is not returned by the query", column)
-            if sess:
-                sess.close()
-                engine.dispose()
+            sess.close()
+            engine.dispose()
             raise NoSuchColumnError(f"Column {column} is not returned by the query.")
 
         data = res[column]
         _LOGGER.debug("Return value from query: %s", data)
 
-    if sess:
-        sess.close()
-        engine.dispose()
+    sess.close()
+    engine.dispose()
 
     return True
 

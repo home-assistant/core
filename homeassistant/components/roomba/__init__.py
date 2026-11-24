@@ -29,7 +29,7 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup_entry(
     hass: HomeAssistant, config_entry: RoombaConfigEntry
-) -> bool:
+) -> None:
     """Set the config entry up."""
     roomba = await async_create_roomba(
         hass,
@@ -59,8 +59,6 @@ async def async_setup_entry(
 
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
 
-    return True
-
 
 async def async_create_roomba(
     hass: HomeAssistant, host: str, blid: str, password: str
@@ -81,12 +79,10 @@ async def async_connect_or_timeout(
         async with asyncio.timeout(10):
             _LOGGER.debug("Initialize connection to vacuum")
             await roomba.connect()
-            while not roomba.connected or name is None:
-                # Waiting for connection and check data is ready
-                name = roomba_reported_state(roomba).get("name", None)
-                if name:
-                    break
+            while not roomba.connected or not roomba_reported_state(roomba):
                 await asyncio.sleep(1)
+            # Some models (such as Roomba 980) omit the 'name' field in initial telemetry
+            name = roomba_reported_state(roomba).get("name") or "Roomba"
     except RoombaConnectionError as err:
         _LOGGER.debug("Error to connect to vacuum: %s", err)
         raise CannotConnect from err
@@ -110,15 +106,10 @@ async def async_disconnect_or_timeout(
 
 async def async_unload_entry(
     hass: HomeAssistant, config_entry: RoombaConfigEntry
-) -> bool:
+) -> None:
     """Unload a config entry."""
-    unload_ok = await hass.config_entries.async_unload_platforms(
-        config_entry, PLATFORMS
-    )
-    if unload_ok:
-        await async_disconnect_or_timeout(hass, roomba=config_entry.runtime_data.roomba)
-
-    return unload_ok
+    await hass.config_entries.async_unload_platforms_or_raise(config_entry, PLATFORMS)
+    await async_disconnect_or_timeout(hass, roomba=config_entry.runtime_data.roomba)
 
 
 def roomba_reported_state(roomba: RoombaClient) -> dict[str, Any]:

@@ -3,6 +3,9 @@
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.components.diagnostics import get_diagnostics_for_config_entry
+from pytest_homeassistant.typing import ClientSessionGenerator
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.cert_expiry.const import DOMAIN
@@ -12,10 +15,6 @@ from homeassistant.core import HomeAssistant
 
 from .const import HOST, PORT
 from .helpers import future_timestamp, static_datetime
-
-from tests.common import MockConfigEntry
-from tests.components.diagnostics import get_diagnostics_for_config_entry
-from tests.typing import ClientSessionGenerator
 
 
 @pytest.mark.freeze_time(static_datetime())

@@ -1,7 +1,12 @@
 {
   "domain": "arris_tg2492lg",
   "name": "Arris TG2492LG",
+  "categories": [
+    "computers_network.routers_network",
+    "presence_location.network_presence"
+  ],
   "codeowners": ["@vanbalken"],
+  "connectivity": ["network"],
   "documentation": "https://www.home-assistant.io/integrations/arris_tg2492lg",
   "integration_type": "hub",
   "iot_class": "local_polling",

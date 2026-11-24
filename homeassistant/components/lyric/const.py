@@ -14,6 +14,9 @@ PRESET_HOLD_UNTIL = "HoldUntil"
 PRESET_PERMANENT_HOLD = "PermanentHold"
 PRESET_VACATION_HOLD = "VacationHold"
 
+LYRIC_HVAC_MODE_HEAT = "Heat"
+LYRIC_HVAC_MODE_EMERGENCY_HEAT = "EmergencyHeat"
+
 LYRIC_EXCEPTIONS = (
     LyricAuthenticationException,
     LyricException,

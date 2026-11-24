@@ -7,11 +7,11 @@ from homeassistant.const import CONF_API_KEY, CONF_MODE
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import issue_registry as ir
 
-if TYPE_CHECKING:
-    from . import OpenweathermapConfigEntry
-
 from .const import DOMAIN, OWM_MODE_V30
 from .utils import validate_api_key
+
+if TYPE_CHECKING:
+    from . import OpenweathermapConfigEntry
 
 
 class DeprecatedV25RepairFlow(RepairsFlow):
@@ -73,6 +73,7 @@ def async_create_issue(hass: HomeAssistant, entry_id: str) -> None:
         hass=hass,
         domain=DOMAIN,
         issue_id=_get_issue_id(entry_id),
+        config_entry_id=entry_id,
         is_fixable=True,
         is_persistent=False,
         severity=ir.IssueSeverity.WARNING,

@@ -40,16 +40,14 @@ rules:
   integration-owner: done
   log-when-unavailable: todo
   parallel-updates: done
-  reauthentication-flow:
-    status: exempt
-    comment: Integration does not require reauthentication.
+  reauthentication-flow: done
   test-coverage: done
 
   # Gold
   devices: done
-  diagnostics: todo
-  discovery-update-info: todo
-  discovery: todo
+  diagnostics: done
+  discovery-update-info: done
+  discovery: done
   docs-data-update: todo
   docs-examples: todo
   docs-known-limitations: todo
@@ -66,7 +64,7 @@ rules:
   icon-translations:
     status: exempt
     comment: Entities define no custom icons.
-  reconfiguration-flow: todo
+  reconfiguration-flow: done
   repair-issues:
     status: exempt
     comment: Integration does not require user intervention repairs.

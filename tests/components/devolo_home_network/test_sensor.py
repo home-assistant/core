@@ -6,6 +6,7 @@ from unittest.mock import AsyncMock
 from devolo_plc_api.exceptions.device import DevicePasswordProtected, DeviceUnavailable
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import async_fire_time_changed
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.devolo_home_network.const import (
@@ -22,8 +23,6 @@ from homeassistant.helpers import entity_registry as er
 from . import configure_integration
 from .const import PLCNET, PLCNET_MISSING_DATA_RATE
 from .mock import MockDevice
-
-from tests.common import async_fire_time_changed
 
 
 @pytest.mark.usefixtures("mock_device")

@@ -1,7 +1,9 @@
 """Tests for wiz integration."""
 
-import datetime
+import datetime as dt
 from unittest.mock import AsyncMock, patch
+
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components.wiz.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
@@ -20,8 +22,6 @@ from . import (
     async_setup_integration,
 )
 
-from tests.common import MockConfigEntry, async_fire_time_changed
-
 
 async def test_setup_retry(hass: HomeAssistant) -> None:
     """Test setup is retried on error."""
@@ -33,7 +33,7 @@ async def test_setup_retry(hass: HomeAssistant) -> None:
 
     with _patch_discovery(), _patch_wizlight(device=bulb):
         await hass.async_block_till_done(wait_background_tasks=True)
-        async_fire_time_changed(hass, utcnow() + datetime.timedelta(minutes=15))
+        async_fire_time_changed(hass, utcnow() + dt.timedelta(minutes=15))
         await hass.async_block_till_done(wait_background_tasks=True)
     assert entry.state is ConfigEntryState.LOADED
 
@@ -74,8 +74,8 @@ async def test_wrong_device_now_has_our_ip(hass: HomeAssistant) -> None:
     bulb.mac = "dddddddddddd"
     _, entry = await async_setup_integration(hass, wizlight=bulb)
     assert entry.state is ConfigEntryState.SETUP_RETRY
-    # Each retry creates a new bulb, so the socket of this one must not leak
-    bulb.async_close.assert_called_once()
+    # Each retry creates a new bulb, so every attempt must close its socket
+    assert bulb.async_close.call_count == bulb.getMac.call_count
 
     with _patch_wizlight():
         await hass.async_block_till_done(wait_background_tasks=True)

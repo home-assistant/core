@@ -1,8 +1,10 @@
 {
   "domain": "subaru",
   "name": "Subaru",
+  "categories": ["vehicles_transport.cars_evs"],
   "codeowners": ["@G-Two", "@jpettitt"],
   "config_flow": true,
+  "connectivity": ["cloud"],
   "documentation": "https://www.home-assistant.io/integrations/subaru",
   "integration_type": "hub",
   "iot_class": "cloud_polling",

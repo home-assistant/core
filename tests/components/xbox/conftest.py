@@ -5,6 +5,8 @@ from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, load_json_object_fixture
+from pythonxbox.api.provider.achievements.models import AchievementResponse
 from pythonxbox.api.provider.catalog.models import CatalogResponse
 from pythonxbox.api.provider.gameclips.models import GameclipsResponse
 from pythonxbox.api.provider.people.models import PeopleResponse
@@ -26,8 +28,6 @@ from homeassistant.components.xbox.const import DOMAIN
 from homeassistant.config_entries import ConfigSubentryData
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
-
-from tests.common import MockConfigEntry, load_json_object_fixture
 
 CLIENT_ID = "1234"
 CLIENT_SECRET = "5678"
@@ -201,6 +201,13 @@ def mock_xbox_live_client() -> Generator[AsyncMock]:
         client.titlehub.get_title_history.return_value = TitleHubResponse(
             **load_json_object_fixture("titlehub_titlehistory.json", DOMAIN)
         )
+        client.achievements = AsyncMock()
+        client.achievements.get_achievements_xboxone_gameprogress.return_value = (
+            AchievementResponse(
+                **load_json_object_fixture("achievements_gameprogress.json", DOMAIN)
+            )
+        )
+
         client.gameclips = AsyncMock()
         client.gameclips.get_recent_clips_by_xuid.return_value = GameclipsResponse(
             **load_json_object_fixture("gameclips_recent_xuid.json", DOMAIN)

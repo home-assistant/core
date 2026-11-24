@@ -5,28 +5,7 @@ from typing import Any
 
 import probatio
 import pytest
-
-from homeassistant.components.humidifier.condition import CONDITIONS
-from homeassistant.components.humidifier.const import (
-    ATTR_ACTION,
-    ATTR_HUMIDITY,
-    HumidifierAction,
-    HumidifierEntityFeature,
-)
-from homeassistant.const import (
-    ATTR_MODE,
-    ATTR_SUPPORTED_FEATURES,
-    CONF_ENTITY_ID,
-    CONF_MODE,
-    CONF_OPTIONS,
-    CONF_TARGET,
-    STATE_OFF,
-    STATE_ON,
-)
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.condition import async_validate_condition_config
-
-from tests.components.common import (
+from pytest_homeassistant.components.common import (
     ConditionStateDescription,
     TargetSupport,
     assert_condition_behavior_all,
@@ -40,6 +19,26 @@ from tests.components.common import (
     parametrize_target_entities,
     target_entities,
 )
+
+from homeassistant.components.humidifier.condition import CONDITIONS
+from homeassistant.components.humidifier.const import (
+    ATTR_ACTION,
+    ATTR_HUMIDITY,
+    HumidifierAction,
+    HumidifierEntityFeature,
+)
+from homeassistant.const import (
+    ATTR_MODE,
+    ATTR_SUPPORTED_FEATURES,
+    CONF_MODE,
+    CONF_OPTIONS,
+    CONF_TARGET,
+    STATE_OFF,
+    STATE_ON,
+    TargetKey,
+)
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.condition import async_validate_condition_config
 
 
 @pytest.fixture
@@ -403,7 +402,7 @@ async def test_humidifier_is_mode_condition_validation(
             hass,
             {
                 "condition": condition,
-                CONF_TARGET: {CONF_ENTITY_ID: "humidifier.test"},
+                CONF_TARGET: {TargetKey.ENTITY_ID: "humidifier.test"},
                 CONF_OPTIONS: condition_options,
             },
         )

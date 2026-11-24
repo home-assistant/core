@@ -9,7 +9,6 @@ import probatio
 from homeassistant.components import ssdp
 from homeassistant.config_entries import (
     SOURCE_IGNORE,
-    ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
     OptionsFlowWithReload,
@@ -37,6 +36,7 @@ from .const import (
     ST_IGD_V1,
     ST_IGD_V2,
 )
+from .coordinator import UpnpConfigEntry
 from .device import async_get_mac_address_from_host, get_preferred_location
 
 
@@ -99,7 +99,7 @@ class UpnpFlowHandler(ConfigFlow, domain=DOMAIN):
     @callback
     @override
     def async_get_options_flow(
-        config_entry: ConfigEntry,
+        config_entry: UpnpConfigEntry,
     ) -> UpnpOptionsFlowHandler:
         """Get the options flow for this handler."""
         return UpnpOptionsFlowHandler()

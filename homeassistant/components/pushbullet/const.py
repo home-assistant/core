@@ -3,7 +3,6 @@
 from typing import Final
 
 DOMAIN: Final = "pushbullet"
-DEFAULT_NAME: Final = "Pushbullet"
 DATA_HASS_CONFIG: Final = "pushbullet_hass_config"
 DATA_UPDATED: Final = "pushbullet_data_updated"
 

@@ -9,11 +9,13 @@ import probatio
 
 from homeassistant.components import usb
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
-from homeassistant.const import ATTR_MODEL, ATTR_SERIAL_NUMBER, CONF_ADDRESS, CONF_PORT
+from homeassistant.const import CONF_ADDRESS, CONF_PORT
 from homeassistant.core import HomeAssistant
 
 from .const import (
-    ATTR_FIRMWARE,
+    CONF_FIRMWARE,
+    CONF_MODEL,
+    CONF_SERIAL_NUMBER,
     DEFAULT_ADDRESS,
     DEFAULT_INTEGRATION_TITLE,
     DOMAIN,
@@ -39,9 +41,9 @@ def validate_and_connect(
     try:
         client = AuroraSerialClient(address, comport, parity="N", timeout=1)
         client.connect()
-        ret[ATTR_SERIAL_NUMBER] = client.serial_number()
-        ret[ATTR_MODEL] = f"{client.version()} ({client.pn()})"
-        ret[ATTR_FIRMWARE] = client.firmware(1)
+        ret[CONF_SERIAL_NUMBER] = client.serial_number()
+        ret[CONF_MODEL] = f"{client.version()} ({client.pn()})"
+        ret[CONF_FIRMWARE] = client.firmware(1)
         _LOGGER.debug("Returning device info=%s", ret)
     except AuroraError:
         _LOGGER.warning("Could not connect to device=%s", comport)

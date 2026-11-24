@@ -29,11 +29,29 @@
       "active_calories": {
         "name": "Active calories"
       },
+      "active_zone_minutes": {
+        "name": "Active zone minutes"
+      },
       "body_fat": {
         "name": "Body fat"
       },
       "calories_consumed": {
         "name": "Calories consumed"
+      },
+      "calories_from_fat": {
+        "name": "Calories from fat"
+      },
+      "cardio_active_zone_minutes": {
+        "name": "Cardio active zone minutes"
+      },
+      "dietary_fiber": {
+        "name": "Dietary fiber"
+      },
+      "elevation": {
+        "name": "Elevation"
+      },
+      "fat_burn_active_zone_minutes": {
+        "name": "Fat burn active zone minutes"
       },
       "floors": {
         "name": "Floors"
@@ -44,8 +62,23 @@
       "last_sync_time": {
         "name": "Last sync time"
       },
+      "light_activity": {
+        "name": "Light activity"
+      },
+      "moderate_activity": {
+        "name": "Moderate activity"
+      },
+      "peak_active_zone_minutes": {
+        "name": "Peak active zone minutes"
+      },
+      "protein": {
+        "name": "Protein"
+      },
       "resting_heart_rate": {
         "name": "Resting heart rate"
+      },
+      "sedentary_time": {
+        "name": "Sedentary time"
       },
       "sleep_after_wakeup": {
         "name": "Time after waking up"
@@ -56,18 +89,48 @@
       "sleep_awake": {
         "name": "Time awake"
       },
+      "sleep_deep": {
+        "name": "Deep sleep"
+      },
+      "sleep_end_time": {
+        "name": "Sleep end time"
+      },
       "sleep_in_bed": {
         "name": "Time in bed"
       },
+      "sleep_light": {
+        "name": "Light sleep"
+      },
+      "sleep_rem": {
+        "name": "REM sleep"
+      },
+      "sleep_start_time": {
+        "name": "Sleep start time"
+      },
       "sleep_to_fall_asleep": {
         "name": "Time to fall asleep"
+      },
+      "sodium": {
+        "name": "Sodium"
       },
       "steps": {
         "name": "Steps",
         "unit_of_measurement": "steps"
       },
+      "sugar": {
+        "name": "Sugar"
+      },
       "total_calories": {
         "name": "Total calories"
+      },
+      "total_carbohydrate": {
+        "name": "Total carbohydrates"
+      },
+      "total_fat": {
+        "name": "Total fat"
+      },
+      "vigorous_activity": {
+        "name": "Vigorous activity"
       }
     }
   },

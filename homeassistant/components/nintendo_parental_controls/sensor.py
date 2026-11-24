@@ -6,6 +6,7 @@ from datetime import datetime
 from enum import StrEnum
 from typing import override
 
+from pynintendoparental.device import Device
 from pynintendoparental.player import Player
 
 from homeassistant.components.sensor import (
@@ -14,12 +15,13 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.const import UnitOfTime
+from homeassistant.const import EntityCategory, UnitOfTime
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.util import dt as dt_util
 
 from .coordinator import NintendoParentalControlsConfigEntry, NintendoUpdateCoordinator
-from .entity import Device, NintendoDevice
+from .entity import NintendoDevice
 
 # Coordinator is used to centralize the data updates
 PARALLEL_UPDATES = 0
@@ -32,6 +34,7 @@ class NintendoParentalControlsSensor(StrEnum):
     PLAYER_PLAYING_TIME = "player_playing_time"
     TIME_REMAINING = "time_remaining"
     TIME_EXTENDED = "time_extended"
+    LAST_SYNC = "last_sync"
 
 
 @dataclass(kw_only=True, frozen=True)
@@ -76,6 +79,17 @@ DEVICE_SENSOR_DESCRIPTIONS: tuple[
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda device: device.extra_playing_time,
         available_fn=lambda device: device.extra_playing_time is not None,
+    ),
+    NintendoParentalControlsDeviceSensorEntityDescription(
+        key=NintendoParentalControlsSensor.LAST_SYNC,
+        translation_key=NintendoParentalControlsSensor.LAST_SYNC,
+        device_class=SensorDeviceClass.TIMESTAMP,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=lambda device: (
+            dt_util.utc_from_timestamp(device.last_sync)
+            if device.last_sync is not None
+            else None
+        ),
     ),
 )
 

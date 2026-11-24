@@ -5,6 +5,7 @@ from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, load_json_object_fixture
 from yolink.home_manager import YoLinkHome
 
 from homeassistant.components.application_credentials import (
@@ -15,8 +16,6 @@ from homeassistant.components.application_credentials import (
 from homeassistant.components.yolink.api import ConfigEntryAuth
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
-
-from tests.common import MockConfigEntry, load_json_object_fixture
 
 CLIENT_ID = "12345"
 CLIENT_SECRET = "6789"

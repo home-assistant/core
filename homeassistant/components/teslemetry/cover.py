@@ -5,13 +5,7 @@ from itertools import chain
 from typing import Any, Self, override
 
 from tesla_fleet_api import firmware_at_least
-from tesla_fleet_api.const import (
-    ClosureState,
-    Scope,
-    SunRoofCommand,
-    Trunk,
-    WindowCommand,
-)
+from tesla_fleet_api.const import Scope, SunRoofCommand, Trunk, WindowCommand
 from tesla_fleet_api.router import VehicleRouter
 from tesla_fleet_api.teslemetry import Vehicle
 from teslemetry_stream import Signal
@@ -26,14 +20,13 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.restore_state import ExtraStoredData, RestoreEntity
 
-from . import TeslemetryConfigEntry
 from .entity import (
     TeslemetryRootEntity,
     TeslemetryVehiclePollingEntity,
     TeslemetryVehicleStreamEntity,
 )
 from .helpers import handle_vehicle_command
-from .models import TeslemetryVehicleData
+from .models import TeslemetryConfigEntry, TeslemetryVehicleData
 
 OPEN = 1
 CLOSED = 0
@@ -584,7 +577,7 @@ class TeslemetryTonneauEntity(TeslemetryRootEntity, CoverEntity):
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open tonneau."""
         self.raise_for_scope(Scope.VEHICLE_CMDS)
-        await handle_vehicle_command(self.api.closure(tonneau=ClosureState.OPEN))
+        await handle_vehicle_command(self.api.open_tonneau())
         self._attr_is_closed = False
         self.async_write_ha_state()
 
@@ -592,7 +585,7 @@ class TeslemetryTonneauEntity(TeslemetryRootEntity, CoverEntity):
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close tonneau."""
         self.raise_for_scope(Scope.VEHICLE_CMDS)
-        await handle_vehicle_command(self.api.closure(tonneau=ClosureState.CLOSE))
+        await handle_vehicle_command(self.api.close_tonneau())
         self._attr_is_closed = True
         self.async_write_ha_state()
 
@@ -600,7 +593,7 @@ class TeslemetryTonneauEntity(TeslemetryRootEntity, CoverEntity):
     async def async_stop_cover(self, **kwargs: Any) -> None:
         """Stop tonneau."""
         self.raise_for_scope(Scope.VEHICLE_CMDS)
-        await handle_vehicle_command(self.api.closure(tonneau=ClosureState.STOP))
+        await handle_vehicle_command(self.api.stop_tonneau())
         self._attr_is_closed = False
         self.async_write_ha_state()
 
