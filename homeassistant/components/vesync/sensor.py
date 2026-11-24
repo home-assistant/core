@@ -39,7 +39,14 @@ from homeassistant.helpers.typing import StateType
 from homeassistant.util import dt as dt_util
 from homeassistant.util.variance import ignore_variance
 
-from .common import is_air_fryer, is_humidifier, is_outlet, is_purifier, rgetattr
+from .common import (
+    is_air_fryer,
+    is_fan,
+    is_humidifier,
+    is_outlet,
+    is_purifier,
+    rgetattr,
+)
 from .const import AIR_FRYER_MODE_MAP, VS_DEVICES, VS_DISCOVERY
 from .coordinator import VesyncConfigEntry, VeSyncDataCoordinator
 from .entity import VeSyncBaseEntity
@@ -219,7 +226,8 @@ SENSORS: tuple[VeSyncSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda device: device.state.temperature,
         exists_fn=lambda device: (
-            is_humidifier(device) and device.state.temperature is not None
+            (is_humidifier(device) or is_fan(device))
+            and device.state.temperature is not None
         ),
     ),
     VeSyncSensorEntityDescription(
