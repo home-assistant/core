@@ -513,6 +513,7 @@ async def test_reproducing_states(
 
     valid_close_tilt_calls = [
         {"entity_id": "cover.tilt_only_open"},
+        {"entity_id": "cover.entity_open_attr"},
         {"entity_id": "cover.open_only_supports_tilt_close_open"},
     ]
     assert len(close_tilt_calls) == len(valid_close_tilt_calls)
@@ -660,7 +661,15 @@ OPEN_AT_0 = {
             CoverState.OPEN, 50, {}, CoverState.CLOSED, [0], id="default_close"
         ),
         pytest.param(
-            CoverState.OPEN, 0, {}, CoverState.CLOSED, [], id="default_closed_at_0"
+            CoverState.OPEN, 0, {}, CoverState.CLOSED, [0], id="default_closed_at_0"
+        ),
+        pytest.param(
+            CoverState.OPENING,
+            100,
+            OPEN_AT_50,
+            CoverState.CLOSED,
+            [0],
+            id="opening_from_100",
         ),
         pytest.param(
             CoverState.OPENING, 0, {}, CoverState.CLOSED, [0], id="opening_from_0"
@@ -700,7 +709,10 @@ async def test_reproducing_state_with_tilt_positions(
     [
         pytest.param(CoverState.OPEN, 30, OPEN_AT_50, 1, id="partly_open"),
         pytest.param(CoverState.OPEN, 100, OPEN_AT_50, 0, id="closed_at_100"),
-        pytest.param(CoverState.OPEN, 0, {}, 0, id="default_closed_at_0"),
+        pytest.param(CoverState.OPEN, 0, OPEN_AT_50, 1, id="closed_at_0"),
+        pytest.param(CoverState.OPEN, 0, {}, 1, id="default_closed_at_0"),
+        pytest.param(CoverState.OPENING, 100, OPEN_AT_50, 1, id="opening_from_100"),
+        pytest.param(CoverState.CLOSING, 100, OPEN_AT_50, 1, id="closing_at_100"),
         pytest.param(CoverState.OPENING, 0, {}, 1, id="opening_from_0"),
         pytest.param(CoverState.CLOSING, 0, {}, 1, id="closing_at_0"),
     ],
@@ -712,7 +724,7 @@ async def test_reproducing_closed_state_with_close_tilt(
     tilt_attributes: dict[str, Any],
     expected_calls: int,
 ) -> None:
-    """Test closing leaves slats that are closed and not moving where they are."""
+    """Test closing leaves slats at another closed position where they are."""
     hass.states.async_set(
         "cover.entity",
         current_state,
