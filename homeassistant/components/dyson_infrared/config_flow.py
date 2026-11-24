@@ -4,13 +4,9 @@ from typing import Any, override
 
 import probatio
 
-from homeassistant.components import infrared
-from homeassistant.components.infrared import DOMAIN as INFRARED_DOMAIN
-from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
-from homeassistant.helpers import entity_registry as er
+from homeassistant.components.infrared import InfraredConsumerConfigFlow
+from homeassistant.core import callback
 from homeassistant.helpers.selector import (
-    EntitySelector,
-    EntitySelectorConfig,
     SelectSelector,
     SelectSelectorConfig,
     SelectSelectorMode,
@@ -28,57 +24,40 @@ DEVICE_TYPE_NAMES: dict[DysonDeviceType, str] = {
 }
 
 
-class DysonIrConfigFlow(ConfigFlow, domain=DOMAIN):
+class DysonIrConfigFlow(InfraredConsumerConfigFlow, domain=DOMAIN):
     """Handle a config flow for Dyson Infrared."""
 
     VERSION = 1
+    INFRARED_EMITTER_KEY = CONF_INFRARED_EMITTER_ENTITY_ID
 
     @override
-    async def async_step_user(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Handle the initial step where the user configures the integration."""
-
-        emitter_entity_ids = infrared.async_get_emitters(self.hass)
-        if not emitter_entity_ids:
-            return self.async_abort(reason="no_emitters")
-
-        if user_input is not None:
-            entity_id = user_input[CONF_INFRARED_EMITTER_ENTITY_ID]
-            device_type = user_input[CONF_DEVICE_TYPE]
-
-            await self.async_set_unique_id(f"{device_type}_{entity_id}")
-            self._abort_if_unique_id_configured()
-
-            ent_reg = er.async_get(self.hass)
-            entry = ent_reg.async_get(entity_id)
-            entity_name = (
-                entry.name or entry.original_name or entity_id if entry else entity_id
-            )
-            device_type_name = DEVICE_TYPE_NAMES[DysonDeviceType(device_type)]
-            title = f"Dyson {device_type_name} via {entity_name}"
-
-            return self.async_create_entry(title=title, data=user_input)
-
-        return self.async_show_form(
-            step_id="user",
-            data_schema=probatio.Schema(
-                {
-                    probatio.Required(CONF_DEVICE_TYPE): SelectSelector(
-                        SelectSelectorConfig(
-                            options=[
-                                device_type.value for device_type in DysonDeviceType
-                            ],
-                            translation_key=CONF_DEVICE_TYPE,
-                            mode=SelectSelectorMode.DROPDOWN,
-                        )
-                    ),
-                    probatio.Required(CONF_INFRARED_EMITTER_ENTITY_ID): EntitySelector(
-                        EntitySelectorConfig(
-                            domain=INFRARED_DOMAIN,
-                            include_entities=emitter_entity_ids,
-                        )
-                    ),
-                }
-            ),
+    @callback
+    def _async_infrared_schema(self) -> probatio.Schema:
+        """Return the device type and emitter selection schema."""
+        return probatio.Schema(
+            {
+                probatio.Required(CONF_DEVICE_TYPE): SelectSelector(
+                    SelectSelectorConfig(
+                        options=[device_type.value for device_type in DysonDeviceType],
+                        translation_key=CONF_DEVICE_TYPE,
+                        mode=SelectSelectorMode.DROPDOWN,
+                    )
+                ),
+                **self._async_infrared_entity_fields(),
+            }
         )
+
+    @override
+    @callback
+    def _async_infrared_match_dict(self, user_input: dict[str, Any]) -> dict[str, Any]:
+        """Return the device type, so each device type can use the same emitter."""
+        return {CONF_DEVICE_TYPE: DysonDeviceType(user_input[CONF_DEVICE_TYPE])}
+
+    @override
+    async def _async_infrared_entry_title(self, user_input: dict[str, Any]) -> str:
+        """Return the title of a new entry."""
+        device_type = DysonDeviceType(user_input[CONF_DEVICE_TYPE])
+        emitter_name = self._async_infrared_entity_name(
+            user_input[CONF_INFRARED_EMITTER_ENTITY_ID]
+        )
+        return f"Dyson {DEVICE_TYPE_NAMES[device_type]} via {emitter_name}"
