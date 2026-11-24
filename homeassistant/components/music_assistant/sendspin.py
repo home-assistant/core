@@ -22,15 +22,40 @@ def async_setup_sendspin_links(hass: HomeAssistant) -> None:
 
     async def esphome_setup(hass: HomeAssistant, _component: str) -> None:
         from homeassistant.components.esphome import (  # noqa: PLC0415
+            async_get_sendspin_device,
             async_sendspin_client_ids,
             async_subscribe_sendspin_clients,
         )
 
+        registry = dr.async_get(hass)
+
         @callback
         def clients_changed(client_ids: list[str]) -> None:
-            for entry in hass.config_entries.async_loaded_entries(DOMAIN):
-                data = entry.runtime_data
-                for client_id in client_ids:
+            entries = hass.config_entries.async_loaded_entries(DOMAIN)
+            for client_id in client_ids:
+                if (satellite := async_get_sendspin_device(hass, client_id)) is None:
+                    continue
+                connections = {
+                    item
+                    for item in satellite.connections
+                    if item[0] == dr.CONNECTION_NETWORK_MAC
+                }
+                # A new advertised ID invalidates old links even before player discovery.
+                for device in registry.async_get_devices(connections=connections):
+                    if (
+                        _is_device_from(hass, device, DOMAIN)
+                        and (
+                            DOMAIN,
+                            client_id,
+                        )
+                        not in device.identifiers
+                    ):
+                        registry.async_update_device(
+                            device.id, new_connections=device.connections - connections
+                        )
+
+                for entry in entries:
+                    data = entry.runtime_data
                     if (
                         client_id in data.discovered_players
                         and (player := data.mass.players.get(client_id)) is not None
@@ -39,8 +64,6 @@ def async_setup_sendspin_links(hass: HomeAssistant) -> None:
 
         async_subscribe_sendspin_clients(hass, clients_changed)
         clients_changed(async_sendspin_client_ids(hass))
-
-        registry = dr.async_get(hass)
 
         @callback
         def area_changed(event: Event[dr.EventDeviceRegistryUpdatedData]) -> None:

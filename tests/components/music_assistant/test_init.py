@@ -753,6 +753,13 @@ async def test_relink_sendspin_device_after_client_id_changes(
     )
     await satellite.mock_connect()
 
+    office = area_registry.async_create("Office")
+    device_registry.async_update_device(source.id, area_id=office.id)
+    await hass.async_block_till_done()
+    assert (unlinked := device_registry.async_get(old_device.id)) is not None
+    assert unlinked.area_id == source.area_id
+    assert not unlinked.connections
+
     music_assistant_client.players._players[new_player.player_id] = new_player
     await trigger_subscription_callback(
         hass,
@@ -768,15 +775,13 @@ async def test_relink_sendspin_device_after_client_id_changes(
     ) is not None
     assert new_device.id != old_device.id
     assert new_device.connections == {connection}
-    assert new_device.area_id == source.area_id
-    assert (unlinked := device_registry.async_get(old_device.id)) is not None
-    assert not unlinked.connections
+    assert new_device.area_id == office.id
 
-    office = area_registry.async_create("Office")
-    device_registry.async_update_device(source.id, area_id=office.id)
+    living_room = area_registry.async_create("Living room")
+    device_registry.async_update_device(source.id, area_id=living_room.id)
     await hass.async_block_till_done()
     assert (updated := device_registry.async_get(new_device.id)) is not None
-    assert updated.area_id == office.id
+    assert updated.area_id == living_room.id
     assert device_registry.async_get(old_device.id) == unlinked
 
 
