@@ -60,7 +60,7 @@ class PortainerEndpointSensorEntityDescription(SensorEntityDescription):
 class PortainerStackSensorEntityDescription(SensorEntityDescription):
     """Class to hold Portainer stack sensor description."""
 
-    value_fn: Callable[[PortainerStackData], StateType]
+    value_fn: Callable[[PortainerStackData], StateType | datetime]
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -411,6 +411,18 @@ STACK_SENSORS: tuple[PortainerStackSensorEntityDescription, ...] = (
         entity_category=EntityCategory.DIAGNOSTIC,
         state_class=SensorStateClass.MEASUREMENT,
     ),
+    PortainerStackSensorEntityDescription(
+        key="stack_last_deployed",
+        translation_key="stack_last_deployed",
+        # Portainer sends 0 for a stack that was never updated
+        value_fn=lambda data: (
+            dt_util.utc_from_timestamp(timestamp)
+            if (timestamp := data.stack.update_date or data.stack.creation_date)
+            else None
+        ),
+        device_class=SensorDeviceClass.TIMESTAMP,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
 )
 VOLUME_SENSORS: tuple[PortainerVolumeSensorEntityDescription, ...] = (
     PortainerVolumeSensorEntityDescription(
@@ -644,7 +656,7 @@ class PortainerStackSensor(PortainerStackEntity, SensorEntity):
 
     @property
     @override
-    def native_value(self) -> StateType:
+    def native_value(self) -> StateType | datetime:
         """Return the state of the sensor."""
         return self.entity_description.value_fn(self.stack_data)
 

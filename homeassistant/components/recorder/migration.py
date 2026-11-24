@@ -2337,16 +2337,16 @@ def _migrate_columns_to_timestamp(
             connection = session.connection()
             connection.execute(
                 text(
-                    'UPDATE events set time_fired_ts=strftime("%s",time_fired) + '
+                    'UPDATE events set time_fired_ts=strftime("%s",substr(time_fired,1,19)) + '
                     "cast(substr(time_fired,-7) AS FLOAT) "
                     "WHERE time_fired_ts is NULL;"
                 )
             )
             connection.execute(
                 text(
-                    'UPDATE states set last_updated_ts=strftime("%s",last_updated) + '
+                    'UPDATE states set last_updated_ts=strftime("%s",substr(last_updated,1,19)) + '
                     "cast(substr(last_updated,-7) AS FLOAT), "
-                    'last_changed_ts=strftime("%s",last_changed) + '
+                    'last_changed_ts=strftime("%s",substr(last_changed,1,19)) + '
                     "cast(substr(last_changed,-7) AS FLOAT) "
                     " WHERE last_updated_ts is NULL;"
                 )
@@ -2502,11 +2502,11 @@ def _migrate_statistics_columns_to_timestamp(
             with session_scope(session=session_maker()) as session:
                 session.connection().execute(
                     text(
-                        f"UPDATE {table} set start_ts=strftime('%s',start) + "  # noqa: S608
+                        f"UPDATE {table} set start_ts=strftime('%s',substr(start,1,19)) + "  # noqa: S608
                         "cast(substr(start,-7) AS FLOAT), "
-                        f"created_ts=strftime('%s',created) + "
+                        f"created_ts=strftime('%s',substr(created,1,19)) + "
                         "cast(substr(created,-7) AS FLOAT), "
-                        f"last_reset_ts=strftime('%s',last_reset) + "
+                        f"last_reset_ts=strftime('%s',substr(last_reset,1,19)) + "
                         "cast(substr(last_reset,-7) AS FLOAT) where start_ts is NULL;"
                     )
                 )
