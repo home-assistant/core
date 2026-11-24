@@ -450,7 +450,7 @@ async def test_bot_press_button(
         await hass.services.async_call(
             BUTTON_DOMAIN,
             ButtonService.PRESS,
-            {CommonServiceArgument.ENTITY_ID: BOT_BUTTON_ENTITY_ID},
+            {TargetKey.ENTITY_ID: BOT_BUTTON_ENTITY_ID},
             blocking=True,
         )
 
@@ -485,7 +485,7 @@ async def test_bot_press_button_failure(
         await hass.services.async_call(
             BUTTON_DOMAIN,
             ButtonService.PRESS,
-            {CommonServiceArgument.ENTITY_ID: BOT_BUTTON_ENTITY_ID},
+            {TargetKey.ENTITY_ID: BOT_BUTTON_ENTITY_ID},
             blocking=True,
         )
         state = hass.states.get(BOT_BUTTON_ENTITY_ID)
@@ -495,7 +495,7 @@ async def test_bot_press_button_failure(
             await hass.services.async_call(
                 BUTTON_DOMAIN,
                 ButtonService.PRESS,
-                {CommonServiceArgument.ENTITY_ID: BOT_BUTTON_ENTITY_ID},
+                {TargetKey.ENTITY_ID: BOT_BUTTON_ENTITY_ID},
                 blocking=True,
             )
 
