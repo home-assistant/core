@@ -777,7 +777,7 @@
       "title": "Template light blueprint uses deprecated options in mireds ({blueprint})"
     },
     "deprecated_light_temperature": {
-      "description": "The template light helper {name} defines its color temperature in mireds. This is deprecated and will stop working in Home Assistant Core {breaks_in_ha_version}.\n\nTo fix this issue, open the options of the template light helper and define the color temperature in kelvin.",
+      "description": "The template light helper {name} defines its color temperature in mireds. This is deprecated and will stop working in Home Assistant Core {breaks_in_ha_version}.\n\nTo fix this issue, open the options of the template light helper and define the color temperature in kelvin, or remove the actions on set color temperature if the light should not support a color temperature.",
       "title": "Template light helper {name} uses a color temperature in mireds"
     },
     "deprecated_weather_template_options": {
@@ -1087,7 +1087,7 @@
           "set_level": "[%key:component::template::config::step::light::data_description::set_level%]",
           "set_temperature": "[%key:component::template::config::step::light::data_description::set_temperature%]",
           "state": "[%key:component::template::config::step::light::data_description::state%]",
-          "temperature": "The color temperature template in mireds is deprecated and can no longer be changed. Define the color temperature in kelvin instead, which removes this template.",
+          "temperature": "The color temperature template in mireds is deprecated and can no longer be changed. Define the color temperature in kelvin instead, or remove the actions on set color temperature, which removes this template.",
           "temperature_kelvin": "[%key:component::template::config::step::light::data_description::temperature_kelvin%]",
           "turn_off": "[%key:component::template::config::step::light::data_description::turn_off%]",
           "turn_on": "[%key:component::template::config::step::light::data_description::turn_on%]"

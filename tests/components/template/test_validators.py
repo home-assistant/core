@@ -1,5 +1,6 @@
 """Test template validators."""
 
+import math
 from typing import Any
 
 import pytest
@@ -563,6 +564,12 @@ async def test_boolean_as_false(
             {"junk"},
             [],
             ["stuff"],
+            "nan",
+            "inf",
+            "-inf",
+            math.nan,
+            math.inf,
+            -math.inf,
         ),
     ],
 )
@@ -619,6 +626,12 @@ async def test_number_as_float(
             {"junk"},
             [],
             ["stuff"],
+            "nan",
+            "inf",
+            "-inf",
+            math.nan,
+            math.inf,
+            -math.inf,
         ),
     ],
 )

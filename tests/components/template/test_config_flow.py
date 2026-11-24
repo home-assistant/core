@@ -1380,21 +1380,33 @@ async def test_options_light_without_temperature(hass: HomeAssistant) -> None:
 @pytest.mark.parametrize(
     ("user_input", "expected_options"),
     [
-        pytest.param({}, {"temperature": "{{ 500 }}"}, id="keep_temperature"),
         pytest.param(
-            {"temperature": "{{ 500 }}"},
-            {"temperature": "{{ 500 }}"},
+            {"set_temperature": []},
+            {"set_temperature": [], "temperature": "{{ 500 }}"},
+            id="keep_temperature",
+        ),
+        pytest.param(
+            {"set_temperature": [], "temperature": "{{ 500 }}"},
+            {"set_temperature": [], "temperature": "{{ 500 }}"},
             id="keep_submitted_temperature",
         ),
         pytest.param(
-            {"temperature_kelvin": "{{ 2000 }}"},
-            {"temperature_kelvin": "{{ 2000 }}"},
+            {"set_temperature": [], "temperature_kelvin": "{{ 2000 }}"},
+            {"set_temperature": [], "temperature_kelvin": "{{ 2000 }}"},
             id="replace_temperature",
         ),
         pytest.param(
-            {"temperature": "{{ 500 }}", "temperature_kelvin": "{{ 2000 }}"},
-            {"temperature_kelvin": "{{ 2000 }}"},
+            {
+                "set_temperature": [],
+                "temperature": "{{ 500 }}",
+                "temperature_kelvin": "{{ 2000 }}",
+            },
+            {"set_temperature": [], "temperature_kelvin": "{{ 2000 }}"},
             id="replace_submitted_temperature",
+        ),
+        pytest.param({}, {}, id="remove_temperature_action"),
+        pytest.param(
+            {"temperature": "{{ 500 }}"}, {}, id="remove_temperature_action_submitted"
         ),
     ],
 )
@@ -1426,10 +1438,16 @@ async def test_options_light_deprecated_temperature(
 
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
-        user_input={"turn_on": [], "turn_off": [], "set_temperature": [], **user_input},
+        user_input={"turn_on": [], "turn_off": [], **user_input},
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert config_entry.options == {**LIGHT_OPTIONS, **expected_options}
+    assert config_entry.options == {
+        "name": "My template",
+        "template_type": "light",
+        "turn_on": [],
+        "turn_off": [],
+        **expected_options,
+    }
 
 
 def _assert_number_unit_of_measurement_context(data_schema: probatio.Schema) -> None:
@@ -2256,6 +2274,46 @@ async def test_option_flow_preview(
         "state": template_state,
     }
     assert len(hass.states.async_all()) == 3
+
+
+async def test_option_flow_preview_light_deprecated_temperature(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
+    """Test the options flow preview of a light helper with a temperature in mireds."""
+    client = await hass_ws_client(hass)
+    config_entry = MockConfigEntry(
+        data={},
+        domain=DOMAIN,
+        options={**LIGHT_OPTIONS, "temperature": "{{ 500 }}"},
+        title="My template",
+    )
+    config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    result = await hass.config_entries.options.async_init(config_entry.entry_id)
+    assert result["preview"] == "template"
+
+    await client.send_json_auto_id(
+        {
+            "type": "template/start_preview",
+            "flow_id": result["flow_id"],
+            "flow_type": "options_flow",
+            "user_input": {
+                "state": "{{ true }}",
+                "turn_on": [],
+                "turn_off": [],
+                "set_temperature": [],
+                "temperature": "{{ 500 }}",
+            },
+        }
+    )
+    msg = await client.receive_json()
+    assert msg["success"]
+
+    msg = await client.receive_json()
+    assert msg["event"]["state"] == "on"
+    assert msg["event"]["attributes"]["color_temp_kelvin"] == 2000
 
 
 async def test_option_flow_sensor_preview_config_entry_removed(

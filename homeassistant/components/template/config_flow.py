@@ -691,8 +691,12 @@ def validate_user_input(
             tcv.requires_option(CONF_TARGET_TEMPERATURE, SET_TEMPERATURE_ACTION)(
                 user_input
             )
-        if template_type == Platform.LIGHT and CONF_TEMPERATURE_KELVIN in user_input:
-            # temperature_kelvin replaces the deprecated, read only, temperature
+        if template_type == Platform.LIGHT and (
+            CONF_TEMPERATURE_KELVIN in user_input
+            or CONF_TEMPERATURE_ACTION not in user_input
+        ):
+            # The deprecated temperature is read only, it is removed by replacing it
+            # with temperature_kelvin or by removing the color temperature action
             handler.options.pop(CONF_TEMPERATURE, None)
             user_input.pop(CONF_TEMPERATURE, None)
         if template_type == Platform.MEDIA_PLAYER:

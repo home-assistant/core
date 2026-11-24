@@ -865,6 +865,7 @@ async def test_temperature_template(
         (2000, "{{ 2000 }}"),
         (6535, "{{ 6535 }}"),
         (3000, "{{ 3000.4 }}"),
+        (2701, "{{ 2700.9 }}"),
         (None, "{{ 1999 }}"),
         (None, "{{ 6536 }}"),
         (None, "{{ true }}"),
@@ -1882,6 +1883,10 @@ async def test_effect_template(
     ("expected_max_kelvin", "attribute_template"),
     [
         (8474, "{{118}}"),
+        (6535, "{{ 0 }}"),
+        (6535, "{{ -5 }}"),
+        (6535, "{{ 'nan' | float }}"),
+        (6535, "{{ 'inf' | float }}"),
         (6535, "{{x - 12}}"),
         (6535, "None"),
         (6535, "{{ none }}"),
@@ -1912,6 +1917,10 @@ async def test_min_mireds_template(
     ("expected_min_kelvin", "attribute_template"),
     [
         (2049, "{{488}}"),
+        (2000, "{{ 0 }}"),
+        (2000, "{{ -5 }}"),
+        (2000, "{{ 'nan' | float }}"),
+        (2000, "{{ 'inf' | float }}"),
         (2000, "{{x - 12}}"),
         (2000, "None"),
         (2000, "{{ none }}"),
@@ -1944,6 +1953,9 @@ async def test_max_mireds_template(
     [
         (2500, "{{ 2500 }}"),
         (2000, "{{ 0 }}"),
+        (2000, "{{ -5 }}"),
+        (2000, "{{ 'nan' | float }}"),
+        (2000, "{{ 'inf' | float }}"),
         (2000, "{{ x - 12 }}"),
         (2000, "None"),
         (2000, "{{ none }}"),
@@ -1975,6 +1987,9 @@ async def test_min_kelvin_template(
     [
         (5000, "{{ 5000 }}"),
         (6535, "{{ 0 }}"),
+        (6535, "{{ -5 }}"),
+        (6535, "{{ 'nan' | float }}"),
+        (6535, "{{ 'inf' | float }}"),
         (6535, "{{ x - 12 }}"),
         (6535, "None"),
         (6535, "{{ none }}"),
@@ -2000,17 +2015,29 @@ async def test_max_kelvin_template(
 @pytest.mark.parametrize(
     "option", ["min_mireds", "max_mireds", "min_kelvin", "max_kelvin"]
 )
+@pytest.mark.parametrize(
+    "value",
+    [
+        pytest.param("{{ x - 12 }}", id="template_error"),
+        pytest.param("{{ 0 }}", id="zero"),
+        pytest.param("{{ 'inf' | float }}", id="infinity"),
+    ],
+)
 async def test_color_temp_range_template_error_rgbww(
-    hass: HomeAssistant, count: int, style: ConfigurationStyle, option: str
+    hass: HomeAssistant,
+    count: int,
+    style: ConfigurationStyle,
+    option: str,
+    value: str,
 ) -> None:
-    """Test a template error in the range keeps the light working in RGBWW mode."""
+    """Test an invalid range keeps the light working in RGBWW mode."""
     await setup_entity(
         hass,
         TEST_LIGHT,
         style,
         count,
         {
-            option: "{{ x - 12 }}",
+            option: value,
             "rgbww": "{{ (255, 0, 0, 10, 10) }}",
             **RGBWW_ACTION,
             **COLOR_TEMP_ACTION,
@@ -2082,6 +2109,67 @@ async def test_temperature_revalidated_when_range_changes(
     await async_trigger(hass, TEST_STATE_ENTITY_ID, STATE_ON)
     state = hass.states.get(TEST_LIGHT.entity_id)
     assert state.attributes["color_temp_kelvin"] is None
+
+
+@pytest.mark.parametrize(
+    "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
+)
+async def test_inverted_color_temp_range(
+    hass: HomeAssistant, style: ConfigurationStyle, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test an inverted range falls back to the default range and warns once."""
+    await setup_entity(
+        hass,
+        TEST_LIGHT,
+        style,
+        1,
+        {
+            "temperature_kelvin": "{{ 4000 }}",
+            "min_kelvin": "{{ 6000 }}",
+            "max_kelvin": "{{ 3000 }}",
+        },
+        "{{ 1==1 }}",
+        ON_OFF_COLOR_TEMP_ACTIONS,
+    )
+    await async_trigger(hass, TEST_STATE_ENTITY_ID, STATE_ON)
+    await async_trigger(hass, TEST_STATE_ENTITY_ID, STATE_OFF)
+
+    state = hass.states.get(TEST_LIGHT.entity_id)
+    assert state.attributes["min_color_temp_kelvin"] == 2000
+    assert state.attributes["max_color_temp_kelvin"] == 6535
+    assert state.attributes["color_temp_kelvin"] == 4000
+    assert caplog.text.count("color temperature range of light.test_light") == 1
+
+
+async def test_color_temp_range_moved_past_old_range(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test moving the whole range does not warn while one bound is updated."""
+    hass.states.async_set("sensor.bound", "2000")
+    await setup_entity(
+        hass,
+        TEST_LIGHT,
+        ConfigurationStyle.MODERN,
+        1,
+        {
+            "temperature_kelvin": "{{ 4500 }}",
+            "min_kelvin": "{{ states('sensor.bound') | int }}",
+            "max_kelvin": "{{ states('sensor.bound') | int + 1000 }}",
+        },
+        "{{ 1==1 }}",
+        ON_OFF_COLOR_TEMP_ACTIONS,
+    )
+    await async_trigger(hass, TEST_STATE_ENTITY_ID, STATE_ON)
+    assert hass.states.get(TEST_LIGHT.entity_id).attributes["color_temp_kelvin"] is None
+
+    hass.states.async_set("sensor.bound", "4000")
+    await hass.async_block_till_done()
+
+    state = hass.states.get(TEST_LIGHT.entity_id)
+    assert state.attributes["min_color_temp_kelvin"] == 4000
+    assert state.attributes["max_color_temp_kelvin"] == 5000
+    assert state.attributes["color_temp_kelvin"] == 4500
+    assert "color temperature range" not in caplog.text
 
 
 @pytest.mark.parametrize(

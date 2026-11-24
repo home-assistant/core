@@ -97,8 +97,6 @@ CONF_XY_ACTION = "set_xy"
 
 DEPRECATED_TEMPERATURE_ISSUE_ID = "deprecated_light_temperature"
 
-DEFAULT_MIN_MIREDS = 153
-DEFAULT_MAX_MIREDS = 500
 
 DEFAULT_NAME = DEFAULT_NAMES[Platform.LIGHT]
 
@@ -455,7 +453,7 @@ class AbstractTemplateLight(AbstractTemplateEntity, LightEntity, RestoreEntity):
         self.setup_template(
             CONF_MAX_MIREDS,
             "_attr_min_color_temp_kelvin",
-            tcv.number(self, CONF_MAX_MIREDS),
+            tcv.number(self, CONF_MAX_MIREDS, 1),
             partial(
                 self._update_min_kelvin,
                 convert=color_util.color_temperature_mired_to_kelvin,
@@ -465,7 +463,7 @@ class AbstractTemplateLight(AbstractTemplateEntity, LightEntity, RestoreEntity):
         self.setup_template(
             CONF_MIN_MIREDS,
             "_attr_max_color_temp_kelvin",
-            tcv.number(self, CONF_MIN_MIREDS),
+            tcv.number(self, CONF_MIN_MIREDS, 1),
             partial(
                 self._update_max_kelvin,
                 convert=color_util.color_temperature_mired_to_kelvin,
@@ -573,6 +571,7 @@ class AbstractTemplateLight(AbstractTemplateEntity, LightEntity, RestoreEntity):
 
         # Stored values for template attributes
         self._supports_transition = False
+        self._inverted_color_temp_range = False
 
         color_modes = {ColorMode.ONOFF}
         for action_id, color_mode in (
@@ -877,21 +876,59 @@ class AbstractTemplateLight(AbstractTemplateEntity, LightEntity, RestoreEntity):
         ):
             self._attr_color_mode = ColorMode.COLOR_TEMP
 
+    @property
+    def _color_temp_range(self) -> tuple[int, int]:
+        """Return the color temperature range, the default range when inverted."""
+        min_kelvin = self._attr_min_color_temp_kelvin
+        max_kelvin = self._attr_max_color_temp_kelvin
+        if min_kelvin is None or max_kelvin is None or min_kelvin > max_kelvin:
+            return DEFAULT_MIN_KELVIN, DEFAULT_MAX_KELVIN
+        return min_kelvin, max_kelvin
+
+    @property
+    @override
+    def min_color_temp_kelvin(self) -> int:
+        """Return the warmest color temperature this light supports."""
+        return self._color_temp_range[0]
+
+    @property
+    @override
+    def max_color_temp_kelvin(self) -> int:
+        """Return the coldest color temperature this light supports."""
+        return self._color_temp_range[1]
+
+    @property
+    @override
+    def capability_attributes(self) -> dict[str, Any]:
+        """Return capability attributes, warning once about an inverted range."""
+        # Checked on write, the bounds can be inverted between their updates
+        inverted = (
+            self._attr_min_color_temp_kelvin is not None
+            and self._attr_max_color_temp_kelvin is not None
+            and self._attr_min_color_temp_kelvin > self._attr_max_color_temp_kelvin
+        )
+        if inverted and not self._inverted_color_temp_range:
+            _LOGGER.warning(
+                "The color temperature range of %s is inverted, min %s K is above "
+                "max %s K, using the default range %s-%s K",
+                self.entity_id,
+                self._attr_min_color_temp_kelvin,
+                self._attr_max_color_temp_kelvin,
+                DEFAULT_MIN_KELVIN,
+                DEFAULT_MAX_KELVIN,
+            )
+        self._inverted_color_temp_range = inverted
+        return super().capability_attributes
+
     @callback
     def _validate_temperature(self, result: Any) -> int | None:
         """Validate the temperature from the template."""
         if tcv.check_result_for_none(result):
             return None
 
-        if (min_kelvin := self._attr_min_color_temp_kelvin) is not None:
-            max_mireds = color_util.color_temperature_kelvin_to_mired(min_kelvin)
-        else:
-            max_mireds = DEFAULT_MAX_MIREDS
-
-        if (max_kelvin := self._attr_max_color_temp_kelvin) is not None:
-            min_mireds = color_util.color_temperature_kelvin_to_mired(max_kelvin)
-        else:
-            min_mireds = DEFAULT_MIN_MIREDS
+        min_kelvin, max_kelvin = self._color_temp_range
+        max_mireds = color_util.color_temperature_kelvin_to_mired(min_kelvin)
+        min_mireds = color_util.color_temperature_kelvin_to_mired(max_kelvin)
 
         if isinstance(result, (int, float)) and min_mireds <= result <= max_mireds:
             return color_util.color_temperature_mired_to_kelvin(result)
@@ -910,16 +947,13 @@ class AbstractTemplateLight(AbstractTemplateEntity, LightEntity, RestoreEntity):
         if tcv.check_result_for_none(result):
             return None
 
-        if (min_kelvin := self._attr_min_color_temp_kelvin) is None:
-            min_kelvin = DEFAULT_MIN_KELVIN
-        if (max_kelvin := self._attr_max_color_temp_kelvin) is None:
-            max_kelvin = DEFAULT_MAX_KELVIN
+        min_kelvin, max_kelvin = self._color_temp_range
         if (
             isinstance(result, (int, float))
             and not isinstance(result, bool)
             and min_kelvin <= result <= max_kelvin
         ):
-            return int(result)
+            return round(result)
 
         tcv.log_validation_result_error(
             self,

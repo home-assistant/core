@@ -15,12 +15,14 @@ from homeassistant import config as hass_config
 from homeassistant.components.template import DOMAIN
 from homeassistant.components.template.config import (
     CONFIG_SECTION_SCHEMA,
+    _merge_deprecated_options,
     async_validate_config,
     async_validate_config_section,
 )
 from homeassistant.components.template.const import (
     PLATFORMS,
     WEATHER_DEPRECATED_OPTIONS,
+    DeprecatedTemplateOptions,
     TemplateService,
 )
 from homeassistant.core import HomeAssistant
@@ -1896,6 +1898,29 @@ async def test_deprecated_template_options_issue_blueprint(
         )
         == snapshot
     )
+
+
+def test_merge_deprecated_options_per_platform() -> None:
+    """Test deprecations of the same platform all keep their option locations."""
+    deprecations = [
+        DeprecatedTemplateOptions(
+            platform=platform,
+            options=options,
+            translation_key=key,
+            blueprint_translation_key=f"{key}_blueprint",
+            breaks_in_ha_version="2027.6.0",
+        )
+        for platform, options, key in (
+            (Platform.LIGHT, {"temperature": "temperature_kelvin"}, "first"),
+            (Platform.LIGHT, {"level": "set_level"}, "second"),
+            (Platform.COVER, {"position": "set_cover_position"}, "third"),
+        )
+    ]
+
+    assert _merge_deprecated_options(deprecations) == {
+        Platform.LIGHT: {"temperature", "level"},
+        Platform.COVER: {"position"},
+    }
 
 
 async def test_option_locations_only_deprecated_options(
