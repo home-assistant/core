@@ -1,7 +1,6 @@
 """Setup the Reolink tests."""
 
 from collections.abc import Generator
-from pathlib import Path
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
@@ -55,20 +54,6 @@ TEST_DUO_MODEL = "Reolink Duo PoE"
 TEST_PRIVACY = True
 TEST_BC_PORT = 5678
 TEST_BC_CON = ConnectionEnum.tcp.value
-
-
-@pytest.fixture(autouse=True)
-def mock_hls_temp_dir(tmp_path: Path) -> Generator[None]:
-    """Use a separate temporary directory per test for the HLS playback files.
-
-    Setting up a config entry removes the leftover HLS files, which would also
-    remove the files of a test running in parallel in another pytest worker.
-    """
-    with patch(
-        "homeassistant.components.reolink.hls.tempfile.gettempdir",
-        return_value=str(tmp_path),
-    ):
-        yield
 
 
 @pytest.fixture
