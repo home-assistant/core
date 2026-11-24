@@ -111,6 +111,7 @@ ATW_OPERATION_TO_HVAC_ACTION: dict[ATWOperationMode, HVACAction] = {
     ATWOperationMode.HEAT_ZONES: HVACAction.HEATING,
     ATWOperationMode.HEATING: HVACAction.HEATING,
     ATWOperationMode.FREEZE_STAT: HVACAction.HEATING,
+    ATWOperationMode.LEGIONELLA_PREVENTION: HVACAction.IDLE,
     ATWOperationMode.COOL: HVACAction.COOLING,
     ATWOperationMode.COOLING: HVACAction.COOLING,
 }

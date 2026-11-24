@@ -9,16 +9,10 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.alarm_control_panel import (
     DOMAIN as ALARM_CONTROL_PANEL_DOMAIN,
+    AlarmControlPanelService,
     AlarmControlPanelState,
 )
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    SERVICE_ALARM_ARM_AWAY,
-    SERVICE_ALARM_ARM_HOME,
-    SERVICE_ALARM_DISARM,
-    STATE_UNAVAILABLE,
-    Platform,
-)
+from homeassistant.const import STATE_UNAVAILABLE, Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -50,8 +44,8 @@ async def test_update_alarm_device(
 
     await hass.services.async_call(
         ALARM_CONTROL_PANEL_DOMAIN,
-        SERVICE_ALARM_ARM_AWAY,
-        {ATTR_ENTITY_ID: entity_id},
+        AlarmControlPanelService.ARM_AWAY,
+        {TargetKey.ENTITY_ID: entity_id},
         blocking=True,
     )
     await call_observable(hass, area.status_observer)
@@ -77,8 +71,8 @@ async def test_update_alarm_device(
 
     await hass.services.async_call(
         ALARM_CONTROL_PANEL_DOMAIN,
-        SERVICE_ALARM_DISARM,
-        {ATTR_ENTITY_ID: entity_id},
+        AlarmControlPanelService.DISARM,
+        {TargetKey.ENTITY_ID: entity_id},
         blocking=True,
     )
 
@@ -90,8 +84,8 @@ async def test_update_alarm_device(
     assert hass.states.get(entity_id).state == AlarmControlPanelState.DISARMED
     await hass.services.async_call(
         ALARM_CONTROL_PANEL_DOMAIN,
-        SERVICE_ALARM_ARM_HOME,
-        {ATTR_ENTITY_ID: entity_id},
+        AlarmControlPanelService.ARM_HOME,
+        {TargetKey.ENTITY_ID: entity_id},
         blocking=True,
     )
 
@@ -110,8 +104,8 @@ async def test_update_alarm_device(
     assert hass.states.get(entity_id).state == AlarmControlPanelState.ARMED_HOME
     await hass.services.async_call(
         ALARM_CONTROL_PANEL_DOMAIN,
-        SERVICE_ALARM_DISARM,
-        {ATTR_ENTITY_ID: entity_id},
+        AlarmControlPanelService.DISARM,
+        {TargetKey.ENTITY_ID: entity_id},
         blocking=True,
     )
     area.is_part_armed.return_value = False

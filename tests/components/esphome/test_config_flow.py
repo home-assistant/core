@@ -3703,10 +3703,9 @@ async def test_zeroconf_when_improv_ble_not_available(
         type="mock_type",
     )
 
-    # Mock async_import_module to return None (simulating improv_ble not available)
     with patch(
         "homeassistant.components.esphome.config_flow.async_import_module",
-        return_value=None,
+        side_effect=ImportError,
     ):
         flow = await hass.config_entries.flow.async_init(
             DOMAIN,

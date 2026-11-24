@@ -1,12 +1,26 @@
 {
   "config": {
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_location%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_location%]",
+      "unique_id_mismatch": "The location of this entry does not match its identifier. Remove the integration and add it again."
     },
     "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_api_key": "[%key:common::config_flow::error::invalid_api_key%]"
     },
     "step": {
+      "reauth_confirm": {
+        "data": {
+          "api_key": "[%key:common::config_flow::data::api_key%]"
+        },
+        "description": "The AEMET OpenData API key is no longer valid. AEMET API keys expire periodically, so you need to generate a new one at {api_key_url}"
+      },
+      "reconfigure": {
+        "data": {
+          "api_key": "[%key:common::config_flow::data::api_key%]"
+        },
+        "description": "Enter a new AEMET OpenData API key. AEMET API keys expire periodically, and you can generate a new one at {api_key_url}"
+      },
       "user": {
         "data": {
           "api_key": "[%key:common::config_flow::data::api_key%]",
@@ -25,6 +39,9 @@
     }
   },
   "exceptions": {
+    "invalid_api_key": {
+      "message": "The AEMET OpenData API key is invalid or has expired"
+    },
     "town_not_found": {
       "message": "No AEMET town found for coordinates {latitude}, {longitude}"
     }
