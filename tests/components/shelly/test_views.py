@@ -12,7 +12,7 @@ from pytest_homeassistant.typing import ClientSessionGenerator
 from yarl import URL
 
 from homeassistant.components.shelly.const import CONF_SLEEP_PERIOD
-from homeassistant.components.shelly.views import MAX_UPSTREAM_REQUESTS
+from homeassistant.components.shelly.coordinator import MAX_UPSTREAM_REQUESTS
 from homeassistant.const import CONF_HOST, CONF_MODEL, CONF_PORT
 from homeassistant.core import HomeAssistant
 

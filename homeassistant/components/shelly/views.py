@@ -1,6 +1,5 @@
 """Shelly HTTP views."""
 
-import asyncio
 from http import HTTPStatus
 import re
 
@@ -31,8 +30,6 @@ FORWARD_RESPONSE_HEADERS = (
 )
 # No total limit, recordings can take long to stream.
 UPSTREAM_TIMEOUT = ClientTimeout(total=None, sock_connect=10, sock_read=30)
-# The camera accepts 6 connections, leave room for Home Assistant's own calls.
-MAX_UPSTREAM_REQUESTS = 4
 
 
 @callback
@@ -58,7 +55,6 @@ class StorageProxyView(HomeAssistantView):
     def __init__(self, hass: HomeAssistant) -> None:
         """Initialize the view."""
         self.hass = hass
-        self._semaphores: dict[str, asyncio.Semaphore] = {}
 
     async def get(
         self, request: web.Request, config_entry_id: str, path: str
@@ -89,10 +85,7 @@ class StorageProxyView(HomeAssistantView):
             for name in FORWARD_REQUEST_HEADERS
             if (value := request.headers.get(name)) is not None
         }
-        semaphore = self._semaphores.setdefault(
-            config_entry_id, asyncio.Semaphore(MAX_UPSTREAM_REQUESTS)
-        )
-        async with semaphore:
+        async with entry.runtime_data.storage_semaphore:
             try:
                 upstream = await async_get_clientsession(self.hass).get(
                     url,

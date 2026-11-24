@@ -2,7 +2,7 @@
 
 import asyncio
 from collections.abc import Callable, Coroutine
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from typing import Any, cast, override
 
@@ -87,6 +87,9 @@ from .utils import (
     update_device_fw_info,
 )
 
+# The camera accepts 6 connections, leave room for Home Assistant's own calls.
+MAX_UPSTREAM_REQUESTS = 4
+
 
 @dataclass
 class ShellyEntryData:
@@ -104,6 +107,9 @@ class ShellyEntryData:
     rpc_supports_scripts: bool | None = None
     rpc_zigbee_firmware: bool | None = None
     unsupported_firmware: bool = False
+    storage_semaphore: asyncio.Semaphore = field(
+        default_factory=lambda: asyncio.Semaphore(MAX_UPSTREAM_REQUESTS)
+    )
 
 
 type ShellyConfigEntry = ConfigEntry[ShellyEntryData]
