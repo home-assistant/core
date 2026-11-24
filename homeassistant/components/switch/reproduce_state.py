@@ -5,7 +5,7 @@ from collections.abc import Iterable
 import logging
 from typing import Any
 
-from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON
+from homeassistant.const import STATE_OFF, STATE_ON, TargetKey
 from homeassistant.core import Context, HomeAssistant, State
 
 from .const import DOMAIN, SwitchService
@@ -37,7 +37,7 @@ async def _async_reproduce_state(
     if cur_state.state == state.state:
         return
 
-    service_data = {ATTR_ENTITY_ID: state.entity_id}
+    service_data: dict[str, Any] = {TargetKey.ENTITY_ID: state.entity_id}
 
     if state.state == STATE_ON:
         service = SwitchService.TURN_ON

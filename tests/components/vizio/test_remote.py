@@ -8,11 +8,9 @@ from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.remote import (
-    ATTR_COMMAND,
-    ATTR_DELAY_SECS,
-    ATTR_NUM_REPEATS,
     DOMAIN as REMOTE_DOMAIN,
-    SERVICE_SEND_COMMAND,
+    RemoteService,
+    RemoteServiceArgument,
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -20,6 +18,7 @@ from homeassistant.const import (
     SERVICE_TURN_ON,
     STATE_OFF,
     Platform,
+    TargetKey,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
@@ -131,10 +130,10 @@ async def test_send_command_tv_valid(
     ) as mock_remote:
         await hass.services.async_call(
             REMOTE_DOMAIN,
-            SERVICE_SEND_COMMAND,
+            RemoteService.SEND_COMMAND,
             {
-                ATTR_ENTITY_ID: REMOTE_ENTITY_ID,
-                ATTR_COMMAND: [command],
+                TargetKey.ENTITY_ID: REMOTE_ENTITY_ID,
+                RemoteServiceArgument.COMMAND: [command],
             },
             blocking=True,
         )
@@ -153,10 +152,10 @@ async def test_send_command_tv_invalid(
     with pytest.raises(ServiceValidationError):
         await hass.services.async_call(
             REMOTE_DOMAIN,
-            SERVICE_SEND_COMMAND,
+            RemoteService.SEND_COMMAND,
             {
-                ATTR_ENTITY_ID: REMOTE_ENTITY_ID,
-                ATTR_COMMAND: [command],
+                TargetKey.ENTITY_ID: REMOTE_ENTITY_ID,
+                RemoteServiceArgument.COMMAND: [command],
             },
             blocking=True,
         )
@@ -188,10 +187,10 @@ async def test_send_command_speaker_valid(
     ) as mock_remote:
         await hass.services.async_call(
             REMOTE_DOMAIN,
-            SERVICE_SEND_COMMAND,
+            RemoteService.SEND_COMMAND,
             {
-                ATTR_ENTITY_ID: REMOTE_ENTITY_ID,
-                ATTR_COMMAND: [command],
+                TargetKey.ENTITY_ID: REMOTE_ENTITY_ID,
+                RemoteServiceArgument.COMMAND: [command],
             },
             blocking=True,
         )
@@ -220,10 +219,10 @@ async def test_send_command_speaker_invalid(
     with pytest.raises(ServiceValidationError):
         await hass.services.async_call(
             REMOTE_DOMAIN,
-            SERVICE_SEND_COMMAND,
+            RemoteService.SEND_COMMAND,
             {
-                ATTR_ENTITY_ID: REMOTE_ENTITY_ID,
-                ATTR_COMMAND: [command],
+                TargetKey.ENTITY_ID: REMOTE_ENTITY_ID,
+                RemoteServiceArgument.COMMAND: [command],
             },
             blocking=True,
         )
@@ -240,10 +239,10 @@ async def test_send_command_multiple(
     ) as mock_remote:
         await hass.services.async_call(
             REMOTE_DOMAIN,
-            SERVICE_SEND_COMMAND,
+            RemoteService.SEND_COMMAND,
             {
-                ATTR_ENTITY_ID: REMOTE_ENTITY_ID,
-                ATTR_COMMAND: ["UP", "OK"],
+                TargetKey.ENTITY_ID: REMOTE_ENTITY_ID,
+                RemoteServiceArgument.COMMAND: ["UP", "OK"],
             },
             blocking=True,
         )
@@ -266,10 +265,10 @@ async def test_send_command_invalid_skips_valid(
     ):
         await hass.services.async_call(
             REMOTE_DOMAIN,
-            SERVICE_SEND_COMMAND,
+            RemoteService.SEND_COMMAND,
             {
-                ATTR_ENTITY_ID: REMOTE_ENTITY_ID,
-                ATTR_COMMAND: ["UP", "INVALID_KEY"],
+                TargetKey.ENTITY_ID: REMOTE_ENTITY_ID,
+                RemoteServiceArgument.COMMAND: ["UP", "INVALID_KEY"],
             },
             blocking=True,
         )
@@ -292,12 +291,12 @@ async def test_send_command_delay_between_repeats(
     ):
         await hass.services.async_call(
             REMOTE_DOMAIN,
-            SERVICE_SEND_COMMAND,
+            RemoteService.SEND_COMMAND,
             {
-                ATTR_ENTITY_ID: REMOTE_ENTITY_ID,
-                ATTR_COMMAND: ["UP"],
-                ATTR_NUM_REPEATS: 3,
-                ATTR_DELAY_SECS: 0.5,
+                TargetKey.ENTITY_ID: REMOTE_ENTITY_ID,
+                RemoteServiceArgument.COMMAND: ["UP"],
+                RemoteServiceArgument.NUM_REPEATS: 3,
+                RemoteServiceArgument.DELAY_SECS: 0.5,
             },
             blocking=True,
         )
