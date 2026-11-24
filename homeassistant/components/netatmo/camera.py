@@ -28,11 +28,10 @@ from .const import (
     NETATMO_ALIM_STATUS_ONLINE,
     NETATMO_CREATE_CAMERA,
     NETATMO_DOORBELLS,
-    SIGNAL_NAME,
     WEBHOOK_PUSH_TYPE,
     NetatmoServiceArgument,
 )
-from .coordinator import EVENT, HOME, NetatmoConfigEntry, NetatmoDevice
+from .coordinator import EVENT, HOME, SIGNAL_NAME, NetatmoConfigEntry, NetatmoDevice
 from .entity import NetatmoModuleEntity
 from .helper import device_type_to_str
 
