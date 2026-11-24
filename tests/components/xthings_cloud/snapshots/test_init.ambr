@@ -1,69 +1,9 @@
 # serializer version: 1
-# name: test_devices[XT-CM100]
-  DeviceRegistryEntrySnapshot({
-    'area_id': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': None,
-    'configuration_url': None,
-    'connections': set({
-    }),
-    'disabled_by': None,
-    'entry_type': None,
-    'hw_version': None,
-    'id': <ANY>,
-    'identifiers': set({
-      tuple(
-        'xthings_cloud',
-        'dev_camera_001',
-      ),
-    }),
-    'labels': set({
-    }),
-    'manufacturer': 'Xthings',
-    'model': 'XT-CM100',
-    'model_id': None,
-    'name': 'Front Door Camera',
-    'name_by_user': None,
-    'serial_number': None,
-    'sw_version': '1.0.0',
-    'via_device_id': None,
-  })
-# ---
-# name: test_devices[XT-LK50]
-  DeviceRegistryEntrySnapshot({
-    'area_id': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': None,
-    'configuration_url': None,
-    'connections': set({
-    }),
-    'disabled_by': None,
-    'entry_type': None,
-    'hw_version': None,
-    'id': <ANY>,
-    'identifiers': set({
-      tuple(
-        'xthings_cloud',
-        'dev_lock_001',
-      ),
-    }),
-    'labels': set({
-    }),
-    'manufacturer': 'Xthings',
-    'model': 'XT-LK50',
-    'model_id': None,
-    'name': 'Front Door Lock',
-    'name_by_user': None,
-    'serial_number': None,
-    'sw_version': '1.0.0',
-    'via_device_id': None,
-  })
-# ---
 # name: test_devices[XT-LT050]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': None,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -93,7 +33,7 @@
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': None,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -123,7 +63,7 @@
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': None,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -149,11 +89,41 @@
     'via_device_id': None,
   })
 # ---
+# name: test_devices[XT-PL50]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'configuration_url': None,
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'xthings_cloud',
+        'dev_plug_001',
+      ),
+    }),
+    'labels': set({
+    }),
+    'manufacturer': 'Xthings',
+    'model': 'XT-PL50',
+    'model_id': None,
+    'name': 'Smart Plug 50',
+    'name_by_user': None,
+    'serial_number': None,
+    'sw_version': '1.0.0',
+    'via_device_id': None,
+  })
+# ---
 # name: test_devices[XT-PL100]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': None,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -179,11 +149,11 @@
     'via_device_id': None,
   })
 # ---
-# name: test_devices[XT-PL50]
+# name: test_devices[XT-LK50]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': None,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -194,15 +164,45 @@
     'identifiers': set({
       tuple(
         'xthings_cloud',
-        'dev_plug_001',
+        'dev_lock_001',
       ),
     }),
     'labels': set({
     }),
     'manufacturer': 'Xthings',
-    'model': 'XT-PL50',
+    'model': 'XT-LK50',
     'model_id': None,
-    'name': 'Smart Plug 50',
+    'name': 'Front Door Lock',
+    'name_by_user': None,
+    'serial_number': None,
+    'sw_version': '1.0.0',
+    'via_device_id': None,
+  })
+# ---
+# name: test_devices[XT-CM100]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'configuration_url': None,
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'xthings_cloud',
+        'dev_camera_001',
+      ),
+    }),
+    'labels': set({
+    }),
+    'manufacturer': 'Xthings',
+    'model': 'XT-CM100',
+    'model_id': None,
+    'name': 'Front Door Camera',
     'name_by_user': None,
     'serial_number': None,
     'sw_version': '1.0.0',

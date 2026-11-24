@@ -3,17 +3,15 @@
 from unittest.mock import AsyncMock, patch
 
 import pytest
-from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_COLOR_MODE,
     ATTR_COLOR_TEMP_KELVIN,
+    ATTR_HS_COLOR,
     DOMAIN as LIGHT_DOMAIN,
     ColorMode,
-    LightService,
-    LightServiceArgument,
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -21,12 +19,13 @@ from homeassistant.const import (
     SERVICE_TURN_ON,
     STATE_UNAVAILABLE,
     Platform,
-    TargetKey,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from . import get_device_by_id, setup_integration
+
+from tests.common import MockConfigEntry, snapshot_platform
 
 
 async def test_lights(
@@ -115,10 +114,10 @@ async def test_light_turn_on_brightness(
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        LightService.TURN_ON,
+        SERVICE_TURN_ON,
         {
-            TargetKey.ENTITY_ID: "light.hallway_light",
-            LightServiceArgument.BRIGHTNESS: 128,
+            ATTR_ENTITY_ID: "light.hallway_light",
+            ATTR_BRIGHTNESS: 128,
         },
         blocking=True,
     )
@@ -139,10 +138,10 @@ async def test_light_switch_turn_on_brightness(
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        LightService.TURN_ON,
+        SERVICE_TURN_ON,
         {
-            TargetKey.ENTITY_ID: "light.hallway_light",
-            LightServiceArgument.BRIGHTNESS: 128,
+            ATTR_ENTITY_ID: "light.hallway_light",
+            ATTR_BRIGHTNESS: 128,
         },
         blocking=True,
     )
@@ -162,10 +161,10 @@ async def test_light_turn_on_hs_color(
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        LightService.TURN_ON,
+        SERVICE_TURN_ON,
         {
-            TargetKey.ENTITY_ID: "light.bedroom_light",
-            LightServiceArgument.HS_COLOR: (200, 90),
+            ATTR_ENTITY_ID: "light.bedroom_light",
+            ATTR_HS_COLOR: (200, 90),
         },
         blocking=True,
     )
@@ -192,10 +191,10 @@ async def test_light_turn_on_color_temp(
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        LightService.TURN_ON,
+        SERVICE_TURN_ON,
         {
-            TargetKey.ENTITY_ID: "light.bedroom_light",
-            LightServiceArgument.COLOR_TEMP_KELVIN: 3000,
+            ATTR_ENTITY_ID: "light.bedroom_light",
+            ATTR_COLOR_TEMP_KELVIN: 3000,
         },
         blocking=True,
     )
@@ -219,11 +218,11 @@ async def test_light_turn_on_hs_color_with_brightness(
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        LightService.TURN_ON,
+        SERVICE_TURN_ON,
         {
-            TargetKey.ENTITY_ID: "light.bedroom_light",
-            LightServiceArgument.HS_COLOR: (100, 50),
-            LightServiceArgument.BRIGHTNESS: 200,
+            ATTR_ENTITY_ID: "light.bedroom_light",
+            ATTR_HS_COLOR: (100, 50),
+            ATTR_BRIGHTNESS: 200,
         },
         blocking=True,
     )
@@ -250,11 +249,11 @@ async def test_light_color_temp_with_brightness(
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        LightService.TURN_ON,
+        SERVICE_TURN_ON,
         {
-            TargetKey.ENTITY_ID: "light.bedroom_light",
-            LightServiceArgument.COLOR_TEMP_KELVIN: 5000,
-            LightServiceArgument.BRIGHTNESS: 180,
+            ATTR_ENTITY_ID: "light.bedroom_light",
+            ATTR_COLOR_TEMP_KELVIN: 5000,
+            ATTR_BRIGHTNESS: 180,
         },
         blocking=True,
     )
