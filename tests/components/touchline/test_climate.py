@@ -11,7 +11,7 @@ from pytest_homeassistant.common import (
     async_fire_time_changed,
     snapshot_platform,
 )
-from pytouchline_extended import TouchlineConnectionError
+from pytouchline_extended import TouchlineConnectionError, TouchlineResponseError
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.climate import (
@@ -29,6 +29,7 @@ from homeassistant.helpers import entity_registry as er
 from .conftest import ROOM_STATUS, make_state
 
 ENTITY_ID = "climate.zone_1"
+COORDINATOR_LOGGER = "homeassistant.components.touchline.coordinator"
 
 
 @pytest.mark.usefixtures("init_integration")
@@ -191,15 +192,25 @@ async def test_set_hvac_mode_heat(
     mock_touchline_controller.set_room_operation_mode_async.assert_not_called()
 
 
+@pytest.mark.parametrize(
+    ("side_effect", "log_level"),
+    [
+        pytest.param(TouchlineConnectionError, logging.INFO, id="unreachable"),
+        pytest.param(TouchlineResponseError, logging.ERROR, id="invalid-response"),
+    ],
+)
 @pytest.mark.usefixtures("init_integration")
-async def test_unavailable_when_controller_unreachable(
+async def test_unavailable_when_update_fails(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
     caplog: pytest.LogCaptureFixture,
     mock_touchline_controller: MagicMock,
+    side_effect: type[Exception],
+    log_level: int,
 ) -> None:
     """Test the entity becomes unavailable, logs once and recovers."""
-    mock_touchline_controller.fetch_async.side_effect = TouchlineConnectionError
+    caplog.set_level(logging.INFO, logger=COORDINATOR_LOGGER)
+    mock_touchline_controller.fetch_async.side_effect = side_effect
 
     for _ in range(2):
         freezer.tick(UPDATE_INTERVAL)
@@ -212,9 +223,8 @@ async def test_unavailable_when_controller_unreachable(
     assert [
         record.levelno
         for record in caplog.records
-        if record.levelno >= logging.WARNING
-        and "Error communicating with Touchline controller" in record.getMessage()
-    ] == [logging.ERROR]
+        if record.name == COORDINATOR_LOGGER and record.levelno >= logging.INFO
+    ] == [log_level]
 
     mock_touchline_controller.fetch_async.side_effect = None
     freezer.tick(UPDATE_INTERVAL)

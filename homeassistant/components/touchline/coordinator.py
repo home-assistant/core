@@ -4,12 +4,21 @@ from datetime import timedelta
 import logging
 from typing import override
 
-from pytouchline_extended import RoomStatus, TouchlineController, TouchlineError
+from pytouchline_extended import (
+    RoomStatus,
+    TouchlineConnectionError,
+    TouchlineController,
+    TouchlineError,
+)
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.helpers.update_coordinator import (
+    DataUpdateCoordinator,
+    UpdateFailed,
+    UpdateFailedUnreachable,
+)
 
 from .const import DOMAIN
 
@@ -42,6 +51,10 @@ class TouchlineCoordinator(DataUpdateCoordinator[dict[str, RoomStatus]]):
         """Fetch the state of all thermostats from the controller."""
         try:
             state = await self.controller.fetch_async()
+        except TouchlineConnectionError as err:
+            raise UpdateFailedUnreachable(
+                f"Touchline controller at {self.controller.url} cannot be reached"
+            ) from err
         except TouchlineError as err:
             raise UpdateFailed(
                 f"Error communicating with Touchline controller at {self.controller.url}"
