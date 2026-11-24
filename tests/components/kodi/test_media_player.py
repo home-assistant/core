@@ -1052,7 +1052,8 @@ async def test_watchdog_closes_connection_without_version(
 
     assert hass.states.get(ENTITY_ID).state == MediaPlayerState.OFF
     mock_connection.close.assert_awaited_once()
-    assert caplog.text.count("Unable to ping Kodi via websocket") == 1
+    assert caplog.text.count("Unable to connect to Kodi via websocket") == 1
+    assert "Unable to ping Kodi via websocket" not in caplog.text
 
 
 @websocket
@@ -1087,11 +1088,11 @@ async def test_watchdog_waits_for_slow_connect(
 
 
 @websocket
+@pytest.mark.usefixtures("mock_kodi")
 async def test_unload(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_connection: MagicMock,
-    mock_kodi: MagicMock,
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test unloading closes the connection and stops the watchdog."""

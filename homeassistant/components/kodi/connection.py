@@ -121,12 +121,14 @@ class KodiConnectionManager:
                 self._async_set_version(None)
                 return
         else:
+            message = "Unable to ping Kodi via websocket"
             try:
                 await self.kodi.ping()
                 if self.version is None:
+                    message = "Unable to connect to Kodi via websocket"
                     await self._async_read_version()
             except CannotConnectError, TransportError, ProtocolError:
-                self._async_log_once("Unable to ping Kodi via websocket")
+                self._async_log_once(message)
                 self._async_set_version(None)
                 await self.connection.close()
                 return
