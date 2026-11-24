@@ -128,6 +128,16 @@ async def test_user_flow_rejects_a_uuid_that_is_not_an_emitter(
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "missing_infrared_entity"}
 
+    # The flow recovers once a valid emitter is selected.
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={CONF_INFRARED_ENTITY_ID: EMITTER_ENTITY_ID},
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"] == _expected_data(entity_registry, EMITTER_ENTITY_ID)
+
 
 class _UnregisteredEmitter(MockInfraredEmitterEntity):
     """Emitter without a unique ID, so it has no entity registry entry."""
