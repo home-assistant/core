@@ -448,6 +448,7 @@ homeassistant.components.nasweb.*
 homeassistant.components.nature_remo.*
 homeassistant.components.neato.*
 homeassistant.components.neopool.*
+homeassistant.components.nepviewer.*
 homeassistant.components.nest.*
 homeassistant.components.netatmo.*
 homeassistant.components.network.*

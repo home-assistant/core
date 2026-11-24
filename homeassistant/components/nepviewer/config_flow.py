@@ -76,6 +76,8 @@ class NEPViewerConfigFlow(ConfigFlow, domain=DOMAIN):
                 reauth_entry.data[CONF_EMAIL], user_input[CONF_PASSWORD], errors
             )
             if uid is not None:
+                await self.async_set_unique_id(uid)
+                self._abort_if_unique_id_mismatch(reason="wrong_account")
                 return self.async_update_reload_and_abort(
                     reauth_entry,
                     data_updates={CONF_PASSWORD: user_input[CONF_PASSWORD]},
@@ -94,14 +96,14 @@ class NEPViewerConfigFlow(ConfigFlow, domain=DOMAIN):
         """Log in and return the account ID, or None after filling errors."""
         client = NepViewer(async_get_clientsession(self.hass), email, password)
         try:
-            auth_data = await client.authenticate()
+            uid = (await client.authenticate()).user_info.uid
         except NepAuthError:
             errors["base"] = "invalid_auth"
-        except NepConnectionError, aiohttp.ClientError:
+        except NepConnectionError, aiohttp.ClientError, TimeoutError:
             errors["base"] = "cannot_connect"
         except Exception:
             _LOGGER.exception("Unexpected exception while logging in")
             errors["base"] = "unknown"
         else:
-            return auth_data.user_info.uid
+            return uid
         return None

@@ -48,15 +48,19 @@ rules:
     status: exempt
     comment: This integration does not have an options flow.
   docs-installation-parameters: todo
-  entity-unavailable: done
+  entity-unavailable:
+    status: todo
+    comment: The library reports zero for missing values, so they are not unknown.
   integration-owner: done
-  log-when-unavailable: done
+  log-when-unavailable:
+    status: todo
+    comment: API errors and interrupted responses are logged as errors instead of info.
   parallel-updates: done
   reauthentication-flow: done
   test-coverage: done
 
   # Gold
-  devices: todo
+  devices: done
   diagnostics: todo
   discovery-update-info: todo
   discovery: todo
@@ -89,4 +93,4 @@ rules:
   # Platinum
   async-dependency: done
   inject-websession: done
-  strict-typing: todo
+  strict-typing: done

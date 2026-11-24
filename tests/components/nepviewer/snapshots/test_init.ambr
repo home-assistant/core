@@ -21,12 +21,12 @@
       'labels': set({
       }),
       'manufacturer': 'NEP',
-      'model': None,
+      'model': 'Test Model',
       'model_id': None,
       'name': 'Test Device',
       'name_by_user': None,
       'serial_number': 'TEST_SN',
-      'sw_version': None,
+      'sw_version': '1.0 / 2.0',
       'via_device_id': <DeviceEntry identifiers=[('nepviewer', 'test_sid')]>,
     }),
     'panel': DeviceRegistryEntrySnapshot({

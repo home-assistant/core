@@ -3,7 +3,7 @@
 from unittest.mock import AsyncMock, MagicMock
 
 from aiohttp import ClientError
-from aionepviewer import NepAuthError, NepConnectionError
+from aionepviewer import AuthData, NepAuthError, NepConnectionError
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
@@ -50,6 +50,7 @@ async def test_form_creates_entry(
         pytest.param(NepAuthError, "invalid_auth", id="invalid_auth"),
         pytest.param(NepConnectionError, "cannot_connect", id="cannot_connect"),
         pytest.param(ClientError, "cannot_connect", id="client_error"),
+        pytest.param(TimeoutError, "cannot_connect", id="timeout"),
         pytest.param(Exception, "unknown", id="unknown"),
     ],
 )
@@ -125,6 +126,7 @@ async def test_reauth_flow_success(
         pytest.param(NepAuthError, "invalid_auth", id="invalid_auth"),
         pytest.param(NepConnectionError, "cannot_connect", id="cannot_connect"),
         pytest.param(ClientError, "cannot_connect", id="client_error"),
+        pytest.param(TimeoutError, "cannot_connect", id="timeout"),
         pytest.param(Exception, "unknown", id="unknown"),
     ],
 )
@@ -155,3 +157,24 @@ async def test_reauth_flow_errors(
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"
     assert mock_config_entry.data[CONF_PASSWORD] == "new_password"
+
+
+async def test_reauth_flow_wrong_account(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_nepviewer: MagicMock,
+) -> None:
+    """Test that reauth is rejected for a different account."""
+    mock_config_entry.add_to_hass(hass)
+    mock_nepviewer.authenticate.return_value = AuthData(
+        {"userInfo": {"uid": "other_uid"}}
+    )
+
+    result = await mock_config_entry.start_reauth_flow(hass)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_PASSWORD: "new_password"}
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "wrong_account"
+    assert mock_config_entry.data[CONF_PASSWORD] == "test_password"

@@ -53,7 +53,16 @@ def mock_nepviewer() -> Generator[MagicMock]:
         }
     )
     mock_site = Site({"sid": "test_sid", "siteName": "Test Site"})
-    mock_device = Device({"sid": "test_sid", "sn": "TEST_SN", "alias": "Test Device"})
+    mock_device = Device(
+        {
+            "sid": "test_sid",
+            "sn": "TEST_SN",
+            "alias": "Test Device",
+            "modelName": "Test Model",
+            "CPUVersion": "1.0",
+            "WIFIVersion": "2.0",
+        }
+    )
     mock_site_overview = SiteOverview(
         {
             "statisticsProduction": {"today": "5.0", "total": "100.0"},
