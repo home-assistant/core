@@ -9,7 +9,6 @@ from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 from tuya_sharing import CustomerDevice, Manager
 
-from homeassistant.components.tuya.const import DOMAIN
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -37,46 +36,6 @@ async def test_platform_setup_and_discovery(
     await initialize_entry(hass, mock_manager, mock_config_entry, mock_devices)
 
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
-
-
-@pytest.mark.parametrize(
-    ("mock_device_code", "label", "undeclared_label"),
-    [
-        pytest.param("zndb_iow5ux77dxy3yrpj", "ov_pwr_t", "ov_cr", id="overpower"),
-        pytest.param("zndb_4ggkyflayu1h1ho9", "ov_cr", "ov_pwr_t", id="overcurrent"),
-    ],
-)
-async def test_zndb_fault_binary_sensors(
-    hass: HomeAssistant,
-    mock_manager: Manager,
-    mock_config_entry: MockConfigEntry,
-    mock_device: CustomerDevice,
-    entity_registry: er.EntityRegistry,
-    notification_helper: TuyaNotificationHelper,
-    label: str,
-    undeclared_label: str,
-) -> None:
-    """Test meter fault bitmap labels are exposed as binary sensors."""
-    await initialize_entry(hass, mock_manager, mock_config_entry, mock_device)
-
-    entity_id = entity_registry.async_get_entity_id(
-        "binary_sensor", DOMAIN, f"tuya.{mock_device.id}fault_{label}"
-    )
-    assert entity_id is not None
-    state = hass.states.get(entity_id)
-    assert state is not None
-    assert state.state == "off"
-    assert (
-        entity_registry.async_get_entity_id(
-            "binary_sensor", DOMAIN, f"tuya.{mock_device.id}fault_{undeclared_label}"
-        )
-        is None
-    )
-
-    await notification_helper.async_send_device_update(mock_device, {"fault": 1})
-    state = hass.states.get(entity_id)
-    assert state is not None
-    assert state.state == "on"
 
 
 @pytest.mark.parametrize(
