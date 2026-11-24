@@ -6,7 +6,8 @@
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-      "invalid_api_key": "[%key:common::config_flow::error::invalid_api_key%]"
+      "invalid_api_key": "[%key:common::config_flow::error::invalid_api_key%]",
+      "town_not_found": "No AEMET town found near this location. AEMET OpenData only covers Spain."
     },
     "step": {
       "reauth_confirm": {

@@ -2,7 +2,7 @@
 
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from aemet_opendata.exceptions import AemetTimeout, AuthError
+from aemet_opendata.exceptions import AemetTimeout, AuthError, TownNotFound
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
@@ -163,6 +163,7 @@ async def test_form_duplicated_id(
     [
         (AuthError, "invalid_api_key"),
         (AemetTimeout, "cannot_connect"),
+        (TownNotFound, "town_not_found"),
     ],
 )
 async def test_form_errors(
