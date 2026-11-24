@@ -228,12 +228,15 @@ class OmadaDeviceUpdate(
 
         self._attr_unique_id = f"{device.mac}_firmware"
 
-        if self.coordinator.data and self._mac in self.coordinator.data:
-            self._update_attrs()
+        self._update_attrs()
 
     def _update_attrs(self) -> None:
         """Set the version and progress attributes from the coordinator."""
-        status = self.coordinator.data[self._mac]
+        data = self.coordinator.data
+        if not data or self._mac not in data:
+            # The device was removed while the firmware data was refreshing.
+            return
+        status = data[self._mac]
 
         if status.firmware and status.device.need_upgrade:
             self._attr_installed_version = status.firmware.current_version
@@ -243,23 +246,35 @@ class OmadaDeviceUpdate(
             self._attr_latest_version = status.device.firmware_version
         self._attr_in_progress = status.device.fw_download
 
+    @property
+    @override
+    def available(self) -> bool:
+        """Return if the device's firmware data is present."""
+        return super().available and (
+            self.coordinator.data is not None and self._mac in self.coordinator.data
+        )
+
     @override
     def release_notes(self) -> str | None:
         """Get the release notes for the latest update."""
-        status = self.coordinator.data[self._mac]
-        if status.firmware:
-            return status.firmware.release_notes
-        return None
+        status = (self.coordinator.data or {}).get(self._mac)
+        if status is None or status.firmware is None:
+            return None
+        return status.firmware.release_notes
 
     @override
     async def async_install(
         self, version: str | None, backup: bool, **kwargs: Any
     ) -> None:
         """Install a firmware update."""
-        try:
-            await self._omada_client.start_firmware_upgrade(
-                self.coordinator.data[self._mac].device
+        status = (self.coordinator.data or {}).get(self._mac)
+        if status is None:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="firmware_update_failed",
             )
+        try:
+            await self._omada_client.start_firmware_upgrade(status.device)
         except RequestFailed as ex:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
