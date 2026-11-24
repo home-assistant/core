@@ -62,6 +62,7 @@ FIXTURES = [
     "inovelli_vtm31",
     "lifx_switch_115",
     "lifx_switch_89",
+    "lixee_zlinky_tic",
     "longan_link_thermostat",
     "mock_air_purifier",
     "mock_battery_solar_bridge",

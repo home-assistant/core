@@ -1471,3 +1471,20 @@ async def test_commodity_price_sensor_currency_and_tariff(
     assert state
     assert state.state == expected_state
     assert state.attributes.get("unit_of_measurement") == expected_unit
+
+
+@pytest.mark.parametrize("node_fixture", ["lixee_zlinky_tic"])
+async def test_commodity_price_sensor_real_device(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """Test Commodity Price sensor against a real LiXee ZLinky_TIC device.
+
+    This fixture reports a Currency.decimalPoints of 4 (instead of 2), to
+    guard against regressions in the price scaling.
+    """
+    state = hass.states.get("sensor.zlinky_current_price")
+    assert state
+    assert state.state == "0.1807"
+    assert state.attributes["unit_of_measurement"] == "EUR/kWh"
