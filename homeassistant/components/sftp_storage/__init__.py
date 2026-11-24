@@ -53,8 +53,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: SFTPConfigEntry) -> None
     # This will raise exception if there is something wrong with either
     # SSH server or config.
     try:
-        client = BackupAgentClient(entry, hass)
-        await client.open()
+        async with BackupAgentClient(entry, hass):
+            pass
     except SFTPConnectionError as e:
         raise ConfigEntryNotReady(
             translation_domain=DOMAIN,

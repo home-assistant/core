@@ -384,6 +384,12 @@
       "timeout_response": {
         "name": "Timed out responses"
       }
+    },
+    "update": {
+      "release_notes_messages": {
+        "sleeping_device": "This is a battery powered sleeping device. You may need to wake it up manually for the update to begin.",
+        "sleeping_device_wakeup": "This is a battery powered sleeping device. You may need to wake it up manually for the update to begin. To wake up this device:\n\n{wakeup_instructions}"
+      }
     }
   },
   "exceptions": {

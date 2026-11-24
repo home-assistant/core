@@ -63,6 +63,7 @@ AGENTS.md @home-assistant/core
 /homeassistant/components/adguard/ @frenck
 /tests/components/adguard/ @frenck
 /homeassistant/components/ads/ @mrpasztoradam
+/tests/components/ads/ @mrpasztoradam
 /homeassistant/components/advantage_air/ @Bre77
 /tests/components/advantage_air/ @Bre77
 /homeassistant/components/aemet/ @Noltari
@@ -1030,6 +1031,7 @@ AGENTS.md @home-assistant/core
 /homeassistant/components/karakeep/ @sli-cka
 /tests/components/karakeep/ @sli-cka
 /homeassistant/components/keba/ @dannerph
+/tests/components/keba/ @dannerph
 /homeassistant/components/keenetic_ndms2/ @foxel
 /tests/components/keenetic_ndms2/ @foxel
 /homeassistant/components/kef/ @basnijholt

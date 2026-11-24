@@ -6,12 +6,16 @@
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-      "invalid_api_key": "[%key:common::config_flow::error::invalid_api_key%]"
+      "invalid_api_key": "[%key:common::config_flow::error::invalid_api_key%]",
+      "town_not_found": "No AEMET town found near this location. AEMET OpenData only covers Spain."
     },
     "step": {
       "reauth_confirm": {
         "data": {
           "api_key": "[%key:common::config_flow::data::api_key%]"
+        },
+        "data_description": {
+          "api_key": "[%key:component::aemet::config::step::user::data_description::api_key%]"
         },
         "description": "The AEMET API key is no longer valid. Enter a new API key. To generate one, go to {api_key_url}."
       },
@@ -19,12 +23,19 @@
         "data": {
           "api_key": "[%key:common::config_flow::data::api_key%]"
         },
+        "data_description": {
+          "api_key": "[%key:component::aemet::config::step::user::data_description::api_key%]"
+        },
         "description": "Enter a new AEMET API key. To generate one, go to {api_key_url}."
       },
       "user": {
         "data": {
           "api_key": "[%key:common::config_flow::data::api_key%]",
           "location": "[%key:common::config_flow::data::location%]"
+        },
+        "data_description": {
+          "api_key": "The API key from your AEMET OpenData account. It is free, but you need to register to get one.",
+          "location": "The location used for the weather forecast and sensors. AEMET OpenData only covers Spain."
         },
         "description": "To generate an API key, go to {api_key_url}."
       }
@@ -71,6 +82,10 @@
         "data": {
           "radar_updates": "Gather data from AEMET weather radar",
           "station_updates": "Gather data from AEMET weather stations"
+        },
+        "data_description": {
+          "radar_updates": "Download the AEMET weather radar image and create an image entity for it.",
+          "station_updates": "Get current observations from the nearest AEMET weather station, in addition to the town forecast."
         }
       }
     }
