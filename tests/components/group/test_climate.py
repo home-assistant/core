@@ -13,7 +13,6 @@ from homeassistant.components.climate import (
     ClimateServiceArgument,
 )
 from homeassistant.const import (
-    ATTR_ENTITY_ID,
     ATTR_SUPPORTED_FEATURES,
     CONF_ENTITIES,
     CONF_UNIQUE_ID,
@@ -21,6 +20,7 @@ from homeassistant.const import (
     SERVICE_TURN_ON,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
+    TargetKey,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -262,7 +262,7 @@ async def test_services(
     await hass.services.async_call(
         CLIMATE_DOMAIN,
         service,
-        {ATTR_ENTITY_ID: CLIMATE_GROUP, **service_data},
+        {TargetKey.ENTITY_ID: CLIMATE_GROUP, **service_data},
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -279,13 +279,16 @@ async def test_turn_on_only_off_members(hass: HomeAssistant) -> None:
     await hass.services.async_call(
         CLIMATE_DOMAIN,
         ClimateService.SET_HVAC_MODE,
-        {ATTR_ENTITY_ID: HEATPUMP_ENTITY_ID, ClimateServiceArgument.HVAC_MODE: "off"},
+        {
+            TargetKey.ENTITY_ID: HEATPUMP_ENTITY_ID,
+            ClimateServiceArgument.HVAC_MODE: "off",
+        },
         blocking=True,
     )
     await hass.services.async_call(
         CLIMATE_DOMAIN,
         SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: CLIMATE_GROUP},
+        {TargetKey.ENTITY_ID: CLIMATE_GROUP},
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -312,7 +315,7 @@ async def test_set_mode_with_member_without_mode_list(hass: HomeAssistant) -> No
     await hass.services.async_call(
         CLIMATE_DOMAIN,
         ClimateService.SET_FAN_MODE,
-        {ATTR_ENTITY_ID: CLIMATE_GROUP, ClimateServiceArgument.FAN_MODE: "on_low"},
+        {TargetKey.ENTITY_ID: CLIMATE_GROUP, ClimateServiceArgument.FAN_MODE: "on_low"},
         blocking=True,
     )
 
