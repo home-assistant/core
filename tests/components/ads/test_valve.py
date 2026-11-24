@@ -57,6 +57,7 @@ async def test_valve(
     [
         pytest.param(BOOL_TRUE, BOOL_TRUE, id="open"),
         pytest.param(BOOL_FALSE, BOOL_TRUE, id="opened"),
+        pytest.param(BOOL_TRUE, BOOL_FALSE, id="closed"),
     ],
 )
 async def test_state_ignores_the_plc(
