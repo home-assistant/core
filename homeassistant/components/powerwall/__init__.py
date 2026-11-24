@@ -24,7 +24,10 @@ from homeassistant.exceptions import (
 )
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
-from homeassistant.helpers.update_coordinator import UpdateFailed
+from homeassistant.helpers.update_coordinator import (
+    UpdateFailed,
+    UpdateFailedUnreachable,
+)
 from homeassistant.util.network import is_ip_address
 
 from .const import (
@@ -111,8 +114,12 @@ class PowerwallDataManager:
                 data = await _fetch_powerwall_data(
                     self.power_wall, restricted=self.restricted
                 )
-            except (TimeoutError, PowerwallUnreachableError) as err:
+            except TimeoutError as err:
                 raise UpdateFailed("Unable to fetch data from powerwall") from err
+            except PowerwallUnreachableError as err:
+                raise UpdateFailedUnreachable(
+                    "Unable to fetch data from powerwall"
+                ) from err
             except MissingAttributeError as err:
                 persistent_notification.create(
                     self.hass, API_CHANGED_ERROR_BODY, API_CHANGED_TITLE

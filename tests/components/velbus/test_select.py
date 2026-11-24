@@ -11,11 +11,11 @@ from homeassistant.components.select import (
     SelectService,
     SelectServiceArgument,
 )
-from homeassistant.const import CommonServiceArgument, Platform
+from homeassistant.const import Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from . import init_integration
+from . import get_entity_id, init_integration
 
 
 async def test_entities(
@@ -38,15 +38,19 @@ async def test_select_program(
     hass: HomeAssistant,
     mock_select: AsyncMock,
     config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
     set_program: str,
 ) -> None:
     """Test program selection."""
     await init_integration(hass, config_entry)
+    entity_id = get_entity_id(
+        entity_registry, SELECT_DOMAIN, "qwerty1234567-SelectedProgram"
+    )
     await hass.services.async_call(
         SELECT_DOMAIN,
         SelectService.SELECT_OPTION,
         {
-            CommonServiceArgument.ENTITY_ID: "select.kitchen_program",
+            TargetKey.ENTITY_ID: entity_id,
             SelectServiceArgument.OPTION: set_program,
         },
         blocking=True,

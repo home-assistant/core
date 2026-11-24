@@ -12,7 +12,7 @@ from homeassistant.components.select import (
     SelectService,
     SelectServiceArgument,
 )
-from homeassistant.const import CommonServiceArgument, Platform
+from homeassistant.const import Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import entity_registry as er
@@ -53,7 +53,7 @@ async def test_airzone_select_air_quality_mode(hass: HomeAssistant) -> None:
             SELECT_DOMAIN,
             SelectService.SELECT_OPTION,
             {
-                CommonServiceArgument.ENTITY_ID: "select.dormitorio_air_quality_mode",
+                TargetKey.ENTITY_ID: "select.dormitorio_air_quality_mode",
                 SelectServiceArgument.OPTION: "Invalid",
             },
             blocking=True,
@@ -67,7 +67,7 @@ async def test_airzone_select_air_quality_mode(hass: HomeAssistant) -> None:
             SELECT_DOMAIN,
             SelectService.SELECT_OPTION,
             {
-                CommonServiceArgument.ENTITY_ID: "select.dormitorio_air_quality_mode",
+                TargetKey.ENTITY_ID: "select.dormitorio_air_quality_mode",
                 SelectServiceArgument.OPTION: "off",
             },
             blocking=True,
@@ -87,7 +87,7 @@ async def test_airzone_select_mode(hass: HomeAssistant) -> None:
             SELECT_DOMAIN,
             SelectService.SELECT_OPTION,
             {
-                CommonServiceArgument.ENTITY_ID: "select.salon_mode",
+                TargetKey.ENTITY_ID: "select.salon_mode",
                 SelectServiceArgument.OPTION: "Invalid",
             },
             blocking=True,
@@ -101,7 +101,7 @@ async def test_airzone_select_mode(hass: HomeAssistant) -> None:
             SELECT_DOMAIN,
             SelectService.SELECT_OPTION,
             {
-                CommonServiceArgument.ENTITY_ID: "select.salon_mode",
+                TargetKey.ENTITY_ID: "select.salon_mode",
                 SelectServiceArgument.OPTION: "heat",
             },
             blocking=True,

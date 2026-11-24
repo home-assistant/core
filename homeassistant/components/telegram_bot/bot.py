@@ -52,24 +52,14 @@ from homeassistant.util import raise_if_invalid_filename, raise_if_invalid_path
 from homeassistant.util.json import JsonValueType
 
 from .const import (
-    ATTR_AUTHENTICATION,
-    ATTR_CAPTION,
-    ATTR_CHAT_ID,
     ATTR_DISABLE_NOTIF,
     ATTR_DISABLE_WEB_PREV,
-    ATTR_FILE,
-    ATTR_FILE_PATH,
     ATTR_INLINE_MESSAGE_ID,
-    ATTR_MEDIA_TYPE,
     ATTR_MESSAGE_TAG,
     ATTR_MESSAGE_THREAD_ID,
     ATTR_PARSER,
-    ATTR_PASSWORD,
     ATTR_REPLY_TO_MSGID,
     ATTR_REPLYMARKUP,
-    ATTR_URL,
-    ATTR_USERNAME,
-    ATTR_VERIFY_SSL,
     CONF_API_ENDPOINT,
     CONF_CHAT_ID,
     CONF_PROXY_URL,
@@ -81,6 +71,7 @@ from .const import (
     TelegramBotParseMode,
     TelegramBotService,
     TelegramBotServiceArgument,
+    TelegramBotServiceResponse,
 )
 from .helpers import signal
 
@@ -261,8 +252,7 @@ class BaseTelegramBot:
             event_data[TelegramBotEventData.MESSAGE] = callback_query.message.to_dict()
             event_data[TelegramBotEventData.CHAT_ID] = callback_query.message.chat.id
 
-        if callback_query.from_user:
-            event_data.update(self._get_user_event_data(callback_query.from_user))
+        event_data.update(self._get_user_event_data(callback_query.from_user))
 
         # Split data into command and args if possible
         event_data.update(self._get_command_event_data(callback_query.data))
@@ -460,7 +450,7 @@ class TelegramNotificationService:
 
         :return: dict with chat_id keys and message_id values for successful sends
         """
-        chat_id: int = kwargs_msg.pop(ATTR_CHAT_ID)
+        chat_id: int = kwargs_msg.pop(TelegramBotServiceArgument.CHAT_ID)
         _LOGGER.debug("%s to chat ID %s", func_send.__name__, chat_id)
 
         response: Message | tuple[Message, ...] = await self._send_msg(
@@ -508,9 +498,9 @@ class TelegramNotificationService:
             }
             if message_tag is not None:
                 event_data[TelegramBotEventData.MESSAGE_TAG] = message_tag
-            if kwargs_msg.get(ATTR_MESSAGE_THREAD_ID) is not None:
+            if kwargs_msg.get(TelegramBotServiceArgument.MESSAGE_THREAD_ID) is not None:
                 event_data[TelegramBotEventData.MESSAGE_THREAD_ID] = kwargs_msg[
-                    ATTR_MESSAGE_THREAD_ID
+                    TelegramBotServiceArgument.MESSAGE_THREAD_ID
                 ]
 
             event_data[TelegramBotEventData.BOT] = _get_bot_info(self.bot, self.config)
@@ -566,26 +556,32 @@ class TelegramNotificationService:
         for entry in input_media:
             file_content = await load_data(
                 self.hass,
-                url=entry.get(ATTR_URL),
-                filepath=entry.get(ATTR_FILE),
-                username=entry.get(ATTR_USERNAME, ""),
-                password=entry.get(ATTR_PASSWORD, ""),
-                authentication=entry.get(ATTR_AUTHENTICATION),
-                verify_ssl=entry[ATTR_VERIFY_SSL],
+                url=entry.get(TelegramBotServiceArgument.URL),
+                filepath=entry.get(TelegramBotServiceArgument.FILE),
+                username=entry.get(TelegramBotServiceArgument.USERNAME, ""),
+                password=entry.get(TelegramBotServiceArgument.PASSWORD, ""),
+                authentication=entry.get(TelegramBotServiceArgument.AUTHENTICATION),
+                verify_ssl=entry[TelegramBotServiceArgument.VERIFY_SSL],
             )
-            _LOGGER.debug("downloaded: %s", entry.get(ATTR_URL) or entry.get(ATTR_FILE))
+            _LOGGER.debug(
+                "downloaded: %s",
+                entry.get(TelegramBotServiceArgument.URL)
+                or entry.get(TelegramBotServiceArgument.FILE),
+            )
 
             # The parse mode of the media group itself only applies to a caption
             # of the whole group, so each caption needs its own
             caption_kwargs: dict[str, Any] = {
-                "caption": entry.get(ATTR_CAPTION),
+                "caption": entry.get(TelegramBotServiceArgument.CAPTION),
                 "parse_mode": params[ATTR_PARSER],
             }
-            if entry[ATTR_MEDIA_TYPE] == InputMediaType.AUDIO:
+            if entry[TelegramBotServiceArgument.MEDIA_TYPE] == InputMediaType.AUDIO:
                 media.append(InputMediaAudio(file_content, **caption_kwargs))
-            elif entry[ATTR_MEDIA_TYPE] == InputMediaType.DOCUMENT:
+            elif (
+                entry[TelegramBotServiceArgument.MEDIA_TYPE] == InputMediaType.DOCUMENT
+            ):
                 media.append(InputMediaDocument(file_content, **caption_kwargs))
-            elif entry[ATTR_MEDIA_TYPE] == InputMediaType.PHOTO:
+            elif entry[TelegramBotServiceArgument.MEDIA_TYPE] == InputMediaType.PHOTO:
                 media.append(InputMediaPhoto(file_content, **caption_kwargs))
             else:
                 media.append(InputMediaVideo(file_content, **caption_kwargs))
@@ -1125,7 +1121,7 @@ class TelegramNotificationService:
             )
         except OSError as err:
             raise os_write_error(err, custom_path) from err
-        return {ATTR_FILE_PATH: custom_path}
+        return {TelegramBotServiceResponse.FILE_PATH: custom_path}
 
     @staticmethod
     def _prepare_download_directory(directory_path: str) -> None:

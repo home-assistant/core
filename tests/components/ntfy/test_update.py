@@ -73,7 +73,7 @@ async def test_setup(
         }
     )
     result = await ws_client.receive_json()
-    assert result["result"] == "**RELEASE_NOTES**"
+    assert result["result"]["release_notes"] == "**RELEASE_NOTES**"
 
 
 @pytest.mark.usefixtures("mock_aiontfy")

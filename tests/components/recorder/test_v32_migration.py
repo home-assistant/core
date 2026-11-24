@@ -86,7 +86,8 @@ async def test_migrate_times(
     """
     importlib.import_module(SCHEMA_MODULE_30)
     old_db_schema = sys.modules[SCHEMA_MODULE_30]
-    now = dt_util.utcnow()
+    # Older SQLite (e.g. 3.40) rounds strftime('%s') up when the fraction is >= .9995
+    now = dt_util.utcnow().replace(microsecond=999534)
     one_second_past = now - timedelta(seconds=1)
     now_timestamp = now.timestamp()
     one_second_past_timestamp = one_second_past.timestamp()

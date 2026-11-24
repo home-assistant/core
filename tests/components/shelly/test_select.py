@@ -20,8 +20,8 @@ from homeassistant.const import (
     ATTR_FRIENDLY_NAME,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
-    CommonServiceArgument,
     Platform,
+    TargetKey,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -107,7 +107,7 @@ async def test_rpc_device_virtual_enum(
         SELECT_DOMAIN,
         SelectService.SELECT_OPTION,
         {
-            CommonServiceArgument.ENTITY_ID: entity_id,
+            TargetKey.ENTITY_ID: entity_id,
             SelectServiceArgument.OPTION: "Title 1",
         },
         blocking=True,
@@ -233,7 +233,7 @@ async def test_select_set_exc(
             SELECT_DOMAIN,
             SelectService.SELECT_OPTION,
             {
-                CommonServiceArgument.ENTITY_ID: f"{SELECT_DOMAIN}.test_name_enum_203",
+                TargetKey.ENTITY_ID: f"{SELECT_DOMAIN}.test_name_enum_203",
                 SelectServiceArgument.OPTION: "option 2",
             },
             blocking=True,
@@ -271,7 +271,7 @@ async def test_select_set_reauth_error(
         SELECT_DOMAIN,
         SelectService.SELECT_OPTION,
         {
-            CommonServiceArgument.ENTITY_ID: f"{SELECT_DOMAIN}.test_name_enum_203",
+            TargetKey.ENTITY_ID: f"{SELECT_DOMAIN}.test_name_enum_203",
             SelectServiceArgument.OPTION: "option 2",
         },
         blocking=True,
@@ -331,7 +331,7 @@ async def test_rpc_cury_mode_select(
         SELECT_DOMAIN,
         SelectService.SELECT_OPTION,
         {
-            CommonServiceArgument.ENTITY_ID: entity_id,
+            TargetKey.ENTITY_ID: entity_id,
             SelectServiceArgument.OPTION: "reception",
         },
         blocking=True,
@@ -374,7 +374,7 @@ async def test_rpc_ledstrip_palette_select(
         SELECT_DOMAIN,
         SelectService.SELECT_OPTION,
         {
-            CommonServiceArgument.ENTITY_ID: LEDSTRIP_ENTITY_ID,
+            TargetKey.ENTITY_ID: LEDSTRIP_ENTITY_ID,
             SelectServiceArgument.OPTION: "fire",
         },
         blocking=True,
@@ -447,7 +447,7 @@ async def test_rpc_ui_led_mode_select(
         SELECT_DOMAIN,
         SelectService.SELECT_OPTION,
         {
-            CommonServiceArgument.ENTITY_ID: entity_id,
+            TargetKey.ENTITY_ID: entity_id,
             SelectServiceArgument.OPTION: "switch",
         },
         blocking=True,

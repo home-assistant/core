@@ -8,7 +8,6 @@ import logging
 from typing import override
 
 from PyViCare.PyViCareDevice import Device as PyViCareDevice
-from PyViCare.PyViCareDeviceConfig import PyViCareDeviceConfig
 from PyViCare.PyViCareFloorHeating import FloorHeating
 from PyViCare.PyViCareHeatingDevice import (
     HeatingDeviceWithComponent as PyViCareHeatingDeviceComponent,
@@ -603,6 +602,35 @@ GLOBAL_SENSORS: tuple[ViCareSensorEntityDescription, ...] = (
         ),
         unit_getter=lambda api: api.getPowerSummaryConsumptionDomesticHotWaterUnit(),
         entity_registry_enabled_default=False,
+    ),
+    ViCareSensorEntityDescription(
+        key="heat_production_current",
+        translation_key="heat_production_current",
+        native_unit_of_measurement=UnitOfPower.KILO_WATT,
+        value_getter=lambda api: api.getHeatProductionCurrent(),
+        unit_getter=lambda api: api.getHeatProductionCurrentUnit(),
+        device_class=SensorDeviceClass.POWER,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    ViCareSensorEntityDescription(
+        key="heat_production_heating_today",
+        translation_key="heat_production_heating_today",
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        value_getter=lambda api: api.getHeatProductionSummaryHeatingCurrentDay(),
+        unit_getter=lambda api: api.getHeatProductionSummaryHeatingUnit(),
+        device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+    ),
+    ViCareSensorEntityDescription(
+        key="heat_production_dhw_today",
+        translation_key="heat_production_dhw_today",
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        value_getter=lambda api: (
+            api.getHeatProductionSummaryDomesticHotWaterCurrentDay()
+        ),
+        unit_getter=lambda api: api.getHeatProductionSummaryDomesticHotWaterUnit(),
+        device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     ViCareSensorEntityDescription(
         key="power_production_current",
@@ -1680,9 +1708,7 @@ def _build_entities(
             ViCareSensor(
                 device.coordinator,
                 description,
-                device.serial,
-                device.config,
-                device.api,
+                device,
             )
             for description in GLOBAL_SENSORS
             if is_supported(description.key, description.value_getter, device.api)
@@ -1693,9 +1719,7 @@ def _build_entities(
                 ViCareSensor(
                     device.coordinator,
                     description,
-                    device.serial,
-                    device.config,
-                    device.api,
+                    device,
                 )
                 for description in FLOOR_HEATING_SENSORS
                 if is_supported(description.key, description.value_getter, device.api)
@@ -1714,9 +1738,7 @@ def _build_entities(
                 ViCareSensor(
                     device.coordinator,
                     description,
-                    device.serial,
-                    device.config,
-                    device.api,
+                    device,
                     component,
                 )
                 for component in component_list
@@ -1749,17 +1771,13 @@ class ViCareSensor(ViCareCoordinatorEntity, SensorEntity):
         self,
         coordinator: ViCareCoordinator,
         description: ViCareSensorEntityDescription,
-        device_serial: str | None,
-        device_config: PyViCareDeviceConfig,
-        device: PyViCareDevice,
+        device: ViCareDevice,
         component: PyViCareHeatingDeviceComponent | None = None,
     ) -> None:
         """Initialize the sensor."""
         super().__init__(
             coordinator,
             description.key,
-            device_serial,
-            device_config,
             device,
             component,
         )

@@ -11,7 +11,7 @@ import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.foreca.const import DOMAIN, SUBENTRY_TYPE_LOCATION
-from homeassistant.config_entries import ConfigEntryState, ConfigSubentry
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState, ConfigSubentry
 from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
@@ -43,17 +43,28 @@ async def test_setup_retries_on_connection_error(
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
-@pytest.mark.parametrize("exception", [ForecaAuthError, ForecaProductUnavailableError])
+@pytest.mark.parametrize(
+    ("method", "exception"),
+    [
+        ("current", ForecaAuthError),
+        ("current", ForecaProductUnavailableError),
+    ],
+)
 async def test_setup_fails_on_rejected_key(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_foreca_client: MagicMock,
+    method: str,
     exception: type[Exception],
 ) -> None:
-    """Test a key that is rejected or lacks the forecasts fails setup."""
-    mock_foreca_client.current.side_effect = exception
+    """Test a key that is rejected or lacks the forecasts starts a reauth flow."""
+    getattr(mock_foreca_client, method).side_effect = exception
     await init_integration(hass, mock_config_entry)
     assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 1
+    assert flows[0]["context"]["source"] == SOURCE_REAUTH
+    assert flows[0]["context"]["entry_id"] == mock_config_entry.entry_id
 
 
 async def test_documented_request_budget(
@@ -61,7 +72,7 @@ async def test_documented_request_budget(
     mock_config_entry: MockConfigEntry,
     mock_foreca_client: MagicMock,
 ) -> None:
-    """Test one update costs the three requests the documentation promises.
+    """Test one update costs the four requests the documentation promises.
 
     The docs page quotes this number against the Freemium daily limit, so a new
     call added to the coordinator has to be a deliberate change here too.
@@ -75,8 +86,13 @@ async def test_documented_request_budget(
         and isinstance(attr := getattr(mock_foreca_client, name), AsyncMock)
         and attr.await_count
     }
-    assert awaited == {"current": 1, "forecast_daily": 1, "forecast_hourly": 1}
-    assert sum(awaited.values()) == 3
+    assert awaited == {
+        "current": 1,
+        "forecast_daily": 1,
+        "forecast_hourly": 1,
+        "observation_latest": 1,
+    }
+    assert sum(awaited.values()) == 4
 
 
 async def test_documented_forecast_length(

@@ -22,6 +22,7 @@ from pyportainer import (
     PortainerEventListenerResult,
     PortainerTimeoutError,
 )
+from pyportainer.exceptions import PortainerNotFoundError
 from pyportainer.models.docker import (
     DockerContainer,
     DockerContainerStats,
@@ -42,10 +43,13 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed, HomeAssistantError
 import homeassistant.helpers.device_registry as dr
 from homeassistant.helpers.device_registry import DeviceEntryType
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.helpers.update_coordinator import (
+    DataUpdateCoordinator,
+    UpdateFailedUnreachable,
+)
 from homeassistant.util import dt as dt_util
 
-from .const import CONTAINER_STATE_ACTIONS, DEFAULT_NAME, DOMAIN
+from .const import CONTAINER_STATE_ACTIONS, DEFAULT_NAME, DOCKER_ENDPOINT_TYPES, DOMAIN
 from .util import sanitize_container_name
 
 type PortainerConfigEntry = ConfigEntry[PortainerCoordinator]
@@ -170,12 +174,12 @@ class PortainerBaseCoordinator[_DataT](DataUpdateCoordinator[_DataT]):
                 translation_key="invalid_auth",
             ) from err
         except PortainerConnectionError as err:
-            raise UpdateFailed(
+            raise UpdateFailedUnreachable(
                 translation_domain=DOMAIN,
                 translation_key="cannot_connect",
             ) from err
         except PortainerTimeoutError as err:
-            raise UpdateFailed(
+            raise UpdateFailedUnreachable(
                 translation_domain=DOMAIN,
                 translation_key="timeout_connect",
             ) from err
@@ -206,12 +210,12 @@ class PortainerBaseCoordinator[_DataT](DataUpdateCoordinator[_DataT]):
                 translation_key="invalid_auth",
             ) from err
         except PortainerConnectionError as err:
-            raise UpdateFailed(
+            raise UpdateFailedUnreachable(
                 translation_domain=DOMAIN,
                 translation_key="cannot_connect",
             ) from err
         except PortainerTimeoutError as err:
-            raise UpdateFailed(
+            raise UpdateFailedUnreachable(
                 translation_domain=DOMAIN,
                 translation_key="timeout_connect",
             ) from err
@@ -284,7 +288,7 @@ class PortainerCoordinator(
                 translation_key="invalid_auth",
             ) from err
         except PortainerConnectionError as err:
-            raise UpdateFailed(
+            raise UpdateFailedUnreachable(
                 translation_domain=DOMAIN,
                 translation_key="cannot_connect",
             ) from err
@@ -298,6 +302,7 @@ class PortainerCoordinator(
             endpoint
             for endpoint in endpoints
             if str(endpoint.id) in subentry_endpoint_ids
+            and endpoint.type in DOCKER_ENDPOINT_TYPES
         ]
 
         mapped_endpoints: dict[int, PortainerCoordinatorData] = {}
@@ -668,7 +673,12 @@ class PortainerCoordinator(
                 )
                 return local_image
 
-        local_image = await self.portainer.get_image(endpoint_id, image)
+        try:
+            local_image = await self.portainer.get_image(endpoint_id, image)
+        except PortainerNotFoundError:
+            # A container can outlive its image; not cached, so the next poll retries
+            _LOGGER.debug("Image %s not found on endpoint %d", image, endpoint_id)
+            return LocalImageInformation(id=image)
         self._image_cache[(endpoint_id, image)] = (
             time.monotonic(),
             local_image,

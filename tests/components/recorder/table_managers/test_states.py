@@ -33,3 +33,14 @@ def test_reset_clears_pending_last_reported() -> None:
     manager.reset()
 
     assert manager.get_pending_last_reported_timestamp() == {}
+
+
+def test_evict_purged_state_ids_drops_pending_last_reported() -> None:
+    """Test purged states have no pending last reported update."""
+    manager = StatesManager()
+    manager.update_pending_last_reported(1, 123.0)
+    manager.update_pending_last_reported(2, 456.0)
+
+    manager.evict_purged_state_ids({1, 3})
+
+    assert manager.get_pending_last_reported_timestamp() == {2: 456.0}
