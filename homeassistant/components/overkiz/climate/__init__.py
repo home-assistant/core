@@ -2,7 +2,7 @@
 
 from enum import StrEnum, unique
 
-from pyoverkiz.enums import Protocol
+from pyoverkiz.enums import OverkizCommand, Protocol
 from pyoverkiz.enums.ui import UIWidget
 from pyoverkiz.models import Device
 
@@ -12,7 +12,7 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .. import OverkizDataConfigEntry
-from ..entity import OverkizEntity, is_heating_level_towel_dryer
+from ..entity import OverkizEntity
 from .atlantic_electrical_heater import AtlanticElectricalHeater
 from .atlantic_electrical_heater_with_adjustable_temperature_setpoint import (
     AtlanticElectricalHeaterWithAdjustableTemperatureSetpoint,
@@ -98,7 +98,10 @@ PARALLEL_UPDATES = 0
 
 def _widget_climate_entity(device: Device) -> type[OverkizEntity]:
     """Return the climate entity class for a device matched on its widget."""
-    if is_heating_level_towel_dryer(device):
+    # Some towel dryers (e.g. Atlantic Adélis 2 Digit) only support heating levels
+    if device.widget == UIWidget.ATLANTIC_ELECTRICAL_TOWEL_DRYER and not (
+        device.supports_command(OverkizCommand.SET_TOWEL_DRYER_OPERATING_MODE)
+    ):
         return AtlanticElectricalTowelDryerHeatingLevel
     return WIDGET_TO_CLIMATE_ENTITY[device.widget]
 

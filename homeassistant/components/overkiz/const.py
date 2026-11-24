@@ -49,8 +49,6 @@ UPDATE_INTERVAL_ALL_ASSUMED_STATE: Final = timedelta(minutes=60)
 UPDATE_INTERVAL_SAUTER_SMART_CONTROL: Final = timedelta(seconds=25)
 # fetch_events allows 1 call per second, and refresh timing jitters, so leave margin.
 UPDATE_INTERVAL_EXECUTION: Final = timedelta(seconds=2)
-
-SIGNAL_BOOST_END_UPDATED: Final = "overkiz_boost_end_updated_{}"
 RATE_LIMIT_RETRY_AFTER: Final = timedelta(minutes=1)
 
 PLATFORMS: list[Platform] = [

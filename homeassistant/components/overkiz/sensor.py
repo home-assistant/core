@@ -2,7 +2,6 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from datetime import datetime
 from typing import cast, override
 
 from pyoverkiz.enums import OverkizAttribute, OverkizState, UIWidget
@@ -30,7 +29,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
@@ -40,14 +38,9 @@ from .const import (
     IGNORED_OVERKIZ_DEVICES,
     OVERKIZ_STATE_TO_TRANSLATION,
     OVERKIZ_UNIT_TO_HA,
-    SIGNAL_BOOST_END_UPDATED,
 )
 from .coordinator import OverkizDataUpdateCoordinator
-from .entity import (
-    OverkizDescriptiveEntity,
-    OverkizEntity,
-    is_heating_level_towel_dryer,
-)
+from .entity import OverkizDescriptiveEntity, OverkizEntity
 
 
 @dataclass(frozen=True)
@@ -571,11 +564,6 @@ async def async_setup_entry(
                 )
             )
 
-        if is_heating_level_towel_dryer(device):
-            entities.append(
-                OverkizTowelDryerBoostEndSensor(device.device_url, data.coordinator)
-            )
-
         if (
             device.widget in IGNORED_OVERKIZ_DEVICES
             or device.ui_class in IGNORED_OVERKIZ_DEVICES
@@ -685,38 +673,4 @@ class OverkizHomeKitSetupCodeSensor(OverkizEntity, SensorEntity):
         # in the entity registry.
         return DeviceInfo(
             identifiers={(DOMAIN, self.device.identifier.gateway_id)},
-        )
-
-
-class OverkizTowelDryerBoostEndSensor(OverkizEntity, SensorEntity):
-    """End of the boost of a towel dryer driven by heating levels."""
-
-    _attr_device_class = SensorDeviceClass.TIMESTAMP
-    _attr_translation_key = "boost_end"
-
-    def __init__(
-        self, device_url: str, coordinator: OverkizDataUpdateCoordinator
-    ) -> None:
-        """Initialize the sensor."""
-        super().__init__(device_url, coordinator)
-        self._attr_unique_id = f"{self._attr_unique_id}-boost_end"
-
-    @override
-    async def async_added_to_hass(self) -> None:
-        """Follow the boost tracked by the climate entity."""
-        await super().async_added_to_hass()
-        self.async_on_remove(
-            async_dispatcher_connect(
-                self.hass,
-                SIGNAL_BOOST_END_UPDATED.format(self.device_url),
-                self.async_write_ha_state,
-            )
-        )
-
-    @property
-    @override
-    def native_value(self) -> datetime | None:
-        """Return the end of the running boost."""
-        return self.coordinator.config_entry.runtime_data.boost_ends.get(
-            self.device_url
         )

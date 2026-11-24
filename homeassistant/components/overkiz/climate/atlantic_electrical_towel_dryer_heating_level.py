@@ -31,12 +31,11 @@ from homeassistant.components.climate import (
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import CALLBACK_TYPE, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.restore_state import ExtraStoredData, RestoreEntity
 from homeassistant.util import dt as dt_util
 
-from ..const import DOMAIN, SIGNAL_BOOST_END_UPDATED
+from ..const import DOMAIN
 from ..coordinator import OverkizDataUpdateCoordinator
 from ..entity import OverkizEntity
 
@@ -184,19 +183,9 @@ class AtlanticElectricalTowelDryerHeatingLevel(
             return self._assumed_level
         return self._reported_level
 
-    def _set_boost_until(self, boost_until: datetime | None) -> None:
-        """Track the end of the boost and share it with the boost end sensor."""
-        self._boost_until = boost_until
-        self.coordinator.config_entry.runtime_data.boost_ends[self.device_url] = (
-            boost_until
-        )
-        async_dispatcher_send(
-            self.hass, SIGNAL_BOOST_END_UPDATED.format(self.device_url)
-        )
-
     def _clear_boost(self) -> None:
         """Forget the running boost."""
-        self._set_boost_until(None)
+        self._boost_until = None
         self._boost_timer_seen = False
         if self._unsub_boost_end:
             self._unsub_boost_end()
@@ -206,7 +195,7 @@ class AtlanticElectricalTowelDryerHeatingLevel(
     def _boost_ended(self, _now: datetime) -> None:
         """Refresh the state when the boost timer runs out."""
         self._unsub_boost_end = None
-        self._set_boost_until(None)
+        self._boost_until = None
         self.async_write_ha_state()
 
     @callback
@@ -278,7 +267,7 @@ class AtlanticElectricalTowelDryerHeatingLevel(
             self._assumed_level = return_level
             self._level_pending_until = None
             self._override_pending = True
-            self._set_boost_until(dt_util.utcnow() + BOOST_DURATION)
+            self._boost_until = dt_util.utcnow() + BOOST_DURATION
             self._unsub_boost_end = async_call_later(
                 self.hass, BOOST_DURATION, self._boost_ended
             )
@@ -296,7 +285,7 @@ class AtlanticElectricalTowelDryerHeatingLevel(
         self._override_pending = data.override_pending
         self._boost_timer_seen = data.boost_timer_seen
         if data.boost_until is not None and data.boost_until > dt_util.utcnow():
-            self._set_boost_until(data.boost_until)
+            self._boost_until = data.boost_until
             self._unsub_boost_end = async_call_later(
                 self.hass, data.boost_until - dt_util.utcnow(), self._boost_ended
             )

@@ -186,9 +186,6 @@
           "verylow": "[%key:common::state::very_low%]"
         }
       },
-      "boost_end": {
-        "name": "Boost end"
-      },
       "discrete_rssi_level": {
         "state": {
           "good": "Good",
