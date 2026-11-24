@@ -48,6 +48,7 @@ async def test_user_flow_minimal(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id is None
     assert result["title"] == "Living room"
     assert result["options"][CONF_NAME] == "Living room"
     assert result["options"][CONF_CHILDREN] == [
@@ -89,6 +90,7 @@ async def test_user_flow_full(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id is None
     assert result["title"] == "Office Speakers"
     opts = result["options"]
     assert opts[CONF_DEVICE_CLASS] == "receiver"
@@ -211,6 +213,7 @@ async def test_import_yaml(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id is None
     opts = result["options"]
     assert opts[CONF_NAME] == "Office Speakers"
     assert opts[CONF_CHILDREN] == ["media_player.sonos"]

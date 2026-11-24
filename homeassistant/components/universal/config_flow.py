@@ -169,7 +169,11 @@ class UniversalFlowHandler(SchemaConfigFlowHandler, domain=DOMAIN):
                 else:
                     raw["data"] = raw.pop("data_template")
             # Move entity_id from data to target (old -> new YAML style)
-            if "data" in raw and isinstance(raw["data"], dict) and "entity_id" in raw["data"]:
+            if (
+                "data" in raw
+                and isinstance(raw["data"], dict)
+                and "entity_id" in raw["data"]
+            ):
                 eid = raw["data"].pop("entity_id")
                 raw.setdefault("target", {})["entity_id"] = eid
                 if not raw["data"]:
