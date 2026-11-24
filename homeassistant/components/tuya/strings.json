@@ -36,8 +36,14 @@
   },
   "entity": {
     "binary_sensor": {
+      "arrear_outage": {
+        "name": "Arrear outage"
+      },
       "bag_full": {
         "name": "Bag full"
+      },
+      "battery_alarm": {
+        "name": "Battery alarm"
       },
       "carbon_dioxide": {
         "name": "Carbon dioxide"
@@ -47,6 +53,9 @@
       },
       "coil_freeze": {
         "name": "Coil freeze/defrost"
+      },
+      "cover_alarm": {
+        "name": "Cover alarm"
       },
       "cover_off": {
         "name": "Cover off"
@@ -108,6 +117,9 @@
       "magnetic_interference": {
         "name": "Magnetic interference"
       },
+      "meter_hardware_alarm": {
+        "name": "Meter hardware alarm"
+      },
       "methane": {
         "name": "Methane"
       },
@@ -126,6 +138,9 @@
       "overload": {
         "name": "Overload"
       },
+      "overpower": {
+        "name": "Overpower"
+      },
       "overpower_early_warning": {
         "name": "Overpower early warning"
       },
@@ -135,11 +150,32 @@
       "overvoltage_early_warning": {
         "name": "Overvoltage early warning"
       },
+      "phase_a_overpower": {
+        "name": "Phase A overpower"
+      },
+      "phase_a_underpower": {
+        "name": "Phase A underpower"
+      },
+      "phase_b_overpower": {
+        "name": "Phase B overpower"
+      },
+      "phase_b_underpower": {
+        "name": "Phase B underpower"
+      },
+      "phase_c_overpower": {
+        "name": "Phase C overpower"
+      },
+      "phase_c_underpower": {
+        "name": "Phase C underpower"
+      },
       "phase_loss": {
         "name": "Phase loss"
       },
       "pm25": {
         "name": "PM2.5"
+      },
+      "power_factor_abnormal": {
+        "name": "Power factor abnormal"
       },
       "power_outage": {
         "name": "Power outage"
@@ -165,8 +201,17 @@
       "temperature_difference": {
         "name": "Temperature difference fault"
       },
+      "terminal_alarm": {
+        "name": "Terminal alarm"
+      },
       "tilt": {
         "name": "Tilt"
+      },
+      "total_overpower": {
+        "name": "Total overpower"
+      },
+      "total_underpower": {
+        "name": "Total underpower"
       },
       "undervoltage": {
         "name": "Undervoltage"
