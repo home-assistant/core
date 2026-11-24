@@ -6,7 +6,6 @@ import pytest
 from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 from vallox_websocket_api import (
-    MetricValue,
     Profile,
     ValloxApiException,
     ValloxInvalidInputException,
@@ -44,6 +43,7 @@ from . import (
     METRICS_PROFILE_UNKNOWN,
     METRICS_UNIT_OFF,
     METRICS_UNIT_ON,
+    METRICS_UNIT_TESTING,
     setup_integration,
 )
 
@@ -69,6 +69,7 @@ async def test_all_entities(
     ("metrics", "expected_state"),
     [
         pytest.param(METRICS_UNIT_ON, STATE_ON, id="on"),
+        pytest.param(METRICS_UNIT_TESTING, STATE_ON, id="testing"),
         pytest.param(METRICS_UNIT_OFF, STATE_OFF, id="off"),
     ],
 )
@@ -131,19 +132,17 @@ async def test_fan_mode_missing(hass: HomeAssistant) -> None:
 
 @pytest.mark.usefixtures("init_integration")
 @pytest.mark.parametrize(
-    ("service", "metrics", "expected_called_with"),
+    ("service", "metrics", "expected_method"),
     [
-        pytest.param(SERVICE_TURN_ON, METRICS_UNIT_OFF, METRICS_UNIT_ON, id="turn_on"),
-        pytest.param(
-            SERVICE_TURN_OFF, METRICS_UNIT_ON, METRICS_UNIT_OFF, id="turn_off"
-        ),
+        pytest.param(SERVICE_TURN_ON, METRICS_UNIT_OFF, "switch_on", id="turn_on"),
+        pytest.param(SERVICE_TURN_OFF, METRICS_UNIT_ON, "switch_off", id="turn_off"),
         # The unit is already in the requested state according to the last poll.
         # It may have changed since, so check that the command is sent regardless.
         pytest.param(
-            SERVICE_TURN_ON, METRICS_UNIT_ON, METRICS_UNIT_ON, id="turn_on_when_on"
+            SERVICE_TURN_ON, METRICS_UNIT_ON, "switch_on", id="turn_on_when_on"
         ),
         pytest.param(
-            SERVICE_TURN_OFF, METRICS_UNIT_OFF, METRICS_UNIT_OFF, id="turn_off_when_off"
+            SERVICE_TURN_OFF, METRICS_UNIT_OFF, "switch_off", id="turn_off_when_off"
         ),
     ],
 )
@@ -151,31 +150,36 @@ async def test_turn_on_off(
     hass: HomeAssistant,
     mock_vallox_client: AsyncMock,
     service: str,
-    expected_called_with: dict[str, MetricValue],
+    expected_method: str,
 ) -> None:
     """Test turn on/off."""
     await hass.services.async_call(
         FAN_DOMAIN, service, {ATTR_ENTITY_ID: FAN_ENTITY_ID}, blocking=True
     )
 
-    mock_vallox_client.set_values.assert_called_once_with(expected_called_with)
+    getattr(mock_vallox_client, expected_method).assert_called_once_with()
     # One fetch at setup, and one refresh after the change.
     assert mock_vallox_client.fetch_metric_data.call_count == 2
 
 
 @pytest.mark.usefixtures("init_integration")
 @pytest.mark.parametrize(
-    ("service", "metrics"),
+    ("service", "metrics", "failing_method"),
     [
-        pytest.param(SERVICE_TURN_ON, METRICS_UNIT_OFF, id="turn_on"),
-        pytest.param(SERVICE_TURN_OFF, METRICS_UNIT_ON, id="turn_off"),
+        pytest.param(SERVICE_TURN_ON, METRICS_UNIT_OFF, "switch_on", id="turn_on"),
+        pytest.param(SERVICE_TURN_OFF, METRICS_UNIT_ON, "switch_off", id="turn_off"),
     ],
 )
 async def test_turn_on_off_exception(
-    hass: HomeAssistant, mock_vallox_client: AsyncMock, service: str
+    hass: HomeAssistant,
+    mock_vallox_client: AsyncMock,
+    service: str,
+    failing_method: str,
 ) -> None:
     """Test turn on/off when the unit returns an error."""
-    mock_vallox_client.set_values.side_effect = ValloxApiException("Fake failure")
+    getattr(mock_vallox_client, failing_method).side_effect = ValloxApiException(
+        "Fake failure"
+    )
 
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
@@ -193,7 +197,7 @@ async def test_turn_on_off_exception(
             [
                 call.set_fan_speed(Profile.AWAY, 15),
                 call.set_profile(Profile.AWAY),
-                call.set_values(METRICS_UNIT_ON),
+                call.switch_on(),
                 call.fetch_metric_data(),
             ],
             id="preset_and_percentage_unit_off",
@@ -204,7 +208,7 @@ async def test_turn_on_off_exception(
             [
                 call.set_fan_speed(Profile.AWAY, 15),
                 call.set_profile(Profile.AWAY),
-                call.set_values(METRICS_UNIT_ON),
+                call.switch_on(),
                 call.fetch_metric_data(),
             ],
             id="preset_and_percentage_unit_on",
@@ -214,7 +218,7 @@ async def test_turn_on_off_exception(
             {ATTR_PRESET_MODE: "away"},
             [
                 call.set_profile(Profile.AWAY),
-                call.set_values(METRICS_UNIT_ON),
+                call.switch_on(),
                 call.fetch_metric_data(),
             ],
             id="preset_only",
@@ -227,7 +231,7 @@ async def test_turn_on_off_exception(
             {ATTR_PRESET_MODE: "home"},
             [
                 call.set_profile(Profile.HOME),
-                call.set_values(METRICS_UNIT_ON),
+                call.switch_on(),
                 call.fetch_metric_data(),
             ],
             id="active_preset",
@@ -237,7 +241,7 @@ async def test_turn_on_off_exception(
             {ATTR_PERCENTAGE: 40},
             [
                 call.set_fan_speed(Profile.HOME, 40),
-                call.set_values(METRICS_UNIT_ON),
+                call.switch_on(),
                 call.fetch_metric_data(),
             ],
             id="percentage_only",
@@ -246,7 +250,7 @@ async def test_turn_on_off_exception(
             METRICS_UNIT_ON,
             {ATTR_PERCENTAGE: 0},
             [
-                call.set_values(METRICS_UNIT_OFF),
+                call.switch_off(),
                 call.fetch_metric_data(),
             ],
             id="zero_percentage",
@@ -255,7 +259,7 @@ async def test_turn_on_off_exception(
             METRICS_UNIT_ON,
             {ATTR_PERCENTAGE: 0, ATTR_PRESET_MODE: "away"},
             [
-                call.set_values(METRICS_UNIT_OFF),
+                call.switch_off(),
                 call.fetch_metric_data(),
             ],
             id="zero_percentage_with_preset",
@@ -264,7 +268,7 @@ async def test_turn_on_off_exception(
             METRICS_UNIT_OFF,
             {ATTR_PERCENTAGE: 0},
             [
-                call.set_values(METRICS_UNIT_OFF),
+                call.switch_off(),
                 call.fetch_metric_data(),
             ],
             id="zero_percentage_unit_off",
@@ -312,11 +316,11 @@ async def test_turn_on_with_parameters(
             id="preset",
         ),
         pytest.param(
-            "set_values",
+            "switch_on",
             [
                 call.set_fan_speed(Profile.AWAY, 15),
                 call.set_profile(Profile.AWAY),
-                call.set_values(METRICS_UNIT_ON),
+                call.switch_on(),
                 call.fetch_metric_data(),
             ],
             id="power",
@@ -461,7 +465,7 @@ async def test_set_preset_mode_exception(
         "metrics",
         "percentage",
         "expected_set_fan_speed_calls",
-        "expected_set_values_calls",
+        "expected_switch_off_calls",
     ),
     [
         pytest.param(METRICS_PROFILE_HOME, 40, [call(Profile.HOME, 40)], [], id="home"),
@@ -469,9 +473,7 @@ async def test_set_preset_mode_exception(
         pytest.param(
             METRICS_PROFILE_BOOST, 60, [call(Profile.BOOST, 60)], [], id="boost"
         ),
-        pytest.param(
-            METRICS_PROFILE_HOME, 0, [], [call(METRICS_UNIT_OFF)], id="turn_off"
-        ),
+        pytest.param(METRICS_PROFILE_HOME, 0, [], [call()], id="turn_off"),
     ],
 )
 async def test_set_percentage(
@@ -479,7 +481,7 @@ async def test_set_percentage(
     mock_vallox_client: AsyncMock,
     percentage: int,
     expected_set_fan_speed_calls: list[_Call],
-    expected_set_values_calls: list[_Call],
+    expected_switch_off_calls: list[_Call],
 ) -> None:
     """Test set fan speed percentage."""
     await hass.services.async_call(
@@ -492,7 +494,7 @@ async def test_set_percentage(
     assert (
         mock_vallox_client.set_fan_speed.call_args_list == expected_set_fan_speed_calls
     )
-    assert mock_vallox_client.set_values.call_args_list == expected_set_values_calls
+    assert mock_vallox_client.switch_off.call_args_list == expected_switch_off_calls
 
 
 @pytest.mark.usefixtures("init_integration")

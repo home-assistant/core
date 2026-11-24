@@ -156,6 +156,9 @@
       "container_disk_usage_total_size": {
         "name": "Container disk usage total size"
       },
+      "container_exit_code": {
+        "name": "Last exit code"
+      },
       "container_health_state": {
         "name": "Health",
         "state": {
@@ -245,6 +248,9 @@
       "stack_containers_count": {
         "name": "Containers",
         "unit_of_measurement": "containers"
+      },
+      "stack_last_deployed": {
+        "name": "Last deployed"
       },
       "stack_type": {
         "name": "Type",
