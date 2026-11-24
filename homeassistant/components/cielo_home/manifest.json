@@ -7,6 +7,7 @@
   ],
   "codeowners": ["@ihsan-cielo", "@mudasar-cielo"],
   "config_flow": true,
+  "connectivity": ["cloud"],
   "documentation": "https://www.home-assistant.io/integrations/cielo_home",
   "integration_type": "hub",
   "iot_class": "cloud_polling",

@@ -61,17 +61,29 @@
       "fan_power": {
         "name": "Fan power"
       },
+      "hot_water_setpoint": {
+        "name": "Hot water setpoint"
+      },
+      "hot_water_temp": {
+        "name": "Hot water temperature"
+      },
       "leaving_air_temp": {
         "name": "Leaving air temperature"
       },
       "leaving_water_temp": {
         "name": "Leaving water temperature"
       },
+      "load_tank_temp": {
+        "name": "Load tank temperature"
+      },
       "loop_pump_power": {
         "name": "Loop pump power"
       },
       "mode": {
         "name": "Furnace mode"
+      },
+      "outdoor_air_temp": {
+        "name": "Outdoor air temperature"
       },
       "room_temp": {
         "name": "Room temperature"

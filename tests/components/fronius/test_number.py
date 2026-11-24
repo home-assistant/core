@@ -10,11 +10,11 @@ from pytest_homeassistant.common import MockConfigEntry
 from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 
 from homeassistant.components.number import (
-    ATTR_VALUE,
     DOMAIN as NUMBER_DOMAIN,
-    SERVICE_SET_VALUE,
+    NumberService,
+    NumberServiceArgument,
 )
-from homeassistant.const import ATTR_ENTITY_ID, Platform
+from homeassistant.const import Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 
@@ -68,15 +68,15 @@ async def test_setting_a_value_leaves_a_released_limit_released(
     change to the setpoint must not quietly re-assert it.
     """
     config_entry = await _setup(hass, aioclient_mock, mock_fronius_modbus)
-    controls = config_entry.runtime_data.modbus_settings_coordinators[
+    controls = config_entry.runtime_data.modbus.settings_coordinators[
         0
     ].modbus_inverter.controls
     assert controls.enabled is False
 
     await hass.services.async_call(
         NUMBER_DOMAIN,
-        SERVICE_SET_VALUE,
-        {ATTR_ENTITY_ID: POWER_LIMIT, ATTR_VALUE: 60},
+        NumberService.SET_VALUE,
+        {TargetKey.ENTITY_ID: POWER_LIMIT, NumberServiceArgument.VALUE: 60},
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -95,7 +95,7 @@ async def test_setting_a_value_re_enables_an_active_limit(
     The device picks up a new setpoint only when the mode is enabled again.
     """
     config_entry = await _setup(hass, aioclient_mock, mock_fronius_modbus)
-    coordinator = config_entry.runtime_data.modbus_settings_coordinators[0]
+    coordinator = config_entry.runtime_data.modbus.settings_coordinators[0]
     controls = coordinator.modbus_inverter.controls
     await coordinator.async_write(lambda inverter: inverter.controls, "enabled", True)
     assert controls.enabled is True
@@ -105,8 +105,8 @@ async def test_setting_a_value_re_enables_an_active_limit(
 
     await hass.services.async_call(
         NUMBER_DOMAIN,
-        SERVICE_SET_VALUE,
-        {ATTR_ENTITY_ID: POWER_LIMIT, ATTR_VALUE: 60},
+        NumberService.SET_VALUE,
+        {TargetKey.ENTITY_ID: POWER_LIMIT, NumberServiceArgument.VALUE: 60},
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -124,14 +124,17 @@ async def test_battery_setpoint_leaves_the_mode_bits_alone(
 ) -> None:
     """Test a battery setpoint doesn't activate a limit that was off."""
     config_entry = await _setup(hass, aioclient_mock, mock_fronius_modbus)
-    storage = config_entry.runtime_data.modbus_settings_coordinators[
+    storage = config_entry.runtime_data.modbus.settings_coordinators[
         0
     ].modbus_inverter.storage
 
     await hass.services.async_call(
         NUMBER_DOMAIN,
-        SERVICE_SET_VALUE,
-        {ATTR_ENTITY_ID: CHARGE_LIMIT, ATTR_VALUE: 50},
+        NumberService.SET_VALUE,
+        {
+            TargetKey.ENTITY_ID: CHARGE_LIMIT,
+            NumberServiceArgument.VALUE: 50,
+        },
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -154,14 +157,14 @@ async def test_battery_rates_are_signed(
 ) -> None:
     """Test a negative battery rate is written - it forces the other way."""
     config_entry = await _setup(hass, aioclient_mock, mock_fronius_modbus)
-    storage = config_entry.runtime_data.modbus_settings_coordinators[
+    storage = config_entry.runtime_data.modbus.settings_coordinators[
         0
     ].modbus_inverter.storage
 
     await hass.services.async_call(
         NUMBER_DOMAIN,
-        SERVICE_SET_VALUE,
-        {ATTR_ENTITY_ID: entity_id, ATTR_VALUE: -50},
+        NumberService.SET_VALUE,
+        {TargetKey.ENTITY_ID: entity_id, NumberServiceArgument.VALUE: -50},
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -172,7 +175,7 @@ async def test_battery_rates_are_signed(
 
 async def _limit_both_ways(config_entry: MockConfigEntry, charge_limit: float) -> None:
     """Enable both battery limits, the charge limit at the given rate."""
-    coordinator = config_entry.runtime_data.modbus_settings_coordinators[0]
+    coordinator = config_entry.runtime_data.modbus.settings_coordinators[0]
     for field, value in (
         ("charge_limit", charge_limit),
         ("charge_limit_enabled", True),
@@ -188,15 +191,18 @@ async def test_forcing_within_the_other_limit(
 ) -> None:
     """Test forcing up to the other active limit is written."""
     config_entry = await _setup(hass, aioclient_mock, mock_fronius_modbus)
-    storage = config_entry.runtime_data.modbus_settings_coordinators[
+    storage = config_entry.runtime_data.modbus.settings_coordinators[
         0
     ].modbus_inverter.storage
     await _limit_both_ways(config_entry, 100)
 
     await hass.services.async_call(
         NUMBER_DOMAIN,
-        SERVICE_SET_VALUE,
-        {ATTR_ENTITY_ID: DISCHARGE_LIMIT, ATTR_VALUE: -100},
+        NumberService.SET_VALUE,
+        {
+            TargetKey.ENTITY_ID: DISCHARGE_LIMIT,
+            NumberServiceArgument.VALUE: -100,
+        },
         blocking=True,
     )
 
@@ -216,7 +222,7 @@ async def test_forcing_beyond_the_other_limit_is_refused(
     discharge limit - with a bare Modbus error, so it is caught before.
     """
     config_entry = await _setup(hass, aioclient_mock, mock_fronius_modbus)
-    storage = config_entry.runtime_data.modbus_settings_coordinators[
+    storage = config_entry.runtime_data.modbus.settings_coordinators[
         0
     ].modbus_inverter.storage
     await _limit_both_ways(config_entry, charge_limit)
@@ -224,8 +230,11 @@ async def test_forcing_beyond_the_other_limit_is_refused(
     with pytest.raises(ServiceValidationError) as err:
         await hass.services.async_call(
             NUMBER_DOMAIN,
-            SERVICE_SET_VALUE,
-            {ATTR_ENTITY_ID: DISCHARGE_LIMIT, ATTR_VALUE: -100},
+            NumberService.SET_VALUE,
+            {
+                TargetKey.ENTITY_ID: DISCHARGE_LIMIT,
+                NumberServiceArgument.VALUE: -100,
+            },
             blocking=True,
         )
 
@@ -249,7 +258,10 @@ async def test_a_refused_write_raises(
     with pytest.raises(HomeAssistantError, match="Could not write"):
         await hass.services.async_call(
             NUMBER_DOMAIN,
-            SERVICE_SET_VALUE,
-            {ATTR_ENTITY_ID: CHARGE_LIMIT, ATTR_VALUE: 50},
+            NumberService.SET_VALUE,
+            {
+                TargetKey.ENTITY_ID: CHARGE_LIMIT,
+                NumberServiceArgument.VALUE: 50,
+            },
             blocking=True,
         )

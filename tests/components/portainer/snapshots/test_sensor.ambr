@@ -7,7 +7,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': None,
+    'config_subentry_id': <ConfigSubentry subentry_type='environment' title='my-environment'>,
     'device_class': None,
     'device_id': <DeviceEntry identifiers=[('portainer', 'portainer_test_entry_123_1_volume_dashy_config')]>,
     'disabled_by': None,
@@ -59,7 +59,7 @@
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': None,
+    'config_subentry_id': <ConfigSubentry subentry_type='environment' title='my-environment'>,
     'device_class': None,
     'device_id': <DeviceEntry identifiers=[('portainer', 'portainer_test_entry_123_1_volume_dashy_config')]>,
     'disabled_by': None,
@@ -107,7 +107,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0.0029296875',
+    'state': 'unknown',
   })
 # ---
 # name: test_all_entities[sensor.dashy_containers-entry]
@@ -120,7 +120,7 @@
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': None,
+    'config_subentry_id': <ConfigSubentry subentry_type='environment' title='my-environment'>,
     'device_class': None,
     'device_id': <DeviceEntry identifiers=[('portainer', 'portainer_test_entry_123_1_stack_2')]>,
     'disabled_by': None,
@@ -174,7 +174,7 @@
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': None,
+    'config_subentry_id': <ConfigSubentry subentry_type='environment' title='my-environment'>,
     'device_class': None,
     'device_id': <DeviceEntry identifiers=[('portainer', 'portainer_test_entry_123_1_dashy_dashy.1.qgza68hnz4n1qvyz3iohynx05')]>,
     'disabled_by': None,
@@ -202,7 +202,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'cpu_usage_total',
-    'unique_id': 'portainer_test_entry_123_dashy_dashy.1.qgza68hnz4n1qvyz3iohynx05_cpu_usage_total',
+    'unique_id': 'portainer_test_entry_123_1_dashy_dashy.1.qgza68hnz4n1qvyz3iohynx05_cpu_usage_total',
     'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
   })
 # ---
@@ -235,7 +235,7 @@
       ]),
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': None,
+    'config_subentry_id': <ConfigSubentry subentry_type='environment' title='my-environment'>,
     'device_class': None,
     'device_id': <DeviceEntry identifiers=[('portainer', 'portainer_test_entry_123_1_dashy_dashy.1.qgza68hnz4n1qvyz3iohynx05')]>,
     'disabled_by': None,
@@ -260,7 +260,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'container_health_state',
-    'unique_id': 'portainer_test_entry_123_dashy_dashy.1.qgza68hnz4n1qvyz3iohynx05_container_health_state',
+    'unique_id': 'portainer_test_entry_123_1_dashy_dashy.1.qgza68hnz4n1qvyz3iohynx05_container_health_state',
     'unit_of_measurement': None,
   })
 # ---
@@ -291,7 +291,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': None,
+    'config_subentry_id': <ConfigSubentry subentry_type='environment' title='my-environment'>,
     'device_class': None,
     'device_id': <DeviceEntry identifiers=[('portainer', 'portainer_test_entry_123_1_dashy_dashy.1.qgza68hnz4n1qvyz3iohynx05')]>,
     'disabled_by': None,
@@ -316,7 +316,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'image',
-    'unique_id': 'portainer_test_entry_123_dashy_dashy.1.qgza68hnz4n1qvyz3iohynx05_image',
+    'unique_id': 'portainer_test_entry_123_1_dashy_dashy.1.qgza68hnz4n1qvyz3iohynx05_image',
     'unit_of_measurement': None,
   })
 # ---
@@ -333,6 +333,56 @@
     'state': 'docker.io/lissy93/dashy:latest',
   })
 # ---
+# name: test_all_entities[sensor.dashy_dashy_1_qgza68hnz4n1qvyz3iohynx05_last_exit_code-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ConfigSubentry subentry_type='environment' title='my-environment'>,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('portainer', 'portainer_test_entry_123_1_dashy_dashy.1.qgza68hnz4n1qvyz3iohynx05')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.dashy_dashy_1_qgza68hnz4n1qvyz3iohynx05_last_exit_code',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Last exit code',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Last exit code',
+    'platform': 'portainer',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'container_exit_code',
+    'unique_id': 'portainer_test_entry_123_1_dashy_dashy.1.qgza68hnz4n1qvyz3iohynx05_container_exit_code',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.dashy_dashy_1_qgza68hnz4n1qvyz3iohynx05_last_exit_code-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'dashy_dashy.1.qgza68hnz4n1qvyz3iohynx05 Last exit code',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.dashy_dashy_1_qgza68hnz4n1qvyz3iohynx05_last_exit_code',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
 # name: test_all_entities[sensor.dashy_dashy_1_qgza68hnz4n1qvyz3iohynx05_memory_limit-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -343,7 +393,7 @@
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': None,
+    'config_subentry_id': <ConfigSubentry subentry_type='environment' title='my-environment'>,
     'device_class': None,
     'device_id': <DeviceEntry identifiers=[('portainer', 'portainer_test_entry_123_1_dashy_dashy.1.qgza68hnz4n1qvyz3iohynx05')]>,
     'disabled_by': None,
@@ -374,7 +424,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'memory_limit',
-    'unique_id': 'portainer_test_entry_123_dashy_dashy.1.qgza68hnz4n1qvyz3iohynx05_memory_limit',
+    'unique_id': 'portainer_test_entry_123_1_dashy_dashy.1.qgza68hnz4n1qvyz3iohynx05_memory_limit',
     'unit_of_measurement': <UnitOfInformation.MEGABYTES: 'MB'>,
   })
 # ---
@@ -404,7 +454,7 @@
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': None,
+    'config_subentry_id': <ConfigSubentry subentry_type='environment' title='my-environment'>,
     'device_class': None,
     'device_id': <DeviceEntry identifiers=[('portainer', 'portainer_test_entry_123_1_dashy_dashy.1.qgza68hnz4n1qvyz3iohynx05')]>,
     'disabled_by': None,
@@ -435,7 +485,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'memory_usage',
-    'unique_id': 'portainer_test_entry_123_dashy_dashy.1.qgza68hnz4n1qvyz3iohynx05_memory_usage',
+    'unique_id': 'portainer_test_entry_123_1_dashy_dashy.1.qgza68hnz4n1qvyz3iohynx05_memory_usage',
     'unit_of_measurement': <UnitOfInformation.MEGABYTES: 'MB'>,
   })
 # ---
@@ -465,7 +515,7 @@
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': None,
+    'config_subentry_id': <ConfigSubentry subentry_type='environment' title='my-environment'>,
     'device_class': None,
     'device_id': <DeviceEntry identifiers=[('portainer', 'portainer_test_entry_123_1_dashy_dashy.1.qgza68hnz4n1qvyz3iohynx05')]>,
     'disabled_by': None,
@@ -493,7 +543,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'memory_usage_percentage',
-    'unique_id': 'portainer_test_entry_123_dashy_dashy.1.qgza68hnz4n1qvyz3iohynx05_memory_usage_percentage',
+    'unique_id': 'portainer_test_entry_123_1_dashy_dashy.1.qgza68hnz4n1qvyz3iohynx05_memory_usage_percentage',
     'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
   })
 # ---
@@ -522,7 +572,7 @@
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': None,
+    'config_subentry_id': <ConfigSubentry subentry_type='environment' title='my-environment'>,
     'device_class': None,
     'device_id': <DeviceEntry identifiers=[('portainer', 'portainer_test_entry_123_1_dashy_dashy.1.qgza68hnz4n1qvyz3iohynx05')]>,
     'disabled_by': None,
@@ -547,7 +597,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'container_restart_count',
-    'unique_id': 'portainer_test_entry_123_dashy_dashy.1.qgza68hnz4n1qvyz3iohynx05_container_restart_count',
+    'unique_id': 'portainer_test_entry_123_1_dashy_dashy.1.qgza68hnz4n1qvyz3iohynx05_container_restart_count',
     'unit_of_measurement': None,
   })
 # ---
@@ -573,7 +623,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': None,
+    'config_subentry_id': <ConfigSubentry subentry_type='environment' title='my-environment'>,
     'device_class': None,
     'device_id': <DeviceEntry identifiers=[('portainer', 'portainer_test_entry_123_1_dashy_dashy.1.qgza68hnz4n1qvyz3iohynx05')]>,
     'disabled_by': None,
@@ -598,7 +648,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'container_started_at',
-    'unique_id': 'portainer_test_entry_123_dashy_dashy.1.qgza68hnz4n1qvyz3iohynx05_container_started_at',
+    'unique_id': 'portainer_test_entry_123_1_dashy_dashy.1.qgza68hnz4n1qvyz3iohynx05_container_started_at',
     'unit_of_measurement': None,
   })
 # ---
@@ -634,7 +684,7 @@
       ]),
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': None,
+    'config_subentry_id': <ConfigSubentry subentry_type='environment' title='my-environment'>,
     'device_class': None,
     'device_id': <DeviceEntry identifiers=[('portainer', 'portainer_test_entry_123_1_dashy_dashy.1.qgza68hnz4n1qvyz3iohynx05')]>,
     'disabled_by': None,
@@ -659,7 +709,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'container_state',
-    'unique_id': 'portainer_test_entry_123_dashy_dashy.1.qgza68hnz4n1qvyz3iohynx05_container_state',
+    'unique_id': 'portainer_test_entry_123_1_dashy_dashy.1.qgza68hnz4n1qvyz3iohynx05_container_state',
     'unit_of_measurement': None,
   })
 # ---
@@ -686,6 +736,57 @@
     'state': 'running',
   })
 # ---
+# name: test_all_entities[sensor.dashy_last_deployed-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ConfigSubentry subentry_type='environment' title='my-environment'>,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('portainer', 'portainer_test_entry_123_1_stack_2')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.dashy_last_deployed',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Last deployed',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_icon': None,
+    'original_name': 'Last deployed',
+    'platform': 'portainer',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'stack_last_deployed',
+    'unique_id': 'portainer_test_entry_123_2_stack_last_deployed',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.dashy_last_deployed-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'timestamp',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'dashy Last deployed',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.dashy_last_deployed',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2025-02-16T12:46:40+00:00',
+  })
+# ---
 # name: test_all_entities[sensor.dashy_type-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -700,7 +801,7 @@
       ]),
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': None,
+    'config_subentry_id': <ConfigSubentry subentry_type='environment' title='my-environment'>,
     'device_class': None,
     'device_id': <DeviceEntry identifiers=[('portainer', 'portainer_test_entry_123_1_stack_2')]>,
     'disabled_by': None,
@@ -756,7 +857,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': None,
+    'config_subentry_id': <ConfigSubentry subentry_type='environment' title='my-environment'>,
     'device_class': None,
     'device_id': <DeviceEntry identifiers=[('portainer', 'portainer_test_entry_123_1_volume_db_data')]>,
     'disabled_by': None,
@@ -808,7 +909,7 @@
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': None,
+    'config_subentry_id': <ConfigSubentry subentry_type='environment' title='my-environment'>,
     'device_class': None,
     'device_id': <DeviceEntry identifiers=[('portainer', 'portainer_test_entry_123_1_volume_db_data')]>,
     'disabled_by': None,
@@ -869,7 +970,7 @@
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': None,
+    'config_subentry_id': <ConfigSubentry subentry_type='environment' title='my-environment'>,
     'device_class': None,
     'device_id': <DeviceEntry identifiers=[('portainer', 'portainer_test_entry_123_1_focused_einstein')]>,
     'disabled_by': None,
@@ -897,7 +998,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'cpu_usage_total',
-    'unique_id': 'portainer_test_entry_123_focused_einstein_cpu_usage_total',
+    'unique_id': 'portainer_test_entry_123_1_focused_einstein_cpu_usage_total',
     'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
   })
 # ---
@@ -930,7 +1031,7 @@
       ]),
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': None,
+    'config_subentry_id': <ConfigSubentry subentry_type='environment' title='my-environment'>,
     'device_class': None,
     'device_id': <DeviceEntry identifiers=[('portainer', 'portainer_test_entry_123_1_focused_einstein')]>,
     'disabled_by': None,
@@ -955,7 +1056,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'container_health_state',
-    'unique_id': 'portainer_test_entry_123_focused_einstein_container_health_state',
+    'unique_id': 'portainer_test_entry_123_1_focused_einstein_container_health_state',
     'unit_of_measurement': None,
   })
 # ---
@@ -986,7 +1087,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': None,
+    'config_subentry_id': <ConfigSubentry subentry_type='environment' title='my-environment'>,
     'device_class': None,
     'device_id': <DeviceEntry identifiers=[('portainer', 'portainer_test_entry_123_1_focused_einstein')]>,
     'disabled_by': None,
@@ -1011,7 +1112,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'image',
-    'unique_id': 'portainer_test_entry_123_focused_einstein_image',
+    'unique_id': 'portainer_test_entry_123_1_focused_einstein_image',
     'unit_of_measurement': None,
   })
 # ---
@@ -1028,6 +1129,56 @@
     'state': 'docker.io/library/redis:7',
   })
 # ---
+# name: test_all_entities[sensor.focused_einstein_last_exit_code-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ConfigSubentry subentry_type='environment' title='my-environment'>,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('portainer', 'portainer_test_entry_123_1_focused_einstein')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.focused_einstein_last_exit_code',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Last exit code',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Last exit code',
+    'platform': 'portainer',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'container_exit_code',
+    'unique_id': 'portainer_test_entry_123_1_focused_einstein_container_exit_code',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.focused_einstein_last_exit_code-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'focused_einstein Last exit code',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.focused_einstein_last_exit_code',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
 # name: test_all_entities[sensor.focused_einstein_memory_limit-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -1038,7 +1189,7 @@
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': None,
+    'config_subentry_id': <ConfigSubentry subentry_type='environment' title='my-environment'>,
     'device_class': None,
     'device_id': <DeviceEntry identifiers=[('portainer', 'portainer_test_entry_123_1_focused_einstein')]>,
     'disabled_by': None,
@@ -1069,7 +1220,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'memory_limit',
-    'unique_id': 'portainer_test_entry_123_focused_einstein_memory_limit',
+    'unique_id': 'portainer_test_entry_123_1_focused_einstein_memory_limit',
     'unit_of_measurement': <UnitOfInformation.MEGABYTES: 'MB'>,
   })
 # ---
@@ -1099,7 +1250,7 @@
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': None,
+    'config_subentry_id': <ConfigSubentry subentry_type='environment' title='my-environment'>,
     'device_class': None,
     'device_id': <DeviceEntry identifiers=[('portainer', 'portainer_test_entry_123_1_focused_einstein')]>,
     'disabled_by': None,
@@ -1130,7 +1281,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'memory_usage',
-    'unique_id': 'portainer_test_entry_123_focused_einstein_memory_usage',
+    'unique_id': 'portainer_test_entry_123_1_focused_einstein_memory_usage',
     'unit_of_measurement': <UnitOfInformation.MEGABYTES: 'MB'>,
   })
 # ---
@@ -1160,7 +1311,7 @@
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': None,
+    'config_subentry_id': <ConfigSubentry subentry_type='environment' title='my-environment'>,
     'device_class': None,
     'device_id': <DeviceEntry identifiers=[('portainer', 'portainer_test_entry_123_1_focused_einstein')]>,
     'disabled_by': None,
@@ -1188,7 +1339,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'memory_usage_percentage',
-    'unique_id': 'portainer_test_entry_123_focused_einstein_memory_usage_percentage',
+    'unique_id': 'portainer_test_entry_123_1_focused_einstein_memory_usage_percentage',
     'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
   })
 # ---
@@ -1217,7 +1368,7 @@
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': None,
+    'config_subentry_id': <ConfigSubentry subentry_type='environment' title='my-environment'>,
     'device_class': None,
     'device_id': <DeviceEntry identifiers=[('portainer', 'portainer_test_entry_123_1_focused_einstein')]>,
     'disabled_by': None,
@@ -1242,7 +1393,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'container_restart_count',
-    'unique_id': 'portainer_test_entry_123_focused_einstein_container_restart_count',
+    'unique_id': 'portainer_test_entry_123_1_focused_einstein_container_restart_count',
     'unit_of_measurement': None,
   })
 # ---
@@ -1268,7 +1419,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': None,
+    'config_subentry_id': <ConfigSubentry subentry_type='environment' title='my-environment'>,
     'device_class': None,
     'device_id': <DeviceEntry identifiers=[('portainer', 'portainer_test_entry_123_1_focused_einstein')]>,
     'disabled_by': None,
@@ -1293,7 +1444,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'container_started_at',
-    'unique_id': 'portainer_test_entry_123_focused_einstein_container_started_at',
+    'unique_id': 'portainer_test_entry_123_1_focused_einstein_container_started_at',
     'unit_of_measurement': None,
   })
 # ---
@@ -1329,7 +1480,7 @@
       ]),
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': None,
+    'config_subentry_id': <ConfigSubentry subentry_type='environment' title='my-environment'>,
     'device_class': None,
     'device_id': <DeviceEntry identifiers=[('portainer', 'portainer_test_entry_123_1_focused_einstein')]>,
     'disabled_by': None,
@@ -1354,7 +1505,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'container_state',
-    'unique_id': 'portainer_test_entry_123_focused_einstein_container_state',
+    'unique_id': 'portainer_test_entry_123_1_focused_einstein_container_state',
     'unit_of_measurement': None,
   })
 # ---
@@ -1391,7 +1542,7 @@
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': None,
+    'config_subentry_id': <ConfigSubentry subentry_type='environment' title='my-environment'>,
     'device_class': None,
     'device_id': <DeviceEntry identifiers=[('portainer', 'portainer_test_entry_123_1_funny_chatelet')]>,
     'disabled_by': None,
@@ -1419,7 +1570,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'cpu_usage_total',
-    'unique_id': 'portainer_test_entry_123_funny_chatelet_cpu_usage_total',
+    'unique_id': 'portainer_test_entry_123_1_funny_chatelet_cpu_usage_total',
     'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
   })
 # ---
@@ -1452,7 +1603,7 @@
       ]),
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': None,
+    'config_subentry_id': <ConfigSubentry subentry_type='environment' title='my-environment'>,
     'device_class': None,
     'device_id': <DeviceEntry identifiers=[('portainer', 'portainer_test_entry_123_1_funny_chatelet')]>,
     'disabled_by': None,
@@ -1477,7 +1628,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'container_health_state',
-    'unique_id': 'portainer_test_entry_123_funny_chatelet_container_health_state',
+    'unique_id': 'portainer_test_entry_123_1_funny_chatelet_container_health_state',
     'unit_of_measurement': None,
   })
 # ---
@@ -1508,7 +1659,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': None,
+    'config_subentry_id': <ConfigSubentry subentry_type='environment' title='my-environment'>,
     'device_class': None,
     'device_id': <DeviceEntry identifiers=[('portainer', 'portainer_test_entry_123_1_funny_chatelet')]>,
     'disabled_by': None,
@@ -1533,7 +1684,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'image',
-    'unique_id': 'portainer_test_entry_123_funny_chatelet_image',
+    'unique_id': 'portainer_test_entry_123_1_funny_chatelet_image',
     'unit_of_measurement': None,
   })
 # ---
@@ -1550,6 +1701,56 @@
     'state': 'docker.io/library/ubuntu:latest',
   })
 # ---
+# name: test_all_entities[sensor.funny_chatelet_last_exit_code-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ConfigSubentry subentry_type='environment' title='my-environment'>,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('portainer', 'portainer_test_entry_123_1_funny_chatelet')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.funny_chatelet_last_exit_code',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Last exit code',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Last exit code',
+    'platform': 'portainer',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'container_exit_code',
+    'unique_id': 'portainer_test_entry_123_1_funny_chatelet_container_exit_code',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.funny_chatelet_last_exit_code-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'funny_chatelet Last exit code',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.funny_chatelet_last_exit_code',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
 # name: test_all_entities[sensor.funny_chatelet_memory_limit-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -1560,7 +1761,7 @@
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': None,
+    'config_subentry_id': <ConfigSubentry subentry_type='environment' title='my-environment'>,
     'device_class': None,
     'device_id': <DeviceEntry identifiers=[('portainer', 'portainer_test_entry_123_1_funny_chatelet')]>,
     'disabled_by': None,
@@ -1591,7 +1792,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'memory_limit',
-    'unique_id': 'portainer_test_entry_123_funny_chatelet_memory_limit',
+    'unique_id': 'portainer_test_entry_123_1_funny_chatelet_memory_limit',
     'unit_of_measurement': <UnitOfInformation.MEGABYTES: 'MB'>,
   })
 # ---
@@ -1621,7 +1822,7 @@
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': None,
+    'config_subentry_id': <ConfigSubentry subentry_type='environment' title='my-environment'>,
     'device_class': None,
     'device_id': <DeviceEntry identifiers=[('portainer', 'portainer_test_entry_123_1_funny_chatelet')]>,
     'disabled_by': None,
@@ -1652,7 +1853,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'memory_usage',
-    'unique_id': 'portainer_test_entry_123_funny_chatelet_memory_usage',
+    'unique_id': 'portainer_test_entry_123_1_funny_chatelet_memory_usage',
     'unit_of_measurement': <UnitOfInformation.MEGABYTES: 'MB'>,
   })
 # ---
@@ -1682,7 +1883,7 @@
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': None,
+    'config_subentry_id': <ConfigSubentry subentry_type='environment' title='my-environment'>,
     'device_class': None,
     'device_id': <DeviceEntry identifiers=[('portainer', 'portainer_test_entry_123_1_funny_chatelet')]>,
     'disabled_by': None,
@@ -1710,7 +1911,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'memory_usage_percentage',
-    'unique_id': 'portainer_test_entry_123_funny_chatelet_memory_usage_percentage',
+    'unique_id': 'portainer_test_entry_123_1_funny_chatelet_memory_usage_percentage',
     'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
   })
 # ---
@@ -1739,7 +1940,7 @@
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': None,
+    'config_subentry_id': <ConfigSubentry subentry_type='environment' title='my-environment'>,
     'device_class': None,
     'device_id': <DeviceEntry identifiers=[('portainer', 'portainer_test_entry_123_1_funny_chatelet')]>,
     'disabled_by': None,
@@ -1764,7 +1965,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'container_restart_count',
-    'unique_id': 'portainer_test_entry_123_funny_chatelet_container_restart_count',
+    'unique_id': 'portainer_test_entry_123_1_funny_chatelet_container_restart_count',
     'unit_of_measurement': None,
   })
 # ---
@@ -1790,7 +1991,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': None,
+    'config_subentry_id': <ConfigSubentry subentry_type='environment' title='my-environment'>,
     'device_class': None,
     'device_id': <DeviceEntry identifiers=[('portainer', 'portainer_test_entry_123_1_funny_chatelet')]>,
     'disabled_by': None,
@@ -1815,7 +2016,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'container_started_at',
-    'unique_id': 'portainer_test_entry_123_funny_chatelet_container_started_at',
+    'unique_id': 'portainer_test_entry_123_1_funny_chatelet_container_started_at',
     'unit_of_measurement': None,
   })
 # ---
@@ -1851,7 +2052,7 @@
       ]),
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': None,
+    'config_subentry_id': <ConfigSubentry subentry_type='environment' title='my-environment'>,
     'device_class': None,
     'device_id': <DeviceEntry identifiers=[('portainer', 'portainer_test_entry_123_1_funny_chatelet')]>,
     'disabled_by': None,
@@ -1876,7 +2077,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'container_state',
-    'unique_id': 'portainer_test_entry_123_funny_chatelet_container_state',
+    'unique_id': 'portainer_test_entry_123_1_funny_chatelet_container_state',
     'unit_of_measurement': None,
   })
 # ---
@@ -1911,7 +2112,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': None,
+    'config_subentry_id': <ConfigSubentry subentry_type='environment' title='my-environment'>,
     'device_class': None,
     'device_id': <DeviceEntry identifiers=[('portainer', 'portainer_test_entry_123_1')]>,
     'disabled_by': None,
@@ -1961,7 +2162,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': None,
+    'config_subentry_id': <ConfigSubentry subentry_type='environment' title='my-environment'>,
     'device_class': None,
     'device_id': <DeviceEntry identifiers=[('portainer', 'portainer_test_entry_123_1')]>,
     'disabled_by': None,
@@ -2013,7 +2214,7 @@
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': None,
+    'config_subentry_id': <ConfigSubentry subentry_type='environment' title='my-environment'>,
     'device_class': None,
     'device_id': <DeviceEntry identifiers=[('portainer', 'portainer_test_entry_123_1')]>,
     'disabled_by': None,
@@ -2066,7 +2267,7 @@
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': None,
+    'config_subentry_id': <ConfigSubentry subentry_type='environment' title='my-environment'>,
     'device_class': None,
     'device_id': <DeviceEntry identifiers=[('portainer', 'portainer_test_entry_123_1')]>,
     'disabled_by': None,
@@ -2127,7 +2328,7 @@
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': None,
+    'config_subentry_id': <ConfigSubentry subentry_type='environment' title='my-environment'>,
     'device_class': None,
     'device_id': <DeviceEntry identifiers=[('portainer', 'portainer_test_entry_123_1')]>,
     'disabled_by': None,
@@ -2188,7 +2389,7 @@
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': None,
+    'config_subentry_id': <ConfigSubentry subentry_type='environment' title='my-environment'>,
     'device_class': None,
     'device_id': <DeviceEntry identifiers=[('portainer', 'portainer_test_entry_123_1')]>,
     'disabled_by': None,
@@ -2241,7 +2442,7 @@
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': None,
+    'config_subentry_id': <ConfigSubentry subentry_type='environment' title='my-environment'>,
     'device_class': None,
     'device_id': <DeviceEntry identifiers=[('portainer', 'portainer_test_entry_123_1')]>,
     'disabled_by': None,
@@ -2294,7 +2495,7 @@
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': None,
+    'config_subentry_id': <ConfigSubentry subentry_type='environment' title='my-environment'>,
     'device_class': None,
     'device_id': <DeviceEntry identifiers=[('portainer', 'portainer_test_entry_123_1')]>,
     'disabled_by': None,
@@ -2345,7 +2546,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': None,
+    'config_subentry_id': <ConfigSubentry subentry_type='environment' title='my-environment'>,
     'device_class': None,
     'device_id': <DeviceEntry identifiers=[('portainer', 'portainer_test_entry_123_1')]>,
     'disabled_by': None,
@@ -2397,7 +2598,7 @@
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': None,
+    'config_subentry_id': <ConfigSubentry subentry_type='environment' title='my-environment'>,
     'device_class': None,
     'device_id': <DeviceEntry identifiers=[('portainer', 'portainer_test_entry_123_1')]>,
     'disabled_by': None,
@@ -2450,7 +2651,7 @@
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': None,
+    'config_subentry_id': <ConfigSubentry subentry_type='environment' title='my-environment'>,
     'device_class': None,
     'device_id': <DeviceEntry identifiers=[('portainer', 'portainer_test_entry_123_1')]>,
     'disabled_by': None,
@@ -2511,7 +2712,7 @@
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': None,
+    'config_subentry_id': <ConfigSubentry subentry_type='environment' title='my-environment'>,
     'device_class': None,
     'device_id': <DeviceEntry identifiers=[('portainer', 'portainer_test_entry_123_1')]>,
     'disabled_by': None,
@@ -2570,7 +2771,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': None,
+    'config_subentry_id': <ConfigSubentry subentry_type='environment' title='my-environment'>,
     'device_class': None,
     'device_id': <DeviceEntry identifiers=[('portainer', 'portainer_test_entry_123_1')]>,
     'disabled_by': None,
@@ -2620,7 +2821,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': None,
+    'config_subentry_id': <ConfigSubentry subentry_type='environment' title='my-environment'>,
     'device_class': None,
     'device_id': <DeviceEntry identifiers=[('portainer', 'portainer_test_entry_123_1')]>,
     'disabled_by': None,
@@ -2670,7 +2871,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': None,
+    'config_subentry_id': <ConfigSubentry subentry_type='environment' title='my-environment'>,
     'device_class': None,
     'device_id': <DeviceEntry identifiers=[('portainer', 'portainer_test_entry_123_1')]>,
     'disabled_by': None,
@@ -2722,7 +2923,7 @@
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': None,
+    'config_subentry_id': <ConfigSubentry subentry_type='environment' title='my-environment'>,
     'device_class': None,
     'device_id': <DeviceEntry identifiers=[('portainer', 'portainer_test_entry_123_1')]>,
     'disabled_by': None,
@@ -2775,7 +2976,7 @@
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': None,
+    'config_subentry_id': <ConfigSubentry subentry_type='environment' title='my-environment'>,
     'device_class': None,
     'device_id': <DeviceEntry identifiers=[('portainer', 'portainer_test_entry_123_1')]>,
     'disabled_by': None,
@@ -2836,7 +3037,7 @@
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': None,
+    'config_subentry_id': <ConfigSubentry subentry_type='environment' title='my-environment'>,
     'device_class': None,
     'device_id': <DeviceEntry identifiers=[('portainer', 'portainer_test_entry_123_1')]>,
     'disabled_by': None,
@@ -2895,7 +3096,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': None,
+    'config_subentry_id': <ConfigSubentry subentry_type='environment' title='my-environment'>,
     'device_class': None,
     'device_id': <DeviceEntry identifiers=[('portainer', 'portainer_test_entry_123_1_volume_myvolume')]>,
     'disabled_by': None,
@@ -2947,7 +3148,7 @@
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': None,
+    'config_subentry_id': <ConfigSubentry subentry_type='environment' title='my-environment'>,
     'device_class': None,
     'device_id': <DeviceEntry identifiers=[('portainer', 'portainer_test_entry_123_1_volume_myvolume')]>,
     'disabled_by': None,
@@ -3008,7 +3209,7 @@
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': None,
+    'config_subentry_id': <ConfigSubentry subentry_type='environment' title='my-environment'>,
     'device_class': None,
     'device_id': <DeviceEntry identifiers=[('portainer', 'portainer_test_entry_123_1_practical_morse')]>,
     'disabled_by': None,
@@ -3036,7 +3237,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'cpu_usage_total',
-    'unique_id': 'portainer_test_entry_123_practical_morse_cpu_usage_total',
+    'unique_id': 'portainer_test_entry_123_1_practical_morse_cpu_usage_total',
     'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
   })
 # ---
@@ -3069,7 +3270,7 @@
       ]),
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': None,
+    'config_subentry_id': <ConfigSubentry subentry_type='environment' title='my-environment'>,
     'device_class': None,
     'device_id': <DeviceEntry identifiers=[('portainer', 'portainer_test_entry_123_1_practical_morse')]>,
     'disabled_by': None,
@@ -3094,7 +3295,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'container_health_state',
-    'unique_id': 'portainer_test_entry_123_practical_morse_container_health_state',
+    'unique_id': 'portainer_test_entry_123_1_practical_morse_container_health_state',
     'unit_of_measurement': None,
   })
 # ---
@@ -3125,7 +3326,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': None,
+    'config_subentry_id': <ConfigSubentry subentry_type='environment' title='my-environment'>,
     'device_class': None,
     'device_id': <DeviceEntry identifiers=[('portainer', 'portainer_test_entry_123_1_practical_morse')]>,
     'disabled_by': None,
@@ -3150,7 +3351,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'image',
-    'unique_id': 'portainer_test_entry_123_practical_morse_image',
+    'unique_id': 'portainer_test_entry_123_1_practical_morse_image',
     'unit_of_measurement': None,
   })
 # ---
@@ -3167,6 +3368,56 @@
     'state': 'docker.io/library/python:3.13-slim',
   })
 # ---
+# name: test_all_entities[sensor.practical_morse_last_exit_code-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ConfigSubentry subentry_type='environment' title='my-environment'>,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('portainer', 'portainer_test_entry_123_1_practical_morse')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.practical_morse_last_exit_code',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Last exit code',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Last exit code',
+    'platform': 'portainer',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'container_exit_code',
+    'unique_id': 'portainer_test_entry_123_1_practical_morse_container_exit_code',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.practical_morse_last_exit_code-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'practical_morse Last exit code',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.practical_morse_last_exit_code',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
 # name: test_all_entities[sensor.practical_morse_memory_limit-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -3177,7 +3428,7 @@
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': None,
+    'config_subentry_id': <ConfigSubentry subentry_type='environment' title='my-environment'>,
     'device_class': None,
     'device_id': <DeviceEntry identifiers=[('portainer', 'portainer_test_entry_123_1_practical_morse')]>,
     'disabled_by': None,
@@ -3208,7 +3459,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'memory_limit',
-    'unique_id': 'portainer_test_entry_123_practical_morse_memory_limit',
+    'unique_id': 'portainer_test_entry_123_1_practical_morse_memory_limit',
     'unit_of_measurement': <UnitOfInformation.MEGABYTES: 'MB'>,
   })
 # ---
@@ -3238,7 +3489,7 @@
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': None,
+    'config_subentry_id': <ConfigSubentry subentry_type='environment' title='my-environment'>,
     'device_class': None,
     'device_id': <DeviceEntry identifiers=[('portainer', 'portainer_test_entry_123_1_practical_morse')]>,
     'disabled_by': None,
@@ -3269,7 +3520,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'memory_usage',
-    'unique_id': 'portainer_test_entry_123_practical_morse_memory_usage',
+    'unique_id': 'portainer_test_entry_123_1_practical_morse_memory_usage',
     'unit_of_measurement': <UnitOfInformation.MEGABYTES: 'MB'>,
   })
 # ---
@@ -3299,7 +3550,7 @@
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': None,
+    'config_subentry_id': <ConfigSubentry subentry_type='environment' title='my-environment'>,
     'device_class': None,
     'device_id': <DeviceEntry identifiers=[('portainer', 'portainer_test_entry_123_1_practical_morse')]>,
     'disabled_by': None,
@@ -3327,7 +3578,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'memory_usage_percentage',
-    'unique_id': 'portainer_test_entry_123_practical_morse_memory_usage_percentage',
+    'unique_id': 'portainer_test_entry_123_1_practical_morse_memory_usage_percentage',
     'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
   })
 # ---
@@ -3356,7 +3607,7 @@
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': None,
+    'config_subentry_id': <ConfigSubentry subentry_type='environment' title='my-environment'>,
     'device_class': None,
     'device_id': <DeviceEntry identifiers=[('portainer', 'portainer_test_entry_123_1_practical_morse')]>,
     'disabled_by': None,
@@ -3381,7 +3632,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'container_restart_count',
-    'unique_id': 'portainer_test_entry_123_practical_morse_container_restart_count',
+    'unique_id': 'portainer_test_entry_123_1_practical_morse_container_restart_count',
     'unit_of_measurement': None,
   })
 # ---
@@ -3407,7 +3658,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': None,
+    'config_subentry_id': <ConfigSubentry subentry_type='environment' title='my-environment'>,
     'device_class': None,
     'device_id': <DeviceEntry identifiers=[('portainer', 'portainer_test_entry_123_1_practical_morse')]>,
     'disabled_by': None,
@@ -3432,7 +3683,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'container_started_at',
-    'unique_id': 'portainer_test_entry_123_practical_morse_container_started_at',
+    'unique_id': 'portainer_test_entry_123_1_practical_morse_container_started_at',
     'unit_of_measurement': None,
   })
 # ---
@@ -3468,7 +3719,7 @@
       ]),
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': None,
+    'config_subentry_id': <ConfigSubentry subentry_type='environment' title='my-environment'>,
     'device_class': None,
     'device_id': <DeviceEntry identifiers=[('portainer', 'portainer_test_entry_123_1_practical_morse')]>,
     'disabled_by': None,
@@ -3493,7 +3744,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'container_state',
-    'unique_id': 'portainer_test_entry_123_practical_morse_container_state',
+    'unique_id': 'portainer_test_entry_123_1_practical_morse_container_state',
     'unit_of_measurement': None,
   })
 # ---
@@ -3530,7 +3781,7 @@
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': None,
+    'config_subentry_id': <ConfigSubentry subentry_type='environment' title='my-environment'>,
     'device_class': None,
     'device_id': <DeviceEntry identifiers=[('portainer', 'portainer_test_entry_123_1_serene_banach')]>,
     'disabled_by': None,
@@ -3558,7 +3809,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'cpu_usage_total',
-    'unique_id': 'portainer_test_entry_123_serene_banach_cpu_usage_total',
+    'unique_id': 'portainer_test_entry_123_1_serene_banach_cpu_usage_total',
     'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
   })
 # ---
@@ -3591,7 +3842,7 @@
       ]),
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': None,
+    'config_subentry_id': <ConfigSubentry subentry_type='environment' title='my-environment'>,
     'device_class': None,
     'device_id': <DeviceEntry identifiers=[('portainer', 'portainer_test_entry_123_1_serene_banach')]>,
     'disabled_by': None,
@@ -3616,7 +3867,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'container_health_state',
-    'unique_id': 'portainer_test_entry_123_serene_banach_container_health_state',
+    'unique_id': 'portainer_test_entry_123_1_serene_banach_container_health_state',
     'unit_of_measurement': None,
   })
 # ---
@@ -3647,7 +3898,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': None,
+    'config_subentry_id': <ConfigSubentry subentry_type='environment' title='my-environment'>,
     'device_class': None,
     'device_id': <DeviceEntry identifiers=[('portainer', 'portainer_test_entry_123_1_serene_banach')]>,
     'disabled_by': None,
@@ -3672,7 +3923,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'image',
-    'unique_id': 'portainer_test_entry_123_serene_banach_image',
+    'unique_id': 'portainer_test_entry_123_1_serene_banach_image',
     'unit_of_measurement': None,
   })
 # ---
@@ -3697,7 +3948,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': None,
+    'config_subentry_id': <ConfigSubentry subentry_type='environment' title='my-environment'>,
     'device_class': None,
     'device_id': <DeviceEntry identifiers=[('portainer', 'portainer_test_entry_123_1_serene_banach')]>,
     'disabled_by': None,
@@ -3722,7 +3973,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'image_created',
-    'unique_id': 'portainer_test_entry_123_serene_banach_image_created',
+    'unique_id': 'portainer_test_entry_123_1_serene_banach_image_created',
     'unit_of_measurement': None,
   })
 # ---
@@ -3748,7 +3999,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': None,
+    'config_subentry_id': <ConfigSubentry subentry_type='environment' title='my-environment'>,
     'device_class': None,
     'device_id': <DeviceEntry identifiers=[('portainer', 'portainer_test_entry_123_1_serene_banach')]>,
     'disabled_by': None,
@@ -3773,7 +4024,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'image_version',
-    'unique_id': 'portainer_test_entry_123_serene_banach_image_version',
+    'unique_id': 'portainer_test_entry_123_1_serene_banach_image_version',
     'unit_of_measurement': None,
   })
 # ---
@@ -3790,6 +4041,56 @@
     'state': '1.29.3',
   })
 # ---
+# name: test_all_entities[sensor.serene_banach_last_exit_code-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ConfigSubentry subentry_type='environment' title='my-environment'>,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('portainer', 'portainer_test_entry_123_1_serene_banach')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.serene_banach_last_exit_code',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Last exit code',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Last exit code',
+    'platform': 'portainer',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'container_exit_code',
+    'unique_id': 'portainer_test_entry_123_1_serene_banach_container_exit_code',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.serene_banach_last_exit_code-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'serene_banach Last exit code',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.serene_banach_last_exit_code',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
 # name: test_all_entities[sensor.serene_banach_memory_limit-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -3800,7 +4101,7 @@
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': None,
+    'config_subentry_id': <ConfigSubentry subentry_type='environment' title='my-environment'>,
     'device_class': None,
     'device_id': <DeviceEntry identifiers=[('portainer', 'portainer_test_entry_123_1_serene_banach')]>,
     'disabled_by': None,
@@ -3831,7 +4132,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'memory_limit',
-    'unique_id': 'portainer_test_entry_123_serene_banach_memory_limit',
+    'unique_id': 'portainer_test_entry_123_1_serene_banach_memory_limit',
     'unit_of_measurement': <UnitOfInformation.MEGABYTES: 'MB'>,
   })
 # ---
@@ -3861,7 +4162,7 @@
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': None,
+    'config_subentry_id': <ConfigSubentry subentry_type='environment' title='my-environment'>,
     'device_class': None,
     'device_id': <DeviceEntry identifiers=[('portainer', 'portainer_test_entry_123_1_serene_banach')]>,
     'disabled_by': None,
@@ -3892,7 +4193,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'memory_usage',
-    'unique_id': 'portainer_test_entry_123_serene_banach_memory_usage',
+    'unique_id': 'portainer_test_entry_123_1_serene_banach_memory_usage',
     'unit_of_measurement': <UnitOfInformation.MEGABYTES: 'MB'>,
   })
 # ---
@@ -3922,7 +4223,7 @@
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': None,
+    'config_subentry_id': <ConfigSubentry subentry_type='environment' title='my-environment'>,
     'device_class': None,
     'device_id': <DeviceEntry identifiers=[('portainer', 'portainer_test_entry_123_1_serene_banach')]>,
     'disabled_by': None,
@@ -3950,7 +4251,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'memory_usage_percentage',
-    'unique_id': 'portainer_test_entry_123_serene_banach_memory_usage_percentage',
+    'unique_id': 'portainer_test_entry_123_1_serene_banach_memory_usage_percentage',
     'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
   })
 # ---
@@ -3979,7 +4280,7 @@
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': None,
+    'config_subentry_id': <ConfigSubentry subentry_type='environment' title='my-environment'>,
     'device_class': None,
     'device_id': <DeviceEntry identifiers=[('portainer', 'portainer_test_entry_123_1_serene_banach')]>,
     'disabled_by': None,
@@ -4004,7 +4305,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'container_restart_count',
-    'unique_id': 'portainer_test_entry_123_serene_banach_container_restart_count',
+    'unique_id': 'portainer_test_entry_123_1_serene_banach_container_restart_count',
     'unit_of_measurement': None,
   })
 # ---
@@ -4030,7 +4331,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': None,
+    'config_subentry_id': <ConfigSubentry subentry_type='environment' title='my-environment'>,
     'device_class': None,
     'device_id': <DeviceEntry identifiers=[('portainer', 'portainer_test_entry_123_1_serene_banach')]>,
     'disabled_by': None,
@@ -4055,7 +4356,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'container_started_at',
-    'unique_id': 'portainer_test_entry_123_serene_banach_container_started_at',
+    'unique_id': 'portainer_test_entry_123_1_serene_banach_container_started_at',
     'unit_of_measurement': None,
   })
 # ---
@@ -4091,7 +4392,7 @@
       ]),
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': None,
+    'config_subentry_id': <ConfigSubentry subentry_type='environment' title='my-environment'>,
     'device_class': None,
     'device_id': <DeviceEntry identifiers=[('portainer', 'portainer_test_entry_123_1_serene_banach')]>,
     'disabled_by': None,
@@ -4116,7 +4417,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'container_state',
-    'unique_id': 'portainer_test_entry_123_serene_banach_container_state',
+    'unique_id': 'portainer_test_entry_123_1_serene_banach_container_state',
     'unit_of_measurement': None,
   })
 # ---
@@ -4153,7 +4454,7 @@
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': None,
+    'config_subentry_id': <ConfigSubentry subentry_type='environment' title='my-environment'>,
     'device_class': None,
     'device_id': <DeviceEntry identifiers=[('portainer', 'portainer_test_entry_123_1_stoic_turing')]>,
     'disabled_by': None,
@@ -4181,7 +4482,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'cpu_usage_total',
-    'unique_id': 'portainer_test_entry_123_stoic_turing_cpu_usage_total',
+    'unique_id': 'portainer_test_entry_123_1_stoic_turing_cpu_usage_total',
     'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
   })
 # ---
@@ -4214,7 +4515,7 @@
       ]),
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': None,
+    'config_subentry_id': <ConfigSubentry subentry_type='environment' title='my-environment'>,
     'device_class': None,
     'device_id': <DeviceEntry identifiers=[('portainer', 'portainer_test_entry_123_1_stoic_turing')]>,
     'disabled_by': None,
@@ -4239,7 +4540,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'container_health_state',
-    'unique_id': 'portainer_test_entry_123_stoic_turing_container_health_state',
+    'unique_id': 'portainer_test_entry_123_1_stoic_turing_container_health_state',
     'unit_of_measurement': None,
   })
 # ---
@@ -4270,7 +4571,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': None,
+    'config_subentry_id': <ConfigSubentry subentry_type='environment' title='my-environment'>,
     'device_class': None,
     'device_id': <DeviceEntry identifiers=[('portainer', 'portainer_test_entry_123_1_stoic_turing')]>,
     'disabled_by': None,
@@ -4295,7 +4596,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'image',
-    'unique_id': 'portainer_test_entry_123_stoic_turing_image',
+    'unique_id': 'portainer_test_entry_123_1_stoic_turing_image',
     'unit_of_measurement': None,
   })
 # ---
@@ -4320,7 +4621,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': None,
+    'config_subentry_id': <ConfigSubentry subentry_type='environment' title='my-environment'>,
     'device_class': None,
     'device_id': <DeviceEntry identifiers=[('portainer', 'portainer_test_entry_123_1_stoic_turing')]>,
     'disabled_by': None,
@@ -4345,7 +4646,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'image_created',
-    'unique_id': 'portainer_test_entry_123_stoic_turing_image_created',
+    'unique_id': 'portainer_test_entry_123_1_stoic_turing_image_created',
     'unit_of_measurement': None,
   })
 # ---
@@ -4371,7 +4672,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': None,
+    'config_subentry_id': <ConfigSubentry subentry_type='environment' title='my-environment'>,
     'device_class': None,
     'device_id': <DeviceEntry identifiers=[('portainer', 'portainer_test_entry_123_1_stoic_turing')]>,
     'disabled_by': None,
@@ -4396,7 +4697,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'image_version',
-    'unique_id': 'portainer_test_entry_123_stoic_turing_image_version',
+    'unique_id': 'portainer_test_entry_123_1_stoic_turing_image_version',
     'unit_of_measurement': None,
   })
 # ---
@@ -4413,6 +4714,56 @@
     'state': '15.14',
   })
 # ---
+# name: test_all_entities[sensor.stoic_turing_last_exit_code-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ConfigSubentry subentry_type='environment' title='my-environment'>,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('portainer', 'portainer_test_entry_123_1_stoic_turing')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.stoic_turing_last_exit_code',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Last exit code',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Last exit code',
+    'platform': 'portainer',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'container_exit_code',
+    'unique_id': 'portainer_test_entry_123_1_stoic_turing_container_exit_code',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.stoic_turing_last_exit_code-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'stoic_turing Last exit code',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.stoic_turing_last_exit_code',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '137',
+  })
+# ---
 # name: test_all_entities[sensor.stoic_turing_memory_limit-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -4423,7 +4774,7 @@
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': None,
+    'config_subentry_id': <ConfigSubentry subentry_type='environment' title='my-environment'>,
     'device_class': None,
     'device_id': <DeviceEntry identifiers=[('portainer', 'portainer_test_entry_123_1_stoic_turing')]>,
     'disabled_by': None,
@@ -4454,7 +4805,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'memory_limit',
-    'unique_id': 'portainer_test_entry_123_stoic_turing_memory_limit',
+    'unique_id': 'portainer_test_entry_123_1_stoic_turing_memory_limit',
     'unit_of_measurement': <UnitOfInformation.MEGABYTES: 'MB'>,
   })
 # ---
@@ -4484,7 +4835,7 @@
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': None,
+    'config_subentry_id': <ConfigSubentry subentry_type='environment' title='my-environment'>,
     'device_class': None,
     'device_id': <DeviceEntry identifiers=[('portainer', 'portainer_test_entry_123_1_stoic_turing')]>,
     'disabled_by': None,
@@ -4515,7 +4866,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'memory_usage',
-    'unique_id': 'portainer_test_entry_123_stoic_turing_memory_usage',
+    'unique_id': 'portainer_test_entry_123_1_stoic_turing_memory_usage',
     'unit_of_measurement': <UnitOfInformation.MEGABYTES: 'MB'>,
   })
 # ---
@@ -4545,7 +4896,7 @@
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': None,
+    'config_subentry_id': <ConfigSubentry subentry_type='environment' title='my-environment'>,
     'device_class': None,
     'device_id': <DeviceEntry identifiers=[('portainer', 'portainer_test_entry_123_1_stoic_turing')]>,
     'disabled_by': None,
@@ -4573,7 +4924,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'memory_usage_percentage',
-    'unique_id': 'portainer_test_entry_123_stoic_turing_memory_usage_percentage',
+    'unique_id': 'portainer_test_entry_123_1_stoic_turing_memory_usage_percentage',
     'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
   })
 # ---
@@ -4602,7 +4953,7 @@
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': None,
+    'config_subentry_id': <ConfigSubentry subentry_type='environment' title='my-environment'>,
     'device_class': None,
     'device_id': <DeviceEntry identifiers=[('portainer', 'portainer_test_entry_123_1_stoic_turing')]>,
     'disabled_by': None,
@@ -4627,7 +4978,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'container_restart_count',
-    'unique_id': 'portainer_test_entry_123_stoic_turing_container_restart_count',
+    'unique_id': 'portainer_test_entry_123_1_stoic_turing_container_restart_count',
     'unit_of_measurement': None,
   })
 # ---
@@ -4653,7 +5004,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': None,
+    'config_subentry_id': <ConfigSubentry subentry_type='environment' title='my-environment'>,
     'device_class': None,
     'device_id': <DeviceEntry identifiers=[('portainer', 'portainer_test_entry_123_1_stoic_turing')]>,
     'disabled_by': None,
@@ -4678,7 +5029,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'container_started_at',
-    'unique_id': 'portainer_test_entry_123_stoic_turing_container_started_at',
+    'unique_id': 'portainer_test_entry_123_1_stoic_turing_container_started_at',
     'unit_of_measurement': None,
   })
 # ---
@@ -4714,7 +5065,7 @@
       ]),
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': None,
+    'config_subentry_id': <ConfigSubentry subentry_type='environment' title='my-environment'>,
     'device_class': None,
     'device_id': <DeviceEntry identifiers=[('portainer', 'portainer_test_entry_123_1_stoic_turing')]>,
     'disabled_by': None,
@@ -4739,7 +5090,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'container_state',
-    'unique_id': 'portainer_test_entry_123_stoic_turing_container_state',
+    'unique_id': 'portainer_test_entry_123_1_stoic_turing_container_state',
     'unit_of_measurement': None,
   })
 # ---
@@ -4776,7 +5127,7 @@
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': None,
+    'config_subentry_id': <ConfigSubentry subentry_type='environment' title='my-environment'>,
     'device_class': None,
     'device_id': <DeviceEntry identifiers=[('portainer', 'portainer_test_entry_123_1_stack_1')]>,
     'disabled_by': None,
@@ -4820,6 +5171,57 @@
     'state': '2',
   })
 # ---
+# name: test_all_entities[sensor.webstack_last_deployed-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ConfigSubentry subentry_type='environment' title='my-environment'>,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('portainer', 'portainer_test_entry_123_1_stack_1')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.webstack_last_deployed',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Last deployed',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_icon': None,
+    'original_name': 'Last deployed',
+    'platform': 'portainer',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'stack_last_deployed',
+    'unique_id': 'portainer_test_entry_123_1_stack_last_deployed',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.webstack_last_deployed-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'timestamp',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'webstack Last deployed',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.webstack_last_deployed',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2025-02-17T13:46:40+00:00',
+  })
+# ---
 # name: test_all_entities[sensor.webstack_type-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -4834,7 +5236,7 @@
       ]),
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': None,
+    'config_subentry_id': <ConfigSubentry subentry_type='environment' title='my-environment'>,
     'device_class': None,
     'device_id': <DeviceEntry identifiers=[('portainer', 'portainer_test_entry_123_1_stack_1')]>,
     'disabled_by': None,

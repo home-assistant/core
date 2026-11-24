@@ -1,6 +1,6 @@
 """LLM tools for the homeassistant integration."""
 
-from collections.abc import Iterator
+from collections.abc import Iterator, Mapping
 from decimal import Decimal
 from enum import Enum
 from operator import attrgetter
@@ -16,8 +16,8 @@ from homeassistant.components.sensor import (
     async_rounded_state,
 )
 from homeassistant.const import EntityStateAttribute
-from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import TemplateError
+from homeassistant.core import HomeAssistant, State, SupportsResponse, callback
+from homeassistant.exceptions import HomeAssistantError, TemplateError
 from homeassistant.helpers import (
     area_registry as ar,
     config_validation as cv,
@@ -35,8 +35,13 @@ from homeassistant.helpers.llm import (
     ToolAnnotations,
     ToolInput,
     ToolResult,
+    rank_name_match,
+    substitute_translation_placeholders,
 )
-from homeassistant.helpers.service import async_get_all_descriptions
+from homeassistant.helpers.service import (
+    async_get_all_descriptions,
+    async_prepare_call_from_config,
+)
 from homeassistant.helpers.template import Template
 from homeassistant.util import dt as dt_util, yaml as yaml_util
 
@@ -202,6 +207,25 @@ def async_get_exposed_entities(
     return entities
 
 
+def _search_name_matches(
+    hass: HomeAssistant, name_filter: str, states: list[State]
+) -> list[State]:
+    """Return the states whose name, alias or entity ID contains the filter."""
+    if not (query := name_filter.strip().casefold()):
+        return []
+    entity_registry = er.async_get(hass)
+    found = []
+    for state in states:
+        entry = entity_registry.async_get(state.entity_id)
+        aliases = er.async_get_entity_aliases(hass, entry) if entry else ()
+        if (
+            rank_name_match(query, (state.name,), aliases, (state.entity_id,))
+            is not None
+        ):
+            found.append(state)
+    return found
+
+
 def _live_context_match_error(
     match_result: intent.MatchTargetsResult,
     name_filter: str | None,
@@ -255,7 +279,11 @@ class GetLiveContextTool(Tool):
         {
             probatio.Optional(
                 "name",
-                description="Filter entities by name or alias (case-insensitive).",
+                description=(
+                    "Filter entities by name or alias (case-insensitive)."
+                    " Without an exact match, returns the entities whose name,"
+                    " alias or entity ID contains it."
+                ),
             ): cv.string,
             probatio.Optional(
                 "domain",
@@ -319,6 +347,30 @@ class GetLiveContextTool(Tool):
                 ),
                 states=exposed_states,
             )
+
+            if name_filter and match_result.no_match_reason in (
+                intent.MatchFailedReason.NAME,
+                intent.MatchFailedReason.AREA,
+                intent.MatchFailedReason.DOMAIN,
+            ):
+                # No exact name match, or only outside the area or domain
+                # filters: fall back to the entities whose names contain the
+                # filter. Only the entities the other filters allow are
+                # searched, and without a hit the original error is kept.
+                candidates = exposed_states
+                if area_filter or domain_filter:
+                    candidates = intent.async_match_targets(
+                        hass,
+                        intent.MatchTargetsConstraints(
+                            area_name=area_filter,
+                            domains=domain_filter,
+                        ),
+                        states=exposed_states,
+                    ).states
+                if found := _search_name_matches(hass, name_filter, candidates):
+                    match_result = intent.MatchTargetsResult(
+                        is_match=True, states=found
+                    )
 
             if not match_result.is_match:
                 return ToolResult(
@@ -431,9 +483,7 @@ def _describe_action(
     def text(config: dict[str, Any], item: str, translation_key: str) -> str:
         """Return a text of the description, else its translation."""
         value = config.get(item) or translations.get(translation_key, "")
-        for placeholder, replacement in placeholders.items():
-            value = value.replace(f"{{{placeholder}}}", replacement)
-        return value
+        return substitute_translation_placeholders(value, placeholders) or ""
 
     fields: dict[str, dict[str, Any]] = {}
     for field, config in _action_fields(action_description["fields"]):
@@ -535,13 +585,109 @@ class SearchActionsTool(Tool):
         return ToolResult(data=result)
 
 
+def _templates(value: Any) -> Iterator[Template]:
+    """Yield the templates in a complex template."""
+    if isinstance(value, Template):
+        yield value
+    elif isinstance(value, list):
+        for item in value:
+            yield from _templates(item)
+    elif isinstance(value, Mapping):
+        for key, item in value.items():
+            yield from _templates(key)
+            yield from _templates(item)
+
+
+class CallActionTool(Tool):
+    """Tool for calling an action."""
+
+    name = "homeassistant__call_action"
+    title = "Call action"
+    description = (
+        "Call a Home Assistant action and return its response, if the action has "
+        "one. Values in target and data can be templates, as in a script."
+    )
+    integration = DOMAIN
+    parameters = probatio.Schema(
+        {
+            probatio.Required(
+                "action", description="The action to call, e.g. 'light.turn_on'."
+            ): cv.service,
+            probatio.Optional(
+                "target",
+                description=(
+                    "What the action acts on, with the keys entity_id, device_id, "
+                    "area_id, floor_id and label_id."
+                ),
+            ): dict,
+            probatio.Optional("data", description="The fields of the action."): dict,
+        }
+    )
+
+    @override
+    async def async_call(
+        self, hass: HomeAssistant, tool_input: ToolInput, llm_context: LLMContext
+    ) -> ToolResult:
+        """Call the action."""
+        args = self.parameters(tool_input.tool_args)
+        domain, action = args["action"].split(".", 1)
+        try:
+            config = cv.SERVICE_SCHEMA(args)
+        except probatio.Invalid as err:
+            return ToolResult(data={"error": str(err)}, error=True)
+        for template in _templates(config):
+            # Renders in a thread first, so a slow template cannot block the event loop.
+            try:
+                will_timeout = await template.async_render_will_timeout(
+                    TEMPLATE_RENDER_TIMEOUT, strict=True
+                )
+            except TemplateError as err:
+                return ToolResult(data={"error": str(err)}, error=True)
+            if will_timeout:
+                return ToolResult(
+                    data={
+                        "error": "Template rendering exceeded the maximum time of "
+                        f"{TEMPLATE_RENDER_TIMEOUT} seconds"
+                    },
+                    error=True,
+                )
+        # Checked after rendering, which awaits, so a reload cannot remove the action
+        if not hass.services.has_service(domain, action):
+            return ToolResult(
+                data={"error": f"Action {args['action']} does not exist."},
+                error=True,
+            )
+        return_response = (
+            hass.services.supports_response(domain, action) is not SupportsResponse.NONE
+        )
+        try:
+            params = async_prepare_call_from_config(hass, config)
+        # A template that renders to a list or dict cannot be a key in the data
+        except (HomeAssistantError, TypeError) as err:
+            return ToolResult(data={"error": str(err)}, error=True)
+        try:
+            response = await hass.services.async_call(
+                **params,
+                blocking=True,
+                context=llm_context.context,
+                return_response=return_response,
+            )
+        except (HomeAssistantError, probatio.Invalid) as err:
+            return ToolResult(data={"error": str(err)}, error=True)
+        if return_response:
+            return ToolResult(data={"response": response})
+        return ToolResult(data={"success": True})
+
+
 @callback
 def async_get_tools(
     hass: HomeAssistant, llm_context: LLMContext, api_id: str
 ) -> LLMTools | None:
     """Return the homeassistant LLM tools for the given API."""
     if api_id == LLM_API_HOME_ASSISTANT:
-        return LLMTools(tools=[RenderTemplateTool(), SearchActionsTool()])
+        return LLMTools(
+            tools=[RenderTemplateTool(), SearchActionsTool(), CallActionTool()]
+        )
 
     if api_id != LLM_API_ASSIST:
         return None

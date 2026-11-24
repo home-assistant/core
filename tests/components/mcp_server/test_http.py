@@ -19,6 +19,7 @@ import pydantic
 import pytest
 from pytest_homeassistant.common import MockConfigEntry, setup_test_component_platform
 from pytest_homeassistant.typing import ClientSessionGenerator
+from yarl import URL
 
 from homeassistant.components.conversation import DOMAIN as CONVERSATION_DOMAIN
 from homeassistant.components.homeassistant.exposed_entities import async_expose_entity
@@ -338,6 +339,7 @@ async def test_options_flow_closes_sessions(
     assert "Could not find session ID" in response_data
 
 
+@pytest.mark.usefixtures("setup_integration")
 @pytest.mark.parametrize(
     ("method", "path"),
     [
@@ -353,17 +355,31 @@ async def test_options_flow_closes_sessions(
 )
 async def test_http_requires_authentication(
     hass: HomeAssistant,
-    setup_integration: None,
     hass_client_no_auth: ClientSessionGenerator,
     method: str,
     path: str,
 ) -> None:
-    """Test every MCP endpoint requires authentication."""
-
+    """Test every MCP endpoint requires authentication and advertises RFC9728 metadata."""
+    assert await async_setup_component(hass, "auth", {})
     client = await hass_client_no_auth()
+    base_url = f"http://{client.host}:{client.port}"
+    hass.config.internal_url = base_url
 
     response = await client.request(method, path)
     assert response.status == HTTPStatus.UNAUTHORIZED
+    expected_metadata_url = f"{base_url}/.well-known/oauth-protected-resource{path}"
+    assert (
+        response.headers["WWW-Authenticate"]
+        == f'Bearer resource_metadata="{expected_metadata_url}"'
+    )
+
+    metadata_response = await client.get(f"/.well-known/oauth-protected-resource{path}")
+    assert metadata_response.status == HTTPStatus.OK
+    assert await metadata_response.json() == {
+        "resource": str(client.make_url(path)),
+        "authorization_servers": [base_url],
+        "resource_documentation": "https://contributors.home-assistant.io/core/internals/auth-api/",
+    }
 
 
 @pytest.fixture(params=["sse", "streamable"])
@@ -430,6 +446,45 @@ def mcp_client_fixture(mcp_protocol: str) -> Any:
     if mcp_protocol == "streamable":
         return mcp_streamable_session
     raise ValueError(f"Unknown MCP protocol: {mcp_protocol}")
+
+
+async def test_server_icons(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    mcp_protocol: str,
+    mcp_client: MCPClientFactory,
+    hass_supervisor_access_token: str,
+) -> None:
+    """Advertise a frontend icon that can be fetched without authentication."""
+    assert await async_setup_component(hass, "frontend", {})
+    client = await hass_client()
+    mcp_url = str(
+        client.make_url({"sse": SSE_API, "streamable": STREAMABLE_API}[mcp_protocol])
+    )
+    base_url = str(URL(mcp_url).origin())
+    # The icon URL follows the origin of the request, not the configured URLs
+    hass.config.internal_url = "http://homeassistant.local:8123"
+    hass.config.external_url = "https://example.com"
+
+    async with mcp_client(hass, mcp_url, hass_supervisor_access_token) as session:
+        assert session.server_info is not None
+        assert session.server_info.icons == [
+            mcp.types.Icon(
+                src=f"{base_url}/static/icons/favicon-192x192.png",
+                mime_type="image/png",
+                sizes=["192x192"],
+            )
+        ]
+
+        async with (
+            aiohttp.ClientSession() as icon_client,
+            icon_client.get(
+                session.server_info.icons[0].src, allow_redirects=False
+            ) as response,
+        ):
+            assert response.status == HTTPStatus.OK
+            assert response.content_type == "image/png"
+            assert (await response.read()).startswith(b"\x89PNG\r\n\x1a\n")
 
 
 @pytest.mark.parametrize(

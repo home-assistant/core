@@ -291,6 +291,8 @@ class MyUplinkDevicePointSensor(MyUplinkEntity, SensorEntity):
             self.entity_description = entity_description
         else:
             self._attr_native_unit_of_measurement = device_point.parameter_unit
+        if device_point.category.lower() == "energy log":
+            self._attr_entity_registry_enabled_default = False
 
     @property
     @override
@@ -331,7 +333,9 @@ class MyUplinkEnumSensor(MyUplinkDevicePointSensor):
     @override
     def native_value(self) -> str | None:
         """Sensor state value for enum sensor."""
-        device_point = self.coordinator.data.points[self.device_id][self.point_id]
+        device_point = self.coordinator.data.points[self.device_id].get(self.point_id)
+        if device_point is None:
+            return None
         return self.options_map.get(str(int(device_point.value)))
 
 

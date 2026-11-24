@@ -4,6 +4,7 @@
   "categories": ["messaging_notifications.email_sms_calls"],
   "codeowners": [],
   "config_flow": true,
+  "connectivity": ["cloud"],
   "dependencies": ["webhook"],
   "documentation": "https://www.home-assistant.io/integrations/mailgun",
   "integration_type": "service",

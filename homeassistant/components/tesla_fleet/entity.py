@@ -7,6 +7,7 @@ from tesla_fleet_api.const import Scope
 from tesla_fleet_api.tesla.energysite import EnergySite
 from tesla_fleet_api.tesla.vehicle.fleet import VehicleFleet
 
+from homeassistant.core import callback
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -85,6 +86,7 @@ class TeslaFleetEntity[_ApiT: VehicleFleet | EnergySite](
         """Return True if a specific value is in coordinator data."""
         return self.key in self.coordinator.data
 
+    @callback
     @override
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""

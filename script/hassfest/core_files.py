@@ -4,9 +4,9 @@ import ast
 from pathlib import Path
 import re
 
-from homeassistant.util.yaml import load_yaml_dict
+from hassfest.model import Config, Integration, IntegrationType
 
-from .model import Config, Integration, IntegrationType
+from homeassistant.util.yaml import load_yaml_dict
 
 # Non-entity-platform components that belong in base_platforms
 EXTRA_BASE_PLATFORMS = {"diagnostics"}

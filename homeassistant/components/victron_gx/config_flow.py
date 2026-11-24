@@ -276,7 +276,6 @@ class VictronGXConfigFlow(ConfigFlow, domain=DOMAIN):
                 data=data,
             )
 
-        self._set_confirm_only()
         return self.async_show_form(
             step_id="ssdp_confirm",
             description_placeholders={"name": self.friendly_name or self.hostname},
@@ -333,11 +332,10 @@ class VictronGXConfigFlow(ConfigFlow, domain=DOMAIN):
                         data=data,
                     )
 
-        self._set_confirm_only()
         return self.async_show_form(
             step_id="ssdp_token_pairing",
             errors=errors,
-            description_placeholders={CONF_HOST: self.hostname},
+            description_placeholders={"host": self.hostname},
         )
 
     async def async_step_ssdp_auth(
@@ -393,7 +391,7 @@ class VictronGXConfigFlow(ConfigFlow, domain=DOMAIN):
                 user_input or {CONF_SSL: self.ssdp_use_ssl},
             ),
             errors=errors,
-            description_placeholders={CONF_HOST: self.hostname},
+            description_placeholders={"host": self.hostname},
         )
 
     async def async_step_reconfigure(
@@ -500,6 +498,6 @@ class VictronGXConfigFlow(ConfigFlow, domain=DOMAIN):
             data_schema=self.add_suggested_values_to_schema(
                 STEP_REAUTH_DATA_SCHEMA, suggested_values
             ),
-            description_placeholders={CONF_HOST: reauth_entry.data[CONF_HOST]},
+            description_placeholders={"host": reauth_entry.data[CONF_HOST]},
             errors=errors,
         )

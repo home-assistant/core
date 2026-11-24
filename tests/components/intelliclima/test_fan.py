@@ -15,18 +15,17 @@ from homeassistant.components.fan import (
     ATTR_PERCENTAGE,
     ATTR_PRESET_MODE,
     DOMAIN as FAN_DOMAIN,
-    SERVICE_SET_PERCENTAGE,
-    SERVICE_SET_PRESET_MODE,
+    FanService,
+    FanServiceArgument,
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
     STATE_OFF,
     STATE_ON,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
     Platform,
+    TargetKey,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -70,8 +69,8 @@ async def test_fan_turn_off_service_calls_api(
     """fan.turn_off should call ecocomfort.turn_off and refresh."""
     await hass.services.async_call(
         FAN_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: FAN_ENTITY_ID},
+        FanService.TURN_OFF,
+        {TargetKey.ENTITY_ID: FAN_ENTITY_ID},
         blocking=True,
     )
 
@@ -87,10 +86,10 @@ async def test_fan_turn_on_service_calls_api(
     """fan.turn_on should call ecocomfort.turn_on and refresh."""
     await hass.services.async_call(
         FAN_DOMAIN,
-        SERVICE_TURN_ON,
+        FanService.TURN_ON,
         {
-            ATTR_ENTITY_ID: FAN_ENTITY_ID,
-            ATTR_PERCENTAGE: 30,
+            TargetKey.ENTITY_ID: FAN_ENTITY_ID,
+            FanServiceArgument.PERCENTAGE: 30,
         },
         blocking=True,
     )
@@ -109,8 +108,8 @@ async def test_fan_set_percentage_maps_to_speed(
     # 15% is closest to 25% (sleep).
     await hass.services.async_call(
         FAN_DOMAIN,
-        SERVICE_SET_PERCENTAGE,
-        {ATTR_ENTITY_ID: FAN_ENTITY_ID, ATTR_PERCENTAGE: 15},
+        FanService.SET_PERCENTAGE,
+        {TargetKey.ENTITY_ID: FAN_ENTITY_ID, FanServiceArgument.PERCENTAGE: 15},
         blocking=True,
     )
     # Initial mode_set=FanMode.inward from single_eco_device.
@@ -128,8 +127,8 @@ async def test_fan_set_preset_mode_service(
 
     await hass.services.async_call(
         FAN_DOMAIN,
-        SERVICE_SET_PRESET_MODE,
-        {ATTR_ENTITY_ID: FAN_ENTITY_ID, ATTR_PRESET_MODE: "auto"},
+        FanService.SET_PRESET_MODE,
+        {TargetKey.ENTITY_ID: FAN_ENTITY_ID, FanServiceArgument.PRESET_MODE: "auto"},
         blocking=True,
     )
 
@@ -146,8 +145,8 @@ async def test_fan_set_percentage_zero_turns_off(
     """Setting percentage to 0 should call turn_off, not set_mode_speed."""
     await hass.services.async_call(
         FAN_DOMAIN,
-        SERVICE_SET_PERCENTAGE,
-        {ATTR_ENTITY_ID: FAN_ENTITY_ID, ATTR_PERCENTAGE: 0},
+        FanService.SET_PERCENTAGE,
+        {TargetKey.ENTITY_ID: FAN_ENTITY_ID, FanServiceArgument.PERCENTAGE: 0},
         blocking=True,
     )
 
@@ -178,7 +177,7 @@ async def test_fan_turn_on_defaulting_behavior(
 
     await hass.services.async_call(
         FAN_DOMAIN,
-        SERVICE_TURN_ON,
+        FanService.TURN_ON,
         data,
         blocking=True,
     )
@@ -203,8 +202,8 @@ async def test_fan_turn_on_when_off_without_percentage(
 
     await hass.services.async_call(
         FAN_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: FAN_ENTITY_ID},
+        FanService.TURN_ON,
+        {TargetKey.ENTITY_ID: FAN_ENTITY_ID},
         blocking=True,
     )
 
@@ -222,8 +221,8 @@ async def test_fan_turn_on_defaulting_behavior_auto_preset(
 
     await hass.services.async_call(
         FAN_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: FAN_ENTITY_ID, ATTR_PRESET_MODE: "auto"},
+        FanService.TURN_ON,
+        {TargetKey.ENTITY_ID: FAN_ENTITY_ID, FanServiceArgument.PRESET_MODE: "auto"},
         blocking=True,
     )
 
@@ -294,8 +293,8 @@ async def test_fan_turn_on_during_boost_keeps_commanded_speed(
 
     await hass.services.async_call(
         FAN_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: FAN_ENTITY_ID},
+        FanService.TURN_ON,
+        {TargetKey.ENTITY_ID: FAN_ENTITY_ID},
         blocking=True,
     )
 

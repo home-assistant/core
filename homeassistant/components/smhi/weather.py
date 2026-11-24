@@ -53,8 +53,8 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import slugify
 
 from .const import ATTR_SMHI_THUNDER_PROBABILITY, ENTITY_ID_SENSOR_FORMAT
-from .coordinator import SMHIConfigEntry
-from .entity import SmhiWeatherEntity
+from .coordinator import SMHIConfigEntry, SMHIDataUpdateCoordinator
+from .entity import SmhiEntity
 
 PARALLEL_UPDATES = 0
 
@@ -90,7 +90,7 @@ async def async_setup_entry(
     """Add a weather entity from map location."""
     location = config_entry.data
 
-    coordinator = config_entry.runtime_data[0]
+    coordinator = config_entry.runtime_data.coordinator
 
     entity = SmhiWeather(
         location[CONF_LOCATION][CONF_LATITUDE],
@@ -102,7 +102,9 @@ async def async_setup_entry(
     async_add_entities([entity])
 
 
-class SmhiWeather(SmhiWeatherEntity, SingleCoordinatorWeatherEntity):
+class SmhiWeather(
+    SmhiEntity[SMHIDataUpdateCoordinator], SingleCoordinatorWeatherEntity
+):
     """Representation of a weather entity."""
 
     _attr_native_temperature_unit = UnitOfTemperature.CELSIUS
@@ -201,16 +203,19 @@ class SmhiWeather(SmhiWeatherEntity, SingleCoordinatorWeatherEntity):
 
         return data
 
+    @callback
     @override
     def _async_forecast_daily(self) -> list[Forecast] | None:
         """Service to retrieve the daily forecast."""
         return self._get_forecast_data(self.coordinator.data.daily, "daily")
 
+    @callback
     @override
     def _async_forecast_hourly(self) -> list[Forecast] | None:
         """Service to retrieve the hourly forecast."""
         return self._get_forecast_data(self.coordinator.data.hourly, "hourly")
 
+    @callback
     @override
     def _async_forecast_twice_daily(self) -> list[Forecast] | None:
         """Service to retrieve the twice daily forecast."""

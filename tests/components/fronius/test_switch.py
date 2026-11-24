@@ -9,7 +9,7 @@ import pytest
 from pytest_homeassistant.common import MockConfigEntry
 from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 
-from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
+from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN, SwitchService
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     SERVICE_TURN_OFF,
@@ -17,6 +17,7 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
     Platform,
+    TargetKey,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
@@ -99,7 +100,10 @@ async def test_limit_switches_keep_each_others_mode_bit(
 
     for entity_id in (CHARGE_LIMITING, DISCHARGE_LIMITING):
         await hass.services.async_call(
-            SWITCH_DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: entity_id}, blocking=True
+            SWITCH_DOMAIN,
+            SwitchService.TURN_ON,
+            {TargetKey.ENTITY_ID: entity_id},
+            blocking=True,
         )
         await hass.async_block_till_done()
 
@@ -118,13 +122,16 @@ async def test_turning_a_limit_on_asserts_its_setpoint(
     impose one of its own. Holding it at 100% is how that gets overridden.
     """
     config_entry = await _setup(hass, aioclient_mock, mock_fronius_modbus)
-    controls = config_entry.runtime_data.modbus_settings_coordinators[
+    controls = config_entry.runtime_data.modbus.settings_coordinators[
         0
     ].modbus_inverter.controls
     assert controls.power_limit == 100.0
 
     await hass.services.async_call(
-        SWITCH_DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: POWER_LIMITING}, blocking=True
+        SWITCH_DOMAIN,
+        SwitchService.TURN_ON,
+        {TargetKey.ENTITY_ID: POWER_LIMITING},
+        blocking=True,
     )
     await hass.async_block_till_done()
 
@@ -139,7 +146,7 @@ async def test_enabling_a_limit_into_an_empty_window_is_refused(
 ) -> None:
     """Test turning on a limit the device would refuse with the other one."""
     config_entry = await _setup(hass, aioclient_mock, mock_fronius_modbus)
-    coordinator = config_entry.runtime_data.modbus_settings_coordinators[0]
+    coordinator = config_entry.runtime_data.modbus.settings_coordinators[0]
     storage = coordinator.modbus_inverter.storage
     for field, value in (
         ("charge_limit", -50),
@@ -151,8 +158,8 @@ async def test_enabling_a_limit_into_an_empty_window_is_refused(
     with pytest.raises(ServiceValidationError):
         await hass.services.async_call(
             SWITCH_DOMAIN,
-            SERVICE_TURN_ON,
-            {ATTR_ENTITY_ID: DISCHARGE_LIMITING},
+            SwitchService.TURN_ON,
+            {TargetKey.ENTITY_ID: DISCHARGE_LIMITING},
             blocking=True,
         )
 
@@ -170,7 +177,7 @@ async def test_other_settings_stay_writable_with_refused_limits(
     charging has to stay switchable regardless.
     """
     config_entry = await _setup(hass, aioclient_mock, mock_fronius_modbus)
-    storage = config_entry.runtime_data.modbus_settings_coordinators[
+    storage = config_entry.runtime_data.modbus.settings_coordinators[
         0
     ].modbus_inverter.storage
     # written past the guard, as another controller would
@@ -183,7 +190,10 @@ async def test_other_settings_stay_writable_with_refused_limits(
         await storage.write(field, value)
 
     await hass.services.async_call(
-        SWITCH_DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: GRID_CHARGING}, blocking=True
+        SWITCH_DOMAIN,
+        SwitchService.TURN_ON,
+        {TargetKey.ENTITY_ID: GRID_CHARGING},
+        blocking=True,
     )
     await hass.async_block_till_done()
 
@@ -202,7 +212,7 @@ async def test_a_refused_write_raises(
     with pytest.raises(HomeAssistantError, match="Could not write"):
         await hass.services.async_call(
             SWITCH_DOMAIN,
-            SERVICE_TURN_ON,
-            {ATTR_ENTITY_ID: POWER_LIMITING},
+            SwitchService.TURN_ON,
+            {TargetKey.ENTITY_ID: POWER_LIMITING},
             blocking=True,
         )

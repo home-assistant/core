@@ -16,6 +16,7 @@ from victron_mqtt import (
     MetricKind,
     MetricType,
     OperationMode,
+    ValueType,
     VictronEnum,
 )
 
@@ -155,6 +156,12 @@ class Hub:
         device: VictronVenusDevice,
         metric: VictronVenusMetric,
     ) -> None:
+        if metric.value_type is ValueType.JSON:
+            _LOGGER.debug(
+                "Skipping entity creation for JSON metric: %s", metric.unique_id
+            )
+            return
+
         _LOGGER.debug("New metric received. Device: %s, Metric: %s", device, metric)
         if TYPE_CHECKING:
             assert hub.installation_id is not None

@@ -90,7 +90,7 @@ rules:
   icon-translations:
     status: exempt
     comment: The integration has no entities.
-  reconfiguration-flow: todo
+  reconfiguration-flow: done
   repair-issues:
     status: exempt
     comment: The integration raises no repair issues.

@@ -6,7 +6,6 @@ from typing import override
 from pyfibaro.fibaro_device import DeviceModel
 
 from homeassistant.components.sensor import (
-    ENTITY_ID_FORMAT,
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
@@ -147,7 +146,6 @@ class FibaroSensor(FibaroEntity, SensorEntity):
         super().__init__(fibaro_device, controller)
         if entity_description is not None:
             self.entity_description = entity_description
-        self.entity_id = ENTITY_ID_FORMAT.format(self.ha_id)
 
         # Map unit if it was not defined in the entity description
         # or there is no entity description at all
@@ -175,14 +173,11 @@ class FibaroAdditionalSensor(FibaroEntity, SensorEntity):
         controller: FibaroController,
     ) -> None:
         """Initialize the sensor."""
-        super().__init__(fibaro_device, controller)
+        super().__init__(fibaro_device, controller, use_child_device_info=True)
         self.entity_description = entity_description
 
         # To differentiate additional sensors from main sensors they need
         # to get different names and ids
-        self.entity_id = ENTITY_ID_FORMAT.format(
-            f"{self.ha_id}_{entity_description.key}"
-        )
         self._attr_name = f"{self._attr_name} {entity_description.name}"
         self._attr_unique_id = f"{self._attr_unique_id}_{entity_description.key}"
 

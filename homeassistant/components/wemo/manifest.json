@@ -4,6 +4,7 @@
   "categories": ["plugs_switches", "lighting.bulbs_lamps"],
   "codeowners": ["@esev"],
   "config_flow": true,
+  "connectivity": ["network"],
   "documentation": "https://www.home-assistant.io/integrations/wemo",
   "homekit": {
     "models": ["Socket", "Wemo"]

@@ -1,0 +1,16 @@
+{
+  "services": {
+    "get_15_minute_forecast": {
+      "service": "mdi:weather-partly-rainy"
+    },
+    "get_3_hour_forecast": {
+      "service": "mdi:weather-partly-cloudy"
+    },
+    "get_forecasts_extra": {
+      "service": "mdi:weather-cloudy-clock"
+    },
+    "get_minute_forecast": {
+      "service": "mdi:weather-pouring"
+    }
+  }
+}

@@ -47,7 +47,7 @@ from .generated.ssdp import SSDP
 from .generated.usb import USB
 from .generated.zeroconf import HOMEKIT, ZEROCONF
 from .helpers.json import cached_json_fragment, json_fragment
-from .helpers.typing import UNDEFINED, UndefinedType
+from .helpers.typing import Undefined
 from .util.async_ import create_eager_task, wait_shared_future
 from .util.hass_dict import HassKey
 from .util.json import JSON_DECODE_EXCEPTIONS, json_loads
@@ -1668,7 +1668,7 @@ async def _resolve_integrations_dependencies(
     integrations: Iterable[Integration],
     *,
     cache: _ResolveDependenciesCacheProtocol,
-    possible_after_dependencies: set[str] | UndefinedType | None = UNDEFINED,
+    possible_after_dependencies: set[str] | Undefined | None = Undefined,
     ignore_exceptions: bool,
 ) -> dict[str, set[str]]:
     """Resolve all dependencies for integrations.
@@ -1711,14 +1711,14 @@ async def _resolve_integration_dependencies(
     itg: Integration,
     *,
     cache: _ResolveDependenciesCacheProtocol,
-    possible_after_dependencies: set[str] | UndefinedType | None = UNDEFINED,
+    possible_after_dependencies: set[str] | Undefined | None = Undefined,
     ignore_exceptions: bool = False,
 ) -> set[str]:
     """Recursively resolve all dependencies.
 
     Uses `cache` to cache the results.
 
-    If `possible_after_dependencies` is not UNDEFINED,
+    If `possible_after_dependencies` is not Undefined,
     listed after dependencies are also considered.
     If `possible_after_dependencies` is None,
     all the possible after dependencies are considered.
@@ -1751,7 +1751,7 @@ async def _resolve_integration_dependencies(
         resolving.add(domain)
 
         dependencies_domains = set(itg.dependencies)
-        if possible_after_dependencies is not UNDEFINED:
+        if possible_after_dependencies is not Undefined:
             if possible_after_dependencies is None:
                 after_dependencies: Iterable[str] = itg.after_dependencies
             else:

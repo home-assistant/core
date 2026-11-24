@@ -34,6 +34,7 @@ VEHICLE_DATA_NONE["response"]["charge_state"]["charge_port_door_open"] = None
 LIVE_STATUS = load_json_object_fixture("live_status.json", DOMAIN)
 SITE_INFO = load_json_object_fixture("site_info.json", DOMAIN)
 POWERWALL_STATUS = load_json_object_fixture("powerwall_status.json", DOMAIN)
+POWERWALL_COMPONENTS = load_json_object_fixture("powerwall_components.json", DOMAIN)
 SITE_INFO_WEEK_CROSSING = load_json_object_fixture(
     "site_info_week_crossing.json", DOMAIN
 )
@@ -129,6 +130,7 @@ METADATA = {
         "123456": {
             "access": True,
             "name": "Energy Site",
+            "paired": True,
         }
     },
 }
@@ -166,6 +168,7 @@ METADATA_LEGACY = {
         "123456": {
             "access": True,
             "name": "Energy Site",
+            "paired": True,
         }
     },
 }
@@ -199,6 +202,7 @@ METADATA_OLD_FIRMWARE = {
         "123456": {
             "access": True,
             "name": "Energy Site",
+            "paired": True,
         }
     },
 }
@@ -222,6 +226,7 @@ METADATA_NOSCOPE = {
         "123456": {
             "access": True,
             "name": "Energy Site",
+            "paired": True,
         }
     },
 }
@@ -242,6 +247,7 @@ METADATA_ENERGY = {
         "123456": {
             "access": True,
             "name": "Energy Site",
+            "paired": True,
         }
     },
 }

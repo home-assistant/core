@@ -8,6 +8,7 @@
   ],
   "codeowners": ["@bsmappee"],
   "config_flow": true,
+  "connectivity": ["cloud", "mqtt", "network"],
   "dependencies": ["auth"],
   "documentation": "https://www.home-assistant.io/integrations/smappee",
   "integration_type": "hub",
