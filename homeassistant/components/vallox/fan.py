@@ -1,6 +1,7 @@
 """Support for the Vallox ventilation unit fan."""
 
 from collections.abc import Mapping
+from datetime import timedelta
 from typing import Any, NamedTuple, override
 
 from vallox_websocket_api import ValloxApiException, ValloxInvalidInputException
@@ -18,6 +19,7 @@ from .const import (
     METRIC_KEY_PROFILE_FAN_SPEED_BOOST,
     METRIC_KEY_PROFILE_FAN_SPEED_HOME,
     PRESET_MODE_TO_VALLOX_PROFILE,
+    PROFILE_DURATION_INDEFINITE,
     VALLOX_PROFILE_TO_PRESET_MODE,
 )
 from .coordinator import ValloxConfigEntry, ValloxDataUpdateCoordinator
@@ -121,8 +123,29 @@ class ValloxFanEntity(ValloxEntity, FanEntity):
 
     @override
     async def async_set_preset_mode(self, preset_mode: str) -> None:
-        """Set new preset mode."""
-        await self._async_set_preset_mode_internal(preset_mode)
+        """Set new preset mode.
+
+        Presets with a timer run for the duration stored on the unit.
+        """
+        await self.async_set_preset_mode_with_duration(preset_mode)
+
+    async def async_set_preset_mode_with_duration(
+        self,
+        preset_mode: str,
+        duration: timedelta | None = None,
+        no_time_limit: bool = False,
+    ) -> None:
+        """Activate a preset for a duration, without a time limit, or as stored."""
+        if no_time_limit:
+            vallox_duration: int | None = PROFILE_DURATION_INDEFINITE
+        elif duration is not None:
+            # The schema only accepts whole minutes.
+            vallox_duration = duration // timedelta(minutes=1)
+        else:
+            # set_profile() uses the duration stored on the unit for None.
+            vallox_duration = None
+
+        await self._async_set_preset_mode_internal(preset_mode, vallox_duration)
 
         # This state change affects other entities like
         # sensors. Force an immediate update that can be
@@ -156,7 +179,7 @@ class ValloxFanEntity(ValloxEntity, FanEntity):
                 await self._async_set_preset_mode_internal(preset_mode)
                 update_needed = True
 
-            # Last, so the unit starts in its final profile and speed.
+            # Last, so the unit starts in its final preset and speed.
             await self._async_set_power(True)
             update_needed = True
         finally:
@@ -188,19 +211,42 @@ class ValloxFanEntity(ValloxEntity, FanEntity):
         except ValloxApiException as err:
             raise HomeAssistantError("Failed to set power mode") from err
 
-    async def _async_set_preset_mode_internal(self, preset_mode: str) -> None:
-        """Set new preset mode."""
+    async def _async_set_preset_mode_internal(
+        self, preset_mode: str, vallox_duration: int | None = None
+    ) -> None:
+        """Set new preset mode, for vallox_duration minutes if given."""
         try:
-            profile = PRESET_MODE_TO_VALLOX_PROFILE[preset_mode]
-            await self.coordinator.client.set_profile(profile)
-
+            await self.coordinator.client.set_profile(
+                PRESET_MODE_TO_VALLOX_PROFILE[preset_mode], vallox_duration
+            )
         except ValloxApiException as err:
-            raise HomeAssistantError(f"Failed to set profile: {preset_mode}") from err
+            if vallox_duration is None:
+                raise HomeAssistantError(
+                    translation_domain=DOMAIN,
+                    translation_key="failed_to_set_preset_mode",
+                    translation_placeholders={"preset_mode": preset_mode},
+                ) from err
+
+            if vallox_duration == PROFILE_DURATION_INDEFINITE:
+                raise HomeAssistantError(
+                    translation_domain=DOMAIN,
+                    translation_key="failed_to_set_preset_mode_without_time_limit",
+                    translation_placeholders={"preset_mode": preset_mode},
+                ) from err
+
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="failed_to_set_preset_mode_for_duration",
+                translation_placeholders={
+                    "preset_mode": preset_mode,
+                    "duration": str(vallox_duration),
+                },
+            ) from err
 
     async def _async_set_percentage_internal(
         self, percentage: int, preset_mode: str | None = None
     ) -> None:
-        """Set the fan speed of the given preset, or of the current profile."""
+        """Set the fan speed of the given preset, or of the current preset."""
         vallox_profile = (
             PRESET_MODE_TO_VALLOX_PROFILE[preset_mode]
             if preset_mode is not None
@@ -211,7 +257,7 @@ class ValloxFanEntity(ValloxEntity, FanEntity):
             await self.coordinator.client.set_fan_speed(vallox_profile, percentage)
         except ValloxInvalidInputException as err:
             # The service schema limits the percentage to 0-100, so only the
-            # profile can be rejected here.
+            # preset can be rejected here.
             raise ServiceValidationError(
                 translation_domain=DOMAIN,
                 translation_key="preset_without_fan_speed",

@@ -53,6 +53,9 @@
     }
   },
   "services": {
+    "set_preset_mode_with_duration": {
+      "service": "mdi:fan-clock"
+    },
     "set_profile": {
       "service": "mdi:fan"
     },

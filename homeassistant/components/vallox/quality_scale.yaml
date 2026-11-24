@@ -3,10 +3,8 @@ rules:
   action-setup:
     status: todo
     comment: >-
-      (1) Actions are registered in async_setup, but raise a plain ValueError
-      unless exactly one entry is loaded. Get the entry with
-      service.async_get_config_entry(hass, DOMAIN, None) to raise translated
-      ServiceValidationErrors instead.
+      (1) The set_profile and set_profile_fan_speed_* actions have no target,
+      and raise a plain ValueError unless exactly one entry is loaded.
       (2) Replace the leftover YAML CONFIG_SCHEMA with
       cv.config_entry_only_config_schema.
   appropriate-polling: done
@@ -72,8 +70,9 @@ rules:
       (1) The number, switch and date entities let ValloxApiException through,
       for example when the unit is unreachable, instead of raising
       HomeAssistantError.
-      (2) The custom actions raise a plain ValueError unless exactly one entry
-      is loaded, which is covered by action-setup.
+      (2) The set_profile and set_profile_fan_speed_* actions raise a plain
+      ValueError unless exactly one entry is loaded, which is covered by
+      action-setup.
   config-entry-unloading: done
   docs-configuration-parameters:
     status: exempt
@@ -99,7 +98,8 @@ rules:
   test-coverage:
     status: todo
     comment: >-
-      Missing for 100%: services.py line 55, which goes away with action-setup.
+      Missing for 100%: the ValueError in _get_coordinator in services.py,
+      which goes away with action-setup.
 
   # Gold
   devices:

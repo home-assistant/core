@@ -136,6 +136,15 @@
     "failed_to_set_fan_speed_for_profile": {
       "message": "Failed to set fan speed to {fan_speed}% for profile {profile}"
     },
+    "failed_to_set_preset_mode": {
+      "message": "Failed to set preset mode to {preset_mode}"
+    },
+    "failed_to_set_preset_mode_for_duration": {
+      "message": "Failed to set preset mode to {preset_mode} for {duration} minutes"
+    },
+    "failed_to_set_preset_mode_without_time_limit": {
+      "message": "Failed to set preset mode to {preset_mode} without a time limit"
+    },
     "failed_to_set_profile": {
       "message": "Failed to set profile to {profile}"
     },
@@ -159,6 +168,24 @@
     }
   },
   "services": {
+    "set_preset_mode_with_duration": {
+      "description": "Activates a preset of a Vallox fan for a set time, or without a time limit.",
+      "fields": {
+        "duration": {
+          "description": "How long the preset stays active. Leave empty to use the duration stored on the unit.",
+          "name": "Duration"
+        },
+        "no_time_limit": {
+          "description": "Keeps the preset active without a time limit. Cannot be combined with a duration.",
+          "name": "No time limit"
+        },
+        "preset_mode": {
+          "description": "The preset to activate.",
+          "name": "[%key:component::fan::services::set_preset_mode::fields::preset_mode::name%]"
+        }
+      },
+      "name": "Set preset mode with duration"
+    },
     "set_profile": {
       "description": "Activate a profile and optionally set duration.",
       "fields": {
