@@ -222,7 +222,7 @@ class HikvisionBinarySensor(HikvisionEntity, BinarySensorEntity):
         self._attr_unique_id = f"{self._data.device_id}_{sensor_type}_{channel}"
 
         # Callback ID for pyhik
-        self._callback_id = f"{self._data.device_id}.{sensor_type}.{channel}"
+        self._callback_id = f"{self._data.stream_id}.{sensor_type}.{channel}"
 
     def _get_sensor_attributes(self) -> tuple[bool, Any, Any, Any]:
         """Get sensor attributes from camera."""
