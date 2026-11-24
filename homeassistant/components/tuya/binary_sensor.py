@@ -315,6 +315,10 @@ BINARY_SENSORS: dict[DeviceCategory, tuple[TuyaBinarySensorEntityDescription, ..
     DeviceCategory.LDCG: (TAMPER_BINARY_SENSOR,),
     DeviceCategory.MC: (
         TuyaBinarySensorEntityDescription(
+            key=DPCode.DOORCONTACT_STATE,
+            device_class=BinarySensorDeviceClass.DOOR,
+        ),
+        TuyaBinarySensorEntityDescription(
             key=DPCode.STATUS,
             device_class=BinarySensorDeviceClass.DOOR,
             on_value={"open", "opened"},
