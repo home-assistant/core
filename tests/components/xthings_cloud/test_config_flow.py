@@ -85,20 +85,16 @@ async def test_user_flow_error_and_recover(
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
-async def test_user_flow_already_configured(
+async def test_user_flow_single_config_entry(
     hass: HomeAssistant,
     mock_setup_entry: AsyncMock,
     mock_api_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test user flow aborts if same account already configured."""
+    """Test user flow aborts when the integration is already configured."""
     mock_config_entry.add_to_hass(hass)
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {CONF_EMAIL: MOCK_EMAIL, CONF_PASSWORD: MOCK_PASSWORD},
-    )
     assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "already_configured"
+    assert result["reason"] == "single_instance_allowed"
