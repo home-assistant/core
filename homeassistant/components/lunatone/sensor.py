@@ -32,6 +32,7 @@ from .coordinator import (
     LunatoneInfoDataUpdateCoordinator,
     LunatoneSensorsDataUpdateCoordinator,
 )
+from .entity import LunatoneEntity
 from .helpers import add_entities_from_builder, format_device_identifier
 
 DALI_LINE_STATUS_SENSOR_MAPPING: dict[str, str] = {
@@ -167,11 +168,10 @@ async def async_setup_entry(
 
 
 class LunatoneSensor(
-    CoordinatorEntity[LunatoneSensorsDataUpdateCoordinator], SensorEntity
+    LunatoneEntity[LunatoneSensorsDataUpdateCoordinator],
+    SensorEntity,
 ):
     """Representation of a Lunatone Sensor."""
-
-    _attr_has_entity_name = True
 
     def __init__(
         self,
@@ -182,12 +182,10 @@ class LunatoneSensor(
         config_entry_unique_id: str,
     ) -> None:
         """Initialize a Lunatone Sensor."""
-        super().__init__(coordinator_sensors)
+        super().__init__(coordinator_sensors, coordinator_info)
         self.entity_description = description
 
-        self._coordinator_info = coordinator_info
         self._sensor_id = sensor_id
-        self._line_id: int | None = None
 
         self._attr_unique_id = self.construct_unique_id(
             config_entry_unique_id, sensor_id, description.key
@@ -199,9 +197,9 @@ class LunatoneSensor(
             self.sensor.data.address_type == SensorAddressType.DALI
             and self.sensor.data.dali_sensor_address
         ):
-            self._line_id = self.sensor.data.dali_sensor_address.line
+            self.line_id = self.sensor.data.dali_sensor_address.line
             linked_device_unique_id = format_device_identifier(
-                config_entry_unique_id, self._line_id
+                config_entry_unique_id, self.line_id
             )
             device_info = dr.DeviceInfo(
                 identifiers={
@@ -215,7 +213,7 @@ class LunatoneSensor(
                 },
                 translation_key="dali_sensor",
                 translation_placeholders={
-                    "line_id": str(self._line_id),
+                    "line_id": str(self.line_id),
                     "dali_address": str(self.sensor.data.dali_sensor_address.address),
                 },
             )
@@ -233,47 +231,6 @@ class LunatoneSensor(
     ) -> str:
         """Returns the unique_id for a device ID."""
         return f"{config_entry_unique_id}-sensor{sensor_id}-{key}"
-
-    @override
-    async def async_added_to_hass(self) -> None:
-        """Register callbacks."""
-        await super().async_added_to_hass()
-        if self._line_id is not None:
-            self.async_on_remove(
-                self._coordinator_info.async_add_listener(self._handle_info_update)
-            )
-
-    @callback
-    def _handle_info_update(self) -> None:
-        assert self._line_id is not None
-        assert self.coordinator.config_entry.unique_id is not None
-
-        config_entry_id = self.coordinator.config_entry.entry_id
-        device_registry = dr.async_get(self.hass)
-        linked_device = device_registry.async_get_device_by_identifier(
-            (
-                DOMAIN,
-                format_device_identifier(
-                    self.coordinator.config_entry.unique_id, self._line_id
-                ),
-            ),
-            config_entry_id,
-        )
-
-        if (
-            linked_device
-            and self.registry_entry
-            and self.registry_entry.device_id is not None
-        ):
-            device = device_registry.async_get(
-                self.registry_entry.device_id, include_child_devices=False
-            )
-            if device and device.via_device_id != linked_device.id:
-                device_registry.async_update_device(
-                    device.id, via_device_id=linked_device.id
-                )
-
-        self.async_write_ha_state()
 
     @property
     def sensor(self) -> Sensor:
