@@ -1581,7 +1581,7 @@
         <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 35.0,
         <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 7.0,
         <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 385>,
-        <ClimateEntityStateAttribute.TARGET_TEMPERATURE: 'temperature'>: 25.0,
+        <ClimateEntityStateAttribute.TARGET_TEMPERATURE: 'temperature'>: 20.0,
         <ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: 'temperature_unit'>: <UnitOfTemperature.CELSIUS: '°C'>,
       }),
       'context': <ANY>,
@@ -1589,7 +1589,7 @@
       'last_changed': <ANY>,
       'last_reported': <ANY>,
       'last_updated': <ANY>,
-      'state': 'cool',
+      'state': 'heat',
     }),
     StateSnapshot({
       'attributes': ReadOnlyDict({
@@ -1751,7 +1751,7 @@
         <ClimateEntityCapabilityAttribute.TARGET_HUMIDITY_STEP: 'target_humidity_step'>: 5,
         <ClimateEntityStateAttribute.TARGET_TEMP_HIGH: 'target_temp_high'>: 24,
         <ClimateEntityStateAttribute.TARGET_TEMP_LOW: 'target_temp_low'>: 21,
-        <ClimateEntityStateAttribute.TARGET_TEMPERATURE: 'temperature'>: 25.0,
+        <ClimateEntityStateAttribute.TARGET_TEMPERATURE: 'temperature'>: 22.5,
         <ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: 'temperature_unit'>: <UnitOfTemperature.CELSIUS: '°C'>,
       }),
       'context': <ANY>,
@@ -1759,7 +1759,7 @@
       'last_changed': <ANY>,
       'last_reported': <ANY>,
       'last_updated': <ANY>,
-      'state': 'cool',
+      'state': 'heat',
     }),
   ])
 # ---

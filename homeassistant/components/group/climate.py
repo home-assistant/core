@@ -215,14 +215,17 @@ class ClimateGroup(GroupEntity, ClimateEntity):
     @override
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
+        entity_ids = self._climates[
+            ClimateEntityFeature.TARGET_TEMPERATURE
+            if ClimateServiceArgument.TEMPERATURE in kwargs
+            else ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
+        ]
+        if (hvac_mode := kwargs.get(ClimateServiceArgument.HVAC_MODE)) is not None:
+            entity_ids = self._entities_with_mode(
+                entity_ids, ClimateEntityCapabilityAttribute.HVAC_MODES, hvac_mode
+            )
         await self._async_call_supported_entities(
-            ClimateService.SET_TEMPERATURE,
-            self._climates[
-                ClimateEntityFeature.TARGET_TEMPERATURE
-                if ClimateServiceArgument.TEMPERATURE in kwargs
-                else ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
-            ],
-            kwargs,
+            ClimateService.SET_TEMPERATURE, entity_ids, kwargs
         )
 
     @override
