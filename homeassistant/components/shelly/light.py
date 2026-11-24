@@ -21,10 +21,13 @@ from homeassistant.components.light import (
     brightness_supported,
 )
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.util import color as color_util
 
 from .const import (
     BLOCK_MAX_TRANSITION_TIME_MS,
+    DOMAIN,
     DUAL_MODE_LIGHT_MODELS,
     KELVIN_MAX_VALUE,
     KELVIN_MIN_VALUE_COLOR,
@@ -44,6 +47,7 @@ from .entity import (
     ShellyRpcAttributeEntity,
     async_setup_entry_block,
     async_setup_entry_rpc,
+    rpc_call,
 )
 from .utils import (
     async_remove_orphaned_entities,
@@ -53,6 +57,7 @@ from .utils import (
     get_rpc_key_id,
     is_block_channel_type_light,
     is_rpc_channel_type_light,
+    is_rpc_ledstrip_control_available,
     percentage_to_brightness,
 )
 
@@ -552,11 +557,37 @@ class RpcShellyLedStrip(RpcShellyLightBase):
     @property
     @override
     def rgb_color(self) -> tuple[int, int, int] | None:
-        """Return the rgb color value, None if the device has not reported it."""
-        if (rgb := self.status.get("rgb")) is None:
+        """Return the rgb color value, None if the current effect does not use it."""
+        if not is_rpc_ledstrip_control_available(
+            self.coordinator.config_entry.runtime_data.rpc_ledstrip_effects,
+            self.status,
+            "rgb",
+        ):
             return None
 
-        return cast(tuple[int, int, int], tuple(rgb))
+        return cast(tuple[int, int, int], tuple(self.status["rgb"]))
+
+    @override
+    async def async_turn_on(self, **kwargs: Any) -> None:
+        """Turn on light, rejecting a color the target effect does not use."""
+        if ATTR_RGB_COLOR in kwargs:
+            effect = kwargs.get(ATTR_EFFECT, self.status["effect"])
+            effects = self.coordinator.config_entry.runtime_data.rpc_ledstrip_effects
+            if (
+                effects is None
+                or (effect_info := effects.get(effect)) is None
+                or "rgb" not in effect_info["controls"]
+            ):
+                raise ServiceValidationError(
+                    translation_domain=DOMAIN,
+                    translation_key="ledstrip_effect_no_color",
+                    translation_placeholders={
+                        "effect": effect,
+                        "entity": self.entity_id,
+                    },
+                )
+
+        await super().async_turn_on(**kwargs)
 
     @property
     @override
@@ -572,6 +603,70 @@ class RpcShellyLedStrip(RpcShellyLightBase):
     def effect(self) -> str:
         """Return the current effect."""
         return cast(str, self.status["effect"])
+
+
+class RpcShellyLedStripBackground(ShellyRpcAttributeEntity, LightEntity):
+    """Entity that controls the background color of LED strip effects."""
+
+    entity_description: RpcLightDescription
+    _id: int
+    _attr_color_mode = ColorMode.RGB
+    _attr_supported_color_modes = {ColorMode.RGB}
+
+    @property
+    @override
+    def available(self) -> bool:
+        """Return if the current effect uses a background color."""
+        return super().available and is_rpc_ledstrip_control_available(
+            self.coordinator.config_entry.runtime_data.rpc_ledstrip_effects,
+            self.status,
+            "bg_rgb",
+        )
+
+    @property
+    def _bg_rgb(self) -> list[int]:
+        """Return the raw background color."""
+        return cast(list[int], self.status["bg_rgb"])
+
+    @property
+    @override
+    def is_on(self) -> bool:
+        """Return if the LED strip is on and the background color is not black."""
+        return bool(self.status["on"]) and any(self._bg_rgb)
+
+    @property
+    @override
+    def brightness(self) -> int:
+        """Return the brightness, the highest channel of the background color."""
+        return max(self._bg_rgb)
+
+    @property
+    @override
+    def rgb_color(self) -> tuple[int, int, int] | None:
+        """Return the background color at full brightness."""
+        if not self.brightness:
+            return None
+
+        return cast(
+            tuple[int, int, int],
+            color_util.match_max_scale((255,), tuple(self._bg_rgb)),
+        )
+
+    @rpc_call
+    @override
+    async def async_turn_on(self, **kwargs: Any) -> None:
+        """Set the background color."""
+        rgb = kwargs.get(ATTR_RGB_COLOR) or self.rgb_color or (255, 255, 255)
+        brightness = kwargs.get(ATTR_BRIGHTNESS) or self.brightness or 255
+        await self.coordinator.device.ledstrip_set(
+            self._id, {"bg_rgb": [round(c * brightness / 255) for c in rgb]}
+        )
+
+    @rpc_call
+    @override
+    async def async_turn_off(self, **kwargs: Any) -> None:
+        """Set the background color to black."""
+        await self.coordinator.device.ledstrip_set(self._id, {"bg_rgb": [0, 0, 0]})
 
 
 class RpcShellyRgbLight(RpcShellyLightBase):
@@ -640,6 +735,14 @@ LIGHTS: Final = (
         sub_key="on",
         translation_key="ledstrip",
         entity_class=RpcShellyLedStrip,
+    ),
+    RpcLightDescription(
+        key="ledstrip_background",
+        components=("ledstrip",),
+        sub_key="bg_rgb",
+        translation_key="ledstrip_background",
+        supported=lambda _: True,
+        entity_class=RpcShellyLedStripBackground,
     ),
 )
 
