@@ -44,7 +44,7 @@ workflows:
         - 'codspeedhq/action@v5.6.3'
         - 'dorny/paths-filter@v4.0.3'
         - 'hadolint/hadolint-action@v3.5.0'
-        - 'j178/prek-action@v3.1.0'
+        - 'j178/prek-action@v3.1.1'
     '.github/workflows/codeql.yml':
         - 'actions/checkout@v7.0.1'
         - 'github/codeql-action@v4.39.3'
@@ -91,7 +91,7 @@ workflows:
         - 'astral-sh/setup-uv@v10.3.3'
         - 'dorny/paths-filter@v4.0.3'
         - 'github/codeql-action@v4.39.3'
-        - 'j178/prek-action@v3.1.0'
+        - 'j178/prek-action@v3.1.1'
 dependencies:
     'actions/ai-inference@v2.1.1':
         ref: 'v2.1.1'
@@ -327,9 +327,9 @@ dependencies:
         commit: 'sha1-a100f6a076013273baaaf94c908d647d91327364'
         owner_id: 13844975
         repo_id: 184234812
-    'j178/prek-action@v3.1.0':
-        ref: 'v3.1.0'
-        commit: 'sha1-44924fe9ef4a6f88253c4b6b1bf11c689d3ce53d'
+    'j178/prek-action@v3.1.1':
+        ref: 'v3.1.1'
+        commit: 'sha1-7b101f8338a08d2bd6fdb3625e4e7692428763a3'
         owner_id: 10510431
         repo_id: 1052387486
     'pnpm/action-setup@v6.1.1':
