@@ -7,7 +7,6 @@
             "state": {
               "anti_allergy": "mdi:flower-pollen",
               "auto": "mdi:fan-auto",
-              "manual": "mdi:fan",
               "night": "mdi:weather-night",
               "turbo": "mdi:turbine"
             }

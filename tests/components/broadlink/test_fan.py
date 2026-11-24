@@ -12,6 +12,7 @@ from homeassistant.components.broadlink.updater import BroadlinkLIFAAIRUpdateMan
 from homeassistant.components.fan import (
     ATTR_PERCENTAGE,
     ATTR_PRESET_MODE,
+    ATTR_PRESET_MODES,
     DOMAIN as FAN_DOMAIN,
     FanService,
     FanServiceArgument,
@@ -33,20 +34,20 @@ from homeassistant.helpers import device_registry as dr
 
 from . import get_device
 
-FAN_ENTITY_ID = "fan.air_purifier"
-PURIFIER_ONLINE_ENTITY_ID = "binary_sensor.air_purifier_purifier_online"
-TEMPERATURE_ENTITY_ID = "sensor.air_purifier_temperature"
-HUMIDITY_ENTITY_ID = "sensor.air_purifier_humidity"
-FORMALDEHYDE_ENTITY_ID = "sensor.air_purifier_formaldehyde"
-TVOC_ENTITY_ID = "sensor.air_purifier_volatile_organic_compounds"
-CO2_ENTITY_ID = "sensor.air_purifier_carbon_dioxide"
+FAN_ENTITY_ID = "fan.nursery"
+PURIFIER_ONLINE_ENTITY_ID = "binary_sensor.nursery_purifier_online"
+TEMPERATURE_ENTITY_ID = "sensor.nursery_temperature"
+HUMIDITY_ENTITY_ID = "sensor.nursery_humidity"
+FORMALDEHYDE_ENTITY_ID = "sensor.nursery_formaldehyde"
+TVOC_ENTITY_ID = "sensor.nursery_volatile_organic_compounds"
+CO2_ENTITY_ID = "sensor.nursery_carbon_dioxide"
 
 
 async def test_lifaair_fan_setup(
     hass: HomeAssistant, device_registry: dr.DeviceRegistry
 ) -> None:
     """Test setting up a LIFAair fan."""
-    device = get_device("Air purifier")
+    device = get_device("Nursery")
     mock_api = device.get_mock_api()
     mock_api.get_state.return_value = {
         "co2": 425,
@@ -76,6 +77,12 @@ async def test_lifaair_fan_setup(
     assert fan_state.state == STATE_ON
     assert fan_state.attributes[ATTR_PRESET_MODE] == "auto"
     assert fan_state.attributes[ATTR_PERCENTAGE] == 41
+    assert fan_state.attributes[ATTR_PRESET_MODES] == [
+        "auto",
+        "night",
+        "turbo",
+        "anti_allergy",
+    ]
 
     formaldehyde_state = hass.states.get(FORMALDEHYDE_ENTITY_ID)
     assert formaldehyde_state is not None
@@ -102,7 +109,7 @@ async def test_lifaair_fan_setup(
 
 async def test_lifaair_purifier_offline(hass: HomeAssistant) -> None:
     """Test the purifier offline state is exposed separately from the station."""
-    device = get_device("Air purifier")
+    device = get_device("Nursery")
     mock_api = device.get_mock_api()
     mock_api.get_state.return_value = {
         "fan_mode": None,
@@ -133,7 +140,7 @@ async def test_lifaair_climate_sensors_unknown_when_online_without_readings(
     hass: HomeAssistant,
 ) -> None:
     """Test missing climate readings are unknown while the purifier is online."""
-    device = get_device("Air purifier")
+    device = get_device("Nursery")
     mock_api = device.get_mock_api()
     mock_api.get_state.return_value = {
         "fan_mode": blk.lifaair.FanMode.AUTO,
@@ -158,7 +165,7 @@ async def test_lifaair_scan_interval(
     hass: HomeAssistant, freezer: FrozenDateTimeFactory
 ) -> None:
     """Test the purifier is polled on the same interval as the A1 and A2 sensors."""
-    device = get_device("Air purifier")
+    device = get_device("Nursery")
     mock_api = device.get_mock_api()
     mock_api.get_state.return_value = {
         "fan_mode": blk.lifaair.FanMode.AUTO,
@@ -176,9 +183,28 @@ async def test_lifaair_scan_interval(
     assert mock_api.get_state.call_count == 2
 
 
+async def test_lifaair_fan_unknown_mode(hass: HomeAssistant) -> None:
+    """Test an unknown fan mode is not reported as a preset."""
+    device = get_device("Nursery")
+    mock_api = device.get_mock_api()
+    mock_api.get_state.return_value = {
+        "fan_mode": blk.lifaair.FanMode.UNKNOWN,
+        "fan_speed": 60,
+        "purifier_online": True,
+    }
+
+    await device.setup_entry(hass, mock_api=mock_api)
+
+    fan_state = hass.states.get(FAN_ENTITY_ID)
+    assert fan_state is not None
+    assert fan_state.state == STATE_ON
+    assert fan_state.attributes[ATTR_PRESET_MODE] is None
+    assert fan_state.attributes[ATTR_PERCENTAGE] == 50
+
+
 async def test_lifaair_fan_turn_on_off(hass: HomeAssistant) -> None:
     """Test that the fan exposes working turn on and turn off services."""
-    device = get_device("Air purifier")
+    device = get_device("Nursery")
     mock_api = device.get_mock_api()
     fan_mode = blk.lifaair.FanMode
     mock_api.get_state.return_value = {
@@ -192,6 +218,12 @@ async def test_lifaair_fan_turn_on_off(hass: HomeAssistant) -> None:
     ]
 
     await device.setup_entry(hass, mock_api=mock_api)
+
+    fan_state = hass.states.get(FAN_ENTITY_ID)
+    assert fan_state is not None
+    assert fan_state.state == STATE_OFF
+    assert fan_state.attributes[ATTR_PRESET_MODE] is None
+    assert fan_state.attributes[ATTR_PERCENTAGE] == 0
 
     await hass.services.async_call(
         FAN_DOMAIN,
@@ -217,11 +249,13 @@ async def test_lifaair_fan_turn_on_off(hass: HomeAssistant) -> None:
     fan_state = hass.states.get(FAN_ENTITY_ID)
     assert fan_state is not None
     assert fan_state.state == STATE_OFF
+    assert fan_state.attributes[ATTR_PRESET_MODE] is None
+    assert fan_state.attributes[ATTR_PERCENTAGE] == 0
 
 
 async def test_lifaair_fan_preset_from_off(hass: HomeAssistant) -> None:
     """Test setting a preset from off starts the fan before changing its mode."""
-    device = get_device("Air purifier")
+    device = get_device("Nursery")
     mock_api = device.get_mock_api()
     fan_mode = blk.lifaair.FanMode
     mock_api.get_state.return_value = {
@@ -240,6 +274,8 @@ async def test_lifaair_fan_preset_from_off(hass: HomeAssistant) -> None:
     fan_state = hass.states.get(FAN_ENTITY_ID)
     assert fan_state is not None
     assert fan_state.state == STATE_OFF
+    assert fan_state.attributes[ATTR_PRESET_MODE] is None
+    assert fan_state.attributes[ATTR_PERCENTAGE] == 0
 
     await hass.services.async_call(
         FAN_DOMAIN,
@@ -260,9 +296,9 @@ async def test_lifaair_fan_preset_from_off(hass: HomeAssistant) -> None:
     assert fan_state.state == STATE_ON
 
 
-async def test_lifaair_manual_preset_sets_speed(hass: HomeAssistant) -> None:
-    """Test the API's manual mode is entered through its speed setter."""
-    device = get_device("Air purifier")
+async def test_lifaair_fan_set_percentage(hass: HomeAssistant) -> None:
+    """Test setting the fan speed enters manual mode."""
+    device = get_device("Nursery")
     mock_api = device.get_mock_api()
     fan_mode = blk.lifaair.FanMode
     mock_api.get_state.return_value = {
@@ -280,31 +316,33 @@ async def test_lifaair_manual_preset_sets_speed(hass: HomeAssistant) -> None:
 
     await hass.services.async_call(
         FAN_DOMAIN,
-        FanService.SET_PRESET_MODE,
-        {
-            TargetKey.ENTITY_ID: FAN_ENTITY_ID,
-            FanServiceArgument.PRESET_MODE: "manual",
-        },
+        FanService.SET_PERCENTAGE,
+        {TargetKey.ENTITY_ID: FAN_ENTITY_ID, FanServiceArgument.PERCENTAGE: 50},
         blocking=True,
     )
 
     mock_api.set_fan_speed.assert_awaited_once_with(60)
     mock_api.set_fan_mode.assert_not_awaited()
+    fan_state = hass.states.get(FAN_ENTITY_ID)
+    assert fan_state is not None
+    assert fan_state.state == STATE_ON
+    assert fan_state.attributes[ATTR_PRESET_MODE] is None
+    assert fan_state.attributes[ATTR_PERCENTAGE] == 50
 
 
-async def test_lifaair_manual_preset_with_zero_auto_speed(hass: HomeAssistant) -> None:
-    """Test selecting manual while auto is stopped uses the fallback speed."""
-    device = get_device("Air purifier")
+async def test_lifaair_fan_preset_from_manual(hass: HomeAssistant) -> None:
+    """Test setting a preset from manual speed does not turn the fan on first."""
+    device = get_device("Nursery")
     mock_api = device.get_mock_api()
     fan_mode = blk.lifaair.FanMode
     mock_api.get_state.return_value = {
-        "fan_mode": fan_mode.AUTO,
-        "fan_speed": 0,
-        "purifier_online": True,
-    }
-    mock_api.set_fan_speed.return_value = {
         "fan_mode": fan_mode.MANUAL,
         "fan_speed": 60,
+        "purifier_online": True,
+    }
+    mock_api.set_fan_mode.return_value = {
+        "fan_mode": fan_mode.NIGHT,
+        "fan_speed": 10,
         "purifier_online": True,
     }
 
@@ -315,18 +353,21 @@ async def test_lifaair_manual_preset_with_zero_auto_speed(hass: HomeAssistant) -
         FanService.SET_PRESET_MODE,
         {
             TargetKey.ENTITY_ID: FAN_ENTITY_ID,
-            FanServiceArgument.PRESET_MODE: "manual",
+            FanServiceArgument.PRESET_MODE: "night",
         },
         blocking=True,
     )
 
-    mock_api.set_fan_speed.assert_awaited_once_with(60)
-    mock_api.set_fan_mode.assert_not_awaited()
+    mock_api.set_fan_mode.assert_awaited_once_with(fan_mode.NIGHT)
+    fan_state = hass.states.get(FAN_ENTITY_ID)
+    assert fan_state is not None
+    assert fan_state.state == STATE_ON
+    assert fan_state.attributes[ATTR_PRESET_MODE] == "night"
 
 
-async def test_lifaair_zero_percentage_turns_off(hass: HomeAssistant) -> None:
-    """Test zero percent uses OFF mode instead of setting a manual speed."""
-    device = get_device("Air purifier")
+async def test_lifaair_fan_set_percentage_zero(hass: HomeAssistant) -> None:
+    """Test setting the fan speed to zero turns the fan off."""
+    device = get_device("Nursery")
     mock_api = device.get_mock_api()
     fan_mode = blk.lifaair.FanMode
     mock_api.get_state.return_value = {
@@ -354,3 +395,5 @@ async def test_lifaair_zero_percentage_turns_off(hass: HomeAssistant) -> None:
     fan_state = hass.states.get(FAN_ENTITY_ID)
     assert fan_state is not None
     assert fan_state.state == STATE_OFF
+    assert fan_state.attributes[ATTR_PRESET_MODE] is None
+    assert fan_state.attributes[ATTR_PERCENTAGE] == 0

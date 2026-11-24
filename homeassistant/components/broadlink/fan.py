@@ -15,8 +15,6 @@ from .const import BROADLINK_DATA, DOMAINS_AND_TYPES
 from .device import BroadlinkDevice
 from .entity import BroadlinkEntity
 
-MAX_FAN_SPEED = 121
-
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -27,27 +25,13 @@ async def async_setup_entry(
     device = hass.data[BROADLINK_DATA].devices[config_entry.entry_id]
 
     if device.api.type in DOMAINS_AND_TYPES[Platform.FAN]:
-        async_add_entities([LifaAirPurifierFan(device)])
+        async_add_entities([BroadlinkLifaAirPurifierFan(device)])
 
 
-def _fan_percentage_to_speed(percentage: int) -> int:
-    return round(MAX_FAN_SPEED * percentage / 100)
+class BroadlinkLifaAirPurifierFan(BroadlinkEntity, FanEntity):
+    """Representation of the LIFAair purifier fan."""
 
-
-def _fan_speed_to_percentage(fan_speed: int) -> int:
-    return round(100 * fan_speed / MAX_FAN_SPEED)
-
-
-def _fan_mode_to_name(fan_mode: lifaair.FanMode) -> str:
-    return fan_mode.name.lower()
-
-
-def _fan_name_to_mode(fan_mode_name: str) -> lifaair.FanMode:
-    return lifaair.FanMode[fan_mode_name.upper()]
-
-
-class LifaAirPurifierFan(BroadlinkEntity, FanEntity):
-    """Representation of a Broadlink LIFAair fan entity."""
+    _MAX_FAN_SPEED = 121
 
     _attr_has_entity_name = True
     _attr_name = None
@@ -59,9 +43,13 @@ class LifaAirPurifierFan(BroadlinkEntity, FanEntity):
         | FanEntityFeature.TURN_OFF
     )
     _attr_preset_modes = [
-        _fan_mode_to_name(mode)
-        for mode in lifaair.FanMode
-        if mode not in (lifaair.FanMode.OFF, lifaair.FanMode.UNKNOWN)
+        mode.name.lower()
+        for mode in (
+            lifaair.FanMode.AUTO,
+            lifaair.FanMode.NIGHT,
+            lifaair.FanMode.TURBO,
+            lifaair.FanMode.ANTI_ALLERGY,
+        )
     ]
     _attr_speed_count = 100
 
@@ -70,35 +58,62 @@ class LifaAirPurifierFan(BroadlinkEntity, FanEntity):
         super().__init__(device)
         self._attr_unique_id = device.unique_id
 
+    @staticmethod
+    def _fan_percentage_to_speed(percentage: int) -> int:
+        return round(BroadlinkLifaAirPurifierFan._MAX_FAN_SPEED * percentage / 100)
+
+    @staticmethod
+    def _fan_speed_to_percentage(fan_speed: int) -> int:
+        return round(100 * fan_speed / BroadlinkLifaAirPurifierFan._MAX_FAN_SPEED)
+
+    @staticmethod
+    def _fan_mode_to_name(fan_mode: lifaair.FanMode) -> str:
+        return fan_mode.name.lower()
+
+    @staticmethod
+    def _fan_name_to_mode(fan_mode_name: str) -> lifaair.FanMode:
+        return lifaair.FanMode[fan_mode_name.upper()]
+
     @callback
     @override
     def _update_state(self, data: dict[str, Any]) -> None:
         """Update fan state."""
-        fan_mode = data["fan_mode"]
-        self._attr_available = fan_mode is not None
-        if fan_mode is None:
-            return
-        if fan_mode == lifaair.FanMode.OFF:
+        self._attr_available = bool(data["purifier_online"])
+        if not self._attr_available:
+            # None is reserved for the Bluetooth purifier being offline.
             self._attr_preset_mode = None
             self._attr_percentage = None
             return
-        self._attr_preset_mode = _fan_mode_to_name(fan_mode)
+
+        fan_mode = data["fan_mode"]
         fan_speed = data["fan_speed"]
-        self._attr_percentage = (
-            _fan_speed_to_percentage(fan_speed) if fan_speed is not None else None
+        percentage = (
+            self._fan_speed_to_percentage(fan_speed) if fan_speed is not None else None
         )
+        if fan_mode is None or fan_mode == lifaair.FanMode.OFF:
+            self._attr_preset_mode = None
+            self._attr_percentage = 0
+            return
+        if fan_mode == lifaair.FanMode.MANUAL:
+            self._attr_preset_mode = None
+            self._attr_percentage = percentage
+            return
+        preset_name = self._fan_mode_to_name(fan_mode)
+        if not self.preset_modes or preset_name not in self.preset_modes:
+            # UNKNOWN or any mode the entity does not expose as a preset.
+            self._attr_preset_mode = None
+            self._attr_percentage = percentage
+            return
+        self._attr_preset_mode = preset_name
+        self._attr_percentage = percentage
 
     @override
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set the preset mode of the fan."""
-        fan_mode = _fan_name_to_mode(preset_mode)
-        if fan_mode == lifaair.FanMode.MANUAL:
-            # The API enters MANUAL mode by setting a speed, not by setting a mode.
-            await self.async_set_percentage(self.percentage or 50)
-        else:
-            was_set_to_auto = await self._async_turn_on_if_needed()
-            if not (was_set_to_auto and fan_mode == lifaair.FanMode.AUTO):
-                await self._async_request(self._device.api.set_fan_mode, fan_mode)
+        fan_mode = self._fan_name_to_mode(preset_mode)
+        was_set_to_auto = await self._async_turn_on_if_needed()
+        if not (was_set_to_auto and fan_mode == lifaair.FanMode.AUTO):
+            await self._async_request(self._device.api.set_fan_mode, fan_mode)
 
     @override
     async def async_set_percentage(self, percentage: int) -> None:
@@ -107,7 +122,7 @@ class LifaAirPurifierFan(BroadlinkEntity, FanEntity):
             await self.async_turn_off()
             return
         await self._async_turn_on_if_needed()
-        fan_speed = _fan_percentage_to_speed(percentage)
+        fan_speed = self._fan_percentage_to_speed(percentage)
         await self._async_request(self._device.api.set_fan_speed, fan_speed)
 
     @override
@@ -132,12 +147,10 @@ class LifaAirPurifierFan(BroadlinkEntity, FanEntity):
 
     async def _async_turn_on_if_needed(self) -> bool:
         # Set AUTO before commands that are rejected while the fan is off.
-        if self.preset_mode is None:
-            await self._async_request(
-                self._device.api.set_fan_mode, lifaair.FanMode.AUTO
-            )
-            return True
-        return False
+        if self.is_on:
+            return False
+        await self._async_request(self._device.api.set_fan_mode, lifaair.FanMode.AUTO)
+        return True
 
     async def _async_request(
         self,

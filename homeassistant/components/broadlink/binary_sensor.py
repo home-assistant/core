@@ -29,7 +29,7 @@ async def async_setup_entry(
         if device.api.type == "HYS":
             entities.append(BroadlinkThermostatHeating(device))
         elif device.api.type == "LIFAAIR":
-            entities.append(BroadlinkLifaAirOnline(device))
+            entities.append(BroadlinkLifaAirPurifierOnline(device))
         async_add_entities(entities)
 
 
@@ -51,7 +51,7 @@ class BroadlinkThermostatHeating(BroadlinkEntity, BinarySensorEntity):
         self._attr_is_on = bool(data["active"])
 
 
-class BroadlinkLifaAirOnline(BroadlinkEntity, BinarySensorEntity):
+class BroadlinkLifaAirPurifierOnline(BroadlinkEntity, BinarySensorEntity):
     """Representation of the LIFAair purifier connectivity."""
 
     _attr_device_class = BinarySensorDeviceClass.CONNECTIVITY
