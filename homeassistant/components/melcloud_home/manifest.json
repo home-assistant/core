@@ -9,6 +9,6 @@
   "integration_type": "hub",
   "iot_class": "cloud_push",
   "loggers": ["aiomelcloudhome"],
-  "quality_scale": "platinum",
+  "quality_scale": "silver",
   "requirements": ["aiomelcloudhome==0.3.2"]
 }
