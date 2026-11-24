@@ -478,7 +478,10 @@ class HKDevice:
         )
         name: str | None = service.value(CharacteristicsTypes.NAME)
         if name and name.casefold().startswith(accessory.name.casefold()):
-            name = name[len(accessory.name) :].strip(" -_")
+            suffix = name[len(accessory.name) :]
+            # Only strip the accessory name when it ends at a word boundary
+            if not suffix or suffix[0] in " -_":
+                name = suffix.strip(" -_")
         if name:
             device_info.name = name
         else:
@@ -746,6 +749,7 @@ class HKDevice:
                 )
                 child_devices[(accessory.aid, service.iid)] = child_device.id
 
+        previous_child_devices = self.child_devices
         self.devices = devices
         self.child_devices = child_devices
 
@@ -758,14 +762,21 @@ class HKDevice:
         ):
             if (iids := unique_id_to_iids(entry.unique_id)) is None:
                 continue
-            aid, iid, _ = iids
+            aid, iid, char_iid = iids
             device_id = (
                 child_devices.get((aid, iid)) if iid is not None else None
             ) or devices.get(aid)
-            if device_id is not None and entry.device_id != device_id:
-                entity_registry.async_update_entity(
-                    entry.entity_id, device_id=device_id
-                )
+            if device_id is None or entry.device_id == device_id:
+                continue
+            updates: dict[str, Any] = {"device_id": device_id}
+            if iid is not None and char_iid is None:
+                # Rename with the move, so the entity's area follows to the child device
+                if (aid, iid) in child_devices:
+                    updates["has_entity_name"] = True
+                    updates["original_name"] = None
+                elif (aid, iid) in previous_child_devices:
+                    updates["has_entity_name"] = False
+            entity_registry.async_update_entity(entry.entity_id, **updates)
 
         child_device_ids = set(child_devices.values())
         for child_device in dr.async_child_entries_for_config_entry(

@@ -121,6 +121,29 @@ async def test_device_remove_devices(
     assert response["success"]
 
 
+async def test_device_remove_child_devices(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test we can't remove the child device of a service that still exists."""
+    assert await async_setup_component(hass, "config", {})
+    accessories = await setup_accessories_from_file(hass, "connectsense.json")
+    config_entry, _ = await setup_test_accessories(hass, accessories)
+    child_devices = dr.async_child_entries_for_config_entry(
+        device_registry, config_entry.entry_id
+    )
+    assert len(child_devices) == 2
+
+    client = await hass_ws_client(hass)
+    response = await client.remove_device(child_devices[0].id)
+
+    assert not response["success"]
+    assert entity_registry.async_get("switch.inwall_outlet_0394de_outlet_a")
+    assert entity_registry.async_get("switch.inwall_outlet_0394de_outlet_b")
+
+
 async def test_offline_device_raises(
     hass: HomeAssistant, get_next_aid: Callable[[], int], controller
 ) -> None:
