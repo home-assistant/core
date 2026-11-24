@@ -14,13 +14,23 @@ write_data_by_name:
           options:
             - "bool"
             - "byte"
+            - "date"
             - "dint"
+            - "dt"
+            - "dword"
             - "int"
+            - "lreal"
+            - "real"
+            - "sint"
+            - "string"
+            - "time"
+            - "tod"
             - "udint"
             - "uint"
+            - "usint"
+            - "word"
     value:
       required: true
+      example: "21.5"
       selector:
-        number:
-          min: 0
-          max: 10000
+        text:
