@@ -5,17 +5,9 @@ from typing import Any, override
 import probatio
 
 from homeassistant.components.climate import HVACMode
-from homeassistant.components.infrared import (
-    DOMAIN as INFRARED_DOMAIN,
-    async_get_emitters,
-    async_get_receivers,
-)
-from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
-from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import entity_registry as er
+from homeassistant.components.infrared import InfraredConsumerReconfigureConfigFlow
+from homeassistant.core import callback
 from homeassistant.helpers.selector import (
-    EntitySelector,
-    EntitySelectorConfig,
     SelectSelector,
     SelectSelectorConfig,
     SelectSelectorMode,
@@ -38,95 +30,46 @@ _HVAC_MODE_OPTIONS = [
 ]
 
 
-@callback
-def _ac_schema(hass: HomeAssistant) -> probatio.Schema:
-    """Return the emitter/receiver/mode selection schema."""
-    return probatio.Schema(
-        {
-            probatio.Required(CONF_INFRARED_EMITTER_ENTITY_ID): EntitySelector(
-                EntitySelectorConfig(
-                    domain=INFRARED_DOMAIN,
-                    include_entities=async_get_emitters(hass),
-                )
-            ),
-            probatio.Optional(CONF_INFRARED_RECEIVER_ENTITY_ID): EntitySelector(
-                EntitySelectorConfig(
-                    domain=INFRARED_DOMAIN,
-                    include_entities=async_get_receivers(hass),
-                )
-            ),
-            probatio.Required(
-                CONF_HVAC_MODES, default=DEFAULT_HVAC_MODES
-            ): probatio.All(
-                SelectSelector(
-                    SelectSelectorConfig(
-                        options=[mode.value for mode in _HVAC_MODE_OPTIONS],
-                        translation_key=CONF_HVAC_MODES,
-                        mode=SelectSelectorMode.LIST,
-                        multiple=True,
-                    )
-                ),
-                probatio.Length(min=1, msg="no_hvac_modes"),
-            ),
-        }
-    )
-
-
-class GreeIrConfigFlow(ConfigFlow, domain=DOMAIN):
+class GreeIrConfigFlow(InfraredConsumerReconfigureConfigFlow, domain=DOMAIN):
     """Handle config flow for Gree IR."""
 
     VERSION = 1
-
-    def _entity_name(self, entity_id: str) -> str:
-        ent_reg = er.async_get(self.hass)
-        entry = ent_reg.async_get(entity_id)
-        return entry.name or entry.original_name or entity_id if entry else entity_id
-
-    @callback
-    def _async_abort_infrared_entities_match(self, user_input: dict[str, Any]) -> None:
-        """Abort if another entry uses one of these IR entities."""
-        emitter_id = user_input[CONF_INFRARED_EMITTER_ENTITY_ID]
-        self._async_abort_entries_match({CONF_INFRARED_EMITTER_ENTITY_ID: emitter_id})
-        if receiver_id := user_input.get(CONF_INFRARED_RECEIVER_ENTITY_ID):
-            self._async_abort_entries_match(
-                {CONF_INFRARED_RECEIVER_ENTITY_ID: receiver_id}
-            )
+    INFRARED_EMITTER_KEY = CONF_INFRARED_EMITTER_ENTITY_ID
+    INFRARED_RECEIVER_KEY = CONF_INFRARED_RECEIVER_ENTITY_ID
 
     @override
-    async def async_step_user(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Handle emitter, receiver and mode selection."""
-        if not async_get_emitters(self.hass):
-            return self.async_abort(reason="no_infrared_emitters")
-
-        if user_input is not None:
-            self._async_abort_infrared_entities_match(user_input)
-            emitter_id = user_input[CONF_INFRARED_EMITTER_ENTITY_ID]
-            return self.async_create_entry(
-                title=f"Gree AC via {self._entity_name(emitter_id)}",
-                data=user_input,
-            )
-
-        return self.async_show_form(step_id="user", data_schema=_ac_schema(self.hass))
-
-    async def async_step_reconfigure(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Handle reconfiguration of the infrared entities and supported modes."""
-        entry = self._get_reconfigure_entry()
-        if not async_get_emitters(self.hass):
-            return self.async_abort(reason="no_infrared_emitters")
-
-        if user_input is not None:
-            self._async_abort_infrared_entities_match(user_input)
-            # Replace rather than update the data, so a cleared receiver
-            # selector removes it from the entry.
-            return self.async_update_reload_and_abort(entry, data=user_input)
-
-        return self.async_show_form(
-            step_id="reconfigure",
-            data_schema=self.add_suggested_values_to_schema(
-                _ac_schema(self.hass), entry.data
-            ),
+    @callback
+    def _async_infrared_schema(self) -> probatio.Schema:
+        """Return the emitter/receiver/mode selection schema."""
+        return probatio.Schema(
+            {
+                **self._async_infrared_entity_fields(),
+                probatio.Required(
+                    CONF_HVAC_MODES, default=DEFAULT_HVAC_MODES
+                ): probatio.All(
+                    SelectSelector(
+                        SelectSelectorConfig(
+                            options=[mode.value for mode in _HVAC_MODE_OPTIONS],
+                            translation_key=CONF_HVAC_MODES,
+                            mode=SelectSelectorMode.LIST,
+                            multiple=True,
+                        )
+                    ),
+                    probatio.Length(min=1, msg="no_hvac_modes"),
+                ),
+            }
         )
+
+    @override
+    @callback
+    def _async_infrared_reconfigure_schema(self) -> probatio.Schema:
+        """Return the emitter/receiver/mode selection schema."""
+        return self._async_infrared_schema()
+
+    @override
+    async def _async_infrared_entry_title(self, user_input: dict[str, Any]) -> str:
+        """Return the title of a new entry."""
+        emitter_name = self._async_infrared_entity_name(
+            user_input[CONF_INFRARED_EMITTER_ENTITY_ID]
+        )
+        return f"Gree AC via {emitter_name}"

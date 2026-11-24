@@ -6,12 +6,16 @@ import logging
 from infrared_protocols.commands import Command as InfraredCommand
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant, callback
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 from homeassistant.exceptions import ConfigEntryError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.typing import ConfigType
 
+from .config_flow_helpers import (
+    InfraredConsumerConfigFlow,
+    InfraredConsumerReconfigureConfigFlow,
+)
 from .const import DATA_COMPONENT, DOMAIN
 from .entity import (
     InfraredDeviceClass,
@@ -26,6 +30,8 @@ from .entity import (
 from .helpers import (
     InfraredEmitterConsumerEntity,
     InfraredReceiverConsumerEntity,
+    async_get_emitters,
+    async_get_receivers,
     async_send_command,
     async_subscribe_receiver,
 )
@@ -33,6 +39,8 @@ from .helpers import (
 __all__ = [
     "DOMAIN",
     "InfraredCommand",
+    "InfraredConsumerConfigFlow",
+    "InfraredConsumerReconfigureConfigFlow",
     "InfraredDeviceClass",
     "InfraredEmitterConsumerEntity",
     "InfraredEmitterEntity",
@@ -81,31 +89,3 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Unload a config entry."""
     await hass.data[DATA_COMPONENT].async_unload_entry(entry)
-
-
-@callback
-def async_get_emitters(hass: HomeAssistant) -> list[str]:
-    """Get all infrared emitter entity IDs."""
-    component = hass.data.get(DATA_COMPONENT)
-    if component is None:
-        return []
-
-    return [
-        entity.entity_id
-        for entity in component.entities
-        if isinstance(entity, InfraredEmitterEntity)
-    ]
-
-
-@callback
-def async_get_receivers(hass: HomeAssistant) -> list[str]:
-    """Get all infrared receiver entity IDs."""
-    component = hass.data.get(DATA_COMPONENT)
-    if component is None:
-        return []
-
-    return [
-        entity.entity_id
-        for entity in component.entities
-        if isinstance(entity, InfraredReceiverEntity)
-    ]

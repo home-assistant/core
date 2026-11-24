@@ -8,6 +8,8 @@ import ast
 from hassfest import ast_parse_module
 from hassfest.model import Config, Integration
 
+from . import has_base_class
+
 
 def _has_method_call(module: ast.Module, name: str) -> bool:
     """Test if the module calls a specific method."""
@@ -21,6 +23,30 @@ def _has_method_call(module: ast.Module, name: str) -> bool:
 def _has_abort_entries_match(module: ast.Module) -> bool:
     """Test if the module calls `_async_abort_entries_match`."""
     return _has_method_call(module, "_async_abort_entries_match")
+
+
+_INFRARED_CONSUMER_FLOWS = {
+    "InfraredConsumerConfigFlow",
+    "InfraredConsumerReconfigureConfigFlow",
+}
+
+
+def _has_infrared_consumer_duplicate_check(module: ast.Module) -> bool:
+    """Test if the module relies on the infrared consumer duplicate check.
+
+    The default user step of the infrared consumer config flows does the check,
+    so a module that defines its own user step must call it.
+    """
+    if not has_base_class(module, _INFRARED_CONSUMER_FLOWS):
+        return False
+    defines_step_user = any(
+        isinstance(item, (ast.FunctionDef, ast.AsyncFunctionDef))
+        and item.name == "async_step_user"
+        for item in ast.walk(module)
+    )
+    if not defines_step_user:
+        return True
+    return _has_method_call(module, "_async_abort_infrared_entities_match")
 
 
 def _has_abort_unique_id_configured(module: ast.Module) -> bool:
@@ -43,6 +69,7 @@ def validate(
 
     if not (
         _has_abort_entries_match(config_flow)
+        or _has_infrared_consumer_duplicate_check(config_flow)
         or _has_abort_unique_id_configured(config_flow)
     ):
         return [
