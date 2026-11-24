@@ -9,11 +9,7 @@ from typing import override
 
 from recamera_protocol import RecameraError
 
-from homeassistant.components.camera import (
-    Camera,
-    CameraEntityFeature,
-    async_get_stream_image,
-)
+from homeassistant.components.camera import Camera, CameraEntityFeature
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -35,6 +31,28 @@ def _load_stream_off_image() -> bytes | None:
         return _STREAM_OFF_IMAGE_PATH.read_bytes()
     except OSError:
         return None
+
+
+async def _async_get_stream_image(
+    camera: Camera,
+    width: int | None = None,
+    height: int | None = None,
+    wait_for_next_keyframe: bool = False,
+) -> bytes | None:
+    """Return a still image from the camera's stream."""
+    if (provider := camera.webrtc_provider) and (
+        image := await provider.async_get_image(camera, width=width, height=height)
+    ) is not None:
+        return image
+    if not camera.stream and CameraEntityFeature.STREAM in camera.supported_features:
+        camera.stream = await camera.async_create_stream()
+    if camera.stream:
+        return await camera.stream.async_get_image(
+            width=width,
+            height=height,
+            wait_for_next_keyframe=wait_for_next_keyframe,
+        )
+    return None
 
 
 async def async_setup_entry(
@@ -272,7 +290,7 @@ class RecameraCamera(RecameraEntity, Camera):
             image: bytes | None = None
             for attempt in range(max_attempts):
                 try:
-                    image = await async_get_stream_image(
+                    image = await _async_get_stream_image(
                         self,
                         width=width,
                         height=height,
