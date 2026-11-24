@@ -9,18 +9,12 @@ import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.light import (
-    ATTR_BRIGHTNESS,
-    ATTR_COLOR_TEMP_KELVIN,
     DOMAIN as LIGHT_DOMAIN,
+    LightEntityStateAttribute,
+    LightService,
+    LightServiceArgument,
 )
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
-    STATE_OFF,
-    STATE_ON,
-    STATE_UNAVAILABLE,
-)
+from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNAVAILABLE, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -92,8 +86,8 @@ async def test_state_follows_the_plc(
     await mock_ads_device.async_push(hass, ADS_VAR_COLOR_TEMP, struct.pack("<H", 3000))
     state = hass.states.get(ENTITY_ID)
     assert state.state == STATE_ON
-    assert state.attributes[ATTR_BRIGHTNESS] == 1000
-    assert state.attributes[ATTR_COLOR_TEMP_KELVIN] == 3000
+    assert state.attributes[LightEntityStateAttribute.BRIGHTNESS] == 1000
+    assert state.attributes[LightEntityStateAttribute.COLOR_TEMP_KELVIN] == 3000
 
     await mock_ads_device.async_push(hass, ADS_VAR, BOOL_FALSE)
     assert hass.states.get(ENTITY_ID).state == STATE_OFF
@@ -123,7 +117,10 @@ async def test_availability_follows_the_onoff_variable(
 
     state = hass.states.get(ENTITY_ID)
     assert state.state == expected_state
-    assert state.attributes.get(ATTR_BRIGHTNESS) == expected_brightness
+    assert (
+        state.attributes.get(LightEntityStateAttribute.BRIGHTNESS)
+        == expected_brightness
+    )
 
 
 @pytest.mark.parametrize(
@@ -131,15 +128,15 @@ async def test_availability_follows_the_onoff_variable(
     [
         pytest.param(
             ONOFF_CONFIG,
-            SERVICE_TURN_ON,
+            LightService.TURN_ON,
             {},
             [call(ADS_VAR, True, pyads.PLCTYPE_BOOL)],
             id="turn_on",
         ),
         pytest.param(
             BRIGHTNESS_CONFIG,
-            SERVICE_TURN_ON,
-            {ATTR_BRIGHTNESS: 200},
+            LightService.TURN_ON,
+            {LightServiceArgument.BRIGHTNESS: 200},
             [
                 call(ADS_VAR, True, pyads.PLCTYPE_BOOL),
                 call(ADS_VAR_BRIGHTNESS, 200, pyads.PLCTYPE_UINT),
@@ -148,8 +145,8 @@ async def test_availability_follows_the_onoff_variable(
         ),
         pytest.param(
             COLOR_TEMP_CONFIG,
-            SERVICE_TURN_ON,
-            {ATTR_COLOR_TEMP_KELVIN: 3000},
+            LightService.TURN_ON,
+            {LightServiceArgument.COLOR_TEMP_KELVIN: 3000},
             [
                 call(ADS_VAR, True, pyads.PLCTYPE_BOOL),
                 call(ADS_VAR_COLOR_TEMP, 3000, pyads.PLCTYPE_UINT),
@@ -157,8 +154,22 @@ async def test_availability_follows_the_onoff_variable(
             id="turn_on_color_temp",
         ),
         pytest.param(
+            COLOR_TEMP_CONFIG,
+            LightService.TURN_ON,
+            {
+                LightServiceArgument.BRIGHTNESS: 200,
+                LightServiceArgument.COLOR_TEMP_KELVIN: 3000,
+            },
+            [
+                call(ADS_VAR, True, pyads.PLCTYPE_BOOL),
+                call(ADS_VAR_BRIGHTNESS, 200, pyads.PLCTYPE_UINT),
+                call(ADS_VAR_COLOR_TEMP, 3000, pyads.PLCTYPE_UINT),
+            ],
+            id="turn_on_brightness_color_temp",
+        ),
+        pytest.param(
             BRIGHTNESS_CONFIG,
-            SERVICE_TURN_OFF,
+            LightService.TURN_OFF,
             {},
             [call(ADS_VAR, False, pyads.PLCTYPE_BOOL)],
             id="turn_off",
@@ -179,7 +190,7 @@ async def test_actions_write_to_the_plc(
     assert await setup_ads_platform(hass, LIGHT_DOMAIN, platform_config)
 
     await hass.services.async_call(
-        LIGHT_DOMAIN, service, {ATTR_ENTITY_ID: ENTITY_ID, **data}, blocking=True
+        LIGHT_DOMAIN, service, {TargetKey.ENTITY_ID: ENTITY_ID, **data}, blocking=True
     )
 
     assert mock_pyads_connection.return_value.write_by_name.call_args_list == writes
@@ -199,8 +210,8 @@ async def test_write_error(
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_BRIGHTNESS: 200},
+        LightService.TURN_ON,
+        {TargetKey.ENTITY_ID: ENTITY_ID, LightServiceArgument.BRIGHTNESS: 200},
         blocking=True,
     )
 
