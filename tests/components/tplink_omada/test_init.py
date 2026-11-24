@@ -2,6 +2,7 @@
 
 import asyncio
 from collections.abc import AsyncGenerator
+from copy import deepcopy
 from datetime import timedelta
 from functools import partial
 import logging
@@ -32,9 +33,9 @@ from homeassistant.components.tplink_omada import (
 from homeassistant.components.tplink_omada.const import DOMAIN
 from homeassistant.components.tplink_omada.coordinator import (
     POLL_CLIENTS,
+    POLL_GATEWAY,
     POLL_KNOWN_CLIENTS,
     OmadaCoordinator,
-    OmadaGatewayCoordinator,
 )
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
@@ -131,32 +132,83 @@ async def test_coordinator_update_failure_is_translated(
 
 async def test_gateway_invalidate_discards_inflight_refresh(
     hass: HomeAssistant,
+    mock_omada_client: MagicMock,
     mock_config_entry: MockConfigEntry,
-    mock_omada_site_client: MagicMock,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Test a refresh started before removal cannot restore stale gateway data."""
-    coordinator = OmadaGatewayCoordinator(
-        hass, mock_config_entry, mock_omada_site_client, "54-AF-97-00-00-02"
+    """Test a gateway poll started before a removal cannot restore stale data."""
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    gateway_mac = "AA-BB-CC-DD-EE-FF"
+    port_entity_id = "switch.test_router_port_12_poe"
+    site_client = mock_omada_client.get_site_client.return_value
+    assert hass.states.get(port_entity_id) is not None
+
+    # A poll that started before the removal reports the gateway without port 12.
+    gateway_data = await async_load_json_object_fixture(
+        hass, "gateway-TL-ER7212PC.json", DOMAIN
     )
-    refresh_started = asyncio.Event()
-    finish_refresh = asyncio.Event()
-    gateway = mock_omada_site_client.get_gateway.return_value
+    stale_data = deepcopy(gateway_data)
+    stale_data["portConfigs"] = [
+        port for port in stale_data["portConfigs"] if port["port"] != 12
+    ]
+    started = asyncio.Event()
+    release = asyncio.Event()
 
-    async def _get_gateway(mac: str) -> object:
-        refresh_started.set()
-        await finish_refresh.wait()
-        return gateway
+    async def _stale_get_gateway(mac: str) -> object:
+        started.set()
+        await release.wait()
+        return OmadaGateway(stale_data)
 
-    mock_omada_site_client.get_gateway = AsyncMock(side_effect=_get_gateway)
+    site_client.get_gateway = _stale_get_gateway
 
-    refresh_task = asyncio.create_task(coordinator._async_update_data())
-    await refresh_started.wait()
-    coordinator.invalidate()
-    finish_refresh.set()
-    with pytest.raises(UpdateFailed):
-        await refresh_task
+    freezer.tick(timedelta(seconds=POLL_GATEWAY + 1))
+    async_fire_time_changed(hass, dt_util.utcnow())
+    for _ in range(50):
+        if started.is_set():
+            break
+        await asyncio.sleep(0)
+    assert started.is_set()
 
-    assert coordinator.data == {}
+    # The gateway is removed while that poll is still running.
+    gateway_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, gateway_mac), mock_config_entry.entry_id
+    )
+    assert gateway_device is not None
+    assert await async_remove_config_entry_device(
+        hass, cast(OmadaConfigEntry, mock_config_entry), gateway_device
+    )
+    device_registry.async_remove_device(gateway_device.id)
+    assert hass.states.get(port_entity_id) is None
+
+    # The stale result arrives after the removal and must be dropped.
+    release.set()
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    # The gateway returns, but its next poll fails. If the dropped result had
+    # been kept, registration would rebuild entities from it; it must not.
+    site_client.get_gateway = AsyncMock(
+        side_effect=OmadaClientException("gateway unavailable")
+    )
+    devices_data = await async_load_json_array_fixture(hass, "devices.json", DOMAIN)
+    site_client.get_devices = AsyncMock(
+        return_value=[OmadaListDevice(device) for device in devices_data]
+    )
+    await _async_poll_devices(hass, freezer)
+
+    assert hass.states.get(port_entity_id) is None
+    assert not [
+        entry
+        for entry in entity_registry.entities.values()
+        if entry.platform == DOMAIN
+        and entry.domain in {"binary_sensor", "switch"}
+        and entry.unique_id.startswith(f"{gateway_mac}_")
+        and "_vpn_" not in entry.unique_id
+    ]
 
 
 async def test_automatic_missing_device_cleanup(
@@ -288,23 +340,24 @@ async def test_in_flight_registration_skips_removed_device(
             break
         await asyncio.sleep(0)
     assert started.is_set()
+    port_polls = site_client.get_switch_ports.call_count
 
     # Remove the switch again while the callback is still awaiting the client.
-    site_client.get_devices = AsyncMock(
-        side_effect=partial(_get_devices_without, hass, switch_mac)
+    switch_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, switch_mac), mock_config_entry.entry_id
     )
-    controller = mock_config_entry.runtime_data
-    freezer.tick(timedelta(seconds=POLL_CLIENTS + 1))
-    async_fire_time_changed(hass, dt_util.utcnow())
-    for _ in range(100):
-        if switch_mac not in (controller.devices_coordinator.data or {}):
-            break
-        await asyncio.sleep(0)
-    assert switch_mac not in (controller.devices_coordinator.data or {})
+    assert switch_device is not None
+    assert await async_remove_config_entry_device(
+        hass, cast(OmadaConfigEntry, mock_config_entry), switch_device
+    )
+    device_registry.async_remove_device(switch_device.id)
 
     release.set()
     await hass.async_block_till_done(wait_background_tasks=True)
 
+    # The callback must not fetch ports or create entities for the removed
+    # switch, and it must not leave a port coordinator behind for it.
+    assert site_client.get_switch_ports.call_count == port_polls
     assert hass.states.get("switch.test_poe_switch_port_1_poe") is None
     assert (
         device_registry.async_get_device_by_identifier(
@@ -462,6 +515,7 @@ async def test_failed_poll_keeps_devices(
     mock_config_entry: MockConfigEntry,
     device_registry: dr.DeviceRegistry,
     freezer: FrozenDateTimeFactory,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test a failed device poll removes nothing."""
     mock_config_entry.add_to_hass(hass)
@@ -473,6 +527,7 @@ async def test_failed_poll_keeps_devices(
     site_client.get_devices = AsyncMock(side_effect=OmadaClientException)
     await _async_poll_devices(hass, freezer)
 
+    assert "Error fetching Omada API Data - DeviceList data" in caplog.text
     assert device_registry.async_get_device_by_identifier(
         (DOMAIN, switch_mac), mock_config_entry.entry_id
     )

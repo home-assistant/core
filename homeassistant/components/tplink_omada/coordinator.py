@@ -210,10 +210,9 @@ class OmadaGatewayCoordinator(OmadaCoordinator[OmadaGateway]):
         generation = self._generation
         data = await super()._async_update_data()
         if generation != self._generation:
-            raise UpdateFailed(
-                translation_domain=DOMAIN,
-                translation_key="api_error",
-            )
+            # The gateway was removed while this poll was running; drop the
+            # result instead of restoring data for a removed device.
+            return self.data or {}
         return data
 
     @override

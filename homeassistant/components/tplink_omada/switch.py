@@ -65,11 +65,16 @@ async def async_setup_entry(
         """Create entities for a switch's ports."""
         omada_client = controller.omada_client
         switch = await omada_client.get_switch(device)
+        if device.mac not in (controller.devices_coordinator.data or {}):
+            return False
         coordinator = controller.get_switch_port_coordinator(switch)
         await coordinator.async_refresh()
         if not coordinator.last_update_success:
             return False
         if device.mac not in (controller.devices_coordinator.data or {}):
+            # The switch was removed while the coordinator was created or
+            # refreshed; drop it so the stale coordinator is not reused.
+            await controller.async_forget_device(device.mac)
             return False
 
         entities: list[Entity] = []
