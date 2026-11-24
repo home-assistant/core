@@ -33,7 +33,7 @@ from homeassistant.components.todo import (
     TodoServices,
 )
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import ATTR_ENTITY_ID, Platform
+from homeassistant.const import Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
@@ -264,7 +264,7 @@ async def test_subtasks_follow_their_parent(
     result = await hass.services.async_call(
         TODO_DOMAIN,
         TodoServices.GET_ITEMS,
-        {ATTR_ENTITY_ID: ENTITY_ID},
+        {TargetKey.ENTITY_ID: ENTITY_ID},
         blocking=True,
         return_response=True,
     )
@@ -284,7 +284,7 @@ async def test_create_item(
         TODO_DOMAIN,
         TodoServices.ADD_ITEM,
         {
-            ATTR_ENTITY_ID: ENTITY_ID,
+            TargetKey.ENTITY_ID: ENTITY_ID,
             ATTR_ITEM: "Eggs",
             ATTR_DUE_DATE: date(2024, 5, 1),
             ATTR_DESCRIPTION: "a dozen",
@@ -317,7 +317,7 @@ async def test_update_item(
         TODO_DOMAIN,
         TodoServices.UPDATE_ITEM,
         {
-            ATTR_ENTITY_ID: ENTITY_ID,
+            TargetKey.ENTITY_ID: ENTITY_ID,
             ATTR_ITEM: "Milk",
             ATTR_RENAME: "Oat milk",
             ATTR_STATUS: "completed",
@@ -344,7 +344,7 @@ async def test_delete_item(
     await hass.services.async_call(
         TODO_DOMAIN,
         TodoServices.REMOVE_ITEM,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_ITEM: "Milk"},
+        {TargetKey.ENTITY_ID: ENTITY_ID, ATTR_ITEM: "Milk"},
         blocking=True,
     )
 
@@ -373,7 +373,7 @@ async def test_partial_delete_still_refreshes(
         await hass.services.async_call(
             TODO_DOMAIN,
             TodoServices.REMOVE_ITEM,
-            {ATTR_ENTITY_ID: ENTITY_ID, ATTR_ITEM: ["Milk", "Eggs"]},
+            {TargetKey.ENTITY_ID: ENTITY_ID, ATTR_ITEM: ["Milk", "Eggs"]},
             blocking=True,
         )
     await hass.async_block_till_done()
@@ -396,7 +396,7 @@ async def test_api_error_raises(
         await hass.services.async_call(
             TODO_DOMAIN,
             TodoServices.REMOVE_ITEM,
-            {ATTR_ENTITY_ID: ENTITY_ID, ATTR_ITEM: "Milk"},
+            {TargetKey.ENTITY_ID: ENTITY_ID, ATTR_ITEM: "Milk"},
             blocking=True,
         )
 
@@ -439,7 +439,7 @@ async def test_create_item_with_date_due(
         TODO_DOMAIN,
         TodoServices.ADD_ITEM,
         {
-            ATTR_ENTITY_ID: ENTITY_ID,
+            TargetKey.ENTITY_ID: ENTITY_ID,
             ATTR_ITEM: "Eggs",
             ATTR_DUE_DATE: date(2024, 5, 1),
         },
@@ -469,7 +469,7 @@ async def test_update_item_with_datetime_due(
         TODO_DOMAIN,
         TodoServices.UPDATE_ITEM,
         {
-            ATTR_ENTITY_ID: ENTITY_ID,
+            TargetKey.ENTITY_ID: ENTITY_ID,
             ATTR_ITEM: "Milk",
             ATTR_DUE_DATETIME: datetime(2024, 5, 1, 9, 30),
         },
@@ -543,7 +543,7 @@ async def test_item_due_time_zone(
     await hass.services.async_call(
         TODO_DOMAIN,
         TodoServices.ADD_ITEM,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_ITEM: "Eggs", **due_data},
+        {TargetKey.ENTITY_ID: ENTITY_ID, ATTR_ITEM: "Eggs", **due_data},
         blocking=True,
     )
 
@@ -559,7 +559,7 @@ async def test_item_due_time_zone(
     await hass.services.async_call(
         TODO_DOMAIN,
         TodoServices.UPDATE_ITEM,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_ITEM: "Milk", **due_data},
+        {TargetKey.ENTITY_ID: ENTITY_ID, ATTR_ITEM: "Milk", **due_data},
         blocking=True,
     )
 
@@ -626,7 +626,7 @@ async def test_update_item_with_unchanged_due_time_zone(
     await hass.services.async_call(
         TODO_DOMAIN,
         TodoServices.UPDATE_ITEM,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_ITEM: "Milk", **update_data},
+        {TargetKey.ENTITY_ID: ENTITY_ID, ATTR_ITEM: "Milk", **update_data},
         blocking=True,
     )
 
@@ -657,7 +657,7 @@ async def test_nested_subtasks_follow_their_parent(
     result = await hass.services.async_call(
         TODO_DOMAIN,
         TodoServices.GET_ITEMS,
-        {ATTR_ENTITY_ID: ENTITY_ID},
+        {TargetKey.ENTITY_ID: ENTITY_ID},
         blocking=True,
         return_response=True,
     )
@@ -688,7 +688,7 @@ async def test_orphaned_subtask_is_kept(
     result = await hass.services.async_call(
         TODO_DOMAIN,
         TodoServices.GET_ITEMS,
-        {ATTR_ENTITY_ID: ENTITY_ID},
+        {TargetKey.ENTITY_ID: ENTITY_ID},
         blocking=True,
         return_response=True,
     )
@@ -718,7 +718,7 @@ async def test_orphan_parent_returned_after_its_child(
     result = await hass.services.async_call(
         TODO_DOMAIN,
         TodoServices.GET_ITEMS,
-        {ATTR_ENTITY_ID: ENTITY_ID},
+        {TargetKey.ENTITY_ID: ENTITY_ID},
         blocking=True,
         return_response=True,
     )
@@ -747,7 +747,7 @@ async def test_update_refused_when_title_undecrypted(
             TODO_DOMAIN,
             TodoServices.UPDATE_ITEM,
             {
-                ATTR_ENTITY_ID: ENTITY_ID,
+                TargetKey.ENTITY_ID: ENTITY_ID,
                 ATTR_ITEM: "Milk",
                 ATTR_STATUS: "completed",
             },
@@ -771,7 +771,7 @@ async def test_missing_reminder_raises_service_error(
         await hass.services.async_call(
             TODO_DOMAIN,
             TodoServices.REMOVE_ITEM,
-            {ATTR_ENTITY_ID: ENTITY_ID, ATTR_ITEM: "Milk"},
+            {TargetKey.ENTITY_ID: ENTITY_ID, ATTR_ITEM: "Milk"},
             blocking=True,
         )
 
@@ -799,7 +799,7 @@ async def test_undecryptable_reminders_are_left_out(
     items = await hass.services.async_call(
         TODO_DOMAIN,
         TodoServices.GET_ITEMS,
-        {ATTR_ENTITY_ID: ENTITY_ID},
+        {TargetKey.ENTITY_ID: ENTITY_ID},
         blocking=True,
         return_response=True,
     )
@@ -956,7 +956,7 @@ async def test_zone_not_found_keeps_existing_entities(
     items = await hass.services.async_call(
         TODO_DOMAIN,
         TodoServices.GET_ITEMS,
-        {ATTR_ENTITY_ID: ENTITY_ID},
+        {TargetKey.ENTITY_ID: ENTITY_ID},
         blocking=True,
         return_response=True,
     )
