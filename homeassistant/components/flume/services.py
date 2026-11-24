@@ -1,6 +1,8 @@
 """Services for flume."""
 
-import voluptuous as vol
+from enum import StrEnum
+
+import probatio
 
 from homeassistant.core import (
     HomeAssistant,
@@ -15,11 +17,24 @@ from homeassistant.helpers.selector import ConfigEntrySelector
 from .const import DOMAIN
 from .coordinator import FlumeConfigEntry
 
-SERVICE_LIST_NOTIFICATIONS = "list_notifications"
-CONF_CONFIG_ENTRY = "config_entry"
-LIST_NOTIFICATIONS_SERVICE_SCHEMA = vol.All(
+
+class FlumeService(StrEnum):
+    """Store keys for Flume services."""
+
+    LIST_NOTIFICATIONS = "list_notifications"
+
+
+class FlumeServiceArgument(StrEnum):
+    """Store keys for Flume service arguments."""
+
+    CONFIG_ENTRY = "config_entry"
+
+
+LIST_NOTIFICATIONS_SERVICE_SCHEMA = probatio.All(
     {
-        vol.Required(CONF_CONFIG_ENTRY): ConfigEntrySelector({"integration": DOMAIN}),
+        probatio.Required(FlumeServiceArgument.CONFIG_ENTRY): ConfigEntrySelector(
+            {"integration": DOMAIN}
+        ),
     },
 )
 
@@ -31,7 +46,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
     @callback
     def list_notifications(call: ServiceCall) -> ServiceResponse:
         """Return the user notifications."""
-        entry_id: str = call.data[CONF_CONFIG_ENTRY]
+        entry_id: str = call.data[FlumeServiceArgument.CONFIG_ENTRY]
         entry: FlumeConfigEntry = service.async_get_config_entry(
             call.hass, DOMAIN, entry_id
         )
@@ -41,7 +56,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
 
     hass.services.async_register(
         DOMAIN,
-        SERVICE_LIST_NOTIFICATIONS,
+        FlumeService.LIST_NOTIFICATIONS,
         list_notifications,
         schema=LIST_NOTIFICATIONS_SERVICE_SCHEMA,
         supports_response=SupportsResponse.ONLY,

@@ -1,13 +1,25 @@
 {
   "exceptions": {
+    "api_connection_failed": {
+      "message": "Unable to connect to the vendor's API"
+    },
+    "api_credentials_invalid": {
+      "message": "The vendor's API rejected the username or password"
+    },
+    "api_rate_limited": {
+      "message": "The vendor's API rate limit has been exceeded; try again later"
+    },
+    "api_request_failed": {
+      "message": "The request to the vendor's API failed"
+    },
+    "api_request_rejected": {
+      "message": "The vendor's API rejected the request"
+    },
+    "api_server_error": {
+      "message": "The vendor's API returned a server error; try again later"
+    },
     "controller_only_service": {
       "message": "Only Evohome controllers support the `{service}` action"
-    },
-    "entity_not_found": {
-      "message": "The specified entity `{entity_id}` could not be found"
-    },
-    "invalid_system_mode": {
-      "message": "The requested system mode is not supported: {error}"
     },
     "mode_cant_be_temporary": {
       "message": "The mode `{mode}` does not support 'Duration' or 'Period'"
@@ -21,44 +33,38 @@
     "mode_not_supported": {
       "message": "The mode `{mode}` is not supported by this controller"
     },
+    "mode_request_invalid": {
+      "message": "The mode `{mode}` can't be set as requested"
+    },
+    "mode_timespan_not_in_future": {
+      "message": "The 'Duration' or 'Period' of the mode `{mode}` must end in the future"
+    },
+    "mode_timespan_required": {
+      "message": "The mode `{mode}` requires a 'Duration' or 'Period'"
+    },
+    "override_not_in_future": {
+      "message": "The override must end in the future (if the duration is 0, the next scheduled setpoint may have already passed)"
+    },
+    "override_request_invalid": {
+      "message": "The override can't be set as requested"
+    },
+    "request_invalid": {
+      "message": "The request is not valid"
+    },
     "zone_only_service": {
       "message": "Only zones support the `{service}` action"
     }
   },
   "issues": {
-    "deprecated_clear_zone_override_service": {
-      "description": "The `clear_zone_override` action is deprecated and will stop working in Home Assistant {breaks_in_ha_version}. Use the zone's Reset button instead.",
-      "title": "Evohome 'Clear zone override' action is deprecated"
-    },
-    "deprecated_controller_service": {
-      "description": "The `{service}` action without `entity_id` is deprecated and will stop working in Home Assistant {breaks_in_ha_version}. Update any automation or script to include `entity_id`, targeting the controller's climate entity.",
-      "title": "Untargeted Evohome controller action is deprecated"
-    },
-    "deprecated_preset_reset": {
-      "description": "Using the `Reset` preset on an Evohome controller is deprecated and will stop working in Home Assistant {breaks_in_ha_version}. Use the system's Reset button instead.",
-      "title": "Evohome Reset preset is deprecated"
-    },
     "deprecated_refresh_system_service": {
       "description": "The `refresh_system` action is deprecated and will stop working in Home Assistant {breaks_in_ha_version}. Instead, use the `homeassistant.update_entity` action, targeting the controller's climate entity.",
       "title": "Evohome 'Refresh system' action is deprecated"
-    },
-    "deprecated_reset_system_service": {
-      "description": "The `reset_system` action is deprecated and will stop working in Home Assistant {breaks_in_ha_version}. Use the system's Reset button instead.",
-      "title": "Evohome 'Reset system' action is deprecated"
     }
   },
   "services": {
-    "clear_zone_override": {
-      "description": "Sets a zone to follow its schedule (deprecated).",
-      "name": "Clear zone override"
-    },
     "refresh_system": {
       "description": "Pulls the latest data from the vendor's servers now, rather than waiting for the next scheduled update (deprecated).",
       "name": "Refresh system"
-    },
-    "reset_system": {
-      "description": "Sets a system's mode to `Auto` mode and resets all its zones to follow their schedules (deprecated). Some older systems may not support this feature.",
-      "name": "Reset system"
     },
     "set_dhw_override": {
       "description": "Overrides a DHW's state, either indefinitely or for a specified duration, after which it will revert to following its schedule.",
@@ -80,10 +86,6 @@
         "duration": {
           "description": "The duration in hours; used only with `AutoWithEco` mode (up to 24 hours).",
           "name": "Duration"
-        },
-        "entity_id": {
-          "description": "The Evohome controller climate entity.",
-          "name": "Entity"
         },
         "mode": {
           "description": "Mode to set the system to.",

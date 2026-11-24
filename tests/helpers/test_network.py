@@ -5,6 +5,7 @@ from unittest.mock import MagicMock, Mock, patch
 from aiohttp import hdrs
 from multidict import CIMultiDict, CIMultiDictProxy
 import pytest
+from pytest_homeassistant.common import mock_component
 from yarl import URL
 
 from homeassistant.components import cloud
@@ -21,8 +22,6 @@ from homeassistant.helpers.network import (
     is_hass_url,
     is_internal_request,
 )
-
-from tests.common import mock_component
 
 
 @pytest.fixture(name="mock_current_request")
@@ -373,8 +372,8 @@ async def test_get_url_external(hass: HomeAssistant) -> None:
         _get_external_url(hass, require_cloud=True)
 
     with patch(
-        "homeassistant.components.cloud.async_remote_ui_url",
-        return_value="https://example.nabu.casa",
+        "homeassistant.components.cloud.async_remote_ui_urls",
+        return_value=["https://example.nabu.casa"],
     ):
         hass.config.components.add("cloud")
         assert (
@@ -388,8 +387,8 @@ async def test_get_cloud_url(hass: HomeAssistant) -> None:
     hass.config.components.add("cloud")
 
     with patch(
-        "homeassistant.components.cloud.async_remote_ui_url",
-        return_value="https://example.nabu.casa",
+        "homeassistant.components.cloud.async_remote_ui_urls",
+        return_value=["https://example.nabu.casa"],
     ):
         assert _get_cloud_url(hass) == "https://example.nabu.casa"
 
@@ -414,9 +413,43 @@ async def test_get_cloud_url(hass: HomeAssistant) -> None:
         ):
             _get_cloud_url(hass, require_current_request=True)
 
+    # Custom domains come first and are preferred over the instance domain
+    with patch(
+        "homeassistant.components.cloud.async_remote_ui_urls",
+        return_value=["https://ha.example.com", "https://example.nabu.casa"],
+    ):
+        assert _get_cloud_url(hass) == "https://ha.example.com"
+
+        with patch(
+            "homeassistant.helpers.network._get_request_host_port",
+            return_value=("ha.example.com", 443),
+        ):
+            assert (
+                _get_cloud_url(hass, require_current_request=True)
+                == "https://ha.example.com"
+            )
+
+        with patch(
+            "homeassistant.helpers.network._get_request_host_port",
+            return_value=("example.nabu.casa", 443),
+        ):
+            assert (
+                _get_cloud_url(hass, require_current_request=True)
+                == "https://example.nabu.casa"
+            )
+
+        with (
+            patch(
+                "homeassistant.helpers.network._get_request_host_port",
+                return_value=("ha.example.com", 8123),
+            ),
+            pytest.raises(NoURLAvailableError),
+        ):
+            _get_cloud_url(hass, require_current_request=True)
+
     with (
         patch(
-            "homeassistant.components.cloud.async_remote_ui_url",
+            "homeassistant.components.cloud.async_remote_ui_urls",
             side_effect=cloud.CloudNotAvailable,
         ),
         pytest.raises(NoURLAvailableError),
@@ -440,8 +473,8 @@ async def test_get_external_url_cloud_fallback(hass: HomeAssistant) -> None:
     # Add Cloud to the previous test
     hass.config.components.add("cloud")
     with patch(
-        "homeassistant.components.cloud.async_remote_ui_url",
-        return_value="https://example.nabu.casa",
+        "homeassistant.components.cloud.async_remote_ui_urls",
+        return_value=["https://example.nabu.casa"],
     ):
         assert _get_external_url(hass, allow_cloud=False) == "http://1.1.1.1:8123"
         assert _get_external_url(hass, allow_ip=False) == "https://example.nabu.casa"
@@ -465,8 +498,8 @@ async def test_get_external_url_cloud_fallback(hass: HomeAssistant) -> None:
     # Add Cloud to the previous test
     hass.config.components.add("cloud")
     with patch(
-        "homeassistant.components.cloud.async_remote_ui_url",
-        return_value="https://example.nabu.casa",
+        "homeassistant.components.cloud.async_remote_ui_urls",
+        return_value=["https://example.nabu.casa"],
     ):
         assert _get_external_url(hass, allow_cloud=False) == "https://example.com"
         assert _get_external_url(hass, allow_ip=False) == "https://example.com"
@@ -1104,14 +1137,16 @@ async def test_is_hass_url(hass: HomeAssistant) -> None:
     assert is_hass_url(hass, "http://example.com") is False
 
     with patch(
-        "homeassistant.components.cloud.async_remote_ui_url",
-        return_value="https://example.nabu.casa",
+        "homeassistant.components.cloud.async_remote_ui_urls",
+        return_value=["https://ha.example.com", "https://example.nabu.casa"],
     ):
         assert is_hass_url(hass, "https://example.nabu.casa") is False
+        assert is_hass_url(hass, "https://ha.example.com") is False
 
         hass.config.components.add("cloud")
         assert is_hass_url(hass, "https://example.nabu.casa:443") is True
         assert is_hass_url(hass, "https://example.nabu.casa") is True
+        assert is_hass_url(hass, "https://ha.example.com") is True
         assert is_hass_url(hass, "http://example.nabu.casa:443") is False
         assert is_hass_url(hass, "http://example.nabu.casa") is False
 

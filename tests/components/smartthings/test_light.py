@@ -6,6 +6,10 @@ from unittest.mock import AsyncMock, call
 from pysmartthings import Attribute, Capability, Command
 from pysmartthings.models import HealthStatus
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    mock_restore_cache_with_extra_data,
+)
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.light import (
@@ -21,6 +25,8 @@ from homeassistant.components.light import (
     ATTR_XY_COLOR,
     DOMAIN as LIGHT_DOMAIN,
     ColorMode,
+    LightService,
+    LightServiceArgument,
 )
 from homeassistant.components.smartthings.const import MAIN
 from homeassistant.const import (
@@ -32,6 +38,7 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
     Platform,
+    TargetKey,
 )
 from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers import entity_registry as er
@@ -43,8 +50,6 @@ from . import (
     trigger_health_update,
     trigger_update,
 )
-
-from tests.common import MockConfigEntry, mock_restore_cache_with_extra_data
 
 
 async def test_all_entities(
@@ -149,8 +154,8 @@ async def test_turn_on_light(
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "light.standing_light"} | data,
+        LightService.TURN_ON,
+        {TargetKey.ENTITY_ID: "light.standing_light"} | data,
         blocking=True,
     )
     assert devices.execute_device_command.mock_calls == calls
@@ -197,8 +202,8 @@ async def test_turn_off_light(
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: "light.standing_light"} | data,
+        LightService.TURN_OFF,
+        {TargetKey.ENTITY_ID: "light.standing_light"} | data,
         blocking=True,
     )
     assert devices.execute_device_command.mock_calls == calls
@@ -522,8 +527,8 @@ async def test_lamp_component_with_brightness(
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: entity_id, ATTR_BRIGHTNESS: brightness},
+        LightService.TURN_ON,
+        {TargetKey.ENTITY_ID: entity_id, LightServiceArgument.BRIGHTNESS: brightness},
         blocking=True,
     )
     devices.execute_device_command.assert_called_once_with(
@@ -579,8 +584,11 @@ async def test_lamp_from_off(
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "light.range_hood_light", ATTR_BRIGHTNESS: 255},
+        LightService.TURN_ON,
+        {
+            TargetKey.ENTITY_ID: "light.range_hood_light",
+            LightServiceArgument.BRIGHTNESS: 255,
+        },
         blocking=True,
     )
     assert devices.execute_device_command.mock_calls == [

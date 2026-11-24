@@ -1,14 +1,16 @@
 """Tests for the tag component."""
 
-import logging
 from typing import Any
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import async_fire_time_changed
+from pytest_homeassistant.typing import WebSocketGenerator
 from syrupy.assertion import SnapshotAssertion
 from syrupy.filters import props
 
 from homeassistant.components.tag import DOMAIN, _create_entry, async_scan_tag
+from homeassistant.components.tag.const import TagEntityStateAttribute
 from homeassistant.const import CONF_NAME, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import collection, entity_registry as er
@@ -17,12 +19,13 @@ from homeassistant.util import dt as dt_util
 
 from . import TEST_DEVICE_ID, TEST_TAG_ID, TEST_TAG_ID_2, TEST_TAG_NAME, TEST_TAG_NAME_2
 
-from tests.common import async_fire_time_changed
-from tests.typing import WebSocketGenerator
-
 
 @pytest.fixture
-def storage_setup(hass: HomeAssistant, hass_storage: dict[str, Any]):
+def storage_setup(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    hass_storage: dict[str, Any],
+):
     """Storage setup."""
 
     async def _storage(items=None):
@@ -44,7 +47,6 @@ def storage_setup(hass: HomeAssistant, hass_storage: dict[str, Any]):
             }
         else:
             hass_storage[DOMAIN] = items
-        entity_registry = er.async_get(hass)  # pylint: disable=home-assistant-tests-registry-fixtures
         _create_entry(entity_registry, TEST_TAG_ID, TEST_TAG_NAME)
         _create_entry(entity_registry, TEST_TAG_ID_2, TEST_TAG_NAME_2)
         config = {DOMAIN: {}}
@@ -265,8 +267,8 @@ async def test_entity(
     assert entity
     assert entity.state == now.isoformat(timespec="milliseconds")
     assert entity.attributes == {
-        "tag_id": "test tag id",
-        "last_scanned_by_device_id": "device id",
+        TagEntityStateAttribute.TAG_ID: "test tag id",
+        TagEntityStateAttribute.LAST_SCANNED_BY_DEVICE_ID: "device id",
         "friendly_name": "test tag name",
     }
 
@@ -284,7 +286,6 @@ async def test_entity_created_and_removed(
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test tag entity created and removed."""
-    caplog.at_level(logging.DEBUG)
     assert await storage_setup()
 
     client = await hass_ws_client(hass)

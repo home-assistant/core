@@ -10,6 +10,7 @@ from unittest.mock import Mock, patch
 from aioshelly.const import MODEL_25
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 from syrupy.assertion import SnapshotAssertion
 from syrupy.filters import props
 
@@ -32,11 +33,10 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.device_registry import (
     CONNECTION_NETWORK_MAC,
+    ChildDeviceEntry,
     DeviceEntry,
     DeviceRegistry,
 )
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 MOCK_MAC = "123456789ABC"
 
@@ -49,6 +49,7 @@ async def init_integration(
     options: dict[str, Any] | None = None,
     skip_setup: bool = False,
     data: dict[str, Any] | None = None,
+    unique_id: str = MOCK_MAC,
 ) -> MockConfigEntry:
     """Set up the Shelly integration in Home Assistant."""
     if data is None:
@@ -63,7 +64,7 @@ async def init_integration(
     entry = MockConfigEntry(
         domain=DOMAIN,
         data=data,
-        unique_id=MOCK_MAC,
+        unique_id=unique_id,
         options=options,
         title="Test name",
         minor_version=3,
@@ -178,14 +179,25 @@ def register_device(
     )
 
 
-def register_sub_device(
+def register_child_device(
+    device_registry: DeviceRegistry, config_entry: ConfigEntry, unique_id: str
+) -> ChildDeviceEntry:
+    """Register Shelly child device."""
+    return device_registry.async_get_or_create_child(
+        config_entry_id=config_entry.entry_id,
+        identifiers={(DOMAIN, f"{MOCK_MAC}-{unique_id}")},
+        parent_device_id=register_device(device_registry, config_entry).id,
+    )
+
+
+def register_legacy_sub_device(
     device_registry: DeviceRegistry, config_entry: ConfigEntry, unique_id: str
 ) -> DeviceEntry:
-    """Register Shelly sub-device."""
+    """Register Shelly sub-device created before sub-devices were child devices."""
     return device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
         identifiers={(DOMAIN, f"{MOCK_MAC}-{unique_id}")},
-        via_device=(DOMAIN, MOCK_MAC),
+        via_device_id=register_device(device_registry, config_entry).id,
     )
 
 

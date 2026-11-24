@@ -5,6 +5,7 @@ from collections import defaultdict
 from collections.abc import Awaitable, Callable, Generator, Mapping
 import contextlib
 import contextvars
+from dataclasses import dataclass, field
 from enum import StrEnum
 from functools import partial
 import logging.handlers
@@ -30,7 +31,7 @@ from .exceptions import DependencyError, HomeAssistantError
 from .helpers import issue_registry as ir, singleton, translation
 from .helpers.issue_registry import IssueSeverity, async_create_issue
 from .helpers.typing import ConfigType
-from .util.async_ import create_eager_task
+from .util.async_ import create_eager_task, wait_shared_future
 from .util.hass_dict import HassKey
 
 current_setup_group: contextvars.ContextVar[tuple[str, str | None] | None] = (
@@ -76,6 +77,10 @@ _DATA_PERSISTENT_ERRORS: HassKey[dict[str, str | None]] = HassKey(
     "bootstrap_persistent_errors"
 )
 
+_DATA_BOOTSTRAP_PROGRESS: HassKey[_BootstrapProgressData] = HassKey(
+    "bootstrap_progress"
+)
+
 NOTIFY_FOR_TRANSLATION_KEYS = [
     "config_validation_err",
     "platform_config_validation_err",
@@ -89,6 +94,100 @@ class EventComponentLoaded(TypedDict):
     """EventComponentLoaded data."""
 
     component: str
+
+
+class BootstrapPhase(StrEnum):
+    """Startup phases reported in the bootstrap progress."""
+
+    PREPARING = "preparing"
+    """Resolving the domains to set up; the total is not known yet."""
+    SETUP = "setup"
+    """Setting up the integrations of a bootstrap stage."""
+    WRAP_UP = "wrap_up"
+    """Waiting for the tasks created during integration setup."""
+    STARTING = "starting"
+    """CoreState.starting: start event listeners and startup jobs."""
+    RUNNING = "running"
+    """CoreState.running: startup is finished."""
+
+
+class BootstrapIntegrationsProgress(TypedDict):
+    """Integrations whose setup attempt finished during bootstrap."""
+
+    total: int | None
+    done: int
+    failed: list[str]
+
+
+class BootstrapProgress(TypedDict):
+    """Startup progress sent by bootstrap."""
+
+    phase: BootstrapPhase
+    elapsed: float
+    integrations: BootstrapIntegrationsProgress
+    active: dict[str, float]
+
+
+@dataclass(slots=True)
+class _BootstrapProgressData:
+    """Startup progress listeners and the source of the current progress."""
+
+    listeners: list[Callable[[BootstrapProgress], None]] = field(default_factory=list)
+    source: Callable[[], BootstrapProgress] | None = None
+
+
+@singleton.singleton(_DATA_BOOTSTRAP_PROGRESS)
+def _bootstrap_progress(hass: core.HomeAssistant) -> _BootstrapProgressData:
+    """Return the startup progress listeners and source."""
+    return _BootstrapProgressData()
+
+
+@callback
+def async_subscribe_bootstrap_progress(
+    hass: HomeAssistant, listener: Callable[[BootstrapProgress], None]
+) -> CALLBACK_TYPE:
+    """Subscribe to the startup progress.
+
+    Once bootstrap has started, the listener is called with the current
+    progress right away.
+    """
+    data = _bootstrap_progress(hass)
+    data.listeners.append(listener)
+    if data.source is not None:
+        _send_bootstrap_progress(listener, data.source())
+    return partial(data.listeners.remove, listener)
+
+
+@callback
+def _async_set_bootstrap_progress_source(
+    hass: HomeAssistant, source: Callable[[], BootstrapProgress]
+) -> None:
+    """Set the source of the current progress and send it to the listeners."""
+    _bootstrap_progress(hass).source = source
+    _async_dispatch_bootstrap_progress(hass)
+
+
+@callback
+def _async_dispatch_bootstrap_progress(hass: HomeAssistant) -> None:
+    """Send the current progress to the listeners."""
+    data = _bootstrap_progress(hass)
+    # The progress is only built when someone listens.
+    if not data.listeners or data.source is None:
+        return
+    progress = data.source()
+    # Listeners can unsubscribe while the progress is sent.
+    for listener in data.listeners.copy():
+        _send_bootstrap_progress(listener, progress)
+
+
+def _send_bootstrap_progress(
+    listener: Callable[[BootstrapProgress], None], progress: BootstrapProgress
+) -> None:
+    """Send the progress to a listener, logging its errors."""
+    try:
+        listener(progress)
+    except Exception:
+        _LOGGER.exception("Error sending bootstrap progress to %s", listener)
 
 
 @callback
@@ -118,6 +217,20 @@ def async_notify_setup_error(
     persistent_notification.async_create(
         hass, message, "Invalid config", "invalid_config"
     )
+
+
+@callback
+def _async_get_domains_pending_setup(hass: core.HomeAssistant) -> set[str]:
+    """Return domains scheduled by bootstrap whose setup has not finished."""
+    return set(hass.data.get(_DATA_SETUP_DONE, ()))
+
+
+@callback
+def _async_get_setup_done_futures(
+    hass: core.HomeAssistant,
+) -> dict[str, asyncio.Future[bool]]:
+    """Return the setup done futures of domains scheduled by bootstrap."""
+    return hass.data.get(_DATA_SETUP_DONE, {})
 
 
 @core.callback
@@ -159,7 +272,7 @@ async def async_setup_component(
     setup_done_futures = hass.data.setdefault(_DATA_SETUP_DONE, {})
 
     if existing_setup_future := setup_futures.get(domain):
-        return await existing_setup_future
+        return await wait_shared_future(existing_setup_future)
 
     setup_future = hass.loop.create_future()
     setup_futures[domain] = setup_future
@@ -195,23 +308,31 @@ async def _async_process_dependencies(
 ) -> list[str]:
     """Ensure all dependencies are set up.
 
+    After dependencies which are scheduled to be loaded are waited for as well,
+    but they are not essential, so they are never reported as failed.
+
     Returns a list of dependencies which failed to set up.
     """
     setup_futures = hass.data.setdefault(_DATA_SETUP, {})
 
-    dependencies_tasks: dict[str, asyncio.Future[bool]] = {}
+    dependencies_tasks: dict[str, Awaitable[bool]] = {}
+    awaited_after_dependencies: set[str] = set()
+
+    def _dependency_awaitable(dep: str, kind: str) -> Awaitable[bool] | None:
+        """Return an awaitable for the setup of dep, or None if already set up."""
+        if (shared_fut := setup_futures.get(dep)) is not None:
+            return wait_shared_future(shared_fut)
+        if dep in hass.config.components:
+            return None
+        return create_eager_task(
+            async_setup_component(hass, dep, config),
+            name=f"setup {dep} as {kind} of {integration.domain}",
+            loop=hass.loop,
+        )
 
     for dep in integration.dependencies:
-        fut = setup_futures.get(dep)
-        if fut is None:
-            if dep in hass.config.components:
-                continue
-            fut = create_eager_task(
-                async_setup_component(hass, dep, config),
-                name=f"setup {dep} as dependency of {integration.domain}",
-                loop=hass.loop,
-            )
-        dependencies_tasks[dep] = fut
+        if (fut := _dependency_awaitable(dep, "dependency")) is not None:
+            dependencies_tasks[dep] = fut
 
     to_be_loaded = hass.data.get(_DATA_SETUP_DONE, {})
     # We don't want to just wait for the futures from `to_be_loaded` here.
@@ -221,16 +342,9 @@ async def _async_process_dependencies(
     for dep in integration.after_dependencies:
         if dep not in to_be_loaded or dep in dependencies_tasks:
             continue
-        fut = setup_futures.get(dep)
-        if fut is None:
-            if dep in hass.config.components:
-                continue
-            fut = create_eager_task(
-                async_setup_component(hass, dep, config),
-                name=f"setup {dep} as after dependency of {integration.domain}",
-                loop=hass.loop,
-            )
-        dependencies_tasks[dep] = fut
+        if (fut := _dependency_awaitable(dep, "after dependency")) is not None:
+            dependencies_tasks[dep] = fut
+            awaited_after_dependencies.add(dep)
 
     if not dependencies_tasks:
         return []
@@ -245,9 +359,18 @@ async def _async_process_dependencies(
     async with hass.timeout.async_freeze(integration.domain):
         results = await asyncio.gather(*dependencies_tasks.values())
 
-    failed = [
-        domain for idx, domain in enumerate(dependencies_tasks) if not results[idx]
-    ]
+    failed: list[str] = []
+    for domain, result in zip(dependencies_tasks, results, strict=True):
+        if result:
+            continue
+        if domain not in awaited_after_dependencies:
+            failed.append(domain)
+            continue
+        _LOGGER.debug(
+            "Ignoring failed after dependency '%s' of '%s'",
+            domain,
+            integration.domain,
+        )
 
     if failed:
         _LOGGER.error(
@@ -837,5 +960,5 @@ async def async_wait_component(hass: HomeAssistant, domain: str) -> bool:
     """Wait until a component is set up if pending, then return if it is set up."""
     setup_done = hass.data.get(_DATA_SETUP_DONE, {})
     if setup_future := setup_done.get(domain):
-        await setup_future
+        await wait_shared_future(setup_future)
     return domain in hass.config.components

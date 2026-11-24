@@ -8,16 +8,26 @@ from matter_server.common.models import EventType, ServerInfoMessage
 
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import Undefined
 
 from .const import DOMAIN, ID_TYPE_DEVICE_ID, ID_TYPE_SERIAL, LOGGER
 from .discovery import async_discover_entities
-from .helpers import MatterConfigEntry, get_device_id
+from .helpers import (
+    MatterConfigEntry,
+    get_device_endpoint,
+    get_device_id,
+    get_discovery_key,
+    get_entity_unique_id,
+    get_legacy_device_id,
+)
 
 if TYPE_CHECKING:
     from matter_server.client import MatterClient
     from matter_server.client.models.node import MatterEndpoint, MatterNode
+
+    from .models import MatterEntityInfo
 
 
 def get_clean_name(name: str | None) -> str | None:
@@ -26,6 +36,35 @@ def get_clean_name(name: str | None) -> str | None:
         return name
     name = name.replace("\x00", "")
     return name.strip() or None
+
+
+def get_suggested_area(endpoint: MatterEndpoint) -> str | None:
+    """Return the Matter Actions cluster Room name for the endpoint's device.
+
+    A bridge (e.g. a Hue Bridge) advertises its rooms as EndpointListStruct entries of
+    type Room on the Actions cluster, wherever it exposes that cluster, each listing the
+    bridged endpoints in that room. Returns None rather than guessing when the endpoint
+    is in no room, or in more than one with conflicting names.
+    """
+    candidate_ids = {
+        endpoint.endpoint_id,
+        *endpoint.node.get_compose_child_ids(endpoint.endpoint_id),
+    }
+    room_names: set[str] = set()
+    for action_endpoint in endpoint.node.endpoints.values():
+        actions = action_endpoint.get_cluster(clusters.Actions)
+        if actions is None:
+            continue
+        for endpoint_list in actions.endpointLists:
+            if endpoint_list.type != clusters.Actions.Enums.EndpointListTypeEnum.kRoom:
+                continue
+            if not candidate_ids & set(endpoint_list.endpoints or ()):
+                continue
+            if room_name := get_clean_name(endpoint_list.name):
+                room_names.add(room_name)
+    if len(room_names) == 1:
+        return room_names.pop()
+    return None
 
 
 class MatterAdapter:
@@ -73,7 +112,11 @@ class MatterAdapter:
             endpoint = node.endpoints[data["endpoint_id"]]
             # Ensure the bridge device (endpoint 0) is registered before a
             # bridged child endpoint resolves it as its via_device.
-            if endpoint.is_bridged_device and node.endpoints[0] != endpoint:
+            device_endpoint = get_device_endpoint(endpoint)
+            if (
+                device_endpoint.is_bridged_device
+                and node.endpoints[0] != device_endpoint
+            ):
                 self._setup_endpoint(node.endpoints[0])
             self._setup_endpoint(endpoint)
 
@@ -88,10 +131,11 @@ class MatterAdapter:
             endpoint = node.endpoints.get(data["endpoint_id"])
             if not endpoint:
                 return  # race condition
-            node_device_id = get_device_id(
-                server_info,
-                node.endpoints[data["endpoint_id"]],
-            )
+            if get_device_endpoint(endpoint) != endpoint:
+                # A composed device is represented by a single HA device, which is
+                # only removed once its compose parent endpoint is removed.
+                return
+            node_device_id = get_device_id(server_info, endpoint)
             identifier = (DOMAIN, f"{ID_TYPE_DEVICE_ID}_{node_device_id}")
             if device := device_registry.async_get_device_by_identifier(
                 identifier, self.config_entry.entry_id
@@ -163,7 +207,13 @@ class MatterAdapter:
         """Create a device registry entry for a MatterNode."""
         server_info = cast(ServerInfoMessage, self.matter_client.server_info)
 
-        basic_info = endpoint.device_info
+        # All endpoints of a composed device share a single device registry entry,
+        # so derive that entry from the compose parent for every one of them.
+        endpoint = get_device_endpoint(endpoint)
+
+        # a Bridged Node without BridgedDeviceBasicInformation gets a device without its info
+        basic_info = endpoint.device_info or clusters.BridgedDeviceBasicInformation()
+        node_info = endpoint.node.device_info
         # use (first) DeviceType of the endpoint as fallback product name
         device_type = next(
             (
@@ -183,7 +233,7 @@ class MatterAdapter:
         device_registry = dr.async_get(self.hass)
 
         # handle bridged devices
-        via_device_id: str | None = None
+        via_device_id: str | Undefined = Undefined
         if endpoint.is_bridged_device and endpoint.node.endpoints[0] != endpoint:
             bridge_device_id = get_device_id(
                 server_info,
@@ -199,15 +249,36 @@ class MatterAdapter:
             server_info,
             endpoint,
         )
-        identifiers = {(DOMAIN, f"{ID_TYPE_DEVICE_ID}_{node_device_id}")}
+        node_device_identifier = (DOMAIN, f"{ID_TYPE_DEVICE_ID}_{node_device_id}")
+        identifiers = {node_device_identifier}
         serial_number: str | None = None
-        # if available, we also add the serialnumber as identifier
+        # if available, we also add the serial number as identifier
         if (
-            basic_info_serial_number := basic_info.serialNumber
-        ) and "test" not in basic_info_serial_number.lower():
+            (basic_info_serial_number := basic_info.serialNumber)
+            and "test" not in basic_info_serial_number.lower()
+            # some bridges report their own serial number for the devices they bridge,
+            # which would make the identifier resolve to the bridge's device
+            and not (
+                isinstance(basic_info, clusters.BridgedDeviceBasicInformation)
+                and node_info is not None
+                and basic_info_serial_number == node_info.serialNumber
+            )
+        ):
             # prefix identifier with 'serial_' to be able to filter it
             identifiers.add((DOMAIN, f"{ID_TYPE_SERIAL}_{basic_info_serial_number}"))
             serial_number = basic_info_serial_number
+
+        # the bridge's device entry keeps every identifier that was ever merged onto
+        # it, so a bridged device can still resolve to it through one left behind
+        if (
+            via_device_id is not Undefined
+            and (via_device := device_registry.async_get(via_device_id))
+            and (stale_identifiers := via_device.identifiers & identifiers)
+        ):
+            device_registry.async_update_device(
+                via_device.id,
+                new_identifiers=via_device.identifiers - stale_identifiers,
+            )
 
         # Model name is the human readable name of the model/product name
         model_name = (
@@ -216,9 +287,7 @@ class MatterAdapter:
             # alternative is the productName (e.g. LCT001)
             or get_clean_name(basic_info.productName)
             # if no product name, use the device type name
-            or device_type.__name__
-            if device_type
-            else None
+            or (device_type.__name__ if device_type else None)
         )
         # Model ID is the non-human readable product ID
         # we prefer the matter product ID so we can look it up in Matter DCL
@@ -229,15 +298,17 @@ class MatterAdapter:
             model_id = str(product_id) if (product_id := basic_info.productID) else None
 
         device_registry.async_get_or_create(
-            name=name,
             config_entry_id=self.config_entry.entry_id,
+            name=name,
             identifiers=identifiers,
             hw_version=basic_info.hardwareVersionString,
             sw_version=basic_info.softwareVersionString,
-            manufacturer=basic_info.vendorName or endpoint.node.device_info.vendorName,
+            manufacturer=basic_info.vendorName
+            or (node_info.vendorName if node_info is not None else None),
             model=model_name,
             model_id=model_id,
             serial_number=serial_number,
+            suggested_area=get_suggested_area(endpoint),
             via_device_id=via_device_id,
         )
 
@@ -245,16 +316,20 @@ class MatterAdapter:
         """Set up a MatterEndpoint as HA Device."""
         # pre-create device registry entry
         self._create_device_registry(endpoint)
+        server_info = cast(ServerInfoMessage, self.matter_client.server_info)
+        device_id = get_device_id(server_info, endpoint)
+        legacy_device_id = get_legacy_device_id(server_info, endpoint)
         # run platform discovery from device type instances
-        for entity_info in async_discover_entities(endpoint):
-            discovery_key = (
-                f"{entity_info.platform}_{endpoint.node.node_id}_{endpoint.endpoint_id}_"
-                f"{entity_info.primary_attribute.cluster_id}_"
-                f"{entity_info.primary_attribute.attribute_id}_"
-                f"{entity_info.entity_description.key}"
-            )
+        for entity_info in async_discover_entities(
+            endpoint, server_info.schema_version
+        ):
+            discovery_key = get_discovery_key(endpoint, entity_info)
             if discovery_key in self.discovered_entities:
                 continue
+            if legacy_device_id != device_id:
+                self._migrate_legacy_unique_id(
+                    endpoint, entity_info, legacy_device_id, device_id
+                )
             LOGGER.debug(
                 "Creating %s entity for %s",
                 entity_info.platform,
@@ -265,3 +340,28 @@ class MatterAdapter:
                 self.matter_client, endpoint, entity_info
             )
             self.platform_handlers[entity_info.platform]([new_entity])
+
+    def _migrate_legacy_unique_id(
+        self,
+        endpoint: MatterEndpoint,
+        entity_info: MatterEntityInfo,
+        legacy_device_id: str,
+        device_id: str,
+    ) -> None:
+        """Rename an entity registry entry still using the pre-1.5.0 unique_id.
+
+        matter-python-client 1.5.0 changed `get_compose_parent()` to resolve to the
+        top of a composition instead of the closest parent, which changes the
+        unique_id of a part nested below another part. Rename the entity registry
+        entry so its entity_id (and any automation referencing it) survives the
+        client upgrade, instead of orphaning it and creating a new entity.
+        """
+        legacy_unique_id = get_entity_unique_id(legacy_device_id, endpoint, entity_info)
+        entity_registry = er.async_get(self.hass)
+        if entity_id := entity_registry.async_get_entity_id(
+            entity_info.platform, DOMAIN, legacy_unique_id
+        ):
+            entity_registry.async_update_entity(
+                entity_id,
+                new_unique_id=get_entity_unique_id(device_id, endpoint, entity_info),
+            )

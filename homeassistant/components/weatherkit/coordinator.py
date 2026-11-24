@@ -2,7 +2,7 @@
 
 from datetime import timedelta
 import time
-from typing import override
+from typing import Any, override
 
 from apple_weatherkit import DataSetType
 from apple_weatherkit.client import WeatherKitApiClient, WeatherKitApiClientError
@@ -28,7 +28,7 @@ HOURLY_FORECAST_DURATION = timedelta(days=7)
 type WeatherKitConfigEntry = ConfigEntry[WeatherKitDataUpdateCoordinator]
 
 
-class WeatherKitDataUpdateCoordinator(DataUpdateCoordinator):
+class WeatherKitDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     """Class to manage fetching data from the API."""
 
     config_entry: WeatherKitConfigEntry
@@ -67,7 +67,7 @@ class WeatherKitDataUpdateCoordinator(DataUpdateCoordinator):
         LOGGER.debug("Supported data sets: %s", self.supported_data_sets)
 
     @override
-    async def _async_update_data(self):
+    async def _async_update_data(self) -> dict[str, Any]:
         """Update the current weather and forecasts."""
         try:
             if not self.supported_data_sets:

@@ -3,6 +3,7 @@
 from unittest.mock import Mock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.growatt_server.const import (
     AUTH_API_TOKEN,
@@ -16,8 +17,6 @@ from homeassistant.components.growatt_server.const import (
 from homeassistant.const import CONF_PASSWORD, CONF_TOKEN, CONF_URL, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 
-from tests.common import MockConfigEntry
-
 
 @pytest.fixture
 def mock_growatt_v1_api():
@@ -29,6 +28,7 @@ def mock_growatt_v1_api():
     Methods mocked for integration setup:
     - device_list: Called during async_setup_entry to discover devices
     - plant_energy_overview: Called by total coordinator during first refresh
+    - plant_power_overview: Called for the total coordinator's current power
 
     Methods mocked for MIN device coordinator refresh:
     - min_detail: Provides device state (e.g., acChargeEnable, chargePowerCommand)
@@ -144,6 +144,10 @@ def mock_growatt_v1_api():
             "today_energy": 12.5,
             "total_energy": 1250.0,
             "current_power": 2.5,
+        }
+        mock_v1_api.plant_power_overview.return_value = {
+            "count": 0,
+            "powers": [],
         }
 
         # Called by switch/number entities during turn_on/turn_off/set_value
@@ -451,6 +455,6 @@ def mock_setup_entry():
     """Mock async_setup_entry to prevent actual setup during config flow tests."""
     with patch(
         "homeassistant.components.growatt_server.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ) as mock:
         yield mock

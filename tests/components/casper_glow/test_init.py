@@ -5,8 +5,17 @@ from datetime import timedelta
 from itertools import count
 from unittest.mock import MagicMock, patch
 
-from bleak import BleakError
+from pycasperglow import (
+    ConnectionError as CasperGlowConnectionError,
+    HandshakeTimeoutError,
+)
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
+from pytest_homeassistant.components.bluetooth import (
+    generate_advertisement_data,
+    generate_ble_device,
+    inject_bluetooth_service_info,
+)
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.bluetooth import BluetoothServiceInfoBleak
@@ -17,13 +26,6 @@ from homeassistant.helpers.device_registry import format_mac
 import homeassistant.util.dt as dt_util
 
 from . import CASPER_GLOW_DISCOVERY_INFO, setup_integration
-
-from tests.common import MockConfigEntry, async_fire_time_changed
-from tests.components.bluetooth import (
-    generate_advertisement_data,
-    generate_ble_device,
-    inject_bluetooth_service_info,
-)
 
 
 async def test_async_setup_entry_success(
@@ -70,10 +72,9 @@ async def test_device_info(
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test device info is correctly populated."""
-    device = device_registry.async_get_device(
-        connections={
-            (dr.CONNECTION_BLUETOOTH, format_mac(CASPER_GLOW_DISCOVERY_INFO.address))
-        }
+    device = device_registry.async_get_device_by_connection(
+        (dr.CONNECTION_BLUETOOTH, format_mac(CASPER_GLOW_DISCOVERY_INFO.address)),
+        config_entry.entry_id,
     )
     assert device is not None
     assert device == snapshot
@@ -122,19 +123,30 @@ async def _trigger_poll(hass: HomeAssistant) -> None:
     async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=11))
 
 
-async def test_poll_bleak_error_logs_unavailable(
+@pytest.mark.parametrize(
+    "error",
+    [
+        pytest.param(
+            CasperGlowConnectionError("connection failed"), id="connection_error"
+        ),
+        pytest.param(HandshakeTimeoutError("not ready"), id="handshake_timeout"),
+    ],
+)
+async def test_poll_connection_error_logs_unavailable(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     mock_casper_glow: MagicMock,
     caplog: pytest.LogCaptureFixture,
+    error: Exception,
 ) -> None:
-    """Test that a BleakError during polling logs unavailable at info level once."""
-    mock_casper_glow.query_state.side_effect = BleakError("connection failed")
+    """Test that a connection error during polling logs unavailable at info level once."""
+    mock_casper_glow.query_state.side_effect = error
 
     await _trigger_poll(hass)
 
     assert "Jar is unavailable" in caplog.text
     assert caplog.text.count("Jar is unavailable") == 1
+    assert "unexpected error while polling" not in caplog.text
 
     # A second poll failure must not log again
     caplog.clear()
@@ -164,7 +176,7 @@ async def test_poll_recovery_logs_back_online(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test that recovery after a failed poll logs back online at info level."""
-    mock_casper_glow.query_state.side_effect = BleakError("gone")
+    mock_casper_glow.query_state.side_effect = CasperGlowConnectionError("gone")
 
     await _trigger_poll(hass)
 

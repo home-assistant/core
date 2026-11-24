@@ -2,13 +2,13 @@
 
 from unittest.mock import MagicMock
 
+from pytest_homeassistant.common import MockConfigEntry
+
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.device_registry import format_mac
 
 from . import ZEROCONF_NAME
-
-from tests.common import MockConfigEntry
 
 
 async def test_entity_rename(
@@ -27,8 +27,8 @@ async def test_entity_rename(
     await hass.async_block_till_done()
 
     mac = format_mac(mock_motionmount.mac.hex())
-    device = device_registry.async_get_device(
-        connections={(dr.CONNECTION_NETWORK_MAC, mac)}
+    device = device_registry.async_get_device_by_connection(
+        (dr.CONNECTION_NETWORK_MAC, mac), mock_config_entry.entry_id
     )
     assert device
     assert device.name == ZEROCONF_NAME
@@ -40,8 +40,8 @@ async def test_entity_rename(
         callback[0][0]()
     await hass.async_block_till_done()
 
-    device = device_registry.async_get_device(
-        connections={(dr.CONNECTION_NETWORK_MAC, mac)}
+    device = device_registry.async_get_device_by_connection(
+        (dr.CONNECTION_NETWORK_MAC, mac), mock_config_entry.entry_id
     )
     assert device
     assert device.name == "Blub"

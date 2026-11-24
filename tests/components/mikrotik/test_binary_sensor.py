@@ -2,6 +2,7 @@
 
 from unittest.mock import patch
 
+from pytest_homeassistant.common import snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
@@ -11,8 +12,6 @@ from homeassistant.helpers import entity_registry as er
 
 from . import setup_mikrotik_entry
 from .const import BRIDGE1_INTERFACE, INTERFACE_DATA
-
-from tests.common import snapshot_platform
 
 
 async def test_binary_sensor_entities_created(
@@ -34,5 +33,14 @@ async def test_binary_sensor_no_matching_interfaces(hass: HomeAssistant) -> None
     }
     with patch("homeassistant.components.mikrotik.PLATFORMS", [Platform.BINARY_SENSOR]):
         await setup_mikrotik_entry(hass, interface_data=[interface_without_running])
+
+    assert hass.states.async_entity_ids(BINARY_SENSOR_DOMAIN) == []
+
+
+async def test_binary_sensor_skips_loopback_interfaces(hass: HomeAssistant) -> None:
+    """Test no binary sensor entities are created for loopback interfaces."""
+    loopback_interface = {**BRIDGE1_INTERFACE, "name": "lo", "type": "loopback"}
+    with patch("homeassistant.components.mikrotik.PLATFORMS", [Platform.BINARY_SENSOR]):
+        await setup_mikrotik_entry(hass, interface_data=[loopback_interface])
 
     assert hass.states.async_entity_ids(BINARY_SENSOR_DOMAIN) == []

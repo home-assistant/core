@@ -6,10 +6,8 @@ from homeassistant.components.application_credentials import (
 )
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.config_entry_oauth2_flow import (
-    ImplementationUnavailableError,
     async_get_config_entry_implementation,
 )
 from homeassistant.helpers.typing import ConfigType
@@ -34,15 +32,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: OndiloIcoConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: OndiloIcoConfigEntry) -> None:
     """Set up Ondilo ICO from a config entry."""
-    try:
-        implementation = await async_get_config_entry_implementation(hass, entry)
-    except ImplementationUnavailableError as err:
-        raise ConfigEntryNotReady(
-            translation_domain=DOMAIN,
-            translation_key="oauth2_implementation_unavailable",
-        ) from err
+    implementation = await async_get_config_entry_implementation(hass, entry)
 
     coordinator = OndiloIcoPoolsCoordinator(
         hass, entry, OndiloClient(hass, entry, implementation)
@@ -54,9 +46,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: OndiloIcoConfigEntry) ->
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: OndiloIcoConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: OndiloIcoConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

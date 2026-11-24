@@ -46,7 +46,6 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util.dt import utcnow
 
-from . import services
 from .const import DOMAIN
 from .coordinator import HeosConfigEntry, HeosCoordinator
 
@@ -119,7 +118,6 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Add media players for a config entry."""
-    services.register_media_player_services()
 
     def add_entities_callback(players: Sequence[HeosPlayer]) -> None:
         """Add entities for each player."""
@@ -452,6 +450,13 @@ class HeosMediaPlayer(CoordinatorEntity[HeosCoordinator], MediaPlayerEntity):
     async def async_join_players(self, group_members: list[str]) -> None:
         """Join `group_members` as a player group with the current player."""
         player_ids: list[int] = [self._player.player_id]
+        # Keep the members of the group this player already leads. HEOS replaces
+        # the group with the players provided, so members that are not sent
+        # again are removed when another player is added to the group.
+        for group in self.coordinator.heos.groups.values():
+            if group.lead_player_id == self._player.player_id:
+                player_ids.extend(group.member_player_ids)
+                break
         # Resolve entity_ids to player_ids
         entity_registry = er.async_get(self.hass)
         for entity_id in group_members:

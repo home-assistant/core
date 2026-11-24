@@ -6,7 +6,7 @@ from typing import Any
 import pytest
 
 from homeassistant.components.sensor import SensorDeviceClass
-from homeassistant.const import ATTR_DEVICE_CLASS, STATE_UNAVAILABLE, STATE_UNKNOWN
+from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN, EntityStateAttribute
 from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers import significant_change
 
@@ -34,7 +34,7 @@ async def test_signicant_change(
 ) -> None:
     """Test initialize helper works."""
     ent_id = "test_domain.test_entity"
-    attrs = {ATTR_DEVICE_CLASS: SensorDeviceClass.BATTERY}
+    attrs = {EntityStateAttribute.DEVICE_CLASS: SensorDeviceClass.BATTERY}
 
     assert checker.async_is_significant_change(State(ent_id, "100", attrs))
 
@@ -60,7 +60,7 @@ async def test_significant_change_extra(
 ) -> None:
     """Test extra significant checker works."""
     ent_id = "test_domain.test_entity"
-    attrs = {ATTR_DEVICE_CLASS: SensorDeviceClass.BATTERY}
+    attrs = {EntityStateAttribute.DEVICE_CLASS: SensorDeviceClass.BATTERY}
 
     assert checker.async_is_significant_change(State(ent_id, "100", attrs), extra_arg=1)
     assert checker.async_is_significant_change(State(ent_id, "200", attrs), extra_arg=1)
@@ -100,3 +100,26 @@ async def test_check_valid_float() -> None:
     assert not significant_change.check_valid_float("")
     assert not significant_change.check_valid_float("invalid")
     assert not significant_change.check_valid_float("1.1.1")
+
+
+@pytest.mark.parametrize(
+    ("old_state", "new_state", "change", "expected"),
+    [
+        pytest.param(100.0, 103.0, 2.0, True, id="positive_changed"),
+        pytest.param(100.0, 101.0, 2.0, False, id="positive_unchanged"),
+        pytest.param(-100.0, -103.0, 2.0, True, id="negative_decrease"),
+        pytest.param(-100.0, -97.0, 2.0, True, id="negative_increase"),
+        pytest.param(-100.0, -101.0, 2.0, False, id="negative_unchanged"),
+        pytest.param(-100.0, 100.0, 2.0, True, id="sign_change"),
+        pytest.param(0.0, 1.0, 2.0, True, id="from_zero"),
+        pytest.param(-5.0, -5.0, 2.0, False, id="equal"),
+    ],
+)
+def test_check_percentage_change(
+    old_state: float, new_state: float, change: float, expected: bool
+) -> None:
+    """Test check_percentage_change is relative to the magnitude of the old value."""
+    assert (
+        significant_change.check_percentage_change(old_state, new_state, change)
+        is expected
+    )

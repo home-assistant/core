@@ -8,7 +8,6 @@ from homeassistant.components.cover import (
     ATTR_TILT_POSITION,
     CoverEntity,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_ON, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -17,6 +16,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from . import setup_mysensors_platform
 from .const import MYSENSORS_DISCOVERY, DiscoveryInfo
 from .entity import MySensorsChildEntity
+from .models import MySensorsConfigEntry
 
 
 @unique
@@ -31,7 +31,7 @@ class CoverState(Enum):
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: MySensorsConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up this platform for a specific ConfigEntry(==Gateway)."""
@@ -39,11 +39,11 @@ async def async_setup_entry(
     async def async_discover(discovery_info: DiscoveryInfo) -> None:
         """Discover and add a MySensors cover."""
         setup_mysensors_platform(
-            hass,
+            config_entry,
             Platform.COVER,
             discovery_info,
             MySensorsCover,
-            async_add_entities=async_add_entities,
+            async_add_entities,
         )
 
     config_entry.async_on_unload(

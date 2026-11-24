@@ -3,6 +3,7 @@
 from copy import deepcopy
 
 import pytest
+from pytest_homeassistant.common import AsyncMock, Generator, MockConfigEntry, patch
 
 from homeassistant.components.comelit.const import BRIDGE, DOMAIN, VEDO
 from homeassistant.const import CONF_HOST, CONF_PIN, CONF_PORT, CONF_TYPE
@@ -18,15 +19,13 @@ from .const import (
     VEDO_PORT,
 )
 
-from tests.common import AsyncMock, Generator, MockConfigEntry, patch
-
 
 @pytest.fixture
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
         "homeassistant.components.comelit.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ) as mock_setup_entry:
         yield mock_setup_entry
 

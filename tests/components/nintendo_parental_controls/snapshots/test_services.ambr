@@ -1,0 +1,25 @@
+# serializer version: 1
+# name: test_get_device_application_report
+  dict({
+    'HA Gamer': list([
+      dict({
+        'image': 'http://example.com/image.png',
+        'name': 'Test Game Name',
+        'playing_time': 110,
+        'whitelisted': True,
+      }),
+    ]),
+  })
+# ---
+# name: test_get_player_application_report
+  dict({
+    'apps': list([
+      dict({
+        'image': 'http://example.com/image.png',
+        'name': 'Test Game Name',
+        'playing_time': 110,
+        'whitelisted': True,
+      }),
+    ]),
+  })
+# ---

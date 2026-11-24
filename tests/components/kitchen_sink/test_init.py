@@ -1,12 +1,14 @@
 """The tests for the Everything but the Kitchen Sink integration."""
 
-import datetime
+import datetime as dt
 from http import HTTPStatus
 from unittest.mock import ANY
 
+import probatio
 import pytest
+from pytest_homeassistant.components.recorder.common import async_wait_recording_done
+from pytest_homeassistant.typing import ClientSessionGenerator, WebSocketGenerator
 from syrupy.assertion import SnapshotAssertion
-import voluptuous as vol
 
 from homeassistant.components.kitchen_sink import DOMAIN
 from homeassistant.components.labs import EVENT_LABS_UPDATED
@@ -24,8 +26,13 @@ from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
 
-from tests.components.recorder.common import async_wait_recording_done
-from tests.typing import ClientSessionGenerator, WebSocketGenerator
+DEMO_ISSUE_IDS = (
+    "transmogrifier_deprecated",
+    "out_of_blinker_fluid",
+    "unfixable_problem",
+    "bad_psu",
+    "cold_tea",
+)
 
 
 @pytest.fixture
@@ -75,7 +82,7 @@ async def test_demo_statistics_growth(hass: HomeAssistant) -> None:
     hass.config.units = US_CUSTOMARY_SYSTEM
 
     now = dt_util.now()
-    last_week = now - datetime.timedelta(days=7)
+    last_week = now - dt.timedelta(days=7)
     last_week_midnight = last_week.replace(hour=0, minute=0, second=0, microsecond=0)
 
     statistic_id = f"{DOMAIN}:energy_consumption_kwh"
@@ -353,13 +360,36 @@ async def test_issues_created(
     }
 
 
+@pytest.mark.usefixtures("mock_history")
+async def test_issues_linked_to_config_entry(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test the demo issues are linked to the config entry and removed with it."""
+    assert await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
+    await hass.async_block_till_done()
+    entry = hass.config_entries.async_entries(DOMAIN)[0]
+
+    for issue_id in DEMO_ISSUE_IDS:
+        issue = issue_registry.async_get_issue(DOMAIN, issue_id)
+        assert issue is not None
+        assert issue.config_entry_id == entry.entry_id
+        assert issue.config_subentry_id is None
+
+    await hass.config_entries.async_remove(entry.entry_id)
+    await hass.async_block_till_done()
+
+    for issue_id in DEMO_ISSUE_IDS:
+        assert issue_registry.async_get_issue(DOMAIN, issue_id) is None
+
+
 async def test_service(
     hass: HomeAssistant,
 ) -> None:
     """Test we can call the service."""
     assert await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
 
-    with pytest.raises(vol.error.MultipleInvalid):
+    with pytest.raises(probatio.error.MultipleInvalid):
         await hass.services.async_call(DOMAIN, "test_service_1", blocking=True)
 
     await hass.services.async_call(

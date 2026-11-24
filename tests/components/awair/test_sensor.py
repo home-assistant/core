@@ -5,6 +5,7 @@ from unittest.mock import patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import async_fire_time_changed, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.awair.sensor import (
@@ -18,8 +19,6 @@ from homeassistant.helpers import entity_registry as er
 
 from . import setup_awair
 from .const import CLOUD_CONFIG, CLOUD_UNIQUE_ID, LOCAL_CONFIG, LOCAL_UNIQUE_ID
-
-from tests.common import async_fire_time_changed, snapshot_platform
 
 SENSOR_TYPES_MAP = {
     desc.key: desc for desc in (SENSOR_TYPE_SCORE, *SENSOR_TYPES, *SENSOR_TYPES_DUST)

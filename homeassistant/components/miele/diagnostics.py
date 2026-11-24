@@ -1,13 +1,13 @@
 """Diagnostics support for Miele."""
 
 import hashlib
-from typing import Any, cast
+from typing import TYPE_CHECKING, Any, cast
 
 from pymiele import completed_warnings
 
 from homeassistant.components.diagnostics import async_redact_data
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import DeviceEntry
+from homeassistant.helpers.device_registry import AnyDeviceEntry, DeviceEntry
 
 from .coordinator import MieleConfigEntry
 
@@ -32,6 +32,8 @@ async def async_get_config_entry_diagnostics(
 ) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
 
+    aux_data = config_entry.runtime_data.aux_coordinator.data
+    filling_levels = aux_data.filling_levels if aux_data else {}
     miele_data: dict[str, Any] = {
         "devices": redact_identifiers(
             {
@@ -44,9 +46,7 @@ async def async_get_config_entry_diagnostics(
         "filling_levels": redact_identifiers(
             {
                 device_id: filling_level_data.raw
-                for device_id, filling_level_data in (
-                    config_entry.runtime_data.aux_coordinator.data.filling_levels.items()
-                )
+                for device_id, filling_level_data in filling_levels.items()
             }
         ),
         "actions": redact_identifiers(
@@ -69,9 +69,13 @@ async def async_get_config_entry_diagnostics(
 
 
 async def async_get_device_diagnostics(
-    hass: HomeAssistant, config_entry: MieleConfigEntry, device: DeviceEntry
+    hass: HomeAssistant, config_entry: MieleConfigEntry, device: AnyDeviceEntry
 ) -> dict[str, Any]:
     """Return diagnostics for a device."""
+    if TYPE_CHECKING:
+        # miele does not create child devices
+        assert isinstance(device, DeviceEntry)
+
     info = {
         "manufacturer": device.manufacturer,
         "model": device.model,
@@ -86,11 +90,15 @@ async def async_get_device_diagnostics(
         "devices": {
             hash_identifier(device_id): coordinator.data.devices[device_id].raw
         },
-        "filling_levels": {
-            hash_identifier(device_id): aux_coordinator.data.filling_levels[
-                device_id
-            ].raw
-        },
+        "filling_levels": (
+            {
+                hash_identifier(device_id): aux_coordinator.data.filling_levels[
+                    device_id
+                ].raw
+            }
+            if aux_coordinator.data
+            else {}
+        ),
         "actions": {
             hash_identifier(device_id): coordinator.data.actions[device_id].raw
         },

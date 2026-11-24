@@ -25,12 +25,16 @@ import time
 from types import MappingProxyType
 from typing import TYPE_CHECKING, Any, Final, cast
 
-import voluptuous as vol
+import probatio
 from yarl import URL
 
-from homeassistant.const import EVENT_HOMEASSISTANT_STOP, EVENT_LOGGING_CHANGED
+from homeassistant.const import (
+    CONF_VERIFY_SSL,
+    EVENT_HOMEASSISTANT_STOP,
+    EVENT_LOGGING_CHANGED,
+)
 from homeassistant.core import Event, HomeAssistant, callback
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.setup import SetupPhases, async_pause_setup
@@ -150,11 +154,15 @@ def _convert_stream_options(
         raise HomeAssistantError("Stream integration is not set up.")
 
     stream_settings = copy.copy(hass.data[DOMAIN][ATTR_SETTINGS])
-    pyav_options: dict[str, str] = {}
     try:
         STREAM_OPTIONS_SCHEMA(stream_options)
-    except vol.Invalid as exc:
+    except probatio.Invalid as exc:
         raise HomeAssistantError(f"Invalid stream options: {exc}") from exc
+
+    # FFmpeg 9 verifies TLS peers by default; cameras use self-signed certificates
+    pyav_options: dict[str, str] = {
+        "tls_verify": "1" if stream_options.get(CONF_VERIFY_SSL) else "0"
+    }
 
     if extra_wait_time := stream_options.get(CONF_EXTRA_PART_WAIT_TIME):
         stream_settings.hls_part_timeout += extra_wait_time
@@ -213,23 +221,23 @@ def create_stream(
     return stream
 
 
-DOMAIN_SCHEMA = vol.Schema(
+DOMAIN_SCHEMA = probatio.Schema(
     {
-        vol.Optional(CONF_LL_HLS, default=True): cv.boolean,
-        vol.Optional(CONF_SEGMENT_DURATION, default=6): vol.All(
-            cv.positive_float, vol.Range(min=2, max=10)
+        probatio.Optional(CONF_LL_HLS, default=True): cv.boolean,
+        probatio.Optional(CONF_SEGMENT_DURATION, default=6): probatio.All(
+            cv.positive_float, probatio.Range(min=2, max=10)
         ),
-        vol.Optional(CONF_PART_DURATION, default=1): vol.All(
-            cv.positive_float, vol.Range(min=0.2, max=1.5)
+        probatio.Optional(CONF_PART_DURATION, default=1): probatio.All(
+            cv.positive_float, probatio.Range(min=0.2, max=1.5)
         ),
     }
 )
 
-CONFIG_SCHEMA = vol.Schema(
+CONFIG_SCHEMA = probatio.Schema(
     {
         DOMAIN: DOMAIN_SCHEMA,
     },
-    extra=vol.ALLOW_EXTRA,
+    extra=probatio.ALLOW_EXTRA,
 )
 
 
@@ -312,6 +320,45 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
+class _WorkerControl:
+    """Thread-safe lifecycle control for a single stream worker thread."""
+
+    def __init__(self) -> None:
+        """Initialize worker control."""
+        self._lock = threading.Lock()
+        self._stopped = False
+        self._restart = False
+        self.interrupt = threading.Event()
+
+    @property
+    def is_stopped(self) -> bool:
+        """Return True once stop() has been called."""
+        return self._stopped
+
+    def stop(self) -> None:
+        """Permanently stop this worker."""
+        with self._lock:
+            self._stopped = True
+            self.interrupt.set()
+
+    def request_restart(self) -> None:
+        """Interrupt the current read or retry backoff to reload the source."""
+        with self._lock:
+            if self._stopped:
+                return
+            self._restart = True
+            self.interrupt.set()
+
+    def consume_restart(self) -> bool:
+        """Consume a pending restart if not stopped."""
+        with self._lock:
+            if self._stopped or not self._restart:
+                return False
+            self._restart = False
+            self.interrupt.clear()
+            return True
+
+
 class Stream:
     """Represents a single stream."""
 
@@ -334,9 +381,8 @@ class Stream:
         self.access_token: str | None = None
         self._start_stop_lock = asyncio.Lock()
         self._thread: threading.Thread | None = None
-        self._thread_quit = threading.Event()
+        self._worker_control: _WorkerControl | None = None
         self._outputs: dict[str, StreamOutput] = {}
-        self._fast_restart_once = False
         self._keyframe_converter = KeyFrameConverter(
             hass, stream_settings, dynamic_stream_settings
         )
@@ -428,15 +474,19 @@ class Stream:
         """
         async with self._start_stop_lock:
             if self._thread and self._thread.is_alive():
-                return
+                if self._worker_control is None or not self._worker_control.is_stopped:
+                    return
+                await self.hass.async_add_executor_job(self._thread.join)
             if self._thread is not None:
                 # The thread must have crashed/exited. Join to clean up the
                 # previous thread.
                 self._thread.join(timeout=0)
-            self._thread_quit.clear()
+            control = _WorkerControl()
+            self._worker_control = control
             self._thread = threading.Thread(
                 name="stream_worker",
                 target=self._run_worker,
+                args=(control,),
             )
             self._thread.start()
             self._logger.debug(
@@ -450,8 +500,8 @@ class Stream:
             "Updating stream source %s", redact_credentials(str(new_source))
         )
         self.source = new_source
-        self._fast_restart_once = True
-        self._thread_quit.set()
+        if self._worker_control is not None:
+            self._worker_control.request_restart()
 
     def _set_state(self, available: bool) -> None:
         """Set the stream state by updating the callback."""
@@ -460,15 +510,26 @@ class Stream:
         # it out each time
         self.hass.loop.call_soon_threadsafe(self._async_update_state, available)
 
-    def _run_worker(self) -> None:
+    def _run_worker(self, control: _WorkerControl) -> None:
         """Handle consuming streams and restart keepalive streams."""
         # Keep import here so that we can import stream
         # integration without installing reqs
         from .worker import StreamState, stream_worker  # noqa: PLC0415
 
-        stream_state = StreamState(self.hass, self.outputs, self._diagnostics)
+        stream_state = StreamState(
+            self.hass,
+            lambda: {} if control.is_stopped else self.outputs(),
+            self._diagnostics,
+        )
         wait_timeout = 0
-        while not self._thread_quit.wait(timeout=wait_timeout):
+        while True:
+            if wait_timeout and control.interrupt.wait(timeout=wait_timeout):
+                if not control.consume_restart():
+                    break
+                wait_timeout = 0
+            elif control.is_stopped:
+                break
+
             start_time = time.time()
             self._set_state(True)
             self._diagnostics.set_value(
@@ -485,22 +546,17 @@ class Stream:
                     self._stream_settings,
                     stream_state,
                     self._keyframe_converter,
-                    self._thread_quit,
+                    control.interrupt,
                 )
             except StreamWorkerError as err:
                 self._diagnostics.increment("worker_error")
                 self._logger.error("Error from stream worker: %s", str(err))
 
             stream_state.discontinuity()
-            if not _should_retry() or self._thread_quit.is_set():
-                if self._fast_restart_once:
-                    # The stream source is updated, restart
-                    # without any delay and reset the retry
-                    # backoff for the new url.
-                    wait_timeout = 0
-                    self._fast_restart_once = False
-                    self._thread_quit.clear()
-                    continue
+            if control.consume_restart():
+                wait_timeout = 0
+                continue
+            if not _should_retry() or control.is_stopped:
                 break
 
             self._set_state(False)
@@ -520,6 +576,8 @@ class Stream:
             )
 
         async def worker_finished() -> None:
+            if control.is_stopped:
+                return
             # The worker is no longer checking availability
             # of the stream and can no longer track it so
             # mark it as available, otherwise the frontend
@@ -547,11 +605,14 @@ class Stream:
         Uses an asyncio.Lock to avoid conflicts with start().
         """
         async with self._start_stop_lock:
-            if self._thread is None:
+            if self._thread is None or self._worker_control is None:
                 return
-            self._thread_quit.set()
+            self._worker_control.stop()
             await self.hass.async_add_executor_job(self._thread.join)
             self._thread = None
+            self._worker_control = None
+            if not self.available:
+                self._async_update_state(True)
             self._logger.debug(
                 "Stopped stream: %s", redact_credentials(str(self.source))
             )
@@ -567,13 +628,19 @@ class Stream:
 
         # Check for file access
         if not self.hass.config.is_allowed_path(video_path):
-            raise HomeAssistantError(f"Can't write {video_path}, no access to path!")
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="path_not_allowed",
+                translation_placeholders={"filename": video_path},
+            )
 
         # Add recorder
         if recorder := self.outputs().get(RECORDER_PROVIDER):
             assert isinstance(recorder, RecorderOutput)
-            raise HomeAssistantError(
-                f"Stream already recording to {recorder.video_path}!"
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="already_recording",
+                translation_placeholders={"filename": recorder.video_path},
             )
         recorder = cast(
             RecorderOutput, self.add_provider(RECORDER_PROVIDER, timeout=duration)
@@ -585,7 +652,7 @@ class Stream:
         self._logger.debug("Started a stream recording of %s seconds", duration)
 
         # Take advantage of lookback
-        hls: HlsStreamOutput = cast(HlsStreamOutput, self.outputs().get(HLS_PROVIDER))
+        hls = cast(HlsStreamOutput | None, self.outputs().get(HLS_PROVIDER))
         if hls:
             num_segments = min(int(lookback / hls.target_duration) + 1, MAX_SEGMENTS)
             # Wait for latest segment, then add the lookback
@@ -625,10 +692,11 @@ def _should_retry() -> bool:
     return True
 
 
-STREAM_OPTIONS_SCHEMA: Final = vol.Schema(
+STREAM_OPTIONS_SCHEMA: Final = probatio.Schema(
     {
-        vol.Optional(CONF_RTSP_TRANSPORT): vol.In(RTSP_TRANSPORTS),
-        vol.Optional(CONF_USE_WALLCLOCK_AS_TIMESTAMPS): bool,
-        vol.Optional(CONF_EXTRA_PART_WAIT_TIME): cv.positive_float,
+        probatio.Optional(CONF_RTSP_TRANSPORT): probatio.In(RTSP_TRANSPORTS),
+        probatio.Optional(CONF_USE_WALLCLOCK_AS_TIMESTAMPS): bool,
+        probatio.Optional(CONF_EXTRA_PART_WAIT_TIME): cv.positive_float,
+        probatio.Optional(CONF_VERIFY_SSL): bool,
     }
 )

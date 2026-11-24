@@ -76,7 +76,6 @@ class UnifiAccessDoorImageEntity(UnifiAccessEntity, ImageEntity):
         if thumbnail := self.coordinator.data.door_thumbnails.get(self._door_id):
             try:
                 return await self.coordinator.client.get_thumbnail(thumbnail.url)
-            # pylint: disable-next=home-assistant-action-swallowed-exception
             except UnifiAccessError as err:
                 raise HomeAssistantError(
                     translation_domain=DOMAIN,
@@ -84,6 +83,7 @@ class UnifiAccessDoorImageEntity(UnifiAccessEntity, ImageEntity):
                 ) from err
         return None
 
+    @callback
     @override
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""

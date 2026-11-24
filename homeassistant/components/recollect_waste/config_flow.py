@@ -4,7 +4,7 @@ from typing import Any, override
 
 from aiorecollect.client import Client
 from aiorecollect.errors import RecollectError
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult, OptionsFlow
 from homeassistant.const import CONF_FRIENDLY_NAME
@@ -14,8 +14,8 @@ from homeassistant.helpers import aiohttp_client
 from .const import CONF_PLACE_ID, CONF_SERVICE_ID, DOMAIN, LOGGER
 from .coordinator import RecollectWasteConfigEntry
 
-DATA_SCHEMA = vol.Schema(
-    {vol.Required(CONF_PLACE_ID): str, vol.Required(CONF_SERVICE_ID): str}
+DATA_SCHEMA = probatio.Schema(
+    {probatio.Required(CONF_PLACE_ID): str, probatio.Required(CONF_SERVICE_ID): str}
 )
 
 
@@ -84,9 +84,9 @@ class RecollectWasteOptionsFlowHandler(OptionsFlow):
 
         return self.async_show_form(
             step_id="init",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Optional(
+                    probatio.Optional(
                         CONF_FRIENDLY_NAME,
                         default=self.config_entry.options.get(CONF_FRIENDLY_NAME),
                     ): bool

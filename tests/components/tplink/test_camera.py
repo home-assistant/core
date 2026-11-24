@@ -7,14 +7,15 @@ from aiohttp.test_utils import make_mocked_request
 from freezegun.api import FrozenDateTimeFactory
 from kasa import Module
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
+from pytest_homeassistant.typing import WebSocketGenerator
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components import stream
 from homeassistant.components.camera import (
     DOMAIN as CAMERA_DOMAIN,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
     CameraEntityFeature,
+    CameraService,
     StreamType,
     async_get_image,
     async_get_mjpeg_stream,
@@ -28,9 +29,6 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from . import _mocked_device, setup_platform_for_device, snapshot_platform
 from .const import DEVICE_ID, IP_ADDRESS3, MAC_ADDRESS3, SMALLEST_VALID_JPEG_BYTES
-
-from tests.common import MockConfigEntry, async_fire_time_changed
-from tests.typing import WebSocketGenerator
 
 
 async def test_states(
@@ -439,7 +437,7 @@ async def test_camera_turn_on_off(
 
     await hass.services.async_call(
         CAMERA_DOMAIN,
-        SERVICE_TURN_ON,
+        CameraService.TURN_ON,
         {"entity_id": "camera.my_camera_live_view"},
         blocking=True,
     )
@@ -447,7 +445,7 @@ async def test_camera_turn_on_off(
 
     await hass.services.async_call(
         CAMERA_DOMAIN,
-        SERVICE_TURN_OFF,
+        CameraService.TURN_OFF,
         {"entity_id": "camera.my_camera_live_view"},
         blocking=True,
     )

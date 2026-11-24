@@ -8,12 +8,14 @@
       "manufacturer_id": 737
     }
   ],
+  "categories": ["energy.solar_batteries"],
   "codeowners": ["@rajlaud"],
   "config_flow": true,
+  "connectivity": ["bluetooth"],
   "dependencies": ["bluetooth_adapters"],
   "documentation": "https://www.home-assistant.io/integrations/victron_ble",
   "integration_type": "device",
   "iot_class": "local_push",
   "quality_scale": "bronze",
-  "requirements": ["victron-ble-ha-parser==0.7.0"]
+  "requirements": ["victron-ble-ha-parser==0.8.0"]
 }

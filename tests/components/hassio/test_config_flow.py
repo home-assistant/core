@@ -5,10 +5,10 @@ from unittest.mock import patch
 from homeassistant.auth.const import GROUP_ID_ADMIN
 from homeassistant.components.hassio import DOMAIN
 from homeassistant.components.hassio.const import (
-    DATA_HASSIO_SUPERVISOR_USER,
     DEFAULT_UPDATE_OPTIONS,
     ENTRY_DATA_USER,
 )
+from homeassistant.components.http.const import DATA_SUPERVISOR_USER
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -22,7 +22,7 @@ async def test_config_flow(hass: HomeAssistant) -> None:
         ) as mock_setup,
         patch(
             "homeassistant.components.hassio.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
     ):
         result = await hass.config_entries.flow.async_init(
@@ -53,11 +53,11 @@ async def test_config_flow_uses_bootstrap_user(hass: HomeAssistant) -> None:
     user = await hass.auth.async_create_system_user(
         "Supervisor", group_ids=[GROUP_ID_ADMIN]
     )
-    hass.data[DATA_HASSIO_SUPERVISOR_USER] = user
+    hass.data[DATA_SUPERVISOR_USER] = user
 
     with (
         patch("homeassistant.components.hassio.async_setup", return_value=True),
-        patch("homeassistant.components.hassio.async_setup_entry", return_value=True),
+        patch("homeassistant.components.hassio.async_setup_entry", return_value=None),
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": "system"}
@@ -72,7 +72,7 @@ async def test_config_flow_without_bootstrap_user(hass: HomeAssistant) -> None:
     """Test config flow still creates default options without bootstrap user."""
     with (
         patch("homeassistant.components.hassio.async_setup", return_value=True),
-        patch("homeassistant.components.hassio.async_setup_entry", return_value=True),
+        patch("homeassistant.components.hassio.async_setup_entry", return_value=None),
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": "system"}

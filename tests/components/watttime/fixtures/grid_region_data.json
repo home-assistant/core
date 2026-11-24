@@ -1,5 +1,5 @@
 {
-  "id": 263,
-  "abbrev": "PJM_NJ",
-  "name": "PJM New Jersey"
+  "region": "PJM_NJ",
+  "region_full_name": "PJM New Jersey",
+  "signal_type": "co2_moer"
 }

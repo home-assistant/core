@@ -3,12 +3,10 @@
 import logging
 from typing import Any, cast, override
 
-from pyatmo.modules import NATherm1
+from pyatmo.modules import BNS, NATherm1
 from pyatmo.modules.device_types import DeviceType
-import voluptuous as vol
 
 from homeassistant.components.climate import (
-    ATTR_PRESET_MODE,
     DEFAULT_MIN_TEMP,
     PRESET_AWAY,
     PRESET_BOOST,
@@ -25,30 +23,21 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import dt as dt_util
 
 from .const import (
-    ATTR_END_DATETIME,
     ATTR_HEATING_POWER_REQUEST,
-    ATTR_SCHEDULE_NAME,
     ATTR_SELECTED_SCHEDULE,
     ATTR_SELECTED_SCHEDULE_ID,
-    ATTR_TARGET_TEMPERATURE,
-    ATTR_TIME_PERIOD,
     DOMAIN,
     EVENT_TYPE_CANCEL_SET_POINT,
     EVENT_TYPE_SCHEDULE,
     EVENT_TYPE_SET_POINT,
     EVENT_TYPE_THERM_MODE,
     NETATMO_CREATE_CLIMATE,
-    SERVICE_CLEAR_TEMPERATURE_SETTING,
-    SERVICE_SET_PRESET_MODE_WITH_END_DATETIME,
-    SERVICE_SET_SCHEDULE,
-    SERVICE_SET_TEMPERATURE_WITH_END_DATETIME,
-    SERVICE_SET_TEMPERATURE_WITH_TIME_PERIOD,
+    NetatmoServiceArgument,
 )
 from .coordinator import HOME, SIGNAL_NAME, NetatmoConfigEntry, NetatmoRoom
 from .entity import NetatmoRoomEntity
@@ -137,49 +126,6 @@ async def async_setup_entry(
         async_dispatcher_connect(hass, NETATMO_CREATE_CLIMATE, _create_entity)
     )
 
-    platform = entity_platform.async_get_current_platform()
-    platform.async_register_entity_service(
-        SERVICE_SET_SCHEDULE,
-        {vol.Required(ATTR_SCHEDULE_NAME): cv.string},
-        "_async_service_set_schedule",
-    )
-    platform.async_register_entity_service(
-        SERVICE_SET_PRESET_MODE_WITH_END_DATETIME,
-        {
-            vol.Required(ATTR_PRESET_MODE): vol.In(THERM_MODES),
-            vol.Required(ATTR_END_DATETIME): cv.datetime,
-        },
-        "_async_service_set_preset_mode_with_end_datetime",
-    )
-    platform.async_register_entity_service(
-        SERVICE_SET_TEMPERATURE_WITH_END_DATETIME,
-        {
-            vol.Required(ATTR_TARGET_TEMPERATURE): vol.All(
-                vol.Coerce(float), vol.Range(min=7, max=30)
-            ),
-            vol.Required(ATTR_END_DATETIME): cv.datetime,
-        },
-        "_async_service_set_temperature_with_end_datetime",
-    )
-    platform.async_register_entity_service(
-        SERVICE_SET_TEMPERATURE_WITH_TIME_PERIOD,
-        {
-            vol.Required(ATTR_TARGET_TEMPERATURE): vol.All(
-                vol.Coerce(float), vol.Range(min=7, max=30)
-            ),
-            vol.Required(ATTR_TIME_PERIOD): vol.All(
-                cv.time_period,
-                cv.positive_timedelta,
-            ),
-        },
-        "_async_service_set_temperature_with_time_period",
-    )
-    platform.async_register_entity_service(
-        SERVICE_CLEAR_TEMPERATURE_SETTING,
-        None,
-        "_async_service_clear_temperature_setting",
-    )
-
 
 class NetatmoThermostat(NetatmoRoomEntity, ClimateEntity):
     """Representation a Netatmo thermostat."""
@@ -189,7 +135,7 @@ class NetatmoThermostat(NetatmoRoomEntity, ClimateEntity):
     _attr_preset_modes = SUPPORT_PRESET
     _attr_supported_features = SUPPORT_FLAGS
     _attr_target_temperature_step = PRECISION_HALVES
-    _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_native_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_translation_key = "thermostat"
     _attr_name = None
     _away: bool | None = None
@@ -198,6 +144,7 @@ class NetatmoThermostat(NetatmoRoomEntity, ClimateEntity):
     _away_temperature: float | None = None
     _hg_temperature: float | None = None
     _boilerstatus: bool | None = None
+    _coolerstatus: bool | None = None
 
     def __init__(self, room: NetatmoRoom) -> None:
         """Initialize the sensor."""
@@ -284,9 +231,9 @@ class NetatmoThermostat(NetatmoRoomEntity, ClimateEntity):
             self._attr_preset_mode = NETATMO_MAP_PRESET[home[EVENT_TYPE_THERM_MODE]]
             self._attr_hvac_mode = HVAC_MAP_NETATMO[self._attr_preset_mode]
             if self._attr_preset_mode == PRESET_FROST_GUARD:
-                self._attr_target_temperature = self._hg_temperature
+                self._attr_native_target_temperature = self._hg_temperature
             elif self._attr_preset_mode == PRESET_AWAY:
-                self._attr_target_temperature = self._away_temperature
+                self._attr_native_target_temperature = self._away_temperature
             elif self._attr_preset_mode in [PRESET_SCHEDULE, PRESET_HOME]:
                 self.async_update_callback()
                 self.data_handler.async_force_update(self._signal_name)
@@ -302,17 +249,21 @@ class NetatmoThermostat(NetatmoRoomEntity, ClimateEntity):
                 if room["therm_setpoint_mode"] == STATE_NETATMO_OFF:
                     self._attr_hvac_mode = HVACMode.OFF
                     self._attr_preset_mode = STATE_NETATMO_OFF
-                    self._attr_target_temperature = 0
+                    self._attr_native_target_temperature = 0
                 elif room["therm_setpoint_mode"] == STATE_NETATMO_MAX:
                     self._attr_hvac_mode = HVACMode.HEAT
                     self._attr_preset_mode = PRESET_MAP_NETATMO[PRESET_BOOST]
-                    self._attr_target_temperature = DEFAULT_MAX_TEMP
+                    self._attr_native_target_temperature = DEFAULT_MAX_TEMP
                 elif room["therm_setpoint_mode"] == STATE_NETATMO_MANUAL:
                     self._attr_hvac_mode = HVACMode.HEAT
-                    self._attr_target_temperature = room["therm_setpoint_temperature"]
+                    self._attr_native_target_temperature = room[
+                        "therm_setpoint_temperature"
+                    ]
                 else:
-                    self._attr_target_temperature = room["therm_setpoint_temperature"]
-                    if self._attr_target_temperature == DEFAULT_MAX_TEMP:
+                    self._attr_native_target_temperature = room[
+                        "therm_setpoint_temperature"
+                    ]
+                    if self._attr_native_target_temperature == DEFAULT_MAX_TEMP:
                         self._attr_hvac_mode = HVACMode.HEAT
                 self.async_write_ha_state()
                 return
@@ -332,8 +283,11 @@ class NetatmoThermostat(NetatmoRoomEntity, ClimateEntity):
     @override
     def hvac_action(self) -> HVACAction:
         """Return the current running hvac operation if supported."""
-        if self.device_type != NA_VALVE and self._boilerstatus is not None:
-            return CURRENT_HVAC_MAP_NETATMO[self._boilerstatus]
+        if self.device_type != NA_VALVE:
+            if self._coolerstatus and not self._boilerstatus:
+                return HVACAction.COOLING
+            if self._boilerstatus is not None:
+                return CURRENT_HVAC_MAP_NETATMO[self._boilerstatus]
         # Maybe it is a valve
         if (
             heating_req := getattr(self.device, "heating_power_request", 0)
@@ -430,8 +384,8 @@ class NetatmoThermostat(NetatmoRoomEntity, ClimateEntity):
 
         self._away_temperature = self.home.get_away_temp()
         self._hg_temperature = self.home.get_hg_temp()
-        self._attr_current_temperature = self.device.therm_measured_temperature
-        self._attr_target_temperature = self.device.therm_setpoint_temperature
+        self._attr_native_current_temperature = self.device.therm_measured_temperature
+        self._attr_native_target_temperature = self.device.therm_setpoint_temperature
 
         therm_setpoint_mode = getattr(self.device, "therm_setpoint_mode", None)
 
@@ -461,12 +415,14 @@ class NetatmoThermostat(NetatmoRoomEntity, ClimateEntity):
                     module = cast(NATherm1, module)
                     if module.boiler_status is not None:
                         self._boilerstatus = module.boiler_status
+                        if hasattr(module, "cooler_status"):
+                            self._coolerstatus = cast(BNS, module).cooler_status
                         break
 
         self.async_write_ha_state()
 
     async def _async_service_set_schedule(self, **kwargs: Any) -> None:
-        schedule_name = kwargs.get(ATTR_SCHEDULE_NAME)
+        schedule_name = kwargs.get(NetatmoServiceArgument.SCHEDULE_NAME)
         schedule_id = None
         for sid, schedule in self.data_handler.schedules[self.home.entity_id].items():
             if schedule.name == schedule_name:
@@ -474,22 +430,25 @@ class NetatmoThermostat(NetatmoRoomEntity, ClimateEntity):
                 break
 
         if not schedule_id:
-            _LOGGER.error("%s is not a valid schedule", kwargs.get(ATTR_SCHEDULE_NAME))
+            _LOGGER.error(
+                "%s is not a valid schedule",
+                kwargs.get(NetatmoServiceArgument.SCHEDULE_NAME),
+            )
             return
 
         await self.home.async_switch_schedule(schedule_id=schedule_id)
         _LOGGER.debug(
             "Setting %s schedule to %s (%s)",
             self.home.entity_id,
-            kwargs.get(ATTR_SCHEDULE_NAME),
+            kwargs.get(NetatmoServiceArgument.SCHEDULE_NAME),
             schedule_id,
         )
 
     async def _async_service_set_preset_mode_with_end_datetime(
         self, **kwargs: Any
     ) -> None:
-        preset_mode = kwargs[ATTR_PRESET_MODE]
-        end_datetime = kwargs[ATTR_END_DATETIME]
+        preset_mode = kwargs[NetatmoServiceArgument.PRESET_MODE]
+        end_datetime = kwargs[NetatmoServiceArgument.END_DATETIME]
         end_timestamp = int(dt_util.as_timestamp(end_datetime))
 
         await self.home.async_set_thermmode(
@@ -505,8 +464,8 @@ class NetatmoThermostat(NetatmoRoomEntity, ClimateEntity):
     async def _async_service_set_temperature_with_end_datetime(
         self, **kwargs: Any
     ) -> None:
-        target_temperature = kwargs[ATTR_TARGET_TEMPERATURE]
-        end_datetime = kwargs[ATTR_END_DATETIME]
+        target_temperature = kwargs[NetatmoServiceArgument.TARGET_TEMPERATURE]
+        end_datetime = kwargs[NetatmoServiceArgument.END_DATETIME]
         end_timestamp = int(dt_util.as_timestamp(end_datetime))
 
         _LOGGER.debug(
@@ -520,8 +479,8 @@ class NetatmoThermostat(NetatmoRoomEntity, ClimateEntity):
     async def _async_service_set_temperature_with_time_period(
         self, **kwargs: Any
     ) -> None:
-        target_temperature = kwargs[ATTR_TARGET_TEMPERATURE]
-        time_period = kwargs[ATTR_TIME_PERIOD]
+        target_temperature = kwargs[NetatmoServiceArgument.TARGET_TEMPERATURE]
+        time_period = kwargs[NetatmoServiceArgument.TIME_PERIOD]
 
         _LOGGER.debug(
             "Setting %s to target temperature %s with time period %s",

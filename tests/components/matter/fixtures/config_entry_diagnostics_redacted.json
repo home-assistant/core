@@ -487,7 +487,8 @@
         },
         "available": true,
         "is_bridge": false,
-        "attribute_subscriptions": []
+        "attribute_subscriptions": [],
+        "endpoint_parents": null
       }
     ],
     "events": []

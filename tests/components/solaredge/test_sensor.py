@@ -5,6 +5,11 @@ from unittest.mock import AsyncMock, MagicMock, Mock, patch
 from aiohttp import ClientError
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.recorder import Recorder
@@ -15,8 +20,6 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from . import setup_integration
 from .conftest import SITE_ID
-
-from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 STORAGE_DATA_MULTI_BATTERY = {
     "storageData": {

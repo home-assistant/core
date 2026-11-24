@@ -1,0 +1,13 @@
+{
+  "serial_number": "HB-00000001",
+  "type": "hub_status",
+  "firmware_revision": "35",
+  "uptime": 1670133,
+  "rssi": -62,
+  "timestamp": 1510855923,
+  "reset_flags": "BOR,PIN,POR",
+  "seq": 48,
+  "fs": [1, 0, 15675411, 524288],
+  "radio_stats": [2, 1, 0, 3, 2839],
+  "mqtt_stats": [1, 0]
+}

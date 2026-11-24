@@ -5,6 +5,15 @@ from unittest.mock import MagicMock
 
 from infrared_protocols.codes.marantz.audio import MarantzAudioCode
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    mock_restore_cache_with_extra_data,
+    snapshot_platform,
+)
+from pytest_homeassistant.components.common import (
+    assert_availability_follows_source_entity,
+)
+from pytest_homeassistant.components.infrared.common import MockInfraredEmitterEntity
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.media_player import (
@@ -12,28 +21,21 @@ from homeassistant.components.media_player import (
     ATTR_INPUT_SOURCE_LIST,
     ATTR_MEDIA_VOLUME_MUTED,
     DOMAIN as MEDIA_PLAYER_DOMAIN,
-    SERVICE_SELECT_SOURCE,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
     SERVICE_VOLUME_DOWN,
     SERVICE_VOLUME_MUTE,
     SERVICE_VOLUME_UP,
     MediaPlayerEntityFeature,
+    MediaPlayerService,
+    MediaPlayerServiceArgument,
     MediaPlayerState,
 )
-from homeassistant.const import ATTR_ENTITY_ID, STATE_UNKNOWN, Platform
+from homeassistant.const import ATTR_ENTITY_ID, STATE_UNKNOWN, Platform, TargetKey
 from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from .conftest import MOCK_INFRARED_EMITTER_ENTITY_ID, media_player_entity_id
-
-from tests.common import (
-    MockConfigEntry,
-    mock_restore_cache_with_extra_data,
-    snapshot_platform,
-)
-from tests.components.common import assert_availability_follows_source_entity
-from tests.components.infrared.common import MockInfraredEmitterEntity
 
 MEDIA_PLAYER_ENTITY_ID = "media_player.marantz_pm6006_integrated_amplifier"
 
@@ -60,8 +62,8 @@ async def test_entities(
     """Test the media player entity is created with correct attributes."""
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
-    device_entry = device_registry.async_get_device(
-        identifiers={("marantz_infrared", mock_config_entry.entry_id)}
+    device_entry = device_registry.async_get_device_by_identifier(
+        ("marantz_infrared", mock_config_entry.entry_id), mock_config_entry.entry_id
     )
     assert device_entry
     entity_entries = er.async_entries_for_config_entry(
@@ -145,8 +147,11 @@ async def test_media_player_select_source(
     """Test selecting a source sends the correct IR code and updates state."""
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
-        SERVICE_SELECT_SOURCE,
-        {ATTR_ENTITY_ID: MEDIA_PLAYER_ENTITY_ID, ATTR_INPUT_SOURCE: source},
+        MediaPlayerService.SELECT_SOURCE,
+        {
+            TargetKey.ENTITY_ID: MEDIA_PLAYER_ENTITY_ID,
+            MediaPlayerServiceArgument.SOURCE: source,
+        },
         blocking=True,
     )
 
@@ -174,8 +179,8 @@ async def test_turn_on_off_update_assumed_state(
     """Turn-on sends POWER_ON and turn-off sends POWER_OFF."""
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: MEDIA_PLAYER_ENTITY_ID},
+        MediaPlayerService.TURN_OFF,
+        {TargetKey.ENTITY_ID: MEDIA_PLAYER_ENTITY_ID},
         blocking=True,
     )
     state = hass.states.get(MEDIA_PLAYER_ENTITY_ID)
@@ -184,8 +189,8 @@ async def test_turn_on_off_update_assumed_state(
 
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: MEDIA_PLAYER_ENTITY_ID},
+        MediaPlayerService.TURN_ON,
+        {TargetKey.ENTITY_ID: MEDIA_PLAYER_ENTITY_ID},
         blocking=True,
     )
     state = hass.states.get(MEDIA_PLAYER_ENTITY_ID)
@@ -204,7 +209,7 @@ async def test_media_player_availability_follows_ir_entity(
 ) -> None:
     """Test media player becomes unavailable when IR entity is unavailable."""
     await assert_availability_follows_source_entity(
-        hass, MEDIA_PLAYER_ENTITY_ID, MOCK_INFRARED_EMITTER_ENTITY_ID
+        hass, MEDIA_PLAYER_ENTITY_ID, [MOCK_INFRARED_EMITTER_ENTITY_ID]
     )
 
 
@@ -251,8 +256,8 @@ async def test_restores_state_source_and_mute(
 
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: MEDIA_PLAYER_ENTITY_ID},
+        MediaPlayerService.TURN_ON,
+        {TargetKey.ENTITY_ID: MEDIA_PLAYER_ENTITY_ID},
         blocking=True,
     )
     state = hass.states.get(MEDIA_PLAYER_ENTITY_ID)
@@ -281,8 +286,8 @@ async def test_toggle_flips_between_commands(
     for _ in range(4):
         await hass.services.async_call(
             MEDIA_PLAYER_DOMAIN,
-            SERVICE_VOLUME_UP,
-            {ATTR_ENTITY_ID: MEDIA_PLAYER_ENTITY_ID},
+            MediaPlayerService.VOLUME_UP,
+            {TargetKey.ENTITY_ID: MEDIA_PLAYER_ENTITY_ID},
             blocking=True,
         )
 
@@ -298,8 +303,8 @@ async def test_power_on_sends_repeat_count(
     """Power-on sends repeat_count=5 so the receiver reliably wakes up."""
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: MEDIA_PLAYER_ENTITY_ID},
+        MediaPlayerService.TURN_ON,
+        {TargetKey.ENTITY_ID: MEDIA_PLAYER_ENTITY_ID},
         blocking=True,
     )
 

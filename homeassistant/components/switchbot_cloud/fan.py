@@ -6,6 +6,7 @@ from typing import TYPE_CHECKING, Any, override
 
 from switchbot_api import (
     AirPurifierCommands,
+    AirPurifierModeV2,
     BatteryCirculatorFanCommands,
     BatteryCirculatorFanMode,
     CommonCommands,
@@ -18,7 +19,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import SwitchbotCloudConfigEntry
-from .const import AFTER_COMMAND_REFRESH, AirPurifierMode
+from .const import AFTER_COMMAND_REFRESH
 from .entity import SwitchBotCloudEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -136,6 +137,11 @@ class SwitchBotCloudFan(SwitchBotCloudEntity, FanEntity):
         await self.coordinator.async_request_refresh()
 
 
+_AIR_PURIFIER_PRESET_MODES = {
+    mode.value: mode.name.lower() for mode in AirPurifierModeV2
+}
+
+
 class SwitchBotAirPurifierEntity(SwitchBotCloudEntity, FanEntity):
     """Representation of a Switchbot air purifier."""
 
@@ -145,7 +151,7 @@ class SwitchBotAirPurifierEntity(SwitchBotCloudEntity, FanEntity):
         | FanEntityFeature.TURN_OFF
         | FanEntityFeature.TURN_ON
     )
-    _attr_preset_modes = AirPurifierMode.get_modes()
+    _attr_preset_modes = AirPurifierModeV2.get_modes()
     _attr_translation_key = "air_purifier"
     _attr_name = None
     _attr_is_on: bool | None = None
@@ -163,9 +169,9 @@ class SwitchBotAirPurifierEntity(SwitchBotCloudEntity, FanEntity):
             return
 
         self._attr_is_on = self.coordinator.data.get("power") == STATE_ON.upper()
-        mode = self.coordinator.data.get("mode")
-        self._attr_preset_mode = (
-            AirPurifierMode(mode).name.lower() if mode is not None else None
+        # An unplugged purifier reports a mode of its own that is none of these
+        self._attr_preset_mode = _AIR_PURIFIER_PRESET_MODES.get(
+            self.coordinator.data.get("mode")
         )
 
     @override
@@ -179,7 +185,7 @@ class SwitchBotAirPurifierEntity(SwitchBotCloudEntity, FanEntity):
         )
         await self.send_api_command(
             AirPurifierCommands.SET_MODE,
-            parameters={"mode": AirPurifierMode[preset_mode.upper()].value},
+            parameters={"mode": AirPurifierModeV2[preset_mode.upper()].value},
         )
         await asyncio.sleep(AFTER_COMMAND_REFRESH)
         await self.coordinator.async_request_refresh()

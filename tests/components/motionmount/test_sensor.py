@@ -4,12 +4,11 @@ from unittest.mock import patch
 
 from motionmount import MotionMountSystemError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.core import HomeAssistant
 
 from . import MAC, ZEROCONF_NAME
-
-from tests.common import MockConfigEntry
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")

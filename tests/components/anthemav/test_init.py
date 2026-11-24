@@ -1,10 +1,13 @@
 """Test the Anthem A/V Receivers config flow."""
 
+import asyncio
 from collections.abc import Callable
+from typing import Any
 from unittest.mock import ANY, AsyncMock, patch
 
 from anthemav.device_error import DeviceError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.anthemav.const import DOMAIN
@@ -12,8 +15,6 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
-
-from tests.common import MockConfigEntry
 
 
 async def test_load_unload_config_entry(
@@ -44,8 +45,8 @@ async def test_device_registry(
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test the device registry entry, including the network MAC connection."""
-    device_entry = device_registry.async_get_device(
-        identifiers={(DOMAIN, "00:00:00:00:00:01")}
+    device_entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "00:00:00:00:00:01"), init_integration.entry_id
     )
     assert device_entry
     assert device_entry == snapshot
@@ -70,6 +71,94 @@ async def test_config_entry_not_ready_when_oserror(
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
         assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+
+
+async def test_config_entry_not_ready_when_connect_hangs(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
+    """Test setup fails fast (instead of hanging) when the AVR never connects."""
+
+    async def _hang(*args: Any, **kwargs: Any) -> None:
+        await asyncio.sleep(3600)
+
+    with (
+        patch(
+            "homeassistant.components.anthemav.CONNECT_TIMEOUT_SECONDS",
+            0.01,
+        ),
+        patch(
+            "anthemav.Connection.create",
+            side_effect=_hang,
+        ),
+    ):
+        mock_config_entry.add_to_hass(hass)
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+        assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+        assert (
+            mock_config_entry.reason
+            == "Timed out connecting to Anthem AVR at 1.1.1.1:14999"
+        )
+
+
+async def test_device_init_timeout_not_reported_as_connect_timeout(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_anthemav: AsyncMock,
+) -> None:
+    """Test a post-connect TimeoutError isn't misreported as a connect timeout."""
+    with (
+        patch("anthemav.Connection.create", return_value=mock_anthemav),
+        patch.object(
+            mock_anthemav.protocol,
+            "wait_for_device_initialised",
+            side_effect=TimeoutError,
+        ),
+    ):
+        mock_config_entry.add_to_hass(hass)
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+        assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+        assert (
+            mock_config_entry.reason
+            == "Timed out waiting for device info from Anthem AVR at 1.1.1.1:14999"
+        )
+        # The connection succeeded before this failure — it must be closed,
+        # not leaked, since runtime_data was never set (so async_unload_entry
+        # never runs to close it for us).
+        mock_anthemav.close.assert_called_once()
+
+
+async def test_setup_entry_cancelled_closes_connection(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_anthemav: AsyncMock,
+) -> None:
+    """Test the AVR is closed if setup is cancelled after connecting."""
+    reached_device_init = asyncio.Event()
+
+    async def _hang_after_reached(*args: Any, **kwargs: Any) -> None:
+        reached_device_init.set()
+        await asyncio.sleep(3600)
+
+    mock_config_entry.add_to_hass(hass)
+    with (
+        patch("anthemav.Connection.create", return_value=mock_anthemav),
+        patch.object(
+            mock_anthemav.protocol,
+            "wait_for_device_initialised",
+            side_effect=_hang_after_reached,
+        ),
+    ):
+        task = hass.async_create_task(
+            hass.config_entries.async_setup(mock_config_entry.entry_id)
+        )
+        await reached_device_init.wait()
+        task.cancel()
+        with pytest.raises(asyncio.CancelledError):
+            await task
+
+    mock_anthemav.close.assert_called_once()
 
 
 async def test_anthemav_dispatcher_signal(

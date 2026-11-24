@@ -17,27 +17,20 @@ from flux_led.const import (
 )
 from flux_led.protocol import MusicMode
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components import flux_led
 from homeassistant.components.flux_led.const import (
-    CONF_COLORS,
     CONF_CUSTOM_EFFECT_COLORS,
     CONF_CUSTOM_EFFECT_SPEED_PCT,
     CONF_CUSTOM_EFFECT_TRANSITION,
-    CONF_SPEED_PCT,
-    CONF_TRANSITION,
     CONF_WHITE_CHANNEL_TYPE,
     DOMAIN,
     MIN_CCT_BRIGHTNESS,
     MIN_RGB_BRIGHTNESS,
     TRANSITION_JUMP,
 )
-from homeassistant.components.flux_led.light import (
-    ATTR_BACKGROUND_COLOR,
-    ATTR_FOREGROUND_COLOR,
-    ATTR_LIGHT_SCREEN,
-    ATTR_SENSITIVITY,
-)
+from homeassistant.components.flux_led.services import FluxLedServiceArgument
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_COLOR_MODE,
@@ -55,16 +48,17 @@ from homeassistant.components.light import (
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
-    CONF_EFFECT,
     CONF_HOST,
     CONF_MODE,
     CONF_NAME,
     STATE_OFF,
     STATE_ON,
     STATE_UNAVAILABLE,
+    CommonServiceArgument,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers.translation import async_get_translations
 from homeassistant.setup import async_setup_component
 from homeassistant.util.dt import utcnow
 
@@ -78,8 +72,6 @@ from . import (
     async_mock_device_turn_off,
     async_mock_device_turn_on,
 )
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 async def test_light_unique_id(
@@ -101,6 +93,58 @@ async def test_light_unique_id(
     assert entity_registry.async_get(entity_id).unique_id == MAC_ADDRESS
     state = hass.states.get(entity_id)
     assert state.state == STATE_ON
+
+
+@pytest.mark.parametrize(
+    ("effect", "label"),
+    [
+        pytest.param("blue_fade", "Blue fade", id="fade"),
+        pytest.param("rb_cross_fade", "Red/blue cross fade", id="cross-fade"),
+        pytest.param("cycle_rgb", "Cycle RGB", id="rgb-cycle"),
+        pytest.param("random", "Random", id="random"),
+    ],
+)
+async def test_effect_labels_preserve_effect_values(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    effect: str,
+    label: str,
+) -> None:
+    """Test readable effect labels preserve state and service identifiers."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_HOST: IP_ADDRESS, CONF_NAME: DEFAULT_ENTRY_TITLE},
+        unique_id=MAC_ADDRESS,
+    )
+    config_entry.add_to_hass(hass)
+    bulb = _mocked_bulb()
+    bulb.effect_list = [effect, "device_specific_effect"]
+    bulb.effect = effect
+    with _patch_discovery(), _patch_wifibulb(device=bulb):
+        await async_setup_component(hass, flux_led.DOMAIN, {flux_led.DOMAIN: {}})
+        await hass.async_block_till_done()
+
+    entity_id = "light.bulb_rgbcw_ddeeff"
+    assert entity_registry.async_get(entity_id).translation_key == "light"
+    state = hass.states.get(entity_id)
+    assert state.attributes[ATTR_EFFECT_LIST] == [effect, "device_specific_effect"]
+    assert state.attributes[ATTR_EFFECT] == effect
+
+    translations = await async_get_translations(hass, "en", "entity", {DOMAIN})
+    assert (
+        translations[
+            f"component.flux_led.entity.light.light.state_attributes.effect.state.{effect}"
+        ]
+        == label
+    )
+
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        "turn_on",
+        {ATTR_ENTITY_ID: entity_id, ATTR_EFFECT: effect},
+        blocking=True,
+    )
+    bulb.async_set_effect.assert_called_once_with(effect, 50, 50)
 
 
 async def test_light_goes_unavailable_and_recovers(
@@ -189,8 +233,8 @@ async def test_light_device_registry(
         await async_setup_component(hass, flux_led.DOMAIN, {flux_led.DOMAIN: {}})
         await hass.async_block_till_done()
 
-    device = device_registry.async_get_device(
-        connections={(dr.CONNECTION_NETWORK_MAC, MAC_ADDRESS)}
+    device = device_registry.async_get_device_by_connection(
+        (dr.CONNECTION_NETWORK_MAC, MAC_ADDRESS), config_entry.entry_id
     )
     assert device.sw_version == str(sw_version)
     assert device.model == model
@@ -1569,10 +1613,10 @@ async def test_rgb_light_custom_effect_via_service(
         DOMAIN,
         "set_custom_effect",
         {
-            ATTR_ENTITY_ID: entity_id,
-            CONF_COLORS: [[0, 0, 255], [255, 0, 0]],
-            CONF_SPEED_PCT: 30,
-            CONF_TRANSITION: "jump",
+            CommonServiceArgument.ENTITY_ID: entity_id,
+            FluxLedServiceArgument.COLORS: [[0, 0, 255], [255, 0, 0]],
+            FluxLedServiceArgument.SPEED_PCT: 30,
+            FluxLedServiceArgument.TRANSITION: "jump",
         },
         blocking=True,
     )
@@ -1585,9 +1629,9 @@ async def test_rgb_light_custom_effect_via_service(
         DOMAIN,
         "set_zones",
         {
-            ATTR_ENTITY_ID: entity_id,
-            CONF_COLORS: [[0, 0, 255], [255, 0, 0]],
-            CONF_EFFECT: "running_water",
+            CommonServiceArgument.ENTITY_ID: entity_id,
+            FluxLedServiceArgument.COLORS: [[0, 0, 255], [255, 0, 0]],
+            FluxLedServiceArgument.EFFECT: "running_water",
         },
         blocking=True,
     )
@@ -1600,9 +1644,9 @@ async def test_rgb_light_custom_effect_via_service(
         DOMAIN,
         "set_zones",
         {
-            ATTR_ENTITY_ID: entity_id,
-            CONF_COLORS: [[0, 0, 255], [255, 0, 0]],
-            CONF_SPEED_PCT: 30,
+            CommonServiceArgument.ENTITY_ID: entity_id,
+            FluxLedServiceArgument.COLORS: [[0, 0, 255], [255, 0, 0]],
+            FluxLedServiceArgument.SPEED_PCT: 30,
         },
         blocking=True,
     )
@@ -1677,13 +1721,13 @@ async def test_music_mode_service(hass: HomeAssistant) -> None:
         DOMAIN,
         "set_music_mode",
         {
-            ATTR_ENTITY_ID: entity_id,
-            ATTR_EFFECT: 12,
-            ATTR_LIGHT_SCREEN: True,
-            ATTR_SENSITIVITY: 50,
-            ATTR_BRIGHTNESS: 50,
-            ATTR_FOREGROUND_COLOR: [255, 0, 0],
-            ATTR_BACKGROUND_COLOR: [0, 255, 0],
+            CommonServiceArgument.ENTITY_ID: entity_id,
+            FluxLedServiceArgument.EFFECT: 12,
+            FluxLedServiceArgument.LIGHT_SCREEN: True,
+            FluxLedServiceArgument.SENSITIVITY: 50,
+            FluxLedServiceArgument.BRIGHTNESS: 50,
+            FluxLedServiceArgument.FOREGROUND_COLOR: [255, 0, 0],
+            FluxLedServiceArgument.BACKGROUND_COLOR: [0, 255, 0],
         },
         blocking=True,
     )

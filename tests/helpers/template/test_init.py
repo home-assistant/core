@@ -1,14 +1,17 @@
 """Test Home Assistant template helper methods."""
 
 from datetime import datetime
+from enum import Enum, IntEnum, IntFlag, StrEnum
 import gc
+from typing import Any
 from unittest.mock import patch
 
 from freezegun import freeze_time
+import jinja2
+import probatio
 import pytest
-import voluptuous as vol
 
-from homeassistant.const import ATTR_UNIT_OF_MEASUREMENT
+from homeassistant.const import EntityStateAttribute
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import TemplateError
 from homeassistant.helpers import entity_registry as er, template
@@ -16,19 +19,11 @@ from homeassistant.helpers.template.render_info import (
     ALL_STATES_RATE_LIMIT,
     DOMAIN_STATES_RATE_LIMIT,
 )
+from homeassistant.helpers.typing import Undefined
 from homeassistant.util import dt as dt_util
+from homeassistant.util.read_only_dict import ReadOnlyDict
 
 from .helpers import assert_result_info, render, render_to_info
-
-
-async def test_template_render_missing_hass(hass: HomeAssistant) -> None:
-    """Test template render when hass is not set."""
-    hass.states.async_set("sensor.test", "23")
-    template_obj = template.Template("{{ states('sensor.test') }}", None)
-    template.render_info_cv.set(template.RenderInfo(template_obj))
-
-    with pytest.raises(RuntimeError, match="hass not set while rendering"):
-        template_obj.async_render_to_info()
 
 
 async def test_template_render_info_collision(hass: HomeAssistant) -> None:
@@ -223,6 +218,44 @@ def test_render_with_possible_json_value_with_invalid_json(hass: HomeAssistant) 
     assert tpl.async_render_with_possible_json_value("{ I AM NOT JSON }") == ""
 
 
+@pytest.mark.parametrize(
+    ("value_json", "expected"),
+    [
+        pytest.param({"hello": "world"}, "raw True {'hello': 'world'}", id="parsed"),
+        pytest.param(None, "raw True None", id="null"),
+        pytest.param(Undefined, "raw False", id="not_json"),
+    ],
+)
+def test_render_with_possible_json_value_with_value_json(
+    hass: HomeAssistant, value_json: Any, expected: str
+) -> None:
+    """A value_json passed by the caller is used instead of parsing the value."""
+    tpl = template.Template(
+        "{{ value }} {{ value_json is defined }} {{ value_json }}", hass
+    )
+    with patch("homeassistant.helpers.template.json_loads") as mock_json_loads:
+        assert (
+            tpl.async_render_with_possible_json_value("raw", value_json=value_json)
+            == expected
+        )
+    mock_json_loads.assert_not_called()
+
+
+CYCLIC: list[object] = []
+CYCLIC.append(CYCLIC)
+
+
+def test_render_with_possible_json_value_cyclic(hass: HomeAssistant) -> None:
+    """A cyclic value returns the fallback instead of escaping a RecursionError."""
+    tpl = template.Template("{{ x }}", hass)
+    assert (
+        tpl.async_render_with_possible_json_value(
+            "value", error_value="fallback", variables={"x": CYCLIC}
+        )
+        == "fallback"
+    )
+
+
 def test_render_with_possible_json_value_with_template_error_value(
     hass: HomeAssistant,
 ) -> None:
@@ -268,6 +301,309 @@ def test_render_with_possible_json_value_and_dont_parse_result(
         """{"hello": {"world": "value1"}}""", parse_result=False
     )
     assert isinstance(result, str)
+
+
+@pytest.mark.parametrize(
+    ("template_str", "kwargs", "expected"),
+    [
+        pytest.param(
+            "{{ value_json.temp }}",
+            {"value": '{"temp": 21.5}'},
+            "21.5",
+            id="attribute",
+        ),
+        pytest.param(
+            "{{value_json.temp}}",
+            {"value": '{"temp": 21.5}', "parse_result": True},
+            21.5,
+            id="parse_result",
+        ),
+        pytest.param(
+            "{{- value_json.temp -}}",
+            {"value": '{"temp": " padded "}'},
+            "padded",
+            id="whitespace_control",
+        ),
+        pytest.param(
+            "{{ value_json['a b'] }}",
+            {"value": '{"a b": true}'},
+            "True",
+            id="item_single_quotes",
+        ),
+        pytest.param(
+            '{{ value_json["temp"] }}',
+            {"value": '{"temp": null}'},
+            "None",
+            id="item_double_quotes",
+        ),
+        pytest.param(
+            "{{ value_json['items'] }}",
+            {"value": '{"items": 5}'},
+            "5",
+            id="item_named_like_dict_attribute",
+        ),
+        pytest.param(
+            "{{ value_json.ENERGY['Power'] }}",
+            {"value": '{"ENERGY": {"Power": 12}}', "parse_result": True},
+            12,
+            id="nested_key",
+        ),
+        pytest.param(
+            "{{ value_json.nested }}",
+            {"value": '{"nested": {"a": [1, "x"]}}'},
+            "{'a': [1, 'x']}",
+            id="container",
+        ),
+        pytest.param(
+            "{{ value_json.temp }}",
+            {"value": "raw", "value_json": {"temp": 21.5}},
+            "21.5",
+            id="value_json_argument",
+        ),
+        pytest.param(
+            '{% if "battery" in value_json %}{{ value_json["battery"] }}{% endif %}',
+            {"value": '{"battery": 87}', "parse_result": True},
+            87,
+            id="guarded",
+        ),
+        pytest.param(
+            '{% if "battery" in value_json %}{{ value_json["battery"] }}{% endif %}',
+            {"value": '{"linkquality": 120}'},
+            "",
+            id="guarded_missing_key",
+        ),
+        pytest.param(
+            "{%- if 'temp' in value_json -%}{{ value_json.temp }}{%- endif -%}",
+            {"value": '{"temp": 21.5}'},
+            "21.5",
+            id="guarded_single_quotes_whitespace_control",
+        ),
+        pytest.param(
+            '{% if "ENERGY" in value_json %}{{ value_json.ENERGY.Power }}{% endif %}',
+            {"value": '{"ENERGY": {"Power": 12}}'},
+            "12",
+            id="guarded_nested_key",
+        ),
+        pytest.param(
+            '{% if "battery" in value_json %}{{ value_json["battery"] }}{% endif %}',
+            {"value": "raw", "value_json": {"battery": 87}},
+            "87",
+            id="guarded_value_json_argument",
+        ),
+        pytest.param(
+            '{% if "battery" in value_json %}{{ value_json["battery"] }}{% endif %}',
+            {"value": '{"linkquality": 120}', "parse_result": True},
+            "",
+            id="guarded_missing_key_parse_result",
+        ),
+        pytest.param(
+            "{% if '' in value_json %}{{ value_json[''] }}{% endif %}",
+            {"value": '{"": 1}'},
+            "1",
+            id="guarded_empty_single_quoted_key",
+        ),
+    ],
+)
+def test_render_with_possible_json_value_json_path(
+    hass: HomeAssistant,
+    template_str: str,
+    kwargs: dict[str, Any],
+    expected: Any,
+) -> None:
+    """A template that only outputs a value_json key is rendered without jinja."""
+    tpl = template.Template(template_str, hass)
+    with patch("homeassistant.helpers.template.render_with_context") as mock_render:
+        assert tpl.async_render_with_possible_json_value(**kwargs) == expected
+    mock_render.assert_not_called()
+
+
+def test_render_with_possible_json_value_json_path_legacy_templates(
+    hass: HomeAssistant,
+) -> None:
+    """The fast path returns a string with legacy templates, like jinja."""
+    hass.config.legacy_templates = True
+    tpl = template.Template("{{ value_json.temp }}", hass)
+    with patch("homeassistant.helpers.template.render_with_context") as mock_render:
+        assert (
+            tpl.async_render_with_possible_json_value(
+                '{"temp": 21.5}', parse_result=True
+            )
+            == "21.5"
+        )
+    mock_render.assert_not_called()
+
+
+def test_render_json_path_matches_environment_finalize(hass: HomeAssistant) -> None:
+    """The fast path renders with the finalize hook jinja uses."""
+    env = template.TemplateEnvironment(hass)
+    assert env.finalize is template._finalize_output
+    assert not env.autoescape
+
+
+@pytest.mark.parametrize(
+    ("template_str", "kwargs", "expected"),
+    [
+        pytest.param(
+            "{{ value_json.goodbye }}",
+            {"value": '{"hello": 1}'},
+            "",
+            id="missing_key",
+        ),
+        pytest.param(
+            "{{ value_json.a.b }}",
+            {"value": '{"a": {}}'},
+            "",
+            id="nested_missing_key",
+        ),
+        pytest.param(
+            "{{ value_json.a.b }}",
+            {"value": '{"a": 1}'},
+            "",
+            id="nested_not_a_dict",
+        ),
+        pytest.param(
+            "{{ value_json.hello }}", {"value": "[1, 2]"}, "", id="not_a_dict"
+        ),
+        pytest.param(
+            "{{ value_json.hello }}",
+            {"value": "not json"},
+            "not json",
+            id="not_json",
+        ),
+        pytest.param(
+            "{{ value_json.temp }}",
+            {"value": "raw", "value_json": Undefined},
+            "raw",
+            id="value_json_undefined",
+        ),
+        pytest.param(
+            "{{ value_json.hello | int }}",
+            {"value": '{"hello": "1"}'},
+            "1",
+            id="filter",
+        ),
+        pytest.param(
+            "{{ value_json['a\rb'] }}",
+            {"value": '{"a\\rb": 1, "a\\nb": 2}'},
+            "2",
+            id="carriage_return_in_key",
+        ),
+        pytest.param(
+            "{{ value_json['a\r\nb'] }}",
+            {"value": '{"a\\r\\nb": 1, "a\\nb": 2}'},
+            "2",
+            id="crlf_in_key",
+        ),
+        pytest.param(
+            "{{ value_json['a\\nb'] }}",
+            {"value": '{"a\\\\nb": 1, "a\\nb": 2}'},
+            "2",
+            id="backslash_escape_in_key",
+        ),
+        pytest.param(
+            "{{ value_json.a }}",
+            {"value": "raw", "value_json": {"a": CYCLIC}, "error_value": "fallback"},
+            "fallback",
+            id="cyclic_value",
+        ),
+        pytest.param(
+            "{{ value_json.a }}",
+            {
+                "value": "raw",
+                "value_json": {"a": jinja2.StrictUndefined(name="a")},
+                "error_value": "fallback",
+            },
+            "fallback",
+            id="strict_undefined_value_error_value",
+        ),
+        pytest.param(
+            "{{ value_json.a }}",
+            {"value": "raw", "value_json": {"a": jinja2.StrictUndefined(name="a")}},
+            "raw",
+            id="strict_undefined_value",
+        ),
+        pytest.param(
+            '{% if "battery" in value_json %}{{ value_json["battery"] }}{% endif %}',
+            {"value": '"battery low"'},
+            "",
+            id="guarded_string_payload",
+        ),
+        pytest.param(
+            '{% if "battery" in value_json %}{{ value_json["battery"] }}{% endif %}',
+            {"value": '["battery"]'},
+            "",
+            id="guarded_list_payload",
+        ),
+        pytest.param(
+            '{% if "a" in value_json %}{{ value_json["b"] }}{% endif %}',
+            {"value": '{"b": 1}'},
+            "",
+            id="guarded_other_key",
+        ),
+        pytest.param(
+            '{% if "a" in value_json %}{{ value_json.a.b }}{% endif %}',
+            {"value": '{"a": {}}'},
+            "",
+            id="guarded_nested_missing_key",
+        ),
+        pytest.param(
+            '{% if "a" in value_json %}x{{ value_json.a }}{% endif %}',
+            {"value": '{"a": 1}'},
+            "x1",
+            id="guarded_with_text",
+        ),
+        pytest.param(
+            "{{ value_json.temp }}",
+            {"value": "raw", "value_json": ReadOnlyDict({"temp": 1})},
+            "1",
+            id="dict_subclass",
+        ),
+        pytest.param(
+            '{% if "battery" in value_json %}{{ value_json["battery"] }}{% endif %}',
+            {"value": "raw", "value_json": ReadOnlyDict({"linkquality": 120})},
+            "",
+            id="guarded_dict_subclass",
+        ),
+    ],
+)
+def test_render_with_possible_json_value_json_path_fallback(
+    hass: HomeAssistant,
+    template_str: str,
+    kwargs: dict[str, Any],
+    expected: str,
+) -> None:
+    """Anything the fast path can't render exactly like jinja is rendered by jinja."""
+    tpl = template.Template(template_str, hass)
+    with patch(
+        "homeassistant.helpers.template.render_with_context",
+        wraps=template.render_with_context,
+    ) as mock_render:
+        result = tpl.async_render_with_possible_json_value(**kwargs)
+    mock_render.assert_called_once()
+    assert result == expected
+
+
+@pytest.mark.parametrize(
+    ("template_str", "value"),
+    [
+        pytest.param("{{ value_json.items }}", '{"items": 1}', id="first_key"),
+        pytest.param(
+            "{{ value_json.a.items }}", '{"a": {"items": 1}}', id="nested_key"
+        ),
+    ],
+)
+def test_render_with_possible_json_value_json_path_dict_attribute(
+    hass: HomeAssistant, template_str: str, value: str
+) -> None:
+    """Attribute access to a dict attribute name is left to jinja, which returns the attribute."""
+    tpl = template.Template(template_str, hass)
+    with patch(
+        "homeassistant.helpers.template.render_with_context",
+        wraps=template.render_with_context,
+    ) as mock_render:
+        result = tpl.async_render_with_possible_json_value(value)
+    mock_render.assert_called_once()
+    assert result.startswith("<built-in method items of dict object")
 
 
 @patch(
@@ -569,8 +905,12 @@ def test_state_with_unit_and_rounding_options(
     )
     assert entry.entity_id == "sensor.test"
 
-    hass.states.async_set("sensor.test", "23", {ATTR_UNIT_OF_MEASUREMENT: "beers"})
-    hass.states.async_set("sensor.test2", "23", {ATTR_UNIT_OF_MEASUREMENT: "beers"})
+    hass.states.async_set(
+        "sensor.test", "23", {EntityStateAttribute.UNIT_OF_MEASUREMENT: "beers"}
+    )
+    hass.states.async_set(
+        "sensor.test2", "23", {EntityStateAttribute.UNIT_OF_MEASUREMENT: "beers"}
+    )
 
     tpl = template.Template(
         f"{{{{ states('sensor.test', rounded={rounded}, with_unit={with_unit}) }}}}",
@@ -584,8 +924,12 @@ def test_state_with_unit_and_rounding_options(
     assert tpl.async_render() == output1_1
     assert tpl2.async_render() == output2_1
 
-    hass.states.async_set("sensor.test", "23.015", {ATTR_UNIT_OF_MEASUREMENT: "beers"})
-    hass.states.async_set("sensor.test2", "23.015", {ATTR_UNIT_OF_MEASUREMENT: "beers"})
+    hass.states.async_set(
+        "sensor.test", "23.015", {EntityStateAttribute.UNIT_OF_MEASUREMENT: "beers"}
+    )
+    hass.states.async_set(
+        "sensor.test2", "23.015", {EntityStateAttribute.UNIT_OF_MEASUREMENT: "beers"}
+    )
 
     assert tpl.async_render() == output1_2
     assert tpl2.async_render() == output2_2
@@ -868,10 +1212,10 @@ async def test_is_static_still_ast_evals(hass: HomeAssistant) -> None:
 async def test_result_wrappers(hass: HomeAssistant) -> None:
     """Test result wrappers."""
     for text, native, orig_type, schema in (
-        ("[1, 2]", [1, 2], list, vol.Schema([int])),
-        ("{1, 2}", {1, 2}, set, vol.Schema({int})),
-        ("(1, 2)", (1, 2), tuple, vol.ExactSequence([int, int])),
-        ('{"hello": True}', {"hello": True}, dict, vol.Schema({"hello": bool})),
+        ("[1, 2]", [1, 2], list, probatio.Schema([int])),
+        ("{1, 2}", {1, 2}, set, probatio.Schema({int})),
+        ("(1, 2)", (1, 2), tuple, probatio.ExactSequence([int, int])),
+        ('{"hello": True}', {"hello": True}, dict, probatio.Schema({"hello": bool})),
     ):
         result = render(hass, text)
         assert isinstance(result, orig_type)
@@ -917,6 +1261,10 @@ async def test_parse_result(hass: HomeAssistant) -> None:
         # ("+48100200300", "+48100200300"),  # phone number
         ("010", "010"),
         ("0011101.00100001010001", "0011101.00100001010001"),
+        # Non-ASCII digits are not Python numeric literals
+        ("\u0661\u0662\u0663", "\u0661\u0662\u0663"),
+        ("-\u0967\u0968", "-\u0967\u0968"),
+        ("\uff11.\uff15", "\uff11.\uff15"),
         # Plain string states are not Python literals and must be returned
         # unchanged (literal_eval raises and the original render is used).
         ("on", "on"),
@@ -933,6 +1281,201 @@ async def test_parse_result(hass: HomeAssistant) -> None:
         ("set()", set()),
     ):
         assert render(hass, tpl) == result
+
+
+async def test_parse_result_returns_independent_containers(
+    hass: HomeAssistant,
+) -> None:
+    """Renders with the same output do not share mutable containers."""
+    first_list = render(hass, "{{ x }}", {"x": "[[1], 2]"})
+    first_list[0].append("mutated")
+    first_list.append("mutated")
+    assert render(hass, "{{ x }}", {"x": "[[1], 2]"}) == [[1], 2]
+
+    first_dict = render(hass, "{{ x }}", {"x": "{'a': {'b': 1}}"})
+    first_dict["a"]["mutated"] = True
+    first_dict["mutated"] = True
+    assert render(hass, "{{ x }}", {"x": "{'a': {'b': 1}}"}) == {"a": {"b": 1}}
+
+    first_tuple = render(hass, "{{ x }}", {"x": "([1], 2)"})
+    first_tuple[0].append("mutated")
+    assert render(hass, "{{ x }}", {"x": "([1], 2)"}) == ([1], 2)
+
+
+class _Color(StrEnum):
+    RED = "red"
+
+
+class _Level(IntEnum):
+    LOW = 1
+
+
+class _LegacyStr(str, Enum):  # noqa: UP042  # legacy str-mixin under test
+    FOO = "foo"
+
+
+class _Plain(Enum):
+    A = "aval"
+
+
+class _Flags(IntFlag):
+    X = 1
+    Y = 2
+
+
+_ENUM_VARS = {
+    "color": _Color.RED,
+    "level": _Level.LOW,
+    "legacy": _LegacyStr.FOO,
+    "plain": _Plain.A,
+    "flag_single": _Flags.X,
+    # IntFlag union, like supported_features (e.g. WeatherEntityFeature); value 3.
+    "flag": _Flags.X | _Flags.Y,
+    # Jinja has no set-literal syntax, so a set can only reach output as a var.
+    "color_set": {_Color.RED},
+    "level_set": {_Level.LOW},
+}
+
+
+@pytest.mark.parametrize(
+    ("template_string", "expected"),
+    [
+        pytest.param("{{ {'k': color} }}", {"k": "red"}, id="strenum-dict-value"),
+        pytest.param("{{ {color: 1} }}", {"red": 1}, id="strenum-dict-key"),
+        pytest.param("{{ [color] }}", ["red"], id="strenum-list"),
+        pytest.param("{{ (color,) }}", ("red",), id="strenum-tuple"),
+        pytest.param("{{ color_set }}", {"red"}, id="strenum-set"),
+        pytest.param("{{ {'k': level} }}", {"k": 1}, id="intenum-dict-value"),
+        pytest.param("{{ {level: 'x'} }}", {1: "x"}, id="intenum-dict-key"),
+        pytest.param("{{ [level] }}", [1], id="intenum-list"),
+        pytest.param("{{ level_set }}", {1}, id="intenum-set"),
+        pytest.param("{{ {'k': flag_single} }}", {"k": 1}, id="intflag-single"),
+        pytest.param("{{ {'k': flag} }}", {"k": 3}, id="intflag-union-dict-value"),
+        pytest.param("{{ [flag] }}", [3], id="intflag-union-list"),
+        pytest.param(
+            "{{ {color: {level: [color, level]}} }}",
+            {"red": {1: ["red", 1]}},
+            id="deeply-nested-mixed-keys-and-values",
+        ),
+        pytest.param(
+            "{{ [{'a': (color, [level])}] }}",
+            [{"a": ("red", [1])}],
+            id="nested-mixed-containers",
+        ),
+    ],
+)
+async def test_parse_result_resolves_enums_in_containers(
+    hass: HomeAssistant, template_string: str, expected: object
+) -> None:
+    """ReprEnum members in containers resolve to their value and round-trip."""
+    assert render(hass, template_string, _ENUM_VARS) == expected
+
+
+@pytest.mark.parametrize(
+    "variable",
+    ["legacy", "plain"],
+)
+async def test_parse_result_unsupported_enums_fall_back_to_string(
+    hass: HomeAssistant, variable: str
+) -> None:
+    """Non-ReprEnum members (plain Enum, legacy mixins) are not resolved."""
+    result = render(hass, "{{ {'k': " + variable + "} }}", _ENUM_VARS)
+    assert isinstance(result, str)
+
+
+@pytest.mark.parametrize(
+    ("template_string", "expected"),
+    [
+        pytest.param("{{ color }}", "red", id="bare-strenum"),
+        pytest.param("{{ level }}", 1, id="bare-intenum"),
+    ],
+)
+async def test_parse_result_bare_enum_unchanged(
+    hass: HomeAssistant, template_string: str, expected: object
+) -> None:
+    """A bare Enum member renders via its default str() and is not coerced."""
+    assert render(hass, template_string, _ENUM_VARS) == expected
+
+
+async def test_parse_result_resolves_enums_in_state_attributes(
+    hass: HomeAssistant,
+) -> None:
+    """State attributes (a ReadOnlyDict) with enum keys/values resolve when rendered.
+
+    Mirrors the reported case: a StrEnum key plus an IntFlag supported_features
+    value (like WeatherEntityFeature) would otherwise make the attributes render
+    as an unparsable string.
+    """
+    hass.states.async_set(
+        "light.test",
+        "on",
+        {_Color.RED: "rainbow", "supported_features": _Flags.X | _Flags.Y},
+    )
+    assert render(hass, "{{ states.light.test.attributes }}") == {
+        "red": "rainbow",
+        "supported_features": 3,
+    }
+
+
+@pytest.mark.parametrize(
+    ("template_string", "expected_value"),
+    [
+        pytest.param(
+            "{{ dict(foo=\"{'a': 1}\") }}", "{'a': 1}", id="python-dict-literal"
+        ),
+        pytest.param("{{ dict(foo='{\"a\": 1}') }}", '{"a": 1}', id="json-object"),
+        pytest.param("{{ dict(foo='[1, 2, 3]') }}", "[1, 2, 3]", id="json-array"),
+        pytest.param("{{ dict(foo='(1, 2)') }}", "(1, 2)", id="tuple-literal"),
+        pytest.param("{{ dict(foo='{1, 2}') }}", "{1, 2}", id="set-literal"),
+        pytest.param("{{ dict(foo='123') }}", "123", id="int-like"),
+        pytest.param("{{ dict(foo='1.5') }}", "1.5", id="float-like"),
+        pytest.param("{{ dict(foo='True') }}", "True", id="bool-like"),
+        pytest.param("{{ dict(foo='null') }}", "null", id="json-null"),
+    ],
+)
+async def test_parse_result_dict_keeps_stringified_value(
+    hass: HomeAssistant, template_string: str, expected_value: str
+) -> None:
+    """dict() keeps a value that looks like a literal as a string, not re-parsed.
+
+    Common workaround (JSON payload templates, MQTT topics) to stop the template
+    parser from resolving a string value. The result must be a dict whose value
+    is the untouched string, even when that string is itself a valid literal.
+    """
+    result = render(hass, template_string)
+    assert isinstance(result, dict)
+    assert result == {"foo": expected_value}
+    assert isinstance(result["foo"], str)
+
+
+async def test_parse_result_cyclic_container_raises(hass: HomeAssistant) -> None:
+    """A cyclic passed-in container raises TemplateError instead of crashing.
+
+    Cyclic values cannot be constructed within a template (the sandbox blocks
+    mutation), so this only covers a cycle passed in as a variable. Resolution
+    recurses through the back-reference until the recursion limit, which is
+    surfaced as a TemplateError.
+    """
+    cyclic: list[object] = []
+    cyclic.append(cyclic)
+    with pytest.raises(TemplateError):
+        render(hass, "{{ x }}", {"x": cyclic})
+
+
+@pytest.mark.parametrize(
+    "operator",
+    [
+        pytest.param("+", id="add"),
+        pytest.param("-", id="subtract"),
+        pytest.param("*", id="multiply"),
+    ],
+)
+async def test_parse_result_long_expression_returns_string(
+    hass: HomeAssistant, operator: str
+) -> None:
+    """A result too deeply nested for literal_eval is returned as a string."""
+    text = "1" + f" {operator} 1" * 60_000
+    assert render(hass, "{{ x }}", {"x": text}) == text
 
 
 @pytest.mark.parametrize(

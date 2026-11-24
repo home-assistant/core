@@ -7,6 +7,7 @@ from ouman_eh_800_api import (
     OumanClientCommunicationError,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.ouman_eh_800.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER
@@ -15,8 +16,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from .conftest import TEST_PASSWORD, TEST_URL, TEST_USERNAME
-
-from tests.common import MockConfigEntry
 
 pytestmark = pytest.mark.usefixtures("mock_setup_entry")
 
@@ -254,3 +253,68 @@ async def test_reconfigure_flow_already_configured(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
+
+
+@pytest.mark.usefixtures("mock_ouman_client")
+async def test_reauth_flow_success(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test a successful reauthentication updates the credentials."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await mock_config_entry.start_reauth_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+    assert result["errors"] == {}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_USERNAME: "new-user", CONF_PASSWORD: "new-pass"},
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+    assert mock_config_entry.data == {
+        CONF_URL: TEST_URL,
+        CONF_USERNAME: "new-user",
+        CONF_PASSWORD: "new-pass",
+    }
+
+
+@pytest.mark.parametrize(
+    ("error", "expected_error"),
+    [
+        (OumanClientCommunicationError("Connection failed"), "cannot_connect"),
+        (OumanClientAuthenticationError("Invalid credentials"), "invalid_auth"),
+        (RuntimeError("Unexpected"), "unknown"),
+    ],
+)
+async def test_reauth_flow_errors_recover(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_ouman_client: AsyncMock,
+    error: Exception,
+    expected_error: str,
+) -> None:
+    """Test that reauthentication errors are surfaced and the flow can recover."""
+    mock_config_entry.add_to_hass(hass)
+    mock_ouman_client.login.side_effect = error
+
+    result = await mock_config_entry.start_reauth_flow(hass)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_USERNAME: TEST_USERNAME, CONF_PASSWORD: "new-pass"},
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": expected_error}
+
+    mock_ouman_client.login.side_effect = None
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_USERNAME: TEST_USERNAME, CONF_PASSWORD: "new-pass"},
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"

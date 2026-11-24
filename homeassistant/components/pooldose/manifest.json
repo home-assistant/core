@@ -1,8 +1,10 @@
 {
   "domain": "pooldose",
   "name": "SEKO PoolDose",
+  "categories": ["water.pools_spas"],
   "codeowners": ["@lmaertin"],
   "config_flow": true,
+  "connectivity": ["network"],
   "dhcp": [
     {
       "hostname": "kommspot"
@@ -12,5 +14,5 @@
   "integration_type": "device",
   "iot_class": "local_polling",
   "quality_scale": "platinum",
-  "requirements": ["python-pooldose==0.9.6"]
+  "requirements": ["python-pooldose==0.9.10"]
 }

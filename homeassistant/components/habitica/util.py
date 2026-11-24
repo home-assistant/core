@@ -1,7 +1,7 @@
 """Utility functions for Habitica."""
 
 from dataclasses import asdict, fields
-import datetime
+import datetime as dt
 from math import floor
 from typing import TYPE_CHECKING, Any, Literal
 
@@ -24,7 +24,7 @@ from habiticalib import ContentData, Frequency, GroupData, QuestBoss, TaskData, 
 from homeassistant.util import dt as dt_util
 
 
-def next_due_date(task: TaskData, today: datetime.datetime) -> datetime.date | None:
+def next_due_date(task: TaskData, today: dt.datetime) -> dt.date | None:
     """Calculate due date for dailies and yesterdailies."""
 
     if task.everyX == 0 or not task.nextDue:  # grey dailies never become due
@@ -34,6 +34,8 @@ def next_due_date(task: TaskData, today: datetime.datetime) -> datetime.date | N
 
     if TYPE_CHECKING:
         assert task.startDate
+        assert task.nextDue[0]
+        assert task.nextDue[1]
 
     if task.isDue is True and not task.completed:
         return dt_util.as_local(today).date()
@@ -118,19 +120,20 @@ def get_attribute_points(
 ) -> dict[str, float]:
     """Get modifiers contributing to STR/INT/CON/PER attributes."""
 
-    equipment = sum(
-        getattr(stats, attribute)
+    # Content is only fetched at setup, so it may not know gear released since then
+    equipped_gear = [
+        stats
         for gear in fields(user.items.gear.equipped)
         if (equipped := getattr(user.items.gear.equipped, gear.name))
-        and (stats := content.gear.flat[equipped])
-    )
+        and (stats := content.gear.flat.get(equipped)) is not None
+    ]
+
+    equipment = sum(getattr(stats, attribute) for stats in equipped_gear)
 
     class_bonus = sum(
         getattr(stats, attribute) / 2
-        for gear in fields(user.items.gear.equipped)
-        if (equipped := getattr(user.items.gear.equipped, gear.name))
-        and (stats := content.gear.flat[equipped])
-        and stats.klass == user.stats.Class
+        for stats in equipped_gear
+        if stats.klass == user.stats.Class
     )
     if TYPE_CHECKING:
         assert user.stats.lvl

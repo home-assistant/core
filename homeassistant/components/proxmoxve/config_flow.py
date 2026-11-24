@@ -4,13 +4,19 @@ from collections.abc import Mapping
 import logging
 from typing import Any, override
 
-from proxmoxer import AuthenticationError, ProxmoxAPI
-from proxmoxer.core import ResourceException
-import requests
-from requests.exceptions import ConnectTimeout, SSLError
-import voluptuous as vol
+from aioproxmox import ProxmoxVE
+from aioproxmox.exceptions import (
+    ProxmoxAPIError,
+    ProxmoxAuthError,
+    ProxmoxConnectionError as PVEConnectionError,
+    ProxmoxNodeUnreachableError,
+    ProxmoxSSLError as PVESSLError,
+    ProxmoxTimeoutError,
+)
+from aioproxmox.model.pve import OperationalStatus
+import probatio
 
-from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import (
     CONF_HOST,
     CONF_PASSWORD,
@@ -19,8 +25,10 @@ from homeassistant.const import (
     CONF_USERNAME,
     CONF_VERIFY_SSL,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.selector import (
     SelectSelector,
     SelectSelectorConfig,
@@ -47,32 +55,32 @@ from .const import (
     DEFAULT_TIMEOUT,
     DEFAULT_VERIFY_SSL,
     DOMAIN,
-    NODE_ONLINE,
 )
+from .coordinator import ProxmoxConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
-BASE_SCHEMA = vol.Schema(
+BASE_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_AUTH_METHOD, default=DEFAULT_REALM): SelectSelector(
+        probatio.Required(CONF_AUTH_METHOD, default=DEFAULT_REALM): SelectSelector(
             SelectSelectorConfig(
                 options=AUTH_METHODS,
                 translation_key=CONF_AUTH_METHOD,
                 mode=SelectSelectorMode.DROPDOWN,
             )
         ),
-        vol.Required(CONF_HOST): cv.string,
-        vol.Required(CONF_USERNAME): TextSelector(
+        probatio.Required(CONF_HOST): cv.string,
+        probatio.Required(CONF_USERNAME): TextSelector(
             TextSelectorConfig(type=TextSelectorType.TEXT, autocomplete="username")
         ),
-        vol.Required(CONF_PORT, default=DEFAULT_PORT): cv.port,
-        vol.Required(CONF_TOKEN, default=False): cv.boolean,
-        vol.Optional(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL): cv.boolean,
+        probatio.Required(CONF_PORT, default=DEFAULT_PORT): probatio.Port(),
+        probatio.Required(CONF_TOKEN, default=False): cv.boolean,
+        probatio.Optional(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL): cv.boolean,
     }
 )
 
-PASSWORD_SCHEMA = vol.Schema(
+PASSWORD_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_PASSWORD): TextSelector(
+        probatio.Required(probatio.Secret(CONF_PASSWORD)): TextSelector(
             TextSelectorConfig(
                 type=TextSelectorType.PASSWORD,
                 autocomplete="current-password",
@@ -80,16 +88,18 @@ PASSWORD_SCHEMA = vol.Schema(
         ),
     }
 )
-TOKEN_SCHEMA = vol.Schema(
+TOKEN_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_TOKEN_ID): cv.string,
-        vol.Required(CONF_TOKEN_SECRET): cv.string,
+        probatio.Required(CONF_TOKEN_ID): cv.string,
+        probatio.Required(probatio.Secret(CONF_TOKEN_SECRET)): cv.string,
     }
 )
 
 
-def _get_nodes_data(data: dict[str, Any]) -> list[dict[str, Any]]:
-    """Validate the user input and fetch data (sync, for executor)."""
+async def _get_nodes_data(
+    hass: HomeAssistant, data: dict[str, Any]
+) -> list[dict[str, Any]]:
+    """Validate the user input and fetch data."""
     auth_kwargs = (
         {
             "token_name": data[CONF_TOKEN_ID],
@@ -99,40 +109,31 @@ def _get_nodes_data(data: dict[str, Any]) -> list[dict[str, Any]]:
         else {"password": data.get(CONF_PASSWORD)}
     )
     data = sanitize_config_entry(data)
+    verify_ssl = data.get(CONF_VERIFY_SSL, DEFAULT_VERIFY_SSL)
+    client = ProxmoxVE(
+        async_get_clientsession(hass, verify_ssl=verify_ssl),
+        host=data[CONF_HOST],
+        port=data[CONF_PORT],
+        user=data[CONF_USERNAME],
+        verify_ssl=verify_ssl,
+        timeout=DEFAULT_TIMEOUT,
+        **auth_kwargs,
+    )
     try:
-        client = ProxmoxAPI(
-            host=data[CONF_HOST],
-            port=data[CONF_PORT],
-            user=data[CONF_USERNAME],
-            verify_ssl=data.get(CONF_VERIFY_SSL, DEFAULT_VERIFY_SSL),
-            timeout=DEFAULT_TIMEOUT,
-            **auth_kwargs,
-        )
-    except AuthenticationError as err:
+        cluster_resources = await client.connect()
+    except ProxmoxAuthError as err:
         raise ProxmoxAuthenticationError from err
-    except SSLError as err:
+    except PVESSLError as err:
         raise ProxmoxSSLError from err
-    except ConnectTimeout as err:
+    except ProxmoxTimeoutError as err:
         raise ProxmoxConnectTimeout from err
-    except ResourceException as err:
+    except ProxmoxAPIError as err:
         _LOGGER.debug("Error during Proxmox client initialisation", exc_info=True)
         raise ProxmoxInitFailed from err
-    except requests.exceptions.ConnectionError as err:
+    except PVEConnectionError as err:
         raise ProxmoxConnectionError from err
 
-    try:
-        nodes = client.nodes.get()
-    except AuthenticationError as err:
-        raise ProxmoxAuthenticationError from err
-    except SSLError as err:
-        raise ProxmoxSSLError from err
-    except ConnectTimeout as err:
-        raise ProxmoxConnectTimeout from err
-    except ResourceException as err:
-        _LOGGER.debug("Error fetching nodes", exc_info=True)
-        raise ProxmoxNoNodesFound from err
-    except requests.exceptions.ConnectionError as err:
-        raise ProxmoxConnectionError from err
+    nodes = cluster_resources.nodes
 
     if not nodes:
         raise ProxmoxNoNodesFound(
@@ -141,28 +142,38 @@ def _get_nodes_data(data: dict[str, Any]) -> list[dict[str, Any]]:
 
     nodes_data: list[dict[str, Any]] = []
     for node in nodes:
-        if node.get("status") != NODE_ONLINE:
+        if node.status != OperationalStatus.ONLINE:
             _LOGGER.debug(
                 "Node %s is offline, skipping VM/container fetch",
-                node["node"],
+                node.node,
             )
             continue
+        node_endpoint = client.nodes(node.node)
         try:
-            vms = client.nodes(node["node"]).qemu.get()
-            containers = client.nodes(node["node"]).lxc.get()
-        except ResourceException as err:
+            vms = await node_endpoint.qemu_all()
+            containers = await node_endpoint.lxc_all()
+        except ProxmoxAuthError as err:
+            raise ProxmoxAuthenticationError from err
+        except ProxmoxNodeUnreachableError:
+            _LOGGER.warning(
+                "Unable to fetch VMs/LXC for node %s, skipping node", node.node
+            )
+            continue
+        except ProxmoxAPIError as err:
             _LOGGER.debug(
-                "Error fetching VMs/LXC for node %s", node["node"], exc_info=True
+                "Error fetching VMs/LXC for node %s", node.node, exc_info=True
             )
             raise ProxmoxNoVMLXCFound from err
-        except requests.exceptions.ConnectionError as err:
+        except ProxmoxTimeoutError as err:
+            raise ProxmoxConnectTimeout from err
+        except PVEConnectionError as err:
             raise ProxmoxConnectionError from err
 
         nodes_data.append(
             {
-                CONF_NODE: node["node"],
-                CONF_VMS: [vm["vmid"] for vm in vms],
-                CONF_CONTAINERS: [container["vmid"] for container in containers],
+                CONF_NODE: node.node,
+                CONF_VMS: [vm.vmid for vm in vms],
+                CONF_CONTAINERS: [container.vmid for container in containers],
             }
         )
 
@@ -175,7 +186,7 @@ class ProxmoxveConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 3
     _data: dict[str, Any] = {}
-    _entry: ConfigEntry
+    _entry: ProxmoxConfigEntry
 
     @override
     async def async_step_user(
@@ -326,9 +337,7 @@ class ProxmoxveConfigFlow(ConfigFlow, domain=DOMAIN):
         proxmox_nodes: list[dict[str, Any]] = []
         err: ProxmoxError | None = None
         try:
-            proxmox_nodes = await self.hass.async_add_executor_job(
-                _get_nodes_data, user_input
-            )
+            proxmox_nodes = await _get_nodes_data(self.hass, user_input)
         except ProxmoxConnectTimeout as exc:
             errors["base"] = "connect_timeout"
             err = exc
@@ -359,13 +368,13 @@ class ProxmoxveConfigFlow(ConfigFlow, domain=DOMAIN):
     def _get_auth_schema(
         self,
         data: Mapping[str, Any],
-    ) -> vol.Schema:
+    ) -> probatio.Schema:
         """Return the auth schema based on the flow data."""
         schema = PASSWORD_SCHEMA
         if data.get(CONF_TOKEN):
             schema = TOKEN_SCHEMA
         if data.get(CONF_AUTH_METHOD) == AUTH_OTHER:
-            schema = schema.extend({vol.Required(CONF_REALM): cv.string})
+            schema = schema.extend({probatio.Required(CONF_REALM): cv.string})
         return schema
 
     def _get_auth_updates(

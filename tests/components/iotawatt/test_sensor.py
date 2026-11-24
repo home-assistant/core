@@ -4,9 +4,13 @@ from datetime import timedelta
 from unittest.mock import MagicMock
 
 from freezegun.api import FrozenDateTimeFactory
+from iotawattpy.sensor import Sensor
+import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components.iotawatt.const import DOMAIN
 from homeassistant.components.sensor import (
+    ATTR_LAST_RESET,
     ATTR_STATE_CLASS,
     SensorDeviceClass,
     SensorStateClass,
@@ -17,13 +21,13 @@ from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
     UnitOfEnergy,
     UnitOfPower,
+    UnitOfReactivePower,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
 
-from . import INPUT_SENSOR, OUTPUT_SENSOR
-
-from tests.common import async_fire_time_changed
+from . import INPUT_SENSOR, OUTPUT_SENSOR, VAR_OUTPUT_SENSOR
 
 
 async def test_sensor_type_input(
@@ -88,3 +92,107 @@ async def test_sensor_type_output(
     await hass.async_block_till_done()
 
     assert hass.states.get("sensor.my_watthour_sensor") is None
+
+
+def _period_total_sensor(value: float, begin: str) -> Sensor:
+    """Return an energy sensor integrated since the start of the period."""
+    return Sensor(
+        channel="N/A",
+        base_name="My WattHour Sensor",
+        suffix=None,
+        io_type="Output",
+        unit="WattHours",
+        value=value,
+        begin=begin,
+        mac_addr="mock-mac",
+        fromStart=True,
+    )
+
+
+async def test_last_reset_set_on_first_state(
+    hass: HomeAssistant, mock_iotawatt: MagicMock
+) -> None:
+    """Test the first state written at startup already has last_reset."""
+    mock_iotawatt.getSensors.return_value["sensors"]["my_watthour_sensor_key"] = (
+        _period_total_sensor(243, "2026-11-14T00:00:00")
+    )
+    assert await async_setup_component(hass, DOMAIN, {})
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.my_watthour_sensor")
+    assert state is not None
+    assert state.attributes[ATTR_LAST_RESET] == "2026-11-14T00:00:00"
+
+
+async def test_last_reset_follows_new_period(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory, mock_iotawatt: MagicMock
+) -> None:
+    """Test last_reset moves to the start of a new period on update."""
+    sensor = _period_total_sensor(243, "2026-11-14T00:00:00")
+    mock_iotawatt.getSensors.return_value["sensors"]["my_watthour_sensor_key"] = sensor
+    assert await async_setup_component(hass, DOMAIN, {})
+    await hass.async_block_till_done()
+
+    sensor.setValue(5)
+    sensor.setBegin("2026-11-15T00:00:00")
+    freezer.tick(timedelta(seconds=30))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.my_watthour_sensor")
+    assert state is not None
+    assert state.state == "5"
+    assert state.attributes[ATTR_LAST_RESET] == "2026-11-15T00:00:00"
+
+
+async def test_output_sensor_not_attached_to_device(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    caplog: pytest.LogCaptureFixture,
+    mock_iotawatt: MagicMock,
+    entry: MockConfigEntry,
+) -> None:
+    """Test only sensors with a unique ID are attached to the device."""
+    mock_iotawatt.getSensors.return_value["sensors"] = {
+        "my_sensor_key": INPUT_SENSOR,
+        "my_watthour_sensor_key": OUTPUT_SENSOR,
+    }
+    assert await async_setup_component(hass, DOMAIN, {})
+    await hass.async_block_till_done()
+
+    device = device_registry.async_get_device_by_connection(
+        (dr.CONNECTION_NETWORK_MAC, "mock-mac"), entry.entry_id
+    )
+    assert device is not None
+
+    input_entry = entity_registry.async_get("sensor.test_device_my_sensor")
+    assert input_entry is not None
+    assert input_entry.device_id == device.id
+
+    # Outputs have no unique ID, hence no registry entry to attach a device to.
+    assert hass.states.get("sensor.my_watthour_sensor") is not None
+    assert entity_registry.async_get("sensor.my_watthour_sensor") is None
+
+    assert "attempts to attach a device to an entity" not in caplog.text
+
+
+async def test_sensor_type_output_reactive_power(
+    hass: HomeAssistant, mock_iotawatt: MagicMock
+) -> None:
+    """Test reactive power output sensors work."""
+    mock_iotawatt.getSensors.return_value["sensors"]["my_var_sensor_key"] = (
+        VAR_OUTPUT_SENSOR
+    )
+    assert await async_setup_component(hass, DOMAIN, {})
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.my_var_sensor")
+    assert state is not None
+    assert state.state == "500"
+    assert state.attributes[ATTR_STATE_CLASS] is SensorStateClass.MEASUREMENT
+    assert (
+        state.attributes[ATTR_UNIT_OF_MEASUREMENT]
+        == UnitOfReactivePower.VOLT_AMPERE_REACTIVE
+    )
+    assert state.attributes[ATTR_DEVICE_CLASS] == SensorDeviceClass.REACTIVE_POWER

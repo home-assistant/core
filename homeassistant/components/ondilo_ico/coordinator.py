@@ -59,7 +59,6 @@ class OndiloIcoPoolsCoordinator(DataUpdateCoordinator[dict[str, OndiloIcoPoolDat
             update_interval=timedelta(minutes=20),
         )
         self.api = api
-        self.config_entry = config_entry
         self._device_registry = dr.async_get(self.hass)
 
     @override
@@ -104,7 +103,7 @@ class OndiloIcoPoolsCoordinator(DataUpdateCoordinator[dict[str, OndiloIcoPoolDat
             pool_data = data[pool_id]
             measures_coordinator = pool_data.measures_coordinator
             measures_coordinator.set_next_refresh(pool_data)
-            if not measures_coordinator.data:
+            if measures_coordinator.data_or_none is None:
                 await measures_coordinator.async_refresh()
 
         return data
@@ -147,7 +146,7 @@ class OndiloIcoMeasuresCoordinator(DataUpdateCoordinator[OndiloIcoMeasurementDat
     def __init__(
         self,
         hass: HomeAssistant,
-        config_entry: ConfigEntry,
+        config_entry: OndiloIcoConfigEntry,
         api: OndiloClient,
         pool_id: str,
     ) -> None:

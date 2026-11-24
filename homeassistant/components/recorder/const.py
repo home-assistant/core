@@ -4,11 +4,9 @@ from enum import StrEnum
 from typing import TYPE_CHECKING
 
 from homeassistant.const import (
-    ATTR_ATTRIBUTION,
-    ATTR_RESTORED,
-    ATTR_SUPPORTED_FEATURES,
     EVENT_RECORDER_5MIN_STATISTICS_GENERATED,  # noqa: F401
     EVENT_RECORDER_HOURLY_STATISTICS_GENERATED,  # noqa: F401
+    EntityStateAttribute,
 )
 from homeassistant.helpers.json import JSON_DUMP  # noqa: F401
 
@@ -16,11 +14,6 @@ if TYPE_CHECKING:
     from .core import Recorder  # noqa: F401
 
 
-SQLITE_URL_PREFIX = "sqlite://"
-MARIADB_URL_PREFIX = "mariadb://"
-MARIADB_PYMYSQL_URL_PREFIX = "mariadb+pymysql://"
-MYSQLDB_URL_PREFIX = "mysql://"
-MYSQLDB_PYMYSQL_URL_PREFIX = "mysql+pymysql://"
 DOMAIN = "recorder"
 
 CONF_DB_INTEGRITY_CHECK = "db_integrity_check"
@@ -40,11 +33,11 @@ DEFAULT_MAX_BIND_VARS = 4000
 
 DB_WORKER_PREFIX = "DbWorker"
 
-ALL_DOMAIN_EXCLUDE_ATTRS = {ATTR_ATTRIBUTION, ATTR_RESTORED, ATTR_SUPPORTED_FEATURES}
-
-ATTR_KEEP_DAYS = "keep_days"
-ATTR_REPACK = "repack"
-ATTR_APPLY_FILTER = "apply_filter"
+ALL_DOMAIN_EXCLUDE_ATTRS: set[str] = {
+    EntityStateAttribute.ATTRIBUTION,
+    EntityStateAttribute.RESTORED,
+    EntityStateAttribute.SUPPORTED_FEATURES,
+}
 
 KEEPALIVE_TIME = 30
 

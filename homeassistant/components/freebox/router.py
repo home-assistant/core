@@ -1,5 +1,7 @@
 """Represent the Freebox router and its devices and sensors."""
 
+import asyncio
+from collections import Counter
 from collections.abc import Callable, Mapping
 from contextlib import suppress
 from datetime import datetime
@@ -8,8 +10,10 @@ import logging
 import os
 from pathlib import Path
 import re
+import time
 from typing import Any
 
+from aiohttp import ClientError
 from freebox_api import Freepybox
 from freebox_api.api.call import Call
 from freebox_api.api.home import Home
@@ -27,11 +31,14 @@ from homeassistant.util import slugify
 from .const import (
     API_VERSION,
     APP_DESC,
+    CONNECTION_IP_SENSORS_KEYS,
     CONNECTION_SENSORS_KEYS,
     DOMAIN,
     HOME_COMPATIBLE_CATEGORIES,
+    LAN_PORT_STATS_FAILED,
     STORAGE_KEY,
     STORAGE_VERSION,
+    LanPortStatsFailed,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -53,6 +60,27 @@ def is_json(json_str: str) -> bool:
     return True
 
 
+def _get_token_file(hass: HomeAssistant, host: str) -> Path:
+    """Return the path of the stored application token file for a host."""
+    freebox_path = Store(hass, STORAGE_VERSION, STORAGE_KEY).path
+    return Path(f"{freebox_path}/{slugify(host)}.conf")
+
+
+def lan_port_translation(
+    port: dict[str, Any], translation_key: str
+) -> tuple[str, dict[str, str]]:
+    """Return the translation key and placeholders of a LAN port entity."""
+    # The port name is not part of the documented API
+    if name := port.get("name"):
+        return translation_key, {"port": name}
+    return f"{translation_key}_unnamed", {"port": str(port["id"])}
+
+
+def _unlink_if_exists(path: Path) -> None:
+    """Remove a file if it exists."""
+    path.unlink(missing_ok=True)
+
+
 async def get_api(hass: HomeAssistant, host: str) -> Freepybox:
     """Get the Freebox API."""
     freebox_path = Store(hass, STORAGE_VERSION, STORAGE_KEY).path
@@ -60,9 +88,51 @@ async def get_api(hass: HomeAssistant, host: str) -> Freepybox:
     if not os.path.exists(freebox_path):
         await hass.async_add_executor_job(os.makedirs, freebox_path)
 
-    token_file = Path(f"{freebox_path}/{slugify(host)}.conf")
+    token_file = _get_token_file(hass, host)
 
     return Freepybox(APP_DESC, token_file, API_VERSION)
+
+
+def is_invalid_token_error(error: Exception) -> bool:
+    """Return whether an authorization error reports a rejected app token."""
+    return bool(
+        (matcher := re.search(r"\(APIResponse: (.+)\)$", str(error)))
+        and is_json(json_str := matcher.group(1))
+        and json.loads(json_str).get("error_code") == "invalid_token"
+    )
+
+
+def is_home_unsupported_error(error: HttpRequestError) -> bool:
+    """Return whether the Freebox Home API reports an unavailable endpoint."""
+    match = re.search(r"\(APIResponse: (.+)\)$", str(error))
+    if not match:
+        return False
+
+    try:
+        response = json.loads(match.group(1))
+    except ValueError, TypeError:
+        return False
+
+    return (
+        isinstance(response, dict)
+        and response.get("error_code") == "invalid_request"
+        and re.search(r"\b404\b", str(response.get("msg", ""))) is not None
+    )
+
+
+async def async_forget_registration(hass: HomeAssistant, host: str) -> None:
+    """Remove a stored application token for a host, if any.
+
+    The Freebox can reject an application token that Home Assistant still
+    considers valid, for example after the router was replaced, factory
+    reset, or the application authorization was revoked from the Freebox
+    OS settings. When that happens, Home Assistant keeps retrying with the
+    same rejected token forever. Removing the stored token forces a fresh
+    pairing (and a new "please confirm on your Freebox" prompt) on the
+    next attempt.
+    """
+    token_file = _get_token_file(hass, host)
+    await hass.async_add_executor_job(_unlink_if_exists, token_file)
 
 
 async def get_hosts_list_if_supported(
@@ -125,11 +195,14 @@ class FreeboxRouter:
         self.disks: dict[int, dict[str, Any]] = {}
         self.supports_raid = True
         self.raids: dict[int, dict[str, Any]] = {}
+        self.lan_ports: dict[int, dict[str, Any]] = {}
+        # Enabled traffic sensors per port, stats are only fetched for these ports
+        self.lan_ports_stats_listeners: Counter[int] = Counter()
         self.sensors_temperature: dict[str, int] = {}
         self.sensors_temperature_names: dict[str, str] = {}
         self.sensors_fan: dict[str, int] = {}
         self.sensors_fan_names: dict[str, str] = {}
-        self.sensors_connection: dict[str, float] = {}
+        self.sensors_connection: dict[str, float | str | None] = {}
         self.call_list: list[dict[str, Any]] = []
         self.home_granted = True
         self.home_devices: dict[str, Any] = {}
@@ -203,13 +276,15 @@ class FreeboxRouter:
         connection_datas: dict[str, Any] = await self._api.connection.get_status()
         for sensor_key in CONNECTION_SENSORS_KEYS:
             self.sensors_connection[sensor_key] = connection_datas[sensor_key]
+        for sensor_key in CONNECTION_IP_SENSORS_KEYS:
+            self.sensors_connection[sensor_key] = connection_datas.get(sensor_key)
 
         self._attrs = {
             "IPv4": connection_datas.get("ipv4"),
             "IPv6": connection_datas.get("ipv6"),
             "connection_type": connection_datas["media"],
             "uptime": datetime.fromtimestamp(
-                round(datetime.now().timestamp()) - syst_datas["uptime_val"]  # pylint: disable=home-assistant-enforce-naive-now
+                round(time.time()) - syst_datas["uptime_val"]
             ),
             "firmware_version": self._sw_v,
             "serial": syst_datas["serial"],
@@ -219,6 +294,7 @@ class FreeboxRouter:
 
         await self._update_disks_sensors()
         await self._update_raids_sensors()
+        await self._update_lan_ports_sensors()
 
         async_dispatcher_send(self.hass, self.signal_sensor_update)
 
@@ -254,6 +330,37 @@ class FreeboxRouter:
         for fbx_raid in fbx_raids:
             self.raids[fbx_raid["id"]] = fbx_raid
 
+    async def _update_lan_ports_sensors(self) -> None:
+        """Update Freebox LAN ports status and traffic."""
+        fbx_ports: list[dict[str, Any]] = await self._api.switch.get_status() or []
+        stats_port_ids = [
+            port["id"]
+            for port in fbx_ports
+            if self.lan_ports_stats_listeners[port["id"]]
+        ]
+        stats = dict(
+            zip(
+                stats_port_ids,
+                await asyncio.gather(
+                    *(self._get_lan_port_stats(i) for i in stats_port_ids)
+                ),
+                strict=True,
+            )
+        )
+        for fbx_port in fbx_ports:
+            port_id = fbx_port["id"]
+            self.lan_ports[port_id] = {**fbx_port, "stats": stats.get(port_id)}
+
+    async def _get_lan_port_stats(
+        self, port_id: int
+    ) -> dict[str, Any] | LanPortStatsFailed:
+        """Return the stats of a LAN port, or LAN_PORT_STATS_FAILED."""
+        try:
+            return await self._api.switch.get_port_stats(port_id)
+        except (HttpRequestError, ClientError, TimeoutError) as err:
+            _LOGGER.debug("Failed to get the stats of LAN port %s: %r", port_id, err)
+            return LAN_PORT_STATS_FAILED
+
     async def update_home_devices(self) -> None:
         """Update Home devices (alarm, light, sensor, switch, remote ...)."""
         if not self.home_granted:
@@ -261,9 +368,12 @@ class FreeboxRouter:
 
         try:
             home_nodes: list[Any] = await self.home.get_home_nodes() or []
-        except HttpRequestError:
+        except HttpRequestError as err:
             self.home_granted = False
-            _LOGGER.warning("Home access is not granted")
+            if is_home_unsupported_error(err):
+                _LOGGER.debug("Freebox Home API endpoint is unavailable: %s", err)
+            else:
+                _LOGGER.warning("Freebox Home API request failed: %s", err)
             return
 
         new_device = False

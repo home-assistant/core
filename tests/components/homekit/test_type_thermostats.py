@@ -5,6 +5,7 @@ from unittest.mock import patch
 from pyhap.characteristic import Characteristic
 from pyhap.const import HAP_REPR_AID, HAP_REPR_CHARS, HAP_REPR_IID, HAP_REPR_VALUE
 import pytest
+from pytest_homeassistant.common import async_mock_service
 
 from homeassistant.components.climate import (
     ATTR_CURRENT_HUMIDITY,
@@ -87,8 +88,6 @@ from homeassistant.const import (
 from homeassistant.core import CoreState, Event, HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
-
-from tests.common import async_mock_service
 
 
 async def test_thermostat(hass: HomeAssistant, hk_driver, events: list[Event]) -> None:

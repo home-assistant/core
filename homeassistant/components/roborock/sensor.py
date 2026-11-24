@@ -2,7 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
-import datetime
+import datetime as dt
 import logging
 from typing import override
 
@@ -30,12 +30,20 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.const import PERCENTAGE, EntityCategory, UnitOfArea, UnitOfTime
+from homeassistant.const import (
+    PERCENTAGE,
+    EntityCategory,
+    Platform,
+    UnitOfArea,
+    UnitOfTime,
+)
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
+from .const import DOMAIN
 from .coordinator import (
     RoborockB01Q7UpdateCoordinator,
     RoborockB01Q10UpdateCoordinator,
@@ -64,7 +72,7 @@ PARALLEL_UPDATES = 0
 class RoborockSensorDescription(SensorEntityDescription):
     """A class that describes Roborock sensors."""
 
-    value_fn: Callable[[DeviceState], StateType | datetime.datetime]
+    value_fn: Callable[[DeviceState], StateType | dt.datetime]
 
     # If it is a dock entity
     is_dock_entity: bool = False
@@ -139,7 +147,9 @@ SENSOR_DESCRIPTIONS = [
         value_fn=lambda data: data.consumable.cleaning_brush_time_left,
         entity_category=EntityCategory.DIAGNOSTIC,
         is_dock_entity=True,
-        support_fn=lambda api: api.wash_towel_mode is not None,
+        support_fn=lambda api: (
+            api.device_features.dock_features.is_cleaning_brush_supported
+        ),
     ),
     RoborockSensorDescription(
         native_unit_of_measurement=UnitOfTime.HOURS,
@@ -541,6 +551,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Roborock vacuum sensors."""
     coordinators = config_entry.runtime_data
+    entity_registry = er.async_get(hass)
 
     @callback
     def async_add_coordinator_entities(
@@ -549,11 +560,18 @@ async def async_setup_entry(
         """Add entities for a specific coordinator."""
         entities: list[RoborockEntity] = []
         if isinstance(coordinator, RoborockDataUpdateCoordinator):
-            entities.extend(
-                RoborockSensorEntity(coordinator, description)
-                for description in SENSOR_DESCRIPTIONS
-                if description.support_fn(coordinator.properties_api)
-            )
+            for description in SENSOR_DESCRIPTIONS:
+                unique_id = f"{description.key}_{coordinator.duid_slug}"
+                if description.support_fn(coordinator.properties_api):
+                    entities.append(
+                        RoborockSensorEntity(unique_id, coordinator, description)
+                    )
+                elif entity_id := entity_registry.async_get_entity_id(
+                    Platform.SENSOR,
+                    DOMAIN,
+                    unique_id,
+                ):
+                    entity_registry.async_remove(entity_id)
             entities.append(RoborockCurrentRoom(coordinator))
         elif isinstance(coordinator, RoborockWetDryVacUpdateCoordinator):
             entities.extend(
@@ -577,6 +595,7 @@ async def async_setup_entry(
                 RoborockSensorEntityB01Q10(coordinator, description)
                 for description in Q10_B01_SENSOR_DESCRIPTIONS
             )
+            entities.append(RoborockCurrentRoomQ10(coordinator))
         async_add_entities(entities)
 
     for coordinator in coordinators.values():
@@ -598,20 +617,21 @@ class RoborockSensorEntity(RoborockCoordinatedEntityV1, SensorEntity):
 
     def __init__(
         self,
+        unique_id: str,
         coordinator: RoborockDataUpdateCoordinator,
         description: RoborockSensorDescription,
     ) -> None:
         """Initialize the entity."""
         self.entity_description = description
         super().__init__(
-            f"{description.key}_{coordinator.duid_slug}",
+            unique_id,
             coordinator,
             is_dock_entity=description.is_dock_entity,
         )
 
     @property
     @override
-    def native_value(self) -> StateType | datetime.datetime:
+    def native_value(self) -> StateType | dt.datetime:
         """Return the value reported by the sensor."""
         if self.coordinator.data is None:
             return None
@@ -661,6 +681,41 @@ class RoborockCurrentRoom(RoborockCoordinatedEntityV1, SensorEntity):
         return None
 
 
+class RoborockCurrentRoomQ10(RoborockCoordinatedEntityB01Q10, SensorEntity):
+    """Representation of the current room of a Q10 vacuum."""
+
+    _attr_device_class = SensorDeviceClass.ENUM
+    _attr_translation_key = "current_room"
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
+
+    def __init__(self, coordinator: RoborockB01Q10UpdateCoordinator) -> None:
+        """Initialize the entity."""
+        super().__init__(f"current_room_{coordinator.duid_slug}", coordinator)
+        self._map_trait = coordinator.api.map
+
+    @override
+    async def async_added_to_hass(self) -> None:
+        """Listen for map and position updates."""
+        await super().async_added_to_hass()
+        self.async_on_remove(
+            self._map_trait.add_update_listener(self.async_write_ha_state)
+        )
+
+    @property
+    @override
+    def options(self) -> list[str]:
+        """Return the currently valid rooms."""
+        return [room.name for room in self._map_trait.rooms]
+
+    @property
+    @override
+    def native_value(self) -> str | None:
+        """Return the room inferred by the library, if available."""
+        if (room := self._map_trait.current_room) is not None:
+            return room.name
+        return None
+
+
 class RoborockSensorEntityA01(RoborockCoordinatedEntityA01, SensorEntity):
     """Representation of a A01 Roborock sensor."""
 
@@ -679,7 +734,7 @@ class RoborockSensorEntityA01(RoborockCoordinatedEntityA01, SensorEntity):
     @override
     def native_value(self) -> StateType:
         """Return the value reported by the sensor."""
-        return self.coordinator.data[self.entity_description.data_protocol]
+        return self.coordinator.data.get(self.entity_description.data_protocol)
 
 
 class RoborockSensorEntityB01Q7(RoborockCoordinatedEntityB01Q7, SensorEntity):

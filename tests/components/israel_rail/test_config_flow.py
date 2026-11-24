@@ -3,6 +3,7 @@
 from unittest.mock import AsyncMock
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.israel_rail import CONF_DESTINATION, CONF_START, DOMAIN
 from homeassistant.config_entries import SOURCE_USER
@@ -10,8 +11,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from .conftest import VALID_CONFIG
-
-from tests.common import MockConfigEntry
 
 
 @pytest.mark.usefixtures("mock_setup_entry")
@@ -33,6 +32,7 @@ async def test_create_entry(hass: HomeAssistant, mock_israelrail: AsyncMock) -> 
         CONF_START: "באר יעקב",
         CONF_DESTINATION: "אשקלון",
     }
+    assert result["result"].unique_id == "באר יעקב אשקלון"
 
 
 @pytest.mark.usefixtures("mock_setup_entry")
@@ -40,9 +40,15 @@ async def test_flow_fails(hass: HomeAssistant, mock_israelrail: AsyncMock) -> No
     """Test that the user step fails."""
     mock_israelrail.query.side_effect = Exception("error")
     failed_result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_USER},
-        data=VALID_CONFIG,
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+
+    assert failed_result["type"] is FlowResultType.FORM
+    assert failed_result["step_id"] == "user"
+
+    failed_result = await hass.config_entries.flow.async_configure(
+        failed_result["flow_id"],
+        user_input=VALID_CONFIG,
     )
 
     assert failed_result["errors"] == {"base": "unknown"}

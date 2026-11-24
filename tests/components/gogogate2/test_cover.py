@@ -15,6 +15,7 @@ from ismartgate.common import (
     TransitionDoorStatus,
     Wifi,
 )
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components.cover import (
     DOMAIN as COVER_DOMAIN,
@@ -46,8 +47,6 @@ from . import (
     _mocked_gogogate_open_door_response,
     _mocked_ismartgate_closed_door_response,
 )
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 @patch("homeassistant.components.gogogate2.common.GogoGate2Api")
@@ -342,7 +341,9 @@ async def test_device_info_ismartgate(
     assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    device = device_registry.async_get_device(identifiers={(DOMAIN, "xyz")})
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "xyz"), config_entry.entry_id
+    )
     assert device
     assert device.manufacturer == MANUFACTURER
     assert device.name == "mycontroller"
@@ -378,7 +379,9 @@ async def test_device_info_gogogate2(
     assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    device = device_registry.async_get_device(identifiers={(DOMAIN, "xyz")})
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "xyz"), config_entry.entry_id
+    )
     assert device
     assert device.manufacturer == MANUFACTURER
     assert device.name == "mycontroller"

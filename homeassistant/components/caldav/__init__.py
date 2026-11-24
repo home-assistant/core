@@ -1,10 +1,11 @@
 """The caldav component."""
 
-import logging
+from dataclasses import dataclass
+from functools import partial
 
-import caldav
+from caldav.davclient import DAVClient
 from caldav.lib.error import AuthorizationError, DAVError
-import requests
+from caldav.lib.http_sync import requests as caldav_requests
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -15,50 +16,67 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.exceptions import (
+    ConfigEntryAuthFailed,
+    ConfigEntryError,
+    ConfigEntryNotReady,
+)
 
-from .const import TIMEOUT
+from .api import CalDavCalendar, get_calendars
+from .const import DOMAIN, TIMEOUT
 
-type CalDavConfigEntry = ConfigEntry[caldav.DAVClient]
 
-_LOGGER = logging.getLogger(__name__)
+@dataclass
+class CalDavData:
+    """The client of a config entry and the calendars it found."""
+
+    client: DAVClient
+    calendars: list[CalDavCalendar]
+
+
+type CalDavConfigEntry = ConfigEntry[CalDavData]
 
 
 PLATFORMS: list[Platform] = [Platform.CALENDAR, Platform.TODO]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: CalDavConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: CalDavConfigEntry) -> None:
     """Set up CalDAV from a config entry."""
-    client = caldav.DAVClient(
-        entry.data[CONF_URL],
-        username=entry.data[CONF_USERNAME],
-        password=entry.data[CONF_PASSWORD],
-        ssl_verify_cert=entry.data[CONF_VERIFY_SSL],
-        timeout=TIMEOUT,
+    client = await hass.async_add_executor_job(
+        partial(
+            DAVClient,
+            entry.data[CONF_URL],
+            username=entry.data[CONF_USERNAME],
+            password=entry.data[CONF_PASSWORD],
+            ssl_verify_cert=entry.data[CONF_VERIFY_SSL],
+            timeout=TIMEOUT,
+        )
     )
     try:
-        await hass.async_add_executor_job(client.principal)
+        calendars = await hass.async_add_executor_job(
+            get_calendars, client, {"VEVENT", "VTODO"}
+        )
     except AuthorizationError as err:
         if err.reason == "Unauthorized":
             raise ConfigEntryAuthFailed("Credentials error from CalDAV server") from err
         # AuthorizationError can be raised if the url is incorrect or
         # on some other unexpected server response.
-        _LOGGER.warning("Unexpected CalDAV server response: %s", err)
-        return False
-    except requests.Timeout as err:
+        raise ConfigEntryError(
+            translation_domain=DOMAIN,
+            translation_key="unexpected_response",
+        ) from err
+    except caldav_requests.exceptions.Timeout as err:
         raise ConfigEntryNotReady("Timeout connecting to CalDAV server") from err
-    except requests.ConnectionError as err:
+    except caldav_requests.exceptions.ConnectionError as err:
         raise ConfigEntryNotReady("Connection error from CalDAV server") from err
     except DAVError as err:
         raise ConfigEntryNotReady("CalDAV client error") from err
 
-    entry.runtime_data = client
+    entry.runtime_data = CalDavData(client, calendars)
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: CalDavConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
