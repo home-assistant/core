@@ -11,7 +11,6 @@ from pytraccar import (
     TraccarException,
 )
 
-from homeassistant import config_entries
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import (
     CONF_API_TOKEN,
@@ -49,6 +48,7 @@ from .const import (
     EVENTS,
     LOGGER,
 )
+from .coordinator import TraccarServerConfigEntry
 
 STEP_USER_DATA_SCHEMA = probatio.Schema(
     {
@@ -221,7 +221,7 @@ class TraccarServerConfigFlow(ConfigFlow, domain=DOMAIN):
     @callback
     @override
     def async_get_options_flow(
-        config_entry: config_entries.ConfigEntry,
+        config_entry: TraccarServerConfigEntry,
     ) -> SchemaOptionsFlowHandler:
         """Get the options flow for this handler."""
         return SchemaOptionsFlowHandler(config_entry, OPTIONS_FLOW)

@@ -33,6 +33,7 @@ from .const import (
 DEVICE_TYPE_NAMES: dict[LGDeviceType, str] = {
     LGDeviceType.TV: "TV",
     LGDeviceType.AC: "AC",
+    LGDeviceType.HOME_THEATER: "Home Theater",
 }
 
 _HVAC_MODE_OPTIONS = [
@@ -86,6 +87,21 @@ def _ac_schema(hass: HomeAssistant) -> probatio.Schema:
                 ),
                 probatio.Length(min=1, msg="no_hvac_modes"),
             )
+        }
+    )
+
+
+@callback
+def _home_theater_schema(hass: HomeAssistant) -> probatio.Schema:
+    """Return the Home Theater schema: emitter only."""
+    return probatio.Schema(
+        {
+            probatio.Required(CONF_INFRARED_ENTITY_ID): EntitySelector(
+                EntitySelectorConfig(
+                    domain=INFRARED_DOMAIN,
+                    include_entities=async_get_emitters(hass),
+                )
+            ),
         }
     )
 
@@ -144,9 +160,10 @@ class LgIrConfigFlow(ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="no_infrared_entities")
 
         menu_options = [LGDeviceType.TV.value]
-        # The AC step requires an emitter, so offering it without one dead-ends.
+        # The AC and Home Theater steps require an emitter, so offering them without one dead-ends.
         if emitter_entity_ids:
             menu_options.append(LGDeviceType.AC.value)
+            menu_options.append(LGDeviceType.HOME_THEATER.value)
 
         return self.async_show_menu(step_id="user", menu_options=menu_options)
 
@@ -180,6 +197,20 @@ class LgIrConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(step_id="ac", data_schema=_ac_schema(self.hass))
 
+    async def async_step_home_theater(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle Home Theater entity selection."""
+        if user_input is not None:
+            return await self._async_create_device_entry(
+                LGDeviceType.HOME_THEATER, user_input
+            )
+
+        return self.async_show_form(
+            step_id="home_theater",
+            data_schema=_home_theater_schema(self.hass),
+        )
+
     async def async_step_reconfigure(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -192,6 +223,10 @@ class LgIrConfigFlow(ConfigFlow, domain=DOMAIN):
             if not async_get_emitters(self.hass):
                 return self.async_abort(reason="no_infrared_emitters")
             data_schema = _ac_schema(self.hass)
+        elif device_type is LGDeviceType.HOME_THEATER:
+            if not async_get_emitters(self.hass):
+                return self.async_abort(reason="no_infrared_emitters")
+            data_schema = _home_theater_schema(self.hass)
         else:
             if not async_get_emitters(self.hass) and not async_get_receivers(self.hass):
                 return self.async_abort(reason="no_infrared_entities")

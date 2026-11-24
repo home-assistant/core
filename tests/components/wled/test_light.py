@@ -20,16 +20,16 @@ from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_COLOR_MODE,
     ATTR_COLOR_TEMP_KELVIN,
-    ATTR_EFFECT,
     ATTR_MAX_COLOR_TEMP_KELVIN,
     ATTR_MIN_COLOR_TEMP_KELVIN,
     ATTR_RGB_COLOR,
     ATTR_RGBW_COLOR,
     ATTR_RGBWW_COLOR,
     ATTR_SUPPORTED_COLOR_MODES,
-    ATTR_TRANSITION,
     DOMAIN as LIGHT_DOMAIN,
     ColorMode,
+    LightService,
+    LightServiceArgument,
 )
 from homeassistant.components.wled.const import (
     CONF_COLD_WHITE_KELVIN,
@@ -39,14 +39,12 @@ from homeassistant.components.wled.const import (
     SCAN_INTERVAL,
 )
 from homeassistant.const import (
-    ATTR_ENTITY_ID,
     ATTR_GROUP_ENTITIES,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
     STATE_OFF,
     STATE_ON,
     STATE_UNAVAILABLE,
     Platform,
+    TargetKey,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -106,8 +104,11 @@ async def test_segment_change_state(
     """Test the change of state of the WLED segments."""
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: "light.wled_rgb_light", ATTR_TRANSITION: 5},
+        LightService.TURN_OFF,
+        {
+            TargetKey.ENTITY_ID: "light.wled_rgb_light",
+            LightServiceArgument.TRANSITION: 5,
+        },
         blocking=True,
     )
     assert mock_wled.segment.call_count == 1
@@ -119,13 +120,13 @@ async def test_segment_change_state(
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
+        LightService.TURN_ON,
         {
-            ATTR_BRIGHTNESS: 42,
-            ATTR_EFFECT: "Chase",
-            ATTR_ENTITY_ID: "light.wled_rgb_light",
-            ATTR_RGB_COLOR: [255, 0, 0],
-            ATTR_TRANSITION: 5,
+            LightServiceArgument.BRIGHTNESS: 42,
+            LightServiceArgument.EFFECT: "Chase",
+            TargetKey.ENTITY_ID: "light.wled_rgb_light",
+            LightServiceArgument.RGB_COLOR: [255, 0, 0],
+            LightServiceArgument.TRANSITION: 5,
         },
         blocking=True,
     )
@@ -147,8 +148,11 @@ async def test_main_change_state(
     """Test the change of state of the WLED main light control."""
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: "light.wled_rgb_light_main", ATTR_TRANSITION: 5},
+        LightService.TURN_OFF,
+        {
+            TargetKey.ENTITY_ID: "light.wled_rgb_light_main",
+            LightServiceArgument.TRANSITION: 5,
+        },
         blocking=True,
     )
     assert mock_wled.master.call_count == 1
@@ -159,11 +163,11 @@ async def test_main_change_state(
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
+        LightService.TURN_ON,
         {
-            ATTR_BRIGHTNESS: 42,
-            ATTR_ENTITY_ID: "light.wled_rgb_light_main",
-            ATTR_TRANSITION: 5,
+            LightServiceArgument.BRIGHTNESS: 42,
+            TargetKey.ENTITY_ID: "light.wled_rgb_light_main",
+            LightServiceArgument.TRANSITION: 5,
         },
         blocking=True,
     )
@@ -176,8 +180,11 @@ async def test_main_change_state(
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: "light.wled_rgb_light_main", ATTR_TRANSITION: 5},
+        LightService.TURN_OFF,
+        {
+            TargetKey.ENTITY_ID: "light.wled_rgb_light_main",
+            LightServiceArgument.TRANSITION: 5,
+        },
         blocking=True,
     )
     assert mock_wled.master.call_count == 3
@@ -188,11 +195,11 @@ async def test_main_change_state(
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
+        LightService.TURN_ON,
         {
-            ATTR_BRIGHTNESS: 42,
-            ATTR_ENTITY_ID: "light.wled_rgb_light_main",
-            ATTR_TRANSITION: 5,
+            LightServiceArgument.BRIGHTNESS: 42,
+            TargetKey.ENTITY_ID: "light.wled_rgb_light_main",
+            LightServiceArgument.TRANSITION: 5,
         },
         blocking=True,
     )
@@ -281,8 +288,11 @@ async def test_single_segment_behavior(
     # Test main is turned off when turning off a single segment
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: "light.wled_rgb_light", ATTR_TRANSITION: 5},
+        LightService.TURN_OFF,
+        {
+            TargetKey.ENTITY_ID: "light.wled_rgb_light",
+            LightServiceArgument.TRANSITION: 5,
+        },
         blocking=True,
     )
     assert mock_wled.master.call_count == 1
@@ -295,11 +305,11 @@ async def test_single_segment_behavior(
     # brightness is set to 255.
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
+        LightService.TURN_ON,
         {
-            ATTR_ENTITY_ID: "light.wled_rgb_light",
-            ATTR_TRANSITION: 5,
-            ATTR_BRIGHTNESS: 42,
+            TargetKey.ENTITY_ID: "light.wled_rgb_light",
+            LightServiceArgument.TRANSITION: 5,
+            LightServiceArgument.BRIGHTNESS: 42,
         },
         blocking=True,
     )
@@ -331,8 +341,8 @@ async def test_light_errors(
     with pytest.raises(HomeAssistantError) as ex:
         await hass.services.async_call(
             LIGHT_DOMAIN,
-            SERVICE_TURN_OFF,
-            {ATTR_ENTITY_ID: "light.wled_rgb_light"},
+            LightService.TURN_OFF,
+            {TargetKey.ENTITY_ID: "light.wled_rgb_light"},
             blocking=True,
         )
 
@@ -356,10 +366,10 @@ async def test_rgbw_light(hass: HomeAssistant, mock_wled: MagicMock) -> None:
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
+        LightService.TURN_ON,
         {
-            ATTR_ENTITY_ID: "light.wled_rgbw_light",
-            ATTR_RGBW_COLOR: (255, 255, 255, 255),
+            TargetKey.ENTITY_ID: "light.wled_rgbw_light",
+            LightServiceArgument.RGBW_COLOR: (255, 255, 255, 255),
         },
         blocking=True,
     )
@@ -406,10 +416,10 @@ async def test_cct_light(hass: HomeAssistant, mock_wled: MagicMock) -> None:
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
+        LightService.TURN_ON,
         {
-            ATTR_ENTITY_ID: "light.wled_cct_light",
-            ATTR_COLOR_TEMP_KELVIN: 4321,
+            TargetKey.ENTITY_ID: "light.wled_cct_light",
+            LightServiceArgument.COLOR_TEMP_KELVIN: 4321,
         },
         blocking=True,
     )
@@ -454,8 +464,11 @@ async def test_cct_light_white_kelvin_range(
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "light.wled_cct_light", ATTR_COLOR_TEMP_KELVIN: kelvin},
+        LightService.TURN_ON,
+        {
+            TargetKey.ENTITY_ID: "light.wled_cct_light",
+            LightServiceArgument.COLOR_TEMP_KELVIN: kelvin,
+        },
         blocking=True,
     )
     mock_wled.segment.assert_called_with(
@@ -691,8 +704,11 @@ async def test_color_temp_sets_white(
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "light.wled_cct_light", ATTR_COLOR_TEMP_KELVIN: 4321},
+        LightService.TURN_ON,
+        {
+            TargetKey.ENTITY_ID: "light.wled_cct_light",
+            LightServiceArgument.COLOR_TEMP_KELVIN: 4321,
+        },
         blocking=True,
     )
 
@@ -725,8 +741,8 @@ async def test_color_leaves_color_temp_alone(
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "light.wled_cct_light", **service_data},
+        LightService.TURN_ON,
+        {TargetKey.ENTITY_ID: "light.wled_cct_light", **service_data},
         blocking=True,
     )
 
@@ -789,10 +805,10 @@ async def test_rgbww_light_turn_on(
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
+        LightService.TURN_ON,
         {
-            ATTR_ENTITY_ID: "light.wled_cct_light",
-            ATTR_RGBWW_COLOR: (0, 0, 255, 149, 150),
+            TargetKey.ENTITY_ID: "light.wled_cct_light",
+            LightServiceArgument.RGBWW_COLOR: (0, 0, 255, 149, 150),
         },
         blocking=True,
     )

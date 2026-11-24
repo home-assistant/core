@@ -1,0 +1,6 @@
+{
+  "domain": "kripsol_neopool",
+  "name": "Kripsol",
+  "integration_type": "virtual",
+  "supported_by": "neopool"
+}

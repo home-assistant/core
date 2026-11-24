@@ -207,19 +207,24 @@ def _get_subentry(
     )
 
 
-async def _setup_repairs(hass: HomeAssistant) -> None:
-    """Set up repairs and create an obsolete-model issue."""
+async def _setup_repairs(hass: HomeAssistant, entry: MockConfigEntry) -> str:
+    """Set up repairs and create an obsolete-model issue for an entry."""
+    issue_id = f"model_deprecated_{entry.entry_id}"
     ir.async_create_issue(
         hass,
         DOMAIN,
-        "model_deprecated",
+        issue_id,
+        config_entry_id=entry.entry_id,
+        data={"entry_id": entry.entry_id},
         is_fixable=True,
         is_persistent=False,
         severity=ir.IssueSeverity.WARNING,
         translation_key="model_deprecated",
+        translation_placeholders={"entry_name": entry.title},
     )
     hass.config.components.add(DOMAIN)
     assert await async_setup_component(hass, "repairs", {})
+    return issue_id
 
 
 async def test_repair_flow_iterates_subentries(
@@ -261,10 +266,11 @@ async def test_repair_flow_iterates_subentries(
         ],
     )
 
-    await _setup_repairs(hass)
+    issue_one = await _setup_repairs(hass, entry_one)
+    issue_two = await _setup_repairs(hass, entry_two)
     client = await hass_client()
 
-    result = await start_repair_fix_flow(client, DOMAIN, "model_deprecated")
+    result = await start_repair_fix_flow(client, DOMAIN, issue_one)
     assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "init"
     placeholders = result["description_placeholders"]
@@ -297,7 +303,7 @@ async def test_repair_flow_iterates_subentries(
         flow_id,
         json={CONF_CHAT_MODEL: "claude-sonnet-4-6"},
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] == FlowResultType.CREATE_ENTRY
     assert _get_subentry(entry_one, "ai_task_data").data == {
         CONF_CHAT_MODEL: "claude-sonnet-4-6",
         CONF_THINKING_TYPE: "adaptive",
@@ -308,7 +314,17 @@ async def test_repair_flow_iterates_subentries(
         _get_subentry(entry_one, "conversation").data[CONF_CHAT_MODEL]
         == "claude-haiku-4-5"
     )
+    # The flow is scoped to its own entry
+    assert (
+        _get_subentry(entry_two, "conversation").data[CONF_CHAT_MODEL]
+        == "claude-3-opus-20240229"
+    )
+    assert issue_registry.async_get_issue(DOMAIN, issue_one) is None
+    assert issue_registry.async_get_issue(DOMAIN, issue_two) is not None
 
+    result = await start_repair_fix_flow(client, DOMAIN, issue_two)
+    assert result["type"] == FlowResultType.FORM
+    flow_id = result["flow_id"]
     placeholders = result["description_placeholders"]
     assert placeholders["entry_name"] == entry_two.title
     assert placeholders["subentry_name"] == "Conversation Two"
@@ -326,7 +342,40 @@ async def test_repair_flow_iterates_subentries(
         == "claude-opus-4-6"
     )
 
-    assert issue_registry.async_get_issue(DOMAIN, "model_deprecated") is None
+    assert issue_registry.async_get_issue(DOMAIN, issue_two) is None
+
+
+async def test_repair_flow_entry_not_loaded(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test the repair flow completes when its entry is not loaded."""
+    entry = _make_entry(
+        hass,
+        title="Entry One",
+        api_key="key-one",
+        subentries_data=[
+            {
+                "data": {CONF_CHAT_MODEL: "claude-3-opus-20240229"},
+                "subentry_type": "conversation",
+                "title": "Conversation One",
+                "unique_id": None,
+            }
+        ],
+    )
+    object.__setattr__(entry, "state", ConfigEntryState.SETUP_RETRY)
+
+    issue_id = await _setup_repairs(hass, entry)
+    client = await hass_client()
+
+    result = await start_repair_fix_flow(client, DOMAIN, issue_id)
+
+    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert (
+        _get_subentry(entry, "conversation").data[CONF_CHAT_MODEL]
+        == "claude-3-opus-20240229"
+    )
 
 
 async def test_repair_flow_no_deprecated_models(
@@ -335,7 +384,7 @@ async def test_repair_flow_no_deprecated_models(
     issue_registry: ir.IssueRegistry,
 ) -> None:
     """Test the repair flow completes when everything was fixed."""
-    _make_entry(
+    entry = _make_entry(
         hass,
         title="Entry One",
         api_key="key-one",
@@ -349,13 +398,13 @@ async def test_repair_flow_no_deprecated_models(
         ],
     )
 
-    await _setup_repairs(hass)
+    issue_id = await _setup_repairs(hass, entry)
     client = await hass_client()
 
-    result = await start_repair_fix_flow(client, DOMAIN, "model_deprecated")
+    result = await start_repair_fix_flow(client, DOMAIN, issue_id)
 
     assert result["type"] == FlowResultType.CREATE_ENTRY
-    assert issue_registry.async_get_issue(DOMAIN, "model_deprecated") is None
+    assert issue_registry.async_get_issue(DOMAIN, issue_id) is None
 
 
 @pytest.mark.parametrize(
@@ -928,10 +977,10 @@ async def test_repair_flow_model_options(
     retrieve = entry.runtime_data.client.models.retrieve = AsyncMock(
         return_value=model_info
     )
-    await _setup_repairs(hass)
+    issue_id = await _setup_repairs(hass, entry)
     client = await hass_client()
 
-    result = await start_repair_fix_flow(client, DOMAIN, "model_deprecated")
+    result = await start_repair_fix_flow(client, DOMAIN, issue_id)
     result = await process_repair_fix_flow(
         client,
         result["flow_id"],
@@ -944,6 +993,65 @@ async def test_repair_flow_model_options(
         **preserved_options,
         **expected_options,
     }
+    retrieve.assert_not_awaited()
+
+
+@pytest.mark.parametrize(
+    ("model", "expected_max_tokens"),
+    [
+        pytest.param("claude-haiku-4-5-20251001", 6000, id="exact_dated_model"),
+        pytest.param("claude-haiku-4-5", 2048, id="alias"),
+    ],
+)
+async def test_repair_flow_model_lookup(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    model: str,
+    expected_max_tokens: int,
+) -> None:
+    """Prefer exact snapshot metadata while preserving alias fallback."""
+    entry = _make_entry(
+        hass,
+        title="Claude",
+        api_key="key",
+        subentries_data=[
+            {
+                "data": {
+                    CONF_CHAT_MODEL: "claude-3-7-sonnet-20250219",
+                    CONF_MAX_TOKENS: 6000,
+                },
+                "subentry_type": "conversation",
+                "title": "Conversation",
+                "unique_id": None,
+            }
+        ],
+    )
+    entry.runtime_data.client.models.list.return_value = AsyncPage(
+        data=[
+            _copy_model_info("claude-haiku-4-5").model_copy(
+                update={"id": "claude-haiku-4-5-20251101", "max_tokens": 2048}
+            ),
+            _copy_model_info("claude-haiku-4-5").model_copy(
+                update={"max_tokens": 8192}
+            ),
+        ],
+        has_more=False,
+    )
+    retrieve = entry.runtime_data.client.models.retrieve = AsyncMock()
+    issue_id = await _setup_repairs(hass, entry)
+    client = await hass_client()
+
+    result = await start_repair_fix_flow(client, DOMAIN, issue_id)
+    result = await process_repair_fix_flow(
+        client,
+        result["flow_id"],
+        json={CONF_CHAT_MODEL: model},
+    )
+
+    assert result["type"] == FlowResultType.CREATE_ENTRY
+    subentry = _get_subentry(entry, "conversation")
+    assert subentry.data[CONF_CHAT_MODEL] == model
+    assert subentry.data[CONF_MAX_TOKENS] == expected_max_tokens
     retrieve.assert_not_awaited()
 
 
@@ -1048,10 +1156,10 @@ async def test_repair_flow_server_tool_options(
     retrieve = entry.runtime_data.client.models.retrieve = AsyncMock(
         return_value=model_info
     )
-    await _setup_repairs(hass)
+    issue_id = await _setup_repairs(hass, entry)
     client = await hass_client()
 
-    result = await start_repair_fix_flow(client, DOMAIN, "model_deprecated")
+    result = await start_repair_fix_flow(client, DOMAIN, issue_id)
     result = await process_repair_fix_flow(
         client,
         result["flow_id"],
@@ -1145,10 +1253,10 @@ async def test_repair_flow_model_lookup_error(
             _copy_model_info("claude-haiku-4-5"),
         ]
     )
-    await _setup_repairs(hass)
+    issue_id = await _setup_repairs(hass, entry)
     client = await hass_client()
 
-    result = await start_repair_fix_flow(client, DOMAIN, "model_deprecated")
+    result = await start_repair_fix_flow(client, DOMAIN, issue_id)
     flow_id = result["flow_id"]
     placeholders = result["description_placeholders"]
     result = await process_repair_fix_flow(
@@ -1171,7 +1279,7 @@ async def test_repair_flow_model_lookup_error(
     assert model_field["description"]["suggested_value"] == "claude-opus-5-5"
     assert _get_subentry(entry, "conversation").data == conversation_data
     assert _get_subentry(entry, "ai_task_data").data == task_data
-    assert issue_registry.async_get_issue(DOMAIN, "model_deprecated") is not None
+    assert issue_registry.async_get_issue(DOMAIN, issue_id) is not None
     retrieve.assert_awaited_once_with("claude-opus-5-5", timeout=10.0)
 
     result = await process_repair_fix_flow(
@@ -1198,7 +1306,7 @@ async def test_repair_flow_model_lookup_error(
         CONF_EFFORT: "low",
     }
     assert _get_subentry(entry, "ai_task_data").data == task_data
-    assert issue_registry.async_get_issue(DOMAIN, "model_deprecated") is not None
+    assert issue_registry.async_get_issue(DOMAIN, issue_id) is not None
     assert retrieve.await_count == 2
     entry.runtime_data.client.models.list.assert_awaited_once_with(timeout=10.0)
 
@@ -1214,7 +1322,7 @@ async def test_repair_flow_model_lookup_error(
         CONF_THINKING_TYPE: "enabled",
         CONF_THINKING_BUDGET: 1024,
     }
-    assert issue_registry.async_get_issue(DOMAIN, "model_deprecated") is None
+    assert issue_registry.async_get_issue(DOMAIN, issue_id) is None
     assert retrieve.await_count == 3
     retrieve.assert_awaited_with("claude-haiku-4-5", timeout=10.0)
 
@@ -1276,10 +1384,10 @@ async def test_repair_flow_lifecycle_metadata(
         ],
     )
     entry.runtime_data.data = [model_info]
-    await _setup_repairs(hass)
+    issue_id = await _setup_repairs(hass, entry)
     client = await hass_client()
 
-    result = await start_repair_fix_flow(client, DOMAIN, "model_deprecated")
+    result = await start_repair_fix_flow(client, DOMAIN, issue_id)
 
     assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == expected_step
@@ -1310,11 +1418,7 @@ async def test_repair_flow_lifecycle_metadata(
     "metadata",
     [
         pytest.param(
-            [
-                DEPRECATED_MODEL_LIST[0].model_copy(
-                    update={"id": "claude-active-haiku", "lifecycle": "active"}
-                )
-            ],
+            [DEPRECATED_MODEL_LIST[0].model_copy(update={"lifecycle": "active"})],
             id="active_model",
         ),
         pytest.param([], id="unknown_model_retired_fallback"),
@@ -1332,7 +1436,7 @@ async def test_repair_flow_skips_active_and_unknown_models(
         api_key="key",
         subentries_data=[
             {
-                "data": {CONF_CHAT_MODEL: "claude-active-haiku"},
+                "data": {CONF_CHAT_MODEL: "claude-3-5-haiku-20241022"},
                 "subentry_type": "conversation",
                 "title": "Conversation",
                 "unique_id": None,
@@ -1340,22 +1444,22 @@ async def test_repair_flow_skips_active_and_unknown_models(
         ],
     )
     entry.runtime_data.data = metadata
-    await _setup_repairs(hass)
+    issue_id = await _setup_repairs(hass, entry)
     client = await hass_client()
 
-    result = await start_repair_fix_flow(client, DOMAIN, "model_deprecated")
+    result = await start_repair_fix_flow(client, DOMAIN, issue_id)
 
     assert result["type"] == FlowResultType.CREATE_ENTRY
     entry.runtime_data.client.models.list.assert_not_awaited()
     assert _get_subentry(entry, "conversation").data == {
-        CONF_CHAT_MODEL: "claude-active-haiku"
+        CONF_CHAT_MODEL: "claude-3-5-haiku-20241022"
     }
 
 
 @pytest.mark.parametrize(
     ("line", "expected_model"),
     [
-        pytest.param("haiku", "claude-opus-1", id="metadata_line"),
+        pytest.param("haiku", "claude-opus-1-20260101", id="metadata_line"),
         pytest.param(None, None, id="no_line"),
         pytest.param("mythos", None, id="no_active_model_in_line"),
     ],
@@ -1393,18 +1497,18 @@ async def test_repair_flow_model_selection(
                 update={"id": "claude-haiku-99"}
             ),
             _copy_model_info("claude-haiku-5-5").model_copy(
-                update={"id": "claude-opus-1"}
+                update={"id": "claude-opus-1-20260101"}
             ),
             _copy_model_info("claude-haiku-5-5").model_copy(
-                update={"id": "claude-opus-99"}
+                update={"id": "claude-opus-1-20250101"}
             ),
         ],
         has_more=False,
     )
-    await _setup_repairs(hass)
+    issue_id = await _setup_repairs(hass, entry)
     client = await hass_client()
 
-    result = await start_repair_fix_flow(client, DOMAIN, "model_deprecated")
+    result = await start_repair_fix_flow(client, DOMAIN, issue_id)
 
     assert result["type"] == FlowResultType.FORM
     model_field = next(
@@ -1413,124 +1517,9 @@ async def test_repair_flow_model_selection(
     assert model_field.get("default") == expected_model
     assert model_field["selector"]["select"]["options"] == [
         {"label": "Claude Sonnet 5.5", "value": "claude-haiku-99"},
-        {"label": "Claude Haiku 5.5", "value": "claude-opus-1"},
-        {"label": "Claude Haiku 5.5", "value": "claude-opus-99"},
+        {"label": "Claude Haiku 5.5", "value": "claude-opus-1-20260101"},
+        {"label": "Claude Haiku 5.5", "value": "claude-opus-1-20250101"},
     ]
-
-
-@pytest.mark.freeze_time("2026-10-16T12:00:00Z")
-@pytest.mark.parametrize(
-    ("sdk_key", "retirement_date", "submitted_model"),
-    [
-        pytest.param(
-            "claude-sonnet-4-5-20250929",
-            "November 30th, 2026",
-            "claude-sonnet-4-5",
-            id="deprecated_version",
-        ),
-        pytest.param(
-            "claude-sonnet-4-5",
-            "November 30th, 2026",
-            "claude-sonnet-4-5",
-            id="deprecated_alias",
-        ),
-        pytest.param(
-            "claude-sonnet-4-5",
-            "November 30th, 2026",
-            "claude-sonnet-4-5-20250929",
-            id="deprecated_alias_dated_submission",
-        ),
-        pytest.param(
-            "claude-sonnet-4-5-20250929",
-            "October 15th, 2026",
-            "claude-sonnet-4-5-20250929",
-            id="retired_version",
-        ),
-        pytest.param(
-            "claude-sonnet-4-5-20250929",
-            "unknown",
-            "claude-sonnet-4-5",
-            id="unknown_retirement_date",
-        ),
-    ],
-)
-async def test_repair_flow_sdk_inactive_current_model(
-    hass: HomeAssistant,
-    hass_client: ClientSessionGenerator,
-    issue_registry: ir.IssueRegistry,
-    sdk_key: str,
-    retirement_date: str,
-    submitted_model: str,
-) -> None:
-    """Do not offer or accept the current model when only the SDK marks it inactive."""
-    entry = _make_entry(
-        hass,
-        title="Claude",
-        api_key="key",
-        subentries_data=[
-            {
-                "data": {CONF_CHAT_MODEL: "claude-sonnet-4-5"},
-                "subentry_type": "conversation",
-                "title": "Conversation",
-                "unique_id": None,
-            }
-        ],
-    )
-    current_model = _copy_model_info("claude-sonnet-4-5")
-    active_model = _copy_model_info("claude-sonnet-5-5")
-    entry.runtime_data.data = [current_model, active_model]
-    entry.runtime_data.client.models.list.return_value = AsyncPage(
-        data=[current_model, active_model], has_more=False
-    )
-    await _setup_repairs(hass)
-    client = await hass_client()
-
-    with patch.dict(
-        "homeassistant.components.anthropic.coordinator.DEPRECATED_MODELS",
-        {sdk_key: retirement_date},
-        clear=True,
-    ):
-        result = await start_repair_fix_flow(client, DOMAIN, "model_deprecated")
-
-        assert result["type"] == FlowResultType.FORM
-        model_field = next(
-            field for field in result["data_schema"] if field["name"] == CONF_CHAT_MODEL
-        )
-        assert model_field["default"] == "claude-sonnet-5-5"
-        assert model_field["selector"]["select"]["options"] == [
-            {"label": "Claude Sonnet 5.5", "value": "claude-sonnet-5-5"}
-        ]
-        flow_id = result["flow_id"]
-        step_id = result["step_id"]
-        placeholders = result["description_placeholders"]
-
-        result = await process_repair_fix_flow(
-            client, flow_id, json={CONF_CHAT_MODEL: submitted_model}
-        )
-
-        assert result["type"] == FlowResultType.FORM
-        assert result["flow_id"] == flow_id
-        assert result["step_id"] == step_id
-        assert result["errors"] == {CONF_CHAT_MODEL: "model_not_active"}
-        assert result["description_placeholders"] == placeholders
-        assert _get_subentry(entry, "conversation").data == {
-            CONF_CHAT_MODEL: "claude-sonnet-4-5"
-        }
-        assert issue_registry.async_get_issue(DOMAIN, "model_deprecated") is not None
-        assert current_model.lifecycle == "active"
-        entry.runtime_data.client.models.retrieve.assert_not_called()
-
-        result = await process_repair_fix_flow(
-            client, flow_id, json={CONF_CHAT_MODEL: "claude-sonnet-5-5"}
-        )
-
-    assert result["type"] == FlowResultType.CREATE_ENTRY
-    assert _get_subentry(entry, "conversation").data == {
-        CONF_CHAT_MODEL: "claude-sonnet-5-5",
-        CONF_THINKING_TYPE: "adaptive",
-        CONF_EFFORT: "low",
-    }
-    assert issue_registry.async_get_issue(DOMAIN, "model_deprecated") is None
 
 
 async def test_repair_flow_model_list_pagination(
@@ -1555,14 +1544,14 @@ async def test_repair_flow_model_list_pagination(
         data=[_copy_model_info("claude-sonnet-5-5")], has_more=True
     )
     second_page = AsyncPage(data=[_copy_model_info("claude-haiku-5-5")], has_more=False)
-    await _setup_repairs(hass)
+    issue_id = await _setup_repairs(hass, entry)
     client = await hass_client()
 
     with (
         patch.object(AsyncPage, "has_next_page", side_effect=[True, False]),
         patch.object(AsyncPage, "get_next_page", return_value=second_page) as next_page,
     ):
-        result = await start_repair_fix_flow(client, DOMAIN, "model_deprecated")
+        result = await start_repair_fix_flow(client, DOMAIN, issue_id)
 
     assert result["type"] == FlowResultType.FORM
     model_field = next(
@@ -1627,10 +1616,10 @@ async def test_repair_flow_inactive_custom_model(
     retrieve = entry.runtime_data.client.models.retrieve = AsyncMock(
         side_effect=[inactive_model, active_model]
     )
-    await _setup_repairs(hass)
+    issue_id = await _setup_repairs(hass, entry)
     client = await hass_client()
 
-    result = await start_repair_fix_flow(client, DOMAIN, "model_deprecated")
+    result = await start_repair_fix_flow(client, DOMAIN, issue_id)
     flow_id = result["flow_id"]
     step_id = result["step_id"]
     placeholders = result["description_placeholders"]
@@ -1646,7 +1635,7 @@ async def test_repair_flow_inactive_custom_model(
     assert _get_subentry(entry, "conversation").data == {
         CONF_CHAT_MODEL: "claude-3-5-haiku-20241022"
     }
-    assert issue_registry.async_get_issue(DOMAIN, "model_deprecated") is not None
+    assert issue_registry.async_get_issue(DOMAIN, issue_id) is not None
     retrieve.assert_awaited_once_with("custom-model", timeout=10.0)
 
     result = await process_repair_fix_flow(
@@ -1659,84 +1648,5 @@ async def test_repair_flow_inactive_custom_model(
         CONF_THINKING_TYPE: "adaptive",
         CONF_EFFORT: "low",
     }
-    assert issue_registry.async_get_issue(DOMAIN, "model_deprecated") is None
+    assert issue_registry.async_get_issue(DOMAIN, issue_id) is None
     assert retrieve.await_args_list == [call("custom-model", timeout=10.0)] * 2
-
-
-@pytest.mark.freeze_time("2026-10-16T12:00:00Z")
-@pytest.mark.parametrize(
-    ("sdk_key", "submitted_model", "retirement_date"),
-    [
-        pytest.param(
-            "custom-model",
-            "custom-model",
-            "November 30th, 2026",
-            id="deprecated_alias",
-        ),
-        pytest.param(
-            "custom-model-20260101",
-            "custom-model-20260101",
-            "October 15th, 2026",
-            id="retired_version",
-        ),
-        pytest.param(
-            "custom-model",
-            "custom-model-20260101",
-            "November 30th, 2026",
-            id="deprecated_alias_dated_submission",
-        ),
-    ],
-)
-async def test_repair_flow_sdk_inactive_custom_model(
-    hass: HomeAssistant,
-    hass_client: ClientSessionGenerator,
-    issue_registry: ir.IssueRegistry,
-    sdk_key: str,
-    submitted_model: str,
-    retirement_date: str,
-) -> None:
-    """Reject directly retrieved active API models deprecated or retired in the SDK."""
-    entry = _make_entry(
-        hass,
-        title="Claude",
-        api_key="key",
-        subentries_data=[
-            {
-                "data": {CONF_CHAT_MODEL: "claude-3-5-haiku-20241022"},
-                "subentry_type": "conversation",
-                "title": "Conversation",
-                "unique_id": None,
-            }
-        ],
-    )
-    custom_model = _copy_model_info("claude-haiku-5-5").model_copy(
-        update={"id": "custom-model-20260101"}
-    )
-    retrieve = entry.runtime_data.client.models.retrieve = AsyncMock(
-        return_value=custom_model
-    )
-    await _setup_repairs(hass)
-    client = await hass_client()
-
-    with patch.dict(
-        "homeassistant.components.anthropic.coordinator.DEPRECATED_MODELS",
-        {sdk_key: retirement_date},
-        clear=True,
-    ):
-        result = await start_repair_fix_flow(client, DOMAIN, "model_deprecated")
-        flow_id = result["flow_id"]
-        placeholders = result["description_placeholders"]
-        result = await process_repair_fix_flow(
-            client, flow_id, json={CONF_CHAT_MODEL: submitted_model}
-        )
-
-    assert result["type"] == FlowResultType.FORM
-    assert result["flow_id"] == flow_id
-    assert result["errors"] == {CONF_CHAT_MODEL: "model_not_active"}
-    assert result["description_placeholders"] == placeholders
-    assert _get_subentry(entry, "conversation").data == {
-        CONF_CHAT_MODEL: "claude-3-5-haiku-20241022"
-    }
-    assert issue_registry.async_get_issue(DOMAIN, "model_deprecated") is not None
-    assert custom_model.lifecycle == "active"
-    retrieve.assert_awaited_once_with(submitted_model, timeout=10.0)

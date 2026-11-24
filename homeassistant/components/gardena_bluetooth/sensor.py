@@ -33,7 +33,7 @@ from homeassistant.const import (
     UnitOfVolume,
     UnitOfVolumeFlowRate,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.util import dt as dt_util
@@ -297,6 +297,7 @@ class GardenaBluetoothSensor(GardenaBluetoothDescriptorEntity, SensorEntity):
 
     entity_description: GardenaBluetoothSensorEntityDescription
 
+    @callback
     @override
     def _handle_coordinator_update(self) -> None:
         value = self.coordinator.get_cached(self.entity_description.char)
@@ -330,6 +331,7 @@ class GardenaBluetoothRemainSensor(GardenaBluetoothEntity, SensorEntity):
         self._attr_translation_key = key
         self._char = char
 
+    @callback
     @override
     def _handle_coordinator_update(self) -> None:
         value = self.coordinator.get_cached(self._char)

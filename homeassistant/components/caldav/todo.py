@@ -23,7 +23,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import dt as dt_util
 
 from . import CalDavConfigEntry
-from .api import async_get_calendars, get_attr_value
+from .api import calendars_supporting, get_attr_value
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -50,7 +50,7 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the CalDav todo platform for a config entry."""
-    calendars = await async_get_calendars(hass, entry.runtime_data, SUPPORTED_COMPONENT)
+    calendars = calendars_supporting(entry.runtime_data.calendars, SUPPORTED_COMPONENT)
     async_add_entities(
         (
             WebDavTodoListEntity(
@@ -284,16 +284,26 @@ class WebDavTodoListEntity(TodoListEntity):
         ) as err:
             raise HomeAssistantError(f"CalDAV lookup error: {err}") from err
 
-        # Run serially as some CalDAV servers do not support concurrent modifications
-        for item in items:
-            try:
-                await self.hass.async_add_executor_job(item.delete)
-            except (
-                caldav_requests.exceptions.ConnectionError,
-                caldav_requests.exceptions.Timeout,
-                DAVError,
-            ) as err:
-                raise HomeAssistantError(f"CalDAV delete error: {err}") from err
-            self._writes += 1
+        deleted = 0
+
+        def delete_items() -> None:
+            """Delete the items one by one."""
+            nonlocal deleted
+            # Run serially as some CalDAV servers do not support concurrent modifications
+            for item in items:
+                item.delete()
+                deleted += 1
+
+        try:
+            await self.hass.async_add_executor_job(delete_items)
+        except (
+            caldav_requests.exceptions.ConnectionError,
+            caldav_requests.exceptions.Timeout,
+            DAVError,
+        ) as err:
+            raise HomeAssistantError(f"CalDAV delete error: {err}") from err
+        finally:
+            # A delete that fails part-way still changed the list
+            self._writes += deleted
         # refreshing async otherwise it would take too much time
         self.hass.async_create_task(self.async_update_ha_state(force_refresh=True))

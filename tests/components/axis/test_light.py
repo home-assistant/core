@@ -15,14 +15,12 @@ from pytest_homeassistant.test_util.aiohttp import (
 from syrupy.assertion import SnapshotAssertion
 from yarl import URL
 
-from homeassistant.components.light import ATTR_BRIGHTNESS, DOMAIN as LIGHT_DOMAIN
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
-    STATE_OFF,
-    Platform,
+from homeassistant.components.light import (
+    DOMAIN as LIGHT_DOMAIN,
+    LightService,
+    LightServiceArgument,
 )
+from homeassistant.const import STATE_OFF, Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -160,8 +158,8 @@ async def test_lights(
     ):
         await hass.services.async_call(
             LIGHT_DOMAIN,
-            SERVICE_TURN_ON,
-            {ATTR_ENTITY_ID: entity_id, ATTR_BRIGHTNESS: 50},
+            LightService.TURN_ON,
+            {TargetKey.ENTITY_ID: entity_id, LightServiceArgument.BRIGHTNESS: 50},
             blocking=True,
         )
         mock_activate.assert_not_awaited()
@@ -173,8 +171,8 @@ async def test_lights(
     ) as mock_deactivate:
         await hass.services.async_call(
             LIGHT_DOMAIN,
-            SERVICE_TURN_OFF,
-            {ATTR_ENTITY_ID: entity_id},
+            LightService.TURN_OFF,
+            {TargetKey.ENTITY_ID: entity_id},
             blocking=True,
         )
         mock_deactivate.assert_called_once()
@@ -201,8 +199,8 @@ async def test_lights(
     ):
         await hass.services.async_call(
             LIGHT_DOMAIN,
-            SERVICE_TURN_ON,
-            {ATTR_ENTITY_ID: entity_id},
+            LightService.TURN_ON,
+            {TargetKey.ENTITY_ID: entity_id},
             blocking=True,
         )
         mock_activate.assert_called_once()
@@ -214,8 +212,8 @@ async def test_lights(
     ) as mock_deactivate:
         await hass.services.async_call(
             LIGHT_DOMAIN,
-            SERVICE_TURN_OFF,
-            {ATTR_ENTITY_ID: entity_id},
+            LightService.TURN_OFF,
+            {TargetKey.ENTITY_ID: entity_id},
             blocking=True,
         )
         mock_deactivate.assert_not_called()

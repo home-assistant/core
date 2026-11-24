@@ -10,6 +10,7 @@ from aiohttp.test_utils import TestClient
 import pytest
 from pytest_homeassistant.common import CLIENT_ID, CLIENT_REDIRECT_URI
 from pytest_homeassistant.typing import ClientSessionGenerator
+from yarl import URL
 
 from homeassistant.auth import AuthManagerFlowManager
 from homeassistant.components.auth import indieauth
@@ -703,55 +704,88 @@ async def test_well_known_auth_info(
 
 @pytest.mark.usefixtures("current_request_with_host")  # Has example.com host
 @pytest.mark.parametrize(
-    ("config", "expected_response"),
+    "config",
     [
-        (
+        pytest.param(
             {
                 "internal_url": "http://192.168.1.100:8123",
                 # Current request matches external url
                 "external_url": "https://example.com",
             },
-            {
-                "resource": "https://example.com",
-                "authorization_servers": ["https://example.com"],
-                "resource_documentation": "https://contributors.home-assistant.io/core/internals/auth-api/",
-            },
+            id="external_url",
         ),
-        (
+        pytest.param(
             {
                 # Current request matches internal url
                 "internal_url": "https://example.com",
                 "external_url": "https://other.com",
             },
-            {
-                "resource": "https://example.com",
-                "authorization_servers": ["https://example.com"],
-                "resource_documentation": "https://contributors.home-assistant.io/core/internals/auth-api/",
-            },
+            id="internal_url",
         ),
     ],
-    ids=["external_url", "internal_url"],
+)
+@pytest.mark.parametrize(
+    ("path", "expected_resource_suffix"),
+    [
+        pytest.param("/.well-known/oauth-protected-resource", "", id="root"),
+        pytest.param(
+            "/.well-known/oauth-protected-resource/api/",
+            "/api/",
+            id="protected-trailing-slash",
+        ),
+        pytest.param(
+            "/.well-known/oauth-protected-resource/api/states",
+            "/api/states",
+            id="protected-get",
+        ),
+        pytest.param(
+            "/.well-known/oauth-protected-resource/api/states/light.kitchen",
+            "/api/states/light.kitchen",
+            id="protected-dynamic",
+        ),
+        pytest.param(
+            "/.well-known/oauth-protected-resource/api/services/light/turn_on",
+            "/api/services/light/turn_on",
+            id="protected-post-only",
+        ),
+        pytest.param(
+            "/.well-known/oauth-protected-resource/api/states?ignored=1",
+            "/api/states",
+            id="query-ignored",
+        ),
+    ],
 )
 async def test_well_known_protected_resource(
     hass: HomeAssistant,
     aiohttp_client: ClientSessionGenerator,
     config: dict[str, str],
-    expected_response: dict[str, Any],
+    path: str,
+    expected_resource_suffix: str,
 ) -> None:
     """Test the well-known OAuth protected resource metadata endpoint per RFC9728."""
     await async_process_ha_core_config(hass, config)
     client = await async_setup_auth(hass, aiohttp_client, setup_api=True)
-    resp = await client.get(
-        "/.well-known/oauth-protected-resource",
-    )
-    assert resp.status == 200
-    assert await resp.json() == expected_response
+    resp = await client.get(path)
+    assert resp.status == HTTPStatus.OK
+    assert await resp.json() == {
+        "resource": f"https://example.com{expected_resource_suffix}",
+        "authorization_servers": ["https://example.com"],
+        "resource_documentation": "https://contributors.home-assistant.io/core/internals/auth-api/",
+    }
 
 
 @pytest.mark.usefixtures("current_request_with_host")  # Has example.com host
+@pytest.mark.parametrize(
+    "path",
+    [
+        pytest.param("/.well-known/oauth-protected-resource", id="root"),
+        pytest.param("/.well-known/oauth-protected-resource/api/", id="protected-path"),
+    ],
+)
 async def test_well_known_protected_resource_no_url(
     hass: HomeAssistant,
     aiohttp_client: ClientSessionGenerator,
+    path: str,
 ) -> None:
     """Test the protected resource metadata returns 404 when no URL is configured."""
     await async_process_ha_core_config(
@@ -762,10 +796,61 @@ async def test_well_known_protected_resource_no_url(
         },
     )
     client = await async_setup_auth(hass, aiohttp_client, setup_api=True)
-    resp = await client.get(
-        "/.well-known/oauth-protected-resource",
+    resp = await client.session.get(
+        URL(f"http://{client.host}:{client.port}{path}", encoded=True)
     )
-    assert resp.status == 404
+    assert resp.status == HTTPStatus.NOT_FOUND
+
+
+@pytest.mark.usefixtures("current_request_with_host")  # Has example.com host
+@pytest.mark.parametrize(
+    "path",
+    [
+        pytest.param("/.well-known/oauth-protected-resource/", id="empty-suffix"),
+        pytest.param(
+            "/.well-known/oauth-protected-resource/unknown/path", id="unregistered"
+        ),
+        pytest.param(
+            "/.well-known/oauth-protected-resource/auth/providers",
+            id="unauthenticated-view",
+        ),
+        pytest.param(
+            "/.well-known/oauth-protected-resource/auth/token",
+            id="unauthenticated-post-view",
+        ),
+        pytest.param(
+            "/.well-known/oauth-protected-resource//api/states",
+            id="double-leading-slash",
+        ),
+        pytest.param("/.well-known/oauth-protected-resource/api/.", id="dot-segment"),
+        pytest.param(
+            "/.well-known/oauth-protected-resource/api/%2e%2e",
+            id="encoded-dot-dot-segment",
+        ),
+        pytest.param(
+            "/.well-known/oauth-protected-resource/api%2Fstates",
+            id="encoded-slash",
+        ),
+    ],
+)
+async def test_well_known_protected_resource_not_found(
+    hass: HomeAssistant,
+    aiohttp_client: ClientSessionGenerator,
+    path: str,
+) -> None:
+    """Test path-suffixed protected resource metadata rejects invalid or public paths."""
+    await async_process_ha_core_config(
+        hass,
+        {
+            "internal_url": "http://192.168.1.100:8123",
+            "external_url": "https://example.com",
+        },
+    )
+    client = await async_setup_auth(hass, aiohttp_client, setup_api=True)
+    resp = await client.session.get(
+        URL(f"http://{client.host}:{client.port}{path}", encoded=True)
+    )
+    assert resp.status == HTTPStatus.NOT_FOUND
 
 
 @pytest.mark.parametrize(
@@ -879,6 +964,10 @@ async def test_login_flow_url_too_long(
             "/.well-known/oauth-authorization-server", id="authorization-server"
         ),
         pytest.param("/.well-known/oauth-protected-resource", id="protected-resource"),
+        pytest.param(
+            "/.well-known/oauth-protected-resource/api/",
+            id="protected-resource-path",
+        ),
     ],
 )
 async def test_well_known_auth_info_allows_cors(

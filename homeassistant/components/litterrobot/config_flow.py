@@ -8,11 +8,12 @@ import probatio
 from pylitterbot import Account
 from pylitterbot.exceptions import LitterRobotException, LitterRobotLoginException
 
-from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DOMAIN
+from .coordinator import LitterRobotConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -108,7 +109,7 @@ class LitterRobotConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
     async def _async_validate_and_update_entry(
-        self, entry: ConfigEntry, user_input: dict[str, Any]
+        self, entry: LitterRobotConfigEntry, user_input: dict[str, Any]
     ) -> tuple[ConfigFlowResult | None, dict[str, str]]:
         """Validate credentials and update an existing entry if valid."""
         errors: dict[str, str] = {}

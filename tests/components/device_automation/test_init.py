@@ -1,5 +1,6 @@
 """The test for light device automation."""
 
+from collections.abc import Awaitable, Callable
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
@@ -21,7 +22,10 @@ from homeassistant.components.device_automation import (
     DOMAIN,
     DeviceAutomationType,
     InvalidDeviceAutomationConfig,
+    action as device_action,
+    condition as device_condition,
     toggle_entity,
+    trigger as device_trigger,
 )
 from homeassistant.components.device_automation.helpers import (
     _resolve_device_id,
@@ -1036,7 +1040,7 @@ async def test_automation_with_integration_without_device_action(
             automation.DOMAIN: {
                 "alias": "hello",
                 "trigger": {"platform": "event", "event_type": "test_event1"},
-                "action": {"device_id": "", "domain": "test"},
+                "action": {"device_id": "abc123", "domain": "test"},
             }
         },
     )
@@ -1321,7 +1325,7 @@ async def test_automation_with_integration_without_device_trigger(
 BAD_AUTOMATIONS = [
     (
         {"device_id": "very_unique", "domain": "light"},
-        "required key not provided at 'entity_id'",
+        "required key not provided at '{platform_path}entity_id'",
     ),
     (
         {"device_id": "wrong", "domain": "light"},
@@ -1337,11 +1341,23 @@ BAD_AUTOMATIONS = [
     ),
     (
         {"device_id": "very_unique", "domain": "light"},
-        "required key not provided at 'entity_id'",
+        "required key not provided at '{platform_path}entity_id'",
     ),
     (
         {"device_id": "very_unique", "domain": "light", "entity_id": "wrong"},
         "Unknown entity 'wrong'",
+    ),
+    (
+        {"device_id": "", "domain": ""},
+        "required value is empty at '{platform_path}device_id'",
+    ),
+    (
+        {"device_id": "", "domain": "light"},
+        "required value is empty at '{platform_path}device_id'",
+    ),
+    (
+        {"device_id": "very_unique", "domain": ""},
+        "required value is empty at '{platform_path}domain'",
     ),
 ]
 
@@ -1368,6 +1384,18 @@ BAD_TRIGGERS = [
         "Unknown entity 'wrong'",
     ),
     ({"domain": "light"}, "required key not provided at '{path}device_id'"),
+    (
+        {"device_id": "", "domain": ""},
+        "required value is empty at '{platform_path}device_id'",
+    ),
+    (
+        {"device_id": "", "domain": "light"},
+        "required value is empty at '{platform_path}device_id'",
+    ),
+    (
+        {"device_id": "very_unique", "domain": ""},
+        "required value is empty at '{platform_path}domain'",
+    ),
 ]
 
 
@@ -1402,7 +1430,10 @@ async def test_automation_with_bad_action(
         },
     )
 
-    assert expected_error.format(path="actions[0].") in caplog.text
+    assert (
+        expected_error.format(path="actions.", platform_path="actions[0].")
+        in caplog.text
+    )
 
 
 @patch("homeassistant.helpers.device_registry.DeviceEntry", MockDeviceEntry)
@@ -1436,7 +1467,10 @@ async def test_automation_with_bad_condition_action(
         },
     )
 
-    assert expected_error.format(path="actions[0].") in caplog.text
+    assert (
+        expected_error.format(path="actions.", platform_path="actions[0].")
+        in caplog.text
+    )
 
 
 @patch("homeassistant.helpers.device_registry.DeviceEntry", MockDeviceEntry)
@@ -1470,7 +1504,10 @@ async def test_automation_with_bad_condition(
         },
     )
 
-    assert expected_error.format(path="conditions[0].") in caplog.text
+    assert (
+        expected_error.format(path="conditions.", platform_path="conditions[0].")
+        in caplog.text
+    )
 
 
 async def test_automation_with_sub_condition(
@@ -1636,8 +1673,9 @@ async def test_automation_with_bad_sub_condition(
         },
     )
 
-    path = "conditions[0].conditions[0]."
-    assert expected_error.format(path=path) in caplog.text
+    path = "conditions.conditions[0]."
+    platform_path = "conditions[0].conditions[0]."
+    assert expected_error.format(path=path, platform_path=platform_path) in caplog.text
 
 
 @patch("homeassistant.helpers.device_registry.DeviceEntry", MockDeviceEntry)
@@ -1670,7 +1708,10 @@ async def test_automation_with_bad_trigger(
         },
     )
 
-    assert expected_error.format(path="") in caplog.text
+    assert (
+        expected_error.format(path="triggers[0].", platform_path="triggers[0].")
+        in caplog.text
+    )
 
 
 async def test_websocket_device_not_found(
@@ -1958,6 +1999,54 @@ async def test_validate_config_rewrites_composite_device_id(
         DeviceAutomationType.TRIGGER,
     )
     assert validated["device_id"] == device_fake.id
+
+
+@pytest.mark.parametrize(
+    ("validator", "base_config"),
+    [
+        pytest.param(
+            device_trigger.async_validate_trigger_config,
+            {"platform": "device"},
+            id="trigger",
+        ),
+        pytest.param(
+            device_condition.DeviceCondition.async_validate_complete_config,
+            {"condition": "device"},
+            id="condition",
+        ),
+        pytest.param(device_action.async_validate_action_config, {}, id="action"),
+    ],
+)
+@pytest.mark.parametrize(
+    ("config", "path"),
+    [
+        pytest.param(
+            {"device_id": "", "domain": ""},
+            ["device_id"],
+            id="empty_device_id_and_domain",
+        ),
+        pytest.param(
+            {"device_id": "", "domain": "light"}, ["device_id"], id="empty_device_id"
+        ),
+        pytest.param(
+            {"device_id": "abc123", "domain": ""}, ["domain"], id="empty_domain"
+        ),
+    ],
+)
+async def test_validate_config_empty_device_id_or_domain(
+    hass: HomeAssistant,
+    validator: Callable[[HomeAssistant, ConfigType], Awaitable[ConfigType]],
+    base_config: ConfigType,
+    config: ConfigType,
+    path: list[str],
+) -> None:
+    """Test an empty device ID or domain is reported as an empty required value."""
+    with pytest.raises(probatio.RequiredFieldInvalid) as excinfo:
+        await validator(hass, base_config | config)
+
+    assert excinfo.value.error_message == "required value is empty"
+    assert excinfo.value.path == path
+    assert excinfo.value.code == "required"
 
 
 def _mock_device_trigger_platform(hass: HomeAssistant, domain: str) -> None:

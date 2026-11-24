@@ -9,7 +9,7 @@ from pytest_homeassistant.common import mock_platform
 from pytest_homeassistant.typing import WebSocketGenerator
 
 from homeassistant.components.repairs import repairs_flow_manager
-from homeassistant.components.repairs.const import DOMAIN
+from homeassistant.components.repairs.const import DATA_REPAIRS, DOMAIN
 from homeassistant.components.repairs.issue_handler import RepairsFlowManager
 from homeassistant.const import __version__ as ha_version
 from homeassistant.core import HomeAssistant
@@ -478,7 +478,7 @@ async def test_non_compliant_platform(
     )
     assert await async_setup_component(hass, DOMAIN, {})
 
-    platforms = await hass.data[DOMAIN]["platforms"].async_get_platforms()
+    platforms = await hass.data[DATA_REPAIRS].platforms.async_get_platforms()
     assert "fake_integration" in platforms
     assert "integration_without_repairs" not in platforms
 
