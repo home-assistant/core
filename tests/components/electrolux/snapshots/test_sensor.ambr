@@ -580,7 +580,6 @@
         'hotrinse',
         'mainwash',
         'prewash',
-        'unavailable',
       ]),
     }),
     'config_entry_id': <ANY>,
@@ -626,7 +625,6 @@
         'hotrinse',
         'mainwash',
         'prewash',
-        'unavailable',
       ]),
     }),
     'context': <ANY>,
@@ -634,7 +632,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unavailable',
+    'state': 'unknown',
   })
 # ---
 # name: test_sensor[sensor.dish_washer_end_at-entry]
@@ -1006,7 +1004,6 @@
         'anticrease',
         'cool',
         'dry',
-        'unavailable',
       ]),
     }),
     'config_entry_id': <ANY>,
@@ -1048,7 +1045,6 @@
         'anticrease',
         'cool',
         'dry',
-        'unavailable',
       ]),
     }),
     'context': <ANY>,
@@ -1056,7 +1052,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unavailable',
+    'state': 'unknown',
   })
 # ---
 # name: test_sensor[sensor.dryer_end_at-entry]
@@ -3468,7 +3464,6 @@
         'rinse',
         'spin',
         'steam',
-        'unavailable',
         'wash',
       ]),
     }),
@@ -3516,7 +3511,6 @@
         'rinse',
         'spin',
         'steam',
-        'unavailable',
         'wash',
       ]),
     }),
@@ -3525,7 +3519,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unavailable',
+    'state': 'unknown',
   })
 # ---
 # name: test_sensor[sensor.washer_dryer_end_at-entry]
@@ -3839,7 +3833,6 @@
         'rinse',
         'spin',
         'steam',
-        'unavailable',
         'wash',
       ]),
     }),
@@ -3886,7 +3879,6 @@
         'rinse',
         'spin',
         'steam',
-        'unavailable',
         'wash',
       ]),
     }),
@@ -3895,7 +3887,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unavailable',
+    'state': 'unknown',
   })
 # ---
 # name: test_sensor[sensor.washing_machine_end_at-entry]

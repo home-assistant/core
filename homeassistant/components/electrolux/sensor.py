@@ -445,6 +445,14 @@ def get_care_appliance_time_left(
     return time_to_end
 
 
+def _get_cycle_phase(
+    appliance: DWAppliance | TDAppliance | WDAppliance | WMAppliance,
+) -> str | None:
+    """Get the current cycle phase of the appliance. Return None if the value reported by the appliance is 'unavaiable'."""
+    cycle_phase = appliance.get_current_cycle_phase()
+    return None if cycle_phase.lower() == "unavailable" else cycle_phase
+
+
 CARE_ELECTROLUX_SENSORS: tuple[
     ElectroluxSensorDescription[DWAppliance | TDAppliance | WDAppliance | WMAppliance],
     ...,
@@ -454,7 +462,7 @@ CARE_ELECTROLUX_SENSORS: tuple[
         key="cycle_phase",
         translation_key="cycle_phase",
         exists_fn=lambda appliance: appliance.is_feature_supported(CYCLE_PHASE),
-        value_fn=lambda appliance: appliance.get_current_cycle_phase(),
+        value_fn=_get_cycle_phase,
         feature_name=CYCLE_PHASE,
         known_values={
             "ado_drying",
@@ -471,7 +479,6 @@ CARE_ELECTROLUX_SENSORS: tuple[
             "rinse",
             "spin",
             "steam",
-            "unavailable",
             "wash",
         },
     ),
