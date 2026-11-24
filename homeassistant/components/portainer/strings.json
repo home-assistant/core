@@ -156,6 +156,9 @@
       "container_disk_usage_total_size": {
         "name": "Container disk usage total size"
       },
+      "container_exit_code": {
+        "name": "Last exit code"
+      },
       "container_health_state": {
         "name": "Health",
         "state": {

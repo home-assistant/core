@@ -116,12 +116,9 @@ async def test_subscription_error(
         pyads.ADSError(err_code=1808)
     )
 
-    assert await async_run_past_first_update(
-        hass,
-        mock_ads_device,
-        setup_ads_platform(
-            hass, mock_ads_device, BINARY_SENSOR_DOMAIN, PLATFORM_CONFIG
-        ),
+    # No first update to wait for, so setup does not need the clock moved on.
+    assert await setup_ads_platform(
+        hass, mock_ads_device, BINARY_SENSOR_DOMAIN, PLATFORM_CONFIG
     )
 
     assert hass.states.get(ENTITY_ID).state == STATE_UNAVAILABLE
