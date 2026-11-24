@@ -204,3 +204,7 @@ IMAGE_SELECT_SETTINGS: tuple[ImageSelectSetting, ...] = (
 EVENT_IMAGE_SETTING_CHANGED = f"{DOMAIN}_image_setting_changed"
 ATTR_NAME = "name"
 ATTR_MESSAGE = "message"
+
+# Sent once the device's controls are found: the binary sensors of its alarm inputs
+# are added then. Formatted with the entry ID.
+SIGNAL_DEVICE_CONTROLS = f"{DOMAIN}_device_controls_{{}}"

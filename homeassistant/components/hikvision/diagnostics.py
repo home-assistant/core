@@ -1,5 +1,6 @@
 """Diagnostics support for Hikvision."""
 
+from dataclasses import asdict
 import math
 from typing import Any
 
@@ -19,7 +20,11 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 
 from . import HikvisionConfigEntry
-from .coordinator import HikvisionImageCoordinator, detection_path
+from .coordinator import (
+    HikvisionDeviceCoordinator,
+    HikvisionImageCoordinator,
+    detection_path,
+)
 
 TO_REDACT = {CONF_HOST, CONF_PASSWORD, CONF_USERNAME, "title", "unique_id"}
 
@@ -147,6 +152,22 @@ async def async_get_config_entry_diagnostics(
     diagnostics["channels"] = sorted(data.channels)
 
     for coordinator in data.image_coordinators:
+        if isinstance(coordinator, HikvisionDeviceCoordinator):
+            # The device's own controls, as the last poll found them.
+            diagnostics["device_controls"] = {
+                "outputs": [asdict(port) for port in coordinator.outputs or ()],
+                "inputs": [asdict(port) for port in coordinator.inputs or ()],
+                "input_states": [
+                    asdict(port) for port in coordinator.input_states or ()
+                ],
+                "holidays": [
+                    # Their names are the user's own.
+                    async_redact_data(asdict(holiday), {"name"})
+                    for holiday in coordinator.holidays.values()
+                ],
+                "values": dict(coordinator.data or {}),
+            }
+            continue
         description = await _async_describe(coordinator)
         if coordinator.channel is None:
             diagnostics["image_settings"] = description

@@ -605,3 +605,47 @@ async def test_cached_detections_are_not_other_values(
         path.startswith("detection:") for path in image_settings["other_values"]
     )
     assert image_settings["detections"]["fieldDetection"] == "true"
+
+
+@pytest.mark.usefixtures("raw_documents", "mock_hikcamera", "mock_device_controls")
+async def test_device_controls_are_reported(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    mock_config_entry: MockConfigEntry,
+    mock_image_settings: MagicMock,
+) -> None:
+    """Test the device's own controls are reported apart from the image settings."""
+    await setup_integration(hass, mock_config_entry)
+
+    result = await get_diagnostics_for_config_entry(
+        hass, hass_client, mock_config_entry
+    )
+
+    local = {"proxy": False, "channel": None}
+    assert result["device_controls"] == {
+        "outputs": [
+            {"id": "1", **local, "number": "1"},
+            {"id": "2", **local, "number": "2"},
+        ],
+        "inputs": [{"id": "1", **local, "number": "1"}],
+        "input_states": [{"id": "1", **local, "number": "1"}],
+        "holidays": [
+            {
+                "id": "1",
+                "name": "**REDACTED**",
+                "enabled": False,
+                "mode": "date",
+                "start": "2026-12-24",
+                "end": "2026-12-26",
+            }
+        ],
+        "values": {
+            "output:1": "false",
+            "output:2": "true",
+            "input:1": "true",
+            "input_state:1": "false",
+            "holiday:1": "false",
+        },
+    }
+    # The image settings are still those of the camera.
+    assert result["image_settings"]["values_source"] == "camera"

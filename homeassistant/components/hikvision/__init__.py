@@ -45,10 +45,12 @@ from homeassistant.helpers import (
     entity_registry as er,
     issue_registry as ir,
 )
+from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_track_time_interval
 
-from .const import CONF_RANDOM_ID, CONF_RECORDER, DOMAIN
+from .const import CONF_RANDOM_ID, CONF_RECORDER, DOMAIN, SIGNAL_DEVICE_CONTROLS
 from .coordinator import (
+    HikvisionDeviceCoordinator,
     HikvisionImageClient,
     HikvisionImageCoordinator,
     async_complete,
@@ -422,6 +424,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: HikvisionConfigEntry) ->
             # is closed here instead, and has no entities.
             await _async_close_image_settings(entry.runtime_data)
             entry.runtime_data.image_coordinators = []
+        # The binary sensors were set up before the discovery, with the events:
+        # those of the device's controls are added now.
+        async_dispatcher_send(hass, SIGNAL_DEVICE_CONTROLS.format(entry.entry_id))
 
         if image_platforms:
             forwarded.extend(image_platforms)
@@ -608,6 +613,8 @@ async def _async_setup_image_settings(
             coordinators = await discovery.async_nvr_cameras()
         else:
             coordinators = await discovery.async_camera()
+        if (device := await discovery.async_device_controls(coordinators)) is not None:
+            coordinators = [*coordinators, device]
     except BaseException:
         # Anything unexpected, or a cancelled setup, must not leave it open. Not
         # closed twice: a path that already closed it is not repeated.
@@ -799,6 +806,26 @@ class _ImageDiscovery:
         if not await self._async_first_refresh(coordinator, host, READ_CAMERA):
             return []
         return [coordinator]
+
+    async def async_device_controls(
+        self, coordinators: list[HikvisionImageCoordinator]
+    ) -> HikvisionDeviceCoordinator | None:
+        """Find the alarm inputs and outputs, and the holiday mode, of the device.
+
+        Its own, not those of the cameras attached to an NVR. None if it has none.
+        """
+        coordinator = HikvisionDeviceCoordinator(self._hass, self._entry, self._shared)
+        data = self._entry.runtime_data
+        # During its first refresh: a 401 there stops the others too.
+        data.image_coordinators = [*coordinators, coordinator]
+        try:
+            if not await self._async_first_refresh(
+                coordinator, f"the controls of {self._host}", READ_DEVICE
+            ):
+                return None
+        finally:
+            data.image_coordinators = coordinators
+        return coordinator if coordinator.found else None
 
     @callback
     def _async_set_up_as_a_recorder(self) -> None:
@@ -997,7 +1024,14 @@ def _async_record_recorder(hass: HomeAssistant, entry: HikvisionConfigEntry) -> 
     )
 
 
+def _get_device_ports(client: ISAPIClient) -> None:
+    """Read the alarm inputs and outputs of the device."""
+    client.get_output_ports()
+    client.get_input_ports()
+
+
 READ_CAMERA: _Probe = (_get_settings, _get_values)
+READ_DEVICE: _Probe = (_get_device_ports,)
 LIST_CHANNELS: _Probe = (_get_channels,)
 
 

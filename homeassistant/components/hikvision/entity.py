@@ -13,7 +13,11 @@ from homeassistant.util import slugify
 
 from . import HikvisionConfigEntry
 from .const import DOMAIN
-from .coordinator import HikvisionImageCoordinator
+from .coordinator import (
+    DevicePort,
+    HikvisionDeviceCoordinator,
+    HikvisionImageCoordinator,
+)
 
 
 def channel_device_info(
@@ -248,3 +252,32 @@ class HikvisionImageChoiceEntity(HikvisionImageEntity):
         if value is None:
             return None
         return self._option_by_value.get(value.lower())
+
+
+class HikvisionDeviceEntity(HikvisionImageEntity):
+    """Base class for the entities of a device's own controls.
+
+    The alarm inputs and outputs of a camera behind an NVR are on the device of its
+    channel, named by the camera's own port number.
+    """
+
+    coordinator: HikvisionDeviceCoordinator
+
+    def __init__(
+        self,
+        coordinator: HikvisionDeviceCoordinator,
+        entry: HikvisionConfigEntry,
+        description: EntityDescription,
+        path: str,
+        port: DevicePort | None = None,
+    ) -> None:
+        """Initialize the entity."""
+        super().__init__(coordinator, entry, description, path)
+        # From the key of the description: not an image setting.
+        self._attr_unique_id = f"{coordinator.device_unique_id_prefix}{description.key}"
+        if port is not None:
+            self._attr_translation_placeholders = {"port": port.number}
+            if port.channel is not None:
+                self._attr_device_info = channel_device_info(
+                    coordinator.hass, entry, port.channel
+                )

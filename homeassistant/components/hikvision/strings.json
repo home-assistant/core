@@ -75,6 +75,9 @@
   },
   "entity": {
     "binary_sensor": {
+      "alarm_input": {
+        "name": "Alarm input {port}"
+      },
       "attended_baggage": {
         "name": "Attended baggage"
       },
@@ -845,6 +848,12 @@
       }
     },
     "switch": {
+      "alarm_input": {
+        "name": "Alarm input {port} enabled"
+      },
+      "alarm_output": {
+        "name": "Alarm output {port}"
+      },
       "backlight_compensation": {
         "name": "Backlight compensation"
       },
@@ -853,6 +862,25 @@
       },
       "highlight_compensation": {
         "name": "Highlight compensation"
+      },
+      "holiday": {
+        "name": "{name}",
+        "state_attributes": {
+          "end": {
+            "name": "End"
+          },
+          "mode": {
+            "name": "Mode",
+            "state": {
+              "date": "By date",
+              "month": "By month",
+              "week": "By week"
+            }
+          },
+          "start": {
+            "name": "Start"
+          }
+        }
       },
       "image_flip": {
         "name": "Image flip"

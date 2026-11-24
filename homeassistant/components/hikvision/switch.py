@@ -1,4 +1,8 @@
-"""Support for the image setting and detection switches of Hikvision cameras."""
+"""Support for the switches of Hikvision devices.
+
+The image settings and detections of each camera, and the alarm inputs and outputs
+and holiday mode of the device itself.
+"""
 
 from dataclasses import dataclass
 from typing import Any, override
@@ -12,8 +16,16 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import HikvisionConfigEntry
 from .const import DETECTION_KEYS, IMAGE_SWITCH_SETTINGS
-from .coordinator import HikvisionImageCoordinator, detection_path
-from .entity import HikvisionImageEntity
+from .coordinator import (
+    DevicePort,
+    HikvisionDeviceCoordinator,
+    HikvisionImageCoordinator,
+    detection_path,
+    holiday_path,
+    input_path,
+    output_path,
+)
+from .entity import HikvisionDeviceEntity, HikvisionImageEntity
 
 # All writes to a camera are serialized by the coordinator.
 PARALLEL_UPDATES = 1
@@ -64,6 +76,21 @@ async def async_setup_entry(
         for detection in coordinator.detections or ()
         if detection in DETECTION_KEYS
     )
+    for coordinator in coordinators:
+        if not isinstance(coordinator, HikvisionDeviceCoordinator):
+            continue
+        entities.extend(
+            HikvisionOutputSwitch(coordinator, entry, port)
+            for port in coordinator.outputs or ()
+        )
+        entities.extend(
+            HikvisionInputSwitch(coordinator, entry, port)
+            for port in coordinator.inputs or ()
+        )
+        entities.extend(
+            HikvisionHolidaySwitch(coordinator, entry, holiday_id)
+            for holiday_id in coordinator.holidays
+        )
     async_add_entities(entities)
 
 
@@ -142,3 +169,136 @@ class HikvisionDetectionSwitch(HikvisionImageSwitch):
         await self.coordinator.async_set_detection(
             self._detection, False, self._context
         )
+
+
+class _HikvisionDeviceSwitch(HikvisionDeviceEntity, HikvisionImageSwitch):
+    """A switch for a control of the device itself, under Controls."""
+
+    def __init__(
+        self,
+        coordinator: HikvisionDeviceCoordinator,
+        entry: HikvisionConfigEntry,
+        key: str,
+        translation_key: str,
+        path: str,
+        port: DevicePort | None = None,
+    ) -> None:
+        """Initialize the switch."""
+        super().__init__(
+            coordinator,
+            entry,
+            HikvisionSwitchEntityDescription(
+                key=key, translation_key=translation_key, path=path
+            ),
+            path,
+            port,
+        )
+
+
+class HikvisionOutputSwitch(_HikvisionDeviceSwitch):
+    """A switch that makes an alarm output active.
+
+    An output set to pulse on the device goes back by itself once its pulse ends.
+    """
+
+    def __init__(
+        self,
+        coordinator: HikvisionDeviceCoordinator,
+        entry: HikvisionConfigEntry,
+        port: DevicePort,
+    ) -> None:
+        """Initialize the switch."""
+        super().__init__(
+            coordinator,
+            entry,
+            f"alarm_output_{port.id}",
+            "alarm_output",
+            output_path(port.id),
+            port,
+        )
+        self._output_id = port.id
+
+    @override
+    async def async_turn_on(self, **kwargs: Any) -> None:
+        """Make the output active."""
+        await self.coordinator.async_set_output(self._output_id, True, self._context)
+
+    @override
+    async def async_turn_off(self, **kwargs: Any) -> None:
+        """Make the output inactive."""
+        await self.coordinator.async_set_output(self._output_id, False, self._context)
+
+
+class HikvisionInputSwitch(_HikvisionDeviceSwitch):
+    """A switch that enables an alarm input: it raises alarms."""
+
+    def __init__(
+        self,
+        coordinator: HikvisionDeviceCoordinator,
+        entry: HikvisionConfigEntry,
+        port: DevicePort,
+    ) -> None:
+        """Initialize the switch."""
+        super().__init__(
+            coordinator,
+            entry,
+            f"alarm_input_{port.id}",
+            "alarm_input",
+            input_path(port.id),
+            port,
+        )
+        self._input_id = port.id
+
+    @override
+    async def async_turn_on(self, **kwargs: Any) -> None:
+        """Enable the input."""
+        await self.coordinator.async_set_input(self._input_id, True, self._context)
+
+    @override
+    async def async_turn_off(self, **kwargs: Any) -> None:
+        """Disable the input."""
+        await self.coordinator.async_set_input(self._input_id, False, self._context)
+
+
+class HikvisionHolidaySwitch(_HikvisionDeviceSwitch):
+    """A switch for a holiday of the device.
+
+    A holiday is a set of dates that the recording and arming schedules treat as
+    holidays while it is enabled.
+    """
+
+    def __init__(
+        self,
+        coordinator: HikvisionDeviceCoordinator,
+        entry: HikvisionConfigEntry,
+        holiday_id: str,
+    ) -> None:
+        """Initialize the switch."""
+        super().__init__(
+            coordinator,
+            entry,
+            f"holiday_{holiday_id}",
+            "holiday",
+            holiday_path(holiday_id),
+        )
+        self._holiday_id = holiday_id
+        self._attr_translation_placeholders = {
+            "name": coordinator.holidays[holiday_id].name
+        }
+
+    @property
+    @override
+    def extra_state_attributes(self) -> dict[str, str | None]:
+        """Return the dates of the holiday, as the device gives them."""
+        holiday = self.coordinator.holidays[self._holiday_id]
+        return {"mode": holiday.mode, "start": holiday.start, "end": holiday.end}
+
+    @override
+    async def async_turn_on(self, **kwargs: Any) -> None:
+        """Enable the holiday."""
+        await self.coordinator.async_set_holiday(self._holiday_id, True, self._context)
+
+    @override
+    async def async_turn_off(self, **kwargs: Any) -> None:
+        """Disable the holiday."""
+        await self.coordinator.async_set_holiday(self._holiday_id, False, self._context)

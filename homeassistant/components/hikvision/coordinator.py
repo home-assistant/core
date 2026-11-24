@@ -13,6 +13,7 @@ from typing import TYPE_CHECKING, Any, override
 from pyhik.image import PRIVILEGE_SUB_STATUSES, ImageSetting, ImageWriteResult
 from pyhik.isapi import (
     DETECTIONS,
+    Holiday,
     ISAPIAuthError,
     ISAPIClient,
     ISAPIConnectionError,
@@ -44,6 +45,9 @@ SCAN_INTERVAL = timedelta(seconds=30)
 # How often to look whether a form of the entry, which keeps Home Assistant from
 # asking for new credentials, has been closed
 REAUTH_RETRY_INTERVAL = timedelta(minutes=1)
+# The alarm inputs and outputs, and the holiday mode, of the device: one request
+# for each, so less often than the image settings.
+DEVICE_SCAN_INTERVAL = timedelta(minutes=1)
 # The cameras of an NVR share one client and one lock, so they are polled one after
 # the other. A slower poll keeps a write from waiting behind dozens of reads.
 NVR_SCAN_INTERVAL = timedelta(minutes=5)
@@ -1159,3 +1163,247 @@ class HikvisionImageCoordinator(DataUpdateCoordinator[dict[str, str]]):
         else:
             key = "image_setting_error"
         return HomeAssistantError(translation_domain=DOMAIN, translation_key=key)
+
+
+# The keys of the stored values of the device's own controls: "true" or "false".
+def output_path(output_id: str) -> str:
+    """Return the key of an alarm output: whether it is active."""
+    return f"output:{output_id}"
+
+
+def input_path(input_id: str) -> str:
+    """Return the key of an alarm input: whether it raises alarms."""
+    return f"input:{input_id}"
+
+
+def input_state_path(input_id: str) -> str:
+    """Return the key of an alarm input's signal: whether it is active now."""
+    return f"input_state:{input_id}"
+
+
+def holiday_path(holiday_id: str) -> str:
+    """Return the key of a holiday: whether it is enabled."""
+    return f"holiday:{holiday_id}"
+
+
+@dataclass(frozen=True)
+class DevicePort:
+    """An alarm input or output of the device, or of a camera behind an NVR."""
+
+    id: str
+    # A port of a camera behind an NVR, read through the NVR's I/O proxy.
+    proxy: bool
+    # The NVR channel of the camera the port is on; None for the device's own.
+    channel: int | None
+    # The port's number on its camera, or on the device.
+    number: str
+
+
+def _device_port(port_id: str, proxy: bool) -> DevicePort:
+    """Return a port; a camera's on an NVR has an ID of channel x 100 + port."""
+    if proxy and port_id.isdigit() and int(port_id) >= 100:
+        channel, number = divmod(int(port_id), 100)
+        return DevicePort(port_id, True, channel, str(number))
+    return DevicePort(port_id, proxy, None, port_id)
+
+
+class HikvisionDeviceCoordinator(HikvisionImageCoordinator):
+    """Poll the alarm inputs and outputs, and the holidays, of the device.
+
+    The NVR's own and those of the cameras on its digital channels, or a standalone
+    camera's. It shares the client of the image settings, and writes and deals with
+    a rejected password as their coordinators do.
+    """
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        config_entry: HikvisionConfigEntry,
+        client: HikvisionImageClient,
+    ) -> None:
+        """Initialize the coordinator."""
+        super().__init__(hass, config_entry, client, [])
+        self.name = f"{DOMAIN} device controls"
+        self.update_interval = DEVICE_SCAN_INTERVAL
+        # None of the detections: they belong to the cameras.
+        self.detections = []
+        # What the device has, found by the first poll.
+        self.outputs: list[DevicePort] | None = None
+        self.inputs: list[DevicePort] | None = None
+        # The inputs whose signal can be read: a device may allow their flag only.
+        self.input_states: list[DevicePort] | None = None
+        self.holidays: dict[str, Holiday] = {}
+        # The NVR's cameras' ports too.
+        self._proxy = config_entry.runtime_data.is_nvr
+        # Whether the device gives every state in one request, local and proxied:
+        # None until asked.
+        self._status_list: dict[bool, bool | None] = {False: None, True: None}
+
+    @property
+    def found(self) -> bool:
+        """Return whether the device has any of these."""
+        return bool(self.outputs or self.inputs or self.holidays)
+
+    @override
+    async def _async_read(self) -> dict[str, str]:
+        """Read the controls the device has. The caller holds the lock.
+
+        The first poll keeps only what the device answers: a port it does not
+        support, or does not allow, gets no entity. One that cannot be read now has
+        no value: its entity is unavailable until it can. A rejected password stops
+        the poll.
+
+        Each poll reads the input lists, which give whether each raises alarms, the
+        state of every port in one request where the device can, and the holidays.
+        """
+        discovering = self.outputs is None or self.inputs is None
+        sides = (False, True) if self._proxy else (False,)
+        values: dict[str, str] = {}
+        if discovering:
+            outputs: list[DevicePort] = []
+            for proxy in sides:
+                ports, _ = await self._async_try(
+                    partial(self.client.get_output_ports, proxy=proxy)
+                )
+                outputs.extend(_device_port(port.id, proxy) for port in ports or ())
+        inputs: list[DevicePort] = []
+        for proxy in sides:
+            ports, _ = await self._async_try(
+                partial(self.client.get_input_ports, proxy=proxy)
+            )
+            for port in ports or ():
+                device_port = _device_port(port.id, proxy)
+                inputs.append(device_port)
+                if port.enabled is None:
+                    enabled, absent = await self._async_try(
+                        partial(self.client.get_input_enabled, port.id)
+                    )
+                    if absent and discovering:
+                        inputs.remove(device_port)
+                        continue
+                else:
+                    enabled = port.enabled
+                if enabled is not None:
+                    values[input_path(port.id)] = "true" if enabled else "false"
+        if discovering:
+            self.outputs = outputs
+            self.inputs = inputs
+            self.input_states = list(inputs)
+        values |= await self._async_read_states(discovering, sides)
+        holidays, _ = await self._async_try(self.client.get_holidays)
+        if holidays is not None:
+            listed = {holiday.id: holiday for holiday in holidays}
+            if discovering:
+                self.holidays = listed
+            else:
+                self.holidays |= {
+                    holiday_id: holiday
+                    for holiday_id, holiday in listed.items()
+                    if holiday_id in self.holidays
+                }
+            for holiday_id in self.holidays:
+                if (holiday := listed.get(holiday_id)) is not None:
+                    values[holiday_path(holiday_id)] = (
+                        "true" if holiday.enabled else "false"
+                    )
+        return values
+
+    async def _async_read_states(
+        self, discovering: bool, sides: tuple[bool, ...]
+    ) -> dict[str, str]:
+        """Read whether each port is active: in one request where the device can."""
+        assert self.outputs is not None and self.input_states is not None
+        values: dict[str, str] = {}
+        for proxy in sides:
+            if self._status_list[proxy] is False:
+                continue
+            states, absent = await self._async_try(
+                partial(self.client.get_io_status, proxy=proxy)
+            )
+            if absent:
+                # Asked port by port from now on.
+                self._status_list[proxy] = False
+                continue
+            if states is None:
+                continue
+            self._status_list[proxy] = True
+            for state in states:
+                if state.type == "output":
+                    values[output_path(state.id)] = "true" if state.active else "false"
+                elif state.type == "input":
+                    values[input_state_path(state.id)] = (
+                        "true" if state.active else "false"
+                    )
+        for ports, read, path in (
+            (self.outputs, self.client.get_output_active, output_path),
+            (self.input_states, self.client.get_input_active, input_state_path),
+        ):
+            for port in list(ports):
+                if self._status_list[port.proxy] or path(port.id) in values:
+                    continue
+                active, absent = await self._async_try(partial(read, port.id))
+                if absent and discovering:
+                    # A state the device refuses has no entity, and is not asked
+                    # again. An input keeps its switch.
+                    ports.remove(port)
+                elif active is not None:
+                    values[path(port.id)] = "true" if active else "false"
+        return values
+
+    async def _async_try[_T](self, job: Callable[[], _T]) -> tuple[_T | None, bool]:
+        """Send a read; return its result, or None if it could not be done now.
+
+        And whether the device lacks it: it does not support it, or does not allow
+        it. A rejected password stops the poll.
+        """
+        try:
+            return await self._async_send(job), False
+        except ISAPINotSupportedError:
+            return None, True
+        except ISAPIAuthError as err:
+            if err.status_code == 401:
+                raise
+            _LOGGER.debug("%s: not allowed: %s", self._device_name, err)
+            return None, True
+        except ISAPIError as err:
+            _LOGGER.debug("%s: unable to read: %s", self._device_name, err)
+            return None, False
+
+    async def async_set_output(
+        self, output_id: str, active: bool, context: Context | None = None
+    ) -> None:
+        """Make an alarm output active or inactive."""
+        path = output_path(output_id)
+        await self._async_write(
+            self.client.set_output_active,
+            (output_id, active),
+            path,
+            {path: "true" if active else "false"},
+            context,
+        )
+
+    async def async_set_input(
+        self, input_id: str, enabled: bool, context: Context | None = None
+    ) -> None:
+        """Enable or disable an alarm input."""
+        path = input_path(input_id)
+        await self._async_write(
+            self.client.set_input_enabled,
+            (input_id, enabled),
+            path,
+            {path: "true" if enabled else "false"},
+            context,
+        )
+
+    async def async_set_holiday(
+        self, holiday_id: str, enabled: bool, context: Context | None = None
+    ) -> None:
+        """Enable or disable a holiday."""
+        path = holiday_path(holiday_id)
+        await self._async_write(
+            self.client.set_holiday_enabled,
+            (holiday_id, enabled),
+            path,
+            {path: "true" if enabled else "false"},
+            context,
+        )
