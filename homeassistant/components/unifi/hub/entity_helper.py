@@ -1,14 +1,16 @@
 """UniFi Network entity helper."""
 
 import asyncio
-from collections.abc import Callable, Mapping
+from collections.abc import Awaitable, Callable, Mapping
 from copy import deepcopy
 from datetime import datetime, timedelta
 from typing import Any, cast
 
 import aiounifi
+from aiounifi.interfaces.api_handlers import APIHandler
+from aiounifi.models.api import ApiItem
 from aiounifi.models.device import DeviceSetPoePortModeRequest
-from aiounifi.models.firewall_policy import FirewallPolicySchedule
+from aiounifi.models.firewall_policy import FirewallPolicy, FirewallPolicySchedule
 
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_send
@@ -23,16 +25,17 @@ class UnifiEntityHelper:
         self,
         hass: HomeAssistant,
         api: aiounifi.Controller,
-        firewall_policy_lock: asyncio.Lock,
+        write_lock: Callable[[APIHandler[Any]], asyncio.Lock],
     ) -> None:
-        """Initialize the UniFi entity loader."""
+        """Initialize the UniFi entity loader.
+
+        write_lock returns the lock a handler's fetches hold.
+        """
         self.hass = hass
         self.api = api
 
         self._device_command = UnifiDeviceCommand(hass, api)
-        self._firewall_policy_command = UnifiFirewallPolicyCommand(
-            api, firewall_policy_lock
-        )
+        self._object_command = UnifiObjectCommand(write_lock)
         self._heartbeat = UnifiEntityHeartbeat(hass)
 
     @callback
@@ -76,10 +79,28 @@ class UnifiEntityHelper:
         schedule_fn: Callable[[Mapping[str, Any]], FirewallPolicySchedule]
         | None = None,
     ) -> None:
-        """Save a change to a firewall policy, one write per policy at a time."""
-        await self._firewall_policy_command.save(
-            obj_id, enabled=enabled, schedule_fn=schedule_fn
-        )
+        """Save a change to a firewall policy.
+
+        schedule_fn builds the new schedule from the current one.
+        """
+        policies = self.api.firewall_policies
+
+        async def save(policy: FirewallPolicy) -> None:
+            schedule = None
+            if schedule_fn is not None:
+                schedule = schedule_fn(policy.schedule or {})
+            response = await policies.save(policy, enabled=enabled, schedule=schedule)
+            if not response.get("data"):
+                # The controller accepted the change without sending the policy
+                # back. Cache what was sent, so the next write builds on it.
+                saved = cast(dict[str, Any], deepcopy(policy.raw))
+                if enabled is not None:
+                    saved["enabled"] = enabled
+                if schedule is not None:
+                    saved["schedule"] = schedule
+                policies.process_raw([saved])
+
+        await self._object_command.write(policies, obj_id, save)
 
 
 class UnifiEntityHeartbeat:
@@ -180,51 +201,28 @@ class UnifiDeviceCommand:
         self._cancel_command = async_call_later(self.hass, self.COMMAND_DELAY, _command)
 
 
-class UnifiFirewallPolicyCommand:
-    """UniFi firewall policy command helper class.
+class UnifiObjectCommand:
+    """UniFi object command helper class.
 
-    Saving a firewall policy sends the whole policy, built from the cached
-    copy. Entities on different platforms can change the same policy, so
-    writes run one at a time, each starting from the policy as the one
-    before it left it. They share the lock the policies' coordinator holds
-    while fetching, so a fetch can't answer between writes with a policy
-    from before them.
+    Some writes send a whole object built from its cached copy. Writes to a
+    handler's objects run one at a time, each starting from the object as the
+    one before it left it. They hold the lock the handler's fetches hold, so a
+    fetch can't answer between writes with an object from before them.
 
     Unlike PoE commands these aren't delayed and batched: the caller needs
     to know whether its own change was accepted.
     """
 
-    def __init__(self, api: aiounifi.Controller, lock: asyncio.Lock) -> None:
-        """Initialize firewall policy command helper."""
-        self.api = api
+    def __init__(self, write_lock: Callable[[APIHandler[Any]], asyncio.Lock]) -> None:
+        """Initialize object command helper."""
+        self._write_lock = write_lock
 
-        self._lock = lock
-
-    async def save(
+    async def write[ItemT: ApiItem](
         self,
+        handler: APIHandler[ItemT],
         obj_id: str,
-        *,
-        enabled: bool | None = None,
-        schedule_fn: Callable[[Mapping[str, Any]], FirewallPolicySchedule]
-        | None = None,
+        change: Callable[[ItemT], Awaitable[None]],
     ) -> None:
-        """Save a change to a firewall policy.
-
-        schedule_fn builds the new schedule from the current one.
-        """
-        async with self._lock:
-            policies = self.api.firewall_policies
-            policy = policies[obj_id]
-            schedule = None
-            if schedule_fn is not None:
-                schedule = schedule_fn(policy.schedule or {})
-            response = await policies.save(policy, enabled=enabled, schedule=schedule)
-            if not response.get("data"):
-                # The controller accepted the change without sending the policy
-                # back. Cache what was sent, so the next write builds on it.
-                saved = cast(dict[str, Any], deepcopy(policy.raw))
-                if enabled is not None:
-                    saved["enabled"] = enabled
-                if schedule is not None:
-                    saved["schedule"] = schedule
-                policies.process_raw([saved])
+        """Apply a change to an object, starting from its latest cached copy."""
+        async with self._write_lock(handler):
+            await change(handler[obj_id])
