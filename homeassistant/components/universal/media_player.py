@@ -20,8 +20,10 @@ from homeassistant.components.media_player import (
     MediaType,
     RepeatMode,
 )
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
     ATTR_ENTITY_ID,
+    CONF_ACTION,
     CONF_DEVICE_CLASS,
     CONF_NAME,
     CONF_STATE,
@@ -32,22 +34,33 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
     EntityStateAttribute,
-    Platform,
 )
-from homeassistant.core import Event, EventStateChangedData, HomeAssistant, callback
+from homeassistant.core import (
+    DOMAIN as HOMEASSISTANT_DOMAIN,
+    Event,
+    EventStateChangedData,
+    HomeAssistant,
+    callback,
+)
+from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.exceptions import TemplateError
-from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers import config_validation as cv, issue_registry as ir
 from homeassistant.helpers.entity_component import EntityComponent
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import (
+    AddConfigEntryEntitiesCallback,
+    AddEntitiesCallback,
+)
 from homeassistant.helpers.event import (
     TrackTemplate,
     TrackTemplateResult,
     async_track_state_change_event,
     async_track_template_result,
 )
-from homeassistant.helpers.reload import async_setup_reload_service
 from homeassistant.helpers.service import async_call_from_config
+from homeassistant.helpers.template import Template
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+
+DOMAIN = "universal"
 
 ATTR_ACTIVE_CHILD = "active_child"
 
@@ -56,6 +69,33 @@ CONF_ATTRS = "attributes"
 CONF_CHILDREN = "children"
 CONF_COMMANDS = "commands"
 CONF_BROWSE_MEDIA_ENTITY = "browse_media_entity"
+
+# Shared with config_flow.py to avoid a circular import.
+EXPOSED_COMMANDS = (
+    MediaPlayerService.TURN_ON,
+    MediaPlayerService.TURN_OFF,
+    MediaPlayerService.VOLUME_UP,
+    MediaPlayerService.VOLUME_DOWN,
+    MediaPlayerService.VOLUME_MUTE,
+    MediaPlayerService.VOLUME_SET,
+    MediaPlayerService.SELECT_SOURCE,
+    MediaPlayerService.SELECT_SOUND_MODE,
+    MediaPlayerService.MEDIA_PLAY,
+    MediaPlayerService.MEDIA_PAUSE,
+    MediaPlayerService.MEDIA_STOP,
+    MediaPlayerService.MEDIA_NEXT_TRACK,
+    MediaPlayerService.MEDIA_PREVIOUS_TRACK,
+)
+
+EXPOSED_ATTRIBUTES = (
+    "state",
+    "is_volume_muted",
+    "volume_level",
+    "source",
+    "source_list",
+    "sound_mode",
+    "sound_mode_list",
+)
 
 STATES_ORDER = [
     STATE_UNKNOWN,
@@ -91,17 +131,97 @@ PLATFORM_SCHEMA = MEDIA_PLAYER_PLATFORM_SCHEMA.extend(
 )
 
 
+BREAKS_IN_HA_VERSION = "2027.6.0"
+INTEGRATION_TITLE = "Universal media player"
+
+
 async def async_setup_platform(
     hass: HomeAssistant,
     config: ConfigType,
     async_add_entities: AddEntitiesCallback,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
-    """Set up the universal media players."""
-    await async_setup_reload_service(hass, "universal", [Platform.MEDIA_PLAYER])
+    """Import YAML platform configuration into a config entry."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_IMPORT}, data=config
+    )
 
-    player = UniversalMediaPlayer(hass, config)
-    async_add_entities([player])
+    if (
+        result["type"] is FlowResultType.ABORT
+        and result["reason"] != "already_configured"
+    ):
+        return
+
+    ir.async_create_issue(
+        hass,
+        HOMEASSISTANT_DOMAIN,
+        f"deprecated_yaml_{DOMAIN}",
+        breaks_in_ha_version=BREAKS_IN_HA_VERSION,
+        is_fixable=False,
+        issue_domain=DOMAIN,
+        severity=ir.IssueSeverity.WARNING,
+        translation_key="deprecated_yaml",
+        translation_placeholders={
+            "domain": DOMAIN,
+            "integration_title": INTEGRATION_TITLE,
+        },
+    )
+
+
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
+    """Set up Universal media player from a config entry."""
+    options = config_entry.options
+
+    # ActionSelector stores actions as lists; unwrap to the single service-call
+    # dict that async_call_from_config expects.  Compile any template strings
+    # in the "action" field back to Template objects (config entry JSON only
+    # holds raw strings, but async_call_from_config renders Template objects
+    # at call time).
+    commands: dict[str, Any] = {}
+    for cmd in EXPOSED_COMMANDS:
+        actions = options.get(cmd, [])
+        if isinstance(actions, list) and actions:
+            call = dict(actions[0])
+            if CONF_ACTION in call and isinstance(call[CONF_ACTION], str):
+                action_val = call[CONF_ACTION]
+                if "{%" in action_val or "{{" in action_val:
+                    call[CONF_ACTION] = Template(action_val, hass)
+            commands[cmd] = call
+    # Extra commands from YAML import that aren't exposed in the UI
+    for cmd, call in options.get(CONF_COMMANDS, {}).items():
+        call = dict(call)
+        if CONF_ACTION in call and isinstance(call[CONF_ACTION], str):
+            action_val = call[CONF_ACTION]
+            if "{%" in action_val or "{{" in action_val:
+                call[CONF_ACTION] = Template(action_val, hass)
+        commands[cmd] = call
+
+    # TemplateSelector stores templates as raw strings; compile them since
+    # UniversalMediaPlayer expects Template objects.
+    active_child_template = None
+    if raw_template := options.get(CONF_ACTIVE_CHILD_TEMPLATE):
+        active_child_template = Template(raw_template, hass)
+    state_template = None
+    if raw_template := options.get(CONF_STATE_TEMPLATE):
+        state_template = Template(raw_template, hass)
+
+    config: ConfigType = {
+        CONF_NAME: config_entry.title,
+        CONF_CHILDREN: options.get(CONF_CHILDREN, []),
+        CONF_COMMANDS: commands,
+        CONF_ATTRS: options.get(CONF_ATTRS, {}),
+        CONF_UNIQUE_ID: options.get(CONF_UNIQUE_ID, config_entry.entry_id),
+        CONF_BROWSE_MEDIA_ENTITY: options.get(CONF_BROWSE_MEDIA_ENTITY),
+        CONF_DEVICE_CLASS: options.get(CONF_DEVICE_CLASS),
+        CONF_ACTIVE_CHILD_TEMPLATE: active_child_template,
+        CONF_STATE_TEMPLATE: state_template,
+    }
+
+    async_add_entities([UniversalMediaPlayer(hass, config)])
 
 
 class UniversalMediaPlayer(MediaPlayerEntity):
