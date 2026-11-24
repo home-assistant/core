@@ -1089,9 +1089,7 @@ _NULLABLE_STRING = probatio.Any(None, _NON_EMPTY_STRING)
 _SENSOR_OPTIONS = (CONF_UNIT_OF_MEASUREMENT, "display_precision")
 
 
-def _check_sensor_options(
-    entry: er.RegistryEntry, device_class: str | None, options: dict[str, Any]
-) -> None:
+def _check_sensor_options(entry: er.RegistryEntry, options: dict[str, Any]) -> None:
     """Raise if the sensor options do not apply to the entity."""
     if entry.domain != SENSOR_DOMAIN:
         raise HomeAssistantError(
@@ -1099,8 +1097,9 @@ def _check_sensor_options(
         )
     if (unit := options.get(CONF_UNIT_OF_MEASUREMENT)) is None:
         return
-    # Like the UI, offer the units that the device class can convert to
-    device_class = device_class or entry.original_device_class
+    # The sensor converts with the device class of the integration, not the one
+    # set in the registry
+    device_class = entry.original_device_class
     units: set[Any] = set()
     if device_class is not None and device_class in UNIT_CONVERTERS:
         units = DEVICE_CLASS_UNITS.get(SensorDeviceClass(device_class), set())
@@ -1240,9 +1239,7 @@ class UpdateEntitySettingsTool(Tool):
             key: settings.pop(key) for key in _SENSOR_OPTIONS if key in settings
         }
         if sensor_options:
-            _check_sensor_options(
-                entry, settings.get("device_class", entry.device_class), sensor_options
-            )
+            _check_sensor_options(entry, sensor_options)
         if (area_id := settings.get("area_id")) and ar.async_get(hass).async_get_area(
             area_id
         ) is None:

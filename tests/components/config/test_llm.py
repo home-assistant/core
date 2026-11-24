@@ -2317,20 +2317,25 @@ async def test_update_sensor_settings(
         "The unit of 'sensor.outside' cannot be 'kWh'. Allowed units: K, °C, °F."
     )
 
-    # The device class in the same call decides which units are allowed
+    # The sensor converts with the device class of the integration, so a device
+    # class set in the registry does not change the allowed units
+    entity_registry.async_update_entity("sensor.outside", device_class="energy")
+    with pytest.raises(HomeAssistantError):
+        await tool.async_call(
+            hass,
+            llm.ToolInput(
+                tool.name, {"entity_id": "sensor.outside", "unit_of_measurement": "kWh"}
+            ),
+            llm_context,
+        )
     result = await tool.async_call(
         hass,
         llm.ToolInput(
-            tool.name,
-            {
-                "entity_id": "sensor.outside",
-                "device_class": "energy",
-                "unit_of_measurement": "kWh",
-            },
+            tool.name, {"entity_id": "sensor.outside", "unit_of_measurement": "°F"}
         ),
         llm_context,
     )
-    assert result.data["result"]["unit_of_measurement"] == "kWh"
+    assert result.data["result"]["unit_of_measurement"] == "°F"
 
 
 async def test_update_sensor_settings_unit_not_convertible(
