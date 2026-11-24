@@ -192,7 +192,6 @@ EXCEPTIONS = {
     "pigpio",  # https://github.com/joan2937/pigpio/pull/608
     "pyelftools",  # Public domain (Unlicense)
     "pymitv",  # MIT
-    "pybbox",  # https://github.com/HydrelioxGitHub/pybbox/pull/5
     "pysabnzbd",  # https://github.com/jeradM/pysabnzbd/pull/6
     "sharp_aquos_rc",  # https://github.com/jmoore987/sharp_aquos_rc/pull/14
     "tapsaff",  # https://github.com/bazwilliams/python-taps-aff/pull/5
