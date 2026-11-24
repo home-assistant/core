@@ -9,7 +9,7 @@ from .coordinator import (
     BoschFirmwareCoordinator,
 )
 
-PLATFORMS = [Platform.CAMERA, Platform.SWITCH, Platform.UPDATE]
+PLATFORMS = [Platform.CAMERA, Platform.LIGHT, Platform.SWITCH, Platform.UPDATE]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: BoschCameraConfigEntry) -> None:

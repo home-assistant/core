@@ -11,6 +11,7 @@ from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 from homeassistant.components.calendar import DOMAIN as CALENDAR_DOMAIN, CalendarService
 from homeassistant.components.holiday.const import (
     CONF_CATEGORIES,
+    CONF_INCLUDE_SUNDAYS,
     CONF_PROVINCE,
     DOMAIN,
 )
@@ -471,3 +472,62 @@ async def test_no_update_when_disabled(
         "incorrectly being triggered for updates while it is disabled"
         not in caplog.text
     )
+
+
+@pytest.mark.parametrize(
+    ("include_sundays", "expected_state", "expected_events"),
+    [
+        pytest.param(
+            True,
+            "on",
+            [
+                {
+                    "start": "2024-11-17",
+                    "end": "2024-11-18",
+                    "summary": "Sunday",
+                    "location": "Sweden",
+                }
+            ],
+            id="sundays_included",
+        ),
+        pytest.param(False, "off", [], id="sundays_not_included"),
+    ],
+)
+async def test_country_options(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    include_sundays: bool,
+    expected_state: str,
+    expected_events: list[dict[str, str]],
+) -> None:
+    """Test the country specific options are used for the state and the events."""
+    await hass.config.async_set_time_zone("Europe/Stockholm")
+    zone = await dt_util.async_get_time_zone("Europe/Stockholm")
+    freezer.move_to(datetime(2024, 11, 17, 12, tzinfo=zone))  # Sunday
+
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_COUNTRY: "SE"},
+        options={CONF_INCLUDE_SUNDAYS: include_sundays},
+        title="Sweden",
+    )
+    config_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("calendar.sweden")
+    assert state is not None
+    assert state.state == expected_state
+
+    response = await hass.services.async_call(
+        CALENDAR_DOMAIN,
+        CalendarService.GET_EVENTS,
+        {
+            "entity_id": "calendar.sweden",
+            "end_date_time": dt_util.now() + timedelta(hours=1),
+        },
+        blocking=True,
+        return_response=True,
+    )
+    assert response == {"calendar.sweden": {"events": expected_events}}

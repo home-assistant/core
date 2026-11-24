@@ -2,6 +2,7 @@
 
 from datetime import datetime
 import logging
+from typing import Any
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
@@ -414,6 +415,106 @@ async def test_list_entities_for_display(
             },
         ],
     }
+
+
+@pytest.mark.parametrize(
+    ("filter_data", "expected_entity_ids"),
+    [
+        (
+            {},
+            ["light.kitchen", "light.bedroom", "switch.fan", "sensor.power"],
+        ),
+        (
+            {"entity_ids": []},
+            ["light.kitchen", "light.bedroom", "switch.fan", "sensor.power"],
+        ),
+        (
+            {"entity_ids": ["light.kitchen", "sensor.power", "light.unknown"]},
+            ["light.kitchen", "sensor.power"],
+        ),
+        (
+            {"include": {"domains": ["light"]}},
+            ["light.kitchen", "light.bedroom"],
+        ),
+        (
+            {"include": {"domains": ["light"], "entities": ["switch.fan"]}},
+            ["light.kitchen", "light.bedroom", "switch.fan"],
+        ),
+        (
+            {"include": {"entity_globs": ["*.k*"]}},
+            ["light.kitchen"],
+        ),
+        (
+            {"exclude": {"domains": ["light"]}},
+            ["switch.fan", "sensor.power"],
+        ),
+        (
+            {
+                "include": {"domains": ["light"]},
+                "exclude": {"entities": ["light.bedroom"]},
+            },
+            ["light.kitchen"],
+        ),
+        (
+            {
+                "entity_ids": ["light.kitchen", "switch.fan"],
+                "include": {"domains": ["light"]},
+            },
+            ["light.kitchen"],
+        ),
+        (
+            {"entity_ids": ["light.disabled"]},
+            [],
+        ),
+    ],
+)
+async def test_list_entities_for_display_with_filter(
+    hass: HomeAssistant,
+    client: MockHAClientWebSocket,
+    filter_data: dict[str, Any],
+    expected_entity_ids: list[str],
+) -> None:
+    """Test list entries limited to entity ids or to an entity filter."""
+    mock_registry(
+        hass,
+        {
+            "light.kitchen": RegistryEntryWithDefaults(
+                entity_id="light.kitchen",
+                platform="test_platform",
+                unique_id="1234",
+            ),
+            "light.bedroom": RegistryEntryWithDefaults(
+                entity_id="light.bedroom",
+                platform="test_platform",
+                unique_id="2345",
+            ),
+            "light.disabled": RegistryEntryWithDefaults(
+                disabled_by=RegistryEntryDisabler.USER,
+                entity_id="light.disabled",
+                platform="test_platform",
+                unique_id="3456",
+            ),
+            "switch.fan": RegistryEntryWithDefaults(
+                entity_id="switch.fan",
+                platform="test_platform",
+                unique_id="4567",
+            ),
+            "sensor.power": RegistryEntryWithDefaults(
+                entity_id="sensor.power",
+                platform="test_platform",
+                unique_id="5678",
+            ),
+        },
+    )
+
+    await client.send_json_auto_id(
+        {"type": "config/entity_registry/list_for_display", **filter_data}
+    )
+    msg = await client.receive_json()
+
+    assert msg["success"]
+    assert msg["result"]["entity_categories"] == {"0": "config", "1": "diagnostic"}
+    assert [entry["ei"] for entry in msg["result"]["entities"]] == expected_entity_ids
 
 
 async def test_get_entity(hass: HomeAssistant, client: MockHAClientWebSocket) -> None:
