@@ -83,6 +83,7 @@ class Light(HomeAccessory):
         self.chars = []
         self._event_timer: CALLBACK_TYPE | None = None
         self._pending_events: dict[str, Any] = {}
+        self._pending_turn_on = False
 
         state = self.hass.states.get(self.entity_id)
         assert state
@@ -240,13 +241,19 @@ class Light(HomeAccessory):
         params: dict[str, Any] = {ATTR_ENTITY_ID: self.entity_id}
         has_on = CHAR_ON in char_values
 
-        # The Home app keeps writing the adaptive lighting curve to accessories
-        # that are off. With no CHAR_ON those writes fall through to the
-        # SERVICE_TURN_ON default below and switch the light on by itself; a
-        # colour only write is never a request to turn a light on.
-        if not has_on and char_values and not char_values.keys() - COLOR_ONLY_CHARS:
+        # Adaptive lighting writes colour to accessories that are off, and a
+        # write without CHAR_ON would fall through to the SERVICE_TURN_ON
+        # default below and switch the light on by itself. A colour only write
+        # is never a request to turn a light on, unless we just asked for On
+        # and the state has not caught up yet.
+        if (
+            self.adaptive_lighting
+            and not has_on
+            and char_values
+            and not char_values.keys() - COLOR_ONLY_CHARS
+        ):
             state = self.hass.states.get(self.entity_id)
-            if state is None or state.state != STATE_ON:
+            if (state is None or state.state != STATE_ON) and not self._pending_turn_on:
                 _LOGGER.debug(
                     "%s: ignoring colour only write %s, the light is off",
                     self.entity_id,
@@ -255,6 +262,7 @@ class Light(HomeAccessory):
                 return
 
         if has_on:
+            self._pending_turn_on = bool(char_values[CHAR_ON])
             if not char_values[CHAR_ON]:
                 service = LightService.TURN_OFF
             events.append(f"Set state to {char_values[CHAR_ON]}")
@@ -354,6 +362,8 @@ class Light(HomeAccessory):
         # Handle State
         state = new_state.state
         attributes = new_state.attributes
+        if state == STATE_ON:
+            self._pending_turn_on = False
         color_mode = attributes.get(LightEntityStateAttribute.COLOR_MODE)
         self.char_on.set_value(int(state == STATE_ON))
         color_mode_changed = self._previous_color_mode != color_mode

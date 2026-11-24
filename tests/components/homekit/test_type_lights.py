@@ -10,6 +10,7 @@ from pytest_homeassistant.common import async_fire_time_changed, async_mock_serv
 
 from homeassistant.components.homekit.const import (
     ATTR_VALUE,
+    CONF_ADAPTIVE_LIGHTING,
     CONF_FLOOR_RGB_COLOR,
     CONF_RGB_BELOW_KELVIN,
     CONF_WARM_RGB_COLOR,
@@ -354,7 +355,7 @@ async def test_light_color_temperature(
 async def test_colour_only_write_does_not_turn_on_an_off_light(
     hass: HomeAssistant, hk_driver, events: list[Event]
 ) -> None:
-    """Test a colour only write is dropped while the light is off.
+    """Test a colour only write is dropped while an adaptive light is off.
 
     Adaptive lighting keeps sending colour temperature to accessories that are
     off, and a write without the On characteristic would otherwise reach
@@ -368,7 +369,14 @@ async def test_colour_only_write_does_not_turn_on_an_off_light(
         {ATTR_SUPPORTED_COLOR_MODES: ["color_temp"], ATTR_COLOR_TEMP_KELVIN: 5263},
     )
     await hass.async_block_till_done()
-    acc = Light(hass, hk_driver, "Light", entity_id, 1, None)
+    acc = Light(
+        hass,
+        hk_driver,
+        "Light",
+        entity_id,
+        1,
+        {CONF_ADAPTIVE_LIGHTING: True},
+    )
     hk_driver.add_accessory(acc)
     acc.run()
     await hass.async_block_till_done()
@@ -417,6 +425,110 @@ async def test_colour_only_write_does_not_turn_on_an_off_light(
     set_chars([colour_write])
     await _wait_for_light_coalesce(hass)
     assert len(call_turn_on) == 2
+
+
+async def test_colour_only_write_turns_on_a_light_without_adaptive(
+    hass: HomeAssistant, hk_driver
+) -> None:
+    """Without adaptive lighting a colour write keeps the old turn_on behaviour."""
+    entity_id = "light.demo"
+
+    hass.states.async_set(
+        entity_id,
+        STATE_OFF,
+        {ATTR_SUPPORTED_COLOR_MODES: ["color_temp"], ATTR_COLOR_TEMP_KELVIN: 5263},
+    )
+    await hass.async_block_till_done()
+    acc = Light(hass, hk_driver, "Light", entity_id, 1, None)
+    hk_driver.add_accessory(acc)
+    acc.run()
+    await hass.async_block_till_done()
+
+    call_turn_on = async_mock_service(hass, LIGHT_DOMAIN, "turn_on")
+    char_color_temp_iid = acc.char_color_temp.to_HAP()[HAP_REPR_IID]
+
+    hk_driver.set_characteristics(
+        {
+            HAP_REPR_CHARS: [
+                {
+                    HAP_REPR_AID: acc.aid,
+                    HAP_REPR_IID: char_color_temp_iid,
+                    HAP_REPR_VALUE: 250,
+                }
+            ]
+        },
+        "mock_addr",
+    )
+    await _wait_for_light_coalesce(hass)
+
+    assert len(call_turn_on) == 1
+    assert call_turn_on[0].data[ATTR_COLOR_TEMP_KELVIN] == 4000
+
+
+async def test_colour_write_after_turn_on_is_not_dropped(
+    hass: HomeAssistant, hk_driver
+) -> None:
+    """A colour write racing a pending turn_on still reaches the light.
+
+    The Home app can send On and the colour in separate writes more than the
+    coalescing window apart; the state still reports off when the colour write
+    is processed, but the light is already turning on.
+    """
+    entity_id = "light.demo"
+
+    hass.states.async_set(
+        entity_id,
+        STATE_OFF,
+        {ATTR_SUPPORTED_COLOR_MODES: ["color_temp"], ATTR_COLOR_TEMP_KELVIN: 5263},
+    )
+    await hass.async_block_till_done()
+    acc = Light(
+        hass,
+        hk_driver,
+        "Light",
+        entity_id,
+        1,
+        {CONF_ADAPTIVE_LIGHTING: True},
+    )
+    hk_driver.add_accessory(acc)
+    acc.run()
+    await hass.async_block_till_done()
+
+    call_turn_on = async_mock_service(hass, LIGHT_DOMAIN, "turn_on")
+    char_color_temp_iid = acc.char_color_temp.to_HAP()[HAP_REPR_IID]
+    char_on_iid = acc.char_on.to_HAP()[HAP_REPR_IID]
+
+    def set_chars(chars: list[dict]) -> None:
+        hk_driver.set_characteristics({HAP_REPR_CHARS: chars}, "mock_addr")
+
+    set_chars(
+        [
+            {
+                HAP_REPR_AID: acc.aid,
+                HAP_REPR_IID: char_on_iid,
+                HAP_REPR_VALUE: 1,
+            }
+        ]
+    )
+    await _wait_for_light_coalesce(hass)
+    assert len(call_turn_on) == 1
+    # The state still reports off: the service call has not landed yet.
+    state = hass.states.get(entity_id)
+    assert state is not None and state.state == STATE_OFF
+
+    set_chars(
+        [
+            {
+                HAP_REPR_AID: acc.aid,
+                HAP_REPR_IID: char_color_temp_iid,
+                HAP_REPR_VALUE: 250,
+            }
+        ]
+    )
+    await _wait_for_light_coalesce(hass)
+
+    assert len(call_turn_on) == 2
+    assert call_turn_on[1].data[ATTR_COLOR_TEMP_KELVIN] == 4000
 
 
 @pytest.mark.parametrize(
