@@ -44,7 +44,9 @@ async def test_binary_sensor(
     """Test the binary sensor is created from YAML with the PLC's value."""
     mock_ads_device.values[ADS_VAR] = BOOL_TRUE
 
-    assert await setup_ads_platform(hass, BINARY_SENSOR_DOMAIN, platform_config)
+    assert await setup_ads_platform(
+        hass, mock_ads_device, BINARY_SENSOR_DOMAIN, platform_config
+    )
 
     assert entity_registry.async_get(entity_id) == snapshot(name="entry")
     assert hass.states.get(entity_id) == snapshot(name="state")
@@ -58,7 +60,9 @@ async def test_subscribes_to_a_bool(
     """Test the binary sensor asks the PLC to notify on its variable as a BOOL."""
     mock_ads_device.values[ADS_VAR] = BOOL_TRUE
 
-    assert await setup_ads_platform(hass, BINARY_SENSOR_DOMAIN, PLATFORM_CONFIG)
+    assert await setup_ads_platform(
+        hass, mock_ads_device, BINARY_SENSOR_DOMAIN, PLATFORM_CONFIG
+    )
 
     add_device_notification = mock_pyads_connection.return_value.add_device_notification
     add_device_notification.assert_called_once()
@@ -72,7 +76,9 @@ async def test_state_follows_the_plc(
 ) -> None:
     """Test the binary sensor follows the values the PLC pushes."""
     mock_ads_device.values[ADS_VAR] = BOOL_TRUE
-    assert await setup_ads_platform(hass, BINARY_SENSOR_DOMAIN, PLATFORM_CONFIG)
+    assert await setup_ads_platform(
+        hass, mock_ads_device, BINARY_SENSOR_DOMAIN, PLATFORM_CONFIG
+    )
     assert hass.states.get(ENTITY_ID).state == STATE_ON
 
     await mock_ads_device.async_push(hass, ADS_VAR, BOOL_FALSE)
@@ -89,7 +95,9 @@ async def test_unavailable_until_the_first_value(
     assert await async_run_past_first_update(
         hass,
         mock_ads_device,
-        setup_ads_platform(hass, BINARY_SENSOR_DOMAIN, PLATFORM_CONFIG),
+        setup_ads_platform(
+            hass, mock_ads_device, BINARY_SENSOR_DOMAIN, PLATFORM_CONFIG
+        ),
     )
     assert hass.states.get(ENTITY_ID).state == STATE_UNAVAILABLE
 
@@ -108,10 +116,9 @@ async def test_subscription_error(
         pyads.ADSError(err_code=1808)
     )
 
-    assert await async_run_past_first_update(
-        hass,
-        mock_ads_device,
-        setup_ads_platform(hass, BINARY_SENSOR_DOMAIN, PLATFORM_CONFIG),
+    # No first update to wait for, so setup does not need the clock moved on.
+    assert await setup_ads_platform(
+        hass, mock_ads_device, BINARY_SENSOR_DOMAIN, PLATFORM_CONFIG
     )
 
     assert hass.states.get(ENTITY_ID).state == STATE_UNAVAILABLE

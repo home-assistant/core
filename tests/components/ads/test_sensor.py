@@ -54,7 +54,9 @@ async def test_sensor(
     """Test the sensor is created from YAML with the PLC's value."""
     mock_ads_device.values[ADS_VAR] = payload
 
-    assert await setup_ads_platform(hass, SENSOR_DOMAIN, platform_config)
+    assert await setup_ads_platform(
+        hass, mock_ads_device, SENSOR_DOMAIN, platform_config
+    )
 
     assert entity_registry.async_get(entity_id) == snapshot(name="entry")
     assert hass.states.get(entity_id) == snapshot(name="state")
@@ -97,6 +99,7 @@ async def test_decodes_the_plc_value(
 
     assert await setup_ads_platform(
         hass,
+        mock_ads_device,
         SENSOR_DOMAIN,
         {"adsvar": ADS_VAR, "name": "Temperature", "adstype": adstype},
     )
@@ -110,7 +113,10 @@ async def test_state_follows_the_plc(
     """Test the sensor follows the values the PLC pushes, scaled by the factor."""
     mock_ads_device.values[ADS_VAR] = struct.pack("<h", 215)
     assert await setup_ads_platform(
-        hass, SENSOR_DOMAIN, {"adsvar": ADS_VAR, "name": "Temperature", "factor": 10}
+        hass,
+        mock_ads_device,
+        SENSOR_DOMAIN,
+        {"adsvar": ADS_VAR, "name": "Temperature", "factor": 10},
     )
     assert hass.states.get(ENTITY_ID).state == "21.5"
 
@@ -134,6 +140,7 @@ async def test_invalid_config(
     """Test a sensor with an unsupported ADS type is not created."""
     await setup_ads_platform(
         hass,
+        mock_ads_device,
         SENSOR_DOMAIN,
         {"adsvar": ADS_VAR, "name": "Temperature", "adstype": adstype},
     )
@@ -155,6 +162,7 @@ async def test_zero_factor(hass: HomeAssistant, mock_ads_device: MockAdsDevice) 
         mock_ads_device,
         setup_ads_platform(
             hass,
+            mock_ads_device,
             SENSOR_DOMAIN,
             {"adsvar": ADS_VAR, "name": "Temperature", "factor": 0},
         ),
