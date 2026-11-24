@@ -512,6 +512,7 @@ def _resolve_short_flow_id(
         if flw["handler"][0] in entry_ids and flw["flow_id"].endswith(suffix)
     )
     if not matches:
+        # Allow aborting subentry flows whose parent entry was removed.
         matches.extend(
             (subentry_mgr, flw)
             for flw in subentry_mgr.async_progress()
