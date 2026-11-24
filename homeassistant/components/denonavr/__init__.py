@@ -66,6 +66,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_setup_entry(hass: HomeAssistant, entry: DenonavrConfigEntry) -> None:
     """Set up the denonavr components from a config entry."""
+    use_telnet = entry.options.get(CONF_USE_TELNET, DEFAULT_USE_TELNET)
     # Connect to receiver
     connect_denonavr = ConnectDenonAVR(
         entry.data[CONF_HOST],
@@ -73,17 +74,19 @@ async def async_setup_entry(hass: HomeAssistant, entry: DenonavrConfigEntry) -> 
         entry.options.get(CONF_SHOW_ALL_SOURCES, DEFAULT_SHOW_SOURCES),
         entry.options.get(CONF_ZONE2, DEFAULT_ZONE2),
         entry.options.get(CONF_ZONE3, DEFAULT_ZONE3),
-        entry.options.get(CONF_USE_TELNET, DEFAULT_USE_TELNET),
+        use_telnet,
         lambda: get_async_client(hass),
     )
     try:
-        await connect_denonavr.async_connect_receiver()
+        connected = await connect_denonavr.async_connect_receiver()
     except AvrRequestError as ex:
         raise ConfigEntryNotReady from ex
     receiver = connect_denonavr.receiver
+    if not connected:
+        if use_telnet and receiver is not None:
+            await receiver.async_telnet_disconnect()
+        raise ConfigEntryNotReady("Receiver identification is incomplete")
     assert receiver is not None
-
-    use_telnet = entry.options.get(CONF_USE_TELNET, DEFAULT_USE_TELNET)
 
     async def _async_disconnect(event: Event) -> None:
         """Disconnect from Telnet."""

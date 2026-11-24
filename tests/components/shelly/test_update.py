@@ -8,6 +8,7 @@ from aioshelly.exceptions import DeviceConnectionError, InvalidAuthError, RpcCal
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from pytest_homeassistant.common import async_fire_time_changed, mock_restore_cache
+from pytest_homeassistant.typing import WebSocketGenerator
 
 from homeassistant.components.shelly.const import (
     BLU_TRV_UPDATE_CHECK_INTERVAL,
@@ -295,6 +296,61 @@ async def test_block_version_compare(
     assert state.attributes[ATTR_LATEST_VERSION] == BETA
 
 
+DO_NOT_UNPLUG_MESSAGE = {
+    "severity": "warning",
+    "message": "Do not unplug or power off the device during the update.",
+}
+
+
+@pytest.mark.parametrize(
+    ("installed_version", "latest_version", "expected_messages"),
+    [
+        pytest.param("1.7.1-gd336f31", "2.0.0-g1a2b3c4", [], id="installed_1_x"),
+        pytest.param(
+            "2.0.0-beta1",
+            "2.1.0-g5d6e7f8",
+            [DO_NOT_UNPLUG_MESSAGE],
+            id="installed_2_x_beta",
+        ),
+        pytest.param(
+            "2.0.0-g1a2b3c4",
+            "2.1.0-g5d6e7f8",
+            [DO_NOT_UNPLUG_MESSAGE],
+            id="installed_2_x",
+        ),
+    ],
+)
+async def test_rpc_update_release_notes_messages(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    mock_rpc_device: Mock,
+    monkeypatch: pytest.MonkeyPatch,
+    installed_version: str,
+    latest_version: str,
+    expected_messages: list[dict[str, str]],
+) -> None:
+    """Test the release notes messages shown before a RPC device update."""
+    monkeypatch.setitem(mock_rpc_device.shelly, "ver", installed_version)
+    monkeypatch.setitem(
+        mock_rpc_device.status["sys"],
+        "available_updates",
+        {"stable": {"version": latest_version}},
+    )
+    await init_integration(hass, 2)
+
+    client = await hass_ws_client(hass)
+    await client.send_json_auto_id(
+        {"type": "update/release_notes", "entity_id": "update.test_name_firmware"}
+    )
+    result = await client.receive_json()
+
+    assert result["success"]
+    assert result["result"] == {
+        "release_notes": None,
+        "messages": expected_messages,
+    }
+
+
 async def test_rpc_update(
     hass: HomeAssistant,
     mock_rpc_device: Mock,
@@ -320,7 +376,11 @@ async def test_rpc_update(
     assert state.attributes[ATTR_IN_PROGRESS] is False
     assert state.attributes[ATTR_UPDATE_PERCENTAGE] is None
     supported_feat = state.attributes[ATTR_SUPPORTED_FEATURES]
-    assert supported_feat == UpdateEntityFeature.INSTALL | UpdateEntityFeature.PROGRESS
+    assert supported_feat == (
+        UpdateEntityFeature.INSTALL
+        | UpdateEntityFeature.PROGRESS
+        | UpdateEntityFeature.RELEASE_NOTES
+    )
 
     await hass.services.async_call(
         UPDATE_DOMAIN,
@@ -404,6 +464,64 @@ async def test_rpc_update(
 
     assert (entry := entity_registry.async_get(entity_id))
     assert entry.unique_id == "123456789ABC-sys-fwupdate"
+
+
+async def test_rpc_update_device_reconnect_without_final_ota_event(
+    hass: HomeAssistant,
+    mock_rpc_device: Mock,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test RPC update progress is cleared when the device reconnects."""
+    entity_id = "update.test_name_firmware"
+    monkeypatch.setitem(mock_rpc_device.shelly, "ver", "1")
+    monkeypatch.setitem(
+        mock_rpc_device.status["sys"],
+        "available_updates",
+        {
+            "stable": {"version": "2"},
+        },
+    )
+    await init_integration(hass, 2)
+
+    await hass.services.async_call(
+        UPDATE_DOMAIN,
+        UpdateService.INSTALL,
+        {TargetKey.ENTITY_ID: entity_id},
+        blocking=True,
+    )
+
+    inject_rpc_device_event(
+        monkeypatch,
+        mock_rpc_device,
+        {
+            "events": [
+                {
+                    "event": "ota_progress",
+                    "id": 1,
+                    "ts": 1668522399.2,
+                    "progress_percent": 96,
+                }
+            ],
+            "ts": 1668522399.2,
+        },
+    )
+
+    assert (state := hass.states.get(entity_id))
+    assert state.attributes[ATTR_IN_PROGRESS] is True
+    assert state.attributes[ATTR_UPDATE_PERCENTAGE] == 96
+
+    # Device reboots and rolls back without sending ota_success or ota_error
+    mock_rpc_device.mock_disconnected()
+    await hass.async_block_till_done()
+    mock_rpc_device.mock_initialized()
+    await hass.async_block_till_done()
+
+    assert (state := hass.states.get(entity_id))
+    assert state.state == STATE_ON
+    assert state.attributes[ATTR_INSTALLED_VERSION] == "1"
+    assert state.attributes[ATTR_LATEST_VERSION] == "2"
+    assert state.attributes[ATTR_IN_PROGRESS] is False
+    assert state.attributes[ATTR_UPDATE_PERCENTAGE] is None
 
 
 async def test_rpc_lora_update(
