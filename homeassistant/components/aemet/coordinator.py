@@ -25,7 +25,7 @@ from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import CONDITIONS_MAP, DOMAIN, FORECAST_MAP
-from .reminder import async_dismiss_api_key_reminder
+from .repairs import async_delete_api_key_expiration_issue
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -54,7 +54,7 @@ class WeatherUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     ) -> None:
         """Initialize coordinator."""
         self.aemet = aemet
-        self.reminder_unsub: Callable[[], None] | None = None
+        self.api_key_expiration_unsub: Callable[[], None] | None = None
 
         super().__init__(
             hass,
@@ -65,11 +65,11 @@ class WeatherUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         )
 
     @callback
-    def async_cancel_api_key_reminder(self) -> None:
-        """Cancel the scheduled API key reminder."""
-        if self.reminder_unsub is not None:
-            self.reminder_unsub()
-            self.reminder_unsub = None
+    def async_cancel_api_key_expiration_repair(self) -> None:
+        """Cancel the scheduled API key expiration repair."""
+        if self.api_key_expiration_unsub is not None:
+            self.api_key_expiration_unsub()
+            self.api_key_expiration_unsub = None
 
     @override
     async def _async_update_data(self) -> dict[str, Any]:
@@ -78,9 +78,9 @@ class WeatherUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             try:
                 await self.aemet.update()
             except AuthError as error:
-                self.async_cancel_api_key_reminder()
+                self.async_cancel_api_key_expiration_repair()
                 if self.config_entry is not None:
-                    async_dismiss_api_key_reminder(self.hass, self.config_entry)
+                    async_delete_api_key_expiration_issue(self.hass, self.config_entry)
                 raise ConfigEntryAuthFailed(
                     translation_domain=DOMAIN,
                     translation_key="invalid_api_key",
