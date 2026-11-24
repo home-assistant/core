@@ -2,7 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from datetime import datetime, timedelta
+from datetime import UTC, datetime, timedelta
 from statistics import fmean
 from typing import override
 
@@ -30,7 +30,12 @@ PRICE_UNIT = f"DKK/{UnitOfEnergy.KILO_WATT_HOUR}"
 
 @dataclass(frozen=True, slots=True)
 class Prices:
-    """The price days held for a location, at a moment."""
+    """The price days held for a location, at a moment.
+
+    Moments are compared in UTC: two datetimes with the same time zone are
+    compared by their wall clock, and when the clocks go back, the hour from
+    02:00 comes twice.
+    """
 
     now: datetime
     today: PriceDay
@@ -38,7 +43,7 @@ class Prices:
 
     def current(self) -> PriceInterval | None:
         """The interval that holds now."""
-        return self.today.at(self.now)
+        return self.today.at(self.now.astimezone(UTC))
 
     def following(self) -> PriceInterval | None:
         """The interval after the current one, which may be tomorrow's first."""
@@ -47,7 +52,8 @@ class Prices:
         intervals = self.today.intervals + (
             self.tomorrow.intervals if self.tomorrow else ()
         )
-        return next((i for i in intervals if i.start == current.end), None)
+        end = current.end.timestamp()
+        return next((i for i in intervals if i.start.timestamp() == end), None)
 
     def lowest(self) -> PriceInterval | None:
         """Today's cheapest interval; the earliest of equal ones."""

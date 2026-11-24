@@ -298,3 +298,44 @@ async def test_without_tomorrow_the_last_hour_has_no_next_price(
         hass.states.get("sensor.hjem_average_electricity_price_today").state
         == STATE_UNKNOWN
     )
+
+
+async def test_the_hour_that_comes_twice_in_autumn_has_its_own_prices(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_client: AsyncMock,
+    at_twenty_to_eleven: FrozenDateTimeFactory,
+) -> None:
+    """When the clocks go back, 02:00 to 03:00 comes twice, each with its own price.
+
+    Here the n-th hour of the day costs 1 + n / 100 kr, so the first 02:00
+    costs 1.02 and the second 1.03.
+    """
+    priced = mock_client.prices.side_effect
+
+    def by_order(location_id: str, day: date, resolution: str) -> PriceDay:
+        whole = priced(location_id, day, resolution)
+        return replace(
+            whole,
+            intervals=tuple(
+                replace(interval, total_inc_vat=round(1 + n / 100, 2))
+                for n, interval in enumerate(whole.intervals)
+            ),
+        )
+
+    mock_client.prices.side_effect = by_order
+    # 02:30 summer time on 25 October 2026, the first time round.
+    at_twenty_to_eleven.move_to("2026-10-25 00:30:00+00:00")
+    mock_config_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert float(hass.states.get(PRICE_NOW).state) == pytest.approx(1.02)
+    assert float(hass.states.get(PRICE_NEXT).state) == pytest.approx(1.03)
+
+    # 02:00 winter time, the second time round.
+    await advance(hass, at_twenty_to_eleven, timedelta(minutes=30, seconds=1))
+
+    assert float(hass.states.get(PRICE_NOW).state) == pytest.approx(1.03)
+    assert float(hass.states.get(PRICE_NEXT).state) == pytest.approx(1.04)
