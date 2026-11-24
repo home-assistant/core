@@ -4,7 +4,7 @@ import asyncio
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from aioesphomeapi import APIClient, DeviceCapabilities, DeviceInfo
+from aioesphomeapi import APIClient, DeviceCapabilities
 from aioesphomeapi.model import SendspinFeature
 from music_assistant_client.exceptions import (
     CannotConnect,
@@ -20,12 +20,6 @@ import pytest
 from pytest_homeassistant.common import MockConfigEntry
 from pytest_homeassistant.typing import WebSocketGenerator
 
-# Simulate a firmware capability report without opening an ESPHome API connection.
-# pylint: disable-next=home-assistant-component-root-import
-from homeassistant.components.esphome.entry_data import ESPHomeStorage, RuntimeEntryData
-
-# pylint: disable-next=home-assistant-component-root-import
-from homeassistant.components.esphome.sendspin import async_sendspin_on_connect
 from homeassistant.components.hassio import HassioNotReadyError
 from homeassistant.components.music_assistant.const import (
     ATTR_CONF_EXPOSE_PLAYER_TO_HA,
@@ -49,6 +43,8 @@ from .common import (
     setup_integration_from_fixtures,
     trigger_subscription_callback,
 )
+
+from tests.components.esphome.conftest import MockESPHomeDeviceType
 
 PLAYER_1_ID = "00:00:00:00:00:01"
 PLAYER_1_OPTION_ENTITY_IDS = (
@@ -591,6 +587,7 @@ async def test_player_added_event(
     assert (device_entry is not None) is expected_added
 
 
+@pytest.mark.usefixtures("mock_async_zeroconf")
 @pytest.mark.parametrize(
     ("esphome_first", "provider_domain", "player_id", "client_id", "linked"),
     [
@@ -610,6 +607,8 @@ async def test_link_sendspin_device(
     music_assistant_client: MagicMock,
     mock_config_entry: MockConfigEntry,
     hass_ws_client: WebSocketGenerator,
+    mock_client: APIClient,
+    mock_esphome_device: MockESPHomeDeviceType,
     esphome_first: bool,
     provider_domain: str,
     player_id: str,
@@ -626,32 +625,22 @@ async def test_link_sendspin_device(
 
     async def connect_esphome() -> dr.DeviceEntry:
         assert await async_setup_component(hass, "esphome", {})
-        entry = MockConfigEntry(domain="esphome")
-        entry.add_to_hass(hass)
-        device = device_registry.async_get_or_create(
-            config_entry_id=entry.entry_id,
-            connections={(dr.CONNECTION_NETWORK_MAC, PLAYER_1_ID)},
-            name="Satellite",
-            suggested_area="Kitchen",
-        )
-        entry.runtime_data = RuntimeEntryData(
-            entry.entry_id,
-            entry.title,
-            MagicMock(spec=APIClient),
-            MagicMock(spec=ESPHomeStorage),
-            device_info=DeviceInfo(mac_address=PLAYER_1_ID),
-            device_capabilities=DeviceCapabilities.from_dict(
-                {
-                    "sendspin": {
-                        "feature_flags": SendspinFeature.PAIRING_TOKEN,
-                        "client_id": client_id,
-                    }
-                }
-            ),
-            main_device_entry_id=device.id,
-        )
-        async_sendspin_on_connect(hass, entry.runtime_data)
         await hass.async_block_till_done()
+        satellite = await mock_esphome_device(
+            mock_client=mock_client,
+            device_info={"mac_address": PLAYER_1_ID, "suggested_area": "Kitchen"},
+            device_capabilities={
+                "sendspin": {
+                    "feature_flags": SendspinFeature.PAIRING_TOKEN,
+                    "client_id": client_id,
+                }
+            },
+        )
+        assert (
+            device := device_registry.async_get_device_by_connection(
+                (dr.CONNECTION_NETWORK_MAC, PLAYER_1_ID), satellite.entry.entry_id
+            )
+        ) is not None
         return device
 
     if esphome_first:
@@ -704,6 +693,91 @@ async def test_link_sendspin_device(
     await hass.async_block_till_done()
     assert (updated := device_registry.async_get(device.id)) is not None
     assert updated.area_id == (None if linked else office.id)
+
+
+@pytest.mark.usefixtures("mock_async_zeroconf")
+async def test_relink_sendspin_device_after_client_id_changes(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    area_registry: ar.AreaRegistry,
+    music_assistant_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    mock_client: APIClient,
+    mock_esphome_device: MockESPHomeDeviceType,
+) -> None:
+    """Move the link to the newly advertised player without removing the old device."""
+    assert await async_setup_component(hass, "homeassistant", {})
+    old_player, new_player = create_players_from_fixture()[:2]
+    old_player.player_id = "old-client"
+    new_player.player_id = "new-client"
+    music_assistant_client.players._players = {old_player.player_id: old_player}
+    music_assistant_client.get_provider.return_value.domain = "sendspin"
+    mock_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    assert await async_setup_component(hass, "esphome", {})
+    await hass.async_block_till_done()
+
+    satellite = await mock_esphome_device(
+        mock_client=mock_client,
+        device_info={"mac_address": PLAYER_1_ID, "suggested_area": "Kitchen"},
+        device_capabilities={
+            "sendspin": {
+                "feature_flags": SendspinFeature.PAIRING_TOKEN,
+                "client_id": old_player.player_id,
+            }
+        },
+    )
+    connection = (dr.CONNECTION_NETWORK_MAC, PLAYER_1_ID)
+    assert (
+        source := device_registry.async_get_device_by_connection(
+            connection, satellite.entry.entry_id
+        )
+    ) is not None
+    assert source.area_id is not None
+    assert (
+        old_device := device_registry.async_get_device_by_identifier(
+            (DOMAIN, old_player.player_id), mock_config_entry.entry_id
+        )
+    ) is not None
+    assert old_device.connections == {connection}
+
+    await satellite.mock_disconnect(False)
+    assert device_registry.async_get(old_device.id) == old_device
+    mock_client.device_capabilities_compat.return_value = DeviceCapabilities.from_dict(
+        {
+            "sendspin": {
+                "feature_flags": SendspinFeature.PAIRING_TOKEN,
+                "client_id": new_player.player_id,
+            }
+        }
+    )
+    await satellite.mock_connect()
+
+    music_assistant_client.players._players[new_player.player_id] = new_player
+    await trigger_subscription_callback(
+        hass,
+        music_assistant_client,
+        EventType.PLAYER_ADDED,
+        new_player.player_id,
+        new_player,
+    )
+    assert (
+        new_device := device_registry.async_get_device_by_identifier(
+            (DOMAIN, new_player.player_id), mock_config_entry.entry_id
+        )
+    ) is not None
+    assert new_device.id != old_device.id
+    assert new_device.connections == {connection}
+    assert new_device.area_id == source.area_id
+    assert (unlinked := device_registry.async_get(old_device.id)) is not None
+    assert not unlinked.connections
+
+    office = area_registry.async_create("Office")
+    device_registry.async_update_device(source.id, area_id=office.id)
+    await hass.async_block_till_done()
+    assert (updated := device_registry.async_get(new_device.id)) is not None
+    assert updated.area_id == office.id
+    assert device_registry.async_get(old_device.id) == unlinked
 
 
 @pytest.mark.parametrize(

@@ -107,11 +107,13 @@ def async_link_sendspin_player(
     registry = dr.async_get(hass)
     identifier = (DOMAIN, player.player_id)
     device = registry.async_get_device_by_identifier(identifier, entry.entry_id)
-    # A connection is unique within a config entry, even across player IDs.
     if (
         owner := registry.async_get_device_by_connection(connection, entry.entry_id)
     ) is not None and (device is None or owner.id != device.id):
-        return
+        # Release the old link before registering the new one to keep both devices.
+        registry.async_update_device(
+            owner.id, new_connections=owner.connections - {connection}
+        )
 
     if device is None:
         device = registry.async_get_or_create(

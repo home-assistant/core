@@ -16,6 +16,12 @@ from pytest_homeassistant.common import AsyncMock, MockConfigEntry, load_fixture
 from homeassistant.components.music_assistant.config_flow import CONF_URL
 from homeassistant.components.music_assistant.const import DOMAIN
 
+from tests.components.esphome.conftest import (  # noqa: F401
+    mock_client,
+    mock_device_info,
+    mock_esphome_device,
+)
+
 MOCK_SERVER_ID = "1234"
 
 
