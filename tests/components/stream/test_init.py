@@ -465,3 +465,56 @@ async def test_start_after_cancelled_stop_waits_for_worker(
             first_wake.set()
             second_wake.set()
             await stream.stop()
+
+
+async def test_update_source_before_retry_attempt_opens_once(
+    hass: HomeAssistant, h264_video: io.BytesIO, should_retry: Mock
+) -> None:
+    """Test update_source() right as a retry starts does not open the new source twice."""
+    await async_setup_component(hass, DOMAIN, {"stream": {}})
+    should_retry.return_value = True
+    ready_for_update = threading.Event()
+    proceed_retry = threading.Event()
+    second_open = threading.Event()
+    opened_sources: list[str] = []
+    real_open = av.open
+
+    def blocking_open(stream_source: Any, *args: Any, **kwargs: Any) -> Any:
+        if isinstance(stream_source, str):
+            opened_sources.append(stream_source)
+            if len(opened_sources) == 1:
+                raise av.FFmpegError(1, "Simulated open failure")
+            should_retry.return_value = False
+            second_open.set()
+            return real_open(io.BytesIO(h264_video.getvalue()))
+        return real_open(stream_source, *args, **kwargs)
+
+    stream = create_stream(hass, STREAM_SOURCE, {}, dynamic_stream_settings())
+    stream.add_provider(HLS_PROVIDER)
+
+    real_set_state = stream._set_state
+
+    def gated_set_state(available: bool) -> None:
+        if available and len(opened_sources) == 1:
+            ready_for_update.set()
+            proceed_retry.wait(TIMEOUT)
+        real_set_state(available)
+
+    with (
+        patch("av.open", new=blocking_open),
+        patch("homeassistant.components.stream.STREAM_RESTART_INCREMENT", 0.01),
+        patch.object(stream, "_set_state", side_effect=gated_set_state),
+    ):
+        try:
+            await stream.start()
+            assert await hass.async_add_executor_job(ready_for_update.wait, TIMEOUT)
+            updated_source = f"{STREAM_SOURCE}-updated"
+            stream.update_source(updated_source)
+            proceed_retry.set()
+            assert await hass.async_add_executor_job(second_open.wait, TIMEOUT)
+            assert stream._thread is not None
+            await hass.async_add_executor_job(stream._thread.join, TIMEOUT)
+            assert opened_sources == [STREAM_SOURCE, updated_source]
+        finally:
+            proceed_retry.set()
+            await stream.stop()
