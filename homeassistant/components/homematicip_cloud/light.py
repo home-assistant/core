@@ -38,6 +38,7 @@ _logger = logging.getLogger(__name__)
 DIMMER_CHANNEL_TYPES = (
     FunctionalChannelType.DIMMER_CHANNEL,
     FunctionalChannelType.MULTI_MODE_INPUT_DIMMER_CHANNEL,
+    FunctionalChannelType.UNIVERSAL_DIMMING_CHANNEL,
 )
 
 # the HmIP-BSL names its two signal lamps by position

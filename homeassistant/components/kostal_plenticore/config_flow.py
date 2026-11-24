@@ -14,7 +14,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import CONF_SERVICE_CODE, DOMAIN
-from .helper import get_hostname_id
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -44,10 +43,9 @@ async def test_connection(hass: HomeAssistant, data) -> str:
         await client.login(
             data[CONF_PASSWORD], service_code=data.get(CONF_SERVICE_CODE)
         )
-        hostname_id = await get_hostname_id(client)
-        values = await client.get_setting_values("scb:network", hostname_id)
+        version_info = await client.get_version()
 
-    return values["scb:network"][hostname_id]
+    return version_info.hostname
 
 
 class KostalPlenticoreConfigFlow(ConfigFlow, domain=DOMAIN):

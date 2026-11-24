@@ -82,13 +82,13 @@ class AirConEntity(WhirlpoolEntity, ClimateEntity):
 
     @property
     @override
-    def native_current_temperature(self) -> float:
+    def native_current_temperature(self) -> float | None:
         """Return the current temperature."""
         return self._appliance.get_current_temp()
 
     @property
     @override
-    def native_target_temperature(self) -> float:
+    def native_target_temperature(self) -> float | None:
         """Return the temperature we try to reach."""
         return self._appliance.get_temp()
 
@@ -96,12 +96,12 @@ class AirConEntity(WhirlpoolEntity, ClimateEntity):
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
         AirConEntity._check_service_request(
-            await self._appliance.set_temp(kwargs.get(ATTR_TEMPERATURE))
+            await self._appliance.set_temp(kwargs[ATTR_TEMPERATURE])
         )
 
     @property
     @override
-    def current_humidity(self) -> int:
+    def current_humidity(self) -> int | None:
         """Return the current humidity."""
         return self._appliance.get_current_humidity()
 
@@ -112,7 +112,8 @@ class AirConEntity(WhirlpoolEntity, ClimateEntity):
         if not self._appliance.get_power_on():
             return HVACMode.OFF
 
-        mode: AirconMode = self._appliance.get_mode()
+        if (mode := self._appliance.get_mode()) is None:
+            return None
         return AIRCON_MODE_MAP.get(mode)
 
     @override
@@ -135,7 +136,8 @@ class AirConEntity(WhirlpoolEntity, ClimateEntity):
     @override
     def fan_mode(self) -> str:
         """Return the fan setting."""
-        fanspeed = self._appliance.get_fanspeed()
+        if (fanspeed := self._appliance.get_fanspeed()) is None:
+            return FAN_OFF
         return AIRCON_FANSPEED_MAP.get(fanspeed, FAN_OFF)
 
     @override

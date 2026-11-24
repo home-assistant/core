@@ -19,6 +19,7 @@ from homeassistant.components.influxdb.const import (
     DEFAULT_BUCKET,
     DEFAULT_DATABASE,
     DOMAIN,
+    INFLUX_CONF_VALUE_V2,
     TEST_QUERY_V1,
     TEST_QUERY_V2,
 )
@@ -439,6 +440,46 @@ async def test_state_for_no_results(
     assert (
         len([record for record in caplog.records if record.levelname == "WARNING"]) == 1
     )
+
+
+@pytest.mark.parametrize(
+    ("mock_client", "tables"),
+    [
+        pytest.param(API_VERSION_2, [Table([])], id="one_empty_table"),
+        pytest.param(API_VERSION_2, [Table([]), Table([])], id="two_empty_tables"),
+    ],
+    indirect=["mock_client"],
+)
+async def test_state_for_empty_flux_tables(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    mock_client,
+    tables,
+) -> None:
+    """Test a Flux query that returns tables without records has no state."""
+    _set_query_mock_v2(mock_client, return_value=tables)
+
+    sensors = await _setup(hass, BASE_V2_CONFIG, BASE_V2_QUERY, ["sensor.test"])
+    assert sensors[0].state == STATE_UNKNOWN
+    assert "Query returned no results" in caplog.text
+
+
+@pytest.mark.parametrize(
+    ("mock_client", "set_query_mock"),
+    [(API_VERSION_2, _set_query_mock_v2)],
+    indirect=["mock_client"],
+)
+async def test_state_skips_empty_flux_table(
+    hass: HomeAssistant, mock_client, set_query_mock
+) -> None:
+    """Test the value comes from the first table that has a record."""
+    set_query_mock(
+        mock_client,
+        return_value=[Table([]), Table([Record({INFLUX_CONF_VALUE_V2: 42})])],
+    )
+
+    sensors = await _setup(hass, BASE_V2_CONFIG, BASE_V2_QUERY, ["sensor.test"])
+    assert sensors[0].state == "42"
 
 
 @pytest.mark.parametrize(

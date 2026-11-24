@@ -5,6 +5,7 @@ from typing import TYPE_CHECKING, Any
 
 import probatio
 
+from homeassistant.const import CONF_API_TOKEN
 from homeassistant.core import HomeAssistant
 
 from .coordinator import ModelContextProtocolConfigEntry
@@ -19,7 +20,9 @@ async def async_get_config_entry_diagnostics(
     if TYPE_CHECKING:
         assert server_info is not None
     return {
-        "authentication": "auth_implementation" in entry.data,
+        "authentication": (
+            "auth_implementation" in entry.data or CONF_API_TOKEN in entry.data
+        ),
         "server": server_info.model_dump(mode="json", by_alias=True, exclude_none=True),
         "tools": [
             {

@@ -14,6 +14,7 @@ from typing import TYPE_CHECKING, Any, Literal, Self, overload
 from aiogithubapi import (
     GitHubAPI,
     GitHubAuthenticationException,
+    GitHubConnectionException,
     GitHubException,
     GitHubNotModifiedException,
     GitHubRatelimitException,
@@ -595,6 +596,8 @@ class MarketplaceManager:
                         gzip.open(compressed, "wb") as f_out,
                     ):
                         shutil.copyfileobj(f_in, f_out)
+                    # mkstemp creates the file readable by its owner only
+                    shutil.copymode(file_path, compressed)
                     os.replace(compressed, f"{file_path}.gz")
                 finally:
                     if os.path.exists(compressed):
@@ -627,8 +630,15 @@ class MarketplaceManager:
                 f"{reset.hour}:{reset.minute}:{reset.second}",
             )
             self.disable(DisabledReason.RATE_LIMIT)
-        except MarketplaceError:
-            LOGGER.exception("Could not get the GitHub API rate limit")
+        except MarketplaceError as err:
+            # The queue tries again on its next run, a network hiccup needs no traceback
+            if isinstance(err.__cause__, GitHubConnectionException):
+                LOGGER.debug(
+                    "Could not reach GitHub to get the API rate limit: %s",
+                    err.__cause__,
+                )
+            else:
+                LOGGER.exception("Could not get the GitHub API rate limit")
 
         return 0
 
@@ -977,7 +987,7 @@ class MarketplaceManager:
     ) -> bytes | None:
         """Download a file, from the first endpoint of the profile that has it.
 
-        A mirror can be down or lag behind, any failure tries the next
+        A relay can be down or lag behind, any failure tries the next
         endpoint. Only the last one retries, and reports what went wrong.
         """
         if remote_file is None:

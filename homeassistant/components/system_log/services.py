@@ -1,5 +1,6 @@
 """Services for the system log integration."""
 
+from enum import StrEnum
 import logging
 
 import probatio
@@ -7,23 +8,32 @@ import probatio
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.helpers import config_validation as cv
 
-from .const import (
-    CONF_LEVEL,
-    CONF_LOGGER,
-    CONF_MESSAGE,
-    DOMAIN,
-    SERVICE_CLEAR,
-    SERVICE_WRITE,
-)
+from .const import DOMAIN
+
+
+class SystemLogService(StrEnum):
+    """Store keys for system log services."""
+
+    CLEAR = "clear"
+    WRITE = "write"
+
+
+class SystemLogServiceArgument(StrEnum):
+    """Store keys for system log service arguments."""
+
+    MESSAGE = "message"
+    LEVEL = "level"
+    LOGGER = "logger"
+
 
 SERVICE_CLEAR_SCHEMA = probatio.Schema({})
 SERVICE_WRITE_SCHEMA = probatio.Schema(
     {
-        probatio.Required(CONF_MESSAGE): cv.string,
-        probatio.Optional(CONF_LEVEL, default="error"): probatio.In(
+        probatio.Required(SystemLogServiceArgument.MESSAGE): cv.string,
+        probatio.Optional(SystemLogServiceArgument.LEVEL, default="error"): probatio.In(
             ["debug", "info", "warning", "error", "critical"]
         ),
-        probatio.Optional(CONF_LOGGER): cv.string,
+        probatio.Optional(SystemLogServiceArgument.LOGGER): cv.string,
     }
 )
 
@@ -35,18 +45,24 @@ def _async_clear_service_handler(service: ServiceCall) -> None:
 
 @callback
 def _async_write_service_handler(service: ServiceCall) -> None:
-    name = service.data.get(CONF_LOGGER, f"{__package__}.external")
+    name = service.data.get(SystemLogServiceArgument.LOGGER, f"{__package__}.external")
     logger = logging.getLogger(name)
-    level = service.data[CONF_LEVEL]
-    getattr(logger, level)(service.data[CONF_MESSAGE])
+    level = service.data[SystemLogServiceArgument.LEVEL]
+    getattr(logger, level)(service.data[SystemLogServiceArgument.MESSAGE])
 
 
 @callback
 def async_setup_services(hass: HomeAssistant) -> None:
     """Set up the services for the system log integration."""
     hass.services.async_register(
-        DOMAIN, SERVICE_CLEAR, _async_clear_service_handler, schema=SERVICE_CLEAR_SCHEMA
+        DOMAIN,
+        SystemLogService.CLEAR,
+        _async_clear_service_handler,
+        schema=SERVICE_CLEAR_SCHEMA,
     )
     hass.services.async_register(
-        DOMAIN, SERVICE_WRITE, _async_write_service_handler, schema=SERVICE_WRITE_SCHEMA
+        DOMAIN,
+        SystemLogService.WRITE,
+        _async_write_service_handler,
+        schema=SERVICE_WRITE_SCHEMA,
     )

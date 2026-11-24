@@ -168,8 +168,9 @@ class AppleTVManager(DeviceListener):
         if self.atv:
             self.atv.close()
             self.atv = None
-        self._dispatch_send(SIGNAL_DISCONNECTED)
         self._start_connect_loop()
+        # Entities must see reconnection before handling the lost transport.
+        self._dispatch_send(SIGNAL_DISCONNECTED)
 
     async def connect(self) -> None:
         """Connect to device."""
