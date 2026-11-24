@@ -139,6 +139,42 @@ async def test_create_area(
     }
 
 
+@pytest.mark.parametrize(
+    ("attribute", "mixed_case_entity_id", "normalized_entity_id"),
+    [
+        pytest.param(
+            "temperature_entity_id",
+            "sensor.MOCK_temperature",
+            "sensor.mock_temperature",
+            id="temperature",
+        ),
+        pytest.param(
+            "humidity_entity_id",
+            "sensor.MOCK_humidity",
+            "sensor.mock_humidity",
+            id="humidity",
+        ),
+        pytest.param("co2_entity_id", "sensor.MOCK_CO2", "sensor.mock_co2", id="co2"),
+    ],
+)
+async def test_area_sensor_entity_ids_are_normalized(
+    area_registry: ar.AreaRegistry,
+    mock_temperature_humidity_co2_entity: None,
+    attribute: str,
+    mixed_case_entity_id: str,
+    normalized_entity_id: str,
+) -> None:
+    """Make sure sensor entity IDs are normalized on create and update."""
+    created = area_registry.async_create("create", **{attribute: mixed_case_entity_id})
+    assert getattr(created, attribute) == normalized_entity_id
+
+    updated = area_registry.async_update(
+        area_registry.async_create("update").id,
+        **{attribute: mixed_case_entity_id},
+    )
+    assert getattr(updated, attribute) == normalized_entity_id
+
+
 async def test_create_area_with_name_already_in_use(
     hass: HomeAssistant, area_registry: ar.AreaRegistry
 ) -> None:
@@ -335,6 +371,10 @@ async def test_update_area_with_normalized_name_already_in_use(
             "Entity sensor.invalid does not exist",
         ),
         (
+            {"temperature_entity_id": "sensor.Invalid Entity"},
+            "Entity sensor.invalid entity is not a valid entity ID",
+        ),
+        (
             {"temperature_entity_id": "light.kitchen"},
             "Entity light.kitchen is not a temperature sensor",
         ),
@@ -347,6 +387,10 @@ async def test_update_area_with_normalized_name_already_in_use(
             "Entity sensor.invalid does not exist",
         ),
         (
+            {"humidity_entity_id": "sensor.Invalid Entity"},
+            "Entity sensor.invalid entity is not a valid entity ID",
+        ),
+        (
             {"humidity_entity_id": "light.kitchen"},
             "Entity light.kitchen is not a humidity sensor",
         ),
@@ -357,6 +401,10 @@ async def test_update_area_with_normalized_name_already_in_use(
         (
             {"co2_entity_id": "sensor.invalid"},
             "Entity sensor.invalid does not exist",
+        ),
+        (
+            {"co2_entity_id": "sensor.Invalid Entity"},
+            "Entity sensor.invalid entity is not a valid entity ID",
         ),
         (
             {"co2_entity_id": "light.kitchen"},
@@ -615,14 +663,15 @@ async def test_migration_from_1_9(
                     "aliases": [],
                     "created_at": "1970-01-01T00:00:00+00:00",
                     "floor_id": "floor",
-                    "humidity_entity_id": "sensor.mock_humidity",
+                    "humidity_entity_id": "sensor.MOCK_humidity",
                     "icon": "mdi:test",
                     "id": "12345A",
                     "labels": [],
                     "modified_at": "1970-01-01T00:00:00+00:00",
                     "name": "AAA",
                     "picture": None,
-                    "temperature_entity_id": "sensor.mock_temperature",
+                    "temperature_entity_id": "sensor.MOCK_temperature",
+                    "co2_entity_id": "sensor.MOCK_CO2",
                 }
             ]
         },
@@ -635,10 +684,23 @@ async def test_migration_from_1_9(
     assert area is not None
     assert area.temperature_entity_id == "sensor.mock_temperature"
     assert area.humidity_entity_id == "sensor.mock_humidity"
-    assert area.co2_entity_id is None
+    assert area.co2_entity_id == "sensor.mock_co2"
 
     await flush_store(registry._store)
-    assert hass_storage[ar.STORAGE_KEY]["data"]["areas"][0]["co2_entity_id"] is None
+    assert hass_storage[ar.STORAGE_KEY]["data"]["areas"][0] == {
+        "aliases": [],
+        "co2_entity_id": "sensor.mock_co2",
+        "created_at": "1970-01-01T00:00:00+00:00",
+        "floor_id": "floor",
+        "humidity_entity_id": "sensor.mock_humidity",
+        "icon": "mdi:test",
+        "id": "12345A",
+        "labels": [],
+        "modified_at": "1970-01-01T00:00:00+00:00",
+        "name": "AAA",
+        "picture": None,
+        "temperature_entity_id": "sensor.mock_temperature",
+    }
 
 
 async def test_async_get_or_create(area_registry: ar.AreaRegistry) -> None:

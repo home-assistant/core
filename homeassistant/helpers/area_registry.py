@@ -8,7 +8,13 @@ from datetime import datetime
 from typing import TYPE_CHECKING, Any, Literal, TypedDict, override
 
 from homeassistant.const import EntityStateAttribute
-from homeassistant.core import Event, HomeAssistant, callback, verify_event_loop_thread
+from homeassistant.core import (
+    Event,
+    HomeAssistant,
+    callback,
+    valid_entity_id,
+    verify_event_loop_thread,
+)
 from homeassistant.util.dt import utc_from_timestamp, utcnow
 from homeassistant.util.event_type import EventType
 from homeassistant.util.hass_dict import HassKey
@@ -38,7 +44,7 @@ EVENT_AREA_REGISTRY_UPDATED: EventType[EventAreaRegistryUpdatedData] = EventType
 )
 STORAGE_KEY = "core.area_registry"
 STORAGE_VERSION_MAJOR = 1
-STORAGE_VERSION_MINOR = 10
+STORAGE_VERSION_MINOR = 11
 
 
 class _AreaStoreData(TypedDict):
@@ -168,6 +174,17 @@ class AreaRegistryStore(Store[AreasRegistryStoreData]):
                 # Version 1.10 adds co2_entity_id
                 for area in old_data["areas"]:
                     area.setdefault("co2_entity_id", None)
+
+            if old_minor_version < 11:
+                # Version 1.11 normalizes sensor entity IDs
+                for area in old_data["areas"]:
+                    for entity_id_key in (
+                        "co2_entity_id",
+                        "humidity_entity_id",
+                        "temperature_entity_id",
+                    ):
+                        if area[entity_id_key] is not None:
+                            area[entity_id_key] = area[entity_id_key].lower()
 
         if old_major_version > 1:
             raise NotImplementedError
@@ -303,13 +320,17 @@ class AreaRegistry(BaseRegistry[AreasRegistryStoreData]):
             )
 
         if humidity_entity_id is not None:
-            _validate_humidity_entity(self.hass, humidity_entity_id)
+            humidity_entity_id = _validate_humidity_entity(
+                self.hass, humidity_entity_id
+            )
 
         if temperature_entity_id is not None:
-            _validate_temperature_entity(self.hass, temperature_entity_id)
+            temperature_entity_id = _validate_temperature_entity(
+                self.hass, temperature_entity_id
+            )
 
         if co2_entity_id is not None:
-            _validate_co2_entity(self.hass, co2_entity_id)
+            co2_entity_id = _validate_co2_entity(self.hass, co2_entity_id)
 
         area = AreaEntry(
             aliases=aliases or set(),
@@ -431,17 +452,29 @@ class AreaRegistry(BaseRegistry[AreasRegistryStoreData]):
             and "humidity_entity_id" in new_values
             and humidity_entity_id is not None
         ):
-            _validate_humidity_entity(self.hass, new_values["humidity_entity_id"])
+            new_values["humidity_entity_id"] = _validate_humidity_entity(
+                self.hass, new_values["humidity_entity_id"]
+            )
 
         if (
             validate
             and "temperature_entity_id" in new_values
             and temperature_entity_id is not None
         ):
-            _validate_temperature_entity(self.hass, new_values["temperature_entity_id"])
+            new_values["temperature_entity_id"] = _validate_temperature_entity(
+                self.hass, new_values["temperature_entity_id"]
+            )
 
         if validate and "co2_entity_id" in new_values and co2_entity_id is not None:
-            _validate_co2_entity(self.hass, new_values["co2_entity_id"])
+            new_values["co2_entity_id"] = _validate_co2_entity(
+                self.hass, new_values["co2_entity_id"]
+            )
+
+        new_values = {
+            attr_name: value
+            for attr_name, value in new_values.items()
+            if value != getattr(old, attr_name)
+        }
 
         if name is not Undefined and name != old.name:
             new_values["name"] = name
@@ -644,9 +677,13 @@ def async_entries_for_label(registry: AreaRegistry, label_id: str) -> list[AreaE
     return registry.areas.get_areas_for_label(label_id)
 
 
-def _validate_temperature_entity(hass: HomeAssistant, entity_id: str) -> None:
+def _validate_temperature_entity(hass: HomeAssistant, entity_id: str) -> str:
     """Validate temperature entity."""
     from homeassistant.components.sensor import SensorDeviceClass  # noqa: PLC0415
+
+    entity_id = entity_id.lower()
+    if not valid_entity_id(entity_id):
+        raise ValueError(f"Entity {entity_id} is not a valid entity ID")
 
     if not (state := hass.states.get(entity_id)):
         raise ValueError(f"Entity {entity_id} does not exist")
@@ -657,11 +694,16 @@ def _validate_temperature_entity(hass: HomeAssistant, entity_id: str) -> None:
         != SensorDeviceClass.TEMPERATURE
     ):
         raise ValueError(f"Entity {entity_id} is not a temperature sensor")
+    return entity_id
 
 
-def _validate_humidity_entity(hass: HomeAssistant, entity_id: str) -> None:
+def _validate_humidity_entity(hass: HomeAssistant, entity_id: str) -> str:
     """Validate humidity entity."""
     from homeassistant.components.sensor import SensorDeviceClass  # noqa: PLC0415
+
+    entity_id = entity_id.lower()
+    if not valid_entity_id(entity_id):
+        raise ValueError(f"Entity {entity_id} is not a valid entity ID")
 
     if not (state := hass.states.get(entity_id)):
         raise ValueError(f"Entity {entity_id} does not exist")
@@ -672,11 +714,16 @@ def _validate_humidity_entity(hass: HomeAssistant, entity_id: str) -> None:
         != SensorDeviceClass.HUMIDITY
     ):
         raise ValueError(f"Entity {entity_id} is not a humidity sensor")
+    return entity_id
 
 
-def _validate_co2_entity(hass: HomeAssistant, entity_id: str) -> None:
+def _validate_co2_entity(hass: HomeAssistant, entity_id: str) -> str:
     """Validate CO2 entity."""
     from homeassistant.components.sensor import SensorDeviceClass  # noqa: PLC0415
+
+    entity_id = entity_id.lower()
+    if not valid_entity_id(entity_id):
+        raise ValueError(f"Entity {entity_id} is not a valid entity ID")
 
     if not (state := hass.states.get(entity_id)):
         raise ValueError(f"Entity {entity_id} does not exist")
@@ -687,3 +734,4 @@ def _validate_co2_entity(hass: HomeAssistant, entity_id: str) -> None:
         != SensorDeviceClass.CO2
     ):
         raise ValueError(f"Entity {entity_id} is not a CO2 sensor")
+    return entity_id
