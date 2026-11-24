@@ -1346,7 +1346,11 @@ class UpdateDeviceSettingsTool(Tool):
                 ),
             ): _NULLABLE_STRING,
             probatio.Optional(
-                "area_id", description="The area_id. null removes the area."
+                "area_id",
+                description=(
+                    "The area_id. null removes the area, and a child device then "
+                    "uses the area of its parent."
+                ),
             ): _NULLABLE_STRING,
             probatio.Optional(
                 "disabled_by",
