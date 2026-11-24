@@ -373,6 +373,8 @@ def smart_plug_device(
     state_after_power_outage: PowerSwitchConfigurationService.StateAfterPowerOutage
     | None = None,
     led_brightness: int | None = None,
+    energy_yield: float | None = None,
+    powerconsumption: float = 0.0,
 ) -> SHCSmartPlug:
     """Build a minimal device double for the smart_plugs bucket."""
     device = create_autospec(SHCSmartPlug, instance=True, spec_set=True)
@@ -380,6 +382,10 @@ def smart_plug_device(
     device.id = device_id
     device.root_device_id = "test-mac"
     device.serial = f"serial-{device_id}"
+    device.supports_energy_yield = energy_yield is not None
+    device.energy_yield = energy_yield
+    device.powerconsumption = powerconsumption
+    device.energyconsumption = 1000.0
     device.manufacturer = "Bosch"
     device.device_model = "PSM"
     device.device_services = []
@@ -410,6 +416,8 @@ def smart_plug_compact_device(
     state_after_power_outage: PowerSwitchConfigurationService.StateAfterPowerOutage
     | None = None,
     led_brightness: int | None = None,
+    energy_yield: float | None = None,
+    powerconsumption: float = 0.0,
 ) -> SHCSmartPlugCompact:
     """Build a minimal device double for the smart_plugs_compact bucket."""
     device = create_autospec(SHCSmartPlugCompact, instance=True, spec_set=True)
@@ -417,6 +425,10 @@ def smart_plug_compact_device(
     device.id = device_id
     device.root_device_id = "test-mac"
     device.serial = f"serial-{device_id}"
+    device.supports_energy_yield = energy_yield is not None
+    device.energy_yield = energy_yield
+    device.powerconsumption = powerconsumption
+    device.energyconsumption = 1000.0
     device.manufacturer = "Bosch"
     device.device_model = "PLUG_COMPACT"
     device.device_services = []

@@ -22,6 +22,8 @@ from .conftest import (
     motion_detector2_device,
     outdoor_siren_device,
     setup_integration,
+    smart_plug_compact_device,
+    smart_plug_device,
     thermostat_device,
     thermostat_gen2_device,
     twinguard_device,
@@ -469,3 +471,56 @@ async def test_battery_level_disabled_by_default(
     assert entry is not None
     assert entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
     assert entry.unique_id == "serial-hdm:HomeMaticIP:motion1_battery_level"
+
+
+@pytest.mark.parametrize(
+    "device_buckets",
+    [
+        {
+            "smart_plugs": [
+                smart_plug_device(
+                    device_id="hdm:ZigBee:plug-pv",
+                    energy_yield=2500.0,
+                    powerconsumption=-120.0,
+                )
+            ],
+            "smart_plugs_compact": [
+                smart_plug_compact_device(
+                    device_id="hdm:ZigBee:compact-pv",
+                    name="Compact PV",
+                    energy_yield=500.0,
+                    powerconsumption=30.0,
+                )
+            ],
+        }
+    ],
+    indirect=True,
+)
+@pytest.mark.usefixtures("mock_session")
+async def test_pv_yield_sensors(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """A plug in Mini-PV mode reports yield energy and positive yield power."""
+    await setup_integration(hass, mock_config_entry)
+
+    assert hass.states.get("sensor.smart_plug_energy_yield").state == "2.5"
+    assert hass.states.get("sensor.smart_plug_power_yield").state == "120.0"
+    assert hass.states.get("sensor.compact_pv_energy_yield").state == "0.5"
+    # Net consumption means no production.
+    assert hass.states.get("sensor.compact_pv_power_yield").state == "0.0"
+
+
+@pytest.mark.parametrize(
+    "device_buckets", [{"smart_plugs": [smart_plug_device()]}], indirect=True
+)
+@pytest.mark.usefixtures("mock_session")
+async def test_plug_without_pv_has_no_yield_sensors(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """A plug that does not report a yield gets no yield entities."""
+    await setup_integration(hass, mock_config_entry)
+
+    assert hass.states.get("sensor.smart_plug_energy_yield") is None
+    assert hass.states.get("sensor.smart_plug_power_yield") is None
