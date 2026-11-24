@@ -5275,20 +5275,33 @@ async def test_bluetooth_proxy_with_voice_assistant_awaits_forward(
 
 
 @pytest.mark.usefixtures("mock_zeroconf")
+@pytest.mark.parametrize(
+    ("voice_assistant_flags", "slow_platform"),
+    [
+        (VoiceAssistantFeature.VOICE_ASSISTANT, Platform.ASSIST_SATELLITE),
+        (
+            VoiceAssistantFeature.VOICE_ASSISTANT | VoiceAssistantFeature.TIMERS,
+            Platform.TIMER_LIST,
+        ),
+    ],
+    ids=["assist_satellite", "timer_list"],
+)
 async def test_bluetooth_proxy_startup_wait_times_out_during_forward(
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
     mock_client: APIClient,
     hass_storage: dict[str, Any],
+    voice_assistant_flags: VoiceAssistantFeature,
+    slow_platform: Platform,
 ) -> None:
-    """Test setup waits for an assist satellite forward that outlasts the wait."""
+    """Test setup waits for a voice assistant forward that outlasts the wait."""
     entry, device_info = _create_cached_bluetooth_proxy_entry(
         hass, hass_storage, BluetoothProxyFeature.PASSIVE_SCAN
     )
     device_info = DeviceInfo(
         **{
             **device_info.to_dict(),
-            "voice_assistant_feature_flags": VoiceAssistantFeature.VOICE_ASSISTANT,
+            "voice_assistant_feature_flags": voice_assistant_flags,
         }
     )
     connect_event = asyncio.Event()
@@ -5303,15 +5316,15 @@ async def test_bluetooth_proxy_startup_wait_times_out_during_forward(
 
     mock_client.device_info_and_list_entities = _block_until_released
 
-    async def _slow_satellite_setup(*args: Any) -> None:
-        """Wait for the device configuration, like a satellite at startup."""
+    async def _slow_platform_setup(*args: Any) -> None:
+        """Take longer than the scanner wait, like a satellite at startup."""
         forward_started.set()
         await release_forward.wait()
 
     caplog.set_level(logging.DEBUG, "homeassistant.components.esphome.manager")
     with patch(
-        "homeassistant.components.esphome.assist_satellite.async_setup_entry",
-        _slow_satellite_setup,
+        f"homeassistant.components.esphome.{slow_platform}.async_setup_entry",
+        _slow_platform_setup,
     ):
         setup_task = hass.async_create_task(
             hass.config_entries.async_setup(entry.entry_id)
@@ -5338,7 +5351,7 @@ async def test_bluetooth_proxy_startup_wait_times_out_during_forward(
             assert await setup_task is True
             await entry.runtime_data.first_connect_done.wait()
 
-    assert Platform.ASSIST_SATELLITE in entry.runtime_data.loaded_platforms
+    assert slow_platform in entry.runtime_data.loaded_platforms
     assert "without awaiting async_forward_entry_setups" not in caplog.text
 
 
