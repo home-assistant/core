@@ -109,6 +109,7 @@ from .const import (
     ENTITY_DESC_KEY_SIGNAL_STRENGTH,
     ENTITY_DESC_KEY_TARGET_TEMPERATURE,
     ENTITY_DESC_KEY_TOTAL_INCREASING,
+    ENTITY_DESC_KEY_UV_INDEX,
     ENTITY_DESC_KEY_VOLTAGE,
     LOGGER,
 )
@@ -334,6 +335,11 @@ ENTITY_DESCRIPTION_KEY_MAP = {
     ENTITY_DESC_KEY_TOTAL_INCREASING: SensorEntityDescription(
         key=ENTITY_DESC_KEY_TOTAL_INCREASING,
         state_class=SensorStateClass.TOTAL_INCREASING,
+    ),
+    ENTITY_DESC_KEY_UV_INDEX: SensorEntityDescription(
+        key=ENTITY_DESC_KEY_UV_INDEX,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UV_INDEX,
     ),
 }
 

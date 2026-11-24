@@ -243,6 +243,7 @@ async def test_numeric_sensor(
         "entity_id",
         "old_scale",
         "old_unit",
+        "old_state_class",
         "new_scale",
         "new_unit",
         "unit_of_measurement",
@@ -253,6 +254,7 @@ async def test_numeric_sensor(
             HUMIDITY_SENSOR,
             1,
             "g/m³",
+            SensorStateClass.MEASUREMENT,
             0,
             "%",
             PERCENTAGE,
@@ -263,10 +265,22 @@ async def test_numeric_sensor(
             "sensor.multisensor_6_illuminance",
             0,
             "%",
+            SensorStateClass.MEASUREMENT,
             1,
             "Lux",
             LIGHT_LUX,
             id="illuminance",
+        ),
+        pytest.param(
+            "Ultraviolet",
+            "sensor.multisensor_6_ultraviolet",
+            255,
+            None,
+            None,
+            0,
+            None,
+            UV_INDEX,
+            id="invalid_scale_to_uv_index",
         ),
     ],
 )
@@ -278,9 +292,10 @@ async def test_legacy_multilevel_sensor_scale_change(
     property_: str,
     entity_id: str,
     old_scale: int,
-    old_unit: str,
+    old_unit: str | None,
+    old_state_class: SensorStateClass | None,
     new_scale: int,
-    new_unit: str,
+    new_unit: str | None,
     unit_of_measurement: str,
 ) -> None:
     """Test a legacy multilevel sensor that changes to a migrated scale."""
@@ -310,8 +325,8 @@ async def test_legacy_multilevel_sensor_scale_change(
     state = hass.states.get(entity_id)
     assert state
     assert ATTR_DEVICE_CLASS not in state.attributes
-    assert state.attributes[ATTR_STATE_CLASS] == SensorStateClass.MEASUREMENT
-    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == old_unit
+    assert state.attributes.get(ATTR_STATE_CLASS) == old_state_class
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == old_unit
 
     event = Event(
         "metadata updated",
