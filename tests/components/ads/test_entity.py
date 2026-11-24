@@ -14,7 +14,7 @@ from homeassistant.const import EVENT_HOMEASSISTANT_STOP, STATE_OFF
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from . import MockAdsDevice, setup_ads_platform
+from . import MockAdsDevice, build_notification, setup_ads_platform
 
 ADS_VAR = "GVL.pump"
 ENTITY_ID = "switch.pump"
@@ -148,6 +148,38 @@ async def test_removal_while_subscribing(
     client.del_device_notification.assert_called_once_with(1, 1)
 
 
+@pytest.mark.parametrize("remove", [True, False], ids=["removal", "shutdown"])
+async def test_notification_while_deleting(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_pyads_connection: MagicMock,
+    mock_ads_device: MockAdsDevice,
+    caplog: pytest.LogCaptureFixture,
+    remove: bool,
+) -> None:
+    """Test a notification still in flight while it is deleted is not unknown."""
+    mock_ads_device.values[ADS_VAR] = BOOL_TRUE
+    assert await setup_ads_platform(
+        hass, mock_ads_device, SWITCH_DOMAIN, PLATFORM_CONFIG
+    )
+    client = mock_pyads_connection.return_value
+    _, _, router_callback = client.add_device_notification.call_args.args
+
+    def del_device_notification(hnotify: int, _huser: int) -> None:
+        # The router finishes delivering before the delete returns.
+        router_callback(build_notification(hnotify, BOOL_FALSE), ADS_VAR)
+
+    client.del_device_notification.side_effect = del_device_notification
+    if remove:
+        entity_registry.async_remove(ENTITY_ID)
+    else:
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
+    await hass.async_block_till_done()
+
+    client.del_device_notification.assert_called_once_with(1, 1)
+    assert "Unknown device notification handle" not in caplog.text
+
+
 async def test_shutdown_waits_for_a_removal(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
@@ -163,7 +195,7 @@ async def test_shutdown_waits_for_a_removal(
     deleting = threading.Event()
     release = threading.Event()
 
-    def del_device_notification(*args: Any) -> None:
+    def del_device_notification(*_: Any) -> None:
         deleting.set()
         release.wait()
 

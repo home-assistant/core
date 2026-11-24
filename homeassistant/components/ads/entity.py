@@ -57,6 +57,7 @@ class AdsEntity(Entity):
             self._ads_hub.add_device_notification, ads_var, plctype, update
         )
         if handle is None:
+            # No notification is registered, so no first update will arrive.
             return
         if self._removed:
             # Removed while this was subscribing, so the removal has already
