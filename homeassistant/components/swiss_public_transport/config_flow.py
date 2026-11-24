@@ -66,7 +66,7 @@ USER_DATA_SCHEMA = probatio.Schema(
             SelectSelectorConfig(
                 options=TRANSPORTATION_OPTIONS,
                 multiple=True,
-                mode=SelectSelectorMode.LIST,
+                mode=SelectSelectorMode.DROPDOWN,
                 translation_key="transportations",
             ),
         ),
