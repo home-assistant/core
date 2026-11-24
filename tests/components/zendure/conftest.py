@@ -1,11 +1,11 @@
 """Fixtures for the Zendure integration tests."""
 
 from collections.abc import Generator
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock, create_autospec, patch
 
 import pytest
 from pytest_homeassistant.common import MockConfigEntry, load_json_object_fixture
-from zendure import Availability, DeviceSnapshot
+from zendure import Availability, DeviceSnapshot, ZendureClient
 
 from homeassistant.components.zendure.const import DOMAIN
 from homeassistant.const import CONF_HOST
@@ -56,11 +56,12 @@ def mock_read() -> AsyncMock:
 @pytest.fixture
 def mock_zendure(mock_read: AsyncMock) -> Generator[MagicMock]:
     """Return a mocked Zendure client shared by setup and the config flow."""
-    client = MagicMock()
+    client = create_autospec(ZendureClient, instance=True)
     client.async_refresh = mock_read
-    client.close = AsyncMock()
-    client.__aenter__ = AsyncMock(return_value=client)
-    client.__aexit__ = AsyncMock(return_value=None)
+    client.__aenter__.return_value = client
+    # Autospec returns a truthy mock, which would swallow exceptions raised
+    # inside "async with".
+    client.__aexit__.return_value = None
     with (
         patch(
             "homeassistant.components.zendure.create_local_client",

@@ -6,7 +6,11 @@ from zendure import DeviceSnapshot, ZendureClient, ZendureConnectionError, Zendu
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.helpers.update_coordinator import (
+    DataUpdateCoordinator,
+    UpdateFailed,
+    UpdateFailedUnreachable,
+)
 
 from .const import DOMAIN, LOGGER, SCAN_INTERVAL
 
@@ -40,7 +44,7 @@ class ZendureDataUpdateCoordinator(DataUpdateCoordinator[DeviceSnapshot]):
         try:
             return await self.client.async_refresh()
         except ZendureConnectionError as err:
-            raise UpdateFailed(
+            raise UpdateFailedUnreachable(
                 translation_domain=DOMAIN,
                 translation_key="communication_error",
                 translation_placeholders={"error": str(err)},

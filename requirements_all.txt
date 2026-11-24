@@ -3631,7 +3631,7 @@ zamg==0.5.0
 zcc-helper==3.8
 
 # homeassistant.components.zendure
-zendure==0.3.0
+zendure==0.3.1
 
 # homeassistant.components.zeroconf
 zeroconf==0.154.0

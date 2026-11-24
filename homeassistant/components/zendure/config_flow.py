@@ -19,6 +19,14 @@ from homeassistant.helpers.selector import TextSelector, TextSelectorConfig
 
 from .const import DOMAIN, LOGGER
 
+STEP_USER_DATA_SCHEMA = probatio.Schema(
+    {
+        probatio.Required(CONF_HOST): TextSelector(
+            TextSelectorConfig(autocomplete="off")
+        ),
+    }
+)
+
 
 class ZendureFlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle a Zendure config flow."""
@@ -59,22 +67,16 @@ class ZendureFlowHandler(ConfigFlow, domain=DOMAIN):
             host = user_input[CONF_HOST]
             if snapshot := await self._async_validate(host, errors):
                 await self.async_set_unique_id(snapshot.serial_number)
-                self._abort_if_unique_id_configured(updates={CONF_HOST: host})
+                self._abort_if_unique_id_configured()
                 return self.async_create_entry(
                     title=lookup_device(snapshot.product_raw).display_name,
                     data={CONF_HOST: host},
                 )
-        else:
-            user_input = {}
 
         return self.async_show_form(
             step_id="user",
-            data_schema=probatio.Schema(
-                {
-                    probatio.Required(
-                        CONF_HOST, default=user_input.get(CONF_HOST)
-                    ): TextSelector(TextSelectorConfig(autocomplete="off")),
-                }
+            data_schema=self.add_suggested_values_to_schema(
+                STEP_USER_DATA_SCHEMA, user_input
             ),
             errors=errors,
         )

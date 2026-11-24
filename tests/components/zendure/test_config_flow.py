@@ -111,7 +111,7 @@ async def test_unsupported_product_is_logged(
 async def test_user_flow_already_configured(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry
 ) -> None:
-    """Test configuring the same device twice updates its address."""
+    """Test configuring the same device twice aborts and keeps the entry."""
     mock_config_entry.add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
@@ -123,4 +123,4 @@ async def test_user_flow_already_configured(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
-    assert mock_config_entry.data[CONF_HOST] == "192.168.1.99"
+    assert mock_config_entry.data[CONF_HOST] == "192.168.1.50"

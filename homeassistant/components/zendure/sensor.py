@@ -4,7 +4,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from typing import override
 
-from zendure import PropertyValue
+from zendure import PackState, PropertyValue
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -28,17 +28,6 @@ from .coordinator import ZendureConfigEntry
 from .entity import ZendureEntity
 
 PARALLEL_UPDATES = 0
-
-
-# Raw state codes reported by packState.
-PACK_STATES = {0: "standby", 1: "charging", 2: "discharging"}
-
-
-def _pack_state(value: PropertyValue) -> str | None:
-    """Map a raw pack state code to its option, or unknown."""
-    if not isinstance(value, int):
-        return None
-    return PACK_STATES.get(value)
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -87,8 +76,7 @@ DEVICE_SENSORS: tuple[ZendureSensorEntityDescription, ...] = (
         key="packState",
         translation_key="pack_state",
         device_class=SensorDeviceClass.ENUM,
-        options=list(PACK_STATES.values()),
-        value_fn=_pack_state,
+        options=[state.value for state in PackState],
     ),
     ZendureSensorEntityDescription(
         key="hyperTmp",
