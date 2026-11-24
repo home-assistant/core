@@ -74,9 +74,7 @@ rules:
   entity-translations: done
   exception-translations: done
   icon-translations: done
-  reconfiguration-flow:
-    status: exempt
-    comment: The only setting is the API key, which a reauthentication flow handles.
+  reconfiguration-flow: todo
   repair-issues: todo
   stale-devices: todo
 
