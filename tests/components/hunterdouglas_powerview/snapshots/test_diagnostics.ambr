@@ -338,6 +338,9 @@
         'modified_at': '2026-01-01T00:00:00+00:00',
         'name': 'Bath East',
         'name_by_user': None,
+        'original_device_slots': dict({
+        }),
+        'original_device_type': None,
         'serial_number': None,
         'sw_version': None,
       }),
@@ -677,6 +680,9 @@
         'modified_at': '2026-01-01T00:00:00+00:00',
         'name': 'Bath South',
         'name_by_user': None,
+        'original_device_slots': dict({
+        }),
+        'original_device_type': None,
         'serial_number': None,
         'sw_version': None,
       }),
@@ -1016,6 +1022,9 @@
         'modified_at': '2026-01-01T00:00:00+00:00',
         'name': 'Kitchen North',
         'name_by_user': None,
+        'original_device_slots': dict({
+        }),
+        'original_device_type': None,
         'serial_number': None,
         'sw_version': None,
       }),
@@ -1355,6 +1364,9 @@
         'modified_at': '2026-01-01T00:00:00+00:00',
         'name': 'Kitchen West',
         'name_by_user': None,
+        'original_device_slots': dict({
+        }),
+        'original_device_type': None,
         'serial_number': None,
         'sw_version': None,
       }),
@@ -2271,6 +2283,9 @@
         'modified_at': '2026-01-01T00:00:00+00:00',
         'name': 'Powerview Generation 1',
         'name_by_user': None,
+        'original_device_slots': dict({
+        }),
+        'original_device_type': None,
         'serial_number': None,
         'sw_version': '1.1.857',
       }),
@@ -2681,6 +2696,9 @@
       'modified_at': '2026-01-01T00:00:00+00:00',
       'name': 'Kitchen North',
       'name_by_user': None,
+      'original_device_slots': dict({
+      }),
+      'original_device_type': None,
       'serial_number': None,
       'sw_version': None,
     }),
@@ -3085,6 +3103,9 @@
       'modified_at': '2026-01-01T00:00:00+00:00',
       'name': 'Family Left',
       'name_by_user': None,
+      'original_device_slots': dict({
+      }),
+      'original_device_type': None,
       'serial_number': None,
       'sw_version': '1.8.1944',
     }),
@@ -4044,6 +4065,9 @@
       'modified_at': '2026-01-01T00:00:00+00:00',
       'name': 'Powerview Generation 1',
       'name_by_user': None,
+      'original_device_slots': dict({
+      }),
+      'original_device_type': None,
       'serial_number': None,
       'sw_version': '1.1.857',
     }),

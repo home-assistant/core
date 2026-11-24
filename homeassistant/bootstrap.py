@@ -233,6 +233,7 @@ DEFAULT_INTEGRATIONS = {
     "application_credentials",
     "backup",
     "brands",
+    "device_type",
     "frontend",
     "hardware",
     "labs",

@@ -1926,6 +1926,7 @@ NO_QUALITY_SCALE = [
     "default_config",
     "device_automation",
     "device_tracker",
+    "device_type",
     "diagnostics",
     "door",
     "doorbell",

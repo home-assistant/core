@@ -44,6 +44,7 @@ from homeassistant.util.dt import utc_from_timestamp, utcnow
 from homeassistant.util.event_type import EventType
 from homeassistant.util.hass_dict import HassKey
 from homeassistant.util.json import format_unserializable_data
+from homeassistant.util.read_only_dict import ReadOnlyDict
 
 from . import frame, storage, translation
 from .debounce import Debouncer
@@ -70,6 +71,7 @@ if TYPE_CHECKING:
     from homeassistant.config_entries import ConfigEntry
 
     from . import entity_registry
+    from .device_type import DeviceType
 else:
     from propcache.api import under_cached_property
 
@@ -81,7 +83,7 @@ EVENT_DEVICE_REGISTRY_UPDATED: EventType[EventDeviceRegistryUpdatedData] = Event
 )
 STORAGE_KEY = "core.device_registry"
 STORAGE_VERSION_MAJOR = 3
-STORAGE_VERSION_MINOR = 4
+STORAGE_VERSION_MINOR = 5
 
 CLEANUP_DELAY = 10
 
@@ -566,6 +568,55 @@ def _validate_device_info_fields(
     }
 
 
+def _device_type_storage(
+    device_type: DeviceType | Undefined | None,
+) -> tuple[
+    str | Undefined | None, Mapping[str, tuple[tuple[str, str, str], ...]] | Undefined
+]:
+    """Return the type id and slots a device type is stored as."""
+    if device_type is Undefined:
+        return Undefined, Undefined
+    if device_type is None:
+        return None, {}
+    from .device_type import DeviceType  # noqa: PLC0415  # Circular dependency
+
+    if not isinstance(device_type, DeviceType):
+        raise TypeError(
+            f"device_type must be a DeviceType instance, not {device_type!r}"
+        )
+    if type(device_type) is DeviceType:
+        return None, {}
+    return device_type.type_id, {
+        slot_id: tuple(
+            (
+                reference.platform.value,
+                reference.integration_domain,
+                reference.unique_id,
+            )
+            for reference in slot
+        )
+        for slot_id, slot in device_type.references.items()
+    }
+
+
+def _protect_device_slots(
+    data: Mapping[str, Iterable[Iterable[str]]],
+) -> ReadOnlyDict[str, tuple[tuple[str, str, str], ...]]:
+    """Return the slots as a read only dict of entity reference tuples.
+
+    A reference is the entity domain, the integration domain and the unique id.
+    """
+    return ReadOnlyDict(
+        {
+            slot_id: tuple(
+                (domain, integration_domain, unique_id)
+                for domain, integration_domain, unique_id in references
+            )
+            for slot_id, references in data.items()
+        }
+    )
+
+
 @lru_cache(maxsize=512)
 def format_mac(mac: str) -> str:
     """Format the mac address string for entry into dev reg."""
@@ -753,6 +804,10 @@ class DeviceEntry(BaseDeviceEntry):
     manufacturer: str | None = attr.ib(default=None)
     model: str | None = attr.ib(default=None)
     model_id: str | None = attr.ib(default=None)
+    original_device_slots: ReadOnlyDict[str, tuple[tuple[str, str, str], ...]] = (
+        attr.ib(converter=_protect_device_slots, factory=dict)
+    )
+    original_device_type: str | None = attr.ib(default=None)
     # Set on devices created by splitting a pre-migration composite device: the
     # identifiers and connections copied from the composite have not yet been reconciled.
     # On the owning integration's first re-registration they are replaced with the ones
@@ -846,6 +901,7 @@ class DeviceEntry(BaseDeviceEntry):
             "name_by_user": self.name_by_user,
             "name": self.name,
             "next_name_part": self.next_name_part,
+            "original_device_type": self.original_device_type,
             "parent_device_id": None,
             # primary_config_entry is deprecated, it can be removed in HA Core 2027.10.
             "primary_config_entry": self.config_entry_id,
@@ -881,6 +937,11 @@ class DeviceEntry(BaseDeviceEntry):
                 "name_by_user": self.name_by_user,
                 "name": self.name,
                 "has_composite_identifiers": (self.has_composite_identifiers),
+                "original_device_slots": {
+                    slot_id: list(references)
+                    for slot_id, references in self.original_device_slots.items()
+                },
+                "original_device_type": self.original_device_type,
                 # primary_config_entry is deprecated, it can be removed in HA Core
                 # 2027.10.
                 "primary_config_entry": self.config_entry_id,
@@ -1464,6 +1525,13 @@ class DeviceRegistryStore(storage.Store[dict[str, list[dict[str, Any]]]]):
         if old_major_version < 3 or (old_major_version == 3 and old_minor_version < 4):
             # Version 3.4 adds child devices, introduced in 2026.9
             old_data.setdefault("child_devices", [])
+
+        if old_major_version < 3 or (old_major_version == 3 and old_minor_version < 5):
+            # Version 3.5 adds original_device_type and original_device_slots,
+            # introduced in 2026.12
+            for device in old_data["devices"]:
+                device.setdefault("original_device_type", None)
+                device.setdefault("original_device_slots", {})
 
         if old_major_version > 3:
             raise NotImplementedError
@@ -2515,6 +2583,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         config_subentry_id: str | Undefined | None = Undefined,
         configuration_url: str | URL | Undefined | None = Undefined,
         connections: set[tuple[str, str]] | Undefined | None = Undefined,
+        device_type: DeviceType | Undefined | None = Undefined,
         # To disable a device if it gets created, does not affect existing devices
         disabled_by: DeviceEntryDisabler | Undefined | None = Undefined,
         entry_type: DeviceEntryType | Undefined | None = Undefined,
@@ -2554,6 +2623,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
             config_entry_id=config_entry_id,
             config_subentry_id=config_subentry_id,
             disabled_by=disabled_by,
+            device_type=device_type,
             device_info=DeviceInfo(
                 configuration_url=configuration_url,
                 # None and Undefined both mean no connections or identifiers
@@ -2605,6 +2675,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         # To disable a device if it gets created, does not affect existing devices
         disabled_by: DeviceEntryDisabler | Undefined | None,
         device_info: DeviceInfo,
+        device_type: DeviceType | Undefined | None = Undefined,
     ) -> DeviceEntry:
         """Get device. Create if it doesn't exist."""
         # The deprecated fields are hidden from type checkers
@@ -2629,6 +2700,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
             serial_number=device_info.serial_number,
             sw_version=device_info.sw_version,
         )
+        original_device_type, original_device_slots = _device_type_storage(device_type)
 
         if disabled_by is DeviceEntryDisabler.DEVICE:
             raise HomeAssistantError(
@@ -2890,6 +2962,8 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
             name=name,
             has_composite_identifiers=has_composite_identifiers,
             new_config_subentry_id=config_subentry_id,
+            original_device_slots=original_device_slots,
+            original_device_type=original_device_type,
             via_device_id=via_device_id,
             **identifiers_connections,
             **validated_fields,
@@ -3258,6 +3332,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
             "manufacturer",
             "model",
             "model_id",
+            "original_device_type",
             "serial_number",
             "sw_version",
             "via_device_id",
@@ -3266,6 +3341,8 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
                 changes[field_name] = old_value
         if device.connections:
             changes["connections"] = device.connections
+        if device.original_device_slots:
+            changes["original_device_slots"] = device.original_device_slots
         # Replace identifiers copied from a pre-migration composite instead of
         # merging, as async_get_or_create does. Can be simplified in HA Core 2027.8.
         if device.has_composite_identifiers:
@@ -3348,6 +3425,9 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         new_config_subentry_id: str | Undefined | None = Undefined,
         new_connections: set[tuple[str, str]] | Undefined = Undefined,
         new_identifiers: set[tuple[str, str]] | Undefined = Undefined,
+        original_device_slots: Mapping[str, Iterable[tuple[str, str, str]]]
+        | Undefined = Undefined,
+        original_device_type: str | Undefined | None = Undefined,
         remove_config_entry_id: str | Undefined = Undefined,
         remove_config_subentry_id: str | Undefined | None = Undefined,
         serial_number: str | Undefined | None = Undefined,
@@ -3752,6 +3832,13 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
             ("name", name),
             ("name_by_user", name_by_user),
             ("has_composite_identifiers", has_composite_identifiers),
+            (
+                "original_device_slots",
+                original_device_slots
+                if original_device_slots is Undefined
+                else _protect_device_slots(original_device_slots),
+            ),
+            ("original_device_type", original_device_type),
             ("serial_number", serial_number),
             ("sw_version", sw_version),
             ("via_device_id", via_device_id),
@@ -4570,6 +4657,8 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
                     name_by_user=device["name_by_user"],
                     name=device["name"],
                     has_composite_identifiers=device["has_composite_identifiers"],
+                    original_device_slots=device["original_device_slots"],
+                    original_device_type=device["original_device_type"],
                     serial_number=device["serial_number"],
                     sw_version=device["sw_version"],
                     via_device_id=device["via_device_id"],

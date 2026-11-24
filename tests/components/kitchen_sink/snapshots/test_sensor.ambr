@@ -3,6 +3,20 @@
   set({
     StateSnapshot({
       'attributes': ReadOnlyDict({
+        <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
+        <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Smart plug Energy',
+        <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+        <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+      }),
+      'context': <ANY>,
+      'entity_id': 'sensor.smart_plug_energy',
+      'last_changed': <ANY>,
+      'last_reported': <ANY>,
+      'last_updated': <ANY>,
+      'state': '42.5',
+    }),
+    StateSnapshot({
+      'attributes': ReadOnlyDict({
         <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
         <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Outlet 1 Power',
         <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -28,6 +42,20 @@
       'last_reported': <ANY>,
       'last_updated': <ANY>,
       'state': '1500',
+    }),
+    StateSnapshot({
+      'attributes': ReadOnlyDict({
+        <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
+        <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Smart plug Power',
+        <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+        <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfPower.WATT: 'W'>,
+      }),
+      'context': <ANY>,
+      'entity_id': 'sensor.smart_plug_power',
+      'last_changed': <ANY>,
+      'last_reported': <ANY>,
+      'last_updated': <ANY>,
+      'state': '120',
     }),
     StateSnapshot({
       'attributes': ReadOnlyDict({
@@ -87,6 +115,20 @@
   set({
     StateSnapshot({
       'attributes': ReadOnlyDict({
+        <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
+        <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Smart plug Energy',
+        <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+        <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+      }),
+      'context': <ANY>,
+      'entity_id': 'sensor.smart_plug_energy',
+      'last_changed': <ANY>,
+      'last_reported': <ANY>,
+      'last_updated': <ANY>,
+      'state': '42.5',
+    }),
+    StateSnapshot({
+      'attributes': ReadOnlyDict({
         <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
         <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Outlet 1 Power',
         <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -112,6 +154,20 @@
       'last_reported': <ANY>,
       'last_updated': <ANY>,
       'state': '1500',
+    }),
+    StateSnapshot({
+      'attributes': ReadOnlyDict({
+        <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
+        <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Smart plug Power',
+        <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+        <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfPower.WATT: 'W'>,
+      }),
+      'context': <ANY>,
+      'entity_id': 'sensor.smart_plug_power',
+      'last_changed': <ANY>,
+      'last_reported': <ANY>,
+      'last_updated': <ANY>,
+      'state': '120',
     }),
     StateSnapshot({
       'attributes': ReadOnlyDict({

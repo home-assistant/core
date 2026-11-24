@@ -237,6 +237,8 @@ DEVICE_FILTER_SELECTOR_CONFIG_SCHEMA = probatio.Schema(
         probatio.Optional("model"): str,
         # Model ID of device
         probatio.Optional("model_id"): str,
+        # Device type of device, which also matches its subtypes
+        probatio.Optional("device_type"): probatio.All(probatio.EnsureList(), [str]),
     }
 )
 
@@ -262,6 +264,7 @@ class DeviceFilterSelectorConfig(TypedDict, total=False):
     manufacturer: str
     model: str
     model_id: str
+    device_type: str | list[str]
 
 
 ENTITY_WITH_DEVICE_FILTER_SELECTOR_CONFIG_SCHEMA = (

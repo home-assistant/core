@@ -10,9 +10,12 @@ from pytest_homeassistant.typing import MockHAClientWebSocket, WebSocketGenerato
 from pytest_unordered import unordered
 
 from homeassistant.components.config import DOMAIN, device_registry
+from homeassistant.components.device_type import SmartPlug
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, label_registry as lr
+from homeassistant.helpers.device_type import EntityReference
 from homeassistant.setup import async_setup_component
 from homeassistant.util.dt import utcnow
 
@@ -47,9 +50,16 @@ async def test_list_devices(
         identifiers={("bridgeid", "1234")},
         manufacturer="manufacturer",
         model="model",
+        device_type=SmartPlug(
+            outlet=EntityReference(Platform.SWITCH, "bridgeid", "outlet")
+        ),
         via_device_id=device1.id,
         entry_type=dr.DeviceEntryType.SERVICE,
     )
+    # Stored, but not part of the list
+    assert device2.original_device_slots == {
+        "outlet": (("switch", "bridgeid", "outlet"),)
+    }
 
     await client.send_json_auto_id({"type": "config/device_registry/list"})
     msg = await client.receive_json()
@@ -78,6 +88,7 @@ async def test_list_devices(
             "name_by_user": None,
             "name": None,
             "next_name_part": None,
+            "original_device_type": None,
             "parent_device_id": None,
             "primary_config_entry": entry.entry_id,
             "serial_number": None,
@@ -105,6 +116,7 @@ async def test_list_devices(
             "name_by_user": None,
             "name": None,
             "next_name_part": None,
+            "original_device_type": "smart_plug",
             "parent_device_id": None,
             "primary_config_entry": entry.entry_id,
             "serial_number": None,
@@ -145,6 +157,7 @@ async def test_list_devices(
             "name_by_user": None,
             "name": None,
             "next_name_part": None,
+            "original_device_type": None,
             "parent_device_id": None,
             "primary_config_entry": entry.entry_id,
             "serial_number": None,
@@ -1077,6 +1090,7 @@ async def test_list_devices_with_child_devices(
             "name_by_user": None,
             "name": "Power strip",
             "next_name_part": None,
+            "original_device_type": None,
             "parent_device_id": None,
             "primary_config_entry": entry.entry_id,
             "serial_number": None,

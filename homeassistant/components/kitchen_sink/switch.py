@@ -46,6 +46,12 @@ HUB_POWER_STRIP_SWITCHES = (
     ),
 )
 
+SMART_PLUG_SWITCHES = (
+    DemoSwitchEntityDescription(
+        key="smart_plug", name=None, device_name="Smart plug", state=True
+    ),
+)
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -98,6 +104,7 @@ async def async_setup_entry(
                 DemoSwitch(description, parent_device_id=power_strip_via_hub.id)
                 for description in HUB_POWER_STRIP_SWITCHES
             ),
+            *(DemoSwitch(description) for description in SMART_PLUG_SWITCHES),
         ]
     )
 

@@ -8,6 +8,7 @@ import datetime as dt
 from functools import partial
 from random import random
 
+from homeassistant.components.device_type import SmartPlug
 from homeassistant.components.labs import (
     EventLabsUpdatedData,
     async_is_preview_feature_enabled,
@@ -33,8 +34,9 @@ from homeassistant.const import (
     UnitOfVolume,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.device_registry import AnyDeviceEntry
+from homeassistant.helpers.device_type import EntityReference
 from homeassistant.helpers.issue_registry import (
     IssueSeverity,
     async_create_issue,
@@ -88,6 +90,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     if "recorder" in hass.config.components:
         # Insert stats for mean_type_changed issue
         await _insert_wrong_wind_direction_statistics(hass)
+
+    # The plug's type references the entities filling its slots
+    dr.async_get(hass).async_get_or_create(
+        config_entry_id=entry.entry_id,
+        identifiers={(DOMAIN, "smart_plug")},
+        name="Smart plug",
+        device_type=SmartPlug(
+            outlet=EntityReference(Platform.SWITCH, DOMAIN, "smart_plug"),
+            power=EntityReference(Platform.SENSOR, DOMAIN, "smart_plug_power"),
+            energy=EntityReference(Platform.SENSOR, DOMAIN, "smart_plug_energy"),
+        ),
+    )
 
     # Set up demo platforms with config entry
     await hass.config_entries.async_forward_entry_setups(

@@ -14,6 +14,7 @@ homeassistant.helpers.condition
 homeassistant.helpers.debounce
 homeassistant.helpers.deprecation
 homeassistant.helpers.device_registry
+homeassistant.helpers.device_type
 homeassistant.helpers.discovery
 homeassistant.helpers.dispatcher
 homeassistant.helpers.entity
@@ -177,6 +178,7 @@ homeassistant.components.demo.*
 homeassistant.components.derivative.*
 homeassistant.components.device_automation.*
 homeassistant.components.device_tracker.*
+homeassistant.components.device_type.*
 homeassistant.components.devolo_home_control.*
 homeassistant.components.devolo_home_network.*
 homeassistant.components.dhcp.*

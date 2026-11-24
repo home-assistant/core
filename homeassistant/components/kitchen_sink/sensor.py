@@ -9,7 +9,7 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import DEGREE, UnitOfPower
+from homeassistant.const import DEGREE, UnitOfEnergy, UnitOfPower
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import ChildDeviceInfo, DeviceInfo
@@ -47,6 +47,27 @@ OUTLET_SENSORS = (
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfPower.WATT,
+    ),
+)
+
+SMART_PLUG_SENSORS = (
+    DemoSensorEntityDescription(
+        key="smart_plug_power",
+        device_unique_id="smart_plug",
+        device_name="Smart plug",
+        state=120,
+        device_class=SensorDeviceClass.POWER,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfPower.WATT,
+    ),
+    DemoSensorEntityDescription(
+        key="smart_plug_energy",
+        device_unique_id="smart_plug",
+        device_name="Smart plug",
+        state=42.5,
+        device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
     ),
 )
 
@@ -115,6 +136,7 @@ async def async_setup_entry(
                 DemoSensor(description, parent_device_id=parent_device_id)
                 for description in OUTLET_SENSORS
             ),
+            *(DemoSensor(description) for description in SMART_PLUG_SENSORS),
             *(DemoSensor(description) for description in STATISTICS_ISSUE_SENSORS),
         ]
     )
