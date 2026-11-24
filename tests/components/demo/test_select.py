@@ -5,12 +5,12 @@ from unittest.mock import patch
 import pytest
 
 from homeassistant.components.select import (
-    ATTR_OPTION,
     ATTR_OPTIONS,
     DOMAIN as SELECT_DOMAIN,
-    SERVICE_SELECT_OPTION,
+    SelectService,
+    SelectServiceArgument,
 )
-from homeassistant.const import ATTR_ENTITY_ID, Platform
+from homeassistant.const import CommonServiceArgument, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.setup import async_setup_component
@@ -58,8 +58,11 @@ async def test_select_option_bad_attr(hass: HomeAssistant) -> None:
     with pytest.raises(ServiceValidationError):
         await hass.services.async_call(
             SELECT_DOMAIN,
-            SERVICE_SELECT_OPTION,
-            {ATTR_OPTION: "slow_speed", ATTR_ENTITY_ID: ENTITY_SPEED},
+            SelectService.SELECT_OPTION,
+            {
+                SelectServiceArgument.OPTION: "slow_speed",
+                CommonServiceArgument.ENTITY_ID: ENTITY_SPEED,
+            },
             blocking=True,
         )
     await hass.async_block_till_done()
@@ -77,8 +80,11 @@ async def test_select_option(hass: HomeAssistant) -> None:
 
     await hass.services.async_call(
         SELECT_DOMAIN,
-        SERVICE_SELECT_OPTION,
-        {ATTR_OPTION: "light_speed", ATTR_ENTITY_ID: ENTITY_SPEED},
+        SelectService.SELECT_OPTION,
+        {
+            SelectServiceArgument.OPTION: "light_speed",
+            CommonServiceArgument.ENTITY_ID: ENTITY_SPEED,
+        },
         blocking=True,
     )
     await hass.async_block_till_done()

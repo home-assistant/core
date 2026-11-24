@@ -7,12 +7,12 @@ from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.number import (
-    ATTR_VALUE,
     DOMAIN as NUMBER_DOMAIN,
-    SERVICE_SET_VALUE,
+    NumberService,
+    NumberServiceArgument,
 )
 from homeassistant.components.plugwise.const import DOMAIN
-from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.const import CommonServiceArgument
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import entity_registry as er, issue_registry as ir
@@ -40,10 +40,10 @@ async def test_adam_temperature_offset_change(
     """Test changing an Adam temperature_offset number."""
     await hass.services.async_call(
         NUMBER_DOMAIN,
-        SERVICE_SET_VALUE,
+        NumberService.SET_VALUE,
         {
-            ATTR_ENTITY_ID: "number.zone_thermostat_jessie_temperature_offset",
-            ATTR_VALUE: 1.0,
+            CommonServiceArgument.ENTITY_ID: "number.zone_thermostat_jessie_temperature_offset",
+            NumberServiceArgument.VALUE: 1.0,
         },
         blocking=True,
     )
@@ -62,13 +62,95 @@ async def test_adam_temperature_offset_out_of_bounds_change(
     with pytest.raises(ServiceValidationError, match="valid range"):
         await hass.services.async_call(
             NUMBER_DOMAIN,
-            SERVICE_SET_VALUE,
+            NumberService.SET_VALUE,
             {
-                ATTR_ENTITY_ID: "number.zone_thermostat_jessie_temperature_offset",
-                ATTR_VALUE: 3.0,
+                CommonServiceArgument.ENTITY_ID: "number.zone_thermostat_jessie_temperature_offset",
+                NumberServiceArgument.VALUE: 3.0,
             },
             blocking=True,
         )
+
+
+async def test_adam_preset_temperature_change(
+    hass: HomeAssistant, mock_smile_adam: MagicMock, init_integration: MockConfigEntry
+) -> None:
+    """Test changing of a preset temperature number."""
+    await hass.services.async_call(
+        NUMBER_DOMAIN,
+        NumberService.SET_VALUE,
+        {
+            CommonServiceArgument.ENTITY_ID: "number.badkamer_home_preset_temperature",
+            NumberServiceArgument.VALUE: 20.5,
+        },
+        blocking=True,
+    )
+
+    assert mock_smile_adam.set_number.call_count == 1
+    mock_smile_adam.set_number.assert_called_with(
+        "08963fec7c53423ca5680aa4cb502c63",
+        "home_preset_temperature",
+        20.5,
+        setpoint="setpoint",
+    )
+
+
+@pytest.mark.usefixtures("mock_smile_adam")
+async def test_adam_preset_temperature_out_of_bounds_change(
+    hass: HomeAssistant, init_integration: MockConfigEntry
+) -> None:
+    """Test changing of a preset temperature number beyond limits."""
+    with pytest.raises(ServiceValidationError, match="valid range"):
+        await hass.services.async_call(
+            NUMBER_DOMAIN,
+            NumberService.SET_VALUE,
+            {
+                CommonServiceArgument.ENTITY_ID: "number.badkamer_home_preset_temperature",
+                NumberServiceArgument.VALUE: 31.0,
+            },
+            blocking=True,
+        )
+
+
+@pytest.mark.usefixtures("mock_smile_adam_heat_cool")
+@pytest.mark.parametrize("chosen_env", ["m_adam_cooling"], indirect=True)
+@pytest.mark.parametrize("cooling_present", [True], indirect=True)
+@pytest.mark.parametrize("platforms", [(NUMBER_DOMAIN,)])
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_adam_cooling_number_entities(
+    hass: HomeAssistant,
+    snapshot: SnapshotAssertion,
+    entity_registry: er.EntityRegistry,
+    setup_platform: MockConfigEntry,
+) -> None:
+    """Test Adam with cooling number snapshot."""
+    await snapshot_platform(hass, entity_registry, snapshot, setup_platform.entry_id)
+
+
+@pytest.mark.parametrize("chosen_env", ["m_adam_cooling"], indirect=True)
+@pytest.mark.parametrize("cooling_present", [True], indirect=True)
+async def test_adam_preset_cooling_temperature_change(
+    hass: HomeAssistant,
+    mock_smile_adam_heat_cool: MagicMock,
+    init_integration: MockConfigEntry,
+) -> None:
+    """Test changing of an Adam preset cooling temperature number."""
+    await hass.services.async_call(
+        NUMBER_DOMAIN,
+        NumberService.SET_VALUE,
+        {
+            CommonServiceArgument.ENTITY_ID: "number.living_room_away_preset_cooling_temperature",
+            NumberServiceArgument.VALUE: 24.0,
+        },
+        blocking=True,
+    )
+
+    assert mock_smile_adam_heat_cool.set_number.call_count == 1
+    mock_smile_adam_heat_cool.set_number.assert_called_with(
+        "f2bf9048bef64cc5b6d5110154e33c81",
+        "away_preset_temperature",
+        24.0,
+        setpoint="setpoint_high",
+    )
 
 
 @pytest.mark.parametrize("chosen_env", ["m_adam_heating"], indirect=True)
@@ -102,10 +184,10 @@ async def test_adam_dhw_setpoint_change(
 
     await hass.services.async_call(
         NUMBER_DOMAIN,
-        SERVICE_SET_VALUE,
+        NumberService.SET_VALUE,
         {
-            ATTR_ENTITY_ID: "number.opentherm_domestic_hot_water_setpoint",
-            ATTR_VALUE: 55,
+            CommonServiceArgument.ENTITY_ID: "number.opentherm_domestic_hot_water_setpoint",
+            NumberServiceArgument.VALUE: 55,
         },
         blocking=True,
     )
@@ -163,10 +245,10 @@ async def test_anna_boiler_temperature_change(
     """Test changing an Anna maximum_boiler_temperature_setpoint number."""
     await hass.services.async_call(
         NUMBER_DOMAIN,
-        SERVICE_SET_VALUE,
+        NumberService.SET_VALUE,
         {
-            ATTR_ENTITY_ID: "number.opentherm_maximum_boiler_temperature_setpoint",
-            ATTR_VALUE: 65,
+            CommonServiceArgument.ENTITY_ID: "number.opentherm_maximum_boiler_temperature_setpoint",
+            NumberServiceArgument.VALUE: 65,
         },
         blocking=True,
     )
@@ -174,4 +256,54 @@ async def test_anna_boiler_temperature_change(
     assert mock_smile_anna.set_number.call_count == 1
     mock_smile_anna.set_number.assert_called_with(
         "1cbf783bb11e4a7c8a6843dee3a86927", "boiler_temperature", 65.0
+    )
+
+
+@pytest.mark.parametrize("chosen_env", ["anna_heatpump_heating"], indirect=True)
+@pytest.mark.parametrize("cooling_present", [True], indirect=True)
+async def test_anna_preset_temperature_change(
+    hass: HomeAssistant, mock_smile_anna: MagicMock, init_integration: MockConfigEntry
+) -> None:
+    """Test changing of an Anna preset temperature number."""
+    await hass.services.async_call(
+        NUMBER_DOMAIN,
+        NumberService.SET_VALUE,
+        {
+            CommonServiceArgument.ENTITY_ID: "number.anna_home_preset_temperature",
+            NumberServiceArgument.VALUE: 20.5,
+        },
+        blocking=True,
+    )
+
+    assert mock_smile_anna.set_number.call_count == 1
+    mock_smile_anna.set_number.assert_called_with(
+        "3cb70739631c4d17a86b8b12e8a5161b",
+        "home_preset_temperature",
+        20.5,
+        setpoint="setpoint_low",
+    )
+
+
+async def test_anna_preset_cooling_temperature_change(
+    hass: HomeAssistant,
+    mock_smile_anna_loria: MagicMock,
+    init_integration: MockConfigEntry,
+) -> None:
+    """Test changing of an Anna preset cooling temperature number."""
+    await hass.services.async_call(
+        NUMBER_DOMAIN,
+        NumberService.SET_VALUE,
+        {
+            CommonServiceArgument.ENTITY_ID: "number.anna_away_preset_cooling_temperature",
+            NumberServiceArgument.VALUE: 26.0,
+        },
+        blocking=True,
+    )
+
+    assert mock_smile_anna_loria.set_number.call_count == 1
+    mock_smile_anna_loria.set_number.assert_called_with(
+        "582dfbdace4d4aeb832923ce7d1ddda0",
+        "away_preset_temperature",
+        26.0,
+        setpoint="setpoint_high",
     )

@@ -31,6 +31,7 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
@@ -79,14 +80,9 @@ def setup_platform(
 
     try:
         ember = EphEmber(username, password)
-    except RuntimeError:
-        _LOGGER.error("Cannot login to EphEmber")
-
-    try:
         homes = ember.get_zones()
-    except RuntimeError:
-        _LOGGER.error("Fail to get zones")
-        return
+    except RuntimeError as err:
+        raise PlatformNotReady(f"Cannot connect to EphEmber: {err}") from err
 
     add_entities(
         EphEmberThermostat(ember, zone) for home in homes for zone in home["zones"]
@@ -196,8 +192,18 @@ class EphEmberThermostat(ClimateEntity):
 
     def update(self) -> None:
         """Get the latest data."""
-        self._ember.get_zones()
-        self._zone = self._ember.get_zone(self._zone["zoneid"])
+        try:
+            self._ember.get_zones()
+            self._zone = self._ember.get_zone(self._zone["zoneid"])
+        except RuntimeError as err:
+            if self._attr_available:
+                _LOGGER.warning("Unable to update %s: %s", self._zone_name, err)
+            self._attr_available = False
+            return
+
+        if not self._attr_available:
+            _LOGGER.info("%s is available again", self._zone_name)
+        self._attr_available = True
 
     @staticmethod
     def map_mode_hass_eph(operation_mode):

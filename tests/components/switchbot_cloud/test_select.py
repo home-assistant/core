@@ -5,12 +5,9 @@ from unittest.mock import AsyncMock, patch
 import pytest
 from switchbot_api import Device, SwitchBotAPI
 
-from homeassistant.components.select import (
-    DOMAIN as SELECT_DOMAIN,
-    SERVICE_SELECT_OPTION,
-)
+from homeassistant.components.select import DOMAIN as SELECT_DOMAIN, SelectService
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.const import CommonServiceArgument
 from homeassistant.core import HomeAssistant
 
 from . import configure_integration
@@ -98,8 +95,8 @@ async def test_night_light_options(
     ):
         await hass.services.async_call(
             SELECT_DOMAIN,
-            SERVICE_SELECT_OPTION,
-            {ATTR_ENTITY_ID: entity_id, "option": key_type},
+            SelectService.SELECT_OPTION,
+            {CommonServiceArgument.ENTITY_ID: entity_id, "option": key_type},
             blocking=True,
         )
 

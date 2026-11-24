@@ -7,15 +7,12 @@ from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from sn2 import ConnectionStatus, SettingsUpdate, StateChange
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
+from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN, SwitchService
 from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    SERVICE_TOGGLE,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
     STATE_OFF,
     STATE_ON,
     STATE_UNAVAILABLE,
+    CommonServiceArgument,
     Platform,
 )
 from homeassistant.core import HomeAssistant
@@ -67,8 +64,8 @@ async def test_switch_turn_on_off_toggle(
     # Test turn on
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "switch.outdoor_smart_plug_relay"},
+        SwitchService.TURN_ON,
+        {CommonServiceArgument.ENTITY_ID: "switch.outdoor_smart_plug_relay"},
         blocking=True,
     )
     device.turn_on.assert_called_once()
@@ -76,8 +73,8 @@ async def test_switch_turn_on_off_toggle(
     # Test turn off
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: "switch.outdoor_smart_plug_relay"},
+        SwitchService.TURN_OFF,
+        {CommonServiceArgument.ENTITY_ID: "switch.outdoor_smart_plug_relay"},
         blocking=True,
     )
     device.turn_off.assert_called_once()
@@ -85,8 +82,8 @@ async def test_switch_turn_on_off_toggle(
     # Test toggle
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        SERVICE_TOGGLE,
-        {ATTR_ENTITY_ID: "switch.outdoor_smart_plug_relay"},
+        SwitchService.TOGGLE,
+        {CommonServiceArgument.ENTITY_ID: "switch.outdoor_smart_plug_relay"},
         blocking=True,
     )
     device.toggle.assert_called_once()
@@ -157,8 +154,8 @@ async def test_configuration_switches(
     # Test turn off 433mhz
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: "switch.outdoor_smart_plug_433_mhz"},
+        SwitchService.TURN_OFF,
+        {CommonServiceArgument.ENTITY_ID: "switch.outdoor_smart_plug_433_mhz"},
         blocking=True,
     )
     mock_setting_433mhz.disable.assert_called_once_with(device)
@@ -166,8 +163,8 @@ async def test_configuration_switches(
     # Test turn on cloud_access
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "switch.outdoor_smart_plug_cloud_access"},
+        SwitchService.TURN_ON,
+        {CommonServiceArgument.ENTITY_ID: "switch.outdoor_smart_plug_cloud_access"},
         blocking=True,
     )
     mock_setting_cloud.enable.assert_called_once_with(device)

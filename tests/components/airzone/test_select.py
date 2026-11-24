@@ -19,13 +19,12 @@ import pytest
 from pytest_homeassistant.common import snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.select import DOMAIN as SELECT_DOMAIN
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    ATTR_OPTION,
-    SERVICE_SELECT_OPTION,
-    Platform,
+from homeassistant.components.select import (
+    DOMAIN as SELECT_DOMAIN,
+    SelectService,
+    SelectServiceArgument,
 )
+from homeassistant.const import CommonServiceArgument, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er
@@ -79,10 +78,10 @@ async def test_airzone_select_sys_qadapt(hass: HomeAssistant) -> None:
     with pytest.raises(ServiceValidationError):
         await hass.services.async_call(
             SELECT_DOMAIN,
-            SERVICE_SELECT_OPTION,
+            SelectService.SELECT_OPTION,
             {
-                ATTR_ENTITY_ID: "select.system_1_q_adapt",
-                ATTR_OPTION: "Invalid",
+                CommonServiceArgument.ENTITY_ID: "select.system_1_q_adapt",
+                SelectServiceArgument.OPTION: "Invalid",
             },
             blocking=True,
         )
@@ -93,10 +92,10 @@ async def test_airzone_select_sys_qadapt(hass: HomeAssistant) -> None:
     ):
         await hass.services.async_call(
             SELECT_DOMAIN,
-            SERVICE_SELECT_OPTION,
+            SelectService.SELECT_OPTION,
             {
-                ATTR_ENTITY_ID: "select.system_1_q_adapt",
-                ATTR_OPTION: "silence",
+                CommonServiceArgument.ENTITY_ID: "select.system_1_q_adapt",
+                SelectServiceArgument.OPTION: "silence",
             },
             blocking=True,
         )
@@ -120,10 +119,10 @@ async def test_airzone_select_sys_qadapt(hass: HomeAssistant) -> None:
     ):
         await hass.services.async_call(
             SELECT_DOMAIN,
-            SERVICE_SELECT_OPTION,
+            SelectService.SELECT_OPTION,
             {
-                ATTR_ENTITY_ID: "select.system_1_q_adapt",
-                ATTR_OPTION: "silence",
+                CommonServiceArgument.ENTITY_ID: "select.system_1_q_adapt",
+                SelectServiceArgument.OPTION: "silence",
             },
             blocking=True,
         )
@@ -147,10 +146,10 @@ async def test_airzone_select_sleep(hass: HomeAssistant) -> None:
     with pytest.raises(ServiceValidationError):
         await hass.services.async_call(
             SELECT_DOMAIN,
-            SERVICE_SELECT_OPTION,
+            SelectService.SELECT_OPTION,
             {
-                ATTR_ENTITY_ID: "select.dorm_1_sleep",
-                ATTR_OPTION: "Invalid",
+                CommonServiceArgument.ENTITY_ID: "select.dorm_1_sleep",
+                SelectServiceArgument.OPTION: "Invalid",
             },
             blocking=True,
         )
@@ -161,10 +160,10 @@ async def test_airzone_select_sleep(hass: HomeAssistant) -> None:
     ):
         await hass.services.async_call(
             SELECT_DOMAIN,
-            SERVICE_SELECT_OPTION,
+            SelectService.SELECT_OPTION,
             {
-                ATTR_ENTITY_ID: "select.dorm_1_sleep",
-                ATTR_OPTION: "30m",
+                CommonServiceArgument.ENTITY_ID: "select.dorm_1_sleep",
+                SelectServiceArgument.OPTION: "30m",
             },
             blocking=True,
         )
@@ -191,10 +190,10 @@ async def test_airzone_select_mode(hass: HomeAssistant) -> None:
     with pytest.raises(ServiceValidationError):
         await hass.services.async_call(
             SELECT_DOMAIN,
-            SERVICE_SELECT_OPTION,
+            SelectService.SELECT_OPTION,
             {
-                ATTR_ENTITY_ID: "select.salon_mode",
-                ATTR_OPTION: "Invalid",
+                CommonServiceArgument.ENTITY_ID: "select.salon_mode",
+                SelectServiceArgument.OPTION: "Invalid",
             },
             blocking=True,
         )
@@ -205,10 +204,10 @@ async def test_airzone_select_mode(hass: HomeAssistant) -> None:
     ):
         await hass.services.async_call(
             SELECT_DOMAIN,
-            SERVICE_SELECT_OPTION,
+            SelectService.SELECT_OPTION,
             {
-                ATTR_ENTITY_ID: "select.salon_mode",
-                ATTR_OPTION: "cool",
+                CommonServiceArgument.ENTITY_ID: "select.salon_mode",
+                SelectServiceArgument.OPTION: "cool",
             },
             blocking=True,
         )
@@ -240,10 +239,10 @@ async def test_airzone_select_grille_angle(hass: HomeAssistant) -> None:
     ):
         await hass.services.async_call(
             SELECT_DOMAIN,
-            SERVICE_SELECT_OPTION,
+            SelectService.SELECT_OPTION,
             {
-                ATTR_ENTITY_ID: "select.dorm_1_cold_angle",
-                ATTR_OPTION: "50deg",
+                CommonServiceArgument.ENTITY_ID: "select.dorm_1_cold_angle",
+                SelectServiceArgument.OPTION: "50deg",
             },
             blocking=True,
         )
@@ -268,10 +267,10 @@ async def test_airzone_select_grille_angle(hass: HomeAssistant) -> None:
     ):
         await hass.services.async_call(
             SELECT_DOMAIN,
-            SERVICE_SELECT_OPTION,
+            SelectService.SELECT_OPTION,
             {
-                ATTR_ENTITY_ID: "select.dorm_1_heat_angle",
-                ATTR_OPTION: "45deg",
+                CommonServiceArgument.ENTITY_ID: "select.dorm_1_heat_angle",
+                SelectServiceArgument.OPTION: "45deg",
             },
             blocking=True,
         )
@@ -302,10 +301,10 @@ async def test_airzone_select_heat_stage(hass: HomeAssistant) -> None:
     with pytest.raises(ServiceValidationError):
         await hass.services.async_call(
             SELECT_DOMAIN,
-            SERVICE_SELECT_OPTION,
+            SelectService.SELECT_OPTION,
             {
-                ATTR_ENTITY_ID: "select.dorm_ppal_heat_stage",
-                ATTR_OPTION: "Invalid",
+                CommonServiceArgument.ENTITY_ID: "select.dorm_ppal_heat_stage",
+                SelectServiceArgument.OPTION: "Invalid",
             },
             blocking=True,
         )
@@ -316,10 +315,10 @@ async def test_airzone_select_heat_stage(hass: HomeAssistant) -> None:
     ) as mock_put_hvac:
         await hass.services.async_call(
             SELECT_DOMAIN,
-            SERVICE_SELECT_OPTION,
+            SelectService.SELECT_OPTION,
             {
-                ATTR_ENTITY_ID: "select.dorm_ppal_heat_stage",
-                ATTR_OPTION: "radiant",
+                CommonServiceArgument.ENTITY_ID: "select.dorm_ppal_heat_stage",
+                SelectServiceArgument.OPTION: "radiant",
             },
             blocking=True,
         )

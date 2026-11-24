@@ -76,6 +76,20 @@
       }
     }
   },
+  "exceptions": {
+    "cannot_connect": {
+      "message": "Unable to connect to {entity}."
+    },
+    "command_failed": {
+      "message": "The command sent to {entity} was not successful."
+    },
+    "device_update_timeout": {
+      "message": "Device {device} did not send an update for {seconds} seconds"
+    },
+    "target_temperature_not_supported": {
+      "message": "The current mode does not support setting the target temperature."
+    }
+  },
   "services": {
     "set_auto_off": {
       "description": "Updates Switcher device auto-off setting.",

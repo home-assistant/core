@@ -9,11 +9,11 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.nobo_hub.const import DOMAIN
 from homeassistant.components.select import (
-    ATTR_OPTION,
     DOMAIN as SELECT_DOMAIN,
-    SERVICE_SELECT_OPTION,
+    SelectService,
+    SelectServiceArgument,
 )
-from homeassistant.const import ATTR_ENTITY_ID, Platform
+from homeassistant.const import CommonServiceArgument, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
@@ -50,8 +50,11 @@ async def test_global_override_select_away(
     """Selecting 'away' on the global override applies the away override."""
     await hass.services.async_call(
         SELECT_DOMAIN,
-        SERVICE_SELECT_OPTION,
-        {ATTR_ENTITY_ID: GLOBAL_ENTITY, ATTR_OPTION: "away"},
+        SelectService.SELECT_OPTION,
+        {
+            CommonServiceArgument.ENTITY_ID: GLOBAL_ENTITY,
+            SelectServiceArgument.OPTION: "away",
+        },
         blocking=True,
     )
     mock_nobo_hub.async_create_override.assert_called_once_with(
@@ -69,8 +72,11 @@ async def test_week_profile_select(
     """Selecting a week profile updates the zone."""
     await hass.services.async_call(
         SELECT_DOMAIN,
-        SERVICE_SELECT_OPTION,
-        {ATTR_ENTITY_ID: PROFILE_ENTITY, ATTR_OPTION: "Default"},
+        SelectService.SELECT_OPTION,
+        {
+            CommonServiceArgument.ENTITY_ID: PROFILE_ENTITY,
+            SelectServiceArgument.OPTION: "Default",
+        },
         blocking=True,
     )
     mock_nobo_hub.async_update_zone.assert_called_once_with("1", week_profile_id="0")
@@ -108,8 +114,11 @@ async def test_select_option_wraps_library_error(
     with pytest.raises(HomeAssistantError) as exc_info:
         await hass.services.async_call(
             SELECT_DOMAIN,
-            SERVICE_SELECT_OPTION,
-            {ATTR_ENTITY_ID: entity_id, ATTR_OPTION: option},
+            SelectService.SELECT_OPTION,
+            {
+                CommonServiceArgument.ENTITY_ID: entity_id,
+                SelectServiceArgument.OPTION: option,
+            },
             blocking=True,
         )
     assert exc_info.value.translation_domain == DOMAIN

@@ -6,14 +6,10 @@ from asyncsleepiq import CoreTemps, FootWarmingTemps
 
 from homeassistant.components.select import (
     DOMAIN as SELECT_DOMAIN,
-    SERVICE_SELECT_OPTION,
+    SelectService,
+    SelectServiceArgument,
 )
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    ATTR_FRIENDLY_NAME,
-    ATTR_ICON,
-    ATTR_OPTION,
-)
+from homeassistant.const import ATTR_FRIENDLY_NAME, ATTR_ICON, CommonServiceArgument
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -77,13 +73,13 @@ async def test_split_foundation_preset(
 
     await hass.services.async_call(
         SELECT_DOMAIN,
-        SERVICE_SELECT_OPTION,
+        SelectService.SELECT_OPTION,
         {
-            ATTR_ENTITY_ID: (
+            CommonServiceArgument.ENTITY_ID: (
                 f"select.{BED_NAME_LOWER}_sleepnumber"
                 f"_{BED_NAME_LOWER}_foundation_preset_left"
             ),
-            ATTR_OPTION: "Zero G",
+            SelectServiceArgument.OPTION: "Zero G",
         },
         blocking=True,
     )
@@ -121,13 +117,13 @@ async def test_single_foundation_preset(
 
     await hass.services.async_call(
         SELECT_DOMAIN,
-        SERVICE_SELECT_OPTION,
+        SelectService.SELECT_OPTION,
         {
-            ATTR_ENTITY_ID: (
+            CommonServiceArgument.ENTITY_ID: (
                 f"select.{BED_NAME_LOWER}_sleepnumber"
                 f"_{BED_NAME_LOWER}_foundation_preset"
             ),
-            ATTR_OPTION: "Zero G",
+            SelectServiceArgument.OPTION: "Zero G",
         },
         blocking=True,
     )
@@ -167,14 +163,14 @@ async def test_foot_warmer(
 
     await hass.services.async_call(
         SELECT_DOMAIN,
-        SERVICE_SELECT_OPTION,
+        SelectService.SELECT_OPTION,
         {
-            ATTR_ENTITY_ID: (
+            CommonServiceArgument.ENTITY_ID: (
                 f"select.{BED_NAME_LOWER}_sleepnumber"
                 f"_{BED_NAME_LOWER}"
                 f"_{SLEEPER_L_NAME_LOWER}_foot_warmer"
             ),
-            ATTR_OPTION: "off",
+            SelectServiceArgument.OPTION: "off",
         },
         blocking=True,
     )
@@ -202,14 +198,14 @@ async def test_foot_warmer(
 
     await hass.services.async_call(
         SELECT_DOMAIN,
-        SERVICE_SELECT_OPTION,
+        SelectService.SELECT_OPTION,
         {
-            ATTR_ENTITY_ID: (
+            CommonServiceArgument.ENTITY_ID: (
                 f"select.{BED_NAME_LOWER}_sleepnumber"
                 f"_{BED_NAME_LOWER}"
                 f"_{SLEEPER_R_NAME_LOWER}_foot_warmer"
             ),
-            ATTR_OPTION: "high",
+            SelectServiceArgument.OPTION: "high",
         },
         blocking=True,
     )
@@ -249,14 +245,14 @@ async def test_core_climate(
 
     await hass.services.async_call(
         SELECT_DOMAIN,
-        SERVICE_SELECT_OPTION,
+        SelectService.SELECT_OPTION,
         {
-            ATTR_ENTITY_ID: (
+            CommonServiceArgument.ENTITY_ID: (
                 f"select.{BED_NAME_LOWER}_sleepnumber"
                 f"_{BED_NAME_LOWER}"
                 f"_{SLEEPER_L_NAME_LOWER}_core_climate"
             ),
-            ATTR_OPTION: "off",
+            SelectServiceArgument.OPTION: "off",
         },
         blocking=True,
     )
@@ -284,14 +280,14 @@ async def test_core_climate(
 
     await hass.services.async_call(
         SELECT_DOMAIN,
-        SERVICE_SELECT_OPTION,
+        SelectService.SELECT_OPTION,
         {
-            ATTR_ENTITY_ID: (
+            CommonServiceArgument.ENTITY_ID: (
                 f"select.{BED_NAME_LOWER}_sleepnumber"
                 f"_{BED_NAME_LOWER}"
                 f"_{SLEEPER_R_NAME_LOWER}_core_climate"
             ),
-            ATTR_OPTION: "heating_high",
+            SelectServiceArgument.OPTION: "heating_high",
         },
         blocking=True,
     )

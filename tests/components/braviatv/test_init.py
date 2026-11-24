@@ -35,6 +35,7 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.service_info.ssdp import SsdpServiceInfo
 from homeassistant.helpers.update_coordinator import UpdateFailed
@@ -324,3 +325,47 @@ async def test_update_failed(
     assert isinstance(error, UpdateFailed)
     assert error.translation_key == translation_key
     assert error.translation_placeholders == placeholders
+
+
+async def test_reconfigure_loaded_entry(hass: HomeAssistant) -> None:
+    """Test reconfiguring a loaded entry reloads it once with the new host."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN, unique_id="very_unique_string", data=ENTRY_DATA
+    )
+    config_entry.add_to_hass(hass)
+
+    with (
+        patch("homeassistant.components.braviatv.PLATFORMS", []),
+        patch(
+            "homeassistant.components.braviatv.BraviaClient", autospec=True
+        ) as mock_client,
+        patch(
+            "homeassistant.components.braviatv.coordinator.BraviaTVCoordinator._async_update_data",
+            return_value=None,
+        ),
+    ):
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+        result = await config_entry.start_reconfigure_flow(hass)
+        with (
+            patch("pybravia.BraviaClient.connect"),
+            patch(
+                "pybravia.BraviaClient.get_system_info",
+                return_value={
+                    "cid": "very_unique_string",
+                    "macAddr": "AA:BB:CC:DD:EE:FF",
+                },
+            ),
+        ):
+            result = await hass.config_entries.flow.async_configure(
+                result["flow_id"], user_input={CONF_HOST: "10.0.0.2"}
+            )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert config_entry.state is ConfigEntryState.LOADED
+    # Initial setup plus a single reload by the update listener
+    assert mock_client.call_count == 2
+    assert mock_client.call_args.args[0] == "10.0.0.2"

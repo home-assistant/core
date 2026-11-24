@@ -24,6 +24,8 @@ BLE_PARENT_KEY = f"{DOMAIN}_ble_parent"
 BLE_PARENT_LOCK_KEY = f"{DOMAIN}_ble_parent_lock"
 BLE_DISCONNECT_TIMEOUT = 10
 BLE_ADVERTISEMENT_TIMEOUT = 5
+# Nearly all stream drops reconnect within a few seconds.
+STREAM_DISCONNECT_GRACE = 10
 
 SUBENTRY_TYPE_ENERGY_SITE = "energy_site"
 CONF_SITE_ID = "site_id"

@@ -4,14 +4,8 @@ from unittest.mock import patch
 
 from aioairzone.const import API_DATA, API_ON, API_SYSTEM_ID, API_ZONE_ID
 
-from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
-    STATE_OFF,
-    STATE_ON,
-)
+from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN, SwitchService
+from homeassistant.const import STATE_OFF, STATE_ON, CommonServiceArgument
 from homeassistant.core import HomeAssistant
 
 from .util import async_init_integration
@@ -59,9 +53,9 @@ async def test_airzone_switch_off(hass: HomeAssistant) -> None:
     ):
         await hass.services.async_call(
             SWITCH_DOMAIN,
-            SERVICE_TURN_OFF,
+            SwitchService.TURN_OFF,
             {
-                ATTR_ENTITY_ID: "switch.dorm_1",
+                CommonServiceArgument.ENTITY_ID: "switch.dorm_1",
             },
             blocking=True,
         )
@@ -91,9 +85,9 @@ async def test_airzone_switch_on(hass: HomeAssistant) -> None:
     ):
         await hass.services.async_call(
             SWITCH_DOMAIN,
-            SERVICE_TURN_ON,
+            SwitchService.TURN_ON,
             {
-                ATTR_ENTITY_ID: "switch.dorm_2",
+                CommonServiceArgument.ENTITY_ID: "switch.dorm_2",
             },
             blocking=True,
         )

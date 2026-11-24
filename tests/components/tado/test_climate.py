@@ -20,6 +20,11 @@ from homeassistant.const import ATTR_ENTITY_ID, ATTR_TEMPERATURE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
+AIRCON_WITH_SWING = "climate.air_conditioning_with_swing_air_conditioning_with_swing"
+AIRCON_WITH_FANLEVEL = (
+    "climate.air_conditioning_with_fanlevel_air_conditioning_with_fanlevel"
+)
+
 
 @pytest.fixture(autouse=True)
 def setup_platforms() -> Generator[None]:
@@ -138,3 +143,60 @@ async def test_aircon_set_hvac_mode(
 
     mock_set_state.assert_called_once()
     snapshot.assert_match(mock_set_state.call_args)
+
+
+@pytest.mark.parametrize(
+    ("zone_states_overrides", "entity_id", "hvac_mode", "expected_temperature"),
+    [
+        pytest.param(
+            {"5": "smartac3.off_cold_room.json"},
+            AIRCON_WITH_SWING,
+            HVACMode.COOL,
+            18.0,
+            id="cool",
+        ),
+        pytest.param(
+            {"5": "smartac3.off_cold_room.json"},
+            AIRCON_WITH_SWING,
+            HVACMode.HEAT,
+            16.0,
+            id="heat",
+        ),
+        pytest.param(
+            {"6": "smartac3.off_cold_room.json"},
+            AIRCON_WITH_FANLEVEL,
+            HVACMode.DRY,
+            16.0,
+            id="dry",
+        ),
+        pytest.param(
+            {"5": "smartac3.off_no_temperature.json"},
+            AIRCON_WITH_SWING,
+            HVACMode.COOL,
+            None,
+            id="no_room_temperature",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("init_integration")
+async def test_aircon_turn_on_from_off(
+    hass: HomeAssistant,
+    entity_id: str,
+    hvac_mode: HVACMode,
+    expected_temperature: float | None,
+) -> None:
+    """Test the room temperature is clamped to the mode limits when turning on."""
+    assert hass.states.get(entity_id).state == HVACMode.OFF
+
+    with patch(
+        "homeassistant.components.tado.PyTado.interface.api.Tado.set_zone_overlay"
+    ) as mock_set_state:
+        await hass.services.async_call(
+            CLIMATE_DOMAIN,
+            SERVICE_SET_HVAC_MODE,
+            {ATTR_ENTITY_ID: entity_id, ATTR_HVAC_MODE: hvac_mode},
+            blocking=True,
+        )
+
+    mock_set_state.assert_called_once()
+    assert mock_set_state.call_args.args[2] == expected_temperature

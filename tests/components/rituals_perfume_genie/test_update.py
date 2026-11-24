@@ -14,13 +14,13 @@ from homeassistant.components.update import (
     ATTR_INSTALLED_VERSION,
     ATTR_LATEST_VERSION,
     DOMAIN as UPDATE_DOMAIN,
-    SERVICE_INSTALL,
+    UpdateService,
 )
 from homeassistant.const import (
-    ATTR_ENTITY_ID,
     STATE_OFF,
     STATE_ON,
     STATE_UNKNOWN,
+    CommonServiceArgument,
     EntityCategory,
 )
 from homeassistant.core import HomeAssistant
@@ -102,7 +102,10 @@ async def test_update_same_version_other_build(hass: HomeAssistant) -> None:
     assert state.attributes[ATTR_LATEST_VERSION] == "5.4 (130)"
 
     await hass.services.async_call(
-        UPDATE_DOMAIN, SERVICE_INSTALL, {ATTR_ENTITY_ID: ENTITY_ID}, blocking=True
+        UPDATE_DOMAIN,
+        UpdateService.INSTALL,
+        {CommonServiceArgument.ENTITY_ID: ENTITY_ID},
+        blocking=True,
     )
 
     client.update_firmware.assert_called_once()
@@ -171,7 +174,10 @@ async def test_install(
     client = await init_integration(hass, config_entry, [diffuser])
 
     await hass.services.async_call(
-        UPDATE_DOMAIN, SERVICE_INSTALL, {ATTR_ENTITY_ID: ENTITY_ID}, blocking=True
+        UPDATE_DOMAIN,
+        UpdateService.INSTALL,
+        {CommonServiceArgument.ENTITY_ID: ENTITY_ID},
+        blocking=True,
     )
 
     client.update_firmware.assert_called_once_with(diffuser.hub_hash)
@@ -182,7 +188,10 @@ async def test_install(
     # While installing, another install isn't started.
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
-            UPDATE_DOMAIN, SERVICE_INSTALL, {ATTR_ENTITY_ID: ENTITY_ID}, blocking=True
+            UPDATE_DOMAIN,
+            UpdateService.INSTALL,
+            {CommonServiceArgument.ENTITY_ID: ENTITY_ID},
+            blocking=True,
         )
     client.update_firmware.assert_called_once()
 
@@ -225,7 +234,10 @@ async def test_install_timeout(
     )
 
     await hass.services.async_call(
-        UPDATE_DOMAIN, SERVICE_INSTALL, {ATTR_ENTITY_ID: ENTITY_ID}, blocking=True
+        UPDATE_DOMAIN,
+        UpdateService.INSTALL,
+        {CommonServiceArgument.ENTITY_ID: ENTITY_ID},
+        blocking=True,
     )
 
     await _tick(hass, freezer, timedelta(minutes=30))
@@ -254,7 +266,10 @@ async def test_install_incomparable_versions(
     )
 
     await hass.services.async_call(
-        UPDATE_DOMAIN, SERVICE_INSTALL, {ATTR_ENTITY_ID: ENTITY_ID}, blocking=True
+        UPDATE_DOMAIN,
+        UpdateService.INSTALL,
+        {CommonServiceArgument.ENTITY_ID: ENTITY_ID},
+        blocking=True,
     )
 
     await _tick(hass, freezer, timedelta(minutes=5))
@@ -283,7 +298,10 @@ async def test_install_failed(hass: HomeAssistant) -> None:
 
     with pytest.raises(HomeAssistantError) as exc_info:
         await hass.services.async_call(
-            UPDATE_DOMAIN, SERVICE_INSTALL, {ATTR_ENTITY_ID: ENTITY_ID}, blocking=True
+            UPDATE_DOMAIN,
+            UpdateService.INSTALL,
+            {CommonServiceArgument.ENTITY_ID: ENTITY_ID},
+            blocking=True,
         )
 
     assert exc_info.value.translation_key == "firmware_update_failed"

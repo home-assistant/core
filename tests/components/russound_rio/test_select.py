@@ -9,9 +9,10 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.select import (
     DOMAIN as SELECT_DOMAIN,
-    SERVICE_SELECT_OPTION,
+    SelectService,
+    SelectServiceArgument,
 )
-from homeassistant.const import ATTR_ENTITY_ID, ATTR_OPTION, Platform
+from homeassistant.const import CommonServiceArgument, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -43,10 +44,10 @@ async def test_setting_value(
 
     await hass.services.async_call(
         SELECT_DOMAIN,
-        SERVICE_SELECT_OPTION,
+        SelectService.SELECT_OPTION,
         {
-            ATTR_ENTITY_ID: "select.backyard_backyard_party_mode",
-            ATTR_OPTION: "master",
+            CommonServiceArgument.ENTITY_ID: "select.backyard_backyard_party_mode",
+            SelectServiceArgument.OPTION: "master",
         },
         blocking=True,
     )
@@ -56,10 +57,10 @@ async def test_setting_value(
     mock_russound_client.controllers[1].zones[1].set_party_mode.reset_mock()
     await hass.services.async_call(
         SELECT_DOMAIN,
-        SERVICE_SELECT_OPTION,
+        SelectService.SELECT_OPTION,
         {
-            ATTR_ENTITY_ID: "select.backyard_backyard_party_mode",
-            ATTR_OPTION: "off",
+            CommonServiceArgument.ENTITY_ID: "select.backyard_backyard_party_mode",
+            SelectServiceArgument.OPTION: "off",
         },
         blocking=True,
     )

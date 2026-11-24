@@ -7,8 +7,8 @@ import pytest
 from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
-from homeassistant.const import ATTR_ENTITY_ID, Platform
+from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, ButtonService
+from homeassistant.const import CommonServiceArgument, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
@@ -51,8 +51,8 @@ async def test_button_press_standby(
     # Mock call to pause (dis)charging
     await hass.services.async_call(
         BUTTON_DOMAIN,
-        SERVICE_PRESS,
-        {ATTR_ENTITY_ID: ENTITY_ID_GEN2},
+        ButtonService.PRESS,
+        {CommonServiceArgument.ENTITY_ID: ENTITY_ID_GEN2},
         blocking=True,
     )
 
@@ -84,8 +84,8 @@ async def test_button_press_standby_already_in_realtime_mode(
     # Mock call to pause (dis)charging
     await hass.services.async_call(
         BUTTON_DOMAIN,
-        SERVICE_PRESS,
-        {ATTR_ENTITY_ID: ENTITY_ID_GEN2},
+        ButtonService.PRESS,
+        {CommonServiceArgument.ENTITY_ID: ENTITY_ID_GEN2},
         blocking=True,
     )
 
@@ -111,8 +111,8 @@ async def test_button_press_standby_rejected_command(
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             BUTTON_DOMAIN,
-            SERVICE_PRESS,
-            {ATTR_ENTITY_ID: ENTITY_ID_GEN2},
+            ButtonService.PRESS,
+            {CommonServiceArgument.ENTITY_ID: ENTITY_ID_GEN2},
             blocking=True,
         )
 
@@ -139,8 +139,8 @@ async def test_button_press_standby_portable_mode_error(
     with pytest.raises(HomeAssistantError) as exc_info:
         await hass.services.async_call(
             BUTTON_DOMAIN,
-            SERVICE_PRESS,
-            {ATTR_ENTITY_ID: ENTITY_ID_GEN2},
+            ButtonService.PRESS,
+            {CommonServiceArgument.ENTITY_ID: ENTITY_ID_GEN2},
             blocking=True,
         )
 

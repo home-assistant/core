@@ -9,16 +9,16 @@ from pytest_homeassistant.common import MockConfigEntry
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.select import (
-    ATTR_OPTION,
     ATTR_OPTIONS,
     DOMAIN as SELECT_DOMAIN,
-    SERVICE_SELECT_OPTION,
+    SelectService,
+    SelectServiceArgument,
 )
 from homeassistant.components.smartthings import MAIN
 from homeassistant.const import (
-    ATTR_ENTITY_ID,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
+    CommonServiceArgument,
     Platform,
 )
 from homeassistant.core import HomeAssistant
@@ -88,8 +88,11 @@ async def test_select_option(
 
     await hass.services.async_call(
         SELECT_DOMAIN,
-        SERVICE_SELECT_OPTION,
-        {ATTR_ENTITY_ID: "select.theater_dryer", ATTR_OPTION: "run"},
+        SelectService.SELECT_OPTION,
+        {
+            CommonServiceArgument.ENTITY_ID: "select.theater_dryer",
+            SelectServiceArgument.OPTION: "run",
+        },
         blocking=True,
     )
     devices.execute_device_command.assert_called_once_with(
@@ -120,8 +123,11 @@ async def test_select_option_map(
 
     await hass.services.async_call(
         SELECT_DOMAIN,
-        SERVICE_SELECT_OPTION,
-        {ATTR_ENTITY_ID: "select.vulcan_lamp", ATTR_OPTION: "extra_high"},
+        SelectService.SELECT_OPTION,
+        {
+            CommonServiceArgument.ENTITY_ID: "select.vulcan_lamp",
+            SelectServiceArgument.OPTION: "extra_high",
+        },
         blocking=True,
     )
     devices.execute_device_command.assert_called_once_with(
@@ -162,8 +168,11 @@ async def test_select_tv_mode(
 
     await hass.services.async_call(
         SELECT_DOMAIN,
-        SERVICE_SELECT_OPTION,
-        {ATTR_ENTITY_ID: entity_id, ATTR_OPTION: option},
+        SelectService.SELECT_OPTION,
+        {
+            CommonServiceArgument.ENTITY_ID: entity_id,
+            SelectServiceArgument.OPTION: option,
+        },
         blocking=True,
     )
     devices.execute_device_command.assert_called_once_with(
@@ -200,10 +209,10 @@ async def test_tv_picture_mode_unmapped_name(
 
     await hass.services.async_call(
         SELECT_DOMAIN,
-        SERVICE_SELECT_OPTION,
+        SelectService.SELECT_OPTION,
         {
-            ATTR_ENTITY_ID: "select.theater_tv_samsung_8_series_49_picture_mode",
-            ATTR_OPTION: "Dynamisch",
+            CommonServiceArgument.ENTITY_ID: "select.theater_tv_samsung_8_series_49_picture_mode",
+            SelectServiceArgument.OPTION: "Dynamisch",
         },
         blocking=True,
     )
@@ -255,8 +264,11 @@ async def test_select_option_without_remote_control(
     ):
         await hass.services.async_call(
             SELECT_DOMAIN,
-            SERVICE_SELECT_OPTION,
-            {ATTR_ENTITY_ID: "select.theater_dryer", ATTR_OPTION: "run"},
+            SelectService.SELECT_OPTION,
+            {
+                CommonServiceArgument.ENTITY_ID: "select.theater_dryer",
+                SelectServiceArgument.OPTION: "run",
+            },
             blocking=True,
         )
     devices.execute_device_command.assert_not_called()
@@ -312,10 +324,10 @@ async def test_select_option_as_integer(
 
     await hass.services.async_call(
         SELECT_DOMAIN,
-        SERVICE_SELECT_OPTION,
+        SelectService.SELECT_OPTION,
         {
-            ATTR_ENTITY_ID: "select.clim_salon_dust_filter_alarm_threshold",
-            ATTR_OPTION: "300",
+            CommonServiceArgument.ENTITY_ID: "select.clim_salon_dust_filter_alarm_threshold",
+            SelectServiceArgument.OPTION: "300",
         },
         blocking=True,
     )
@@ -355,8 +367,11 @@ async def test_select_dishwasher_washing_course_with_wrong_machine_state(
     ):
         await hass.services.async_call(
             SELECT_DOMAIN,
-            SERVICE_SELECT_OPTION,
-            {ATTR_ENTITY_ID: "select.dishwasher_1_cycle", ATTR_OPTION: "eco"},
+            SelectService.SELECT_OPTION,
+            {
+                CommonServiceArgument.ENTITY_ID: "select.dishwasher_1_cycle",
+                SelectServiceArgument.OPTION: "eco",
+            },
             blocking=True,
         )
     devices.execute_device_command.assert_not_called()
@@ -378,8 +393,11 @@ async def test_select_dishwasher_washing_course(
     await setup_integration(hass, mock_config_entry)
     await hass.services.async_call(
         SELECT_DOMAIN,
-        SERVICE_SELECT_OPTION,
-        {ATTR_ENTITY_ID: "select.dishwasher_1_cycle", ATTR_OPTION: "eco"},
+        SelectService.SELECT_OPTION,
+        {
+            CommonServiceArgument.ENTITY_ID: "select.dishwasher_1_cycle",
+            SelectServiceArgument.OPTION: "eco",
+        },
         blocking=True,
     )
     devices.execute_device_command.assert_called_once_with(
@@ -418,8 +436,11 @@ async def test_select_dishwasher_washing_option_with_wrong_machine_state(
     ):
         await hass.services.async_call(
             SELECT_DOMAIN,
-            SERVICE_SELECT_OPTION,
-            {ATTR_ENTITY_ID: "select.dishwasher_1_selected_zone", ATTR_OPTION: "lower"},
+            SelectService.SELECT_OPTION,
+            {
+                CommonServiceArgument.ENTITY_ID: "select.dishwasher_1_selected_zone",
+                SelectServiceArgument.OPTION: "lower",
+            },
             blocking=True,
         )
     devices.execute_device_command.assert_not_called()
@@ -442,8 +463,11 @@ async def test_select_dishwasher_washing_option(
 
     await hass.services.async_call(
         SELECT_DOMAIN,
-        SERVICE_SELECT_OPTION,
-        {ATTR_ENTITY_ID: "select.dishwasher_1_selected_zone", ATTR_OPTION: "lower"},
+        SelectService.SELECT_OPTION,
+        {
+            CommonServiceArgument.ENTITY_ID: "select.dishwasher_1_selected_zone",
+            SelectServiceArgument.OPTION: "lower",
+        },
         blocking=True,
     )
     device_id = "7ff318f3-3772-524d-3c9f-72fcd26413ed"

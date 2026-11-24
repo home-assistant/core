@@ -7,8 +7,8 @@ import pytest
 from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
-from homeassistant.const import ATTR_ENTITY_ID, Platform
+from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, ButtonService
+from homeassistant.const import CommonServiceArgument, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
@@ -36,7 +36,10 @@ async def test_button_entities(
 async def test_identify(hass: HomeAssistant, mock_identify: AsyncMock) -> None:
     """Test pressing the button blinks the LED."""
     await hass.services.async_call(
-        BUTTON_DOMAIN, SERVICE_PRESS, {ATTR_ENTITY_ID: IDENTIFY}, blocking=True
+        BUTTON_DOMAIN,
+        ButtonService.PRESS,
+        {CommonServiceArgument.ENTITY_ID: IDENTIFY},
+        blocking=True,
     )
     mock_identify.assert_awaited_once()
 
@@ -47,6 +50,9 @@ async def test_identify_error(hass: HomeAssistant, mock_identify: AsyncMock) -> 
     mock_identify.side_effect = LighthouseConnectionError("gone")
     with pytest.raises(HomeAssistantError) as raised:
         await hass.services.async_call(
-            BUTTON_DOMAIN, SERVICE_PRESS, {ATTR_ENTITY_ID: IDENTIFY}, blocking=True
+            BUTTON_DOMAIN,
+            ButtonService.PRESS,
+            {CommonServiceArgument.ENTITY_ID: IDENTIFY},
+            blocking=True,
         )
     assert raised.value.translation_key == "cannot_connect"

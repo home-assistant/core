@@ -23,18 +23,17 @@ from homeassistant.components.update import (
     ATTR_TITLE,
     ATTR_UPDATE_PERCENTAGE,
     DOMAIN as UPDATE_DOMAIN,
-    SERVICE_INSTALL,
-    SERVICE_SKIP,
     UpdateDeviceClass,
     UpdateEntityFeature,
+    UpdateService,
 )
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
-    ATTR_ENTITY_ID,
     ATTR_SUPPORTED_FEATURES,
     STATE_OFF,
     STATE_ON,
     STATE_UNAVAILABLE,
+    CommonServiceArgument,
     EntityCategory,
 )
 from homeassistant.core import HomeAssistant
@@ -183,8 +182,8 @@ async def test_firmware_check_preserves_skipped_update(
     )
     await hass.services.async_call(
         UPDATE_DOMAIN,
-        SERVICE_SKIP,
-        {ATTR_ENTITY_ID: update_entry.entity_id},
+        UpdateService.SKIP,
+        {CommonServiceArgument.ENTITY_ID: update_entry.entity_id},
         blocking=True,
     )
 
@@ -287,8 +286,8 @@ async def test_install_firmware_update_service(
         with pytest.raises(HomeAssistantError) as err:
             await hass.services.async_call(
                 UPDATE_DOMAIN,
-                SERVICE_INSTALL,
-                {ATTR_ENTITY_ID: update_entry.entity_id},
+                UpdateService.INSTALL,
+                {CommonServiceArgument.ENTITY_ID: update_entry.entity_id},
                 blocking=True,
             )
 
@@ -302,8 +301,8 @@ async def test_install_firmware_update_service(
     ) as install:
         await hass.services.async_call(
             UPDATE_DOMAIN,
-            SERVICE_INSTALL,
-            {ATTR_ENTITY_ID: update_entry.entity_id},
+            UpdateService.INSTALL,
+            {CommonServiceArgument.ENTITY_ID: update_entry.entity_id},
             blocking=True,
         )
 
@@ -385,8 +384,8 @@ async def test_install_propagates_translated_failure_and_clears_progress(
     ):
         await hass.services.async_call(
             UPDATE_DOMAIN,
-            SERVICE_INSTALL,
-            {ATTR_ENTITY_ID: update_entry.entity_id},
+            UpdateService.INSTALL,
+            {CommonServiceArgument.ENTITY_ID: update_entry.entity_id},
             blocking=True,
         )
 

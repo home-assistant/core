@@ -17,6 +17,7 @@ from homeassistant.components.switch import (
     DOMAIN as SWITCH_DOMAIN,
     SCAN_INTERVAL,
     SwitchDeviceClass,
+    SwitchService,
 )
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
@@ -34,12 +35,11 @@ from homeassistant.const import (
     CONF_RESOURCE,
     CONF_UNIQUE_ID,
     CONTENT_TYPE_JSON,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
     STATE_OFF,
     STATE_ON,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
+    CommonServiceArgument,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -290,8 +290,8 @@ async def test_turn_on_success(
     respx.get(RESOURCE).mock(side_effect=httpx2.RequestError)
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "switch.foo"},
+        SwitchService.TURN_ON,
+        {CommonServiceArgument.ENTITY_ID: "switch.foo"},
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -311,8 +311,8 @@ async def test_turn_on_status_not_ok(hass: HomeAssistant) -> None:
     with pytest.raises(HomeAssistantError) as exc_info:
         await hass.services.async_call(
             SWITCH_DOMAIN,
-            SERVICE_TURN_ON,
-            {ATTR_ENTITY_ID: "switch.foo"},
+            SwitchService.TURN_ON,
+            {CommonServiceArgument.ENTITY_ID: "switch.foo"},
             blocking=True,
         )
 
@@ -333,8 +333,8 @@ async def test_turn_on_timeout(hass: HomeAssistant) -> None:
     with pytest.raises(HomeAssistantError) as exc_info:
         await hass.services.async_call(
             SWITCH_DOMAIN,
-            SERVICE_TURN_ON,
-            {ATTR_ENTITY_ID: "switch.foo"},
+            SwitchService.TURN_ON,
+            {CommonServiceArgument.ENTITY_ID: "switch.foo"},
             blocking=True,
         )
 
@@ -354,8 +354,8 @@ async def test_turn_off_success(
     respx.get(RESOURCE).mock(side_effect=httpx2.RequestError)
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: "switch.foo"},
+        SwitchService.TURN_OFF,
+        {CommonServiceArgument.ENTITY_ID: "switch.foo"},
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -376,8 +376,8 @@ async def test_turn_off_status_not_ok(hass: HomeAssistant) -> None:
     with pytest.raises(HomeAssistantError) as exc_info:
         await hass.services.async_call(
             SWITCH_DOMAIN,
-            SERVICE_TURN_OFF,
-            {ATTR_ENTITY_ID: "switch.foo"},
+            SwitchService.TURN_OFF,
+            {CommonServiceArgument.ENTITY_ID: "switch.foo"},
             blocking=True,
         )
 
@@ -398,8 +398,8 @@ async def test_turn_off_timeout(hass: HomeAssistant) -> None:
     with pytest.raises(HomeAssistantError) as exc_info:
         await hass.services.async_call(
             SWITCH_DOMAIN,
-            SERVICE_TURN_OFF,
-            {ATTR_ENTITY_ID: "switch.foo"},
+            SwitchService.TURN_OFF,
+            {CommonServiceArgument.ENTITY_ID: "switch.foo"},
             blocking=True,
         )
 

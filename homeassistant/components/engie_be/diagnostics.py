@@ -4,7 +4,7 @@ from datetime import timedelta
 import hashlib
 from typing import TYPE_CHECKING, Any
 
-from aioengiebelgium import EpexGranularity, bare_ean
+from aioengiebelgium import EpexGranularity, MonthlyPeaks, Peak, bare_ean
 
 from homeassistant.components.diagnostics import async_redact_data
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_EMAIL
@@ -15,6 +15,7 @@ from .const import CONF_REFRESH_TOKEN
 from .coordinator import (
     BRUSSELS_TIME_ZONE,
     EngieBeEpexCoordinator,
+    EngieBePeaksCoordinator,
     epex_day_available,
     epex_slots_for_day,
 )
@@ -34,6 +35,55 @@ TO_REDACT = {
 def _hashed_identifier(identifier: str) -> str:
     """Return a stable fingerprint that keeps households and meters apart."""
     return f"**REDACTED_{hashlib.sha256(identifier.encode()).hexdigest()[:16]}"
+
+
+def _peak_diagnostics(peak: Peak) -> dict[str, Any]:
+    """Return the diagnostics of one capacity tariff peak."""
+    return {
+        "peak_kw": peak.peak_kw,
+        "peak_kwh": peak.peak_kwh,
+        "start": peak.start.isoformat(),
+        "end": peak.end.isoformat(),
+    }
+
+
+def _monthly_peaks_diagnostics(monthly: MonthlyPeaks) -> dict[str, Any]:
+    """Return the diagnostics of one month of capacity tariff peaks."""
+    return {
+        "year": monthly.year,
+        "month": monthly.month,
+        "peak_of_the_month": (
+            _peak_diagnostics(monthly.peak_of_the_month)
+            if monthly.peak_of_the_month is not None
+            else None
+        ),
+        "daily_peaks": [_peak_diagnostics(peak) for peak in monthly.daily_peaks],
+        "skipped_entries": monthly.skipped_entries,
+        "previous_peak_of_the_month": (
+            _peak_diagnostics(monthly.previous_peak_of_the_month)
+            if monthly.previous_peak_of_the_month is not None
+            else None
+        ),
+    }
+
+
+def _peaks_diagnostics(peaks: EngieBePeaksCoordinator) -> dict[str, Any]:
+    """Return the diagnostics of the capacity tariff peaks coordinator."""
+    data = peaks.data
+    return {
+        "last_update_success": peaks.last_update_success,
+        "update_interval": str(peaks.update_interval),
+        "monthly": (
+            _monthly_peaks_diagnostics(data.monthly) if data is not None else None
+        ),
+        "previous_month": (
+            _monthly_peaks_diagnostics(data.previous_month)
+            if data is not None and data.previous_month is not None
+            else None
+        ),
+        "peak_month": data.peak_month if data is not None else None,
+        "is_fallback": data.is_fallback if data is not None else None,
+    }
 
 
 def _household_diagnostics(
@@ -61,6 +111,7 @@ def _household_diagnostics(
             for ean, energy_type in prices.ean_energy_types.items()
         },
         "slots": slots,
+        "peaks": _peaks_diagnostics(household.peaks),
     }
 
 

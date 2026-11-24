@@ -7,11 +7,8 @@ import pytest
 from pytest_homeassistant.common import MockConfigEntry
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.weather import (
-    DOMAIN as WEATHER_DOMAIN,
-    SERVICE_GET_FORECASTS,
-)
-from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.components.weather import DOMAIN as WEATHER_DOMAIN, WeatherService
+from homeassistant.const import CommonServiceArgument
 from homeassistant.core import HomeAssistant
 
 
@@ -29,8 +26,8 @@ async def test_forecast_service(
 
     response = await hass.services.async_call(
         WEATHER_DOMAIN,
-        SERVICE_GET_FORECASTS,
-        {ATTR_ENTITY_ID: "weather.home", "type": "daily"},
+        WeatherService.GET_FORECASTS,
+        {CommonServiceArgument.ENTITY_ID: "weather.home", "type": "daily"},
         blocking=True,
         return_response=True,
     )
@@ -38,8 +35,8 @@ async def test_forecast_service(
 
     response = await hass.services.async_call(
         WEATHER_DOMAIN,
-        SERVICE_GET_FORECASTS,
-        {ATTR_ENTITY_ID: "weather.home", "type": "hourly"},
+        WeatherService.GET_FORECASTS,
+        {CommonServiceArgument.ENTITY_ID: "weather.home", "type": "hourly"},
         blocking=True,
         return_response=True,
     )
@@ -99,8 +96,8 @@ async def test_weather_without_data(
     for forecast_type in ("daily", "hourly"):
         response = await hass.services.async_call(
             WEATHER_DOMAIN,
-            SERVICE_GET_FORECASTS,
-            {ATTR_ENTITY_ID: "weather.home", "type": forecast_type},
+            WeatherService.GET_FORECASTS,
+            {CommonServiceArgument.ENTITY_ID: "weather.home", "type": forecast_type},
             blocking=True,
             return_response=True,
         )

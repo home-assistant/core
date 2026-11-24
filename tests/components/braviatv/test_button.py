@@ -13,8 +13,8 @@ from pytest_homeassistant.common import (
 )
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
-from homeassistant.const import ATTR_ENTITY_ID, Platform
+from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, ButtonService
+from homeassistant.const import CommonServiceArgument, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
@@ -56,7 +56,10 @@ async def test_button_press(
     power_status_calls = mock_braviatv_client.get_power_status.call_count
 
     await hass.services.async_call(
-        BUTTON_DOMAIN, SERVICE_PRESS, {ATTR_ENTITY_ID: entity_id}, blocking=True
+        BUTTON_DOMAIN,
+        ButtonService.PRESS,
+        {CommonServiceArgument.ENTITY_ID: entity_id},
+        blocking=True,
     )
 
     getattr(mock_braviatv_client, method).assert_called_once()
@@ -84,7 +87,7 @@ async def test_button_press_error(
     ):
         await hass.services.async_call(
             BUTTON_DOMAIN,
-            SERVICE_PRESS,
-            {ATTR_ENTITY_ID: "button.bravia_tv_model_restart"},
+            ButtonService.PRESS,
+            {CommonServiceArgument.ENTITY_ID: "button.bravia_tv_model_restart"},
             blocking=True,
         )

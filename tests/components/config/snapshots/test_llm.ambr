@@ -1,25 +1,55 @@
 # serializer version: 1
 # name: test_parameters_openapi
   dict({
+    'config__configure_flow': dict({
+      'additionalProperties': False,
+      'properties': dict({
+        'abort': dict({
+          'default': False,
+          'description': 'Set to true to cancel and abort the flow (default: false).',
+          'type': 'boolean',
+        }),
+        'flow_id': dict({
+          'description': "The flow_id of the in-progress flow (e.g. 'random:8K2M').",
+          'format': 'strip',
+          'type': 'string',
+        }),
+        'next_step_id': dict({
+          'description': "Menu option key to select when the current step has type 'menu'.",
+          'format': 'strip',
+          'type': 'string',
+        }),
+        'user_input': dict({
+          'additionalProperties': True,
+          'description': "Field values to submit when the current step has type 'form' (pass {} to confirm an empty form). Omit to fetch the current step state.",
+          'type': 'object',
+        }),
+      }),
+      'required': list([
+        'flow_id',
+      ]),
+      'type': 'object',
+    }),
     'config__get_config_entries': dict({
       'additionalProperties': False,
       'properties': dict({
         'domain': dict({
-          'anyOf': list([
-            dict({
-              'format': 'strip',
-              'type': 'string',
-            }),
-            dict({
-              'items': dict({
-                'format': 'strip',
+          'description': "Filter by integration domain (e.g. 'hue', 'zwave_js'). Accepts a single domain or a list of domains.",
+          'items': dict({
+            'allOf': list([
+              dict({
                 'type': 'string',
               }),
-              'minItems': 1,
-              'type': 'array',
-            }),
-          ]),
-          'description': "Filter by integration domain (e.g. 'hue', 'zwave_js'). Accepts a single domain or a list of domains.",
+              dict({
+                'format': 'strip',
+              }),
+              dict({
+                'format': 'lower',
+              }),
+            ]),
+          }),
+          'minItems': 1,
+          'type': 'array',
         }),
         'status': dict({
           'description': "Filter by status: 'loaded' (working normally), 'error' (failed setup, retrying, migration error, or failed unload), or 'not_loaded' (including disabled or ignored entries).",
@@ -68,6 +98,29 @@
       }),
       'required': list([
         'query',
+      ]),
+      'type': 'object',
+    }),
+    'config__start_flow': dict({
+      'additionalProperties': False,
+      'properties': dict({
+        'domain': dict({
+          'allOf': list([
+            dict({
+              'type': 'string',
+            }),
+            dict({
+              'format': 'strip',
+            }),
+            dict({
+              'format': 'lower',
+            }),
+          ]),
+          'description': "Integration domain to set up (e.g. 'local_todo', 'template').",
+        }),
+      }),
+      'required': list([
+        'domain',
       ]),
       'type': 'object',
     }),

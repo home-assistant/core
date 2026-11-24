@@ -19,10 +19,9 @@ from homeassistant.components.sensor import (
 from homeassistant.components.zwave_js.const import (
     ATTR_METER_TYPE,
     ATTR_METER_TYPE_NAME,
-    ATTR_VALUE,
     DOMAIN,
-    SERVICE_REFRESH_VALUE,
-    SERVICE_RESET_METER,
+    ZWaveJSService,
+    ZWaveJSServiceArgument,
 )
 from homeassistant.components.zwave_js.helpers import get_valueless_base_unique_id
 from homeassistant.components.zwave_js.sensor import (
@@ -32,12 +31,12 @@ from homeassistant.components.zwave_js.sensor import (
 from homeassistant.config_entries import RELOAD_AFTER_UPDATE_DELAY
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
-    ATTR_ENTITY_ID,
     ATTR_UNIT_OF_MEASUREMENT,
     PERCENTAGE,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
     UV_INDEX,
+    CommonServiceArgument,
     EntityCategory,
     Platform,
     UnitOfElectricCurrent,
@@ -498,9 +497,9 @@ async def test_node_status_sensor_not_ready(
 
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_REFRESH_VALUE,
+        ZWaveJSService.REFRESH_VALUE,
         {
-            ATTR_ENTITY_ID: node_status_entity_id,
+            CommonServiceArgument.ENTITY_ID: node_status_entity_id,
         },
         blocking=True,
     )
@@ -529,9 +528,9 @@ async def test_reset_meter(
     # Test successful meter reset call
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_RESET_METER,
+        ZWaveJSService.RESET_METER,
         {
-            ATTR_ENTITY_ID: entity_id,
+            CommonServiceArgument.ENTITY_ID: entity_id,
         },
         blocking=True,
     )
@@ -548,11 +547,11 @@ async def test_reset_meter(
     # Test successful meter reset call with options
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_RESET_METER,
+        ZWaveJSService.RESET_METER,
         {
-            ATTR_ENTITY_ID: entity_id,
-            ATTR_METER_TYPE: 1,
-            ATTR_VALUE: 2,
+            CommonServiceArgument.ENTITY_ID: entity_id,
+            ZWaveJSServiceArgument.METER_TYPE: 1,
+            ZWaveJSServiceArgument.VALUE: 2,
         },
         blocking=True,
     )
@@ -573,8 +572,8 @@ async def test_reset_meter(
     with pytest.raises(HomeAssistantError) as err:
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_RESET_METER,
-            {ATTR_ENTITY_ID: entity_id},
+            ZWaveJSService.RESET_METER,
+            {CommonServiceArgument.ENTITY_ID: entity_id},
             blocking=True,
         )
 
@@ -1120,8 +1119,8 @@ async def test_statistics_sensors(
 
             await hass.services.async_call(
                 DOMAIN,
-                SERVICE_REFRESH_VALUE,
-                {ATTR_ENTITY_ID: entity_id},
+                ZWaveJSService.REFRESH_VALUE,
+                {CommonServiceArgument.ENTITY_ID: entity_id},
                 blocking=True,
             )
     await hass.async_block_till_done()

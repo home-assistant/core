@@ -9,9 +9,10 @@ from yalesmartalarmclient import YaleSmartAlarmData
 
 from homeassistant.components.select import (
     DOMAIN as SELECT_DOMAIN,
-    SERVICE_SELECT_OPTION,
+    SelectService,
+    SelectServiceArgument,
 )
-from homeassistant.const import ATTR_ENTITY_ID, ATTR_OPTION, Platform
+from homeassistant.const import CommonServiceArgument, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import entity_registry as er
@@ -37,10 +38,10 @@ async def test_switch(
 
     await hass.services.async_call(
         SELECT_DOMAIN,
-        SERVICE_SELECT_OPTION,
+        SelectService.SELECT_OPTION,
         {
-            ATTR_ENTITY_ID: "select.device1_volume",
-            ATTR_OPTION: "high",
+            CommonServiceArgument.ENTITY_ID: "select.device1_volume",
+            SelectServiceArgument.OPTION: "high",
         },
         blocking=True,
     )
@@ -54,10 +55,10 @@ async def test_switch(
     with pytest.raises(ServiceValidationError):
         await hass.services.async_call(
             SELECT_DOMAIN,
-            SERVICE_SELECT_OPTION,
+            SelectService.SELECT_OPTION,
             {
-                ATTR_ENTITY_ID: "select.device1_volume",
-                ATTR_OPTION: "not_exist",
+                CommonServiceArgument.ENTITY_ID: "select.device1_volume",
+                SelectServiceArgument.OPTION: "not_exist",
             },
             blocking=True,
         )

@@ -21,7 +21,11 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 
-from .conftest import micromodule_dimmer_device, setup_integration
+from .conftest import (
+    micromodule_dimmer_device,
+    motion_detector2_device,
+    setup_integration,
+)
 
 
 @pytest.fixture(autouse=True)
@@ -105,3 +109,68 @@ async def test_dimmer_turn_off(
     )
 
     assert device.binarystate is False
+
+
+@pytest.mark.parametrize(
+    "device_buckets",
+    [
+        {
+            "motion_detectors2": [
+                motion_detector2_device(binaryswitch=True, multi_level_switch=50)
+            ]
+        }
+    ],
+    indirect=True,
+)
+@pytest.mark.usefixtures("mock_session")
+async def test_motion_light_state(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """The orientation light reports its on/off state and brightness."""
+    await setup_integration(hass, mock_config_entry)
+
+    state = hass.states.get("light.motion_detector_orientation_light")
+    assert state is not None
+    assert state.state == STATE_ON
+    assert state.attributes[ATTR_BRIGHTNESS] == 128
+    assert state.attributes["supported_color_modes"] == [ColorMode.BRIGHTNESS]
+
+
+@pytest.mark.parametrize(
+    "device_buckets",
+    [{"motion_detectors2": [motion_detector2_device()]}],
+    indirect=True,
+)
+@pytest.mark.usefixtures("mock_session")
+async def test_motion_light_turn_on_off(
+    hass: HomeAssistant,
+    mock_session: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Turning the orientation light on sets brightness and switch, off clears it."""
+    await setup_integration(hass, mock_config_entry)
+    device = mock_session.device_helper.motion_detectors2[0]
+    entity_id = "light.motion_detector_orientation_light"
+
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: entity_id, ATTR_BRIGHTNESS: 255},
+        blocking=True,
+    )
+    assert device.multi_level_switch == 100
+    assert device.binaryswitch is True
+
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: entity_id, ATTR_BRIGHTNESS: 1},
+        blocking=True,
+    )
+    assert device.multi_level_switch == 1
+
+    await hass.services.async_call(
+        LIGHT_DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: entity_id}, blocking=True
+    )
+    assert device.binaryswitch is False

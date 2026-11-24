@@ -1,20 +1,26 @@
 """Tests for the Sofar select platform."""
 
+from datetime import timedelta
 from unittest.mock import patch
 
+from freezegun.api import FrozenDateTimeFactory
 from modbus_connection import ModbusError
 from modbus_connection.mock import MockModbusConnection
 import pytest
-from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.select import (
-    ATTR_OPTION,
     DOMAIN as SELECT_DOMAIN,
-    SERVICE_SELECT_OPTION,
+    SelectService,
+    SelectServiceArgument,
 )
-from homeassistant.components.sofar.const import DOMAIN
-from homeassistant.const import ATTR_ENTITY_ID, Platform
+from homeassistant.components.sofar.const import DOMAIN, PACKS_SCAN_INTERVAL
+from homeassistant.const import CommonServiceArgument, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -83,11 +89,18 @@ async def _setup_pv(
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_hybrid_entities(
     hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
     snapshot: SnapshotAssertion,
     entity_registry: er.EntityRegistry,
 ) -> None:
-    """Test the select entities a hybrid inverter serves."""
-    entry, _ = await _setup_hybrid(hass)
+    """Test the select entities a hybrid inverter serves after a poll."""
+    entry, connection = await _setup_hybrid(hass)
+    unit = connection.for_unit(1)
+    unit.holding[0x1110] = 1  # charger mode -> time of use
+    unit.holding[0x1029] = 2  # EPS -> enable cold start
+    freezer.tick(timedelta(seconds=PACKS_SCAN_INTERVAL))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
     await snapshot_platform(hass, entity_registry, snapshot, entry.entry_id)
 
 
@@ -126,8 +139,11 @@ async def test_select_option(
 
     await hass.services.async_call(
         SELECT_DOMAIN,
-        SERVICE_SELECT_OPTION,
-        {ATTR_ENTITY_ID: entity_id, ATTR_OPTION: option},
+        SelectService.SELECT_OPTION,
+        {
+            CommonServiceArgument.ENTITY_ID: entity_id,
+            SelectServiceArgument.OPTION: option,
+        },
         blocking=True,
     )
     assert (state := hass.states.get(entity_id)) is not None
@@ -148,7 +164,10 @@ async def test_select_option_modbus_error(
     with pytest.raises(ModbusError, match="busy"):
         await hass.services.async_call(
             SELECT_DOMAIN,
-            SERVICE_SELECT_OPTION,
-            {ATTR_ENTITY_ID: charger_id, ATTR_OPTION: "feed_in_priority_mode"},
+            SelectService.SELECT_OPTION,
+            {
+                CommonServiceArgument.ENTITY_ID: charger_id,
+                SelectServiceArgument.OPTION: "feed_in_priority_mode",
+            },
             blocking=True,
         )

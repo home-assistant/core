@@ -11,8 +11,8 @@ from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from pytest_homeassistant.typing import WebSocketGenerator
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.update import DOMAIN as UPDATE_DOMAIN, SERVICE_INSTALL
-from homeassistant.const import ATTR_ENTITY_ID, Platform
+from homeassistant.components.update import DOMAIN as UPDATE_DOMAIN, UpdateService
+from homeassistant.const import CommonServiceArgument, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
@@ -89,9 +89,9 @@ async def test_update_process(
 
     await hass.services.async_call(
         UPDATE_DOMAIN,
-        SERVICE_INSTALL,
+        UpdateService.INSTALL,
         {
-            ATTR_ENTITY_ID: f"update.{serial_number}_gateway_firmware",
+            CommonServiceArgument.ENTITY_ID: f"update.{serial_number}_gateway_firmware",
         },
         blocking=True,
     )
@@ -125,9 +125,9 @@ async def test_update_error(
     with pytest.raises(HomeAssistantError) as exc_info:
         await hass.services.async_call(
             UPDATE_DOMAIN,
-            SERVICE_INSTALL,
+            UpdateService.INSTALL,
             {
-                ATTR_ENTITY_ID: (
+                CommonServiceArgument.ENTITY_ID: (
                     f"update.{mock_lamarzocco.serial_number}_gateway_firmware"
                 ),
             },
@@ -159,9 +159,9 @@ async def test_update_times_out(
     ):
         await hass.services.async_call(
             UPDATE_DOMAIN,
-            SERVICE_INSTALL,
+            UpdateService.INSTALL,
             {
-                ATTR_ENTITY_ID: (
+                CommonServiceArgument.ENTITY_ID: (
                     f"update.{mock_lamarzocco.serial_number}_gateway_firmware"
                 ),
             },

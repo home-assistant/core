@@ -8,14 +8,14 @@ from unittest.mock import MagicMock, patch
 import pytest
 from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
-from homeassistant.components.input_number import ATTR_VALUE, SERVICE_SET_VALUE
+from homeassistant.components.number import NumberService, NumberServiceArgument
 from homeassistant.components.wallbox.const import CHARGER_JWT_TTL, CONF_STATION, DOMAIN
 from homeassistant.components.wallbox.coordinator import (
     InsufficientRights,
     check_token_validity,
 )
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.const import CommonServiceArgument
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, HomeAssistantError
 from homeassistant.helpers import issue_registry as ir
@@ -92,10 +92,10 @@ async def test_wallbox_refresh_failed_error_auth(
     ):
         await hass.services.async_call(
             "number",
-            SERVICE_SET_VALUE,
+            NumberService.SET_VALUE,
             {
-                ATTR_ENTITY_ID: MOCK_NUMBER_ENTITY_ENERGY_PRICE_ID,
-                ATTR_VALUE: 1.1,
+                CommonServiceArgument.ENTITY_ID: MOCK_NUMBER_ENTITY_ENERGY_PRICE_ID,
+                NumberServiceArgument.VALUE: 1.1,
             },
             blocking=True,
         )
@@ -106,10 +106,10 @@ async def test_wallbox_refresh_failed_error_auth(
     ):
         await hass.services.async_call(
             "number",
-            SERVICE_SET_VALUE,
+            NumberService.SET_VALUE,
             {
-                ATTR_ENTITY_ID: MOCK_NUMBER_ENTITY_ENERGY_PRICE_ID,
-                ATTR_VALUE: 1.1,
+                CommonServiceArgument.ENTITY_ID: MOCK_NUMBER_ENTITY_ENERGY_PRICE_ID,
+                NumberServiceArgument.VALUE: 1.1,
             },
             blocking=True,
         )

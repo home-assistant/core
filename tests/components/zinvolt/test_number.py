@@ -12,12 +12,12 @@ from syrupy.assertion import SnapshotAssertion
 from zinvolt.models import BatteryState
 
 from homeassistant.components.number import (
-    ATTR_VALUE,
     DOMAIN as NUMBER_DOMAIN,
-    SERVICE_SET_VALUE,
+    NumberService,
+    NumberServiceArgument,
 )
 from homeassistant.components.zinvolt.const import DOMAIN
-from homeassistant.const import ATTR_ENTITY_ID, Platform
+from homeassistant.const import CommonServiceArgument, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -72,10 +72,10 @@ async def test_set_max_charge_power(
 
     await hass.services.async_call(
         NUMBER_DOMAIN,
-        SERVICE_SET_VALUE,
+        NumberService.SET_VALUE,
         {
-            ATTR_ENTITY_ID: "number.zinvolt_batterij_maximum_charge_power",
-            ATTR_VALUE: 1500,
+            CommonServiceArgument.ENTITY_ID: "number.zinvolt_batterij_maximum_charge_power",
+            NumberServiceArgument.VALUE: 1500,
         },
         blocking=True,
     )

@@ -25,13 +25,12 @@ from homeassistant.components.light import (
     DOMAIN as LIGHT_DOMAIN,
     ColorMode,
 )
-from homeassistant.components.modern_forms.const import (
-    ATTR_SLEEP_TIME,
-    DOMAIN,
-    SERVICE_CLEAR_LIGHT_SLEEP_TIMER,
-    SERVICE_SET_LIGHT_SLEEP_TIMER,
-)
+from homeassistant.components.modern_forms.const import DOMAIN
 from homeassistant.components.modern_forms.coordinator import SCAN_INTERVAL
+from homeassistant.components.modern_forms.services import (
+    ModernFormsService,
+    ModernFormsServiceArgument,
+)
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_FRIENDLY_NAME,
@@ -40,6 +39,7 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
     STATE_UNAVAILABLE,
+    CommonServiceArgument,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -109,8 +109,11 @@ async def test_sleep_timer_services(
     with patch("aiomodernforms.ModernFormsDevice.light") as light_mock:
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_SET_LIGHT_SLEEP_TIMER,
-            {ATTR_ENTITY_ID: "light.modernformsfan_light", ATTR_SLEEP_TIME: 1},
+            ModernFormsService.SET_LIGHT_SLEEP_TIMER,
+            {
+                CommonServiceArgument.ENTITY_ID: "light.modernformsfan_light",
+                ModernFormsServiceArgument.SLEEP_TIME: 1,
+            },
             blocking=True,
         )
         await hass.async_block_till_done()
@@ -119,8 +122,8 @@ async def test_sleep_timer_services(
     with patch("aiomodernforms.ModernFormsDevice.light") as light_mock:
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_CLEAR_LIGHT_SLEEP_TIMER,
-            {ATTR_ENTITY_ID: "light.modernformsfan_light"},
+            ModernFormsService.CLEAR_LIGHT_SLEEP_TIMER,
+            {CommonServiceArgument.ENTITY_ID: "light.modernformsfan_light"},
             blocking=True,
         )
         await hass.async_block_till_done()
@@ -352,8 +355,11 @@ async def test_light_sleep_timer_not_supported_gen4(
     with pytest.raises(HomeAssistantError) as exc_info:
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_SET_LIGHT_SLEEP_TIMER,
-            {ATTR_ENTITY_ID: "light.modernformsfan_uplight", ATTR_SLEEP_TIME: 1},
+            ModernFormsService.SET_LIGHT_SLEEP_TIMER,
+            {
+                CommonServiceArgument.ENTITY_ID: "light.modernformsfan_uplight",
+                ModernFormsServiceArgument.SLEEP_TIME: 1,
+            },
             blocking=True,
         )
 
@@ -371,8 +377,8 @@ async def test_clear_light_sleep_timer_not_supported_gen4(
     with pytest.raises(HomeAssistantError) as exc_info:
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_CLEAR_LIGHT_SLEEP_TIMER,
-            {ATTR_ENTITY_ID: "light.modernformsfan_uplight"},
+            ModernFormsService.CLEAR_LIGHT_SLEEP_TIMER,
+            {CommonServiceArgument.ENTITY_ID: "light.modernformsfan_uplight"},
             blocking=True,
         )
 

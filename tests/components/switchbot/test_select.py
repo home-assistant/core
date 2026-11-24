@@ -15,14 +15,14 @@ from switchbot import NightLightState
 
 from homeassistant.components.bluetooth import BluetoothServiceInfoBleak
 from homeassistant.components.select import (
-    ATTR_OPTION,
     DOMAIN as SELECT_DOMAIN,
-    SERVICE_SELECT_OPTION,
+    SelectService,
+    SelectServiceArgument,
 )
 from homeassistant.const import (
-    ATTR_ENTITY_ID,
     EVENT_HOMEASSISTANT_STARTED,
     STATE_UNKNOWN,
+    CommonServiceArgument,
 )
 from homeassistant.core import CoreState, HomeAssistant
 from homeassistant.setup import async_setup_component
@@ -270,10 +270,10 @@ async def test_set_time_format(
 
         await hass.services.async_call(
             SELECT_DOMAIN,
-            SERVICE_SELECT_OPTION,
+            SelectService.SELECT_OPTION,
             {
-                ATTR_ENTITY_ID: TIME_FORMAT_ENTITY_ID,
-                ATTR_OPTION: expected_state,
+                CommonServiceArgument.ENTITY_ID: TIME_FORMAT_ENTITY_ID,
+                SelectServiceArgument.OPTION: expected_state,
             },
             blocking=True,
         )
@@ -321,8 +321,11 @@ async def test_standing_fan_night_light_select(
 
         await hass.services.async_call(
             SELECT_DOMAIN,
-            SERVICE_SELECT_OPTION,
-            {ATTR_ENTITY_ID: "select.test_name_night_light", ATTR_OPTION: option},
+            SelectService.SELECT_OPTION,
+            {
+                CommonServiceArgument.ENTITY_ID: "select.test_name_night_light",
+                SelectServiceArgument.OPTION: option,
+            },
             blocking=True,
         )
 

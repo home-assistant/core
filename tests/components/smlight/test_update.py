@@ -26,19 +26,24 @@ from homeassistant.components.update import (
     ATTR_LATEST_VERSION,
     ATTR_UPDATE_PERCENTAGE,
     DOMAIN as UPDATE_DOMAIN,
-    SERVICE_INSTALL,
+    UpdateService,
+    UpdateServiceArgument,
 )
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.const import (
-    ATTR_ENTITY_ID,
     STATE_OFF,
     STATE_ON,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
+    CommonServiceArgument,
     Platform,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed, HomeAssistantError
+from homeassistant.exceptions import (
+    ConfigEntryAuthFailed,
+    HomeAssistantError,
+    ServiceValidationError,
+)
 from homeassistant.helpers import entity_registry as er
 
 from . import get_mock_event_function
@@ -345,8 +350,8 @@ async def test_update_firmware(
 
     await hass.services.async_call(
         UPDATE_DOMAIN,
-        SERVICE_INSTALL,
-        {ATTR_ENTITY_ID: entity_id},
+        UpdateService.INSTALL,
+        {CommonServiceArgument.ENTITY_ID: entity_id},
         blocking=False,
     )
 
@@ -400,8 +405,8 @@ async def test_update_zigbee2_firmware(
 
     await hass.services.async_call(
         UPDATE_DOMAIN,
-        SERVICE_INSTALL,
-        {ATTR_ENTITY_ID: entity_id},
+        UpdateService.INSTALL,
+        {CommonServiceArgument.ENTITY_ID: entity_id},
         blocking=False,
     )
 
@@ -445,8 +450,8 @@ async def test_update_legacy_firmware_v2(
 
     await hass.services.async_call(
         UPDATE_DOMAIN,
-        SERVICE_INSTALL,
-        {ATTR_ENTITY_ID: entity_id},
+        UpdateService.INSTALL,
+        {CommonServiceArgument.ENTITY_ID: entity_id},
         blocking=False,
     )
 
@@ -486,8 +491,8 @@ async def test_update_firmware_failed(
 
     await hass.services.async_call(
         UPDATE_DOMAIN,
-        SERVICE_INSTALL,
-        {ATTR_ENTITY_ID: entity_id},
+        UpdateService.INSTALL,
+        {CommonServiceArgument.ENTITY_ID: entity_id},
         blocking=False,
     )
 
@@ -541,8 +546,8 @@ async def test_update_install_command_error(
     with pytest.raises(expected_exception, match=expected_match):
         await hass.services.async_call(
             UPDATE_DOMAIN,
-            SERVICE_INSTALL,
-            {ATTR_ENTITY_ID: entity_id},
+            UpdateService.INSTALL,
+            {CommonServiceArgument.ENTITY_ID: entity_id},
             blocking=True,
         )
 
@@ -586,8 +591,8 @@ async def test_update_reboot_timeout(
         install_task = hass.async_create_task(
             hass.services.async_call(
                 UPDATE_DOMAIN,
-                SERVICE_INSTALL,
-                {ATTR_ENTITY_ID: entity_id},
+                UpdateService.INSTALL,
+                {CommonServiceArgument.ENTITY_ID: entity_id},
                 blocking=True,
             )
         )
@@ -715,3 +720,107 @@ async def test_zwave_update_naming_mr10(
     state = hass.states.get("update.mock_title_z_wave_firmware")
     assert state is not None
     assert state.name == "Mock Title Z-Wave firmware"
+
+
+@pytest.mark.parametrize(
+    ("entity_id", "version", "installed_version", "latest_version", "updated_info"),
+    [
+        pytest.param(
+            "update.mock_title_core_firmware",
+            "0.9.9",
+            "v2.3.6",
+            "v2.7.5",
+            Info(sw_version="0.9.9"),
+            id="core",
+        ),
+        pytest.param(
+            "update.mock_title_zigbee_firmware",
+            "20240315",
+            "20240314",
+            "20250201",
+            Info(radios=[Radio(chip_index=0, zb_type=0, zb_version="20240315")]),
+            id="zigbee",
+        ),
+    ],
+)
+@patch("homeassistant.components.smlight.update.asyncio.sleep", return_value=None)
+async def test_update_firmware_specific_version(
+    mock_sleep: MagicMock,
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_smlight_client: MagicMock,
+    entity_id: str,
+    version: str,
+    installed_version: str,
+    latest_version: str,
+    updated_info: Info,
+) -> None:
+    """Test installing a specific firmware version, older than the latest."""
+    await setup_integration(hass, mock_config_entry)
+    state = hass.states.get(entity_id)
+    assert state.attributes[ATTR_INSTALLED_VERSION] == installed_version
+    assert state.attributes[ATTR_LATEST_VERSION] == latest_version
+
+    await hass.services.async_call(
+        UPDATE_DOMAIN,
+        UpdateService.INSTALL,
+        {
+            CommonServiceArgument.ENTITY_ID: entity_id,
+            UpdateServiceArgument.VERSION: version,
+        },
+        blocking=False,
+    )
+
+    assert len(mock_smlight_client.fw_update.mock_calls) == 1
+    firmware, idx = mock_smlight_client.fw_update.call_args.args
+    assert firmware.ver == version
+    assert idx == 0
+
+    event_function = get_mock_event_function(mock_smlight_client, SmEvents.FW_UPD_done)
+    event_function(MOCK_FIRMWARE_DONE)
+
+    mock_smlight_client.get_info.side_effect = None
+    mock_smlight_client.get_info.return_value = updated_info
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state.state == STATE_ON
+    assert state.attributes[ATTR_IN_PROGRESS] is False
+    assert state.attributes[ATTR_INSTALLED_VERSION] == version
+    assert state.attributes[ATTR_LATEST_VERSION] == latest_version
+
+
+@pytest.mark.parametrize(
+    ("version", "translation_key"),
+    [
+        pytest.param("v9.9.9", "firmware_version_not_found", id="not_in_catalog"),
+        pytest.param("", "firmware_version_not_found", id="empty"),
+        pytest.param(
+            "v2.3.6", "firmware_version_already_installed", id="already_installed"
+        ),
+    ],
+)
+async def test_update_firmware_specific_version_invalid(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_smlight_client: MagicMock,
+    version: str,
+    translation_key: str,
+) -> None:
+    """Test a version that cannot be installed is refused before flashing."""
+    await setup_integration(hass, mock_config_entry)
+
+    with pytest.raises(ServiceValidationError) as exc_info:
+        await hass.services.async_call(
+            UPDATE_DOMAIN,
+            UpdateService.INSTALL,
+            {
+                CommonServiceArgument.ENTITY_ID: "update.mock_title_core_firmware",
+                UpdateServiceArgument.VERSION: version,
+            },
+            blocking=True,
+        )
+
+    mock_smlight_client.fw_update.assert_not_called()
+    assert exc_info.value.translation_domain == DOMAIN
+    assert exc_info.value.translation_key == translation_key

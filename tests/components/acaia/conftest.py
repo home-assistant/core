@@ -1,6 +1,7 @@
 """Common fixtures for the acaia tests."""
 
 from collections.abc import Generator
+from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from aioacaia.const import UnitMass as AcaiaUnitOfMass
@@ -34,7 +35,15 @@ def mock_verify() -> Generator[AsyncMock]:
 
 
 @pytest.fixture
-def mock_config_entry(hass: HomeAssistant) -> MockConfigEntry:
+def entry_options() -> dict[str, Any]:
+    """Return the options of the mocked config entry."""
+    return {}
+
+
+@pytest.fixture
+def mock_config_entry(
+    hass: HomeAssistant, entry_options: dict[str, Any]
+) -> MockConfigEntry:
     """Return the default mocked config entry."""
     return MockConfigEntry(
         title="LUNAR-DDEEFF",
@@ -44,6 +53,7 @@ def mock_config_entry(hass: HomeAssistant) -> MockConfigEntry:
             CONF_ADDRESS: "aa:bb:cc:dd:ee:ff",
             CONF_IS_NEW_STYLE_SCALE: True,
         },
+        options=entry_options,
         unique_id="aa:bb:cc:dd:ee:ff",
     )
 
@@ -58,26 +68,30 @@ async def init_integration(
 
 
 @pytest.fixture
-def mock_scale() -> Generator[MagicMock]:
+def mock_scale_class() -> Generator[MagicMock]:
+    """Return the mocked acaia scale client class."""
+    with patch(
+        "homeassistant.components.acaia.coordinator.AcaiaScale",
+        autospec=True,
+    ) as scale_mock:
+        yield scale_mock
+
+
+@pytest.fixture
+def mock_scale(mock_scale_class: MagicMock) -> MagicMock:
     """Return a mocked acaia scale client."""
-    with (
-        patch(
-            "homeassistant.components.acaia.coordinator.AcaiaScale",
-            autospec=True,
-        ) as scale_mock,
-    ):
-        scale = scale_mock.return_value
-        scale.connected = True
-        scale.mac = "aa:bb:cc:dd:ee:ff"
-        scale.model = "Lunar"
-        scale.last_disconnect_time = "1732181388.1895587"
-        scale.timer_running = True
-        scale.heartbeat_task = None
-        scale.process_queue_task = None
-        scale.device_state = AcaiaDeviceState(
-            battery_level=42, units=AcaiaUnitOfMass.OUNCES
-        )
-        scale.weight = 123.45
-        scale.timer = 23
-        scale.flow_rate = 1.23
-        yield scale
+    scale = mock_scale_class.return_value
+    scale.connected = True
+    scale.mac = "aa:bb:cc:dd:ee:ff"
+    scale.model = "Lunar"
+    scale.last_disconnect_time = "1732181388.1895587"
+    scale.timer_running = True
+    scale.heartbeat_task = None
+    scale.process_queue_task = None
+    scale.device_state = AcaiaDeviceState(
+        battery_level=42, units=AcaiaUnitOfMass.OUNCES
+    )
+    scale.weight = 123.45
+    scale.timer = 23
+    scale.flow_rate = 1.23
+    return scale

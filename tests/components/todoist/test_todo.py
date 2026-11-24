@@ -19,11 +19,10 @@ from homeassistant.components.todo import (
     DOMAIN as TODO_DOMAIN,
     TodoServices,
 )
-from homeassistant.components.todoist.const import (
-    CONTENT,
-    DOMAIN,
-    PROJECT_NAME,
-    SERVICE_NEW_TASK,
+from homeassistant.components.todoist.const import DOMAIN
+from homeassistant.components.todoist.services import (
+    TodoistService,
+    TodoistServiceArgument,
 )
 from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
@@ -242,8 +241,11 @@ async def test_new_task_action_refreshes_todo_list(
 
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_NEW_TASK,
-        {CONTENT: "Soda", PROJECT_NAME: "Name"},
+        TodoistService.NEW_TASK,
+        {
+            TodoistServiceArgument.CONTENT: "Soda",
+            TodoistServiceArgument.PROJECT: "Name",
+        },
         blocking=True,
     )
 

@@ -17,11 +17,11 @@ from watergate_local_api import WatergateApiException
 from watergate_local_api.models import AutoShutOffState
 
 from homeassistant.components.number import (
-    ATTR_VALUE,
     DOMAIN as NUMBER_DOMAIN,
-    SERVICE_SET_VALUE,
+    NumberService,
+    NumberServiceArgument,
 )
-from homeassistant.const import ATTR_ENTITY_ID, Platform
+from homeassistant.const import CommonServiceArgument, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
@@ -65,8 +65,8 @@ async def test_setting_threshold_calls_client(
 
     await hass.services.async_call(
         NUMBER_DOMAIN,
-        SERVICE_SET_VALUE,
-        {ATTR_ENTITY_ID: entity_id, ATTR_VALUE: 250},
+        NumberService.SET_VALUE,
+        {CommonServiceArgument.ENTITY_ID: entity_id, NumberServiceArgument.VALUE: 250},
         blocking=True,
     )
 
@@ -88,8 +88,11 @@ async def test_setting_fractional_threshold_rounds_to_integer(
 
     await hass.services.async_call(
         NUMBER_DOMAIN,
-        SERVICE_SET_VALUE,
-        {ATTR_ENTITY_ID: VOLUME_ENTITY_ID, ATTR_VALUE: 250.6},
+        NumberService.SET_VALUE,
+        {
+            CommonServiceArgument.ENTITY_ID: VOLUME_ENTITY_ID,
+            NumberServiceArgument.VALUE: 250.6,
+        },
         blocking=True,
     )
 
@@ -150,8 +153,11 @@ async def test_number_raises_on_client_failure(
     with pytest.raises(HomeAssistantError) as exc_info:
         await hass.services.async_call(
             NUMBER_DOMAIN,
-            SERVICE_SET_VALUE,
-            {ATTR_ENTITY_ID: entity_id, ATTR_VALUE: 250},
+            NumberService.SET_VALUE,
+            {
+                CommonServiceArgument.ENTITY_ID: entity_id,
+                NumberServiceArgument.VALUE: 250,
+            },
             blocking=True,
         )
 

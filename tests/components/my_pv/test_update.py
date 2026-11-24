@@ -21,13 +21,13 @@ from homeassistant.components.update import (
     ATTR_IN_PROGRESS,
     ATTR_UPDATE_PERCENTAGE,
     DOMAIN as UPDATE_DOMAIN,
-    SERVICE_INSTALL,
+    UpdateService,
 )
 from homeassistant.const import (
-    ATTR_ENTITY_ID,
     STATE_OFF,
     STATE_ON,
     STATE_UNAVAILABLE,
+    CommonServiceArgument,
     Platform,
 )
 from homeassistant.core import HomeAssistant
@@ -103,8 +103,8 @@ async def test_update_install(
 
     await hass.services.async_call(
         UPDATE_DOMAIN,
-        SERVICE_INSTALL,
-        {ATTR_ENTITY_ID: "update.my_pv_ac_elwa_2_firmware"},
+        UpdateService.INSTALL,
+        {CommonServiceArgument.ENTITY_ID: "update.my_pv_ac_elwa_2_firmware"},
         blocking=True,
     )
     mock_my_pv_client.update_firmware.assert_awaited_once_with()
@@ -169,8 +169,8 @@ async def test_update_in_progress_on_setup(
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             UPDATE_DOMAIN,
-            SERVICE_INSTALL,
-            {ATTR_ENTITY_ID: "update.my_pv_ac_elwa_2_firmware"},
+            UpdateService.INSTALL,
+            {CommonServiceArgument.ENTITY_ID: "update.my_pv_ac_elwa_2_firmware"},
             blocking=True,
         )
     mock_my_pv_client.update_firmware.assert_not_awaited()
@@ -188,8 +188,8 @@ async def test_update_install_firmware_returns_false(
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             UPDATE_DOMAIN,
-            SERVICE_INSTALL,
-            {ATTR_ENTITY_ID: "update.my_pv_ac_elwa_2_firmware"},
+            UpdateService.INSTALL,
+            {CommonServiceArgument.ENTITY_ID: "update.my_pv_ac_elwa_2_firmware"},
             blocking=True,
         )
     mock_my_pv_client.update_firmware.assert_awaited_once_with()
@@ -198,8 +198,8 @@ async def test_update_install_firmware_returns_false(
     mock_my_pv_client.update_firmware.return_value = True
     await hass.services.async_call(
         UPDATE_DOMAIN,
-        SERVICE_INSTALL,
-        {ATTR_ENTITY_ID: "update.my_pv_ac_elwa_2_firmware"},
+        UpdateService.INSTALL,
+        {CommonServiceArgument.ENTITY_ID: "update.my_pv_ac_elwa_2_firmware"},
         blocking=True,
     )
     mock_my_pv_client.update_firmware.assert_awaited_once_with()
@@ -227,8 +227,8 @@ async def test_update_install_firmware_raises_error(
     with pytest.raises(expected_ha_error):
         await hass.services.async_call(
             UPDATE_DOMAIN,
-            SERVICE_INSTALL,
-            {ATTR_ENTITY_ID: "update.my_pv_ac_elwa_2_firmware"},
+            UpdateService.INSTALL,
+            {CommonServiceArgument.ENTITY_ID: "update.my_pv_ac_elwa_2_firmware"},
             blocking=True,
         )
     mock_my_pv_client.update_firmware.assert_awaited_once_with()
@@ -237,8 +237,8 @@ async def test_update_install_firmware_raises_error(
     mock_my_pv_client.update_firmware.side_effect = None
     await hass.services.async_call(
         UPDATE_DOMAIN,
-        SERVICE_INSTALL,
-        {ATTR_ENTITY_ID: "update.my_pv_ac_elwa_2_firmware"},
+        UpdateService.INSTALL,
+        {CommonServiceArgument.ENTITY_ID: "update.my_pv_ac_elwa_2_firmware"},
         blocking=True,
     )
     mock_my_pv_client.update_firmware.assert_awaited_once_with()

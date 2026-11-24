@@ -16,9 +16,10 @@ from syrupy.assertion import SnapshotAssertion
 from homeassistant.components.onewire.onewirehub import _DEVICE_SCAN_INTERVAL
 from homeassistant.components.select import (
     DOMAIN as SELECT_DOMAIN,
-    SERVICE_SELECT_OPTION,
+    SelectService,
+    SelectServiceArgument,
 )
-from homeassistant.const import ATTR_ENTITY_ID, ATTR_OPTION, Platform
+from homeassistant.const import CommonServiceArgument, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
@@ -95,8 +96,8 @@ async def test_selection_option_service(
     owproxy.return_value.read.side_effect = [b"         9"]
     await hass.services.async_call(
         SELECT_DOMAIN,
-        SERVICE_SELECT_OPTION,
-        {ATTR_ENTITY_ID: entity_id, ATTR_OPTION: "9"},
+        SelectService.SELECT_OPTION,
+        {CommonServiceArgument.ENTITY_ID: entity_id, SelectServiceArgument.OPTION: "9"},
         blocking=True,
     )
     assert hass.states.get(entity_id).state == "9"
@@ -118,10 +119,10 @@ async def test_selection_option_write_failure(
     with pytest.raises(HomeAssistantError) as exc_info:
         await hass.services.async_call(
             SELECT_DOMAIN,
-            SERVICE_SELECT_OPTION,
+            SelectService.SELECT_OPTION,
             {
-                ATTR_ENTITY_ID: "select.28_111111111111_temperature_resolution",
-                ATTR_OPTION: "9",
+                CommonServiceArgument.ENTITY_ID: "select.28_111111111111_temperature_resolution",
+                SelectServiceArgument.OPTION: "9",
             },
             blocking=True,
         )

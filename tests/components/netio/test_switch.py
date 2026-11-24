@@ -14,7 +14,7 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.netio.const import DOMAIN
 from homeassistant.components.netio.coordinator import SCAN_INTERVAL
-from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
+from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN, SwitchService
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     SERVICE_TURN_OFF,
@@ -22,6 +22,7 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
     STATE_UNAVAILABLE,
+    CommonServiceArgument,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -96,8 +97,8 @@ async def test_switch_optimistic_state_reconciled(
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: ENTITY_OUTPUT_1},
+        SwitchService.TURN_OFF,
+        {CommonServiceArgument.ENTITY_ID: ENTITY_OUTPUT_1},
         blocking=True,
     )
     assert hass.states.get(ENTITY_OUTPUT_1).state == STATE_OFF
@@ -123,8 +124,8 @@ async def test_switch_action_error(
     with pytest.raises(HomeAssistantError, match="Error setting output 1"):
         await hass.services.async_call(
             SWITCH_DOMAIN,
-            SERVICE_TURN_ON,
-            {ATTR_ENTITY_ID: ENTITY_OUTPUT_1},
+            SwitchService.TURN_ON,
+            {CommonServiceArgument.ENTITY_ID: ENTITY_OUTPUT_1},
             blocking=True,
         )
 

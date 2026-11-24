@@ -18,12 +18,13 @@ from homeassistant.components.engie_be.const import (
     CONF_REFRESH_TOKEN,
     DOMAIN,
 )
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_EMAIL, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .conftest import EMAIL, PASSWORD, SUBJECT
+from .conftest import EMAIL, PASSWORD, SUBJECT, setup_entry
 
 USER_INPUT = {
     CONF_EMAIL: EMAIL,
@@ -350,3 +351,141 @@ async def test_reauth_flow_unique_id_mismatch(
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "unique_id_mismatch"
     assert mock_config_entry.data[CONF_ACCESS_TOKEN] == "access-token"
+
+
+async def test_reconfigure_flow(
+    hass: HomeAssistant,
+    mock_engie_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test that reconfiguration updates the entry and reloads it."""
+    mock_engie_client.return_value.subject = SUBJECT
+    await setup_entry(hass, mock_config_entry)
+
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_EMAIL: "new-email@example.com",
+            CONF_PASSWORD: "new-password",
+            CONF_MFA_METHOD: "email",
+        },
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "mfa"
+    assert mock_engie_client.return_value.async_start_authentication.call_args.args[
+        :3
+    ] == ("new-email@example.com", "new-password", MfaMethod.EMAIL)
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"code": "123456"}
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    await hass.async_block_till_done()
+    assert mock_config_entry.title == "new-email@example.com"
+    assert mock_config_entry.data == {
+        CONF_EMAIL: "new-email@example.com",
+        CONF_MFA_METHOD: "email",
+        CONF_ACCESS_TOKEN: "new-access-token",
+        CONF_REFRESH_TOKEN: "new-refresh-token",
+    }
+    assert mock_engie_client.call_args.kwargs[CONF_ACCESS_TOKEN] == "new-access-token"
+    assert mock_engie_client.call_args.kwargs[CONF_REFRESH_TOKEN] == "new-refresh-token"
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+
+
+@pytest.mark.parametrize(
+    ("exception", "error"),
+    [
+        pytest.param(
+            EngieBeCommunicationError("boom"), "cannot_connect", id="cannot_connect"
+        ),
+        pytest.param(
+            EngieBeAuthenticationError("boom"), "invalid_auth", id="invalid_auth"
+        ),
+        pytest.param(EngieBeError("boom"), "unknown", id="unknown"),
+    ],
+)
+async def test_reconfigure_flow_errors(
+    hass: HomeAssistant,
+    mock_engie_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    exception: Exception,
+    error: str,
+) -> None:
+    """Test recoverable errors in the reconfigure flow."""
+    mock_engie_client.return_value.subject = SUBJECT
+    await setup_entry(hass, mock_config_entry)
+
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+
+    mock_engie_client.return_value.async_start_authentication.side_effect = exception
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_EMAIL: EMAIL,
+            CONF_PASSWORD: "new-password",
+            CONF_MFA_METHOD: "sms",
+        },
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+    assert result["errors"] == {"base": error}
+
+    mock_engie_client.return_value.async_start_authentication.side_effect = None
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_EMAIL: EMAIL,
+            CONF_PASSWORD: "new-password",
+            CONF_MFA_METHOD: "sms",
+        },
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "mfa"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"code": "123456"}
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    await hass.async_block_till_done()
+
+
+async def test_reconfigure_flow_unique_id_mismatch(
+    hass: HomeAssistant,
+    mock_engie_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test that reconfiguration aborts when signing in to a different account."""
+    mock_engie_client.return_value.subject = "auth0|7a3c9e21b48f5d0261af3d77"
+    await setup_entry(hass, mock_config_entry)
+
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_EMAIL: EMAIL,
+            CONF_PASSWORD: "new-password",
+            CONF_MFA_METHOD: "sms",
+        },
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "mfa"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"code": "123456"}
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "unique_id_mismatch"
+    assert mock_config_entry.title == EMAIL
+    assert mock_config_entry.data == {
+        CONF_EMAIL: EMAIL,
+        CONF_MFA_METHOD: "sms",
+        CONF_ACCESS_TOKEN: "access-token",
+        CONF_REFRESH_TOKEN: "refresh-token",
+    }

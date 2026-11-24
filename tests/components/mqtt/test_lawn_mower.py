@@ -43,15 +43,12 @@ from pytest_homeassistant.typing import MqttMockHAClientGenerator, MqttMockPahoC
 from homeassistant.components import lawn_mower
 from homeassistant.components.lawn_mower import (
     DOMAIN as LAWN_MOWER_DOMAIN,
-    SERVICE_DOCK,
-    SERVICE_PAUSE,
-    SERVICE_START_MOWING,
-    SERVICE_STOP,
     LawnMowerEntityFeature,
+    LawnMowerService,
 )
 from homeassistant.components.mqtt.const import DOMAIN
 from homeassistant.components.mqtt.lawn_mower import MQTT_LAWN_MOWER_ATTRIBUTES_BLOCKED
-from homeassistant.const import ATTR_ASSUMED_STATE, ATTR_ENTITY_ID, STATE_UNKNOWN
+from homeassistant.const import ATTR_ASSUMED_STATE, STATE_UNKNOWN, CommonServiceArgument
 from homeassistant.core import HomeAssistant, State
 
 ATTR_ACTIVITY = "activity"
@@ -260,8 +257,8 @@ async def test_run_lawn_mower_service_optimistic(
 
     await hass.services.async_call(
         lawn_mower.DOMAIN,
-        SERVICE_START_MOWING,
-        {ATTR_ENTITY_ID: "lawn_mower.test"},
+        LawnMowerService.START_MOWING,
+        {CommonServiceArgument.ENTITY_ID: "lawn_mower.test"},
         blocking=True,
     )
 
@@ -278,8 +275,8 @@ async def test_run_lawn_mower_service_optimistic(
 
     await hass.services.async_call(
         lawn_mower.DOMAIN,
-        SERVICE_PAUSE,
-        {ATTR_ENTITY_ID: "lawn_mower.test"},
+        LawnMowerService.PAUSE,
+        {CommonServiceArgument.ENTITY_ID: "lawn_mower.test"},
         blocking=True,
     )
 
@@ -292,8 +289,8 @@ async def test_run_lawn_mower_service_optimistic(
 
     await hass.services.async_call(
         lawn_mower.DOMAIN,
-        SERVICE_DOCK,
-        {ATTR_ENTITY_ID: "lawn_mower.test"},
+        LawnMowerService.DOCK,
+        {CommonServiceArgument.ENTITY_ID: "lawn_mower.test"},
         blocking=True,
     )
 
@@ -306,8 +303,8 @@ async def test_run_lawn_mower_service_optimistic(
 
     await hass.services.async_call(
         lawn_mower.DOMAIN,
-        SERVICE_STOP,
-        {ATTR_ENTITY_ID: "lawn_mower.test"},
+        LawnMowerService.STOP,
+        {CommonServiceArgument.ENTITY_ID: "lawn_mower.test"},
         blocking=True,
     )
 
@@ -380,8 +377,8 @@ async def test_run_lawn_mower_service_optimistic_with_command_templates(
 
     await hass.services.async_call(
         lawn_mower.DOMAIN,
-        SERVICE_START_MOWING,
-        {ATTR_ENTITY_ID: "lawn_mower.test_lawn_mower"},
+        LawnMowerService.START_MOWING,
+        {CommonServiceArgument.ENTITY_ID: "lawn_mower.test_lawn_mower"},
         blocking=True,
     )
 
@@ -398,8 +395,8 @@ async def test_run_lawn_mower_service_optimistic_with_command_templates(
 
     await hass.services.async_call(
         lawn_mower.DOMAIN,
-        SERVICE_PAUSE,
-        {ATTR_ENTITY_ID: "lawn_mower.test_lawn_mower"},
+        LawnMowerService.PAUSE,
+        {CommonServiceArgument.ENTITY_ID: "lawn_mower.test_lawn_mower"},
         blocking=True,
     )
 
@@ -416,8 +413,8 @@ async def test_run_lawn_mower_service_optimistic_with_command_templates(
 
     await hass.services.async_call(
         lawn_mower.DOMAIN,
-        SERVICE_DOCK,
-        {ATTR_ENTITY_ID: "lawn_mower.test_lawn_mower"},
+        LawnMowerService.DOCK,
+        {CommonServiceArgument.ENTITY_ID: "lawn_mower.test_lawn_mower"},
         blocking=True,
     )
 
@@ -434,8 +431,8 @@ async def test_run_lawn_mower_service_optimistic_with_command_templates(
 
     await hass.services.async_call(
         lawn_mower.DOMAIN,
-        SERVICE_STOP,
-        {ATTR_ENTITY_ID: "lawn_mower.test_lawn_mower"},
+        LawnMowerService.STOP,
+        {CommonServiceArgument.ENTITY_ID: "lawn_mower.test_lawn_mower"},
         blocking=True,
     )
 
@@ -708,28 +705,28 @@ async def test_entity_id_update_discovery_update(
     ("service", "command_payload", "state_payload", "state_topic", "command_topic"),
     [
         (
-            SERVICE_START_MOWING,
+            LawnMowerService.START_MOWING,
             "start_mowing",
             "mowing",
             "test/lawn_mower_stat",
             "start_mowing-test-topic",
         ),
         (
-            SERVICE_PAUSE,
+            LawnMowerService.PAUSE,
             "pause",
             "paused",
             "test/lawn_mower_stat",
             "pause-test-topic",
         ),
         (
-            SERVICE_DOCK,
+            LawnMowerService.DOCK,
             "dock",
             "docked",
             "test/lawn_mower_stat",
             "dock-test-topic",
         ),
         (
-            SERVICE_STOP,
+            LawnMowerService.STOP,
             "stop",
             "idle",
             "test/lawn_mower_stat",
@@ -811,28 +808,28 @@ async def test_mqtt_payload_not_a_valid_activity_warning(
     ("service", "topic", "parameters", "payload", "template"),
     [
         (
-            SERVICE_START_MOWING,
+            LawnMowerService.START_MOWING,
             "start_mowing_command_topic",
             {},
             "start_mowing",
             "start_mowing_command_template",
         ),
         (
-            SERVICE_PAUSE,
+            LawnMowerService.PAUSE,
             "pause_command_topic",
             {},
             "pause",
             "pause_command_template",
         ),
         (
-            SERVICE_DOCK,
+            LawnMowerService.DOCK,
             "dock_command_topic",
             {},
             "dock",
             "dock_command_template",
         ),
         (
-            SERVICE_STOP,
+            LawnMowerService.STOP,
             "stop_command_topic",
             {},
             "stop",

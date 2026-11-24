@@ -1,25 +1,24 @@
 """Tests for the fan module."""
 
 from contextlib import nullcontext
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, _Call, call, patch
 
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
 from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
+from pyvesync.devices.vesyncfan import VeSyncPedestalFan, VeSyncTowerFan
+from pyvesync.devices.vesyncpurifier import VeSyncAirBaseV2
+from pyvesync.utils.errors import ResponseInfo
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.fan import (
-    ATTR_PERCENTAGE,
-    ATTR_PRESET_MODE,
-    ATTR_PRESET_MODES,
     DOMAIN as FAN_DOMAIN,
+    FanEntityCapabilityAttribute,
+    FanEntityStateAttribute,
+    FanService,
+    FanServiceArgument,
 )
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
-    STATE_UNAVAILABLE,
-)
+from homeassistant.const import STATE_UNAVAILABLE, CommonServiceArgument
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -32,6 +31,15 @@ from .common import (
 )
 
 NoException = nullcontext()
+DEVICE_ERROR = ResponseInfo(name="error", error_type="error", message="Device error")
+
+
+async def _fail_without_response(
+    device: VeSyncTowerFan | VeSyncPedestalFan, *args: bool
+) -> bool:
+    """Simulate a device command that failed without an API response."""
+    device.last_response = None
+    return False
 
 
 @pytest.mark.parametrize("device_name", ALL_DEVICE_NAMES)
@@ -75,8 +83,8 @@ async def test_fan_state(
 @pytest.mark.parametrize(
     ("action", "command"),
     [
-        (SERVICE_TURN_ON, "pyvesync.devices.vesyncfan.VeSyncTowerFan.turn_on"),
-        (SERVICE_TURN_OFF, "pyvesync.devices.vesyncfan.VeSyncTowerFan.turn_off"),
+        (FanService.TURN_ON, "pyvesync.devices.vesyncfan.VeSyncTowerFan.turn_on"),
+        (FanService.TURN_OFF, "pyvesync.devices.vesyncfan.VeSyncTowerFan.turn_off"),
     ],
 )
 async def test_turn_on_off_success(
@@ -99,7 +107,7 @@ async def test_turn_on_off_success(
             await hass.services.async_call(
                 FAN_DOMAIN,
                 action,
-                {ATTR_ENTITY_ID: ENTITY_FAN},
+                {CommonServiceArgument.ENTITY_ID: ENTITY_FAN},
                 blocking=True,
             )
 
@@ -112,11 +120,11 @@ async def test_turn_on_off_success(
     ("action", "command"),
     [
         (
-            SERVICE_TURN_ON,
+            FanService.TURN_ON,
             "pyvesync.base_devices.vesyncbasedevice.VeSyncBaseToggleDevice.turn_on",
         ),
         (
-            SERVICE_TURN_OFF,
+            FanService.TURN_OFF,
             "pyvesync.base_devices.vesyncbasedevice.VeSyncBaseToggleDevice.turn_off",
         ),
     ],
@@ -140,7 +148,7 @@ async def test_turn_on_off_raises_error(
         await hass.services.async_call(
             FAN_DOMAIN,
             action,
-            {ATTR_ENTITY_ID: ENTITY_FAN},
+            {CommonServiceArgument.ENTITY_ID: ENTITY_FAN},
             blocking=True,
         )
 
@@ -187,8 +195,11 @@ async def test_set_preset_mode(
         ) as update_mock:
             await hass.services.async_call(
                 FAN_DOMAIN,
-                SERVICE_TURN_ON,
-                {ATTR_ENTITY_ID: ENTITY_FAN, ATTR_PRESET_MODE: preset_mode},
+                FanService.TURN_ON,
+                {
+                    CommonServiceArgument.ENTITY_ID: ENTITY_FAN,
+                    FanServiceArgument.PRESET_MODE: preset_mode,
+                },
                 blocking=True,
             )
 
@@ -214,7 +225,7 @@ async def test_out_of_range_fan_level(
     state = hass.states.get(ENTITY_PEDESTAL_FAN)
     assert state is not None
     assert state.state != STATE_UNAVAILABLE
-    assert state.attributes[ATTR_PERCENTAGE] is None
+    assert state.attributes[FanEntityStateAttribute.PERCENTAGE] is None
 
 
 async def test_set_preset_mode_eco(
@@ -232,8 +243,8 @@ async def test_set_preset_mode_eco(
 
     state = hass.states.get(ENTITY_PEDESTAL_FAN)
     assert state is not None
-    assert "eco" in state.attributes[ATTR_PRESET_MODES]
-    assert state.attributes[ATTR_PRESET_MODE] == "eco"
+    assert "eco" in state.attributes[FanEntityCapabilityAttribute.PRESET_MODES]
+    assert state.attributes[FanEntityStateAttribute.PRESET_MODE] == "eco"
 
     with (
         patch(
@@ -247,8 +258,11 @@ async def test_set_preset_mode_eco(
     ):
         await hass.services.async_call(
             FAN_DOMAIN,
-            SERVICE_TURN_ON,
-            {ATTR_ENTITY_ID: ENTITY_PEDESTAL_FAN, ATTR_PRESET_MODE: "eco"},
+            FanService.TURN_ON,
+            {
+                CommonServiceArgument.ENTITY_ID: ENTITY_PEDESTAL_FAN,
+                FanServiceArgument.PRESET_MODE: "eco",
+            },
             blocking=True,
         )
         await hass.async_block_till_done()
@@ -299,8 +313,11 @@ async def test_pedestal_fan_oscillation(
         ) as update_mock:
             await hass.services.async_call(
                 FAN_DOMAIN,
-                "oscillate",
-                {ATTR_ENTITY_ID: ENTITY_PEDESTAL_FAN, "oscillating": action},
+                FanService.OSCILLATE,
+                {
+                    CommonServiceArgument.ENTITY_ID: ENTITY_PEDESTAL_FAN,
+                    FanServiceArgument.OSCILLATING: action,
+                },
                 blocking=True,
             )
 
@@ -345,14 +362,201 @@ async def test_oscillation_success(
         ) as update_mock:
             await hass.services.async_call(
                 FAN_DOMAIN,
-                "oscillate",
-                {ATTR_ENTITY_ID: ENTITY_FAN, "oscillating": action},
+                FanService.OSCILLATE,
+                {
+                    CommonServiceArgument.ENTITY_ID: ENTITY_FAN,
+                    FanServiceArgument.OSCILLATING: action,
+                },
                 blocking=True,
             )
 
         await hass.async_block_till_done()
         method_mock.assert_called_once()
         update_mock.assert_called_once()
+
+
+@pytest.mark.parametrize("service", [FanService.SET_PERCENTAGE, FanService.TURN_ON])
+@pytest.mark.parametrize(
+    ("details", "percentage", "expected_calls"),
+    [
+        pytest.param(
+            {"powerSwitch": 1, "workMode": "normal"},
+            0,
+            [call.turn_off()],
+            id="zero_turns_off",
+        ),
+        pytest.param(
+            {"powerSwitch": 1, "workMode": "normal"},
+            50,
+            [call.set_fan_speed(6)],
+            id="on_in_normal_mode",
+        ),
+        pytest.param(
+            {"powerSwitch": 0, "workMode": "normal"},
+            50,
+            [call.turn_on(), call.set_fan_speed(6)],
+            id="off_turns_on_first",
+        ),
+        pytest.param(
+            {"powerSwitch": 1, "workMode": "auto"},
+            50,
+            [call.set_manual_mode(), call.set_fan_speed(6)],
+            id="preset_switches_to_manual_first",
+        ),
+    ],
+)
+async def test_set_percentage(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    aioclient_mock: AiohttpClientMocker,
+    service: str,
+    details: dict[str, int | str],
+    percentage: int,
+    expected_calls: list[_Call],
+) -> None:
+    """Test setting the speed sends the required device commands in order."""
+    mock_devices_response(aioclient_mock, "SmartTowerFan", details_override=details)
+
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    device = AsyncMock(
+        **{
+            f"{command}.return_value": True
+            for command in (
+                "turn_on",
+                "turn_off",
+                "set_manual_mode",
+                "set_fan_speed",
+            )
+        }
+    )
+    with patch.multiple(
+        "pyvesync.devices.vesyncfan.VeSyncTowerFan",
+        turn_on=device.turn_on,
+        turn_off=device.turn_off,
+        set_manual_mode=device.set_manual_mode,
+        set_fan_speed=device.set_fan_speed,
+    ):
+        await hass.services.async_call(
+            FAN_DOMAIN,
+            service,
+            {
+                CommonServiceArgument.ENTITY_ID: ENTITY_FAN,
+                FanServiceArgument.PERCENTAGE: percentage,
+            },
+            blocking=True,
+        )
+
+    assert device.mock_calls == expected_calls
+
+
+@pytest.mark.parametrize(
+    ("details", "percentage", "command", "last_response", "message"),
+    [
+        pytest.param(
+            {"powerSwitch": 1, "workMode": "normal"},
+            0,
+            "turn_off",
+            DEVICE_ERROR,
+            "An error occurred while turning off: Device error",
+            id="turn_off_last_response",
+        ),
+        pytest.param(
+            {"powerSwitch": 1, "workMode": "normal"},
+            0,
+            "turn_off",
+            None,
+            "Failed to turn off fan, no response found.",
+            id="turn_off_no_last_response",
+        ),
+        pytest.param(
+            {"powerSwitch": 0, "workMode": "normal"},
+            50,
+            "turn_on",
+            DEVICE_ERROR,
+            "An error occurred while turning on: Device error",
+            id="turn_on_last_response",
+        ),
+        pytest.param(
+            {"powerSwitch": 0, "workMode": "normal"},
+            50,
+            "turn_on",
+            None,
+            "Failed to turn on fan, no response found.",
+            id="turn_on_no_last_response",
+        ),
+        pytest.param(
+            {"powerSwitch": 1, "workMode": "auto"},
+            50,
+            "set_manual_mode",
+            DEVICE_ERROR,
+            "An error occurred while setting manual mode.Device error",
+            id="set_manual_mode_last_response",
+        ),
+        pytest.param(
+            {"powerSwitch": 1, "workMode": "auto"},
+            50,
+            "set_manual_mode",
+            None,
+            "Failed to set manual mode, no response found.",
+            id="set_manual_mode_no_last_response",
+        ),
+        pytest.param(
+            {"powerSwitch": 1, "workMode": "normal"},
+            50,
+            "set_fan_speed",
+            DEVICE_ERROR,
+            "An error occurred while changing fan speed: Device error",
+            id="set_fan_speed_last_response",
+        ),
+        pytest.param(
+            {"powerSwitch": 1, "workMode": "normal"},
+            50,
+            "set_fan_speed",
+            None,
+            "Failed to set fan speed, no response found.",
+            id="set_fan_speed_no_last_response",
+        ),
+    ],
+)
+async def test_set_percentage_failure(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    aioclient_mock: AiohttpClientMocker,
+    details: dict[str, int | str],
+    percentage: int,
+    command: str,
+    last_response: ResponseInfo | None,
+    message: str,
+) -> None:
+    """Test a failed device command while setting the speed raises an error."""
+    mock_devices_response(aioclient_mock, "SmartTowerFan", details_override=details)
+
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    async def _fail_command(device: VeSyncTowerFan, *args: int) -> bool:
+        device.last_response = last_response
+        return False
+
+    with (
+        patch.object(
+            VeSyncTowerFan, command, autospec=True, side_effect=_fail_command
+        ) as command_mock,
+        pytest.raises(HomeAssistantError, match=message),
+    ):
+        await hass.services.async_call(
+            FAN_DOMAIN,
+            FanService.SET_PERCENTAGE,
+            {
+                CommonServiceArgument.ENTITY_ID: ENTITY_FAN,
+                FanServiceArgument.PERCENTAGE: percentage,
+            },
+            blocking=True,
+        )
+
+    command_mock.assert_awaited_once()
 
 
 @pytest.mark.parametrize(
@@ -401,4 +605,203 @@ async def test_percentage_in_preset_mode(
 
     state = hass.states.get(entity_id)
     assert state is not None
-    assert state.attributes[ATTR_PERCENTAGE] == expected_percentage
+    assert state.attributes[FanEntityStateAttribute.PERCENTAGE] == expected_percentage
+
+
+@pytest.mark.parametrize(
+    ("service", "service_data", "command", "message"),
+    [
+        pytest.param(
+            FanService.TURN_ON,
+            {},
+            "turn_on",
+            "Failed to turn on fan, no response found.",
+            id="turn_on",
+        ),
+        pytest.param(
+            FanService.TURN_OFF,
+            {},
+            "turn_off",
+            "Failed to turn off fan, no response found.",
+            id="turn_off",
+        ),
+        pytest.param(
+            FanService.TURN_ON,
+            {FanServiceArgument.PRESET_MODE: "auto"},
+            "set_auto_mode",
+            "Failed to set preset mode, no response found.",
+            id="preset_mode",
+        ),
+        pytest.param(
+            FanService.OSCILLATE,
+            {FanServiceArgument.OSCILLATING: True},
+            "toggle_oscillation",
+            "Failed to set oscillation, no response found.",
+            id="oscillate",
+        ),
+    ],
+)
+async def test_command_failure_without_response(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    aioclient_mock: AiohttpClientMocker,
+    service: str,
+    service_data: dict[str, str | bool],
+    command: str,
+    message: str,
+) -> None:
+    """Test a failed command with no API response raises a fallback error."""
+    mock_devices_response(
+        aioclient_mock, "SmartTowerFan", details_override={"powerSwitch": 1}
+    )
+
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    with (
+        patch.object(
+            VeSyncTowerFan, command, autospec=True, side_effect=_fail_without_response
+        ) as command_mock,
+        pytest.raises(HomeAssistantError, match=message),
+    ):
+        await hass.services.async_call(
+            FAN_DOMAIN,
+            service,
+            {CommonServiceArgument.ENTITY_ID: ENTITY_FAN, **service_data},
+            blocking=True,
+        )
+
+    command_mock.assert_awaited_once()
+
+
+async def test_pedestal_fan_oscillation_failure_without_response(
+    hass: HomeAssistant,
+    pedestal_fan_config_entry: MockConfigEntry,
+) -> None:
+    """Test a failed pedestal oscillation with no API response raises an error."""
+    with (
+        patch.object(
+            VeSyncPedestalFan,
+            "toggle_vertical_oscillation",
+            autospec=True,
+            side_effect=_fail_without_response,
+        ),
+        patch.object(
+            VeSyncPedestalFan,
+            "toggle_horizontal_oscillation",
+            autospec=True,
+            side_effect=_fail_without_response,
+        ),
+        pytest.raises(
+            HomeAssistantError, match="Failed to set oscillation, no response found."
+        ),
+    ):
+        await hass.services.async_call(
+            FAN_DOMAIN,
+            FanService.OSCILLATE,
+            {
+                CommonServiceArgument.ENTITY_ID: ENTITY_PEDESTAL_FAN,
+                FanServiceArgument.OSCILLATING: True,
+            },
+            blocking=True,
+        )
+
+
+@pytest.mark.parametrize(
+    ("vertical", "horizontal", "expected"),
+    [
+        pytest.param(1, 1, True, id="both_axes"),
+        pytest.param(1, 0, True, id="vertical_only"),
+        pytest.param(0, 1, True, id="horizontal_only"),
+        pytest.param(0, 0, False, id="neither_axis"),
+    ],
+)
+async def test_pedestal_fan_oscillating_state(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    aioclient_mock: AiohttpClientMocker,
+    vertical: int,
+    horizontal: int,
+    expected: bool,
+) -> None:
+    """Test a pedestal fan is oscillating when either axis is active."""
+    mock_devices_response(
+        aioclient_mock,
+        "CoreBreeze 432S",
+        details_override={
+            "verticalOscillationState": vertical,
+            "horizontalOscillationState": horizontal,
+        },
+    )
+
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(ENTITY_PEDESTAL_FAN)
+    assert state is not None
+    assert state.attributes[FanEntityStateAttribute.OSCILLATING] is expected
+
+
+async def test_preset_mode_not_reported(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    aioclient_mock: AiohttpClientMocker,
+) -> None:
+    """Test no preset is reported when the library cannot map the work mode."""
+    mock_devices_response(
+        aioclient_mock, "SmartTowerFan", details_override={"workMode": "unmapped"}
+    )
+
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(ENTITY_FAN)
+    assert state is not None
+    assert state.attributes[FanEntityStateAttribute.PRESET_MODE] is None
+
+
+async def test_unknown_preset_mode_logs_warning(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    aioclient_mock: AiohttpClientMocker,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test an unknown device mode is reported as no preset and logged."""
+    mock_devices_response(
+        aioclient_mock, "Air Purifier 200s", details_override={"mode": "unmapped"}
+    )
+
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("fan.air_purifier_200s")
+    assert state is not None
+    assert state.attributes[FanEntityStateAttribute.PRESET_MODE] is None
+    assert "Unknown mode 'unmapped'" in caplog.text
+
+
+async def test_set_preset_mode_pet(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    aioclient_mock: AiohttpClientMocker,
+) -> None:
+    """Test the pet preset is sent to purifiers that support it."""
+    mock_devices_response(aioclient_mock, "Air Purifier Vital 200S")
+
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    with patch.object(
+        VeSyncAirBaseV2, "set_pet_mode", new_callable=AsyncMock, return_value=True
+    ) as method_mock:
+        await hass.services.async_call(
+            FAN_DOMAIN,
+            FanService.TURN_ON,
+            {
+                CommonServiceArgument.ENTITY_ID: "fan.air_purifier_vital_200s",
+                FanServiceArgument.PRESET_MODE: "pet",
+            },
+            blocking=True,
+        )
+
+    method_mock.assert_awaited_once_with()

@@ -46,10 +46,7 @@ from homeassistant.components.vizio.const import (
     DEFAULT_VOLUME_STEP,
     DOMAIN,
 )
-from homeassistant.components.vizio.services import (
-    SERVICE_SEND_TEXT,
-    SERVICE_UPDATE_SETTING,
-)
+from homeassistant.components.vizio.services import VizioService
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -58,6 +55,7 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
     STATE_UNAVAILABLE,
+    CommonServiceArgument,
     Platform,
 )
 from homeassistant.core import HomeAssistant
@@ -539,7 +537,7 @@ async def test_services(
         hass,
         DOMAIN,
         "set_setting",
-        SERVICE_UPDATE_SETTING,
+        VizioService.UPDATE_SETTING,
         {"setting_type": "Audio", "setting_name": "AV Delay", "new_value": "0"},
         "audio",
         "av_delay",
@@ -549,7 +547,7 @@ async def test_services(
         hass,
         DOMAIN,
         "set_setting",
-        SERVICE_UPDATE_SETTING,
+        VizioService.UPDATE_SETTING,
         {"setting_type": "Audio", "setting_name": "EQ", "new_value": "Music"},
         "audio",
         "eq",
@@ -1080,8 +1078,8 @@ async def test_send_text(
     with patch("homeassistant.components.vizio.Vizio.send_text") as mock_send_text:
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_SEND_TEXT,
-            {ATTR_ENTITY_ID: ENTITY_ID, "text": "stranger things"},
+            VizioService.SEND_TEXT,
+            {CommonServiceArgument.ENTITY_ID: ENTITY_ID, "text": "stranger things"},
             blocking=True,
         )
     mock_send_text.assert_called_once_with("stranger things")
@@ -1103,7 +1101,7 @@ async def test_send_text_device_error(
     ):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_SEND_TEXT,
-            {ATTR_ENTITY_ID: ENTITY_ID, "text": "abc"},
+            VizioService.SEND_TEXT,
+            {CommonServiceArgument.ENTITY_ID: ENTITY_ID, "text": "abc"},
             blocking=True,
         )

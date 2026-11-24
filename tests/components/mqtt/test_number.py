@@ -57,13 +57,15 @@ from homeassistant.components.number import (
     ATTR_VALUE,
     DOMAIN as NUMBER_DOMAIN,
     SERVICE_SET_VALUE,
+    NumberService,
+    NumberServiceArgument,
 )
 from homeassistant.const import (
     ATTR_ASSUMED_STATE,
     ATTR_DEVICE_CLASS,
-    ATTR_ENTITY_ID,
     ATTR_MODE,
     ATTR_UNIT_OF_MEASUREMENT,
+    CommonServiceArgument,
     UnitOfElectricPotential,
     UnitOfTemperature,
 )
@@ -247,8 +249,11 @@ async def test_native_value_validation(
 
     await hass.services.async_call(
         NUMBER_DOMAIN,
-        SERVICE_SET_VALUE,
-        {ATTR_ENTITY_ID: "number.test_number", ATTR_VALUE: 68},
+        NumberService.SET_VALUE,
+        {
+            CommonServiceArgument.ENTITY_ID: "number.test_number",
+            NumberServiceArgument.VALUE: 68,
+        },
         blocking=True,
     )
 
@@ -444,8 +449,11 @@ async def test_run_number_service_optimistic(
     # Integer
     await hass.services.async_call(
         NUMBER_DOMAIN,
-        SERVICE_SET_VALUE,
-        {ATTR_ENTITY_ID: "number.test_number", ATTR_VALUE: 30},
+        NumberService.SET_VALUE,
+        {
+            CommonServiceArgument.ENTITY_ID: "number.test_number",
+            NumberServiceArgument.VALUE: 30,
+        },
         blocking=True,
     )
 
@@ -459,8 +467,11 @@ async def test_run_number_service_optimistic(
     # Float with no decimal -> integer
     await hass.services.async_call(
         NUMBER_DOMAIN,
-        SERVICE_SET_VALUE,
-        {ATTR_ENTITY_ID: "number.test_number", ATTR_VALUE: 42.0},
+        NumberService.SET_VALUE,
+        {
+            CommonServiceArgument.ENTITY_ID: "number.test_number",
+            NumberServiceArgument.VALUE: 42.0,
+        },
         blocking=True,
     )
 
@@ -474,8 +485,11 @@ async def test_run_number_service_optimistic(
     # Float with decimal -> float
     await hass.services.async_call(
         NUMBER_DOMAIN,
-        SERVICE_SET_VALUE,
-        {ATTR_ENTITY_ID: "number.test_number", ATTR_VALUE: 42.1},
+        NumberService.SET_VALUE,
+        {
+            CommonServiceArgument.ENTITY_ID: "number.test_number",
+            NumberServiceArgument.VALUE: 42.1,
+        },
         blocking=True,
     )
 
@@ -527,8 +541,11 @@ async def test_run_number_service_optimistic_with_command_template(
     # Integer
     await hass.services.async_call(
         NUMBER_DOMAIN,
-        SERVICE_SET_VALUE,
-        {ATTR_ENTITY_ID: "number.test_number", ATTR_VALUE: 30},
+        NumberService.SET_VALUE,
+        {
+            CommonServiceArgument.ENTITY_ID: "number.test_number",
+            NumberServiceArgument.VALUE: 30,
+        },
         blocking=True,
     )
 
@@ -542,8 +559,11 @@ async def test_run_number_service_optimistic_with_command_template(
     # Float with no decimal -> integer
     await hass.services.async_call(
         NUMBER_DOMAIN,
-        SERVICE_SET_VALUE,
-        {ATTR_ENTITY_ID: "number.test_number", ATTR_VALUE: 42.0},
+        NumberService.SET_VALUE,
+        {
+            CommonServiceArgument.ENTITY_ID: "number.test_number",
+            NumberServiceArgument.VALUE: 42.0,
+        },
         blocking=True,
     )
 
@@ -557,8 +577,11 @@ async def test_run_number_service_optimistic_with_command_template(
     # Float with decimal -> float
     await hass.services.async_call(
         NUMBER_DOMAIN,
-        SERVICE_SET_VALUE,
-        {ATTR_ENTITY_ID: "number.test_number", ATTR_VALUE: 42.1},
+        NumberService.SET_VALUE,
+        {
+            CommonServiceArgument.ENTITY_ID: "number.test_number",
+            NumberServiceArgument.VALUE: 42.1,
+        },
         blocking=True,
     )
 
@@ -599,8 +622,11 @@ async def test_run_number_service(
 
     await hass.services.async_call(
         NUMBER_DOMAIN,
-        SERVICE_SET_VALUE,
-        {ATTR_ENTITY_ID: "number.test_number", ATTR_VALUE: 30},
+        NumberService.SET_VALUE,
+        {
+            CommonServiceArgument.ENTITY_ID: "number.test_number",
+            NumberServiceArgument.VALUE: 30,
+        },
         blocking=True,
     )
     mqtt_mock.async_publish.assert_called_once_with(
@@ -640,8 +666,11 @@ async def test_run_number_service_with_command_template(
 
     await hass.services.async_call(
         NUMBER_DOMAIN,
-        SERVICE_SET_VALUE,
-        {ATTR_ENTITY_ID: "number.test_number", ATTR_VALUE: 30},
+        NumberService.SET_VALUE,
+        {
+            CommonServiceArgument.ENTITY_ID: "number.test_number",
+            NumberServiceArgument.VALUE: 30,
+        },
         blocking=True,
     )
     mqtt_mock.async_publish.assert_called_once_with(

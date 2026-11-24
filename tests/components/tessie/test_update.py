@@ -9,9 +9,9 @@ from tesla_fleet_api.exceptions import UnsupportedVehicle
 from homeassistant.components.update import (
     ATTR_IN_PROGRESS,
     DOMAIN as UPDATE_DOMAIN,
-    SERVICE_INSTALL,
+    UpdateService,
 )
-from homeassistant.const import ATTR_ENTITY_ID, STATE_ON, Platform
+from homeassistant.const import STATE_ON, CommonServiceArgument, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
@@ -35,8 +35,8 @@ async def test_updates(
     ) as mock_update:
         await hass.services.async_call(
             UPDATE_DOMAIN,
-            SERVICE_INSTALL,
-            {ATTR_ENTITY_ID: [entity_id]},
+            UpdateService.INSTALL,
+            {CommonServiceArgument.ENTITY_ID: [entity_id]},
             blocking=True,
         )
         mock_update.assert_called_once()
@@ -60,8 +60,8 @@ async def test_update_error(hass: HomeAssistant) -> None:
     ):
         await hass.services.async_call(
             UPDATE_DOMAIN,
-            SERVICE_INSTALL,
-            {ATTR_ENTITY_ID: ["update.test_update"]},
+            UpdateService.INSTALL,
+            {CommonServiceArgument.ENTITY_ID: ["update.test_update"]},
             blocking=True,
         )
 
@@ -79,8 +79,8 @@ async def test_update_error(hass: HomeAssistant) -> None:
     ):
         await hass.services.async_call(
             UPDATE_DOMAIN,
-            SERVICE_INSTALL,
-            {ATTR_ENTITY_ID: ["update.test_update"]},
+            UpdateService.INSTALL,
+            {CommonServiceArgument.ENTITY_ID: ["update.test_update"]},
             blocking=True,
         )
 

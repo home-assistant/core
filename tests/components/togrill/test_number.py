@@ -19,9 +19,9 @@ from togrill_bluetooth.packets import (
 )
 
 from homeassistant.components.number import (
-    ATTR_VALUE,
     DOMAIN as NUMBER_DOMAIN,
-    SERVICE_SET_VALUE,
+    NumberService,
+    NumberServiceArgument,
 )
 from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
@@ -209,9 +209,9 @@ async def test_set_ambient_number(
 
     await hass.services.async_call(
         NUMBER_DOMAIN,
-        SERVICE_SET_VALUE,
+        NumberService.SET_VALUE,
         service_data={
-            ATTR_VALUE: value,
+            NumberServiceArgument.VALUE: value,
         },
         target={
             ATTR_ENTITY_ID: entity_id,
@@ -373,9 +373,9 @@ async def test_set_number(
 
     await hass.services.async_call(
         NUMBER_DOMAIN,
-        SERVICE_SET_VALUE,
+        NumberService.SET_VALUE,
         service_data={
-            ATTR_VALUE: value,
+            NumberServiceArgument.VALUE: value,
         },
         target={
             ATTR_ENTITY_ID: entity_id,
@@ -426,9 +426,9 @@ async def test_set_number_write_error(
     with pytest.raises(HomeAssistantError, match=message):
         await hass.services.async_call(
             NUMBER_DOMAIN,
-            SERVICE_SET_VALUE,
+            NumberService.SET_VALUE,
             service_data={
-                ATTR_VALUE: 100,
+                NumberServiceArgument.VALUE: 100,
             },
             target={
                 ATTR_ENTITY_ID: "number.pro_05_probe_1_target_temperature",
@@ -460,9 +460,9 @@ async def test_set_number_disconnected(
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             NUMBER_DOMAIN,
-            SERVICE_SET_VALUE,
+            NumberService.SET_VALUE,
             service_data={
-                ATTR_VALUE: 100,
+                NumberServiceArgument.VALUE: 100,
             },
             target={
                 ATTR_ENTITY_ID: "number.pro_05_probe_1_target_temperature",

@@ -23,7 +23,7 @@ from homeassistant.components.update import (
     ATTR_LATEST_VERSION,
     ATTR_RELEASE_URL,
     DOMAIN as UPDATE_DOMAIN,
-    SERVICE_INSTALL,
+    UpdateService,
 )
 from homeassistant.components.wled import WLED_KEY
 from homeassistant.components.wled.const import (
@@ -38,6 +38,7 @@ from homeassistant.const import (
     STATE_ON,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
+    CommonServiceArgument,
     Platform,
 )
 from homeassistant.core import HomeAssistant
@@ -120,8 +121,8 @@ async def test_update_error(
 
     await hass.services.async_call(
         UPDATE_DOMAIN,
-        SERVICE_INSTALL,
-        {ATTR_ENTITY_ID: "update.wled_rgb_light_firmware"},
+        UpdateService.INSTALL,
+        {CommonServiceArgument.ENTITY_ID: "update.wled_rgb_light_firmware"},
         blocking=True,
     )
 
@@ -147,8 +148,8 @@ async def test_update_stay_stable(
 
     await hass.services.async_call(
         UPDATE_DOMAIN,
-        SERVICE_INSTALL,
-        {ATTR_ENTITY_ID: "update.wled_rgb_light_firmware"},
+        UpdateService.INSTALL,
+        {CommonServiceArgument.ENTITY_ID: "update.wled_rgb_light_firmware"},
         blocking=True,
     )
     assert mock_wled.upgrade.call_count == 1
@@ -173,8 +174,8 @@ async def test_update_beta_to_stable(
 
     await hass.services.async_call(
         UPDATE_DOMAIN,
-        SERVICE_INSTALL,
-        {ATTR_ENTITY_ID: "update.wled_rgbw_light_firmware"},
+        UpdateService.INSTALL,
+        {CommonServiceArgument.ENTITY_ID: "update.wled_rgbw_light_firmware"},
         blocking=True,
     )
     assert mock_wled.upgrade.call_count == 1
@@ -198,8 +199,8 @@ async def test_update_stay_beta(
 
     await hass.services.async_call(
         UPDATE_DOMAIN,
-        SERVICE_INSTALL,
-        {ATTR_ENTITY_ID: "update.wled_rgb_light_firmware"},
+        UpdateService.INSTALL,
+        {CommonServiceArgument.ENTITY_ID: "update.wled_rgb_light_firmware"},
         blocking=True,
     )
     assert mock_wled.upgrade.call_count == 1
@@ -327,8 +328,8 @@ async def test_update_install_refused(
     ) as exc_info:
         await hass.services.async_call(
             UPDATE_DOMAIN,
-            SERVICE_INSTALL,
-            {ATTR_ENTITY_ID: "update.wled_rgb_light_firmware"},
+            UpdateService.INSTALL,
+            {CommonServiceArgument.ENTITY_ID: "update.wled_rgb_light_firmware"},
             blocking=True,
         )
 

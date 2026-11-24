@@ -1,6 +1,5 @@
 """Tests for SFTP Storage."""
 
-import logging
 from pathlib import Path
 from unittest.mock import patch
 
@@ -148,7 +147,6 @@ async def test_async_remove_entry(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test async_remove_entry."""
-    caplog.set_level(logging.DEBUG)
     # Setup default config entry
     await setup_integration()
 

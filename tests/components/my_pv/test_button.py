@@ -11,7 +11,7 @@ import pytest
 from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
+from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, ButtonService
 from homeassistant.const import STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, HomeAssistantError
@@ -60,7 +60,7 @@ async def test_button_press(
 
     await hass.services.async_call(
         BUTTON_DOMAIN,
-        SERVICE_PRESS,
+        ButtonService.PRESS,
         {"entity_id": "button.my_pv_ac_elwa_2_restart"},
         blocking=True,
     )
@@ -79,7 +79,7 @@ async def test_button_press_send_command_returns_false(
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             BUTTON_DOMAIN,
-            SERVICE_PRESS,
+            ButtonService.PRESS,
             {"entity_id": "button.my_pv_ac_elwa_2_restart"},
             blocking=True,
         )
@@ -89,7 +89,7 @@ async def test_button_press_send_command_returns_false(
     mock_my_pv_client.send_command.return_value = True
     await hass.services.async_call(
         BUTTON_DOMAIN,
-        SERVICE_PRESS,
+        ButtonService.PRESS,
         {"entity_id": "button.my_pv_ac_elwa_2_restart"},
         blocking=True,
     )
@@ -118,7 +118,7 @@ async def test_button_press_send_command_raises_error(
     with pytest.raises(expected_ha_error):
         await hass.services.async_call(
             BUTTON_DOMAIN,
-            SERVICE_PRESS,
+            ButtonService.PRESS,
             {"entity_id": "button.my_pv_ac_elwa_2_restart"},
             blocking=True,
         )
@@ -128,7 +128,7 @@ async def test_button_press_send_command_raises_error(
     mock_my_pv_client.send_command.side_effect = None
     await hass.services.async_call(
         BUTTON_DOMAIN,
-        SERVICE_PRESS,
+        ButtonService.PRESS,
         {"entity_id": "button.my_pv_ac_elwa_2_restart"},
         blocking=True,
     )

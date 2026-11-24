@@ -6,8 +6,8 @@ import pytest
 from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.scene import DOMAIN as SCENE_DOMAIN
-from homeassistant.const import ATTR_ENTITY_ID, SERVICE_TURN_ON, Platform
+from homeassistant.components.scene import DOMAIN as SCENE_DOMAIN, SceneService
+from homeassistant.const import CommonServiceArgument, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -44,8 +44,8 @@ async def test_activate_scene(
 
     await hass.services.async_call(
         SCENE_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "scene.room_scene"},
+        SceneService.TURN_ON,
+        {CommonServiceArgument.ENTITY_ID: "scene.room_scene"},
         blocking=True,
     )
     mock_niko_home_control_connection.scenes[scene_id].activate.assert_called_once()

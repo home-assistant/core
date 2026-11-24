@@ -8,6 +8,7 @@ import logging
 
 from aiohttp import ClientError, ClientResponseError
 from energyid_webhooks.client_v2 import WebhookClient
+from energyid_webhooks.exceptions import EnergyIDAuthenticationError
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_DEVICE_ID, STATE_UNAVAILABLE, STATE_UNKNOWN
@@ -30,7 +31,6 @@ from homeassistant.helpers.event import (
     async_track_state_change_event,
     async_track_time_interval,
 )
-from homeassistant.util import dt as dt_util
 
 from .const import (
     CONF_DEVICE_NAME,
@@ -124,11 +124,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: EnergyIDConfigEntry) -> 
         try:
             await client.synchronize_sensors()
             if entry.runtime_data.unavailable_logged:
-                _LOGGER.debug("Connection to EnergyID re-established")
+                _LOGGER.info("Connection to EnergyID re-established")
                 entry.runtime_data.unavailable_logged = False
-        except (OSError, RuntimeError) as err:
+        except EnergyIDAuthenticationError:
+            # The client signs in again on its own, and EnergyID refused it.
+            entry.async_start_reauth(hass)
+        except (ClientError, OSError, RuntimeError) as err:
             if not entry.runtime_data.unavailable_logged:
-                _LOGGER.debug("EnergyID is unavailable: %s", err)
+                _LOGGER.info("EnergyID is unavailable: %s", err)
                 entry.runtime_data.unavailable_logged = True
 
     upload_interval = DEFAULT_UPLOAD_INTERVAL_SECONDS
@@ -157,6 +160,14 @@ async def config_entry_update_listener(
     hass: HomeAssistant, entry: EnergyIDConfigEntry
 ) -> None:
     """Handle config entry updates, including subentry changes."""
+    client = entry.runtime_data.client
+    # New credentials only take effect with a new client.
+    if (
+        client.provisioning_key != entry.data[CONF_PROVISIONING_KEY]
+        or client.provisioning_secret != entry.data[CONF_PROVISIONING_SECRET]
+    ):
+        await hass.config_entries.async_reload(entry.entry_id)
+        return
     _LOGGER.debug("Config entry updated for %s, reloading listeners", entry.entry_id)
     update_listeners(hass, entry)
 
@@ -235,7 +246,7 @@ def update_listeners(hass: HomeAssistant, entry: EnergyIDConfigEntry) -> None:
             ):
                 try:
                     value = float(current_state.state)
-                    timestamp = current_state.last_updated or dt_util.utcnow()
+                    timestamp = current_state.last_updated
                     client.get_or_create_sensor(energyid_key).update(value, timestamp)
                 except ValueError, TypeError:
                     _LOGGER.debug(

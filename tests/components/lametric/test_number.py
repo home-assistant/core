@@ -10,17 +10,17 @@ from homeassistant.components.number import (
     ATTR_MAX,
     ATTR_MIN,
     ATTR_STEP,
-    ATTR_VALUE,
     DOMAIN as NUMBER_DOMAIN,
-    SERVICE_SET_VALUE,
+    NumberService,
+    NumberServiceArgument,
 )
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
-    ATTR_ENTITY_ID,
     ATTR_FRIENDLY_NAME,
     ATTR_UNIT_OF_MEASUREMENT,
     PERCENTAGE,
     STATE_UNAVAILABLE,
+    CommonServiceArgument,
     EntityCategory,
 )
 from homeassistant.core import HomeAssistant
@@ -70,10 +70,10 @@ async def test_brightness(
 
     await hass.services.async_call(
         NUMBER_DOMAIN,
-        SERVICE_SET_VALUE,
+        NumberService.SET_VALUE,
         {
-            ATTR_ENTITY_ID: "number.frenck_s_lametric_brightness",
-            ATTR_VALUE: 21,
+            CommonServiceArgument.ENTITY_ID: "number.frenck_s_lametric_brightness",
+            NumberServiceArgument.VALUE: 21,
         },
         blocking=True,
     )
@@ -121,10 +121,10 @@ async def test_volume(
 
     await hass.services.async_call(
         NUMBER_DOMAIN,
-        SERVICE_SET_VALUE,
+        NumberService.SET_VALUE,
         {
-            ATTR_ENTITY_ID: "number.frenck_s_lametric_volume",
-            ATTR_VALUE: 42,
+            CommonServiceArgument.ENTITY_ID: "number.frenck_s_lametric_volume",
+            NumberServiceArgument.VALUE: 42,
         },
         blocking=True,
     )
@@ -150,10 +150,10 @@ async def test_number_error(
     ):
         await hass.services.async_call(
             NUMBER_DOMAIN,
-            SERVICE_SET_VALUE,
+            NumberService.SET_VALUE,
             {
-                ATTR_ENTITY_ID: "number.frenck_s_lametric_volume",
-                ATTR_VALUE: 42,
+                CommonServiceArgument.ENTITY_ID: "number.frenck_s_lametric_volume",
+                NumberServiceArgument.VALUE: 42,
             },
             blocking=True,
         )
@@ -179,10 +179,10 @@ async def test_number_connection_error(
     ):
         await hass.services.async_call(
             NUMBER_DOMAIN,
-            SERVICE_SET_VALUE,
+            NumberService.SET_VALUE,
             {
-                ATTR_ENTITY_ID: "number.frenck_s_lametric_volume",
-                ATTR_VALUE: 42,
+                CommonServiceArgument.ENTITY_ID: "number.frenck_s_lametric_volume",
+                NumberServiceArgument.VALUE: 42,
             },
             blocking=True,
         )

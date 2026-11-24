@@ -14,7 +14,12 @@ from aioengiebelgium import (
 )
 import probatio
 
-from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import (
+    SOURCE_REAUTH,
+    SOURCE_RECONFIGURE,
+    ConfigFlow,
+    ConfigFlowResult,
+)
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_EMAIL, CONF_PASSWORD
 from homeassistant.helpers import selector
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
@@ -28,6 +33,15 @@ _MFA_METHOD_SELECTOR = selector.SelectSelector(
     )
 )
 _CODE_SCHEMA = probatio.Schema({probatio.Required("code"): str})
+_CREDENTIALS_SCHEMA = probatio.Schema(
+    {
+        probatio.Required(CONF_EMAIL): str,
+        probatio.Required(CONF_PASSWORD): str,
+        probatio.Required(CONF_MFA_METHOD, default=MfaMethod.SMS.value): (
+            _MFA_METHOD_SELECTOR
+        ),
+    }
+)
 
 
 class EngieBeConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -100,15 +114,7 @@ class EngieBeConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user",
-            data_schema=probatio.Schema(
-                {
-                    probatio.Required(CONF_EMAIL): str,
-                    probatio.Required(CONF_PASSWORD): str,
-                    probatio.Required(
-                        CONF_MFA_METHOD, default=MfaMethod.SMS.value
-                    ): _MFA_METHOD_SELECTOR,
-                }
-            ),
+            data_schema=_CREDENTIALS_SCHEMA,
             description_placeholders={"user_management_url": USER_MANAGEMENT_URL},
             errors=errors,
         )
@@ -144,6 +150,31 @@ class EngieBeConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle reconfiguration of the integration."""
+        errors: dict[str, str] = {}
+        entry = self._get_reconfigure_entry()
+
+        if user_input is not None:
+            errors = await self._async_start_authentication(user_input)
+            if not errors:
+                return await self.async_step_mfa()
+
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=self.add_suggested_values_to_schema(
+                _CREDENTIALS_SCHEMA,
+                {
+                    CONF_EMAIL: entry.data[CONF_EMAIL],
+                    CONF_MFA_METHOD: entry.data[CONF_MFA_METHOD],
+                },
+            ),
+            description_placeholders={"user_management_url": USER_MANAGEMENT_URL},
+            errors=errors,
+        )
+
     async def async_step_mfa(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -171,6 +202,18 @@ class EngieBeConfigFlow(ConfigFlow, domain=DOMAIN):
                             CONF_ACCESS_TOKEN: access_token,
                             CONF_REFRESH_TOKEN: refresh_token,
                         },
+                    )
+                if self.source == SOURCE_RECONFIGURE:
+                    self._abort_if_unique_id_mismatch()
+                    return self.async_update_reload_and_abort(
+                        self._get_reconfigure_entry(),
+                        data_updates={
+                            CONF_EMAIL: self._email,
+                            CONF_MFA_METHOD: self._mfa_method.value,
+                            CONF_ACCESS_TOKEN: access_token,
+                            CONF_REFRESH_TOKEN: refresh_token,
+                        },
+                        title=self._email,
                     )
                 self._abort_if_unique_id_configured()
                 return self.async_create_entry(

@@ -23,9 +23,9 @@ from homeassistant.components.media_player import (
     MediaPlayerEntityFeature,
 )
 from homeassistant.components.samsung_exlink.const import DOMAIN
+from homeassistant.components.samsung_exlink.coordinator import SCAN_INTERVAL
 from homeassistant.components.samsung_exlink.media_player import (
     INPUT_SOURCE_SAMSUNG_TO_HA,
-    SCAN_INTERVAL,
     SOURCE_ART_MODE,
 )
 from homeassistant.const import (
@@ -39,8 +39,8 @@ from homeassistant.const import (
     SERVICE_VOLUME_UP,
     STATE_OFF,
     STATE_ON,
-    STATE_UNAVAILABLE,
     STATE_UNKNOWN,
+    Platform,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -55,6 +55,12 @@ ENTITY_ID = "media_player.samsung_tv"
 @pytest.fixture(autouse=True)
 async def auto_init_components(init_components: None) -> None:
     """Set up the component."""
+
+
+@pytest.fixture
+def samsung_exlink_platforms() -> list[Platform]:
+    """Load only the media player platform."""
+    return [Platform.MEDIA_PLAYER]
 
 
 async def test_entities_created(
@@ -105,7 +111,7 @@ async def test_polling_updates_state(
 async def test_state_updates(
     hass: HomeAssistant, mock_samsung_tv: MockSamsungTV
 ) -> None:
-    """Test the entity updates from TV pushes and disconnects."""
+    """Test the entity updates from TV state pushes."""
     assert hass.states.get(ENTITY_ID).state == STATE_ON
 
     state = _default_state()
@@ -114,11 +120,6 @@ async def test_state_updates(
     await hass.async_block_till_done()
 
     assert hass.states.get(ENTITY_ID).state == STATE_OFF
-
-    mock_samsung_tv.mock_state(None)
-    await hass.async_block_till_done()
-
-    assert hass.states.get(ENTITY_ID).state == STATE_UNAVAILABLE
 
 
 async def test_state_unknown_when_not_queried(

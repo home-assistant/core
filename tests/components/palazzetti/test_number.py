@@ -8,8 +8,8 @@ import pytest
 from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.number import DOMAIN as NUMBER_DOMAIN, SERVICE_SET_VALUE
-from homeassistant.const import ATTR_ENTITY_ID, Platform
+from homeassistant.components.number import DOMAIN as NUMBER_DOMAIN, NumberService
+from homeassistant.const import CommonServiceArgument, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er
@@ -45,8 +45,8 @@ async def test_async_set_data_power(
     # Set value: Success
     await hass.services.async_call(
         NUMBER_DOMAIN,
-        SERVICE_SET_VALUE,
-        {ATTR_ENTITY_ID: POWER_ENTITY_ID, "value": 1},
+        NumberService.SET_VALUE,
+        {CommonServiceArgument.ENTITY_ID: POWER_ENTITY_ID, "value": 1},
         blocking=True,
     )
     mock_palazzetti_client.set_power_mode.assert_called_once_with(1)
@@ -58,8 +58,8 @@ async def test_async_set_data_power(
     with pytest.raises(HomeAssistantError, match=message):
         await hass.services.async_call(
             NUMBER_DOMAIN,
-            SERVICE_SET_VALUE,
-            {ATTR_ENTITY_ID: POWER_ENTITY_ID, "value": 1},
+            NumberService.SET_VALUE,
+            {CommonServiceArgument.ENTITY_ID: POWER_ENTITY_ID, "value": 1},
             blocking=True,
         )
     mock_palazzetti_client.set_power_mode.reset_mock()
@@ -69,8 +69,8 @@ async def test_async_set_data_power(
     with pytest.raises(ServiceValidationError, match=message):
         await hass.services.async_call(
             NUMBER_DOMAIN,
-            SERVICE_SET_VALUE,
-            {ATTR_ENTITY_ID: POWER_ENTITY_ID, "value": 1},
+            NumberService.SET_VALUE,
+            {CommonServiceArgument.ENTITY_ID: POWER_ENTITY_ID, "value": 1},
             blocking=True,
         )
 
@@ -86,8 +86,8 @@ async def test_async_set_data_fan(
     # Set value: Success
     await hass.services.async_call(
         NUMBER_DOMAIN,
-        SERVICE_SET_VALUE,
-        {ATTR_ENTITY_ID: FAN_ENTITY_ID, "value": 1},
+        NumberService.SET_VALUE,
+        {CommonServiceArgument.ENTITY_ID: FAN_ENTITY_ID, "value": 1},
         blocking=True,
     )
     mock_palazzetti_client.set_fan_speed.assert_called_once_with(1, FanType.LEFT)
@@ -99,8 +99,8 @@ async def test_async_set_data_fan(
     with pytest.raises(HomeAssistantError, match=message):
         await hass.services.async_call(
             NUMBER_DOMAIN,
-            SERVICE_SET_VALUE,
-            {ATTR_ENTITY_ID: FAN_ENTITY_ID, "value": 1},
+            NumberService.SET_VALUE,
+            {CommonServiceArgument.ENTITY_ID: FAN_ENTITY_ID, "value": 1},
             blocking=True,
         )
     mock_palazzetti_client.set_on.reset_mock()
@@ -110,7 +110,7 @@ async def test_async_set_data_fan(
     with pytest.raises(ServiceValidationError, match=message):
         await hass.services.async_call(
             NUMBER_DOMAIN,
-            SERVICE_SET_VALUE,
-            {ATTR_ENTITY_ID: FAN_ENTITY_ID, "value": 1},
+            NumberService.SET_VALUE,
+            {CommonServiceArgument.ENTITY_ID: FAN_ENTITY_ID, "value": 1},
             blocking=True,
         )

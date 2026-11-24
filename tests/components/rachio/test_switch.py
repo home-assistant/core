@@ -5,15 +5,8 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
-    STATE_OFF,
-    STATE_ON,
-    Platform,
-)
+from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN, SwitchService
+from homeassistant.const import STATE_OFF, STATE_ON, CommonServiceArgument, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 
@@ -66,8 +59,8 @@ async def test_zone_services_update_state(
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: ZONE_ENTITY_ID},
+        SwitchService.TURN_ON,
+        {CommonServiceArgument.ENTITY_ID: ZONE_ENTITY_ID},
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -78,8 +71,8 @@ async def test_zone_services_update_state(
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: ZONE_ENTITY_ID},
+        SwitchService.TURN_OFF,
+        {CommonServiceArgument.ENTITY_ID: ZONE_ENTITY_ID},
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -114,8 +107,8 @@ async def test_zone_start_failure_does_not_update_state(
     with pytest.raises(expected_exception):
         await hass.services.async_call(
             SWITCH_DOMAIN,
-            SERVICE_TURN_ON,
-            {ATTR_ENTITY_ID: ZONE_ENTITY_ID},
+            SwitchService.TURN_ON,
+            {CommonServiceArgument.ENTITY_ID: ZONE_ENTITY_ID},
             blocking=True,
         )
     await hass.async_block_till_done()
@@ -145,8 +138,8 @@ async def test_zone_stop_failure_does_not_update_state(
     """Test a failed stop command does not optimistically update state."""
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: ZONE_ENTITY_ID},
+        SwitchService.TURN_ON,
+        {CommonServiceArgument.ENTITY_ID: ZONE_ENTITY_ID},
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -158,8 +151,8 @@ async def test_zone_stop_failure_does_not_update_state(
     with pytest.raises(expected_exception):
         await hass.services.async_call(
             SWITCH_DOMAIN,
-            SERVICE_TURN_OFF,
-            {ATTR_ENTITY_ID: ZONE_ENTITY_ID},
+            SwitchService.TURN_OFF,
+            {CommonServiceArgument.ENTITY_ID: ZONE_ENTITY_ID},
             blocking=True,
         )
     await hass.async_block_till_done()

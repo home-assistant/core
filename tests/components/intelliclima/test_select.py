@@ -11,11 +11,11 @@ from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.select import (
-    ATTR_OPTION,
     DOMAIN as SELECT_DOMAIN,
-    SERVICE_SELECT_OPTION,
+    SelectService,
+    SelectServiceArgument,
 )
-from homeassistant.const import ATTR_ENTITY_ID, STATE_UNKNOWN, Platform
+from homeassistant.const import STATE_UNKNOWN, CommonServiceArgument, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
@@ -83,8 +83,11 @@ async def test_select_option_keeps_current_speed(
     """Selecting any valid option retains the current speed and calls set_mode_speed."""
     await hass.services.async_call(
         SELECT_DOMAIN,
-        SERVICE_SELECT_OPTION,
-        {ATTR_ENTITY_ID: SELECT_ENTITY_ID, ATTR_OPTION: option},
+        SelectService.SELECT_OPTION,
+        {
+            CommonServiceArgument.ENTITY_ID: SELECT_ENTITY_ID,
+            SelectServiceArgument.OPTION: option,
+        },
         blocking=True,
     )
     # Device starts with speed_set=FanSpeed.medium (from single_eco_device in conftest),
@@ -106,8 +109,11 @@ async def test_select_option_when_off_defaults_speed_to_sleep(
 
     await hass.services.async_call(
         SELECT_DOMAIN,
-        SERVICE_SELECT_OPTION,
-        {ATTR_ENTITY_ID: SELECT_ENTITY_ID, ATTR_OPTION: "forward"},
+        SelectService.SELECT_OPTION,
+        {
+            CommonServiceArgument.ENTITY_ID: SELECT_ENTITY_ID,
+            SelectServiceArgument.OPTION: "forward",
+        },
         blocking=True,
     )
     mock_cloud_interface.ecocomfort2.set_mode_speed.assert_awaited_once_with(
@@ -127,8 +133,11 @@ async def test_select_option_in_auto_mode_defaults_speed_to_sleep(
 
     await hass.services.async_call(
         SELECT_DOMAIN,
-        SERVICE_SELECT_OPTION,
-        {ATTR_ENTITY_ID: SELECT_ENTITY_ID, ATTR_OPTION: "reverse"},
+        SelectService.SELECT_OPTION,
+        {
+            CommonServiceArgument.ENTITY_ID: SELECT_ENTITY_ID,
+            SelectServiceArgument.OPTION: "reverse",
+        },
         blocking=True,
     )
     mock_cloud_interface.ecocomfort2.set_mode_speed.assert_awaited_once_with(
@@ -145,8 +154,11 @@ async def test_select_option_does_not_call_turn_off(
     """Selecting an option should never call turn_off."""
     await hass.services.async_call(
         SELECT_DOMAIN,
-        SERVICE_SELECT_OPTION,
-        {ATTR_ENTITY_ID: SELECT_ENTITY_ID, ATTR_OPTION: option},
+        SelectService.SELECT_OPTION,
+        {
+            CommonServiceArgument.ENTITY_ID: SELECT_ENTITY_ID,
+            SelectServiceArgument.OPTION: option,
+        },
         blocking=True,
     )
     mock_cloud_interface.ecocomfort2.turn_off.assert_not_awaited()
@@ -161,8 +173,11 @@ async def test_select_option_triggers_coordinator_refresh(
 
     await hass.services.async_call(
         SELECT_DOMAIN,
-        SERVICE_SELECT_OPTION,
-        {ATTR_ENTITY_ID: SELECT_ENTITY_ID, ATTR_OPTION: "sensor"},
+        SelectService.SELECT_OPTION,
+        {
+            CommonServiceArgument.ENTITY_ID: SELECT_ENTITY_ID,
+            SelectServiceArgument.OPTION: "sensor",
+        },
         blocking=True,
     )
     # A refresh must have been requested, so the status fetch count increases.

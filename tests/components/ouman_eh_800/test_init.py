@@ -18,12 +18,12 @@ from homeassistant.components.ouman_eh_800.const import (
     OumanDevice,
 )
 from homeassistant.components.select import (
-    ATTR_OPTION,
     DOMAIN as SELECT_DOMAIN,
-    SERVICE_SELECT_OPTION,
+    SelectService,
+    SelectServiceArgument,
 )
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
-from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE, Platform
+from homeassistant.const import STATE_UNAVAILABLE, CommonServiceArgument, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr
@@ -165,10 +165,10 @@ async def test_reauth_started_on_action_auth_failure(
     with pytest.raises(HomeAssistantError, match="Authentication failed"):
         await hass.services.async_call(
             SELECT_DOMAIN,
-            SERVICE_SELECT_OPTION,
+            SelectService.SELECT_OPTION,
             {
-                ATTR_ENTITY_ID: "select.ouman_eh_800_home_away_mode",
-                ATTR_OPTION: "away",
+                CommonServiceArgument.ENTITY_ID: "select.ouman_eh_800_home_away_mode",
+                SelectServiceArgument.OPTION: "away",
             },
             blocking=True,
         )

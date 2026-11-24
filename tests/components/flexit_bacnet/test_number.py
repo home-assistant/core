@@ -14,11 +14,11 @@ from pytest_homeassistant.common import (
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.number import (
-    ATTR_VALUE,
     DOMAIN as NUMBER_DOMAIN,
-    SERVICE_SET_VALUE,
+    NumberService,
+    NumberServiceArgument,
 )
-from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE, Platform
+from homeassistant.const import STATE_UNAVAILABLE, CommonServiceArgument, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
@@ -58,10 +58,10 @@ async def test_numbers_implementation(
 
     await hass.services.async_call(
         NUMBER_DOMAIN,
-        SERVICE_SET_VALUE,
+        NumberService.SET_VALUE,
         {
-            ATTR_ENTITY_ID: ENTITY_ID,
-            ATTR_VALUE: 60,
+            CommonServiceArgument.ENTITY_ID: ENTITY_ID,
+            NumberServiceArgument.VALUE: 60,
         },
         blocking=True,
     )
@@ -74,10 +74,10 @@ async def test_numbers_implementation(
 
     await hass.services.async_call(
         NUMBER_DOMAIN,
-        SERVICE_SET_VALUE,
+        NumberService.SET_VALUE,
         {
-            ATTR_ENTITY_ID: ENTITY_ID,
-            ATTR_VALUE: 40,
+            CommonServiceArgument.ENTITY_ID: ENTITY_ID,
+            NumberServiceArgument.VALUE: 40,
         },
         blocking=True,
     )
@@ -92,10 +92,10 @@ async def test_numbers_implementation(
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             NUMBER_DOMAIN,
-            SERVICE_SET_VALUE,
+            NumberService.SET_VALUE,
             {
-                ATTR_ENTITY_ID: ENTITY_ID,
-                ATTR_VALUE: 40,
+                CommonServiceArgument.ENTITY_ID: ENTITY_ID,
+                NumberServiceArgument.VALUE: 40,
             },
             blocking=True,
         )
@@ -108,10 +108,10 @@ async def test_numbers_implementation(
 
     await hass.services.async_call(
         NUMBER_DOMAIN,
-        SERVICE_SET_VALUE,
+        NumberService.SET_VALUE,
         {
-            ATTR_ENTITY_ID: ENTITY_ID,
-            ATTR_VALUE: 30,
+            CommonServiceArgument.ENTITY_ID: ENTITY_ID,
+            NumberServiceArgument.VALUE: 30,
         },
         blocking=True,
     )

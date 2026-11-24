@@ -12,17 +12,17 @@ from homeassistant.components.number import (
     ATTR_MAX,
     ATTR_MIN,
     ATTR_STEP,
-    ATTR_VALUE,
     DOMAIN as NUMBER_DOMAIN,
-    SERVICE_SET_VALUE,
+    NumberService,
+    NumberServiceArgument,
 )
 from homeassistant.components.sleepiq.coordinator import LONGER_UPDATE_INTERVAL
 from homeassistant.const import (
-    ATTR_ENTITY_ID,
     ATTR_FRIENDLY_NAME,
     ATTR_ICON,
     ATTR_UNIT_OF_MEASUREMENT,
     STATE_UNAVAILABLE,
+    CommonServiceArgument,
     UnitOfTime,
 )
 from homeassistant.core import HomeAssistant
@@ -93,13 +93,13 @@ async def test_firmness(
 
     await hass.services.async_call(
         NUMBER_DOMAIN,
-        SERVICE_SET_VALUE,
+        NumberService.SET_VALUE,
         {
-            ATTR_ENTITY_ID: (
+            CommonServiceArgument.ENTITY_ID: (
                 f"number.{BED_NAME_LOWER}_sleepnumber"
                 f"_{BED_NAME_LOWER}_{SLEEPER_L_NAME_LOWER}_firmness"
             ),
-            ATTR_VALUE: 42,
+            NumberServiceArgument.VALUE: 42,
         },
         blocking=True,
     )
@@ -140,8 +140,11 @@ async def test_favorite_firmness(
 
     await hass.services.async_call(
         NUMBER_DOMAIN,
-        SERVICE_SET_VALUE,
-        {ATTR_ENTITY_ID: FAVORITE_L_ENTITY_ID, ATTR_VALUE: 45},
+        NumberService.SET_VALUE,
+        {
+            CommonServiceArgument.ENTITY_ID: FAVORITE_L_ENTITY_ID,
+            NumberServiceArgument.VALUE: 45,
+        },
         blocking=True,
     )
 
@@ -253,13 +256,13 @@ async def test_actuators(
 
     await hass.services.async_call(
         NUMBER_DOMAIN,
-        SERVICE_SET_VALUE,
+        NumberService.SET_VALUE,
         {
-            ATTR_ENTITY_ID: (
+            CommonServiceArgument.ENTITY_ID: (
                 f"number.{BED_NAME_LOWER}_sleepnumber"
                 f"_{BED_NAME_LOWER}_right_head_position"
             ),
-            ATTR_VALUE: 42,
+            NumberServiceArgument.VALUE: 42,
         },
         blocking=True,
     )
@@ -301,14 +304,14 @@ async def test_foot_warmer_timer(
 
     await hass.services.async_call(
         NUMBER_DOMAIN,
-        SERVICE_SET_VALUE,
+        NumberService.SET_VALUE,
         {
-            ATTR_ENTITY_ID: (
+            CommonServiceArgument.ENTITY_ID: (
                 f"number.{BED_NAME_LOWER}_sleepnumber"
                 f"_{BED_NAME_LOWER}"
                 f"_{SLEEPER_L_NAME_LOWER}_foot_warming_timer"
             ),
-            ATTR_VALUE: 300,
+            NumberServiceArgument.VALUE: 300,
         },
         blocking=True,
     )
@@ -345,14 +348,14 @@ async def test_core_climate_timer(
 
     await hass.services.async_call(
         NUMBER_DOMAIN,
-        SERVICE_SET_VALUE,
+        NumberService.SET_VALUE,
         {
-            ATTR_ENTITY_ID: (
+            CommonServiceArgument.ENTITY_ID: (
                 f"number.{BED_NAME_LOWER}_sleepnumber"
                 f"_{BED_NAME_LOWER}"
                 f"_{SLEEPER_L_NAME_LOWER}_core_climate_timer"
             ),
-            ATTR_VALUE: 420,
+            NumberServiceArgument.VALUE: 420,
         },
         blocking=True,
     )

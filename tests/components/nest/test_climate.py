@@ -1936,6 +1936,41 @@ async def test_thermostat_hvac_mode_failure(
     assert PRESET_ECO in str(e_info)
 
 
+async def test_thermostat_set_temperature_eco(
+    hass: HomeAssistant,
+    setup_platform: PlatformSetup,
+    auth: FakeAuth,
+    create_device: CreateDevice,
+) -> None:
+    """Test setting a temperature while the thermostat is in eco mode."""
+    create_device.create(
+        {
+            "sdm.devices.traits.ThermostatHvac": {"status": "OFF"},
+            "sdm.devices.traits.ThermostatMode": {
+                "availableModes": ["HEAT", "COOL", "HEATCOOL", "OFF"],
+                "mode": "HEAT",
+            },
+            "sdm.devices.traits.ThermostatEco": {
+                "availableModes": ["MANUAL_ECO", "OFF"],
+                "mode": "MANUAL_ECO",
+                "heatCelsius": 15.0,
+                "coolCelsius": 28.0,
+            },
+            "sdm.devices.traits.ThermostatTemperatureSetpoint": {
+                "heatCelsius": 19.0,
+            },
+        },
+    )
+    await setup_platform()
+
+    with pytest.raises(HomeAssistantError) as err:
+        await common.async_set_temperature(hass, temperature=24.0)
+
+    assert "temperature to 24.0" in str(err.value)
+    assert "Cannot set temperature while in ECO preset mode." in str(err.value)
+    assert not auth.captured_requests
+
+
 async def test_thermostat_available(
     hass: HomeAssistant, setup_platform: PlatformSetup, create_device: CreateDevice
 ) -> None:

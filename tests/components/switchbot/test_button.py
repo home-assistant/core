@@ -10,7 +10,7 @@ from pytest_homeassistant.components.bluetooth import inject_bluetooth_service_i
 from switchbot import SwitchbotOperationError
 
 from homeassistant.components.bluetooth import BluetoothServiceInfoBleak
-from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
+from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, ButtonService
 from homeassistant.components.switchbot.const import (
     CONF_ENCRYPTION_KEY,
     CONF_KEY_ID,
@@ -19,10 +19,10 @@ from homeassistant.components.switchbot.const import (
     DEFAULT_RETRY_COUNT,
 )
 from homeassistant.const import (
-    ATTR_ENTITY_ID,
     CONF_ADDRESS,
     CONF_NAME,
     CONF_SENSOR_TYPE,
+    CommonServiceArgument,
     EntityCategory,
 )
 from homeassistant.core import HomeAssistant
@@ -46,9 +46,9 @@ from . import (
 @pytest.mark.parametrize(
     ("service", "mock_method", "entity_id"),
     [
-        (SERVICE_PRESS, "next_image", "button.test_name_next_image"),
-        (SERVICE_PRESS, "prev_image", "button.test_name_previous_image"),
-        (SERVICE_PRESS, "random_image", "button.test_name_random_image"),
+        (ButtonService.PRESS, "next_image", "button.test_name_next_image"),
+        (ButtonService.PRESS, "prev_image", "button.test_name_previous_image"),
+        (ButtonService.PRESS, "random_image", "button.test_name_random_image"),
     ],
 )
 async def test_art_frame_button_press(
@@ -84,7 +84,7 @@ async def test_art_frame_button_press(
         await hass.services.async_call(
             BUTTON_DOMAIN,
             service,
-            {ATTR_ENTITY_ID: entity_id},
+            {CommonServiceArgument.ENTITY_ID: entity_id},
             blocking=True,
         )
 
@@ -137,8 +137,8 @@ async def test_meter_pro_sync_datetime_button(
 
         await hass.services.async_call(
             BUTTON_DOMAIN,
-            SERVICE_PRESS,
-            {ATTR_ENTITY_ID: "button.test_name_sync_date_and_time"},
+            ButtonService.PRESS,
+            {CommonServiceArgument.ENTITY_ID: "button.test_name_sync_date_and_time"},
             blocking=True,
         )
 
@@ -194,8 +194,8 @@ async def test_meter_pro_co2_sync_datetime_button_with_timezone(
 
         await hass.services.async_call(
             BUTTON_DOMAIN,
-            SERVICE_PRESS,
-            {ATTR_ENTITY_ID: "button.test_name_sync_date_and_time"},
+            ButtonService.PRESS,
+            {CommonServiceArgument.ENTITY_ID: "button.test_name_sync_date_and_time"},
             blocking=True,
         )
 
@@ -241,8 +241,8 @@ async def test_air_purifier_buttons(
 
         await hass.services.async_call(
             BUTTON_DOMAIN,
-            SERVICE_PRESS,
-            {ATTR_ENTITY_ID: entity_id},
+            ButtonService.PRESS,
+            {CommonServiceArgument.ENTITY_ID: entity_id},
             blocking=True,
         )
         mock_instance.assert_awaited_once()
@@ -291,7 +291,10 @@ async def test_air_purifier_reset_filter_usage(
         reset_filter_usage.assert_not_awaited()
 
         await hass.services.async_call(
-            BUTTON_DOMAIN, SERVICE_PRESS, {ATTR_ENTITY_ID: entity_id}, blocking=True
+            BUTTON_DOMAIN,
+            ButtonService.PRESS,
+            {CommonServiceArgument.ENTITY_ID: entity_id},
+            blocking=True,
         )
         reset_filter_usage.assert_awaited_once_with()
         assert hass.states.get(entity_id).attributes["last_run_success"] is True
@@ -321,13 +324,19 @@ async def test_air_purifier_reset_filter_usage_failure(
         initial_usage = hass.states.get("sensor.test_name_filter_usage").state
 
         await hass.services.async_call(
-            BUTTON_DOMAIN, SERVICE_PRESS, {ATTR_ENTITY_ID: entity_id}, blocking=True
+            BUTTON_DOMAIN,
+            ButtonService.PRESS,
+            {CommonServiceArgument.ENTITY_ID: entity_id},
+            blocking=True,
         )
         assert hass.states.get(entity_id).attributes["last_run_success"] is True
 
         with pytest.raises(HomeAssistantError, match="Filter usage read was rejected"):
             await hass.services.async_call(
-                BUTTON_DOMAIN, SERVICE_PRESS, {ATTR_ENTITY_ID: entity_id}, blocking=True
+                BUTTON_DOMAIN,
+                ButtonService.PRESS,
+                {CommonServiceArgument.ENTITY_ID: entity_id},
+                blocking=True,
             )
         assert reset_filter_usage.await_count == 2
         assert hass.states.get("sensor.test_name_filter_usage").state == initial_usage
@@ -375,8 +384,8 @@ async def test_lock_ultra_half_lock_button(
 
         await hass.services.async_call(
             BUTTON_DOMAIN,
-            SERVICE_PRESS,
-            {ATTR_ENTITY_ID: "button.test_name_half_lock"},
+            ButtonService.PRESS,
+            {CommonServiceArgument.ENTITY_ID: "button.test_name_half_lock"},
             blocking=True,
         )
 

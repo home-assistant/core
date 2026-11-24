@@ -5,12 +5,8 @@ from unittest.mock import AsyncMock, patch
 from pytest_homeassistant.common import MockConfigEntry
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.switch import (
-    DOMAIN as SWITCH_DOMAIN,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
-)
-from homeassistant.const import ATTR_ENTITY_ID, Platform
+from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN, SwitchService
+from homeassistant.const import CommonServiceArgument, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -51,8 +47,8 @@ async def test_switch_setup_and_services(
     with patch("pyatmo.home.Home.async_set_state") as mock_set_state:
         await hass.services.async_call(
             SWITCH_DOMAIN,
-            SERVICE_TURN_OFF,
-            {ATTR_ENTITY_ID: switch_entity},
+            SwitchService.TURN_OFF,
+            {CommonServiceArgument.ENTITY_ID: switch_entity},
             blocking=True,
         )
         await hass.async_block_till_done()
@@ -72,8 +68,8 @@ async def test_switch_setup_and_services(
     with patch("pyatmo.home.Home.async_set_state") as mock_set_state:
         await hass.services.async_call(
             SWITCH_DOMAIN,
-            SERVICE_TURN_ON,
-            {ATTR_ENTITY_ID: switch_entity},
+            SwitchService.TURN_ON,
+            {CommonServiceArgument.ENTITY_ID: switch_entity},
             blocking=True,
         )
         await hass.async_block_till_done()

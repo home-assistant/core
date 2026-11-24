@@ -120,19 +120,25 @@ class BackupMetadata:
 class BackupAgentClient:
     """Helper class that manages SSH and SFTP Server connections."""
 
-    sftp: SFTPClient
-
     def __init__(self, config: SFTPConfigEntry, hass: HomeAssistant) -> None:
         """Initialize `BackupAgentClient`."""
         self.cfg: SFTPConfigEntry = config
         self.hass: HomeAssistant = hass
         self._ssh: SSHClientConnection | None = None
+        self._sftp: SFTPClient | None = None
         LOGGER.debug("Initialized with config: %s", self.cfg.runtime_data)
+
+    @property
+    def sftp(self) -> SFTPClient:
+        """Return the SFTP client of an open connection."""
+        if self._sftp is None:
+            raise RuntimeError("The SFTP connection is not open")
+        return self._sftp
 
     async def __aenter__(self) -> Self:
         """Async context manager entrypoint."""
 
-        return await self.open()  # type: ignore[return-value]  # mypy will otherwise raise an error
+        return await self.open()
 
     async def __aexit__(
         self,
@@ -141,9 +147,9 @@ class BackupAgentClient:
         traceback: TracebackType | None,
     ) -> None:
         """Async Context Manager exit routine."""
-        if self.sftp:
-            self.sftp.exit()
-            await self.sftp.wait_closed()
+        if self._sftp:
+            self._sftp.exit()
+            await self._sftp.wait_closed()
 
         if self._ssh:
             self._ssh.close()
@@ -299,7 +305,7 @@ class BackupAgentClient:
                 files.append(f"{self.cfg.runtime_data.backup_location}/{file}")
         return files
 
-    async def open(self) -> BackupAgentClient:
+    async def open(self) -> Self:
         """Return initialized `BackupAgentClient`.
 
         This is to avoid calling `__aenter__` dunder method.
@@ -328,8 +334,8 @@ class BackupAgentClient:
 
         # Configure SFTP Client Connection
         try:
-            self.sftp = await self._ssh.start_sftp_client()
-            await self.sftp.chdir(self.cfg.runtime_data.backup_location)
+            self._sftp = await self._ssh.start_sftp_client()
+            await self._sftp.chdir(self.cfg.runtime_data.backup_location)
         except (SFTPNoSuchFile, SFTPPermissionDenied) as e:
             raise BackupAgentError(
                 "Failed to create SFTP client."

@@ -4,6 +4,7 @@ from collections.abc import Awaitable, Callable
 from unittest.mock import AsyncMock, MagicMock
 
 from aiohomeconnect.model import (
+    ApplianceType,
     ArrayOfEvents,
     Event,
     EventKey,
@@ -81,7 +82,7 @@ def get_available_program_fixture(
     )
 
 
-@pytest.mark.parametrize("appliance", ["AirConditioner"], indirect=True)
+@pytest.mark.parametrize("appliance", [ApplianceType.AIR_CONDITIONER], indirect=True)
 async def test_paired_depaired_devices_flow(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
@@ -139,7 +140,7 @@ async def test_paired_depaired_devices_flow(
         assert entity_registry.async_get(entity_entry.entity_id)
 
 
-@pytest.mark.parametrize("appliance", ["AirConditioner"], indirect=True)
+@pytest.mark.parametrize("appliance", [ApplianceType.AIR_CONDITIONER], indirect=True)
 async def test_connected_devices(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
@@ -207,7 +208,7 @@ async def test_connected_devices(
     )
 
 
-@pytest.mark.parametrize("appliance", ["AirConditioner"], indirect=True)
+@pytest.mark.parametrize("appliance", [ApplianceType.AIR_CONDITIONER], indirect=True)
 async def test_fan_entity_availability(
     hass: HomeAssistant,
     client: MagicMock,
@@ -258,7 +259,7 @@ async def test_fan_entity_availability(
         assert state.state != STATE_UNAVAILABLE
 
 
-@pytest.mark.parametrize("appliance", ["AirConditioner"], indirect=True)
+@pytest.mark.parametrize("appliance", [ApplianceType.AIR_CONDITIONER], indirect=True)
 @pytest.mark.parametrize(
     (
         "set_active_program_options_side_effect",
@@ -350,7 +351,7 @@ async def test_set_speed_raises_home_assistant_error_on_api_errors(
         )
 
 
-@pytest.mark.parametrize("appliance", ["AirConditioner"], indirect=True)
+@pytest.mark.parametrize("appliance", [ApplianceType.AIR_CONDITIONER], indirect=True)
 @pytest.mark.parametrize(
     (
         "set_active_program_options_side_effect",
@@ -497,7 +498,7 @@ async def test_set_preset_mode_raises_home_assistant_error_on_api_errors(
         )
 
 
-@pytest.mark.parametrize("appliance", ["AirConditioner"], indirect=True)
+@pytest.mark.parametrize("appliance", [ApplianceType.AIR_CONDITIONER], indirect=True)
 @pytest.mark.parametrize(
     ("option_key", "expected_fan_feature"),
     [
@@ -612,7 +613,7 @@ async def test_supported_features(
     assert state.attributes[ATTR_SUPPORTED_FEATURES] & expected_fan_feature
 
 
-@pytest.mark.parametrize("appliance", ["AirConditioner"], indirect=True)
+@pytest.mark.parametrize("appliance", [ApplianceType.AIR_CONDITIONER], indirect=True)
 async def test_added_entity_automatically(
     hass: HomeAssistant,
     client: MagicMock,

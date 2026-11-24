@@ -12,11 +12,11 @@ from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.number import (
-    ATTR_VALUE,
     DOMAIN as NUMBER_DOMAIN,
-    SERVICE_SET_VALUE,
+    NumberService,
+    NumberServiceArgument,
 )
-from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE, Platform
+from homeassistant.const import STATE_UNAVAILABLE, CommonServiceArgument, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, HomeAssistantError
 from homeassistant.helpers import entity_registry as er
@@ -83,10 +83,10 @@ async def test_number_set_value(
 
     await hass.services.async_call(
         NUMBER_DOMAIN,
-        SERVICE_SET_VALUE,
+        NumberService.SET_VALUE,
         {
-            ATTR_ENTITY_ID: "number.my_pv_ac_elwa_2_boost_target_temperature",
-            ATTR_VALUE: 70.0,
+            CommonServiceArgument.ENTITY_ID: "number.my_pv_ac_elwa_2_boost_target_temperature",
+            NumberServiceArgument.VALUE: 70.0,
         },
         blocking=True,
     )
@@ -109,10 +109,10 @@ async def test_number_set_value_returns_false(
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             NUMBER_DOMAIN,
-            SERVICE_SET_VALUE,
+            NumberService.SET_VALUE,
             {
-                ATTR_ENTITY_ID: "number.my_pv_ac_elwa_2_boost_target_temperature",
-                ATTR_VALUE: 70,
+                CommonServiceArgument.ENTITY_ID: "number.my_pv_ac_elwa_2_boost_target_temperature",
+                NumberServiceArgument.VALUE: 70,
             },
             blocking=True,
         )
@@ -145,10 +145,10 @@ async def test_number_set_value_raises_error(
     with pytest.raises(expected_ha_error):
         await hass.services.async_call(
             NUMBER_DOMAIN,
-            SERVICE_SET_VALUE,
+            NumberService.SET_VALUE,
             {
-                ATTR_ENTITY_ID: "number.my_pv_ac_elwa_2_boost_target_temperature",
-                ATTR_VALUE: 70,
+                CommonServiceArgument.ENTITY_ID: "number.my_pv_ac_elwa_2_boost_target_temperature",
+                NumberServiceArgument.VALUE: 70,
             },
             blocking=True,
         )

@@ -9,11 +9,11 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.fumis.const import DOMAIN
 from homeassistant.components.number import (
-    ATTR_VALUE,
     DOMAIN as NUMBER_DOMAIN,
-    SERVICE_SET_VALUE,
+    NumberService,
+    NumberServiceArgument,
 )
-from homeassistant.const import ATTR_ENTITY_ID, Platform
+from homeassistant.const import CommonServiceArgument, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
@@ -44,8 +44,11 @@ async def test_set_power_level(
     """Test setting the power level."""
     await hass.services.async_call(
         NUMBER_DOMAIN,
-        SERVICE_SET_VALUE,
-        {ATTR_ENTITY_ID: "number.clou_duo_power_level", ATTR_VALUE: 3},
+        NumberService.SET_VALUE,
+        {
+            CommonServiceArgument.ENTITY_ID: "number.clou_duo_power_level",
+            NumberServiceArgument.VALUE: 3,
+        },
         blocking=True,
     )
 
@@ -60,8 +63,11 @@ async def test_set_fan_speed(
     """Test setting the fan speed."""
     await hass.services.async_call(
         NUMBER_DOMAIN,
-        SERVICE_SET_VALUE,
-        {ATTR_ENTITY_ID: "number.clou_duo_fan_speed", ATTR_VALUE: 2},
+        NumberService.SET_VALUE,
+        {
+            CommonServiceArgument.ENTITY_ID: "number.clou_duo_fan_speed",
+            NumberServiceArgument.VALUE: 2,
+        },
         blocking=True,
     )
 
@@ -79,8 +85,11 @@ async def test_number_error_handling(
     with pytest.raises(HomeAssistantError) as exc_info:
         await hass.services.async_call(
             NUMBER_DOMAIN,
-            SERVICE_SET_VALUE,
-            {ATTR_ENTITY_ID: "number.clou_duo_power_level", ATTR_VALUE: 3},
+            NumberService.SET_VALUE,
+            {
+                CommonServiceArgument.ENTITY_ID: "number.clou_duo_power_level",
+                NumberServiceArgument.VALUE: 3,
+            },
             blocking=True,
         )
 

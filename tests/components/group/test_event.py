@@ -3,9 +3,9 @@
 from pytest_unordered import unordered
 
 from homeassistant.components.event import (
-    ATTR_EVENT_TYPE,
-    ATTR_EVENT_TYPES,
     DOMAIN as EVENT_DOMAIN,
+    EventEntityCapabilityAttribute,
+    EventEntityStateAttribute,
 )
 from homeassistant.components.group import DOMAIN
 from homeassistant.const import (
@@ -54,10 +54,10 @@ async def test_default_state(
     assert state is not None
     assert state.state == STATE_UNKNOWN
     assert state.attributes.get(ATTR_ENTITY_ID) == ["event.button_1", "event.button_2"]
-    assert not state.attributes.get(ATTR_EVENT_TYPE)
-    assert state.attributes.get(ATTR_EVENT_TYPES) == unordered(
-        ["single_press", "double_press"]
-    )
+    assert not state.attributes.get(EventEntityStateAttribute.EVENT_TYPE)
+    assert state.attributes.get(
+        EventEntityCapabilityAttribute.EVENT_TYPES
+    ) == unordered(["single_press", "double_press"])
 
     # State changed
     hass.states.async_set(
@@ -71,10 +71,10 @@ async def test_default_state(
     assert state is not None
     assert state.state
     assert state.attributes.get(ATTR_ENTITY_ID) == ["event.button_1", "event.button_2"]
-    assert state.attributes.get(ATTR_EVENT_TYPE) == "single_press"
-    assert state.attributes.get(ATTR_EVENT_TYPES) == unordered(
-        ["single_press", "double_press"]
-    )
+    assert state.attributes.get(EventEntityStateAttribute.EVENT_TYPE) == "single_press"
+    assert state.attributes.get(
+        EventEntityCapabilityAttribute.EVENT_TYPES
+    ) == unordered(["single_press", "double_press"])
 
     # State changed, second remote came online
     hass.states.async_set(
@@ -89,10 +89,10 @@ async def test_default_state(
     assert state is not None
     assert state.state
     assert state.attributes.get(ATTR_ENTITY_ID) == ["event.button_1", "event.button_2"]
-    assert state.attributes.get(ATTR_EVENT_TYPE) == "single_press"
-    assert state.attributes.get(ATTR_EVENT_TYPES) == unordered(
-        ["single_press", "double_press", "triple_press"]
-    )
+    assert state.attributes.get(EventEntityStateAttribute.EVENT_TYPE) == "single_press"
+    assert state.attributes.get(
+        EventEntityCapabilityAttribute.EVENT_TYPES
+    ) == unordered(["single_press", "double_press", "triple_press"])
 
     # State changed, now it fires an event
     hass.states.async_set(
@@ -110,10 +110,10 @@ async def test_default_state(
     assert state is not None
     assert state.state
     assert state.attributes.get(ATTR_ENTITY_ID) == ["event.button_1", "event.button_2"]
-    assert state.attributes.get(ATTR_EVENT_TYPE) == "triple_press"
-    assert state.attributes.get(ATTR_EVENT_TYPES) == unordered(
-        ["single_press", "double_press", "triple_press"]
-    )
+    assert state.attributes.get(EventEntityStateAttribute.EVENT_TYPE) == "triple_press"
+    assert state.attributes.get(
+        EventEntityCapabilityAttribute.EVENT_TYPES
+    ) == unordered(["single_press", "double_press", "triple_press"])
     assert ATTR_DEVICE_CLASS not in state.attributes
 
     # Mark button 1 unavailable
@@ -124,10 +124,10 @@ async def test_default_state(
     assert state is not None
     assert state.state
     assert state.attributes.get(ATTR_ENTITY_ID) == ["event.button_1", "event.button_2"]
-    assert state.attributes.get(ATTR_EVENT_TYPE) == "triple_press"
-    assert state.attributes.get(ATTR_EVENT_TYPES) == unordered(
-        ["double_press", "triple_press"]
-    )
+    assert state.attributes.get(EventEntityStateAttribute.EVENT_TYPE) == "triple_press"
+    assert state.attributes.get(
+        EventEntityCapabilityAttribute.EVENT_TYPES
+    ) == unordered(["double_press", "triple_press"])
 
     # Mark button 2 unavailable
     hass.states.async_set("event.button_2", STATE_UNAVAILABLE)

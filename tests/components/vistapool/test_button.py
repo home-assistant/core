@@ -11,9 +11,9 @@ import pytest
 from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
+from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, ButtonService
 from homeassistant.components.vistapool.button import _LED_PULSE_DELAY_SECONDS
-from homeassistant.const import ATTR_ENTITY_ID, Platform
+from homeassistant.const import CommonServiceArgument, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
@@ -86,8 +86,8 @@ async def test_sync_time_button_writes_local_wall_clock(
 
     await hass.services.async_call(
         BUTTON_DOMAIN,
-        SERVICE_PRESS,
-        {ATTR_ENTITY_ID: _SYNC_TIME_BUTTON},
+        ButtonService.PRESS,
+        {CommonServiceArgument.ENTITY_ID: _SYNC_TIME_BUTTON},
         blocking=True,
     )
 
@@ -111,8 +111,8 @@ async def test_button_press_when_light_off(
 
     await hass.services.async_call(
         BUTTON_DOMAIN,
-        SERVICE_PRESS,
-        {ATTR_ENTITY_ID: _BUTTON},
+        ButtonService.PRESS,
+        {CommonServiceArgument.ENTITY_ID: _BUTTON},
         blocking=True,
     )
 
@@ -138,8 +138,8 @@ async def test_button_press_when_light_on(
 
     await hass.services.async_call(
         BUTTON_DOMAIN,
-        SERVICE_PRESS,
-        {ATTR_ENTITY_ID: _BUTTON},
+        ButtonService.PRESS,
+        {CommonServiceArgument.ENTITY_ID: _BUTTON},
         blocking=True,
     )
 
@@ -170,8 +170,8 @@ async def test_button_press_rapid_repeat_after_off(
 
     await hass.services.async_call(
         BUTTON_DOMAIN,
-        SERVICE_PRESS,
-        {ATTR_ENTITY_ID: _BUTTON},
+        ButtonService.PRESS,
+        {CommonServiceArgument.ENTITY_ID: _BUTTON},
         blocking=True,
     )
     mock_vistapool_client.set_value.assert_awaited_once_with(
@@ -183,8 +183,8 @@ async def test_button_press_rapid_repeat_after_off(
 
     await hass.services.async_call(
         BUTTON_DOMAIN,
-        SERVICE_PRESS,
-        {ATTR_ENTITY_ID: _BUTTON},
+        ButtonService.PRESS,
+        {CommonServiceArgument.ENTITY_ID: _BUTTON},
         blocking=True,
     )
 
@@ -224,8 +224,8 @@ async def test_button_press_raises_on_api_error(
     with pytest.raises(HomeAssistantError) as excinfo:
         await hass.services.async_call(
             BUTTON_DOMAIN,
-            SERVICE_PRESS,
-            {ATTR_ENTITY_ID: entity_id},
+            ButtonService.PRESS,
+            {CommonServiceArgument.ENTITY_ID: entity_id},
             blocking=True,
         )
     assert excinfo.value.translation_key == "set_failed"

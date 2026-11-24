@@ -311,6 +311,7 @@ homeassistant.components.homewizard.*
 homeassistant.components.homeworks.*
 homeassistant.components.hortimax.*
 homeassistant.components.hotspring.*
+homeassistant.components.hp_printer.*
 homeassistant.components.hr_energy_qube.*
 homeassistant.components.http.*
 homeassistant.components.huawei_lte.*
@@ -342,6 +343,7 @@ homeassistant.components.integration.*
 homeassistant.components.intelliclima.*
 homeassistant.components.intent.*
 homeassistant.components.intent_script.*
+homeassistant.components.intesis_modbus.*
 homeassistant.components.ios.*
 homeassistant.components.iotty.*
 homeassistant.components.ipp.*
@@ -689,12 +691,14 @@ homeassistant.components.vivotek.*
 homeassistant.components.vizio.*
 homeassistant.components.vlc_telnet.*
 homeassistant.components.vodafone_station.*
+homeassistant.components.voice_support.*
 homeassistant.components.volvo.*
 homeassistant.components.wake_on_lan.*
 homeassistant.components.wake_word.*
 homeassistant.components.wallbox.*
 homeassistant.components.waqi.*
 homeassistant.components.water_heater.*
+homeassistant.components.watergate.*
 homeassistant.components.watts.*
 homeassistant.components.watttime.*
 homeassistant.components.wattwaechter.*

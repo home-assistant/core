@@ -9,8 +9,8 @@ from pyblu.errors import (
 )
 import pytest
 
-from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
-from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, ButtonService
+from homeassistant.const import CommonServiceArgument
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 
@@ -26,8 +26,8 @@ async def test_set_sleep_timer(
     """Test the media player volume set."""
     await hass.services.async_call(
         BUTTON_DOMAIN,
-        SERVICE_PRESS,
-        {ATTR_ENTITY_ID: "button.player_name1111_set_sleep_timer"},
+        ButtonService.PRESS,
+        {CommonServiceArgument.ENTITY_ID: "button.player_name1111_set_sleep_timer"},
         blocking=True,
     )
 
@@ -45,8 +45,8 @@ async def test_clear_sleep_timer(
 
     await hass.services.async_call(
         BUTTON_DOMAIN,
-        SERVICE_PRESS,
-        {ATTR_ENTITY_ID: "button.player_name1111_clear_sleep_timer"},
+        ButtonService.PRESS,
+        {CommonServiceArgument.ENTITY_ID: "button.player_name1111_clear_sleep_timer"},
         blocking=True,
     )
 
@@ -89,7 +89,7 @@ async def test_press_error(
     with pytest.raises(HomeAssistantError, match=message):
         await hass.services.async_call(
             BUTTON_DOMAIN,
-            SERVICE_PRESS,
-            {ATTR_ENTITY_ID: entity_id},
+            ButtonService.PRESS,
+            {CommonServiceArgument.ENTITY_ID: entity_id},
             blocking=True,
         )

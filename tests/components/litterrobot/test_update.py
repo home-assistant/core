@@ -12,15 +12,15 @@ from homeassistant.components.update import (
     ATTR_LATEST_VERSION,
     ATTR_RELEASE_URL,
     DOMAIN as UPDATE_DOMAIN,
-    SERVICE_INSTALL,
     UpdateDeviceClass,
+    UpdateService,
 )
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
-    ATTR_ENTITY_ID,
     STATE_OFF,
     STATE_ON,
     STATE_UNKNOWN,
+    CommonServiceArgument,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -79,8 +79,8 @@ async def test_robot_with_update(
     with pytest.raises(HomeAssistantError, match="Unable to start firmware update"):
         await hass.services.async_call(
             UPDATE_DOMAIN,
-            SERVICE_INSTALL,
-            {ATTR_ENTITY_ID: ENTITY_ID},
+            UpdateService.INSTALL,
+            {CommonServiceArgument.ENTITY_ID: ENTITY_ID},
             blocking=True,
         )
     await hass.async_block_till_done()
@@ -88,7 +88,10 @@ async def test_robot_with_update(
 
     robot.update_firmware = AsyncMock(return_value=True)
     await hass.services.async_call(
-        UPDATE_DOMAIN, SERVICE_INSTALL, {ATTR_ENTITY_ID: ENTITY_ID}, blocking=True
+        UPDATE_DOMAIN,
+        UpdateService.INSTALL,
+        {CommonServiceArgument.ENTITY_ID: ENTITY_ID},
+        blocking=True,
     )
     await hass.async_block_till_done()
     assert robot.update_firmware.call_count == 1
@@ -134,7 +137,7 @@ async def test_update_command_exception(
     with pytest.raises(HomeAssistantError, match="Invalid command: oops"):
         await hass.services.async_call(
             UPDATE_DOMAIN,
-            SERVICE_INSTALL,
-            {ATTR_ENTITY_ID: ENTITY_ID},
+            UpdateService.INSTALL,
+            {CommonServiceArgument.ENTITY_ID: ENTITY_ID},
             blocking=True,
         )

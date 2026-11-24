@@ -62,7 +62,7 @@ class DemoImage(ImageEntity):
         self._image_filename = image
 
     @override
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Set the update time."""
         self._attr_image_last_updated = dt_util.utcnow()
 

@@ -36,7 +36,7 @@ from homeassistant.components.roku.const import (
     DEFAULT_PLAY_MEDIA_APP_ID,
     DOMAIN,
 )
-from homeassistant.components.roku.services import ATTR_KEYWORD, SERVICE_SEARCH
+from homeassistant.components.roku.services import RokuService, RokuServiceArgument
 from homeassistant.components.stream import FORMAT_CONTENT_TYPE, HLS_PROVIDER
 from homeassistant.components.websocket_api import TYPE_RESULT
 from homeassistant.const import (
@@ -1084,8 +1084,8 @@ async def test_integration_services(
     """Test integration services."""
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_SEARCH,
-        {ATTR_ENTITY_ID: MAIN_ENTITY_ID, ATTR_KEYWORD: "Space Jam"},
+        RokuService.SEARCH,
+        {ATTR_ENTITY_ID: MAIN_ENTITY_ID, RokuServiceArgument.KEYWORD: "Space Jam"},
         blocking=True,
     )
     mock_roku.search.assert_called_once_with("Space Jam")

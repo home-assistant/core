@@ -7,9 +7,9 @@ from nexia.const import HOLD_PERMANENT, OPERATION_MODE_COOL
 from nexia.home import NexiaHome
 import pytest
 
-from homeassistant.components.climate import ATTR_HVAC_MODE, HVACMode
-from homeassistant.components.nexia.const import ATTR_RUN_MODE, DOMAIN
-from homeassistant.components.nexia.services import SERVICE_SET_HVAC_RUN_MODE
+from homeassistant.components.climate import HVACMode
+from homeassistant.components.nexia.const import DOMAIN
+from homeassistant.components.nexia.services import NexiaService, NexiaServiceArgument
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
 
@@ -91,15 +91,20 @@ async def test_climate_zones(hass: HomeAssistant, patch_nexia_home: NexiaHome) -
 @pytest.mark.parametrize(
     ("service_data", "expected_hold_calls", "expected_set_mode_calls"),
     [
-        pytest.param({ATTR_RUN_MODE: HOLD_PERMANENT}, 1, [], id="run_mode_only"),
         pytest.param(
-            {ATTR_HVAC_MODE: HVACMode.COOL},
+            {NexiaServiceArgument.RUN_MODE: HOLD_PERMANENT}, 1, [], id="run_mode_only"
+        ),
+        pytest.param(
+            {NexiaServiceArgument.HVAC_MODE: HVACMode.COOL},
             0,
             [call(mode=OPERATION_MODE_COOL)],
             id="hvac_mode_only",
         ),
         pytest.param(
-            {ATTR_RUN_MODE: HOLD_PERMANENT, ATTR_HVAC_MODE: HVACMode.COOL},
+            {
+                NexiaServiceArgument.RUN_MODE: HOLD_PERMANENT,
+                NexiaServiceArgument.HVAC_MODE: HVACMode.COOL,
+            },
             1,
             [call(mode=OPERATION_MODE_COOL)],
             id="both",
@@ -119,7 +124,7 @@ async def test_set_hvac_run_mode(
 
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_SET_HVAC_RUN_MODE,
+        NexiaService.SET_HVAC_RUN_MODE,
         {ATTR_ENTITY_ID: ENTITY_ID, **service_data},
         blocking=True,
     )

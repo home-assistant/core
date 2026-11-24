@@ -28,6 +28,7 @@ from homeassistant.util import slugify
 from .const import (
     API_VERSION,
     APP_DESC,
+    CONNECTION_IP_SENSORS_KEYS,
     CONNECTION_SENSORS_KEYS,
     DOMAIN,
     HOME_COMPATIBLE_CATEGORIES,
@@ -83,6 +84,24 @@ def is_invalid_token_error(error: Exception) -> bool:
         (matcher := re.search(r"\(APIResponse: (.+)\)$", str(error)))
         and is_json(json_str := matcher.group(1))
         and json.loads(json_str).get("error_code") == "invalid_token"
+    )
+
+
+def is_home_unsupported_error(error: HttpRequestError) -> bool:
+    """Return whether the Freebox Home API reports an unavailable endpoint."""
+    match = re.search(r"\(APIResponse: (.+)\)$", str(error))
+    if not match:
+        return False
+
+    try:
+        response = json.loads(match.group(1))
+    except ValueError, TypeError:
+        return False
+
+    return (
+        isinstance(response, dict)
+        and response.get("error_code") == "invalid_request"
+        and re.search(r"\b404\b", str(response.get("msg", ""))) is not None
     )
 
 
@@ -165,7 +184,7 @@ class FreeboxRouter:
         self.sensors_temperature_names: dict[str, str] = {}
         self.sensors_fan: dict[str, int] = {}
         self.sensors_fan_names: dict[str, str] = {}
-        self.sensors_connection: dict[str, float] = {}
+        self.sensors_connection: dict[str, float | str | None] = {}
         self.call_list: list[dict[str, Any]] = []
         self.home_granted = True
         self.home_devices: dict[str, Any] = {}
@@ -239,6 +258,8 @@ class FreeboxRouter:
         connection_datas: dict[str, Any] = await self._api.connection.get_status()
         for sensor_key in CONNECTION_SENSORS_KEYS:
             self.sensors_connection[sensor_key] = connection_datas[sensor_key]
+        for sensor_key in CONNECTION_IP_SENSORS_KEYS:
+            self.sensors_connection[sensor_key] = connection_datas.get(sensor_key)
 
         self._attrs = {
             "IPv4": connection_datas.get("ipv4"),
@@ -297,9 +318,12 @@ class FreeboxRouter:
 
         try:
             home_nodes: list[Any] = await self.home.get_home_nodes() or []
-        except HttpRequestError:
+        except HttpRequestError as err:
             self.home_granted = False
-            _LOGGER.warning("Home access is not granted")
+            if is_home_unsupported_error(err):
+                _LOGGER.debug("Freebox Home API endpoint is unavailable: %s", err)
+            else:
+                _LOGGER.warning("Freebox Home API request failed: %s", err)
             return
 
         new_device = False

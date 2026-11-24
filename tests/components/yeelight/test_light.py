@@ -47,7 +47,6 @@ from homeassistant.components.light import (
 )
 from homeassistant.components.yeelight.const import (
     ATTR_COUNT,
-    ATTR_MODE_MUSIC,
     ATTR_TRANSITIONS,
     CONF_CUSTOM_EFFECTS,
     CONF_FLOW_PARAMS,
@@ -85,25 +84,17 @@ from homeassistant.components.yeelight.light import (
     YEELIGHT_COLOR_EFFECT_LIST,
 )
 from homeassistant.components.yeelight.services import (
-    ATTR_KELVIN,
-    ATTR_MINUTES,
-    SERVICE_SET_AUTO_DELAY_OFF_SCENE,
-    SERVICE_SET_COLOR_FLOW_SCENE,
-    SERVICE_SET_COLOR_SCENE,
-    SERVICE_SET_COLOR_TEMP_SCENE,
-    SERVICE_SET_HSV_SCENE,
-    SERVICE_SET_MODE,
-    SERVICE_SET_MUSIC_MODE,
-    SERVICE_START_FLOW,
+    YeelightService,
+    YeelightServiceArgument,
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
-    ATTR_MODE,
     CONF_HOST,
     CONF_NAME,
     STATE_OFF,
     STATE_ON,
     STATE_UNAVAILABLE,
+    CommonServiceArgument,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -394,29 +385,34 @@ async def test_services(hass: HomeAssistant, caplog: pytest.LogCaptureFixture) -
     # set_mode
     mode = "rgb"
     await _async_test_service(
-        SERVICE_SET_MODE,
-        {ATTR_ENTITY_ID: ENTITY_LIGHT, ATTR_MODE: "rgb"},
+        YeelightService.SET_MODE,
+        {
+            CommonServiceArgument.ENTITY_ID: ENTITY_LIGHT,
+            YeelightServiceArgument.MODE: "rgb",
+        },
         "async_set_power_mode",
         [PowerMode[mode.upper()]],
     )
 
     # start_flow
     await _async_test_service(
-        SERVICE_START_FLOW,
+        YeelightService.START_FLOW,
         {
-            ATTR_ENTITY_ID: ENTITY_LIGHT,
-            ATTR_TRANSITIONS: [{YEELIGHT_TEMPERATURE_TRANSACTION: [1900, 2000, 60]}],
+            CommonServiceArgument.ENTITY_ID: ENTITY_LIGHT,
+            YeelightServiceArgument.TRANSITIONS: [
+                {YEELIGHT_TEMPERATURE_TRANSACTION: [1900, 2000, 60]}
+            ],
         },
         "async_start_flow",
     )
 
     # set_color_scene
     await _async_test_service(
-        SERVICE_SET_COLOR_SCENE,
+        YeelightService.SET_COLOR_SCENE,
         {
-            ATTR_ENTITY_ID: ENTITY_LIGHT,
-            ATTR_RGB_COLOR: [10, 20, 30],
-            ATTR_BRIGHTNESS: 50,
+            CommonServiceArgument.ENTITY_ID: ENTITY_LIGHT,
+            YeelightServiceArgument.RGB_COLOR: [10, 20, 30],
+            YeelightServiceArgument.BRIGHTNESS: 50,
         },
         "async_set_scene",
         [SceneClass.COLOR, 10, 20, 30, 50],
@@ -424,34 +420,48 @@ async def test_services(hass: HomeAssistant, caplog: pytest.LogCaptureFixture) -
 
     # set_hsv_scene
     await _async_test_service(
-        SERVICE_SET_HSV_SCENE,
-        {ATTR_ENTITY_ID: ENTITY_LIGHT, ATTR_HS_COLOR: [180, 50], ATTR_BRIGHTNESS: 50},
+        YeelightService.SET_HSV_SCENE,
+        {
+            CommonServiceArgument.ENTITY_ID: ENTITY_LIGHT,
+            YeelightServiceArgument.HS_COLOR: [180, 50],
+            YeelightServiceArgument.BRIGHTNESS: 50,
+        },
         "async_set_scene",
         [SceneClass.HSV, 180, 50, 50],
     )
 
     # set_color_temp_scene
     await _async_test_service(
-        SERVICE_SET_COLOR_TEMP_SCENE,
-        {ATTR_ENTITY_ID: ENTITY_LIGHT, ATTR_KELVIN: 4000, ATTR_BRIGHTNESS: 50},
+        YeelightService.SET_COLOR_TEMP_SCENE,
+        {
+            CommonServiceArgument.ENTITY_ID: ENTITY_LIGHT,
+            YeelightServiceArgument.KELVIN: 4000,
+            YeelightServiceArgument.BRIGHTNESS: 50,
+        },
         "async_set_scene",
         [SceneClass.CT, 4000, 50],
     )
 
     # set_color_flow_scene
     await _async_test_service(
-        SERVICE_SET_COLOR_FLOW_SCENE,
+        YeelightService.SET_COLOR_FLOW_SCENE,
         {
-            ATTR_ENTITY_ID: ENTITY_LIGHT,
-            ATTR_TRANSITIONS: [{YEELIGHT_TEMPERATURE_TRANSACTION: [1900, 2000, 60]}],
+            CommonServiceArgument.ENTITY_ID: ENTITY_LIGHT,
+            YeelightServiceArgument.TRANSITIONS: [
+                {YEELIGHT_TEMPERATURE_TRANSACTION: [1900, 2000, 60]}
+            ],
         },
         "async_set_scene",
     )
 
     # set_auto_delay_off_scene
     await _async_test_service(
-        SERVICE_SET_AUTO_DELAY_OFF_SCENE,
-        {ATTR_ENTITY_ID: ENTITY_LIGHT, ATTR_MINUTES: 1, ATTR_BRIGHTNESS: 50},
+        YeelightService.SET_AUTO_DELAY_OFF_SCENE,
+        {
+            CommonServiceArgument.ENTITY_ID: ENTITY_LIGHT,
+            YeelightServiceArgument.MINUTES: 1,
+            YeelightServiceArgument.BRIGHTNESS: 50,
+        },
         "async_set_scene",
         [SceneClass.AUTO_DELAY_OFF, 50, 1],
     )
@@ -461,8 +471,11 @@ async def test_services(hass: HomeAssistant, caplog: pytest.LogCaptureFixture) -
     with pytest.raises(HomeAssistantError) as err:
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_SET_MUSIC_MODE,
-            {ATTR_ENTITY_ID: ENTITY_LIGHT, ATTR_MODE_MUSIC: "true"},
+            YeelightService.SET_MUSIC_MODE,
+            {
+                CommonServiceArgument.ENTITY_ID: ENTITY_LIGHT,
+                YeelightServiceArgument.MUSIC_MODE: "true",
+            },
             blocking=True,
         )
     assert mocked_bulb.async_start_music.mock_calls == [call()]
@@ -471,16 +484,22 @@ async def test_services(hass: HomeAssistant, caplog: pytest.LogCaptureFixture) -
 
     # set_music_mode disable
     await _async_test_service(
-        SERVICE_SET_MUSIC_MODE,
-        {ATTR_ENTITY_ID: ENTITY_LIGHT, ATTR_MODE_MUSIC: "false"},
+        YeelightService.SET_MUSIC_MODE,
+        {
+            CommonServiceArgument.ENTITY_ID: ENTITY_LIGHT,
+            YeelightServiceArgument.MUSIC_MODE: "false",
+        },
         "async_stop_music",
         failure_side_effect=None,
     )
 
     # set_music_mode success enable
     await _async_test_service(
-        SERVICE_SET_MUSIC_MODE,
-        {ATTR_ENTITY_ID: ENTITY_LIGHT, ATTR_MODE_MUSIC: "true"},
+        YeelightService.SET_MUSIC_MODE,
+        {
+            CommonServiceArgument.ENTITY_ID: ENTITY_LIGHT,
+            YeelightServiceArgument.MUSIC_MODE: "true",
+        },
         "async_start_music",
         failure_side_effect=None,
     )

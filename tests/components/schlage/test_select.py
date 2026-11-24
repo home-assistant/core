@@ -9,11 +9,11 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.schlage.const import DOMAIN
 from homeassistant.components.select import (
-    ATTR_OPTION,
     DOMAIN as SELECT_DOMAIN,
-    SERVICE_SELECT_OPTION,
+    SelectService,
+    SelectServiceArgument,
 )
-from homeassistant.const import ATTR_ENTITY_ID, Platform
+from homeassistant.const import CommonServiceArgument, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.translation import LOCALE_EN, async_get_translations
@@ -48,8 +48,11 @@ async def test_select(
 
     await hass.services.async_call(
         SELECT_DOMAIN,
-        SERVICE_SELECT_OPTION,
-        {ATTR_ENTITY_ID: select.entity_id, ATTR_OPTION: "30"},
+        SelectService.SELECT_OPTION,
+        {
+            CommonServiceArgument.ENTITY_ID: select.entity_id,
+            SelectServiceArgument.OPTION: "30",
+        },
         blocking=True,
     )
     mock_lock.set_auto_lock_time.assert_called_once_with(30)

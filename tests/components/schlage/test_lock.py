@@ -19,21 +19,10 @@ import pytest
 from pytest_homeassistant.common import async_fire_time_changed, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.lock import DOMAIN as LOCK_DOMAIN, LockState
-from homeassistant.components.schlage.const import (
-    DOMAIN,
-    SERVICE_ADD_CODE,
-    SERVICE_DELETE_CODE,
-    SERVICE_GET_CODES,
-    UPDATE_INTERVAL,
-)
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    SERVICE_LOCK,
-    SERVICE_UNLOCK,
-    STATE_UNAVAILABLE,
-    Platform,
-)
+from homeassistant.components.lock import DOMAIN as LOCK_DOMAIN, LockService, LockState
+from homeassistant.components.schlage.const import DOMAIN, UPDATE_INTERVAL
+from homeassistant.components.schlage.services import SchlageService
+from homeassistant.const import STATE_UNAVAILABLE, CommonServiceArgument, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er
@@ -95,8 +84,8 @@ async def test_lock_services(
     """Test lock services."""
     await hass.services.async_call(
         LOCK_DOMAIN,
-        SERVICE_LOCK,
-        service_data={ATTR_ENTITY_ID: "lock.vault_door"},
+        LockService.LOCK,
+        service_data={CommonServiceArgument.ENTITY_ID: "lock.vault_door"},
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -104,8 +93,8 @@ async def test_lock_services(
 
     await hass.services.async_call(
         LOCK_DOMAIN,
-        SERVICE_UNLOCK,
-        service_data={ATTR_ENTITY_ID: "lock.vault_door"},
+        LockService.UNLOCK,
+        service_data={CommonServiceArgument.ENTITY_ID: "lock.vault_door"},
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -153,7 +142,7 @@ async def test_add_code_service(
 
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_ADD_CODE,
+        SchlageService.ADD_CODE,
         service_data={
             "entity_id": "lock.vault_door",
             "name": "test_user",
@@ -185,7 +174,7 @@ async def test_add_code_service_integer_code(
 
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_ADD_CODE,
+        SchlageService.ADD_CODE,
         service_data={
             "entity_id": "lock.vault_door",
             "name": "test_user",
@@ -215,7 +204,7 @@ async def test_add_code_service_default_notify_on_use_value(
 
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_ADD_CODE,
+        SchlageService.ADD_CODE,
         service_data={
             "entity_id": "lock.vault_door",
             "name": "test_user",
@@ -257,7 +246,7 @@ async def test_add_code_service_invalid_code(
     with pytest.raises(probatio.Invalid):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_ADD_CODE,
+            SchlageService.ADD_CODE,
             service_data={
                 "entity_id": "lock.vault_door",
                 "name": "test_user",
@@ -287,7 +276,7 @@ async def test_add_code_service_duplicate_name(
     ) as exc_info:
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_ADD_CODE,
+            SchlageService.ADD_CODE,
             service_data={
                 "entity_id": "lock.vault_door",
                 "name": "test_user",
@@ -319,7 +308,7 @@ async def test_add_code_service_duplicate_code(
     ) as exc_info:
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_ADD_CODE,
+            SchlageService.ADD_CODE,
             service_data={
                 "entity_id": "lock.vault_door",
                 "name": "test_user",
@@ -345,7 +334,7 @@ async def test_delete_code_service(
 
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_DELETE_CODE,
+        SchlageService.DELETE_CODE,
         service_data={
             "entity_id": "lock.vault_door",
             "name": "test_user",
@@ -372,7 +361,7 @@ async def test_delete_code_service_case_insensitive(
 
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_DELETE_CODE,
+        SchlageService.DELETE_CODE,
         service_data={
             "entity_id": "lock.vault_door",
             "name": "test_user",
@@ -395,7 +384,7 @@ async def test_delete_code_service_nonexistent_code(
     # Should not raise an error, just return silently
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_DELETE_CODE,
+        SchlageService.DELETE_CODE,
         service_data={
             "entity_id": "lock.vault_door",
             "name": "nonexistent",
@@ -416,7 +405,7 @@ async def test_delete_code_service_no_access_codes(
     # Should not raise an error, just return silently
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_DELETE_CODE,
+        SchlageService.DELETE_CODE,
         service_data={
             "entity_id": "lock.vault_door",
             "name": "test_user",
@@ -447,7 +436,7 @@ async def test_get_codes_service(
 
     response = await hass.services.async_call(
         DOMAIN,
-        SERVICE_GET_CODES,
+        SchlageService.GET_CODES,
         service_data={
             "entity_id": "lock.vault_door",
         },
@@ -572,7 +561,7 @@ async def test_get_codes_service_schedule_time_values(
 
     response = await hass.services.async_call(
         DOMAIN,
-        SERVICE_GET_CODES,
+        SchlageService.GET_CODES,
         service_data={
             "entity_id": "lock.vault_door",
         },
@@ -610,7 +599,7 @@ async def test_get_codes_service_temporary_schedule(
 
     response = await hass.services.async_call(
         DOMAIN,
-        SERVICE_GET_CODES,
+        SchlageService.GET_CODES,
         service_data={
             "entity_id": "lock.vault_door",
         },
@@ -645,7 +634,7 @@ async def test_get_codes_service_no_codes(
 
     response = await hass.services.async_call(
         DOMAIN,
-        SERVICE_GET_CODES,
+        SchlageService.GET_CODES,
         service_data={
             "entity_id": "lock.vault_door",
         },
@@ -667,7 +656,7 @@ async def test_get_codes_service_empty_codes(
 
     response = await hass.services.async_call(
         DOMAIN,
-        SERVICE_GET_CODES,
+        SchlageService.GET_CODES,
         service_data={
             "entity_id": "lock.vault_door",
         },
@@ -694,7 +683,7 @@ async def test_delete_code_service_nonexistent_code_with_existing_codes(
     # Try to delete a code that doesn't exist
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_DELETE_CODE,
+        SchlageService.DELETE_CODE,
         service_data={
             "entity_id": "lock.vault_door",
             "name": "nonexistent_user",
@@ -718,7 +707,7 @@ async def test_add_code_service_refresh_error(
     with pytest.raises(HomeAssistantError) as exc_info:
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_ADD_CODE,
+            SchlageService.ADD_CODE,
             service_data={
                 "entity_id": "lock.vault_door",
                 "name": "test_user",
@@ -742,7 +731,7 @@ async def test_add_code_service_api_error(
     with pytest.raises(HomeAssistantError) as exc_info:
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_ADD_CODE,
+            SchlageService.ADD_CODE,
             service_data={
                 "entity_id": "lock.vault_door",
                 "name": "test_user",
@@ -768,7 +757,7 @@ async def test_delete_code_service_api_error(
     with pytest.raises(HomeAssistantError) as exc_info:
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_DELETE_CODE,
+            SchlageService.DELETE_CODE,
             service_data={
                 "entity_id": "lock.vault_door",
                 "name": "test_user",
@@ -789,7 +778,7 @@ async def test_get_codes_service_refresh_error(
     with pytest.raises(HomeAssistantError) as exc_info:
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_GET_CODES,
+            SchlageService.GET_CODES,
             service_data={
                 "entity_id": "lock.vault_door",
             },
@@ -810,7 +799,7 @@ async def test_add_code_service_temporary_pin(
 
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_ADD_CODE,
+        SchlageService.ADD_CODE,
         service_data={
             "entity_id": "lock.vault_door",
             "name": "temp_user",
@@ -844,7 +833,7 @@ async def test_add_code_service_validation_before_refresh(
     with pytest.raises(ServiceValidationError) as exc_info:
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_ADD_CODE,
+            SchlageService.ADD_CODE,
             service_data={
                 "entity_id": "lock.vault_door",
                 "name": "test_user",
@@ -904,7 +893,7 @@ async def test_add_code_service_invalid_datetime(
     with pytest.raises(ServiceValidationError, match=match) as exc_info:
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_ADD_CODE,
+            SchlageService.ADD_CODE,
             service_data={
                 "entity_id": "lock.vault_door",
                 "name": "test_user",
@@ -932,7 +921,7 @@ async def test_add_code_service_temporary_pin_non_utc_timezone(
 
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_ADD_CODE,
+        SchlageService.ADD_CODE,
         service_data={
             "entity_id": "lock.vault_door",
             "name": "temp_user",

@@ -2752,6 +2752,48 @@ async def test_install_from_the_catalog(
 
 
 @pytest.mark.parametrize("github_token", [None])
+async def test_repository_page_shows_the_readme_of_the_installed_version(
+    hass: HomeAssistant,
+    marketplace: MarketplaceManager,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test the README follows an update and an uninstall, as the page asks for it."""
+    repository = marketplace.repositories.get_by_full_name(REPOSITORY_INTEGRATION)
+    client = await hass_ws_client(hass)
+
+    async def readme() -> str:
+        await client.send_json_auto_id(
+            {"type": "marketplace/repository/info", "repository_id": repository.data.id}
+        )
+        response = await client.receive_json()
+        assert response["success"]
+        return response["result"]["additional_info"]
+
+    # The catalog names 1.0.0
+    assert (await _install(hass, hass_ws_client, repository.data.id))["success"]
+    assert "(1.0.0)" in await readme()
+
+    # 2.0.0 is not the version of the catalog, it comes through the GitHub API
+    await client.send_json_auto_id(
+        {
+            "type": "marketplace/repository/install",
+            "repository": repository.data.id,
+            "version": "2.0.0",
+        }
+    )
+    assert (await client.receive_json())["success"]
+    assert repository.data.installed_version == "2.0.0"
+    assert "(2.0.0)" in await readme()
+
+    await client.send_json_auto_id(
+        {"type": "marketplace/repository/uninstall", "repository": repository.data.id}
+    )
+    assert (await client.receive_json())["success"]
+    # Not installed, the page shows the README of the version the catalog names
+    assert "(1.0.0)" in await readme()
+
+
+@pytest.mark.parametrize("github_token", [None])
 @pytest.mark.parametrize("category_test_data", category_test_data_parametrized())
 async def test_install_custom_repository(
     hass: HomeAssistant,

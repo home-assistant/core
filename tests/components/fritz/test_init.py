@@ -17,9 +17,9 @@ from homeassistant.components.fritz.const import (
     FRITZ_AUTH_EXCEPTIONS,
     FRITZ_EXCEPTIONS,
 )
-from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
+from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN, SwitchService
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import ATTR_ENTITY_ID, SERVICE_TURN_OFF
+from homeassistant.const import CommonServiceArgument
 from homeassistant.core import HomeAssistant
 
 from .const import MOCK_USER_DATA
@@ -189,8 +189,8 @@ async def test_execute_action_while_shutdown(
     hass.set_state(core.CoreState.stopping)
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: "switch.mock_title_wi_fi_guest"},
+        SwitchService.TURN_OFF,
+        {CommonServiceArgument.ENTITY_ID: "switch.mock_title_wi_fi_guest"},
         blocking=True,
     )
 

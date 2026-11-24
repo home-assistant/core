@@ -1,6 +1,6 @@
 """Common fixtures for the ENGIE Belgium tests."""
 
-from collections.abc import Generator
+from collections.abc import Generator, Iterable
 from datetime import UTC, date, datetime, timedelta, timezone
 from unittest.mock import AsyncMock, MagicMock, patch
 from zoneinfo import ZoneInfo
@@ -19,6 +19,8 @@ from aioengiebelgium import (
     EpexGranularity,
     EpexPayload,
     EpexSlot,
+    MonthlyPeaks,
+    Peak,
     PricePeriod,
     PriceSlot,
     PricesResponse,
@@ -37,6 +39,7 @@ from homeassistant.components.engie_be.const import (
 )
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_EMAIL
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 from homeassistant.util import dt as dt_util
 
 BRUSSELS_TIME_ZONE = ZoneInfo("Europe/Brussels")
@@ -249,6 +252,45 @@ def build_epex_payload_with_partial_tomorrow(
     return build_epex_payload(start, end, granularity)
 
 
+def build_peak(
+    start: datetime, *, power_kw: float = 4.2, energy_kwh: float = 1.05
+) -> Peak:
+    """Build a 15-minute capacity tariff peak starting at the given moment."""
+    return Peak(
+        peak_kw=power_kw,
+        peak_kwh=energy_kwh,
+        start=start,
+        end=start + timedelta(minutes=15),
+    )
+
+
+def build_monthly_peaks(
+    year: int,
+    month: int,
+    *,
+    peak: Peak | None = None,
+    daily_peaks: tuple[Peak, ...] = (),
+    previous_peak: Peak | None = None,
+) -> MonthlyPeaks:
+    """Build a monthly peaks response for the given month."""
+    return MonthlyPeaks(
+        year=year,
+        month=month,
+        peak_of_the_month=peak,
+        daily_peaks=daily_peaks,
+        previous_peak_of_the_month=previous_peak,
+    )
+
+
+def build_monthly_peaks_for_request(
+    ban: str, year: int, month: int, *, day: int | None = None
+) -> MonthlyPeaks:
+    """Build a peaks response with one peak on the 15th of the requested month."""
+    start = datetime(year, month, 15, 18, 0, tzinfo=BRUSSELS_TIME_ZONE)
+    peak = build_peak(start, power_kw=4.2, energy_kwh=1.05)
+    return build_monthly_peaks(year, month, peak=peak, daily_peaks=(peak,))
+
+
 @pytest.fixture
 def mock_config_entry() -> MockConfigEntry:
     """Return a mock config entry."""
@@ -283,6 +325,7 @@ def mock_engie_client(mock_auth_flow: MagicMock) -> Generator[MagicMock]:
         client.async_get_service_point.side_effect = build_service_point
         client.async_get_energy_contracts.return_value = build_contracts()
         client.async_get_epex_prices.side_effect = build_epex_payload
+        client.async_get_monthly_peaks.side_effect = build_monthly_peaks_for_request
         client.async_start_authentication.return_value = mock_auth_flow
         yield mock_client_class
 
@@ -310,6 +353,13 @@ def mock_setup_entry() -> Generator[AsyncMock]:
 def frozen_afternoon(freezer: FrozenDateTimeFactory) -> None:
     """Freeze time on a Brussels Saturday afternoon."""
     freezer.move_to(datetime(2026, 10, 3, 14, 0, tzinfo=BRUSSELS_TIME_ZONE))
+
+
+def without_capacity_tariff(
+    entries: Iterable[er.RegistryEntry],
+) -> list[er.RegistryEntry]:
+    """Return the given registry entries excluding the capacity tariff peak sensors."""
+    return [entry for entry in entries if "_capacity_tariff_" not in entry.unique_id]
 
 
 async def setup_entry(hass: HomeAssistant, mock_config_entry: MockConfigEntry) -> None:

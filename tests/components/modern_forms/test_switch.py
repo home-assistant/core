@@ -7,14 +7,8 @@ import pytest
 from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 
 from homeassistant.components.modern_forms.const import DOMAIN
-from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
-    STATE_OFF,
-    STATE_UNAVAILABLE,
-)
+from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN, SwitchService
+from homeassistant.const import STATE_OFF, STATE_UNAVAILABLE, CommonServiceArgument
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
@@ -57,8 +51,8 @@ async def test_switch_change_state(
     with patch("aiomodernforms.ModernFormsDevice.away") as away_mock:
         await hass.services.async_call(
             SWITCH_DOMAIN,
-            SERVICE_TURN_ON,
-            {ATTR_ENTITY_ID: "switch.modernformsfan_away_mode"},
+            SwitchService.TURN_ON,
+            {CommonServiceArgument.ENTITY_ID: "switch.modernformsfan_away_mode"},
             blocking=True,
         )
         await hass.async_block_till_done()
@@ -67,8 +61,8 @@ async def test_switch_change_state(
     with patch("aiomodernforms.ModernFormsDevice.away") as away_mock:
         await hass.services.async_call(
             SWITCH_DOMAIN,
-            SERVICE_TURN_OFF,
-            {ATTR_ENTITY_ID: "switch.modernformsfan_away_mode"},
+            SwitchService.TURN_OFF,
+            {CommonServiceArgument.ENTITY_ID: "switch.modernformsfan_away_mode"},
             blocking=True,
         )
         await hass.async_block_till_done()
@@ -80,8 +74,10 @@ async def test_switch_change_state(
     ) as adaptive_learning_mock:
         await hass.services.async_call(
             SWITCH_DOMAIN,
-            SERVICE_TURN_ON,
-            {ATTR_ENTITY_ID: "switch.modernformsfan_adaptive_learning"},
+            SwitchService.TURN_ON,
+            {
+                CommonServiceArgument.ENTITY_ID: "switch.modernformsfan_adaptive_learning"
+            },
             blocking=True,
         )
         await hass.async_block_till_done()
@@ -92,8 +88,10 @@ async def test_switch_change_state(
     ) as adaptive_learning_mock:
         await hass.services.async_call(
             SWITCH_DOMAIN,
-            SERVICE_TURN_OFF,
-            {ATTR_ENTITY_ID: "switch.modernformsfan_adaptive_learning"},
+            SwitchService.TURN_OFF,
+            {
+                CommonServiceArgument.ENTITY_ID: "switch.modernformsfan_adaptive_learning"
+            },
             blocking=True,
         )
         await hass.async_block_till_done()
@@ -118,8 +116,8 @@ async def test_switch_error(
     ):
         await hass.services.async_call(
             SWITCH_DOMAIN,
-            SERVICE_TURN_ON,
-            {ATTR_ENTITY_ID: "switch.modernformsfan_away_mode"},
+            SwitchService.TURN_ON,
+            {CommonServiceArgument.ENTITY_ID: "switch.modernformsfan_away_mode"},
             blocking=True,
         )
 
@@ -145,8 +143,8 @@ async def test_switch_connection_error(
     ):
         await hass.services.async_call(
             SWITCH_DOMAIN,
-            SERVICE_TURN_ON,
-            {ATTR_ENTITY_ID: "switch.modernformsfan_away_mode"},
+            SwitchService.TURN_ON,
+            {CommonServiceArgument.ENTITY_ID: "switch.modernformsfan_away_mode"},
             blocking=True,
         )
 

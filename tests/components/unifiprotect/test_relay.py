@@ -19,16 +19,14 @@ from uiprotect.data import (
 from uiprotect.exceptions import ClientError, NotAuthorized
 from uiprotect.websocket import WebsocketState
 
-from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
+from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN, SwitchService
 from homeassistant.components.unifiprotect.const import DOMAIN
 from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
     STATE_OFF,
     STATE_ON,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
+    CommonServiceArgument,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -655,8 +653,8 @@ async def test_relay_readopted_with_new_id(
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: SWITCH_ENTITY_ID},
+        SwitchService.TURN_OFF,
+        {CommonServiceArgument.ENTITY_ID: SWITCH_ENTITY_ID},
         blocking=True,
     )
     readopted.activate_output.assert_awaited_once_with(OUTPUT_ID, state="off")
@@ -684,8 +682,8 @@ async def test_relay_readopted_during_websocket_outage(
     assert _state(hass, SWITCH_ENTITY_ID) == STATE_ON
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: SWITCH_ENTITY_ID},
+        SwitchService.TURN_OFF,
+        {CommonServiceArgument.ENTITY_ID: SWITCH_ENTITY_ID},
         blocking=True,
     )
     readopted.activate_output.assert_awaited_once_with(OUTPUT_ID, state="off")
@@ -736,8 +734,8 @@ async def test_relay_switch_turn_on_off(
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: SWITCH_ENTITY_ID},
+        SwitchService.TURN_ON,
+        {CommonServiceArgument.ENTITY_ID: SWITCH_ENTITY_ID},
         blocking=True,
     )
     relay.activate_output.assert_awaited_once_with(output_id, state="on")
@@ -745,8 +743,8 @@ async def test_relay_switch_turn_on_off(
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: SWITCH_ENTITY_ID},
+        SwitchService.TURN_OFF,
+        {CommonServiceArgument.ENTITY_ID: SWITCH_ENTITY_ID},
         blocking=True,
     )
     relay.activate_output.assert_awaited_once_with(output_id, state="off")
@@ -772,8 +770,8 @@ async def test_relay_switch_command_error_raises(
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             SWITCH_DOMAIN,
-            SERVICE_TURN_ON,
-            {ATTR_ENTITY_ID: SWITCH_ENTITY_ID},
+            SwitchService.TURN_ON,
+            {CommonServiceArgument.ENTITY_ID: SWITCH_ENTITY_ID},
             blocking=True,
         )
 
@@ -807,8 +805,8 @@ async def test_relay_switch_command_without_output_raises(
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             SWITCH_DOMAIN,
-            SERVICE_TURN_ON,
-            {ATTR_ENTITY_ID: SWITCH_ENTITY_ID},
+            SwitchService.TURN_ON,
+            {CommonServiceArgument.ENTITY_ID: SWITCH_ENTITY_ID},
             blocking=True,
         )
     relay.activate_output.assert_not_awaited()
@@ -936,8 +934,8 @@ async def test_relay_switch_public_only(
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: SWITCH_ENTITY_ID},
+        SwitchService.TURN_OFF,
+        {CommonServiceArgument.ENTITY_ID: SWITCH_ENTITY_ID},
         blocking=True,
     )
     relay.activate_output.assert_awaited_once_with(OUTPUT_ID, state="off")

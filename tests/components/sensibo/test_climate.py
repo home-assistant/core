@@ -27,38 +27,20 @@ from homeassistant.components.climate import (
 from homeassistant.components.sensibo.climate import _find_valid_target_temp
 from homeassistant.components.sensibo.const import DOMAIN
 from homeassistant.components.sensibo.services import (
-    ATTR_AC_INTEGRATION,
-    ATTR_GEO_INTEGRATION,
-    ATTR_HIGH_TEMPERATURE_STATE,
-    ATTR_HIGH_TEMPERATURE_THRESHOLD,
-    ATTR_HORIZONTAL_SWING_MODE,
-    ATTR_INDOOR_INTEGRATION,
-    ATTR_LIGHT,
-    ATTR_LOW_TEMPERATURE_STATE,
-    ATTR_LOW_TEMPERATURE_THRESHOLD,
-    ATTR_MINUTES,
-    ATTR_OUTDOOR_INTEGRATION,
-    ATTR_SENSITIVITY,
-    ATTR_SMART_TYPE,
-    ATTR_TARGET_TEMPERATURE,
-    SERVICE_ASSUME_STATE,
-    SERVICE_ENABLE_CLIMATE_REACT,
-    SERVICE_ENABLE_PURE_BOOST,
-    SERVICE_ENABLE_TIMER,
-    SERVICE_FULL_STATE,
-    SERVICE_GET_DEVICE_CAPABILITIES,
+    SensiboService,
+    SensiboServiceArgument,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_MODE,
-    ATTR_STATE,
     ATTR_TEMPERATURE,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
     STATE_OFF,
     STATE_ON,
     STATE_UNKNOWN,
+    CommonServiceArgument,
     Platform,
 )
 from homeassistant.core import HomeAssistant
@@ -692,8 +674,11 @@ async def test_climate_assumed_state(
 
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_ASSUME_STATE,
-        {ATTR_ENTITY_ID: state.entity_id, ATTR_STATE: "off"},
+        SensiboService.ASSUME_STATE,
+        {
+            CommonServiceArgument.ENTITY_ID: state.entity_id,
+            SensiboServiceArgument.STATE: "off",
+        },
         blocking=True,
     )
 
@@ -756,9 +741,9 @@ async def test_climate_set_timer(
     with pytest.raises(MultipleInvalid):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_ENABLE_TIMER,
+            SensiboService.ENABLE_TIMER,
             {
-                ATTR_ENTITY_ID: state.entity_id,
+                CommonServiceArgument.ENTITY_ID: state.entity_id,
             },
             blocking=True,
         )
@@ -766,10 +751,10 @@ async def test_climate_set_timer(
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_ENABLE_TIMER,
+            SensiboService.ENABLE_TIMER,
             {
-                ATTR_ENTITY_ID: state.entity_id,
-                ATTR_MINUTES: 30,
+                CommonServiceArgument.ENTITY_ID: state.entity_id,
+                SensiboServiceArgument.MINUTES: 30,
             },
             blocking=True,
         )
@@ -781,10 +766,10 @@ async def test_climate_set_timer(
 
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_ENABLE_TIMER,
+        SensiboService.ENABLE_TIMER,
         {
-            ATTR_ENTITY_ID: state.entity_id,
-            ATTR_MINUTES: 30,
+            CommonServiceArgument.ENTITY_ID: state.entity_id,
+            SensiboServiceArgument.MINUTES: 30,
         },
         blocking=True,
     )
@@ -832,12 +817,12 @@ async def test_climate_pure_boost(
     ):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_ENABLE_PURE_BOOST,
+            SensiboService.ENABLE_PURE_BOOST,
             {
-                ATTR_ENTITY_ID: state.entity_id,
-                ATTR_INDOOR_INTEGRATION: True,
-                ATTR_OUTDOOR_INTEGRATION: True,
-                ATTR_SENSITIVITY: "sensitive",
+                CommonServiceArgument.ENTITY_ID: state.entity_id,
+                SensiboServiceArgument.INDOOR_INTEGRATION: True,
+                SensiboServiceArgument.OUTDOOR_INTEGRATION: True,
+                SensiboServiceArgument.SENSITIVITY: "sensitive",
             },
             blocking=True,
         )
@@ -856,14 +841,14 @@ async def test_climate_pure_boost(
 
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_ENABLE_PURE_BOOST,
+        SensiboService.ENABLE_PURE_BOOST,
         {
-            ATTR_ENTITY_ID: state.entity_id,
-            ATTR_AC_INTEGRATION: False,
-            ATTR_GEO_INTEGRATION: False,
-            ATTR_INDOOR_INTEGRATION: True,
-            ATTR_OUTDOOR_INTEGRATION: True,
-            ATTR_SENSITIVITY: "sensitive",
+            CommonServiceArgument.ENTITY_ID: state.entity_id,
+            SensiboServiceArgument.AC_INTEGRATION: False,
+            SensiboServiceArgument.GEO_INTEGRATION: False,
+            SensiboServiceArgument.INDOOR_INTEGRATION: True,
+            SensiboServiceArgument.OUTDOOR_INTEGRATION: True,
+            SensiboServiceArgument.SENSITIVITY: "sensitive",
         },
         blocking=True,
     )
@@ -921,12 +906,12 @@ async def test_climate_climate_react(
     ):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_ENABLE_PURE_BOOST,
+            SensiboService.ENABLE_PURE_BOOST,
             {
-                ATTR_ENTITY_ID: state_climate.entity_id,
-                ATTR_LOW_TEMPERATURE_THRESHOLD: 0.2,
-                ATTR_HIGH_TEMPERATURE_THRESHOLD: 30.3,
-                ATTR_SMART_TYPE: "temperature",
+                CommonServiceArgument.ENTITY_ID: state_climate.entity_id,
+                SensiboServiceArgument.LOW_TEMPERATURE_THRESHOLD: 0.2,
+                SensiboServiceArgument.HIGH_TEMPERATURE_THRESHOLD: 30.3,
+                SensiboServiceArgument.SMART_TYPE: "temperature",
             },
             blocking=True,
         )
@@ -964,12 +949,12 @@ async def test_climate_climate_react(
 
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_ENABLE_CLIMATE_REACT,
+        SensiboService.ENABLE_CLIMATE_REACT,
         {
-            ATTR_ENTITY_ID: state_climate.entity_id,
-            ATTR_LOW_TEMPERATURE_THRESHOLD: 5.5,
-            ATTR_HIGH_TEMPERATURE_THRESHOLD: 30.5,
-            ATTR_LOW_TEMPERATURE_STATE: {
+            CommonServiceArgument.ENTITY_ID: state_climate.entity_id,
+            SensiboServiceArgument.LOW_TEMPERATURE_THRESHOLD: 5.5,
+            SensiboServiceArgument.HIGH_TEMPERATURE_THRESHOLD: 30.5,
+            SensiboServiceArgument.LOW_TEMPERATURE_STATE: {
                 "on": True,
                 "targetTemperature": 25,
                 "temperatureUnit": "C",
@@ -979,7 +964,7 @@ async def test_climate_climate_react(
                 "horizontalSwing": "stopped",
                 "light": "on",
             },
-            ATTR_HIGH_TEMPERATURE_STATE: {
+            SensiboServiceArgument.HIGH_TEMPERATURE_STATE: {
                 "on": True,
                 "targetTemperature": 15,
                 "temperatureUnit": "C",
@@ -989,7 +974,7 @@ async def test_climate_climate_react(
                 "horizontalSwing": "stopped",
                 "light": "on",
             },
-            ATTR_SMART_TYPE: "feelslike",
+            SensiboServiceArgument.SMART_TYPE: "feelslike",
         },
         blocking=True,
     )
@@ -1100,12 +1085,12 @@ async def test_climate_climate_react_fahrenheit(
 
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_ENABLE_CLIMATE_REACT,
+        SensiboService.ENABLE_CLIMATE_REACT,
         {
-            ATTR_ENTITY_ID: state.entity_id,
-            ATTR_LOW_TEMPERATURE_THRESHOLD: 32.0,
-            ATTR_HIGH_TEMPERATURE_THRESHOLD: 77.0,
-            ATTR_LOW_TEMPERATURE_STATE: {
+            CommonServiceArgument.ENTITY_ID: state.entity_id,
+            SensiboServiceArgument.LOW_TEMPERATURE_THRESHOLD: 32.0,
+            SensiboServiceArgument.HIGH_TEMPERATURE_THRESHOLD: 77.0,
+            SensiboServiceArgument.LOW_TEMPERATURE_STATE: {
                 "on": True,
                 "targetTemperature": 85,
                 "temperatureUnit": "F",
@@ -1115,7 +1100,7 @@ async def test_climate_climate_react_fahrenheit(
                 "horizontalSwing": "stopped",
                 "light": "on",
             },
-            ATTR_HIGH_TEMPERATURE_STATE: {
+            SensiboServiceArgument.HIGH_TEMPERATURE_STATE: {
                 "on": True,
                 "targetTemperature": 65,
                 "temperatureUnit": "F",
@@ -1125,7 +1110,7 @@ async def test_climate_climate_react_fahrenheit(
                 "horizontalSwing": "stopped",
                 "light": "on",
             },
-            ATTR_SMART_TYPE: "temperature",
+            SensiboServiceArgument.SMART_TYPE: "temperature",
         },
         blocking=True,
     )
@@ -1209,10 +1194,10 @@ async def test_climate_full_ac_state(
     ):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_FULL_STATE,
+            SensiboService.FULL_STATE,
             {
-                ATTR_ENTITY_ID: state.entity_id,
-                ATTR_TARGET_TEMPERATURE: 22,
+                CommonServiceArgument.ENTITY_ID: state.entity_id,
+                SensiboServiceArgument.TARGET_TEMPERATURE: 22,
             },
             blocking=True,
         )
@@ -1221,15 +1206,15 @@ async def test_climate_full_ac_state(
 
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_FULL_STATE,
+        SensiboService.FULL_STATE,
         {
-            ATTR_ENTITY_ID: state.entity_id,
-            ATTR_MODE: "cool",
-            ATTR_TARGET_TEMPERATURE: 22,
-            ATTR_FAN_MODE: "high",
-            ATTR_SWING_MODE: "stopped",
-            ATTR_HORIZONTAL_SWING_MODE: "stopped",
-            ATTR_LIGHT: "on",
+            CommonServiceArgument.ENTITY_ID: state.entity_id,
+            SensiboServiceArgument.MODE: "cool",
+            SensiboServiceArgument.TARGET_TEMPERATURE: 22,
+            SensiboServiceArgument.FAN_MODE: "high",
+            SensiboServiceArgument.SWING_MODE: "stopped",
+            SensiboServiceArgument.HORIZONTAL_SWING_MODE: "stopped",
+            SensiboServiceArgument.LIGHT: "on",
         },
         blocking=True,
     )
@@ -1273,7 +1258,7 @@ async def test_climate_full_ac_state_keeps_device_data(
     service_data = {
         ATTR_ENTITY_ID: "climate.hallway_hallway",
         ATTR_MODE: "cool",
-        ATTR_TARGET_TEMPERATURE: 22,
+        SensiboServiceArgument.TARGET_TEMPERATURE: 22,
     }
     expected_payload = {
         "on": True,
@@ -1290,7 +1275,7 @@ async def test_climate_full_ac_state_keeps_device_data(
     mock_client.async_set_ac_states.return_value = {"result": {"status": "Failed"}}
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
-            DOMAIN, SERVICE_FULL_STATE, service_data, blocking=True
+            DOMAIN, SensiboService.FULL_STATE, service_data, blocking=True
         )
 
     assert ac_states == original_ac_states
@@ -1301,7 +1286,7 @@ async def test_climate_full_ac_state_keeps_device_data(
     mock_client.async_set_ac_states.reset_mock()
     mock_client.async_set_ac_states.return_value = {"result": {"status": "Success"}}
     await hass.services.async_call(
-        DOMAIN, SERVICE_FULL_STATE, service_data, blocking=True
+        DOMAIN, SensiboService.FULL_STATE, service_data, blocking=True
     )
 
     mock_client.async_set_ac_states.assert_called_once_with(
@@ -1357,8 +1342,11 @@ async def test_climate_get_device_capabilities(
 
     response = await hass.services.async_call(
         DOMAIN,
-        SERVICE_GET_DEVICE_CAPABILITIES,
-        {ATTR_ENTITY_ID: "climate.hallway_hallway", ATTR_HVAC_MODE: "heat"},
+        SensiboService.GET_DEVICE_CAPABILITIES,
+        {
+            CommonServiceArgument.ENTITY_ID: "climate.hallway_hallway",
+            SensiboServiceArgument.HVAC_MODE: "heat",
+        },
         blocking=True,
         return_response=True,
     )
@@ -1369,8 +1357,11 @@ async def test_climate_get_device_capabilities(
     ):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_GET_DEVICE_CAPABILITIES,
-            {ATTR_ENTITY_ID: "climate.hallway_hallway", ATTR_HVAC_MODE: "heat_cool"},
+            SensiboService.GET_DEVICE_CAPABILITIES,
+            {
+                CommonServiceArgument.ENTITY_ID: "climate.hallway_hallway",
+                SensiboServiceArgument.HVAC_MODE: "heat_cool",
+            },
             blocking=True,
             return_response=True,
         )

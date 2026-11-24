@@ -5,12 +5,8 @@ from unittest.mock import MagicMock, patch
 from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.huawei_lte.const import DOMAIN
-from homeassistant.components.switch import (
-    DOMAIN as SWITCH_DOMAIN,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
-)
-from homeassistant.const import ATTR_ENTITY_ID, CONF_URL, STATE_OFF, STATE_ON
+from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN, SwitchService
+from homeassistant.const import CONF_URL, STATE_OFF, STATE_ON, CommonServiceArgument
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -74,8 +70,8 @@ async def test_turn_on_switch_wifi_guest_network(hass: HomeAssistant) -> None:
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: SWITCH_WIFI_GUEST_NETWORK},
+        SwitchService.TURN_ON,
+        {CommonServiceArgument.ENTITY_ID: SWITCH_WIFI_GUEST_NETWORK},
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -100,8 +96,8 @@ async def test_turn_off_switch_wifi_guest_network(hass: HomeAssistant) -> None:
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: SWITCH_WIFI_GUEST_NETWORK},
+        SwitchService.TURN_OFF,
+        {CommonServiceArgument.ENTITY_ID: SWITCH_WIFI_GUEST_NETWORK},
         blocking=True,
     )
     await hass.async_block_till_done()
