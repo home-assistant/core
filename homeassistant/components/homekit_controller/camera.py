@@ -1,5 +1,6 @@
 """Support for Homekit cameras."""
 
+import logging
 from typing import override
 
 from aiohomekit.model import Accessory, Transport
@@ -14,6 +15,7 @@ from homeassistant.components.camera import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import ConfigType
 
@@ -24,6 +26,13 @@ from .entity import AccessoryEntity
 DEFAULT_IMAGE_WIDTH = 640
 DEFAULT_IMAGE_HEIGHT = 480
 
+_LOGGER = logging.getLogger(__name__)
+
+
+def _address(entry: ConfigEntry) -> tuple[str | None, int | None]:
+    """Return the accessory's address, which discovery keeps up to date."""
+    return entry.data.get("AccessoryIP"), entry.data.get("AccessoryPort")
+
 
 class HomeKitCamera(AccessoryEntity, Camera):
     """Representation of a Homekit camera."""
@@ -33,6 +42,7 @@ class HomeKitCamera(AccessoryEntity, Camera):
     def __init__(self, accessory: HKDevice, devinfo: ConfigType) -> None:
         """Initialise the camera."""
         super().__init__(accessory, devinfo)
+        self._address = _address(accessory.config_entry)
         # go2rtc's homekit:// source streams from IP accessories with aid 1
         if accessory.pairing.transport is Transport.IP and self._aid == 1:
             self._attr_supported_features = CameraEntityFeature.STREAM
@@ -43,6 +53,37 @@ class HomeKitCamera(AccessoryEntity, Camera):
                 self._attr_camera_entity_capabilities = CameraEntityCapabilities(
                     two_way_audio=True
                 )
+
+    @override
+    async def async_added_to_hass(self) -> None:
+        """Follow address changes of a streaming camera."""
+        await super().async_added_to_hass()
+        if CameraEntityFeature.STREAM in self.supported_features:
+            self.async_on_remove(
+                self._accessory.config_entry.add_update_listener(
+                    self._async_entry_updated
+                )
+            )
+
+    async def _async_entry_updated(
+        self, hass: HomeAssistant, entry: ConfigEntry
+    ) -> None:
+        """Update go2rtc's stream when discovery changed the camera's address."""
+        if (address := _address(entry)) == self._address:
+            return
+        self._address = address
+        if not self.stream:
+            return
+        # HLS and recording keep reading go2rtc's restream without asking for
+        # it again, so the restream gets the new address now
+        try:
+            await self.async_create_stream()
+        except HomeAssistantError:
+            # Not logged, as the error can carry the source's credentials
+            _LOGGER.warning(
+                "Unable to update the stream of %s to its new address",
+                self.entity_id,
+            )
 
     @override
     def get_characteristic_types(self) -> list[str]:

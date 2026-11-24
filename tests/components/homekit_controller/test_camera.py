@@ -2,7 +2,7 @@
 
 import base64
 from collections.abc import Callable
-from unittest.mock import ANY, patch
+from unittest.mock import ANY, Mock, patch
 
 from aiohomekit.model import Accessory
 from aiohomekit.model.characteristics import CharacteristicsTypes
@@ -224,6 +224,47 @@ async def test_webrtc_source_follows_address_change(
         f"&client_private={TEST_IP_PAIRING_DATA['iOSDeviceLTSK']}"
         f"{TEST_IP_PAIRING_DATA['iOSDeviceLTPK']}"
     )
+
+
+@pytest.mark.parametrize(
+    ("side_effect", "logged"),
+    [
+        pytest.param(None, False, id="updated"),
+        pytest.param(HomeAssistantError("secret"), True, id="error"),
+    ],
+)
+async def test_stream_follows_address_change(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    side_effect: Exception | None,
+    logged: bool,
+) -> None:
+    """Test a running stream gets the new address, as HLS keeps reading it."""
+    helper = await setup_test_component(hass, 1, create_camera, connection="IP")
+    entity = get_camera_from_entity_id(hass, helper.entity_id)
+    entity.stream = Mock()
+
+    with patch.object(
+        entity, "async_create_stream", side_effect=side_effect
+    ) as create_stream:
+        # Another update leaves the address, so the stream, alone
+        hass.config_entries.async_update_entry(
+            helper.config_entry, data={**helper.config_entry.data, "Other": 1}
+        )
+        await hass.async_block_till_done()
+        create_stream.assert_not_called()
+
+        hass.config_entries.async_update_entry(
+            helper.config_entry,
+            data={**helper.config_entry.data, "AccessoryIP": "192.168.1.60"},
+        )
+        await hass.async_block_till_done()
+
+    create_stream.assert_awaited_once()
+    assert (
+        f"Unable to update the stream of {helper.entity_id}" in caplog.text
+    ) is logged
+    assert "secret" not in caplog.text
 
 
 async def test_no_stream_for_bridged_camera(hass: HomeAssistant) -> None:
