@@ -18,16 +18,9 @@ import pytest
 from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components.bosch_smart_camera.coordinator import SCAN_INTERVAL
-from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
+from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN, LightService
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
-    STATE_OFF,
-    STATE_ON,
-    STATE_UNAVAILABLE,
-)
+from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNAVAILABLE, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
@@ -103,7 +96,10 @@ async def test_turn_on_and_off(
     await setup_integration(hass, mock_config_entry)
 
     await hass.services.async_call(
-        LIGHT_DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: ENTITY_ID}, blocking=True
+        LIGHT_DOMAIN,
+        LightService.TURN_ON,
+        {TargetKey.ENTITY_ID: ENTITY_ID},
+        blocking=True,
     )
     assert hass.states.get(ENTITY_ID).state == STATE_ON
     assert mock_set_light.await_args.args[1:4] == (
@@ -117,7 +113,10 @@ async def test_turn_on_and_off(
     }
 
     await hass.services.async_call(
-        LIGHT_DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: ENTITY_ID}, blocking=True
+        LIGHT_DOMAIN,
+        LightService.TURN_OFF,
+        {TargetKey.ENTITY_ID: ENTITY_ID},
+        blocking=True,
     )
     assert hass.states.get(ENTITY_ID).state == STATE_OFF
     assert mock_set_light.await_args.args[3] is False
@@ -135,7 +134,10 @@ async def test_intensity_defaults_to_full(
     await setup_integration(hass, mock_config_entry)
 
     await hass.services.async_call(
-        LIGHT_DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: ENTITY_ID}, blocking=True
+        LIGHT_DOMAIN,
+        LightService.TURN_ON,
+        {TargetKey.ENTITY_ID: ENTITY_ID},
+        blocking=True,
     )
     assert mock_set_light.await_args.kwargs["last_front_intensity"] == 1.0
 
@@ -160,7 +162,10 @@ async def test_write_failure(
 
     with pytest.raises(HomeAssistantError) as err:
         await hass.services.async_call(
-            LIGHT_DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: ENTITY_ID}, blocking=True
+            LIGHT_DOMAIN,
+            LightService.TURN_ON,
+            {TargetKey.ENTITY_ID: ENTITY_ID},
+            blocking=True,
         )
     assert err.value.translation_key == "light_failed"
     assert hass.states.get(ENTITY_ID).state == STATE_OFF
@@ -226,7 +231,10 @@ async def test_write_auth_status_starts_reauth(
         pytest.raises(HomeAssistantError) as err,
     ):
         await hass.services.async_call(
-            LIGHT_DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: ENTITY_ID}, blocking=True
+            LIGHT_DOMAIN,
+            LightService.TURN_ON,
+            {TargetKey.ENTITY_ID: ENTITY_ID},
+            blocking=True,
         )
     assert err.value.translation_key == "auth_failed"
     start_reauth.assert_called_once_with(hass)
@@ -249,7 +257,10 @@ async def test_write_auth_error_starts_reauth(
         pytest.raises(HomeAssistantError) as err,
     ):
         await hass.services.async_call(
-            LIGHT_DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: ENTITY_ID}, blocking=True
+            LIGHT_DOMAIN,
+            LightService.TURN_ON,
+            {TargetKey.ENTITY_ID: ENTITY_ID},
+            blocking=True,
         )
     assert err.value.translation_key == "auth_failed"
     start_reauth.assert_called_once_with(hass)
