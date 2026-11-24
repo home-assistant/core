@@ -1589,7 +1589,7 @@
       'last_changed': <ANY>,
       'last_reported': <ANY>,
       'last_updated': <ANY>,
-      'state': 'heat',
+      'state': 'cool',
     }),
     StateSnapshot({
       'attributes': ReadOnlyDict({
@@ -1692,7 +1692,7 @@
       'last_changed': <ANY>,
       'last_reported': <ANY>,
       'last_updated': <ANY>,
-      'state': 'cool',
+      'state': 'heat_cool',
     }),
     StateSnapshot({
       'attributes': ReadOnlyDict({
@@ -1759,7 +1759,7 @@
       'last_changed': <ANY>,
       'last_reported': <ANY>,
       'last_updated': <ANY>,
-      'state': 'heat',
+      'state': 'cool',
     }),
   ])
 # ---
