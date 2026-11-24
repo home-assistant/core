@@ -87,7 +87,9 @@ async def test_unavailable_until_the_first_value(
 ) -> None:
     """Test the binary sensor is unavailable until the PLC delivers a value."""
     assert await async_run_past_first_update(
-        hass, setup_ads_platform(hass, BINARY_SENSOR_DOMAIN, PLATFORM_CONFIG)
+        hass,
+        mock_ads_device,
+        setup_ads_platform(hass, BINARY_SENSOR_DOMAIN, PLATFORM_CONFIG),
     )
     assert hass.states.get(ENTITY_ID).state == STATE_UNAVAILABLE
 
@@ -98,6 +100,7 @@ async def test_unavailable_until_the_first_value(
 async def test_subscription_error(
     hass: HomeAssistant,
     mock_pyads_connection: MagicMock,
+    mock_ads_device: MockAdsDevice,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test a variable the PLC refuses leaves the binary sensor unavailable."""
@@ -106,7 +109,9 @@ async def test_subscription_error(
     )
 
     assert await async_run_past_first_update(
-        hass, setup_ads_platform(hass, BINARY_SENSOR_DOMAIN, PLATFORM_CONFIG)
+        hass,
+        mock_ads_device,
+        setup_ads_platform(hass, BINARY_SENSOR_DOMAIN, PLATFORM_CONFIG),
     )
 
     assert hass.states.get(ENTITY_ID).state == STATE_UNAVAILABLE
