@@ -548,7 +548,7 @@
           "knx": {
             "knx_group_address": {
               "add_passive_address": "+ Add passive address",
-              "also_used_by": "Also used by {entities}",
+              "also_used_by": "Also used by",
               "dpt": "Datapoint type",
               "dpt_incompatible": "DPT {dpt} is incompatible with this field's expected DPTs.",
               "dpt_no_selection": "No DPT selected",
