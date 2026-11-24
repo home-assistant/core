@@ -3,6 +3,7 @@
 from datetime import timedelta
 from unittest.mock import patch
 
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 from pytest_homeassistant.common import async_fire_time_changed
 from pytrafikverket.models import FerryStopModel
@@ -17,6 +18,7 @@ async def test_sensor(
     load_int: ConfigEntry,
     monkeypatch: pytest.MonkeyPatch,
     get_ferries: list[FerryStopModel],
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test the Trafikverket Ferry sensor."""
     state1 = hass.states.get("sensor.harbor1_departure_from")
@@ -33,10 +35,8 @@ async def test_sensor(
         "homeassistant.components.trafikverket_ferry.coordinator.TrafikverketFerry.async_get_next_ferry_stops",
         return_value=get_ferries,
     ):
-        async_fire_time_changed(
-            hass,
-            dt_util.utcnow() + timedelta(minutes=6),
-        )
+        freezer.tick(timedelta(minutes=6))
+        async_fire_time_changed(hass)
         await hass.async_block_till_done()
 
     state1 = hass.states.get("sensor.harbor1_departure_from")

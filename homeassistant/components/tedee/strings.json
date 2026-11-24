@@ -70,6 +70,9 @@
     "authentication_failed": {
       "message": "Authentication failed. Local access token is invalid"
     },
+    "authentication_failed_transient": {
+      "message": "The bridge rejected the local access token, retrying"
+    },
     "lock_failed": {
       "message": "Failed to lock the door. Lock {lock_id}"
     },

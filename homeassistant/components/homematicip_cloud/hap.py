@@ -3,6 +3,7 @@
 import asyncio
 from collections.abc import Callable
 import logging
+import math
 from typing import Any
 
 from homematicip.async_home import AsyncHome
@@ -10,9 +11,11 @@ from homematicip.auth import Auth
 from homematicip.base.enums import EventType
 from homematicip.connection.connection_context import ConnectionContextBuilder
 from homematicip.connection.rest_connection import RestConnection
+from homematicip.connection.throttling import throttle_cooldown_remaining
 from homematicip.exceptions.connection_exceptions import (
     HmipAuthenticationError,
     HmipConnectionError,
+    HmipThrottlingError,
 )
 
 import homeassistant
@@ -20,6 +23,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.httpx_client import get_async_client
 
 from .const import (
@@ -29,6 +33,7 @@ from .const import (
     HMIPC_NAME,
     HMIPC_PIN,
     PLATFORMS,
+    SIGNAL_ARMING_BLOCKED,
 )
 from .errors import HmipcConnectionError
 
@@ -128,9 +133,21 @@ class HomematicipHAP:
         self._get_state_task: asyncio.Task | None = None
         self.hmip_device_by_entity_id: dict[str, Any] = {}
         self.reset_connection_listener: Callable | None = None
+        self.arming_blocked = False
+
+    @callback
+    def async_set_arming_blocked(self, blocked: bool) -> None:
+        """Publish whether the last arming attempt was refused."""
+        self.arming_blocked = blocked
+        async_dispatcher_send(
+            self.hass, SIGNAL_ARMING_BLOCKED.format(self.config_entry.entry_id)
+        )
 
     async def async_setup(self, tries: int = 0) -> bool:
         """Initialize connection."""
+        # The cloud throttles the public IP after a 429 and every request during the
+        # block extends it, so a setup retry must not touch the cloud until it is over
+        self._raise_if_throttled()
         try:
             self.home = await self.get_hap(
                 self.hass,
@@ -141,6 +158,9 @@ class HomematicipHAP:
 
         except HmipAuthenticationError as err:
             raise ConfigEntryAuthFailed from err
+        except HmipThrottlingError as err:
+            self._raise_if_throttled(err)
+            raise ConfigEntryNotReady from err
         except HmipcConnectionError as err:
             raise ConfigEntryNotReady from err
         except Exception as err:  # noqa: BLE001
@@ -160,6 +180,17 @@ class HomematicipHAP:
         )
 
         return True
+
+    def _raise_if_throttled(self, cause: Exception | None = None) -> None:
+        """Raise ConfigEntryNotReady while the cloud throttles this IP."""
+        if not (remaining := throttle_cooldown_remaining()):
+            return
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN,
+            translation_key="cloud_throttled",
+            translation_placeholders={"minutes": str(math.ceil(remaining / 60))},
+            retry_after=remaining,
+        ) from cause
 
     @callback
     def _async_register_access_point(self) -> None:
@@ -414,7 +445,7 @@ class HomematicipHAP:
             context = await build_context_async(hass, hapid, authtoken)
             home.init_with_context(context, True, get_async_client(hass))
             await home.get_current_state_async()
-        except HmipAuthenticationError:
+        except HmipAuthenticationError, HmipThrottlingError:
             raise
         except HmipConnectionError as err:
             raise HmipcConnectionError from err

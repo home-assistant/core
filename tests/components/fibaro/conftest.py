@@ -7,7 +7,7 @@ from pyfibaro.fibaro_device import SceneEvent
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
-from homeassistant.components.fibaro import CONF_IMPORT_PLUGINS, DOMAIN
+from homeassistant.components.fibaro.const import CONF_IMPORT_PLUGINS, DOMAIN
 from homeassistant.const import CONF_PASSWORD, CONF_URL, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 
@@ -55,6 +55,7 @@ def mock_power_sensor() -> Mock:
     sensor = Mock()
     sensor.fibaro_id = 1
     sensor.parent_fibaro_id = 0
+    sensor.has_endpoint_id = False
     sensor.name = "Test sensor"
     sensor.room_id = 1
     sensor.visible = True
@@ -87,6 +88,7 @@ def mock_positionable_cover() -> Mock:
     cover = Mock()
     cover.fibaro_id = 2
     cover.parent_fibaro_id = 0
+    cover.has_endpoint_id = False
     cover.name = "Test cover"
     cover.room_id = 1
     cover.dead = False
@@ -117,6 +119,7 @@ def mock_cover() -> Mock:
     cover = Mock()
     cover.fibaro_id = 4
     cover.parent_fibaro_id = 0
+    cover.has_endpoint_id = False
     cover.name = "Test cover"
     cover.room_id = 1
     cover.dead = False
@@ -153,6 +156,7 @@ def mock_light() -> Mock:
     light = Mock()
     light.fibaro_id = 3
     light.parent_fibaro_id = 0
+    light.has_endpoint_id = False
     light.name = "Test light"
     light.room_id = 1
     light.dead = False
@@ -177,6 +181,7 @@ def mock_fgd212_light() -> Mock:
     light = Mock()
     light.fibaro_id = 116
     light.parent_fibaro_id = 113
+    light.has_endpoint_id = False
     light.name = "8 Spots"
     light.room_id = 1
     light.dead = False
@@ -211,6 +216,7 @@ def mock_multilevel_base_type_light() -> Mock:
     light = Mock()
     light.fibaro_id = 42
     light.parent_fibaro_id = 0
+    light.has_endpoint_id = False
     light.name = "Base type dimmer"
     light.room_id = 1
     light.dead = False
@@ -240,6 +246,7 @@ def mock_zigbee_light() -> Mock:
     light = Mock()
     light.fibaro_id = 12
     light.parent_fibaro_id = 0
+    light.has_endpoint_id = False
     light.name = "Test light"
     light.room_id = 1
     light.dead = False
@@ -273,6 +280,7 @@ def mock_thermostat() -> Mock:
     climate = Mock()
     climate.fibaro_id = 13
     climate.parent_fibaro_id = 0
+    climate.has_endpoint_id = False
     climate.name = "Test climate"
     climate.room_id = 1
     climate.dead = False
@@ -301,6 +309,7 @@ def mock_thermostat_parent() -> Mock:
     climate = Mock()
     climate.fibaro_id = 5
     climate.parent_fibaro_id = 0
+    climate.has_endpoint_id = False
     climate.name = "Test climate"
     climate.room_id = 1
     climate.dead = False
@@ -318,6 +327,7 @@ def mock_thermostat_with_operating_mode() -> Mock:
     """Fixture for a thermostat."""
     climate = Mock()
     climate.fibaro_id = 6
+    climate.has_endpoint_id = True
     climate.endpoint_id = 1
     climate.parent_fibaro_id = 5
     climate.name = "Test climate"
@@ -415,6 +425,7 @@ def mock_fan_device() -> Mock:
     """Fixture for a fan endpoint of a thermostat device."""
     climate = Mock()
     climate.fibaro_id = 7
+    climate.has_endpoint_id = True
     climate.endpoint_id = 1
     climate.parent_fibaro_id = 5
     climate.name = "Test fan"
@@ -432,11 +443,60 @@ def mock_fan_device() -> Mock:
 
 
 @pytest.fixture
+def mock_hvac_system() -> Mock:
+    """Fixture for an HC3 fan coil thermostat with a cooling setpoint."""
+    climate = Mock()
+    climate.fibaro_id = 8
+    climate.has_endpoint_id = True
+    climate.endpoint_id = 1
+    climate.parent_fibaro_id = 5
+    climate.name = "Test climate"
+    climate.room_id = 1
+    climate.dead = False
+    climate.visible = True
+    climate.enabled = True
+    climate.type = "com.fibaro.hvacSystem"
+    climate.base_type = "com.fibaro.device"
+    climate.properties = {
+        "manufacturer": "",
+        "coolingThermostatSetpoint": 25,
+        "coolingThermostatSetpointFuture": 24,
+    }
+    climate.actions = {
+        "setThermostatMode": 1,
+        "setHeatingThermostatSetpoint": 1,
+        "setCoolingThermostatSetpoint": 1,
+    }
+    climate.supported_features = {}
+    climate.has_supported_thermostat_modes = True
+    climate.supported_thermostat_modes = ["Off", "Heat", "Cool"]
+    climate.has_operating_mode = False
+    climate.has_thermostat_mode = True
+    climate.thermostat_mode = "Heat"
+    climate.has_thermostat_operating_state = False
+    climate.has_unit = True
+    climate.unit = "C"
+    climate.has_heating_thermostat_setpoint = True
+    climate.heating_thermostat_setpoint = 20.5
+    climate.has_heating_thermostat_setpoint_future = True
+    climate.heating_thermostat_setpoint_future = 21.5
+    climate.has_cooling_thermostat_setpoint = True
+    climate.cooling_thermostat_setpoint = 25.0
+    climate.has_cooling_thermostat_setpoint_future = True
+    climate.cooling_thermostat_setpoint_future = 24.0
+    value_mock = Mock()
+    value_mock.has_value = False
+    climate.value = value_mock
+    return climate
+
+
+@pytest.fixture
 def mock_button_device() -> Mock:
     """Fixture for a button device."""
     climate = Mock()
     climate.fibaro_id = 8
     climate.parent_fibaro_id = 0
+    climate.has_endpoint_id = False
     climate.name = "Test button"
     climate.room_id = 1
     climate.dead = False
@@ -459,6 +519,7 @@ def mock_switch() -> Mock:
     switch = Mock()
     switch.fibaro_id = 9
     switch.parent_fibaro_id = 0
+    switch.has_endpoint_id = False
     switch.name = "Test switch"
     switch.room_id = 1
     switch.dead = False
@@ -487,6 +548,7 @@ def mock_binary_sensor() -> Mock:
     sensor = Mock()
     sensor.fibaro_id = 10
     sensor.parent_fibaro_id = 0
+    sensor.has_endpoint_id = False
     sensor.name = "Test motion sensor"
     sensor.room_id = 1
     sensor.dead = False
@@ -515,6 +577,7 @@ def mock_lock() -> Mock:
     lock = Mock()
     lock.fibaro_id = 11
     lock.parent_fibaro_id = 0
+    lock.has_endpoint_id = False
     lock.name = "Test lock"
     lock.room_id = 1
     lock.dead = False
@@ -543,6 +606,7 @@ def mock_multilevel_sensor() -> Mock:
     sensor = Mock()
     sensor.fibaro_id = 12
     sensor.parent_fibaro_id = 0
+    sensor.has_endpoint_id = False
     sensor.name = "Test multilevel sensor"
     sensor.room_id = 1
     sensor.unit = "V"

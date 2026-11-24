@@ -2,12 +2,16 @@
 
 from unittest.mock import AsyncMock, MagicMock
 
-from pyforeca import ForecaAuthError, ForecaConnectionError
+from pyforeca import (
+    ForecaAuthError,
+    ForecaConnectionError,
+    ForecaProductUnavailableError,
+)
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.foreca.const import DOMAIN, SUBENTRY_TYPE_LOCATION
-from homeassistant.config_entries import ConfigEntryState, ConfigSubentry
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState, ConfigSubentry
 from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
@@ -39,15 +43,28 @@ async def test_setup_retries_on_connection_error(
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
+@pytest.mark.parametrize(
+    ("method", "exception"),
+    [
+        ("current", ForecaAuthError),
+        ("current", ForecaProductUnavailableError),
+    ],
+)
 async def test_setup_fails_on_rejected_key(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_foreca_client: MagicMock,
+    method: str,
+    exception: type[Exception],
 ) -> None:
-    """Test a rejected API key fails setup instead of retrying."""
-    mock_foreca_client.current.side_effect = ForecaAuthError
+    """Test a key that is rejected or lacks the forecasts starts a reauth flow."""
+    getattr(mock_foreca_client, method).side_effect = exception
     await init_integration(hass, mock_config_entry)
     assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 1
+    assert flows[0]["context"]["source"] == SOURCE_REAUTH
+    assert flows[0]["context"]["entry_id"] == mock_config_entry.entry_id
 
 
 async def test_documented_request_budget(
@@ -55,7 +72,7 @@ async def test_documented_request_budget(
     mock_config_entry: MockConfigEntry,
     mock_foreca_client: MagicMock,
 ) -> None:
-    """Test one update costs the three requests the documentation promises.
+    """Test one update costs the five requests the documentation promises.
 
     The docs page quotes this number against the Freemium daily limit, so a new
     call added to the coordinator has to be a deliberate change here too.
@@ -69,8 +86,37 @@ async def test_documented_request_budget(
         and isinstance(attr := getattr(mock_foreca_client, name), AsyncMock)
         and attr.await_count
     }
-    assert awaited == {"current": 1, "forecast_daily": 1, "forecast_hourly": 1}
-    assert sum(awaited.values()) == 3
+    assert awaited == {
+        "air_quality_hourly": 1,
+        "current": 1,
+        "forecast_daily": 1,
+        "forecast_hourly": 1,
+        "observation_latest": 1,
+    }
+    assert sum(awaited.values()) == 5
+
+
+async def test_documented_forecast_length(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_foreca_client: MagicMock,
+) -> None:
+    """Test the forecasts cover the seven hourly and 14 daily days the docs promise."""
+    await init_integration(hass, mock_config_entry)
+
+    assert mock_foreca_client.forecast_hourly.await_args.kwargs["periods"] == 168
+    assert mock_foreca_client.forecast_daily.await_args.kwargs["periods"] == 14
+
+
+async def test_daily_forecast_asks_for_the_ensemble(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_foreca_client: MagicMock,
+) -> None:
+    """Test the daily forecast request asks for the ensemble percentiles."""
+    await init_integration(hass, mock_config_entry)
+
+    assert mock_foreca_client.forecast_daily.await_args.kwargs["ensemble"] is True
 
 
 @pytest.mark.usefixtures("mock_foreca_client")

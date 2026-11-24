@@ -52,6 +52,7 @@ async def test_entry_diagnostics(
     assert "192.168.1.177" not in payload
     assert "OFFICE_SSID" not in payload
     assert "140.100.128.10" not in payload
+    assert "SuperSecretPsk" not in payload
 
     assert result == snapshot(exclude=props("entry_id", "created_at", "modified_at"))
 

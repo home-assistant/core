@@ -301,6 +301,11 @@ async def test_subentry_unsupported_model(
         ("gpt-5.5-pro", ["medium", "high", "xhigh"]),
         ("gpt-5.6", ["none", "low", "medium", "high", "xhigh", "max"]),
         ("gpt-6-luna", ["none", "low", "medium", "high", "xhigh", "max"]),
+        pytest.param(
+            "gpt-6.1-terra",
+            ["none", "low", "medium", "high", "xhigh", "max"],
+            id="terra",
+        ),
         ("gpt-6-astra", ["low", "medium", "high", "xhigh", "max"]),
     ],
 )
@@ -338,15 +343,23 @@ async def test_subentry_reasoning_effort_list(
 
 
 @pytest.mark.usefixtures("mock_init_component")
+@pytest.mark.parametrize(
+    "model",
+    [
+        pytest.param("gpt-6-luna", id="luna"),
+        pytest.param("gpt-6.1-terra", id="terra"),
+    ],
+)
 @pytest.mark.parametrize("subentry_type", ["conversation", "ai_task_data"])
 @pytest.mark.parametrize("reasoning_effort", ["none", "low"])
-async def test_subentry_luna_reasoning_effort(
+async def test_subentry_reasoning_effort(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
+    model: str,
     subentry_type: str,
     reasoning_effort: str,
 ) -> None:
-    """Test that Luna reasoning effort can be selected and saved."""
+    """Test that reasoning effort can be selected and saved."""
     subentry = next(
         entry
         for entry in mock_config_entry.subentries.values()
@@ -356,7 +369,7 @@ async def test_subentry_luna_reasoning_effort(
         hass, subentry.subentry_id
     )
     result = await hass.config_entries.subentries.async_configure(
-        result["flow_id"], {CONF_RECOMMENDED: False, CONF_CHAT_MODEL: "gpt-6-luna"}
+        result["flow_id"], {CONF_RECOMMENDED: False, CONF_CHAT_MODEL: model}
     )
     assert result["step_id"] == "model"
 
@@ -366,7 +379,7 @@ async def test_subentry_luna_reasoning_effort(
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reconfigure_successful"
     saved = mock_config_entry.subentries[subentry.subentry_id].data
-    assert saved[CONF_CHAT_MODEL] == "gpt-6-luna"
+    assert saved[CONF_CHAT_MODEL] == model
     assert saved[CONF_REASONING_EFFORT] == reasoning_effort
 
 
@@ -780,6 +793,10 @@ async def test_form_invalid_auth(
                 CONF_TOP_P: RECOMMENDED_TOP_P,
                 CONF_MAX_TOKENS: RECOMMENDED_MAX_TOKENS,
                 CONF_STORE_RESPONSES: False,
+                CONF_REASONING_EFFORT: "low",
+                CONF_REASONING_SUMMARY: RECOMMENDED_REASONING_SUMMARY,
+                CONF_PRO_MODE: False,
+                CONF_VERBOSITY: "medium",
                 CONF_SERVICE_TIER: "auto",
                 CONF_WEB_SEARCH: True,
                 CONF_WEB_SEARCH_CONTEXT_SIZE: "low",
@@ -1298,6 +1315,10 @@ async def test_subentry_web_search_user_location(
         CONF_WEB_SEARCH_TIMEZONE: "America/Los_Angeles",
         CONF_WEB_SEARCH_INLINE_CITATIONS: False,
         CONF_CODE_INTERPRETER: False,
+        CONF_REASONING_EFFORT: "low",
+        CONF_REASONING_SUMMARY: RECOMMENDED_REASONING_SUMMARY,
+        CONF_PRO_MODE: False,
+        CONF_VERBOSITY: "medium",
     }
 
 
@@ -1362,7 +1383,17 @@ async def test_ai_task_subentry_not_loaded(
 @pytest.mark.parametrize(
     ("image_options", "image_model"),
     [
-        ({}, "gpt-image-2.5-flare"),
+        ({}, "gpt-image-2.6-flare"),
+        pytest.param(
+            {CONF_IMAGE_MODEL: "gpt-image-2.6-sunburst"},
+            "gpt-image-2.6-sunburst",
+            id="gpt-image-2.6-sunburst",
+        ),
+        pytest.param(
+            {CONF_IMAGE_MODEL: "gpt-image-2.6-flare"},
+            "gpt-image-2.6-flare",
+            id="gpt-image-2.6-flare",
+        ),
         (
             {CONF_IMAGE_MODEL: "gpt-image-2.5-sunburst"},
             "gpt-image-2.5-sunburst",

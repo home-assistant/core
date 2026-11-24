@@ -4,7 +4,7 @@
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'integration',
       <EntityStateAttribute.ICON: 'icon'>: 'mdi:chart-histogram',
-      'source': 'sensor.source',
+      <IntegrationEntityStateAttribute.SOURCE: 'source'>: 'sensor.source',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'BTU',
     }),
@@ -21,7 +21,7 @@
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'integration',
       <EntityStateAttribute.ICON: 'icon'>: 'mdi:chart-histogram',
-      'source': 'sensor.source',
+      <IntegrationEntityStateAttribute.SOURCE: 'source'>: 'sensor.source',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'ft³',
     }),
@@ -38,7 +38,7 @@
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'integration',
       <EntityStateAttribute.ICON: 'icon'>: 'mdi:chart-histogram',
-      'source': 'sensor.source',
+      <IntegrationEntityStateAttribute.SOURCE: 'source'>: 'sensor.source',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'kWh',
     }),
@@ -55,7 +55,7 @@
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'integration',
-      'source': 'sensor.source',
+      <IntegrationEntityStateAttribute.SOURCE: 'source'>: 'sensor.source',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'kWh',
     }),

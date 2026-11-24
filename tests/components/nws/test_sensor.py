@@ -62,6 +62,7 @@ async def test_imperial_metric(
     entry = MockConfigEntry(
         domain=DOMAIN,
         data=NWS_CONFIG,
+        version=2,
     )
     entry.add_to_hass(hass)
     await hass.config_entries.async_setup(entry.entry_id)
@@ -112,6 +113,7 @@ async def test_pressure_sensors_use_atmospheric_pressure(
     entry = MockConfigEntry(
         domain=DOMAIN,
         data=NWS_CONFIG,
+        version=2,
     )
     entry.add_to_hass(hass)
     await hass.config_entries.async_setup(entry.entry_id)
@@ -152,6 +154,7 @@ async def test_none_values(
     entry = MockConfigEntry(
         domain=DOMAIN,
         data=NWS_CONFIG,
+        version=2,
     )
     entry.add_to_hass(hass)
     await hass.config_entries.async_setup(entry.entry_id)

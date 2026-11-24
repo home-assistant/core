@@ -104,7 +104,7 @@ def _device_info(
 
     # Left out when unknown, so a model stored before isn't wiped.
     if hardware and hardware.device_version:
-        device_info["model"] = hardware.device_version
+        device_info.model = hardware.device_version
 
     return device_info
 

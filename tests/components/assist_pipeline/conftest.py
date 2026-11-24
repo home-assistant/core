@@ -404,7 +404,10 @@ def mock_chat_session(hass: HomeAssistant) -> Generator[chat_session.ChatSession
     """Mock the ulid of chat sessions."""
     # pylint: disable-next=contextmanager-generator-missing-cleanup
     with (
-        patch("homeassistant.helpers.chat_session.ulid_now", return_value="mock-ulid"),
-        chat_session.async_get_chat_session(hass) as session,
+        patch(
+            "homeassistant.helpers.chat_session.secure_ulid_now",
+            return_value="mock-ulid",
+        ),
+        chat_session.async_get_chat_session(hass, context=None) as session,
     ):
         yield session

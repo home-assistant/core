@@ -78,8 +78,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: OmadaConfigEntry) -> Non
 
     entry.runtime_data = controller
 
-    # The first refresh sweeps stale registry entries before platforms create
-    # entities, so replaced devices do not push new entities onto suffixed IDs.
+    # The first refresh sweeps stale device and client registry entries before
+    # platforms create entities, so replacements do not push entities onto
+    # suffixed IDs.
     await controller.initialize_first_refresh()
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)

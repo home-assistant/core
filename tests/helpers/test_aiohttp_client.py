@@ -4,6 +4,7 @@ from collections.abc import AsyncGenerator
 import socket
 from unittest.mock import Mock, patch
 
+import aiodns
 import aiohttp
 from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
@@ -416,6 +417,18 @@ async def test_async_mdnsresolver(
     assert await resp.json() == {"x": 1}
 
 
+@pytest.mark.usefixtures("disable_mock_zeroconf_resolver")
+@pytest.mark.usefixtures("mock_async_zeroconf")
+async def test_resolver_tries(hass: HomeAssistant) -> None:
+    """Test the resolver is created with the configured number of tries."""
+    with patch(
+        "aiohttp.resolver.aiodns.DNSResolver", wraps=aiodns.DNSResolver
+    ) as mock_dns_resolver:
+        resolver = client._async_make_resolver(hass)
+    await resolver.real_close()
+    mock_dns_resolver.assert_called_once_with(tries=client.DNS_RESOLVER_TRIES)
+
+
 async def test_resolver_is_singleton(hass: HomeAssistant) -> None:
     """Test that the resolver is a singleton."""
     session = client.async_get_clientsession(hass)
@@ -689,3 +702,22 @@ async def test_redirect_to_blocked_address(
         pytest.raises(client.SSRFRedirectError),
     ):
         await session.get(redirect_url)
+
+
+@pytest.mark.usefixtures("socket_enabled")
+async def test_clientsession_accepts_large_headers(hass: HomeAssistant) -> None:
+    """Test the clientsession reads header fields larger than aiohttp's default limit."""
+    large_value = "x" * 9300
+
+    async def handler(request: web.Request) -> web.Response:
+        """Return a response with a header field larger than 8190 bytes."""
+        return web.Response(text="ok", headers={"Content-Security-Policy": large_value})
+
+    app = web.Application()
+    app.router.add_get("/", handler)
+
+    async with TestServer(app) as server:
+        session = client.async_get_clientsession(hass)
+        async with session.get(server.make_url("/")) as resp:
+            assert resp.status == 200
+            assert resp.headers["Content-Security-Policy"] == large_value

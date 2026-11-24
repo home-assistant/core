@@ -73,6 +73,7 @@ def mock_config_entry() -> MockConfigEntry:
         },
         unique_id="e7ef5713-9dab-4bd4-b899-715b0ca4379e",
         title="Someone",
+        entry_id="01JIMMICH00000000000000000",
     )
 
 

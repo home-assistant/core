@@ -1,6 +1,7 @@
 """Test the actions of the Mijn Farmad Apotheek integration."""
 
 import asyncio
+import logging
 from unittest.mock import MagicMock
 
 from aiofarmad import (
@@ -12,6 +13,8 @@ from aiofarmad import (
     FarmadAuthorizationError,
     FarmadCommunicationError,
     FarmadError,
+    FarmadMissingPriceError,
+    FarmadPriceLookupError,
     FarmadRejectedError,
     FarmadTimeoutError,
 )
@@ -21,13 +24,15 @@ from pytest_homeassistant.common import MockUser
 
 from homeassistant.components.mijn_farmad_apotheek.const import (
     ATTR_BASKET_ID,
-    ATTR_COMMENT,
     ATTR_DESCRIPTION,
     BASKET_PAGE_SIZE,
     DOMAIN,
-    SERVICE_ORDER_MEDICATION,
-    SERVICE_SEARCH_MEDICATION,
 )
+from homeassistant.components.mijn_farmad_apotheek.services import (
+    FarmadService,
+    FarmadServiceArgument,
+)
+from homeassistant.config_entries import SOURCE_REAUTH
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.exceptions import (
     HomeAssistantError,
@@ -57,6 +62,8 @@ ORDER_DATA = {
     "quantity": 1,
     "apb": API_APB,
 }
+
+LOGGER_NAME = "homeassistant.components.mijn_farmad_apotheek"
 
 PRODUCTS = (DraftProduct(product_cnk=API_PRODUCT_CNK, quantity=1),)
 
@@ -89,7 +96,7 @@ async def test_order_medication_requires_admin(
     with pytest.raises(Unauthorized):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_ORDER_MEDICATION,
+            FarmadService.ORDER_MEDICATION,
             ORDER_DATA,
             blocking=True,
             context=Context(user_id=hass_read_only_user.id),
@@ -108,7 +115,7 @@ async def test_search_medication_all_users(
 
     response = await hass.services.async_call(
         DOMAIN,
-        SERVICE_SEARCH_MEDICATION,
+        FarmadService.SEARCH_MEDICATION,
         SEARCH_DATA,
         blocking=True,
         return_response=True,
@@ -127,7 +134,7 @@ async def test_order_medication_from_history(
 
     response = await hass.services.async_call(
         DOMAIN,
-        SERVICE_ORDER_MEDICATION,
+        FarmadService.ORDER_MEDICATION,
         ORDER_DATA,
         blocking=True,
         return_response=True,
@@ -159,7 +166,7 @@ async def test_order_medication_from_later_history_page(
 
     response = await hass.services.async_call(
         DOMAIN,
-        SERVICE_ORDER_MEDICATION,
+        FarmadService.ORDER_MEDICATION,
         {"product": API_PRODUCT_CNK_LATER, "apb": API_APB},
         blocking=True,
         return_response=True,
@@ -187,7 +194,7 @@ async def test_order_medication_existing_draft(
     )
 
     await hass.services.async_call(
-        DOMAIN, SERVICE_ORDER_MEDICATION, ORDER_DATA, blocking=True
+        DOMAIN, FarmadService.ORDER_MEDICATION, ORDER_DATA, blocking=True
     )
 
     client.async_update_draft_basket.assert_awaited_once_with(
@@ -244,7 +251,7 @@ async def test_order_medication_existing_draft_items(
 
     with pytest.raises(ServiceValidationError) as exc_info:
         await hass.services.async_call(
-            DOMAIN, SERVICE_ORDER_MEDICATION, ORDER_DATA, blocking=True
+            DOMAIN, FarmadService.ORDER_MEDICATION, ORDER_DATA, blocking=True
         )
 
     assert exc_info.value.translation_key == "draft_not_empty"
@@ -262,8 +269,8 @@ async def test_order_medication_with_comment(
 
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_ORDER_MEDICATION,
-        {**ORDER_DATA, ATTR_COMMENT: "test comment"},
+        FarmadService.ORDER_MEDICATION,
+        {**ORDER_DATA, FarmadServiceArgument.COMMENT: "test comment"},
         blocking=True,
     )
 
@@ -281,7 +288,7 @@ async def test_order_medication_quantity(
 
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_ORDER_MEDICATION,
+        FarmadService.ORDER_MEDICATION,
         {**ORDER_DATA, "quantity": 3},
         blocking=True,
     )
@@ -300,7 +307,7 @@ async def test_order_medication_by_cnk(
 
     response = await hass.services.async_call(
         DOMAIN,
-        SERVICE_ORDER_MEDICATION,
+        FarmadService.ORDER_MEDICATION,
         {"product": API_PRODUCT_CNK_2, "apb": API_APB},
         blocking=True,
         return_response=True,
@@ -330,7 +337,7 @@ async def test_order_medication_no_search_results(
     with pytest.raises(ServiceValidationError) as exc_info:
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_ORDER_MEDICATION,
+            FarmadService.ORDER_MEDICATION,
             {"product": API_PRODUCT_CNK_2, "apb": API_APB},
             blocking=True,
         )
@@ -355,7 +362,7 @@ async def test_order_medication_history_other_pharmacy(
     with pytest.raises(ServiceValidationError) as exc_info:
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_ORDER_MEDICATION,
+            FarmadService.ORDER_MEDICATION,
             {**ORDER_DATA, "apb": API_APB_2},
             blocking=True,
         )
@@ -377,7 +384,7 @@ async def test_order_medication_invalid_product(
     with pytest.raises(ServiceValidationError) as exc_info:
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_ORDER_MEDICATION,
+            FarmadService.ORDER_MEDICATION,
             {"product": API_SEARCH_QUERY, "apb": API_APB},
             blocking=True,
         )
@@ -420,6 +427,13 @@ async def test_order_medication_invalid_product(
         ),
         pytest.param(
             "async_submit_basket",
+            FarmadPriceLookupError("mock"),
+            "order_failed",
+            1,
+            id="price-lookup-communication",
+        ),
+        pytest.param(
+            "async_submit_basket",
             FarmadCommunicationError("mock"),
             "order_unconfirmed",
             0,
@@ -451,23 +465,86 @@ async def test_order_medication_invalid_product(
 async def test_order_medication_errors(
     hass: HomeAssistant,
     mock_farmad_client: MagicMock,
+    caplog: pytest.LogCaptureFixture,
     method: str,
     side_effect: Exception,
     translation_key: str,
     clear_count: int,
 ) -> None:
     """Test library errors during ordering map to translated Home Assistant errors."""
+    caplog.set_level(logging.DEBUG, logger=LOGGER_NAME)
     await init_integration(hass)
     client = mock_farmad_client.return_value
     getattr(client, method).side_effect = side_effect
 
     with pytest.raises(HomeAssistantError) as exc_info:
         await hass.services.async_call(
-            DOMAIN, SERVICE_ORDER_MEDICATION, ORDER_DATA, blocking=True
+            DOMAIN, FarmadService.ORDER_MEDICATION, ORDER_DATA, blocking=True
         )
 
     assert exc_info.value.translation_key == translation_key
     assert client.async_clear_draft_basket.await_count == clear_count
+    assert f"Ordering at pharmacy {API_APB} failed: mock" in caplog.text
+
+
+async def test_order_medication_missing_price(
+    hass: HomeAssistant,
+    mock_farmad_client: MagicMock,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test a product without a catalog price raises a translated error with its CNK."""
+    caplog.set_level(logging.DEBUG, logger=LOGGER_NAME)
+    await init_integration(hass)
+    client = mock_farmad_client.return_value
+    client.async_submit_basket.side_effect = FarmadMissingPriceError("mock")
+
+    with pytest.raises(HomeAssistantError) as exc_info:
+        await hass.services.async_call(
+            DOMAIN, FarmadService.ORDER_MEDICATION, ORDER_DATA, blocking=True
+        )
+
+    assert exc_info.value.translation_key == "price_unavailable"
+    assert exc_info.value.translation_placeholders == {
+        "apb": API_APB,
+        "product": API_PRODUCT_CNK,
+    }
+    assert f"Ordering at pharmacy {API_APB} failed: mock" in caplog.text
+    client.async_clear_draft_basket.assert_awaited_once_with(API_APB)
+
+
+async def test_order_medication_retries_after_a_price_lookup_failure(
+    hass: HomeAssistant,
+    mock_farmad_client: MagicMock,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test a failed price lookup clears the draft so a retry places the order."""
+    caplog.set_level(logging.DEBUG, logger=LOGGER_NAME)
+    await init_integration(hass)
+    client = mock_farmad_client.return_value
+    client.async_submit_basket.side_effect = [
+        FarmadPriceLookupError("mock"),
+        API_BASKET_ID,
+    ]
+
+    with pytest.raises(HomeAssistantError) as exc_info:
+        await hass.services.async_call(
+            DOMAIN, FarmadService.ORDER_MEDICATION, ORDER_DATA, blocking=True
+        )
+    response = await hass.services.async_call(
+        DOMAIN,
+        FarmadService.ORDER_MEDICATION,
+        ORDER_DATA,
+        blocking=True,
+        return_response=True,
+    )
+
+    assert exc_info.value.translation_key == "order_failed"
+    assert f"Ordering at pharmacy {API_APB} failed: mock" in caplog.text
+    assert response == {
+        ATTR_BASKET_ID: API_BASKET_ID,
+        ATTR_DESCRIPTION: API_PRODUCT_DESCRIPTION,
+    }
+    client.async_clear_draft_basket.assert_awaited_once_with(API_APB)
 
 
 async def test_order_medication_update_draft_error(
@@ -483,7 +560,7 @@ async def test_order_medication_update_draft_error(
 
     with pytest.raises(HomeAssistantError) as exc_info:
         await hass.services.async_call(
-            DOMAIN, SERVICE_ORDER_MEDICATION, ORDER_DATA, blocking=True
+            DOMAIN, FarmadService.ORDER_MEDICATION, ORDER_DATA, blocking=True
         )
 
     assert exc_info.value.translation_key == "order_failed"
@@ -501,7 +578,7 @@ async def test_order_medication_clear_draft_fails(
 
     with pytest.raises(HomeAssistantError) as exc_info:
         await hass.services.async_call(
-            DOMAIN, SERVICE_ORDER_MEDICATION, ORDER_DATA, blocking=True
+            DOMAIN, FarmadService.ORDER_MEDICATION, ORDER_DATA, blocking=True
         )
 
     assert exc_info.value.translation_key == "order_failed"
@@ -518,7 +595,7 @@ async def test_order_medication_without_draft_id(
 
     with pytest.raises(HomeAssistantError) as exc_info:
         await hass.services.async_call(
-            DOMAIN, SERVICE_ORDER_MEDICATION, ORDER_DATA, blocking=True
+            DOMAIN, FarmadService.ORDER_MEDICATION, ORDER_DATA, blocking=True
         )
 
     assert exc_info.value.translation_key == "order_failed"
@@ -536,7 +613,7 @@ async def test_order_medication_without_basket_id(
 
     with pytest.raises(HomeAssistantError) as exc_info:
         await hass.services.async_call(
-            DOMAIN, SERVICE_ORDER_MEDICATION, ORDER_DATA, blocking=True
+            DOMAIN, FarmadService.ORDER_MEDICATION, ORDER_DATA, blocking=True
         )
 
     assert exc_info.value.translation_key == "order_unconfirmed"
@@ -580,7 +657,7 @@ async def test_order_medication_serialized(
         *(
             asyncio.create_task(
                 hass.services.async_call(
-                    DOMAIN, SERVICE_ORDER_MEDICATION, ORDER_DATA, blocking=True
+                    DOMAIN, FarmadService.ORDER_MEDICATION, ORDER_DATA, blocking=True
                 )
             )
             for _ in range(2)
@@ -609,7 +686,7 @@ async def test_order_medication_invalid_quantity(
     with pytest.raises(probatio.MultipleInvalid, match="quantity"):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_ORDER_MEDICATION,
+            FarmadService.ORDER_MEDICATION,
             {"product": API_PRODUCT_CNK, "apb": API_APB, "quantity": quantity},
             blocking=True,
         )
@@ -619,31 +696,31 @@ async def test_order_medication_invalid_quantity(
     ("action", "data", "field"),
     [
         pytest.param(
-            SERVICE_SEARCH_MEDICATION,
+            FarmadService.SEARCH_MEDICATION,
             {"query": "", "apb": API_APB},
             "query",
             id="search-empty-query",
         ),
         pytest.param(
-            SERVICE_SEARCH_MEDICATION,
+            FarmadService.SEARCH_MEDICATION,
             {"query": API_SEARCH_QUERY},
             "apb",
             id="search-missing-apb",
         ),
         pytest.param(
-            SERVICE_SEARCH_MEDICATION,
+            FarmadService.SEARCH_MEDICATION,
             {"query": API_SEARCH_QUERY, "apb": ""},
             "apb",
             id="search-empty-apb",
         ),
         pytest.param(
-            SERVICE_ORDER_MEDICATION,
+            FarmadService.ORDER_MEDICATION,
             {"product": API_PRODUCT_CNK},
             "apb",
             id="order-missing-apb",
         ),
         pytest.param(
-            SERVICE_ORDER_MEDICATION,
+            FarmadService.ORDER_MEDICATION,
             {"product": API_PRODUCT_CNK, "apb": ""},
             "apb",
             id="order-empty-apb",
@@ -680,7 +757,7 @@ async def test_order_medication_after_unload(
 
     with pytest.raises(ServiceValidationError):
         await hass.services.async_call(
-            DOMAIN, SERVICE_ORDER_MEDICATION, ORDER_DATA, blocking=True
+            DOMAIN, FarmadService.ORDER_MEDICATION, ORDER_DATA, blocking=True
         )
 
 
@@ -693,7 +770,7 @@ async def test_search_medication(
 
     response = await hass.services.async_call(
         DOMAIN,
-        SERVICE_SEARCH_MEDICATION,
+        FarmadService.SEARCH_MEDICATION,
         SEARCH_DATA,
         blocking=True,
         return_response=True,
@@ -715,7 +792,7 @@ async def test_search_medication_no_results(
 
     response = await hass.services.async_call(
         DOMAIN,
-        SERVICE_SEARCH_MEDICATION,
+        FarmadService.SEARCH_MEDICATION,
         SEARCH_DATA,
         blocking=True,
         return_response=True,
@@ -747,10 +824,12 @@ async def test_search_medication_no_results(
 async def test_search_medication_errors(
     hass: HomeAssistant,
     mock_farmad_client: MagicMock,
+    caplog: pytest.LogCaptureFixture,
     side_effect: Exception,
     translation_key: str,
 ) -> None:
     """Test library errors map to translated Home Assistant errors."""
+    caplog.set_level(logging.DEBUG, logger=LOGGER_NAME)
     await init_integration(hass)
     mock_farmad_client.return_value.async_search_products_in_apb.side_effect = (
         side_effect
@@ -759,13 +838,14 @@ async def test_search_medication_errors(
     with pytest.raises(HomeAssistantError) as exc_info:
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_SEARCH_MEDICATION,
+            FarmadService.SEARCH_MEDICATION,
             SEARCH_DATA,
             blocking=True,
             return_response=True,
         )
 
     assert exc_info.value.translation_key == translation_key
+    assert f"Searching pharmacy {API_APB} failed: mock" in caplog.text
 
 
 async def test_search_medication_after_unload(
@@ -779,8 +859,48 @@ async def test_search_medication_after_unload(
     with pytest.raises(ServiceValidationError):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_SEARCH_MEDICATION,
+            FarmadService.SEARCH_MEDICATION,
             SEARCH_DATA,
             blocking=True,
             return_response=True,
         )
+
+
+@pytest.mark.parametrize(
+    ("action", "data", "method"),
+    [
+        pytest.param(
+            FarmadService.SEARCH_MEDICATION,
+            SEARCH_DATA,
+            "async_search_products_in_apb",
+            id="search",
+        ),
+        pytest.param(
+            FarmadService.ORDER_MEDICATION,
+            ORDER_DATA,
+            "async_get_draft_basket",
+            id="order",
+        ),
+    ],
+)
+async def test_rejected_session_starts_reauth(
+    hass: HomeAssistant,
+    mock_farmad_client: MagicMock,
+    action: str,
+    data: dict[str, str],
+    method: str,
+) -> None:
+    """Test a rejected session starts the reauthentication flow."""
+    entry = await init_integration(hass)
+    getattr(
+        mock_farmad_client.return_value, method
+    ).side_effect = FarmadAuthenticationError("mock")
+
+    with pytest.raises(HomeAssistantError) as exc_info:
+        await hass.services.async_call(
+            DOMAIN, action, data, blocking=True, return_response=True
+        )
+    await hass.async_block_till_done()
+
+    assert exc_info.value.translation_key == "authentication_failed"
+    assert any(entry.async_get_active_flows(hass, {SOURCE_REAUTH}))

@@ -61,7 +61,7 @@ async def async_update_options(hass: HomeAssistant, entry: DsmrConfigEntry) -> N
 
 @callback
 def async_migrate_entity_entry(
-    config_entry: ConfigEntry, entity_entry: er.RegistryEntry
+    config_entry: DsmrConfigEntry, entity_entry: er.RegistryEntry
 ) -> dict[str, Any] | None:
     """Migrate DSMR entity entries.
 

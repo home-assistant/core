@@ -6,13 +6,8 @@ from unittest.mock import Mock, patch
 from pytest_homeassistant.common import snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
-    Platform,
-)
+from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN, SwitchService
+from homeassistant.const import Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -39,8 +34,8 @@ async def test_beeper_services(
     """Test BeeperSwitch services."""
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        SERVICE_TURN_OFF,
-        service_data={ATTR_ENTITY_ID: "switch.vault_door_keypress_beep"},
+        SwitchService.TURN_OFF,
+        service_data={TargetKey.ENTITY_ID: "switch.vault_door_keypress_beep"},
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -49,8 +44,8 @@ async def test_beeper_services(
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        SERVICE_TURN_ON,
-        service_data={ATTR_ENTITY_ID: "switch.vault_door_keypress_beep"},
+        SwitchService.TURN_ON,
+        service_data={TargetKey.ENTITY_ID: "switch.vault_door_keypress_beep"},
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -67,8 +62,8 @@ async def test_lock_and_leave_services(
     """Test LockAndLeaveSwitch services."""
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        SERVICE_TURN_OFF,
-        service_data={ATTR_ENTITY_ID: "switch.vault_door_1_touch_locking"},
+        SwitchService.TURN_OFF,
+        service_data={TargetKey.ENTITY_ID: "switch.vault_door_1_touch_locking"},
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -77,8 +72,8 @@ async def test_lock_and_leave_services(
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        SERVICE_TURN_ON,
-        service_data={ATTR_ENTITY_ID: "switch.vault_door_1_touch_locking"},
+        SwitchService.TURN_ON,
+        service_data={TargetKey.ENTITY_ID: "switch.vault_door_1_touch_locking"},
         blocking=True,
     )
     await hass.async_block_till_done()

@@ -21,6 +21,7 @@ description: Everything you need to know to build, test and review Home Assistan
 - Bump dependencies in a standalone PR that contains only the compatibility adjustments the bump requires. Features that need the new version go in a follow-up PR.
 
 The following platforms have extra guidelines:
+- **Device tracker**: [`platform-device-tracker.md`](platform-device-tracker.md) for replacing legacy device trackers
 - **Diagnostics**: [`platform-diagnostics.md`](platform-diagnostics.md) for diagnostic data collection
 - **Repairs**: [`platform-repairs.md`](platform-repairs.md) for user-actionable repair issues
 
@@ -53,6 +54,7 @@ Template scale file: `./script/scaffold/templates/integration/integration/qualit
    - `done`: Rule implemented
    - `exempt`: Rule doesn't apply (with reason in comment)
    - `todo`: Rule needs implementation
+5. **Rule comments**: A comment describes what is missing or why the rule is exempt, never a pull request. Hassfest rejects pull request references like URLs, `owner/repo#123` or `PR #123`. When work is split into a follow-up pull request, keep the rule `todo` with a description of the gap; the follow-up sets it to `done` and removes the comment. Also flag vaguer variants that hassfest cannot catch, like "PR already raised to fix this".
 
 
 ## Testing Requirements

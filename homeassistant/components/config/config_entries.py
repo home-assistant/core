@@ -146,8 +146,16 @@ class ConfigManagerEntryResourceReloadView(HomeAssistantView):
             return self.json_message("Invalid entry specified", HTTPStatus.NOT_FOUND)
         assert isinstance(entry, config_entries.ConfigEntry)
 
+        # Shield the reload from cancellation on connection drop, otherwise the
+        # entry can be left unloaded. The task is created through hass so a
+        # strong reference is held for its lifetime.
+        reload_task = hass.async_create_task(
+            hass.config_entries.async_reload(entry_id),
+            f"config entry reload {entry_id}",
+        )
+
         try:
-            await hass.config_entries.async_reload(entry_id)
+            await shield(reload_task)
         except config_entries.OperationNotAllowed:
             return self.json_message("Entry cannot be reloaded", HTTPStatus.FORBIDDEN)
 
