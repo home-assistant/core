@@ -74,6 +74,7 @@ FIXTURES = [
     "mock_dimmable_light",
     "mock_dimmable_plugin_unit",
     "mock_door_lock",
+    "mock_door_lock_with_schedules",
     "mock_door_lock_with_unbolt",
     "mock_doorbell",
     "mock_extractor_hood",

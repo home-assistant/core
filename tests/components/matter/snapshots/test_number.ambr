@@ -3754,6 +3754,185 @@
     'state': '3',
   })
 # ---
+# name: test_numbers[mock_door_lock_with_schedules][number.mock_door_lock_with_schedules_auto_relock_time-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 65534,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.BOX: 'box'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1.0,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-000000000000004C-MatterNodeDevice'), ('matter', 'serial_serial_76')]>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'number.mock_door_lock_with_schedules_auto_relock_time',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Auto-relock time',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Auto-relock time',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'auto_relock_timer',
+    'unique_id': '00000000000004D2-000000000000004C-MatterNodeDevice-1-AutoRelockTimer-257-35',
+    'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+  })
+# ---
+# name: test_numbers[mock_door_lock_with_schedules][number.mock_door_lock_with_schedules_auto_relock_time-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Door Lock with Schedules Auto-relock time',
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 65534,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.BOX: 'box'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1.0,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTime.SECONDS: 's'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.mock_door_lock_with_schedules_auto_relock_time',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '60',
+  })
+# ---
+# name: test_numbers[mock_door_lock_with_schedules][number.mock_door_lock_with_schedules_user_code_temporary_disable_time-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 255,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 1,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.BOX: 'box'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-000000000000004C-MatterNodeDevice'), ('matter', 'serial_serial_76')]>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'number.mock_door_lock_with_schedules_user_code_temporary_disable_time',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'User code temporary disable time',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'User code temporary disable time',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'user_code_temporary_disable_time',
+    'unique_id': '00000000000004D2-000000000000004C-MatterNodeDevice-1-DoorLockUserCodeTemporaryDisableTime-257-49',
+    'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+  })
+# ---
+# name: test_numbers[mock_door_lock_with_schedules][number.mock_door_lock_with_schedules_user_code_temporary_disable_time-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Door Lock with Schedules User code temporary disable time',
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 255,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 1,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.BOX: 'box'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTime.SECONDS: 's'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.mock_door_lock_with_schedules_user_code_temporary_disable_time',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '10',
+  })
+# ---
+# name: test_numbers[mock_door_lock_with_schedules][number.mock_door_lock_with_schedules_wrong_code_limit-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 255,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 1,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.BOX: 'box'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-000000000000004C-MatterNodeDevice'), ('matter', 'serial_serial_76')]>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'number.mock_door_lock_with_schedules_wrong_code_limit',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Wrong code limit',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Wrong code limit',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'wrong_code_entry_limit',
+    'unique_id': '00000000000004D2-000000000000004C-MatterNodeDevice-1-DoorLockWrongCodeEntryLimit-257-48',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_numbers[mock_door_lock_with_schedules][number.mock_door_lock_with_schedules_wrong_code_limit-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Door Lock with Schedules Wrong code limit',
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 255,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 1,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.BOX: 'box'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1,
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.mock_door_lock_with_schedules_wrong_code_limit',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '3',
+  })
+# ---
 # name: test_numbers[mock_door_lock_with_unbolt][number.mock_door_lock_with_unbolt_auto_relock_time-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([

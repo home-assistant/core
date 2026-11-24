@@ -2645,6 +2645,158 @@
     'state': 'off',
   })
 # ---
+# name: test_binary_sensors[mock_door_lock_with_schedules][binary_sensor.mock_door_lock_with_schedules_actuator-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-000000000000004C-MatterNodeDevice'), ('matter', 'serial_serial_76')]>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.mock_door_lock_with_schedules_actuator',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Actuator',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Actuator',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'actuator',
+    'unique_id': '00000000000004D2-000000000000004C-MatterNodeDevice-1-LockActuatorEnabledSensor-257-2',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_binary_sensors[mock_door_lock_with_schedules][binary_sensor.mock_door_lock_with_schedules_actuator-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Door Lock with Schedules Actuator',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.mock_door_lock_with_schedules_actuator',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_binary_sensors[mock_door_lock_with_schedules][binary_sensor.mock_door_lock_with_schedules_battery-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-000000000000004C-MatterNodeDevice'), ('matter', 'serial_serial_76')]>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.mock_door_lock_with_schedules_battery',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Battery',
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.BATTERY: 'battery'>,
+    'original_icon': None,
+    'original_name': 'Battery',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '00000000000004D2-000000000000004C-MatterNodeDevice-1-BatteryChargeLevel-47-14',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_binary_sensors[mock_door_lock_with_schedules][binary_sensor.mock_door_lock_with_schedules_battery-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'battery',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Door Lock with Schedules Battery',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.mock_door_lock_with_schedules_battery',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_binary_sensors[mock_door_lock_with_schedules][binary_sensor.mock_door_lock_with_schedules_door-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-000000000000004C-MatterNodeDevice'), ('matter', 'serial_serial_76')]>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.mock_door_lock_with_schedules_door',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Door',
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.DOOR: 'door'>,
+    'original_icon': None,
+    'original_name': 'Door',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '00000000000004D2-000000000000004C-MatterNodeDevice-1-LockDoorStateSensor-257-3',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_binary_sensors[mock_door_lock_with_schedules][binary_sensor.mock_door_lock_with_schedules_door-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'door',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Door Lock with Schedules Door',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.mock_door_lock_with_schedules_door',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
 # name: test_binary_sensors[mock_door_lock_with_unbolt][binary_sensor.mock_door_lock_with_unbolt_actuator-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([

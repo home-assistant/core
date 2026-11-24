@@ -28999,6 +28999,230 @@
     'state': '2025-01-01T13:59:35+00:00',
   })
 # ---
+# name: test_sensors[mock_door_lock_with_schedules][sensor.mock_door_lock_with_schedules_battery_quantity-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-000000000000004C-MatterNodeDevice'), ('matter', 'serial_serial_76')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.mock_door_lock_with_schedules_battery_quantity',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Battery quantity',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Battery quantity',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'battery_quantity',
+    'unique_id': '00000000000004D2-000000000000004C-MatterNodeDevice-1-PowerSourceBatQuantity-47-25',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[mock_door_lock_with_schedules][sensor.mock_door_lock_with_schedules_battery_quantity-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Door Lock with Schedules Battery quantity',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.mock_door_lock_with_schedules_battery_quantity',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '1',
+  })
+# ---
+# name: test_sensors[mock_door_lock_with_schedules][sensor.mock_door_lock_with_schedules_boot_reason-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'unspecified',
+        'power_on_reboot',
+        'brown_out_reset',
+        'software_watchdog_reset',
+        'hardware_watchdog_reset',
+        'software_update_completed',
+        'software_reset',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-000000000000004C-MatterNodeDevice'), ('matter', 'serial_serial_76')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.mock_door_lock_with_schedules_boot_reason',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Boot reason',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Boot reason',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'boot_reason',
+    'unique_id': '00000000000004D2-000000000000004C-MatterNodeDevice-0-GeneralDiagnosticsBootReason-51-4',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[mock_door_lock_with_schedules][sensor.mock_door_lock_with_schedules_boot_reason-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Door Lock with Schedules Boot reason',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'unspecified',
+        'power_on_reboot',
+        'brown_out_reset',
+        'software_watchdog_reset',
+        'hardware_watchdog_reset',
+        'software_update_completed',
+        'software_reset',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.mock_door_lock_with_schedules_boot_reason',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unspecified',
+  })
+# ---
+# name: test_sensors[mock_door_lock_with_schedules][sensor.mock_door_lock_with_schedules_reboot_count-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-000000000000004C-MatterNodeDevice'), ('matter', 'serial_serial_76')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.mock_door_lock_with_schedules_reboot_count',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Reboot count',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Reboot count',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'reboot_count',
+    'unique_id': '00000000000004D2-000000000000004C-MatterNodeDevice-0-GeneralDiagnosticsRebootCount-51-1',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[mock_door_lock_with_schedules][sensor.mock_door_lock_with_schedules_reboot_count-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Door Lock with Schedules Reboot count',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.mock_door_lock_with_schedules_reboot_count',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '1',
+  })
+# ---
+# name: test_sensors[mock_door_lock_with_schedules][sensor.mock_door_lock_with_schedules_uptime-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-000000000000004C-MatterNodeDevice'), ('matter', 'serial_serial_76')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.mock_door_lock_with_schedules_uptime',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Uptime',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.UPTIME: 'uptime'>,
+    'original_icon': None,
+    'original_name': 'Uptime',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'uptime',
+    'unique_id': '00000000000004D2-000000000000004C-MatterNodeDevice-0-GeneralDiagnosticsUpTime-51-2',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[mock_door_lock_with_schedules][sensor.mock_door_lock_with_schedules_uptime-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'uptime',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Door Lock with Schedules Uptime',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.mock_door_lock_with_schedules_uptime',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2025-01-01T13:59:26+00:00',
+  })
+# ---
 # name: test_sensors[mock_door_lock_with_unbolt][sensor.mock_door_lock_with_unbolt_boot_reason-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
