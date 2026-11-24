@@ -236,13 +236,13 @@ async def test_climate_state_trigger_behavior_each(
         *parametrize_numerical_attribute_changed_trigger_states(
             "climate.target_humidity_changed",
             HVACMode.AUTO,
-            ClimateEntityStateAttribute.HUMIDITY,
+            ClimateEntityStateAttribute.TARGET_HUMIDITY,
             attribute_required=True,
         ),
         *parametrize_numerical_attribute_changed_trigger_states(
             "climate.target_temperature_changed",
             HVACMode.AUTO,
-            ClimateEntityStateAttribute.TEMPERATURE,
+            ClimateEntityStateAttribute.TARGET_TEMPERATURE,
             threshold_unit=UnitOfTemperature.CELSIUS,
             unit_attributes=_CLIMATE_UNIT_ATTRIBUTES,
             attribute_required=True,
@@ -250,13 +250,13 @@ async def test_climate_state_trigger_behavior_each(
         *parametrize_numerical_attribute_crossed_threshold_trigger_states(
             "climate.target_humidity_crossed_threshold",
             HVACMode.AUTO,
-            ClimateEntityStateAttribute.HUMIDITY,
+            ClimateEntityStateAttribute.TARGET_HUMIDITY,
             attribute_required=True,
         ),
         *parametrize_numerical_attribute_crossed_threshold_trigger_states(
             "climate.target_temperature_crossed_threshold",
             HVACMode.AUTO,
-            ClimateEntityStateAttribute.TEMPERATURE,
+            ClimateEntityStateAttribute.TARGET_TEMPERATURE,
             threshold_unit=UnitOfTemperature.CELSIUS,
             unit_attributes=_CLIMATE_UNIT_ATTRIBUTES,
             attribute_required=True,
@@ -398,13 +398,13 @@ async def test_climate_state_trigger_behavior_first(
         *parametrize_numerical_attribute_crossed_threshold_trigger_states(
             "climate.target_humidity_crossed_threshold",
             HVACMode.AUTO,
-            ClimateEntityStateAttribute.HUMIDITY,
+            ClimateEntityStateAttribute.TARGET_HUMIDITY,
             attribute_required=True,
         ),
         *parametrize_numerical_attribute_crossed_threshold_trigger_states(
             "climate.target_temperature_crossed_threshold",
             HVACMode.AUTO,
-            ClimateEntityStateAttribute.TEMPERATURE,
+            ClimateEntityStateAttribute.TARGET_TEMPERATURE,
             threshold_unit=UnitOfTemperature.CELSIUS,
             unit_attributes=_CLIMATE_UNIT_ATTRIBUTES,
             attribute_required=True,
@@ -546,13 +546,13 @@ async def test_climate_state_trigger_behavior_all(
         *parametrize_numerical_attribute_crossed_threshold_trigger_states(
             "climate.target_humidity_crossed_threshold",
             HVACMode.AUTO,
-            ClimateEntityStateAttribute.HUMIDITY,
+            ClimateEntityStateAttribute.TARGET_HUMIDITY,
             attribute_required=True,
         ),
         *parametrize_numerical_attribute_crossed_threshold_trigger_states(
             "climate.target_temperature_crossed_threshold",
             HVACMode.AUTO,
-            ClimateEntityStateAttribute.TEMPERATURE,
+            ClimateEntityStateAttribute.TARGET_TEMPERATURE,
             threshold_unit=UnitOfTemperature.CELSIUS,
             unit_attributes=_CLIMATE_UNIT_ATTRIBUTES,
             attribute_required=True,
@@ -639,7 +639,7 @@ async def test_climate_target_temperature_trigger_temperature_unit(
         entity_id,
         HVACMode.AUTO,
         {
-            ClimateEntityStateAttribute.TEMPERATURE: 70,
+            ClimateEntityStateAttribute.TARGET_TEMPERATURE: 70,
             ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: UnitOfTemperature.FAHRENHEIT,
         },
     )
@@ -663,7 +663,7 @@ async def test_climate_target_temperature_trigger_temperature_unit(
         entity_id,
         HVACMode.AUTO,
         {
-            ClimateEntityStateAttribute.TEMPERATURE: 72,
+            ClimateEntityStateAttribute.TARGET_TEMPERATURE: 72,
             ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: UnitOfTemperature.FAHRENHEIT,
         },
     )
@@ -675,7 +675,7 @@ async def test_climate_target_temperature_trigger_temperature_unit(
         entity_id,
         HVACMode.AUTO,
         {
-            ClimateEntityStateAttribute.TEMPERATURE: 80,
+            ClimateEntityStateAttribute.TARGET_TEMPERATURE: 80,
             ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: UnitOfTemperature.FAHRENHEIT,
         },
     )
