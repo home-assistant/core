@@ -24,6 +24,7 @@ from homeassistant.components.media_player import (
     MediaPlayerState,
 )
 from homeassistant.components.yoto.const import DOMAIN
+from homeassistant.components.yoto.services import YotoService, YotoServiceArgument
 from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE, Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
@@ -724,9 +725,13 @@ async def test_command_error_raises(
 @pytest.mark.parametrize(
     "service_data",
     [
-        pytest.param({"duration": {"minutes": 30}}, id="duration"),
+        pytest.param({YotoServiceArgument.DURATION: {"minutes": 30}}, id="duration"),
         pytest.param(
-            {"mode": "duration", "duration": {"minutes": 30}}, id="duration_mode"
+            {
+                YotoServiceArgument.MODE: "duration",
+                YotoServiceArgument.DURATION: {"minutes": 30},
+            },
+            id="duration_mode",
         ),
     ],
 )
@@ -741,8 +746,8 @@ async def test_set_sleep_timer_duration(
 
     await hass.services.async_call(
         DOMAIN,
-        "set_sleep_timer",
-        {ATTR_ENTITY_ID: ENTITY_ID, **service_data},
+        YotoService.SET_SLEEP_TIMER,
+        {TargetKey.ENTITY_ID: ENTITY_ID, **service_data},
         blocking=True,
     )
 
@@ -759,8 +764,8 @@ async def test_clear_sleep_timer(
 
     await hass.services.async_call(
         DOMAIN,
-        "clear_sleep_timer",
-        {ATTR_ENTITY_ID: ENTITY_ID},
+        YotoService.CLEAR_SLEEP_TIMER,
+        {TargetKey.ENTITY_ID: ENTITY_ID},
         blocking=True,
     )
 
@@ -777,8 +782,8 @@ async def test_set_sleep_timer_end_of_track(
 
     await hass.services.async_call(
         DOMAIN,
-        "set_sleep_timer",
-        {ATTR_ENTITY_ID: ENTITY_ID, "mode": "end_of_track"},
+        YotoService.SET_SLEEP_TIMER,
+        {TargetKey.ENTITY_ID: ENTITY_ID, YotoServiceArgument.MODE: "end_of_track"},
         blocking=True,
     )
 
@@ -809,8 +814,8 @@ async def test_set_sleep_timer_end_of_track_error(
     with pytest.raises(expected_error):
         await hass.services.async_call(
             DOMAIN,
-            "set_sleep_timer",
-            {ATTR_ENTITY_ID: ENTITY_ID, "mode": "end_of_track"},
+            YotoService.SET_SLEEP_TIMER,
+            {TargetKey.ENTITY_ID: ENTITY_ID, YotoServiceArgument.MODE: "end_of_track"},
             blocking=True,
         )
 
@@ -819,13 +824,20 @@ async def test_set_sleep_timer_end_of_track_error(
     "service_data",
     [
         pytest.param({}, id="missing_duration"),
-        pytest.param({"mode": "duration"}, id="duration_mode_without_duration"),
-        pytest.param({"duration": {"seconds": 0}}, id="zero_duration"),
         pytest.param(
-            {"mode": "end_of_track", "duration": {"minutes": 5}},
+            {YotoServiceArgument.MODE: "duration"}, id="duration_mode_without_duration"
+        ),
+        pytest.param(
+            {YotoServiceArgument.DURATION: {"seconds": 0}}, id="zero_duration"
+        ),
+        pytest.param(
+            {
+                YotoServiceArgument.MODE: "end_of_track",
+                YotoServiceArgument.DURATION: {"minutes": 5},
+            },
             id="end_of_track_with_duration",
         ),
-        pytest.param({"mode": "unknown"}, id="unknown_mode"),
+        pytest.param({YotoServiceArgument.MODE: "unknown"}, id="unknown_mode"),
     ],
 )
 async def test_set_sleep_timer_invalid(
@@ -840,8 +852,8 @@ async def test_set_sleep_timer_invalid(
     with pytest.raises(probatio.Invalid):
         await hass.services.async_call(
             DOMAIN,
-            "set_sleep_timer",
-            {ATTR_ENTITY_ID: ENTITY_ID, **service_data},
+            YotoService.SET_SLEEP_TIMER,
+            {TargetKey.ENTITY_ID: ENTITY_ID, **service_data},
             blocking=True,
         )
 
@@ -860,7 +872,10 @@ async def test_sleep_timer_command_error(
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             DOMAIN,
-            "set_sleep_timer",
-            {ATTR_ENTITY_ID: ENTITY_ID, "duration": {"minutes": 5}},
+            YotoService.SET_SLEEP_TIMER,
+            {
+                TargetKey.ENTITY_ID: ENTITY_ID,
+                YotoServiceArgument.DURATION: {"minutes": 5},
+            },
             blocking=True,
         )

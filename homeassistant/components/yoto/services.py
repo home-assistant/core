@@ -1,6 +1,7 @@
 """Service actions for the Yoto integration."""
 
 from datetime import timedelta
+from enum import StrEnum
 from typing import Any
 
 import probatio
@@ -11,23 +12,32 @@ from homeassistant.helpers import config_validation as cv, service
 
 from .const import DOMAIN, SleepTimerMode
 
-SERVICE_SET_SLEEP_TIMER = "set_sleep_timer"
-SERVICE_CLEAR_SLEEP_TIMER = "clear_sleep_timer"
 
-ATTR_MODE = "mode"
-ATTR_DURATION = "duration"
+class YotoService(StrEnum):
+    """Store keys for Yoto services."""
+
+    CLEAR_SLEEP_TIMER = "clear_sleep_timer"
+    SET_SLEEP_TIMER = "set_sleep_timer"
+
+
+class YotoServiceArgument(StrEnum):
+    """Store keys for Yoto service arguments."""
+
+    DURATION = "duration"
+    MODE = "mode"
 
 
 def _validate_duration(data: dict[str, Any]) -> dict[str, Any]:
     """Require a duration in duration mode, and only there."""
-    if data[ATTR_MODE] is SleepTimerMode.DURATION:
-        if ATTR_DURATION not in data:
+    if data[YotoServiceArgument.MODE] is SleepTimerMode.DURATION:
+        if YotoServiceArgument.DURATION not in data:
             raise probatio.Invalid(
-                "duration is required in duration mode", [ATTR_DURATION]
+                "duration is required in duration mode", [YotoServiceArgument.DURATION]
             )
-    elif ATTR_DURATION in data:
+    elif YotoServiceArgument.DURATION in data:
         raise probatio.Invalid(
-            "duration cannot be used in end of track mode", [ATTR_DURATION]
+            "duration cannot be used in end of track mode",
+            [YotoServiceArgument.DURATION],
         )
     return data
 
@@ -36,9 +46,9 @@ SET_SLEEP_TIMER_SCHEMA = probatio.All(
     cv.make_entity_service_schema(
         {
             probatio.Optional(
-                ATTR_MODE, default=SleepTimerMode.DURATION
+                YotoServiceArgument.MODE, default=SleepTimerMode.DURATION
             ): probatio.Coerce(SleepTimerMode),
-            probatio.Optional(ATTR_DURATION): probatio.All(
+            probatio.Optional(YotoServiceArgument.DURATION): probatio.All(
                 cv.time_period, probatio.Range(min=timedelta(seconds=1))
             ),
         }
@@ -53,7 +63,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
     service.async_register_platform_entity_service(
         hass,
         DOMAIN,
-        SERVICE_SET_SLEEP_TIMER,
+        YotoService.SET_SLEEP_TIMER,
         entity_domain=MEDIA_PLAYER_DOMAIN,
         schema=SET_SLEEP_TIMER_SCHEMA,
         func="async_set_sleep_timer",
@@ -61,7 +71,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
     service.async_register_platform_entity_service(
         hass,
         DOMAIN,
-        SERVICE_CLEAR_SLEEP_TIMER,
+        YotoService.CLEAR_SLEEP_TIMER,
         entity_domain=MEDIA_PLAYER_DOMAIN,
         schema=None,
         func="async_clear_sleep_timer",
