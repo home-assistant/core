@@ -1,5 +1,6 @@
 """Test the Portainer initial specific behavior."""
 
+from types import MappingProxyType
 from typing import Any, cast
 from unittest.mock import AsyncMock, MagicMock
 
@@ -24,7 +25,7 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.portainer.const import DOMAIN, SUBENTRY_TYPE_ENVIRONMENT
 from homeassistant.components.portainer.coordinator import DEFAULT_SCAN_INTERVAL
-from homeassistant.config_entries import ConfigEntryState
+from homeassistant.config_entries import ConfigEntryState, ConfigSubentry
 from homeassistant.const import (
     CONF_API_KEY,
     CONF_API_TOKEN,
@@ -248,7 +249,7 @@ async def test_migration_v5_1_to_v5_2(
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-    assert entry.minor_version == 2
+    assert entry.minor_version == 3
     assert len(entry.subentries) == 1
     subentry = next(iter(entry.subentries.values()))
     assert subentry.subentry_type == SUBENTRY_TYPE_ENVIRONMENT
@@ -264,6 +265,74 @@ async def test_migration_v5_1_to_v5_2(
     assert entity_after.unique_id == f"{entry.entry_id}_1_adguard_container"
     assert endpoint_entity_after.config_subentry_id == subentry.subentry_id
     assert endpoint_entity_after.unique_id == f"{entry.entry_id}_1_api_version"
+
+
+@pytest.mark.parametrize(
+    ("unique_id_suffix", "translation_key", "disabled_by", "expected_disabled_by"),
+    [
+        pytest.param(
+            "1_image_disk_usage_total_size",
+            "image_disk_usage_total_size",
+            None,
+            er.RegistryEntryDisabler.INTEGRATION,
+            id="endpoint_disk_space",
+        ),
+        pytest.param(
+            "1_volume_myvolume_volume_size",
+            "volume_size",
+            None,
+            er.RegistryEntryDisabler.INTEGRATION,
+            id="volume_size",
+        ),
+        pytest.param(
+            "1_api_version",
+            "api_version",
+            None,
+            None,
+            id="not_disk_space",
+        ),
+        pytest.param(
+            "1_image_disk_usage_total_size",
+            "image_disk_usage_total_size",
+            er.RegistryEntryDisabler.USER,
+            er.RegistryEntryDisabler.USER,
+            id="user_disabled",
+        ),
+    ],
+)
+async def test_migration_v5_2_to_v5_3(
+    hass: HomeAssistant,
+    mock_portainer_client: AsyncMock,
+    entity_registry: er.EntityRegistry,
+    unique_id_suffix: str,
+    translation_key: str,
+    disabled_by: er.RegistryEntryDisabler | None,
+    expected_disabled_by: er.RegistryEntryDisabler | None,
+) -> None:
+    """Test migration disables the disk space sensors."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data=MOCK_TEST_CONFIG,
+        unique_id=TEST_INSTANCE_ID,
+        version=5,
+        minor_version=2,
+    )
+    entry.add_to_hass(hass)
+    entity = entity_registry.async_get_or_create(
+        domain="sensor",
+        platform=DOMAIN,
+        unique_id=f"{entry.entry_id}_{unique_id_suffix}",
+        config_entry=entry,
+        translation_key=translation_key,
+        disabled_by=disabled_by,
+    )
+
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert entry.minor_version == 3
+    assert (entity_after := entity_registry.async_get(entity.entity_id))
+    assert entity_after.disabled_by is expected_disabled_by
 
 
 async def test_unload_entry(
@@ -527,6 +596,40 @@ async def test_new_endpoint_callback(
     )
     assert stack_device is not None
     assert stack_device.via_device_id == endpoint_device.id
+
+
+async def test_non_docker_endpoint_skipped(
+    hass: HomeAssistant,
+    mock_portainer_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test a configured Kubernetes environment is skipped without failing setup."""
+    mock_config_entry.add_to_hass(hass)
+    hass.config_entries.async_add_subentry(
+        mock_config_entry,
+        ConfigSubentry(
+            data=MappingProxyType({}),
+            subentry_type=SUBENTRY_TYPE_ENVIRONMENT,
+            title="my-kubernetes",
+            unique_id="7",
+        ),
+    )
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    assert 7 not in mock_config_entry.runtime_data.data
+    assert 1 in mock_config_entry.runtime_data.data
+    assert 7 not in {
+        call.args[0] for call in mock_portainer_client.get_containers.call_args_list
+    }
+    assert (
+        device_registry.async_get_device_by_identifier(
+            (DOMAIN, f"{mock_config_entry.entry_id}_7"), mock_config_entry.entry_id
+        )
+        is None
+    )
 
 
 async def test_removed_endpoint_stops_event_listener(

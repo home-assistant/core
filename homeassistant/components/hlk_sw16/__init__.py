@@ -1,6 +1,8 @@
 """Support for HLK-SW16 relay switches."""
 
+import asyncio
 import logging
+from typing import Any
 
 from hlk_sw16 import create_hlk_sw16_connection
 from hlk_sw16.protocol import SW16Client
@@ -8,8 +10,9 @@ import probatio
 
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT, CONF_SWITCHES, Platform
-from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import config_validation as cv
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant, callback
+from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers import config_validation as cv, issue_registry as ir
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.typing import ConfigType
 
@@ -19,6 +22,7 @@ from .const import (
     DEFAULT_PORT,
     DEFAULT_RECONNECT_INTERVAL,
     DOMAIN,
+    INTEGRATION_TITLE,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -61,16 +65,72 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     if DOMAIN not in config:
         return True
 
-    for device_id in config[DOMAIN]:
-        conf = config[DOMAIN][device_id]
-        hass.async_create_task(
-            hass.config_entries.flow.async_init(
-                DOMAIN,
-                context={"source": SOURCE_IMPORT},
-                data={CONF_HOST: conf[CONF_HOST], CONF_PORT: conf[CONF_PORT]},
-            )
+    hass.async_create_task(
+        _async_import_yaml(
+            hass,
+            [
+                {CONF_HOST: conf[CONF_HOST], CONF_PORT: conf[CONF_PORT]}
+                for conf in config[DOMAIN].values()
+            ],
         )
+    )
     return True
+
+
+async def _async_import_yaml(
+    hass: HomeAssistant, import_data: list[dict[str, Any]]
+) -> None:
+    """Import the YAML devices into config entries."""
+    # Eager tasks register the import flows before setup waits for them.
+    results = await asyncio.gather(
+        *(
+            hass.async_create_task(
+                hass.config_entries.flow.async_init(
+                    DOMAIN, context={"source": SOURCE_IMPORT}, data=data
+                )
+            )
+            for data in import_data
+        )
+    )
+    failed_reasons = {
+        result["reason"]
+        for result in results
+        if result["type"] is FlowResultType.ABORT
+        and result["reason"] != "already_configured"
+    }
+    for reason in failed_reasons:
+        ir.async_create_issue(
+            hass,
+            DOMAIN,
+            f"deprecated_yaml_import_issue_{reason}",
+            breaks_in_ha_version="2027.6.0",
+            is_fixable=False,
+            issue_domain=DOMAIN,
+            severity=ir.IssueSeverity.WARNING,
+            translation_key=f"deprecated_yaml_import_issue_{reason}",
+            translation_placeholders={
+                "domain": DOMAIN,
+                "integration_title": INTEGRATION_TITLE,
+            },
+        )
+    # The shared issue tells users to remove all YAML, which would drop failed devices.
+    if failed_reasons:
+        return
+
+    ir.async_create_issue(
+        hass,
+        HOMEASSISTANT_DOMAIN,
+        f"deprecated_yaml_{DOMAIN}",
+        breaks_in_ha_version="2027.6.0",
+        is_fixable=False,
+        issue_domain=DOMAIN,
+        severity=ir.IssueSeverity.WARNING,
+        translation_key="deprecated_yaml",
+        translation_placeholders={
+            "domain": DOMAIN,
+            "integration_title": INTEGRATION_TITLE,
+        },
+    )
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: HlkConfigEntry) -> None:

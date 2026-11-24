@@ -20,19 +20,17 @@ from homeassistant.components.alert.const import (
     CONF_SKIP_FIRST,
     CONF_TITLE,
     DOMAIN,
+    AlertService,
 )
 from homeassistant.const import (
-    ATTR_ENTITY_ID,
     CONF_ENTITY_ID,
     CONF_NAME,
     CONF_REPEAT,
     CONF_STATE,
-    SERVICE_TOGGLE,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
     STATE_IDLE,
     STATE_OFF,
     STATE_ON,
+    TargetKey,
 )
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.exceptions import ServiceValidationError
@@ -133,8 +131,8 @@ async def test_silence(hass: HomeAssistant, mock_notifier: list[ServiceCall]) ->
 
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: ENTITY_ID},
+        AlertService.TURN_OFF,
+        {TargetKey.ENTITY_ID: ENTITY_ID},
         blocking=True,
     )
     assert hass.states.get(ENTITY_ID).state == STATE_OFF
@@ -170,8 +168,8 @@ async def test_silence_can_acknowledge_false(hass: HomeAssistant) -> None:
     with pytest.raises(ServiceValidationError):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_TURN_OFF,
-            {ATTR_ENTITY_ID: ENTITY_ID},
+            AlertService.TURN_OFF,
+            {TargetKey.ENTITY_ID: ENTITY_ID},
             blocking=True,
         )
     await hass.async_block_till_done()
@@ -188,8 +186,8 @@ async def test_reset(hass: HomeAssistant, mock_notifier: list[ServiceCall]) -> N
 
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: ENTITY_ID},
+        AlertService.TURN_OFF,
+        {TargetKey.ENTITY_ID: ENTITY_ID},
         blocking=True,
     )
 
@@ -197,8 +195,8 @@ async def test_reset(hass: HomeAssistant, mock_notifier: list[ServiceCall]) -> N
 
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: ENTITY_ID},
+        AlertService.TURN_ON,
+        {TargetKey.ENTITY_ID: ENTITY_ID},
         blocking=True,
     )
     assert hass.states.get(ENTITY_ID).state == STATE_ON
@@ -213,16 +211,16 @@ async def test_toggle(hass: HomeAssistant, mock_notifier: list[ServiceCall]) -> 
 
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_TOGGLE,
-        {ATTR_ENTITY_ID: ENTITY_ID},
+        AlertService.TOGGLE,
+        {TargetKey.ENTITY_ID: ENTITY_ID},
         blocking=True,
     )
     assert hass.states.get(ENTITY_ID).state == STATE_OFF
 
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_TOGGLE,
-        {ATTR_ENTITY_ID: ENTITY_ID},
+        AlertService.TOGGLE,
+        {TargetKey.ENTITY_ID: ENTITY_ID},
         blocking=True,
     )
     assert hass.states.get(ENTITY_ID).state == STATE_ON

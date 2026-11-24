@@ -6,7 +6,7 @@ from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components import button
 from homeassistant.components.fully_kiosk.const import DOMAIN
-from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.const import CommonServiceArgument
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
@@ -25,8 +25,8 @@ async def test_buttons(
     assert entry.unique_id == "abcdef-123456-restartApp"
     await hass.services.async_call(
         button.DOMAIN,
-        button.SERVICE_PRESS,
-        {ATTR_ENTITY_ID: "button.amazon_fire_restart_browser"},
+        button.ButtonService.PRESS,
+        {CommonServiceArgument.ENTITY_ID: "button.amazon_fire_restart_browser"},
         blocking=True,
     )
     assert len(mock_fully_kiosk.restartApp.mock_calls) == 1
@@ -39,8 +39,8 @@ async def test_buttons(
     assert entry.unique_id == "abcdef-123456-rebootDevice"
     await hass.services.async_call(
         button.DOMAIN,
-        button.SERVICE_PRESS,
-        {ATTR_ENTITY_ID: "button.amazon_fire_restart_device"},
+        button.ButtonService.PRESS,
+        {CommonServiceArgument.ENTITY_ID: "button.amazon_fire_restart_device"},
         blocking=True,
     )
     assert len(mock_fully_kiosk.rebootDevice.mock_calls) == 1
@@ -53,8 +53,8 @@ async def test_buttons(
     assert entry.unique_id == "abcdef-123456-toForeground"
     await hass.services.async_call(
         button.DOMAIN,
-        button.SERVICE_PRESS,
-        {ATTR_ENTITY_ID: "button.amazon_fire_bring_to_foreground"},
+        button.ButtonService.PRESS,
+        {CommonServiceArgument.ENTITY_ID: "button.amazon_fire_bring_to_foreground"},
         blocking=True,
     )
     assert len(mock_fully_kiosk.toForeground.mock_calls) == 1
@@ -67,8 +67,8 @@ async def test_buttons(
     assert entry.unique_id == "abcdef-123456-toBackground"
     await hass.services.async_call(
         button.DOMAIN,
-        button.SERVICE_PRESS,
-        {ATTR_ENTITY_ID: "button.amazon_fire_send_to_background"},
+        button.ButtonService.PRESS,
+        {CommonServiceArgument.ENTITY_ID: "button.amazon_fire_send_to_background"},
         blocking=True,
     )
     assert len(mock_fully_kiosk.toBackground.mock_calls) == 1
@@ -81,8 +81,8 @@ async def test_buttons(
     assert entry.unique_id == "abcdef-123456-loadStartUrl"
     await hass.services.async_call(
         button.DOMAIN,
-        button.SERVICE_PRESS,
-        {ATTR_ENTITY_ID: "button.amazon_fire_load_start_url"},
+        button.ButtonService.PRESS,
+        {CommonServiceArgument.ENTITY_ID: "button.amazon_fire_load_start_url"},
         blocking=True,
     )
     assert len(mock_fully_kiosk.loadStartUrl.mock_calls) == 1
@@ -95,8 +95,8 @@ async def test_buttons(
     assert entry.unique_id == "abcdef-123456-clearCache"
     await hass.services.async_call(
         button.DOMAIN,
-        button.SERVICE_PRESS,
-        {ATTR_ENTITY_ID: "button.amazon_fire_clear_browser_cache"},
+        button.ButtonService.PRESS,
+        {CommonServiceArgument.ENTITY_ID: "button.amazon_fire_clear_browser_cache"},
         blocking=True,
     )
     assert len(mock_fully_kiosk.clearCache.mock_calls) == 1
@@ -111,8 +111,8 @@ async def test_buttons(
     assert entry.unique_id == "abcdef-123456-triggerMotion"
     await hass.services.async_call(
         button.DOMAIN,
-        button.SERVICE_PRESS,
-        {ATTR_ENTITY_ID: "button.amazon_fire_trigger_motion_activity"},
+        button.ButtonService.PRESS,
+        {CommonServiceArgument.ENTITY_ID: "button.amazon_fire_trigger_motion_activity"},
         blocking=True,
     )
     assert len(mock_fully_kiosk.triggerMotion.mock_calls) == 1

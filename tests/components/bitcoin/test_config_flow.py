@@ -4,11 +4,15 @@ from unittest.mock import AsyncMock, MagicMock
 
 from blockchain.exchangerates import Currency
 import pytest
-from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.common import MockConfigEntry, get_schema_suggested_value
 
 from homeassistant.components.bitcoin.const import DOMAIN
 from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER
-from homeassistant.const import CONF_CURRENCY, CONF_DISPLAY_OPTIONS
+from homeassistant.const import (
+    ATTR_UNIT_OF_MEASUREMENT,
+    CONF_CURRENCY,
+    CONF_DISPLAY_OPTIONS,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -74,6 +78,50 @@ async def test_user_flow_single_instance(
     )
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "single_instance_allowed"
+
+
+@pytest.mark.usefixtures("mock_exchangerates", "mock_statistics")
+async def test_reconfigure_flow(hass: HomeAssistant) -> None:
+    """Test changing the currency of an existing entry."""
+    entry = MockConfigEntry(domain=DOMAIN, title="Bitcoin", data={CONF_CURRENCY: "EUR"})
+    entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+    state = hass.states.get("sensor.bitcoin_exchange_rate")
+    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == "EUR"
+
+    result = await entry.start_reconfigure_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+    assert get_schema_suggested_value(result["data_schema"].schema, CONF_CURRENCY) == (
+        "EUR"
+    )
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_CURRENCY: "USD"}
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert entry.data == {CONF_CURRENCY: "USD"}
+
+    await hass.async_block_till_done()
+    state = hass.states.get("sensor.bitcoin_exchange_rate")
+    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == "USD"
+
+
+@pytest.mark.usefixtures("mock_statistics")
+async def test_reconfigure_flow_cannot_connect(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_exchangerates: MagicMock,
+) -> None:
+    """Test the reconfigure flow aborts when blockchain.com cannot be reached."""
+    mock_config_entry.add_to_hass(hass)
+    mock_exchangerates.side_effect = OSError("boom")
+
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "cannot_connect"
 
 
 @pytest.mark.usefixtures("mock_exchangerates")

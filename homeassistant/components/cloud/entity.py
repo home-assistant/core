@@ -45,13 +45,13 @@ from openai.types.responses.response_output_item import ImageGenerationCall
 import probatio
 
 from homeassistant.components import conversation
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import llm
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.json import json_dumps
 from homeassistant.util import slugify
 
+from . import CloudConfigEntry
 from .client import CloudClient
 
 _LOGGER = logging.getLogger(__name__)
@@ -463,7 +463,9 @@ async def _transform_stream(  # noqa: C901 - This is complex, but better to have
 class BaseCloudLLMEntity(Entity):
     """Cloud LLM conversation agent."""
 
-    def __init__(self, cloud: Cloud[CloudClient], config_entry: ConfigEntry) -> None:
+    def __init__(
+        self, cloud: Cloud[CloudClient], config_entry: CloudConfigEntry
+    ) -> None:
         """Initialize the entity."""
         self._cloud = cloud
         self._entry = config_entry

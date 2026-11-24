@@ -18,7 +18,6 @@ from homeassistant.components.homeassistant_hardware.util import (
 )
 from homeassistant.components.usb import usb_service_info_from_device
 from homeassistant.config_entries import (
-    ConfigEntry,
     ConfigEntryBaseFlow,
     ConfigFlowContext,
     ConfigFlowResult,
@@ -27,6 +26,7 @@ from homeassistant.config_entries import (
 from homeassistant.core import callback
 from homeassistant.helpers.service_info.usb import UsbServiceInfo
 
+from . import HomeAssistantSkyConnectConfigEntry
 from .const import (
     DESCRIPTION,
     DEVICE,
@@ -138,7 +138,7 @@ class HomeAssistantSkyConnectConfigFlow(
     @callback
     @override
     def async_get_options_flow(
-        config_entry: ConfigEntry,
+        config_entry: HomeAssistantSkyConnectConfigEntry,
     ) -> OptionsFlow:
         """Return the options flow."""
         firmware_type = ApplicationType(config_entry.data[FIRMWARE])

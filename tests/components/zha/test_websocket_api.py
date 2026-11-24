@@ -20,6 +20,7 @@ from zha.application.const import (
     ATTR_ENDPOINT_NAMES,
     ATTR_IEEE,
     ATTR_MANUFACTURER,
+    ATTR_MODEL,
     ATTR_NEIGHBORS,
     ATTR_QUIRK_APPLIED,
     ATTR_TYPE,
@@ -34,6 +35,7 @@ from zha.zigbee.device import (
 import zigpy.backups
 from zigpy.const import SIG_EP_INPUT, SIG_EP_OUTPUT, SIG_EP_PROFILE, SIG_EP_TYPE
 from zigpy.device import GreenPowerDevice as ZigpyGreenPowerDevice
+import zigpy.exceptions
 import zigpy.profiles.zha
 import zigpy.types
 from zigpy.types.named import EUI64
@@ -45,6 +47,7 @@ from zigpy.zgp.types import ApplicationID, SrcID
 from zigpy.zgp.util import synthetic_ieee
 
 from homeassistant.components.websocket_api import (
+    ERR_HOME_ASSISTANT_ERROR,
     ERR_INVALID_FORMAT,
     ERR_NOT_FOUND,
     ERR_NOT_SUPPORTED,
@@ -57,6 +60,7 @@ from homeassistant.components.zha.const import (
     ATTR_QR_CODE,
     ATTR_SOURCE_IEEE,
     EZSP_OVERWRITE_EUI64,
+    ZHAService,
 )
 from homeassistant.components.zha.helpers import (
     DEBUG_LEVELS,
@@ -65,7 +69,6 @@ from homeassistant.components.zha.helpers import (
     get_zha_gateway,
     get_zha_gateway_proxy,
 )
-from homeassistant.components.zha.services import SERVICE_PERMIT
 from homeassistant.components.zha.websocket_api import (
     ATTR_TARGET_IEEE,
     BINDINGS,
@@ -76,7 +79,7 @@ from homeassistant.components.zha.websocket_api import (
     TYPE,
     async_load_api,
 )
-from homeassistant.const import ATTR_AREA_ID, ATTR_MODEL, ATTR_NAME, Platform
+from homeassistant.const import ATTR_AREA_ID, ATTR_NAME, Platform
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
@@ -85,6 +88,7 @@ from .data import BASE_CUSTOM_CONFIGURATION, CONFIG_WITH_ALARM_OPTIONS
 
 IEEE_SWITCH_DEVICE = "01:2d:6f:00:0a:90:69:e7"
 IEEE_GROUPABLE_DEVICE = "01:2d:6f:00:0a:90:69:e8"
+IEEE_UNKNOWN_DEVICE = "28:6d:97:00:01:04:11:8c"
 GREEN_POWER_SRC_ID = SrcID(0x12345678)
 IEEE_GREEN_POWER_DEVICE = str(synthetic_ieee(GREEN_POWER_SRC_ID))
 
@@ -660,6 +664,75 @@ async def test_read_zigbee_cluster_attribute(
     assert read_mock.call_count == read_calls
 
 
+async def test_read_zigbee_cluster_attribute_device_not_found(
+    zha_client: MockHAClientWebSocket,
+) -> None:
+    """Test reading a cluster attribute of an unknown device."""
+    await zha_client.send_json(
+        {
+            ID: 5,
+            TYPE: "zha/devices/clusters/attributes/value",
+            ATTR_IEEE: IEEE_UNKNOWN_DEVICE,
+            ATTR_ENDPOINT_ID: 1,
+            ATTR_CLUSTER_ID: general.OnOff.cluster_id,
+            ATTR_CLUSTER_TYPE: CLUSTER_TYPE_IN,
+            ATTR_ATTRIBUTE: 0,
+        }
+    )
+    msg = await zha_client.receive_json()
+
+    assert not msg["success"]
+    assert msg["error"]["code"] == ERR_NOT_FOUND
+
+
+async def test_read_zigbee_cluster_attribute_radio_failure(
+    hass: HomeAssistant, zha_client: MockHAClientWebSocket
+) -> None:
+    """Test a failed cluster attribute read is reported as a readable error."""
+    cluster = (
+        get_zha_gateway(hass)
+        .get_device(EUI64.convert(IEEE_SWITCH_DEVICE))
+        .async_get_cluster(1, general.OnOff.cluster_id)
+    )
+
+    with patch.object(
+        cluster,
+        "read_attributes",
+        AsyncMock(
+            side_effect=zigpy.exceptions.DeliveryError("Failed to deliver packet", 225)
+        ),
+    ):
+        await zha_client.send_json(
+            {
+                ID: 5,
+                TYPE: "zha/devices/clusters/attributes/value",
+                ATTR_IEEE: IEEE_SWITCH_DEVICE,
+                ATTR_ENDPOINT_ID: 1,
+                ATTR_CLUSTER_ID: general.OnOff.cluster_id,
+                ATTR_CLUSTER_TYPE: CLUSTER_TYPE_IN,
+                ATTR_ATTRIBUTE: 0,
+            }
+        )
+        msg = await zha_client.receive_json()
+
+    assert not msg["success"]
+    assert msg["error"]["code"] == ERR_HOME_ASSISTANT_ERROR
+    assert msg["error"]["message"] == "Failed to send request: Failed to deliver packet"
+
+
+async def test_get_bindable_devices_device_not_found(
+    zha_client: MockHAClientWebSocket,
+) -> None:
+    """Test listing the bindable devices of an unknown device."""
+    await zha_client.send_json(
+        {ID: 5, TYPE: "zha/devices/bindable", ATTR_IEEE: IEEE_UNKNOWN_DEVICE}
+    )
+    msg = await zha_client.receive_json()
+
+    assert not msg["success"]
+    assert msg["error"]["code"] == ERR_NOT_FOUND
+
+
 async def test_get_zha_config_with_green_power_device(
     hass: HomeAssistant, zha_client: MockHAClientWebSocket
 ) -> None:
@@ -879,7 +952,7 @@ async def test_permit_ha12(
     """Test permit service."""
 
     await hass.services.async_call(
-        DOMAIN, SERVICE_PERMIT, params, True, Context(user_id=hass_admin_user.id)
+        DOMAIN, ZHAService.PERMIT, params, True, Context(user_id=hass_admin_user.id)
     )
     assert app_controller.permit.await_count == 1
     assert app_controller.permit.await_args[1]["time_s"] == duration
@@ -923,7 +996,7 @@ async def test_permit_with_install_code(
     """Test permit service with install code."""
 
     await hass.services.async_call(
-        DOMAIN, SERVICE_PERMIT, params, True, Context(user_id=hass_admin_user.id)
+        DOMAIN, ZHAService.PERMIT, params, True, Context(user_id=hass_admin_user.id)
     )
     assert app_controller.permit.await_count == 0
     assert app_controller.permit_with_link_key.call_count == 1
@@ -978,7 +1051,7 @@ async def test_permit_with_install_code_fail(
 
     with pytest.raises(probatio.Invalid):
         await hass.services.async_call(
-            DOMAIN, SERVICE_PERMIT, params, True, Context(user_id=hass_admin_user.id)
+            DOMAIN, ZHAService.PERMIT, params, True, Context(user_id=hass_admin_user.id)
         )
     assert app_controller.permit.await_count == 0
     assert app_controller.permit_with_link_key.call_count == 0
@@ -1039,7 +1112,7 @@ async def test_permit_with_qr_code(
     """Test permit service with install code from qr code."""
 
     await hass.services.async_call(
-        DOMAIN, SERVICE_PERMIT, params, True, Context(user_id=hass_admin_user.id)
+        DOMAIN, ZHAService.PERMIT, params, True, Context(user_id=hass_admin_user.id)
     )
     assert app_controller.permit.await_count == 0
     assert app_controller.permit_with_link_key.call_count == 1
@@ -1055,7 +1128,7 @@ async def test_ws_permit_with_qr_code(
     """Test permit service with install code from qr code."""
 
     await zha_client.send_json(
-        {ID: 14, TYPE: f"{DOMAIN}/devices/{SERVICE_PERMIT}", **params}
+        {ID: 14, TYPE: f"{DOMAIN}/devices/{ZHAService.PERMIT}", **params}
     )
 
     msg_type = None
@@ -1083,7 +1156,7 @@ async def test_ws_permit_with_install_code_fail(
     """Test permit ws service with install code."""
 
     await zha_client.send_json(
-        {ID: 14, TYPE: f"{DOMAIN}/devices/{SERVICE_PERMIT}", **params}
+        {ID: 14, TYPE: f"{DOMAIN}/devices/{ZHAService.PERMIT}", **params}
     )
 
     msg = await zha_client.receive_json()
@@ -1118,7 +1191,7 @@ async def test_ws_permit_ha12(
     """Test permit ws service."""
 
     await zha_client.send_json(
-        {ID: 14, TYPE: f"{DOMAIN}/devices/{SERVICE_PERMIT}", **params}
+        {ID: 14, TYPE: f"{DOMAIN}/devices/{ZHAService.PERMIT}", **params}
     )
 
     msg_type = None
@@ -1136,6 +1209,29 @@ async def test_ws_permit_ha12(
     assert app_controller.permit.await_args[1]["time_s"] == duration
     assert app_controller.permit.await_args[1]["node"] == node
     assert app_controller.permit_with_link_key.call_count == 0
+
+
+async def test_ws_permit_radio_failure(
+    app_controller: ControllerApplication, zha_client: MockHAClientWebSocket
+) -> None:
+    """Test a failed permit is reported as a readable error."""
+    app_controller.permit.side_effect = zigpy.exceptions.DeliveryError(
+        "Failed to deliver packet", 225
+    )
+
+    await zha_client.send_json({ID: 14, TYPE: f"{DOMAIN}/devices/{ZHAService.PERMIT}"})
+
+    msg_type = None
+    while msg_type != TYPE_RESULT:
+        # There will be logging events coming over the websocket
+        # as well so we want to ignore those
+        msg = await zha_client.receive_json()
+        msg_type = msg["type"]
+
+    assert msg["id"] == 14
+    assert not msg["success"]
+    assert msg["error"]["code"] == ERR_HOME_ASSISTANT_ERROR
+    assert msg["error"]["message"] == "Failed to send request: Failed to deliver packet"
 
 
 async def test_ws_permit_overlapping_restores_log_levels(
@@ -1158,8 +1254,8 @@ async def test_ws_permit_overlapping_restores_log_levels(
     for name in DEBUG_LEVELS:
         caplog.set_level(logging.INFO, logger=name)
 
-    await send_and_wait_result({ID: 20, TYPE: f"{DOMAIN}/devices/{SERVICE_PERMIT}"})
-    await send_and_wait_result({ID: 21, TYPE: f"{DOMAIN}/devices/{SERVICE_PERMIT}"})
+    await send_and_wait_result({ID: 20, TYPE: f"{DOMAIN}/devices/{ZHAService.PERMIT}"})
+    await send_and_wait_result({ID: 21, TYPE: f"{DOMAIN}/devices/{ZHAService.PERMIT}"})
     assert log_levels() == DEBUG_LEVELS
 
     # Ending the first session must leave the second one in debug mode
@@ -1343,6 +1439,7 @@ async def test_websocket_change_channel(
 )
 async def test_websocket_bind_unbind_devices(
     operation: tuple[str, zdo_types.ZDOCmd],
+    hass: HomeAssistant,
     app_controller: ControllerApplication,
     zha_client,
 ) -> None:
@@ -1366,14 +1463,67 @@ async def test_websocket_bind_unbind_devices(
     assert msg["id"] == 27
     assert msg["type"] == TYPE_RESULT
     assert msg["success"]
+    gateway = get_zha_gateway(hass)
     assert binding_operation_mock.mock_calls == [
         call(
-            ANY,
-            EUI64.convert(IEEE_SWITCH_DEVICE),
-            EUI64.convert(IEEE_GROUPABLE_DEVICE),
+            gateway.get_device(EUI64.convert(IEEE_SWITCH_DEVICE)),
+            gateway.get_device(EUI64.convert(IEEE_GROUPABLE_DEVICE)),
             req,
         )
     ]
+
+
+@pytest.mark.parametrize("command_type", ["bind", "unbind"])
+@pytest.mark.parametrize(
+    ("source_ieee", "target_ieee", "error_code"),
+    [
+        pytest.param(
+            IEEE_UNKNOWN_DEVICE,
+            IEEE_GROUPABLE_DEVICE,
+            ERR_NOT_FOUND,
+            id="missing_source",
+        ),
+        pytest.param(
+            IEEE_SWITCH_DEVICE, IEEE_UNKNOWN_DEVICE, ERR_NOT_FOUND, id="missing_target"
+        ),
+        pytest.param(
+            IEEE_GREEN_POWER_DEVICE,
+            IEEE_GROUPABLE_DEVICE,
+            ERR_NOT_SUPPORTED,
+            id="green_power_source",
+        ),
+    ],
+)
+async def test_websocket_bind_unbind_devices_invalid_device(
+    command_type: str,
+    source_ieee: str,
+    target_ieee: str,
+    error_code: str,
+    hass: HomeAssistant,
+    zha_client: MockHAClientWebSocket,
+) -> None:
+    """Test binding devices fails for a missing device or a Green Power source."""
+    await _async_add_green_power_device(hass)
+
+    with patch(
+        "homeassistant.components.zha.websocket_api.async_binding_operation",
+        autospec=True,
+    ) as binding_operation_mock:
+        await zha_client.send_json(
+            {
+                ID: 27,
+                TYPE: f"zha/devices/{command_type}",
+                ATTR_SOURCE_IEEE: source_ieee,
+                ATTR_TARGET_IEEE: target_ieee,
+            }
+        )
+        msg = await zha_client.receive_json()
+
+    assert msg["id"] == 27
+    assert msg["type"] == TYPE_RESULT
+    assert not msg["success"]
+    assert msg["error"]["code"] == error_code
+    assert binding_operation_mock.call_count == 0
 
 
 @pytest.mark.parametrize(
@@ -1424,7 +1574,7 @@ async def test_websocket_bind_unbind_group(
 @pytest.mark.parametrize(
     ("source_ieee", "error_code"),
     [
-        pytest.param("28:6d:97:00:01:04:11:8c", ERR_NOT_FOUND, id="missing"),
+        pytest.param(IEEE_UNKNOWN_DEVICE, ERR_NOT_FOUND, id="missing"),
         pytest.param(IEEE_GREEN_POWER_DEVICE, ERR_NOT_SUPPORTED, id="green_power"),
     ],
 )

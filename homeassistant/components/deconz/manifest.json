@@ -4,6 +4,7 @@
   "categories": ["hubs_protocols.wireless_protocols"],
   "codeowners": ["@Kane610"],
   "config_flow": true,
+  "connectivity": ["zigbee"],
   "documentation": "https://www.home-assistant.io/integrations/deconz",
   "integration_type": "hub",
   "iot_class": "local_push",

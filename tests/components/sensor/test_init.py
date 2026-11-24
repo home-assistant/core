@@ -1699,6 +1699,49 @@ async def test_unit_conversion_priority_precision(
 
 
 @pytest.mark.parametrize(
+    ("suggested_precision", "custom_unit", "expected_precision"),
+    [
+        pytest.param(2, UnitOfElectricPotential.MILLIVOLT, 0, id="mV_precision_2"),
+        pytest.param(3, UnitOfElectricPotential.MILLIVOLT, 0, id="mV_precision_3"),
+        pytest.param(4, UnitOfElectricPotential.MILLIVOLT, 1, id="mV_precision_4"),
+        pytest.param(2, UnitOfElectricPotential.KILOVOLT, 5, id="kV_precision_2"),
+    ],
+)
+async def test_custom_unit_adjusted_precision(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    suggested_precision: int,
+    custom_unit: str,
+    expected_precision: int,
+) -> None:
+    """Test suggested precision is scaled by the ratio to a custom unit."""
+    entity0 = MockSensor(
+        name="Test",
+        device_class=SensorDeviceClass.VOLTAGE,
+        native_unit_of_measurement=UnitOfElectricPotential.MILLIVOLT,
+        native_value="4150",
+        suggested_display_precision=suggested_precision,
+        suggested_unit_of_measurement=UnitOfElectricPotential.VOLT,
+        unique_id="very_unique",
+    )
+    setup_test_component_platform(hass, sensor.DOMAIN, [entity0])
+
+    assert await async_setup_component(hass, DOMAIN, {"sensor": {"platform": "test"}})
+    await hass.async_block_till_done()
+
+    entry = entity_registry.async_get(entity0.entity_id)
+    assert entry.options["sensor"]["suggested_display_precision"] == suggested_precision
+
+    entity_registry.async_update_entity_options(
+        entity0.entity_id, "sensor", {"unit_of_measurement": custom_unit}
+    )
+    await hass.async_block_till_done()
+
+    entry = entity_registry.async_get(entity0.entity_id)
+    assert entry.options["sensor"]["suggested_display_precision"] == expected_precision
+
+
+@pytest.mark.parametrize(
     (
         "unit_system",
         "native_unit",

@@ -12,11 +12,10 @@ from homeassistant.const import (
     ATTR_TRIPPED,
 )
 from homeassistant.helpers.entity import Entity
-from homeassistant.util import slugify
 from homeassistant.util.dt import utc_from_timestamp
 
 from .common import ControllerData
-from .const import CONF_LEGACY_UNIQUE_ID, VERA_ID_FORMAT
+from .const import CONF_LEGACY_UNIQUE_ID
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -32,10 +31,6 @@ class VeraEntity[_DeviceTypeT: veraApi.VeraDevice](Entity):
         self.controller = controller_data.controller
 
         self._name = self.vera_device.name
-        # Append device id to prevent name clashes in HA.
-        self.vera_id = VERA_ID_FORMAT.format(
-            slugify(vera_device.name), vera_device.vera_device_id
-        )
 
         if controller_data.config_entry.data.get(CONF_LEGACY_UNIQUE_ID):
             self._unique_id = str(self.vera_device.vera_device_id)

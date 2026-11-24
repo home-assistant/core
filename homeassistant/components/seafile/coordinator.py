@@ -9,18 +9,32 @@ from aioseafile import (
     Library,
     Seafile,
     SeafileAuthenticationError,
+    SeafileConnectionError,
     SeafileError,
+    SeafilePermissionError,
     SeafileTimeoutError,
 )
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_TOKEN, CONF_URL, CONF_VERIFY_SSL
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed
+from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.helpers.update_coordinator import (
+    DataUpdateCoordinator,
+    UpdateFailed,
+    UpdateFailedUnreachable,
+)
 
-from .const import CONF_LIBRARY_ID, DOMAIN, LOGGER, SUBENTRY_TYPE_LIBRARY
+from .const import (
+    CONF_LIBRARY_ID,
+    DOMAIN,
+    ISSUE_LIBRARY_DELETED,
+    LOGGER,
+    SUBENTRY_TYPE_LIBRARY,
+)
+from .utils import handle_seafile_errors
 
 type SeafileConfigEntry = ConfigEntry[SeafileDataUpdateCoordinator]
 
@@ -33,6 +47,7 @@ class SeafileData:
 
     libraries: dict[str, Library]
     file_counts: dict[str, int]
+    history_limits: dict[str, int]
 
 
 class SeafileDataUpdateCoordinator(DataUpdateCoordinator[SeafileData]):
@@ -78,20 +93,99 @@ class SeafileDataUpdateCoordinator(DataUpdateCoordinator[SeafileData]):
                     if library_id in libraries
                 )
             )
+            # Only the owner, or a user the library is shared with as admin,
+            # can read the history setting of a library.
+            owned_library_ids = [
+                library_id
+                for library_id in library_ids
+                if library_id in libraries
+                and (
+                    libraries[library_id].type == "repo"
+                    or libraries[library_id].permission == "admin"
+                )
+            ]
+            history_limits = await asyncio.gather(
+                *(
+                    self._async_get_history_limit(library_id)
+                    for library_id in owned_library_ids
+                )
+            )
         except SeafileAuthenticationError as err:
             raise ConfigEntryAuthFailed(
                 translation_domain=DOMAIN, translation_key="invalid_auth"
             ) from err
         except SeafileTimeoutError as err:
-            raise UpdateFailed(
+            raise UpdateFailedUnreachable(
                 translation_domain=DOMAIN, translation_key="timeout_connect"
+            ) from err
+        except SeafileConnectionError as err:
+            raise UpdateFailedUnreachable(
+                translation_domain=DOMAIN, translation_key="cannot_connect"
             ) from err
         except SeafileError as err:
             raise UpdateFailed(
                 translation_domain=DOMAIN, translation_key="cannot_connect"
             ) from err
         else:
+            self._async_update_library_issues(libraries)
             return SeafileData(
                 libraries=libraries,
                 file_counts={detail.id: detail.file_count for detail in details},
+                history_limits={
+                    library_id: keep_days
+                    for library_id, keep_days in zip(
+                        owned_library_ids, history_limits, strict=True
+                    )
+                    if keep_days is not None
+                },
             )
+
+    @callback
+    def _async_update_library_issues(self, libraries: dict[str, Library]) -> None:
+        """Create an issue for each library that was deleted on the server.
+
+        Issues of libraries that are back, or whose subentry was removed, are
+        deleted when the refresh ends.
+        """
+        entry = self.config_entry
+        with ir.async_refresh_issues(
+            self.hass,
+            DOMAIN,
+            issue_id_pattern=f"{ISSUE_LIBRARY_DELETED}_",
+            config_entry_id=entry.entry_id,
+        ):
+            for subentry in entry.get_subentries_of_type(SUBENTRY_TYPE_LIBRARY):
+                if subentry.data[CONF_LIBRARY_ID] in libraries:
+                    continue
+                ir.async_create_issue(
+                    self.hass,
+                    DOMAIN,
+                    f"{ISSUE_LIBRARY_DELETED}_{subentry.subentry_id}",
+                    config_entry_id=entry.entry_id,
+                    data={
+                        "entry_id": entry.entry_id,
+                        "subentry_id": subentry.subentry_id,
+                        "name": subentry.title,
+                    },
+                    is_fixable=True,
+                    severity=ir.IssueSeverity.ERROR,
+                    translation_key=ISSUE_LIBRARY_DELETED,
+                    translation_placeholders={"name": subentry.title},
+                )
+
+    async def async_set_history_limit(self, library_id: str, keep_days: int) -> None:
+        """Change the days of history a library keeps and update the entities."""
+        async with handle_seafile_errors():
+            keep_days = await self.client.set_library_history_limit(
+                library_id, keep_days
+            )
+        self.data.history_limits[library_id] = keep_days
+        self.async_update_listeners()
+
+    async def _async_get_history_limit(self, library_id: str) -> int | None:
+        """Return the days of history a library keeps, if the server allows it."""
+        try:
+            return await self.client.get_library_history_limit(library_id)
+        except SeafilePermissionError:
+            # Virtual libraries have no history setting.
+            return None
