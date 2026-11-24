@@ -34,7 +34,7 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import GroupEntityStateAttribute
 from .entity import GroupEntity
-from .util import reduce_attribute
+from .util import mean_position, reduce_attribute
 
 KEY_OPEN_CLOSE = "open_close"
 KEY_STOP = "stop"
@@ -317,14 +317,18 @@ class CoverGroup(GroupEntity, CoverEntity):
         all_position_states = [self.hass.states.get(x) for x in position_covers]
         position_states: list[State] = list(filter(None, all_position_states))
         self._attr_current_cover_position = reduce_attribute(
-            position_states, CoverEntityStateAttribute.CURRENT_POSITION
+            position_states,
+            CoverEntityStateAttribute.CURRENT_POSITION,
+            reduce=mean_position,
         )
 
         tilt_covers = self._tilts[KEY_POSITION]
         all_tilt_states = [self.hass.states.get(x) for x in tilt_covers]
         tilt_states: list[State] = list(filter(None, all_tilt_states))
         self._attr_current_cover_tilt_position = reduce_attribute(
-            tilt_states, CoverEntityStateAttribute.CURRENT_TILT_POSITION
+            tilt_states,
+            CoverEntityStateAttribute.CURRENT_TILT_POSITION,
+            reduce=mean_position,
         )
 
         supported_features = CoverEntityFeature(0)

@@ -20,7 +20,12 @@ from homeassistant.helpers.selector import (
 
 from . import WorkdayConfigEntry
 from .config_flow import validate_custom_dates
-from .const import CONF_PROVINCE, CONF_REMOVE_HOLIDAYS
+from .const import (
+    CONF_PROVINCE,
+    CONF_REMOVE_HOLIDAYS,
+    SECTION_COUNTRY_SETTINGS,
+    SECTION_CUSTOM_HOLIDAYS,
+)
 
 
 class CountryFixFlow(RepairsFlow):
@@ -31,6 +36,18 @@ class CountryFixFlow(RepairsFlow):
         self.entry = entry
         self.country: str | None = country
         super().__init__()
+
+    def _options_with_country(
+        self, country: str | None, province: str | None
+    ) -> dict[str, Any]:
+        """Return the entry options with a new country and province."""
+        options = dict(self.entry.options)
+        options[CONF_COUNTRY] = country
+        options[SECTION_COUNTRY_SETTINGS] = {
+            **options.get(SECTION_COUNTRY_SETTINGS, {}),
+            CONF_PROVINCE: province,
+        }
+        return options
 
     async def async_step_init(
         self, user_input: dict[str, str] | None = None
@@ -47,10 +64,9 @@ class CountryFixFlow(RepairsFlow):
         if user_input is not None:
             all_countries = list_supported_countries(include_aliases=False)
             if not all_countries[user_input[CONF_COUNTRY]]:
-                options = dict(self.entry.options)
-                new_options = {**options, **user_input, CONF_PROVINCE: None}
                 self.hass.config_entries.async_update_entry(
-                    self.entry, options=new_options
+                    self.entry,
+                    options=self._options_with_country(user_input[CONF_COUNTRY], None),
                 )
                 await self.hass.config_entries.async_reload(self.entry.entry_id)
                 return self.async_create_entry(data={})
@@ -79,10 +95,12 @@ class CountryFixFlow(RepairsFlow):
     ) -> RepairsFlowResult:
         """Handle the province step of a fix flow."""
         if user_input is not None:
-            user_input.setdefault(CONF_PROVINCE, None)
-            options = dict(self.entry.options)
-            new_options = {**options, **user_input, CONF_COUNTRY: self.country}
-            self.hass.config_entries.async_update_entry(self.entry, options=new_options)
+            self.hass.config_entries.async_update_entry(
+                self.entry,
+                options=self._options_with_country(
+                    self.country, user_input.get(CONF_PROVINCE)
+                ),
+            )
             await self.hass.config_entries.async_reload(self.entry.entry_id)
             return self.async_create_entry(data={})
 
@@ -135,7 +153,13 @@ class HolidayFixFlow(RepairsFlow):
         errors: dict[str, str] = {}
         if user_input:
             options = dict(self.entry.options)
-            new_options = {**options, **user_input}
+            new_options = {
+                **options,
+                SECTION_CUSTOM_HOLIDAYS: {
+                    **options[SECTION_CUSTOM_HOLIDAYS],
+                    **user_input,
+                },
+            }
             try:
                 await self.hass.async_add_executor_job(
                     validate_custom_dates, new_options
@@ -149,7 +173,9 @@ class HolidayFixFlow(RepairsFlow):
                 await self.hass.config_entries.async_reload(self.entry.entry_id)
                 return self.async_create_entry(data={})
 
-        remove_holidays = self.entry.options[CONF_REMOVE_HOLIDAYS]
+        remove_holidays = self.entry.options[SECTION_CUSTOM_HOLIDAYS][
+            CONF_REMOVE_HOLIDAYS
+        ]
         removed_named_holiday = [
             value for value in remove_holidays if value != self.named_holiday
         ]

@@ -30,16 +30,16 @@ from homeassistant.components.climate import (
     PRESET_ECO,
     PRESET_NONE,
     PRESET_SLEEP,
-    SERVICE_TURN_ON,
     ClimateEntityFeature,
+    ClimateService,
     HVACAction,
     HVACMode,
 )
 from homeassistant.const import (
-    ATTR_ENTITY_ID,
     ATTR_SUPPORTED_FEATURES,
     ATTR_TEMPERATURE,
     STATE_UNAVAILABLE,
+    TargetKey,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import (
@@ -538,8 +538,8 @@ async def test_thermostat_turn_on_already_on(
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "climate.my_thermostat"},
+        ClimateService.TURN_ON,
+        {TargetKey.ENTITY_ID: "climate.my_thermostat"},
         blocking=True,
     )
 
@@ -573,8 +573,8 @@ async def test_thermostat_turn_on_from_off(
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "climate.my_thermostat"},
+        ClimateService.TURN_ON,
+        {TargetKey.ENTITY_ID: "climate.my_thermostat"},
         blocking=True,
     )
 

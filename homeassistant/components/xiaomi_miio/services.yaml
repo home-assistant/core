@@ -128,7 +128,7 @@ switch_set_power_price:
       integration: xiaomi_miio
       domain: switch
   fields:
-    mode:
+    price:
       required: true
       selector:
         number:

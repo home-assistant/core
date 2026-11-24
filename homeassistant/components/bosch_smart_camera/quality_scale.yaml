@@ -32,9 +32,7 @@ rules:
   unique-config-entry: done
 
   # Silver
-  action-exceptions:
-    status: exempt
-    comment: This integration does not have custom actions.
+  action-exceptions: done
   config-entry-unloading: done
   docs-configuration-parameters:
     status: exempt
@@ -62,7 +60,7 @@ rules:
   docs-troubleshooting: todo
   docs-use-cases: todo
   dynamic-devices: done
-  entity-category: todo
+  entity-category: done
   entity-device-class: todo
   entity-disabled-by-default: todo
   entity-translations:

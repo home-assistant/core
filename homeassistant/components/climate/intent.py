@@ -4,7 +4,7 @@ from typing import override
 
 import probatio
 
-from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.const import TargetKey
 from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers import config_validation as cv, intent, translation
 
@@ -94,7 +94,7 @@ class SetTemperatureIntent(intent.IntentHandler):
             DOMAIN,
             ClimateService.SET_TEMPERATURE,
             service_data={ClimateServiceArgument.TEMPERATURE: temperature},
-            target={ATTR_ENTITY_ID: climate_state.entity_id},
+            target={TargetKey.ENTITY_ID: climate_state.entity_id},
             blocking=True,
         )
 
@@ -184,7 +184,7 @@ class SetFanModeIntent(intent.IntentHandler):
             DOMAIN,
             ClimateService.SET_FAN_MODE,
             service_data={ClimateServiceArgument.FAN_MODE: fan_mode},
-            target={ATTR_ENTITY_ID: climate_state.entity_id},
+            target={TargetKey.ENTITY_ID: climate_state.entity_id},
             blocking=True,
             context=intent_obj.context,
         )

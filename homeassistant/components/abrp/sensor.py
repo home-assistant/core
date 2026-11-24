@@ -98,6 +98,7 @@ SENSORS: tuple[AbrpTelemetrySensorEntityDescription, ...] = (
     ),
     AbrpTelemetrySensorEntityDescription(
         key="voltage",
+        entity_registry_enabled_default=False,
         device_class=SensorDeviceClass.VOLTAGE,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfElectricPotential.VOLT,
@@ -128,6 +129,7 @@ SENSORS: tuple[AbrpTelemetrySensorEntityDescription, ...] = (
     ),
     AbrpTelemetrySensorEntityDescription(
         key="calibrated_ref_cons",
+        entity_registry_enabled_default=False,
         translation_key="calibrated_ref_cons",
         device_class=SensorDeviceClass.ENERGY_DISTANCE,
         state_class=SensorStateClass.MEASUREMENT,
@@ -153,6 +155,7 @@ SENSORS: tuple[AbrpTelemetrySensorEntityDescription, ...] = (
     ),
     AbrpTelemetrySensorEntityDescription(
         key="soh",
+        entity_registry_enabled_default=False,
         translation_key="soh",
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=PERCENTAGE,
@@ -208,7 +211,7 @@ async def async_setup_entry(
     def _add_new_sensors() -> None:
         """Create a sensor per ``(vehicle, metric)`` pair that now carries a value."""
         entities: list[SensorEntity] = []
-        for raw, _ in runtime.garage_coordinator.data:
+        for raw in runtime.garage_coordinator.data:
             vehicle_id = raw.vehicle_id
             tlm = telemetry_coordinator.data.get(vehicle_id)
             if tlm is None:
