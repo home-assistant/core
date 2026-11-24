@@ -191,6 +191,10 @@ class AdsHub:
                 )
             except pyads.ADSError as err:
                 _LOGGER.error(err)
+            # Dropped even when the delete failed: pyads 3.4.0 releases its
+            # side of the notification before it raises, so nothing reaches
+            # this hub for it any more, and deleting it again at shutdown
+            # would raise a KeyError from pyads.
             with self._lock:
                 del self._notification_items[hnotify]
 
