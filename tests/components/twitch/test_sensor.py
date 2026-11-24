@@ -1,19 +1,39 @@
 """The tests for an update of the Twitch component."""
 
 from datetime import datetime
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, MagicMock
 
 from dateutil.tz import tzutc
-from pytest_homeassistant.common import MockConfigEntry, async_load_json_object_fixture
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_load_json_object_fixture,
+    snapshot_platform,
+)
+from syrupy.assertion import SnapshotAssertion
 from twitchAPI.object.api import FollowedChannel, Stream, UserSubscription
 from twitchAPI.type import TwitchResourceNotFound
 
 from homeassistant.components.twitch.const import DOMAIN
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 
 from . import TwitchIterObject, get_generator_from_data, setup_integration
 
 ENTITY_ID = "sensor.channel123"
+
+
+async def test_all_entities(
+    hass: HomeAssistant,
+    twitch_mock: AsyncMock,
+    config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test all entities."""
+    twitch_mock.return_value.get_channel_followers.return_value = MagicMock(total=42)
+    await setup_integration(hass, config_entry)
+
+    await snapshot_platform(hass, entity_registry, snapshot, config_entry.entry_id)
 
 
 async def test_offline(
