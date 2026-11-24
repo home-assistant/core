@@ -1,17 +1,16 @@
 """Config flow for the Aprilaire integration."""
 
-import logging
 from typing import Any, override
 
 import probatio
+from pyaprilaire.client import AprilaireClient, AprilaireResponseError
 from pyaprilaire.const import Attribute
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.helpers.device_registry import format_mac
 
-from .const import DOMAIN
-from .coordinator import AprilaireCoordinator
+from .const import DOMAIN, WAIT_TIMEOUT
 
 STEP_USER_DATA_SCHEMA = probatio.Schema(
     {
@@ -20,7 +19,21 @@ STEP_USER_DATA_SCHEMA = probatio.Schema(
     }
 )
 
-_LOGGER = logging.getLogger(__name__)
+
+async def _async_read_mac_address(host: str, port: int) -> str | None:
+    """Connect to the thermostat and return its MAC address."""
+    client = AprilaireClient(host, port, lambda data: None)
+    try:
+        await client.start_listen_once()
+        data = await client.read_mac_address_and_wait(WAIT_TIMEOUT)
+    except OSError, AprilaireResponseError:
+        return None
+    finally:
+        client.stop_listen()
+
+    if not data or Attribute.MAC_ADDRESS not in data:
+        return None
+    return format_mac(data[Attribute.MAC_ADDRESS])
 
 
 class AprilaireConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -40,24 +53,10 @@ class AprilaireConfigFlow(ConfigFlow, domain=DOMAIN):
                 step_id="user", data_schema=STEP_USER_DATA_SCHEMA
             )
 
-        coordinator = AprilaireCoordinator(
-            self.hass, None, user_input[CONF_HOST], user_input[CONF_PORT]
-        )
-        await coordinator.start_listen()
-
-        async def ready_callback(ready: bool):
-            if not ready:
-                _LOGGER.error("Failed to wait for ready")
-
-        try:
-            ready = await coordinator.wait_for_ready(ready_callback)
-        finally:
-            coordinator.stop_listen()
-
-        mac_address = coordinator.data.get(Attribute.MAC_ADDRESS)
-
-        if ready and mac_address is not None:
-            await self.async_set_unique_id(format_mac(mac_address))
+        if mac_address := await _async_read_mac_address(
+            user_input[CONF_HOST], user_input[CONF_PORT]
+        ):
+            await self.async_set_unique_id(mac_address)
 
             self._abort_if_unique_id_configured()
 
@@ -69,4 +68,31 @@ class AprilaireConfigFlow(ConfigFlow, domain=DOMAIN):
                 STEP_USER_DATA_SCHEMA, user_input
             ),
             errors={"base": "connection_failed"},
+        )
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle reconfiguration of the host and port."""
+        reconfigure_entry = self._get_reconfigure_entry()
+        errors: dict[str, str] = {}
+
+        if user_input is not None:
+            if mac_address := await _async_read_mac_address(
+                user_input[CONF_HOST], user_input[CONF_PORT]
+            ):
+                await self.async_set_unique_id(mac_address)
+                self._abort_if_unique_id_mismatch(reason="wrong_device")
+
+                return self.async_update_reload_and_abort(
+                    reconfigure_entry, data_updates=user_input
+                )
+            errors["base"] = "connection_failed"
+
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=self.add_suggested_values_to_schema(
+                STEP_USER_DATA_SCHEMA, user_input or reconfigure_entry.data
+            ),
+            errors=errors,
         )
