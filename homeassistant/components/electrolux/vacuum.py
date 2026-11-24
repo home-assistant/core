@@ -398,7 +398,7 @@ class RvcEntity(ElectroluxBaseEntity[RVCAppliance], StateVacuumEntity):
 
     @override
     async def async_clean_segments(self, segment_ids: list[str], **kwargs: Any) -> None:
-
+        """Clean the specified segments."""
         description = self.entity_description
 
         map_id: str | None = None
@@ -434,7 +434,7 @@ class RvcEntity(ElectroluxBaseEntity[RVCAppliance], StateVacuumEntity):
         await self.coordinator.send_command(command)
 
     async def _check_for_segments_update(self) -> None:
-
+        """Check for updates to the segments for the vacuum cleaner."""
         if self.last_seen_segments is None:
             return
 
