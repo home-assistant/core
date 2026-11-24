@@ -70,19 +70,17 @@ def _entity_item(
     )
 
 
-def _entities(hass: HomeAssistant) -> Iterator[_Item]:
-    """Yield the entities that are not automations, scripts or scenes.
+def _disabled_entities(
+    hass: HomeAssistant, ent_reg: er.EntityRegistry, include: Callable[[str], bool]
+) -> Iterator[_Item]:
+    """Yield the disabled entities of the included domains.
 
     Disabled entities have no state, so they come from the entity registry.
     """
-    ent_reg = er.async_get(hass)
-    for state in hass.states.async_all():
-        if state.domain not in _OWN_TYPE_DOMAINS:
-            yield _entity_item(hass, ent_reg, state)
     for entry in ent_reg.entities.values():
         if (
             entry.disabled
-            and entry.domain not in _OWN_TYPE_DOMAINS
+            and include(entry.domain)
             and hass.states.get(entry.entity_id) is None
         ):
             name = er.async_get_full_entity_name(hass, entry) or None
@@ -93,6 +91,17 @@ def _entities(hass: HomeAssistant) -> Iterator[_Item]:
                 er.async_get_entity_aliases(hass, entry),
                 (entry.entity_id,),
             )
+
+
+def _entities(hass: HomeAssistant) -> Iterator[_Item]:
+    """Yield the entities that are not automations, scripts or scenes."""
+    ent_reg = er.async_get(hass)
+    for state in hass.states.async_all():
+        if state.domain not in _OWN_TYPE_DOMAINS:
+            yield _entity_item(hass, ent_reg, state)
+    yield from _disabled_entities(
+        hass, ent_reg, lambda domain: domain not in _OWN_TYPE_DOMAINS
+    )
 
 
 def _devices(hass: HomeAssistant) -> Iterator[_Item]:
@@ -128,6 +137,7 @@ def _domain_entities(domain: str, hass: HomeAssistant) -> Iterator[_Item]:
     ent_reg = er.async_get(hass)
     for state in hass.states.async_all(domain):
         yield _entity_item(hass, ent_reg, state)
+    yield from _disabled_entities(hass, ent_reg, domain.__eq__)
 
 
 _ITEMS: dict[str, Callable[[HomeAssistant], Iterator[_Item]]] = {

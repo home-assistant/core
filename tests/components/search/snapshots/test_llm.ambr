@@ -215,6 +215,19 @@
     }),
   })
 # ---
+# name: test_search[disabled_script]
+  dict({
+    'script': dict({
+      'results': list([
+        list([
+          'script.evening_news',
+          'Evening news',
+        ]),
+      ]),
+      'total': 1,
+    }),
+  })
+# ---
 # name: test_search[entity_id]
   dict({
     'automation': dict({

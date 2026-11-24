@@ -126,6 +126,14 @@ async def setup_items(
         original_name="Kitchen oven",
         disabled_by=er.RegistryEntryDisabler.USER,
     )
+    entity_registry.async_get_or_create(
+        "script",
+        "test",
+        "evening_news",
+        suggested_object_id="evening_news",
+        original_name="Evening news",
+        disabled_by=er.RegistryEntryDisabler.USER,
+    )
 
     return {
         search_item_ids["device"]: "<sensor device>",
@@ -187,6 +195,7 @@ def test_parameters_openapi(snapshot: SnapshotAssertion) -> None:
         pytest.param({"query": "kitchen_lights"}, id="entity_id"),
         pytest.param({"query": "kitchen oven"}, id="disabled_entity"),
         pytest.param({"query": "kitchen disabled"}, id="disabled_device"),
+        pytest.param({"query": "evening news"}, id="disabled_script"),
         pytest.param({"query": "nothing"}, id="no_match"),
     ],
 )
