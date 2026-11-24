@@ -30,21 +30,6 @@ def int_payload(value: int) -> bytes:
     return struct.pack("<h", value)
 
 
-async def setup_select(
-    hass: HomeAssistant, device: MockAdsDevice, platform_config: dict[str, Any]
-) -> bool:
-    """Set up the select and wait for the first value of both its subscriptions.
-
-    Only the second subscription sets the option, and nothing in the setup
-    waits for its first value, so the state is not settled until it lands.
-    """
-    result = await setup_ads_platform(hass, SELECT_DOMAIN, platform_config)
-    for delivery in device.deliveries:
-        await hass.async_add_executor_job(delivery.join)
-    await hass.async_block_till_done()
-    return result
-
-
 @pytest.mark.parametrize(
     ("platform_config", "entity_id"),
     [
@@ -65,7 +50,9 @@ async def test_select(
     """Test the select is created from YAML with the PLC's option."""
     mock_ads_device.values[ADS_VAR] = int_payload(1)
 
-    assert await setup_select(hass, mock_ads_device, platform_config)
+    assert await setup_ads_platform(
+        hass, mock_ads_device, SELECT_DOMAIN, platform_config
+    )
 
     assert entity_registry.async_get(entity_id) == snapshot(name="entry")
     assert hass.states.get(entity_id) == snapshot(name="state")
@@ -79,7 +66,9 @@ async def test_subscribes_twice(
     """Test the select registers two notifications on its variable as an INT."""
     mock_ads_device.values[ADS_VAR] = int_payload(1)
 
-    assert await setup_select(hass, mock_ads_device, PLATFORM_CONFIG)
+    assert await setup_ads_platform(
+        hass, mock_ads_device, SELECT_DOMAIN, PLATFORM_CONFIG
+    )
 
     calls = mock_pyads_connection.return_value.add_device_notification.call_args_list
     assert [(c.args[0], c.args[1].length) for c in calls] == [
@@ -104,7 +93,9 @@ async def test_option_follows_the_plc(
 ) -> None:
     """Test the option follows the PLC, keeping the last one for out of range values."""
     mock_ads_device.values[ADS_VAR] = int_payload(1)
-    assert await setup_select(hass, mock_ads_device, PLATFORM_CONFIG)
+    assert await setup_ads_platform(
+        hass, mock_ads_device, SELECT_DOMAIN, PLATFORM_CONFIG
+    )
     assert hass.states.get(ENTITY_ID).state == "day"
 
     await mock_ads_device.async_push(hass, ADS_VAR, int_payload(pushed))
@@ -118,7 +109,9 @@ async def test_unknown_for_an_out_of_range_first_value(
     """Test a first value with no matching option leaves the select unknown."""
     mock_ads_device.values[ADS_VAR] = int_payload(7)
 
-    assert await setup_select(hass, mock_ads_device, PLATFORM_CONFIG)
+    assert await setup_ads_platform(
+        hass, mock_ads_device, SELECT_DOMAIN, PLATFORM_CONFIG
+    )
 
     assert hass.states.get(ENTITY_ID).state == STATE_UNKNOWN
 
@@ -128,7 +121,9 @@ async def test_unavailable_until_the_first_value(
 ) -> None:
     """Test the select is unavailable until the PLC delivers a value."""
     assert await async_run_past_first_update(
-        hass, mock_ads_device, setup_ads_platform(hass, SELECT_DOMAIN, PLATFORM_CONFIG)
+        hass,
+        mock_ads_device,
+        setup_ads_platform(hass, mock_ads_device, SELECT_DOMAIN, PLATFORM_CONFIG),
     )
     assert hass.states.get(ENTITY_ID).state == STATE_UNAVAILABLE
 
@@ -143,7 +138,9 @@ async def test_select_option_writes_the_index(
 ) -> None:
     """Test selecting an option writes its index, and the option is assumed."""
     mock_ads_device.values[ADS_VAR] = int_payload(0)
-    assert await setup_select(hass, mock_ads_device, PLATFORM_CONFIG)
+    assert await setup_ads_platform(
+        hass, mock_ads_device, SELECT_DOMAIN, PLATFORM_CONFIG
+    )
 
     await hass.services.async_call(
         SELECT_DOMAIN,
@@ -170,7 +167,9 @@ async def test_write_error(
 ) -> None:
     """Test a failing write is logged instead of raised at the caller."""
     mock_ads_device.values[ADS_VAR] = int_payload(0)
-    assert await setup_select(hass, mock_ads_device, PLATFORM_CONFIG)
+    assert await setup_ads_platform(
+        hass, mock_ads_device, SELECT_DOMAIN, PLATFORM_CONFIG
+    )
     mock_pyads_connection.return_value.write_by_name.side_effect = pyads.ADSError(
         err_code=1861
     )
