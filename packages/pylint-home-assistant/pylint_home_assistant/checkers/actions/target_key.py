@@ -1,9 +1,9 @@
 """Checker for the target keys of action calls.
 
 Target keys select what an action applies to, so they use ``TargetKey``.
-Only ``hass.services.async_call`` calls in tests are checked: every constant
-key of their ``target=`` dict literal is a target key, and so is every constant
-key of its ``exclude`` dict literal.
+Only ``hass.services.async_call`` calls are checked: every constant key of
+their ``target=`` dict literal is a target key, and so is every constant key of
+its ``exclude`` dict literal.
 
 - ``C7465``: Target key of an action call should use ``TargetKey``
 """
@@ -13,8 +13,6 @@ import re
 from astroid import nodes
 from pylint.checkers import BaseChecker
 from pylint.lint import PyLinter
-
-from pylint_home_assistant.helpers.module_info import is_test_module
 
 # Constant keys of a target dict, with the TargetKey member they stand for
 _TARGET_KEY = re.compile(
@@ -59,22 +57,16 @@ class TargetKeyChecker(BaseChecker):
         "C7465": (
             "Target key %s should be %s",
             "home-assistant-action-target-key",
-            "Used when the target dict of an action call in a test uses a "
-            "constant other than TargetKey as key. Target keys select what the "
+            "Used when the target dict of an action call uses a constant "
+            "other than TargetKey as key. Target keys select what the "
             "action applies to, not fields of the action, so they use TargetKey.",
         ),
     }
     options = ()
 
-    _in_test_module: bool
-
-    def visit_module(self, node: nodes.Module) -> None:
-        """Only check test modules."""
-        self._in_test_module = is_test_module(node.name)
-
     def visit_call(self, node: nodes.Call) -> None:
         """Check the target keys of hass.services.async_call."""
-        if not self._in_test_module or not _is_async_call(node):
+        if not _is_async_call(node):
             return
         target = _keyword_value(node, "target")
         if isinstance(target, nodes.Dict):

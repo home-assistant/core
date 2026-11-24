@@ -8,7 +8,7 @@ from pyephember2.pyephember2 import EphEmber, EphEmberError
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import Event, HomeAssistant
-from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.dispatcher import dispatcher_send
 
 from .const import LOGGER, PLATFORMS, signal_zone_update
@@ -34,7 +34,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: EphEmberConfigEntry) -> 
     except EphEmberError as err:
         raise ConfigEntryNotReady(f"Cannot connect to EPH Ember: {err}") from err
     except RuntimeError as err:
-        raise ConfigEntryError("Invalid username or password") from err
+        raise ConfigEntryAuthFailed("Invalid username or password") from err
 
     try:
         homes = await hass.async_add_executor_job(ember.get_zones)
