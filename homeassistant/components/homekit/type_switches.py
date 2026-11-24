@@ -12,9 +12,11 @@ from pyhap.const import (
     CATEGORY_SWITCH,
 )
 
-from homeassistant.components import input_button
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, ButtonService
-from homeassistant.components.input_button import DOMAIN as INPUT_BUTTON_DOMAIN
+from homeassistant.components.input_button import (
+    DOMAIN as INPUT_BUTTON_DOMAIN,
+    InputButtonService,
+)
 from homeassistant.components.input_number import (
     ATTR_VALUE as INPUT_NUMBER_ATTR_VALUE,
     CONF_MAX as INPUT_NUMBER_CONF_MAX,
@@ -195,7 +197,7 @@ class Switch(HomeAccessory):
         elif self._domain == BUTTON_DOMAIN:
             service = ButtonService.PRESS
         elif self._domain == INPUT_BUTTON_DOMAIN:
-            service = input_button.SERVICE_PRESS
+            service = InputButtonService.PRESS
         else:
             service = SERVICE_TURN_ON if value else SERVICE_TURN_OFF
 
@@ -234,13 +236,11 @@ class Vacuum(Switch):
         features = state.attributes.get(EntityStateAttribute.SUPPORTED_FEATURES, 0)
 
         if value:
-            sup_start = features & VacuumEntityFeature.START
-            service = VacuumService.START if sup_start else SERVICE_TURN_ON
+            service = VacuumService.START
+        elif features & VacuumEntityFeature.RETURN_HOME:
+            service = VacuumService.RETURN_TO_BASE
         else:
-            sup_return_home = features & VacuumEntityFeature.RETURN_HOME
-            service = (
-                VacuumService.RETURN_TO_BASE if sup_return_home else SERVICE_TURN_OFF
-            )
+            service = VacuumService.STOP
 
         self.async_call_service(
             VACUUM_DOMAIN, service, {ATTR_ENTITY_ID: self.entity_id}
@@ -250,7 +250,7 @@ class Vacuum(Switch):
     @override
     def async_update_state(self, new_state: State) -> None:
         """Update switch state after state changed."""
-        current_state = new_state.state in (VacuumActivity.CLEANING, STATE_ON)
+        current_state = new_state.state == VacuumActivity.CLEANING
         _LOGGER.debug("%s: Set current state to %s", self.entity_id, current_state)
         self.char_on.set_value(current_state)
 
@@ -518,8 +518,8 @@ class Valve(ValveBase):
         super().__init__(
             config.get(CONF_TYPE, TYPE_VALVE),
             VALVE_OPEN_STATES,
-            ValveService.OPEN_VALVE,
-            ValveService.CLOSE_VALVE,
+            ValveService.OPEN,
+            ValveService.CLOSE,
             hass,
             driver,
             name,

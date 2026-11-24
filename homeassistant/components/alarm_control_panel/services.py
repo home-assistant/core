@@ -26,42 +26,42 @@ def async_setup_services(hass: HomeAssistant) -> None:
     component = hass.data[DATA_COMPONENT]
 
     component.async_register_entity_service(
-        AlarmControlPanelService.ALARM_DISARM,
+        AlarmControlPanelService.DISARM,
         ALARM_SERVICE_SCHEMA,
         "async_handle_alarm_disarm",
     )
     component.async_register_entity_service(
-        AlarmControlPanelService.ALARM_ARM_HOME,
+        AlarmControlPanelService.ARM_HOME,
         ALARM_SERVICE_SCHEMA,
         "async_handle_alarm_arm_home",
         [AlarmControlPanelEntityFeature.ARM_HOME],
     )
     component.async_register_entity_service(
-        AlarmControlPanelService.ALARM_ARM_AWAY,
+        AlarmControlPanelService.ARM_AWAY,
         ALARM_SERVICE_SCHEMA,
         "async_handle_alarm_arm_away",
         [AlarmControlPanelEntityFeature.ARM_AWAY],
     )
     component.async_register_entity_service(
-        AlarmControlPanelService.ALARM_ARM_NIGHT,
+        AlarmControlPanelService.ARM_NIGHT,
         ALARM_SERVICE_SCHEMA,
         "async_handle_alarm_arm_night",
         [AlarmControlPanelEntityFeature.ARM_NIGHT],
     )
     component.async_register_entity_service(
-        AlarmControlPanelService.ALARM_ARM_VACATION,
+        AlarmControlPanelService.ARM_VACATION,
         ALARM_SERVICE_SCHEMA,
         "async_handle_alarm_arm_vacation",
         [AlarmControlPanelEntityFeature.ARM_VACATION],
     )
     component.async_register_entity_service(
-        AlarmControlPanelService.ALARM_ARM_CUSTOM_BYPASS,
+        AlarmControlPanelService.ARM_CUSTOM_BYPASS,
         ALARM_SERVICE_SCHEMA,
         "async_handle_alarm_arm_custom_bypass",
         [AlarmControlPanelEntityFeature.ARM_CUSTOM_BYPASS],
     )
     component.async_register_entity_service(
-        AlarmControlPanelService.ALARM_TRIGGER,
+        AlarmControlPanelService.TRIGGER,
         ALARM_SERVICE_SCHEMA,
         "async_alarm_trigger",
         [AlarmControlPanelEntityFeature.TRIGGER],

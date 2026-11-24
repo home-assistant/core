@@ -245,9 +245,6 @@ class IZoneConfigFlow(ConfigFlow, domain=DOMAIN):
 
         device_uid = model.split(" ", 1)[1]
 
-        if device_uid in izone_discovery.yaml_excluded_uids(self.hass):
-            return self.async_abort(reason="no_devices_found")
-
         # async_set_unique_id + _abort_if_unique_id_configured handles both existing
         # entries (including SOURCE_IGNORE) and stale in-progress flows for this UID.
         # A direct async_entry_for_domain_unique_id pre-check would miss the
@@ -263,12 +260,17 @@ class IZoneConfigFlow(ConfigFlow, domain=DOMAIN):
                 endpoint = await izone_discovery.async_discover_endpoint(
                     self.hass, device_uid
                 )
-                if endpoint is None:
-                    return self.async_abort(reason="no_devices_found")
-                endpoints = {**endpoints, endpoint.uid: endpoint}
+                if endpoint is not None:
+                    endpoints = {**endpoints, endpoint.uid: endpoint}
+        except pizone.EndpointVerifyError as err:
+            _LOGGER.debug("iZone controller did not verify: %s", err)
+            return self.async_abort(reason="cannot_connect")
         except OSError:
             _LOGGER.debug("Unable to start iZone discovery service", exc_info=True)
             return self.async_abort(reason="discovery_failed")
+
+        if endpoint is None:
+            return self.async_abort(reason="no_devices_found")
 
         self._discovered_controller_host = endpoint.host
 
@@ -289,9 +291,6 @@ class IZoneConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle fan-out, YAML import secondaries, and runtime discovery."""
         uid = self.context["unique_id"]
         host = discovery_info[CONF_HOST]
-        if uid in izone_discovery.yaml_excluded_uids(self.hass):
-            return self.async_abort(reason="no_devices_found")
-
         await self.async_set_unique_id(uid)
         self._abort_if_unique_id_configured()
         # Persist through confirm into entry data as CONF_HOST.
@@ -400,6 +399,12 @@ class IZoneConfigFlow(ConfigFlow, domain=DOMAIN):
 
         try:
             endpoint = await izone_discovery.async_discover_by_host(self.hass, host)
+        except pizone.EndpointVerifyError as err:
+            _LOGGER.debug("iZone controller did not verify: %s", err)
+            return self._async_show_manual_host_form(
+                errors={"base": "cannot_connect"},
+                suggested_values={CONF_HOST: host},
+            )
         except OSError:
             _LOGGER.debug("Unable to start iZone discovery service", exc_info=True)
             return self.async_abort(reason="discovery_failed")
@@ -411,18 +416,6 @@ class IZoneConfigFlow(ConfigFlow, domain=DOMAIN):
         except pizone.ControllerAlreadyClaimedError:
             return self._async_show_manual_host_form(
                 errors={"base": "already_configured"},
-                suggested_values={CONF_HOST: host},
-            )
-
-        if endpoint is None:
-            return self._async_show_manual_host_form(
-                errors={"base": "cannot_connect"},
-                suggested_values={CONF_HOST: host},
-            )
-
-        if endpoint.uid in izone_discovery.yaml_excluded_uids(self.hass):
-            return self._async_show_manual_host_form(
-                errors={"base": "no_devices_found"},
                 suggested_values={CONF_HOST: host},
             )
 

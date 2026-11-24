@@ -79,7 +79,9 @@ class MyUplinkSelect(MyUplinkEntity, SelectEntity):
     @override
     def current_option(self) -> str | None:
         """Retrieve currently selected option."""
-        device_point = self.coordinator.data.points[self.device_id][self.point_id]
+        device_point = self.coordinator.data.points[self.device_id].get(self.point_id)
+        if device_point is None:
+            return None
         return self.options_map.get(float(cast(float, device_point.value_t)))
 
     @override

@@ -169,11 +169,11 @@ class GarageDoorOpener(HomeAccessory):
         if value == HK_DOOR_OPEN:
             if self.char_current_state.value != value:
                 self.char_current_state.set_value(HK_DOOR_OPENING)
-            self.async_call_service(COVER_DOMAIN, CoverService.OPEN_COVER, params)
+            self.async_call_service(COVER_DOMAIN, CoverService.OPEN, params)
         elif value == HK_DOOR_CLOSED:
             if self.char_current_state.value != value:
                 self.char_current_state.set_value(HK_DOOR_CLOSING)
-            self.async_call_service(COVER_DOMAIN, CoverService.CLOSE_COVER, params)
+            self.async_call_service(COVER_DOMAIN, CoverService.CLOSE, params)
 
     @callback
     @override
@@ -239,7 +239,7 @@ class OpeningDeviceBase(HomeAccessory):
         if value != 1:
             return
         self.async_call_service(
-            COVER_DOMAIN, CoverService.STOP_COVER, {ATTR_ENTITY_ID: self.entity_id}
+            COVER_DOMAIN, CoverService.STOP, {ATTR_ENTITY_ID: self.entity_id}
         )
 
     def set_tilt(self, value: float) -> None:
@@ -256,7 +256,7 @@ class OpeningDeviceBase(HomeAccessory):
         }
 
         self.async_call_service(
-            COVER_DOMAIN, CoverService.SET_COVER_TILT_POSITION, params, value
+            COVER_DOMAIN, CoverService.SET_TILT_POSITION, params, value
         )
 
     @callback
@@ -321,9 +321,7 @@ class OpeningDevice(OpeningDeviceBase, HomeAccessory):
         """Move cover to value if call came from HomeKit."""
         _LOGGER.debug("%s: Set position to %d", self.entity_id, value)
         params = {ATTR_ENTITY_ID: self.entity_id, CoverServiceArgument.POSITION: value}
-        self.async_call_service(
-            COVER_DOMAIN, CoverService.SET_COVER_POSITION, params, value
-        )
+        self.async_call_service(COVER_DOMAIN, CoverService.SET_POSITION, params, value)
 
     @callback
     def _async_update_target_position_while_moving(
@@ -441,11 +439,11 @@ class WindowCoveringBasic(OpeningDeviceBase, HomeAccessory):
         if (self._supports_stop and value > 70) or (
             not self._supports_stop and value >= 50
         ):
-            service, position = (CoverService.OPEN_COVER, 100)
+            service, position = (CoverService.OPEN, 100)
         elif value < 30 or not self._supports_stop:
-            service, position = (CoverService.CLOSE_COVER, 0)
+            service, position = (CoverService.CLOSE, 0)
         else:
-            service, position = (CoverService.STOP_COVER, 50)
+            service, position = (CoverService.STOP, 50)
 
         params = {ATTR_ENTITY_ID: self.entity_id}
         self.async_call_service(COVER_DOMAIN, service, params)

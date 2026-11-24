@@ -1,10 +1,11 @@
 """Test the raw log stream of the system log."""
 
+from collections.abc import AsyncIterator
 import logging
 import logging.handlers
 from pathlib import Path
 from queue import SimpleQueue
-from unittest.mock import patch
+from unittest.mock import Mock, call, patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
@@ -12,7 +13,11 @@ from pytest_homeassistant.common import async_fire_time_changed
 from pytest_homeassistant.typing import WebSocketGenerator
 
 from homeassistant.components import system_log
-from homeassistant.components.system_log.const import RAW_UPDATE_COOLDOWN
+from homeassistant.components.system_log.const import (
+    RAW_BACKLOG_LINES,
+    RAW_INTEGRATION_READER_LINES,
+    RAW_UPDATE_COOLDOWN,
+)
 from homeassistant.components.system_log.stream import (
     DATA_RAW_LOG_STREAM,
     WEBSOCKET_CONNECTION_LOGGER,
@@ -23,6 +28,16 @@ from homeassistant.setup import async_setup_component
 from homeassistant.util.logging import HomeAssistantQueueHandler
 
 _LOGGER = logging.getLogger("test_logger")
+
+
+def _log_reader(log_lines: list[str]) -> Mock:
+    """Return a log reader streaming the last lines wanted."""
+
+    async def _read(lines: int) -> AsyncIterator[str]:
+        for line in log_lines[-lines:]:
+            yield line
+
+    return Mock(side_effect=_read)
 
 
 async def test_subscribe_raw(
@@ -100,6 +115,71 @@ async def test_subscribe_raw_without_log_file(
     assert msg["success"]
     msg = await client.receive_json()
     assert msg["event"] == []
+
+
+@pytest.mark.parametrize(
+    ("integration", "lines", "expected"),
+    [
+        pytest.param({}, RAW_BACKLOG_LINES, slice(-100, None), id="all"),
+        pytest.param(
+            {"integration": "demo"},
+            RAW_INTEGRATION_READER_LINES,
+            slice(-2, None),
+            id="demo",
+        ),
+    ],
+)
+async def test_subscribe_raw_log_reader(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    integration: dict[str, str],
+    lines: int,
+    expected: slice,
+) -> None:
+    """Test the raw log starts with the log reader without a log file."""
+    log_lines = [
+        f"2026-10-29 10:00:00.{i:03} INFO (MainThread) [homeassistant.setup] {i}"
+        for i in range(150)
+    ]
+    log_lines += [
+        "2026-10-29 10:00:01.000 ERROR (MainThread) [homeassistant.components.demo]"
+        " Failed",
+        "ValueError: boom",
+    ]
+    hass.data[KEY_DATA_LOGGING] = None
+    await async_setup_component(hass, system_log.DOMAIN, {})
+    await hass.async_block_till_done()
+    reader = _log_reader(log_lines)
+    system_log.async_register_log_reader(hass, reader)
+
+    client = await hass_ws_client()
+    await client.send_json_auto_id({"type": "system_log/subscribe_raw", **integration})
+    msg = await client.receive_json()
+    assert msg["success"]
+    msg = await client.receive_json()
+    assert msg["event"] == log_lines[expected]
+    assert reader.mock_calls == [call(lines)]
+
+
+async def test_subscribe_raw_log_file_before_reader(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, tmp_path: Path
+) -> None:
+    """Test the log file is read instead of the log reader."""
+    log_file = tmp_path / "home-assistant.log"
+    log_file.write_text("From the file\n")
+    hass.data[KEY_DATA_LOGGING] = str(log_file)
+    await async_setup_component(hass, system_log.DOMAIN, {})
+    await hass.async_block_till_done()
+    reader = _log_reader(["From the reader"])
+    system_log.async_register_log_reader(hass, reader)
+
+    client = await hass_ws_client()
+    await client.send_json_auto_id({"type": "system_log/subscribe_raw"})
+    msg = await client.receive_json()
+    assert msg["success"]
+    msg = await client.receive_json()
+    assert msg["event"] == ["From the file"]
+    reader.assert_not_called()
 
 
 async def test_unsubscribe_raw(

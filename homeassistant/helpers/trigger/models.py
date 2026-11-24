@@ -19,7 +19,9 @@ TRIGGERS: HassKey[dict[str, str]] = HassKey("triggers")
 _TRIGGER_SCHEMA = cv.TRIGGER_BASE_SCHEMA.extend(
     {
         probatio.Optional(CONF_OPTIONS): object,
-        probatio.Optional(CONF_TARGET): cv.TARGET_FIELDS,
+        probatio.Optional(CONF_TARGET): probatio.All(
+            cv.TARGET_FIELDS, cv.exclude_requires_target
+        ),
     }
 )
 

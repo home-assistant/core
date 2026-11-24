@@ -12,8 +12,6 @@ from homeassistant.components import (
     cover,
     event,
     fan,
-    input_button,
-    input_select,
     lawn_mower,
     light,
     media_player,
@@ -66,8 +64,15 @@ from homeassistant.components.humidifier import (
     HumidifierServiceArgument,
 )
 from homeassistant.components.input_boolean import DOMAIN as INPUT_BOOLEAN_DOMAIN
-from homeassistant.components.input_button import DOMAIN as INPUT_BUTTON_DOMAIN
-from homeassistant.components.input_select import DOMAIN as INPUT_SELECT_DOMAIN
+from homeassistant.components.input_button import (
+    DOMAIN as INPUT_BUTTON_DOMAIN,
+    InputButtonService,
+)
+from homeassistant.components.input_select import (
+    DOMAIN as INPUT_SELECT_DOMAIN,
+    InputSelectService,
+    InputSelectServiceArgument,
+)
 from homeassistant.components.lawn_mower import (
     DOMAIN as LAWN_MOWER_DOMAIN,
     LawnMowerEntityFeature,
@@ -256,24 +261,24 @@ COVER_VALVE_STATES = {
 }
 
 SERVICE_STOP_COVER_VALVE = {
-    COVER_DOMAIN: CoverService.STOP_COVER,
-    VALVE_DOMAIN: ValveService.STOP_VALVE,
+    COVER_DOMAIN: CoverService.STOP,
+    VALVE_DOMAIN: ValveService.STOP,
 }
 SERVICE_OPEN_COVER_VALVE = {
-    COVER_DOMAIN: CoverService.OPEN_COVER,
-    VALVE_DOMAIN: ValveService.OPEN_VALVE,
+    COVER_DOMAIN: CoverService.OPEN,
+    VALVE_DOMAIN: ValveService.OPEN,
 }
 SERVICE_CLOSE_COVER_VALVE = {
-    COVER_DOMAIN: CoverService.CLOSE_COVER,
-    VALVE_DOMAIN: ValveService.CLOSE_VALVE,
+    COVER_DOMAIN: CoverService.CLOSE,
+    VALVE_DOMAIN: ValveService.CLOSE,
 }
 SERVICE_TOGGLE_COVER_VALVE = {
     COVER_DOMAIN: CoverService.TOGGLE,
     VALVE_DOMAIN: ValveService.TOGGLE,
 }
 SERVICE_SET_POSITION_COVER_VALVE = {
-    COVER_DOMAIN: CoverService.SET_COVER_POSITION,
-    VALVE_DOMAIN: ValveService.SET_VALVE_POSITION,
+    COVER_DOMAIN: CoverService.SET_POSITION,
+    VALVE_DOMAIN: ValveService.SET_POSITION,
 }
 
 COVER_VALVE_CURRENT_POSITION = {
@@ -794,7 +799,7 @@ class SceneTrait(_Trait):
         if self.state.domain == BUTTON_DOMAIN:
             service = ButtonService.PRESS
         elif self.state.domain == INPUT_BUTTON_DOMAIN:
-            service = input_button.SERVICE_PRESS
+            service = InputButtonService.PRESS
 
         # Don't block for scripts or buttons, as they can be slow.
         await self.hass.services.async_call(
@@ -1190,13 +1195,13 @@ class TemperatureControlTrait(_Trait):
     @override
     def sync_attributes(self) -> dict[str, Any]:
         """Return temperature attributes for a sync request."""
-        response = {}
+        response: dict[str, Any] = {}
         domain = self.state.domain
         attrs = self.state.attributes
-        unit = self.hass.config.units.temperature_unit
-        response["temperatureUnitForUX"] = _google_temp_unit(unit)
 
         if domain == WATER_HEATER_DOMAIN:
+            unit = attrs[WaterHeaterCapabilityAttribute.TEMPERATURE_UNIT]
+            response["temperatureUnitForUX"] = _google_temp_unit(unit)
             min_temp = round(
                 TemperatureConverter.convert(
                     float(attrs[WaterHeaterCapabilityAttribute.MIN_TEMP]),
@@ -1218,6 +1223,9 @@ class TemperatureControlTrait(_Trait):
                 "maxThresholdCelsius": max_temp,
             }
         else:
+            response["temperatureUnitForUX"] = _google_temp_unit(
+                self.hass.config.units.temperature_unit
+            )
             response["queryOnlyTemperatureControl"] = True
             response["temperatureRange"] = {
                 "minThresholdCelsius": -100,
@@ -1231,8 +1239,10 @@ class TemperatureControlTrait(_Trait):
         """Return temperature states."""
         response = {}
         domain = self.state.domain
-        unit = self.hass.config.units.temperature_unit
         if domain == WATER_HEATER_DOMAIN:
+            unit = self.state.attributes[
+                WaterHeaterCapabilityAttribute.TEMPERATURE_UNIT
+            ]
             target_temp = self.state.attributes[WaterHeaterStateAttribute.TEMPERATURE]
             current_temp = self.state.attributes[
                 WaterHeaterStateAttribute.CURRENT_TEMPERATURE
@@ -1262,7 +1272,9 @@ class TemperatureControlTrait(_Trait):
         if current_temp not in (STATE_UNKNOWN, STATE_UNAVAILABLE):
             temp = round(
                 TemperatureConverter.convert(
-                    float(current_temp), unit, UnitOfTemperature.CELSIUS
+                    float(current_temp),
+                    self.hass.config.units.temperature_unit,
+                    UnitOfTemperature.CELSIUS,
                 ),
                 1,
             )
@@ -1276,9 +1288,11 @@ class TemperatureControlTrait(_Trait):
         """Execute a temperature point or mode command."""
         # All sent in temperatures are always in Celsius
         domain = self.state.domain
-        unit = self.hass.config.units.temperature_unit
 
         if domain == WATER_HEATER_DOMAIN and command == COMMAND_SET_TEMPERATURE:
+            unit = self.state.attributes[
+                WaterHeaterCapabilityAttribute.TEMPERATURE_UNIT
+            ]
             min_temp = self.state.attributes[WaterHeaterCapabilityAttribute.MIN_TEMP]
             max_temp = self.state.attributes[WaterHeaterCapabilityAttribute.MAX_TEMP]
             temp = TemperatureConverter.convert(
@@ -1376,7 +1390,7 @@ class TemperatureSettingTrait(_Trait):
         """Return temperature point and modes attributes for a sync request."""
         response = {}
         attrs = self.state.attributes
-        unit = self.hass.config.units.temperature_unit
+        unit = attrs[ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT]
         response["thermostatTemperatureUnit"] = _google_temp_unit(unit)
 
         min_temp = round(
@@ -1434,7 +1448,7 @@ class TemperatureSettingTrait(_Trait):
         """Return temperature point and modes query attributes."""
         response: dict[str, Any] = {}
         attrs = self.state.attributes
-        unit = self.hass.config.units.temperature_unit
+        unit = attrs[ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT]
 
         operation = self.state.state
         preset = attrs.get(ClimateEntityStateAttribute.PRESET_MODE)
@@ -1510,7 +1524,7 @@ class TemperatureSettingTrait(_Trait):
     async def execute(self, command, data, params, challenge):
         """Execute a temperature point or mode command."""
         # All sent in temperatures are always in Celsius
-        unit = self.hass.config.units.temperature_unit
+        unit = self.state.attributes[ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT]
         min_temp = self.state.attributes[ClimateEntityCapabilityAttribute.MIN_TEMP]
         max_temp = self.state.attributes[ClimateEntityCapabilityAttribute.MAX_TEMP]
 
@@ -1815,11 +1829,11 @@ class ArmDisArmTrait(_Trait):
     commands = [COMMAND_ARM_DISARM]
 
     state_to_service = {
-        AlarmControlPanelState.ARMED_HOME: AlarmControlPanelService.ALARM_ARM_HOME,
-        AlarmControlPanelState.ARMED_NIGHT: AlarmControlPanelService.ALARM_ARM_NIGHT,
-        AlarmControlPanelState.ARMED_AWAY: AlarmControlPanelService.ALARM_ARM_AWAY,
-        AlarmControlPanelState.ARMED_CUSTOM_BYPASS: AlarmControlPanelService.ALARM_ARM_CUSTOM_BYPASS,
-        AlarmControlPanelState.TRIGGERED: AlarmControlPanelService.ALARM_TRIGGER,
+        AlarmControlPanelState.ARMED_HOME: AlarmControlPanelService.ARM_HOME,
+        AlarmControlPanelState.ARMED_NIGHT: AlarmControlPanelService.ARM_NIGHT,
+        AlarmControlPanelState.ARMED_AWAY: AlarmControlPanelService.ARM_AWAY,
+        AlarmControlPanelState.ARMED_CUSTOM_BYPASS: AlarmControlPanelService.ARM_CUSTOM_BYPASS,
+        AlarmControlPanelState.TRIGGERED: AlarmControlPanelService.TRIGGER,
     }
 
     state_to_support = {
@@ -1921,12 +1935,12 @@ class ArmDisArmTrait(_Trait):
             and params.get("cancel")
             and self.state.state == AlarmControlPanelState.PENDING
         ):
-            service = AlarmControlPanelService.ALARM_DISARM
+            service = AlarmControlPanelService.DISARM
         else:
             if self.state.state == AlarmControlPanelState.DISARMED:
                 raise SmartHomeError(ERR_ALREADY_DISARMED, "System is already disarmed")
             _verify_pin_challenge(data, self.state, challenge)
-            service = AlarmControlPanelService.ALARM_DISARM
+            service = AlarmControlPanelService.DISARM
 
         await self.hass.services.async_call(
             ALARM_CONTROL_PANEL_DOMAIN,
@@ -2304,10 +2318,10 @@ class ModesTrait(_Trait):
             option = settings["option"]
             await self.hass.services.async_call(
                 INPUT_SELECT_DOMAIN,
-                input_select.SERVICE_SELECT_OPTION,
+                InputSelectService.SELECT_OPTION,
                 {
                     ATTR_ENTITY_ID: self.state.entity_id,
-                    input_select.ATTR_OPTION: option,
+                    InputSelectServiceArgument.OPTION: option,
                 },
                 blocking=not self.config.should_report_state,
                 context=data.context,

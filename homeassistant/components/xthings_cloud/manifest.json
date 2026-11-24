@@ -4,6 +4,7 @@
   "categories": ["lighting.bulbs_lamps", "security_safety.locks_access"],
   "codeowners": ["@XthingsJacobs"],
   "config_flow": true,
+  "connectivity": ["cloud"],
   "documentation": "https://www.home-assistant.io/integrations/xthings_cloud",
   "integration_type": "hub",
   "iot_class": "cloud_push",

@@ -37,7 +37,6 @@ class DSMRSensor(SensorEntity):
         self.entity_description = description
 
         slug = slugify(description.key.replace("/", "_"))
-        self.entity_id = f"sensor.{slug}"
         self._attr_unique_id = f"{config_entry.entry_id}-{slug}"
         self._config_entry_id = config_entry.entry_id
 

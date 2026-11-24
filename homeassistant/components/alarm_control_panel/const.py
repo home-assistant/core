@@ -72,13 +72,13 @@ CONDITION_ARMED_CUSTOM_BYPASS: Final = "is_armed_custom_bypass"
 class AlarmControlPanelService(StrEnum):
     """Store keys for alarm control panel services."""
 
-    ALARM_ARM_AWAY = "alarm_arm_away"
-    ALARM_ARM_CUSTOM_BYPASS = "alarm_arm_custom_bypass"
-    ALARM_ARM_HOME = "alarm_arm_home"
-    ALARM_ARM_NIGHT = "alarm_arm_night"
-    ALARM_ARM_VACATION = "alarm_arm_vacation"
-    ALARM_DISARM = "alarm_disarm"
-    ALARM_TRIGGER = "alarm_trigger"
+    ARM_AWAY = "alarm_arm_away"
+    ARM_CUSTOM_BYPASS = "alarm_arm_custom_bypass"
+    ARM_HOME = "alarm_arm_home"
+    ARM_NIGHT = "alarm_arm_night"
+    ARM_VACATION = "alarm_arm_vacation"
+    DISARM = "alarm_disarm"
+    TRIGGER = "alarm_trigger"
 
 
 class AlarmControlPanelServiceArgument(StrEnum):

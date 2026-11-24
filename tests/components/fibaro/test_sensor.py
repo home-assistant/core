@@ -32,7 +32,9 @@ async def test_power_sensor_detected(
         # Act
         await init_integration(hass, mock_config_entry)
         # Assert
-        entry = entity_registry.async_get("sensor.room_1_test_sensor_1_power")
+        entry = entity_registry.async_get(
+            "sensor.my_fibaro_home_center_room_1_test_sensor_power"
+        )
         assert entry
         assert entry.unique_id == "hc2_111111.1_power"
         assert entry.original_name == "Room 1 Test sensor Power"
@@ -56,7 +58,9 @@ async def test_voltage_sensor_detected(
         # Act
         await init_integration(hass, mock_config_entry)
         # Assert
-        entry = entity_registry.async_get("sensor.room_1_test_multilevel_sensor_12")
+        entry = entity_registry.async_get(
+            "sensor.test_multilevel_sensor_room_1_test_multilevel_sensor"
+        )
         assert entry
         assert entry.unique_id == "hc2_111111.12"
         assert entry.original_name == "Room 1 Test multilevel sensor"

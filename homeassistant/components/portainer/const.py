@@ -7,6 +7,12 @@ DEFAULT_NAME = "Portainer"
 
 API_MAX_RETRIES = 3
 
+SUBENTRY_TYPE_ENVIRONMENT = "environment"
+CONF_ENDPOINT_ID = "endpoint_id"
+
+# Portainer EndpointType values of Docker, agent and edge agent on Docker
+DOCKER_ENDPOINT_TYPES = frozenset({1, 2, 4})
+
 CONTAINER_STATE_ACTIONS: dict[str, DockerContainerState | None] = {
     "start": DockerContainerState.RUNNING,
     "stop": DockerContainerState.EXITED,

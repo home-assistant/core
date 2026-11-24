@@ -49,19 +49,19 @@ async def _async_reproduce_state(
     service_data = {ATTR_ENTITY_ID: state.entity_id}
 
     if state.state == AlarmControlPanelState.ARMED_AWAY:
-        service = AlarmControlPanelService.ALARM_ARM_AWAY
+        service = AlarmControlPanelService.ARM_AWAY
     elif state.state == AlarmControlPanelState.ARMED_CUSTOM_BYPASS:
-        service = AlarmControlPanelService.ALARM_ARM_CUSTOM_BYPASS
+        service = AlarmControlPanelService.ARM_CUSTOM_BYPASS
     elif state.state == AlarmControlPanelState.ARMED_HOME:
-        service = AlarmControlPanelService.ALARM_ARM_HOME
+        service = AlarmControlPanelService.ARM_HOME
     elif state.state == AlarmControlPanelState.ARMED_NIGHT:
-        service = AlarmControlPanelService.ALARM_ARM_NIGHT
+        service = AlarmControlPanelService.ARM_NIGHT
     elif state.state == AlarmControlPanelState.ARMED_VACATION:
-        service = AlarmControlPanelService.ALARM_ARM_VACATION
+        service = AlarmControlPanelService.ARM_VACATION
     elif state.state == AlarmControlPanelState.DISARMED:
-        service = AlarmControlPanelService.ALARM_DISARM
+        service = AlarmControlPanelService.DISARM
     elif state.state == AlarmControlPanelState.TRIGGERED:
-        service = AlarmControlPanelService.ALARM_TRIGGER
+        service = AlarmControlPanelService.TRIGGER
 
     await hass.services.async_call(
         DOMAIN, service, service_data, context=context, blocking=True

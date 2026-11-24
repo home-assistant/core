@@ -5,6 +5,7 @@ from ipaddress import ip_address
 from typing import Any
 
 from pytest_homeassistant.common import MockConfigEntry
+from systembridgeconnector.models.fixtures.modules.audio import FIXTURE_AUDIO
 from systembridgeconnector.models.fixtures.modules.battery import FIXTURE_BATTERY
 from systembridgeconnector.models.fixtures.modules.cpu import FIXTURE_CPU
 from systembridgeconnector.models.fixtures.modules.disks import FIXTURE_DISKS
@@ -12,9 +13,11 @@ from systembridgeconnector.models.fixtures.modules.displays import FIXTURE_DISPL
 from systembridgeconnector.models.fixtures.modules.gpus import FIXTURE_GPUS
 from systembridgeconnector.models.fixtures.modules.media import FIXTURE_MEDIA
 from systembridgeconnector.models.fixtures.modules.memory import FIXTURE_MEMORY
+from systembridgeconnector.models.fixtures.modules.networks import FIXTURE_NETWORKS
 from systembridgeconnector.models.fixtures.modules.processes import FIXTURE_PROCESSES
 from systembridgeconnector.models.fixtures.modules.system import FIXTURE_SYSTEM
 from systembridgeconnector.models.modules import Module, ModulesData
+from systembridgeconnector.models.settings import SettingsCommandDefinition
 
 from homeassistant.const import CONF_HOST, CONF_PORT, CONF_TOKEN
 from homeassistant.core import HomeAssistant
@@ -27,18 +30,27 @@ FIXTURE_REQUEST_ID = "test"
 FIXTURE_MAC_ADDRESS = FIXTURE_SYSTEM.mac_address
 FIXTURE_UUID = FIXTURE_SYSTEM.uuid
 
+# A valid System Bridge key, from Groundwork's client key test vectors
+FIXTURE_KEY = "system-bridge_client_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz03GVkI"
+FIXTURE_NEW_KEY = (
+    "system-bridge_client_yyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy382dw9"
+)
+# The shared token System Bridge used before each client had its own key
+FIXTURE_OLD_TOKEN = "abc-123-def-456-ghi"
+FIXTURE_PAIRING_CODE = "MZXW6YTBOI4DQNZXGQ2DGMBQGE3TSNBR"
+
 FIXTURE_AUTH_INPUT = {
-    CONF_TOKEN: "abc-123-def-456-ghi",
+    CONF_TOKEN: FIXTURE_KEY,
 }
 
 FIXTURE_USER_INPUT = {
-    CONF_TOKEN: "abc-123-def-456-ghi",
+    CONF_TOKEN: FIXTURE_KEY,
     CONF_HOST: "127.0.0.1",
     CONF_PORT: "9170",
 }
 
 FIXTURE_ZEROCONF_INPUT = {
-    CONF_TOKEN: "abc-123-def-456-ghi",
+    CONF_TOKEN: FIXTURE_KEY,
     CONF_HOST: FIXTURE_USER_INPUT[CONF_HOST],
     CONF_PORT: "9170",
 }
@@ -77,6 +89,14 @@ FIXTURE_DATA_RESPONSE = ModulesData(
     system=FIXTURE_SYSTEM,
 )
 
+FIXTURE_COMMAND = SettingsCommandDefinition(
+    id="backup",
+    name="Back up",
+    command="/usr/local/bin/backup",
+    workingDir="/home/user",
+    arguments=["--token", "secret"],
+)
+
 
 async def setup_integration(
     hass: HomeAssistant,
@@ -94,10 +114,14 @@ async def setup_integration(
 async def mock_data_listener(
     callback: Callable[[str, Any], Awaitable[None]] | None = None,
     _: bool = False,
+    notification_event_callback: Callable[[Any], Awaitable[None]] | None = None,
+    power_state_callback: Callable[[Any], Awaitable[None]] | None = None,
+    settings_callback: Callable[[Any], Awaitable[None]] | None = None,
 ):
     """Mock websocket data listener."""
     if callback is not None:
         # Simulate data received from the websocket
+        await callback(Module.AUDIO, FIXTURE_AUDIO)
         await callback(Module.BATTERY, FIXTURE_BATTERY)
         await callback(Module.CPU, FIXTURE_CPU)
         await callback(Module.DISKS, FIXTURE_DISKS)
@@ -105,5 +129,6 @@ async def mock_data_listener(
         await callback(Module.GPUS, FIXTURE_GPUS)
         await callback(Module.MEDIA, FIXTURE_MEDIA)
         await callback(Module.MEMORY, FIXTURE_MEMORY)
+        await callback(Module.NETWORKS, FIXTURE_NETWORKS)
         await callback(Module.PROCESSES, FIXTURE_PROCESSES)
         await callback(Module.SYSTEM, FIXTURE_SYSTEM)

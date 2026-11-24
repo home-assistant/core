@@ -4,6 +4,7 @@
   "categories": ["presence_location.network_presence"],
   "codeowners": ["@Lorenzo-Gasparini"],
   "config_flow": true,
+  "connectivity": ["network"],
   "documentation": "https://www.home-assistant.io/integrations/fing",
   "integration_type": "service",
   "iot_class": "local_polling",
