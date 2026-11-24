@@ -150,7 +150,10 @@ async def test_reset_energy_summation_button_press(
     device = getattr(mock_session.device_helper, bucket)[0]
 
     await hass.services.async_call(
-        BUTTON_DOMAIN, SERVICE_PRESS, {ATTR_ENTITY_ID: entity_id}, blocking=True
+        BUTTON_DOMAIN,
+        ButtonService.PRESS,
+        {TargetKey.ENTITY_ID: entity_id},
+        blocking=True,
     )
 
     device.reset_energy_summation.assert_called_once_with()
