@@ -601,12 +601,19 @@ async def test_service_play_media(
 
 
 @pytest.mark.parametrize(
-    ("side_effect", "expected_error", "translation_key", "volume_calls"),
+    (
+        "side_effect",
+        "expected_error",
+        "translation_key",
+        "translation_placeholders",
+        "volume_calls",
+    ),
     [
         pytest.param(
             InvalidInputError("music is not available as a music provider"),
             ServiceValidationError,
-            "invalid_user_input",
+            "invalid_music_provider",
+            {"provider": "music"},
             1,
             id="invalid_input",
         ),
@@ -614,6 +621,7 @@ async def test_service_play_media(
             CannotConnect,
             HomeAssistantError,
             "cannot_connect_with_error",
+            {"error": "CannotConnect()"},
             0,
             id="cannot_connect",
         ),
@@ -626,6 +634,7 @@ async def test_service_play_media_failure_availability(
     side_effect: Exception | type[Exception],
     expected_error: type[HomeAssistantError],
     translation_key: str,
+    translation_placeholders: dict[str, str],
     volume_calls: int,
 ) -> None:
     """Invalid input is a validation error and does not block later actions."""
@@ -646,6 +655,7 @@ async def test_service_play_media_failure_availability(
         )
 
     assert exc_info.value.translation_key == translation_key
+    assert exc_info.value.translation_placeholders == translation_placeholders
 
     await hass.services.async_call(
         MP_DOMAIN,

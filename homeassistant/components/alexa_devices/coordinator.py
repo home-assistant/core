@@ -84,7 +84,6 @@ async def alexa_api_call(
         raise ServiceValidationError(
             translation_domain=DOMAIN,
             translation_key="invalid_user_input",
-            translation_placeholders={"error": repr(err)},
         ) from err
     except CannotSetFeature as err:
         raise HomeAssistantError(

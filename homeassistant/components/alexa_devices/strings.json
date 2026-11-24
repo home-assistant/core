@@ -148,11 +148,14 @@
     "invalid_info_skill_value": {
       "message": "Invalid info skill {info_skill} specified"
     },
+    "invalid_music_provider": {
+      "message": "Music provider {provider} is not available"
+    },
     "invalid_sound_value": {
       "message": "Invalid sound {sound} specified"
     },
     "invalid_user_input": {
-      "message": "Invalid input: {error}"
+      "message": "Alexa rejected the action because its input is invalid"
     },
     "select_option_not_found": {
       "message": "Selected option not found: {option}"
