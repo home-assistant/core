@@ -28,7 +28,7 @@ from homeassistant.components.skoda.const import DOMAIN
 from homeassistant.components.skoda.coordinator import UPDATE_INTERVAL
 from homeassistant.const import STATE_UNKNOWN, Platform, TargetKey
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
@@ -329,6 +329,33 @@ async def test_set_temperature_with_hvac_mode(
     assert (state := hass.states.get(entity_id))
     assert state.state == expected_mode
     assert state.attributes[ClimateEntityStateAttribute.TARGET_TEMPERATURE] == 23
+
+
+async def test_set_temperature_with_unsupported_hvac_mode(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_skoda_client: AsyncMock,
+) -> None:
+    """Test an unsupported mode is rejected without sending or changing anything."""
+    await setup_integration(hass, mock_config_entry)
+
+    with pytest.raises(ServiceValidationError) as exc_info:
+        await hass.services.async_call(
+            CLIMATE_DOMAIN,
+            ClimateService.SET_TEMPERATURE,
+            {
+                TargetKey.ENTITY_ID: ENYAQ,
+                ClimateServiceArgument.TEMPERATURE: 23,
+                ClimateServiceArgument.HVAC_MODE: HVACMode.HEAT,
+            },
+            blocking=True,
+        )
+
+    assert exc_info.value.translation_key == "invalid_hvac_mode"
+    mock_skoda_client.start_air_conditioning.assert_not_awaited()
+    mock_skoda_client.stop_air_conditioning.assert_not_awaited()
+    assert (state := hass.states.get(ENYAQ))
+    assert state.attributes[ClimateEntityStateAttribute.TARGET_TEMPERATURE] == 21.5
 
 
 @pytest.mark.parametrize(

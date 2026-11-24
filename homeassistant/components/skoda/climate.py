@@ -19,9 +19,11 @@ from homeassistant.components.climate import (
 )
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util.unit_conversion import TemperatureConverter
 
+from .const import DOMAIN
 from .coordinator import SkodaConfigEntry, SkodaUpdateCoordinator
 from .entity import SkodaEntity
 
@@ -175,7 +177,17 @@ class SkodaClimate(SkodaEntity, ClimateEntity):
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set the target temperature, applying a requested HVAC mode as well."""
         temperature: float = kwargs[ATTR_TEMPERATURE]
-        hvac_mode = kwargs.get(ATTR_HVAC_MODE, self.hvac_mode)
+        if (hvac_mode := kwargs.get(ATTR_HVAC_MODE)) is None:
+            hvac_mode = self.hvac_mode
+        elif hvac_mode not in self.hvac_modes:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="invalid_hvac_mode",
+                translation_placeholders={
+                    "hvac_mode": hvac_mode,
+                    "hvac_modes": ", ".join(self.hvac_modes),
+                },
+            )
         if hvac_mode == HVACMode.HEAT_COOL:
             await self._async_start(temperature)
         elif hvac_mode == HVACMode.OFF and self.hvac_mode != HVACMode.OFF:
