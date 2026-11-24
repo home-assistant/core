@@ -1,5 +1,6 @@
 """Basic checks for HomeKit cameras."""
 
+import asyncio
 import base64
 from collections.abc import Callable
 from unittest.mock import ANY, Mock, patch
@@ -8,7 +9,9 @@ from aiohomekit.model import Accessory
 from aiohomekit.model.characteristics import CharacteristicsTypes
 from aiohomekit.model.services import ServicesTypes
 from aiohomekit.testing import FAKE_CAMERA_IMAGE
+from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import async_fire_time_changed
 
 from homeassistant.components import camera
 from homeassistant.components.camera import (
@@ -20,7 +23,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
-from .common import TEST_IP_PAIRING_DATA, setup_test_component
+from .common import TEST_IP_PAIRING_DATA, Helper, setup_test_component
 
 
 def create_camera(accessory: Accessory) -> None:
@@ -226,27 +229,22 @@ async def test_webrtc_source_follows_address_change(
     )
 
 
-@pytest.mark.parametrize(
-    ("side_effect", "logged"),
-    [
-        pytest.param(None, False, id="updated"),
-        pytest.param(HomeAssistantError("secret"), True, id="error"),
-    ],
-)
-async def test_stream_follows_address_change(
-    hass: HomeAssistant,
-    caplog: pytest.LogCaptureFixture,
-    side_effect: Exception | None,
-    logged: bool,
-) -> None:
+async def _move_camera(hass: HomeAssistant, helper: Helper, address: str) -> None:
+    """Store a new address for the camera, as discovery does."""
+    hass.config_entries.async_update_entry(
+        helper.config_entry,
+        data={**helper.config_entry.data, "AccessoryIP": address},
+    )
+    await hass.async_block_till_done()
+
+
+async def test_stream_follows_address_change(hass: HomeAssistant) -> None:
     """Test a running stream gets the new address, as HLS keeps reading it."""
     helper = await setup_test_component(hass, 1, create_camera, connection="IP")
     entity = get_camera_from_entity_id(hass, helper.entity_id)
     entity.stream = Mock()
 
-    with patch.object(
-        entity, "async_create_stream", side_effect=side_effect
-    ) as create_stream:
+    with patch.object(entity, "async_create_stream") as create_stream:
         # Another update leaves the address, so the stream, alone
         hass.config_entries.async_update_entry(
             helper.config_entry, data={**helper.config_entry.data, "Other": 1}
@@ -254,17 +252,89 @@ async def test_stream_follows_address_change(
         await hass.async_block_till_done()
         create_stream.assert_not_called()
 
-        hass.config_entries.async_update_entry(
-            helper.config_entry,
-            data={**helper.config_entry.data, "AccessoryIP": "192.168.1.60"},
-        )
+        await _move_camera(hass, helper, "192.168.1.60")
+
+    create_stream.assert_awaited_once()
+
+
+async def test_stream_address_update_retried(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test a failed address update is retried until go2rtc has it.
+
+    The error isn't logged, as it can carry the pairing key.
+    """
+    helper = await setup_test_component(hass, 1, create_camera, connection="IP")
+    entity = get_camera_from_entity_id(hass, helper.entity_id)
+    entity.stream = Mock()
+
+    with patch.object(
+        entity,
+        "async_create_stream",
+        side_effect=[HomeAssistantError("secret"), TimeoutError, None],
+    ) as create_stream:
+        await _move_camera(hass, helper, "192.168.1.60")
+        assert create_stream.await_count == 1
+        for delay in (5, 15):
+            freezer.tick(delay)
+            async_fire_time_changed(hass)
+            await hass.async_block_till_done()
+        assert create_stream.await_count == 3
+
+        # Updated, so no further retries
+        freezer.tick(300)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+        assert create_stream.await_count == 3
+
+    assert caplog.text.count("Unable to update the stream") == 1
+    assert f"Updated the stream of {helper.entity_id}" in caplog.text
+    assert "secret" not in caplog.text
+
+
+async def test_stream_address_update_waits_for_stream_creation(
+    hass: HomeAssistant,
+) -> None:
+    """Test an address change during stream creation updates the new stream."""
+    helper = await setup_test_component(hass, 1, create_camera, connection="IP")
+    entity = get_camera_from_entity_id(hass, helper.entity_id)
+    entity._create_stream_lock = asyncio.Lock()
+
+    with patch.object(entity, "async_create_stream") as create_stream:
+        async with entity._create_stream_lock:
+            hass.config_entries.async_update_entry(
+                helper.config_entry,
+                data={**helper.config_entry.data, "AccessoryIP": "192.168.1.60"},
+            )
+            for _ in range(5):
+                await asyncio.sleep(0)
+            # The stream being created resolved the old address
+            entity.stream = Mock()
         await hass.async_block_till_done()
 
     create_stream.assert_awaited_once()
-    assert (
-        f"Unable to update the stream of {helper.entity_id}" in caplog.text
-    ) is logged
-    assert "secret" not in caplog.text
+
+
+async def test_stream_address_retry_stopped_on_removal(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
+    """Test a pending address update retry is cancelled with the entity."""
+    helper = await setup_test_component(hass, 1, create_camera, connection="IP")
+    entity = get_camera_from_entity_id(hass, helper.entity_id)
+    entity.stream = Mock()
+
+    with patch.object(
+        entity, "async_create_stream", side_effect=HomeAssistantError
+    ) as create_stream:
+        await _move_camera(hass, helper, "192.168.1.60")
+        await hass.config_entries.async_unload(helper.config_entry.entry_id)
+        freezer.tick(300)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+
+    create_stream.assert_awaited_once()
 
 
 async def test_no_stream_for_bridged_camera(hass: HomeAssistant) -> None:
