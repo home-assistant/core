@@ -10,6 +10,7 @@ from typing import TYPE_CHECKING, Any, override
 
 from tesla_fleet_api.const import VehicleDataEndpoint
 from tesla_fleet_api.exceptions import (
+    Forbidden,
     GatewayTimeout,
     InsufficientCredits,
     InvalidResponse,
@@ -83,6 +84,11 @@ WALL_CONNECTOR_TOTALS = "totals"
 # Keys within tariff_content_v2 kept as nested dicts rather than flattened,
 # since entities and calendars read them as whole structures.
 TARIFF_SKIP_KEYS = ["daily_charges", "demand_charges", "energy_charges", "seasons"]
+
+# Teslemetry's reauth keeps a valid Tesla grant, so only a fresh Tesla login
+# that re-asks for declined scopes can restore them.
+ISSUE_MISSING_SCOPES = "missing_scopes"
+MISSING_SCOPES_URL = "https://teslemetry.com/login?prompt_missing_scopes=1"
 
 # Insufficient credits will not resolve themselves quickly, so back off polling
 # instead of hammering the API at the coordinator's normal interval.
@@ -184,6 +190,21 @@ class TeslemetryVehicleDataCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 translation_key="update_failed_insufficient_credits",
                 retry_after=INSUFFICIENT_CREDITS_RETRY_AFTER,
             ) from e
+        except Forbidden as e:
+            ir.async_create_issue(
+                self.hass,
+                DOMAIN,
+                f"{ISSUE_MISSING_SCOPES}_{self.config_entry.entry_id}",
+                config_entry_id=self.config_entry.entry_id,
+                is_fixable=False,
+                severity=ir.IssueSeverity.ERROR,
+                translation_key=ISSUE_MISSING_SCOPES,
+                learn_more_url=MISSING_SCOPES_URL,
+            )
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="update_failed_missing_scopes",
+            ) from e
         except RETRY_EXCEPTIONS as e:
             raise UpdateFailed(
                 translation_domain=DOMAIN,
@@ -198,6 +219,9 @@ class TeslemetryVehicleDataCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 translation_placeholders={"message": e.message},
             ) from e
 
+        ir.async_delete_issue(
+            self.hass, DOMAIN, f"{ISSUE_MISSING_SCOPES}_{self.config_entry.entry_id}"
+        )
         data = flatten(data)
         if version := data.get("vehicle_state_car_version"):
             # Consume firmware opportunistically rather than through a listener
