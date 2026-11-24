@@ -177,7 +177,7 @@ class KNXProject:
     ) -> None:
         """Initialize project data."""
         self.hass = hass
-        self.xknx = xknx
+        self._xknx = xknx
         self._store = Store[KNXProjectModel](hass, STORAGE_VERSION, STORAGE_KEY)
         # Serializes the cached project against upload and removal, so a load
         # in flight cannot resurrect a project that was replaced or removed.
@@ -199,29 +199,31 @@ class KNXProject:
         Also sets the address format xknx shows group addresses in, for the
         whole process: the project's, or the 3-level format without a project.
         """
-        if project := data or await self._store.async_load():
-            self.devices = project["devices"]
-            self.info = project["info"]
-            self.xknx.group_address_dpt.clear()
-            xknx_ga_dict: dict[DeviceAddressableType, DPTType] = {}
-            # Replace rather than extend: addresses of a previous project don't stay.
-            group_addresses: dict[str, GroupAddressInfo] = {}
-
-            for ga_model in project["group_addresses"].values():
-                ga_info = _create_group_address_info(ga_model)
-                group_addresses[ga_info.address] = ga_info
-                if (dpt_model := ga_model.get("dpt")) is not None:
-                    xknx_ga_dict[ga_model["address"]] = dpt_model
-
-            self.xknx.group_address_dpt.set(xknx_ga_dict)
-            self.group_addresses = group_addresses
-
-            _LOGGER.debug(
-                "Loaded KNX project data with %s group addresses from storage",
-                len(self.group_addresses),
-            )
-            self.loaded = True
+        if not (project := data or await self._store.async_load()):
+            GroupAddress.address_format = self.get_address_format()
+            return
+        self.devices = project["devices"]
+        self.info = project["info"]
         GroupAddress.address_format = self.get_address_format()
+        self._xknx.group_address_dpt.clear()
+        xknx_ga_dict: dict[DeviceAddressableType, DPTType] = {}
+        # Replace rather than extend: addresses of a previous project don't stay.
+        group_addresses: dict[str, GroupAddressInfo] = {}
+
+        for ga_model in project["group_addresses"].values():
+            ga_info = _create_group_address_info(ga_model)
+            group_addresses[ga_info.address] = ga_info
+            if (dpt_model := ga_model.get("dpt")) is not None:
+                xknx_ga_dict[ga_model["address"]] = dpt_model
+
+        self._xknx.group_address_dpt.set(xknx_ga_dict)
+        self.group_addresses = group_addresses
+
+        _LOGGER.debug(
+            "Loaded KNX project data with %s group addresses from storage",
+            len(self.group_addresses),
+        )
+        self.loaded = True
 
     async def process_project_file(self, file_id: str, password: str) -> None:
         """Process an uploaded project file."""
@@ -252,6 +254,9 @@ class KNXProject:
         async with self._project_lock:
             await self._store.async_remove()
             self.initial_state()
+            # what the project set in xknx goes with it
+            self._xknx.group_address_dpt.clear()
+            GroupAddress.address_format = self.get_address_format()
 
     async def get_knxproject(self) -> KNXProjectModel | None:
         """Return the full project, reading it from local storage on first use.
