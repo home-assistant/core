@@ -17,24 +17,16 @@ from skoda_public_api.models.vehicle import VehicleResponse
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.climate import (
-    ATTR_HVAC_ACTION,
-    ATTR_HVAC_MODE,
     DOMAIN as CLIMATE_DOMAIN,
-    SERVICE_SET_HVAC_MODE,
-    SERVICE_SET_TEMPERATURE,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
+    ClimateEntityStateAttribute,
+    ClimateService,
+    ClimateServiceArgument,
     HVACAction,
     HVACMode,
 )
 from homeassistant.components.skoda.const import DOMAIN
 from homeassistant.components.skoda.coordinator import UPDATE_INTERVAL
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    ATTR_TEMPERATURE,
-    STATE_UNKNOWN,
-    Platform,
-)
+from homeassistant.const import STATE_UNKNOWN, Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
@@ -121,8 +113,11 @@ async def test_start_air_conditioning(
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_HVAC_MODE,
-        {ATTR_ENTITY_ID: ENYAQ, ATTR_HVAC_MODE: HVACMode.HEAT_COOL},
+        ClimateService.SET_HVAC_MODE,
+        {
+            TargetKey.ENTITY_ID: ENYAQ,
+            ClimateServiceArgument.HVAC_MODE: HVACMode.HEAT_COOL,
+        },
         blocking=True,
     )
 
@@ -141,7 +136,10 @@ async def test_start_without_target_temperature(
     await setup_integration(hass, mock_config_entry)
 
     await hass.services.async_call(
-        CLIMATE_DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: SUPERB}, blocking=True
+        CLIMATE_DOMAIN,
+        ClimateService.TURN_ON,
+        {TargetKey.ENTITY_ID: SUPERB},
+        blocking=True,
     )
 
     mock_skoda_client.start_air_conditioning.assert_awaited_once_with(VIN, None)
@@ -157,7 +155,10 @@ async def test_stop_air_conditioning(
     await setup_integration(hass, mock_config_entry)
 
     await hass.services.async_call(
-        CLIMATE_DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: SUPERB}, blocking=True
+        CLIMATE_DOMAIN,
+        ClimateService.TURN_OFF,
+        {TargetKey.ENTITY_ID: SUPERB},
+        blocking=True,
     )
 
     mock_skoda_client.stop_air_conditioning.assert_awaited_once_with(VIN)
@@ -176,14 +177,14 @@ async def test_set_temperature_while_running(
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_TEMPERATURE,
-        {ATTR_ENTITY_ID: SUPERB, ATTR_TEMPERATURE: 25},
+        ClimateService.SET_TEMPERATURE,
+        {TargetKey.ENTITY_ID: SUPERB, ClimateServiceArgument.TEMPERATURE: 25},
         blocking=True,
     )
 
     mock_skoda_client.start_air_conditioning.assert_awaited_once_with(VIN, 25)
     assert (state := hass.states.get(SUPERB))
-    assert state.attributes[ATTR_TEMPERATURE] == 25
+    assert state.attributes[ClimateEntityStateAttribute.TARGET_TEMPERATURE] == 25
 
 
 async def test_set_temperature_while_off(
@@ -197,8 +198,8 @@ async def test_set_temperature_while_off(
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_TEMPERATURE,
-        {ATTR_ENTITY_ID: ENYAQ, ATTR_TEMPERATURE: 23},
+        ClimateService.SET_TEMPERATURE,
+        {TargetKey.ENTITY_ID: ENYAQ, ClimateServiceArgument.TEMPERATURE: 23},
         blocking=True,
     )
     mock_skoda_client.start_air_conditioning.assert_not_awaited()
@@ -207,10 +208,13 @@ async def test_set_temperature_while_off(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
     assert (state := hass.states.get(ENYAQ))
-    assert state.attributes[ATTR_TEMPERATURE] == 23
+    assert state.attributes[ClimateEntityStateAttribute.TARGET_TEMPERATURE] == 23
 
     await hass.services.async_call(
-        CLIMATE_DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: ENYAQ}, blocking=True
+        CLIMATE_DOMAIN,
+        ClimateService.TURN_ON,
+        {TargetKey.ENTITY_ID: ENYAQ},
+        blocking=True,
     )
     mock_skoda_client.start_air_conditioning.assert_awaited_once_with(VIN, 23)
 
@@ -231,7 +235,7 @@ async def test_vehicle_target_temperature_change(
     await hass.async_block_till_done()
 
     assert (state := hass.states.get(ENYAQ))
-    assert state.attributes[ATTR_TEMPERATURE] == 19.0
+    assert state.attributes[ClimateEntityStateAttribute.TARGET_TEMPERATURE] == 19.0
 
 
 async def test_target_temperature_kept_without_vehicle_target(
@@ -245,8 +249,8 @@ async def test_target_temperature_kept_without_vehicle_target(
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_TEMPERATURE,
-        {ATTR_ENTITY_ID: ENYAQ, ATTR_TEMPERATURE: 23},
+        ClimateService.SET_TEMPERATURE,
+        {TargetKey.ENTITY_ID: ENYAQ, ClimateServiceArgument.TEMPERATURE: 23},
         blocking=True,
     )
 
@@ -265,7 +269,7 @@ async def test_target_temperature_kept_without_vehicle_target(
     await hass.async_block_till_done()
 
     assert (state := hass.states.get(ENYAQ))
-    assert state.attributes[ATTR_TEMPERATURE] == 23
+    assert state.attributes[ClimateEntityStateAttribute.TARGET_TEMPERATURE] == 23
 
 
 @pytest.mark.parametrize(
@@ -311,8 +315,12 @@ async def test_set_temperature_with_hvac_mode(
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_TEMPERATURE,
-        {ATTR_ENTITY_ID: entity_id, ATTR_TEMPERATURE: 23, ATTR_HVAC_MODE: hvac_mode},
+        ClimateService.SET_TEMPERATURE,
+        {
+            TargetKey.ENTITY_ID: entity_id,
+            ClimateServiceArgument.TEMPERATURE: 23,
+            ClimateServiceArgument.HVAC_MODE: hvac_mode,
+        },
         blocking=True,
     )
 
@@ -320,7 +328,7 @@ async def test_set_temperature_with_hvac_mode(
     getattr(mock_skoda_client, skipped_command).assert_not_awaited()
     assert (state := hass.states.get(entity_id))
     assert state.state == expected_mode
-    assert state.attributes[ATTR_TEMPERATURE] == 23
+    assert state.attributes[ClimateEntityStateAttribute.TARGET_TEMPERATURE] == 23
 
 
 @pytest.mark.parametrize(
@@ -358,7 +366,9 @@ async def test_climate_follows_vehicle_state(
 
     assert (state := hass.states.get(ENYAQ))
     assert state.state == expected_mode
-    assert state.attributes.get(ATTR_HVAC_ACTION) == expected_action
+    assert (
+        state.attributes.get(ClimateEntityStateAttribute.HVAC_ACTION) == expected_action
+    )
 
 
 async def test_climate_action_error(
@@ -372,7 +382,10 @@ async def test_climate_action_error(
 
     with pytest.raises(HomeAssistantError) as exc_info:
         await hass.services.async_call(
-            CLIMATE_DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: ENYAQ}, blocking=True
+            CLIMATE_DOMAIN,
+            ClimateService.TURN_ON,
+            {TargetKey.ENTITY_ID: ENYAQ},
+            blocking=True,
         )
 
     assert exc_info.value.translation_key == "command_failed"
