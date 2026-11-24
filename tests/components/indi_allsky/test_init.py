@@ -4,7 +4,11 @@ from datetime import timedelta
 from unittest.mock import AsyncMock, patch
 
 import aiohttp
-from aioindiallsky import IndiAllSkyAuthError, IndiAllSkyConnectionError
+from aioindiallsky import (
+    ExposureData,
+    IndiAllSkyAuthError,
+    IndiAllSkyConnectionError,
+)
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
@@ -177,6 +181,27 @@ async def test_background_sensor_fetch_unavailable_and_recovery(
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
 
+    assert caplog.text.count("Error requesting indi_allsky data") == 1
+
+    # Unrelated exposure push updates must not clear the sensor-fetch failure
+    # state, emit duplicate error logs, or suppress the later recovery log.
+    for cb in mock_indi_allsky_client.callbacks["exposure_complete"]:
+        cb(
+            ExposureData(
+                filename="next.jpg",
+                create_date="2026-08-13 23:03:41",
+                exposure=1.0,
+                gain=100.0,
+                binmode=1,
+                night=True,
+                camera_id=1,
+            )
+        )
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    state = hass.states.get("binary_sensor.indi_allsky_night")
+    assert state is not None
+    assert state.state == STATE_UNAVAILABLE
     assert caplog.text.count("Error requesting indi_allsky data") == 1
 
     mock_indi_allsky_client.fetch_sensors.side_effect = None

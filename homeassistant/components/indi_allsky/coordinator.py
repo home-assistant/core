@@ -90,6 +90,7 @@ class IndiAllSkyDataUpdateCoordinator(DataUpdateCoordinator[IndiAllSkyData]):
         self.latest_sensor: SensorData | None = None
         self._sensor_fetch_task: asyncio.Task[None] | None = None
         self._sensor_fetch_queued = False
+        self._sensor_fetch_failed = False
 
         entry.async_on_unload(
             self.client.register_callback(
@@ -127,6 +128,23 @@ class IndiAllSkyDataUpdateCoordinator(DataUpdateCoordinator[IndiAllSkyData]):
             update_interval=None,
         )
 
+    def _publish_data(self) -> None:
+        """Publish latest data without clearing an active sensor-fetch failure."""
+        data = IndiAllSkyData(
+            exposure=self.latest_exposure,
+            latest_keogram=self.latest_keogram,
+            latest_keogram_image=self.latest_keogram_image,
+            latest_keogram_updated=self.latest_keogram_updated,
+            latest_startrail=self.latest_startrail,
+            latest_startrail_image=self.latest_startrail_image,
+            latest_startrail_updated=self.latest_startrail_updated,
+            sensor=self.latest_sensor,
+        )
+        if self._sensor_fetch_failed:
+            self.data = data
+            return
+        self.async_set_updated_data(data)
+
     async def _async_handle_interval_refresh(self, _now: datetime) -> None:
         """Handle periodic fallback sensor polling."""
         self._async_trigger_fetch_sensors()
@@ -135,18 +153,7 @@ class IndiAllSkyDataUpdateCoordinator(DataUpdateCoordinator[IndiAllSkyData]):
         """Handle new exposure_complete event from WebSocket stream."""
         self.latest_exposure = exposure
         self._async_trigger_fetch_sensors()
-        self.async_set_updated_data(
-            IndiAllSkyData(
-                exposure=exposure,
-                latest_keogram=self.latest_keogram,
-                latest_keogram_image=self.latest_keogram_image,
-                latest_keogram_updated=self.latest_keogram_updated,
-                latest_startrail=self.latest_startrail,
-                latest_startrail_image=self.latest_startrail_image,
-                latest_startrail_updated=self.latest_startrail_updated,
-                sensor=self.latest_sensor,
-            )
-        )
+        self._publish_data()
 
     def _async_trigger_fetch_sensors(self) -> None:
         """Trigger sensor fetch if no fetch task is active, or queue a trailing run."""
@@ -164,29 +171,20 @@ class IndiAllSkyDataUpdateCoordinator(DataUpdateCoordinator[IndiAllSkyData]):
         while True:
             self._sensor_fetch_queued = False
             try:
-                was_unavailable = not self.last_update_success
                 try:
                     await self.client.fetch_sensors()
                 except IndiAllSkyAuthError as err:
+                    self._sensor_fetch_failed = True
                     self.async_set_update_error(err)
                     self.config_entry.async_start_reauth(self.hass)
                 except IndiAllSkyError as err:
+                    self._sensor_fetch_failed = True
                     self.async_set_update_error(err)
                 else:
-                    if was_unavailable:
+                    if self._sensor_fetch_failed:
+                        self._sensor_fetch_failed = False
                         _LOGGER.info("Fetching %s data recovered", self.name)
-                        self.async_set_updated_data(
-                            IndiAllSkyData(
-                                exposure=self.latest_exposure,
-                                latest_keogram=self.latest_keogram,
-                                latest_keogram_image=self.latest_keogram_image,
-                                latest_keogram_updated=self.latest_keogram_updated,
-                                latest_startrail=self.latest_startrail,
-                                latest_startrail_image=self.latest_startrail_image,
-                                latest_startrail_updated=self.latest_startrail_updated,
-                                sensor=self.latest_sensor,
-                            )
-                        )
+                        self._publish_data()
             finally:
                 if not self._sensor_fetch_queued:
                     self._sensor_fetch_task = None
@@ -217,18 +215,7 @@ class IndiAllSkyDataUpdateCoordinator(DataUpdateCoordinator[IndiAllSkyData]):
         self.latest_keogram_updated = (
             dt_util.utcnow() if image_bytes is not None else None
         )
-        self.async_set_updated_data(
-            IndiAllSkyData(
-                exposure=self.latest_exposure,
-                latest_keogram=self.latest_keogram,
-                latest_keogram_image=self.latest_keogram_image,
-                latest_keogram_updated=self.latest_keogram_updated,
-                latest_startrail=self.latest_startrail,
-                latest_startrail_image=self.latest_startrail_image,
-                latest_startrail_updated=self.latest_startrail_updated,
-                sensor=self.latest_sensor,
-            )
-        )
+        self._publish_data()
 
     async def _async_fetch_keogram_and_update(self, media: MediaData) -> None:
         """Fetch latest keogram image and update coordinator."""
@@ -267,18 +254,7 @@ class IndiAllSkyDataUpdateCoordinator(DataUpdateCoordinator[IndiAllSkyData]):
         self.latest_startrail_updated = (
             dt_util.utcnow() if image_bytes is not None else None
         )
-        self.async_set_updated_data(
-            IndiAllSkyData(
-                exposure=self.latest_exposure,
-                latest_keogram=self.latest_keogram,
-                latest_keogram_image=self.latest_keogram_image,
-                latest_keogram_updated=self.latest_keogram_updated,
-                latest_startrail=self.latest_startrail,
-                latest_startrail_image=self.latest_startrail_image,
-                latest_startrail_updated=self.latest_startrail_updated,
-                sensor=self.latest_sensor,
-            )
-        )
+        self._publish_data()
 
     async def _async_fetch_startrail_and_update(self, media: MediaData) -> None:
         """Fetch latest startrail image and update coordinator."""
@@ -438,18 +414,7 @@ class IndiAllSkyDataUpdateCoordinator(DataUpdateCoordinator[IndiAllSkyData]):
         else:
             self.latest_sensor = sensor
 
-        self.async_set_updated_data(
-            IndiAllSkyData(
-                exposure=self.latest_exposure,
-                latest_keogram=self.latest_keogram,
-                latest_keogram_image=self.latest_keogram_image,
-                latest_keogram_updated=self.latest_keogram_updated,
-                latest_startrail=self.latest_startrail,
-                latest_startrail_image=self.latest_startrail_image,
-                latest_startrail_updated=self.latest_startrail_updated,
-                sensor=self.latest_sensor,
-            )
-        )
+        self._publish_data()
 
     @override
     async def _async_update_data(self) -> IndiAllSkyData:
