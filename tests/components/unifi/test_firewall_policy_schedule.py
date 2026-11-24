@@ -22,7 +22,7 @@ from homeassistant.components.select import (
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN, SwitchService
 from homeassistant.components.unifi.const import CONF_SITE_ID, DOMAIN
 from homeassistant.components.unifi.coordinator import POLL_INTERVAL
-from homeassistant.const import CONF_HOST, CONTENT_TYPE_JSON, CommonServiceArgument
+from homeassistant.const import CONF_HOST, CONTENT_TYPE_JSON, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 
@@ -113,7 +113,7 @@ async def _call(
     await hass.services.async_call(
         domain,
         service,
-        {CommonServiceArgument.ENTITY_ID: entity_id, **(data or {})},
+        {TargetKey.ENTITY_ID: entity_id, **(data or {})},
         blocking=True,
     )
 
