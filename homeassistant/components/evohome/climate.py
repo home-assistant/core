@@ -319,7 +319,7 @@ class EvoController(EvoClimateEntity):
     It is assumed there is only one TCS per location, and they are thus synonymous.
     """
 
-    _attr_icon = "mdi:thermostat-box"
+    _attr_translation_key = "controller"
     _attr_precision = PRECISION_TENTHS
 
     _evo_device: evo.ControlSystem
