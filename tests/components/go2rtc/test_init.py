@@ -2196,3 +2196,128 @@ async def test_refresh_stream_source_waits_for_stream_update(
         await hass.async_block_till_done()
 
     assert server_streams[identifier].producers[0].url == "rtsp://new"
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_unregister_waits_for_stream_update(
+    hass: HomeAssistant,
+    init_test_integration: MockCamera,
+    rest_client: AsyncMock,
+) -> None:
+    """Test unregistering a camera waits for its stream update in progress.
+
+    The late update can't bring back the removed camera's state.
+    """
+    camera = init_test_integration
+    provider = camera.webrtc_provider
+    assert isinstance(provider, WebRTCProvider)
+    identifier = get_camera_identifier(camera)
+    adding = asyncio.Event()
+    release = asyncio.Event()
+
+    async def add_stream(name: str, sources: list[str]) -> None:
+        adding.set()
+        await release.wait()
+
+    rest_client.streams.add.side_effect = add_stream
+    update = hass.async_create_task(provider._update_stream_source(camera))
+    await adding.wait()
+    unregister = hass.async_create_task(provider.async_unregister_camera(camera))
+    await asyncio.sleep(0)
+    assert not unregister.done()
+
+    release.set()
+    await update
+    await unregister
+    assert identifier not in provider._added_stream_sources
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_stream_update_timeout_retried(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    init_test_integration: MockCamera,
+    rest_client: AsyncMock,
+) -> None:
+    """Test a timeout reading a camera's source is retried like other errors."""
+    camera = init_test_integration
+    assert isinstance(camera.webrtc_provider, WebRTCProvider)
+    camera.set_stream_source(None)
+
+    with patch.object(camera, "webrtc_source", return_value="rtsp://native"):
+        await camera.webrtc_provider.async_get_stream_source(camera)
+        rest_client.streams.add.reset_mock()
+        with patch.object(camera, "stream_source", side_effect=TimeoutError):
+            async_dispatcher_send(hass, SIGNAL_SERVER_RESTARTED)
+            await hass.async_block_till_done()
+        rest_client.streams.add.assert_not_called()
+
+        freezer.tick(5)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+
+    rest_client.streams.add.assert_called_once()
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_refresh_stream_source_after_reload(
+    hass: HomeAssistant,
+    init_test_integration: MockCamera,
+    rest_client: AsyncMock,
+) -> None:
+    """Test a source change reaches a stream go2rtc already had, e.g. after a reload."""
+    camera = init_test_integration
+    provider = camera.webrtc_provider
+    assert isinstance(provider, WebRTCProvider)
+    identifier = get_camera_identifier(camera)
+    server_streams = {
+        identifier: Stream(
+            [
+                Producer("rtsp://old"),
+                Producer(f"ffmpeg:{identifier}#audio=opus#query=log_level=debug"),
+            ]
+        )
+    }
+    rest_client.streams.list.side_effect = lambda: server_streams
+
+    with patch.object(camera, "webrtc_source", return_value="rtsp://old"):
+        await provider._update_stream_source(camera)
+    rest_client.streams.add.assert_not_called()
+
+    with patch.object(camera, "webrtc_source", return_value="rtsp://new"):
+        camera.async_webrtc_source_changed()
+        await hass.async_block_till_done()
+
+    assert rest_client.streams.add.call_args[0][1][0] == "rtsp://new"
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_aac_transcode_follows_stream_source(
+    init_test_integration: MockCamera,
+    rest_client: AsyncMock,
+) -> None:
+    """Test the AAC transcode is added once the camera loses its own source."""
+    camera = init_test_integration
+    provider = camera.webrtc_provider
+    assert isinstance(provider, WebRTCProvider)
+    identifier = get_camera_identifier(camera)
+    aac = f"ffmpeg:{identifier}#audio=aac#query=log_level=debug"
+    server_streams: dict[str, Stream] = {}
+
+    async def add_stream(name: str, sources: list[str]) -> None:
+        server_streams[name] = Stream([Producer(source) for source in sources])
+
+    rest_client.streams.add.side_effect = add_stream
+    rest_client.streams.list.side_effect = lambda: server_streams
+
+    with patch.object(camera, "webrtc_source", return_value="rtsp://native"):
+        camera.set_stream_source("rtsp://native")
+        await provider._update_stream_source(camera)
+        assert aac not in rest_client.streams.add.call_args[0][1]
+
+        # Same WebRTC source, but FFmpeg now reads the restream
+        camera.set_stream_source(None)
+        await provider._update_stream_source(camera)
+
+    assert rest_client.streams.add.call_count == 2
+    assert aac in rest_client.streams.add.call_args[0][1]

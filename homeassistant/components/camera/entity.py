@@ -296,6 +296,11 @@ class Camera(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         """
         if self._webrtc_provider:
             self._webrtc_provider.async_refresh_stream_source(self)
+        else:
+            # Without a source earlier, no provider was picked
+            self.hass.async_create_task(
+                self.async_refresh_providers(), f"{self.entity_id} refresh providers"
+            )
 
     async def _async_get_webrtc_provider_stream_source(self) -> str | None:
         """Return the WebRTC provider's restream of the camera, if any."""

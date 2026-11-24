@@ -537,7 +537,7 @@ class WebRTCProvider(CameraWebRTCProvider):
                         or identifier in self._added_stream_sources
                     ):
                         await self._update_stream_source_locked(camera)
-            except Go2RtcClientError, HomeAssistantError:
+            except Go2RtcClientError, HomeAssistantError, TimeoutError:
                 # Not logged, as the error can carry the source's credentials
                 failed.append(camera.entity_id)
                 continue
@@ -631,19 +631,28 @@ class WebRTCProvider(CameraWebRTCProvider):
             # Therefore setting it to debug will not hide any important logs
             f"ffmpeg:{identifier}#audio=opus#query=log_level=debug",
         ]
+        aac_source = f"ffmpeg:{identifier}#audio=aac#query=log_level=debug"
         if ffmpeg_source is None:
             # FFmpeg reads go2rtc's restream instead (async_get_stream_source),
             # with AAC audio transcoded only while someone reads it
-            sources.append(f"ffmpeg:{identifier}#audio=aac#query=log_level=debug")
+            sources.append(aac_source)
 
         streams = await self._rest_client.streams.list()
 
-        if (stream := streams.get(identifier)) is None or not any(
-            self._is_added_stream_source(identifier, stream_source, producer.url)
-            for producer in stream.producers
+        if (
+            (stream := streams.get(identifier)) is None
+            or not any(
+                self._is_added_stream_source(identifier, stream_source, producer.url)
+                for producer in stream.producers
+            )
+            # The AAC transcode must follow whether FFmpeg reads the restream
+            or (aac_source in sources)
+            != any(producer.url == aac_source for producer in stream.producers)
         ):
             await self._rest_client.streams.add(identifier, sources)
-            self._added_stream_sources[identifier] = stream_source
+        # Also when go2rtc has the stream already, e.g. after a reload, so
+        # later source changes reach it
+        self._added_stream_sources[identifier] = stream_source
 
     def _is_added_stream_source(
         self, identifier: str, stream_source: str, producer_url: str
@@ -711,10 +720,12 @@ class WebRTCProvider(CameraWebRTCProvider):
         """Will be called when the provider is unregistered for a camera."""
         await self._close_camera_sessions(camera)
         identifier = get_camera_identifier(camera)
-        self._added_stream_sources.pop(identifier, None)
-        self._restreamed_cameras.pop(identifier, None)
         self._pending_updates.pop(identifier, None)
-        self._stream_locks.pop(identifier, None)
+        # After an update in progress, so it can't bring the state back. The
+        # lock stays, so a camera registered again under the identifier uses it
+        async with self._stream_locks[identifier]:
+            self._added_stream_sources.pop(identifier, None)
+            self._restreamed_cameras.pop(identifier, None)
         if identifier in await self._rest_client.preload.list():
             await self._rest_client.preload.disable(identifier)
 
