@@ -52,6 +52,7 @@ from .const import (
     CONF_SSL_CERTIFICATE,
     CONF_SSL_KEY,
     CONF_SSL_PEER_CERTIFICATE,
+    CONF_SSL_PEER_CERTIFICATE_REMOTE,
     CONF_SSL_PROFILE,
     CONF_TRUSTED_PROXIES,
     ENV_SUPERVISOR,
@@ -114,6 +115,7 @@ def make_server(
         server_port=conf[CONF_SERVER_PORT],
         ssl_certificate=conf.get(CONF_SSL_CERTIFICATE),
         ssl_peer_certificate=conf.get(CONF_SSL_PEER_CERTIFICATE),
+        ssl_peer_certificate_remote=conf[CONF_SSL_PEER_CERTIFICATE_REMOTE],
         ssl_key=conf.get(CONF_SSL_KEY),
         # The loaded config stores trusted proxies as strings
         # (JSON-serializable); the forwarded middleware needs
@@ -210,6 +212,29 @@ async def async_verify_can_bind(hass: HomeAssistant, conf: ConfData) -> None:
         await server.stop()
 
 
+def _load_peer_certificate(ssl_peer_certificate: str) -> None:
+    """Load the peer certificate authority into a throwaway SSL context."""
+    ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER).load_verify_locations(ssl_peer_certificate)
+
+
+async def async_verify_peer_certificate(
+    hass: HomeAssistant, ssl_peer_certificate: str
+) -> None:
+    """Verify the peer certificate authority file can be loaded.
+
+    The local server only loads it when it serves SSL itself, while remote
+    access loads it on its own, so it is checked separately here.
+
+    Raises ``HomeAssistantError`` if the file cannot be loaded.
+    """
+    try:
+        await hass.async_add_executor_job(_load_peer_certificate, ssl_peer_certificate)
+    except (OSError, ssl.SSLError) as err:
+        raise HomeAssistantError(
+            f"Could not use SSL peer certificate from {ssl_peer_certificate}: {err}"
+        ) from err
+
+
 class HomeAssistantRequest(web.Request):
     """Home Assistant request object."""
 
@@ -272,6 +297,7 @@ class HomeAssistantHTTP:
         ssl_profile: SSLProfile,
         supervisor_unix_socket_path: Path | None = None,
         port_transition: bool = False,
+        ssl_peer_certificate_remote: bool = False,
     ) -> None:
         """Initialize the HTTP Home Assistant server."""
         self.app = HomeAssistantApplication(
@@ -285,6 +311,7 @@ class HomeAssistantHTTP:
         self.hass = hass
         self.ssl_certificate = ssl_certificate
         self.ssl_peer_certificate = ssl_peer_certificate
+        self.ssl_peer_certificate_remote = ssl_peer_certificate_remote
         self.ssl_key = ssl_key
         self.server_host = server_host
         self.server_port = server_port
@@ -302,6 +329,13 @@ class HomeAssistantHTTP:
         self._legacy_redirect_runner: web.AppRunner | None = None
         self._legacy_redirect_server: asyncio.Server | None = None
         self._requires_auth_resources: set[AbstractResource] = set()
+
+    @property
+    def remote_ssl_peer_certificate(self) -> str | None:
+        """Return the peer certificate remote access must require, if any."""
+        if not self.ssl_peer_certificate_remote:
+            return None
+        return self.ssl_peer_certificate
 
     async def async_bind(self) -> None:
         """Create the SSL context and the server, binding its sockets.

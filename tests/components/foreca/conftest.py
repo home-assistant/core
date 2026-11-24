@@ -4,13 +4,14 @@ from collections.abc import Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from pyforeca import (
+    AirQualityForecast,
     CurrentWeather,
     DailyForecast,
+    FifteenMinuteForecast,
     HourlyForecast,
     Location,
     MinutelyForecast,
     MinutelyForecastList,
-    Observation,
 )
 import pytest
 from pytest_homeassistant.common import MockConfigEntry, load_json_object_fixture
@@ -18,6 +19,8 @@ from pytest_homeassistant.common import MockConfigEntry, load_json_object_fixtur
 from homeassistant.components.foreca.const import DOMAIN, SUBENTRY_TYPE_LOCATION
 from homeassistant.config_entries import ConfigSubentryData
 from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE
+
+from . import load_observation
 
 CURRENT = CurrentWeather(
     time="2026-09-01T17:00+03:00",
@@ -131,6 +134,57 @@ MINUTELY = MinutelyForecastList(
     resolution=1,
 )
 
+FIFTEEN_MINUTE = [
+    FifteenMinuteForecast.from_api(
+        {
+            "time": "2026-11-06T11:00+02:00",
+            "symbol": "d200",
+            "symbolPhrase": "partly cloudy",
+            "temperature": 3,
+            "feelsLikeTemp": -1,
+            "relHumidity": 77,
+            "dewPoint": -1,
+            "windDir": 325,
+            "windSpeed": 5,
+            "windGust": 8,
+            "windDirString": "NW",
+            "precipProb": 1,
+            "snowRate": 0,
+            "precipRate": 0,
+            "cloudiness": 66,
+            "thunderProb": 0,
+            "uvIndex": 0,
+            "pressure": 1026.04,
+            "visibility": 10000,
+            "precipType": "rain",
+        }
+    ),
+    FifteenMinuteForecast.from_api(
+        {
+            "time": "2026-11-06T11:15+02:00",
+            "symbol": "d322",
+            "symbolPhrase": "partly cloudy",
+            "temperature": 3,
+            "feelsLikeTemp": -1,
+            "relHumidity": 76,
+            "dewPoint": -1,
+            "windDir": 324,
+            "windSpeed": 4,
+            "windGust": 8,
+            "windDirString": "NW",
+            "precipProb": 70,
+            "snowRate": 0.8,
+            "precipRate": 1.2,
+            "cloudiness": 49,
+            "thunderProb": 0,
+            "uvIndex": 0,
+            "pressure": 1026.03,
+            "visibility": 11620,
+            "precipType": "snow",
+        }
+    ),
+]
+
 LOCATION = Location(
     id=100658225,
     name="Helsinki",
@@ -141,25 +195,18 @@ LOCATION = Location(
 )
 
 
-OBSERVATION = Observation.from_api(
+AIR_QUALITY = AirQualityForecast.from_api(
     {
-        "station": "Helsinki Kaisaniemi",
-        "distance": "1 km N",
-        "time": "2026-11-05T10:40:00+02:00",
-        "temperature": 8,
-        "feelsLikeTemp": 4,
-        "symbol": "d000",
-        "windDirString": "NW",
-        "windDir": 306,
-        "windSpeed": 6,
-        "windGust": 9,
-        "pressure": 1018.8,
-        "relHumidity": 69,
-        "visibility": 20000,
-        "snowDepth": None,
-        "longitude": 24.94,
-        "latitude": 60.18,
-        "elevation": 4,
+        "time": "2026-11-05T10:00+02:00",
+        "pollutant": "Ozone",
+        "pollutantPhrase": "Ozone",
+        "AQI": 31,
+        "AQI_CO": 1,
+        "AQI_NO2": 3,
+        "AQI_O3": 31,
+        "AQI_SO2": 0,
+        "AQI_PM10": 4,
+        "AQI_PM2P5": 8,
     }
 )
 
@@ -200,7 +247,13 @@ def mock_foreca_client() -> Generator[MagicMock]:
             ]
         )
         client.forecast_minutely = AsyncMock(return_value=MINUTELY)
-        client.observation_latest = AsyncMock(return_value=OBSERVATION)
+        client.forecast_15minutely = AsyncMock(return_value=FIFTEEN_MINUTE)
+        client.observation_latest = AsyncMock(
+            return_value=load_observation(
+                "observation_hourly_precipitation_helsinki.json"
+            )
+        )
+        client.air_quality_hourly = AsyncMock(return_value=[AIR_QUALITY])
         yield client
 
 
