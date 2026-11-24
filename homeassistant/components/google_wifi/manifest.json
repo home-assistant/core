@@ -2,7 +2,7 @@
   "domain": "google_wifi",
   "name": "Google Wifi",
   "categories": ["computers_network.routers_network"],
-  "codeowners": ["@EReaso"],
+  "codeowners": ["@EReaso", "@Epicburrito"],
   "config_flow": true,
   "connectivity": ["network"],
   "documentation": "https://www.home-assistant.io/integrations/google_wifi",

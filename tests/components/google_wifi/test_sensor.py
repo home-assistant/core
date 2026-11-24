@@ -8,8 +8,16 @@ from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 
 from homeassistant.components.google_wifi.const import DOMAIN
+from homeassistant.components.google_wifi.coordinator import GoogleWifiCoordinator
+from homeassistant.components.google_wifi.sensor import SENSOR_TYPES, GoogleWifiSensor
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import CONF_HOST, CONF_NAME, STATE_UNAVAILABLE, STATE_UNKNOWN
+from homeassistant.const import (
+    ATTR_FRIENDLY_NAME,
+    CONF_HOST,
+    CONF_NAME,
+    STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, issue_registry as ir
 from homeassistant.setup import async_setup_component
@@ -44,8 +52,36 @@ async def test_sensors_expose_router_data(
     assert hass.states.get("sensor.test_wifi_local_ip").state == "10.0.0.10"
     assert hass.states.get("sensor.test_wifi_status").state == "Online"
     assert hass.states.get("sensor.test_wifi_last_restart") is not None
+    assert (
+        hass.states.get("sensor.test_wifi_current_version").attributes[
+            ATTR_FRIENDLY_NAME
+        ]
+        == "Test Wifi Current version"
+    )
+    assert (
+        hass.states.get("sensor.test_wifi_new_version").attributes[ATTR_FRIENDLY_NAME]
+        == "Test Wifi New version"
+    )
+    assert (
+        hass.states.get("sensor.test_wifi_uptime").attributes[ATTR_FRIENDLY_NAME]
+        == "Test Wifi Uptime"
+    )
+    assert (
+        hass.states.get("sensor.test_wifi_local_ip").attributes[ATTR_FRIENDLY_NAME]
+        == "Test Wifi Local IP"
+    )
+    assert (
+        hass.states.get("sensor.test_wifi_status").attributes[ATTR_FRIENDLY_NAME]
+        == "Test Wifi Status"
+    )
+    assert (
+        hass.states.get("sensor.test_wifi_last_restart").attributes[ATTR_FRIENDLY_NAME]
+        == "Test Wifi Last restart"
+    )
 
-    device = device_registry.async_get_device(identifiers={(DOMAIN, HARDWARE_ID)})
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, HARDWARE_ID), mock_config_entry.entry_id
+    )
     assert device is not None
     assert device.name == "Test Wifi"
 
@@ -62,6 +98,21 @@ async def test_setup_retries_when_router_unreachable(
 
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
     assert hass.states.get("sensor.test_wifi_uptime") is None
+
+
+async def test_native_value_when_data_is_none(hass: HomeAssistant) -> None:
+    """Test an unavailable entity has no native value."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=HARDWARE_ID,
+        title="Test Wifi",
+        data={CONF_HOST: "192.168.86.1"},
+    )
+    coordinator = GoogleWifiCoordinator(hass, entry, api=None)
+
+    sensor = GoogleWifiSensor(coordinator, SENSOR_TYPES[0])
+
+    assert sensor.native_value is None
 
 
 @pytest.mark.usefixtures("mock_success")
@@ -119,7 +170,26 @@ async def test_multiple_devices(
     assert hass.states.get("sensor.office_status").state == "Online"
     assert hass.states.get("sensor.basement_status").state == "Online"
     assert (
-        device_registry.async_get_device(identifiers={(DOMAIN, "hardware-2")})
+        hass.states.get("sensor.living_room_status").attributes[ATTR_FRIENDLY_NAME]
+        == "Living Room Status"
+    )
+    assert (
+        hass.states.get("sensor.office_status").attributes[ATTR_FRIENDLY_NAME]
+        == "Office Status"
+    )
+    assert (
+        hass.states.get("sensor.basement_status").attributes[ATTR_FRIENDLY_NAME]
+        == "Basement Status"
+    )
+    office_entry = next(
+        entry
+        for entry in hass.config_entries.async_entries(DOMAIN)
+        if entry.unique_id == "hardware-2"
+    )
+    assert (
+        device_registry.async_get_device_by_identifier(
+            (DOMAIN, "hardware-2"), office_entry.entry_id
+        )
         is not None
     )
 
