@@ -432,18 +432,25 @@ def _get_option_locations(
     config: TemplateConfig,
 ) -> dict[str, list[dict[str, tuple[str, int]]]]:
     """Return the file and line of the deprecated entity options loaded from YAML."""
-    return {
-        deprecation.platform: [
-            {
-                key: (key.__config_file__, key.__line__)
-                for key in deprecation.options_config(entity_config)
-                if key in deprecation.options and hasattr(key, "__config_file__")
-            }
-            for entity_config in config[deprecation.platform]
-        ]
-        for deprecation in DEPRECATED_TEMPLATE_OPTIONS
-        if deprecation.platform in config
-    }
+    locations: dict[str, list[dict[str, tuple[str, int]]]] = {}
+    for deprecation in DEPRECATED_TEMPLATE_OPTIONS:
+        if (platform := deprecation.platform) not in config:
+            continue
+        # A platform can have several deprecations, keep the locations of all
+        platform_locations = locations.setdefault(
+            platform, [{} for _ in config[platform]]
+        )
+        for entity_locations, entity_config in zip(
+            platform_locations, config[platform], strict=True
+        ):
+            entity_locations.update(
+                {
+                    key: (key.__config_file__, key.__line__)
+                    for key in deprecation.options_config(entity_config)
+                    if key in deprecation.options and hasattr(key, "__config_file__")
+                }
+            )
+    return locations
 
 
 async def async_validate_config_section(

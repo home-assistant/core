@@ -25,6 +25,7 @@ from homeassistant.components.template.const import (
     SENSOR_DEPRECATED_ATTRIBUTES,
     VACUUM_DEPRECATED_ATTRIBUTES,
     WEATHER_DEPRECATED_OPTIONS,
+    DeprecatedTemplateOptions,
     TemplateService,
 )
 from homeassistant.core import HomeAssistant
@@ -1900,6 +1901,50 @@ async def test_deprecated_template_options_issue_blueprint(
         )
         == snapshot
     )
+
+
+async def test_option_locations_several_deprecations_per_platform(
+    hass: HomeAssistant, yaml_config_dir: Path
+) -> None:
+    """Test deprecations of the same platform all keep their option locations."""
+    yaml_path = yaml_config_dir / "configuration.yaml"
+    await hass.async_add_executor_job(
+        yaml_path.write_text,
+        """\
+template:
+  - sensor:
+      - name: Test
+        state: "{{ 1 }}"
+        attributes:
+          device_class: energy
+        unit_of_measurement: kWh
+""",
+    )
+    config = await hass.async_add_executor_job(load_yaml_dict, yaml_path)
+    unit_deprecation = DeprecatedTemplateOptions(
+        platform=Platform.SENSOR,
+        options={"unit_of_measurement": "unit"},
+        translation_key="deprecated_sensor_unit",
+        blueprint_translation_key="deprecated_sensor_unit_blueprint",
+        breaks_in_ha_version="2027.6.0",
+    )
+
+    with patch(
+        "homeassistant.components.template.config.DEPRECATED_TEMPLATE_OPTIONS",
+        (SENSOR_DEPRECATED_ATTRIBUTES, unit_deprecation),
+    ):
+        validated = await async_validate_config(hass, config)
+
+    assert [section.option_locations for section in validated[DOMAIN]] == [
+        {
+            "sensor": [
+                {
+                    "device_class": (str(yaml_path), 6),
+                    "unit_of_measurement": (str(yaml_path), 7),
+                }
+            ]
+        },
+    ]
 
 
 async def test_option_locations_only_deprecated_options(
