@@ -381,9 +381,13 @@ class ModelContextProtocolConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
         """
         with authorization_server_context(self.authorization_server()):
             implementations = await async_get_implementations(self.hass, self.DOMAIN)
+        # The published client metadata document lists the My Home Assistant
+        # redirect URL, so this path is only available when that integration
+        # is loaded.
         client_metadata_supported = (
             self.oauth_config is not None
             and self.oauth_config.client_id_metadata_document_supported
+            and "my" in self.hass.config.components
         )
         if not implementations:
             if client_metadata_supported:
