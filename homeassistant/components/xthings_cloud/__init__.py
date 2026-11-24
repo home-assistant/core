@@ -7,9 +7,8 @@ from ha_xthings_cloud import XthingsCloudApiClient, XthingsCloudApiError
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_TOKEN
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.device_registry import EVENT_DEVICE_REGISTRY_UPDATED
 from homeassistant.helpers.instance_id import async_get as async_get_instance_id
 from homeassistant.helpers.typing import ConfigType

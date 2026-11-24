@@ -17304,6 +17304,13 @@
     "xthings_cloud": {
       "name": "Xthings Cloud",
       "integration_type": "hub",
+      "categories": [
+        "lighting.bulbs_lamps",
+        "security_safety.locks_access"
+      ],
+      "connectivity": [
+        "cloud"
+      ],
       "config_flow": true,
       "iot_class": "cloud_push",
       "single_config_entry": true
