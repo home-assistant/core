@@ -211,7 +211,9 @@ PARAMETER_ID_TO_EXCLUDE_F730 = (
 PARAMETER_ID_TO_INCLUDE_SMO20 = (
     "40013",
     "40033",
+    "40067",
     "40940",
+    "40941",
     "44069",
     "44071",
     "44073",

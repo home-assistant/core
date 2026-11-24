@@ -67,6 +67,7 @@ from .const import (
 )
 
 EVENT_FIRST_TELEGRAM = "dsmr_first_telegram_{}"
+EVENT_TELEGRAM = "dsmr_telegram_{}"
 
 UNIT_CONVERSION = {"m3": UnitOfVolume.CUBIC_METERS}
 
@@ -831,7 +832,6 @@ async def async_setup_entry(
 ) -> None:
     """Set up the DSMR sensor."""
     dsmr_version = entry.data[CONF_DSMR_VERSION]
-    entities: list[DSMREntity] = []
     initialized: bool = False
     add_entities_handler: Callable[[], None] | None
 
@@ -843,6 +843,7 @@ async def async_setup_entry(
         add_entities_handler()
         add_entities_handler = None
 
+        entities: list[DSMREntity] = []
         entities.extend(create_mbus_entities(hass, telegram, entry, dsmr_version))
 
         entities.extend(
@@ -878,9 +879,8 @@ async def async_setup_entry(
     def update_entities_telegram(telegram: Telegram | None) -> None:
         """Update entities with latest telegram and trigger state update."""
         nonlocal initialized
-        # Make all device entities aware of new telegram
-        for entity in entities:
-            entity.update_data(telegram)
+        # Make all added entities aware of new telegram
+        async_dispatcher_send(hass, EVENT_TELEGRAM.format(entry.entry_id), telegram)
 
         entry.runtime_data.telegram = telegram
 
@@ -1098,11 +1098,23 @@ class DSMREntity(SensorEntity):
         else:
             self._attr_unique_id = f"{device_serial}_{entity_description.key}"
 
+    @override
+    async def async_added_to_hass(self) -> None:
+        """Subscribe to new telegrams."""
+        await super().async_added_to_hass()
+        # Telegrams received since the entity was created were not delivered
+        self.telegram = self._entry.runtime_data.telegram
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass, EVENT_TELEGRAM.format(self._entry.entry_id), self.update_data
+            )
+        )
+
     @callback
     def update_data(self, telegram: Telegram | None) -> None:
         """Update data."""
         self.telegram = telegram
-        if self.hass and (
+        if (
             telegram is None
             or get_dsmr_object(
                 telegram, self._mbus_id, self.entity_description.obis_reference
@@ -1200,7 +1212,7 @@ class DSMRBelgiumDemandHistory(DSMREntity):
     def __init__(
         self,
         entity_description: DSMRSensorEntityDescription,
-        entry: ConfigEntry,
+        entry: DsmrConfigEntry,
         telegram: Telegram,
     ) -> None:
         """Initialize historical maximum demand sensor."""

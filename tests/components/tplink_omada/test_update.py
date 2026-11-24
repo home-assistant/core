@@ -304,7 +304,7 @@ async def test_controller_update_without_current_version(
     )
     result = await client.receive_json()
     assert result["success"]
-    assert result["result"] is None
+    assert result["result"]["release_notes"] is None
 
     device_entity = hass.states.get("update.test_poe_switch_firmware")
     assert device_entity is not None
@@ -622,7 +622,7 @@ async def test_release_notes(
     )
     result = await client.receive_json()
 
-    assert expected_notes == result["result"]
+    assert expected_notes == result["result"]["release_notes"]
 
 
 @pytest.mark.parametrize(
@@ -719,7 +719,7 @@ async def test_controller_release_notes_content(
     result = await client.receive_json()
     assert result["success"]
     assert (
-        result["result"]
+        result["result"]["release_notes"]
         == {
             "software": software_notes,
             "hardware": hardware_notes,

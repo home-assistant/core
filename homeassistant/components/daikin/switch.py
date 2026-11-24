@@ -8,7 +8,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import ZONE_NAME_UNCONFIGURED
 from .coordinator import DaikinConfigEntry, DaikinCoordinator
-from .entity import DaikinEntity
+from .entity import DaikinEntity, daikin_exception_handler
 
 DAIKIN_ATTR_ADVANCED = "adv"
 DAIKIN_ATTR_STREAMER = "streamer"
@@ -62,12 +62,14 @@ class DaikinZoneSwitch(DaikinEntity, SwitchEntity):
         return self.device.zones[self._zone_id][1] == "1"
 
     @override
+    @daikin_exception_handler
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the zone on."""
         await self.device.set_zone(self._zone_id, "zone_onoff", "1")
         await self.coordinator.async_refresh()
 
     @override
+    @daikin_exception_handler
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the zone off."""
         await self.device.set_zone(self._zone_id, "zone_onoff", "0")
@@ -92,12 +94,14 @@ class DaikinStreamerSwitch(DaikinEntity, SwitchEntity):
         return DAIKIN_ATTR_STREAMER in self.device.represent(DAIKIN_ATTR_ADVANCED)[1]
 
     @override
+    @daikin_exception_handler
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the zone on."""
         await self.device.set_streamer("on")
         await self.coordinator.async_refresh()
 
     @override
+    @daikin_exception_handler
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the zone off."""
         await self.device.set_streamer("off")
@@ -121,12 +125,14 @@ class DaikinToggleSwitch(DaikinEntity, SwitchEntity):
         return "off" not in self.device.represent(DAIKIN_ATTR_MODE)
 
     @override
+    @daikin_exception_handler
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the zone on."""
         await self.device.set({})
         await self.coordinator.async_refresh()
 
     @override
+    @daikin_exception_handler
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the zone off."""
         await self.device.set({DAIKIN_ATTR_MODE: "off"})

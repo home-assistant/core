@@ -38,10 +38,10 @@ gazetteer-matcher==1.1.0
 go2rtc-client==0.4.0
 ha-ffmpeg==3.2.2
 habluetooth==7.1.2
-hass-nabucasa==2.8.1
-hassil==3.12.1
+hass-nabucasa==2.9.0
+hassil==3.13.0
 home-assistant-bluetooth==2.0.0
-home-assistant-frontend==20261028.6
+home-assistant-frontend==20261028.8
 home-assistant-intents==2026.10.27
 httpx2==2.14.0
 ifaddr==0.2.0
@@ -77,7 +77,7 @@ truststore==0.10.4
 typing-extensions>=4.16.0,<5.0
 ulid-transform==2.2.9
 urllib3>=2.0
-uv==0.13.7
+uv==0.13.8
 webrtc-models==0.3.0
 yarl==1.25.1
 zeroconf==0.154.0

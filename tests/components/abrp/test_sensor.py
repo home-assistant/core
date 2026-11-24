@@ -3,7 +3,13 @@
 import logging
 from unittest.mock import MagicMock
 
-from aioabrp import ChargingState, ConnectionEvent, ConnectionState, Telemetry
+from aioabrp import (
+    ChargingState,
+    ConnectionEvent,
+    ConnectionState,
+    DrivingState,
+    Telemetry,
+)
 import pytest
 from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
@@ -30,13 +36,17 @@ from .conftest import (
 SOC_ENTITY_ID = "sensor.rivian_r2_2027_standard_long_range_soc"
 POWER_ENTITY_ID = "sensor.rivian_r2_2027_standard_long_range_power"
 VOLTAGE_ENTITY_ID = "sensor.rivian_r2_2027_standard_long_range_voltage"
+SOH_ENTITY_ID = "sensor.rivian_r2_2027_standard_long_range_state_of_health"
+CALIBRATED_REF_CONS_ENTITY_ID = (
+    "sensor.rivian_r2_2027_standard_long_range_calibrated_ref_cons"
+)
 CHARGING_STATE_ENTITY_ID = "sensor.rivian_r2_2027_standard_long_range_charging_state"
 VOLTAGE_ENTITY_ID_2 = "sensor.rivian_r1s_2024_quad_max_voltage"
 # Not in the mocked garage, so the stream never subscribes to it.
 _ABSENT_VEHICLE_ID = 999999999999
 
 
-@pytest.mark.usefixtures("mock_abrp_client")
+@pytest.mark.usefixtures("mock_abrp_client", "entity_registry_enabled_by_default")
 async def test_telemetry_sensors_snapshot(
     hass: HomeAssistant,
     config_entry_with_vehicles: MockConfigEntry,
@@ -62,6 +72,13 @@ async def test_telemetry_sensors_snapshot(
             soh=build_metric_value(98.0),
             range=build_metric_value(100000.0),
             battery_temperature=build_metric_value(23.7),
+            battery_temperature_min=build_metric_value(21.4),
+            battery_temperature_max=build_metric_value(26.1),
+            external_temperature=build_metric_value(8.5),
+            cabin_temperature=build_metric_value(20.5),
+            current=build_metric_value(33.1),
+            hvac_power=build_metric_value(1200.0),
+            driving_state=build_metric_value(DrivingState.DRIVE),
             charging_state=build_metric_value(ChargingState.CHARGING_AC),
         ),
     )
@@ -195,6 +212,47 @@ async def test_first_frame_creates_only_that_metric(
     ] * len(absent)
 
 
+@pytest.mark.parametrize(
+    ("telemetry", "entity_id"),
+    [
+        pytest.param(
+            Telemetry(voltage=build_metric_value(400.0)),
+            VOLTAGE_ENTITY_ID,
+            id="voltage",
+        ),
+        pytest.param(
+            Telemetry(soh=build_metric_value(98.0)),
+            SOH_ENTITY_ID,
+            id="soh",
+        ),
+        pytest.param(
+            Telemetry(calibrated_ref_cons=build_metric_value(175.0)),
+            CALIBRATED_REF_CONS_ENTITY_ID,
+            id="calibrated_ref_cons",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("mock_abrp_client")
+async def test_rarely_used_sensors_disabled_by_default(
+    hass: HomeAssistant,
+    config_entry_with_vehicles: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    mock_telemetry_stream: MagicMock,
+    telemetry: Telemetry,
+    entity_id: str,
+) -> None:
+    """Rarely used sensors are registered but disabled until the user enables them."""
+    await setup_integration(hass, config_entry_with_vehicles)
+
+    fire_frame(mock_telemetry_stream, MOCK_VEHICLE_ID, telemetry)
+    await hass.async_block_till_done()
+
+    entry = entity_registry.async_get(entity_id)
+    assert entry is not None
+    assert entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
+    assert hass.states.get(entity_id) is None
+
+
 @pytest.mark.usefixtures("mock_abrp_client")
 async def test_lazy_create_idempotent_on_repeated_frames(
     hass: HomeAssistant,
@@ -263,7 +321,7 @@ async def test_lazy_create_idempotent_on_repeated_frames(
         ),
     ],
 )
-@pytest.mark.usefixtures("mock_abrp_client")
+@pytest.mark.usefixtures("mock_abrp_client", "entity_registry_enabled_by_default")
 async def test_multi_vehicle_entity_isolation(
     hass: HomeAssistant,
     config_entry_with_vehicles: MockConfigEntry,

@@ -21,7 +21,7 @@ from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components.cover import (
     DOMAIN as COVER_DOMAIN,
-    SERVICE_OPEN_COVER,
+    CoverService,
     CoverState,
 )
 from homeassistant.components.overkiz.const import (
@@ -33,7 +33,7 @@ from homeassistant.components.overkiz.const import (
     UPDATE_INTERVAL_SAUTER_SMART_CONTROL,
 )
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE
+from homeassistant.const import STATE_UNAVAILABLE, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
@@ -240,8 +240,8 @@ async def test_commands_share_the_execution_poll(
     for cover in (SHUTTER, GARAGE):
         await hass.services.async_call(
             COVER_DOMAIN,
-            SERVICE_OPEN_COVER,
-            {ATTR_ENTITY_ID: cover.entity_id},
+            CoverService.OPEN,
+            {TargetKey.ENTITY_ID: cover.entity_id},
             blocking=True,
         )
 
@@ -297,8 +297,8 @@ async def test_execution_polls_fast_until_it_finishes(
 
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_OPEN_COVER,
-        {ATTR_ENTITY_ID: SHUTTER.entity_id},
+        CoverService.OPEN,
+        {TargetKey.ENTITY_ID: SHUTTER.entity_id},
         blocking=True,
     )
 
@@ -375,8 +375,8 @@ async def test_command_during_execution_poll_keeps_its_schedule(
         for cover in (SHUTTER, GARAGE):
             await hass.services.async_call(
                 COVER_DOMAIN,
-                SERVICE_OPEN_COVER,
-                {ATTR_ENTITY_ID: cover.entity_id},
+                CoverService.OPEN,
+                {TargetKey.ENTITY_ID: cover.entity_id},
                 blocking=True,
             )
             await async_deliver_events(
@@ -455,8 +455,8 @@ async def test_stateless_hub_skips_the_execution_poll(
 
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_OPEN_COVER,
-        {ATTR_ENTITY_ID: RTS_SHUTTER.entity_id},
+        CoverService.OPEN,
+        {TargetKey.ENTITY_ID: RTS_SHUTTER.entity_id},
         blocking=True,
     )
     assert mock_client.execute_action_group.await_count == 1

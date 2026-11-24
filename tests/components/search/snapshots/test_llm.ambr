@@ -19,6 +19,7 @@
           'entity',
           'device',
           'area',
+          'floor',
           'label',
           'automation',
           'script',
@@ -208,6 +209,19 @@
         ]),
       ]),
       'total': 2,
+    }),
+  })
+# ---
+# name: test_search[floor_alias]
+  dict({
+    'floor': dict({
+      'results': list([
+        list([
+          'first_floor',
+          'First floor',
+        ]),
+      ]),
+      'total': 1,
     }),
   })
 # ---

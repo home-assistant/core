@@ -196,7 +196,7 @@ async def test_update_entity_states(
         }
     )
     result = await ws_client.receive_json()
-    assert result["result"] is None
+    assert result["result"] == {"release_notes": None, "messages": []}
 
     client.async_send_command.return_value = FIRMWARE_UPDATES
 
@@ -222,7 +222,7 @@ async def test_update_entity_states(
         }
     )
     result = await ws_client.receive_json()
-    assert result["result"] == "blah 2"
+    assert result["result"] == {"release_notes": "blah 2", "messages": []}
 
     # Refresh value should not be supported by this entity
     await hass.services.async_call(
@@ -289,8 +289,20 @@ async def test_update_entity_release_notes_sleeping_device(
     hass_ws_client: WebSocketGenerator,
     expected_message: str,
 ) -> None:
-    """Test release notes of a sleeping device start with a wake-up alert."""
+    """Test release notes of a sleeping device come with a wake-up message."""
     ws_client = await hass_ws_client(hass)
+
+    # No messages while no update is available
+    await ws_client.send_json(
+        {
+            "id": 1,
+            "type": "update/release_notes",
+            "entity_id": SLEEPING_NODE_UPDATE_ENTITY,
+        }
+    )
+    result = await ws_client.receive_json()
+    assert result["result"] == {"release_notes": None, "messages": []}
+
     client.async_send_command.return_value = FIRMWARE_UPDATES
 
     async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=15, days=1))
@@ -302,15 +314,16 @@ async def test_update_entity_release_notes_sleeping_device(
 
     await ws_client.send_json(
         {
-            "id": 1,
+            "id": 2,
             "type": "update/release_notes",
             "entity_id": SLEEPING_NODE_UPDATE_ENTITY,
         }
     )
     result = await ws_client.receive_json()
-    assert result["result"] == (
-        f"<ha-alert alert-type='info'>\n\n{expected_message}\n\n</ha-alert>\n\nblah 2"
-    )
+    assert result["result"] == {
+        "release_notes": "blah 2",
+        "messages": [{"severity": "info", "message": expected_message}],
+    }
 
 
 @pytest.mark.parametrize(

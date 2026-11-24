@@ -1,3 +1,8 @@
+get_15_minute_forecast:
+  target:
+    entity:
+      domain: weather
+      integration: foreca
 get_3_hour_forecast:
   target:
     entity:
@@ -17,3 +22,8 @@ get_forecasts_extra:
             - "daily"
             - "hourly"
           translation_key: forecast_type
+get_minute_forecast:
+  target:
+    entity:
+      domain: weather
+      integration: foreca
