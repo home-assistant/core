@@ -505,12 +505,15 @@ def _resolve_short_flow_id(
     matches.extend(
         cast(ConfigSubentryFlow, subentry_mgr._progress[flw["flow_id"]])  # noqa: SLF001
         for flw in subentry_mgr.async_progress()
-        if flw["flow_id"].endswith(suffix)
-        and (
-            flw["handler"][0] in entry_ids
-            or hass.config_entries.async_get_entry(flw["handler"][0]) is None
-        )
+        if flw["handler"][0] in entry_ids and flw["flow_id"].endswith(suffix)
     )
+    if not matches:
+        matches.extend(
+            cast(ConfigSubentryFlow, subentry_mgr._progress[flw["flow_id"]])  # noqa: SLF001
+            for flw in subentry_mgr.async_progress()
+            if flw["flow_id"].endswith(suffix)
+            and hass.config_entries.async_get_entry(flw["handler"][0]) is None
+        )
 
     if len(matches) != 1:
         raise HomeAssistantError(f"Flow '{flow_id}' not found.")
@@ -1010,21 +1013,13 @@ class ConfigureFlowTool(Tool):
         elif isinstance(flow_handler, ConfigSubentryFlow):
             flow_mgr = hass.config_entries.subentries
             entry_id, subentry_type = flow_handler.handler
-            entry = hass.config_entries.async_get_entry(entry_id)
-            if entry is None:
-                flow_mgr.async_abort(flow_handler.flow_id)
-                if abort:
-                    return ToolResult(
-                        data={
-                            "result": {
-                                "flow_id": short_flow_id,
-                                "type": "abort",
-                                "reason": "aborted",
-                            }
-                        }
-                    )
-                return _error_result("Config entry or subentry no longer exists.")
-            domain = entry.domain
+            if (entry := hass.config_entries.async_get_entry(entry_id)) is None:
+                if not abort:
+                    flow_mgr.async_abort(flow_handler.flow_id)
+                    return _error_result("Config entry or subentry no longer exists.")
+                domain = ""
+            else:
+                domain = entry.domain
             flow_category = "config_subentries"
             is_new_entry = False
         else:
