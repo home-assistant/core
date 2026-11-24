@@ -172,7 +172,10 @@ def _restore_templates(obj: Any, hass: HomeAssistant) -> Any:
     if isinstance(obj, str) and ("{%" in obj or "{{" in obj):
         return Template(obj, hass)
     if isinstance(obj, dict):
-        return {k: _restore_templates(v, hass) for k, v in obj.items()}
+        return {
+            _restore_templates(k, hass): _restore_templates(v, hass)
+            for k, v in obj.items()
+        }
     if isinstance(obj, list):
         return [_restore_templates(v, hass) for v in obj]
     return obj
