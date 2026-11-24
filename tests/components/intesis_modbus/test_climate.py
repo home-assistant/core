@@ -28,6 +28,10 @@ from homeassistant.components.climate import (
     ClimateServiceArgument,
     HVACMode,
 )
+from homeassistant.components.homeassistant import (
+    DOMAIN as HOMEASSISTANT_DOMAIN,
+    SERVICE_UPDATE_ENTITY,
+)
 from homeassistant.components.intesis_modbus.const import CONF_HAS_VANE, DOMAIN
 from homeassistant.components.intesis_modbus.coordinator import SCAN_INTERVAL
 from homeassistant.config_entries import ConfigEntryState
@@ -42,10 +46,11 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er
+from homeassistant.setup import async_setup_component
 
 from . import INIT_VALUE, INITIALISING_REGISTERS
 
-ENTITY_ID = "climate.inmbsmhi001r000"
+ENTITY_ID = "climate.inmbsmhi001r000_air_conditioner"
 
 
 async def _poll(hass: HomeAssistant, freezer: FrozenDateTimeFactory) -> None:
@@ -313,6 +318,24 @@ async def test_write_failure_raises_home_assistant_error(
     assert err.value.translation_placeholders is None
 
 
+async def test_manual_update_polls_the_gateway(
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+    mock_connection: MockModbusConnection,
+) -> None:
+    """Updating the entity by hand reads the gateway, without the next poll."""
+    assert await async_setup_component(hass, HOMEASSISTANT_DOMAIN, {})
+    mock_connection.for_unit(1).holding[1] = 4
+    await hass.services.async_call(
+        HOMEASSISTANT_DOMAIN,
+        SERVICE_UPDATE_ENTITY,
+        {TargetKey.ENTITY_ID: ENTITY_ID},
+        blocking=True,
+    )
+    await hass.async_block_till_done(wait_background_tasks=True)
+    assert hass.states.get(ENTITY_ID).state == HVACMode.COOL
+
+
 @pytest.mark.parametrize("registers", [INITIALISING_REGISTERS])
 async def test_initialising_gateway_climate_unknown(
     hass: HomeAssistant, init_integration: MockConfigEntry
@@ -490,12 +513,39 @@ async def test_unreachable_indoor_unit_is_logged_once(
     unit.holding[11] = 65535
     await _poll(hass, freezer)
     await _poll(hass, freezer)
-    assert caplog.text.count("Error fetching INMBSMHI001R000 data") == 1
+    assert caplog.text.count("INMBSMHI001R000 air conditioner is unavailable") == 1
+    assert "Error fetching" not in caplog.text
     assert "data recovered" not in caplog.text
     unit.holding[11] = 0
     await _poll(hass, freezer)
     await _poll(hass, freezer)
+    assert (
+        caplog.text.count("Fetching INMBSMHI001R000 air conditioner data recovered")
+        == 1
+    )
+
+
+async def test_silent_gateway_is_logged_once(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    caplog: pytest.LogCaptureFixture,
+    init_integration: MockConfigEntry,
+    mock_connection: MockModbusConnection,
+) -> None:
+    """A gateway that stops answering takes the air conditioner with it."""
+    mock_connection.for_unit(1).fail_requests(ModbusTimeoutError())
+    await _poll(hass, freezer)
+    await _poll(hass, freezer)
+    assert caplog.text.count("Error fetching INMBSMHI001R000 data") == 1
+    assert caplog.text.count("INMBSMHI001R000 air conditioner is unavailable") == 1
+    mock_connection.for_unit(1).fail_requests(None)
+    await _poll(hass, freezer)
+    await _poll(hass, freezer)
     assert caplog.text.count("Fetching INMBSMHI001R000 data recovered") == 1
+    assert (
+        caplog.text.count("Fetching INMBSMHI001R000 air conditioner data recovered")
+        == 1
+    )
 
 
 async def test_temperature_format_follows_the_dip_switches(
