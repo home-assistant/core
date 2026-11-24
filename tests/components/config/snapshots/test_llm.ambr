@@ -345,7 +345,7 @@
           'type': 'string',
         }),
         'unit_of_measurement': dict({
-          'description': "Only for sensors. The unit to show the state in, like 'kWh'. null uses the unit from the integration.",
+          'description': "Only for sensors. The unit to show the state in, like 'kWh'. null uses the default unit of the sensor.",
           'format': 'strip',
           'nullable': True,
           'type': 'string',

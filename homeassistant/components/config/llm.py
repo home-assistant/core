@@ -1214,7 +1214,7 @@ class UpdateEntitySettingsTool(Tool):
                 CONF_UNIT_OF_MEASUREMENT,
                 description=(
                     "Only for sensors. The unit to show the state in, like 'kWh'. "
-                    "null uses the unit from the integration."
+                    "null uses the default unit of the sensor."
                 ),
             ): _NULLABLE_STRING,
             probatio.Optional(
