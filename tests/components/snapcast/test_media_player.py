@@ -20,6 +20,11 @@ from homeassistant.components.media_player import (
     MediaPlayerServiceArgument,
     MediaPlayerState,
 )
+from homeassistant.components.snapcast.const import DOMAIN
+from homeassistant.components.snapcast.services import (
+    SnapcastService,
+    SnapcastServiceArgument,
+)
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE, TargetKey
 from homeassistant.core import HomeAssistant
@@ -46,6 +51,34 @@ async def test_state(
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
 
+@pytest.mark.parametrize(
+    ("domain", "service", "service_data", "method", "args"),
+    [
+        (
+            MEDIA_PLAYER_DOMAIN,
+            MediaPlayerService.VOLUME_SET,
+            {MediaPlayerServiceArgument.VOLUME_LEVEL: 0.37},
+            "set_volume",
+            (37,),
+        ),
+        (
+            MEDIA_PLAYER_DOMAIN,
+            MediaPlayerService.VOLUME_MUTE,
+            {MediaPlayerServiceArgument.IS_VOLUME_MUTED: True},
+            "set_muted",
+            (True,),
+        ),
+        (
+            DOMAIN,
+            SnapcastService.SET_LATENCY,
+            {SnapcastServiceArgument.LATENCY: 25},
+            "set_latency",
+            (25,),
+        ),
+        (DOMAIN, SnapcastService.RESTORE, {}, "restore", ()),
+    ],
+    ids=["volume", "mute", "latency", "restore"],
+)
 async def test_client_identity_survives_reconnect(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
@@ -54,6 +87,11 @@ async def test_client_identity_survives_reconnect(
     mock_client_2: AsyncMock,
     mock_group_1: AsyncMock,
     entity_registry: er.EntityRegistry,
+    domain: str,
+    service: str,
+    service_data: dict[str, float | bool | int],
+    method: str,
+    args: tuple[int | bool, ...],
 ) -> None:
     """Test a reconnect cannot rebind an entity to another physical client."""
     with patch("secrets.token_hex", return_value="mock_token"):
@@ -104,22 +142,51 @@ async def test_client_identity_survives_reconnect(
     assert state.state == MediaPlayerState.PLAYING
 
     await hass.services.async_call(
-        MEDIA_PLAYER_DOMAIN,
-        MediaPlayerService.VOLUME_SET,
-        {
-            TargetKey.ENTITY_ID: entity_id,
-            MediaPlayerServiceArgument.VOLUME_LEVEL: 0.37,
-        },
+        domain,
+        service,
+        {TargetKey.ENTITY_ID: entity_id, **service_data},
         blocking=True,
     )
 
-    replacement_client.set_volume.assert_awaited_once_with(37)
-    mock_client_1.set_volume.assert_not_awaited()
-    mock_client_2.set_volume.assert_not_awaited()
+    getattr(replacement_client, method).assert_awaited_once_with(*args)
+    getattr(mock_client_1, method).assert_not_called()
+    getattr(mock_client_2, method).assert_not_called()
 
     registry_entry = entity_registry.async_get(entity_id)
     assert registry_entry is not None
     assert registry_entry.unique_id == original_unique_id
+
+
+async def test_snapshot_during_disconnect(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_create_server: AsyncMock,
+    mock_client_1: AsyncMock,
+    mock_client_2: AsyncMock,
+) -> None:
+    """A snapshot can only be taken while the targeted client is present."""
+    await setup_integration(hass, mock_config_entry)
+    target = {TargetKey.ENTITY_ID: "media_player.test_client_1_snapcast_client"}
+    await hass.services.async_call(
+        DOMAIN, SnapcastService.SNAPSHOT, target, blocking=True
+    )
+    mock_client_1.snapshot.assert_called_once_with()
+
+    # The client disappears between HA's availability check and the snapshot.
+    with (
+        patch.object(
+            mock_create_server,
+            "client",
+            side_effect=[mock_client_1, KeyError(mock_client_1.identifier)],
+        ),
+        pytest.raises(ServiceValidationError, match="not currently available"),
+    ):
+        await hass.services.async_call(
+            DOMAIN, SnapcastService.SNAPSHOT, target, blocking=True
+        )
+
+    mock_client_1.snapshot.assert_called_once_with()
+    mock_client_2.snapshot.assert_not_called()
 
 
 @pytest.mark.parametrize(
