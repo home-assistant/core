@@ -287,6 +287,16 @@ class Camera(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
                 self.stream.set_update_callback(self.async_write_ha_state)
             return self.stream
 
+    @callback
+    def async_webrtc_source_changed(self) -> None:
+        """Tell the WebRTC provider that webrtc_source changed.
+
+        For a camera whose source can change, e.g. its address, so that a
+        running restream follows it.
+        """
+        if self._webrtc_provider:
+            self._webrtc_provider.async_refresh_stream_source(self)
+
     async def _async_get_webrtc_provider_stream_source(self) -> str | None:
         """Return the WebRTC provider's restream of the camera, if any."""
         # Only for a camera with its own webrtc_source, as for others a missing

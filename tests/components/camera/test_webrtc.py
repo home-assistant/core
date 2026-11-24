@@ -926,6 +926,33 @@ async def test_no_provider_stream_source_without_webrtc_source(
     await hass.async_block_till_done()
 
 
+@pytest.mark.usefixtures("mock_camera", "mock_stream_source")
+async def test_webrtc_source_changed(hass: HomeAssistant) -> None:
+    """Test a camera tells its WebRTC provider when its source changed."""
+    camera = get_camera_from_entity_id(hass, "camera.demo_camera")
+    refresh = Mock()
+
+    class RefreshProvider(SomeTestProvider):
+        @callback
+        def async_refresh_stream_source(self, camera: Camera) -> None:
+            refresh(camera)
+
+    # Nothing to tell without a provider
+    camera.async_webrtc_source_changed()
+
+    unregister = async_register_webrtc_provider(hass, RefreshProvider())
+    await hass.async_block_till_done()
+    assert camera.webrtc_provider is not None
+
+    camera.async_webrtc_source_changed()
+
+    refresh.assert_called_once_with(camera)
+    unregister()
+    await hass.async_block_till_done()
+
+
 async def test_provider_stream_source_default() -> None:
     """Test providers return no stream source by default."""
     assert await SomeTestProvider().async_get_stream_source(Mock()) is None
+    # Nor refresh anything
+    SomeTestProvider().async_refresh_stream_source(Mock())

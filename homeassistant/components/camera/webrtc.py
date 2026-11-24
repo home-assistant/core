@@ -157,6 +157,15 @@ class CameraWebRTCProvider(ABC):
         return None
 
     @callback
+    def async_refresh_stream_source(self, camera: Camera) -> None:
+        """Pick up a change of the camera's WebRTC source.
+
+        Optional: a provider that restreams the camera updates the restream,
+        as HLS and recording keep reading it without asking again.
+        """
+        return
+
+    @callback
     def async_supports_stream_source(self, camera: Camera) -> bool:
         """Return if async_get_stream_source can restream the camera."""
         return False
