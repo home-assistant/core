@@ -15,8 +15,8 @@ from place.models import Credentials
 from place.mqtt_client import MqttClient
 from place.provider import Provider
 
-from homeassistant.const import Platform
-from homeassistant.core import HomeAssistant
+from homeassistant.const import EVENT_HOMEASSISTANT_STOP, Platform
+from homeassistant.core import Event, HomeAssistant
 from homeassistant.exceptions import (
     ConfigEntryAuthFailed,
     ConfigEntryNotReady,
@@ -102,6 +102,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: PlaceConfigEntry) -> Non
     )
 
     coordinator = PlaceCoordinator(hass, entry, provider, mqtt_client)
+
+    async def async_on_hass_stop(_: Event) -> None:
+        """Disconnect MQTT when Home Assistant stops."""
+        await coordinator.async_shutdown()
+
+    entry.async_on_unload(
+        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, async_on_hass_stop)
+    )
+
     await coordinator.async_setup()
     entry.runtime_data = coordinator
 

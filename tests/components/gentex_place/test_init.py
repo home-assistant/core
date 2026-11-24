@@ -23,6 +23,7 @@ from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 
 from homeassistant.components.gentex_place.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
+from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import (
     OAuth2TokenRequestConnectionError,
@@ -91,6 +92,33 @@ async def test_load_unload_entry(
 
     assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
     mock_mqtt_client.disconnect.assert_called_once()
+    mock_mqtt_client.loop_stop.assert_called_once()
+
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
+    await hass.async_block_till_done()
+
+    mock_mqtt_client.disconnect.assert_called_once()
+    mock_mqtt_client.loop_stop.assert_called_once()
+
+
+@pytest.mark.usefixtures(
+    "aioclient_mock_fixture",
+    "mock_provider",
+    "mock_get_iot_credentials",
+)
+async def test_stop_disconnects_mqtt(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_mqtt_client: MagicMock,
+) -> None:
+    """Test MQTT cleanup when Home Assistant stops."""
+    await setup_integration(hass, mock_config_entry)
+
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
+    await hass.async_block_till_done()
+
+    mock_mqtt_client.disconnect.assert_called_once()
+    mock_mqtt_client.loop_stop.assert_called_once()
 
 
 @pytest.mark.usefixtures(
