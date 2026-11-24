@@ -186,21 +186,23 @@ class DaikinFirmwareUpdateEntity(DaikinManagementPointEntity, UpdateEntity):
         self._attr_latest_version = self._attr_installed_version
         self._attr_release_url = None
         self._attr_release_summary = None
-        self._firmware_id = None
+        offered_update = firmware.offered_update
+        self._firmware_id = (
+            offered_update.firmware_id if offered_update is not None else None
+        )
         self._attr_supported_features = (
             UpdateEntityFeature.INSTALL
-            if self._is_update_supported and firmware.firmware_id is not None
+            if self._is_update_supported and self._firmware_id is not None
             else UpdateEntityFeature(0)
         )
         self._attr_extra_state_attributes = {}
 
-        if (firmware_update := firmware.offered_update) is not None:
+        if offered_update is not None:
             self._attr_latest_version = (
-                firmware_update.version or self._attr_latest_version
+                offered_update.version or self._attr_latest_version
             )
-            self._attr_release_summary = firmware_update.description
-            self._firmware_id = firmware.firmware_id
-            if firmware_update_type := firmware_update.update_type:
+            self._attr_release_summary = offered_update.description
+            if firmware_update_type := offered_update.update_type:
                 self._attr_extra_state_attributes["firmware_update_type"] = (
                     firmware_update_type
                 )

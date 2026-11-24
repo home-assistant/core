@@ -599,6 +599,38 @@ async def test_firmware_install_rejects_unavailable_firmware(
     execute.assert_not_awaited()
 
 
+async def test_firmware_install_not_advertised_without_offer(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+) -> None:
+    """Do not expose install when the management point has no firmware offer."""
+    await _async_setup_fixture(hass, config_entry, "dx4_firmwareavailable")
+    coordinator = config_entry.runtime_data
+    execute = AsyncMock(return_value=True)
+    coordinator.async_execute_command = execute
+    gateway = next(iter(coordinator.data.values()))
+    point = gateway.device.management_point(gateway.device.gateway_embedded_id)
+    assert point is not None
+    point.firmware_update = None
+    coordinator.async_update_listeners()
+    await hass.async_block_till_done()
+
+    entity = hass.data[UPDATE_DOMAIN].get_entity(LIVING_ROOM_FIRMWARE_UPDATE_ENTITY_ID)
+    assert isinstance(entity, DaikinFirmwareUpdateEntity)
+    assert not entity.supported_features & UpdateEntityFeature.INSTALL
+
+    with pytest.raises(HomeAssistantError) as err:
+        await hass.services.async_call(
+            UPDATE_DOMAIN,
+            SERVICE_INSTALL,
+            {ATTR_ENTITY_ID: LIVING_ROOM_FIRMWARE_UPDATE_ENTITY_ID},
+            blocking=True,
+        )
+
+    assert err.value.translation_key == "service_not_supported"
+    execute.assert_not_awaited()
+
+
 async def test_firmware_state_clears_when_firmware_disappears(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,

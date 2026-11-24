@@ -194,16 +194,23 @@ class DaikinClimate(DaikinManagementPointEntity, ClimateEntity):
         self._attr_native_target_temperature = self._get_target_temperature(
             climate_control
         )
-        self._attr_hvac_modes = self._get_hvac_modes(climate_control)
-        self._attr_swing_modes = self._get_swing_modes(climate_control)
-        self._attr_swing_horizontal_modes = self._get_swing_horizontal_modes(
-            climate_control
+        hvac_modes = self._get_hvac_modes(climate_control)
+        swing_modes = self._get_swing_modes(climate_control)
+        swing_horizontal_modes = self._get_swing_horizontal_modes(climate_control)
+        preset_modes = self._get_preset_modes(climate_control, active_presets)
+        fan_modes = self._get_fan_modes(climate_control)
+        self._attr_hvac_modes = hvac_modes
+        self._attr_swing_modes = swing_modes
+        self._attr_swing_horizontal_modes = swing_horizontal_modes
+        self._attr_preset_modes = preset_modes
+        self._attr_fan_modes = fan_modes
+        self._attr_supported_features = self._get_supported_features(
+            climate_control,
+            preset_modes=preset_modes,
+            fan_modes=fan_modes,
+            swing_modes=swing_modes,
+            swing_horizontal_modes=swing_horizontal_modes,
         )
-        self._attr_preset_modes = self._get_preset_modes(
-            climate_control, active_presets
-        )
-        self._attr_fan_modes = self._get_fan_modes(climate_control)
-        self._attr_supported_features = self._get_supported_features(climate_control)
         self._attr_hvac_mode = self._get_hvac_mode(climate_control)
         self._attr_swing_mode = self._get_swing_mode(climate_control)
         self._attr_swing_horizontal_mode = self._get_swing_horizontal_mode(
@@ -342,7 +349,13 @@ class DaikinClimate(DaikinManagementPointEntity, ClimateEntity):
         return self._get_setpoint(climate_control)
 
     def _get_supported_features(
-        self, climate_control: ClimateControl | None
+        self,
+        climate_control: ClimateControl | None,
+        *,
+        preset_modes: list[str],
+        fan_modes: list[str],
+        swing_modes: list[str],
+        swing_horizontal_modes: list[str],
     ) -> ClimateEntityFeature:
         """Return the features supported by this climate entity."""
         supported_features = ClimateEntityFeature(0)
@@ -350,7 +363,7 @@ class DaikinClimate(DaikinManagementPointEntity, ClimateEntity):
             setpoint := self._get_target_setpoint(climate_control)
         ) is not None and setpoint.settable:
             supported_features |= ClimateEntityFeature.TARGET_TEMPERATURE
-        if self._attr_preset_modes and len(self._attr_preset_modes) > 1:
+        if len(preset_modes) > 1:
             supported_features |= ClimateEntityFeature.PRESET_MODE
         cc = climate_control
         if cc is not None:
@@ -358,11 +371,11 @@ class DaikinClimate(DaikinManagementPointEntity, ClimateEntity):
                 supported_features |= (
                     ClimateEntityFeature.TURN_OFF | ClimateEntityFeature.TURN_ON
                 )
-            if self._attr_fan_modes and self._fan_mode_is_settable(cc):
+            if fan_modes and self._fan_mode_is_settable(cc):
                 supported_features |= ClimateEntityFeature.FAN_MODE
-            if self._attr_swing_modes:
+            if swing_modes:
                 supported_features |= ClimateEntityFeature.SWING_MODE
-            if self._attr_swing_horizontal_modes:
+            if swing_horizontal_modes:
                 supported_features |= ClimateEntityFeature.SWING_HORIZONTAL_MODE
 
         return supported_features
@@ -479,7 +492,7 @@ class DaikinClimate(DaikinManagementPointEntity, ClimateEntity):
                     setpointdict.value = value
                     self._publish_write_update()
 
-        if hvac_mode is not None:
+        if hvac_mode == HVACMode.OFF:
             await self.async_handle_set_hvac_mode_service(hvac_mode)
 
     def _get_hvac_mode(self, climate_control: ClimateControl | None) -> HVACMode | None:

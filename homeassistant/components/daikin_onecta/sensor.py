@@ -59,6 +59,9 @@ SENSOR_DESCRIPTIONS: dict[str, SensorEntityDescription] = {
 }
 
 _LOGGER = logging.getLogger(__name__)
+_ENERGY_AGGREGATE_PERIOD_ORDER = {
+    period: index for index, period in enumerate(ENERGY_AGGREGATE_PERIODS)
+}
 
 
 def _native_unit(unit: str | None, description: SensorEntityDescription) -> str | None:
@@ -103,12 +106,11 @@ def add_energy_sensors(
     is_known: EntityIdChecker,
 ) -> None:
     """Add sensors for every typed energy aggregate exposed by a point."""
-    period_order = {
-        period: index for index, period in enumerate(ENERGY_AGGREGATE_PERIODS)
-    }
     for aggregate in sorted(
         management_point.energy_aggregates,
-        key=lambda aggregate: period_order.get(aggregate.period, len(period_order)),
+        key=lambda aggregate: _ENERGY_AGGREGATE_PERIOD_ORDER.get(
+            aggregate.period, len(_ENERGY_AGGREGATE_PERIOD_ORDER)
+        ),
     ):
         description_key = energy_description_key(aggregate)
         if description_key is None:
