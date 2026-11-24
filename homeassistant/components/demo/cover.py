@@ -120,7 +120,7 @@ class DemoCover(CoverEntity):
         supported_features: CoverEntityFeature | None = None,
         supported_speeds: list[str] | None = None,
         translation_key: str | None = None,
-        open_tilt_position: int = 100,
+        open_tilt_position: int | None = None,
         closed_tilt_positions: list[int] | None = None,
         tilt_start_angle: int | None = None,
         tilt_end_angle: int | None = None,
@@ -133,10 +133,12 @@ class DemoCover(CoverEntity):
         self._attr_supported_features = supported_features
         self._attr_supported_speeds = supported_speeds
         self._attr_translation_key = translation_key
-        self._open_tilt_position = open_tilt_position
+        self._attr_open_tilt_position = open_tilt_position
+        self._attr_closed_tilt_positions = closed_tilt_positions
+        self._open_tilt_position = (
+            100 if open_tilt_position is None else open_tilt_position
+        )
         self._closed_tilt_positions = closed_tilt_positions or [0]
-        self._attr_open_tilt_position = self._open_tilt_position
-        self._attr_closed_tilt_positions = self._closed_tilt_positions
         self._attr_tilt_start_angle = tilt_start_angle
         self._attr_tilt_end_angle = tilt_end_angle
         self._set_position: int | None = None

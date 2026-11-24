@@ -226,26 +226,6 @@ def _angles(start: int, end: int) -> dict[str, int]:
             id="closed_positions_set",
         ),
         pytest.param(
-            {"open_tilt_position": 50, "closed_tilt_positions": [10, 100]},
-            {"open_tilt_position": 50, "closed_tilt_positions": [100]},
-            id="closed_position_inside_the_scale_is_dropped",
-        ),
-        pytest.param(
-            {"closed_tilt_positions": [0, 100]},
-            {"open_tilt_position": 100, "closed_tilt_positions": [0]},
-            id="closed_positions_with_the_open_position",
-        ),
-        pytest.param(
-            {"closed_tilt_positions": []},
-            {"open_tilt_position": 100, "closed_tilt_positions": [0]},
-            id="closed_positions_empty",
-        ),
-        pytest.param(
-            {"closed_tilt_positions": [10]},
-            {"open_tilt_position": 100, "closed_tilt_positions": [0]},
-            id="only_closed_position_inside_the_scale",
-        ),
-        pytest.param(
             _angles(-90, 90),
             {"open_tilt_position": 50, "closed_tilt_positions": [0, 100]}
             | _angles(-90, 90),
@@ -310,16 +290,6 @@ def _angles(start: int, end: int) -> dict[str, int]:
             {"open_tilt_position": 50, "closed_tilt_positions": [0]} | _angles(-90, 90),
             id="closed_positions_override_angles",
         ),
-        pytest.param(
-            {"tilt_start_angle": -90},
-            {"open_tilt_position": 100, "closed_tilt_positions": [0]},
-            id="one_angle",
-        ),
-        pytest.param(
-            _angles(90, 90),
-            {"open_tilt_position": 100, "closed_tilt_positions": [0]},
-            id="equal_angles",
-        ),
     ],
 )
 async def test_tilt_capability_attributes(
@@ -330,6 +300,67 @@ async def test_tilt_capability_attributes(
     await _setup_cover(hass, ent)
 
     assert _tilt_attributes(hass, ent) == expected
+
+
+@pytest.mark.parametrize(
+    ("values", "match"),
+    [
+        pytest.param(
+            {"open_tilt_position": 150},
+            "invalid open tilt position",
+            id="open_position_out_of_range",
+        ),
+        pytest.param(
+            {"open_tilt_position": 50.5},
+            "invalid open tilt position",
+            id="open_position_not_an_integer",
+        ),
+        pytest.param(_angles(-120, 90), "invalid tilt angles", id="angle_out_of_range"),
+        pytest.param(
+            {"tilt_start_angle": -89.5, "tilt_end_angle": 90},
+            "invalid tilt angles",
+            id="angle_not_an_integer",
+        ),
+        pytest.param({"tilt_start_angle": -90}, "invalid tilt angles", id="one_angle"),
+        pytest.param(_angles(90, 90), "invalid tilt angles", id="equal_angles"),
+        pytest.param(
+            {"open_tilt_position": 50, "closed_tilt_positions": []},
+            "invalid closed tilt positions",
+            id="closed_positions_empty",
+        ),
+        pytest.param(
+            {"open_tilt_position": 50, "closed_tilt_positions": [10, 100]},
+            "invalid closed tilt positions",
+            id="closed_position_inside_the_scale",
+        ),
+        pytest.param(
+            {"open_tilt_position": 50, "closed_tilt_positions": [0, 0]},
+            "invalid closed tilt positions",
+            id="closed_position_twice",
+        ),
+        pytest.param(
+            {"open_tilt_position": 100, "closed_tilt_positions": [0, 100]},
+            "in its closed tilt positions",
+            id="open_position_in_the_closed_positions",
+        ),
+        pytest.param(
+            {"closed_tilt_positions": [100]},
+            "in its closed tilt positions",
+            id="closed_at_the_default_open_position",
+        ),
+        pytest.param(
+            _angles(-90, 90) | {"open_tilt_position": 100},
+            "in its closed tilt positions",
+            id="open_position_closed_by_the_angles",
+        ),
+    ],
+)
+def test_invalid_tilt_values(values: dict[str, Any], match: str) -> None:
+    """Test invalid tilt values raise instead of being corrected."""
+    ent = _tilt_cover(**values)
+
+    with pytest.raises(ValueError, match=match):
+        _ = ent.capability_attributes
 
 
 @pytest.mark.parametrize(
@@ -427,11 +458,6 @@ async def test_tilt_capability_attributes_unchanged(
             {"current_cover_tilt_position": 50, "open_tilt_position": 50},
             "close",
             id="open_at_50",
-        ),
-        pytest.param(
-            {"current_cover_tilt_position": 10, "closed_tilt_positions": [10]},
-            "close",
-            id="closed_inside_the_scale_is_ignored",
         ),
         pytest.param(
             {"current_cover_tilt_position": 100} | _angles(-90, 90),
