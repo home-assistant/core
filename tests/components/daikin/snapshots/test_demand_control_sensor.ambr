@@ -1,0 +1,121 @@
+# serializer version: 1
+# name: test_demand_control_sensor[disabled-auto]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'armed_mode': 'auto',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Daikin Test Demand control mode',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'off',
+        'auto',
+        'manual',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.daikin_test_demand_control_mode',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_demand_control_sensor[disabled-manual]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'armed_mode': 'manual',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Daikin Test Demand control mode',
+      'max_pow': 50,
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'off',
+        'auto',
+        'manual',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.daikin_test_demand_control_mode',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_demand_control_sensor[enabled-auto]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'armed_mode': 'auto',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Daikin Test Demand control mode',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'off',
+        'auto',
+        'manual',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.daikin_test_demand_control_mode',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'auto',
+  })
+# ---
+# name: test_demand_control_sensor[enabled-manual]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'armed_mode': 'manual',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Daikin Test Demand control mode',
+      'max_pow': 50,
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'off',
+        'auto',
+        'manual',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.daikin_test_demand_control_mode',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'manual',
+  })
+# ---
+# name: test_demand_control_sensor[invalid-en_demand]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Daikin Test Demand control mode',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'off',
+        'auto',
+        'manual',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.daikin_test_demand_control_mode',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_demand_control_sensor[unsupported-mode]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Daikin Test Demand control mode',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'off',
+        'auto',
+        'manual',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.daikin_test_demand_control_mode',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
