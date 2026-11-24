@@ -662,8 +662,6 @@ class DaikinClimate(DaikinManagementPointEntity, ClimateEntity):
             and cc.operation_mode is not None
             and operation_mode != cc.operation_mode.value
         ):
-            if operation_mode == "off" and cc.operation_mode.value is not None:
-                self._last_active_operation_mode = cc.operation_mode.value
             await self._async_execute_sub_client_command(
                 OnectaClient.climate_control,
                 lambda climate: climate.set_operation_mode(operation_mode),
@@ -1093,7 +1091,7 @@ class DaikinClimate(DaikinManagementPointEntity, ClimateEntity):
         """Turn device CLIMATE on."""
         cc = self._climate_control()
         if cc is not None and cc.on_off_mode is None:
-            if self.hvac_mode not in (None, HVACMode.OFF):
+            if self.hvac_mode != HVACMode.OFF:
                 return
             modes = self.hvac_modes
             remembered_mode = self._last_active_operation_mode

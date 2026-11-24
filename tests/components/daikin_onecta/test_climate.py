@@ -1372,8 +1372,13 @@ async def test_climate_turn_on_and_off_use_operation_mode_without_power_control(
     management_point = replacement
     climate_control = management_point.climate_control
     assert climate_control is not None and climate_control.operation_mode is not None
-    climate_control.operation_mode.value = "heating"
-    climate_control.operation_mode.values = ["cooling", "heating", "off"]
+    climate_control.operation_mode.value = "heatingNight"
+    climate_control.operation_mode.values = [
+        "cooling",
+        "heating",
+        "heatingNight",
+        "off",
+    ]
     coordinator.async_update_listeners()
 
     state = hass.states.get(entity_id)
@@ -1405,8 +1410,95 @@ async def test_climate_turn_on_and_off_use_operation_mode_without_power_control(
         gateway_id,
         management_point.embedded_id,
         "operationMode",
-        "heating",
+        "heatingNight",
     )
+
+
+async def test_climate_turn_on_uses_preferred_fallback_mode(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    mock_onecta_client: MockOnectaClient,
+) -> None:
+    """Prefer heating over earlier cooling and fan-only modes without history."""
+    gateway = _load_gateway_devices("climate_fixedfanmode")[0]
+    management_point = gateway.management_point("climateControl")
+    assert management_point is not None
+    replacement = replace(management_point, on_off_mode=None)
+    gateway.management_points.remove(management_point)
+    gateway.management_points.append(replacement)
+    management_point = replacement
+    climate_control = management_point.climate_control
+    assert climate_control is not None and climate_control.operation_mode is not None
+    climate_control.operation_mode.value = "off"
+    climate_control.operation_mode.values = [
+        "fanOnly",
+        "cooling",
+        "heating",
+        "off",
+    ]
+    await _async_setup_fixture(
+        hass, config_entry, "climate_fixedfanmode", gateway_devices=[gateway]
+    )
+    entity_id = entity_registry.async_get_entity_id(
+        Platform.CLIMATE,
+        DOMAIN,
+        f"{gateway.id}_{management_point.embedded_id}_roomTemperature",
+    )
+    assert entity_id is not None
+
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: entity_id},
+        blocking=True,
+    )
+
+    mock_onecta_client.patch_characteristic.assert_awaited_once_with(
+        gateway.id,
+        management_point.embedded_id,
+        "operationMode",
+        "heating",
+        path=None,
+    )
+
+
+async def test_climate_turn_on_does_not_replace_unknown_running_mode(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    mock_onecta_client: MockOnectaClient,
+) -> None:
+    """Leave a running mode alone when its operation is unknown to Home Assistant."""
+    gateway = _load_gateway_devices("climate_fixedfanmode")[0]
+    management_point = gateway.management_point("climateControl")
+    assert management_point is not None
+    replacement = replace(management_point, on_off_mode=None)
+    gateway.management_points.remove(management_point)
+    gateway.management_points.append(replacement)
+    management_point = replacement
+    climate_control = management_point.climate_control
+    assert climate_control is not None and climate_control.operation_mode is not None
+    climate_control.operation_mode.value = "vendorMode"
+    climate_control.operation_mode.values = ["vendorMode", "cooling", "off"]
+    await _async_setup_fixture(
+        hass, config_entry, "climate_fixedfanmode", gateway_devices=[gateway]
+    )
+    entity_id = entity_registry.async_get_entity_id(
+        Platform.CLIMATE,
+        DOMAIN,
+        f"{gateway.id}_{management_point.embedded_id}_roomTemperature",
+    )
+    assert entity_id is not None
+
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: entity_id},
+        blocking=True,
+    )
+
+    mock_onecta_client.patch_characteristic.assert_not_awaited()
 
 
 async def test_climate_service_rejects_unknown_native_mode(
