@@ -17,6 +17,7 @@ from .const import (
     ATTR_CONFIG,
     CONF_SERVER_HOST,
     CONF_SERVER_PORT,
+    CONF_SSL_CERTIFICATE,
     CONF_SSL_PEER_CERTIFICATE,
     CONF_SSL_PEER_CERTIFICATE_REMOTE,
     CONF_TRUSTED_PROXIES,
@@ -162,7 +163,11 @@ async def websocket_set_config(
         except HomeAssistantError as err:
             connection.send_error(msg["id"], ERR_BIND_FAILED, str(err))
             return
-        if (ssl_peer_certificate := config.get(CONF_SSL_PEER_CERTIFICATE)) is not None:
+        if (
+            ssl_peer_certificate := config.get(CONF_SSL_PEER_CERTIFICATE)
+        ) is not None and (
+            CONF_SSL_CERTIFICATE in config or config[CONF_SSL_PEER_CERTIFICATE_REMOTE]
+        ):
             try:
                 await async_verify_peer_certificate(hass, ssl_peer_certificate)
             except HomeAssistantError as err:

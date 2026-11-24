@@ -2740,6 +2740,45 @@ async def test_websocket_configure_rejects_unusable_peer_certificate(
     assert len(restart_calls) == 0
 
 
+async def test_websocket_configure_skips_unused_peer_certificate(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    hass_storage: dict[str, Any],
+    tmp_path: Path,
+) -> None:
+    """An unusable peer certificate nothing requires does not block saving.
+
+    Without local SSL and without requiring it remotely, the file is unused,
+    so turning off the remote requirement works even if it broke.
+    """
+    peer_cert_path, _ = _setup_broken_ssl_pem_files(tmp_path)
+
+    assert await async_setup_component(hass, DOMAIN, {})
+    await async_setup_component(hass, "websocket_api", {})
+    await hass.async_start()
+    await hass.async_block_till_done()
+
+    restart_calls = async_mock_service(hass, "homeassistant", "restart")
+    config = {
+        "ssl_peer_certificate": str(peer_cert_path),
+        "ssl_peer_certificate_remote": False,
+    }
+
+    ws_client = await hass_ws_client(hass)
+    await ws_client.send_json_auto_id(
+        {"type": "http/config/configure", "config": config}
+    )
+    response = await ws_client.receive_json()
+    assert response["success"]
+    assert response["result"] == {"restart": True}
+    assert hass_storage[DOMAIN]["data"]["pending"] == _stored_config(
+        config, created_at=ANY
+    )
+
+    await hass.async_block_till_done()
+    assert len(restart_calls) == 1
+
+
 async def test_websocket_configure_peer_certificate_remote(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,

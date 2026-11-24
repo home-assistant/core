@@ -731,7 +731,9 @@ class _HTTPStore(Store[_HTTPStoreData]):
                 _migrate_ssl_profile(old_data[KEY_PENDING])
         if (old_major_version, old_minor_version) < (3, 2):
             # 3.2 added requiring the peer certificate on remote access.
-            old_data[KEY_STABLE][CONF_SSL_PEER_CERTIFICATE_REMOTE] = False
+            old_data[KEY_STABLE].setdefault(CONF_SSL_PEER_CERTIFICATE_REMOTE, False)
             if old_data[KEY_PENDING] is not None:
-                old_data[KEY_PENDING][CONF_SSL_PEER_CERTIFICATE_REMOTE] = False
+                old_data[KEY_PENDING].setdefault(
+                    CONF_SSL_PEER_CERTIFICATE_REMOTE, False
+                )
         return old_data
