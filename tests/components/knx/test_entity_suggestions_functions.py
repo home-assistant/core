@@ -478,7 +478,7 @@ async def test_ws_get_entity_suggestions(
     entity = await create_ui_entity(Platform.SWITCH, {"ga_switch": {"write": "4/0/1"}})
 
     result = await get_entity_suggestions()
-    assert result["providers"]["function"] == {
+    assert result["providers"]["fn"] == {
         "state": "ok",
         "function_types_found": [
             "FT-0",
@@ -493,15 +493,15 @@ async def test_ws_get_entity_suggestions(
     suggestions = {
         suggestion["id"]: suggestion
         for suggestion in result["suggestions"]
-        if suggestion["source"] == "function"
+        if suggestion["source"] == "fn"
     }
     assert sorted(suggestions) == [
-        "function_F-1",
-        "function_F-2",
-        "function_F-3",
-        "function_F-4",
+        "fn_F-1",
+        "fn_F-2",
+        "fn_F-3",
+        "fn_F-4",
     ]
-    ceiling = suggestions["function_F-1"]
+    ceiling = suggestions["fn_F-1"]
     assert ceiling["suggested_name"] == "Ceiling"
     # grouped by the room the function is in
     assert ceiling["group_id"] == "P-2"
@@ -518,11 +518,11 @@ async def test_ws_get_entity_suggestions(
         },
     }
     assert ceiling["existing_entity_ids"] == []
-    assert suggestions["function_F-2"]["metadata"]["roles"] == {
+    assert suggestions["fn_F-2"]["metadata"]["roles"] == {
         "MoveUpDown": "inferred",
         "StopStepUpDown": "inferred",
     }
-    assert suggestions["function_F-4"]["existing_entity_ids"] == [entity.entity_id]
+    assert suggestions["fn_F-4"]["existing_entity_ids"] == [entity.entity_id]
 
 
 async def test_ws_get_entity_suggestions_no_project(
@@ -532,7 +532,7 @@ async def test_ws_get_entity_suggestions_no_project(
     """Test suggestions without project data."""
     await knx.setup_integration()
     result = await get_entity_suggestions()
-    assert result["providers"]["function"] == {"state": "no_project"}
+    assert result["providers"]["fn"] == {"state": "no_project"}
 
 
 async def test_ws_get_entity_suggestions_outdated_parser(
@@ -548,7 +548,7 @@ async def test_ws_get_entity_suggestions_outdated_parser(
     hass_storage[KNX_PROJECT_STORAGE_KEY] = {"version": 1, "data": project}
     await knx.setup_integration()
     result = await get_entity_suggestions()
-    assert result["providers"]["function"] == {
+    assert result["providers"]["fn"] == {
         "state": "outdated_parser",
         "parser_version": "3.2.0",
     }
@@ -564,5 +564,5 @@ async def test_ws_get_entity_suggestions_no_functions(
     hass_storage[KNX_PROJECT_STORAGE_KEY] = {"version": 1, "data": project}
     await knx.setup_integration()
     result = await get_entity_suggestions()
-    assert result["providers"]["function"] == {"state": "no_functions"}
-    assert all(s["source"] != "function" for s in result["suggestions"])
+    assert result["providers"]["fn"] == {"state": "no_functions"}
+    assert all(s["source"] != "fn" for s in result["suggestions"])

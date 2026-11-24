@@ -530,7 +530,7 @@ def _build_suggestions(project: KNXProject) -> list[ProviderSuggestion]:
 class FunctionSuggestionProvider(SuggestionProvider):
     """Suggest entities from the building functions of imported project data."""
 
-    provider_id = "function"
+    provider_id = "fn"
 
     @override
     async def async_get_suggestions(
