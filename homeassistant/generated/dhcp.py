@@ -337,6 +337,10 @@ DHCP: Final[list[dict[str, str | bool]]] = [
     },
     {
         "domain": "earn_e_p1",
+        "hostname": "p1dongle-*",
+    },
+    {
+        "domain": "earn_e_p1",
         "registered_devices": True,
     },
     {
@@ -455,6 +459,34 @@ DHCP: Final[list[dict[str, str | bool]]] = [
     {
         "domain": "gogogate2",
         "hostname": "ismartgate*",
+    },
+    {
+        "domain": "gree",
+        "macaddress": "0447CA*",
+    },
+    {
+        "domain": "gree",
+        "macaddress": "502CC6*",
+    },
+    {
+        "domain": "gree",
+        "macaddress": "580D0D*",
+    },
+    {
+        "domain": "gree",
+        "macaddress": "7CB8E6*",
+    },
+    {
+        "domain": "gree",
+        "macaddress": "9424B8*",
+    },
+    {
+        "domain": "gree",
+        "macaddress": "C03937*",
+    },
+    {
+        "domain": "gree",
+        "macaddress": "F4911E*",
     },
     {
         "domain": "guardian",

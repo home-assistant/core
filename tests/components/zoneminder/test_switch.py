@@ -12,12 +12,7 @@ from zoneminder.monitor import MonitorState
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN, SwitchService
 from homeassistant.components.zoneminder.const import DOMAIN
 from homeassistant.components.zoneminder.switch import PLATFORM_SCHEMA
-from homeassistant.const import (
-    STATE_OFF,
-    STATE_ON,
-    STATE_UNKNOWN,
-    CommonServiceArgument,
-)
+from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNKNOWN, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
@@ -174,7 +169,7 @@ async def test_switch_turn_on_service(
     await hass.services.async_call(
         SWITCH_DOMAIN,
         SwitchService.TURN_ON,
-        {CommonServiceArgument.ENTITY_ID: "switch.front_door_state"},
+        {TargetKey.ENTITY_ID: "switch.front_door_state"},
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -198,7 +193,7 @@ async def test_switch_turn_off_service(
     await hass.services.async_call(
         SWITCH_DOMAIN,
         SwitchService.TURN_OFF,
-        {CommonServiceArgument.ENTITY_ID: "switch.front_door_state"},
+        {TargetKey.ENTITY_ID: "switch.front_door_state"},
         blocking=True,
     )
     await hass.async_block_till_done()

@@ -15,6 +15,8 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from .conftest import (
     climate_control_device,
+    motion_detector2_device,
+    outdoor_siren_device,
     setup_integration,
     shutter_contact_device,
     smoke_detection_system_device,
@@ -288,3 +290,135 @@ async def test_climate_control_binary_sensors(
     device = device_registry.async_get(entry.device_id)
     assert device is not None
     assert device.name == "Living Room"
+
+
+@pytest.mark.parametrize(
+    ("device_kwargs", "entity_id", "expected"),
+    [
+        (
+            {"acoustic_alarm_on": True},
+            "binary_sensor.outdoor_siren_acoustic_alarm",
+            STATE_ON,
+        ),
+        ({}, "binary_sensor.outdoor_siren_acoustic_alarm", STATE_OFF),
+        (
+            {"visual_alarm_on": True},
+            "binary_sensor.outdoor_siren_visual_alarm",
+            STATE_ON,
+        ),
+        ({"tamper_activated": True}, "binary_sensor.outdoor_siren_tamper", STATE_ON),
+        ({}, "binary_sensor.outdoor_siren_tamper", STATE_OFF),
+    ],
+)
+@pytest.mark.usefixtures("mock_session")
+async def test_outdoor_siren_binary_sensors(
+    hass: HomeAssistant,
+    mock_session: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    device_kwargs: dict[str, bool],
+    entity_id: str,
+    expected: str,
+) -> None:
+    """An outdoor siren exposes its alarm and tamper state."""
+    mock_session.device_helper.outdoor_sirens = [outdoor_siren_device(**device_kwargs)]
+    await setup_integration(hass, mock_config_entry)
+
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == expected
+
+
+@pytest.mark.usefixtures("mock_session")
+async def test_outdoor_siren_no_siren_service(
+    hass: HomeAssistant,
+    mock_session: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """An outdoor siren without the siren service gets no alarm sensors."""
+    siren = outdoor_siren_device()
+    siren.siren = None
+    mock_session.device_helper.outdoor_sirens = [siren]
+    await setup_integration(hass, mock_config_entry)
+
+    assert hass.states.get("binary_sensor.outdoor_siren_acoustic_alarm") is None
+    assert hass.states.get("binary_sensor.outdoor_siren_visual_alarm") is None
+    assert hass.states.get("binary_sensor.outdoor_siren_tamper") is None
+
+
+@pytest.mark.parametrize(
+    ("device_kwargs", "entity_id", "expected"),
+    [
+        ({"occupied": True}, "binary_sensor.motion_detector_occupancy", STATE_ON),
+        ({}, "binary_sensor.motion_detector_occupancy", STATE_OFF),
+        ({"was_tampered": True}, "binary_sensor.motion_detector_tamper", STATE_ON),
+        ({}, "binary_sensor.motion_detector_tamper", STATE_OFF),
+    ],
+)
+@pytest.mark.usefixtures("mock_session")
+async def test_motion_detector2_binary_sensors(
+    hass: HomeAssistant,
+    mock_session: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    device_kwargs: dict[str, bool],
+    entity_id: str,
+    expected: str,
+) -> None:
+    """A Motion Detector II exposes occupancy and tamper state."""
+    mock_session.device_helper.motion_detectors2 = [
+        motion_detector2_device(**device_kwargs)
+    ]
+    await setup_integration(hass, mock_config_entry)
+
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == expected
+
+
+SMOKE_ALARM_ENTITY_ID = "binary_sensor.smoke_detection_system_smoke"
+
+
+@pytest.mark.parametrize(
+    ("alarm", "expected"),
+    [
+        (SurveillanceAlarmService.State.ALARM_OFF, STATE_OFF),
+        (SurveillanceAlarmService.State.PRE_ALARM, STATE_ON),
+        (SurveillanceAlarmService.State.ALARM_ON, STATE_ON),
+        (SurveillanceAlarmService.State.ALARM_MUTED, STATE_ON),
+    ],
+)
+async def test_smoke_detection_system_state(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_session: MagicMock,
+    alarm: SurveillanceAlarmService.State,
+    expected: str,
+) -> None:
+    """The system sensor is on for every alarm state except off."""
+    mock_session.device_helper.smoke_detection_system = smoke_detection_system_device(
+        alarm=alarm
+    )
+    await setup_integration(hass, mock_config_entry)
+
+    state = hass.states.get(SMOKE_ALARM_ENTITY_ID)
+    assert state is not None
+    assert state.state == expected
+
+
+async def test_smoke_detection_system_push_update(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_session: MagicMock,
+) -> None:
+    """A pushed alarm change updates the sensor."""
+    system = smoke_detection_system_device(
+        alarm=SurveillanceAlarmService.State.ALARM_OFF
+    )
+    mock_session.device_helper.smoke_detection_system = system
+    await setup_integration(hass, mock_config_entry)
+    assert hass.states.get(SMOKE_ALARM_ENTITY_ID).state == STATE_OFF
+
+    system.alarm = SurveillanceAlarmService.State.ALARM_ON
+    _fire_alarm_update(mock_session)
+    await hass.async_block_till_done()
+
+    assert hass.states.get(SMOKE_ALARM_ENTITY_ID).state == STATE_ON

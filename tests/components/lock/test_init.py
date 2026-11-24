@@ -6,13 +6,11 @@ from typing import Any
 import pytest
 
 from homeassistant.components.lock import (
-    ATTR_CODE,
     CONF_DEFAULT_CODE,
     DOMAIN,
-    SERVICE_LOCK,
-    SERVICE_OPEN,
-    SERVICE_UNLOCK,
     LockEntityFeature,
+    LockService,
+    LockServiceArgument,
     LockState,
 )
 from homeassistant.core import HomeAssistant
@@ -32,7 +30,7 @@ async def help_test_async_lock_service(
     """Help to lock a test lock."""
     data: dict[str, Any] = {"entity_id": entity_id}
     if code is not Undefined:
-        data[ATTR_CODE] = code
+        data[LockServiceArgument.CODE] = code
 
     await hass.services.async_call(DOMAIN, service, data, blocking=True)
 
@@ -145,18 +143,18 @@ async def test_lock_open_with_code(
 
     with pytest.raises(ServiceValidationError):
         await help_test_async_lock_service(
-            hass, mock_lock_entity.entity_id, SERVICE_OPEN
+            hass, mock_lock_entity.entity_id, LockService.OPEN
         )
     with pytest.raises(ServiceValidationError):
         await help_test_async_lock_service(
-            hass, mock_lock_entity.entity_id, SERVICE_OPEN, code=""
+            hass, mock_lock_entity.entity_id, LockService.OPEN, code=""
         )
     with pytest.raises(ServiceValidationError):
         await help_test_async_lock_service(
-            hass, mock_lock_entity.entity_id, SERVICE_OPEN, code="HELLO"
+            hass, mock_lock_entity.entity_id, LockService.OPEN, code="HELLO"
         )
     await help_test_async_lock_service(
-        hass, mock_lock_entity.entity_id, SERVICE_OPEN, code="1234"
+        hass, mock_lock_entity.entity_id, LockService.OPEN, code="1234"
     )
     assert mock_lock_entity.calls_open.call_count == 1
     mock_lock_entity.calls_open.assert_called_with(code="1234")
@@ -174,25 +172,25 @@ async def test_lock_lock_with_code(
     assert state.attributes["code_format"] == r"^\d{4}$"
 
     await help_test_async_lock_service(
-        hass, mock_lock_entity.entity_id, SERVICE_UNLOCK, code="1234"
+        hass, mock_lock_entity.entity_id, LockService.UNLOCK, code="1234"
     )
     mock_lock_entity.calls_unlock.assert_called_with(code="1234")
     assert mock_lock_entity.calls_lock.call_count == 0
 
     with pytest.raises(ServiceValidationError):
         await help_test_async_lock_service(
-            hass, mock_lock_entity.entity_id, SERVICE_LOCK
+            hass, mock_lock_entity.entity_id, LockService.LOCK
         )
     with pytest.raises(ServiceValidationError):
         await help_test_async_lock_service(
-            hass, mock_lock_entity.entity_id, SERVICE_LOCK, code=""
+            hass, mock_lock_entity.entity_id, LockService.LOCK, code=""
         )
     with pytest.raises(ServiceValidationError):
         await help_test_async_lock_service(
-            hass, mock_lock_entity.entity_id, SERVICE_LOCK, code="HELLO"
+            hass, mock_lock_entity.entity_id, LockService.LOCK, code="HELLO"
         )
     await help_test_async_lock_service(
-        hass, mock_lock_entity.entity_id, SERVICE_LOCK, code="1234"
+        hass, mock_lock_entity.entity_id, LockService.LOCK, code="1234"
     )
     assert mock_lock_entity.calls_lock.call_count == 1
     mock_lock_entity.calls_lock.assert_called_with(code="1234")
@@ -210,25 +208,25 @@ async def test_lock_unlock_with_code(
     assert state.attributes["code_format"] == r"^\d{4}$"
 
     await help_test_async_lock_service(
-        hass, mock_lock_entity.entity_id, SERVICE_LOCK, code="1234"
+        hass, mock_lock_entity.entity_id, LockService.LOCK, code="1234"
     )
     mock_lock_entity.calls_lock.assert_called_with(code="1234")
     assert mock_lock_entity.calls_unlock.call_count == 0
 
     with pytest.raises(ServiceValidationError):
         await help_test_async_lock_service(
-            hass, mock_lock_entity.entity_id, SERVICE_UNLOCK
+            hass, mock_lock_entity.entity_id, LockService.UNLOCK
         )
     with pytest.raises(ServiceValidationError):
         await help_test_async_lock_service(
-            hass, mock_lock_entity.entity_id, SERVICE_UNLOCK, code=""
+            hass, mock_lock_entity.entity_id, LockService.UNLOCK, code=""
         )
     with pytest.raises(ServiceValidationError):
         await help_test_async_lock_service(
-            hass, mock_lock_entity.entity_id, SERVICE_UNLOCK, code="HELLO"
+            hass, mock_lock_entity.entity_id, LockService.UNLOCK, code="HELLO"
         )
     await help_test_async_lock_service(
-        hass, mock_lock_entity.entity_id, SERVICE_UNLOCK, code="1234"
+        hass, mock_lock_entity.entity_id, LockService.UNLOCK, code="1234"
     )
     assert mock_lock_entity.calls_unlock.call_count == 1
     mock_lock_entity.calls_unlock.assert_called_with(code="1234")
@@ -245,15 +243,15 @@ async def test_lock_with_illegal_code(
 
     with pytest.raises(ServiceValidationError):
         await help_test_async_lock_service(
-            hass, mock_lock_entity.entity_id, SERVICE_OPEN, code="123456"
+            hass, mock_lock_entity.entity_id, LockService.OPEN, code="123456"
         )
     with pytest.raises(ServiceValidationError):
         await help_test_async_lock_service(
-            hass, mock_lock_entity.entity_id, SERVICE_LOCK, code="123456"
+            hass, mock_lock_entity.entity_id, LockService.LOCK, code="123456"
         )
     with pytest.raises(ServiceValidationError):
         await help_test_async_lock_service(
-            hass, mock_lock_entity.entity_id, SERVICE_UNLOCK, code="123456"
+            hass, mock_lock_entity.entity_id, LockService.UNLOCK, code="123456"
         )
 
 
@@ -265,11 +263,17 @@ async def test_lock_with_no_code(
     hass: HomeAssistant, mock_lock_entity: MockLock
 ) -> None:
     """Test lock entity without code."""
-    await help_test_async_lock_service(hass, mock_lock_entity.entity_id, SERVICE_OPEN)
+    await help_test_async_lock_service(
+        hass, mock_lock_entity.entity_id, LockService.OPEN
+    )
     mock_lock_entity.calls_open.assert_called_with()
-    await help_test_async_lock_service(hass, mock_lock_entity.entity_id, SERVICE_LOCK)
+    await help_test_async_lock_service(
+        hass, mock_lock_entity.entity_id, LockService.LOCK
+    )
     mock_lock_entity.calls_lock.assert_called_with()
-    await help_test_async_lock_service(hass, mock_lock_entity.entity_id, SERVICE_UNLOCK)
+    await help_test_async_lock_service(
+        hass, mock_lock_entity.entity_id, LockService.UNLOCK
+    )
     mock_lock_entity.calls_unlock.assert_called_with()
 
     mock_lock_entity.calls_open.reset_mock()
@@ -277,15 +281,15 @@ async def test_lock_with_no_code(
     mock_lock_entity.calls_unlock.reset_mock()
 
     await help_test_async_lock_service(
-        hass, mock_lock_entity.entity_id, SERVICE_OPEN, code=""
+        hass, mock_lock_entity.entity_id, LockService.OPEN, code=""
     )
     mock_lock_entity.calls_open.assert_called_with()
     await help_test_async_lock_service(
-        hass, mock_lock_entity.entity_id, SERVICE_LOCK, code=""
+        hass, mock_lock_entity.entity_id, LockService.LOCK, code=""
     )
     mock_lock_entity.calls_lock.assert_called_with()
     await help_test_async_lock_service(
-        hass, mock_lock_entity.entity_id, SERVICE_UNLOCK, code=""
+        hass, mock_lock_entity.entity_id, LockService.UNLOCK, code=""
     )
     mock_lock_entity.calls_unlock.assert_called_with()
 
@@ -307,15 +311,15 @@ async def test_lock_with_default_code(
     assert mock_lock_entity._lock_option_default_code == "1234"
 
     await help_test_async_lock_service(
-        hass, mock_lock_entity.entity_id, SERVICE_OPEN, code="1234"
+        hass, mock_lock_entity.entity_id, LockService.OPEN, code="1234"
     )
     mock_lock_entity.calls_open.assert_called_with(code="1234")
     await help_test_async_lock_service(
-        hass, mock_lock_entity.entity_id, SERVICE_LOCK, code="1234"
+        hass, mock_lock_entity.entity_id, LockService.LOCK, code="1234"
     )
     mock_lock_entity.calls_lock.assert_called_with(code="1234")
     await help_test_async_lock_service(
-        hass, mock_lock_entity.entity_id, SERVICE_UNLOCK, code="1234"
+        hass, mock_lock_entity.entity_id, LockService.UNLOCK, code="1234"
     )
     mock_lock_entity.calls_unlock.assert_called_with(code="1234")
 
@@ -324,15 +328,15 @@ async def test_lock_with_default_code(
     mock_lock_entity.calls_unlock.reset_mock()
 
     await help_test_async_lock_service(
-        hass, mock_lock_entity.entity_id, SERVICE_OPEN, code=""
+        hass, mock_lock_entity.entity_id, LockService.OPEN, code=""
     )
     mock_lock_entity.calls_open.assert_called_with(code="1234")
     await help_test_async_lock_service(
-        hass, mock_lock_entity.entity_id, SERVICE_LOCK, code=""
+        hass, mock_lock_entity.entity_id, LockService.LOCK, code=""
     )
     mock_lock_entity.calls_lock.assert_called_with(code="1234")
     await help_test_async_lock_service(
-        hass, mock_lock_entity.entity_id, SERVICE_UNLOCK, code=""
+        hass, mock_lock_entity.entity_id, LockService.UNLOCK, code=""
     )
     mock_lock_entity.calls_unlock.assert_called_with(code="1234")
 
@@ -355,11 +359,11 @@ async def test_lock_with_illegal_default_code(
 
     with pytest.raises(ServiceValidationError):
         await help_test_async_lock_service(
-            hass, mock_lock_entity.entity_id, SERVICE_OPEN
+            hass, mock_lock_entity.entity_id, LockService.OPEN
         )
     with pytest.raises(ServiceValidationError):
         await help_test_async_lock_service(
-            hass, mock_lock_entity.entity_id, SERVICE_LOCK
+            hass, mock_lock_entity.entity_id, LockService.LOCK
         )
     with pytest.raises(
         ServiceValidationError,
@@ -368,7 +372,7 @@ async def test_lock_with_illegal_default_code(
         ),
     ) as exc:
         await help_test_async_lock_service(
-            hass, mock_lock_entity.entity_id, SERVICE_UNLOCK
+            hass, mock_lock_entity.entity_id, LockService.UNLOCK
         )
 
     assert (

@@ -10,9 +10,6 @@ from typing import TYPE_CHECKING, Any
 from asyncinotify import Event as InotifyEvent, Inotify, Mask, Watch
 import probatio
 
-if TYPE_CHECKING:
-    from evdev import InputDevice
-
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_TYPE, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import (
@@ -56,6 +53,9 @@ from .const import (
     MATCH_DEVICE_PATH,
     MATCH_DEVICE_UNIQ,
 )
+
+if TYPE_CHECKING:
+    from evdev import InputDevice
 
 _LOGGER = logging.getLogger(__name__)
 

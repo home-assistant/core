@@ -75,9 +75,11 @@ rules:
   entity-disabled-by-default:
     status: exempt
     comment: Desired devices are selected in Libre Hardware Monitor.
-  entity-translations: todo
+  entity-translations:
+    status: exempt
+    comment: Sensors are named dynamically and can be renamed by users.
   exception-translations: done
-  icon-translations: todo
+  icon-translations: done
   reconfiguration-flow: done
   repair-issues:
     status: exempt

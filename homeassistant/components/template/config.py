@@ -1,6 +1,6 @@
 """Template config validator."""
 
-from collections.abc import Callable
+from collections.abc import Callable, Collection
 from contextlib import suppress
 import itertools
 import logging
@@ -80,7 +80,14 @@ from . import (
     water_heater as water_heater_platform,
     weather as weather_platform,
 )
-from .const import CONF_TRIGGER_VARIABLES, DOMAIN, PLATFORMS, TemplateConfig
+from .const import (
+    CONF_TRIGGER_VARIABLES,
+    DOMAIN,
+    PLATFORMS,
+    WEATHER_DEPRECATED_TEMPLATE_OPTIONS,
+    TemplateConfig,
+    TemplateConfigSections,
+)
 from .helpers import async_get_blueprints
 from .validators import entity_config_identifier
 
@@ -398,23 +405,60 @@ async def _async_resolve_template_config(
     return template_config
 
 
+async def _async_validate_triggers_and_conditions(
+    hass: HomeAssistant, config: TemplateConfig
+) -> None:
+    """Validate the triggers and conditions of a resolved config section."""
+    if CONF_TRIGGERS in config:
+        try:
+            config[CONF_TRIGGERS] = await async_validate_trigger_config(
+                hass, config[CONF_TRIGGERS]
+            )
+        except probatio.Invalid as err:
+            err.prepend([CONF_TRIGGERS])
+            raise
+
+    if CONF_CONDITIONS in config:
+        try:
+            config[CONF_CONDITIONS] = await async_validate_conditions_config(
+                hass, config[CONF_CONDITIONS]
+            )
+        except probatio.Invalid as err:
+            err.prepend([CONF_CONDITIONS])
+            raise
+
+
+# Deprecated options per platform whose file and line are kept for repairs
+DEPRECATED_OPTIONS_WITH_LOCATIONS: dict[str, Collection[str]] = {
+    WEATHER_DOMAIN: WEATHER_DEPRECATED_TEMPLATE_OPTIONS,
+}
+
+
+def _get_option_locations(
+    config: TemplateConfig,
+) -> dict[str, list[dict[str, tuple[str, int]]]]:
+    """Return the file and line of the deprecated entity options loaded from YAML."""
+    return {
+        platform: [
+            {
+                key: (key.__config_file__, key.__line__)
+                for key in entity_config
+                if key in options and hasattr(key, "__config_file__")
+            }
+            for entity_config in config[platform]
+        ]
+        for platform, options in DEPRECATED_OPTIONS_WITH_LOCATIONS.items()
+        if platform in config
+    }
+
+
 async def async_validate_config_section(
     hass: HomeAssistant, config: ConfigType
 ) -> TemplateConfig:
     """Validate an entire config section for the template integration."""
 
     validated_config = await _async_resolve_template_config(hass, config)
-
-    if CONF_TRIGGERS in validated_config:
-        validated_config[CONF_TRIGGERS] = await async_validate_trigger_config(
-            hass, validated_config[CONF_TRIGGERS]
-        )
-
-    if CONF_CONDITIONS in validated_config:
-        validated_config[CONF_CONDITIONS] = await async_validate_conditions_config(
-            hass, validated_config[CONF_CONDITIONS]
-        )
-
+    await _async_validate_triggers_and_conditions(hass, validated_config)
     return validated_config
 
 
@@ -432,18 +476,27 @@ async def async_validate_config(hass: HomeAssistant, config: ConfigType) -> Conf
     if not configs:
         return config
 
-    config_sections = []
+    config_sections = TemplateConfigSections()
 
     for cfg in itertools.chain(*configs):
         try:
-            template_config: TemplateConfig = await async_validate_config_section(
-                hass, cfg
-            )
+            template_config = await _async_resolve_template_config(hass, cfg)
         except probatio.Invalid as err:
             async_log_schema_error(err, DOMAIN, cfg, hass)
             async_notify_setup_error(hass, DOMAIN)
+            config_sections.has_invalid_sections = True
             continue
 
+        try:
+            await _async_validate_triggers_and_conditions(hass, template_config)
+        except probatio.Invalid as err:
+            # The path of a trigger or condition error indexes the resolved section
+            async_log_schema_error(err, DOMAIN, template_config, hass)
+            async_notify_setup_error(hass, DOMAIN)
+            config_sections.has_invalid_sections = True
+            continue
+
+        template_config.option_locations = _get_option_locations(template_config)
         config_sections.append(template_config)
 
     # Create a copy of the configuration with all config for current

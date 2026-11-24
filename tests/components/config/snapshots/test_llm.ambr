@@ -64,6 +64,39 @@
       }),
       'type': 'object',
     }),
+    'config__get_entity_settings': dict({
+      'additionalProperties': False,
+      'properties': dict({
+        'entity_id': dict({
+          'format': 'strip',
+          'type': 'string',
+        }),
+      }),
+      'required': list([
+        'entity_id',
+      ]),
+      'type': 'object',
+    }),
+    'config__get_flows_in_progress': dict({
+      'additionalProperties': False,
+      'properties': dict({
+        'domain': dict({
+          'allOf': list([
+            dict({
+              'type': 'string',
+            }),
+            dict({
+              'format': 'strip',
+            }),
+            dict({
+              'format': 'lower',
+            }),
+          ]),
+          'description': 'Filter in-progress flows by integration domain.',
+        }),
+      }),
+      'type': 'object',
+    }),
     'config__reload_config_entry': dict({
       'additionalProperties': False,
       'properties': dict({
@@ -78,27 +111,68 @@
       ]),
       'type': 'object',
     }),
-    'config__search_integrations': dict({
+    'config__remove_entity': dict({
       'additionalProperties': False,
       'properties': dict({
-        'query': dict({
-          'description': 'Search text to match against integration name, domain, or brand (case-insensitive).',
+        'entity_id': dict({
           'format': 'strip',
-          'type': 'string',
-        }),
-        'type': dict({
-          'description': "Filter results by type: 'integration' or 'helper'.",
-          'enum': list([
-            'integration',
-            'helper',
-          ]),
-          'format': 'lower',
           'type': 'string',
         }),
       }),
       'required': list([
-        'query',
+        'entity_id',
       ]),
+      'type': 'object',
+    }),
+    'config__search_integrations': dict({
+      'additionalProperties': False,
+      'properties': dict({
+        'category': dict({
+          'description': "Filter results by category. Use 'helpers' to find helpers, and 'local_services' for waste collection, power outages and other city or utility information.",
+          'enum': list([
+            'ai_voice',
+            'appliances_cleaning',
+            'blinds_curtains',
+            'buttons_remotes',
+            'climate',
+            'computers_network',
+            'diy_makers',
+            'energy',
+            'finance',
+            'garden_plants',
+            'health_wellbeing',
+            'helpers',
+            'hubs_protocols',
+            'lighting',
+            'local_services',
+            'media_entertainment',
+            'messaging_notifications',
+            'news_social_media',
+            'other_ecosystems',
+            'pets',
+            'plugs_switches',
+            'presence_location',
+            'productivity_information',
+            'security_safety',
+            'sensors',
+            'vehicles_transport',
+            'water',
+            'weather_alerts',
+          ]),
+          'type': 'string',
+        }),
+        'offset': dict({
+          'default': 0,
+          'description': 'Number of results to skip. Use the next_offset of the previous result.',
+          'minimum': 0,
+          'type': 'integer',
+        }),
+        'query': dict({
+          'description': "Search text to match against integration name, domain, or brand (case-insensitive). Required if 'category' is not given.",
+          'format': 'strip',
+          'type': 'string',
+        }),
+      }),
       'type': 'object',
     }),
     'config__start_flow': dict({
@@ -116,11 +190,157 @@
               'format': 'lower',
             }),
           ]),
-          'description': "Integration domain to set up (e.g. 'local_todo', 'template').",
+          'description': "Integration domain to set up when flow_type is 'config' (e.g. 'local_todo', 'template').",
+        }),
+        'entry_id': dict({
+          'description': "The entry_id of the config entry when flow_type is 'options' or 'reconfigure' (e.g. 'hue:8K2M').",
+          'format': 'strip',
+          'type': 'string',
+        }),
+        'flow_type': dict({
+          'default': 'config',
+          'description': "Type of flow to start: 'config' (new entry, default), 'options', or 'reconfigure'.",
+          'enum': list([
+            'config',
+            'options',
+            'reconfigure',
+          ]),
+          'format': 'lower',
+          'type': 'string',
+        }),
+      }),
+      'type': 'object',
+    }),
+    'config__update_core_config': dict({
+      'additionalProperties': False,
+      'properties': dict({
+        'country': dict({
+          'description': "ISO 3166-1 alpha-2 country code, e.g. 'NL'.",
+          'type': 'string',
+        }),
+        'currency': dict({
+          'description': "ISO 4217 currency code, e.g. 'EUR'.",
+          'type': 'string',
+        }),
+        'elevation': dict({
+          'description': 'Elevation in meters above sea level.',
+          'type': 'integer',
+        }),
+        'external_url': dict({
+          'description': 'URL of Home Assistant on the internet. Only set it when the URL in use does not work. null lets Home Assistant find it.',
+          'nullable': True,
+          'type': 'string',
+        }),
+        'internal_url': dict({
+          'description': 'URL of Home Assistant on the local network. Only set it when the URL in use does not work. null lets Home Assistant find it.',
+          'nullable': True,
+          'type': 'string',
+        }),
+        'language': dict({
+          'description': "Language code, e.g. 'en' or 'pt-BR'.",
+          'type': 'string',
+        }),
+        'latitude': dict({
+          'type': 'number',
+        }),
+        'location_name': dict({
+          'description': 'The name of the home.',
+          'type': 'string',
+        }),
+        'longitude': dict({
+          'type': 'number',
+        }),
+        'radius': dict({
+          'description': 'Radius of the home zone in meters.',
+          'type': 'integer',
+        }),
+        'time_zone': dict({
+          'description': "IANA time zone, e.g. 'Europe/Amsterdam'.",
+          'type': 'string',
+        }),
+        'unit_system': dict({
+          'description': 'A new unit system also changes the units of sensors, except units the user set.',
+          'enum': list([
+            'metric',
+            'us_customary',
+          ]),
+          'type': 'string',
+        }),
+      }),
+      'type': 'object',
+    }),
+    'config__update_entity_settings': dict({
+      'additionalProperties': False,
+      'properties': dict({
+        'aliases': dict({
+          'description': 'The names that voice assistants know the entity by. This replaces all aliases. null stands for the name of the entity.',
+          'items': dict({
+            'format': 'strip',
+            'nullable': True,
+            'type': 'string',
+          }),
+          'type': 'array',
+        }),
+        'area_id': dict({
+          'description': 'The area_id. null uses the area of the device.',
+          'format': 'strip',
+          'nullable': True,
+          'type': 'string',
+        }),
+        'device_class': dict({
+          'description': "The device class, like 'outlet' for a switch. null uses the device class from the integration.",
+          'format': 'strip',
+          'nullable': True,
+          'type': 'string',
+        }),
+        'disabled_by': dict({
+          'description': "'user' disables the entity, null enables it. A disabled entity has no state.",
+          'enum': list([
+            'user',
+            None,
+          ]),
+          'nullable': True,
+          'type': 'string',
+        }),
+        'entity_id': dict({
+          'format': 'strip',
+          'type': 'string',
+        }),
+        'hidden_by': dict({
+          'description': "'user' hides the entity from auto-populated dashboards, null shows it.",
+          'enum': list([
+            'user',
+            None,
+          ]),
+          'nullable': True,
+          'type': 'string',
+        }),
+        'icon': dict({
+          'description': "The icon, like 'mdi:lamp'. null uses the icon from the integration.",
+          'nullable': True,
+          'type': 'string',
+        }),
+        'labels': dict({
+          'description': 'The label_ids. This replaces all labels.',
+          'items': dict({
+            'format': 'strip',
+            'type': 'string',
+          }),
+          'type': 'array',
+        }),
+        'name': dict({
+          'description': 'The name of the entity. null uses the name from the integration. An empty string names the entity after its device only.',
+          'format': 'strip',
+          'nullable': True,
+          'type': 'string',
+        }),
+        'new_entity_id': dict({
+          'description': 'A new entity_id. Automations and scripts that use the old one are not updated.',
+          'type': 'string',
         }),
       }),
       'required': list([
-        'domain',
+        'entity_id',
       ]),
       'type': 'object',
     }),
