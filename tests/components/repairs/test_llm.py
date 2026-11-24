@@ -600,6 +600,69 @@ def _register_repairs_flow(
 
 
 @pytest.mark.parametrize("ignore_translations_for_mock_domains", [MOCK_DOMAINS])
+@pytest.mark.parametrize(
+    ("step_type", "submit_args"),
+    [
+        (data_entry_flow.FlowResultType.FORM, {"user_input": {}}),
+        (data_entry_flow.FlowResultType.MENU, {"next_step_id": "finish"}),
+    ],
+)
+async def test_inspect_fix_flow_preserves_pending_step(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+    llm_api: llm.APIInstance,
+    step_type: data_entry_flow.FlowResultType,
+    submit_args: JsonObjectType,
+) -> None:
+    """Inspect a stateful repair without advancing it or clearing its issue."""
+
+    class StatefulFixFlow(RepairsFlow):
+        async def async_step_init(
+            self, user_input: dict[str, Any] | None = None
+        ) -> RepairsFlowResult:
+            if self.cur_step is not None:
+                return self.async_create_entry(data={})
+            if step_type is data_entry_flow.FlowResultType.FORM:
+                return self.async_show_form(
+                    step_id="init", data_schema=probatio.Schema({})
+                )
+            return self.async_show_menu(step_id="init", menu_options=["finish"])
+
+        async def async_step_finish(
+            self, user_input: dict[str, Any] | None = None
+        ) -> RepairsFlowResult:
+            return self.async_create_entry(data={})
+
+    _register_repairs_flow(hass, "domain_a", StatefulFixFlow)
+    ir.async_create_issue(
+        hass,
+        "domain_a",
+        "stateful_issue",
+        is_fixable=True,
+        severity=ir.IssueSeverity.WARNING,
+        translation_key="stateful_key",
+    )
+    start_res = await llm_api.async_call_tool(
+        llm.ToolInput(
+            START_FIX_FLOW_TOOL, {"domain": "domain_a", "issue_id": "stateful_issue"}
+        )
+    )
+    flow_id = start_res.data["result"]["flow_id"]
+
+    inspect_res = await llm_api.async_call_tool(
+        llm.ToolInput(CONFIGURE_FIX_FLOW_TOOL, {"flow_id": flow_id})
+    )
+    assert inspect_res == start_res
+    assert issue_registry.async_get_issue("domain_a", "stateful_issue") is not None
+
+    done_res = await llm_api.async_call_tool(
+        llm.ToolInput(CONFIGURE_FIX_FLOW_TOOL, {"flow_id": flow_id, **submit_args})
+    )
+    assert done_res.data["result"]["type"] == "create_entry"
+    assert issue_registry.async_get_issue("domain_a", "stateful_issue") is None
+
+
+@pytest.mark.parametrize("ignore_translations_for_mock_domains", [MOCK_DOMAINS])
 async def test_custom_fix_flow_menu_form_and_create_entry(
     hass: HomeAssistant,
     issue_registry: ir.IssueRegistry,
