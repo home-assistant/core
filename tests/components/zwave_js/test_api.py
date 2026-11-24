@@ -1877,9 +1877,10 @@ async def test_provision_smart_start_node_unknown_area(
     client,
     hass_ws_client: WebSocketGenerator,
 ) -> None:
-    """Test provisioning with an unknown area creates no device and sends nothing."""
+    """Test provisioning with an unknown area creates no device and provisions nothing."""
     entry = integration
     ws_client = await hass_ws_client(hass)
+    client.async_send_command.return_value = {"success": True}
 
     await ws_client.send_json_auto_id(
         {
@@ -1908,7 +1909,9 @@ async def test_provision_smart_start_node_unknown_area(
     assert not device_registry.async_get_device_by_identifier(
         (DOMAIN, "provision_test"), entry.entry_id
     )
-    client.async_send_command.assert_not_called()
+    assert [
+        call[0][0]["command"] for call in client.async_send_command.call_args_list
+    ] == ["config_manager.lookup_device"]
 
 
 async def test_unprovision_smart_start_node(

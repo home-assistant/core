@@ -1216,10 +1216,6 @@ async def websocket_provision_smart_start_node(
     device = None
     # Create an empty device if device_name is provided
     if device_name := msg.get(DEVICE_NAME):
-        area_id = msg.get(AREA_ID)
-        if area_id and ar.async_get(hass).async_get_area(area_id) is None:
-            connection.send_error(msg[ID], ERR_NOT_FOUND, f"Area {area_id} not found")
-            return
         dev_reg = dr.async_get(hass)
 
         # Create a unique device identifier using the DSK
@@ -1244,6 +1240,12 @@ async def websocket_provision_smart_start_node(
                 get_device_id(driver, driver.controller.own_node),
                 config_entry_id=entry.entry_id,
             )
+
+        # Checked after the awaits, so a deleted area cannot slip through
+        area_id = msg.get(AREA_ID) or None
+        if area_id and ar.async_get(hass).async_get_area(area_id) is None:
+            connection.send_error(msg[ID], ERR_NOT_FOUND, f"Area {area_id} not found")
+            return
 
         # Create an empty device
         device = dev_reg.async_get_or_create(
