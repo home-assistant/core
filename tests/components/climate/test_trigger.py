@@ -23,21 +23,13 @@ from pytest_homeassistant.components.common import (
 )
 
 from homeassistant.components.climate.const import (
-    ATTR_HUMIDITY,
-    ATTR_HVAC_ACTION,
     ClimateEntityCapabilityAttribute,
+    ClimateEntityStateAttribute,
     HVACAction,
     HVACMode,
 )
 from homeassistant.components.climate.trigger import CONF_HVAC_MODE, TRIGGERS
-from homeassistant.const import (
-    ATTR_TEMPERATURE,
-    CONF_ENTITY_ID,
-    CONF_OPTIONS,
-    CONF_TARGET,
-    TargetKey,
-    UnitOfTemperature,
-)
+from homeassistant.const import CONF_OPTIONS, CONF_TARGET, TargetKey, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.trigger import async_validate_trigger_config
 
@@ -244,13 +236,13 @@ async def test_climate_state_trigger_behavior_each(
         *parametrize_numerical_attribute_changed_trigger_states(
             "climate.target_humidity_changed",
             HVACMode.AUTO,
-            ATTR_HUMIDITY,
+            ClimateEntityStateAttribute.HUMIDITY,
             attribute_required=True,
         ),
         *parametrize_numerical_attribute_changed_trigger_states(
             "climate.target_temperature_changed",
             HVACMode.AUTO,
-            ATTR_TEMPERATURE,
+            ClimateEntityStateAttribute.TEMPERATURE,
             threshold_unit=UnitOfTemperature.CELSIUS,
             unit_attributes=_CLIMATE_UNIT_ATTRIBUTES,
             attribute_required=True,
@@ -258,31 +250,61 @@ async def test_climate_state_trigger_behavior_each(
         *parametrize_numerical_attribute_crossed_threshold_trigger_states(
             "climate.target_humidity_crossed_threshold",
             HVACMode.AUTO,
-            ATTR_HUMIDITY,
+            ClimateEntityStateAttribute.HUMIDITY,
             attribute_required=True,
         ),
         *parametrize_numerical_attribute_crossed_threshold_trigger_states(
             "climate.target_temperature_crossed_threshold",
             HVACMode.AUTO,
-            ATTR_TEMPERATURE,
+            ClimateEntityStateAttribute.TEMPERATURE,
             threshold_unit=UnitOfTemperature.CELSIUS,
             unit_attributes=_CLIMATE_UNIT_ATTRIBUTES,
             attribute_required=True,
         ),
         *parametrize_trigger_states(
             trigger="climate.started_cooling",
-            target_states=[(HVACMode.AUTO, {ATTR_HVAC_ACTION: HVACAction.COOLING})],
-            other_states=[(HVACMode.AUTO, {ATTR_HVAC_ACTION: HVACAction.IDLE})],
+            target_states=[
+                (
+                    HVACMode.AUTO,
+                    {ClimateEntityStateAttribute.HVAC_ACTION: HVACAction.COOLING},
+                )
+            ],
+            other_states=[
+                (
+                    HVACMode.AUTO,
+                    {ClimateEntityStateAttribute.HVAC_ACTION: HVACAction.IDLE},
+                )
+            ],
         ),
         *parametrize_trigger_states(
             trigger="climate.started_drying",
-            target_states=[(HVACMode.AUTO, {ATTR_HVAC_ACTION: HVACAction.DRYING})],
-            other_states=[(HVACMode.AUTO, {ATTR_HVAC_ACTION: HVACAction.IDLE})],
+            target_states=[
+                (
+                    HVACMode.AUTO,
+                    {ClimateEntityStateAttribute.HVAC_ACTION: HVACAction.DRYING},
+                )
+            ],
+            other_states=[
+                (
+                    HVACMode.AUTO,
+                    {ClimateEntityStateAttribute.HVAC_ACTION: HVACAction.IDLE},
+                )
+            ],
         ),
         *parametrize_trigger_states(
             trigger="climate.started_heating",
-            target_states=[(HVACMode.AUTO, {ATTR_HVAC_ACTION: HVACAction.HEATING})],
-            other_states=[(HVACMode.AUTO, {ATTR_HVAC_ACTION: HVACAction.IDLE})],
+            target_states=[
+                (
+                    HVACMode.AUTO,
+                    {ClimateEntityStateAttribute.HVAC_ACTION: HVACAction.HEATING},
+                )
+            ],
+            other_states=[
+                (
+                    HVACMode.AUTO,
+                    {ClimateEntityStateAttribute.HVAC_ACTION: HVACAction.IDLE},
+                )
+            ],
         ),
     ],
 )
@@ -376,31 +398,61 @@ async def test_climate_state_trigger_behavior_first(
         *parametrize_numerical_attribute_crossed_threshold_trigger_states(
             "climate.target_humidity_crossed_threshold",
             HVACMode.AUTO,
-            ATTR_HUMIDITY,
+            ClimateEntityStateAttribute.HUMIDITY,
             attribute_required=True,
         ),
         *parametrize_numerical_attribute_crossed_threshold_trigger_states(
             "climate.target_temperature_crossed_threshold",
             HVACMode.AUTO,
-            ATTR_TEMPERATURE,
+            ClimateEntityStateAttribute.TEMPERATURE,
             threshold_unit=UnitOfTemperature.CELSIUS,
             unit_attributes=_CLIMATE_UNIT_ATTRIBUTES,
             attribute_required=True,
         ),
         *parametrize_trigger_states(
             trigger="climate.started_cooling",
-            target_states=[(HVACMode.AUTO, {ATTR_HVAC_ACTION: HVACAction.COOLING})],
-            other_states=[(HVACMode.AUTO, {ATTR_HVAC_ACTION: HVACAction.IDLE})],
+            target_states=[
+                (
+                    HVACMode.AUTO,
+                    {ClimateEntityStateAttribute.HVAC_ACTION: HVACAction.COOLING},
+                )
+            ],
+            other_states=[
+                (
+                    HVACMode.AUTO,
+                    {ClimateEntityStateAttribute.HVAC_ACTION: HVACAction.IDLE},
+                )
+            ],
         ),
         *parametrize_trigger_states(
             trigger="climate.started_drying",
-            target_states=[(HVACMode.AUTO, {ATTR_HVAC_ACTION: HVACAction.DRYING})],
-            other_states=[(HVACMode.AUTO, {ATTR_HVAC_ACTION: HVACAction.IDLE})],
+            target_states=[
+                (
+                    HVACMode.AUTO,
+                    {ClimateEntityStateAttribute.HVAC_ACTION: HVACAction.DRYING},
+                )
+            ],
+            other_states=[
+                (
+                    HVACMode.AUTO,
+                    {ClimateEntityStateAttribute.HVAC_ACTION: HVACAction.IDLE},
+                )
+            ],
         ),
         *parametrize_trigger_states(
             trigger="climate.started_heating",
-            target_states=[(HVACMode.AUTO, {ATTR_HVAC_ACTION: HVACAction.HEATING})],
-            other_states=[(HVACMode.AUTO, {ATTR_HVAC_ACTION: HVACAction.IDLE})],
+            target_states=[
+                (
+                    HVACMode.AUTO,
+                    {ClimateEntityStateAttribute.HVAC_ACTION: HVACAction.HEATING},
+                )
+            ],
+            other_states=[
+                (
+                    HVACMode.AUTO,
+                    {ClimateEntityStateAttribute.HVAC_ACTION: HVACAction.IDLE},
+                )
+            ],
         ),
     ],
 )
@@ -494,31 +546,61 @@ async def test_climate_state_trigger_behavior_all(
         *parametrize_numerical_attribute_crossed_threshold_trigger_states(
             "climate.target_humidity_crossed_threshold",
             HVACMode.AUTO,
-            ATTR_HUMIDITY,
+            ClimateEntityStateAttribute.HUMIDITY,
             attribute_required=True,
         ),
         *parametrize_numerical_attribute_crossed_threshold_trigger_states(
             "climate.target_temperature_crossed_threshold",
             HVACMode.AUTO,
-            ATTR_TEMPERATURE,
+            ClimateEntityStateAttribute.TEMPERATURE,
             threshold_unit=UnitOfTemperature.CELSIUS,
             unit_attributes=_CLIMATE_UNIT_ATTRIBUTES,
             attribute_required=True,
         ),
         *parametrize_trigger_states(
             trigger="climate.started_cooling",
-            target_states=[(HVACMode.AUTO, {ATTR_HVAC_ACTION: HVACAction.COOLING})],
-            other_states=[(HVACMode.AUTO, {ATTR_HVAC_ACTION: HVACAction.IDLE})],
+            target_states=[
+                (
+                    HVACMode.AUTO,
+                    {ClimateEntityStateAttribute.HVAC_ACTION: HVACAction.COOLING},
+                )
+            ],
+            other_states=[
+                (
+                    HVACMode.AUTO,
+                    {ClimateEntityStateAttribute.HVAC_ACTION: HVACAction.IDLE},
+                )
+            ],
         ),
         *parametrize_trigger_states(
             trigger="climate.started_drying",
-            target_states=[(HVACMode.AUTO, {ATTR_HVAC_ACTION: HVACAction.DRYING})],
-            other_states=[(HVACMode.AUTO, {ATTR_HVAC_ACTION: HVACAction.IDLE})],
+            target_states=[
+                (
+                    HVACMode.AUTO,
+                    {ClimateEntityStateAttribute.HVAC_ACTION: HVACAction.DRYING},
+                )
+            ],
+            other_states=[
+                (
+                    HVACMode.AUTO,
+                    {ClimateEntityStateAttribute.HVAC_ACTION: HVACAction.IDLE},
+                )
+            ],
         ),
         *parametrize_trigger_states(
             trigger="climate.started_heating",
-            target_states=[(HVACMode.AUTO, {ATTR_HVAC_ACTION: HVACAction.HEATING})],
-            other_states=[(HVACMode.AUTO, {ATTR_HVAC_ACTION: HVACAction.IDLE})],
+            target_states=[
+                (
+                    HVACMode.AUTO,
+                    {ClimateEntityStateAttribute.HVAC_ACTION: HVACAction.HEATING},
+                )
+            ],
+            other_states=[
+                (
+                    HVACMode.AUTO,
+                    {ClimateEntityStateAttribute.HVAC_ACTION: HVACAction.IDLE},
+                )
+            ],
         ),
     ],
 )
@@ -557,7 +639,7 @@ async def test_climate_target_temperature_trigger_temperature_unit(
         entity_id,
         HVACMode.AUTO,
         {
-            ATTR_TEMPERATURE: 70,
+            ClimateEntityStateAttribute.TEMPERATURE: 70,
             ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: UnitOfTemperature.FAHRENHEIT,
         },
     )
@@ -572,7 +654,7 @@ async def test_climate_target_temperature_trigger_temperature_unit(
                 "value": {"number": 25, "unit_of_measurement": "°C"},
             }
         },
-        {CONF_ENTITY_ID: [entity_id]},
+        {TargetKey.ENTITY_ID: [entity_id]},
         calls,
     )
 
@@ -581,7 +663,7 @@ async def test_climate_target_temperature_trigger_temperature_unit(
         entity_id,
         HVACMode.AUTO,
         {
-            ATTR_TEMPERATURE: 72,
+            ClimateEntityStateAttribute.TEMPERATURE: 72,
             ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: UnitOfTemperature.FAHRENHEIT,
         },
     )
@@ -593,7 +675,7 @@ async def test_climate_target_temperature_trigger_temperature_unit(
         entity_id,
         HVACMode.AUTO,
         {
-            ATTR_TEMPERATURE: 80,
+            ClimateEntityStateAttribute.TEMPERATURE: 80,
             ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: UnitOfTemperature.FAHRENHEIT,
         },
     )
