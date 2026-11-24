@@ -844,7 +844,7 @@ class FakeLatestMotionService:
         """Record the generic callback SHCEntity subscribes per service."""
         self.callbacks[entity] = callback
 
-    def unsubscribe_callback(self, entity: Any) -> None:
+    def unsubscribe_callback(self, entity: Any, callback: Any = None) -> None:
         """Drop the recorded callback."""
         self.callbacks.pop(entity, None)
 
@@ -865,7 +865,7 @@ class FakeAlarmService:
     def subscribe_callback(self, entity: Any, callback: Any) -> None:
         """No-op: SHCEntity subscribes to every device service's generic callback."""
 
-    def unsubscribe_callback(self, entity: Any) -> None:
+    def unsubscribe_callback(self, entity: Any, callback: Any = None) -> None:
         """No-op counterpart to subscribe_callback."""
 
 
@@ -882,7 +882,7 @@ class FakeSurveillanceAlarmService:
         """Remember the callback so tests can fire it."""
         self.callbacks[entity] = callback
 
-    def unsubscribe_callback(self, entity: Any) -> None:
+    def unsubscribe_callback(self, entity: Any, callback: Any = None) -> None:
         """Forget the callback."""
         self.callbacks.pop(entity, None)
 
@@ -893,6 +893,13 @@ def smoke_detection_system_device(
     """Build a minimal double of the smoke detection system."""
     system = MagicMock()
     system.id = "hdm:ZigBee:smokedetectionsystem"
+    system.name = "Smoke Detection System"
+    system.root_device_id = "test-mac"
+    system.serial = "serial-smokedetectionsystem"
+    system.manufacturer = "Bosch"
+    system.device_model = "SMOKE_DETECTION_SYSTEM"
+    system.deleted = False
+    system.status = "AVAILABLE"
     system.alarm = alarm
     system.device_services = [FakeSurveillanceAlarmService()]
     system.triggered_device_ids.return_value = triggered or set()

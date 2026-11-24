@@ -25,7 +25,7 @@ HATasmota==0.10.2
 HueBLE==2.4.1
 
 # homeassistant.components.mastodon
-Mastodon.py==2.3.3
+Mastodon.py==2.4.0
 
 # homeassistant.components.netio
 Netio==2.0.1
@@ -1550,7 +1550,7 @@ leaone-ble==0.3.0
 led-ble==1.1.11
 
 # homeassistant.components.lektrico
-lektricowifi==0.1
+lektricowifi==0.2
 
 # homeassistant.components.letpot
 letpot==0.7.0
@@ -3425,7 +3425,7 @@ uasiren==0.0.1
 uhooapi==1.2.8
 
 # homeassistant.components.unifiprotect
-uiprotect==25.8.0
+uiprotect==25.8.1
 
 # homeassistant.components.landisgyr_heat_meter
 ultraheat-api==0.6.1
