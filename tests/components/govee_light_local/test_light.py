@@ -139,13 +139,9 @@ async def test_light_setup_retry(
 
     entry = create_entry(hass, create_device(mock_govee_api))
 
-    with patch(
-        "homeassistant.components.govee_light_local.coordinator.DISCOVERY_TIMEOUT",
-        0,
-    ):
-        await hass.config_entries.async_setup(entry.entry_id)
+    await hass.config_entries.async_setup(entry.entry_id)
     assert entry.state is ConfigEntryState.SETUP_RETRY
-    assert entry.reason == "The light at 192.168.1.100 did not respond"
+    assert entry.reason == "The light did not respond"
     mock_govee_api.add_device_to_discovery_queue.assert_called_once_with(
         "192.168.1.100"
     )

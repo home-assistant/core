@@ -14,6 +14,7 @@ from homeassistant.components.govee_light_local.const import (
     CLEANUP_TIMEOUT,
     CLEANUP_WAIT_TIMEOUT,
     DOMAIN,
+    SCAN_INTERVAL,
 )
 from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
 from homeassistant.const import CONF_IP_ADDRESS, STATE_OFF
@@ -43,6 +44,7 @@ def _register_legacy_light(
         config_entry_id=entry.entry_id,
         identifiers={(DOMAIN, device.fingerprint)},
         name=device.sku,
+        model=device.sku,
     )
     return entity_registry.async_get_or_create(
         LIGHT_DOMAIN,
@@ -220,11 +222,7 @@ async def test_retrying_entry_recovers_when_lamp_answers(
     )
     offline_entry = create_entry(hass, offline_device)
 
-    with patch(
-        "homeassistant.components.govee_light_local.coordinator.DISCOVERY_TIMEOUT",
-        0,
-    ):
-        await hass.config_entries.async_setup(offline_entry.entry_id)
+    await hass.config_entries.async_setup(offline_entry.entry_id)
     assert offline_entry.state is config_entries.ConfigEntryState.SETUP_RETRY
 
     # It comes back with another address, heard through the other lamp's controller.
@@ -277,25 +275,83 @@ async def test_ignored_or_disabled_lamp_is_left_alone(
     source: str,
     disabled_by: config_entries.ConfigEntryDisabler | None,
 ) -> None:
-    """Test a lamp the user ignored or disabled is not offered."""
+    """Test a lamp the user ignored or disabled is only offered once that ends."""
 
     await setup_light(hass, mock_govee_api)
     device = create_device(
         mock_govee_api, ip="192.168.1.101", fingerprint="unwanted", sku="H615B"
     )
-    MockConfigEntry(
+    entry = MockConfigEntry(
         domain=DOMAIN,
         version=2,
         unique_id=device.fingerprint,
         source=source,
         disabled_by=disabled_by,
         data={CONF_IP_ADDRESS: device.ip},
-    ).add_to_hass(hass)
+    )
+    entry.add_to_hass(hass)
 
+    assert not scan_reply(mock_govee_api, device)
+    await hass.async_block_till_done()
+
+    assert device not in mock_govee_api.devices
+    assert not hass.config_entries.flow.async_progress_by_handler(DOMAIN)
+
+    assert await hass.config_entries.async_remove(entry.entry_id)
     scan_reply(mock_govee_api, device)
     await hass.async_block_till_done()
 
-    assert not hass.config_entries.flow.async_progress_by_handler(DOMAIN)
+    flows = hass.config_entries.flow.async_progress_by_handler(DOMAIN)
+    assert [flow["context"]["unique_id"] for flow in flows] == ["unwanted"]
+
+
+async def test_cancelled_start_releases_port(
+    hass: HomeAssistant, mock_govee_api: AsyncMock
+) -> None:
+    """Test the controller is cleaned up when its start is cancelled."""
+
+    entry = create_entry(hass, create_device(mock_govee_api))
+    mock_govee_api.start.side_effect = asyncio.CancelledError
+
+    await hass.config_entries.async_setup(entry.entry_id)
+
+    assert entry.state is config_entries.ConfigEntryState.SETUP_ERROR
+    mock_govee_api.cleanup.assert_called_once_with(timeout=CLEANUP_TIMEOUT)
+
+
+@pytest.mark.parametrize(
+    ("polling_disabled", "polled"),
+    [
+        pytest.param([True], False, id="only_lamp_disabled"),
+        pytest.param([True, True], False, id="every_lamp_disabled"),
+        pytest.param([True, False], True, id="one_lamp_still_polling"),
+    ],
+)
+async def test_polling_preference(
+    hass: HomeAssistant,
+    mock_govee_api: AsyncMock,
+    freezer: FrozenDateTimeFactory,
+    polling_disabled: list[bool],
+    polled: bool,
+) -> None:
+    """Test the shared controller stops polling once every lamp has it disabled."""
+
+    for index, disabled in enumerate(polling_disabled):
+        device = create_device(
+            mock_govee_api, ip=f"192.168.1.{100 + index}", fingerprint=f"lamp_{index}"
+        )
+        answer_scans(mock_govee_api, device)
+        entry = create_entry(hass, device)
+        hass.config_entries.async_update_entry(entry, pref_disable_polling=disabled)
+        assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+    mock_govee_api.send_update_message.reset_mock()
+
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert mock_govee_api.send_update_message.called is polled
 
 
 async def test_legacy_entry_is_split_per_lamp(
@@ -306,8 +362,8 @@ async def test_legacy_entry_is_split_per_lamp(
 ) -> None:
     """Test the entry for every lamp becomes one entry per lamp.
 
-    Lamps that answer are split right away and keep their registry entries;
-    a lamp that is offline follows once it answers.
+    Every lamp it had set up gets its own entry and keeps its registry
+    entries, also a lamp that is offline.
     """
 
     legacy_entry = create_legacy_entry(hass)
@@ -324,6 +380,20 @@ async def test_legacy_entry_is_split_per_lamp(
         ).entity_id
         for device in (first, second, offline)
     }
+    # An entity another integration attached to the lamp stays with it.
+    helper_entry = MockConfigEntry(domain="helper")
+    helper_entry.add_to_hass(hass)
+    second_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "second"), legacy_entry.entry_id
+    )
+    assert second_device is not None
+    helper_entity = entity_registry.async_get_or_create(
+        "sensor",
+        "helper",
+        "second_helper",
+        config_entry=helper_entry,
+        device_id=second_device.id,
+    )
     answer_scans(mock_govee_api, first, second)
 
     assert await hass.config_entries.async_setup(legacy_entry.entry_id)
@@ -342,45 +412,46 @@ async def test_legacy_entry_is_split_per_lamp(
     assert second_entry.title == "H615B"
     assert second_entry.data == {CONF_IP_ADDRESS: "192.168.1.101"}
 
+    offline_entry = hass.config_entries.async_entry_for_domain_unique_id(
+        DOMAIN, "offline"
+    )
+    assert offline_entry is not None
+    assert offline_entry.state is config_entries.ConfigEntryState.SETUP_RETRY
+    assert offline_entry.title == "H615C"
+    assert offline_entry.data == {CONF_IP_ADDRESS: None}
+
     mock_govee_api.start.assert_awaited_once()
-    assert len(hass.config_entries.async_entries(DOMAIN)) == 2
+    assert len(hass.config_entries.async_entries(DOMAIN)) == 3
     assert not hass.config_entries.flow.async_progress_by_handler(DOMAIN)
 
     for fingerprint, entry in (
         ("first", legacy_entry),
         ("second", second_entry),
-        ("offline", legacy_entry),
+        ("offline", offline_entry),
     ):
         entity_entry = entity_registry.async_get(entity_ids[fingerprint])
         assert entity_entry is not None
         assert entity_entry.config_entry_id == entry.entry_id
-        assert device_registry.async_get_device_by_identifier(
-            (DOMAIN, fingerprint), entry.entry_id
-        )
+        assert dr.async_entries_for_config_entry(device_registry, entry.entry_id) == [
+            device_registry.async_get_device_by_identifier(
+                (DOMAIN, fingerprint), entry.entry_id
+            )
+        ]
     assert hass.states.get(entity_ids["first"]).state == STATE_OFF
     assert hass.states.get(entity_ids["second"]).state == STATE_OFF
+    helper_entity = entity_registry.async_get(helper_entity.entity_id)
+    assert helper_entity is not None
+    assert helper_entity.config_entry_id == helper_entry.entry_id
 
-    # The offline lamp comes back and moves to its own entry without a prompt.
+    # The offline lamp comes back and is set up without a prompt.
     answer_scans(mock_govee_api, offline)
     scan_reply(mock_govee_api, offline)
     await hass.async_block_till_done()
 
-    offline_entry = hass.config_entries.async_entry_for_domain_unique_id(
-        DOMAIN, "offline"
-    )
-    assert offline_entry is not None
     assert offline_entry.state is config_entries.ConfigEntryState.LOADED
-    entity_entry = entity_registry.async_get(entity_ids["offline"])
-    assert entity_entry is not None
-    assert entity_entry.config_entry_id == offline_entry.entry_id
+    assert offline_entry.data == {CONF_IP_ADDRESS: "192.168.1.102"}
     assert hass.states.get(entity_ids["offline"]).state == STATE_OFF
-    assert dr.async_entries_for_config_entry(
-        device_registry, legacy_entry.entry_id
-    ) == [
-        device_registry.async_get_device_by_identifier(
-            (DOMAIN, "first"), legacy_entry.entry_id
-        )
-    ]
+    assert not hass.config_entries.flow.async_progress_by_handler(DOMAIN)
 
 
 async def test_legacy_entry_prefers_a_lamp_it_had_set_up(
@@ -425,24 +496,26 @@ async def test_legacy_entry_without_registered_lamps(
     assert hass.states.get("light.h615a").state == STATE_OFF
 
 
-async def test_legacy_entry_retries_until_a_lamp_answers(
+async def test_legacy_entry_waits_for_a_lamp_it_had_set_up(
     hass: HomeAssistant,
     mock_govee_api: AsyncMock,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
 ) -> None:
-    """Test the legacy entry is left untouched while no lamp answers."""
+    """Test the legacy entry does not take a new lamp while its own are offline."""
 
     legacy_entry = create_legacy_entry(hass)
     entity_entry = _register_legacy_light(
         device_registry, entity_registry, legacy_entry, create_device(mock_govee_api)
     )
+    answer_scans(
+        mock_govee_api,
+        create_device(
+            mock_govee_api, ip="192.168.1.101", fingerprint="new_lamp", sku="H615B"
+        ),
+    )
 
-    with patch(
-        "homeassistant.components.govee_light_local.coordinator.DISCOVERY_TIMEOUT",
-        0,
-    ):
-        await hass.config_entries.async_setup(legacy_entry.entry_id)
+    await hass.config_entries.async_setup(legacy_entry.entry_id)
     await hass.async_block_till_done()
 
     assert legacy_entry.state is config_entries.ConfigEntryState.SETUP_RETRY
@@ -450,6 +523,72 @@ async def test_legacy_entry_retries_until_a_lamp_answers(
     assert legacy_entry.unique_id == DOMAIN
     assert entity_registry.async_get(entity_entry.entity_id) is not None
     mock_govee_api.cleanup.assert_called_once_with(timeout=CLEANUP_TIMEOUT)
+    # The new lamp is offered like any newly discovered one.
+    flows = hass.config_entries.flow.async_progress_by_handler(DOMAIN)
+    assert len(flows) == 1
+    assert flows[0]["context"]["source"] == config_entries.SOURCE_INTEGRATION_DISCOVERY
+    assert flows[0]["context"]["unique_id"] == "new_lamp"
+
+
+async def test_user_scan_leaves_lamps_to_the_pending_legacy_entry(
+    hass: HomeAssistant,
+    mock_govee_api: AsyncMock,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test a scan started by the user does not split the legacy entry's lamps."""
+
+    legacy_entry = create_legacy_entry(hass)
+    device = create_device(mock_govee_api)
+    entity_entry = _register_legacy_light(
+        device_registry, entity_registry, legacy_entry, device
+    )
+    await hass.config_entries.async_setup(legacy_entry.entry_id)
+    assert legacy_entry.state is config_entries.ConfigEntryState.SETUP_RETRY
+
+    answer_scans(mock_govee_api, device)
+    await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    await hass.async_block_till_done()
+
+    assert hass.config_entries.async_entries(DOMAIN) == [legacy_entry]
+    assert not hass.config_entries.flow.async_progress_by_handler(DOMAIN)
+    entity_entry = entity_registry.async_get(entity_entry.entity_id)
+    assert entity_entry is not None
+    assert entity_entry.config_entry_id == legacy_entry.entry_id
+
+
+async def test_disabled_legacy_entry_keeps_its_lamps(
+    hass: HomeAssistant,
+    mock_govee_api: AsyncMock,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test a disabled legacy entry's lamps stay disabled and block no other lamp."""
+
+    legacy_entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=DOMAIN,
+        disabled_by=config_entries.ConfigEntryDisabler.USER,
+    )
+    legacy_entry.add_to_hass(hass)
+    owned = create_device(
+        mock_govee_api, ip="192.168.1.101", fingerprint="owned", sku="H615B"
+    )
+    _register_legacy_light(device_registry, entity_registry, legacy_entry, owned)
+    new_device = create_device(
+        mock_govee_api, ip="192.168.1.102", fingerprint="new_lamp", sku="H615C"
+    )
+    await setup_light(hass, mock_govee_api)
+
+    scan_reply(mock_govee_api, owned)
+    scan_reply(mock_govee_api, new_device)
+    await hass.async_block_till_done()
+
+    assert len(hass.config_entries.async_entries(DOMAIN)) == 2
+    flows = hass.config_entries.flow.async_progress_by_handler(DOMAIN)
+    assert [flow["context"]["unique_id"] for flow in flows] == ["new_lamp"]
 
 
 async def test_scan_waits_for_late_replies(
@@ -467,16 +606,19 @@ async def test_scan_waits_for_late_replies(
 
     mock_govee_api.send_discovery_message.side_effect = send_discovery_message
 
-    setup_task = hass.async_create_task(
-        hass.config_entries.async_setup(legacy_entry.entry_id)
-    )
-    await scan_sent.wait()
-    assert not setup_task.done()
+    with patch(
+        "homeassistant.components.govee_light_local.coordinator.DISCOVERY_TIMEOUT", 5
+    ):
+        setup_task = hass.async_create_task(
+            hass.config_entries.async_setup(legacy_entry.entry_id)
+        )
+        await scan_sent.wait()
+        assert not setup_task.done()
 
-    # The reply arrived after the scan started waiting; the next poll picks it up.
-    freezer.tick(1)
-    async_fire_time_changed(hass)
-    assert await setup_task
+        # The reply arrives while the scan is still collecting them.
+        freezer.tick(5)
+        async_fire_time_changed(hass)
+        assert await setup_task
     await hass.async_block_till_done()
 
     assert legacy_entry.unique_id == "asdawdqwdqwd"

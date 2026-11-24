@@ -63,22 +63,27 @@ class GoveeConfigFlow(ConfigFlow, domain=DOMAIN):
         self, discovery_info: DiscoveryInfoType
     ) -> ConfigFlowResult:
         """Handle a lamp that answered the shared controller's scan."""
-        await self._async_set_device(discovery_info)
+        await self._async_set_unique_id(discovery_info)
+        self._ip_address = discovery_info[CONF_IP_ADDRESS]
+        self._model = discovery_info[CONF_MODEL]
         return await self.async_step_discovery_confirm()
 
     async def async_step_import(self, import_data: dict[str, Any]) -> ConfigFlowResult:
         """Add a lamp that the entry for every lamp had already set up."""
-        await self._async_set_device(import_data)
+        await self._async_set_unique_id(import_data)
+        # The address is not known for a lamp that has not answered yet.
         return self.async_create_entry(
-            title=self._model, data={CONF_IP_ADDRESS: self._ip_address}
+            title=import_data[CONF_MODEL],
+            data={CONF_IP_ADDRESS: import_data[CONF_IP_ADDRESS]},
         )
 
-    async def _async_set_device(self, discovery_info: dict[str, Any]) -> None:
+    async def _async_set_unique_id(self, discovery_info: dict[str, Any]) -> None:
         """Identify the lamp, storing a new address if it is already configured."""
-        self._ip_address = discovery_info[CONF_IP_ADDRESS]
-        self._model = discovery_info[CONF_MODEL]
         await self.async_set_unique_id(discovery_info[CONF_FINGERPRINT])
-        self._abort_if_unique_id_configured(updates={CONF_IP_ADDRESS: self._ip_address})
+        if (ip_address := discovery_info[CONF_IP_ADDRESS]) is not None:
+            self._abort_if_unique_id_configured(updates={CONF_IP_ADDRESS: ip_address})
+        else:
+            self._abort_if_unique_id_configured()
 
     async def async_step_discovery_confirm(
         self, user_input: dict[str, Any] | None = None

@@ -7,12 +7,17 @@ from typing import TYPE_CHECKING
 
 from govee_local_api.controller import LISTENING_PORT
 
-from homeassistant.const import CONF_IP_ADDRESS, Platform
+from homeassistant.config_entries import SOURCE_IMPORT
+from homeassistant.const import CONF_IP_ADDRESS, CONF_MODEL, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
-from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers import (
+    device_registry as dr,
+    discovery_flow,
+    entity_registry as er,
+)
 
-from .const import DOMAIN
+from .const import CONF_FINGERPRINT, DOMAIN
 from .coordinator import (
     GoveeLocalApiCoordinator,
     GoveeLocalConfigEntry,
@@ -66,7 +71,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: GoveeLocalConfigEntry) -
         raise ConfigEntryNotReady(
             translation_domain=DOMAIN,
             translation_key="device_not_responding",
-            translation_placeholders={"ip": entry.data[CONF_IP_ADDRESS]},
         )
     entry.async_on_unload(partial(coordinator.remove_device, device))
     if device.ip != entry.data[CONF_IP_ADDRESS]:
@@ -113,24 +117,29 @@ async def _async_convert_legacy_entry(
 ) -> None:
     """Turn the entry for every lamp into the entry of one answering lamp.
 
-    The other lamps it had set up get their own entry when they answer a scan.
+    The other lamps it had set up get their own entry, answering or not.
     """
     devices = await coordinator.async_scan()
-    if not devices:
+    registered = {
+        identifier[1]: device_entry
+        for device_entry in dr.async_entries_for_config_entry(
+            dr.async_get(hass), entry.entry_id
+        )
+        for identifier in device_entry.identifiers
+        if identifier[0] == DOMAIN
+    }
+    # Only an entry that never set up a lamp takes one it does not know.
+    candidates = [
+        device
+        for device in devices
+        if not registered or device.fingerprint in registered
+    ]
+    if not candidates:
+        coordinator.async_offer_unconfigured()
         raise ConfigEntryNotReady(
             translation_domain=DOMAIN, translation_key="no_devices_found"
         )
-    device_registry = dr.async_get(hass)
-    device = next(
-        (
-            device
-            for device in devices
-            if device_registry.async_get_device_by_identifier(
-                (DOMAIN, device.fingerprint), entry.entry_id
-            )
-        ),
-        devices[0],
-    )
+    device = candidates[0]
     hass.config_entries.async_update_entry(
         entry,
         unique_id=device.fingerprint,
@@ -138,6 +147,21 @@ async def _async_convert_legacy_entry(
         data={CONF_IP_ADDRESS: device.ip},
     )
     coordinator.async_offer_unconfigured()
+    # The lamps that did not answer get their entry too, so that they do not
+    # stay with the entry of another lamp.
+    answering = {device.fingerprint for device in devices}
+    for fingerprint, device_entry in registered.items():
+        if fingerprint not in answering:
+            discovery_flow.async_create_flow(
+                hass,
+                DOMAIN,
+                context={"source": SOURCE_IMPORT},
+                data={
+                    CONF_IP_ADDRESS: None,
+                    CONF_FINGERPRINT: fingerprint,
+                    CONF_MODEL: device_entry.model or fingerprint,
+                },
+            )
 
 
 @callback
@@ -164,9 +188,10 @@ def _async_adopt_registry_entries(
         for entity_entry in er.async_entries_for_device(
             entity_registry, device_entry.id, include_disabled_entities=True
         ):
-            entity_registry.async_update_entity(
-                entity_entry.entity_id, config_entry_id=entry.entry_id
-            )
+            if entity_entry.config_entry_id == other_entry.entry_id:
+                entity_registry.async_update_entity(
+                    entity_entry.entity_id, config_entry_id=entry.entry_id
+                )
         device_registry.async_update_device(
             device_entry.id, new_config_entry_id=entry.entry_id
         )

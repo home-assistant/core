@@ -1,15 +1,17 @@
 """Coordinator for Govee light local."""
 
 import asyncio
+from collections.abc import Callable
 from dataclasses import dataclass, field
 from datetime import datetime
 import logging
-from typing import override
+from typing import Any, override
 
 from govee_local_api import GoveeController, GoveeDevice
 
 from homeassistant.components import network
 from homeassistant.config_entries import (
+    SOURCE_IGNORE,
     SOURCE_IMPORT,
     SOURCE_INTEGRATION_DISCOVERY,
     ConfigEntry,
@@ -21,6 +23,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, discovery_flow
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.util import dt as dt_util
 from homeassistant.util.hass_dict import HassKey
 
 from .const import (
@@ -88,14 +91,19 @@ async def async_get_listening_addresses(hass: HomeAssistant) -> list[str]:
     )
 
 
+def _is_legacy_entry(entry: ConfigEntry) -> bool:
+    """Return if the entry predates one entry per lamp."""
+    return entry.unique_id is None or entry.unique_id == DOMAIN
+
+
 @callback
 def async_get_legacy_entry(hass: HomeAssistant) -> GoveeLocalConfigEntry | None:
-    """Return the single entry that predates one entry per lamp, if still there."""
+    """Return the entry that is still to be split per lamp, unless it is disabled."""
     return next(
         (
             entry
             for entry in hass.config_entries.async_entries(DOMAIN)
-            if entry.unique_id is None or entry.unique_id == DOMAIN
+            if _is_legacy_entry(entry) and not entry.disabled_by
         ),
         None,
     )
@@ -206,7 +214,7 @@ class GoveeLocalApiCoordinator(DataUpdateCoordinator[list[GoveeDevice]]):
             # Home Assistant enumerates adapters once at startup, so an address
             # can be stale by the time we bind it. Keep the adapters that do bind.
             await self._controller.start(require_all=False)
-        except OSError:
+        except OSError, asyncio.CancelledError:
             await async_cleanup_controller(self._controller)
             raise
         self._controller.send_update_message()
@@ -232,7 +240,7 @@ class GoveeLocalApiCoordinator(DataUpdateCoordinator[list[GoveeDevice]]):
 
     @callback
     def _async_device_discovered(self, device: GoveeDevice, is_new: bool) -> bool:
-        """Handle a scan reply; every lamp that answers is tracked."""
+        """Handle a scan reply; return whether the lamp is to be tracked."""
         fingerprint = device.fingerprint
         if (waiter := self._waiters.get(fingerprint)) is not None and not waiter.done():
             waiter.set_result(device)
@@ -240,6 +248,10 @@ class GoveeLocalApiCoordinator(DataUpdateCoordinator[list[GoveeDevice]]):
         entry = self.hass.config_entries.async_entry_for_domain_unique_id(
             DOMAIN, fingerprint
         )
+        if entry is not None and (entry.source == SOURCE_IGNORE or entry.disabled_by):
+            # Left untracked, so it counts as new once that entry is removed.
+            self._controller.remove_device(device)
+            return False
         if entry is not None and entry.state is ConfigEntryState.LOADED:
             if entry.data[CONF_IP_ADDRESS] != device.ip:
                 self.hass.config_entries.async_update_entry(
@@ -278,17 +290,24 @@ class GoveeLocalApiCoordinator(DataUpdateCoordinator[list[GoveeDevice]]):
     def _async_create_flow(self, device: GoveeDevice) -> None:
         """Offer a lamp to the user, or add it right away if it was set up before."""
         device_registry = dr.async_get(self.hass)
-        known = any(
-            device_registry.async_get_device_by_identifier(
-                (DOMAIN, device.fingerprint), entry.entry_id
-            )
-            for entry in self.hass.config_entries.async_entries(DOMAIN)
+        owner = next(
+            (
+                entry
+                for entry in self.hass.config_entries.async_entries(DOMAIN)
+                if device_registry.async_get_device_by_identifier(
+                    (DOMAIN, device.fingerprint), entry.entry_id
+                )
+            ),
+            None,
         )
+        if owner is not None and (owner.disabled_by or _is_legacy_entry(owner)):
+            # Its entry is disabled, or adds its lamps itself once it is split.
+            return
         discovery_flow.async_create_flow(
             self.hass,
             DOMAIN,
             context={
-                "source": SOURCE_IMPORT if known else SOURCE_INTEGRATION_DISCOVERY
+                "source": SOURCE_IMPORT if owner else SOURCE_INTEGRATION_DISCOVERY
             },
             data={
                 CONF_IP_ADDRESS: device.ip,
@@ -298,7 +317,7 @@ class GoveeLocalApiCoordinator(DataUpdateCoordinator[list[GoveeDevice]]):
         )
 
     async def async_wait_for_device(
-        self, fingerprint: str, ip: str
+        self, fingerprint: str, ip: str | None
     ) -> GoveeDevice | None:
         """Return the lamp once it answers a scan, probing its last known address."""
         if (
@@ -307,7 +326,8 @@ class GoveeLocalApiCoordinator(DataUpdateCoordinator[list[GoveeDevice]]):
             return device
 
         waiter = self._waiters[fingerprint] = self.hass.loop.create_future()
-        self._controller.add_device_to_discovery_queue(ip)
+        if ip is not None:
+            self._controller.add_device_to_discovery_queue(ip)
         # Queueing alone waits for the next discovery interval.
         self._controller.send_discovery_message()
         try:
@@ -319,19 +339,25 @@ class GoveeLocalApiCoordinator(DataUpdateCoordinator[list[GoveeDevice]]):
             del self._waiters[fingerprint]
             # Dequeueing an address also makes the library forget a lamp
             # tracked there, which could be another entry's.
-            if self._controller.get_device_by_ip(ip) is None:
+            if ip is not None and self._controller.get_device_by_ip(ip) is None:
                 self._controller.remove_device_from_discovery_queue(ip)
 
     async def async_scan(self) -> list[GoveeDevice]:
-        """Scan and return the answering lamps that have no config entry."""
+        """Scan and return the answering lamps that had no config entry."""
+        # Compared with the entries from before the scan, so a lamp that gets
+        # its entry while the scan runs is still part of the result.
+        configured = {
+            entry.unique_id for entry in self.hass.config_entries.async_entries(DOMAIN)
+        }
+        started = dt_util.utcnow()
         self._controller.send_discovery_message()
-        try:
-            async with asyncio.timeout(DISCOVERY_TIMEOUT):
-                while not self.unconfigured_devices:
-                    await asyncio.sleep(1)
-        except TimeoutError:
-            pass
-        return self.unconfigured_devices
+        await asyncio.sleep(DISCOVERY_TIMEOUT)
+        # A lamp stays tracked after it stops answering, so check it was heard.
+        return [
+            device
+            for device in self._controller.devices
+            if device.fingerprint not in configured and device.lastseen >= started
+        ]
 
     @callback
     def remove_device(self, device: GoveeDevice) -> None:
@@ -383,6 +409,34 @@ class GoveeLocalApiCoordinator(DataUpdateCoordinator[list[GoveeDevice]]):
         """Wait for an in-flight rebind to finish."""
         async with self._rebind_lock:
             pass
+
+    def _polling_disabled(self) -> bool:
+        """Return if every lamp's entry has polling disabled."""
+        return all(
+            entry.pref_disable_polling
+            for entry in self.hass.config_entries.async_entries(
+                DOMAIN, include_ignore=False, include_disabled=False
+            )
+        )
+
+    @override
+    @callback
+    def _schedule_refresh(self) -> None:
+        # Shared between the entries, so the base class cannot check their preference.
+        if self._polling_disabled():
+            return
+        super()._schedule_refresh()
+
+    @override
+    @callback
+    def async_add_listener(
+        self, update_callback: CALLBACK_TYPE, context: Any = None
+    ) -> Callable[[], None]:
+        remove_listener = super().async_add_listener(update_callback, context)
+        # The base class only schedules for the first listener, which may
+        # belong to an entry with polling disabled.
+        self._schedule_refresh()
+        return remove_listener
 
     @override
     async def _async_update_data(self) -> list[GoveeDevice]:

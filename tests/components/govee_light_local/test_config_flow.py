@@ -5,8 +5,9 @@ from errno import EADDRINUSE, EADDRNOTAVAIL
 from ipaddress import IPv4Network
 from unittest.mock import AsyncMock, patch
 
+from freezegun.api import FrozenDateTimeFactory
 import pytest
-from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant import config_entries
 from homeassistant.components.govee_light_local.const import (
@@ -24,6 +25,7 @@ from .conftest import (
     answer_scans,
     create_device,
     create_entry,
+    scan_reply,
     setup_light,
 )
 
@@ -97,13 +99,9 @@ async def test_user_flow_no_devices(
 ) -> None:
     """Test the user flow aborts when no lamp answers."""
 
-    with patch(
-        "homeassistant.components.govee_light_local.coordinator.DISCOVERY_TIMEOUT",
-        0,
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": config_entries.SOURCE_USER}
-        )
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "no_devices_found"
@@ -120,13 +118,9 @@ async def test_user_flow_with_devices_set_up(
 
     await setup_light(hass, mock_govee_api)
 
-    with patch(
-        "homeassistant.components.govee_light_local.coordinator.DISCOVERY_TIMEOUT",
-        0,
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": config_entries.SOURCE_USER}
-        )
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "no_devices_found"
 
@@ -183,6 +177,76 @@ async def test_user_flow_offers_dismissed_device_again(
     assert [flow["context"]["unique_id"] for flow in flows] == ["other"]
 
 
+async def test_user_flow_ignores_lamp_that_stopped_answering(
+    hass: HomeAssistant, mock_govee_api: AsyncMock, freezer: FrozenDateTimeFactory
+) -> None:
+    """Test a lamp heard earlier that no longer answers does not count as found."""
+
+    await setup_light(hass, mock_govee_api)
+    silent_device = create_device(
+        mock_govee_api, ip="192.168.1.101", fingerprint="silent", sku="H615B"
+    )
+    scan_reply(mock_govee_api, silent_device)
+    await hass.async_block_till_done()
+    assert silent_device in mock_govee_api.devices
+
+    freezer.tick(60)
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "no_devices_found"
+
+
+async def test_user_flow_counts_lamps_set_up_during_the_scan(
+    hass: HomeAssistant, mock_govee_api: AsyncMock, freezer: FrozenDateTimeFactory
+) -> None:
+    """Test a lamp that is set up while the scan still runs counts as found."""
+
+    answer_scans(mock_govee_api, create_device(mock_govee_api))
+    scan_sent = asyncio.Event()
+    deliver_replies = mock_govee_api.send_discovery_message.side_effect
+
+    def send_discovery_message() -> None:
+        deliver_replies()
+        scan_sent.set()
+
+    mock_govee_api.send_discovery_message.side_effect = send_discovery_message
+
+    with (
+        patch(
+            "homeassistant.components.govee_light_local.coordinator.DISCOVERY_TIMEOUT",
+            5,
+        ),
+        patch(
+            "homeassistant.components.onboarding.async_is_onboarded",
+            return_value=False,
+        ),
+    ):
+        task = hass.async_create_background_task(
+            hass.config_entries.flow.async_init(
+                DOMAIN, context={"source": config_entries.SOURCE_USER}
+            ),
+            "user flow",
+        )
+        await scan_sent.wait()
+        # During onboarding the lamp gets its entry without a prompt.
+        await hass.async_block_till_done()
+        assert hass.config_entries.async_entry_for_domain_unique_id(
+            DOMAIN, "asdawdqwdqwd"
+        )
+        assert not task.done()
+
+        freezer.tick(5)
+        async_fire_time_changed(hass)
+        result = await task
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "discovery_started"
+
+
 async def test_user_flow_releases_port_when_cancelled(
     hass: HomeAssistant, mock_govee_api: AsyncMock
 ) -> None:
@@ -195,15 +259,18 @@ async def test_user_flow_releases_port_when_cancelled(
 
     mock_govee_api.start.side_effect = _start
 
-    task = hass.async_create_task(
-        hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": config_entries.SOURCE_USER}
+    with patch(
+        "homeassistant.components.govee_light_local.coordinator.DISCOVERY_TIMEOUT", 5
+    ):
+        task = hass.async_create_task(
+            hass.config_entries.flow.async_init(
+                DOMAIN, context={"source": config_entries.SOURCE_USER}
+            )
         )
-    )
-    await started.wait()
-    # Yield once more so the flow parks in the discovery wait before we cancel it.
-    await asyncio.sleep(0)
-    task.cancel()
+        await started.wait()
+        # Yield once more so the flow parks in the discovery wait before we cancel it.
+        await asyncio.sleep(0)
+        task.cancel()
 
     with pytest.raises(asyncio.CancelledError):
         await task
@@ -345,12 +412,32 @@ async def test_flow_without_confirmation(
 
 
 @pytest.mark.parametrize(
-    "source",
-    [config_entries.SOURCE_INTEGRATION_DISCOVERY, config_entries.SOURCE_IMPORT],
+    ("source", "ip_address", "stored_ip_address"),
+    [
+        pytest.param(
+            config_entries.SOURCE_INTEGRATION_DISCOVERY,
+            "192.168.1.150",
+            "192.168.1.150",
+            id="discovery",
+        ),
+        pytest.param(
+            config_entries.SOURCE_IMPORT, "192.168.1.150", "192.168.1.150", id="import"
+        ),
+        pytest.param(
+            config_entries.SOURCE_IMPORT,
+            None,
+            "192.168.1.100",
+            id="import_without_address",
+        ),
+    ],
 )
 @pytest.mark.usefixtures("mock_setup_entry")
 async def test_flow_already_configured(
-    hass: HomeAssistant, mock_govee_api: AsyncMock, source: str
+    hass: HomeAssistant,
+    mock_govee_api: AsyncMock,
+    source: str,
+    ip_address: str | None,
+    stored_ip_address: str,
 ) -> None:
     """Test a configured lamp answering from a new address updates its entry."""
 
@@ -359,9 +446,9 @@ async def test_flow_already_configured(
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": source},
-        data={**DISCOVERY_INFO, CONF_IP_ADDRESS: "192.168.1.150"},
+        data={**DISCOVERY_INFO, CONF_IP_ADDRESS: ip_address},
     )
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
-    assert entry.data == {CONF_IP_ADDRESS: "192.168.1.150"}
+    assert entry.data == {CONF_IP_ADDRESS: stored_ip_address}

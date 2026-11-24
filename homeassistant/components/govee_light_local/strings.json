@@ -165,7 +165,7 @@
       "message": "Could not listen for Govee devices: {error}"
     },
     "device_not_responding": {
-      "message": "The light at {ip} did not respond"
+      "message": "The light did not respond"
     },
     "no_devices_found": {
       "message": "[%key:common::config_flow::abort::no_devices_found%]"

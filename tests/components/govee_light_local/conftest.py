@@ -75,6 +75,15 @@ def fixture_mock_network_adapters() -> Generator[None]:
         yield
 
 
+@pytest.fixture(autouse=True)
+def fixture_no_discovery_wait() -> Generator[None]:
+    """Do not wait for scan replies; the mocked lamps answer right away."""
+    with patch(
+        "homeassistant.components.govee_light_local.coordinator.DISCOVERY_TIMEOUT", 0
+    ):
+        yield
+
+
 @pytest.fixture(name="mock_govee_api")
 def fixture_mock_govee_api() -> Generator[AsyncMock]:
     """Set up Govee Local API fixture."""
@@ -111,7 +120,11 @@ def fixture_mock_govee_api() -> Generator[AsyncMock]:
             (device for device in mock_api.devices if device.ip == ip), None
         )
     )
-    mock_api.remove_device = MagicMock(side_effect=mock_api.devices.remove)
+    mock_api.remove_device = MagicMock(
+        side_effect=lambda device: (
+            mock_api.devices.remove(device) if device in mock_api.devices else None
+        )
+    )
     mock_api.send_discovery_message = MagicMock(
         side_effect=lambda: [
             scan_reply(mock_api, device) for device in mock_api.answering_devices
@@ -132,6 +145,7 @@ def scan_reply(mock_govee_api: AsyncMock, device: GoveeDevice) -> bool:
     """
     discovered_callback = mock_govee_api.set_device_discovered_callback.call_args[0][0]
     is_new = device not in mock_govee_api.devices
+    device.update_lastseen()
     accepted: bool = discovered_callback(device, is_new)
     if accepted and is_new:
         mock_govee_api.devices.append(device)
