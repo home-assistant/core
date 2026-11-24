@@ -1546,7 +1546,6 @@ INTEGRATIONS_WITHOUT_SCALE = [
     "oncue",
     "ondilo_ico",
     "onvif",
-    "open_meteo",
     "openalpr_cloud",
     "openerz",
     "openexchangerates",
