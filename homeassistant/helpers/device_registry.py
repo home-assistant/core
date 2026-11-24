@@ -3390,6 +3390,17 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         """
         old = self._devices[device_id]
 
+        # Validate before any change, so a rejected update changes nothing
+        _validate_area_and_labels(
+            self.hass,
+            {
+                key: value
+                for key, value in (("area_id", area_id), ("labels", labels))
+                if value is not Undefined and value != getattr(old, key)
+            },
+            old.labels,
+        )
+
         new_values: dict[str, Any] = {}  # Dict with new key/value pairs
         old_values: dict[str, Any] = {}  # Dict with old key/value pairs
 
@@ -3786,8 +3797,6 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
             if value is not Undefined and value != getattr(old, attr_name):
                 new_values[attr_name] = value
                 old_values[attr_name] = getattr(old, attr_name)
-
-        _validate_area_and_labels(self.hass, new_values, old.labels)
 
         if not new_values and not is_new:
             return old

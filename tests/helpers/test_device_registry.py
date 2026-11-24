@@ -8797,6 +8797,57 @@ async def test_update_device_empty_identity_rejected_before_mutation(
     assert device_registry._devices[device_2.id]._pending_move == pending_move
 
 
+@pytest.mark.parametrize(
+    ("changes", "message"),
+    [
+        pytest.param({"area_id": "unknown"}, "Area 'unknown' not found.", id="area"),
+        pytest.param({"labels": {"unknown"}}, "Labels not found: unknown", id="labels"),
+    ],
+)
+async def test_update_device_unknown_area_or_label_rejected_before_mutation(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    changes: dict[str, Any],
+    message: str,
+) -> None:
+    """Test an unknown area or label is rejected before any sibling state changes.
+
+    Completing a composite split's move clears its siblings' pending moves. An update
+    combining that move with an unknown area or label must reject before that
+    mutation, so the rejected update leaves no partial state behind.
+    """
+    entry_1 = MockConfigEntry(domain="test")
+    entry_1.add_to_hass(hass)
+    entry_2 = MockConfigEntry(domain="test")
+    entry_2.add_to_hass(hass)
+    entry_3 = MockConfigEntry(domain="test")
+    entry_3.add_to_hass(hass)
+    device_1 = device_registry.async_get_or_create(
+        config_entry_id=entry_1.entry_id, identifiers={("test", "1")}
+    )
+    device_2 = device_registry.async_get_or_create(
+        config_entry_id=entry_2.entry_id, identifiers={("test", "2")}
+    )
+    old_id = "composite00000000000000000000ab"
+    # Simulate two migration splits of one composite, each with a pending move to entry_3
+    pending_move = dr._PendingMove(entry_3.entry_id, None, None)
+    device_registry._devices[device_1.id] = attr.evolve(
+        device_1, composite_device_id=old_id, pending_move=pending_move
+    )
+    device_registry._devices[device_2.id] = attr.evolve(
+        device_2, composite_device_id=old_id, pending_move=pending_move
+    )
+
+    with pytest.raises(ValueError, match=message):
+        device_registry.async_update_device(
+            device_1.id, remove_config_entry_id=entry_1.entry_id, **changes
+        )
+
+    # device_1 is untouched, and the sibling's pending move survives the rejected update
+    assert device_registry._devices[device_1.id].config_entry_id == entry_1.entry_id
+    assert device_registry._devices[device_2.id]._pending_move == pending_move
+
+
 async def test_connections_validator() -> None:
     """Test checking connections validator."""
     with pytest.raises(ValueError, match="Invalid mac address format"):
