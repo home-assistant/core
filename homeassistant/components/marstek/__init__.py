@@ -41,7 +41,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: MarstekConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: MarstekConfigEntry) -> None:
     """Set up Marstek from a config entry."""
     coordinator = MarstekDataUpdateCoordinator(
         hass, entry, hass.data[MARSTEK_UDP_CLIENT]
@@ -50,9 +50,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: MarstekConfigEntry) -> b
     await coordinator.async_config_entry_first_refresh()
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: MarstekConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: MarstekConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
