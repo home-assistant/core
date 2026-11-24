@@ -222,6 +222,11 @@ async def _async_upload_image(call: ServiceCall) -> None:
             ble_device=ble_device,
             encryption_key=encryption_key,
         ) as device:
+            if device.legacy.capabilities is None:
+                raise HomeAssistantError(
+                    translation_domain=DOMAIN,
+                    translation_key="display_not_supported",
+                )
             await device.legacy.upload_image(
                 pil_image,
                 refresh_mode=refresh_mode,

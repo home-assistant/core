@@ -255,6 +255,34 @@ async def test_upload_image_ble_error(
         )
 
 
+async def test_upload_image_display_not_supported(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_opendisplay_device: MagicMock,
+    mock_resolve_media: MagicMock,
+) -> None:
+    """Test that a display the uploader cannot describe raises a clear error."""
+    device_id = _device_id(hass, mock_config_entry)
+    mock_opendisplay_device.legacy.capabilities = None
+
+    with pytest.raises(HomeAssistantError) as exc_info:
+        await hass.services.async_call(
+            DOMAIN,
+            "upload_image",
+            {
+                "device_id": device_id,
+                "image": {
+                    "media_content_id": "media-source://local/test.png",
+                    "media_content_type": "image/png",
+                },
+            },
+            blocking=True,
+        )
+
+    assert exc_info.value.translation_key == "display_not_supported"
+    mock_opendisplay_device.legacy.upload_image.assert_not_called()
+
+
 async def test_upload_image_download_error(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,

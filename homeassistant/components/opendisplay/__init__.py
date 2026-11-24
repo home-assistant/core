@@ -129,7 +129,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: OpenDisplayConfigEntry) 
             translation_domain=DOMAIN,
             translation_key="setup_connection_error",
         ) from err
-    if device_config is None:
+    if device_config is None or not device_config.displays:
         raise ConfigEntryError(
             translation_domain=DOMAIN,
             translation_key="device_not_configured",

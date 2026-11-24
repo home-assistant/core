@@ -79,6 +79,9 @@
     "device_not_found": {
       "message": "Could not find Bluetooth device with address `{address}`. Reason: {reason}"
     },
+    "display_not_supported": {
+      "message": "Images cannot be uploaded to this device: its configuration has no display, or a color scheme this integration does not support yet."
+    },
     "media_download_error": {
       "message": "Failed to download media: {error}"
     },

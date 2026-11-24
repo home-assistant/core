@@ -1,6 +1,7 @@
 """Test the OpenDisplay integration setup and unload."""
 
 import asyncio
+from dataclasses import replace
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from opendisplay import (
@@ -19,7 +20,7 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
-from . import ENCRYPTION_KEY
+from . import DEVICE_CONFIG, ENCRYPTION_KEY
 
 
 async def test_setup_and_unload(
@@ -200,6 +201,22 @@ async def test_setup_device_not_configured(
 ) -> None:
     """Test that a device without a stored config fails setup with a clear error."""
     mock_opendisplay_device.config.cached = None
+    mock_config_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
+    assert mock_config_entry.error_reason_translation_key == "device_not_configured"
+
+
+async def test_setup_device_without_displays(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_opendisplay_device: MagicMock,
+) -> None:
+    """Test that a stored config without a display fails setup with a clear error."""
+    mock_opendisplay_device.config.cached = replace(DEVICE_CONFIG, displays=[])
     mock_config_entry.add_to_hass(hass)
 
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
