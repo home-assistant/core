@@ -128,10 +128,9 @@ async def test_browsing(
 ) -> None:
     """Test browsing the Reolink three."""
     entry_id = config_entry.entry_id
-    reolink_host.supported.return_value = 1
+    reolink_host.supported.side_effect = lambda ch, key: key != "replay_trigger"
     reolink_host.model = "Reolink TrackMix PoE"
     reolink_host.is_dual_lens = True
-    reolink_host.is_nvr = False
 
     with patch("homeassistant.components.reolink.PLATFORMS", [Platform.CAMERA]):
         assert await hass.config_entries.async_setup(entry_id) is True
@@ -248,8 +247,8 @@ async def test_browsing(
     reolink_host.model = TEST_HOST_MODEL
     reolink_host.is_dual_lens = False
 
-    # browse event trigger person on a NVR
-    reolink_host.is_nvr = True
+    # browse event trigger person on a device supporting replay triggers
+    reolink_host.supported.side_effect = None
     browse_event_person_id = (
         f"EVE|{entry_id}|{TEST_CHANNEL}|{TEST_STREAM}"
         f"|{TEST_YEAR}|{TEST_MONTH}|{TEST_DAY}"
@@ -307,7 +306,6 @@ async def test_browsing_autotrack_thumbnail(
 ) -> None:
     """Test recordings of an autotrack stream have a telephoto thumbnail."""
     entry_id = config_entry.entry_id
-    reolink_host.is_nvr = False
 
     with patch("homeassistant.components.reolink.PLATFORMS", [Platform.CAMERA]):
         assert await hass.config_entries.async_setup(entry_id) is True
@@ -321,7 +319,9 @@ async def test_browsing_autotrack_thumbnail(
     mock_vod_file.file_name = TEST_FILE_NAME
     mock_vod_file.triggers = VOD_trigger.PERSON
     reolink_host.request_vod_files.return_value = ([], [mock_vod_file])
-    reolink_host.supported.side_effect = lambda ch, key: battery or key != "battery"
+    reolink_host.supported.side_effect = lambda ch, key: (
+        key != "replay_trigger" and (battery or key != "battery")
+    )
 
     browse_day_id = (
         f"DAY|{entry_id}|{TEST_CHANNEL}|{stream}|{TEST_YEAR}|{TEST_MONTH}|{TEST_DAY}"
