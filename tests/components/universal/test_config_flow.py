@@ -15,7 +15,12 @@ from homeassistant.components.universal.media_player import (
     CONF_CHILDREN,
     EXPOSED_COMMANDS,
 )
-from homeassistant.const import CONF_DEVICE_CLASS, CONF_NAME, CONF_STATE_TEMPLATE
+from homeassistant.const import (
+    CONF_DEVICE_CLASS,
+    CONF_NAME,
+    CONF_STATE_TEMPLATE,
+    CONF_UNIQUE_ID,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.template import Template
@@ -243,6 +248,32 @@ async def test_import_yaml_dedup(hass: HomeAssistant) -> None:
         DOMAIN,
         context={"source": config_entries.SOURCE_IMPORT},
         data={CONF_NAME: "Office Speakers"},
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+
+
+async def test_import_yaml_dedup_unique_id(hass: HomeAssistant) -> None:
+    """Test that YAML import deduplicates by unique_id when present."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="Office Speakers",
+        unique_id="my_unique_player",
+        options={
+            CONF_NAME: "Office Speakers",
+            CONF_CHILDREN: [],
+            CONF_ATTRS: {},
+            CONF_UNIQUE_ID: "my_unique_player",
+            **{cmd: [] for cmd in EXPOSED_COMMANDS},
+        },
+    )
+    config_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_IMPORT},
+        data={CONF_NAME: "Different Name", CONF_UNIQUE_ID: "my_unique_player"},
     )
 
     assert result["type"] is FlowResultType.ABORT

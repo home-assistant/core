@@ -23,7 +23,6 @@ from homeassistant.components.media_player import (
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
     ATTR_ENTITY_ID,
-    CONF_ACTION,
     CONF_DEVICE_CLASS,
     CONF_NAME,
     CONF_STATE,
@@ -168,6 +167,17 @@ async def async_setup_platform(
     )
 
 
+def _restore_templates(obj: Any, hass: HomeAssistant) -> Any:
+    """Recursively compile template-looking strings back to Template objects."""
+    if isinstance(obj, str) and ("{%" in obj or "{{" in obj):
+        return Template(obj, hass)
+    if isinstance(obj, dict):
+        return {k: _restore_templates(v, hass) for k, v in obj.items()}
+    if isinstance(obj, list):
+        return [_restore_templates(v, hass) for v in obj]
+    return obj
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
@@ -177,28 +187,17 @@ async def async_setup_entry(
     options = config_entry.options
 
     # ActionSelector stores actions as lists; unwrap to the single service-call
-    # dict that async_call_from_config expects.  Compile any template strings
-    # in the "action" field back to Template objects (config entry JSON only
-    # holds raw strings, but async_call_from_config renders Template objects
-    # at call time).
+    # dict that async_call_from_config expects. Restore any template strings
+    # (config entry JSON only holds raw strings, but async_call_from_config
+    # renders Template objects at call time).
     commands: dict[str, Any] = {}
     for cmd in EXPOSED_COMMANDS:
         actions = options.get(cmd, [])
         if isinstance(actions, list) and actions:
-            call = dict(actions[0])
-            if CONF_ACTION in call and isinstance(call[CONF_ACTION], str):
-                action_val = call[CONF_ACTION]
-                if "{%" in action_val or "{{" in action_val:
-                    call[CONF_ACTION] = Template(action_val, hass)
-            commands[cmd] = call
+            commands[cmd] = _restore_templates(dict(actions[0]), hass)
     # Extra commands from YAML import that aren't exposed in the UI
     for cmd, call in options.get(CONF_COMMANDS, {}).items():
-        call = dict(call)
-        if CONF_ACTION in call and isinstance(call[CONF_ACTION], str):
-            action_val = call[CONF_ACTION]
-            if "{%" in action_val or "{{" in action_val:
-                call[CONF_ACTION] = Template(action_val, hass)
-        commands[cmd] = call
+        commands[cmd] = _restore_templates(dict(call), hass)
 
     # TemplateSelector stores templates as raw strings; compile them since
     # UniversalMediaPlayer expects Template objects.

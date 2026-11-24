@@ -51,8 +51,8 @@ _ENTITY_FIELDS: dict[probatio.Marker, Any] = {
     probatio.Optional(CONF_STATE_TEMPLATE): _TEMPLATE_SELECTOR,
     # Commands
     **{probatio.Optional(cmd): _ACTION_SELECTOR for cmd in EXPOSED_COMMANDS},
-    # Attribute overrides
-    **{probatio.Optional(attr): _TEMPLATE_SELECTOR for attr in EXPOSED_ATTRIBUTES},
+    # Attribute overrides (entity_id or entity_id|attribute, not templates)
+    **{probatio.Optional(attr): _TEXT_SELECTOR for attr in EXPOSED_ATTRIBUTES},
     # Children and advanced
     probatio.Optional(CONF_CHILDREN, default=[]): selector.EntitySelector(
         selector.EntitySelectorConfig(domain="media_player", multiple=True)
@@ -81,8 +81,10 @@ async def _validate_input(
     for cmd in EXPOSED_COMMANDS:
         user_input.setdefault(cmd, [])
 
-    # Attributes: nest under CONF_ATTRS, drop blanks
-    attrs = {}
+    # Attributes: nest under CONF_ATTRS, drop blanks.
+    # Preserve any extra attributes from YAML import that aren't in the form.
+    existing_attrs = dict(handler.options.get(CONF_ATTRS, {}))
+    attrs = {k: v for k, v in existing_attrs.items() if k not in EXPOSED_ATTRIBUTES}
     for attr in EXPOSED_ATTRIBUTES:
         if val := user_input.pop(attr, None):
             attrs[attr] = val
@@ -122,7 +124,7 @@ def _strip_templates(obj: Any) -> Any:
     if isinstance(obj, Template):
         return obj.template
     if isinstance(obj, dict):
-        return {k: _strip_templates(v) for k, v in obj.items()}
+        return {_strip_templates(k): _strip_templates(v) for k, v in obj.items()}
     if isinstance(obj, list):
         return [_strip_templates(v) for v in obj]
     return obj
@@ -145,8 +147,12 @@ class UniversalFlowHandler(SchemaConfigFlowHandler, domain=DOMAIN):
         """Import a YAML-configured universal media player."""
         name: str = import_data[CONF_NAME]
 
-        # Deduplicate by name
-        self._async_abort_entries_match({CONF_NAME: name})
+        # Deduplicate by unique_id when available, otherwise by name
+        if unique_id := import_data.get(CONF_UNIQUE_ID):
+            await self.async_set_unique_id(unique_id)
+            self._abort_if_unique_id_configured()
+        else:
+            self._async_abort_entries_match({CONF_NAME: name})
 
         yaml_commands: dict[str, Any] = import_data.get(CONF_COMMANDS, {})
         options: dict[str, Any] = {}
@@ -158,14 +164,16 @@ class UniversalFlowHandler(SchemaConfigFlowHandler, domain=DOMAIN):
             if "service_template" in raw:
                 raw["action"] = raw.pop("service_template")
             if "data_template" in raw:
-                raw["data"] = raw.pop("data_template")
+                if "data" in raw:
+                    raw["data"] = {**raw.pop("data_template"), **raw["data"]}
+                else:
+                    raw["data"] = raw.pop("data_template")
             # Move entity_id from data to target (old -> new YAML style)
-            for data_key in ("data", "data_template"):
-                if data_key in raw and "entity_id" in raw[data_key]:
-                    eid = raw[data_key].pop("entity_id")
-                    raw.setdefault("target", {})["entity_id"] = eid
-                    if not raw[data_key]:
-                        del raw[data_key]
+            if "data" in raw and isinstance(raw["data"], dict) and "entity_id" in raw["data"]:
+                eid = raw["data"].pop("entity_id")
+                raw.setdefault("target", {})["entity_id"] = eid
+                if not raw["data"]:
+                    del raw["data"]
             if "entity_id" in raw and "target" not in raw:
                 raw["target"] = {"entity_id": raw.pop("entity_id")}
             if cmd in EXPOSED_COMMANDS:
