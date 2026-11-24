@@ -61,6 +61,7 @@ workflows:
         - 'pnpm/action-setup@v6.1.1'
     '.github/workflows/lock.yml':
         - 'dessant/lock-threads@v6.0.2'
+    '.github/workflows/pr-reviewer-trigger.yml': []
     '.github/workflows/quality-scale-reviewer-trigger.yml': []
     '.github/workflows/quality-scale-reviewer.lock.yml':
         - 'actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9'
