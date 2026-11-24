@@ -9,11 +9,11 @@ import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.select import (
-    ATTR_OPTION,
     DOMAIN as SELECT_DOMAIN,
-    SERVICE_SELECT_OPTION,
+    SelectService,
+    SelectServiceArgument,
 )
-from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE, STATE_UNKNOWN
+from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -132,8 +132,8 @@ async def test_select_option_writes_the_index(
 
     await hass.services.async_call(
         SELECT_DOMAIN,
-        SERVICE_SELECT_OPTION,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_OPTION: "night"},
+        SelectService.SELECT_OPTION,
+        {TargetKey.ENTITY_ID: ENTITY_ID, SelectServiceArgument.OPTION: "night"},
         blocking=True,
     )
 
@@ -162,8 +162,8 @@ async def test_write_error(
 
     await hass.services.async_call(
         SELECT_DOMAIN,
-        SERVICE_SELECT_OPTION,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_OPTION: "night"},
+        SelectService.SELECT_OPTION,
+        {TargetKey.ENTITY_ID: ENTITY_ID, SelectServiceArgument.OPTION: "night"},
         blocking=True,
     )
 
