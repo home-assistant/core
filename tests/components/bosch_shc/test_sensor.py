@@ -25,6 +25,7 @@ from .conftest import (
     battery_only_device,
     light_control_device,
     micromodule_blinds_device,
+    micromodule_shutter_control_device,
     motion_detector2_device,
     outdoor_siren_device,
     setup_integration,
@@ -489,6 +490,7 @@ async def test_battery_level_disabled_by_default(
                 )
             ],
             "micromodule_blinds": [micromodule_blinds_device()],
+            "micromodule_shutter_controls": [micromodule_shutter_control_device()],
             "smart_plugs_compact": [smart_plug_compact_device()],
         }
     ],
@@ -506,6 +508,10 @@ async def test_communication_quality_sensors(
         hass.states.get("sensor.shutter_contact_communication_quality").state == "BAD"
     )
     assert hass.states.get("sensor.blinds_communication_quality").state == "GOOD"
+    assert (
+        hass.states.get("sensor.micromodule_shutter_communication_quality").state
+        == "GOOD"
+    )
     assert (
         hass.states.get("sensor.smart_plug_compact_communication_quality").state
         == "GOOD"

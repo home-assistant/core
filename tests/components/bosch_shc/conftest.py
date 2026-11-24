@@ -32,6 +32,7 @@ from boschshcpy import (
     SHCMicromoduleBlinds,
     SHCMicromoduleDimmer,
     SHCMicromoduleRelay,
+    SHCMicromoduleShutterControl,
     SHCMotionDetector,
     SHCMotionDetector2,
     SHCOutdoorSiren,
@@ -336,6 +337,28 @@ def shutter_control_device(
     device.status = "AVAILABLE"
     device.level = level
     device.operation_state = operation_state
+    return device
+
+
+def micromodule_shutter_control_device(
+    device_id: str = "hdm:ZigBee:micromoduleshutter1",
+    name: str = "Micromodule shutter",
+    communication_quality: CommunicationQualityService.State = (
+        CommunicationQualityService.State.GOOD
+    ),
+) -> SHCMicromoduleShutterControl:
+    """Build a minimal device double for the micromodule_shutter_controls bucket."""
+    device = create_autospec(SHCMicromoduleShutterControl, instance=True, spec_set=True)
+    device.name = name
+    device.id = device_id
+    device.root_device_id = "test-mac"
+    device.serial = f"serial-{device_id}"
+    device.manufacturer = "Bosch"
+    device.device_model = "MICROMODULE_SHUTTER"
+    device.device_services = []
+    device.deleted = False
+    device.status = "AVAILABLE"
+    device.communicationquality = communication_quality
     return device
 
 
