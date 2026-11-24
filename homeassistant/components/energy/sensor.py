@@ -493,7 +493,7 @@ class EnergyCostSensor(RestoreSensor):
     @callback
     def _update_cost(self) -> None:
         """Update incurred costs."""
-        if self._adapter.source_type == "grid":
+        if self._adapter.source_type in ("grid", "heat"):
             valid_units = VALID_ENERGY_UNITS
             default_price_unit: str | None = UnitOfEnergy.KILO_WATT_HOUR
 
@@ -508,10 +508,6 @@ class EnergyCostSensor(RestoreSensor):
                 default_price_unit = UnitOfVolume.CUBIC_METERS
             else:
                 default_price_unit = UnitOfVolume.GALLONS
-
-        elif self._adapter.source_type == "heat":
-            valid_units = VALID_ENERGY_UNITS
-            default_price_unit = UnitOfEnergy.KILO_WATT_HOUR
 
         energy_state = self.hass.states.get(
             cast(str, self._config[self._adapter.stat_energy_key])

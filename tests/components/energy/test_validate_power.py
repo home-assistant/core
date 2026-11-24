@@ -159,10 +159,11 @@ async def test_validation_heat_power(
 
 @pytest.mark.usefixtures("mock_get_metadata")
 @pytest.mark.parametrize(
-    ("unit", "issues"),
+    ("unit", "state_class", "issues"),
     [
         pytest.param(
             "beers",
+            "measurement",
             [
                 {
                     "type": "entity_unexpected_unit_power",
@@ -172,13 +173,26 @@ async def test_validation_heat_power(
             ],
             id="wrong_unit",
         ),
-        pytest.param("W", [], id="valid"),
+        pytest.param(
+            "W",
+            "total_increasing",
+            [
+                {
+                    "type": "entity_unexpected_state_class",
+                    "affected_entities": {("sensor.home_power", "total_increasing")},
+                    "translation_placeholders": None,
+                }
+            ],
+            id="wrong_state_class",
+        ),
+        pytest.param("W", "measurement", [], id="valid"),
     ],
 )
 async def test_validation_home_power(
     hass: HomeAssistant,
     mock_energy_manager: EnergyManager,
     unit: str,
+    state_class: str,
     issues: list[dict[str, Any]],
 ) -> None:
     """Test validating the whole-home power sensor."""
@@ -208,63 +222,12 @@ async def test_validation_home_power(
         {
             "device_class": "power",
             "unit_of_measurement": unit,
-            "state_class": "measurement",
+            "state_class": state_class,
         },
     )
 
     assert (await validate.async_validate(hass)).as_dict() == {
         "energy_sources": [issues],
-        "device_consumption": [],
-        "device_consumption_water": [],
-        "device_consumption_gas": [],
-    }
-
-
-async def test_validation_home_power_wrong_state_class(
-    hass: HomeAssistant, mock_energy_manager, mock_get_metadata
-) -> None:
-    """Test validating home with power sensor having wrong state class."""
-    await mock_energy_manager.async_update(
-        {
-            "energy_sources": [
-                {
-                    "type": "home",
-                    "stat_energy_to": "sensor.home_energy",
-                    "stat_rate": "sensor.home_power",
-                }
-            ]
-        }
-    )
-    hass.states.async_set(
-        "sensor.home_energy",
-        "10.10",
-        {
-            "device_class": "energy",
-            "unit_of_measurement": "kWh",
-            "state_class": "total_increasing",
-        },
-    )
-    hass.states.async_set(
-        "sensor.home_power",
-        "1.5",
-        {
-            "device_class": "power",
-            "unit_of_measurement": UnitOfPower.WATT,
-            "state_class": "total_increasing",
-        },
-    )
-
-    result = await validate.async_validate(hass)
-    assert result.as_dict() == {
-        "energy_sources": [
-            [
-                {
-                    "type": "entity_unexpected_state_class",
-                    "affected_entities": {("sensor.home_power", "total_increasing")},
-                    "translation_placeholders": None,
-                }
-            ]
-        ],
         "device_consumption": [],
         "device_consumption_water": [],
         "device_consumption_gas": [],
