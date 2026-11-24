@@ -19,7 +19,7 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.tankerkoenig.const import DOMAIN
 from homeassistant.components.tankerkoenig.services import TankerkoenigService
-from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.const import TargetKey
 from homeassistant.core import HomeAssistant, ServiceResponse
 from homeassistant.exceptions import HomeAssistantError
 
@@ -34,7 +34,7 @@ async def get_opening_times(hass: HomeAssistant) -> ServiceResponse:
     return await hass.services.async_call(
         DOMAIN,
         TankerkoenigService.GET_OPENING_TIMES,
-        {ATTR_ENTITY_ID: ENTITY_ID},
+        {TargetKey.ENTITY_ID: ENTITY_ID},
         blocking=True,
         return_response=True,
     )

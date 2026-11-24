@@ -22,6 +22,11 @@
     }
   },
   "entity": {
+    "light": {
+      "camera_light": {
+        "name": "Camera light"
+      }
+    },
     "sensor": {
       "wifi_signal_strength": {
         "name": "Wi-Fi signal strength"
@@ -39,6 +44,9 @@
     },
     "cannot_connect": {
       "message": "Unable to fetch the cameras from Bosch."
+    },
+    "light_failed": {
+      "message": "Unable to switch the camera light."
     },
     "privacy_mode_failed": {
       "message": "Unable to change the privacy mode at Bosch."

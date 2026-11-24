@@ -57,7 +57,7 @@ rules:
 
   # Gold
   devices: done
-  diagnostics: todo
+  diagnostics: done
   discovery:
     status: exempt
     comment: Tiles owned by other people are common, so Tiles are added through the user flow instead of discovery.
@@ -75,15 +75,11 @@ rules:
     status: exempt
     comment: Each config entry represents a single Tile.
   entity-category: done
-  entity-device-class:
-    status: exempt
-    comment: The device tracker has no device class.
-  entity-disabled-by-default:
-    status: exempt
-    comment: All entities are useful for every Tile.
+  entity-device-class: done
+  entity-disabled-by-default: done
   entity-translations:
     status: exempt
-    comment: The device tracker uses the device name.
+    comment: The device tracker uses the device name and the sensor uses its device class name.
   exception-translations:
     status: exempt
     comment: This integration does not raise exceptions.
@@ -103,4 +99,4 @@ rules:
   # Platinum
   async-dependency: done
   inject-websession: done
-  strict-typing: todo
+  strict-typing: done

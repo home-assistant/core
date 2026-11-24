@@ -9,6 +9,7 @@ TEST_NAME = "Vallox"
 
 # Values for the metrics fixture, see conftest.py.
 METRICS_UNIT_ON = {"A_CYC_MODE": 0}
+METRICS_UNIT_TESTING = {"A_CYC_MODE": 1}
 METRICS_UNIT_OFF = {"A_CYC_MODE": 5}
 
 # The fan shows the unit's profiles as preset modes. Home, Away and Auto are
