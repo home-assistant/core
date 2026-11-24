@@ -111,21 +111,7 @@ jobs:
           INPUT_PR_NUMBER: ${{ inputs.pull_request_number }}
           RUN_ID: ${{ github.event.workflow_run.id }}
           RUN_TITLE: ${{ github.event.workflow_run.display_title }}
-        run: |
-          set -euo pipefail
-          skip() {
-            echo "::notice title=PR review skipped::$1"
-            echo "skip=true" >> "${GITHUB_OUTPUT}"
-            exit 0
-          }
-
-          if [ "${EVENT_NAME}" = "workflow_dispatch" ]; then
-            echo "pr_number=${INPUT_PR_NUMBER}" >> "${GITHUB_OUTPUT}"
-            exit 0
-          fi
-          # The run name can come from a fork's copy of the trigger: never echo it.
-          [[ "${RUN_TITLE}" =~ ^#([1-9][0-9]{0,9})$ ]] || skip "No pull request number in the name of trigger run ${RUN_ID}"
-          echo "pr_number=${BASH_REMATCH[1]}" >> "${GITHUB_OUTPUT}"
+        run: script/pr_reviewer/resolve_pr.py
       - name: Check there is something to review
         id: task
         if: steps.pr.outputs.skip != 'true'
@@ -133,16 +119,8 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           PR_NUMBER: ${{ steps.pr.outputs.pr_number }}
           RUN_HEAD_SHA: ${{ github.event.workflow_run.head_sha }}
-        run: |
-          set -euo pipefail
-          OUT="${RUNNER_TEMP}/pr-reviewer"
-          # A fork's trigger run can name any pull request: collect.py skips unless it is at the run's commit.
-          script/pr_reviewer/collect.py "${PR_NUMBER}" "${OUT}" "${RUN_HEAD_SHA}"
-          if ! jq -e '.review' "${OUT}/task.json" > /dev/null; then
-            echo "skip=true" >> "${GITHUB_OUTPUT}"
-            exit 0
-          fi
-          echo "head_sha=$(jq -r '.head_sha' "${OUT}/pr.json")" >> "${GITHUB_OUTPUT}"
+        # A fork's trigger run can name any pull request: collect.py skips unless it is at the run's commit.
+        run: script/pr_reviewer/collect.py --set-outputs "${PR_NUMBER}" "${RUNNER_TEMP}/pr-reviewer" "${RUN_HEAD_SHA}"
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.workflow_run.id || inputs.pull_request_number }}
   cancel-in-progress: true
@@ -152,31 +130,7 @@ steps:
     env:
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       PR_NUMBER: ${{ needs.prepare.outputs.pr_number }}
-    run: |
-      set -euo pipefail
-      # Runs for the same pull request take turns in the agent job, but one whose agent
-      # job has finished may still be posting. Wait for it, so this run sees what it
-      # posted.
-      # An API error counts as busy. At most 12 minutes, so the agent step's own
-      # timeout still fits in the job's.
-      TITLE="PR reviewer: #${PR_NUMBER}"
-      for _ in $(seq 36); do
-        BUSY=false
-        for STATUS in queued in_progress waiting pending; do
-          RUNS=$(gh api --paginate "repos/${GITHUB_REPOSITORY}/actions/workflows/pr-reviewer.lock.yml/runs?status=${STATUS}&per_page=100" \
-            --jq ".workflow_runs[] | select(.id != ${GITHUB_RUN_ID} and .display_title == \"${TITLE}\") | .id") \
-            || { BUSY=true; continue; }
-          for RUN in ${RUNS}; do
-            POSTING=$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs/${RUN}/jobs?per_page=100" \
-              --jq 'any(.jobs[]; .name == "agent" and (.conclusion | IN("success", "failure", "timed_out")))') \
-              || POSTING=true
-            [ "${POSTING}" = true ] && BUSY=true
-          done
-        done
-        [ "${BUSY}" = false ] && exit 0
-        sleep 20
-      done
-      echo "::warning::Earlier runs for #${PR_NUMBER} are still posting after 12 minutes"
+    run: script/pr_reviewer/wait_for_runs.py "${PR_NUMBER}"
   - name: Collect the pull request, its reviews and comments
     env:
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

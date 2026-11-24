@@ -3,10 +3,11 @@
 
 Decides whether to review it, in task.json.
 
-Usage: script/pr_reviewer/collect.py <pr-number> <out-dir> [<head-sha>]
+Usage: script/pr_reviewer/collect.py [--set-outputs] <pr-number> <out-dir> [<head-sha>]
 
 Needs GH_TOKEN and GITHUB_REPOSITORY. <head-sha> pins the commit to review;
-it defaults to the pull request's head.
+it defaults to the pull request's head. --set-outputs also writes `head_sha`
+to GITHUB_OUTPUT, or `skip=true` when there is nothing to review.
 
 The workflow keeps no state of its own and reads it back from the pull request:
 its reviews carry gh-aw's hidden marker, and its last review's commit is the
@@ -118,10 +119,13 @@ def diff_id(diff: bytes) -> str:
     return hashlib.sha256(HUNK_RANGES.sub(b"@@", INDEX_LINE.sub(b"", diff))).hexdigest()
 
 
-def collect(repo: str, number: int, out: Path, head_sha: str | None) -> str | None:
-    """Write what the review of a pull request needs and return the reviewed head.
+def collect(
+    repo: str, number: int, out: Path, head_sha: str | None
+) -> tuple[str, str | None]:
+    """Write what the review of a pull request needs.
 
-    Raises Skip when there is nothing to review.
+    Returns the head to review and the reviewed head. Raises Skip when there is
+    nothing to review.
     """
     result = subprocess.run(
         ["gh", "api", f"repos/{repo}/pulls/{number}"],
@@ -282,13 +286,18 @@ def collect(repo: str, number: int, out: Path, head_sha: str | None) -> str | No
             (out / "since-review.diff").write_bytes(
                 pr_diff(repo, reviewed_head, head_sha, paths)
             )
-    return reviewed_head
+    return head_sha, reviewed_head
 
 
 def main() -> None:
     """Collect a pull request and write whether to review it to task.json."""
     parser = argparse.ArgumentParser(
         description="Collect what the PR reviewer workflow needs for one pull request."
+    )
+    parser.add_argument(
+        "--set-outputs",
+        action="store_true",
+        help="write head_sha, or skip=true, to GITHUB_OUTPUT",
     )
     parser.add_argument("pr_number", type=int)
     parser.add_argument("out_dir", type=Path)
@@ -299,15 +308,20 @@ def main() -> None:
 
     args.out_dir.mkdir(parents=True, exist_ok=True)
     try:
-        reviewed_head = collect(
+        head_sha, reviewed_head = collect(
             os.environ["GITHUB_REPOSITORY"], args.pr_number, args.out_dir, args.head_sha
         )
     except Skip as skip:
         print(f"::notice title=PR review skipped::{skip}")
         task = {"review": False, "reviewed_head": None, "reason": str(skip)}
+        output = "skip=true"
     else:
         task = {"review": True, "reviewed_head": reviewed_head}
+        output = f"head_sha={head_sha}"
     write_json(args.out_dir / "task.json", task)
+    if args.set_outputs:
+        with Path(os.environ["GITHUB_OUTPUT"]).open("a", encoding="utf-8") as file:
+            file.write(f"{output}\n")
 
 
 if __name__ == "__main__":
