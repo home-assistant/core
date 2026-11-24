@@ -176,7 +176,7 @@ async def test_zeroconf_confirm_does_not_trust_unverified_mdns_serial() -> None:
             }
         )
     assert res["type"] == FlowResultType.CREATE_ENTRY
-    assert flow.async_set_unique_id.call_args.args[0] == "fe47bc57260a"
+    assert flow.async_set_unique_id.call_args.args[0] == "fe:47:bc:57:26:0a"
     assert getattr(flow, "unique_id", None) is None
     assert res["data"].get(CONF_SERIAL_NUMBER) is None
 

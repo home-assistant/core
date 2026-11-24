@@ -449,6 +449,9 @@
     "unsupported_capture_format": {
       "message": "The requested capture format is not supported."
     },
+    "update_failed": {
+      "message": "Unable to update reCamera Pro data: {error}"
+    },
     "validation_error": {
       "message": "The capture request is invalid: {error}"
     },

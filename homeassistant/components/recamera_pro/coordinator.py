@@ -1275,7 +1275,11 @@ class RecameraCoordinator(DataUpdateCoordinator[RecameraRuntimeData]):
                 translation_key="invalid_auth",
             ) from info_result
         if isinstance(info_result, BaseException):
-            raise UpdateFailed(str(info_result)) from info_result
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="update_failed",
+                translation_placeholders={"error": str(info_result)},
+            ) from info_result
         info = info_result
         capabilities = dict(previous.capabilities) if previous is not None else {}
         if isinstance(capabilities_result, RecameraAuthenticationError):
