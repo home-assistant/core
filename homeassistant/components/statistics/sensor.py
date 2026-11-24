@@ -780,7 +780,11 @@ class StatisticsSensor(SensorEntity):
         """
         _LOGGER.debug("Startup for %s", self.entity_id)
         if "recorder" in self.hass.config.components:
-            await self._initialize_from_database()
+            if get_instance(self.hass).database_ready:
+                await self._initialize_from_database()
+            else:
+                # Skip history while the database is not ready, no waiting
+                self._initialize_from_current_state()
         self.async_on_remove(self._async_cancel_update_listener)
         self.async_on_remove(
             async_track_state_change_event(
@@ -1102,6 +1106,18 @@ class StatisticsSensor(SensorEntity):
             for state in reversed(states):
                 self._add_state_to_queue(state, state.last_reported_timestamp)
                 self._calculate_state_attributes(state)
+        self._async_publish_initial_state()
+        _LOGGER.debug("%s: initializing from database completed", self.entity_id)
+
+    def _initialize_from_current_state(self) -> None:
+        """Seed the buffer from the source's current state, without history."""
+        if (state := self.hass.states.get(self._source_entity_id)) is not None:
+            self._add_state_to_queue(state, state.last_reported_timestamp)
+            self._calculate_state_attributes(state)
+        self._async_publish_initial_state()
+
+    def _async_publish_initial_state(self) -> None:
+        """Purge, schedule the next update and publish the first state."""
         self._async_purge_update_and_schedule()
 
         # only write state to the state machine if we are not in preview mode
@@ -1110,7 +1126,6 @@ class StatisticsSensor(SensorEntity):
             self._preview_callback(calculated_state.state, calculated_state.attributes)
         else:
             self.async_write_ha_state()
-        _LOGGER.debug("%s: initializing from database completed", self.entity_id)
 
     def _update_extra_state_attributes(self) -> None:
         """Calculate and update the various attributes."""

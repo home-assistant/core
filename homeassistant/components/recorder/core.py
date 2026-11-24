@@ -52,10 +52,15 @@ from homeassistant.util.event_type import EventType
 
 from . import migration, statistics
 from .const import (
+    DB_SETUP_RETRY_WAIT_MAX,
+    DB_SETUP_RETRY_WAIT_MIN,
+    DB_SETUP_STOP_POLL_INTERVAL,
     DB_WORKER_PREFIX,
     DEFAULT_MAX_BIND_VARS,
     DOMAIN,
     KEEPALIVE_TIME,
+    MAX_DB_SETUP_RETRIES,
+    MAX_DB_SETUP_WAIT,
     MAX_QUEUE_BACKLOG_MIN_VALUE,
     MIN_AVAILABLE_MEMORY_FOR_QUEUE_BACKLOG,
     SupportedDialect,
@@ -183,9 +188,16 @@ class Recorder(threading.Thread):
         self.async_db_connected: asyncio.Future[bool] = db_connected
         # Database is ready to use but live migration may be in progress
         self.async_db_ready: asyncio.Future[bool] = hass.loop.create_future()
+        # Setup may return: the database is ready, or it was not reachable and
+        # the recorder has fallen back to retrying it on its own thread.
+        self.async_setup_complete: asyncio.Future[bool] = hass.loop.create_future()
+        # Set once setup was released before the database was reachable
+        self._setup_released_early = False
         # Database is ready to use and all migration steps completed (used by tests)
         self.async_recorder_ready = asyncio.Event()
         self._queue_watch = threading.Event()
+        # Set on close and final write; unlike hass.state it never reverts
+        self._shutdown_requested = threading.Event()
         self.engine: Engine | None = None
         self.max_backlog: int = MAX_QUEUE_BACKLOG_MIN_VALUE
         self._psutil: ha_psutil.PsutilWrapper | None = None
@@ -249,6 +261,12 @@ class Recorder(threading.Thread):
     def recording(self) -> bool:
         """Return if the recorder is recording."""
         return self._event_listener is not None
+
+    @property
+    def database_ready(self) -> bool:
+        """Return if the database is ready, False while pending or given up."""
+        ready = self.async_db_ready
+        return ready.done() and not ready.cancelled() and ready.result()
 
     def get_session(self) -> Session:
         """Get a new sqlalchemy session."""
@@ -362,7 +380,23 @@ class Recorder(threading.Thread):
         self, target: Callable[..., _T], *args: Any
     ) -> asyncio.Future[_T]:
         """Add an executor job from within the event loop."""
+        if self._setup_released_early and not self.database_ready:
+            # Setup returned before the database was reachable, so dependents
+            # can call in before the executor and session exist, or after the
+            # retrying gave up.
+            return self.hass.loop.create_task(
+                self._async_run_once_db_ready(target, *args)
+            )
         return self.hass.loop.run_in_executor(self._db_executor, target, *args)
+
+    async def _async_run_once_db_ready[_T](
+        self, target: Callable[..., _T], *args: Any
+    ) -> _T:
+        """Run an executor job once the database is ready, or fail cleanly."""
+        # Shield the shared future: cancelling one job must not cancel it
+        if not await asyncio.shield(self.async_db_ready):
+            raise RuntimeError("The database connection has not been established")
+        return await self.hass.loop.run_in_executor(self._db_executor, target, *args)
 
     @callback
     def _async_check_queue(self, *_: Any) -> None:
@@ -467,6 +501,7 @@ class Recorder(threading.Thread):
         # We drain all the events in the queue and then insert
         # an empty one to ensure the next thing the recorder sees
         # is a request to shutdown.
+        self._shutdown_requested.set()
         while True:
             try:
                 self._queue.get_nowait()
@@ -477,6 +512,7 @@ class Recorder(threading.Thread):
 
     async def _async_shutdown(self, event: Event) -> None:
         """Shut down the Recorder at final write."""
+        self._shutdown_requested.set()
         if not self._hass_started.done():
             self._hass_started.set_result(SHUTDOWN_TASK)
         self.queue_task(StopTask())
@@ -508,6 +544,8 @@ class Recorder(threading.Thread):
             self.async_db_connected.set_result(False)
         if not self.async_db_ready.done():
             self.async_db_ready.set_result(False)
+        if not self.async_setup_complete.done():
+            self.async_setup_complete.set_result(False)
         if startup_failed:
             persistent_notification.async_create(
                 self.hass,
@@ -533,7 +571,19 @@ class Recorder(threading.Thread):
         if self.async_db_ready.done():
             return
         self.async_db_ready.set_result(True)
+        if not self.async_setup_complete.done():
+            self.async_setup_complete.set_result(True)
         self.async_start_executor()
+
+    @callback
+    def async_db_retry_started(self) -> None:
+        """Release setup while the database is still being retried.
+
+        Setup waits on async_setup_complete, not async_db_ready, so that a
+        database which is not up yet does not hold up the rest of startup.
+        """
+        if not self.async_setup_complete.done():
+            self.async_setup_complete.set_result(True)
 
     @callback
     def _async_set_recorder_ready_migration_done(self) -> None:
@@ -768,10 +818,12 @@ class Recorder(threading.Thread):
         self.thread_id = thread_id
         self.recorder_and_worker_thread_ids.add(thread_id)
 
-        setup_result = self._setup_recorder()
+        setup_result = self._setup_recorder(extended_retry=True)
 
         if not setup_result:
-            _LOGGER.error("Recorder setup failed, recorder shutting down")
+            # A restart during the retry window is not a setup failure
+            if not self._stopped_while_retrying():
+                _LOGGER.error("Recorder setup failed, recorder shutting down")
             # Give up if we could not connect
             return
 
@@ -790,6 +842,17 @@ class Recorder(threading.Thread):
                 SCHEMA_VERSION,
             )
             return
+
+        # Before schema_version is set, so _shutdown still reports the failure
+        if self._setup_released_early and not migration.live_migration(schema_status):
+            # Dependents were set up while the database was unreachable and
+            # would query tables the offline migration is altering.
+            _LOGGER.error(
+                "The database became reachable after startup but needs an "
+                "offline migration, restart Home Assistant to run it"
+            )
+            return
+
         self.schema_version = schema_status.current_version
 
         if not schema_status.migration_needed and not schema_status.schema_errors:
@@ -970,28 +1033,147 @@ class Recorder(threading.Thread):
         # happens to rollback and recover
         self._reopen_event_session()
 
-    def _setup_recorder(self) -> bool:
+    def _log_setup_failure(
+        self, err: Exception, *, log_exception: bool, connect_failed: bool
+    ) -> None:
+        """Log a setup failure at the caller's chosen volume."""
+        if log_exception:
+            _LOGGER.exception(
+                "Error during connection setup: (retrying in %s seconds)",
+                self.db_retry_wait,
+            )
+        elif connect_failed:
+            _LOGGER.info("Database still unreachable: %s", err)
+        else:
+            # Ends the extended retrying, so name the cause at a visible level
+            _LOGGER.error("Database setup failed, not retrying: %s", err)
+
+    def _try_setup_recorder_once(
+        self, *, log_exception: bool
+    ) -> tuple[bool | None, bool]:
+        """Attempt the connection once.
+
+        Returns (result, connect_failed). A None result is worth retrying.
+        """
+        try:
+            self._setup_connection()
+        except UnsupportedDialect:
+            return False, False
+        except (exc.OperationalError, exc.InterfaceError) as err:
+            # One after the first connect completed (schema inspection, DDL)
+            # is not about the database being unreachable
+            connect_failed = not self._completed_first_database_setup
+            self._log_setup_failure(
+                err, log_exception=log_exception, connect_failed=connect_failed
+            )
+            return None, connect_failed
+        except Exception as err:  # noqa: BLE001
+            # Bad URL, missing driver, DDL privileges: retried by the fast
+            # budget as before, but waiting longer will not fix them.
+            self._log_setup_failure(
+                err, log_exception=log_exception, connect_failed=False
+            )
+            return None, False
+
+        try:
+            return migration.initialize_database(self.get_session), False
+        except UnsupportedDialect:
+            return False, False
+        except Exception as err:  # noqa: BLE001
+            self._log_setup_failure(
+                err, log_exception=log_exception, connect_failed=False
+            )
+            return None, False
+
+    def _sleep_unless_stopping(self, wait: float) -> bool:
+        """Sleep in slices, returning False as soon as hass is stopping."""
+        remaining = wait
+        while remaining > 0:
+            if self._is_stopping():
+                return False
+            slice_ = min(DB_SETUP_STOP_POLL_INTERVAL, remaining)
+            time.sleep(slice_)
+            remaining -= slice_
+        return not self._is_stopping()
+
+    def _is_stopping(self) -> bool:
+        """Return if shutdown started, which hass.is_stopping stops saying later."""
+        return self.hass.is_stopping or self._shutdown_requested.is_set()
+
+    def _stopped_while_retrying(self) -> bool:
+        """Return if a stop cut the extended retrying short."""
+        return self._setup_released_early and self._is_stopping()
+
+    def _setup_recorder_extended(self, deadline: float) -> bool:
+        """Keep retrying the connection on a backoff, within both bounds."""
+        wait = float(
+            min(
+                max(self.db_retry_wait, DB_SETUP_RETRY_WAIT_MIN),
+                DB_SETUP_RETRY_WAIT_MAX,
+            )
+        )
+
+        for _ in range(MAX_DB_SETUP_RETRIES):
+            remaining = deadline - time.monotonic()
+            if remaining <= 0:
+                break
+            self._close_connection()
+            if not self._sleep_unless_stopping(min(wait, remaining)):
+                return False
+            result, connect_failed = self._try_setup_recorder_once(log_exception=False)
+            if result is None:
+                if not connect_failed:
+                    return False
+                wait = min(wait * 2, DB_SETUP_RETRY_WAIT_MAX)
+                continue
+            if result and self._is_stopping():
+                # Reached it during teardown: do not carry on into startup
+                return False
+            if result:
+                _LOGGER.warning("Database is reachable again, recorder starting")
+            return result
+
+        _LOGGER.error("Database still unreachable, giving up")
+        return False
+
+    def _setup_recorder(self, *, extended_retry: bool = False) -> bool:
         """Create a connection to the database."""
+        deadline = time.monotonic() + MAX_DB_SETUP_WAIT
         tries = 1
+        connect_failed = False
 
         while tries <= self.db_max_retries:
-            try:
-                self._setup_connection()
-                return migration.initialize_database(self.get_session)
-            except UnsupportedDialect:
-                break
-            except Exception:
-                _LOGGER.exception(
-                    "Error during connection setup: (retrying in %s seconds)",
-                    self.db_retry_wait,
-                )
+            result, connect_failed = self._try_setup_recorder_once(log_exception=True)
+            if result is not None:
+                return result
             tries += 1
 
             if tries <= self.db_max_retries:
                 self._close_connection()
                 time.sleep(self.db_retry_wait)
 
-        return False
+        # Only startup waits, and only on a database we could not reach: one
+        # that opened and then failed to initialise will not fix itself. A
+        # local sqlite file is a config problem, not a database still booting.
+        if (
+            not extended_retry
+            or not connect_failed
+            or get_engine_db_url(self.db_url).get_backend_name() == "sqlite"
+            or time.monotonic() >= deadline
+            or self._is_stopping()
+        ):
+            return False
+
+        self._setup_released_early = True
+        _LOGGER.warning(
+            "Database not ready after %s attempts, retrying for up to %s seconds",
+            self.db_max_retries,
+            MAX_DB_SETUP_WAIT,
+        )
+        # Let setup return before the retrying starts, so an absent database
+        # delays history and logbook rather than the whole of startup.
+        self.hass.add_job(self.async_db_retry_started)
+        return self._setup_recorder_extended(deadline)
 
     def _migrate_data_offline(
         self, schema_status: migration.SchemaValidationStatus
@@ -1563,8 +1745,9 @@ class Recorder(threading.Thread):
         # If the schema version is not set, we never had a working
         # connection to the database or the schema never reached a
         # good state.
-        # In either case, we want to mark startup as failed.
-        startup_failed = (
+        # In either case, we want to mark startup as failed, unless a stop
+        # ended the extended retrying, which is not a failure to start.
+        startup_failed = not self._stopped_while_retrying() and (
             not self.schema_version or self.schema_version != SCHEMA_VERSION
         )
         self.hass.add_job(self._async_startup_done, startup_failed)

@@ -61,8 +61,11 @@ async def system_health_info(hass: HomeAssistant) -> dict[str, Any]:
     database_name = get_engine_db_url(instance.db_url).database or ""
     db_engine_info = _async_get_db_engine_info(instance)
     db_stats: dict[str, Any] = {}
+    db_runs: dict[str, Any] = {}
 
-    if instance.async_db_ready.done():
+    # Not ready while setup was released early and the database is still
+    # being retried, or after it gave up
+    if instance.database_ready:
         db_stats = await instance.async_add_executor_job(
             _get_db_stats, instance, database_name
         )
