@@ -7,13 +7,12 @@ import pyads
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.valve import DOMAIN as VALVE_DOMAIN, ValveState
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    SERVICE_CLOSE_VALVE,
-    SERVICE_OPEN_VALVE,
-    STATE_UNAVAILABLE,
+from homeassistant.components.valve import (
+    DOMAIN as VALVE_DOMAIN,
+    ValveService,
+    ValveState,
 )
+from homeassistant.const import STATE_UNAVAILABLE, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -88,8 +87,8 @@ async def test_unavailable_until_the_first_value(
 @pytest.mark.parametrize(
     ("service", "written"),
     [
-        pytest.param(SERVICE_OPEN_VALVE, True, id="open"),
-        pytest.param(SERVICE_CLOSE_VALVE, False, id="close"),
+        pytest.param(ValveService.OPEN, True, id="open"),
+        pytest.param(ValveService.CLOSE, False, id="close"),
     ],
 )
 async def test_actions_write_to_the_plc(
@@ -104,7 +103,7 @@ async def test_actions_write_to_the_plc(
     assert await setup_ads_platform(hass, VALVE_DOMAIN, PLATFORM_CONFIG)
 
     await hass.services.async_call(
-        VALVE_DOMAIN, service, {ATTR_ENTITY_ID: ENTITY_ID}, blocking=True
+        VALVE_DOMAIN, service, {TargetKey.ENTITY_ID: ENTITY_ID}, blocking=True
     )
 
     mock_pyads_connection.return_value.write_by_name.assert_called_once_with(
@@ -120,14 +119,17 @@ async def test_state_is_assumed_from_the_actions(
     assert await setup_ads_platform(hass, VALVE_DOMAIN, PLATFORM_CONFIG)
 
     await hass.services.async_call(
-        VALVE_DOMAIN, SERVICE_OPEN_VALVE, {ATTR_ENTITY_ID: ENTITY_ID}, blocking=True
+        VALVE_DOMAIN, ValveService.OPEN, {TargetKey.ENTITY_ID: ENTITY_ID}, blocking=True
     )
     assert hass.states.get(ENTITY_ID).state == ValveState.CLOSED
     await mock_ads_device.async_push(hass, ADS_VAR, BOOL_FALSE)
     assert hass.states.get(ENTITY_ID).state == ValveState.OPEN
 
     await hass.services.async_call(
-        VALVE_DOMAIN, SERVICE_CLOSE_VALVE, {ATTR_ENTITY_ID: ENTITY_ID}, blocking=True
+        VALVE_DOMAIN,
+        ValveService.CLOSE,
+        {TargetKey.ENTITY_ID: ENTITY_ID},
+        blocking=True,
     )
     await mock_ads_device.async_push(hass, ADS_VAR, BOOL_TRUE)
     assert hass.states.get(ENTITY_ID).state == ValveState.CLOSED
@@ -147,7 +149,7 @@ async def test_write_error(
     )
 
     await hass.services.async_call(
-        VALVE_DOMAIN, SERVICE_OPEN_VALVE, {ATTR_ENTITY_ID: ENTITY_ID}, blocking=True
+        VALVE_DOMAIN, ValveService.OPEN, {TargetKey.ENTITY_ID: ENTITY_ID}, blocking=True
     )
 
     assert f"Error writing {ADS_VAR}: ADSError: timeout elapsed (1861)" in caplog.text
