@@ -4063,125 +4063,217 @@ async def test_validate_config_works(
     msg = await websocket_client.receive_json()
     assert msg["type"] == const.TYPE_RESULT
     assert msg["success"]
-    assert msg["result"] == {key: {"valid": True, "error": None}}
+    assert msg["result"] == {key: {"valid": True, "error": None, "errors": []}}
+
+
+_UNKNOWN_DEVICE_CONDITION = {
+    "condition": "device",
+    "device_id": "a51a57e5af051eb403d56eb9e6fd691c",
+    "domain": "sensor",
+    "entity_id": "7d18a157b7c00adbf2982ea7de0d0362",
+    "type": "is_carbon_dioxide",
+    "above": 50,
+}
+_UNKNOWN_DEVICE_ACTION = {
+    "device_id": "a51a57e5af051eb403d56eb9e6fd691c",
+    "domain": "light",
+    "entity_id": "7d18a157b7c00adbf2982ea7de0d0362",
+    "type": "turn_on",
+}
+_UNKNOWN_TRIGGER = {"platform": "non_existing"}
+_VALID_TRIGGER = {"platform": "event", "event_type": "hello"}
+_VALID_ACTION = {"delay": 1}
 
 
 @pytest.mark.parametrize(
-    ("key", "config", "error"),
+    "config",
     [
-        # Raises probatio.Invalid
-        (
-            "triggers",
-            {"platform": "non_existing", "event_type": "hello"},
-            "Invalid trigger 'non_existing' specified",
-        ),
-        # Raises probatio.Invalid
-        ("triggers", [5], "expected a mapping at '[0]'"),
         pytest.param(
-            "triggers",
-            [{"platform": "non_existing"}],
-            "Invalid trigger 'non_existing' specified at '[0]'",
-            id="trigger_list",
+            {"triggers": {"platform": "non_existing", "event_type": "hello"}},
+            id="single_trigger",
         ),
+        pytest.param({"triggers": [5]}, id="trigger_list_not_a_mapping"),
+        pytest.param({"triggers": [_UNKNOWN_TRIGGER]}, id="trigger_list"),
         pytest.param(
-            "triggers",
-            {"platform": "state"},
-            "required key not provided at 'entity_id'",
+            {"triggers": {"platform": "state"}},
             id="single_trigger_with_path",
         ),
         pytest.param(
-            "triggers",
-            [{"platform": "state"}],
-            "required key not provided at '[0].entity_id'",
+            {"triggers": [{"platform": "state"}]},
             id="trigger_list_with_path",
         ),
         pytest.param(
-            "triggers",
-            {"triggers": [{"platform": "event", "event_type": "a"}, {"platform": "x"}]},
-            "Invalid trigger 'x' specified at '[1]'",
+            {"triggers": {"triggers": [_VALID_TRIGGER, {"platform": "x"}]}},
             id="single_trigger_sublist",
         ),
         pytest.param(
-            "conditions",
-            {"condition": "state", "entity_id": "abcd" * 8, "state": "on"},
-            f"Unknown entity registry entry {'abcd' * 8}",
-            id="single_condition",
-        ),
-        pytest.param(
-            "conditions",
-            [{"condition": "state", "entity_id": "abcd" * 8, "state": "on"}],
-            f"Unknown entity registry entry {'abcd' * 8} at '[0]'",
-            id="condition_list",
-        ),
-        pytest.param(
-            "conditions",
             {
-                "condition": "and",
                 "conditions": {
                     "condition": "state",
                     "entity_id": "abcd" * 8,
                     "state": "on",
-                },
+                }
             },
-            f"Unknown entity registry entry {'abcd' * 8} at 'conditions[0]'",
+            id="single_condition",
+        ),
+        pytest.param(
+            {
+                "conditions": [
+                    {"condition": "state", "entity_id": "abcd" * 8, "state": "on"}
+                ]
+            },
+            id="condition_list",
+        ),
+        pytest.param(
+            {
+                "conditions": {
+                    "condition": "and",
+                    "conditions": {
+                        "condition": "state",
+                        "entity_id": "abcd" * 8,
+                        "state": "on",
+                    },
+                }
+            },
             id="single_condition_nested_single_condition",
         ),
         pytest.param(
-            "actions",
-            {"wait_for_trigger": {"platform": "non_existing"}},
-            "Invalid trigger 'non_existing' specified at 'wait_for_trigger[0]'",
+            {"actions": {"wait_for_trigger": _UNKNOWN_TRIGGER}},
             id="single_action_nested_single_trigger",
         ),
         pytest.param(
-            "actions",
-            [{"wait_for_trigger": [{"platform": "non_existing"}]}],
-            "Invalid trigger 'non_existing' specified at '[0].wait_for_trigger[0]'",
+            {"actions": [{"wait_for_trigger": [_UNKNOWN_TRIGGER]}]},
             id="action_list",
         ),
-        # Raises probatio.Invalid
-        (
-            "conditions",
+        pytest.param(
             {
-                "condition": "non_existing",
-                "entity_id": "hello.world",
-                "state": "paulus",
+                "conditions": {
+                    "condition": "non_existing",
+                    "entity_id": "hello.world",
+                    "state": "paulus",
+                }
             },
-            'Invalid condition "non_existing" specified',
+            id="single_condition_unknown_condition",
         ),
-        # Raises HomeAssistantError
-        (
-            "conditions",
+        pytest.param(
+            {"conditions": _UNKNOWN_DEVICE_CONDITION},
+            id="single_condition_home_assistant_error",
+        ),
+        pytest.param(
+            {"actions": {"non_existing": "domain_test.test_service"}},
+            id="single_action_unknown_action",
+        ),
+        pytest.param(
+            {"actions": [_VALID_ACTION, {"delay": 1, "bogus": 2}, {"delay": "abc"}]},
+            id="schema_errors",
+        ),
+        pytest.param(
             {
-                "above": 50,
-                "condition": "device",
-                "device_id": "a51a57e5af051eb403d56eb9e6fd691c",
-                "domain": "sensor",
-                "entity_id": "7d18a157b7c00adbf2982ea7de0d0362",
-                "type": "is_carbon_dioxide",
+                "triggers": [
+                    _VALID_TRIGGER,
+                    {"platform": "state"},
+                    _UNKNOWN_TRIGGER,
+                ]
             },
-            "Unknown device 'a51a57e5af051eb403d56eb9e6fd691c'",
+            id="platform_errors",
         ),
-        # Raises probatio.Invalid
-        (
-            "actions",
-            {"non_existing": "domain_test.test_service"},
-            "Unable to determine action",
+        pytest.param(
+            {"conditions": [_UNKNOWN_DEVICE_CONDITION]},
+            id="home_assistant_error",
+        ),
+        pytest.param(
+            {
+                "actions": [
+                    {
+                        "if": [_UNKNOWN_DEVICE_CONDITION],
+                        "then": [{"wait_for_trigger": [_UNKNOWN_TRIGGER]}],
+                        "else": [
+                            {
+                                "choose": [
+                                    {
+                                        "conditions": [_UNKNOWN_DEVICE_CONDITION],
+                                        "sequence": [
+                                            _VALID_ACTION,
+                                            _UNKNOWN_DEVICE_ACTION,
+                                        ],
+                                    }
+                                ],
+                                "default": [_UNKNOWN_DEVICE_ACTION],
+                            }
+                        ],
+                    }
+                ]
+            },
+            id="nested_blocks",
+        ),
+        pytest.param(
+            {"actions": {"repeat": {"count": 2, "sequence": _UNKNOWN_DEVICE_ACTION}}},
+            id="nested_single_items",
+        ),
+        pytest.param(
+            {
+                "conditions": [
+                    {"or": [_UNKNOWN_DEVICE_CONDITION]},
+                    {"not": _UNKNOWN_DEVICE_CONDITION},
+                ]
+            },
+            id="condition_shorthand",
+        ),
+        pytest.param(
+            {
+                "triggers": [
+                    _VALID_TRIGGER,
+                    {"triggers": [_VALID_TRIGGER, _UNKNOWN_TRIGGER]},
+                ]
+            },
+            id="trigger_sublist",
+        ),
+        pytest.param(
+            {
+                "actions": [
+                    {
+                        "parallel": [
+                            _UNKNOWN_DEVICE_ACTION,
+                            [_VALID_ACTION, _UNKNOWN_DEVICE_ACTION],
+                            {"sequence": [_UNKNOWN_DEVICE_ACTION]},
+                        ]
+                    }
+                ]
+            },
+            id="parallel",
+        ),
+        pytest.param(
+            {
+                "actions": [
+                    {"delay": 1, "bogus": 2},
+                    _UNKNOWN_DEVICE_ACTION,
+                    {"wait_for_trigger": [_UNKNOWN_TRIGGER]},
+                ]
+            },
+            id="schema_and_platform_errors",
+        ),
+        pytest.param(
+            {
+                "triggers": [_UNKNOWN_TRIGGER],
+                "conditions": [_UNKNOWN_DEVICE_CONDITION],
+                "actions": [_VALID_ACTION],
+            },
+            id="errors_in_two_keys",
         ),
     ],
 )
 async def test_validate_config_invalid(
     websocket_client: MockHAClientWebSocket,
-    key: str,
-    config: dict[str, Any] | list[Any],
-    error: str,
+    snapshot: SnapshotAssertion,
+    config: dict[str, Any],
 ) -> None:
-    """Test config validation."""
-    await websocket_client.send_json_auto_id({"type": "validate_config", key: config})
+    """Test the errors of each key are returned, with their paths."""
+    await websocket_client.send_json_auto_id({"type": "validate_config", **config})
 
     msg = await websocket_client.receive_json()
     assert msg["type"] == const.TYPE_RESULT
     assert msg["success"]
-    assert msg["result"] == {key: {"valid": False, "error": error}}
+    assert msg["result"] == snapshot
 
 
 async def test_message_coalescing(
