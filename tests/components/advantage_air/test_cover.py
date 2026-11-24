@@ -3,15 +3,13 @@
 from unittest.mock import AsyncMock
 
 from homeassistant.components.cover import (
-    ATTR_POSITION,
     DOMAIN as COVER_DOMAIN,
-    SERVICE_CLOSE_COVER,
-    SERVICE_OPEN_COVER,
-    SERVICE_SET_COVER_POSITION,
     CoverDeviceClass,
+    CoverService,
+    CoverServiceArgument,
     CoverState,
 )
-from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.const import TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -42,8 +40,8 @@ async def test_ac_cover(
 
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_CLOSE_COVER,
-        {ATTR_ENTITY_ID: [entity_id]},
+        CoverService.CLOSE,
+        {TargetKey.ENTITY_ID: [entity_id]},
         blocking=True,
     )
     mock_update.assert_called_once()
@@ -51,8 +49,8 @@ async def test_ac_cover(
 
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_OPEN_COVER,
-        {ATTR_ENTITY_ID: [entity_id]},
+        CoverService.OPEN,
+        {TargetKey.ENTITY_ID: [entity_id]},
         blocking=True,
     )
     mock_update.assert_called_once()
@@ -60,8 +58,8 @@ async def test_ac_cover(
 
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_SET_COVER_POSITION,
-        {ATTR_ENTITY_ID: [entity_id], ATTR_POSITION: 50},
+        CoverService.SET_POSITION,
+        {TargetKey.ENTITY_ID: [entity_id], CoverServiceArgument.POSITION: 50},
         blocking=True,
     )
     mock_update.assert_called_once()
@@ -69,8 +67,8 @@ async def test_ac_cover(
 
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_SET_COVER_POSITION,
-        {ATTR_ENTITY_ID: [entity_id], ATTR_POSITION: 0},
+        CoverService.SET_POSITION,
+        {TargetKey.ENTITY_ID: [entity_id], CoverServiceArgument.POSITION: 0},
         blocking=True,
     )
     mock_update.assert_called_once()
@@ -79,9 +77,9 @@ async def test_ac_cover(
     # Test controlling multiple Cover Zone Entity
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_CLOSE_COVER,
+        CoverService.CLOSE,
         {
-            ATTR_ENTITY_ID: [
+            TargetKey.ENTITY_ID: [
                 "cover.myauto_zone_y",
                 "cover.myauto_zone_z",
             ]
@@ -93,9 +91,9 @@ async def test_ac_cover(
 
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_OPEN_COVER,
+        CoverService.OPEN,
         {
-            ATTR_ENTITY_ID: [
+            TargetKey.ENTITY_ID: [
                 "cover.myauto_zone_y",
                 "cover.myauto_zone_z",
             ]
@@ -130,8 +128,8 @@ async def test_things_cover(
 
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_CLOSE_COVER,
-        {ATTR_ENTITY_ID: [entity_id]},
+        CoverService.CLOSE,
+        {TargetKey.ENTITY_ID: [entity_id]},
         blocking=True,
     )
     mock_update.assert_called_once()
@@ -139,8 +137,8 @@ async def test_things_cover(
 
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_OPEN_COVER,
-        {ATTR_ENTITY_ID: [entity_id]},
+        CoverService.OPEN,
+        {TargetKey.ENTITY_ID: [entity_id]},
         blocking=True,
     )
     mock_update.assert_called_once()

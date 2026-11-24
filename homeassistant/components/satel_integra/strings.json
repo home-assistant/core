@@ -187,6 +187,9 @@
   },
   "entity": {
     "binary_sensor": {
+      "bypass": {
+        "name": "Bypass"
+      },
       "dt1_trouble": {
         "name": "DT1 trouble"
       },

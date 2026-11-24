@@ -12,13 +12,6 @@ from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from aiohttp import ClientConnectionError, ClientError, ClientResponseError
-from aiopowerwall import (
-    PowerwallAuthenticationError,
-    PowerwallConnectionError,
-    PowerwallError,
-    PowerwallProtocolError,
-    PowerwallRateLimitError,
-)
 from bleak.exc import BleakError
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import rsa
@@ -46,6 +39,13 @@ from tesla_fleet_api.exceptions import (
     TeslaFleetError,
 )
 from tesla_fleet_api.tesla import EnergySiteRouter, VehicleRouter
+from tesla_fleet_api.tesla.powerwall import (
+    PowerwallAuthenticationError,
+    PowerwallConnectionError,
+    PowerwallError,
+    PowerwallProtocolError,
+    PowerwallRateLimitError,
+)
 from tesla_fleet_api.tesla.vehicle.bluetooth import VehicleBluetooth
 from tesla_fleet_api.tesla.vehicle.stream_glue import BleBroadcastStreamGlue
 from tesla_fleet_api.teslemetry import EnergySite, Vehicle
@@ -63,6 +63,8 @@ from homeassistant.components.number import (
     ATTR_VALUE,
     DOMAIN as NUMBER_DOMAIN,
     SERVICE_SET_VALUE,
+    NumberService,
+    NumberServiceArgument,
 )
 from homeassistant.components.select import (
     ATTR_OPTION,
@@ -81,6 +83,7 @@ from homeassistant.components.teslemetry.const import (
     CONF_VIN,
     DOMAIN,
     LABS_CHARGE_ON_SOLAR_FEATURE,
+    STREAM_DISCONNECT_GRACE,
     SUBENTRY_TYPE_ENERGY_SITE,
     SUBENTRY_TYPE_VEHICLE,
 )
@@ -113,8 +116,9 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
     Platform,
+    TargetKey,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import CoreState, HomeAssistant
 from homeassistant.exceptions import (
     ConfigEntryAuthFailed,
     ConfigEntryNotReady,
@@ -179,6 +183,7 @@ CONNECTION_ERRORS = [
 VEHICLE_ERRORS = [
     *ERRORS,
     (InsufficientCredits, ConfigEntryState.SETUP_RETRY),
+    (Forbidden, ConfigEntryState.SETUP_RETRY),
 ]
 
 
@@ -1255,6 +1260,39 @@ async def test_insufficient_credits_backs_off_polling(
     assert coordinator.last_exception.retry_after == INSUFFICIENT_CREDITS_RETRY_AFTER
 
 
+async def test_vehicle_data_missing_scopes_repair(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    issue_registry: ir.IssueRegistry,
+    mock_vehicle_data: AsyncMock,
+    mock_legacy: AsyncMock,
+) -> None:
+    """Missing scopes raise a repair that clears once vehicle data is readable."""
+    entry = await setup_platform(hass)
+    assert entry.state is ConfigEntryState.LOADED
+    issue_id = f"missing_scopes_{entry.entry_id}"
+
+    mock_vehicle_data.side_effect = Forbidden
+    freezer.tick(VEHICLE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.LOADED
+    assert hass.states.get("sensor.test_battery_level").state == STATE_UNAVAILABLE
+    issue = issue_registry.async_get_issue(DOMAIN, issue_id)
+    assert issue is not None
+    assert (
+        issue.learn_more_url == "https://teslemetry.com/login?prompt_missing_scopes=1"
+    )
+
+    mock_vehicle_data.side_effect = None
+    freezer.tick(VEHICLE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert issue_registry.async_get_issue(DOMAIN, issue_id) is None
+
+
 def _oauth_session(hass: HomeAssistant, entry: MockConfigEntry) -> OAuth2Session:
     """Build an OAuth2Session for directly exercising _get_access_token."""
     return OAuth2Session(hass, entry, TeslemetryImplementation(hass, DOMAIN, CLIENT_ID))
@@ -1382,7 +1420,7 @@ PASSWORD = "abcde"
 ENTRY_ID = "01JTESLEMETRYENTRY00000000"
 GATEWAY_ISSUE_ID = f"gateway_not_found_{ENTRY_ID}_{SITE_ID}"
 
-# aiopowerwall's PowerwallClient parses the PEM at construction time, so tests
+# PowerwallClient parses the PEM at construction time, so tests
 # that build one need a real (if undersized, for speed) RSA key rather than
 # arbitrary bytes.
 _TEST_RSA_KEY_PEM = rsa.generate_private_key(
@@ -1672,7 +1710,10 @@ async def test_energy_site_router_command_routing(
     local = AsyncMock(side_effect=local_error, return_value={"routed": "local"})
     cloud = AsyncMock(return_value={"routed": "cloud"})
     with (
-        patch("aiopowerwall.energysite.PowerwallEnergySite.backup", new=local),
+        patch(
+            "tesla_fleet_api.tesla.powerwall.energysite.PowerwallEnergySite.backup",
+            new=local,
+        ),
         patch(
             "tesla_fleet_api.teslemetry.energysite.TeslemetryEnergySite.backup",
             new=cloud,
@@ -1708,7 +1749,10 @@ async def test_energy_site_router_command_rejected_locally(
     local = AsyncMock(side_effect=PowerwallError("rejected"))
     cloud = AsyncMock(return_value={"routed": "cloud"})
     with (
-        patch("aiopowerwall.energysite.PowerwallEnergySite.backup", new=local),
+        patch(
+            "tesla_fleet_api.tesla.powerwall.energysite.PowerwallEnergySite.backup",
+            new=local,
+        ),
         patch(
             "tesla_fleet_api.teslemetry.energysite.TeslemetryEnergySite.backup",
             new=cloud,
@@ -2497,6 +2541,7 @@ async def test_energy_stream_stop_does_not_fail_coordinators(
 
 async def test_energy_stream_disconnect_marks_unavailable_and_recovers(
     hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
     mock_add_connection_listener: MagicMock,
     mock_energy_live_stream: MagicMock,
     mock_energy_info_stream: MagicMock,
@@ -2508,9 +2553,10 @@ async def test_energy_stream_disconnect_marks_unavailable_and_recovers(
     assert hass.states.get("sensor.energy_site_solar_power").state == "1.185"
     assert hass.states.get("calendar.energy_site_buy_tariff").state != STATE_UNAVAILABLE
 
-    # A stream disconnect fails the live and info/tariff coordinators.
+    # A stream that stays down past the grace fails the live and info/tariff
+    # coordinators.
     mock_add_connection_listener.send(False)
-    await hass.async_block_till_done()
+    await _tick(hass, freezer, STREAM_GRACE)
 
     assert hass.states.get("sensor.energy_site_solar_power").state == STATE_UNAVAILABLE
     assert hass.states.get("calendar.energy_site_buy_tariff").state == STATE_UNAVAILABLE
@@ -2537,6 +2583,89 @@ async def test_energy_stream_disconnect_marks_unavailable_and_recovers(
         for flow in hass.config_entries.flow.async_progress()
         if flow["handler"] == DOMAIN
     ]
+
+
+async def test_energy_stream_quick_reconnect_stays_available(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    freezer: FrozenDateTimeFactory,
+    mock_add_connection_listener: MagicMock,
+) -> None:
+    """A drop that reconnects within the grace keeps energy entities available."""
+    await setup_platform(hass, [Platform.SENSOR, Platform.CALENDAR])
+
+    mock_add_connection_listener.send(False)
+    await _tick(hass, freezer, STREAM_GRACE - timedelta(seconds=1))
+    assert hass.states.get("sensor.energy_site_solar_power").state == "1.185"
+    assert hass.states.get("calendar.energy_site_buy_tariff").state != STATE_UNAVAILABLE
+
+    mock_add_connection_listener.send(True)
+    # The reconnect cancelled the grace timer, so passing its deadline fails nothing.
+    await _tick(hass, freezer, STREAM_GRACE)
+
+    assert hass.states.get("sensor.energy_site_solar_power").state == "1.185"
+    assert hass.states.get("calendar.energy_site_buy_tariff").state != STATE_UNAVAILABLE
+    assert "Disconnected from the Teslemetry stream" not in caplog.text
+
+
+async def test_energy_stream_failed_reconnects_mark_unavailable(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    freezer: FrozenDateTimeFactory,
+    mock_add_connection_listener: MagicMock,
+) -> None:
+    """Reconnects that keep failing past the grace fail the energy coordinators."""
+    await setup_platform(hass, [Platform.SENSOR, Platform.CALENDAR])
+
+    mock_add_connection_listener.send(False)
+    await _tick(hass, freezer, STREAM_GRACE - timedelta(seconds=1))
+    # A failed reconnect attempt reports another disconnect; it must not
+    # restart the grace.
+    mock_add_connection_listener.send(False)
+    await _tick(hass, freezer, timedelta(seconds=1))
+
+    assert hass.states.get("sensor.energy_site_solar_power").state == STATE_UNAVAILABLE
+    assert hass.states.get("calendar.energy_site_buy_tariff").state == STATE_UNAVAILABLE
+    assert [
+        record
+        for record in caplog.records
+        if record.levelno == logging.ERROR
+        and "Disconnected from the Teslemetry stream" in record.getMessage()
+    ]
+
+
+async def test_energy_stream_grace_cancelled_on_unload(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    freezer: FrozenDateTimeFactory,
+    mock_add_connection_listener: MagicMock,
+) -> None:
+    """Unloading during the grace cancels the pending coordinator failure."""
+    entry = await setup_platform(hass, [Platform.SENSOR, Platform.CALENDAR])
+
+    mock_add_connection_listener.send(False)
+    await hass.config_entries.async_unload(entry.entry_id)
+    await _tick(hass, freezer, STREAM_GRACE)
+
+    assert "Disconnected from the Teslemetry stream" not in caplog.text
+
+
+async def test_energy_stream_grace_expiring_while_stopping(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    freezer: FrozenDateTimeFactory,
+    mock_add_connection_listener: MagicMock,
+) -> None:
+    """A grace that expires while Home Assistant stops fails nothing."""
+    await setup_platform(hass, [Platform.SENSOR, Platform.CALENDAR])
+
+    mock_add_connection_listener.send(False)
+    hass.set_state(CoreState.stopping)
+    await _tick(hass, freezer, STREAM_GRACE)
+
+    assert hass.states.get("sensor.energy_site_solar_power").state == "1.185"
+    assert hass.states.get("calendar.energy_site_buy_tariff").state != STATE_UNAVAILABLE
+    assert "Disconnected from the Teslemetry stream" not in caplog.text
 
 
 CLOUD_RESULT = {"response": {"result": True, "reason": "cloud"}}
@@ -3330,8 +3459,11 @@ async def test_charge_on_solar_settings_removed_with_entry(
 
     await hass.services.async_call(
         NUMBER_DOMAIN,
-        SERVICE_SET_VALUE,
-        {ATTR_ENTITY_ID: "number.test_charge_on_solar_lower_limit", ATTR_VALUE: 35},
+        NumberService.SET_VALUE,
+        {
+            TargetKey.ENTITY_ID: "number.test_charge_on_solar_lower_limit",
+            NumberServiceArgument.VALUE: 35,
+        },
         blocking=True,
     )
     async_fire_time_changed(hass)
@@ -3407,6 +3539,9 @@ async def _setup_energy_site_entry(
         await hass.async_block_till_done()
 
 
+STREAM_GRACE = timedelta(seconds=STREAM_DISCONNECT_GRACE)
+
+
 async def _tick(
     hass: HomeAssistant, freezer: FrozenDateTimeFactory, interval: timedelta
 ) -> None:
@@ -3475,6 +3610,33 @@ async def test_paired_site_local_gap_keeps_cloud_value(
     assert hass.states.get("sensor.energy_site_battery_power").state == "3.0"
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+@pytest.mark.parametrize(
+    ("local_load_power", "expected"),
+    [
+        pytest.param(-1500, "0.0", id="negative_clamped_to_zero"),
+        pytest.param(4000, "4.0", id="positive_unchanged"),
+    ],
+)
+async def test_paired_site_local_load_power_clamped_at_zero(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_powerwall_live_status: AsyncMock,
+    local_load_power: int,
+    expected: str,
+) -> None:
+    """A negative local load_power is clamped at 0 and a positive one is kept."""
+    local = deepcopy(_LOCAL_LIVE_STATUS)
+    local["response"]["load_power"] = local_load_power
+    mock_powerwall_live_status.side_effect = lambda: deepcopy(local)
+    await _setup_energy_site_entry(hass, _entry_with_powerwall(), [Platform.SENSOR])
+
+    await _tick_local_live(hass, freezer, 1)
+
+    assert hass.states.get("sensor.energy_site_load_power").state == expected
+    assert hass.states.get("sensor.energy_site_battery_power").state == "3.0"
+
+
 async def test_paired_site_config_reads_merge_over_cloud(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
@@ -3522,13 +3684,16 @@ async def test_local_command_survives_site_info_push_before_next_poll(
     assert hass.states.get("number.energy_site_backup_reserve").state == "20.0"
 
     with patch(
-        "aiopowerwall.energysite.PowerwallEnergySite.backup",
+        "tesla_fleet_api.tesla.powerwall.energysite.PowerwallEnergySite.backup",
         return_value=COMMAND_OK,
     ):
         await hass.services.async_call(
             NUMBER_DOMAIN,
-            SERVICE_SET_VALUE,
-            {ATTR_ENTITY_ID: "number.energy_site_backup_reserve", ATTR_VALUE: 80},
+            NumberService.SET_VALUE,
+            {
+                TargetKey.ENTITY_ID: "number.energy_site_backup_reserve",
+                NumberServiceArgument.VALUE: 80,
+            },
             blocking=True,
         )
     assert hass.states.get("number.energy_site_backup_reserve").state == "80"
@@ -3563,13 +3728,16 @@ async def test_local_command_survives_poll_started_before_it(
     assert mock_powerwall_local_config.call_count == 1
 
     with patch(
-        "aiopowerwall.energysite.PowerwallEnergySite.backup",
+        "tesla_fleet_api.tesla.powerwall.energysite.PowerwallEnergySite.backup",
         return_value=COMMAND_OK,
     ):
         await hass.services.async_call(
             NUMBER_DOMAIN,
-            SERVICE_SET_VALUE,
-            {ATTR_ENTITY_ID: "number.energy_site_backup_reserve", ATTR_VALUE: 80},
+            NumberService.SET_VALUE,
+            {
+                TargetKey.ENTITY_ID: "number.energy_site_backup_reserve",
+                NumberServiceArgument.VALUE: 80,
+            },
             blocking=True,
         )
     assert hass.states.get("number.energy_site_backup_reserve").state == "80"
@@ -3636,7 +3804,7 @@ async def test_local_command_survives_failed_poll(
     await _tick(hass, freezer, ENERGY_CONFIG_INTERVAL)
 
     with patch(
-        f"aiopowerwall.energysite.PowerwallEnergySite.{command}",
+        f"tesla_fleet_api.tesla.powerwall.energysite.PowerwallEnergySite.{command}",
         return_value=COMMAND_OK,
     ):
         await hass.services.async_call(*service_call, blocking=True)
@@ -3771,7 +3939,7 @@ async def test_local_command_released_by_reporting_poll(
     assert hass.states.get(entity_id).state == baseline
 
     with patch(
-        f"aiopowerwall.energysite.PowerwallEnergySite.{command}",
+        f"tesla_fleet_api.tesla.powerwall.energysite.PowerwallEnergySite.{command}",
         return_value=COMMAND_OK,
     ):
         await hass.services.async_call(*service_call, blocking=True)
@@ -3891,6 +4059,7 @@ async def test_cloud_owned_command_value_held_until_cloud_site_info(
     freezer: FrozenDateTimeFactory,
     mock_site_info: AsyncMock,
     mock_energy_info_stream: MagicMock,
+    mock_energy_tariff_stream: MagicMock,
     entry_factory: Callable[[], MockConfigEntry],
     release: Callable[[HomeAssistant, MagicMock, str], Awaitable[None]],
     platform: Platform,
@@ -3900,7 +4069,7 @@ async def test_cloud_owned_command_value_held_until_cloud_site_info(
     commanded: str,
     confirmed: str,
 ) -> None:
-    """A cloud-owned command value holds through LAN polls until the next cloud site_info."""
+    """A cloud-owned command value holds through other updates until the next cloud site_info."""
     site_info = deepcopy(SITE_INFO)
     site_info["response"]["off_grid_vehicle_charging_reserve_percent"] = 20
     mock_site_info.side_effect = lambda: deepcopy(site_info)
@@ -3909,7 +4078,7 @@ async def test_cloud_owned_command_value_held_until_cloud_site_info(
 
     with (
         patch(
-            f"aiopowerwall.energysite.PowerwallEnergySite.{command}",
+            f"tesla_fleet_api.tesla.powerwall.energysite.PowerwallEnergySite.{command}",
             return_value=COMMAND_OK,
         ),
         patch(
@@ -3921,6 +4090,11 @@ async def test_cloud_owned_command_value_held_until_cloud_site_info(
     assert hass.states.get(entity_id).state == commanded
 
     await _tick(hass, freezer, ENERGY_CONFIG_INTERVAL)
+    assert hass.states.get(entity_id).state == commanded
+
+    # A tariff push republishes the coordinator view without a new site_info.
+    mock_energy_tariff_stream.send(None)
+    await hass.async_block_till_done()
     assert hass.states.get(entity_id).state == commanded
 
     # The cloud has not taken the command, and the off-grid reserve moved.
@@ -4257,6 +4431,7 @@ async def test_overlapping_local_live_poll_skips_second_tick(
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_paired_stream_push_restores_availability_after_disconnect(
     hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
     mock_add_connection_listener: MagicMock,
     mock_energy_live_stream: MagicMock,
 ) -> None:
@@ -4265,7 +4440,7 @@ async def test_paired_stream_push_restores_availability_after_disconnect(
     assert hass.states.get("sensor.energy_site_grid_services_power").state == "0.0"
 
     mock_add_connection_listener.send(False)
-    await hass.async_block_till_done()
+    await _tick(hass, freezer, STREAM_GRACE)
     assert (
         hass.states.get("sensor.energy_site_grid_services_power").state
         == STATE_UNAVAILABLE
@@ -4293,7 +4468,7 @@ async def test_local_config_poll_does_not_clear_stream_error(
     await _setup_energy_site_entry(hass, _entry_with_powerwall(), [Platform.SELECT])
 
     mock_add_connection_listener.send(False)
-    await hass.async_block_till_done()
+    await _tick(hass, freezer, STREAM_GRACE)
     assert (
         hass.states.get("select.energy_site_operation_mode").state == STATE_UNAVAILABLE
     )

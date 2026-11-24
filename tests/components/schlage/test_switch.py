@@ -7,7 +7,7 @@ from pytest_homeassistant.common import snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN, SwitchService
-from homeassistant.const import CommonServiceArgument, Platform
+from homeassistant.const import Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -35,9 +35,7 @@ async def test_beeper_services(
     await hass.services.async_call(
         SWITCH_DOMAIN,
         SwitchService.TURN_OFF,
-        service_data={
-            CommonServiceArgument.ENTITY_ID: "switch.vault_door_keypress_beep"
-        },
+        service_data={TargetKey.ENTITY_ID: "switch.vault_door_keypress_beep"},
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -47,9 +45,7 @@ async def test_beeper_services(
     await hass.services.async_call(
         SWITCH_DOMAIN,
         SwitchService.TURN_ON,
-        service_data={
-            CommonServiceArgument.ENTITY_ID: "switch.vault_door_keypress_beep"
-        },
+        service_data={TargetKey.ENTITY_ID: "switch.vault_door_keypress_beep"},
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -67,9 +63,7 @@ async def test_lock_and_leave_services(
     await hass.services.async_call(
         SWITCH_DOMAIN,
         SwitchService.TURN_OFF,
-        service_data={
-            CommonServiceArgument.ENTITY_ID: "switch.vault_door_1_touch_locking"
-        },
+        service_data={TargetKey.ENTITY_ID: "switch.vault_door_1_touch_locking"},
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -79,9 +73,7 @@ async def test_lock_and_leave_services(
     await hass.services.async_call(
         SWITCH_DOMAIN,
         SwitchService.TURN_ON,
-        service_data={
-            CommonServiceArgument.ENTITY_ID: "switch.vault_door_1_touch_locking"
-        },
+        service_data={TargetKey.ENTITY_ID: "switch.vault_door_1_touch_locking"},
         blocking=True,
     )
     await hass.async_block_till_done()

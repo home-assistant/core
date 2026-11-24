@@ -25,18 +25,18 @@ from homeassistant.components.update import (
     ATTR_INSTALLED_VERSION,
     ATTR_LATEST_VERSION,
     ATTR_UPDATE_PERCENTAGE,
-    ATTR_VERSION,
     DOMAIN as UPDATE_DOMAIN,
-    SERVICE_INSTALL,
+    UpdateService,
+    UpdateServiceArgument,
 )
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.const import (
-    ATTR_ENTITY_ID,
     STATE_OFF,
     STATE_ON,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
     Platform,
+    TargetKey,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import (
@@ -350,8 +350,8 @@ async def test_update_firmware(
 
     await hass.services.async_call(
         UPDATE_DOMAIN,
-        SERVICE_INSTALL,
-        {ATTR_ENTITY_ID: entity_id},
+        UpdateService.INSTALL,
+        {TargetKey.ENTITY_ID: entity_id},
         blocking=False,
     )
 
@@ -405,8 +405,8 @@ async def test_update_zigbee2_firmware(
 
     await hass.services.async_call(
         UPDATE_DOMAIN,
-        SERVICE_INSTALL,
-        {ATTR_ENTITY_ID: entity_id},
+        UpdateService.INSTALL,
+        {TargetKey.ENTITY_ID: entity_id},
         blocking=False,
     )
 
@@ -450,8 +450,8 @@ async def test_update_legacy_firmware_v2(
 
     await hass.services.async_call(
         UPDATE_DOMAIN,
-        SERVICE_INSTALL,
-        {ATTR_ENTITY_ID: entity_id},
+        UpdateService.INSTALL,
+        {TargetKey.ENTITY_ID: entity_id},
         blocking=False,
     )
 
@@ -491,8 +491,8 @@ async def test_update_firmware_failed(
 
     await hass.services.async_call(
         UPDATE_DOMAIN,
-        SERVICE_INSTALL,
-        {ATTR_ENTITY_ID: entity_id},
+        UpdateService.INSTALL,
+        {TargetKey.ENTITY_ID: entity_id},
         blocking=False,
     )
 
@@ -546,8 +546,8 @@ async def test_update_install_command_error(
     with pytest.raises(expected_exception, match=expected_match):
         await hass.services.async_call(
             UPDATE_DOMAIN,
-            SERVICE_INSTALL,
-            {ATTR_ENTITY_ID: entity_id},
+            UpdateService.INSTALL,
+            {TargetKey.ENTITY_ID: entity_id},
             blocking=True,
         )
 
@@ -591,8 +591,8 @@ async def test_update_reboot_timeout(
         install_task = hass.async_create_task(
             hass.services.async_call(
                 UPDATE_DOMAIN,
-                SERVICE_INSTALL,
-                {ATTR_ENTITY_ID: entity_id},
+                UpdateService.INSTALL,
+                {TargetKey.ENTITY_ID: entity_id},
                 blocking=True,
             )
         )
@@ -650,7 +650,7 @@ async def test_update_release_notes(
         }
     )
     result = await ws_client.receive_json()
-    assert result["result"] is not None
+    assert result["result"]["release_notes"] is not None
 
 
 async def test_update_blank_release_notes(
@@ -682,7 +682,7 @@ async def test_update_blank_release_notes(
     )
     result = await ws_client.receive_json()
     await hass.async_block_till_done()
-    assert result["result"] is None
+    assert result["result"]["release_notes"] is None
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default", "mock_ultima_client")
@@ -763,8 +763,11 @@ async def test_update_firmware_specific_version(
 
     await hass.services.async_call(
         UPDATE_DOMAIN,
-        SERVICE_INSTALL,
-        {ATTR_ENTITY_ID: entity_id, ATTR_VERSION: version},
+        UpdateService.INSTALL,
+        {
+            TargetKey.ENTITY_ID: entity_id,
+            UpdateServiceArgument.VERSION: version,
+        },
         blocking=False,
     )
 
@@ -810,8 +813,11 @@ async def test_update_firmware_specific_version_invalid(
     with pytest.raises(ServiceValidationError) as exc_info:
         await hass.services.async_call(
             UPDATE_DOMAIN,
-            SERVICE_INSTALL,
-            {ATTR_ENTITY_ID: "update.mock_title_core_firmware", ATTR_VERSION: version},
+            UpdateService.INSTALL,
+            {
+                TargetKey.ENTITY_ID: "update.mock_title_core_firmware",
+                UpdateServiceArgument.VERSION: version,
+            },
             blocking=True,
         )
 

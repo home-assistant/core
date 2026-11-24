@@ -18,7 +18,6 @@ from homeassistant.components.climate import (
     ATTR_CURRENT_TEMPERATURE,
     ATTR_FAN_MODE,
     ATTR_HVAC_ACTION,
-    ATTR_HVAC_MODE,
     ATTR_HVAC_MODES,
     ATTR_MAX_TEMP,
     ATTR_MIN_TEMP,
@@ -27,24 +26,21 @@ from homeassistant.components.climate import (
     ATTR_TARGET_TEMP_LOW,
     DOMAIN as CLIMATE_DOMAIN,
     PRESET_NONE,
-    SERVICE_SET_FAN_MODE,
-    SERVICE_SET_HVAC_MODE,
-    SERVICE_SET_PRESET_MODE,
-    SERVICE_SET_TEMPERATURE,
     ClimateEntityFeature,
+    ClimateService,
+    ClimateServiceArgument,
     HVACAction,
     HVACMode,
 )
 from homeassistant.components.zwave_js.climate import ATTR_FAN_STATE
-from homeassistant.components.zwave_js.const import DOMAIN, SERVICE_REFRESH_VALUE
+from homeassistant.components.zwave_js.const import DOMAIN, ZWaveJSService
 from homeassistant.components.zwave_js.helpers import ZwaveValueMatcher
 from homeassistant.const import (
-    ATTR_ENTITY_ID,
     ATTR_SUPPORTED_FEATURES,
     ATTR_TEMPERATURE,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
+    CommonServiceArgument,
     Platform,
+    TargetKey,
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
@@ -109,8 +105,8 @@ async def test_thermostat_v2(
     # Check that turning the device on is a no-op because it is already on
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: CLIMATE_RADIO_THERMOSTAT_ENTITY},
+        ClimateService.TURN_ON,
+        {TargetKey.ENTITY_ID: CLIMATE_RADIO_THERMOSTAT_ENTITY},
         blocking=True,
     )
 
@@ -121,10 +117,10 @@ async def test_thermostat_v2(
     # Test setting hvac mode
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_HVAC_MODE,
+        ClimateService.SET_HVAC_MODE,
         {
-            ATTR_ENTITY_ID: CLIMATE_RADIO_THERMOSTAT_ENTITY,
-            ATTR_HVAC_MODE: HVACMode.COOL,
+            TargetKey.ENTITY_ID: CLIMATE_RADIO_THERMOSTAT_ENTITY,
+            ClimateServiceArgument.HVAC_MODE: HVACMode.COOL,
         },
         blocking=True,
     )
@@ -145,11 +141,11 @@ async def test_thermostat_v2(
     # Test setting temperature
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_TEMPERATURE,
+        ClimateService.SET_TEMPERATURE,
         {
-            ATTR_ENTITY_ID: CLIMATE_RADIO_THERMOSTAT_ENTITY,
-            ATTR_HVAC_MODE: HVACMode.COOL,
-            ATTR_TEMPERATURE: 25,
+            TargetKey.ENTITY_ID: CLIMATE_RADIO_THERMOSTAT_ENTITY,
+            ClimateServiceArgument.HVAC_MODE: HVACMode.COOL,
+            ClimateServiceArgument.TEMPERATURE: 25,
         },
         blocking=True,
     )
@@ -234,11 +230,11 @@ async def test_thermostat_v2(
     # Test setting temperature with heat_cool
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_TEMPERATURE,
+        ClimateService.SET_TEMPERATURE,
         {
-            ATTR_ENTITY_ID: CLIMATE_RADIO_THERMOSTAT_ENTITY,
-            ATTR_TARGET_TEMP_HIGH: 30,
-            ATTR_TARGET_TEMP_LOW: 25,
+            TargetKey.ENTITY_ID: CLIMATE_RADIO_THERMOSTAT_ENTITY,
+            ClimateServiceArgument.TARGET_TEMP_HIGH: 30,
+            ClimateServiceArgument.TARGET_TEMP_LOW: 25,
         },
         blocking=True,
     )
@@ -272,10 +268,10 @@ async def test_thermostat_v2(
     with pytest.raises(ServiceValidationError):
         await hass.services.async_call(
             CLIMATE_DOMAIN,
-            SERVICE_SET_HVAC_MODE,
+            ClimateService.SET_HVAC_MODE,
             {
-                ATTR_ENTITY_ID: CLIMATE_RADIO_THERMOSTAT_ENTITY,
-                ATTR_HVAC_MODE: HVACMode.DRY,
+                TargetKey.ENTITY_ID: CLIMATE_RADIO_THERMOSTAT_ENTITY,
+                ClimateServiceArgument.HVAC_MODE: HVACMode.DRY,
             },
             blocking=True,
         )
@@ -285,10 +281,10 @@ async def test_thermostat_v2(
     # Test setting fan mode
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_FAN_MODE,
+        ClimateService.SET_FAN_MODE,
         {
-            ATTR_ENTITY_ID: CLIMATE_RADIO_THERMOSTAT_ENTITY,
-            ATTR_FAN_MODE: "Low",
+            TargetKey.ENTITY_ID: CLIMATE_RADIO_THERMOSTAT_ENTITY,
+            ClimateServiceArgument.FAN_MODE: "Low",
         },
         blocking=True,
     )
@@ -309,8 +305,8 @@ async def test_thermostat_v2(
     # Test turning device off then on to see if the previous state is retained
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: CLIMATE_RADIO_THERMOSTAT_ENTITY},
+        ClimateService.TURN_OFF,
+        {TargetKey.ENTITY_ID: CLIMATE_RADIO_THERMOSTAT_ENTITY},
         blocking=True,
     )
 
@@ -350,8 +346,8 @@ async def test_thermostat_v2(
     # Test turning device on
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: CLIMATE_RADIO_THERMOSTAT_ENTITY},
+        ClimateService.TURN_ON,
+        {TargetKey.ENTITY_ID: CLIMATE_RADIO_THERMOSTAT_ENTITY},
         blocking=True,
     )
 
@@ -372,10 +368,10 @@ async def test_thermostat_v2(
     with pytest.raises(ServiceValidationError):
         await hass.services.async_call(
             CLIMATE_DOMAIN,
-            SERVICE_SET_FAN_MODE,
+            ClimateService.SET_FAN_MODE,
             {
-                ATTR_ENTITY_ID: CLIMATE_RADIO_THERMOSTAT_ENTITY,
-                ATTR_FAN_MODE: "fake value",
+                TargetKey.ENTITY_ID: CLIMATE_RADIO_THERMOSTAT_ENTITY,
+                ClimateServiceArgument.FAN_MODE: "fake value",
             },
             blocking=True,
         )
@@ -385,9 +381,9 @@ async def test_thermostat_v2(
     client.async_send_command.side_effect = FailedZWaveCommand("test", 1, "test")
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_REFRESH_VALUE,
+        ZWaveJSService.REFRESH_VALUE,
         {
-            ATTR_ENTITY_ID: CLIMATE_RADIO_THERMOSTAT_ENTITY,
+            CommonServiceArgument.ENTITY_ID: CLIMATE_RADIO_THERMOSTAT_ENTITY,
         },
         blocking=True,
     )
@@ -422,10 +418,10 @@ async def test_setpoint_thermostat_fahrenheit_rounding(
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_TEMPERATURE,
+        ClimateService.SET_TEMPERATURE,
         {
-            ATTR_ENTITY_ID: CLIMATE_RADIO_THERMOSTAT_ENTITY,
-            ATTR_TEMPERATURE: requested_temperature,
+            TargetKey.ENTITY_ID: CLIMATE_RADIO_THERMOSTAT_ENTITY,
+            ClimateServiceArgument.TEMPERATURE: requested_temperature,
         },
         blocking=True,
     )
@@ -474,11 +470,11 @@ async def test_setpoint_thermostat_fahrenheit_range_rounding(
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_TEMPERATURE,
+        ClimateService.SET_TEMPERATURE,
         {
-            ATTR_ENTITY_ID: CLIMATE_RADIO_THERMOSTAT_ENTITY,
-            ATTR_TARGET_TEMP_LOW: 23.3,
-            ATTR_TARGET_TEMP_HIGH: 25.9,
+            TargetKey.ENTITY_ID: CLIMATE_RADIO_THERMOSTAT_ENTITY,
+            ClimateServiceArgument.TARGET_TEMP_LOW: 23.3,
+            ClimateServiceArgument.TARGET_TEMP_HIGH: 25.9,
         },
         blocking=True,
     )
@@ -530,10 +526,10 @@ async def test_setpoint_thermostat_fahrenheit_rounding_clamped(
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_TEMPERATURE,
+        ClimateService.SET_TEMPERATURE,
         {
-            ATTR_ENTITY_ID: CLIMATE_RADIO_THERMOSTAT_ENTITY,
-            ATTR_TEMPERATURE: requested_temperature,
+            TargetKey.ENTITY_ID: CLIMATE_RADIO_THERMOSTAT_ENTITY,
+            ClimateServiceArgument.TEMPERATURE: requested_temperature,
         },
         blocking=True,
     )
@@ -565,10 +561,10 @@ async def test_setpoint_thermostat_celsius_not_rounded(
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_TEMPERATURE,
+        ClimateService.SET_TEMPERATURE,
         {
-            ATTR_ENTITY_ID: CLIMATE_FLOOR_THERMOSTAT_ENTITY,
-            ATTR_TEMPERATURE: 70,
+            TargetKey.ENTITY_ID: CLIMATE_FLOOR_THERMOSTAT_ENTITY,
+            ClimateServiceArgument.TEMPERATURE: 70,
         },
         blocking=True,
     )
@@ -613,8 +609,8 @@ async def test_thermostat_v2_turn_on_after_off(
     # Test turning device on
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: CLIMATE_RADIO_THERMOSTAT_ENTITY},
+        ClimateService.TURN_ON,
+        {TargetKey.ENTITY_ID: CLIMATE_RADIO_THERMOSTAT_ENTITY},
         blocking=True,
     )
 
@@ -657,8 +653,8 @@ async def test_thermostat_turn_on_after_off_no_heat_cool_auto(
     # Test turning device on sets it to first available mode (Energy heat)
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: entity_id},
+        ClimateService.TURN_ON,
+        {TargetKey.ENTITY_ID: entity_id},
         blocking=True,
     )
 
@@ -703,8 +699,8 @@ async def test_thermostat_turn_on_after_off_with_resume(
     # Test turning device on sends resume command
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: entity_id},
+        ClimateService.TURN_ON,
+        {TargetKey.ENTITY_ID: entity_id},
         blocking=True,
     )
 
@@ -756,10 +752,10 @@ async def test_setpoint_thermostat(
     # Test setting temperature
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_TEMPERATURE,
+        ClimateService.SET_TEMPERATURE,
         {
-            ATTR_ENTITY_ID: CLIMATE_DANFOSS_LC13_ENTITY,
-            ATTR_TEMPERATURE: 21.5,
+            TargetKey.ENTITY_ID: CLIMATE_DANFOSS_LC13_ENTITY,
+            ClimateServiceArgument.TEMPERATURE: 21.5,
         },
         blocking=True,
     )
@@ -768,10 +764,10 @@ async def test_setpoint_thermostat(
     with pytest.raises(ServiceValidationError):
         await hass.services.async_call(
             CLIMATE_DOMAIN,
-            SERVICE_SET_HVAC_MODE,
+            ClimateService.SET_HVAC_MODE,
             {
-                ATTR_ENTITY_ID: CLIMATE_DANFOSS_LC13_ENTITY,
-                ATTR_HVAC_MODE: HVACMode.COOL,
+                TargetKey.ENTITY_ID: CLIMATE_DANFOSS_LC13_ENTITY,
+                ClimateServiceArgument.HVAC_MODE: HVACMode.COOL,
             },
             blocking=True,
         )
@@ -780,10 +776,10 @@ async def test_setpoint_thermostat(
     # raise an error
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_HVAC_MODE,
+        ClimateService.SET_HVAC_MODE,
         {
-            ATTR_ENTITY_ID: CLIMATE_DANFOSS_LC13_ENTITY,
-            ATTR_HVAC_MODE: HVACMode.HEAT,
+            TargetKey.ENTITY_ID: CLIMATE_DANFOSS_LC13_ENTITY,
+            ClimateServiceArgument.HVAC_MODE: HVACMode.HEAT,
         },
         blocking=True,
     )
@@ -1088,10 +1084,10 @@ async def test_preset_and_no_setpoint(
     # Test setting preset mode Full power
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_PRESET_MODE,
+        ClimateService.SET_PRESET_MODE,
         {
-            ATTR_ENTITY_ID: CLIMATE_EUROTRONICS_SPIRIT_Z_ENTITY,
-            ATTR_PRESET_MODE: "Full power",
+            TargetKey.ENTITY_ID: CLIMATE_EUROTRONICS_SPIRIT_Z_ENTITY,
+            ClimateServiceArgument.PRESET_MODE: "Full power",
         },
         blocking=True,
     )
@@ -1138,10 +1134,10 @@ async def test_preset_and_no_setpoint(
         # Test setting invalid preset mode
         await hass.services.async_call(
             CLIMATE_DOMAIN,
-            SERVICE_SET_PRESET_MODE,
+            ClimateService.SET_PRESET_MODE,
             {
-                ATTR_ENTITY_ID: CLIMATE_EUROTRONICS_SPIRIT_Z_ENTITY,
-                ATTR_PRESET_MODE: "invalid_preset",
+                TargetKey.ENTITY_ID: CLIMATE_EUROTRONICS_SPIRIT_Z_ENTITY,
+                ClimateServiceArgument.PRESET_MODE: "invalid_preset",
             },
             blocking=True,
         )
@@ -1153,10 +1149,10 @@ async def test_preset_and_no_setpoint(
     # Restore hvac mode by setting preset None
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_PRESET_MODE,
+        ClimateService.SET_PRESET_MODE,
         {
-            ATTR_ENTITY_ID: CLIMATE_EUROTRONICS_SPIRIT_Z_ENTITY,
-            ATTR_PRESET_MODE: PRESET_NONE,
+            TargetKey.ENTITY_ID: CLIMATE_EUROTRONICS_SPIRIT_Z_ENTITY,
+            ClimateServiceArgument.PRESET_MODE: PRESET_NONE,
         },
         blocking=True,
     )
@@ -1236,10 +1232,10 @@ async def test_set_preset_mode_manufacturer_specific(
     # Test setting preset mode to "Manufacturer specific"
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_PRESET_MODE,
+        ClimateService.SET_PRESET_MODE,
         {
-            ATTR_ENTITY_ID: entity_id,
-            ATTR_PRESET_MODE: "Manufacturer specific",
+            TargetKey.ENTITY_ID: entity_id,
+            ClimateServiceArgument.PRESET_MODE: "Manufacturer specific",
         },
         blocking=True,
     )
@@ -1286,10 +1282,10 @@ async def test_set_preset_mode_manufacturer_specific(
     # Test restoring hvac mode by setting preset to none.
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_PRESET_MODE,
+        ClimateService.SET_PRESET_MODE,
         {
-            ATTR_ENTITY_ID: entity_id,
-            ATTR_PRESET_MODE: PRESET_NONE,
+            TargetKey.ENTITY_ID: entity_id,
+            ClimateServiceArgument.PRESET_MODE: PRESET_NONE,
         },
         blocking=True,
     )
@@ -1372,10 +1368,10 @@ async def test_set_preset_mode_mapped_preset(
     # Set preset mode to "Energy heat"
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_PRESET_MODE,
+        ClimateService.SET_PRESET_MODE,
         {
-            ATTR_ENTITY_ID: entity_id,
-            ATTR_PRESET_MODE: "Energy heat",
+            TargetKey.ENTITY_ID: entity_id,
+            ClimateServiceArgument.PRESET_MODE: "Energy heat",
         },
         blocking=True,
     )
@@ -1417,10 +1413,10 @@ async def test_set_preset_mode_mapped_preset(
     # Clear preset - should restore to heat (the mapped mode).
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_PRESET_MODE,
+        ClimateService.SET_PRESET_MODE,
         {
-            ATTR_ENTITY_ID: entity_id,
-            ATTR_PRESET_MODE: PRESET_NONE,
+            TargetKey.ENTITY_ID: entity_id,
+            ClimateServiceArgument.PRESET_MODE: PRESET_NONE,
         },
         blocking=True,
     )
@@ -1451,10 +1447,10 @@ async def test_set_preset_mode_none_while_in_hvac_mode(
     # the current hvac mode.
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_PRESET_MODE,
+        ClimateService.SET_PRESET_MODE,
         {
-            ATTR_ENTITY_ID: entity_id,
-            ATTR_PRESET_MODE: PRESET_NONE,
+            TargetKey.ENTITY_ID: entity_id,
+            ClimateServiceArgument.PRESET_MODE: PRESET_NONE,
         },
         blocking=True,
     )
@@ -1518,10 +1514,10 @@ async def test_set_preset_mode_none_unmapped_preset(
     # stored previous HVAC mode.
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_PRESET_MODE,
+        ClimateService.SET_PRESET_MODE,
         {
-            ATTR_ENTITY_ID: entity_id,
-            ATTR_PRESET_MODE: PRESET_NONE,
+            TargetKey.ENTITY_ID: entity_id,
+            ClimateServiceArgument.PRESET_MODE: PRESET_NONE,
         },
         blocking=True,
     )

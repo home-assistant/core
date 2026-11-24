@@ -19,7 +19,7 @@ from homeassistant.components.velbus.event import (
     EVENT_SHORT_PRESS,
     EVENT_TYPES,
 )
-from homeassistant.const import ATTR_DEVICE_CLASS, STATE_ON, STATE_UNKNOWN, Platform
+from homeassistant.const import STATE_ON, STATE_UNKNOWN, EntityStateAttribute, Platform
 from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers import entity_registry as er
 
@@ -96,7 +96,9 @@ async def test_entities(
 
     state = _event_state(hass)
     assert state.state == STATE_UNKNOWN
-    assert state.attributes[ATTR_DEVICE_CLASS] == EventDeviceClass.BUTTON
+    assert (
+        state.attributes[EntityStateAttribute.DEVICE_CLASS] == EventDeviceClass.BUTTON
+    )
     assert state.attributes[EventEntityCapabilityAttribute.EVENT_TYPES] == EVENT_TYPES
 
     binary_sensor_state = hass.states.get(BINARY_SENSOR_ENTITY_ID)

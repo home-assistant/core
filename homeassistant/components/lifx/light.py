@@ -324,6 +324,10 @@ class LIFXLight(LIFXEntity, LightEntity):
         fading_on = power_on and not self.is_on
 
         if new_hsbk:
+            # A firmware effect would draw over the new color
+            await self.manager.async_stop_firmware_effect(
+                self.device, self.coordinator.data
+            )
             await self.set_color(
                 new_hsbk,
                 kwargs,
@@ -872,6 +876,8 @@ class LIFXComponentLight[
             # The library refuses a dark color, so zero brightness means off
             power = False
         elif requested(changes):
+            # A firmware effect would draw over the new colors
+            await self.manager.async_stop_firmware_effect(self.device, self._state)
             if not overwrites_existing_color(changes):
                 # Every zone is written back, so a zone changed outside Home
                 # Assistant has to be read before it is merged over

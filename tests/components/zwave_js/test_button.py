@@ -8,14 +8,14 @@ from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 from zwave_js_server.model.node import Node
 
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, ButtonService
-from homeassistant.components.zwave_js.const import DOMAIN, SERVICE_REFRESH_VALUE
+from homeassistant.components.zwave_js.const import DOMAIN, ZWaveJSService
 from homeassistant.components.zwave_js.helpers import get_valueless_base_unique_id
 from homeassistant.config_entries import RELOAD_AFTER_UPDATE_DELAY
 from homeassistant.const import (
-    ATTR_ENTITY_ID,
     CommonServiceArgument,
     EntityCategory,
     Platform,
+    TargetKey,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -44,7 +44,7 @@ async def test_ping_entity(
         BUTTON_DOMAIN,
         ButtonService.PRESS,
         {
-            CommonServiceArgument.ENTITY_ID: "button.z_wave_thermostat_ping",
+            TargetKey.ENTITY_ID: "button.z_wave_thermostat_ping",
         },
         blocking=True,
     )
@@ -61,9 +61,9 @@ async def test_ping_entity(
 
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_REFRESH_VALUE,
+        ZWaveJSService.REFRESH_VALUE,
         {
-            ATTR_ENTITY_ID: "button.z_wave_thermostat_ping",
+            CommonServiceArgument.ENTITY_ID: "button.z_wave_thermostat_ping",
         },
         blocking=True,
     )
@@ -123,7 +123,7 @@ async def test_notification_idle_button(
         BUTTON_DOMAIN,
         ButtonService.PRESS,
         {
-            CommonServiceArgument.ENTITY_ID: entity_id,
+            TargetKey.ENTITY_ID: entity_id,
         },
         blocking=True,
     )

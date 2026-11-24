@@ -16,11 +16,11 @@ from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, ButtonServi
 from homeassistant.components.enphase_envoy.const import Platform
 from homeassistant.components.enphase_envoy.coordinator import SCAN_INTERVAL
 from homeassistant.components.select import (
-    ATTR_OPTION,
     DOMAIN as SELECT_DOMAIN,
-    SERVICE_SELECT_OPTION,
+    SelectService,
+    SelectServiceArgument,
 )
-from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE, CommonServiceArgument
+from homeassistant.const import STATE_UNAVAILABLE, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
@@ -83,7 +83,7 @@ async def test_button_sleep(
     await hass.services.async_call(
         BUTTON_DOMAIN,
         ButtonService.PRESS,
-        {CommonServiceArgument.ENTITY_ID: SLEEP},
+        {TargetKey.ENTITY_ID: SLEEP},
         blocking=True,
     )
     # Default SOC band is derived from the battery configured with sleep thresholds
@@ -108,7 +108,7 @@ async def test_button_wake(
     await hass.services.async_call(
         BUTTON_DOMAIN,
         ButtonService.PRESS,
-        {CommonServiceArgument.ENTITY_ID: WAKE},
+        {TargetKey.ENTITY_ID: WAKE},
         blocking=True,
     )
     mock_envoy.clear_acb_sleep.assert_awaited_once_with(ALL_SERIALS)
@@ -129,17 +129,17 @@ async def test_button_sleep_uses_selected_soc(
 
     await hass.services.async_call(
         SELECT_DOMAIN,
-        SERVICE_SELECT_OPTION,
+        SelectService.SELECT_OPTION,
         {
-            ATTR_ENTITY_ID: "select.acb_1234_battery_sleep_soc_target",
-            ATTR_OPTION: "50-55",
+            TargetKey.ENTITY_ID: "select.acb_1234_battery_sleep_soc_target",
+            SelectServiceArgument.OPTION: "50-55",
         },
         blocking=True,
     )
     await hass.services.async_call(
         BUTTON_DOMAIN,
         ButtonService.PRESS,
-        {CommonServiceArgument.ENTITY_ID: SLEEP},
+        {TargetKey.ENTITY_ID: SLEEP},
         blocking=True,
     )
     mock_envoy.set_acb_sleep.assert_awaited_once_with(
@@ -165,7 +165,7 @@ async def test_button_error(
         await hass.services.async_call(
             BUTTON_DOMAIN,
             ButtonService.PRESS,
-            {CommonServiceArgument.ENTITY_ID: SLEEP},
+            {TargetKey.ENTITY_ID: SLEEP},
             blocking=True,
         )
 
@@ -185,7 +185,7 @@ async def test_button_value_error(
         await hass.services.async_call(
             BUTTON_DOMAIN,
             ButtonService.PRESS,
-            {CommonServiceArgument.ENTITY_ID: SLEEP},
+            {TargetKey.ENTITY_ID: SLEEP},
             blocking=True,
         )
 

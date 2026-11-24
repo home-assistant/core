@@ -47,7 +47,7 @@ from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util.dt import utc_from_timestamp
 
-from . import MusicAssistantConfigEntry
+from . import MusicAssistantConfigEntry, PlatformHandlers
 from .const import (
     ATTR_ACTIVE,
     ATTR_ACTIVE_QUEUE,
@@ -58,6 +58,7 @@ from .const import (
     ATTR_MASS_PLAYER_TYPE,
     ATTR_NEXT_ITEM,
     ATTR_QUEUE_ID,
+    ATTR_QUEUE_ITEMS,
     ATTR_RADIO_MODE,
     ATTR_REPEAT_MODE,
     ATTR_SHUFFLE_ENABLED,
@@ -183,7 +184,9 @@ async def async_setup_entry(
         async_add_entities([MusicAssistantPlayer(mass, player_id)])
 
     # register callback to add players when they are discovered
-    entry.runtime_data.platform_handlers.setdefault(Platform.MEDIA_PLAYER, add_player)
+    entry.runtime_data.platform_handlers.setdefault(
+        Platform.MEDIA_PLAYER, PlatformHandlers(add_player=add_player)
+    )
 
     # known_dashboard_ids is scoped to this setup call, so a reload starts
     # fresh and re-adds whatever is in the dashboard cache.
@@ -696,13 +699,39 @@ class MusicAssistantPlayer(MusicAssistantEntity, MediaPlayerEntity):
         )
 
     @catch_musicassistant_error
-    async def _async_handle_get_queue(self) -> ServiceResponse:
+    async def _async_handle_get_queue(
+        self, limit: int, offset: int, username: str | None = None
+    ) -> ServiceResponse:
         """Handle get_queue action."""
+        if offset and not limit:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN, translation_key="offset_needs_limit"
+            )
         if not self.active_queue:
-            raise HomeAssistantError("No active queue found")
+            raise HomeAssistantError(
+                translation_domain=DOMAIN, translation_key="no_active_queue"
+            )
         active_queue = self.active_queue
+        details: dict[str, Any] = {}
+        # the items are opt-in, so a call without a limit stays a cache-only read
+        if limit:
+            with catch_user_not_found(username):
+                queue_items = await self.mass.player_queues.get_queue_items(
+                    active_queue.queue_id,
+                    limit,
+                    offset,
+                    user=(
+                        username
+                        if username is not None
+                        else user_from_context(self._context)
+                    ),
+                )
+            details[ATTR_QUEUE_ITEMS] = [
+                queue_item_dict_from_mass_item(self.mass, item) for item in queue_items
+            ]
         response: ServiceResponse = QUEUE_DETAILS_SCHEMA(
             {
+                **details,
                 ATTR_QUEUE_ID: active_queue.queue_id,
                 ATTR_ACTIVE: active_queue.active,
                 ATTR_NAME: active_queue.display_name,
