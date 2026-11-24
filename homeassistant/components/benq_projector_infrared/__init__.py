@@ -22,7 +22,7 @@ from .const import (
     BenQProjectorBusyReason,
 )
 
-PLATFORMS = [Platform.MEDIA_PLAYER]
+PLATFORMS = [Platform.BUTTON, Platform.MEDIA_PLAYER]
 
 
 class BenQProjectorIrRuntimeData:

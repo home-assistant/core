@@ -20,6 +20,194 @@
     }
   },
   "entity": {
+    "button": {
+      "aspect_ratio": {
+        "name": "Aspect ratio"
+      },
+      "aspect_ratio_4_3": {
+        "name": "4:3 aspect ratio"
+      },
+      "aspect_ratio_anamorphic": {
+        "name": "Anamorphic aspect ratio"
+      },
+      "aspect_ratio_letterbox": {
+        "name": "Letterbox aspect ratio"
+      },
+      "aspect_ratio_real": {
+        "name": "Real aspect ratio"
+      },
+      "aspect_ratio_wide": {
+        "name": "Wide aspect ratio"
+      },
+      "auto_adjust": {
+        "name": "Auto adjust"
+      },
+      "back": {
+        "name": "Back"
+      },
+      "brightness": {
+        "name": "Brightness"
+      },
+      "brilliant_color": {
+        "name": "BrilliantColor"
+      },
+      "cinema_master": {
+        "name": "CinemaMaster"
+      },
+      "color": {
+        "name": "Color"
+      },
+      "color_management": {
+        "name": "Color management"
+      },
+      "color_temperature": {
+        "name": "Color temperature"
+      },
+      "contrast": {
+        "name": "Contrast"
+      },
+      "cursor_down": {
+        "name": "Cursor down"
+      },
+      "cursor_left": {
+        "name": "Cursor left"
+      },
+      "cursor_right": {
+        "name": "Cursor right"
+      },
+      "cursor_up": {
+        "name": "Cursor up"
+      },
+      "detail_enhancement": {
+        "name": "Detail enhancement"
+      },
+      "digital_zoom_in": {
+        "name": "Digital zoom in"
+      },
+      "digital_zoom_out": {
+        "name": "Digital zoom out"
+      },
+      "dynamic_iris": {
+        "name": "Dynamic iris"
+      },
+      "eco_blank": {
+        "name": "Eco blank"
+      },
+      "enter": {
+        "name": "Enter"
+      },
+      "fast_forward": {
+        "name": "Fast forward"
+      },
+      "fine_tune": {
+        "name": "Fine tune"
+      },
+      "focus": {
+        "name": "Focus"
+      },
+      "freeze": {
+        "name": "Freeze"
+      },
+      "gamma": {
+        "name": "Gamma"
+      },
+      "hdr": {
+        "name": "HDR"
+      },
+      "info": {
+        "name": "Info"
+      },
+      "keystone_2d": {
+        "name": "2D keystone"
+      },
+      "keystone_down": {
+        "name": "Keystone down"
+      },
+      "keystone_horizontal": {
+        "name": "Horizontal keystone"
+      },
+      "keystone_up": {
+        "name": "Keystone up"
+      },
+      "keystone_vertical": {
+        "name": "Vertical keystone"
+      },
+      "lens": {
+        "name": "Lens"
+      },
+      "light_mode": {
+        "name": "Light mode"
+      },
+      "lumiexpert": {
+        "name": "LumiExpert"
+      },
+      "menu": {
+        "name": "Menu"
+      },
+      "next_track": {
+        "name": "Next track"
+      },
+      "overscan": {
+        "name": "Overscan"
+      },
+      "pan": {
+        "name": "Pan"
+      },
+      "pause": {
+        "name": "Pause"
+      },
+      "picture_mode": {
+        "name": "Picture mode"
+      },
+      "play": {
+        "name": "Play"
+      },
+      "previous_track": {
+        "name": "Previous track"
+      },
+      "return": {
+        "name": "Return"
+      },
+      "rewind": {
+        "name": "Rewind"
+      },
+      "sharpness": {
+        "name": "Sharpness"
+      },
+      "sound_mode": {
+        "name": "Sound mode"
+      },
+      "stop": {
+        "name": "Stop"
+      },
+      "test_pattern": {
+        "name": "Test pattern"
+      },
+      "three_d": {
+        "name": "3D"
+      },
+      "three_d_menu": {
+        "name": "3D menu"
+      },
+      "three_d_sync_invert": {
+        "name": "3D sync invert"
+      },
+      "tint": {
+        "name": "Tint"
+      },
+      "user_1": {
+        "name": "User 1"
+      },
+      "user_2": {
+        "name": "User 2"
+      },
+      "user_3": {
+        "name": "User 3"
+      },
+      "zoom": {
+        "name": "Zoom"
+      }
+    },
     "media_player": {
       "projector": {
         "state_attributes": {
