@@ -231,7 +231,7 @@ Read these files in `/tmp/gh-aw/agent/` instead of calling GitHub for the same d
   - `reason`: why not to review, when set.
 - `pr.json`: number, title, body, author, head SHA, base branch and labels.
 - `pr.diff`: the PR diff, without test snapshot (`.ambr`) files.
-- `since-review.diff`: the changes on the PR branch since `reviewed_head`. Only when `review` is true and `reviewed_head` is set; missing when GitHub refused it. It also holds changes merged in from `dev`: ignore those not in `pr.diff`.
+- `since-review.diff`: the changes on the PR branch since `reviewed_head`, in the files the PR changed then or changes now. Only when `review` is true and `reviewed_head` is set; missing when GitHub refused it. It also holds changes merged in from `dev` to those files: ignore those not in `pr.diff`.
 - `reviews.json`, `review-comments.json`, `issue-comments.json`: every review, review comment and PR conversation comment. In reviews and review comments, `ours: true` marks yours. A review comment's `thread` is the ID of its thread's first comment.
 - `threads.json`: the resolved and outdated state of each review thread, by `thread`.
 

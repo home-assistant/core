@@ -82,8 +82,21 @@ def write_json(path: Path, data: Any) -> None:
     )
 
 
-def pr_diff(repo: str, base: str, head: str) -> bytes:
-    """Return the diff from base to head, as GitHub shows it, without test snapshots."""
+def diff_path(file_diff: bytes) -> bytes:
+    """Return the path a file's diff changes, from its `diff --git` line."""
+    return file_diff.partition(b"\n")[0].rpartition(b" b/")[2]
+
+
+def diff_paths(diff: bytes) -> set[bytes]:
+    """Return the paths a diff changes."""
+    return {diff_path(file_diff) for file_diff in FILE_DIFF_START.split(diff)}
+
+
+def pr_diff(repo: str, base: str, head: str, paths: set[bytes] | None = None) -> bytes:
+    """Return the diff from base to head, as GitHub shows it, without test snapshots.
+
+    With paths, only the diffs of those files are kept.
+    """
     diff = gh_api(
         "-H",
         "Accept: application/vnd.github.diff",
@@ -92,7 +105,8 @@ def pr_diff(repo: str, base: str, head: str) -> bytes:
     return b"".join(
         file_diff
         for file_diff in FILE_DIFF_START.split(diff)
-        if not file_diff.partition(b"\n")[0].endswith(b".ambr")
+        if not diff_path(file_diff).endswith(b".ambr")
+        and (paths is None or diff_path(file_diff) in paths)
     )
 
 
@@ -173,8 +187,8 @@ def collect(repo: str, number: int, out: Path, head_sha: str | None) -> str | No
             **author(comment),
             # Replies always point at the first comment of their thread, which names the thread.
             "thread": comment.get("in_reply_to_id") or comment["id"],
-            "review_id": comment.get("pull_request_review_id"),
-            "url": comment.get("html_url"),
+            "review_id": comment["pull_request_review_id"],
+            "url": comment["html_url"],
         }
         for comment in gh_list(f"repos/{repo}/pulls/{number}/comments?per_page=100")
     ]
@@ -188,9 +202,9 @@ def collect(repo: str, number: int, out: Path, head_sha: str | None) -> str | No
             "graphql",
             "--paginate",
             "--slurp",
-            "-F",
+            "-f",
             f"owner={owner}",
-            "-F",
+            "-f",
             f"name={name}",
             "-F",
             f"number={number}",
@@ -223,7 +237,7 @@ def collect(repo: str, number: int, out: Path, head_sha: str | None) -> str | No
             {
                 **pick(comment, "id", "created_at", "body"),
                 **author(comment),
-                "url": comment.get("html_url"),
+                "url": comment["html_url"],
             }
             for comment in gh_list(
                 f"repos/{repo}/issues/{number}/comments?per_page=100"
@@ -255,14 +269,18 @@ def collect(repo: str, number: int, out: Path, head_sha: str | None) -> str | No
     if not diff:
         raise Skip(f"No diff for #{number} outside test snapshots")
     if reviewed_head:
+        # Merges from dev bring in changes to any file: keep the PR's files, then and now.
+        paths = diff_paths(diff)
         # A diff GitHub refuses counts as changed.
         with suppress(subprocess.CalledProcessError):
+            reviewed_diff = pr_diff(repo, base, reviewed_head)
             # Only dev merged in since the last review: the pull request's diff is unchanged.
-            if diff_id(pr_diff(repo, base, reviewed_head)) == diff_id(diff):
+            if diff_id(reviewed_diff) == diff_id(diff):
                 raise Skip(f"The diff of #{number} is unchanged since {reviewed_head}")
+            paths |= diff_paths(reviewed_diff)
         with suppress(subprocess.CalledProcessError):
             (out / "since-review.diff").write_bytes(
-                pr_diff(repo, reviewed_head, head_sha)
+                pr_diff(repo, reviewed_head, head_sha, paths)
             )
     return reviewed_head
 
