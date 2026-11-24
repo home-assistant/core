@@ -352,6 +352,18 @@ def _receive(
             MediaPlayerState.ON,
             id="off_cancelled_by_on",
         ),
+        pytest.param(
+            MediaPlayerState.ON,
+            [0x4E, 0x04, 0x4E],
+            MediaPlayerState.ON,
+            id="off_cancelled_by_source_key",
+        ),
+        pytest.param(
+            MediaPlayerState.ON,
+            [0x4E, 0x82, 0x4E],
+            MediaPlayerState.ON,
+            id="off_cancelled_by_volume_key",
+        ),
     ],
 )
 @pytest.mark.parametrize("has_receiver_entity", [True])
@@ -388,6 +400,57 @@ async def test_receiver_power_codes_update_state(
     state = hass.states.get(MEDIA_PLAYER_ENTITY_ID)
     assert state is not None
     assert state.state == expected_state
+
+
+@pytest.mark.parametrize(
+    ("service", "service_data"),
+    [
+        (MediaPlayerService.TURN_ON, {}),
+        (MediaPlayerService.VOLUME_UP, {}),
+        (MediaPlayerService.SELECT_SOURCE, {"source": "hdmi_1"}),
+    ],
+)
+@pytest.mark.parametrize("has_receiver_entity", [True])
+@pytest.mark.usefixtures("mock_infrared_emitter_entity", "mock_benq_to_command")
+async def test_command_sent_dismisses_remote_power_off(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_infrared_receiver_entity: MockInfraredReceiverEntity,
+    service: str,
+    service_data: dict[str, str],
+) -> None:
+    """A command from Home Assistant dismisses the power-off prompt.
+
+    The next off press on the remote starts a new confirmation, even when the
+    receiver did not pick up the command sent by the emitter.
+    """
+    mock_restore_cache_with_extra_data(
+        hass,
+        [
+            (
+                State(MEDIA_PLAYER_ENTITY_ID, MediaPlayerState.ON),
+                {"power_state": MediaPlayerState.ON, "source": None},
+            )
+        ],
+    )
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    _receive(mock_infrared_receiver_entity, 0x4E)
+    await hass.async_block_till_done()
+    await hass.services.async_call(
+        MEDIA_PLAYER_DOMAIN,
+        service,
+        {TargetKey.ENTITY_ID: MEDIA_PLAYER_ENTITY_ID, **service_data},
+        blocking=True,
+    )
+    _receive(mock_infrared_receiver_entity, 0x4E)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(MEDIA_PLAYER_ENTITY_ID)
+    assert state is not None
+    assert state.state == MediaPlayerState.ON
 
 
 @pytest.mark.parametrize("has_receiver_entity", [True])

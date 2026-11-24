@@ -18,6 +18,7 @@ from .const import (
     DEFAULT_COOL_DOWN_TIME,
     DEFAULT_WARM_UP_TIME,
     DOMAIN,
+    POWER_OFF_CONFIRM_WINDOW,
     BenQProjectorBusyReason,
 )
 
@@ -27,8 +28,9 @@ PLATFORMS = [Platform.MEDIA_PLAYER]
 class BenQProjectorIrRuntimeData:
     """Runtime data for a BenQ projector config entry.
 
-    The projector ignores every command while it warms up or cools down. This is
-    tracked at the device level so all entities of a config entry share it.
+    The projector ignores every command while it warms up or cools down, and only
+    powers off when a second off press confirms the first. Both are tracked at the
+    device level so all entities of a config entry share them.
     """
 
     def __init__(self, *, warm_up_time: timedelta, cool_down_time: timedelta) -> None:
@@ -37,6 +39,7 @@ class BenQProjectorIrRuntimeData:
         self._cool_down_time = cool_down_time
         self._busy_until: datetime | None = None
         self._busy_reason = BenQProjectorBusyReason.WARMING_UP
+        self._power_off_requested_at: datetime | None = None
 
     def start_warm_up(self) -> None:
         """Start the warm-up after the projector is turned on."""
@@ -54,6 +57,23 @@ class BenQProjectorIrRuntimeData:
     def busy_reason(self) -> BenQProjectorBusyReason:
         """Return why the projector ignores commands, while it is busy."""
         return self._busy_reason
+
+    def request_power_off(self) -> bool:
+        """Register a power-off press and return whether it confirms an earlier one.
+
+        The first press only shows the confirmation prompt on the projector.
+        """
+        now = dt_util.utcnow()
+        requested_at = self._power_off_requested_at
+        if requested_at is not None and now - requested_at <= POWER_OFF_CONFIRM_WINDOW:
+            self._power_off_requested_at = None
+            return True
+        self._power_off_requested_at = now
+        return False
+
+    def dismiss_power_off(self) -> None:
+        """Dismiss a pending power-off confirmation, as any other key does."""
+        self._power_off_requested_at = None
 
     def busy_remaining(self) -> timedelta | None:
         """Return how long the projector still ignores commands, if it does."""
