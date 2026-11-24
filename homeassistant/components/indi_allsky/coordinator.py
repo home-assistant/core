@@ -436,6 +436,7 @@ class IndiAllSkyDataUpdateCoordinator(DataUpdateCoordinator[IndiAllSkyData]):
                 translation_key="update_failed",
             ) from err
 
+        self._sensor_fetch_failed = False
         return IndiAllSkyData(
             exposure=self.latest_exposure,
             latest_keogram=self.latest_keogram,
