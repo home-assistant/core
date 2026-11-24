@@ -1,6 +1,7 @@
 """Validate integration quality scale files."""
 
 from dataclasses import dataclass
+import re
 
 from hassfest.model import Config, Integration, IntegrationType, ScaledQualityScaleTiers
 import probatio
@@ -1993,6 +1994,17 @@ NO_QUALITY_SCALE = [
     "zone",
 ]
 
+# Matches references to a specific pull request, like a GitHub pull request URL,
+# "owner/repo#123", "PR #123", "PR 123" or "#12345". A comment that points to a
+# pull request goes stale as soon as that pull request merges.
+PULL_REQUEST_REFERENCE = re.compile(
+    r"github\.com/[\w.-]+/[\w.-]+/pull/\d+"
+    r"|[\w.-]+/[\w.-]+#\d+"
+    r"|\bPR\s*#?\d+"
+    r"|(?<![\w&/])#\d{3,}\b",
+    re.IGNORECASE,
+)
+
 SCHEMA = probatio.Schema(
     {
         probatio.Required("rules"): probatio.Schema(
@@ -2123,6 +2135,18 @@ def validate_iqs_file(config: Config, integration: Integration) -> None:
     rules_done = set[str]()
     rules_met = set[str]()
     for rule_name, rule_value in data.get("rules", {}).items():
+        if (
+            isinstance(rule_value, dict)
+            and isinstance(comment := rule_value.get("comment"), str)
+            and (match := PULL_REQUEST_REFERENCE.search(comment))
+        ):
+            integration.add_error(
+                "quality_scale",
+                f"[{rule_name}] The comment refers to a pull request"
+                f" ({match.group(0)}). Describe what is missing or why"
+                " the rule is exempt instead, and update the status in"
+                " the pull request that completes the rule.",
+            )
         status = rule_value["status"] if isinstance(rule_value, dict) else rule_value
         if status not in {"done", "exempt"}:
             continue
