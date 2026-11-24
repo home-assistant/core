@@ -145,7 +145,7 @@ adguardhome==1.0.0
 advantage-air==0.4.4
 
 # homeassistant.components.aerosmart
-aerosmart-modbus==0.3.7
+aerosmart-modbus==0.3.8
 
 # homeassistant.components.frontier_silicon
 afsapi==1.0.2
@@ -1146,7 +1146,7 @@ gatus-api==1.2.0
 gazetteer-matcher==1.1.0
 
 # homeassistant.components.google
-gcal-sync==9.2.0
+gcal-sync==9.2.2
 
 # homeassistant.components.aladdin_connect
 genie-partner-sdk==1.0.11

@@ -7,7 +7,6 @@ from dataclasses import dataclass, field
 from datetime import date, datetime, time, timedelta
 from itertools import pairwise
 from typing import TYPE_CHECKING, override
-from zoneinfo import ZoneInfo
 
 from aioengiebelgium import (
     BusinessAgreement,
@@ -32,6 +31,7 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 from homeassistant.util import dt as dt_util
 
 from .const import (
+    BRUSSELS_TIME_ZONE,
     DOMAIN,
     EPEX_SCAN_INTERVAL,
     LOGGER,
@@ -46,8 +46,6 @@ _DIRECTIONS = ("offtake", "injection")
 _DIRECTION_PREFIXES = ("OFFTAKE_", "INJECTION_")
 _BLENDED_SLOT_CODE = "EN"
 _SERVICE_POINT_REFRESH_INTERVAL = timedelta(days=1)
-
-BRUSSELS_TIME_ZONE = ZoneInfo("Europe/Brussels")
 
 
 def mask_identifier(identifier: str) -> str:
@@ -247,9 +245,7 @@ class EngieBePricesCoordinator(DataUpdateCoordinator[EngieBePricesData]):
                     self.gas_conversion_coefficients[bare] = coefficient
                 self._service_points_refreshed_at[bare] = now
 
-        brussels = dt_util.get_time_zone("Europe/Brussels")
-        assert brussels is not None
-        today = dt_util.now(brussels).date()
+        today = dt_util.now(BRUSSELS_TIME_ZONE).date()
         slots: dict[tuple[str, str, str], PriceSlot] = {}
         for ean_prices in prices.items:
             period = _current_period(ean_prices.periods, today)

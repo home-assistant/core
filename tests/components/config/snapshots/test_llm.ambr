@@ -30,6 +30,50 @@
       ]),
       'type': 'object',
     }),
+    'config__create_floor': dict({
+      'additionalProperties': False,
+      'properties': dict({
+        'aliases': dict({
+          'description': 'Other names that voice assistants know the floor by. This replaces all aliases.',
+          'items': dict({
+            'format': 'strip',
+            'type': 'string',
+          }),
+          'type': 'array',
+        }),
+        'icon': dict({
+          'description': "The icon, like 'mdi:home-floor-1'. null removes it.",
+          'nullable': True,
+          'type': 'string',
+        }),
+        'level': dict({
+          'description': 'The level of the floor, to sort floors. 0 is the ground floor, -1 the floor below it. null removes it.',
+          'nullable': True,
+          'type': 'integer',
+        }),
+        'name': dict({
+          'format': 'strip',
+          'type': 'string',
+        }),
+      }),
+      'required': list([
+        'name',
+      ]),
+      'type': 'object',
+    }),
+    'config__delete_floor': dict({
+      'additionalProperties': False,
+      'properties': dict({
+        'floor_id': dict({
+          'format': 'strip',
+          'type': 'string',
+        }),
+      }),
+      'required': list([
+        'floor_id',
+      ]),
+      'type': 'object',
+    }),
     'config__get_config_entries': dict({
       'additionalProperties': False,
       'properties': dict({
@@ -87,6 +131,19 @@
       }),
       'required': list([
         'entity_id',
+      ]),
+      'type': 'object',
+    }),
+    'config__get_floor_settings': dict({
+      'additionalProperties': False,
+      'properties': dict({
+        'floor_id': dict({
+          'format': 'strip',
+          'type': 'string',
+        }),
+      }),
+      'required': list([
+        'floor_id',
       ]),
       'type': 'object',
     }),
@@ -396,6 +453,41 @@
       }),
       'required': list([
         'entity_id',
+      ]),
+      'type': 'object',
+    }),
+    'config__update_floor_settings': dict({
+      'additionalProperties': False,
+      'properties': dict({
+        'aliases': dict({
+          'description': 'Other names that voice assistants know the floor by. This replaces all aliases.',
+          'items': dict({
+            'format': 'strip',
+            'type': 'string',
+          }),
+          'type': 'array',
+        }),
+        'floor_id': dict({
+          'format': 'strip',
+          'type': 'string',
+        }),
+        'icon': dict({
+          'description': "The icon, like 'mdi:home-floor-1'. null removes it.",
+          'nullable': True,
+          'type': 'string',
+        }),
+        'level': dict({
+          'description': 'The level of the floor, to sort floors. 0 is the ground floor, -1 the floor below it. null removes it.',
+          'nullable': True,
+          'type': 'integer',
+        }),
+        'name': dict({
+          'format': 'strip',
+          'type': 'string',
+        }),
+      }),
+      'required': list([
+        'floor_id',
       ]),
       'type': 'object',
     }),
