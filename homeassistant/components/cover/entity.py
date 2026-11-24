@@ -199,7 +199,7 @@ class CoverEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
 
     @cached_property
     def closed_tilt_positions(self) -> list[int] | None:
-        """Return the one or two tilt positions where the slats are closed.
+        """Return the tilt positions where the slats are closed: 0, 100 or both.
 
         close_cover_tilt moves the slats to one of them. None means the
         default: the ends where the slats lie flat if the angles are set,
@@ -242,7 +242,7 @@ class CoverEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         open_position = self._resolved_open_tilt_position()
         positions: set[int] = set()
         if (closed := self.closed_tilt_positions) is not None:
-            positions = set(closed)
+            positions = {0, 100}.intersection(closed)
         elif (angles := self._tilt_angles()) is not None:
             # The ends where the slats lie the flattest, usually at 90 degrees
             flattest = max(abs(angle) for angle in angles)
@@ -254,7 +254,7 @@ class CoverEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         positions.discard(open_position)
         if not positions:
             return [100 if open_position == 0 else 0]
-        return sorted(positions)[:2]
+        return sorted(positions)
 
     @final
     def _is_tilt_closed(self) -> bool:
