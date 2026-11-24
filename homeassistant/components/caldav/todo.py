@@ -23,7 +23,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import dt as dt_util
 
 from . import CalDavConfigEntry
-from .api import async_get_calendars, get_attr_value
+from .api import calendars_supporting, get_attr_value
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -50,7 +50,7 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the CalDav todo platform for a config entry."""
-    calendars = await async_get_calendars(hass, entry.runtime_data, SUPPORTED_COMPONENT)
+    calendars = calendars_supporting(entry.runtime_data.calendars, SUPPORTED_COMPONENT)
     async_add_entities(
         (
             WebDavTodoListEntity(

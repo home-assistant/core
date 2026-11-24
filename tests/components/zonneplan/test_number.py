@@ -26,9 +26,8 @@ from pyzonneplan.const import BatteryMode, MarketTimeResolution
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.number import (
-    ATTR_MAX,
-    ATTR_MIN,
     DOMAIN as NUMBER_DOMAIN,
+    NumberEntityCapabilityAttribute,
     NumberService,
     NumberServiceArgument,
 )
@@ -158,8 +157,8 @@ async def test_power_limit_range_fallback(
     await hass.async_block_till_done()
 
     assert (state := hass.states.get(MAX_CHARGE_POWER_ENTITY_ID))
-    assert state.attributes[ATTR_MIN] == 0
-    assert state.attributes[ATTR_MAX] == 10000
+    assert state.attributes[NumberEntityCapabilityAttribute.MIN] == 0
+    assert state.attributes[NumberEntityCapabilityAttribute.MAX] == 10000
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")

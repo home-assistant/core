@@ -22,6 +22,11 @@
     }
   },
   "entity": {
+    "light": {
+      "camera_light": {
+        "name": "Camera light"
+      }
+    },
     "number": {
       "speaker_level": {
         "name": "Speaker level"
@@ -42,6 +47,9 @@
     },
     "invalid_speaker_level": {
       "message": "The speaker level must be a number between 0 and 100."
+    },
+    "light_failed": {
+      "message": "Unable to switch the camera light."
     },
     "privacy_mode_failed": {
       "message": "Unable to change the privacy mode at Bosch."

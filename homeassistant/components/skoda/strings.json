@@ -68,6 +68,11 @@
         "name": "Windows"
       }
     },
+    "climate": {
+      "air_conditioning": {
+        "name": "Air conditioning"
+      }
+    },
     "number": {
       "charge_limit": {
         "name": "Charge limit"
@@ -150,6 +155,9 @@
     },
     "command_not_supported": {
       "message": "The vehicle does not support this command."
+    },
+    "invalid_hvac_mode": {
+      "message": "HVAC mode {hvac_mode} is not supported. Supported modes are: {hvac_modes}."
     },
     "invalid_step": {
       "message": "The value {value} does not match the supported increment of {step}."

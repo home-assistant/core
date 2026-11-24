@@ -1,9 +1,8 @@
 """Test the Fuelprices.dk config flow."""
 
-from collections.abc import Callable
-from unittest.mock import AsyncMock, Mock
+from unittest.mock import AsyncMock, MagicMock
 
-from aiohttp import ClientResponseError
+from aiohttp import ClientConnectionError
 from pybraendstofpriser import Flist
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
@@ -13,27 +12,33 @@ from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers.aiohttp_client import SERVER_SOFTWARE
 
-from . import setup_integration
+from . import client_error, setup_integration
 from .conftest import TEST_API_KEY, TEST_COMPANY, TEST_STATION
 
 pytestmark = pytest.mark.usefixtures("mock_setup_entry")
 
 
-def _client_error(status: int) -> ClientResponseError:
-    """Create an aiohttp client response error with a specific status code."""
-    return ClientResponseError(
-        request_info=Mock(),
-        history=(),
-        status=status,
-        message="error",
-        headers=None,
-    )
+CONNECTION_FAILURES = (
+    pytest.param(client_error(500), id="server_error"),
+    pytest.param(ClientConnectionError(), id="connection_error"),
+    pytest.param(TimeoutError(), id="timeout"),
+)
+COMPANY_FAILURES = (
+    pytest.param(client_error(401), "invalid_api_key", id="invalid_api_key"),
+    pytest.param(client_error(429), "rate_limit_exceeded", id="rate_limit"),
+    pytest.param(client_error(500), "cannot_connect", id="server_error"),
+    pytest.param(ClientConnectionError(), "cannot_connect", id="connection_error"),
+    pytest.param(TimeoutError(), "cannot_connect", id="timeout"),
+    pytest.param([], "cannot_connect", id="empty"),
+)
 
 
 async def test_full_user_flow(
     hass: HomeAssistant,
     mock_braendstofpriser: AsyncMock,
+    mock_braendstofpriser_class: MagicMock,
     mock_setup_entry: AsyncMock,
 ) -> None:
     """Test a full successful config flow."""
@@ -70,24 +75,23 @@ async def test_full_user_flow(
     assert subentry["unique_id"] == f"{TEST_COMPANY}_{TEST_STATION['id']}"
     assert subentry["data"] == {"company": TEST_COMPANY, "station": TEST_STATION}
     assert len(mock_setup_entry.mock_calls) == 1
+    mock_braendstofpriser_class.assert_called_once_with(
+        TEST_API_KEY, user_agent=SERVER_SOFTWARE
+    )
 
 
-@pytest.mark.parametrize(
-    ("status", "error"),
-    [
-        (401, "invalid_api_key"),
-        (429, "rate_limit_exceeded"),
-        (500, "cannot_connect"),
-    ],
-)
+@pytest.mark.parametrize(("response", "error"), COMPANY_FAILURES)
 async def test_user_flow_recovers_from_api_errors(
     hass: HomeAssistant,
     mock_braendstofpriser: AsyncMock,
-    status: int,
+    response: Exception | list[dict[str, str]],
     error: str,
 ) -> None:
     """Test the user flow shows an error and then recovers."""
-    mock_braendstofpriser.list_companies.side_effect = _client_error(status)
+    mock_braendstofpriser.list_companies.side_effect = [
+        response,
+        [{"company": TEST_COMPANY}],
+    ]
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
@@ -100,42 +104,6 @@ async def test_user_flow_recovers_from_api_errors(
     assert result["step_id"] == "user"
     assert result["errors"] == {"base": error}
 
-    mock_braendstofpriser.list_companies.side_effect = None
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {CONF_API_KEY: TEST_API_KEY}
-    )
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "company_selection"
-
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {"company": TEST_COMPANY}
-    )
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {"station": TEST_STATION["name"]}
-    )
-
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-
-
-async def test_user_flow_recovers_without_companies(
-    hass: HomeAssistant,
-    mock_braendstofpriser: AsyncMock,
-) -> None:
-    """Test the user flow recovers when the API returns no companies."""
-    mock_braendstofpriser.list_companies.return_value = []
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}
-    )
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {CONF_API_KEY: TEST_API_KEY}
-    )
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "user"
-    assert result["errors"] == {"base": "cannot_connect"}
-
-    mock_braendstofpriser.list_companies.return_value = [{"company": TEST_COMPANY}]
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], {CONF_API_KEY: TEST_API_KEY}
     )
@@ -171,20 +139,16 @@ async def test_user_flow_duplicate_api_key_aborts(
 
 
 @pytest.mark.parametrize(
-    "configure_stations",
-    [
-        lambda mock: setattr(mock.list_stations, "side_effect", _client_error(500)),
-        lambda mock: setattr(mock.list_stations, "return_value", Flist([])),
-    ],
-    ids=["error", "empty"],
+    "response",
+    [*CONNECTION_FAILURES, pytest.param(Flist(), id="empty")],
 )
 async def test_user_flow_station_error_returns_to_company_selection(
     hass: HomeAssistant,
     mock_braendstofpriser: AsyncMock,
-    configure_stations: Callable[[AsyncMock], None],
+    response: Exception | Flist[dict[str, int | str]],
 ) -> None:
     """Test station loading errors return the user to company selection."""
-    configure_stations(mock_braendstofpriser)
+    mock_braendstofpriser.list_stations.side_effect = [response]
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
@@ -303,6 +267,7 @@ async def test_reauth_success(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_braendstofpriser: AsyncMock,
+    mock_braendstofpriser_class: MagicMock,
 ) -> None:
     """Test reauthentication updates the API key."""
     mock_config_entry.add_to_hass(hass)
@@ -318,6 +283,9 @@ async def test_reauth_success(
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"
     assert mock_config_entry.data[CONF_API_KEY] == "new-api-key"
+    mock_braendstofpriser_class.assert_called_once_with(
+        "new-api-key", user_agent=SERVER_SOFTWARE
+    )
 
 
 async def test_reauth_rejects_api_key_used_by_another_entry(
@@ -339,24 +307,20 @@ async def test_reauth_rejects_api_key_used_by_another_entry(
     assert mock_config_entry.data[CONF_API_KEY] == TEST_API_KEY
 
 
-@pytest.mark.parametrize(
-    ("status", "error"),
-    [
-        (401, "invalid_api_key"),
-        (429, "rate_limit_exceeded"),
-        (500, "cannot_connect"),
-    ],
-)
+@pytest.mark.parametrize(("response", "error"), COMPANY_FAILURES)
 async def test_reauth_recovers_from_api_errors(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_braendstofpriser: AsyncMock,
-    status: int,
+    response: Exception | list[dict[str, str]],
     error: str,
 ) -> None:
     """Test reauth shows an error and then recovers."""
     mock_config_entry.add_to_hass(hass)
-    mock_braendstofpriser.list_companies.side_effect = _client_error(status)
+    mock_braendstofpriser.list_companies.side_effect = [
+        response,
+        [{"company": TEST_COMPANY}],
+    ]
 
     result = await mock_config_entry.start_reauth_flow(hass)
     result = await hass.config_entries.flow.async_configure(
@@ -367,7 +331,6 @@ async def test_reauth_recovers_from_api_errors(
     assert result["step_id"] == "reauth_confirm"
     assert result["errors"] == {"base": error}
 
-    mock_braendstofpriser.list_companies.side_effect = None
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], {CONF_API_KEY: "new-api-key"}
     )
@@ -379,6 +342,7 @@ async def test_reauth_recovers_from_api_errors(
 async def test_subentry_flow_create(
     hass: HomeAssistant,
     mock_braendstofpriser: AsyncMock,
+    mock_braendstofpriser_class: MagicMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test creating a station subentry."""
@@ -409,6 +373,9 @@ async def test_subentry_flow_create(
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == f"{TEST_COMPANY} - {new_station['name']}"
     assert result["unique_id"] == f"{TEST_COMPANY}_{new_station['id']}"
+    mock_braendstofpriser_class.assert_called_once_with(
+        TEST_API_KEY, user_agent=SERVER_SOFTWARE
+    )
 
 
 @pytest.mark.parametrize(
@@ -446,7 +413,6 @@ async def test_subentry_flow_duplicate_station(
     [
         (401, "invalid_api_key"),
         (429, "rate_limit_exceeded"),
-        (500, "cannot_connect"),
     ],
 )
 async def test_subentry_flow_api_init_error(
@@ -458,7 +424,7 @@ async def test_subentry_flow_api_init_error(
 ) -> None:
     """Test subentry flow aborts for API init errors."""
     await setup_integration(hass, mock_config_entry)
-    mock_braendstofpriser.list_companies.side_effect = _client_error(status)
+    mock_braendstofpriser.list_companies.side_effect = client_error(status)
 
     result = await hass.config_entries.subentries.async_init(
         (mock_config_entry.entry_id, "station"),
@@ -468,41 +434,60 @@ async def test_subentry_flow_api_init_error(
     assert result["reason"] == reason
 
 
-async def test_subentry_flow_no_companies_aborts(
+@pytest.mark.parametrize(
+    "response",
+    [*CONNECTION_FAILURES, pytest.param([], id="empty")],
+)
+async def test_subentry_flow_recovers_from_connection_error(
     hass: HomeAssistant,
     mock_braendstofpriser: AsyncMock,
     mock_config_entry: MockConfigEntry,
+    response: Exception | list[dict[str, str]],
 ) -> None:
-    """Test subentry flow aborts when no companies are returned."""
+    """Test the user can retry loading companies in the same subentry flow."""
     await setup_integration(hass, mock_config_entry)
-    mock_braendstofpriser.list_companies.return_value = []
+    mock_braendstofpriser.list_companies.side_effect = [
+        response,
+        [{"company": TEST_COMPANY}],
+    ]
+    new_station = {"id": 4321, "name": "Aarhus N"}
+    mock_braendstofpriser.list_stations.return_value = Flist([new_station])
 
     result = await hass.config_entries.subentries.async_init(
         (mock_config_entry.entry_id, "station"),
         context={"source": SOURCE_USER},
     )
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "cannot_connect"
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert result["errors"] == {"base": "cannot_connect"}
+
+    result = await hass.config_entries.subentries.async_configure(result["flow_id"], {})
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "company_selection"
+
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"], {"company": TEST_COMPANY}
+    )
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"], {"station": new_station["name"]}
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 @pytest.mark.parametrize(
-    "configure_stations",
-    [
-        lambda mock: setattr(mock.list_stations, "side_effect", _client_error(500)),
-        lambda mock: setattr(mock.list_stations, "return_value", Flist([])),
-    ],
-    ids=["error", "empty"],
+    "response",
+    [*CONNECTION_FAILURES, pytest.param(Flist(), id="empty")],
 )
 async def test_subentry_flow_station_error_returns_to_company_selection(
     hass: HomeAssistant,
     mock_braendstofpriser: AsyncMock,
     mock_config_entry: MockConfigEntry,
-    configure_stations: Callable[[AsyncMock], None],
+    response: Exception | Flist[dict[str, int | str]],
 ) -> None:
     """Test station loading errors return the user to company selection."""
     await setup_integration(hass, mock_config_entry)
 
-    configure_stations(mock_braendstofpriser)
+    mock_braendstofpriser.list_stations.side_effect = [response]
 
     result = await hass.config_entries.subentries.async_init(
         (mock_config_entry.entry_id, "station"),
