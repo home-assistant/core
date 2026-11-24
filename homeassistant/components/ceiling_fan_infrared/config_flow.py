@@ -10,6 +10,7 @@ from homeassistant.components.infrared import (
 )
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.core import callback
+from homeassistant.data_entry_flow import AbortFlow
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.selector import EntitySelector, EntitySelectorConfig
 
@@ -118,12 +119,24 @@ class CeilingFanIrConfigFlow(ConfigFlow, domain=DOMAIN):
     def _abort_if_emitter_is_configured(self, entity_id: str) -> None:
         """Abort when the emitter is already used by another entry.
 
-        The entity ID is checked for entries that predate the stored UUID and
-        for emitters without a registry entry. The UUID is checked as well,
-        because an entry whose emitter was renamed while it was unloaded still
-        has the old entity ID until it is set up again.
+        Compare each entry's current entity ID, resolving its stored UUID
+        first: a rename made while a fan entry was unloaded leaves its saved
+        entity ID stale. Entries without a resolvable UUID, including emitters
+        without a registry entry, fall back to the saved entity ID.
         """
-        self._async_abort_entries_match({CONF_INFRARED_ENTITY_ID: entity_id})
+        entity_registry = er.async_get(self.hass)
+        for entry in self._async_current_entries(include_ignore=False):
+            if entry.entry_id == self.context.get("entry_id"):
+                continue
+            if (uuid := entry.data.get(CONF_INFRARED_ENTITY_UUID)) is not None:
+                if (
+                    resolved := er.async_resolve_entity_id(entity_registry, uuid)
+                ) is not None:
+                    if resolved == entity_id:
+                        raise AbortFlow("already_configured")
+                    continue
+            if entry.data.get(CONF_INFRARED_ENTITY_ID) == entity_id:
+                raise AbortFlow("already_configured")
         if (uuid := self._emitter_uuid(entity_id)) is not None:
             self._async_abort_entries_match({CONF_INFRARED_ENTITY_UUID: uuid})
 

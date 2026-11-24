@@ -355,3 +355,56 @@ async def test_reconfigure_flow_no_emitters(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "no_infrared_entities"
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_user_flow_allows_a_different_emitter_that_reuses_an_entity_id(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
+    """Test a reused entity ID is not mistaken for the configured emitter.
+
+    Emitter A is renamed while the fan entry is unloaded, then emitter B takes
+    A's old entity ID. The entry's stale ID must not block configuring B.
+    """
+    await init_infrared_fixture_helper(hass)
+    first = MockInfraredEmitterEntity("first_ir_emitter", "Shared name")
+    await hass.data[DATA_COMPONENT].async_add_entities([first])
+    await hass.async_block_till_done()
+
+    stale_entity_id = first.entity_id
+    first_entry = entity_registry.async_get(stale_entity_id)
+    assert first_entry is not None
+    entity_registry.async_update_entity(
+        stale_entity_id, new_entity_id="infrared.renamed_first_emitter"
+    )
+    await hass.async_block_till_done()
+
+    second = MockInfraredEmitterEntity("second_ir_emitter", "Shared name")
+    await hass.data[DATA_COMPONENT].async_add_entities([second])
+    await hass.async_block_till_done()
+    assert second.entity_id == stale_entity_id
+    second_entry = entity_registry.async_get(stale_entity_id)
+    assert second_entry is not None
+
+    MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_INFRARED_ENTITY_ID: stale_entity_id,
+            CONF_INFRARED_ENTITY_UUID: first_entry.id,
+        },
+    ).add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={CONF_INFRARED_ENTITY_ID: stale_entity_id},
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"] == {
+        CONF_INFRARED_ENTITY_ID: stale_entity_id,
+        CONF_INFRARED_ENTITY_UUID: second_entry.id,
+    }
