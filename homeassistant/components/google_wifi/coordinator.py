@@ -36,14 +36,13 @@ class GoogleWifiCoordinator(DataUpdateCoordinator[GoogleWifiStatus]):
             update_interval=timedelta(seconds=30),
         )
         self.api = api
-        self.hardware_id = entry.unique_id or entry.entry_id
 
     @callback
     def _async_update_sw_version(self, status: GoogleWifiStatus) -> None:
         """Update the device registry when the firmware version changed."""
         device_registry = dr.async_get(self.hass)
         device = device_registry.async_get_device_by_identifier(
-            (DOMAIN, self.hardware_id), self.config_entry.entry_id
+            (DOMAIN, self.config_entry.entry_id), self.config_entry.entry_id
         )
         sw_version = status.software.software_version
         if device is not None and device.sw_version != sw_version:

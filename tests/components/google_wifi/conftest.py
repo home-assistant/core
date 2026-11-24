@@ -12,8 +12,6 @@ from homeassistant.const import CONF_HOST
 
 from .const import DEFAULT_RESPONSE, RESOURCE_URL
 
-HARDWARE_ID = "GALE [REDACTED]"
-
 
 @pytest.fixture
 def normal_response() -> dict[str, Any]:
@@ -26,7 +24,6 @@ def mock_config_entry() -> MockConfigEntry:
     """Return a Google Wifi config entry for the default host."""
     return MockConfigEntry(
         domain=DOMAIN,
-        unique_id=HARDWARE_ID,
         title="Test Wifi",
         data={CONF_HOST: "192.168.86.1"},
     )

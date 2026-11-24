@@ -19,7 +19,6 @@ def build_response(
     uptime: int = 86_400,
     online: bool = True,
     local_ip: str = "10.0.0.10",
-    hardware_id: str = "GALE [REDACTED]",
 ) -> dict[str, Any]:
     """Build a Google Wifi status response payload."""
     return {
@@ -37,7 +36,7 @@ def build_response(
         "system": {
             "countryCode": "us",
             "groupRole": "root",
-            "hardwareId": hardware_id,
+            "hardwareId": "GALE [REDACTED]",
             "lan0Link": False,
             "ledAnimation": "CONNECTED",
             "ledIntensity": 6,

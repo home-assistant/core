@@ -24,7 +24,6 @@ from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
 from . import mock_device, setup_integration
-from .conftest import HARDWARE_ID
 from .const import RESOURCE_URL, UPDATED_RESPONSE
 
 
@@ -80,7 +79,7 @@ async def test_sensors_expose_router_data(
     )
 
     device = device_registry.async_get_device_by_identifier(
-        (DOMAIN, HARDWARE_ID), mock_config_entry.entry_id
+        (DOMAIN, mock_config_entry.entry_id), mock_config_entry.entry_id
     )
     assert device is not None
     assert device.name == "Test Wifi"
@@ -101,7 +100,9 @@ async def test_device_software_version_follows_firmware_update(
     aioclient_mock.get(RESOURCE_URL, json=UPDATED_RESPONSE)
     await fire_polling_update(hass, 31)
 
-    device = device_registry.async_get_device(identifiers={(DOMAIN, HARDWARE_ID)})
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, mock_config_entry.entry_id), mock_config_entry.entry_id
+    )
     assert device is not None
     assert device.sw_version == "newVersion"
 
@@ -124,7 +125,6 @@ async def test_native_value_when_data_is_none(hass: HomeAssistant) -> None:
     """Test an unavailable entity has no native value."""
     entry = MockConfigEntry(
         domain=DOMAIN,
-        unique_id=HARDWARE_ID,
         title="Test Wifi",
         data={CONF_HOST: "192.168.86.1"},
     )
@@ -171,19 +171,16 @@ async def test_multiple_devices(
 ) -> None:
     """Test each router address is its own device."""
     devices = (
-        ("192.168.86.1", "hardware-1", "Living Room"),
-        ("192.168.86.2", "hardware-2", "Office"),
-        ("192.168.86.3", "hardware-3", "Basement"),
+        ("192.168.86.1", "Living Room"),
+        ("192.168.86.2", "Office"),
+        ("192.168.86.3", "Basement"),
     )
-    for host, hardware_id, title in devices:
-        mock_device(aioclient_mock, host, hardware_id=hardware_id)
-        entry = MockConfigEntry(
-            domain=DOMAIN,
-            unique_id=hardware_id,
-            title=title,
-            data={CONF_HOST: host},
-        )
+    entries: list[MockConfigEntry] = []
+    for host, title in devices:
+        mock_device(aioclient_mock, host)
+        entry = MockConfigEntry(domain=DOMAIN, title=title, data={CONF_HOST: host})
         await setup_integration(hass, entry)
+        entries.append(entry)
 
     assert len(hass.config_entries.async_entries(DOMAIN)) == 3
     assert hass.states.get("sensor.living_room_status").state == "Online"
@@ -201,14 +198,10 @@ async def test_multiple_devices(
         hass.states.get("sensor.basement_status").attributes[ATTR_FRIENDLY_NAME]
         == "Basement Status"
     )
-    office_entry = next(
-        entry
-        for entry in hass.config_entries.async_entries(DOMAIN)
-        if entry.unique_id == "hardware-2"
-    )
+    office_entry = entries[1]
     assert (
         device_registry.async_get_device_by_identifier(
-            (DOMAIN, "hardware-2"), office_entry.entry_id
+            (DOMAIN, office_entry.entry_id), office_entry.entry_id
         )
         is not None
     )
@@ -233,7 +226,6 @@ async def test_yaml_import_creates_config_entry(
 
     entries = hass.config_entries.async_entries(DOMAIN)
     assert len(entries) == 1
-    assert entries[0].unique_id == HARDWARE_ID
     assert entries[0].title == "Test Wifi"
     assert entries[0].data[CONF_HOST] == "192.168.86.1"
     assert hass.states.get("sensor.test_wifi_uptime").state == "1.0"
@@ -246,12 +238,12 @@ async def test_yaml_import_supports_multiple_devices(
 ) -> None:
     """Test each YAML host is imported as its own config entry."""
     devices = (
-        ("192.168.86.1", "hardware-1", "Living Room"),
-        ("192.168.86.2", "hardware-2", "Office"),
-        ("192.168.86.3", "hardware-3", "Basement"),
+        ("192.168.86.1", "Living Room"),
+        ("192.168.86.2", "Office"),
+        ("192.168.86.3", "Basement"),
     )
-    for host, hardware_id, _title in devices:
-        mock_device(aioclient_mock, host, hardware_id=hardware_id)
+    for host, _title in devices:
+        mock_device(aioclient_mock, host)
 
     assert await async_setup_component(
         hass,
@@ -263,7 +255,7 @@ async def test_yaml_import_supports_multiple_devices(
                     CONF_HOST: host,
                     CONF_NAME: title,
                 }
-                for host, _hardware_id, title in devices
+                for host, title in devices
             ]
         },
     )
@@ -271,10 +263,10 @@ async def test_yaml_import_supports_multiple_devices(
 
     entries = hass.config_entries.async_entries(DOMAIN)
     assert len(entries) == 3
-    assert {entry.unique_id for entry in entries} == {
-        "hardware-1",
-        "hardware-2",
-        "hardware-3",
+    assert {entry.data[CONF_HOST] for entry in entries} == {
+        "192.168.86.1",
+        "192.168.86.2",
+        "192.168.86.3",
     }
     assert hass.states.get("sensor.living_room_local_ip") is not None
     assert hass.states.get("sensor.office_local_ip") is not None
@@ -285,8 +277,8 @@ async def test_yaml_import_duplicate_names_keep_legacy_entity_ids(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
     """Test devices sharing a YAML name get the suffixed entity IDs they had before."""
-    mock_device(aioclient_mock, "192.168.86.1", hardware_id="hardware-1")
-    mock_device(aioclient_mock, "192.168.86.2", hardware_id="hardware-2")
+    mock_device(aioclient_mock, "192.168.86.1")
+    mock_device(aioclient_mock, "192.168.86.2")
 
     assert await async_setup_component(
         hass,
