@@ -3,6 +3,7 @@
   "name": "Iperf3",
   "categories": ["computers_network.monitoring"],
   "codeowners": ["@rohankapoorcom"],
+  "connectivity": ["network"],
   "documentation": "https://www.home-assistant.io/integrations/iperf3",
   "iot_class": "local_polling",
   "loggers": ["iperf3"],

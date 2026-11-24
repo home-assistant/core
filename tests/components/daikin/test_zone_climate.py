@@ -13,13 +13,14 @@ from homeassistant.components.climate import (
     ATTR_MIN_TEMP,
     DOMAIN as CLIMATE_DOMAIN,
     SERVICE_SET_HVAC_MODE,
-    SERVICE_SET_TEMPERATURE,
     ClimateEntityFeature,
+    ClimateService,
+    ClimateServiceArgument,
     HVACAction,
     HVACMode,
 )
 from homeassistant.components.daikin.const import DOMAIN, KEY_MAC
-from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
+from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN, SwitchService
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_SUPPORTED_FEATURES,
@@ -31,6 +32,7 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
     STATE_UNAVAILABLE,
+    TargetKey,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
@@ -87,10 +89,10 @@ async def _async_set_zone_temperature(
     """Call `climate.set_temperature` for a zone climate."""
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_TEMPERATURE,
+        ClimateService.SET_TEMPERATURE,
         {
-            ATTR_ENTITY_ID: entity_id,
-            ATTR_TEMPERATURE: temperature,
+            TargetKey.ENTITY_ID: entity_id,
+            ClimateServiceArgument.TEMPERATURE: temperature,
         },
         blocking=True,
     )
@@ -292,10 +294,10 @@ async def test_zone_climate_rejects_main_mode_change(
     with pytest.raises(ServiceValidationError) as err:
         await hass.services.async_call(
             CLIMATE_DOMAIN,
-            SERVICE_SET_HVAC_MODE,
+            ClimateService.SET_HVAC_MODE,
             {
-                ATTR_ENTITY_ID: entity_id,
-                ATTR_HVAC_MODE: HVACMode.COOL,
+                TargetKey.ENTITY_ID: entity_id,
+                ClimateServiceArgument.HVAC_MODE: HVACMode.COOL,
             },
             blocking=True,
         )
@@ -515,8 +517,8 @@ async def test_zone_switch_updates_zone_climate(
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: switch_entity_id},
+        SwitchService.TURN_OFF,
+        {TargetKey.ENTITY_ID: switch_entity_id},
         blocking=True,
     )
 

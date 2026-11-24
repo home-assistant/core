@@ -14,6 +14,7 @@
   "categories": ["sensors.temperature_humidity", "sensors.air_quality"],
   "codeowners": ["@akx"],
   "config_flow": true,
+  "connectivity": ["bluetooth"],
   "dependencies": ["bluetooth_adapters"],
   "documentation": "https://www.home-assistant.io/integrations/ruuvitag_ble",
   "integration_type": "device",

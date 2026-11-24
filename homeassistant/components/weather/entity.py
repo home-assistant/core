@@ -66,6 +66,7 @@ from .const import (
     ROUNDING_PRECISION,
     UNIT_CONVERSIONS,
     VALID_UNITS,
+    WeatherEntityCapabilityAttribute,
     WeatherEntityStateAttribute,
 )
 
@@ -469,6 +470,21 @@ class WeatherEntity(Entity, PostInit, cached_properties=CACHED_PROPERTIES_WITH_A
     @final
     @property
     @override
+    def capability_attributes(self) -> dict[str, Any]:
+        """Return the units the state attributes are converted to."""
+        return {
+            WeatherEntityCapabilityAttribute.TEMPERATURE_UNIT: self._temperature_unit,
+            WeatherEntityCapabilityAttribute.PRESSURE_UNIT: self._pressure_unit,
+            WeatherEntityCapabilityAttribute.WIND_SPEED_UNIT: self._wind_speed_unit,
+            WeatherEntityCapabilityAttribute.VISIBILITY_UNIT: self._visibility_unit,
+            WeatherEntityCapabilityAttribute.PRECIPITATION_UNIT: (
+                self._precipitation_unit
+            ),
+        }
+
+    @final
+    @property
+    @override
     def state_attributes(self) -> dict[str, Any]:
         """Return the state attributes, converted.
 
@@ -522,8 +538,6 @@ class WeatherEntity(Entity, PostInit, cached_properties=CACHED_PROPERTIES_WITH_A
             except TypeError, ValueError:
                 data[WeatherEntityStateAttribute.DEW_POINT] = dew_point
 
-        data[WeatherEntityStateAttribute.TEMPERATURE_UNIT] = self._temperature_unit
-
         if (humidity := self.humidity) is not None:
             data[WeatherEntityStateAttribute.HUMIDITY] = round(humidity)
 
@@ -549,8 +563,6 @@ class WeatherEntity(Entity, PostInit, cached_properties=CACHED_PROPERTIES_WITH_A
                 )
             except TypeError, ValueError:
                 data[WeatherEntityStateAttribute.PRESSURE] = pressure
-
-        data[WeatherEntityStateAttribute.PRESSURE_UNIT] = self._pressure_unit
 
         if (wind_bearing := self.wind_bearing) is not None:
             data[WeatherEntityStateAttribute.WIND_BEARING] = wind_bearing
@@ -583,8 +595,6 @@ class WeatherEntity(Entity, PostInit, cached_properties=CACHED_PROPERTIES_WITH_A
             except TypeError, ValueError:
                 data[WeatherEntityStateAttribute.WIND_SPEED] = wind_speed
 
-        data[WeatherEntityStateAttribute.WIND_SPEED_UNIT] = self._wind_speed_unit
-
         if (visibility := self.native_visibility) is not None:
             from_unit = self.native_visibility_unit or self._default_visibility_unit
             to_unit = self._visibility_unit
@@ -598,9 +608,6 @@ class WeatherEntity(Entity, PostInit, cached_properties=CACHED_PROPERTIES_WITH_A
                 )
             except TypeError, ValueError:
                 data[WeatherEntityStateAttribute.VISIBILITY] = visibility
-
-        data[WeatherEntityStateAttribute.VISIBILITY_UNIT] = self._visibility_unit
-        data[WeatherEntityStateAttribute.PRECIPITATION_UNIT] = self._precipitation_unit
 
         return data
 

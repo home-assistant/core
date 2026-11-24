@@ -24,11 +24,12 @@ STEP_SIZE = 10
 class BondButtonEntityDescription(ButtonEntityDescription):
     """Class to describe a Bond Button entity."""
 
-    # BondEntity does not support UNDEFINED,
+    # BondEntity does not support Undefined,
     # restrict the type to str | None
     name: str | None = None
     mutually_exclusive: Action | None
     argument: int | None
+    available_when_untrusted: bool = False
 
 
 STOP_BUTTON = BondButtonEntityDescription(
@@ -47,6 +48,7 @@ BUTTONS: tuple[BondButtonEntityDescription, ...] = (
         translation_key="toggle_power",
         mutually_exclusive=Action.TURN_ON,
         argument=None,
+        available_when_untrusted=True,
     ),
     BondButtonEntityDescription(
         key=Action.TOGGLE_LIGHT,
@@ -285,9 +287,16 @@ async def async_setup_entry(
             and (
                 description.mutually_exclusive is None
                 or not device.has_action(description.mutually_exclusive)
+                or (
+                    description.available_when_untrusted
+                    and data.hub.is_bridge
+                    and not device.trust_state
+                )
             )
         ]
-        if device_entities and device.has_action(STOP_BUTTON.key):
+        if device.has_action(STOP_BUTTON.key) and any(
+            entity.entity_registry_enabled_default for entity in device_entities
+        ):
             # Most devices have the stop action available, but
             # we only add the stop action button if we add actions
             # since its not so useful if there are no actions to stop
@@ -313,6 +322,12 @@ class BondButtonEntity(BondEntity, ButtonEntity):
         """Init Bond button."""
         self.entity_description = description
         super().__init__(data, device, description.name, description.key.lower())
+        if (
+            description.available_when_untrusted
+            and description.mutually_exclusive is not None
+            and device.has_action(description.mutually_exclusive)
+        ):
+            self._attr_entity_registry_enabled_default = False
 
     @override
     async def async_press(self) -> None:

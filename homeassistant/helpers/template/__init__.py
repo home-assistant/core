@@ -32,7 +32,7 @@ from homeassistant.helpers.trace import (
     trace_stack_cv,
     trace_stack_top,
 )
-from homeassistant.helpers.typing import UNDEFINED, TemplateVarsType
+from homeassistant.helpers.typing import TemplateVarsType, Undefined
 from homeassistant.util.async_ import run_callback_threadsafe
 from homeassistant.util.hass_dict import HassKey
 from homeassistant.util.json import JSON_DECODE_EXCEPTIONS, json_loads
@@ -101,6 +101,29 @@ _HASS_LOADER = "template.hass_loader"
 
 # Match "simple" ints and floats. -1.0, 1, +5, 5.0
 _IS_NUMERIC = re.compile(r"^[+-]?(?!0\d)\d*(?:\.\d*)?$", re.ASCII)
+
+# One key of a value_json path: .name, ['name'] or ["name"]. Quoted keys
+# with a backslash or carriage return are left to jinja, which unescapes
+# them and normalizes line endings.
+_JSON_PATH_STEP_PATTERN = (
+    r"\.([A-Za-z_][A-Za-z0-9_]*)|\['([^'\\\r]*)'\]|\[\"([^\"\\\r]*)\"\]"
+)
+_JSON_PATH_STEP = re.compile(_JSON_PATH_STEP_PATTERN, re.ASCII)
+# A template that only outputs a value from the JSON payload,
+# e.g. {{ value_json.temperature }} or {{ value_json['ENERGY'].Power }}
+_JSON_PATH_OUTPUT_PATTERN = (
+    rf"\{{\{{-?\s*value_json(?P<path>(?:{_JSON_PATH_STEP_PATTERN})+)\s*-?\}}\}}"
+)
+_JSON_PATH_TEMPLATE = re.compile(_JSON_PATH_OUTPUT_PATTERN, re.ASCII)
+# The same, guarded by the presence of the first key, as Zigbee2MQTT sends it:
+# {% if "battery" in value_json %}{{ value_json["battery"] }}{% endif %}
+_GUARDED_JSON_PATH_TEMPLATE = re.compile(
+    r"\{%-?\s*if\s+(?:'(?P<single>[^'\\\r]*)'|\"(?P<double>[^\"\\\r]*)\")"
+    r"\s+in\s+value_json\s*-?%\}"
+    rf"{_JSON_PATH_OUTPUT_PATTERN}"
+    r"\{%-?\s*endif\s*-?%\}",
+    re.ASCII,
+)
 
 EVAL_CACHE_SIZE = 512
 
@@ -353,6 +376,30 @@ def _finalize_output(value: Any, _nested: bool = False) -> Any:
     return value
 
 
+def _render_json_path(
+    value_json: Any, json_path: tuple[str, ...], guarded: bool
+) -> str | None:
+    """Render a plain value_json template like jinja does, None if it can't.
+
+    Only plain dicts that hold the key are handled, or, for a guarded
+    template, plain dicts without the first key. On other payloads `in` is a
+    substring or item test, so those are left to jinja.
+    """
+    if guarded and type(value_json) is dict and json_path[0] not in value_json:
+        return ""
+    value = value_json
+    for key in json_path:
+        if type(value) is not dict or key not in value:
+            return None
+        value = value[key]
+    try:
+        # Same output as jinja while TemplateEnvironment uses this finalize
+        return str(_finalize_output(value)).strip()
+    # Let jinja render it, so its error handling applies
+    except jinja2.TemplateError, RecursionError:
+        return None
+
+
 class Template:
     """Class to hold a template and manage caching and rendering."""
 
@@ -362,6 +409,8 @@ class Template:
         "_compiled_code",
         "_exc_info",
         "_hash_cache",
+        "_json_path",
+        "_json_path_guarded",
         "_limited",
         "_log_fn",
         "_renders",
@@ -387,6 +436,8 @@ class Template:
         self._log_fn: Callable[[int, str], None] | None = None
         self._hash_cache: int = hash(self.template)
         self._renders: int = 0
+        self._json_path: tuple[str, ...] | None = None
+        self._json_path_guarded = False
 
     @property
     def _env(self) -> TemplateEnvironment:
@@ -442,10 +493,9 @@ class Template:
         or filter depending on hass or the state machine.
         """
         if self.is_static:
-            if not parse_result or (self.hass and self.hass.config.legacy_templates):
+            if not parse_result or self.hass.config.legacy_templates:
                 return self.template
             return _parse_result(self.template)
-        assert self.hass is not None, "hass variable not set on template"
         return run_callback_threadsafe(
             self.hass.loop,
             partial(self.async_render, variables, parse_result, limited, **kwargs),
@@ -471,7 +521,7 @@ class Template:
         self._renders += 1
 
         if self.is_static:
-            if not parse_result or (self.hass and self.hass.config.legacy_templates):
+            if not parse_result or self.hass.config.legacy_templates:
                 return self.template
             return _parse_result(self.template)
 
@@ -493,7 +543,7 @@ class Template:
 
         render_result = render_result.strip()
 
-        if not parse_result or (self.hass and self.hass.config.legacy_templates):
+        if not parse_result or self.hass.config.legacy_templates:
             return render_result
 
         return _parse_result(render_result)
@@ -533,7 +583,6 @@ class Template:
         finish_event = asyncio.Event()
 
         def _render_template() -> None:
-            assert self.hass is not None, "hass variable not set on template"
             try:
                 render_with_context(self.template, compiled, **kwargs)
             except TimeoutError:
@@ -568,14 +617,11 @@ class Template:
         **kwargs: Any,
     ) -> RenderInfo:
         """Render the template and collect an entity filter."""
-        if self.hass and self.hass.config.debug:
+        if self.hass.config.debug:
             self.hass.verify_event_loop_thread("async_render_to_info")
         self._renders += 1
 
         render_info = RenderInfo(self)
-
-        if not self.hass:
-            raise RuntimeError(f"hass not set while rendering {self}")
 
         if (in_flight := render_info_cv.get()) is not None and in_flight.collecting:
             raise RuntimeError(
@@ -631,7 +677,7 @@ class Template:
         """Render template with value exposed.
 
         If valid JSON will expose value_json too. A caller that has parsed the
-        value already passes it as value_json, or UNDEFINED if it is not JSON.
+        value already passes it as value_json, or Undefined if it is not JSON.
 
         This method must be run in the event loop.
         """
@@ -642,36 +688,74 @@ class Template:
 
         compiled = self._compiled or self._ensure_compiled()
 
-        variables = dict(variables or {})
-        variables["value"] = value
-
         if value_json is _SENTINEL:
-            try:  # noqa: SIM105 - suppress is much slower
-                variables["value_json"] = json_loads(value)
+            try:
+                value_json = json_loads(value)
             except JSON_DECODE_EXCEPTIONS:
-                pass
-        elif value_json is not UNDEFINED:
-            variables["value_json"] = value_json
+                value_json = Undefined
 
-        try:
-            render_result = render_with_context(
-                self.template, compiled, **variables
-            ).strip()
-        # A cyclic value makes the finalize hook recurse until RecursionError.
-        except (jinja2.TemplateError, RecursionError) as ex:
-            if error_value is _SENTINEL:
-                _LOGGER.error(
-                    "Error parsing value: %s (value: %s, template: %s)",
-                    ex,
-                    value,
-                    self.template,
-                )
-            return value if error_value is _SENTINEL else error_value
+        render_result: str | None = None
+        if value_json is not Undefined and (json_path := self._get_json_path()):
+            render_result = _render_json_path(
+                value_json, json_path, self._json_path_guarded
+            )
 
-        if not parse_result or (self.hass and self.hass.config.legacy_templates):
+        if render_result is None:
+            variables = dict(variables or {})
+            variables["value"] = value
+            if value_json is not Undefined:
+                variables["value_json"] = value_json
+
+            try:
+                render_result = render_with_context(
+                    self.template, compiled, **variables
+                ).strip()
+            # A cyclic value makes the finalize hook recurse until RecursionError.
+            except (jinja2.TemplateError, RecursionError) as ex:
+                if error_value is _SENTINEL:
+                    _LOGGER.error(
+                        "Error parsing value: %s (value: %s, template: %s)",
+                        ex,
+                        value,
+                        self.template,
+                    )
+                return value if error_value is _SENTINEL else error_value
+
+        if not parse_result or self.hass.config.legacy_templates:
             return render_result
 
         return _parse_result(render_result)
+
+    def _get_json_path(self) -> tuple[str, ...]:
+        """Return the keys a plain value_json template outputs, empty otherwise.
+
+        Also matches the output guarded by `{% if "key" in value_json %}` on
+        its first key. For attribute access to a name like .items, jinja returns the dict
+        method instead of the key, so those templates are left to jinja.
+        """
+        if (json_path := self._json_path) is None:
+            json_path = ()
+            if match := _JSON_PATH_TEMPLATE.fullmatch(self.template):
+                json_path = self._parse_json_path(match["path"])
+            elif match := _GUARDED_JSON_PATH_TEMPLATE.fullmatch(self.template):
+                guard = (
+                    match["single"] if match["single"] is not None else match["double"]
+                )
+                json_path = self._parse_json_path(match["path"])
+                # Only a guard on the first key makes a missing key render empty
+                if json_path and json_path[0] == guard:
+                    self._json_path_guarded = True
+                else:
+                    json_path = ()
+            self._json_path = json_path
+        return json_path
+
+    @staticmethod
+    def _parse_json_path(path: str) -> tuple[str, ...]:
+        steps = _JSON_PATH_STEP.findall(path)
+        if any(attr and hasattr(dict, attr) for attr, _, _ in steps):
+            return ()
+        return tuple(attr or single or double for attr, single, double in steps)
 
     def _ensure_compiled(
         self,
@@ -682,7 +766,6 @@ class Template:
         """Bind a template to a specific hass instance."""
         self.ensure_valid()
 
-        assert self.hass is not None, "hass variable not set on template"
         assert self._limited is None or self._limited == limited, (
             "can't change between limited and non limited template"
         )

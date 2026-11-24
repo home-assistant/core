@@ -22,6 +22,13 @@ LAST_EVENT_TIMESTAMP_KEY = "last_event_timestamp"
 _LOGGER = logging.getLogger(__name__)
 
 
+def last_event_store(hass: HomeAssistant, entry_id: str) -> Store[dict[str, Any]]:
+    """Return the store holding the timestamp of the last fetched event."""
+    return Store(
+        hass, LAST_EVENT_STORAGE_VERSION, f"risco_{entry_id}_last_event_timestamp"
+    )
+
+
 class RiscoDataUpdateCoordinator(DataUpdateCoordinator[Alarm]):
     """Class to manage fetching risco data."""
 
@@ -65,11 +72,7 @@ class RiscoEventsDataUpdateCoordinator(DataUpdateCoordinator[list[Event]]):
     ) -> None:
         """Initialize global risco data updater."""
         self.risco = risco
-        self._store = Store[dict[str, Any]](
-            hass,
-            LAST_EVENT_STORAGE_VERSION,
-            f"risco_{config_entry.entry_id}_last_event_timestamp",
-        )
+        self._store = last_event_store(hass, config_entry.entry_id)
         super().__init__(
             hass,
             _LOGGER,

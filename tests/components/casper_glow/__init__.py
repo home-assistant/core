@@ -1,5 +1,6 @@
 """Tests for the Casper Glow integration."""
 
+from pycasperglow import MANUFACTURER_ID
 from pytest_homeassistant.common import MockConfigEntry
 from pytest_homeassistant.components.bluetooth import (
     generate_advertisement_data,
@@ -10,16 +11,20 @@ from pytest_homeassistant.components.bluetooth import (
 from homeassistant.components.bluetooth import BluetoothServiceInfoBleak
 from homeassistant.core import HomeAssistant
 
+CASPER_GLOW_MANUFACTURER_DATA = {MANUFACTURER_ID: b"\x00"}
+
 CASPER_GLOW_DISCOVERY_INFO = BluetoothServiceInfoBleak(
     name="Jar",
     address="AA:BB:CC:DD:EE:FF",
     rssi=-60,
-    manufacturer_data={},
+    manufacturer_data=CASPER_GLOW_MANUFACTURER_DATA,
     service_uuids=[],
     service_data={},
     source="local",
     device=generate_ble_device(address="AA:BB:CC:DD:EE:FF", name="Jar"),
     advertisement=generate_advertisement_data(
+        local_name="Jar",
+        manufacturer_data=CASPER_GLOW_MANUFACTURER_DATA,
         service_uuids=[],
     ),
     time=0,
@@ -77,6 +82,23 @@ async def setup_integration(hass: HomeAssistant, entry: MockConfigEntry) -> None
     inject_bluetooth_service_info(hass, CASPER_GLOW_DISCOVERY_INFO)
     await hass.config_entries.async_setup(entry.entry_id)
 
+
+JAR_NAME_WITHOUT_MANUFACTURER_DISCOVERY_INFO = BluetoothServiceInfoBleak(
+    name="Jar",
+    address="4D:9F:F5:47:7D:E6",
+    rssi=-60,
+    manufacturer_data={117: b"\x01"},
+    service_uuids=[],
+    service_data={},
+    source="local",
+    device=generate_ble_device(address="4D:9F:F5:47:7D:E6", name="Jar"),
+    advertisement=generate_advertisement_data(
+        local_name="Jar", manufacturer_data={117: b"\x01"}
+    ),
+    time=0,
+    connectable=True,
+    tx_power=-127,
+)
 
 NOT_CASPER_GLOW_DISCOVERY_INFO = BluetoothServiceInfoBleak(
     name="NotGlow",

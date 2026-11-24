@@ -5,7 +5,8 @@
       "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
-      "missing_configuration": "[%key:common::config_flow::abort::oauth2_missing_configuration%]"
+      "missing_configuration": "[%key:common::config_flow::abort::oauth2_missing_configuration%]",
+      "wrong_account": "Please sign in with the account this entry was set up with."
     },
     "create_entry": {
       "default": "[%key:common::config_flow::create_entry::authenticated%]"
@@ -13,6 +14,22 @@
     "step": {
       "pick_implementation": {
         "title": "[%key:common::config_flow::title::oauth2_pick_implementation%]"
+      },
+      "reauth_confirm": {
+        "description": "The Bosch Smart Camera integration needs you to sign in again.",
+        "title": "[%key:common::config_flow::title::reauth%]"
+      }
+    }
+  },
+  "entity": {
+    "light": {
+      "camera_light": {
+        "name": "Camera light"
+      }
+    },
+    "switch": {
+      "privacy_mode": {
+        "name": "Privacy mode"
       }
     }
   },
@@ -22,6 +39,12 @@
     },
     "cannot_connect": {
       "message": "Unable to fetch the cameras from Bosch."
+    },
+    "light_failed": {
+      "message": "Unable to switch the camera light."
+    },
+    "privacy_mode_failed": {
+      "message": "Unable to change the privacy mode at Bosch."
     },
     "snapshot_failed": {
       "message": "Unable to fetch the camera image from Bosch."

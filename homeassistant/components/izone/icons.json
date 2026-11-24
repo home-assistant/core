@@ -1,4 +1,28 @@
 {
+  "entity": {
+    "number": {
+      "damper_max": {
+        "default": "mdi:valve-open"
+      },
+      "damper_min": {
+        "default": "mdi:valve-closed"
+      }
+    },
+    "sensor": {
+      "damper_position": {
+        "default": "mdi:valve"
+      },
+      "rf_signal": {
+        "default": "mdi:wifi-strength-4",
+        "range": {
+          "0": "mdi:wifi-strength-outline",
+          "25": "mdi:wifi-strength-1",
+          "50": "mdi:wifi-strength-2",
+          "100": "mdi:wifi-strength-4"
+        }
+      }
+    }
+  },
   "services": {
     "airflow_max": {
       "service": "mdi:fan-plus"

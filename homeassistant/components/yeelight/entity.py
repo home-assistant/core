@@ -2,10 +2,10 @@
 
 from typing import override
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity
 
+from . import YeelightConfigEntry
 from .const import DOMAIN
 from .device import YeelightDevice
 
@@ -16,7 +16,7 @@ class YeelightEntity(Entity):
     _attr_should_poll = False
     _attr_has_entity_name = True
 
-    def __init__(self, device: YeelightDevice, entry: ConfigEntry) -> None:
+    def __init__(self, device: YeelightDevice, entry: YeelightConfigEntry) -> None:
         """Initialize the entity."""
         self._device = device
         self._unique_id = entry.unique_id or entry.entry_id

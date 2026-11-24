@@ -72,6 +72,7 @@ async def async_setup_scanner(
                 hass,
                 DOMAIN,
                 f"yaml_import_{reason}",
+                breaks_in_ha_version="2027.2.0",
                 is_fixable=False,
                 issue_domain=DOMAIN,
                 severity=ir.IssueSeverity.ERROR,
@@ -84,6 +85,7 @@ async def async_setup_scanner(
         hass,
         HOMEASSISTANT_DOMAIN,
         f"deprecated_yaml_{DOMAIN}",
+        breaks_in_ha_version="2027.2.0",
         is_fixable=False,
         issue_domain=DOMAIN,
         severity=ir.IssueSeverity.WARNING,
@@ -104,13 +106,27 @@ async def async_setup_entry(
 ) -> None:
     """Set up device tracker for OpenWrt (luci) component."""
     coordinator = entry.runtime_data
-    tracked: set[str] = set()
 
     @callback
     def _async_add_new_devices() -> None:
-        """Add entities for devices seen for the first time."""
-        if new_macs := coordinator.data.keys() - tracked:
-            tracked.update(new_macs)
+        """Rename the devices of renamed clients and add new clients."""
+        # Done here because disabled trackers do not listen to the coordinator
+        device_registry = dr.async_get(hass)
+        for mac, device in coordinator.data.items():
+            if (
+                device.hostname
+                and (
+                    device_entry := device_registry.async_get_device_by_connection(
+                        (dr.CONNECTION_NETWORK_MAC, mac), entry.entry_id
+                    )
+                )
+                and device_entry.name != device.hostname
+            ):
+                device_registry.async_update_device(
+                    device_entry.id, name=device.hostname
+                )
+        if new_macs := coordinator.data.keys() - coordinator.tracked_macs:
+            coordinator.tracked_macs.update(new_macs)
             async_add_entities(
                 LuciScannerEntity(coordinator, mac, coordinator.data[mac])
                 for mac in new_macs
@@ -138,10 +154,15 @@ class LuciScannerEntity(CoordinatorEntity[LuciCoordinator], ScannerEntity):
         self._attr_mac_address = mac
         self._attr_hostname = device.hostname
         self._attr_ip_address = device.ip
-        self._attr_device_info = DeviceInfo(
-            connections={(dr.CONNECTION_NETWORK_MAC, mac)},
-            name=device.hostname or mac,
-        )
+        connection = (dr.CONNECTION_NETWORK_MAC, mac)
+        self._attr_device_info = DeviceInfo(connections={connection})
+        if device.hostname:
+            self._attr_device_info.name = device.hostname
+        elif not dr.async_get(coordinator.hass).async_get_device_by_connection(
+            connection, coordinator.config_entry.entry_id
+        ):
+            # Only name a new device by MAC, an existing device keeps its name
+            self._attr_device_info.name = mac
 
     @property
     @override
@@ -163,12 +184,4 @@ class LuciScannerEntity(CoordinatorEntity[LuciCoordinator], ScannerEntity):
             device = self.coordinator.data[self._mac]
             self._attr_hostname = device.hostname
             self._attr_ip_address = device.ip
-            if (
-                device.hostname
-                and (device_entry := self.device_entry)
-                and device_entry.name != device.hostname
-            ):
-                dr.async_get(self.hass).async_update_device(
-                    device_entry.id, name=device.hostname
-                )
         super()._handle_coordinator_update()

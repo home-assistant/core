@@ -320,6 +320,45 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
+class _WorkerControl:
+    """Thread-safe lifecycle control for a single stream worker thread."""
+
+    def __init__(self) -> None:
+        """Initialize worker control."""
+        self._lock = threading.Lock()
+        self._stopped = False
+        self._restart = False
+        self.interrupt = threading.Event()
+
+    @property
+    def is_stopped(self) -> bool:
+        """Return True once stop() has been called."""
+        return self._stopped
+
+    def stop(self) -> None:
+        """Permanently stop this worker."""
+        with self._lock:
+            self._stopped = True
+            self.interrupt.set()
+
+    def request_restart(self) -> None:
+        """Interrupt the current read or retry backoff to reload the source."""
+        with self._lock:
+            if self._stopped:
+                return
+            self._restart = True
+            self.interrupt.set()
+
+    def consume_restart(self) -> bool:
+        """Consume a pending restart if not stopped."""
+        with self._lock:
+            if self._stopped or not self._restart:
+                return False
+            self._restart = False
+            self.interrupt.clear()
+            return True
+
+
 class Stream:
     """Represents a single stream."""
 
@@ -342,9 +381,8 @@ class Stream:
         self.access_token: str | None = None
         self._start_stop_lock = asyncio.Lock()
         self._thread: threading.Thread | None = None
-        self._thread_quit = threading.Event()
+        self._worker_control: _WorkerControl | None = None
         self._outputs: dict[str, StreamOutput] = {}
-        self._fast_restart_once = False
         self._keyframe_converter = KeyFrameConverter(
             hass, stream_settings, dynamic_stream_settings
         )
@@ -436,15 +474,19 @@ class Stream:
         """
         async with self._start_stop_lock:
             if self._thread and self._thread.is_alive():
-                return
+                if self._worker_control is None or not self._worker_control.is_stopped:
+                    return
+                await self.hass.async_add_executor_job(self._thread.join)
             if self._thread is not None:
                 # The thread must have crashed/exited. Join to clean up the
                 # previous thread.
                 self._thread.join(timeout=0)
-            self._thread_quit.clear()
+            control = _WorkerControl()
+            self._worker_control = control
             self._thread = threading.Thread(
                 name="stream_worker",
                 target=self._run_worker,
+                args=(control,),
             )
             self._thread.start()
             self._logger.debug(
@@ -458,8 +500,8 @@ class Stream:
             "Updating stream source %s", redact_credentials(str(new_source))
         )
         self.source = new_source
-        self._fast_restart_once = True
-        self._thread_quit.set()
+        if self._worker_control is not None:
+            self._worker_control.request_restart()
 
     def _set_state(self, available: bool) -> None:
         """Set the stream state by updating the callback."""
@@ -468,15 +510,26 @@ class Stream:
         # it out each time
         self.hass.loop.call_soon_threadsafe(self._async_update_state, available)
 
-    def _run_worker(self) -> None:
+    def _run_worker(self, control: _WorkerControl) -> None:
         """Handle consuming streams and restart keepalive streams."""
         # Keep import here so that we can import stream
         # integration without installing reqs
         from .worker import StreamState, stream_worker  # noqa: PLC0415
 
-        stream_state = StreamState(self.hass, self.outputs, self._diagnostics)
+        stream_state = StreamState(
+            self.hass,
+            lambda: {} if control.is_stopped else self.outputs(),
+            self._diagnostics,
+        )
         wait_timeout = 0
-        while not self._thread_quit.wait(timeout=wait_timeout):
+        while True:
+            if wait_timeout and control.interrupt.wait(timeout=wait_timeout):
+                if not control.consume_restart():
+                    break
+                wait_timeout = 0
+            elif control.is_stopped:
+                break
+
             start_time = time.time()
             self._set_state(True)
             self._diagnostics.set_value(
@@ -493,22 +546,17 @@ class Stream:
                     self._stream_settings,
                     stream_state,
                     self._keyframe_converter,
-                    self._thread_quit,
+                    control.interrupt,
                 )
             except StreamWorkerError as err:
                 self._diagnostics.increment("worker_error")
                 self._logger.error("Error from stream worker: %s", str(err))
 
             stream_state.discontinuity()
-            if not _should_retry() or self._thread_quit.is_set():
-                if self._fast_restart_once:
-                    # The stream source is updated, restart
-                    # without any delay and reset the retry
-                    # backoff for the new url.
-                    wait_timeout = 0
-                    self._fast_restart_once = False
-                    self._thread_quit.clear()
-                    continue
+            if control.consume_restart():
+                wait_timeout = 0
+                continue
+            if not _should_retry() or control.is_stopped:
                 break
 
             self._set_state(False)
@@ -528,6 +576,8 @@ class Stream:
             )
 
         async def worker_finished() -> None:
+            if control.is_stopped:
+                return
             # The worker is no longer checking availability
             # of the stream and can no longer track it so
             # mark it as available, otherwise the frontend
@@ -555,11 +605,14 @@ class Stream:
         Uses an asyncio.Lock to avoid conflicts with start().
         """
         async with self._start_stop_lock:
-            if self._thread is None:
+            if self._thread is None or self._worker_control is None:
                 return
-            self._thread_quit.set()
+            self._worker_control.stop()
             await self.hass.async_add_executor_job(self._thread.join)
             self._thread = None
+            self._worker_control = None
+            if not self.available:
+                self._async_update_state(True)
             self._logger.debug(
                 "Stopped stream: %s", redact_credentials(str(self.source))
             )
@@ -599,7 +652,7 @@ class Stream:
         self._logger.debug("Started a stream recording of %s seconds", duration)
 
         # Take advantage of lookback
-        hls: HlsStreamOutput = cast(HlsStreamOutput, self.outputs().get(HLS_PROVIDER))
+        hls = cast(HlsStreamOutput | None, self.outputs().get(HLS_PROVIDER))
         if hls:
             num_segments = min(int(lookback / hls.target_duration) + 1, MAX_SEGMENTS)
             # Wait for latest segment, then add the lookback

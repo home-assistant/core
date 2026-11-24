@@ -581,6 +581,43 @@ async def test_parallel_updates_sync_platform_updates_in_sequence(
     assert peak_update_count == 1
 
 
+async def test_updates_in_sequence_skip_removed_entity(hass: HomeAssistant) -> None:
+    """Test an entity removed during a sequential update is not updated."""
+    platform = MockPlatform()
+
+    mock_platform(hass, "platform.test_domain", platform)
+
+    component = EntityComponent(_LOGGER, DOMAIN, hass)
+    component._platforms = {}
+
+    await component.async_setup({DOMAIN: {"platform": "platform"}})
+    await hass.async_block_till_done()
+
+    handle = list(component._platforms.values())[-1]
+    updated: list[str] = []
+
+    class SyncEntity(MockEntity):
+        """Mock entity that has update."""
+
+        def update(self) -> None:
+            pass
+
+        async def async_update_ha_state(self, *args: Any, **kwargs: Any) -> None:
+            updated.append(self.entity_id)
+            if self is entity1:
+                await entity2.async_remove()
+
+    entity1 = SyncEntity(name="first")
+    entity2 = SyncEntity(name="second")
+    entity3 = SyncEntity(name="third")
+
+    await handle.async_add_entities([entity1, entity2, entity3])
+    assert handle._update_in_sequence is True
+
+    await handle._async_update_entity_states()
+    assert updated == [entity1.entity_id, entity3.entity_id]
+
+
 async def test_raise_error_on_update(hass: HomeAssistant) -> None:
     """Test the add entity if they raise an error on update."""
     updates = []
