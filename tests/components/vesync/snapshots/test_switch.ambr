@@ -1595,6 +1595,234 @@
     'state': 'on',
   })
 # ---
+# name: test_switch_state[Humidifier Sprout][devices]
+  list([
+    DeviceRegistryEntrySnapshot({
+      'area_id': None,
+      'config_entry_id': <ANY>,
+      'config_subentry_id': None,
+      'configuration_url': None,
+      'connections': set({
+      }),
+      'disabled_by': None,
+      'entry_type': None,
+      'hw_version': None,
+      'id': <ANY>,
+      'identifiers': set({
+        tuple(
+          'vesync',
+          'sprout-humidifier',
+        ),
+      }),
+      'labels': set({
+      }),
+      'manufacturer': 'VeSync',
+      'model': 'LEH-B381S-WUS',
+      'model_id': None,
+      'name': 'Humidifier Sprout',
+      'name_by_user': None,
+      'serial_number': None,
+      'sw_version': None,
+      'via_device_id': None,
+    }),
+  ])
+# ---
+# name: test_switch_state[Humidifier Sprout][entities]
+  list([
+    EntityRegistryEntrySnapshot({
+      'aliases': list([
+        None,
+      ]),
+      'area_id': None,
+      'capabilities': None,
+      'config_entry_id': <ANY>,
+      'config_subentry_id': None,
+      'device_class': None,
+      'device_id': <DeviceEntry identifiers=[('vesync', 'sprout-humidifier')]>,
+      'disabled_by': None,
+      'domain': 'switch',
+      'entity_category': <EntityCategory.CONFIG: 'config'>,
+      'entity_id': 'switch.humidifier_sprout_display',
+      'has_entity_name': True,
+      'hidden_by': None,
+      'icon': None,
+      'id': <ANY>,
+      'labels': set({
+      }),
+      'name': None,
+      'object_id_base': 'Display',
+      'options': dict({
+      }),
+      'original_device_class': None,
+      'original_icon': None,
+      'original_name': 'Display',
+      'platform': 'vesync',
+      'previous_unique_id': None,
+      'suggested_object_id': None,
+      'supported_features': 0,
+      'translation_key': 'display',
+      'unique_id': 'sprout-humidifier-display',
+      'unit_of_measurement': None,
+    }),
+    EntityRegistryEntrySnapshot({
+      'aliases': list([
+        None,
+      ]),
+      'area_id': None,
+      'capabilities': None,
+      'config_entry_id': <ANY>,
+      'config_subentry_id': None,
+      'device_class': None,
+      'device_id': <DeviceEntry identifiers=[('vesync', 'sprout-humidifier')]>,
+      'disabled_by': None,
+      'domain': 'switch',
+      'entity_category': <EntityCategory.CONFIG: 'config'>,
+      'entity_id': 'switch.humidifier_sprout_child_lock',
+      'has_entity_name': True,
+      'hidden_by': None,
+      'icon': None,
+      'id': <ANY>,
+      'labels': set({
+      }),
+      'name': None,
+      'object_id_base': 'Child lock',
+      'options': dict({
+      }),
+      'original_device_class': None,
+      'original_icon': None,
+      'original_name': 'Child lock',
+      'platform': 'vesync',
+      'previous_unique_id': None,
+      'suggested_object_id': None,
+      'supported_features': 0,
+      'translation_key': 'child_lock',
+      'unique_id': 'sprout-humidifier-child_lock',
+      'unit_of_measurement': None,
+    }),
+    EntityRegistryEntrySnapshot({
+      'aliases': list([
+        None,
+      ]),
+      'area_id': None,
+      'capabilities': None,
+      'config_entry_id': <ANY>,
+      'config_subentry_id': None,
+      'device_class': None,
+      'device_id': <DeviceEntry identifiers=[('vesync', 'sprout-humidifier')]>,
+      'disabled_by': None,
+      'domain': 'switch',
+      'entity_category': <EntityCategory.CONFIG: 'config'>,
+      'entity_id': 'switch.humidifier_sprout_auto_off',
+      'has_entity_name': True,
+      'hidden_by': None,
+      'icon': None,
+      'id': <ANY>,
+      'labels': set({
+      }),
+      'name': None,
+      'object_id_base': 'Auto Off',
+      'options': dict({
+      }),
+      'original_device_class': None,
+      'original_icon': None,
+      'original_name': 'Auto Off',
+      'platform': 'vesync',
+      'previous_unique_id': None,
+      'suggested_object_id': None,
+      'supported_features': 0,
+      'translation_key': 'auto_off_config',
+      'unique_id': 'sprout-humidifier-auto_off_config',
+      'unit_of_measurement': None,
+    }),
+    EntityRegistryEntrySnapshot({
+      'aliases': list([
+        None,
+      ]),
+      'area_id': None,
+      'capabilities': None,
+      'config_entry_id': <ANY>,
+      'config_subentry_id': None,
+      'device_class': None,
+      'device_id': <DeviceEntry identifiers=[('vesync', 'sprout-humidifier')]>,
+      'disabled_by': None,
+      'domain': 'switch',
+      'entity_category': <EntityCategory.CONFIG: 'config'>,
+      'entity_id': 'switch.humidifier_sprout_enable_drying_mode_while_power_is_off',
+      'has_entity_name': True,
+      'hidden_by': None,
+      'icon': None,
+      'id': <ANY>,
+      'labels': set({
+      }),
+      'name': None,
+      'object_id_base': 'Enable drying mode while power is off',
+      'options': dict({
+      }),
+      'original_device_class': None,
+      'original_icon': None,
+      'original_name': 'Enable drying mode while power is off',
+      'platform': 'vesync',
+      'previous_unique_id': None,
+      'suggested_object_id': None,
+      'supported_features': 0,
+      'translation_key': 'drying_mode_power_off',
+      'unique_id': 'sprout-humidifier-drying_mode_power_off',
+      'unit_of_measurement': None,
+    }),
+  ])
+# ---
+# name: test_switch_state[Humidifier Sprout][switch.humidifier_sprout_auto_off]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Humidifier Sprout Auto Off',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.humidifier_sprout_auto_off',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_switch_state[Humidifier Sprout][switch.humidifier_sprout_child_lock]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Humidifier Sprout Child lock',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.humidifier_sprout_child_lock',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_switch_state[Humidifier Sprout][switch.humidifier_sprout_display]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Humidifier Sprout Display',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.humidifier_sprout_display',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_switch_state[Humidifier Sprout][switch.humidifier_sprout_enable_drying_mode_while_power_is_off]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Humidifier Sprout Enable drying mode while power is off',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.humidifier_sprout_enable_drying_mode_while_power_is_off',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
 # name: test_switch_state[Outlet][devices]
   list([
     DeviceRegistryEntrySnapshot({
