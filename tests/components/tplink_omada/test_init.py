@@ -367,6 +367,95 @@ async def test_in_flight_registration_skips_removed_device(
     )
 
 
+async def test_in_flight_registration_same_mac_return(
+    hass: HomeAssistant,
+    mock_omada_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test a stale registration cannot add entities after a same-MAC return."""
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    switch_mac = "54-AF-97-00-00-01"
+    entity_id = "switch.test_poe_switch_port_1_poe"
+    site_client = mock_omada_client.get_site_client.return_value
+    original_get_devices = site_client.get_devices
+    original_get_switch = site_client.get_switch
+
+    # Drop the switch once so the next update registers it again.
+    site_client.get_devices = AsyncMock(
+        side_effect=partial(_get_devices_without, hass, switch_mac)
+    )
+    await _async_poll_devices(hass, freezer)
+    assert hass.states.get(entity_id) is None
+
+    gates: list[tuple[asyncio.Event, asyncio.Event]] = []
+
+    async def _slow_get_switch(device: OmadaListDevice) -> object:
+        if gates:
+            reached, release = gates.pop(0)
+            reached.set()
+            await release.wait()
+        return await original_get_switch(device)
+
+    site_client.get_switch = _slow_get_switch
+    site_client.get_devices = original_get_devices
+
+    # Both port callbacks of the first registration block in get_switch.
+    first_reached = [asyncio.Event(), asyncio.Event()]
+    first_release = asyncio.Event()
+    gates.extend((event, first_release) for event in first_reached)
+    freezer.tick(timedelta(seconds=POLL_CLIENTS + 1))
+    async_fire_time_changed(hass, dt_util.utcnow())
+    for event in first_reached:
+        for _ in range(100):
+            if event.is_set():
+                break
+            await asyncio.sleep(0)
+        assert event.is_set()
+
+    # Remove the switch, then let it return, while those callbacks are blocked.
+    site_client.get_devices = AsyncMock(
+        side_effect=partial(_get_devices_without, hass, switch_mac)
+    )
+    freezer.tick(timedelta(seconds=POLL_CLIENTS + 1))
+    async_fire_time_changed(hass, dt_util.utcnow())
+    for _ in range(100):
+        if "Removing stale Omada device" in caplog.text:
+            break
+        await asyncio.sleep(0)
+    assert "Removing stale Omada device" in caplog.text
+    site_client.get_devices = original_get_devices
+
+    # The second registration blocks too, so the stale callbacks run first.
+    second_reached = [asyncio.Event(), asyncio.Event()]
+    second_release = asyncio.Event()
+    gates.extend((event, second_release) for event in second_reached)
+    freezer.tick(timedelta(seconds=POLL_CLIENTS + 1))
+    async_fire_time_changed(hass, dt_util.utcnow())
+    for event in second_reached:
+        for _ in range(100):
+            if event.is_set():
+                break
+            await asyncio.sleep(0)
+        assert event.is_set()
+
+    # The stale callbacks must not add entities, so the healthy ones win.
+    first_release.set()
+    for _ in range(100):
+        if hass.states.get(entity_id) is not None:
+            break
+        await asyncio.sleep(0)
+    second_release.set()
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert "does not generate unique IDs" not in caplog.text
+    assert hass.states.get(entity_id) is not None
+
+
 async def test_startup_cleanup_runs_before_platform_setup(
     hass: HomeAssistant,
     mock_omada_client: MagicMock,

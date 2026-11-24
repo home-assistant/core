@@ -63,7 +63,8 @@ class OmadaSiteController:
         self._known_clients_coordinator = OmadaKnownClientsCoordinator(
             hass, config_entry, omada_client
         )
-        self._device_entity_registrations: list[set[str]] = []
+        self._device_entity_registrations: list[dict[str, int]] = []
+        self._device_generations: dict[str, int] = {}
 
     async def initialize_first_refresh(self) -> None:
         """Initialize the all coordinators, and perform first refresh."""
@@ -101,10 +102,10 @@ class OmadaSiteController:
             entity_callback: Given a discovered Omada device, creates entities and
                 returns True, or returns False when the device is not ready yet.
         """
-        # Track which devices have been processed already. A device removed by
-        # cleanup is dropped from these sets so it is registered again when it
-        # reappears.
-        processed_devices: set[str] = set()
+        # Track which devices have been processed already, keyed by the removal
+        # generation they were reserved in. A device removed by cleanup is
+        # dropped from these maps so it is registered again when it reappears.
+        processed_devices: dict[str, int] = {}
         self._device_entity_registrations.append(processed_devices)
 
         async def _async_register_entities() -> None:
@@ -129,22 +130,24 @@ class OmadaSiteController:
                     continue
                 # Reserve the device before awaiting so concurrent
                 # registrations do not process it twice.
-                processed_devices.add(mac)
+                generation = self.device_generation(mac)
+                processed_devices[mac] = generation
                 try:
                     registered = await entity_callback(device)
                 except OmadaClientException as ex:
                     # Expected transient failures are retried on the next update.
-                    processed_devices.discard(mac)
+                    if processed_devices.get(mac) == generation:
+                        processed_devices.pop(mac, None)
                     _LOGGER.debug(
                         "Failed to register entities for Omada device %s: %s",
                         mac,
                         ex,
                     )
                     continue
-                if not registered:
+                if not registered and processed_devices.get(mac) == generation:
                     # The device is not ready (for example no data for it yet);
                     # leave it unprocessed so a later update retries.
-                    processed_devices.discard(mac)
+                    processed_devices.pop(mac, None)
 
         @callback
         def _handle_devices_update() -> None:
@@ -157,13 +160,19 @@ class OmadaSiteController:
         # Call once on initial setup
         await _async_register_entities()
 
+    @callback
+    def device_generation(self, mac: str) -> int:
+        """Return how many times a device has been removed from the controller."""
+        return self._device_generations.get(mac, 0)
+
     def _forget_device_registration(self, mac: str) -> None:
         """Drop a device from the registration state so it can be added again."""
         for processed in self._device_entity_registrations:
-            processed.discard(mac)
+            processed.pop(mac, None)
 
     async def async_forget_device(self, mac: str) -> None:
         """Drop cached registration and coordinator state for a device."""
+        self._device_generations[mac] = self.device_generation(mac) + 1
         self._forget_device_registration(mac)
         gateway_coordinator = self._gateway_coordinator
         if gateway_coordinator is not None and gateway_coordinator.mac == mac:
