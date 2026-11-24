@@ -7,6 +7,7 @@ from irm_kmi_api import (
     CurrentWeatherData,
     PollenLevel,
     PollenName,
+    RadarAnimationData,
     RadarForecast,
     WarningData,
     WarningType,

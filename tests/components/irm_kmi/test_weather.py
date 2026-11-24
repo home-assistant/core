@@ -352,8 +352,11 @@ async def test_get_forecasts_radar_five_minute_frames(
         blocking=True,
         return_response=True,
     )
+    assert response is not None
+    response_data = cast(dict[str, dict[str, list[dict[str, Any]]]], response)
     assert [
-        forecast["datetime"] for forecast in response[WEATHER_ENTITY_ID]["forecast"]
+        forecast["datetime"]
+        for forecast in response_data[WEATHER_ENTITY_ID]["forecast"]
     ] == [
         "2023-12-28T14:15:00+00:00",
         "2023-12-28T14:20:00+00:00",

@@ -2,7 +2,13 @@
 
 from dataclasses import dataclass, field
 
-from irm_kmi_api import CurrentWeatherData, ExtendedForecast, RadarAnimationData, RadarForecast, WarningData
+from irm_kmi_api import (
+    CurrentWeatherData,
+    ExtendedForecast,
+    RadarAnimationData,
+    RadarForecast,
+    WarningData,
+)
 
 from homeassistant.components.weather import Forecast
 

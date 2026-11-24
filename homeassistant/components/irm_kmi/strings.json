@@ -143,11 +143,11 @@
     "api_error": {
       "message": "An error occurred while communicating with the API: {error}"
     },
-    "radar_unavailable": {
-      "message": "The rain radar image could not be downloaded."
-    },
     "no_radar_forecast": {
       "message": "The rain radar reported no forecast for this location."
+    },
+    "radar_unavailable": {
+      "message": "The rain radar image could not be downloaded."
     }
   },
   "options": {

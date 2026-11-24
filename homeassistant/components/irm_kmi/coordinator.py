@@ -11,7 +11,7 @@ from irm_kmi_api import (
     PollenLevel,
     PollenName,
     RadarAnimationData,
-    RadarForecast,  
+    RadarForecast,
 )
 
 from homeassistant.config_entries import ConfigEntry
@@ -153,12 +153,12 @@ class IrmKmiCoordinator(TimestampDataUpdateCoordinator[ProcessedCoordinatorData]
             animation = None
 
         return ProcessedCoordinatorData(
-            current_weather=self._api.get_current_weather(tz),
-            daily_forecast=self._api.get_daily_forecast(tz, lang),
-            hourly_forecast=self._api.get_hourly_forecast(tz),
-            country=self._api.get_country(),
-            warnings=self._api.get_warnings(lang),
-            radar_forecast=_in_mm_per_hour(self._api.get_radar_forecast()),
+            current_weather=self.api.get_current_weather(tz),
+            daily_forecast=self.api.get_daily_forecast(tz, lang),
+            hourly_forecast=self.api.get_hourly_forecast(tz),
+            country=self.api.get_country(),
+            warnings=self.api.get_warnings(lang),
+            radar_forecast=_in_mm_per_hour(self.api.get_radar_forecast()),
             animation=animation,
         )
 

@@ -28,7 +28,6 @@ async def test_exclude_attributes_radar(
         get_significant_states, hass, now, None, [RADAR_ENTITY_ID]
     )
     assert len(states[RADAR_ENTITY_ID]) == 1
-    assert "hint" not in states[RADAR_ENTITY_ID][0].attributes
     recorded_state = states[RADAR_ENTITY_ID][0]
     assert isinstance(recorded_state, State)
     assert "hint" not in recorded_state.attributes
@@ -41,11 +40,15 @@ async def test_exclude_attributes_warning(
     """Test the warnings are not recorded."""
     now = dt_util.utcnow()
     await setup_integration(hass, mock_config_entry)
-    assert "warnings" in hass.states.get(WARNING_ENTITY_ID).attributes
+    warning_state = hass.states.get(WARNING_ENTITY_ID)
+    assert warning_state is not None
+    assert "warnings" in warning_state.attributes
     await async_wait_recording_done(hass)
 
     states = await hass.async_add_executor_job(
         get_significant_states, hass, now, None, [WARNING_ENTITY_ID]
     )
     assert len(states[WARNING_ENTITY_ID]) == 1
-    assert "warnings" not in states[WARNING_ENTITY_ID][0].attributes
+    recorded_state = states[WARNING_ENTITY_ID][0]
+    assert isinstance(recorded_state, State)
+    assert "warnings" not in recorded_state.attributes

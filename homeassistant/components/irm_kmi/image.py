@@ -14,7 +14,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import dt as dt_util
 
 from .const import DOMAIN, TIMEZONE
-from .coordinator import IrmKmiConfigEntry
+from .coordinator import IrmKmiConfigEntry, IrmKmiCoordinator
 from .entity import IrmKmiBaseEntity
 from .utils import radar_options
 
@@ -30,7 +30,7 @@ async def async_setup_entry(
     async_add_entities([IrmKmiRadarImage(entry)])
 
 
-class IrmKmiRadarImage(IrmKmiBaseEntity, ImageEntity):
+class IrmKmiRadarImage(IrmKmiBaseEntity[IrmKmiCoordinator], ImageEntity):
     """Animated rain radar of the next hour, rendered as an SVG."""
 
     _attr_content_type = "image/svg+xml"
@@ -39,7 +39,7 @@ class IrmKmiRadarImage(IrmKmiBaseEntity, ImageEntity):
 
     def __init__(self, entry: IrmKmiConfigEntry) -> None:
         """Create the radar image from a configuration entry."""
-        super().__init__(entry)
+        super().__init__(entry, entry.runtime_data.weather)
         ImageEntity.__init__(self, self.coordinator.hass)
         self._attr_unique_id = f"{entry.data[CONF_UNIQUE_ID]}-radar"
         self._style, self._dark_mode = radar_options(entry)
