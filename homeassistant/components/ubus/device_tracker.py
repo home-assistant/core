@@ -205,6 +205,36 @@ def _async_rename_devices(
             device_registry.async_update_device(device_entry.id, name=hostname)
 
 
+@callback
+def _async_migrate_unique_ids(entity_registry: er.EntityRegistry) -> None:
+    """Normalize pre-existing tracker unique ids to lowercase MACs.
+
+    Trackers created before MACs were normalized keep the router's raw
+    case; re-pointing the unique id reuses the entity, with its entity
+    id and customizations, instead of creating a duplicate.
+    """
+    for registry_entry in list(entity_registry.entities.values()):
+        if (
+            registry_entry.domain != DEVICE_TRACKER_DOMAIN
+            or registry_entry.platform != DOMAIN
+            or registry_entry.unique_id is None
+        ):
+            continue
+        if (unique_id := registry_entry.unique_id.lower()) == registry_entry.unique_id:
+            continue
+        if (
+            duplicate := entity_registry.async_get_entity_id(
+                DEVICE_TRACKER_DOMAIN, DOMAIN, unique_id
+            )
+        ) is not None and duplicate != registry_entry.entity_id:
+            # A normalized tracker already exists; keep the pre-
+            # normalization one, which carries the established entity id.
+            entity_registry.async_remove(duplicate)
+        entity_registry.async_update_entity(
+            registry_entry.entity_id, new_unique_id=unique_id
+        )
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: UbusConfigEntry,
@@ -217,6 +247,8 @@ async def async_setup_entry(
     device_registry = dr.async_get(hass)
     entity_registry = er.async_get(hass)
     shared: UbusSharedState = hass.data[DOMAIN]
+
+    _async_migrate_unique_ids(entity_registry)
 
     @callback
     def _async_take_over(mac: str, entity_id: str, previous_owner: str | None) -> None:

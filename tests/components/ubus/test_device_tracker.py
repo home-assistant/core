@@ -12,10 +12,7 @@ from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 from homeassistant.components.device_tracker import DOMAIN as DEVICE_TRACKER_DOMAIN
 from homeassistant.components.device_tracker.const import DEFAULT_CONSIDER_HOME
 from homeassistant.components.ubus.const import DOMAIN
-from homeassistant.components.ubus.coordinator import (
-    LEASE_REREAD_INTERVAL,
-    UbusSharedState,
-)
+from homeassistant.components.ubus.coordinator import LEASE_REREAD_INTERVAL
 from homeassistant.components.ubus.device_tracker import UbusScannerEntity
 from homeassistant.config_entries import (
     SOURCE_IMPORT,
@@ -230,22 +227,20 @@ async def test_single_tracker_for_multiple_routers(
     assert "source" not in state.attributes
 
 
-@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+@pytest.mark.usefixtures("entity_registry_enabled_by_default", "two_router_entries")
 async def test_mac_address_case_normalized_across_routers(
     hass: HomeAssistant,
     mock_ubus_by_host: tuple[MagicMock, dict[str, MagicMock]],
-    two_router_entries: tuple[MockConfigEntry, MockConfigEntry],
     entity_registry: er.EntityRegistry,
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test routers reporting the same MAC in different case share one tracker.
 
-    MAC addresses are normalized to lowercase at the source, so the
-    presence records, the ownership claims and the entity ids all key on
-    one form regardless of how a router spells the address.
+    MAC addresses are normalized to lowercase at the source, so however
+    a router spells the address, the client gets one tracker under its
+    normalized form.
     """
     _mock, ubus = mock_ubus_by_host
-    entry_a, entry_b = two_router_entries
 
     # Router A reports the MAC uppercase, router B lowercase.
     ubus[MOCK_HOST].get_hostapd_clients.return_value = {
@@ -257,12 +252,6 @@ async def test_mac_address_case_normalized_across_routers(
     freezer.tick(timedelta(seconds=30))
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
-
-    shared: UbusSharedState = hass.data[DOMAIN]
-    assert MAC_PHONE in shared.presence
-    assert MAC_PHONE.upper() not in shared.presence
-    assert shared.owners.get(MAC_PHONE) in (entry_a.entry_id, entry_b.entry_id)
-    assert MAC_PHONE.upper() not in shared.owners
 
     # One tracker for the client, under its normalized MAC.
     trackers = [
@@ -282,6 +271,126 @@ async def test_mac_address_case_normalized_across_routers(
         is None
     )
     state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == STATE_HOME
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_uppercase_unique_id_migrated_to_lowercase(
+    hass: HomeAssistant,
+    mock_ubus_by_host: tuple[MagicMock, dict[str, MagicMock]],
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test a tracker created before MAC normalization keeps its entity id.
+
+    A router which reported the MAC in another case created the tracker
+    under that raw unique id; it is re-pointed to the normalized form on
+    setup, so the entity and its customizations are reused.
+    """
+    _mock, _ = mock_ubus_by_host
+    entry_a = MockConfigEntry(domain=DOMAIN, data=MOCK_CONFIG, title=MOCK_HOST)
+    entry_a.add_to_hass(hass)
+
+    # The tracker and device were created before MACs were normalized, so
+    # they carry the router's raw case.
+    device = device_registry.async_get_or_create(
+        config_entry_id=entry_a.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, MAC_PHONE.upper())},
+    )
+    entity_entry = entity_registry.async_get_or_create(
+        DEVICE_TRACKER_DOMAIN,
+        DOMAIN,
+        MAC_PHONE.upper(),
+        config_entry=entry_a,
+        device_id=device.id,
+    )
+    entity_id = entity_entry.entity_id
+
+    router = _mock(f"http://{MOCK_HOST}/ubus", "root", "password", verify=True)
+    router.get_hostapd_clients.return_value = {
+        "clients": {MAC_PHONE: {"authorized": True}}
+    }
+    assert await hass.config_entries.async_setup(entry_a.entry_id)
+    await hass.async_block_till_done()
+
+    # The tracker was reused with its entity id, now under the normalized
+    # unique id.
+    assert entity_registry.async_get(entity_id) is not None
+    assert entity_registry.async_get(entity_id).unique_id == MAC_PHONE
+    assert (
+        entity_registry.async_get_entity_id(
+            DEVICE_TRACKER_DOMAIN, DOMAIN, MAC_PHONE.upper()
+        )
+        is None
+    )
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == STATE_HOME
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_duplicate_mac_case_trackers_merged(
+    hass: HomeAssistant,
+    mock_ubus_by_host: tuple[MagicMock, dict[str, MagicMock]],
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test the established tracker wins when both MAC cases are registered.
+
+    If a tracker exists in both the raw case and the normalized form, the
+    established one keeps its entity id and gains the normalized unique id,
+    and the duplicate is removed.
+    """
+    _mock, _ = mock_ubus_by_host
+    entry_a = MockConfigEntry(domain=DOMAIN, data=MOCK_CONFIG, title=MOCK_HOST)
+    entry_b = MockConfigEntry(
+        domain=DOMAIN,
+        data={**MOCK_CONFIG, CONF_HOST: MOCK_HOST_B},
+        title=MOCK_HOST_B,
+    )
+    entry_a.add_to_hass(hass)
+    entry_b.add_to_hass(hass)
+
+    device_a = device_registry.async_get_or_create(
+        config_entry_id=entry_a.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, MAC_PHONE.upper())},
+    )
+    raw_entry = entity_registry.async_get_or_create(
+        DEVICE_TRACKER_DOMAIN,
+        DOMAIN,
+        MAC_PHONE.upper(),
+        config_entry=entry_a,
+        device_id=device_a.id,
+    )
+    raw_id = raw_entry.entity_id
+    device_b = device_registry.async_get_or_create(
+        config_entry_id=entry_b.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, MAC_PHONE)},
+    )
+    duplicate_entry = entity_registry.async_get_or_create(
+        DEVICE_TRACKER_DOMAIN,
+        DOMAIN,
+        MAC_PHONE,
+        config_entry=entry_b,
+        device_id=device_b.id,
+    )
+    duplicate_id = duplicate_entry.entity_id
+
+    router = _mock(f"http://{MOCK_HOST}/ubus", "root", "password", verify=True)
+    router.get_hostapd_clients.return_value = {
+        "clients": {MAC_PHONE: {"authorized": True}}
+    }
+    assert await hass.config_entries.async_setup(entry_a.entry_id)
+    await hass.async_block_till_done()
+
+    # The established tracker kept its entity id and gained the normalized
+    # unique id; the duplicate is gone.
+    assert entity_registry.async_get(raw_id) is not None
+    assert entity_registry.async_get(raw_id).unique_id == MAC_PHONE
+    assert entity_registry.async_get(duplicate_id) is None
+
+    state = hass.states.get(raw_id)
     assert state is not None
     assert state.state == STATE_HOME
 
