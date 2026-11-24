@@ -33,8 +33,8 @@ class NetioOutputEntity(CoordinatorEntity[NetioDataUpdateCoordinator]):
         The last known name is kept so the entity name does not flip to a
         generic one while the output is missing from a poll.
         """
-        if (output := self.output) is not None and output.Name:
-            self._last_output_name = output.Name
+        if (output := self.output) is not None:
+            self._last_output_name = output.Name or None
         if self._last_output_name is not None:
             return self._last_output_name
         return f"Output {self._output_id}"
