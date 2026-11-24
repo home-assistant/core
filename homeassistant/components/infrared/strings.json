@@ -1,4 +1,11 @@
 {
+  "common": {
+    "infrared_entity_id": "Infrared emitter",
+    "infrared_entity_id_description": "The infrared emitter entity to use for sending commands.",
+    "infrared_receiver_entity_id": "Infrared receiver",
+    "no_infrared_emitters": "No infrared emitter entities found. Please set up an infrared device first.",
+    "no_infrared_entities": "No infrared entities found. Please set up an infrared device first."
+  },
   "entity_component": {
     "emitter": {
       "name": "Infrared emitter"

@@ -165,6 +165,16 @@
       },
       "name": "Enable URL"
     },
+    "pause_protection": {
+      "description": "Pauses protection in AdGuard Home for a duration, after which AdGuard Home enables it again.",
+      "fields": {
+        "duration": {
+          "description": "How long to pause protection for.",
+          "name": "Duration"
+        }
+      },
+      "name": "Pause protection"
+    },
     "refresh": {
       "description": "Refreshes all filter subscriptions in AdGuard Home.",
       "fields": {
