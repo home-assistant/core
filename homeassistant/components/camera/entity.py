@@ -254,8 +254,9 @@ class Camera(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
                 async with asyncio.timeout(CAMERA_STREAM_SOURCE_TIMEOUT):
                     source = await self._async_get_webrtc_provider_stream_source()
                 if not source:
+                    # Stops the outputs but keeps the stream: a preloaded worker
+                    # keeps running, so it resumes with the restream later
                     await self.stream.stop()
-                    self.stream = None
                     return None
                 if source != self.stream.source:
                     self.stream.update_source(source)

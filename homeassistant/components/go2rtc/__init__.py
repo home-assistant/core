@@ -1,6 +1,7 @@
 """The go2rtc component."""
 
 from dataclasses import dataclass
+from datetime import datetime
 import logging
 import re
 from secrets import token_hex
@@ -45,7 +46,7 @@ from homeassistant.const import (
     CONF_USERNAME,
     EVENT_HOMEASSISTANT_STOP,
 )
-from homeassistant.core import Event, HomeAssistant, callback
+from homeassistant.core import CALLBACK_TYPE, Event, HomeAssistant, callback
 from homeassistant.exceptions import (
     ConfigEntryError,
     ConfigEntryNotReady,
@@ -61,6 +62,7 @@ from homeassistant.helpers.aiohttp_client import (
     async_get_clientsession,
 )
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util.hass_dict import HassKey
 from homeassistant.util.package import is_docker_env
@@ -129,6 +131,8 @@ CONFIG_SCHEMA = probatio.Schema(
 
 _DATA_GO2RTC: HassKey[Go2RtcConfig] = HassKey(DOMAIN)
 _RETRYABLE_ERRORS = (ClientConnectionError, ServerConnectionError)
+# Seconds before each retry of restoring the restreams, the last repeating
+_RESTORE_RETRY_DELAYS = (5, 15, 30, 60, 300)
 type Go2RtcConfigEntry = ConfigEntry[WebRTCProvider]
 
 
@@ -331,6 +335,8 @@ class WebRTCProvider(CameraWebRTCProvider):
         self._supported_schemes: set[str] = set()
         self._added_stream_sources: dict[str, str] = {}
         self._restreamed_cameras: dict[str, Camera] = {}
+        self._restore_attempt = 0
+        self._cancel_restore_retry: CALLBACK_TYPE | None = None
 
     @property
     @override
@@ -450,8 +456,9 @@ class WebRTCProvider(CameraWebRTCProvider):
             return None
         try:
             await self._update_stream_source(camera)
-        except Go2RtcClientError as err:
-            raise HomeAssistantError("Unable to update the stream in go2rtc") from err
+        except Go2RtcClientError:
+            # Without the client error, which can carry the source's credentials
+            raise HomeAssistantError("Unable to update the stream in go2rtc") from None
         identifier = get_camera_identifier(camera)
         # A restarted server has lost the stream, but HLS and recording keep
         # reading its address
@@ -464,19 +471,57 @@ class WebRTCProvider(CameraWebRTCProvider):
     @callback
     def async_restore_restreams(self) -> None:
         """Restore the restreams after the managed server restarted."""
+        self._stop_restore_retry()
+        self._restore_attempt = 0
         self._hass.async_create_task(
             self._async_restore_restreams(), "go2rtc restore restreams"
         )
 
+    @callback
+    def _async_retry_restore(self, _now: datetime) -> None:
+        """Retry restoring the restreams."""
+        self._cancel_restore_retry = None
+        self._hass.async_create_task(
+            self._async_restore_restreams(), "go2rtc restore restreams"
+        )
+
+    @callback
+    def _stop_restore_retry(self) -> None:
+        """Cancel a pending retry of restoring the restreams."""
+        if self._cancel_restore_retry:
+            self._cancel_restore_retry()
+            self._cancel_restore_retry = None
+
     async def _async_restore_restreams(self) -> None:
-        """Add the restreamed cameras' streams again to a restarted server."""
+        """Add the restreamed cameras' streams again to a restarted server.
+
+        HLS and recording keep reading the restreams without asking for them
+        again, so a failure is retried until it succeeds.
+        """
+        failed: list[str] = []
         for camera in list(self._restreamed_cameras.values()):
             try:
                 await self._update_stream_source(camera)
-            except (Go2RtcClientError, HomeAssistantError) as err:
-                _LOGGER.warning(
-                    "Unable to restore the restream of %s: %s", camera.entity_id, err
-                )
+            except Go2RtcClientError, HomeAssistantError:
+                # Not logged, as the error can carry the source's credentials
+                failed.append(camera.entity_id)
+        if not failed:
+            if self._restore_attempt:
+                _LOGGER.info("Restored the restreams in go2rtc")
+            self._restore_attempt = 0
+            return
+        if not self._restore_attempt:
+            _LOGGER.warning(
+                "Unable to restore the restreams of %s in go2rtc, retrying",
+                ", ".join(failed),
+            )
+        delay = _RESTORE_RETRY_DELAYS[
+            min(self._restore_attempt, len(_RESTORE_RETRY_DELAYS) - 1)
+        ]
+        self._restore_attempt += 1
+        self._cancel_restore_retry = async_call_later(
+            self._hass, delay, self._async_retry_restore
+        )
 
     async def _update_stream_source(self, camera: Camera) -> None:
         """Update the stream source in go2rtc config if needed."""
@@ -598,6 +643,7 @@ class WebRTCProvider(CameraWebRTCProvider):
 
     async def teardown(self) -> None:
         """Tear down the provider."""
+        self._stop_restore_retry()
         while self._sessions:
             _, session_info = self._sessions.popitem()
             await session_info.ws_client.close()
