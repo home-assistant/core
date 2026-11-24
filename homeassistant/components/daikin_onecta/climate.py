@@ -376,7 +376,9 @@ class DaikinClimate(DaikinManagementPointEntity, ClimateEntity):
             supported_features |= ClimateEntityFeature.PRESET_MODE
         cc = climate_control
         if cc is not None:
-            if cc.on_off_mode is not None and cc.on_off_mode.settable:
+            if (
+                cc.on_off_mode is not None and cc.on_off_mode.settable
+            ) or self._operation_mode_controls_power(cc):
                 supported_features |= (
                     ClimateEntityFeature.TURN_OFF | ClimateEntityFeature.TURN_ON
                 )
@@ -388,6 +390,20 @@ class DaikinClimate(DaikinManagementPointEntity, ClimateEntity):
                 supported_features |= ClimateEntityFeature.SWING_HORIZONTAL_MODE
 
         return supported_features
+
+    def _operation_mode_controls_power(self, climate_control: ClimateControl) -> bool:
+        """Return whether operationMode can turn the unit off and back on."""
+        operation_mode = self._operation_mode(climate_control)
+        if (
+            climate_control.on_off_mode is not None
+            or operation_mode is None
+            or not operation_mode.settable
+        ):
+            return False
+        modes = [DAIKIN_HVAC_TO_HA.get(mode) for mode in operation_mode.values or []]
+        return HVACMode.OFF in modes and any(
+            mode is not None and mode != HVACMode.OFF for mode in modes
+        )
 
     def _fan_mode_is_settable(self, climate_control: ClimateControl | None) -> bool:
         """Return whether any fan mode control is writable."""
@@ -573,6 +589,14 @@ class DaikinClimate(DaikinManagementPointEntity, ClimateEntity):
             cc is not None
             and cc.on_off_mode is not None
             and cc.on_off_mode.value not in {"on", "off"}
+        ):
+            self._raise_service_validation_error("climate_power_unavailable")
+        if (
+            hvac_mode != HVACMode.OFF
+            and cc is not None
+            and cc.on_off_mode is not None
+            and not cc.on_off_mode.settable
+            and cc.on_off_mode.value == "off"
         ):
             self._raise_service_validation_error("climate_power_unavailable")
 
@@ -1037,9 +1061,25 @@ class DaikinClimate(DaikinManagementPointEntity, ClimateEntity):
     @override
     async def async_turn_on(self) -> None:
         """Turn device CLIMATE on."""
+        cc = self._climate_control()
+        if cc is not None and cc.on_off_mode is None:
+            if self.hvac_mode == HVACMode.OFF:
+                next_mode = next(
+                    (mode for mode in self.hvac_modes if mode != HVACMode.OFF), None
+                )
+                if next_mode is None:
+                    self._raise_service_validation_error(
+                        "climate_hvac_mode_unavailable"
+                    )
+                await self.async_set_hvac_mode(next_mode)
+            return
         await self._async_set_power(True, "turn_on_failed")
 
     @override
     async def async_turn_off(self) -> None:
         """Turn the climate entity off."""
+        cc = self._climate_control()
+        if cc is not None and cc.on_off_mode is None:
+            await self.async_set_hvac_mode(HVACMode.OFF)
+            return
         await self._async_set_power(False, "turn_off_failed")
