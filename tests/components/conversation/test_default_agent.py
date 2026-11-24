@@ -1021,7 +1021,7 @@ async def test_error_no_device_on_floor_exposed(
     )
 
     with patch(
-        "homeassistant.components.conversation.default_agent.recognize_all",
+        "homeassistant.components.conversation.default_agent.recognize_ranked",
         return_value=[recognize_result],
     ):
         result = await conversation.async_converse(
@@ -1320,7 +1320,7 @@ async def test_error_no_domain(hass: HomeAssistant) -> None:
     )
 
     with patch(
-        "homeassistant.components.conversation.default_agent.recognize_all",
+        "homeassistant.components.conversation.default_agent.recognize_ranked",
         return_value=[recognize_result],
     ):
         result = await conversation.async_converse(
@@ -1355,7 +1355,7 @@ async def test_error_no_domain_exposed(hass: HomeAssistant) -> None:
     )
 
     with patch(
-        "homeassistant.components.conversation.default_agent.recognize_all",
+        "homeassistant.components.conversation.default_agent.recognize_ranked",
         return_value=[recognize_result],
     ):
         result = await conversation.async_converse(
@@ -1529,7 +1529,7 @@ async def test_error_no_device_class(hass: HomeAssistant) -> None:
     )
 
     with patch(
-        "homeassistant.components.conversation.default_agent.recognize_all",
+        "homeassistant.components.conversation.default_agent.recognize_ranked",
         return_value=[recognize_result],
     ):
         result = await conversation.async_converse(
@@ -1578,7 +1578,7 @@ async def test_error_no_device_class_exposed(hass: HomeAssistant) -> None:
     )
 
     with patch(
-        "homeassistant.components.conversation.default_agent.recognize_all",
+        "homeassistant.components.conversation.default_agent.recognize_ranked",
         return_value=[recognize_result],
     ):
         result = await conversation.async_converse(
@@ -1689,7 +1689,7 @@ async def test_error_no_device_class_on_floor_exposed(
     )
 
     with patch(
-        "homeassistant.components.conversation.default_agent.recognize_all",
+        "homeassistant.components.conversation.default_agent.recognize_ranked",
         return_value=[recognize_result],
     ):
         result = await conversation.async_converse(
@@ -1711,7 +1711,7 @@ async def test_error_no_device_class_on_floor_exposed(
 async def test_error_no_intent(hass: HomeAssistant) -> None:
     """Test response with an intent match failure."""
     with patch(
-        "homeassistant.components.conversation.default_agent.recognize_all",
+        "homeassistant.components.conversation.default_agent.recognize_ranked",
         return_value=[],
     ):
         result = await conversation.async_converse(
@@ -3465,8 +3465,9 @@ async def test_fixed_name_slot_priority(hass: HomeAssistant) -> None:
         entities_list=[name],
     )
 
+    # Patched below recognize_ranked, so hassil still ranks the results
     with patch(
-        "homeassistant.components.conversation.default_agent.recognize_all",
+        "hassil.recognize.recognize_all",
         return_value=[nameless_result, named_result],
     ):
         results = await async_get_agent(hass).async_recognize_intents(
@@ -3482,6 +3483,59 @@ async def test_fixed_name_slot_priority(hass: HomeAssistant) -> None:
         )
 
     assert results == [named_result]
+
+
+async def test_custom_sentence_name_outside_area(
+    hass: HomeAssistant,
+    area_registry: ar.AreaRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test that a built-in sentence in the satellite area does not beat a custom one."""
+    assert await async_setup_component(hass, "homeassistant", {})
+    assert await async_setup_component(hass, "intent", {})
+    assert await async_setup_component(
+        hass,
+        DOMAIN,
+        {"conversation": {"intents": {"CustomIntent": ["turn on [the] {name}"]}}},
+    )
+    assert await async_setup_component(
+        hass,
+        "intent_script",
+        {"intent_script": {"CustomIntent": {"speech": {"text": "custom response"}}}},
+    )
+    turn_on_calls = async_mock_service(hass, "light", "turn_on")
+
+    area_kitchen = area_registry.async_get_or_create("kitchen")
+    area_bedroom = area_registry.async_get_or_create("bedroom")
+    for object_id, name, area_id in (
+        ("named", "light", area_kitchen.id),
+        ("bedroom_ceiling", "bedroom ceiling", area_bedroom.id),
+    ):
+        entry = entity_registry.async_get_or_create(
+            "light",
+            "demo",
+            object_id,
+            suggested_object_id=object_id,
+            original_name=name,
+        )
+        entity_registry.async_update_entity(entry.entity_id, area_id=area_id)
+        hass.states.async_set(entry.entity_id, STATE_OFF, {ATTR_FRIENDLY_NAME: name})
+
+    satellite = entity_registry.async_get_or_create("assist_satellite", "demo", "sat")
+    entity_registry.async_update_entity(satellite.entity_id, area_id=area_bedroom.id)
+
+    result = await conversation.async_converse(
+        hass,
+        "turn on the light",
+        None,
+        Context(),
+        None,
+        satellite_id=satellite.entity_id,
+    )
+    await hass.async_block_till_done()
+
+    assert result.response.speech["plain"]["speech"] == "custom response"
+    assert not turn_on_calls
 
 
 async def test_custom_sentences_priority(
