@@ -3,12 +3,13 @@
 import asyncio
 import threading
 from typing import Any
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, call
 
 import pyads
 import pytest
 
 from homeassistant.components.ads.const import DATA_ADS
+from homeassistant.components.select import DOMAIN as SELECT_DOMAIN
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP, STATE_OFF
 from homeassistant.core import HomeAssistant
@@ -47,6 +48,29 @@ async def test_removal_deletes_the_notification(
     hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
     await hass.async_block_till_done()
     client.del_device_notification.assert_called_once()
+
+
+async def test_select_removal_deletes_both_notifications(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_pyads_connection: MagicMock,
+    mock_ads_device: MockAdsDevice,
+) -> None:
+    """Test removing a select deletes the option subscription as well."""
+    mock_ads_device.values["GVL.mode"] = b"\x01\x00"
+    assert await setup_ads_platform(
+        hass,
+        mock_ads_device,
+        SELECT_DOMAIN,
+        {"adsvar": "GVL.mode", "name": "Mode", "options": ["off", "auto"]},
+    )
+    assert hass.states.get("select.mode").state == "auto"
+
+    entity_registry.async_remove("select.mode")
+    await hass.async_block_till_done()
+
+    client = mock_pyads_connection.return_value
+    assert client.del_device_notification.call_args_list == [call(1, 1), call(2, 2)]
 
 
 async def test_removal_after_shutdown(

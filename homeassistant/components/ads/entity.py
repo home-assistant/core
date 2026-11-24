@@ -2,6 +2,7 @@
 
 import asyncio
 from asyncio import timeout
+from collections.abc import Callable
 import logging
 from typing import Any, override
 
@@ -53,25 +54,42 @@ class AdsEntity(Entity):
 
         event = asyncio.Event()
 
+        if not await self.async_add_notification(ads_var, plctype, update):
+            return
+        try:
+            async with timeout(10):
+                await event.wait()
+        except TimeoutError:
+            _LOGGER.debug("Variable %s: Timeout during first update", ads_var)
+
+    async def async_add_notification(
+        self,
+        ads_var: str,
+        plctype: type,
+        notification_callback: Callable[[str, Any], None],
+    ) -> bool:
+        """Subscribe to a variable for this entity, returning whether it worked.
+
+        The handle is tracked, so removing the entity deletes it again.
+        """
         handle = await self.hass.async_add_executor_job(
-            self._ads_hub.add_device_notification, ads_var, plctype, update
+            self._ads_hub.add_device_notification,
+            ads_var,
+            plctype,
+            notification_callback,
         )
         if handle is None:
             # No notification is registered, so no first update will arrive.
-            return
+            return False
         if self._removed:
             # Removed while this was subscribing, so the removal has already
             # drained the handles and will not come back for this one.
             await self.hass.async_add_executor_job(
                 self._ads_hub.delete_device_notification, handle
             )
-            return
+            return False
         self._notification_handles.append(handle)
-        try:
-            async with timeout(10):
-                await event.wait()
-        except TimeoutError:
-            _LOGGER.debug("Variable %s: Timeout during first update", ads_var)
+        return True
 
     @property
     @override
