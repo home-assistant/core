@@ -46,6 +46,7 @@ from homeassistant.components.light import (
     ATTR_COLOR_TEMP_KELVIN,
     ATTR_SUPPORTED_COLOR_MODES,
     DOMAIN as LIGHT_DOMAIN,
+    ColorMode,
 )
 from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
@@ -174,7 +175,7 @@ async def _setup_light(hass: HomeAssistant, hk_driver, state: str = STATE_ON) ->
         entity_id,
         state,
         {
-            ATTR_SUPPORTED_COLOR_MODES: ["color_temp"],
+            ATTR_SUPPORTED_COLOR_MODES: [ColorMode.COLOR_TEMP],
             ATTR_BRIGHTNESS: 255,
             ATTR_COLOR_TEMP_KELVIN: 4000,
         },
@@ -220,7 +221,7 @@ async def test_adaptive_lighting_is_off_without_the_option(
 ) -> None:
     """Without the option the light behaves exactly as before."""
     hass.states.async_set(
-        "light.demo", STATE_ON, {ATTR_SUPPORTED_COLOR_MODES: ["color_temp"]}
+        "light.demo", STATE_ON, {ATTR_SUPPORTED_COLOR_MODES: [ColorMode.COLOR_TEMP]}
     )
     await hass.async_block_till_done()
     acc = Light(hass, hk_driver, "Light", "light.demo", 1, None)
@@ -536,7 +537,7 @@ async def test_switching_the_light_on_applies_the_curve_at_once(
         "light.demo",
         STATE_ON,
         {
-            ATTR_SUPPORTED_COLOR_MODES: ["color_temp"],
+            ATTR_SUPPORTED_COLOR_MODES: [ColorMode.COLOR_TEMP],
             ATTR_BRIGHTNESS: 255,
             ATTR_COLOR_TEMP_KELVIN: 4000,
         },
@@ -568,7 +569,7 @@ async def test_a_brightness_change_applies_the_curve_at_once(
         "light.demo",
         STATE_ON,
         {
-            ATTR_SUPPORTED_COLOR_MODES: ["color_temp"],
+            ATTR_SUPPORTED_COLOR_MODES: [ColorMode.COLOR_TEMP],
             ATTR_BRIGHTNESS: 26,
             ATTR_COLOR_TEMP_KELVIN: 4000,
         },
