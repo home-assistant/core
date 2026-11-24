@@ -214,6 +214,18 @@ def test_manifest_reads_unset_string_as_not_set(
     assert "Ignoring" not in caplog.text
 
 
+@pytest.mark.parametrize("value", [False, None])
+def test_manifest_reads_unset_hacs_version_as_not_set(
+    value: Any, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test false or null for the HACS version, which HACS accepted, is read as not set."""
+    manifest = RepositoryManifest.from_dict({"name": "TEST", "hacs": value})
+
+    assert manifest.manifest == {"name": "TEST"}
+    assert manifest.hacs is None
+    assert "Ignoring" not in caplog.text
+
+
 def test_manifest_with_legacy_values_from_issue() -> None:
     """Test the hacs.json values from the issue keep their HACS meaning."""
     manifest = RepositoryManifest.from_dict(
