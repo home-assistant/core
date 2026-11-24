@@ -754,9 +754,7 @@ class DefaultAgent(ConversationEntity):
         chat_log: ChatLog,
     ) -> intent.IntentResponse | None:
         """Try to recognize a sentence hassil could not, or return None to give up."""
-        if hassil_result is not None and (hassil_result.intent_metadata or {}).get(
-            METADATA_CUSTOM_SENTENCE
-        ):
+        if hassil_result is not None and _is_custom_sentence(hassil_result):
             # A sentence somebody wrote themselves, matched to the intent they wrote
             # it for, with only the target left unresolved. Its error says so; the
             # gazetteer would answer a different intent it happens to recognize.
@@ -1750,12 +1748,15 @@ def _recognize_strict(
         best_metadata_key=METADATA_CUSTOM_SENTENCE,
         best_slot_name="name",
     )
+
     if not results:
         return []
 
     top_result = results[0]
+
+    # Custom sentences rank first, so the top result tells if any matched.
+    # When one did, the built-in results are dropped so none can replace it.
     if _is_custom_sentence(top_result):
-        # A built-in sentence must not take over from a custom one
         results = [result for result in results if _is_custom_sentence(result)]
 
     # A matched name normally beats a domain or area match. Try such an
@@ -1775,6 +1776,13 @@ def _recognize_strict(
         result for result in results if _is_name_in_scope(result, context_area)
     )
     return [in_scope_result, top_result]
+
+
+def _is_custom_sentence(result: RecognizeResult) -> bool:
+    """Check if a result was matched by a custom sentence."""
+    return bool(
+        result.intent_metadata and result.intent_metadata.get(METADATA_CUSTOM_SENTENCE)
+    )
 
 
 def _get_matched_name(result: RecognizeResult) -> MatchEntity | None:
@@ -1824,13 +1832,6 @@ def _get_area_ids(entity: MatchEntity | None) -> set[str] | None:
     if entity is None or entity.metadata is None:
         return None
     return entity.metadata.get(_METADATA_AREA_IDS)
-
-
-def _is_custom_sentence(result: RecognizeResult) -> bool:
-    """Check if a result was matched by a custom sentence."""
-    return bool(
-        result.intent_metadata and result.intent_metadata.get(METADATA_CUSTOM_SENTENCE)
-    )
 
 
 def _found_no_targets(response: intent.IntentResponse) -> bool:
