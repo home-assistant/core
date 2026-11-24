@@ -1,7 +1,8 @@
 """Support for Danfoss Air HRV."""
 
-from datetime import timedelta
+from datetime import datetime, timedelta
 import logging
+import threading
 
 import probatio
 from pydanfossair.commands import ReadCommand
@@ -11,7 +12,7 @@ from homeassistant.const import CONF_HOST, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, discovery
 from homeassistant.helpers.typing import ConfigType
-from homeassistant.util import Throttle
+from homeassistant.util import dt as dt_util
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -45,6 +46,8 @@ class DanfossAir:
         """Initialize the Danfoss Air CCM connection."""
         self._data = {}
         self.available = True
+        self._lock = threading.Lock()
+        self._last_update: datetime | None = None
 
         self._client = DanfossClient(host)
 
@@ -54,10 +57,26 @@ class DanfossAir:
 
     def update_state(self, command, state_command):
         """Send update command to Danfoss Air CCM."""
-        self._data[state_command] = self._client.command(command)
+        with self._lock:
+            self._data[state_command] = self._client.command(command)
 
-    @Throttle(MIN_TIME_BETWEEN_UPDATES)
-    def update(self):
+    def update(self) -> None:
+        """Fetch new data, at most once per MIN_TIME_BETWEEN_UPDATES.
+
+        Every entity calls this from its own update, often at the same time.
+        A caller that arrives while a fetch is running waits for it, instead
+        of reading the data before it is filled in.
+        """
+        with self._lock:
+            if (
+                self._last_update is not None
+                and dt_util.utcnow() - self._last_update < MIN_TIME_BETWEEN_UPDATES
+            ):
+                return
+            self._update()
+            self._last_update = dt_util.utcnow()
+
+    def _update(self) -> None:
         """Use the data from Danfoss Air API."""
         _LOGGER.debug("Fetching data from Danfoss Air CCM module")
 
