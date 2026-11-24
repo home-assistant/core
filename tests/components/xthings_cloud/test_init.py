@@ -12,7 +12,6 @@ from homeassistant.helpers import device_registry as dr
 from . import setup_integration
 
 
-
 async def test_devices(
     hass: HomeAssistant,
     snapshot: SnapshotAssertion,

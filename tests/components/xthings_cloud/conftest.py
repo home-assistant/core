@@ -12,7 +12,6 @@ from homeassistant.const import CONF_EMAIL, CONF_TOKEN
 from .const import MOCK_EMAIL, MOCK_REFRESH_TOKEN, MOCK_TOKEN, MOCK_USER_ID
 
 
-
 @pytest.fixture
 def mock_config_entry() -> MockConfigEntry:
     """Return a mock config entry."""

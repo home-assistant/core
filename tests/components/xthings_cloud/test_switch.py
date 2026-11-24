@@ -22,7 +22,6 @@ from homeassistant.helpers import entity_registry as er
 from . import get_device_by_id, setup_integration
 
 
-
 async def test_switches(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,

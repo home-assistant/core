@@ -21,7 +21,6 @@ from .const import (
 )
 
 
-
 async def test_user_flow_success(
     hass: HomeAssistant,
     mock_setup_entry: AsyncMock,
