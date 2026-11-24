@@ -4039,7 +4039,7 @@
         "cloud"
       ],
       "config_flow": true,
-      "iot_class": "cloud_polling"
+      "iot_class": "cloud_push"
     },
     "epic_games_store": {
       "name": "Epic Games Store",
@@ -17277,7 +17277,7 @@
       }
     },
     "xmpp": {
-      "name": "Jabber (XMPP)",
+      "name": "XMPP",
       "integration_type": "hub",
       "categories": [
         "messaging_notifications.chat_apps"

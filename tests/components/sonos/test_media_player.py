@@ -53,6 +53,7 @@ from homeassistant.components.sonos.media_player import (
     VOLUME_INCREMENT,
 )
 from homeassistant.components.sonos.services import SonosService, SonosServiceArgument
+from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN, SwitchService
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_ENTITY_PICTURE,
@@ -1765,6 +1766,18 @@ async def test_service_update_alarm(
         ("Volume", 25),
         ("IncludeLinkedZones", "1"),
     ]
+    # Toggling the alarm switch keeps the updated alarm settings.
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        SwitchService.TURN_OFF,
+        {ATTR_ENTITY_ID: "switch.zone_a_daily_alarm_07_00"},
+        blocking=True,
+    )
+    assert soco.alarmClock.UpdateAlarm.call_count == 2
+    sent = dict(soco.alarmClock.UpdateAlarm.call_args.args[0])
+    assert sent["StartLocalTime"] == "07:15:00"
+    assert sent["IncludeLinkedZones"] == "1"
+    assert sent["Enabled"] == "0"
 
 
 async def test_service_update_alarm_dne(

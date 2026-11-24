@@ -24,6 +24,7 @@ from boschshcpy import (
     SHCCameraOutdoorGen2,
     SHCClimateControl,
     SHCHeatingCircuit,
+    SHCInformation,
     SHCIntrusionSystem,
     SHCLightSwitchBSM,
     SHCMicromoduleBlinds,
@@ -157,7 +158,8 @@ def mock_session(device_buckets: dict[str, Any]) -> Generator[MagicMock]:
     """Mock SHCSession, patched in for the duration of the test."""
     session = MagicMock()
     session.information.unique_id = "test-mac"
-    session.information.updateState.name = "UP_TO_DATE"
+    session.information.updateState = SHCInformation.UpdateState.NO_UPDATE_AVAILABLE
+    session.information.available_version = None
     session.information.version = "2.0"
     session.device_helper = SimpleNamespace(**device_buckets)
     session.intrusion_system = intrusion_system_device()
@@ -824,16 +826,19 @@ class FakeLatestMotionService:
     def __init__(self) -> None:
         """Initialize the fake service's callback registry."""
         self._event_callbacks: dict[str, Any] = {}
+        self.callbacks: dict[Any, Any] = {}
 
     def register_event(self, event: str, callback: Any) -> None:
         """Register a callback for the given device id."""
         self._event_callbacks[event] = callback
 
     def subscribe_callback(self, entity: Any, callback: Any) -> None:
-        """No-op: SHCEntity subscribes to every device service's generic callback."""
+        """Record the generic callback SHCEntity subscribes per service."""
+        self.callbacks[entity] = callback
 
     def unsubscribe_callback(self, entity: Any) -> None:
-        """No-op counterpart to subscribe_callback."""
+        """Drop the recorded callback."""
+        self.callbacks.pop(entity, None)
 
 
 class FakeAlarmService:
@@ -923,6 +928,7 @@ def motion_detector2_device(
     long_poll_interval: PollControlService.PollControlState = PollControlService.PollControlState.LONG,
     occupied: bool = False,
     was_tampered: bool = False,
+    temperature: float = 21.5,
 ) -> SHCMotionDetector2:
     """Build a minimal device double for the motion_detectors2 bucket."""
     device = create_autospec(SHCMotionDetector2, instance=True, spec_set=True)
@@ -943,6 +949,7 @@ def motion_detector2_device(
     device.latestmotion = latestmotion
     device.occupied = occupied
     device.was_tampered = was_tampered
+    device.temperature = temperature
     device.get_smart_sensitivity.side_effect = lambda context: (
         {"context": context.value, "manualLevel": smart_sensitivity[context.value]}
         if smart_sensitivity
