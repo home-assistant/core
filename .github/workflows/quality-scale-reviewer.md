@@ -21,7 +21,9 @@ intent: >
 on:
   workflow_run:
     workflows: ["Quality scale reviewer (trigger)"]
-    types: [completed]
+    # `requested` only cancels an older review through the concurrency group
+    # when a new push arrives; `prepare` runs only on a successful `completed`.
+    types: [requested, completed]
   workflow_dispatch:
     inputs:
       pull_request_number:
@@ -69,7 +71,7 @@ safe-outputs:
   add-comment:
     max: 1
     target: "${{ needs.prepare.outputs.pr_number }}"
-    # Re-runs (reopen, manual dispatch) minimize the previous run's comment.
+    # Re-runs (new commits, reopen, manual dispatch) minimize the previous run's comment.
     hide-older-comments: true
   needs:
     - prepare
@@ -210,8 +212,13 @@ jobs:
           ## Quality scale review
 
           ⏭️ The automated Integration Quality Scale review was skipped: the workflow's daily AI-credit budget is used up."
+# One run per pull request: a newer push cancels the review of an older one as
+# soon as its trigger run is requested. The pull request number is not known
+# here for forks, its head repository and branch identify it. Completions of
+# cancelled or failed trigger runs get their own group, so a late one cannot
+# cancel a newer review.
 concurrency:
-  group: ${{ github.workflow }}-${{ github.event.workflow_run.id || inputs.pull_request_number }}
+  group: ${{ github.workflow }}-${{ inputs.pull_request_number || (github.event.action == 'completed' && github.event.workflow_run.conclusion != 'success' && github.run_id) || format('{0}:{1}', github.event.workflow_run.head_repository.full_name, github.event.workflow_run.head_branch) }}
   cancel-in-progress: true
   job-discriminator: ${{ github.run_id }}
 steps:
