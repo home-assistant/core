@@ -76,16 +76,6 @@ def _raise_update_errors() -> Iterator[None]:
         raise _cannot_connect() from err
 
 
-def peak_as_dict(peak: Peak) -> dict[str, float | str]:
-    """Return one capacity tariff peak as a plain dictionary."""
-    return {
-        "power_kw": peak.peak_kw,
-        "energy_kwh": peak.peak_kwh,
-        "start": peak.start.isoformat(),
-        "end": peak.end.isoformat(),
-    }
-
-
 def normalize_slot_code(raw_code: str) -> str:
     """Strip a redundant direction prefix from a raw time-of-use slot code."""
     for prefix in _DIRECTION_PREFIXES:
