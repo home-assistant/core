@@ -4,9 +4,14 @@ from unittest.mock import MagicMock
 
 import pytest
 from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
+from pytouchline_extended import TouchlineConnectionError
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.climate import ClimateService, ClimateServiceArgument
+from homeassistant.components.climate import (
+    ClimateService,
+    ClimateServiceArgument,
+    HVACMode,
+)
 from homeassistant.const import TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -51,7 +56,7 @@ async def test_set_temperature(
         pytest.param(False, None, id="returns-false"),
         pytest.param(
             None,
-            ConnectionError("Unexpected backend explosion"),
+            TouchlineConnectionError("Unexpected backend explosion"),
             id="connection-error",
         ),
     ],
@@ -109,7 +114,7 @@ async def test_set_preset_mode(
         pytest.param(
             None,
             None,
-            ConnectionError("Unexpected backend explosion"),
+            TouchlineConnectionError("Unexpected backend explosion"),
             id="connection-error",
         ),
     ],
@@ -139,3 +144,23 @@ async def test_set_preset_mode_error(
             },
             blocking=True,
         )
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_set_hvac_mode_heat(
+    hass: HomeAssistant,
+    mock_pytouchline: MagicMock,
+) -> None:
+    """Test setting the only supported HVAC mode does not write to the controller."""
+    await hass.services.async_call(
+        "climate",
+        ClimateService.SET_HVAC_MODE,
+        {
+            TargetKey.ENTITY_ID: "climate.zone_1",
+            ClimateServiceArgument.HVAC_MODE: HVACMode.HEAT,
+        },
+        blocking=True,
+    )
+
+    assert hass.states.get("climate.zone_1").state == HVACMode.HEAT
+    mock_pytouchline.set_operation_mode.assert_not_called()

@@ -5,10 +5,21 @@ from datetime import datetime, timedelta
 import logging
 from typing import TYPE_CHECKING, Final, override
 
-from irm_kmi_api import IrmKmiApiClientHa, IrmKmiApiError, PollenLevel, PollenName
+from irm_kmi_api import (
+    IrmKmiApiClientHa,
+    IrmKmiApiError,
+    PollenLevel,
+    PollenName,
+    RadarForecast,
+)
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_LATITUDE, CONF_LOCATION, CONF_LONGITUDE
+from homeassistant.const import (
+    CONF_LATITUDE,
+    CONF_LOCATION,
+    CONF_LONGITUDE,
+    UnitOfVolumetricFlux,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import (
     DataUpdateCoordinator,
@@ -26,6 +37,12 @@ _LOGGER = logging.getLogger(__name__)
 UPDATE_INTERVAL: Final = timedelta(minutes=7)
 GRACE_PERIOD: Final = 2.5 * UPDATE_INTERVAL
 
+# Belgian and Luxembourgish radar rates are per 10 minutes, Dutch ones per hour
+MM_PER_HOUR_FACTOR: Final[dict[str | None, float]] = {
+    "mm/10min": 6,
+    UnitOfVolumetricFlux.MILLIMETERS_PER_HOUR: 1,
+}
+
 type IrmKmiConfigEntry = ConfigEntry[IrmKmiRuntimeData]
 
 
@@ -35,6 +52,31 @@ class IrmKmiRuntimeData:
 
     weather: IrmKmiCoordinator
     pollen: IrmKmiPollenCoordinator
+
+
+def _in_mm_per_hour(forecasts: list[RadarForecast]) -> list[RadarForecast]:
+    """Convert radar rain rates to mm/h, dropping frames in an unknown unit."""
+    converted: list[RadarForecast] = []
+    for forecast in forecasts:
+        factor = MM_PER_HOUR_FACTOR.get(forecast["unit"])
+        if factor is None:
+            _LOGGER.debug(
+                "Dropping a radar frame reported in unknown unit %s", forecast["unit"]
+            )
+            continue
+        precipitation = forecast["native_precipitation"]
+        converted.append(
+            {
+                **forecast,
+                "native_precipitation": None
+                if precipitation is None
+                else round(precipitation * factor, 2),
+                "rain_forecast_max": round(forecast["rain_forecast_max"] * factor, 2),
+                "rain_forecast_min": round(forecast["rain_forecast_min"] * factor, 2),
+                "unit": UnitOfVolumetricFlux.MILLIMETERS_PER_HOUR,
+            }
+        )
+    return converted
 
 
 class IrmKmiCoordinator(TimestampDataUpdateCoordinator[ProcessedCoordinatorData]):
@@ -107,6 +149,7 @@ class IrmKmiCoordinator(TimestampDataUpdateCoordinator[ProcessedCoordinatorData]
             hourly_forecast=self._api.get_hourly_forecast(tz),
             country=self._api.get_country(),
             warnings=self._api.get_warnings(lang),
+            radar_forecast=_in_mm_per_hour(self._api.get_radar_forecast()),
         )
 
 

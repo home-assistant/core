@@ -22,6 +22,7 @@ from pyportainer import (
     PortainerEventListenerResult,
     PortainerTimeoutError,
 )
+from pyportainer.exceptions import PortainerNotFoundError
 from pyportainer.models.docker import (
     DockerContainer,
     DockerContainerStats,
@@ -48,7 +49,7 @@ from homeassistant.helpers.update_coordinator import (
 )
 from homeassistant.util import dt as dt_util
 
-from .const import CONTAINER_STATE_ACTIONS, DEFAULT_NAME, DOMAIN
+from .const import CONTAINER_STATE_ACTIONS, DEFAULT_NAME, DOCKER_ENDPOINT_TYPES, DOMAIN
 from .util import sanitize_container_name
 
 type PortainerConfigEntry = ConfigEntry[PortainerCoordinator]
@@ -301,6 +302,7 @@ class PortainerCoordinator(
             endpoint
             for endpoint in endpoints
             if str(endpoint.id) in subentry_endpoint_ids
+            and endpoint.type in DOCKER_ENDPOINT_TYPES
         ]
 
         mapped_endpoints: dict[int, PortainerCoordinatorData] = {}
@@ -671,7 +673,12 @@ class PortainerCoordinator(
                 )
                 return local_image
 
-        local_image = await self.portainer.get_image(endpoint_id, image)
+        try:
+            local_image = await self.portainer.get_image(endpoint_id, image)
+        except PortainerNotFoundError:
+            # A container can outlive its image; not cached, so the next poll retries
+            _LOGGER.debug("Image %s not found on endpoint %d", image, endpoint_id)
+            return LocalImageInformation(id=image)
         self._image_cache[(endpoint_id, image)] = (
             time.monotonic(),
             local_image,

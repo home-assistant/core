@@ -13,6 +13,7 @@ from homeassistant.components.http import KEY_HASS, HomeAssistantView, require_a
 from homeassistant.const import CONF_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.validation_errors import validation_errors_as_dicts
 from homeassistant.util.file import file_lock, write_utf8_file_atomic
 from homeassistant.util.yaml import dump, load_yaml
 from homeassistant.util.yaml.loader import JSON_TYPE
@@ -24,6 +25,10 @@ class BaseEditConfigView[_DataT: (dict[str, dict[str, Any]], list[dict[str, Any]
     HomeAssistantView
 ):
     """Configure a Group endpoint."""
+
+    # Whether a validation error response lists all errors with their paths.
+    # The paths must be paths in the posted config.
+    structured_errors = False
 
     def __init__(
         self,
@@ -119,9 +124,10 @@ class BaseEditConfigView[_DataT: (dict[str, dict[str, Any]], list[dict[str, Any]
                 # We either have a data_schema or a data_validator, ignore mypy
                 self.data_schema(data)  # type: ignore[misc]
         except (probatio.Invalid, HomeAssistantError) as err:
-            return self.json_message(
-                f"Message malformed: {err}", HTTPStatus.BAD_REQUEST
-            )
+            result: dict[str, Any] = {"message": f"Message malformed: {err}"}
+            if self.structured_errors:
+                result["errors"] = validation_errors_as_dicts(err)
+            return self.json(result, HTTPStatus.BAD_REQUEST)
 
         path = hass.config.path(self.path)
 

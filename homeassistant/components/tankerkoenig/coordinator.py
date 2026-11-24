@@ -2,6 +2,7 @@
 
 import asyncio
 from collections import defaultdict
+from dataclasses import asdict
 from datetime import datetime, timedelta
 import logging
 from math import ceil
@@ -27,6 +28,7 @@ from homeassistant.exceptions import (
 )
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.storage import Store
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
 
@@ -34,11 +36,35 @@ from .const import CONF_STATIONS, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
+STATION_CACHE_VERSION = 1
+# Master data hardly ever changes and the details endpoint is rate limited
+STATION_CACHE_MAX_AGE = timedelta(days=7)
+# The fuel fields tell the sensor platform which fuels a station offers
+_CACHED_FIELDS = (
+    "id",
+    "name",
+    "house_number",
+    "place",
+    "post_code",
+    "street",
+    "lat",
+    "lng",
+    "brand",
+    "diesel",
+    "e5",
+    "e10",
+)
+
 # Opening times rarely change, so the details of a station are fetched again at
 # most once per hour, however often the opening times are asked for.
 STATION_DETAILS_MAX_AGE = timedelta(hours=1)
 
 type TankerkoenigConfigEntry = ConfigEntry[TankerkoenigDataUpdateCoordinator]
+
+
+def station_cache(hass: HomeAssistant, entry_id: str) -> Store[dict]:
+    """Return the store with the station master data of a config entry."""
+    return Store(hass, STATION_CACHE_VERSION, f"{DOMAIN}.{entry_id}.stations")
 
 
 class TankerkoenigDataUpdateCoordinator(DataUpdateCoordinator[dict[str, PriceInfo]]):
@@ -70,6 +96,8 @@ class TankerkoenigDataUpdateCoordinator(DataUpdateCoordinator[dict[str, PriceInf
         )
         self.show_on_map: bool = self.config_entry.options[CONF_SHOW_ON_MAP]
 
+        self._station_cache = station_cache(hass, config_entry.entry_id)
+
         self._tankerkoenig = Tankerkoenig(
             api_key=self.config_entry.data[CONF_API_KEY],
             session=async_get_clientsession(hass),
@@ -77,35 +105,70 @@ class TankerkoenigDataUpdateCoordinator(DataUpdateCoordinator[dict[str, PriceInf
 
     async def async_setup(self) -> None:
         """Set up the tankerkoenig API."""
-        for station_id in self._selected_stations:
-            try:
-                station = await self._tankerkoenig.station_details(station_id)
-            except TankerkoenigInvalidKeyError as err:
-                _LOGGER.debug(
-                    "invalid key error occur during setup of station %s %s",
-                    station_id,
-                    err,
-                )
-                raise ConfigEntryAuthFailed(
-                    translation_domain=DOMAIN,
-                    translation_key="invalid_api_key",
-                ) from err
-            except TankerkoenigConnectionError as err:
-                _LOGGER.debug(
-                    "connection error occur during setup of station %s %s",
-                    station_id,
-                    err,
-                )
-                raise ConfigEntryNotReady(
-                    translation_domain=DOMAIN,
-                    translation_key="connection_error",
-                ) from err
-            except TankerkoenigError as err:
-                _LOGGER.error("Error when adding station %s %s", station_id, err)
-                continue
+        cache = await self._station_cache.async_load() or {}
+        cached: dict[str, dict] = cache.get("stations", {})
+        now = dt_util.utcnow()
+        fetched = False
+        try:
+            for station_id in self._selected_stations:
+                entry = cached.get(station_id)
+                saved = dt_util.parse_datetime(entry["saved"]) if entry else None
+                if entry and saved and now - saved < STATION_CACHE_MAX_AGE:
+                    self._restore_station(station_id, entry)
+                    continue
+                try:
+                    station = await self._tankerkoenig.station_details(station_id)
+                except TankerkoenigInvalidKeyError as err:
+                    _LOGGER.debug(
+                        "invalid key error occur during setup of station %s %s",
+                        station_id,
+                        err,
+                    )
+                    raise ConfigEntryAuthFailed(
+                        translation_domain=DOMAIN,
+                        translation_key="invalid_api_key",
+                    ) from err
+                except TankerkoenigConnectionError as err:
+                    _LOGGER.debug(
+                        "connection error occur during setup of station %s %s",
+                        station_id,
+                        err,
+                    )
+                    if entry:  # outdated master data is better than no prices at all
+                        self._restore_station(station_id, entry)
+                        continue
+                    raise ConfigEntryNotReady(
+                        translation_domain=DOMAIN,
+                        translation_key="connection_error",
+                    ) from err
+                except TankerkoenigError as err:
+                    if entry:
+                        self._restore_station(station_id, entry)
+                        continue
+                    _LOGGER.error("Error when adding station %s %s", station_id, err)
+                    continue
 
-            self.stations[station_id] = station
-            self._station_details_fetched[station_id] = dt_util.utcnow()
+                self.stations[station_id] = station
+                self._station_details_fetched[station_id] = now
+                cached[station_id] = {
+                    "saved": now.isoformat(),
+                    "station": {
+                        k: v for k, v in asdict(station).items() if k in _CACHED_FIELDS
+                    },
+                }
+                fetched = True
+        finally:
+            # Keep what was fetched, also when a later station aborts the setup
+            if fetched:
+                await self._station_cache.async_save(
+                    {
+                        "stations": {
+                            k: v
+                            for k, v in cached.items()
+                            if k in self._selected_stations
+                        }
+                    }
+                )
 
         entity_reg = er.async_get(self.hass)
         for entity in er.async_entries_for_config_entry(
@@ -132,6 +195,12 @@ class TankerkoenigDataUpdateCoordinator(DataUpdateCoordinator[dict[str, PriceInf
                 "This might invalidate your api-key on the long run. "
                 "Try using a smaller radius"
             )
+
+    def _restore_station(self, station_id: str, entry: dict) -> None:
+        """Use the cached master data of a station."""
+        self.stations[station_id] = Station(**entry["station"])
+        # Opening times are not cached, so the first request fetches the details
+        self._station_details_fetched[station_id] = dt_util.utc_from_timestamp(0)
 
     async def async_get_station_details(self, station_id: str) -> Station:
         """Return the details of a station, fetched again once they are an hour old."""
