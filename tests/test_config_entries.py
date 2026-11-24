@@ -36,6 +36,7 @@ from homeassistant import config_entries, data_entry_flow, loader
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     EVENT_COMPONENT_LOADED,
+    EVENT_HOMEASSISTANT_START,
     EVENT_HOMEASSISTANT_STARTED,
     EVENT_HOMEASSISTANT_STOP,
     STATE_UNKNOWN,
@@ -11460,6 +11461,126 @@ async def test_load_unique_id_collisions_backup_fails(
     assert [entry["entry_id"] for entry in saved_entries] == ["a1", "a2"]
     assert saved_entries[0]["title"] == "New title"
     assert saved_entries[1] == stored_entries[1]
+
+
+@pytest.mark.freeze_time("2026-11-03 12:34:56+00:00")
+async def test_load_unique_id_collisions_finish_at_start(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    issue_registry: ir.IssueRegistry,
+    tmp_path: Path,
+) -> None:
+    """Test registries are cleaned up and the issue is created at start."""
+    hass.config.config_dir = str(tmp_path)
+    (tmp_path / ".storage").mkdir()
+    # Registry entries are created through config entries known to hass
+    registry_entries = {}
+    for entry_id in ("a1", "a2"):
+        mock_entry = MockConfigEntry(domain="test", entry_id=entry_id)
+        mock_entry.add_to_hass(hass)
+        device = device_registry.async_get_or_create(
+            config_entry_id=entry_id, identifiers={("test", entry_id)}
+        )
+        registry_entries[entry_id] = (
+            device.id,
+            entity_registry.async_get_or_create(
+                "sensor",
+                "test",
+                f"{entry_id}_device",
+                config_entry=mock_entry,
+                device_id=device.id,
+            ).entity_id,
+            entity_registry.async_get_or_create(
+                "sensor", "test", f"{entry_id}_no_device", config_entry=mock_entry
+            ).entity_id,
+        )
+    hass_storage[config_entries.STORAGE_KEY] = {
+        "version": config_entries.STORAGE_VERSION,
+        "minor_version": config_entries.STORAGE_VERSION_MINOR,
+        "data": {
+            "entries": [
+                _stored_entry("a1", "test", "uid"),
+                _stored_entry("a2", "test", "uid"),
+            ]
+        },
+    }
+    issue_id = "config_entry_unique_id_collisions_removed_20261103123456"
+
+    hass.set_state(CoreState.not_running)
+    manager = config_entries.ConfigEntries(hass, {})
+    await manager.async_initialize()
+
+    # The registries may not be loaded yet, nothing is cleaned up or saved
+    assert manager.async_entry_ids() == ["a1"]
+    assert issue_registry.async_get_issue(HOMEASSISTANT_DOMAIN, issue_id) is None
+    for device_id, *entity_ids in registry_entries.values():
+        assert device_registry.async_get(device_id) is not None
+        for entity_id in entity_ids:
+            assert entity_registry.async_get(entity_id) is not None
+    await flush_store(manager._store)
+    assert [
+        entry["entry_id"]
+        for entry in hass_storage[config_entries.STORAGE_KEY]["data"]["entries"]
+    ] == ["a1", "a2"]
+
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
+    await hass.async_block_till_done()
+
+    assert issue_registry.async_get_issue(HOMEASSISTANT_DOMAIN, issue_id)
+    device_id, *entity_ids = registry_entries["a1"]
+    assert device_registry.async_get(device_id) is not None
+    for entity_id in entity_ids:
+        assert entity_registry.async_get(entity_id) is not None
+    device_id, *entity_ids = registry_entries["a2"]
+    assert device_registry.async_get(device_id) is None
+    for entity_id in entity_ids:
+        assert entity_registry.async_get(entity_id) is None
+    await flush_store(manager._store)
+    assert [
+        entry["entry_id"]
+        for entry in hass_storage[config_entries.STORAGE_KEY]["data"]["entries"]
+    ] == ["a1"]
+
+    hass.set_state(CoreState.running)
+
+
+@pytest.mark.parametrize("mode", ["recovery_mode", "safe_mode"])
+async def test_load_unique_id_collisions_recovery_mode(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    caplog: pytest.LogCaptureFixture,
+    issue_registry: ir.IssueRegistry,
+    tmp_path: Path,
+    mode: str,
+) -> None:
+    """Test recovery and safe mode load colliding entries and leave the store."""
+    setattr(hass.config, mode, True)
+    hass.config.config_dir = str(tmp_path)
+    (tmp_path / ".storage").mkdir()
+    hass_storage[config_entries.STORAGE_KEY] = {
+        "version": config_entries.STORAGE_VERSION,
+        "minor_version": config_entries.STORAGE_VERSION_MINOR,
+        "data": {
+            "entries": [
+                _stored_entry("a1", "test", "uid"),
+                _stored_entry("a2", "test", "uid"),
+            ]
+        },
+    }
+
+    manager = config_entries.ConfigEntries(hass, {})
+    await manager.async_initialize()
+
+    assert manager.async_entry_ids() == ["a1", "a2"]
+    assert not list((tmp_path / ".storage").iterdir())
+    assert "has the same unique id" not in caplog.text
+    assert not [
+        issue_id
+        for _, issue_id in issue_registry.issues
+        if issue_id.startswith("config_entry_unique_id_collisions_removed")
+    ]
 
 
 async def test_context_no_leak(hass: HomeAssistant) -> None:

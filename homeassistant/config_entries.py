@@ -79,6 +79,7 @@ from .helpers.json import (
     json_fragment,
     save_json,
 )
+from .helpers.start import async_at_start
 from .helpers.typing import ConfigType, DiscoveryInfoType, NoEventData, Undefined
 from .loader import async_suggest_report_issue
 from .setup import (
@@ -2417,16 +2418,18 @@ class ConfigEntries:
         return (unload_success, entry)
 
     @callback
+    def _async_clear_registries(self, entry_id: str, domain: str) -> None:
+        """Remove devices, entities and issues of a removed config entry."""
+        dr.async_get(self.hass).async_clear_config_entry(entry_id, domain)
+        er.async_get(self.hass).async_clear_config_entry(entry_id)
+        ir.async_get(self.hass).async_clear_config_entry(entry_id)
+
+    @callback
     def _async_clean_up(self, entry: ConfigEntry) -> None:
         """Clean up after an entry."""
         entry_id = entry.entry_id
 
-        dev_reg = dr.async_get(self.hass)
-        ent_reg = er.async_get(self.hass)
-
-        dev_reg.async_clear_config_entry(entry_id, entry.domain)
-        ent_reg.async_clear_config_entry(entry_id)
-        ir.async_get(self.hass).async_clear_config_entry(entry_id)
+        self._async_clear_registries(entry_id, entry.domain)
 
         # If the configuration entry is removed during reauth, it should
         # abort any reauth flow that is active for the removed entry and
@@ -2455,6 +2458,9 @@ class ConfigEntries:
 
         entries: ConfigEntryItems = ConfigEntryItems(self.hass)
         migrated_domains: set[str] = set()
+        remove_collisions = (
+            not self.hass.config.recovery_mode and not self.hass.config.safe_mode
+        )
         stored_entries: dict[str, dict[str, Any]] = {}
         # Removed entry, and the entry kept instead of it
         removed_entries: list[tuple[dict[str, Any], ConfigEntry]] = []
@@ -2476,11 +2482,16 @@ class ConfigEntries:
                 entry_domain = replacement
 
             replaced_entry: ConfigEntry | None = None
-            if (unique_id := entry["unique_id"]) is not None and (
-                existing_entry := entries.get_entry_by_domain_and_unique_id(
-                    entry_domain, unique_id
+            if (
+                remove_collisions
+                and (unique_id := entry["unique_id"]) is not None
+                and (
+                    existing_entry := entries.get_entry_by_domain_and_unique_id(
+                        entry_domain, unique_id
+                    )
                 )
-            ) is not None:
+                is not None
+            ):
                 if _colliding_entry_rank(entry) <= _colliding_entry_rank(
                     stored_entries[existing_entry.entry_id]
                 ):
@@ -3188,23 +3199,31 @@ class ConfigEntries:
                 kept_entry.unique_id,
                 path,
             )
-        ir.async_create_issue(
-            self.hass,
-            HOMEASSISTANT_DOMAIN,
-            f"{ISSUE_UNIQUE_ID_COLLISIONS_REMOVED}_{timestamp}",
-            is_fixable=True,
-            is_persistent=True,
-            severity=ir.IssueSeverity.WARNING,
-            translation_key=ISSUE_UNIQUE_ID_COLLISIONS_REMOVED,
-            translation_placeholders={
-                "backup_path": path,
-                "entries": "\n".join(
-                    f"- '{entry['title']}' ({kept_entry.domain})"
-                    for entry, kept_entry in removed_entries
-                ),
-            },
-        )
-        self._async_schedule_save()
+
+        @callback
+        def _async_finish_removal(hass: HomeAssistant) -> None:
+            """Clean up after the removed entries and create a repair issue."""
+            for entry, kept_entry in removed_entries:
+                self._async_clear_registries(entry["entry_id"], kept_entry.domain)
+            ir.async_create_issue(
+                hass,
+                HOMEASSISTANT_DOMAIN,
+                f"{ISSUE_UNIQUE_ID_COLLISIONS_REMOVED}_{timestamp}",
+                is_fixable=True,
+                is_persistent=True,
+                severity=ir.IssueSeverity.WARNING,
+                translation_key=ISSUE_UNIQUE_ID_COLLISIONS_REMOVED,
+                translation_placeholders={
+                    "backup_path": path,
+                    "entries": "\n".join(
+                        f"- '{entry['title']}' ({kept_entry.domain})"
+                        for entry, kept_entry in removed_entries
+                    ),
+                },
+            )
+            self._async_schedule_save()
+
+        async_at_start(self.hass, _async_finish_removal)
 
     @callback
     def _async_schedule_save(self) -> None:
