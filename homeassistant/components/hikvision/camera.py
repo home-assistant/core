@@ -69,7 +69,7 @@ class HikvisionCamera(HikvisionEntity, Camera):
 
         # No pyhik event is routed here; the registration exists so the
         # camera is told when the event stream connects or drops.
-        self._callback_id = f"{self._data.device_id}.camera.{channel.id}"
+        self._callback_id = f"{self._data.stream_id}.camera.{channel.id}"
 
         if stream_type == STREAM_TYPE_SUB:
             self._attr_translation_key = "substream"
