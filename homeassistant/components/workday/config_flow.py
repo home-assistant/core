@@ -16,6 +16,7 @@ from homeassistant.core import callback
 from homeassistant.data_entry_flow import AbortFlow, section
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.selector import (
+    BooleanSelector,
     CountrySelector,
     CountrySelectorConfig,
     LanguageSelector,
@@ -40,6 +41,7 @@ from .const import (
     CONF_PROVINCE,
     CONF_REMOVE_HOLIDAYS,
     CONF_WORKDAYS,
+    COUNTRY_OPTIONS,
     DEFAULT_EXCLUDES,
     DEFAULT_NAME,
     DEFAULT_OFFSET,
@@ -49,6 +51,7 @@ from .const import (
     SECTION_COUNTRY_SETTINGS,
     SECTION_CUSTOM_HOLIDAYS,
 )
+from .util import get_country_options
 
 
 def add_province_and_language_to_schema(
@@ -115,11 +118,19 @@ def add_province_and_language_to_schema(
             ),
         }
 
+    supported_options = _country.get_supported_options()
+    country_options_schema = {
+        probatio.Optional(option, default=supported_options[option]): BooleanSelector()
+        for option in COUNTRY_OPTIONS
+        if option in supported_options
+    }
+
     if not (
         country_settings_schema := {
             **language_schema,
             **province_schema,
             **category_schema,
+            **country_options_schema,
         }
     ):
         return schema
@@ -164,6 +175,7 @@ def validate_custom_dates(user_input: dict[str, Any]) -> None:
             years=year,
             language=country_settings.get(CONF_LANGUAGE),
             categories=[PUBLIC, *country_settings.get(CONF_CATEGORY, [])],
+            **get_country_options(country, country_settings),
         )
 
     else:
@@ -230,7 +242,7 @@ class WorkdayConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Workday integration."""
 
     VERSION = 2
-    MINOR_VERSION = 1
+    MINOR_VERSION = 2
 
     data: dict[str, Any] = {}
 
