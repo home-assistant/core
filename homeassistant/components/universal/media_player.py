@@ -28,7 +28,6 @@ from homeassistant.const import (
     CONF_STATE,
     CONF_STATE_TEMPLATE,
     CONF_UNIQUE_ID,
-    EVENT_HOMEASSISTANT_START,
     STATE_ON,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
@@ -56,6 +55,7 @@ from homeassistant.helpers.event import (
     async_track_template_result,
 )
 from homeassistant.helpers.service import async_call_from_config
+from homeassistant.helpers.start import async_at_start
 from homeassistant.helpers.template import Template
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
@@ -304,10 +304,9 @@ class UniversalMediaPlayer(MediaPlayerEntity):
                 track_templates,
                 _async_on_template_update,
             )
-            self.hass.bus.async_listen_once(
-                EVENT_HOMEASSISTANT_START, callback(lambda _: result.async_refresh())
+            self.async_on_remove(
+                async_at_start(self.hass, callback(lambda _: result.async_refresh()))
             )
-
             self.async_on_remove(result.async_remove)
 
         depend = copy(self._children)
