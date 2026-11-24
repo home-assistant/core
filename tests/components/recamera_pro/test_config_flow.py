@@ -628,6 +628,10 @@ async def test_config_flow_helper_edge_cases() -> None:
             "192.168.1.10",
             "192.168.1.20",
         ]
+        assert await _prioritize_reachable_hosts(["192.168.1.20", "192.168.1.30"]) == [
+            "192.168.1.20",
+            "192.168.1.30",
+        ]
 
     with patch(
         "homeassistant.components.recamera_pro.config_flow.async_probe_device",
@@ -884,6 +888,7 @@ async def test_zeroconf_and_discovery_refresh_branches() -> None:
     )
 
     flow._discovery_serial = "SN123456"
+    assert flow._canonical_discovery_identity() == "SN123456"
     assert flow._discovery_identity_mismatch(_probe(serial="OTHER"))
     flow._discovery_serial = None
     assert not flow._discovery_identity_mismatch(_probe())
@@ -988,7 +993,7 @@ async def test_zeroconf_and_discovery_refresh_branches() -> None:
         new=AsyncMock(side_effect=[TimeoutError("t"), RuntimeError("boom")]),
     ):
         _, _, ex_err = await flow._async_probe_existing_discovery_hosts(
-            entry, ["192.168.10.22"]
+            entry, ["192.168.10.22", "192.168.10.23"]
         )
     with patch(
         "homeassistant.components.recamera_pro.config_flow._async_probe_device_with_hass",
@@ -1090,7 +1095,7 @@ async def test_zeroconf_and_discovery_refresh_branches() -> None:
         ),
         patch(
             "homeassistant.components.recamera_pro.config_flow._any_host_reachable",
-            new=AsyncMock(side_effect=[True, True, False]),
+            new=AsyncMock(side_effect=[True, True, False, False]),
         ),
         patch(
             "homeassistant.components.recamera_pro.config_flow.asyncio.sleep",
