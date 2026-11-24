@@ -120,6 +120,7 @@ homeassistant.components.backup.*
 homeassistant.components.baf.*
 homeassistant.components.bang_olufsen.*
 homeassistant.components.bayesian.*
+homeassistant.components.benq_projector_infrared.*
 homeassistant.components.besen.*
 homeassistant.components.binary_sensor.*
 homeassistant.components.bitcoin.*
@@ -247,6 +248,7 @@ homeassistant.components.fritzbox_callmonitor.*
 homeassistant.components.fronius.*
 homeassistant.components.frontend.*
 homeassistant.components.fujitsu_fglair.*
+homeassistant.components.fujitsu_infrared.*
 homeassistant.components.fully_kiosk.*
 homeassistant.components.fumis.*
 homeassistant.components.fyta.*

@@ -334,7 +334,6 @@ async def ws_project_file_process(
     """Handle get info command."""
     try:
         await knx.project.process_project_file(
-            xknx=knx.xknx,
             file_id=msg["file_id"],
             password=msg["password"],
         )

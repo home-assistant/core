@@ -8,7 +8,10 @@ from meteoalarmapi import Meteoalert, ServerError, UnexpectedError, WrongCountry
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.helpers.update_coordinator import (
+    DataUpdateCoordinator,
+    UpdateFailedUnreachable,
+)
 
 from .const import DOMAIN
 
@@ -46,4 +49,6 @@ class MeteoAlarmCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         try:
             return await self.hass.async_add_executor_job(self.api.get_alert)
         except (ServerError, UnexpectedError, WrongCountry) as err:
-            raise UpdateFailed(f"Error fetching MeteoAlarm data: {err}") from err
+            raise UpdateFailedUnreachable(
+                f"Error fetching MeteoAlarm data: {err}"
+            ) from err
