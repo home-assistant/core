@@ -3,6 +3,18 @@
 from infrared_protocols.codes.osram.light import OSRAM_ADDRESS, OsramLightCode
 from infrared_protocols.commands.nec import NECCommand
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
+from pytest_homeassistant.components.common import (
+    assert_availability_follows_source_entity,
+)
+from pytest_homeassistant.components.infrared import (
+    EMITTER_ENTITY_ID,
+    RECEIVER_ENTITY_ID,
+)
+from pytest_homeassistant.components.infrared.common import (
+    MockInfraredEmitterEntity,
+    MockInfraredReceiverEntity,
+)
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.infrared import InfraredReceivedSignal
@@ -11,30 +23,22 @@ from homeassistant.components.light import (
     ATTR_RGB_COLOR,
     DOMAIN as LIGHT_DOMAIN,
     EFFECT_OFF,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
+    LightService,
+    LightServiceArgument,
 )
 from homeassistant.components.osram_infrared.const import DOMAIN
 from homeassistant.components.osram_infrared.light import CMD_REPEAT_COUNT
 from homeassistant.const import (
-    ATTR_ENTITY_ID,
     STATE_OFF,
     STATE_ON,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
     Platform,
+    TargetKey,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
-
-from tests.common import MockConfigEntry, snapshot_platform
-from tests.components.common import assert_availability_follows_source_entity
-from tests.components.infrared import EMITTER_ENTITY_ID, RECEIVER_ENTITY_ID
-from tests.components.infrared.common import (
-    MockInfraredEmitterEntity,
-    MockInfraredReceiverEntity,
-)
 
 
 @pytest.fixture
@@ -79,8 +83,8 @@ async def test_turn_on_sends_on_code(
     """Test turning on the light sends the OSRAM on code."""
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "light.osram_light"},
+        LightService.TURN_ON,
+        {TargetKey.ENTITY_ID: "light.osram_light"},
         blocking=True,
     )
 
@@ -105,8 +109,8 @@ async def test_turn_off_sends_off_code(
     """Test turning off the light sends the OSRAM off code."""
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: "light.osram_light"},
+        LightService.TURN_OFF,
+        {TargetKey.ENTITY_ID: "light.osram_light"},
         blocking=True,
     )
 
@@ -142,10 +146,10 @@ async def test_turn_on_with_rgb_color_sends_nearest_color_code(
     """Test setting RGB color sends the nearest supported OSRAM color code."""
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
+        LightService.TURN_ON,
         {
-            ATTR_ENTITY_ID: "light.osram_light",
-            ATTR_RGB_COLOR: rgb_color,
+            TargetKey.ENTITY_ID: "light.osram_light",
+            LightServiceArgument.RGB_COLOR: rgb_color,
         },
         blocking=True,
     )
@@ -178,10 +182,10 @@ async def test_turn_on_with_effect_sends_effect_code(
     """Test setting an OSRAM effect sends the matching effect code."""
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
+        LightService.TURN_ON,
         {
-            ATTR_ENTITY_ID: "light.osram_light",
-            ATTR_EFFECT: effect,
+            TargetKey.ENTITY_ID: "light.osram_light",
+            LightServiceArgument.EFFECT: effect,
         },
         blocking=True,
     )
@@ -204,20 +208,20 @@ async def test_turn_on_with_effect_off_restores_last_static_color(
     """Test turning an effect off restores the last static color."""
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
+        LightService.TURN_ON,
         {
-            ATTR_ENTITY_ID: "light.osram_light",
-            ATTR_RGB_COLOR: (0, 255, 0),
+            TargetKey.ENTITY_ID: "light.osram_light",
+            LightServiceArgument.RGB_COLOR: (0, 255, 0),
         },
         blocking=True,
     )
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
+        LightService.TURN_ON,
         {
-            ATTR_ENTITY_ID: "light.osram_light",
-            ATTR_EFFECT: "flash",
+            TargetKey.ENTITY_ID: "light.osram_light",
+            LightServiceArgument.EFFECT: "flash",
         },
         blocking=True,
     )
@@ -226,10 +230,10 @@ async def test_turn_on_with_effect_off_restores_last_static_color(
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
+        LightService.TURN_ON,
         {
-            ATTR_ENTITY_ID: "light.osram_light",
-            ATTR_EFFECT: EFFECT_OFF,
+            TargetKey.ENTITY_ID: "light.osram_light",
+            LightServiceArgument.EFFECT: EFFECT_OFF,
         },
         blocking=True,
     )
@@ -258,10 +262,10 @@ async def test_turn_on_with_unsupported_effect_raises(
     ):
         await hass.services.async_call(
             LIGHT_DOMAIN,
-            SERVICE_TURN_ON,
+            LightService.TURN_ON,
             {
-                ATTR_ENTITY_ID: "light.osram_light",
-                ATTR_EFFECT: "invalid_effect",
+                TargetKey.ENTITY_ID: "light.osram_light",
+                LightServiceArgument.EFFECT: "invalid_effect",
             },
             blocking=True,
         )

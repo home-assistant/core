@@ -1,7 +1,9 @@
 {
   "domain": "clicksend",
   "name": "ClickSend SMS",
+  "categories": ["messaging_notifications.email_sms_calls"],
   "codeowners": [],
+  "connectivity": ["cloud"],
   "documentation": "https://www.home-assistant.io/integrations/clicksend",
   "iot_class": "cloud_push",
   "quality_scale": "legacy"

@@ -25,7 +25,7 @@ PLATFORMS: list[Platform] = [Platform.BINARY_SENSOR, Platform.SENSOR]
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: LD2410BLEConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: LD2410BLEConfigEntry) -> None:
     """Set up LD2410 BLE from a config entry."""
     address: str = entry.data[CONF_ADDRESS]
 
@@ -90,7 +90,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: LD2410BLEConfigEntry) ->
     entry.async_on_unload(
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _async_stop)
     )
-    return True
 
 
 async def _async_update_listener(
@@ -101,9 +100,7 @@ async def _async_update_listener(
         await hass.config_entries.async_reload(entry.entry_id)
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: LD2410BLEConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: LD2410BLEConfigEntry) -> None:
     """Unload a config entry."""
-    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        await entry.runtime_data.device.stop()
-
-    return unload_ok
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
+    await entry.runtime_data.device.stop()

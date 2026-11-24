@@ -2,9 +2,15 @@
 
 import json
 
+from hassfest.model import IntegrationType
+
 from homeassistant.util import slugify
-from script.hassfest.manifest import SUPPORTED_IOT_CLASSES
-from script.hassfest.model import IntegrationType
+from script.hassfest.icons import integration_category_keys
+from script.hassfest.manifest import (
+    CATEGORIES_DOCUMENTATION_URL,
+    NO_CATEGORIES_INTEGRATION_TYPES,
+    SUPPORTED_IOT_CLASSES,
+)
 
 from .const import COMPONENT_DIR
 from .error import ExitApp
@@ -56,10 +62,17 @@ and has to match the directory name of the integration."""
                 "requirement": "aiodevelop==1.2.3",
                 "oauth2": True,
                 "iot_class": "local_polling",
+                "categories": ["diy_makers"],
+                "integration_type": "hub",
             }
         )
     else:
-        info.update(gather_new_integration(arguments.template == "integration"))
+        info.update(
+            gather_new_integration(
+                arguments.template == "integration",
+                arguments.template == "config_flow_helper",
+            )
+        )
 
     return Info(**info)
 
@@ -70,7 +83,7 @@ YES_NO = {
 }
 
 
-def gather_new_integration(determine_auth: bool) -> Info:
+def gather_new_integration(determine_auth: bool, is_helper: bool = False) -> Info:
     """Gather info about new integration from user."""
     fields = {
         "name": {
@@ -101,13 +114,29 @@ def gather_new_integration(determine_auth: bool) -> Info:
 
 Valid values are {", ".join(SUPPORTED_IOT_CLASSES)}
 
-More info @ https://developers.home-assistant.io/docs/creating_integration_manifest#iot-class
+More info @ https://contributors.home-assistant.io/core/integrations/manifest/#iot_class
 """
             ),
             "validators": [
                 [
                     f"You need to pick one of {', '.join(SUPPORTED_IOT_CLASSES)}",
                     lambda value: value in SUPPORTED_IOT_CLASSES,
+                ]
+            ],
+        },
+        "integration_type": {
+            "prompt": (
+                f"""What is the integration type?
+
+Valid types are {", ".join(IntegrationType)}.
+
+More info @ https://contributors.home-assistant.io/core/integrations/manifest/#integration_type
+"""
+            ),
+            "validators": [
+                [
+                    f"You need to pick one of {', '.join(IntegrationType)}.",
+                    lambda value: value in IntegrationType,
                 ]
             ],
         },
@@ -133,30 +162,6 @@ More info @ https://developers.home-assistant.io/docs/creating_integration_manif
                     "default": "no",
                     **YES_NO,
                 },
-                "integration_type": {
-                    "prompt": (
-                        "What is the integration type?"
-                        "\n\nValid types are "
-                        f"{', '.join(IntegrationType)}."
-                        "\nThis field is recommended and"
-                        " required in some cases."
-                        " To intentionally leave it"
-                        " unset, type 'omit'."
-                        "\n\nMore info @ "
-                        "https://developers.home-assistant.io"
-                        "/docs/creating_integration_manifest"
-                        "/#integration-type\n"
-                    ),
-                    "validators": [
-                        [
-                            "You need to pick one of"
-                            f" {', '.join(IntegrationType)}"
-                            " or 'omit'.",
-                            lambda value: value in IntegrationType or value == "omit",
-                        ]
-                    ],
-                    "converter": lambda value: None if value == "omit" else value,
-                },
                 "oauth2": {
                     "prompt": (
                         "Can the user authenticate the device using OAuth2? (yes/no)"
@@ -167,7 +172,81 @@ More info @ https://developers.home-assistant.io/docs/creating_integration_manif
             }
         )
 
-    return _gather_info(fields)
+    if is_helper:
+        del fields["integration_type"]
+
+    info = _gather_info(fields)
+
+    if is_helper:
+        info["integration_type"] = "helper"
+
+    if info.get("integration_type") not in (
+        NO_CATEGORIES_INTEGRATION_TYPES | {IntegrationType.VIRTUAL}
+    ):
+        info.update(_gather_categories())
+
+    return info
+
+
+def _split_categories(value: str) -> list[str]:
+    """Split a comma separated list of categories."""
+    return [category.strip() for category in value.split(",") if category.strip()]
+
+
+def _gather_categories() -> dict:
+    """Gather the categories of a new integration from user."""
+    strings = json.loads((COMPONENT_DIR / "homeassistant" / "strings.json").read_text())
+    known_categories = integration_category_keys(strings["integration_category"])
+
+    return _gather_info(
+        {
+            "categories": {
+                "prompt": (
+                    f"""Which categories does your integration belong to?
+
+Separate multiple categories with a comma.
+Valid values are {", ".join(sorted(known_categories))}
+
+More info @ {CATEGORIES_DOCUMENTATION_URL}
+"""
+                ),
+                "validators": [
+                    [
+                        "You need to pick at least one category.",
+                        _split_categories,
+                    ],
+                    [
+                        "You need to pick from the valid values.",
+                        lambda value: known_categories.issuperset(
+                            _split_categories(value)
+                        ),
+                    ],
+                    [
+                        "You need to pick at most three categories.",
+                        lambda value: len(_split_categories(value)) <= 3,
+                    ],
+                    [
+                        "You need to pick each category only once.",
+                        lambda value: (
+                            len(set(_split_categories(value)))
+                            == len(_split_categories(value))
+                        ),
+                    ],
+                    [
+                        "A subcategory implies its category, remove the category.",
+                        lambda value: (
+                            not any(
+                                category.partition(".")[0] in _split_categories(value)
+                                for category in _split_categories(value)
+                                if "." in category
+                            )
+                        ),
+                    ],
+                ],
+                "converter": _split_categories,
+            }
+        }
+    )
 
 
 def _load_existing_integration(domain) -> Info:

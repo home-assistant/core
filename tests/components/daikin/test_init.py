@@ -5,8 +5,9 @@ from unittest.mock import AsyncMock, PropertyMock, patch
 
 from aiohttp import ClientConnectionError
 from freezegun.api import FrozenDateTimeFactory
-from pydaikin.exceptions import DaikinException
+from pydaikin.exceptions import DaikinException, DaikinUnsupportedError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components.daikin import update_unique_id
 from homeassistant.components.daikin.const import DOMAIN, KEY_MAC
@@ -16,8 +17,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from .test_config_flow import HOST, MAC
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 @pytest.fixture
@@ -264,3 +263,20 @@ async def test_daikin_exception_retries(hass: HomeAssistant, mock_daikin) -> Non
     await hass.async_block_till_done()
 
     assert config_entry.state is ConfigEntryState.SETUP_RETRY
+
+
+async def test_daikin_unsupported_error(hass: HomeAssistant, mock_daikin) -> None:
+    """Test that a DaikinUnsupportedError during setup fails permanently."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=MAC,
+        data={CONF_HOST: HOST, KEY_MAC: MAC},
+    )
+    config_entry.add_to_hass(hass)
+
+    mock_daikin.side_effect = DaikinUnsupportedError("not supported")
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.SETUP_ERROR
+    assert config_entry.error_reason_translation_key == "unsupported_device"

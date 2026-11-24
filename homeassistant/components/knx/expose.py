@@ -42,7 +42,7 @@ from .const import CONF_RESPOND_TO_READ, KNX_ADDRESS
 from .schema import ExposeSchema
 
 if TYPE_CHECKING:
-    from .storage.time_server import KNXTimeServerStoreModel
+    from .storage.time_server import TimeServerConfig
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -347,23 +347,18 @@ def _yaml_config_to_expose_time_options(config: ConfigType) -> KnxExposeTimeOpti
 @callback
 def create_time_server_exposures(
     xknx: XKNX,
-    config: KNXTimeServerStoreModel,
+    config: TimeServerConfig,
 ) -> list[KnxExposeTime]:
     """Create exposures from UI config store time server config."""
     exposures: list[KnxExposeTime] = []
     device_cls: type[DateDevice | DateTimeDevice | TimeDevice]
-    for expose_type, data in config.items():
-        if not data or (ga := data.get("write")) is None:  # type: ignore[attr-defined]
+    for expose_type, ga_config, device_cls in (
+        ("time", config.time, TimeDevice),
+        ("date", config.date, DateDevice),
+        ("datetime", config.datetime, DateTimeDevice),
+    ):
+        if ga_config is None or (ga := ga_config.write) is None:
             continue
-        match expose_type:
-            case "time":
-                device_cls = TimeDevice
-            case "date":
-                device_cls = DateDevice
-            case "datetime":
-                device_cls = DateTimeDevice
-            case _:
-                continue
         exposures.append(
             KnxExposeTime(
                 xknx=xknx,

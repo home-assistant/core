@@ -32,7 +32,7 @@ from .const import CONF_FOLDER, CONF_PATTERNS, DOMAIN, PLATFORMS
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Set up Folder watcher from a config entry."""
 
     path: str = entry.options[CONF_FOLDER]
@@ -51,6 +51,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 "config_variable": "allowlist_external_dirs",
             },
             learn_more_url="https://www.home-assistant.io/docs/configuration/basic/#allowlist_external_dirs",
+            config_entry_id=entry.entry_id,
         )
         raise ConfigEntryError(
             translation_domain=DOMAIN,
@@ -59,7 +60,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         )
     await hass.async_add_executor_job(Watcher, path, patterns, hass, entry.entry_id)
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-    return True
 
 
 def create_event_handler(

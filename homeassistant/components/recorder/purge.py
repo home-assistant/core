@@ -9,6 +9,7 @@ from typing import TYPE_CHECKING
 
 from sqlalchemy.orm.session import Session
 
+from homeassistant.helpers.recorder import session_scope
 from homeassistant.util.collection import chunked_or_all
 from homeassistant.util.json import json_loads
 
@@ -42,7 +43,7 @@ from .queries import (
     find_statistics_runs_to_purge,
 )
 from .repack import repack_database
-from .util import retryable_database_job, session_scope
+from .util import retryable_database_job
 
 if TYPE_CHECKING:
     from . import Recorder
@@ -595,7 +596,6 @@ def _purge_old_event_types(instance: Recorder, session: Session) -> None:
 
 def _purge_old_entity_ids(instance: Recorder, session: Session) -> None:
     """Purge all old entity_ids."""
-    # entity_ids are small, no need to batch run it
     purge_entity_ids = set()
     states_metadata_ids = set()
     for metadata_id, entity_id in session.execute(find_entity_ids_to_purge()):
@@ -605,8 +605,11 @@ def _purge_old_entity_ids(instance: Recorder, session: Session) -> None:
     if not states_metadata_ids:
         return
 
-    deleted_rows = session.execute(delete_states_meta_rows(states_metadata_ids))
-    _LOGGER.debug("Deleted %s states meta", deleted_rows)
+    for metadata_ids_chunk in chunked_or_all(
+        states_metadata_ids, instance.max_bind_vars
+    ):
+        deleted_rows = session.execute(delete_states_meta_rows(metadata_ids_chunk))
+        _LOGGER.debug("Deleted %s states meta", deleted_rows)
 
     # Evict any entries in the event_type cache referring to a purged state
     instance.states_meta_manager.evict_purged(purge_entity_ids)
@@ -628,12 +631,12 @@ def _purge_filtered_data(
     # Check if excluded entity_ids are in database
     entity_filter = instance.entity_filter
     has_more_to_purge = False
-    excluded_metadata_ids: list[str] = [
+    excluded_metadata_ids: list[int] = [
         metadata_id
         for (metadata_id, entity_id) in session.query(
             StatesMeta.metadata_id, StatesMeta.entity_id
         ).all()
-        if entity_filter and not entity_filter(entity_id)
+        if entity_id is not None and entity_filter and not entity_filter(entity_id)
     ]
     if excluded_metadata_ids:
         has_more_to_purge |= not _purge_filtered_states(
@@ -760,7 +763,7 @@ def _event_data_filter_matches(
 def _purge_filtered_states(
     instance: Recorder,
     session: Session,
-    metadata_ids_to_purge: list[str],
+    metadata_ids_to_purge: list[int],
     database_engine: DatabaseEngine,
     purge_before_timestamp: float,
 ) -> bool:
@@ -858,12 +861,12 @@ def purge_entity_data(
     assert database_engine is not None
     purge_before_timestamp = purge_before.timestamp()
     with session_scope(session=instance.get_session()) as session:
-        selected_metadata_ids: list[str] = [
+        selected_metadata_ids: list[int] = [
             metadata_id
             for (metadata_id, entity_id) in session.query(
                 StatesMeta.metadata_id, StatesMeta.entity_id
             ).all()
-            if entity_filter and entity_filter(entity_id)
+            if entity_id is not None and entity_filter and entity_filter(entity_id)
         ]
         _LOGGER.debug("Purging entity data for %s", selected_metadata_ids)
         if not selected_metadata_ids:

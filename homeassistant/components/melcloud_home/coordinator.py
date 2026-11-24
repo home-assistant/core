@@ -7,10 +7,11 @@ from datetime import datetime, timedelta
 import logging
 from typing import Any, override
 
-from aiomelcloudhome import ATAUnit, ATWUnit, MELCloudHome, UserContext
+from aiomelcloudhome import ATAUnit, ATWUnit, MELCloudHome, UnitStateDelta, UserContext
 from aiomelcloudhome.exceptions import (
     MelCloudHomeAuthenticationError,
     MelCloudHomeConnectionError,
+    MelCloudHomeError,
     MelCloudHomeTimeoutError,
 )
 
@@ -21,12 +22,17 @@ from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util.dt import utcnow
 
-from .const import DOMAIN
+from .const import DEVICE_ATA, DEVICE_ATW, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
 UPDATE_INTERVAL = timedelta(seconds=60)
+LIVE_UPDATE_INTERVAL = timedelta(minutes=10)
 TELEMETRY_UPDATE_INTERVAL = timedelta(minutes=15)
+
+# ATA telemetry reports Wh, ATW telemetry kWh per interval
+ATA_ENERGY_MEASURE = "cumulative_energy_consumed_since_last_upload"
+ATW_ENERGY_MEASURE = "interval_energy_consumed"
 
 
 @dataclass(kw_only=True, frozen=True)
@@ -60,18 +66,23 @@ class MelCloudHomeCoordinator(DataUpdateCoordinator[UserContext]):
             update_interval=UPDATE_INTERVAL,
         )
         self.client = client
+        self.websocket = client.websocket()
         self.ata_units: dict[str, ATAUnit] = {}
         self.atw_units: dict[str, ATWUnit] = {}
         self.known_ata: set[str] = set()
         self.known_atw: set[str] = set()
         self.new_ata_callbacks: list[Callable[[list[ATAUnit]], None]] = []
         self.new_atw_callbacks: list[Callable[[list[ATWUnit]], None]] = []
+        self._deltas_during_fetch: list[UnitStateDelta] | None = None
 
-    def _notify_new_units(self, data: UserContext) -> None:
-        """Notify callbacks when new units are discovered."""
-        current_ata = [
-            unit for building in data.buildings for unit in building.air_to_air_units
-        ]
+    def _async_sync_units(self) -> None:
+        """Add entities for new units and remove devices of units that are gone."""
+        current_ata = list(self.ata_units.values())
+        current_atw_units = list(self.atw_units.values())
+        if not current_ata and not current_atw_units:
+            # An empty context is more likely an API glitch than every unit removed
+            _LOGGER.debug("No units in the account, skipping stale device removal")
+            return
 
         current_ata_ids = {unit.id for unit in current_ata}
         self.known_ata &= current_ata_ids
@@ -82,10 +93,6 @@ class MelCloudHomeCoordinator(DataUpdateCoordinator[UserContext]):
             self.known_ata.update(unit.id for unit in new_ata_units)
             for ata_callback in self.new_ata_callbacks:
                 ata_callback(new_ata_units)
-
-        current_atw_units = [
-            unit for building in data.buildings for unit in building.air_to_water_units
-        ]
 
         current_atw_ids = {unit.id for unit in current_atw_units}
         self.known_atw &= current_atw_ids
@@ -116,6 +123,8 @@ class MelCloudHomeCoordinator(DataUpdateCoordinator[UserContext]):
     @override
     async def _async_update_data(self) -> UserContext:
         """Fetch data from the MELCloud Home API."""
+        deltas: list[UnitStateDelta] = []
+        self._deltas_during_fetch = deltas
         try:
             data = await self.client.get_context()
         except MelCloudHomeAuthenticationError as err:
@@ -133,12 +142,27 @@ class MelCloudHomeCoordinator(DataUpdateCoordinator[UserContext]):
                 translation_domain=DOMAIN,
                 translation_key="timeout_connect",
             ) from err
+        except MelCloudHomeError as err:
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="api_error",
+            ) from err
+        finally:
+            self._deltas_during_fetch = None
 
-        for building in data.buildings:
-            for ata_unit in building.air_to_air_units:
-                self.ata_units[ata_unit.id] = ata_unit
-            for atw_unit in building.air_to_water_units:
-                self.atw_units[atw_unit.id] = atw_unit
+        self.ata_units = {
+            unit.id: unit
+            for building in data.buildings
+            for unit in building.air_to_air_units
+        }
+        self.atw_units = {
+            unit.id: unit
+            for building in data.buildings
+            for unit in building.air_to_water_units
+        }
+        # The snapshot can predate deltas that arrived while it was fetched
+        for delta in deltas:
+            self._apply_delta(delta)
 
         return data
 
@@ -147,7 +171,78 @@ class MelCloudHomeCoordinator(DataUpdateCoordinator[UserContext]):
     def _async_refresh_finished(self) -> None:
         """Notify entity callbacks after coordinator data has been updated."""
         if self.data is not None:
-            self._notify_new_units(self.data)
+            self._async_sync_units()
+
+    @callback
+    def async_start_live_updates(self) -> None:
+        """Receive live updates until the config entry unloads."""
+        entry = self.config_entry
+        # Unload callbacks run in reverse, so the socket closes after unregistering
+        entry.async_on_unload(self.websocket.close)
+        entry.async_on_unload(
+            self.websocket.register_delta_callback(self.async_handle_delta)
+        )
+        entry.async_on_unload(
+            self.websocket.register_connection_callback(self.async_handle_connection)
+        )
+        entry.async_create_background_task(
+            self.hass, self._async_listen(), f"{DOMAIN}_websocket"
+        )
+
+    async def _async_listen(self) -> None:
+        """Receive live updates until the websocket is closed."""
+        try:
+            await self.websocket.listen()
+        except MelCloudHomeAuthenticationError:
+            self.config_entry.async_start_reauth(self.hass)
+
+    @callback
+    def async_handle_delta(self, delta: UnitStateDelta) -> None:
+        """Apply a websocket delta to the cached unit."""
+        _LOGGER.debug("Received websocket delta: %s", delta)
+        if self._deltas_during_fetch is not None:
+            self._deltas_during_fetch.append(delta)
+        if not self._apply_delta(delta):
+            return
+        # An in-flight fetch decides availability when it finishes
+        if self._deltas_during_fetch is None:
+            self.last_update_success = True
+        self.async_update_listeners()
+
+    def _apply_delta(self, delta: UnitStateDelta) -> bool:
+        """Apply a delta to the cached unit of its type; return whether it changed."""
+        if delta.unit_type == DEVICE_ATA:
+            return _apply_unit_delta(self.ata_units, delta)
+        if delta.unit_type == DEVICE_ATW:
+            return _apply_unit_delta(self.atw_units, delta)
+        return False
+
+    @callback
+    def async_handle_connection(self, connected: bool) -> None:
+        """Poll less often while live updates arrive."""
+        _LOGGER.debug("Live updates %s", "connected" if connected else "disconnected")
+        if connected:
+            self.update_interval = LIVE_UPDATE_INTERVAL
+            return
+        self.update_interval = UPDATE_INTERVAL
+        # Shutdown would wait for this request
+        if self.hass.is_stopping:
+            return
+        # Catches up on missed changes and reschedules polling at the shorter interval
+        self.config_entry.async_create_task(self.hass, self.async_request_refresh())
+
+
+def _apply_unit_delta[_UnitT: (ATAUnit, ATWUnit)](
+    units: dict[str, _UnitT], delta: UnitStateDelta
+) -> bool:
+    """Apply a websocket delta to a cached unit; return whether it changed."""
+    # Unknown units are discovered by the regular poll
+    if (unit := units.get(delta.unit_id)) is None:
+        return False
+    if (updated := delta.apply_to(unit)) is unit:
+        return False
+    units[delta.unit_id] = updated
+    return True
 
 
 @dataclass(kw_only=True, frozen=True)
@@ -155,6 +250,7 @@ class MelCloudHomeTelemetryData:
     """Telemetry data fetched periodically for MELCloud Home units."""
 
     energy: dict[str, float | None]
+    energy_period_start: datetime
     outdoor_temperature: dict[str, float | None]
 
 
@@ -169,7 +265,7 @@ class MelCloudHomeTelemetryCoordinator(
         self,
         hass: HomeAssistant,
         entry: MelCloudHomeConfigEntry,
-        client: MELCloudHome,
+        coordinator: MelCloudHomeCoordinator,
     ) -> None:
         """Initialize the coordinator."""
         super().__init__(
@@ -179,7 +275,7 @@ class MelCloudHomeTelemetryCoordinator(
             name=f"{DOMAIN}_telemetry",
             update_interval=TELEMETRY_UPDATE_INTERVAL,
         )
-        self.client = client
+        self._coordinator = coordinator
         self._unavailable_telemetry: set[tuple[str, str]] = set()
 
     async def _async_fetch_telemetry[_T](
@@ -189,11 +285,7 @@ class MelCloudHomeTelemetryCoordinator(
         key = (name, unit_id)
         try:
             result = await coroutine
-        except (
-            MelCloudHomeAuthenticationError,
-            MelCloudHomeConnectionError,
-            MelCloudHomeTimeoutError,
-        ):
+        except MelCloudHomeError:
             if key not in self._unavailable_telemetry:
                 self._unavailable_telemetry.add(key)
                 _LOGGER.info("%s for %s is unavailable", name, unit_id)
@@ -204,59 +296,54 @@ class MelCloudHomeTelemetryCoordinator(
         return result
 
     async def _async_get_energy(
-        self, unit_id: str, start_of_month: datetime, now: datetime
+        self,
+        unit_id: str,
+        start_of_month: datetime,
+        now: datetime,
+        *,
+        measure: str = ATA_ENERGY_MEASURE,
+        wh_per_unit: float = 1,
     ) -> float | None:
-        """Fetch energy telemetry for a unit without failing the whole update."""
+        """Fetch energy telemetry in Wh for a unit without failing the whole update."""
         energy = await self._async_fetch_telemetry(
             "Energy telemetry",
             unit_id,
-            self.client.get_energy_telemetry(
-                unit_id, from_dt=start_of_month, to_dt=now, interval="Day"
+            self._coordinator.client.get_energy_telemetry(
+                unit_id,
+                from_dt=start_of_month,
+                to_dt=now,
+                interval="Day",
+                measure=measure,
             ),
         )
         if energy is None:
             return None
-        return sum(float(e.value) for e in energy)
+        return sum(float(e.value) for e in energy) * wh_per_unit
 
     async def _async_get_outdoor_temperature(self, unit_id: str) -> float | None:
         """Fetch outdoor temperature for a unit without failing the whole update."""
         return await self._async_fetch_telemetry(
             "Outdoor temperature",
             unit_id,
-            self.client.get_outdoor_temperature(unit_id),
+            self._coordinator.client.get_outdoor_temperature(unit_id),
         )
 
     @override
     async def _async_update_data(self) -> MelCloudHomeTelemetryData:
         """Fetch energy and outdoor temperature telemetry for all supported units."""
-        try:
-            data = await self.client.get_context()
-        except MelCloudHomeAuthenticationError as err:
-            raise ConfigEntryAuthFailed(
-                translation_domain=DOMAIN,
-                translation_key="invalid_auth",
-            ) from err
-        except MelCloudHomeConnectionError as err:
+        if not self._coordinator.last_update_success:
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="cannot_connect",
-            ) from err
-        except MelCloudHomeTimeoutError as err:
-            raise UpdateFailed(
-                translation_domain=DOMAIN,
-                translation_key="timeout_connect",
-            ) from err
-
-        start_of_month = utcnow().replace(
-            day=1, hour=0, minute=0, second=0, microsecond=0
-        )
+            )
         now = utcnow()
+        start_of_month = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
 
         energy_coroutines: dict[str, Coroutine[None, None, float | None]] = {}
         outdoor_temperature_coroutine: dict[
             str, Coroutine[None, None, float | None]
         ] = {}
-        for building in data.buildings:
+        for building in self._coordinator.data.buildings:
             for ata_unit in building.air_to_air_units:
                 if (
                     ata_unit.capabilities
@@ -265,9 +352,10 @@ class MelCloudHomeTelemetryCoordinator(
                     energy_coroutines[ata_unit.id] = self._async_get_energy(
                         ata_unit.id, start_of_month, now
                     )
+                # The API doesn't send this flag, so units without it are probed
                 if (
-                    ata_unit.capabilities
-                    and ata_unit.capabilities.has_outdoor_temperature_sensor
+                    ata_unit.capabilities is None
+                    or ata_unit.capabilities.has_outdoor_temperature_sensor is not False
                 ):
                     outdoor_temperature_coroutine[ata_unit.id] = (
                         self._async_get_outdoor_temperature(ata_unit.id)
@@ -279,7 +367,11 @@ class MelCloudHomeTelemetryCoordinator(
                     and atw_unit.capabilities.has_energy_consumed_meter
                 ):
                     energy_coroutines[atw_unit.id] = self._async_get_energy(
-                        atw_unit.id, start_of_month, now
+                        atw_unit.id,
+                        start_of_month,
+                        now,
+                        measure=ATW_ENERGY_MEASURE,
+                        wh_per_unit=1000,
                     )
 
         energy_values, outdoor_temperature_values = await asyncio.gather(
@@ -289,6 +381,7 @@ class MelCloudHomeTelemetryCoordinator(
 
         return MelCloudHomeTelemetryData(
             energy=dict(zip(energy_coroutines, energy_values, strict=True)),
+            energy_period_start=start_of_month,
             outdoor_temperature=dict(
                 zip(
                     outdoor_temperature_coroutine,

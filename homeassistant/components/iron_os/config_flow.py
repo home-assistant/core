@@ -62,7 +62,6 @@ class IronOSConfigFlow(ConfigFlow, domain=DOMAIN):
             finally:
                 await device.disconnect()
 
-        self._set_confirm_only()
         placeholders = {"name": title}
         self.context["title_placeholders"] = placeholders
         return self.async_show_form(

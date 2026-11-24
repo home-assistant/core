@@ -20,7 +20,7 @@ from homeassistant.components import cloud, webhook
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_KEY, CONF_API_TOKEN, CONF_WEBHOOK_ID, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.network import NoURLAvailableError
@@ -81,6 +81,7 @@ class SwitchbotCloudData:
 
     api: SwitchBotAPI
     devices: SwitchbotDevices
+    webhook_registered: bool = False
 
 
 type SwitchbotCloudConfigEntry = ConfigEntry[SwitchbotCloudData]
@@ -153,22 +154,14 @@ async def make_device_data(
 
     if (
         isinstance(device, Device)
-        and (
-            device.device_type.startswith("Plug")
-            or device.device_type in ["Relay Switch 1PM", "Relay Switch 1"]
-        )
+        and device.device_type in ["Relay Switch 1PM", "Relay Switch 1"]
     ) or isinstance(device, Remote):
         coordinator = await coordinator_for_device(
             hass, entry, api, device, coordinators_by_id
         )
         devices_data.switches.append((device, coordinator))
 
-    if isinstance(device, Device) and device.device_type in [
-        "Relay Switch 1PM",
-        "Plug Mini (US)",
-        "Plug Mini (JP)",
-        "Plug Mini (EU)",
-    ]:
+    if isinstance(device, Device) and device.device_type == "Relay Switch 1PM":
         coordinator = await coordinator_for_device(
             hass, entry, api, device, coordinators_by_id
         )
@@ -196,10 +189,14 @@ async def make_device_data(
         )
         devices_data.sensors.append((device, coordinator))
         if coordinator.data is not None:
-            if coordinator.data.get("deviceMode") == "pressMode":
-                devices_data.buttons.append((device, coordinator))
-            else:
-                devices_data.switches.append((device, coordinator))
+            device_mode = coordinator.data.get("deviceMode")
+            match device_mode:
+                case "pressMode":
+                    devices_data.buttons.append((device, coordinator))
+                case "switchMode":
+                    devices_data.switches.append((device, coordinator))
+                case _:
+                    pass
     if isinstance(device, Device) and device.device_type == "Relay Switch 2PM":
         coordinator = await coordinator_for_device(
             hass, entry, api, device, coordinators_by_id
@@ -286,7 +283,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_setup_entry(
     hass: HomeAssistant, entry: SwitchbotCloudConfigEntry
-) -> bool:
+) -> None:
     """Set up SwitchBot via API from a config entry."""
     token = entry.data[CONF_API_TOKEN]
     secret = entry.data[CONF_API_KEY]
@@ -296,7 +293,7 @@ async def async_setup_entry(
     try:
         devices = await api.list_devices()
     except SwitchBotAuthenticationError as ex:
-        raise ConfigEntryError(
+        raise ConfigEntryAuthFailed(
             translation_domain=DOMAIN,
             translation_key="invalid_auth",
         ) from ex
@@ -342,19 +339,15 @@ async def async_setup_entry(
     # retry to set up a second time
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
-
 
 async def async_unload_entry(
     hass: HomeAssistant, entry: SwitchbotCloudConfigEntry
-) -> bool:
+) -> None:
     """Unload a config entry."""
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
 
-    if unload_ok and CONF_WEBHOOK_ID in entry.data:
+    if CONF_WEBHOOK_ID in entry.data:
         webhook.async_unregister(hass, entry.data[CONF_WEBHOOK_ID])
-
-    return unload_ok
 
 
 async def _initialize_webhook(
@@ -399,6 +392,7 @@ async def _initialize_webhook(
 
         # check if webhook is configured in switchbot cloud
 
+        entry.runtime_data.webhook_registered = False
         try:
             check_webhook_result = None
             with contextlib.suppress(Exception):
@@ -433,6 +427,7 @@ async def _initialize_webhook(
                 )
 
             _LOGGER.debug("Registered Switchbot cloud webhook at: %s", webhook_url)
+            entry.runtime_data.webhook_registered = True
         except SwitchBotDeviceOfflineError as e:
             _LOGGER.error("Failed to connect Switchbot cloud device: %s", e)
         except SwitchBotConnectionError as e:

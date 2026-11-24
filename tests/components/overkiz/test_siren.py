@@ -6,23 +6,20 @@ from unittest.mock import patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.siren import ATTR_DURATION, DOMAIN as SIREN_DOMAIN
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
-    STATE_UNAVAILABLE,
-    Platform,
+from homeassistant.components.siren import (
+    DOMAIN as SIREN_DOMAIN,
+    SirenService,
+    SirenServiceArgument,
 )
+from homeassistant.const import STATE_UNAVAILABLE, Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from .conftest import FixtureDevice, MockOverkizClient, SetupOverkizIntegration
 from .helpers import assert_command_call, async_deliver_events, device_unavailable_event
-
-from tests.common import snapshot_platform
 
 SIREN = FixtureDevice(
     "setup/local_somfy_tahoma_v2_europe.json",
@@ -71,8 +68,8 @@ async def test_siren_turn_on_default_duration(
 
     await hass.services.async_call(
         SIREN_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: SIREN.entity_id},
+        SirenService.TURN_ON,
+        {TargetKey.ENTITY_ID: SIREN.entity_id},
         blocking=True,
     )
 
@@ -94,8 +91,8 @@ async def test_siren_turn_on_custom_duration(
 
     await hass.services.async_call(
         SIREN_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: SIREN.entity_id, ATTR_DURATION: 30},
+        SirenService.TURN_ON,
+        {TargetKey.ENTITY_ID: SIREN.entity_id, SirenServiceArgument.DURATION: 30},
         blocking=True,
     )
 
@@ -117,8 +114,8 @@ async def test_siren_turn_off(
 
     await hass.services.async_call(
         SIREN_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: SIREN.entity_id},
+        SirenService.TURN_OFF,
+        {TargetKey.ENTITY_ID: SIREN.entity_id},
         blocking=True,
     )
 

@@ -6,6 +6,7 @@ from typing import Any
 from unittest.mock import MagicMock
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 from zwave_js_server.event import Event
 from zwave_js_server.model.node import Node
 
@@ -39,8 +40,6 @@ from .common import (
     TAMPER_SENSOR,
     NodeDataType,
 )
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 def _add_door_tilt_state_value(node_state: dict[str, Any]) -> dict[str, Any]:
@@ -168,6 +167,45 @@ def _add_glass_break_notification_states(
                 "6": "Glass breakage detected",
             }
             break
+    return updated_state
+
+
+def _add_water_valve_notification_values(node_state: NodeDataType) -> NodeDataType:
+    """Return a node state with more Water Valve notification values."""
+    updated_state = copy.deepcopy(node_state)
+    jammed_value = next(
+        value_data
+        for value_data in updated_state["values"]
+        if value_data.get("commandClass") == 113
+        and value_data.get("propertyKey") == "Valve jammed status"
+    )
+    for property_key, states in (
+        ("Master valve operation status", {"0": "Off / Closed", "1": "On / Open"}),
+        ("Valve short circuit status", {"0": "idle", "3": "Valve short circuit"}),
+        (
+            "Master valve short circuit status",
+            {"0": "idle", "4": "Master valve short circuit"},
+        ),
+        # zwave-js replaces the state id with the enum values for these variables.
+        (
+            "Valve current alarm status",
+            {
+                "0": "idle",
+                "1": "No data",
+                "2": "Below low threshold",
+                "3": "Above high threshold",
+                "4": "Max",
+            },
+        ),
+        ("Master valve current alarm status", {"0": "idle", "4": "Max"}),
+        ("Custom valve status", {"0": "idle", "1": "Custom valve state"}),
+    ):
+        value_data = copy.deepcopy(jammed_value)
+        value_data["propertyKey"] = value_data["propertyKeyName"] = property_key
+        value_data["metadata"]["label"] = property_key
+        value_data["metadata"]["states"] = states
+        value_data["value"] = 0
+        updated_state["values"].append(value_data)
     return updated_state
 
 
@@ -464,6 +502,164 @@ async def test_heat_notification_sensor_primary(
     entity_entry = entity_registry.async_get(entity_id)
     assert entity_entry
     assert entity_entry.entity_category is None
+
+
+async def test_water_valve_notification_sensor(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    zooz_zac36_titan_valve_actuator: Node,
+    integration: MockConfigEntry,
+) -> None:
+    """Test Water Valve notification sensors."""
+    node = zooz_zac36_titan_valve_actuator
+    entity_id = "binary_sensor.titan_water_valve_actuator_valve_jammed"
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == STATE_ON
+    assert state.attributes[ATTR_DEVICE_CLASS] == BinarySensorDeviceClass.PROBLEM
+
+    entity_entry = entity_registry.async_get(entity_id)
+    assert entity_entry
+    assert entity_entry.entity_category is EntityCategory.DIAGNOSTIC
+
+    valve_operation_entity_id = "binary_sensor.titan_water_valve_actuator_on_open"
+    state = hass.states.get(valve_operation_entity_id)
+    assert state
+    assert state.state == STATE_OFF
+    assert state.attributes.get(ATTR_DEVICE_CLASS) is None
+
+    entity_entry = entity_registry.async_get(valve_operation_entity_id)
+    assert entity_entry
+    assert entity_entry.entity_category is None
+
+    # Only the non-idle states of the two Water Valve values get an entity.
+    water_valve_entries = [
+        reg_entry
+        for reg_entry in entity_registry.entities.values()
+        if reg_entry.domain == "binary_sensor"
+        and reg_entry.platform == "zwave_js"
+        and "Water Valve" in reg_entry.unique_id
+    ]
+    assert len(water_valve_entries) == 2
+
+    for prev_value, new_value, expected_state in ((7, 0, STATE_OFF), (0, 7, STATE_ON)):
+        event = Event(
+            type="value updated",
+            data={
+                "source": "node",
+                "event": "value updated",
+                "nodeId": node.node_id,
+                "args": {
+                    "commandClassName": "Notification",
+                    "commandClass": 113,
+                    "endpoint": 0,
+                    "property": "Water Valve",
+                    "propertyKey": "Valve jammed status",
+                    "newValue": new_value,
+                    "prevValue": prev_value,
+                    "propertyName": "Water Valve",
+                    "propertyKeyName": "Valve jammed status",
+                },
+            },
+        )
+        node.receive_event(event)
+
+        state = hass.states.get(entity_id)
+        assert state
+        assert state.state == expected_state
+
+
+@pytest.mark.parametrize(
+    ("entity_id", "device_class", "entity_category"),
+    [
+        pytest.param(
+            "binary_sensor.titan_water_valve_actuator_valve_short_circuit",
+            BinarySensorDeviceClass.PROBLEM,
+            EntityCategory.DIAGNOSTIC,
+            id="short_circuit",
+        ),
+        pytest.param(
+            "binary_sensor.titan_water_valve_actuator_master_valve_short_circuit",
+            BinarySensorDeviceClass.PROBLEM,
+            EntityCategory.DIAGNOSTIC,
+            id="master_short_circuit",
+        ),
+        pytest.param(
+            "binary_sensor.titan_water_valve_actuator_on_open_2",
+            None,
+            None,
+            id="master_valve_operation",
+        ),
+        pytest.param(
+            "binary_sensor.titan_water_valve_actuator_no_data",
+            BinarySensorDeviceClass.PROBLEM,
+            EntityCategory.DIAGNOSTIC,
+            id="current_alarm_no_data",
+        ),
+        pytest.param(
+            "binary_sensor.titan_water_valve_actuator_below_low_threshold",
+            BinarySensorDeviceClass.PROBLEM,
+            EntityCategory.DIAGNOSTIC,
+            id="current_alarm_below_low_threshold",
+        ),
+        pytest.param(
+            "binary_sensor.titan_water_valve_actuator_above_high_threshold",
+            BinarySensorDeviceClass.PROBLEM,
+            EntityCategory.DIAGNOSTIC,
+            id="current_alarm_above_high_threshold",
+        ),
+        pytest.param(
+            "binary_sensor.titan_water_valve_actuator_max",
+            BinarySensorDeviceClass.PROBLEM,
+            EntityCategory.DIAGNOSTIC,
+            id="current_alarm_max",
+        ),
+        pytest.param(
+            "binary_sensor.titan_water_valve_actuator_max_2",
+            BinarySensorDeviceClass.PROBLEM,
+            EntityCategory.DIAGNOSTIC,
+            id="master_current_alarm_max",
+        ),
+        pytest.param(
+            "binary_sensor.titan_water_valve_actuator_custom_valve_state",
+            None,
+            EntityCategory.DIAGNOSTIC,
+            id="catch_all",
+        ),
+    ],
+)
+async def test_water_valve_notification_sensor_other_values(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    client: MagicMock,
+    caplog: pytest.LogCaptureFixture,
+    zooz_zac36_titan_valve_actuator_state: NodeDataType,
+    entity_id: str,
+    device_class: BinarySensorDeviceClass | None,
+    entity_category: EntityCategory | None,
+) -> None:
+    """Test Water Valve short circuit, current alarm and unknown value sensors."""
+    node = Node(
+        client,
+        _add_water_valve_notification_values(zooz_zac36_titan_valve_actuator_state),
+    )
+    client.driver.controller.nodes[node.node_id] = node
+
+    entry = MockConfigEntry(domain=DOMAIN, data={"url": "ws://test.org"})
+    entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.attributes.get(ATTR_DEVICE_CLASS) == device_class
+
+    entity_entry = entity_registry.async_get(entity_id)
+    assert entity_entry
+    assert entity_entry.entity_category == entity_category
+
+    # Overlapping schemas would create entities with the same unique ID.
+    assert "does not generate unique IDs" not in caplog.text
 
 
 @pytest.mark.usefixtures("wallmote_central_scene", "integration")
@@ -1468,6 +1664,7 @@ async def test_legacy_door_open_state_repair_issue(
     )
     assert issue is not None
     assert issue.translation_key == "deprecated_legacy_door_open_state"
+    assert issue.config_entry_id == entry.entry_id
     assert issue.translation_placeholders["entity_id"] == entity_id
     assert issue.translation_placeholders["entity_name"] == "Window/door is open"
     assert (
@@ -1475,6 +1672,15 @@ async def test_legacy_door_open_state_repair_issue(
         == "binary_sensor.ehandle_connectsense"
     )
     assert "test" in issue.translation_placeholders["items"]
+
+    await hass.config_entries.async_remove(entry.entry_id)
+    await hass.async_block_till_done()
+    assert (
+        issue_registry.async_get_issue(
+            DOMAIN, f"deprecated_legacy_door_open_state.{entity_id}"
+        )
+        is None
+    )
 
 
 async def test_legacy_door_tilt_state_repair_issue(

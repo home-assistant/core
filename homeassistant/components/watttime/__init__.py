@@ -14,7 +14,7 @@ from .coordinator import WattTimeConfigEntry, WattTimeCoordinator
 PLATFORMS: list[Platform] = [Platform.SENSOR]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: WattTimeConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: WattTimeConfigEntry) -> None:
     """Set up WattTime from a config entry."""
     session = aiohttp_client.async_get_clientsession(hass)
 
@@ -39,12 +39,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: WattTimeConfigEntry) -> 
 
     entry.async_on_unload(entry.add_update_listener(async_reload_entry))
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: WattTimeConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: WattTimeConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
 
 
 async def async_reload_entry(

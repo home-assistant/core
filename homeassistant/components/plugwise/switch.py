@@ -10,13 +10,14 @@ from homeassistant.components.switch import (
     SwitchEntity,
     SwitchEntityDescription,
 )
-from homeassistant.const import EntityCategory
+from homeassistant.const import EntityCategory, Platform
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .coordinator import PlugwiseConfigEntry, PlugwiseDataUpdateCoordinator
 from .entity import PlugwiseEntity
-from .util import plugwise_command
+from .util import deprecate_entity, plugwise_command
 
 PARALLEL_UPDATES = 0
 
@@ -59,6 +60,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Smile switches from a config entry."""
     coordinator = entry.runtime_data
+    entity_registry = er.async_get(hass)
 
     @callback
     def _add_entities() -> None:
@@ -66,13 +68,33 @@ async def async_setup_entry(
         if not coordinator.new_devices:
             return
 
-        async_add_entities(
-            PlugwiseSwitchEntity(coordinator, device_id, description)
-            for device_id in coordinator.new_devices
-            if (switches := coordinator.data[device_id].get("switches"))
-            for description in SWITCHES
-            if description.key in switches
-        )
+        entities: list[SwitchEntity] = []
+        for device_id in coordinator.new_devices:
+            if not (switches := coordinator.data[device_id].get("switches")):
+                continue
+            for description in SWITCHES:
+                if description.key not in switches:
+                    continue
+                if description.key == "dhw_cm_switch":
+                    if not deprecate_entity(
+                        hass,
+                        entity_registry,
+                        async_on_unload=entry.async_on_unload,
+                        platform_domain=Platform.SWITCH,
+                        entity_unique_id=f"{device_id}-dhw_cm_switch",
+                        issue_id=f"deprecated_dhw_cm_switch_{device_id}",
+                        translation_key="deprecated_dhw_cm_switch",
+                    ):
+                        continue
+                    entities.append(
+                        PlugwiseDhwCmSwitchEntity(coordinator, device_id, description)
+                    )
+                else:
+                    entities.append(
+                        PlugwiseSwitchEntity(coordinator, device_id, description)
+                    )
+
+        async_add_entities(entities)
 
     _add_entities()
     entry.async_on_unload(coordinator.async_add_listener(_add_entities))
@@ -121,3 +143,17 @@ class PlugwiseSwitchEntity(PlugwiseEntity, SwitchEntity):
             self.entity_description.key,
             "off",
         )
+
+
+class PlugwiseDhwCmSwitchEntity(PlugwiseSwitchEntity):
+    """Represent the deprecated DHW comfort switch."""
+
+    @override
+    async def async_turn_on(self, **kwargs: Any) -> None:
+        """Turn the deprecated DHW comfort switch on."""
+        await super().async_turn_on(**kwargs)
+
+    @override
+    async def async_turn_off(self, **kwargs: Any) -> None:
+        """Turn the deprecated DHW comfort switch off."""
+        await super().async_turn_off(**kwargs)

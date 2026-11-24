@@ -3,6 +3,7 @@
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries
 from homeassistant.components.blue_current import DOMAIN
@@ -14,8 +15,6 @@ from homeassistant.components.blue_current.config_flow import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-
-from tests.common import MockConfigEntry
 
 
 async def test_form(hass: HomeAssistant) -> None:
@@ -47,7 +46,7 @@ async def test_user(hass: HomeAssistant) -> None:
         ),
         patch(
             "homeassistant.components.blue_current.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ),
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -105,7 +104,7 @@ async def test_flow_fails(hass: HomeAssistant, error: Exception, message: str) -
         ),
         patch(
             "homeassistant.components.blue_current.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ),
     ):
         result2 = await hass.config_entries.flow.async_configure(

@@ -5,23 +5,20 @@ from unittest.mock import MagicMock, patch
 from pylitterbot.exceptions import InvalidCommandException
 from pylitterbot.robot.litterrobot4 import NightLightMode
 import pytest
+from pytest_homeassistant.common import snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.light import (
-    ATTR_BRIGHTNESS,
-    ATTR_RGB_COLOR,
     DOMAIN as LIGHT_DOMAIN,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
+    LightService,
+    LightServiceArgument,
 )
-from homeassistant.const import ATTR_ENTITY_ID, Platform
+from homeassistant.const import Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
 from .conftest import create_mock_account, setup_integration
-
-from tests.common import snapshot_platform
 
 NIGHT_LIGHT_ENTITY_ID = "light.test_night_light"
 
@@ -49,8 +46,11 @@ async def test_turn_on_brightness(
     robot = mock_account_with_litterrobot_5.robots[0]
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: NIGHT_LIGHT_ENTITY_ID, ATTR_BRIGHTNESS: 255},
+        LightService.TURN_ON,
+        {
+            TargetKey.ENTITY_ID: NIGHT_LIGHT_ENTITY_ID,
+            LightServiceArgument.BRIGHTNESS: 255,
+        },
         blocking=True,
     )
     robot.set_night_light_settings.assert_awaited_once_with(
@@ -67,8 +67,11 @@ async def test_turn_on_color(
     robot = mock_account_with_litterrobot_5.robots[0]
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: NIGHT_LIGHT_ENTITY_ID, ATTR_RGB_COLOR: (255, 0, 0)},
+        LightService.TURN_ON,
+        {
+            TargetKey.ENTITY_ID: NIGHT_LIGHT_ENTITY_ID,
+            LightServiceArgument.RGB_COLOR: (255, 0, 0),
+        },
         blocking=True,
     )
     robot.set_night_light_settings.assert_awaited_once_with(
@@ -97,8 +100,8 @@ async def test_turn_on_from_off_switches_on(hass: HomeAssistant) -> None:
     robot = mock_account.robots[0]
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: NIGHT_LIGHT_ENTITY_ID},
+        LightService.TURN_ON,
+        {TargetKey.ENTITY_ID: NIGHT_LIGHT_ENTITY_ID},
         blocking=True,
     )
     robot.set_night_light_settings.assert_awaited_once_with(
@@ -115,8 +118,8 @@ async def test_turn_off(
     robot = mock_account_with_litterrobot_5.robots[0]
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: NIGHT_LIGHT_ENTITY_ID},
+        LightService.TURN_OFF,
+        {TargetKey.ENTITY_ID: NIGHT_LIGHT_ENTITY_ID},
         blocking=True,
     )
     robot.set_night_light_settings.assert_awaited_once_with(mode=NightLightMode.OFF)
@@ -132,8 +135,8 @@ async def test_command_exception(hass: HomeAssistant) -> None:
     with pytest.raises(HomeAssistantError, match="Invalid command: oops"):
         await hass.services.async_call(
             LIGHT_DOMAIN,
-            SERVICE_TURN_OFF,
-            {ATTR_ENTITY_ID: NIGHT_LIGHT_ENTITY_ID},
+            LightService.TURN_OFF,
+            {TargetKey.ENTITY_ID: NIGHT_LIGHT_ENTITY_ID},
             blocking=True,
         )
 

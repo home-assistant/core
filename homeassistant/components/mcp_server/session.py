@@ -39,7 +39,7 @@ class SessionManager:
     @asynccontextmanager
     async def create(self, session: Session) -> AsyncGenerator[str]:
         """Context manager to create a new session ID and close when done."""
-        session_id = ulid_util.ulid_now()
+        session_id = ulid_util.secure_ulid_now()
         _LOGGER.debug("Creating session: %s", session_id)
         self._sessions[session_id] = session
         try:
@@ -48,6 +48,11 @@ class SessionManager:
             _LOGGER.debug("Closing session: %s", session_id)
             if session_id in self._sessions:  # close() may have already been called
                 self._sessions.pop(session_id)
+
+    @property
+    def session_count(self) -> int:
+        """Return the number of open sessions."""
+        return len(self._sessions)
 
     def get(self, session_id: str) -> Session | None:
         """Get an existing session."""

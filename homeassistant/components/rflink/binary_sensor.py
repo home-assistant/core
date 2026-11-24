@@ -6,8 +6,6 @@ import probatio
 
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASSES_SCHEMA,
-    DOMAIN as PLATFORM_DOMAIN,
-    PLATFORM_SCHEMA as BINARY_SENSOR_PLATFORM_SCHEMA,
     BinarySensorDeviceClass,
     BinarySensorEntity,
 )
@@ -26,7 +24,6 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import CONF_ALIASES
 from .entity import RflinkDevice
-from .utils import create_issue_yaml_migration
 
 CONF_OFF_DELAY = "off_delay"
 DEFAULT_FORCE_UPDATE = False
@@ -49,11 +46,6 @@ RFLINK_PLATFORM = {
     }
 }
 
-PLATFORM_SCHEMA = BINARY_SENSOR_PLATFORM_SCHEMA.extend(
-    RFLINK_PLATFORM,
-    extra=probatio.ALLOW_EXTRA,
-)
-
 
 def devices_from_config(domain_config):
     """Parse configuration and add Rflink sensor devices."""
@@ -73,10 +65,8 @@ async def async_setup_platform(
 ) -> None:
     """Set up the Rflink platform."""
     if discovery_info is None:
-        create_issue_yaml_migration(hass, PLATFORM_DOMAIN)
-        async_add_entities(devices_from_config(config))
-    else:
-        async_add_entities(devices_from_config(discovery_info))
+        return
+    async_add_entities(devices_from_config(discovery_info))
 
 
 class RflinkBinarySensor(RflinkDevice, BinarySensorEntity, RestoreEntity):
@@ -97,17 +87,6 @@ class RflinkBinarySensor(RflinkDevice, BinarySensorEntity, RestoreEntity):
         self._off_delay = off_delay
         self._delay_listener = None
         super().__init__(device_id, **kwargs)
-
-    @callback
-    @override
-    def async_entity_id_changed(self, old_entity_id: str) -> None:
-        """Opt in to in-place entity_id changes.
-
-        Can be removed when backwards compatibility is disabled for core
-        integrations, i.e. once all core integrations have been migrated
-        to in-place entity ID change.
-        """
-        super().async_entity_id_changed(old_entity_id)
 
     @override
     async def async_added_to_hass(self) -> None:

@@ -3,9 +3,9 @@
 from functools import partial
 from types import MappingProxyType
 
+import aiohttp
 from google.genai import Client
-from google.genai.errors import APIError, ClientError
-from requests.exceptions import Timeout
+from google.genai.errors import APIError, ClientError, ServerError
 
 from homeassistant.config_entries import ConfigEntry, ConfigSubentry
 from homeassistant.const import CONF_API_KEY, Platform
@@ -20,7 +20,7 @@ from homeassistant.helpers import (
     device_registry as dr,
     entity_registry as er,
 )
-from homeassistant.helpers.typing import UNDEFINED, ConfigType, UndefinedType
+from homeassistant.helpers.typing import ConfigType, Undefined
 
 from .const import (
     DEFAULT_AI_TASK_NAME,
@@ -57,41 +57,42 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_setup_entry(
     hass: HomeAssistant, entry: GoogleGenerativeAIConfigEntry
-) -> bool:
+) -> None:
     """Set up Google Generative AI Conversation from a config entry."""
 
+    client = await hass.async_add_executor_job(
+        partial(Client, api_key=entry.data[CONF_API_KEY])
+    )
     try:
-        client = await hass.async_add_executor_job(
-            partial(Client, api_key=entry.data[CONF_API_KEY])
-        )
         await client.aio.models.get(
             model=RECOMMENDED_CHAT_MODEL,
             config={"http_options": {"timeout": TIMEOUT_MILLIS}},
         )
-    except (APIError, Timeout) as err:
+    except (TimeoutError, aiohttp.ClientError) as err:
+        await client.aio.aclose()
+        raise ConfigEntryNotReady(err) from err
+    except APIError as err:
+        await client.aio.aclose()
         if isinstance(err, ClientError) and "API_KEY_INVALID" in str(err):
             raise ConfigEntryAuthFailed(err.message) from err
-        if isinstance(err, Timeout):
+        if isinstance(err, ServerError) or (
+            err.code and (err.code >= 500 or err.code in (408, 429))
+        ):
             raise ConfigEntryNotReady(err) from err
         raise ConfigEntryError(err) from err
-    else:
-        entry.runtime_data = client
+
+    entry.runtime_data = client
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     entry.async_on_unload(entry.add_update_listener(async_update_options))
 
-    return True
-
 
 async def async_unload_entry(
     hass: HomeAssistant, entry: GoogleGenerativeAIConfigEntry
-) -> bool:
+) -> None:
     """Unload GoogleGenerativeAI."""
-    if not await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        return False
-
-    return True
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
 
 
 async def async_update_options(
@@ -112,7 +113,7 @@ async def async_migrate_integration(hass: HomeAssistant) -> None:
     if not any(entry.version == 1 for entry in entries):
         return
 
-    api_keys_entries: dict[str, tuple[ConfigEntry, bool]] = {}
+    api_keys_entries: dict[str, tuple[GoogleGenerativeAIConfigEntry, bool]] = {}
     entity_registry = er.async_get(hass)
     device_registry = dr.async_get(hass)
 
@@ -182,7 +183,7 @@ async def async_migrate_integration(hass: HomeAssistant) -> None:
             # Device and entity registries will set the disabled_by flag to None
             # when moving a device or entity disabled by CONFIG_ENTRY to an enabled
             # config entry, but we want to set it to USER instead,
-            device_disabled_by: dr.DeviceEntryDisabler | UndefinedType = UNDEFINED
+            device_disabled_by: dr.DeviceEntryDisabler | Undefined = Undefined
             if (
                 device.disabled_by is dr.DeviceEntryDisabler.CONFIG_ENTRY
                 and not all_disabled
@@ -211,7 +212,7 @@ async def async_migrate_integration(hass: HomeAssistant) -> None:
 
 async def async_migrate_entry(
     hass: HomeAssistant, entry: GoogleGenerativeAIConfigEntry
-) -> bool:
+) -> None:
     """Migrate entry."""
     LOGGER.debug("Migrating from version %s:%s", entry.version, entry.minor_version)
 
@@ -274,8 +275,6 @@ async def async_migrate_entry(
     LOGGER.debug(
         "Migration to version %s:%s successful", entry.version, entry.minor_version
     )
-
-    return True
 
 
 def _add_ai_task_and_stt_subentries(

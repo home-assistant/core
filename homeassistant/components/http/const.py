@@ -6,6 +6,7 @@ from aiohttp.web import Request
 
 from homeassistant.helpers.http import KEY_AUTHENTICATED, KEY_HASS  # noqa: F401
 from homeassistant.util.hass_dict import HassKey
+from homeassistant.util.ssl import SSLProfile
 
 if TYPE_CHECKING:
     from homeassistant.auth.models import User
@@ -35,8 +36,20 @@ CONF_LOGIN_ATTEMPTS_THRESHOLD: Final = "login_attempts_threshold"
 CONF_IP_BAN_ENABLED: Final = "ip_ban_enabled"
 CONF_SSL_PROFILE: Final = "ssl_profile"
 
+# Profile names of the deprecated YAML config and of storage before version
+# 3. They predate the versioned profiles and name the v4 ones.
 SSL_MODERN: Final = "modern"
 SSL_INTERMEDIATE: Final = "intermediate"
+UNVERSIONED_SSL_PROFILES: Final = {
+    SSL_MODERN: SSLProfile.MODERN_V4,
+    SSL_INTERMEDIATE: SSLProfile.INTERMEDIATE_V4,
+}
+# Profiles following the current guidelines, recommended one first. A server
+# running any other profile with SSL gets a repair offering these.
+CURRENT_SSL_PROFILES: Final = (SSLProfile.INTERMEDIATE_V6, SSLProfile.MODERN_V6)
+DEFAULT_SSL_PROFILE: Final = CURRENT_SSL_PROFILES[0]
+
+ISSUE_SSL_PROFILE_OUTDATED: Final = "ssl_profile_outdated"
 
 ENV_SETUP_PORT: Final = "SETUP_PORT"
 ENV_SUPERVISOR: Final = "SUPERVISOR"
@@ -49,6 +62,8 @@ SUPERVISOR_DEFAULT_PORT: Final = 80
 # My to be able to check url and version info.
 DEFAULT_CORS: Final[list[str]] = ["https://cast.home-assistant.io"]
 NO_LOGIN_ATTEMPT_THRESHOLD: Final = -1
+# Largest legitimate unauthenticated request (login flow, token) is a few KB
+MAX_UNAUTHENTICATED_BODY_SIZE: Final = 64 * 1024
 
 ATTR_CONFIG = "config"
 

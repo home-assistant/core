@@ -9,16 +9,6 @@ from aiohue.v2.models.device import Device
 from aiohue.v2.models.resource import ResourceTypes
 from aiohue.v2.models.service_group import ServiceGroup
 
-from homeassistant.const import (
-    ATTR_CONNECTIONS,
-    ATTR_IDENTIFIERS,
-    ATTR_MANUFACTURER,
-    ATTR_MODEL,
-    ATTR_MODEL_ID,
-    ATTR_NAME,
-    ATTR_SUGGESTED_AREA,
-    ATTR_SW_VERSION,
-)
 from homeassistant.core import callback
 from homeassistant.helpers import device_registry as dr
 
@@ -61,22 +51,23 @@ async def async_setup_devices(bridge: HueBridge):
                 else None,
             )
         # Register a Hue device resource as device in HA device registry.
-        params = {
-            ATTR_IDENTIFIERS: {(DOMAIN, hue_resource.id)},
-            ATTR_SW_VERSION: hue_resource.product_data.software_version,
-            ATTR_NAME: hue_resource.metadata.name,
-            ATTR_MODEL: hue_resource.product_data.product_name,
-            ATTR_MODEL_ID: hue_resource.product_data.model_id,
-            ATTR_MANUFACTURER: hue_resource.product_data.manufacturer_name,
-        }
-        if room := dev_controller.get_room(hue_resource.id):
-            params[ATTR_SUGGESTED_AREA] = room.metadata.name
+        identifiers = {(DOMAIN, hue_resource.id)}
         if hue_resource.id == api.config.bridge_device.id:
-            params[ATTR_IDENTIFIERS].add((DOMAIN, api.config.bridge_id))
-        else:
+            identifiers.add((DOMAIN, api.config.bridge_id))
+        device_info = dr.DeviceInfo(
+            identifiers=identifiers,
+            sw_version=hue_resource.product_data.software_version,
+            name=hue_resource.metadata.name,
+            model=hue_resource.product_data.product_name,
+            model_id=hue_resource.product_data.model_id,
+            manufacturer=hue_resource.product_data.manufacturer_name,
+        )
+        if room := dev_controller.get_room(hue_resource.id):
+            device_info.suggested_area = room.metadata.name
+        if hue_resource.id != api.config.bridge_device.id:
             # The bridge device is always registered first (see sort below), so
             # its id can be resolved here for the via_device link.
-            params["via_device_id"] = dr.async_get_device_id_by_identifier(
+            device_info.via_device_id = dr.async_get_device_id_by_identifier(
                 hass,
                 (DOMAIN, api.config.bridge_device.id),
                 config_entry_id=entry.entry_id,
@@ -85,9 +76,11 @@ async def async_setup_devices(bridge: HueBridge):
         if zigbee and zigbee.mac_address:
             mac_owner = mac_owners.setdefault(zigbee.mac_address, hue_resource.id)
             if mac_owner == hue_resource.id:
-                params[ATTR_CONNECTIONS] = {(dr.CONNECTION_ZIGBEE, zigbee.mac_address)}
+                device_info.connections = {(dr.CONNECTION_ZIGBEE, zigbee.mac_address)}
 
-        return dev_reg.async_get_or_create(config_entry_id=entry.entry_id, **params)
+        return dev_reg.async_get_or_create_from_info(
+            config_entry_id=entry.entry_id, device_info=device_info
+        )
 
     @callback
     def remove_device(hue_device_id: str) -> None:

@@ -4,6 +4,7 @@ from unittest.mock import AsyncMock, patch
 
 from aiomealie import About, MealieAuthenticationError, MealieConnectionError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.mealie.const import DOMAIN
@@ -12,8 +13,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
 from . import setup_integration
-
-from tests.common import MockConfigEntry
 
 
 async def test_device_info(

@@ -6,9 +6,24 @@
     "error": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_access_token": "[%key:common::config_flow::error::invalid_access_token%]",
       "no_modules": "No Velbus modules found, please check your VLP file."
     },
     "step": {
+      "manager": {
+        "data": {
+          "access_token": "[%key:common::config_flow::data::access_token%]",
+          "host": "[%key:common::config_flow::data::host%]",
+          "port": "[%key:common::config_flow::data::port%]"
+        },
+        "data_description": {
+          "access_token": "Bearer token when Velbus Manager authentication is enabled.",
+          "host": "Hostname or IP of Velbus Manager (use manager for the Home Assistant app on the same host).",
+          "port": "Velbus Manager HTTP port (default 4201)."
+        },
+        "description": "Connect through Velbus Manager REST and WebSocket instead of the Velbus TCP bus.",
+        "title": "Velbus Manager"
+      },
       "network": {
         "data": {
           "host": "[%key:common::config_flow::data::host%]",
@@ -20,10 +35,20 @@
           "host": "The IP address or hostname of the Velbus interface.",
           "password": "The password of the Velbus interface, this is only needed if the interface is password-protected.",
           "port": "The port number of the Velbus interface.",
-          "tls": "Enable this if you use a secure connection to your Velbus interface, like a Signum."
+          "tls": "Enable this if you use a secure TLS connection to your Velbus interface."
         },
-        "description": "TCP/IP configuration, in case you use a Signum, VelServ, velbus-tcp or any other Velbus to TCP/IP interface.",
+        "description": "TCP/IP configuration for VelServ, velbus-tcp, or any other Velbus to TCP/IP interface.",
         "title": "TCP/IP configuration"
+      },
+      "reauth_confirm": {
+        "data": {
+          "access_token": "[%key:common::config_flow::data::access_token%]"
+        },
+        "data_description": {
+          "access_token": "Bearer token when Velbus Manager authentication is enabled."
+        },
+        "description": "The Velbus Manager rejected the access token. Provide a new token.",
+        "title": "Reauthenticate Velbus Manager"
       },
       "usbselect": {
         "data": {
@@ -38,6 +63,7 @@
       "user": {
         "description": "How do you want to configure the Velbus hub?",
         "menu_options": {
+          "manager": "Via Velbus Manager",
           "network": "Via network connection",
           "usbselect": "Via USB device"
         },
@@ -55,21 +81,44 @@
       }
     }
   },
+  "entity": {
+    "light": {
+      "button_light": {
+        "name": "LED {channel_name}"
+      }
+    },
+    "select": {
+      "select_program": {
+        "name": "Program"
+      }
+    },
+    "sensor": {
+      "counter": {
+        "name": "{channel_name} counter"
+      }
+    }
+  },
   "exceptions": {
     "api_call_failed": {
       "message": "Action execute for {entity} failed."
     },
     "clear_cache_failed": {
-      "message": "Could not clear the Velbus cache: {error}"
+      "message": "Cannot clear the Velbus cache at {path}."
     },
     "connection_failed": {
       "message": "Could not connect to Velbus."
+    },
+    "invalid_access_token": {
+      "message": "[%key:common::config_flow::error::invalid_access_token%]"
     },
     "invalid_hvac_mode": {
       "message": "Climate mode {hvac_mode} is not supported."
     },
     "module_not_found": {
       "message": "Module with address {address} not found."
+    },
+    "no_modules": {
+      "message": "No Velbus modules found, please check your VLP file."
     },
     "scan_failed": {
       "message": "Scan service: {error}."

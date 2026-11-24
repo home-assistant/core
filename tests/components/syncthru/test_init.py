@@ -3,14 +3,13 @@
 from unittest.mock import AsyncMock, patch
 
 from pysyncthru import SyncThruAPINotSupported
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.syncthru.coordinator import SyncthruCoordinator
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 
 from . import setup_integration
-
-from tests.common import MockConfigEntry
 
 
 async def test_setup_api_not_supported(

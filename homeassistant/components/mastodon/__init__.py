@@ -42,7 +42,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: MastodonConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: MastodonConfigEntry) -> None:
     """Set up Mastodon from a config entry."""
 
     try:
@@ -72,15 +72,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: MastodonConfigEntry) -> 
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: MastodonConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: MastodonConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
 
 
-async def async_migrate_entry(hass: HomeAssistant, entry: MastodonConfigEntry) -> bool:
+async def async_migrate_entry(hass: HomeAssistant, entry: MastodonConfigEntry) -> None:
     """Migrate old config."""
 
     if entry.version == 1 and entry.minor_version == 1:
@@ -115,8 +113,6 @@ async def async_migrate_entry(hass: HomeAssistant, entry: MastodonConfigEntry) -
             entry.version,
             entry.minor_version,
         )
-
-    return True
 
 
 def setup_mastodon(

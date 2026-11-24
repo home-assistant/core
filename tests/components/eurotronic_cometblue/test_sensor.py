@@ -4,6 +4,11 @@ from unittest.mock import patch
 
 from eurotronic_cometblue_ha import InvalidByteValueError
 from freezegun.api import FrozenDateTimeFactory
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.eurotronic_cometblue.coordinator import SCAN_INTERVAL
@@ -12,8 +17,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from .conftest import setup_with_selected_platforms
-
-from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 ENTITY_ID = "sensor.comet_blue_aa_bb_cc_dd_ee_ff_battery"
 

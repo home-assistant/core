@@ -18,10 +18,9 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import NeatoConfigEntry
 from .const import ACTION, ALERTS, DOMAIN, ERRORS, MODE, SCAN_INTERVAL_MINUTES
 from .entity import NeatoEntity
-from .hub import NeatoHub
+from .hub import NeatoConfigEntry, NeatoHub
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -262,9 +261,9 @@ class NeatoConnectedVacuum(NeatoEntity, StateVacuumEntity):
         """Device info for neato robot."""
         device_info = self._attr_device_info
         if self._robot_stats:
-            device_info["manufacturer"] = self._robot_stats["battery"]["vendor"]
-            device_info["model"] = self._robot_stats["model"]
-            device_info["sw_version"] = self._robot_stats["firmware"]
+            device_info.manufacturer = self._robot_stats["battery"]["vendor"]
+            device_info.model = self._robot_stats["model"]
+            device_info.sw_version = self._robot_stats["firmware"]
         return device_info
 
     @override

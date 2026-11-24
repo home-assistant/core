@@ -1,6 +1,7 @@
 """Tests for the climate LLM tools platform."""
 
 import pytest
+from pytest_homeassistant.common import async_mock_service
 
 from homeassistant.components import llm as llm_component
 from homeassistant.components.climate import (
@@ -14,8 +15,6 @@ from homeassistant.components.homeassistant.exposed_entities import async_expose
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.helpers import llm
 from homeassistant.setup import async_setup_component
-
-from tests.common import async_mock_service
 
 ENTITY_ID = "climate.test"
 

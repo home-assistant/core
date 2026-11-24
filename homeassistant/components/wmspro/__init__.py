@@ -13,7 +13,7 @@ from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.storage import STORAGE_DIR
-from homeassistant.helpers.typing import UNDEFINED, ConfigType
+from homeassistant.helpers.typing import ConfigType, Undefined
 
 from .const import DOMAIN, MANUFACTURER
 from .services import async_setup_services
@@ -47,7 +47,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_setup_entry(
     hass: HomeAssistant, entry: WebControlProConfigEntry
-) -> bool:
+) -> None:
     """Set up wmspro from a config entry."""
     host = entry.data[CONF_HOST]
     session = async_get_clientsession(hass)
@@ -67,7 +67,7 @@ async def async_setup_entry(
         config_entry_id=entry.entry_id,
         connections={(dr.CONNECTION_NETWORK_MAC, entry.unique_id)}
         if entry.unique_id
-        else UNDEFINED,
+        else Undefined,
         identifiers={(DOMAIN, entry.entry_id)},
         manufacturer=MANUFACTURER,
         model="WMS WebControl pro",
@@ -83,14 +83,12 @@ async def async_setup_entry(
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
-
 
 async def async_unload_entry(
     hass: HomeAssistant, entry: WebControlProConfigEntry
-) -> bool:
+) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
 
 
 async def async_remove_entry(

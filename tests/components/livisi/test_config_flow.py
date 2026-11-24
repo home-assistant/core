@@ -2,20 +2,23 @@
 
 from unittest.mock import patch
 
-from livisi import errors as livisi_errors
+from livisi import (
+    ErrorCodeException,
+    IncorrectIpAddressException,
+    LivisiException,
+    ShcUnreachableException,
+    WrongCredentialException,
+)
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.livisi.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER
+from homeassistant.const import CONF_HOST, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from . import (
-    VALID_CONFIG,
-    mocked_livisi_controller,
-    mocked_livisi_login,
-    mocked_livisi_setup_entry,
-)
+from . import VALID_CONFIG, mocked_livisi_connect, mocked_livisi_setup_entry
 
 
 async def test_create_entry(hass: HomeAssistant) -> None:
@@ -24,7 +27,7 @@ async def test_create_entry(hass: HomeAssistant) -> None:
         DOMAIN, context={"source": SOURCE_USER}
     )
 
-    with mocked_livisi_login(), mocked_livisi_controller(), mocked_livisi_setup_entry():
+    with mocked_livisi_connect() as connect, mocked_livisi_setup_entry():
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             VALID_CONFIG,
@@ -34,22 +37,50 @@ async def test_create_entry(hass: HomeAssistant) -> None:
         assert result["title"] == "SHC Classic"
         assert result["data"]["host"] == "1.1.1.1"
         assert result["data"]["password"] == "test"
+        connect.assert_awaited_once_with("1.1.1.1", "test")
+        connect.return_value.close.assert_awaited_once_with()
+
+
+async def test_no_controller(hass: HomeAssistant) -> None:
+    """Test a connection without controller data."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+
+    with mocked_livisi_connect() as connect:
+        connect.return_value.controller = None
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], VALID_CONFIG
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"]["base"] == "cannot_connect"
+    connect.return_value.close.assert_awaited_once_with()
+
+    with mocked_livisi_connect(), mocked_livisi_setup_entry():
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], VALID_CONFIG
+        )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 @pytest.mark.parametrize(
     ("exception", "expected_reason"),
     [
-        (livisi_errors.ShcUnreachableException(), "cannot_connect"),
-        (livisi_errors.IncorrectIpAddressException(), "wrong_ip_address"),
-        (livisi_errors.WrongCredentialException(), "wrong_password"),
+        (ShcUnreachableException(), "cannot_connect"),
+        (IncorrectIpAddressException(), "wrong_ip_address"),
+        (WrongCredentialException(), "wrong_password"),
+        (ErrorCodeException(1000), "cannot_connect"),
+        (LivisiException(), "cannot_connect"),
     ],
 )
 async def test_create_entity_after_login_error(
-    hass: HomeAssistant, exception: livisi_errors.LivisiException, expected_reason: str
+    hass: HomeAssistant, exception: LivisiException, expected_reason: str
 ) -> None:
     """Test LIVISI can create an entity after user login errors."""
     with patch(
-        "homeassistant.components.livisi.config_flow.AioLivisi.async_set_token",
+        "homeassistant.components.livisi.config_flow.livisi_connect",
         side_effect=exception,
     ):
         result = await hass.config_entries.flow.async_init(
@@ -61,9 +92,99 @@ async def test_create_entity_after_login_error(
         )
         assert result["type"] is FlowResultType.FORM
         assert result["errors"]["base"] == expected_reason
-    with mocked_livisi_login(), mocked_livisi_controller(), mocked_livisi_setup_entry():
+    with mocked_livisi_connect(), mocked_livisi_setup_entry():
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             user_input=VALID_CONFIG,
         )
     assert result["type"] is FlowResultType.CREATE_ENTRY
+
+
+async def test_reauth(hass: HomeAssistant) -> None:
+    """Test reauthentication with a new password."""
+    config_entry = MockConfigEntry(domain=DOMAIN, data=VALID_CONFIG)
+    config_entry.add_to_hass(hass)
+
+    result = await config_entry.start_reauth_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+
+    with mocked_livisi_connect() as connect, mocked_livisi_setup_entry() as setup:
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_PASSWORD: "new_password"}
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+    assert config_entry.data == {CONF_HOST: "1.1.1.1", CONF_PASSWORD: "new_password"}
+    connect.assert_awaited_once_with("1.1.1.1", "new_password")
+    connect.return_value.close.assert_awaited_once_with()
+    setup.assert_awaited_once()
+
+
+async def test_reauth_no_controller(hass: HomeAssistant) -> None:
+    """Test reauthentication with a connection without controller data."""
+    config_entry = MockConfigEntry(domain=DOMAIN, data=VALID_CONFIG)
+    config_entry.add_to_hass(hass)
+
+    result = await config_entry.start_reauth_flow(hass)
+
+    with mocked_livisi_connect() as connect:
+        connect.return_value.controller = None
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_PASSWORD: "new_password"}
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "cannot_connect"}
+    assert config_entry.data == VALID_CONFIG
+    connect.return_value.close.assert_awaited_once_with()
+
+    with mocked_livisi_connect(), mocked_livisi_setup_entry():
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_PASSWORD: "new_password"}
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+
+
+@pytest.mark.parametrize(
+    ("exception", "expected_reason"),
+    [
+        (ShcUnreachableException(), "cannot_connect"),
+        (IncorrectIpAddressException(), "wrong_ip_address"),
+        (WrongCredentialException(), "wrong_password"),
+        (LivisiException(), "cannot_connect"),
+    ],
+)
+async def test_reauth_error(
+    hass: HomeAssistant, exception: LivisiException, expected_reason: str
+) -> None:
+    """Test reauthentication recovers after an error."""
+    config_entry = MockConfigEntry(domain=DOMAIN, data=VALID_CONFIG)
+    config_entry.add_to_hass(hass)
+
+    result = await config_entry.start_reauth_flow(hass)
+
+    with patch(
+        "homeassistant.components.livisi.config_flow.livisi_connect",
+        side_effect=exception,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_PASSWORD: "new_password"}
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": expected_reason}
+
+    with mocked_livisi_connect(), mocked_livisi_setup_entry():
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_PASSWORD: "new_password"}
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+    assert config_entry.data[CONF_PASSWORD] == "new_password"

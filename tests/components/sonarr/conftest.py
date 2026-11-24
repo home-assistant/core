@@ -14,6 +14,11 @@ from aiopyarr import (
     SystemStatus,
 )
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    load_json_array_fixture,
+    load_json_object_fixture,
+)
 
 from homeassistant.components.sonarr.const import (
     CONF_BASE_PATH,
@@ -31,12 +36,6 @@ from homeassistant.const import (
     CONF_VERIFY_SSL,
 )
 from homeassistant.core import HomeAssistant
-
-from tests.common import (
-    MockConfigEntry,
-    load_json_array_fixture,
-    load_json_object_fixture,
-)
 
 
 def sonarr_calendar() -> list[SonarrCalendar]:
@@ -128,7 +127,7 @@ def mock_config_entry() -> MockConfigEntry:
 @pytest.fixture
 def mock_setup_entry() -> Generator[None]:
     """Mock setting up a config entry."""
-    with patch("homeassistant.components.sonarr.async_setup_entry", return_value=True):
+    with patch("homeassistant.components.sonarr.async_setup_entry", return_value=None):
         yield
 
 

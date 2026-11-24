@@ -3,13 +3,12 @@
 from unittest.mock import Mock
 
 import aiohttp
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 
 from homeassistant.components.android_ip_webcam.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry
-from tests.test_util.aiohttp import AiohttpClientMocker
 
 MOCK_CONFIG_DATA = {
     "name": "IP Webcam",

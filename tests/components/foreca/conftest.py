@@ -1,0 +1,224 @@
+"""Common fixtures for the Foreca tests."""
+
+from collections.abc import Generator
+from unittest.mock import AsyncMock, MagicMock, patch
+
+from pyforeca import (
+    CurrentWeather,
+    DailyForecast,
+    HourlyForecast,
+    Location,
+    MinutelyForecast,
+    MinutelyForecastList,
+    Observation,
+)
+import pytest
+from pytest_homeassistant.common import MockConfigEntry, load_json_object_fixture
+
+from homeassistant.components.foreca.const import DOMAIN, SUBENTRY_TYPE_LOCATION
+from homeassistant.config_entries import ConfigSubentryData
+from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE
+
+CURRENT = CurrentWeather(
+    time="2026-09-01T17:00+03:00",
+    symbol="d200",
+    symbol_phrase="partly cloudy",
+    temperature=17.4,
+    feels_like_temp=16.9,
+    rel_humidity=62,
+    dew_point=10.1,
+    wind_speed=4.2,
+    wind_dir=210,
+    wind_gust=8.0,
+    precip_prob=5,
+    precip_rate=0.0,
+    thunder_prob=8,
+    cloudiness=40,
+    uv_index=2,
+    pressure=1013.2,
+    visibility=20000,
+)
+
+HOURLY = [
+    HourlyForecast(
+        time="2026-09-01T18:00+03:00",
+        symbol="d300",
+        temperature=16.0,
+        feels_like_temp=15.2,
+        wind_speed=3.9,
+        wind_gust=7.1,
+        wind_dir=200,
+        precip_prob=10,
+        precip_accum=0.0,
+        rel_humidity=70,
+        cloudiness=60,
+        uv_index=1,
+        precip_type="rain",
+        snow_accum=0.3,
+        thunder_prob=12,
+        visibility=24000,
+        solar_radiation=141.0,
+        snow_depth=2.0,
+    )
+]
+
+DAILY = [
+    DailyForecast(
+        date="2026-09-02",
+        symbol="d310",
+        max_temp=18.0,
+        min_temp=9.0,
+        max_feels_like_temp=16.6,
+        cloudiness=55,
+        precip_accum=1.2,
+        precip_prob=40,
+        max_wind_speed=6.0,
+        max_wind_gust=11.0,
+        wind_dir=225,
+        uv_index=3,
+        min_feels_like_temp=7.4,
+        max_rel_humidity=93,
+        min_rel_humidity=51,
+        min_dew_point=4.6,
+        min_visibility=8000,
+        snow_accum=1.5,
+        snow_depth=4.0,
+        sunhours=6.4,
+        solar_radiation_sum=2875,
+        sunrise_epoch=1788318000,
+        sunset_epoch=1788368400,
+        confidence="g",
+        max_temp_ensemble={
+            "p000": 16.4,
+            "p025": 17.5,
+            "p050": 18.1,
+            "p075": 18.6,
+            "p100": 19.9,
+        },
+        min_temp_ensemble={
+            "p000": 7.2,
+            "p025": 8.4,
+            "p050": 9.1,
+            "p075": 9.6,
+            "p100": 10.8,
+        },
+        precip_accum_ensemble={
+            "p010": None,
+            "p025": 0.3,
+            "p050": 1.1,
+            "p075": 2.4,
+            "p090": 4.7,
+        },
+    ),
+    DailyForecast(
+        date="2026-09-03",
+        symbol="d212",
+        max_temp=12.0,
+        min_temp=4.0,
+        precip_accum=0.4,
+        max_wind_speed=5.0,
+        wind_dir=180,
+    ),
+]
+
+MINUTELY = MinutelyForecastList(
+    [
+        MinutelyForecast(time="2026-09-01T17:01+03:00", precip_rate=0.0),
+        MinutelyForecast(time="2026-09-01T17:02+03:00", precip_rate=0.4),
+        MinutelyForecast(time="2026-09-01T17:03+03:00", precip_rate=1.27),
+        MinutelyForecast(time="2026-09-01T17:04+03:00", precip_rate=None),
+    ],
+    resolution=1,
+)
+
+LOCATION = Location(
+    id=100658225,
+    name="Helsinki",
+    country="Finland",
+    timezone="Europe/Helsinki",
+    lon=24.94,
+    lat=60.17,
+)
+
+
+OBSERVATION = Observation.from_api(
+    {
+        "station": "Helsinki Kaisaniemi",
+        "distance": "1 km N",
+        "time": "2026-11-05T10:40:00+02:00",
+        "temperature": 8,
+        "feelsLikeTemp": 4,
+        "symbol": "d000",
+        "windDirString": "NW",
+        "windDir": 306,
+        "windSpeed": 6,
+        "windGust": 9,
+        "pressure": 1018.8,
+        "relHumidity": 69,
+        "visibility": 20000,
+        "snowDepth": None,
+        "longitude": 24.94,
+        "latitude": 60.18,
+        "elevation": 4,
+    }
+)
+
+
+@pytest.fixture
+def mock_setup_entry() -> Generator[AsyncMock]:
+    """Override async_setup_entry."""
+    with patch(
+        "homeassistant.components.foreca.async_setup_entry", return_value=None
+    ) as mock_setup:
+        yield mock_setup
+
+
+@pytest.fixture
+def mock_foreca_client() -> Generator[MagicMock]:
+    """Mock the Foreca API client."""
+    with (
+        patch(
+            "homeassistant.components.foreca.ForecaApiClient",
+            autospec=True,
+        ) as client_cls,
+        patch(
+            "homeassistant.components.foreca.config_flow.ForecaApiClient",
+            new=client_cls,
+        ),
+    ):
+        client = client_cls.return_value
+        client.location_info = AsyncMock(return_value=LOCATION)
+        client.current = AsyncMock(return_value=CURRENT)
+        client.forecast_hourly = AsyncMock(return_value=HOURLY)
+        client.forecast_daily = AsyncMock(return_value=DAILY)
+        client.forecast_3hourly = AsyncMock(
+            return_value=[
+                HourlyForecast.from_api(step)
+                for step in load_json_object_fixture("forecast_3hourly.json", DOMAIN)[
+                    "forecast"
+                ]
+            ]
+        )
+        client.forecast_minutely = AsyncMock(return_value=MINUTELY)
+        client.observation_latest = AsyncMock(return_value=OBSERVATION)
+        yield client
+
+
+@pytest.fixture
+def mock_config_entry() -> MockConfigEntry:
+    """Return a mock config entry with one location subentry."""
+    return MockConfigEntry(
+        domain=DOMAIN,
+        title="Foreca",
+        entry_id="01JZ4Q1F0RECA0000000000000",
+        data={CONF_API_KEY: "test-key"},
+        subentries_data=[
+            ConfigSubentryData(
+                data={CONF_LATITUDE: 60.17, CONF_LONGITUDE: 24.94},
+                subentry_id="01JZ4Q1F0RECALOCATION000001",
+                subentry_type=SUBENTRY_TYPE_LOCATION,
+                title="Helsinki",
+                unique_id="60.17-24.94",
+            )
+        ],
+    )

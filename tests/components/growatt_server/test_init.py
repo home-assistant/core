@@ -7,6 +7,7 @@ from freezegun.api import FrozenDateTimeFactory
 import growattServer
 from growattServer import GrowattV1ApiErrorCode
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 import requests
 from syrupy.assertion import SnapshotAssertion
 
@@ -34,8 +35,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from . import setup_integration
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 @pytest.mark.usefixtures("init_integration")

@@ -4,6 +4,7 @@ from unittest.mock import AsyncMock
 
 import probatio
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries
 from homeassistant.components.melnor.const import DOMAIN
@@ -18,8 +19,6 @@ from .conftest import (
     FAKE_SERVICE_INFO_2,
     patch_async_discovered_service_info,
 )
-
-from tests.common import MockConfigEntry
 
 
 async def test_user_step_no_devices(

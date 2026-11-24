@@ -25,9 +25,8 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import const, lock_helpers
-from .const import DOMAIN, LOGGER
-from .discovery import ZwaveDiscoveryInfo
+from . import lock_helpers
+from .const import DOMAIN, LOGGER, ZWaveJSServiceArgument
 from .entity import ZWaveBaseEntity
 from .lock_helpers import (
     CREDENTIAL_RULE_REVERSE_MAP,
@@ -38,7 +37,7 @@ from .lock_helpers import (
     SetUserReturn,
     UsersResult,
 )
-from .models import ZwaveJSConfigEntry
+from .models import ZwaveDiscoveryInfo, ZwaveJSConfigEntry
 
 PARALLEL_UPDATES = 0
 
@@ -245,14 +244,14 @@ class ZWaveLock(ZWaveBaseEntity, LockEntity):
 
     async def async_set_user(self, **kwargs: Any) -> SetUserReturn:
         """Create or update an access-control user, optionally with a credential."""
-        user_type = kwargs.get(const.ATTR_USER_TYPE)
-        credential_rule = kwargs.get(const.ATTR_CREDENTIAL_RULE)
-        credential_type = kwargs.get(const.ATTR_CREDENTIAL_TYPE)
+        user_type = kwargs.get(ZWaveJSServiceArgument.USER_TYPE)
+        credential_rule = kwargs.get(ZWaveJSServiceArgument.CREDENTIAL_RULE)
+        credential_type = kwargs.get(ZWaveJSServiceArgument.CREDENTIAL_TYPE)
         try:
             return await lock_helpers.async_set_user(
                 self.info.node,
-                user_id=kwargs.get(const.ATTR_USER_ID),
-                user_name=kwargs.get(const.ATTR_USER_NAME),
+                user_id=kwargs.get(ZWaveJSServiceArgument.USER_ID),
+                user_name=kwargs.get(ZWaveJSServiceArgument.USER_NAME),
                 user_type=(
                     USER_TYPE_REVERSE_MAP[user_type] if user_type is not None else None
                 ),
@@ -261,21 +260,21 @@ class ZWaveLock(ZWaveBaseEntity, LockEntity):
                     if credential_rule is not None
                     else None
                 ),
-                active=kwargs.get(const.ATTR_USER_ACTIVE),
+                active=kwargs.get(ZWaveJSServiceArgument.ACTIVE),
                 credential_type=(
                     CREDENTIAL_TYPE_REVERSE_MAP[credential_type]
                     if credential_type is not None
                     else None
                 ),
-                credential_slot=kwargs.get(const.ATTR_CREDENTIAL_SLOT),
-                credential_data=kwargs.get(const.ATTR_CREDENTIAL_DATA),
+                credential_slot=kwargs.get(ZWaveJSServiceArgument.CREDENTIAL_SLOT),
+                credential_data=kwargs.get(ZWaveJSServiceArgument.CREDENTIAL_DATA),
             )
         except BaseZwaveJSServerError as err:
             raise _credential_service_error("set_user_failed", err) from err
 
     async def async_delete_user(self, **kwargs: Any) -> None:
         """Delete a single access-control user."""
-        user_id: int = kwargs[const.ATTR_USER_ID]
+        user_id: int = kwargs[ZWaveJSServiceArgument.USER_ID]
         try:
             await lock_helpers.async_delete_user(self.info.node, user_id)
         except BaseZwaveJSServerError as err:
@@ -310,14 +309,14 @@ class ZWaveLock(ZWaveBaseEntity, LockEntity):
 
     async def async_set_credential(self, **kwargs: Any) -> SetCredentialReturn:
         """Add or update a credential for an existing user."""
-        credential_type = kwargs[const.ATTR_CREDENTIAL_TYPE]
+        credential_type = kwargs[ZWaveJSServiceArgument.CREDENTIAL_TYPE]
         try:
             return await lock_helpers.async_set_credential(
                 self.info.node,
-                user_id=kwargs[const.ATTR_USER_ID],
+                user_id=kwargs[ZWaveJSServiceArgument.USER_ID],
                 credential_type=CREDENTIAL_TYPE_REVERSE_MAP[credential_type],
-                credential_data=kwargs[const.ATTR_CREDENTIAL_DATA],
-                credential_slot=kwargs.get(const.ATTR_CREDENTIAL_SLOT),
+                credential_data=kwargs[ZWaveJSServiceArgument.CREDENTIAL_DATA],
+                credential_slot=kwargs.get(ZWaveJSServiceArgument.CREDENTIAL_SLOT),
             )
         except BaseZwaveJSServerError as err:
             raise _credential_service_error("set_credential_failed", err) from err
@@ -327,18 +326,18 @@ class ZWaveLock(ZWaveBaseEntity, LockEntity):
         try:
             await lock_helpers.async_delete_credential(
                 self.info.node,
-                user_id=kwargs[const.ATTR_USER_ID],
+                user_id=kwargs[ZWaveJSServiceArgument.USER_ID],
                 credential_type=CREDENTIAL_TYPE_REVERSE_MAP[
-                    kwargs[const.ATTR_CREDENTIAL_TYPE]
+                    kwargs[ZWaveJSServiceArgument.CREDENTIAL_TYPE]
                 ],
-                credential_slot=kwargs[const.ATTR_CREDENTIAL_SLOT],
+                credential_slot=kwargs[ZWaveJSServiceArgument.CREDENTIAL_SLOT],
             )
         except BaseZwaveJSServerError as err:
             raise _credential_service_error("delete_credential_failed", err) from err
 
     async def async_delete_all_credentials(self, **kwargs: Any) -> None:
         """Delete all credentials for a user."""
-        user_id: int = kwargs[const.ATTR_USER_ID]
+        user_id: int = kwargs[ZWaveJSServiceArgument.USER_ID]
         try:
             await lock_helpers.async_delete_all_credentials(self.info.node, user_id)
         except BaseZwaveJSServerError as err:

@@ -4,23 +4,18 @@ from collections.abc import Callable
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import snapshot_platform
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.climate import (
-    ATTR_FAN_MODE,
-    ATTR_HVAC_MODE,
-    ATTR_PRESET_MODE,
-    ATTR_TARGET_TEMP_HIGH,
-    ATTR_TARGET_TEMP_LOW,
     DOMAIN as CLIMATE_DOMAIN,
     FAN_OFF,
     FAN_ON,
     PRESET_BOOST,
     PRESET_COMFORT,
-    SERVICE_SET_FAN_MODE,
-    SERVICE_SET_HVAC_MODE,
-    SERVICE_SET_PRESET_MODE,
-    SERVICE_SET_TEMPERATURE,
+    ClimateService,
+    ClimateServiceArgument,
     HVACAction,
     HVACMode,
 )
@@ -30,15 +25,12 @@ from homeassistant.components.deconz.climate import (
     DECONZ_PRESET_MANUAL,
 )
 from homeassistant.components.deconz.const import CONF_ALLOW_CLIP_SENSOR
-from homeassistant.const import ATTR_ENTITY_ID, ATTR_TEMPERATURE, STATE_OFF, Platform
+from homeassistant.const import STATE_OFF, Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import entity_registry as er
 
 from .conftest import ConfigEntryFactoryType, WebsocketDataType
-
-from tests.common import snapshot_platform
-from tests.test_util.aiohttp import AiohttpClientMocker
 
 
 @pytest.mark.parametrize(
@@ -118,8 +110,11 @@ async def test_simple_climate_device(
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_HVAC_MODE,
-        {ATTR_ENTITY_ID: "climate.thermostat", ATTR_HVAC_MODE: HVACMode.HEAT},
+        ClimateService.SET_HVAC_MODE,
+        {
+            TargetKey.ENTITY_ID: "climate.thermostat",
+            ClimateServiceArgument.HVAC_MODE: HVACMode.HEAT,
+        },
         blocking=True,
     )
     assert aioclient_mock.mock_calls[1][2] == {"on": True}
@@ -128,8 +123,11 @@ async def test_simple_climate_device(
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_HVAC_MODE,
-        {ATTR_ENTITY_ID: "climate.thermostat", ATTR_HVAC_MODE: HVACMode.OFF},
+        ClimateService.SET_HVAC_MODE,
+        {
+            TargetKey.ENTITY_ID: "climate.thermostat",
+            ClimateServiceArgument.HVAC_MODE: HVACMode.OFF,
+        },
         blocking=True,
     )
     assert aioclient_mock.mock_calls[2][2] == {"on": False}
@@ -139,8 +137,11 @@ async def test_simple_climate_device(
     with pytest.raises(ServiceValidationError):
         await hass.services.async_call(
             CLIMATE_DOMAIN,
-            SERVICE_SET_HVAC_MODE,
-            {ATTR_ENTITY_ID: "climate.thermostat", ATTR_HVAC_MODE: HVACMode.AUTO},
+            ClimateService.SET_HVAC_MODE,
+            {
+                TargetKey.ENTITY_ID: "climate.thermostat",
+                ClimateServiceArgument.HVAC_MODE: HVACMode.AUTO,
+            },
             blocking=True,
         )
 
@@ -211,8 +212,11 @@ async def test_climate_device_without_cooling_support(
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_HVAC_MODE,
-        {ATTR_ENTITY_ID: "climate.thermostat", ATTR_HVAC_MODE: HVACMode.AUTO},
+        ClimateService.SET_HVAC_MODE,
+        {
+            TargetKey.ENTITY_ID: "climate.thermostat",
+            ClimateServiceArgument.HVAC_MODE: HVACMode.AUTO,
+        },
         blocking=True,
     )
     assert aioclient_mock.mock_calls[1][2] == {"mode": "auto"}
@@ -221,8 +225,11 @@ async def test_climate_device_without_cooling_support(
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_HVAC_MODE,
-        {ATTR_ENTITY_ID: "climate.thermostat", ATTR_HVAC_MODE: HVACMode.HEAT},
+        ClimateService.SET_HVAC_MODE,
+        {
+            TargetKey.ENTITY_ID: "climate.thermostat",
+            ClimateServiceArgument.HVAC_MODE: HVACMode.HEAT,
+        },
         blocking=True,
     )
     assert aioclient_mock.mock_calls[2][2] == {"mode": "heat"}
@@ -231,8 +238,11 @@ async def test_climate_device_without_cooling_support(
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_HVAC_MODE,
-        {ATTR_ENTITY_ID: "climate.thermostat", ATTR_HVAC_MODE: HVACMode.OFF},
+        ClimateService.SET_HVAC_MODE,
+        {
+            TargetKey.ENTITY_ID: "climate.thermostat",
+            ClimateServiceArgument.HVAC_MODE: HVACMode.OFF,
+        },
         blocking=True,
     )
     assert aioclient_mock.mock_calls[3][2] == {"mode": "off"}
@@ -242,8 +252,11 @@ async def test_climate_device_without_cooling_support(
     with pytest.raises(ServiceValidationError):
         await hass.services.async_call(
             CLIMATE_DOMAIN,
-            SERVICE_SET_HVAC_MODE,
-            {ATTR_ENTITY_ID: "climate.thermostat", ATTR_HVAC_MODE: HVACMode.COOL},
+            ClimateService.SET_HVAC_MODE,
+            {
+                TargetKey.ENTITY_ID: "climate.thermostat",
+                ClimateServiceArgument.HVAC_MODE: HVACMode.COOL,
+            },
             blocking=True,
         )
 
@@ -251,8 +264,11 @@ async def test_climate_device_without_cooling_support(
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_TEMPERATURE,
-        {ATTR_ENTITY_ID: "climate.thermostat", ATTR_TEMPERATURE: 20},
+        ClimateService.SET_TEMPERATURE,
+        {
+            TargetKey.ENTITY_ID: "climate.thermostat",
+            ClimateServiceArgument.TEMPERATURE: 20,
+        },
         blocking=True,
     )
     assert aioclient_mock.mock_calls[4][2] == {"heatsetpoint": 2000.0}
@@ -262,11 +278,11 @@ async def test_climate_device_without_cooling_support(
     with pytest.raises(ServiceValidationError):
         await hass.services.async_call(
             CLIMATE_DOMAIN,
-            SERVICE_SET_TEMPERATURE,
+            ClimateService.SET_TEMPERATURE,
             {
-                ATTR_ENTITY_ID: "climate.thermostat",
-                ATTR_TARGET_TEMP_HIGH: 30,
-                ATTR_TARGET_TEMP_LOW: 10,
+                TargetKey.ENTITY_ID: "climate.thermostat",
+                ClimateServiceArgument.TARGET_TEMP_HIGH: 30,
+                ClimateServiceArgument.TARGET_TEMP_LOW: 10,
             },
             blocking=True,
         )
@@ -341,8 +357,8 @@ async def test_climate_device_with_cooling_support(
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_TEMPERATURE,
-        {ATTR_ENTITY_ID: "climate.zen_01", ATTR_TEMPERATURE: 20},
+        ClimateService.SET_TEMPERATURE,
+        {TargetKey.ENTITY_ID: "climate.zen_01", ClimateServiceArgument.TEMPERATURE: 20},
         blocking=True,
     )
     assert aioclient_mock.mock_calls[1][2] == {"coolsetpoint": 2000.0}
@@ -425,8 +441,11 @@ async def test_climate_device_with_fan_support(
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_FAN_MODE,
-        {ATTR_ENTITY_ID: "climate.zen_01", ATTR_FAN_MODE: FAN_OFF},
+        ClimateService.SET_FAN_MODE,
+        {
+            TargetKey.ENTITY_ID: "climate.zen_01",
+            ClimateServiceArgument.FAN_MODE: FAN_OFF,
+        },
         blocking=True,
     )
     assert aioclient_mock.mock_calls[1][2] == {"fanmode": "off"}
@@ -435,8 +454,11 @@ async def test_climate_device_with_fan_support(
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_FAN_MODE,
-        {ATTR_ENTITY_ID: "climate.zen_01", ATTR_FAN_MODE: DECONZ_FAN_SMART},
+        ClimateService.SET_FAN_MODE,
+        {
+            TargetKey.ENTITY_ID: "climate.zen_01",
+            ClimateServiceArgument.FAN_MODE: DECONZ_FAN_SMART,
+        },
         blocking=True,
     )
     assert aioclient_mock.mock_calls[2][2] == {"fanmode": "smart"}
@@ -446,8 +468,11 @@ async def test_climate_device_with_fan_support(
     with pytest.raises(ServiceValidationError):
         await hass.services.async_call(
             CLIMATE_DOMAIN,
-            SERVICE_SET_FAN_MODE,
-            {ATTR_ENTITY_ID: "climate.zen_01", ATTR_FAN_MODE: "unsupported"},
+            ClimateService.SET_FAN_MODE,
+            {
+                TargetKey.ENTITY_ID: "climate.zen_01",
+                ClimateServiceArgument.FAN_MODE: "unsupported",
+            },
             blocking=True,
         )
 
@@ -517,8 +542,11 @@ async def test_climate_device_with_preset(
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_PRESET_MODE,
-        {ATTR_ENTITY_ID: "climate.zen_01", ATTR_PRESET_MODE: PRESET_COMFORT},
+        ClimateService.SET_PRESET_MODE,
+        {
+            TargetKey.ENTITY_ID: "climate.zen_01",
+            ClimateServiceArgument.PRESET_MODE: PRESET_COMFORT,
+        },
         blocking=True,
     )
     assert aioclient_mock.mock_calls[1][2] == {"preset": "comfort"}
@@ -527,8 +555,11 @@ async def test_climate_device_with_preset(
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_PRESET_MODE,
-        {ATTR_ENTITY_ID: "climate.zen_01", ATTR_PRESET_MODE: DECONZ_PRESET_MANUAL},
+        ClimateService.SET_PRESET_MODE,
+        {
+            TargetKey.ENTITY_ID: "climate.zen_01",
+            ClimateServiceArgument.PRESET_MODE: DECONZ_PRESET_MANUAL,
+        },
         blocking=True,
     )
     assert aioclient_mock.mock_calls[2][2] == {"preset": "manual"}
@@ -538,8 +569,11 @@ async def test_climate_device_with_preset(
     with pytest.raises(ServiceValidationError):
         await hass.services.async_call(
             CLIMATE_DOMAIN,
-            SERVICE_SET_PRESET_MODE,
-            {ATTR_ENTITY_ID: "climate.zen_01", ATTR_PRESET_MODE: "unsupported"},
+            ClimateService.SET_PRESET_MODE,
+            {
+                TargetKey.ENTITY_ID: "climate.zen_01",
+                ClimateServiceArgument.PRESET_MODE: "unsupported",
+            },
             blocking=True,
         )
 

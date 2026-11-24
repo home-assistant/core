@@ -9,6 +9,16 @@
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "step": {
+      "reauth_confirm": {
+        "data": {
+          "api_key": "[%key:common::config_flow::data::api_key%]"
+        },
+        "data_description": {
+          "api_key": "The LiteLLM API key or virtual key to use for the proxy."
+        },
+        "description": "The API key for the LiteLLM proxy at {url} is no longer valid. Enter a new API key.",
+        "title": "[%key:common::config_flow::title::reauth%]"
+      },
       "user": {
         "data": {
           "api_key": "[%key:common::config_flow::data::api_key%]",
@@ -42,7 +52,7 @@
             "prompt": "[%key:common::config_flow::data::prompt%]"
           },
           "data_description": {
-            "llm_hass_api": "Select which tools the model can use to interact with your devices and entities.",
+            "llm_hass_api": "[%key:common::config_flow::data_description::llm_hass_api%]",
             "model": "The model to use for the conversation agent",
             "prompt": "Instruct how the LLM should respond. This can be a template."
           },
@@ -77,6 +87,32 @@
             "prompt": "Optional context or instructions for the transcription. Supports Home Assistant templates. The prompt must match the language of the audio and be supported by the selected model."
           },
           "description": "Select the speech-to-text model. The transcription language is selected in the Assist pipeline. LiteLLM does not report language capabilities for individual backend models."
+        }
+      }
+    },
+    "tts": {
+      "abort": {
+        "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+        "entry_not_loaded": "[%key:component::litellm::config_subentries::stt::abort::entry_not_loaded%]",
+        "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+        "unknown": "[%key:common::config_flow::error::unknown%]"
+      },
+      "entry_type": "Text-to-speech",
+      "initiate_flow": {
+        "reconfigure": "Reconfigure text-to-speech service",
+        "user": "Add text-to-speech service"
+      },
+      "step": {
+        "init": {
+          "data": {
+            "model": "[%key:common::generic::model%]",
+            "voice": "Voice"
+          },
+          "data_description": {
+            "model": "The model to use to generate speech",
+            "voice": "The voice to speak with. The listed voices are OpenAI voices; enter the voice name of your backend for other models."
+          },
+          "description": "Select the text-to-speech model and voice. LiteLLM does not report language capabilities for individual backend models."
         }
       }
     }

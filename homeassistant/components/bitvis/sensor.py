@@ -29,9 +29,8 @@ from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, Device
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import BitvisConfigEntry
 from .const import DOMAIN, MANUFACTURER
-from .coordinator import BitvisDataUpdateCoordinator
+from .coordinator import BitvisConfigEntry, BitvisDataUpdateCoordinator
 
 PARALLEL_UPDATES = 0
 

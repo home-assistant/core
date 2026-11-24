@@ -16,33 +16,33 @@ from aioamazondevices.structures import (
 )
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.alexa_devices.coordinator import SCAN_INTERVAL
 from homeassistant.components.media_player import (
-    ATTR_MEDIA_VOLUME_LEVEL,
-    ATTR_MEDIA_VOLUME_MUTED,
     DOMAIN as MP_DOMAIN,
     SERVICE_MEDIA_NEXT_TRACK,
     SERVICE_MEDIA_PAUSE,
     SERVICE_MEDIA_PLAY,
     SERVICE_MEDIA_PREVIOUS_TRACK,
     SERVICE_MEDIA_STOP,
-    SERVICE_PLAY_MEDIA,
-    SERVICE_VOLUME_MUTE,
-    SERVICE_VOLUME_SET,
     MediaPlayerEntityFeature,
+    MediaPlayerService,
+    MediaPlayerServiceArgument,
     MediaPlayerState,
     MediaType,
 )
-from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE, Platform
+from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE, Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from . import assert_device_removed_and_readded, setup_integration
 from .const import TEST_DEVICE_1, TEST_DEVICE_1_SN, TEST_DEVICE_AQM, TEST_DEVICE_AQM_SN
-
-from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 ENTITY_ID = "media_player.echo_test"
 
@@ -447,8 +447,8 @@ async def test_service_set_volume_level(
 
     await hass.services.async_call(
         MP_DOMAIN,
-        SERVICE_VOLUME_SET,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_MEDIA_VOLUME_LEVEL: 0.75},
+        MediaPlayerService.VOLUME_SET,
+        {TargetKey.ENTITY_ID: ENTITY_ID, MediaPlayerServiceArgument.VOLUME_LEVEL: 0.75},
         blocking=True,
     )
 
@@ -472,8 +472,11 @@ async def test_service_mute_volume(
 
     await hass.services.async_call(
         MP_DOMAIN,
-        SERVICE_VOLUME_MUTE,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_MEDIA_VOLUME_MUTED: True},
+        MediaPlayerService.VOLUME_MUTE,
+        {
+            TargetKey.ENTITY_ID: ENTITY_ID,
+            MediaPlayerServiceArgument.IS_VOLUME_MUTED: True,
+        },
         blocking=True,
     )
 
@@ -497,16 +500,22 @@ async def test_service_unmute_volume_restores_level(
 
     await hass.services.async_call(
         MP_DOMAIN,
-        SERVICE_VOLUME_MUTE,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_MEDIA_VOLUME_MUTED: True},
+        MediaPlayerService.VOLUME_MUTE,
+        {
+            TargetKey.ENTITY_ID: ENTITY_ID,
+            MediaPlayerServiceArgument.IS_VOLUME_MUTED: True,
+        },
         blocking=True,
     )
     mock_amazon_devices_client.set_device_volume.reset_mock()
 
     await hass.services.async_call(
         MP_DOMAIN,
-        SERVICE_VOLUME_MUTE,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_MEDIA_VOLUME_MUTED: False},
+        MediaPlayerService.VOLUME_MUTE,
+        {
+            TargetKey.ENTITY_ID: ENTITY_ID,
+            MediaPlayerServiceArgument.IS_VOLUME_MUTED: False,
+        },
         blocking=True,
     )
 
@@ -579,9 +588,9 @@ async def test_service_play_media(
 
     await hass.services.async_call(
         MP_DOMAIN,
-        SERVICE_PLAY_MEDIA,
+        MediaPlayerService.PLAY_MEDIA,
         {
-            ATTR_ENTITY_ID: ENTITY_ID,
+            TargetKey.ENTITY_ID: ENTITY_ID,
             "media_content_id": "Abbey Road",
             "media_content_type": MediaType.MUSIC,
         },
@@ -701,8 +710,11 @@ async def test_mute_volume_no_volume_state_returns_early(
 
     await hass.services.async_call(
         MP_DOMAIN,
-        SERVICE_VOLUME_MUTE,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_MEDIA_VOLUME_MUTED: True},
+        MediaPlayerService.VOLUME_MUTE,
+        {
+            TargetKey.ENTITY_ID: ENTITY_ID,
+            MediaPlayerServiceArgument.IS_VOLUME_MUTED: True,
+        },
         blocking=True,
     )
 
@@ -725,8 +737,11 @@ async def test_unmute_volume_without_prev_volume_returns_early(
 
     await hass.services.async_call(
         MP_DOMAIN,
-        SERVICE_VOLUME_MUTE,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_MEDIA_VOLUME_MUTED: False},
+        MediaPlayerService.VOLUME_MUTE,
+        {
+            TargetKey.ENTITY_ID: ENTITY_ID,
+            MediaPlayerServiceArgument.IS_VOLUME_MUTED: False,
+        },
         blocking=True,
     )
 
@@ -749,8 +764,11 @@ async def test_unmute_volume_when_alexa_muted_restores_current_volume(
 
     await hass.services.async_call(
         MP_DOMAIN,
-        SERVICE_VOLUME_MUTE,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_MEDIA_VOLUME_MUTED: False},
+        MediaPlayerService.VOLUME_MUTE,
+        {
+            TargetKey.ENTITY_ID: ENTITY_ID,
+            MediaPlayerServiceArgument.IS_VOLUME_MUTED: False,
+        },
         blocking=True,
     )
 

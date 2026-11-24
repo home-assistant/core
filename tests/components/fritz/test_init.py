@@ -1,10 +1,12 @@
 """Tests for Fritz!Tools."""
 
+from copy import deepcopy
 import re
 from unittest.mock import patch
 from xml.etree.ElementTree import ParseError
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import core
 from homeassistant.components.device_tracker import (
@@ -12,18 +14,17 @@ from homeassistant.components.device_tracker import (
     DEFAULT_CONSIDER_HOME,
 )
 from homeassistant.components.fritz.const import (
+    DEFAULT_SSL,
     DOMAIN,
     FRITZ_AUTH_EXCEPTIONS,
     FRITZ_EXCEPTIONS,
 )
-from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
+from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN, SwitchService
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import ATTR_ENTITY_ID, SERVICE_TURN_OFF
+from homeassistant.const import CONF_SSL, TargetKey
 from homeassistant.core import HomeAssistant
 
 from .const import MOCK_USER_DATA
-
-from tests.common import MockConfigEntry
 
 
 async def test_setup(
@@ -43,6 +44,21 @@ async def test_setup(
 
     await hass.config_entries.async_unload(entry.entry_id)
     assert entry.state is ConfigEntryState.NOT_LOADED
+
+
+@pytest.mark.usefixtures("fc_class_mock", "fh_class_mock", "fs_class_mock")
+async def test_setup_missing_ssl_option(hass: HomeAssistant) -> None:
+    """Test a missing ssl option is added to older config entries on setup."""
+    entry_data = deepcopy(MOCK_USER_DATA)
+    entry_data.pop(CONF_SSL)
+    entry = MockConfigEntry(domain=DOMAIN, data=entry_data)
+    entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.LOADED
+    assert entry.data[CONF_SSL] is DEFAULT_SSL
 
 
 async def test_options_reload(
@@ -138,11 +154,19 @@ async def test_setup_fail_parse_error(hass: HomeAssistant, fc_class_mock) -> Non
     assert entry.error_reason_translation_key == "error_parse_device_info"
 
 
+@pytest.mark.parametrize(
+    "upnp_config",
+    [
+        pytest.param({"NewEnable": False}, id="disabled"),
+        pytest.param({}, id="missing_key"),
+    ],
+)
 async def test_upnp_missing(
     hass: HomeAssistant,
     fc_class_mock,
     fh_class_mock,
     fs_class_mock,
+    upnp_config: dict[str, bool],
 ) -> None:
     """Test UPNP configuration is missing."""
 
@@ -152,7 +176,7 @@ async def test_upnp_missing(
     with (
         patch(
             "homeassistant.components.fritz.coordinator.AvmWrapper.async_get_upnp_configuration",
-            return_value={"NewEnable": False},
+            return_value=upnp_config,
         ),
     ):
         await hass.config_entries.async_setup(entry.entry_id)
@@ -182,8 +206,8 @@ async def test_execute_action_while_shutdown(
     hass.set_state(core.CoreState.stopping)
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: "switch.mock_title_wi_fi_guest"},
+        SwitchService.TURN_OFF,
+        {TargetKey.ENTITY_ID: "switch.mock_title_wi_fi_guest"},
         blocking=True,
     )
 

@@ -73,7 +73,13 @@ class CyncLightEntity(CyncBaseEntity, LightEntity):
         room_name: str | None = None,
     ) -> None:
         """Set up base attributes."""
-        super().__init__(device, coordinator, room_name)
+        # Preserve existing light registry identifiers across pycync versions.
+        super().__init__(
+            device,
+            coordinator,
+            room_name,
+            unique_id=f"{device.parent_home_id}-{device.device_id}",
+        )
 
         supported_color_modes = {ColorMode.ONOFF}
         if device.supports_capability(CyncCapability.CCT_COLOR):
@@ -139,6 +145,10 @@ class CyncLightEntity(CyncBaseEntity, LightEntity):
     @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Process an action on the light."""
+        if not kwargs:
+            await self._device.turn_on()
+            return
+
         converted_brightness: int | None = None
         converted_color_temp: int | None = None
         rgb: tuple[int, int, int] | None = None
@@ -192,4 +202,4 @@ class CyncLightEntity(CyncBaseEntity, LightEntity):
     def _device(self) -> CyncLight:
         """Fetch the reference to the backing Cync light for this device."""
 
-        return self.coordinator.data[self._cync_device_id]
+        return self.coordinator.data[self._cync_unique_id]

@@ -124,6 +124,11 @@
         "name": "Usage duration"
       }
     },
+    "siren": {
+      "siren": {
+        "name": "Siren"
+      }
+    },
     "switch": {
       "ab_alarm_sound": {
         "name": "Abnormal sound alarm"
@@ -176,6 +181,9 @@
     "alarm_arm_disarm_failed": {
       "message": "Imou rejected the arming change"
     },
+    "fetch_devices_failed": {
+      "message": "Could not list devices from Imou"
+    },
     "get_image_failed": {
       "message": "Could not get a snapshot from Imou"
     },
@@ -188,11 +196,23 @@
     "press_button_failed": {
       "message": "Imou rejected the button press"
     },
+    "quota_exceeded": {
+      "message": "The Imou monthly API quota is used up"
+    },
     "select_option_failed": {
       "message": "Imou rejected the new option"
     },
+    "siren_operation_failed": {
+      "message": "Imou rejected the siren change"
+    },
     "switch_operation_failed": {
       "message": "Imou rejected the switch change"
+    },
+    "update_devices_failed": {
+      "message": "Could not refresh device status from Imou"
+    },
+    "update_timeout": {
+      "message": "Timed out while contacting Imou"
     }
   },
   "selector": {

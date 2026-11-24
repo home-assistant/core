@@ -12,6 +12,12 @@ from pajgps_api.models.sensordata import SensorData
 from pajgps_api.models.trackpoint import TrackPoint
 from pajgps_api.pajgps_api_error import PajGpsApiError
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    load_json_object_fixture,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.paj_gps.const import DOMAIN, UPDATE_INTERVAL
@@ -20,13 +26,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
-
-from tests.common import (
-    MockConfigEntry,
-    async_fire_time_changed,
-    load_json_object_fixture,
-    snapshot_platform,
-)
 
 
 @pytest.fixture(autouse=True)

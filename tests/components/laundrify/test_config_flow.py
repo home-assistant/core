@@ -1,6 +1,7 @@
 """Test the laundrify config flow."""
 
 from laundrify_aio import LaundrifyAPI, exceptions
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.laundrify.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER
@@ -9,8 +10,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from .const import VALID_ACCESS_TOKEN, VALID_AUTH_CODE, VALID_USER_INPUT
-
-from tests.common import MockConfigEntry
 
 
 async def _assert_recovers(

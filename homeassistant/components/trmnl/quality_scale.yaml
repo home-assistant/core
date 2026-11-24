@@ -51,9 +51,7 @@ rules:
   discovery-update-info:
     status: exempt
     comment: Uses the cloud API
-  discovery:
-    status: exempt
-    comment: Can't be discovered
+  discovery: done
   docs-data-update: done
   docs-examples: done
   docs-known-limitations: done

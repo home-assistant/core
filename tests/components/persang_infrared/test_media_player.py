@@ -4,6 +4,15 @@ from unittest.mock import patch
 
 from infrared_protocols.codes.persang.speaker import PersangSpeakerCode
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    mock_restore_cache,
+    snapshot_platform,
+)
+from pytest_homeassistant.components.common import (
+    assert_availability_follows_source_entity,
+)
+from pytest_homeassistant.components.infrared.common import MockInfraredEmitterEntity
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.media_player import (
@@ -16,19 +25,16 @@ from homeassistant.components.media_player import (
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
     SERVICE_VOLUME_DOWN,
-    SERVICE_VOLUME_MUTE,
     SERVICE_VOLUME_UP,
+    MediaPlayerService,
+    MediaPlayerServiceArgument,
     MediaPlayerState,
 )
-from homeassistant.const import ATTR_ENTITY_ID, STATE_UNKNOWN, Platform
+from homeassistant.const import ATTR_ENTITY_ID, STATE_UNKNOWN, Platform, TargetKey
 from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from .conftest import MOCK_INFRARED_EMITTER_ENTITY_ID
-
-from tests.common import MockConfigEntry, mock_restore_cache, snapshot_platform
-from tests.components.common import assert_availability_follows_source_entity
-from tests.components.infrared.common import MockInfraredEmitterEntity
 
 MEDIA_PLAYER_ENTITY_ID = "media_player.persang_speaker"
 
@@ -129,8 +135,11 @@ async def test_mute(
     """Test muting sends the mute toggle and tracks the requested state."""
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
-        SERVICE_VOLUME_MUTE,
-        {ATTR_ENTITY_ID: MEDIA_PLAYER_ENTITY_ID, ATTR_MEDIA_VOLUME_MUTED: mute},
+        MediaPlayerService.VOLUME_MUTE,
+        {
+            TargetKey.ENTITY_ID: MEDIA_PLAYER_ENTITY_ID,
+            MediaPlayerServiceArgument.IS_VOLUME_MUTED: mute,
+        },
         blocking=True,
     )
 
