@@ -124,7 +124,9 @@ async def test_shutdown_deletes_the_notifications(
 ) -> None:
     """Test stopping deletes every notification before closing the connection."""
     mock_ads_device.values["GVL.temperature"] = b"\x00\x00"
-    assert await setup_ads_platform(hass, SENSOR_DOMAIN, {"adsvar": "GVL.temperature"})
+    assert await setup_ads_platform(
+        hass, mock_ads_device, SENSOR_DOMAIN, {"adsvar": "GVL.temperature"}
+    )
 
     hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
     await hass.async_block_till_done()
@@ -144,7 +146,9 @@ async def test_shutdown_notification_delete_error(
 ) -> None:
     """Test a notification that cannot be deleted still lets the connection close."""
     mock_ads_device.values["GVL.temperature"] = b"\x00\x00"
-    assert await setup_ads_platform(hass, SENSOR_DOMAIN, {"adsvar": "GVL.temperature"})
+    assert await setup_ads_platform(
+        hass, mock_ads_device, SENSOR_DOMAIN, {"adsvar": "GVL.temperature"}
+    )
     client = mock_pyads_connection.return_value
     client.del_device_notification.side_effect = pyads.ADSError(err_code=1861)
 
@@ -162,7 +166,9 @@ async def test_notification_for_an_unknown_handle(
 ) -> None:
     """Test a notification nobody subscribed to is logged and dropped."""
     mock_ads_device.values["GVL.temperature"] = b"\x00\x00"
-    assert await setup_ads_platform(hass, SENSOR_DOMAIN, {"adsvar": "GVL.temperature"})
+    assert await setup_ads_platform(
+        hass, mock_ads_device, SENSOR_DOMAIN, {"adsvar": "GVL.temperature"}
+    )
 
     await mock_ads_device.async_push_unknown(hass, b"\x00\x00")
 
