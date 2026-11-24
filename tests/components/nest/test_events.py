@@ -7,12 +7,15 @@ pubsub subscriber.
 from collections.abc import Mapping
 import datetime as dt
 from typing import Any
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, patch
 
 import aiohttp
+from google_nest_sdm.device_manager import DeviceManager
+from google_nest_sdm.google_nest_subscriber import GoogleNestSubscriber
 import pytest
-from pytest_homeassistant.common import async_capture_events
+from pytest_homeassistant.common import MockConfigEntry, async_capture_events
 
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.util.dt import utcnow
@@ -201,6 +204,42 @@ async def test_event(
     }
     assert "image" in events[0].data["attachment"]
     assert "video" not in events[0].data["attachment"]
+
+
+async def test_event_before_setup_completes(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    config_entry: MockConfigEntry,
+    setup_platform: PlatformSetup,
+    subscriber: AsyncMock,
+) -> None:
+    """Test an event received before setup completes is handled."""
+    # The device is already known, as on a restart
+    device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id, identifiers={(DOMAIN, DEVICE_ID)}
+    )
+    events = async_capture_events(hass, NEST_EVENT)
+    get_device_manager = GoogleNestSubscriber.async_get_device_manager
+    pending_events = [create_event("sdm.devices.events.DoorbellChime.Chime")]
+
+    async def get_device_manager_and_receive_event(
+        nest_subscriber: GoogleNestSubscriber,
+    ) -> DeviceManager:
+        device_manager = await get_device_manager(nest_subscriber)
+        # Handling the event fetches the device manager again
+        while pending_events:
+            await subscriber.async_receive_event(pending_events.pop())
+        return device_manager
+
+    with patch.object(
+        GoogleNestSubscriber,
+        "async_get_device_manager",
+        get_device_manager_and_receive_event,
+    ):
+        await setup_platform()
+
+    assert config_entry.state is ConfigEntryState.LOADED
+    assert len(events) == 1
 
 
 @pytest.mark.parametrize(

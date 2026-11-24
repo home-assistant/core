@@ -12,7 +12,6 @@ from py_rejseplan.exceptions import (
 )
 
 from homeassistant.config_entries import (
-    ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
     ConfigSubentryFlow,
@@ -40,6 +39,7 @@ from .const import (
     DEFAULT_STOP_NAME,
     DOMAIN,
 )
+from .coordinator import RejseplanenConfigEntry
 
 CONFIG_SCHEMA = probatio.Schema(
     {
@@ -86,7 +86,7 @@ class RejseplanenConfigFlow(ConfigFlow, domain=DOMAIN):
     @classmethod
     @callback
     def async_get_supported_subentry_types(
-        cls, config_entry: ConfigEntry
+        cls, config_entry: RejseplanenConfigEntry
     ) -> dict[str, type[ConfigSubentryFlow]]:
         """Return subentries supported by this integration."""
         return {"stop": RejseplanenSubentryStopFlow}

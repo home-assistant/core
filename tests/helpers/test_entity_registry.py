@@ -24,10 +24,10 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant import config_entries
 from homeassistant.const import (
-    ATTR_FRIENDLY_NAME,
     EVENT_HOMEASSISTANT_START,
     STATE_UNAVAILABLE,
     EntityCategory,
+    EntityStateAttribute,
 )
 from homeassistant.core import (
     CoreState,
@@ -45,7 +45,7 @@ from homeassistant.helpers import (
     issue_registry as ir,
 )
 from homeassistant.helpers.event import async_track_entity_registry_updated_event
-from homeassistant.helpers.typing import UNDEFINED, UndefinedType
+from homeassistant.helpers.typing import Undefined
 from homeassistant.util.dt import utc_from_timestamp, utcnow
 
 YAML__OPEN_PATH = "homeassistant.util.yaml.loader.open"
@@ -1360,6 +1360,57 @@ def test_generate_entity_id_next_name_part(
     assert entity_registry.async_regenerate_entity_id(entry) == "sensor.garage_power"
 
 
+def test_regenerate_entity_id_overrides(
+    hass: HomeAssistant,
+    area_registry: ar.AreaRegistry,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test regenerating an entity ID with unsaved name and area changes."""
+    config_entry = MockConfigEntry(domain="sensor")
+    config_entry.add_to_hass(hass)
+
+    kitchen = area_registry.async_create("Kitchen")
+    garage = area_registry.async_create("Garage")
+
+    device = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        identifiers={("test", "lamp")},
+        name="Lamp",
+    )
+    device_registry.async_update_device(device.id, area_id=kitchen.id)
+    entry = entity_registry.async_get_or_create(
+        "sensor",
+        "test",
+        "1234",
+        config_entry=config_entry,
+        device_id=device.id,
+        has_entity_name=True,
+        object_id_base="Power",
+        original_name="Power",
+    )
+    entry = entity_registry.async_update_entity(
+        entry.entity_id, area_id=garage.id, name="Stored"
+    )
+    assert entity_registry.async_regenerate_entity_id(entry) == "sensor.garage_stored"
+
+    assert (
+        entity_registry.async_regenerate_entity_id(entry, name="Energy")
+        == "sensor.garage_energy"
+    )
+    assert (
+        entity_registry.async_regenerate_entity_id(entry, area_id=None)
+        == "sensor.kitchen_lamp_stored"
+    )
+    assert (
+        entity_registry.async_regenerate_entity_id(entry, area_id=None, name=None)
+        == "sensor.kitchen_lamp_power"
+    )
+
+    # The overrides are not stored
+    assert entity_registry.async_get(entry.entity_id) == entry
+
+
 def test_next_name_part(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
@@ -2434,9 +2485,9 @@ async def test_migration_1_11(
     deleted_entry = registry.deleted_entities[
         ("test", "super_duper_platform", "very_very_unique")
     ]
-    assert deleted_entry.disabled_by is UNDEFINED
-    assert deleted_entry.hidden_by is UNDEFINED
-    assert deleted_entry.options is UNDEFINED
+    assert deleted_entry.disabled_by is Undefined
+    assert deleted_entry.hidden_by is Undefined
+    assert deleted_entry.options is Undefined
 
     # Check migrated data
     await flush_store(registry._store)
@@ -4178,14 +4229,14 @@ async def test_restore_entity_disabled_by_undefined_config_entry_pref(
             config_subentry_id=None,
             created_at=utcnow(),
             device_class=None,
-            disabled_by=UNDEFINED,
-            hidden_by=UNDEFINED,
+            disabled_by=Undefined,
+            hidden_by=Undefined,
             icon=None,
             id="legacy-id",
             labels=set(),
             modified_at=utcnow(),
             name=None,
-            options=UNDEFINED,
+            options=Undefined,
             orphaned_timestamp=None,
         )
     )
@@ -4344,7 +4395,7 @@ async def test_restore_states_disabled_by_changed_keeps_live_state(
 @pytest.mark.parametrize(
     ("initial_disabled_by", "new_disabled_by"),
     [
-        pytest.param(None, UNDEFINED, id="rename"),
+        pytest.param(None, Undefined, id="rename"),
         pytest.param(None, er.RegistryEntryDisabler.USER, id="rename_disable"),
         pytest.param(er.RegistryEntryDisabler.USER, None, id="rename_enable"),
     ],
@@ -4354,7 +4405,7 @@ async def test_restore_states_renamed(
     entity_registry: er.EntityRegistry,
     snapshot: SnapshotAssertion,
     initial_disabled_by: er.RegistryEntryDisabler | None,
-    new_disabled_by: er.RegistryEntryDisabler | UndefinedType | None,
+    new_disabled_by: er.RegistryEntryDisabler | Undefined | None,
 ) -> None:
     """Test a restored state follows a registry entry rename."""
     hass.set_state(CoreState.not_running)
@@ -6264,7 +6315,7 @@ async def test_restore_migrated_entity_disabled_by(
 
     deleted_entry = entity_registry.deleted_entities[("light", "hue", "1234")]
     entity_registry.deleted_entities[("light", "hue", "1234")] = attr.evolve(
-        deleted_entry, disabled_by=UNDEFINED
+        deleted_entry, disabled_by=Undefined
     )
 
     # Re-add entity, integration has changed
@@ -6389,7 +6440,7 @@ async def test_restore_migrated_entity_hidden_by(
 
     deleted_entry = entity_registry.deleted_entities[("light", "hue", "1234")]
     entity_registry.deleted_entities[("light", "hue", "1234")] = attr.evolve(
-        deleted_entry, hidden_by=UNDEFINED
+        deleted_entry, hidden_by=Undefined
     )
 
     # Re-add entity, integration has changed
@@ -6505,7 +6556,7 @@ async def test_restore_migrated_entity_initial_options(
 
     deleted_entry = entity_registry.deleted_entities[("light", "hue", "1234")]
     entity_registry.deleted_entities[("light", "hue", "1234")] = attr.evolve(
-        deleted_entry, options=UNDEFINED
+        deleted_entry, options=Undefined
     )
 
     # Re-add entity, integration has changed
@@ -8291,7 +8342,8 @@ async def test_migration_1_23(
         entry = registry.async_get(entity_id)
         assert er.async_get_legacy_friendly_name(hass, entry) == friendly_name
         assert (
-            hass.states.get(entity_id).attributes[ATTR_FRIENDLY_NAME] == friendly_name
+            hass.states.get(entity_id).attributes[EntityStateAttribute.FRIENDLY_NAME]
+            == friendly_name
         )
 
     # Check migrated data

@@ -2,6 +2,7 @@
 
 from collections.abc import Callable
 import logging
+from typing import TYPE_CHECKING
 
 from satel_integra import AsyncSatel
 from satel_integra.exceptions import (
@@ -11,7 +12,6 @@ from satel_integra.exceptions import (
     SatelPanelBusyError,
 )
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
@@ -29,6 +29,9 @@ from .const import (
     SUBENTRY_TYPE_ZONE,
 )
 
+if TYPE_CHECKING:
+    from .coordinator import SatelConfigEntry
+
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -37,7 +40,7 @@ class SatelClient:
 
     controller: AsyncSatel
 
-    def __init__(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
+    def __init__(self, hass: HomeAssistant, entry: SatelConfigEntry) -> None:
         """Initialize the client wrapper."""
         self.hass = hass
         self.config_entry = entry

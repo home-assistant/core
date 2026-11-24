@@ -27,7 +27,9 @@ _LOGGER = logging.getLogger(__name__)
 type MotionBlindsConfigEntry = ConfigEntry[DataUpdateCoordinatorMotionBlinds]
 
 
-class DataUpdateCoordinatorMotionBlinds(DataUpdateCoordinator):
+class DataUpdateCoordinatorMotionBlinds(
+    DataUpdateCoordinator[dict[str, dict[str, bool]]]
+):
     """Class to manage fetching data from single endpoint."""
 
     config_entry: MotionBlindsConfigEntry
@@ -80,7 +82,7 @@ class DataUpdateCoordinatorMotionBlinds(DataUpdateCoordinator):
         return {ATTR_AVAILABLE: True}
 
     @override
-    async def _async_update_data(self):
+    async def _async_update_data(self) -> dict[str, dict[str, bool]]:
         """Fetch the latest data from the gateway and blinds."""
         data = {}
 

@@ -18,7 +18,6 @@ from homeassistant.components.notify import (
     NotifyEntityFeature,
 )
 from homeassistant.const import (
-    ATTR_ICON,
     CONF_HOST,
     CONF_NAME,
     CONF_PASSWORD,
@@ -51,6 +50,7 @@ PLATFORM_SCHEMA = YAML_NOTIFY_SCHEMA
 DEFAULT_TIMEOUT = 5
 
 ATTR_DISPLAYTIME = "displaytime"
+ATTR_ICON = "icon"
 
 
 async def async_get_service(

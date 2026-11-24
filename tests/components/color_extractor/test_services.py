@@ -12,12 +12,10 @@ import pytest
 from pytest_homeassistant.common import async_load_fixture, load_fixture
 from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 
+from homeassistant.components.color_extractor.const import DOMAIN
 from homeassistant.components.color_extractor.services import (
-    ATTR_PATH,
-    ATTR_URL,
-    DOMAIN,
-    SERVICE_GET_COLOR,
-    SERVICE_TURN_ON,
+    ColorExtractorService,
+    ColorExtractorServiceArgument,
 )
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
@@ -112,7 +110,7 @@ async def test_missing_url_and_path(hass: HomeAssistant, setup_integration) -> N
 
     with pytest.raises(MultipleInvalid):
         await hass.services.async_call(
-            DOMAIN, SERVICE_TURN_ON, service_data, blocking=True
+            DOMAIN, ColorExtractorService.TURN_ON, service_data, blocking=True
         )
 
     # check light is still off, unchanged due to bad parameters on service call
@@ -129,7 +127,9 @@ async def _async_execute_service(hass: HomeAssistant, service_data: dict[str, An
 
     # Call the shared service, our above mock should return
     # the base64 decoded fixture 1x1 pixel
-    await hass.services.async_call(DOMAIN, SERVICE_TURN_ON, service_data, blocking=True)
+    await hass.services.async_call(
+        DOMAIN, ColorExtractorService.TURN_ON, service_data, blocking=True
+    )
 
     await hass.async_block_till_done()
 
@@ -139,7 +139,7 @@ async def test_url_success(
 ) -> None:
     """Test that a successful image GET translate to light RGB."""
     service_data = {
-        ATTR_URL: "http://example.com/images/logo.png",
+        ColorExtractorServiceArgument.URL: "http://example.com/images/logo.png",
         ATTR_ENTITY_ID: LIGHT_ENTITY,
         # Standard light service data which we pass
         ATTR_BRIGHTNESS_PCT: 50,
@@ -147,7 +147,7 @@ async def test_url_success(
 
     # Mock the HTTP Response with a base64 encoded 1x1 pixel
     aioclient_mock.get(
-        url=service_data[ATTR_URL],
+        url=service_data[ColorExtractorServiceArgument.URL],
         content=base64.b64decode(
             await async_load_fixture(hass, "color_extractor_url.txt", DOMAIN)
         ),
@@ -176,13 +176,13 @@ async def test_url_not_allowed(
 ) -> None:
     """Test that a not allowed external URL raises and doesn't turn light on."""
     service_data = {
-        ATTR_URL: "http://denied.com/images/logo.png",
+        ColorExtractorServiceArgument.URL: "http://denied.com/images/logo.png",
         ATTR_ENTITY_ID: LIGHT_ENTITY,
     }
 
     with pytest.raises(ServiceValidationError) as exc_info:
         await hass.services.async_call(
-            DOMAIN, SERVICE_TURN_ON, service_data, blocking=True
+            DOMAIN, ColorExtractorService.TURN_ON, service_data, blocking=True
         )
 
     assert exc_info.value.translation_domain == DOMAIN
@@ -216,18 +216,18 @@ async def test_url_exception(
 ) -> None:
     """Test that a failed image download raises and doesn't turn light on."""
     service_data = {
-        ATTR_URL: "http://example.com/images/logo.png",
+        ColorExtractorServiceArgument.URL: "http://example.com/images/logo.png",
         ATTR_ENTITY_ID: LIGHT_ENTITY,
     }
 
     # Don't let the URL not being allowed sway our exception test
     hass.config.allowlist_external_urls.add("http://example.com/images/")
 
-    aioclient_mock.get(url=service_data[ATTR_URL], exc=exc)
+    aioclient_mock.get(url=service_data[ColorExtractorServiceArgument.URL], exc=exc)
 
     with pytest.raises(HomeAssistantError) as exc_info:
         await hass.services.async_call(
-            DOMAIN, SERVICE_TURN_ON, service_data, blocking=True
+            DOMAIN, ColorExtractorService.TURN_ON, service_data, blocking=True
         )
 
     assert exc_info.value.translation_domain == DOMAIN
@@ -235,7 +235,7 @@ async def test_url_exception(
     placeholders = exc_info.value.translation_placeholders
     assert placeholders is not None
     assert set(placeholders) == placeholder_keys
-    assert placeholders["url"] == service_data[ATTR_URL]
+    assert placeholders["url"] == service_data[ColorExtractorServiceArgument.URL]
 
     # Light has not been modified due to failure
     state = hass.states.get(LIGHT_ENTITY)
@@ -256,14 +256,16 @@ async def test_url_error(
 ) -> None:
     """Test that a non-OK HTTP status raises and doesn't turn light on."""
     service_data = {
-        ATTR_URL: "http://example.com/images/logo.png",
+        ColorExtractorServiceArgument.URL: "http://example.com/images/logo.png",
         ATTR_ENTITY_ID: LIGHT_ENTITY,
     }
 
     # Don't let the URL not being allowed sway our exception test
     hass.config.allowlist_external_urls.add("http://example.com/images/")
 
-    aioclient_mock.get(url=service_data[ATTR_URL], status=status)
+    aioclient_mock.get(
+        url=service_data[ColorExtractorServiceArgument.URL], status=status
+    )
 
     # The body of a non-OK response must not be downloaded at all
     with (
@@ -274,13 +276,13 @@ async def test_url_error(
         pytest.raises(HomeAssistantError) as exc_info,
     ):
         await hass.services.async_call(
-            DOMAIN, SERVICE_TURN_ON, service_data, blocking=True
+            DOMAIN, ColorExtractorService.TURN_ON, service_data, blocking=True
         )
 
     assert exc_info.value.translation_domain == DOMAIN
     assert exc_info.value.translation_key == "http_error"
     assert exc_info.value.translation_placeholders == {
-        "url": service_data[ATTR_URL],
+        "url": service_data[ColorExtractorServiceArgument.URL],
         "status": str(status),
     }
 
@@ -315,7 +317,7 @@ def _get_file_mock(file_path):
 async def test_file(hass: HomeAssistant, setup_integration) -> None:
     """Test that the file only service reads a file and translates to light RGB."""
     service_data = {
-        ATTR_PATH: "/opt/image.png",
+        ColorExtractorServiceArgument.PATH: "/opt/image.png",
         ATTR_ENTITY_ID: LIGHT_ENTITY,
         # Standard light service data which we pass
         ATTR_BRIGHTNESS_PCT: 100,
@@ -333,7 +335,9 @@ async def test_file(hass: HomeAssistant, setup_integration) -> None:
     with patch(
         "homeassistant.components.color_extractor.services._get_file", _get_file_mock
     ):
-        await hass.services.async_call(DOMAIN, SERVICE_TURN_ON, service_data)
+        await hass.services.async_call(
+            DOMAIN, ColorExtractorService.TURN_ON, service_data
+        )
         await hass.async_block_till_done()
 
     state = hass.states.get(LIGHT_ENTITY)
@@ -355,7 +359,7 @@ async def test_file(hass: HomeAssistant, setup_integration) -> None:
 async def test_file_denied_dir(hass: HomeAssistant, setup_integration) -> None:
     """Test file service raises for images in disallowed dirs."""
     service_data = {
-        ATTR_PATH: "/path/to/a/dir/not/allowed/image.png",
+        ColorExtractorServiceArgument.PATH: "/path/to/a/dir/not/allowed/image.png",
         ATTR_ENTITY_ID: LIGHT_ENTITY,
         # Standard light service data which we pass
         ATTR_BRIGHTNESS_PCT: 100,
@@ -368,7 +372,7 @@ async def test_file_denied_dir(hass: HomeAssistant, setup_integration) -> None:
 
     with pytest.raises(ServiceValidationError) as exc_info:
         await hass.services.async_call(
-            DOMAIN, SERVICE_TURN_ON, service_data, blocking=True
+            DOMAIN, ColorExtractorService.TURN_ON, service_data, blocking=True
         )
 
     assert exc_info.value.translation_domain == DOMAIN
@@ -388,9 +392,17 @@ async def test_file_denied_dir(hass: HomeAssistant, setup_integration) -> None:
 @pytest.mark.parametrize(
     ("image_attr", "image_reference", "image_type"),
     [
-        pytest.param(ATTR_PATH, "/opt/not_an_image.txt", "file path", id="file_path"),
         pytest.param(
-            ATTR_URL, "http://example.com/images/not_an_image.txt", "URL", id="url"
+            ColorExtractorServiceArgument.PATH,
+            "/opt/not_an_image.txt",
+            "file path",
+            id="file_path",
+        ),
+        pytest.param(
+            ColorExtractorServiceArgument.URL,
+            "http://example.com/images/not_an_image.txt",
+            "URL",
+            id="url",
         ),
     ],
 )
@@ -424,7 +436,7 @@ async def test_turn_on_invalid_image(
         pytest.raises(ServiceValidationError) as exc_info,
     ):
         await hass.services.async_call(
-            DOMAIN, SERVICE_TURN_ON, service_data, blocking=True
+            DOMAIN, ColorExtractorService.TURN_ON, service_data, blocking=True
         )
 
     assert exc_info.value.translation_domain == DOMAIN
@@ -445,7 +457,7 @@ async def test_turn_on_invalid_image(
 async def test_get_color_service(hass: HomeAssistant, setup_integration) -> None:
     """Test that the get_color service returns the expected RGB color."""
     service_data = {
-        ATTR_PATH: "/opt/image.png",
+        ColorExtractorServiceArgument.PATH: "/opt/image.png",
     }
 
     # Add our /opt/ path to the allowed list of paths
@@ -455,7 +467,11 @@ async def test_get_color_service(hass: HomeAssistant, setup_integration) -> None
         "homeassistant.components.color_extractor.services._get_file", _get_file_mock
     ):
         result = await hass.services.async_call(
-            DOMAIN, SERVICE_GET_COLOR, service_data, blocking=True, return_response=True
+            DOMAIN,
+            ColorExtractorService.GET_COLOR,
+            service_data,
+            blocking=True,
+            return_response=True,
         )
 
     assert result is not None
@@ -470,7 +486,7 @@ async def test_get_color_service_invalid_image(
 ) -> None:
     """Test that the get_color service raises a ServiceValidationError when given an invalid image."""
     service_data = {
-        ATTR_PATH: "/opt/not_an_image.txt",
+        ColorExtractorServiceArgument.PATH: "/opt/not_an_image.txt",
     }
 
     # Add our /opt/ path to the allowed list of paths
@@ -484,7 +500,11 @@ async def test_get_color_service_invalid_image(
         pytest.raises(ServiceValidationError) as exc_info,
     ):
         await hass.services.async_call(
-            DOMAIN, SERVICE_GET_COLOR, service_data, blocking=True, return_response=True
+            DOMAIN,
+            ColorExtractorService.GET_COLOR,
+            service_data,
+            blocking=True,
+            return_response=True,
         )
 
     assert exc_info.value.translation_key == "invalid_image"
@@ -501,12 +521,16 @@ async def test_get_color_service_not_allowed_path(
 ) -> None:
     """Test that the get_color service raises a ServiceValidationError when given an image from a path that is not allowed."""
     service_data = {
-        ATTR_PATH: "/opt/not_an_image.txt",
+        ColorExtractorServiceArgument.PATH: "/opt/not_an_image.txt",
     }
 
     with pytest.raises(ServiceValidationError) as exc_info:
         await hass.services.async_call(
-            DOMAIN, SERVICE_GET_COLOR, service_data, blocking=True, return_response=True
+            DOMAIN,
+            ColorExtractorService.GET_COLOR,
+            service_data,
+            blocking=True,
+            return_response=True,
         )
 
     assert exc_info.value.translation_domain == DOMAIN

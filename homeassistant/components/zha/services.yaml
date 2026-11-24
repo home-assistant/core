@@ -34,14 +34,6 @@ remove:
       selector:
         text:
 
-reconfigure_device:
-  fields:
-    ieee:
-      required: true
-      example: "00:0d:6f:00:05:7d:2d:34"
-      selector:
-        text:
-
 set_zigbee_cluster_attribute:
   fields:
     ieee:

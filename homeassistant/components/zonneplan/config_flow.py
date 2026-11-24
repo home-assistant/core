@@ -141,7 +141,7 @@ class ZonneplanConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="otp",
             data_schema=STEP_OTP_DATA_SCHEMA,
             errors=errors,
-            description_placeholders={CONF_EMAIL: self._challenge.email},
+            description_placeholders={"email": self._challenge.email},
         )
 
     async def async_step_reauth(
@@ -168,7 +168,7 @@ class ZonneplanConfigFlow(ConfigFlow, domain=DOMAIN):
                 suggested_values=user_input or {CONF_EMAIL: email},
             ),
             errors=errors,
-            description_placeholders={CONF_EMAIL: email},
+            description_placeholders={"email": email},
         )
 
     async def async_step_reconfigure(
@@ -195,5 +195,5 @@ class ZonneplanConfigFlow(ConfigFlow, domain=DOMAIN):
                 suggested_values=user_input or {CONF_EMAIL: email},
             ),
             errors=errors,
-            description_placeholders={CONF_EMAIL: email},
+            description_placeholders={"email": email},
         )

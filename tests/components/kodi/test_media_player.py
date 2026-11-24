@@ -1,7 +1,9 @@
 """Tests for the Kodi media player."""
 
+import asyncio
 from collections.abc import Awaitable, Callable
 from datetime import timedelta
+import logging
 from typing import Any
 from unittest.mock import MagicMock, patch
 
@@ -21,9 +23,13 @@ from syrupy.filters import props
 
 from homeassistant.components.kodi.const import DOMAIN
 from homeassistant.components.media_player import (
+    ATTR_MEDIA_ALBUM_NAME,
     ATTR_MEDIA_CONTENT_TYPE,
+    ATTR_MEDIA_EPISODE,
     ATTR_MEDIA_POSITION,
     ATTR_MEDIA_POSITION_UPDATED_AT,
+    ATTR_MEDIA_SEASON,
+    ATTR_MEDIA_SERIES_TITLE,
     ATTR_MEDIA_TITLE,
     ATTR_MEDIA_VOLUME_LEVEL,
     ATTR_MEDIA_VOLUME_MUTED,
@@ -447,6 +453,43 @@ async def test_websocket_setup(
 
 @websocket
 @pytest.mark.usefixtures("mock_connection")
+@pytest.mark.parametrize(
+    ("speed", "expected_state"),
+    [
+        pytest.param(0, MediaPlayerState.PAUSED, id="paused"),
+        pytest.param(1, MediaPlayerState.PLAYING, id="playing"),
+    ],
+)
+async def test_websocket_setup_while_refresh_in_progress(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_kodi: MagicMock,
+    speed: int,
+    expected_state: MediaPlayerState,
+) -> None:
+    """Test adding the entity while Kodi is playing and the first refresh is pending."""
+    await set_playing(hass, mock_kodi, speed=speed)
+    get_player_properties = mock_kodi.get_player_properties.side_effect
+
+    async def slow_get_player_properties(*args: Any) -> dict[str, Any]:
+        await asyncio.sleep(0)
+        await asyncio.sleep(0)
+        return get_player_properties(*args)
+
+    async def slow_ping() -> bool:
+        await asyncio.sleep(0)
+        return True
+
+    mock_kodi.get_player_properties.side_effect = slow_get_player_properties
+    mock_kodi.ping.side_effect = slow_ping
+
+    await setup_integration(hass, mock_config_entry)
+
+    assert hass.states.get(ENTITY_ID).state == expected_state
+
+
+@websocket
+@pytest.mark.usefixtures("mock_connection")
 async def test_websocket_does_not_poll(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
@@ -515,6 +558,78 @@ async def test_websocket_refresh_failure(
     await hass.async_block_till_done()
 
     assert hass.states.get(ENTITY_ID).state == MediaPlayerState.PAUSED
+
+
+async def stop_playback(connection: MagicMock) -> None:
+    """Let Kodi report that the playback stopped."""
+    connection.server.Player.OnStop(
+        "xbmc", {"end": False, "item": {"id": 1, "type": "movie"}}
+    )
+
+
+async def quit_kodi(connection: MagicMock) -> None:
+    """Let Kodi report that it quits."""
+    await connection.server.System.OnQuit("xbmc", None)
+
+
+REFRESH_REQUESTS = [
+    "get_players",
+    "get_application_properties",
+    "get_player_properties",
+    "get_playing_item_properties",
+]
+
+
+@websocket
+@pytest.mark.parametrize("request_name", REFRESH_REQUESTS)
+@pytest.mark.parametrize(
+    ("notification", "expected_state"),
+    [
+        pytest.param(stop_playback, MediaPlayerState.IDLE, id="stop"),
+        pytest.param(quit_kodi, MediaPlayerState.OFF, id="quit"),
+    ],
+)
+async def test_websocket_reset_during_refresh(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_connection: MagicMock,
+    mock_kodi: MagicMock,
+    caplog: pytest.LogCaptureFixture,
+    request_name: str,
+    notification: Callable[[MagicMock], Awaitable[None]],
+    expected_state: MediaPlayerState,
+) -> None:
+    """Test a stop or quit ends a refresh that waits for a reply."""
+    await set_playing(hass, mock_kodi)
+    await setup_integration(hass, mock_config_entry)
+    assert hass.states.get(ENTITY_ID).state == MediaPlayerState.PLAYING
+    request = getattr(mock_kodi, request_name)
+    reply = request.side_effect
+    requested = asyncio.Event()
+    replied = asyncio.Event()
+
+    async def pending_request(*args: Any) -> Any:
+        result = reply(*args) if reply else request.return_value
+        requested.set()
+        await replied.wait()
+        return result
+
+    request.side_effect = pending_request
+    mock_kodi.reset_mock()
+
+    async with asyncio.timeout(5):
+        mock_connection.server.Player.OnPause("xbmc", player_notification(0))
+        await requested.wait()
+        await notification(mock_connection)
+        replied.set()
+        await hass.async_block_till_done()
+
+    state = hass.states.get(ENTITY_ID)
+    assert state.state == expected_state
+    assert ATTR_MEDIA_TITLE not in state.attributes
+    assert not [record for record in caplog.records if record.levelno >= logging.ERROR]
+    for later_request in REFRESH_REQUESTS[REFRESH_REQUESTS.index(request_name) + 1 :]:
+        getattr(mock_kodi, later_request).assert_not_awaited()
 
 
 @websocket
@@ -782,3 +897,55 @@ async def test_unload(
     await advance_time(hass, freezer, WATCHDOG_INTERVAL)
 
     mock_kodi.ping.assert_not_awaited()
+
+
+@pytest.mark.usefixtures("mock_connection")
+@pytest.mark.parametrize(
+    ("season", "episode", "expected_season", "expected_episode"),
+    [
+        pytest.param(-1, -1, None, None, id="unset"),
+        pytest.param(-2, -3, None, None, id="other_negative"),
+        pytest.param(0, 0, 0, 0, id="special"),
+    ],
+)
+async def test_season_and_episode(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_kodi: MagicMock,
+    freezer: FrozenDateTimeFactory,
+    season: int,
+    episode: int,
+    expected_season: int | None,
+    expected_episode: int | None,
+) -> None:
+    """Test negative season and episode numbers are not reported, while 0 is kept."""
+    await set_playing(
+        hass,
+        mock_kodi,
+        {"title": "Title", "season": season, "episode": episode},
+    )
+    await setup_integration(hass, mock_config_entry)
+
+    await advance_time(hass, freezer, SCAN_INTERVAL)
+
+    attributes = hass.states.get(ENTITY_ID).attributes
+    assert attributes.get(ATTR_MEDIA_SEASON) == expected_season
+    assert attributes.get(ATTR_MEDIA_EPISODE) == expected_episode
+
+
+@pytest.mark.usefixtures("mock_connection")
+async def test_empty_series_title_and_album(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_kodi: MagicMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test empty series title and album name are not reported."""
+    await set_playing(hass, mock_kodi, {"title": "Title", "showtitle": "", "album": ""})
+    await setup_integration(hass, mock_config_entry)
+
+    await advance_time(hass, freezer, SCAN_INTERVAL)
+
+    attributes = hass.states.get(ENTITY_ID).attributes
+    assert ATTR_MEDIA_SERIES_TITLE not in attributes
+    assert ATTR_MEDIA_ALBUM_NAME not in attributes

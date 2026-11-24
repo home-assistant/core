@@ -337,7 +337,9 @@ async def test_coordinator_skips_queued_refresh_after_periodic_update(
     await hass.services.async_call(
         HOME_ASSISTANT_DOMAIN,
         SERVICE_UPDATE_ENTITY,
-        {ATTR_ENTITY_ID: "sensor.energy_production_today"},
+        {
+            ATTR_ENTITY_ID: "sensor.solar_production_forecast_estimated_energy_production_today"
+        },
         blocking=True,
     )
     assert mock_forecast_solar.estimate.call_count == estimate_calls + 2
