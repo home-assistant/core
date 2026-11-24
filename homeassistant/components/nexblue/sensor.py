@@ -21,13 +21,12 @@ from homeassistant.const import (
     UnitOfPower,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN
 from .coordinator import NexBlueConfigEntry, NexBlueDataUpdateCoordinator
+from .entity import charger_device_info
 
 CHARGING_STATE_MAP = {
     0: "idle",
@@ -250,12 +249,7 @@ class NexBlueStatusSensor(
         self._attr_unique_id = f"{serial_number}_{description.key}"
         if description.phase is not None:
             self._attr_translation_placeholders = {"phase": f"L{description.phase}"}
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, serial_number)},
-            manufacturer="NexBlue",
-            name=serial_number,
-            serial_number=serial_number,
-        )
+        self._attr_device_info = charger_device_info(serial_number)
 
     @property
     @override

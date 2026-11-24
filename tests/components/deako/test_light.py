@@ -6,8 +6,12 @@ import pytest
 from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.light import ATTR_BRIGHTNESS, DOMAIN as LIGHT_DOMAIN
-from homeassistant.const import ATTR_ENTITY_ID, SERVICE_TURN_OFF, SERVICE_TURN_ON
+from homeassistant.components.light import (
+    DOMAIN as LIGHT_DOMAIN,
+    LightService,
+    LightServiceArgument,
+)
+from homeassistant.const import TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -111,8 +115,8 @@ async def test_light_power_change_on(
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "light.kitchen"},
+        LightService.TURN_ON,
+        {TargetKey.ENTITY_ID: "light.kitchen"},
         blocking=True,
     )
 
@@ -141,8 +145,8 @@ async def test_light_power_change_off(
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: "light.kitchen"},
+        LightService.TURN_OFF,
+        {TargetKey.ENTITY_ID: "light.kitchen"},
         blocking=True,
     )
 
@@ -181,10 +185,10 @@ async def test_light_brightness_change(
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
+        LightService.TURN_ON,
         {
-            ATTR_ENTITY_ID: "light.kitchen",
-            ATTR_BRIGHTNESS: dim_input,
+            TargetKey.ENTITY_ID: "light.kitchen",
+            LightServiceArgument.BRIGHTNESS: dim_input,
         },
         blocking=True,
     )

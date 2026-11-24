@@ -55,9 +55,11 @@ class AdsEntity(Entity):
 
         self._event = asyncio.Event()
 
-        await self.hass.async_add_executor_job(
+        if not await self.hass.async_add_executor_job(
             self._ads_hub.add_device_notification, ads_var, plctype, update
-        )
+        ):
+            # No notification is registered, so no first update will arrive.
+            return
         try:
             async with timeout(10):
                 await self._event.wait()

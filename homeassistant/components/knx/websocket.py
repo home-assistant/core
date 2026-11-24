@@ -39,6 +39,7 @@ from .const import (
     UI_DEVICE_ID_PREFIX,
 )
 from .dpt import get_supported_dpts
+from .project import async_set_project
 from .storage.config_store import ConfigStoreException
 from .storage.const import CONF_DATA
 from .storage.entity_store_schema import (
@@ -76,6 +77,7 @@ async def register_panel(hass: HomeAssistant) -> None:
     websocket_api.async_register_command(hass, ws_query_telegrams)
     websocket_api.async_register_command(hass, ws_subscribe_telegram)
     websocket_api.async_register_command(hass, ws_get_knx_project)
+    websocket_api.async_register_command(hass, ws_set_knx_project)
     websocket_api.async_register_command(hass, ws_get_entity_suggestions)
     websocket_api.async_register_command(hass, ws_validate_entity)
     websocket_api.async_register_command(hass, ws_create_entity)
@@ -263,6 +265,29 @@ async def ws_get_knx_project(
 @websocket_api.require_admin
 @websocket_api.websocket_command(
     {
+        probatio.Required("type"): "knx/set_knx_project",
+        probatio.Required("project"): dict,
+    }
+)
+@websocket_api.async_response
+async def ws_set_knx_project(
+    hass: HomeAssistant,
+    connection: websocket_api.ActiveConnection,
+    msg: dict,
+) -> None:
+    """Replace the KNX project with project data in the format of xknxproject.
+
+    The whole project is one message, so it is limited by the maximum message
+    size of the WebSocket API (4 MiB): a larger message closes the connection.
+    Larger project data can be set with `async_set_project` from Python.
+    """
+    await async_set_project(hass, msg["project"])
+    connection.send_result(msg["id"])
+
+
+@websocket_api.require_admin
+@websocket_api.websocket_command(
+    {
         probatio.Required("type"): "knx/get_entity_suggestions",
         probatio.Optional("platform"): probatio.In(SUPPORTED_PLATFORMS_UI),
         probatio.Optional("group_id"): str,
@@ -309,7 +334,6 @@ async def ws_project_file_process(
     """Handle get info command."""
     try:
         await knx.project.process_project_file(
-            xknx=knx.xknx,
             file_id=msg["file_id"],
             password=msg["password"],
         )
