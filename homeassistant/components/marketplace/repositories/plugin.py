@@ -47,6 +47,17 @@ def _archive_name(filename: str) -> str | None:
     return f"{filename.removesuffix('.js')}.zip"
 
 
+def _check_no_file_is_a_folder(members: list[zipfile.ZipInfo]) -> None:
+    """Refuse members below a file, extracting them fails halfway through."""
+    files = {member.filename for member in members if not member.is_dir()}
+    for member in members:
+        parts = member.filename.rstrip("/").split("/")
+        # A folder entry is a folder itself, a file only its parents are
+        for depth in range(1, len(parts) + member.is_dir()):
+            if (parent := "/".join(parts[:depth])) in files:
+                raise zipfile.BadZipFile(f"{parent} is both a file and a folder")
+
+
 class PluginRepository(Repository):
     """Dashboard resource repository."""
 
@@ -204,6 +215,7 @@ class PluginRepository(Repository):
                 member.filename = relative
                 resolve_in_directory(self.content.path.local, relative)
                 members.append(member)
+            _check_no_file_is_a_folder(members)
             archive.extractall(self.content.path.local, members)
 
     def _resource_folder(self, names: list[str]) -> str | None:

@@ -3689,6 +3689,18 @@ ZIP_FALLBACK_FILES = [
             ZIP_FALLBACK_FILES,
             id="zip_with_the_resource_in_two_folders",
         ),
+        *(
+            pytest.param(
+                {"content": _zip_bytes({"plugin-basic.js": "", **members})},
+                "asset",
+                ZIP_FALLBACK_FILES,
+                id=f"zip_with_a_file_that_is_a_{kind}",
+            )
+            for kind, members in (
+                ("parent", {"translations": "", "translations/en.json": "{}"}),
+                ("folder_entry", {"translations": "", "translations/": ""}),
+            )
+        ),
         pytest.param(
             {"content": _zip_bytes({"plugin-basic.js": "", "../outside.js": ""})},
             "asset",
