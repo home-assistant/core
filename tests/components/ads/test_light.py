@@ -112,7 +112,7 @@ async def test_availability_follows_the_onoff_variable(
     del mock_ads_device.values[silent_var]
 
     assert await async_run_past_first_update(
-        hass, setup_ads_platform(hass, LIGHT_DOMAIN, BRIGHTNESS_CONFIG)
+        hass, mock_ads_device, setup_ads_platform(hass, LIGHT_DOMAIN, BRIGHTNESS_CONFIG)
     )
 
     state = hass.states.get(ENTITY_ID)
