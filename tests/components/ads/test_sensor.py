@@ -140,6 +140,7 @@ async def test_zero_factor(hass: HomeAssistant, mock_ads_device: MockAdsDevice) 
 
     assert await async_run_past_first_update(
         hass,
+        mock_ads_device,
         setup_ads_platform(
             hass,
             SENSOR_DOMAIN,
