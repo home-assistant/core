@@ -1,4 +1,70 @@
 # serializer version: 1
+# name: test_deprecated_template_options_issue[deprecated-ConfigurationStyle.MODERN]
+  list([
+    IssueRegistryItemSnapshot({
+      'active': True,
+      'breaks_in_ha_version': '2027.6.0',
+      'config_entry_id': None,
+      'config_subentry_id': None,
+      'created': <ANY>,
+      'data': None,
+      'dismissed_version': None,
+      'domain': 'template',
+      'is_fixable': False,
+      'is_persistent': False,
+      'issue_domain': None,
+      'issue_id': 'deprecated_weather_template_options_cac46eb3ad493c4f',
+      'learn_more_url': 'https://www.home-assistant.io/integrations/template/#weather',
+      'severity': <IssueSeverity.WARNING: 'warning'>,
+      'translation_key': 'deprecated_weather_template_options',
+      'translation_placeholders': dict({
+        'identifier': 'name: template_weather',
+        'options': '''
+          - `condition_template` → `condition`
+          - `temperature_template` → `temperature`
+          - `humidity_template` → `humidity`
+        ''',
+      }),
+    }),
+  ])
+# ---
+# name: test_deprecated_template_options_issue[deprecated-ConfigurationStyle.TRIGGER]
+  list([
+    IssueRegistryItemSnapshot({
+      'active': True,
+      'breaks_in_ha_version': '2027.6.0',
+      'config_entry_id': None,
+      'config_subentry_id': None,
+      'created': <ANY>,
+      'data': None,
+      'dismissed_version': None,
+      'domain': 'template',
+      'is_fixable': False,
+      'is_persistent': False,
+      'issue_domain': None,
+      'issue_id': 'deprecated_weather_template_options_cac46eb3ad493c4f',
+      'learn_more_url': 'https://www.home-assistant.io/integrations/template/#weather',
+      'severity': <IssueSeverity.WARNING: 'warning'>,
+      'translation_key': 'deprecated_weather_template_options',
+      'translation_placeholders': dict({
+        'identifier': 'name: template_weather',
+        'options': '''
+          - `condition_template` → `condition`
+          - `temperature_template` → `temperature`
+          - `humidity_template` → `humidity`
+        ''',
+      }),
+    }),
+  ])
+# ---
+# name: test_deprecated_template_options_issue[modern-ConfigurationStyle.MODERN]
+  list([
+  ])
+# ---
+# name: test_deprecated_template_options_issue[modern-ConfigurationStyle.TRIGGER]
+  list([
+  ])
+# ---
 # name: test_forecasts[config0-ConfigurationStyle.MODERN]
   dict({
     'weather.template_weather': dict({

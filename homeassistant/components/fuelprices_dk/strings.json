@@ -87,6 +87,9 @@
             "station": "[%key:component::fuelprices_dk::config::step::station_selection::data_description::station%]"
           },
           "description": "[%key:component::fuelprices_dk::config::step::station_selection::description%]"
+        },
+        "user": {
+          "description": "Try again to load the list of fuel companies."
         }
       }
     }
