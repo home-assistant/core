@@ -157,6 +157,35 @@ async def test_client_identity_survives_reconnect(
     assert registry_entry.unique_id == original_unique_id
 
 
+async def test_client_rename_survives_disconnect(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_create_server: AsyncMock,
+    mock_client_1: AsyncMock,
+    mock_client_2: AsyncMock,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """A temporary disconnect preserves the last name reported by Snapcast."""
+    await setup_integration(hass, mock_config_entry)
+    entity_id = "media_player.test_client_1_snapcast_client"
+    expected_name = "Kitchen Snapcast Client"
+    mock_client_1.friendly_name = "Kitchen"
+    mock_config_entry.runtime_data.async_update_listeners()
+    await hass.async_block_till_done()
+
+    assert hass.states.get(entity_id).name == expected_name
+    assert entity_registry.async_get(entity_id).original_name == expected_name
+
+    mock_create_server.clients = [mock_client_2]
+    mock_config_entry.runtime_data.async_update_listeners()
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state.state == STATE_UNAVAILABLE
+    assert state.name == expected_name
+    assert entity_registry.async_get(entity_id).original_name == expected_name
+
+
 async def test_snapshot_during_disconnect(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,

@@ -109,7 +109,7 @@ class SnapcastClientDevice(SnapcastCoordinatorEntity, MediaPlayerEntity):
         # python-snapcast server can replace its Snapclient object when a physical
         # client reconnects, so never keep that mutable object as the identity.
         self._client_id = device.identifier
-        self._fallback_name = device.friendly_name
+        self._last_known_name = device.friendly_name
         self._bound_device: Snapclient | None = None
         self._attr_unique_id = self.get_unique_id(coordinator.host_id, self._client_id)
 
@@ -230,8 +230,8 @@ class SnapcastClientDevice(SnapcastCoordinatorEntity, MediaPlayerEntity):
     def name(self) -> str:
         """Return the name of the device."""
         if (device := self._device) is not None:
-            return f"{device.friendly_name} {CLIENT_SUFFIX}"
-        return f"{self._fallback_name} {CLIENT_SUFFIX}"
+            self._last_known_name = device.friendly_name
+        return f"{self._last_known_name} {CLIENT_SUFFIX}"
 
     @property
     @override
