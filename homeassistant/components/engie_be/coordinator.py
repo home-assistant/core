@@ -179,7 +179,6 @@ class EngieBePricesCoordinator(DataUpdateCoordinator[EngieBePricesData]):
         )
         self.client = client
         self.ban = ban
-        self.agreement = agreement
         self.ean_energy_types: dict[str, str | None] = {}
         self.gas_conversion_coefficients: dict[str, float] = {}
         self._service_points_refreshed_at: dict[str, datetime] = {}
@@ -459,17 +458,12 @@ class EngieBeEpexCoordinator(DataUpdateCoordinator[EngieBeEpexData]):
     @override
     async def _async_update_data(self) -> EngieBeEpexData:
         """Fetch EPEX prices for each day and granularity without full coverage."""
-        data = (
-            self.data
-            if self.data is not None
-            else EngieBeEpexData(hourly=(), quarter_hourly=())
-        )
         today = dt_util.now(BRUSSELS_TIME_ZONE).date()
         tomorrow = today + timedelta(days=1)
         slots = {
             granularity: [
                 slot
-                for slot in data.slots(granularity)
+                for slot in self.data.slots(granularity)
                 if slot.start.astimezone(BRUSSELS_TIME_ZONE).date() >= today
             ]
             for granularity in EpexGranularity
