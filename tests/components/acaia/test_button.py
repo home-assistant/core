@@ -3,7 +3,9 @@
 from datetime import timedelta
 from unittest.mock import MagicMock, patch
 
+from aioacaia.exceptions import AcaiaDeviceNotFound, AcaiaError
 from freezegun.api import FrozenDateTimeFactory
+import pytest
 from pytest_homeassistant.common import (
     MockConfigEntry,
     async_fire_time_changed,
@@ -12,13 +14,9 @@ from pytest_homeassistant.common import (
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, ButtonService
-from homeassistant.const import (
-    STATE_UNAVAILABLE,
-    STATE_UNKNOWN,
-    CommonServiceArgument,
-    Platform,
-)
+from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN, Platform, TargetKey
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
@@ -58,13 +56,44 @@ async def test_button_presses(
             BUTTON_DOMAIN,
             ButtonService.PRESS,
             {
-                CommonServiceArgument.ENTITY_ID: f"button.kitchen_lunar_ddeeff_{button}",
+                TargetKey.ENTITY_ID: f"button.kitchen_lunar_ddeeff_{button}",
             },
             blocking=True,
         )
 
         function = getattr(mock_scale, button)
         function.assert_called_once()
+
+
+@pytest.mark.parametrize("button", BUTTONS)
+@pytest.mark.parametrize(
+    "exception",
+    [
+        pytest.param(AcaiaError("Error during connecting to device"), id="error"),
+        pytest.param(AcaiaDeviceNotFound("Device not found"), id="not_found"),
+    ],
+)
+async def test_button_press_error(
+    hass: HomeAssistant,
+    mock_scale: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    button: str,
+    exception: Exception,
+) -> None:
+    """Test a button press raises when the scale can't be reached."""
+
+    await setup_integration(hass, mock_config_entry)
+    getattr(mock_scale, button).side_effect = exception
+
+    with pytest.raises(HomeAssistantError, match="Could not connect to the scale"):
+        await hass.services.async_call(
+            BUTTON_DOMAIN,
+            ButtonService.PRESS,
+            {
+                TargetKey.ENTITY_ID: f"button.kitchen_lunar_ddeeff_{button}",
+            },
+            blocking=True,
+        )
 
 
 async def test_buttons_unavailable_on_disconnected_scale(

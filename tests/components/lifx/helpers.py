@@ -35,6 +35,7 @@ from lifx import (
     WifiInfo,
     mac_candidates_for_serial,
 )
+from lifx.devices.paint_record import PaintKind, PaintRecord
 from lifx.products import get_mirror_layout, get_product
 from lifx.protocol.models import (
     MAC_OFFSET_FIRMWARE_MAJOR,
@@ -133,6 +134,18 @@ def assert_color_written(
 def set_connectivity(device: MockDevice, connectivity: Connectivity) -> None:
     """Report the radio as discovery metadata would."""
     device._set_connectivity(connectivity)
+
+
+def record_paint(
+    device: MultiZoneLight | MatrixLight, kind: PaintKind, slug: str
+) -> None:
+    """Leave the record the library keeps after painting a theme or Mood."""
+    device._paint_record = PaintRecord(kind=kind, slug=slug)
+
+
+def clear_paint_record(device: MultiZoneLight | MatrixLight) -> None:
+    """End the record, as the library does once the light changes."""
+    device._clear_paint_record()
 
 
 def _mac_address(serial: str, firmware: FirmwareInfo) -> str:

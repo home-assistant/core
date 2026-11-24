@@ -7,7 +7,7 @@ import pytest
 
 from homeassistant.components.demo import DOMAIN
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN, SwitchService
-from homeassistant.const import STATE_OFF, STATE_ON, CommonServiceArgument, Platform
+from homeassistant.const import STATE_OFF, STATE_ON, Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
@@ -39,7 +39,7 @@ async def test_turn_on(hass: HomeAssistant, switch_entity_id: str) -> None:
     await hass.services.async_call(
         SWITCH_DOMAIN,
         SwitchService.TURN_OFF,
-        {CommonServiceArgument.ENTITY_ID: switch_entity_id},
+        {TargetKey.ENTITY_ID: switch_entity_id},
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -50,7 +50,7 @@ async def test_turn_on(hass: HomeAssistant, switch_entity_id: str) -> None:
     await hass.services.async_call(
         SWITCH_DOMAIN,
         SwitchService.TURN_ON,
-        {CommonServiceArgument.ENTITY_ID: switch_entity_id},
+        {TargetKey.ENTITY_ID: switch_entity_id},
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -65,7 +65,7 @@ async def test_turn_off(hass: HomeAssistant, switch_entity_id: str) -> None:
     await hass.services.async_call(
         SWITCH_DOMAIN,
         SwitchService.TURN_ON,
-        {CommonServiceArgument.ENTITY_ID: switch_entity_id},
+        {TargetKey.ENTITY_ID: switch_entity_id},
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -76,7 +76,7 @@ async def test_turn_off(hass: HomeAssistant, switch_entity_id: str) -> None:
     await hass.services.async_call(
         SWITCH_DOMAIN,
         SwitchService.TURN_OFF,
-        {CommonServiceArgument.ENTITY_ID: switch_entity_id},
+        {TargetKey.ENTITY_ID: switch_entity_id},
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -93,7 +93,7 @@ async def test_turn_off_without_entity_id(
     await hass.services.async_call(
         SWITCH_DOMAIN,
         SwitchService.TURN_ON,
-        {CommonServiceArgument.ENTITY_ID: "all"},
+        {TargetKey.ENTITY_ID: "all"},
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -104,7 +104,7 @@ async def test_turn_off_without_entity_id(
     await hass.services.async_call(
         SWITCH_DOMAIN,
         SwitchService.TURN_OFF,
-        {CommonServiceArgument.ENTITY_ID: "all"},
+        {TargetKey.ENTITY_ID: "all"},
         blocking=True,
     )
     await hass.async_block_till_done()

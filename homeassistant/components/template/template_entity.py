@@ -509,7 +509,6 @@ class TemplateEntity(AbstractTemplateEntity):
         except Exception as err:  # noqa: BLE001
             self._preview_callback(None, None, None, str(err))
         else:
-            assert self._template_result_info
             self._preview_callback(
                 calculated_state.state,
                 calculated_state.attributes,

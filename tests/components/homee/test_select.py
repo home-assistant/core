@@ -16,7 +16,7 @@ from homeassistant.components.select import (
     SERVICE_SELECT_PREVIOUS,
     SelectService,
 )
-from homeassistant.const import ATTR_ENTITY_ID, CommonServiceArgument, Platform
+from homeassistant.const import ATTR_ENTITY_ID, Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import entity_registry as er
@@ -93,7 +93,7 @@ async def test_select_option_service_error(
             SELECT_DOMAIN,
             SelectService.SELECT_OPTION,
             {
-                CommonServiceArgument.ENTITY_ID: "select.test_select_repeater_mode",
+                TargetKey.ENTITY_ID: "select.test_select_repeater_mode",
                 "option": "invalid",
             },
             blocking=True,

@@ -13,6 +13,7 @@ from .const import (
     ProviderSuggestion,
     SuggestionFilter,
 )
+from .existing_config import ExistingConfigSuggestionProvider
 from .functional_blocks import FunctionalBlockSuggestionProvider
 from .functions import FunctionSuggestionProvider
 
@@ -22,6 +23,7 @@ if TYPE_CHECKING:
 SUGGESTION_PROVIDERS: list[SuggestionProvider] = [
     FunctionalBlockSuggestionProvider(),
     FunctionSuggestionProvider(),
+    ExistingConfigSuggestionProvider(),
 ]
 
 

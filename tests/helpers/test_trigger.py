@@ -32,7 +32,6 @@ from homeassistant.components.system_health import DOMAIN as SYSTEM_HEALTH_DOMAI
 from homeassistant.components.tag import DOMAIN as TAG_DOMAIN
 from homeassistant.components.text import DOMAIN as TEXT_DOMAIN
 from homeassistant.const import (
-    ATTR_LABEL_ID,
     CONF_ENTITY_ID,
     CONF_EXCLUDE,
     CONF_FOR,
@@ -45,6 +44,7 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
     EntityStateAttribute,
+    TargetKey,
     UnitOfTemperature,
 )
 from homeassistant.core import (
@@ -141,7 +141,7 @@ async def _arm_numerical_trigger(
 
     trigger_config = {
         CONF_PLATFORM: "test.numerical",
-        CONF_TARGET: {CONF_ENTITY_ID: entity_id},
+        CONF_TARGET: {TargetKey.ENTITY_ID: entity_id},
         CONF_OPTIONS: options,
     }
     log = logging.getLogger(__name__)
@@ -1736,7 +1736,7 @@ async def test_numerical_state_attribute_changed_trigger_config_validation(
             [
                 {
                     "platform": "test.test_trigger",
-                    CONF_TARGET: {CONF_ENTITY_ID: "test.test_entity"},
+                    CONF_TARGET: {TargetKey.ENTITY_ID: "test.test_entity"},
                     CONF_OPTIONS: trigger_options,
                 }
             ],
@@ -1939,7 +1939,7 @@ async def test_numerical_state_attribute_changed_with_unit_trigger_config_valida
             [
                 {
                     "platform": "test.test_trigger",
-                    CONF_TARGET: {CONF_ENTITY_ID: "test.test_entity"},
+                    CONF_TARGET: {TargetKey.ENTITY_ID: "test.test_entity"},
                     CONF_OPTIONS: trigger_options,
                 }
             ],
@@ -2259,7 +2259,7 @@ async def test_numerical_state_attribute_changed_trigger_thresholds(
             automation.DOMAIN: {
                 "trigger": {
                     CONF_PLATFORM: "test.attribute_changed",
-                    CONF_TARGET: {CONF_ENTITY_ID: "test.test_entity"},
+                    CONF_TARGET: {TargetKey.ENTITY_ID: "test.test_entity"},
                     CONF_OPTIONS: trigger_options,
                 },
                 "action": {
@@ -2323,7 +2323,7 @@ async def test_numerical_state_trigger_threshold_entity_same_loop_iteration(
         automation.DOMAIN: {
             "trigger": {
                 CONF_PLATFORM: "test.attribute_changed",
-                CONF_TARGET: {CONF_ENTITY_ID: "test.test_entity"},
+                CONF_TARGET: {TargetKey.ENTITY_ID: "test.test_entity"},
                 CONF_OPTIONS: {
                     "threshold": {
                         "type": "above",
@@ -2390,7 +2390,7 @@ async def test_numerical_state_attribute_changed_entity_limit_unit_validation(
             automation.DOMAIN: {
                 "trigger": {
                     CONF_PLATFORM: "test.attribute_changed",
-                    CONF_TARGET: {CONF_ENTITY_ID: "test.test_entity"},
+                    CONF_TARGET: {TargetKey.ENTITY_ID: "test.test_entity"},
                 }
                 | options,
                 "action": {
@@ -3326,7 +3326,7 @@ async def test_numerical_state_attribute_crossed_threshold_trigger_config_valida
             [
                 {
                     "platform": "test.test_trigger",
-                    CONF_TARGET: {CONF_ENTITY_ID: "test.test_entity"},
+                    CONF_TARGET: {TargetKey.ENTITY_ID: "test.test_entity"},
                     CONF_OPTIONS: trigger_options,
                 }
             ],
@@ -3480,7 +3480,7 @@ async def test_numerical_state_attr_crossed_threshold_unit_trigger_config_valida
             [
                 {
                     "platform": "test.test_trigger",
-                    CONF_TARGET: {CONF_ENTITY_ID: "test.test_entity"},
+                    CONF_TARGET: {TargetKey.ENTITY_ID: "test.test_entity"},
                     CONF_OPTIONS: trigger_options,
                 }
             ],
@@ -3816,7 +3816,7 @@ async def test_numerical_state_attribute_crossed_threshold_trigger_thresholds(
             automation.DOMAIN: {
                 "trigger": {
                     CONF_PLATFORM: "test.crossed_threshold",
-                    CONF_TARGET: {CONF_ENTITY_ID: "test.test_entity"},
+                    CONF_TARGET: {TargetKey.ENTITY_ID: "test.test_entity"},
                     CONF_OPTIONS: trigger_options,
                 },
                 "action": {
@@ -3868,7 +3868,7 @@ async def test_numerical_state_attribute_crossed_threshold_entity_limit_unit_val
             automation.DOMAIN: {
                 "trigger": {
                     CONF_PLATFORM: "test.crossed_threshold",
-                    CONF_TARGET: {CONF_ENTITY_ID: "test.test_entity"},
+                    CONF_TARGET: {TargetKey.ENTITY_ID: "test.test_entity"},
                 }
                 | options,
                 "action": {
@@ -4063,7 +4063,7 @@ def _make_trigger(
             """Accept any state."""
             return True
 
-    config = TriggerConfig(key="test.test_trigger", target={CONF_ENTITY_ID: []})
+    config = TriggerConfig(key="test.test_trigger", target={TargetKey.ENTITY_ID: []})
     return _SimpleTrigger(hass, config)
 
 
@@ -4362,7 +4362,7 @@ async def _arm_activated_trigger(
 
     trigger_config = {
         CONF_PLATFORM: "test.activated",
-        CONF_TARGET: {CONF_ENTITY_ID: entity_ids},
+        CONF_TARGET: {TargetKey.ENTITY_ID: entity_ids},
     }
 
     log = logging.getLogger(__name__)
@@ -5314,7 +5314,7 @@ async def test_entity_trigger_duration_each_cancelled_when_entity_leaves_target(
         BEHAVIOR_EACH,
         calls,
         duration={"seconds": 5},
-        target={ATTR_LABEL_ID: label.label_id},
+        target={TargetKey.LABEL_ID: label.label_id},
     )
 
     hass.states.async_set(entry.entity_id, STATE_ON)
@@ -5363,7 +5363,7 @@ async def test_trigger_target_exclude_only_invalid(hass: HomeAssistant) -> None:
             [
                 {
                     CONF_PLATFORM: "test",
-                    CONF_TARGET: {CONF_EXCLUDE: {CONF_ENTITY_ID: "test.excluded"}},
+                    CONF_TARGET: {CONF_EXCLUDE: {TargetKey.ENTITY_ID: "test.excluded"}},
                 }
             ],
         )
@@ -5398,8 +5398,8 @@ async def test_entity_trigger_target_exclude(
         calls,
         duration=None,
         target={
-            ATTR_LABEL_ID: label.label_id,
-            CONF_EXCLUDE: {CONF_ENTITY_ID: _EXCLUDED_ENTITY_ID},
+            TargetKey.LABEL_ID: label.label_id,
+            CONF_EXCLUDE: {TargetKey.ENTITY_ID: _EXCLUDED_ENTITY_ID},
         },
     )
 
@@ -5439,8 +5439,8 @@ async def test_entity_trigger_target_exclude_registry_update(
         calls,
         duration=None,
         target={
-            CONF_ENTITY_ID: _INCLUDED_ENTITY_ID,
-            CONF_EXCLUDE: {ATTR_LABEL_ID: excluded_label.label_id},
+            TargetKey.ENTITY_ID: _INCLUDED_ENTITY_ID,
+            CONF_EXCLUDE: {TargetKey.LABEL_ID: excluded_label.label_id},
         },
     )
 
@@ -5491,8 +5491,8 @@ async def test_entity_trigger_duration_each_cancelled_when_entity_excluded(
         calls,
         duration={"seconds": 5},
         target={
-            CONF_ENTITY_ID: _INCLUDED_ENTITY_ID,
-            CONF_EXCLUDE: {ATTR_LABEL_ID: excluded_label.label_id},
+            TargetKey.ENTITY_ID: _INCLUDED_ENTITY_ID,
+            CONF_EXCLUDE: {TargetKey.LABEL_ID: excluded_label.label_id},
         },
     )
 
@@ -5543,7 +5543,7 @@ async def test_entity_trigger_duration_each_cancelled_on_entity_rename(
         BEHAVIOR_EACH,
         calls,
         duration={"seconds": 5},
-        target={ATTR_LABEL_ID: label.label_id},
+        target={TargetKey.LABEL_ID: label.label_id},
     )
 
     hass.states.async_set(entry.entity_id, STATE_ON)
@@ -5600,7 +5600,7 @@ async def test_entity_trigger_duration_all_survives_entity_leaving_target(
         BEHAVIOR_ALL,
         calls,
         duration={"seconds": 5},
-        target={ATTR_LABEL_ID: label.label_id},
+        target={TargetKey.LABEL_ID: label.label_id},
     )
 
     hass.states.async_set(entry_a.entity_id, STATE_ON)
@@ -5665,7 +5665,7 @@ async def test_entity_trigger_duration_all_revalidated_when_entity_joins_target(
         BEHAVIOR_ALL,
         calls,
         duration={"seconds": 5},
-        target={ATTR_LABEL_ID: label.label_id},
+        target={TargetKey.LABEL_ID: label.label_id},
     )
 
     hass.states.async_set(entry_a.entity_id, STATE_ON)
@@ -5720,7 +5720,7 @@ async def test_entity_trigger_duration_first_cancelled_when_match_leaves_target(
         BEHAVIOR_FIRST,
         calls,
         duration={"seconds": 5},
-        target={ATTR_LABEL_ID: label.label_id},
+        target={TargetKey.LABEL_ID: label.label_id},
     )
 
     hass.states.async_set(entry_a.entity_id, STATE_ON)
@@ -5766,7 +5766,7 @@ async def test_entity_trigger_duration_first_survives_entity_joining_target(
         BEHAVIOR_FIRST,
         calls,
         duration={"seconds": 5},
-        target={ATTR_LABEL_ID: label.label_id},
+        target={TargetKey.LABEL_ID: label.label_id},
     )
 
     hass.states.async_set(entry_a.entity_id, STATE_ON)
@@ -6590,7 +6590,7 @@ def test_entity_state_trigger_schema_behavior_backwards_compatible(
 ) -> None:
     """Test legacy behavior values are converted to their new equivalents."""
     config = {
-        CONF_TARGET: {CONF_ENTITY_ID: "test.entity"},
+        CONF_TARGET: {TargetKey.ENTITY_ID: "test.entity"},
         CONF_OPTIONS: {ATTR_BEHAVIOR: behavior},
     }
     validated = ENTITY_STATE_TRIGGER_SCHEMA_WITH_BEHAVIOR(config)
@@ -6611,7 +6611,7 @@ async def test_entity_state_trigger_legacy_behavior_creates_repair_issue(
 ) -> None:
     """Test a repair issue is raised when a legacy behavior value is used."""
     config = {
-        CONF_TARGET: {CONF_ENTITY_ID: "test.entity"},
+        CONF_TARGET: {TargetKey.ENTITY_ID: "test.entity"},
         CONF_OPTIONS: {ATTR_BEHAVIOR: behavior},
     }
     validated = ENTITY_STATE_TRIGGER_SCHEMA_WITH_BEHAVIOR(config)
@@ -6635,7 +6635,7 @@ async def test_entity_state_trigger_new_behavior_no_repair_issue(
 ) -> None:
     """Test no repair issue is raised when a current behavior value is used."""
     config = {
-        CONF_TARGET: {CONF_ENTITY_ID: "test.entity"},
+        CONF_TARGET: {TargetKey.ENTITY_ID: "test.entity"},
         CONF_OPTIONS: {ATTR_BEHAVIOR: behavior},
     }
     ENTITY_STATE_TRIGGER_SCHEMA_WITH_BEHAVIOR(config)
@@ -6646,7 +6646,7 @@ async def test_entity_state_trigger_new_behavior_no_repair_issue(
 def test_entity_state_trigger_schema_behavior_default() -> None:
     """Test the behavior defaults to 'each' when omitted."""
     config = {
-        CONF_TARGET: {CONF_ENTITY_ID: "test.entity"},
+        CONF_TARGET: {TargetKey.ENTITY_ID: "test.entity"},
         CONF_OPTIONS: {},
     }
     validated = ENTITY_STATE_TRIGGER_SCHEMA_WITH_BEHAVIOR(config)
@@ -6657,7 +6657,7 @@ def test_entity_state_trigger_schema_behavior_default() -> None:
 def test_entity_state_trigger_schema_behavior_invalid(behavior: str) -> None:
     """Test invalid behavior values are rejected."""
     config = {
-        CONF_TARGET: {CONF_ENTITY_ID: "test.entity"},
+        CONF_TARGET: {TargetKey.ENTITY_ID: "test.entity"},
         CONF_OPTIONS: {ATTR_BEHAVIOR: behavior},
     }
     with pytest.raises(probatio.Invalid):

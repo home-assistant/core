@@ -33,8 +33,8 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
     STATE_UNAVAILABLE,
-    CommonServiceArgument,
     EntityCategory,
+    TargetKey,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -183,7 +183,7 @@ async def test_firmware_check_preserves_skipped_update(
     await hass.services.async_call(
         UPDATE_DOMAIN,
         UpdateService.SKIP,
-        {CommonServiceArgument.ENTITY_ID: update_entry.entity_id},
+        {TargetKey.ENTITY_ID: update_entry.entity_id},
         blocking=True,
     )
 
@@ -287,7 +287,7 @@ async def test_install_firmware_update_service(
             await hass.services.async_call(
                 UPDATE_DOMAIN,
                 UpdateService.INSTALL,
-                {CommonServiceArgument.ENTITY_ID: update_entry.entity_id},
+                {TargetKey.ENTITY_ID: update_entry.entity_id},
                 blocking=True,
             )
 
@@ -302,7 +302,7 @@ async def test_install_firmware_update_service(
         await hass.services.async_call(
             UPDATE_DOMAIN,
             UpdateService.INSTALL,
-            {CommonServiceArgument.ENTITY_ID: update_entry.entity_id},
+            {TargetKey.ENTITY_ID: update_entry.entity_id},
             blocking=True,
         )
 
@@ -385,7 +385,7 @@ async def test_install_propagates_translated_failure_and_clears_progress(
         await hass.services.async_call(
             UPDATE_DOMAIN,
             UpdateService.INSTALL,
-            {CommonServiceArgument.ENTITY_ID: update_entry.entity_id},
+            {TargetKey.ENTITY_ID: update_entry.entity_id},
             blocking=True,
         )
 
