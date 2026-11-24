@@ -44,7 +44,7 @@ tools:
     mode: gh-proxy
     toolsets: [pull_requests, repos]
     min-integrity: approved
-    # collect.sh in the custom steps must see comments from outside contributors.
+    # collect.py in the custom steps must see comments from outside contributors.
     # The agent stays filtered.
     integrity-proxy: false
   bash:
@@ -66,7 +66,7 @@ skills:
   - .claude/skills/ha-integration-knowledge
 if: needs.prepare.outputs.skip != 'true'
 safe-outputs:
-  # Post as github-actions[bot], which collect.sh looks for, even if the
+  # Post as github-actions[bot], which collect.py looks for, even if the
   # repository has a GH_AW_GITHUB_TOKEN secret.
   github-token: ${{ secrets.GITHUB_TOKEN }}
   create-pull-request-review-comment:
@@ -78,7 +78,7 @@ safe-outputs:
     target: "${{ needs.prepare.outputs.pr_number }}"
     commit-id: "${{ needs.prepare.outputs.head_sha }}"
     allowed-events: [COMMENT]
-    # The footer's hidden marker is how collect.sh finds this workflow's reviews.
+    # The footer's hidden marker is how collect.py finds this workflow's reviews.
     footer: always
   needs:
     - prepare
@@ -136,8 +136,8 @@ jobs:
         run: |
           set -euo pipefail
           OUT="${RUNNER_TEMP}/pr-reviewer"
-          # A fork's trigger run can name any pull request: collect.sh skips unless it is at the run's commit.
-          script/pr_reviewer/collect.sh "${PR_NUMBER}" "${OUT}" "${RUN_HEAD_SHA}"
+          # A fork's trigger run can name any pull request: collect.py skips unless it is at the run's commit.
+          script/pr_reviewer/collect.py "${PR_NUMBER}" "${OUT}" "${RUN_HEAD_SHA}"
           if ! jq -e '.review' "${OUT}/task.json" > /dev/null; then
             echo "skip=true" >> "${GITHUB_OUTPUT}"
             exit 0
@@ -183,7 +183,7 @@ steps:
       PR_NUMBER: ${{ needs.prepare.outputs.pr_number }}
       HEAD_SHA: ${{ needs.prepare.outputs.head_sha }}
     # Runs the default branch's script, before the pull request is checked out.
-    run: script/pr_reviewer/collect.sh "${PR_NUMBER}" /tmp/gh-aw/agent "${HEAD_SHA}"
+    run: script/pr_reviewer/collect.py "${PR_NUMBER}" /tmp/gh-aw/agent "${HEAD_SHA}"
   - name: Check out the pull request head
     env:
       HEAD_SHA: ${{ needs.prepare.outputs.head_sha }}
@@ -191,7 +191,7 @@ steps:
     run: |
       set -euo pipefail
       BASE_SHA=$(git rev-parse HEAD)
-      # The collected diff describes HEAD_SHA. A force-push may have dropped it: collect.sh
+      # The collected diff describes HEAD_SHA. A force-push may have dropped it: collect.py
       # then finds the head moved, so the run has nothing to review and needs only a workspace.
       git fetch --depth=1 origin "${HEAD_SHA}" || git fetch --depth=1 origin "refs/pull/${PR_NUMBER}/head"
       git checkout --detach FETCH_HEAD
