@@ -2,7 +2,7 @@
 
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from aemet_opendata.exceptions import AemetTimeout, AuthError
+from aemet_opendata.exceptions import AemetTimeout, AuthError, TownNotFound
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
@@ -163,6 +163,7 @@ async def test_form_duplicated_id(
     [
         (AuthError, "invalid_api_key"),
         (AemetTimeout, "cannot_connect"),
+        (TownNotFound, "town_not_found"),
     ],
 )
 async def test_form_errors(
@@ -249,3 +250,112 @@ async def test_reauth(hass: HomeAssistant, exception: Exception, error: str) -> 
     assert result["reason"] == "reauth_successful"
     assert entry.data[CONF_API_KEY] == "new"
     mocked_aemet.select_coordinates.assert_awaited_once_with(40.30403754, -3.72935236)
+
+
+def _reconfigure_entry(hass: HomeAssistant, unique_id: str) -> MockConfigEntry:
+    """Add an AEMET config entry to reconfigure."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=unique_id,
+        data={
+            CONF_API_KEY: "old",
+            CONF_LATITUDE: 40.30403754,
+            CONF_LONGITUDE: -3.72935236,
+        },
+    )
+    entry.add_to_hass(hass)
+    return entry
+
+
+async def test_reconfigure(hass: HomeAssistant) -> None:
+    """Test the reconfigure flow replaces the API key."""
+    entry = _reconfigure_entry(hass, "40.30403754--3.72935236")
+
+    mocked_aemet = MagicMock()
+    mocked_aemet.select_coordinates = AsyncMock()
+
+    with patch(
+        "homeassistant.components.aemet.config_flow.AEMET",
+        return_value=mocked_aemet,
+    ):
+        result = await entry.start_reconfigure_flow(hass)
+
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "reconfigure"
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={CONF_API_KEY: "new"},
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert entry.data == {
+        CONF_API_KEY: "new",
+        CONF_LATITUDE: 40.30403754,
+        CONF_LONGITUDE: -3.72935236,
+    }
+    mocked_aemet.select_coordinates.assert_awaited_once_with(40.30403754, -3.72935236)
+
+
+@pytest.mark.parametrize(
+    ("exception", "error"),
+    [
+        (AuthError, "invalid_api_key"),
+        (AemetTimeout, "cannot_connect"),
+    ],
+)
+async def test_reconfigure_errors(
+    hass: HomeAssistant, exception: Exception, error: str
+) -> None:
+    """Test the reconfigure flow shows errors and recovers from them."""
+    entry = _reconfigure_entry(hass, "40.30403754--3.72935236")
+
+    mocked_aemet = MagicMock()
+    mocked_aemet.select_coordinates.side_effect = exception
+
+    with patch(
+        "homeassistant.components.aemet.config_flow.AEMET",
+        return_value=mocked_aemet,
+    ):
+        result = await entry.start_reconfigure_flow(hass)
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={CONF_API_KEY: "invalid"},
+        )
+
+        assert result["type"] is FlowResultType.FORM
+        assert result["errors"] == {"base": error}
+
+        mocked_aemet.select_coordinates = AsyncMock()
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={CONF_API_KEY: "new"},
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert entry.data[CONF_API_KEY] == "new"
+
+
+async def test_reconfigure_unique_id_mismatch(hass: HomeAssistant) -> None:
+    """Test the reconfigure flow aborts if the location does not match the entry."""
+    entry = _reconfigure_entry(hass, "41.0--4.0")
+
+    mocked_aemet = MagicMock()
+    mocked_aemet.select_coordinates = AsyncMock()
+
+    with patch(
+        "homeassistant.components.aemet.config_flow.AEMET",
+        return_value=mocked_aemet,
+    ):
+        result = await entry.start_reconfigure_flow(hass)
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={CONF_API_KEY: "new"},
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "unique_id_mismatch"
+    assert entry.data[CONF_API_KEY] == "old"
+    mocked_aemet.select_coordinates.assert_not_awaited()

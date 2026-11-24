@@ -1,9 +1,15 @@
 """Tests for the Alexa Devices sensor platform."""
 
 from copy import deepcopy
+from datetime import UTC, datetime
 from typing import Any
 from unittest.mock import AsyncMock, patch
 
+from aioamazondevices.const.schedules import (
+    NOTIFICATION_ALARM,
+    NOTIFICATION_REMINDER,
+    NOTIFICATION_TIMER,
+)
 from aioamazondevices.exceptions import (
     CannotAuthenticate,
     CannotConnect,
@@ -13,6 +19,7 @@ from aioamazondevices.structures import (
     AmazonDevice,
     AmazonDeviceFeature,
     AmazonDeviceSensor,
+    AmazonSchedule,
 )
 from freezegun.api import FrozenDateTimeFactory
 import pytest
@@ -37,6 +44,22 @@ from .const import (
     TEST_DEVICE_AQM,
     TEST_DEVICE_AQM_SN,
 )
+
+ALARM_ENTITY_ID = "sensor.echo_test_next_alarm"
+REMINDER_ENTITY_ID = "sensor.echo_test_next_reminder"
+TIMER_ENTITY_ID = "sensor.echo_test_next_timer"
+
+
+async def _push_notifications(
+    hass: HomeAssistant,
+    mock_amazon_devices_client: AsyncMock,
+    notifications: dict[str, dict[str, AmazonSchedule]],
+) -> None:
+    """Push notifications via the callback registered on the library event."""
+    event = mock_amazon_devices_client.on_notification_event
+    event.append.assert_called_once()
+    await event.append.call_args.args[0](notifications)
+    await hass.async_block_till_done()
 
 
 @pytest.mark.parametrize(
@@ -285,4 +308,92 @@ async def test_sensor_unavailable(
     await setup_integration(hass, mock_config_entry)
 
     assert (state := hass.states.get(entity_id))
+    assert state.state == STATE_UNAVAILABLE
+
+
+async def test_notification_push_updates(
+    hass: HomeAssistant,
+    mock_amazon_devices_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test pushed notification events update alarm, reminder and timer sensors."""
+    await setup_integration(hass, mock_config_entry)
+
+    # Initial sync only has an alarm with a next occurrence
+    assert (state := hass.states.get(ALARM_ENTITY_ID))
+    assert state.state == "2023-10-01T07:00:00+00:00"
+    for entity_id in (REMINDER_ENTITY_ID, TIMER_ENTITY_ID):
+        assert (state := hass.states.get(entity_id))
+        assert state.state == STATE_UNAVAILABLE
+
+    await _push_notifications(
+        hass,
+        mock_amazon_devices_client,
+        {
+            TEST_DEVICE_1_SN: {
+                NOTIFICATION_ALARM: AmazonSchedule(
+                    type=NOTIFICATION_ALARM,
+                    status="ON",
+                    label="Morning Alarm",
+                    next_occurrence=datetime(2023, 10, 2, 7, 0, tzinfo=UTC),
+                ),
+                NOTIFICATION_REMINDER: AmazonSchedule(
+                    type=NOTIFICATION_REMINDER,
+                    status="ON",
+                    label="Take out the trash",
+                    next_occurrence=datetime(2023, 10, 1, 18, 30, tzinfo=UTC),
+                ),
+                NOTIFICATION_TIMER: AmazonSchedule(
+                    type=NOTIFICATION_TIMER,
+                    status="ON",
+                    label="Pasta",
+                    next_occurrence=datetime(2023, 10, 1, 12, 15, tzinfo=UTC),
+                ),
+            }
+        },
+    )
+
+    assert (state := hass.states.get(ALARM_ENTITY_ID))
+    assert state.state == "2023-10-02T07:00:00+00:00"
+    assert (state := hass.states.get(REMINDER_ENTITY_ID))
+    assert state.state == "2023-10-01T18:30:00+00:00"
+    assert (state := hass.states.get(TIMER_ENTITY_ID))
+    assert state.state == "2023-10-01T12:15:00+00:00"
+
+
+@pytest.mark.parametrize(
+    "notifications",
+    [
+        pytest.param({}, id="device_removed"),
+        pytest.param({TEST_DEVICE_1_SN: {}}, id="notification_removed"),
+        pytest.param(
+            {
+                TEST_DEVICE_1_SN: {
+                    NOTIFICATION_ALARM: AmazonSchedule(
+                        type=NOTIFICATION_ALARM,
+                        status="OFF",
+                        label="Morning Alarm",
+                        next_occurrence=None,
+                    )
+                }
+            },
+            id="no_next_occurrence",
+        ),
+    ],
+)
+async def test_notification_push_replaces_cache(
+    hass: HomeAssistant,
+    mock_amazon_devices_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    notifications: dict[str, dict[str, AmazonSchedule]],
+) -> None:
+    """Test a pushed notification event replaces the previous notifications."""
+    await setup_integration(hass, mock_config_entry)
+
+    assert (state := hass.states.get(ALARM_ENTITY_ID))
+    assert state.state == "2023-10-01T07:00:00+00:00"
+
+    await _push_notifications(hass, mock_amazon_devices_client, notifications)
+
+    assert (state := hass.states.get(ALARM_ENTITY_ID))
     assert state.state == STATE_UNAVAILABLE
