@@ -17,12 +17,13 @@ from homeassistant.components.marstek.const import (
     CONF_WIFI_NAME,
     DOMAIN,
 )
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_DEVICE, CONF_HOST, CONF_MAC
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-from homeassistant.setup import async_setup_component
 
 from .conftest import (
+    MOCK_DEVICE_INFO,
     MOCK_DISCOVERY_RESPONSE,
     TEST_BLE_MAC,
     TEST_DEVICE_TYPE,
@@ -84,6 +85,9 @@ EXPECTED_ENTRY_DATA = {
     CONF_WIFI_MAC: TEST_WIFI_MAC,
     CONF_BLE_MAC: TEST_BLE_MAC,
 }
+
+OTHER_HOST = "192.168.1.101"
+OTHER_MAC = "AA:BB:CC:DD:EE:00"
 
 EXPECTED_TITLE = f"Marstek {TEST_DEVICE_TYPE} v{TEST_VERSION} ({TEST_HOST})"
 EXPECTED_DEVICE_OPTION = (
@@ -150,11 +154,29 @@ async def test_discovery_flow_creates_entry(
     mock_setup_entry.assert_called_once()
 
 
+async def _async_setup_other_device(
+    hass: HomeAssistant, mock_udp_client: MagicMock
+) -> None:
+    """Load an entry for another device so the shared UDP client exists."""
+    other_device = replace(MOCK_DEVICE_INFO, ip=OTHER_HOST, mac=OTHER_MAC)
+    mock_udp_client.get_device_info.side_effect = lambda host: (
+        other_device if host == OTHER_HOST else MOCK_DEVICE_INFO
+    )
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={**EXPECTED_ENTRY_DATA, CONF_HOST: OTHER_HOST, CONF_MAC: OTHER_MAC},
+        unique_id=OTHER_MAC,
+    )
+    entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+
 async def test_discovery_flow_reuses_shared_udp_client(
     hass: HomeAssistant, mock_udp_client: MagicMock
 ) -> None:
     """Discovery reuses the active integration client bound to the UDP port."""
-    assert await async_setup_component(hass, DOMAIN, {})
+    await _async_setup_other_device(hass, mock_udp_client)
     mock_udp_client.discover_devices.return_value = [DISCOVERED_DEVICE]
 
     result = await hass.config_entries.flow.async_init(
@@ -168,12 +190,11 @@ async def test_discovery_flow_reuses_shared_udp_client(
 
 
 async def test_discovery_flow_selects_device_with_shared_udp_client(
-    hass: HomeAssistant, mock_udp_client: MagicMock, mock_setup_entry: AsyncMock
+    hass: HomeAssistant, mock_udp_client: MagicMock
 ) -> None:
     """Selecting a discovered device reuses the shared UDP client."""
-    assert await async_setup_component(hass, DOMAIN, {})
+    await _async_setup_other_device(hass, mock_udp_client)
     mock_udp_client.discover_devices.return_value = [DISCOVERED_DEVICE]
-    mock_udp_client.get_device_info.return_value = MOCK_DISCOVERY_RESPONSE["result"]
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -186,9 +207,8 @@ async def test_discovery_flow_selects_device_with_shared_udp_client(
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["result"].unique_id == TEST_MAC
-    mock_udp_client.get_device_info.assert_awaited_once_with(TEST_HOST)
+    assert result["result"].state is ConfigEntryState.LOADED
     mock_udp_client.async_cleanup.assert_not_awaited()
-    mock_setup_entry.assert_called_once()
 
 
 async def test_discovery_flow_duplicate_device_names(
@@ -402,6 +422,35 @@ async def test_manual_flow_aborts_if_host_configured(hass: HomeAssistant) -> Non
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
+
+
+async def test_manual_flow_updates_host_of_configured_device(
+    hass: HomeAssistant, mock_udp_client: MagicMock
+) -> None:
+    """Test a configured device found at a new host updates the entry."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title=EXPECTED_TITLE,
+        data={**EXPECTED_ENTRY_DATA, CONF_HOST: "192.168.1.50"},
+        unique_id=TEST_MAC,
+    )
+    entry.add_to_hass(hass)
+    mock_udp_client.get_device_info.return_value = MOCK_DISCOVERY_RESPONSE["result"]
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"next_step_id": "manual"}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_HOST: TEST_HOST}
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert entry.data[CONF_HOST] == TEST_HOST
+    assert len(hass.config_entries.async_entries(DOMAIN)) == 1
 
 
 async def test_manual_flow_errors_if_device_type_is_unsupported(
