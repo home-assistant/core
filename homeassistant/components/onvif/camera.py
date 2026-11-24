@@ -17,6 +17,7 @@ from homeassistant.components.stream import (
 )
 from homeassistant.const import HTTP_BASIC_AUTHENTICATION
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_aiohttp_proxy_stream
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -140,12 +141,25 @@ class ONVIFCameraEntity(ONVIFBaseEntity, Camera):
         """Return the stream URI."""
         if self._stream_uri:
             return self._stream_uri
-        if self._stream_uri_future:
-            return await self._stream_uri_future
+        if future := self._stream_uri_future:
+            # Not awaited directly: a cancelled waiting call must not cancel
+            # the request that the other calls are waiting for.
+            await asyncio.wait((future,))
+            return future.result()
         loop = asyncio.get_running_loop()
         self._stream_uri_future = future = loop.create_future()
         try:
             uri_no_auth = await self.device.async_get_stream_uri(self.profile)
+        except asyncio.CancelledError:
+            # The caller gave up, e.g. on a timeout. Calls waiting for the same
+            # request get an error instead of waiting forever; the next call
+            # asks the camera again.
+            self._stream_uri_future = None
+            future.set_exception(
+                HomeAssistantError("Request for the stream URI was cancelled")
+            )
+            future.exception()
+            raise
         except (TimeoutError, Exception) as err:
             LOGGER.error("Failed to get stream uri: %s", err)
             self._stream_uri_future = None
