@@ -1490,7 +1490,7 @@ async def test_search_related_resolves_entity_registry_ids(
     monkeypatch.setattr(
         module,
         extractor_name,
-        lambda *_: [entity.id, entity.entity_id, "light.missing", "0" * 32],
+        lambda *_: [entity.id, "light.missing", "0" * 32],
     )
 
     assert await async_setup_component(hass, DOMAIN, {})
