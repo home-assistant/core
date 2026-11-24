@@ -114,6 +114,19 @@
       "observed_humidity": {
         "name": "Observed humidity"
       },
+      "observed_precipitation": {
+        "name": "Observed hourly precipitation"
+      },
+      "observed_precipitation_type": {
+        "name": "Observed precipitation type",
+        "state": {
+          "hail": "Hail",
+          "icing": "Icing",
+          "rain": "Rain",
+          "sleet": "Sleet",
+          "snow": "Snow"
+        }
+      },
       "observed_pressure": {
         "name": "Observed pressure"
       },

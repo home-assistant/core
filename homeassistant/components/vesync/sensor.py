@@ -104,6 +104,17 @@ SENSORS: tuple[VeSyncSensorEntityDescription, ...] = (
         exists_fn=lambda device: rgetattr(device, "state.filter_life") is not None,
     ),
     VeSyncSensorEntityDescription(
+        key="hepa_filter_life",
+        translation_key="hepa_filter_life",
+        native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=lambda device: device.state.hepa_filter_life,
+        exists_fn=lambda device: (
+            is_humidifier(device) and device.state.hepa_filter_life is not None
+        ),
+    ),
+    VeSyncSensorEntityDescription(
         key="air-quality",
         translation_key="air_quality",
         value_fn=lambda device: device.state.air_quality_string,
@@ -142,6 +153,13 @@ SENSORS: tuple[VeSyncSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda device: device.state.co2,
         exists_fn=lambda device: is_purifier(device) and device.state.co2 is not None,
+    ),
+    VeSyncSensorEntityDescription(
+        key="voc",
+        translation_key="voc",
+        state_class=SensorStateClass.MEASUREMENT,
+        value_fn=lambda device: device.state.voc,
+        exists_fn=lambda device: is_purifier(device) and device.state.voc is not None,
     ),
     VeSyncSensorEntityDescription(
         key="power",
