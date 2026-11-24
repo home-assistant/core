@@ -2,7 +2,14 @@
 
 from typing import cast, override
 
-from pyoverkiz.enums import APIType, OverkizAttribute, OverkizCommandParam, OverkizState
+from pyoverkiz.enums import (
+    APIType,
+    OverkizAttribute,
+    OverkizCommand,
+    OverkizCommandParam,
+    OverkizState,
+    UIWidget,
+)
 from pyoverkiz.models import Device
 
 from homeassistant.helpers import device_registry as dr
@@ -13,6 +20,14 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from .const import DOMAIN
 from .coordinator import OverkizDataUpdateCoordinator
 from .executor import OverkizExecutor
+
+
+def is_heating_level_towel_dryer(device: Device) -> bool:
+    """Return True for towel dryers driven by heating levels."""
+    # Some towel dryers (e.g. Atlantic Adélis 2 Digit) lack the towel dryer commands
+    return device.widget == UIWidget.ATLANTIC_ELECTRICAL_TOWEL_DRYER and not (
+        device.supports_command(OverkizCommand.SET_TOWEL_DRYER_OPERATING_MODE)
+    )
 
 
 class OverkizEntity(CoordinatorEntity[OverkizDataUpdateCoordinator]):

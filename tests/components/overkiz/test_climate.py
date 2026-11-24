@@ -645,7 +645,6 @@ async def test_towel_dryer_heating_level_boost(
     state = hass.states.get(TOWEL_DRYER_HEATING_LEVEL.entity_id)
     assert state is not None
     assert state.attributes[ATTR_PRESET_MODE] == "boost"
-    assert state.attributes["boost_end"] is not None
     # The boost and the level to return to are kept across a restart
     stored = {
         stored.state.entity_id: stored.extra_data
@@ -655,7 +654,7 @@ async def test_towel_dryer_heating_level_boost(
     assert extra_data is not None
     assert extra_data.as_dict() == {
         "assumed_level": "eco",
-        "boost_until": state.attributes["boost_end"],
+        "boost_until": (dt_util.utcnow() + timedelta(minutes=60)).isoformat(),
         "override_pending": True,
         "boost_timer_seen": False,
     }
@@ -675,7 +674,7 @@ async def test_towel_dryer_heating_level_boost(
     ]
     state = hass.states.get(TOWEL_DRYER_HEATING_LEVEL.entity_id)
     assert state is not None
-    assert state.attributes["boost_end"] is None
+    assert state.attributes[ATTR_PRESET_MODE] == "eco"
 
 
 async def test_towel_dryer_heating_level_boost_ends(
@@ -727,7 +726,6 @@ async def test_towel_dryer_heating_level_boost_ends(
     state = hass.states.get(TOWEL_DRYER_HEATING_LEVEL.entity_id)
     assert state is not None
     assert state.attributes[ATTR_PRESET_MODE] == "eco"
-    assert state.attributes["boost_end"] is None
 
     # A cancel resets the timer, the level stays stale until a new one is set
     for timer, expected_preset in ((0, "eco"), (65535, "comfort")):
@@ -951,7 +949,6 @@ async def test_towel_dryer_heating_level_restore_boost(
     state = hass.states.get(TOWEL_DRYER_HEATING_LEVEL.entity_id)
     assert state is not None
     assert state.attributes[ATTR_PRESET_MODE] == "boost"
-    assert state.attributes["boost_end"] == boost_until.isoformat()
 
     freezer.tick(timedelta(minutes=31))
     async_fire_time_changed(hass)
@@ -960,7 +957,6 @@ async def test_towel_dryer_heating_level_restore_boost(
     state = hass.states.get(TOWEL_DRYER_HEATING_LEVEL.entity_id)
     assert state is not None
     assert state.attributes[ATTR_PRESET_MODE] == "eco"
-    assert state.attributes["boost_end"] is None
 
 
 async def test_towel_dryer_heating_level_restore_invalid_data(
@@ -977,7 +973,6 @@ async def test_towel_dryer_heating_level_restore_invalid_data(
     state = hass.states.get(TOWEL_DRYER_HEATING_LEVEL.entity_id)
     assert state is not None
     assert state.attributes[ATTR_PRESET_MODE] == "eco"
-    assert state.attributes["boost_end"] is None
 
 
 def towel_dryer_states_event(level: str, timer: int) -> Event:
@@ -1023,7 +1018,6 @@ async def test_towel_dryer_heating_level_boost_cancelled_elsewhere(
     state = hass.states.get(TOWEL_DRYER_HEATING_LEVEL.entity_id)
     assert state is not None
     assert state.state == HVACMode.OFF
-    assert state.attributes["boost_end"] is None
 
 
 @pytest.mark.usefixtures("no_cancel_settle_delay")
@@ -1090,7 +1084,6 @@ async def test_towel_dryer_heating_level_set_level_fails(
     assert state is not None
     assert state.state == HVACMode.HEAT
     assert state.attributes[ATTR_PRESET_MODE] == "boost"
-    assert state.attributes["boost_end"] is not None
 
 
 async def test_towel_dryer_heating_level_boost_after_pending_level(
@@ -1227,7 +1220,6 @@ async def test_towel_dryer_heating_level_boost_cancelled_timer(
     state = hass.states.get(TOWEL_DRYER_HEATING_LEVEL.entity_id)
     assert state is not None
     assert state.attributes[ATTR_PRESET_MODE] == "comfort"
-    assert state.attributes["boost_end"] is None
 
 
 async def test_towel_dryer_heating_level_pending_level_expires(
@@ -1356,4 +1348,3 @@ async def test_towel_dryer_heating_level_set_level_fails_after_cancel(
     assert state is not None
     assert state.state == HVACMode.HEAT
     assert state.attributes[ATTR_PRESET_MODE] == "eco"
-    assert state.attributes["boost_end"] is None

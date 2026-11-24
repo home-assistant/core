@@ -108,9 +108,6 @@
     "climate": {
       "overkiz": {
         "state_attributes": {
-          "boost_end": {
-            "name": "Boost end"
-          },
           "fan_mode": {
             "state": {
               "away": "[%key:common::state::not_home%]",
@@ -188,6 +185,9 @@
           "normal": "[%key:common::state::normal%]",
           "verylow": "[%key:common::state::very_low%]"
         }
+      },
+      "boost_end": {
+        "name": "Boost end"
       },
       "discrete_rssi_level": {
         "state": {

@@ -55,7 +55,6 @@
 # name: test_climate_entities_snapshot[cloud_atlantic_adelis_2_digit.json][climate.bathroom_towel_dryer-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'boost_end': None,
       <ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: 18.5,
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bathroom Towel Dryer',
       <ClimateEntityStateAttribute.HVAC_ACTION: 'hvac_action'>: <HVACAction.IDLE: 'idle'>,
