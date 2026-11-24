@@ -11,11 +11,14 @@ from mcstatus.responses import (
     LegacyStatusResponse,
 )
 import pytest
-from pytest_homeassistant.common import async_fire_time_changed
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.const import STATE_UNAVAILABLE
+from homeassistant.components.minecraft_server.api import MinecraftServerType
+from homeassistant.const import CONF_TYPE, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.entity_registry import EntityRegistry
 
 from .const import (
     TEST_BEDROCK_STATUS_RESPONSE,
@@ -318,3 +321,95 @@ async def test_sensor_update_failure(
         await hass.async_block_till_done()
         for entity_id in entity_ids:
             assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+@pytest.mark.parametrize(
+    ("server_type", "server", "lookup_function_name", "status_response"),
+    [
+        (
+            MinecraftServerType.JAVA_EDITION,
+            JavaServer,
+            "async_lookup",
+            TEST_JAVA_STATUS_RESPONSE,
+        ),
+        (
+            MinecraftServerType.LEGACY_JAVA_EDITION,
+            LegacyServer,
+            "async_lookup",
+            TEST_LEGACY_JAVA_STATUS_RESPONSE,
+        ),
+    ],
+    ids=["java", "legacy_java"],
+)
+async def test_sensor_entities_removed_when_edition_changes(
+    hass: HomeAssistant,
+    entity_registry: EntityRegistry,
+    bedrock_mock_config_entry: MockConfigEntry,
+    server_type: MinecraftServerType,
+    server: JavaServer | LegacyServer,
+    lookup_function_name: str,
+    status_response: JavaStatusResponse | LegacyStatusResponse,
+) -> None:
+    """Test Bedrock-only sensors are removed after switching to another edition."""
+    bedrock_mock_config_entry.add_to_hass(hass)
+    bedrock_only_entity_ids = set(BEDROCK_SENSOR_ENTITIES) - set(JAVA_SENSOR_ENTITIES)
+
+    with (
+        patch(
+            "homeassistant.components.minecraft_server.api.BedrockServer.lookup",
+            return_value=BedrockServer(host=TEST_HOST, port=TEST_PORT),
+        ),
+        patch(
+            "homeassistant.components.minecraft_server.api.BedrockServer.async_status",
+            return_value=TEST_BEDROCK_STATUS_RESPONSE,
+        ),
+    ):
+        assert await hass.config_entries.async_setup(bedrock_mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    registered_entity_ids = {
+        entity.entity_id
+        for entity in er.async_entries_for_config_entry(
+            entity_registry, bedrock_mock_config_entry.entry_id
+        )
+    }
+
+    for entity_id in bedrock_only_entity_ids:
+        assert entity_id in registered_entity_ids
+
+    hass.config_entries.async_update_entry(
+        bedrock_mock_config_entry,
+        data={
+            **bedrock_mock_config_entry.data,
+            CONF_TYPE: server_type,
+        },
+    )
+
+    with (
+        patch(
+            f"homeassistant.components.minecraft_server.api.{server.__name__}.{lookup_function_name}",
+            return_value=server(host=TEST_HOST, port=TEST_PORT),
+        ),
+        patch(
+            f"homeassistant.components.minecraft_server.api.{server.__name__}.async_status",
+            return_value=status_response,
+        ),
+    ):
+        assert await hass.config_entries.async_reload(
+            bedrock_mock_config_entry.entry_id
+        )
+        await hass.async_block_till_done()
+
+    remaining_entity_ids = {
+        entity.entity_id
+        for entity in er.async_entries_for_config_entry(
+            entity_registry, bedrock_mock_config_entry.entry_id
+        )
+    }
+    for entity_id in bedrock_only_entity_ids:
+        assert entity_id not in remaining_entity_ids
+        assert hass.states.get(entity_id) is None
+
+    for entity_id in JAVA_SENSOR_ENTITIES:
+        assert entity_id in remaining_entity_ids

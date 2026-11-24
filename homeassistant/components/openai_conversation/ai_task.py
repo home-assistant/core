@@ -3,7 +3,6 @@
 import base64
 from json import JSONDecodeError
 import logging
-from pathlib import Path
 from typing import TYPE_CHECKING, override
 
 import openai
@@ -174,9 +173,36 @@ class OpenAITaskEntity(
         )
 
 
-def _read_image_base64(path: Path) -> str:
-    """Read and encode an image off the event loop."""
-    return base64.b64encode(path.read_bytes()).decode("ascii")
+def _read_images(
+    attachments: list[conversation.Attachment],
+) -> list[DecisionInputPartUnionParam]:
+    """Validate and read the image attachments as base64 input parts."""
+    content: list[DecisionInputPartUnionParam] = []
+    for attachment in attachments:
+        mime_type = attachment.mime_type.partition(";")[0].strip().lower()
+        if mime_type == "image/jpg":
+            mime_type = "image/jpeg"
+        if mime_type not in (
+            "image/png",
+            "image/jpeg",
+            "image/webp",
+            "image/gif",
+        ):
+            raise HomeAssistantError(
+                "OpenAI decisions only support JPEG, PNG, WebP, and GIF "
+                f"image attachments; received {attachment.mime_type}"
+            )
+        try:
+            encoded = base64.b64encode(attachment.path.read_bytes()).decode("ascii")
+        except OSError as err:
+            raise HomeAssistantError("Unable to read evaluation attachment") from err
+        content.append(
+            {
+                "type": "input_image",
+                "image_url": f"data:{mime_type};base64,{encoded}",
+            }
+        )
+    return content
 
 
 class OpenAIEvaluationEntity(ai_task.AITaskEntity, OpenAIBaseLLMEntity):
@@ -234,34 +260,9 @@ class OpenAIEvaluationEntity(ai_task.AITaskEntity, OpenAIBaseLLMEntity):
             content: list[DecisionInputPartUnionParam] = []
             if state is not None:
                 content.append({"type": "input_text", "text": state_text})
-            for attachment in task.attachments:
-                mime_type = attachment.mime_type.partition(";")[0].strip().lower()
-                if mime_type == "image/jpg":
-                    mime_type = "image/jpeg"
-                if mime_type not in (
-                    "image/png",
-                    "image/jpeg",
-                    "image/webp",
-                    "image/gif",
-                ):
-                    raise HomeAssistantError(
-                        "OpenAI decisions only support JPEG, PNG, WebP, and GIF "
-                        f"image attachments; received {attachment.mime_type}"
-                    )
-                try:
-                    encoded = await self.hass.async_add_executor_job(
-                        _read_image_base64, attachment.path
-                    )
-                except OSError as err:
-                    raise HomeAssistantError(
-                        "Unable to read evaluation attachment"
-                    ) from err
-                content.append(
-                    {
-                        "type": "input_image",
-                        "image_url": f"data:{mime_type};base64,{encoded}",
-                    }
-                )
+            content.extend(
+                await self.hass.async_add_executor_job(_read_images, task.attachments)
+            )
             decision_input = [{"role": "user", "content": content}]
 
         try:

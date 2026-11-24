@@ -17,10 +17,12 @@ from homeassistant.components.keyboard_remote.const import (
     CONF_EMULATE_KEY_HOLD,
     CONF_EMULATE_KEY_HOLD_DELAY,
     CONF_EMULATE_KEY_HOLD_REPEAT,
+    CONF_EXCLUSIVE,
     CONF_KEY_TYPES,
     DEFAULT_EMULATE_KEY_HOLD,
     DEFAULT_EMULATE_KEY_HOLD_DELAY,
     DEFAULT_EMULATE_KEY_HOLD_REPEAT,
+    DEFAULT_EXCLUSIVE,
     DEFAULT_KEY_TYPES,
     DOMAIN,
 )
@@ -49,6 +51,7 @@ REMOTE_2_UNIQ = "aa:bb:cc:dd:ee:02"
 
 DEFAULT_OPTIONS = {
     CONF_KEY_TYPES: DEFAULT_KEY_TYPES,
+    CONF_EXCLUSIVE: DEFAULT_EXCLUSIVE,
     CONF_EMULATE_KEY_HOLD: DEFAULT_EMULATE_KEY_HOLD,
     CONF_EMULATE_KEY_HOLD_DELAY: DEFAULT_EMULATE_KEY_HOLD_DELAY,
     CONF_EMULATE_KEY_HOLD_REPEAT: DEFAULT_EMULATE_KEY_HOLD_REPEAT,
@@ -465,6 +468,7 @@ async def test_import_with_descriptor_and_by_id(
     }
     assert result["options"] == {
         CONF_KEY_TYPES: ["key_up", "key_down"],
+        CONF_EXCLUSIVE: DEFAULT_EXCLUSIVE,
         CONF_EMULATE_KEY_HOLD: True,
         CONF_EMULATE_KEY_HOLD_DELAY: 0.5,
         CONF_EMULATE_KEY_HOLD_REPEAT: 0.05,
@@ -900,6 +904,7 @@ async def test_options_flow(
         result["flow_id"],
         user_input={
             CONF_KEY_TYPES: ["key_up", "key_down", "key_hold"],
+            CONF_EXCLUSIVE: False,
             CONF_EMULATE_KEY_HOLD: True,
             CONF_EMULATE_KEY_HOLD_DELAY: 0.5,
             CONF_EMULATE_KEY_HOLD_REPEAT: 0.05,
@@ -910,6 +915,7 @@ async def test_options_flow(
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == {
         CONF_KEY_TYPES: ["key_up", "key_down", "key_hold"],
+        CONF_EXCLUSIVE: False,
         CONF_EMULATE_KEY_HOLD: True,
         CONF_EMULATE_KEY_HOLD_DELAY: 0.5,
         CONF_EMULATE_KEY_HOLD_REPEAT: 0.05,
@@ -930,6 +936,7 @@ async def test_options_flow_requires_a_key_type(
     await hass.async_block_till_done()
     options = {
         CONF_KEY_TYPES: [],
+        CONF_EXCLUSIVE: True,
         CONF_EMULATE_KEY_HOLD: False,
         CONF_EMULATE_KEY_HOLD_DELAY: 0.5,
         CONF_EMULATE_KEY_HOLD_REPEAT: 0.05,
@@ -950,6 +957,46 @@ async def test_options_flow_requires_a_key_type(
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"][CONF_KEY_TYPES] == ["key_down"]
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_options_flow_defaults_to_exclusive_before_migration(
+    hass: HomeAssistant,
+) -> None:
+    """Test the options form of an entry not migrated yet defaults to exclusive.
+
+    An entry disabled since before the option existed is never set up, so it is
+    never migrated and its options hold no exclusive value to suggest.
+    """
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        minor_version=1,
+        data={CONF_DEVICE_PATH: FAKE_DEVICE_PATH, CONF_DEVICE_NAME: FAKE_DEVICE_NAME},
+        options={
+            CONF_KEY_TYPES: DEFAULT_KEY_TYPES,
+            CONF_EMULATE_KEY_HOLD: DEFAULT_EMULATE_KEY_HOLD,
+            CONF_EMULATE_KEY_HOLD_DELAY: DEFAULT_EMULATE_KEY_HOLD_DELAY,
+            CONF_EMULATE_KEY_HOLD_REPEAT: DEFAULT_EMULATE_KEY_HOLD_REPEAT,
+        },
+    )
+    entry.add_to_hass(hass)
+
+    result = await hass.config_entries.options.async_init(entry.entry_id)
+
+    assert result["type"] is FlowResultType.FORM
+    exclusive = next(
+        key for key in result["data_schema"].schema if key == CONF_EXCLUSIVE
+    )
+    assert exclusive.default() is DEFAULT_EXCLUSIVE
+    assert "suggested_value" not in (exclusive.description or {})
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"], user_input=dict(entry.options)
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"] == {**entry.options, CONF_EXCLUSIVE: DEFAULT_EXCLUSIVE}
 
 
 @pytest.mark.parametrize(

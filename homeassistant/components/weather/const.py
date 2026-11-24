@@ -11,6 +11,7 @@ from homeassistant.const import (
     UnitOfSpeed,
     UnitOfTemperature,
 )
+from homeassistant.helpers.deprecation import EnumWithDeprecatedMembers
 from homeassistant.util.hass_dict import HassKey
 from homeassistant.util.unit_conversion import (
     DistanceConverter,
@@ -95,26 +96,60 @@ ATTR_WEATHER_CLOUD_COVERAGE = "cloud_coverage"
 ATTR_WEATHER_UV_INDEX = "uv_index"
 
 
-class WeatherEntityStateAttribute(StrEnum):
+class WeatherEntityCapabilityAttribute(StrEnum):
+    """Capability attributes for weather entities."""
+
+    TEMPERATURE_UNIT = "temperature_unit"
+    PRESSURE_UNIT = "pressure_unit"
+    WIND_SPEED_UNIT = "wind_speed_unit"
+    VISIBILITY_UNIT = "visibility_unit"
+    PRECIPITATION_UNIT = "precipitation_unit"
+
+
+class WeatherEntityStateAttribute(
+    StrEnum,
+    metaclass=EnumWithDeprecatedMembers,
+    deprecated={
+        "TEMPERATURE_UNIT": (
+            "WeatherEntityCapabilityAttribute.TEMPERATURE_UNIT",
+            "2027.6.0",
+        ),
+        "PRESSURE_UNIT": ("WeatherEntityCapabilityAttribute.PRESSURE_UNIT", "2027.6.0"),
+        "WIND_SPEED_UNIT": (
+            "WeatherEntityCapabilityAttribute.WIND_SPEED_UNIT",
+            "2027.6.0",
+        ),
+        "VISIBILITY_UNIT": (
+            "WeatherEntityCapabilityAttribute.VISIBILITY_UNIT",
+            "2027.6.0",
+        ),
+        "PRECIPITATION_UNIT": (
+            "WeatherEntityCapabilityAttribute.PRECIPITATION_UNIT",
+            "2027.6.0",
+        ),
+    },
+):
     """State attributes for weather entities."""
 
     TEMPERATURE = "temperature"
     APPARENT_TEMPERATURE = "apparent_temperature"
     DEW_POINT = "dew_point"
-    TEMPERATURE_UNIT = "temperature_unit"
+    TEMPERATURE_UNIT = "temperature_unit"  # Deprecated, moved to capability attributes
     HUMIDITY = "humidity"
     OZONE = "ozone"
     CLOUD_COVERAGE = "cloud_coverage"
     UV_INDEX = "uv_index"
     PRESSURE = "pressure"
-    PRESSURE_UNIT = "pressure_unit"
+    PRESSURE_UNIT = "pressure_unit"  # Deprecated, moved to capability attributes
     WIND_BEARING = "wind_bearing"
     WIND_GUST_SPEED = "wind_gust_speed"
     WIND_SPEED = "wind_speed"
-    WIND_SPEED_UNIT = "wind_speed_unit"
+    WIND_SPEED_UNIT = "wind_speed_unit"  # Deprecated, moved to capability attributes
     VISIBILITY = "visibility"
-    VISIBILITY_UNIT = "visibility_unit"
-    PRECIPITATION_UNIT = "precipitation_unit"
+    VISIBILITY_UNIT = "visibility_unit"  # Deprecated, moved to capability attributes
+    PRECIPITATION_UNIT = (
+        "precipitation_unit"  # Deprecated, moved to capability attributes
+    )
 
 
 DOMAIN: Final = "weather"
@@ -167,3 +202,15 @@ VALID_UNITS: dict[str, set[str]] = {
     ATTR_WEATHER_PRECIPITATION_UNIT: VALID_UNITS_PRECIPITATION,
     ATTR_WEATHER_WIND_SPEED_UNIT: VALID_UNITS_WIND_SPEED,
 }
+
+
+class WeatherService(StrEnum):
+    """Store keys for weather services."""
+
+    GET_FORECASTS = "get_forecasts"
+
+
+class WeatherServiceArgument(StrEnum):
+    """Store keys for weather service arguments."""
+
+    TYPE = "type"

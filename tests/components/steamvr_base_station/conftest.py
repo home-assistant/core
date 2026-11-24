@@ -38,6 +38,20 @@ def mock_set_power() -> Generator[AsyncMock]:
         yield mock
 
 
+@pytest.fixture
+def mock_set_channel() -> Generator[AsyncMock]:
+    """Mock moving the station to another channel."""
+    with patch.object(BaseStationV2, "set_channel", autospec=True) as mock:
+        yield mock
+
+
+@pytest.fixture
+def mock_identify() -> Generator[AsyncMock]:
+    """Mock blinking the LED."""
+    with patch.object(BaseStationV2, "identify", autospec=True) as mock:
+        yield mock
+
+
 @pytest.fixture(autouse=True)
 def mock_read_device_info() -> Generator[AsyncMock]:
     """Mock reading the Device Information Service."""

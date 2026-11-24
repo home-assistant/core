@@ -5,6 +5,7 @@ from typing import Any
 from unittest.mock import AsyncMock, MagicMock
 
 from aiohomeconnect.model import (
+    ApplianceType,
     HomeAppliance,
     Option,
     OptionKey,
@@ -148,7 +149,7 @@ def test_services_yaml_set_program_and_options_option_keys() -> None:
                 )
 
 
-@pytest.mark.parametrize("appliance", ["Washer"], indirect=True)
+@pytest.mark.parametrize("appliance", [ApplianceType.WASHER], indirect=True)
 @pytest.mark.parametrize("service_call", SERVICE_KV_CALL_PARAMS)
 async def test_key_value_services(
     hass: HomeAssistant,
@@ -177,7 +178,7 @@ async def test_key_value_services(
     )
 
 
-@pytest.mark.parametrize("appliance", ["Washer"], indirect=True)
+@pytest.mark.parametrize("appliance", [ApplianceType.WASHER], indirect=True)
 @pytest.mark.parametrize(
     ("service_call", "called_method"),
     zip(
@@ -219,7 +220,7 @@ async def test_set_program_and_options(
     assert method_mock.call_args == snapshot
 
 
-@pytest.mark.parametrize("appliance", ["Washer"], indirect=True)
+@pytest.mark.parametrize("appliance", [ApplianceType.WASHER], indirect=True)
 @pytest.mark.parametrize(
     ("service_call", "error_regex"),
     zip(
@@ -257,7 +258,7 @@ async def test_set_program_and_options_exceptions(
         await hass.services.async_call(**service_call)
 
 
-@pytest.mark.parametrize("appliance", ["Dishwasher"], indirect=True)
+@pytest.mark.parametrize("appliance", [ApplianceType.DISHWASHER], indirect=True)
 @pytest.mark.parametrize(
     "additional_service_data",
     [
@@ -387,7 +388,7 @@ async def test_start_selected_program(
 @pytest.mark.parametrize(
     "get_active_program_side_effect", [None, NoProgramActiveError("error.key")]
 )
-@pytest.mark.parametrize("appliance", ["Dishwasher"], indirect=True)
+@pytest.mark.parametrize("appliance", [ApplianceType.DISHWASHER], indirect=True)
 async def test_start_select_program_non_writtable_options_discarded(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
@@ -470,7 +471,72 @@ async def test_start_select_program_non_writtable_options_discarded(
     )
 
 
-@pytest.mark.parametrize("appliance", ["Dishwasher"], indirect=True)
+@pytest.mark.parametrize(
+    "get_active_program_side_effect", [None, NoProgramActiveError("error.key")]
+)
+@pytest.mark.parametrize("appliance", [ApplianceType.DISHWASHER], indirect=True)
+async def test_start_selected_favorite_program(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    client: MagicMock,
+    config_entry: MockConfigEntry,
+    integration_setup: Callable[[MagicMock], Awaitable[bool]],
+    appliance: HomeAppliance,
+    get_active_program_side_effect: NoProgramActiveError | None,
+) -> None:
+    """Test starting the selected favorite program."""
+    base_program = ProgramKey.DISHCARE_DISHWASHER_ECO_50
+    non_writable_options = [
+        Option(key=OptionKey.BSH_COMMON_BASE_PROGRAM, value=base_program)
+    ]
+    client.get_active_program = AsyncMock(
+        return_value=Program(
+            key=ProgramKey.BSH_COMMON_FAVORITE_001,
+            options=non_writable_options,
+        ),
+        side_effect=get_active_program_side_effect,
+    )
+    client.get_selected_program = AsyncMock(
+        return_value=Program(
+            key=ProgramKey.BSH_COMMON_FAVORITE_001,
+            options=non_writable_options,
+        )
+    )
+    client.start_program = AsyncMock()
+
+    assert await integration_setup(client)
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    device_entry = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        identifiers={(DOMAIN, appliance.ha_id)},
+    )
+    client.get_available_program = AsyncMock(
+        return_value=ProgramDefinition(
+            key=ProgramKey.DISHCARE_DISHWASHER_ECO_50,
+        )
+    )
+
+    await hass.services.async_call(
+        domain=DOMAIN,
+        service="start_selected_program",
+        service_data={
+            "device_id": device_entry.id,
+        },
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+
+    client.get_available_program.assert_awaited_once_with(
+        appliance.ha_id, program_key=base_program
+    )
+    assert client.start_program.call_args.kwargs == {
+        "program_key": base_program,
+        "options": None,  # The base program option should not be added in this call
+    }
+
+
+@pytest.mark.parametrize("appliance", [ApplianceType.DISHWASHER], indirect=True)
 @pytest.mark.parametrize(
     ("mock_attr", "error_regex", "get_active_program_side_effect"),
     [
@@ -531,7 +597,7 @@ async def test_start_selected_program_and_options_exceptions(
         )
 
 
-@pytest.mark.parametrize("appliance", ["Washer"], indirect=True)
+@pytest.mark.parametrize("appliance", [ApplianceType.WASHER], indirect=True)
 async def test_start_selected_program_user_option_not_writable_raises(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
@@ -621,6 +687,54 @@ async def test_no_program_error(
 
 
 @pytest.mark.parametrize(
+    "get_active_program_side_effect", [None, NoProgramActiveError("error.key")]
+)
+@pytest.mark.parametrize("appliance", [ApplianceType.DISHWASHER], indirect=True)
+async def test_start_selected_favorite_program_no_base_program(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    client: MagicMock,
+    config_entry: MockConfigEntry,
+    integration_setup: Callable[[MagicMock], Awaitable[bool]],
+    appliance: HomeAppliance,
+    get_active_program_side_effect: NoProgramActiveError | None,
+) -> None:
+    """Test starting the selected favorite program without base program option."""
+    client.get_active_program = AsyncMock(
+        return_value=Program(key=ProgramKey.BSH_COMMON_FAVORITE_001),
+        side_effect=get_active_program_side_effect,
+    )
+    client.get_selected_program = AsyncMock(
+        return_value=Program(key=ProgramKey.BSH_COMMON_FAVORITE_001)
+    )
+
+    assert await integration_setup(client)
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    client.get_available_program = AsyncMock()
+    device_entry = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        identifiers={(DOMAIN, appliance.ha_id)},
+    )
+
+    with pytest.raises(
+        HomeAssistantError,
+        match="The API cannot start a favorite program and the base program is missing for the selected favorite program",
+    ):
+        await hass.services.async_call(
+            domain=DOMAIN,
+            service="start_selected_program",
+            service_data={
+                "device_id": device_entry.id,
+            },
+            blocking=True,
+        )
+
+    client.get_available_program.assert_not_awaited()
+    client.start_program.assert_not_awaited()
+
+
+@pytest.mark.parametrize(
     "service_call",
     [
         SERVICE_KV_CALL_PARAMS[0],
@@ -677,7 +791,7 @@ async def test_services_appliance_not_found(
         await hass.services.async_call(**service_call)
 
 
-@pytest.mark.parametrize("appliance", ["Washer"], indirect=True)
+@pytest.mark.parametrize("appliance", [ApplianceType.WASHER], indirect=True)
 @pytest.mark.parametrize(
     "service_call",
     SERVICE_KV_CALL_PARAMS,
@@ -741,7 +855,7 @@ async def test_not_possible_to_use_favorite_program(
         )
 
 
-@pytest.mark.parametrize("appliance", ["Dishwasher"], indirect=True)
+@pytest.mark.parametrize("appliance", [ApplianceType.DISHWASHER], indirect=True)
 @pytest.mark.parametrize(
     ("temperature_option", "service_option"),
     [
@@ -871,7 +985,7 @@ async def test_temperature_options_convert(
     )
 
 
-@pytest.mark.parametrize("appliance", ["Dishwasher"], indirect=True)
+@pytest.mark.parametrize("appliance", [ApplianceType.DISHWASHER], indirect=True)
 @pytest.mark.parametrize(
     "service_option",
     [
@@ -976,7 +1090,7 @@ async def test_temperature_options_convert_missing_option(
     assert call_options[0].value == 35
 
 
-@pytest.mark.parametrize("appliance", ["Dishwasher"], indirect=True)
+@pytest.mark.parametrize("appliance", [ApplianceType.DISHWASHER], indirect=True)
 @pytest.mark.parametrize(
     "service_option",
     [

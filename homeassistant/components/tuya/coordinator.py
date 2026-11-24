@@ -149,7 +149,7 @@ class DeviceListener(SharingDeviceListener):
         """Register device with Home Assistant."""
         TUYA_QUIRKS_REGISTRY.initialise_device_quirk(device)
 
-        device_registry.async_get_or_create_device(
+        device_registry.async_get_or_create_from_info(
             config_entry_id=self._entry.entry_id,
             device_info=get_device_info(device),
         )

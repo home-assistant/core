@@ -118,6 +118,14 @@
       "device_uplink_mac": {
         "name": "Uplink MAC"
       },
+      "firewall_policy_schedule_status": {
+        "name": "{policy_name} schedule status",
+        "state": {
+          "active": "[%key:common::state::active%]",
+          "disabled": "[%key:common::state::disabled%]",
+          "inactive": "Inactive"
+        }
+      },
       "outlet_power": {
         "name": "{outlet_name} outlet power"
       },
@@ -183,6 +191,11 @@
       "wlan_control": {
         "name": "Enabled"
       }
+    },
+    "update": {
+      "ips_engine": {
+        "name": "IPS engine"
+      }
     }
   },
   "exceptions": {
@@ -200,6 +213,9 @@
     },
     "remove_clients_request_failed": {
       "message": "Failed to remove clients from UniFi Network"
+    },
+    "site_not_found": {
+      "message": "The configured UniFi Network site no longer exists"
     },
     "unload_failed": {
       "message": "Failed to unload UniFi Network"

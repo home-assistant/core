@@ -11,6 +11,9 @@ from google_health_api.model import (
     SLEEP,
     WEIGHT,
     ActiveEnergyBurnedRollupValue,
+    ActiveMinutesRollupValue,
+    ActiveZoneMinutesRollupValue,
+    AltitudeRollupValue,
     DailyRollupDataPoint,
     DataPoint,
     DataType,
@@ -21,6 +24,7 @@ from google_health_api.model import (
     ListDataPointResult,
     ListPairedDevicesResult,
     NutritionLogRollupValue,
+    SedentaryPeriodRollupValue,
     StepsRollupValue,
     TotalCaloriesRollupValue,
     UserInfo,
@@ -157,6 +161,26 @@ def mock_google_health_client() -> Generator[AsyncMock]:
         client.floors = AsyncMock()
         client.floors.today.return_value = _rollup_fixture(
             "floors.json", FloorsRollupValue, "floors"
+        )
+        client.altitude = AsyncMock()
+        client.altitude.today.return_value = _rollup_fixture(
+            "altitude.json", AltitudeRollupValue, "altitude"
+        )
+        client.active_minutes = AsyncMock()
+        client.active_minutes.today.return_value = _rollup_fixture(
+            "active_minutes.json", ActiveMinutesRollupValue, "activeMinutes"
+        )
+        client.active_zone_minutes = AsyncMock()
+        client.active_zone_minutes.today.return_value = _rollup_fixture(
+            "active_zone_minutes.json",
+            ActiveZoneMinutesRollupValue,
+            "activeZoneMinutes",
+        )
+        client.sedentary_period = AsyncMock()
+        client.sedentary_period.today.return_value = _rollup_fixture(
+            "sedentary_period.json",
+            SedentaryPeriodRollupValue,
+            "sedentaryPeriod",
         )
         client.hydration_log = AsyncMock()
         client.hydration_log.today.return_value = _rollup_fixture(

@@ -95,12 +95,11 @@ def _make_handler(
             async with asyncio.timeout(COMMAND_TIMEOUT):
                 stdout_data, stderr_data = await process.communicate()
         except TimeoutError as err:
-            if process:
-                with suppress(TypeError):
-                    process.kill()
-                    # https://bugs.python.org/issue43884
-                    process._transport.close()  # type: ignore[attr-defined]  # noqa: SLF001
-                del process
+            with suppress(TypeError):
+                process.kill()
+                # https://bugs.python.org/issue43884
+                process._transport.close()  # type: ignore[attr-defined]  # noqa: SLF001
+            del process
 
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
@@ -200,8 +199,10 @@ async def _async_reload_service_handler(service_call: ServiceCall) -> None:
         if svc != SERVICE_RELOAD:
             hass.services.async_remove(DOMAIN, svc)
     hass.data.setdefault(_DATA_CACHE, {}).clear()
-    ir.async_delete_issue(hass, DOMAIN, f"reserved_{SERVICE_RELOAD}")
-    async_register_shell_commands(hass, new_conf)
+    with ir.async_refresh_issues(
+        hass, DOMAIN, issue_ids=[f"reserved_{SERVICE_RELOAD}"]
+    ):
+        async_register_shell_commands(hass, new_conf)
 
 
 @callback

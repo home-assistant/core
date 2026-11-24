@@ -17,12 +17,8 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.easyenergy.const import DOMAIN
 from homeassistant.components.easyenergy.services import (
-    ATTR_CONFIG_ENTRY,
-    ATTR_GRANULARITY,
-    ATTR_PRICE_TYPE,
-    ENERGY_RETURN_SERVICE_NAME,
-    ENERGY_USAGE_SERVICE_NAME,
-    GAS_SERVICE_NAME,
+    EasyEnergyService,
+    EasyEnergyServiceArgument,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
@@ -33,18 +29,18 @@ async def test_has_services(
     hass: HomeAssistant,
 ) -> None:
     """Test the existence of the easyEnergy Service."""
-    assert hass.services.has_service(DOMAIN, GAS_SERVICE_NAME)
-    assert hass.services.has_service(DOMAIN, ENERGY_USAGE_SERVICE_NAME)
-    assert hass.services.has_service(DOMAIN, ENERGY_RETURN_SERVICE_NAME)
+    assert hass.services.has_service(DOMAIN, EasyEnergyService.GET_GAS_PRICES)
+    assert hass.services.has_service(DOMAIN, EasyEnergyService.GET_ENERGY_USAGE_PRICES)
+    assert hass.services.has_service(DOMAIN, EasyEnergyService.GET_ENERGY_RETURN_PRICES)
 
 
 @pytest.mark.usefixtures("init_integration")
 @pytest.mark.parametrize(
     "service",
     [
-        GAS_SERVICE_NAME,
-        ENERGY_USAGE_SERVICE_NAME,
-        ENERGY_RETURN_SERVICE_NAME,
+        EasyEnergyService.GET_GAS_PRICES,
+        EasyEnergyService.GET_ENERGY_USAGE_PRICES,
+        EasyEnergyService.GET_ENERGY_RETURN_PRICES,
     ],
 )
 @pytest.mark.parametrize("incl_vat", [{"incl_vat": False}, {"incl_vat": True}])
@@ -60,8 +56,8 @@ async def test_service(
     end: dict[str, str],
 ) -> None:
     """Test the easyEnergy service."""
-    entry = {ATTR_CONFIG_ENTRY: mock_config_entry.entry_id}
-    if service == ENERGY_RETURN_SERVICE_NAME:
+    entry = {EasyEnergyServiceArgument.CONFIG_ENTRY: mock_config_entry.entry_id}
+    if service == EasyEnergyService.GET_ENERGY_RETURN_PRICES:
         incl_vat = {}
 
     data = entry | incl_vat | start | end
@@ -80,13 +76,13 @@ async def test_service(
     ("service", "expected_prices"),
     [
         (
-            GAS_SERVICE_NAME,
+            EasyEnergyService.GET_GAS_PRICES,
             [
                 {"timestamp": "2026-04-18 22:00:00+00:00", "price": 0.6169},
             ],
         ),
         (
-            ENERGY_USAGE_SERVICE_NAME,
+            EasyEnergyService.GET_ENERGY_USAGE_PRICES,
             [
                 {"timestamp": "2026-04-19 00:00:00+00:00", "price": 0.13213},
                 {"timestamp": "2026-04-19 01:00:00+00:00", "price": 0.12493},
@@ -94,7 +90,7 @@ async def test_service(
             ],
         ),
         (
-            ENERGY_RETURN_SERVICE_NAME,
+            EasyEnergyService.GET_ENERGY_RETURN_PRICES,
             [
                 {"timestamp": "2026-04-19 00:00:00+00:00", "price": 0.13213},
                 {"timestamp": "2026-04-19 01:00:00+00:00", "price": 0.12493},
@@ -112,11 +108,11 @@ async def test_service_filters_datetime_range(
 ) -> None:
     """Test easyEnergy services filter returned day data to a datetime range."""
     service_data: dict[str, str | bool] = {
-        ATTR_CONFIG_ENTRY: mock_config_entry.entry_id,
+        EasyEnergyServiceArgument.CONFIG_ENTRY: mock_config_entry.entry_id,
         "start": "2026-04-19 02:00:00+02:00",
         "end": "2026-04-19 05:00:00+02:00",
     }
-    if service != ENERGY_RETURN_SERVICE_NAME:
+    if service != EasyEnergyService.GET_ENERGY_RETURN_PRICES:
         service_data["incl_vat"] = True
 
     mock_easyenergy.reset_mock()
@@ -136,7 +132,7 @@ async def test_service_filters_datetime_range(
         "end_date": date(2026, 4, 19),
         "vat": VatOption.INCLUDE,
     }
-    if service == GAS_SERVICE_NAME:
+    if service == EasyEnergyService.GET_GAS_PRICES:
         mock_easyenergy.gas_prices.assert_called_once_with(**expected_call)
         mock_easyenergy.energy_prices.assert_not_called()
     else:
@@ -150,13 +146,13 @@ async def test_service_filters_datetime_range(
     ("service", "expected_prices"),
     [
         (
-            GAS_SERVICE_NAME,
+            EasyEnergyService.GET_GAS_PRICES,
             [
                 {"timestamp": "2026-04-18 22:00:00+00:00", "price": 1.4227},
             ],
         ),
         (
-            ENERGY_USAGE_SERVICE_NAME,
+            EasyEnergyService.GET_ENERGY_USAGE_PRICES,
             [
                 {"timestamp": "2026-04-19 00:00:00+00:00", "price": 0.26476},
                 {"timestamp": "2026-04-19 01:00:00+00:00", "price": 0.25756},
@@ -179,8 +175,8 @@ async def test_usage_services_invoice_price_type(
         DOMAIN,
         service,
         {
-            ATTR_CONFIG_ENTRY: mock_config_entry.entry_id,
-            ATTR_PRICE_TYPE: "invoice",
+            EasyEnergyServiceArgument.CONFIG_ENTRY: mock_config_entry.entry_id,
+            EasyEnergyServiceArgument.PRICE_TYPE: "invoice",
             "incl_vat": True,
             "start": "2026-04-19 02:00:00+02:00",
             "end": "2026-04-19 05:00:00+02:00",
@@ -196,7 +192,7 @@ async def test_usage_services_invoice_price_type(
         "end_date": date(2026, 4, 19),
         "vat": VatOption.INCLUDE,
     }
-    if service == GAS_SERVICE_NAME:
+    if service == EasyEnergyService.GET_GAS_PRICES:
         mock_easyenergy.gas_prices.assert_called_once_with(**expected_call)
         mock_easyenergy.energy_prices.assert_not_called()
     else:
@@ -209,8 +205,8 @@ async def test_usage_services_invoice_price_type(
 @pytest.mark.parametrize(
     "service",
     [
-        ENERGY_USAGE_SERVICE_NAME,
-        ENERGY_RETURN_SERVICE_NAME,
+        EasyEnergyService.GET_ENERGY_USAGE_PRICES,
+        EasyEnergyService.GET_ENERGY_RETURN_PRICES,
     ],
 )
 async def test_energy_services_quarter_granularity(
@@ -221,12 +217,12 @@ async def test_energy_services_quarter_granularity(
 ) -> None:
     """Test energy services can request quarter-hour prices."""
     service_data: dict[str, str | bool] = {
-        ATTR_CONFIG_ENTRY: mock_config_entry.entry_id,
-        ATTR_GRANULARITY: "quarter",
+        EasyEnergyServiceArgument.CONFIG_ENTRY: mock_config_entry.entry_id,
+        EasyEnergyServiceArgument.GRANULARITY: "quarter",
         "start": "2026-04-19",
         "end": "2026-04-19",
     }
-    if service == ENERGY_USAGE_SERVICE_NAME:
+    if service == EasyEnergyService.GET_ENERGY_USAGE_PRICES:
         service_data["incl_vat"] = True
 
     mock_easyenergy.reset_mock()
@@ -263,9 +259,9 @@ def config_entry_data(
 @pytest.mark.parametrize(
     "service",
     [
-        GAS_SERVICE_NAME,
-        ENERGY_USAGE_SERVICE_NAME,
-        ENERGY_RETURN_SERVICE_NAME,
+        EasyEnergyService.GET_GAS_PRICES,
+        EasyEnergyService.GET_ENERGY_USAGE_PRICES,
+        EasyEnergyService.GET_ENERGY_RETURN_PRICES,
     ],
 )
 @pytest.mark.parametrize(
@@ -295,7 +291,10 @@ async def test_service_schema_validation(
 
 
 @pytest.mark.usefixtures("init_integration")
-@pytest.mark.parametrize("service", [GAS_SERVICE_NAME, ENERGY_USAGE_SERVICE_NAME])
+@pytest.mark.parametrize(
+    "service",
+    [EasyEnergyService.GET_GAS_PRICES, EasyEnergyService.GET_ENERGY_USAGE_PRICES],
+)
 @pytest.mark.parametrize(
     ("service_data", "error_message"),
     [
@@ -316,23 +315,30 @@ async def test_service_schema_validation_vat(
         await hass.services.async_call(
             DOMAIN,
             service,
-            {ATTR_CONFIG_ENTRY: mock_config_entry.entry_id} | service_data,
+            {EasyEnergyServiceArgument.CONFIG_ENTRY: mock_config_entry.entry_id}
+            | service_data,
             blocking=True,
             return_response=True,
         )
 
 
 @pytest.mark.usefixtures("init_integration")
-@pytest.mark.parametrize("service", [GAS_SERVICE_NAME, ENERGY_USAGE_SERVICE_NAME])
+@pytest.mark.parametrize(
+    "service",
+    [EasyEnergyService.GET_GAS_PRICES, EasyEnergyService.GET_ENERGY_USAGE_PRICES],
+)
 @pytest.mark.parametrize(
     ("service_data", "error_message"),
     [
         (
-            {"incl_vat": True, ATTR_PRICE_TYPE: "incorrect price type"},
+            {
+                "incl_vat": True,
+                EasyEnergyServiceArgument.PRICE_TYPE: "incorrect price type",
+            },
             "value must be one of .+",
         ),
         (
-            {"incl_vat": True, ATTR_PRICE_TYPE: True},
+            {"incl_vat": True, EasyEnergyServiceArgument.PRICE_TYPE: True},
             "value must be one of .+",
         ),
     ],
@@ -350,7 +356,8 @@ async def test_service_schema_validation_usage_price_type(
         await hass.services.async_call(
             DOMAIN,
             service,
-            {ATTR_CONFIG_ENTRY: mock_config_entry.entry_id} | service_data,
+            {EasyEnergyServiceArgument.CONFIG_ENTRY: mock_config_entry.entry_id}
+            | service_data,
             blocking=True,
             return_response=True,
         )
@@ -360,19 +367,19 @@ async def test_service_schema_validation_usage_price_type(
 @pytest.mark.parametrize(
     "service",
     [
-        ENERGY_USAGE_SERVICE_NAME,
-        ENERGY_RETURN_SERVICE_NAME,
+        EasyEnergyService.GET_ENERGY_USAGE_PRICES,
+        EasyEnergyService.GET_ENERGY_RETURN_PRICES,
     ],
 )
 @pytest.mark.parametrize(
     ("service_data", "error_message"),
     [
         (
-            {ATTR_GRANULARITY: "incorrect granularity"},
+            {EasyEnergyServiceArgument.GRANULARITY: "incorrect granularity"},
             "value must be one of .+",
         ),
         (
-            {ATTR_GRANULARITY: True},
+            {EasyEnergyServiceArgument.GRANULARITY: True},
             "value must be one of .+",
         ),
     ],
@@ -385,8 +392,10 @@ async def test_service_schema_validation_granularity(
     error_message: str,
 ) -> None:
     """Test energy service schema validation for granularity."""
-    data = {ATTR_CONFIG_ENTRY: mock_config_entry.entry_id} | service_data
-    if service == ENERGY_USAGE_SERVICE_NAME:
+    data = {
+        EasyEnergyServiceArgument.CONFIG_ENTRY: mock_config_entry.entry_id
+    } | service_data
+    if service == EasyEnergyService.GET_ENERGY_USAGE_PRICES:
         data["incl_vat"] = True
 
     with pytest.raises(probatio.error.Error, match=error_message):
@@ -409,8 +418,11 @@ async def test_service_schema_validation_return_vat(
     with pytest.raises(probatio.error.Error, match="not a valid option .+"):
         await hass.services.async_call(
             DOMAIN,
-            ENERGY_RETURN_SERVICE_NAME,
-            {ATTR_CONFIG_ENTRY: mock_config_entry.entry_id, "incl_vat": True},
+            EasyEnergyService.GET_ENERGY_RETURN_PRICES,
+            {
+                EasyEnergyServiceArgument.CONFIG_ENTRY: mock_config_entry.entry_id,
+                "incl_vat": True,
+            },
             blocking=True,
             return_response=True,
         )
@@ -420,9 +432,9 @@ async def test_service_schema_validation_return_vat(
 @pytest.mark.parametrize(
     "service",
     [
-        GAS_SERVICE_NAME,
-        ENERGY_USAGE_SERVICE_NAME,
-        ENERGY_RETURN_SERVICE_NAME,
+        EasyEnergyService.GET_GAS_PRICES,
+        EasyEnergyService.GET_ENERGY_USAGE_PRICES,
+        EasyEnergyService.GET_ENERGY_RETURN_PRICES,
     ],
 )
 async def test_service_validation_config_entry_not_found(
@@ -430,8 +442,10 @@ async def test_service_validation_config_entry_not_found(
     service: str,
 ) -> None:
     """Test config entry validation for easyEnergy services."""
-    service_data: dict[str, str | bool] = {ATTR_CONFIG_ENTRY: "incorrect entry"}
-    if service != ENERGY_RETURN_SERVICE_NAME:
+    service_data: dict[str, str | bool] = {
+        EasyEnergyServiceArgument.CONFIG_ENTRY: "incorrect entry"
+    }
+    if service != EasyEnergyService.GET_ENERGY_RETURN_PRICES:
         service_data["incl_vat"] = True
 
     with pytest.raises(ServiceValidationError) as err:
@@ -454,9 +468,9 @@ async def test_service_validation_config_entry_not_found(
 @pytest.mark.parametrize(
     "service",
     [
-        GAS_SERVICE_NAME,
-        ENERGY_USAGE_SERVICE_NAME,
-        ENERGY_RETURN_SERVICE_NAME,
+        EasyEnergyService.GET_GAS_PRICES,
+        EasyEnergyService.GET_ENERGY_USAGE_PRICES,
+        EasyEnergyService.GET_ENERGY_RETURN_PRICES,
     ],
 )
 @pytest.mark.parametrize("date_field", ["start", "end"])
@@ -471,10 +485,10 @@ async def test_service_validation_invalid_date(
 ) -> None:
     """Test invalid date validation for easyEnergy services."""
     service_data: dict[str, str | bool] = {
-        ATTR_CONFIG_ENTRY: mock_config_entry.entry_id,
+        EasyEnergyServiceArgument.CONFIG_ENTRY: mock_config_entry.entry_id,
         date_field: date_value,
     }
-    if service != ENERGY_RETURN_SERVICE_NAME:
+    if service != EasyEnergyService.GET_ENERGY_RETURN_PRICES:
         service_data["incl_vat"] = True
 
     mock_easyenergy.reset_mock()
@@ -499,9 +513,13 @@ async def test_service_validation_invalid_date(
 @pytest.mark.parametrize(
     ("service", "method", "service_data"),
     [
-        (GAS_SERVICE_NAME, "gas_prices", {"incl_vat": True}),
-        (ENERGY_USAGE_SERVICE_NAME, "energy_prices", {"incl_vat": True}),
-        (ENERGY_RETURN_SERVICE_NAME, "energy_prices", {}),
+        (EasyEnergyService.GET_GAS_PRICES, "gas_prices", {"incl_vat": True}),
+        (
+            EasyEnergyService.GET_ENERGY_USAGE_PRICES,
+            "energy_prices",
+            {"incl_vat": True},
+        ),
+        (EasyEnergyService.GET_ENERGY_RETURN_PRICES, "energy_prices", {}),
     ],
 )
 @pytest.mark.parametrize(
@@ -535,7 +553,8 @@ async def test_service_api_error(
         await hass.services.async_call(
             DOMAIN,
             service,
-            {ATTR_CONFIG_ENTRY: mock_config_entry.entry_id} | service_data,
+            {EasyEnergyServiceArgument.CONFIG_ENTRY: mock_config_entry.entry_id}
+            | service_data,
             blocking=True,
             return_response=True,
         )

@@ -374,7 +374,7 @@ async def _transform_stream(  # noqa: C901 - This is complex, but better to have
                             tool_name="web_search_call",
                             tool_args={
                                 "action": event.item.action.to_dict()
-                                if event.item.action
+                                if event.item.action is not None
                                 else None,
                             },
                             external=True,
@@ -556,14 +556,13 @@ class OpenAIBaseLLMEntity(Entity):
             stream=True,
         )
 
+        reasoning: Reasoning = {}
         if model_args["model"].startswith(("o", "gpt-5", "gpt-6")):
-            reasoning: Reasoning = {
-                "effort": options.get(
-                    CONF_REASONING_EFFORT, RECOMMENDED_REASONING_EFFORT
-                )
+            reasoning["effort"] = (
+                options.get(CONF_REASONING_EFFORT, RECOMMENDED_REASONING_EFFORT)
                 if not model_args["model"].startswith("gpt-5-pro")
-                else "high",  # GPT-5 pro only supports reasoning.effort: high
-            }
+                else "high"  # GPT-5 pro only supports reasoning.effort: high
+            )
 
             reasoning_summary = options.get(
                 CONF_REASONING_SUMMARY, RECOMMENDED_REASONING_SUMMARY
@@ -573,17 +572,6 @@ class OpenAIBaseLLMEntity(Entity):
 
             if options.get(CONF_PRO_MODE, RECOMMENDED_PRO_MODE):
                 reasoning["mode"] = "pro"
-
-            model_args["reasoning"] = reasoning
-
-        if (
-            not model_args["model"].startswith(("gpt-5", "gpt-6"))
-            or model_args["reasoning"]["effort"] == "none"  # type: ignore[index]
-        ):
-            model_args["top_p"] = options.get(CONF_TOP_P, RECOMMENDED_TOP_P)
-            model_args["temperature"] = options.get(
-                CONF_TEMPERATURE, RECOMMENDED_TEMPERATURE
-            )
 
         if model_args["model"].startswith(("gpt-5", "gpt-6")):
             model_args["text"] = {
@@ -662,6 +650,19 @@ class OpenAIBaseLLMEntity(Entity):
                 model=image_model,
                 output_format="png",
             )
+            complexity = None
+            if image_model.startswith("gpt-image-2.6"):
+                match reasoning.get("effort"):
+                    case "none" | "minimal":
+                        complexity = "low"
+                    case "xhigh" | "max":
+                        complexity = "high"
+            else:
+                # Older image models reject inherited complexity.
+                # More details: https://community.openai.com/t/responses-api-with-gpt-image-2-gives-complexity-low-is-not-supported-after-gpt-image-2-6-launch-with-temporary-hack/1412952/8
+                reasoning.pop("effort", None)
+            if complexity is not None:
+                image_tool["complexity"] = complexity  # type: ignore[typeddict-unknown-key]
             if image_model in ("gpt-image-1", "gpt-image-1.5"):
                 image_tool["input_fidelity"] = "high"
             tools.append(image_tool)
@@ -669,6 +670,18 @@ class OpenAIBaseLLMEntity(Entity):
             # conversation ID without resending the generated image data.
             model_args["store"] = True
             model_args["tool_choice"] = ToolChoiceTypesParam(type="image_generation")
+
+        if reasoning:
+            model_args["reasoning"] = reasoning
+
+        if (
+            not model_args["model"].startswith(("gpt-5", "gpt-6"))
+            or reasoning.get("effort") == "none"
+        ):
+            model_args["top_p"] = options.get(CONF_TOP_P, RECOMMENDED_TOP_P)
+            model_args["temperature"] = options.get(
+                CONF_TEMPERATURE, RECOMMENDED_TEMPERATURE
+            )
 
         if tools:
             model_args["tools"] = tools
@@ -775,7 +788,8 @@ class OpenAIBaseLLMEntity(Entity):
                     ir.async_create_issue(
                         self.hass,
                         DOMAIN,
-                        "organization_verification_required",
+                        f"organization_verification_required_{self.entry.entry_id}",
+                        config_entry_id=self.entry.entry_id,
                         is_fixable=False,
                         is_persistent=False,
                         learn_more_url="https://help.openai.com/en/articles/10910291-api-organization-verification",

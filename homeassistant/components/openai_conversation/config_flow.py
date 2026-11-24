@@ -8,6 +8,7 @@ from typing import Any, override
 import openai
 import probatio
 
+from homeassistant import data_entry_flow
 from homeassistant.components.zone import ENTITY_ID_HOME
 from homeassistant.config_entries import (
     SOURCE_REAUTH,
@@ -31,6 +32,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import AbortFlow
 from homeassistant.exceptions import ConfigEntryAuthFailed, HomeAssistantError
 from homeassistant.helpers import llm
+from homeassistant.helpers.field_visibility import FieldCondition
 from homeassistant.helpers.httpx_client import get_async_client
 from homeassistant.helpers.selector import (
     NumberSelector,
@@ -46,6 +48,7 @@ from homeassistant.helpers.selector import (
 )
 from homeassistant.helpers.typing import VolDictType
 
+from . import OpenAIConfigEntry
 from .chatgpt_auth import (
     CLIENT_ID_PREFIX,
     PLAN_SCOPE,
@@ -557,7 +560,7 @@ class OpenAIConfigFlow(ConfigFlow, domain=DOMAIN):
     @callback
     @override
     def async_get_supported_subentry_types(
-        cls, config_entry: ConfigEntry
+        cls, config_entry: OpenAIConfigEntry
     ) -> dict[str, type[ConfigSubentryFlow]]:
         """Return subentries supported by this integration."""
         subentry_types: dict[str, type[ConfigSubentryFlow]] = {
@@ -609,6 +612,7 @@ class OpenAISubentryFlowHandler(ConfigSubentryFlow):
             return self.async_abort(reason="entry_not_loaded")
 
         options = self.options
+        errors: dict[str, str] = {}
 
         hass_apis: list[SelectOptionDict] = [
             SelectOptionDict(
@@ -646,7 +650,11 @@ class OpenAISubentryFlowHandler(ConfigSubentryFlow):
                         },
                     ): TemplateSelector(),
                     probatio.Optional(CONF_LLM_HASS_API): SelectSelector(
-                        SelectSelectorConfig(options=hass_apis, multiple=True)
+                        SelectSelectorConfig(
+                            options=hass_apis,
+                            multiple=True,
+                            mode=SelectSelectorMode.LIST,
+                        )
                     ),
                 }
             )
@@ -657,6 +665,40 @@ class OpenAISubentryFlowHandler(ConfigSubentryFlow):
             )
         ] = bool
 
+        not_recommended: FieldCondition = {
+            "field": CONF_RECOMMENDED,
+            "value": False,
+        }
+        step_schema.update(
+            {
+                data_entry_flow.Optional(
+                    CONF_CHAT_MODEL,
+                    default=RECOMMENDED_CHAT_MODEL,
+                    visible=not_recommended,
+                ): str,
+                data_entry_flow.Optional(
+                    CONF_MAX_TOKENS,
+                    default=RECOMMENDED_MAX_TOKENS,
+                    visible=not_recommended,
+                ): int,
+                data_entry_flow.Optional(
+                    CONF_TOP_P,
+                    default=RECOMMENDED_TOP_P,
+                    visible=not_recommended,
+                ): NumberSelector(NumberSelectorConfig(min=0, max=1, step=0.05)),
+                data_entry_flow.Optional(
+                    CONF_TEMPERATURE,
+                    default=RECOMMENDED_TEMPERATURE,
+                    visible=not_recommended,
+                ): NumberSelector(NumberSelectorConfig(min=0, max=2, step=0.05)),
+                data_entry_flow.Optional(
+                    CONF_STORE_RESPONSES,
+                    default=RECOMMENDED_STORE_RESPONSES,
+                    visible=not_recommended,
+                ): bool,
+            }
+        )
+
         if user_input is not None:
             if user_input.get(CONF_LLM_HASS_API) is None:
                 user_input.pop(CONF_LLM_HASS_API, None)
@@ -664,8 +706,8 @@ class OpenAISubentryFlowHandler(ConfigSubentryFlow):
             if user_input[CONF_RECOMMENDED]:
                 if self._is_new:
                     if is_chatgpt_entry(self._get_entry()):
-                        # The plan usage route rejects the API default model, so a
-                        # plan subentry cannot be created without choosing a model.
+                        # The plan route needs an account-specific model before
+                        # creating a subentry.
                         self.options.update(user_input)
                         return await self.async_step_additional()
                     return self.async_create_entry(
@@ -676,10 +718,6 @@ class OpenAISubentryFlowHandler(ConfigSubentryFlow):
                 if is_chatgpt_entry(self._get_entry()) and (
                     model := subentry.data.get(CONF_CHAT_MODEL)
                 ):
-                    # The subentry data carries the plan model; dropping it would
-                    # send requests to the API default model, which the route
-                    # rejects. Other entries follow upstream's replacement
-                    # semantics.
                     user_input = {**user_input, CONF_CHAT_MODEL: model}
                 return self.async_update_and_abort(
                     self._get_entry(),
@@ -687,16 +725,32 @@ class OpenAISubentryFlowHandler(ConfigSubentryFlow):
                     data=user_input,
                 )
 
+            if is_chatgpt_entry(self._get_entry()):
+                # Do not trust the API model field: the plan entry must select
+                # from its own catalog (or enter a model if the catalog is down).
+                self.options.update(user_input)
+                if (
+                    CONF_LLM_HASS_API in self.options
+                    and CONF_LLM_HASS_API not in user_input
+                ):
+                    self.options.pop(CONF_LLM_HASS_API)
+                return await self.async_step_additional()
+
+            if user_input.get(CONF_CHAT_MODEL) in UNSUPPORTED_MODELS:
+                errors[CONF_CHAT_MODEL] = "model_not_supported"
+
             options.update(user_input)
             if CONF_LLM_HASS_API in options and CONF_LLM_HASS_API not in user_input:
                 options.pop(CONF_LLM_HASS_API)
-            return await self.async_step_additional()
+            if not errors:
+                return await self.async_step_model()
 
         return self.async_show_form(
             step_id="init",
             data_schema=self.add_suggested_values_to_schema(
                 probatio.Schema(step_schema), options
             ),
+            errors=errors,
         )
 
     async def async_step_additional(
@@ -799,6 +853,9 @@ class OpenAISubentryFlowHandler(ConfigSubentryFlow):
             elif user_input.get(CONF_CHAT_MODEL) in UNSUPPORTED_MODELS:
                 errors[CONF_CHAT_MODEL] = "model_not_supported"
 
+            options.update(user_input)
+            if CONF_LLM_HASS_API in options and CONF_LLM_HASS_API not in user_input:
+                options.pop(CONF_LLM_HASS_API)
             if not errors:
                 return await self.async_step_model()
 
@@ -997,11 +1054,12 @@ class OpenAISubentryFlowHandler(ConfigSubentryFlow):
             ] = SelectSelector(
                 SelectSelectorConfig(
                     options=[
+                        "gpt-image-2.6-sunburst",
+                        "gpt-image-2.6-flare",
                         "gpt-image-2.5-sunburst",
                         "gpt-image-2.5-flare",
                         "gpt-image-2",
                         "gpt-image-1.5",
-                        "gpt-image-1",
                         "gpt-image-1-mini",
                     ],
                     mode=SelectSelectorMode.DROPDOWN,
@@ -1054,7 +1112,14 @@ class OpenAISubentryFlowHandler(ConfigSubentryFlow):
             return []
 
         models_reasoning_map: dict[str | tuple[str, ...], list[str]] = {
-            "gpt-6-luna": ["none", "low", "medium", "high", "xhigh", "max"],
+            ("gpt-6-luna", "gpt-6.1-terra"): [
+                "none",
+                "low",
+                "medium",
+                "high",
+                "xhigh",
+                "max",
+            ],
             "gpt-6": ["low", "medium", "high", "xhigh", "max"],
             "gpt-5.6": ["none", "low", "medium", "high", "xhigh", "max"],
             ("gpt-5.2-pro", "gpt-5.4-pro", "gpt-5.5-pro"): ["medium", "high", "xhigh"],
@@ -1226,6 +1291,7 @@ class OpenAISubentrySTTFlowHandler(ConfigSubentryFlow):
                 ): SelectSelector(
                     SelectSelectorConfig(
                         options=[
+                            "gpt-transcribe",
                             "gpt-4o-transcribe",
                             "gpt-4o-mini-transcribe",
                             "whisper-1",

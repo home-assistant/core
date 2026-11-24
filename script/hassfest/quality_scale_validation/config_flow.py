@@ -3,7 +3,7 @@
 https://contributors.home-assistant.io/core/quality-scale/config-flow/
 """
 
-from script.hassfest.model import Config, Integration
+from hassfest.model import Config, Integration
 
 
 def validate(

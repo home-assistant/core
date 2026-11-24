@@ -115,9 +115,19 @@
         },
         "init": {
           "data": {
+            "chat_model": "[%key:common::generic::model%]",
+            "max_tokens": "[%key:component::openai_conversation::config_subentries::conversation::step::init::data::max_tokens%]",
             "name": "[%key:common::config_flow::data::name%]",
-            "recommended": "[%key:component::openai_conversation::config_subentries::conversation::step::init::data::recommended%]"
-          }
+            "recommended": "[%key:component::openai_conversation::config_subentries::conversation::step::init::data::recommended%]",
+            "store_responses": "[%key:component::openai_conversation::config_subentries::conversation::step::init::data::store_responses%]",
+            "temperature": "[%key:component::openai_conversation::config_subentries::conversation::step::init::data::temperature%]",
+            "top_p": "[%key:component::openai_conversation::config_subentries::conversation::step::init::data::top_p%]"
+          },
+          "data_description": {
+            "store_responses": "[%key:component::openai_conversation::config_subentries::conversation::step::init::data_description::store_responses%]"
+          },
+          "description": "[%key:component::openai_conversation::config_subentries::conversation::step::init::description%]",
+          "title": "[%key:component::openai_conversation::config_subentries::conversation::step::init::title%]"
         },
         "model": {
           "data": {
@@ -198,14 +208,23 @@
         },
         "init": {
           "data": {
+            "chat_model": "[%key:common::generic::model%]",
             "llm_hass_api": "[%key:common::config_flow::data::llm_hass_api%]",
+            "max_tokens": "Maximum tokens to return in response",
             "name": "[%key:common::config_flow::data::name%]",
             "prompt": "[%key:common::config_flow::data::prompt%]",
-            "recommended": "Recommended model settings"
+            "recommended": "Recommended model settings",
+            "store_responses": "Store requests and responses in OpenAI",
+            "temperature": "Temperature",
+            "top_p": "Top P"
           },
           "data_description": {
-            "prompt": "Instruct how the LLM should respond. This can be a template."
-          }
+            "llm_hass_api": "[%key:common::config_flow::data_description::llm_hass_api%]",
+            "prompt": "Instruct how the LLM should respond. This can be a template.",
+            "store_responses": "If enabled, requests and responses are stored by OpenAI and visible in your OpenAI dashboard logs"
+          },
+          "description": "Choose the model and the request parameters.{catalog_note}",
+          "title": "Additional settings"
         },
         "model": {
           "data": {

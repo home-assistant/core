@@ -63,6 +63,12 @@ class BlinkConfigFlow(ConfigFlow, domain=DOMAIN):
             return hardware_id
         return None
 
+    async def _async_check_unique_id(self, user_input: dict[str, Any]) -> None:
+        """Set the unique ID and abort if the account is already configured."""
+        await self.async_set_unique_id(user_input[CONF_USERNAME])
+        if self.source not in (SOURCE_REAUTH, SOURCE_RECONFIGURE):
+            self._abort_if_unique_id_configured()
+
     async def _handle_user_input(self, user_input: dict[str, Any]):
         """Handle user input."""
         # Omit hardware_id on new installs so blinkpy mints a per-install UUID;
@@ -77,10 +83,6 @@ class BlinkConfigFlow(ConfigFlow, domain=DOMAIN):
         )
         self.blink = Blink(session=async_get_clientsession(self.hass))
         self.blink.auth = self.auth
-        await self.async_set_unique_id(user_input[CONF_USERNAME])
-        if self.source not in (SOURCE_REAUTH, SOURCE_RECONFIGURE):
-            self._abort_if_unique_id_configured()
-
         await validate_input(self.blink)
         return self._async_finish_flow()
 
@@ -91,6 +93,7 @@ class BlinkConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle a flow initiated by the user."""
         errors = {}
         if user_input is not None:
+            await self._async_check_unique_id(user_input)
             try:
                 return await self._handle_user_input(user_input)
             except BlinkTwoFARequiredError:
@@ -156,6 +159,7 @@ class BlinkConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle reauth confirmation."""
         errors = {}
         if user_input is not None:
+            await self._async_check_unique_id(user_input)
             try:
                 return await self._handle_user_input(user_input)
             except BlinkTwoFARequiredError:
@@ -190,6 +194,7 @@ class BlinkConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle reconfiguration initiated by the user."""
         errors = {}
         if user_input is not None:
+            await self._async_check_unique_id(user_input)
             try:
                 return await self._handle_user_input(user_input)
             except BlinkTwoFARequiredError:
