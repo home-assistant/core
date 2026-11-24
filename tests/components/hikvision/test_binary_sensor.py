@@ -74,8 +74,8 @@ async def test_binary_sensor_callback_registered(
     """Test that callback is registered with pyhik."""
     await setup_integration(hass, mock_config_entry)
 
-    # Verify callback was registered for each sensor
-    assert mock_hikcamera.return_value.add_update_callback.call_count == 2
+    # Verify callback was registered for each sensor, and one to watch the credentials
+    assert mock_hikcamera.return_value.add_update_callback.call_count == 3
 
 
 async def test_binary_sensor_no_sensors(
