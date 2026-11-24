@@ -554,6 +554,30 @@ async def test_remove_config_entry_device_stale_client(
     assert device_registry.async_get(device_entry.id) is None
 
 
+async def test_remove_config_entry_device_rejects_child_device(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test a child device cannot be removed."""
+    config_entry = await _setup_entry_with_connected_client(hass)
+    hub_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, TEST_SERIAL_NUMBER), config_entry.entry_id
+    )
+    assert hub_device is not None
+    child_device = device_registry.async_get_or_create_child(
+        config_entry_id=config_entry.entry_id,
+        identifiers={(DOMAIN, "test_child_device")},
+        parent_device_id=hub_device.id,
+    )
+
+    client = await hass_ws_client(hass)
+    response = await client.remove_device(child_device.id)
+
+    assert not response["success"]
+    assert device_registry.async_get(child_device.id) is not None
+
+
 @pytest.mark.parametrize(
     ("lookup", "removable"),
     [

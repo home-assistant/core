@@ -25,7 +25,11 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import dt as dt_util
 
 from ..const import CLIENT_RESTORE_MAX_AGE, LOGGER, UNIFI_WIRELESS_CLIENTS
-from ..coordinator import UPDATE_TIMEOUT, UnifiDataUpdateCoordinator
+from ..coordinator import (
+    UPDATE_TIMEOUT,
+    UnifiDataUpdateCoordinator,
+    UnifiDeviceDataUpdateCoordinator,
+)
 from ..entity import UnifiEntity, UnifiEntityDescription
 from .connection import ACCOUNT_ERRORS, LOGIN_ERRORS, NOT_READY_ERRORS, REQUEST_TIMEOUT
 
@@ -46,11 +50,13 @@ class UnifiEntityLoader:
 
         self._data_coordinators: dict[int, UnifiDataUpdateCoordinator[Any]] = {
             id(hub.api.clients): UnifiDataUpdateCoordinator(hub, hub.api.clients),
-            id(hub.api.devices): UnifiDataUpdateCoordinator(hub, hub.api.devices),
+            id(hub.api.devices): UnifiDeviceDataUpdateCoordinator(hub),
             id(hub.api.dpi_apps): UnifiDataUpdateCoordinator(hub, hub.api.dpi_apps),
             id(hub.api.dpi_groups): UnifiDataUpdateCoordinator(hub, hub.api.dpi_groups),
             id(hub.api.firewall_policies): UnifiDataUpdateCoordinator(
-                hub, hub.api.firewall_policies
+                hub,
+                hub.api.firewall_policies,
+                disable_polling_on_endpoint_not_found=True,
             ),
             id(hub.api.object_oriented_network_configs): UnifiDataUpdateCoordinator(
                 hub,
@@ -61,10 +67,14 @@ class UnifiEntityLoader:
                 hub, hub.api.port_forwarding
             ),
             id(hub.api.traffic_rules): UnifiDataUpdateCoordinator(
-                hub, hub.api.traffic_rules
+                hub,
+                hub.api.traffic_rules,
+                disable_polling_on_endpoint_not_found=True,
             ),
             id(hub.api.traffic_routes): UnifiDataUpdateCoordinator(
-                hub, hub.api.traffic_routes
+                hub,
+                hub.api.traffic_routes,
+                disable_polling_on_endpoint_not_found=True,
             ),
             id(hub.api.wlans): UnifiDataUpdateCoordinator(hub, hub.api.wlans),
         }

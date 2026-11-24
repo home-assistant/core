@@ -3,7 +3,7 @@
 from datetime import timedelta
 from io import BufferedReader
 import logging
-from typing import Any, override
+from typing import Any, Final, override
 
 from notifications_android_tv.notifications import ConnectError, Notifications
 import probatio
@@ -63,6 +63,13 @@ _LOGGER = logging.getLogger(__name__)
 
 _ATTR_ICON = "icon"
 
+_MESSAGE_NEWLINE_TAG: Final = "<br>"
+
+
+def nl2br(message: str) -> str:
+    """Replace newlines with _MESSAGE_NEWLINE_TAG tags."""
+    return message.replace("\n", _MESSAGE_NEWLINE_TAG)
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -98,7 +105,7 @@ class NFAndroidTVNotifyEntity(NotifyEntity):
     def send_message(self, message: str, title: str | None = None) -> None:
         """Send a message via notify.send_message action."""
         try:
-            self.client.send(message=message, title=title)
+            self.client.send(message=nl2br(message), title=title)
         except ConnectError as e:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
@@ -129,7 +136,7 @@ class NFAndroidTVNotifyEntity(NotifyEntity):
 
         try:
             sent = await self.hass.async_add_executor_job(
-                lambda: self.client.send(message=message, **kwargs)
+                lambda: self.client.send(message=nl2br(message), **kwargs)
             )
         except (ConnectError, requests.RequestException) as e:
             raise HomeAssistantError(
@@ -316,7 +323,7 @@ class NFAndroidTVNotificationService(BaseNotificationService):
 
         try:
             self.notify.send(
-                message,
+                nl2br(message),
                 title=title,
                 duration=duration,
                 fontsize=fontsize,

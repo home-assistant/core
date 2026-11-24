@@ -6,9 +6,13 @@ from datetime import datetime, timedelta
 from functools import partial
 from typing import Any, override
 
-from aiopowerwall import component_float, current_power, pv_string_current
 from tesla_fleet_api import firmware_at_least
 from tesla_fleet_api.const import Scope
+from tesla_fleet_api.tesla.powerwall import (
+    component_float,
+    current_power,
+    pv_string_current,
+)
 from teslemetry_stream import TeslemetryStream, TeslemetryStreamVehicle
 from teslemetry_stream.const import CreditsEvent
 

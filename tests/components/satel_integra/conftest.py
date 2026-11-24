@@ -97,7 +97,12 @@ def mock_satel() -> Generator[AsyncMock]:
         client.read_panel_info = AsyncMock(
             return_value=SatelPanelInfo(
                 type_code=2,
-                model=SatelPanelModel("INTEGRA 64"),
+                model=SatelPanelModel(
+                    name="INTEGRA 64",
+                    max_zones=64,
+                    max_outputs=64,
+                    max_partitions=32,
+                ),
                 firmware=SatelFirmwareVersion(
                     version="1.24", release_date="2025-03-12"
                 ),

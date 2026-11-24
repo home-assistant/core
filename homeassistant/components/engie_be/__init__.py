@@ -15,12 +15,13 @@ from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.event import async_track_time_interval
 
-from .const import CONF_REFRESH_TOKEN, CONTRACTS_RETRY_INTERVAL, DOMAIN, LOGGER
+from .const import CONF_REFRESH_TOKEN, CONTRACTS_RETRY_INTERVAL, LOGGER
 from .coordinator import (
     EngieBeEpexCoordinator,
     EngieBePeaksCoordinator,
     EngieBePricesCoordinator,
     EngieBeRelationsCoordinator,
+    invalid_auth_error,
     mask_identifier,
 )
 
@@ -46,6 +47,31 @@ class EngieBeRuntimeData:
     households: dict[str, EngieBeHouseholdCoordinators]
     epex_ready_callbacks: list[Callable[[], None]] = field(default_factory=list)
 
+    @callback
+    def async_add_epex_entities(
+        self, add_entities: Callable[[EngieBeEpexCoordinator, list[str]], None]
+    ) -> None:
+        """Add EPEX entities for the dynamic households now and whenever more are found."""
+        known_bans: set[str] = set()
+
+        @callback
+        def _async_add_new_households() -> None:
+            """Pass the newly found dynamic households to add_entities."""
+            if self.epex is None:
+                return
+            new_bans = [
+                ban
+                for ban, household in self.households.items()
+                if household.is_dynamic and ban not in known_bans
+            ]
+            if not new_bans:
+                return
+            known_bans.update(new_bans)
+            add_entities(self.epex, new_bans)
+
+        self.epex_ready_callbacks.append(_async_add_new_households)
+        _async_add_new_households()
+
 
 type EngieBeConfigEntry = ConfigEntry[EngieBeRuntimeData]
 
@@ -55,9 +81,7 @@ async def _async_is_dynamic(client: EngieBeClient, ban: str) -> bool | None:
     try:
         contracts = await client.async_get_energy_contracts(ban)
     except EngieBeAuthenticationError as err:
-        raise ConfigEntryAuthFailed(
-            translation_domain=DOMAIN, translation_key="invalid_auth"
-        ) from err
+        raise invalid_auth_error() from err
     except EngieBeError as err:
         LOGGER.debug(
             "Fetching energy contracts for %s failed: %s",

@@ -109,7 +109,7 @@ backup_partial:
       selector:
         object:
     folders:
-      example: ["homeassistant", "share"]
+      example: ["share", "ssl"]
       selector:
         object:
     name:
@@ -150,7 +150,7 @@ restore_partial:
       selector:
         boolean:
     folders:
-      example: ["homeassistant", "share"]
+      example: ["share", "ssl"]
       selector:
         object:
     apps:
