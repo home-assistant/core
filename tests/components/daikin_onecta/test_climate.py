@@ -3257,17 +3257,40 @@ async def test_fan_mode_changes_with_hvac_mode(
         "current_mode",
         "mode_settable",
         "speed_settable",
+        "fixed_min",
+        "fixed_max",
         "fixed_step",
         "expected_modes",
     ),
     [
-        pytest.param("quiet", False, True, 1, [], id="current-mode-read-only"),
-        pytest.param("fixed", False, True, 1, ["1", "2"], id="fixed-position"),
+        pytest.param("quiet", False, True, 1, 2, 1, [], id="current-mode-read-only"),
+        pytest.param("fixed", False, True, 1, 2, 1, ["1", "2"], id="fixed-position"),
         pytest.param(
-            "fixed", True, False, 1, ["quiet", "3"], id="current-fixed-speed-read-only"
+            "fixed",
+            True,
+            False,
+            1,
+            2,
+            1,
+            ["quiet", "3"],
+            id="current-fixed-speed-read-only",
         ),
-        pytest.param("quiet", True, False, 1, ["quiet"], id="fixed-speed-read-only"),
-        pytest.param("quiet", True, True, 0, ["quiet"], id="zero-step-is-ignored"),
+        pytest.param(
+            "fixed",
+            True,
+            True,
+            None,
+            None,
+            None,
+            ["quiet", "3"],
+            id="settable-without-range",
+        ),
+        pytest.param(
+            "quiet", True, False, 1, 2, 1, ["quiet"], id="fixed-speed-read-only"
+        ),
+        pytest.param(
+            "quiet", True, True, 1, 2, 0, ["quiet"], id="zero-step-is-ignored"
+        ),
     ],
 )
 async def test_climate_state_fan_modes_respect_writable_characteristics(
@@ -3277,7 +3300,9 @@ async def test_climate_state_fan_modes_respect_writable_characteristics(
     current_mode: str,
     mode_settable: bool,
     speed_settable: bool,
-    fixed_step: int,
+    fixed_min: int | None,
+    fixed_max: int | None,
+    fixed_step: int | None,
     expected_modes: list[str],
 ) -> None:
     """Treat mode selection and numeric speed control as separate capabilities."""
@@ -3297,8 +3322,8 @@ async def test_climate_state_fan_modes_respect_writable_characteristics(
     fan_speed.current_mode.values = ["quiet", FANMODE_FIXED]
     fixed = fan_speed.modes[FANMODE_FIXED]
     fixed.settable = speed_settable
-    fixed.min_value = 1
-    fixed.max_value = 2
+    fixed.min_value = fixed_min
+    fixed.max_value = fixed_max
     fixed.step_value = fixed_step
     coordinator.async_update_listeners()
 

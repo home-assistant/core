@@ -654,8 +654,7 @@ class DaikinClimate(DaikinManagementPointEntity, ClimateEntity):
                 if positions is not None:
                     fan_modes.extend(str(position) for position in positions)
                 elif (
-                    not fixed.settable
-                    and fan_speed.current_mode.value == FANMODE_FIXED
+                    fan_speed.current_mode.value == FANMODE_FIXED
                     and fixed.value is not None
                 ):
                     fan_modes.append(str(fixed.value))
