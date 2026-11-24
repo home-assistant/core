@@ -1,9 +1,10 @@
 """UniFi Network config entry abstraction."""
 
+from collections.abc import Mapping
 from dataclasses import dataclass
 from datetime import timedelta
 import ssl
-from typing import TYPE_CHECKING, Literal, Self
+from typing import TYPE_CHECKING, Any, Literal, Self
 
 from homeassistant.const import (
     CONF_HOST,
@@ -18,6 +19,7 @@ from ..const import (
     CONF_ALLOW_UPTIME_SENSORS,
     CONF_BLOCK_CLIENT,
     CONF_CLIENT_SOURCE,
+    CONF_CONNECTION_MODE,
     CONF_DETECTION_TIME,
     CONF_DPI_RESTRICTIONS,
     CONF_IGNORE_LOCAL_MAC,
@@ -27,6 +29,7 @@ from ..const import (
     CONF_TRACK_CLIENTS,
     CONF_TRACK_DEVICES,
     CONF_TRACK_WIRED_CLIENTS,
+    CONNECTION_MODE_API_KEY_ONLY,
     DEFAULT_ALLOW_BANDWIDTH_SENSORS,
     DEFAULT_ALLOW_UPTIME_SENSORS,
     DEFAULT_DETECTION_TIME,
@@ -42,6 +45,11 @@ if TYPE_CHECKING:
     from .. import UnifiConfigEntry
 
 
+def entry_is_api_key_only(data: Mapping[str, Any]) -> bool:
+    """Return if config entry data connects with only an API key."""
+    return data.get(CONF_CONNECTION_MODE) == CONNECTION_MODE_API_KEY_ONLY
+
+
 @dataclass
 class UnifiConfig:
     """Represent a UniFi config entry."""
@@ -54,6 +62,8 @@ class UnifiConfig:
     password: str
     site: str
     ssl_context: ssl.SSLContext | Literal[False]
+    api_key_only: bool
+    """Only the Integration API is used, there is no local user."""
 
     option_supported_clients: list[str]
     """Allow creating entities from clients."""
@@ -97,11 +107,12 @@ class UnifiConfig:
         return cls(
             entry=config_entry,
             host=config[CONF_HOST],
-            username=config[CONF_USERNAME],
-            password=config[CONF_PASSWORD],
+            username=config.get(CONF_USERNAME, ""),
+            password=config.get(CONF_PASSWORD, ""),
             port=config[CONF_PORT],
             site=config[CONF_SITE_ID],
             ssl_context=config.get(CONF_VERIFY_SSL, False),
+            api_key_only=entry_is_api_key_only(config),
             option_supported_clients=options.get(CONF_CLIENT_SOURCE, []),
             option_track_clients=options.get(CONF_TRACK_CLIENTS, DEFAULT_TRACK_CLIENTS),
             option_track_wired_clients=options.get(

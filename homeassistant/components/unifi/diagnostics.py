@@ -5,14 +5,14 @@ from itertools import chain
 from typing import Any
 
 from homeassistant.components.diagnostics import REDACTED, async_redact_data
-from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import CONF_API_KEY, CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import format_mac
 
 from . import UnifiConfigEntry
 
 TO_REDACT = {CONF_PASSWORD}
-REDACT_CONFIG = {CONF_HOST, CONF_PASSWORD, CONF_USERNAME}
+REDACT_CONFIG = {CONF_API_KEY, CONF_HOST, CONF_PASSWORD, CONF_USERNAME}
 REDACT_CLIENTS = {"bssid", "essid"}
 REDACT_DEVICES = {
     "anon_id",
@@ -73,6 +73,8 @@ async def async_get_config_entry_diagnostics(
 ) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
     hub = config_entry.runtime_data
+    if hub.config.api_key_only:
+        return _async_network_api_diagnostics(config_entry)
     diag: dict[str, Any] = {}
     macs_to_redact: dict[str, str] = {}
 
@@ -114,3 +116,40 @@ async def async_get_config_entry_diagnostics(
     }
 
     return diag
+
+
+@callback
+def _async_network_api_diagnostics(config_entry: UnifiConfigEntry) -> dict[str, Any]:
+    """Return diagnostics of an entry using the Integration API."""
+    hub = config_entry.runtime_data
+    network = hub.api.network
+    macs_to_redact = {
+        mac: format_mac(str(counter).zfill(12))
+        for counter, mac in enumerate(chain(network.clients, network.devices))
+    }
+
+    return {
+        "config": async_redact_data(
+            async_replace_dict_data(config_entry.as_dict(), macs_to_redact),
+            REDACT_CONFIG,
+        ),
+        "network_version": hub.network_version,
+        "clients": {
+            macs_to_redact[mac]: async_replace_dict_data(client.raw, macs_to_redact)
+            for mac, client in network.clients.items()
+        },
+        "devices": {
+            macs_to_redact[mac]: async_replace_dict_data(device.raw, macs_to_redact)
+            for mac, device in network.devices.items()
+        },
+        "ports": {
+            f"{macs_to_redact[obj_id.partition('_')[0]]}_{port.idx}": (
+                async_replace_dict_data(port.raw, macs_to_redact)
+            )
+            for obj_id, port in hub.network_ports.items()
+        },
+        "statistics": {
+            macs_to_redact[mac]: async_replace_dict_data(statistics.raw, macs_to_redact)
+            for mac, statistics in hub.network_statistics.items()
+        },
+    }

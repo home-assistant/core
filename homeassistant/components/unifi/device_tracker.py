@@ -7,13 +7,23 @@ import logging
 from typing import Any, override
 
 import aiounifi
-from aiounifi.interfaces.api_handlers import APIHandler, ItemEvent
+from aiounifi.interfaces.api_handlers import ItemEvent
 from aiounifi.interfaces.clients import Clients
 from aiounifi.interfaces.devices import Devices
 from aiounifi.models.api import ApiItem
 from aiounifi.models.client import Client
 from aiounifi.models.device import Device
 from aiounifi.models.event import Event, EventKey
+from aiounifi.network.v1.interfaces.clients import Clients as NetworkClients
+from aiounifi.network.v1.interfaces.devices import Devices as NetworkDevices
+from aiounifi.network.v1.models.client import (
+    Client as NetworkClient,
+    ClientType as NetworkClientType,
+)
+from aiounifi.network.v1.models.device import (
+    Device as NetworkDevice,
+    DeviceState as NetworkDeviceState,
+)
 from propcache.api import cached_property
 
 from homeassistant.components.device_tracker import (
@@ -21,11 +31,14 @@ from homeassistant.components.device_tracker import (
     ScannerEntityDescription,
 )
 from homeassistant.core import Event as core_Event, HomeAssistant, callback
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import dt as dt_util
 
 from . import UnifiConfigEntry
+from .const import CLIENT_TYPE_OPTION, DOMAIN, NETWORK_MIN_DETECTION_TIME
+from .coordinator import UnifiApiHandler
 from .entity import (
     UnifiEntity,
     UnifiEntityDescription,
@@ -34,12 +47,18 @@ from .entity import (
     async_device_available_fn,
     async_device_device_info_fn,
     async_device_supported_fn,
+    async_network_client_device_info_fn,
+    async_network_device_device_info_fn,
+    async_network_device_supported_fn,
     is_locally_administered_mac,
 )
 from .hub import UnifiHub
 
 LOGGER = logging.getLogger(__name__)
 PARALLEL_UPDATES = 0
+
+# Devices are polled through the Integration API, allow a missed poll
+NETWORK_DEVICE_HEARTBEAT = timedelta(seconds=60)
 
 CLIENT_TRACKER = "client"
 DEVICE_TRACKER = "device"
@@ -139,6 +158,43 @@ def async_client_is_connected_fn(hub: UnifiHub, obj_id: str) -> bool:
 
 
 @callback
+def async_network_client_allowed_fn(hub: UnifiHub, obj_id: str) -> bool:
+    """Check if a client of the Integration API is allowed."""
+    if obj_id in hub.config.option_supported_clients:
+        return True
+
+    if not hub.config.option_track_clients:
+        return False
+
+    if hub.api.network.clients[obj_id].type is NetworkClientType.WIRED:
+        return bool(hub.config.option_track_wired_clients)
+
+    return not (
+        hub.config.option_ignore_local_mac and is_locally_administered_mac(obj_id)
+    )
+
+
+@callback
+def async_network_client_heartbeat_timedelta_fn(
+    hub: UnifiHub, obj_id: str
+) -> timedelta:
+    """Return the detection time, never shorter than the polls allow."""
+    return max(
+        hub.config.option_detection_time,
+        timedelta(seconds=NETWORK_MIN_DETECTION_TIME),
+    )
+
+
+@callback
+def async_network_client_type_fn(api: aiounifi.Controller, obj_id: str) -> str | None:
+    """Return the connection type of a client, None while it is not known."""
+    client_type = api.network.clients[obj_id].type
+    if client_type is NetworkClientType.UNKNOWN:
+        return None
+    return client_type.value
+
+
+@callback
 def async_device_heartbeat_timedelta_fn(hub: UnifiHub, obj_id: str) -> timedelta:
     """Check if device object is disabled."""
     device = hub.api.devices[obj_id]
@@ -146,12 +202,13 @@ def async_device_heartbeat_timedelta_fn(hub: UnifiHub, obj_id: str) -> timedelta
 
 
 @dataclass(frozen=True, kw_only=True)
-class UnifiTrackerEntityDescription[HandlerT: APIHandler, ApiItemT: ApiItem](
+class UnifiTrackerEntityDescription[HandlerT: UnifiApiHandler, ApiItemT: ApiItem](
     UnifiEntityDescription[HandlerT, ApiItemT], ScannerEntityDescription
 ):
     """Class describing UniFi device tracker entity."""
 
     heartbeat_timedelta_fn: Callable[[UnifiHub, str], timedelta]
+    client_type_fn: Callable[[aiounifi.Controller, str], str | None] | None = None
     ip_address_fn: Callable[[aiounifi.Controller, str], str | None]
     is_connected_fn: Callable[[UnifiHub, str], bool]
     hostname_fn: Callable[[aiounifi.Controller, str], str | None]
@@ -195,18 +252,58 @@ ENTITY_DESCRIPTIONS: tuple[UnifiTrackerEntityDescription, ...] = (
 )
 
 
+NETWORK_API_ENTITY_DESCRIPTIONS: tuple[UnifiTrackerEntityDescription, ...] = (
+    UnifiTrackerEntityDescription[NetworkClients, NetworkClient](
+        key="Integration API client scanner",
+        allowed_fn=async_network_client_allowed_fn,
+        entity_registry_enabled_default=False,
+        api_handler_fn=lambda api: api.network.clients,
+        device_info_fn=async_network_client_device_info_fn,
+        heartbeat_timedelta_fn=async_network_client_heartbeat_timedelta_fn,
+        client_type_fn=async_network_client_type_fn,
+        is_connected_fn=lambda hub, obj_id: hub.api.network.clients.is_connected(
+            obj_id
+        ),
+        object_fn=lambda api, obj_id: api.network.clients[obj_id],
+        unique_id_fn=lambda hub, obj_id: f"{hub.site}-{obj_id}",
+        ip_address_fn=lambda api, obj_id: api.network.clients[obj_id].ip_address,
+        hostname_fn=lambda api, obj_id: None,
+    ),
+    UnifiTrackerEntityDescription[NetworkDevices, NetworkDevice](
+        key="Integration API device scanner",
+        allowed_fn=lambda hub, obj_id: hub.config.option_track_devices,
+        api_handler_fn=lambda api: api.network.devices,
+        device_info_fn=async_network_device_device_info_fn,
+        heartbeat_timedelta_fn=lambda hub, _: NETWORK_DEVICE_HEARTBEAT,
+        is_connected_fn=lambda hub, obj_id: (
+            hub.api.network.devices[obj_id].state is NetworkDeviceState.ONLINE
+        ),
+        object_fn=lambda api, obj_id: api.network.devices[obj_id],
+        supported_fn=async_network_device_supported_fn,
+        unique_id_fn=lambda hub, obj_id: obj_id,
+        ip_address_fn=lambda api, obj_id: api.network.devices[obj_id].ip_address,
+        hostname_fn=lambda api, obj_id: None,
+    ),
+)
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: UnifiConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up device tracker for UniFi Network integration."""
-    config_entry.runtime_data.entity_loader.register_platform(
-        async_add_entities, UnifiScannerEntity, ENTITY_DESCRIPTIONS
+    hub = config_entry.runtime_data
+    hub.entity_loader.register_platform(
+        async_add_entities,
+        UnifiScannerEntity,
+        NETWORK_API_ENTITY_DESCRIPTIONS
+        if hub.config.api_key_only
+        else ENTITY_DESCRIPTIONS,
     )
 
 
-class UnifiScannerEntity[HandlerT: APIHandler, ApiItemT: ApiItem](
+class UnifiScannerEntity[HandlerT: UnifiApiHandler, ApiItemT: ApiItem](
     UnifiEntity[HandlerT, ApiItemT], ScannerEntity
 ):
     """Representation of a UniFi scanner."""
@@ -300,6 +397,7 @@ class UnifiScannerEntity[HandlerT: APIHandler, ApiItemT: ApiItem](
             return
 
         obj_id = self._obj_id
+        self._async_store_client_type()
         if is_connected := description.is_connected_fn(hub, obj_id):
             self._is_connected = is_connected
             self.hub.update_heartbeat(
@@ -328,10 +426,28 @@ class UnifiScannerEntity[HandlerT: APIHandler, ApiItemT: ApiItem](
             + self.entity_description.heartbeat_timedelta_fn(hub, obj_id),
         )
 
+    @callback
+    def _async_store_client_type(self) -> None:
+        """Remember the connection type so a restored client keeps its filters."""
+        type_fn = self.entity_description.client_type_fn
+        if (
+            type_fn is None
+            or self.registry_entry is None
+            or (client_type := type_fn(self.api, self._obj_id)) is None
+        ):
+            return
+        stored: Mapping[str, Any] = self.registry_entry.options.get(DOMAIN) or {}
+        if stored.get(CLIENT_TYPE_OPTION) == client_type:
+            return
+        er.async_get(self.hass).async_update_entity_options(
+            self.entity_id, DOMAIN, {CLIENT_TYPE_OPTION: client_type}
+        )
+
     @override
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
         await super().async_added_to_hass()
+        self._async_store_client_type()
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass,

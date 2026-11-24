@@ -14,6 +14,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from ..const import LOGGER
+from .config import entry_is_api_key_only
 
 if TYPE_CHECKING:
     from .. import UnifiConfigEntry
@@ -90,6 +91,7 @@ class UnifiConnectionManager:
         self.api = api
         self.signal = signal
         self.available = True
+        self._api_key_only = entry_is_api_key_only(config_entry.data)
 
         self._recovery_callback = recovery_callback
         self._attempt = 0
@@ -173,9 +175,12 @@ class UnifiConnectionManager:
             LOGGER.debug("UniFi Network answered the session check: %r", probe_err)
 
     async def _async_probe(self) -> None:
-        """Request system information, which every account can read."""
+        """Request data every account or API key can read."""
         async with asyncio.timeout(REQUEST_TIMEOUT):
-            await self.api.system_information.update()
+            if self._api_key_only:
+                await self.api.network.get_info()
+            else:
+                await self.api.system_information.update()
 
     def _cancel_stable_timer(self) -> None:
         """Cancel the pending reset of the retry backoff."""
@@ -266,6 +271,10 @@ class UnifiConnectionManager:
             self._handle_login_error(err)
             return
         except aiounifi.AiounifiException as err:
+            if self._api_key_only:
+                # Every request carries the key, there is no session to renew
+                LOGGER.debug("UniFi Network is not ready: %r", err)
+                return
             # An expired session, or an answer a fresh session tells apart
             LOGGER.debug("UniFi Network did not accept the session: %r", err)
             if not await self._async_login():

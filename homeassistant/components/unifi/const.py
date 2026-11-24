@@ -26,7 +26,18 @@ PLATFORMS = [
     Platform.UPDATE,
 ]
 
+API_KEY_ONLY_PLATFORMS = [
+    Platform.BUTTON,
+    Platform.DEVICE_TRACKER,
+    Platform.SENSOR,
+]
+
 CONF_SITE_ID = "site"
+
+# Stored local user credentials do not imply the mode: they are kept on a
+# switch to API key only so switching back is lossless.
+CONF_CONNECTION_MODE = "connection_mode"
+CONNECTION_MODE_API_KEY_ONLY = "api_key_only"
 
 UNIFI_WIRELESS_CLIENTS = "unifi_wireless_clients"
 
@@ -53,6 +64,12 @@ DEFAULT_TRACK_CLIENTS = True
 DEFAULT_TRACK_DEVICES = True
 DEFAULT_TRACK_WIRED_CLIENTS = True
 DEFAULT_DETECTION_TIME = 300
+# Integration API clients are polled, a shorter time could expire between polls
+NETWORK_MIN_DETECTION_TIME = 60
+
+# Entity registry option remembering the connection type of an Integration API
+# client, which the API no longer reports once the client disconnects
+CLIENT_TYPE_OPTION = "client_type"
 
 ATTR_MANUFACTURER = "Ubiquiti Networks"
 

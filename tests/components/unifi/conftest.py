@@ -16,9 +16,15 @@ from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 
 from homeassistant.components.unifi import STORAGE_KEY, STORAGE_VERSION
-from homeassistant.components.unifi.const import CONF_SITE_ID, DOMAIN
+from homeassistant.components.unifi.const import (
+    CONF_CONNECTION_MODE,
+    CONF_SITE_ID,
+    CONNECTION_MODE_API_KEY_ONLY,
+    DOMAIN,
+)
 from homeassistant.components.unifi.hub.connection import RETRY_DELAYS, RETRY_JITTER
 from homeassistant.const import (
+    CONF_API_KEY,
     CONF_HOST,
     CONF_PASSWORD,
     CONF_PORT,
@@ -50,6 +56,11 @@ DEFAULT_CONFIG_ENTRY_ID = "1"
 DEFAULT_HOST = "1.2.3.4"
 DEFAULT_PORT = 1234
 DEFAULT_SITE = "site_id"
+
+NETWORK_API_KEY = "api_key"
+NETWORK_SITE_ID = "88f7af54-98f8-306a-a1c7-c9349722b1f6"
+NETWORK_VERSION = "10.0.160"
+NETWORK_URL = f"https://{DEFAULT_HOST}:{DEFAULT_PORT}/proxy/network/integration/v1"
 
 CONTROLLER_HOST = {
     "hostname": "controller_host",
@@ -361,6 +372,129 @@ async def fixture_config_entry_setup(
 ) -> MockConfigEntry:
     """Fixture providing a set up instance of UniFi network integration."""
     return await config_entry_factory()
+
+
+@pytest.fixture(name="network_config_entry")
+def fixture_network_config_entry(
+    hass: HomeAssistant, config_entry_options: MappingProxyType[str, Any]
+) -> MockConfigEntry:
+    """Define a config entry connecting with only an API key."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        entry_id="1",
+        unique_id=NETWORK_SITE_ID,
+        title="Site name",
+        data={
+            CONF_HOST: DEFAULT_HOST,
+            CONF_API_KEY: NETWORK_API_KEY,
+            CONF_PORT: DEFAULT_PORT,
+            CONF_SITE_ID: DEFAULT_SITE,
+            CONF_VERIFY_SSL: False,
+            CONF_CONNECTION_MODE: CONNECTION_MODE_API_KEY_ONLY,
+        },
+        options=config_entry_options,
+    )
+    config_entry.add_to_hass(hass)
+    return config_entry
+
+
+@pytest.fixture(name="network_site_payload")
+def fixture_network_site_data() -> list[dict[str, Any]]:
+    """Integration API site data."""
+    return [
+        {"id": NETWORK_SITE_ID, "internalReference": DEFAULT_SITE, "name": "Site name"}
+    ]
+
+
+@pytest.fixture(name="network_client_payload")
+def fixture_network_client_data() -> list[dict[str, Any]]:
+    """Integration API client data."""
+    return []
+
+
+@pytest.fixture(name="network_device_payload")
+def fixture_network_device_data() -> list[dict[str, Any]]:
+    """Integration API device list data."""
+    return []
+
+
+@pytest.fixture(name="network_device_details_payload")
+def fixture_network_device_details_data() -> dict[str, dict[str, Any]]:
+    """Integration API device details, by device ID."""
+    return {}
+
+
+@pytest.fixture(name="network_device_statistics_payload")
+def fixture_network_device_statistics_data() -> dict[str, dict[str, Any]]:
+    """Integration API device statistics, by device ID."""
+    return {}
+
+
+def network_page(data: list[dict[str, Any]]) -> dict[str, Any]:
+    """Wrap items into one page of an Integration API list."""
+    return {
+        "offset": 0,
+        "limit": 200,
+        "count": len(data),
+        "totalCount": len(data),
+        "data": data,
+    }
+
+
+@pytest.fixture(name="mock_network_requests")
+def fixture_network_requests(
+    aioclient_mock: AiohttpClientMocker,
+    network_site_payload: list[dict[str, Any]],
+    network_client_payload: list[dict[str, Any]],
+    network_device_payload: list[dict[str, Any]],
+    network_device_details_payload: dict[str, dict[str, Any]],
+    network_device_statistics_payload: dict[str, dict[str, Any]],
+) -> Callable[[], None]:
+    """Mock the Integration API responses."""
+
+    def __mock_requests() -> None:
+        site = f"{NETWORK_URL}/sites/{NETWORK_SITE_ID}"
+        aioclient_mock.get(
+            f"{NETWORK_URL}/info", json={"applicationVersion": NETWORK_VERSION}
+        )
+        aioclient_mock.get(
+            f"{NETWORK_URL}/sites", json=network_page(network_site_payload)
+        )
+        aioclient_mock.get(f"{site}/clients", json=network_page(network_client_payload))
+        aioclient_mock.get(f"{site}/devices", json=network_page(network_device_payload))
+        for device_id, details in network_device_details_payload.items():
+            aioclient_mock.get(f"{site}/devices/{device_id}", json=details)
+        for device_id, statistics in network_device_statistics_payload.items():
+            aioclient_mock.get(
+                f"{site}/devices/{device_id}/statistics/latest", json=statistics
+            )
+
+    return __mock_requests
+
+
+@pytest.fixture(name="network_config_entry_factory")
+async def fixture_network_config_entry_factory(
+    hass: HomeAssistant,
+    network_config_entry: MockConfigEntry,
+    mock_network_requests: Callable[[], None],
+) -> ConfigEntryFactoryType:
+    """Fixture factory that sets up an entry connecting with only an API key."""
+
+    async def __mock_setup_config_entry() -> MockConfigEntry:
+        mock_network_requests()
+        await hass.config_entries.async_setup(network_config_entry.entry_id)
+        await hass.async_block_till_done()
+        return network_config_entry
+
+    return __mock_setup_config_entry
+
+
+@pytest.fixture(name="network_config_entry_setup")
+async def fixture_network_config_entry_setup(
+    network_config_entry_factory: ConfigEntryFactoryType,
+) -> MockConfigEntry:
+    """Fixture providing a set up entry connecting with only an API key."""
+    return await network_config_entry_factory()
 
 
 # Websocket fixtures

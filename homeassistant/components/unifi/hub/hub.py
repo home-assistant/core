@@ -1,16 +1,22 @@
 """UniFi Network abstraction."""
 
+import asyncio
+from collections.abc import Mapping
 from contextlib import suppress
 from datetime import datetime, tzinfo
 import re
 from typing import TYPE_CHECKING
 
 import aiounifi
-from aiounifi.interfaces.sites import Sites
 
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
+from homeassistant.const import Platform
 from homeassistant.core import Event, HomeAssistant, callback
-from homeassistant.exceptions import ConfigEntryError
+from homeassistant.exceptions import (
+    ConfigEntryAuthFailed,
+    ConfigEntryError,
+    ConfigEntryNotReady,
+)
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import (
     DeviceEntry,
@@ -20,12 +26,20 @@ from homeassistant.helpers.device_registry import (
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.util import dt as dt_util
 
-from ..const import ATTR_MANUFACTURER, CONF_SITE_ID, DOMAIN, LOGGER, PLATFORMS
+from ..const import (
+    API_KEY_ONLY_PLATFORMS,
+    ATTR_MANUFACTURER,
+    CONF_SITE_ID,
+    DOMAIN,
+    LOGGER,
+    PLATFORMS,
+)
 from .adoption import UnifiDeviceAdoption
 from .config import UnifiConfig
-from .connection import UnifiConnectionManager
+from .connection import REQUEST_TIMEOUT, UnifiConnectionManager
 from .entity_helper import UnifiEntityHelper
 from .entity_loader import UnifiEntityLoader
+from .network import NetworkPorts, NetworkStatistics
 from .websocket import UnifiWebsocket
 
 if TYPE_CHECKING:
@@ -35,21 +49,50 @@ OBJECT_ID = re.compile(r"[0-9a-f]{24}")
 UUID = re.compile(r"[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}")
 
 
+def site_ids_moved(old_id: str, new_id: str) -> bool:
+    """Return if two IDs can be the same site in either API.
+
+    Consoles older than UniFi Network 11 give a site an ObjectId in the local
+    user API, the Integration API always gives it a UUID.
+    """
+    return bool(
+        (OBJECT_ID.fullmatch(old_id) and UUID.fullmatch(new_id))
+        or (UUID.fullmatch(old_id) and OBJECT_ID.fullmatch(new_id))
+    )
+
+
+@callback
+def async_move_site_devices(
+    hass: HomeAssistant, entry_id: str, old_id: str, new_id: str
+) -> None:
+    """Move the devices of the UniFi Network application to a new site ID."""
+    device_registry = dr.async_get(hass)
+    for domain in (DOMAIN, SWITCH_DOMAIN):
+        device = device_registry.async_get_device_by_identifier(
+            (domain, old_id), entry_id
+        )
+        if device:
+            device_registry.async_update_device(
+                device.id, new_identifiers={(domain, new_id)}
+            )
+
+
 @callback
 def update_site_unique_id(
     hass: HomeAssistant,
     config_entry: UnifiConfigEntry,
     old_id: str,
     site_name: str,
-    sites: Sites,
+    site_ids: Mapping[str, str],
 ) -> str:
     """Move an entry from the ObjectId to the UUID UniFi Network 11 gives sites.
 
-    The site name remains stable and is unique per controller.
+    The site name remains stable and is unique per controller, site_ids maps
+    it to the ID of the site. The Integration API always identifies sites by
+    UUID.
     """
     if not OBJECT_ID.fullmatch(old_id):
         return old_id
-    site_ids = {site.name: site.site_id for site in sites.values()}
     new_id = site_ids.get(site_name)
     if new_id is None or not UUID.fullmatch(new_id):
         return old_id
@@ -57,15 +100,7 @@ def update_site_unique_id(
         return old_id
 
     LOGGER.info("UniFi site %s changed ID from %s to %s", site_name, old_id, new_id)
-    device_registry = dr.async_get(hass)
-    for domain in (DOMAIN, SWITCH_DOMAIN):
-        device = device_registry.async_get_device_by_identifier(
-            (domain, old_id), config_entry.entry_id
-        )
-        if device:
-            device_registry.async_update_device(
-                device.id, new_identifiers={(domain, new_id)}
-            )
+    async_move_site_devices(hass, config_entry.entry_id, old_id, new_id)
     hass.config_entries.async_update_entry(config_entry, unique_id=new_id)
     return new_id
 
@@ -92,6 +127,10 @@ class UnifiHub:
             self._async_connection_recovered,
         )
         config_entry.async_on_unload(self.connection.stop)
+        self.network_ports = NetworkPorts(api)
+        self.network_statistics = NetworkStatistics(api)
+        self.network_version: str | None = None
+        """Version of the Network application, read from the Integration API."""
         self.websocket = UnifiWebsocket(self.connection)
         self.entity_loader = UnifiEntityLoader(self)
         self.adoption = UnifiDeviceAdoption(self)
@@ -145,25 +184,18 @@ class UnifiHub:
         """Event specific per UniFi entry to signal new options."""
         return f"unifi-options-{self.config.entry.entry_id}"
 
+    @property
+    def platforms(self) -> list[Platform]:
+        """Platforms the connection mode can fill."""
+        return API_KEY_ONLY_PLATFORMS if self.config.api_key_only else PLATFORMS
+
     async def initialize(self) -> None:
         """Set up a UniFi Network instance."""
         await self.entity_loader.async_load_sites()
-        # Requests for a site that is gone get 401, check it before using it
-        unique_id = self.config.entry.unique_id
-        assert unique_id is not None
-        if unique_id not in self.api.sites:
-            unique_id = update_site_unique_id(
-                self.hass,
-                self.config.entry,
-                unique_id,
-                self.site,
-                self.api.sites,
-            )
-        if (site := self.api.sites.get(unique_id)) is None:
-            raise ConfigEntryError(
-                translation_domain=DOMAIN, translation_key="site_not_found"
-            )
-        self.is_admin = site.role == "admin"
+        if self.config.api_key_only:
+            await self._async_assign_network_site()
+        else:
+            self._async_check_site()
 
         await self.entity_loader.initialize()
         await self._async_load_time_zone()
@@ -173,6 +205,58 @@ class UnifiHub:
         self.config.entry.async_on_unload(
             self.config.entry.add_update_listener(self.async_config_entry_updated)
         )
+
+    @callback
+    def _async_check_site(self) -> None:
+        """Check the site exists and if the account administers it."""
+        # Requests for a site that is gone get 401, check it before using it
+        unique_id = self.config.entry.unique_id
+        assert unique_id is not None
+        if unique_id not in self.api.sites:
+            unique_id = update_site_unique_id(
+                self.hass,
+                self.config.entry,
+                unique_id,
+                self.site,
+                {site.name: site.site_id for site in self.api.sites.values()},
+            )
+        if (site := self.api.sites.get(unique_id)) is None:
+            raise ConfigEntryError(
+                translation_domain=DOMAIN, translation_key="site_not_found"
+            )
+        self.is_admin = site.role == "admin"
+
+    async def _async_assign_network_site(self) -> None:
+        """Make the site of the entry the one the Integration API uses."""
+        network = self.api.network
+        unique_id = self.config.entry.unique_id
+        if unique_id is not None and unique_id not in network.sites:
+            unique_id = update_site_unique_id(
+                self.hass,
+                self.config.entry,
+                unique_id,
+                self.site,
+                {
+                    site.internal_reference: site.site_id
+                    for site in network.sites.values()
+                },
+            )
+        if unique_id is None or unique_id not in network.sites:
+            raise ConfigEntryError(
+                translation_domain=DOMAIN, translation_key="site_not_found"
+            )
+        try:
+            async with asyncio.timeout(REQUEST_TIMEOUT):
+                await network.assign_site(unique_id)
+        except (aiounifi.Forbidden, aiounifi.Unauthorized) as err:
+            raise ConfigEntryAuthFailed from err
+        except (TimeoutError, aiounifi.AiounifiException) as err:
+            raise ConfigEntryNotReady("UniFi site is not available") from err
+        # Only an administrator can create an API key
+        self.is_admin = True
+        with suppress(TimeoutError, aiounifi.AiounifiException):
+            async with asyncio.timeout(REQUEST_TIMEOUT):
+                self.network_version = (await network.get_info())["applicationVersion"]
 
     async def _async_load_time_zone(self) -> None:
         """Use the time zone from the controller's system information."""
@@ -189,7 +273,7 @@ class UnifiHub:
         """UniFi Network device info."""
         assert self.config.entry.unique_id is not None
 
-        version: str | None = None
+        version = self.network_version
         if sysinfo := next(iter(self.api.system_information.values()), None):
             version = sysinfo.version
 
@@ -243,5 +327,5 @@ class UnifiHub:
         await self.websocket.stop_and_wait()
 
         return await self.hass.config_entries.async_unload_platforms(
-            self.config.entry, PLATFORMS
+            self.config.entry, self.platforms
         )

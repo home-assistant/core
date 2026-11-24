@@ -40,6 +40,9 @@
           "inactive": "mdi:shield-outline"
         }
       },
+      "network_device_state": {
+        "default": "mdi:lan-connect"
+      },
       "port_bandwidth_rx": {
         "default": "mdi:download"
       },

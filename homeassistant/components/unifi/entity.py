@@ -6,14 +6,10 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING, override
 
 import aiounifi
-from aiounifi.interfaces.api_handlers import (
-    APIHandler,
-    CallbackType,
-    ItemEvent,
-    UnsubscribeType,
-)
+from aiounifi.interfaces.api_handlers import CallbackType, ItemEvent, UnsubscribeType
 from aiounifi.models.api import ApiItem
 from aiounifi.models.event import Event, EventKey
+from aiounifi.network.v1.models.device import DeviceState
 
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.core import callback
@@ -27,7 +23,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity, EntityDescription
 
 from .const import ATTR_MANUFACTURER, DOMAIN
-from .coordinator import UnifiDataUpdateCoordinator
+from .coordinator import UnifiApiHandler, UnifiDataUpdateCoordinator
 
 if TYPE_CHECKING:
     from .hub import UnifiHub
@@ -155,8 +151,46 @@ def async_unifi_network_device_info_fn(hub: UnifiHub, obj_id: str) -> DeviceInfo
     )
 
 
+@callback
+def async_network_device_available_fn(hub: UnifiHub, obj_id: str) -> bool:
+    """Check if a device of the Integration API is online."""
+    device = hub.api.network.devices.get(obj_id.partition("_")[0])
+    return hub.available and device is not None and device.state is DeviceState.ONLINE
+
+
+@callback
+def async_network_device_supported_fn(hub: UnifiHub, obj_id: str) -> bool:
+    """Check if the Integration API supports a device."""
+    return hub.api.network.devices[obj_id.partition("_")[0]].supported
+
+
+@callback
+def async_network_device_device_info_fn(hub: UnifiHub, obj_id: str) -> DeviceInfo:
+    """Create device registry entry for a device of the Integration API."""
+    device = hub.api.network.devices[obj_id.partition("_")[0]]
+    return DeviceInfo(
+        connections={(CONNECTION_NETWORK_MAC, device.mac_address)},
+        manufacturer=ATTR_MANUFACTURER,
+        model=device.model,
+        name=device.name or device.model,
+        sw_version=device.firmware_version,
+    )
+
+
+@callback
+def async_network_client_device_info_fn(hub: UnifiHub, obj_id: str) -> DeviceInfo:
+    """Create device registry entry for a client of the Integration API."""
+    client = hub.api.network.clients[obj_id]
+    return DeviceInfo(
+        connections={(CONNECTION_NETWORK_MAC, obj_id)},
+        name=client.name or None,
+    )
+
+
 @dataclass(frozen=True, kw_only=True)
-class UnifiEntityDescription[HandlerT: APIHandler, ItemT: ApiItem](EntityDescription):
+class UnifiEntityDescription[HandlerT: UnifiApiHandler, ItemT: ApiItem](
+    EntityDescription
+):
     """UniFi Entity Description."""
 
     api_handler_fn: Callable[[aiounifi.Controller], HandlerT]
@@ -191,7 +225,7 @@ class UnifiEntityDescription[HandlerT: APIHandler, ItemT: ApiItem](EntityDescrip
     """If entity needs to do regular checks on state."""
 
 
-class UnifiEntity[HandlerT: APIHandler, ItemT: ApiItem](Entity):
+class UnifiEntity[HandlerT: UnifiApiHandler, ItemT: ApiItem](Entity):
     """Representation of a UniFi entity."""
 
     entity_description: UnifiEntityDescription[HandlerT, ItemT]
