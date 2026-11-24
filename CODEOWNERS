@@ -1173,6 +1173,8 @@ AGENTS.md @home-assistant/core
 /tests/components/lyric/ @timmo001
 /homeassistant/components/madvr/ @iloveicedgreentea
 /tests/components/madvr/ @iloveicedgreentea
+/homeassistant/components/mammotion/ @mikey0000
+/tests/components/mammotion/ @mikey0000
 /homeassistant/components/map_tiles/ @home-assistant/core
 /tests/components/map_tiles/ @home-assistant/core
 /homeassistant/components/marantz_infrared/ @balloob

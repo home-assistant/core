@@ -8805,6 +8805,19 @@
       "config_flow": true,
       "iot_class": "cloud_push"
     },
+    "mammotion": {
+      "name": "Mammotion",
+      "integration_type": "hub",
+      "categories": [
+        "garden_plants"
+      ],
+      "connectivity": [
+        "bluetooth",
+        "cloud"
+      ],
+      "config_flow": true,
+      "iot_class": "cloud_push"
+    },
     "marantz": {
       "name": "Marantz",
       "integrations": {
