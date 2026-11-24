@@ -9,13 +9,15 @@ from unittest.mock import MagicMock, Mock, patch
 
 import pytest
 from pytest_homeassistant.common import async_fire_time_changed
-from soco.exceptions import SoCoException, SoCoUPnPException
+from soco.exceptions import SoCoUPnPException
 
 from homeassistant.components.sonos.const import (
     DATA_SONOS_DISCOVERY_MANAGER,
     DOMAIN,
     MODEL_SONOS_ARC_ULTRA,
+    SCAN_INTERVAL,
 )
+from homeassistant.components.sonos.services import SonosService, SonosServiceArgument
 from homeassistant.components.sonos.switch import (
     ATTR_DURATION,
     ATTR_ID,
@@ -706,27 +708,91 @@ async def test_tv_ungroup_autoplay_not_created_for_non_ht(
     assert entity_id not in entity_registry.entities
 
 
-async def test_alarm_update_exception_logs_warning(
+async def test_alarms_multiple_households(
     hass: HomeAssistant,
-    async_setup_sonos,
+    async_setup_sonos: Callable[[], Coroutine[Any, Any, None]],
+    soco_factory: SoCoMockFactory,
+    alarm_clock: SonosMockAlarmClock,
+    discover: MagicMock,
     entity_registry: er.EntityRegistry,
-    soco: MockSoCo,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Test household mismatch logs warning and alarm update/setup is skipped."""
-    with patch(
-        "homeassistant.components.sonos.alarms.Alarms.update",
-        side_effect=SoCoException(
-            "Alarm list UID RINCON_0001234567890:31"
-            " does not match RINCON_000E987654321:0"
-        ),
-    ):
-        await async_setup_sonos()
-        await hass.async_block_till_done()
+    """Test alarms with the same ID in two households are kept separate."""
+    soco_b = soco_factory.cache_mock(MockSoCo(), "10.10.10.2", "Bedroom")
+    soco_b.household_id = "household_b"
+    soco_b.alarmClock = SonosMockAlarmClock(
+        {
+            "CurrentAlarmListVersion": f"{soco_b.uid}:3",
+            "CurrentAlarmList": "<Alarms>"
+            '<Alarm ID="14" StartTime="08:00:00" Duration="02:00:00" '
+            f'Recurrence="DAILY" Enabled="0" RoomUUID="{soco_b.uid}" '
+            'ProgramURI="x-rincon-buzzer:0" ProgramMetaData="" '
+            'PlayMode="SHUFFLE_NOREPEAT" Volume="25" IncludeLinkedZones="0"/>'
+            "</Alarms>",
+        },
+        soco_b.ip_address,
+    )
+    await async_setup_sonos()
 
-    # Alarm should not be set up due to household mismatch
-    assert "switch.zone_a_daily_alarm_07_00" not in entity_registry.entities
-    assert "cannot be updated due to a household mismatch" in caplog.text
+    discover.call_args.args[1](
+        SsdpServiceInfo(
+            ssdp_location=f"http://{soco_b.ip_address}/",
+            ssdp_st="urn:schemas-upnp-org:device:ZonePlayer:1",
+            ssdp_usn=f"uuid:{soco_b.uid}_MR::urn:schemas-upnp-org:service:GroupRenderingControl:1",
+            upnp={ATTR_UPNP_UDN: f"uuid:{soco_b.uid}"},
+        ),
+        SsdpChange.ALIVE,
+    )
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert entity_registry.async_get_entity_id(
+        SWITCH_DOMAIN, DOMAIN, ALARM_14_UNIQUE_ID
+    )
+    assert entity_registry.async_get_entity_id(
+        SWITCH_DOMAIN, DOMAIN, "alarm-household_b:14"
+    )
+    assert hass.states.get("switch.zone_a_daily_alarm_07_00").state == STATE_ON
+    assert hass.states.get("switch.bedroom_daily_alarm_08_00").state == STATE_OFF
+
+    # When subscriptions fail, each household only polls its own speakers.
+    alarm_clock.ListAlarms.reset_mock()
+    soco_b.alarmClock.ListAlarms.reset_mock()
+    caplog.clear()
+    async_fire_time_changed(hass, dt_util.utcnow() + SCAN_INTERVAL)
+    await hass.async_block_till_done(wait_background_tasks=True)
+    # Let the debounced household poll run.
+    async_fire_time_changed(hass, dt_util.utcnow() + SCAN_INTERVAL * 2)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    alarm_clock.ListAlarms.assert_called_once()
+    soco_b.alarmClock.ListAlarms.assert_called_once()
+    assert "Could not refresh" not in caplog.text
+
+    # update_alarm works for each household, and toggling that household's
+    # alarm switch keeps the updated time.
+    for media_player, switch, alarm_clock_mock in (
+        ("media_player.zone_a", "switch.zone_a_daily_alarm_07_00", alarm_clock),
+        ("media_player.bedroom", "switch.bedroom_daily_alarm_08_00", soco_b.alarmClock),
+    ):
+        await hass.services.async_call(
+            DOMAIN,
+            SonosService.UPDATE_ALARM,
+            {
+                TargetKey.ENTITY_ID: media_player,
+                SonosServiceArgument.ALARM_ID: 14,
+                SonosServiceArgument.TIME: "09:30:00",
+            },
+            blocking=True,
+        )
+        await hass.services.async_call(
+            SWITCH_DOMAIN,
+            SwitchService.TOGGLE,
+            {TargetKey.ENTITY_ID: switch},
+            blocking=True,
+        )
+        assert alarm_clock_mock.UpdateAlarm.call_count == 2
+        sent = dict(alarm_clock_mock.UpdateAlarm.call_args.args[0])
+        assert sent["StartLocalTime"] == "09:30:00"
 
 
 async def test_alarm_setup_for_undiscovered_speaker(

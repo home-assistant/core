@@ -42,6 +42,9 @@
     "mode_timespan_required": {
       "message": "The mode `{mode}` requires a 'Duration' or 'Period'"
     },
+    "mode_unknown": {
+      "message": "The mode `{mode}` is not a valid system mode"
+    },
     "override_not_in_future": {
       "message": "The override must end in the future (if the duration is 0, the next scheduled setpoint may have already passed)"
     },

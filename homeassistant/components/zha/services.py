@@ -25,7 +25,8 @@ from zha.application.platforms.siren import (
     StrobeLevel,
     WarningMode,
 )
-from zha.zigbee.device import ZigbeeDevice
+from zha.zigbee.device import BaseDevice, ZigbeeDevice
+from zha.zigbee.group import Group
 from zigpy.types.named import EUI64, KeyData
 from zigpy.typing import (
     UNDEFINED as ZIGPY_UNDEFINED,
@@ -50,7 +51,12 @@ from .const import (
     ZHAService,
     ZHAServiceArgument,
 )
-from .helpers import IEEE_SCHEMA, SERVICE_PERMIT_PARAMS, get_zha_data
+from .helpers import (
+    IEEE_SCHEMA,
+    SERVICE_PERMIT_PARAMS,
+    convert_zha_error_to_ha_error,
+    get_zha_data,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -188,12 +194,21 @@ def _get_gateway(service: ServiceCall) -> Gateway:
     return gateway_proxy.gateway
 
 
+def _get_device(zha_gateway: Gateway, ieee: EUI64) -> BaseDevice:
+    """Return the device, raising a user-facing error if it is unknown."""
+    if (zha_device := zha_gateway.get_device(ieee)) is None:
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="device_not_found",
+            translation_placeholders={"ieee": str(ieee)},
+        )
+
+    return zha_device
+
+
 def _get_zigbee_device(zha_gateway: Gateway, ieee: EUI64) -> ZigbeeDevice:
     """Return the Zigbee device, raising if it is missing or not a Zigbee device."""
-    zha_device = zha_gateway.get_device(ieee)
-    if zha_device is None:
-        raise ValueError(f"Device with IEEE {ieee!s} not found")
-
+    zha_device = _get_device(zha_gateway, ieee)
     if not isinstance(zha_device, ZigbeeDevice):
         raise ServiceValidationError(
             translation_domain=DOMAIN,
@@ -202,6 +217,31 @@ def _get_zigbee_device(zha_gateway: Gateway, ieee: EUI64) -> ZigbeeDevice:
         )
 
     return zha_device
+
+
+def _get_warning_device(zha_gateway: Gateway, ieee: EUI64) -> BaseSiren:
+    """Return the IAS warning device entity of a device, raising if it has none."""
+    zha_device = _get_device(zha_gateway, ieee)
+    try:
+        return zha_device.get_entity(Platform.SIREN, pick_first=True)
+    except LookupError as err:
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="no_warning_device",
+            translation_placeholders={"ieee": str(ieee)},
+        ) from err
+
+
+def _get_group(zha_gateway: Gateway, group_id: int) -> Group:
+    """Return the group, raising a user-facing error if it is unknown."""
+    if (group := zha_gateway.get_group(group_id)) is None:
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="group_not_found",
+            translation_placeholders={"group_id": str(group_id)},
+        )
+
+    return group
 
 
 async def _permit(service: ServiceCall) -> None:
@@ -215,24 +255,27 @@ async def _permit(service: ServiceCall) -> None:
         src_ieee = service.data[ZHAServiceArgument.SOURCE_IEEE]
         link_key = service.data[ZHAServiceArgument.INSTALL_CODE]
         _LOGGER.info("Allowing join for %s device with link key", src_ieee)
-        await application_controller.permit_with_link_key(
-            time_s=duration, node=src_ieee, link_key=link_key
-        )
+        async with convert_zha_error_to_ha_error():
+            await application_controller.permit_with_link_key(
+                time_s=duration, node=src_ieee, link_key=link_key
+            )
         return
 
     if ZHAServiceArgument.QR_CODE in service.data:
         src_ieee, link_key = service.data[ZHAServiceArgument.QR_CODE]
         _LOGGER.info("Allowing join for %s device with link key", src_ieee)
-        await application_controller.permit_with_link_key(
-            time_s=duration, node=src_ieee, link_key=link_key
-        )
+        async with convert_zha_error_to_ha_error():
+            await application_controller.permit_with_link_key(
+                time_s=duration, node=src_ieee, link_key=link_key
+            )
         return
 
     if ieee:
         _LOGGER.info("Permitting joins for %ss on %s device", duration, ieee)
     else:
         _LOGGER.info("Permitting joins for %ss", duration)
-    await application_controller.permit(time_s=duration, node=ieee)
+    async with convert_zha_error_to_ha_error():
+        await application_controller.permit(time_s=duration, node=ieee)
 
 
 async def _remove(service: ServiceCall) -> None:
@@ -240,7 +283,8 @@ async def _remove(service: ServiceCall) -> None:
     zha_gateway = _get_gateway(service)
     ieee: EUI64 = service.data[ZHAServiceArgument.IEEE]
     _LOGGER.info("Removing node %s", ieee)
-    await zha_gateway.async_remove_device(ieee)
+    async with convert_zha_error_to_ha_error():
+        await zha_gateway.async_remove_device(ieee)
 
 
 async def _set_zigbee_cluster_attributes(service: ServiceCall) -> None:
@@ -256,14 +300,15 @@ async def _set_zigbee_cluster_attributes(service: ServiceCall) -> None:
         ZHAServiceArgument.MANUFACTURER, ZIGPY_UNDEFINED
     )
     zha_device = _get_zigbee_device(zha_gateway, ieee)
-    response = await zha_device.write_zigbee_attribute(
-        endpoint_id,
-        cluster_id,
-        attribute,
-        value,
-        cluster_type=cluster_type,
-        manufacturer=manufacturer,
-    )
+    async with convert_zha_error_to_ha_error():
+        response = await zha_device.write_zigbee_attribute(
+            endpoint_id,
+            cluster_id,
+            attribute,
+            value,
+            cluster_type=cluster_type,
+            manufacturer=manufacturer,
+        )
 
     _LOGGER.debug(
         (
@@ -305,16 +350,17 @@ async def _issue_zigbee_cluster_command(service: ServiceCall) -> None:
     if cluster_id >= MFG_CLUSTER_ID_START and manufacturer is None:
         manufacturer = zha_device.manufacturer_code
 
-    await zha_device.issue_cluster_command(
-        endpoint_id,
-        cluster_id,
-        command,
-        command_type,
-        args,
-        params,
-        cluster_type=cluster_type,
-        manufacturer=manufacturer,
-    )
+    async with convert_zha_error_to_ha_error():
+        await zha_device.issue_cluster_command(
+            endpoint_id,
+            cluster_id,
+            command,
+            command_type,
+            args,
+            params,
+            cluster_type=cluster_type,
+            manufacturer=manufacturer,
+        )
     _LOGGER.debug(
         (
             "Issued command for: %s: [%s] %s: [%s] %s: [%s] %s: [%s] %s: [%s]"
@@ -349,12 +395,11 @@ async def _issue_zigbee_group_command(service: ServiceCall) -> None:
     manufacturer: int | ZigpyUndefinedType = service.data.get(
         ZHAServiceArgument.MANUFACTURER, ZIGPY_UNDEFINED
     )
-    group = zha_gateway.get_group(group_id)
+    group = _get_group(zha_gateway, group_id)
     if cluster_id >= MFG_CLUSTER_ID_START and manufacturer is None:
         _LOGGER.error("Missing manufacturer attribute for cluster: %d", cluster_id)
-    response = None
-    if group is not None:
-        cluster = group.endpoint[cluster_id]
+    cluster = group.endpoint[cluster_id]
+    async with convert_zha_error_to_ha_error():
         response = await cluster.command(
             command, *args, manufacturer=manufacturer, expect_reply=True
         )
@@ -381,10 +426,10 @@ async def _warning_device_squawk(service: ServiceCall) -> None:
     strobe: int = service.data[ZHAServiceArgument.STROBE]
     level: int = service.data[ZHAServiceArgument.LEVEL]
 
-    device = zha_gateway.get_device(ieee)
-    siren: BaseSiren = device.get_entity(Platform.SIREN, pick_first=True)
+    siren = _get_warning_device(zha_gateway, ieee)
 
-    await siren.async_squawk(mode=mode, strobe=strobe, squawk_level=level)
+    async with convert_zha_error_to_ha_error():
+        await siren.async_squawk(mode=mode, strobe=strobe, squawk_level=level)
 
 
 async def _warning_device_warn(service: ServiceCall) -> None:
@@ -398,17 +443,17 @@ async def _warning_device_warn(service: ServiceCall) -> None:
     duty_mode: int = service.data[ZHAServiceArgument.DUTY_CYCLE]
     intensity: int = service.data[ZHAServiceArgument.INTENSITY]
 
-    device = zha_gateway.get_device(ieee)
-    siren: BaseSiren = device.get_entity(Platform.SIREN, pick_first=True)
+    siren = _get_warning_device(zha_gateway, ieee)
 
-    await siren.async_turn_on(
-        tone=mode,
-        volume_level=level,
-        duration=duration,
-        strobe=strobe,
-        strobe_duty_cycle=duty_mode,
-        strobe_intensity=intensity,
-    )
+    async with convert_zha_error_to_ha_error():
+        await siren.async_turn_on(
+            tone=mode,
+            volume_level=level,
+            duration=duration,
+            strobe=strobe,
+            strobe_duty_cycle=duty_mode,
+            strobe_intensity=intensity,
+        )
 
 
 LOCK_CODE_SLOT_SCHEMA: VolDictType = {

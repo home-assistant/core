@@ -44,8 +44,8 @@ from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.setup import async_setup_component
 
-from . import mock_config_entry, setup_platform
-from .const import METADATA
+from . import mock_config_entry, setup_paired_platform, setup_platform
+from .const import METADATA, PRODUCTS
 
 VEHICLE_VIN = "LRW3F7EK4NC700000"
 SITE_ID = 123456
@@ -745,3 +745,211 @@ async def test_gateway_repair_aborts_without_loaded_site(
 
     assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == "entry_not_loaded"
+
+
+def _energy_issue_id(entry: MockConfigEntry) -> str:
+    """Return the id of the pairing repair issue of the energy site."""
+    return f"energy_site_not_paired_{entry.entry_id}_{SITE_ID}"
+
+
+def _metadata_with_paired(paired: bool | None) -> dict[str, Any]:
+    """Return a copy of the metadata with the energy site paired flag set."""
+    metadata = deepcopy(METADATA)
+    metadata["energy_sites"][str(SITE_ID)]["paired"] = paired
+    return metadata
+
+
+def _products_without_battery() -> dict[str, Any]:
+    """Return a copy of the products with a solar-only energy site."""
+    products = deepcopy(PRODUCTS)
+    site = next(
+        product
+        for product in products["response"]
+        if product.get("energy_site_id") == SITE_ID
+    )
+    site["components"]["battery"] = False
+    return products
+
+
+@pytest.mark.parametrize(
+    "paired", [pytest.param(False, id="not_paired"), pytest.param(None, id="unknown")]
+)
+async def test_energy_site_repair_issue_created(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+    paired: bool | None,
+) -> None:
+    """Test a repair issue is created for a battery site Teslemetry cannot sign for."""
+    with patch(
+        "tesla_fleet_api.teslemetry.Teslemetry.metadata",
+        return_value=_metadata_with_paired(paired),
+    ):
+        entry = await setup_platform(hass, [])
+    assert entry.state is ConfigEntryState.LOADED
+
+    issue = issue_registry.async_get_issue(DOMAIN, _energy_issue_id(entry))
+    assert issue is not None
+    assert issue.config_entry_id == entry.entry_id
+    assert issue.translation_key == "energy_site_not_paired"
+    assert issue.translation_placeholders == {
+        "site": "Energy Site",
+        "link": f"https://teslemetry.com/console/energy/{SITE_ID}/setup",
+    }
+    assert issue.data == {
+        "entry_id": entry.entry_id,
+        "site_id": SITE_ID,
+        "site": "Energy Site",
+        "link": f"https://teslemetry.com/console/energy/{SITE_ID}/setup",
+    }
+
+
+async def test_no_energy_site_repair_issue_when_paired(
+    hass: HomeAssistant, issue_registry: ir.IssueRegistry
+) -> None:
+    """Test no repair issue is created when Teslemetry is paired with the gateway."""
+    entry = await setup_platform(hass, [])
+    assert entry.state is ConfigEntryState.LOADED
+
+    assert issue_registry.async_get_issue(DOMAIN, _energy_issue_id(entry)) is None
+
+
+async def test_no_energy_site_repair_issue_with_local_control(
+    hass: HomeAssistant, issue_registry: ir.IssueRegistry
+) -> None:
+    """Test no repair issue is created when the site has local control."""
+    with patch(
+        "tesla_fleet_api.teslemetry.Teslemetry.metadata",
+        return_value=_metadata_with_paired(False),
+    ):
+        entry = await setup_paired_platform(hass, [])
+    assert entry.state is ConfigEntryState.LOADED
+
+    assert issue_registry.async_get_issue(DOMAIN, _energy_issue_id(entry)) is None
+
+
+async def test_no_energy_site_repair_issue_without_battery(
+    hass: HomeAssistant, issue_registry: ir.IssueRegistry
+) -> None:
+    """Test no repair issue is created for a site without a Powerwall."""
+    with (
+        patch(
+            "tesla_fleet_api.teslemetry.Teslemetry.metadata",
+            return_value=_metadata_with_paired(False),
+        ),
+        patch(
+            "tesla_fleet_api.teslemetry.Teslemetry.products",
+            return_value=_products_without_battery(),
+        ),
+    ):
+        entry = await setup_platform(hass, [])
+    assert entry.state is ConfigEntryState.LOADED
+
+    assert issue_registry.async_get_issue(DOMAIN, _energy_issue_id(entry)) is None
+
+
+@pytest.mark.parametrize(
+    ("before", "after", "issue_before", "issue_after"),
+    [
+        pytest.param(False, True, True, False, id="becomes_paired"),
+        pytest.param(True, False, False, True, id="becomes_unpaired"),
+    ],
+)
+async def test_energy_site_repair_issue_follows_metadata(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    issue_registry: ir.IssueRegistry,
+    before: bool,
+    after: bool,
+    issue_before: bool,
+    issue_after: bool,
+) -> None:
+    """Test the repair issue follows the paired flag on each metadata poll."""
+    with patch(
+        "tesla_fleet_api.teslemetry.Teslemetry.metadata",
+        return_value=_metadata_with_paired(before),
+    ):
+        entry = await setup_platform(hass, [])
+    assert (
+        issue_registry.async_get_issue(DOMAIN, _energy_issue_id(entry)) is not None
+    ) is issue_before
+
+    with patch(
+        "tesla_fleet_api.teslemetry.Teslemetry.metadata",
+        return_value=_metadata_with_paired(after),
+    ):
+        freezer.tick(METADATA_INTERVAL)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert (
+        issue_registry.async_get_issue(DOMAIN, _energy_issue_id(entry)) is not None
+    ) is issue_after
+
+
+async def test_energy_site_repair_fix_flow(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test the fix flow re-checks metadata and resolves once paired."""
+    assert await async_setup_component(hass, "repairs", {})
+    client = await hass_client()
+
+    with patch(
+        "tesla_fleet_api.teslemetry.Teslemetry.metadata",
+        return_value=_metadata_with_paired(False),
+    ):
+        entry = await setup_platform(hass, [])
+    issue_id = _energy_issue_id(entry)
+    assert issue_registry.async_get_issue(DOMAIN, issue_id) is not None
+
+    result = await start_repair_fix_flow(client, DOMAIN, issue_id)
+    flow_id = result["flow_id"]
+    assert result["type"] == FlowResultType.FORM
+    assert result["step_id"] == "confirm"
+    assert result["description_placeholders"] == {
+        "site": "Energy Site",
+        "link": f"https://teslemetry.com/console/energy/{SITE_ID}/setup",
+    }
+
+    with patch(
+        "tesla_fleet_api.teslemetry.Teslemetry.metadata",
+        return_value=_metadata_with_paired(None),
+    ):
+        result = await process_repair_fix_flow(client, flow_id, json={})
+    assert result["type"] == FlowResultType.FORM
+    assert result["errors"] == {"base": "not_resolved"}
+    assert issue_registry.async_get_issue(DOMAIN, issue_id) is not None
+
+    with patch(
+        "tesla_fleet_api.teslemetry.Teslemetry.metadata",
+        return_value=_metadata_with_paired(True),
+    ):
+        result = await process_repair_fix_flow(client, flow_id, json={})
+    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert issue_registry.async_get_issue(DOMAIN, issue_id) is None
+
+
+@pytest.mark.parametrize(
+    "data",
+    [
+        pytest.param(None, id="no_data"),
+        pytest.param(
+            {"entry_id": "missing", "site_id": SITE_ID, "site": "Site", "link": "x"},
+            id="missing_entry",
+        ),
+        pytest.param(
+            {"entry_id": ENTRY_ID, "site_id": str(SITE_ID), "site": "Site"},
+            id="malformed",
+        ),
+    ],
+)
+async def test_energy_site_repair_invalid_data_returns_confirm_flow(
+    hass: HomeAssistant,
+    data: dict[str, Any] | None,
+) -> None:
+    """Test invalid pairing repair data falls back to a confirm flow."""
+    flow = await async_create_fix_flow(
+        hass, f"energy_site_not_paired_{ENTRY_ID}_{SITE_ID}", data
+    )
+    assert isinstance(flow, ConfirmRepairFlow)
