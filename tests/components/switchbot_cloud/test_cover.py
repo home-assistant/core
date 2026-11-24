@@ -19,7 +19,16 @@ from homeassistant.components.switchbot_cloud.const import (
     CURTAIN_MODE_SILENT,
 )
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import STATE_CLOSED, STATE_OPEN, STATE_UNKNOWN, TargetKey
+from homeassistant.const import (
+    SERVICE_CLOSE_COVER,
+    SERVICE_OPEN_COVER,
+    SERVICE_SET_COVER_POSITION,
+    SERVICE_STOP_COVER,
+    STATE_CLOSED,
+    STATE_OPEN,
+    STATE_UNKNOWN,
+    TargetKey,
+)
 from homeassistant.core import HomeAssistant
 
 from . import configure_integration
@@ -187,7 +196,7 @@ async def test_curtain_features(
     assert entry.state is ConfigEntryState.LOADED
 
     cover_id = "cover.cover_1"
-    service_data = {ATTR_ENTITY_ID: cover_id}
+    service_data = {TargetKey.ENTITY_ID: cover_id}
     service_data.update(args)
     with patch.object(SwitchBotAPI, "send_command") as mock_send_command:
         await hass.services.async_call(
