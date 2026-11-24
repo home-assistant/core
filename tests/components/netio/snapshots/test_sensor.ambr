@@ -36,7 +36,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'current',
     'unique_id': '24A42C39F87E_1_current',
     'unit_of_measurement': <UnitOfElectricCurrent.MILLIAMPERE: 'mA'>,
   })
@@ -97,7 +97,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'energy',
     'unique_id': '24A42C39F87E_1_energy',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
@@ -155,7 +155,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'load',
     'unique_id': '24A42C39F87E_1_load',
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
@@ -202,6 +202,9 @@
     'name': None,
     'object_id_base': 'Output 1 power factor',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.POWER_FACTOR: 'power_factor'>,
     'original_icon': None,
@@ -210,7 +213,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'power_factor',
     'unique_id': '24A42C39F87E_1_power_factor',
     'unit_of_measurement': None,
   })
@@ -270,7 +273,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'reverse_energy',
     'unique_id': '24A42C39F87E_1_reverse_energy',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
@@ -331,7 +334,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'total_energy',
     'unique_id': '24A42C39F87E_1_total_energy',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
@@ -392,7 +395,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'total_reverse_energy',
     'unique_id': '24A42C39F87E_1_total_reverse_energy',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })

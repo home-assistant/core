@@ -19,6 +19,7 @@ class NetioOutputEntity(CoordinatorEntity[NetioDataUpdateCoordinator]):
         super().__init__(coordinator)
         self._output_id = output_id
         self._attr_device_info = coordinator.device_info
+        self._last_output_name: str | None = None
 
     @property
     def output(self) -> Netio.OUTPUT | None:
@@ -27,10 +28,16 @@ class NetioOutputEntity(CoordinatorEntity[NetioDataUpdateCoordinator]):
 
     @property
     def output_name(self) -> str:
-        """Return the name of the output configured on the device."""
-        if (output := self.output) is None or not output.Name:
-            return f"Output {self._output_id}"
-        return output.Name
+        """Return the name of the output configured on the device.
+
+        The last known name is kept so the entity name does not flip to a
+        generic one while the output is missing from a poll.
+        """
+        if (output := self.output) is not None and output.Name:
+            self._last_output_name = output.Name
+        if self._last_output_name is not None:
+            return self._last_output_name
+        return f"Output {self._output_id}"
 
     @property
     @override
