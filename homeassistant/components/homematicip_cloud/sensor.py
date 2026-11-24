@@ -985,6 +985,7 @@ class HmipEsiGasCurrentGasFlow(HmipEsiSensorEntity):
     _attr_device_class = SensorDeviceClass.VOLUME_FLOW_RATE
     _attr_native_unit_of_measurement = UnitOfVolumeFlowRate.CUBIC_METERS_PER_HOUR
     _attr_state_class = SensorStateClass.MEASUREMENT
+    _attr_suggested_display_precision = 2
 
     def __init__(self, hap: HomematicipHAP, device) -> None:
         """Initialize the device."""

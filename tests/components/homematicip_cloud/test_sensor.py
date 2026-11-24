@@ -825,7 +825,9 @@ async def test_hmip_esi_iec_unknown_channel(
 
 
 async def test_hmip_esi_gas_current_gas_flow(
-    hass: HomeAssistant, default_mock_hap_factory: HomeFactory
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    default_mock_hap_factory: HomeFactory,
 ) -> None:
     """Test ESI-IEC CurrentGasFlow."""
     entity_id = "sensor.esi_gas_currentgasflow"
@@ -840,6 +842,8 @@ async def test_hmip_esi_gas_current_gas_flow(
     )
 
     assert ha_state.state == "1.03"
+    entry = entity_registry.async_get(entity_id)
+    assert entry.options["sensor"]["suggested_display_precision"] == 2
 
 
 async def test_hmip_esi_gas_gas_volume(
