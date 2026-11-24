@@ -165,7 +165,7 @@
   },
   "exceptions": {
     "install_failed": {
-      "message": "Failed to install update: {error}"
+      "message": "Failed to install the update."
     },
     "no_release_available": {
       "message": "No release is currently available to install."
@@ -174,10 +174,10 @@
       "message": "Installing updates remotely is not supported on Google Play editions of Fully Kiosk."
     },
     "update_feed_communication_error": {
-      "message": "Error communicating with Fully Kiosk update feed: {error}"
+      "message": "Error communicating with the Fully Kiosk update feed."
     },
     "update_feed_parse_error": {
-      "message": "Failed to parse Fully Kiosk update feed: {error}"
+      "message": "Failed to parse the Fully Kiosk update feed."
     },
     "version_not_found": {
       "message": "Version {version} was not found in available releases."

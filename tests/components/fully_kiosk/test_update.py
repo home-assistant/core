@@ -1,6 +1,8 @@
 """Test Fully Kiosk Browser update platform."""
 
+import asyncio
 from datetime import timedelta
+from typing import Any
 from unittest.mock import MagicMock, patch
 
 from aiohttp import ClientError
@@ -10,14 +12,24 @@ import pytest
 from pytest_homeassistant.common import (
     MockConfigEntry,
     async_fire_time_changed,
+    async_load_fixture,
     async_load_json_object_fixture,
 )
-from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
+from pytest_homeassistant.test_util.aiohttp import (
+    AiohttpClientMocker,
+    AiohttpClientMockResponse,
+)
+from yarl import URL
 
 from homeassistant.components.fully_kiosk.const import (
     DOMAIN,
+    UPDATE_FEED_INTERVAL,
+    UPDATE_FEED_RETRY_INTERVAL,
     UPDATE_FEED_URL,
     UPDATE_INTERVAL,
+)
+from homeassistant.components.fully_kiosk.coordinator import (
+    async_get_releases_coordinator,
 )
 from homeassistant.components.update import (
     ATTR_IN_PROGRESS,
@@ -269,15 +281,22 @@ async def test_update_google_play_edition(
     assert excinfo.value.translation_key == "play_store_install_unsupported"
 
 
+@pytest.mark.parametrize(
+    "side_effect",
+    [
+        pytest.param(FullyKioskError("Error", "Install failed"), id="api_error"),
+        pytest.param(ClientError("Connection refused"), id="connection_error"),
+        pytest.param(TimeoutError(), id="timeout"),
+    ],
+)
 @pytest.mark.usefixtures("init_integration")
 async def test_update_install_error(
     hass: HomeAssistant,
     mock_fully_kiosk: MagicMock,
+    side_effect: Exception,
 ) -> None:
     """Test error when calling loadApkFile."""
-    mock_fully_kiosk.loadApkFile.side_effect = FullyKioskError(
-        "Error", "Install failed"
-    )
+    mock_fully_kiosk.loadApkFile.side_effect = side_effect
 
     with pytest.raises(HomeAssistantError) as excinfo:
         await hass.services.async_call(
@@ -596,3 +615,138 @@ async def test_update_foreground_app_ignored(
     state = hass.states.get(ENTITY_ID)
     assert state
     assert state.attributes[ATTR_TITLE] == "Fully Kiosk Browser"
+
+
+async def test_update_waits_for_restart(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_fully_kiosk: MagicMock,
+) -> None:
+    """Test progress continues until the app is back after a slow restart."""
+    device_info = await async_load_json_object_fixture(hass, "deviceinfo.json", DOMAIN)
+    mock_fully_kiosk.getInstallApkState.return_value = {"status": "success"}
+
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    in_progress: list[bool] = []
+
+    async def get_device_info() -> dict[str, Any]:
+        in_progress.append(hass.states.get(ENTITY_ID).attributes[ATTR_IN_PROGRESS])
+        if len(in_progress) <= 8:
+            raise ClientError("Connection refused")
+        return {**device_info, "appVersionName": "1.61.4"}
+
+    mock_fully_kiosk.getDeviceInfo.side_effect = get_device_info
+
+    with patch("homeassistant.components.fully_kiosk.update.POLL_INTERVAL", 0.01):
+        await hass.services.async_call(
+            UPDATE_DOMAIN,
+            SERVICE_INSTALL,
+            {ATTR_ENTITY_ID: ENTITY_ID},
+            blocking=True,
+        )
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert in_progress == [True] * 9
+    state = hass.states.get(ENTITY_ID)
+    assert state.state == STATE_OFF
+    assert state.attributes[ATTR_IN_PROGRESS] is False
+
+
+@pytest.mark.usefixtures("mock_fully_kiosk")
+async def test_update_feed_retry(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    aioclient_mock: AiohttpClientMocker,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a failed feed fetch is retried without waiting for the next poll."""
+    aioclient_mock.clear_requests()
+    aioclient_mock.get(UPDATE_FEED_URL, exc=ClientError)
+
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert hass.states.get(ENTITY_ID).state == STATE_UNAVAILABLE
+
+    aioclient_mock.clear_requests()
+    aioclient_mock.get(
+        UPDATE_FEED_URL, text=await async_load_fixture(hass, "feed_media.xml", DOMAIN)
+    )
+    freezer.tick(UPDATE_FEED_RETRY_INTERVAL + timedelta(seconds=1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert hass.states.get(ENTITY_ID).state == STATE_ON
+
+
+async def test_update_feed_reused(
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+    aioclient_mock: AiohttpClientMocker,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test the shared releases are only fetched again when stale."""
+    assert aioclient_mock.call_count == 1
+
+    await hass.config_entries.async_reload(init_integration.entry_id)
+    await hass.async_block_till_done()
+    assert aioclient_mock.call_count == 1
+
+    await hass.config_entries.async_unload(init_integration.entry_id)
+    freezer.tick(UPDATE_FEED_INTERVAL)
+    await hass.config_entries.async_setup(init_integration.entry_id)
+    await hass.async_block_till_done()
+    assert aioclient_mock.call_count == 2
+
+
+@pytest.mark.usefixtures("mock_fully_kiosk")
+async def test_update_feed_failure_retried_on_reload(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    aioclient_mock: AiohttpClientMocker,
+) -> None:
+    """Test a failed fetch is retried when the cached coordinator is reused."""
+    aioclient_mock.clear_requests()
+    aioclient_mock.get(UPDATE_FEED_URL, exc=ClientError)
+
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert hass.states.get(ENTITY_ID).state == STATE_UNAVAILABLE
+
+    aioclient_mock.clear_requests()
+    aioclient_mock.get(
+        UPDATE_FEED_URL, text=await async_load_fixture(hass, "feed_media.xml", DOMAIN)
+    )
+    await hass.config_entries.async_reload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert hass.states.get(ENTITY_ID).state == STATE_ON
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_update_feed_fetch_is_shared(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test that devices set up at the same time share one fetch."""
+    freezer.tick(UPDATE_FEED_INTERVAL)
+    aioclient_mock.mock_calls.clear()
+    release = asyncio.Event()
+
+    async def slow_response(
+        method: str, url: URL, data: Any
+    ) -> AiohttpClientMockResponse:
+        await release.wait()
+        return AiohttpClientMockResponse(method, url, text="<rss></rss>")
+
+    aioclient_mock.clear_requests()
+    aioclient_mock.get(UPDATE_FEED_URL, side_effect=slow_response)
+
+    async_get_releases_coordinator(hass)
+    async_get_releases_coordinator(hass)
+    release.set()
+    await hass.async_block_till_done()
+    assert aioclient_mock.call_count == 1

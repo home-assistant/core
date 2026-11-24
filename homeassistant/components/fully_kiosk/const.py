@@ -11,6 +11,7 @@ DOMAIN: Final = "fully_kiosk"
 LOGGER = logging.getLogger(__package__)
 UPDATE_INTERVAL = timedelta(seconds=30)
 UPDATE_FEED_INTERVAL = timedelta(hours=12)
+UPDATE_FEED_RETRY_INTERVAL = timedelta(minutes=15)
 
 DEFAULT_PORT = 2323
 

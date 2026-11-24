@@ -2,6 +2,7 @@
 
 import asyncio
 from dataclasses import dataclass
+from datetime import datetime
 import re
 from typing import Any, cast, override
 
@@ -13,9 +14,10 @@ from fullykiosk.exceptions import FullyKioskError
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_SSL, CONF_VERIFY_SSL
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.util import dt as dt_util
 from homeassistant.util.hass_dict import HassKey
 
 from .const import (
@@ -23,6 +25,7 @@ from .const import (
     DOMAIN,
     LOGGER,
     UPDATE_FEED_INTERVAL,
+    UPDATE_FEED_RETRY_INTERVAL,
     UPDATE_FEED_URL,
     UPDATE_INTERVAL,
 )
@@ -101,6 +104,23 @@ class FullyKioskReleasesDataUpdateCoordinator(
             name=f"{DOMAIN}_releases",
             update_interval=UPDATE_FEED_INTERVAL,
         )
+        self._last_fetched: datetime | None = None
+        self._refresh_task: asyncio.Task[None] | None = None
+
+    @callback
+    def async_refresh_if_stale(self) -> None:
+        """Refresh missing or stale releases, sharing an ongoing refresh."""
+        if self._refresh_task and not self._refresh_task.done():
+            return
+        if (
+            self.last_update_success
+            and self._last_fetched
+            and dt_util.utcnow() - self._last_fetched < UPDATE_FEED_INTERVAL
+        ):
+            return
+        self._refresh_task = self.hass.async_create_task(
+            self.async_refresh(), f"{DOMAIN} releases refresh"
+        )
 
     @override
     async def _async_update_data(self) -> FullyKioskReleaseInfo:
@@ -114,7 +134,7 @@ class FullyKioskReleasesDataUpdateCoordinator(
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="update_feed_communication_error",
-                translation_placeholders={"error": str(err)},
+                retry_after=UPDATE_FEED_RETRY_INTERVAL.total_seconds(),
             ) from err
 
         try:
@@ -123,7 +143,7 @@ class FullyKioskReleasesDataUpdateCoordinator(
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="update_feed_parse_error",
-                translation_placeholders={"error": str(err)},
+                retry_after=UPDATE_FEED_RETRY_INTERVAL.total_seconds(),
             ) from err
 
         releases: list[FullyKioskRelease] = []
@@ -144,17 +164,19 @@ class FullyKioskReleasesDataUpdateCoordinator(
                     )
                 )
 
+        self._last_fetched = dt_util.utcnow()
         return FullyKioskReleaseInfo(releases=releases)
 
 
-async def async_get_releases_coordinator(
+@callback
+def async_get_releases_coordinator(
     hass: HomeAssistant,
 ) -> FullyKioskReleasesDataUpdateCoordinator:
     """Get or create the shared Fully Kiosk releases coordinator."""
     if (coordinator := hass.data.get(RELEASES_KEY)) is None:
         coordinator = FullyKioskReleasesDataUpdateCoordinator(hass)
         hass.data[RELEASES_KEY] = coordinator
-        await coordinator.async_refresh()
+    coordinator.async_refresh_if_stale()
     return coordinator
 
 

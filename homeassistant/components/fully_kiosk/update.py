@@ -59,7 +59,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Fully Kiosk Browser update entities."""
     coordinator: FullyKioskDataUpdateCoordinator = entry.runtime_data
-    releases_coordinator = await async_get_releases_coordinator(hass)
+    releases_coordinator = async_get_releases_coordinator(hass)
     async_add_entities([FullyKioskUpdateEntity(coordinator, releases_coordinator)])
 
 
@@ -119,6 +119,7 @@ class FullyKioskUpdateEntity(FullyKioskEntity, UpdateEntity):
         loop = asyncio.get_running_loop()
         start_time = loop.time()
         has_started = False
+        installed = False
 
         try:
             while (remaining := INSTALL_TIMEOUT - (loop.time() - start_time)) > 0:
@@ -127,6 +128,13 @@ class FullyKioskUpdateEntity(FullyKioskEntity, UpdateEntity):
                 # Check if device updated and restarted with target version
                 if not is_reinstall and self.installed_version == target_version:
                     break
+
+                if installed:
+                    # The app restarts after installing, so wait until it is back
+                    await self.coordinator.async_refresh()
+                    if self.coordinator.last_update_success:
+                        break
+                    continue
 
                 remaining = INSTALL_TIMEOUT - (loop.time() - start_time)
                 if remaining <= 0:
@@ -150,14 +158,8 @@ class FullyKioskUpdateEntity(FullyKioskEntity, UpdateEntity):
                     has_started = True
 
                 if status in ("success", "idle") and (status != "idle" or has_started):
-                    # Fully Kiosk process restarts upon successful APK installation.
-                    # Retry coordinator refresh in case the web server is still booting up.
-                    for _ in range(5):
-                        await self.coordinator.async_refresh()
-                        if self.coordinator.last_update_success:
-                            break
-                        await asyncio.sleep(1.0)
-                    break
+                    installed = True
+                    continue
 
                 if status == "failed":
                     error_msg = state.get("statustext") or "APK installation failed"
@@ -327,11 +329,10 @@ class FullyKioskUpdateEntity(FullyKioskEntity, UpdateEntity):
             await self.coordinator.fully.loadApkFile(
                 release.url, force_install=force_install
             )
-        except FullyKioskError as err:
+        except (ClientError, TimeoutError, FullyKioskError) as err:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="install_failed",
-                translation_placeholders={"error": str(err)},
             ) from err
 
         self._installing = True
