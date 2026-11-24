@@ -1536,6 +1536,18 @@
         "zigbee"
       ]
     },
+    "benq_projector_infrared": {
+      "name": "BenQ Projector Infrared",
+      "integration_type": "device",
+      "categories": [
+        "media_entertainment.tv_streaming"
+      ],
+      "connectivity": [
+        "infrared"
+      ],
+      "config_flow": true,
+      "iot_class": "assumed_state"
+    },
     "besen": {
       "name": "Besen",
       "integration_type": "device",
@@ -5013,6 +5025,9 @@
           "integration_type": "device",
           "config_flow": true,
           "iot_class": "assumed_state",
+          "categories": [
+            "climate.heat_pumps_air_conditioning"
+          ],
           "name": "Fujitsu Infrared"
         }
       }
