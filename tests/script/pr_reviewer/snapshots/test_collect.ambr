@@ -1,0 +1,99 @@
+# serializer version: 1
+# name: test_first_review
+  dict({
+    'issue-comments.json': '''
+      [
+        {
+          "id": 20,
+          "created_at": "2026-11-11T09:00:00Z",
+          "body": "Merci — 谢谢",
+          "user": "contributor",
+          "user_type": "User",
+          "url": "https://github.com/home-assistant/core/pull/42#issuecomment-20"
+        }
+      ]
+  
+    ''',
+    'pr.json': '''
+      {
+        "number": 42,
+        "title": "Add the température sensor to Démo",
+        "body": "Adds a sensor ☀️.",
+        "author": "contributor",
+        "head_sha": "cccccccccccccccccccccccccccccccccccccccc",
+        "base": "dev",
+        "labels": [
+          "new-feature"
+        ]
+      }
+  
+    ''',
+    'review-comments.json': '''
+      [
+        {
+          "id": 10,
+          "path": "homeassistant/components/demo/sensor.py",
+          "line": 12,
+          "start_line": null,
+          "side": "RIGHT",
+          "original_line": 12,
+          "commit_id": "cccccccccccccccccccccccccccccccccccccccc",
+          "original_commit_id": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "created_at": "2026-11-10T10:00:00Z",
+          "body": "Utiliser « °C » ici ?",
+          "user": "reviewer",
+          "user_type": "User",
+          "thread": 10,
+          "review_id": 1,
+          "url": "https://github.com/home-assistant/core/pull/42#discussion_r10",
+          "ours": false
+        },
+        {
+          "id": 11,
+          "path": "homeassistant/components/demo/sensor.py",
+          "line": 12,
+          "start_line": null,
+          "side": "RIGHT",
+          "original_line": 12,
+          "commit_id": "cccccccccccccccccccccccccccccccccccccccc",
+          "original_commit_id": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "created_at": "2026-11-10T10:00:00Z",
+          "body": "Fait ✅",
+          "user": "contributor",
+          "user_type": "User",
+          "thread": 10,
+          "review_id": 2,
+          "url": "https://github.com/home-assistant/core/pull/42#discussion_r11",
+          "ours": false
+        }
+      ]
+  
+    ''',
+    'reviews.json': '''
+      [
+        {
+          "id": 1,
+          "state": "COMMENTED",
+          "commit_id": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "submitted_at": "2026-11-09T08:00:00Z",
+          "body": "Ça a l'air bien 👍",
+          "user": "reviewer",
+          "user_type": "User",
+          "ours": false
+        }
+      ]
+  
+    ''',
+    'threads.json': '''
+      [
+        {
+          "thread": 10,
+          "resolved": true,
+          "outdated": false,
+          "resolved_by": "contributor"
+        }
+      ]
+  
+    ''',
+  })
+# ---
