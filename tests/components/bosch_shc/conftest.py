@@ -385,6 +385,8 @@ def smart_plug_device(
     device.device_services = []
     device.deleted = False
     device.status = "AVAILABLE"
+    device.profile = None
+    device.supported_profiles = []
     device.switchstate = PowerSwitchService.State.OFF
     device.routing = routing
     device.supports_energy_saving_mode = supports_energy_saving_mode
@@ -422,6 +424,8 @@ def smart_plug_compact_device(
     device.device_services = []
     device.deleted = False
     device.status = "AVAILABLE"
+    device.profile = None
+    device.supported_profiles = []
     device.switchstate = PowerSwitchService.State.OFF
     device.supports_energy_saving_mode = supports_energy_saving_mode
     device.energy_saving_mode_enabled = energy_saving_mode_enabled
@@ -703,6 +707,8 @@ def micromodule_relay_device(
     device.device_services = []
     device.deleted = False
     device.status = "AVAILABLE"
+    device.profile = None
+    device.supported_profiles = []
     device.child_lock = child_lock
     device.device_service_ids = {"ChildProtection"} if has_child_protection else set()
     device.supports_switch_configuration = supports_switch_configuration
@@ -1037,6 +1043,8 @@ def motion_detector2_device(
     temperature: float = 21.5,
     supports_walk_test: bool = False,
     supports_detection_test: bool = False,
+    profile: str | None = None,
+    supported_profiles: list[str] | None = None,
 ) -> SHCMotionDetector2:
     """Build a minimal device double for the motion_detectors2 bucket."""
     device = create_autospec(SHCMotionDetector2, instance=True, spec_set=True)
@@ -1051,6 +1059,8 @@ def motion_detector2_device(
     device.status = "AVAILABLE"
     device.supports_walk_test = supports_walk_test
     device.supports_detection_test = supports_detection_test
+    device.profile = profile
+    device.supported_profiles = supported_profiles or []
     device.pet_immunity_enabled = pet_immunity_enabled
     device.tamper_protection_enabled = tamper_protection_enabled
     device.supports_smart_sensitivity = supports_smart_sensitivity

@@ -1,6 +1,6 @@
 """Tests for the Bosch SHC select platform."""
 
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
 from boschshcpy import SHCRoomThermostat2
 from boschshcpy.services_impl import (
@@ -47,6 +47,7 @@ STATE_AFTER_OUTAGE_ENTITY_ID = "select.smart_plug_state_after_power_outage"
 VALVE_TYPE_ENTITY_ID = "select.thermostat_gen2_valve_type"
 HEATER_TYPE_ENTITY_ID = "select.thermostat_gen2_heater_type"
 PHASE_CONTROL_ENTITY_ID = "select.dimmer_dimmer_phase_control"
+PROFILE_ENTITY_ID = "select.motion_detector_purpose_of_use"
 TERMINAL_TYPE_ENTITY_ID = "select.thermostat_gen2_sensor_connection"
 SMOKE_SENSITIVITY_ENTITY_ID = "select.smoke_detector_smoke_sensitivity"
 VIBRATION_SENSITIVITY_ENTITY_ID = "select.shutter_contact_vibration_sensitivity"
@@ -1060,3 +1061,82 @@ async def test_orientation_light_select_option(
         blocking=True,
     )
     assert device.long_poll_interval == PollControlService.PollControlState.SHORT
+
+
+@pytest.mark.parametrize(
+    "device_buckets",
+    [
+        {
+            "motion_detectors2": [
+                motion_detector2_device(
+                    profile="OUTDOOR", supported_profiles=["GENERIC", "OUTDOOR"]
+                )
+            ]
+        }
+    ],
+    indirect=True,
+)
+@pytest.mark.usefixtures("mock_session")
+async def test_installation_profile_current_option(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """The advertised profiles are the options and the active one is selected."""
+    await setup_integration(hass, mock_config_entry)
+
+    state = hass.states.get(PROFILE_ENTITY_ID)
+    assert state is not None
+    assert state.state == "outdoor"
+    assert state.attributes["options"] == ["generic", "outdoor"]
+
+
+@pytest.mark.parametrize(
+    "device_buckets",
+    [
+        {
+            "motion_detectors2": [
+                motion_detector2_device(
+                    profile="GENERIC", supported_profiles=["GENERIC", "OUTDOOR"]
+                )
+            ]
+        }
+    ],
+    indirect=True,
+)
+@pytest.mark.usefixtures("mock_session")
+async def test_installation_profile_select_option_reloads(
+    hass: HomeAssistant,
+    mock_session: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Selecting a profile writes it and reloads the entry for the new entities."""
+    await setup_integration(hass, mock_config_entry)
+    device = mock_session.device_helper.motion_detectors2[0]
+
+    with patch.object(hass.config_entries, "async_schedule_reload") as mock_reload:
+        await hass.services.async_call(
+            SELECT_DOMAIN,
+            SelectService.SELECT_OPTION,
+            {TargetKey.ENTITY_ID: PROFILE_ENTITY_ID, "option": "outdoor"},
+            blocking=True,
+        )
+        await hass.async_block_till_done()
+
+    device.set_profile.assert_called_once_with("OUTDOOR")
+    mock_reload.assert_called_once_with(mock_config_entry.entry_id)
+
+
+@pytest.mark.parametrize(
+    "device_buckets",
+    [{"motion_detectors2": [motion_detector2_device()]}],
+    indirect=True,
+)
+@pytest.mark.usefixtures("mock_session")
+async def test_installation_profile_not_supported(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """A device without advertised profiles gets no profile select."""
+    await setup_integration(hass, mock_config_entry)
+
+    assert hass.states.get(PROFILE_ENTITY_ID) is None

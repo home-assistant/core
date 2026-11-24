@@ -239,6 +239,17 @@
           "volt_free_heating": "Central heating"
         }
       },
+      "installation_profile": {
+        "name": "Purpose of use",
+        "state": {
+          "boiler": "Central heating",
+          "generic": "Standard",
+          "heating_rcc": "Heater",
+          "light": "Lamp",
+          "mini_pv": "Mini PV system",
+          "outdoor": "Outdoors"
+        }
+      },
       "motion_sensitivity": {
         "name": "Motion sensitivity",
         "state": {
