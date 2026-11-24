@@ -84,7 +84,15 @@ SCRIPT_ENTITY_SCHEMA = make_script_schema(
         probatio.Required(CONF_SEQUENCE): cv.SCRIPT_SCHEMA,
         probatio.Optional(CONF_DESCRIPTION, default=""): cv.string,
         probatio.Optional(CONF_VARIABLES): cv.SCRIPT_VARIABLES_SCHEMA,
-        probatio.Optional(CONF_FIELDS, default={}): {
+        probatio.Optional(CONF_FIELDS, default={}): cv.match_all,
+    },
+    SCRIPT_MODE_SINGLE,
+)
+
+
+_SCRIPT_FIELDS_SCHEMA = probatio.Schema(
+    {
+        probatio.Required(CONF_FIELDS): {
             cv.string: {
                 probatio.Optional(CONF_ADVANCED, default=False): cv.boolean,
                 probatio.Optional(CONF_DEFAULT): cv.match_all,
@@ -96,7 +104,7 @@ SCRIPT_ENTITY_SCHEMA = make_script_schema(
             }
         },
     },
-    SCRIPT_MODE_SINGLE,
+    extra=probatio.ALLOW_EXTRA,
 )
 
 
@@ -218,6 +226,10 @@ async def _async_validate_config_item(
         raise
     try:
         validated_config = SCRIPT_ENTITY_SCHEMA(config)
+        # Selectors can import modules, while action templates need the event loop.
+        validated_config = await hass.async_add_executor_job(
+            _SCRIPT_FIELDS_SCHEMA, validated_config
+        )
     except probatio.Invalid as err:
         _log_invalid_script(err, script_name, "could not be validated", config)
         if raise_on_errors:

@@ -49,10 +49,36 @@ async def test_get_script_config(
 
 
 @pytest.mark.parametrize("script_config", [{}])
+@pytest.mark.parametrize(
+    "fields",
+    [
+        pytest.param({}, id="no-fields"),
+        pytest.param(
+            {
+                "cover": {
+                    "selector": {
+                        "entity": {
+                            "filter": [
+                                {
+                                    "domain": "cover",
+                                    "supported_features": [
+                                        "cover.CoverEntityFeature.OPEN"
+                                    ],
+                                }
+                            ]
+                        }
+                    }
+                }
+            },
+            id="feature-selector",
+        ),
+    ],
+)
 async def test_update_script_config(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
     hass_config_store: dict[str, Any],
+    fields: dict[str, Any],
 ) -> None:
     """Test updating script config."""
     with patch.object(config, "SECTIONS", [script]):
@@ -67,7 +93,7 @@ async def test_update_script_config(
 
     resp = await client.post(
         "/api/config/script/config/moon",
-        data=json.dumps({"alias": "Moon updated", "sequence": []}),
+        data=json.dumps({"alias": "Moon updated", "sequence": [], "fields": fields}),
     )
     await hass.async_block_till_done()
     assert sorted(hass.states.async_entity_ids("script")) == [
@@ -82,8 +108,12 @@ async def test_update_script_config(
     assert result == {"result": "ok"}
 
     new_data = hass_config_store["scripts.yaml"]
-    assert list(new_data["moon"]) == ["alias", "sequence"]
-    assert new_data["moon"] == {"alias": "Moon updated", "sequence": []}
+    assert list(new_data["moon"]) == ["alias", "sequence", "fields"]
+    assert new_data["moon"] == {
+        "alias": "Moon updated",
+        "sequence": [],
+        "fields": fields,
+    }
 
 
 @pytest.mark.parametrize("script_config", [{}])
@@ -126,6 +156,19 @@ async def test_invalid_object_id(
 @pytest.mark.parametrize(
     ("updated_config", "validation_error"),
     [
+        pytest.param(
+            {
+                "sequence": [],
+                "fields": {"cover": {"selector": {"unknown_selector": {}}}},
+            },
+            "Unknown selector type unknown_selector found at 'fields.cover.selector'",
+            id="invalid-field-selector",
+        ),
+        pytest.param(
+            {"sequence": [], "fields": []},
+            "expected a mapping at 'fields'",
+            id="invalid-fields-type",
+        ),
         ({}, "required key not provided at 'sequence'"),
         (
             {
