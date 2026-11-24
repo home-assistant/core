@@ -63,7 +63,7 @@ rules:
   # Gold
   devices: done
   diagnostics: todo
-  # Diagnostics are added in a follow-up PR, as required for new integrations.
+  # Diagnostics are not implemented.
   discovery-update-info:
     status: exempt
     comment: |
