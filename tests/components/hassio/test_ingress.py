@@ -34,6 +34,27 @@ async def test_ingress_request_unix_socket(
     assert requests[0].path_qs == "/ingress/a3_vl/test/beer/ping?index=1"
     assert requests[0].headers["X-Hass-Source"] == "core.ingress"
     assert requests[0].headers["X-Ingress-Path"] == "/api/hassio_ingress/a3_vl"
+    assert requests[0].headers["X-Forwarded-Prefix"] == "/api/hassio_ingress/a3_vl"
+
+
+async def test_ingress_request_overrides_forwarded_prefix(
+    hassio_unix_socket_client: TestClient,
+    supervisor_unix_socket: tuple[Path, list[web.Request]],
+) -> None:
+    """Test a client supplied X-Forwarded-Prefix is replaced by the ingress path."""
+    resp = await hassio_unix_socket_client.get(
+        "/api/hassio_ingress/a3_vl/test/beer/ping",
+        headers=[
+            ("X-Forwarded-Prefix", "/spoofed"),
+            ("X-Forwarded-Prefix", "/spoofed2"),
+        ],
+    )
+
+    assert resp.status == HTTPStatus.OK
+    _, requests = supervisor_unix_socket
+    assert requests[0].headers.getall("X-Forwarded-Prefix") == [
+        "/api/hassio_ingress/a3_vl"
+    ]
 
 
 @pytest.mark.parametrize(

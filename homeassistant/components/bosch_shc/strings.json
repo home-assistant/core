@@ -81,6 +81,12 @@
       }
     },
     "button": {
+      "preview_max_brightness": {
+        "name": "Preview max brightness"
+      },
+      "preview_min_brightness": {
+        "name": "Preview min brightness"
+      },
       "reset_energy_summation": {
         "name": "Reset consumption value"
       },
