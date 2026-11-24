@@ -5,7 +5,7 @@
   },
   "config": {
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
       "wrong_account": "The user credentials provided do not match this Schlage account."
     },
     "error": {
