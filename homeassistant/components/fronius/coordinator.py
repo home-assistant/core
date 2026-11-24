@@ -41,8 +41,7 @@ from .entity import ModbusComponentFn, ModbusValues
 from .heartbeat import LimitHeartbeat
 
 if TYPE_CHECKING:
-    from . import FroniusConfigEntry
-    from .solar_net import FroniusSolarNet
+    from .solar_net import FroniusConfigEntry, FroniusSolarNet
 
 
 class FroniusCoordinatorBase[_DataT](
@@ -267,6 +266,7 @@ class FroniusModbusSettingsUpdateCoordinator(FroniusModbusCoordinatorBase):
         for component in (
             self.modbus_inverter.controls,
             self.modbus_inverter.storage,
+            self.modbus_inverter.basic_settings,
         ):
             if component is not None:
                 await component.async_update()
@@ -346,6 +346,9 @@ class FroniusModbusSettingsUpdateCoordinator(FroniusModbusCoordinatorBase):
         if (controls := inverter.controls) is not None:
             values["ac_power_limit"] = controls.power_limit
             values["ac_power_limit_enabled"] = controls.enabled
+            if (basic_settings := inverter.basic_settings) is not None:
+                # WMax, what the power limit is a percentage of
+                values["ac_power_limit_reference"] = basic_settings.max_power
         if (storage := inverter.storage) is not None:
             values["battery_charge_power_limit"] = storage.charge_limit
             values["battery_charge_power_limit_enabled"] = storage.charge_limit_enabled
@@ -355,6 +358,8 @@ class FroniusModbusSettingsUpdateCoordinator(FroniusModbusCoordinatorBase):
             )
             values["battery_minimum_reserve"] = storage.minimum_reserve
             values["battery_grid_charging"] = storage.grid_charging
+            # WChaMax, what the charge and discharge limits are a percentage of
+            values["battery_power_limit_reference"] = storage.charge_reference_power
 
         return self._as_device_data(values)
 

@@ -297,11 +297,10 @@ class HlsPlaylistView(StreamView):
         while hls_msn > track.last_sequence:
             if not await track.recv():
                 return self.not_found(blocking_request, track.target_duration)
-        if track.last_segment is None:
+        if (last_segment := track.last_segment) is None:
             return self.not_found(blocking_request, 0)
         if (
-            (last_segment := track.last_segment)
-            and hls_msn == last_segment.sequence
+            hls_msn == last_segment.sequence
             and hls_part
             >= len(last_segment.parts)
             - 1
@@ -311,7 +310,7 @@ class HlsPlaylistView(StreamView):
 
         # Receive parts until msn and part are met
         while (
-            (last_segment := track.last_segment)
+            (last_segment := track.last_segment) is not None
             and hls_msn == last_segment.sequence
             and hls_part >= len(last_segment.parts)
         ):
@@ -319,6 +318,9 @@ class HlsPlaylistView(StreamView):
                 timeout=track.stream_settings.hls_part_timeout
             ):
                 return self.not_found(blocking_request, track.target_duration)
+        # The segments are cleared when the output is cleaned up while waiting
+        if last_segment is None:
+            return self.not_found(blocking_request, track.target_duration)
         # Now we should have msn.part >= hls_msn.hls_part. However, in the case
         # that we have a rollover part request from the previous segment, we need
         # to make sure that the new segment has a part. From 6.2.5.2 of the RFC:

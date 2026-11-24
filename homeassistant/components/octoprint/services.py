@@ -1,23 +1,39 @@
 """Services for octoprint."""
 
+from enum import StrEnum
 from typing import cast
 
 import probatio
 from pyoctoprintapi import OctoprintClient
 
-from homeassistant.const import CONF_DEVICE_ID, CONF_PORT, CONF_PROFILE_NAME
+from homeassistant.const import CommonServiceArgument
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.helpers import config_validation as cv, service
 
-from .const import CONF_BAUDRATE, DOMAIN, SERVICE_CONNECT
+from .const import DOMAIN
 from .coordinator import OctoprintConfigEntry
+
+
+class OctoPrintService(StrEnum):
+    """Store keys for OctoPrint services."""
+
+    PRINTER_CONNECT = "printer_connect"
+
+
+class OctoPrintServiceArgument(StrEnum):
+    """Store keys for OctoPrint service arguments."""
+
+    PROFILE_NAME = "profile_name"
+    PORT = "port"
+    BAUDRATE = "baudrate"
+
 
 SERVICE_CONNECT_SCHEMA = probatio.Schema(
     {
-        probatio.Required(CONF_DEVICE_ID): cv.string,
-        probatio.Optional(CONF_PROFILE_NAME): cv.string,
-        probatio.Optional(CONF_PORT): cv.string,
-        probatio.Optional(CONF_BAUDRATE): cv.positive_int,
+        probatio.Required(CommonServiceArgument.DEVICE_ID): cv.string,
+        probatio.Optional(OctoPrintServiceArgument.PROFILE_NAME): cv.string,
+        probatio.Optional(OctoPrintServiceArgument.PORT): cv.string,
+        probatio.Optional(OctoPrintServiceArgument.BAUDRATE): cv.positive_int,
     }
 )
 
@@ -27,7 +43,7 @@ def async_get_client_for_service_call(
 ) -> OctoprintClient:
     """Get the client related to a service call (by device ID)."""
     _, config_entry = service.async_get_device_and_config_entry(
-        hass, DOMAIN, call.data[CONF_DEVICE_ID]
+        hass, DOMAIN, call.data[CommonServiceArgument.DEVICE_ID]
     )
     return cast(OctoprintConfigEntry, config_entry).runtime_data.octoprint
 
@@ -40,14 +56,14 @@ def async_setup_services(hass: HomeAssistant) -> None:
         """Connect to a printer."""
         client = async_get_client_for_service_call(hass, call)
         await client.connect(
-            printer_profile=call.data.get(CONF_PROFILE_NAME),
-            port=call.data.get(CONF_PORT),
-            baud_rate=call.data.get(CONF_BAUDRATE),
+            printer_profile=call.data.get(OctoPrintServiceArgument.PROFILE_NAME),
+            port=call.data.get(OctoPrintServiceArgument.PORT),
+            baud_rate=call.data.get(OctoPrintServiceArgument.BAUDRATE),
         )
 
     hass.services.async_register(
         DOMAIN,
-        SERVICE_CONNECT,
+        OctoPrintService.PRINTER_CONNECT,
         async_printer_connect,
         schema=SERVICE_CONNECT_SCHEMA,
     )

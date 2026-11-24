@@ -10,7 +10,7 @@ from aiohttp import ClientPayloadError
 from asyncssh.sftp import SFTPError
 from freezegun.api import FrozenDateTimeFactory
 import pytest
-from pytest_homeassistant.common import get_fixture_path
+from pytest_homeassistant.common import MockConfigEntry, get_fixture_path
 from pytest_homeassistant.typing import ClientSessionGenerator, WebSocketGenerator
 
 from homeassistant.components.backup import DOMAIN as BACKUP_DOMAIN, async_get_manager
@@ -144,10 +144,26 @@ async def test_agents_list_backups_fail(
     assert response["success"]
     assert response["result"]["backups"] == []
     assert response["result"]["agent_errors"] == {
-        f"{DOMAIN}.{TEST_AGENT_ID}": (
-            "Remote server error while attempting to list backups: Error message"
-        )
+        f"{DOMAIN}.{TEST_AGENT_ID}": "Failed to list backups"
     }
+
+
+async def test_agents_list_backups_closes_connection_on_open_error(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    mock_ssh_connection: SSHClientConnectionMock,
+) -> None:
+    """Test the SSH connection is closed when opening the backup location fails."""
+    mock_ssh_connection._sftp._mock_chdir.side_effect = SFTPError(2, "No such file")
+
+    client = await hass_ws_client(hass)
+    with patch.object(mock_ssh_connection, "close", MagicMock()) as mock_close:
+        await client.send_json_auto_id({"type": "backup/info"})
+        response = await client.receive_json()
+
+    assert response["success"]
+    assert f"{DOMAIN}.{TEST_AGENT_ID}" in response["result"]["agent_errors"]
+    mock_close.assert_called_once()
 
 
 async def test_agents_list_backups_include_bad_metadata(
@@ -395,11 +411,18 @@ async def test_agents_delete(
         (
             SFTPError(0, "manual"),
             {
-                "agent_error_translations": {},
+                "agent_error_translations": {
+                    f"{DOMAIN}.{TEST_AGENT_ID}": {
+                        "translation_domain": DOMAIN,
+                        "translation_key": "delete_failed",
+                        "translation_placeholders": {
+                            "backup_id": TEST_AGENT_BACKUP.backup_id,
+                        },
+                    }
+                },
                 "agent_errors": {
                     f"{DOMAIN}.{TEST_AGENT_ID}": (
-                        f"Failed to delete backup id:"
-                        f" {TEST_AGENT_BACKUP.backup_id}: manual"
+                        f"Failed to delete backup {TEST_AGENT_BACKUP.backup_id}"
                     )
                 },
             },
@@ -687,3 +710,47 @@ async def test_agents_download_closed_while_connecting(
     assert not downloaded_files
     # One connection to find the archive, one to read it
     assert [conn.close.call_count for conn in ssh_connections] == [1, 1]
+
+
+async def test_agents_download_aclosed_while_connecting(
+    hass: HomeAssistant,
+    ssh_connections: list[SSHClientConnectionMock],
+    downloaded_files: list[SFTPOpenMock],
+) -> None:
+    """Test the download can be closed gracefully while connecting."""
+    agent = async_get_manager(hass).backup_agents[f"{DOMAIN}.{TEST_AGENT_ID}"]
+    stream = await agent.async_download_backup(TEST_AGENT_BACKUP.backup_id)
+
+    connect = sftp_client.connect.side_effect
+    connecting = asyncio.Event()
+    connected = asyncio.Event()
+
+    @async_context_manager
+    async def paused_connect(*args: Any, **kwargs: Any) -> SSHClientConnectionMock:
+        connecting.set()
+        await connected.wait()
+        return await connect(*args, **kwargs)
+
+    sftp_client.connect.side_effect = paused_connect
+
+    read = asyncio.create_task(anext(stream))
+    await connecting.wait()
+    await stream.aclose()
+    connected.set()
+    with pytest.raises(StopAsyncIteration):
+        await read
+
+    # The archive is opened before the closed download aborts the connection
+    assert len(downloaded_files) == 1
+    # One connection to find the archive, one to read it
+    assert [conn.close.call_count for conn in ssh_connections] == [1, 1]
+
+
+async def test_client_sftp_not_open(
+    hass: HomeAssistant, config_entry: MockConfigEntry
+) -> None:
+    """Test the SFTP client is not available before the connection is open."""
+    client = sftp_client.BackupAgentClient(config_entry, hass)
+
+    with pytest.raises(RuntimeError, match="The SFTP connection is not open"):
+        _ = client.sftp

@@ -6,6 +6,7 @@
     "computers_network.routers_network"
   ],
   "codeowners": ["@typhoon2099"],
+  "connectivity": ["network"],
   "documentation": "https://www.home-assistant.io/integrations/bt_smarthub",
   "iot_class": "local_polling",
   "loggers": ["btsmarthub_devicelist"],

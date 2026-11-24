@@ -33,6 +33,7 @@ from homeassistant.components.assist_satellite import (
     AssistSatelliteEntityDescription,
     AssistSatelliteEntityFeature,
 )
+from homeassistant.components.tts import TextToSpeechCommonOption
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util.ulid import ulid_now
@@ -152,10 +153,10 @@ class WyomingAssistSatellite(WyomingSatelliteEntity, AssistSatelliteEntity):
     def tts_options(self) -> dict[str, Any] | None:
         """Options passed for text-to-speech."""
         return {
-            tts.ATTR_PREFERRED_FORMAT: "wav",
-            tts.ATTR_PREFERRED_SAMPLE_RATE: _TTS_SAMPLE_RATE,
-            tts.ATTR_PREFERRED_SAMPLE_CHANNELS: SAMPLE_CHANNELS,
-            tts.ATTR_PREFERRED_SAMPLE_BYTES: SAMPLE_WIDTH,
+            TextToSpeechCommonOption.PREFERRED_FORMAT: "wav",
+            TextToSpeechCommonOption.PREFERRED_SAMPLE_RATE: _TTS_SAMPLE_RATE,
+            TextToSpeechCommonOption.PREFERRED_SAMPLE_CHANNELS: SAMPLE_CHANNELS,
+            TextToSpeechCommonOption.PREFERRED_SAMPLE_BYTES: SAMPLE_WIDTH,
         }
 
     @override

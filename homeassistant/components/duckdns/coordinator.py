@@ -66,7 +66,7 @@ class DuckDnsUpdateCoordinator(DataUpdateCoordinator[None]):
                     translation_domain=DOMAIN,
                     translation_key="update_failed",
                     translation_placeholders={
-                        CONF_DOMAIN: self.config_entry.data[CONF_DOMAIN],
+                        "domain": self.config_entry.data[CONF_DOMAIN],
                     },
                     retry_after=retry_after,
                 )
@@ -76,7 +76,7 @@ class DuckDnsUpdateCoordinator(DataUpdateCoordinator[None]):
                 translation_domain=DOMAIN,
                 translation_key="connection_error",
                 translation_placeholders={
-                    CONF_DOMAIN: self.config_entry.data[CONF_DOMAIN],
+                    "domain": self.config_entry.data[CONF_DOMAIN],
                 },
                 retry_after=retry_after,
             ) from e

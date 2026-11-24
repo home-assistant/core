@@ -6,7 +6,7 @@ from unittest.mock import AsyncMock
 import pytest
 from python_snoo.containers import SnooDevice, SnooLevels, SnooStates
 
-from homeassistant.components.select import SERVICE_SELECT_OPTION
+from homeassistant.components.select import SelectService
 from homeassistant.components.snoo.select import SnooCommandException
 from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
@@ -42,13 +42,13 @@ async def test_update_success(hass: HomeAssistant, bypass_api: AsyncMock) -> Non
     bypass_api.set_level.side_effect = update_level
     await hass.services.async_call(
         "select",
-        SERVICE_SELECT_OPTION,
+        SelectService.SELECT_OPTION,
         service_data={"option": "level1"},
         blocking=True,
         target={"entity_id": "select.test_snoo_intensity"},
     )
 
-    assert bypass_api.set_level.assert_called_once
+    bypass_api.set_level.assert_called_once()
     assert hass.states.get("select.test_snoo_intensity").state == "level1"
 
 
@@ -65,11 +65,11 @@ async def test_update_failed(hass: HomeAssistant, bypass_api: AsyncMock) -> None
     ):
         await hass.services.async_call(
             "select",
-            SERVICE_SELECT_OPTION,
+            SelectService.SELECT_OPTION,
             service_data={"option": "level1"},
             blocking=True,
             target={"entity_id": "select.test_snoo_intensity"},
         )
 
-    assert bypass_api.set_level.assert_called_once
+    bypass_api.set_level.assert_called_once()
     assert hass.states.get("select.test_snoo_intensity").state == "stop"

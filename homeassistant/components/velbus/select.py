@@ -41,6 +41,7 @@ class VelbusSelect(VelbusEntity, SelectEntity):
     ) -> None:
         """Initialize a select Velbus entity."""
         super().__init__(channel)
+        del self._attr_name
         self._attr_options = self._channel.get_options()
 
     @api_call

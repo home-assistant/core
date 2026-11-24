@@ -78,9 +78,6 @@
       },
       "network_outbound": {
         "name": "Network outbound"
-      },
-      "uptime": {
-        "name": "Uptime"
       }
     }
   }

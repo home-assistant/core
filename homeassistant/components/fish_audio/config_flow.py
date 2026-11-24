@@ -10,7 +10,6 @@ import probatio
 
 from homeassistant.config_entries import (
     SOURCE_USER,
-    ConfigEntry,
     ConfigEntryState,
     ConfigFlow,
     ConfigFlowResult,
@@ -58,6 +57,7 @@ from .error import (
     InvalidAuthError,
     UnexpectedError,
 )
+from .types import FishAudioConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -277,7 +277,7 @@ class FishAudioConfigFlow(ConfigFlow, domain=DOMAIN):
     @callback
     @override
     def async_get_supported_subentry_types(
-        cls, config_entry: ConfigEntry
+        cls, config_entry: FishAudioConfigEntry
     ) -> dict[str, type]:
         """Return subentries supported by this integration."""
         return {"tts": FishAudioSubentryFlowHandler}

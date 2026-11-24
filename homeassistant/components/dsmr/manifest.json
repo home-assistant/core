@@ -4,6 +4,7 @@
   "categories": ["energy.meters_monitoring", "water.meters_leak_detection"],
   "codeowners": ["@Robbie1221"],
   "config_flow": true,
+  "connectivity": ["network", "serial"],
   "dependencies": ["usb"],
   "documentation": "https://www.home-assistant.io/integrations/dsmr",
   "integration_type": "hub",
