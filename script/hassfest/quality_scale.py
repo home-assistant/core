@@ -1461,7 +1461,6 @@ INTEGRATIONS_WITHOUT_SCALE = [
     "met",
     "met_eireann",
     "meteo_france",
-    "meteoalarm",
     "meteoclimatic",
     "mfi",
     "microbees",

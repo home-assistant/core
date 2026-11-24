@@ -1393,6 +1393,9 @@
     "update_failed_insufficient_credits": {
       "message": "Teslemetry account has insufficient command credits, pausing updates until credits are added"
     },
+    "update_failed_missing_scopes": {
+      "message": "Tesla authorization is missing the permissions to read vehicle data"
+    },
     "wake_up_failed": {
       "message": "Failed to wake up vehicle: {message}"
     },
@@ -1440,6 +1443,10 @@
         }
       },
       "title": "Pair the virtual key for {vehicle}"
+    },
+    "missing_scopes": {
+      "description": "Tesla is refusing to share vehicle data with Teslemetry because your Tesla authorization is missing the required permissions. Select **Learn more** to sign in with Tesla again and grant the missing permissions, including Vehicle Information, then reload the integration.",
+      "title": "Tesla authorization is missing permissions"
     },
     "streaming_toggle": {
       "fix_flow": {
