@@ -4,6 +4,7 @@
   "categories": ["blinds_curtains"],
   "codeowners": ["@vemboy200"],
   "config_flow": true,
+  "connectivity": ["network"],
   "dependencies": ["network"],
   "dhcp": [
     { "hostname": "ps-*", "macaddress": "D83AF5*" },
