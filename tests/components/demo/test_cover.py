@@ -401,7 +401,7 @@ async def test_set_tilt_position_moving_state(
 async def test_tilt_moving_state_across_the_open_position(
     hass: HomeAssistant,
 ) -> None:
-    """Test the tilt opens up to the open position and closes after it."""
+    """Test a move between two closed positions reports closing all the way."""
     entity_id = "cover.office_blind"
     await hass.services.async_call(
         COVER_DOMAIN,
@@ -411,7 +411,7 @@ async def test_tilt_moving_state_across_the_open_position(
     )
     state = hass.states.get(entity_id)
     assert state
-    assert state.state == CoverState.OPENING
+    assert state.state == CoverState.CLOSING
 
     for _ in range(5):
         future = dt_util.utcnow() + timedelta(seconds=1)
@@ -506,6 +506,33 @@ async def test_close_tilt_goes_to_the_nearest_closed_position(
     state = hass.states.get(entity_id)
     assert state
     assert state.attributes[ATTR_CURRENT_TILT_POSITION] == closed_tilt_position
+
+
+async def test_close_tilt_stops_a_move_from_a_closed_position(
+    hass: HomeAssistant,
+) -> None:
+    """Test closing the tilt cancels a move that has not left a closed position."""
+    entity_id = "cover.office_blind"
+    await hass.services.async_call(
+        COVER_DOMAIN,
+        CoverService.OPEN_TILT,
+        {TargetKey.ENTITY_ID: entity_id},
+        blocking=True,
+    )
+    await hass.services.async_call(
+        COVER_DOMAIN,
+        CoverService.CLOSE_TILT,
+        {TargetKey.ENTITY_ID: entity_id},
+        blocking=True,
+    )
+    for _ in range(3):
+        future = dt_util.utcnow() + timedelta(seconds=1)
+        async_fire_time_changed(hass, future)
+        await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.attributes[ATTR_CURRENT_TILT_POSITION] == 100
 
 
 async def test_tilt_only_cover_state(hass: HomeAssistant) -> None:
