@@ -88,7 +88,7 @@ def build_epex_payload_with_gap(
     end: datetime,
     granularity: EpexGranularity = EpexGranularity.HOURLY,
 ) -> EpexPayload:
-    """Return an hourly payload without the slot covering the frozen afternoon."""
+    """Build a payload and drop the hourly slot covering the frozen afternoon."""
     payload = build_epex_payload(start, end, granularity)
     if granularity is not EpexGranularity.HOURLY:
         return payload
@@ -108,7 +108,7 @@ async def test_sensors(
     device_registry: dr.DeviceRegistry,
     snapshot: SnapshotAssertion,
 ) -> None:
-    """Test the sensors of a dynamic-tariff household with an offtake-only and a dual-direction EAN."""
+    """Test the sensors and devices of a dynamic-tariff household with an offtake-only and a dual-direction EAN."""
     with patch("homeassistant.components.engie_be._PLATFORMS", [Platform.SENSOR]):
         await setup_dynamic_entry(hass, mock_config_entry, mock_engie_client)
 
