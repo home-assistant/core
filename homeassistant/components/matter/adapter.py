@@ -105,24 +105,28 @@ def _get_unique_id_prefixes(
     )
 
 
-def _child_device_unique_id_prefix(child_device: dr.ChildDeviceEntry) -> str | None:
-    """Return the unique_id prefix of the entities of a child device's endpoint."""
+def _child_device_id(child_device: dr.ChildDeviceEntry) -> str | None:
+    """Return the device id in a child device's Matter identifier."""
     prefix = f"{ID_TYPE_DEVICE_ID}_"
     for domain, value in child_device.identifiers:
         if domain == DOMAIN and value.startswith(prefix):
-            return f"{value.removeprefix(prefix)}-"
+            return value.removeprefix(prefix)
     return None
+
+
+def _child_device_unique_id_prefix(child_device: dr.ChildDeviceEntry) -> str | None:
+    """Return the unique_id prefix of the entities of a child device's endpoint."""
+    if (device_id := _child_device_id(child_device)) is None:
+        return None
+    return f"{device_id}-"
 
 
 def _child_device_endpoint_id(child_device: dr.ChildDeviceEntry) -> int | None:
     """Return the endpoint id encoded in a child device's Matter identifier."""
-    prefix = f"{ID_TYPE_DEVICE_ID}_"
-    for domain, value in child_device.identifiers:
-        if domain == DOMAIN and value.startswith(prefix):
-            endpoint_part = value.rsplit("-", 1)[-1]
-            if endpoint_part.isdigit():
-                return int(endpoint_part)
-    return None
+    if (device_id := _child_device_id(child_device)) is None:
+        return None
+    endpoint_part = device_id.rsplit("-", 1)[-1]
+    return int(endpoint_part) if endpoint_part.isdigit() else None
 
 
 class MatterAdapter:

@@ -13,7 +13,6 @@ from typing import TYPE_CHECKING
 from chip.clusters import Objects as clusters
 from chip.clusters.Types import NullValue
 
-from .const import VENDOR_LABELING_LIST
 from .util import get_clean_name
 
 if TYPE_CHECKING:
@@ -30,6 +29,31 @@ POSITION_BOTTOM = 0x03
 POSITION_MIDDLE = 0x04
 POSITION_ROW = 0x05
 POSITION_COLUMN = 0x06
+
+# Due to variances in labeling implementations, labels are vendor and product specific.
+# This dictionary defines which labels to use for specific vendor/product combinations.
+# The keys are vendor IDs, the values are dictionaries with product IDs as keys
+# and lists of label names to use as values. If the value is None, no labels are used
+VENDOR_LABELING_LIST: dict[int, dict[int, list[str] | None]] = {
+    4488: {259: ["position"]},  # TP-Link Dual Outdoor Plug US
+    4874: {105: ["orientation"]},  # Eve Energy dual Outlet US
+    4961: {
+        1: ["inovelliname", "label", "name", "button"],  # Inovelli VTM31
+        2: ["label", "devicetype", "button"],  # Inovelli VTM35
+        4: None,  # Inovelli VTM36
+        16: ["label", "name", "button"],  # Inovelli VTM30
+    },
+    65521: {  # Test/DIY devices
+        32768: ["ha_entitylabel"],
+        32769: ["ha_entitylabel"],
+        32770: ["ha_entitylabel"],
+    },
+    65522: {  # Test/DIY devices
+        32768: ["ha_entitylabel"],
+        32769: ["ha_entitylabel"],
+        32770: ["ha_entitylabel"],
+    },
+}
 
 # Basic Information SpecificationVersion of Matter 1.3. From 1.3, sibling
 # endpoints of a device type without its own disambiguation method must be told
@@ -218,7 +242,7 @@ def _vendor_label_names(
     All labels being numbers, or all being position words, gives translated
     names; otherwise every label is used as a literal name. So all endpoints of
     a group get the same kind of name. Only used for devices built for a Matter
-    version before 1.3, which must use tags instead.
+    version before 1.3; from 1.3 devices must use tags instead.
     """
     if (device_info := endpoints[0].node.device_info) is not None and (
         device_info.specificationVersion or 0
