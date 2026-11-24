@@ -111,6 +111,17 @@ class UbusSharedState:
             self.health.get(entry, True) for entry in self.presence.get(mac.lower(), {})
         )
 
+    def known_hostname(self, mac: str) -> str | None:
+        """Return the most recent non-empty hostname stamped for a client."""
+        stamps = [
+            stamp
+            for stamp in self.presence.get(mac.lower(), {}).values()
+            if stamp.hostname
+        ]
+        if not stamps:
+            return None
+        return max(stamps, key=lambda stamp: stamp.seq).hostname
+
     @callback
     def remove_entry(self, entry_id: str) -> None:
         """Drop the stamps, claims and health of a config entry."""
@@ -232,6 +243,7 @@ class UbusDataUpdateCoordinator(DataUpdateCoordinator[dict[str, str | None]]):
     def _read_clients(self) -> dict[str, str | None]:
         """Return authorized clients mapped to their DHCP hostname.
 
+        MAC addresses are lowercase, the one form every consumer keys on.
         PermissionError is left to propagate so the caller can re-authenticate.
         """
         clients = self._fetch_hostapd_clients()
@@ -251,7 +263,7 @@ class UbusDataUpdateCoordinator(DataUpdateCoordinator[dict[str, str | None]]):
                 # Merge, as an empty or partial read must not forget names.
                 self._mac2name = {**known, **mac2name}
                 self._unnamed = unnamed - mac2name.keys()
-        return {mac: self._name_for(mac) for mac in authorized}
+        return {mac.lower(): self._name_for(mac) for mac in authorized}
 
     def _fetch_hostapd_clients(self) -> dict[str, dict]:
         """Return the raw hostapd client table merged across all interfaces."""

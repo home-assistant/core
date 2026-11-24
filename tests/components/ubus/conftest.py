@@ -22,6 +22,7 @@ from homeassistant.core import HomeAssistant
 
 MOCK_HOST = "192.168.1.1"
 MOCK_HOST_B = "192.168.1.2"
+MOCK_HOST_C = "192.168.1.3"
 
 MOCK_CONFIG = {
     CONF_HOST: MOCK_HOST,
@@ -32,7 +33,7 @@ MOCK_CONFIG = {
     CONF_DHCP_SOFTWARE: DEFAULT_DHCP_SOFTWARE,
 }
 
-MAC_PHONE = "AA:BB:CC:DD:EE:FF"
+MAC_PHONE = "aa:bb:cc:dd:ee:ff"
 MAC_LAPTOP = "11:22:33:44:55:66"
 MAC_GUEST = "99:88:77:66:55:44"
 

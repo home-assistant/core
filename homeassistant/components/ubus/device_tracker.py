@@ -246,8 +246,6 @@ async def async_setup_entry(
 
     @callback
     def _async_update_devices() -> None:
-        if not coordinator.last_update_success:
-            return
         # Track every client this router sees, plus every tracker this entry
         # owns, so it keeps reporting clients connected to another router.
         owned = {
@@ -259,9 +257,12 @@ async def async_setup_entry(
             and registry_entry.platform == DOMAIN
             and registry_entry.unique_id is not None
         }
-        new_macs = [
-            mac for mac in coordinator.data.keys() | owned if mac not in tracked
-        ]
+        # A failed poll sees nothing new, but trackers handed over to this
+        # entry must still be recreated while its own polls fail.
+        seen: set[str] = (
+            set(coordinator.data) if coordinator.last_update_success else set()
+        )
+        new_macs = [mac for mac in seen | owned if mac not in tracked]
         claimed: list[str] = []
         for mac in new_macs:
             # One tracker per MAC: an entry only creates a tracker it owns, so
@@ -415,7 +416,9 @@ class UbusScannerEntity(CoordinatorEntity[UbusDataUpdateCoordinator], ScannerEnt
         shared: UbusSharedState = self.hass.data[DOMAIN]
         if (stamp := shared.latest_stamp(self._mac)) is None:
             return None
-        return stamp[1].hostname
+        # The latest router may have no lease for the client; fall back to
+        # the hostname the client was known by before.
+        return stamp[1].hostname or shared.known_hostname(self._mac)
 
     @property
     @override
