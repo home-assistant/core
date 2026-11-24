@@ -176,32 +176,17 @@
   dict({
     '00000000000004D2-0000000000000459-MatterNodeDevice': dict({
       'children': dict({
-        '00000000000004D2-0000000000000459-MatterNodeDevice-1': dict({
-          'entities': dict({
-            'select.dewenwils_3_zone_transformer_endpoint_1_power_on_behavior': 'Power-on behavior',
-            'switch.dewenwils_3_zone_transformer_endpoint_1': None,
-          }),
-          'name': 'Endpoint 1',
-        }),
-        '00000000000004D2-0000000000000459-MatterNodeDevice-2': dict({
-          'entities': dict({
-            'select.dewenwils_3_zone_transformer_endpoint_2_power_on_behavior': 'Power-on behavior',
-            'switch.dewenwils_3_zone_transformer_endpoint_2': None,
-          }),
-          'name': 'Endpoint 2',
-        }),
-        '00000000000004D2-0000000000000459-MatterNodeDevice-3': dict({
-          'entities': dict({
-            'select.dewenwils_3_zone_transformer_endpoint_3_power_on_behavior': 'Power-on behavior',
-            'switch.dewenwils_3_zone_transformer_endpoint_3': None,
-          }),
-          'name': 'Endpoint 3',
-        }),
       }),
       'entities': dict({
+        'select.dewenwils_3_zone_transformer_power_on_behavior_1': 'Power-on behavior (1)',
+        'select.dewenwils_3_zone_transformer_power_on_behavior_2': 'Power-on behavior (2)',
+        'select.dewenwils_3_zone_transformer_power_on_behavior_3': 'Power-on behavior (3)',
         'sensor.dewenwils_3_zone_transformer_reboot_count': 'Reboot count',
         'sensor.dewenwils_3_zone_transformer_uptime': 'Uptime',
         'sensor.dewenwils_3_zone_transformer_wi_fi_rssi': 'Wi-Fi RSSI',
+        'switch.dewenwils_3_zone_transformer_switch_1': 'Switch (1)',
+        'switch.dewenwils_3_zone_transformer_switch_2': 'Switch (2)',
+        'switch.dewenwils_3_zone_transformer_switch_3': 'Switch (3)',
         'update.dewenwils_3_zone_transformer_firmware': 'Firmware',
       }),
       'name': 'DEWENWILS 3 -Zone Transformer',
@@ -253,14 +238,9 @@
           'entities': dict({
             'button.eve_energy_20ecn4101_top_identify': 'Identify',
             'select.eve_energy_20ecn4101_top_power_on_behavior': 'Power-on behavior',
-            'sensor.eve_energy_20ecn4101_top_current': 'Current',
-            'sensor.eve_energy_20ecn4101_top_energy': 'Energy',
-            'sensor.eve_energy_20ecn4101_top_power': 'Power',
-            'sensor.eve_energy_20ecn4101_top_voltage': 'Voltage',
             'switch.eve_energy_20ecn4101_top': None,
-            'switch.eve_energy_20ecn4101_top_child_lock': 'Child lock',
           }),
-          'name': 'top',
+          'name': 'Top',
         }),
         '00000000000004D2-00000000000000C7-MatterNodeDevice-2': dict({
           'entities': dict({
@@ -268,18 +248,23 @@
             'select.eve_energy_20ecn4101_bottom_power_on_behavior': 'Power-on behavior',
             'switch.eve_energy_20ecn4101_bottom': None,
           }),
-          'name': 'bottom',
+          'name': 'Bottom',
         }),
       }),
       'entities': dict({
         'binary_sensor.eve_energy_20ecn4101_hardware_faults': 'Hardware faults',
         'binary_sensor.eve_energy_20ecn4101_network_faults': 'Network faults',
         'binary_sensor.eve_energy_20ecn4101_radio_faults': 'Radio faults',
+        'sensor.eve_energy_20ecn4101_current_top': 'Current (top)',
+        'sensor.eve_energy_20ecn4101_energy_top': 'Energy (top)',
+        'sensor.eve_energy_20ecn4101_power_top': 'Power (top)',
         'sensor.eve_energy_20ecn4101_reboot_count': 'Reboot count',
         'sensor.eve_energy_20ecn4101_thread_channel': 'Thread channel',
         'sensor.eve_energy_20ecn4101_thread_network_name': 'Thread network name',
         'sensor.eve_energy_20ecn4101_thread_routing_role': 'Thread routing role',
         'sensor.eve_energy_20ecn4101_uptime': 'Uptime',
+        'sensor.eve_energy_20ecn4101_voltage_top': 'Voltage (top)',
+        'switch.eve_energy_20ecn4101_child_lock_top': 'Child lock (top)',
         'update.eve_energy_20ecn4101_firmware': 'Firmware',
       }),
       'name': 'Eve Energy 20ECN4101',
@@ -407,35 +392,35 @@
       'children': dict({
         '00000000000004D2-0000000000000446-MatterNodeDevice-41': dict({
           'entities': dict({
-            'button.kitchen_switch_endpoint_41_identify': 'Identify',
-            'select.kitchen_switch_endpoint_41_power_on_behavior': 'Power-on behavior',
-            'switch.kitchen_switch_endpoint_41': None,
+            'button.kitchen_switch_channel_1_identify': 'Identify',
+            'select.kitchen_switch_channel_1_power_on_behavior': 'Power-on behavior',
+            'switch.kitchen_switch_channel_1': None,
           }),
-          'name': 'Endpoint 41',
+          'name': 'Channel 1',
         }),
         '00000000000004D2-0000000000000446-MatterNodeDevice-42': dict({
           'entities': dict({
-            'button.kitchen_switch_endpoint_42_identify': 'Identify',
-            'select.kitchen_switch_endpoint_42_power_on_behavior': 'Power-on behavior',
-            'switch.kitchen_switch_endpoint_42': None,
+            'button.kitchen_switch_channel_2_identify': 'Identify',
+            'select.kitchen_switch_channel_2_power_on_behavior': 'Power-on behavior',
+            'switch.kitchen_switch_channel_2': None,
           }),
-          'name': 'Endpoint 42',
+          'name': 'Channel 2',
         }),
         '00000000000004D2-0000000000000446-MatterNodeDevice-43': dict({
           'entities': dict({
-            'button.kitchen_switch_endpoint_43_identify': 'Identify',
-            'select.kitchen_switch_endpoint_43_power_on_behavior': 'Power-on behavior',
-            'switch.kitchen_switch_endpoint_43': None,
+            'button.kitchen_switch_channel_3_identify': 'Identify',
+            'select.kitchen_switch_channel_3_power_on_behavior': 'Power-on behavior',
+            'switch.kitchen_switch_channel_3': None,
           }),
-          'name': 'Endpoint 43',
+          'name': 'Channel 3',
         }),
         '00000000000004D2-0000000000000446-MatterNodeDevice-44': dict({
           'entities': dict({
-            'button.kitchen_switch_endpoint_44_identify': 'Identify',
-            'select.kitchen_switch_endpoint_44_power_on_behavior': 'Power-on behavior',
-            'switch.kitchen_switch_endpoint_44': None,
+            'button.kitchen_switch_channel_4_identify': 'Identify',
+            'select.kitchen_switch_channel_4_power_on_behavior': 'Power-on behavior',
+            'switch.kitchen_switch_channel_4': None,
           }),
-          'name': 'Endpoint 44',
+          'name': 'Channel 4',
         }),
       }),
       'entities': dict({
@@ -653,25 +638,15 @@
   dict({
     '00000000000004D2-000000000000008A-MatterNodeDevice': dict({
       'children': dict({
-        '00000000000004D2-000000000000008A-MatterNodeDevice-1': dict({
-          'entities': dict({
-            'select.tapo_smart_wi_fi_outlet_endpoint_1_power_on_behavior': 'Power-on behavior',
-            'switch.tapo_smart_wi_fi_outlet_endpoint_1': None,
-          }),
-          'name': 'Endpoint 1',
-        }),
-        '00000000000004D2-000000000000008A-MatterNodeDevice-2': dict({
-          'entities': dict({
-            'select.tapo_smart_wi_fi_outlet_endpoint_2_power_on_behavior': 'Power-on behavior',
-            'switch.tapo_smart_wi_fi_outlet_endpoint_2': None,
-          }),
-          'name': 'Endpoint 2',
-        }),
       }),
       'entities': dict({
+        'select.tapo_smart_wi_fi_outlet_power_on_behavior_1': 'Power-on behavior (1)',
+        'select.tapo_smart_wi_fi_outlet_power_on_behavior_2': 'Power-on behavior (2)',
         'sensor.tapo_smart_wi_fi_outlet_boot_reason': 'Boot reason',
         'sensor.tapo_smart_wi_fi_outlet_reboot_count': 'Reboot count',
         'sensor.tapo_smart_wi_fi_outlet_uptime': 'Uptime',
+        'switch.tapo_smart_wi_fi_outlet_switch_1': 'Switch (1)',
+        'switch.tapo_smart_wi_fi_outlet_switch_2': 'Switch (2)',
         'update.tapo_smart_wi_fi_outlet_firmware': 'Firmware',
       }),
       'name': 'Tapo Smart Wi-Fi Outlet',
@@ -706,83 +681,53 @@
   dict({
     '00000000000004D2-0000000000000437-MatterNodeDevice': dict({
       'children': dict({
-        '00000000000004D2-0000000000000437-MatterNodeDevice-1': dict({
-          'entities': dict({
-            'select.smart_wi_fi_power_strip_endpoint_1_power_on_behavior': 'Power-on behavior',
-            'sensor.smart_wi_fi_power_strip_endpoint_1_effective_current': 'Effective current',
-            'sensor.smart_wi_fi_power_strip_endpoint_1_effective_voltage': 'Effective voltage',
-            'sensor.smart_wi_fi_power_strip_endpoint_1_energy': 'Energy',
-            'sensor.smart_wi_fi_power_strip_endpoint_1_energy_exported': 'Energy exported',
-            'sensor.smart_wi_fi_power_strip_endpoint_1_power': 'Power',
-            'switch.smart_wi_fi_power_strip_endpoint_1': None,
-          }),
-          'name': 'Endpoint 1',
-        }),
-        '00000000000004D2-0000000000000437-MatterNodeDevice-2': dict({
-          'entities': dict({
-            'select.smart_wi_fi_power_strip_endpoint_2_power_on_behavior': 'Power-on behavior',
-            'sensor.smart_wi_fi_power_strip_endpoint_2_effective_current': 'Effective current',
-            'sensor.smart_wi_fi_power_strip_endpoint_2_effective_voltage': 'Effective voltage',
-            'sensor.smart_wi_fi_power_strip_endpoint_2_energy': 'Energy',
-            'sensor.smart_wi_fi_power_strip_endpoint_2_energy_exported': 'Energy exported',
-            'sensor.smart_wi_fi_power_strip_endpoint_2_power': 'Power',
-            'switch.smart_wi_fi_power_strip_endpoint_2': None,
-          }),
-          'name': 'Endpoint 2',
-        }),
-        '00000000000004D2-0000000000000437-MatterNodeDevice-3': dict({
-          'entities': dict({
-            'select.smart_wi_fi_power_strip_endpoint_3_power_on_behavior': 'Power-on behavior',
-            'sensor.smart_wi_fi_power_strip_endpoint_3_effective_current': 'Effective current',
-            'sensor.smart_wi_fi_power_strip_endpoint_3_effective_voltage': 'Effective voltage',
-            'sensor.smart_wi_fi_power_strip_endpoint_3_energy': 'Energy',
-            'sensor.smart_wi_fi_power_strip_endpoint_3_energy_exported': 'Energy exported',
-            'sensor.smart_wi_fi_power_strip_endpoint_3_power': 'Power',
-            'switch.smart_wi_fi_power_strip_endpoint_3': None,
-          }),
-          'name': 'Endpoint 3',
-        }),
-        '00000000000004D2-0000000000000437-MatterNodeDevice-4': dict({
-          'entities': dict({
-            'select.smart_wi_fi_power_strip_endpoint_4_power_on_behavior': 'Power-on behavior',
-            'sensor.smart_wi_fi_power_strip_endpoint_4_effective_current': 'Effective current',
-            'sensor.smart_wi_fi_power_strip_endpoint_4_effective_voltage': 'Effective voltage',
-            'sensor.smart_wi_fi_power_strip_endpoint_4_energy': 'Energy',
-            'sensor.smart_wi_fi_power_strip_endpoint_4_energy_exported': 'Energy exported',
-            'sensor.smart_wi_fi_power_strip_endpoint_4_power': 'Power',
-            'switch.smart_wi_fi_power_strip_endpoint_4': None,
-          }),
-          'name': 'Endpoint 4',
-        }),
-        '00000000000004D2-0000000000000437-MatterNodeDevice-5': dict({
-          'entities': dict({
-            'select.smart_wi_fi_power_strip_endpoint_5_power_on_behavior': 'Power-on behavior',
-            'sensor.smart_wi_fi_power_strip_endpoint_5_effective_current': 'Effective current',
-            'sensor.smart_wi_fi_power_strip_endpoint_5_effective_voltage': 'Effective voltage',
-            'sensor.smart_wi_fi_power_strip_endpoint_5_energy': 'Energy',
-            'sensor.smart_wi_fi_power_strip_endpoint_5_energy_exported': 'Energy exported',
-            'sensor.smart_wi_fi_power_strip_endpoint_5_power': 'Power',
-            'switch.smart_wi_fi_power_strip_endpoint_5': None,
-          }),
-          'name': 'Endpoint 5',
-        }),
-        '00000000000004D2-0000000000000437-MatterNodeDevice-6': dict({
-          'entities': dict({
-            'select.smart_wi_fi_power_strip_endpoint_6_power_on_behavior': 'Power-on behavior',
-            'sensor.smart_wi_fi_power_strip_endpoint_6_effective_current': 'Effective current',
-            'sensor.smart_wi_fi_power_strip_endpoint_6_effective_voltage': 'Effective voltage',
-            'sensor.smart_wi_fi_power_strip_endpoint_6_energy': 'Energy',
-            'sensor.smart_wi_fi_power_strip_endpoint_6_energy_exported': 'Energy exported',
-            'sensor.smart_wi_fi_power_strip_endpoint_6_power': 'Power',
-            'switch.smart_wi_fi_power_strip_endpoint_6': None,
-          }),
-          'name': 'Endpoint 6',
-        }),
       }),
       'entities': dict({
+        'select.smart_wi_fi_power_strip_power_on_behavior_1': 'Power-on behavior (1)',
+        'select.smart_wi_fi_power_strip_power_on_behavior_2': 'Power-on behavior (2)',
+        'select.smart_wi_fi_power_strip_power_on_behavior_3': 'Power-on behavior (3)',
+        'select.smart_wi_fi_power_strip_power_on_behavior_4': 'Power-on behavior (4)',
+        'select.smart_wi_fi_power_strip_power_on_behavior_5': 'Power-on behavior (5)',
+        'select.smart_wi_fi_power_strip_power_on_behavior_6': 'Power-on behavior (6)',
         'sensor.smart_wi_fi_power_strip_boot_reason': 'Boot reason',
+        'sensor.smart_wi_fi_power_strip_effective_current_10': 'Effective current (10)',
+        'sensor.smart_wi_fi_power_strip_effective_current_11': 'Effective current (11)',
+        'sensor.smart_wi_fi_power_strip_effective_current_12': 'Effective current (12)',
+        'sensor.smart_wi_fi_power_strip_effective_current_7': 'Effective current (7)',
+        'sensor.smart_wi_fi_power_strip_effective_current_8': 'Effective current (8)',
+        'sensor.smart_wi_fi_power_strip_effective_current_9': 'Effective current (9)',
+        'sensor.smart_wi_fi_power_strip_effective_voltage_10': 'Effective voltage (10)',
+        'sensor.smart_wi_fi_power_strip_effective_voltage_11': 'Effective voltage (11)',
+        'sensor.smart_wi_fi_power_strip_effective_voltage_12': 'Effective voltage (12)',
+        'sensor.smart_wi_fi_power_strip_effective_voltage_7': 'Effective voltage (7)',
+        'sensor.smart_wi_fi_power_strip_effective_voltage_8': 'Effective voltage (8)',
+        'sensor.smart_wi_fi_power_strip_effective_voltage_9': 'Effective voltage (9)',
+        'sensor.smart_wi_fi_power_strip_energy_10': 'Energy (10)',
+        'sensor.smart_wi_fi_power_strip_energy_11': 'Energy (11)',
+        'sensor.smart_wi_fi_power_strip_energy_12': 'Energy (12)',
+        'sensor.smart_wi_fi_power_strip_energy_7': 'Energy (7)',
+        'sensor.smart_wi_fi_power_strip_energy_8': 'Energy (8)',
+        'sensor.smart_wi_fi_power_strip_energy_9': 'Energy (9)',
+        'sensor.smart_wi_fi_power_strip_energy_exported_10': 'Energy exported (10)',
+        'sensor.smart_wi_fi_power_strip_energy_exported_11': 'Energy exported (11)',
+        'sensor.smart_wi_fi_power_strip_energy_exported_12': 'Energy exported (12)',
+        'sensor.smart_wi_fi_power_strip_energy_exported_7': 'Energy exported (7)',
+        'sensor.smart_wi_fi_power_strip_energy_exported_8': 'Energy exported (8)',
+        'sensor.smart_wi_fi_power_strip_energy_exported_9': 'Energy exported (9)',
+        'sensor.smart_wi_fi_power_strip_power_10': 'Power (10)',
+        'sensor.smart_wi_fi_power_strip_power_11': 'Power (11)',
+        'sensor.smart_wi_fi_power_strip_power_12': 'Power (12)',
+        'sensor.smart_wi_fi_power_strip_power_7': 'Power (7)',
+        'sensor.smart_wi_fi_power_strip_power_8': 'Power (8)',
+        'sensor.smart_wi_fi_power_strip_power_9': 'Power (9)',
         'sensor.smart_wi_fi_power_strip_reboot_count': 'Reboot count',
         'sensor.smart_wi_fi_power_strip_uptime': 'Uptime',
+        'switch.smart_wi_fi_power_strip_switch_1': 'Switch (1)',
+        'switch.smart_wi_fi_power_strip_switch_2': 'Switch (2)',
+        'switch.smart_wi_fi_power_strip_switch_3': 'Switch (3)',
+        'switch.smart_wi_fi_power_strip_switch_4': 'Switch (4)',
+        'switch.smart_wi_fi_power_strip_switch_5': 'Switch (5)',
+        'switch.smart_wi_fi_power_strip_switch_6': 'Switch (6)',
         'update.smart_wi_fi_power_strip_firmware': 'Firmware',
       }),
       'name': 'Smart Wi-Fi Power Strip',
@@ -796,15 +741,15 @@
       'children': dict({
         '00000000000004D2-000000000000040A-MatterNodeDevice-1': dict({
           'entities': dict({
-            'switch.smart_outdoor_plug_1': None,
+            'switch.smart_outdoor_plug_channel_1': None,
           }),
-          'name': '1',
+          'name': 'Channel 1',
         }),
         '00000000000004D2-000000000000040A-MatterNodeDevice-2': dict({
           'entities': dict({
-            'switch.smart_outdoor_plug_2': None,
+            'switch.smart_outdoor_plug_channel_2': None,
           }),
-          'name': '2',
+          'name': 'Channel 2',
         }),
       }),
       'entities': dict({

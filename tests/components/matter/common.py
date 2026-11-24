@@ -156,6 +156,16 @@ EVE_ENERGY_LIGHT_PART_ATTRIBUTES = {
 }
 
 
+# Common Number tags 1 to 6 on the outlets (endpoints 1 to 6), so they split.
+TAPO_STRIP_NUMBER_TAG_ATTRIBUTES = {
+    **{
+        f"{endpoint_id}/29/4": [{"0": None, "1": 7, "2": endpoint_id}]
+        for endpoint_id in range(1, 7)
+    },
+    **{f"{endpoint_id}/29/65532": 1 for endpoint_id in range(1, 7)},
+}
+
+
 @cache
 def load_node_fixture(fixture: str) -> str:
     """Load a fixture."""

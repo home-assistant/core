@@ -6,6 +6,7 @@ from typing import TYPE_CHECKING
 
 from chip.clusters import Objects as clusters
 from matter_server.client.models.device_types import OnOffPlugInUnit
+from matter_server.common.custom_clusters import EveCluster
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
@@ -13,8 +14,10 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr
 
 from .const import DOMAIN, ID_TYPE_DEVICE_ID
+from .semantic_tags import ChildDeviceName, resolve_group_names
 
 if TYPE_CHECKING:
+    from chip.clusters.ClusterObjects import ClusterAttributeDescriptor
     from matter_ble_proxy import MatterBleProxy
     from matter_server.client.models.device_types import DeviceType
     from matter_server.client.models.node import MatterEndpoint, MatterNode
@@ -26,15 +29,23 @@ if TYPE_CHECKING:
 
 # Application (output) device types that each represent an independent physical
 # sub-unit of a node. When a node exposes the same one of these on more than one
-# endpoint (e.g. the sockets of a multi-socket plug), each such endpoint becomes
-# its own child device instead of collapsing onto the node device with a numeric
-# entity name suffix. Stateless controls (Generic Switch) and utility endpoints
-# (Power Source, Electrical Sensor, ...) are deliberately excluded.
+# endpoint (e.g. the sockets of a multi-socket plug), and semantic tags or vendor
+# labels name each such endpoint, each one becomes its own child device instead
+# of collapsing onto the node device with a numeric entity name suffix.
+# Stateless controls (Generic Switch) and utility endpoints (Power Source,
+# Electrical Sensor, ...) are deliberately excluded.
 # The allowlist is intentionally limited to device types we have test fixtures
 # for; it can be extended (e.g. lights, covers) as fixtures become available.
 CHILD_DEVICE_TYPES: set[type[DeviceType]] = {
     OnOffPlugInUnit,
 }
+
+# Vendor clusters whose entities stay on the node device, also on an endpoint that
+# splits into a child device. The Eve Energy dual outlet carries the Eve cluster
+# only on its first outlet's endpoint, while its readings appear to cover the
+# whole device. They keep that outlet's name suffix, so their entity IDs don't
+# change.
+NODE_DEVICE_CLUSTER_IDS: set[int] = {EveCluster.id}
 
 
 class MissingNode(HomeAssistantError):
@@ -187,25 +198,62 @@ def _endpoint_maps_to_node_device(endpoint: MatterEndpoint) -> bool:
     )
 
 
+def get_child_device_names(node: MatterNode) -> dict[int, ChildDeviceName]:
+    """Return the child device name of every endpoint of the node that splits.
+
+    Endpoints that map to the node device and are linked by sharing a device type
+    of CHILD_DEVICE_TYPES form a sibling group, e.g. the sockets of a multi-socket
+    plug. A group splits into child devices only when one name source (semantic
+    tags or vendor labels) names every endpoint of the group with distinct names,
+    and those names don't collide with the names of another group of the node.
+    An endpoint that isn't in the result doesn't split.
+    """
+    groups: list[list[MatterEndpoint]] = []
+    for endpoint in node.endpoints.values():
+        if not _endpoint_maps_to_node_device(endpoint):
+            continue
+        if not (splittable_types := CHILD_DEVICE_TYPES & endpoint.device_types):
+            continue
+        linked = [
+            group
+            for group in groups
+            if any(splittable_types & other.device_types for other in group)
+        ]
+        groups = [group for group in groups if group not in linked]
+        groups.append([endpoint, *(other for group in linked for other in group)])
+
+    group_names = [
+        names
+        for group in groups
+        if len(group) > 1 and (names := resolve_group_names(group)) is not None
+    ]
+    child_device_names: dict[int, ChildDeviceName] = {}
+    for names in group_names:
+        keys = {name.comparison_key for name in names.values()}
+        if any(
+            other is not names
+            and keys & {name.comparison_key for name in other.values()}
+            for other in group_names
+        ):
+            continue
+        child_device_names.update(names)
+    return child_device_names
+
+
 def endpoint_requires_child_device(endpoint: MatterEndpoint) -> bool:
     """Return if the endpoint should be represented as its own child device.
 
-    True for an endpoint that maps to the node device and exposes an application
-    device type (see CHILD_DEVICE_TYPES) also present on a sibling endpoint that
-    maps to the same node device, e.g. one socket of a multi-socket plug. Every
-    entity of such an endpoint is then placed on its own child device.
+    True for an endpoint of a sibling group that splits into named child devices,
+    see `get_child_device_names`. Its entities are then placed on its own child
+    device, apart from those of a vendor cluster covering the node, see
+    `get_entity_child_device_owner`.
     """
-    if not _endpoint_maps_to_node_device(endpoint):
+    # Skip naming the whole node for endpoints that can never split.
+    if not _endpoint_maps_to_node_device(endpoint) or not (
+        CHILD_DEVICE_TYPES & endpoint.device_types
+    ):
         return False
-    splittable_types = CHILD_DEVICE_TYPES & endpoint.device_types
-    if not splittable_types:
-        return False
-    return any(
-        other.endpoint_id != endpoint.endpoint_id
-        and splittable_types & other.device_types
-        and _endpoint_maps_to_node_device(other)
-        for other in endpoint.node.endpoints.values()
-    )
+    return endpoint.endpoint_id in get_child_device_names(endpoint.node)
 
 
 def get_power_topology_endpoint_id(endpoint: MatterEndpoint) -> int | None:
@@ -249,6 +297,19 @@ def get_child_device_owner(endpoint: MatterEndpoint) -> MatterEndpoint | None:
     ):
         return measured
     return None
+
+
+def get_entity_child_device_owner(
+    endpoint: MatterEndpoint, primary_attribute: type[ClusterAttributeDescriptor]
+) -> MatterEndpoint | None:
+    """Return the endpoint whose child device holds an entity of the endpoint.
+
+    Like `get_child_device_owner`, except that the entities of a vendor cluster
+    covering the whole node stay on the node device.
+    """
+    if primary_attribute.cluster_id in NODE_DEVICE_CLUSTER_IDS:
+        return None
+    return get_child_device_owner(endpoint)
 
 
 def get_node_device_identifier(

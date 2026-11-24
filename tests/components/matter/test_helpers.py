@@ -17,7 +17,11 @@ from homeassistant.components.matter.helpers import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
-from .common import create_node_from_fixture, setup_integration_with_node_fixture
+from .common import (
+    TAPO_STRIP_NUMBER_TAG_ATTRIBUTES,
+    create_node_from_fixture,
+    setup_integration_with_node_fixture,
+)
 
 
 @pytest.mark.parametrize(
@@ -25,9 +29,16 @@ from .common import create_node_from_fixture, setup_integration_with_node_fixtur
     [
         # Root endpoint always maps to the node (parent) device.
         ("eve_energy_20ecn4101", 0, False),
-        # Each socket of the dual-socket plug (same device type) splits off.
+        # Each socket of the dual-socket plug (same device type) splits off,
+        # named from its vendor label.
         ("eve_energy_20ecn4101", 1, True),
         ("eve_energy_20ecn4101", 2, True),
+        ("tp_link_smart_outdoor_plug", 1, True),
+        # Each relay named from its Common Number semantic tag splits off.
+        ("lifx_switch_115", 41, True),
+        # Sockets without semantic tags or vendor labels naming them don't split.
+        ("tapo_smart_wi_fi_power_strip", 1, False),
+        ("dewenwils_3_zone_transformer", 1, False),
         # Endpoints sharing a primary attribute but of different device types are
         # the same physical unit, so they are not split.
         ("inovelli_vtm31", 1, False),
@@ -63,10 +74,34 @@ EVE_ENERGY_COMPOSED_PART_ATTRIBUTES = {
 @pytest.mark.parametrize(
     ("node_fixture", "attributes", "endpoint_id", "expected_owner_id"),
     [
-        pytest.param("tapo_smart_wi_fi_power_strip", None, 7, 1, id="set_single_first"),
-        pytest.param("tapo_smart_wi_fi_power_strip", None, 12, 6, id="set_single_last"),
-        pytest.param("tapo_smart_wi_fi_power_strip", None, 1, 1, id="split_outlet"),
-        pytest.param("tapo_smart_wi_fi_power_strip", None, 0, None, id="root"),
+        pytest.param(
+            "tapo_smart_wi_fi_power_strip",
+            TAPO_STRIP_NUMBER_TAG_ATTRIBUTES,
+            7,
+            1,
+            id="set_single_first",
+        ),
+        pytest.param(
+            "tapo_smart_wi_fi_power_strip",
+            TAPO_STRIP_NUMBER_TAG_ATTRIBUTES,
+            12,
+            6,
+            id="set_single_last",
+        ),
+        pytest.param(
+            "tapo_smart_wi_fi_power_strip",
+            TAPO_STRIP_NUMBER_TAG_ATTRIBUTES,
+            1,
+            1,
+            id="split_outlet",
+        ),
+        pytest.param(
+            "tapo_smart_wi_fi_power_strip",
+            TAPO_STRIP_NUMBER_TAG_ATTRIBUTES,
+            0,
+            None,
+            id="root",
+        ),
         pytest.param(
             "tapo_smart_wi_fi_plug_265", None, 2, None, id="set_outlet_not_split"
         ),

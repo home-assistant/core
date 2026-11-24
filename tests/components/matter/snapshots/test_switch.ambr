@@ -249,7 +249,7 @@
     'state': 'off',
   })
 # ---
-# name: test_switches[dewenwils_3_zone_transformer][switch.dewenwils_3_zone_transformer_endpoint_1-entry]
+# name: test_switches[dewenwils_3_zone_transformer][switch.dewenwils_3_zone_transformer_switch_1-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -259,11 +259,11 @@
     'config_entry_id': <ANY>,
     'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ChildDeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-0000000000000459-MatterNodeDevice-1')]>,
+    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-0000000000000459-MatterNodeDevice'), ('matter', 'serial_serial_1113')]>,
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': None,
-    'entity_id': 'switch.dewenwils_3_zone_transformer_endpoint_1',
+    'entity_id': 'switch.dewenwils_3_zone_transformer_switch_1',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -271,12 +271,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': None,
+    'object_id_base': 'Switch (1)',
     'options': dict({
     }),
     'original_device_class': <SwitchDeviceClass.OUTLET: 'outlet'>,
     'original_icon': None,
-    'original_name': None,
+    'original_name': 'Switch (1)',
     'platform': 'matter',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -286,21 +286,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_switches[dewenwils_3_zone_transformer][switch.dewenwils_3_zone_transformer_endpoint_1-state]
+# name: test_switches[dewenwils_3_zone_transformer][switch.dewenwils_3_zone_transformer_switch_1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'outlet',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Endpoint 1',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'DEWENWILS 3 -Zone Transformer Switch (1)',
     }),
     'context': <ANY>,
-    'entity_id': 'switch.dewenwils_3_zone_transformer_endpoint_1',
+    'entity_id': 'switch.dewenwils_3_zone_transformer_switch_1',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'on',
   })
 # ---
-# name: test_switches[dewenwils_3_zone_transformer][switch.dewenwils_3_zone_transformer_endpoint_2-entry]
+# name: test_switches[dewenwils_3_zone_transformer][switch.dewenwils_3_zone_transformer_switch_2-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -310,11 +310,11 @@
     'config_entry_id': <ANY>,
     'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ChildDeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-0000000000000459-MatterNodeDevice-2')]>,
+    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-0000000000000459-MatterNodeDevice'), ('matter', 'serial_serial_1113')]>,
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': None,
-    'entity_id': 'switch.dewenwils_3_zone_transformer_endpoint_2',
+    'entity_id': 'switch.dewenwils_3_zone_transformer_switch_2',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -322,12 +322,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': None,
+    'object_id_base': 'Switch (2)',
     'options': dict({
     }),
     'original_device_class': <SwitchDeviceClass.OUTLET: 'outlet'>,
     'original_icon': None,
-    'original_name': None,
+    'original_name': 'Switch (2)',
     'platform': 'matter',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -337,21 +337,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_switches[dewenwils_3_zone_transformer][switch.dewenwils_3_zone_transformer_endpoint_2-state]
+# name: test_switches[dewenwils_3_zone_transformer][switch.dewenwils_3_zone_transformer_switch_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'outlet',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Endpoint 2',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'DEWENWILS 3 -Zone Transformer Switch (2)',
     }),
     'context': <ANY>,
-    'entity_id': 'switch.dewenwils_3_zone_transformer_endpoint_2',
+    'entity_id': 'switch.dewenwils_3_zone_transformer_switch_2',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_switches[dewenwils_3_zone_transformer][switch.dewenwils_3_zone_transformer_endpoint_3-entry]
+# name: test_switches[dewenwils_3_zone_transformer][switch.dewenwils_3_zone_transformer_switch_3-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -361,11 +361,11 @@
     'config_entry_id': <ANY>,
     'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ChildDeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-0000000000000459-MatterNodeDevice-3')]>,
+    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-0000000000000459-MatterNodeDevice'), ('matter', 'serial_serial_1113')]>,
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': None,
-    'entity_id': 'switch.dewenwils_3_zone_transformer_endpoint_3',
+    'entity_id': 'switch.dewenwils_3_zone_transformer_switch_3',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -373,12 +373,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': None,
+    'object_id_base': 'Switch (3)',
     'options': dict({
     }),
     'original_device_class': <SwitchDeviceClass.OUTLET: 'outlet'>,
     'original_icon': None,
-    'original_name': None,
+    'original_name': 'Switch (3)',
     'platform': 'matter',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -388,14 +388,14 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_switches[dewenwils_3_zone_transformer][switch.dewenwils_3_zone_transformer_endpoint_3-state]
+# name: test_switches[dewenwils_3_zone_transformer][switch.dewenwils_3_zone_transformer_switch_3-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'outlet',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Endpoint 3',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'DEWENWILS 3 -Zone Transformer Switch (3)',
     }),
     'context': <ANY>,
-    'entity_id': 'switch.dewenwils_3_zone_transformer_endpoint_3',
+    'entity_id': 'switch.dewenwils_3_zone_transformer_switch_3',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -594,7 +594,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'outlet',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'bottom',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bottom',
     }),
     'context': <ANY>,
     'entity_id': 'switch.eve_energy_20ecn4101_bottom',
@@ -602,6 +602,56 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'on',
+  })
+# ---
+# name: test_switches[eve_energy_20ecn4101][switch.eve_energy_20ecn4101_child_lock_top-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-00000000000000C7-MatterNodeDevice'), ('matter', 'serial_serial_199')]>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'switch.eve_energy_20ecn4101_child_lock_top',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Child lock (top)',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Child lock (top)',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'child_lock',
+    'unique_id': '00000000000004D2-00000000000000C7-MatterNodeDevice-1-EveChildLock-319486977-319422481',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_switches[eve_energy_20ecn4101][switch.eve_energy_20ecn4101_child_lock_top-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Eve Energy 20ECN4101 Child lock (top)',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.eve_energy_20ecn4101_child_lock_top',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
   })
 # ---
 # name: test_switches[eve_energy_20ecn4101][switch.eve_energy_20ecn4101_top-entry]
@@ -645,60 +695,10 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'outlet',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'top',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Top',
     }),
     'context': <ANY>,
     'entity_id': 'switch.eve_energy_20ecn4101_top',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'off',
-  })
-# ---
-# name: test_switches[eve_energy_20ecn4101][switch.eve_energy_20ecn4101_top_child_lock-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': None,
-    'device_class': None,
-    'device_id': <ChildDeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-00000000000000C7-MatterNodeDevice-1')]>,
-    'disabled_by': None,
-    'domain': 'switch',
-    'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'switch.eve_energy_20ecn4101_top_child_lock',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Child lock',
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Child lock',
-    'platform': 'matter',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'child_lock',
-    'unique_id': '00000000000004D2-00000000000000C7-MatterNodeDevice-1-EveChildLock-319486977-319422481',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_switches[eve_energy_20ecn4101][switch.eve_energy_20ecn4101_top_child_lock-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'top Child lock',
-    }),
-    'context': <ANY>,
-    'entity_id': 'switch.eve_energy_20ecn4101_top_child_lock',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -1258,7 +1258,7 @@
     'state': 'off',
   })
 # ---
-# name: test_switches[lifx_switch_115][switch.kitchen_switch_endpoint_41-entry]
+# name: test_switches[lifx_switch_115][switch.kitchen_switch_channel_1-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -1272,7 +1272,7 @@
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': None,
-    'entity_id': 'switch.kitchen_switch_endpoint_41',
+    'entity_id': 'switch.kitchen_switch_channel_1',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1295,21 +1295,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_switches[lifx_switch_115][switch.kitchen_switch_endpoint_41-state]
+# name: test_switches[lifx_switch_115][switch.kitchen_switch_channel_1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'outlet',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Endpoint 41',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Channel 1',
     }),
     'context': <ANY>,
-    'entity_id': 'switch.kitchen_switch_endpoint_41',
+    'entity_id': 'switch.kitchen_switch_channel_1',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_switches[lifx_switch_115][switch.kitchen_switch_endpoint_42-entry]
+# name: test_switches[lifx_switch_115][switch.kitchen_switch_channel_2-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -1323,7 +1323,7 @@
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': None,
-    'entity_id': 'switch.kitchen_switch_endpoint_42',
+    'entity_id': 'switch.kitchen_switch_channel_2',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1346,21 +1346,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_switches[lifx_switch_115][switch.kitchen_switch_endpoint_42-state]
+# name: test_switches[lifx_switch_115][switch.kitchen_switch_channel_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'outlet',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Endpoint 42',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Channel 2',
     }),
     'context': <ANY>,
-    'entity_id': 'switch.kitchen_switch_endpoint_42',
+    'entity_id': 'switch.kitchen_switch_channel_2',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_switches[lifx_switch_115][switch.kitchen_switch_endpoint_43-entry]
+# name: test_switches[lifx_switch_115][switch.kitchen_switch_channel_3-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -1374,7 +1374,7 @@
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': None,
-    'entity_id': 'switch.kitchen_switch_endpoint_43',
+    'entity_id': 'switch.kitchen_switch_channel_3',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1397,21 +1397,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_switches[lifx_switch_115][switch.kitchen_switch_endpoint_43-state]
+# name: test_switches[lifx_switch_115][switch.kitchen_switch_channel_3-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'outlet',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Endpoint 43',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Channel 3',
     }),
     'context': <ANY>,
-    'entity_id': 'switch.kitchen_switch_endpoint_43',
+    'entity_id': 'switch.kitchen_switch_channel_3',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_switches[lifx_switch_115][switch.kitchen_switch_endpoint_44-entry]
+# name: test_switches[lifx_switch_115][switch.kitchen_switch_channel_4-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -1425,7 +1425,7 @@
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': None,
-    'entity_id': 'switch.kitchen_switch_endpoint_44',
+    'entity_id': 'switch.kitchen_switch_channel_4',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1448,14 +1448,14 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_switches[lifx_switch_115][switch.kitchen_switch_endpoint_44-state]
+# name: test_switches[lifx_switch_115][switch.kitchen_switch_channel_4-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'outlet',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Endpoint 44',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Channel 4',
     }),
     'context': <ANY>,
-    'entity_id': 'switch.kitchen_switch_endpoint_44',
+    'entity_id': 'switch.kitchen_switch_channel_4',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -2776,7 +2776,7 @@
     'state': 'off',
   })
 # ---
-# name: test_switches[tapo_smart_wi_fi_outlet][switch.tapo_smart_wi_fi_outlet_endpoint_1-entry]
+# name: test_switches[tapo_smart_wi_fi_outlet][switch.tapo_smart_wi_fi_outlet_switch_1-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -2786,11 +2786,11 @@
     'config_entry_id': <ANY>,
     'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ChildDeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-000000000000008A-MatterNodeDevice-1')]>,
+    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-000000000000008A-MatterNodeDevice'), ('matter', 'serial_serial_138')]>,
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': None,
-    'entity_id': 'switch.tapo_smart_wi_fi_outlet_endpoint_1',
+    'entity_id': 'switch.tapo_smart_wi_fi_outlet_switch_1',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2798,12 +2798,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': None,
+    'object_id_base': 'Switch (1)',
     'options': dict({
     }),
     'original_device_class': <SwitchDeviceClass.OUTLET: 'outlet'>,
     'original_icon': None,
-    'original_name': None,
+    'original_name': 'Switch (1)',
     'platform': 'matter',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -2813,21 +2813,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_switches[tapo_smart_wi_fi_outlet][switch.tapo_smart_wi_fi_outlet_endpoint_1-state]
+# name: test_switches[tapo_smart_wi_fi_outlet][switch.tapo_smart_wi_fi_outlet_switch_1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'outlet',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Endpoint 1',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Tapo Smart Wi-Fi Outlet Switch (1)',
     }),
     'context': <ANY>,
-    'entity_id': 'switch.tapo_smart_wi_fi_outlet_endpoint_1',
+    'entity_id': 'switch.tapo_smart_wi_fi_outlet_switch_1',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'on',
   })
 # ---
-# name: test_switches[tapo_smart_wi_fi_outlet][switch.tapo_smart_wi_fi_outlet_endpoint_2-entry]
+# name: test_switches[tapo_smart_wi_fi_outlet][switch.tapo_smart_wi_fi_outlet_switch_2-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -2837,11 +2837,11 @@
     'config_entry_id': <ANY>,
     'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ChildDeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-000000000000008A-MatterNodeDevice-2')]>,
+    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-000000000000008A-MatterNodeDevice'), ('matter', 'serial_serial_138')]>,
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': None,
-    'entity_id': 'switch.tapo_smart_wi_fi_outlet_endpoint_2',
+    'entity_id': 'switch.tapo_smart_wi_fi_outlet_switch_2',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2849,12 +2849,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': None,
+    'object_id_base': 'Switch (2)',
     'options': dict({
     }),
     'original_device_class': <SwitchDeviceClass.OUTLET: 'outlet'>,
     'original_icon': None,
-    'original_name': None,
+    'original_name': 'Switch (2)',
     'platform': 'matter',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -2864,14 +2864,14 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_switches[tapo_smart_wi_fi_outlet][switch.tapo_smart_wi_fi_outlet_endpoint_2-state]
+# name: test_switches[tapo_smart_wi_fi_outlet][switch.tapo_smart_wi_fi_outlet_switch_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'outlet',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Endpoint 2',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Tapo Smart Wi-Fi Outlet Switch (2)',
     }),
     'context': <ANY>,
-    'entity_id': 'switch.tapo_smart_wi_fi_outlet_endpoint_2',
+    'entity_id': 'switch.tapo_smart_wi_fi_outlet_switch_2',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -2929,7 +2929,7 @@
     'state': 'on',
   })
 # ---
-# name: test_switches[tapo_smart_wi_fi_power_strip][switch.smart_wi_fi_power_strip_endpoint_1-entry]
+# name: test_switches[tapo_smart_wi_fi_power_strip][switch.smart_wi_fi_power_strip_switch_1-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -2939,11 +2939,11 @@
     'config_entry_id': <ANY>,
     'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ChildDeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-0000000000000437-MatterNodeDevice-1')]>,
+    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-0000000000000437-MatterNodeDevice'), ('matter', 'serial_serial_1079')]>,
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': None,
-    'entity_id': 'switch.smart_wi_fi_power_strip_endpoint_1',
+    'entity_id': 'switch.smart_wi_fi_power_strip_switch_1',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2951,12 +2951,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': None,
+    'object_id_base': 'Switch (1)',
     'options': dict({
     }),
     'original_device_class': <SwitchDeviceClass.OUTLET: 'outlet'>,
     'original_icon': None,
-    'original_name': None,
+    'original_name': 'Switch (1)',
     'platform': 'matter',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -2966,21 +2966,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_switches[tapo_smart_wi_fi_power_strip][switch.smart_wi_fi_power_strip_endpoint_1-state]
+# name: test_switches[tapo_smart_wi_fi_power_strip][switch.smart_wi_fi_power_strip_switch_1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'outlet',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Endpoint 1',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Smart Wi-Fi Power Strip Switch (1)',
     }),
     'context': <ANY>,
-    'entity_id': 'switch.smart_wi_fi_power_strip_endpoint_1',
+    'entity_id': 'switch.smart_wi_fi_power_strip_switch_1',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'on',
   })
 # ---
-# name: test_switches[tapo_smart_wi_fi_power_strip][switch.smart_wi_fi_power_strip_endpoint_2-entry]
+# name: test_switches[tapo_smart_wi_fi_power_strip][switch.smart_wi_fi_power_strip_switch_2-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -2990,11 +2990,11 @@
     'config_entry_id': <ANY>,
     'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ChildDeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-0000000000000437-MatterNodeDevice-2')]>,
+    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-0000000000000437-MatterNodeDevice'), ('matter', 'serial_serial_1079')]>,
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': None,
-    'entity_id': 'switch.smart_wi_fi_power_strip_endpoint_2',
+    'entity_id': 'switch.smart_wi_fi_power_strip_switch_2',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -3002,12 +3002,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': None,
+    'object_id_base': 'Switch (2)',
     'options': dict({
     }),
     'original_device_class': <SwitchDeviceClass.OUTLET: 'outlet'>,
     'original_icon': None,
-    'original_name': None,
+    'original_name': 'Switch (2)',
     'platform': 'matter',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -3017,21 +3017,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_switches[tapo_smart_wi_fi_power_strip][switch.smart_wi_fi_power_strip_endpoint_2-state]
+# name: test_switches[tapo_smart_wi_fi_power_strip][switch.smart_wi_fi_power_strip_switch_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'outlet',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Endpoint 2',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Smart Wi-Fi Power Strip Switch (2)',
     }),
     'context': <ANY>,
-    'entity_id': 'switch.smart_wi_fi_power_strip_endpoint_2',
+    'entity_id': 'switch.smart_wi_fi_power_strip_switch_2',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_switches[tapo_smart_wi_fi_power_strip][switch.smart_wi_fi_power_strip_endpoint_3-entry]
+# name: test_switches[tapo_smart_wi_fi_power_strip][switch.smart_wi_fi_power_strip_switch_3-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -3041,11 +3041,11 @@
     'config_entry_id': <ANY>,
     'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ChildDeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-0000000000000437-MatterNodeDevice-3')]>,
+    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-0000000000000437-MatterNodeDevice'), ('matter', 'serial_serial_1079')]>,
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': None,
-    'entity_id': 'switch.smart_wi_fi_power_strip_endpoint_3',
+    'entity_id': 'switch.smart_wi_fi_power_strip_switch_3',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -3053,12 +3053,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': None,
+    'object_id_base': 'Switch (3)',
     'options': dict({
     }),
     'original_device_class': <SwitchDeviceClass.OUTLET: 'outlet'>,
     'original_icon': None,
-    'original_name': None,
+    'original_name': 'Switch (3)',
     'platform': 'matter',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -3068,21 +3068,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_switches[tapo_smart_wi_fi_power_strip][switch.smart_wi_fi_power_strip_endpoint_3-state]
+# name: test_switches[tapo_smart_wi_fi_power_strip][switch.smart_wi_fi_power_strip_switch_3-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'outlet',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Endpoint 3',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Smart Wi-Fi Power Strip Switch (3)',
     }),
     'context': <ANY>,
-    'entity_id': 'switch.smart_wi_fi_power_strip_endpoint_3',
+    'entity_id': 'switch.smart_wi_fi_power_strip_switch_3',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_switches[tapo_smart_wi_fi_power_strip][switch.smart_wi_fi_power_strip_endpoint_4-entry]
+# name: test_switches[tapo_smart_wi_fi_power_strip][switch.smart_wi_fi_power_strip_switch_4-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -3092,11 +3092,11 @@
     'config_entry_id': <ANY>,
     'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ChildDeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-0000000000000437-MatterNodeDevice-4')]>,
+    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-0000000000000437-MatterNodeDevice'), ('matter', 'serial_serial_1079')]>,
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': None,
-    'entity_id': 'switch.smart_wi_fi_power_strip_endpoint_4',
+    'entity_id': 'switch.smart_wi_fi_power_strip_switch_4',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -3104,12 +3104,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': None,
+    'object_id_base': 'Switch (4)',
     'options': dict({
     }),
     'original_device_class': <SwitchDeviceClass.OUTLET: 'outlet'>,
     'original_icon': None,
-    'original_name': None,
+    'original_name': 'Switch (4)',
     'platform': 'matter',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -3119,21 +3119,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_switches[tapo_smart_wi_fi_power_strip][switch.smart_wi_fi_power_strip_endpoint_4-state]
+# name: test_switches[tapo_smart_wi_fi_power_strip][switch.smart_wi_fi_power_strip_switch_4-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'outlet',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Endpoint 4',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Smart Wi-Fi Power Strip Switch (4)',
     }),
     'context': <ANY>,
-    'entity_id': 'switch.smart_wi_fi_power_strip_endpoint_4',
+    'entity_id': 'switch.smart_wi_fi_power_strip_switch_4',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_switches[tapo_smart_wi_fi_power_strip][switch.smart_wi_fi_power_strip_endpoint_5-entry]
+# name: test_switches[tapo_smart_wi_fi_power_strip][switch.smart_wi_fi_power_strip_switch_5-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -3143,11 +3143,11 @@
     'config_entry_id': <ANY>,
     'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ChildDeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-0000000000000437-MatterNodeDevice-5')]>,
+    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-0000000000000437-MatterNodeDevice'), ('matter', 'serial_serial_1079')]>,
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': None,
-    'entity_id': 'switch.smart_wi_fi_power_strip_endpoint_5',
+    'entity_id': 'switch.smart_wi_fi_power_strip_switch_5',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -3155,12 +3155,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': None,
+    'object_id_base': 'Switch (5)',
     'options': dict({
     }),
     'original_device_class': <SwitchDeviceClass.OUTLET: 'outlet'>,
     'original_icon': None,
-    'original_name': None,
+    'original_name': 'Switch (5)',
     'platform': 'matter',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -3170,21 +3170,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_switches[tapo_smart_wi_fi_power_strip][switch.smart_wi_fi_power_strip_endpoint_5-state]
+# name: test_switches[tapo_smart_wi_fi_power_strip][switch.smart_wi_fi_power_strip_switch_5-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'outlet',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Endpoint 5',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Smart Wi-Fi Power Strip Switch (5)',
     }),
     'context': <ANY>,
-    'entity_id': 'switch.smart_wi_fi_power_strip_endpoint_5',
+    'entity_id': 'switch.smart_wi_fi_power_strip_switch_5',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'on',
   })
 # ---
-# name: test_switches[tapo_smart_wi_fi_power_strip][switch.smart_wi_fi_power_strip_endpoint_6-entry]
+# name: test_switches[tapo_smart_wi_fi_power_strip][switch.smart_wi_fi_power_strip_switch_6-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -3194,11 +3194,11 @@
     'config_entry_id': <ANY>,
     'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ChildDeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-0000000000000437-MatterNodeDevice-6')]>,
+    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-0000000000000437-MatterNodeDevice'), ('matter', 'serial_serial_1079')]>,
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': None,
-    'entity_id': 'switch.smart_wi_fi_power_strip_endpoint_6',
+    'entity_id': 'switch.smart_wi_fi_power_strip_switch_6',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -3206,12 +3206,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': None,
+    'object_id_base': 'Switch (6)',
     'options': dict({
     }),
     'original_device_class': <SwitchDeviceClass.OUTLET: 'outlet'>,
     'original_icon': None,
-    'original_name': None,
+    'original_name': 'Switch (6)',
     'platform': 'matter',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -3221,21 +3221,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_switches[tapo_smart_wi_fi_power_strip][switch.smart_wi_fi_power_strip_endpoint_6-state]
+# name: test_switches[tapo_smart_wi_fi_power_strip][switch.smart_wi_fi_power_strip_switch_6-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'outlet',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Endpoint 6',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Smart Wi-Fi Power Strip Switch (6)',
     }),
     'context': <ANY>,
-    'entity_id': 'switch.smart_wi_fi_power_strip_endpoint_6',
+    'entity_id': 'switch.smart_wi_fi_power_strip_switch_6',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_switches[tp_link_smart_outdoor_plug][switch.smart_outdoor_plug_1-entry]
+# name: test_switches[tp_link_smart_outdoor_plug][switch.smart_outdoor_plug_channel_1-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -3249,7 +3249,7 @@
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': None,
-    'entity_id': 'switch.smart_outdoor_plug_1',
+    'entity_id': 'switch.smart_outdoor_plug_channel_1',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -3272,21 +3272,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_switches[tp_link_smart_outdoor_plug][switch.smart_outdoor_plug_1-state]
+# name: test_switches[tp_link_smart_outdoor_plug][switch.smart_outdoor_plug_channel_1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'outlet',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '1',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Channel 1',
     }),
     'context': <ANY>,
-    'entity_id': 'switch.smart_outdoor_plug_1',
+    'entity_id': 'switch.smart_outdoor_plug_channel_1',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_switches[tp_link_smart_outdoor_plug][switch.smart_outdoor_plug_2-entry]
+# name: test_switches[tp_link_smart_outdoor_plug][switch.smart_outdoor_plug_channel_2-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -3300,7 +3300,7 @@
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': None,
-    'entity_id': 'switch.smart_outdoor_plug_2',
+    'entity_id': 'switch.smart_outdoor_plug_channel_2',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -3323,14 +3323,14 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_switches[tp_link_smart_outdoor_plug][switch.smart_outdoor_plug_2-state]
+# name: test_switches[tp_link_smart_outdoor_plug][switch.smart_outdoor_plug_channel_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'outlet',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '2',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Channel 2',
     }),
     'context': <ANY>,
-    'entity_id': 'switch.smart_outdoor_plug_2',
+    'entity_id': 'switch.smart_outdoor_plug_channel_2',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
