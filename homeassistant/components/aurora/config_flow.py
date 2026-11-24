@@ -7,7 +7,7 @@ from aiohttp import ClientError
 from auroranoaa import AuroraForecast
 import probatio
 
-from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_LATITUDE, CONF_LOCATION, CONF_LONGITUDE
 from homeassistant.core import callback
 from homeassistant.helpers import aiohttp_client
@@ -18,6 +18,7 @@ from homeassistant.helpers.schema_config_entry_flow import (
 from homeassistant.helpers.selector import LocationSelector, LocationSelectorConfig
 
 from .const import CONF_THRESHOLD, DEFAULT_THRESHOLD, DOMAIN
+from .coordinator import AuroraConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -42,7 +43,7 @@ class AuroraConfigFlow(ConfigFlow, domain=DOMAIN):
     @callback
     @override
     def async_get_options_flow(
-        config_entry: ConfigEntry,
+        config_entry: AuroraConfigEntry,
     ) -> SchemaOptionsFlowHandler:
         """Get the options flow for this handler."""
         return SchemaOptionsFlowHandler(config_entry, OPTIONS_FLOW)

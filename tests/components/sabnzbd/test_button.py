@@ -13,13 +13,8 @@ from pytest_homeassistant.common import (
 )
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    STATE_UNAVAILABLE,
-    STATE_UNKNOWN,
-    Platform,
-)
+from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, ButtonService
+from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN, Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
@@ -51,9 +46,9 @@ async def test_button_presses(
     """Test the sabnzbd button presses."""
     await hass.services.async_call(
         BUTTON_DOMAIN,
-        SERVICE_PRESS,
+        ButtonService.PRESS,
         {
-            ATTR_ENTITY_ID: f"button.sabnzbd_{button}",
+            TargetKey.ENTITY_ID: f"button.sabnzbd_{button}",
         },
         blocking=True,
     )
@@ -84,9 +79,9 @@ async def test_buttons_exception(
     ):
         await hass.services.async_call(
             BUTTON_DOMAIN,
-            SERVICE_PRESS,
+            ButtonService.PRESS,
             {
-                ATTR_ENTITY_ID: f"button.sabnzbd_{button}",
+                TargetKey.ENTITY_ID: f"button.sabnzbd_{button}",
             },
             blocking=True,
         )

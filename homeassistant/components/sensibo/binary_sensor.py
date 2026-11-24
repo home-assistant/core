@@ -3,7 +3,7 @@
 from collections.abc import Callable
 from dataclasses import dataclass
 import logging
-from typing import TYPE_CHECKING, override
+from typing import override
 
 from pysensibo.model import MotionSensor, SensiboDevice
 
@@ -200,8 +200,6 @@ class SensiboMotionSensor(SensiboMotionBaseEntity, BinarySensorEntity):
     @override
     def is_on(self) -> bool | None:
         """Return true if the binary sensor is on."""
-        if TYPE_CHECKING:
-            assert self.sensor_data
         return self.entity_description.value_fn(self.sensor_data)
 
 

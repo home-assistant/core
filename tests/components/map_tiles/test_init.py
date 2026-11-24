@@ -241,7 +241,7 @@ async def test_tilejson_is_rewritten(
     tilejson = await resp.json()
     assert tilejson["tiles"] == ["/api/map_tiles/vector/{z}/{x}/{y}.mvt"]
     assert tilejson["attribution"] == ATTRIBUTION
-    assert "contributors" in tilejson["attribution"]
+    assert "OpenStreetMap" in tilejson["attribution"]
     assert tilejson["minzoom"] == 0
     assert tilejson["maxzoom"] == 14
     # Passed through, so a change upstream needs no release here.

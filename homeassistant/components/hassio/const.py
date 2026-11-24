@@ -28,17 +28,13 @@ if TYPE_CHECKING:
         SupervisorIssuesCoordinator,
         SupervisorJobsCoordinator,
     )
-    from .handler import HassIO
 
 
 DOMAIN = "hassio"
 
 ATTR_ADDON = "addon"
 ATTR_ADDONS = "addons"
-ATTR_APP = "app"
-ATTR_APPS = "apps"
 ATTR_ADMIN = "admin"
-ATTR_COMPRESSED = "compressed"
 ATTR_CONFIG = "config"
 ATTR_DATA = "data"
 ATTR_SESSION = "session"
@@ -48,9 +44,7 @@ ATTR_ENABLE = "enable"
 ATTR_ENDPOINT = "endpoint"
 ATTR_FOLDERS = "folders"
 ATTR_HEALTHY = "healthy"
-ATTR_HOMEASSISTANT = "homeassistant"
 ATTR_HOMEASSISTANT_EXCLUDE_DATABASE = "homeassistant_exclude_database"
-ATTR_INPUT = "input"
 ATTR_ISSUES = "issues"
 ATTR_MESSAGE = "message"
 ATTR_METHOD = "method"
@@ -73,6 +67,8 @@ ATTR_UUID = "uuid"
 ATTR_WS_EVENT = "event"
 
 X_AUTH_TOKEN = "X-Supervisor-Token"
+X_FORWARDED_PREFIX = "X-Forwarded-Prefix"
+# Deprecated in favor of X-Forwarded-Prefix, will be removed in Home Assistant 2027.12
 X_INGRESS_PATH = "X-Ingress-Path"
 X_HASS_SOURCE = "X-Hass-Source"
 
@@ -115,7 +111,6 @@ JOBS_COORDINATOR: HassKey[SupervisorJobsCoordinator] = HassKey(
 DATA_AUTO_UPDATE: HassKey[AutoUpdateManager] = HassKey("hassio_auto_update")
 
 
-DATA_COMPONENT: HassKey[HassIO] = HassKey(DOMAIN)
 DATA_CORE_INFO: HassKey[HomeAssistantInfo] = HassKey("hassio_core_info")
 DATA_CORE_STATS = "hassio_core_stats"
 DATA_HOST_INFO: HassKey[HostInfo] = HassKey("hassio_host_info")
@@ -158,9 +153,12 @@ DATA_KEY_SUPERVISOR_ISSUES: HassKey[SupervisorIssuesCoordinator] = HassKey(
     "supervisor_issues"
 )
 DATA_KEY_MOUNTS = "mounts"
-DATA_HASSIO_HOST: HassKey[str] = HassKey("hassio_host")
 
 ENTRY_DATA_USER = "user"
+
+ENV_SUPERVISOR = "SUPERVISOR"
+ENV_SUPERVISOR_SOCKET = "SUPERVISOR_SOCKET"
+ENV_SUPERVISOR_TOKEN = "SUPERVISOR_TOKEN"
 
 OPTION_ADD_ON_BACKUP_BEFORE_UPDATE = "add_on_backup_before_update"
 OPTION_ADD_ON_BACKUP_RETAIN_COPIES = "add_on_backup_retain_copies"
@@ -205,7 +203,6 @@ ISSUE_KEY_SYSTEM_FREE_SPACE = "issue_system_free_space"
 ISSUE_KEY_SYSTEM_REBOOT_REQUIRED = "issue_system_reboot_required"
 ISSUE_KEY_ADDON_DEPRECATED = "issue_addon_deprecated_addon"
 ISSUE_KEY_ADDON_DEPRECATED_ARCH = "issue_addon_deprecated_arch_addon"
-ISSUE_KEY_LEGACY_HOMEASSISTANT_FOLDER = "legacy_homeassistant_folder"
 
 ISSUE_MOUNT_MOUNT_FAILED = "issue_mount_mount_failed"
 

@@ -68,7 +68,7 @@ class MockUser:
         self._top_tracks = [] if top_tracks is Undefined else top_tracks
         self.name = username
 
-    def get_name(self, capitalized: bool) -> str:
+    def get_name(self) -> str:
         """Get name of the user."""
         return self.name
 

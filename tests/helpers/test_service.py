@@ -2023,6 +2023,41 @@ async def test_service_call_exclude_invalid(
         )
 
 
+@pytest.mark.parametrize(
+    ("data", "translation_key", "translation_placeholders"),
+    [
+        pytest.param(
+            "{{ 100 }}",
+            "service_data_template_not_dict",
+            None,
+            id="not_dict",
+        ),
+        pytest.param(
+            {"value": "{{ 1 / 0 }}"},
+            "service_data_template_error",
+            {"error": "ZeroDivisionError: division by zero"},
+            id="render_error",
+        ),
+    ],
+)
+async def test_service_call_data_template_error(
+    hass: HomeAssistant,
+    data: dict[str, Any] | str,
+    translation_key: str,
+    translation_placeholders: dict[str, str] | None,
+) -> None:
+    """Test errors rendering the service data are translated."""
+    with pytest.raises(exceptions.HomeAssistantError) as err:
+        service.async_prepare_call_from_config(
+            hass,
+            {"action": "test_domain.test_service", "data": data},
+            validate_config=True,
+        )
+    assert err.value.translation_domain == "homeassistant"
+    assert err.value.translation_key == translation_key
+    assert err.value.translation_placeholders == translation_placeholders
+
+
 async def test_call_single_entity_uses_parallel_updates(
     hass: HomeAssistant,
     mock_entities: dict[str, MockEntity],

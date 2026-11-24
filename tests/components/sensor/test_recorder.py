@@ -202,6 +202,7 @@ def assert_issues(
             active=True,
             breaks_in_ha_version=None,
             config_entry_id=None,
+            config_subentry_id=None,
             created=ANY,
             data=expected_issue_data,
             dismissed_version=None,
@@ -7098,6 +7099,7 @@ async def test_clean_up_repairs(
             "issues": [
                 {
                     "config_entry_id": None,
+                    "config_subentry_id": None,
                     "created": "2022-07-19T09:41:13.746514+00:00",
                     "dismissed_version": None,
                     "domain": DOMAIN,

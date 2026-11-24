@@ -10,7 +10,7 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import ATTRIBUTION, DOMAIN, MANUFACTURER
+from .const import ATTRIBUTION, DEFAULT_NAME, DOMAIN, MANUFACTURER
 from .coordinator import GoalZeroDataUpdateCoordinator
 
 
@@ -39,7 +39,10 @@ class GoalZeroEntity(CoordinatorEntity[GoalZeroDataUpdateCoordinator]):
             identifiers={(DOMAIN, self.coordinator.config_entry.entry_id)},
             manufacturer=MANUFACTURER,
             model=self._api.sysdata["model"],
-            name=self.coordinator.config_entry.data[CONF_NAME].capitalize(),
+            # Entries created before the name field was removed store a name
+            name=self.coordinator.config_entry.data.get(
+                CONF_NAME, DEFAULT_NAME
+            ).capitalize(),
             sw_version=self._api.data["firmwareVersion"],
         )
 

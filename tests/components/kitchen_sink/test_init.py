@@ -26,6 +26,14 @@ from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
 
+DEMO_ISSUE_IDS = (
+    "transmogrifier_deprecated",
+    "out_of_blinker_fluid",
+    "unfixable_problem",
+    "bad_psu",
+    "cold_tea",
+)
+
 
 @pytest.fixture
 def mock_history(hass: HomeAssistant) -> None:
@@ -350,6 +358,29 @@ async def test_issues_created(
             },
         ]
     }
+
+
+@pytest.mark.usefixtures("mock_history")
+async def test_issues_linked_to_config_entry(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test the demo issues are linked to the config entry and removed with it."""
+    assert await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
+    await hass.async_block_till_done()
+    entry = hass.config_entries.async_entries(DOMAIN)[0]
+
+    for issue_id in DEMO_ISSUE_IDS:
+        issue = issue_registry.async_get_issue(DOMAIN, issue_id)
+        assert issue is not None
+        assert issue.config_entry_id == entry.entry_id
+        assert issue.config_subentry_id is None
+
+    await hass.config_entries.async_remove(entry.entry_id)
+    await hass.async_block_till_done()
+
+    for issue_id in DEMO_ISSUE_IDS:
+        assert issue_registry.async_get_issue(DOMAIN, issue_id) is None
 
 
 async def test_service(

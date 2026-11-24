@@ -88,5 +88,5 @@ class MyStromConfigFlow(ConfigFlow, domain=DOMAIN):
             assert self._host is not None
         return self.async_show_form(
             step_id="discovery_confirm",
-            description_placeholders={CONF_HOST: self._host},
+            description_placeholders={"host": self._host},
         )

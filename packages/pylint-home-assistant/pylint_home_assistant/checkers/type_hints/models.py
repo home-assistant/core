@@ -14,9 +14,9 @@ class TypeHintMatch:
 
     function_name: str
     return_type: list[str | _Undefined | None] | str | _Undefined | None
-    arg_types: dict[int, str] | None = None
+    arg_types: dict[int, str] | dict[int, list[str]] | None = None
     """arg_types is for positional arguments"""
-    named_arg_types: dict[str, str] | None = None
+    named_arg_types: dict[str, str] | dict[str, list[str]] | None = None
     """named_arg_types is for named or keyword arguments"""
     kwargs_type: str | None = None
     """kwargs_type is for the special case `**kwargs`"""
@@ -24,6 +24,9 @@ class TypeHintMatch:
     """`function_name` and `async_function_name` share arguments and return type"""
     mandatory: bool = False
     """bypass ignore_missing_annotations"""
+    coroutine: bool | None = None
+    """`True` for `async def`, `False` for `def`, `None` to skip the check;
+    the async counterpart of a `has_async_counterpart` match is always `async def`"""
 
     def need_to_check_function(self, node: nodes.FunctionDef) -> bool:
         """Confirm if function should be checked."""
