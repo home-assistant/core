@@ -117,7 +117,7 @@ async def test_sleeping_device_is_ignored(
             hass, f"media-source://shelly/{entry.entry_id}"
         )
 
-    assert excinfo.value.translation_key == "unexpected_identifier"
+    assert excinfo.value.translation_key == "storage_unavailable"
 
 
 async def test_browse_storage(

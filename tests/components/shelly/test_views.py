@@ -345,6 +345,24 @@ async def test_storage_proxy_unsupported_entry(
     assert aioclient_mock.call_count == 0
 
 
+async def test_storage_proxy_inactive_storage(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    aioclient_mock: AiohttpClientMocker,
+    mock_camera_storage: Mock,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test a device without active storage is rejected."""
+    monkeypatch.setitem(mock_camera_storage.status["storage:0"], "active", False)
+    entry = await init_integration(hass, 3, model=MODEL_CAMERA)
+    client = await hass_client()
+
+    response = await client.get(f"/api/shelly/storage/{entry.entry_id}/{PATH}")
+
+    assert response.status == HTTPStatus.NOT_FOUND
+    assert aioclient_mock.call_count == 0
+
+
 @pytest.mark.usefixtures("mock_camera_storage")
 async def test_storage_proxy_unloaded_entry(
     hass: HomeAssistant,
