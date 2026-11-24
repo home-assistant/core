@@ -4,6 +4,7 @@ from datetime import timedelta
 import sys
 
 from pyhap.const import HAP_REPR_AID, HAP_REPR_CHARS, HAP_REPR_IID, HAP_REPR_VALUE
+from pyhap.util import is_callback
 import pytest
 from pytest_homeassistant.common import async_fire_time_changed, async_mock_service
 
@@ -54,6 +55,15 @@ async def _wait_for_light_coalesce(hass: HomeAssistant) -> None:
         hass, dt_util.utcnow() + timedelta(seconds=CHANGE_COALESCE_TIME_WINDOW)
     )
     await hass.async_block_till_done()
+
+
+def test_light_run_is_a_pyhap_callback() -> None:
+    """Light.run must stay a pyhap callback so the driver runs it on the loop.
+
+    Without the marker AccessoryDriver dispatches run() to an executor thread,
+    and the state listeners it registers are event-loop only.
+    """
+    assert is_callback(Light.run)
 
 
 async def test_light_basic(hass: HomeAssistant, hk_driver, events: list[Event]) -> None:

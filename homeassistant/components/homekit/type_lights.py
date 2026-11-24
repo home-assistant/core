@@ -5,6 +5,7 @@ import logging
 from typing import Any, override
 
 from pyhap.const import CATEGORY_LIGHTBULB
+from pyhap.util import callback as pyhap_callback
 
 from homeassistant.components.light import (
     DOMAIN as LIGHT_DOMAIN,
@@ -173,6 +174,7 @@ class Light(HomeAccessory):
 
     @override
     @callback
+    @pyhap_callback  # type: ignore[untyped-decorator]
     def run(self) -> None:
         """Start the accessory and resume a saved adaptive lighting schedule."""
         super().run()
