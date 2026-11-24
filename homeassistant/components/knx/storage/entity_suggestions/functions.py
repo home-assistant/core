@@ -18,6 +18,9 @@ none yet and maps its roles to config keys itself).
 - A command role (written by the entity) only goes to a group address a linked
   communication object receives (communication and write flags), as far as the
   project knows its links.
+- A command address is only also read back when a linked communication object
+  answers reads of it (communication and read flags) as its first group address:
+  an object sends its responses on that one.
 """
 
 from collections import Counter
@@ -287,7 +290,8 @@ class LinkedObjects:
 
     # a linked object receives the group address (write flag)
     receives: dict[str, bool]
-    # a linked object answers reads of the group address (read flag)
+    # a linked object answers reads of the group address (read flag): only on its
+    # first group address, as a response is sent on the object's sending address
     answers: dict[str, bool]
 
 
@@ -297,12 +301,12 @@ def _linked_objects(project: KNXProject) -> LinkedObjects:
     answers: dict[str, bool] = {}
     for com_object in (project.get("communication_objects") or {}).values():
         flags = com_object["flags"]
-        for address in com_object["group_address_links"]:
+        for index, address in enumerate(com_object["group_address_links"]):
             receives[address] = receives.get(address, False) or (
                 flags["communication"] and flags["write"]
             )
             answers[address] = answers.get(address, False) or (
-                flags["communication"] and flags["read"]
+                index == 0 and flags["communication"] and flags["read"]
             )
     return LinkedObjects(receives, answers)
 

@@ -343,6 +343,18 @@ def test_read_back_needs_an_answering_object() -> None:
         "state": "3/0/4",
         "passive": [],
     }
+    # an object answers a read on its first group address only: a further one of it
+    # is not read back
+    second = _com_object("9/0/9", write=True, read=True)
+    second["group_address_links"].append("3/0/4")
+    project["communication_objects"] = {"O-2": second}
+    _platform, suggestion, _roles = _build_platform_suggestion(
+        project, TEST_PROJECT["functions"]["F-3"]
+    )
+    assert suggestion["knx"]["ga_operation_mode"] == {
+        "write": "3/0/4",
+        "passive": [],
+    }
 
 
 def test_brightness_feedback_without_brightness_value() -> None:
