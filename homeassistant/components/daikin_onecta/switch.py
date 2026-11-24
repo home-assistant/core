@@ -71,7 +71,6 @@ def _create_switches(
                     coordinator,
                     management_point.embedded_id,
                     SWITCH_DESCRIPTIONS[value],
-                    value,
                 )
             )
     return switches
@@ -86,28 +85,28 @@ class DaikinSwitch(DaikinManagementPointEntity, SwitchEntity):
         coordinator: OnectaDataUpdateCoordinator,
         embedded_id: str,
         description: SwitchEntityDescription,
-        value: str,
     ) -> None:
         """Initialize the switch from a device characteristic."""
         super().__init__(device, coordinator, embedded_id)
-        self._value = value
         self.entity_description = description
         self._attr_unique_id = management_point_unique_id(
-            self._device_id, self._embedded_id, self._value
+            self._device_id, self._embedded_id, self.entity_description.key
         )
         self.update_state()
 
     @override
     def update_state(self) -> None:
         """Refresh the state and platform exposure from current device data."""
-        characteristic = self._characteristic(self._value)
+        characteristic = self._characteristic(self.entity_description.key)
         result = characteristic.value if characteristic is not None else None
         self._attr_is_on = result == "on" if isinstance(result, str) else None
         self._is_exposed_on_platform = (
             characteristic is not None
             and characteristic.settable
             and is_on_off_value(characteristic.values)
-            and self._characteristic_exposed_on(self._value, Platform.SWITCH)
+            and self._characteristic_exposed_on(
+                self.entity_description.key, Platform.SWITCH
+            )
         )
 
     @property
@@ -138,10 +137,10 @@ class DaikinSwitch(DaikinManagementPointEntity, SwitchEntity):
         await self._async_execute_command(
             lambda client: client.management_point(
                 self._device_id, self._embedded_id
-            ).set_characteristic(self._value, state),
+            ).set_characteristic(self.entity_description.key, state),
             translation_key,
         )
-        characteristic = self._characteristic(self._value)
+        characteristic = self._characteristic(self.entity_description.key)
         if characteristic is not None:
             characteristic.value = state
         self._publish_write_update()

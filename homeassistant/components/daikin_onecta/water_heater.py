@@ -165,7 +165,7 @@ class DaikinWaterTank(DaikinManagementPointEntity, WaterHeaterEntity):
         return hot_water.temperature if hot_water is not None else None
 
     def get_supported_features(
-        self, operation_list: list[str] | None = None
+        self, operation_list: list[str]
     ) -> WaterHeaterEntityFeature:
         """Return the list of supported features."""
         sf = WaterHeaterEntityFeature(0)
@@ -176,8 +176,6 @@ class DaikinWaterTank(DaikinManagementPointEntity, WaterHeaterEntity):
             and hot_water.power.settable
         ):
             sf |= WaterHeaterEntityFeature.ON_OFF
-        if operation_list is None:
-            operation_list = self.get_operation_list()
         hot_water_power = hot_water.power if hot_water is not None else None
         powerful_mode = hot_water.powerful_mode if hot_water is not None else None
         if len(operation_list) > 1 and (

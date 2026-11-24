@@ -55,7 +55,6 @@ def _create_schedule_selects(
             coordinator,
             management_point.embedded_id,
             SELECT_DESCRIPTIONS["schedule"],
-            "schedule",
         )
         for device, management_point in iter_management_points(coordinator)
         if management_point.schedule_state is not None
@@ -77,15 +76,13 @@ class DaikinScheduleSelect(DaikinManagementPointEntity, SelectEntity):
         coordinator: OnectaDataUpdateCoordinator,
         embedded_id: str,
         description: SelectEntityDescription,
-        value: str,
     ) -> None:
         """Initialize a schedule selection entity."""
         super().__init__(device, coordinator, embedded_id)
-        self._value = value
-        self._attr_unique_id = management_point_unique_id(
-            self._device_id, self._embedded_id, self._value
-        )
         self.entity_description = description
+        self._attr_unique_id = management_point_unique_id(
+            self._device_id, self._embedded_id, self.entity_description.key
+        )
         self._cached_schedule_options: list[tuple[str, str]] = []
         self.update_state()
 

@@ -81,7 +81,6 @@ def _create_binary_sensors(
                     coordinator,
                     management_point.embedded_id,
                     BINARY_SENSOR_DESCRIPTIONS[value],
-                    value,
                 )
             )
     return sensors
@@ -96,22 +95,20 @@ class DaikinBinarySensor(DaikinManagementPointEntity, BinarySensorEntity):
         coordinator: OnectaDataUpdateCoordinator,
         embedded_id: str,
         description: BinarySensorEntityDescription,
-        value: str,
     ) -> None:
         """Initialize the binary sensor from a device characteristic."""
         super().__init__(device, coordinator, embedded_id)
-        self._value = value
+        self.entity_description = description
         self._attr_unique_id = management_point_unique_id(
-            self._device_id, self._embedded_id, self._value
+            self._device_id, self._embedded_id, self.entity_description.key
         )
         management_point = self._management_point
         if (
-            self._value == "isInErrorState"
+            self.entity_description.key == "isInErrorState"
             and management_point is not None
             and management_point.management_point_type == "gateway"
         ):
             self._attr_translation_key = "gateway_isinerrorstate"
-        self.entity_description = description
         self.update_state()
 
     @override
@@ -119,12 +116,12 @@ class DaikinBinarySensor(DaikinManagementPointEntity, BinarySensorEntity):
         """Refresh the state and platform exposure from current device data."""
         self._attr_is_on = self.sensor_value()
         self._is_exposed_on_platform = self._characteristic_exposed_on(
-            self._value, Platform.BINARY_SENSOR
+            self.entity_description.key, Platform.BINARY_SENSOR
         )
 
     def sensor_value(self) -> bool | None:
         """Return the binary characteristic value."""
-        characteristic = self._characteristic(self._value)
+        characteristic = self._characteristic(self.entity_description.key)
         result = characteristic.value if characteristic is not None else None
         if isinstance(result, bool):
             return result
