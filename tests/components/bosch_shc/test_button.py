@@ -216,11 +216,14 @@ async def test_dimmer_preview_buttons(
 async def test_dimmer_without_configuration_has_no_preview_buttons(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """A dimmer without a DimmerConfiguration service gets no preview buttons."""
     await setup_integration(hass, mock_config_entry)
 
-    assert hass.states.get("button.dimmer_preview_max_brightness") is None
+    # The buttons are disabled by default, so only the registry can show them.
+    assert entity_registry.async_get("button.dimmer_preview_max_brightness") is None
+    assert entity_registry.async_get("button.dimmer_preview_min_brightness") is None
 
 
 @pytest.mark.parametrize(
