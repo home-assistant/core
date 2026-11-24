@@ -652,7 +652,12 @@ def micromodule_dimmer_device(
     device.edge_phase_control_mode = edge_phase_control_mode
     device.dimming_speed = dimming_speed
     device.dimmer_configuration = (
-        SimpleNamespace(min_brightness=min_brightness, max_brightness=max_brightness)
+        SimpleNamespace(
+            min_brightness=min_brightness,
+            max_brightness=max_brightness,
+            preview_max_brightness=MagicMock(),
+            preview_min_brightness=MagicMock(),
+        )
         if supports_dimmer_configuration
         else None
     )
