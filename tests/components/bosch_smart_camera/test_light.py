@@ -38,6 +38,16 @@ OTHER_ID = "22222222-2222-2222-2222-222222222222"
 MODULE = "homeassistant.components.bosch_smart_camera.coordinator"
 
 
+async def turn_on(hass: HomeAssistant, entity_id: str = ENTITY_ID) -> None:
+    """Turn the light on through the service."""
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        LightService.TURN_ON,
+        {TargetKey.ENTITY_ID: entity_id},
+        blocking=True,
+    )
+
+
 @pytest.fixture(autouse=True)
 def mock_gen1(mock_list_cameras: AsyncMock) -> None:
     """Make the account hold a Gen1 outdoor camera."""
@@ -172,13 +182,19 @@ async def test_write_failure(
 
 
 async def test_unavailable_without_light_state(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_get_light: AsyncMock
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_get_light: AsyncMock,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Test the light is unavailable when the coordinator has no state for it."""
+    """Test the light is unavailable when a poll cannot read its state."""
     await setup_integration(hass, mock_config_entry)
-    coordinator = mock_config_entry.runtime_data
-    coordinator.light_states.clear()
-    coordinator.async_update_listeners()
+    assert hass.states.get(ENTITY_ID).state == STATE_OFF
+
+    mock_get_light.side_effect = BoschCameraConnectionError
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
 
     assert hass.states.get(ENTITY_ID).state == STATE_UNAVAILABLE
 
@@ -275,10 +291,9 @@ async def test_poll_started_before_a_write_does_not_overwrite_it(
 ) -> None:
     """Test an older poll result is dropped after a successful write."""
     await setup_integration(hass, mock_config_entry)
-    coordinator = mock_config_entry.runtime_data
 
     async def stale_read(*args: Any, **kwargs: Any) -> LightState:
-        await coordinator.async_set_light(CAMERA_ID, True)
+        await turn_on(hass)
         return OFF
 
     mock_get_light.side_effect = stale_read
@@ -301,11 +316,10 @@ async def test_write_during_poll_of_another_camera_is_kept(
     other = Camera(OTHER_ID, "Yard", "OUTDOOR", CameraModel.EYES_OUTDOOR, None)
     mock_list_cameras.return_value = [GEN1, other]
     await setup_integration(hass, mock_config_entry)
-    coordinator = mock_config_entry.runtime_data
 
     async def read(session: Any, token: str, camera_id: str) -> LightState:
         if camera_id == OTHER_ID:
-            await coordinator.async_set_light(CAMERA_ID, True)
+            await turn_on(hass)
         return OFF
 
     mock_get_light.side_effect = read
@@ -325,7 +339,6 @@ async def test_write_after_failed_poll_keeps_working(
 ) -> None:
     """Test a poll failing during a write does not break recording the write."""
     await setup_integration(hass, mock_config_entry)
-    coordinator = mock_config_entry.runtime_data
 
     async def slow_write(*args: Any, **kwargs: Any) -> CameraLightSetResult:
         mock_get_light.side_effect = BoschCameraConnectionError("offline")
@@ -335,7 +348,7 @@ async def test_write_after_failed_poll_keeps_working(
         return CameraLightSetResult(ok=True, status=204)
 
     mock_set_light.side_effect = slow_write
-    await coordinator.async_set_light(CAMERA_ID, True)
+    await turn_on(hass)
 
     assert hass.states.get(ENTITY_ID).state == STATE_ON
 
@@ -370,21 +383,31 @@ async def test_light_unreachable_and_recovery_logged_once(
     assert caplog.text.count("is reachable again") == 1
 
 
-@pytest.mark.usefixtures("mock_get_light")
+@pytest.mark.usefixtures("mock_set_light")
 async def test_removed_cameras_are_forgotten_by_the_light_tracking(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
+    mock_list_cameras: AsyncMock,
+    mock_get_light: AsyncMock,
     freezer: FrozenDateTimeFactory,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Test the write counters and unreachable marks of removed cameras are pruned."""
+    """Test a camera that left the account starts fresh when it returns."""
+    other = Camera(OTHER_ID, "Yard", "OUTDOOR", CameraModel.EYES_OUTDOOR, None)
+    mock_list_cameras.return_value = [GEN1, other]
     await setup_integration(hass, mock_config_entry)
-    coordinator = mock_config_entry.runtime_data
-    coordinator._light_unreachable.add("removed")
-    coordinator._light_writes["removed"] = 3
+    await turn_on(hass, "light.yard_camera_light")
 
-    freezer.tick(SCAN_INTERVAL)
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    async def read(session: Any, token: str, camera_id: str) -> LightState:
+        if camera_id == OTHER_ID:
+            raise BoschCameraConnectionError
+        return OFF
 
-    assert "removed" not in coordinator._light_unreachable
-    assert "removed" not in coordinator._light_writes
+    mock_get_light.side_effect = read
+    for cameras in ([GEN1, other], [GEN1], [GEN1, other]):
+        mock_list_cameras.return_value = cameras
+        freezer.tick(SCAN_INTERVAL)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+
+    assert caplog.text.count("The light of Yard is unreachable") == 2
