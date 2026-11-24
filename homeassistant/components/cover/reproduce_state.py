@@ -6,7 +6,7 @@ from functools import partial
 import logging
 from typing import Any, Final
 
-from homeassistant.const import ATTR_ENTITY_ID, EntityStateAttribute
+from homeassistant.const import EntityStateAttribute, TargetKey
 from homeassistant.core import Context, HomeAssistant, ServiceResponse, State
 from homeassistant.util.enum import try_parse_enum
 
@@ -207,7 +207,7 @@ async def _async_reproduce_state(
         context=context,
         blocking=True,
     )
-    service_data = {ATTR_ENTITY_ID: entity_id}
+    service_data: dict[str, Any] = {TargetKey.ENTITY_ID: entity_id}
 
     set_position = target_position is not None and await _async_set_position(
         service_call, service_data, features, target_position

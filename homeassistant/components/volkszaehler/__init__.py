@@ -13,7 +13,7 @@ from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.util import Throttle
 
-from .const import SUBENTRY_TYPE_CHANNEL
+from .const import CONF_MIDDLEWARE, DEFAULT_MIDDLEWARE, SUBENTRY_TYPE_CHANNEL
 
 _PLATFORMS: list[Platform] = [Platform.SENSOR]
 
@@ -58,6 +58,7 @@ async def async_setup_entry(
                 subentry.data[CONF_UUID],
                 host=entry.data[CONF_HOST],
                 port=entry.data[CONF_PORT],
+                middleware=entry.data.get(CONF_MIDDLEWARE, DEFAULT_MIDDLEWARE),
             )
         )
         await vz_data.async_update()

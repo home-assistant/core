@@ -14,16 +14,13 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.sonarr.const import (
     ATTR_DISKS,
-    ATTR_ENTRY_ID,
     ATTR_EPISODES,
     ATTR_SHOWS,
     DOMAIN,
-    SERVICE_GET_DISKSPACE,
-    SERVICE_GET_EPISODES,
-    SERVICE_GET_QUEUE,
-    SERVICE_GET_SERIES,
-    SERVICE_GET_UPCOMING,
-    SERVICE_GET_WANTED,
+)
+from homeassistant.components.sonarr.services import (
+    SonarrService,
+    SonarrServiceArgument,
 )
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
@@ -33,11 +30,11 @@ from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 @pytest.mark.parametrize(
     "service",
     [
-        SERVICE_GET_SERIES,
-        SERVICE_GET_QUEUE,
-        SERVICE_GET_DISKSPACE,
-        SERVICE_GET_UPCOMING,
-        SERVICE_GET_WANTED,
+        SonarrService.GET_SERIES,
+        SonarrService.GET_QUEUE,
+        SonarrService.GET_DISKSPACE,
+        SonarrService.GET_UPCOMING,
+        SonarrService.GET_WANTED,
     ],
 )
 async def test_services_config_entry_not_loaded_state(
@@ -60,7 +57,7 @@ async def test_services_config_entry_not_loaded_state(
         await hass.services.async_call(
             DOMAIN,
             service,
-            {ATTR_ENTRY_ID: unloaded_entry.entry_id},
+            {SonarrServiceArgument.ENTRY_ID: unloaded_entry.entry_id},
             blocking=True,
             return_response=True,
         )
@@ -71,11 +68,11 @@ async def test_services_config_entry_not_loaded_state(
 @pytest.mark.parametrize(
     "service",
     [
-        SERVICE_GET_SERIES,
-        SERVICE_GET_QUEUE,
-        SERVICE_GET_DISKSPACE,
-        SERVICE_GET_UPCOMING,
-        SERVICE_GET_WANTED,
+        SonarrService.GET_SERIES,
+        SonarrService.GET_QUEUE,
+        SonarrService.GET_DISKSPACE,
+        SonarrService.GET_UPCOMING,
+        SonarrService.GET_WANTED,
     ],
 )
 async def test_services_integration_not_found(
@@ -88,7 +85,7 @@ async def test_services_integration_not_found(
         await hass.services.async_call(
             DOMAIN,
             service,
-            {ATTR_ENTRY_ID: "non_existent_entry_id"},
+            {SonarrServiceArgument.ENTRY_ID: "non_existent_entry_id"},
             blocking=True,
             return_response=True,
         )
@@ -104,8 +101,8 @@ async def test_service_get_series(
     """Test get_series service."""
     response = await hass.services.async_call(
         DOMAIN,
-        SERVICE_GET_SERIES,
-        {ATTR_ENTRY_ID: init_integration.entry_id},
+        SonarrService.GET_SERIES,
+        {SonarrServiceArgument.ENTRY_ID: init_integration.entry_id},
         blocking=True,
         return_response=True,
     )
@@ -125,8 +122,8 @@ async def test_service_get_queue(
     """Test get_queue service."""
     response = await hass.services.async_call(
         DOMAIN,
-        SERVICE_GET_QUEUE,
-        {ATTR_ENTRY_ID: init_integration.entry_id},
+        SonarrService.GET_QUEUE,
+        {SonarrServiceArgument.ENTRY_ID: init_integration.entry_id},
         blocking=True,
         return_response=True,
     )
@@ -141,11 +138,11 @@ async def test_service_get_queue(
 @pytest.mark.parametrize(
     "service",
     [
-        SERVICE_GET_SERIES,
-        SERVICE_GET_QUEUE,
-        SERVICE_GET_DISKSPACE,
-        SERVICE_GET_UPCOMING,
-        SERVICE_GET_WANTED,
+        SonarrService.GET_SERIES,
+        SonarrService.GET_QUEUE,
+        SonarrService.GET_DISKSPACE,
+        SonarrService.GET_UPCOMING,
+        SonarrService.GET_WANTED,
     ],
 )
 async def test_services_entry_not_loaded(
@@ -162,7 +159,7 @@ async def test_services_entry_not_loaded(
         await hass.services.async_call(
             DOMAIN,
             service,
-            {ATTR_ENTRY_ID: init_integration.entry_id},
+            {SonarrServiceArgument.ENTRY_ID: init_integration.entry_id},
             blocking=True,
             return_response=True,
         )
@@ -190,8 +187,8 @@ async def test_service_get_queue_empty(
 
     response = await hass.services.async_call(
         DOMAIN,
-        SERVICE_GET_QUEUE,
-        {ATTR_ENTRY_ID: init_integration.entry_id},
+        SonarrService.GET_QUEUE,
+        {SonarrServiceArgument.ENTRY_ID: init_integration.entry_id},
         blocking=True,
         return_response=True,
     )
@@ -211,8 +208,8 @@ async def test_service_get_diskspace(
     """Test get_diskspace service."""
     response = await hass.services.async_call(
         DOMAIN,
-        SERVICE_GET_DISKSPACE,
-        {ATTR_ENTRY_ID: init_integration.entry_id},
+        SonarrService.GET_DISKSPACE,
+        {SonarrServiceArgument.ENTRY_ID: init_integration.entry_id},
         blocking=True,
         return_response=True,
     )
@@ -260,8 +257,8 @@ async def test_service_get_diskspace_multiple_drives(
 
     response = await hass.services.async_call(
         DOMAIN,
-        SERVICE_GET_DISKSPACE,
-        {ATTR_ENTRY_ID: init_integration.entry_id},
+        SonarrService.GET_DISKSPACE,
+        {SonarrServiceArgument.ENTRY_ID: init_integration.entry_id},
         blocking=True,
         return_response=True,
     )
@@ -303,8 +300,8 @@ async def test_service_get_upcoming(
     """Test get_upcoming service."""
     response = await hass.services.async_call(
         DOMAIN,
-        SERVICE_GET_UPCOMING,
-        {ATTR_ENTRY_ID: init_integration.entry_id},
+        SonarrService.GET_UPCOMING,
+        {SonarrServiceArgument.ENTRY_ID: init_integration.entry_id},
         blocking=True,
         return_response=True,
     )
@@ -324,8 +321,8 @@ async def test_service_get_wanted(
     """Test get_wanted service."""
     response = await hass.services.async_call(
         DOMAIN,
-        SERVICE_GET_WANTED,
-        {ATTR_ENTRY_ID: init_integration.entry_id},
+        SonarrService.GET_WANTED,
+        {SonarrServiceArgument.ENTRY_ID: init_integration.entry_id},
         blocking=True,
         return_response=True,
     )
@@ -345,8 +342,8 @@ async def test_service_get_episodes(
     """Test get_episodes service."""
     response = await hass.services.async_call(
         DOMAIN,
-        SERVICE_GET_EPISODES,
-        {ATTR_ENTRY_ID: init_integration.entry_id, "series_id": 105},
+        SonarrService.GET_EPISODES,
+        {SonarrServiceArgument.ENTRY_ID: init_integration.entry_id, "series_id": 105},
         blocking=True,
         return_response=True,
     )
@@ -365,9 +362,9 @@ async def test_service_get_episodes_with_season_filter(
     """Test get_episodes service with season filter."""
     response = await hass.services.async_call(
         DOMAIN,
-        SERVICE_GET_EPISODES,
+        SonarrService.GET_EPISODES,
         {
-            ATTR_ENTRY_ID: init_integration.entry_id,
+            SonarrServiceArgument.ENTRY_ID: init_integration.entry_id,
             "series_id": 105,
             "season_number": 1,
         },
@@ -482,8 +479,8 @@ async def test_service_get_queue_image_fallback(
 
     response = await hass.services.async_call(
         DOMAIN,
-        SERVICE_GET_QUEUE,
-        {ATTR_ENTRY_ID: init_integration.entry_id},
+        SonarrService.GET_QUEUE,
+        {SonarrServiceArgument.ENTRY_ID: init_integration.entry_id},
         blocking=True,
         return_response=True,
     )
@@ -522,8 +519,8 @@ async def test_service_get_queue_season_pack(
 
     response = await hass.services.async_call(
         DOMAIN,
-        SERVICE_GET_QUEUE,
-        {ATTR_ENTRY_ID: mock_config_entry.entry_id},
+        SonarrService.GET_QUEUE,
+        {SonarrServiceArgument.ENTRY_ID: mock_config_entry.entry_id},
         blocking=True,
         return_response=True,
     )
@@ -556,11 +553,11 @@ async def test_service_get_queue_season_pack(
 @pytest.mark.parametrize(
     ("service", "method"),
     [
-        (SERVICE_GET_SERIES, "async_get_series"),
-        (SERVICE_GET_QUEUE, "async_get_queue"),
-        (SERVICE_GET_DISKSPACE, "async_get_diskspace"),
-        (SERVICE_GET_UPCOMING, "async_get_calendar"),
-        (SERVICE_GET_WANTED, "async_get_wanted"),
+        (SonarrService.GET_SERIES, "async_get_series"),
+        (SonarrService.GET_QUEUE, "async_get_queue"),
+        (SonarrService.GET_DISKSPACE, "async_get_diskspace"),
+        (SonarrService.GET_UPCOMING, "async_get_calendar"),
+        (SonarrService.GET_WANTED, "async_get_wanted"),
     ],
 )
 async def test_services_api_connection_error(
@@ -580,7 +577,7 @@ async def test_services_api_connection_error(
         await hass.services.async_call(
             DOMAIN,
             service,
-            {ATTR_ENTRY_ID: init_integration.entry_id},
+            {SonarrServiceArgument.ENTRY_ID: init_integration.entry_id},
             blocking=True,
             return_response=True,
         )
@@ -589,11 +586,11 @@ async def test_services_api_connection_error(
 @pytest.mark.parametrize(
     ("service", "method"),
     [
-        (SERVICE_GET_SERIES, "async_get_series"),
-        (SERVICE_GET_QUEUE, "async_get_queue"),
-        (SERVICE_GET_DISKSPACE, "async_get_diskspace"),
-        (SERVICE_GET_UPCOMING, "async_get_calendar"),
-        (SERVICE_GET_WANTED, "async_get_wanted"),
+        (SonarrService.GET_SERIES, "async_get_series"),
+        (SonarrService.GET_QUEUE, "async_get_queue"),
+        (SonarrService.GET_DISKSPACE, "async_get_diskspace"),
+        (SonarrService.GET_UPCOMING, "async_get_calendar"),
+        (SonarrService.GET_WANTED, "async_get_wanted"),
     ],
 )
 async def test_services_api_auth_error(
@@ -613,7 +610,7 @@ async def test_services_api_auth_error(
         await hass.services.async_call(
             DOMAIN,
             service,
-            {ATTR_ENTRY_ID: init_integration.entry_id},
+            {SonarrServiceArgument.ENTRY_ID: init_integration.entry_id},
             blocking=True,
             return_response=True,
         )

@@ -102,6 +102,12 @@ def fixture_discovery():
 # Config entry fixtures
 
 
+@pytest.fixture(name="disable_polling")
+def fixture_disable_polling(hass: HomeAssistant, config_entry: MockConfigEntry) -> None:
+    """Disable scheduled polling for push-only tests."""
+    hass.config_entries.async_update_entry(config_entry, pref_disable_polling=True)
+
+
 @pytest.fixture(name="config_entry")
 def fixture_config_entry(
     hass: HomeAssistant,

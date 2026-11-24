@@ -1,6 +1,7 @@
 """Test the Gardena Bluetooth setup."""
 
 import asyncio
+from collections.abc import Awaitable, Callable
 from datetime import timedelta
 from unittest.mock import Mock
 
@@ -11,6 +12,7 @@ from gardena_bluetooth.const import (
     DeviceConfiguration,
     DeviceInformation,
 )
+from gardena_bluetooth.exceptions import CommunicationFailure
 from habluetooth import BluetoothServiceInfo
 import pytest
 from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
@@ -23,6 +25,10 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_ADDRESS
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.update_coordinator import (
+    UpdateFailed,
+    UpdateFailedUnreachable,
+)
 from homeassistant.util import utcnow
 
 from . import (
@@ -199,3 +205,33 @@ async def test_setup_retry(
     await hass.async_block_till_done(wait_background_tasks=True)
 
     assert mock_entry.state is ConfigEntryState.LOADED
+
+
+@pytest.mark.parametrize(
+    ("exception", "expected"),
+    [
+        pytest.param(DeviceUnavailable, UpdateFailedUnreachable, id="unreachable"),
+        pytest.param(CommunicationFailure, UpdateFailed, id="communication_failure"),
+    ],
+)
+@pytest.mark.usefixtures("constant_advertisements")
+async def test_refresh_failure(
+    hass: HomeAssistant,
+    mock_entry: MockConfigEntry,
+    mock_read_char_raw: dict[str, bytes | Exception],
+    scan_step: Callable[[], Awaitable[None]],
+    exception: type[Exception],
+    expected: type[UpdateFailed],
+) -> None:
+    """Test the exception raised when a refresh fails."""
+    mock_read_char_raw[Battery.battery_level.unique_id] = Battery.battery_level.encode(
+        100
+    )
+    inject_bluetooth_service_info(hass, WATER_TIMER_SERVICE_INFO)
+    mock_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(mock_entry.entry_id) is True
+
+    mock_read_char_raw[Battery.battery_level.unique_id] = exception("Test")
+    await scan_step()
+
+    assert type(mock_entry.runtime_data.last_exception) is expected

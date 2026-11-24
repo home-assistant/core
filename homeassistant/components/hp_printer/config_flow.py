@@ -18,7 +18,7 @@ from homeassistant.helpers.selector import (
 )
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
-from .const import DOMAIN, SECTION_ADVANCED_SETTINGS
+from .const import DOMAIN, LOGGER, SECTION_ADVANCED_SETTINGS
 
 STEP_USER_DATA_SCHEMA = probatio.Schema(
     {
@@ -40,6 +40,17 @@ STEP_USER_DATA_SCHEMA = probatio.Schema(
 )
 
 
+def _entry_data(user_input: dict[str, Any]) -> dict[str, Any]:
+    """Return the config entry data for the submitted form."""
+    data = {
+        CONF_HOST: user_input[CONF_HOST],
+        **user_input[SECTION_ADVANCED_SETTINGS],
+    }
+    if CONF_PORT in data:
+        data[CONF_PORT] = int(data[CONF_PORT])
+    return data
+
+
 class HpPrinterConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for HP Printer."""
 
@@ -55,12 +66,7 @@ class HpPrinterConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle the initial step."""
         errors: dict[str, str] = {}
         if user_input is not None:
-            data = {
-                CONF_HOST: user_input[CONF_HOST],
-                **user_input[SECTION_ADVANCED_SETTINGS],
-            }
-            if CONF_PORT in data:
-                data[CONF_PORT] = int(data[CONF_PORT])
+            data = _entry_data(user_input)
             device = await self._async_get_device(
                 data[CONF_HOST], data.get(CONF_PORT), data[CONF_SSL]
             )
@@ -119,6 +125,44 @@ class HpPrinterConfigFlow(ConfigFlow, domain=DOMAIN):
             description_placeholders={"name": self._title, "host": self._host},
         )
 
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle reconfiguration of the printer's connection settings."""
+        errors: dict[str, str] = {}
+        reconfigure_entry = self._get_reconfigure_entry()
+        if user_input is not None:
+            data = _entry_data(user_input)
+            device = await self._async_get_device(
+                data[CONF_HOST], data.get(CONF_PORT), data[CONF_SSL]
+            )
+            if device is None:
+                errors["base"] = "cannot_connect"
+            else:
+                if not device.serial_number:
+                    return self.async_abort(reason="missing_serial_number")
+                await self.async_set_unique_id(device.serial_number)
+                self._abort_if_unique_id_mismatch()
+                return self.async_update_reload_and_abort(reconfigure_entry, data=data)
+
+        entry_data = reconfigure_entry.data
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=self.add_suggested_values_to_schema(
+                STEP_USER_DATA_SCHEMA,
+                user_input
+                or {
+                    CONF_HOST: entry_data[CONF_HOST],
+                    SECTION_ADVANCED_SETTINGS: {
+                        key: entry_data[key]
+                        for key in (CONF_SSL, CONF_PORT)
+                        if key in entry_data
+                    },
+                },
+            ),
+            errors=errors,
+        )
+
     async def _async_get_device(
         self, host: str, port: int | None, ssl: bool
     ) -> HpPrinterDevice | None:
@@ -129,5 +173,6 @@ class HpPrinterConfigFlow(ConfigFlow, domain=DOMAIN):
             # Updates fail without the status endpoint, so check it too.
             await client.status()
         except HpPrinterError:
+            LOGGER.debug("Cannot connect to HP printer at %s:", host, exc_info=True)
             return None
         return device
