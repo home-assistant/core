@@ -12,7 +12,7 @@ from pytest_homeassistant.typing import ClientSessionGenerator
 from yarl import URL
 
 from homeassistant.components.shelly.const import CONF_SLEEP_PERIOD
-from homeassistant.components.shelly.coordinator import MAX_UPSTREAM_REQUESTS
+from homeassistant.components.shelly.coordinator import MAX_STORAGE_REQUESTS
 from homeassistant.const import CONF_HOST, CONF_MODEL, CONF_PORT
 from homeassistant.core import HomeAssistant
 
@@ -248,7 +248,7 @@ async def test_storage_proxy_limits_upstream_requests(
         nonlocal in_flight, max_in_flight
         in_flight += 1
         max_in_flight = max(max_in_flight, in_flight)
-        if in_flight == MAX_UPSTREAM_REQUESTS:
+        if in_flight == MAX_STORAGE_REQUESTS:
             saturated.set()
         try:
             await release.wait()
@@ -267,21 +267,21 @@ async def test_storage_proxy_limits_upstream_requests(
             asyncio.create_task(
                 client.get(f"/api/shelly/storage/{entry.entry_id}/{PATH}")
             )
-            for _ in range(MAX_UPSTREAM_REQUESTS + 1)
+            for _ in range(MAX_STORAGE_REQUESTS + 1)
         ]
         await saturated.wait()
         # Give the extra request time to reach the device if it were not limited.
         await asyncio.sleep(0.1)
-        assert session.get.await_count == MAX_UPSTREAM_REQUESTS
+        assert session.get.await_count == MAX_STORAGE_REQUESTS
 
         release.set()
         responses = await asyncio.gather(*tasks)
 
     assert [response.status for response in responses] == (
-        [HTTPStatus.OK] * (MAX_UPSTREAM_REQUESTS + 1)
+        [HTTPStatus.OK] * (MAX_STORAGE_REQUESTS + 1)
     )
-    assert session.get.await_count == MAX_UPSTREAM_REQUESTS + 1
-    assert max_in_flight == MAX_UPSTREAM_REQUESTS
+    assert session.get.await_count == MAX_STORAGE_REQUESTS + 1
+    assert max_in_flight == MAX_STORAGE_REQUESTS
 
 
 @pytest.mark.parametrize(

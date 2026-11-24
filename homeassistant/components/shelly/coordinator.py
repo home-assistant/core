@@ -88,7 +88,7 @@ from .utils import (
 )
 
 # The camera accepts 6 connections, leave room for Home Assistant's own calls.
-MAX_UPSTREAM_REQUESTS = 4
+MAX_STORAGE_REQUESTS = 4
 
 
 @dataclass
@@ -108,7 +108,7 @@ class ShellyEntryData:
     rpc_zigbee_firmware: bool | None = None
     unsupported_firmware: bool = False
     storage_semaphore: asyncio.Semaphore = field(
-        default_factory=lambda: asyncio.Semaphore(MAX_UPSTREAM_REQUESTS)
+        default_factory=lambda: asyncio.Semaphore(MAX_STORAGE_REQUESTS)
     )
 
 
