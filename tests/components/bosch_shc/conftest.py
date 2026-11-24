@@ -836,6 +836,9 @@ def shutter_contact2_plus_device(
     bypass: BypassService.State = BypassService.State.BYPASS_INACTIVE,
     bypass_infinite: bool = False,
     vibration_enabled: bool = False,
+    vibrationsensor: VibrationSensorService.State = (
+        VibrationSensorService.State.NO_VIBRATION
+    ),
     sensitivity: VibrationSensorService.SensitivityState = (
         VibrationSensorService.SensitivityState.MEDIUM
     ),
@@ -853,6 +856,7 @@ def shutter_contact2_plus_device(
     device.status = "AVAILABLE"
     device.bypass = bypass
     device.bypass_infinite = bypass_infinite
+    device.vibrationsensor = vibrationsensor
     device.enabled = vibration_enabled
     device.sensitivity = sensitivity
     return device
