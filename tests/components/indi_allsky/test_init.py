@@ -20,6 +20,7 @@ from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
+from homeassistant.setup import async_setup_component
 
 from . import setup_integration
 
@@ -237,7 +238,13 @@ async def test_manual_refresh_clears_sensor_fetch_failure(
     assert state.state == STATE_UNAVAILABLE
 
     mock_indi_allsky_client.fetch_sensors.side_effect = None
-    await mock_config_entry.runtime_data.async_refresh()
+    assert await async_setup_component(hass, "homeassistant", {})
+    await hass.services.async_call(
+        "homeassistant",
+        "update_entity",
+        {"entity_id": "binary_sensor.indi_allsky_night"},
+        blocking=True,
+    )
     await hass.async_block_till_done(wait_background_tasks=True)
 
     for cb in mock_indi_allsky_client.callbacks["sensor_update"]:
