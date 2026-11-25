@@ -25,6 +25,15 @@
           "plugged_in": "mdi:power-plug"
         }
       },
+      "driving_state": {
+        "default": "mdi:car-shift-pattern",
+        "state": {
+          "drive": "mdi:alpha-d-circle",
+          "neutral": "mdi:alpha-n-circle",
+          "park": "mdi:alpha-p-circle",
+          "reverse": "mdi:alpha-r-circle"
+        }
+      },
       "odometer": {
         "default": "mdi:counter"
       },
