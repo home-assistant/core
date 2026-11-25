@@ -208,7 +208,7 @@ FORECAST_SENSOR_TYPES: tuple[AccuWeatherSensorDescription, ...] = (
         entity_registry_enabled_default=False,
         native_unit_of_measurement=UnitOfSpeed.KILOMETERS_PER_HOUR,
         value_fn=lambda data: cast(float, data[ATTR_SPEED][ATTR_VALUE]),
-        attr_fn=lambda data: {"direction": data[ATTR_DIRECTION][ATTR_ENGLISH]},
+        attr_fn=lambda data: {"direction": data[ATTR_DIRECTION][ATTR_ENGLISH].lower()},
         translation_key="wind_gust_speed_day",
     ),
     AccuWeatherSensorDescription(
@@ -217,7 +217,7 @@ FORECAST_SENSOR_TYPES: tuple[AccuWeatherSensorDescription, ...] = (
         entity_registry_enabled_default=False,
         native_unit_of_measurement=UnitOfSpeed.KILOMETERS_PER_HOUR,
         value_fn=lambda data: cast(float, data[ATTR_SPEED][ATTR_VALUE]),
-        attr_fn=lambda data: {"direction": data[ATTR_DIRECTION][ATTR_ENGLISH]},
+        attr_fn=lambda data: {"direction": data[ATTR_DIRECTION][ATTR_ENGLISH].lower()},
         translation_key="wind_gust_speed_night",
     ),
     AccuWeatherSensorDescription(
@@ -225,7 +225,7 @@ FORECAST_SENSOR_TYPES: tuple[AccuWeatherSensorDescription, ...] = (
         device_class=SensorDeviceClass.WIND_SPEED,
         native_unit_of_measurement=UnitOfSpeed.KILOMETERS_PER_HOUR,
         value_fn=lambda data: cast(float, data[ATTR_SPEED][ATTR_VALUE]),
-        attr_fn=lambda data: {"direction": data[ATTR_DIRECTION][ATTR_ENGLISH]},
+        attr_fn=lambda data: {"direction": data[ATTR_DIRECTION][ATTR_ENGLISH].lower()},
         translation_key="wind_speed_day",
     ),
     AccuWeatherSensorDescription(
@@ -233,7 +233,7 @@ FORECAST_SENSOR_TYPES: tuple[AccuWeatherSensorDescription, ...] = (
         device_class=SensorDeviceClass.WIND_SPEED,
         native_unit_of_measurement=UnitOfSpeed.KILOMETERS_PER_HOUR,
         value_fn=lambda data: cast(float, data[ATTR_SPEED][ATTR_VALUE]),
-        attr_fn=lambda data: {"direction": data[ATTR_DIRECTION][ATTR_ENGLISH]},
+        attr_fn=lambda data: {"direction": data[ATTR_DIRECTION][ATTR_ENGLISH].lower()},
         translation_key="wind_speed_night",
     ),
 )
@@ -338,7 +338,7 @@ SENSOR_TYPES: tuple[AccuWeatherSensorDescription, ...] = (
         entity_registry_enabled_default=False,
         native_unit_of_measurement=UV_INDEX,
         value_fn=lambda data: cast(int, data),
-        attr_fn=lambda data: {ATTR_LEVEL: data["UVIndexText"]},
+        attr_fn=lambda data: {ATTR_LEVEL: data["UVIndexText"].replace(" ", "_")},
         translation_key="uv_index",
     ),
     AccuWeatherSensorDescription(

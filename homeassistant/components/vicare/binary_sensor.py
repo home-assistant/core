@@ -109,6 +109,12 @@ GLOBAL_SENSORS: tuple[ViCareBinarySensorEntityDescription, ...] = (
         value_getter=lambda api: api.getDomesticHotWaterPumpActive(),
     ),
     ViCareBinarySensorEntityDescription(
+        key="boiler_internal_pump_active",
+        translation_key="boiler_internal_pump",
+        device_class=BinarySensorDeviceClass.RUNNING,
+        value_getter=lambda api: api.getBoilerInternalPumpActive(),
+    ),
+    ViCareBinarySensorEntityDescription(
         key="one_time_charge",
         translation_key="one_time_charge",
         device_class=BinarySensorDeviceClass.RUNNING,

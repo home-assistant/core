@@ -16,8 +16,6 @@ async def setup_integration(hass: HomeAssistant) -> None:
     await hass.async_block_till_done(wait_background_tasks=True)
 
     # Switches are added without update_before_add, so they have no state
-    # until their first update. Scheduled polls run the entities in parallel
-    # against the throttled DanfossAir.update, which lets an entity read the
-    # data before it is filled in, so update them one at a time instead.
+    # until their first update.
     for entity_id in hass.states.async_entity_ids(SWITCH_DOMAIN):
         await async_update_entity(hass, entity_id)

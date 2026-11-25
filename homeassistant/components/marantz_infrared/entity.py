@@ -1,7 +1,7 @@
 """Common entity for Marantz IR integration."""
 
-from infrared_protocols.codes.marantz import models as marantz_models
 from infrared_protocols.codes.marantz.audio import MarantzAudioCode
+import infrared_protocols.codes.marantz.models as marantz_models
 
 from homeassistant.components.infrared import InfraredEmitterConsumerEntity
 from homeassistant.const import CONF_MODEL

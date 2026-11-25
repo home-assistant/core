@@ -19,7 +19,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import CONF_HAS_VANE
-from .coordinator import IntesisConfigEntry, IntesisCoordinator
+from .coordinator import IntesisConfigEntry, IntesisUnitCoordinator
 from .entity import IntesisEntity
 
 PARALLEL_UPDATES = 1
@@ -53,7 +53,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up the climate entity of the air conditioner behind the gateway."""
     async_add_entities(
-        [IntesisClimate(entry.runtime_data, has_vane=entry.options[CONF_HAS_VANE])]
+        [IntesisClimate(entry.runtime_data.unit, has_vane=entry.options[CONF_HAS_VANE])]
     )
 
 
@@ -64,7 +64,7 @@ class IntesisClimate(IntesisEntity, ClimateEntity):
     _attr_translation_key = "air_conditioner"
     _attr_native_temperature_unit = UnitOfTemperature.CELSIUS
 
-    def __init__(self, coordinator: IntesisCoordinator, *, has_vane: bool) -> None:
+    def __init__(self, coordinator: IntesisUnitCoordinator, *, has_vane: bool) -> None:
         """Bind to the air conditioner the gateway controls."""
         super().__init__(coordinator, "air_conditioner", "control")
         self._ac = coordinator.device
