@@ -68,6 +68,8 @@ def mock_bambu_lab_client(mock_bambu_lab_client_class: MagicMock) -> MagicMock:
     client = mock_bambu_lab_client_class.return_value
     client.serial = SERIAL_NUMBER
     client.available = True
+    client.supports_camera_images = False
+    client.camera_stream_url = None
     client.info = PrinterInfo(
         serial=SERIAL_NUMBER,
         model=PrinterModel.X1C,
