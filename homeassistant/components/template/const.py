@@ -1,9 +1,10 @@
 """Constants for the Template Platform Components."""
 
+from abc import ABC, abstractmethod
 from collections.abc import Collection, Mapping
 from dataclasses import dataclass
 from enum import StrEnum
-from typing import Any
+from typing import Any, override
 
 from homeassistant.const import Platform
 from homeassistant.helpers.typing import ConfigType
@@ -121,7 +122,7 @@ LIGHT_DEPRECATED_MIREDS_OPTIONS = {
 
 
 @dataclass(frozen=True, kw_only=True)
-class TemplateOptionsDeprecation:
+class TemplateOptionsDeprecation(ABC):
     """Deprecated use of YAML options of a template platform that creates repairs."""
 
     platform: Platform
@@ -134,7 +135,7 @@ class TemplateOptionsDeprecation:
     # The entity option holding the deprecated options, the entity config when None
     parent_option: str | None = None
 
-    def options_config(self, entity_config: ConfigType) -> Mapping[Any, Any]:
+    def options_config(self, entity_config: Mapping[str, Any]) -> Mapping[Any, Any]:
         """Return the config holding the deprecated options of an entity."""
         if self.parent_option is None:
             return entity_config
@@ -143,6 +144,20 @@ class TemplateOptionsDeprecation:
             return options
         return {}
 
+    def option_name(self, option: str) -> str:
+        """Return the name of an option as the user configures it."""
+        if self.parent_option is None:
+            return option
+        return f"{self.parent_option}: {option}"
+
+    @abstractmethod
+    def deprecated_options(self, entity_config: Mapping[str, Any]) -> list[str]:
+        """Return the deprecated options set in the config of an entity."""
+
+    @abstractmethod
+    def describe_option(self, option: str) -> str:
+        """Return how to fix a deprecated option, in markdown."""
+
 
 @dataclass(frozen=True, kw_only=True)
 class DeprecatedTemplateOptions(TemplateOptionsDeprecation):
@@ -150,6 +165,18 @@ class DeprecatedTemplateOptions(TemplateOptionsDeprecation):
 
     # Deprecated option to the option that replaces it
     options: Mapping[str, str]
+
+    @override
+    def deprecated_options(self, entity_config: Mapping[str, Any]) -> list[str]:
+        """Return the deprecated options set in the config of an entity."""
+        return [
+            key for key in self.options_config(entity_config) if key in self.options
+        ]
+
+    @override
+    def describe_option(self, option: str) -> str:
+        """Return the deprecated option and the option that replaces it."""
+        return f"`{self.option_name(option)}` → `{self.options[option]}`"
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -161,6 +188,28 @@ class IncompleteTemplateOptionGroup(TemplateOptionsDeprecation):
     """
 
     options: tuple[str, ...]
+    # Only set when it has items, the frontend sends an empty list when cleared
+    list_option: str
+
+    @override
+    def deprecated_options(self, entity_config: Mapping[str, Any]) -> list[str]:
+        """Return the options of a partially set group."""
+        options_config = self.options_config(entity_config)
+        is_set = [
+            key
+            for key in self.options
+            if key in options_config
+            and (key != self.list_option or options_config[key])
+        ]
+        if not is_set or set(is_set).issuperset(self.options[1:]):
+            return []
+        return is_set
+
+    @override
+    def describe_option(self, option: str) -> str:
+        """Return the option and the options it requires."""
+        required = [f"`{key}`" for key in self.options[1:] if key != option]
+        return f"`{self.option_name(option)}` requires {' and '.join(required)}"
 
 
 WEATHER_DEPRECATED_OPTIONS = DeprecatedTemplateOptions(
@@ -218,6 +267,7 @@ LIGHT_DEPRECATED_OPTIONS = DeprecatedTemplateOptions(
 FAN_INCOMPLETE_PRESET_MODE_OPTIONS = IncompleteTemplateOptionGroup(
     platform=Platform.FAN,
     options=("preset_mode", "preset_modes", "set_preset_mode"),
+    list_option="preset_modes",
     translation_key="incomplete_fan_preset_mode_options",
     blueprint_translation_key="incomplete_fan_preset_mode_options_blueprint",
     breaks_in_ha_version="2027.6.0",
@@ -226,6 +276,7 @@ FAN_INCOMPLETE_PRESET_MODE_OPTIONS = IncompleteTemplateOptionGroup(
 VACUUM_INCOMPLETE_FAN_SPEED_OPTIONS = IncompleteTemplateOptionGroup(
     platform=Platform.VACUUM,
     options=("fan_speed", "fan_speeds", "set_fan_speed"),
+    list_option="fan_speeds",
     translation_key="incomplete_vacuum_fan_speed_options",
     blueprint_translation_key="incomplete_vacuum_fan_speed_options_blueprint",
     breaks_in_ha_version="2027.6.0",

@@ -1630,31 +1630,33 @@ def get_incomplete_fan_speed_options_issues(
     "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
 )
 @pytest.mark.parametrize(
-    ("config", "options", "missing"),
+    ("config", "options"),
     [
         pytest.param(
             {"fan_speed": "{{ 'high' }}"},
-            "- `fan_speed`",
-            "`fan_speeds`, `set_fan_speed`",
+            "- `fan_speed` requires `fan_speeds` and `set_fan_speed`",
             id="fan_speed_only",
         ),
         pytest.param(
             {"fan_speed": "{{ 'high' }}", "fan_speeds": ["high"]},
-            "- `fan_speed`\n- `fan_speeds`",
-            "`set_fan_speed`",
+            "- `fan_speed` requires `fan_speeds` and `set_fan_speed`\n"
+            "- `fan_speeds` requires `set_fan_speed`",
             id="fan_speed_without_action",
         ),
         pytest.param(
             {"fan_speeds": ["high"]},
-            "- `fan_speeds`",
-            "`set_fan_speed`",
+            "- `fan_speeds` requires `set_fan_speed`",
             id="list_only",
         ),
         pytest.param(
             SET_FAN_SPEED_ACTION,
-            "- `set_fan_speed`",
-            "`fan_speeds`",
+            "- `set_fan_speed` requires `fan_speeds`",
             id="action_only",
+        ),
+        pytest.param(
+            {**SET_FAN_SPEED_ACTION, "fan_speeds": []},
+            "- `set_fan_speed` requires `fan_speeds`",
+            id="action_with_empty_list",
         ),
     ],
 )
@@ -1664,7 +1666,6 @@ async def test_incomplete_fan_speed_options_issue(
     style: ConfigurationStyle,
     config: ConfigType,
     options: str,
-    missing: str,
 ) -> None:
     """Test a repair issue is created for partially set fan speed options."""
     await setup_entity(
@@ -1685,7 +1686,6 @@ async def test_incomplete_fan_speed_options_issue(
     assert issues[0].translation_placeholders == {
         "identifier": f"name: {TEST_VACUUM.object_id}",
         "options": options,
-        "missing": missing,
     }
 
 
@@ -1757,8 +1757,7 @@ async def test_incomplete_fan_speed_options_issue_file_and_line(
     assert len(issues) == 1
     assert issues[0].translation_placeholders == {
         "identifier": "name: Test",
-        "options": "- `configuration.yaml:5`: `set_fan_speed`",
-        "missing": "`fan_speeds`",
+        "options": "- `configuration.yaml:5`: `set_fan_speed` requires `fan_speeds`",
     }
 
     # An ignored repair stays ignored while the configuration is unchanged
@@ -1809,9 +1808,8 @@ async def test_incomplete_fan_speed_options_issue_blueprint(
         "blueprint": "test_vacuum_incomplete_fan_speed.yaml",
         "options": (
             "- `blueprints/template/test_vacuum_incomplete_fan_speed.yaml:17`: "
-            "`set_fan_speed`"
+            "`set_fan_speed` requires `fan_speeds`"
         ),
-        "missing": "`fan_speeds`",
     }
 
 
@@ -1837,11 +1835,18 @@ async def _async_setup_vacuum_config_entry(
     return config_entry
 
 
+@pytest.mark.parametrize(
+    "options",
+    [
+        pytest.param({"set_fan_speed": []}, id="action_only"),
+        pytest.param({"set_fan_speed": [], "fan_speeds": []}, id="empty_list"),
+    ],
+)
 async def test_incomplete_fan_speed_config_entry_issue(
-    hass: HomeAssistant, issue_registry: ir.IssueRegistry
+    hass: HomeAssistant, issue_registry: ir.IssueRegistry, options: dict[str, Any]
 ) -> None:
     """Test a repair issue is tied to a helper with incomplete fan speed options."""
-    config_entry = await _async_setup_vacuum_config_entry(hass, {"set_fan_speed": []})
+    config_entry = await _async_setup_vacuum_config_entry(hass, options)
     issue_id = f"{INCOMPLETE_FAN_SPEED_HELPER_ISSUE_ID}_{config_entry.entry_id}"
     issue = issue_registry.async_get_issue(template.DOMAIN, issue_id)
     assert issue is not None

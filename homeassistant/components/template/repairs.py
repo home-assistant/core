@@ -1,9 +1,7 @@
 """Repairs platform for the template integration."""
 
-from collections.abc import Mapping
 import hashlib
 import os
-from typing import Any
 
 import probatio
 
@@ -23,8 +21,6 @@ from . import validators as tcv
 from .const import (
     DEPRECATED_TEMPLATE_OPTIONS,
     DOMAIN,
-    DeprecatedTemplateOptions,
-    IncompleteTemplateOptionGroup,
     TemplateConfig,
     TemplateConfigSections,
     TemplateOptionsDeprecation,
@@ -94,34 +90,16 @@ class CompositeDeviceIdRepairFlow(RepairsFlow):
         )
 
 
-def _get_deprecated_options(
-    deprecation: TemplateOptionsDeprecation, options_config: Mapping[str, Any]
-) -> tuple[list[str], dict[str, str]]:
-    """Return the options of an entity the repair lists and its extra placeholders."""
-    if not isinstance(deprecation, IncompleteTemplateOptionGroup):
-        return [key for key in options_config if key in deprecation.options], {}
-    if not (
-        missing := tcv.inclusive_group_missing(options_config, *deprecation.options)
-    ):
-        return [], {}
-    return [key for key in deprecation.options if key in options_config], {
-        "missing": ", ".join(f"`{key}`" for key in sorted(missing))
-    }
-
-
 def _format_deprecated_options(
     hass: HomeAssistant,
     deprecation: TemplateOptionsDeprecation,
     deprecated: list[str],
     locations: dict[str, tuple[str, int]],
 ) -> str:
-    """Return the deprecated options, and their replacements, as a markdown list."""
-    prefix = f"{deprecation.parent_option}: " if deprecation.parent_option else ""
+    """Return the deprecated options and how to fix them as a markdown list."""
     changes: list[str] = []
     for key in deprecated:
-        change = f"`{prefix}{key}`"
-        if isinstance(deprecation, DeprecatedTemplateOptions):
-            change = f"{change} → `{deprecation.options[key]}`"
+        change = deprecation.describe_option(key)
         if (location := locations.get(key)) is not None:
             path = os.path.relpath(location[0], hass.config.config_dir)
             change = f"`{path}:{location[1]}`: {change}"
@@ -146,7 +124,7 @@ def _async_update_deprecated_options_issues(
 ) -> None:
     """Create an issue per entity or blueprint of a platform using deprecated options."""
     platform = deprecation.platform
-    # Fingerprint to translation key, label placeholders and options of each entity
+    # Fingerprint to translation key, label placeholder and options of each entity
     issues: dict[str, tuple[str, dict[str, str], list[str]]] = {}
     for section in config_sections or []:
         blueprint_path: str | None = None
@@ -154,11 +132,7 @@ def _async_update_deprecated_options_issues(
             blueprint_path = section.raw_blueprint_inputs[CONF_USE_BLUEPRINT][CONF_PATH]
 
         for index, entity_config in enumerate(section.get(platform, [])):
-            options_config = deprecation.options_config(entity_config)
-            deprecated, placeholders = _get_deprecated_options(
-                deprecation, options_config
-            )
-            if not deprecated:
+            if not (deprecated := deprecation.deprecated_options(entity_config)):
                 continue
 
             # The id only changes with the configuration, so a dismissed issue stays
@@ -172,8 +146,9 @@ def _async_update_deprecated_options_issues(
                 if fingerprint in issues:
                     continue
                 translation_key = deprecation.blueprint_translation_key
-                label = {"blueprint": blueprint_path, **placeholders}
+                label = {"blueprint": blueprint_path}
             else:
+                options_config = deprecation.options_config(entity_config)
                 fingerprint = "\n".join(
                     [
                         tcv.entity_config_repair_identifier(
@@ -188,8 +163,7 @@ def _async_update_deprecated_options_issues(
                 )
                 translation_key = deprecation.translation_key
                 label = {
-                    "identifier": tcv.entity_config_identifier(platform, entity_config),
-                    **placeholders,
+                    "identifier": tcv.entity_config_identifier(platform, entity_config)
                 }
 
             # Identical entities share a fingerprint, one issue lists all of them

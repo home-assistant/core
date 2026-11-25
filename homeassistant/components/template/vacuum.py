@@ -146,9 +146,7 @@ async def async_setup_entry(
 ) -> None:
     """Initialize config entry."""
     issue_id = f"{INCOMPLETE_FAN_SPEED_HELPER_ISSUE_ID}_{config_entry.entry_id}"
-    if tcv.inclusive_group_missing(
-        config_entry.options, *VACUUM_INCOMPLETE_FAN_SPEED_OPTIONS.options
-    ):
+    if VACUUM_INCOMPLETE_FAN_SPEED_OPTIONS.deprecated_options(config_entry.options):
         breaks_in_ha_version = VACUUM_INCOMPLETE_FAN_SPEED_OPTIONS.breaks_in_ha_version
         ir.async_create_issue(
             hass,

@@ -11,6 +11,9 @@ from pytest_unordered import unordered
 
 from homeassistant import config_entries
 from homeassistant.components.template import DOMAIN, async_setup_entry
+from homeassistant.components.template.vacuum import (
+    INCOMPLETE_FAN_SPEED_HELPER_ISSUE_ID,
+)
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
@@ -18,6 +21,7 @@ from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import (
     config_validation as cv,
     device_registry as dr,
+    issue_registry as ir,
     selector,
 )
 
@@ -1450,6 +1454,60 @@ async def test_options_light_deprecated_temperature(
     }
 
 
+@pytest.mark.parametrize(
+    "user_input",
+    [
+        pytest.param(
+            {"fan_speeds": ["high"], "set_fan_speed": []}, id="complete_group"
+        ),
+        pytest.param({}, id="remove_group"),
+    ],
+)
+async def test_options_vacuum_incomplete_fan_speed(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+    user_input: dict[str, Any],
+) -> None:
+    """Test editing a vacuum helper with incomplete fan speed options."""
+    config_entry = MockConfigEntry(
+        data={},
+        domain=DOMAIN,
+        options={
+            "name": "My template",
+            "template_type": "vacuum",
+            "start": [],
+            "set_fan_speed": [],
+        },
+        title="My template",
+    )
+    config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+    issue_id = f"{INCOMPLETE_FAN_SPEED_HELPER_ISSUE_ID}_{config_entry.entry_id}"
+    assert issue_registry.async_get_issue(DOMAIN, issue_id) is not None
+
+    result = await hass.config_entries.options.async_init(config_entry.entry_id)
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={"start": [], "set_fan_speed": [], "fan_speeds": []},
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "fan_speeds_required"}
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"], user_input={"start": [], **user_input}
+    )
+    await hass.async_block_till_done()
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert config_entry.options == {
+        "name": "My template",
+        "template_type": "vacuum",
+        "start": [],
+        **user_input,
+    }
+    assert issue_registry.async_get_issue(DOMAIN, issue_id) is None
+
+
 def _assert_number_unit_of_measurement_context(data_schema: probatio.Schema) -> None:
     """Assert the unit of measurement selector is filtered by the device class."""
     # Serialize the form the way it is sent to the frontend
@@ -1774,6 +1832,16 @@ REQUIRED_OPTION_ERROR = (
         (
             "vacuum",
             "",
+            {"start": [], "set_fan_speed": [], "fan_speeds": []},
+            {
+                "set_fan_speed": REQUIRED_OPTION_ERROR.format(
+                    "fan_speeds", "set_fan_speed"
+                )
+            },
+        ),
+        (
+            "vacuum",
+            "",
             {"start": [], "fan_speeds": ["high"]},
             {"fan_speeds": REQUIRED_OPTION_ERROR.format("set_fan_speed", "fan_speeds")},
         ),
@@ -1939,6 +2007,13 @@ async def test_config_flow_preview_bad_input(
             "fan_speeds_required",
             {"fan_speeds": ["high"]},
             id="set_fan_speed_without_fan_speeds",
+        ),
+        pytest.param(
+            "vacuum",
+            {"start": [], "set_fan_speed": [], "fan_speeds": []},
+            "fan_speeds_required",
+            {"fan_speeds": ["high"]},
+            id="set_fan_speed_with_empty_fan_speeds",
         ),
         pytest.param(
             "vacuum",

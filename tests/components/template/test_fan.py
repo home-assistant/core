@@ -1779,31 +1779,33 @@ def get_incomplete_preset_mode_options_issues(
     "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
 )
 @pytest.mark.parametrize(
-    ("config", "options", "missing"),
+    ("config", "options"),
     [
         pytest.param(
             {"preset_mode": "{{ 'auto' }}"},
-            "- `preset_mode`",
-            "`preset_modes`, `set_preset_mode`",
+            "- `preset_mode` requires `preset_modes` and `set_preset_mode`",
             id="preset_mode_only",
         ),
         pytest.param(
             {"preset_mode": "{{ 'auto' }}", "preset_modes": ["auto"]},
-            "- `preset_mode`\n- `preset_modes`",
-            "`set_preset_mode`",
+            "- `preset_mode` requires `preset_modes` and `set_preset_mode`\n"
+            "- `preset_modes` requires `set_preset_mode`",
             id="preset_mode_without_action",
         ),
         pytest.param(
             {"preset_modes": ["auto"]},
-            "- `preset_modes`",
-            "`set_preset_mode`",
+            "- `preset_modes` requires `set_preset_mode`",
             id="list_only",
         ),
         pytest.param(
             PRESET_MODE_ACTION,
-            "- `set_preset_mode`",
-            "`preset_modes`",
+            "- `set_preset_mode` requires `preset_modes`",
             id="action_only",
+        ),
+        pytest.param(
+            {**PRESET_MODE_ACTION, "preset_modes": []},
+            "- `set_preset_mode` requires `preset_modes`",
+            id="action_with_empty_list",
         ),
     ],
 )
@@ -1813,7 +1815,6 @@ async def test_incomplete_preset_mode_options_issue(
     style: ConfigurationStyle,
     config: ConfigType,
     options: str,
-    missing: str,
 ) -> None:
     """Test a repair issue is created for partially set preset mode options."""
     await setup_entity(
@@ -1834,7 +1835,6 @@ async def test_incomplete_preset_mode_options_issue(
     assert issues[0].translation_placeholders == {
         "identifier": f"name: {TEST_FAN.object_id}",
         "options": options,
-        "missing": missing,
     }
 
 
