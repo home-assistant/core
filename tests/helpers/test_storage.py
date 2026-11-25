@@ -721,6 +721,66 @@ async def test_delayed_save_error_is_logged_not_raised(
     assert store.key not in hass_storage
 
 
+async def test_coalesced_save_failure_is_retried_by_queued_caller(
+    hass: HomeAssistant, hass_storage: dict[str, Any]
+) -> None:
+    """Test a failed coalesced write is retried instead of reporting success.
+
+    With A writing and B/C queued, B consumes C's data. If that write fails,
+    B raises but the data must be kept so C retries the write and gets a
+    truthful outcome instead of returning success for data never written.
+    """
+    store = storage.Store(hass, MOCK_VERSION, MOCK_KEY)
+    write_started = asyncio.Event()
+    finish_first_write = asyncio.Event()
+    write_calls = 0
+
+    async def write_side_effect(data: dict) -> None:
+        nonlocal write_calls
+        write_calls += 1
+        if write_calls == 1:
+            write_started.set()
+            await finish_first_write.wait()
+        elif write_calls == 2:
+            raise WriteError("simulated")
+
+    with patch.object(store, "_async_write_data", side_effect=write_side_effect):
+        save_a = hass.async_create_task(store.async_save({"writer": "a"}))
+        await write_started.wait()
+        save_b = hass.async_create_task(store.async_save({"writer": "b"}))
+        save_c = hass.async_create_task(store.async_save({"writer": "c"}))
+        await asyncio.sleep(0)
+        await asyncio.sleep(0)
+        finish_first_write.set()
+
+        await save_a
+        with pytest.raises(WriteError):
+            await save_b
+        await save_c
+
+    # B consumed C's data and failed; C retried the write instead of
+    # silently reporting success.
+    assert write_calls == 3
+
+
+async def test_failed_write_is_retried_on_final_write(
+    hass: HomeAssistant, hass_storage: dict[str, Any]
+) -> None:
+    """Test data from a failed awaited save is kept for the final write."""
+    store = storage.Store(hass, MOCK_VERSION, MOCK_KEY)
+    with (
+        patch.object(store, "_async_write_data", side_effect=WriteError("simulated")),
+        pytest.raises(WriteError),
+    ):
+        await store.async_save(MOCK_DATA)
+
+    assert store.key not in hass_storage
+
+    # The data survives for a later write attempt instead of being lost
+    await store._async_callback_final_write(None)
+    assert hass_storage[store.key]["data"] == MOCK_DATA
+
+
 async def test_migrator_no_existing_config(
     hass: HomeAssistant, store: storage.Store, hass_storage: dict[str, Any]
 ) -> None:

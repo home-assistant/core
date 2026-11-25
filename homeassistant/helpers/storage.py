@@ -644,6 +644,13 @@ class Store[_T: Mapping[str, Any] | Sequence[Any]]:
                 await self._async_write_data(data)
             except (json_util.SerializationError, WriteError) as err:
                 _LOGGER.error("Error writing config for %s: %s", self.key, err)
+                if self._data is None:
+                    # Keep the data so a queued save or the final write
+                    # retries it instead of silently losing it. A caller
+                    # whose data was consumed by a failed coalesced write
+                    # would otherwise report success for data never written.
+                    self._data = data
+                    self._async_ensure_final_write_listener()
                 if raise_errors:
                     raise
 
