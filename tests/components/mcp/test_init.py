@@ -26,7 +26,7 @@ import pytest
 from pytest_homeassistant.common import MockConfigEntry
 import respx
 
-from homeassistant.components.mcp.const import CONF_SLUG, DOMAIN
+from homeassistant.components.mcp.const import CONF_SERVER_NAME, CONF_SLUG, DOMAIN
 from homeassistant.components.mcp.coordinator import (
     META_USER_ID,
     create_mcp_httpx_client,
@@ -561,6 +561,57 @@ async def test_llm_api_tool_prefix_for_servers_with_same_name(
 
     assert len(prefixes) == 2
     assert all(prefix.startswith(f"{TEST_SERVER_NAME}-") for prefix in prefixes)
+
+    # The prefix does not change when the other server is unloaded
+    await hass.config_entries.async_unload(other_entry.entry_id)
+    api = next(
+        api
+        for api in llm.async_get_apis(hass)
+        if api.id.endswith(config_entry.entry_id)
+    )
+    api_instance = await api.async_get_api_instance(create_llm_context())
+    assert api_instance.tools[0].name.partition("__")[0] in prefixes
+
+
+async def test_server_name_is_stored(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    fake_mcp_server: FakeMcpServer,
+) -> None:
+    """Test the name the server reports is stored on the entry."""
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    assert config_entry.state is ConfigEntryState.LOADED
+    assert config_entry.data[CONF_SERVER_NAME] == TEST_SERVER_NAME
+
+
+async def test_llm_api_long_tool_names(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    fake_mcp_server: FakeMcpServer,
+) -> None:
+    """Test long tool names are cut, stay unique, and call the original tool."""
+    long_name = "a" * 60
+    fake_mcp_server.tools = [
+        Tool(name=f"{long_name}_one", inputSchema={"type": "object"}),
+        Tool(name=f"{long_name}_two", inputSchema={"type": "object"}),
+        SEARCH_MEMORY_TOOL,
+    ]
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    api = next(
+        api
+        for api in llm.async_get_apis(hass)
+        if api.id.endswith(config_entry.entry_id)
+    )
+    api_instance = await api.async_get_api_instance(create_llm_context())
+    names = [tool.name for tool in api_instance.tools]
+
+    assert len(set(names)) == 3
+    assert all(len(name) <= 64 for name in names)
+    assert names[2] == f"{TEST_SERVER_NAME}__search_memory"
+    assert all(name.startswith(f"{TEST_SERVER_NAME}__aaa") for name in names[:2])
+    assert api_instance.tools[0].tool.name == f"{long_name}_one"
 
 
 async def test_llm_get_api_tools(
