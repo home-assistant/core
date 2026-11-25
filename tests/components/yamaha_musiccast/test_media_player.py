@@ -9,9 +9,9 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.media_player import (
     DOMAIN as MEDIA_PLAYER_DOMAIN,
-    ATTR_INPUT_SOURCE,
-    ATTR_INPUT_SOURCE_LIST,
     MediaClass,
+    MediaPlayerEntityCapabilityAttribute,
+    MediaPlayerEntityStateAttribute,
     MediaPlayerService,
     MediaPlayerServiceArgument,
     MediaType,
@@ -28,6 +28,8 @@ from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 
 from .conftest import STATIONS, TEST_DEVICE_ID
+
+MAIN_ENTITY_ID = "media_player.main_musiccast"
 
 
 @pytest.fixture
@@ -435,11 +437,10 @@ async def test_play_unsupported_media(
     mock_musiccast_device.play_url_media.assert_not_awaited()
 
 
-MAIN_ENTITY_ID = "media_player.main_musiccast"
-
-
 async def test_source_list_shows_all_sources_by_default(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_musiccast_device
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_musiccast_device: MagicMock,
 ) -> None:
     """Test every known source is listed when none are hidden."""
     mock_config_entry.add_to_hass(hass)
@@ -458,11 +459,13 @@ async def test_source_list_shows_all_sources_by_default(
 
     state = hass.states.get(MAIN_ENTITY_ID)
     assert state is not None
-    assert sorted(state.attributes[ATTR_INPUT_SOURCE_LIST]) == [
+    assert sorted(
+        state.attributes[MediaPlayerEntityCapabilityAttribute.INPUT_SOURCE_LIST]
+    ) == [
         "Bluetooth",
         "NET RADIO",
     ]
-    assert state.attributes[ATTR_INPUT_SOURCE] == "NET RADIO"
+    assert state.attributes[MediaPlayerEntityStateAttribute.INPUT_SOURCE] == "NET RADIO"
 
 
 @pytest.mark.usefixtures("mock_musiccast_device")
@@ -483,11 +486,15 @@ async def test_source_list_excludes_hidden_sources(
 
     state = hass.states.get(MAIN_ENTITY_ID)
     assert state is not None
-    assert state.attributes[ATTR_INPUT_SOURCE_LIST] == ["NET RADIO"]
+    assert state.attributes[MediaPlayerEntityCapabilityAttribute.INPUT_SOURCE_LIST] == [
+        "NET RADIO"
+    ]
 
 
 async def test_hidden_current_source_still_reported(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_musiccast_device
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_musiccast_device: MagicMock,
 ) -> None:
     """Test the active source is still reported even if it is hidden."""
     mock_config_entry.add_to_hass(hass)
@@ -506,5 +513,7 @@ async def test_hidden_current_source_still_reported(
 
     state = hass.states.get(MAIN_ENTITY_ID)
     assert state is not None
-    assert state.attributes[ATTR_INPUT_SOURCE_LIST] == ["Bluetooth"]
-    assert state.attributes[ATTR_INPUT_SOURCE] == "NET RADIO"
+    assert state.attributes[MediaPlayerEntityCapabilityAttribute.INPUT_SOURCE_LIST] == [
+        "Bluetooth"
+    ]
+    assert state.attributes[MediaPlayerEntityStateAttribute.INPUT_SOURCE] == "NET RADIO"
