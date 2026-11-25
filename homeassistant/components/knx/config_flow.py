@@ -486,7 +486,9 @@ class KNXConfigFlow(ConfigFlow, domain=DOMAIN):
             for tunnel in self._found_tunnels
         ]
         tunnel_options.append(
-            selector.SelectOptionDict(value=OPTION_MANUAL_TUNNEL, label="Manual")
+            selector.SelectOptionDict(
+                value=OPTION_MANUAL_TUNNEL, label="Manual configuration"
+            )
         )
         default_tunnel = next(
             (

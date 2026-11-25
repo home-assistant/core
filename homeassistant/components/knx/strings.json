@@ -1795,7 +1795,7 @@
     },
     "tunnel_gateway": {
       "options": {
-        "manual": "Manual"
+        "manual": "Manual configuration"
       }
     },
     "tunneling_type": {
