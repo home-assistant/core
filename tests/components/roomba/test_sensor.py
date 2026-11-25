@@ -120,14 +120,9 @@ async def test_robot_without_dock_has_no_dock_sensor(
         ),
         pytest.param({"batInfo": {"cCount": 0}}, "0", id="new_battery"),
         pytest.param(
-            {"bbchg3": {"nLithChrg": 0, "nNimhChrg": 0}, "batInfo": {"cCount": 70}},
-            "70",
-            id="zero_charge_stats",
-        ),
-        pytest.param(
-            {"bbchg3": {"nLithChrg": 0, "nNimhChrg": 0}},
+            {"bbchg3": {"nLithChrg": 0}, "batInfo": {"cCount": 70}},
             "0",
-            id="zero_charge_stats_only",
+            id="zero_charge_stats_precedence",
         ),
         pytest.param({}, STATE_UNKNOWN, id="missing"),
     ],

@@ -42,12 +42,18 @@ class RoombaSensorEntityDescription(SensorEntityDescription):
 
 def _battery_cycles(entity: IRobotEntity) -> int | None:
     """Return the battery cycles, falling back to the battery's own count."""
-    charges = entity.battery_stats.get("nLithChrg") or entity.battery_stats.get(
-        "nNimhChrg"
+    return next(
+        (
+            value
+            for value in (
+                entity.battery_stats.get("nLithChrg"),
+                entity.battery_stats.get("nNimhChrg"),
+                entity.battery_info.get("cCount"),
+            )
+            if value is not None
+        ),
+        None,
     )
-    if charges or (cycle_count := entity.battery_info.get("cCount")) is None:
-        return charges
-    return cycle_count
 
 
 DOCK_SENSORS: list[RoombaSensorEntityDescription] = [
