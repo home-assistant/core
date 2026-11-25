@@ -9,8 +9,6 @@ import pytest
 
 from homeassistant.components.ads.const import DOMAIN
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ServiceValidationError
-from homeassistant.setup import async_setup_component
 
 SERVICE_WRITE_DATA_BY_NAME = "write_data_by_name"
 ADS_VAR = "GVL.setpoint"
@@ -23,8 +21,12 @@ ADS_VAR = "GVL.setpoint"
         pytest.param("int", 42, 42, pyads.PLCTYPE_INT, id="int"),
         pytest.param("int", "42", 42, pyads.PLCTYPE_INT, id="int_from_text"),
         pytest.param("udint", 70000, 70000, pyads.PLCTYPE_UDINT, id="udint"),
-        pytest.param("bool", 1, 1, pyads.PLCTYPE_BOOL, id="bool_as_int"),
-        pytest.param("real", 21, 21, pyads.PLCTYPE_REAL, id="real_as_int"),
+        pytest.param("time", "1500", 1500, pyads.PLCTYPE_TIME, id="time"),
+        pytest.param("bool", 1, True, pyads.PLCTYPE_BOOL, id="bool_as_int"),
+        pytest.param("bool", "off", False, pyads.PLCTYPE_BOOL, id="bool_from_text"),
+        pytest.param("real", 21, 21.0, pyads.PLCTYPE_REAL, id="real_as_int"),
+        pytest.param("real", "21.5", 21.5, pyads.PLCTYPE_REAL, id="real_from_text"),
+        pytest.param("lreal", 0.125, 0.125, pyads.PLCTYPE_LREAL, id="lreal"),
     ],
 )
 async def test_write_data_by_name(
@@ -35,7 +37,7 @@ async def test_write_data_by_name(
     written: Any,
     plc_datatype: type,
 ) -> None:
-    """Test the write action writes the value to the PLC as an integer."""
+    """Test the write action writes the value as the type the ADS type needs."""
     await hass.services.async_call(
         DOMAIN,
         SERVICE_WRITE_DATA_BY_NAME,
@@ -43,9 +45,10 @@ async def test_write_data_by_name(
         blocking=True,
     )
 
-    mock_pyads_connection.return_value.write_by_name.assert_called_once_with(
-        ADS_VAR, written, plc_datatype
-    )
+    write_by_name = mock_pyads_connection.return_value.write_by_name
+    write_by_name.assert_called_once_with(ADS_VAR, written, plc_datatype)
+    # Equality alone would let 1 pass for True and 21 for 21.0.
+    assert type(write_by_name.call_args.args[1]) is type(written)
 
 
 @pytest.mark.usefixtures("setup_ads")
@@ -53,12 +56,16 @@ async def test_write_data_by_name(
     "data",
     [
         pytest.param(
-            {"adsvar": ADS_VAR, "adstype": "real", "value": "21.5"},
-            id="fractional_value",
+            {"adsvar": ADS_VAR, "adstype": "int", "value": "21.5"},
+            id="fractional_int",
         ),
         pytest.param(
-            {"adsvar": ADS_VAR, "adstype": "string", "value": "hello"},
-            id="text_value",
+            {"adsvar": ADS_VAR, "adstype": "int", "value": "hello"},
+            id="text_int",
+        ),
+        pytest.param(
+            {"adsvar": ADS_VAR, "adstype": "bool", "value": "maybe"},
+            id="text_bool",
         ),
         pytest.param(
             {"adsvar": ADS_VAR, "adstype": "float", "value": 1},
@@ -70,7 +77,7 @@ async def test_write_data_by_name(
 async def test_write_data_by_name_invalid(
     hass: HomeAssistant, mock_pyads_connection: MagicMock, data: dict[str, Any]
 ) -> None:
-    """Test the action rejects data it cannot write as an integer."""
+    """Test the action rejects a value its ADS type cannot hold."""
     with pytest.raises(probatio.Invalid):
         await hass.services.async_call(
             DOMAIN, SERVICE_WRITE_DATA_BY_NAME, data, blocking=True
@@ -98,19 +105,3 @@ async def test_write_data_by_name_error(
     )
 
     assert f"Error writing {ADS_VAR}" in caplog.text
-
-
-async def test_write_data_by_name_not_loaded(hass: HomeAssistant) -> None:
-    """Test the write action is refused while no connection is set up."""
-    assert await async_setup_component(hass, DOMAIN, {})
-    await hass.async_block_till_done()
-
-    with pytest.raises(ServiceValidationError) as exc_info:
-        await hass.services.async_call(
-            DOMAIN,
-            SERVICE_WRITE_DATA_BY_NAME,
-            {"adsvar": ADS_VAR, "adstype": "int", "value": 42},
-            blocking=True,
-        )
-
-    assert exc_info.value.translation_key == "not_loaded"

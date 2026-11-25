@@ -1,6 +1,8 @@
 """Services for the ADS integration."""
 
+from collections.abc import Callable
 from enum import StrEnum
+from typing import Any
 
 import probatio
 
@@ -26,12 +28,41 @@ class AdsServiceArgument(StrEnum):
     VALUE = "value"
 
 
-SCHEMA_SERVICE_WRITE_DATA_BY_NAME = probatio.Schema(
-    {
-        probatio.Required(AdsServiceArgument.ADSTYPE): probatio.Coerce(AdsType),
-        probatio.Required(AdsServiceArgument.VALUE): probatio.Coerce(int),
-        probatio.Required(AdsServiceArgument.ADSVAR): cv.string,
+# Types whose PLC representation is not an integer. Every other type is
+# written as one, so a value given as text in YAML still reaches the PLC.
+ADS_VALUE_VALIDATORS: dict[AdsType, Callable[[Any], Any]] = {
+    # ctypes reads any non-empty string as True, so "off" has to be parsed.
+    AdsType.BOOL: cv.boolean,
+    AdsType.REAL: probatio.Coerce(float),
+    AdsType.LREAL: probatio.Coerce(float),
+}
+DEFAULT_ADS_VALUE_VALIDATOR = probatio.Coerce(int)
+
+
+def _coerce_value_for_ads_type(data: dict[str, Any]) -> dict[str, Any]:
+    """Coerce the value to the Python type its ADS type is written as."""
+    validator = ADS_VALUE_VALIDATORS.get(
+        data[AdsServiceArgument.ADSTYPE], DEFAULT_ADS_VALUE_VALIDATOR
+    )
+    return {
+        **data,
+        AdsServiceArgument.VALUE: validator(data[AdsServiceArgument.VALUE]),
     }
+
+
+SCHEMA_SERVICE_WRITE_DATA_BY_NAME = probatio.Schema(
+    probatio.All(
+        probatio.Schema(
+            {
+                probatio.Required(AdsServiceArgument.ADSTYPE): probatio.Coerce(AdsType),
+                probatio.Required(AdsServiceArgument.VALUE): probatio.Any(
+                    bool, int, float, str
+                ),
+                probatio.Required(AdsServiceArgument.ADSVAR): cv.string,
+            }
+        ),
+        _coerce_value_for_ads_type,
+    )
 )
 
 
@@ -47,7 +78,7 @@ async def _async_handle_write_data_by_name(call: ServiceCall) -> None:
     ads = entries[0].runtime_data
     ads_var: str = call.data[AdsServiceArgument.ADSVAR]
     ads_type: AdsType = call.data[AdsServiceArgument.ADSTYPE]
-    value: int = call.data[AdsServiceArgument.VALUE]
+    value: bool | float = call.data[AdsServiceArgument.VALUE]
 
     # The hub logs a write the PLC refuses instead of raising it.
     await call.hass.async_add_executor_job(

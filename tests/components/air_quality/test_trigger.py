@@ -25,9 +25,9 @@ from homeassistant.components.sensor import SensorDeviceClass
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_UNIT_OF_MEASUREMENT,
-    CONF_ENTITY_ID,
     STATE_OFF,
     STATE_ON,
+    TargetKey,
     UnitOfDensity,
     UnitOfRadiationConcentration,
     UnitOfRatio,
@@ -879,7 +879,7 @@ async def test_air_quality_trigger_unit_conversion_co_ppm_to_ugm3(
                 "value": {"number": 1000, "unit_of_measurement": "μg/m³"},
             }
         },
-        {CONF_ENTITY_ID: [entity_id]},
+        {TargetKey.ENTITY_ID: [entity_id]},
         calls,
     )
 

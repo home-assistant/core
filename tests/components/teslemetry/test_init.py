@@ -1,7 +1,7 @@
 """Test the Teslemetry init."""
 
 import asyncio
-from collections.abc import AsyncIterator, Awaitable, Callable
+from collections.abc import AsyncIterator, Awaitable, Callable, Generator
 from contextlib import asynccontextmanager
 from copy import deepcopy
 from datetime import timedelta
@@ -154,6 +154,7 @@ from .const import (
 )
 
 LIVE_STATUS_ENTITY_ID = "sensor.energy_site_battery_power"
+STREAMING_ALLOWANCE_ISSUE_ID = f"streaming_allowance_{VIN}"
 
 
 async def _async_update_live_status(hass: HomeAssistant) -> None:
@@ -813,6 +814,106 @@ async def test_missing_token_data(hass: HomeAssistant) -> None:
     entry = hass.config_entries.async_get_entry(mock_entry.entry_id)
     assert entry is not None
     assert entry.state is ConfigEntryState.SETUP_ERROR
+
+
+@pytest.fixture
+def config_refused_listeners() -> Generator[list[Callable[[str, str | None], None]]]:
+    """Capture the registered streaming config refused listeners."""
+    listeners: list[Callable[[str, str | None], None]] = []
+
+    def listen(callback: Callable[[str, str | None], None]) -> Callable[[], None]:
+        listeners.append(callback)
+        return lambda: listeners.remove(callback)
+
+    with patch(
+        "teslemetry_stream.TeslemetryStreamVehicle.listen_config_refused",
+        side_effect=listen,
+    ):
+        yield listeners
+
+
+@pytest.mark.parametrize(
+    ("display_name", "vehicle_name"),
+    [
+        pytest.param("Test", "Test", id="named"),
+        pytest.param(None, VIN, id="unnamed"),
+    ],
+)
+async def test_streaming_allowance_repair(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+    mock_products: AsyncMock,
+    config_refused_listeners: list[Callable[[str, str | None], None]],
+    display_name: str | None,
+    vehicle_name: str,
+) -> None:
+    """Test a refusal over the streaming allowance raises a repair for the vehicle."""
+    products = deepcopy(PRODUCTS)
+    products["response"][0]["display_name"] = display_name
+    mock_products.return_value = products
+    await setup_platform(hass)
+
+    assert issue_registry.async_get_issue(DOMAIN, STREAMING_ALLOWANCE_ISSUE_ID) is None
+
+    config_refused_listeners[0](
+        "streaming_allowance_exceeded",
+        "This streaming configuration uses 120.5% of the base plan's streaming allowance.",
+    )
+
+    issue = issue_registry.async_get_issue(DOMAIN, STREAMING_ALLOWANCE_ISSUE_ID)
+    assert issue is not None
+    assert issue.translation_key == "streaming_allowance"
+    assert issue.translation_placeholders == {"vehicle": vehicle_name}
+    assert issue.severity is ir.IssueSeverity.WARNING
+    assert not issue.is_fixable
+    assert not issue.is_persistent
+    assert (
+        issue.learn_more_url == f"https://teslemetry.com/console/vehicle/{VIN}/fields"
+    )
+
+
+async def test_config_refused_other_error_no_repair(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+    config_refused_listeners: list[Callable[[str, str | None], None]],
+) -> None:
+    """Test a refusal for another reason raises no repair."""
+    await setup_platform(hass)
+
+    config_refused_listeners[0]("invalid_field", None)
+
+    assert issue_registry.async_get_issue(DOMAIN, STREAMING_ALLOWANCE_ISSUE_ID) is None
+
+
+async def test_streaming_allowance_repair_cleared_on_reload(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+    config_refused_listeners: list[Callable[[str, str | None], None]],
+) -> None:
+    """Test setup clears the repair, including one for a vehicle no longer set up."""
+    entry = await setup_platform(hass)
+    config_refused_listeners[0]("streaming_allowance_exceeded", None)
+    ir.async_create_issue(
+        hass,
+        DOMAIN,
+        "streaming_allowance_LRW3F7EK4NC799999",
+        config_entry_id=entry.entry_id,
+        is_fixable=False,
+        severity=ir.IssueSeverity.WARNING,
+        translation_key="streaming_allowance",
+        translation_placeholders={"vehicle": "Gone"},
+    )
+
+    await hass.config_entries.async_reload(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert issue_registry.async_get_issue(DOMAIN, STREAMING_ALLOWANCE_ISSUE_ID) is None
+    assert (
+        issue_registry.async_get_issue(DOMAIN, "streaming_allowance_LRW3F7EK4NC799999")
+        is None
+    )
+    # The unload removed the first listener, so only the reloaded one remains.
+    assert len(config_refused_listeners) == 1
 
 
 async def test_vehicle_streaming_version_update(

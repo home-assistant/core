@@ -18,6 +18,7 @@ set_dynamic_eq:
       domain: media_player
   fields:
     dynamic_eq:
+      required: true
       default: true
       selector:
         boolean:
