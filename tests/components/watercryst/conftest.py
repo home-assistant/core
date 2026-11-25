@@ -1,9 +1,10 @@
 """Common fixtures for the WATERCryst BIOCAT tests."""
 
 from collections.abc import AsyncGenerator, Generator
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 from unittest.mock import AsyncMock, patch
 
+from freezegun.api import FrozenDateTimeFactory
 from pyocat.models import (
     DeviceResponse,
     EventResponse,
@@ -14,11 +15,14 @@ from pyocat.models import (
     WaterProtectionResponse,
 )
 import pytest
-from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components.watercryst.const import DOMAIN
 from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
+from homeassistant.util import dt as dt_util
+
+from .common import InitIntegrationFunc, TriggerPollFunc
 
 BIOCAT_ELECTRONICS_SERIAL = "0123456789"
 BIOCAT_SERIAL = "2026123456789123"
@@ -224,10 +228,42 @@ async def mock_api_client() -> AsyncGenerator[AsyncMock]:
 
 @pytest.fixture
 async def setup_integration(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry
-) -> MockConfigEntry:
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_config_entry: MockConfigEntry,
+) -> None:
     """Set up the integration for testing."""
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
-    return mock_config_entry
+
+
+@pytest.fixture
+def init_integration(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_config_entry: MockConfigEntry,
+) -> InitIntegrationFunc:
+    """Initialize the integration."""
+
+    async def run() -> bool:
+        mock_config_entry.add_to_hass(hass)
+        result = await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+        return result
+
+    return run
+
+
+@pytest.fixture
+def advance_time(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> TriggerPollFunc:
+    """A helper to advance time to trigger a polling event."""
+
+    async def run(interval: timedelta) -> None:
+        freezer.tick(interval + timedelta(seconds=1))
+        async_fire_time_changed(hass, dt_util.utcnow())
+        await hass.async_block_till_done()
+
+    return run

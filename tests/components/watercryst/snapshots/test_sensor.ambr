@@ -712,7 +712,7 @@
     'state': '24',
   })
 # ---
-# name: test_available_entities[sensor.ha_device_device_mode-entry]
+# name: test_mandatory_entities[sensor.ha_device_device_mode-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -762,7 +762,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_available_entities[sensor.ha_device_device_mode-state]
+# name: test_mandatory_entities[sensor.ha_device_device_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
@@ -788,7 +788,7 @@
     'state': 'water_treatment',
   })
 # ---
-# name: test_available_entities[sensor.ha_device_event_category-entry]
+# name: test_mandatory_entities[sensor.ha_device_event_category-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -831,7 +831,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_available_entities[sensor.ha_device_event_category-state]
+# name: test_mandatory_entities[sensor.ha_device_event_category-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
@@ -850,7 +850,7 @@
     'state': 'info',
   })
 # ---
-# name: test_available_entities[sensor.ha_device_event_id-entry]
+# name: test_mandatory_entities[sensor.ha_device_event_id-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -887,7 +887,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_available_entities[sensor.ha_device_event_id-state]
+# name: test_mandatory_entities[sensor.ha_device_event_id-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'HA Device Event ID',
