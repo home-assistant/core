@@ -486,6 +486,9 @@ _PATHS_OUTSIDE_FOLDER = [
     pytest.param("../script/test_service.yaml", id="parent"),
     pytest.param("in_folder/../../script/test_service.yaml", id="nested_parent"),
     pytest.param("/etc/hosts.yaml", id="absolute"),
+    pytest.param("", id="empty"),
+    pytest.param(".", id="folder"),
+    pytest.param("in_folder/..", id="folder_through_subfolder"),
 ]
 
 

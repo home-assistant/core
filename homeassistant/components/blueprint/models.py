@@ -252,7 +252,7 @@ class DomainBlueprints:
         # Checked without resolving links, so a blueprint linked into the folder
         # from elsewhere still works
         path = pathlib.Path(os.path.normpath(folder / blueprint_path))
-        if not path.is_relative_to(folder):
+        if path == folder or not path.is_relative_to(folder):
             raise BlueprintException(
                 self.domain,
                 f"Blueprint path {blueprint_path} is not in the blueprint folder",
