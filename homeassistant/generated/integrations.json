@@ -11746,6 +11746,15 @@
       "config_flow": true,
       "iot_class": "local_polling"
     },
+    "plus_home": {
+      "name": "+Home",
+      "integration_type": "virtual",
+      "categories": [
+        "appliances_cleaning",
+        "climate"
+      ],
+      "supported_by": "electrolux"
+    },
     "pocketcasts": {
       "name": "Pocket Casts",
       "integration_type": "hub",
