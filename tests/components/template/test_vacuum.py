@@ -1728,7 +1728,9 @@ template:
   - vacuum:
       - name: Test
         start: []
-        set_fan_speed: []
+        set_fan_speed:
+          - variables:
+              speed: "{{ fan_speed }}"
 """
 
 

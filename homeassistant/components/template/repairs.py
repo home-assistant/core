@@ -161,8 +161,7 @@ def _async_update_deprecated_options_issues(
                         platform, entity_config, section.get(CONF_UNIQUE_ID)
                     ),
                     *(
-                        f"{key}="
-                        f"{getattr(options_config[key], 'template', options_config[key])}"
+                        deprecation.option_fingerprint(key, options_config[key])
                         for key in sorted(deprecated)
                     ),
                 ]

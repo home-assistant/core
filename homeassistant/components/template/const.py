@@ -165,6 +165,10 @@ class TemplateOptionsDeprecation(ABC):
             return option
         return f"{self.parent_option}: {option}"
 
+    def option_fingerprint(self, option: str, value: Any) -> str:
+        """Return the part of the issue id of a deprecated option."""
+        return f"{option}={getattr(value, 'template', value)}"
+
     @abstractmethod
     def deprecated_options(self, entity_config: Mapping[str, Any]) -> list[str]:
         """Return the deprecated options set in the config of an entity."""
@@ -216,6 +220,7 @@ class IncompleteTemplateOptionGroup(TemplateOptionsDeprecation):
     options: tuple[str, ...]
     # Only set when it has items, the frontend sends an empty list when cleared
     list_option: str
+    action_option: str
 
     @override
     def deprecated_options(self, entity_config: Mapping[str, Any]) -> list[str]:
@@ -230,6 +235,14 @@ class IncompleteTemplateOptionGroup(TemplateOptionsDeprecation):
         if not is_set or set(is_set).issuperset(self.options[1:]):
             return []
         return is_set
+
+    @override
+    def option_fingerprint(self, option: str, value: Any) -> str:
+        """Return the part of the issue id of an option of the group."""
+        # Validated actions can hold objects without a stable representation
+        if option == self.action_option:
+            return option
+        return super().option_fingerprint(option, value)
 
     @override
     def describe_option(self, option: str) -> str:
@@ -313,6 +326,7 @@ FAN_INCOMPLETE_PRESET_MODE_OPTIONS = IncompleteTemplateOptionGroup(
     platform=Platform.FAN,
     options=("preset_mode", "preset_modes", "set_preset_mode"),
     list_option="preset_modes",
+    action_option="set_preset_mode",
     translation_key="deprecated_fan_incomplete_preset_mode_options",
     blueprint_translation_key="deprecated_fan_incomplete_preset_mode_options_blueprint",
     breaks_in_ha_version="2027.6.0",
@@ -322,6 +336,7 @@ VACUUM_INCOMPLETE_FAN_SPEED_OPTIONS = IncompleteTemplateOptionGroup(
     platform=Platform.VACUUM,
     options=("fan_speed", "fan_speeds", "set_fan_speed"),
     list_option="fan_speeds",
+    action_option="set_fan_speed",
     translation_key="deprecated_vacuum_incomplete_fan_speed_options",
     blueprint_translation_key="deprecated_vacuum_incomplete_fan_speed_options_blueprint",
     breaks_in_ha_version="2027.6.0",
