@@ -27,13 +27,12 @@ class AdsServiceArgument(StrEnum):
 
 
 # Types whose PLC representation is not an integer. Every other type is
-# written as one, so a value entered as text still reaches the PLC correctly.
+# written as one, so a value given as text in YAML still reaches the PLC.
 ADS_VALUE_VALIDATORS: dict[AdsType, Callable[[Any], Any]] = {
     # ctypes reads any non-empty string as True, so "off" has to be parsed.
     AdsType.BOOL: cv.boolean,
     AdsType.REAL: probatio.Coerce(float),
     AdsType.LREAL: probatio.Coerce(float),
-    AdsType.STRING: cv.string,
 }
 DEFAULT_ADS_VALUE_VALIDATOR = probatio.Coerce(int)
 
@@ -70,7 +69,7 @@ async def _async_handle_write_data_by_name(call: ServiceCall) -> None:
     ads = call.hass.data[DATA_ADS]
     ads_var: str = call.data[AdsServiceArgument.ADSVAR]
     ads_type: AdsType = call.data[AdsServiceArgument.ADSTYPE]
-    value: bool | float | str = call.data[AdsServiceArgument.VALUE]
+    value: bool | float = call.data[AdsServiceArgument.VALUE]
 
     # The hub logs a write the PLC refuses instead of raising it.
     await call.hass.async_add_executor_job(

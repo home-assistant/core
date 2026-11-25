@@ -30,7 +30,6 @@ ADS_VAR = "GVL.setpoint"
         pytest.param("real", 21, 21.0, pyads.PLCTYPE_REAL, id="real_as_int"),
         pytest.param("real", "21.5", 21.5, pyads.PLCTYPE_REAL, id="real_from_text"),
         pytest.param("lreal", 0.125, 0.125, pyads.PLCTYPE_LREAL, id="lreal"),
-        pytest.param("string", "hello", "hello", pyads.PLCTYPE_STRING, id="string"),
     ],
 )
 async def test_write_data_by_name(
@@ -110,11 +109,22 @@ async def test_write_data_by_name_error(
     assert f"Error writing {ADS_VAR}" in caplog.text
 
 
-def test_selector_lists_every_ads_type() -> None:
-    """Test the action selector offers exactly the types the action accepts."""
+# Their values are raw integers (ms, epoch seconds) or text, which a number
+# field cannot guide, so the UI does not offer them.
+TYPES_NOT_IN_SELECTOR = {
+    AdsType.STRING,
+    AdsType.TIME,
+    AdsType.DATE,
+    AdsType.DATE_AND_TIME,
+    AdsType.TOD,
+}
+
+
+def test_selector_lists_numeric_ads_types() -> None:
+    """Test the action selector offers bool and every numeric ADS type."""
     description = load_yaml_dict(str(Path(services.__file__).parent / "services.yaml"))
     options = description["write_data_by_name"]["fields"]["adstype"]["selector"][
         "select"
     ]["options"]
 
-    assert sorted(options) == sorted(AdsType)
+    assert sorted(options) == sorted(set(AdsType) - TYPES_NOT_IN_SELECTOR)
