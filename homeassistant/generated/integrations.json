@@ -1763,6 +1763,16 @@
       "config_flow": true,
       "iot_class": "local_polling"
     },
+    "bms_ble": {
+      "name": "BLE Battery Management System",
+      "integration_type": "device",
+      "categories": [
+        "energy.solar_batteries",
+        "energy.meters_monitoring"
+      ],
+      "config_flow": true,
+      "iot_class": "local_polling"
+    },
     "bond": {
       "name": "Bond",
       "integration_type": "hub",
