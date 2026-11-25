@@ -12,7 +12,6 @@ from homeassistant.components.device_tracker import (
     DEFAULT_CONSIDER_HOME,
     DOMAIN as TRACKER_DOMAIN,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import entity_registry as er
@@ -59,7 +58,7 @@ def unnamed_client_name(mac: str) -> str:
     return mac.replace(":", "_")
 
 
-def get_device_identifier(entry: ConfigEntry) -> tuple[str, str]:
+def get_device_identifier(entry: AsusWrtConfigEntry) -> tuple[str, str]:
     """Return the device registry identifier of the router."""
     return (DOMAIN, entry.unique_id or "AsusWRT")
 
@@ -189,7 +188,7 @@ class AsusWrtDevInfo:
 class AsusWrtRouter:
     """Representation of a AsusWrt router."""
 
-    def __init__(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
+    def __init__(self, hass: HomeAssistant, entry: AsusWrtConfigEntry) -> None:
         """Initialize a AsusWrt router."""
         self.hass = hass
         self._entry = entry

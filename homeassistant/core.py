@@ -53,7 +53,6 @@ from typing_extensions import Sentinel as sentinel
 from . import util
 from .const import (
     ATTR_DOMAIN,
-    ATTR_FRIENDLY_NAME,
     ATTR_SERVICE,
     ATTR_SERVICE_DATA,
     COMPRESSED_STATE_ATTRIBUTES,
@@ -78,6 +77,7 @@ from .const import (
     MAX_LENGTH_EVENT_EVENT_TYPE,
     MAX_LENGTH_STATE_STATE,
     STATE_UNKNOWN,
+    EntityStateAttribute,
     __version__,
 )
 from .exceptions import (
@@ -2023,9 +2023,9 @@ class State:
     @under_cached_property
     def name(self) -> str:
         """Name of this state."""
-        return self.attributes.get(ATTR_FRIENDLY_NAME) or self.object_id.replace(
-            "_", " "
-        )
+        return self.attributes.get(
+            EntityStateAttribute.FRIENDLY_NAME
+        ) or self.object_id.replace("_", " ")
 
     @under_cached_property
     def last_changed_timestamp(self) -> float:
@@ -2752,7 +2752,9 @@ class ServiceRegistry:
         the context. Will return NONE if the service does not exist as there is
         other error handling when calling the service if it does not exist.
         """
-        if not (handler := self._services[domain.lower()][service.lower()]):
+        if (
+            handler := self._services.get(domain.lower(), {}).get(service.lower())
+        ) is None:
             return SupportsResponse.NONE
         return handler.supports_response
 

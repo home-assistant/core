@@ -269,7 +269,6 @@ class SolarmanSensorEntity(SolarmanEntity, SensorEntity):
         description: SensorEntityDescription,
     ) -> None:
         """Initialize the sensor."""
-        assert coordinator.config_entry
         super().__init__(coordinator)
         self.entity_description = description
         self._attr_unique_id = f"{coordinator.config_entry.unique_id}_{description.key}"

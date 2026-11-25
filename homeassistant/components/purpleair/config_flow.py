@@ -12,7 +12,6 @@ from aiopurpleair.errors import InvalidApiKeyError, PurpleAirError
 import probatio
 
 from homeassistant.config_entries import (
-    ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
     OptionsFlowWithReload,
@@ -43,6 +42,7 @@ from homeassistant.helpers.selector import (
 )
 
 from .const import CONF_SENSOR_INDICES, DOMAIN, LOGGER
+from .coordinator import PurpleAirConfigEntry
 
 CONF_DISTANCE = "distance"
 CONF_NEARBY_SENSOR_OPTIONS = "nearby_sensor_options"
@@ -100,7 +100,7 @@ def async_get_nearby_sensors_schema(options: list[SelectOptionDict]) -> probatio
 
 @callback
 def async_get_remove_sensor_options(
-    hass: HomeAssistant, config_entry: ConfigEntry
+    hass: HomeAssistant, config_entry: PurpleAirConfigEntry
 ) -> list[SelectOptionDict]:
     """Return a set of already-configured sensors as SelectOptionDict objects."""
     device_registry = dr.async_get(hass)
@@ -201,7 +201,7 @@ class PurpleAirConfigFlow(ConfigFlow, domain=DOMAIN):
     @callback
     @override
     def async_get_options_flow(
-        config_entry: ConfigEntry,
+        config_entry: PurpleAirConfigEntry,
     ) -> PurpleAirOptionsFlowHandler:
         """Define the config flow to handle options."""
         return PurpleAirOptionsFlowHandler()

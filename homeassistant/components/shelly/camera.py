@@ -35,23 +35,25 @@ class RpcCameraEntityDescription(RpcEntityDescription, CameraEntityDescription):
     stream: int
 
 
-RPC_CAMERA_ENTITIES: Final = {
-    "stream_0": RpcCameraEntityDescription(
-        key="camera",
+RPC_CAMERA_ENTITIES: Final = (
+    RpcCameraEntityDescription(
+        key="stream_0",
+        components=("camera",),
         stream=0,
         translation_key="stream",
         translation_placeholders={"stream_id": "0"},
         removal_condition=lambda config, _, key: not config[key]["rtsp"]["enable"],
     ),
-    "stream_1": RpcCameraEntityDescription(
-        key="camera",
+    RpcCameraEntityDescription(
+        key="stream_1",
+        components=("camera",),
         stream=1,
         translation_key="stream",
         translation_placeholders={"stream_id": "1"},
         entity_registry_enabled_default=False,
         removal_condition=lambda config, _, key: not config[key]["rtsp"]["enable"],
     ),
-}
+)
 
 
 async def async_setup_entry(

@@ -170,6 +170,12 @@
     },
     "unload_platforms_failed": {
       "message": "Failed to unload one or more platforms."
+    },
+    "update_failed": {
+      "message": "Failed to fetch the data"
+    },
+    "update_failed_timeout": {
+      "message": "Timed out while fetching the data"
     }
   },
   "integration_category": {
@@ -385,7 +391,7 @@
       "name": "News & social media"
     },
     "other_ecosystems": {
-      "description": "Use your Home Assistant devices in Apple Home, Alexa, Google Assistant and other platforms.",
+      "description": "Use your Home Assistant devices in Apple Home, Alexa, Google Home and other platforms.",
       "name": "Other ecosystems"
     },
     "pets": {

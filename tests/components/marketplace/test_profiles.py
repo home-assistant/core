@@ -45,6 +45,7 @@ from . import (
     category_test_data_parametrized,
     get_marketplace,
     mocked_response,
+    setup_integration,
 )
 from .conftest import MarketplaceResponses
 from .const import REPOSITORY_PLUGIN, TOKEN
@@ -464,6 +465,30 @@ async def test_profile_suggested_for_the_country(
     ) is suggested
 
 
+async def test_profile_suggestion_belongs_to_the_entry(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test the suggestion is linked to the entry and removed with it."""
+    await setup_integration(hass, mock_config_entry)
+    hass.config.country = "CN"
+
+    await _unreachable_catalog(get_marketplace(hass))
+
+    issue = issue_registry.async_get_issue(DOMAIN, PROFILE_ISSUE_ID)
+    assert issue is not None
+    assert issue.config_entry_id == mock_config_entry.entry_id
+    assert issue.data == {
+        "entry_id": mock_config_entry.entry_id,
+        "profile": "hasscn",
+    }
+
+    await hass.config_entries.async_remove(mock_config_entry.entry_id)
+
+    assert issue_registry.async_get_issue(DOMAIN, PROFILE_ISSUE_ID) is None
+
+
 async def test_profile_suggestion_withdrawn_when_the_catalog_is_back(
     hass: HomeAssistant,
     marketplace: MarketplaceManager,
@@ -490,8 +515,10 @@ async def test_profile_suggestion_fix_flow(
     marketplace: MarketplaceManager,
     issue_registry: ir.IssueRegistry,
 ) -> None:
-    """Test accepting the suggestion switches the profile and reloads."""
+    """Test accepting the suggestion switches the profile of its entry and reloads."""
     assert await async_setup_component(hass, "repairs", {})
+    other_entry = MockConfigEntry(domain=DOMAIN)
+    other_entry.add_to_hass(hass)
     hass.config.country = "CN"
     await _unreachable_catalog(marketplace)
 
@@ -511,6 +538,7 @@ async def test_profile_suggestion_fix_flow(
 
     assert data["type"] == "create_entry"
     assert init_integration.options == {CONF_PROFILE: "hasscn"}
+    assert other_entry.options == {}
     assert get_marketplace(hass) is not marketplace
     assert get_marketplace(hass).configuration.profile.id == "hasscn"
     assert issue_registry.async_get_issue(DOMAIN, PROFILE_ISSUE_ID) is None
@@ -577,6 +605,66 @@ async def test_profile_suggestion_ignored_after_the_catalog_is_back(
     issue = issue_registry.async_get_issue(DOMAIN, PROFILE_ISSUE_ID)
     assert issue is not None
     assert issue.dismissed_version is not None
+    assert issue.config_entry_id == marketplace.configuration.config_entry.entry_id
+
+
+@pytest.mark.parametrize("next_step_id", ["use_profile", "ignore"])
+async def test_profile_suggestion_entry_removed_while_the_menu_is_open(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    mock_config_entry: MockConfigEntry,
+    issue_registry: ir.IssueRegistry,
+    next_step_id: str,
+) -> None:
+    """Test the fix flow neither changes nor creates anything for a removed entry."""
+    assert await async_setup_component(hass, "repairs", {})
+    await setup_integration(hass, mock_config_entry)
+    hass.config.country = "CN"
+    await _unreachable_catalog(get_marketplace(hass))
+
+    client = await hass_client()
+    data = await start_repair_fix_flow(client, DOMAIN, PROFILE_ISSUE_ID)
+    await hass.config_entries.async_remove(mock_config_entry.entry_id)
+    data = await process_repair_fix_flow(
+        client, data["flow_id"], json={"next_step_id": next_step_id}
+    )
+
+    assert data["type"] == "abort"
+    assert data["reason"] == "entry_removed"
+    assert issue_registry.async_get_issue(DOMAIN, PROFILE_ISSUE_ID) is None
+
+
+@pytest.mark.parametrize("next_step_id", ["use_profile", "ignore"])
+async def test_profile_suggestion_entry_added_again_while_the_menu_is_open(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    mock_config_entry: MockConfigEntry,
+    issue_registry: ir.IssueRegistry,
+    next_step_id: str,
+) -> None:
+    """Test the fix flow of a removed entry leaves the issue of the new entry."""
+    assert await async_setup_component(hass, "repairs", {})
+    await setup_integration(hass, mock_config_entry)
+    hass.config.country = "CN"
+    await _unreachable_catalog(get_marketplace(hass))
+
+    client = await hass_client()
+    data = await start_repair_fix_flow(client, DOMAIN, PROFILE_ISSUE_ID)
+    await hass.config_entries.async_remove(mock_config_entry.entry_id)
+    new_entry = MockConfigEntry(domain=DOMAIN)
+    await setup_integration(hass, new_entry)
+    await _unreachable_catalog(get_marketplace(hass))
+    data = await process_repair_fix_flow(
+        client, data["flow_id"], json={"next_step_id": next_step_id}
+    )
+
+    assert data["type"] == "abort"
+    assert data["reason"] == "entry_removed"
+    assert new_entry.options == {}
+    issue = issue_registry.async_get_issue(DOMAIN, PROFILE_ISSUE_ID)
+    assert issue is not None
+    assert issue.config_entry_id == new_entry.entry_id
+    assert issue.dismissed_version is None
 
 
 @pytest.mark.parametrize("download_profile", ["hasscn"])

@@ -2,7 +2,8 @@
 # name: test_get_statistics[auto_period_5minute_falls_back_to_hour]
   dict({
     'result': dict({
-      'entities': dict({
+      'period': '5minute',
+      'statistics': dict({
         'sensor.energy': dict({
           'csv': '''
             start,change
@@ -15,7 +16,7 @@
           'unit': 'kWh',
         }),
         'sensor.humidity': dict({
-          'error': 'No statistics are recorded for this entity.',
+          'error': 'No statistics are recorded for this ID.',
         }),
         'sensor.temperature': dict({
           'csv': '''
@@ -29,14 +30,14 @@
           'unit': '°C',
         }),
       }),
-      'period': '5minute',
     }),
   })
 # ---
 # name: test_get_statistics[auto_period_day]
   dict({
     'result': dict({
-      'entities': dict({
+      'period': 'day',
+      'statistics': dict({
         'sensor.energy': dict({
           'csv': '''
             start,change
@@ -49,7 +50,7 @@
           'unit': 'kWh',
         }),
         'sensor.humidity': dict({
-          'error': 'No statistics are recorded for this entity.',
+          'error': 'No statistics are recorded for this ID.',
         }),
         'sensor.temperature': dict({
           'csv': '''
@@ -63,14 +64,14 @@
           'unit': '°C',
         }),
       }),
-      'period': 'day',
     }),
   })
 # ---
 # name: test_get_statistics[auto_period_no_short_term]
   dict({
     'result': dict({
-      'entities': dict({
+      'period': 'hour',
+      'statistics': dict({
         'sensor.energy': dict({
           'csv': '''
             start,change
@@ -79,7 +80,7 @@
           'unit': 'kWh',
         }),
         'sensor.humidity': dict({
-          'error': 'No statistics are recorded for this entity.',
+          'error': 'No statistics are recorded for this ID.',
         }),
         'sensor.temperature': dict({
           'csv': '''
@@ -89,14 +90,14 @@
           'unit': '°C',
         }),
       }),
-      'period': 'hour',
     }),
   })
 # ---
 # name: test_get_statistics[defaults]
   dict({
     'result': dict({
-      'entities': dict({
+      'period': 'hour',
+      'statistics': dict({
         'sensor.energy': dict({
           'csv': '''
             start,change
@@ -129,7 +130,7 @@
           'unit': 'kWh',
         }),
         'sensor.humidity': dict({
-          'error': 'No statistics are recorded for this entity.',
+          'error': 'No statistics are recorded for this ID.',
         }),
         'sensor.temperature': dict({
           'csv': '''
@@ -163,14 +164,14 @@
           'unit': '°C',
         }),
       }),
-      'period': 'hour',
     }),
   })
 # ---
 # name: test_get_statistics[local_time_span]
   dict({
     'result': dict({
-      'entities': dict({
+      'period': 'hour',
+      'statistics': dict({
         'sensor.energy': dict({
           'csv': '''
             start,change
@@ -181,7 +182,7 @@
           'unit': 'kWh',
         }),
         'sensor.humidity': dict({
-          'error': 'No statistics are recorded for this entity.',
+          'error': 'No statistics are recorded for this ID.',
         }),
         'sensor.temperature': dict({
           'csv': '''
@@ -193,14 +194,14 @@
           'unit': '°C',
         }),
       }),
-      'period': 'hour',
     }),
   })
 # ---
 # name: test_get_statistics[period_5minute_no_fallback]
   dict({
     'result': dict({
-      'entities': dict({
+      'period': '5minute',
+      'statistics': dict({
         'sensor.energy': dict({
           'csv': '''
             start,change
@@ -209,7 +210,7 @@
           'unit': 'kWh',
         }),
         'sensor.humidity': dict({
-          'error': 'No statistics are recorded for this entity.',
+          'error': 'No statistics are recorded for this ID.',
         }),
         'sensor.temperature': dict({
           'csv': '''
@@ -219,14 +220,14 @@
           'unit': '°C',
         }),
       }),
-      'period': '5minute',
     }),
   })
 # ---
 # name: test_get_statistics[period_day]
   dict({
     'result': dict({
-      'entities': dict({
+      'period': 'day',
+      'statistics': dict({
         'sensor.energy': dict({
           'csv': '''
             start,change
@@ -237,7 +238,7 @@
           'unit': 'kWh',
         }),
         'sensor.humidity': dict({
-          'error': 'No statistics are recorded for this entity.',
+          'error': 'No statistics are recorded for this ID.',
         }),
         'sensor.temperature': dict({
           'csv': '''
@@ -249,14 +250,14 @@
           'unit': '°C',
         }),
       }),
-      'period': 'day',
     }),
   })
 # ---
 # name: test_get_statistics[period_day_exclusive_end]
   dict({
     'result': dict({
-      'entities': dict({
+      'period': 'day',
+      'statistics': dict({
         'sensor.energy': dict({
           'csv': '''
             start,change
@@ -266,7 +267,7 @@
           'unit': 'kWh',
         }),
         'sensor.humidity': dict({
-          'error': 'No statistics are recorded for this entity.',
+          'error': 'No statistics are recorded for this ID.',
         }),
         'sensor.temperature': dict({
           'csv': '''
@@ -277,14 +278,14 @@
           'unit': '°C',
         }),
       }),
-      'period': 'day',
     }),
   })
 # ---
 # name: test_hourly_fallback_per_entity
   dict({
     'result': dict({
-      'entities': dict({
+      'period': '5minute',
+      'statistics': dict({
         'sensor.energy': dict({
           'csv': '''
             start,change
@@ -306,45 +307,108 @@
           'unit': 'W',
         }),
       }),
-      'period': '5minute',
     }),
   })
 # ---
 # name: test_parameters_openapi
   dict({
-    'additionalProperties': False,
-    'properties': dict({
-      'end_time': dict({
-        'description': 'End of the time span as an ISO 8601 datetime. Local time is used when no UTC offset is given (default: now).',
-        'type': 'string',
-      }),
-      'entity_ids': dict({
-        'description': "Entity IDs to get the history for (e.g. 'sensor.outside_temperature').",
-        'items': dict({
+    'history__get_history': dict({
+      'additionalProperties': False,
+      'properties': dict({
+        'end_time': dict({
+          'description': 'End of the time span as an ISO 8601 datetime. Local time is used when no UTC offset is given (default: now).',
           'type': 'string',
         }),
-        'minItems': 1,
-        'type': 'array',
+        'period': dict({
+          'description': 'The length of each row. 5minute rows are usually kept for 10 days (default: picked from the length of the time span).',
+          'enum': list([
+            '5minute',
+            'hour',
+            'day',
+            'week',
+            'month',
+          ]),
+          'type': 'string',
+        }),
+        'start_time': dict({
+          'description': 'Start of the time span as an ISO 8601 datetime. Local time is used when no UTC offset is given (default: 24 hours before end_time).',
+          'type': 'string',
+        }),
+        'statistic_ids': dict({
+          'description': "Entity IDs, like 'sensor.outside_temperature', or the IDs of statistics without an entity, like 'opower:electricity'. history__search_statistics finds them.",
+          'items': dict({
+            'type': 'string',
+          }),
+          'minItems': 1,
+          'type': 'array',
+        }),
       }),
-      'period': dict({
-        'description': 'The length of each row. 5minute rows are usually kept for 10 days (default: picked from the length of the time span).',
-        'enum': list([
-          '5minute',
-          'hour',
-          'day',
-          'week',
-          'month',
-        ]),
-        'type': 'string',
-      }),
-      'start_time': dict({
-        'description': 'Start of the time span as an ISO 8601 datetime. Local time is used when no UTC offset is given (default: 24 hours before end_time).',
-        'type': 'string',
-      }),
+      'required': list([
+        'statistic_ids',
+      ]),
+      'type': 'object',
     }),
-    'required': list([
-      'entity_ids',
-    ]),
-    'type': 'object',
+    'history__search_statistics': dict({
+      'additionalProperties': False,
+      'properties': dict({
+        'offset': dict({
+          'default': 0,
+          'description': 'Number of results to skip. Use the next_offset of the previous result.',
+          'minimum': 0,
+          'type': 'integer',
+        }),
+        'query': dict({
+          'description': 'Text to find in the statistic name, entity alias or ID, case-insensitive.',
+          'format': 'strip',
+          'type': 'string',
+        }),
+        'statistic_type': dict({
+          'description': 'sum for meters, mean for measurements.',
+          'enum': list([
+            'sum',
+            'mean',
+          ]),
+          'type': 'string',
+        }),
+        'unit_class': dict({
+          'description': 'The kind of unit. The energy dashboard uses energy and volume for meters, and power and volume_flow_rate for rates.',
+          'enum': list([
+            'apparent_power',
+            'area',
+            'blood_glucose_concentration',
+            'carbon_monoxide',
+            'concentration',
+            'conductivity',
+            'data_rate',
+            'distance',
+            'duration',
+            'electric_current',
+            'energy',
+            'energy_distance',
+            'frequency',
+            'information',
+            'mass',
+            'nitrogen_dioxide',
+            'nitrogen_monoxide',
+            'ozone',
+            'power',
+            'pressure',
+            'radiation_concentration',
+            'reactive_energy',
+            'reactive_power',
+            'speed',
+            'sulphur_dioxide',
+            'temperature',
+            'temperature_delta',
+            'unitless',
+            'voltage',
+            'volume',
+            'volume_flow_rate',
+          ]),
+          'type': 'string',
+        }),
+      }),
+      'type': 'object',
+    }),
   })
 # ---

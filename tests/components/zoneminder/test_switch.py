@@ -9,17 +9,10 @@ import pytest
 from pytest_homeassistant.common import async_fire_time_changed
 from zoneminder.monitor import MonitorState
 
-from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
+from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN, SwitchService
 from homeassistant.components.zoneminder.const import DOMAIN
 from homeassistant.components.zoneminder.switch import PLATFORM_SCHEMA
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
-    STATE_OFF,
-    STATE_ON,
-    STATE_UNKNOWN,
-)
+from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNKNOWN, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
@@ -175,8 +168,8 @@ async def test_switch_turn_on_service(
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "switch.front_door_state"},
+        SwitchService.TURN_ON,
+        {TargetKey.ENTITY_ID: "switch.front_door_state"},
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -199,8 +192,8 @@ async def test_switch_turn_off_service(
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: "switch.front_door_state"},
+        SwitchService.TURN_OFF,
+        {TargetKey.ENTITY_ID: "switch.front_door_state"},
         blocking=True,
     )
     await hass.async_block_till_done()

@@ -2,8 +2,10 @@
 
 from typing import Any
 
+from homeassistant.components.diagnostics import async_redact_data
 from homeassistant.core import HomeAssistant
 
+from .const import CONNECTION_IP_SENSORS_KEYS
 from .router import FreeboxConfigEntry
 
 STORAGE_KEYS_TO_OMIT = {
@@ -59,17 +61,17 @@ async def async_get_config_entry_diagnostics(
     device_info = router.device_info
     return {
         "router": {
-            "model": device_info.get("model"),
-            "model_id": device_info.get("model_id"),
-            "sw_version": device_info.get("sw_version"),
-            "hw_version": device_info.get("hw_version"),
+            "model": device_info.model,
+            "model_id": device_info.model_id,
+            "sw_version": device_info.sw_version,
+            "hw_version": device_info.hw_version,
             "supports_hosts": router.supports_hosts,
             "supports_raid": router.supports_raid,
             "home_granted": router.home_granted,
             "tracked_devices": len(router.devices),
             "calls": len(router.call_list),
         },
-        "sensors": router.sensors,
+        "sensors": async_redact_data(router.sensors, CONNECTION_IP_SENSORS_KEYS),
         "disks": _omit(list(router.disks.values()), STORAGE_KEYS_TO_OMIT),
         "raids": _omit(list(router.raids.values()), STORAGE_KEYS_TO_OMIT),
         "home_devices": [_home_node(node) for node in router.home_devices.values()],

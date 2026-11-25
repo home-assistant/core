@@ -1,5 +1,7 @@
 """Provides device actions for lights."""
 
+from typing import Any
+
 import probatio
 
 from homeassistant.components.device_automation import (
@@ -14,6 +16,7 @@ from homeassistant.const import (
     CONF_DOMAIN,
     CONF_ENTITY_ID,
     CONF_TYPE,
+    TargetKey,
 )
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -79,7 +82,7 @@ async def async_call_action_from_config(
         )
         return
 
-    data = {ATTR_ENTITY_ID: config[ATTR_ENTITY_ID]}
+    data: dict[str, Any] = {TargetKey.ENTITY_ID: config[ATTR_ENTITY_ID]}
 
     if config[CONF_TYPE] == TYPE_BRIGHTNESS_INCREASE:
         data[LightServiceArgument.BRIGHTNESS_STEP_PCT] = 10

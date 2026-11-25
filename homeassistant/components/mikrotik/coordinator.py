@@ -57,7 +57,10 @@ class MikrotikData:
     """Handle all communication with the Mikrotik API."""
 
     def __init__(
-        self, hass: HomeAssistant, config_entry: ConfigEntry, api: librouteros.Api
+        self,
+        hass: HomeAssistant,
+        config_entry: MikrotikConfigEntry,
+        api: librouteros.Api,
     ) -> None:
         """Initialize the Mikrotik Client."""
         self.hass = hass
@@ -401,6 +404,17 @@ class MikrotikDataUpdateCoordinator(DataUpdateCoordinator[None]):
     def serial_num(self) -> str:
         """Return the serial number of the hub."""
         return self._mk_data.serial_number
+
+    @property
+    def interface_scope(self) -> str:
+        """Return the prefix that scopes interface identifiers to this router.
+
+        CHR and x86 installs have no routerboard serial number, so the config
+        entry ID keeps their interfaces apart instead.
+        """
+        if self.serial_num == "None":
+            return self.config_entry.entry_id
+        return self.serial_num
 
     @property
     def option_detection_time(self) -> timedelta:
