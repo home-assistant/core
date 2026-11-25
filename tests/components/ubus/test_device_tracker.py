@@ -1640,6 +1640,99 @@ async def test_disconnected_tracker_handed_to_other_entry_on_removal(
         (dr.CONNECTION_NETWORK_MAC, MAC_PHONE), entry_a.entry_id
     )
 
+    # The client reconnects to router B; the handed-over tracker reports
+    # it again, so the unavailable state is not permanent.
+    ubus[MOCK_HOST_B].get_hostapd_clients.return_value = {
+        "clients": {MAC_PHONE: {"authorized": True}}
+    }
+    freezer.tick(timedelta(seconds=30))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    state = hass.states.get(handed_over)
+    assert state is not None
+    assert state.state == STATE_HOME
+    assert state.attributes["source"] == MOCK_HOST_B
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_migration_survivor_handed_to_remaining_entry_on_removal(
+    hass: HomeAssistant,
+    mock_ubus_by_host: tuple[MagicMock, dict[str, MagicMock]],
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test a case-migration survivor is handed to the remaining entry.
+
+    The migration deletes the duplicate's device, so the removal
+    handoff must move the survivor's own device without leaving a
+    broken reference behind.
+    """
+    _mock, _ = mock_ubus_by_host
+    entry_a = MockConfigEntry(domain=DOMAIN, data=MOCK_CONFIG, title=MOCK_HOST)
+    entry_a.add_to_hass(hass)
+    entry_b = MockConfigEntry(
+        domain=DOMAIN,
+        data={**MOCK_CONFIG, CONF_HOST: MOCK_HOST_B},
+        title=MOCK_HOST_B,
+    )
+    entry_b.add_to_hass(hass)
+
+    device_a = device_registry.async_get_or_create(
+        config_entry_id=entry_a.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, MAC_PHONE.upper())},
+    )
+    raw_entry = entity_registry.async_get_or_create(
+        DEVICE_TRACKER_DOMAIN,
+        DOMAIN,
+        MAC_PHONE.upper(),
+        config_entry=entry_a,
+        device_id=device_a.id,
+    )
+    raw_id = raw_entry.entity_id
+    device_b = device_registry.async_get_or_create(
+        config_entry_id=entry_b.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, MAC_PHONE)},
+    )
+    duplicate_id = entity_registry.async_get_or_create(
+        DEVICE_TRACKER_DOMAIN,
+        DOMAIN,
+        MAC_PHONE,
+        config_entry=entry_b,
+        device_id=device_b.id,
+    ).entity_id
+
+    router_a = _mock(f"http://{MOCK_HOST}/ubus", "root", "password", verify=True)
+    router_a.get_hostapd_clients.return_value = {
+        "clients": {MAC_PHONE: {"authorized": True}}
+    }
+    # Setting up either entry sets up both.
+    assert await hass.config_entries.async_setup(entry_a.entry_id)
+    await hass.async_block_till_done()
+    assert entry_b.state is ConfigEntryState.LOADED
+
+    # The established tracker survived the migration with the
+    # normalized unique id; the duplicate and its device are gone.
+    assert entity_registry.async_get(raw_id) is not None
+    assert entity_registry.async_get(raw_id).unique_id == MAC_PHONE
+    assert entity_registry.async_get(duplicate_id) is None
+    assert device_registry.async_get(device_b.id) is None
+
+    # Removing entry A hands the survivor, with its device, to entry B.
+    await hass.config_entries.async_remove(entry_a.entry_id)
+    await hass.async_block_till_done()
+
+    assert entity_registry.async_get(raw_id) is not None
+    assert entity_registry.async_get(raw_id).config_entry_id == entry_b.entry_id
+    assert device_registry.async_get(device_a.id) is not None
+    assert device_registry.async_get(device_a.id).config_entry_id == entry_b.entry_id
+    state = hass.states.get(raw_id)
+    assert state is not None
+    # Entry A's records went with its removal, and router B has never
+    # seen the client, so no healthy router can report it.
+    assert state.state == STATE_UNAVAILABLE
+    assert "source" not in state.attributes
+
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_tracker_handed_to_loaded_entry_on_removal(
