@@ -68,8 +68,15 @@ def server(
 
 
 @pytest.fixture
-def mock_tempfile() -> Generator[Mock]:
-    """Fixture to mock NamedTemporaryFile."""
+def mock_remove_config_file() -> Generator[Mock]:
+    """Fixture to mock removing the config file."""
+    with patch("homeassistant.components.go2rtc.server.os.remove") as mock_remove:
+        yield mock_remove
+
+
+@pytest.fixture
+def mock_tempfile(mock_remove_config_file: Mock) -> Generator[Mock]:
+    """Fixture to mock NamedTemporaryFile, and removing it."""
     with patch(
         "homeassistant.components.go2rtc.server.NamedTemporaryFile", autospec=True
     ) as mock_tempfile:
@@ -150,6 +157,7 @@ async def test_server_run_success(
     server: Server,
     caplog: pytest.LogCaptureFixture,
     mock_tempfile: Mock,
+    mock_remove_config_file: Mock,
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test that the server runs successfully."""
@@ -172,11 +180,25 @@ async def test_server_run_success(
     # Verify go2rtc binary stdout was logged with debug level
     assert_server_output_logged(server_stdout, caplog, logging.DEBUG)
 
+    mock_remove_config_file.assert_not_called()
     await server.stop()
     mock_create_subprocess.return_value.terminate.assert_called_once()
+    # The config file is removed, as go2rtc also writes stream sources to it
+    mock_remove_config_file.assert_called_once_with("test.yaml")
 
     # Verify go2rtc binary stdout was not logged with warning level
     assert_server_output_not_logged(server_stdout, caplog, logging.WARNING)
+
+
+@pytest.mark.usefixtures("mock_tempfile", "rest_client")
+async def test_server_config_file_already_removed(
+    mock_create_subprocess: MagicMock, server: Server, mock_remove_config_file: Mock
+) -> None:
+    """Test stopping the server when the config file is already gone."""
+    mock_remove_config_file.side_effect = FileNotFoundError
+    await server.start()
+    await server.stop()
+    mock_remove_config_file.assert_called_once_with("test.yaml")
 
 
 @pytest.mark.usefixtures("mock_tempfile")
