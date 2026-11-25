@@ -2,6 +2,7 @@
 
 from unittest.mock import AsyncMock
 
+from freezegun.api import FrozenDateTimeFactory
 from pylondonair import (
     NO_SPECIES_DATA,
     LondonAirConnectionError,
@@ -9,24 +10,47 @@ from pylondonair import (
     LondonAirUpdateError,
 )
 import pytest
-from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
-from homeassistant.components.london_air.const import CONF_LOCATIONS, DOMAIN
-from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.components.london_air.const import (
+    CONF_LOCATIONS,
+    DOMAIN,
+    SCAN_INTERVAL,
+)
+from homeassistant.config_entries import ConfigEntryState
+from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers.device_registry import DeviceEntryType
 from homeassistant.setup import async_setup_component
 
 
 @pytest.mark.usefixtures("setup_entry")
-async def test_valid_state(hass: HomeAssistant) -> None:
+async def test_valid_state(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
+) -> None:
     """Test for operational london_air sensor with proper attributes."""
-    state = hass.states.get("sensor.merton")
+    state = hass.states.get("sensor.merton_air_quality")
     assert state is not None
     assert state.state == "Low"
     assert state.attributes["icon"] == "mdi:cloud-outline"
     assert state.attributes["updated"] == "2017-08-03 03:00:00"
     assert state.attributes["sites"] == 2
-    assert state.attributes["friendly_name"] == "Merton"
+    assert state.attributes["friendly_name"] == "Merton Air Quality"
+
+    entity_entry = entity_registry.async_get("sensor.merton_air_quality")
+    assert entity_entry is not None
+    assert entity_entry.unique_id == "Merton"
+    assert entity_entry.device_id is not None
+
+    device_entry = device_registry.async_get(entity_entry.device_id)
+    assert device_entry is not None
+    assert device_entry.entry_type is DeviceEntryType.SERVICE
+    assert device_entry.name == "Merton"
+    assert device_entry.manufacturer == "Imperial College London"
+    assert (DOMAIN, "Merton") in device_entry.identifiers
 
     sites = state.attributes["data"]
     assert sites is not None
@@ -64,7 +88,7 @@ async def test_api_failure(
     locations: list[str],
     mock_london_air_client: AsyncMock,
 ) -> None:
-    """Test for failure in the API."""
+    """Test that a failed first refresh leaves the entry in setup retry."""
     mock_london_air_client.async_update.side_effect = error
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -75,11 +99,45 @@ async def test_api_failure(
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-    state = hass.states.get("sensor.merton")
+    assert entry.state is ConfigEntryState.SETUP_RETRY
+    assert hass.states.get("sensor.merton_air_quality") is None
+
+
+@pytest.mark.parametrize(
+    "error",
+    [
+        pytest.param(
+            LondonAirConnectionError("Request to London Air API failed"),
+            id="connection-error",
+        ),
+        pytest.param(
+            LondonAirUpdateError("Invalid JSON from London Air API"),
+            id="update-error",
+        ),
+    ],
+)
+async def test_update_failure_keeps_last_data(
+    hass: HomeAssistant,
+    error: LondonAirConnectionError | LondonAirUpdateError,
+    setup_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+    mock_london_air_client: AsyncMock,
+) -> None:
+    """Test that a failed update keeps the last good data."""
+    state = hass.states.get("sensor.merton_air_quality")
     assert state is not None
-    assert state.state == "unknown"
-    assert state.attributes["updated"] is None
-    assert state.attributes["sites"] == 0
+    assert state.state == "Low"
+
+    mock_london_air_client.async_update.side_effect = error
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    # A failed update marks the entity unavailable but keeps the last good data
+    state = hass.states.get("sensor.merton_air_quality")
+    assert state is not None
+    assert state.state == STATE_UNAVAILABLE
+    assert setup_entry.runtime_data.data is not None
 
 
 @pytest.mark.parametrize(
@@ -87,12 +145,12 @@ async def test_api_failure(
     [
         pytest.param(
             ["City of London"],
-            "sensor.city_of_london",
+            "sensor.city_of_london_air_quality",
             id="authority-without-sites",
         ),
         pytest.param(
             ["Barking and Dagenham"],
-            "sensor.barking_and_dagenham",
+            "sensor.barking_and_dagenham_air_quality",
             id="authority-not-in-data",
         ),
     ],
@@ -111,7 +169,7 @@ async def test_authority_without_site_data(hass: HomeAssistant, entity_id: str) 
 @pytest.mark.usefixtures("setup_entry")
 async def test_site_without_pollutants(hass: HomeAssistant) -> None:
     """Test a site that reports no pollutant data."""
-    state = hass.states.get("sensor.barnet")
+    state = hass.states.get("sensor.barnet_air_quality")
     assert state is not None
     assert state.state == "Low"
     site = state.attributes["data"][0]
@@ -121,20 +179,17 @@ async def test_site_without_pollutants(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.usefixtures("setup_entry")
-async def test_second_update_throttled(
-    hass: HomeAssistant, mock_london_air_client: AsyncMock
+async def test_update_interval(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_london_air_client: AsyncMock,
 ) -> None:
-    """Test that a second update within the scan interval does not refetch."""
+    """Test that the coordinator polls at the configured interval."""
     assert mock_london_air_client.async_update.await_count == 1
-
-    assert await async_setup_component(hass, "homeassistant", {})
-    await hass.services.async_call(
-        "homeassistant",
-        "update_entity",
-        {ATTR_ENTITY_ID: "sensor.merton"},
-        blocking=True,
-    )
-    assert mock_london_air_client.async_update.await_count == 1
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert mock_london_air_client.async_update.await_count == 2
 
 
 async def test_multiple_yaml_blocks_merge_locations(
@@ -160,5 +215,5 @@ async def test_multiple_yaml_blocks_merge_locations(
     assert len(entries) == 1
     assert set(entries[0].data[CONF_LOCATIONS]) == {"Merton", "Barnet"}
 
-    assert hass.states.get("sensor.merton") is not None
-    assert hass.states.get("sensor.barnet") is not None
+    assert hass.states.get("sensor.merton_air_quality") is not None
+    assert hass.states.get("sensor.barnet_air_quality") is not None

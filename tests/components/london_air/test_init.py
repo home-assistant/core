@@ -7,6 +7,7 @@ from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.london_air.const import CONF_LOCATIONS, DOMAIN
 from homeassistant.config_entries import ConfigEntryState
+from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.setup import async_setup_component
@@ -17,7 +18,7 @@ async def test_load_unload_entry(
 ) -> None:
     """Test loading and unloading the config entry."""
     assert setup_entry.state is ConfigEntryState.LOADED
-    state = hass.states.get("sensor.merton")
+    state = hass.states.get("sensor.merton_air_quality")
     assert state is not None
     assert state.state == "Low"
 
@@ -25,7 +26,9 @@ async def test_load_unload_entry(
     await hass.async_block_till_done()
 
     assert setup_entry.state is ConfigEntryState.NOT_LOADED
-    assert hass.states.get("sensor.merton") is None
+    state = hass.states.get("sensor.merton_air_quality")
+    assert state is not None
+    assert state.state == STATE_UNAVAILABLE
 
 
 async def test_import_from_yaml(
@@ -47,7 +50,7 @@ async def test_import_from_yaml(
     assert len(entries) == 1
     assert entries[0].data == {CONF_LOCATIONS: ["Merton"]}
 
-    state = hass.states.get("sensor.merton")
+    state = hass.states.get("sensor.merton_air_quality")
     assert state is not None
     assert state.state == "Low"
 
