@@ -58,7 +58,8 @@ class EsphomeTimerList(InMemoryTimerListEntity):
     """Timers of an ESPHome voice satellite, which the device shows and rings.
 
     Timers are kept in Home Assistant, so they keep running while the device is
-    disconnected; it misses the changes made in the meantime.
+    disconnected. When it connects again, it is sent every running timer and
+    told to drop the ones that ended in the meantime.
     """
 
     _attr_has_entity_name = True
@@ -68,6 +69,10 @@ class EsphomeTimerList(InMemoryTimerListEntity):
         """Initialize the timer list."""
         super().__init__()
         self._entry_data = entry_data
+        self._was_available = entry_data.available
+        # Running timers the device was told about, to cancel there when they
+        # end while it is disconnected
+        self._device_timers: dict[str, str | None] = {}
         self._attr_unique_id = f"{mac_address}-{TIMER_LIST_KEY}"
         self._attr_device_info = DeviceInfo(
             connections={(dr.CONNECTION_NETWORK_MAC, mac_address)}
@@ -77,7 +82,49 @@ class EsphomeTimerList(InMemoryTimerListEntity):
     async def async_added_to_hass(self) -> None:
         """Send timer changes to the device."""
         await super().async_added_to_hass()
+        self._was_available = self._entry_data.available
         self.async_on_remove(self.async_subscribe_updates(self._async_send_event))
+        self.async_on_remove(
+            self._entry_data.async_subscribe_device_updated(self._async_device_updated)
+        )
+
+    @callback
+    def _async_device_updated(self) -> None:
+        """Bring the device's timers up to date when it connects again."""
+        was_available = self._was_available
+        self._was_available = self._entry_data.available
+        if was_available or not self._entry_data.available:
+            return
+
+        running = {
+            timer.timer_id: timer
+            for timer in self.timers
+            if timer.status in (TimerStatus.ACTIVE, TimerStatus.PAUSED)
+        }
+        for timer_id, name in list(self._device_timers.items()):
+            if timer_id not in running:
+                # Ended while the device was away: drop it there without a
+                # late ring
+                self._async_send(
+                    VoiceAssistantTimerEventType.VOICE_ASSISTANT_TIMER_CANCELLED,
+                    timer_id,
+                    name,
+                    0,
+                    0,
+                    False,
+                )
+        now = dt_util.utcnow()
+        for item in running.values():
+            # The device may have missed changes or restarted and lost the
+            # timer; an update adds a timer it does not know.
+            self._async_send(
+                VoiceAssistantTimerEventType.VOICE_ASSISTANT_TIMER_UPDATED,
+                item.timer_id,
+                item.name,
+                math.ceil(item.total_duration.total_seconds()),
+                math.ceil(item.remaining_at(now).total_seconds()),
+                item.status == TimerStatus.ACTIVE,
+            )
 
     @callback
     def _async_send_event(self, event: TimerListEvent) -> None:
@@ -102,11 +149,33 @@ class EsphomeTimerList(InMemoryTimerListEntity):
             )
             is_active = item.status == TimerStatus.ACTIVE
 
-        self._entry_data.client.send_voice_assistant_timer_event(
+        self._async_send(
             native_event_type,
             item.timer_id,
             item.name,
             math.ceil(item.total_duration.total_seconds()),
             seconds_left,
             is_active,
+        )
+
+    @callback
+    def _async_send(
+        self,
+        event_type: VoiceAssistantTimerEventType,
+        timer_id: str,
+        name: str | None,
+        total_seconds: int,
+        seconds_left: int,
+        is_active: bool,
+    ) -> None:
+        """Send a timer event to the device and track what it shows."""
+        if event_type in (
+            VoiceAssistantTimerEventType.VOICE_ASSISTANT_TIMER_CANCELLED,
+            VoiceAssistantTimerEventType.VOICE_ASSISTANT_TIMER_FINISHED,
+        ):
+            self._device_timers.pop(timer_id, None)
+        else:
+            self._device_timers[timer_id] = name
+        self._entry_data.client.send_voice_assistant_timer_event(
+            event_type, timer_id, name, total_seconds, seconds_left, is_active
         )

@@ -257,9 +257,93 @@ async def test_timers_kept_while_disconnected(
     await _call(hass, entity_id, "pause_timer", timer_id=result["timer_id"])
 
     assert hass.states.get(entity_id).state == "0"
-    mock_client.send_voice_assistant_timer_event.assert_called_once_with(
-        UPDATED, result["timer_id"], None, 90, 90, False
+    assert mock_client.send_voice_assistant_timer_event.mock_calls == [
+        # The change missed while disconnected
+        call(UPDATED, result["timer_id"], None, 90, 90, True),
+        call(UPDATED, result["timer_id"], None, 90, 90, False),
+    ]
+
+
+async def test_timers_resent_on_reconnect(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_client: APIClient,
+    mock_device: MockESPHomeDevice,
+) -> None:
+    """Test the device gets its running timers again when it reconnects."""
+    entity_id = _timer_list_entity_id(hass, mock_device)
+    assert entity_id is not None
+    cancelled = await _call(
+        hass, entity_id, "create_timer", name="cancelled", duration={"seconds": 60}
     )
+    finished = await _call(
+        hass, entity_id, "create_timer", name="finished", duration={"seconds": 60}
+    )
+    ran_out = await _call(
+        hass, entity_id, "create_timer", name="ran out", duration={"seconds": 20}
+    )
+    removed = await _call(
+        hass, entity_id, "create_timer", name="removed", duration={"seconds": 60}
+    )
+    paused = await _call(
+        hass, entity_id, "create_timer", name="paused", duration={"seconds": 120}
+    )
+    kept = await _call(
+        hass, entity_id, "create_timer", name="kept", duration={"seconds": 300}
+    )
+
+    await mock_device.mock_disconnect(expected_disconnect=False)
+    await hass.async_block_till_done()
+    await _call(hass, entity_id, "cancel_timer", timer_id=cancelled["timer_id"])
+    await _call(hass, entity_id, "finish_timer", timer_id=finished["timer_id"])
+    await _call(hass, entity_id, "remove_timer", timer_id=removed["timer_id"])
+    await _call(hass, entity_id, "pause_timer", timer_id=paused["timer_id"])
+    new = await _call(
+        hass, entity_id, "create_timer", name="new", duration={"seconds": 30}
+    )
+    freezer.tick(timedelta(seconds=25))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    mock_client.send_voice_assistant_timer_event.reset_mock()
+
+    await mock_device.mock_connect()
+    await hass.async_block_till_done()
+
+    assert mock_client.send_voice_assistant_timer_event.mock_calls == [
+        # Ended while disconnected: cancelled, so the device does not ring late
+        call(CANCELLED, cancelled["timer_id"], "cancelled", 0, 0, False),
+        call(CANCELLED, finished["timer_id"], "finished", 0, 0, False),
+        call(CANCELLED, ran_out["timer_id"], "ran out", 0, 0, False),
+        call(CANCELLED, removed["timer_id"], "removed", 0, 0, False),
+        call(UPDATED, paused["timer_id"], "paused", 120, 120, False),
+        call(UPDATED, kept["timer_id"], "kept", 300, 275, True),
+        call(UPDATED, new["timer_id"], "new", 30, 5, True),
+    ]
+
+    # Only what changed is sent on the next reconnect
+    await mock_device.mock_disconnect(expected_disconnect=False)
+    await hass.async_block_till_done()
+    mock_client.send_voice_assistant_timer_event.reset_mock()
+    await mock_device.mock_connect()
+    await hass.async_block_till_done()
+
+    assert mock_client.send_voice_assistant_timer_event.mock_calls == [
+        call(UPDATED, paused["timer_id"], "paused", 120, 120, False),
+        call(UPDATED, kept["timer_id"], "kept", 300, 275, True),
+        call(UPDATED, new["timer_id"], "new", 30, 5, True),
+    ]
+
+
+async def test_nothing_resent_without_timers(
+    hass: HomeAssistant, mock_client: APIClient, mock_device: MockESPHomeDevice
+) -> None:
+    """Test a reconnect sends nothing when there are no timers."""
+    await mock_device.mock_disconnect(expected_disconnect=False)
+    await hass.async_block_till_done()
+    await mock_device.mock_connect()
+    await hass.async_block_till_done()
+
+    mock_client.send_voice_assistant_timer_event.assert_not_called()
 
 
 async def test_no_timer_list_without_timers(
