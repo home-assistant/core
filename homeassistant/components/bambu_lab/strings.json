@@ -31,6 +31,11 @@
         "name": "Camera"
       }
     },
+    "light": {
+      "chamber_light": {
+        "name": "Chamber light"
+      }
+    },
     "sensor": {
       "bed_temperature": {
         "name": "Bed temperature"
@@ -69,6 +74,9 @@
   "exceptions": {
     "cannot_connect": {
       "message": "Could not connect to the printer at {host}."
+    },
+    "command_error": {
+      "message": "Could not send the command to the printer."
     },
     "invalid_auth": {
       "message": "The printer rejected the access code."
