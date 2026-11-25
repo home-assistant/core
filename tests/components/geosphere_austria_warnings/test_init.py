@@ -17,6 +17,7 @@ from homeassistant.components.geosphere_austria_warnings.coordinator import (
     UPDATE_INTERVAL,
 )
 from homeassistant.config_entries import ConfigEntryState
+from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -90,6 +91,54 @@ async def test_warnings_fetch_skipped_when_unchanged(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
     assert mock_client.get_warnings_for_coords.call_count == 2
+
+
+@pytest.mark.parametrize(
+    ("ha_language", "api_language"),
+    [
+        pytest.param("de", "de", id="german"),
+        pytest.param("de-CH", "de", id="swiss_german"),
+        pytest.param("en", "en", id="english"),
+        pytest.param("fr", "en", id="unsupported_falls_back_to_english"),
+    ],
+)
+async def test_warnings_language(
+    hass: HomeAssistant,
+    mock_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    ha_language: str,
+    api_language: str,
+) -> None:
+    """Test that warnings are fetched in the Home Assistant language."""
+    hass.config.language = ha_language
+    await setup_integration(hass, mock_config_entry)
+
+    mock_client.get_warnings_for_coords.assert_called_once_with(
+        mock_config_entry.data[CONF_LATITUDE],
+        mock_config_entry.data[CONF_LONGITUDE],
+        api_language,
+    )
+
+
+@pytest.mark.freeze_time("2023-03-27 12:00:00+00:00")
+async def test_warnings_refetched_when_language_changes(
+    hass: HomeAssistant,
+    mock_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test that a language change refetches unchanged warnings."""
+    hass.config.language = "en"
+    await setup_integration(hass, mock_config_entry)
+    assert mock_client.get_warnings_for_coords.call_count == 1
+
+    hass.config.language = "de"
+    freezer.tick(UPDATE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert mock_client.get_warnings_for_coords.call_count == 2
+    assert mock_client.get_warnings_for_coords.call_args.args[2] == "de"
 
 
 @pytest.mark.parametrize(

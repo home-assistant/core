@@ -58,6 +58,7 @@ class GeoSphereUpdateCoordinator(DataUpdateCoordinator[GeoSphereData]):
         )
         self.client = GeoSphereWarningsClient(async_get_clientsession(hass))
         self._last_modified: datetime | None = None
+        self._language: str | None = None
 
     @cached_property
     def warnings_portal_url(self) -> str:
@@ -73,6 +74,8 @@ class GeoSphereUpdateCoordinator(DataUpdateCoordinator[GeoSphereData]):
     @override
     async def _async_update_data(self) -> GeoSphereData:
         """Fetch warnings, skipping the full fetch when nothing changed."""
+        # The Warn API only provides German and English warning texts.
+        language = "de" if self.hass.config.language.startswith("de") else "en"
         try:
             last_modified = await self.client.get_last_modified()
             if (
@@ -80,10 +83,12 @@ class GeoSphereUpdateCoordinator(DataUpdateCoordinator[GeoSphereData]):
                 or last_modified is None
                 or self._last_modified is None
                 or last_modified != self._last_modified
+                or language != self._language
             ):
                 location_warnings = await self.client.get_warnings_for_coords(
                     self.config_entry.data[CONF_LATITUDE],
                     self.config_entry.data[CONF_LONGITUDE],
+                    language,
                 )
             else:
                 location_warnings = self.data.location_warnings
@@ -105,6 +110,7 @@ class GeoSphereUpdateCoordinator(DataUpdateCoordinator[GeoSphereData]):
                 translation_placeholders={"error": str(err)},
             ) from err
         self._last_modified = last_modified
+        self._language = language
         now = dt_util.utcnow()
         return GeoSphereData(
             location_warnings=location_warnings,
