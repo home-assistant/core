@@ -192,3 +192,7 @@ async def test_mjpeg_from_stream(
 
     assert chunk.endswith(b"frame")
     assert mock_create_stream.call_args.args[1] == STREAM_URL
+    # A stream that just started has no image yet, so the camera waits for one.
+    mock_create_stream.return_value.async_get_image.assert_called_with(
+        width=None, height=None, wait_for_next_keyframe=True
+    )

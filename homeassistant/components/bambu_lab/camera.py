@@ -81,8 +81,14 @@ class BambuLabStreamCamera(BambuLabCamera):
     ) -> bytes | None:
         """Return an image from the video stream."""
         stream = await self.async_create_stream()
+        # A stream that just started has no image yet. Wait for one, instead
+        # of ending the response without an image.
         return (
-            await stream.async_get_image(width=width, height=height) if stream else None
+            await stream.async_get_image(
+                width=width, height=height, wait_for_next_keyframe=True
+            )
+            if stream
+            else None
         )
 
     @override
