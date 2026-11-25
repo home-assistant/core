@@ -27,6 +27,7 @@ from homeassistant.components.switch import (
     DOMAIN as SWITCH_DOMAIN,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
+    SwitchService,
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -36,6 +37,7 @@ from homeassistant.const import (
     STATE_UNKNOWN,
     EntityCategory,
     Platform,
+    TargetKey,
 )
 from homeassistant.core import HomeAssistant, State
 from homeassistant.exceptions import HomeAssistantError
@@ -881,8 +883,8 @@ async def test_switch_turn_on_raises_on_device_communication_error(
     ):
         await hass.services.async_call(
             SWITCH_DOMAIN,
-            SERVICE_TURN_ON,
-            {ATTR_ENTITY_ID: entity_entry.entity_id},
+            SwitchService.TURN_ON,
+            {TargetKey.ENTITY_ID: entity_entry.entity_id},
             blocking=True,
         )
 

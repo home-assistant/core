@@ -156,7 +156,7 @@ def fixture_request(
         auth_challenge_sent = False
 
         def _url_pattern(path: str) -> re.Pattern[str]:
-            return re.compile(rf"^https?://{re.escape(host)}(?::\d+)?{path}$")
+            return re.compile(rf"^https?://{re.escape(host)}(?::\d+)?{path}(?:\?.*)?$")
 
         def _text_response(
             url: URL, text: str, status: int = 200

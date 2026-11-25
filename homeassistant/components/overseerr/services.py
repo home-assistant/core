@@ -7,6 +7,7 @@ from typing import Any, Literal, cast
 
 import probatio
 from python_overseerr import OverseerrClient, OverseerrConnectionError
+from python_overseerr.exceptions import OverseerrNothingToRequestError
 
 from homeassistant.const import CommonServiceArgument
 from homeassistant.core import (
@@ -16,7 +17,7 @@ from homeassistant.core import (
     SupportsResponse,
     callback,
 )
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import service
 from homeassistant.util.json import JsonValueType
 
@@ -185,6 +186,11 @@ async def _async_request_media(call: ServiceCall) -> ServiceResponse:
     try:
         # We can always pass in the seasons, they will be ignored if the media type isn't TV
         request = await client.create_request(media_type, media_id, seasons)
+    except OverseerrNothingToRequestError as err:
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="nothing_to_request",
+        ) from err
     except OverseerrConnectionError as err:
         raise HomeAssistantError(
             translation_domain=DOMAIN,

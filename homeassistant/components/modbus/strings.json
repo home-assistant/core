@@ -18,6 +18,9 @@
     },
     "temp_out_of_range": {
       "message": "Provided temperature {temperature} is not valid. Accepted range is {min_temp} to {max_temp}."
+    },
+    "unknown_hub": {
+      "message": "Modbus hub {hub} is not configured."
     }
   },
   "issues": {

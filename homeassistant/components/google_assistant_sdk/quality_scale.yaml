@@ -21,13 +21,9 @@ rules:
     comment: This integration does not have any triggers.
   entity-event-setup:
     status: exempt
-    comment: No entities.
-  entity-unique-id:
-    status: exempt
-    comment: No entities.
-  has-entity-name:
-    status: exempt
-    comment: No entities.
+    comment: The conversation entity does not subscribe to events.
+  entity-unique-id: done
+  has-entity-name: done
   runtime-data: done
   test-before-configure: done
   test-before-setup: done
@@ -40,21 +36,17 @@ rules:
   docs-installation-parameters: done
   entity-unavailable:
     status: exempt
-    comment: No entities.
+    comment: The conversation entity has no state to fetch.
   integration-owner: done
   log-when-unavailable:
     status: exempt
-    comment: No entities.
-  parallel-updates:
-    status: exempt
-    comment: No entities to update.
+    comment: The conversation entity has no state to fetch.
+  parallel-updates: done
   reauthentication-flow: done
   test-coverage: done
 
   # Gold
-  devices:
-    status: exempt
-    comment: This integration acts as a service and does not represent physical devices.
+  devices: done
   diagnostics: done
   discovery-update-info:
     status: exempt
@@ -64,7 +56,7 @@ rules:
     comment: This is a cloud service integration that cannot be discovered locally.
   docs-data-update:
     status: exempt
-    comment: No entities to update.
+    comment: The conversation entity has no data to update.
   docs-examples: done
   docs-known-limitations: done
   docs-supported-devices: done
@@ -73,19 +65,19 @@ rules:
   docs-use-cases: done
   dynamic-devices:
     status: exempt
-    comment: No devices.
+    comment: The integration has a single service device.
   entity-category:
     status: exempt
-    comment: No entities.
+    comment: The conversation entity is a primary entity.
   entity-device-class:
     status: exempt
-    comment: No entities.
+    comment: Conversation entities have no device class.
   entity-disabled-by-default:
     status: exempt
-    comment: No entities.
+    comment: The conversation entity is the main entity.
   entity-translations:
     status: exempt
-    comment: No entities.
+    comment: The conversation entity uses the device name.
   exception-translations: done
   icon-translations: done
   reconfiguration-flow: done
@@ -94,7 +86,7 @@ rules:
     comment: No repairs.
   stale-devices:
     status: exempt
-    comment: No devices.
+    comment: The service device is removed with the config entry.
 
   # Platinum
   async-dependency: done
