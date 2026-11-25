@@ -144,12 +144,9 @@ class NepViewerCoordinator(DataUpdateCoordinator[NepViewerData]):
 
     def last_reported(self, device: Device) -> datetime | None:
         """Return when the device last reported to the cloud."""
-        timestamp = self.data.device_overviews[device.sn].last_update_time
-        time_zone = self._time_zones.get(device.sid)
-        if not timestamp or not time_zone:
+        if (time_zone := self._time_zones.get(device.sid)) is None:
             return None
-        # The timestamp is the local time of the site encoded as if it were UTC.
-        return dt_util.utc_from_timestamp(timestamp).replace(tzinfo=time_zone)
+        return self.data.device_overviews[device.sn].last_update_datetime(time_zone)
 
     def is_device_reporting(self, device: Device) -> bool:
         """Return if the values of the device are recent enough to be trusted."""

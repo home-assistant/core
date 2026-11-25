@@ -9,5 +9,5 @@
   "integration_type": "hub",
   "iot_class": "cloud_polling",
   "quality_scale": "bronze",
-  "requirements": ["aionepviewer==0.1.2"]
+  "requirements": ["aionepviewer==0.1.3"]
 }
