@@ -23,7 +23,7 @@ from homeassistant.components.roomba.const import (
 )
 from homeassistant.components.vacuum import DOMAIN as VACUUM_DOMAIN, SERVICE_LOCATE
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.const import ATTR_ENTITY_ID, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.setup import async_setup_component
@@ -357,17 +357,19 @@ async def test_idle_release_stops_background_reconnect(
 
 async def test_no_session_after_stop(
     hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
     mock_config_entry: MockConfigEntry,
     periodic_roomba: AsyncMock,
 ) -> None:
-    """Test a late command does not reopen a session once the entry is stopped."""
+    """Test a late command does not reopen a session once Home Assistant stops."""
     await _setup(hass, mock_config_entry, continuous=False)
-    connection = mock_config_entry.runtime_data.connection
-    await hass.config_entries.async_unload(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-    assert not periodic_roomba.connected
+    await _advance(hass, freezer, timedelta(seconds=TELEMETRY_QUIET_SECONDS))
 
-    await connection.async_ensure_connected()
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
+    await hass.async_block_till_done()
+    await hass.services.async_call(
+        VACUUM_DOMAIN, SERVICE_LOCATE, {ATTR_ENTITY_ID: VACUUM_ENTITY_ID}, blocking=True
+    )
 
     periodic_roomba.connect.assert_awaited_once()
     assert not periodic_roomba.connected
@@ -494,3 +496,47 @@ async def test_command_fails_cleanly_when_unreachable(
 
     assert exc_info.value.translation_key == "not_connected"
     periodic_roomba.send_command.assert_not_awaited()
+
+
+async def test_empty_message_does_not_extend_the_session(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_config_entry: MockConfigEntry,
+    periodic_roomba: AsyncMock,
+) -> None:
+    """Test messages without reported state do not count as the robot publishing."""
+    await _setup(hass, mock_config_entry, continuous=False)
+    await _advance(hass, freezer, timedelta(seconds=TELEMETRY_QUIET_SECONDS))
+    await _advance(hass, freezer, PERIODIC_UPDATE_INTERVAL)
+
+    await _advance(hass, freezer, timedelta(seconds=1))
+    # The connection handler registers last; entities do not handle a null state.
+    on_message = periodic_roomba.register_on_message_callback.call_args_list[-1].args[0]
+    on_message({"state": None})
+    on_message({"state": {"reported": {}}})
+    await _advance(hass, freezer, timedelta(seconds=TELEMETRY_QUIET_SECONDS - 1))
+
+    assert not periodic_roomba.connected
+
+
+async def test_command_logs_recovery(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_config_entry: MockConfigEntry,
+    periodic_roomba: AsyncMock,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test a successful command after an outage logs that the robot is back."""
+    await _setup(hass, mock_config_entry, continuous=False)
+    await _advance(hass, freezer, timedelta(seconds=TELEMETRY_QUIET_SECONDS))
+    connect = periodic_roomba.connect.side_effect
+    periodic_roomba.connect.side_effect = RoombaConnectionError
+    await _advance(hass, freezer, PERIODIC_UPDATE_INTERVAL)
+    assert "is unreachable" in caplog.text
+
+    periodic_roomba.connect.side_effect = connect
+    await hass.services.async_call(
+        VACUUM_DOMAIN, SERVICE_LOCATE, {ATTR_ENTITY_ID: VACUUM_ENTITY_ID}, blocking=True
+    )
+
+    assert "is reachable again" in caplog.text

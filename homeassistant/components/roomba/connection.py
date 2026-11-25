@@ -108,8 +108,8 @@ class RoombaConnection:
     @callback
     def _on_message(self, message: RoombaMessage) -> None:
         """Note when the robot last published something other than Wi-Fi stats."""
-        reported = message.get("state", {}).get("reported", {})
-        if len(reported) > 1 or "signal" not in reported:
+        reported = (message.get("state") or {}).get("reported") or {}
+        if len(reported) > 1 or (reported and "signal" not in reported):
             self._last_message = time.monotonic()
 
     async def async_ensure_connected(self) -> None:
@@ -123,6 +123,7 @@ class RoombaConnection:
             if not self.roomba.connected:
                 _LOGGER.debug("Connecting to send a command")
                 await self._async_open()
+                self._mark_reachable()
         self._schedule_release(COMMAND_HOLD_SECONDS)
 
     async def _async_open(self) -> None:
@@ -163,14 +164,18 @@ class RoombaConnection:
                             err,
                         )
                     return
-                if self._unreachable:
-                    self._unreachable = False
-                    _LOGGER.info("Roomba at %s is reachable again", self.host)
+                self._mark_reachable()
                 connected_now = True
         if connected_now:
             self._schedule_settle()
         else:
             await self._async_release()
+
+    @callback
+    def _mark_reachable(self) -> None:
+        if self._unreachable:
+            self._unreachable = False
+            _LOGGER.info("Roomba at %s is reachable again", self.host)
 
     @callback
     def _schedule_release(self, delay: float) -> None:
