@@ -1,4 +1,6 @@
 ---
+# PR-triggered runs have no fixed head branch, so the CTR-021 workflow_run branch filter cannot be satisfied.
+strict: false
 name: PR reviewer
 run-name: "PR reviewer: ${{ github.event.workflow_run.display_title || format('#{0}', inputs.pull_request_number) }}"
 description: >
