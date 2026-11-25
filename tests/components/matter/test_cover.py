@@ -7,6 +7,7 @@ from typing import Any
 from unittest.mock import MagicMock, call
 
 from chip.clusters import Objects as clusters
+from chip.clusters.Types import NullValue
 from freezegun.api import FrozenDateTimeFactory
 from matter_server.client.models.node import MatterNode
 from matter_server.common.helpers.util import create_attribute_path
@@ -1891,56 +1892,91 @@ async def test_closure_cover_slats_orientation_tilt(
     )
 
 
+_DIM = clusters.ClosureDimension
+_SLATS_FEATURE_MAP = (
+    95 & ~_DIM.Bitmaps.Feature.kRotation
+) | _DIM.Bitmaps.Feature.kModulation
+
+
 @pytest.mark.parametrize("node_fixture", ["mock_closure_venetian_blinds"])
-async def test_closure_cover_slats_orientation_tilt_out_of_range(
+@pytest.mark.parametrize(
+    ("feature_map", "modulation_type", "unit", "unit_range"),
+    [
+        pytest.param(
+            _SLATS_FEATURE_MAP,
+            _DIM.Enums.ModulationTypeEnum.kSlatsOrientation.value,
+            _DIM.Enums.ClosureUnitEnum.kDegree.value,
+            {0: 0, 1: 90},
+            id="unit_range_0_to_90",
+        ),
+        pytest.param(
+            95 & ~_DIM.Bitmaps.Feature.kRotation,
+            _DIM.Enums.ModulationTypeEnum.kSlatsOrientation.value,
+            _DIM.Enums.ClosureUnitEnum.kDegree.value,
+            {0: -90, 1: 90},
+            id="no_modulation_feature",
+        ),
+        pytest.param(
+            (95 & ~_DIM.Bitmaps.Feature.kRotation & ~_DIM.Bitmaps.Feature.kUnit)
+            | _DIM.Bitmaps.Feature.kModulation,
+            _DIM.Enums.ModulationTypeEnum.kSlatsOrientation.value,
+            _DIM.Enums.ClosureUnitEnum.kDegree.value,
+            {0: -90, 1: 90},
+            id="no_unit_feature",
+        ),
+        pytest.param(
+            _SLATS_FEATURE_MAP,
+            _DIM.Enums.ModulationTypeEnum.kOpacity.value,
+            _DIM.Enums.ClosureUnitEnum.kDegree.value,
+            {0: -90, 1: 90},
+            id="not_slats_orientation",
+        ),
+        pytest.param(
+            _SLATS_FEATURE_MAP,
+            _DIM.Enums.ModulationTypeEnum.kSlatsOrientation.value,
+            _DIM.Enums.ClosureUnitEnum.kMillimeter.value,
+            {0: -90, 1: 90},
+            id="unit_not_degree",
+        ),
+    ],
+)
+async def test_closure_cover_slats_orientation_tilt_no_fold(
     hass: HomeAssistant,
     matter_client: MagicMock,
     matter_node: MatterNode,
     freezer: FrozenDateTimeFactory,
+    feature_map: int,
+    modulation_type: int,
+    unit: int,
+    unit_range: dict[int, int],
 ) -> None:
-    """Test a Modulation/SlatsOrientation panel outside the spec's -90..90 fold.
+    """Test a tilt panel that misses any fold condition keeps the general mapping.
 
-    Per spec 5.5.8.1.5.1, the SlatsOrientation fold is only the spec's "only
-    accepted exception" for a Unit=Degree, UnitRange=-90..90 panel. A panel
-    reporting a different range (here 0..90) isn't covered, so it must keep
+    Per spec 5.5.8.1.5.1, only a Modulation/SlatsOrientation panel with
+    Unit=Degree and UnitRange -90..90 is folded. Every other combination uses
     the general monotonic 0%=open/100%=closed mapping.
     """
     entity_id = hass.states.async_all(Platform.COVER)[0].entity_id
-    dim = clusters.ClosureDimension
 
     set_node_attribute(
-        matter_node,
-        3,
-        dim.id,
-        dim.Attributes.FeatureMap.attribute_id,
-        (95 & ~dim.Bitmaps.Feature.kRotation) | dim.Bitmaps.Feature.kModulation,
+        matter_node, 3, _DIM.id, _DIM.Attributes.FeatureMap.attribute_id, feature_map
     )
     set_node_attribute(
         matter_node,
         3,
-        dim.id,
-        dim.Attributes.ModulationType.attribute_id,
-        dim.Enums.ModulationTypeEnum.kSlatsOrientation.value,
+        _DIM.id,
+        _DIM.Attributes.ModulationType.attribute_id,
+        modulation_type,
+    )
+    set_node_attribute(matter_node, 3, _DIM.id, _DIM.Attributes.Unit.attribute_id, unit)
+    set_node_attribute(
+        matter_node, 3, _DIM.id, _DIM.Attributes.UnitRange.attribute_id, unit_range
     )
     set_node_attribute(
         matter_node,
         3,
-        dim.id,
-        dim.Attributes.Unit.attribute_id,
-        dim.Enums.ClosureUnitEnum.kDegree.value,
-    )
-    set_node_attribute(
-        matter_node,
-        3,
-        dim.id,
-        dim.Attributes.UnitRange.attribute_id,
-        {0: 0, 1: 90},
-    )
-    set_node_attribute(
-        matter_node,
-        3,
-        dim.id,
-        dim.Attributes.CurrentState.attribute_id,
+        _DIM.id,
+        _DIM.Attributes.CurrentState.attribute_id,
         {0: 7000, 1: False, 2: 0},
     )
     await trigger_subscription_callback_debounced(hass, freezer, matter_client)
@@ -1958,7 +1994,75 @@ async def test_closure_cover_slats_orientation_tilt_out_of_range(
     assert matter_client.send_device_command.call_args == call(
         node_id=matter_node.node_id,
         endpoint_id=3,
-        command=clusters.ClosureDimension.Commands.SetTarget(position=7000),
+        command=_DIM.Commands.SetTarget(position=7000),
+        timed_request_timeout_ms=1000,
+    )
+
+
+@pytest.mark.parametrize("node_fixture", ["mock_closure_venetian_blinds"])
+async def test_closure_cover_slats_orientation_position_panel_not_folded(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a slat-rotating panel in the POSITION role keeps the general mapping.
+
+    The fold only applies to the TILT role, so a Lift panel configured exactly
+    like a SlatsOrientation tilt panel still maps its position monotonically.
+    """
+    entity_id = hass.states.async_all(Platform.COVER)[0].entity_id
+
+    set_node_attribute(
+        matter_node,
+        2,
+        _DIM.id,
+        _DIM.Attributes.FeatureMap.attribute_id,
+        _SLATS_FEATURE_MAP,
+    )
+    set_node_attribute(
+        matter_node,
+        2,
+        _DIM.id,
+        _DIM.Attributes.ModulationType.attribute_id,
+        _DIM.Enums.ModulationTypeEnum.kSlatsOrientation.value,
+    )
+    set_node_attribute(
+        matter_node,
+        2,
+        _DIM.id,
+        _DIM.Attributes.Unit.attribute_id,
+        _DIM.Enums.ClosureUnitEnum.kDegree.value,
+    )
+    set_node_attribute(
+        matter_node,
+        2,
+        _DIM.id,
+        _DIM.Attributes.UnitRange.attribute_id,
+        {0: -90, 1: 90},
+    )
+    set_node_attribute(
+        matter_node,
+        2,
+        _DIM.id,
+        _DIM.Attributes.CurrentState.attribute_id,
+        {0: 7000, 1: False, 2: 0},
+    )
+    await trigger_subscription_callback_debounced(hass, freezer, matter_client)
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.attributes["current_position"] == 30
+
+    await hass.services.async_call(
+        "cover",
+        "set_cover_position",
+        {"entity_id": entity_id, "position": 30},
+        blocking=True,
+    )
+    assert matter_client.send_device_command.call_args == call(
+        node_id=matter_node.node_id,
+        endpoint_id=2,
+        command=_DIM.Commands.SetTarget(position=7000),
         timed_request_timeout_ms=1000,
     )
 
@@ -2356,6 +2460,93 @@ async def test_closure_cover_instantaneous_has_no_stop(
     state = hass.states.get(entity_id)
     assert state
     assert not (state.attributes["supported_features"] & CoverEntityFeature.STOP)
+
+
+@pytest.mark.parametrize("node_fixture", ["mock_closure_gate"])
+async def test_closure_cover_instantaneous_gate_cancel_pending_open_unlatches(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """Test Close on a latched Instantaneous gate with a pending Open unlatches it.
+
+    Instantaneous closures have no Stop, and MoveTo to the current position is
+    rejected while latched, so MoveTo with latch=False is the only way to
+    cancel the pending Open.
+    """
+    entity_id = hass.states.async_all(Platform.COVER)[0].entity_id
+
+    set_node_attribute(
+        matter_node,
+        1,
+        clusters.ClosureControl.id,
+        clusters.ClosureControl.Attributes.FeatureMap.attribute_id,
+        43 & ~clusters.ClosureControl.Bitmaps.Feature.kSpeed
+        | clusters.ClosureControl.Bitmaps.Feature.kInstantaneous,
+    )
+    set_node_attribute(
+        matter_node,
+        1,
+        clusters.ClosureControl.id,
+        clusters.ClosureControl.Attributes.MainState.attribute_id,
+        clusters.ClosureControl.Enums.MainStateEnum.kWaitingForMotion.value,
+    )
+    set_node_attribute(
+        matter_node,
+        1,
+        clusters.ClosureControl.id,
+        clusters.ClosureControl.Attributes.OverallTargetState.attribute_id,
+        {
+            0: clusters.ClosureControl.Enums.TargetPositionEnum.kMoveToFullyOpen.value,
+            1: False,
+        },
+    )
+
+    await hass.services.async_call(
+        "cover",
+        "close_cover",
+        {"entity_id": entity_id},
+        blocking=True,
+    )
+    assert matter_client.send_device_command.call_args == call(
+        node_id=matter_node.node_id,
+        endpoint_id=1,
+        command=clusters.ClosureControl.Commands.MoveTo(
+            position=clusters.ClosureControl.Enums.TargetPositionEnum.kMoveToFullyClosed,
+            latch=False,
+        ),
+        timed_request_timeout_ms=1000,
+    )
+
+
+@pytest.mark.parametrize("node_fixture", ["mock_closure_gate"])
+async def test_closure_cover_gate_close_without_main_state_sends_nothing(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """Test Close on a closed, latched gate with no MainState sends nothing.
+
+    An absent MainState isn't a pending move, so the gate already at the target
+    needs no command. Counting it as pending would send Stop.
+    """
+    entity_id = hass.states.async_all(Platform.COVER)[0].entity_id
+
+    set_node_attribute(
+        matter_node,
+        1,
+        clusters.ClosureControl.id,
+        clusters.ClosureControl.Attributes.MainState.attribute_id,
+        NullValue,
+    )
+
+    await hass.services.async_call(
+        "cover",
+        "close_cover",
+        {"entity_id": entity_id},
+        blocking=True,
+    )
+    matter_client.send_device_command.assert_not_called()
 
 
 @pytest.mark.parametrize("node_fixture", ["mock_closure_roof_window_matterbridge"])

@@ -725,12 +725,12 @@ class MatterClosure(MatterEntity, CoverEntity):
         target: clusters.ClosureControl.Enums.TargetPositionEnum,
         fully_at: clusters.ClosureControl.Enums.CurrentPositionEnum,
     ) -> None:
-        """Send MoveTo, unlatching only if the move leaves the current position.
+        """Send MoveTo, unlatching a latched closure.
 
-        Unlatching a closure that is already at the target would desecure it
-        for no reason. A pending move at the current position is cancelled
-        with Stop instead, since MoveTo to that position is rejected while
-        latched.
+        A pending move at the current position is cancelled with Stop instead,
+        since MoveTo to that position is rejected while latched. Instantaneous
+        closures have no Stop, so they are unlatched with MoveTo instead, which
+        also cancels the pending move.
         """
         overall_current_state = self.get_matter_attribute_value(
             clusters.ClosureControl.Attributes.OverallCurrentState
@@ -763,7 +763,7 @@ class MatterClosure(MatterEntity, CoverEntity):
         if self._motion_latching_supported() and _extract_struct_field(
             overall_current_state, "latch"
         ):
-            command_kwargs["latch"] = move_pending and already_at_target
+            command_kwargs["latch"] = False
         await self.send_device_command(
             clusters.ClosureControl.Commands.MoveTo(**command_kwargs),
             timed_request_timeout_ms=1000,
