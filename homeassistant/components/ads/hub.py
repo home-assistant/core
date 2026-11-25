@@ -4,6 +4,7 @@ import asyncio
 from collections import namedtuple
 import ctypes
 import logging
+import socket
 import struct
 import threading
 from typing import TYPE_CHECKING
@@ -20,6 +21,11 @@ if TYPE_CHECKING:
     from .entity import AdsEntity
 
 _LOGGER = logging.getLogger(__name__)
+
+# The AMS router talks to the device over this TCP port.
+ADS_TCP_PORT = 48898
+# How long to wait for the device to accept a TCP connection.
+REACHABLE_TIMEOUT = 5
 
 # Tuple to hold data needed for notification
 NotificationItem = namedtuple(  # noqa: PYI024
@@ -255,11 +261,26 @@ class AdsHub:
         notification_item.callback(notification_item.name, value)
 
 
+def check_reachable(device: str, ip_address: str | None) -> None:
+    """Raise OSError unless the device accepts a TCP connection on the ADS port.
+
+    The AMS router keeps retrying the connection to a device that does not
+    answer, about 75 seconds per attempt, so the first request through pyads
+    would block for minutes instead of failing.
+    """
+    # pyads derives the address from the AMS NetID the same way.
+    host = ip_address or ".".join(device.split(".")[:4])
+    with socket.create_connection((host, ADS_TCP_PORT), timeout=REACHABLE_TIMEOUT):
+        pass
+
+
 def connect(device: str, port: int, ip_address: str | None) -> AdsHub:
     """Connect to the ADS device and verify it responds.
 
-    Opening the port raises RuntimeError when the AMS router refuses it.
+    Raises OSError when the device does not answer at all, and RuntimeError
+    when the AMS router refuses to open a port.
     """
+    check_reachable(device, ip_address)
     hub = AdsHub(pyads.Connection(device, port, ip_address))
     try:
         hub.read_state()

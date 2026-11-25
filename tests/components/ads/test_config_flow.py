@@ -118,6 +118,33 @@ async def test_user_flow_errors(
     assert result["data"] == ADS_CONFIG
 
 
+async def test_user_flow_unreachable(
+    hass: HomeAssistant,
+    mock_pyads_connection: MagicMock,
+    mock_create_connection: MagicMock,
+) -> None:
+    """Test an unreachable device is reported at once, without pyads."""
+    mock_create_connection.side_effect = TimeoutError("timed out")
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], ADS_CONFIG
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "cannot_connect"}
+    mock_pyads_connection.assert_not_called()
+
+    mock_create_connection.side_effect = None
+    mock_pyads_connection.return_value.read_state.return_value = (5, 0)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], ADS_CONFIG
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
+
 @pytest.mark.usefixtures("mock_pyads_connection")
 async def test_user_flow_single_instance(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry

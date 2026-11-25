@@ -94,7 +94,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: AdsConfigEntry) -> None:
             entry.data[CONF_PORT],
             entry.data.get(CONF_IP_ADDRESS),
         )
-    except (pyads.ADSError, RuntimeError) as err:
+    except (pyads.ADSError, OSError, RuntimeError) as err:
         raise ConfigEntryNotReady(
             translation_domain=DOMAIN,
             translation_key="cannot_connect",

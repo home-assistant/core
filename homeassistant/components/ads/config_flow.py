@@ -14,6 +14,7 @@ from homeassistant.config_entries import (
 from homeassistant.const import CONF_DEVICE, CONF_IP_ADDRESS, CONF_PORT
 
 from .const import DEFAULT_PORT, DOMAIN
+from .hub import check_reachable
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -47,6 +48,7 @@ def _is_valid_net_id(net_id: str) -> bool:
 
 def _validate_connection(data: dict[str, Any]) -> None:
     """Open a connection and read the device state."""
+    check_reachable(data[CONF_DEVICE], data.get(CONF_IP_ADDRESS))
     client = pyads.Connection(
         data[CONF_DEVICE], data[CONF_PORT], data.get(CONF_IP_ADDRESS)
     )
@@ -70,9 +72,10 @@ class AdsConfigFlow(ConfigFlow, domain=DOMAIN):
             await self.hass.async_add_executor_job(_validate_connection, data)
         except ValueError:
             return "invalid_net_id"
-        except pyads.ADSError, RuntimeError:
-            # The AMS router refusing to open a port raises RuntimeError; setup
-            # treats that as a connectivity failure too.
+        except pyads.ADSError, OSError, RuntimeError:
+            # A device that does not answer raises OSError and the AMS router
+            # refusing to open a port raises RuntimeError; setup treats both as
+            # connectivity failures too.
             return "cannot_connect"
         except Exception:
             _LOGGER.exception("Unexpected exception")

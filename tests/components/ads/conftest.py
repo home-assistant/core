@@ -43,7 +43,18 @@ def mock_validate_connection() -> Generator[MagicMock]:
 
 
 @pytest.fixture
-def mock_pyads_connection(mock_validate_connection: MagicMock) -> Generator[MagicMock]:
+def mock_create_connection() -> Generator[MagicMock]:
+    """Mock the TCP check run before connecting, so the device is reachable."""
+    with patch(
+        "homeassistant.components.ads.hub.socket.create_connection"
+    ) as mock_create_connection:
+        yield mock_create_connection
+
+
+@pytest.fixture
+def mock_pyads_connection(
+    mock_validate_connection: MagicMock, mock_create_connection: MagicMock
+) -> Generator[MagicMock]:
     """Mock the pyads Connection class."""
     with patch("pyads.Connection", autospec=True) as mock_connection:
         yield mock_connection
