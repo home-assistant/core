@@ -5,7 +5,9 @@ from collections.abc import Callable
 from aiohomekit.model import Accessory
 from aiohomekit.model.characteristics import CharacteristicsTypes
 from aiohomekit.model.services import Service, ServicesTypes
+import pytest
 
+from homeassistant.components.cover import CoverEntityCapabilityAttribute
 from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -439,6 +441,106 @@ async def test_write_window_cover_tilt_no_minmax(
         {
             CharacteristicsTypes.HORIZONTAL_TILT_TARGET: 72,
         },
+    )
+
+
+@pytest.mark.parametrize(
+    ("create_service", "start_angle", "end_angle", "open_position", "closed"),
+    [
+        pytest.param(
+            create_window_covering_service_with_h_tilt, 0, 90, 0, [100], id="0_90"
+        ),
+        pytest.param(
+            create_window_covering_service_with_h_tilt_2,
+            0,
+            -90,
+            0,
+            [100],
+            id="inverted_minus_90_0",
+        ),
+        pytest.param(
+            create_window_covering_service_with_full_range_tilt,
+            -90,
+            90,
+            50,
+            [0, 100],
+            id="minus_90_90",
+        ),
+    ],
+)
+async def test_read_window_cover_tilt_angles(
+    hass: HomeAssistant,
+    get_next_aid: Callable[[], int],
+    create_service: Callable[[Accessory], None],
+    start_angle: int,
+    end_angle: int,
+    open_position: int,
+    closed: list[int],
+) -> None:
+    """Test the tilt angles come from the range of the tilt characteristic."""
+    helper = await setup_test_component(hass, get_next_aid(), create_service)
+
+    state = await helper.poll_and_get_state()
+    assert state.attributes[CoverEntityCapabilityAttribute.TILT_START_ANGLE] == (
+        start_angle
+    )
+    assert state.attributes[CoverEntityCapabilityAttribute.TILT_END_ANGLE] == end_angle
+    assert state.attributes[CoverEntityCapabilityAttribute.OPEN_TILT_POSITION] == (
+        open_position
+    )
+    assert (
+        state.attributes[CoverEntityCapabilityAttribute.CLOSED_TILT_POSITIONS] == closed
+    )
+
+
+@pytest.mark.parametrize(
+    ("create_service", "service", "angle"),
+    [
+        pytest.param(
+            create_window_covering_service_with_h_tilt, "open_cover_tilt", 0, id="open"
+        ),
+        pytest.param(
+            create_window_covering_service_with_h_tilt,
+            "close_cover_tilt",
+            90,
+            id="close",
+        ),
+        pytest.param(
+            create_window_covering_service_with_h_tilt_2,
+            "close_cover_tilt",
+            -90,
+            id="close_inverted",
+        ),
+        pytest.param(
+            create_window_covering_service_with_full_range_tilt,
+            "open_cover_tilt",
+            0,
+            id="open_full_range",
+        ),
+        pytest.param(
+            create_window_covering_service_with_full_range_tilt,
+            "close_cover_tilt",
+            -90,
+            id="close_full_range",
+        ),
+    ],
+)
+async def test_open_and_close_window_cover_tilt(
+    hass: HomeAssistant,
+    get_next_aid: Callable[[], int],
+    create_service: Callable[[Accessory], None],
+    service: str,
+    angle: int,
+) -> None:
+    """Test opening and closing the tilt turns the slats to the open or flat angle."""
+    helper = await setup_test_component(hass, get_next_aid(), create_service)
+
+    await hass.services.async_call(
+        "cover", service, {"entity_id": helper.entity_id}, blocking=True
+    )
+    helper.async_assert_service_values(
+        ServicesTypes.WINDOW_COVERING,
+        {CharacteristicsTypes.HORIZONTAL_TILT_TARGET: angle},
     )
 
 

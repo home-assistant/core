@@ -2,7 +2,7 @@
 
 from typing import Any, override
 
-from aiohomekit.model.characteristics import CharacteristicsTypes
+from aiohomekit.model.characteristics import Characteristic, CharacteristicsTypes
 from aiohomekit.model.services import Service, ServicesTypes
 from propcache.api import cached_property
 
@@ -257,6 +257,44 @@ class HomeKitWindowCover(HomeKitEntity, CoverEntity):
         # normal scale
         return abs(int(100 / total_range * (tilt_position - min_value)))
 
+    def _device_tilt_angles(self) -> tuple[int, int] | None:
+        """Return the angles of the slats at tilt 0 and 100, if the device gives them."""
+        if self.is_vertical_tilt:
+            char = self.service[CharacteristicsTypes.VERTICAL_TILT_CURRENT]
+        elif self.is_horizontal_tilt:
+            char = self.service[CharacteristicsTypes.HORIZONTAL_TILT_CURRENT]
+        else:
+            return None
+        min_value = char.minValue
+        max_value = char.maxValue
+        if min_value is None or max_value is None:
+            return None
+        if not (
+            float(min_value).is_integer()
+            and float(max_value).is_integer()
+            and -90 <= min_value < max_value <= 90
+        ):
+            return None
+        if min_value == -90 and max_value == 0:
+            return 0, -90
+        return int(min_value), int(max_value)
+
+    @property
+    @override
+    def tilt_start_angle(self) -> int | None:
+        """Return the angle of the slats at tilt 0."""
+        if (angles := self._device_tilt_angles()) is None:
+            return None
+        return angles[0]
+
+    @property
+    @override
+    def tilt_end_angle(self) -> int | None:
+        """Return the angle of the slats at tilt 100."""
+        if (angles := self._device_tilt_angles()) is None:
+            return None
+        return angles[1]
+
     @override
     async def async_stop_cover(self, **kwargs: Any) -> None:
         """Send hold command."""
@@ -280,24 +318,41 @@ class HomeKitWindowCover(HomeKitEntity, CoverEntity):
             {CharacteristicsTypes.POSITION_TARGET: position}
         )
 
+    def _tilt_target(self) -> tuple[Characteristic, int | float, int | float]:
+        """Return the tilt target characteristic and its angle range."""
+        if self.is_vertical_tilt:
+            char = self.service[CharacteristicsTypes.VERTICAL_TILT_TARGET]
+        else:
+            char = self.service[CharacteristicsTypes.HORIZONTAL_TILT_TARGET]
+        if char.minValue is None or char.maxValue is None:
+            raise ValueError(
+                "Entity does not provide minValue and maxValue for the tilt"
+            )
+        return char, char.minValue, char.maxValue
+
+    @override
+    async def async_open_cover_tilt(self, **kwargs: Any) -> None:
+        """Turn the slats to the angle nearest to 0 degrees, where they are open."""
+        char, min_value, max_value = self._tilt_target()
+        await self.async_put_characteristics(
+            {char.type: int(min(max(0, min_value), max_value))}
+        )
+
+    @override
+    async def async_close_cover_tilt(self, **kwargs: Any) -> None:
+        """Turn the slats to the angle farthest from 0 degrees, where they are closed."""
+        char, min_value, max_value = self._tilt_target()
+        closed = min_value if abs(min_value) >= abs(max_value) else max_value
+        await self.async_put_characteristics({char.type: int(closed)})
+
     @override
     async def async_set_cover_tilt_position(self, **kwargs: Any) -> None:
         """Move the cover tilt to a specific position."""
         tilt_position = kwargs[CoverServiceArgument.TILT_POSITION]
 
-        if self.is_vertical_tilt:
-            char = self.service[CharacteristicsTypes.VERTICAL_TILT_TARGET]
-        elif self.is_horizontal_tilt:
-            char = self.service[CharacteristicsTypes.HORIZONTAL_TILT_TARGET]
-
         # Calculate tilt_position. Convert from 1-100 scale to arc
         # degree scale respecting possible min/max Values.
-        min_value = char.minValue
-        max_value = char.maxValue
-        if min_value is None or max_value is None:
-            raise ValueError(
-                "Entity does not provide minValue and maxValue for the tilt"
-            )
+        char, min_value, max_value = self._tilt_target()
 
         # inverted scale
         if min_value == -90 and max_value == 0:
