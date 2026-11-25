@@ -10,15 +10,24 @@ from homeassistant.components.switch import (
     PLATFORM_SCHEMA as SWITCH_PLATFORM_SCHEMA,
     SwitchEntity,
 )
+from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import CONF_HOST, CONF_NAME
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers import config_validation as cv, issue_registry as ir
+from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.entity_platform import (
+    AddConfigEntryEntitiesCallback,
+    AddEntitiesCallback,
+)
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+
+from . import SonyProjectorConfigEntry
+from .const import DEFAULT_NAME, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-DEFAULT_NAME = "Sony Projector"
+BREAKS_IN_HA_VERSION = "2027.7.0"
 
 PLATFORM_SCHEMA = SWITCH_PLATFORM_SCHEMA.extend(
     {
@@ -28,36 +37,78 @@ PLATFORM_SCHEMA = SWITCH_PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(
+async def async_setup_platform(
     hass: HomeAssistant,
     config: ConfigType,
-    add_entities: AddEntitiesCallback,
+    async_add_entities: AddEntitiesCallback,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
-    """Connect to Sony projector using network."""
+    """Import the YAML platform into a config entry."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_IMPORT},
+        data={CONF_HOST: config[CONF_HOST], CONF_NAME: config[CONF_NAME]},
+    )
 
-    host = config[CONF_HOST]
-    name = config[CONF_NAME]
-    sdcp_connection = pysdcp.Projector(host)
+    translation_placeholders = {"domain": DOMAIN, "integration_title": DEFAULT_NAME}
 
-    # Sanity check the connection
-    try:
-        sdcp_connection.get_power()
-    except ConnectionError:
-        _LOGGER.error("Failed to connect to projector '%s'", host)
+    if (
+        result["type"] is FlowResultType.ABORT
+        and result["reason"] != "already_configured"
+    ):
+        ir.async_create_issue(
+            hass,
+            DOMAIN,
+            f"deprecated_yaml_import_issue_{result['reason']}",
+            breaks_in_ha_version=BREAKS_IN_HA_VERSION,
+            is_fixable=False,
+            issue_domain=DOMAIN,
+            severity=ir.IssueSeverity.ERROR,
+            translation_key=f"deprecated_yaml_import_issue_{result['reason']}",
+            translation_placeholders=translation_placeholders,
+        )
         return
-    _LOGGER.debug("Validated projector '%s' OK", host)
-    add_entities([SonyProjector(sdcp_connection, name)], True)
+
+    ir.async_create_issue(
+        hass,
+        HOMEASSISTANT_DOMAIN,
+        f"deprecated_yaml_{DOMAIN}",
+        breaks_in_ha_version=BREAKS_IN_HA_VERSION,
+        is_fixable=False,
+        issue_domain=DOMAIN,
+        severity=ir.IssueSeverity.WARNING,
+        translation_key="deprecated_yaml",
+        translation_placeholders=translation_placeholders,
+    )
+
+
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: SonyProjectorConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
+    """Set up the projector switch from a config entry."""
+    async_add_entities([SonyProjector(entry.runtime_data, entry)], True)
 
 
 class SonyProjector(SwitchEntity):
     """Represents a Sony Projector as a switch."""
 
-    def __init__(self, sdcp_connection, name):
+    _attr_has_entity_name = True
+    _attr_name = None
+
+    def __init__(
+        self, sdcp_connection: pysdcp.Projector, entry: SonyProjectorConfigEntry
+    ) -> None:
         """Init of the Sony projector."""
         self._sdcp = sdcp_connection
         self._attr_available = False
-        self._attr_name = name
+        self._attr_unique_id = entry.entry_id
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, entry.entry_id)},
+            manufacturer="Sony",
+            name=entry.title,
+        )
 
     def update(self) -> None:
         """Get the latest state from the projector."""

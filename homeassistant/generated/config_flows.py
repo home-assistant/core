@@ -803,6 +803,7 @@ FLOWS = {
         "songpal",
         "sonos",
         "sony_infrared",
+        "sony_projector",
         "soundtouch",
         "specialized_turbo",
         "speedtestdotnet",
