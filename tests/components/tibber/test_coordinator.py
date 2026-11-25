@@ -332,20 +332,31 @@ def _consumption_backend_error() -> tibber.RetryableHttpExceptionError:
 
 
 @pytest.mark.parametrize(
-    ("failing_step", "expected_message"),
+    (
+        "consumption_side_effect",
+        "production_side_effect",
+        "statistics_side_effect",
+        "expected_message",
+    ),
     [
         pytest.param(
-            "fetch_consumption_data_active_homes",
+            _consumption_backend_error(),
+            None,
+            None,
             "Unable to update Tibber consumption data",
             id="consumption",
         ),
         pytest.param(
-            "fetch_production_data_active_homes",
+            None,
+            _consumption_backend_error(),
+            None,
             "Unable to update Tibber production data",
             id="production",
         ),
         pytest.param(
-            "statistics",
+            None,
+            None,
+            _consumption_backend_error(),
             "Unable to update Tibber statistics",
             id="statistics",
         ),
@@ -359,18 +370,22 @@ async def test_setup_loads_when_consumption_backend_fails(
     setup_credentials: None,
     entity_registry: er.EntityRegistry,
     caplog: pytest.LogCaptureFixture,
-    failing_step: str,
+    consumption_side_effect: Exception | None,
+    production_side_effect: Exception | None,
+    statistics_side_effect: Exception | None,
     expected_message: str,
 ) -> None:
     """Test a Tibber backend error for consumption data doesn't block setup."""
     home = create_tibber_home(current_price=1.25)
     home.hourly_consumption_data = CONSUMPTION_DATA_1
-    home.get_historic_data = AsyncMock(return_value=CONSUMPTION_DATA_1)
+    home.get_historic_data = AsyncMock(
+        return_value=CONSUMPTION_DATA_1, side_effect=statistics_side_effect
+    )
     tibber_mock.get_homes.return_value = [home]
-    if failing_step == "statistics":
-        home.get_historic_data.side_effect = _consumption_backend_error()
-    else:
-        getattr(tibber_mock, failing_step).side_effect = _consumption_backend_error()
+    tibber_mock.fetch_consumption_data_active_homes.side_effect = (
+        consumption_side_effect
+    )
+    tibber_mock.fetch_production_data_active_homes.side_effect = production_side_effect
 
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
