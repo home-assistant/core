@@ -23,11 +23,13 @@ ATTR_STATE_OFF = "off"
 
 MODE_MANUAL = "manual"
 MODE_AUTO = "auto"
+MODE_OFF = "off"
 
 DAIKIN_DEMAND_CONTROL_MODES: dict[str, int] = {
     MODE_MANUAL: 0,
     MODE_AUTO: 2,
 }
+DAIKIN_DEMAND_CONTROL_OPTIONS = (MODE_OFF, MODE_AUTO, MODE_MANUAL)
 
 KEY_MAC = "mac"
 KEY_IP = "ip"

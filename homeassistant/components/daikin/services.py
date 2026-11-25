@@ -6,12 +6,13 @@ import probatio
 
 from homeassistant.const import CommonServiceArgument
 from homeassistant.core import HomeAssistant, ServiceCall, callback
-from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.service import async_extract_config_entry_ids
 
 from .const import DAIKIN_DEMAND_CONTROL_MODES, DOMAIN, MODE_MANUAL
 from .coordinator import DaikinConfigEntry
+from .demand_control import async_update_demand_control
 
 
 class DaikinService(StrEnum):
@@ -61,18 +62,12 @@ async def _extract_config_entry(call: ServiceCall) -> DaikinConfigEntry:
 async def async_set_demand_control(call: ServiceCall) -> None:
     """Set the demand control maximum power of the unit."""
     entry = await _extract_config_entry(call)
-    device = entry.runtime_data.device
-    if not device.support_demand_control:
-        raise HomeAssistantError(
-            translation_domain=DOMAIN,
-            translation_key="demand_control_unsupported",
-        )
-    await device.set_demand_control(
-        en_demand="on" if call.data[DaikinServiceArgument.EN_DEMAND] else "off",
-        max_pow=call.data[DaikinServiceArgument.MAX_POW],
-        mode=DAIKIN_DEMAND_CONTROL_MODES[call.data[DaikinServiceArgument.MODE]],
+    await async_update_demand_control(
+        entry.runtime_data,
+        enabled=call.data[DaikinServiceArgument.EN_DEMAND],
+        max_power=call.data[DaikinServiceArgument.MAX_POW],
+        mode=call.data[DaikinServiceArgument.MODE],
     )
-    await entry.runtime_data.async_refresh()
 
 
 @callback

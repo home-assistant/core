@@ -1,14 +1,21 @@
 {
   "entity": {
+    "number": {
+      "demand_control_max_power": {
+        "default": "mdi:percent"
+      }
+    },
+    "select": {
+      "demand_control_mode": {
+        "default": "mdi:meter-electric-outline"
+      }
+    },
     "sensor": {
       "compressor_frequency": {
         "default": "mdi:fan"
       },
       "cool_energy_consumption": {
         "default": "mdi:snowflake"
-      },
-      "demand_control_mode": {
-        "default": "mdi:meter-electric-outline"
       },
       "heat_energy_consumption": {
         "default": "mdi:fire"
