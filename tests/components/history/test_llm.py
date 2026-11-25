@@ -28,7 +28,7 @@ from homeassistant.components.recorder.statistics import (
     async_import_statistics,
 )
 from homeassistant.core import Context, HomeAssistant
-from homeassistant.helpers import llm
+from homeassistant.helpers import entity_registry as er, llm
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 from homeassistant.util.json import JsonObjectType
@@ -483,18 +483,24 @@ async def test_get_external_statistics(
             {"query": "ELECTRICITY usage"}, [EXTERNAL_STATISTIC_ID], id="query_name"
         ),
         pytest.param({"query": "living room"}, [ENTITY_ID], id="query_entity_name"),
+        pytest.param({"query": "grid meter"}, [ENERGY_ENTITY_ID], id="query_alias"),
         pytest.param({"query": "sensor.energy"}, [ENERGY_ENTITY_ID], id="query_id"),
         pytest.param({"unit_class": "power"}, [], id="no_match"),
     ],
 )
 async def test_search_statistics(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
     llm_context: llm.LLMContext,
     tool_args: JsonObjectType,
     expected_ids: list[str],
 ) -> None:
     """Test searching the statistics."""
     hass.states.async_set(ENTITY_ID, "21", {"friendly_name": "Living room temperature"})
+    entry = entity_registry.async_get_or_create(
+        "sensor", "test", "energy", suggested_object_id="energy"
+    )
+    entity_registry.async_update_entity(entry.entity_id, aliases=["Grid meter"])
     tool = SearchStatisticsTool()
     result = await tool.async_call(
         hass, llm.ToolInput(tool.name, tool_args), llm_context
