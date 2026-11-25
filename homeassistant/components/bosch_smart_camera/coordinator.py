@@ -105,11 +105,6 @@ class BoschCameraCoordinator(DataUpdateCoordinator[dict[str, Camera]]):
         await super().async_shutdown()
         await self.live_sessions.async_close_all()
 
-    async def async_get_access_token(self) -> str:
-        """Return a valid access token."""
-        await self._oauth_session.async_ensure_token_valid()
-        return str(self._oauth_session.token[CONF_ACCESS_TOKEN])
-
     @override
     async def _async_update_data(self) -> dict[str, Camera]:
         """Fetch the camera list."""
