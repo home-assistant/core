@@ -4950,6 +4950,15 @@
         "zigbee"
       ]
     },
+    "frigidaire": {
+      "name": "Frigidaire",
+      "integration_type": "virtual",
+      "categories": [
+        "appliances_cleaning",
+        "climate"
+      ],
+      "supported_by": "electrolux"
+    },
     "fritzbox": {
       "name": "FRITZ!",
       "integrations": {

@@ -250,10 +250,10 @@ async def test_ac_set_hvac_mode_switch_on_fails(
     with pytest.raises(SmartThingsConnectionError):
         await hass.services.async_call(
             CLIMATE_DOMAIN,
-            SERVICE_SET_HVAC_MODE,
+            ClimateService.SET_HVAC_MODE,
             {
-                ATTR_ENTITY_ID: "climate.theater_ac_office_granit",
-                ATTR_HVAC_MODE: HVACMode.HEAT,
+                TargetKey.ENTITY_ID: "climate.theater_ac_office_granit",
+                ClimateServiceArgument.HVAC_MODE: HVACMode.HEAT,
             },
             blocking=True,
         )
