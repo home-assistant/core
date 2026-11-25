@@ -7,7 +7,7 @@ from homeassistant.const import Platform
 
 LOGGER = logging.getLogger(__package__)
 DOMAIN: Final = "lastfm"
-PLATFORMS = [Platform.SENSOR]
+PLATFORMS = [Platform.IMAGE, Platform.SENSOR]
 DEFAULT_NAME = "LastFM"
 
 CONF_API_SECRET = "api_secret"
