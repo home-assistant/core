@@ -1375,6 +1375,9 @@
     "not_ready_connection_error": {
       "message": "Unable to connect to Teslemetry"
     },
+    "rear_trunk_state_unknown": {
+      "message": "The rear trunk state is unknown, try again once the vehicle reports it"
+    },
     "set_scheduled_charging_time": {
       "message": "Scheduled charging time is required when enabling"
     },
