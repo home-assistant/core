@@ -5,11 +5,12 @@ from unittest.mock import patch
 import pytest
 from pytest_homeassistant.common import assert_setup_component, async_mock_service
 
-from homeassistant.components import notify, tts
+from homeassistant.components import notify
 from homeassistant.components.media_player import (
     DOMAIN as MP_DOMAIN,
     SERVICE_PLAY_MEDIA,
 )
+from homeassistant.components.notify import NotifyServiceArgument
 from homeassistant.core import HomeAssistant
 from homeassistant.core_config import async_process_ha_core_config
 from homeassistant.setup import async_setup_component
@@ -114,7 +115,7 @@ async def test_setup_legacy_service(
         notify.DOMAIN,
         "tts_test",
         {
-            tts.ATTR_MESSAGE: "There is someone at the door.",
+            NotifyServiceArgument.MESSAGE: "There is someone at the door.",
         },
         blocking=True,
     )
@@ -151,7 +152,7 @@ async def test_setup_service(
         notify.DOMAIN,
         "tts_test",
         {
-            tts.ATTR_MESSAGE: "There is someone at the door.",
+            NotifyServiceArgument.MESSAGE: "There is someone at the door.",
         },
         blocking=True,
     )
