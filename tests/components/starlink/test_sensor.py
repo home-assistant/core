@@ -3,7 +3,6 @@
 from copy import deepcopy
 
 import pytest
-from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.const import PERCENTAGE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
@@ -21,7 +20,6 @@ def _status_with_signal_quality(signal_quality: float | None) -> JsonArrayType:
     return status_data
 
 
-@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 @pytest.mark.parametrize(
     ("status_data", "expected_state"),
     [
@@ -33,9 +31,8 @@ def _status_with_signal_quality(signal_quality: float | None) -> JsonArrayType:
     ],
     indirect=["status_data"],
 )
-async def test_signal_quality(
-    hass: HomeAssistant, init_integration: MockConfigEntry, expected_state: str
-) -> None:
+@pytest.mark.usefixtures("entity_registry_enabled_by_default", "init_integration")
+async def test_signal_quality(hass: HomeAssistant, expected_state: str) -> None:
     """Test the signal quality sensor."""
     state = hass.states.get(ENTITY_ID)
     assert state is not None

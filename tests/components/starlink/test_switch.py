@@ -53,17 +53,21 @@ def _status_without_gps_enabled() -> JsonArrayType:
     ],
     indirect=["status_data"],
 )
+@pytest.mark.usefixtures("init_integration")
 async def test_starlink_positioning_exclusive_state(
-    hass: HomeAssistant, init_integration: MockConfigEntry, expected_state: str
+    hass: HomeAssistant, expected_state: str
 ) -> None:
     """Test the switch is on when the dish does not use GPS."""
     assert hass.states.get(ENTITY_ID).state == expected_state
 
 
-@pytest.mark.parametrize("status_data", [_status_without_gps_enabled()], indirect=True)
-async def test_starlink_positioning_exclusive_not_reported(
-    hass: HomeAssistant, init_integration: MockConfigEntry
-) -> None:
+@pytest.mark.parametrize(
+    "status_data",
+    [pytest.param(_status_without_gps_enabled(), id="gps_not_reported")],
+    indirect=True,
+)
+@pytest.mark.usefixtures("init_integration")
+async def test_starlink_positioning_exclusive_not_reported(hass: HomeAssistant) -> None:
     """Test the switch is unknown when the dish omits the GPS state."""
     assert hass.states.get(ENTITY_ID).state == STATE_UNKNOWN
 
@@ -95,9 +99,8 @@ async def test_starlink_positioning_exclusive_set(
     )
 
 
-async def test_starlink_positioning_exclusive_error(
-    hass: HomeAssistant, init_integration: MockConfigEntry
-) -> None:
+@pytest.mark.usefixtures("init_integration")
+async def test_starlink_positioning_exclusive_error(hass: HomeAssistant) -> None:
     """Test a communication error is raised as HomeAssistantError."""
     with (
         patch(SET_GPS_CONFIG_TARGET, side_effect=GrpcError("error")),

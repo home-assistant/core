@@ -1,7 +1,8 @@
 """Tests Starlink integration init/unload."""
 
+from copy import deepcopy
 from datetime import datetime, timedelta
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 from freezegun import freeze_time
 from freezegun.api import FrozenDateTimeFactory
@@ -17,6 +18,13 @@ from homeassistant.util import dt as dt_util
 from homeassistant.util.json import JsonArrayType
 
 from . import setup_integration
+
+
+def _status_with_uptime(status_data: JsonArrayType, uptime: int) -> JsonArrayType:
+    """Return status data with the given uptime."""
+    status = deepcopy(status_data)
+    status[0]["uptime"] = uptime
+    return status
 
 
 async def test_successful_entry(
@@ -88,6 +96,7 @@ async def test_restore_cache_with_accumulation(
 async def test_last_restart_state(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
+    mock_starlink: MagicMock,
     status_data: JsonArrayType,
 ) -> None:
     """Test Starlink last restart state."""
@@ -102,7 +111,7 @@ async def test_last_restart_state(
     with patch.object(
         mock_config_entry.runtime_data, "always_update", return_value=True
     ):
-        status_data[0]["uptime"] = 804144
+        mock_starlink.return_value = _status_with_uptime(status_data, 804144)
 
         with freeze_time(utc_now + timedelta(seconds=5)):
             async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=5))
@@ -110,7 +119,7 @@ async def test_last_restart_state(
 
         assert hass.states.get(entity_id).state == "2025-10-13T06:09:11+00:00"
 
-        status_data[0]["uptime"] = 804134
+        mock_starlink.return_value = _status_with_uptime(status_data, 804134)
 
         with freeze_time(utc_now + timedelta(seconds=10)):
             async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=10))
@@ -118,7 +127,7 @@ async def test_last_restart_state(
 
         assert hass.states.get(entity_id).state == "2025-10-13T06:09:11+00:00"
 
-        status_data[0]["uptime"] = 100
+        mock_starlink.return_value = _status_with_uptime(status_data, 100)
 
         with freeze_time(utc_now + timedelta(seconds=15)):
             async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=15))

@@ -3,7 +3,6 @@
 from copy import deepcopy
 
 import pytest
-from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.const import STATE_OFF, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
@@ -44,15 +43,16 @@ def _status_with_motors_stuck() -> JsonArrayType:
         "binary_sensor.starlink_sleep",
     ],
 )
-async def test_alert_reported_by_dish(
-    hass: HomeAssistant, init_integration: MockConfigEntry, entity_id: str
-) -> None:
+@pytest.mark.usefixtures("init_integration")
+async def test_alert_reported_by_dish(hass: HomeAssistant, entity_id: str) -> None:
     """Test that an alert the dish reports is used as the state."""
     assert hass.states.get(entity_id).state == STATE_OFF
 
 
 @pytest.mark.parametrize(
-    "status_data", [_status_without_missing_alerts()], indirect=True
+    "status_data",
+    [pytest.param(_status_without_missing_alerts(), id="alerts_not_reported")],
+    indirect=True,
 )
 @pytest.mark.parametrize(
     "entity_id",
@@ -62,17 +62,19 @@ async def test_alert_reported_by_dish(
         "binary_sensor.starlink_sleep",
     ],
 )
-async def test_alert_not_reported_by_dish(
-    hass: HomeAssistant, init_integration: MockConfigEntry, entity_id: str
-) -> None:
+@pytest.mark.usefixtures("init_integration")
+async def test_alert_not_reported_by_dish(hass: HomeAssistant, entity_id: str) -> None:
     """Test that an alert the dish omits is unknown instead of raising."""
     assert hass.states.get(entity_id).state == STATE_UNKNOWN
 
 
-@pytest.mark.parametrize("status_data", [_status_with_motors_stuck()], indirect=True)
-async def test_remaining_alerts_unaffected(
-    hass: HomeAssistant, init_integration: MockConfigEntry
-) -> None:
+@pytest.mark.parametrize(
+    "status_data",
+    [pytest.param(_status_with_motors_stuck(), id="motors_stuck")],
+    indirect=True,
+)
+@pytest.mark.usefixtures("init_integration")
+async def test_remaining_alerts_unaffected(hass: HomeAssistant) -> None:
     """Test that alerts the dish still reports keep working."""
     assert hass.states.get("binary_sensor.starlink_motors_stuck").state == "on"
     assert hass.states.get("binary_sensor.starlink_thermal_throttle").state == STATE_OFF

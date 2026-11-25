@@ -5,7 +5,7 @@ from unittest.mock import MagicMock
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
-from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
+from pytest_homeassistant.common import async_fire_time_changed
 from starlink_grpc import GrpcError
 
 from homeassistant.const import STATE_UNAVAILABLE
@@ -16,10 +16,10 @@ ENTITY_ID = "time.starlink_sleep_start"
 
 @pytest.mark.freeze_time("2026-06-01 12:00:00+00:00")
 @pytest.mark.parametrize("sleep_config", [[0, 60, True]], indirect=True)
+@pytest.mark.usefixtures("init_integration")
 async def test_unavailable_on_update_failure(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
-    init_integration: MockConfigEntry,
     mock_sleep_config: MagicMock,
 ) -> None:
     """Test the time entity is unavailable while the coordinator update fails."""

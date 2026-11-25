@@ -2,6 +2,7 @@
 
 from unittest.mock import MagicMock
 
+import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries
@@ -14,8 +15,9 @@ from homeassistant.data_entry_flow import FlowResultType
 USER_INPUT = {CONF_IP_ADDRESS: "192.168.100.1:9200"}
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_flow_user_fails_can_succeed(
-    hass: HomeAssistant, mock_get_id: MagicMock, mock_setup_entry: MagicMock
+    hass: HomeAssistant, mock_get_id: MagicMock
 ) -> None:
     """Test user flow can succeed after failure when Starlink is available."""
     mock_get_id.return_value = None
@@ -46,9 +48,8 @@ async def test_flow_user_fails_can_succeed(
     assert result["data"] == USER_INPUT
 
 
-async def test_flow_user_success(
-    hass: HomeAssistant, mock_get_id: MagicMock, mock_setup_entry: MagicMock
-) -> None:
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_flow_user_success(hass: HomeAssistant, mock_get_id: MagicMock) -> None:
     """Test user initialized flow succeeds when Starlink is available."""
     mock_get_id.return_value = "some-valid-id"
 
@@ -68,8 +69,9 @@ async def test_flow_user_success(
     assert result["result"].unique_id == "some-valid-id"
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_flow_user_duplicate_abort(
-    hass: HomeAssistant, mock_get_id: MagicMock, mock_setup_entry: MagicMock
+    hass: HomeAssistant, mock_get_id: MagicMock
 ) -> None:
     """Test user initialized flow aborts when Starlink is already configured."""
     mock_get_id.return_value = "some-valid-id"
