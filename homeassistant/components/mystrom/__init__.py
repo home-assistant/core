@@ -16,7 +16,7 @@ from .const import DOMAIN
 from .models import MyStromConfigEntry, MyStromData
 
 PLATFORMS_PLUGS = [Platform.SENSOR, Platform.SWITCH]
-PLATFORMS_BULB = [Platform.LIGHT]
+PLATFORMS_BULB = [Platform.LIGHT, Platform.SENSOR]
 PLATFORMS_MOTION_SENSOR = [Platform.SENSOR]
 
 

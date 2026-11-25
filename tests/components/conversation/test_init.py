@@ -5,7 +5,13 @@ from unittest.mock import patch
 
 import probatio
 import pytest
-from pytest_homeassistant.common import MockUser, async_mock_service
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    MockModule,
+    MockUser,
+    async_mock_service,
+    mock_integration,
+)
 from pytest_homeassistant.typing import ClientSessionGenerator
 from syrupy.assertion import SnapshotAssertion
 
@@ -13,6 +19,7 @@ from homeassistant.components import conversation
 from homeassistant.components.conversation import (
     DOMAIN,
     ConversationInput,
+    ConversationServiceArgument,
     async_get_agent,
     async_get_chat_log,
     async_handle_intents,
@@ -20,12 +27,7 @@ from homeassistant.components.conversation import (
     default_agent,
 )
 from homeassistant.components.conversation.agent_manager import agent_id_validator
-from homeassistant.components.conversation.const import (
-    ATTR_AGENT_ID,
-    ATTR_CONVERSATION_ID,
-    ATTR_TEXT,
-    HOME_ASSISTANT_AGENT,
-)
+from homeassistant.components.conversation.const import HOME_ASSISTANT_AGENT
 from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -56,11 +58,11 @@ async def test_turn_on_intent(
     hass.states.async_set("light.kitchen", "off")
     calls = async_mock_service(hass, LIGHT_DOMAIN, "turn_on")
 
-    data = {ATTR_TEXT: sentence}
+    data = {ConversationServiceArgument.TEXT: sentence}
     if agent_id is not None:
-        data[ATTR_AGENT_ID] = agent_id
+        data[ConversationServiceArgument.AGENT_ID] = agent_id
     if conversation_id is not None:
-        data[ATTR_CONVERSATION_ID] = conversation_id
+        data[ConversationServiceArgument.CONVERSATION_ID] = conversation_id
     result = await hass.services.async_call(
         "conversation",
         "process",
@@ -104,7 +106,9 @@ async def test_turn_off_intent(hass: HomeAssistant, init_components, sentence) -
     hass.states.async_set("light.kitchen", "on")
     calls = async_mock_service(hass, LIGHT_DOMAIN, "turn_off")
 
-    await hass.services.async_call("conversation", "process", {ATTR_TEXT: sentence})
+    await hass.services.async_call(
+        "conversation", "process", {ConversationServiceArgument.TEXT: sentence}
+    )
     await hass.async_block_till_done()
 
     assert len(calls) == 1
@@ -149,6 +153,24 @@ async def test_custom_agent(
     conversation.async_unset_agent(
         hass, hass.config_entries.async_get_entry(mock_conversation_agent.agent_id)
     )
+
+
+@pytest.mark.usefixtures("init_components")
+async def test_set_agent_not_entity_deprecated(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test that setting an agent that is not an entity is deprecated."""
+    mock_integration(hass, MockModule("legacy_agent"))
+    entry = MockConfigEntry(domain="legacy_agent")
+    entry.add_to_hass(hass)
+
+    conversation.async_set_agent(hass, entry, MockAgent(entry.entry_id, ["en"]))
+
+    assert (
+        "Detected that integration 'legacy_agent' sets a conversation agent that "
+        "is not a conversation entity. Convert the conversation platform to use "
+        "ConversationEntity. This will stop working in Home Assistant 2027.6.0"
+    ) in caplog.text
 
 
 @pytest.mark.usefixtures("init_components")

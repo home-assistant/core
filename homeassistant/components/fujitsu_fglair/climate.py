@@ -25,7 +25,7 @@ from homeassistant.components.climate import (
     HVACMode,
 )
 from homeassistant.const import ATTR_TEMPERATURE, PRECISION_HALVES, UnitOfTemperature
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .coordinator import FGLairConfigEntry, FGLairCoordinator
@@ -156,6 +156,7 @@ class FGLairDevice(FGLairEntity, ClimateEntity):
             self._attr_native_current_temperature = self.device.sensed_temp
             self._attr_native_target_temperature = self.device.set_temp
 
+    @callback
     @override
     def _handle_coordinator_update(self) -> None:
         self._set_attr()

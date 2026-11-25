@@ -52,8 +52,8 @@ class TuyaConfigFlow(ConfigFlow, domain=DOMAIN):
 
             errors["base"] = "login_error"
             placeholders = {
-                TUYA_RESPONSE_MSG: response.get(TUYA_RESPONSE_MSG, "Unknown error"),
-                TUYA_RESPONSE_CODE: response.get(TUYA_RESPONSE_CODE, "0"),
+                "msg": response.get(TUYA_RESPONSE_MSG, "Unknown error"),
+                "code": response.get(TUYA_RESPONSE_CODE, "0"),
             }
         else:
             user_input = {}
@@ -185,8 +185,8 @@ class TuyaConfigFlow(ConfigFlow, domain=DOMAIN):
 
             errors["base"] = "login_error"
             placeholders = {
-                TUYA_RESPONSE_MSG: response.get(TUYA_RESPONSE_MSG, "Unknown error"),
-                TUYA_RESPONSE_CODE: response.get(TUYA_RESPONSE_CODE, "0"),
+                "msg": response.get(TUYA_RESPONSE_MSG, "Unknown error"),
+                "code": response.get(TUYA_RESPONSE_CODE, "0"),
             }
         else:
             user_input = {}

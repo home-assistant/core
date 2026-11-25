@@ -12,6 +12,7 @@ from matter_server.client.exceptions import (
     ServerVersionTooNew,
     ServerVersionTooOld,
 )
+from matter_server.client.models.node import MatterNode
 from matter_server.common.errors import MatterError
 import pytest
 from pytest_homeassistant.common import MockConfigEntry, mock_component
@@ -665,7 +666,9 @@ async def test_issue_registry_invalid_version(
 
     entry_state = entry.state
     assert entry_state is ConfigEntryState.SETUP_RETRY
-    assert issue_registry.async_get_issue(DOMAIN, issue_raised)
+    issue = issue_registry.async_get_issue(DOMAIN, issue_raised)
+    assert issue
+    assert issue.config_entry_id == entry.entry_id
 
     matter_client.connect.side_effect = original_connect_side_effect
 
@@ -673,6 +676,48 @@ async def test_issue_registry_invalid_version(
     await hass.async_block_till_done()
 
     assert entry.state is ConfigEntryState.LOADED
+    assert not issue_registry.async_get_issue(DOMAIN, issue_raised)
+
+
+@pytest.mark.parametrize(
+    ("connect_side_effect", "issue_raised"),
+    [
+        (
+            ServerVersionTooOld("Invalid version"),
+            "server_version_version_too_old",
+        ),
+        (
+            ServerVersionTooNew("Invalid version"),
+            "server_version_version_too_new",
+        ),
+    ],
+)
+async def test_invalid_version_issue_removed_with_entry(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    issue_registry: ir.IssueRegistry,
+    connect_side_effect: Exception,
+    issue_raised: str,
+) -> None:
+    """Test the invalid version issue is deleted when the entry is removed."""
+    matter_client.connect.side_effect = connect_side_effect
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="Matter",
+        data={
+            "url": "ws://host1:5581/ws",
+            "use_addon": False,
+        },
+    )
+    entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+    assert issue_registry.async_get_issue(DOMAIN, issue_raised)
+
+    await hass.config_entries.async_remove(entry.entry_id)
+    await hass.async_block_till_done()
+
     assert not issue_registry.async_get_issue(DOMAIN, issue_raised)
 
 
@@ -1092,13 +1137,13 @@ async def test_remove_config_entry_device_no_node(
     assert not device_registry.async_get(device_entry.id)
 
 
-async def test_remove_config_entry_device_rejects_child_device(
+async def test_remove_config_entry_device_allows_orphan_child_device(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
     device_registry: dr.DeviceRegistry,
     integration: MockConfigEntry,
 ) -> None:
-    """Test that removing an unexpected child device is rejected."""
+    """Test that an orphan child device (its endpoint is gone) can be removed."""
     assert await async_setup_component(hass, "config", {})
     parent_device = device_registry.async_get_or_create(
         config_entry_id=integration.entry_id,
@@ -1112,12 +1157,57 @@ async def test_remove_config_entry_device_rejects_child_device(
 
     client = await hass_ws_client(hass)
     response = await client.remove_device(child_device.id)
-    assert not response["success"]
-    assert (
-        response["error"]["message"]
-        == "Failed to remove device entry, rejected by integration"
+    assert response["success"]
+    await hass.async_block_till_done()
+
+    assert not device_registry.async_get(child_device.id)
+
+
+@pytest.mark.usefixtures("matter_node")
+@pytest.mark.parametrize("node_fixture", ["eve_energy_20ecn4101"])
+async def test_remove_config_entry_device_rejects_active_child_device(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test removing a child device whose endpoint still needs one is rejected."""
+    assert await async_setup_component(hass, "config", {})
+    config_entry = hass.config_entries.async_entries(DOMAIN)[0]
+    children = dr.async_child_entries_for_config_entry(
+        device_registry, config_entry.entry_id
     )
-    assert device_registry.async_get(child_device.id)
+    assert children
+
+    client = await hass_ws_client(hass)
+    for child in children:
+        response = await client.remove_device(child.id)
+        assert not response["success"]
+        assert device_registry.async_get(child.id)
+
+
+@pytest.mark.parametrize("node_fixture", ["eve_energy_20ecn4101"])
+async def test_get_matter_device_info_child_device(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    matter_node: MatterNode,
+) -> None:
+    """Test Matter device info resolves a child device id to its node.
+
+    This underpins the Google Assistant SYNC response and device diagnostics for
+    entities that live on a split endpoint's child device.
+    """
+    config_entry = hass.config_entries.async_entries(DOMAIN)[0]
+    children = dr.async_child_entries_for_config_entry(
+        device_registry, config_entry.entry_id
+    )
+    assert children
+    expected_device_info = {
+        "unique_id": matter_node.device_info.uniqueID,
+        "vendor_id": hex(matter_node.device_info.vendorID),
+        "product_id": hex(matter_node.device_info.productID),
+    }
+    for child in children:
+        assert get_matter_device_info(hass, child.id) == expected_device_info
 
 
 async def test_get_matter_device_info(

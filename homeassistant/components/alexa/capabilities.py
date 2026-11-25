@@ -1075,12 +1075,16 @@ class AlexaTemperatureSensor(AlexaCapability):
         )
         temp: str | None = self.entity.state
         if self.entity.domain == CLIMATE_DOMAIN:
-            unit = self.hass.config.units.temperature_unit
+            unit = self.entity.attributes[
+                ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT
+            ]
             temp = self.entity.attributes.get(
                 ClimateEntityStateAttribute.CURRENT_TEMPERATURE
             )
         elif self.entity.domain == WATER_HEATER_DOMAIN:
-            unit = self.hass.config.units.temperature_unit
+            unit = self.entity.attributes[
+                WaterHeaterCapabilityAttribute.TEMPERATURE_UNIT
+            ]
             temp = self.entity.attributes.get(
                 WaterHeaterStateAttribute.CURRENT_TEMPERATURE
             )
@@ -1318,7 +1322,7 @@ class AlexaThermostatController(AlexaCapability):
                 mode = API_THERMOSTAT_MODES[HVACMode(self.entity.state)]
             return mode
 
-        unit = self.hass.config.units.temperature_unit
+        unit = self.entity.attributes[ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT]
         if name == "targetSetpoint":
             temp = self.entity.attributes.get(
                 ClimateEntityStateAttribute.TARGET_TEMPERATURE

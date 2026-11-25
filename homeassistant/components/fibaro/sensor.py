@@ -173,7 +173,7 @@ class FibaroAdditionalSensor(FibaroEntity, SensorEntity):
         controller: FibaroController,
     ) -> None:
         """Initialize the sensor."""
-        super().__init__(fibaro_device, controller)
+        super().__init__(fibaro_device, controller, use_child_device_info=True)
         self.entity_description = entity_description
 
         # To differentiate additional sensors from main sensors they need

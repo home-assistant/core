@@ -38,8 +38,8 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.icon import icon_for_battery_level
 from homeassistant.helpers.typing import StateType, Undefined
 
-from . import EcovacsConfigEntry
 from .const import LEGACY_SUPPORTED_LIFESPANS, SUPPORTED_LIFESPANS
+from .controller import EcovacsConfigEntry
 from .entity import (
     EcovacsCapabilityEntityDescription,
     EcovacsDescriptionEntity,
@@ -259,9 +259,8 @@ async def async_setup_entry(
         if description.component in device.capabilities.life_span.types
     )
     entities.extend(
-        EcovacsErrorSensor(device, capability)
+        EcovacsErrorSensor(device, device.capabilities.error)
         for device in controller.devices
-        if (capability := device.capabilities.error)
     )
 
     async_add_entities(entities)

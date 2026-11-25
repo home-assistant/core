@@ -95,12 +95,11 @@ def _make_handler(
             async with asyncio.timeout(COMMAND_TIMEOUT):
                 stdout_data, stderr_data = await process.communicate()
         except TimeoutError as err:
-            if process:
-                with suppress(TypeError):
-                    process.kill()
-                    # https://bugs.python.org/issue43884
-                    process._transport.close()  # type: ignore[attr-defined]  # noqa: SLF001
-                del process
+            with suppress(TypeError):
+                process.kill()
+                # https://bugs.python.org/issue43884
+                process._transport.close()  # type: ignore[attr-defined]  # noqa: SLF001
+            del process
 
             raise HomeAssistantError(
                 translation_domain=DOMAIN,

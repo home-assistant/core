@@ -3,7 +3,7 @@
 import math
 from typing import Any, override
 
-from pyintelliclima import FanMode, FanPreset, FanSpeed, FanSpeedState, IntelliClimaECO2
+from pyintelliclima import FanMode, FanPreset, FanSpeed, FanSpeedState
 
 from homeassistant.components.fan import FanEntity, FanEntityFeature
 from homeassistant.core import HomeAssistant
@@ -15,7 +15,7 @@ from homeassistant.util.percentage import (
 from homeassistant.util.scaling import int_states_in_range
 
 from .coordinator import IntelliClimaConfigEntry, IntelliClimaCoordinator
-from .entity import IntelliClimaECOEntity
+from .entity import IntelliClimaECODevice, IntelliClimaECOEntity, eco_devices
 
 # Coordinator is used to centralize the data updates
 PARALLEL_UPDATES = 0
@@ -32,9 +32,9 @@ async def async_setup_entry(
     entities: list[IntelliClimaVMCFan] = [
         IntelliClimaVMCFan(
             coordinator=coordinator,
-            device=ecocomfort2,
+            device=device,
         )
-        for ecocomfort2 in coordinator.data.ecocomfort2_devices.values()
+        for device in eco_devices(coordinator.data)
     ]
 
     async_add_entities(entities)
@@ -55,7 +55,7 @@ class IntelliClimaVMCFan(IntelliClimaECOEntity, FanEntity):
     def __init__(
         self,
         coordinator: IntelliClimaCoordinator,
-        device: IntelliClimaECO2,
+        device: IntelliClimaECODevice,
     ) -> None:
         """Class initializer."""
         super().__init__(coordinator, device)
@@ -117,7 +117,7 @@ class IntelliClimaVMCFan(IntelliClimaECOEntity, FanEntity):
     @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the fan."""
-        await self.coordinator.api.ecocomfort2.turn_off(self._device_sn)
+        await self._device_api.turn_off(self._device_sn)
         await self.coordinator.async_request_refresh()
 
     @override
@@ -149,7 +149,7 @@ class IntelliClimaVMCFan(IntelliClimaECOEntity, FanEntity):
 
         if preset_mode == "auto":
             # auto is a special case with special mode and speed setting
-            await self.coordinator.api.ecocomfort2.set_mode_speed_auto(self._device_sn)
+            await self._device_api.set_mode_speed_auto(self._device_sn)
             await self.coordinator.async_request_refresh()
             return
         if percentage == 0:
@@ -174,7 +174,5 @@ class IntelliClimaVMCFan(IntelliClimaECOEntity, FanEntity):
         )
 
         speed = FanSpeed.sleep if speed == FanSpeed.off else speed
-        await self.coordinator.api.ecocomfort2.set_mode_speed(
-            self._device_sn, mode, speed
-        )
+        await self._device_api.set_mode_speed(self._device_sn, mode, speed)
         await self.coordinator.async_request_refresh()

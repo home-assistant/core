@@ -1,39 +1,34 @@
 """Tests for the A Better Routeplanner sensor platform."""
 
 import logging
-from unittest.mock import AsyncMock, MagicMock
+from unittest.mock import MagicMock
 
 from aioabrp import (
-    AbrpVehicle,
     ChargingState,
     ConnectionEvent,
     ConnectionState,
+    DrivingState,
     Telemetry,
-    VehicleModelDisplay,
 )
 import pytest
 from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.abrp.const import DOMAIN
 from homeassistant.components.homeassistant import (
     DOMAIN as HOMEASSISTANT_DOMAIN,
     SERVICE_UPDATE_ENTITY,
 )
+from homeassistant.config_entries import SOURCE_REAUTH
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 
 from . import setup_integration
 from .conftest import (
     MOCK_VEHICLE_ID,
     MOCK_VEHICLE_ID_2,
-    MOCK_VEHICLE_MODEL,
-    MOCK_VEHICLE_NAME,
-    SENSOR_TEST_SUB,
     build_metric_value,
-    build_vehicle_model_display,
     fire_connection,
     fire_frame,
 )
@@ -41,16 +36,17 @@ from .conftest import (
 SOC_ENTITY_ID = "sensor.rivian_r2_2027_standard_long_range_soc"
 POWER_ENTITY_ID = "sensor.rivian_r2_2027_standard_long_range_power"
 VOLTAGE_ENTITY_ID = "sensor.rivian_r2_2027_standard_long_range_voltage"
+SOH_ENTITY_ID = "sensor.rivian_r2_2027_standard_long_range_state_of_health"
+CALIBRATED_REF_CONS_ENTITY_ID = (
+    "sensor.rivian_r2_2027_standard_long_range_calibrated_ref_cons"
+)
 CHARGING_STATE_ENTITY_ID = "sensor.rivian_r2_2027_standard_long_range_charging_state"
 VOLTAGE_ENTITY_ID_2 = "sensor.rivian_r1s_2024_quad_max_voltage"
 # Not in the mocked garage, so the stream never subscribes to it.
 _ABSENT_VEHICLE_ID = 999999999999
-# Two makes: a single-make setup can't tell per-vehicle binding from a
-# hard-coded first make.
-_POLESTAR_VEHICLE_MODEL = "polestar:2:24:bev:awd"
 
 
-@pytest.mark.usefixtures("mock_abrp_client")
+@pytest.mark.usefixtures("mock_abrp_client", "entity_registry_enabled_by_default")
 async def test_telemetry_sensors_snapshot(
     hass: HomeAssistant,
     config_entry_with_vehicles: MockConfigEntry,
@@ -76,6 +72,13 @@ async def test_telemetry_sensors_snapshot(
             soh=build_metric_value(98.0),
             range=build_metric_value(100000.0),
             battery_temperature=build_metric_value(23.7),
+            battery_temperature_min=build_metric_value(21.4),
+            battery_temperature_max=build_metric_value(26.1),
+            external_temperature=build_metric_value(8.5),
+            cabin_temperature=build_metric_value(20.5),
+            current=build_metric_value(33.1),
+            hvac_power=build_metric_value(1200.0),
+            driving_state=build_metric_value(DrivingState.DRIVE),
             charging_state=build_metric_value(ChargingState.CHARGING_AC),
         ),
     )
@@ -84,117 +87,6 @@ async def test_telemetry_sensors_snapshot(
     await snapshot_platform(
         hass, entity_registry, snapshot, config_entry_with_vehicles.entry_id
     )
-
-
-def _make_vehicle(
-    *,
-    vehicle_id: int = MOCK_VEHICLE_ID,
-    name: str | None = "Rivian R2 2027 Standard Long Range",
-    vehicle_model: str = MOCK_VEHICLE_MODEL,
-    paint: str | None = "WHITE",
-) -> AbrpVehicle:
-    """Build an AbrpVehicle from its four identity fields."""
-    return AbrpVehicle(
-        vehicle_id=vehicle_id,
-        name=name,
-        vehicle_model=vehicle_model,
-        paint=paint,
-    )
-
-
-def _scope(entry: MockConfigEntry, vehicle_id: int) -> str:
-    """Build the unique_id / device-identifier prefix for one vehicle."""
-    return f"{entry.unique_id}_{vehicle_id}"
-
-
-@pytest.mark.usefixtures("mock_telemetry_stream")
-async def test_device_info_name_falls_back_to_typecode_when_unnamed(
-    hass: HomeAssistant,
-    config_entry_with_vehicles: MockConfigEntry,
-    device_registry: dr.DeviceRegistry,
-    mock_abrp_client: AsyncMock,
-) -> None:
-    """``DeviceInfo.name`` falls back to the raw typecode for an unnamed vehicle."""
-    mock_abrp_client.return_value = [_make_vehicle(name=None)]
-
-    await setup_integration(hass, config_entry_with_vehicles)
-
-    device = device_registry.async_get_device_by_identifier(
-        (DOMAIN, _scope(config_entry_with_vehicles, MOCK_VEHICLE_ID)),
-        config_entry_with_vehicles.entry_id,
-    )
-    assert device is not None
-    assert device.name == MOCK_VEHICLE_MODEL
-
-
-def _set_two_make_displays(
-    mock_abrp_client: AsyncMock,
-) -> dict[int, VehicleModelDisplay]:
-    """Register display fixtures for the two distinct-make vehicles."""
-    displays = {
-        MOCK_VEHICLE_ID: build_vehicle_model_display(
-            manufacturer="Rivian",
-            model="R2",
-            years="2026",
-            title="",
-            start_year=2026,
-            end_year=None,
-        ),
-        MOCK_VEHICLE_ID_2: build_vehicle_model_display(
-            manufacturer="Polestar",
-            model="2",
-            years="2024",
-            title="",
-            start_year=2024,
-            end_year=None,
-        ),
-    }
-    mock_abrp_client.display_responses[MOCK_VEHICLE_MODEL] = displays[MOCK_VEHICLE_ID]
-    mock_abrp_client.display_responses[_POLESTAR_VEHICLE_MODEL] = displays[
-        MOCK_VEHICLE_ID_2
-    ]
-    return displays
-
-
-@pytest.mark.usefixtures("mock_telemetry_stream")
-async def test_per_vehicle_device_anchored_at_setup(
-    hass: HomeAssistant,
-    config_entry_with_vehicles: MockConfigEntry,
-    device_registry: dr.DeviceRegistry,
-    mock_abrp_client: AsyncMock,
-) -> None:
-    """Each garage vehicle's device exists with full metadata after setup."""
-    polestar_name = "Polestar 2 Long Range"
-    mock_abrp_client.return_value = [
-        _make_vehicle(),
-        _make_vehicle(
-            vehicle_id=MOCK_VEHICLE_ID_2,
-            name=polestar_name,
-            vehicle_model=_POLESTAR_VEHICLE_MODEL,
-        ),
-    ]
-    entry = config_entry_with_vehicles
-
-    displays = _set_two_make_displays(mock_abrp_client)
-    await setup_integration(hass, entry)
-
-    expected_names = {
-        MOCK_VEHICLE_ID: MOCK_VEHICLE_NAME,
-        MOCK_VEHICLE_ID_2: polestar_name,
-    }
-    for vehicle_id, display in displays.items():
-        device = device_registry.async_get_device_by_identifier(
-            (DOMAIN, f"{SENSOR_TEST_SUB}_{vehicle_id}"), entry.entry_id
-        )
-        assert device is not None
-        assert device.manufacturer == display.manufacturer
-        # ``model_name`` drops the make, which has its own field; the label's
-        # own composition rules are the library's contract.
-        assert device.model == display.model_name
-        assert device.name == expected_names[vehicle_id]
-        assert device.configuration_url == (
-            f"https://abetterrouteplanner.com/?vehicle_id={vehicle_id}"
-        )
 
 
 @pytest.mark.parametrize(
@@ -266,6 +158,7 @@ async def test_availability_follows_stream_auth_not_connection(
     assert [
         record.levelno for record in caplog.records if "auth failed" in record.message
     ] == [logging.WARNING]
+    assert any(config_entry_with_vehicles.async_get_active_flows(hass, {SOURCE_REAUTH}))
 
     fire_connection(
         mock_telemetry_stream,
@@ -317,6 +210,47 @@ async def test_first_frame_creates_only_that_metric(
     assert [entity_registry.async_get(entity_id) for entity_id in absent] == [
         None
     ] * len(absent)
+
+
+@pytest.mark.parametrize(
+    ("telemetry", "entity_id"),
+    [
+        pytest.param(
+            Telemetry(voltage=build_metric_value(400.0)),
+            VOLTAGE_ENTITY_ID,
+            id="voltage",
+        ),
+        pytest.param(
+            Telemetry(soh=build_metric_value(98.0)),
+            SOH_ENTITY_ID,
+            id="soh",
+        ),
+        pytest.param(
+            Telemetry(calibrated_ref_cons=build_metric_value(175.0)),
+            CALIBRATED_REF_CONS_ENTITY_ID,
+            id="calibrated_ref_cons",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("mock_abrp_client")
+async def test_rarely_used_sensors_disabled_by_default(
+    hass: HomeAssistant,
+    config_entry_with_vehicles: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    mock_telemetry_stream: MagicMock,
+    telemetry: Telemetry,
+    entity_id: str,
+) -> None:
+    """Rarely used sensors are registered but disabled until the user enables them."""
+    await setup_integration(hass, config_entry_with_vehicles)
+
+    fire_frame(mock_telemetry_stream, MOCK_VEHICLE_ID, telemetry)
+    await hass.async_block_till_done()
+
+    entry = entity_registry.async_get(entity_id)
+    assert entry is not None
+    assert entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
+    assert hass.states.get(entity_id) is None
 
 
 @pytest.mark.usefixtures("mock_abrp_client")
@@ -387,7 +321,7 @@ async def test_lazy_create_idempotent_on_repeated_frames(
         ),
     ],
 )
-@pytest.mark.usefixtures("mock_abrp_client")
+@pytest.mark.usefixtures("mock_abrp_client", "entity_registry_enabled_by_default")
 async def test_multi_vehicle_entity_isolation(
     hass: HomeAssistant,
     config_entry_with_vehicles: MockConfigEntry,
