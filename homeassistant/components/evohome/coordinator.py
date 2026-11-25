@@ -116,10 +116,11 @@ def _log_api_call_failure(logger: logging.Logger, err: ec2.ApiCallFailedError) -
     )
 
 
-def _log_validation_error(
-    logger: logging.Logger, err: ec2.BadApiRequestError | ec2.BadApiResponseError
+def _log_client_error(
+    logger: logging.Logger,
+    err: ec2.BadApiRequestError | ec2.BadApiResponseError | ec2.ClientStateError,
 ) -> None:
-    """Log (as debug) what the translated error of a bad request/response leaves out."""
+    """Log (as debug) what the translated error of an error the client raised leaves out."""
     logger.debug(
         "%s: %s (reason=%s, details=%s)",
         type(err).__name__,
@@ -213,7 +214,7 @@ class EvoAccountCoordinator(_EvoCoordinator[_HighPrecisionTemps]):
             ) from err
 
         except ec2.BadApiResponseError as err:
-            _log_validation_error(self.logger, err)
+            _log_client_error(self.logger, err)
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="api_response_invalid",
@@ -371,7 +372,7 @@ class EvoLocationCoordinator(_EvoCoordinator[EvoLocStatusT]):
             ) from err
 
         except ec2.BadApiRequestError as err:  # e.g. InvalidSetModeError
-            _log_validation_error(self.logger, err)
+            _log_client_error(self.logger, err)
             raise _bad_request_error(err) from err
 
         if request_refresh:  # wait a moment for system to quiesce before updating state
@@ -401,14 +402,14 @@ class EvoLocationCoordinator(_EvoCoordinator[EvoLocStatusT]):
             ) from err
 
         except ec2.BadApiResponseError as err:
-            _log_validation_error(self.logger, err)
+            _log_client_error(self.logger, err)
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="api_response_invalid",
             ) from err
 
         except ec2.StaleConfigError as err:
-            self.logger.debug("The location's config is stale: %s", err)
+            _log_client_error(self.logger, err)
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="config_stale",
