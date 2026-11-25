@@ -232,7 +232,7 @@
       "message": "The device accepted the request but did not start the one-time run, so the manual control did not take effect."
     },
     "tou_invalid_plan": {
-      "message": "Invalid time-of-use plan: {error}. Each rule is time|function|power|weekdays|enabled, rules separated by ;"
+      "message": "Invalid time-of-use plan: {error}. Format: start-end|function|power|weekdays|enabled, rules separated by ';'. Function is charge, discharge, or self, where self uses '-' as power."
     },
     "manual_control_still_running": {
       "message": "The device still reports the one-time run after the stop request."
