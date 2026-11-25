@@ -5,6 +5,7 @@ from collections.abc import Callable, Coroutine
 from functools import wraps
 from typing import Any, Concatenate, override
 
+from pywizlight import PilotParser, wizlight
 from pywizlight.bulblibrary import BulbType
 from pywizlight.exceptions import (
     WizLightConnectionError,
@@ -20,6 +21,11 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
 from .coordinator import WizCoordinator, WizData
+
+
+def get_wiz_state(device: wizlight) -> PilotParser | None:
+    """Return the primary state of a WiZ device."""
+    return device.state[0] if device.state else None
 
 
 class WizEntity(CoordinatorEntity[WizCoordinator], Entity):
@@ -47,6 +53,11 @@ class WizEntity(CoordinatorEntity[WizCoordinator], Entity):
         hw_version = f"{board} {hw_data[0]}" if hw_data else board
         self._attr_device_info.hw_version = hw_version
         self._attr_device_info.model = model
+
+    @property
+    def _state(self) -> PilotParser | None:
+        """Return the primary state of the device."""
+        return get_wiz_state(self._device)
 
     @callback
     @override

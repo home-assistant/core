@@ -6,6 +6,7 @@ from unittest.mock import MagicMock, patch
 
 from aioengiebelgium import (
     EngieBeCommunicationError,
+    EngieBeEpexNotPublishedError,
     EpexGranularity,
     EpexPayload,
     EpexSlot,
@@ -19,20 +20,55 @@ from pytest_homeassistant.common import (
 )
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.engie_be.const import DOMAIN, EPEX_SCAN_INTERVAL
+from homeassistant.components.engie_be.const import (
+    BRUSSELS_TIME_ZONE,
+    EPEX_SCAN_INTERVAL,
+)
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
+from homeassistant.util import dt as dt_util
 
 from .conftest import (
-    BAN,
-    BRUSSELS_TIME_ZONE,
+    EPEX_CURRENT_HOUR_UNIQUE_ID,
+    EPEX_TOMORROW_AVAILABLE_UNIQUE_ID,
     build_epex_payload,
-    build_epex_payload_with_partial_tomorrow,
-    build_epex_payload_without_tomorrow,
+    get_entity_id,
+    get_state,
     setup_dynamic_entry,
 )
+
+
+def _after_today(moment: datetime) -> bool:
+    """Return True when the moment falls on a later Brussels day than today."""
+    return (
+        moment.astimezone(BRUSSELS_TIME_ZONE).date()
+        > dt_util.now(BRUSSELS_TIME_ZONE).date()
+    )
+
+
+def build_epex_payload_without_tomorrow(
+    start: datetime,
+    end: datetime,
+    granularity: EpexGranularity = EpexGranularity.HOURLY,
+) -> EpexPayload:
+    """Raise for any window after today and build a payload otherwise."""
+    if _after_today(start):
+        raise EngieBeEpexNotPublishedError("not published")
+    return build_epex_payload(start, end, granularity)
+
+
+def build_epex_payload_with_partial_tomorrow(
+    start: datetime,
+    end: datetime,
+    granularity: EpexGranularity = EpexGranularity.HOURLY,
+) -> EpexPayload:
+    """Return one slot for tomorrow windows and a full payload otherwise."""
+    if _after_today(start):
+        payload = build_epex_payload(start, end, granularity)
+        return EpexPayload(slots=payload.slots[:1], slot_duration=payload.slot_duration)
+    return build_epex_payload(start, end, granularity)
 
 
 @pytest.mark.usefixtures("frozen_afternoon")
@@ -49,21 +85,17 @@ async def test_tomorrow_prices_not_published(
         build_epex_payload_without_tomorrow
     )
     await setup_dynamic_entry(hass, mock_config_entry, mock_engie_client)
-    entity_id = entity_registry.async_get_entity_id(
-        "binary_sensor", DOMAIN, f"{BAN}_epex_tomorrow_available"
+    entity_id = get_entity_id(
+        entity_registry, Platform.BINARY_SENSOR, EPEX_TOMORROW_AVAILABLE_UNIQUE_ID
     )
-    assert entity_id is not None
 
     state = hass.states.get(entity_id)
     assert state is not None
     assert state.state == STATE_OFF
 
-    current_entity_id = entity_registry.async_get_entity_id(
-        "sensor", DOMAIN, f"{BAN}_epex_current_hour"
+    current_state = get_state(
+        hass, entity_registry, Platform.SENSOR, EPEX_CURRENT_HOUR_UNIQUE_ID
     )
-    assert current_entity_id is not None
-    current_state = hass.states.get(current_entity_id)
-    assert current_state is not None
     assert float(current_state.state) == pytest.approx(0.15)
     assert "Fetching EPEX prices for 2026-10-04 failed" in caplog.text
 
@@ -81,10 +113,9 @@ async def test_tomorrow_prices_partial(
         build_epex_payload_with_partial_tomorrow
     )
     await setup_dynamic_entry(hass, mock_config_entry, mock_engie_client)
-    entity_id = entity_registry.async_get_entity_id(
-        "binary_sensor", DOMAIN, f"{BAN}_epex_tomorrow_available"
+    entity_id = get_entity_id(
+        entity_registry, Platform.BINARY_SENSOR, EPEX_TOMORROW_AVAILABLE_UNIQUE_ID
     )
-    assert entity_id is not None
 
     state = hass.states.get(entity_id)
     assert state is not None
@@ -116,10 +147,9 @@ async def test_tomorrow_prices_unavailable_when_fetch_fails(
     )
     await setup_dynamic_entry(hass, mock_config_entry, mock_engie_client)
     assert mock_config_entry.state is ConfigEntryState.LOADED
-    entity_id = entity_registry.async_get_entity_id(
-        "binary_sensor", DOMAIN, f"{BAN}_epex_tomorrow_available"
+    entity_id = get_entity_id(
+        entity_registry, Platform.BINARY_SENSOR, EPEX_TOMORROW_AVAILABLE_UNIQUE_ID
     )
-    assert entity_id is not None
 
     state = hass.states.get(entity_id)
     assert state is not None
@@ -156,10 +186,9 @@ async def test_tomorrow_prices_with_stretched_slot(
         _stretched_tomorrow
     )
     await setup_dynamic_entry(hass, mock_config_entry, mock_engie_client)
-    entity_id = entity_registry.async_get_entity_id(
-        "binary_sensor", DOMAIN, f"{BAN}_epex_tomorrow_available"
+    entity_id = get_entity_id(
+        entity_registry, Platform.BINARY_SENSOR, EPEX_TOMORROW_AVAILABLE_UNIQUE_ID
     )
-    assert entity_id is not None
 
     state = hass.states.get(entity_id)
     assert state is not None

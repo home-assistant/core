@@ -45,6 +45,10 @@
       "description": "You do not have a Home Assistant Link subscription. Subscribe at {account_url}.",
       "title": "No subscription detected"
     },
+    "remote_client_certificate_error": {
+      "description": "Remote access through Home Assistant Link is off because the client certificate authority file ({ca_file}) could not be loaded. Fix the file or update the SSL peer certificate in the network settings, then restart Home Assistant.",
+      "title": "Remote access client certificate authority could not be loaded"
+    },
     "reset_bad_custom_domain_configuration": {
       "description": "The DNS configuration for your custom domain ({custom_domains}) is not correct. This domain has now been ignored and will not be used for Home Assistant Link. If you want to use this domain, please fix the DNS configuration and restart Home Assistant. If you do not need this anymore, you can remove it from the account page.",
       "title": "Custom domain ignored"
@@ -88,6 +92,7 @@
       "logged_in": "Logged In",
       "relayer_connected": "Relayer connected",
       "relayer_region": "Relayer region",
+      "remote_client_certificate_required": "Remote client certificate required",
       "remote_connected": "Remote connected",
       "remote_enabled": "Remote enabled",
       "remote_server": "Remote server",

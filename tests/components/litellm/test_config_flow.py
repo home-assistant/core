@@ -18,6 +18,7 @@ from homeassistant.components.litellm.const import (
     CONF_STT_CUSTOM_PROMPT_KEYWORDS,
     CONF_STT_KEYWORDS,
     CONF_STT_PROMPT,
+    CONF_TTS_VOICE,
     DOMAIN,
 )
 from homeassistant.config_entries import SOURCE_USER, ConfigEntryState
@@ -188,6 +189,7 @@ async def test_duplicate_entry(
     assert result["reason"] == "already_configured"
 
 
+@pytest.mark.parametrize("subentry_type", ["ai_task_evaluate", "stt", "tts"])
 @pytest.mark.parametrize(
     ("exception", "reason"),
     [
@@ -196,14 +198,15 @@ async def test_duplicate_entry(
         (Exception("unexpected"), "unknown"),
     ],
 )
-async def test_stt_subentry_exceptions(
+async def test_model_subentry_exceptions(
     hass: HomeAssistant,
     mock_openai_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
+    subentry_type: str,
     exception: Exception,
     reason: str,
 ) -> None:
-    """Test STT subentry flow aborts when models cannot be fetched."""
+    """Test model subentry flows abort when models cannot be fetched."""
     await setup_integration(hass, mock_config_entry)
 
     with patch(
@@ -212,7 +215,7 @@ async def test_stt_subentry_exceptions(
         side_effect=exception,
     ):
         result = await hass.config_entries.subentries.async_init(
-            (mock_config_entry.entry_id, "stt"),
+            (mock_config_entry.entry_id, subentry_type),
             context={"source": SOURCE_USER},
         )
 
@@ -260,6 +263,81 @@ async def test_create_stt_subentry(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reconfigure_successful"
+
+
+@pytest.mark.usefixtures("mock_openai_client", "mock_models")
+async def test_create_ai_task_evaluate_subentry(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
+    """Test creating an AI task evaluation subentry and changing its model."""
+    await setup_integration(hass, mock_config_entry)
+
+    result = await hass.config_entries.subentries.async_init(
+        (mock_config_entry.entry_id, "ai_task_evaluate"),
+        context={"source": SOURCE_USER},
+    )
+    assert result["type"] is FlowResultType.FORM
+
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"], {CONF_MODEL: "openai/gpt-6-luna"}
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "openai/gpt-6-luna"
+    assert result["data"] == {CONF_MODEL: "openai/gpt-6-luna"}
+
+    subentry_id = get_subentry_id(mock_config_entry, "ai_task_evaluate")
+    result = await mock_config_entry.start_subentry_reconfigure_flow(hass, subentry_id)
+    assert result["type"] is FlowResultType.FORM
+
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"], {CONF_MODEL: "gpt-3.5-turbo"}
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    subentry = mock_config_entry.subentries[subentry_id]
+    assert subentry.title == "gpt-3.5-turbo"
+    assert subentry.data == {CONF_MODEL: "gpt-3.5-turbo"}
+
+
+@pytest.mark.usefixtures("mock_openai_client", "mock_models")
+async def test_create_tts_subentry(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
+    """Test creating a TTS subentry and changing its voice."""
+    await setup_integration(hass, mock_config_entry)
+
+    result = await hass.config_entries.subentries.async_init(
+        (mock_config_entry.entry_id, "tts"),
+        context={"source": SOURCE_USER},
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "init"
+
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"], {CONF_MODEL: "gpt-4", CONF_TTS_VOICE: "alloy"}
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "gpt-4"
+    assert result["data"] == {CONF_MODEL: "gpt-4", CONF_TTS_VOICE: "alloy"}
+
+    subentry_id = get_subentry_id(mock_config_entry, "tts")
+    result = await mock_config_entry.start_subentry_reconfigure_flow(hass, subentry_id)
+    assert result["type"] is FlowResultType.FORM
+
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"], {CONF_MODEL: "gpt-4", CONF_TTS_VOICE: "af_bella"}
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert mock_config_entry.subentries[subentry_id].data == {
+        CONF_MODEL: "gpt-4",
+        CONF_TTS_VOICE: "af_bella",
+    }
 
 
 async def _create_stt_with_hints(
@@ -436,7 +514,18 @@ async def test_create_conversation_agent_no_control(
 @pytest.mark.usefixtures("mock_openai_client", "mock_models")
 @pytest.mark.parametrize(
     "proxy_models",
-    [("gpt-4o", "whisper-1", "text-embedding-3-small", "kokoro", "gpt-4o-alias")],
+    [
+        (
+            "gpt-4o",
+            "whisper-1",
+            "tts-1",
+            "text-embedding-3-small",
+            "decider",
+            "judge",
+            "kokoro",
+            "gpt-4o-alias",
+        )
+    ],
 )
 @pytest.mark.parametrize(
     "proxy_model_modes",
@@ -444,7 +533,10 @@ async def test_create_conversation_agent_no_control(
         {
             "gpt-4o": "chat",
             "whisper-1": "audio_transcription",
+            "tts-1": "audio_speech",
             "text-embedding-3-small": "embedding",
+            "decider": "decisions",
+            "judge": "evaluation",
             "kokoro": None,
         }
     ],
@@ -453,9 +545,15 @@ async def test_create_conversation_agent_no_control(
     ("subentry_type", "expected_models"),
     [
         pytest.param(
+            "ai_task_evaluate",
+            ["decider", "judge", "kokoro", "gpt-4o-alias"],
+            id="ai_task_evaluate",
+        ),
+        pytest.param(
             "conversation", ["gpt-4o", "kokoro", "gpt-4o-alias"], id="conversation"
         ),
         pytest.param("stt", ["whisper-1", "kokoro", "gpt-4o-alias"], id="stt"),
+        pytest.param("tts", ["tts-1", "kokoro", "gpt-4o-alias"], id="tts"),
     ],
 )
 async def test_subentry_model_options_by_mode(
@@ -612,7 +710,9 @@ async def test_reconfigure_conversation_agent_disable_llm_api(
     assert key.default() == []
 
 
-@pytest.mark.parametrize("subentry_type", ["conversation", "stt"])
+@pytest.mark.parametrize(
+    "subentry_type", ["ai_task_evaluate", "conversation", "stt", "tts"]
+)
 async def test_reconfigure_entry_not_loaded(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
