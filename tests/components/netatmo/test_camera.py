@@ -260,6 +260,122 @@ async def test_monitoring_component(
         # NDB (Netatmo Doorbell) does not support monitoring on/off, so it is not tested here
     ],
 )
+async def test_camera_override(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+    netatmo_auth: AsyncMock,
+    camera_type: str,
+    camera_id: str,
+    camera_entity: str,
+) -> None:
+    """Test polling override monitoring component with webhook and action."""
+
+    fake_post_hits = 0
+
+    async def fake_post(*args: Any, **kwargs: Any):
+        """Fake error during requesting backend data."""
+        nonlocal fake_post_hits
+        fake_post_hits += 1
+        return await fake_post_request(hass, *args, **kwargs)
+
+    with (
+        patch(
+            "homeassistant.components.netatmo.api.AsyncConfigEntryNetatmoAuth"
+        ) as mock_auth,
+        patch("homeassistant.components.netatmo.coordinator.PLATFORMS", ["camera"]),
+        patch(
+            "homeassistant.components.netatmo.async_get_config_entry_implementation",
+            return_value=AsyncMock(),
+        ),
+        patch(
+            "homeassistant.components.netatmo.webhook.webhook_generate_url",
+        ) as mock_webhook,
+    ):
+        mock_auth.return_value.async_post_api_request.side_effect = fake_post
+        mock_auth.return_value.async_addwebhook.side_effect = AsyncMock()
+        mock_auth.return_value.async_dropwebhook.side_effect = AsyncMock()
+        mock_webhook.return_value = "https://example.com"
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+
+    webhook_id = config_entry.data[CONF_WEBHOOK_ID]
+    await hass.async_block_till_done()
+
+    assert hass.states.get(camera_entity).state == "idle"
+    assert hass.states.get(camera_entity).attributes.get("monitoring") is True
+
+    # Test off camera event
+    response = {
+        "event_type": "off",
+        "device_id": camera_id,
+        "camera_id": camera_id,
+        "event_id": "601dce1560abca1ebad9b723",
+        "push_type": f"{camera_type}-off",
+    }
+    await simulate_webhook(hass, webhook_id, response)
+
+    assert hass.states.get(camera_entity).state == "idle"
+    assert hass.states.get(camera_entity).attributes.get("monitoring") is False
+
+    # Trigger some polling cycle to let polling restores the monitoring state to True
+    await advance_time(hass, freezer, **POLLING_INTERVAL)
+
+    assert hass.states.get(camera_entity).state == "idle"
+    assert hass.states.get(camera_entity).attributes.get("monitoring") is True
+
+    # Test disconnection camera event
+    response = {
+        "event_type": "disconnection",
+        "device_id": camera_id,
+        "camera_id": camera_id,
+        "event_id": "601dce1560abca1ebad9b723",
+        "push_type": f"{camera_type}-disconnection",
+    }
+    await simulate_webhook(hass, webhook_id, response)
+
+    assert hass.states.get(camera_entity).state == "unavailable"
+    assert hass.states.get(camera_entity).attributes.get("monitoring") is None
+
+    # Trigger some polling cycle to let polling restores the monitoring state to True
+    await advance_time(hass, freezer, **POLLING_INTERVAL)
+
+    assert hass.states.get(camera_entity).state == "idle"
+    assert hass.states.get(camera_entity).attributes.get("monitoring") is True
+
+    # Test turn_off services while camera was on
+    with patch("pyatmo.home.Home.async_set_state") as mock_set_state:
+        await hass.services.async_call(
+            "camera", "turn_off", service_data={"entity_id": camera_entity}
+        )
+        await hass.async_block_till_done()
+        mock_set_state.assert_called_once_with(
+            {
+                "modules": [
+                    {
+                        "id": camera_id,
+                        "monitoring": "off",
+                    }
+                ]
+            }
+        )
+    assert hass.states.get(camera_entity).state == "idle"
+    assert hass.states.get(camera_entity).attributes.get("monitoring") is False
+
+    # Trigger some polling cycle to let polling restores the monitoring state to True
+    await advance_time(hass, freezer, **POLLING_INTERVAL)
+
+    assert hass.states.get(camera_entity).state == "idle"
+    assert hass.states.get(camera_entity).attributes.get("monitoring") is True
+
+
+@pytest.mark.parametrize(
+    ("camera_type", "camera_id", "camera_entity"),
+    [
+        ("NACamera", "12:34:56:00:f1:62", "camera.hall"),
+        ("NOC", "12:34:56:10:b9:0e", "camera.front"),
+        # NDB (Netatmo Doorbell) does not support monitoring on/off, so it is not tested here
+    ],
+)
 async def test_monitoring_component_failure(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
