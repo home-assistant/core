@@ -1,8 +1,10 @@
 """Fixtures for the IRM KMI integration tests."""
 
 from collections.abc import Generator
+import copy
 from unittest.mock import AsyncMock, MagicMock, patch
 
+from irm_kmi_api import PollenParser
 import pytest
 from pytest_homeassistant.common import MockConfigEntry, load_json_object_fixture
 
@@ -14,7 +16,14 @@ from homeassistant.const import (
     CONF_UNIQUE_ID,
 )
 
-from .const import CURRENT_WEATHER
+from .const import (
+    ANIMATION,
+    CURRENT_WEATHER,
+    POLLEN,
+    RADAR_FORECAST,
+    RADAR_FRAME,
+    WARNINGS,
+)
 
 
 @pytest.fixture
@@ -60,7 +69,22 @@ def mock_irm_kmi_api() -> Generator[MagicMock]:
         irm_kmi.get_current_weather.return_value = CURRENT_WEATHER
         irm_kmi.get_daily_forecast.return_value = []
         irm_kmi.get_hourly_forecast.return_value = []
+        irm_kmi.get_animation_data.return_value = ANIMATION
+        irm_kmi.get_warnings.return_value = WARNINGS
+        irm_kmi.get_radar_forecast.return_value = RADAR_FORECAST
+        irm_kmi.get_pollen.return_value = POLLEN
+        irm_kmi.get_animation_data.side_effect = lambda *args: copy.deepcopy(ANIMATION)
         yield irm_kmi
+
+
+@pytest.fixture
+def mock_get_image() -> Generator[AsyncMock]:
+    """Mock get_image() to return a radar frame."""
+    with patch(
+        "homeassistant.components.irm_kmi.IrmKmiApiClientHa.get_image",
+        return_value=RADAR_FRAME,
+    ) as get_image:
+        yield get_image
 
 
 @pytest.fixture
@@ -72,8 +96,14 @@ def forecast_fixture() -> str:
 @pytest.fixture
 def mock_get_forecasts_coord(forecast_fixture: str) -> Generator[AsyncMock]:
     """Mock get_forecasts_coord() to return a recorded forecast."""
-    with patch(
-        "homeassistant.components.irm_kmi.IrmKmiApiClientHa.get_forecasts_coord",
-        return_value=load_json_object_fixture(forecast_fixture, DOMAIN),
-    ) as get_forecasts_coord:
+    with (
+        patch(
+            "homeassistant.components.irm_kmi.IrmKmiApiClientHa.get_forecasts_coord",
+            return_value=load_json_object_fixture(forecast_fixture, DOMAIN),
+        ) as get_forecasts_coord,
+        patch(
+            "homeassistant.components.irm_kmi.IrmKmiApiClientHa.get_pollen",
+            return_value=PollenParser.get_default_data(),
+        ),
+    ):
         yield get_forecasts_coord

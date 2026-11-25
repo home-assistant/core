@@ -13,6 +13,7 @@ from aioairzone.const import (
     API_AIR_DEMAND,
     API_ANTI_FREEZE,
     API_BATTERY,
+    API_CLOUD_CONNECTED,
     API_COLD_ANGLE,
     API_COLD_DEMAND,
     API_COLD_STAGE,
@@ -33,6 +34,7 @@ from aioairzone.const import (
     API_HEAT_STAGE,
     API_HEAT_STAGES,
     API_HUMIDITY,
+    API_INTERFACE,
     API_MAC,
     API_MASTER_ZONE_ID,
     API_MAX_TEMP,
@@ -394,6 +396,8 @@ HVAC_VERSION_MOCK = {
 }
 
 HVAC_WEBSERVER_MOCK = {
+    API_CLOUD_CONNECTED: 0,
+    API_INTERFACE: "ethernet",
     API_MAC: "11:22:33:44:55:66",
     API_WS_TYPE: API_WS_AZ,
     API_WIFI_CHANNEL: 6,

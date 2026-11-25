@@ -1,0 +1,427 @@
+{
+  "observations": [
+    {
+      "station": "Helsinki Kaisaniemi",
+      "distance": "1 km N",
+      "time": "2026-11-06T14:20:00+02:00",
+      "temperature": 5.6,
+      "feelsLikeTemp": 2.8,
+      "symbol": "d000",
+      "windDirString": "NW",
+      "windDir": 310,
+      "windSpeed": 3.7,
+      "windGust": 6.7,
+      "pressure": 1026.2,
+      "relHumidity": 63,
+      "visibility": 20000,
+      "snowDepth": null,
+      "longitude": 24.94,
+      "latitude": 60.18,
+      "elevation": 4,
+      "precip1h": [
+        {
+          "endtime": "2026-11-05T15:00:00+02:00",
+          "accum": 0,
+          "prectype": "undefined"
+        },
+        {
+          "endtime": "2026-11-05T16:00:00+02:00",
+          "accum": 0,
+          "prectype": "undefined"
+        },
+        {
+          "endtime": "2026-11-05T17:00:00+02:00",
+          "accum": 0,
+          "prectype": "undefined"
+        },
+        {
+          "endtime": "2026-11-05T18:00:00+02:00",
+          "accum": 0,
+          "prectype": "undefined"
+        },
+        {
+          "endtime": "2026-11-05T19:00:00+02:00",
+          "accum": 0,
+          "prectype": "undefined"
+        },
+        {
+          "endtime": "2026-11-05T20:00:00+02:00",
+          "accum": 0,
+          "prectype": "undefined"
+        },
+        {
+          "endtime": "2026-11-05T21:00:00+02:00",
+          "accum": 0,
+          "prectype": "undefined"
+        },
+        {
+          "endtime": "2026-11-05T22:00:00+02:00",
+          "accum": 0,
+          "prectype": "undefined"
+        },
+        {
+          "endtime": "2026-11-05T23:00:00+02:00",
+          "accum": 0,
+          "prectype": "undefined"
+        },
+        {
+          "endtime": "2026-11-06T00:00:00+02:00",
+          "accum": 0,
+          "prectype": "undefined"
+        },
+        {
+          "endtime": "2026-11-06T01:00:00+02:00",
+          "accum": 0,
+          "prectype": "undefined"
+        },
+        {
+          "endtime": "2026-11-06T02:00:00+02:00",
+          "accum": 0,
+          "prectype": "undefined"
+        },
+        {
+          "endtime": "2026-11-06T03:00:00+02:00",
+          "accum": 0,
+          "prectype": "undefined"
+        },
+        {
+          "endtime": "2026-11-06T04:00:00+02:00",
+          "accum": 0,
+          "prectype": "undefined"
+        },
+        {
+          "endtime": "2026-11-06T05:00:00+02:00",
+          "accum": 0,
+          "prectype": "undefined"
+        },
+        {
+          "endtime": "2026-11-06T06:00:00+02:00",
+          "accum": 0,
+          "prectype": "undefined"
+        },
+        {
+          "endtime": "2026-11-06T07:00:00+02:00",
+          "accum": 0,
+          "prectype": "undefined"
+        },
+        {
+          "endtime": "2026-11-06T08:00:00+02:00",
+          "accum": 0,
+          "prectype": "undefined"
+        },
+        {
+          "endtime": "2026-11-06T09:00:00+02:00",
+          "accum": 0,
+          "prectype": "undefined"
+        },
+        {
+          "endtime": "2026-11-06T10:00:00+02:00",
+          "accum": 0,
+          "prectype": "undefined"
+        },
+        {
+          "endtime": "2026-11-06T11:00:00+02:00",
+          "accum": 0,
+          "prectype": "undefined"
+        },
+        {
+          "endtime": "2026-11-06T12:00:00+02:00",
+          "accum": 0,
+          "prectype": "undefined"
+        },
+        {
+          "endtime": "2026-11-06T13:00:00+02:00",
+          "accum": 0,
+          "prectype": "undefined"
+        },
+        {
+          "endtime": "2026-11-06T14:00:00+02:00",
+          "accum": 0,
+          "prectype": "undefined"
+        }
+      ]
+    },
+    {
+      "station": "Helsinki Kumpula",
+      "distance": "4 km N",
+      "time": "2026-11-06T14:20:00+02:00",
+      "temperature": 5.2,
+      "feelsLikeTemp": 2.4,
+      "symbol": "d000",
+      "windDirString": "NW",
+      "windDir": 307,
+      "windSpeed": 3.5,
+      "windGust": 5.8,
+      "pressure": 1026.2,
+      "relHumidity": 66,
+      "visibility": 49790,
+      "snowDepth": null,
+      "longitude": 24.96,
+      "latitude": 60.2,
+      "elevation": 26,
+      "precip1h": [
+        {
+          "endtime": "2026-11-05T15:00:00+02:00",
+          "accum": 0,
+          "prectype": "undefined"
+        },
+        {
+          "endtime": "2026-11-05T16:00:00+02:00",
+          "accum": 0,
+          "prectype": "undefined"
+        },
+        {
+          "endtime": "2026-11-05T17:00:00+02:00",
+          "accum": 0,
+          "prectype": "undefined"
+        },
+        {
+          "endtime": "2026-11-05T18:00:00+02:00",
+          "accum": 0,
+          "prectype": "undefined"
+        },
+        {
+          "endtime": "2026-11-05T19:00:00+02:00",
+          "accum": 0,
+          "prectype": "undefined"
+        },
+        {
+          "endtime": "2026-11-05T20:00:00+02:00",
+          "accum": 0,
+          "prectype": "undefined"
+        },
+        {
+          "endtime": "2026-11-05T21:00:00+02:00",
+          "accum": 0,
+          "prectype": "undefined"
+        },
+        {
+          "endtime": "2026-11-05T22:00:00+02:00",
+          "accum": 0,
+          "prectype": "undefined"
+        },
+        {
+          "endtime": "2026-11-05T23:00:00+02:00",
+          "accum": 0,
+          "prectype": "undefined"
+        },
+        {
+          "endtime": "2026-11-06T00:00:00+02:00",
+          "accum": 0,
+          "prectype": "undefined"
+        },
+        {
+          "endtime": "2026-11-06T01:00:00+02:00",
+          "accum": 0,
+          "prectype": "undefined"
+        },
+        {
+          "endtime": "2026-11-06T02:00:00+02:00",
+          "accum": 0,
+          "prectype": "undefined"
+        },
+        {
+          "endtime": "2026-11-06T03:00:00+02:00",
+          "accum": 0,
+          "prectype": "undefined"
+        },
+        {
+          "endtime": "2026-11-06T04:00:00+02:00",
+          "accum": 0,
+          "prectype": "undefined"
+        },
+        {
+          "endtime": "2026-11-06T05:00:00+02:00",
+          "accum": 0,
+          "prectype": "undefined"
+        },
+        {
+          "endtime": "2026-11-06T06:00:00+02:00",
+          "accum": 0,
+          "prectype": "undefined"
+        },
+        {
+          "endtime": "2026-11-06T07:00:00+02:00",
+          "accum": 0,
+          "prectype": "undefined"
+        },
+        {
+          "endtime": "2026-11-06T08:00:00+02:00",
+          "accum": 0,
+          "prectype": "undefined"
+        },
+        {
+          "endtime": "2026-11-06T09:00:00+02:00",
+          "accum": 0,
+          "prectype": "undefined"
+        },
+        {
+          "endtime": "2026-11-06T10:00:00+02:00",
+          "accum": 0,
+          "prectype": "undefined"
+        },
+        {
+          "endtime": "2026-11-06T11:00:00+02:00",
+          "accum": 0,
+          "prectype": "undefined"
+        },
+        {
+          "endtime": "2026-11-06T12:00:00+02:00",
+          "accum": 0,
+          "prectype": "undefined"
+        },
+        {
+          "endtime": "2026-11-06T13:00:00+02:00",
+          "accum": 0,
+          "prectype": "undefined"
+        },
+        {
+          "endtime": "2026-11-06T14:00:00+02:00",
+          "accum": 0,
+          "prectype": "undefined"
+        }
+      ]
+    },
+    {
+      "station": "Espoo Tapiola",
+      "distance": "8 km W",
+      "time": "2026-11-06T14:20:00+02:00",
+      "temperature": 5.1,
+      "feelsLikeTemp": 2,
+      "symbol": "d000",
+      "windDirString": "NW",
+      "windDir": 299,
+      "windSpeed": 3.9,
+      "windGust": 5.5,
+      "pressure": 1026.4,
+      "relHumidity": 68,
+      "visibility": 33254,
+      "snowDepth": null,
+      "longitude": 24.79,
+      "latitude": 60.18,
+      "elevation": 6,
+      "precip1h": [
+        {
+          "endtime": "2026-11-05T15:00:00+02:00",
+          "accum": 0,
+          "prectype": "undefined"
+        },
+        {
+          "endtime": "2026-11-05T16:00:00+02:00",
+          "accum": 0,
+          "prectype": "undefined"
+        },
+        {
+          "endtime": "2026-11-05T17:00:00+02:00",
+          "accum": 0,
+          "prectype": "undefined"
+        },
+        {
+          "endtime": "2026-11-05T18:00:00+02:00",
+          "accum": 0,
+          "prectype": "undefined"
+        },
+        {
+          "endtime": "2026-11-05T19:00:00+02:00",
+          "accum": 0,
+          "prectype": "undefined"
+        },
+        {
+          "endtime": "2026-11-05T20:00:00+02:00",
+          "accum": 0,
+          "prectype": "undefined"
+        },
+        {
+          "endtime": "2026-11-05T21:00:00+02:00",
+          "accum": 0,
+          "prectype": "undefined"
+        },
+        {
+          "endtime": "2026-11-05T22:00:00+02:00",
+          "accum": 0,
+          "prectype": "undefined"
+        },
+        {
+          "endtime": "2026-11-05T23:00:00+02:00",
+          "accum": 0,
+          "prectype": "undefined"
+        },
+        {
+          "endtime": "2026-11-06T00:00:00+02:00",
+          "accum": 0,
+          "prectype": "undefined"
+        },
+        {
+          "endtime": "2026-11-06T01:00:00+02:00",
+          "accum": 0,
+          "prectype": "undefined"
+        },
+        {
+          "endtime": "2026-11-06T02:00:00+02:00",
+          "accum": 0,
+          "prectype": "undefined"
+        },
+        {
+          "endtime": "2026-11-06T03:00:00+02:00",
+          "accum": 0,
+          "prectype": "undefined"
+        },
+        {
+          "endtime": "2026-11-06T04:00:00+02:00",
+          "accum": 0,
+          "prectype": "undefined"
+        },
+        {
+          "endtime": "2026-11-06T05:00:00+02:00",
+          "accum": 0,
+          "prectype": "undefined"
+        },
+        {
+          "endtime": "2026-11-06T06:00:00+02:00",
+          "accum": 0,
+          "prectype": "undefined"
+        },
+        {
+          "endtime": "2026-11-06T07:00:00+02:00",
+          "accum": 0,
+          "prectype": "undefined"
+        },
+        {
+          "endtime": "2026-11-06T08:00:00+02:00",
+          "accum": 0,
+          "prectype": "undefined"
+        },
+        {
+          "endtime": "2026-11-06T09:00:00+02:00",
+          "accum": 0,
+          "prectype": "undefined"
+        },
+        {
+          "endtime": "2026-11-06T10:00:00+02:00",
+          "accum": 0,
+          "prectype": "undefined"
+        },
+        {
+          "endtime": "2026-11-06T11:00:00+02:00",
+          "accum": 0,
+          "prectype": "undefined"
+        },
+        {
+          "endtime": "2026-11-06T12:00:00+02:00",
+          "accum": 0,
+          "prectype": "undefined"
+        },
+        {
+          "endtime": "2026-11-06T13:00:00+02:00",
+          "accum": 0,
+          "prectype": "undefined"
+        },
+        {
+          "endtime": "2026-11-06T14:00:00+02:00",
+          "accum": 0,
+          "prectype": "undefined"
+        }
+      ]
+    }
+  ]
+}

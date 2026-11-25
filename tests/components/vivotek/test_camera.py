@@ -9,8 +9,7 @@ from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.camera import (
-    SERVICE_DISABLE_MOTION,
-    SERVICE_ENABLE_MOTION,
+    CameraService,
     async_get_image,
     async_get_stream_source,
 )
@@ -151,14 +150,14 @@ async def test_camera_motion_detection_methods(
 
     await hass.services.async_call(
         "camera",
-        SERVICE_ENABLE_MOTION,
+        CameraService.ENABLE_MOTION_DETECTION,
         {"entity_id": "camera.vivotek_camera"},
         blocking=True,
     )
 
     await hass.services.async_call(
         "camera",
-        SERVICE_DISABLE_MOTION,
+        CameraService.DISABLE_MOTION_DETECTION,
         {"entity_id": "camera.vivotek_camera"},
         blocking=True,
     )

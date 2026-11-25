@@ -83,7 +83,7 @@ async def async_remove_config_entry_device(
 ) -> bool:
     """Remove config entry from a device."""
     if not isinstance(device_entry, dr.DeviceEntry):
-        # This integration does not create child devices.
+        # Child devices are retained until their removal can be confirmed.
         return False
     hub = config_entry.runtime_data
     if any(

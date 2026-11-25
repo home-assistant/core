@@ -7,7 +7,7 @@ from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN, SwitchService
-from homeassistant.const import CommonServiceArgument, Platform
+from homeassistant.const import Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -41,7 +41,7 @@ async def test_setting_value(
         SWITCH_DOMAIN,
         SwitchService.TURN_ON,
         {
-            CommonServiceArgument.ENTITY_ID: "switch.cambridge_audio_cxnv2_early_update",
+            TargetKey.ENTITY_ID: "switch.cambridge_audio_cxnv2_early_update",
         },
         blocking=True,
     )
@@ -52,7 +52,7 @@ async def test_setting_value(
         SWITCH_DOMAIN,
         SwitchService.TURN_OFF,
         {
-            CommonServiceArgument.ENTITY_ID: "switch.cambridge_audio_cxnv2_early_update",
+            TargetKey.ENTITY_ID: "switch.cambridge_audio_cxnv2_early_update",
         },
         blocking=True,
     )
@@ -72,7 +72,7 @@ async def test_equalizer_switch(
         SWITCH_DOMAIN,
         SwitchService.TURN_ON,
         {
-            CommonServiceArgument.ENTITY_ID: "switch.cambridge_audio_cxnv2_equalizer",
+            TargetKey.ENTITY_ID: "switch.cambridge_audio_cxnv2_equalizer",
         },
         blocking=True,
     )
@@ -84,7 +84,7 @@ async def test_equalizer_switch(
         SWITCH_DOMAIN,
         SwitchService.TURN_OFF,
         {
-            CommonServiceArgument.ENTITY_ID: "switch.cambridge_audio_cxnv2_equalizer",
+            TargetKey.ENTITY_ID: "switch.cambridge_audio_cxnv2_equalizer",
         },
         blocking=True,
     )

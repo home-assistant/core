@@ -395,6 +395,42 @@
   list([
   ])
 # ---
+# name: test_humidifier_state[Dual Air Fryer][devices]
+  list([
+    DeviceRegistryEntrySnapshot({
+      'area_id': None,
+      'config_entry_id': <ANY>,
+      'config_subentry_id': None,
+      'configuration_url': None,
+      'connections': set({
+      }),
+      'disabled_by': None,
+      'entry_type': None,
+      'hw_version': None,
+      'id': <ANY>,
+      'identifiers': set({
+        tuple(
+          'vesync',
+          'CAFTF101S',
+        ),
+      }),
+      'labels': set({
+      }),
+      'manufacturer': 'VeSync',
+      'model': 'CAF-TF101S',
+      'model_id': None,
+      'name': 'Dual Air Fryer',
+      'name_by_user': None,
+      'serial_number': None,
+      'sw_version': None,
+      'via_device_id': None,
+    }),
+  ])
+# ---
+# name: test_humidifier_state[Dual Air Fryer][entities]
+  list([
+  ])
+# ---
 # name: test_humidifier_state[Humidifier 200s][devices]
   list([
     DeviceRegistryEntrySnapshot({
@@ -460,7 +496,7 @@
       'object_id_base': None,
       'options': dict({
       }),
-      'original_device_class': None,
+      'original_device_class': <HumidifierDeviceClass.HUMIDIFIER: 'humidifier'>,
       'original_icon': None,
       'original_name': None,
       'platform': 'vesync',
@@ -481,6 +517,7 @@
         'normal',
       ]),
       <HumidifierEntityStateAttribute.CURRENT_HUMIDITY: 'current_humidity'>: 35,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'humidifier',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Humidifier 200s',
       <HumidifierEntityStateAttribute.HUMIDITY: 'humidity'>: 40,
       <HumidifierEntityCapabilityAttribute.MAX_HUMIDITY: 'max_humidity'>: 80,
@@ -563,7 +600,7 @@
       'object_id_base': None,
       'options': dict({
       }),
-      'original_device_class': None,
+      'original_device_class': <HumidifierDeviceClass.HUMIDIFIER: 'humidifier'>,
       'original_icon': None,
       'original_name': None,
       'platform': 'vesync',
@@ -586,6 +623,7 @@
         'sleep',
       ]),
       <HumidifierEntityStateAttribute.CURRENT_HUMIDITY: 'current_humidity'>: 36,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'humidifier',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Humidifier 6000s',
       <HumidifierEntityStateAttribute.HUMIDITY: 'humidity'>: 40,
       <HumidifierEntityCapabilityAttribute.MAX_HUMIDITY: 'max_humidity'>: 80,
@@ -667,7 +705,7 @@
       'object_id_base': None,
       'options': dict({
       }),
-      'original_device_class': None,
+      'original_device_class': <HumidifierDeviceClass.HUMIDIFIER: 'humidifier'>,
       'original_icon': None,
       'original_name': None,
       'platform': 'vesync',
@@ -689,6 +727,7 @@
         'sleep',
       ]),
       <HumidifierEntityStateAttribute.CURRENT_HUMIDITY: 'current_humidity'>: 35,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'humidifier',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Humidifier 600S',
       <HumidifierEntityStateAttribute.HUMIDITY: 'humidity'>: 40,
       <HumidifierEntityCapabilityAttribute.MAX_HUMIDITY: 'max_humidity'>: 80,
@@ -698,6 +737,110 @@
     }),
     'context': <ANY>,
     'entity_id': 'humidifier.humidifier_600s',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_humidifier_state[Humidifier Sprout][devices]
+  list([
+    DeviceRegistryEntrySnapshot({
+      'area_id': None,
+      'config_entry_id': <ANY>,
+      'config_subentry_id': None,
+      'configuration_url': None,
+      'connections': set({
+      }),
+      'disabled_by': None,
+      'entry_type': None,
+      'hw_version': None,
+      'id': <ANY>,
+      'identifiers': set({
+        tuple(
+          'vesync',
+          'sprout-humidifier',
+        ),
+      }),
+      'labels': set({
+      }),
+      'manufacturer': 'VeSync',
+      'model': 'LEH-B381S-WUS',
+      'model_id': None,
+      'name': 'Humidifier Sprout',
+      'name_by_user': None,
+      'serial_number': None,
+      'sw_version': None,
+      'via_device_id': None,
+    }),
+  ])
+# ---
+# name: test_humidifier_state[Humidifier Sprout][entities]
+  list([
+    EntityRegistryEntrySnapshot({
+      'aliases': list([
+        None,
+      ]),
+      'area_id': None,
+      'capabilities': dict({
+        <HumidifierEntityCapabilityAttribute.AVAILABLE_MODES: 'available_modes'>: list([
+          'auto',
+          'normal',
+          'sleep',
+        ]),
+        <HumidifierEntityCapabilityAttribute.MAX_HUMIDITY: 'max_humidity'>: 80,
+        <HumidifierEntityCapabilityAttribute.MIN_HUMIDITY: 'min_humidity'>: 30,
+      }),
+      'config_entry_id': <ANY>,
+      'config_subentry_id': None,
+      'device_class': None,
+      'device_id': <DeviceEntry identifiers=[('vesync', 'sprout-humidifier')]>,
+      'disabled_by': None,
+      'domain': 'humidifier',
+      'entity_category': None,
+      'entity_id': 'humidifier.humidifier_sprout',
+      'has_entity_name': True,
+      'hidden_by': None,
+      'icon': None,
+      'id': <ANY>,
+      'labels': set({
+      }),
+      'name': None,
+      'object_id_base': None,
+      'options': dict({
+      }),
+      'original_device_class': <HumidifierDeviceClass.HUMIDIFIER: 'humidifier'>,
+      'original_icon': None,
+      'original_name': None,
+      'platform': 'vesync',
+      'previous_unique_id': None,
+      'suggested_object_id': None,
+      'supported_features': <HumidifierEntityFeature: 1>,
+      'translation_key': 'vesync',
+      'unique_id': 'sprout-humidifier',
+      'unit_of_measurement': None,
+    }),
+  ])
+# ---
+# name: test_humidifier_state[Humidifier Sprout][humidifier.humidifier_sprout]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <HumidifierEntityCapabilityAttribute.AVAILABLE_MODES: 'available_modes'>: list([
+        'auto',
+        'normal',
+        'sleep',
+      ]),
+      <HumidifierEntityStateAttribute.CURRENT_HUMIDITY: 'current_humidity'>: 45,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'humidifier',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Humidifier Sprout',
+      <HumidifierEntityStateAttribute.HUMIDITY: 'humidity'>: 50,
+      <HumidifierEntityCapabilityAttribute.MAX_HUMIDITY: 'max_humidity'>: 80,
+      <HumidifierEntityCapabilityAttribute.MIN_HUMIDITY: 'min_humidity'>: 30,
+      <HumidifierEntityStateAttribute.MODE: 'mode'>: 'auto',
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <HumidifierEntityFeature: 1>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'humidifier.humidifier_sprout',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

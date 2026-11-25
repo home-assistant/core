@@ -5,6 +5,9 @@ from aioharmony.harmonyapi import HarmonyAPI
 
 from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.storage import STORAGE_DIR
+
+from .const import DOMAIN
 
 
 def find_unique_id_for_remote(harmony: HarmonyAPI):
@@ -18,7 +21,7 @@ def find_unique_id_for_remote(harmony: HarmonyAPI):
 
 def config_file_path(hass: HomeAssistant, unique_id: str | None) -> str:
     """Return the path the hub configuration is written to."""
-    return hass.config.path(f"harmony_{unique_id}.conf")
+    return hass.config.path(STORAGE_DIR, DOMAIN, f"harmony_{unique_id}.conf")
 
 
 def find_best_name_for_remote(data: dict, harmony: HarmonyAPI):
