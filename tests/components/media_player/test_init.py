@@ -28,7 +28,7 @@ from homeassistant.components.media_player import (
 )
 from homeassistant.components.media_player.const import DATA_COMPONENT
 from homeassistant.components.websocket_api import TYPE_RESULT
-from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, TargetKey
+from homeassistant.const import STATE_OFF, TargetKey
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.setup import async_setup_component
 
@@ -762,7 +762,7 @@ async def test_group_members_available_when_off(hass: HomeAssistant) -> None:
     await hass.services.async_call(
         "media_player",
         "turn_off",
-        {ATTR_ENTITY_ID: "media_player.group"},
+        {TargetKey.ENTITY_ID: "media_player.group"},
         blocking=True,
     )
     await hass.async_block_till_done()
