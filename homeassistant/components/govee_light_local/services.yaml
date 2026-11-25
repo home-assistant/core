@@ -1,0 +1,16 @@
+set_segment_color:
+  target:
+    entity:
+      integration: govee_light_local
+      domain: light
+  fields:
+    segments:
+      required: true
+      example: "[1, 3, 5]"
+      selector:
+        object:
+    rgb_color:
+      required: true
+      example: "[255, 100, 100]"
+      selector:
+        color_rgb:

@@ -10,12 +10,17 @@ from homeassistant.components import network
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.event import async_track_time_interval
+from homeassistant.helpers.typing import ConfigType
 
 from .const import DISCOVERY_TIMEOUT, DOMAIN, REBIND_INTERVAL
 from .coordinator import GoveeLocalApiCoordinator, GoveeLocalConfigEntry
+from .services import async_setup_services
 
 PLATFORMS: list[Platform] = [Platform.LIGHT]
+
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 # Bind errors that clear up on their own (port freed, adapter back, resources
 # released); anything else needs user intervention and must not retry.
@@ -24,6 +29,12 @@ TRANSIENT_BIND_ERRNOS = frozenset(
 )
 
 _LOGGER = logging.getLogger(__name__)
+
+
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up the Govee light local services."""
+    async_setup_services(hass)
+    return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: GoveeLocalConfigEntry) -> None:

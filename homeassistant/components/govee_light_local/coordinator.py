@@ -143,6 +143,12 @@ class GoveeLocalApiCoordinator(DataUpdateCoordinator[list[GoveeDevice]]):
         """Set light scene."""
         await device.set_scene(scene)
 
+    async def set_segment_rgb_color(
+        self, device: GoveeDevice, segment: int, rgb_color: tuple[int, int, int]
+    ) -> None:
+        """Set the RGB color of one segment of the light, counted from 1."""
+        await device.set_segment_rgb_color(segment, *rgb_color)
+
     @property
     def devices(self) -> list[GoveeDevice]:
         """Return a list of discovered Govee devices."""
