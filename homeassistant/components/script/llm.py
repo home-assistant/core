@@ -121,8 +121,10 @@ class ListScriptsTool(Tool):
                 and (entity := component.get_entity(state.entity_id)) is not None
                 and entity.raw_config
                 and (description := entity.raw_config.get("description"))
+                not in (None, "")
             ):
-                script["description"] = description
+                # The raw configuration is not validated, so it may hold a number
+                script["description"] = str(description)
             scripts.append(script)
 
         result: JsonObjectType = {"scripts": scripts, "total": len(states)}

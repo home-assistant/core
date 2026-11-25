@@ -39,7 +39,7 @@ async def setup_integrations(hass: HomeAssistant) -> None:
                     },
                 },
                 "unexposed_script": {"sequence": []},
-                "123456": {"sequence": []},
+                "123456": {"description": 0, "sequence": []},
             }
         },
     )
@@ -126,6 +126,7 @@ def _list_scripts_expected(last_triggered: str | None) -> list[JsonObjectType]:
             "name": "123456",
             "state": "off",
             "last_triggered": None,
+            "description": "0",
         },
         {
             "entity_id": ENTITY_ID,
