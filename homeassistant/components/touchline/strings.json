@@ -13,13 +13,22 @@
       "discovery_confirm": {
         "description": "Do you want to set up the Roth Touchline controller at {host}?"
       },
-      "user": {
+      "manual": {
         "data": {
           "host": "[%key:common::config_flow::data::host%]"
         },
         "data_description": {
           "host": "The URL of your Roth Touchline controller, for example `http://192.168.1.1`."
         }
+      },
+      "user": {
+        "data": {
+          "device": "Controller"
+        },
+        "data_description": {
+          "device": "Controllers that are already set up are not listed."
+        },
+        "description": "Select a controller found on your network, or enter its URL manually."
       }
     }
   },
@@ -44,6 +53,13 @@
     },
     "error_set_temperature": {
       "message": "An error occurred while setting the temperature."
+    }
+  },
+  "selector": {
+    "device": {
+      "options": {
+        "manual": "Enter the URL manually"
+      }
     }
   }
 }

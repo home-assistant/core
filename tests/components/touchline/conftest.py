@@ -1,13 +1,14 @@
 """Fixtures for the Touchline tests."""
 
 from collections.abc import Generator
-from unittest.mock import MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
 from pytouchline_extended import (
     ControllerOperationMode,
     ControllerStatus,
+    DiscoveredController,
     RoomOperationMode,
     RoomStatus,
     TemperatureUnit,
@@ -65,6 +66,17 @@ ROOM_STATUS = RoomStatus(
 )
 
 
+DISCOVERED_CONTROLLER = DiscoveredController(
+    controller_id=1,
+    unique_id="51FF6E064965525706340287",
+    url=f"http://{TEST_HOST}",
+    ip_address=TEST_HOST,
+    mac_address="5C-C2-13-00-81-49",
+    name="ID10655-47951974",
+    protocol_version="R100",
+)
+
+
 def make_state(*rooms: RoomStatus) -> TouchlineState:
     """Return a controller state with the given thermostats."""
     return TouchlineState(controller=CONTROLLER_STATUS, rooms=rooms)
@@ -90,6 +102,22 @@ def mock_touchline_controller() -> Generator[MagicMock]:
         instance.set_room_operation_mode_async.return_value = True
         instance.set_room_week_program_async.return_value = True
         yield instance
+
+
+@pytest.fixture
+def mock_discover_controllers() -> Generator[AsyncMock]:
+    """Mock searching two networks, which find no controllers by default."""
+    with (
+        patch(
+            "homeassistant.components.network.async_get_ipv4_broadcast_addresses",
+            return_value={"10.255.255.255", "192.168.1.255"},
+        ),
+        patch(
+            "homeassistant.components.touchline.config_flow.discover_controllers",
+            return_value=[],
+        ) as mock_discover,
+    ):
+        yield mock_discover
 
 
 @pytest.fixture

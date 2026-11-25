@@ -5,6 +5,7 @@
   "codeowners": ["@mnordseth"],
   "config_flow": true,
   "connectivity": ["network"],
+  "dependencies": ["network"],
   "dhcp": [
     {
       "hostname": "roth-*",
