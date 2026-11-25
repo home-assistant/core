@@ -5,7 +5,7 @@ from collections.abc import Callable, Iterable, Mapping
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from itertools import product
-from typing import TYPE_CHECKING, Any, override
+from typing import TYPE_CHECKING, override
 
 from aioengiebelgium import EpexGranularity, EpexSlot, Peak, bare_ean
 
@@ -22,11 +22,11 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import dt as dt_util
 
-from .const import ATTRIBUTION
+from .const import ATTRIBUTION, BRUSSELS_TIME_ZONE
 from .coordinator import (
-    BRUSSELS_TIME_ZONE,
     EngieBeEpexCoordinator,
     EngieBePeaksCoordinator,
+    EngieBePeaksData,
     EngieBePricesCoordinator,
     EngieBePricesData,
     epex_slot_covering,
@@ -81,7 +81,7 @@ async def async_setup_entry(
     def _async_add_new_entities() -> None:
         """Add price sensors for any household/EAN/slot combination not yet known."""
         new_entities: list[EngieBePriceSensor] = []
-        for ban, household in runtime_data.households.items():
+        for household in runtime_data.households.values():
             prices_data: EngieBePricesData | None = household.prices.data
             if prices_data is None:
                 continue
@@ -102,7 +102,6 @@ async def async_setup_entry(
                 ):
                     entity = EngieBePriceSensor(
                         household.prices,
-                        business_agreement_number=ban,
                         ean=ean,
                         direction=direction,
                         slot_code=slot_code,
@@ -144,11 +143,10 @@ async def async_setup_entry(
     async_add_entities(
         EngieBePeaksSensor(
             household.peaks,
-            ban=ban,
             device_info=household.prices.device_info,
             description=description,
         )
-        for ban, household in runtime_data.households.items()
+        for household in runtime_data.households.values()
         for description in _CAPACITY_TARIFF_SENSORS
     )
 
@@ -166,7 +164,6 @@ class EngieBePriceSensor(CoordinatorEntity[EngieBePricesCoordinator], SensorEnti
         self,
         coordinator: EngieBePricesCoordinator,
         *,
-        business_agreement_number: str,
         ean: str,
         direction: str,
         slot_code: str,
@@ -184,7 +181,7 @@ class EngieBePriceSensor(CoordinatorEntity[EngieBePricesCoordinator], SensorEnti
         self._excl_vat = excl_vat
         self._per_cubic_meter = per_cubic_meter
 
-        unique_id = f"{business_agreement_number}_{ean}_{direction}_{slot_code}"
+        unique_id = f"{coordinator.ban}_{ean}_{direction}_{slot_code}"
         if per_cubic_meter:
             unique_id = f"{unique_id}_per_m3"
             self._attr_native_unit_of_measurement = _UNIT_PER_CUBIC_METER
@@ -360,39 +357,16 @@ class EngieBeEpexPriceSensor(CoordinatorEntity[EngieBeEpexCoordinator], SensorEn
         return self.entity_description.value_fn(self)
 
 
-def _monthly_peak(entity: EngieBePeaksSensor) -> Peak | None:
-    """Return the displayed monthly peak of the sensor's household."""
-    return entity.coordinator.data.peak
+def _monthly_peak_value[_T](
+    get_value: Callable[[Peak], _T],
+) -> Callable[[EngieBePeaksData], _T | None]:
+    """Return a value function that reads one field of the displayed monthly peak."""
+    return lambda data: None if data.peak is None else get_value(data.peak)
 
 
-def _peak_power_kw(entity: EngieBePeaksSensor) -> float | None:
-    """Return the monthly peak power in kW."""
-    peak = _monthly_peak(entity)
-    return None if peak is None else peak.peak_kw
-
-
-def _peak_energy_kwh(entity: EngieBePeaksSensor) -> float | None:
-    """Return the monthly peak energy in kWh."""
-    peak = _monthly_peak(entity)
-    return None if peak is None else peak.peak_kwh
-
-
-def _peak_start(entity: EngieBePeaksSensor) -> datetime | None:
-    """Return the start of the monthly peak window."""
-    peak = _monthly_peak(entity)
-    return None if peak is None else peak.start
-
-
-def _peak_end(entity: EngieBePeaksSensor) -> datetime | None:
-    """Return the end of the monthly peak window."""
-    peak = _monthly_peak(entity)
-    return None if peak is None else peak.end
-
-
-def _daily_peak_power_kw(entity: EngieBePeaksSensor) -> float | None:
+def _daily_peak_power_kw(data: EngieBePeaksData) -> float | None:
     """Return the power of the most recent daily peak in kW."""
-    daily_peaks = entity.coordinator.data.monthly.daily_peaks
-    if not daily_peaks:
+    if not (daily_peaks := data.monthly.daily_peaks):
         return None
     return max(daily_peaks, key=lambda peak: peak.start).peak_kw
 
@@ -401,7 +375,7 @@ def _daily_peak_power_kw(entity: EngieBePeaksSensor) -> float | None:
 class EngieBePeaksSensorEntityDescription(SensorEntityDescription):
     """Describes a capacity tariff peak sensor entity."""
 
-    value_fn: Callable[[EngieBePeaksSensor], float | datetime | None]
+    value_fn: Callable[[EngieBePeaksData], float | datetime | None]
 
 
 _CAPACITY_TARIFF_SENSORS: tuple[EngieBePeaksSensorEntityDescription, ...] = (
@@ -411,7 +385,7 @@ _CAPACITY_TARIFF_SENSORS: tuple[EngieBePeaksSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.POWER,
         native_unit_of_measurement=UnitOfPower.KILO_WATT,
         suggested_display_precision=2,
-        value_fn=_peak_power_kw,
+        value_fn=_monthly_peak_value(lambda peak: peak.peak_kw),
     ),
     EngieBePeaksSensorEntityDescription(
         key="capacity_tariff_monthly_energy_peak",
@@ -419,21 +393,21 @@ _CAPACITY_TARIFF_SENSORS: tuple[EngieBePeaksSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.ENERGY,
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         suggested_display_precision=2,
-        value_fn=_peak_energy_kwh,
+        value_fn=_monthly_peak_value(lambda peak: peak.peak_kwh),
     ),
     EngieBePeaksSensorEntityDescription(
         key="capacity_tariff_monthly_peak_start",
         translation_key="capacity_tariff_monthly_peak_start",
         device_class=SensorDeviceClass.TIMESTAMP,
         entity_category=EntityCategory.DIAGNOSTIC,
-        value_fn=_peak_start,
+        value_fn=_monthly_peak_value(lambda peak: peak.start),
     ),
     EngieBePeaksSensorEntityDescription(
         key="capacity_tariff_monthly_peak_end",
         translation_key="capacity_tariff_monthly_peak_end",
         device_class=SensorDeviceClass.TIMESTAMP,
         entity_category=EntityCategory.DIAGNOSTIC,
-        value_fn=_peak_end,
+        value_fn=_monthly_peak_value(lambda peak: peak.end),
     ),
     EngieBePeaksSensorEntityDescription(
         key="capacity_tariff_daily_power_peak",
@@ -458,7 +432,6 @@ class EngieBePeaksSensor(CoordinatorEntity[EngieBePeaksCoordinator], SensorEntit
         self,
         coordinator: EngieBePeaksCoordinator,
         *,
-        ban: str,
         device_info: DeviceInfo,
         description: EngieBePeaksSensorEntityDescription,
     ) -> None:
@@ -466,43 +439,10 @@ class EngieBePeaksSensor(CoordinatorEntity[EngieBePeaksCoordinator], SensorEntit
         super().__init__(coordinator)
         self.entity_description = description
         self._attr_device_info = device_info
-        self._attr_unique_id = f"{ban}_{description.key}"
+        self._attr_unique_id = f"{coordinator.ban}_{description.key}"
 
     @property
     @override
     def native_value(self) -> float | datetime | None:
         """Return the sensor value derived from the peaks data."""
-        return self.entity_description.value_fn(self)
-
-    @property
-    @override
-    def extra_state_attributes(self) -> dict[str, Any]:
-        """Return peak provenance and daily peak details."""
-        data = self.coordinator.data
-        if self.entity_description.key == "capacity_tariff_monthly_power_peak":
-            attributes: dict[str, Any] = {
-                "peak_month": data.peak_month,
-                "peak_is_fallback": data.is_fallback,
-            }
-            previous = data.monthly.previous_peak_of_the_month
-            if previous is not None:
-                attributes["previous_peak"] = {
-                    "power_kw": previous.peak_kw,
-                    "energy_kwh": previous.peak_kwh,
-                    "start": previous.start.isoformat(),
-                    "end": previous.end.isoformat(),
-                }
-            return attributes
-        if self.entity_description.key == "capacity_tariff_daily_power_peak":
-            return {
-                "daily_peaks": [
-                    {
-                        "power_kw": peak.peak_kw,
-                        "energy_kwh": peak.peak_kwh,
-                        "start": peak.start.isoformat(),
-                        "end": peak.end.isoformat(),
-                    }
-                    for peak in data.monthly.daily_peaks
-                ]
-            }
-        return {}
+        return self.entity_description.value_fn(self.coordinator.data)

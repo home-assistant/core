@@ -15,7 +15,7 @@ from unittest.mock import patch
 
 import pytest
 from pytest_homeassistant.typing import WebSocketGenerator
-from xknx.telegram.address import GroupAddress
+from xknx.telegram.address import GroupAddress, GroupAddressType
 
 from homeassistant.components.knx import async_set_project
 from homeassistant.components.knx.const import KNX_MODULE_KEY
@@ -147,6 +147,19 @@ async def test_new_project_replaces_group_addresses(
     assert xknx.group_address_dpt.get(GroupAddress("0/0/2")) is not None
 
 
+async def test_project_without_data(
+    hass: HomeAssistant, knx: KNXTestKit, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Without project data, group addresses are shown in the 3-level format."""
+    # a format left by another project; monkeypatch restores it on teardown
+    monkeypatch.setattr(GroupAddress, "address_format", GroupAddressType.SHORT)
+    await knx.setup_integration()
+    knx_module = hass.data[KNX_MODULE_KEY]
+
+    assert not knx_module.project.loaded
+    assert GroupAddress.address_format is GroupAddressType.LONG
+
+
 @pytest.mark.usefixtures("load_knxproj")
 async def test_set_project(
     hass: HomeAssistant,
@@ -261,6 +274,34 @@ async def test_set_project_two_level(
     await async_set_project(hass, new_data)
 
     assert set(hass.data[KNX_MODULE_KEY].project.group_addresses) == {"0/1"}
+
+
+async def test_remove_project_resets_xknx(
+    hass: HomeAssistant,
+    knx: KNXTestKit,
+    current_project_data: dict[str, Any],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Removing the project also removes what it set in xknx."""
+    # setting the attribute to its own value restores it on teardown
+    monkeypatch.setattr(GroupAddress, "address_format", GroupAddress.address_format)
+    await knx.setup_integration()
+    knx_module = hass.data[KNX_MODULE_KEY]
+    group_address = current_project_data["group_addresses"]["1/0/0"]
+    await async_set_project(
+        hass,
+        {
+            **_with_info(current_project_data, group_address_style="TwoLevel"),
+            "group_addresses": {"0/1": {**group_address, "address": "0/1"}},
+        },
+    )
+    assert GroupAddress.address_format is GroupAddressType.SHORT
+    assert knx_module.xknx.group_address_dpt.get(GroupAddress("0/1")) is not None
+
+    await knx_module.project.remove_project_file()
+
+    assert GroupAddress.address_format is GroupAddressType.LONG
+    assert knx_module.xknx.group_address_dpt.get(GroupAddress("0/1")) is None
 
 
 @pytest.mark.parametrize(
