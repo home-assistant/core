@@ -1,10 +1,9 @@
 """Tests for the Sony TV RS-232 media player platform."""
 
-import asyncio
 from datetime import timedelta
 import logging
 from pathlib import Path
-from unittest.mock import call, patch
+from unittest.mock import MagicMock, call
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
@@ -62,7 +61,7 @@ from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util.json import load_json
 
-from .conftest import MockSonyTV, default_state
+from . import default_state, mock_state_update, setup_integration
 
 ENTITY_ID = "media_player.sony_tv"
 POWER_ON_REFRESH = timedelta(seconds=POWER_ON_REFRESH_DELAY)
@@ -90,29 +89,31 @@ async def _tick(
     await hass.async_block_till_done()
 
 
-@pytest.fixture(autouse=True)
-async def auto_init_components(init_components: None) -> None:
-    """Set up the component."""
-
-
 async def test_entities_created(
     hass: HomeAssistant,
-    mock_sony_tv: MockSonyTV,
+    mock_sony_tv: MagicMock,
     snapshot: SnapshotAssertion,
     mock_config_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test the media player entity is created through config entry setup."""
+    await setup_integration(hass, mock_config_entry)
+
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
     # The connect handshake already queried the TV; the first refresh does not.
     mock_sony_tv.query_power.assert_not_awaited()
 
 
-@pytest.mark.parametrize("initial_tv_state", [_standby_state()])
 async def test_standby_poll_queries_power_only(
-    hass: HomeAssistant, mock_sony_tv: MockSonyTV, freezer: FrozenDateTimeFactory
+    hass: HomeAssistant,
+    mock_sony_tv: MagicMock,
+    freezer: FrozenDateTimeFactory,
+    mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test a TV in standby is only asked for its power state."""
+    mock_sony_tv.state.power = PowerState.OFF
+    await setup_integration(hass, mock_config_entry)
+
     assert hass.states.get(ENTITY_ID).state == STATE_OFF
 
     await _tick(hass, freezer, SCAN_INTERVAL)
@@ -126,12 +127,17 @@ async def test_standby_poll_queries_power_only(
 
 
 async def test_on_poll_queries_everything(
-    hass: HomeAssistant, mock_sony_tv: MockSonyTV, freezer: FrozenDateTimeFactory
+    hass: HomeAssistant,
+    mock_sony_tv: MagicMock,
+    freezer: FrozenDateTimeFactory,
+    mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test a TV that is on is polled for every attribute the entity shows.
 
     A query the model does not answer times out and keeps its last value.
     """
+    await setup_integration(hass, mock_config_entry)
+
     mock_sony_tv.query_mute.side_effect = CommandTimeoutError("no answer")
     mock_sony_tv.state.volume = 35
     mock_sony_tv.state.sound_mode = SoundMode.CUSTOM
@@ -151,9 +157,14 @@ async def test_on_poll_queries_everything(
 
 
 async def test_poll_reflects_remote_changes(
-    hass: HomeAssistant, mock_sony_tv: MockSonyTV, freezer: FrozenDateTimeFactory
+    hass: HomeAssistant,
+    mock_sony_tv: MagicMock,
+    freezer: FrozenDateTimeFactory,
+    mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test a change made with the TV's own remote is picked up on the poll."""
+    await setup_integration(hass, mock_config_entry)
+
     assert hass.states.get(ENTITY_ID).state == STATE_ON
 
     mock_sony_tv.state.power = PowerState.OFF
@@ -165,15 +176,18 @@ async def test_poll_reflects_remote_changes(
 
 async def test_poll_failure_marks_unavailable_once_and_recovers(
     hass: HomeAssistant,
-    mock_sony_tv: MockSonyTV,
+    mock_sony_tv: MagicMock,
     freezer: FrozenDateTimeFactory,
     caplog: pytest.LogCaptureFixture,
+    mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test an unanswered power query makes the entity unavailable.
 
     The outage is logged once across consecutive failing polls, and the
     recovery once.
     """
+    await setup_integration(hass, mock_config_entry)
+
     mock_sony_tv.query_power.side_effect = CommandTimeoutError("no answer")
 
     await _tick(hass, freezer, SCAN_INTERVAL)
@@ -191,11 +205,16 @@ async def test_poll_failure_marks_unavailable_once_and_recovers(
     assert _records(caplog, logging.INFO, "Fetching sony_tv_rs232 data recovered") == 1
 
 
-@pytest.mark.parametrize("supports_queries", [False])
 async def test_set_only_tv_is_not_polled(
-    hass: HomeAssistant, mock_sony_tv: MockSonyTV, freezer: FrozenDateTimeFactory
+    hass: HomeAssistant,
+    mock_sony_tv: MagicMock,
+    freezer: FrozenDateTimeFactory,
+    mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test a consumer TV that ignores queries is never asked anything."""
+    mock_sony_tv.supports_queries = False
+    await setup_integration(hass, mock_config_entry)
+
     assert hass.states.get(ENTITY_ID).state == STATE_ON
 
     await _tick(hass, freezer, SCAN_INTERVAL)
@@ -208,25 +227,28 @@ async def test_set_only_tv_is_not_polled(
 
 async def test_link_drop_and_reconnect(
     hass: HomeAssistant,
-    mock_sony_tv: MockSonyTV,
+    mock_sony_tv: MagicMock,
     caplog: pytest.LogCaptureFixture,
+    mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test the entity follows the library's link notifications.
 
     A dropped link is logged once; the state the library pushes after its own
     reconnect restores availability and is logged once.
     """
+    await setup_integration(hass, mock_config_entry)
+
     assert hass.states.get(ENTITY_ID).state == STATE_ON
 
-    mock_sony_tv.mock_state(None)
+    mock_state_update(mock_sony_tv, None)
     await hass.async_block_till_done()
     assert hass.states.get(ENTITY_ID).state == STATE_UNAVAILABLE
 
-    mock_sony_tv.mock_state(None)
+    mock_state_update(mock_sony_tv, None)
     await hass.async_block_till_done()
     assert _records(caplog, logging.ERROR, "Serial connection to the TV lost") == 1
 
-    mock_sony_tv.mock_state(default_state())
+    mock_state_update(mock_sony_tv, default_state())
     await hass.async_block_till_done()
     assert hass.states.get(ENTITY_ID).state == STATE_ON
     assert _records(caplog, logging.INFO, "Connection to sony_tv_rs232 restored") == 1
@@ -234,12 +256,15 @@ async def test_link_drop_and_reconnect(
 
 async def test_poll_while_disconnected_does_not_query(
     hass: HomeAssistant,
-    mock_sony_tv: MockSonyTV,
+    mock_sony_tv: MagicMock,
     freezer: FrozenDateTimeFactory,
     caplog: pytest.LogCaptureFixture,
+    mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test a scheduled poll on a dropped link sends nothing and logs nothing new."""
-    mock_sony_tv.mock_state(None)
+    await setup_integration(hass, mock_config_entry)
+
+    mock_state_update(mock_sony_tv, None)
     await hass.async_block_till_done()
     assert hass.states.get(ENTITY_ID).state == STATE_UNAVAILABLE
 
@@ -251,17 +276,22 @@ async def test_poll_while_disconnected_does_not_query(
 
 
 async def test_push_during_poll_is_ignored(
-    hass: HomeAssistant, mock_sony_tv: MockSonyTV, freezer: FrozenDateTimeFactory
+    hass: HomeAssistant,
+    mock_sony_tv: MagicMock,
+    freezer: FrozenDateTimeFactory,
+    mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test a notification raised by the poll's own queries is not published.
 
     Every query reply notifies subscribers; publishing those mid-poll would
     show partial states. The poll's snapshot is what reaches the entity.
     """
+    await setup_integration(hass, mock_config_entry)
+
     seen: list[str] = []
 
     def push_partial() -> InputSource:
-        mock_sony_tv._deliver(TVState())
+        mock_sony_tv.subscribe.call_args.args[0](TVState())
         seen.append(hass.states.get(ENTITY_ID).state)
         return mock_sony_tv.state.input_source
 
@@ -273,37 +303,34 @@ async def test_push_during_poll_is_ignored(
     assert hass.states.get(ENTITY_ID).state == STATE_ON
 
 
-async def test_deferred_notification_from_poll_is_not_published(
+async def test_poll_round_is_batched(
     hass: HomeAssistant,
-    mock_sony_tv: MockSonyTV,
-    mock_config_entry: MockConfigEntry,
+    mock_sony_tv: MagicMock,
     freezer: FrozenDateTimeFactory,
+    mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test the library's deferred notify from a poll query stays inside the poll.
+    """Test the poll's queries run inside one library batch.
 
-    A query reply notifies via call_soon; landing after the poll it would be
-    taken for a push, which cancels any refresh queued behind the poll.
+    The library defers the notification a query reply raises; the batch
+    delivers it before the poll ends, where it is ignored as the poll's own.
+    Landing after the poll it would be taken for a push.
     """
+    await setup_integration(hass, mock_config_entry)
 
-    async def remote_mute() -> bool:
-        mock_sony_tv._apply("audio_mute", True)
-        return True
+    batch = mock_sony_tv.batch.return_value
+    in_batch: list[bool] = []
 
-    mock_sony_tv.query_mute.side_effect = remote_mute
-    coordinator = mock_config_entry.runtime_data
+    def query_sound_mode() -> SoundMode:
+        in_batch.append(batch.__enter__.called and not batch.__exit__.called)
+        return mock_sony_tv.state.sound_mode
 
-    with patch.object(
-        coordinator,
-        "async_set_updated_data",
-        wraps=coordinator.async_set_updated_data,
-    ) as pushed:
-        await _tick(hass, freezer, SCAN_INTERVAL)
-        # A deferred notify lands one loop turn after the poll task finishes.
-        await asyncio.sleep(0)
-        await hass.async_block_till_done()
+    mock_sony_tv.query_sound_mode.side_effect = query_sound_mode
 
-    pushed.assert_not_called()
-    assert hass.states.get(ENTITY_ID).attributes[ATTR_MEDIA_VOLUME_MUTED] is True
+    await _tick(hass, freezer, SCAN_INTERVAL)
+
+    mock_sony_tv.batch.assert_called_once_with()
+    assert in_batch == [True]
+    batch.__exit__.assert_called_once()
 
 
 @pytest.mark.parametrize(
@@ -311,12 +338,15 @@ async def test_deferred_notification_from_poll_is_not_published(
 )
 async def test_link_drop_during_poll_marks_unavailable(
     hass: HomeAssistant,
-    mock_sony_tv: MockSonyTV,
+    mock_sony_tv: MagicMock,
     freezer: FrozenDateTimeFactory,
     caplog: pytest.LogCaptureFixture,
     error: Exception,
+    mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test a link failure mid-round is an update failure, not an unexpected error."""
+    await setup_integration(hass, mock_config_entry)
+
     mock_sony_tv.query_volume.side_effect = error
 
     await _tick(hass, freezer, SCAN_INTERVAL)
@@ -327,15 +357,17 @@ async def test_link_drop_during_poll_marks_unavailable(
 
 
 async def test_pushed_state_updates_entity(
-    hass: HomeAssistant, mock_sony_tv: MockSonyTV
+    hass: HomeAssistant, mock_sony_tv: MagicMock, mock_config_entry: MockConfigEntry
 ) -> None:
     """Test an acknowledged command's state push reaches the entity."""
+    await setup_integration(hass, mock_config_entry)
+
     state = default_state()
     state.input_source = InputSource.HDMI2
     state.volume = 50
     state.audio_mute = True
     state.sound_mode = SoundMode.CUSTOM
-    mock_sony_tv.mock_state(state)
+    mock_state_update(mock_sony_tv, state)
     await hass.async_block_till_done()
 
     attributes = hass.states.get(ENTITY_ID).attributes
@@ -346,10 +378,12 @@ async def test_pushed_state_updates_entity(
 
 
 async def test_state_unknown_when_nothing_known(
-    hass: HomeAssistant, mock_sony_tv: MockSonyTV
+    hass: HomeAssistant, mock_sony_tv: MagicMock, mock_config_entry: MockConfigEntry
 ) -> None:
     """Test attributes are cleared when the TV reports no state."""
-    mock_sony_tv.mock_state(TVState())
+    await setup_integration(hass, mock_config_entry)
+
+    mock_state_update(mock_sony_tv, TVState())
     await hass.async_block_till_done()
 
     state = hass.states.get(ENTITY_ID)
@@ -359,23 +393,28 @@ async def test_state_unknown_when_nothing_known(
     assert state.attributes.get(ATTR_SOUND_MODE) is None
 
 
-@pytest.mark.parametrize("initial_tv_state", [_standby_state()])
 async def test_power_on_push_schedules_refresh(
-    hass: HomeAssistant, mock_sony_tv: MockSonyTV, freezer: FrozenDateTimeFactory
+    hass: HomeAssistant,
+    mock_sony_tv: MagicMock,
+    freezer: FrozenDateTimeFactory,
+    mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test an off-to-on transition re-queries the TV once it has booted.
 
     A second transition before the delay elapses re-arms the timer instead of
     firing twice.
     """
-    mock_sony_tv.mock_state(default_state())
+    mock_sony_tv.state.power = PowerState.OFF
+    await setup_integration(hass, mock_config_entry)
+
+    mock_state_update(mock_sony_tv, default_state())
     await hass.async_block_till_done()
     assert hass.states.get(ENTITY_ID).state == STATE_ON
     mock_sony_tv.query_power.assert_not_awaited()
 
     await _tick(hass, freezer, timedelta(seconds=2))
-    mock_sony_tv.mock_state(_standby_state())
-    mock_sony_tv.mock_state(default_state())
+    mock_state_update(mock_sony_tv, _standby_state())
+    mock_state_update(mock_sony_tv, default_state())
     await hass.async_block_till_done()
 
     # The first timer would have fired by now; it was cancelled by the re-arm.
@@ -387,14 +426,19 @@ async def test_power_on_push_schedules_refresh(
     mock_sony_tv.query_volume.assert_awaited_once()
 
 
-@pytest.mark.parametrize("initial_tv_state", [_standby_state()])
 async def test_power_on_poll_schedules_refresh(
-    hass: HomeAssistant, mock_sony_tv: MockSonyTV, freezer: FrozenDateTimeFactory
+    hass: HomeAssistant,
+    mock_sony_tv: MagicMock,
+    freezer: FrozenDateTimeFactory,
+    mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test a power-on found by a poll (the TV's own remote) re-queries it.
 
     The poll's own attribute queries may land while the set is still booting.
     """
+    mock_sony_tv.state.power = PowerState.OFF
+    await setup_integration(hass, mock_config_entry)
+
     mock_sony_tv.state.power = PowerState.ON
 
     await _tick(hass, freezer, SCAN_INTERVAL)
@@ -411,15 +455,17 @@ async def test_power_on_poll_schedules_refresh(
     assert mock_sony_tv.query_power.await_count == 2
 
 
-@pytest.mark.parametrize("initial_tv_state", [_standby_state()])
 async def test_power_on_refresh_cancelled_on_unload(
     hass: HomeAssistant,
-    mock_sony_tv: MockSonyTV,
+    mock_sony_tv: MagicMock,
     mock_config_entry: MockConfigEntry,
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test unloading the entry cancels a pending power-on refresh."""
-    mock_sony_tv.mock_state(default_state())
+    mock_sony_tv.state.power = PowerState.OFF
+    await setup_integration(hass, mock_config_entry)
+
+    mock_state_update(mock_sony_tv, default_state())
     await hass.async_block_till_done()
 
     await hass.config_entries.async_unload(mock_config_entry.entry_id)
@@ -429,21 +475,30 @@ async def test_power_on_refresh_cancelled_on_unload(
     mock_sony_tv.query_power.assert_not_awaited()
 
 
-@pytest.mark.parametrize("initial_tv_state", [_standby_state()])
 async def test_power_on_refresh_cancelled_on_link_drop(
-    hass: HomeAssistant, mock_sony_tv: MockSonyTV, freezer: FrozenDateTimeFactory
+    hass: HomeAssistant,
+    mock_sony_tv: MagicMock,
+    freezer: FrozenDateTimeFactory,
+    mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test a link drop cancels a pending power-on refresh."""
-    mock_sony_tv.mock_state(default_state())
-    mock_sony_tv.mock_state(None)
+    mock_sony_tv.state.power = PowerState.OFF
+    await setup_integration(hass, mock_config_entry)
+
+    mock_state_update(mock_sony_tv, default_state())
+    mock_state_update(mock_sony_tv, None)
     await hass.async_block_till_done()
 
     await _tick(hass, freezer, POWER_ON_REFRESH)
     mock_sony_tv.query_power.assert_not_awaited()
 
 
-async def test_power_controls(hass: HomeAssistant, mock_sony_tv: MockSonyTV) -> None:
+async def test_power_controls(
+    hass: HomeAssistant, mock_sony_tv: MagicMock, mock_config_entry: MockConfigEntry
+) -> None:
     """Test power services call the right methods."""
+    await setup_integration(hass, mock_config_entry)
+
     await hass.services.async_call(
         MP_DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: ENTITY_ID}, blocking=True
     )
@@ -455,8 +510,12 @@ async def test_power_controls(hass: HomeAssistant, mock_sony_tv: MockSonyTV) -> 
     mock_sony_tv.power_off.assert_awaited_once()
 
 
-async def test_volume_controls(hass: HomeAssistant, mock_sony_tv: MockSonyTV) -> None:
+async def test_volume_controls(
+    hass: HomeAssistant, mock_sony_tv: MagicMock, mock_config_entry: MockConfigEntry
+) -> None:
     """Test volume state and controls."""
+    await setup_integration(hass, mock_config_entry)
+
     assert hass.states.get(ENTITY_ID).attributes[ATTR_MEDIA_VOLUME_LEVEL] == 0.2
 
     await hass.services.async_call(
@@ -478,8 +537,12 @@ async def test_volume_controls(hass: HomeAssistant, mock_sony_tv: MockSonyTV) ->
     mock_sony_tv.volume_down.assert_awaited_once()
 
 
-async def test_mute_controls(hass: HomeAssistant, mock_sony_tv: MockSonyTV) -> None:
+async def test_mute_controls(
+    hass: HomeAssistant, mock_sony_tv: MagicMock, mock_config_entry: MockConfigEntry
+) -> None:
     """Test mute state and controls."""
+    await setup_integration(hass, mock_config_entry)
+
     assert hass.states.get(ENTITY_ID).attributes[ATTR_MEDIA_VOLUME_MUTED] is False
 
     await hass.services.async_call(
@@ -500,9 +563,11 @@ async def test_mute_controls(hass: HomeAssistant, mock_sony_tv: MockSonyTV) -> N
 
 
 async def test_source_and_sound_mode_controls(
-    hass: HomeAssistant, mock_sony_tv: MockSonyTV
+    hass: HomeAssistant, mock_sony_tv: MagicMock, mock_config_entry: MockConfigEntry
 ) -> None:
     """Test source and sound mode state and selection."""
+    await setup_integration(hass, mock_config_entry)
+
     attributes = hass.states.get(ENTITY_ID).attributes
     assert attributes[ATTR_INPUT_SOURCE] == "hdmi1"
     assert "hdmi1" in attributes[ATTR_INPUT_SOURCE_LIST]
@@ -539,12 +604,15 @@ async def test_source_and_sound_mode_controls(
 )
 async def test_invalid_source_or_sound_mode_raises(
     hass: HomeAssistant,
-    mock_sony_tv: MockSonyTV,
+    mock_sony_tv: MagicMock,
     service: str,
     data: dict[str, str],
     translation_key: str,
+    mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test an unknown source or sound mode is rejected before reaching the TV."""
+    await setup_integration(hass, mock_config_entry)
+
     with pytest.raises(ServiceValidationError) as excinfo:
         await hass.services.async_call(
             MP_DOMAIN, service, {ATTR_ENTITY_ID: ENTITY_ID, **data}, blocking=True
@@ -564,9 +632,14 @@ async def test_invalid_source_or_sound_mode_raises(
     ],
 )
 async def test_command_error_raises(
-    hass: HomeAssistant, mock_sony_tv: MockSonyTV, exception: Exception
+    hass: HomeAssistant,
+    mock_sony_tv: MagicMock,
+    exception: Exception,
+    mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test library errors raised during an action surface as HomeAssistantError."""
+    await setup_integration(hass, mock_config_entry)
+
     mock_sony_tv.power_on.side_effect = exception
 
     with pytest.raises(HomeAssistantError):

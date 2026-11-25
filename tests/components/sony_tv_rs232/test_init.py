@@ -1,6 +1,6 @@
 """Tests for the Sony TV RS-232 integration init."""
 
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
@@ -9,7 +9,7 @@ from sony_tv_rs232 import ConnectionLostError
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 
-from .conftest import MockSonyTV
+from . import mock_state_update, setup_integration
 
 
 @pytest.mark.parametrize(
@@ -18,7 +18,7 @@ from .conftest import MockSonyTV
 )
 async def test_setup_connection_error(
     hass: HomeAssistant,
-    mock_sony_tv: MockSonyTV,
+    mock_sony_tv: MagicMock,
     mock_config_entry: MockConfigEntry,
     exception: Exception,
 ) -> None:
@@ -29,23 +29,18 @@ async def test_setup_connection_error(
     """
     mock_sony_tv.connect.side_effect = exception
 
-    with patch(
-        "homeassistant.components.sony_tv_rs232.SonyTV",
-        return_value=mock_sony_tv,
-    ):
-        await hass.config_entries.async_setup(mock_config_entry.entry_id)
-        await hass.async_block_till_done()
+    await setup_integration(hass, mock_config_entry)
 
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
 async def test_unload_entry(
     hass: HomeAssistant,
-    mock_sony_tv: MockSonyTV,
-    init_components: None,
+    mock_sony_tv: MagicMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test unloading a config entry disconnects from the TV."""
+    await setup_integration(hass, mock_config_entry)
     assert mock_config_entry.state is ConfigEntryState.LOADED
 
     await hass.config_entries.async_unload(mock_config_entry.entry_id)
@@ -57,8 +52,7 @@ async def test_unload_entry(
 
 async def test_link_drop_does_not_reload(
     hass: HomeAssistant,
-    mock_sony_tv: MockSonyTV,
-    init_components: None,
+    mock_sony_tv: MagicMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test a dropped serial link is left to the library to reconnect.
@@ -66,8 +60,10 @@ async def test_link_drop_does_not_reload(
     The library reconnects on its own; reloading the entry would run a second
     reconnect loop against the same port.
     """
+    await setup_integration(hass, mock_config_entry)
+
     with patch.object(hass.config_entries, "async_schedule_reload") as mock_reload:
-        mock_sony_tv.mock_state(None)
+        mock_state_update(mock_sony_tv, None)
         await hass.async_block_till_done()
 
     mock_reload.assert_not_called()
