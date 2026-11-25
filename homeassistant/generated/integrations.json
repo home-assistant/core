@@ -10757,6 +10757,9 @@
           "categories": [
             "climate.heat_pumps_air_conditioning"
           ],
+          "connectivity": [
+            "infrared"
+          ],
           "name": "O General Infrared"
         }
       }
