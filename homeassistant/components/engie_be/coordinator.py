@@ -333,13 +333,23 @@ class EngieBePeaksData:
     previous_month: MonthlyPeaks | None
 
     @property
-    def peak(self) -> Peak | None:
-        """Return the peak to display, falling back to the previous month early in the month."""
+    def _source(self) -> MonthlyPeaks | None:
+        """Return the month whose peak is displayed."""
         if self.monthly.peak_of_the_month is not None:
-            return self.monthly.peak_of_the_month
-        if self.previous_month is not None:
-            return self.previous_month.peak_of_the_month
+            return self.monthly
+        if (
+            self.previous_month is not None
+            and self.previous_month.peak_of_the_month is not None
+        ):
+            return self.previous_month
         return None
+
+    @property
+    def peak(self) -> Peak | None:
+        """Return this month's peak, or last month's peak when this month has none yet."""
+        if (source := self._source) is None:
+            return None
+        return source.peak_of_the_month
 
     @property
     def is_fallback(self) -> bool:
@@ -349,14 +359,7 @@ class EngieBePeaksData:
     @property
     def peak_month(self) -> str | None:
         """Return the YYYY-MM month the displayed peak belongs to."""
-        if self.monthly.peak_of_the_month is not None:
-            source = self.monthly
-        elif (
-            self.previous_month is not None
-            and self.previous_month.peak_of_the_month is not None
-        ):
-            source = self.previous_month
-        else:
+        if (source := self._source) is None:
             return None
         return f"{source.year}-{source.month:02d}"
 
@@ -388,19 +391,15 @@ class EngieBePeaksCoordinator(DataUpdateCoordinator[EngieBePeaksData]):
     async def _async_update_data(self) -> EngieBePeaksData:
         """Fetch this month's peaks, plus last month's when this month has no peak yet."""
         today = dt_util.now(BRUSSELS_TIME_ZONE).date()
+        last_month = today.replace(day=1) - timedelta(days=1)
         with _raise_update_errors():
             monthly = await self.client.async_get_monthly_peaks(
                 self.ban, today.year, today.month
             )
             previous_month: MonthlyPeaks | None = None
             if monthly.peak_of_the_month is None:
-                prev_year, prev_month = (
-                    (today.year - 1, 12)
-                    if today.month == 1
-                    else (today.year, today.month - 1)
-                )
                 previous_month = await self.client.async_get_monthly_peaks(
-                    self.ban, prev_year, prev_month
+                    self.ban, last_month.year, last_month.month
                 )
         return EngieBePeaksData(monthly=monthly, previous_month=previous_month)
 
