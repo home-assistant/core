@@ -717,6 +717,41 @@ async def test_preload_stream(hass: HomeAssistant, mock_create_stream: Mock) -> 
         assert mock_create_stream.start.called
 
 
+@pytest.mark.usefixtures("mock_stream")
+async def test_preload_stream_continues_after_error(
+    hass: HomeAssistant, mock_create_stream: Mock, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test one camera's error doesn't stop the others' streams preloading."""
+    demo_settings = camera.DynamicStreamSettings(preload_stream=True)
+    original = camera.Camera.async_create_stream
+    failed: list[str] = []
+
+    async def _create_stream(self: camera.Camera) -> Any:
+        if not failed:
+            failed.append(self.entity_id)
+            raise HomeAssistantError("Unable to restream")
+        return await original(self)
+
+    with (
+        patch(
+            "homeassistant.components.camera.prefs.CameraPreferences.get_dynamic_stream_settings",
+            return_value=demo_settings,
+        ),
+        patch(
+            "homeassistant.components.demo.camera.DemoCamera.stream_source",
+            return_value="http://example.com",
+        ),
+        patch.object(camera.Camera, "async_create_stream", _create_stream),
+    ):
+        assert await async_setup_component(hass, DOMAIN, {DOMAIN: {"platform": "demo"}})
+        await hass.async_block_till_done()
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+        await hass.async_block_till_done()
+
+    assert f"Unable to preload stream of {failed[0]}" in caplog.text
+    assert mock_create_stream.start.called
+
+
 @pytest.mark.usefixtures("mock_camera")
 async def test_record_service_not_supported(hass: HomeAssistant) -> None:
     """Test record service on a camera without stream support."""
