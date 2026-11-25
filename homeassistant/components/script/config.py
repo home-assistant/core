@@ -6,7 +6,6 @@ from enum import StrEnum
 from typing import Any
 
 import probatio
-from probatio.humanize import humanize_error
 
 from homeassistant.components.blueprint import (
     CONF_USE_BLUEPRINT,
@@ -39,6 +38,7 @@ from homeassistant.helpers.typing import ConfigType
 from homeassistant.helpers.validation_errors import (
     ValidationErrorInfo,
     ValidationErrors,
+    humanize_validation_errors,
     iter_validation_errors,
 )
 from homeassistant.util.yaml.input import UndefinedSubstitution
@@ -107,7 +107,7 @@ SCRIPT_ENTITY_SCHEMA = make_script_schema(
 )
 
 
-async def _async_validate_config_item(
+async def _async_validate_config_item(  # noqa: C901
     hass: HomeAssistant,
     object_id: str,
     config: ConfigType,
@@ -121,14 +121,8 @@ async def _async_validate_config_item(
     with suppress(ValueError):  # Invalid config
         raw_config = dict(config)
 
-    def _humanize(err: Exception, data: Any) -> str:
-        """Humanize probatio.Invalid, stringify other exceptions."""
-        if isinstance(err, probatio.Invalid):
-            return humanize_error(data, err)
-        return str(err)
-
     def _log_invalid_script(
-        err: Exception,
+        err: probatio.Invalid | HomeAssistantError,
         script_name: str,
         problem: str,
         data: Any,
@@ -142,7 +136,7 @@ async def _async_validate_config_item(
                 "Blueprint '%s' generated invalid script with inputs %s: %s",
                 blueprint_inputs.blueprint.name,
                 blueprint_inputs.inputs,
-                _humanize(err, data),
+                humanize_validation_errors(data, err),
             )
             return
 
@@ -150,7 +144,7 @@ async def _async_validate_config_item(
             "%s %s and has been disabled: %s",
             script_name,
             problem,
-            _humanize(err, data),
+            humanize_validation_errors(data, err),
         )
         return
 
@@ -175,6 +169,30 @@ async def _async_validate_config_item(
         script_config.raw_blueprint_inputs = raw_blueprint_inputs
         script_config.raw_config = raw_config
         _set_validation_status(script_config, validation_status, validation_error)
+        return script_config
+
+    async def _async_invalid(
+        validation_status: ValidationStatus,
+        problem: str,
+        fail_fast_error: probatio.Invalid | HomeAssistantError,
+        script_config: ScriptConfig | None = None,
+    ) -> ScriptConfig:
+        """Log all errors of the invalid script and set its validation status.
+
+        Must not be awaited in an except block: each error would be chained to
+        the one which is handled.
+        """
+        # Done first: it clears the traceback, which holds this frame
+        fail_fast_errors = list(iter_validation_errors(fail_fast_error))
+        # Keep the error if validating again does not give any
+        errors = ValidationErrors(
+            await _async_collect_errors(hass, config) or fail_fast_errors
+        )
+        _log_invalid_script(errors, script_name, problem, config)
+        error = humanize_validation_errors(config, errors)
+        if script_config is None:
+            return _minimal_config(validation_status, error)
+        _set_validation_status(script_config, validation_status, error)
         return script_config
 
     if is_blueprint_instance_config(config):
@@ -219,13 +237,19 @@ async def _async_validate_config_item(
     except probatio.Invalid as err:
         _log_invalid_script(err, script_name, "has invalid object id", object_id)
         raise
+
+    fail_fast_error: probatio.Invalid | HomeAssistantError | None = None
     try:
         validated_config = SCRIPT_ENTITY_SCHEMA(config)
     except probatio.Invalid as err:
-        _log_invalid_script(err, script_name, "could not be validated", config)
         if raise_on_errors:
+            _log_invalid_script(err, script_name, "could not be validated", config)
             raise
-        return _minimal_config(ValidationStatus.FAILED_SCHEMA, _humanize(err, config))
+        fail_fast_error = err
+    if fail_fast_error is not None:
+        return await _async_invalid(
+            ValidationStatus.FAILED_SCHEMA, "could not be validated", fail_fast_error
+        )
 
     script_config = ScriptConfig(validated_config)
     script_config.raw_blueprint_inputs = raw_blueprint_inputs
@@ -241,17 +265,17 @@ async def _async_validate_config_item(
     ) as err:
         if isinstance(err, probatio.Invalid):
             err.prepend([CONF_SEQUENCE])
-        _log_invalid_script(
-            err, script_name, "failed to setup sequence", validated_config
-        )
         if raise_on_errors:
+            _log_invalid_script(err, script_name, "failed to setup sequence", config)
             raise
-        _set_validation_status(
-            script_config,
+        fail_fast_error = err
+    if fail_fast_error is not None:
+        return await _async_invalid(
             ValidationStatus.FAILED_SEQUENCE,
-            _humanize(err, validated_config),
+            "failed to setup sequence",
+            fail_fast_error,
+            script_config,
         )
-        return script_config
 
     return script_config
 
