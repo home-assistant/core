@@ -1073,6 +1073,167 @@ async def test_unloaded_entry_tracker_adopted_by_other_entry(
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_tracker_adopted_when_current_owner_reloads(
+    hass: HomeAssistant,
+    mock_ubus_by_host: tuple[MagicMock, dict[str, MagicMock]],
+    two_router_entries: tuple[MockConfigEntry, MockConfigEntry],
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test the remaining entry keeps a tracker when its owner reloads.
+
+    The client is still connected to the reloaded router, so the
+    tracker stays home while it is hosted by the other entry.
+    """
+    _mock, ubus = mock_ubus_by_host
+    entry_a, entry_b = two_router_entries
+
+    # The device is on router A, so entry A owns its tracker.
+    ubus[MOCK_HOST].get_hostapd_clients.return_value = {
+        "clients": {MAC_PHONE: {"authorized": True}}
+    }
+    freezer.tick(timedelta(seconds=30))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    entity_id = entity_registry.async_get_entity_id(
+        DEVICE_TRACKER_DOMAIN, DOMAIN, MAC_PHONE
+    )
+    assert entity_id is not None
+    assert entity_registry.async_get(entity_id).config_entry_id == entry_a.entry_id
+
+    # Reloading entry A releases its claim, so entry B adopts the
+    # tracker and the client's device while the client stays connected
+    # to router A.
+    assert await hass.config_entries.async_reload(entry_a.entry_id)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == STATE_HOME
+    assert state.attributes["source"] == MOCK_HOST
+    assert entity_registry.async_get(entity_id).config_entry_id == entry_b.entry_id
+    assert device_registry.async_get_device_by_connection(
+        (dr.CONNECTION_NETWORK_MAC, MAC_PHONE), entry_b.entry_id
+    )
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_tracker_stays_with_owner_when_other_entry_reloads(
+    hass: HomeAssistant,
+    mock_ubus_by_host: tuple[MagicMock, dict[str, MagicMock]],
+    two_router_entries: tuple[MockConfigEntry, MockConfigEntry],
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test reloading an entry does not move another entry's tracker.
+
+    The loaded owner keeps its claim, so the reloaded entry does not
+    take over the tracker.
+    """
+    _mock, ubus = mock_ubus_by_host
+    entry_a, entry_b = two_router_entries
+
+    # The device is on router A, so entry A owns its tracker.
+    ubus[MOCK_HOST].get_hostapd_clients.return_value = {
+        "clients": {MAC_PHONE: {"authorized": True}}
+    }
+    freezer.tick(timedelta(seconds=30))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    entity_id = entity_registry.async_get_entity_id(
+        DEVICE_TRACKER_DOMAIN, DOMAIN, MAC_PHONE
+    )
+    assert entity_id is not None
+
+    # Reloading entry B, which has never seen the client, leaves the
+    # tracker with its owner.
+    assert await hass.config_entries.async_reload(entry_b.entry_id)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == STATE_HOME
+    assert state.attributes["source"] == MOCK_HOST
+    assert entity_registry.async_get(entity_id).config_entry_id == entry_a.entry_id
+    assert device_registry.async_get_device_by_connection(
+        (dr.CONNECTION_NETWORK_MAC, MAC_PHONE), entry_a.entry_id
+    )
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_away_state_survives_entry_reload(
+    hass: HomeAssistant,
+    mock_ubus_by_host: tuple[MagicMock, dict[str, MagicMock]],
+    two_router_entries: tuple[MockConfigEntry, MockConfigEntry],
+    entity_registry: er.EntityRegistry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test the away state survives a reload while stamps remain.
+
+    The away state is derived from the live stamps: reloading an entry
+    which no longer sees the client keeps it, while reloading the entry
+    holding the client's last sighting leaves the tracker unavailable,
+    as after a restart.
+    """
+    _mock, ubus = mock_ubus_by_host
+    entry_a, entry_b = two_router_entries
+
+    # The device is on router A, so entry A owns its tracker.
+    ubus[MOCK_HOST].get_hostapd_clients.return_value = {
+        "clients": {MAC_PHONE: {"authorized": True}}
+    }
+    freezer.tick(timedelta(seconds=30))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    entity_id = entity_registry.async_get_entity_id(
+        DEVICE_TRACKER_DOMAIN, DOMAIN, MAC_PHONE
+    )
+    assert entity_id is not None
+
+    # The device roams to router B, then leaves it too.
+    ubus[MOCK_HOST].get_hostapd_clients.return_value = {"clients": {}}
+    ubus[MOCK_HOST_B].get_hostapd_clients.return_value = {
+        "clients": {MAC_PHONE: {"authorized": True}}
+    }
+    freezer.tick(timedelta(seconds=30))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+    ubus[MOCK_HOST_B].get_hostapd_clients.return_value = {"clients": {}}
+    freezer.tick(DEFAULT_CONSIDER_HOME + timedelta(seconds=30))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == STATE_NOT_HOME
+
+    # Reloading entry A drops its stamps, but entry B still holds the
+    # client's last sighting, so the tracker stays away, adopted by B.
+    assert await hass.config_entries.async_reload(entry_a.entry_id)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == STATE_NOT_HOME
+    assert entity_registry.async_get(entity_id).config_entry_id == entry_b.entry_id
+
+    # Reloading entry B drops the last sighting; without stamps the
+    # tracker is unavailable, adopted by the remaining loaded entry.
+    assert await hass.config_entries.async_reload(entry_b.entry_id)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == STATE_UNAVAILABLE
+    assert entity_registry.async_get(entity_id).config_entry_id == entry_a.entry_id
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_unloaded_entry_tracker_adopted_from_retained_sighting(
     hass: HomeAssistant,
     mock_ubus_by_host: tuple[MagicMock, dict[str, MagicMock]],
