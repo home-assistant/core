@@ -29,6 +29,7 @@ from homeassistant.components.shelly.utils import (
     get_block_device_sleep_period,
     get_block_input_triggers,
     get_block_number_of_channels,
+    get_device_url,
     get_host,
     get_release_url,
     get_rpc_channel_name,
@@ -38,6 +39,7 @@ from homeassistant.components.shelly.utils import (
     is_block_momentary_input,
     mac_address_from_name,
 )
+from homeassistant.const import CONF_HOST, CONF_PORT
 
 DEVICE_BLOCK_ID = 4
 
@@ -292,6 +294,21 @@ def test_get_version_from_fw_id(fw_id: str, expected: str | None) -> None:
 def test_get_host(host: str, expected: str) -> None:
     """Test get_host function."""
     assert get_host(host) == expected
+
+
+@pytest.mark.parametrize(
+    ("data", "expected"),
+    [
+        ({CONF_HOST: "192.168.178.12"}, "http://192.168.178.12"),
+        ({CONF_HOST: "192.168.178.12", CONF_PORT: 80}, "http://192.168.178.12"),
+        ({CONF_HOST: "192.168.178.12", CONF_PORT: 8080}, "http://192.168.178.12:8080"),
+        ({CONF_HOST: "192.168.178.12", CONF_PORT: 443}, "https://192.168.178.12"),
+        ({CONF_HOST: "2001:db8::1"}, "http://[2001:db8::1]"),
+    ],
+)
+def test_get_device_url(data: dict[str, Any], expected: str) -> None:
+    """Test get_device_url function."""
+    assert get_device_url(data) == expected
 
 
 @pytest.mark.parametrize(

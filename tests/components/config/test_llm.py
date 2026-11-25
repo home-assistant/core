@@ -30,6 +30,7 @@ from homeassistant.components.config.llm import (
     GetAreaSettingsTool,
     GetConfigEntriesTool,
     GetCoreConfigTool,
+    GetDeviceSettingsTool,
     GetEntitySettingsTool,
     GetFloorSettingsTool,
     GetFlowsInProgressTool,
@@ -40,6 +41,7 @@ from homeassistant.components.config.llm import (
     StartFlowTool,
     UpdateAreaSettingsTool,
     UpdateCoreConfigTool,
+    UpdateDeviceSettingsTool,
     UpdateEntitySettingsTool,
     UpdateFloorSettingsTool,
     UpdateLabelSettingsTool,
@@ -65,6 +67,7 @@ from homeassistant.exceptions import (
 from homeassistant.helpers import (
     area_registry as ar,
     config_entry_oauth2_flow,
+    device_registry as dr,
     entity_registry as er,
     floor_registry as fr,
     label_registry as lr,
@@ -153,6 +156,8 @@ async def test_async_get_tools(
         "config__update_area_settings",
         "config__create_area",
         "config__delete_area",
+        "config__get_device_settings",
+        "config__update_device_settings",
     ]
     assert ha_tools.prompt is None
 
@@ -182,6 +187,8 @@ def test_parameters_openapi(snapshot: SnapshotAssertion) -> None:
         UpdateAreaSettingsTool(),
         CreateAreaTool(),
         DeleteAreaTool(),
+        GetDeviceSettingsTool(),
+        UpdateDeviceSettingsTool(),
     ]
     assert {
         tool.name: probatio.to_openapi(tool.parameters) for tool in tools
@@ -3317,6 +3324,267 @@ async def test_delete_area(
     with pytest.raises(HomeAssistantError, match=f"Area '{area.id}' not found."):
         await tool.async_call(
             hass, llm.ToolInput(tool.name, {"area_id": area.id}), llm_context
+        )
+
+
+def _create_parent_and_child(
+    hass: HomeAssistant, device_registry: dr.DeviceRegistry
+) -> tuple[dr.DeviceEntry, dr.ChildDeviceEntry]:
+    """Create a parent device and one child device."""
+    config_entry = MockConfigEntry(domain="test")
+    config_entry.add_to_hass(hass)
+    parent = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        identifiers={("test", "strip")},
+        manufacturer="Acme",
+        model="Strip 2000",
+        name="Power strip",
+    )
+    child = device_registry.async_get_or_create_child(
+        config_entry_id=config_entry.entry_id,
+        identifiers={("test", "strip_outlet_1")},
+        parent_device_id=parent.id,
+        name="Outlet 1",
+    )
+    return parent, child
+
+
+async def test_get_device_settings(
+    hass: HomeAssistant,
+    llm_context: llm.LLMContext,
+    device_registry: dr.DeviceRegistry,
+    area_registry: ar.AreaRegistry,
+    label_registry: lr.LabelRegistry,
+) -> None:
+    """Test getting the settings of a device."""
+    area = area_registry.async_create("Kitchen")
+    label = label_registry.async_create("Energy")
+    parent, child = _create_parent_and_child(hass, device_registry)
+    device_registry.async_update_device(
+        parent.id, area_id=area.id, labels={label.label_id}, name_by_user="Strip"
+    )
+
+    tool = GetDeviceSettingsTool()
+    result = await tool.async_call(
+        hass, llm.ToolInput(tool.name, {"device_id": parent.id}), llm_context
+    )
+    assert result == llm.ToolResult(
+        data={
+            "result": {
+                "device_id": parent.id,
+                "name": "Power strip",
+                "name_by_user": "Strip",
+                "area_id": area.id,
+                "disabled_by": None,
+                "labels": [label.label_id],
+                "manufacturer": "Acme",
+                "model": "Strip 2000",
+            }
+        }
+    )
+
+    result = await tool.async_call(
+        hass, llm.ToolInput(tool.name, {"device_id": child.id}), llm_context
+    )
+    assert result == llm.ToolResult(
+        data={
+            "result": {
+                "device_id": child.id,
+                "name": "Outlet 1",
+                "name_by_user": None,
+                "area_id": None,
+                "disabled_by": None,
+                "labels": [],
+                "parent_device_id": parent.id,
+            }
+        }
+    )
+
+    with pytest.raises(HomeAssistantError, match="Device 'unknown' not found."):
+        await tool.async_call(
+            hass, llm.ToolInput(tool.name, {"device_id": "unknown"}), llm_context
+        )
+
+
+async def test_update_device_settings(
+    hass: HomeAssistant,
+    llm_context: llm.LLMContext,
+    device_registry: dr.DeviceRegistry,
+    area_registry: ar.AreaRegistry,
+    label_registry: lr.LabelRegistry,
+) -> None:
+    """Test updating the settings of a device and a child device."""
+    area = area_registry.async_create("Kitchen")
+    label = label_registry.async_create("Energy")
+    parent, child = _create_parent_and_child(hass, device_registry)
+
+    tool = UpdateDeviceSettingsTool()
+    for device_id in (parent.id, child.id):
+        result = await tool.async_call(
+            hass,
+            llm.ToolInput(
+                tool.name,
+                {
+                    "device_id": device_id,
+                    "name_by_user": " Strip ",
+                    "area_id": area.id,
+                    "disabled_by": "user",
+                    "labels": [label.label_id],
+                },
+            ),
+            llm_context,
+        )
+        assert not result.error
+        assert result.data["result"]["disabled_by"] == "user"
+        assert "note" not in result.data["result"]
+
+        device = device_registry.async_get(device_id)
+        assert device.name_by_user == "Strip"
+        assert device.area_id == area.id
+        assert device.disabled_by is dr.DeviceEntryDisabler.USER
+        assert device.labels == {label.label_id}
+
+        result = await tool.async_call(
+            hass,
+            llm.ToolInput(
+                tool.name,
+                {
+                    "device_id": device_id,
+                    "name_by_user": None,
+                    "area_id": None,
+                    "labels": [],
+                },
+            ),
+            llm_context,
+        )
+        assert not result.error
+        device = device_registry.async_get(device_id)
+        assert device.name_by_user is None
+        assert device.area_id is None
+        assert device.disabled_by is dr.DeviceEntryDisabler.USER
+        assert device.labels == set()
+
+
+@pytest.mark.parametrize(
+    ("tool_args", "error"),
+    [
+        pytest.param(
+            {"device_id": "unknown", "name_by_user": "Strip"},
+            "Device 'unknown' not found.",
+            id="unknown_device",
+        ),
+        pytest.param({"area_id": "garage"}, "Area 'garage' not found.", id="area"),
+        pytest.param({"labels": ["b", "a"]}, "Labels not found: a, b", id="labels"),
+    ],
+)
+async def test_update_device_settings_errors(
+    hass: HomeAssistant,
+    llm_context: llm.LLMContext,
+    device_registry: dr.DeviceRegistry,
+    tool_args: dict[str, Any],
+    error: str,
+) -> None:
+    """Test errors when updating the settings of a device."""
+    parent, _ = _create_parent_and_child(hass, device_registry)
+
+    tool = UpdateDeviceSettingsTool()
+    with pytest.raises(HomeAssistantError) as exc_info:
+        await tool.async_call(
+            hass,
+            llm.ToolInput(tool.name, {"device_id": parent.id, **tool_args}),
+            llm_context,
+        )
+    assert str(exc_info.value) == error
+
+
+@pytest.mark.parametrize(
+    "invalid_args",
+    [
+        pytest.param({"name_by_user": "Strip"}, id="missing_device_id"),
+        pytest.param({"device_id": "abc", "disabled_by": "integration"}),
+        pytest.param({"device_id": "abc", "name_by_user": ""}),
+        pytest.param({"device_id": "abc", "unknown": "value"}),
+    ],
+)
+async def test_update_device_settings_invalid_args(
+    hass: HomeAssistant,
+    llm_context: llm.LLMContext,
+    invalid_args: dict[str, Any],
+) -> None:
+    """Test that invalid arguments raise probatio.Invalid."""
+    tool = UpdateDeviceSettingsTool()
+    with pytest.raises(probatio.Invalid):
+        await tool.async_call(hass, llm.ToolInput(tool.name, invalid_args), llm_context)
+
+
+async def test_update_device_settings_enable(
+    hass: HomeAssistant,
+    llm_context: llm.LLMContext,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test enabling a device."""
+    config_entry = MockConfigEntry(domain=TEST_DOMAIN)
+    config_entry.add_to_hass(hass)
+    device = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        identifiers={(TEST_DOMAIN, "strip")},
+        disabled_by=dr.DeviceEntryDisabler.USER,
+    )
+
+    tool = UpdateDeviceSettingsTool()
+    result = await tool.async_call(
+        hass,
+        llm.ToolInput(tool.name, {"device_id": device.id, "disabled_by": None}),
+        llm_context,
+    )
+    assert result.data["result"]["disabled_by"] is None
+    assert device_registry.async_get(device.id).disabled_by is None
+
+
+async def test_update_device_settings_enable_disabled_config_entry(
+    hass: HomeAssistant,
+    llm_context: llm.LLMContext,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test that a device of a disabled config entry cannot be enabled."""
+    config_entry = MockConfigEntry(
+        domain=TEST_DOMAIN,
+        disabled_by=config_entries.ConfigEntryDisabler.USER,
+    )
+    config_entry.add_to_hass(hass)
+    device = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        identifiers={(TEST_DOMAIN, "strip")},
+    )
+    assert device.disabled_by is dr.DeviceEntryDisabler.CONFIG_ENTRY
+
+    tool = UpdateDeviceSettingsTool()
+    with pytest.raises(HomeAssistantError, match="Enable the config entry first"):
+        await tool.async_call(
+            hass,
+            llm.ToolInput(tool.name, {"device_id": device.id, "disabled_by": None}),
+            llm_context,
+        )
+
+
+async def test_update_device_settings_enable_disabled_parent(
+    hass: HomeAssistant,
+    llm_context: llm.LLMContext,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test that a child device of a disabled parent cannot be enabled."""
+    parent, child = _create_parent_and_child(hass, device_registry)
+    device_registry.async_update_device(
+        parent.id, disabled_by=dr.DeviceEntryDisabler.USER
+    )
+    assert device_registry.async_get(child.id).disabled_by is not None
+
+    tool = UpdateDeviceSettingsTool()
+    with pytest.raises(HomeAssistantError, match="Enable the parent device first"):
+        await tool.async_call(
+            hass,
+            llm.ToolInput(tool.name, {"device_id": child.id, "disabled_by": None}),
+            llm_context,
         )
 
 
