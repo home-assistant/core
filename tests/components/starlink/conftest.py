@@ -34,6 +34,7 @@ def mock_config_entry() -> MockConfigEntry:
     return MockConfigEntry(
         domain=DOMAIN,
         data={CONF_IP_ADDRESS: "1.2.3.4:0000"},
+        unique_id="ut00000000-00000000-000000aa",
     )
 
 
