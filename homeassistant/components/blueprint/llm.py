@@ -20,7 +20,7 @@ from homeassistant.util.json import JsonObjectType, JsonValueType
 from .const import DOMAIN
 from .models import Blueprint, DomainBlueprints
 
-_NON_EMPTY_STRING = probatio.All(str, probatio.Strip, probatio.NonEmpty())
+_DOMAIN_STRING = probatio.All(str, probatio.Strip, probatio.Lower, probatio.NonEmpty())
 _METADATA_KEYS = ("description", "author", "source_url")
 
 
@@ -51,7 +51,7 @@ class ListBlueprintsTool(Tool):
                 "domain",
                 description="Return only the blueprints of this domain, like "
                 "automation or script.",
-            ): _NON_EMPTY_STRING,
+            ): _DOMAIN_STRING,
         }
     )
 
@@ -106,7 +106,7 @@ class GetBlueprintTool(Tool):
         {
             probatio.Required(
                 "domain", description="The domain, like automation or script."
-            ): _NON_EMPTY_STRING,
+            ): _DOMAIN_STRING,
             # Not stripped, as the path must match a listed file exactly
             probatio.Required(
                 "path", description="The path of the blueprint."

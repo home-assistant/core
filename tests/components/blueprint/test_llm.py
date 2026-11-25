@@ -1,10 +1,13 @@
 """Tests for the blueprint LLM tools."""
 
+from collections.abc import Generator
+from unittest.mock import patch
+
 import probatio
 import pytest
 from pytest_homeassistant.common import MockUser
 
-from homeassistant.components.blueprint import DOMAIN
+from homeassistant.components.blueprint import BLUEPRINT_SCHEMA, DOMAIN, errors, models
 from homeassistant.components.blueprint.llm import (
     GetBlueprintTool,
     ListBlueprintsTool,
@@ -35,6 +38,35 @@ async def setup_blueprints(hass: HomeAssistant) -> None:
     assert await async_setup_component(hass, DOMAIN, {})
     assert await async_setup_component(hass, "automation", {})
     assert await async_setup_component(hass, "script", {})
+
+
+@pytest.fixture
+def other_blueprints(hass: HomeAssistant) -> Generator[None]:
+    """Replace the automation blueprints with one with metadata and a broken one."""
+    blueprints = {
+        "with_metadata.yaml": models.Blueprint(
+            {
+                "blueprint": {
+                    "name": "With metadata",
+                    "domain": "automation",
+                    "description": "Turns on a light when motion is seen.",
+                    "author": "Jane",
+                    "source_url": "https://example.com/with_metadata.yaml",
+                    "input": {},
+                }
+            },
+            schema=BLUEPRINT_SCHEMA,
+        ),
+        "broken.yaml": errors.FailedToLoad(
+            "automation", "broken.yaml", FileNotFoundError("Missing file")
+        ),
+    }
+    with patch.object(
+        hass.data[DOMAIN]["automation"],
+        "async_get_blueprints",
+        return_value=blueprints,
+    ):
+        yield
 
 
 async def _call(
@@ -106,6 +138,53 @@ async def test_list_blueprints_of_domain(
     assert [item["path"] for item in result["blueprints"]] == ["test_service.yaml"]
 
 
+@pytest.mark.usefixtures("setup_blueprints", "other_blueprints")
+async def test_list_blueprints_with_metadata_and_error(
+    hass: HomeAssistant, llm_context: llm.LLMContext
+) -> None:
+    """Test the metadata of a blueprint, and the error of a broken one."""
+    result = await _call(
+        hass, llm_context, ListBlueprintsTool(), {"domain": "automation"}
+    )
+
+    assert result == {
+        "blueprints": [
+            {
+                "domain": "automation",
+                "path": "broken.yaml",
+                "error": "Failed to load blueprint: Missing file",
+            },
+            {
+                "domain": "automation",
+                "path": "with_metadata.yaml",
+                "name": "With metadata",
+                "description": "Turns on a light when motion is seen.",
+                "author": "Jane",
+                "source_url": "https://example.com/with_metadata.yaml",
+            },
+        ]
+    }
+
+
+@pytest.mark.usefixtures("setup_blueprints")
+async def test_domain_ignores_case(
+    hass: HomeAssistant, llm_context: llm.LLMContext
+) -> None:
+    """Test the domain matches in any case."""
+    listed = await _call(
+        hass, llm_context, ListBlueprintsTool(), {"domain": " Script "}
+    )
+    assert [item["path"] for item in listed["blueprints"]] == ["test_service.yaml"]
+
+    result = await _call(
+        hass,
+        llm_context,
+        GetBlueprintTool(),
+        {"domain": "Script", "path": "test_service.yaml"},
+    )
+    assert result["domain"] == "script"
+
+
 async def test_list_without_blueprints(
     hass: HomeAssistant, llm_context: llm.LLMContext
 ) -> None:
@@ -153,6 +232,41 @@ async def test_get_blueprint_not_found(
         await tool.async_call(
             hass,
             llm.ToolInput(tool.name, {"domain": domain, "path": path}),
+            llm_context,
+        )
+
+
+@pytest.mark.usefixtures("setup_blueprints", "other_blueprints")
+async def test_get_blueprint_with_metadata(
+    hass: HomeAssistant, llm_context: llm.LLMContext
+) -> None:
+    """Test the YAML of a blueprint holds its metadata."""
+    result = await _call(
+        hass,
+        llm_context,
+        GetBlueprintTool(),
+        {"domain": "automation", "path": "with_metadata.yaml"},
+    )
+
+    assert "description: Turns on a light when motion is seen." in result["yaml"]
+    assert "author: Jane" in result["yaml"]
+    assert "source_url: https://example.com/with_metadata.yaml" in result["yaml"]
+
+
+@pytest.mark.usefixtures("setup_blueprints", "other_blueprints")
+async def test_get_blueprint_failed_to_load(
+    hass: HomeAssistant, llm_context: llm.LLMContext
+) -> None:
+    """Test a blueprint that failed to load returns its error."""
+    tool = GetBlueprintTool()
+    with pytest.raises(
+        HomeAssistantError,
+        match="Blueprint 'automation/broken.yaml' failed to load: Failed to load "
+        "blueprint: Missing file",
+    ):
+        await tool.async_call(
+            hass,
+            llm.ToolInput(tool.name, {"domain": "automation", "path": "broken.yaml"}),
             llm_context,
         )
 
