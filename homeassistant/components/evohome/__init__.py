@@ -110,9 +110,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         if not c.last_update_success:
             # translations aren't available until setup completes, so log the cause
             err = c.last_exception
-            _LOGGER.error(
-                "Failed to fetch initial data: %s", (err and err.__cause__) or err
-            )
+            msg = (err and err.__cause__) or err
+            _LOGGER.error("Failed to fetch initial data: %s", msg)
             return False
 
     assert location_coord.tcs is not None  # mypy
