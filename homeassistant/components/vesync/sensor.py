@@ -40,7 +40,14 @@ from homeassistant.helpers.typing import StateType
 from homeassistant.util import dt as dt_util
 from homeassistant.util.variance import ignore_variance
 
-from .common import is_air_fryer, is_humidifier, is_outlet, is_purifier, rgetattr
+from .common import (
+    is_air_fryer,
+    is_humidifier,
+    is_outlet,
+    is_pedestal_fan,
+    is_purifier,
+    rgetattr,
+)
 from .const import AIR_FRYER_MODE_MAP, VS_DEVICES, VS_DISCOVERY
 from .coordinator import VesyncConfigEntry, VeSyncDataCoordinator
 from .entity import VeSyncBaseEntity
@@ -113,6 +120,17 @@ SENSORS: tuple[VeSyncSensorEntityDescription, ...] = (
         exists_fn=lambda device: rgetattr(device, "state.filter_life") is not None,
     ),
     VeSyncSensorEntityDescription(
+        key="hepa_filter_life",
+        translation_key="hepa_filter_life",
+        native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=lambda device: device.state.hepa_filter_life,
+        exists_fn=lambda device: (
+            is_humidifier(device) and device.state.hepa_filter_life is not None
+        ),
+    ),
+    VeSyncSensorEntityDescription(
         key="air-quality",
         translation_key="air_quality",
         device_class=SensorDeviceClass.ENUM,
@@ -153,6 +171,13 @@ SENSORS: tuple[VeSyncSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda device: device.state.co2,
         exists_fn=lambda device: is_purifier(device) and device.state.co2 is not None,
+    ),
+    VeSyncSensorEntityDescription(
+        key="voc",
+        translation_key="voc",
+        state_class=SensorStateClass.MEASUREMENT,
+        value_fn=lambda device: device.state.voc,
+        exists_fn=lambda device: is_purifier(device) and device.state.voc is not None,
     ),
     VeSyncSensorEntityDescription(
         key="power",
@@ -229,8 +254,10 @@ SENSORS: tuple[VeSyncSensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfTemperature.FAHRENHEIT,
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda device: device.state.temperature,
+        # pyvesync scales only pedestal fan readings to °F; tower fan scale is unconfirmed.
         exists_fn=lambda device: (
-            is_humidifier(device) and device.state.temperature is not None
+            (is_humidifier(device) or is_pedestal_fan(device))
+            and device.state.temperature is not None
         ),
     ),
     VeSyncSensorEntityDescription(

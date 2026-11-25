@@ -221,11 +221,17 @@
       "filter_life": {
         "name": "Filter lifetime"
       },
+      "hepa_filter_life": {
+        "name": "HEPA filter lifetime"
+      },
       "preheat_set_time": {
         "name": "Preheating set time"
       },
       "preheat_set_time_basket": {
         "name": "Basket {basket} preheating set time"
+      },
+      "voc": {
+        "name": "Volatile organic compounds"
       }
     },
     "switch": {

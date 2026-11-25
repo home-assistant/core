@@ -12,7 +12,7 @@ from syrupy.assertion import SnapshotAssertion
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, ButtonService
 from homeassistant.components.renault.const import DOMAIN
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntry
-from homeassistant.const import ATTR_ENTITY_ID, CommonServiceArgument, Platform
+from homeassistant.const import ATTR_ENTITY_ID, Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
@@ -148,9 +148,7 @@ async def test_button_authentication_expired(
         await hass.services.async_call(
             BUTTON_DOMAIN,
             ButtonService.PRESS,
-            service_data={
-                CommonServiceArgument.ENTITY_ID: "button.reg_zoe_40_start_charge"
-            },
+            service_data={TargetKey.ENTITY_ID: "button.reg_zoe_40_start_charge"},
             blocking=True,
         )
 

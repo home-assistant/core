@@ -37,7 +37,7 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import CalDavConfigEntry
-from .api import async_get_calendar_color, async_get_calendars
+from .api import async_get_calendar_color, async_get_calendars, calendars_supporting
 from .const import TIMEOUT
 from .coordinator import CalDavUpdateCoordinator
 
@@ -166,7 +166,7 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the CalDav calendar platform for a config entry."""
-    calendars = await async_get_calendars(hass, entry.runtime_data, SUPPORTED_COMPONENT)
+    calendars = calendars_supporting(entry.runtime_data.calendars, SUPPORTED_COMPONENT)
     entities = [
         WebDavCalendarEntity(
             calendar_name,
