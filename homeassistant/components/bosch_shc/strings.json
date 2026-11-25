@@ -312,6 +312,14 @@
       "air_quality": {
         "name": "Air quality"
       },
+      "battery_level": {
+        "name": "Battery level",
+        "state": {
+          "critically_low_battery": "Critically low",
+          "low_battery": "[%key:common::state::low%]",
+          "ok": "OK"
+        }
+      },
       "communication_quality": {
         "name": "Communication quality"
       },
