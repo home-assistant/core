@@ -1,5 +1,6 @@
 """Passive update processors for the Bluetooth integration."""
 
+from copy import copy
 import dataclasses
 from datetime import timedelta
 from functools import cache
@@ -180,7 +181,7 @@ class PassiveBluetoothDataUpdate[_T]:
         return {
             "devices": {
                 # A plain dict, as orjson would also write the unset dataclass fields
-                key or "": dict(device_info)
+                key or "": device_info.as_dict()
                 for key, device_info in self.devices.items()
             },
             "entity_descriptions": {
@@ -202,14 +203,18 @@ class PassiveBluetoothDataUpdate[_T]:
         entity_description_class: type[EntityDescription],
     ) -> None:
         """Set the restored data from storage."""
-        self.devices.update(
-            {
-                key or None: DeviceInfo(
-                    **{k: v for k, v in device_info.items() if k in _DEVICE_INFO_FIELDS}
-                )
-                for key, device_info in restore_data["devices"].items()
+        devices: dict[str | None, DeviceInfo] = {}
+        for key, device_info in restore_data["devices"].items():
+            restored = {
+                k: v for k, v in device_info.items() if k in _DEVICE_INFO_FIELDS
             }
-        )
+            # SensorPro and ThermoBeacon stored the model as an int. Remove the
+            # conversion once their parsers are fixed upstream and stored data has
+            # been replaced.
+            if isinstance(model := restored.get("model"), int):
+                restored["model"] = str(model)
+            devices[key or None] = DeviceInfo(**restored)
+        self.devices.update(devices)
         self.entity_descriptions.update(
             {
                 PassiveBluetoothEntityKey.from_string(
@@ -700,10 +705,10 @@ class PassiveBluetoothProcessorEntity[
         else:
             identifier = address
             self._attr_unique_id = f"{address}-{key}"
+        device_info = copy(devices[device_id]) if device_id in devices else DeviceInfo()
         # The coordinator name is only a default for the device's own name
-        device_info = DeviceInfo(name=processor.coordinator.name)
-        if device_id in devices:
-            device_info.update(devices[device_id])
+        if device_info.name is Undefined:
+            device_info.name = processor.coordinator.name
         device_info.identifiers = {(DOMAIN, identifier)}
         if device_id is None:
             device_info.connections = {(CONNECTION_BLUETOOTH, address)}

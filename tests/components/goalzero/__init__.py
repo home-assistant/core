@@ -5,8 +5,8 @@ from unittest.mock import AsyncMock, patch
 from pytest_homeassistant.common import MockConfigEntry, async_load_fixture
 from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 
-from homeassistant.components.goalzero.const import DEFAULT_NAME, DOMAIN
-from homeassistant.const import CONF_HOST, CONF_NAME
+from homeassistant.components.goalzero.const import DOMAIN
+from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
@@ -14,10 +14,7 @@ from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 HOST = "1.2.3.4"
 MAC = "aa:bb:cc:dd:ee:ff"
 
-CONF_DATA = {
-    CONF_HOST: HOST,
-    CONF_NAME: DEFAULT_NAME,
-}
+CONF_DATA = {CONF_HOST: HOST}
 
 CONF_DHCP_FLOW = DhcpServiceInfo(
     ip=HOST,
@@ -26,11 +23,11 @@ CONF_DHCP_FLOW = DhcpServiceInfo(
 )
 
 
-def create_entry(hass: HomeAssistant):
+def create_entry(hass: HomeAssistant, data: dict[str, str] | None = None):
     """Add config entry in Home Assistant."""
     entry = MockConfigEntry(
         domain=DOMAIN,
-        data=CONF_DATA,
+        data=data or CONF_DATA,
         unique_id=MAC,
     )
     entry.add_to_hass(hass)
@@ -60,9 +57,10 @@ async def async_init_integration(
     hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,
     skip_setup: bool = False,
+    data: dict[str, str] | None = None,
 ) -> MockConfigEntry:
     """Set up the Goal Zero integration in Home Assistant."""
-    entry = create_entry(hass)
+    entry = create_entry(hass, data)
     base_url = f"http://{HOST}/"
     aioclient_mock.get(
         f"{base_url}state",

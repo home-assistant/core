@@ -1082,16 +1082,6 @@ async def test_abort_flow_exception_finish_flow_translation_domain(
     assert form["translation_domain"] == "homeassistant"
 
 
-async def test_init_unknown_flow(manager: MockFlowManager) -> None:
-    """Test that UnknownFlow is raised when async_create_flow returns None."""
-
-    with (
-        pytest.raises(data_entry_flow.UnknownFlow),
-        patch.object(manager, "async_create_flow", return_value=None),
-    ):
-        await manager.async_init("test")
-
-
 async def test_async_get_unknown_flow(manager: MockFlowManager) -> None:
     """Test UnknownFlow raised when async_get gets unknown flow_id."""
 

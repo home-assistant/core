@@ -1,6 +1,7 @@
 """Services for SimpliSafe."""
 
 from collections.abc import Callable, Coroutine
+from enum import StrEnum
 from typing import TYPE_CHECKING, Any
 
 import probatio
@@ -18,7 +19,7 @@ from simplipy.system.v3 import (
     Volume,
 )
 
-from homeassistant.const import ATTR_DEVICE_ID
+from homeassistant.const import CommonServiceArgument
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import config_validation as cv, device_registry as dr
@@ -28,26 +29,37 @@ from homeassistant.helpers.service import (
     verify_domain_control,
 )
 
-from .const import (
-    ATTR_ALARM_DURATION,
-    ATTR_ALARM_VOLUME,
-    ATTR_CHIME_VOLUME,
-    ATTR_ENTRY_DELAY_AWAY,
-    ATTR_ENTRY_DELAY_HOME,
-    ATTR_EXIT_DELAY_AWAY,
-    ATTR_EXIT_DELAY_HOME,
-    ATTR_LIGHT,
-    ATTR_VOICE_PROMPT_VOLUME,
-    DOMAIN,
-)
+from .const import DOMAIN
 from .typing import SystemType
 
 if TYPE_CHECKING:
     from . import SimpliSafeConfigEntry
 
-ATTR_PIN_LABEL = "label"
-ATTR_PIN_LABEL_OR_VALUE = "label_or_pin"
-ATTR_PIN_VALUE = "pin"
+
+class SimpliSafeService(StrEnum):
+    """Store keys for SimpliSafe services."""
+
+    REMOVE_PIN = "remove_pin"
+    SET_PIN = "set_pin"
+    SET_SYSTEM_PROPERTIES = "set_system_properties"
+
+
+class SimpliSafeServiceArgument(StrEnum):
+    """Store keys for SimpliSafe service arguments."""
+
+    LABEL_OR_PIN = "label_or_pin"
+    LABEL = "label"
+    PIN = "pin"
+    ALARM_DURATION = "alarm_duration"
+    ALARM_VOLUME = "alarm_volume"
+    CHIME_VOLUME = "chime_volume"
+    ENTRY_DELAY_AWAY = "entry_delay_away"
+    ENTRY_DELAY_HOME = "entry_delay_home"
+    EXIT_DELAY_AWAY = "exit_delay_away"
+    EXIT_DELAY_HOME = "exit_delay_home"
+    LIGHT = "light"
+    VOICE_PROMPT_VOLUME = "voice_prompt_volume"
+
 
 VOLUME_MAP = {
     "high": Volume.HIGH,
@@ -56,61 +68,58 @@ VOLUME_MAP = {
     "off": Volume.OFF,
 }
 
-SERVICE_NAME_REMOVE_PIN = "remove_pin"
-SERVICE_NAME_SET_PIN = "set_pin"
-SERVICE_NAME_SET_SYSTEM_PROPERTIES = "set_system_properties"
 
 SERVICE_REMOVE_PIN_SCHEMA = probatio.Schema(
     {
-        probatio.Required(ATTR_DEVICE_ID): cv.string,
-        probatio.Required(ATTR_PIN_LABEL_OR_VALUE): cv.string,
+        probatio.Required(CommonServiceArgument.DEVICE_ID): cv.string,
+        probatio.Required(SimpliSafeServiceArgument.LABEL_OR_PIN): cv.string,
     }
 )
 
 SERVICE_SET_PIN_SCHEMA = probatio.Schema(
     {
-        probatio.Required(ATTR_DEVICE_ID): cv.string,
-        probatio.Required(ATTR_PIN_LABEL): cv.string,
-        probatio.Required(ATTR_PIN_VALUE): cv.string,
+        probatio.Required(CommonServiceArgument.DEVICE_ID): cv.string,
+        probatio.Required(SimpliSafeServiceArgument.LABEL): cv.string,
+        probatio.Required(SimpliSafeServiceArgument.PIN): cv.string,
     },
 )
 
 SERVICE_SET_SYSTEM_PROPERTIES_SCHEMA = probatio.Schema(
     {
-        probatio.Required(ATTR_DEVICE_ID): cv.string,
-        probatio.Optional(ATTR_ALARM_DURATION): probatio.All(
+        probatio.Required(CommonServiceArgument.DEVICE_ID): cv.string,
+        probatio.Optional(SimpliSafeServiceArgument.ALARM_DURATION): probatio.All(
             cv.time_period,
             lambda value: value.total_seconds(),
             probatio.Range(min=MIN_ALARM_DURATION, max=MAX_ALARM_DURATION),
         ),
-        probatio.Optional(ATTR_ALARM_VOLUME): probatio.All(
+        probatio.Optional(SimpliSafeServiceArgument.ALARM_VOLUME): probatio.All(
             probatio.In(VOLUME_MAP), VOLUME_MAP.get
         ),
-        probatio.Optional(ATTR_CHIME_VOLUME): probatio.All(
+        probatio.Optional(SimpliSafeServiceArgument.CHIME_VOLUME): probatio.All(
             probatio.In(VOLUME_MAP), VOLUME_MAP.get
         ),
-        probatio.Optional(ATTR_ENTRY_DELAY_AWAY): probatio.All(
+        probatio.Optional(SimpliSafeServiceArgument.ENTRY_DELAY_AWAY): probatio.All(
             cv.time_period,
             lambda value: value.total_seconds(),
             probatio.Range(min=MIN_ENTRY_DELAY_AWAY, max=MAX_ENTRY_DELAY_AWAY),
         ),
-        probatio.Optional(ATTR_ENTRY_DELAY_HOME): probatio.All(
+        probatio.Optional(SimpliSafeServiceArgument.ENTRY_DELAY_HOME): probatio.All(
             cv.time_period,
             lambda value: value.total_seconds(),
             probatio.Range(max=MAX_ENTRY_DELAY_HOME),
         ),
-        probatio.Optional(ATTR_EXIT_DELAY_AWAY): probatio.All(
+        probatio.Optional(SimpliSafeServiceArgument.EXIT_DELAY_AWAY): probatio.All(
             cv.time_period,
             lambda value: value.total_seconds(),
             probatio.Range(min=MIN_EXIT_DELAY_AWAY, max=MAX_EXIT_DELAY_AWAY),
         ),
-        probatio.Optional(ATTR_EXIT_DELAY_HOME): probatio.All(
+        probatio.Optional(SimpliSafeServiceArgument.EXIT_DELAY_HOME): probatio.All(
             cv.time_period,
             lambda value: value.total_seconds(),
             probatio.Range(max=MAX_EXIT_DELAY_HOME),
         ),
-        probatio.Optional(ATTR_LIGHT): cv.boolean,
-        probatio.Optional(ATTR_VOICE_PROMPT_VOLUME): probatio.All(
+        probatio.Optional(SimpliSafeServiceArgument.LIGHT): cv.boolean,
+        probatio.Optional(SimpliSafeServiceArgument.VOICE_PROMPT_VOLUME): probatio.All(
             probatio.In(VOLUME_MAP), VOLUME_MAP.get
         ),
     }
@@ -122,7 +131,7 @@ _verify_domain_control = verify_domain_control(DOMAIN)
 @callback
 def _async_get_system_for_service_call(call: ServiceCall) -> SystemType:
     """Get the SimpliSafe system related to a service call (by device ID)."""
-    device_id = call.data[ATTR_DEVICE_ID]
+    device_id = call.data[CommonServiceArgument.DEVICE_ID]
     device_registry = dr.async_get(call.hass)
 
     if (
@@ -179,14 +188,17 @@ def extract_system(
 @extract_system
 async def async_remove_pin(call: ServiceCall, system: SystemType) -> None:
     """Remove a PIN."""
-    await system.async_remove_pin(call.data[ATTR_PIN_LABEL_OR_VALUE])
+    await system.async_remove_pin(call.data[SimpliSafeServiceArgument.LABEL_OR_PIN])
 
 
 @_verify_domain_control
 @extract_system
 async def async_set_pin(call: ServiceCall, system: SystemType) -> None:
     """Set a PIN."""
-    await system.async_set_pin(call.data[ATTR_PIN_LABEL], call.data[ATTR_PIN_VALUE])
+    await system.async_set_pin(
+        call.data[SimpliSafeServiceArgument.LABEL],
+        call.data[SimpliSafeServiceArgument.PIN],
+    )
 
 
 @_verify_domain_control
@@ -200,7 +212,11 @@ async def async_set_system_properties(call: ServiceCall, system: SystemType) -> 
         )
 
     await system.async_set_properties(
-        {prop: value for prop, value in call.data.items() if prop != ATTR_DEVICE_ID}
+        {
+            prop: value
+            for prop, value in call.data.items()
+            if prop != CommonServiceArgument.DEVICE_ID
+        }
     )
 
 
@@ -209,10 +225,10 @@ def async_setup_services(hass: HomeAssistant) -> None:
     """Register services."""
 
     for service, method, schema in (
-        (SERVICE_NAME_REMOVE_PIN, async_remove_pin, SERVICE_REMOVE_PIN_SCHEMA),
-        (SERVICE_NAME_SET_PIN, async_set_pin, SERVICE_SET_PIN_SCHEMA),
+        (SimpliSafeService.REMOVE_PIN, async_remove_pin, SERVICE_REMOVE_PIN_SCHEMA),
+        (SimpliSafeService.SET_PIN, async_set_pin, SERVICE_SET_PIN_SCHEMA),
         (
-            SERVICE_NAME_SET_SYSTEM_PROPERTIES,
+            SimpliSafeService.SET_SYSTEM_PROPERTIES,
             async_set_system_properties,
             SERVICE_SET_SYSTEM_PROPERTIES_SCHEMA,
         ),

@@ -1,5 +1,6 @@
 """Support for (EMEA/EU-based) Honeywell TCC systems."""
 
+from collections.abc import Mapping
 from datetime import timedelta
 from typing import Any, NotRequired, TypedDict, override
 
@@ -8,7 +9,9 @@ from evohomeasync.auth import (
     SZ_SESSION_ID_EXPIRES,
     AbstractSessionManager,
 )
-from evohomeasync2.auth import AbstractTokenManager
+from evohomeasync.schemas import TccFailureCode
+from evohomeasync2.auth import CREDS_USER_PASSWORD, AbstractTokenManager
+from evohomeasync2.schemas.const import OAUTH_GRANT_TYPE, TccOAuthError
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.storage import Store
@@ -40,6 +43,20 @@ class TokenManager(AbstractTokenManager, AbstractSessionManager):
 
         self._store: Store[_TokenStoreT] = Store(hass, STORAGE_VER, STORAGE_KEY)
         self._store_initialized = False  # True once cache loaded first time
+
+    @override
+    def _is_bad_credentials(self, data: Mapping[str, str], code: str | None) -> bool:
+        """Return True if a failed request (v1 or v2) was refused for the credentials.
+
+        Without this, only the v2 check would apply (it is first in the MRO).
+        """
+
+        if (
+            code == TccOAuthError.INVALID_GRANT
+            and data.get(OAUTH_GRANT_TYPE) == CREDS_USER_PASSWORD[OAUTH_GRANT_TYPE]
+        ):
+            return True
+        return code == TccFailureCode.EMAIL_OR_PASSWORD_INCORRECT
 
     @override
     async def get_access_token(self) -> str:

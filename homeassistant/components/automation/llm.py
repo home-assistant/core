@@ -1,0 +1,175 @@
+"""LLM tools for the automation integration."""
+
+from datetime import datetime
+from typing import override
+
+import probatio
+
+from homeassistant.components.llm import LLMTools
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import (
+    area_registry as ar,
+    category_registry as cr,
+    config_validation as cv,
+    entity_registry as er,
+    label_registry as lr,
+)
+from homeassistant.helpers.json import json_dumps
+from homeassistant.helpers.llm import (
+    LLM_API_HOME_ASSISTANT,
+    LLMContext,
+    Tool,
+    ToolAnnotations,
+    ToolInput,
+    ToolResult,
+)
+from homeassistant.util.json import JsonObjectType, JsonValueType, json_loads_object
+
+from . import ATTR_LAST_TRIGGERED
+from .const import DATA_COMPONENT, DOMAIN
+
+_LIMIT = 50
+
+
+class ListAutomationsTool(Tool):
+    """LLM Tool to list the automations."""
+
+    name = "automation__list_automations"
+    title = "List automations"
+    description = (
+        "List the automations, sorted by name, with their state, when they were "
+        "last triggered, their description, area, category and labels. An automation that is off ignores "
+        "its triggers but can still be run by hand, and one that is unavailable "
+        "has an error in its configuration. "
+        f"Returns at most {_LIMIT} automations per call."
+    )
+    annotations = ToolAnnotations(
+        read_only=True, destructive=False, idempotent=True, open_world=False
+    )
+    integration = DOMAIN
+    parameters = probatio.Schema(
+        {
+            probatio.Optional(
+                "offset",
+                description=(
+                    "Number of automations to skip. Use the next_offset of the "
+                    "previous result."
+                ),
+                default=0,
+            ): probatio.All(probatio.Coerce(int), probatio.Range(min=0)),
+        }
+    )
+
+    @override
+    async def async_call(
+        self, hass: HomeAssistant, tool_input: ToolInput, llm_context: LLMContext
+    ) -> ToolResult:
+        """Return a page of the automations."""
+        offset: int = self.parameters(tool_input.tool_args)["offset"]
+        states = sorted(
+            hass.states.async_all(DOMAIN),
+            key=lambda state: (state.name.casefold(), state.entity_id),
+        )
+        component = hass.data.get(DATA_COMPONENT)
+        ent_reg = er.async_get(hass)
+        area_reg = ar.async_get(hass)
+        cat_reg = cr.async_get(hass)
+        lab_reg = lr.async_get(hass)
+
+        automations: list[JsonValueType] = []
+        for state in states[offset : offset + _LIMIT]:
+            last_triggered = state.attributes.get(ATTR_LAST_TRIGGERED)
+            automation: JsonObjectType = {
+                "entity_id": state.entity_id,
+                "name": state.name,
+                "state": state.state,
+                "last_triggered": last_triggered.isoformat()
+                if isinstance(last_triggered, datetime)
+                else None,
+            }
+            if (
+                component is not None
+                and (entity := component.get_entity(state.entity_id)) is not None
+                and entity.raw_config
+                and (description := entity.raw_config.get("description"))
+                not in (None, "")
+            ):
+                # The raw configuration is not validated, so it may hold a number
+                automation["description"] = str(description)
+            if entry := ent_reg.async_get(state.entity_id):
+                if (area_id := er.async_get_effective_area_id(hass, entry)) and (
+                    area := area_reg.async_get_area(area_id)
+                ):
+                    automation["area"] = area.name
+                if (category_id := entry.categories.get(DOMAIN)) and (
+                    category := cat_reg.async_get_category(
+                        scope=DOMAIN, category_id=category_id
+                    )
+                ):
+                    automation["category"] = category.name
+                if labels := sorted(
+                    label.name
+                    for label_id in entry.labels
+                    if (label := lab_reg.async_get_label(label_id))
+                ):
+                    automation["labels"] = list[JsonValueType](labels)
+            automations.append(automation)
+
+        result: JsonObjectType = {"automations": automations, "total": len(states)}
+        if (next_offset := offset + _LIMIT) < len(states):
+            result["next_offset"] = next_offset
+        return ToolResult(data=result)
+
+
+class GetConfigTool(Tool):
+    """LLM Tool to get the configuration of an automation."""
+
+    name = "automation__get_config"
+    title = "Get automation configuration"
+    description = (
+        "Get the configuration of an automation: its triggers, conditions and "
+        "actions, or the blueprint it uses with its inputs. Use "
+        "automation__list_automations or search__search to find the entity_id."
+    )
+    annotations = ToolAnnotations(
+        read_only=True, destructive=False, idempotent=True, open_world=False
+    )
+    integration = DOMAIN
+    parameters = probatio.Schema(
+        {
+            probatio.Required(
+                "entity_id", description="The entity_id of the automation."
+            ): cv.entity_domain(DOMAIN),
+        }
+    )
+
+    @override
+    async def async_call(
+        self, hass: HomeAssistant, tool_input: ToolInput, llm_context: LLMContext
+    ) -> ToolResult:
+        """Return the configuration of the automation."""
+        entity_id: str = self.parameters(tool_input.tool_args)["entity_id"]
+        if (
+            (component := hass.data.get(DATA_COMPONENT)) is None
+            or (entity := component.get_entity(entity_id)) is None
+            or (config := entity.raw_blueprint_inputs or entity.raw_config) is None
+        ):
+            raise HomeAssistantError(f"Automation '{entity_id}' not found.")
+        return ToolResult(
+            data={
+                "entity_id": entity_id,
+                "config": json_loads_object(json_dumps(config)),
+            }
+        )
+
+
+@callback
+def async_get_tools(
+    hass: HomeAssistant, llm_context: LLMContext, api_id: str
+) -> LLMTools | None:
+    """Return the automation LLM tools for the Home Assistant API."""
+    if api_id != LLM_API_HOME_ASSISTANT:
+        return None
+
+    return LLMTools(tools=[ListAutomationsTool(), GetConfigTool()])

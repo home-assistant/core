@@ -10,7 +10,7 @@ from typing import Any, cast, override
 
 from samsungtvws.async_remote import SamsungTVWSAsyncRemote
 from samsungtvws.async_rest import SamsungTVAsyncRest
-from samsungtvws.command import SamsungTVCommand
+from samsungtvws.command import SamsungTVCommand, SamsungTVSleepCommand
 from samsungtvws.encrypted.command import SamsungTVEncryptedCommand
 from samsungtvws.encrypted.remote import (
     SamsungTVEncryptedWSAsyncRemote,
@@ -79,6 +79,10 @@ KEY_PRESS_TIMEOUT = 1.2
 
 ENCRYPTED_MODEL_USES_POWER_OFF = {"H6400", "H6410"}
 ENCRYPTED_MODEL_USES_POWER = {"JU6400", "JU641D"}
+
+# ~4 s of repeated presses, as sent by a held physical remote
+FRAME_POWER_OFF_PRESSES = 40
+FRAME_POWER_OFF_PRESS_INTERVAL = 0.1
 
 REST_EXCEPTIONS = (HttpApiError, AsyncioTimeoutError, ResponseError)
 
@@ -429,14 +433,19 @@ class SamsungTVWSBaseBridge[
             return remote.is_alive()
         return False
 
-    async def _async_send_commands(self, commands: list[_CommandT]) -> None:
+    async def _async_send_commands(
+        self, commands: list[_CommandT], key_press_delay: float | None = None
+    ) -> None:
         """Send the commands using websocket protocol."""
         # recreate connection if connection was dead
         retry_count = 1
         for attempt in range(retry_count + 1):
             try:
                 if remote := await self._async_get_remote():
-                    await remote.send_commands(commands)  # type: ignore[arg-type]
+                    await remote.send_commands(
+                        commands,  # type: ignore[arg-type]
+                        key_press_delay=key_press_delay,
+                    )
             except (BrokenPipeError, WebSocketException) as err:
                 # BrokenPipe can occur when the commands is sent to fast
                 # WebSocketException can occur when timed out
@@ -732,7 +741,13 @@ class SamsungTVWSBridge(
     async def _async_send_power_off(self) -> None:
         """Send power off command to remote."""
         if self._get_device_spec("FrameTVSupport") == "true":
-            await self._async_send_commands(SendRemoteKey.hold("KEY_POWER", 3))
+            # A single long press only toggles Art mode on recent Frame firmware
+            commands: list[SamsungTVCommand] = []
+            for _ in range(FRAME_POWER_OFF_PRESSES):
+                commands.append(SendRemoteKey.press("KEY_POWER"))
+                commands.append(SamsungTVSleepCommand(FRAME_POWER_OFF_PRESS_INTERVAL))
+            commands.append(SendRemoteKey.release("KEY_POWER"))
+            await self._async_send_commands(commands, key_press_delay=0)
         else:
             await self._async_send_commands([SendRemoteKey.click("KEY_POWER")])
 

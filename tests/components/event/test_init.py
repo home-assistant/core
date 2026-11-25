@@ -23,13 +23,13 @@ from pytest_homeassistant.common import (
 
 from homeassistant.components import event
 from homeassistant.components.event import (
-    ATTR_EVENT_TYPE,
-    ATTR_EVENT_TYPES,
     DOMAIN,
     DoorbellEventType,
     EventDeviceClass,
     EventEntity,
+    EventEntityCapabilityAttribute,
     EventEntityDescription,
+    EventEntityStateAttribute,
     const as event_const,
 )
 from homeassistant.config_entries import ConfigEntry, ConfigFlow
@@ -52,7 +52,7 @@ async def test_event() -> None:
     event.entity_id = "event.doorbell"
     # Test event with no data at all
     assert event.state is None
-    assert event.state_attributes == {ATTR_EVENT_TYPE: None}
+    assert event.state_attributes == {EventEntityStateAttribute.EVENT_TYPE: None}
     assert not event.extra_state_attributes
     assert event.device_class is None
 
@@ -84,7 +84,9 @@ async def test_event() -> None:
         event._trigger_event("long_press")
 
         assert event.state == now.isoformat(timespec="milliseconds")
-        assert event.state_attributes == {ATTR_EVENT_TYPE: "long_press"}
+        assert event.state_attributes == {
+            EventEntityStateAttribute.EVENT_TYPE: "long_press"
+        }
         assert not event.extra_state_attributes
 
     # Test triggering an event, with extra attribute data. Use a later time so
@@ -96,7 +98,7 @@ async def test_event() -> None:
 
         assert event.state == later.isoformat(timespec="milliseconds")
         assert event.state_attributes == {
-            ATTR_EVENT_TYPE: "short_press",
+            EventEntityStateAttribute.EVENT_TYPE: "short_press",
             "hello": "world",
         }
 
@@ -148,8 +150,8 @@ async def test_restore_state(hass: HomeAssistant) -> None:
                     "event.doorbell",
                     "2021-01-01T23:59:59.123+00:00",
                     attributes={
-                        ATTR_EVENT_TYPE: "ignored",
-                        ATTR_EVENT_TYPES: [
+                        EventEntityStateAttribute.EVENT_TYPE: "ignored",
+                        EventEntityCapabilityAttribute.EVENT_TYPES: [
                             "single_press",
                             "double_press",
                             "do",
@@ -175,8 +177,11 @@ async def test_restore_state(hass: HomeAssistant) -> None:
     state = hass.states.get("event.doorbell")
     assert state
     assert state.state == "2021-01-01T23:59:59.123+00:00"
-    assert state.attributes[ATTR_EVENT_TYPES] == ["short_press", "long_press"]
-    assert state.attributes[ATTR_EVENT_TYPE] == "double_press"
+    assert state.attributes[EventEntityCapabilityAttribute.EVENT_TYPES] == [
+        "short_press",
+        "long_press",
+    ]
+    assert state.attributes[EventEntityStateAttribute.EVENT_TYPE] == "double_press"
     assert state.attributes["hello"] == "world"
 
 
@@ -211,7 +216,7 @@ async def test_restore_state_naive_timestamp(
     state = hass.states.get("event.doorbell")
     assert state
     assert state.state == STATE_UNKNOWN
-    assert state.attributes[ATTR_EVENT_TYPE] == "double_press"
+    assert state.attributes[EventEntityStateAttribute.EVENT_TYPE] == "double_press"
 
     platform = async_get_platforms(hass, DOMAIN)[0]
     entity = platform.domain_entities["event.doorbell"]
@@ -251,8 +256,11 @@ async def test_invalid_extra_restore_state(hass: HomeAssistant) -> None:
     state = hass.states.get("event.doorbell")
     assert state
     assert state.state == STATE_UNKNOWN
-    assert state.attributes[ATTR_EVENT_TYPES] == ["short_press", "long_press"]
-    assert state.attributes[ATTR_EVENT_TYPE] is None
+    assert state.attributes[EventEntityCapabilityAttribute.EVENT_TYPES] == [
+        "short_press",
+        "long_press",
+    ]
+    assert state.attributes[EventEntityStateAttribute.EVENT_TYPE] is None
     assert "hello" not in state.attributes
 
 
@@ -266,11 +274,11 @@ async def test_no_extra_restore_state(hass: HomeAssistant) -> None:
                 "event.doorbell",
                 "2021-01-01T23:59:59.123+00:00",
                 attributes={
-                    ATTR_EVENT_TYPES: [
+                    EventEntityCapabilityAttribute.EVENT_TYPES: [
                         "single_press",
                         "double_press",
                     ],
-                    ATTR_EVENT_TYPE: "double_press",
+                    EventEntityStateAttribute.EVENT_TYPE: "double_press",
                     "hello": "world",
                 },
             ),
@@ -283,8 +291,11 @@ async def test_no_extra_restore_state(hass: HomeAssistant) -> None:
     state = hass.states.get("event.doorbell")
     assert state
     assert state.state == STATE_UNKNOWN
-    assert state.attributes[ATTR_EVENT_TYPES] == ["short_press", "long_press"]
-    assert state.attributes[ATTR_EVENT_TYPE] is None
+    assert state.attributes[EventEntityCapabilityAttribute.EVENT_TYPES] == [
+        "short_press",
+        "long_press",
+    ]
+    assert state.attributes[EventEntityStateAttribute.EVENT_TYPE] is None
     assert "hello" not in state.attributes
 
 

@@ -5,8 +5,6 @@ import enum
 import logging
 from typing import Any, override
 
-from PyViCare.PyViCareDevice import Device as PyViCareDevice
-from PyViCare.PyViCareDeviceConfig import PyViCareDeviceConfig
 from PyViCare.PyViCareUtils import PyViCareNotSupportedFeatureError
 
 from homeassistant.components.fan import FanEntity, FanEntityFeature
@@ -95,9 +93,7 @@ def _build_entities(
 ) -> list[ViCareFan]:
     """Create ViCare climate entities for a device."""
     return [
-        ViCareFan(device.serial, device.config, device.api)
-        for device in device_list
-        if device.api.isVentilationDevice()
+        ViCareFan(device) for device in device_list if device.api.isVentilationDevice()
     ]
 
 
@@ -124,14 +120,10 @@ class ViCareFan(ViCareEntity, FanEntity):
 
     def __init__(
         self,
-        device_serial: str | None,
-        device_config: PyViCareDeviceConfig,
-        device: PyViCareDevice,
+        device: ViCareDevice,
     ) -> None:
         """Initialize the fan entity."""
-        super().__init__(
-            self._attr_translation_key, device_serial, device_config, device
-        )
+        super().__init__(self._attr_translation_key, device)
         # init preset_mode
         supported_modes = list[str](self._api.getVentilationModes())
         self._attr_preset_modes = [
@@ -151,11 +143,11 @@ class ViCareFan(ViCareEntity, FanEntity):
         # evaluate quickmodes
         self._attributes: dict[str, Any] = {}
         self._attributes["vicare_quickmodes"] = quickmodes = list[str](
-            device.getVentilationQuickmodes()
+            device.api.getVentilationQuickmodes()
             if is_supported(
                 "getVentilationQuickmodes",
                 lambda api: api.getVentilationQuickmodes(),
-                device,
+                device.api,
             )
             else []
         )
@@ -163,7 +155,7 @@ class ViCareFan(ViCareEntity, FanEntity):
             self._attr_supported_features |= FanEntityFeature.TURN_OFF
             # The first state is published before the first poll.
             with suppress(PyViCareNotSupportedFeatureError):
-                self._standby = device.getVentilationQuickmode(
+                self._standby = device.api.getVentilationQuickmode(
                     VentilationQuickmode.STANDBY
                 )
 

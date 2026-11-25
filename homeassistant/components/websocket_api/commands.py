@@ -5,7 +5,7 @@ from datetime import datetime, timedelta
 from functools import lru_cache, partial
 import json
 import logging
-from typing import Any, cast
+from typing import Any, Literal, cast
 
 import probatio
 
@@ -17,6 +17,7 @@ from homeassistant.const import (
     EVENT_STATE_CHANGED,
     MATCH_ALL,
     SIGNAL_BOOTSTRAP_INTEGRATIONS,
+    TargetKey,
 )
 from homeassistant.core import (
     Context,
@@ -48,7 +49,6 @@ from homeassistant.helpers.condition import (
     async_get_all_descriptions as async_get_all_condition_descriptions,
     async_subscribe_platform_events as async_subscribe_condition_platform_events,
     async_validate_condition_config,
-    async_validate_conditions_config,
 )
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entityfilter import (
@@ -77,6 +77,10 @@ from homeassistant.helpers.trigger import (
     async_subscribe_platform_events as async_subscribe_trigger_platform_events,
     async_validate_trigger_config,
 )
+from homeassistant.helpers.validation_errors import (
+    ValidationErrors,
+    validation_errors_as_dicts,
+)
 from homeassistant.loader import (
     IntegrationNotFound,
     async_get_integration,
@@ -84,8 +88,10 @@ from homeassistant.loader import (
     async_get_integrations,
 )
 from homeassistant.setup import (
+    BootstrapProgress,
     async_get_loaded_integrations,
     async_get_setup_timings,
+    async_subscribe_bootstrap_progress,
     async_wait_component,
 )
 from homeassistant.util import slugify
@@ -132,6 +138,7 @@ def async_register_commands(
     async_reg(hass, handle_render_template)
     async_reg(hass, handle_slugify)
     async_reg(hass, handle_subscribe_bootstrap_integrations)
+    async_reg(hass, handle_subscribe_bootstrap_progress)
     async_reg(hass, handle_subscribe_condition)
     async_reg(hass, handle_subscribe_condition_platforms)
     async_reg(hass, handle_subscribe_events)
@@ -246,6 +253,29 @@ def handle_subscribe_bootstrap_integrations(
     )
 
     connection.send_result(msg["id"])
+
+
+@callback
+@decorators.websocket_command(
+    {
+        probatio.Required("type"): "subscribe_bootstrap_progress",
+    }
+)
+def handle_subscribe_bootstrap_progress(
+    hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
+) -> None:
+    """Handle subscribe bootstrap progress command."""
+
+    @callback
+    def forward_bootstrap_progress(message: BootstrapProgress) -> None:
+        """Forward bootstrap progress to websocket."""
+        connection.send_message(messages.event_message(msg["id"], message))
+
+    # Subscribing sends the current progress, which must follow the result.
+    connection.send_result(msg["id"])
+    connection.subscriptions[msg["id"]] = async_subscribe_bootstrap_progress(
+        hass, forward_bootstrap_progress
+    )
 
 
 @callback
@@ -382,9 +412,24 @@ async def handle_call_service(
             translation_placeholders=err.translation_placeholders,
         )
     except HomeAssistantError as err:
-        connection.logger.error(
-            "Error during service call to %s.%s: %s", msg["domain"], msg["service"], err
-        )
+        call_data = {**msg.get("service_data", {}), **msg.get("target", {})}
+        if target := {
+            key: value for key, value in call_data.items() if key in TargetKey
+        }:
+            connection.logger.error(
+                "Error during service call to %s.%s with target %s: %s",
+                msg["domain"],
+                msg["service"],
+                target,
+                err,
+            )
+        else:
+            connection.logger.error(
+                "Error during service call to %s.%s: %s",
+                msg["domain"],
+                msg["service"],
+                err,
+            )
         connection.logger.debug("", exc_info=True)
         connection.send_error(
             msg["id"],
@@ -1113,6 +1158,7 @@ async def handle_subscribe_trigger(
     try:
         trigger_config = await async_validate_trigger_config(hass, msg["trigger"])
     except probatio.Invalid as err:
+        err.prepend(["trigger"])
         connection.send_error(msg["id"], const.ERR_INVALID_FORMAT, str(err))
         return
     except HomeAssistantError as err:
@@ -1179,6 +1225,7 @@ async def handle_test_condition(
         config = await async_validate_condition_config(hass, msg["condition"])
         condition = await async_condition_from_config(hass, config)
     except probatio.Invalid as err:
+        err.prepend(["condition"])
         connection.send_error(msg["id"], const.ERR_INVALID_FORMAT, str(err))
         return
     except HomeAssistantError as err:
@@ -1237,6 +1284,7 @@ async def handle_subscribe_condition(
         condition_config = await async_validate_condition_config(hass, msg["condition"])
         condition = await async_condition_from_config(hass, condition_config)
     except probatio.Invalid as err:
+        err.prepend(["condition"])
         connection.send_error(msg["id"], const.ERR_INVALID_FORMAT, str(err))
         return
     except HomeAssistantError as err:
@@ -1319,7 +1367,11 @@ async def handle_execute_script(
     # Circular dep
     from homeassistant.helpers.script import Script, async_validate_actions_config  # noqa: PLC0415
 
-    script_config = await async_validate_actions_config(hass, msg["sequence"])
+    try:
+        script_config = await async_validate_actions_config(hass, msg["sequence"])
+    except probatio.Invalid as err:
+        err.prepend(["sequence"])
+        raise
 
     context = connection.context(msg)
     script_obj = Script(hass, script_config, f"{const.DOMAIN} script", const.DOMAIN)
@@ -1387,27 +1439,21 @@ async def handle_validate_config(
 
     result = {}
 
-    for key, schema, validator in (
-        ("triggers", cv.TRIGGER_SCHEMA, async_validate_trigger_config),
-        (
-            "conditions",
-            cv.CONDITIONS_SCHEMA,
-            async_validate_conditions_config,
-        ),
-        ("actions", cv.SCRIPT_SCHEMA, script.async_validate_actions_config),
-    ):
+    key: Literal["triggers", "conditions", "actions"]
+    for key in ("triggers", "conditions", "actions"):
         if key not in msg:
             continue
 
         try:
-            await validator(hass, schema(msg[key]))
-        except (
-            probatio.Invalid,
-            HomeAssistantError,
-        ) as err:
-            result[key] = {"valid": False, "error": str(err)}
+            await script.async_validate_block_collect_errors(hass, key, msg[key])
+        except ValidationErrors as err:
+            result[key] = {
+                "valid": False,
+                "error": str(err),
+                "errors": validation_errors_as_dicts(err),
+            }
         else:
-            result[key] = {"valid": True, "error": None}
+            result[key] = {"valid": True, "error": None, "errors": []}
 
     connection.send_result(msg["id"], result)
 

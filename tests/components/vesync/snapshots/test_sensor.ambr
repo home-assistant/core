@@ -788,6 +788,43 @@
         None,
       ]),
       'area_id': None,
+      'capabilities': dict({
+        <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      }),
+      'config_entry_id': <ANY>,
+      'config_subentry_id': None,
+      'device_class': None,
+      'device_id': <DeviceEntry identifiers=[('vesync', 'sprout-purifier')]>,
+      'disabled_by': None,
+      'domain': 'sensor',
+      'entity_category': None,
+      'entity_id': 'sensor.air_purifier_sprout_volatile_organic_compounds',
+      'has_entity_name': True,
+      'hidden_by': None,
+      'icon': None,
+      'id': <ANY>,
+      'labels': set({
+      }),
+      'name': None,
+      'object_id_base': 'Volatile organic compounds',
+      'options': dict({
+      }),
+      'original_device_class': None,
+      'original_icon': None,
+      'original_name': 'Volatile organic compounds',
+      'platform': 'vesync',
+      'previous_unique_id': None,
+      'suggested_object_id': None,
+      'supported_features': 0,
+      'translation_key': 'voc',
+      'unique_id': 'sprout-purifier-voc',
+      'unit_of_measurement': None,
+    }),
+    EntityRegistryEntrySnapshot({
+      'aliases': list([
+        None,
+      ]),
+      'area_id': None,
       'capabilities': None,
       'config_entry_id': <ANY>,
       'config_subentry_id': None,
@@ -895,6 +932,20 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '3',
+  })
+# ---
+# name: test_sensor_state[Air Purifier Sprout][sensor.air_purifier_sprout_volatile_organic_compounds]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Air Purifier Sprout Volatile organic compounds',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.air_purifier_sprout_volatile_organic_compounds',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '120',
   })
 # ---
 # name: test_sensor_state[Air Purifier Vital 200S][devices]
@@ -1251,6 +1302,41 @@
       'disabled_by': None,
       'domain': 'sensor',
       'entity_category': None,
+      'entity_id': 'sensor.cs158_af_air_fryer_cooking_cooking_end',
+      'has_entity_name': True,
+      'hidden_by': None,
+      'icon': None,
+      'id': <ANY>,
+      'labels': set({
+      }),
+      'name': None,
+      'object_id_base': 'Cooking end',
+      'options': dict({
+      }),
+      'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+      'original_icon': None,
+      'original_name': 'Cooking end',
+      'platform': 'vesync',
+      'previous_unique_id': None,
+      'suggested_object_id': None,
+      'supported_features': 0,
+      'translation_key': 'cook_end_time',
+      'unique_id': 'CS158Cooking-cook_end_time',
+      'unit_of_measurement': None,
+    }),
+    EntityRegistryEntrySnapshot({
+      'aliases': list([
+        None,
+      ]),
+      'area_id': None,
+      'capabilities': None,
+      'config_entry_id': <ANY>,
+      'config_subentry_id': None,
+      'device_class': None,
+      'device_id': <DeviceEntry identifiers=[('vesync', 'CS158Cooking')]>,
+      'disabled_by': None,
+      'domain': 'sensor',
+      'entity_category': None,
       'entity_id': 'sensor.cs158_af_air_fryer_cooking_preheating_set_time',
       'has_entity_name': True,
       'hidden_by': None,
@@ -1326,6 +1412,20 @@
       'unit_of_measurement': None,
     }),
   ])
+# ---
+# name: test_sensor_state[CS158-AF Air Fryer Cooking][sensor.cs158_af_air_fryer_cooking_cooking_end]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'timestamp',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'CS158-AF Air Fryer Cooking Cooking end',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.cs158_af_air_fryer_cooking_cooking_end',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2026-11-16T12:10:00+00:00',
+  })
 # ---
 # name: test_sensor_state[CS158-AF Air Fryer Cooking][sensor.cs158_af_air_fryer_cooking_cooking_set_temperature]
   StateSnapshot({
@@ -1581,6 +1681,41 @@
       'disabled_by': None,
       'domain': 'sensor',
       'entity_category': None,
+      'entity_id': 'sensor.cs158_af_air_fryer_standby_cooking_end',
+      'has_entity_name': True,
+      'hidden_by': None,
+      'icon': None,
+      'id': <ANY>,
+      'labels': set({
+      }),
+      'name': None,
+      'object_id_base': 'Cooking end',
+      'options': dict({
+      }),
+      'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+      'original_icon': None,
+      'original_name': 'Cooking end',
+      'platform': 'vesync',
+      'previous_unique_id': None,
+      'suggested_object_id': None,
+      'supported_features': 0,
+      'translation_key': 'cook_end_time',
+      'unique_id': 'CS158Standby-cook_end_time',
+      'unit_of_measurement': None,
+    }),
+    EntityRegistryEntrySnapshot({
+      'aliases': list([
+        None,
+      ]),
+      'area_id': None,
+      'capabilities': None,
+      'config_entry_id': <ANY>,
+      'config_subentry_id': None,
+      'device_class': None,
+      'device_id': <DeviceEntry identifiers=[('vesync', 'CS158Standby')]>,
+      'disabled_by': None,
+      'domain': 'sensor',
+      'entity_category': None,
       'entity_id': 'sensor.cs158_af_air_fryer_standby_preheating_set_time',
       'has_entity_name': True,
       'hidden_by': None,
@@ -1656,6 +1791,20 @@
       'unit_of_measurement': None,
     }),
   ])
+# ---
+# name: test_sensor_state[CS158-AF Air Fryer Standby][sensor.cs158_af_air_fryer_standby_cooking_end]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'timestamp',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'CS158-AF Air Fryer Standby Cooking end',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.cs158_af_air_fryer_standby_cooking_end',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
 # ---
 # name: test_sensor_state[CS158-AF Air Fryer Standby][sensor.cs158_af_air_fryer_standby_cooking_set_temperature]
   StateSnapshot({
@@ -1780,7 +1929,63 @@
 # ---
 # name: test_sensor_state[CoreBreeze 432S][entities]
   list([
+    EntityRegistryEntrySnapshot({
+      'aliases': list([
+        None,
+      ]),
+      'area_id': None,
+      'capabilities': dict({
+        <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      }),
+      'config_entry_id': <ANY>,
+      'config_subentry_id': None,
+      'device_class': None,
+      'device_id': <DeviceEntry identifiers=[('vesync', 'corebreeze432s')]>,
+      'disabled_by': None,
+      'domain': 'sensor',
+      'entity_category': None,
+      'entity_id': 'sensor.corebreeze_432s_temperature',
+      'has_entity_name': True,
+      'hidden_by': None,
+      'icon': None,
+      'id': <ANY>,
+      'labels': set({
+      }),
+      'name': None,
+      'object_id_base': 'Temperature',
+      'options': dict({
+        'sensor': dict({
+          'suggested_display_precision': 1,
+        }),
+      }),
+      'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
+      'original_icon': None,
+      'original_name': 'Temperature',
+      'platform': 'vesync',
+      'previous_unique_id': None,
+      'suggested_object_id': None,
+      'supported_features': 0,
+      'translation_key': None,
+      'unique_id': 'corebreeze432s-temperature',
+      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+    }),
   ])
+# ---
+# name: test_sensor_state[CoreBreeze 432S][sensor.corebreeze_432s_temperature]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'CoreBreeze 432S Temperature',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.corebreeze_432s_temperature',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '22.0555555555556',
+  })
 # ---
 # name: test_sensor_state[Dimmable Light][devices]
   list([
@@ -1853,6 +2058,622 @@
 # name: test_sensor_state[Dimmer Switch][entities]
   list([
   ])
+# ---
+# name: test_sensor_state[Dual Air Fryer][devices]
+  list([
+    DeviceRegistryEntrySnapshot({
+      'area_id': None,
+      'config_entry_id': <ANY>,
+      'config_subentry_id': None,
+      'configuration_url': None,
+      'connections': set({
+      }),
+      'disabled_by': None,
+      'entry_type': None,
+      'hw_version': None,
+      'id': <ANY>,
+      'identifiers': set({
+        tuple(
+          'vesync',
+          'CAFTF101S',
+        ),
+      }),
+      'labels': set({
+      }),
+      'manufacturer': 'VeSync',
+      'model': 'CAF-TF101S',
+      'model_id': None,
+      'name': 'Dual Air Fryer',
+      'name_by_user': None,
+      'serial_number': None,
+      'sw_version': None,
+      'via_device_id': None,
+    }),
+  ])
+# ---
+# name: test_sensor_state[Dual Air Fryer][entities]
+  list([
+    EntityRegistryEntrySnapshot({
+      'aliases': list([
+        None,
+      ]),
+      'area_id': None,
+      'capabilities': dict({
+        <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+          'cooking_end',
+          'cooking',
+          'cooking_stop',
+          'heating',
+          'ready',
+          'appointing',
+          'hold',
+          'preheat_end',
+          'preheat_stop',
+          'pull_out',
+          'standby',
+        ]),
+      }),
+      'config_entry_id': <ANY>,
+      'config_subentry_id': None,
+      'device_class': None,
+      'device_id': <DeviceEntry identifiers=[('vesync', 'CAFTF101S')]>,
+      'disabled_by': None,
+      'domain': 'sensor',
+      'entity_category': None,
+      'entity_id': 'sensor.dual_air_fryer_basket_2_cooking_status',
+      'has_entity_name': True,
+      'hidden_by': None,
+      'icon': None,
+      'id': <ANY>,
+      'labels': set({
+      }),
+      'name': None,
+      'object_id_base': 'Basket 2 cooking status',
+      'options': dict({
+      }),
+      'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+      'original_icon': None,
+      'original_name': 'Basket 2 cooking status',
+      'platform': 'vesync',
+      'previous_unique_id': None,
+      'suggested_object_id': None,
+      'supported_features': 0,
+      'translation_key': 'cook_status_basket',
+      'unique_id': 'CAFTF101S-cook_status-chamber_2',
+      'unit_of_measurement': None,
+    }),
+    EntityRegistryEntrySnapshot({
+      'aliases': list([
+        None,
+      ]),
+      'area_id': None,
+      'capabilities': dict({
+        <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      }),
+      'config_entry_id': <ANY>,
+      'config_subentry_id': None,
+      'device_class': None,
+      'device_id': <DeviceEntry identifiers=[('vesync', 'CAFTF101S')]>,
+      'disabled_by': None,
+      'domain': 'sensor',
+      'entity_category': None,
+      'entity_id': 'sensor.dual_air_fryer_basket_1_current_temperature',
+      'has_entity_name': True,
+      'hidden_by': None,
+      'icon': None,
+      'id': <ANY>,
+      'labels': set({
+      }),
+      'name': None,
+      'object_id_base': 'Basket 1 current temperature',
+      'options': dict({
+        'sensor': dict({
+          'suggested_display_precision': 1,
+        }),
+      }),
+      'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
+      'original_icon': None,
+      'original_name': 'Basket 1 current temperature',
+      'platform': 'vesync',
+      'previous_unique_id': None,
+      'suggested_object_id': None,
+      'supported_features': 0,
+      'translation_key': 'current_temp_basket',
+      'unique_id': 'CAFTF101S-current_temp',
+      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+    }),
+    EntityRegistryEntrySnapshot({
+      'aliases': list([
+        None,
+      ]),
+      'area_id': None,
+      'capabilities': dict({
+        <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      }),
+      'config_entry_id': <ANY>,
+      'config_subentry_id': None,
+      'device_class': None,
+      'device_id': <DeviceEntry identifiers=[('vesync', 'CAFTF101S')]>,
+      'disabled_by': None,
+      'domain': 'sensor',
+      'entity_category': None,
+      'entity_id': 'sensor.dual_air_fryer_basket_2_current_temperature',
+      'has_entity_name': True,
+      'hidden_by': None,
+      'icon': None,
+      'id': <ANY>,
+      'labels': set({
+      }),
+      'name': None,
+      'object_id_base': 'Basket 2 current temperature',
+      'options': dict({
+        'sensor': dict({
+          'suggested_display_precision': 1,
+        }),
+      }),
+      'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
+      'original_icon': None,
+      'original_name': 'Basket 2 current temperature',
+      'platform': 'vesync',
+      'previous_unique_id': None,
+      'suggested_object_id': None,
+      'supported_features': 0,
+      'translation_key': 'current_temp_basket',
+      'unique_id': 'CAFTF101S-current_temp-chamber_2',
+      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+    }),
+    EntityRegistryEntrySnapshot({
+      'aliases': list([
+        None,
+      ]),
+      'area_id': None,
+      'capabilities': dict({
+        <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      }),
+      'config_entry_id': <ANY>,
+      'config_subentry_id': None,
+      'device_class': None,
+      'device_id': <DeviceEntry identifiers=[('vesync', 'CAFTF101S')]>,
+      'disabled_by': None,
+      'domain': 'sensor',
+      'entity_category': None,
+      'entity_id': 'sensor.dual_air_fryer_basket_1_cooking_set_temperature',
+      'has_entity_name': True,
+      'hidden_by': None,
+      'icon': None,
+      'id': <ANY>,
+      'labels': set({
+      }),
+      'name': None,
+      'object_id_base': 'Basket 1 cooking set temperature',
+      'options': dict({
+        'sensor': dict({
+          'suggested_display_precision': 1,
+        }),
+      }),
+      'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
+      'original_icon': None,
+      'original_name': 'Basket 1 cooking set temperature',
+      'platform': 'vesync',
+      'previous_unique_id': None,
+      'suggested_object_id': None,
+      'supported_features': 0,
+      'translation_key': 'cook_set_temp_basket',
+      'unique_id': 'CAFTF101S-cook_set_temp',
+      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+    }),
+    EntityRegistryEntrySnapshot({
+      'aliases': list([
+        None,
+      ]),
+      'area_id': None,
+      'capabilities': dict({
+        <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      }),
+      'config_entry_id': <ANY>,
+      'config_subentry_id': None,
+      'device_class': None,
+      'device_id': <DeviceEntry identifiers=[('vesync', 'CAFTF101S')]>,
+      'disabled_by': None,
+      'domain': 'sensor',
+      'entity_category': None,
+      'entity_id': 'sensor.dual_air_fryer_basket_2_cooking_set_temperature',
+      'has_entity_name': True,
+      'hidden_by': None,
+      'icon': None,
+      'id': <ANY>,
+      'labels': set({
+      }),
+      'name': None,
+      'object_id_base': 'Basket 2 cooking set temperature',
+      'options': dict({
+        'sensor': dict({
+          'suggested_display_precision': 1,
+        }),
+      }),
+      'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
+      'original_icon': None,
+      'original_name': 'Basket 2 cooking set temperature',
+      'platform': 'vesync',
+      'previous_unique_id': None,
+      'suggested_object_id': None,
+      'supported_features': 0,
+      'translation_key': 'cook_set_temp_basket',
+      'unique_id': 'CAFTF101S-cook_set_temp-chamber_2',
+      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+    }),
+    EntityRegistryEntrySnapshot({
+      'aliases': list([
+        None,
+      ]),
+      'area_id': None,
+      'capabilities': None,
+      'config_entry_id': <ANY>,
+      'config_subentry_id': None,
+      'device_class': None,
+      'device_id': <DeviceEntry identifiers=[('vesync', 'CAFTF101S')]>,
+      'disabled_by': None,
+      'domain': 'sensor',
+      'entity_category': None,
+      'entity_id': 'sensor.dual_air_fryer_basket_1_cooking_set_time',
+      'has_entity_name': True,
+      'hidden_by': None,
+      'icon': None,
+      'id': <ANY>,
+      'labels': set({
+      }),
+      'name': None,
+      'object_id_base': 'Basket 1 cooking set time',
+      'options': dict({
+        'sensor': dict({
+          'suggested_display_precision': 2,
+        }),
+      }),
+      'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
+      'original_icon': None,
+      'original_name': 'Basket 1 cooking set time',
+      'platform': 'vesync',
+      'previous_unique_id': None,
+      'suggested_object_id': None,
+      'supported_features': 0,
+      'translation_key': 'cook_set_time_basket',
+      'unique_id': 'CAFTF101S-cook_set_time',
+      'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+    }),
+    EntityRegistryEntrySnapshot({
+      'aliases': list([
+        None,
+      ]),
+      'area_id': None,
+      'capabilities': None,
+      'config_entry_id': <ANY>,
+      'config_subentry_id': None,
+      'device_class': None,
+      'device_id': <DeviceEntry identifiers=[('vesync', 'CAFTF101S')]>,
+      'disabled_by': None,
+      'domain': 'sensor',
+      'entity_category': None,
+      'entity_id': 'sensor.dual_air_fryer_basket_2_cooking_set_time',
+      'has_entity_name': True,
+      'hidden_by': None,
+      'icon': None,
+      'id': <ANY>,
+      'labels': set({
+      }),
+      'name': None,
+      'object_id_base': 'Basket 2 cooking set time',
+      'options': dict({
+        'sensor': dict({
+          'suggested_display_precision': 2,
+        }),
+      }),
+      'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
+      'original_icon': None,
+      'original_name': 'Basket 2 cooking set time',
+      'platform': 'vesync',
+      'previous_unique_id': None,
+      'suggested_object_id': None,
+      'supported_features': 0,
+      'translation_key': 'cook_set_time_basket',
+      'unique_id': 'CAFTF101S-cook_set_time-chamber_2',
+      'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+    }),
+    EntityRegistryEntrySnapshot({
+      'aliases': list([
+        None,
+      ]),
+      'area_id': None,
+      'capabilities': None,
+      'config_entry_id': <ANY>,
+      'config_subentry_id': None,
+      'device_class': None,
+      'device_id': <DeviceEntry identifiers=[('vesync', 'CAFTF101S')]>,
+      'disabled_by': None,
+      'domain': 'sensor',
+      'entity_category': None,
+      'entity_id': 'sensor.dual_air_fryer_basket_1_cooking_end',
+      'has_entity_name': True,
+      'hidden_by': None,
+      'icon': None,
+      'id': <ANY>,
+      'labels': set({
+      }),
+      'name': None,
+      'object_id_base': 'Basket 1 cooking end',
+      'options': dict({
+      }),
+      'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+      'original_icon': None,
+      'original_name': 'Basket 1 cooking end',
+      'platform': 'vesync',
+      'previous_unique_id': None,
+      'suggested_object_id': None,
+      'supported_features': 0,
+      'translation_key': 'cook_end_time_basket',
+      'unique_id': 'CAFTF101S-cook_end_time',
+      'unit_of_measurement': None,
+    }),
+    EntityRegistryEntrySnapshot({
+      'aliases': list([
+        None,
+      ]),
+      'area_id': None,
+      'capabilities': None,
+      'config_entry_id': <ANY>,
+      'config_subentry_id': None,
+      'device_class': None,
+      'device_id': <DeviceEntry identifiers=[('vesync', 'CAFTF101S')]>,
+      'disabled_by': None,
+      'domain': 'sensor',
+      'entity_category': None,
+      'entity_id': 'sensor.dual_air_fryer_basket_2_cooking_end',
+      'has_entity_name': True,
+      'hidden_by': None,
+      'icon': None,
+      'id': <ANY>,
+      'labels': set({
+      }),
+      'name': None,
+      'object_id_base': 'Basket 2 cooking end',
+      'options': dict({
+      }),
+      'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+      'original_icon': None,
+      'original_name': 'Basket 2 cooking end',
+      'platform': 'vesync',
+      'previous_unique_id': None,
+      'suggested_object_id': None,
+      'supported_features': 0,
+      'translation_key': 'cook_end_time_basket',
+      'unique_id': 'CAFTF101S-cook_end_time-chamber_2',
+      'unit_of_measurement': None,
+    }),
+    EntityRegistryEntrySnapshot({
+      'aliases': list([
+        None,
+      ]),
+      'area_id': None,
+      'capabilities': dict({
+        <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+          'cooking_end',
+          'cooking',
+          'cooking_stop',
+          'heating',
+          'ready',
+          'appointing',
+          'hold',
+          'preheat_end',
+          'preheat_stop',
+          'pull_out',
+          'standby',
+        ]),
+      }),
+      'config_entry_id': <ANY>,
+      'config_subentry_id': None,
+      'device_class': None,
+      'device_id': <DeviceEntry identifiers=[('vesync', 'CAFTF101S')]>,
+      'disabled_by': None,
+      'domain': 'sensor',
+      'entity_category': None,
+      'entity_id': 'sensor.dual_air_fryer_basket_1_cooking_status',
+      'has_entity_name': True,
+      'hidden_by': None,
+      'icon': None,
+      'id': <ANY>,
+      'labels': set({
+      }),
+      'name': None,
+      'object_id_base': 'Basket 1 cooking status',
+      'options': dict({
+      }),
+      'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+      'original_icon': None,
+      'original_name': 'Basket 1 cooking status',
+      'platform': 'vesync',
+      'previous_unique_id': None,
+      'suggested_object_id': None,
+      'supported_features': 0,
+      'translation_key': 'cook_status_basket',
+      'unique_id': 'CAFTF101S-cook_status',
+      'unit_of_measurement': None,
+    }),
+  ])
+# ---
+# name: test_sensor_state[Dual Air Fryer][sensor.dual_air_fryer_basket_1_cooking_end]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'timestamp',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Dual Air Fryer Basket 1 cooking end',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.dual_air_fryer_basket_1_cooking_end',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2026-11-16T12:19:00+00:00',
+  })
+# ---
+# name: test_sensor_state[Dual Air Fryer][sensor.dual_air_fryer_basket_1_cooking_set_temperature]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Dual Air Fryer Basket 1 cooking set temperature',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.dual_air_fryer_basket_1_cooking_set_temperature',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '200',
+  })
+# ---
+# name: test_sensor_state[Dual Air Fryer][sensor.dual_air_fryer_basket_1_cooking_set_time]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'duration',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Dual Air Fryer Basket 1 cooking set time',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTime.SECONDS: 's'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.dual_air_fryer_basket_1_cooking_set_time',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '1200',
+  })
+# ---
+# name: test_sensor_state[Dual Air Fryer][sensor.dual_air_fryer_basket_1_cooking_status]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Dual Air Fryer Basket 1 cooking status',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'cooking_end',
+        'cooking',
+        'cooking_stop',
+        'heating',
+        'ready',
+        'appointing',
+        'hold',
+        'preheat_end',
+        'preheat_stop',
+        'pull_out',
+        'standby',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.dual_air_fryer_basket_1_cooking_status',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'cooking',
+  })
+# ---
+# name: test_sensor_state[Dual Air Fryer][sensor.dual_air_fryer_basket_1_current_temperature]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Dual Air Fryer Basket 1 current temperature',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.dual_air_fryer_basket_1_current_temperature',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_sensor_state[Dual Air Fryer][sensor.dual_air_fryer_basket_2_cooking_end]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'timestamp',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Dual Air Fryer Basket 2 cooking end',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.dual_air_fryer_basket_2_cooking_end',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_sensor_state[Dual Air Fryer][sensor.dual_air_fryer_basket_2_cooking_set_temperature]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Dual Air Fryer Basket 2 cooking set temperature',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.dual_air_fryer_basket_2_cooking_set_temperature',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_sensor_state[Dual Air Fryer][sensor.dual_air_fryer_basket_2_cooking_set_time]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'duration',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Dual Air Fryer Basket 2 cooking set time',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTime.SECONDS: 's'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.dual_air_fryer_basket_2_cooking_set_time',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_sensor_state[Dual Air Fryer][sensor.dual_air_fryer_basket_2_cooking_status]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Dual Air Fryer Basket 2 cooking status',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'cooking_end',
+        'cooking',
+        'cooking_stop',
+        'heating',
+        'ready',
+        'appointing',
+        'hold',
+        'preheat_end',
+        'preheat_stop',
+        'pull_out',
+        'standby',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.dual_air_fryer_basket_2_cooking_status',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'standby',
+  })
+# ---
+# name: test_sensor_state[Dual Air Fryer][sensor.dual_air_fryer_basket_2_current_temperature]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Dual Air Fryer Basket 2 current temperature',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.dual_air_fryer_basket_2_current_temperature',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
 # ---
 # name: test_sensor_state[Humidifier 200s][devices]
   list([
@@ -2229,6 +3050,255 @@
     'state': '35',
   })
 # ---
+# name: test_sensor_state[Humidifier Sprout][devices]
+  list([
+    DeviceRegistryEntrySnapshot({
+      'area_id': None,
+      'config_entry_id': <ANY>,
+      'config_subentry_id': None,
+      'configuration_url': None,
+      'connections': set({
+      }),
+      'disabled_by': None,
+      'entry_type': None,
+      'hw_version': None,
+      'id': <ANY>,
+      'identifiers': set({
+        tuple(
+          'vesync',
+          'sprout-humidifier',
+        ),
+      }),
+      'labels': set({
+      }),
+      'manufacturer': 'VeSync',
+      'model': 'LEH-B381S-WUS',
+      'model_id': None,
+      'name': 'Humidifier Sprout',
+      'name_by_user': None,
+      'serial_number': None,
+      'sw_version': None,
+      'via_device_id': None,
+    }),
+  ])
+# ---
+# name: test_sensor_state[Humidifier Sprout][entities]
+  list([
+    EntityRegistryEntrySnapshot({
+      'aliases': list([
+        None,
+      ]),
+      'area_id': None,
+      'capabilities': dict({
+        <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      }),
+      'config_entry_id': <ANY>,
+      'config_subentry_id': None,
+      'device_class': None,
+      'device_id': <DeviceEntry identifiers=[('vesync', 'sprout-humidifier')]>,
+      'disabled_by': None,
+      'domain': 'sensor',
+      'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+      'entity_id': 'sensor.humidifier_sprout_hepa_filter_lifetime',
+      'has_entity_name': True,
+      'hidden_by': None,
+      'icon': None,
+      'id': <ANY>,
+      'labels': set({
+      }),
+      'name': None,
+      'object_id_base': 'HEPA filter lifetime',
+      'options': dict({
+      }),
+      'original_device_class': None,
+      'original_icon': None,
+      'original_name': 'HEPA filter lifetime',
+      'platform': 'vesync',
+      'previous_unique_id': None,
+      'suggested_object_id': None,
+      'supported_features': 0,
+      'translation_key': 'hepa_filter_life',
+      'unique_id': 'sprout-humidifier-hepa_filter_life',
+      'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
+    }),
+    EntityRegistryEntrySnapshot({
+      'aliases': list([
+        None,
+      ]),
+      'area_id': None,
+      'capabilities': dict({
+        <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      }),
+      'config_entry_id': <ANY>,
+      'config_subentry_id': None,
+      'device_class': None,
+      'device_id': <DeviceEntry identifiers=[('vesync', 'sprout-humidifier')]>,
+      'disabled_by': None,
+      'domain': 'sensor',
+      'entity_category': None,
+      'entity_id': 'sensor.humidifier_sprout_humidity',
+      'has_entity_name': True,
+      'hidden_by': None,
+      'icon': None,
+      'id': <ANY>,
+      'labels': set({
+      }),
+      'name': None,
+      'object_id_base': 'Humidity',
+      'options': dict({
+      }),
+      'original_device_class': <SensorDeviceClass.HUMIDITY: 'humidity'>,
+      'original_icon': None,
+      'original_name': 'Humidity',
+      'platform': 'vesync',
+      'previous_unique_id': None,
+      'suggested_object_id': None,
+      'supported_features': 0,
+      'translation_key': None,
+      'unique_id': 'sprout-humidifier-humidity',
+      'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
+    }),
+    EntityRegistryEntrySnapshot({
+      'aliases': list([
+        None,
+      ]),
+      'area_id': None,
+      'capabilities': dict({
+        <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      }),
+      'config_entry_id': <ANY>,
+      'config_subentry_id': None,
+      'device_class': None,
+      'device_id': <DeviceEntry identifiers=[('vesync', 'sprout-humidifier')]>,
+      'disabled_by': None,
+      'domain': 'sensor',
+      'entity_category': None,
+      'entity_id': 'sensor.humidifier_sprout_temperature',
+      'has_entity_name': True,
+      'hidden_by': None,
+      'icon': None,
+      'id': <ANY>,
+      'labels': set({
+      }),
+      'name': None,
+      'object_id_base': 'Temperature',
+      'options': dict({
+        'sensor': dict({
+          'suggested_display_precision': 1,
+        }),
+      }),
+      'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
+      'original_icon': None,
+      'original_name': 'Temperature',
+      'platform': 'vesync',
+      'previous_unique_id': None,
+      'suggested_object_id': None,
+      'supported_features': 0,
+      'translation_key': None,
+      'unique_id': 'sprout-humidifier-temperature',
+      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+    }),
+    EntityRegistryEntrySnapshot({
+      'aliases': list([
+        None,
+      ]),
+      'area_id': None,
+      'capabilities': dict({
+        <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      }),
+      'config_entry_id': <ANY>,
+      'config_subentry_id': None,
+      'device_class': None,
+      'device_id': <DeviceEntry identifiers=[('vesync', 'sprout-humidifier')]>,
+      'disabled_by': None,
+      'domain': 'sensor',
+      'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+      'entity_id': 'sensor.humidifier_sprout_filter_lifetime',
+      'has_entity_name': True,
+      'hidden_by': None,
+      'icon': None,
+      'id': <ANY>,
+      'labels': set({
+      }),
+      'name': None,
+      'object_id_base': 'Filter lifetime',
+      'options': dict({
+      }),
+      'original_device_class': None,
+      'original_icon': None,
+      'original_name': 'Filter lifetime',
+      'platform': 'vesync',
+      'previous_unique_id': None,
+      'suggested_object_id': None,
+      'supported_features': 0,
+      'translation_key': 'filter_life',
+      'unique_id': 'sprout-humidifier-filter-life',
+      'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
+    }),
+  ])
+# ---
+# name: test_sensor_state[Humidifier Sprout][sensor.humidifier_sprout_filter_lifetime]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Humidifier Sprout Filter lifetime',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PERCENTAGE: '%'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.humidifier_sprout_filter_lifetime',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '90',
+  })
+# ---
+# name: test_sensor_state[Humidifier Sprout][sensor.humidifier_sprout_hepa_filter_lifetime]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Humidifier Sprout HEPA filter lifetime',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PERCENTAGE: '%'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.humidifier_sprout_hepa_filter_lifetime',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '85',
+  })
+# ---
+# name: test_sensor_state[Humidifier Sprout][sensor.humidifier_sprout_humidity]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'humidity',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Humidifier Sprout Humidity',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PERCENTAGE: '%'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.humidifier_sprout_humidity',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '45',
+  })
+# ---
+# name: test_sensor_state[Humidifier Sprout][sensor.humidifier_sprout_temperature]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Humidifier Sprout Temperature',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.humidifier_sprout_temperature',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '22.2222222222222',
+  })
+# ---
 # name: test_sensor_state[Outlet][devices]
   list([
     DeviceRegistryEntrySnapshot({
@@ -2437,7 +3507,7 @@
       'device_id': <DeviceEntry identifiers=[('vesync', 'outlet')]>,
       'disabled_by': None,
       'domain': 'sensor',
-      'entity_category': None,
+      'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
       'entity_id': 'sensor.outlet_current_voltage',
       'has_entity_name': True,
       'hidden_by': None,
