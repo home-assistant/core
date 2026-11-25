@@ -9,6 +9,7 @@ from zha.application.platforms.light.const import (
     ColorMode as ZhaColorMode,
     LightEntityFeature as ZhaLightEntityFeature,
 )
+from zigpy.zcl.clusters import general
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
@@ -21,9 +22,10 @@ from homeassistant.components.light import (
     LightEntity,
     LightEntityFeature,
     LightEntityStateAttribute,
+    brightness_supported,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import STATE_ON, Platform
+from homeassistant.const import STATE_OFF, STATE_ON, Platform
 from homeassistant.core import HomeAssistant, State, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -74,6 +76,8 @@ async def async_setup_entry(
 
 class Light(LightEntity, ZHASupportedFeaturesEntity):
     """Representation of a ZHA or ZLL light."""
+
+    _group_target_cluster_ids = frozenset({general.OnOff.cluster_id})
 
     @staticmethod
     @functools.cache
@@ -179,6 +183,28 @@ class Light(LightEntity, ZHASupportedFeaturesEntity):
             if (color_temp_k := kwargs.get(ATTR_COLOR_TEMP_KELVIN))
             else None
         )
+        effective_brightness = kwargs.get(ATTR_BRIGHTNESS)
+        if (
+            effective_brightness is None
+            and self._zha_state.off_with_transition
+            and self._zha_state.off_brightness is not None
+        ):
+            effective_brightness = self._zha_state.off_brightness
+        uses_level_control = (
+            effective_brightness is not None or kwargs.get(ATTR_TRANSITION) is not None
+        )
+        if uses_level_control:
+            target_cluster_ids = (
+                frozenset({general.LevelControl.cluster_id})
+                if brightness_supported(self.supported_color_modes)
+                else frozenset()
+            )
+        else:
+            target_cluster_ids = frozenset({general.OnOff.cluster_id})
+        self._propagate_group_context(
+            STATE_OFF if effective_brightness == 0 else STATE_ON,
+            target_cluster_ids,
+        )
         await self.entity_data.entity.async_turn_on(
             transition=kwargs.get(ATTR_TRANSITION),
             brightness=kwargs.get(ATTR_BRIGHTNESS),
@@ -193,6 +219,13 @@ class Light(LightEntity, ZHASupportedFeaturesEntity):
     @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
+        target_cluster_ids = (
+            frozenset({general.LevelControl.cluster_id})
+            if kwargs.get(ATTR_TRANSITION) is not None
+            and brightness_supported(self.supported_color_modes)
+            else frozenset({general.OnOff.cluster_id})
+        )
+        self._propagate_group_context(STATE_OFF, target_cluster_ids)
         await self.entity_data.entity.async_turn_off(
             transition=kwargs.get(ATTR_TRANSITION)
         )

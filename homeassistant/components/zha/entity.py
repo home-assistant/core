@@ -1,7 +1,7 @@
 """Entity for Zigbee Home Automation."""
 
 import asyncio
-from collections.abc import Callable
+from collections.abc import Callable, Iterator
 import dataclasses
 from enum import IntFlag
 from functools import partial
@@ -9,17 +9,18 @@ import logging
 from typing import Any, override
 
 from propcache.api import cached_property
-from zha.application.platforms import EntityStateChangedEvent
+from zha.application.platforms import EntityStateChangedEvent, ZclPlatformEntity
 from zha.mixins import LogMixin
+from zigpy.zcl import ClusterType
 
-from homeassistant.const import EntityCategory
-from homeassistant.core import State, callback
+from homeassistant.const import STATE_UNAVAILABLE, EntityCategory
+from homeassistant.core import Context, State, callback
 from homeassistant.helpers.device_registry import CONNECTION_ZIGBEE, DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity import CONTEXT_RECENT_TIME_SECONDS, Entity
 from homeassistant.helpers.group import IntegrationSpecificGroup
 from homeassistant.helpers.restore_state import RestoreEntity
-from homeassistant.helpers.typing import Undefined
+from homeassistant.helpers.typing import StateType, Undefined
 
 from .const import DOMAIN
 from .helpers import (
@@ -37,6 +38,9 @@ class ZHAEntity(LogMixin, RestoreEntity, Entity):
 
     _attr_has_entity_name = True
     _attr_should_poll = False
+    _context_expected_state: StateType = None
+    _context_expected_state_matched: bool = False
+    _group_target_cluster_ids: frozenset[int] = frozenset()
     remove_future: asyncio.Future[Any]
 
     def __init__(self, entity_data: EntityData, *args, **kwargs) -> None:
@@ -150,12 +154,111 @@ class ZHAEntity(LogMixin, RestoreEntity, Entity):
     def _update_capability_attrs(self) -> None:
         """Re-derive capability `_attr_*` attributes from the cached state."""
 
+    def _iter_group_member_entities(
+        self, target_cluster_ids: frozenset[int]
+    ) -> Iterator[ZHAEntity]:
+        """Yield registered HA entities for members controlled by this group entity."""
+        group_proxy = self.entity_data.group_proxy
+        assert group_proxy is not None
+        gateway_proxy = group_proxy.gateway_proxy
+        member_unique_ids = set(group_proxy.group.all_member_entity_unique_ids)
+        for ieee in {member.device.ieee for member in group_proxy.group.members}:
+            for entity_ref in gateway_proxy.ha_entity_refs.get(ieee, ()):
+                zha_entity = entity_ref.entity_data.entity
+                if (
+                    zha_entity.unique_id in member_unique_ids
+                    and isinstance(zha_entity, ZclPlatformEntity)
+                    and any(
+                        zha_entity.targets_cluster(cluster_id, ClusterType.Server)
+                        and cluster_id in zha_entity.endpoint.zigpy_endpoint.in_clusters
+                        for cluster_id in target_cluster_ids
+                    )
+                ):
+                    yield entity_ref.ha_entity
+
+    @callback
+    def async_set_group_context(
+        self,
+        context: Context,
+        context_set: float | None,
+        expected_state: StateType,
+    ) -> None:
+        """Set context propagated from a ZHA group entity."""
+        current_state = self.state if self.available else STATE_UNAVAILABLE
+        has_pending_transition = (
+            self._context is not None
+            and self._context_expected_state is not None
+            and not self._context_expected_state_matched
+            and self._context_set is not None
+            and context_set is not None
+            and context_set - self._context_set <= CONTEXT_RECENT_TIME_SECONDS
+        )
+        self._context = context
+        self._context_set = context_set
+        self._context_expected_state = expected_state
+        self._context_expected_state_matched = (
+            current_state == expected_state and not has_pending_transition
+        )
+
+    @callback
+    def _propagate_group_context(
+        self,
+        expected_state: StateType,
+        target_cluster_ids: frozenset[int] | None = None,
+    ) -> None:
+        """Propagate the active group context and its expected target state to members."""
+        if not self.entity_data.is_group_entity or self._context is None:
+            return
+        cluster_ids = (
+            self._group_target_cluster_ids
+            if target_cluster_ids is None
+            else target_cluster_ids
+        )
+        if not cluster_ids:
+            return
+        for member_entity in self._iter_group_member_entities(cluster_ids):
+            member_entity.async_set_group_context(
+                self._context,
+                self._context_set,
+                expected_state,
+            )
+
+    @callback
+    @override
+    def async_set_context(self, context: Context) -> None:
+        """Set the context the entity currently operates under."""
+        super().async_set_context(context)
+        self._context_expected_state = None
+        self._context_expected_state_matched = False
+
     @callback
     def _handle_zha_entity_state_changed(self, event: EntityStateChangedEvent) -> None:
         """Handle a state change reported by the ZHA library entity."""
         self.debug("Handling event from entity: %s", event)
         self._zha_state = dataclasses.replace(self._zha_state, **event.state_diff)
         self._update_capability_attrs()
+        current_state = self.state if self.available else STATE_UNAVAILABLE
+        if self._context_expected_state is not None:
+            if current_state == self._context_expected_state:
+                self._context_expected_state_matched = True
+            elif self._context_expected_state_matched:
+                self._context = None
+                self._context_set = None
+                self._context_expected_state = None
+                self._context_expected_state_matched = False
+            else:
+                # Withhold group context from a mismatched report without discarding
+                # a still-pending command before its matching report arrives.
+                pending_context = self._context
+                pending_context_set = self._context_set
+                self._context = None
+                self._context_set = None
+                try:
+                    self.async_write_ha_state()
+                finally:
+                    self._context = pending_context
+                    self._context_set = pending_context_set
+                return
         self.async_write_ha_state()
 
     @override
@@ -185,11 +288,7 @@ class ZHAEntity(LogMixin, RestoreEntity, Entity):
                 self.async_remove,
             )
         )
-        self.entity_data.device_proxy.gateway_proxy.register_entity_reference(
-            self.entity_id,
-            self.entity_data,
-            self.remove_future,
-        )
+        self.entity_data.device_proxy.gateway_proxy.register_entity_reference(self)
 
         if (state := await self.async_get_last_state()) is not None:
             self.restore_external_state_attributes(state)

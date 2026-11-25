@@ -715,6 +715,7 @@ class EntityReference(NamedTuple):
     ha_entity_id: str
     entity_data: EntityData
     remove_future: asyncio.Future[Any]
+    ha_entity: ZHAEntity
 
 
 class ZHAGatewayProxy(EventBase):
@@ -765,16 +766,15 @@ class ZHAGatewayProxy(EventBase):
 
     def register_entity_reference(
         self,
-        ha_entity_id: str,
-        entity_data: EntityData,
-        remove_future: asyncio.Future[Any],
+        entity: ZHAEntity,
     ) -> None:
         """Record the creation of a hass entity associated with ieee."""
-        self._ha_entity_refs[_entity_reference_key(entity_data)].append(
+        self._ha_entity_refs[_entity_reference_key(entity.entity_data)].append(
             EntityReference(
-                ha_entity_id=ha_entity_id,
-                entity_data=entity_data,
-                remove_future=remove_future,
+                ha_entity_id=entity.entity_id,
+                entity_data=entity.entity_data,
+                remove_future=entity.remove_future,
+                ha_entity=entity,
             )
         )
 
