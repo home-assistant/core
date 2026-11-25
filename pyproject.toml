@@ -69,7 +69,7 @@ dependencies = [
   "orjson==3.13.0",
   "packaging>=23.1",
   "psutil-home-assistant==0.0.1",
-  "python-slugify==9.1.3",
+  "python-slugify==9.2.0",
   "PyYAML==6.0.3",
   "requests==2.34.2",
   "securetar==2026.10.0",
