@@ -27,6 +27,11 @@
         "name": "Camera light"
       }
     },
+    "sensor": {
+      "wifi_signal_strength": {
+        "name": "Wi-Fi signal strength"
+      }
+    },
     "switch": {
       "notifications": {
         "name": "Notifications"

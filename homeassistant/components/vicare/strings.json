@@ -28,6 +28,9 @@
   },
   "entity": {
     "binary_sensor": {
+      "boiler_internal_pump": {
+        "name": "Internal pump"
+      },
       "burner": {
         "name": "Burner"
       },
@@ -201,6 +204,12 @@
       },
       "boiler_circuit_pump_power": {
         "name": "Boiler circuit pump"
+      },
+      "boiler_internal_pump_modulation": {
+        "name": "Internal pump modulation"
+      },
+      "boiler_internal_pump_target_modulation": {
+        "name": "Internal pump target modulation"
       },
       "boiler_supply_temperature": {
         "name": "Boiler supply temperature"
