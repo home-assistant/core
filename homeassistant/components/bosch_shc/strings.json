@@ -101,6 +101,15 @@
       }
     },
     "event": {
+      "lower_button": {
+        "name": "Lower key"
+      },
+      "lower_left_button": {
+        "name": "Lower left key"
+      },
+      "lower_right_button": {
+        "name": "Lower right key"
+      },
       "smoke_detector_alarm": {
         "state_attributes": {
           "event_type": {
@@ -114,6 +123,15 @@
             }
           }
         }
+      },
+      "upper_button": {
+        "name": "Upper key"
+      },
+      "upper_left_button": {
+        "name": "Upper left key"
+      },
+      "upper_right_button": {
+        "name": "Upper right key"
       }
     },
     "light": {
