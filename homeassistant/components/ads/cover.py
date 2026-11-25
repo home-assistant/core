@@ -47,10 +47,10 @@ PLATFORM_SCHEMA = COVER_PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(
+async def async_setup_platform(
     hass: HomeAssistant,
     config: ConfigType,
-    add_entities: AddEntitiesCallback,
+    async_add_entities: AddEntitiesCallback,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the cover platform for ADS."""
@@ -65,7 +65,7 @@ def setup_platform(
     name: str = config[CONF_NAME]
     device_class: CoverDeviceClass | None = config.get(CONF_DEVICE_CLASS)
 
-    add_entities(
+    async_add_entities(
         [
             AdsCover(
                 ads_hub,

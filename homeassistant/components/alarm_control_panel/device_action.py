@@ -1,17 +1,17 @@
 """Provides device automations for Alarm control panel."""
 
-from typing import Final
+from typing import Any, Final
 
 import probatio
 
 from homeassistant.components.device_automation import async_validate_entity_schema
 from homeassistant.const import (
-    ATTR_ENTITY_ID,
     CONF_CODE,
     CONF_DEVICE_ID,
     CONF_DOMAIN,
     CONF_ENTITY_ID,
     CONF_TYPE,
+    TargetKey,
 )
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.helpers import config_validation as cv, entity_registry as er
@@ -94,7 +94,7 @@ async def async_call_action_from_config(
     context: Context | None,
 ) -> None:
     """Execute a device action."""
-    service_data = {ATTR_ENTITY_ID: config[CONF_ENTITY_ID]}
+    service_data: dict[str, Any] = {TargetKey.ENTITY_ID: config[CONF_ENTITY_ID]}
     if CONF_CODE in config:
         service_data[AlarmControlPanelServiceArgument.CODE] = config[CONF_CODE]
 

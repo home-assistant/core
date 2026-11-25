@@ -13,9 +13,16 @@ from bosch_shc_camera_client.cameras import (
     BoschCameraConnectionError,
     BoschCameraInvalidResponseError,
     Camera,
+    CameraModel,
 )
 from bosch_shc_camera_client.client import BoschCameraClient
-from bosch_shc_camera_client.states import CameraAccountStates
+from bosch_shc_camera_client.cloud import cloud_set_camera_light
+from bosch_shc_camera_client.states import (
+    CameraAccountStates,
+    LightState,
+    get_light_state,
+    get_wifi_info,
+)
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ACCESS_TOKEN
@@ -36,6 +43,9 @@ _LOGGER = logging.getLogger(__name__)
 
 # The camera list only changes when the user adds or removes a camera.
 SCAN_INTERVAL = timedelta(minutes=5)
+
+# The signal strength fluctuates, but a diagnostic value needs no tight polling.
+WIFI_SCAN_INTERVAL = timedelta(minutes=10)
 
 # Dashboards request the image often, but the latest event rarely changes.
 SNAPSHOT_TTL = 60
@@ -62,6 +72,9 @@ class BoschCameraCoordinator(DataUpdateCoordinator[dict[str, Camera]]):
             update_interval=SCAN_INTERVAL,
         )
         self.account_states: dict[str, CameraAccountStates] = {}
+        self.light_states: dict[str, LightState] = {}
+        self._light_writes: defaultdict[str, int] = defaultdict(int)
+        self._light_unreachable: set[str] = set()
         self._write_seq = 0
         self._written_at: dict[str, int] = {}
         self._snapshots: dict[str, tuple[float, bytes | None]] = {}
@@ -123,6 +136,7 @@ class BoschCameraCoordinator(DataUpdateCoordinator[dict[str, Camera]]):
             if written > started
         }
         data = {camera.id: camera for camera in cameras}
+        await self._async_update_light_states(cameras)
         for camera_id in self._snapshots.keys() - data.keys():
             del self._snapshots[camera_id]
             self._snapshot_locks.pop(camera_id, None)
@@ -150,6 +164,88 @@ class BoschCameraCoordinator(DataUpdateCoordinator[dict[str, Camera]]):
             self._snapshots[camera_id] = (time.monotonic(), image)
             return image
 
+    async def _async_update_light_states(self, cameras: list[Camera]) -> None:
+        """Poll the light of each Gen1 outdoor camera, isolating failures."""
+        # Forget removed cameras so a camera that comes back is logged again.
+        listed = {camera.id for camera in cameras}
+        self._light_unreachable &= listed
+        for camera_id in self._light_writes.keys() - listed:
+            del self._light_writes[camera_id]
+        polled: dict[str, tuple[int, LightState | None]] = {}
+        for camera in cameras:
+            if camera.model is not CameraModel.EYES_OUTDOOR:
+                continue
+            writes = self._light_writes[camera.id]
+            try:
+                state = await get_light_state(
+                    async_get_clientsession(self.hass),
+                    await self._async_get_token(),
+                    camera.id,
+                )
+            except BoschCameraAuthError as err:
+                raise ConfigEntryAuthFailed(
+                    translation_domain=DOMAIN, translation_key="auth_failed"
+                ) from err
+            except BoschCameraConnectionError, BoschCameraInvalidResponseError:
+                if camera.id not in self._light_unreachable:
+                    self._light_unreachable.add(camera.id)
+                    _LOGGER.info("The light of %s is unreachable", camera.title)
+                _LOGGER.debug("Unable to read the light of a camera", exc_info=True)
+                state = None
+            else:
+                if camera.id in self._light_unreachable:
+                    self._light_unreachable.discard(camera.id)
+                    _LOGGER.info("The light of %s is reachable again", camera.title)
+            polled[camera.id] = (writes, state)
+        # A write that finished while polling makes the polled state outdated,
+        # also for cameras polled before the write.
+        states: dict[str, LightState] = {}
+        for camera_id, (writes, state) in polled.items():
+            if writes != self._light_writes[camera_id]:
+                state = self.light_states.get(camera_id)
+            if state is not None:
+                states[camera_id] = state
+        self.light_states = states
+
+    async def async_set_light(self, camera_id: str, on: bool) -> None:
+        """Switch the light of a camera and remember the new state."""
+        known = self.light_states.get(camera_id)
+        intensity = known.front_light_intensity if known else None
+        try:
+            result = await cloud_set_camera_light(
+                async_get_clientsession(self.hass),
+                await self._async_get_token(),
+                camera_id,
+                on,
+                gen2=False,
+                last_front_intensity=intensity or 1.0,
+            )
+        except BoschCameraAuthError as err:
+            self.config_entry.async_start_reauth_if_available(self.hass)
+            raise HomeAssistantError(
+                translation_domain=DOMAIN, translation_key="auth_failed"
+            ) from err
+        except BoschCameraConnectionError as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN, translation_key="light_failed"
+            ) from err
+        if result.status in (401, 403):
+            self.config_entry.async_start_reauth_if_available(self.hass)
+            raise HomeAssistantError(
+                translation_domain=DOMAIN, translation_key="auth_failed"
+            )
+        if not result.ok:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN, translation_key="light_failed"
+            )
+        self._light_writes[camera_id] += 1
+        self.light_states[camera_id] = LightState(
+            front_light_on=on,
+            wallwasher_on=on,
+            front_light_intensity=intensity,
+        )
+        self.async_update_listeners()
+
     async def async_set_privacy_mode(self, camera_id: str, enabled: bool) -> None:
         """Switch the privacy mode of a camera and update the cached state."""
         result = await self._client.set_privacy_mode(camera_id, enabled)
@@ -170,6 +266,11 @@ class BoschCameraCoordinator(DataUpdateCoordinator[dict[str, Camera]]):
         self._written_at[camera_id] = self._write_seq
         self.account_states[camera_id] = replace(state, privacy_mode=enabled)
         self.async_update_listeners()
+
+    async def async_get_access_token(self) -> str:
+        """Return a valid access token."""
+        await self._oauth_session.async_ensure_token_valid()
+        return str(self._oauth_session.token[CONF_ACCESS_TOKEN])
 
     def _sync_devices(self, cameras: dict[str, Camera]) -> None:
         """Remove devices of cameras no longer in the account, refresh the rest."""
@@ -194,3 +295,53 @@ class BoschCameraCoordinator(DataUpdateCoordinator[dict[str, Camera]]):
                 device_registry.async_update_device(
                     device.id, name=camera.title, sw_version=camera.firmware_version
                 )
+
+
+class BoschWifiCoordinator(DataUpdateCoordinator[dict[str, int | None]]):
+    """Fetch the Wi-Fi signal strength of every camera."""
+
+    config_entry: BoschCameraConfigEntry
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        config_entry: BoschCameraConfigEntry,
+        cameras: BoschCameraCoordinator,
+    ) -> None:
+        """Initialize the coordinator."""
+        super().__init__(
+            hass,
+            _LOGGER,
+            config_entry=config_entry,
+            name=f"{DOMAIN}_wifi",
+            update_interval=WIFI_SCAN_INTERVAL,
+        )
+        self._cameras = cameras
+
+    @override
+    async def _async_update_data(self) -> dict[str, int | None]:
+        """Fetch the signal strength of each camera."""
+        token = await self._cameras.async_get_access_token()
+        session = async_get_clientsession(self.hass)
+        data: dict[str, int | None] = {}
+        # The first poll runs before any entity exists; later ones only fetch
+        # cameras that have an enabled sensor.
+        subscribed = set(self.async_contexts())
+        camera_ids = [
+            camera_id
+            for camera_id in self._cameras.data
+            if self.data is None or camera_id in subscribed
+        ]
+        for camera_id in camera_ids:
+            try:
+                info = await get_wifi_info(session, token, camera_id)
+            except BoschCameraAuthError as err:
+                raise ConfigEntryAuthFailed(
+                    translation_domain=DOMAIN, translation_key="auth_failed"
+                ) from err
+            except BoschCameraConnectionError, BoschCameraInvalidResponseError:
+                # One failing camera must not hide the others; it stays unavailable.
+                _LOGGER.debug("Wi-Fi info of camera %s unavailable", camera_id)
+                continue
+            data[camera_id] = info.signal_strength
+        return data

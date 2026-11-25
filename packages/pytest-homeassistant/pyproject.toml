@@ -28,7 +28,7 @@ dependencies = [
   "pytest-xdist==3.8.0",
   "requests-mock==1.12.1",
   "respx==0.23.1",
-  "syrupy==7.0.1",
+  "syrupy==7.0.2",
 ]
 
 [project.entry-points.pytest11]
@@ -44,7 +44,7 @@ bluetooth = [
   "habluetooth==7.1.2",
   "serialx==1.15.1",
 ]
-infrared = ["infrared-protocols==10.7.0"]
+infrared = ["infrared-protocols==10.8.0"]
 radio-frequency = ["rf-protocols==4.3.0"]
 
 [project.urls]
