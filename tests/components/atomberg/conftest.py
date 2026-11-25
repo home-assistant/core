@@ -3,7 +3,7 @@
 from collections.abc import Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from atomberg_api import AtombergDevice
+from ha_atomberg_integration import AtombergDevice
 import pytest
 from pytest_homeassistant.common import MockConfigEntry, load_json_array_fixture
 

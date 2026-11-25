@@ -5,7 +5,7 @@ from collections.abc import Generator
 from contextlib import contextmanager
 from typing import Any, override
 
-from atomberg_api import (
+from ha_atomberg_integration import (
     DEVICE_TYPE_FAN,
     AtombergAuthError,
     AtombergClient,

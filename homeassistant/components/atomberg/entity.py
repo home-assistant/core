@@ -2,7 +2,7 @@
 
 from typing import Any, override
 
-from atomberg_api import AtombergDevice
+from ha_atomberg_integration import AtombergDevice
 
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity

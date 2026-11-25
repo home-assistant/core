@@ -1,6 +1,6 @@
 """The Atomberg integration."""
 
-from atomberg_api import AtombergClient
+from ha_atomberg_integration import AtombergClient
 
 from homeassistant.const import CONF_API_KEY, Platform
 from homeassistant.core import HomeAssistant

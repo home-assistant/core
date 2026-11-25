@@ -2,7 +2,7 @@
 
 from typing import Any, override
 
-from atomberg_api import AtombergAuthError, AtombergClient, AtombergError
+from ha_atomberg_integration import AtombergAuthError, AtombergClient, AtombergError
 import probatio
 
 from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult

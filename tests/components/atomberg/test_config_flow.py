@@ -2,7 +2,7 @@
 
 from unittest.mock import AsyncMock
 
-from atomberg_api import AtombergAuthError, AtombergConnectionError
+from ha_atomberg_integration import AtombergAuthError, AtombergConnectionError
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
 

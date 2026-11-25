@@ -2,7 +2,7 @@
 
 from typing import Any, override
 
-from atomberg_api import COMMAND_POWER, COMMAND_SPEED, AtombergDevice
+from ha_atomberg_integration import COMMAND_POWER, COMMAND_SPEED, AtombergDevice
 
 from homeassistant.components.fan import FanEntity, FanEntityFeature
 from homeassistant.core import HomeAssistant

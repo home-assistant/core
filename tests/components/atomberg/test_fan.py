@@ -5,8 +5,12 @@ from datetime import timedelta
 from typing import Any
 from unittest.mock import AsyncMock, call
 
-from atomberg_api import AtombergAuthError, AtombergConnectionError, AtombergError
 from freezegun.api import FrozenDateTimeFactory
+from ha_atomberg_integration import (
+    AtombergAuthError,
+    AtombergConnectionError,
+    AtombergError,
+)
 import pytest
 from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
