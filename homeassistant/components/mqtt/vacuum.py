@@ -316,10 +316,11 @@ class MqttStateVacuum(MqttEntity, StateVacuumEntity):
         ):
             self._segments = segments
             self._attr_supported_features |= VacuumEntityFeature.CLEAN_AREA
-            if (last_seen := self.last_seen_segments) is not None and {
-                s.id: s for s in last_seen
-            } != {s.id: s for s in self._segments}:
-                self.async_create_segments_issue()
+            if (last_seen := self.last_seen_segments) is not None:
+                if {s.id: s for s in last_seen} != {s.id: s for s in self._segments}:
+                    self.async_create_segments_issue()
+                else:
+                    self.async_delete_segments_issue()
 
         self._update_state_attributes(payload)
 

@@ -120,6 +120,7 @@ homeassistant.components.backup.*
 homeassistant.components.baf.*
 homeassistant.components.bang_olufsen.*
 homeassistant.components.bayesian.*
+homeassistant.components.benq_projector_infrared.*
 homeassistant.components.besen.*
 homeassistant.components.binary_sensor.*
 homeassistant.components.bitcoin.*
@@ -140,6 +141,7 @@ homeassistant.components.browser.*
 homeassistant.components.bryant_evolution.*
 homeassistant.components.bsblan.*
 homeassistant.components.bthome.*
+homeassistant.components.busybar.*
 homeassistant.components.button.*
 homeassistant.components.calendar.*
 homeassistant.components.cambridge_audio.*
@@ -166,6 +168,7 @@ homeassistant.components.cover.*
 homeassistant.components.cpuspeed.*
 homeassistant.components.croma_infrared.*
 homeassistant.components.crownstone.*
+homeassistant.components.daikin_infrared.*
 homeassistant.components.data_grand_lyon.*
 homeassistant.components.date.*
 homeassistant.components.datetime.*
@@ -247,6 +250,7 @@ homeassistant.components.fritzbox_callmonitor.*
 homeassistant.components.fronius.*
 homeassistant.components.frontend.*
 homeassistant.components.fujitsu_fglair.*
+homeassistant.components.fujitsu_infrared.*
 homeassistant.components.fully_kiosk.*
 homeassistant.components.fumis.*
 homeassistant.components.fyta.*
@@ -600,6 +604,7 @@ homeassistant.components.solaredge_modbus.*
 homeassistant.components.solarlog.*
 homeassistant.components.solyx_energy_cloud.*
 homeassistant.components.sonarr.*
+homeassistant.components.sony_tv_rs232.*
 homeassistant.components.spaceapi.*
 homeassistant.components.specialized_turbo.*
 homeassistant.components.speedtestdotnet.*

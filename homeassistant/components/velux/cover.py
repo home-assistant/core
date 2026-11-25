@@ -124,7 +124,8 @@ class VeluxCover(VeluxEntity, CoverEntity):
         """Return capability attributes without the deprecated speeds."""
         # Remove in 2027.6.0 when the deprecated speeds are removed
         return {
-            CoverEntityCapabilityAttribute.SUPPORTED_SPEEDS: list(_SPEED_TO_VELOCITY)
+            **(super().capability_attributes or {}),
+            CoverEntityCapabilityAttribute.SUPPORTED_SPEEDS: list(_SPEED_TO_VELOCITY),
         }
 
     def _velocity_from_speed(self, speed: str | None) -> Velocity | None:

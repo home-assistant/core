@@ -140,6 +140,62 @@ async def test_service_get_kvs_value_exc(
     assert exc_info.value.translation_placeholders == {"device": entry.title}
 
 
+@pytest.mark.parametrize(
+    ("service", "method", "service_data", "return_response"),
+    [
+        pytest.param(
+            ShellyService.GET_KVS_VALUE,
+            "kvs_get",
+            {ShellyServiceArgument.KEY: "test_key"},
+            True,
+            id="get_kvs_value",
+        ),
+        pytest.param(
+            ShellyService.SET_KVS_VALUE,
+            "kvs_set",
+            {ShellyServiceArgument.KEY: "test_key", ShellyServiceArgument.VALUE: 1},
+            False,
+            id="set_kvs_value",
+        ),
+    ],
+)
+async def test_service_kvs_auth_error(
+    hass: HomeAssistant,
+    mock_rpc_device: Mock,
+    device_registry: dr.DeviceRegistry,
+    service: str,
+    method: str,
+    service_data: dict[str, Any],
+    return_response: bool,
+) -> None:
+    """Test KVS services start reauth on authentication error."""
+    entry = await init_integration(hass, 2)
+
+    device = dr.async_entries_for_config_entry(device_registry, entry.entry_id)[0]
+
+    getattr(mock_rpc_device, method).side_effect = InvalidAuthError
+
+    with pytest.raises(HomeAssistantError) as exc_info:
+        await hass.services.async_call(
+            DOMAIN,
+            service,
+            {CommonServiceArgument.DEVICE_ID: device.id, **service_data},
+            blocking=True,
+            return_response=return_response,
+        )
+
+    assert exc_info.value.translation_domain == DOMAIN
+    assert exc_info.value.translation_key == "auth_error"
+    assert exc_info.value.translation_placeholders == {"device": entry.title}
+
+    await hass.async_block_till_done()
+
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 1
+    assert flows[0]["context"]["source"] == SOURCE_REAUTH
+    assert flows[0]["context"]["entry_id"] == entry.entry_id
+
+
 async def test_config_entry_not_loaded(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
