@@ -6,6 +6,7 @@ import probatio
 import pytest
 
 from homeassistant.components import llm as llm_component
+from homeassistant.components.blueprint import Blueprint, DomainBlueprints
 from homeassistant.components.homeassistant.exposed_entities import async_expose_entity
 from homeassistant.components.script import llm as script_llm
 from homeassistant.core import Context, HomeAssistant
@@ -19,6 +20,7 @@ from homeassistant.helpers import (
 )
 from homeassistant.setup import async_setup_component
 from homeassistant.util.json import JsonObjectType
+from homeassistant.util.yaml import Input
 
 ENTITY_ID = "script.test_script"
 
@@ -290,3 +292,58 @@ async def test_get_config_of_blueprint_script(hass: HomeAssistant) -> None:
 
     assert hass.states.get("script.from_blueprint").state == "off"
     assert result.data["config"] == {"use_blueprint": use_blueprint}
+
+
+async def test_get_config_after_switching_to_equivalent_blueprint(
+    hass: HomeAssistant,
+) -> None:
+    """Test the configuration follows a switch to a blueprint with the same result."""
+    load_blueprint = DomainBlueprints._load_blueprint
+
+    def load_copy(self: DomainBlueprints, path: str) -> Blueprint:
+        if path != "copy.yaml":
+            return load_blueprint(self, path)
+        # The same as test_service.yaml, so the script it makes is the same
+        return Blueprint(
+            {
+                "blueprint": {
+                    "name": "Copy",
+                    "domain": "script",
+                    "input": {"service_to_call": None},
+                },
+                "sequence": {
+                    "service": Input("service_to_call"),
+                    "entity_id": "light.kitchen",
+                },
+            },
+            expected_domain=self.domain,
+            path=path,
+            schema=self._blueprint_schema,
+        )
+
+    async def reload(path: str) -> None:
+        config = {
+            "script": {
+                "from_blueprint": {
+                    "use_blueprint": {
+                        "path": path,
+                        "input": {"service_to_call": "test.script"},
+                    }
+                }
+            }
+        }
+        with patch("homeassistant.config.load_yaml_config_file", return_value=config):
+            await hass.services.async_call("script", "reload", blocking=True)
+
+    with patch.object(DomainBlueprints, "_load_blueprint", load_copy):
+        await reload("test_service.yaml")
+        await reload("copy.yaml")
+
+    tool = script_llm.GetConfigTool()
+    result = await tool.async_call(
+        hass,
+        llm.ToolInput(tool.name, {"entity_id": "script.from_blueprint"}),
+        _llm_context(),
+    )
+
+    assert result.data["config"]["use_blueprint"]["path"] == "copy.yaml"
