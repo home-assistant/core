@@ -2,7 +2,8 @@
 
 from collections.abc import Callable
 from copy import deepcopy
-from unittest.mock import ANY, Mock
+from typing import Any
+from unittest.mock import ANY, Mock, patch
 
 from aiohttp import ClientError
 from freebox_api.exceptions import HttpRequestError
@@ -15,7 +16,7 @@ from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAI
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN
 from homeassistant.components.device_tracker import DOMAIN as DT_DOMAIN
 from homeassistant.components.freebox import SCAN_INTERVAL
-from homeassistant.components.freebox.const import DOMAIN
+from homeassistant.components.freebox.const import CONF_REGISTRATION_NAME, DOMAIN
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.config_entries import ConfigEntryState
@@ -25,7 +26,7 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
 
 from .common import setup_platform
-from .const import DATA_HOME_GET_NODES, MOCK_HOST, MOCK_PORT
+from .const import DATA_HOME_GET_NODES, MOCK_HOST, MOCK_PORT, MOCK_REGISTRATION_NAME
 
 MOCK_MAC = "68:A3:78:00:00:00"
 
@@ -45,6 +46,45 @@ async def test_setup(hass: HomeAssistant, router: Mock) -> None:
 
     assert router.call_count == 1
     assert router().open.call_count == 1
+
+
+@pytest.mark.parametrize(
+    ("entry_data", "expected_registration_name"),
+    [
+        pytest.param(
+            {
+                CONF_HOST: MOCK_HOST,
+                CONF_PORT: MOCK_PORT,
+                CONF_REGISTRATION_NAME: "chosen",
+            },
+            "chosen",
+            id="configured",
+        ),
+        pytest.param(
+            {CONF_HOST: MOCK_HOST, CONF_PORT: MOCK_PORT},
+            MOCK_REGISTRATION_NAME,
+            id="hostname_fallback",
+        ),
+    ],
+)
+async def test_setup_registration_name(
+    hass: HomeAssistant,
+    router: Mock,
+    entry_data: dict[str, Any],
+    expected_registration_name: str,
+) -> None:
+    """Test the device name registered on the Freebox."""
+    entry = MockConfigEntry(
+        domain=DOMAIN, data=entry_data, unique_id=MOCK_HOST, version=2
+    )
+    entry.add_to_hass(hass)
+    with patch(
+        "homeassistant.components.freebox.socket.gethostname",
+        return_value=MOCK_REGISTRATION_NAME,
+    ):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+
+    assert router.call_args.args[0]["device_name"] == expected_registration_name
 
 
 @pytest.mark.parametrize(
