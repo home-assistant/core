@@ -2,6 +2,7 @@
   "config": {
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "unload_failed": "The gateway could not be stopped to try the new settings. Restart Home Assistant and reconfigure the gateway again.",
       "unsupported_brand": "This is a {brand} gateway. Its code and error tables are not written yet, so it cannot be set up. See the intesis-gw-modbus library for how to contribute them."
     },
     "error": {
@@ -19,6 +20,19 @@
           "has_vane": "The gateway cannot tell whether the indoor unit has a motorised vane, so this is pre-filled from what it last reported. Turn it off for a unit without one and the climate entity will not offer swing modes."
         },
         "description": "Confirm what the indoor unit behind the gateway can do."
+      },
+      "reconfigure": {
+        "data": {
+          "baudrate": "[%key:component::modbus::common::baud_rate%]",
+          "device": "[%key:component::modbus::common::serial_port%]",
+          "unit_id": "[%key:component::intesis_modbus::config::step::user::data::unit_id%]"
+        },
+        "data_description": {
+          "baudrate": "[%key:component::intesis_modbus::config::step::user::data_description::baudrate%]",
+          "device": "[%key:component::modbus::common::serial_port_description%]",
+          "unit_id": "[%key:component::intesis_modbus::config::step::user::data_description::unit_id%]"
+        },
+        "description": "Update how this gateway is reached, for example after it moved to another serial port or its DIP switches changed."
       },
       "user": {
         "data": {
