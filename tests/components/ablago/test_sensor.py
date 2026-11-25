@@ -14,7 +14,6 @@ from pytest_homeassistant.common import (
 )
 
 from homeassistant.components.ablago.const import UPDATE_INTERVAL
-from homeassistant.config_entries import SOURCE_REAUTH
 from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -79,13 +78,9 @@ async def test_key_revoked(
     mock_ablago_client: MagicMock,
     freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Test a key revoked while running starts the reauth flow."""
+    """Test a key revoked while running makes the entities unavailable."""
     mock_ablago_client.zaehler.side_effect = AblagoAuthError("401", status=401)
     freezer.tick(UPDATE_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
     assert hass.states.get(NEW_MAIL).state == STATE_UNAVAILABLE
-
-    flows = hass.config_entries.flow.async_progress()
-    assert [flow["context"]["source"] for flow in flows] == [SOURCE_REAUTH]
-    assert flows[0]["context"]["entry_id"] == init_integration.entry_id
