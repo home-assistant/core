@@ -84,6 +84,7 @@ class AdsEntity(Entity):
             notification_callback,
         )
         if handle is None:
+            # No notification is registered, so no first update will arrive.
             return False
         if self._removed:
             # Removed while this was subscribing, so the removal has already

@@ -1342,6 +1342,12 @@
     "command_reason": {
       "message": "Command was rejected: {reason}"
     },
+    "energy_site_not_paired": {
+      "message": "Teslemetry is not paired with the Powerwall system for {site}, pair it in the Teslemetry console or set up local control"
+    },
+    "live_status_timeout": {
+      "message": "No live status received from the Teslemetry stream for energy site {site_id} in {minutes} minutes"
+    },
     "local_command_failed": {
       "message": "The Powerwall gateway could not complete the command, check the logs for details"
     },
@@ -1404,6 +1410,20 @@
     }
   },
   "issues": {
+    "energy_site_not_paired": {
+      "fix_flow": {
+        "error": {
+          "not_resolved": "Teslemetry still appears to be unpaired. Please complete the pairing at {link}, then try again."
+        },
+        "step": {
+          "confirm": {
+            "description": "Home Assistant cannot send battery commands, such as dispatching battery power, to {site} because Teslemetry is not paired with its Powerwall system and local control is not set up. Teslemetry can only send these commands through the cloud once its key is verified on the Powerwall gateway.\n\n1. Open {link}.\n2. Follow the prompts to pair Teslemetry with the Powerwall system.\n3. Select **Submit** below to re-check.\n\nAlternatively, set up local control for {site}.",
+            "title": "[%key:component::teslemetry::issues::energy_site_not_paired::title%]"
+          }
+        }
+      },
+      "title": "Pair Teslemetry with the Powerwall system for {site}"
+    },
     "gateway_not_found": {
       "fix_flow": {
         "abort": {

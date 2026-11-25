@@ -25,7 +25,11 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
+from homeassistant.exceptions import (
+    ConfigEntryAuthFailed,
+    ConfigEntryError,
+    ConfigEntryNotReady,
+)
 from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.typing import ConfigType
@@ -291,7 +295,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ElkM1ConfigEntry) -> Non
         await ElkSyncWaiter(elk, LOGIN_TIMEOUT, SYNC_TIMEOUT).async_wait()
         sync_success = True
     except LoginFailed as exc:
-        raise ConfigEntryError(
+        raise ConfigEntryAuthFailed(
             translation_domain=DOMAIN,
             translation_key="login_failed",
             translation_placeholders={"host": conf[CONF_HOST]},

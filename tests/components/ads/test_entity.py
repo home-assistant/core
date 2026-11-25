@@ -208,7 +208,6 @@ def _stop_hass(hass: HomeAssistant) -> None:
 )
 async def test_notification_while_deleting(
     hass: HomeAssistant,
-    entity_registry: er.EntityRegistry,
     mock_pyads_connection: MagicMock,
     mock_ads_device: MockAdsDevice,
     caplog: pytest.LogCaptureFixture,

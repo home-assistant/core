@@ -55,8 +55,20 @@
       "schedule_override_active": {
         "name": "Schedule override active"
       },
+      "siren_ac_dc_error": {
+        "name": "AC/DC error"
+      },
       "siren_acoustic_alarm": {
         "name": "Acoustic alarm"
+      },
+      "siren_battery_defect": {
+        "name": "Battery defect"
+      },
+      "siren_battery_temperature_abnormal": {
+        "name": "Battery temperature abnormal"
+      },
+      "siren_primary_power_supply_outage": {
+        "name": "Primary power supply outage"
       },
       "siren_visual_alarm": {
         "name": "Visual alarm"
@@ -69,6 +81,15 @@
       }
     },
     "button": {
+      "preview_max_brightness": {
+        "name": "Preview max brightness"
+      },
+      "preview_min_brightness": {
+        "name": "Preview min brightness"
+      },
+      "reset_energy_summation": {
+        "name": "Reset consumption value"
+      },
       "reset_tamper": {
         "name": "Reset tamper"
       },
@@ -104,6 +125,9 @@
       "bypass_timeout": {
         "name": "Break function timeout"
       },
+      "comfort_temperature": {
+        "name": "Comfort temperature"
+      },
       "dimmer_max": {
         "name": "Maximum brightness"
       },
@@ -118,6 +142,9 @@
       },
       "display_on_time": {
         "name": "Display on-time"
+      },
+      "eco_temperature": {
+        "name": "Eco temperature"
       },
       "energy_saving_enter_duration": {
         "name": "Energy-saving enter duration"
@@ -284,6 +311,14 @@
     "sensor": {
       "air_quality": {
         "name": "Air quality"
+      },
+      "battery_level": {
+        "name": "Battery level",
+        "state": {
+          "critically_low_battery": "Critically low",
+          "low_battery": "[%key:common::state::low%]",
+          "ok": "OK"
+        }
       },
       "communication_quality": {
         "name": "Communication quality"
