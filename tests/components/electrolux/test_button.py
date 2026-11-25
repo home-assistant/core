@@ -12,6 +12,7 @@ from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
+from homeassistant.config_entries import SOURCE_REAUTH
 from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
@@ -290,3 +291,31 @@ async def test_command_backend_errors(
             blocking=True,
         )
     assert exc_info.value.translation_key == ha_error_reason
+
+
+@pytest.mark.parametrize("appliance_fixture", ["tumble_dryer"])
+@pytest.mark.parametrize("status", [401, 403])
+async def test_command_authorization_failed_starts_reauth(
+    hass: HomeAssistant,
+    appliances: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    status: int,
+) -> None:
+    """Test a rejected command starts reauthentication."""
+    appliances.send_command.side_effect = ApplianceClientException(status=status)
+
+    await setup_integration(hass, mock_config_entry)
+
+    with pytest.raises(HomeAssistantError):
+        await hass.services.async_call(
+            BUTTON_DOMAIN,
+            SERVICE_PRESS,
+            {ATTR_ENTITY_ID: "button.dryer_appliance_start"},
+            blocking=True,
+        )
+    await hass.async_block_till_done()
+
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 1
+    assert flows[0]["context"]["source"] == SOURCE_REAUTH
+    assert flows[0]["context"]["entry_id"] == mock_config_entry.entry_id

@@ -190,3 +190,28 @@ async def test_turn_off(
     assert appliances.send_command.mock_calls == [
         call(appliance_id, command) for command in commands
     ]
+
+
+@pytest.mark.parametrize("appliance_fixture", ["hood"])
+async def test_hood_light_state(
+    hass: HomeAssistant,
+    appliances: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test the hood light reports its brightness and color temperature."""
+    appliance_id = get_appliance_id("hood")
+
+    state = await appliances.get_appliance_state(appliance_id)
+    state.properties["reported"]["lightIntensity"] = 70
+    state.properties["reported"]["lightColorTemperature"] = 42
+
+    appliances.get_appliance_state.side_effect = None
+    appliances.get_appliance_state.return_value = state
+
+    await setup_integration(hass, mock_config_entry)
+
+    light_state = hass.states.get("light.ceiling_hood_light")
+    assert light_state is not None
+    assert light_state.state == "on"
+    assert light_state.attributes[ATTR_BRIGHTNESS] == 178
+    assert light_state.attributes[ATTR_COLOR_TEMP_KELVIN] == 4006

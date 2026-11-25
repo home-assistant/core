@@ -425,7 +425,7 @@ def get_care_appliance_end_at(
     if end_at is not None:
         return round_to_minute(end_at)
 
-    if appliance.get_current_appliance_state() is not APPLIANCE_STATE_RUNNING:
+    if appliance.get_current_appliance_state() != APPLIANCE_STATE_RUNNING:
         return None
 
     time_to_end = appliance.get_current_time_to_end()

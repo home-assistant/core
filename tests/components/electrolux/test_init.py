@@ -23,7 +23,7 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.electrolux import ElectroluxData
 from homeassistant.components.electrolux.const import DOMAIN
-from homeassistant.config_entries import ConfigEntryState
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
@@ -188,23 +188,72 @@ async def test_appliance_client_exception(
     assert mock_config_entry.state is entry_state
 
 
-@pytest.mark.parametrize(
-    ("exception", "entry_state"),
-    [
-        (BadCredentialsException(), ConfigEntryState.SETUP_ERROR),
-        (FailedConnectionException(), ConfigEntryState.SETUP_RETRY),
-    ],
-)
+async def test_appliance_client_test_connection_failed(
+    hass: HomeAssistant,
+    mock_appliance_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test a failed connection while testing the connection retries setup."""
+    mock_appliance_client.test_connection.side_effect = FailedConnectionException()
+
+    await setup_integration(hass, mock_config_entry)
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+
+
 async def test_appliance_client_test_connection_bad_credentials(
     hass: HomeAssistant,
     mock_appliance_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
-    exception: Exception,
-    entry_state: ConfigEntryState,
 ) -> None:
-    """Test for handling errors that occur while testing the connection."""
-    mock_appliance_client.test_connection.side_effect = exception
+    """Test bad credentials while testing the connection start reauthentication."""
+    mock_appliance_client.test_connection.side_effect = BadCredentialsException()
 
     await setup_integration(hass, mock_config_entry)
 
-    assert mock_config_entry.state is entry_state
+    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 1
+    assert flows[0]["context"]["source"] == SOURCE_REAUTH
+    assert flows[0]["context"]["entry_id"] == mock_config_entry.entry_id
+
+
+async def test_incomplete_appliance_not_removed(
+    hass: HomeAssistant,
+    mock_appliance_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test an appliance still listed without state is not removed on reconnect."""
+    appliance_fixture = "fenix_oven"
+    appliance_id = "900412569_00:43319382-443E0748CCD4"
+
+    def appliance_data(*, with_state: bool) -> ApplianceData:
+        return appliance_data_factory(
+            appliance=load_appliance(appliance_fixture),
+            details=load_appliance_details(appliance_fixture),
+            state=load_appliance_state(appliance_fixture) if with_state else None,
+        )
+
+    mock_appliance_client.get_appliance_data.return_value = [
+        appliance_data(with_state=True)
+    ]
+    await setup_integration(hass, mock_config_entry)
+
+    assert device_registry.async_get_device_by_identifier(
+        (DOMAIN, appliance_id), mock_config_entry.entry_id
+    )
+
+    # The account still lists the appliance, but without its state
+    mock_appliance_client.get_appliance_data.return_value = [
+        appliance_data(with_state=False)
+    ]
+
+    callback_list = mock_appliance_client.start_event_stream.call_args.args[0]
+    for callback in callback_list:
+        await callback()
+
+    assert device_registry.async_get_device_by_identifier(
+        (DOMAIN, appliance_id), mock_config_entry.entry_id
+    )
+    assert appliance_id in mock_config_entry.runtime_data.coordinators

@@ -21,11 +21,7 @@ from electrolux_group_developer_sdk.client.failed_connection_exception import (
 
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_API_KEY, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import (
-    ConfigEntryAuthFailed,
-    ConfigEntryError,
-    ConfigEntryNotReady,
-)
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
@@ -66,7 +62,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ElectroluxConfigEntry) -
     try:
         await client.test_connection()
     except BadCredentialsException as e:
-        raise ConfigEntryError("Bad credentials detected.") from e
+        raise ConfigEntryAuthFailed("Bad credentials detected.") from e
     except FailedConnectionException as e:
         raise ConfigEntryNotReady("Connection with client failed.") from e
 
@@ -151,13 +147,12 @@ def create_token_manager(
             },
         )
 
-    api_key = entry.data.get(CONF_API_KEY)
-    refresh_token = entry.data.get(CONF_REFRESH_TOKEN)
-    access_token = entry.data.get(CONF_ACCESS_TOKEN)
-
-    if access_token and refresh_token and api_key:
-        return TokenManager(access_token, refresh_token, api_key, save_tokens)
-    raise ConfigEntryAuthFailed("Missing access token, refresh token or API key")
+    return TokenManager(
+        entry.data[CONF_ACCESS_TOKEN],
+        entry.data[CONF_REFRESH_TOKEN],
+        entry.data[CONF_API_KEY],
+        save_tokens,
+    )
 
 
 async def _check_for_new_devices(
@@ -172,7 +167,8 @@ async def _check_for_new_devices(
     on_livestream_opening_callback_list = (
         entry.runtime_data.on_livestream_opening_callback_list
     )
-    appliances = await fetch_appliance_data(client)
+    all_appliances = await client.get_appliance_data()
+    appliances = _filter_complete_appliances(all_appliances)
     entry.runtime_data.appliances = appliances
 
     existing_ids = set(coordinators.keys())
@@ -198,7 +194,9 @@ async def _check_for_new_devices(
             )
 
     # Detect MISSING appliances
-    discovered_ids = {appliance.appliance.applianceId for appliance in appliances}
+    # Use the unfiltered list, so an appliance that is still listed but returned
+    # without details or state is not removed.
+    discovered_ids = {appliance.appliance.applianceId for appliance in all_appliances}
     missing_ids = existing_ids - discovered_ids
     device_registry = dr.async_get(hass)
     for missing_id in missing_ids:
@@ -225,7 +223,13 @@ async def fetch_appliance_data(client: ApplianceClient) -> list[ApplianceData]:
         _LOGGER.warning("Failed to get appliances: %s", e)
         raise
 
-    # Filter out appliances where details or state is None
+    return _filter_complete_appliances(appliances)
+
+
+def _filter_complete_appliances(
+    appliances: list[ApplianceData],
+) -> list[ApplianceData]:
+    """Filter out appliances where details or state is None."""
     return [
         appliance
         for appliance in appliances

@@ -334,11 +334,7 @@ class ElectroluxLight[T: ApplianceData](ElectroluxBaseLight[T]):
         if description.color_fn is None:
             return None
 
-        color_temp = description.color_fn(self._appliance_data)
-        if color_temp is None or not (0 <= color_temp <= 100):
-            return None
-
-        return color_temp
+        return description.color_fn(self._appliance_data)
 
     @override
     def _get_brightness(self) -> int | None:
@@ -346,11 +342,7 @@ class ElectroluxLight[T: ApplianceData](ElectroluxBaseLight[T]):
         if description.brightness_fn is None:
             return None
 
-        brightness = description.brightness_fn(self._appliance_data)
-        if brightness is None or not (0 < brightness <= 100):
-            return None
-
-        return brightness
+        return description.brightness_fn(self._appliance_data)
 
     @override
     def _is_on(self) -> bool | None:
@@ -423,11 +415,7 @@ class ElectroluxSubmoduleLight[T: ApplianceData](ElectroluxBaseLight[T]):
         if description.color_fn is None:
             return None
 
-        color_temp = description.color_fn(self._appliance_data, self._submodule)
-        if color_temp is None or not (0 <= color_temp <= 100):
-            return None
-
-        return color_temp
+        return description.color_fn(self._appliance_data, self._submodule)
 
     @override
     def _get_brightness(self) -> int | None:
@@ -435,11 +423,7 @@ class ElectroluxSubmoduleLight[T: ApplianceData](ElectroluxBaseLight[T]):
         if description.brightness_fn is None:
             return None
 
-        brightness = description.brightness_fn(self._appliance_data, self._submodule)
-        if brightness is None or not (0 < brightness <= 100):
-            return None
-
-        return brightness
+        return description.brightness_fn(self._appliance_data, self._submodule)
 
     @override
     def _is_on(self) -> bool | None:

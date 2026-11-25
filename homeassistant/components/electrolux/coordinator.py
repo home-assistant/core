@@ -20,7 +20,7 @@ from electrolux_group_developer_sdk.client.dto.appliance_state import ApplianceS
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import ConfigEntryAuthFailed, HomeAssistantError
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN
@@ -108,7 +108,8 @@ class ElectroluxDataUpdateCoordinator(DataUpdateCoordinator[ApplianceState]):
             await self.client.send_command(self._appliance_id, command)
         except ApplianceClientException as exception:
             if exception.status in [401, 403]:
-                raise HomeAssistantError(
+                self.config_entry.async_start_reauth(self.hass)
+                raise ConfigEntryAuthFailed(
                     translation_domain=DOMAIN,
                     translation_key="authorization_failed",
                 ) from exception
