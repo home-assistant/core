@@ -464,6 +464,38 @@ async def test_reconfigure_changes_the_baud_rate_of_a_loaded_entry(
     assert mock_get_unit.call_args.args[2].baudrate == 19200
 
 
+async def test_reconfigure_changes_the_baud_rate_of_an_entry_retrying_setup(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_get_unit: MagicMock,
+    mock_connection: MockModbusConnection,
+) -> None:
+    """An entry retrying at the wrong baud rate stops retrying during the probe."""
+    mock_connection.for_unit(1).fail_requests(ModbusTimeoutError())
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+
+    states: list[ConfigEntryState] = []
+    mock_connection.for_unit(1).fail_requests(None)
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+    with _patch_temporary_unit(
+        _seeded(),
+        baudrate=19200,
+        on_probe=lambda: states.append(mock_config_entry.state),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], FASTER_INPUT
+        )
+    await hass.async_block_till_done()
+    assert states == [ConfigEntryState.NOT_LOADED]
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert mock_config_entry.data == {**MOCK_ENTRY_DATA, CONF_BAUDRATE: 19200}
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    assert mock_get_unit.call_args.args[2].baudrate == 19200
+
+
 async def test_reconfigure_puts_a_loaded_entry_back_when_the_probe_fails(
     hass: HomeAssistant, init_integration: MockConfigEntry
 ) -> None:
