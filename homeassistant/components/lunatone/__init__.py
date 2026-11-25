@@ -25,6 +25,7 @@ from .coordinator import (
     find_devices,
     remove_devices,
 )
+from .helpers import format_device_identifier
 
 _LOGGER = logging.getLogger(__name__)
 PLATFORMS: Final[list[Platform]] = [
@@ -123,12 +124,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: LunatoneConfigEntry) -> 
     def _async_register_devices() -> None:
         info_data = coordinator_info.data
         for line_id, line_info in info_data.lines.items():
-            line_unique_id = f"{entry_unique_id}-line{line_id}"
+            line_unique_id = format_device_identifier(entry_unique_id, int(line_id))
 
             device_info = dr.DeviceInfo(
                 identifiers={(DOMAIN, line_unique_id)},
                 translation_key="dali_line",
-                translation_placeholders={"line_id": str(line_id)},
+                translation_placeholders={"line_id": line_id},
                 via_device_id=dr.async_get_device_id_by_identifier(
                     hass, (DOMAIN, entry_unique_id), config_entry_id=entry.entry_id
                 ),

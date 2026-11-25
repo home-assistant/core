@@ -21,12 +21,15 @@ from pytest_homeassistant.components.common import (
 )
 
 from homeassistant.components.button.condition import CONDITIONS
-from homeassistant.components.event import ATTR_EVENT_TYPE, ATTR_EVENT_TYPES
+from homeassistant.components.event import (
+    EventEntityCapabilityAttribute,
+    EventEntityStateAttribute,
+)
 from homeassistant.const import (
-    ATTR_DEVICE_CLASS,
     CONF_CONDITION,
     CONF_OPTIONS,
     CONF_TARGET,
+    EntityStateAttribute,
     TargetKey,
 )
 from homeassistant.core import HomeAssistant
@@ -49,9 +52,9 @@ def _button_event(
     event_type: str, event_types: list[str] | None = None
 ) -> tuple[str, dict[str, Any]]:
     """Build an event entity state, optionally with its declared event types."""
-    attributes: dict[str, Any] = {ATTR_EVENT_TYPE: event_type}
+    attributes: dict[str, Any] = {EventEntityStateAttribute.EVENT_TYPE: event_type}
     if event_types is not None:
-        attributes[ATTR_EVENT_TYPES] = event_types
+        attributes[EventEntityCapabilityAttribute.EVENT_TYPES] = event_types
     return (_EVENT_TIMESTAMP, attributes)
 
 
@@ -124,8 +127,8 @@ _IS_BEING_HELD_STATES: dict[str, Any] = {
         if event_type != "long_press_start"
     ],
     "required_filter_attributes": {
-        ATTR_DEVICE_CLASS: "button",
-        ATTR_EVENT_TYPES: _ALL_BUTTON_EVENT_TYPES,
+        EntityStateAttribute.DEVICE_CLASS: "button",
+        EventEntityCapabilityAttribute.EVENT_TYPES: _ALL_BUTTON_EVENT_TYPES,
     },
 }
 # The event types vary per state, to test which entities are skipped.
@@ -144,7 +147,7 @@ _IS_BEING_HELD_EVENT_TYPES_STATES: dict[str, Any] = {
         _button_event("long_press_start", []),
         _button_event("long_press_start"),
     ],
-    "required_filter_attributes": {ATTR_DEVICE_CLASS: "button"},
+    "required_filter_attributes": {EntityStateAttribute.DEVICE_CLASS: "button"},
 }
 
 
@@ -226,7 +229,9 @@ async def test_button_is_being_held_condition_ignores_buttons(
     """Test the is_being_held condition ignores button and input_button entities."""
     # Attributes of a held button, so only the domain filter can keep it out.
     state, attributes = _button_event("long_press_start", _ALL_BUTTON_EVENT_TYPES)
-    hass.states.async_set(entity_id, state, attributes | {ATTR_DEVICE_CLASS: "button"})
+    hass.states.async_set(
+        entity_id, state, attributes | {EntityStateAttribute.DEVICE_CLASS: "button"}
+    )
     await hass.async_block_till_done()
 
     cond = await create_target_condition(
@@ -245,13 +250,15 @@ async def test_button_is_being_held_condition_for(
 ) -> None:
     """Test the is_being_held condition duration counts from the hold start."""
     attributes = {
-        ATTR_DEVICE_CLASS: "button",
-        ATTR_EVENT_TYPES: _ALL_BUTTON_EVENT_TYPES,
+        EntityStateAttribute.DEVICE_CLASS: "button",
+        EventEntityCapabilityAttribute.EVENT_TYPES: _ALL_BUTTON_EVENT_TYPES,
     }
 
     def set_event(timestamp: str, event_type: str) -> None:
         hass.states.async_set(
-            _EVENT_ENTITY_ID, timestamp, attributes | {ATTR_EVENT_TYPE: event_type}
+            _EVENT_ENTITY_ID,
+            timestamp,
+            attributes | {EventEntityStateAttribute.EVENT_TYPE: event_type},
         )
 
     set_event("2026-01-01T00:00:00.000+00:00", "long_press_start")
@@ -306,7 +313,9 @@ async def test_button_is_being_held_condition_timeout(
     """Test the is_being_held condition stops passing when the hold times out."""
     state, attributes = _button_event("long_press_start", _ALL_BUTTON_EVENT_TYPES)
     hass.states.async_set(
-        _EVENT_ENTITY_ID, state, attributes | {ATTR_DEVICE_CLASS: "button"}
+        _EVENT_ENTITY_ID,
+        state,
+        attributes | {EntityStateAttribute.DEVICE_CLASS: "button"},
     )
     await hass.async_block_till_done()
 
@@ -351,7 +360,9 @@ async def test_button_is_being_held_condition_timeout_start(
     state, attributes = _button_event("long_press_start", _ALL_BUTTON_EVENT_TYPES)
     freezer.tick(written_after_event)
     hass.states.async_set(
-        _EVENT_ENTITY_ID, state, attributes | {ATTR_DEVICE_CLASS: "button"}
+        _EVENT_ENTITY_ID,
+        state,
+        attributes | {EntityStateAttribute.DEVICE_CLASS: "button"},
     )
     await hass.async_block_till_done()
 

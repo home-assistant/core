@@ -23,7 +23,7 @@ from .coordinator import (
     LunatoneInfoDataUpdateCoordinator,
     LunatoneScanDataUpdateCoordinator,
 )
-from .entity import add_entities_from_builder, format_device_identifier
+from .helpers import add_entities_from_builder, format_device_identifier
 
 PARALLEL_UPDATES = 0
 

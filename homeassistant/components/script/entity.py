@@ -77,6 +77,8 @@ class BaseScriptEntity(ToggleEntity, ABC):
     )
 
     raw_config: ConfigType | None
+    # The configuration as written, with use_blueprint, when it uses a blueprint
+    raw_blueprint_inputs: ConfigType | None
 
     @cached_property
     @abstractmethod
@@ -130,7 +132,7 @@ class UnavailableScriptEntity(BaseScriptEntity):
         self._attr_name = raw_config.get(CONF_ALIAS, key) if raw_config else key
         self._attr_unique_id = key
         self.raw_config = raw_config
-        self._raw_blueprint_inputs = raw_blueprint_inputs
+        self.raw_blueprint_inputs = raw_blueprint_inputs
         self._validation_error = validation_error
         self._validation_status = validation_status
 
@@ -158,7 +160,7 @@ class UnavailableScriptEntity(BaseScriptEntity):
         """Return referenced blueprint or None."""
         # The config is invalid, but it can still point at its blueprint. Once
         # the blueprint was applied, only its inputs hold that reference.
-        for config in (self._raw_blueprint_inputs, self.raw_config):
+        for config in (self.raw_blueprint_inputs, self.raw_config):
             if (
                 config is not None
                 and isinstance(blueprint := config.get(CONF_USE_BLUEPRINT), dict)
@@ -270,7 +272,7 @@ class ScriptEntity(BaseScriptEntity, RestoreEntity):
         self._changed = asyncio.Event()
         self.raw_config = raw_config
         self._trace_config = cfg[CONF_TRACE]
-        self._blueprint_inputs = blueprint_inputs
+        self.raw_blueprint_inputs = blueprint_inputs
         self._attr_name = self.script.name
 
     @property
@@ -317,9 +319,9 @@ class ScriptEntity(BaseScriptEntity, RestoreEntity):
     @override
     def referenced_blueprint(self) -> str | None:
         """Return referenced blueprint or None."""
-        if self._blueprint_inputs is None:
+        if self.raw_blueprint_inputs is None:
             return None
-        path: str = self._blueprint_inputs[CONF_USE_BLUEPRINT][CONF_PATH]
+        path: str = self.raw_blueprint_inputs[CONF_USE_BLUEPRINT][CONF_PATH]
         return path
 
     @cached_property
@@ -390,7 +392,7 @@ class ScriptEntity(BaseScriptEntity, RestoreEntity):
             self.hass,
             self._attr_unique_id,
             self.raw_config,
-            self._blueprint_inputs,
+            self.raw_blueprint_inputs,
             context,
             self._trace_config,
         ) as script_trace:

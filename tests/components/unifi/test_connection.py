@@ -1067,6 +1067,29 @@ async def test_websocket_error_marks_session_down(
     assert not _available(hass)
 
 
+async def test_websocket_resync_does_not_wait_for_update_lock(
+    hass: HomeAssistant,
+    hub: UnifiHub,
+    mock_websocket_state: WebsocketStateManager,
+) -> None:
+    """Only polled handlers hold the update lock, a websocket resync skips it."""
+    coordinator = hub.entity_loader.get_data_update_coordinator(hub.api.clients)
+    resynced = asyncio.Event()
+
+    async def update() -> None:
+        resynced.set()
+
+    await mock_websocket_state.disconnect()
+    mock_websocket_state.clear()
+    async with coordinator.update_lock:
+        with patch.object(hub.api.clients, "update", side_effect=update):
+            _fire(hass, FIRST_RETRY_DELAY)
+            await _wait(resynced)
+
+    await hass.async_block_till_done(wait_background_tasks=True)
+    assert _available(hass)
+
+
 async def test_one_hanging_handler_does_not_block_recovery(
     hass: HomeAssistant,
     hub: UnifiHub,

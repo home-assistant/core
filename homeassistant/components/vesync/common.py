@@ -10,6 +10,7 @@ from pyvesync.base_devices.outlet_base import VeSyncOutlet
 from pyvesync.base_devices.purifier_base import VeSyncPurifier
 from pyvesync.base_devices.vesyncbasedevice import VeSyncBaseDevice
 from pyvesync.const import ProductTypes
+from pyvesync.devices.vesyncfan import VeSyncPedestalFan
 from pyvesync.devices.vesyncswitch import VeSyncWallSwitch
 
 _LOGGER = logging.getLogger(__name__)
@@ -53,6 +54,12 @@ def is_outlet(device: VeSyncBaseDevice) -> TypeGuard[VeSyncOutlet]:
     """Check if the device represents an outlet."""
 
     return device.product_type == ProductTypes.OUTLET
+
+
+def is_pedestal_fan(device: VeSyncBaseDevice) -> TypeGuard[VeSyncPedestalFan]:
+    """Check if the device represents a pedestal fan."""
+
+    return isinstance(device, VeSyncPedestalFan)
 
 
 def is_wall_switch(device: VeSyncBaseDevice) -> TypeGuard[VeSyncWallSwitch]:

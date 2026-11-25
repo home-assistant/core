@@ -1,35 +1,72 @@
-"""Shared helpers for Lunatone entities."""
+"""Base entity for Lunatone."""
 
-from collections.abc import Callable
-from typing import TypeVar
+from typing import TYPE_CHECKING, Any, TypeVar, override
 
-from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.core import callback
+from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.update_coordinator import (
+    CoordinatorEntity,
+    DataUpdateCoordinator,
+)
 
-_EntityT = TypeVar("_EntityT", bound=Entity)
+from .const import DOMAIN
+from .coordinator import LunatoneInfoDataUpdateCoordinator
+from .helpers import format_device_identifier
+
+T = TypeVar("T", bound=DataUpdateCoordinator[Any])
 
 
-def format_device_identifier(
-    config_entry_unique_id: str, line_id: int | None = None
-) -> str:
-    """Return the unique ID of a device."""
-    suffix = f"-line{line_id}" if line_id is not None else ""
-    return f"{config_entry_unique_id}{suffix}"
+class LunatoneEntity(CoordinatorEntity[T]):
+    """Representation of a Lunatone entity."""
 
+    _attr_has_entity_name = True
 
-def add_entities_from_builder(
-    entity_builder: dict[str, Callable[[], _EntityT]],
-    known_entities: set[str],
-    async_add_entities: AddEntitiesCallback,
-) -> None:
-    """Add newly discovered entities and track their unique IDs."""
-    current_entities = entity_builder.keys()
-    new_entities = current_entities - known_entities
-    stale_entities = known_entities - current_entities
+    def __init__(
+        self,
+        coordinator: T,
+        coordinator_info: LunatoneInfoDataUpdateCoordinator,
+        line_id: int | None = None,
+    ) -> None:
+        """Initialize a Lunatone entity."""
+        super().__init__(coordinator)
+        self.coordinator_info = coordinator_info
+        self.line_id = line_id
 
-    if new_entities:
-        async_add_entities(
-            [entity_builder[entity_unique_id]() for entity_unique_id in new_entities]
+    @override
+    async def async_added_to_hass(self) -> None:
+        """Register callbacks."""
+        await super().async_added_to_hass()
+        if self.line_id is not None:
+            self.async_on_remove(
+                self.coordinator_info.async_add_listener(self._handle_info_update)
+            )
+
+    @callback
+    def _handle_info_update(self) -> None:
+        config_entry = self.coordinator.config_entry
+        if TYPE_CHECKING:
+            assert config_entry is not None
+            assert config_entry.unique_id is not None
+
+        config_entry_id = config_entry.entry_id
+        device_registry = dr.async_get(self.hass)
+        linked_device = device_registry.async_get_device_by_identifier(
+            (DOMAIN, format_device_identifier(config_entry.unique_id, self.line_id)),
+            config_entry_id,
         )
-        known_entities.update(new_entities)
-    known_entities.difference_update(stale_entities)
+
+        if (
+            linked_device
+            and self.registry_entry
+            and self.registry_entry.device_id is not None
+            and self.registry_entry.device_id != linked_device.id
+        ):
+            device = device_registry.async_get(
+                self.registry_entry.device_id, include_child_devices=False
+            )
+            if device and device.via_device_id != linked_device.id:
+                device_registry.async_update_device(
+                    device.id, via_device_id=linked_device.id
+                )
+
+        self.async_write_ha_state()
