@@ -450,7 +450,9 @@ def _get_cycle_phase(
 ) -> str | None:
     """Get the current cycle phase of the appliance. Return None if the value reported by the appliance is 'unavaiable'."""
     cycle_phase = appliance.get_current_cycle_phase()
-    return None if cycle_phase.lower() == "unavailable" else cycle_phase
+    if cycle_phase is None or cycle_phase.lower() == "unavailable":
+        return None
+    return cycle_phase
 
 
 CARE_ELECTROLUX_SENSORS: tuple[
