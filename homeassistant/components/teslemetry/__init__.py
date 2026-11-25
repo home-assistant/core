@@ -85,6 +85,7 @@ from .const import (
     CHARGE_ON_SOLAR_LOWER_LIMIT_KEY,
     CHARGE_ON_SOLAR_SWITCH_KEY,
     CLIENT_ID,
+    CONF_LEGACY_GATEWAY,
     CONF_VIN,
     DOMAIN,
     ISSUE_ENERGY_SITE_NOT_PAIRED,
@@ -587,7 +588,13 @@ async def _async_resolve_energy_site_api(
         return cloud_energy_site
 
     key_pem = await _async_get_rsa_key_pem(hass)
-    powerwall_client = create_powerwall_client(hass, host, password, key_pem)
+    powerwall_client = create_powerwall_client(
+        hass,
+        host,
+        password,
+        key_pem,
+        legacy_gateway=subentry.data.get(CONF_LEGACY_GATEWAY, False),
+    )
     try:
         await powerwall_client.connect()
     except PowerwallRateLimitError as err:
@@ -647,7 +654,11 @@ async def _async_rediscover_gateway(
         return stale_client
     if host and host != stale_client.host:
         client = create_powerwall_client(
-            hass, host, subentry.data[CONF_PASSWORD], key_pem
+            hass,
+            host,
+            subentry.data[CONF_PASSWORD],
+            key_pem,
+            legacy_gateway=subentry.data.get(CONF_LEGACY_GATEWAY, False),
         )
         try:
             await client.connect()

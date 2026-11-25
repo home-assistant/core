@@ -27,6 +27,7 @@ from tesla_fleet_api.tesla.powerwall import (
 
 from homeassistant.components.repairs import ConfirmRepairFlow
 from homeassistant.components.teslemetry.const import (
+    CONF_LEGACY_GATEWAY,
     CONF_SITE_ID,
     DOMAIN,
     RSA_PARENT_KEY,
@@ -533,7 +534,9 @@ def mock_powerwall_client() -> Generator[MagicMock]:
         yield client
 
 
-async def _setup_entry_with_lost_gateway(hass: HomeAssistant) -> MockConfigEntry:
+async def _setup_entry_with_lost_gateway(
+    hass: HomeAssistant, subentry_data: dict[str, Any] | None = None
+) -> MockConfigEntry:
     """Set up an entry whose paired gateway could not be found."""
     assert await async_setup_component(hass, "repairs", {})
     hass.data[RSA_PARENT_KEY] = b"test-key-pem"
@@ -554,6 +557,7 @@ async def _setup_entry_with_lost_gateway(hass: HomeAssistant) -> MockConfigEntry
                     CONF_SITE_ID: SITE_ID,
                     CONF_HOST: HOST,
                     CONF_PASSWORD: PASSWORD,
+                    **(subentry_data or {}),
                 },
             )
         ],
@@ -604,6 +608,50 @@ async def test_gateway_repair_fixed_through_cloud(
     }
     mock_reload.assert_called_once_with(entry.entry_id)
     assert issue_registry.async_get_issue(DOMAIN, GATEWAY_ISSUE_ID) is None
+
+
+async def test_gateway_repair_verifies_gateway_1_with_full_password(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """The fix flow verifies a Gateway 1 with its full password."""
+    gateway = MagicMock()
+    gateway.__aenter__ = AsyncMock(return_value=gateway)
+    gateway.__aexit__ = AsyncMock(return_value=False)
+    gateway.connect = AsyncMock(side_effect=PowerwallConnectionError("unreachable"))
+    gateway.get_status = AsyncMock()
+    with patch(
+        "homeassistant.components.teslemetry.helpers.PowerwallClient"
+    ) as mock_client:
+        mock_client.legacy_gateway.return_value = gateway
+        entry = await _setup_entry_with_lost_gateway(
+            hass, {CONF_PASSWORD: "long-wifi-password", CONF_LEGACY_GATEWAY: True}
+        )
+        assert issue_registry.async_get_issue(DOMAIN, GATEWAY_ISSUE_ID) is not None
+        client = await hass_client()
+
+        gateway.connect.side_effect = None
+        with (
+            patch(FIND_GATEWAY_ADDRESS, new=AsyncMock(return_value=NEW_HOST)),
+            patch.object(hass.config_entries, "async_schedule_reload"),
+        ):
+            result = await start_repair_fix_flow(client, DOMAIN, GATEWAY_ISSUE_ID)
+
+    assert result["type"] == FlowResultType.CREATE_ENTRY
+    mock_client.assert_not_called()
+    assert mock_client.legacy_gateway.call_args.kwargs["host"] == NEW_HOST
+    assert (
+        mock_client.legacy_gateway.call_args.kwargs["gateway_password"]
+        == "long-wifi-password"
+    )
+    subentry = entry.get_subentries_of_type(SUBENTRY_TYPE_ENERGY_SITE)[0]
+    assert subentry.data == {
+        CONF_SITE_ID: SITE_ID,
+        CONF_HOST: NEW_HOST,
+        CONF_PASSWORD: "long-wifi-password",
+        CONF_LEGACY_GATEWAY: True,
+    }
 
 
 @pytest.mark.parametrize(
