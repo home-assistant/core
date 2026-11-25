@@ -13,6 +13,7 @@ import pytest
 from tests.pylint import assert_adds_messages, assert_no_messages, walk_checker
 
 astroid.MANAGER.ast_from_module_name("homeassistant.config_entries")
+astroid.MANAGER.ast_from_module_name("homeassistant.components.repairs")
 
 TEST_MODULE = "tests.components.direct_flow_handler_test.test_config_flow"
 INTEGRATION_MODULE = "homeassistant.components.direct_flow_handler_test.config_flow"
@@ -27,9 +28,19 @@ def integration_module() -> Generator[None]:
     previous = cache.get(INTEGRATION_MODULE)
     cache[INTEGRATION_MODULE] = astroid.parse(
         """
-from homeassistant.config_entries import ConfigFlow
+from homeassistant.components.repairs import RepairsFlow
+from homeassistant.config_entries import ConfigFlow, ConfigSubentryFlow, OptionsFlow
 
 class PylintTestConfigFlow(ConfigFlow):
+    pass
+
+class PylintTestOptionsFlow(OptionsFlow):
+    pass
+
+class PylintTestSubentryFlow(ConfigSubentryFlow):
+    pass
+
+class PylintTestRepairFlow(RepairsFlow):
     pass
 
 class NotAFlow:
@@ -133,21 +144,30 @@ def test_no_warning(
 
 
 @pytest.mark.parametrize(
+    "class_name",
+    [
+        "PylintTestConfigFlow",
+        "PylintTestOptionsFlow",
+        "PylintTestSubentryFlow",
+        "PylintTestRepairFlow",
+    ],
+)
+@pytest.mark.parametrize(
     "code",
     [
         pytest.param(
-            """
-from homeassistant.components.direct_flow_handler_test.config_flow import PylintTestConfigFlow
+            f"""
+from {INTEGRATION_MODULE} import {{class_name}}
 
-flow = PylintTestConfigFlow()
+flow = {{class_name}}()
 """,
             id="from_import",
         ),
         pytest.param(
-            """
-import homeassistant.components.direct_flow_handler_test.config_flow as config_flow
+            f"""
+import {INTEGRATION_MODULE} as config_flow
 
-flow = config_flow.PylintTestConfigFlow()
+flow = config_flow.{{class_name}}()
 """,
             id="module_import",
         ),
@@ -157,15 +177,14 @@ def test_flow_handler_created(
     linter: UnittestLinter,
     checker: DirectFlowHandlerChecker,
     code: str,
+    class_name: str,
 ) -> None:
     """Test creating an integration flow handler is flagged."""
-    root_node = _module(code)
+    root_node = _module(code.format(class_name=class_name))
     call = next(root_node.nodes_of_class(nodes.Call))
 
     with assert_adds_messages(
         linter,
-        _expect(
-            call, "home-assistant-tests-direct-flow-handler", "PylintTestConfigFlow"
-        ),
+        _expect(call, "home-assistant-tests-direct-flow-handler", class_name),
     ):
         walk_checker(linter, checker, root_node)
