@@ -14,7 +14,7 @@
   "documentation": "https://www.home-assistant.io/integrations/simplisafe",
   "integration_type": "hub",
   "iot_class": "cloud_polling",
-"loggers": ["simplipy"],
-"quality_scale": "bronze",
+  "loggers": ["simplipy"],
+  "quality_scale": "bronze",
   "requirements": ["simplisafe-python==2026.06.0"]
 }
