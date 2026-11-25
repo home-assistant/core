@@ -1481,6 +1481,18 @@
       "config_flow": true,
       "iot_class": "local_push"
     },
+    "bambu_lab": {
+      "name": "Bambu Lab",
+      "integration_type": "device",
+      "categories": [
+        "computers_network.printers"
+      ],
+      "connectivity": [
+        "network"
+      ],
+      "config_flow": true,
+      "iot_class": "local_push"
+    },
     "bang_olufsen": {
       "name": "Bang & Olufsen",
       "integration_type": "device",
