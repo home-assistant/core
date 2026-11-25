@@ -15,8 +15,10 @@
   },
   "config": {
     "error": {
+      "fan_speeds_required": "Fan speeds are required when a fan speed or the set fan speed action is set.",
       "hs_action_required": "Actions on set HS color are required when an HS color is set.",
       "level_action_required": "Actions on set level are required when a brightness level is set.",
+      "set_fan_speed_required": "A set fan speed action is required when fan speeds are set.",
       "source_list_required": "A source list is required when a source or the select source actions are set.",
       "temperature_action_required": "Actions on set color temperature are required when a color temperature is set.",
       "volume_up_and_down_required": "Volume up and volume down actions must be set together."
@@ -795,6 +797,14 @@
       "description": "The template event blueprint `{blueprint}` sets options in `attributes` that have a dedicated option. Setting these options in `attributes` is deprecated and will stop working in a future version of Home Assistant.\n\nUpdate the blueprint by moving the following options out of `attributes` to their dedicated option, or by removing them from `attributes` if the dedicated option is already set:\n\n{options}\n\nThe `device_class` option does not support templates, use a supported device class.\n\nIf the blueprint was imported, re-import it once its author has updated it instead. Then reload the template entities or restart Home Assistant to fix this issue.",
       "title": "Template event blueprint sets options in attributes ({blueprint})"
     },
+    "deprecated_fan_incomplete_preset_mode_options": {
+      "description": "The template fan entity with `{identifier}` sets some of the `preset_mode`, `preset_modes` and `set_preset_mode` options without the others. Without all of them, these options do nothing or fail when used. This is deprecated and will be a configuration error in a future version of Home Assistant.\n\nUpdate your YAML configuration by adding the missing options or removing the options:\n\n{options}\n\nAfter updating the configuration, reload the template entities or restart Home Assistant to fix this issue.",
+      "title": "Template fan entity has incomplete preset mode options ({identifier})"
+    },
+    "deprecated_fan_incomplete_preset_mode_options_blueprint": {
+      "description": "The template fan blueprint `{blueprint}` sets some of the `preset_mode`, `preset_modes` and `set_preset_mode` options without the others. Without all of them, these options do nothing or fail when used. This is deprecated and will be a configuration error in a future version of Home Assistant.\n\nUpdate the blueprint by adding the missing options or removing the options:\n\n{options}\n\nIf the blueprint was imported, re-import it once its author has updated it instead. Then reload the template entities or restart Home Assistant to fix this issue.",
+      "title": "Template fan blueprint has incomplete preset mode options ({blueprint})"
+    },
     "deprecated_light_helper_missing_actions": {
       "description": "The template light helper {name} has options without the action that changes them. This is deprecated and will stop working in Home Assistant Core {breaks_in_ha_version}.\n\nOpen the options of the template light helper and add the missing actions or remove the options:\n\n{options}",
       "title": "Template light helper {name} has options without their action"
@@ -835,6 +845,18 @@
       "description": "The template vacuum blueprint `{blueprint}` sets options in `attributes` that have a dedicated option. Setting these options in `attributes` is deprecated and will stop working in a future version of Home Assistant.\n\nUpdate the blueprint by moving the following options out of `attributes` to their dedicated option, or by removing them from `attributes` if the dedicated option is already set:\n\n{options}\n\nThe `fan_speeds` option does not support templates, use a YAML list of fan speeds. The `fan_speed` option only accepts a speed from `fan_speeds`, so list every speed it can render in `fan_speeds`.\n\nIf the blueprint was imported, re-import it once its author has updated it instead. Then reload the template entities or restart Home Assistant to fix this issue.",
       "title": "Template vacuum blueprint sets options in attributes ({blueprint})"
     },
+    "deprecated_vacuum_helper_incomplete_fan_speed_options": {
+      "description": "The template vacuum helper {name} sets some of the fan speed options without the others. This is deprecated and will stop working in Home Assistant Core {breaks_in_ha_version}.\n\nOpen the options of the template vacuum helper and add the missing options or remove the options:\n\n{options}",
+      "title": "Template vacuum helper {name} has incomplete fan speed options"
+    },
+    "deprecated_vacuum_incomplete_fan_speed_options": {
+      "description": "The template vacuum entity with `{identifier}` sets some of the `fan_speed`, `fan_speeds` and `set_fan_speed` options without the others. Without all of them, these options do nothing or fail when used. This is deprecated and will be a configuration error in a future version of Home Assistant.\n\nUpdate your YAML configuration by adding the missing options or removing the options:\n\n{options}\n\nAfter updating the configuration, reload the template entities or restart Home Assistant to fix this issue.",
+      "title": "Template vacuum entity has incomplete fan speed options ({identifier})"
+    },
+    "deprecated_vacuum_incomplete_fan_speed_options_blueprint": {
+      "description": "The template vacuum blueprint `{blueprint}` sets some of the `fan_speed`, `fan_speeds` and `set_fan_speed` options without the others. Without all of them, these options do nothing or fail when used. This is deprecated and will be a configuration error in a future version of Home Assistant.\n\nUpdate the blueprint by adding the missing options or removing the options:\n\n{options}\n\nIf the blueprint was imported, re-import it once its author has updated it instead. Then reload the template entities or restart Home Assistant to fix this issue.",
+      "title": "Template vacuum blueprint has incomplete fan speed options ({blueprint})"
+    },
     "deprecated_weather_template_options": {
       "description": "The template weather entity with `{identifier}` uses options ending in `_template`. These options are deprecated and will be removed in a future version of Home Assistant.\n\nUpdate your YAML configuration by renaming the following options:\n\n{options}\n\nAfter updating the configuration, reload the template entities or restart Home Assistant to fix this issue.",
       "title": "Template weather entity uses deprecated options ({identifier})"
@@ -846,8 +868,10 @@
   },
   "options": {
     "error": {
+      "fan_speeds_required": "[%key:component::template::config::error::fan_speeds_required%]",
       "hs_action_required": "[%key:component::template::config::error::hs_action_required%]",
       "level_action_required": "[%key:component::template::config::error::level_action_required%]",
+      "set_fan_speed_required": "[%key:component::template::config::error::set_fan_speed_required%]",
       "source_list_required": "[%key:component::template::config::error::source_list_required%]",
       "temperature_action_required": "[%key:component::template::config::error::temperature_action_required%]",
       "volume_up_and_down_required": "[%key:component::template::config::error::volume_up_and_down_required%]"
