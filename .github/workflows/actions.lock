@@ -5,6 +5,8 @@ version: 'v0.0.3'
 workflows:
     '.github/workflows/actions-lock.yml':
         - 'actions/checkout@v7.0.1'
+    '.github/workflows/agentic-workflows-lock.yml':
+        - 'actions/checkout@v7.0.1'
     '.github/workflows/builder.yml':
         - 'actions/attest@v4.2.2'
         - 'actions/checkout@v7.0.1'
