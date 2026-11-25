@@ -587,6 +587,36 @@ async def test_tilt_positions(
     )
 
 
+@pytest.mark.parametrize(
+    ("tilt_current", "expected_tilt_position"),
+    [
+        pytest.param(100, 50, id="closed_at_0"),
+        pytest.param(0, 50, id="closed_at_100"),
+        pytest.param(50, 100, id="open"),
+    ],
+)
+async def test_toggle_tilt_180(
+    shutterbox,
+    hass: HomeAssistant,
+    tilt_current: int,
+    expected_tilt_position: int,
+) -> None:
+    """Test toggling the tilt of a 180-degree shutter opens it at both closed ends."""
+    feature_mock, entity_id = shutterbox
+    feature_mock.is_tilt_180 = True
+    feature_mock.tilt_current = tilt_current
+    await async_setup_entity(hass, entity_id)
+
+    await hass.services.async_call(
+        "cover",
+        CoverService.TOGGLE_TILT,
+        {"entity_id": entity_id},
+        blocking=True,
+    )
+
+    feature_mock.async_set_tilt_position.assert_called_once_with(expected_tilt_position)
+
+
 async def test_close_tilt(shutterbox, hass: HomeAssistant) -> None:
     """Test closing tilt."""
     feature_mock, entity_id = shutterbox

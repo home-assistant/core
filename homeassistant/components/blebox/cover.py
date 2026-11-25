@@ -96,8 +96,8 @@ class BleBoxCoverEntity(BleBoxEntity[blebox_uniapi.cover.Cover], CoverEntity):
             if feature.is_calibrated:
                 self._attr_supported_features |= CoverEntityFeature.SET_TILT_POSITION
             if feature.is_tilt_180:
-                self._attr_open_tilt_position = 50
-                self._attr_closed_tilt_positions = [0, 100]
+                self._attr_tilt_start_angle = -90
+                self._attr_tilt_end_angle = 90
 
         if feature.tilt_only:
             self._attr_supported_features &= ~(
