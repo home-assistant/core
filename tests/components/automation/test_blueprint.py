@@ -240,3 +240,76 @@ async def test_motion_light(hass: HomeAssistant) -> None:
     for _ in range(25):
         await asyncio.sleep(0)
     assert len(turn_on_calls) == 4
+
+
+def _blueprint_automation_config(a_number: int) -> dict[str, Any]:
+    """Return the config of an automation from a blueprint."""
+    return {
+        "id": "from_blueprint",
+        "alias": "From blueprint",
+        "use_blueprint": {
+            "path": "test_event_service.yaml",
+            "input": {
+                "trigger_event": "blueprint_event",
+                "service_to_call": "test.automation",
+                # The blueprint does not use this input
+                "a_number": a_number,
+            },
+        },
+    }
+
+
+async def _reload(
+    hass: HomeAssistant, config: dict[str, Any], service_data: dict[str, Any]
+) -> None:
+    """Reload the automations with a new config."""
+    with patch(
+        "homeassistant.config.load_yaml_config_file",
+        return_value={DOMAIN: config},
+    ):
+        await hass.services.async_call(DOMAIN, "reload", service_data, blocking=True)
+
+
+@pytest.mark.parametrize(
+    "service_data", [{}, {"id": "from_blueprint"}], ids=["all", "single"]
+)
+async def test_reload_keeps_automation_when_unused_input_changes(
+    hass: HomeAssistant, service_data: dict[str, Any]
+) -> None:
+    """Test a reload keeps the automation and updates its blueprint inputs."""
+    assert await async_setup_component(
+        hass, DOMAIN, {DOMAIN: _blueprint_automation_config(5)}
+    )
+    component = hass.data[automation.DATA_COMPONENT]
+    entity = component.get_entity("automation.from_blueprint")
+    assert entity is not None
+
+    await _reload(hass, _blueprint_automation_config(6), service_data)
+
+    assert component.get_entity("automation.from_blueprint") is entity
+    assert entity.raw_blueprint_inputs == _blueprint_automation_config(6)
+
+
+@pytest.mark.parametrize(
+    "service_data", [{}, {"id": "from_blueprint"}], ids=["all", "single"]
+)
+async def test_reload_keeps_automation_when_taking_control(
+    hass: HomeAssistant, service_data: dict[str, Any]
+) -> None:
+    """Test taking control of a blueprint automation keeps the automation."""
+    assert await async_setup_component(
+        hass, DOMAIN, {DOMAIN: _blueprint_automation_config(5)}
+    )
+    component = hass.data[automation.DATA_COMPONENT]
+    entity = component.get_entity("automation.from_blueprint")
+    assert entity is not None
+    assert automation.automations_with_blueprint(hass, "test_event_service.yaml") == [
+        "automation.from_blueprint"
+    ]
+
+    # The expanded config, without the blueprint
+    await _reload(hass, dict(entity.raw_config), service_data)
+
+    assert component.get_entity("automation.from_blueprint") is entity
+    assert entity.raw_blueprint_inputs is None
+    assert automation.automations_with_blueprint(hass, "test_event_service.yaml") == []

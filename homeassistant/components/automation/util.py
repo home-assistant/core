@@ -217,6 +217,7 @@ async def async_process_config(
                 if automation_matches_config(automation, automation_config):
                     automation_matches.add(automation_idx)
                     config_matches.add(config_idx)
+                    _keep_automation(automation, automation_config)
                 continue
 
             for config_idx, automation_config in automation_configs_without_id:
@@ -226,6 +227,7 @@ async def async_process_config(
                 if automation_matches_config(automation, automation_config):
                     automation_matches.add(automation_idx)
                     config_matches.add(config_idx)
+                    _keep_automation(automation, automation_config)
                     # Only allow an automation to match at most once
                     break
 
@@ -283,15 +285,23 @@ async def _async_replace_automations(
 
 
 def _automation_matches_config(
-    automation: BaseAutomationEntity | None, config: AutomationEntityConfig | None
+    automation: BaseAutomationEntity, config: AutomationEntityConfig
 ) -> bool:
     """Return False if an automation's config has been changed."""
-    if not automation:
-        return False
-    if not config:
-        return False
     name = _automation_name(config)
     return automation.name == name and automation.raw_config == config.raw_config
+
+
+def _keep_automation(
+    automation: BaseAutomationEntity, config: AutomationEntityConfig
+) -> None:
+    """Update an automation that a reload keeps, because its config is the same.
+
+    The blueprint inputs can change without changing the expanded config, for
+    example when an input the blueprint does not use changes, or when the user
+    takes control of a blueprint automation.
+    """
+    automation.raw_blueprint_inputs = config.raw_blueprint_inputs
 
 
 async def async_process_single_config(
@@ -308,7 +318,12 @@ async def async_process_single_config(
     )
     automation_config = automation_configs[0] if automation_configs else None
 
-    if _automation_matches_config(automation, automation_config):
+    if (
+        automation
+        and automation_config
+        and _automation_matches_config(automation, automation_config)
+    ):
+        _keep_automation(automation, automation_config)
         return
 
     await _async_replace_automations(

@@ -121,6 +121,9 @@ async def async_process_config(
                 if script_matches_config(script, script_config):
                     script_matches.add(script_idx)
                     config_matches.add(config_idx)
+                    # The blueprint inputs can change without changing the
+                    # expanded config, like when an unused input changes
+                    script.raw_blueprint_inputs = script_config.raw_blueprint_inputs
                     # Only allow a script to match at most once
                     break
 

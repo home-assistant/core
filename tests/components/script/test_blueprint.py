@@ -159,3 +159,38 @@ async def test_confirmable_notification(
     assert turn_on_calls[0].data == {
         "entity_id": ["mount.doom"],
     }
+
+
+async def test_reload_keeps_script_when_taking_control(hass: HomeAssistant) -> None:
+    """Test taking control of a blueprint script keeps the script."""
+    assert await async_setup_component(
+        hass,
+        script.DOMAIN,
+        {
+            script.DOMAIN: {
+                "from_blueprint": {
+                    "use_blueprint": {
+                        "path": "test_service.yaml",
+                        "input": {"service_to_call": "test.script"},
+                    }
+                }
+            }
+        },
+    )
+    component = hass.data[script.DOMAIN]
+    entity = component.get_entity("script.from_blueprint")
+    assert entity is not None
+    assert script.scripts_with_blueprint(hass, "test_service.yaml") == [
+        "script.from_blueprint"
+    ]
+
+    # The expanded config, without the blueprint
+    with patch(
+        "homeassistant.config.load_yaml_config_file",
+        return_value={script.DOMAIN: {"from_blueprint": dict(entity.raw_config)}},
+    ):
+        await hass.services.async_call(script.DOMAIN, "reload", blocking=True)
+
+    assert component.get_entity("script.from_blueprint") is entity
+    assert entity.raw_blueprint_inputs is None
+    assert script.scripts_with_blueprint(hass, "test_service.yaml") == []
