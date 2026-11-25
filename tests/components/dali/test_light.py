@@ -1,137 +1,293 @@
 """Test the Tridonic DALI light platform."""
 
-from unittest.mock import AsyncMock, patch
+from collections.abc import Generator
+from unittest.mock import patch
 
 from dali.exceptions import TransmissionError
 from dali.gear.general import DAPC
 import pytest
-from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.dali.const import DOMAIN
 from homeassistant.components.dali.coordinator import (
-    DaliCoordinator,
     DaliGearData,
     _brightness_to_dali_level,
     _dali_level_to_brightness,
 )
-from homeassistant.components.dali.light import DaliLight, _is_light
-from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN, ColorMode
-from homeassistant.const import CONF_DEVICE
+from homeassistant.components.dali.light import _is_light
+from homeassistant.components.light import (
+    ATTR_BRIGHTNESS,
+    DOMAIN as LIGHT_DOMAIN,
+    SERVICE_TURN_OFF,
+    SERVICE_TURN_ON,
+)
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    CONF_DEVICE,
+    STATE_OFF,
+    STATE_ON,
+    STATE_UNKNOWN,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
 from .conftest import FakeDaliDriver
 
+# The fake bus has linear DT6 gear at address 0 (minimum level 86), a DT1
+# emergency gear at 1 and logarithmic DT6 gear at 2.
+LINEAR_GEAR = 0
+LOGARITHMIC_GEAR = 2
 
-async def test_light_commands_clamp_dali_mask(
-    hass: HomeAssistant, fake_dali_driver: FakeDaliDriver
-) -> None:
-    """Test light commands never send DALI's mask value as brightness."""
-    entry = MockConfigEntry(
+
+@pytest.fixture
+def mock_config_entry() -> MockConfigEntry:
+    """Return the DALI config entry."""
+    return MockConfigEntry(
         domain=DOMAIN,
+        entry_id="01JDALITESTENTRY0000000000",
         data={CONF_DEVICE: "/dev/ttyACM0"},
         title="USB-DALI2",
     )
-    coordinator = DaliCoordinator(hass, fake_dali_driver, entry)
-    coordinator.data = {
-        0: DaliGearData(level=128, min_level=86, linear_dimming=True, device_types=(6,))
-    }
-    light = DaliLight(coordinator, entry.entry_id, entry.title, 0, set())
-
-    with patch.object(coordinator, "async_update_gear", new_callable=AsyncMock):
-        await light.async_turn_on(brightness=255)
-    assert isinstance(fake_dali_driver.sent[-1], DAPC)
-    assert fake_dali_driver.sent[-1].power == 254
-
-    with patch.object(coordinator, "async_update_gear", new_callable=AsyncMock):
-        await light.async_turn_off()
-    assert isinstance(fake_dali_driver.sent[-1], DAPC)
-    assert fake_dali_driver.sent[-1].power == 0
 
 
-async def test_light_command_failure_raises_home_assistant_error(
-    hass: HomeAssistant, fake_dali_driver: FakeDaliDriver
-) -> None:
-    """Test DALI communication errors are surfaced as Home Assistant errors."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={CONF_DEVICE: "/dev/ttyACM0"},
-        title="USB-DALI2",
-    )
-    coordinator = DaliCoordinator(hass, fake_dali_driver, entry)
-    coordinator.data = {
-        0: DaliGearData(level=128, min_level=86, linear_dimming=True, device_types=(6,))
-    }
-    light = DaliLight(coordinator, entry.entry_id, entry.title, 0, set())
-
-    with (
-        patch.object(fake_dali_driver, "send", side_effect=OSError("serial failure")),
-        pytest.raises(HomeAssistantError),
+@pytest.fixture
+def mock_driver(fake_dali_driver: FakeDaliDriver) -> Generator[FakeDaliDriver]:
+    """Make the integration use the fake DALI driver."""
+    with patch(
+        "homeassistant.components.dali.DriverLubaRs232",
+        return_value=fake_dali_driver,
     ):
-        await light.async_turn_off()
+        yield fake_dali_driver
 
 
-async def test_light_properties(
-    hass: HomeAssistant, fake_dali_driver: FakeDaliDriver
+async def _setup(hass: HomeAssistant, entry: MockConfigEntry) -> None:
+    """Set up the DALI config entry."""
+    entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+
+def _entity_id(
+    entity_registry: er.EntityRegistry, entry: MockConfigEntry, address: int
+) -> str:
+    """Return the light entity ID of a short address."""
+    entity_id = entity_registry.async_get_entity_id(
+        LIGHT_DOMAIN, DOMAIN, f"{entry.entry_id}_{address}"
+    )
+    assert entity_id is not None
+    return entity_id
+
+
+def _sent_dapc(driver: FakeDaliDriver) -> list[DAPC]:
+    """Return the DAPC frames sent to the bus."""
+    return [command for command in driver.sent if isinstance(command, DAPC)]
+
+
+async def test_entities(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
+    mock_config_entry: MockConfigEntry,
+    mock_driver: FakeDaliDriver,
 ) -> None:
-    """Test basic light properties."""
-    entry = MockConfigEntry(domain=DOMAIN, data={CONF_DEVICE: "/dev/ttyACM0"})
-    coordinator = DaliCoordinator(hass, fake_dali_driver, entry)
-    coordinator.data = {0: DaliGearData(level=128, min_level=86, device_types=(6,))}
-    light = DaliLight(coordinator, entry.entry_id, entry.title, 0, set())
+    """Test only DT6 gear become light entities."""
+    await _setup(hass, mock_config_entry)
 
-    assert light.available
-    assert light.is_on
-    assert light.brightness == 128
-    assert light.color_mode is ColorMode.BRIGHTNESS
-    assert light.supported_color_modes == {ColorMode.BRIGHTNESS}
+    await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
 
-async def test_light_unknown_state(
-    hass: HomeAssistant, fake_dali_driver: FakeDaliDriver
+@pytest.mark.parametrize(
+    ("brightness", "expected_level"),
+    [
+        # Full brightness must never send DALI's 255 mask value.
+        (255, 254),
+        # A level below the gear's minimum is clamped up to it.
+        (1, 86),
+        (128, _brightness_to_dali_level(128, True, 86)),
+    ],
+)
+async def test_turn_on_with_brightness(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_config_entry: MockConfigEntry,
+    mock_driver: FakeDaliDriver,
+    brightness: int,
+    expected_level: int,
 ) -> None:
-    """Test a gear that does not report a level exposes an unknown state."""
-    entry = MockConfigEntry(domain=DOMAIN, data={CONF_DEVICE: "/dev/ttyACM0"})
-    coordinator = DaliCoordinator(hass, fake_dali_driver, entry)
-    coordinator.data = {0: DaliGearData(level=None, device_types=(6,))}
-    light = DaliLight(coordinator, entry.entry_id, entry.title, 0, set())
+    """Test turning on with a brightness sends the matching arc-power level."""
+    await _setup(hass, mock_config_entry)
+    entity_id = _entity_id(entity_registry, mock_config_entry, LINEAR_GEAR)
 
-    assert light.is_on is None
-    assert light.brightness is None
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: entity_id, ATTR_BRIGHTNESS: brightness},
+        blocking=True,
+    )
+
+    assert [command.power for command in _sent_dapc(mock_driver)] == [expected_level]
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == STATE_ON
+    assert state.attributes[ATTR_BRIGHTNESS] == _dali_level_to_brightness(
+        expected_level, True
+    )
 
 
-async def test_light_turn_on_clamps_to_max_level(
-    hass: HomeAssistant, fake_dali_driver: FakeDaliDriver
+async def test_turn_on_clamps_to_max_level(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_config_entry: MockConfigEntry,
+    mock_driver: FakeDaliDriver,
 ) -> None:
     """Test the commanded level never exceeds the gear's configured max level."""
-    entry = MockConfigEntry(domain=DOMAIN, data={CONF_DEVICE: "/dev/ttyACM0"})
-    coordinator = DaliCoordinator(hass, fake_dali_driver, entry)
-    coordinator.data = {
-        0: DaliGearData(level=0, min_level=1, max_level=200, device_types=(6,))
-    }
-    light = DaliLight(coordinator, entry.entry_id, entry.title, 0, set())
+    mock_driver.max_levels[LINEAR_GEAR] = 200
+    await _setup(hass, mock_config_entry)
+    entity_id = _entity_id(entity_registry, mock_config_entry, LINEAR_GEAR)
 
-    with patch.object(coordinator, "async_update_gear", new_callable=AsyncMock):
-        await light.async_turn_on(brightness=255)
-    assert isinstance(fake_dali_driver.sent[-1], DAPC)
-    assert fake_dali_driver.sent[-1].power == 200
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: entity_id, ATTR_BRIGHTNESS: 255},
+        blocking=True,
+    )
+
+    assert [command.power for command in _sent_dapc(mock_driver)] == [200]
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.attributes[ATTR_BRIGHTNESS] == _dali_level_to_brightness(200, True)
 
 
-async def test_light_turn_on_transmission_error_raises_home_assistant_error(
-    hass: HomeAssistant, fake_dali_driver: FakeDaliDriver
+async def test_turn_on_already_on_keeps_level(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_config_entry: MockConfigEntry,
+    mock_driver: FakeDaliDriver,
 ) -> None:
-    """Test a TransmissionError on turn-on is surfaced as a HomeAssistantError."""
-    entry = MockConfigEntry(domain=DOMAIN, data={CONF_DEVICE: "/dev/ttyACM0"})
-    coordinator = DaliCoordinator(hass, fake_dali_driver, entry)
-    coordinator.data = {0: DaliGearData(level=0, min_level=1, device_types=(6,))}
-    light = DaliLight(coordinator, entry.entry_id, entry.title, 0, set())
+    """Test turning on an already-on light without a brightness sends nothing.
+
+    A raw logarithmic level of 50 reads back as brightness 1, which maps back to
+    raw level 1; re-sending it would dim the light.
+    """
+    mock_driver.levels[LOGARITHMIC_GEAR] = 50
+    await _setup(hass, mock_config_entry)
+    entity_id = _entity_id(entity_registry, mock_config_entry, LOGARITHMIC_GEAR)
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.attributes[ATTR_BRIGHTNESS] == 1
+
+    await hass.services.async_call(
+        LIGHT_DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: entity_id}, blocking=True
+    )
+
+    assert _sent_dapc(mock_driver) == []
+    assert mock_driver.levels[LOGARITHMIC_GEAR] == 50
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == STATE_ON
+    assert state.attributes[ATTR_BRIGHTNESS] == 1
+
+
+async def test_turn_on_from_off_goes_full(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_config_entry: MockConfigEntry,
+    mock_driver: FakeDaliDriver,
+) -> None:
+    """Test turning on an off light without a brightness commands full output."""
+    mock_driver.levels[LOGARITHMIC_GEAR] = 0
+    await _setup(hass, mock_config_entry)
+    entity_id = _entity_id(entity_registry, mock_config_entry, LOGARITHMIC_GEAR)
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == STATE_OFF
+
+    await hass.services.async_call(
+        LIGHT_DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: entity_id}, blocking=True
+    )
+
+    assert [command.power for command in _sent_dapc(mock_driver)] == [254]
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == STATE_ON
+    assert state.attributes[ATTR_BRIGHTNESS] == 255
+
+
+async def test_turn_off(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_config_entry: MockConfigEntry,
+    mock_driver: FakeDaliDriver,
+) -> None:
+    """Test turning off sends arc-power level 0."""
+    await _setup(hass, mock_config_entry)
+    entity_id = _entity_id(entity_registry, mock_config_entry, LINEAR_GEAR)
+
+    await hass.services.async_call(
+        LIGHT_DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: entity_id}, blocking=True
+    )
+
+    assert [command.power for command in _sent_dapc(mock_driver)] == [0]
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == STATE_OFF
+
+
+async def test_unknown_level(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_config_entry: MockConfigEntry,
+    mock_driver: FakeDaliDriver,
+) -> None:
+    """Test a gear answering with the mask value exposes an unknown state."""
+    mock_driver.levels[LINEAR_GEAR] = 255
+    await _setup(hass, mock_config_entry)
+
+    state = hass.states.get(_entity_id(entity_registry, mock_config_entry, LINEAR_GEAR))
+    assert state is not None
+    assert state.state == STATE_UNKNOWN
+    assert state.attributes.get(ATTR_BRIGHTNESS) is None
+
+
+@pytest.mark.parametrize(
+    ("service", "service_data"),
+    [
+        (SERVICE_TURN_ON, {ATTR_BRIGHTNESS: 255}),
+        (SERVICE_TURN_OFF, {}),
+    ],
+)
+@pytest.mark.parametrize(
+    "error",
+    [OSError("serial failure"), TimeoutError, TransmissionError(1)],
+    ids=["os_error", "timeout", "transmission_error"],
+)
+async def test_command_failure_raises_home_assistant_error(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_config_entry: MockConfigEntry,
+    mock_driver: FakeDaliDriver,
+    service: str,
+    service_data: dict[str, int],
+    error: Exception,
+) -> None:
+    """Test DALI communication errors are surfaced as Home Assistant errors."""
+    await _setup(hass, mock_config_entry)
+    entity_id = _entity_id(entity_registry, mock_config_entry, LINEAR_GEAR)
 
     with (
-        patch.object(fake_dali_driver, "send", side_effect=TransmissionError(1)),
-        pytest.raises(HomeAssistantError),
+        patch.object(mock_driver, "send", side_effect=error),
+        pytest.raises(HomeAssistantError) as exc_info,
     ):
-        await light.async_turn_on(brightness=255)
+        await hass.services.async_call(
+            LIGHT_DOMAIN,
+            service,
+            {ATTR_ENTITY_ID: entity_id, **service_data},
+            blocking=True,
+        )
+
+    assert exc_info.value.translation_key == "communication_error"
 
 
 def test_dali_level_to_brightness_never_rounds_on_level_to_zero() -> None:
@@ -155,32 +311,6 @@ def test_dali_level_to_brightness_never_rounds_on_level_to_zero() -> None:
 def test_is_light_only_matches_led_gear(gear: DaliGearData, expected: bool) -> None:
     """Test only dimmable (DT6) gear become lights."""
     assert _is_light(gear) is expected
-
-
-async def test_light_setup_adds_new_entities(
-    hass: HomeAssistant,
-    entity_registry: er.EntityRegistry,
-    fake_dali_driver: FakeDaliDriver,
-) -> None:
-    """Test the light platform creates entities and registers a listener."""
-    entry = MockConfigEntry(domain=DOMAIN, data={CONF_DEVICE: "/dev/ttyACM0"})
-    entry.add_to_hass(hass)
-
-    with patch(
-        "homeassistant.components.dali.DriverLubaRs232",
-        return_value=fake_dali_driver,
-    ):
-        assert await hass.config_entries.async_setup(entry.entry_id)
-
-    entity_entries = [
-        entity
-        for entity in er.async_entries_for_config_entry(entity_registry, entry.entry_id)
-        if entity.domain == LIGHT_DOMAIN
-    ]
-    assert len(entity_entries) == 2
-    assert {
-        entity.unique_id.rsplit("_", maxsplit=1)[-1] for entity in entity_entries
-    } == {"0", "2"}
 
 
 @pytest.mark.parametrize("min_level", [1, 86, 96, 128, 200])
@@ -216,39 +346,3 @@ def test_brightness_to_level_snaps_to_closest_readback(
                 _dali_level_to_brightness(other, linear_dimming) - brightness
             )
             assert chosen_error <= other_error
-
-
-async def test_light_turn_on_without_brightness_keeps_level(
-    hass: HomeAssistant, fake_dali_driver: FakeDaliDriver
-) -> None:
-    """Test turning on without a brightness keeps the current dimmed level."""
-    entry = MockConfigEntry(domain=DOMAIN, data={CONF_DEVICE: "/dev/ttyACM0"})
-    coordinator = DaliCoordinator(hass, fake_dali_driver, entry)
-    coordinator.data = {
-        0: DaliGearData(level=128, min_level=1, linear_dimming=True, device_types=(6,))
-    }
-    light = DaliLight(coordinator, entry.entry_id, entry.title, 0, set())
-
-    with patch.object(coordinator, "async_update_gear", new_callable=AsyncMock):
-        await light.async_turn_on()
-
-    assert isinstance(fake_dali_driver.sent[-1], DAPC)
-    assert fake_dali_driver.sent[-1].power == _brightness_to_dali_level(128, True, 1)
-    # Not the full-output level a missing brightness used to command.
-    assert fake_dali_driver.sent[-1].power != _brightness_to_dali_level(255, True, 1)
-
-
-async def test_light_turn_on_failure_raises_home_assistant_error(
-    hass: HomeAssistant, fake_dali_driver: FakeDaliDriver
-) -> None:
-    """Test turn-on communication errors are surfaced."""
-    entry = MockConfigEntry(domain=DOMAIN, data={CONF_DEVICE: "/dev/ttyACM0"})
-    coordinator = DaliCoordinator(hass, fake_dali_driver, entry)
-    coordinator.data = {0: DaliGearData(level=128, device_types=(6,))}
-    light = DaliLight(coordinator, entry.entry_id, entry.title, 0, set())
-
-    with (
-        patch.object(fake_dali_driver, "send", side_effect=OSError("offline")),
-        pytest.raises(HomeAssistantError),
-    ):
-        await light.async_turn_on()

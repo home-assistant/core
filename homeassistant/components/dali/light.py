@@ -6,7 +6,7 @@ from dali.address import GearShort
 from dali.exceptions import DALISequenceError, ResponseError, TransmissionError
 from dali.gear.general import DAPC
 
-from homeassistant.components.light import ColorMode, LightEntity
+from homeassistant.components.light import ATTR_BRIGHTNESS, ColorMode, LightEntity
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -103,12 +103,13 @@ class DaliLight(CoordinatorEntity[DaliCoordinator], LightEntity):
     @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the light on."""
+        gear_data = self.coordinator.data[self._address]
+        if ATTR_BRIGHTNESS not in kwargs and gear_data.level:
+            # Already on: re-sending the reported brightness would round-trip a
+            # raw level through the coarser 1-255 axis and could dim the light.
+            return
         try:
-            gear_data = self.coordinator.data[self._address]
-            # Turning on without a brightness keeps the current level rather than
-            # jumping an already-dimmed light to full output.
-            default = gear_data.level or 255
-            brightness = max(1, min(kwargs.get("brightness", default), 255))
+            brightness = max(1, min(kwargs.get(ATTR_BRIGHTNESS, 255), 255))
             level = _brightness_to_dali_level(
                 brightness, gear_data.linear_dimming, gear_data.min_level
             )

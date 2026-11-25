@@ -15,7 +15,7 @@ from homeassistant.components.usb import (
     usb_unique_id_from_service_info,
 )
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
-from homeassistant.const import CONF_DEVICE, CONF_NAME
+from homeassistant.const import CONF_DEVICE
 from homeassistant.helpers.selector import SerialPortSelector
 from homeassistant.helpers.service_info.usb import UsbServiceInfo
 
@@ -124,7 +124,7 @@ class DaliConfigFlow(ConfigFlow, domain=DOMAIN):
         )
         self._abort_if_unique_id_configured(updates={CONF_DEVICE: self._device})
         self.context["title_placeholders"] = {
-            CONF_NAME: human_readable_device_name(
+            "name": human_readable_device_name(
                 discovery_info.device,
                 discovery_info.serial_number,
                 discovery_info.manufacturer,
@@ -144,7 +144,7 @@ class DaliConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Confirm the discovered USB-DALI2 interface."""
         if user_input is not None:
-            self._title = self.context["title_placeholders"][CONF_NAME]
+            self._title = self.context["title_placeholders"]["name"]
             return await self.async_step_bus_power()
         return self.async_show_form(step_id="usb_confirm")
 

@@ -374,9 +374,9 @@ async def test_device_info_for_unknown_address(
 
     device_info = coordinator.device_info("entry", "USB-DALI2", 5)
 
-    assert device_info["name"] == "USB-DALI2/5 (gear)"
-    assert device_info["model"] == "DALI control gear (address 5)"
-    assert device_info["serial_number"] is None
+    assert device_info.name == "USB-DALI2/5 (gear)"
+    assert device_info.model == "DALI control gear (address 5)"
+    assert device_info.serial_number is None
 
 
 async def test_device_info_uses_gtin_as_model_id(
@@ -387,8 +387,8 @@ async def test_device_info_uses_gtin_as_model_id(
 
     device_info = coordinator.device_info("entry", "USB-DALI2", 5)
 
-    assert device_info["model"] == "DALI control gear (address 5)"
-    assert device_info["model_id"] == "1234567654321"
+    assert device_info.model == "DALI control gear (address 5)"
+    assert device_info.model_id == "1234567654321"
 
 
 async def test_device_info_reports_the_serial_number(
@@ -399,7 +399,7 @@ async def test_device_info_reports_the_serial_number(
 
     device_info = coordinator.device_info("entry", "USB-DALI2", 5)
 
-    assert device_info["serial_number"] == "080706"
+    assert device_info.serial_number == "080706"
 
 
 async def test_device_info_model_exposes_gear_device_type(
@@ -410,7 +410,7 @@ async def test_device_info_model_exposes_gear_device_type(
 
     device_info = coordinator.device_info("entry", "USB-DALI2", 5)
 
-    assert device_info["model"] == (
+    assert device_info.model == (
         "DALI control gear – LED module (DT6, IEC 62386-207) (address 5)"
     )
 
@@ -429,4 +429,4 @@ async def test_device_info_uses_short_usb_label(
 
     device_info = coordinator.device_info(entry.entry_id, entry.title, 0)
 
-    assert device_info["name"] == "DALI-2_USB_PS_000000024994/0 (gear)"
+    assert device_info.name == "DALI-2_USB_PS_000000024994/0 (gear)"

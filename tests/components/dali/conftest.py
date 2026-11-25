@@ -6,6 +6,7 @@ from unittest.mock import AsyncMock, patch
 
 from dali.command import Command
 from dali.gear.general import (
+    DAPC,
     DTR0,
     QueryActualLevel,
     QueryControlGearPresent,
@@ -69,6 +70,10 @@ class FakeDaliDriver:
             self._gear_dtr0 = command.param
             return SimpleNamespace(value=None)
         address = command.destination.address
+        if isinstance(command, DAPC):
+            # Model the gear settling at the commanded arc-power level.
+            self.levels[address] = command.power
+            return SimpleNamespace(value=None)
         if isinstance(command, QueryControlGearPresent):
             return self._gear_present_response(address)
         if isinstance(command, QueryActualLevel):
