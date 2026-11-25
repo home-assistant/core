@@ -100,7 +100,7 @@ rules:
     status: exempt
     comment: Google calendar does not have devices
   docs-troubleshooting: todo
-  diagnostics: todo
+  diagnostics: done
   docs-use-cases: todo
 
   # Platinum

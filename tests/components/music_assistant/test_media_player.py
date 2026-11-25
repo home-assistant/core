@@ -1589,7 +1589,7 @@ async def test_media_player_get_queue_action_items(
         DOMAIN,
         MusicAssistantService.GET_QUEUE,
         {
-            ATTR_ENTITY_ID: entity_id,
+            TargetKey.ENTITY_ID: entity_id,
             MusicAssistantServiceArgument.LIMIT: 2,
             MusicAssistantServiceArgument.OFFSET: 25,
         },
@@ -1651,7 +1651,7 @@ async def test_media_player_get_queue_action_user(
         DOMAIN,
         MusicAssistantService.GET_QUEUE,
         {
-            ATTR_ENTITY_ID: "media_player.test_group_player_1",
+            TargetKey.ENTITY_ID: "media_player.test_group_player_1",
             MusicAssistantServiceArgument.LIMIT: 5,
         }
         | extra_data,
@@ -1679,7 +1679,7 @@ async def test_media_player_get_queue_action_older_server(
             DOMAIN,
             MusicAssistantService.GET_QUEUE,
             {
-                ATTR_ENTITY_ID: "media_player.test_group_player_1",
+                TargetKey.ENTITY_ID: "media_player.test_group_player_1",
                 MusicAssistantServiceArgument.LIMIT: 5,
                 MusicAssistantServiceArgument.USERNAME: "john",
             },
@@ -1700,7 +1700,7 @@ async def test_media_player_get_queue_action_no_active_queue(
         await hass.services.async_call(
             DOMAIN,
             MusicAssistantService.GET_QUEUE,
-            {ATTR_ENTITY_ID: "media_player.test_group_player_1"},
+            {TargetKey.ENTITY_ID: "media_player.test_group_player_1"},
             blocking=True,
             return_response=True,
         )
@@ -1718,7 +1718,7 @@ async def test_media_player_get_queue_action_offset_without_limit(
             DOMAIN,
             MusicAssistantService.GET_QUEUE,
             {
-                ATTR_ENTITY_ID: "media_player.test_group_player_1",
+                TargetKey.ENTITY_ID: "media_player.test_group_player_1",
                 MusicAssistantServiceArgument.OFFSET: 10,
             },
             blocking=True,

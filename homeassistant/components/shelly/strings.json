@@ -75,7 +75,7 @@
       },
       "user": {
         "data": {
-          "device": "Device"
+          "device": "[%key:common::config_flow::data::device%]"
         },
         "data_description": {
           "device": "Select a discovered device or enter an address manually."
@@ -247,6 +247,9 @@
       "mute_alarm": {
         "name": "Mute alarm"
       },
+      "next_effect": {
+        "name": "Next effect"
+      },
       "open": {
         "name": "Open"
       },
@@ -344,6 +347,9 @@
             }
           }
         }
+      },
+      "ledstrip_background": {
+        "name": "Effect background"
       }
     },
     "number": {
@@ -870,6 +876,9 @@
       },
       "lora_firmware": {
         "name": "LoRa add-on firmware"
+      },
+      "release_notes_messages": {
+        "multi_step_update": "This update reorganizes the device memory and can run in two steps. The device installs the update and restarts, and may come back still reporting the previous firmware version. About a minute and a half later, it downloads the update again and restarts once more on the new version. Do not restart, remove power from, or otherwise interrupt the device until it reports the new firmware version. If the device comes back on the previous version and the second step does not start within a few minutes, start the update again."
       }
     },
     "valve": {
@@ -924,6 +933,9 @@
     "kvs_not_supported": {
       "message": "{device} does not support KVS"
     },
+    "ledstrip_effect_no_color": {
+      "message": "Cannot set a color for {entity} because the {effect} effect does not use one"
+    },
     "ota_update_connection_error": {
       "message": "Device communication error occurred while triggering OTA update for {device}"
     },
@@ -935,6 +947,12 @@
     },
     "rpc_call_error": {
       "message": "RPC call error occurred for {device}"
+    },
+    "storage_unavailable": {
+      "message": "Storage unavailable for {device}"
+    },
+    "unexpected_identifier": {
+      "message": "Unexpected identifier: {identifier}"
     },
     "unsupported_media_content_type": {
       "message": "Unsupported media content type for Shelly device: {media_content_type}"

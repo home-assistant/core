@@ -1,6 +1,7 @@
 """DataUpdateCoordinator for the BLUETTI Modbus integration."""
 
 from dataclasses import dataclass
+from datetime import timedelta
 import logging
 from typing import Any, override
 
@@ -12,7 +13,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import DOMAIN, SCAN_INTERVAL
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -29,7 +30,10 @@ class BluettiModbusDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         hass: HomeAssistant,
         entry: BluettiModbusConfigEntry,
         device: Balco260,
-        pack_summary: Balco260,
+        *,
+        name: str,
+        update_interval: timedelta,
+        pack_summary: Balco260 | None = None,
     ) -> None:
         """Initialize the coordinator."""
         self.device = device
@@ -38,8 +42,8 @@ class BluettiModbusDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             hass,
             _LOGGER,
             config_entry=entry,
-            name=f"{entry.title} readings",
-            update_interval=SCAN_INTERVAL,
+            name=f"{entry.title} {name}",
+            update_interval=update_interval,
         )
 
     @override
@@ -49,12 +53,12 @@ class BluettiModbusDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         # busy after its retry, or a failed teardown of the link, through unwrapped.
         try:
             await self.device.async_update_with_retry()
-            await self._pack_summary.async_update_with_retry()
+            if self._pack_summary is not None:
+                await self._pack_summary.async_update_with_retry()
         except ModbusError as err:
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="communication_error",
-                translation_placeholders={"error": str(err)},
             ) from err
 
         values = self.device.values
@@ -65,6 +69,8 @@ class BluettiModbusDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 translation_domain=DOMAIN,
                 translation_key="wrong_device",
             )
+        if self._pack_summary is None:
+            return values
         return values | self._pack_summary.values
 
 
@@ -73,6 +79,7 @@ class BluettiModbusRuntimeData:
     """Runtime data for a BLUETTI Modbus config entry."""
 
     coordinator: BluettiModbusDataUpdateCoordinator
+    settings: BluettiModbusDataUpdateCoordinator
     device_info: DeviceInfo
     device_id: str
     serial: str

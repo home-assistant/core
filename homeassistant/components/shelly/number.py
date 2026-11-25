@@ -1,12 +1,13 @@
 """Number for Shelly."""
 
-from collections.abc import Callable
+from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any, Final, cast, override
 
 from aioshelly.block_device import Block
 from aioshelly.const import RPC_GENERATIONS
 from aioshelly.exceptions import DeviceConnectionError, InvalidAuthError
+from aioshelly.rpc_device import RpcDevice
 from aioshelly.rpc_device.models import ShellyWallDisplayUiBrightness
 
 from homeassistant.components.number import (
@@ -52,6 +53,7 @@ from .utils import (
     get_device_entry_gen,
     get_virtual_component_ids,
     get_virtual_component_unit,
+    get_virtual_component_view,
     is_rpc_ledstrip_control_available,
     is_rpc_wall_display_brightness_supported,
     is_view_for_platform,
@@ -73,8 +75,7 @@ class RpcNumberDescription(RpcEntityDescription, NumberEntityDescription):
     min_fn: Callable[[dict], float] | None = None
     step_fn: Callable[[dict], float] | None = None
     mode_fn: Callable[[dict], NumberMode] | None = None
-    slot: str | None = None
-    method: str
+    method: Callable[[RpcDevice, int, float], Awaitable[None]]
 
 
 class RpcNumber(ShellyRpcAttributeEntity, NumberEntity):
@@ -82,7 +83,7 @@ class RpcNumber(ShellyRpcAttributeEntity, NumberEntity):
 
     entity_description: RpcNumberDescription
     attribute_value: float | None
-    _id: int | None
+    _id: int
 
     def __init__(
         self,
@@ -117,29 +118,7 @@ class RpcNumber(ShellyRpcAttributeEntity, NumberEntity):
     @override
     async def async_set_native_value(self, value: float) -> None:
         """Change the value."""
-        method = getattr(self.coordinator.device, self.entity_description.method)
-
-        if TYPE_CHECKING:
-            assert method is not None
-
-        await method(self._id, value)
-
-
-class RpcCuryIntensityNumber(RpcNumber):
-    """Represent a RPC Cury Intensity entity."""
-
-    @rpc_call
-    @override
-    async def async_set_native_value(self, value: float) -> None:
-        """Change the value."""
-        method = getattr(self.coordinator.device, self.entity_description.method)
-
-        if TYPE_CHECKING:
-            assert method is not None
-
-        await method(
-            self._id, slot=self.entity_description.slot, intensity=round(value)
-        )
+        await self.entity_description.method(self.coordinator.device, self._id, value)
 
 
 class RpcLedStripNumber(RpcNumber):
@@ -157,17 +136,6 @@ class RpcLedStripNumber(RpcNumber):
             self.status,
             self.entity_description.sub_key,
         )
-
-    @rpc_call
-    @override
-    async def async_set_native_value(self, value: float) -> None:
-        """Change the value."""
-        method = getattr(self.coordinator.device, self.entity_description.method)
-
-        if TYPE_CHECKING:
-            assert method is not None
-
-        await method(self._id, {self.entity_description.sub_key: round(value)})
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -290,7 +258,9 @@ RPC_NUMBERS: Final = (
         entity_category=EntityCategory.CONFIG,
         device_class=NumberDeviceClass.TEMPERATURE,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
-        method="blu_trv_set_external_temperature",
+        method=lambda device, id_, value: device.blu_trv_set_external_temperature(
+            id_, value
+        ),
         entity_class=RpcBluTrvExtTempNumber,
     ),
     RpcNumberDescription(
@@ -303,11 +273,11 @@ RPC_NUMBERS: Final = (
         max_fn=lambda config: config["max"],
         min_fn=lambda config: config["min"],
         mode_fn=lambda config: VIRTUAL_NUMBER_MODE_MAP.get(
-            config["meta"]["ui"]["view"], NumberMode.BOX
+            get_virtual_component_view(config), NumberMode.BOX
         ),
         step_fn=lambda config: config["meta"]["ui"].get("step"),
         unit=get_virtual_component_unit,
-        method="number_set",
+        method=lambda device, id_, value: device.number_set(id_, value),
         role=ROLE_GENERIC,
     ),
     RpcNumberDescription(
@@ -321,7 +291,7 @@ RPC_NUMBERS: Final = (
         mode_fn=lambda _: NumberMode.SLIDER,
         step_fn=lambda config: config["meta"]["ui"].get("step"),
         unit=get_virtual_component_unit,
-        method="number_set",
+        method=lambda device, id_, value: device.number_set(id_, value),
         role="current_limit",
     ),
     RpcNumberDescription(
@@ -335,7 +305,7 @@ RPC_NUMBERS: Final = (
         mode_fn=lambda _: NumberMode.SLIDER,
         step_fn=lambda config: config["meta"]["ui"].get("step"),
         unit=get_virtual_component_unit,
-        method="number_set",
+        method=lambda device, id_, value: device.number_set(id_, value),
         role="position",
         models={MODEL_FRANKEVER_WATER_VALVE},
     ),
@@ -351,7 +321,7 @@ RPC_NUMBERS: Final = (
         mode_fn=lambda _: NumberMode.SLIDER,
         step_fn=lambda config: config["meta"]["ui"].get("step"),
         unit=get_virtual_component_unit,
-        method="number_set",
+        method=lambda device, id_, value: device.number_set(id_, value),
         role="target_humidity",
         models={MODEL_LINKEDGO_ST802_THERMOSTAT, MODEL_LINKEDGO_ST1820_THERMOSTAT},
     ),
@@ -367,7 +337,7 @@ RPC_NUMBERS: Final = (
         mode_fn=lambda _: NumberMode.SLIDER,
         step_fn=lambda config: config["meta"]["ui"].get("step"),
         unit=get_virtual_component_unit,
-        method="number_set",
+        method=lambda device, id_, value: device.number_set(id_, value),
         role="target_temperature",
         models={MODEL_LINKEDGO_ST802_THERMOSTAT, MODEL_LINKEDGO_ST1820_THERMOSTAT},
     ),
@@ -381,7 +351,7 @@ RPC_NUMBERS: Final = (
         native_step=1,
         mode=NumberMode.SLIDER,
         native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
-        method="blu_trv_set_valve_position",
+        method=lambda device, id_, value: device.blu_trv_set_valve_position(id_, value),
         removal_condition=lambda config, _, key: (
             config[key].get("enable", True) is True
         ),
@@ -398,13 +368,13 @@ RPC_NUMBERS: Final = (
         native_step=1,
         mode=NumberMode.SLIDER,
         native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
-        method="cury_set",
-        slot="left",
+        method=lambda device, id_, value: device.cury_set(
+            id_, slot="left", intensity=round(value)
+        ),
         available=lambda status: (
             (left := status["left"]) is not None
             and left.get("vial", {}).get("level", -1) != -1
         ),
-        entity_class=RpcCuryIntensityNumber,
     ),
     RpcNumberDescription(
         key="right_slot_intensity",
@@ -417,13 +387,13 @@ RPC_NUMBERS: Final = (
         native_step=1,
         mode=NumberMode.SLIDER,
         native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
-        method="cury_set",
-        slot="right",
+        method=lambda device, id_, value: device.cury_set(
+            id_, slot="right", intensity=round(value)
+        ),
         available=lambda status: (
             (right := status["right"]) is not None
             and right.get("vial", {}).get("level", -1) != -1
         ),
-        entity_class=RpcCuryIntensityNumber,
     ),
     RpcNumberDescription(
         key="ledstrip_speed",
@@ -435,7 +405,9 @@ RPC_NUMBERS: Final = (
         native_step=1,
         mode=NumberMode.SLIDER,
         native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
-        method="ledstrip_set",
+        method=lambda device, id_, value: device.ledstrip_set(
+            id_, {"speed": round(value)}
+        ),
         supported=lambda _: True,
         entity_class=RpcLedStripNumber,
     ),
@@ -449,7 +421,9 @@ RPC_NUMBERS: Final = (
         native_step=1,
         mode=NumberMode.SLIDER,
         native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
-        method="ledstrip_set",
+        method=lambda device, id_, value: device.ledstrip_set(
+            id_, {"intensity": round(value)}
+        ),
         supported=lambda _: True,
         entity_class=RpcLedStripNumber,
     ),

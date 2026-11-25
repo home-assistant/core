@@ -2,10 +2,7 @@
 
 import pytest
 
-from homeassistant.components.cover import (
-    ATTR_CURRENT_POSITION,
-    ATTR_CURRENT_TILT_POSITION,
-)
+from homeassistant.components.cover import CoverEntityStateAttribute
 from homeassistant.components.cover.significant_change import (
     async_check_significant_change,
 )
@@ -22,32 +19,56 @@ async def test_significant_state_change() -> None:
     ("old_attrs", "new_attrs", "expected_result"),
     [
         # float attributes
-        ({ATTR_CURRENT_POSITION: 60.0}, {ATTR_CURRENT_POSITION: 61.0}, True),
-        ({ATTR_CURRENT_POSITION: 60.0}, {ATTR_CURRENT_POSITION: 60.9}, False),
-        ({ATTR_CURRENT_POSITION: "invalid"}, {ATTR_CURRENT_POSITION: 60.0}, True),
-        ({ATTR_CURRENT_POSITION: 60.0}, {ATTR_CURRENT_POSITION: "invalid"}, False),
-        ({ATTR_CURRENT_TILT_POSITION: 60.0}, {ATTR_CURRENT_TILT_POSITION: 61.0}, True),
-        ({ATTR_CURRENT_TILT_POSITION: 60.0}, {ATTR_CURRENT_TILT_POSITION: 60.9}, False),
+        (
+            {CoverEntityStateAttribute.CURRENT_POSITION: 60.0},
+            {CoverEntityStateAttribute.CURRENT_POSITION: 61.0},
+            True,
+        ),
+        (
+            {CoverEntityStateAttribute.CURRENT_POSITION: 60.0},
+            {CoverEntityStateAttribute.CURRENT_POSITION: 60.9},
+            False,
+        ),
+        (
+            {CoverEntityStateAttribute.CURRENT_POSITION: "invalid"},
+            {CoverEntityStateAttribute.CURRENT_POSITION: 60.0},
+            True,
+        ),
+        (
+            {CoverEntityStateAttribute.CURRENT_POSITION: 60.0},
+            {CoverEntityStateAttribute.CURRENT_POSITION: "invalid"},
+            False,
+        ),
+        (
+            {CoverEntityStateAttribute.CURRENT_TILT_POSITION: 60.0},
+            {CoverEntityStateAttribute.CURRENT_TILT_POSITION: 61.0},
+            True,
+        ),
+        (
+            {CoverEntityStateAttribute.CURRENT_TILT_POSITION: 60.0},
+            {CoverEntityStateAttribute.CURRENT_TILT_POSITION: 60.9},
+            False,
+        ),
         # multiple attributes
         (
             {
-                ATTR_CURRENT_POSITION: 60,
-                ATTR_CURRENT_TILT_POSITION: 60,
+                CoverEntityStateAttribute.CURRENT_POSITION: 60,
+                CoverEntityStateAttribute.CURRENT_TILT_POSITION: 60,
             },
             {
-                ATTR_CURRENT_POSITION: 60,
-                ATTR_CURRENT_TILT_POSITION: 61,
+                CoverEntityStateAttribute.CURRENT_POSITION: 60,
+                CoverEntityStateAttribute.CURRENT_TILT_POSITION: 61,
             },
             True,
         ),
         (
             {
-                ATTR_CURRENT_POSITION: 60,
-                ATTR_CURRENT_TILT_POSITION: 59.1,
+                CoverEntityStateAttribute.CURRENT_POSITION: 60,
+                CoverEntityStateAttribute.CURRENT_TILT_POSITION: 59.1,
             },
             {
-                ATTR_CURRENT_POSITION: 60,
-                ATTR_CURRENT_TILT_POSITION: 60.9,
+                CoverEntityStateAttribute.CURRENT_POSITION: 60,
+                CoverEntityStateAttribute.CURRENT_TILT_POSITION: 60.9,
             },
             True,
         ),

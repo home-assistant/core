@@ -344,6 +344,16 @@ class WebRTCProvider(CameraWebRTCProvider):
         except HomeAssistantError as err:
             send_message(WebRTCError("go2rtc_webrtc_offer_failed", str(err)))
             return
+        except Go2RtcClientError:
+            # Not logged, as the client error can contain the stream source
+            # with its credentials
+            send_message(
+                WebRTCError(
+                    "go2rtc_webrtc_offer_failed",
+                    "Unable to update the stream in go2rtc",
+                )
+            )
+            return
 
         ws_client = Go2RtcWsClient(
             self._session, self._url, source=get_camera_identifier(camera)

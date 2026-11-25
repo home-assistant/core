@@ -1,5 +1,6 @@
 """Test Matter sensors."""
 
+from typing import Any
 from unittest.mock import MagicMock
 
 from chip.clusters import Objects as clusters
@@ -1353,3 +1354,136 @@ async def test_general_diagnostics_sensors_disabled_by_default(
         entry = entity_registry.async_get(entity_id)
         assert entry, f"Expected {entity_id} to be registered"
         assert entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
+
+
+@pytest.mark.parametrize("node_fixture", ["mock_electrical_utility_meter"])
+async def test_commodity_price_sensor(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """Test Commodity Price sensor."""
+
+    entity_id = "sensor.mock_commodity_price_current_price"
+
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == "0.25"
+    assert state.attributes["unit_of_measurement"] == "EUR/kWh"
+
+    # Update CurrentPrice
+    set_node_attribute(
+        matter_node,
+        3,
+        149,
+        2,
+        {
+            0: 784976400,
+            1: 784980000,
+            2: 32,
+        },
+    )
+
+    await trigger_subscription_callback(hass, matter_client)
+
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == "0.32"
+    assert state.attributes["unit_of_measurement"] == "EUR/kWh"
+
+    # Open-ended period: periodEnd is None
+    set_node_attribute(
+        matter_node,
+        3,
+        149,
+        2,
+        {
+            0: 784976400,
+            1: None,
+            2: 25,
+        },
+    )
+
+    await trigger_subscription_callback(hass, matter_client)
+
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == "0.25"
+    assert state.attributes["unit_of_measurement"] == "EUR/kWh"
+
+    # Null CurrentPrice: the price is unknown
+    set_node_attribute(matter_node, 3, 149, 2, None)
+
+    await trigger_subscription_callback(hass, matter_client)
+
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == STATE_UNKNOWN
+    assert state.attributes["unit_of_measurement"] == "EUR/kWh"
+
+    # CurrentPrice without Price: the price is unknown
+    set_node_attribute(
+        matter_node,
+        3,
+        149,
+        2,
+        {
+            0: 784976400,
+            1: 784980000,
+        },
+    )
+
+    await trigger_subscription_callback(hass, matter_client)
+
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == STATE_UNKNOWN
+
+
+@pytest.mark.parametrize("node_fixture", ["mock_electrical_utility_meter"])
+@pytest.mark.parametrize(
+    ("attribute_id", "value", "expected_state", "expected_unit"),
+    [
+        pytest.param(0, 1, "0.25", "EUR/kVAh", id="kvah"),
+        pytest.param(1, {0: 752, 1: 2}, "0.25", "SEK/kWh", id="known_currency"),
+        pytest.param(1, {0: 999, 1: 2}, "0.25", None, id="unknown_currency"),
+        pytest.param(1, None, "unknown", None, id="null_currency"),
+    ],
+)
+async def test_commodity_price_sensor_currency_and_tariff(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+    attribute_id: int,
+    value: Any,
+    expected_state: str,
+    expected_unit: str | None,
+) -> None:
+    """Test Commodity Price unit when currency or tariff unit changes."""
+    entity_id = "sensor.mock_commodity_price_current_price"
+
+    set_node_attribute(matter_node, 3, 149, attribute_id, value)
+
+    await trigger_subscription_callback(hass, matter_client)
+
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == expected_state
+    assert state.attributes.get("unit_of_measurement") == expected_unit
+
+
+@pytest.mark.parametrize("node_fixture", ["lixee_zlinky_tic"])
+async def test_commodity_price_sensor_real_device(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """Test Commodity Price sensor against a real LiXee ZLinky_TIC device.
+
+    This fixture reports a Currency.decimalPoints of 4 (instead of 2), to
+    guard against regressions in the price scaling.
+    """
+    state = hass.states.get("sensor.zlinky_current_price")
+    assert state
+    assert state.state == "0.1807"
+    assert state.attributes["unit_of_measurement"] == "EUR/kWh"

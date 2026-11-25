@@ -220,7 +220,7 @@ def _get_expected_archives(backup: AgentBackup) -> set[str]:
     for addon in backup.addons:
         expected_archives.add(addon.slug)
     for folder in backup.folders:
-        expected_archives.add(folder.value)
+        expected_archives.add(folder.value.replace("/", "_"))
     return expected_archives
 
 

@@ -7,21 +7,20 @@ from bluetti_modbus_lib import (
 )
 from modbus_connection import ModbusUnit
 
-from .const import EXCLUDED_FIELDS
+from .const import EXCLUDED_FIELDS, SETTINGS_FIELDS
 
 
 def restricted_device(unit: ModbusUnit) -> Balco260:
     """Return the power station with EXCLUDED_FIELDS left out of its read plan.
 
     Used for the config flow's probe as well as for setup, so both read the
-    same registers. The pack summary is left out too: it reads 0 at the
-    device's own unit ID.
+    same registers. The settings are read on their own poll. The pack summary
+    is left out too: it reads 0 at the device's own unit ID.
     """
     device = Balco260(unit)
+    left_out = EXCLUDED_FIELDS | SETTINGS_FIELDS | AGGREGATE_SUMMARY_FIELDS
     device.restrict_fields(
-        name
-        for name in device.field_names()
-        if name not in EXCLUDED_FIELDS and name not in AGGREGATE_SUMMARY_FIELDS
+        name for name in device.field_names() if name not in left_out
     )
     return device
 
