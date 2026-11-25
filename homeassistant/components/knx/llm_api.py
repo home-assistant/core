@@ -975,6 +975,7 @@ def async_register_llm_api(hass: HomeAssistant, knx: KNXModule) -> CALLBACK_TYPE
             hass=hass,
             id=LLM_API_ID,
             name=LLM_API_NAME,
+            requires_admin=True,
             knx=knx,
         ),
     )
