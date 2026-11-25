@@ -1,6 +1,7 @@
 """Provide common smhi fixtures."""
 
 from collections.abc import AsyncGenerator, Generator
+from datetime import UTC, datetime
 import json
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
@@ -8,6 +9,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 from freezegun import freeze_time
 from pysmhi.smhi_fire_forecast import SMHIFireForecast, SMHIFirePointForecast
 from pysmhi.smhi_forecast import SMHIForecast, SMHIPointForecast
+from pysmhi.smhi_radar import SMHIRadar
 import pytest
 from pytest_homeassistant.common import MockConfigEntry, load_fixture
 from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
@@ -40,6 +42,7 @@ async def load_int(
     hass: HomeAssistant,
     mock_client: SMHIPointForecast,
     mock_fire_client: SMHIFirePointForecast,
+    mock_radar_client: MagicMock,
     load_platforms: list[Platform],
 ) -> MockConfigEntry:
     """Set up the SMHI integration."""
@@ -102,6 +105,33 @@ async def get_fire_client(
         client.async_get_daily_forecast.return_value = get_fire_data[0]
         client.async_get_hourly_forecast.return_value = get_fire_data[1]
         yield client
+
+
+@pytest.fixture(name="mock_radar_client")
+async def get_radar_client(
+    hass: HomeAssistant, get_radar_data: SMHIRadar
+) -> AsyncGenerator[MagicMock]:
+    """Mock SMHIRadarImage client."""
+
+    with patch(
+        "homeassistant.components.smhi.coordinator.SMHIRadarImage",
+        autospec=True,
+    ) as mock_client:
+        client = mock_client.return_value
+        client.async_get_radar.return_value = get_radar_data
+        client.async_get_image.return_value = b"radar image"
+        yield client
+
+
+@pytest.fixture(name="get_radar_data")
+def get_radar_data_fixture() -> SMHIRadar:
+    """Return radar data."""
+    return SMHIRadar(
+        valid_time=datetime(2026, 11, 10, 18, 35, tzinfo=UTC),
+        image_url="https://opendata-download-radar.smhi.se/api/version/latest/area/sweden/product/comp/latest.png",
+        dbz=27.6,
+        precipitation=1.25,
+    )
 
 
 @pytest.fixture(name="get_data")

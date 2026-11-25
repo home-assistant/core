@@ -1,0 +1,362 @@
+{
+  "applianceInfo": {
+    "serialNumber": "98802845",
+    "pnc": "950133061",
+    "brand": "FRIGIDAIRE",
+    "deviceType": "DEHUMIDIFIER",
+    "model": "FGAC5044W1",
+    "variant": "50PINT",
+    "colour": "WHITE"
+  },
+  "capabilities": {
+    "alerts": {
+      "access": "read",
+      "type": "alert",
+      "values": {
+        "BUCKET_FULL": {},
+        "BUS_HIGH_VOLTAGE": {},
+        "COMMUNICATION_FAULT": {},
+        "PM25_SENSOR_FAULT": {}
+      }
+    },
+    "applianceState": {
+      "access": "read",
+      "type": "string",
+      "values": {
+        "OFF": {},
+        "RUNNING": {}
+      }
+    },
+    "cleanAirMode": {
+      "access": "readwrite",
+      "schedulable": true,
+      "type": "string",
+      "values": {
+        "OFF": {},
+        "ON": {}
+      }
+    },
+    "displayLight": {
+      "access": "readwrite",
+      "type": "string",
+      "values": {
+        "DISPLAY_LIGHT_0": {},
+        "DISPLAY_LIGHT_1": {}
+      }
+    },
+    "executeCommand": {
+      "access": "write",
+      "schedulable": true,
+      "type": "string",
+      "values": {
+        "OFF": {},
+        "ON": {}
+      }
+    },
+    "fanSpeedSetting": {
+      "access": "readwrite",
+      "schedulable": true,
+      "type": "string",
+      "values": {
+        "HIGH": {},
+        "LOW": {},
+        "MIDDLE": {}
+      }
+    },
+    "fanSpeedState": {
+      "access": "read",
+      "type": "string",
+      "values": {
+        "HIGH": {},
+        "LOW": {},
+        "MIDDLE": {}
+      }
+    },
+    "filterState": {
+      "access": "read",
+      "type": "string",
+      "values": {
+        "BUY": {},
+        "CHANGE": {},
+        "CLEAN": {},
+        "GOOD": {}
+      }
+    },
+    "mode": {
+      "access": "readwrite",
+      "schedulable": true,
+      "triggers": [
+        {
+          "action": {
+            "targetHumidity": {
+              "disabled": false
+            }
+          },
+          "condition": {
+            "operand_1": "value",
+            "operand_2": "DRY",
+            "operator": "eq"
+          }
+        },
+        {
+          "action": {
+            "targetHumidity": {
+              "disabled": true
+            }
+          },
+          "condition": {
+            "operand_1": "value",
+            "operand_2": "DRY",
+            "operator": "ne"
+          }
+        },
+        {
+          "action": {
+            "fanSpeedSetting": {
+              "access": "read"
+            }
+          },
+          "condition": {
+            "operand_1": {
+              "operand_1": "value",
+              "operand_2": "AUTO",
+              "operator": "eq"
+            },
+            "operand_2": {
+              "operand_1": "value",
+              "operand_2": "QUIET",
+              "operator": "eq"
+            },
+            "operator": "or"
+          }
+        },
+        {
+          "action": {
+            "fanSpeedSetting": {
+              "access": "readwrite"
+            }
+          },
+          "condition": {
+            "operand_1": {
+              "operand_1": "value",
+              "operand_2": "DRY",
+              "operator": "eq"
+            },
+            "operand_2": {
+              "operand_1": "value",
+              "operand_2": "CONTINUOUS",
+              "operator": "eq"
+            },
+            "operator": "or"
+          }
+        },
+        {
+          "action": {
+            "displayLight": {
+              "access": "read"
+            }
+          },
+          "condition": {
+            "operand_1": {
+              "operand_1": "value",
+              "operand_2": "CONTINUOUS",
+              "operator": "eq"
+            },
+            "operand_2": {
+              "operand_1": "value",
+              "operand_2": "QUIET",
+              "operator": "eq"
+            },
+            "operator": "or"
+          }
+        },
+        {
+          "action": {
+            "displayLight": {
+              "access": "readwrite"
+            }
+          },
+          "condition": {
+            "operand_1": {
+              "operand_1": "value",
+              "operand_2": "CONTINUOUS",
+              "operator": "ne"
+            },
+            "operand_2": {
+              "operand_1": "value",
+              "operand_2": "QUIET",
+              "operator": "ne"
+            },
+            "operator": "and"
+          }
+        }
+      ],
+      "type": "string",
+      "values": {
+        "AUTO": {},
+        "CONTINUOUS": {},
+        "DRY": {},
+        "OFF": {
+          "disabled": true
+        },
+        "QUIET": {}
+      }
+    },
+    "networkInterface": {
+      "command": {
+        "access": "write",
+        "type": "string",
+        "values": {
+          "APPLIANCE_AUTHORIZE": {},
+          "START": {},
+          "USER_AUTHORIZE": {},
+          "USER_NOT_AUTHORIZE": {}
+        }
+      },
+      "linkQualityIndicator": {
+        "access": "read",
+        "type": "string",
+        "values": {
+          "EXCELLENT": {},
+          "GOOD": {},
+          "POOR": {},
+          "UNDEFINED": {},
+          "VERY_GOOD": {},
+          "VERY_POOR": {}
+        }
+      },
+      "niuSwUpdateCurrentDescription": {
+        "access": "read",
+        "type": "string"
+      },
+      "otaState": {
+        "access": "read",
+        "type": "string",
+        "values": {
+          "DESCRIPTION_AVAILABLE": {},
+          "DESCRIPTION_DOWNLOADING": {},
+          "DESCRIPTION_READY": {},
+          "FW_DOWNLOADING": {},
+          "FW_DOWNLOAD_START": {},
+          "FW_SIGNATURE_CHECK": {},
+          "FW_UPDATE_IN_PROGRESS": {},
+          "IDLE": {},
+          "READY_TO_UPDATE": {},
+          "UPDATE_ABORT": {},
+          "UPDATE_CHECK": {},
+          "UPDATE_ERROR": {},
+          "UPDATE_OK": {},
+          "WAITINGFORAUTHORIZATION": {}
+        }
+      },
+      "startUpCommand": {
+        "access": "write",
+        "type": "string",
+        "values": {
+          "UNINSTALL": {}
+        }
+      },
+      "swAncAndRevision": {
+        "access": "read",
+        "type": "string"
+      },
+      "swVersion": {
+        "access": "read",
+        "type": "string"
+      }
+    },
+    "sensorHumidity": {
+      "access": "read",
+      "type": "number"
+    },
+    "startTime": {
+      "access": "readwrite",
+      "default": 0,
+      "max": 86400,
+      "min": 0,
+      "step": 1800,
+      "type": "number",
+      "values": {
+        "INVALID_OR_NOT_SET_TIME": {}
+      }
+    },
+    "stopTime": {
+      "access": "readwrite",
+      "default": 0,
+      "max": 86400,
+      "min": 0,
+      "step": 1800,
+      "type": "number",
+      "values": {
+        "0": {},
+        "1800": {},
+        "3600": {},
+        "5400": {},
+        "7200": {},
+        "9000": {},
+        "10800": {},
+        "12600": {},
+        "14400": {},
+        "16200": {},
+        "18000": {},
+        "19800": {},
+        "21600": {},
+        "23400": {},
+        "25200": {},
+        "27000": {},
+        "28800": {},
+        "30600": {},
+        "32400": {},
+        "34200": {},
+        "36000": {},
+        "39600": {},
+        "43200": {},
+        "46800": {},
+        "50400": {},
+        "54000": {},
+        "57600": {},
+        "61200": {},
+        "64800": {},
+        "68400": {},
+        "72000": {},
+        "75600": {},
+        "79200": {},
+        "82800": {},
+        "86400": {},
+        "-1": {}
+      }
+    },
+    "targetHumidity": {
+      "access": "readwrite",
+      "max": 85,
+      "min": 35,
+      "step": 5,
+      "type": "number",
+      "values": {
+        "35": {},
+        "40": {},
+        "45": {},
+        "50": {},
+        "55": {},
+        "60": {},
+        "65": {},
+        "70": {},
+        "75": {},
+        "80": {},
+        "85": {}
+      }
+    },
+    "uiLockMode": {
+      "access": "readwrite",
+      "type": "boolean",
+      "values": {
+        "OFF": {},
+        "ON": {}
+      }
+    },
+    "waterBucketLevel": {
+      "access": "read",
+      "type": "number"
+    }
+  }
+}

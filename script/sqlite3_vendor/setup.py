@@ -33,6 +33,9 @@ setup(
                 ("SQLITE_ENABLE_FTS5", "1"),
                 ("SQLITE_ENABLE_RTREE", "1"),
                 ("SQLITE_ENABLE_MATH_FUNCTIONS", "1"),
+                # Alpine (HA OS and Container) enables dbstat; without it the
+                # database usage byte-figure tests skip in the SQLite matrix
+                ("SQLITE_ENABLE_DBSTAT_VTAB", "1"),
             ],
             # Override the interpreter's -O3 -g, which make compiling the
             # amalgamation much slower for no runtime gain

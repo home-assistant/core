@@ -3,11 +3,10 @@
 from typing import Any, override
 
 from homeassistant.components.light import (
-    ATTR_BRIGHTNESS,
-    ATTR_COLOR_TEMP_KELVIN,
     ColorMode,
     LightEntity,
     LightEntityStateAttribute,
+    LightServiceArgument,
 )
 from homeassistant.const import CONF_LIGHTS, CONF_NAME
 from homeassistant.core import HomeAssistant
@@ -104,10 +103,10 @@ class ModbusLight(ModbusToggleEntity, LightEntity):
     @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn light on and set brightness if provided."""
-        brightness = kwargs.get(ATTR_BRIGHTNESS)
+        brightness = kwargs.get(LightServiceArgument.BRIGHTNESS)
         if brightness and isinstance(brightness, int):
             await self.async_set_brightness(brightness)
-        color_temp = kwargs.get(ATTR_COLOR_TEMP_KELVIN)
+        color_temp = kwargs.get(LightServiceArgument.COLOR_TEMP_KELVIN)
         if color_temp and isinstance(color_temp, int):
             await self.async_set_color_temp(color_temp)
         await self.async_turn(self.command_on)

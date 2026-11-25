@@ -41,6 +41,7 @@ STATE_MAP = {
     "hmPostMsn": VacuumActivity.RETURNING,  # Cycle finished
     "hmUsrDock": VacuumActivity.RETURNING,
     "pause": VacuumActivity.PAUSED,
+    "refill": VacuumActivity.CLEANING,  # Refilling the tank
     "run": VacuumActivity.CLEANING,
     "stop": VacuumActivity.IDLE,
     "stuck": VacuumActivity.ERROR,

@@ -3,7 +3,7 @@
 import logging
 from typing import Any
 
-from homeassistant.const import CONF_NAME, Platform
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.device_registry import AnyDeviceEntry
@@ -124,7 +124,7 @@ def _setup_server_device_registry(
     device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
         identifiers={(DOMAIN, entry.entry_id)},
-        name=entry.data[CONF_NAME],
+        name=entry.title,
         model="OpenRGB SDK Server",
         manufacturer="OpenRGB",
         sw_version=coordinator.get_client_protocol_version(),

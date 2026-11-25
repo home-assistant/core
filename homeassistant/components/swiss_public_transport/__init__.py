@@ -2,7 +2,7 @@
 
 import logging
 
-from opendata_transport import OpendataTransport
+from opendata_transport import OpendataTransport, OpendataTransportStationboard
 from opendata_transport.exceptions import (
     OpendataTransportConnectionError,
     OpendataTransportError,
@@ -22,9 +22,11 @@ from homeassistant.helpers.typing import ConfigType
 from .const import (
     CONF_DESTINATION,
     CONF_START,
+    CONF_STATIONS,
     CONF_TIME_FIXED,
     CONF_TIME_OFFSET,
     CONF_TIME_STATION,
+    CONF_TRANSPORTATIONS,
     CONF_VIA,
     DEFAULT_TIME_STATION,
     DOMAIN,
@@ -33,6 +35,7 @@ from .const import (
 from .coordinator import (
     SwissPublicTransportConfigEntry,
     SwissPublicTransportDataUpdateCoordinator,
+    SwissPublicTransportStationboardDataUpdateCoordinator,
 )
 from .helper import offset_opendata, unique_id_from_config
 from .services import async_setup_services
@@ -55,6 +58,30 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: SwissPublicTransportConfigEntry
 ) -> None:
     """Set up Swiss public transport from a config entry."""
+    coordinator: (
+        SwissPublicTransportDataUpdateCoordinator
+        | SwissPublicTransportStationboardDataUpdateCoordinator
+    )
+    if CONF_STATIONS in entry.data:
+        coordinator = SwissPublicTransportStationboardDataUpdateCoordinator(
+            hass,
+            entry,
+            OpendataTransportStationboard(
+                entry.data[CONF_STATIONS], async_get_clientsession(hass)
+            ),
+        )
+    else:
+        coordinator = await _async_get_connection_coordinator(hass, entry)
+    await coordinator.async_config_entry_first_refresh()
+    entry.runtime_data = coordinator
+
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+
+
+async def _async_get_connection_coordinator(
+    hass: HomeAssistant, entry: SwissPublicTransportConfigEntry
+) -> SwissPublicTransportDataUpdateCoordinator:
+    """Validate a connection config entry and return its coordinator."""
     config = entry.data
 
     start = config[CONF_START]
@@ -70,6 +97,7 @@ async def async_setup_entry(
         via=config.get(CONF_VIA),
         time=config.get(CONF_TIME_FIXED),
         isArrivalTime=config.get(CONF_TIME_STATION, DEFAULT_TIME_STATION) == "arrival",
+        transportations=config.get(CONF_TRANSPORTATIONS),
     )
     if time_offset:
         offset_opendata(opendata, time_offset)
@@ -96,13 +124,7 @@ async def async_setup_entry(
             },
         ) from e
 
-    coordinator = SwissPublicTransportDataUpdateCoordinator(
-        hass, entry, opendata, time_offset
-    )
-    await coordinator.async_config_entry_first_refresh()
-    entry.runtime_data = coordinator
-
-    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+    return SwissPublicTransportDataUpdateCoordinator(hass, entry, opendata, time_offset)
 
 
 async def async_unload_entry(

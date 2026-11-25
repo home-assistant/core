@@ -1,6 +1,5 @@
 """Test KNX select."""
 
-import logging
 from typing import Any
 
 import pytest
@@ -80,8 +79,7 @@ async def test_select_dpt_2_simple(
     assert state.state == "Control - On"
 
     # update from KNX with undefined value
-    with caplog.at_level(logging.DEBUG):
-        await knx.receive_write(test_address, 0b01)
+    await knx.receive_write(test_address, 0b01)
     state = hass.states.get("select.test")
     assert state.state is STATE_UNKNOWN
     # the unconfigured payload and its telegram are logged for diagnosis

@@ -2,11 +2,18 @@
 
 import logging
 
+from homeassistant.const import UnitOfTemperature
+
 LOGGER = logging.getLogger(__package__)
 
 DOMAIN = "alexa_devices"
 CONF_LOGIN_DATA = "login_data"
 CONF_SITE = "site"
+
+AMAZON_TO_UNIT = {
+    "CELSIUS": UnitOfTemperature.CELSIUS,
+    "FAHRENHEIT": UnitOfTemperature.FAHRENHEIT,
+}
 
 DEFAULT_DOMAIN = "com"
 COUNTRY_DOMAINS = {

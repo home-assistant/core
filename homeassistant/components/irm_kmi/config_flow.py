@@ -3,7 +3,7 @@
 import logging
 from typing import override
 
-from irm_kmi_api import IrmKmiApiClient, IrmKmiApiError
+from irm_kmi_api import IrmKmiApiClient, IrmKmiApiError, RadarStyle
 import probatio
 
 from homeassistant.config_entries import (
@@ -21,6 +21,7 @@ from homeassistant.const import (
 from homeassistant.core import callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.selector import (
+    BooleanSelector,
     LocationSelector,
     SelectSelector,
     SelectSelectorConfig,
@@ -28,8 +29,11 @@ from homeassistant.helpers.selector import (
 )
 
 from .const import (
+    CONF_DARK_MODE,
     CONF_LANGUAGE_OVERRIDE,
     CONF_LANGUAGE_OVERRIDE_OPTIONS,
+    CONF_RADAR_STYLE,
+    CONF_RADAR_STYLE_OPTIONS,
     DOMAIN,
     OUT_OF_BENELUX,
     USER_AGENT,
@@ -37,6 +41,28 @@ from .const import (
 from .coordinator import IrmKmiConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
+
+OPTIONS_SCHEMA = probatio.Schema(
+    {
+        probatio.Optional(CONF_LANGUAGE_OVERRIDE, default="none"): SelectSelector(
+            SelectSelectorConfig(
+                options=CONF_LANGUAGE_OVERRIDE_OPTIONS,
+                mode=SelectSelectorMode.DROPDOWN,
+                translation_key=CONF_LANGUAGE_OVERRIDE,
+            )
+        ),
+        probatio.Optional(
+            CONF_RADAR_STYLE, default=RadarStyle.OPTION_STYLE_STD
+        ): SelectSelector(
+            SelectSelectorConfig(
+                options=CONF_RADAR_STYLE_OPTIONS,
+                mode=SelectSelectorMode.DROPDOWN,
+                translation_key=CONF_RADAR_STYLE,
+            )
+        ),
+        probatio.Optional(CONF_DARK_MODE, default=False): BooleanSelector(),
+    }
+)
 
 
 class IrmKmiConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -119,20 +145,7 @@ class IrmKmiOptionFlow(OptionsFlowWithReload):
 
         return self.async_show_form(
             step_id="init",
-            data_schema=probatio.Schema(
-                {
-                    probatio.Optional(
-                        CONF_LANGUAGE_OVERRIDE,
-                        default=self.config_entry.options.get(
-                            CONF_LANGUAGE_OVERRIDE, "none"
-                        ),
-                    ): SelectSelector(
-                        SelectSelectorConfig(
-                            options=CONF_LANGUAGE_OVERRIDE_OPTIONS,
-                            mode=SelectSelectorMode.DROPDOWN,
-                            translation_key=CONF_LANGUAGE_OVERRIDE,
-                        )
-                    )
-                }
+            data_schema=self.add_suggested_values_to_schema(
+                OPTIONS_SCHEMA, self.config_entry.options
             ),
         )

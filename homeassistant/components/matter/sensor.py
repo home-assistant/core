@@ -66,6 +66,176 @@ AIR_QUALITY_MAP = {
     clusters.AirQuality.Enums.AirQualityEnum.kUnknownEnumValue: None,
 }
 
+# Currency codes (ISO 4217 numeric -> alphabetic), covering all active currencies.
+# See https://en.wikipedia.org/wiki/ISO_4217#Active_codes for the full list.
+COMMODITY_PRICE_CURRENCY_MAP = {
+    8: "ALL",
+    12: "DZD",
+    32: "ARS",
+    36: "AUD",
+    44: "BSD",
+    48: "BHD",
+    50: "BDT",
+    51: "AMD",
+    52: "BBD",
+    60: "BMD",
+    64: "BTN",
+    68: "BOB",
+    72: "BWP",
+    84: "BZD",
+    90: "SBD",
+    96: "BND",
+    104: "MMK",
+    108: "BIF",
+    116: "KHR",
+    124: "CAD",
+    132: "CVE",
+    136: "KYD",
+    144: "LKR",
+    152: "CLP",
+    156: "CNY",
+    170: "COP",
+    174: "KMF",
+    188: "CRC",
+    191: "HRK",
+    192: "CUP",
+    203: "CZK",
+    208: "DKK",
+    214: "DOP",
+    222: "SVC",
+    230: "ETB",
+    232: "ERN",
+    238: "FKP",
+    242: "FJD",
+    262: "DJF",
+    270: "GMD",
+    292: "GIP",
+    320: "GTQ",
+    324: "GNF",
+    328: "GYD",
+    332: "HTG",
+    340: "HNL",
+    344: "HKD",
+    348: "HUF",
+    352: "ISK",
+    356: "INR",
+    360: "IDR",
+    364: "IRR",
+    368: "IQD",
+    376: "ILS",
+    388: "JMD",
+    392: "JPY",
+    398: "KZT",
+    400: "JOD",
+    404: "KES",
+    408: "KPW",
+    410: "KRW",
+    414: "KWD",
+    417: "KGS",
+    418: "LAK",
+    422: "LBP",
+    426: "LSL",
+    430: "LRD",
+    434: "LYD",
+    446: "MOP",
+    454: "MWK",
+    458: "MYR",
+    462: "MVR",
+    480: "MUR",
+    484: "MXN",
+    496: "MNT",
+    498: "MDL",
+    504: "MAD",
+    512: "OMR",
+    516: "NAD",
+    524: "NPR",
+    532: "ANG",
+    533: "AWG",
+    548: "VUV",
+    554: "NZD",
+    558: "NIO",
+    566: "NGN",
+    578: "NOK",
+    586: "PKR",
+    590: "PAB",
+    598: "PGK",
+    600: "PYG",
+    604: "PEN",
+    608: "PHP",
+    634: "QAR",
+    643: "RUB",
+    646: "RWF",
+    654: "SHP",
+    682: "SAR",
+    690: "SCR",
+    694: "SLL",
+    702: "SGD",
+    704: "VND",
+    706: "SOS",
+    710: "ZAR",  # codespell:ignore zar
+    728: "SSP",
+    748: "SZL",
+    752: "SEK",
+    756: "CHF",
+    760: "SYP",
+    764: "THB",
+    776: "TOP",
+    780: "TTD",
+    784: "AED",
+    788: "TND",
+    800: "UGX",
+    807: "MKD",
+    818: "EGP",
+    826: "GBP",
+    834: "TZS",
+    840: "USD",
+    858: "UYU",
+    860: "UZS",
+    882: "WST",
+    886: "YER",
+    901: "TWD",
+    925: "SLE",
+    926: "VED",
+    928: "VES",
+    929: "MRU",
+    930: "STN",
+    931: "CUC",
+    932: "ZWL",
+    933: "BYN",
+    934: "TMT",
+    936: "GHS",
+    938: "SDG",
+    941: "RSD",
+    943: "MZN",
+    944: "AZN",
+    946: "RON",
+    949: "TRY",
+    950: "XAF",
+    951: "XCD",
+    952: "XOF",
+    953: "XPF",
+    967: "ZMW",
+    968: "SRD",
+    969: "MGA",
+    971: "AFN",
+    972: "TJS",
+    973: "AOA",
+    975: "BGN",
+    976: "CDF",
+    977: "BAM",
+    978: "EUR",
+    980: "UAH",
+    981: "GEL",
+    985: "PLN",
+    986: "BRL",
+}
+
+COMMODITY_PRICE_TARIFF_UNIT_MAP = {
+    clusters.Globals.Enums.TariffUnitEnum.kKVAh: "kVAh",
+    clusters.Globals.Enums.TariffUnitEnum.kKWh: "kWh",
+    clusters.Globals.Enums.TariffUnitEnum.kUnknownEnumValue: None,
+}
+
 CONTAMINATION_STATE_MAP = {
     clusters.SmokeCoAlarm.Enums.ContaminationStateEnum.kNormal: "normal",
     clusters.SmokeCoAlarm.Enums.ContaminationStateEnum.kLow: "low",
@@ -348,6 +518,49 @@ class MatterSensor(MatterEntity, SensorEntity):
         elif value_convert := self.entity_description.device_to_ha:
             value = value_convert(value)
         self._attr_native_value = value
+
+
+class MatterCommodityPriceSensor(MatterSensor):
+    """Representation of a Matter Commodity Price sensor."""
+
+    @callback
+    @override
+    def _update_from_device(self) -> None:
+        """Update commodity price from device."""
+        current_price = self.get_matter_attribute_value(
+            clusters.CommodityPrice.Attributes.CurrentPrice
+        )
+        currency = self.get_matter_attribute_value(
+            clusters.CommodityPrice.Attributes.Currency
+        )
+        tariff_unit = self.get_matter_attribute_value(
+            clusters.CommodityPrice.Attributes.TariffUnit
+        )
+
+        # Currency contains the decimal scaling information.
+        # Without it, the price cannot be converted reliably.
+        if currency in (None, NullValue):
+            self._attr_native_value = None
+            self._attr_native_unit_of_measurement = None
+            return
+
+        currency_name = COMMODITY_PRICE_CURRENCY_MAP.get(currency.currency)
+        tariff_name = COMMODITY_PRICE_TARIFF_UNIT_MAP.get(tariff_unit)
+
+        # Only expose a unit when both mappings are known.
+        self._attr_native_unit_of_measurement = (
+            f"{currency_name}/{tariff_name}"
+            if currency_name is not None and tariff_name is not None
+            else None
+        )
+
+        # A null CurrentPrice, or one without Price, means the current price
+        # is unknown or cannot be determined (Matter spec §9.9.6.3).
+        if current_price in (None, NullValue) or current_price.price is None:
+            self._attr_native_value = None
+            return
+
+        self._attr_native_value = current_price.price / (10**currency.decimalPoints)
 
 
 class MatterConcentrationSensor(MatterSensor):
@@ -661,6 +874,18 @@ DISCOVERY_SCHEMAS = [
         ),
         # Some manufacturers returns an empty string
         value_is_not="",
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.SENSOR,
+        entity_description=MatterSensorEntityDescription(
+            key="PowerSourceBatQuantity",
+            translation_key="battery_quantity",
+            entity_category=EntityCategory.DIAGNOSTIC,
+        ),
+        entity_class=MatterSensor,
+        required_attributes=(clusters.PowerSource.Attributes.BatQuantity,),
+        # Some devices report 0 when the value is not filled in
+        value_is_not=0,
     ),
     MatterDiscoverySchema(
         platform=Platform.SENSOR,
@@ -1901,5 +2126,21 @@ DISCOVERY_SCHEMAS = [
         ),
         entity_class=MatterSensor,
         required_attributes=(clusters.GeneralDiagnostics.Attributes.BootReason,),
+    ),
+    # CommodityPrice cluster sensors
+    MatterDiscoverySchema(
+        platform=Platform.SENSOR,
+        entity_description=MatterSensorEntityDescription(
+            key="CommodityPriceCurrentPrice",
+            translation_key="commodity_price",
+            state_class=SensorStateClass.MEASUREMENT,
+        ),
+        entity_class=MatterCommodityPriceSensor,
+        required_attributes=(
+            clusters.CommodityPrice.Attributes.CurrentPrice,
+            clusters.CommodityPrice.Attributes.Currency,
+            clusters.CommodityPrice.Attributes.TariffUnit,
+        ),
+        allow_none_value=True,
     ),
 ]

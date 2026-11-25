@@ -9,7 +9,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from .coordinator import SmartyPlantsConfigEntry, SmartyPlantsCoordinator
 from .webhook import async_register_webhook, async_unregister_webhook
 
-PLATFORMS: list[Platform] = [Platform.SENSOR]
+PLATFORMS: list[Platform] = [Platform.BINARY_SENSOR, Platform.SENSOR]
 
 
 async def async_setup_entry(

@@ -1,6 +1,7 @@
 """Setup the Reolink tests."""
 
 from collections.abc import Generator
+from pathlib import Path
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
@@ -56,6 +57,20 @@ TEST_BC_PORT = 5678
 TEST_BC_CON = ConnectionEnum.tcp.value
 
 
+@pytest.fixture(autouse=True)
+def mock_hls_temp_dir(tmp_path: Path) -> Generator[None]:
+    """Use a separate temporary directory per test for the HLS playback files.
+
+    Setting up a config entry removes the leftover HLS files, which would also
+    remove the files of a test running in parallel in another pytest worker.
+    """
+    with patch(
+        "homeassistant.components.reolink.hls.tempfile.gettempdir",
+        return_value=str(tmp_path),
+    ):
+        yield
+
+
 @pytest.fixture
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
@@ -88,7 +103,6 @@ def _init_host_mock(host_mock: MagicMock) -> None:
     host_mock.set_whiteled = AsyncMock()
     host_mock.set_state_light = AsyncMock()
     host_mock.renew = AsyncMock()
-    host_mock.get_vod_source = AsyncMock()
     host_mock.request_vod_files = AsyncMock()
     host_mock.expire_session = AsyncMock()
     host_mock.set_volume = AsyncMock()

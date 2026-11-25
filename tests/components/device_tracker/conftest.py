@@ -2,6 +2,8 @@
 
 import pytest
 
+from tests.components.zone.common import improved_presence_detection  # noqa: F401
+
 
 @pytest.fixture
 def hass_config_dir(hass_tmp_config_dir: str) -> str:
