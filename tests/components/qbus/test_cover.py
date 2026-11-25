@@ -208,6 +208,8 @@ async def test_cover_slats(
     )
     assert attributes[CoverEntityCapabilityAttribute.OPEN_TILT_POSITION] == 50
     assert attributes[CoverEntityCapabilityAttribute.CLOSED_TILT_POSITIONS] == [0, 100]
+    assert attributes[CoverEntityCapabilityAttribute.TILT_START_ANGLE] == -90
+    assert attributes[CoverEntityCapabilityAttribute.TILT_END_ANGLE] == 90
 
     # Start with a fully closed cover
     mock_publish_state.reset_mock()
