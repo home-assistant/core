@@ -311,8 +311,23 @@ async def test_tilt_capability_attributes(
             "invalid open tilt position",
             id="open_position_not_an_integer",
         ),
+<<<<<<< HEAD
         pytest.param(_angles(-120, 90), "invalid tilt angles", id="angle_out_of_range"),
         pytest.param(
+=======
+        pytest.param(
+            {"open_tilt_position": True},
+            "invalid open tilt position",
+            id="open_position_is_a_bool",
+        ),
+        pytest.param(_angles(-120, 90), "invalid tilt angles", id="angle_out_of_range"),
+        pytest.param(
+            {"tilt_start_angle": False, "tilt_end_angle": 90},
+            "invalid tilt angles",
+            id="angle_is_a_bool",
+        ),
+        pytest.param(
+>>>>>>> origin/dev
             {"tilt_start_angle": -89.5, "tilt_end_angle": 90},
             "invalid tilt angles",
             id="angle_not_an_integer",

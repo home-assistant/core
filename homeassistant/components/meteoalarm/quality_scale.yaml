@@ -40,10 +40,10 @@ rules:
     status: exempt
     comment: This integration does not have an options flow.
   docs-installation-parameters: done
-  entity-unavailable: todo
+  entity-unavailable: done
   integration-owner: done
-  log-when-unavailable: todo
-  parallel-updates: todo
+  log-when-unavailable: done
+  parallel-updates: done
   reauthentication-flow:
     status: exempt
     comment: MeteoAlarm's feeds are public and need no authentication.

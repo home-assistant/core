@@ -2,13 +2,13 @@
 
 import asyncio
 from collections.abc import Callable, Coroutine
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from typing import Any, cast, override
 
 from aioshelly.ble import async_ensure_ble_enabled, async_stop_scanner
 from aioshelly.block_device import BlockDevice, BlockUpdateType
-from aioshelly.const import DEFAULT_HTTPS_PORT, MODEL_VALVE
+from aioshelly.const import MODEL_VALVE
 from aioshelly.exceptions import (
     DeviceConnectionError,
     InvalidAuthError,
@@ -24,7 +24,6 @@ from homeassistant.components.bluetooth import async_remove_scanner
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.const import (
     ATTR_DEVICE_ID,
-    CONF_HOST,
     CONF_MODEL,
     EVENT_HOMEASSISTANT_STOP,
     Platform,
@@ -78,8 +77,7 @@ from .utils import (
     async_manage_coiot_issues_task,
     get_block_device_sleep_period,
     get_device_entry_gen,
-    get_host,
-    get_http_port,
+    get_device_url,
     get_rpc_device_wakeup_period,
     get_rpc_key,
     get_rpc_ws_url,
@@ -88,6 +86,9 @@ from .utils import (
     is_rpc_ble_scanner_supported,
     update_device_fw_info,
 )
+
+# The camera accepts 6 connections, leave room for Home Assistant's own calls.
+MAX_STORAGE_REQUESTS = 4
 
 
 @dataclass
@@ -106,6 +107,9 @@ class ShellyEntryData:
     rpc_supports_scripts: bool | None = None
     rpc_zigbee_firmware: bool | None = None
     unsupported_firmware: bool = False
+    storage_semaphore: asyncio.Semaphore = field(
+        default_factory=lambda: asyncio.Semaphore(MAX_STORAGE_REQUESTS)
+    )
 
 
 type ShellyConfigEntry = ConfigEntry[ShellyEntryData]
@@ -172,9 +176,7 @@ class ShellyCoordinatorBase[_DeviceT: BlockDevice | RpcDevice](
     @cached_property
     def configuration_url(self) -> str:
         """Return the configuration URL for the device."""
-        port = get_http_port(self.config_entry.data)
-        scheme = "https" if port == DEFAULT_HTTPS_PORT else "http"
-        return f"{scheme}://{get_host(self.config_entry.data[CONF_HOST])}:{port}"
+        return get_device_url(self.config_entry.data)
 
     @cached_property
     def model(self) -> str:
