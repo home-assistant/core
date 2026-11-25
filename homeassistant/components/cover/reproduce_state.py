@@ -109,10 +109,7 @@ async def _async_close_cover(
     features: CoverEntityFeature,
     set_position: bool,
     set_tilt: bool,
-<<<<<<< HEAD
     tilt_is_closed: bool,
-=======
->>>>>>> origin/dev
     closed_tilt_position: int,
 ) -> None:
     """Close the cover if it was not closed by setting the position."""
@@ -238,15 +235,9 @@ async def _async_reproduce_state(
             features,
             set_position,
             set_tilt,
-<<<<<<< HEAD
             cur_state.state not in (CoverState.OPENING, CoverState.CLOSING)
             and current_tilt_position in closed_tilt_positions,
             closed_tilt_positions[0],
-=======
-            current_attrs.get(
-                CoverEntityCapabilityAttribute.CLOSED_TILT_POSITIONS, [FULL_CLOSE]
-            )[0],
->>>>>>> origin/dev
         )
 
     elif target_state in OPENING_STATES:
