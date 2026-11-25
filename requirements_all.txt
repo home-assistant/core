@@ -2665,7 +2665,7 @@ pysabnzbd==1.1.1
 pysaunum==0.7.0
 
 # homeassistant.components.schlage
-pyschlage==2026.11.0
+pyschlage==2026.11.1
 
 # homeassistant.components.scorpiontrack
 pyscorpiontrack==0.1.2
