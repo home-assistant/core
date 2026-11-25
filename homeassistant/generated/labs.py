@@ -55,7 +55,7 @@ LABS_PREVIEW_FEATURES = {
     },
     "zone": {
         "improved_presence_detection": {
-            "feedback_url": "",
+            "feedback_url": "https://forms.gle/U6etWNafbssUiUex6",
             "learn_more_url": "",
             "report_issue_url": "",
         },

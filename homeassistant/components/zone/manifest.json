@@ -5,6 +5,10 @@
   "config_flow": false,
   "documentation": "https://www.home-assistant.io/integrations/zone",
   "integration_type": "system",
-  "preview_features": { "improved_presence_detection": {} },
+  "preview_features": {
+    "improved_presence_detection": {
+      "feedback_url": "https://forms.gle/U6etWNafbssUiUex6"
+    }
+  },
   "quality_scale": "internal"
 }

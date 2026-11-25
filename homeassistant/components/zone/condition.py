@@ -61,7 +61,7 @@ def zone(
     """Test if zone-condition matches.
 
     If improved presence detection is enabled and the entity's accuracy circle
-    only partly overlaps the zone, previous_match is returned. Legacy device
+    only overlaps the zone, previous_match is returned. Legacy device
     trackers always use the default overlap test.
 
     Async friendly.

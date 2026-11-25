@@ -25,7 +25,7 @@ class ZoneRelation(StrEnum):
     CONTAINED = "contained"
     """The accuracy circle fits fully inside the zone."""
     OVERLAPPING = "overlapping"
-    """The accuracy circle partly overlaps the zone."""
+    """The accuracy circle overlaps the zone."""
     SEPARATED = "separated"
     """The accuracy circle does not overlap the zone."""
 
