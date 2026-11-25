@@ -1,0 +1,913 @@
+{
+  "gateways": [
+    {
+      "connectivity": {
+        "status": "OK",
+        "protocolVersion": "2026.5.3"
+      },
+      "gatewayId": "1234-5678-7259"
+    }
+  ],
+  "devices": [
+    {
+      "label": "Bathroom Towel Dryer",
+      "uiClass": "HeatingSystem",
+      "deviceURL": "io://1234-5678-7259/9876543#1",
+      "shortcut": false,
+      "controllableName": "io:AtlanticElectricalTowelDryer_IC3_IOComponent",
+      "creationTime": 1795126130000,
+      "lastUpdateTime": 1795126130000,
+      "definition": {
+        "commands": [
+          {
+            "commandName": "addLockLevel",
+            "nparams": 2
+          },
+          {
+            "commandName": "advancedRefresh",
+            "nparams": 2
+          },
+          {
+            "commandName": "cancelHeatingLevel",
+            "nparams": 1
+          },
+          {
+            "commandName": "delayedStopIdentify",
+            "nparams": 1
+          },
+          {
+            "commandName": "getName",
+            "nparams": 0
+          },
+          {
+            "commandName": "identify",
+            "nparams": 0
+          },
+          {
+            "commandName": "off",
+            "nparams": 0
+          },
+          {
+            "commandName": "refreshComfortTemperature",
+            "nparams": 0
+          },
+          {
+            "commandName": "refreshDerogatedTargetTemperature",
+            "nparams": 0
+          },
+          {
+            "commandName": "refreshEcoTemperature",
+            "nparams": 0
+          },
+          {
+            "commandName": "refreshHeatingLevel",
+            "nparams": 0
+          },
+          {
+            "commandName": "refreshManufacturerName",
+            "nparams": 0
+          },
+          {
+            "commandName": "refreshMaximumHeatingTargetTemperature",
+            "nparams": 0
+          },
+          {
+            "commandName": "refreshMaximumTargetTemperature",
+            "nparams": 0
+          },
+          {
+            "commandName": "refreshTargetTemperature",
+            "nparams": 0
+          },
+          {
+            "commandName": "refreshTemperature",
+            "nparams": 0
+          },
+          {
+            "commandName": "removeLockLevel",
+            "nparams": 1
+          },
+          {
+            "commandName": "resetLockLevels",
+            "nparams": 0
+          },
+          {
+            "commandName": "setComfortTemperature",
+            "nparams": 1
+          },
+          {
+            "commandName": "setDerogatedTargetTemperature",
+            "nparams": 1
+          },
+          {
+            "commandName": "setEcoTemperature",
+            "nparams": 1
+          },
+          {
+            "commandName": "setHeatingLevel",
+            "nparams": 1
+          },
+          {
+            "commandName": "setHeatingLevelWithTimer",
+            "nparams": 2
+          },
+          {
+            "commandName": "setName",
+            "nparams": 1
+          },
+          {
+            "commandName": "setSchedulingType",
+            "nparams": 1
+          },
+          {
+            "commandName": "setTargetTemperature",
+            "nparams": 1
+          },
+          {
+            "commandName": "startIdentify",
+            "nparams": 0
+          },
+          {
+            "commandName": "stopIdentify",
+            "nparams": 0
+          },
+          {
+            "commandName": "wink",
+            "nparams": 1
+          },
+          {
+            "commandName": "pairOneWayController",
+            "nparams": 2
+          },
+          {
+            "commandName": "refreshAutoProgram",
+            "nparams": 0
+          },
+          {
+            "commandName": "refreshControllerAddress",
+            "nparams": 0
+          },
+          {
+            "commandName": "refreshModel",
+            "nparams": 0
+          },
+          {
+            "commandName": "refreshNativeFunctionalLevel",
+            "nparams": 0
+          },
+          {
+            "commandName": "refreshPowerAndTension",
+            "nparams": 0
+          },
+          {
+            "commandName": "refreshSetpointLoweringTemperatureInProgMode",
+            "nparams": 0
+          },
+          {
+            "commandName": "setSetpointLoweringTemperatureInProgMode",
+            "nparams": 1
+          },
+          {
+            "commandName": "unpairAllOneWayControllers",
+            "nparams": 0
+          },
+          {
+            "commandName": "unpairOneWayController",
+            "nparams": 2
+          }
+        ],
+        "states": [
+          {
+            "type": "ContinuousState",
+            "qualifiedName": "core:ComfortRoomTemperatureState"
+          },
+          {
+            "eventBased": true,
+            "type": "DataState",
+            "qualifiedName": "core:CommandLockLevelsState"
+          },
+          {
+            "type": "ContinuousState",
+            "qualifiedName": "core:DerogatedTargetTemperatureState"
+          },
+          {
+            "type": "DiscreteState",
+            "values": ["good", "low", "normal", "verylow"],
+            "qualifiedName": "core:DiscreteRSSILevelState"
+          },
+          {
+            "type": "ContinuousState",
+            "qualifiedName": "core:EcoRoomTemperatureState"
+          },
+          {
+            "type": "DataState",
+            "qualifiedName": "core:IdentifierState"
+          },
+          {
+            "type": "DataState",
+            "qualifiedName": "core:ManufacturerNameState"
+          },
+          {
+            "type": "ContinuousState",
+            "qualifiedName": "core:MaximumHeatingTargetTemperatureState"
+          },
+          {
+            "type": "ContinuousState",
+            "qualifiedName": "core:MaximumTargetTemperatureState"
+          },
+          {
+            "type": "DataState",
+            "qualifiedName": "core:NameState"
+          },
+          {
+            "type": "DiscreteState",
+            "values": ["off", "on"],
+            "qualifiedName": "core:OnOffState"
+          },
+          {
+            "type": "ContinuousState",
+            "qualifiedName": "core:PriorityLockTimerState"
+          },
+          {
+            "type": "ContinuousState",
+            "qualifiedName": "core:RSSILevelState"
+          },
+          {
+            "type": "DiscreteState",
+            "values": ["increase", "none", "standby"],
+            "qualifiedName": "core:RegulationModeState"
+          },
+          {
+            "type": "DiscreteState",
+            "values": ["available", "unavailable"],
+            "qualifiedName": "core:StatusState"
+          },
+          {
+            "type": "ContinuousState",
+            "qualifiedName": "core:TargetTemperatureState"
+          },
+          {
+            "type": "ContinuousState",
+            "qualifiedName": "core:VersionState"
+          },
+          {
+            "type": "DataState",
+            "qualifiedName": "io:ControllerAddressState"
+          },
+          {
+            "type": "DiscreteState",
+            "values": ["external", "internal"],
+            "qualifiedName": "io:InternalExternalSchedulingTypeState"
+          },
+          {
+            "type": "DiscreteState",
+            "values": [
+              "boost",
+              "comfort",
+              "comfort-1",
+              "comfort-2",
+              "eco",
+              "frostprotection",
+              "off",
+              "secured"
+            ],
+            "qualifiedName": "io:MaximumHeatingLevelState"
+          },
+          {
+            "type": "DataState",
+            "qualifiedName": "io:ModelState"
+          },
+          {
+            "type": "DiscreteState",
+            "values": ["base", "medium", "top"],
+            "qualifiedName": "io:NativeFunctionalLevelState"
+          },
+          {
+            "type": "DataState",
+            "qualifiedName": "io:PowerState"
+          },
+          {
+            "type": "DiscreteState",
+            "values": [
+              "comfortLevel1",
+              "comfortLevel2",
+              "comfortLevel3",
+              "comfortLevel4",
+              "environmentProtection",
+              "humanProtection",
+              "userLevel1",
+              "userLevel2"
+            ],
+            "qualifiedName": "io:PriorityLockLevelState"
+          },
+          {
+            "type": "DiscreteState",
+            "values": [
+              "LSC",
+              "SAAC",
+              "SFC",
+              "UPS",
+              "externalGateway",
+              "localUser",
+              "myself",
+              "rain",
+              "security",
+              "temperature",
+              "timer",
+              "user",
+              "wind"
+            ],
+            "qualifiedName": "io:PriorityLockOriginatorState"
+          },
+          {
+            "type": "ContinuousState",
+            "qualifiedName": "io:SetpointLoweringTemperatureInProgModeState"
+          },
+          {
+            "type": "DiscreteState",
+            "values": [
+              "boost",
+              "comfort",
+              "comfort-1",
+              "comfort-2",
+              "eco",
+              "frostprotection",
+              "off",
+              "secured"
+            ],
+            "qualifiedName": "io:TargetHeatingLevelState"
+          },
+          {
+            "type": "DataState",
+            "qualifiedName": "io:TensionState"
+          },
+          {
+            "type": "ContinuousState",
+            "qualifiedName": "io:TimerForTransitoryStateState"
+          }
+        ],
+        "dataProperties": [
+          {
+            "value": "500",
+            "qualifiedName": "core:identifyInterval"
+          }
+        ],
+        "widgetName": "AtlanticElectricalTowelDryer",
+        "uiProfiles": ["HeatingLevel", "StatefulThermostat", "Thermostat"],
+        "uiClass": "HeatingSystem",
+        "uiClassifiers": ["emitter"],
+        "qualifiedName": "io:AtlanticElectricalTowelDryer_IC3_IOComponent",
+        "type": "ACTUATOR"
+      },
+      "states": [
+        {
+          "name": "core:NameState",
+          "type": 3,
+          "value": "Bathroom Towel Dryer"
+        },
+        {
+          "name": "core:VersionState",
+          "type": 3,
+          "value": "45373235303038202020"
+        },
+        {
+          "name": "io:PriorityLockOriginatorState",
+          "type": 3,
+          "value": "unknown"
+        },
+        {
+          "name": "core:PriorityLockTimerState",
+          "type": 1,
+          "value": 0
+        },
+        {
+          "name": "core:CommandLockLevelsState",
+          "type": 3,
+          "value": "[]",
+          "lastUpdateTime": 1795126130000
+        },
+        {
+          "name": "core:StatusState",
+          "type": 3,
+          "value": "available"
+        },
+        {
+          "name": "core:DiscreteRSSILevelState",
+          "type": 3,
+          "value": "normal"
+        },
+        {
+          "name": "core:RSSILevelState",
+          "type": 2,
+          "value": 62.0
+        },
+        {
+          "name": "core:IdentifierState",
+          "type": 3,
+          "value": "00000000"
+        },
+        {
+          "name": "io:MaximumHeatingLevelState",
+          "type": 3,
+          "value": "unknown"
+        },
+        {
+          "name": "io:TimerForTransitoryStateState",
+          "type": 1,
+          "value": 65535
+        },
+        {
+          "name": "core:ComfortRoomTemperatureState",
+          "type": 1,
+          "value": 21
+        },
+        {
+          "name": "core:EcoRoomTemperatureState",
+          "type": 2,
+          "value": 3.5
+        },
+        {
+          "name": "io:SetpointLoweringTemperatureInProgModeState",
+          "type": 2,
+          "value": 3.5
+        },
+        {
+          "name": "core:RegulationModeState",
+          "type": 3,
+          "value": "standby"
+        },
+        {
+          "name": "core:ManufacturerNameState",
+          "type": 3,
+          "value": "Atlantic"
+        },
+        {
+          "name": "io:ModelState",
+          "type": 3,
+          "value": "ADELIS 2 DIGIT"
+        },
+        {
+          "name": "io:PowerState",
+          "type": 1,
+          "value": 500
+        },
+        {
+          "name": "io:TensionState",
+          "type": 1,
+          "value": 230
+        },
+        {
+          "name": "core:DerogatedTargetTemperatureState",
+          "type": 2,
+          "value": 0.0
+        },
+        {
+          "name": "io:NativeFunctionalLevelState",
+          "type": 3,
+          "value": "Base"
+        },
+        {
+          "name": "io:ControllerAddressState",
+          "type": 1,
+          "value": 9876542
+        },
+        {
+          "name": "core:TargetTemperatureState",
+          "type": 2,
+          "value": 21.0
+        },
+        {
+          "name": "core:OnOffState",
+          "type": 3,
+          "value": "on"
+        },
+        {
+          "name": "io:TargetHeatingLevelState",
+          "type": 3,
+          "value": "eco"
+        }
+      ],
+      "attributes": [
+        {
+          "name": "core:FirmwareRevision",
+          "type": 3,
+          "value": "E725008"
+        },
+        {
+          "name": "core:Manufacturer",
+          "type": 3,
+          "value": "Atlantic Group"
+        }
+      ],
+      "available": true,
+      "enabled": true,
+      "placeOID": "7b9c1d2e-3f40-4a51-8b62-7c83d94ea5f6",
+      "oid": "22866113-966c-5a59-9fb7-d538c0fb8cf6",
+      "widget": "AtlanticElectricalTowelDryer",
+      "type": 1
+    },
+    {
+      "label": "Bathroom Towel Dryer Occupancy",
+      "uiClass": "OccupancySensor",
+      "deviceURL": "io://1234-5678-7259/9876543#2",
+      "shortcut": false,
+      "controllableName": "io:OccupancyIOSystemDeviceSensor",
+      "creationTime": 1795126130000,
+      "lastUpdateTime": 1795126130000,
+      "definition": {
+        "commands": [],
+        "states": [
+          {
+            "type": "DiscreteState",
+            "values": ["available", "unavailable"],
+            "qualifiedName": "core:StatusState"
+          }
+        ],
+        "dataProperties": [],
+        "widgetName": "OccupancySensor",
+        "uiProfiles": ["Specific"],
+        "uiClass": "OccupancySensor",
+        "qualifiedName": "io:OccupancyIOSystemDeviceSensor",
+        "type": "SENSOR"
+      },
+      "states": [
+        {
+          "name": "core:StatusState",
+          "type": 3,
+          "value": "available"
+        }
+      ],
+      "attributes": [
+        {
+          "name": "core:FirmwareRevision",
+          "type": 3,
+          "value": "E725008"
+        },
+        {
+          "name": "core:Manufacturer",
+          "type": 3,
+          "value": "Atlantic Group"
+        },
+        {
+          "name": "core:PowerSourceType",
+          "type": 3,
+          "value": "mainSupply"
+        }
+      ],
+      "available": true,
+      "enabled": true,
+      "placeOID": "7b9c1d2e-3f40-4a51-8b62-7c83d94ea5f6",
+      "oid": "71a89f7b-c16a-541b-856a-e5fe932a04b9",
+      "widget": "OccupancySensor",
+      "type": 2
+    },
+    {
+      "label": "Bathroom Towel Dryer Light",
+      "uiClass": "LightSensor",
+      "deviceURL": "io://1234-5678-7259/9876543#3",
+      "shortcut": false,
+      "controllableName": "io:LightIOSystemDeviceSensor",
+      "creationTime": 1795126130000,
+      "lastUpdateTime": 1795126130000,
+      "definition": {
+        "commands": [],
+        "states": [
+          {
+            "type": "DiscreteState",
+            "values": ["available", "unavailable"],
+            "qualifiedName": "core:StatusState"
+          }
+        ],
+        "dataProperties": [],
+        "widgetName": "LuminanceSensor",
+        "uiProfiles": ["Specific"],
+        "uiClass": "LightSensor",
+        "qualifiedName": "io:LightIOSystemDeviceSensor",
+        "type": "SENSOR"
+      },
+      "states": [
+        {
+          "name": "core:StatusState",
+          "type": 3,
+          "value": "available"
+        }
+      ],
+      "attributes": [
+        {
+          "name": "core:FirmwareRevision",
+          "type": 3,
+          "value": "E725008"
+        },
+        {
+          "name": "core:Manufacturer",
+          "type": 3,
+          "value": "Atlantic Group"
+        },
+        {
+          "name": "core:MeasuredValueType",
+          "type": 3,
+          "value": "core:LuminanceInLux"
+        },
+        {
+          "name": "core:PowerSourceType",
+          "type": 3,
+          "value": "mainSupply"
+        }
+      ],
+      "available": true,
+      "enabled": true,
+      "placeOID": "7b9c1d2e-3f40-4a51-8b62-7c83d94ea5f6",
+      "oid": "fe7f3171-cf7c-5ac3-a1ea-144e6e1de035",
+      "widget": "LuminanceSensor",
+      "type": 2
+    },
+    {
+      "label": "Bathroom Towel Dryer Humidity",
+      "uiClass": "HumiditySensor",
+      "deviceURL": "io://1234-5678-7259/9876543#4",
+      "shortcut": false,
+      "controllableName": "io:RelativeHumidityIOSystemDeviceSensor",
+      "creationTime": 1795126130000,
+      "lastUpdateTime": 1795126130000,
+      "definition": {
+        "commands": [],
+        "states": [
+          {
+            "type": "DiscreteState",
+            "values": ["available", "unavailable"],
+            "qualifiedName": "core:StatusState"
+          }
+        ],
+        "dataProperties": [],
+        "widgetName": "RelativeHumiditySensor",
+        "uiProfiles": ["Specific"],
+        "uiClass": "HumiditySensor",
+        "qualifiedName": "io:RelativeHumidityIOSystemDeviceSensor",
+        "type": "SENSOR"
+      },
+      "states": [
+        {
+          "name": "core:StatusState",
+          "type": 3,
+          "value": "available"
+        }
+      ],
+      "attributes": [
+        {
+          "name": "core:FirmwareRevision",
+          "type": 3,
+          "value": "E725008"
+        },
+        {
+          "name": "core:Manufacturer",
+          "type": 3,
+          "value": "Atlantic Group"
+        },
+        {
+          "name": "core:PowerSourceType",
+          "type": 3,
+          "value": "mainSupply"
+        },
+        {
+          "name": "core:MeasuredValueType",
+          "type": 3,
+          "value": "core:RelativeValueInPercentage"
+        }
+      ],
+      "available": true,
+      "enabled": true,
+      "placeOID": "7b9c1d2e-3f40-4a51-8b62-7c83d94ea5f6",
+      "oid": "0046c11f-d215-5428-9155-ed5b42d31c67",
+      "widget": "RelativeHumiditySensor",
+      "type": 2
+    },
+    {
+      "label": "Bathroom Towel Dryer Temperature",
+      "uiClass": "TemperatureSensor",
+      "deviceURL": "io://1234-5678-7259/9876543#5",
+      "shortcut": false,
+      "controllableName": "io:TemperatureInCelciusIOSystemDeviceSensor",
+      "creationTime": 1795126130000,
+      "lastUpdateTime": 1795126130000,
+      "definition": {
+        "commands": [],
+        "states": [
+          {
+            "type": "DiscreteState",
+            "values": ["available", "unavailable"],
+            "qualifiedName": "core:StatusState"
+          }
+        ],
+        "dataProperties": [],
+        "widgetName": "TemperatureSensor",
+        "uiProfiles": ["Specific"],
+        "uiClass": "TemperatureSensor",
+        "qualifiedName": "io:TemperatureInCelciusIOSystemDeviceSensor",
+        "type": "SENSOR"
+      },
+      "states": [
+        {
+          "name": "core:StatusState",
+          "type": 3,
+          "value": "available"
+        }
+      ],
+      "attributes": [
+        {
+          "name": "core:FirmwareRevision",
+          "type": 3,
+          "value": "E725008"
+        },
+        {
+          "name": "core:Manufacturer",
+          "type": 3,
+          "value": "Atlantic Group"
+        },
+        {
+          "name": "core:MeasuredValueType",
+          "type": 3,
+          "value": "core:TemperatureInCelcius"
+        },
+        {
+          "name": "core:PowerSourceType",
+          "type": 3,
+          "value": "mainSupply"
+        }
+      ],
+      "available": true,
+      "enabled": true,
+      "placeOID": "7b9c1d2e-3f40-4a51-8b62-7c83d94ea5f6",
+      "oid": "159ffbbe-3aa4-5945-a4dd-9e2d7e329871",
+      "widget": "TemperatureSensor",
+      "type": 2
+    },
+    {
+      "label": "Bathroom Towel Dryer Consumption",
+      "uiClass": "ElectricitySensor",
+      "deviceURL": "io://1234-5678-7259/9876543#6",
+      "shortcut": false,
+      "controllableName": "io:CumulatedElectricalEnergyConsumptionIOSystemDeviceSensor",
+      "creationTime": 1795126130000,
+      "lastUpdateTime": 1795126130000,
+      "definition": {
+        "commands": [],
+        "states": [
+          {
+            "type": "ContinuousState",
+            "qualifiedName": "core:ElectricEnergyConsumptionState"
+          },
+          {
+            "type": "DiscreteState",
+            "values": ["available", "unavailable"],
+            "qualifiedName": "core:StatusState"
+          }
+        ],
+        "dataProperties": [],
+        "widgetName": "CumulativeElectricPowerConsumptionSensor",
+        "uiProfiles": ["ElectricEnergyConsumption"],
+        "uiClass": "ElectricitySensor",
+        "qualifiedName": "io:CumulatedElectricalEnergyConsumptionIOSystemDeviceSensor",
+        "type": "SENSOR"
+      },
+      "states": [
+        {
+          "name": "core:StatusState",
+          "type": 3,
+          "value": "available"
+        },
+        {
+          "name": "core:ElectricEnergyConsumptionState",
+          "type": 1,
+          "value": 2000
+        }
+      ],
+      "attributes": [
+        {
+          "name": "core:FirmwareRevision",
+          "type": 3,
+          "value": "E725008"
+        },
+        {
+          "name": "core:Manufacturer",
+          "type": 3,
+          "value": "Atlantic Group"
+        },
+        {
+          "name": "core:PowerSourceType",
+          "type": 3,
+          "value": "mainSupply"
+        },
+        {
+          "name": "core:MeasuredValueType",
+          "type": 3,
+          "value": "core:ElectricalEnergyInWh"
+        }
+      ],
+      "available": true,
+      "enabled": true,
+      "placeOID": "7b9c1d2e-3f40-4a51-8b62-7c83d94ea5f6",
+      "oid": "f4c43919-8486-53b9-9bb2-a25887676c7b",
+      "widget": "CumulativeElectricPowerConsumptionSensor",
+      "type": 2
+    },
+    {
+      "label": "Bathroom Towel Dryer Room Temperature",
+      "uiClass": "TemperatureSensor",
+      "deviceURL": "io://1234-5678-7259/9876543#7",
+      "shortcut": false,
+      "controllableName": "io:TemperatureInCelciusIOSystemDeviceSensor",
+      "creationTime": 1795126130000,
+      "lastUpdateTime": 1795126130000,
+      "definition": {
+        "commands": [],
+        "states": [
+          {
+            "type": "DiscreteState",
+            "values": ["available", "unavailable"],
+            "qualifiedName": "core:StatusState"
+          },
+          {
+            "type": "ContinuousState",
+            "qualifiedName": "core:TemperatureState"
+          }
+        ],
+        "dataProperties": [],
+        "widgetName": "TemperatureSensor",
+        "uiProfiles": ["Temperature"],
+        "uiClass": "TemperatureSensor",
+        "qualifiedName": "io:TemperatureInCelciusIOSystemDeviceSensor",
+        "type": "SENSOR"
+      },
+      "states": [
+        {
+          "name": "core:StatusState",
+          "type": 3,
+          "value": "available"
+        },
+        {
+          "name": "core:TemperatureState",
+          "type": 2,
+          "value": 18.5
+        }
+      ],
+      "attributes": [
+        {
+          "name": "core:FirmwareRevision",
+          "type": 3,
+          "value": "E725008"
+        },
+        {
+          "name": "core:Manufacturer",
+          "type": 3,
+          "value": "Atlantic Group"
+        },
+        {
+          "name": "core:MeasuredValueType",
+          "type": 3,
+          "value": "core:TemperatureInCelcius"
+        },
+        {
+          "name": "core:PowerSourceType",
+          "type": 3,
+          "value": "mainSupply"
+        }
+      ],
+      "available": true,
+      "enabled": true,
+      "placeOID": "7b9c1d2e-3f40-4a51-8b62-7c83d94ea5f6",
+      "oid": "fcb860fe-bfaa-5eb3-8911-810afaf99936",
+      "widget": "TemperatureSensor",
+      "type": 2
+    },
+    {
+      "label": "Bathroom Towel Dryer Weather",
+      "uiClass": "WeatherSensor",
+      "deviceURL": "io://1234-5678-7259/9876543#8",
+      "shortcut": false,
+      "controllableName": "core:WeatherSystemSensor",
+      "creationTime": 1795126130000,
+      "lastUpdateTime": 1795126130000,
+      "definition": {
+        "commands": [
+          {
+            "commandName": "advancedRefresh",
+            "nparams": 2
+          }
+        ],
+        "states": [],
+        "dataProperties": [],
+        "widgetName": "WeatherForecastSensor",
+        "uiProfiles": ["Specific"],
+        "uiClass": "WeatherSensor",
+        "qualifiedName": "core:WeatherSystemSensor",
+        "type": "SENSOR"
+      },
+      "available": true,
+      "enabled": true,
+      "placeOID": "7b9c1d2e-3f40-4a51-8b62-7c83d94ea5f6",
+      "oid": "4609b629-4af1-5e5a-8b94-b2e9f61b9523",
+      "widget": "WeatherForecastSensor",
+      "type": 2
+    }
+  ]
+}

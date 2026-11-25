@@ -21,6 +21,8 @@ from .const import DOMAIN
 from .coordinator import LockData, SchlageConfigEntry, SchlageDataUpdateCoordinator
 from .entity import SchlageEntity
 
+PARALLEL_UPDATES = 1
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -69,13 +71,13 @@ class SchlageLockEntity(SchlageEntity, LockEntity):
     @override
     async def async_lock(self, **kwargs: Any) -> None:
         """Lock the device."""
-        await self.hass.async_add_executor_job(self._lock.lock)
+        await self._async_send_command(self._lock.lock)
         await self.coordinator.async_request_refresh()
 
     @override
     async def async_unlock(self, **kwargs: Any) -> None:
         """Unlock the device."""
-        await self.hass.async_add_executor_job(self._lock.unlock)
+        await self._async_send_command(self._lock.unlock)
         await self.coordinator.async_request_refresh()
 
     @staticmethod

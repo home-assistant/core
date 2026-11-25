@@ -87,12 +87,15 @@ from .const import (
     CLIENT_ID,
     CONF_VIN,
     DOMAIN,
+    ISSUE_ENERGY_SITE_NOT_PAIRED,
     ISSUE_GATEWAY_NOT_FOUND,
+    ISSUE_STREAMING_ALLOWANCE,
     LABS_CHARGE_ON_SOLAR_FEATURE,
     LOGGER,
     POWERWALL_KEY_FILE,
     RSA_PARENT_KEY,
     STREAM_DISCONNECT_GRACE,
+    STREAMING_ALLOWANCE_EXCEEDED,
     SUBENTRY_TYPE_ENERGY_SITE,
     SUBENTRY_TYPE_VEHICLE,
     VEHICLE_ISSUE_KEY,
@@ -346,6 +349,55 @@ def _setup_vehicle_repairs(
             return
         _async_update_vehicle_repairs(hass, entry, vins, data["vehicles"])
 
+    entry.async_on_unload(
+        metadata_coordinator.async_add_listener(_handle_metadata_update)
+    )
+
+
+def _setup_energy_site_repairs(
+    hass: HomeAssistant,
+    entry: TeslemetryConfigEntry,
+    metadata_coordinator: TeslemetryMetadataCoordinator,
+    energysites: list[TeslemetryEnergyData],
+) -> None:
+    """Keep a repair issue for each battery site signed commands cannot reach."""
+
+    @callback
+    def _handle_metadata_update() -> None:
+        """Re-evaluate energy site repair issues when metadata changes."""
+        with ir.async_refresh_issues(
+            hass,
+            DOMAIN,
+            issue_id_pattern=f"{ISSUE_ENERGY_SITE_NOT_PAIRED}_",
+            config_entry_id=entry.entry_id,
+        ):
+            for energysite in energysites:
+                if (
+                    not energysite.can_local_control
+                    or energysite.signed_commands_available(metadata_coordinator.data)
+                ):
+                    continue
+                placeholders = {
+                    "site": energysite.device["name"],
+                    "link": f"{energysite.device['configuration_url']}/setup",
+                }
+                ir.async_create_issue(
+                    hass,
+                    DOMAIN,
+                    f"{ISSUE_ENERGY_SITE_NOT_PAIRED}_{entry.entry_id}_{energysite.id}",
+                    config_entry_id=entry.entry_id,
+                    is_fixable=True,
+                    severity=ir.IssueSeverity.WARNING,
+                    translation_key=ISSUE_ENERGY_SITE_NOT_PAIRED,
+                    translation_placeholders=placeholders,
+                    data={
+                        "entry_id": entry.entry_id,
+                        "site_id": energysite.id,
+                        **placeholders,
+                    },
+                )
+
+    _handle_metadata_update()
     entry.async_on_unload(
         metadata_coordinator.async_add_listener(_handle_metadata_update)
     )
@@ -962,6 +1014,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -
 
     gateway_refresh.async_finish()
 
+    # A config that is still refused returns its repair when it is sent again below
+    ir.async_refresh_issues(
+        hass,
+        DOMAIN,
+        issue_id_pattern=f"{ISSUE_STREAMING_ALLOWANCE}_",
+        config_entry_id=entry.entry_id,
+    ).async_finish()
+
     # Run all first refreshes
     await asyncio.gather(
         *(
@@ -1029,6 +1089,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -
         {vehicle.vin for vehicle in vehicles},
         vehicle_metadata,
     )
+
+    _setup_energy_site_repairs(hass, entry, metadata_coordinator, energysites)
 
     entry.async_on_unload(_async_subscribe_charge_on_solar_labs(hass, entry))
 
@@ -1190,7 +1252,9 @@ async def _async_setup_energy_site(
         ) from e
 
     live_coordinator = (
-        TeslemetryEnergySiteLiveCoordinator(hass, entry, energy_site, live_status)
+        TeslemetryEnergySiteLiveCoordinator(
+            hass, entry, energy_site, live_status, stream
+        )
         if isinstance(live_status, dict)
         else None
     )
@@ -1382,6 +1446,27 @@ async def async_setup_stream(
         vehicle.stream_vehicle.listen_Version(
             create_vehicle_streaming_listener(hass, vehicle.vin, entry.entry_id)
         )
+    )
+
+    @callback
+    def handle_config_refused(error: str, description: str | None) -> None:
+        """Raise a repair when the streaming allowance refuses the config."""
+        if error != STREAMING_ALLOWANCE_EXCEEDED:
+            return
+        ir.async_create_issue(
+            hass,
+            DOMAIN,
+            f"{ISSUE_STREAMING_ALLOWANCE}_{vehicle.vin}",
+            config_entry_id=entry.entry_id,
+            is_fixable=False,
+            learn_more_url=f"https://teslemetry.com/console/vehicle/{vehicle.vin}/fields",
+            severity=ir.IssueSeverity.WARNING,
+            translation_key=ISSUE_STREAMING_ALLOWANCE,
+            translation_placeholders={"vehicle": vehicle.device["name"] or vehicle.vin},
+        )
+
+    entry.async_on_unload(
+        vehicle.stream_vehicle.listen_config_refused(handle_config_refused)
     )
 
 
