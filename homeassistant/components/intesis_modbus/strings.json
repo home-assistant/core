@@ -80,7 +80,7 @@
         "name": "Error",
         "state": {
           "communication_error": "Communication error with the unit",
-          "initialising": "Initialising",
+          "initialising": "Initializing",
           "none": "No error",
           "unit_error": "Unit error"
         }
