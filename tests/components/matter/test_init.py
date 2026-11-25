@@ -822,12 +822,12 @@ async def test_ipv6_disabled_repair(
         await hass.async_block_till_done()
 
     assert entry.state is ConfigEntryState.LOADED
-    issues = {
+    issues = [
         (issue.issue_id, issue.config_entry_id)
         for issue in issue_registry.issues.values()
         if issue.domain == DOMAIN
-    }
-    assert (("ipv6_disabled", entry.entry_id) in issues) is issue_expected
+    ]
+    assert issues == [("ipv6_disabled", entry.entry_id)] * issue_expected
 
 
 async def test_ipv6_repair_not_raised_without_supervisor(
