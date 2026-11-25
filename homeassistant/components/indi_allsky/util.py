@@ -6,23 +6,26 @@ import ssl
 from homeassistant.util.ssl import get_default_context, get_default_no_verify_context
 
 
+def _parse_ip_address(
+    host: str,
+) -> ipaddress.IPv4Address | ipaddress.IPv6Address | None:
+    """Parse host as an IP address, or return None."""
+    try:
+        return ipaddress.ip_address(host.strip(" []"))
+    except ValueError:
+        return None
+
+
 def normalize_host(host: str) -> str:
     """Normalize hostname or IP address into canonical form."""
-    host_clean = host.strip(" []")
-    try:
-        return str(ipaddress.ip_address(host_clean))
-    except ValueError:
-        return host_clean.lower().removesuffix(".")
+    if (ip := _parse_ip_address(host)) is not None:
+        return str(ip)
+    return host.strip(" []").lower().removesuffix(".")
 
 
 def is_ip_address(host: str) -> bool:
     """Return True if host is an IP address."""
-    try:
-        ipaddress.ip_address(host.strip(" []"))
-    except ValueError:
-        return False
-    else:
-        return True
+    return _parse_ip_address(host) is not None
 
 
 def get_ssl_context(ssl_enabled: bool, verify_ssl: bool) -> bool | ssl.SSLContext:
