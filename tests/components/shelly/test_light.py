@@ -1316,8 +1316,34 @@ async def test_rpc_ledstrip_background_light(
     assert (state := hass.states.get(LEDSTRIP_BACKGROUND_ENTITY_ID))
     assert state.state == STATE_OFF
 
-    # Without a color or brightness the background turns on at full white
+    # Turning on without a color or brightness restores the last background color
     mock_ledstrip_rpc_device.ledstrip_set.reset_mock()
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        LightService.TURN_ON,
+        {TargetKey.ENTITY_ID: LEDSTRIP_BACKGROUND_ENTITY_ID},
+        blocking=True,
+    )
+
+    mock_ledstrip_rpc_device.ledstrip_set.assert_called_once_with(
+        0, {"on": True, "bg_rgb": [64, 96, 128]}
+    )
+
+
+async def test_rpc_ledstrip_background_light_turn_on_default_white(
+    hass: HomeAssistant,
+    mock_ledstrip_rpc_device: Mock,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test the background light turns on white without a color to restore."""
+    monkeypatch.setitem(
+        mock_ledstrip_rpc_device.status,
+        "ledstrip:0",
+        MOCK_LEDSTRIP_STATUS_AURORA | {"on": True},
+    )
+
+    await init_integration(hass, 4)
+
     await hass.services.async_call(
         LIGHT_DOMAIN,
         LightService.TURN_ON,

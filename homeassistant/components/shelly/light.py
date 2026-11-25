@@ -628,6 +628,7 @@ class RpcShellyLedStripBackground(ShellyRpcAttributeEntity, LightEntity):
     _id: int
     _attr_color_mode = ColorMode.RGB
     _attr_supported_color_modes = {ColorMode.RGB}
+    _last_bg_rgb: tuple[int, ...] = (255, 255, 255)
 
     @property
     @override
@@ -658,11 +659,8 @@ class RpcShellyLedStripBackground(ShellyRpcAttributeEntity, LightEntity):
 
     @property
     @override
-    def rgb_color(self) -> tuple[int, int, int] | None:
+    def rgb_color(self) -> tuple[int, int, int]:
         """Return the background color at full brightness."""
-        if not self.brightness:
-            return None
-
         return cast(
             tuple[int, int, int],
             color_util.match_max_scale((255,), tuple(self._bg_rgb)),
@@ -672,8 +670,9 @@ class RpcShellyLedStripBackground(ShellyRpcAttributeEntity, LightEntity):
     @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the LED strip with the background color."""
-        rgb = kwargs.get(ATTR_RGB_COLOR) or self.rgb_color or (255, 255, 255)
-        brightness = kwargs.get(ATTR_BRIGHTNESS) or self.brightness or 255
+        bg_rgb = tuple(self._bg_rgb) if any(self._bg_rgb) else self._last_bg_rgb
+        rgb = kwargs.get(ATTR_RGB_COLOR) or color_util.match_max_scale((255,), bg_rgb)
+        brightness = kwargs.get(ATTR_BRIGHTNESS) or max(bg_rgb)
         await self.coordinator.device.ledstrip_set(
             self._id,
             {
@@ -689,6 +688,8 @@ class RpcShellyLedStripBackground(ShellyRpcAttributeEntity, LightEntity):
         # Keep the effect's stored background color when the strip is already off
         if not self.status["on"]:
             return
+        if any(self._bg_rgb):
+            self._last_bg_rgb = tuple(self._bg_rgb)
         await self.coordinator.device.ledstrip_set(self._id, {"bg_rgb": [0, 0, 0]})
 
 
