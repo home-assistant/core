@@ -224,9 +224,9 @@ class StateVacuumEntity(
     def async_delete_segments_issue(self) -> None:
         """Delete the repair issue created when vacuum segments have changed.
 
-        Integrations should call this method when the vacuum reports the same
-        segments again as were last mapped to areas. It is not an error to call
-        it when no issue exists.
+        Integrations should call this method when the segments reported by the
+        vacuum match `last_seen_segments` again, so the user no longer needs to
+        update the area mapping. Calling it when no issue exists does nothing.
         """
         if self.registry_entry is None:
             raise RuntimeError(
