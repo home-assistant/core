@@ -357,7 +357,10 @@ async def test_holiday_program_not_supported(
         await hass.services.async_call(
             DOMAIN,
             "cancel_holiday",
-            {TargetKey.ENTITY_ID: "climate.model0_heating", "program": "holiday_at_home"},
+            {
+                TargetKey.ENTITY_ID: "climate.model0_heating",
+                "program": "holiday_at_home",
+            },
             blocking=True,
         )
     assert exc_info.value.translation_key == "holiday_not_supported"
@@ -431,7 +434,7 @@ async def test_holiday_api_error(
         await hass.services.async_call(
             DOMAIN,
             service,
-            {ATTR_ENTITY_ID: "climate.model0_heating", **data},
+            {TargetKey.ENTITY_ID: "climate.model0_heating", **data},
             blocking=True,
         )
     assert exc_info.value.translation_key == "api_error"
@@ -473,7 +476,7 @@ async def test_holiday_support_check_api_error(
         await hass.services.async_call(
             DOMAIN,
             service,
-            {ATTR_ENTITY_ID: "climate.model0_heating", **data},
+            {TargetKey.ENTITY_ID: "climate.model0_heating", **data},
             blocking=True,
         )
     assert exc_info.value.translation_key == "api_error"
