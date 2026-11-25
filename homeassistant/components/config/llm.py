@@ -1,6 +1,5 @@
 """LLM tools for the config integration."""
 
-from collections import defaultdict
 from collections.abc import Iterable, Iterator, Mapping
 from contextlib import suppress
 import heapq
@@ -39,11 +38,13 @@ from homeassistant.helpers import (
 from homeassistant.helpers.entity import get_unit_of_measurement
 from homeassistant.helpers.llm import (
     LLM_API_HOME_ASSISTANT,
+    SHORT_ID_MIN_LENGTH,
     LLMContext,
     Tool,
     ToolAnnotations,
     ToolInput,
     ToolResult,
+    format_short_ids,
 )
 from homeassistant.helpers.network import NoURLAvailableError, get_url
 from homeassistant.helpers.typing import VolDictType
@@ -75,7 +76,6 @@ _STATUS_STATES: dict[str, set[ConfigEntryState]] = {
 }
 _NON_EMPTY_STRING = probatio.All(str, probatio.Strip, probatio.NonEmpty())
 _DOMAIN_STRING = probatio.All(str, probatio.Strip, probatio.Lower, probatio.NonEmpty())
-_MIN_SHORT_ID_LEN = 4
 _OAUTH_RUNTIME_ERRORS = ("No current request in context", "No header in request")
 type _FlowCategory = Literal["config", "options", "config_subentries"]
 _FLOW_TYPES = ["config", "options", "reconfigure", "subentry"]
@@ -87,36 +87,15 @@ def _resolve_language(hass: HomeAssistant, language: str | None) -> str:
     return language if language and language != "*" else (hass.config.language or "en")
 
 
-def _format_short_ids(pairs: Iterable[tuple[str, str]]) -> dict[str, str]:
-    """Return a mapping of full ID to short '<prefix>:<suffix>' ID.
-
-    Short IDs reduce token usage and LLM transcription errors across tool calls.
-    The trailing suffix starts at 4 characters and expands if another item with
-    the same prefix shares that suffix.
-    """
-    groups: defaultdict[tuple[str, str], list[str]] = defaultdict(list)
-    for prefix, full_id in pairs:
-        groups[(prefix, full_id[-_MIN_SHORT_ID_LEN:])].append(full_id)
-
-    result: dict[str, str] = {}
-    for (prefix, _), group in groups.items():
-        length = _MIN_SHORT_ID_LEN
-        while len(group) > 1 and len({fid[-length:] for fid in group}) < len(group):
-            length += 1
-        for fid in group:
-            result[fid] = f"{prefix}:{fid[-length:]}"
-    return result
-
-
 def _format_short_entry_ids(entries: Iterable[ConfigEntry]) -> dict[str, str]:
     """Return a mapping of full entry_id to short '<domain>:<suffix>' ID."""
-    return _format_short_ids((entry.domain, entry.entry_id) for entry in entries)
+    return format_short_ids((entry.domain, entry.entry_id) for entry in entries)
 
 
 def _resolve_short_entry_id(hass: HomeAssistant, entry_id: str) -> ConfigEntry:
     """Resolve a ConfigEntry from a '<domain>:<suffix>' short ID."""
     domain, sep, suffix = entry_id.partition(":")
-    if not sep or not domain or len(suffix) < _MIN_SHORT_ID_LEN:
+    if not sep or not domain or len(suffix) < SHORT_ID_MIN_LENGTH:
         raise HomeAssistantError(f"Config entry '{entry_id}' not found.")
 
     matches = [
@@ -133,7 +112,7 @@ def _resolve_short_entry_id(hass: HomeAssistant, entry_id: str) -> ConfigEntry:
 def _resolve_short_subentry_id(entry: ConfigEntry, subentry_id: str) -> ConfigSubentry:
     """Resolve a ConfigSubentry from a '<subentry_type>:<suffix>' short ID."""
     subentry_type, sep, suffix = subentry_id.rpartition(":")
-    if not sep or not subentry_type or len(suffix) < _MIN_SHORT_ID_LEN:
+    if not sep or not subentry_type or len(suffix) < SHORT_ID_MIN_LENGTH:
         raise HomeAssistantError(f"Subentry '{subentry_id}' not found.")
 
     matches = [
@@ -198,7 +177,7 @@ def _format_config_entry(entry: ConfigEntry, short_id: str) -> JsonObjectType:
             for sub_type, sub_meta in entry.supported_subentry_types.items()
         }
     if entry.subentries:
-        short_subentry_ids = _format_short_ids(
+        short_subentry_ids = format_short_ids(
             (subentry.subentry_type, subentry.subentry_id)
             for subentry in entry.subentries.values()
         )
@@ -499,7 +478,7 @@ def _resolve_short_flow_id(
 ]:
     """Resolve an active flow from a '<domain>:<suffix>' short ID."""
     domain, sep, suffix = flow_id.partition(":")
-    if not sep or not domain or len(suffix) < _MIN_SHORT_ID_LEN:
+    if not sep or not domain or len(suffix) < SHORT_ID_MIN_LENGTH:
         raise HomeAssistantError(f"Flow '{flow_id}' not found.")
 
     flow_mgr = hass.config_entries.flow
@@ -619,7 +598,7 @@ async def _async_finalize_flow_step(
                 f"component.homeassistant.config.abort.{reason}"
             )
 
-    flow_id = f"{domain}:{result['flow_id'][-_MIN_SHORT_ID_LEN:]}"
+    flow_id = f"{domain}:{result['flow_id'][-SHORT_ID_MIN_LENGTH:]}"
     formatted = llm_flow.format_result(
         result,
         trans,
@@ -714,7 +693,7 @@ class GetFlowsInProgressTool(Tool):
                 flow_title = title_trans.get(f"component.{handler}.title", handler)
 
             item: JsonObjectType = {
-                "flow_id": f"{handler}:{flw['flow_id'][-_MIN_SHORT_ID_LEN:]}",
+                "flow_id": f"{handler}:{flw['flow_id'][-SHORT_ID_MIN_LENGTH:]}",
                 "domain": handler,
                 "source": context["source"],
                 "title": flow_title,
