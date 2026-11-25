@@ -6,7 +6,7 @@ from aiohttp import ClientSession
 from linkplay.bridge import LinkPlayBridge
 from linkplay.controller import LinkPlayController
 from linkplay.discovery import linkplay_factory_httpapi_bridge
-from linkplay.exceptions import LinkPlayRequestException
+from linkplay.exceptions import LinkPlayInvalidDataException, LinkPlayRequestException
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST
@@ -47,7 +47,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: LinkPlayConfigEntry) -> 
     # try create a bridge
     try:
         bridge = await linkplay_factory_httpapi_bridge(entry.data[CONF_HOST], session)
-    except LinkPlayRequestException as exception:
+    except (LinkPlayRequestException, LinkPlayInvalidDataException) as exception:
         raise ConfigEntryNotReady(
             f"Failed to connect to LinkPlay device at {entry.data[CONF_HOST]}"
         ) from exception
