@@ -2,6 +2,7 @@
 
 from unittest.mock import AsyncMock
 
+import pytest
 from pytest_homeassistant.common import async_fire_mqtt_message
 from qbusmqttapi.state import QbusMqttShutterState
 
@@ -285,6 +286,42 @@ async def test_cover_slats(
     entity_state = hass.states.get(_ENTITY_ID_SLAT)
     assert entity_state.state == CoverState.CLOSED
     assert entity_state.attributes[ATTR_CURRENT_TILT_POSITION] == 0
+
+
+@pytest.mark.parametrize(
+    ("slat_position", "sent_slat_position"),
+    [
+        pytest.param(0, 50, id="closed_at_0"),
+        pytest.param(100, 50, id="closed_at_100"),
+        pytest.param(50, 0, id="open"),
+    ],
+)
+async def test_cover_slats_toggle_tilt(
+    hass: HomeAssistant,
+    setup_integration: None,
+    mock_publish_state: AsyncMock,
+    slat_position: int,
+    sent_slat_position: int,
+) -> None:
+    """Test toggling the slats opens them at both closed ends."""
+    async_fire_mqtt_message(
+        hass,
+        _TOPIC_SLAT_STATE,
+        f'{{"id":"UL31","properties":{{"slatPosition":{slat_position}}},"type":"event"}}',
+    )
+    await hass.async_block_till_done()
+
+    mock_publish_state.reset_mock()
+    await hass.services.async_call(
+        COVER_DOMAIN,
+        CoverService.TOGGLE_TILT,
+        {TargetKey.ENTITY_ID: _ENTITY_ID_SLAT},
+        blocking=True,
+    )
+
+    assert _get_publish_state(mock_publish_state).read_slat_position() == (
+        sent_slat_position
+    )
 
 
 def _get_publish_state(mock_publish_state: AsyncMock) -> QbusMqttShutterState:
