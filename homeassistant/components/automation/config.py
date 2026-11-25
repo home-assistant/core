@@ -6,7 +6,6 @@ from enum import StrEnum
 from typing import Any, Literal
 
 import probatio
-from probatio.humanize import humanize_error
 
 from homeassistant.components import blueprint
 from homeassistant.components.trace import TRACE_CONFIG_SCHEMA
@@ -32,6 +31,7 @@ from homeassistant.helpers.typing import ConfigType
 from homeassistant.helpers.validation_errors import (
     ValidationErrorInfo,
     ValidationErrors,
+    humanize_validation_errors,
     iter_validation_errors,
 )
 from homeassistant.util.yaml.input import UndefinedSubstitution
@@ -122,17 +122,16 @@ async def _async_validate_config_item(  # noqa: C901
     with suppress(ValueError):
         raw_config = dict(config)
 
-    def _humanize(err: Exception, config: ConfigType) -> str:
-        """Humanize probatio.Invalid, stringify other exceptions."""
-        if isinstance(err, probatio.Invalid):
-            return humanize_error(config, err)
-        return str(err)
+    def _humanize(err: probatio.Invalid | HomeAssistantError) -> str:
+        """Return the errors in err, with the values they are about as written."""
+        return humanize_validation_errors(
+            config if raw_config is None else raw_config, err
+        )
 
     def _log_invalid_automation(
-        err: Exception,
+        err: probatio.Invalid | HomeAssistantError,
         automation_name: str,
         problem: str,
-        config: ConfigType,
     ) -> None:
         """Log an error about invalid automation."""
         if not warn_on_errors:
@@ -143,7 +142,7 @@ async def _async_validate_config_item(  # noqa: C901
                 "Blueprint '%s' generated invalid automation with inputs %s: %s",
                 blueprint_inputs.blueprint.name,
                 blueprint_inputs.inputs,
-                _humanize(err, config),
+                _humanize(err),
             )
             return
 
@@ -151,7 +150,7 @@ async def _async_validate_config_item(  # noqa: C901
             "%s %s and has been disabled: %s",
             automation_name,
             problem,
-            _humanize(err, config),
+            _humanize(err),
         )
         return
 
@@ -176,6 +175,36 @@ async def _async_validate_config_item(  # noqa: C901
         automation_config.raw_blueprint_inputs = raw_blueprint_inputs
         automation_config.raw_config = raw_config
         _set_validation_status(automation_config, validation_status, validation_error)
+        return automation_config
+
+    async def _async_invalid(
+        validation_status: ValidationStatus,
+        problem: str,
+        fail_fast_error: probatio.Invalid | HomeAssistantError,
+        automation_config: AutomationConfig | None = None,
+    ) -> AutomationConfig:
+        """Log all errors of the invalid automation and set its validation status.
+
+        Must not be awaited in an except block: each error would be chained to
+        the one which is handled.
+        """
+        # Done first: it clears the traceback, which holds this frame
+        fail_fast_errors = list(iter_validation_errors(fail_fast_error))
+        submitted_keys = raw_config or ()
+        if _has_key_conflict(submitted_keys):
+            # The schema stopped at the conflict, it is the only error
+            errors = ValidationErrors(fail_fast_errors)
+        else:
+            errors = ValidationErrors(
+                await _async_collect_located_errors(
+                    hass, config, fail_fast_errors, submitted_keys
+                )
+            )
+        _log_invalid_automation(errors, automation_name, problem)
+        error = _humanize(errors)
+        if automation_config is None:
+            return _minimal_config(validation_status, error)
+        _set_validation_status(automation_config, validation_status, error)
         return automation_config
 
     if blueprint.is_blueprint_instance_config(config):
@@ -219,13 +248,18 @@ async def _async_validate_config_item(  # noqa: C901
         elif CONF_ID in config:
             automation_name = f"Automation with ID '{config[CONF_ID]}'"
 
+    fail_fast_error: probatio.Invalid | HomeAssistantError | None = None
     try:
         validated_config = PLATFORM_SCHEMA(config)
     except probatio.Invalid as err:
-        _log_invalid_automation(err, automation_name, "could not be validated", config)
         if raise_on_errors:
+            _log_invalid_automation(err, automation_name, "could not be validated")
             raise
-        return _minimal_config(ValidationStatus.FAILED_SCHEMA, _humanize(err, config))
+        fail_fast_error = err
+    if fail_fast_error is not None:
+        return await _async_invalid(
+            ValidationStatus.FAILED_SCHEMA, "could not be validated", fail_fast_error
+        )
 
     automation_config = AutomationConfig(validated_config)
     automation_config.raw_blueprint_inputs = raw_blueprint_inputs
@@ -256,13 +290,14 @@ async def _async_validate_config_item(  # noqa: C901
         except (probatio.Invalid, HomeAssistantError) as err:
             if isinstance(err, probatio.Invalid):
                 err.prepend([key])
-            _log_invalid_automation(err, automation_name, problem, validated_config)
             if raise_on_errors:
+                _log_invalid_automation(err, automation_name, problem)
                 raise
-            _set_validation_status(
-                automation_config, validation_status, _humanize(err, validated_config)
+            fail_fast_error = err
+        if fail_fast_error is not None:
+            return await _async_invalid(
+                validation_status, problem, fail_fast_error, automation_config
             )
-            return automation_config
 
     return automation_config
 
