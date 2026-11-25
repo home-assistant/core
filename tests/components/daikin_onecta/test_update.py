@@ -213,6 +213,54 @@ async def test_firmware_pending_install_survives_missing_installed_version(
     assert state.attributes[UpdateEntityStateAttribute.IN_PROGRESS] is False
 
 
+async def test_firmware_pending_install_with_unknown_baseline(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+    mock_onecta_client: MockOnectaClient,
+) -> None:
+    """Keep an install pending when the pre-install version is unknown."""
+    existing_devices = _load_gateway_devices("dx4_firmwareavailable")
+    initial_devices = deepcopy(existing_devices)
+    gateway = initial_devices[0].gateway_management_point
+    assert gateway is not None
+    gateway.firmware_version = None
+    gateway.software_version = None
+    await _async_setup_fixture(
+        hass,
+        config_entry,
+        "dx4_firmwareavailable",
+        gateway_devices=initial_devices,
+    )
+
+    coordinator = config_entry.runtime_data
+    entity_id = LIVING_ROOM_FIRMWARE_UPDATE_ENTITY_ID
+    entity = hass.data[UPDATE_DOMAIN].get_entity(entity_id)
+    assert isinstance(entity, DaikinFirmwareUpdateEntity)
+    assert entity.installed_version is None
+    coordinator.async_execute_command = _execute_typed_command(
+        config_entry, mock_onecta_client
+    )
+
+    await hass.services.async_call(
+        UPDATE_DOMAIN,
+        SERVICE_INSTALL,
+        {ATTR_ENTITY_ID: entity_id},
+        blocking=True,
+    )
+    assert entity._pending_install is not None
+    assert entity._pending_install[1] is None
+
+    mock_onecta_client.get_gateway_devices.return_value = existing_devices
+    await _async_fire_coordinator_update(hass, coordinator, freezer)
+
+    assert entity.installed_version == "2_0_0"
+    assert entity._pending_install is not None
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.attributes[UpdateEntityStateAttribute.IN_PROGRESS] is True
+
+
 async def test_firmware_entity_available_without_installed_version(
     hass: HomeAssistant, config_entry: MockConfigEntry
 ) -> None:
