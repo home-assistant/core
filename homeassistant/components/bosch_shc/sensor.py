@@ -5,6 +5,7 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any, override
 
 from boschshcpy import (
+    BatteryLevelService,
     SHCBatteryDevice,
     SHCLightControl,
     SHCLightSwitchBSM,
@@ -200,9 +201,12 @@ _BATTERY_LEVEL_DESCRIPTION: SHCSensorEntityDescription[SHCBatteryDevice] = (
             "low_battery",
             "critical_low",
             "critically_low_battery",
-            "not_available",
         ],
-        value_fn=lambda device: device.batterylevel.value.lower(),
+        value_fn=lambda device: (
+            None
+            if device.batterylevel is BatteryLevelService.State.NOT_AVAILABLE
+            else device.batterylevel.value.lower()
+        ),
     )
 )
 _TWINGUARD_TEMPERATURE_DESCRIPTION: SHCSensorEntityDescription[SHCTwinguard] = (

@@ -317,8 +317,7 @@
         "state": {
           "critical_low": "Critical",
           "critically_low_battery": "Critically low",
-          "low_battery": "Low",
-          "not_available": "Not available",
+          "low_battery": "[%key:common::state::low%]",
           "ok": "OK"
         }
       },
