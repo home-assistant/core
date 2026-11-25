@@ -2,16 +2,16 @@
 
 from collections.abc import Iterator
 from datetime import datetime
-import json
 from typing import Any, override
 
+import orjson
 import probatio
 
 from homeassistant.components.llm import LLMTools
 from homeassistant.core import HomeAssistant, callback, split_entity_id
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, entity_registry as er
-from homeassistant.helpers.json import ExtendedJSONEncoder
+from homeassistant.helpers.json import json_encoder_default
 from homeassistant.helpers.llm import (
     LLM_API_HOME_ASSISTANT,
     SHORT_ID_MIN_LENGTH,
@@ -43,6 +43,14 @@ def _short_trace_ids(hass: HomeAssistant, domain: str) -> dict[str, str]:
     return format_short_ids(
         (domain, trace.run_id) for trace in _domain_traces(hass, domain)
     )
+
+
+def _json_default(obj: Any) -> Any:
+    """Encode Home Assistant objects, and any other object by its repr."""
+    try:
+        return json_encoder_default(obj)
+    except TypeError:
+        return {"__type": str(type(obj)), "repr": repr(obj)}
 
 
 def _isoformat(value: Any) -> Any:
@@ -192,9 +200,14 @@ class GetTraceTool(Tool):
             ),
             "steps": steps,
         }
-        # Trace steps hold any variable, so fall back to repr for unknown types
+        # Trace steps hold any variable: orjson writes NaN as null, and unknown
+        # types fall back to their repr
         return ToolResult(
-            data=json_loads_object(json.dumps(result, cls=ExtendedJSONEncoder))
+            data=json_loads_object(
+                orjson.dumps(
+                    result, default=_json_default, option=orjson.OPT_NON_STR_KEYS
+                )
+            )
         )
 
 

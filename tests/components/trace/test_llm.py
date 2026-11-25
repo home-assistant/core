@@ -1,5 +1,6 @@
 """Tests for the trace LLM tools."""
 
+import math
 from typing import Any
 
 import probatio
@@ -7,6 +8,7 @@ import pytest
 from pytest_homeassistant.common import MockUser, async_load_json_object_fixture
 
 from homeassistant.components.trace import DOMAIN
+from homeassistant.components.trace.const import DATA_TRACE
 from homeassistant.components.trace.llm import (
     GetTraceTool,
     ListTracesTool,
@@ -143,6 +145,41 @@ async def test_get_trace(hass: HomeAssistant, llm_context: llm.LLMContext) -> No
     )
     assert script_result["entity_id"] == "script.cleanup"
     assert [step["path"] for step in script_result["steps"]] == ["sequence/0"]
+
+
+async def test_get_trace_with_nan(
+    hass: HomeAssistant, llm_context: llm.LLMContext
+) -> None:
+    """Test a run whose variables hold NaN, which JSON cannot hold."""
+    assert await async_setup_component(
+        hass,
+        "automation",
+        {
+            "automation": {
+                "id": "nan",
+                "alias": "NaN",
+                "triggers": {"trigger": "event", "event_type": "test_event"},
+                "actions": [],
+            }
+        },
+    )
+    hass.bus.async_fire("test_event", {"value": math.nan})
+    await hass.async_block_till_done()
+    listed = await _call(
+        hass, llm_context, ListTracesTool(), {"entity_id": "automation.nan"}
+    )
+
+    result = await _call(
+        hass,
+        llm_context,
+        GetTraceTool(),
+        {"trace_id": listed["traces"][0]["trace_id"]},
+    )
+
+    trigger = result["steps"][0]["changed_variables"]["trigger"]
+    assert trigger["event"]["data"]["value"] is None
+    # The mock storage of the tests cannot save NaN when Home Assistant stops
+    hass.data[DATA_TRACE].clear()
 
 
 @pytest.mark.parametrize("domain", ["automation", "script"])
