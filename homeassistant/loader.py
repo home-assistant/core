@@ -634,15 +634,15 @@ async def async_get_bluetooth(hass: HomeAssistant) -> list[BluetoothMatcher]:
 
 
 async def async_get_locations(hass: HomeAssistant) -> dict[str, list[str]]:
-    """Return the domains of the integrations serving each region."""
-    locations = {region: list(domains) for region, domains in LOCATIONS.items()}
+    """Return the domains of the integrations serving each country."""
+    locations = {country: list(domains) for country, domains in LOCATIONS.items()}
 
     integrations = await async_get_custom_components(hass)
     for integration in integrations.values():
         if not integration.locations:
             continue
-        for region in integration.locations:
-            locations.setdefault(region, []).append(integration.domain)
+        for country in integration.locations:
+            locations.setdefault(country, []).append(integration.domain)
     return locations
 
 
@@ -1084,7 +1084,7 @@ class Integration:
 
     @property
     def locations(self) -> list[str] | None:
-        """Return Integration location regions."""
+        """Return Integration location countries."""
         return self.manifest.get("locations")
 
     @property

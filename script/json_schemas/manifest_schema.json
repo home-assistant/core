@@ -140,12 +140,12 @@
         "uniqueItems": true
       },
       "locations": {
-        "description": "A list of ids of the regions served by the integration. The integration is suggested when the home location is inside one of these regions. Regions are GeoJSON files in homeassistant/components/location/regions.",
+        "description": "A list of countries served by the integration. The integration is suggested when the country of the home location is in this list.",
         "type": "array",
         "minItems": 1,
         "items": {
           "type": "string",
-          "description": "Region id, the name of a region file without the .geojson suffix."
+          "description": "ISO 3166-1 alpha-2 country code."
         },
         "uniqueItems": true
       },

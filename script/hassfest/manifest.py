@@ -302,7 +302,7 @@ INTEGRATION_MANIFEST_SCHEMA = probatio.Schema(
                 }
             )
         ],
-        probatio.Optional("locations"): probatio.All([str], probatio.Unique()),
+        probatio.Optional("locations"): probatio.All([cv.country], probatio.Unique()),
         probatio.Required("documentation"): probatio.All(
             probatio.Url(), core_documentation_url
         ),
