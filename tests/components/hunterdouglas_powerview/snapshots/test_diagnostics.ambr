@@ -161,7 +161,12 @@
               None,
             ]),
             'area_id': None,
-            'capabilities': None,
+            'capabilities': dict({
+              'closed_tilt_positions': list([
+                0,
+              ]),
+              'open_tilt_position': 100,
+            }),
             'categories': dict({
             }),
             'config_entry_id': '01JHUNTERDOUGLASPOWERVIEW0',
@@ -190,11 +195,15 @@
             'state': dict({
               'attributes': dict({
                 'assumed_state': True,
+                'closed_tilt_positions': list([
+                  0,
+                ]),
                 'current_position': 0,
                 'current_tilt_position': 0,
                 'device_class': 'shade',
                 'friendly_name': 'Bath East',
                 'is_closed': True,
+                'open_tilt_position': 100,
                 'room_name': 'Spindle',
                 'supported_features': 176,
               }),
@@ -500,7 +509,12 @@
               None,
             ]),
             'area_id': None,
-            'capabilities': None,
+            'capabilities': dict({
+              'closed_tilt_positions': list([
+                0,
+              ]),
+              'open_tilt_position': 100,
+            }),
             'categories': dict({
             }),
             'config_entry_id': '01JHUNTERDOUGLASPOWERVIEW0',
@@ -529,11 +543,15 @@
             'state': dict({
               'attributes': dict({
                 'assumed_state': True,
+                'closed_tilt_positions': list([
+                  0,
+                ]),
                 'current_position': 0,
                 'current_tilt_position': 0,
                 'device_class': 'shade',
                 'friendly_name': 'Bath South',
                 'is_closed': True,
+                'open_tilt_position': 100,
                 'room_name': 'Spindle',
                 'supported_features': 176,
               }),
@@ -839,7 +857,12 @@
               None,
             ]),
             'area_id': None,
-            'capabilities': None,
+            'capabilities': dict({
+              'closed_tilt_positions': list([
+                0,
+              ]),
+              'open_tilt_position': 100,
+            }),
             'categories': dict({
             }),
             'config_entry_id': '01JHUNTERDOUGLASPOWERVIEW0',
@@ -868,11 +891,15 @@
             'state': dict({
               'attributes': dict({
                 'assumed_state': True,
+                'closed_tilt_positions': list([
+                  0,
+                ]),
                 'current_position': 0,
                 'current_tilt_position': 0,
                 'device_class': 'shade',
                 'friendly_name': 'Kitchen North',
                 'is_closed': True,
+                'open_tilt_position': 100,
                 'room_name': 'Spindle',
                 'supported_features': 176,
               }),
@@ -1178,7 +1205,12 @@
               None,
             ]),
             'area_id': None,
-            'capabilities': None,
+            'capabilities': dict({
+              'closed_tilt_positions': list([
+                0,
+              ]),
+              'open_tilt_position': 100,
+            }),
             'categories': dict({
             }),
             'config_entry_id': '01JHUNTERDOUGLASPOWERVIEW0',
@@ -1207,11 +1239,15 @@
             'state': dict({
               'attributes': dict({
                 'assumed_state': True,
+                'closed_tilt_positions': list([
+                  0,
+                ]),
                 'current_position': 0,
                 'current_tilt_position': 0,
                 'device_class': 'shade',
                 'friendly_name': 'Kitchen West',
                 'is_closed': True,
+                'open_tilt_position': 100,
                 'room_name': 'Spindle',
                 'supported_features': 176,
               }),
@@ -2504,7 +2540,12 @@
             None,
           ]),
           'area_id': None,
-          'capabilities': None,
+          'capabilities': dict({
+            'closed_tilt_positions': list([
+              0,
+            ]),
+            'open_tilt_position': 100,
+          }),
           'categories': dict({
           }),
           'config_entry_id': '01JHUNTERDOUGLASPOWERVIEW0',
@@ -2533,11 +2574,15 @@
           'state': dict({
             'attributes': dict({
               'assumed_state': True,
+              'closed_tilt_positions': list([
+                0,
+              ]),
               'current_position': 0,
               'current_tilt_position': 0,
               'device_class': 'shade',
               'friendly_name': 'Kitchen North',
               'is_closed': True,
+              'open_tilt_position': 100,
               'room_name': 'Spindle',
               'supported_features': 176,
             }),

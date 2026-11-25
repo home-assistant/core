@@ -38,7 +38,14 @@
         None,
       ]),
       'area_id': None,
-      'capabilities': None,
+      'capabilities': dict({
+        <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+          'excellent',
+          'good',
+          'moderate',
+          'poor',
+        ]),
+      }),
       'config_entry_id': <ANY>,
       'config_subentry_id': None,
       'device_class': None,
@@ -57,7 +64,7 @@
       'object_id_base': 'Air quality',
       'options': dict({
       }),
-      'original_device_class': None,
+      'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
       'original_icon': None,
       'original_name': 'Air quality',
       'platform': 'vesync',
@@ -110,7 +117,14 @@
 # name: test_sensor_state[Air Purifier 131s][sensor.air_purifier_131s_air_quality]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Air Purifier 131s Air quality',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'excellent',
+        'good',
+        'moderate',
+        'poor',
+      ]),
     }),
     'context': <ANY>,
     'entity_id': 'sensor.air_purifier_131s_air_quality',
@@ -262,7 +276,14 @@
         None,
       ]),
       'area_id': None,
-      'capabilities': None,
+      'capabilities': dict({
+        <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+          'excellent',
+          'good',
+          'moderate',
+          'poor',
+        ]),
+      }),
       'config_entry_id': <ANY>,
       'config_subentry_id': None,
       'device_class': None,
@@ -281,7 +302,7 @@
       'object_id_base': 'Air quality',
       'options': dict({
       }),
-      'original_device_class': None,
+      'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
       'original_icon': None,
       'original_name': 'Air quality',
       'platform': 'vesync',
@@ -371,7 +392,14 @@
 # name: test_sensor_state[Air Purifier 400s][sensor.air_purifier_400s_air_quality]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Air Purifier 400s Air quality',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'excellent',
+        'good',
+        'moderate',
+        'poor',
+      ]),
     }),
     'context': <ANY>,
     'entity_id': 'sensor.air_purifier_400s_air_quality',
@@ -451,7 +479,14 @@
         None,
       ]),
       'area_id': None,
-      'capabilities': None,
+      'capabilities': dict({
+        <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+          'excellent',
+          'good',
+          'moderate',
+          'poor',
+        ]),
+      }),
       'config_entry_id': <ANY>,
       'config_subentry_id': None,
       'device_class': None,
@@ -470,7 +505,7 @@
       'object_id_base': 'Air quality',
       'options': dict({
       }),
-      'original_device_class': None,
+      'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
       'original_icon': None,
       'original_name': 'Air quality',
       'platform': 'vesync',
@@ -560,7 +595,14 @@
 # name: test_sensor_state[Air Purifier 600s][sensor.air_purifier_600s_air_quality]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Air Purifier 600s Air quality',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'excellent',
+        'good',
+        'moderate',
+        'poor',
+      ]),
     }),
     'context': <ANY>,
     'entity_id': 'sensor.air_purifier_600s_air_quality',
@@ -825,7 +867,14 @@
         None,
       ]),
       'area_id': None,
-      'capabilities': None,
+      'capabilities': dict({
+        <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+          'excellent',
+          'good',
+          'moderate',
+          'poor',
+        ]),
+      }),
       'config_entry_id': <ANY>,
       'config_subentry_id': None,
       'device_class': None,
@@ -844,7 +893,7 @@
       'object_id_base': 'Air quality',
       'options': dict({
       }),
-      'original_device_class': None,
+      'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
       'original_icon': None,
       'original_name': 'Air quality',
       'platform': 'vesync',
@@ -860,7 +909,14 @@
 # name: test_sensor_state[Air Purifier Sprout][sensor.air_purifier_sprout_air_quality]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Air Purifier Sprout Air quality',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'excellent',
+        'good',
+        'moderate',
+        'poor',
+      ]),
     }),
     'context': <ANY>,
     'entity_id': 'sensor.air_purifier_sprout_air_quality',
@@ -987,7 +1043,14 @@
         None,
       ]),
       'area_id': None,
-      'capabilities': None,
+      'capabilities': dict({
+        <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+          'excellent',
+          'good',
+          'moderate',
+          'poor',
+        ]),
+      }),
       'config_entry_id': <ANY>,
       'config_subentry_id': None,
       'device_class': None,
@@ -1006,7 +1069,7 @@
       'object_id_base': 'Air quality',
       'options': dict({
       }),
-      'original_device_class': None,
+      'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
       'original_icon': None,
       'original_name': 'Air quality',
       'platform': 'vesync',
@@ -1096,7 +1159,14 @@
 # name: test_sensor_state[Air Purifier Vital 200S][sensor.air_purifier_vital_200s_air_quality]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Air Purifier Vital 200S Air quality',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'excellent',
+        'good',
+        'moderate',
+        'poor',
+      ]),
     }),
     'context': <ANY>,
     'entity_id': 'sensor.air_purifier_vital_200s_air_quality',
