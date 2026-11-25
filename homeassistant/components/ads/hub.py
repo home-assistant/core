@@ -50,6 +50,10 @@ RECONNECT_MAX_INTERVAL = 300.0
 ADS_TIMEOUT = 5000
 TEARDOWN_TIMEOUT = 100
 
+# ADS errors meaning the device stopped answering, as opposed to refusing one
+# variable, for example after a download removed it.
+CONNECTION_ERRORS = frozenset({13, 21, 27, 1861, 1864})
+
 
 @dataclass
 class Subscription:
@@ -185,8 +189,16 @@ class AdsHub:
             return
         if ads_state is None:
             _LOGGER.info("Lost the connection to the ADS device: %s", error)
-            await self._hass.async_add_executor_job(self._drop_connection)
+            # Set before the teardown, which can outlast the probe interval
+            # with a few hundred notifications; a probe still seeing RUNNING
+            # would drop the connection a second time.
             self._async_set_state(ConnectionState.LOST)
+            await self._hass.async_add_executor_job(self._drop_connection)
+            # The deletions waited for the last callbacks, so no value from the
+            # lost connection arrives after this. A variable that cannot be
+            # subscribed again stays unavailable instead of showing it.
+            for device in self.devices:
+                device.mark_unavailable()
             self._async_schedule_reconnect(RECONNECT_MIN_INTERVAL)
         elif ads_state == pyads.ADSSTATE_RUN:
             if self._state is ConnectionState.STOPPED:
@@ -311,7 +323,11 @@ class AdsHub:
             self._port_open = True
             subscription_ids = list(self._subscriptions)
         for subscription_id in subscription_ids:
-            self._register(subscription_id)
+            if not self._register(subscription_id):
+                # Gone again, so the rest would each wait the full timeout.
+                _LOGGER.debug("The ADS device stopped answering while resubscribing")
+                self._drop_connection()
+                return None
         return state[0]
 
     def shutdown(self, *args, **kwargs):
@@ -443,8 +459,11 @@ class AdsHub:
             subscription = self._subscriptions.get(subscription_id)
             return subscription is not None and subscription.handles is not None
 
-    def _register(self, subscription_id: int) -> None:
+    def _register(self, subscription_id: int) -> bool:
         """Ask the device to notify on a subscription's variable.
+
+        Returns False when the device did not answer, and True otherwise, also
+        when it refused the variable.
 
         While the connection is lost this waits for the reconnect, which
         registers every subscription again. The teardown lock keeps a delete,
@@ -452,14 +471,18 @@ class AdsHub:
         registration, which would leave a notification nobody deletes.
         """
         with self._teardown_lock:
-            self._register_locked(subscription_id)
+            return self._register_locked(subscription_id)
 
-    def _register_locked(self, subscription_id: int) -> None:
+    def _register_locked(self, subscription_id: int) -> bool:
         """Register a subscription; the caller holds the teardown lock."""
         with self._lock:
             subscription = self._subscriptions.get(subscription_id)
             if subscription is None or self._closed or not self._port_open:
-                return
+                return True
+            if subscription.handles is not None:
+                # Added just before a reconnect took its snapshot, so both
+                # register it; a second registration would orphan the first.
+                return True
             attr = pyads.NotificationAttrib(ctypes.sizeof(subscription.plc_datatype))
             try:
                 handles = self._client.add_device_notification(
@@ -467,7 +490,7 @@ class AdsHub:
                 )
             except pyads.ADSError as err:
                 _LOGGER.error("Error subscribing to %s: %s", subscription.name, err)
-                return
+                return getattr(err, "err_code", None) not in CONNECTION_ERRORS
             if handles is None:
                 # pyads returns None instead of raising when the port is not
                 # open.
@@ -475,7 +498,7 @@ class AdsHub:
                     "Error subscribing to %s: the connection is not open",
                     subscription.name,
                 )
-                return
+                return False
             hnotify, huser = int(handles[0]), int(handles[1])
             subscription.handles = (hnotify, huser)
             self._subscription_ids_by_hnotify[hnotify] = subscription_id
@@ -484,6 +507,7 @@ class AdsHub:
                 hnotify,
                 subscription.name,
             )
+            return True
 
     def delete_device_notification(self, subscription_id: int) -> None:
         """Unsubscribe, deleting the device notification if there is one."""
@@ -582,11 +606,14 @@ def connect(device: str, port: int, ip_address: str | None) -> AdsHub:
     check_reachable(device, ip_address)
     hub = AdsHub(pyads.Connection(device, port, ip_address), device, ip_address)
     try:
-        hub.read_state()
+        ads_state, _ = hub.read_state()
     except pyads.ADSError:
         # Nothing is subscribed yet, so this cannot wait on a callback.
         hub.shutdown()
         raise
+    if ads_state != pyads.ADSSTATE_RUN:
+        # Nothing listens to the hub yet, so no entity needs updating.
+        hub._state = ConnectionState.STOPPED  # noqa: SLF001
     return hub
 
 

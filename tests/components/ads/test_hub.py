@@ -27,7 +27,7 @@ from homeassistant.exceptions import HomeAssistantError, PlatformNotReady
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 
-from . import MockAdsDevice, get_hub, setup_ads_platform
+from . import ADS_CONFIG, MockAdsDevice, get_hub, setup_ads_platform
 from .const import AMS_NET_ID, IP_ADDRESS, PORT
 
 
@@ -76,6 +76,18 @@ def test_connect_closes_on_error(
         connect(AMS_NET_ID, PORT, IP_ADDRESS)
 
     mock_pyads_connection.return_value.close.assert_called_once()
+
+
+def test_connect_to_a_stopped_plc(mock_pyads_connection: MagicMock) -> None:
+    """Test a device that answers but does not run connects as not running."""
+    mock_pyads_connection.return_value.read_state.return_value = (
+        pyads.ADSSTATE_STOP,
+        0,
+    )
+
+    hub = connect(AMS_NET_ID, PORT, IP_ADDRESS)
+
+    assert not hub.connected
 
 
 SWITCH_CONFIG = {"adsvar": "GVL.pump", "name": "Pump"}
@@ -268,6 +280,124 @@ async def test_reconnect_to_a_stopped_plc(
     client.read_state.return_value = (pyads.ADSSTATE_RUN, 0)
     await _async_advance(hass, freezer, mock_ads_device, PROBE_INTERVAL)
     assert hass.states.get(SWITCH_ID).state == STATE_ON
+
+
+async def test_lost_while_tearing_down(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_pyads_connection: MagicMock,
+    mock_ads_device: MockAdsDevice,
+) -> None:
+    """Test entities go unavailable before a slow teardown, which is not repeated."""
+    await _async_setup_switch(hass, mock_ads_device)
+    client = mock_pyads_connection.return_value
+    client.read_state.return_value = None
+    deleting, release = threading.Event(), threading.Event()
+
+    def _del_device_notification(*args: Any) -> None:
+        deleting.set()
+        release.wait(5)
+
+    client.del_device_notification.side_effect = _del_device_notification
+    freezer.tick(PROBE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_add_executor_job(deleting.wait, 5)
+
+    assert hass.states.get(SWITCH_ID).state == STATE_UNAVAILABLE
+
+    # A teardown of many notifications can outlast the probe interval.
+    probes = client.read_state.call_count
+    freezer.tick(PROBE_INTERVAL)
+    async_fire_time_changed(hass)
+    await _async_yield()
+    assert client.read_state.call_count == probes
+
+    release.set()
+    await hass.async_block_till_done(wait_background_tasks=True)
+    client.close.assert_called_once()
+
+
+async def test_variable_gone_after_reconnect(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_pyads_connection: MagicMock,
+    mock_ads_device: MockAdsDevice,
+) -> None:
+    """Test a variable a download removed does not show its value from before."""
+    await _async_setup_switch(hass, mock_ads_device)
+    client = mock_pyads_connection.return_value
+    client.read_state.return_value = None
+    await _async_advance(hass, freezer, mock_ads_device, PROBE_INTERVAL)
+
+    client.read_state.return_value = (pyads.ADSSTATE_RUN, 0)
+    client.add_device_notification.side_effect = pyads.ADSError(err_code=1808)
+    await _async_advance(hass, freezer, mock_ads_device, timedelta(seconds=5))
+
+    assert get_hub(hass).connected
+    assert hass.states.get(SWITCH_ID).state == STATE_UNAVAILABLE
+
+
+async def test_reconnect_stops_when_the_device_drops_again(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_pyads_connection: MagicMock,
+    mock_create_connection: MagicMock,
+    mock_ads_device: MockAdsDevice,
+) -> None:
+    """Test a device lost again while resubscribing is not asked for the rest."""
+    mock_ads_device.values["GVL.pump"] = BOOL_TRUE
+    mock_ads_device.values["GVL.fan"] = BOOL_TRUE
+    assert await async_setup_component(
+        hass,
+        SWITCH_DOMAIN,
+        {
+            DOMAIN: ADS_CONFIG,
+            SWITCH_DOMAIN: [
+                {"platform": DOMAIN, **SWITCH_CONFIG},
+                {"platform": DOMAIN, "adsvar": "GVL.fan", "name": "Fan"},
+            ],
+        },
+    )
+    await hass.async_block_till_done()
+    client = mock_pyads_connection.return_value
+    client.read_state.return_value = None
+    await _async_advance(hass, freezer, mock_ads_device, PROBE_INTERVAL)
+
+    # The device answers the state, then is gone before the subscriptions.
+    client.read_state.return_value = (pyads.ADSSTATE_RUN, 0)
+    client.add_device_notification.reset_mock()
+    client.add_device_notification.side_effect = pyads.ADSError(err_code=1861)
+    client.close.reset_mock()
+    await _async_advance(hass, freezer, mock_ads_device, timedelta(seconds=5))
+
+    client.add_device_notification.assert_called_once()
+    client.close.assert_called_once()
+    assert not get_hub(hass).connected
+
+    # The next attempt backs off.
+    mock_create_connection.reset_mock()
+    await _async_advance(hass, freezer, mock_ads_device, timedelta(seconds=5))
+    mock_create_connection.assert_not_called()
+    await _async_advance(hass, freezer, mock_ads_device, timedelta(seconds=5))
+    mock_create_connection.assert_called_once()
+
+
+async def test_registered_subscription_not_registered_twice(
+    hass: HomeAssistant,
+    mock_pyads_connection: MagicMock,
+    mock_ads_device: MockAdsDevice,
+) -> None:
+    """Test a subscription added just before a reconnect's snapshot registers once.
+
+    A second registration would overwrite the first handles, and that
+    notification would stay live past removal and shutdown.
+    """
+    hub = await _async_setup_switch(hass, mock_ads_device)
+    client = mock_pyads_connection.return_value
+
+    await hass.async_add_executor_job(hub._register, 1)
+
+    client.add_device_notification.assert_called_once()
 
 
 async def test_unload_stops_monitoring(
