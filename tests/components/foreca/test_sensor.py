@@ -1,5 +1,6 @@
 """Test the Foreca sensor platform."""
 
+from typing import Any
 from unittest.mock import MagicMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
@@ -16,6 +17,7 @@ from pytest_homeassistant.common import (
     MockConfigEntry,
     async_fire_time_changed,
     async_load_json_object_fixture,
+    load_json_object_fixture,
     snapshot_platform,
 )
 from syrupy.assertion import SnapshotAssertion
@@ -44,7 +46,18 @@ AIR_QUALITY_INDEX = "sensor.helsinki_air_quality_index"
 HOURLY_PRECIPITATION = "sensor.helsinki_observed_hourly_precipitation"
 OBSERVED_TEMPERATURE = "sensor.helsinki_observed_temperature"
 PRECIPITATION_TYPE = "sensor.helsinki_observed_precipitation_type"
-PRECIPITATION_PROBABILITY = "sensor.helsinki_precipitation_probability"
+PRECIPITATION_3_HOURS = "sensor.helsinki_observed_3_hour_precipitation"
+PRECIPITATION_6_HOURS = "sensor.helsinki_observed_6_hour_precipitation"
+PRECIPITATION_12_HOURS = "sensor.helsinki_observed_12_hour_precipitation"
+PRECIPITATION_24_HOURS = "sensor.helsinki_observed_24_hour_precipitation"
+
+
+def _totals_at(city: str, time: str) -> Observation:
+    """Return the totals of a city's station as if observed at another time."""
+    station = load_json_object_fixture(
+        f"observation_precipitation_totals_{city}.json", DOMAIN
+    )["observations"][0]
+    return Observation.from_api(station | {"time": time})
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default", "mock_foreca_client")
@@ -84,6 +97,9 @@ async def test_sensors_disabled_by_default(
         "sensor.helsinki_pm10_index",
         "sensor.helsinki_pm2_5_index",
         "sensor.helsinki_sulphur_dioxide_index",
+        PRECIPITATION_3_HOURS,
+        PRECIPITATION_6_HOURS,
+        PRECIPITATION_12_HOURS,
         "sensor.helsinki_observation_time",
         "sensor.helsinki_observed_apparent_temperature",
         "sensor.helsinki_observed_condition",
@@ -99,10 +115,12 @@ async def test_sensors_disabled_by_default(
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 @pytest.mark.parametrize(
-    ("observation", "air_quality"),
+    ("observation", "precipitation_totals", "air_quality"),
     [
-        pytest.param(None, [], id="no_station_or_air_quality_nearby"),
-        pytest.param(Observation(), [AirQualityForecast()], id="empty_values"),
+        pytest.param(None, None, [], id="no_station_or_air_quality_nearby"),
+        pytest.param(
+            Observation(), Observation(), [AirQualityForecast()], id="empty_values"
+        ),
     ],
 )
 async def test_sensors_without_values(
@@ -120,7 +138,7 @@ async def test_sensors_without_values(
         await init_integration(hass, mock_config_entry)
 
     states = hass.states.async_all(Platform.SENSOR)
-    assert len(states) == 25
+    assert len(states) == 29
     assert {state.state for state in states} == {STATE_UNKNOWN}
 
 
@@ -173,21 +191,32 @@ def _unavailable(hass: HomeAssistant) -> set[str]:
 
 
 @pytest.mark.parametrize(
-    ("method", "unavailable"),
+    ("method", "precipitation", "unavailable", "requests"),
     [
         pytest.param(
             "observation_latest",
+            "hourly",
             {
                 "sensor.helsinki_observation_station",
                 HOURLY_PRECIPITATION,
                 "sensor.helsinki_observed_humidity",
                 OBSERVED_TEMPERATURE,
             },
+            6,
             id="observation",
         ),
         pytest.param(
+            "observation_latest",
+            "latest",
+            {PRECIPITATION_24_HOURS},
+            6,
+            id="precipitation_totals",
+        ),
+        pytest.param(
             "air_quality_hourly",
+            None,
             {AIR_QUALITY_INDEX, "sensor.helsinki_dominant_pollutant"},
+            3,
             id="air_quality",
         ),
     ],
@@ -198,10 +227,24 @@ async def test_failed_request_leaves_other_entities_available(
     mock_foreca_client: MagicMock,
     freezer: FrozenDateTimeFactory,
     method: str,
+    precipitation: str | None,
     unavailable: set[str],
+    requests: int,
 ) -> None:
-    """Test a failing station or air quality request makes only its sensors unavailable."""
-    getattr(mock_foreca_client, method).side_effect = ForecaConnectionError("Timeout")
+    """Test a failing station or air quality request makes only its sensors unavailable.
+
+    The station is asked twice per update, once for its hourly precipitation
+    and once for its totals, and either request can fail on its own.
+    """
+    request = getattr(mock_foreca_client, method)
+    respond = request.side_effect
+
+    async def fail(location: str, **kwargs: Any) -> Any:
+        if kwargs.get("precipitation") == precipitation:
+            raise ForecaConnectionError("Timeout")
+        return await respond(location, **kwargs)
+
+    request.side_effect = fail
     await init_integration(hass, mock_config_entry)
 
     assert _unavailable(hass) == unavailable
@@ -211,13 +254,13 @@ async def test_failed_request_leaves_other_entities_available(
     await hass.async_block_till_done()
     assert _unavailable(hass) == unavailable
 
-    getattr(mock_foreca_client, method).side_effect = None
+    request.side_effect = respond
     freezer.tick(UPDATE_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
     assert _unavailable(hass) == set()
-    assert getattr(mock_foreca_client, method).await_count == 3
+    assert request.await_count == requests
 
 
 async def test_air_quality_update_error_is_translated(
@@ -311,14 +354,20 @@ async def test_observation_request(
     mock_config_entry: MockConfigEntry,
     mock_foreca_client: MagicMock,
 ) -> None:
-    """Test the observation asks for station precipitation and unrounded values."""
+    """Test the station requests ask for precipitation and unrounded values.
+
+    The API answers a request for both the hourly series and the totals with
+    neither, so each needs a request of its own.
+    """
     with patch("homeassistant.components.foreca.PLATFORMS", [Platform.SENSOR]):
         await init_integration(hass, mock_config_entry)
 
-    assert mock_foreca_client.observation_latest.await_args.kwargs == {
-        "precipitation": "hourly",
-        "rounding": 0,
-    }
+    assert [
+        call.kwargs for call in mock_foreca_client.observation_latest.await_args_list
+    ] == [
+        {"precipitation": "hourly", "rounding": 0},
+        {"precipitation": "latest", "rounding": 0},
+    ]
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
@@ -383,7 +432,7 @@ async def test_observed_hourly_precipitation(
             "2026-11-06T13:00:00+01:00",
             STATE_UNKNOWN,
             STATE_UNKNOWN,
-            id="three_hours",
+            id="3_12_and_24_hours",
         ),
         pytest.param(0, None, STATE_UNKNOWN, STATE_UNKNOWN, id="no_observation_time"),
     ],
@@ -418,3 +467,99 @@ async def test_stale_hourly_precipitation(
     assert state is not None
     assert state.state == amount
     assert hass.states.get(PRECIPITATION_TYPE).state == precipitation_type
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default", "mock_foreca_client")
+@pytest.mark.parametrize(
+    ("precipitation_totals", "expected"),
+    [
+        pytest.param(
+            load_observation("observation_precipitation_totals_london.json"),
+            {
+                PRECIPITATION_3_HOURS: (STATE_UNKNOWN, None),
+                PRECIPITATION_6_HOURS: ("0.8", "2026-11-06T06:00:00+00:00"),
+                PRECIPITATION_12_HOURS: ("1.2", "2026-11-05T21:00:00+00:00"),
+                PRECIPITATION_24_HOURS: ("0.4", "2026-11-05T06:00:00+00:00"),
+            },
+            id="6_12_and_24_hours",
+        ),
+        pytest.param(
+            load_observation("observation_precipitation_totals_helsinki.json"),
+            {
+                PRECIPITATION_3_HOURS: (STATE_UNKNOWN, None),
+                PRECIPITATION_6_HOURS: (STATE_UNKNOWN, None),
+                PRECIPITATION_12_HOURS: (STATE_UNKNOWN, None),
+                PRECIPITATION_24_HOURS: ("0", "2026-11-05T08:00:00+02:00"),
+            },
+            id="periods_not_reported",
+        ),
+        pytest.param(
+            load_observation("observation_precipitation_totals_berlin.json"),
+            {
+                PRECIPITATION_3_HOURS: ("0", "2026-11-09T07:00:00+01:00"),
+                PRECIPITATION_6_HOURS: (STATE_UNKNOWN, None),
+                PRECIPITATION_12_HOURS: ("0", "2026-11-08T19:00:00+01:00"),
+                PRECIPITATION_24_HOURS: ("0", "2026-11-08T07:00:00+01:00"),
+            },
+            id="3_12_and_24_hours",
+        ),
+        pytest.param(
+            _totals_at("berlin", "2026-11-09T14:20:00+01:00"),
+            {
+                PRECIPITATION_3_HOURS: (STATE_UNKNOWN, None),
+                PRECIPITATION_6_HOURS: (STATE_UNKNOWN, None),
+                PRECIPITATION_12_HOURS: ("0", "2026-11-08T19:00:00+01:00"),
+                PRECIPITATION_24_HOURS: ("0", "2026-11-08T07:00:00+01:00"),
+            },
+            id="3_hours_stale",
+        ),
+        pytest.param(
+            _totals_at("london", "2026-11-06T19:00:00Z"),
+            {
+                PRECIPITATION_3_HOURS: (STATE_UNKNOWN, None),
+                PRECIPITATION_6_HOURS: ("0.8", "2026-11-06T06:00:00+00:00"),
+                PRECIPITATION_12_HOURS: ("1.2", "2026-11-05T21:00:00+00:00"),
+                PRECIPITATION_24_HOURS: ("0.4", "2026-11-05T06:00:00+00:00"),
+            },
+            id="next_6_hours_an_hour_late",
+        ),
+        pytest.param(
+            _totals_at("london", "2026-11-06T19:20:00Z"),
+            {
+                PRECIPITATION_3_HOURS: (STATE_UNKNOWN, None),
+                PRECIPITATION_6_HOURS: (STATE_UNKNOWN, None),
+                PRECIPITATION_12_HOURS: ("1.2", "2026-11-05T21:00:00+00:00"),
+                PRECIPITATION_24_HOURS: ("0.4", "2026-11-05T06:00:00+00:00"),
+            },
+            id="6_hours_stale",
+        ),
+        pytest.param(
+            _totals_at("london", "2026-11-07T07:20:00Z"),
+            {
+                PRECIPITATION_3_HOURS: (STATE_UNKNOWN, None),
+                PRECIPITATION_6_HOURS: (STATE_UNKNOWN, None),
+                PRECIPITATION_12_HOURS: (STATE_UNKNOWN, None),
+                PRECIPITATION_24_HOURS: (STATE_UNKNOWN, None),
+            },
+            id="all_stale",
+        ),
+    ],
+)
+async def test_observed_precipitation_totals(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    expected: dict[str, tuple[str, str | None]],
+) -> None:
+    """Test the station's own totals and the windows they cover.
+
+    A total counts until an hour after the next one should have ended.
+    """
+    with patch("homeassistant.components.foreca.PLATFORMS", [Platform.SENSOR]):
+        await init_integration(hass, mock_config_entry)
+
+    states = {entity_id: hass.states.get(entity_id) for entity_id in expected}
+    assert {
+        entity_id: (state.state, state.attributes.get(ATTR_LAST_RESET))
+        for entity_id, state in states.items()
+        if state is not None
+    } == expected
