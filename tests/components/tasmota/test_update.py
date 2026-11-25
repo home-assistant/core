@@ -4,13 +4,9 @@ import asyncio
 import copy
 from datetime import timedelta
 import json
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock
 
-from aiogithubapi import (
-    GitHubConnectionException,
-    GitHubRatelimitException,
-    GitHubReleaseModel,
-)
+from aiogithubapi import GitHubConnectionException, GitHubRatelimitException
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from pytest_homeassistant.common import (
@@ -36,21 +32,25 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from .conftest import setup_tasmota_helper
-from .test_common import DEFAULT_CONFIG, DEFAULT_VERSION, NEWER_VERSION, OLDER_VERSION
+from .test_common import (
+    DEFAULT_CONFIG,
+    DEFAULT_VERSION,
+    NEWER_VERSION,
+    OLDER_VERSION,
+    mock_github_release,
+)
 
 
 @pytest.fixture
-def mock_github_latest_release(request: pytest.FixtureRequest):
+def mock_github_latest_release(
+    request: pytest.FixtureRequest, mock_github_api: AsyncMock
+) -> str:
     """Mock the GitHub release API to return a specific version."""
     tag_name: str = request.param
-
-    mock_response = AsyncMock(
-        data=GitHubReleaseModel(
-            {
-                "tag_name": tag_name,
-                "name": f"Tasmota {tag_name.removeprefix('v')}",
-                "html_url": f"https://github.com/arendst/Tasmota/releases/tag/{tag_name}",
-                "body": """\
+    mock_github_api.repos.releases.latest.return_value = AsyncMock(
+        data=mock_github_release(
+            tag_name.removeprefix("v"),
+            body="""\
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="./tools/logo/TASMOTA_FullLogo_Vector_White.svg">
   <img alt="Logo" src="./tools/logo/TASMOTA_FullLogo_Vector.svg" align="right" height="76">
@@ -59,15 +59,9 @@ def mock_github_latest_release(request: pytest.FixtureRequest):
 # RELEASE NOTES
 
 ...        """,
-            }
         )
     )
-
-    with patch(
-        "aiogithubapi.namespaces.releases.GitHubReleasesNamespace.latest",
-        new=AsyncMock(return_value=mock_response),
-    ):
-        yield tag_name
+    return tag_name
 
 
 @pytest.mark.parametrize(
@@ -174,15 +168,14 @@ async def test_device_update_entity_rediscovered(
 
 
 @pytest.fixture
-def mock_github_latest_release_failure(request: pytest.FixtureRequest) -> AsyncMock:
+def mock_github_latest_release_failure(
+    request: pytest.FixtureRequest, mock_github_api: AsyncMock
+) -> AsyncMock:
     """Mock the GitHub release API to fail or return an empty response."""
-    mock: AsyncMock = AsyncMock(**request.param)
-
-    with patch(
-        "aiogithubapi.namespaces.releases.GitHubReleasesNamespace.latest",
-        new=mock,
-    ):
-        yield mock
+    latest = mock_github_api.repos.releases.latest
+    for name, value in request.param.items():
+        setattr(latest, name, value)
+    return latest
 
 
 @pytest.mark.parametrize(
@@ -232,14 +225,7 @@ async def test_device_update_entity_github_failure(
     # When the API recovers, the entity becomes available again
     mock_github_latest_release_failure.side_effect = None
     mock_github_latest_release_failure.return_value = AsyncMock(
-        data=GitHubReleaseModel(
-            {
-                "tag_name": f"v{NEWER_VERSION}",
-                "name": f"Tasmota {NEWER_VERSION}",
-                "html_url": f"https://github.com/arendst/Tasmota/releases/tag/v{NEWER_VERSION}",
-                "body": "",
-            }
-        )
+        data=mock_github_release(NEWER_VERSION)
     )
     freezer.tick(timedelta(days=1))
     async_fire_time_changed(hass)
@@ -296,6 +282,7 @@ async def test_setup_not_blocked_by_slow_github_refresh(
     hass: HomeAssistant,
     mqtt_mock: MqttMockHAClient,
     entity_registry: er.EntityRegistry,
+    mock_github_api: AsyncMock,
 ) -> None:
     """Test integration setup is not delayed by a slow GitHub refresh."""
 
@@ -305,51 +292,38 @@ async def test_setup_not_blocked_by_slow_github_refresh(
     async def slow_latest(*_args: object, **_kwargs: object) -> AsyncMock:
         refresh_started.set()
         await refresh_proceed.wait()
-        return AsyncMock(
-            data=GitHubReleaseModel(
-                {
-                    "tag_name": f"v{NEWER_VERSION}",
-                    "name": f"Tasmota {NEWER_VERSION}",
-                    "html_url": f"https://github.com/arendst/Tasmota/releases/tag/v{NEWER_VERSION}",
-                    "body": "",
-                }
-            )
-        )
+        return AsyncMock(data=mock_github_release(NEWER_VERSION))
 
-    with patch(
-        "aiogithubapi.namespaces.releases.GitHubReleasesNamespace.latest",
-        new=AsyncMock(side_effect=slow_latest),
-    ):
-        hass.config.components.add("tasmota")
+    mock_github_api.repos.releases.latest.side_effect = slow_latest
 
-        entry = MockConfigEntry(
-            data={CONF_DISCOVERY_PREFIX: DEFAULT_PREFIX},
-            domain=DOMAIN,
-            title="Tasmota",
-        )
-        entry.add_to_hass(hass)
+    hass.config.components.add("tasmota")
 
-        assert await hass.config_entries.async_setup(entry.entry_id)
+    entry = MockConfigEntry(
+        data={CONF_DISCOVERY_PREFIX: DEFAULT_PREFIX},
+        domain=DOMAIN,
+        title="Tasmota",
+    )
+    entry.add_to_hass(hass)
 
-        assert not refresh_proceed.is_set()
-        await asyncio.wait_for(refresh_started.wait(), timeout=10)
+    assert await hass.config_entries.async_setup(entry.entry_id)
 
-        refresh_proceed.set()
-        await hass.async_block_till_done()
+    assert not refresh_proceed.is_set()
+    await asyncio.wait_for(refresh_started.wait(), timeout=10)
 
-        config = copy.deepcopy(DEFAULT_CONFIG)
-        mac = config["mac"]
-        async_fire_mqtt_message(
-            hass, f"{DEFAULT_PREFIX}/{mac}/config", json.dumps(config)
-        )
-        await hass.async_block_till_done()
+    refresh_proceed.set()
+    await hass.async_block_till_done()
 
-        entity_id = entity_registry.async_get_entity_id(
-            Platform.UPDATE, DOMAIN, dr.format_mac(mac)
-        )
-        assert entity_id is not None
+    config = copy.deepcopy(DEFAULT_CONFIG)
+    mac = config["mac"]
+    async_fire_mqtt_message(hass, f"{DEFAULT_PREFIX}/{mac}/config", json.dumps(config))
+    await hass.async_block_till_done()
 
-        state = hass.states.get(entity_id)
-        assert state is not None
-        assert state.attributes[ATTR_INSTALLED_VERSION] == DEFAULT_VERSION
-        assert state.attributes[ATTR_LATEST_VERSION] == NEWER_VERSION
+    entity_id = entity_registry.async_get_entity_id(
+        Platform.UPDATE, DOMAIN, dr.format_mac(mac)
+    )
+    assert entity_id is not None
+
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.attributes[ATTR_INSTALLED_VERSION] == DEFAULT_VERSION
+    assert state.attributes[ATTR_LATEST_VERSION] == NEWER_VERSION

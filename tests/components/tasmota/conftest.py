@@ -1,8 +1,8 @@
 """Test fixtures for Tasmota component."""
 
+from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 
-from aiogithubapi import GitHubReleaseModel
 from hatasmota.discovery import get_status_sensor_entities
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
@@ -14,7 +14,7 @@ from homeassistant.components.tasmota.const import (
 )
 from homeassistant.core import HomeAssistant
 
-from .test_common import NEWER_VERSION
+from .test_common import NEWER_VERSION, mock_github_release
 
 from tests.components.light.conftest import mock_light_profiles  # noqa: F401
 
@@ -41,24 +41,15 @@ def disable_status_sensor(status_sensor_disabled):
 
 
 @pytest.fixture(autouse=True)
-def mock_github_api():
+def mock_github_api() -> Generator[AsyncMock]:
     """Mock the GitHub release API to prevent network requests."""
-    mock_response = AsyncMock(
-        data=GitHubReleaseModel(
-            {
-                "tag_name": f"v{NEWER_VERSION}",
-                "name": f"Tasmota {NEWER_VERSION}",
-                "html_url": f"https://github.com/arendst/Tasmota/releases/tag/v{NEWER_VERSION}",
-                "body": "",
-            }
+    with patch("homeassistant.components.tasmota.coordinator.GitHubAPI") as api_class:
+        mock_client = AsyncMock()
+        api_class.return_value = mock_client
+        mock_client.repos.releases.latest.return_value = AsyncMock(
+            data=mock_github_release(NEWER_VERSION)
         )
-    )
-
-    with patch(
-        "aiogithubapi.namespaces.releases.GitHubReleasesNamespace.latest",
-        new=AsyncMock(return_value=mock_response),
-    ):
-        yield
+        yield mock_client
 
 
 async def setup_tasmota_helper(hass: HomeAssistant) -> None:
