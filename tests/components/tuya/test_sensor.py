@@ -141,7 +141,7 @@ async def test_indexed_raw_phase_child_devices(
         assert len(er.async_entries_for_device(entity_registry, child.id)) == 6
 
     entity_id = entity_registry.async_get_entity_id(
-        "sensor", DOMAIN, f"tuya.{mock_device.id}phase_1electriccurrent"
+        "sensor", DOMAIN, f"tuya.{mock_device.id}phase_s1electriccurrent"
     )
     assert entity_id is not None
     state = hass.states.get(entity_id)

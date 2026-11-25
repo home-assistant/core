@@ -85,7 +85,7 @@ from .util import get_device_temp_unit_convert
 class TuyaSensorEntityDescription(TuyaEntityDescription, SensorEntityDescription):
     """Describes Tuya sensor entity."""
 
-    dpcode: DPCode | None = None
+    dpcode: DPCode | tuple[DPCode, ...] | None = None
     wrapper_class: tuple[type[DPCodeTypeInformationWrapper], ...] | None = None
 
 
@@ -161,29 +161,27 @@ def _electricity_data(dpcode: DPCode) -> tuple[TuyaSensorEntityDescription, ...]
 
 def _has_multiple_phase_channels(device: CustomerDevice) -> bool:
     """Return if the device reports more than one indexed phase channel."""
-    return DPCode.PHASE_S2 in device.status_range
-
-
-def _has_multiple_raw_phase_channels(device: CustomerDevice) -> bool:
-    """Return if the device reports more than one indexed raw phase channel."""
-    return DPCode.PHASE_2 in device.status_range
+    return (
+        DPCode.PHASE_S2 in device.status_range or DPCode.PHASE_2 in device.status_range
+    )
 
 
 def _indexed_electricity_data(
-    dpcode: DPCode,
+    dpcode: DPCode | tuple[DPCode, ...],
     index: int,
     *,
-    wrapper_classes: tuple[type[DPCodeTypeInformationWrapper], ...] = (
-        ElectricityCurrentHexStringWrapper,
-        ElectricityPowerHexStringWrapper,
-        ElectricityVoltageHexStringWrapper,
-        ElectricityReactivePowerHexStringWrapper,
-        ElectricityApparentPowerHexStringWrapper,
-        ElectricityPowerFactorHexStringWrapper,
+    wrapper_classes: tuple[tuple[type[DPCodeTypeInformationWrapper], ...], ...] = (
+        (ElectricityCurrentHexStringWrapper,),
+        (ElectricityPowerHexStringWrapper,),
+        (ElectricityVoltageHexStringWrapper,),
+        (ElectricityReactivePowerHexStringWrapper,),
+        (ElectricityApparentPowerHexStringWrapper,),
+        (ElectricityPowerFactorHexStringWrapper,),
     ),
     channel_condition: Callable[[CustomerDevice], bool] = _has_multiple_phase_channels,
 ) -> tuple[TuyaSensorEntityDescription, ...]:
     """Build sensors extracted from an indexed electricity DPCode."""
+    key_prefix = dpcode if isinstance(dpcode, str) else dpcode[0]
     (
         current_wrapper,
         power_wrapper,
@@ -194,60 +192,60 @@ def _indexed_electricity_data(
     ) = wrapper_classes
     return (
         TuyaSensorEntityDescription(
-            key=f"{dpcode}electriccurrent",
+            key=f"{key_prefix}electriccurrent",
             dpcode=dpcode,
             device_class=SensorDeviceClass.CURRENT,
             state_class=SensorStateClass.MEASUREMENT,
             suggested_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
-            wrapper_class=(current_wrapper,),
+            wrapper_class=current_wrapper,
             channel_index=index,
             channel_condition=channel_condition,
         ),
         TuyaSensorEntityDescription(
-            key=f"{dpcode}power",
+            key=f"{key_prefix}power",
             dpcode=dpcode,
             device_class=SensorDeviceClass.POWER,
             state_class=SensorStateClass.MEASUREMENT,
             suggested_unit_of_measurement=UnitOfPower.KILO_WATT,
-            wrapper_class=(power_wrapper,),
+            wrapper_class=power_wrapper,
             channel_index=index,
             channel_condition=channel_condition,
         ),
         TuyaSensorEntityDescription(
-            key=f"{dpcode}voltage",
+            key=f"{key_prefix}voltage",
             dpcode=dpcode,
             device_class=SensorDeviceClass.VOLTAGE,
             state_class=SensorStateClass.MEASUREMENT,
-            wrapper_class=(voltage_wrapper,),
+            wrapper_class=voltage_wrapper,
             channel_index=index,
             channel_condition=channel_condition,
         ),
         TuyaSensorEntityDescription(
-            key=f"{dpcode}reactivepower",
+            key=f"{key_prefix}reactivepower",
             dpcode=dpcode,
             device_class=SensorDeviceClass.REACTIVE_POWER,
             state_class=SensorStateClass.MEASUREMENT,
             suggested_unit_of_measurement=UnitOfReactivePower.KILO_VOLT_AMPERE_REACTIVE,
-            wrapper_class=(reactive_power_wrapper,),
+            wrapper_class=reactive_power_wrapper,
             channel_index=index,
             channel_condition=channel_condition,
         ),
         TuyaSensorEntityDescription(
-            key=f"{dpcode}apparentpower",
+            key=f"{key_prefix}apparentpower",
             dpcode=dpcode,
             device_class=SensorDeviceClass.APPARENT_POWER,
             state_class=SensorStateClass.MEASUREMENT,
             suggested_unit_of_measurement=UnitOfApparentPower.KILO_VOLT_AMPERE,
-            wrapper_class=(apparent_power_wrapper,),
+            wrapper_class=apparent_power_wrapper,
             channel_index=index,
             channel_condition=channel_condition,
         ),
         TuyaSensorEntityDescription(
-            key=f"{dpcode}powerfactor",
+            key=f"{key_prefix}powerfactor",
             dpcode=dpcode,
             device_class=SensorDeviceClass.POWER_FACTOR,
             state_class=SensorStateClass.MEASUREMENT,
-            wrapper_class=(power_factor_wrapper,),
+            wrapper_class=power_factor_wrapper,
             channel_index=index,
             channel_condition=channel_condition,
         ),
@@ -1975,24 +1973,34 @@ SENSORS: dict[DeviceCategory, tuple[TuyaSensorEntityDescription, ...]] = {
             description
             for index in range(1, 21)
             for description in _indexed_electricity_data(
-                DPCode(f"phase_s{index}"), index
-            )
-        ),
-        *(
-            description
-            for index in range(1, 21)
-            for description in _indexed_electricity_data(
-                DPCode(f"phase_{index}"),
+                (DPCode(f"phase_s{index}"), DPCode(f"phase_{index}")),
                 index,
                 wrapper_classes=(
-                    ElectricityCurrentRawWrapper,
-                    ElectricityPowerRawWrapper,
-                    ElectricityVoltageRawWrapper,
-                    ElectricityReactivePowerRawWrapper,
-                    ElectricityApparentPowerRawWrapper,
-                    ElectricityPowerFactorRawWrapper,
+                    (
+                        ElectricityCurrentHexStringWrapper,
+                        ElectricityCurrentRawWrapper,
+                    ),
+                    (
+                        ElectricityPowerHexStringWrapper,
+                        ElectricityPowerRawWrapper,
+                    ),
+                    (
+                        ElectricityVoltageHexStringWrapper,
+                        ElectricityVoltageRawWrapper,
+                    ),
+                    (
+                        ElectricityReactivePowerHexStringWrapper,
+                        ElectricityReactivePowerRawWrapper,
+                    ),
+                    (
+                        ElectricityApparentPowerHexStringWrapper,
+                        ElectricityApparentPowerRawWrapper,
+                    ),
+                    (
+                        ElectricityPowerFactorHexStringWrapper,
+                        ElectricityPowerFactorRawWrapper,
+                    ),
                 ),
-                channel_condition=_has_multiple_raw_phase_channels,
             )
         ),
     ),
@@ -2104,6 +2112,20 @@ SENSORS: dict[DeviceCategory, tuple[TuyaSensorEntityDescription, ...]] = {
 }
 
 
+def _get_sensor_definition(
+    device: CustomerDevice,
+    dpcode: str | tuple[DPCode, ...],
+    wrapper_class: tuple[type[DPCodeTypeInformationWrapper], ...] | None,
+) -> SensorDefinition | None:
+    """Return the sensor definition, accepting a tuple of DP codes."""
+    if isinstance(dpcode, tuple):
+        for candidate in wrapper_class or ():
+            if wrapper := candidate.find_dpcode(device, dpcode):
+                return SensorDefinition(sensor_wrapper=wrapper)
+        return None
+    return get_default_definition(device, dpcode, wrapper_class)
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: TuyaConfigEntry,
@@ -2136,7 +2158,7 @@ async def async_setup_entry(
                     )
                     for description in descriptions
                     if (
-                        definition := get_default_definition(
+                        definition := _get_sensor_definition(
                             device,
                             description.dpcode or description.key,
                             description.wrapper_class,

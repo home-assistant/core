@@ -27168,7 +27168,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'tuya.k4pje7uhfn4km88tbdnzphase_10apparentpower',
+    'unique_id': 'tuya.k4pje7uhfn4km88tbdnzphase_s10apparentpower',
     'unit_of_measurement': <UnitOfApparentPower.KILO_VOLT_AMPERE: 'kVA'>,
   })
 # ---
@@ -27229,7 +27229,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'tuya.k4pje7uhfn4km88tbdnzphase_10electriccurrent',
+    'unique_id': 'tuya.k4pje7uhfn4km88tbdnzphase_s10electriccurrent',
     'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
   })
 # ---
@@ -27290,7 +27290,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'tuya.k4pje7uhfn4km88tbdnzphase_10power',
+    'unique_id': 'tuya.k4pje7uhfn4km88tbdnzphase_s10power',
     'unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
   })
 # ---
@@ -27345,7 +27345,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'tuya.k4pje7uhfn4km88tbdnzphase_10powerfactor',
+    'unique_id': 'tuya.k4pje7uhfn4km88tbdnzphase_s10powerfactor',
     'unit_of_measurement': None,
   })
 # ---
@@ -27405,7 +27405,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'tuya.k4pje7uhfn4km88tbdnzphase_10reactivepower',
+    'unique_id': 'tuya.k4pje7uhfn4km88tbdnzphase_s10reactivepower',
     'unit_of_measurement': <UnitOfReactivePower.KILO_VOLT_AMPERE_REACTIVE: 'kvar'>,
   })
 # ---
@@ -27463,7 +27463,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'tuya.k4pje7uhfn4km88tbdnzphase_10voltage',
+    'unique_id': 'tuya.k4pje7uhfn4km88tbdnzphase_s10voltage',
     'unit_of_measurement': 'V',
   })
 # ---
@@ -27524,7 +27524,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'tuya.k4pje7uhfn4km88tbdnzphase_11apparentpower',
+    'unique_id': 'tuya.k4pje7uhfn4km88tbdnzphase_s11apparentpower',
     'unit_of_measurement': <UnitOfApparentPower.KILO_VOLT_AMPERE: 'kVA'>,
   })
 # ---
@@ -27585,7 +27585,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'tuya.k4pje7uhfn4km88tbdnzphase_11electriccurrent',
+    'unique_id': 'tuya.k4pje7uhfn4km88tbdnzphase_s11electriccurrent',
     'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
   })
 # ---
@@ -27646,7 +27646,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'tuya.k4pje7uhfn4km88tbdnzphase_11power',
+    'unique_id': 'tuya.k4pje7uhfn4km88tbdnzphase_s11power',
     'unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
   })
 # ---
@@ -27701,7 +27701,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'tuya.k4pje7uhfn4km88tbdnzphase_11powerfactor',
+    'unique_id': 'tuya.k4pje7uhfn4km88tbdnzphase_s11powerfactor',
     'unit_of_measurement': None,
   })
 # ---
@@ -27761,7 +27761,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'tuya.k4pje7uhfn4km88tbdnzphase_11reactivepower',
+    'unique_id': 'tuya.k4pje7uhfn4km88tbdnzphase_s11reactivepower',
     'unit_of_measurement': <UnitOfReactivePower.KILO_VOLT_AMPERE_REACTIVE: 'kvar'>,
   })
 # ---
@@ -27819,7 +27819,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'tuya.k4pje7uhfn4km88tbdnzphase_11voltage',
+    'unique_id': 'tuya.k4pje7uhfn4km88tbdnzphase_s11voltage',
     'unit_of_measurement': 'V',
   })
 # ---
@@ -27880,7 +27880,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'tuya.k4pje7uhfn4km88tbdnzphase_12apparentpower',
+    'unique_id': 'tuya.k4pje7uhfn4km88tbdnzphase_s12apparentpower',
     'unit_of_measurement': <UnitOfApparentPower.KILO_VOLT_AMPERE: 'kVA'>,
   })
 # ---
@@ -27941,7 +27941,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'tuya.k4pje7uhfn4km88tbdnzphase_12electriccurrent',
+    'unique_id': 'tuya.k4pje7uhfn4km88tbdnzphase_s12electriccurrent',
     'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
   })
 # ---
@@ -28002,7 +28002,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'tuya.k4pje7uhfn4km88tbdnzphase_12power',
+    'unique_id': 'tuya.k4pje7uhfn4km88tbdnzphase_s12power',
     'unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
   })
 # ---
@@ -28057,7 +28057,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'tuya.k4pje7uhfn4km88tbdnzphase_12powerfactor',
+    'unique_id': 'tuya.k4pje7uhfn4km88tbdnzphase_s12powerfactor',
     'unit_of_measurement': None,
   })
 # ---
@@ -28117,7 +28117,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'tuya.k4pje7uhfn4km88tbdnzphase_12reactivepower',
+    'unique_id': 'tuya.k4pje7uhfn4km88tbdnzphase_s12reactivepower',
     'unit_of_measurement': <UnitOfReactivePower.KILO_VOLT_AMPERE_REACTIVE: 'kvar'>,
   })
 # ---
@@ -28175,7 +28175,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'tuya.k4pje7uhfn4km88tbdnzphase_12voltage',
+    'unique_id': 'tuya.k4pje7uhfn4km88tbdnzphase_s12voltage',
     'unit_of_measurement': 'V',
   })
 # ---
@@ -28236,7 +28236,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'tuya.k4pje7uhfn4km88tbdnzphase_13apparentpower',
+    'unique_id': 'tuya.k4pje7uhfn4km88tbdnzphase_s13apparentpower',
     'unit_of_measurement': <UnitOfApparentPower.KILO_VOLT_AMPERE: 'kVA'>,
   })
 # ---
@@ -28297,7 +28297,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'tuya.k4pje7uhfn4km88tbdnzphase_13electriccurrent',
+    'unique_id': 'tuya.k4pje7uhfn4km88tbdnzphase_s13electriccurrent',
     'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
   })
 # ---
@@ -28358,7 +28358,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'tuya.k4pje7uhfn4km88tbdnzphase_13power',
+    'unique_id': 'tuya.k4pje7uhfn4km88tbdnzphase_s13power',
     'unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
   })
 # ---
@@ -28413,7 +28413,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'tuya.k4pje7uhfn4km88tbdnzphase_13powerfactor',
+    'unique_id': 'tuya.k4pje7uhfn4km88tbdnzphase_s13powerfactor',
     'unit_of_measurement': None,
   })
 # ---
@@ -28473,7 +28473,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'tuya.k4pje7uhfn4km88tbdnzphase_13reactivepower',
+    'unique_id': 'tuya.k4pje7uhfn4km88tbdnzphase_s13reactivepower',
     'unit_of_measurement': <UnitOfReactivePower.KILO_VOLT_AMPERE_REACTIVE: 'kvar'>,
   })
 # ---
@@ -28531,7 +28531,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'tuya.k4pje7uhfn4km88tbdnzphase_13voltage',
+    'unique_id': 'tuya.k4pje7uhfn4km88tbdnzphase_s13voltage',
     'unit_of_measurement': 'V',
   })
 # ---
@@ -28592,7 +28592,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'tuya.k4pje7uhfn4km88tbdnzphase_14apparentpower',
+    'unique_id': 'tuya.k4pje7uhfn4km88tbdnzphase_s14apparentpower',
     'unit_of_measurement': <UnitOfApparentPower.KILO_VOLT_AMPERE: 'kVA'>,
   })
 # ---
@@ -28653,7 +28653,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'tuya.k4pje7uhfn4km88tbdnzphase_14electriccurrent',
+    'unique_id': 'tuya.k4pje7uhfn4km88tbdnzphase_s14electriccurrent',
     'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
   })
 # ---
@@ -28714,7 +28714,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'tuya.k4pje7uhfn4km88tbdnzphase_14power',
+    'unique_id': 'tuya.k4pje7uhfn4km88tbdnzphase_s14power',
     'unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
   })
 # ---
@@ -28769,7 +28769,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'tuya.k4pje7uhfn4km88tbdnzphase_14powerfactor',
+    'unique_id': 'tuya.k4pje7uhfn4km88tbdnzphase_s14powerfactor',
     'unit_of_measurement': None,
   })
 # ---
@@ -28829,7 +28829,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'tuya.k4pje7uhfn4km88tbdnzphase_14reactivepower',
+    'unique_id': 'tuya.k4pje7uhfn4km88tbdnzphase_s14reactivepower',
     'unit_of_measurement': <UnitOfReactivePower.KILO_VOLT_AMPERE_REACTIVE: 'kvar'>,
   })
 # ---
@@ -28887,7 +28887,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'tuya.k4pje7uhfn4km88tbdnzphase_14voltage',
+    'unique_id': 'tuya.k4pje7uhfn4km88tbdnzphase_s14voltage',
     'unit_of_measurement': 'V',
   })
 # ---
@@ -28948,7 +28948,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'tuya.k4pje7uhfn4km88tbdnzphase_15apparentpower',
+    'unique_id': 'tuya.k4pje7uhfn4km88tbdnzphase_s15apparentpower',
     'unit_of_measurement': <UnitOfApparentPower.KILO_VOLT_AMPERE: 'kVA'>,
   })
 # ---
@@ -29009,7 +29009,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'tuya.k4pje7uhfn4km88tbdnzphase_15electriccurrent',
+    'unique_id': 'tuya.k4pje7uhfn4km88tbdnzphase_s15electriccurrent',
     'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
   })
 # ---
@@ -29070,7 +29070,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'tuya.k4pje7uhfn4km88tbdnzphase_15power',
+    'unique_id': 'tuya.k4pje7uhfn4km88tbdnzphase_s15power',
     'unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
   })
 # ---
@@ -29125,7 +29125,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'tuya.k4pje7uhfn4km88tbdnzphase_15powerfactor',
+    'unique_id': 'tuya.k4pje7uhfn4km88tbdnzphase_s15powerfactor',
     'unit_of_measurement': None,
   })
 # ---
@@ -29185,7 +29185,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'tuya.k4pje7uhfn4km88tbdnzphase_15reactivepower',
+    'unique_id': 'tuya.k4pje7uhfn4km88tbdnzphase_s15reactivepower',
     'unit_of_measurement': <UnitOfReactivePower.KILO_VOLT_AMPERE_REACTIVE: 'kvar'>,
   })
 # ---
@@ -29243,7 +29243,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'tuya.k4pje7uhfn4km88tbdnzphase_15voltage',
+    'unique_id': 'tuya.k4pje7uhfn4km88tbdnzphase_s15voltage',
     'unit_of_measurement': 'V',
   })
 # ---
@@ -29304,7 +29304,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'tuya.k4pje7uhfn4km88tbdnzphase_16apparentpower',
+    'unique_id': 'tuya.k4pje7uhfn4km88tbdnzphase_s16apparentpower',
     'unit_of_measurement': <UnitOfApparentPower.KILO_VOLT_AMPERE: 'kVA'>,
   })
 # ---
@@ -29365,7 +29365,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'tuya.k4pje7uhfn4km88tbdnzphase_16electriccurrent',
+    'unique_id': 'tuya.k4pje7uhfn4km88tbdnzphase_s16electriccurrent',
     'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
   })
 # ---
@@ -29426,7 +29426,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'tuya.k4pje7uhfn4km88tbdnzphase_16power',
+    'unique_id': 'tuya.k4pje7uhfn4km88tbdnzphase_s16power',
     'unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
   })
 # ---
@@ -29481,7 +29481,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'tuya.k4pje7uhfn4km88tbdnzphase_16powerfactor',
+    'unique_id': 'tuya.k4pje7uhfn4km88tbdnzphase_s16powerfactor',
     'unit_of_measurement': None,
   })
 # ---
@@ -29541,7 +29541,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'tuya.k4pje7uhfn4km88tbdnzphase_16reactivepower',
+    'unique_id': 'tuya.k4pje7uhfn4km88tbdnzphase_s16reactivepower',
     'unit_of_measurement': <UnitOfReactivePower.KILO_VOLT_AMPERE_REACTIVE: 'kvar'>,
   })
 # ---
@@ -29599,7 +29599,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'tuya.k4pje7uhfn4km88tbdnzphase_16voltage',
+    'unique_id': 'tuya.k4pje7uhfn4km88tbdnzphase_s16voltage',
     'unit_of_measurement': 'V',
   })
 # ---
@@ -29660,7 +29660,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'tuya.k4pje7uhfn4km88tbdnzphase_1apparentpower',
+    'unique_id': 'tuya.k4pje7uhfn4km88tbdnzphase_s1apparentpower',
     'unit_of_measurement': <UnitOfApparentPower.KILO_VOLT_AMPERE: 'kVA'>,
   })
 # ---
@@ -29721,7 +29721,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'tuya.k4pje7uhfn4km88tbdnzphase_1electriccurrent',
+    'unique_id': 'tuya.k4pje7uhfn4km88tbdnzphase_s1electriccurrent',
     'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
   })
 # ---
@@ -29782,7 +29782,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'tuya.k4pje7uhfn4km88tbdnzphase_1power',
+    'unique_id': 'tuya.k4pje7uhfn4km88tbdnzphase_s1power',
     'unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
   })
 # ---
@@ -29837,7 +29837,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'tuya.k4pje7uhfn4km88tbdnzphase_1powerfactor',
+    'unique_id': 'tuya.k4pje7uhfn4km88tbdnzphase_s1powerfactor',
     'unit_of_measurement': None,
   })
 # ---
@@ -29897,7 +29897,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'tuya.k4pje7uhfn4km88tbdnzphase_1reactivepower',
+    'unique_id': 'tuya.k4pje7uhfn4km88tbdnzphase_s1reactivepower',
     'unit_of_measurement': <UnitOfReactivePower.KILO_VOLT_AMPERE_REACTIVE: 'kvar'>,
   })
 # ---
@@ -29955,7 +29955,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'tuya.k4pje7uhfn4km88tbdnzphase_1voltage',
+    'unique_id': 'tuya.k4pje7uhfn4km88tbdnzphase_s1voltage',
     'unit_of_measurement': 'V',
   })
 # ---
@@ -30016,7 +30016,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'tuya.k4pje7uhfn4km88tbdnzphase_2apparentpower',
+    'unique_id': 'tuya.k4pje7uhfn4km88tbdnzphase_s2apparentpower',
     'unit_of_measurement': <UnitOfApparentPower.KILO_VOLT_AMPERE: 'kVA'>,
   })
 # ---
@@ -30077,7 +30077,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'tuya.k4pje7uhfn4km88tbdnzphase_2electriccurrent',
+    'unique_id': 'tuya.k4pje7uhfn4km88tbdnzphase_s2electriccurrent',
     'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
   })
 # ---
@@ -30138,7 +30138,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'tuya.k4pje7uhfn4km88tbdnzphase_2power',
+    'unique_id': 'tuya.k4pje7uhfn4km88tbdnzphase_s2power',
     'unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
   })
 # ---
@@ -30193,7 +30193,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'tuya.k4pje7uhfn4km88tbdnzphase_2powerfactor',
+    'unique_id': 'tuya.k4pje7uhfn4km88tbdnzphase_s2powerfactor',
     'unit_of_measurement': None,
   })
 # ---
@@ -30253,7 +30253,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'tuya.k4pje7uhfn4km88tbdnzphase_2reactivepower',
+    'unique_id': 'tuya.k4pje7uhfn4km88tbdnzphase_s2reactivepower',
     'unit_of_measurement': <UnitOfReactivePower.KILO_VOLT_AMPERE_REACTIVE: 'kvar'>,
   })
 # ---
@@ -30311,7 +30311,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'tuya.k4pje7uhfn4km88tbdnzphase_2voltage',
+    'unique_id': 'tuya.k4pje7uhfn4km88tbdnzphase_s2voltage',
     'unit_of_measurement': 'V',
   })
 # ---
@@ -30372,7 +30372,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'tuya.k4pje7uhfn4km88tbdnzphase_3apparentpower',
+    'unique_id': 'tuya.k4pje7uhfn4km88tbdnzphase_s3apparentpower',
     'unit_of_measurement': <UnitOfApparentPower.KILO_VOLT_AMPERE: 'kVA'>,
   })
 # ---
@@ -30433,7 +30433,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'tuya.k4pje7uhfn4km88tbdnzphase_3electriccurrent',
+    'unique_id': 'tuya.k4pje7uhfn4km88tbdnzphase_s3electriccurrent',
     'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
   })
 # ---
@@ -30494,7 +30494,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'tuya.k4pje7uhfn4km88tbdnzphase_3power',
+    'unique_id': 'tuya.k4pje7uhfn4km88tbdnzphase_s3power',
     'unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
   })
 # ---
@@ -30549,7 +30549,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'tuya.k4pje7uhfn4km88tbdnzphase_3powerfactor',
+    'unique_id': 'tuya.k4pje7uhfn4km88tbdnzphase_s3powerfactor',
     'unit_of_measurement': None,
   })
 # ---
@@ -30609,7 +30609,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'tuya.k4pje7uhfn4km88tbdnzphase_3reactivepower',
+    'unique_id': 'tuya.k4pje7uhfn4km88tbdnzphase_s3reactivepower',
     'unit_of_measurement': <UnitOfReactivePower.KILO_VOLT_AMPERE_REACTIVE: 'kvar'>,
   })
 # ---
@@ -30667,7 +30667,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'tuya.k4pje7uhfn4km88tbdnzphase_3voltage',
+    'unique_id': 'tuya.k4pje7uhfn4km88tbdnzphase_s3voltage',
     'unit_of_measurement': 'V',
   })
 # ---
@@ -30728,7 +30728,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'tuya.k4pje7uhfn4km88tbdnzphase_4apparentpower',
+    'unique_id': 'tuya.k4pje7uhfn4km88tbdnzphase_s4apparentpower',
     'unit_of_measurement': <UnitOfApparentPower.KILO_VOLT_AMPERE: 'kVA'>,
   })
 # ---
@@ -30789,7 +30789,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'tuya.k4pje7uhfn4km88tbdnzphase_4electriccurrent',
+    'unique_id': 'tuya.k4pje7uhfn4km88tbdnzphase_s4electriccurrent',
     'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
   })
 # ---
@@ -30850,7 +30850,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'tuya.k4pje7uhfn4km88tbdnzphase_4power',
+    'unique_id': 'tuya.k4pje7uhfn4km88tbdnzphase_s4power',
     'unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
   })
 # ---
@@ -30905,7 +30905,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'tuya.k4pje7uhfn4km88tbdnzphase_4powerfactor',
+    'unique_id': 'tuya.k4pje7uhfn4km88tbdnzphase_s4powerfactor',
     'unit_of_measurement': None,
   })
 # ---
@@ -30965,7 +30965,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'tuya.k4pje7uhfn4km88tbdnzphase_4reactivepower',
+    'unique_id': 'tuya.k4pje7uhfn4km88tbdnzphase_s4reactivepower',
     'unit_of_measurement': <UnitOfReactivePower.KILO_VOLT_AMPERE_REACTIVE: 'kvar'>,
   })
 # ---
@@ -31023,7 +31023,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'tuya.k4pje7uhfn4km88tbdnzphase_4voltage',
+    'unique_id': 'tuya.k4pje7uhfn4km88tbdnzphase_s4voltage',
     'unit_of_measurement': 'V',
   })
 # ---
@@ -31084,7 +31084,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'tuya.k4pje7uhfn4km88tbdnzphase_5apparentpower',
+    'unique_id': 'tuya.k4pje7uhfn4km88tbdnzphase_s5apparentpower',
     'unit_of_measurement': <UnitOfApparentPower.KILO_VOLT_AMPERE: 'kVA'>,
   })
 # ---
@@ -31145,7 +31145,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'tuya.k4pje7uhfn4km88tbdnzphase_5electriccurrent',
+    'unique_id': 'tuya.k4pje7uhfn4km88tbdnzphase_s5electriccurrent',
     'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
   })
 # ---
@@ -31206,7 +31206,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'tuya.k4pje7uhfn4km88tbdnzphase_5power',
+    'unique_id': 'tuya.k4pje7uhfn4km88tbdnzphase_s5power',
     'unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
   })
 # ---
@@ -31261,7 +31261,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'tuya.k4pje7uhfn4km88tbdnzphase_5powerfactor',
+    'unique_id': 'tuya.k4pje7uhfn4km88tbdnzphase_s5powerfactor',
     'unit_of_measurement': None,
   })
 # ---
@@ -31321,7 +31321,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'tuya.k4pje7uhfn4km88tbdnzphase_5reactivepower',
+    'unique_id': 'tuya.k4pje7uhfn4km88tbdnzphase_s5reactivepower',
     'unit_of_measurement': <UnitOfReactivePower.KILO_VOLT_AMPERE_REACTIVE: 'kvar'>,
   })
 # ---
@@ -31379,7 +31379,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'tuya.k4pje7uhfn4km88tbdnzphase_5voltage',
+    'unique_id': 'tuya.k4pje7uhfn4km88tbdnzphase_s5voltage',
     'unit_of_measurement': 'V',
   })
 # ---
@@ -31440,7 +31440,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'tuya.k4pje7uhfn4km88tbdnzphase_6apparentpower',
+    'unique_id': 'tuya.k4pje7uhfn4km88tbdnzphase_s6apparentpower',
     'unit_of_measurement': <UnitOfApparentPower.KILO_VOLT_AMPERE: 'kVA'>,
   })
 # ---
@@ -31501,7 +31501,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'tuya.k4pje7uhfn4km88tbdnzphase_6electriccurrent',
+    'unique_id': 'tuya.k4pje7uhfn4km88tbdnzphase_s6electriccurrent',
     'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
   })
 # ---
@@ -31562,7 +31562,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'tuya.k4pje7uhfn4km88tbdnzphase_6power',
+    'unique_id': 'tuya.k4pje7uhfn4km88tbdnzphase_s6power',
     'unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
   })
 # ---
@@ -31617,7 +31617,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'tuya.k4pje7uhfn4km88tbdnzphase_6powerfactor',
+    'unique_id': 'tuya.k4pje7uhfn4km88tbdnzphase_s6powerfactor',
     'unit_of_measurement': None,
   })
 # ---
@@ -31677,7 +31677,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'tuya.k4pje7uhfn4km88tbdnzphase_6reactivepower',
+    'unique_id': 'tuya.k4pje7uhfn4km88tbdnzphase_s6reactivepower',
     'unit_of_measurement': <UnitOfReactivePower.KILO_VOLT_AMPERE_REACTIVE: 'kvar'>,
   })
 # ---
@@ -31735,7 +31735,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'tuya.k4pje7uhfn4km88tbdnzphase_6voltage',
+    'unique_id': 'tuya.k4pje7uhfn4km88tbdnzphase_s6voltage',
     'unit_of_measurement': 'V',
   })
 # ---
@@ -31796,7 +31796,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'tuya.k4pje7uhfn4km88tbdnzphase_7apparentpower',
+    'unique_id': 'tuya.k4pje7uhfn4km88tbdnzphase_s7apparentpower',
     'unit_of_measurement': <UnitOfApparentPower.KILO_VOLT_AMPERE: 'kVA'>,
   })
 # ---
@@ -31857,7 +31857,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'tuya.k4pje7uhfn4km88tbdnzphase_7electriccurrent',
+    'unique_id': 'tuya.k4pje7uhfn4km88tbdnzphase_s7electriccurrent',
     'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
   })
 # ---
@@ -31918,7 +31918,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'tuya.k4pje7uhfn4km88tbdnzphase_7power',
+    'unique_id': 'tuya.k4pje7uhfn4km88tbdnzphase_s7power',
     'unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
   })
 # ---
@@ -31973,7 +31973,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'tuya.k4pje7uhfn4km88tbdnzphase_7powerfactor',
+    'unique_id': 'tuya.k4pje7uhfn4km88tbdnzphase_s7powerfactor',
     'unit_of_measurement': None,
   })
 # ---
@@ -32033,7 +32033,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'tuya.k4pje7uhfn4km88tbdnzphase_7reactivepower',
+    'unique_id': 'tuya.k4pje7uhfn4km88tbdnzphase_s7reactivepower',
     'unit_of_measurement': <UnitOfReactivePower.KILO_VOLT_AMPERE_REACTIVE: 'kvar'>,
   })
 # ---
@@ -32091,7 +32091,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'tuya.k4pje7uhfn4km88tbdnzphase_7voltage',
+    'unique_id': 'tuya.k4pje7uhfn4km88tbdnzphase_s7voltage',
     'unit_of_measurement': 'V',
   })
 # ---
@@ -32152,7 +32152,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'tuya.k4pje7uhfn4km88tbdnzphase_8apparentpower',
+    'unique_id': 'tuya.k4pje7uhfn4km88tbdnzphase_s8apparentpower',
     'unit_of_measurement': <UnitOfApparentPower.KILO_VOLT_AMPERE: 'kVA'>,
   })
 # ---
@@ -32213,7 +32213,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'tuya.k4pje7uhfn4km88tbdnzphase_8electriccurrent',
+    'unique_id': 'tuya.k4pje7uhfn4km88tbdnzphase_s8electriccurrent',
     'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
   })
 # ---
@@ -32274,7 +32274,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'tuya.k4pje7uhfn4km88tbdnzphase_8power',
+    'unique_id': 'tuya.k4pje7uhfn4km88tbdnzphase_s8power',
     'unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
   })
 # ---
@@ -32329,7 +32329,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'tuya.k4pje7uhfn4km88tbdnzphase_8powerfactor',
+    'unique_id': 'tuya.k4pje7uhfn4km88tbdnzphase_s8powerfactor',
     'unit_of_measurement': None,
   })
 # ---
@@ -32389,7 +32389,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'tuya.k4pje7uhfn4km88tbdnzphase_8reactivepower',
+    'unique_id': 'tuya.k4pje7uhfn4km88tbdnzphase_s8reactivepower',
     'unit_of_measurement': <UnitOfReactivePower.KILO_VOLT_AMPERE_REACTIVE: 'kvar'>,
   })
 # ---
@@ -32447,7 +32447,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'tuya.k4pje7uhfn4km88tbdnzphase_8voltage',
+    'unique_id': 'tuya.k4pje7uhfn4km88tbdnzphase_s8voltage',
     'unit_of_measurement': 'V',
   })
 # ---
@@ -32508,7 +32508,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'tuya.k4pje7uhfn4km88tbdnzphase_9apparentpower',
+    'unique_id': 'tuya.k4pje7uhfn4km88tbdnzphase_s9apparentpower',
     'unit_of_measurement': <UnitOfApparentPower.KILO_VOLT_AMPERE: 'kVA'>,
   })
 # ---
@@ -32569,7 +32569,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'tuya.k4pje7uhfn4km88tbdnzphase_9electriccurrent',
+    'unique_id': 'tuya.k4pje7uhfn4km88tbdnzphase_s9electriccurrent',
     'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
   })
 # ---
@@ -32630,7 +32630,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'tuya.k4pje7uhfn4km88tbdnzphase_9power',
+    'unique_id': 'tuya.k4pje7uhfn4km88tbdnzphase_s9power',
     'unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
   })
 # ---
@@ -32685,7 +32685,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'tuya.k4pje7uhfn4km88tbdnzphase_9powerfactor',
+    'unique_id': 'tuya.k4pje7uhfn4km88tbdnzphase_s9powerfactor',
     'unit_of_measurement': None,
   })
 # ---
@@ -32745,7 +32745,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'tuya.k4pje7uhfn4km88tbdnzphase_9reactivepower',
+    'unique_id': 'tuya.k4pje7uhfn4km88tbdnzphase_s9reactivepower',
     'unit_of_measurement': <UnitOfReactivePower.KILO_VOLT_AMPERE_REACTIVE: 'kvar'>,
   })
 # ---
@@ -32803,7 +32803,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'tuya.k4pje7uhfn4km88tbdnzphase_9voltage',
+    'unique_id': 'tuya.k4pje7uhfn4km88tbdnzphase_s9voltage',
     'unit_of_measurement': 'V',
   })
 # ---
