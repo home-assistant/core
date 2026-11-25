@@ -424,3 +424,32 @@ async def test_universal_switch_no_replay_on_startup(
     await hass.async_block_till_done()
 
     assert hass.states.get("event.universal_switch_lower_key").state == "unknown"
+
+
+@pytest.mark.parametrize(
+    "device_buckets",
+    [
+        {
+            "universal_switches": [
+                universal_switch_device(
+                    keystates=("LOWER_BUTTON", "UPPER_BUTTON"),
+                )
+            ]
+        }
+    ],
+    indirect=True,
+)
+async def test_universal_switch_unregisters_callbacks_on_unload(
+    hass: HomeAssistant,
+    mock_session: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Unloading removes every key's Keypad callback registration."""
+    await setup_integration(hass, mock_config_entry)
+    keypad = mock_session.device_helper.universal_switches[0].device_services[0]
+    assert set(keypad._event_callbacks) == {"LOWER_BUTTON", "UPPER_BUTTON"}
+
+    await hass.config_entries.async_unload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert not keypad._event_callbacks
