@@ -10,6 +10,7 @@ from homeassistant.components.cover import (
     SERVICE_CLOSE_COVER,
     SERVICE_OPEN_COVER,
     SERVICE_STOP_COVER,
+    CoverDeviceClass,
     CoverEntityFeature,
     CoverState,
 )
@@ -60,7 +61,7 @@ async def test_entities(
 
     state = hass.states.get(CHANNEL_1)
     assert state.state == STATE_UNKNOWN
-    assert state.attributes[ATTR_DEVICE_CLASS] == "blind"
+    assert state.attributes[ATTR_DEVICE_CLASS] == CoverDeviceClass.BLIND
     assert state.attributes[ATTR_ASSUMED_STATE] is True
     assert state.attributes[ATTR_SUPPORTED_FEATURES] == (
         CoverEntityFeature.OPEN | CoverEntityFeature.CLOSE | CoverEntityFeature.STOP

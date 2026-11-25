@@ -7,16 +7,17 @@ from homeassistant.const import CONF_DEVICE, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 
-from .const import (
-    CONF_SYSTEM,
-    DOMAIN,
-    LINK_ERRORS,
-    LOGGER,
-    R2D7ConfigEntry,
-    redact_port,
-)
+from .const import CONF_SYSTEM, DOMAIN, LINK_ERRORS, LOGGER, R2D7ConfigEntry
 
 PLATFORMS = [Platform.COVER]
+
+
+def redact_port(port: str) -> str:
+    """Return the port without its query string.
+
+    An ESPHome proxy URL can carry the API key in its query string.
+    """
+    return port.split("?", 1)[0]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: R2D7ConfigEntry) -> None:

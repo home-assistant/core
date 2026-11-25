@@ -25,9 +25,13 @@ from .const import (
     CONF_SYSTEM,
     DOMAIN,
     LINK_ERRORS,
-    RECENT_MOVE_SECONDS,
     R2D7ConfigEntry,
 )
+
+# The controller reports nothing back. A Stop is universal, so it marks as
+# unknown the blind it was pressed on plus every blind sent Open or Close
+# within this many seconds.
+RECENT_MOVE_SECONDS = 120
 
 
 def _stopped_signal(entry_id: str) -> str:
@@ -86,7 +90,7 @@ class R2D7Blind(CoverEntity):
     @override
     def available(self) -> bool:
         """Return if the serial link is up."""
-        return self._connection.connected
+        return super().available and self._connection.connected
 
     @override
     async def async_added_to_hass(self) -> None:

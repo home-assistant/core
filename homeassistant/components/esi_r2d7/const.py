@@ -14,20 +14,7 @@ CONF_SYSTEM = "system"
 CONF_FIRST_CHANNEL = "first_channel"
 CONF_LAST_CHANNEL = "last_channel"
 
-# The controller reports nothing back. A Stop is universal, so it marks as
-# unknown the blind it was pressed on plus every blind sent Open or Close
-# within this many seconds.
-RECENT_MOVE_SECONDS = 120
-
 # HomeAssistantError: the ESPHome serial proxy raises it while it is not ready.
 LINK_ERRORS = (*CONNECT_ERRORS, HomeAssistantError)
 
 type R2D7ConfigEntry = ConfigEntry[R2D7Connection]
-
-
-def redact_port(port: str) -> str:
-    """Return the port without its query string.
-
-    An ESPHome proxy URL can carry the API key in its query string.
-    """
-    return port.split("?", 1)[0]
