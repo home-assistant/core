@@ -1,6 +1,5 @@
 """Config flow for the Plexilent integration."""
 
-from collections.abc import Mapping
 import logging
 from typing import Any, override
 
@@ -20,9 +19,6 @@ USER_SCHEMA = probatio.Schema(
         probatio.Required(CONF_EMAIL): str,
         probatio.Required(probatio.Secret(CONF_PASSWORD)): str,
     }
-)
-REAUTH_SCHEMA = probatio.Schema(
-    {probatio.Required(probatio.Secret(CONF_PASSWORD)): str}
 )
 
 
@@ -67,32 +63,5 @@ class PlexilentConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="user",
             data_schema=self.add_suggested_values_to_schema(USER_SCHEMA, user_input),
-            errors=errors,
-        )
-
-    async def async_step_reauth(
-        self, entry_data: Mapping[str, Any]
-    ) -> ConfigFlowResult:
-        """Start reauthentication when the cloud rejects the stored login."""
-        return await self.async_step_reauth_confirm()
-
-    async def async_step_reauth_confirm(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Ask for the password again."""
-        entry = self._get_reauth_entry()
-        errors: dict[str, str] = {}
-        if user_input is not None:
-            token, errors = await self._login(
-                entry.data[CONF_EMAIL], user_input[CONF_PASSWORD]
-            )
-            if token:
-                return self.async_update_reload_and_abort(
-                    entry, data_updates={CONF_REFRESH_TOKEN: token}
-                )
-        return self.async_show_form(
-            step_id="reauth_confirm",
-            data_schema=REAUTH_SCHEMA,
-            description_placeholders={CONF_EMAIL: entry.data[CONF_EMAIL]},
             errors=errors,
         )

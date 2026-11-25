@@ -35,23 +35,21 @@ async def test_setup_retry_unload(
 async def test_setup_auth_failed(
     hass: HomeAssistant, client: MagicMock, entry: MockConfigEntry
 ) -> None:
-    """A rejected login at setup starts reauthentication."""
+    """A rejected login at setup is handled as a failed update."""
     client.devices.side_effect = PlexilentAuthError
     entry.add_to_hass(hass)
     await hass.config_entries.async_setup(entry.entry_id)
-    assert entry.state is ConfigEntryState.SETUP_ERROR
-    assert [f["step_id"] for f in hass.config_entries.flow.async_progress()] == [
-        "reauth_confirm"
-    ]
+    assert entry.state is ConfigEntryState.SETUP_RETRY
+    assert not hass.config_entries.flow.async_progress()
 
 
-async def test_new_device_then_auth_failure(
+async def test_new_device(
     hass: HomeAssistant,
     client: MagicMock,
     entry: MockConfigEntry,
     freezer: FrozenDateTimeFactory,
 ) -> None:
-    """A device added in the app appears on the next poll; a revoked link asks to sign in."""
+    """A device added in the app appears on the next poll."""
     await setup_integration(hass, entry)
     client.devices.return_value = [
         *DEVICES,
@@ -75,11 +73,3 @@ async def test_new_device_then_auth_failure(
     bed = hass.states.get("light.bed")
     assert bed.attributes["color_mode"] == "color_temp"
     assert bed.attributes["color_temp_kelvin"] == 4000
-
-    client.devices.side_effect = PlexilentAuthError
-    freezer.tick(SCAN_INTERVAL)
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done()
-    assert [f["step_id"] for f in hass.config_entries.flow.async_progress()] == [
-        "reauth_confirm"
-    ]
