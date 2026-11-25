@@ -4,7 +4,7 @@ import logging
 from typing import override
 
 from broadlink_async.exceptions import BroadlinkException
-from broadlink_async.remote import TICK
+from broadlink_async.remote import TICK, pulses_to_rm4_rf
 from rf_protocols import RadioFrequencyCommand
 
 from homeassistant.components.radio_frequency import RadioFrequencyTransmitterEntity
@@ -27,6 +27,9 @@ _TICK_US = TICK
 
 _MAX_TICKS = 0xFFFF  # About 2 s
 
+# Off time after a frame that ends on a pulse, as in a learned RM4 Pro code.
+_RM4_RF_GAP_US = 12_881
+
 _RF_433_TYPE_BYTE = 0xB2
 _RF_315_TYPE_BYTE = 0xB4
 
@@ -34,6 +37,12 @@ _RF_433_RANGE = (433_050_000, 434_790_000)
 _RF_315_RANGE = (314_950_000, 315_250_000)
 
 SUPPORTED_FREQUENCY_RANGES: list[tuple[int, int]] = [_RF_433_RANGE, _RF_315_RANGE]
+
+# Measured on an RM4 Pro: the outermost frequencies it was heard sending on.
+RM4_PRO_FREQUENCY_RANGES: list[tuple[int, int]] = [
+    (305_000_000, 335_000_000),
+    (431_000_000, 438_000_000),
+]
 
 
 def _type_byte_for_frequency(frequency: int) -> int:
@@ -90,6 +99,31 @@ def encode_rf_packet(
     return bytes(buf)
 
 
+def encode_rm4_rf_packet(
+    *,
+    frequency: int,
+    repeat_count: int,
+    timings_us: list[int],
+) -> bytes:
+    """Encode raw OOK timings as an RM4 Pro RF packet that carries its frequency.
+
+    The frame is written out ``repeat_count + 1`` times.
+    """
+    gap_us = _RM4_RF_GAP_US if timings_us and timings_us[-1] > 0 else None
+    try:
+        return pulses_to_rm4_rf(
+            timings_us,
+            frequency / 1_000_000,
+            frames=repeat_count + 1,
+            gap_us=gap_us,
+        )
+    except ValueError as err:
+        raise HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key="invalid_rf_timings",
+        ) from err
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
@@ -114,18 +148,26 @@ class BroadlinkRadioFrequency(BroadlinkEntity, RadioFrequencyTransmitterEntity):
     @property
     @override
     def supported_frequency_ranges(self) -> list[tuple[int, int]]:
-        """Return the Broadlink-supported narrow RF bands."""
+        """Return the RF bands this Broadlink model can send on."""
+        if self._device.api.type == "RM4PRO":
+            return RM4_PRO_FREQUENCY_RANGES
         return SUPPORTED_FREQUENCY_RANGES
 
     @override
     async def async_send_command(self, command: RadioFrequencyCommand) -> None:
         """Encode an OOK command and transmit it via the Broadlink device."""
-        type_byte = _type_byte_for_frequency(command.frequency)
-        packet = encode_rf_packet(
-            type_byte=type_byte,
-            repeat_count=command.repeat_count,
-            timings_us=command.get_raw_timings(),
-        )
+        if self._device.api.type == "RM4PRO":
+            packet = encode_rm4_rf_packet(
+                frequency=command.frequency,
+                repeat_count=command.repeat_count,
+                timings_us=command.get_raw_timings(),
+            )
+        else:
+            packet = encode_rf_packet(
+                type_byte=_type_byte_for_frequency(command.frequency),
+                repeat_count=command.repeat_count,
+                timings_us=command.get_raw_timings(),
+            )
         _LOGGER.debug(
             "Transmitting RF packet: %d bytes on %d Hz (repeat=%d)",
             len(packet),

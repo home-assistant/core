@@ -10,6 +10,7 @@ from typing import TYPE_CHECKING, Any, override
 
 from tesla_fleet_api.const import VehicleDataEndpoint
 from tesla_fleet_api.exceptions import (
+    Forbidden,
     GatewayTimeout,
     InsufficientCredits,
     InvalidResponse,
@@ -31,12 +32,13 @@ from tesla_fleet_api.tesla.powerwall import (
     PowerwallError,
 )
 from tesla_fleet_api.teslemetry import EnergySite, Teslemetry, Vehicle
+from teslemetry_stream import TeslemetryStream
 from teslemetry_stream.const import EnergyTotalsEvent, WallConnectorTotalsEvent
 
-from homeassistant.core import HomeAssistant
+from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers import issue_registry as ir
-from homeassistant.helpers.event import async_track_time_interval
+from homeassistant.helpers.event import async_call_later, async_track_time_interval
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
 
@@ -72,6 +74,9 @@ ENERGY_LIVE_LOCAL_MAX_BACKOFF = timedelta(minutes=1)
 ENERGY_CONFIG_INTERVAL = timedelta(seconds=30)
 LOCAL_STATUS_INTERVAL = timedelta(seconds=10)
 LOCAL_COMPONENTS_INTERVAL = timedelta(seconds=30)
+# Teslemetry streams live_status after each 30s poll of the site, so this long
+# without one on a connected stream means Tesla stopped answering for it.
+ENERGY_LIVE_STREAM_TIMEOUT = timedelta(minutes=5)
 
 # Start of the day the energy history totals cover. Kept out of
 # ENERGY_HISTORY_FIELDS, which is the list of keys that become sensors.
@@ -83,6 +88,11 @@ WALL_CONNECTOR_TOTALS = "totals"
 # Keys within tariff_content_v2 kept as nested dicts rather than flattened,
 # since entities and calendars read them as whole structures.
 TARIFF_SKIP_KEYS = ["daily_charges", "demand_charges", "energy_charges", "seasons"]
+
+# Teslemetry's reauth keeps a valid Tesla grant, so only a fresh Tesla login
+# that re-asks for declined scopes can restore them.
+ISSUE_MISSING_SCOPES = "missing_scopes"
+MISSING_SCOPES_URL = "https://teslemetry.com/login?prompt_missing_scopes=1"
 
 # Insufficient credits will not resolve themselves quickly, so back off polling
 # instead of hammering the API at the coordinator's normal interval.
@@ -184,6 +194,21 @@ class TeslemetryVehicleDataCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 translation_key="update_failed_insufficient_credits",
                 retry_after=INSUFFICIENT_CREDITS_RETRY_AFTER,
             ) from e
+        except Forbidden as e:
+            ir.async_create_issue(
+                self.hass,
+                DOMAIN,
+                f"{ISSUE_MISSING_SCOPES}_{self.config_entry.entry_id}",
+                config_entry_id=self.config_entry.entry_id,
+                is_fixable=False,
+                severity=ir.IssueSeverity.ERROR,
+                translation_key=ISSUE_MISSING_SCOPES,
+                learn_more_url=MISSING_SCOPES_URL,
+            )
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="update_failed_missing_scopes",
+            ) from e
         except RETRY_EXCEPTIONS as e:
             raise UpdateFailed(
                 translation_domain=DOMAIN,
@@ -198,6 +223,9 @@ class TeslemetryVehicleDataCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 translation_placeholders={"message": e.message},
             ) from e
 
+        ir.async_delete_issue(
+            self.hass, DOMAIN, f"{ISSUE_MISSING_SCOPES}_{self.config_entry.entry_id}"
+        )
         data = flatten(data)
         if version := data.get("vehicle_state_car_version"):
             # Consume firmware opportunistically rather than through a listener
@@ -236,6 +264,7 @@ class TeslemetryEnergySiteLiveCoordinator(DataUpdateCoordinator[dict[str, Any]])
         config_entry: TeslemetryConfigEntry,
         api: EnergySite,
         data: dict[str, Any],
+        stream: TeslemetryStream,
     ) -> None:
         """Initialize Teslemetry Energy Site Live coordinator."""
         super().__init__(
@@ -245,6 +274,10 @@ class TeslemetryEnergySiteLiveCoordinator(DataUpdateCoordinator[dict[str, Any]])
             name="Teslemetry Energy Site Live",
         )
         self.api = api
+        self._stream = stream
+        self._cancel_stream_timeout: CALLBACK_TYPE | None = None
+        config_entry.async_on_unload(self._async_cancel_stream_timeout)
+        self._async_restart_stream_timeout()
         self._local: PowerwallEnergySite | None = None
         # Kept un-indexed as the merge base, since _index_wall_connectors mutates.
         self._cloud_live = deepcopy(data)
@@ -285,7 +318,7 @@ class TeslemetryEnergySiteLiveCoordinator(DataUpdateCoordinator[dict[str, Any]])
         self._local_poll_in_progress = True
         try:
             try:
-                self._local_live = (await local.live_status())["response"]
+                local_live = (await local.live_status())["response"]
             except PowerwallError as e:
                 self._local_live = None
                 LOGGER.log(
@@ -305,6 +338,11 @@ class TeslemetryEnergySiteLiveCoordinator(DataUpdateCoordinator[dict[str, Any]])
                         "Local live poll for %s recovered", self.api.energy_site_id
                     )
                 self._local_backoff_ticks = 1
+                # The gateway omits unmeasured AC-coupled solar, so its load can go
+                # negative; Tesla's cloud never reports a load below 0.
+                if (local_live.get("load_power") or 0) < 0:
+                    local_live = {**local_live, "load_power": 0}
+                self._local_live = local_live
                 if not self._local_reached:
                     self._local_reached = True
                     ir.async_delete_issue(
@@ -326,8 +364,43 @@ class TeslemetryEnergySiteLiveCoordinator(DataUpdateCoordinator[dict[str, Any]])
             merge_live_status(self._cloud_live, self._local_live)
         )
 
+    @callback
+    def _async_cancel_stream_timeout(self) -> None:
+        if self._cancel_stream_timeout is not None:
+            self._cancel_stream_timeout()
+            self._cancel_stream_timeout = None
+
+    @callback
+    def _async_restart_stream_timeout(self) -> None:
+        self._async_cancel_stream_timeout()
+        self._cancel_stream_timeout = async_call_later(
+            self.hass, ENERGY_LIVE_STREAM_TIMEOUT, self._async_handle_stream_timeout
+        )
+
+    @callback
+    def _async_handle_stream_timeout(self, _now: datetime) -> None:
+        """Fail the coordinator when a connected stream stops sending live_status."""
+        self._cancel_stream_timeout = None
+        # The connection listener reports a dropped stream; check again later.
+        if not self._stream.connected:
+            self._async_restart_stream_timeout()
+            return
+        self.async_set_update_error(
+            UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="live_status_timeout",
+                translation_placeholders={
+                    "site_id": str(self.api.energy_site_id),
+                    "minutes": str(
+                        int(ENERGY_LIVE_STREAM_TIMEOUT.total_seconds() // 60)
+                    ),
+                },
+            )
+        )
+
     def handle_stream_update(self, data: dict[str, Any]) -> None:
         """Handle a live_status document from the stream."""
+        self._async_restart_stream_timeout()
         if self._local is None:
             self.async_set_updated_data(_index_wall_connectors(data))
             return
@@ -354,6 +427,7 @@ class TeslemetryEnergySiteLiveCoordinator(DataUpdateCoordinator[dict[str, Any]])
                 translation_key="update_failed",
                 translation_placeholders={"message": e.message},
             ) from e
+        self._async_restart_stream_timeout()
         if self._local is None:
             return _index_wall_connectors(data)
         self._cloud_live = data
