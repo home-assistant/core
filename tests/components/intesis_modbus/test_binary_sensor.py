@@ -45,34 +45,55 @@ async def test_all_binary_sensors_snapshot(
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
 
+@pytest.mark.parametrize(
+    ("address", "entity_id", "other"),
+    [
+        pytest.param(10, ALARM, WINDOW, id="alarm"),
+        pytest.param(31, WINDOW, ALARM, id="window"),
+    ],
+)
 @pytest.mark.usefixtures("init_integration")
-async def test_alarm_and_window_follow_the_gateway(
+async def test_binary_sensor_follows_its_own_register(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
     mock_connection: MockModbusConnection,
+    address: int,
+    entity_id: str,
+    other: str,
 ) -> None:
-    """The alarm and the window state follow registers 10 and 31."""
-    assert hass.states.get(ALARM).state == STATE_OFF
-    assert hass.states.get(WINDOW).state == STATE_OFF
-    unit = mock_connection.for_unit(1)
-    unit.holding[10] = 1
-    unit.holding[31] = 1
+    """The alarm follows register 10 and the window register 31, each alone."""
+    assert hass.states.get(entity_id).state == STATE_OFF
+    mock_connection.for_unit(1).holding[address] = 1
     await _poll(hass, freezer)
-    assert hass.states.get(ALARM).state == STATE_ON
-    assert hass.states.get(WINDOW).state == STATE_ON
+    assert hass.states.get(entity_id).state == STATE_ON
+    assert hass.states.get(other).state == STATE_OFF
 
 
+@pytest.mark.parametrize(
+    ("address", "entity_id", "other"),
+    [
+        pytest.param(0, ALARM, WINDOW, id="control"),
+        pytest.param(31, WINDOW, ALARM, id="window"),
+    ],
+)
 @pytest.mark.usefixtures("init_integration")
 async def test_failed_block_only_takes_its_own_binary_sensor(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
     mock_connection: MockModbusConnection,
+    address: int,
+    entity_id: str,
+    other: str,
 ) -> None:
-    """A binary sensor read from a block that stops answering goes unavailable alone."""
-    mock_connection.for_unit(1).fail_read(31, IllegalDataAddressError())
+    """A binary sensor goes unavailable alone with its block, and comes back."""
+    unit = mock_connection.for_unit(1)
+    unit.fail_read(address, IllegalDataAddressError())
     await _poll(hass, freezer)
-    assert hass.states.get(WINDOW).state == STATE_UNAVAILABLE
-    assert hass.states.get(ALARM).state == STATE_OFF
+    assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
+    assert hass.states.get(other).state == STATE_OFF
+    unit.fail_read(address, None)
+    await _poll(hass, freezer)
+    assert hass.states.get(entity_id).state == STATE_OFF
 
 
 @pytest.mark.usefixtures("init_integration")
