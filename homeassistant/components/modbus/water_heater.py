@@ -1,5 +1,6 @@
 """Support for Generic Modbus Water Heaters."""
 
+import math
 import struct
 from typing import Any, override
 
@@ -221,7 +222,16 @@ class ModbusWaterHeater(ModbusStructEntity, WaterHeaterEntity):
             temperature - self._target_temp_offset
         ) / self._target_temp_scale
         if self._value_is_int:
+            # keep the rounded register value within the configured limits
+            low, high = sorted(
+                (limit - self._target_temp_offset) / self._target_temp_scale
+                for limit in (self.min_temp, self.max_temp)
+            )
             target_temperature = round(target_temperature)
+            if target_temperature > high:
+                target_temperature = math.floor(high)
+            elif target_temperature < low:
+                target_temperature = math.ceil(low)
         as_bytes = struct.pack(self._structure, target_temperature)
         registers = self._swap_registers(
             [

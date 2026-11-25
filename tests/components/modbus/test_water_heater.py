@@ -581,6 +581,38 @@ async def test_unavailable_on_empty_response(
             id="scale_offset_rounded",
         ),
         pytest.param(
+            {CONF_WATER_HEATERS: [{**BASE_CONFIG, CONF_TARGET_TEMP_OFFSET: 0.4}]},
+            [0],
+            60,
+            "write_register",
+            mock.call(TARGET_TEMP_ADDRESS, device_id=10, value=59),
+            id="rounded_within_max",
+        ),
+        pytest.param(
+            {CONF_WATER_HEATERS: [{**BASE_CONFIG, CONF_TARGET_TEMP_OFFSET: -0.4}]},
+            [0],
+            40,
+            "write_register",
+            mock.call(TARGET_TEMP_ADDRESS, device_id=10, value=41),
+            id="rounded_within_min",
+        ),
+        pytest.param(
+            {
+                CONF_WATER_HEATERS: [
+                    {
+                        **BASE_CONFIG,
+                        CONF_TARGET_TEMP_SCALE: -1,
+                        CONF_TARGET_TEMP_OFFSET: 0.4,
+                    },
+                ]
+            },
+            [0],
+            60,
+            "write_register",
+            mock.call(TARGET_TEMP_ADDRESS, device_id=10, value=65477),
+            id="rounded_within_max_negative_scale",
+        ),
+        pytest.param(
             {
                 CONF_WATER_HEATERS: [
                     {**BASE_CONFIG, CONF_DATA_TYPE: DataType.INT32},
