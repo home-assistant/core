@@ -299,7 +299,7 @@ async def test_pressing_line_scan_button(
             useLines=[line_id],
         )
     )
-    assert mock_lunatone_scan.async_update.await_count == scan_update_count + 1
+    assert mock_lunatone_scan.async_update.await_count == scan_update_count + 2
 
 
 @pytest.mark.parametrize("line_id", [0, 1])
