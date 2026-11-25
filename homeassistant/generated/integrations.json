@@ -4789,7 +4789,7 @@
       "iot_class": "cloud_polling"
     },
     "foreca": {
-      "name": "Foreca",
+      "name": "Foreca Weather",
       "integration_type": "service",
       "categories": [
         "weather_alerts.forecasts"
