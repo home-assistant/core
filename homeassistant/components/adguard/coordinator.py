@@ -35,6 +35,7 @@ class AdGuardHomeState:
     """The status of AdGuard Home and the features that can be turned on and off."""
 
     status: Status
+    dhcp_enabled: bool | None
     filtering: FilteringConfig
     parental: bool
     query_log: QueryLogConfig
@@ -116,14 +117,14 @@ class AdGuardHomeStateCoordinator(AdGuardHomeCoordinator[AdGuardHomeState]):
     async def _async_fetch(self) -> AdGuardHomeState:
         """Fetch the status and settings of AdGuard Home."""
         (
-            status,
+            (status, dhcp_enabled),
             filtering,
             parental,
             query_log,
             safe_browsing,
             safe_search,
         ) = await asyncio.gather(
-            self.client.status(),
+            self._async_fetch_status_and_dhcp(),
             self.client.filtering.config(),
             self.client.parental.enabled(),
             self.client.querylog.config(),
@@ -133,12 +134,27 @@ class AdGuardHomeStateCoordinator(AdGuardHomeCoordinator[AdGuardHomeState]):
 
         return AdGuardHomeState(
             status=status,
+            dhcp_enabled=dhcp_enabled,
             filtering=filtering,
             parental=parental,
             query_log=query_log,
             safe_browsing=safe_browsing,
             safe_search=safe_search,
         )
+
+    async def _async_fetch_status_and_dhcp(self) -> tuple[Status, bool | None]:
+        """Fetch status and read DHCP only on supported servers."""
+        status = await self.client.status()
+        if not status.dhcp_available:
+            return status, None
+
+        try:
+            config = await self.client.dhcp.config()
+        except AdGuardHomeError:
+            # A failure limited to DHCP must not make the other switches unavailable.
+            LOGGER.debug("Failed to read DHCP configuration", exc_info=True)
+            return status, None
+        return status, config.enabled
 
 
 class AdGuardHomeStatisticsCoordinator(AdGuardHomeCoordinator[AdGuardHomeStatistics]):

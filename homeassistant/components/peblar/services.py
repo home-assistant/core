@@ -2,6 +2,7 @@
 
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
+from enum import StrEnum
 
 from peblar import (
     Peblar,
@@ -12,7 +13,7 @@ from peblar import (
 )
 import probatio
 
-from homeassistant.const import ATTR_CONFIG_ENTRY_ID, CONF_ALIAS, CONF_DESCRIPTION
+from homeassistant.const import CONF_ALIAS, CONF_DESCRIPTION, CommonServiceArgument
 from homeassistant.core import (
     HomeAssistant,
     ServiceCall,
@@ -26,35 +27,59 @@ from homeassistant.helpers.service import (
     async_register_admin_service,
 )
 
-from .const import CONF_EVCC_ID, CONF_UID, DOMAIN
+from .const import CONF_EVCC_ID, DOMAIN
 from .coordinator import PeblarConfigEntry
 
-SERVICE_ADD_RFID_TOKEN = "add_rfid_token"
-SERVICE_AUTHORIZE_CHARGE_SESSION = "authorize_charge_session"
-SERVICE_ADD_VEHICLE_TOKEN = "add_vehicle_token"
-SERVICE_DELETE_RFID_TOKEN = "delete_rfid_token"
-SERVICE_DELETE_VEHICLE_TOKEN = "delete_vehicle_token"
-SERVICE_LIST_RFID_TOKENS = "list_rfid_tokens"
-SERVICE_LIST_VEHICLE_TOKENS = "list_vehicle_tokens"
 
-CHARGER_SCHEMA = probatio.Schema({probatio.Required(ATTR_CONFIG_ENTRY_ID): str})
+class PeblarService(StrEnum):
+    """Store keys for Peblar services."""
 
-TOKEN_SCHEMA = CHARGER_SCHEMA.extend({probatio.Required(CONF_UID): str})
-ADD_TOKEN_SCHEMA = TOKEN_SCHEMA.extend({probatio.Required(CONF_DESCRIPTION): str})
+    LIST_RFID_TOKENS = "list_rfid_tokens"
+    ADD_RFID_TOKEN = "add_rfid_token"
+    DELETE_RFID_TOKEN = "delete_rfid_token"
+    LIST_VEHICLE_TOKENS = "list_vehicle_tokens"
+    ADD_VEHICLE_TOKEN = "add_vehicle_token"
+    DELETE_VEHICLE_TOKEN = "delete_vehicle_token"
+    AUTHORIZE_CHARGE_SESSION = "authorize_charge_session"
 
-VEHICLE_SCHEMA = CHARGER_SCHEMA.extend({probatio.Required(CONF_EVCC_ID): str})
-ADD_VEHICLE_SCHEMA = VEHICLE_SCHEMA.extend({probatio.Required(CONF_ALIAS): str})
+
+class PeblarServiceArgument(StrEnum):
+    """Store keys for Peblar service arguments."""
+
+    UID = "uid"
+    DESCRIPTION = "description"
+    EVCC_ID = "evcc_id"
+    ALIAS = "alias"
+
+
+CHARGER_SCHEMA = probatio.Schema(
+    {probatio.Required(CommonServiceArgument.CONFIG_ENTRY_ID): str}
+)
+
+TOKEN_SCHEMA = CHARGER_SCHEMA.extend(
+    {probatio.Required(PeblarServiceArgument.UID): str}
+)
+ADD_TOKEN_SCHEMA = TOKEN_SCHEMA.extend(
+    {probatio.Required(PeblarServiceArgument.DESCRIPTION): str}
+)
+
+VEHICLE_SCHEMA = CHARGER_SCHEMA.extend(
+    {probatio.Required(PeblarServiceArgument.EVCC_ID): str}
+)
+ADD_VEHICLE_SCHEMA = VEHICLE_SCHEMA.extend(
+    {probatio.Required(PeblarServiceArgument.ALIAS): str}
+)
 
 # The charger takes the token by UID or by description, and wants exactly
 # one of the two.
 AUTHORIZE_SCHEMA = probatio.All(
     CHARGER_SCHEMA.extend(
         {
-            probatio.Exclusive(CONF_UID, "token"): str,
-            probatio.Exclusive(CONF_DESCRIPTION, "token"): str,
+            probatio.Exclusive(PeblarServiceArgument.UID, "token"): str,
+            probatio.Exclusive(PeblarServiceArgument.DESCRIPTION, "token"): str,
         }
     ),
-    probatio.AtLeastOne(CONF_UID, CONF_DESCRIPTION),
+    probatio.AtLeastOne(PeblarServiceArgument.UID, PeblarServiceArgument.DESCRIPTION),
 )
 
 
@@ -174,7 +199,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
     """Register RFID management services."""
 
     async def _handle_list_rfid_tokens(call: ServiceCall) -> ServiceResponse:
-        entry_id = call.data[ATTR_CONFIG_ENTRY_ID]
+        entry_id = call.data[CommonServiceArgument.CONFIG_ENTRY_ID]
         peblar = _get_rfid_peblar(hass, entry_id)
         async with _handle_peblar_errors(hass, entry_id):
             tokens = await peblar.rfid_tokens()
@@ -189,31 +214,31 @@ def async_setup_services(hass: HomeAssistant) -> None:
         }
 
     async def _handle_add_rfid_token(call: ServiceCall) -> None:
-        entry_id = call.data[ATTR_CONFIG_ENTRY_ID]
+        entry_id = call.data[CommonServiceArgument.CONFIG_ENTRY_ID]
         peblar = _get_rfid_peblar(hass, entry_id)
         async with _handle_peblar_errors(hass, entry_id):
             await peblar.add_rfid_token(
-                rfid_token_uid=call.data[CONF_UID],
-                rfid_token_description=call.data[CONF_DESCRIPTION],
+                rfid_token_uid=call.data[PeblarServiceArgument.UID],
+                rfid_token_description=call.data[PeblarServiceArgument.DESCRIPTION],
             )
 
     async def _handle_delete_rfid_token(call: ServiceCall) -> None:
-        entry_id = call.data[ATTR_CONFIG_ENTRY_ID]
+        entry_id = call.data[CommonServiceArgument.CONFIG_ENTRY_ID]
         peblar = _get_rfid_peblar(hass, entry_id)
         async with _handle_peblar_errors(hass, entry_id):
-            await peblar.delete_rfid_token(uid=call.data[CONF_UID])
+            await peblar.delete_rfid_token(uid=call.data[PeblarServiceArgument.UID])
 
     async def _handle_authorize_charge_session(call: ServiceCall) -> None:
-        entry_id = call.data[ATTR_CONFIG_ENTRY_ID]
+        entry_id = call.data[CommonServiceArgument.CONFIG_ENTRY_ID]
         api = _get_authorizing_api(hass, entry_id)
         async with _handle_peblar_errors(hass, entry_id):
             await api.authorize_charge_session(
-                token=call.data.get(CONF_UID),
-                name=call.data.get(CONF_DESCRIPTION),
+                token=call.data.get(PeblarServiceArgument.UID),
+                name=call.data.get(PeblarServiceArgument.DESCRIPTION),
             )
 
     async def _handle_list_vehicle_tokens(call: ServiceCall) -> ServiceResponse:
-        entry_id = call.data[ATTR_CONFIG_ENTRY_ID]
+        entry_id = call.data[CommonServiceArgument.CONFIG_ENTRY_ID]
         peblar = _get_autocharge_peblar(hass, entry_id)
         async with _handle_peblar_errors(hass, entry_id):
             vehicles = await peblar.vehicle_tokens()
@@ -225,24 +250,26 @@ def async_setup_services(hass: HomeAssistant) -> None:
         }
 
     async def _handle_add_vehicle_token(call: ServiceCall) -> None:
-        entry_id = call.data[ATTR_CONFIG_ENTRY_ID]
+        entry_id = call.data[CommonServiceArgument.CONFIG_ENTRY_ID]
         peblar = _get_autocharge_peblar(hass, entry_id)
         async with _handle_peblar_errors(hass, entry_id):
             await peblar.add_vehicle_token(
-                evcc_id=call.data[CONF_EVCC_ID],
-                alias=call.data[CONF_ALIAS],
+                evcc_id=call.data[PeblarServiceArgument.EVCC_ID],
+                alias=call.data[PeblarServiceArgument.ALIAS],
             )
 
     async def _handle_delete_vehicle_token(call: ServiceCall) -> None:
-        entry_id = call.data[ATTR_CONFIG_ENTRY_ID]
+        entry_id = call.data[CommonServiceArgument.CONFIG_ENTRY_ID]
         peblar = _get_autocharge_peblar(hass, entry_id)
         async with _handle_peblar_errors(hass, entry_id):
-            await peblar.delete_vehicle_token(evcc_id=call.data[CONF_EVCC_ID])
+            await peblar.delete_vehicle_token(
+                evcc_id=call.data[PeblarServiceArgument.EVCC_ID]
+            )
 
     async_register_admin_service(
         hass,
         DOMAIN,
-        SERVICE_LIST_RFID_TOKENS,
+        PeblarService.LIST_RFID_TOKENS,
         _handle_list_rfid_tokens,
         schema=CHARGER_SCHEMA,
         supports_response=SupportsResponse.ONLY,
@@ -250,21 +277,21 @@ def async_setup_services(hass: HomeAssistant) -> None:
     async_register_admin_service(
         hass,
         DOMAIN,
-        SERVICE_ADD_RFID_TOKEN,
+        PeblarService.ADD_RFID_TOKEN,
         _handle_add_rfid_token,
         schema=ADD_TOKEN_SCHEMA,
     )
     async_register_admin_service(
         hass,
         DOMAIN,
-        SERVICE_DELETE_RFID_TOKEN,
+        PeblarService.DELETE_RFID_TOKEN,
         _handle_delete_rfid_token,
         schema=TOKEN_SCHEMA,
     )
     async_register_admin_service(
         hass,
         DOMAIN,
-        SERVICE_LIST_VEHICLE_TOKENS,
+        PeblarService.LIST_VEHICLE_TOKENS,
         _handle_list_vehicle_tokens,
         schema=CHARGER_SCHEMA,
         supports_response=SupportsResponse.ONLY,
@@ -272,21 +299,21 @@ def async_setup_services(hass: HomeAssistant) -> None:
     async_register_admin_service(
         hass,
         DOMAIN,
-        SERVICE_ADD_VEHICLE_TOKEN,
+        PeblarService.ADD_VEHICLE_TOKEN,
         _handle_add_vehicle_token,
         schema=ADD_VEHICLE_SCHEMA,
     )
     async_register_admin_service(
         hass,
         DOMAIN,
-        SERVICE_DELETE_VEHICLE_TOKEN,
+        PeblarService.DELETE_VEHICLE_TOKEN,
         _handle_delete_vehicle_token,
         schema=VEHICLE_SCHEMA,
     )
     async_register_admin_service(
         hass,
         DOMAIN,
-        SERVICE_AUTHORIZE_CHARGE_SESSION,
+        PeblarService.AUTHORIZE_CHARGE_SESSION,
         _handle_authorize_charge_session,
         schema=AUTHORIZE_SCHEMA,
     )

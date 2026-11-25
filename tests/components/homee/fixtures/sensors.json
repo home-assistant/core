@@ -787,6 +787,48 @@
           "month": 6
         }
       }
+    },
+    {
+      "id": 37,
+      "node_id": 1,
+      "instance": 0,
+      "minimum": 0,
+      "maximum": 1000,
+      "current_value": 0.4,
+      "target_value": 0.4,
+      "last_value": 0.4,
+      "unit": "mm",
+      "step_value": 0.1,
+      "editable": 0,
+      "type": 168,
+      "state": 1,
+      "last_changed": 1747078281,
+      "changed_by": 1,
+      "changed_by_id": 0,
+      "based_on": 1,
+      "data": "",
+      "name": ""
+    },
+    {
+      "id": 38,
+      "node_id": 1,
+      "instance": 0,
+      "minimum": 0,
+      "maximum": 1000,
+      "current_value": 2.3,
+      "target_value": 2.3,
+      "last_value": 2.3,
+      "unit": "mm",
+      "step_value": 0.1,
+      "editable": 0,
+      "type": 169,
+      "state": 1,
+      "last_changed": 1747078282,
+      "changed_by": 1,
+      "changed_by_id": 0,
+      "based_on": 1,
+      "data": "",
+      "name": ""
     }
   ]
 }

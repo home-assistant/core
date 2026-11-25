@@ -12,15 +12,11 @@ import probatio
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASSES_SCHEMA as BINARY_SENSOR_DEVICE_CLASSES_SCHEMA,
 )
-from homeassistant.config_entries import (
-    ConfigEntry,
-    ConfigFlow,
-    ConfigFlowResult,
-    OptionsFlow,
-)
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult, OptionsFlow
 from homeassistant.const import CONF_HOST, CONF_PORT, CONF_PROTOCOL
 from homeassistant.core import HomeAssistant, callback
 
+from . import AlarmDecoderConfigEntry
 from .const import (
     CONF_ALT_NIGHT_MODE,
     CONF_AUTO_BYPASS,
@@ -74,7 +70,7 @@ class AlarmDecoderFlowHandler(ConfigFlow, domain=DOMAIN):
     @callback
     @override
     def async_get_options_flow(
-        config_entry: ConfigEntry,
+        config_entry: AlarmDecoderConfigEntry,
     ) -> AlarmDecoderOptionsFlowHandler:
         """Get the options flow for AlarmDecoder."""
         return AlarmDecoderOptionsFlowHandler(config_entry)
@@ -160,7 +156,7 @@ class AlarmDecoderOptionsFlowHandler(OptionsFlow):
 
     selected_zone: str
 
-    def __init__(self, config_entry: ConfigEntry) -> None:
+    def __init__(self, config_entry: AlarmDecoderConfigEntry) -> None:
         """Initialize AlarmDecoder options flow."""
         self.arm_options = config_entry.options.get(OPTIONS_ARM, DEFAULT_ARM_OPTIONS)
         self.zone_options = config_entry.options.get(
@@ -364,7 +360,9 @@ def _fix_input_types(zone_input: dict[str, Any]) -> dict[str, Any]:
 
 
 def _device_already_added(
-    current_entries: list[ConfigEntry], user_input: dict[str, Any], protocol: str | None
+    current_entries: list[AlarmDecoderConfigEntry],
+    user_input: dict[str, Any],
+    protocol: str | None,
 ) -> bool:
     """Determine if entry has already been added to HA."""
     user_host = user_input.get(CONF_HOST)

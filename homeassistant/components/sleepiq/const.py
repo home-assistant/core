@@ -14,6 +14,7 @@ FAVORITE_FIRMNESS = "favorite_firmness"
 ICON_EMPTY = "mdi:bed-empty"
 ICON_OCCUPIED = "mdi:bed"
 IS_IN_BED = "is_in_bed"
+RESPONSIVE_AIR = "responsive_air"
 SLEEP_NUMBER = "sleep_number"
 FOOT_WARMING_TIMER = "foot_warming_timer"
 FOOT_WARMER = "foot_warmer"
@@ -22,6 +23,12 @@ SLEEP_DURATION = "sleep_duration"
 HEART_RATE = "heart_rate"
 RESPIRATORY_RATE = "respiratory_rate"
 HRV = "hrv"
+RESTFUL = "restful"
+RESTLESS = "restless"
+OUT_OF_BED = "out_of_bed"
+FALL_ASLEEP = "fall_asleep"
+BEDTIME = "bedtime"
+WAKE_TIME = "wake_time"
 ENTITY_TYPES = {
     ACTUATOR: "Position",
     CORE_CLIMATE_TIMER: "Core Climate Timer",
@@ -30,6 +37,7 @@ ENTITY_TYPES = {
     FAVORITE_FIRMNESS: "Favorite Firmness",
     PRESSURE: "Pressure",
     IS_IN_BED: "Is In Bed",
+    RESPONSIVE_AIR: "Responsive Air",
     SLEEP_NUMBER: "SleepNumber",
     FOOT_WARMING_TIMER: "Foot Warming Timer",
     FOOT_WARMER: "Foot Warmer",
@@ -38,6 +46,12 @@ ENTITY_TYPES = {
     HEART_RATE: "Heart Rate Average",
     RESPIRATORY_RATE: "Respiratory Rate Average",
     HRV: "Heart Rate Variability",
+    RESTFUL: "Restful Sleep",
+    RESTLESS: "Restless Sleep",
+    OUT_OF_BED: "Time Out of Bed",
+    FALL_ASLEEP: "Time to Fall Asleep",
+    BEDTIME: "Bedtime",
+    WAKE_TIME: "Wake Time",
 }
 
 LEFT = "left"

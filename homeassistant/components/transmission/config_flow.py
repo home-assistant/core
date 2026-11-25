@@ -11,7 +11,6 @@ from transmission_rpc.error import (
 )
 
 from homeassistant.config_entries import (
-    ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
     OptionsFlowWithReload,
@@ -40,6 +39,7 @@ from .const import (
     MIN_REQUIRED_TRANSMISSION_VERSION,
     SUPPORTED_ORDER_MODES,
 )
+from .coordinator import TransmissionConfigEntry
 from .helpers import create_version
 
 DATA_SCHEMA = probatio.Schema(
@@ -64,7 +64,7 @@ class TransmissionFlowHandler(ConfigFlow, domain=DOMAIN):
     @callback
     @override
     def async_get_options_flow(
-        config_entry: ConfigEntry,
+        config_entry: TransmissionConfigEntry,
     ) -> TransmissionOptionsFlowHandler:
         """Get the options flow for this handler."""
         return TransmissionOptionsFlowHandler()

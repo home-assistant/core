@@ -1171,9 +1171,10 @@ async def test_ir_raw_receive_disabled_issue_fix_flow(
     issue_id = IR_RAW_RECEIVE_DISABLED_ISSUE_ID.format(unique=MOCK_MAC)
     assert await async_setup_component(hass, "repairs", {})
     await hass.async_block_till_done()
-    await init_integration(hass, 2)
+    entry = await init_integration(hass, 2)
 
-    assert issue_registry.async_get_issue(DOMAIN, issue_id)
+    assert (issue := issue_registry.async_get_issue(DOMAIN, issue_id))
+    assert issue.config_entry_id == entry.entry_id
     assert len(issue_registry.issues) == 1
 
     client = await hass_client()
@@ -1193,6 +1194,10 @@ async def test_ir_raw_receive_disabled_issue_fix_flow(
 
     assert bool(issue_registry.async_get_issue(DOMAIN, issue_id)) is issue_exists
     assert len(issue_registry.issues) == int(issue_exists)
+
+    await hass.config_entries.async_remove(entry.entry_id)
+    await hass.async_block_till_done()
+    assert not issue_registry.async_get_issue(DOMAIN, issue_id)
 
 
 @pytest.mark.parametrize(

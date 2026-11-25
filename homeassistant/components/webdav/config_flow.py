@@ -67,10 +67,8 @@ class WebDavConfigFlow(ConfigFlow, domain=DOMAIN):
             verify_ssl=data.get(CONF_VERIFY_SSL, True),
         )
 
-        # .check() already does the most of the error handling and will return True
-        # if we can access the root directory
         try:
-            result = await client.check()
+            result = await client.exists()
         except UnauthorizedError:
             return {"base": "invalid_auth"}
         except AccessDeniedError:

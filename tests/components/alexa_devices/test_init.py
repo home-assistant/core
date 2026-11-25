@@ -2,8 +2,10 @@
 
 import asyncio
 from collections.abc import Callable
+from pathlib import Path
 from unittest.mock import AsyncMock, patch
 
+from aioamazondevices.api import SETTINGS_FILENAME
 from aioamazondevices.exceptions import CannotConnect, CannotRetrieveData
 from aioamazondevices.structures import AmazonListInfo, AmazonListType
 import pytest
@@ -24,9 +26,15 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.storage import STORAGE_DIR
 
 from . import setup_integration
 from .const import TEST_DEVICE_1_SN, TEST_PASSWORD, TEST_USER_ID, TEST_USERNAME
+
+OLD_SETTINGS_FILE = f"{DOMAIN}/{SETTINGS_FILENAME}"
+NEW_SETTINGS_FILE = f"{STORAGE_DIR}/{DOMAIN}/{SETTINGS_FILENAME}"
+OLD_SETTINGS = '{"default_device": "old"}'
+NEW_SETTINGS = '{"default_device": "new"}'
 
 
 def _fail_todo_list_items(client: AsyncMock, error: Exception) -> None:
@@ -140,8 +148,108 @@ async def test_migrate_entry(
 
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
     assert config_entry.state is ConfigEntryState.LOADED
-    assert config_entry.minor_version == 3
+    assert config_entry.minor_version == 4
     assert config_entry.data[CONF_LOGIN_DATA][CONF_SITE] == "https://www.amazon.com"
+
+
+@pytest.mark.usefixtures("mock_amazon_devices_client")
+@pytest.mark.parametrize(
+    ("existing_files", "expected_new_settings", "old_dir_removed"),
+    [
+        pytest.param({OLD_SETTINGS_FILE: OLD_SETTINGS}, OLD_SETTINGS, True, id="moved"),
+        pytest.param(
+            {OLD_SETTINGS_FILE: OLD_SETTINGS, NEW_SETTINGS_FILE: NEW_SETTINGS},
+            NEW_SETTINGS,
+            False,
+            id="new_already_present",
+        ),
+    ],
+)
+async def test_migrate_settings_to_storage(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    tmp_path: Path,
+    existing_files: dict[str, str],
+    expected_new_settings: str,
+    old_dir_removed: bool,
+) -> None:
+    """Test library settings are moved from the config root into .storage."""
+    hass.config.config_dir = str(tmp_path)
+    for relative_path, content in existing_files.items():
+        file = tmp_path / relative_path
+        file.parent.mkdir(parents=True, exist_ok=True)
+        file.write_text(content)
+
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data=mock_config_entry.data,
+        unique_id=TEST_USER_ID,
+        version=1,
+        minor_version=3,
+    )
+    await setup_integration(hass, config_entry)
+
+    assert config_entry.state is ConfigEntryState.LOADED
+    assert config_entry.minor_version == 4
+    assert (tmp_path / NEW_SETTINGS_FILE).read_text() == expected_new_settings
+    assert (tmp_path / DOMAIN).exists() is not old_dir_removed
+
+
+def _move_concurrently(source: Path, target: Path) -> None:
+    """Simulate another entry moving the settings file first."""
+    target.write_text(source.read_text())
+    raise FileNotFoundError
+
+
+def _vanish(source: Path, target: Path) -> None:
+    """Simulate the settings file disappearing without being moved."""
+    raise FileNotFoundError
+
+
+@pytest.mark.usefixtures("mock_amazon_devices_client")
+@pytest.mark.parametrize(
+    ("replace_side_effect", "expected_state", "expected_minor_version"),
+    [
+        pytest.param(
+            _move_concurrently,
+            ConfigEntryState.LOADED,
+            4,
+            id="moved_by_other_entry",
+        ),
+        pytest.param(
+            _vanish,
+            ConfigEntryState.MIGRATION_ERROR,
+            3,
+            id="vanished",
+        ),
+    ],
+)
+async def test_migrate_settings_to_storage_race(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    tmp_path: Path,
+    replace_side_effect: Callable[[Path, Path], None],
+    expected_state: ConfigEntryState,
+    expected_minor_version: int,
+) -> None:
+    """Test the settings file disappearing while being moved."""
+    hass.config.config_dir = str(tmp_path)
+    old_file = tmp_path / OLD_SETTINGS_FILE
+    old_file.parent.mkdir()
+    old_file.write_text(OLD_SETTINGS)
+
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data=mock_config_entry.data,
+        unique_id=TEST_USER_ID,
+        version=1,
+        minor_version=3,
+    )
+    with patch.object(Path, "replace", autospec=True, side_effect=replace_side_effect):
+        await setup_integration(hass, config_entry)
+
+    assert config_entry.state is expected_state
+    assert config_entry.minor_version == expected_minor_version
 
 
 async def test_migrate_future_version_returns_false(

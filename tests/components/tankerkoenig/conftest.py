@@ -3,6 +3,7 @@
 from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 
+from aiotankerkoenig import Station
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
@@ -14,8 +15,14 @@ from homeassistant.setup import async_setup_component
 from .const import CONFIG_DATA, NEARBY_STATIONS, PRICES, STATION
 
 
+@pytest.fixture(name="station")
+def mock_station() -> Station:
+    """Return the station details the API reports."""
+    return STATION
+
+
 @pytest.fixture(name="tankerkoenig")
-def mock_tankerkoenig() -> Generator[AsyncMock]:
+def mock_tankerkoenig(station: Station) -> Generator[AsyncMock]:
     """Mock the aiotankerkoenig client."""
     with (
         patch(
@@ -28,7 +35,7 @@ def mock_tankerkoenig() -> Generator[AsyncMock]:
         ),
     ):
         mock = mock_tankerkoenig.return_value
-        mock.station_details.return_value = STATION
+        mock.station_details.return_value = station
         mock.prices.return_value = PRICES
         mock.nearby_stations.return_value = NEARBY_STATIONS
         yield mock

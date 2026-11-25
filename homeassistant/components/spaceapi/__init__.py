@@ -11,7 +11,6 @@ from homeassistant import core as ha
 from homeassistant.components.http import KEY_HASS, HomeAssistantView
 from homeassistant.const import (
     ATTR_ENTITY_ID,
-    ATTR_ICON,
     ATTR_LOCATION,
     ATTR_NAME,
     ATTR_STATE,
@@ -42,6 +41,7 @@ ATTR_LON = "lon"
 ATTR_API = "api"
 ATTR_CLOSED = "closed"
 ATTR_CONTACT = "contact"
+ATTR_ICON = "icon"
 ATTR_ISSUE_REPORT_CHANNELS = "issue_report_channels"
 ATTR_LASTCHANGE = "lastchange"
 ATTR_LOGO = "logo"

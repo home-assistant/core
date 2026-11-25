@@ -3,7 +3,7 @@
 from datetime import timedelta
 from unittest.mock import patch
 
-from httpx2 import ConnectError
+from httpx2 import ConnectError, ReadError
 from pyprusalink.types import InvalidAuth, PrusaLinkError
 import pytest
 from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
@@ -66,10 +66,18 @@ async def test_unloading(
 
 @pytest.mark.parametrize(
     "exception",
-    [InvalidAuth, PrusaLinkError, ConnectError("All connection attempts failed")],
+    [
+        InvalidAuth,
+        PrusaLinkError,
+        ConnectError("All connection attempts failed"),
+        ReadError("Read failed"),
+    ],
 )
 async def test_failed_update(
-    hass: HomeAssistant, mock_config_entry: ConfigEntry, exception
+    hass: HomeAssistant,
+    mock_config_entry: ConfigEntry,
+    exception: Exception | type[Exception],
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test failed update marks prusalink unavailable."""
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
@@ -98,6 +106,7 @@ async def test_failed_update(
 
     for state in hass.states.async_all():
         assert state.state == "unavailable"
+    assert "Unexpected error fetching" not in caplog.text
 
 
 async def test_migration_from_1_1_to_1_2(
