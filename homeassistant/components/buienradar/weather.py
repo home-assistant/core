@@ -165,7 +165,8 @@ class BrWeather(WeatherEntity):
         self._attr_native_wind_speed = values.wind_speed
         self._attr_wind_bearing = values.wind_bearing
 
-        if not self.hass:  # type: ignore[truthy-bool]  # None until added, not needed once on a coordinator
+        # hass is None until the entity is added, not needed once on a coordinator
+        if not self.hass:  # type: ignore[truthy-bool]
             return
         self.async_write_ha_state()
         assert self.platform.config_entry

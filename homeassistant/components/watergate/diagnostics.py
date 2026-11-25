@@ -128,7 +128,9 @@ async def async_get_config_entry_diagnostics(
                 },
                 TO_REDACT,
             )
-            if data  # type: ignore[truthy-bool]  # None until the first refresh succeeds (the entry is retrying setup)
+            # Without data the first refresh has not succeeded (the entry is retrying
+            # setup).
+            if data  # type: ignore[truthy-bool]
             else None
         ),
     }
