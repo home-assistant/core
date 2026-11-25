@@ -1,10 +1,9 @@
 """LLM tools for the config integration."""
 
-from collections import defaultdict
 from collections.abc import Iterable, Iterator, Mapping
 from contextlib import suppress
 import heapq
-from typing import Any, Literal, override
+from typing import TYPE_CHECKING, Any, Literal, override
 
 import probatio
 
@@ -30,18 +29,22 @@ from homeassistant.generated.integration_categories import INTEGRATION_CATEGORIE
 from homeassistant.helpers import (
     area_registry as ar,
     config_validation as cv,
+    device_registry as dr,
     entity_registry as er,
     floor_registry as fr,
     label_registry as lr,
     translation,
 )
+from homeassistant.helpers.entity import get_unit_of_measurement
 from homeassistant.helpers.llm import (
     LLM_API_HOME_ASSISTANT,
+    SHORT_ID_MIN_LENGTH,
     LLMContext,
     Tool,
     ToolAnnotations,
     ToolInput,
     ToolResult,
+    format_short_ids,
 )
 from homeassistant.helpers.network import NoURLAvailableError, get_url
 from homeassistant.helpers.typing import VolDictType
@@ -73,7 +76,6 @@ _STATUS_STATES: dict[str, set[ConfigEntryState]] = {
 }
 _NON_EMPTY_STRING = probatio.All(str, probatio.Strip, probatio.NonEmpty())
 _DOMAIN_STRING = probatio.All(str, probatio.Strip, probatio.Lower, probatio.NonEmpty())
-_MIN_SHORT_ID_LEN = 4
 _OAUTH_RUNTIME_ERRORS = ("No current request in context", "No header in request")
 type _FlowCategory = Literal["config", "options", "config_subentries"]
 _FLOW_TYPES = ["config", "options", "reconfigure", "subentry"]
@@ -85,36 +87,15 @@ def _resolve_language(hass: HomeAssistant, language: str | None) -> str:
     return language if language and language != "*" else (hass.config.language or "en")
 
 
-def _format_short_ids(pairs: Iterable[tuple[str, str]]) -> dict[str, str]:
-    """Return a mapping of full ID to short '<prefix>:<suffix>' ID.
-
-    Short IDs reduce token usage and LLM transcription errors across tool calls.
-    The trailing suffix starts at 4 characters and expands if another item with
-    the same prefix shares that suffix.
-    """
-    groups: defaultdict[tuple[str, str], list[str]] = defaultdict(list)
-    for prefix, full_id in pairs:
-        groups[(prefix, full_id[-_MIN_SHORT_ID_LEN:])].append(full_id)
-
-    result: dict[str, str] = {}
-    for (prefix, _), group in groups.items():
-        length = _MIN_SHORT_ID_LEN
-        while len(group) > 1 and len({fid[-length:] for fid in group}) < len(group):
-            length += 1
-        for fid in group:
-            result[fid] = f"{prefix}:{fid[-length:]}"
-    return result
-
-
 def _format_short_entry_ids(entries: Iterable[ConfigEntry]) -> dict[str, str]:
     """Return a mapping of full entry_id to short '<domain>:<suffix>' ID."""
-    return _format_short_ids((entry.domain, entry.entry_id) for entry in entries)
+    return format_short_ids((entry.domain, entry.entry_id) for entry in entries)
 
 
 def _resolve_short_entry_id(hass: HomeAssistant, entry_id: str) -> ConfigEntry:
     """Resolve a ConfigEntry from a '<domain>:<suffix>' short ID."""
     domain, sep, suffix = entry_id.partition(":")
-    if not sep or not domain or len(suffix) < _MIN_SHORT_ID_LEN:
+    if not sep or not domain or len(suffix) < SHORT_ID_MIN_LENGTH:
         raise HomeAssistantError(f"Config entry '{entry_id}' not found.")
 
     matches = [
@@ -131,7 +112,7 @@ def _resolve_short_entry_id(hass: HomeAssistant, entry_id: str) -> ConfigEntry:
 def _resolve_short_subentry_id(entry: ConfigEntry, subentry_id: str) -> ConfigSubentry:
     """Resolve a ConfigSubentry from a '<subentry_type>:<suffix>' short ID."""
     subentry_type, sep, suffix = subentry_id.rpartition(":")
-    if not sep or not subentry_type or len(suffix) < _MIN_SHORT_ID_LEN:
+    if not sep or not subentry_type or len(suffix) < SHORT_ID_MIN_LENGTH:
         raise HomeAssistantError(f"Subentry '{subentry_id}' not found.")
 
     matches = [
@@ -196,7 +177,7 @@ def _format_config_entry(entry: ConfigEntry, short_id: str) -> JsonObjectType:
             for sub_type, sub_meta in entry.supported_subentry_types.items()
         }
     if entry.subentries:
-        short_subentry_ids = _format_short_ids(
+        short_subentry_ids = format_short_ids(
             (subentry.subentry_type, subentry.subentry_id)
             for subentry in entry.subentries.values()
         )
@@ -497,7 +478,7 @@ def _resolve_short_flow_id(
 ]:
     """Resolve an active flow from a '<domain>:<suffix>' short ID."""
     domain, sep, suffix = flow_id.partition(":")
-    if not sep or not domain or len(suffix) < _MIN_SHORT_ID_LEN:
+    if not sep or not domain or len(suffix) < SHORT_ID_MIN_LENGTH:
         raise HomeAssistantError(f"Flow '{flow_id}' not found.")
 
     flow_mgr = hass.config_entries.flow
@@ -617,7 +598,7 @@ async def _async_finalize_flow_step(
                 f"component.homeassistant.config.abort.{reason}"
             )
 
-    flow_id = f"{domain}:{result['flow_id'][-_MIN_SHORT_ID_LEN:]}"
+    flow_id = f"{domain}:{result['flow_id'][-SHORT_ID_MIN_LENGTH:]}"
     formatted = llm_flow.format_result(
         result,
         trans,
@@ -712,7 +693,7 @@ class GetFlowsInProgressTool(Tool):
                 flow_title = title_trans.get(f"component.{handler}.title", handler)
 
             item: JsonObjectType = {
-                "flow_id": f"{handler}:{flw['flow_id'][-_MIN_SHORT_ID_LEN:]}",
+                "flow_id": f"{handler}:{flw['flow_id'][-SHORT_ID_MIN_LENGTH:]}",
                 "domain": handler,
                 "source": context["source"],
                 "title": flow_title,
@@ -1261,7 +1242,9 @@ _NULLABLE_STRING = probatio.Any(None, _NON_EMPTY_STRING)
 _SENSOR_OPTIONS = (CONF_UNIT_OF_MEASUREMENT, "display_precision")
 
 
-def _check_sensor_options(entry: er.RegistryEntry, options: dict[str, Any]) -> None:
+def _check_sensor_options(
+    hass: HomeAssistant, entry: er.RegistryEntry, options: dict[str, Any]
+) -> None:
     """Raise if the sensor options do not apply to the entity."""
     if entry.domain != SENSOR_DOMAIN:
         raise HomeAssistantError(
@@ -1273,7 +1256,11 @@ def _check_sensor_options(entry: er.RegistryEntry, options: dict[str, Any]) -> N
     # set in the registry
     device_class = entry.original_device_class
     units: set[Any] = set()
-    if device_class is not None and device_class in UNIT_CONVERTERS:
+    if (
+        device_class is not None
+        and (converter := UNIT_CONVERTERS.get(device_class)) is not None
+        and get_unit_of_measurement(hass, entry.entity_id) in converter.VALID_UNITS
+    ):
         units = DEVICE_CLASS_UNITS.get(SensorDeviceClass(device_class), set())
     if unit not in units:
         allowed = ", ".join(sorted(str(allowed) for allowed in units if allowed))
@@ -1411,17 +1398,9 @@ class UpdateEntitySettingsTool(Tool):
             key: settings.pop(key) for key in _SENSOR_OPTIONS if key in settings
         }
         if sensor_options:
-            _check_sensor_options(entry, sensor_options)
-        if (area_id := settings.get("area_id")) and ar.async_get(hass).async_get_area(
-            area_id
-        ) is None:
-            raise HomeAssistantError(f"Area '{area_id}' not found.")
+            _check_sensor_options(hass, entry, sensor_options)
         if "labels" in settings:
             settings["labels"] = set(settings["labels"])
-            if missing := lr.async_get_missing_label_ids(hass, settings["labels"]):
-                raise HomeAssistantError(
-                    f"Labels not found: {', '.join(sorted(missing))}"
-                )
         if settings.get("disabled_by"):
             settings["disabled_by"] = er.RegistryEntryDisabler.USER
         if settings.get("hidden_by"):
@@ -1816,6 +1795,342 @@ class DeleteLabelTool(Tool):
         return ToolResult(data={"result": {"label_id": label_id}})
 
 
+def _get_area_entry(hass: HomeAssistant, area_id: str) -> ar.AreaEntry:
+    """Return the registry entry of an area."""
+    if (area := ar.async_get(hass).async_get_area(area_id)) is None:
+        raise HomeAssistantError(f"Area '{area_id}' not found.")
+    return area
+
+
+def _format_area_settings(area: ar.AreaEntry) -> JsonObjectType:
+    """Format the settings of an area for LLM consumption."""
+    return {
+        "area_id": area.id,
+        "name": area.name,
+        "aliases": list[JsonValueType](sorted(area.aliases)),
+        "floor_id": area.floor_id,
+        "icon": area.icon,
+        "labels": list[JsonValueType](sorted(area.labels)),
+        "temperature_entity_id": area.temperature_entity_id,
+        "humidity_entity_id": area.humidity_entity_id,
+    }
+
+
+def _prepare_area_settings(hass: HomeAssistant, settings: dict[str, Any]) -> None:
+    """Check the floor and labels of the settings and convert the lists to sets."""
+    if (floor_id := settings.get("floor_id")) and fr.async_get(hass).async_get_floor(
+        floor_id
+    ) is None:
+        raise HomeAssistantError(f"Floor '{floor_id}' not found.")
+    if "labels" in settings:
+        settings["labels"] = set(settings["labels"])
+        if missing := lr.async_get_missing_label_ids(hass, settings["labels"]):
+            raise HomeAssistantError(f"Labels not found: {', '.join(sorted(missing))}")
+    if "aliases" in settings:
+        settings["aliases"] = set(settings["aliases"])
+
+
+_AREA_SETTINGS: VolDictType = {
+    probatio.Optional(
+        "aliases",
+        description=(
+            "Other names that voice assistants know the area by. This replaces all "
+            "aliases."
+        ),
+    ): [_NON_EMPTY_STRING],
+    probatio.Optional(
+        "floor_id", description="The floor_id. null removes the area from its floor."
+    ): _NULLABLE_STRING,
+    probatio.Optional(
+        "icon", description="The icon, like 'mdi:sofa'. null removes the icon."
+    ): probatio.Any(None, probatio.All(str, cv.icon)),
+    probatio.Optional(
+        "labels", description="The label_ids. This replaces all labels."
+    ): [_NON_EMPTY_STRING],
+    probatio.Optional(
+        "temperature_entity_id",
+        description=(
+            "The sensor that gives the temperature of the area. null removes it."
+        ),
+    ): _NULLABLE_STRING,
+    probatio.Optional(
+        "humidity_entity_id",
+        description="The sensor that gives the humidity of the area. null removes it.",
+    ): _NULLABLE_STRING,
+}
+
+
+class GetAreaSettingsTool(Tool):
+    """LLM Tool to get the settings of an area."""
+
+    name = "config__get_area_settings"
+    title = "Get area settings"
+    description = (
+        "Get the settings of the area with the given area_id. Use search__search "
+        "to find the area_id."
+    )
+    annotations = ToolAnnotations(
+        read_only=True, destructive=False, idempotent=True, open_world=False
+    )
+    integration = DOMAIN
+    parameters = probatio.Schema({probatio.Required("area_id"): _NON_EMPTY_STRING})
+
+    @override
+    async def async_call(
+        self, hass: HomeAssistant, tool_input: ToolInput, llm_context: LLMContext
+    ) -> ToolResult:
+        """Return the settings of the area."""
+        args = self.parameters(tool_input.tool_args)
+        area = _get_area_entry(hass, args["area_id"])
+        return ToolResult(data={"result": _format_area_settings(area)})
+
+
+class UpdateAreaSettingsTool(Tool):
+    """LLM Tool to update the settings of an area."""
+
+    name = "config__update_area_settings"
+    title = "Update area settings"
+    description = (
+        "Update the settings of the area with the given area_id. Only the given "
+        "settings change. Use search__search to find area_ids and label_ids. "
+        "Returns the new settings."
+    )
+    annotations = ToolAnnotations(
+        read_only=False, destructive=True, idempotent=True, open_world=False
+    )
+    integration = DOMAIN
+    parameters = probatio.Schema(
+        {
+            probatio.Required("area_id"): _NON_EMPTY_STRING,
+            probatio.Optional("name"): _NON_EMPTY_STRING,
+            **_AREA_SETTINGS,
+        }
+    )
+
+    @override
+    async def async_call(
+        self, hass: HomeAssistant, tool_input: ToolInput, llm_context: LLMContext
+    ) -> ToolResult:
+        """Update the settings of the area and return the new settings."""
+        settings = self.parameters(tool_input.tool_args)
+        area_id = settings.pop("area_id")
+        _get_area_entry(hass, area_id)
+        _prepare_area_settings(hass, settings)
+        try:
+            area = ar.async_get(hass).async_update(area_id, **settings)
+        except ValueError as err:
+            raise HomeAssistantError(str(err)) from err
+        return ToolResult(data={"result": _format_area_settings(area)})
+
+
+class CreateAreaTool(Tool):
+    """LLM Tool to create an area."""
+
+    name = "config__create_area"
+    title = "Create area"
+    description = (
+        "Create an area, like a room. Use search__search to find label_ids. "
+        "Returns the settings of the new area."
+    )
+    annotations = ToolAnnotations(
+        read_only=False, destructive=False, idempotent=False, open_world=False
+    )
+    integration = DOMAIN
+    parameters = probatio.Schema(
+        {probatio.Required("name"): _NON_EMPTY_STRING, **_AREA_SETTINGS}
+    )
+
+    @override
+    async def async_call(
+        self, hass: HomeAssistant, tool_input: ToolInput, llm_context: LLMContext
+    ) -> ToolResult:
+        """Create the area and return its settings."""
+        settings = self.parameters(tool_input.tool_args)
+        _prepare_area_settings(hass, settings)
+        try:
+            area = ar.async_get(hass).async_create(**settings)
+        except ValueError as err:
+            raise HomeAssistantError(str(err)) from err
+        return ToolResult(data={"result": _format_area_settings(area)})
+
+
+class DeleteAreaTool(Tool):
+    """LLM Tool to delete an area."""
+
+    name = "config__delete_area"
+    title = "Delete area"
+    description = (
+        "Delete the area with the given area_id. Its devices and entities stay, "
+        "without an area. An entity without an area uses the area of its device."
+    )
+    annotations = ToolAnnotations(
+        read_only=False, destructive=True, idempotent=True, open_world=False
+    )
+    integration = DOMAIN
+    parameters = probatio.Schema({probatio.Required("area_id"): _NON_EMPTY_STRING})
+
+    @override
+    async def async_call(
+        self, hass: HomeAssistant, tool_input: ToolInput, llm_context: LLMContext
+    ) -> ToolResult:
+        """Delete the area."""
+        area_id = self.parameters(tool_input.tool_args)["area_id"]
+        _get_area_entry(hass, area_id)
+        ar.async_get(hass).async_delete(area_id)
+        return ToolResult(data={"result": {"area_id": area_id}})
+
+
+def _get_device_entry(hass: HomeAssistant, device_id: str) -> dr.AnyDeviceEntry:
+    """Return the registry entry of a device."""
+    if (
+        device := dr.async_get(hass).async_get(
+            device_id, include_composite_devices=False
+        )
+    ) is None:
+        raise HomeAssistantError(f"Device '{device_id}' not found.")
+    return device
+
+
+def _format_device_settings(device: dr.AnyDeviceEntry) -> JsonObjectType:
+    """Format the settings of a device for LLM consumption."""
+    result: JsonObjectType = {
+        "device_id": device.id,
+        "name": device.name,
+        "name_by_user": device.name_by_user,
+        "area_id": device.area_id,
+        "disabled_by": device.disabled_by,
+        "labels": list[JsonValueType](sorted(device.labels)),
+    }
+    if isinstance(device, dr.ChildDeviceEntry):
+        result["parent_device_id"] = device.parent_device_id
+    else:
+        result["manufacturer"] = device.manufacturer
+        result["model"] = device.model
+    return result
+
+
+class GetDeviceSettingsTool(Tool):
+    """LLM Tool to get the settings of a device."""
+
+    name = "config__get_device_settings"
+    title = "Get device settings"
+    description = (
+        "Get the settings of the device with the given device_id. Use "
+        "search__search to find the device_id."
+    )
+    annotations = ToolAnnotations(
+        read_only=True, destructive=False, idempotent=True, open_world=False
+    )
+    integration = DOMAIN
+    parameters = probatio.Schema({probatio.Required("device_id"): _NON_EMPTY_STRING})
+
+    @override
+    async def async_call(
+        self, hass: HomeAssistant, tool_input: ToolInput, llm_context: LLMContext
+    ) -> ToolResult:
+        """Return the settings of the device."""
+        args = self.parameters(tool_input.tool_args)
+        device = _get_device_entry(hass, args["device_id"])
+        return ToolResult(data={"result": _format_device_settings(device)})
+
+
+class UpdateDeviceSettingsTool(Tool):
+    """LLM Tool to update the settings of a device."""
+
+    name = "config__update_device_settings"
+    title = "Update device settings"
+    description = (
+        "Update the settings of the device with the given device_id. Only the "
+        "given settings change. Use search__search to find area and label IDs. "
+        "Returns the new settings."
+    )
+    annotations = ToolAnnotations(
+        read_only=False, destructive=True, idempotent=True, open_world=False
+    )
+    integration = DOMAIN
+    parameters = probatio.Schema(
+        {
+            probatio.Required("device_id"): _NON_EMPTY_STRING,
+            probatio.Optional(
+                "name_by_user",
+                description=(
+                    "The name of the device. null uses the name from the integration."
+                ),
+            ): _NULLABLE_STRING,
+            probatio.Optional(
+                "area_id",
+                description=(
+                    "The area_id. null removes the area, and a child device then "
+                    "uses the area of its parent."
+                ),
+            ): _NULLABLE_STRING,
+            probatio.Optional(
+                "disabled_by",
+                description=(
+                    "'user' disables the device and its entities, null enables it."
+                ),
+            ): probatio.Any(None, dr.DeviceEntryDisabler.USER.value),
+            probatio.Optional(
+                "labels",
+                description="The label_ids. This replaces all labels.",
+            ): [_NON_EMPTY_STRING],
+        }
+    )
+
+    @override
+    async def async_call(
+        self, hass: HomeAssistant, tool_input: ToolInput, llm_context: LLMContext
+    ) -> ToolResult:
+        """Update the settings of the device and return the new settings."""
+        settings = self.parameters(tool_input.tool_args)
+        device_id = settings.pop("device_id")
+        device = _get_device_entry(hass, device_id)
+        if (area_id := settings.get("area_id")) and ar.async_get(hass).async_get_area(
+            area_id
+        ) is None:
+            raise HomeAssistantError(f"Area '{area_id}' not found.")
+        if "labels" in settings:
+            settings["labels"] = set(settings["labels"])
+            if missing := lr.async_get_missing_label_ids(hass, settings["labels"]):
+                raise HomeAssistantError(
+                    f"Labels not found: {', '.join(sorted(missing))}"
+                )
+        if settings.get("disabled_by"):
+            settings["disabled_by"] = dr.DeviceEntryDisabler.USER
+
+        registry = dr.async_get(hass)
+        if (
+            "disabled_by" in settings
+            and settings["disabled_by"] is None
+            and device.disabled_by is not None
+        ):
+            if (
+                config_entry := hass.config_entries.async_get_entry(
+                    device.config_entry_id
+                )
+            ) and config_entry.disabled_by:
+                raise HomeAssistantError(
+                    f"The config entry of device '{device_id}' is disabled. Enable "
+                    "the config entry first."
+                )
+            if isinstance(device, dr.ChildDeviceEntry) and (
+                (parent := registry.async_get(device.parent_device_id))
+                and parent.disabled
+            ):
+                raise HomeAssistantError(
+                    f"The parent device '{device.parent_device_id}' is disabled. "
+                    "Enable the parent device first."
+                )
+        updated: dr.AnyDeviceEntry | None
+        if isinstance(device, dr.ChildDeviceEntry):
+            updated = registry.async_update_child_device(device_id, **settings)
+        else:
+            updated = registry.async_update_device(device_id, **settings)
+        if TYPE_CHECKING:
+            assert updated is not None
+        return ToolResult(data={"result": _format_device_settings(updated)})
+
+
 @callback
 def async_get_tools(
     hass: HomeAssistant, llm_context: LLMContext, api_id: str
@@ -1845,5 +2160,11 @@ def async_get_tools(
             UpdateLabelSettingsTool(),
             CreateLabelTool(),
             DeleteLabelTool(),
+            GetAreaSettingsTool(),
+            UpdateAreaSettingsTool(),
+            CreateAreaTool(),
+            DeleteAreaTool(),
+            GetDeviceSettingsTool(),
+            UpdateDeviceSettingsTool(),
         ]
     )
