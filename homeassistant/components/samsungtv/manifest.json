@@ -36,7 +36,7 @@
   "integration_type": "device",
   "iot_class": "local_push",
   "loggers": ["samsungtvws"],
-  "quality_scale": "gold",
+  "quality_scale": "platinum",
   "requirements": [
     "samsungtvws[async,encrypted]==3.0.7",
     "async-upnp-client==0.49.0"

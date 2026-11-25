@@ -11,6 +11,12 @@
     },
     "step": {
       "link": {
+        "data": {
+          "registration_name": "Registration name"
+        },
+        "data_description": {
+          "registration_name": "The name under which Home Assistant is registered on the Freebox. Keep it the same across reinstalls, for example when the Home Assistant container is recreated, to avoid having to register again."
+        },
         "description": "Select **Submit**, then touch the right arrow on the router to register Freebox with Home Assistant.\n\n![Location of button on the router](/static/images/config_freebox.png)",
         "title": "Link Freebox router"
       },
@@ -29,6 +35,12 @@
     "binary_sensor": {
       "cover": {
         "name": "Cover"
+      },
+      "port_link": {
+        "name": "{port} link"
+      },
+      "port_link_unnamed": {
+        "name": "Port {port} link"
       },
       "raid_degraded": {
         "name": "RAID array {id} degraded"
@@ -66,6 +78,24 @@
       },
       "partition_free_space": {
         "name": "{partition} free space"
+      },
+      "port_link_speed": {
+        "name": "{port} link speed"
+      },
+      "port_link_speed_unnamed": {
+        "name": "Port {port} link speed"
+      },
+      "port_rx_rate": {
+        "name": "{port} receive rate"
+      },
+      "port_rx_rate_unnamed": {
+        "name": "Port {port} receive rate"
+      },
+      "port_tx_rate": {
+        "name": "{port} transmit rate"
+      },
+      "port_tx_rate_unnamed": {
+        "name": "Port {port} transmit rate"
       },
       "rate_down": {
         "name": "Download speed"

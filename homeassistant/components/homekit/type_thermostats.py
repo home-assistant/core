@@ -28,12 +28,12 @@ from homeassistant.components.water_heater import (
     WaterHeaterStateAttribute,
 )
 from homeassistant.const import (
-    ATTR_ENTITY_ID,
     PERCENTAGE,
     STATE_OFF,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
     EntityStateAttribute,
+    TargetKey,
     UnitOfTemperature,
 )
 from homeassistant.core import State, callback
@@ -278,7 +278,7 @@ class Thermostat(HomeKitClimateAccessory):
     def _set_chars(self, char_values: dict[str, Any]) -> None:
         _LOGGER.debug("Thermostat _set_chars: %s", char_values)
         events = []
-        params: dict[str, Any] = {ATTR_ENTITY_ID: self.entity_id}
+        params: dict[str, Any] = {TargetKey.ENTITY_ID: self.entity_id}
         service = None
         state = self.hass.states.get(self.entity_id)
         assert state
@@ -320,7 +320,8 @@ class Thermostat(HomeKitClimateAccessory):
                             target_hc,
                             hc_fallback,
                         )
-                        self.char_target_heat_cool.value = target_hc = hc_fallback
+                        target_hc = hc_fallback
+                        self.char_target_heat_cool.set_value(target_hc)
                         break
 
             params[ClimateServiceArgument.HVAC_MODE] = self.hc_homekit_to_hass[
@@ -438,8 +439,8 @@ class Thermostat(HomeKitClimateAccessory):
     def set_target_humidity(self, value: float) -> None:
         """Set target humidity to value if call came from HomeKit."""
         _LOGGER.debug("%s: Set target humidity to %d", self.entity_id, value)
-        params = {
-            ATTR_ENTITY_ID: self.entity_id,
+        params: dict[str, Any] = {
+            TargetKey.ENTITY_ID: self.entity_id,
             ClimateServiceArgument.HUMIDITY: value,
         }
         self.async_call_service(
@@ -614,7 +615,7 @@ class WaterHeater(HomeAccessory):
     def set_heat_cool(self, value: int) -> None:
         """Change operation mode to value if call came from HomeKit."""
         _LOGGER.debug("%s: Set heat-cool to %d", self.entity_id, value)
-        params: dict[str, Any] = {ATTR_ENTITY_ID: self.entity_id}
+        params: dict[str, Any] = {TargetKey.ENTITY_ID: self.entity_id}
         if value == HC_HEAT_COOL_OFF:
             if self._supports_on_off:
                 self.async_call_service(
@@ -666,8 +667,8 @@ class WaterHeater(HomeAccessory):
         """Set target temperature to value if call came from HomeKit."""
         _LOGGER.debug("%s: Set target temperature to %.1f°C", self.entity_id, value)
         temperature = temperature_to_states(value, self._unit)
-        params = {
-            ATTR_ENTITY_ID: self.entity_id,
+        params: dict[str, Any] = {
+            TargetKey.ENTITY_ID: self.entity_id,
             WaterHeaterServiceArgument.TEMPERATURE: temperature,
         }
         self.async_call_service(

@@ -7,7 +7,7 @@ from pyControl4.error_handling import BadCredentials, C4Exception
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
-from homeassistant.config_entries import ConfigEntryState
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 
@@ -25,7 +25,7 @@ async def test_setup_bad_credentials(
     mock_config_entry: MockConfigEntry,
     mock_c4_account: MagicMock,
 ) -> None:
-    """Test setup fails with invalid credentials."""
+    """Test setup fails with invalid credentials and starts a reauth flow."""
     mock_c4_account.get_account_bearer_token.side_effect = BadCredentials(
         "Invalid credentials"
     )
@@ -37,6 +37,11 @@ async def test_setup_bad_credentials(
         "Error authenticating with the Control4 account API, incorrect username or"
         " password"
     )
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 1
+    assert flows[0]["step_id"] == "reauth_confirm"
+    assert flows[0]["context"]["source"] == SOURCE_REAUTH
+    assert flows[0]["context"]["entry_id"] == mock_config_entry.entry_id
 
 
 @pytest.mark.usefixtures("mock_c4_account")

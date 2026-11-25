@@ -3,9 +3,9 @@
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "no_mac_address": "The MAC address is missing from the Zeroconf record",
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
       "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
-      "unique_id_mismatch": "The provided connection settings belong to a different Synology NAS."
+      "unique_id_mismatch": "The provided connection settings belong to a different Synology NAS.",
+      "wrong_nas": "The NAS at this address is not the one this entry was set up for (different serial number)."
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
@@ -29,7 +29,7 @@
       },
       "backup_share": {
         "data": {
-          "backup_path": "Path",
+          "backup_path": "[%key:common::config_flow::data::path%]",
           "backup_share": "Shared folder"
         },
         "data_description": {
@@ -227,6 +227,9 @@
       }
     },
     "update": {
+      "package_update": {
+        "name": "{package_name} update"
+      },
       "update": {
         "name": "DSM update"
       }
@@ -266,7 +269,7 @@
         "step": {
           "confirm": {
             "data": {
-              "backup_path": "[%key:component::synology_dsm::config::step::backup_share::data::backup_path%]",
+              "backup_path": "[%key:common::config_flow::data::path%]",
               "backup_share": "[%key:component::synology_dsm::config::step::backup_share::data::backup_share%]"
             },
             "data_description": {
@@ -294,7 +297,7 @@
     "step": {
       "init": {
         "data": {
-          "backup_path": "[%key:component::synology_dsm::config::step::backup_share::data::backup_path%]",
+          "backup_path": "[%key:common::config_flow::data::path%]",
           "backup_share": "[%key:component::synology_dsm::config::step::backup_share::data::backup_share%]",
           "snap_profile_type": "Quality level of camera snapshots (0:high 1:medium 2:low)"
         },

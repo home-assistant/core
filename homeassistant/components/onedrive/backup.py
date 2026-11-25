@@ -12,6 +12,7 @@ from onedrive_personal_sdk.exceptions import (
     AuthenticationError,
     HashMismatchError,
     OneDriveException,
+    UploadSessionExpired,
 )
 from onedrive_personal_sdk.models.upload import FileInfo
 
@@ -90,8 +91,9 @@ def handle_backup_errors[_R, **P](
             ) from err
         except OneDriveException as err:
             _LOGGER.error(
-                "Error during backup in %s:, message %s",
+                "Error during backup in %s: %s: %s",
                 func.__name__,
+                type(err).__name__,
                 err,
             )
             _LOGGER.debug("Full error: %s", err, exc_info=True)
@@ -169,12 +171,6 @@ class OneDriveBackupAgent(BackupAgent):
             expires_at - time(),
         )
         backup_filename, metadata_filename = suggested_filenames(backup)
-        file = FileInfo(
-            backup_filename,
-            backup.size,
-            self._folder_id,
-            await open_stream(),
-        )
 
         # determine chunk based on target chunks
         upload_chunk_size = backup.size / TARGET_CHUNKS
@@ -185,10 +181,15 @@ class OneDriveBackupAgent(BackupAgent):
         # ensure minimum chunk size of 320KB
         upload_chunk_size = max(upload_chunk_size, 320 * 1024)
 
-        try:
+        async def upload() -> None:
             await LargeFileUploadClient.upload(
                 self._token_function,
-                file,
+                FileInfo(
+                    backup_filename,
+                    backup.size,
+                    self._folder_id,
+                    await open_stream(),
+                ),
                 upload_chunk_size=upload_chunk_size,
                 session=async_get_clientsession(self._hass),
                 smart_chunk_size=True,
@@ -196,6 +197,13 @@ class OneDriveBackupAgent(BackupAgent):
                     bytes_uploaded=bytes_uploaded
                 ),
             )
+
+        try:
+            try:
+                await upload()
+            except UploadSessionExpired:
+                _LOGGER.debug("Upload session expired, retrying with a new session")
+                await upload()
         except HashMismatchError as err:
             raise BackupAgentError(
                 translation_domain=DOMAIN,

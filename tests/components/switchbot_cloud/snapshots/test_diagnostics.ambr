@@ -9,7 +9,6 @@
         'manageable_by_webhook': False,
         'platforms': list([
           'climates',
-          'switches',
         ]),
         'remote': True,
         'status': None,

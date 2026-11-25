@@ -272,9 +272,6 @@
     "permit": {
       "service": "mdi:cellphone-link"
     },
-    "reconfigure_device": {
-      "service": "mdi:cellphone-cog"
-    },
     "remove": {
       "service": "mdi:cellphone-remove"
     },

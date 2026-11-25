@@ -110,7 +110,7 @@ class SystemNexa2DataUpdateCoordinator(DataUpdateCoordinator[SystemNexa2Data]):
         await self.device.connect()
 
     async def _async_handle_update(self, event: UpdateEvent) -> None:
-        data = self.data or SystemNexa2Data()
+        data = self.data_or_none or SystemNexa2Data()
         _is_connected = True
         match event:
             case ConnectionStatus(connected):
