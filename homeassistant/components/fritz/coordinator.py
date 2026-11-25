@@ -175,6 +175,7 @@ class FritzBoxTools(DataUpdateCoordinator[UpdateCoordinatorDataType]):
         self.use_tls = use_tls
         self.device_discovery_enabled = device_discovery_enabled
         self.has_call_deflections: bool = False
+        self.has_guest_wifi: bool = False
         self._model: str | None = None
         self._current_firmware: str | None = None
         self._latest_firmware: str | None = None
@@ -276,6 +277,18 @@ class FritzBoxTools(DataUpdateCoordinator[UpdateCoordinatorDataType]):
                 self.device_is_router = False
 
         self.has_call_deflections = "X_AVM-DE_OnTel1" in self.connection.services
+
+        # Some firmwares advertise the guest Wi-Fi service but reject every call to it
+        try:
+            self.fritz_guest_wifi.get_info()
+        except FritzConnectionException as ex:
+            LOGGER.warning(
+                "Guest Wi-Fi of %s is not accessible, skipping guest Wi-Fi entities: %s",
+                self.host,
+                ex,
+            )
+        else:
+            self.has_guest_wifi = True
 
     async def async_register_entity_updates(
         self, key: str, update_fn: Callable[[FritzStatus, StateType], Any]

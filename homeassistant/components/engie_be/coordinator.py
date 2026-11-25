@@ -7,7 +7,6 @@ from dataclasses import dataclass, field
 from datetime import date, datetime, time, timedelta
 from itertools import pairwise
 from typing import TYPE_CHECKING, override
-from zoneinfo import ZoneInfo
 
 from aioengiebelgium import (
     BusinessAgreement,
@@ -32,6 +31,7 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 from homeassistant.util import dt as dt_util
 
 from .const import (
+    BRUSSELS_TIME_ZONE,
     DOMAIN,
     EPEX_SCAN_INTERVAL,
     LOGGER,
@@ -46,8 +46,6 @@ _DIRECTIONS = ("offtake", "injection")
 _DIRECTION_PREFIXES = ("OFFTAKE_", "INJECTION_")
 _BLENDED_SLOT_CODE = "EN"
 _SERVICE_POINT_REFRESH_INTERVAL = timedelta(days=1)
-
-BRUSSELS_TIME_ZONE = ZoneInfo("Europe/Brussels")
 
 
 def mask_identifier(identifier: str) -> str:
@@ -179,7 +177,6 @@ class EngieBePricesCoordinator(DataUpdateCoordinator[EngieBePricesData]):
         )
         self.client = client
         self.ban = ban
-        self.agreement = agreement
         self.ean_energy_types: dict[str, str | None] = {}
         self.gas_conversion_coefficients: dict[str, float] = {}
         self._service_points_refreshed_at: dict[str, datetime] = {}
@@ -248,9 +245,7 @@ class EngieBePricesCoordinator(DataUpdateCoordinator[EngieBePricesData]):
                     self.gas_conversion_coefficients[bare] = coefficient
                 self._service_points_refreshed_at[bare] = now
 
-        brussels = dt_util.get_time_zone("Europe/Brussels")
-        assert brussels is not None
-        today = dt_util.now(brussels).date()
+        today = dt_util.now(BRUSSELS_TIME_ZONE).date()
         slots: dict[tuple[str, str, str], PriceSlot] = {}
         for ean_prices in prices.items:
             period = _current_period(ean_prices.periods, today)
@@ -338,13 +333,23 @@ class EngieBePeaksData:
     previous_month: MonthlyPeaks | None
 
     @property
-    def peak(self) -> Peak | None:
-        """Return the peak to display, falling back to the previous month early in the month."""
+    def _source(self) -> MonthlyPeaks | None:
+        """Return the month whose peak is displayed."""
         if self.monthly.peak_of_the_month is not None:
-            return self.monthly.peak_of_the_month
-        if self.previous_month is not None:
-            return self.previous_month.peak_of_the_month
+            return self.monthly
+        if (
+            self.previous_month is not None
+            and self.previous_month.peak_of_the_month is not None
+        ):
+            return self.previous_month
         return None
+
+    @property
+    def peak(self) -> Peak | None:
+        """Return this month's peak, or last month's peak when this month has none yet."""
+        if (source := self._source) is None:
+            return None
+        return source.peak_of_the_month
 
     @property
     def is_fallback(self) -> bool:
@@ -354,14 +359,7 @@ class EngieBePeaksData:
     @property
     def peak_month(self) -> str | None:
         """Return the YYYY-MM month the displayed peak belongs to."""
-        if self.monthly.peak_of_the_month is not None:
-            source = self.monthly
-        elif (
-            self.previous_month is not None
-            and self.previous_month.peak_of_the_month is not None
-        ):
-            source = self.previous_month
-        else:
+        if (source := self._source) is None:
             return None
         return f"{source.year}-{source.month:02d}"
 
@@ -393,19 +391,15 @@ class EngieBePeaksCoordinator(DataUpdateCoordinator[EngieBePeaksData]):
     async def _async_update_data(self) -> EngieBePeaksData:
         """Fetch this month's peaks, plus last month's when this month has no peak yet."""
         today = dt_util.now(BRUSSELS_TIME_ZONE).date()
+        last_month = today.replace(day=1) - timedelta(days=1)
         with _raise_update_errors():
             monthly = await self.client.async_get_monthly_peaks(
                 self.ban, today.year, today.month
             )
             previous_month: MonthlyPeaks | None = None
             if monthly.peak_of_the_month is None:
-                prev_year, prev_month = (
-                    (today.year - 1, 12)
-                    if today.month == 1
-                    else (today.year, today.month - 1)
-                )
                 previous_month = await self.client.async_get_monthly_peaks(
-                    self.ban, prev_year, prev_month
+                    self.ban, last_month.year, last_month.month
                 )
         return EngieBePeaksData(monthly=monthly, previous_month=previous_month)
 
@@ -459,17 +453,12 @@ class EngieBeEpexCoordinator(DataUpdateCoordinator[EngieBeEpexData]):
     @override
     async def _async_update_data(self) -> EngieBeEpexData:
         """Fetch EPEX prices for each day and granularity without full coverage."""
-        data = (
-            self.data
-            if self.data is not None
-            else EngieBeEpexData(hourly=(), quarter_hourly=())
-        )
         today = dt_util.now(BRUSSELS_TIME_ZONE).date()
         tomorrow = today + timedelta(days=1)
         slots = {
             granularity: [
                 slot
-                for slot in data.slots(granularity)
+                for slot in self.data.slots(granularity)
                 if slot.start.astimezone(BRUSSELS_TIME_ZONE).date() >= today
             ]
             for granularity in EpexGranularity
