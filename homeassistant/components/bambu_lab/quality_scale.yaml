@@ -32,7 +32,9 @@ rules:
   unique-config-entry: done
 
   # Silver
-  action-exceptions: done
+  action-exceptions:
+    status: exempt
+    comment: The integration does not register actions.
   config-entry-unloading: done
   docs-configuration-parameters:
     status: exempt
