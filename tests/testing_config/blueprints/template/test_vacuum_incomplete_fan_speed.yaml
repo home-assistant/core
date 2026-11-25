@@ -1,6 +1,6 @@
 blueprint:
   name: Test vacuum with incomplete fan speed options
-  description: Creates a vacuum with a set fan speed action but no fan speeds
+  description: Creates a vacuum with fan speeds but no set fan speed action
   domain: template
   input:
     sensor:
@@ -9,9 +9,16 @@ blueprint:
       selector:
         entity:
           domain: sensor
+    fan_speeds:
+      name: Fan speeds
+      description: The fan speeds of the vacuum
+      selector:
+        text:
+          multiple: true
 variables:
   sensor: !input sensor
 vacuum:
   state: "{{ states(sensor) }}"
   start: []
-  set_fan_speed: []
+  fan_speed: "{{ 'high' }}"
+  fan_speeds: !input fan_speeds

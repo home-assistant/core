@@ -12,7 +12,7 @@ from pytest_unordered import unordered
 from homeassistant import config_entries
 from homeassistant.components.template import DOMAIN, async_setup_entry
 from homeassistant.components.template.vacuum import (
-    INCOMPLETE_FAN_SPEED_HELPER_ISSUE_ID,
+    DEPRECATED_HELPER_INCOMPLETE_FAN_SPEED_ISSUE_ID,
 )
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import STATE_UNAVAILABLE
@@ -1483,7 +1483,9 @@ async def test_options_vacuum_incomplete_fan_speed(
     config_entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
-    issue_id = f"{INCOMPLETE_FAN_SPEED_HELPER_ISSUE_ID}_{config_entry.entry_id}"
+    issue_id = (
+        f"{DEPRECATED_HELPER_INCOMPLETE_FAN_SPEED_ISSUE_ID}_{config_entry.entry_id}"
+    )
     assert issue_registry.async_get_issue(DOMAIN, issue_id) is not None
 
     result = await hass.config_entries.options.async_init(config_entry.entry_id)

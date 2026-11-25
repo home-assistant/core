@@ -313,8 +313,8 @@ FAN_INCOMPLETE_PRESET_MODE_OPTIONS = IncompleteTemplateOptionGroup(
     platform=Platform.FAN,
     options=("preset_mode", "preset_modes", "set_preset_mode"),
     list_option="preset_modes",
-    translation_key="incomplete_fan_preset_mode_options",
-    blueprint_translation_key="incomplete_fan_preset_mode_options_blueprint",
+    translation_key="deprecated_fan_incomplete_preset_mode_options",
+    blueprint_translation_key="deprecated_fan_incomplete_preset_mode_options_blueprint",
     breaks_in_ha_version="2027.6.0",
 )
 
@@ -322,8 +322,8 @@ VACUUM_INCOMPLETE_FAN_SPEED_OPTIONS = IncompleteTemplateOptionGroup(
     platform=Platform.VACUUM,
     options=("fan_speed", "fan_speeds", "set_fan_speed"),
     list_option="fan_speeds",
-    translation_key="incomplete_vacuum_fan_speed_options",
-    blueprint_translation_key="incomplete_vacuum_fan_speed_options_blueprint",
+    translation_key="deprecated_vacuum_incomplete_fan_speed_options",
+    blueprint_translation_key="deprecated_vacuum_incomplete_fan_speed_options_blueprint",
     breaks_in_ha_version="2027.6.0",
 )
 

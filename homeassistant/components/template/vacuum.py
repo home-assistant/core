@@ -43,6 +43,7 @@ from .helpers import (
     async_setup_template_platform,
     async_setup_template_preview,
 )
+from .repairs import format_deprecated_options
 from .schemas import (
     TEMPLATE_ENTITY_COMMON_CONFIG_ENTRY_SCHEMA,
     TEMPLATE_ENTITY_OPTIMISTIC_SCHEMA,
@@ -76,7 +77,9 @@ SCRIPT_FIELDS = (
 
 CLEAN_AREA_GROUP = "clean_area_group"
 
-INCOMPLETE_FAN_SPEED_HELPER_ISSUE_ID = "incomplete_vacuum_fan_speed_helper"
+DEPRECATED_HELPER_INCOMPLETE_FAN_SPEED_ISSUE_ID = (
+    "deprecated_vacuum_helper_incomplete_fan_speed_options"
+)
 
 VACUUM_COMMON_SCHEMA = probatio.Schema(
     {
@@ -145,21 +148,29 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Initialize config entry."""
-    issue_id = f"{INCOMPLETE_FAN_SPEED_HELPER_ISSUE_ID}_{config_entry.entry_id}"
-    if VACUUM_INCOMPLETE_FAN_SPEED_OPTIONS.deprecated_options(config_entry.options):
-        breaks_in_ha_version = VACUUM_INCOMPLETE_FAN_SPEED_OPTIONS.breaks_in_ha_version
+    issue_id = (
+        f"{DEPRECATED_HELPER_INCOMPLETE_FAN_SPEED_ISSUE_ID}_{config_entry.entry_id}"
+    )
+    if incomplete := VACUUM_INCOMPLETE_FAN_SPEED_OPTIONS.deprecated_options(
+        config_entry.options
+    ):
         ir.async_create_issue(
             hass,
             DOMAIN,
             issue_id,
-            breaks_in_ha_version=breaks_in_ha_version,
+            breaks_in_ha_version=VACUUM_INCOMPLETE_FAN_SPEED_OPTIONS.breaks_in_ha_version,
             config_entry_id=config_entry.entry_id,
             is_fixable=False,
             severity=ir.IssueSeverity.WARNING,
-            translation_key=INCOMPLETE_FAN_SPEED_HELPER_ISSUE_ID,
+            translation_key=DEPRECATED_HELPER_INCOMPLETE_FAN_SPEED_ISSUE_ID,
             translation_placeholders={
                 "name": config_entry.title,
-                "breaks_in_ha_version": breaks_in_ha_version,
+                "breaks_in_ha_version": (
+                    VACUUM_INCOMPLETE_FAN_SPEED_OPTIONS.breaks_in_ha_version
+                ),
+                "options": format_deprecated_options(
+                    hass, VACUUM_INCOMPLETE_FAN_SPEED_OPTIONS, incomplete, {}
+                ),
             },
         )
     else:

@@ -25,7 +25,7 @@ from homeassistant.components.template.const import (
 from homeassistant.components.template.vacuum import (
     CONF_CLEAN_SEGMENTS,
     CONF_SEGMENTS,
-    INCOMPLETE_FAN_SPEED_HELPER_ISSUE_ID,
+    DEPRECATED_HELPER_INCOMPLETE_FAN_SPEED_ISSUE_ID,
 )
 from homeassistant.components.vacuum import (
     ATTR_FAN_SPEED,
@@ -1824,13 +1824,14 @@ async def test_incomplete_fan_speed_options_issue_blueprint(
                 {
                     "use_blueprint": {
                         "path": "test_vacuum_incomplete_fan_speed.yaml",
-                        "input": {"sensor": sensor},
+                        "input": {"sensor": sensor, "fan_speeds": fan_speeds},
                     },
                     "name": name,
                 }
-                for sensor, name in (
-                    ("sensor.first", "First"),
-                    ("sensor.second", "Second"),
+                # The deprecated options differ per instance
+                for sensor, fan_speeds, name in (
+                    ("sensor.first", [], "First"),
+                    ("sensor.second", ["high"], "Second"),
                 )
             ]
         },
@@ -1846,8 +1847,10 @@ async def test_incomplete_fan_speed_options_issue_blueprint(
     assert issues[0].translation_placeholders == {
         "blueprint": "test_vacuum_incomplete_fan_speed.yaml",
         "options": (
-            "- `blueprints/template/test_vacuum_incomplete_fan_speed.yaml:17`: "
-            "`set_fan_speed` requires `fan_speeds`"
+            "- `blueprints/template/test_vacuum_incomplete_fan_speed.yaml:23`: "
+            "`fan_speed` requires `fan_speeds` and `set_fan_speed`\n"
+            "- `blueprints/template/test_vacuum_incomplete_fan_speed.yaml:24`: "
+            "`fan_speeds` requires `set_fan_speed`"
         ),
     }
 
@@ -1875,32 +1878,56 @@ async def _async_setup_vacuum_config_entry(
 
 
 @pytest.mark.parametrize(
-    "options",
+    ("options", "expected_options"),
     [
-        pytest.param({"set_fan_speed": []}, id="action_only"),
-        pytest.param({"set_fan_speed": [], "fan_speeds": []}, id="empty_list"),
+        pytest.param(
+            {"set_fan_speed": []},
+            "- `set_fan_speed` requires `fan_speeds`",
+            id="action_only",
+        ),
+        pytest.param(
+            {"set_fan_speed": [], "fan_speeds": []},
+            "- `set_fan_speed` requires `fan_speeds`",
+            id="empty_list",
+        ),
+        pytest.param(
+            {"fan_speed": "{{ 'high' }}"},
+            "- `fan_speed` requires `fan_speeds` and `set_fan_speed`",
+            id="fan_speed_only",
+        ),
     ],
 )
 async def test_incomplete_fan_speed_config_entry_issue(
-    hass: HomeAssistant, issue_registry: ir.IssueRegistry, options: dict[str, Any]
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+    options: dict[str, Any],
+    expected_options: str,
 ) -> None:
     """Test a repair issue is tied to a helper with incomplete fan speed options."""
     config_entry = await _async_setup_vacuum_config_entry(hass, options)
-    issue_id = f"{INCOMPLETE_FAN_SPEED_HELPER_ISSUE_ID}_{config_entry.entry_id}"
+    issue_id = (
+        f"{DEPRECATED_HELPER_INCOMPLETE_FAN_SPEED_ISSUE_ID}_{config_entry.entry_id}"
+    )
     issue = issue_registry.async_get_issue(template.DOMAIN, issue_id)
     assert issue is not None
     assert issue.breaks_in_ha_version == "2027.6.0"
     assert issue.config_entry_id == config_entry.entry_id
-    assert issue.translation_key == INCOMPLETE_FAN_SPEED_HELPER_ISSUE_ID
+    assert issue.translation_key == DEPRECATED_HELPER_INCOMPLETE_FAN_SPEED_ISSUE_ID
     assert issue.translation_placeholders == {
         "name": "My template",
         "breaks_in_ha_version": "2027.6.0",
+        "options": expected_options,
     }
     # The YAML repairs don't remove the repairs of helpers
     assert get_incomplete_fan_speed_options_issues(issue_registry) == []
 
     hass.config_entries.async_update_entry(
-        config_entry, options={**config_entry.options, "fan_speeds": ["high"]}
+        config_entry,
+        options={
+            **config_entry.options,
+            "fan_speeds": ["high"],
+            "set_fan_speed": [],
+        },
     )
     assert await hass.config_entries.async_reload(config_entry.entry_id)
     await hass.async_block_till_done()
@@ -1912,7 +1939,9 @@ async def test_incomplete_fan_speed_config_entry_removed(
 ) -> None:
     """Test the repair issue is removed with the helper."""
     config_entry = await _async_setup_vacuum_config_entry(hass, {"set_fan_speed": []})
-    issue_id = f"{INCOMPLETE_FAN_SPEED_HELPER_ISSUE_ID}_{config_entry.entry_id}"
+    issue_id = (
+        f"{DEPRECATED_HELPER_INCOMPLETE_FAN_SPEED_ISSUE_ID}_{config_entry.entry_id}"
+    )
     assert issue_registry.async_get_issue(template.DOMAIN, issue_id) is not None
 
     assert await hass.config_entries.async_remove(config_entry.entry_id)
@@ -1930,7 +1959,7 @@ async def test_no_incomplete_fan_speed_config_entry_issue(
     assert (
         issue_registry.async_get_issue(
             template.DOMAIN,
-            f"{INCOMPLETE_FAN_SPEED_HELPER_ISSUE_ID}_{config_entry.entry_id}",
+            f"{DEPRECATED_HELPER_INCOMPLETE_FAN_SPEED_ISSUE_ID}_{config_entry.entry_id}",
         )
         is None
     )

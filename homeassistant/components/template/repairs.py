@@ -126,6 +126,8 @@ def _async_update_deprecated_options_issues(
     platform = deprecation.platform
     # Fingerprint to translation key, label placeholder and options of each entity
     issues: dict[str, tuple[str, dict[str, str], list[str]]] = {}
+    # Blueprint path to the deprecated options and their locations of all instances
+    blueprints: dict[str, tuple[dict[str, None], dict[str, tuple[str, int]]]] = {}
     for section in config_sections or []:
         blueprint_path: str | None = None
         if section.raw_blueprint_inputs is not None:
@@ -135,48 +137,60 @@ def _async_update_deprecated_options_issues(
             if not (deprecated := deprecation.deprecated_options(entity_config)):
                 continue
 
-            # The id only changes with the configuration, so a dismissed issue stays
-            # dismissed until the configuration changes
+            locations = (
+                section.option_locations[platform][index]
+                if section.option_locations
+                else {}
+            )
             if blueprint_path is not None:
                 # The fix belongs in the blueprint, one issue covers all its instances.
-                # Templates are left out, inputs can make them differ per instance
-                fingerprint = "\n".join(
-                    [f"blueprint: {blueprint_path}", *sorted(deprecated)]
+                # Inputs can make the deprecated options differ per instance
+                blueprint_options, blueprint_locations = blueprints.setdefault(
+                    blueprint_path, ({}, {})
                 )
-                if fingerprint in issues:
-                    continue
-                translation_key = deprecation.blueprint_translation_key
-                label = {"blueprint": blueprint_path}
-            else:
-                options_config = deprecation.options_config(entity_config)
-                fingerprint = "\n".join(
-                    [
-                        tcv.entity_config_repair_identifier(
-                            platform, entity_config, section.get(CONF_UNIQUE_ID)
-                        ),
-                        *(
-                            f"{key}="
-                            f"{getattr(options_config[key], 'template', options_config[key])}"
-                            for key in sorted(deprecated)
-                        ),
-                    ]
-                )
-                translation_key = deprecation.translation_key
-                label = {
-                    "identifier": tcv.entity_config_identifier(platform, entity_config)
-                }
+                blueprint_options.update(dict.fromkeys(deprecated))
+                blueprint_locations.update(locations)
+                continue
+
+            # The id only changes with the configuration, so a dismissed issue stays
+            # dismissed until the configuration changes
+            options_config = deprecation.options_config(entity_config)
+            fingerprint = "\n".join(
+                [
+                    tcv.entity_config_repair_identifier(
+                        platform, entity_config, section.get(CONF_UNIQUE_ID)
+                    ),
+                    *(
+                        f"{key}="
+                        f"{getattr(options_config[key], 'template', options_config[key])}"
+                        for key in sorted(deprecated)
+                    ),
+                ]
+            )
+            translation_key = deprecation.translation_key
+            label = {
+                "identifier": tcv.entity_config_identifier(platform, entity_config)
+            }
 
             # Identical entities share a fingerprint, one issue lists all of them
             issues.setdefault(fingerprint, (translation_key, label, []))[2].append(
-                format_deprecated_options(
-                    hass,
-                    deprecation,
-                    deprecated,
-                    section.option_locations[platform][index]
-                    if section.option_locations
-                    else {},
-                )
+                format_deprecated_options(hass, deprecation, deprecated, locations)
             )
+
+    for blueprint_path, (deprecated_options, locations) in blueprints.items():
+        # Templates are left out, inputs can make them differ per instance
+        fingerprint = "\n".join(
+            [f"blueprint: {blueprint_path}", *sorted(deprecated_options)]
+        )
+        issues[fingerprint] = (
+            deprecation.blueprint_translation_key,
+            {"blueprint": blueprint_path},
+            [
+                format_deprecated_options(
+                    hass, deprecation, list(deprecated_options), locations
+                )
+            ],
+        )
 
     with ir.async_refresh_issues(
         hass, DOMAIN, issue_id_pattern=f"{deprecation.translation_key}_"
