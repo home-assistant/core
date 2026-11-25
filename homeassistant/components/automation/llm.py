@@ -30,8 +30,9 @@ class ListAutomationsTool(Tool):
     title = "List automations"
     description = (
         "List the automations, sorted by name, with their state, when they were "
-        "last triggered and their description. An automation that is off does not "
-        "run, and one that is unavailable has an error in its configuration. "
+        "last triggered and their description. An automation that is off ignores "
+        "its triggers but can still be run by hand, and one that is unavailable "
+        "has an error in its configuration. "
         f"Returns at most {_LIMIT} automations per call."
     )
     annotations = ToolAnnotations(
@@ -79,8 +80,10 @@ class ListAutomationsTool(Tool):
                 and (entity := component.get_entity(state.entity_id)) is not None
                 and entity.raw_config
                 and (description := entity.raw_config.get("description"))
+                not in (None, "")
             ):
-                automation["description"] = description
+                # The raw configuration is not validated, so it may hold a number
+                automation["description"] = str(description)
             automations.append(automation)
 
         result: JsonObjectType = {"automations": automations, "total": len(states)}

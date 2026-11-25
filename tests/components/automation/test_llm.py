@@ -44,6 +44,7 @@ async def setup_automations(hass: HomeAssistant) -> None:
                 {
                     "id": "bedroom",
                     "alias": "Bedroom",
+                    "description": 0,
                     "initial_state": False,
                     "triggers": {"trigger": "event", "event_type": "test_event"},
                     "actions": [],
@@ -97,6 +98,7 @@ async def test_list_automations(
                 "name": "Bedroom",
                 "state": "off",
                 "last_triggered": None,
+                "description": "0",
             },
             {
                 "entity_id": "automation.broken",
