@@ -28,9 +28,15 @@ def expected_lingering_tasks() -> bool:
 
 
 @pytest.fixture
-def keba_data() -> dict[str, Any]:
-    """Return the data the library reports for an idle P30."""
-    return load_json_object_fixture("p30.json", DOMAIN)
+def keba_fixture() -> str:
+    """Return the fixture file with the station's data, an idle P30 by default."""
+    return "p30.json"
+
+
+@pytest.fixture
+def keba_data(keba_fixture: str) -> dict[str, Any]:
+    """Return the data the library reports for the station."""
+    return load_json_object_fixture(keba_fixture, DOMAIN)
 
 
 @pytest.fixture
