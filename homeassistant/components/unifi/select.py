@@ -29,8 +29,8 @@ from .const import DOMAIN
 from .entity import (
     UnifiEntity,
     UnifiEntityDescription,
+    async_firewall_policy_device_info_fn,
     async_firewall_policy_supported_fn,
-    async_unifi_network_device_info_fn,
 )
 
 if TYPE_CHECKING:
@@ -95,11 +95,10 @@ ENTITY_DESCRIPTIONS: tuple[UnifiSelectEntityDescription, ...] = (
         options=list(SCHEDULE_MODE_OPTIONS.values()),
         api_handler_fn=lambda api: api.firewall_policies,
         current_option_fn=async_firewall_policy_schedule_mode_fn,
-        device_info_fn=async_unifi_network_device_info_fn,
+        device_info_fn=async_firewall_policy_device_info_fn,
         object_fn=lambda api, obj_id: api.firewall_policies[obj_id],
         select_option_fn=async_firewall_policy_schedule_mode_control_fn,
         supported_fn=async_firewall_policy_supported_fn,
-        translation_placeholders_fn=lambda policy: {"policy_name": policy.name},
         unique_id_fn=lambda hub, obj_id: f"firewall_policy_schedule_mode-{obj_id}",
     ),
 )

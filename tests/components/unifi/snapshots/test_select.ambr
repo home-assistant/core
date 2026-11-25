@@ -17,7 +17,7 @@
     'config_entry_id': <ANY>,
     'config_subentry_id': None,
     'device_class': None,
-    'device_id': <DeviceEntry identifiers=[('switch', '1')]>,
+    'device_id': <ChildDeviceEntry identifiers=[('unifi', 'firewall_policy-678ceb9fe3849d293243405c')]>,
     'disabled_by': None,
     'domain': 'select',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
@@ -29,12 +29,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Block streaming schedule',
+    'object_id_base': 'Schedule',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Block streaming schedule',
+    'original_name': 'Schedule',
     'platform': 'unifi',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -47,7 +47,7 @@
 # name: test_entity_and_device_data[firewall_policy_payload0][select.unifi_network_block_streaming_schedule-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'UniFi Network Block streaming schedule',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Block streaming Schedule',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'always',
         'every_day',

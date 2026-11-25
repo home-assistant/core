@@ -37,6 +37,7 @@ from .conftest import (
     ConfigEntryFactoryType,
     WebsocketMessageMock,
 )
+from .test_sensor import FIREWALL_POLICY
 
 
 async def test_setup_entry_fails_config_entry_not_ready(
@@ -958,3 +959,42 @@ async def test_entity_not_added_retried(
         hass.states.get(entity_id).attributes[ATTR_INSTALLED_VERSION]
         == ADOPTED_PENDING_DEVICE["version"]
     )
+
+
+@pytest.mark.parametrize("firewall_policy_payload", [[FIREWALL_POLICY]])
+async def test_firewall_policy_entities_move_to_child_device(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    config_entry: MockConfigEntry,
+    config_entry_factory: ConfigEntryFactoryType,
+) -> None:
+    """Move firewall policy entities to a child device of UniFi Network."""
+    assert config_entry.unique_id is not None
+    network = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        identifiers={(SWITCH_DOMAIN, config_entry.unique_id)},
+    )
+    switch = entity_registry.async_get_or_create(
+        Platform.SWITCH,
+        DOMAIN,
+        f"firewall_policy-{FIREWALL_POLICY['_id']}",
+        config_entry=config_entry,
+        device_id=network.id,
+        suggested_object_id="custom_firewall_policy",
+    )
+
+    await config_entry_factory()
+
+    policy_device = device_registry.async_get_child_device_by_identifier(
+        (DOMAIN, f"firewall_policy-{FIREWALL_POLICY['_id']}"), config_entry.entry_id
+    )
+    assert policy_device is not None
+    assert policy_device.parent_device_id == network.id
+    assert policy_device.name == FIREWALL_POLICY["name"]
+
+    migrated_switch = entity_registry.async_get(switch.entity_id)
+    assert migrated_switch is not None
+    assert migrated_switch.entity_id == "switch.custom_firewall_policy"
+    assert migrated_switch.device_id == policy_device.id
+    assert hass.states.get(switch.entity_id) is not None

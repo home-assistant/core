@@ -86,7 +86,7 @@
     },
     "select": {
       "firewall_policy_schedule_mode": {
-        "name": "{policy_name} schedule",
+        "name": "Schedule",
         "state": {
           "always": "Always",
           "custom": "Custom",
@@ -136,7 +136,7 @@
         "name": "Uplink MAC"
       },
       "firewall_policy_schedule_status": {
-        "name": "{policy_name} schedule status",
+        "name": "Schedule status",
         "state": {
           "active": "[%key:common::state::active%]",
           "disabled": "[%key:common::state::disabled%]",
