@@ -116,6 +116,9 @@ class LoqedDataCoordinator(DataUpdateCoordinator[StatusMessage]):
             raise
         if "bolt_state" in data:
             await self.lock.updateState(data["bolt_state"])
+        # Lock.online reads raw_data, so keep it in sync with the polled status
+        self.lock.raw_data.update(data)
+        self._async_log_lock_availability()
         return data
 
     async def _handle_webhook(
@@ -137,15 +140,20 @@ class LoqedDataCoordinator(DataUpdateCoordinator[StatusMessage]):
             _LOGGER.warning("Incorrect callback received:: %s", event_data)
             return None
 
-        if self.lock.online != self._lock_online:
-            self._lock_online = self.lock.online
-            if self._lock_online:
-                _LOGGER.info("LOQED lock %s is back online", self.device_name)
-            else:
-                _LOGGER.info("LOQED lock %s is unavailable", self.device_name)
-
+        self._async_log_lock_availability()
         self.async_update_listeners()
         return None
+
+    @callback
+    def _async_log_lock_availability(self) -> None:
+        """Log once when the lock goes offline and once when it comes back."""
+        if self.lock.online == self._lock_online:
+            return
+        self._lock_online = self.lock.online
+        if self._lock_online:
+            _LOGGER.info("LOQED lock %s is back online", self.device_name)
+        else:
+            _LOGGER.info("LOQED lock %s is unavailable", self.device_name)
 
     async def ensure_webhooks(self) -> None:
         """Register webhook on LOQED bridge."""
