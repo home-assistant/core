@@ -25,11 +25,61 @@
       "warning": {
         "name": "Warning",
         "state_attributes": {
+          "change_id": {
+            "name": "Change ID"
+          },
+          "course_id": {
+            "name": "Course ID"
+          },
+          "end": {
+            "name": "End"
+          },
           "event_type": {
             "state": {
               "issued": "Issued",
               "updated": "Updated"
             }
+          },
+          "impacts": {
+            "name": "Impacts"
+          },
+          "level": {
+            "name": "Level",
+            "state": {
+              "orange": "[%key:component::geosphere_austria_warnings::entity::sensor::active_warning_level::state::orange%]",
+              "red": "[%key:component::geosphere_austria_warnings::entity::sensor::active_warning_level::state::red%]",
+              "yellow": "[%key:component::geosphere_austria_warnings::entity::sensor::active_warning_level::state::yellow%]"
+            }
+          },
+          "meteo_text": {
+            "name": "Meteorological description"
+          },
+          "recommendations": {
+            "name": "Recommendations"
+          },
+          "start": {
+            "name": "Start"
+          },
+          "text": {
+            "name": "Text"
+          },
+          "type": {
+            "name": "Type",
+            "state": {
+              "black_ice": "Black ice",
+              "cold": "Cold",
+              "heat": "Heat",
+              "rain": "Rain",
+              "snow": "Snow",
+              "storm": "Storm",
+              "thunderstorm": "Thunderstorm"
+            }
+          },
+          "update_reason": {
+            "name": "Update reason"
+          },
+          "warning_id": {
+            "name": "Warning ID"
           }
         }
       }
