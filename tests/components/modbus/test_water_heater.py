@@ -35,25 +35,21 @@ from homeassistant.components.modbus.const import (
     DataType,
 )
 from homeassistant.components.water_heater import (
-    ATTR_CURRENT_TEMPERATURE,
-    ATTR_MAX_TEMP,
-    ATTR_MIN_TEMP,
-    ATTR_OPERATION_LIST,
-    ATTR_OPERATION_MODE,
     DOMAIN as WATER_HEATER_DOMAIN,
-    SERVICE_SET_OPERATION_MODE,
-    SERVICE_SET_TEMPERATURE,
     STATE_ECO,
     STATE_ELECTRIC,
     STATE_GAS,
     STATE_HEAT_PUMP,
     STATE_PERFORMANCE,
+    WaterHeaterCapabilityAttribute,
     WaterHeaterEntityFeature,
+    WaterHeaterService,
+    WaterHeaterServiceArgument,
+    WaterHeaterStateAttribute,
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_SUPPORTED_FEATURES,
-    ATTR_TEMPERATURE,
     CONF_ADDRESS,
     CONF_COUNT,
     CONF_NAME,
@@ -63,12 +59,11 @@ from homeassistant.const import (
     CONF_SLAVE,
     CONF_STRUCTURE,
     CONF_TEMPERATURE_UNIT,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
     STATE_OFF,
     STATE_ON,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
+    TargetKey,
 )
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
@@ -239,7 +234,10 @@ async def test_config_features(
     """Test the supported features and operation list built from the config."""
     state = hass.states.get(ENTITY_ID)
     assert state.attributes[ATTR_SUPPORTED_FEATURES] == features
-    assert state.attributes.get(ATTR_OPERATION_LIST) == operation_list
+    assert (
+        state.attributes.get(WaterHeaterCapabilityAttribute.OPERATION_LIST)
+        == operation_list
+    )
 
 
 @pytest.mark.parametrize(
@@ -383,8 +381,8 @@ async def test_update_state(
     )
     state = hass.states.get(ENTITY_ID)
     assert state.state == expected_state
-    assert state.attributes[ATTR_CURRENT_TEMPERATURE] == 42
-    assert state.attributes[ATTR_TEMPERATURE] == 55
+    assert state.attributes[WaterHeaterStateAttribute.CURRENT_TEMPERATURE] == 42
+    assert state.attributes[WaterHeaterStateAttribute.TARGET_TEMPERATURE] == 55
 
 
 @pytest.mark.parametrize(
@@ -436,8 +434,8 @@ async def test_update_scale_and_offset(
         blocking=True,
     )
     state = hass.states.get(ENTITY_ID)
-    assert state.attributes[ATTR_CURRENT_TEMPERATURE] == current
-    assert state.attributes[ATTR_TEMPERATURE] == target
+    assert state.attributes[WaterHeaterStateAttribute.CURRENT_TEMPERATURE] == current
+    assert state.attributes[WaterHeaterStateAttribute.TARGET_TEMPERATURE] == target
 
 
 @pytest.mark.parametrize(
@@ -618,8 +616,11 @@ async def test_set_temperature(
     """Test writing the target temperature."""
     await hass.services.async_call(
         WATER_HEATER_DOMAIN,
-        SERVICE_SET_TEMPERATURE,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_TEMPERATURE: temperature},
+        WaterHeaterService.SET_TEMPERATURE,
+        {
+            TargetKey.ENTITY_ID: ENTITY_ID,
+            WaterHeaterServiceArgument.TEMPERATURE: temperature,
+        },
         blocking=True,
     )
     assert getattr(mock_modbus_ha, write_call).call_args_list == [expected_call]
@@ -645,11 +646,11 @@ async def test_set_temperature_with_operation_mode(
     """Test setting the target temperature together with the operation mode."""
     await hass.services.async_call(
         WATER_HEATER_DOMAIN,
-        SERVICE_SET_TEMPERATURE,
+        WaterHeaterService.SET_TEMPERATURE,
         {
-            ATTR_ENTITY_ID: ENTITY_ID,
-            ATTR_TEMPERATURE: 50,
-            ATTR_OPERATION_MODE: STATE_ECO,
+            TargetKey.ENTITY_ID: ENTITY_ID,
+            WaterHeaterServiceArgument.TEMPERATURE: 50,
+            WaterHeaterServiceArgument.OPERATION_MODE: STATE_ECO,
         },
         blocking=True,
     )
@@ -680,11 +681,11 @@ async def test_set_temperature_with_invalid_operation_mode(
     with pytest.raises(ServiceValidationError):
         await hass.services.async_call(
             WATER_HEATER_DOMAIN,
-            SERVICE_SET_TEMPERATURE,
+            WaterHeaterService.SET_TEMPERATURE,
             {
-                ATTR_ENTITY_ID: ENTITY_ID,
-                ATTR_TEMPERATURE: 50,
-                ATTR_OPERATION_MODE: STATE_GAS,
+                TargetKey.ENTITY_ID: ENTITY_ID,
+                WaterHeaterServiceArgument.TEMPERATURE: 50,
+                WaterHeaterServiceArgument.OPERATION_MODE: STATE_GAS,
             },
             blocking=True,
         )
@@ -719,11 +720,11 @@ async def test_set_temperature_out_of_range(
     with pytest.raises(ServiceValidationError, match="Accepted range is 40"):
         await hass.services.async_call(
             WATER_HEATER_DOMAIN,
-            SERVICE_SET_TEMPERATURE,
+            WaterHeaterService.SET_TEMPERATURE,
             {
-                ATTR_ENTITY_ID: ENTITY_ID,
-                ATTR_TEMPERATURE: temperature,
-                ATTR_OPERATION_MODE: STATE_ECO,
+                TargetKey.ENTITY_ID: ENTITY_ID,
+                WaterHeaterServiceArgument.TEMPERATURE: temperature,
+                WaterHeaterServiceArgument.OPERATION_MODE: STATE_ECO,
             },
             blocking=True,
         )
@@ -762,8 +763,11 @@ async def test_set_temperature_displayed_limit(
     """Test the displayed limits are accepted and written as the native limits."""
     await hass.services.async_call(
         WATER_HEATER_DOMAIN,
-        SERVICE_SET_TEMPERATURE,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_TEMPERATURE: temperature},
+        WaterHeaterService.SET_TEMPERATURE,
+        {
+            TargetKey.ENTITY_ID: ENTITY_ID,
+            WaterHeaterServiceArgument.TEMPERATURE: temperature,
+        },
         blocking=True,
     )
     assert mock_modbus_ha.write_register.call_args_list == [
@@ -804,8 +808,8 @@ async def test_temperature_limits(
 ) -> None:
     """Test the default limits follow the temperature unit, shown in Celsius."""
     state = hass.states.get(ENTITY_ID)
-    assert state.attributes[ATTR_MIN_TEMP] == min_temp
-    assert state.attributes[ATTR_MAX_TEMP] == max_temp
+    assert state.attributes[WaterHeaterCapabilityAttribute.MIN_TEMP] == min_temp
+    assert state.attributes[WaterHeaterCapabilityAttribute.MAX_TEMP] == max_temp
 
 
 @pytest.mark.parametrize(
@@ -818,8 +822,8 @@ async def test_set_temperature_fahrenheit(
     """Test a usual target (50 °C = 122 °F) is accepted with the default limits."""
     await hass.services.async_call(
         WATER_HEATER_DOMAIN,
-        SERVICE_SET_TEMPERATURE,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_TEMPERATURE: 50},
+        WaterHeaterService.SET_TEMPERATURE,
+        {TargetKey.ENTITY_ID: ENTITY_ID, WaterHeaterServiceArgument.TEMPERATURE: 50},
         blocking=True,
     )
     assert mock_modbus_ha.write_register.call_args_list == [
@@ -959,8 +963,11 @@ async def test_set_operation_mode(
     """Test writing the operation mode."""
     await hass.services.async_call(
         WATER_HEATER_DOMAIN,
-        SERVICE_SET_OPERATION_MODE,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_OPERATION_MODE: operation_mode},
+        WaterHeaterService.SET_OPERATION_MODE,
+        {
+            TargetKey.ENTITY_ID: ENTITY_ID,
+            WaterHeaterServiceArgument.OPERATION_MODE: operation_mode,
+        },
         blocking=True,
     )
     assert mock_modbus_ha.write_register.call_args_list == register_calls
@@ -991,8 +998,11 @@ async def test_set_operation_mode_write_registers(
     """Test writing the operation mode with write multiple registers."""
     await hass.services.async_call(
         WATER_HEATER_DOMAIN,
-        SERVICE_SET_OPERATION_MODE,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_OPERATION_MODE: STATE_ECO},
+        WaterHeaterService.SET_OPERATION_MODE,
+        {
+            TargetKey.ENTITY_ID: ENTITY_ID,
+            WaterHeaterServiceArgument.OPERATION_MODE: STATE_ECO,
+        },
         blocking=True,
     )
     assert mock_modbus_ha.write_registers.call_args_list == [
@@ -1011,7 +1021,7 @@ async def test_set_operation_mode_write_registers(
                     {**BASE_CONFIG, CONF_ONOFF_COIL: ONOFF_ADDRESS},
                 ]
             },
-            SERVICE_TURN_ON,
+            WaterHeaterService.TURN_ON,
             "write_coil",
             1,
             id="coil_on",
@@ -1022,7 +1032,7 @@ async def test_set_operation_mode_write_registers(
                     {**BASE_CONFIG, CONF_ONOFF_COIL: ONOFF_ADDRESS},
                 ]
             },
-            SERVICE_TURN_OFF,
+            WaterHeaterService.TURN_OFF,
             "write_coil",
             0,
             id="coil_off",
@@ -1038,7 +1048,7 @@ async def test_set_operation_mode_write_registers(
                     },
                 ]
             },
-            SERVICE_TURN_ON,
+            WaterHeaterService.TURN_ON,
             "write_register",
             5,
             id="register_on",
@@ -1054,7 +1064,7 @@ async def test_set_operation_mode_write_registers(
                     },
                 ]
             },
-            SERVICE_TURN_OFF,
+            WaterHeaterService.TURN_OFF,
             "write_register",
             6,
             id="register_off",
@@ -1064,7 +1074,7 @@ async def test_set_operation_mode_write_registers(
 async def test_turn_on_off(
     hass: HomeAssistant,
     mock_modbus_ha: mock.AsyncMock,
-    service: str,
+    service: WaterHeaterService,
     write_call: str,
     value: int,
 ) -> None:
@@ -1072,7 +1082,7 @@ async def test_turn_on_off(
     await hass.services.async_call(
         WATER_HEATER_DOMAIN,
         service,
-        {ATTR_ENTITY_ID: ENTITY_ID},
+        {TargetKey.ENTITY_ID: ENTITY_ID},
         blocking=True,
     )
     getattr(mock_modbus_ha, write_call).assert_called_once_with(
