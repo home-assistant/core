@@ -164,6 +164,34 @@ async def test_authentication_failure_v2(
     assert caplog.record_tuples == AUTHENTICATION_TESTS[exception]
 
 
+async def test_location_idx_out_of_range(
+    hass: HomeAssistant,
+    config: dict[str, str],
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test the log of an invalid location_idx keeps the untranslated message."""
+
+    with (
+        patch(
+            "evohomeasync2.auth.CredentialsManagerBase._post_request",
+            mock_post_request("default"),
+        ),
+        patch("_evohome.auth.AbstractAuth._make_request", mock_make_request("default")),
+    ):
+        # the default install has only one location
+        result = await async_setup_component(
+            hass, DOMAIN, {DOMAIN: {**config, "location_idx": 1}}
+        )
+
+    assert result is False
+
+    # the message of the UpdateFailed, not that of its cause (an IndexError)
+    assert "Failed to fetch initial data:" in caplog.text
+    assert "'location_idx' = 1," in caplog.text
+    assert "the valid range is 0-0" in caplog.text
+    assert "list index out of range" not in caplog.text
+
+
 async def test_bad_credentials_v1(
     hass: HomeAssistant,
     config: dict[str, str],
