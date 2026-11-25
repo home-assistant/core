@@ -821,7 +821,11 @@ async def test_initiate_backup_with_agent_error(
     }
 
     await ws_client.send_json_auto_id(
-        {"type": "backup/config/update", "retention": {"copies": 1, "days": None}}
+        {
+            "type": "backup/config/update",
+            "create_backup": {"agent_ids": agent_ids},
+            "retention": {"copies": 1, "days": None},
+        }
     )
     result = await ws_client.receive_json()
     assert result["success"]

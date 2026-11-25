@@ -1625,7 +1625,7 @@ async def test_start_timer_with_sentence_trigger_validation(
         mock_agent.async_recognize_sentence_trigger = AsyncMock(
             return_value=MagicMock(),
         )
-        mock_agent.async_recognize_intent = AsyncMock(return_value=None)
+        mock_agent.async_recognize_intents = AsyncMock(return_value=[])
         mock_get_agent.return_value = mock_agent
 
         result = await intent.async_handle(

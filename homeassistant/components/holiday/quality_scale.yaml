@@ -74,10 +74,10 @@ rules:
   entity-translations:
     status: exempt
     comment: The only entity uses the device name directly via _attr_name = None.
-  exception-translations: todo
+  exception-translations: done
   icon-translations: todo
   reconfiguration-flow: done
-  repair-issues: todo
+  repair-issues: done
   stale-devices: todo
 
   # Platinum

@@ -232,20 +232,12 @@ class EngieBePriceSensor(CoordinatorEntity[EngieBePricesCoordinator], SensorEnti
         return price
 
 
-_EPEX_PRECISION = 4
-
-
 @dataclass(frozen=True, kw_only=True)
 class EngieBeEpexSensorEntityDescription(SensorEntityDescription):
     """Describes an EPEX day-ahead price sensor entity."""
 
     granularity: EpexGranularity
-    value_fn: Callable[[EngieBeEpexPriceSensor], float | None]
-
-
-def _epex_slot_value(slot: EpexSlot | None) -> float | None:
-    """Return the EUR/kWh value of a slot."""
-    return None if slot is None else slot.value_eur_per_kwh
+    slot_fn: Callable[[EngieBeEpexPriceSensor], EpexSlot | None]
 
 
 _EPEX_SENSORS: tuple[EngieBeEpexSensorEntityDescription, ...] = (
@@ -254,50 +246,50 @@ _EPEX_SENSORS: tuple[EngieBeEpexSensorEntityDescription, ...] = (
         translation_key="epex_current_hour",
         granularity=EpexGranularity.HOURLY,
         state_class=SensorStateClass.MEASUREMENT,
-        value_fn=lambda entity: _epex_slot_value(entity.current_slot()),
+        slot_fn=lambda entity: entity.current_slot(),
     ),
     EngieBeEpexSensorEntityDescription(
         key="epex_next_hour",
         translation_key="epex_next_hour",
         granularity=EpexGranularity.HOURLY,
-        value_fn=lambda entity: _epex_slot_value(entity.next_slot()),
+        slot_fn=lambda entity: entity.next_slot(),
     ),
     EngieBeEpexSensorEntityDescription(
         key="epex_low_today_hour",
         translation_key="epex_low_today_hour",
         granularity=EpexGranularity.HOURLY,
-        value_fn=lambda entity: _epex_slot_value(entity.extreme_slot(min)),
+        slot_fn=lambda entity: entity.extreme_slot(min),
     ),
     EngieBeEpexSensorEntityDescription(
         key="epex_high_today_hour",
         translation_key="epex_high_today_hour",
         granularity=EpexGranularity.HOURLY,
-        value_fn=lambda entity: _epex_slot_value(entity.extreme_slot(max)),
+        slot_fn=lambda entity: entity.extreme_slot(max),
     ),
     EngieBeEpexSensorEntityDescription(
         key="epex_current_quarter_hour",
         translation_key="epex_current_quarter_hour",
         granularity=EpexGranularity.QUARTER_HOURLY,
         state_class=SensorStateClass.MEASUREMENT,
-        value_fn=lambda entity: _epex_slot_value(entity.current_slot()),
+        slot_fn=lambda entity: entity.current_slot(),
     ),
     EngieBeEpexSensorEntityDescription(
         key="epex_next_quarter_hour",
         translation_key="epex_next_quarter_hour",
         granularity=EpexGranularity.QUARTER_HOURLY,
-        value_fn=lambda entity: _epex_slot_value(entity.next_slot()),
+        slot_fn=lambda entity: entity.next_slot(),
     ),
     EngieBeEpexSensorEntityDescription(
         key="epex_low_today_quarter_hour",
         translation_key="epex_low_today_quarter_hour",
         granularity=EpexGranularity.QUARTER_HOURLY,
-        value_fn=lambda entity: _epex_slot_value(entity.extreme_slot(min)),
+        slot_fn=lambda entity: entity.extreme_slot(min),
     ),
     EngieBeEpexSensorEntityDescription(
         key="epex_high_today_quarter_hour",
         translation_key="epex_high_today_quarter_hour",
         granularity=EpexGranularity.QUARTER_HOURLY,
-        value_fn=lambda entity: _epex_slot_value(entity.extreme_slot(max)),
+        slot_fn=lambda entity: entity.extreme_slot(max),
     ),
 )
 
@@ -308,7 +300,7 @@ class EngieBeEpexPriceSensor(CoordinatorEntity[EngieBeEpexCoordinator], SensorEn
     _attr_attribution = ATTRIBUTION
     _attr_has_entity_name = True
     _attr_native_unit_of_measurement = _UNIT
-    _attr_suggested_display_precision = _EPEX_PRECISION
+    _attr_suggested_display_precision = 4
 
     entity_description: EngieBeEpexSensorEntityDescription
 
@@ -354,7 +346,8 @@ class EngieBeEpexPriceSensor(CoordinatorEntity[EngieBeEpexCoordinator], SensorEn
     @override
     def native_value(self) -> float | None:
         """Return the EPEX day-ahead price."""
-        return self.entity_description.value_fn(self)
+        slot = self.entity_description.slot_fn(self)
+        return None if slot is None else slot.value_eur_per_kwh
 
 
 def _monthly_peak_value[_T](
