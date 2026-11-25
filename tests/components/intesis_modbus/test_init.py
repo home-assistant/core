@@ -2,16 +2,18 @@
 
 from unittest.mock import MagicMock
 
-from modbus_connection import ModbusTimeoutError
+from modbus_connection import ModbusSerialParams, ModbusTcpParams, ModbusTimeoutError
 from modbus_connection.mock import MockModbusConnection
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.intesis_modbus.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import STATE_UNAVAILABLE
+from homeassistant.const import CONF_TYPE, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
+
+from . import MOCK_ENTRY_DATA, MOCK_ENTRY_OPTIONS, MOCK_TCP_ENTRY_DATA
 
 
 async def test_setup_and_unload(
@@ -91,3 +93,41 @@ async def test_wrong_model_is_setup_error(
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
+
+
+async def test_entry_from_before_the_connection_type_is_migrated(
+    hass: HomeAssistant, mock_get_unit: MagicMock
+) -> None:
+    """An entry made before network links existed is marked as a serial one."""
+    data = {k: v for k, v in MOCK_ENTRY_DATA.items() if k != CONF_TYPE}
+    entry = MockConfigEntry(
+        domain=DOMAIN, data=data, options=MOCK_ENTRY_OPTIONS, minor_version=1
+    )
+    entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done(wait_background_tasks=True)
+    assert entry.state is ConfigEntryState.LOADED
+    assert entry.minor_version == 2
+    assert entry.data == MOCK_ENTRY_DATA
+    assert mock_get_unit.call_args.args[2] == ModbusSerialParams(
+        device="/dev/ttyUSB0", baudrate=9600, bytesize=8, parity="N", stopbits=2
+    )
+
+
+async def test_setup_through_a_tcp_bridge(
+    hass: HomeAssistant, mock_get_unit: MagicMock
+) -> None:
+    """An entry for a gateway behind a bridge connects to its host and port."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data=MOCK_TCP_ENTRY_DATA,
+        options=MOCK_ENTRY_OPTIONS,
+        minor_version=2,
+    )
+    entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done(wait_background_tasks=True)
+    assert entry.state is ConfigEntryState.LOADED
+    assert mock_get_unit.call_args.args[2] == ModbusTcpParams(
+        host="192.168.1.50", port=502
+    )

@@ -56,6 +56,7 @@ def mock_config_entry(entry_options: dict[str, Any]) -> MockConfigEntry:
         data=MOCK_ENTRY_DATA,
         options=entry_options,
         title="INMBSMHI001R000",
+        minor_version=2,
     )
 
 

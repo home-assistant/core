@@ -3,11 +3,13 @@
 import asyncio
 from collections.abc import AsyncIterator, Callable
 from contextlib import asynccontextmanager
+from typing import Any
 from unittest.mock import AsyncMock, MagicMock, _patch, patch
 
 from modbus_connection import (
     IllegalDataAddressError,
     ModbusSerialParams,
+    ModbusTcpParams,
     ModbusTimeoutError,
     ServerDeviceBusyError,
 )
@@ -23,7 +25,7 @@ from homeassistant.components.intesis_modbus.const import (
     DOMAIN,
 )
 from homeassistant.config_entries import SOURCE_USER, ConfigEntryState, ConfigFlowResult
-from homeassistant.const import CONF_DEVICE, Platform
+from homeassistant.const import CONF_DEVICE, CONF_HOST, CONF_PORT, CONF_TYPE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType, UnknownFlow
 from homeassistant.exceptions import HomeAssistantError
@@ -31,6 +33,8 @@ from homeassistant.exceptions import HomeAssistantError
 from . import (
     MOCK_ENTRY_DATA,
     MOCK_ENTRY_OPTIONS,
+    MOCK_TCP_ENTRY_DATA,
+    MOCK_TCP_INPUT,
     MOCK_USER_INPUT,
     seed_initialising_single_unit,
     seed_single_unit,
@@ -44,16 +48,21 @@ def _patch_temporary_unit(
     device: str = "/dev/ttyUSB0",
     baudrate: int = 9600,
     on_probe: Callable[[], None] | None = None,
+    expected: ModbusSerialParams | ModbusTcpParams | None = None,
 ) -> _patch:
     """Stand in for async_get_temporary_unit, handing out a unit on connection."""
+    if expected is None:
+        expected = ModbusSerialParams(
+            device=device, baudrate=baudrate, bytesize=8, parity="N", stopbits=2
+        )
 
     @asynccontextmanager
     async def _get_temporary_unit(
-        hass: HomeAssistant, params: ModbusSerialParams, unit_id: int
+        hass: HomeAssistant,
+        params: ModbusSerialParams | ModbusTcpParams,
+        unit_id: int,
     ) -> AsyncIterator[MockModbusUnit]:
-        assert params == ModbusSerialParams(
-            device=device, baudrate=baudrate, bytesize=8, parity="N", stopbits=2
-        )
+        assert params == expected
         if on_probe is not None:
             on_probe()
         yield connection.for_unit(unit_id)
@@ -82,16 +91,45 @@ def _seeded(
     return connection
 
 
-async def _submit_link(hass: HomeAssistant) -> ConfigFlowResult:
-    """Start a user flow and submit the serial link settings."""
+async def _pick_link(
+    hass: HomeAssistant, result: ConfigFlowResult, step_id: str
+) -> ConfigFlowResult:
+    """Pick a connection type in the menu a flow opens with."""
+    assert result["type"] is FlowResultType.MENU
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"next_step_id": step_id}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == step_id
+    return result
+
+
+async def _submit_link(
+    hass: HomeAssistant,
+    step_id: str = "serial",
+    user_input: dict[str, Any] | None = None,
+) -> ConfigFlowResult:
+    """Start a user flow, pick the connection type and submit its settings.
+
+    Without settings, the serial ones of the mock gateway are submitted.
+    """
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
-    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
+    result = await _pick_link(hass, result, step_id)
     return await hass.config_entries.flow.async_configure(
-        result["flow_id"], MOCK_USER_INPUT
+        result["flow_id"], MOCK_USER_INPUT if user_input is None else user_input
     )
+
+
+async def _start_reconfigure(
+    hass: HomeAssistant, entry: MockConfigEntry, step_id: str = "reconfigure_serial"
+) -> ConfigFlowResult:
+    """Start a reconfigure flow and pick the connection type."""
+    result = await entry.start_reconfigure_flow(hass)
+    assert result["step_id"] == "reconfigure"
+    return await _pick_link(hass, result, step_id)
 
 
 async def _finish_features(
@@ -132,7 +170,7 @@ async def test_initialising_gateway_can_be_retried(hass: HomeAssistant) -> None:
     with _patch_temporary_unit(connection):
         result = await _submit_link(hass)
         assert result["type"] is FlowResultType.FORM
-        assert result["step_id"] == "user"
+        assert result["step_id"] == "serial"
         assert result["errors"] == {"base": "gateway_starting"}
         seed_single_unit(connection.for_unit(1))
         result = await hass.config_entries.flow.async_configure(
@@ -193,7 +231,7 @@ async def test_other_device_on_the_line_can_be_corrected(hass: HomeAssistant) ->
     with _patch_temporary_unit(connection):
         result = await _submit_link(hass)
         assert result["type"] is FlowResultType.FORM
-        assert result["step_id"] == "user"
+        assert result["step_id"] == "serial"
         assert result["errors"] == {"base": "unsupported_device"}
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], {**MOCK_USER_INPUT, CONF_UNIT_ID: 2}
@@ -312,11 +350,8 @@ async def test_second_gateway_on_same_port(
     connection = MockModbusConnection()
     seed_single_unit(connection.for_unit(2))
     with _patch_temporary_unit(connection):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_USER}
-        )
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {**MOCK_USER_INPUT, CONF_UNIT_ID: 2}
+        result = await _submit_link(
+            hass, user_input={**MOCK_USER_INPUT, CONF_UNIT_ID: 2}
         )
     result = await _finish_features(hass, result)
     assert result["type"] is FlowResultType.CREATE_ENTRY
@@ -333,9 +368,7 @@ async def test_reconfigure_moves_the_gateway_to_another_port(
 ) -> None:
     """Reconfiguring points the entry at the port the gateway moved to."""
     mock_config_entry.add_to_hass(hass)
-    result = await mock_config_entry.start_reconfigure_flow(hass)
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "reconfigure"
+    result = await _start_reconfigure(hass, mock_config_entry)
     assert (
         get_schema_suggested_value(result["data_schema"].schema, CONF_DEVICE)
         == "/dev/ttyUSB0"
@@ -361,7 +394,7 @@ async def test_reconfigure_keeps_the_fields_left_out(hass: HomeAssistant) -> Non
     entry.add_to_hass(hass)
     connection = MockModbusConnection()
     seed_single_unit(connection.for_unit(2))
-    result = await entry.start_reconfigure_flow(hass)
+    result = await _start_reconfigure(hass, entry)
     with _patch_temporary_unit(connection, "/dev/ttyUSB1", baudrate=19200):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], {CONF_DEVICE: "/dev/ttyUSB1"}
@@ -384,13 +417,13 @@ async def test_reconfigure_can_be_retried(
     mock_config_entry.add_to_hass(hass)
     connection = _seeded()
     connection.for_unit(1).fail_requests(ModbusTimeoutError())
-    result = await mock_config_entry.start_reconfigure_flow(hass)
+    result = await _start_reconfigure(hass, mock_config_entry)
     with _patch_temporary_unit(connection, "/dev/ttyUSB1"):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], MOVED_INPUT
         )
         assert result["type"] is FlowResultType.FORM
-        assert result["step_id"] == "reconfigure"
+        assert result["step_id"] == "reconfigure_serial"
         assert result["errors"] == {"base": "cannot_connect"}
         connection.for_unit(1).fail_requests(None)
         result = await hass.config_entries.flow.async_configure(
@@ -410,7 +443,7 @@ async def test_reconfigure_picks_up_the_temperature_format(
     connection = _seeded()
     for address, value in {4: 22, 5: 20, 23: 22, 24: 30, 25: 16}.items():
         connection.for_unit(1).holding[address] = value
-    result = await mock_config_entry.start_reconfigure_flow(hass)
+    result = await _start_reconfigure(hass, mock_config_entry)
     with _patch_temporary_unit(connection):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], MOCK_USER_INPUT
@@ -430,7 +463,7 @@ async def test_reconfigure_onto_another_entry_aborts(
         data={**MOCK_ENTRY_DATA, CONF_DEVICE: "/dev/ttyUSB1"},
         options=MOCK_ENTRY_OPTIONS,
     ).add_to_hass(hass)
-    result = await mock_config_entry.start_reconfigure_flow(hass)
+    result = await _start_reconfigure(hass, mock_config_entry)
     with _patch_temporary_unit(_seeded(), "/dev/ttyUSB1"):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], MOVED_INPUT
@@ -453,7 +486,7 @@ async def test_reconfigure_recheck_finds_an_entry_added_meanwhile(
             options=MOCK_ENTRY_OPTIONS,
         ).add_to_hass(hass)
 
-    result = await mock_config_entry.start_reconfigure_flow(hass)
+    result = await _start_reconfigure(hass, mock_config_entry)
     with _patch_temporary_unit(_seeded(), "/dev/ttyUSB1", on_probe=_claim):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], MOVED_INPUT
@@ -473,7 +506,7 @@ async def test_reconfigure_changes_the_baud_rate_of_a_loaded_entry(
 ) -> None:
     """The entry lets go of the port, which it holds at the old baud rate."""
     states: list[ConfigEntryState] = []
-    result = await init_integration.start_reconfigure_flow(hass)
+    result = await _start_reconfigure(hass, init_integration)
     with _patch_temporary_unit(
         _seeded(),
         baudrate=19200,
@@ -505,7 +538,7 @@ async def test_reconfigure_changes_the_baud_rate_of_an_entry_retrying_setup(
 
     states: list[ConfigEntryState] = []
     mock_connection.for_unit(1).fail_requests(None)
-    result = await mock_config_entry.start_reconfigure_flow(hass)
+    result = await _start_reconfigure(hass, mock_config_entry)
     with _patch_temporary_unit(
         _seeded(),
         baudrate=19200,
@@ -530,7 +563,7 @@ async def test_reconfigure_puts_a_loaded_entry_back_when_the_probe_fails(
     states: list[ConfigEntryState] = []
     connection = _seeded()
     connection.for_unit(1).fail_requests(ModbusTimeoutError())
-    result = await init_integration.start_reconfigure_flow(hass)
+    result = await _start_reconfigure(hass, init_integration)
     with _patch_temporary_unit(
         connection,
         baudrate=19200,
@@ -561,7 +594,7 @@ async def test_reconfigure_keeps_a_loaded_entry_running_on_another_port(
 ) -> None:
     """Probing another port does not need the entry to let go of its own."""
     states: list[ConfigEntryState] = []
-    result = await init_integration.start_reconfigure_flow(hass)
+    result = await _start_reconfigure(hass, init_integration)
     with _patch_temporary_unit(
         _seeded(),
         "/dev/ttyUSB1",
@@ -582,7 +615,7 @@ async def test_reconfigure_recovers_from_a_port_in_use(
 ) -> None:
     """A port another entry holds with other settings can be tried again."""
     mock_config_entry.add_to_hass(hass)
-    result = await mock_config_entry.start_reconfigure_flow(hass)
+    result = await _start_reconfigure(hass, mock_config_entry)
     with patch(
         TARGET, return_value=_RaisingTemporaryUnit(HomeAssistantError("in use"))
     ):
@@ -590,7 +623,7 @@ async def test_reconfigure_recovers_from_a_port_in_use(
             result["flow_id"], MOVED_INPUT
         )
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "reconfigure"
+    assert result["step_id"] == "reconfigure_serial"
     assert result["errors"] == {"base": "device_in_use"}
     with _patch_temporary_unit(_seeded(), "/dev/ttyUSB1"):
         result = await hass.config_entries.flow.async_configure(
@@ -610,7 +643,7 @@ async def test_reconfigure_recovers_from_another_device_on_the_line(
     connection = _seeded()
     connection.for_unit(1).holding[49] = 0x7777
     seed_single_unit(connection.for_unit(2))
-    result = await mock_config_entry.start_reconfigure_flow(hass)
+    result = await _start_reconfigure(hass, mock_config_entry)
     with _patch_temporary_unit(connection, "/dev/ttyUSB1"):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], MOVED_INPUT
@@ -636,7 +669,7 @@ async def test_reconfigure_recovers_from_a_gateway_that_is_starting(
     """A gateway that is still starting up is saved once it reports values."""
     mock_config_entry.add_to_hass(hass)
     connection = _seeded(seed_initialising_single_unit)
-    result = await mock_config_entry.start_reconfigure_flow(hass)
+    result = await _start_reconfigure(hass, mock_config_entry)
     with _patch_temporary_unit(connection, "/dev/ttyUSB1"):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], MOVED_INPUT
@@ -659,7 +692,7 @@ async def test_reconfigure_puts_a_loaded_entry_back_on_an_unsupported_brand(
     states: list[ConfigEntryState] = []
     connection = _seeded()
     connection.for_unit(1).holding[49] = 0x0801
-    result = await init_integration.start_reconfigure_flow(hass)
+    result = await _start_reconfigure(hass, init_integration)
     with _patch_temporary_unit(
         connection,
         baudrate=19200,
@@ -686,7 +719,7 @@ async def test_reconfigure_puts_a_loaded_entry_back_when_the_gateway_was_claimed
             domain=DOMAIN, data=MOCK_ENTRY_DATA, options=MOCK_ENTRY_OPTIONS
         ).add_to_hass(hass)
 
-    result = await init_integration.start_reconfigure_flow(hass)
+    result = await _start_reconfigure(hass, init_integration)
     with _patch_temporary_unit(_seeded(), baudrate=19200, on_probe=_claim):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], FASTER_INPUT
@@ -714,7 +747,7 @@ async def test_reconfigure_finishes_when_the_request_is_cancelled(
 
     connection = _seeded()
     connection.for_unit(1).fail_requests(ModbusTimeoutError())
-    result = await init_integration.start_reconfigure_flow(hass)
+    result = await _start_reconfigure(hass, init_integration)
     with (
         patch.object(
             hass.config_entries, "async_unload_platforms_or_raise", _slow_unload
@@ -738,7 +771,7 @@ async def test_reconfigure_aborts_when_the_entry_does_not_unload(
     hass: HomeAssistant, init_integration: MockConfigEntry
 ) -> None:
     """An entry that keeps holding its port cannot be probed at another rate."""
-    result = await init_integration.start_reconfigure_flow(hass)
+    result = await _start_reconfigure(hass, init_integration)
     with (
         patch.object(hass.config_entries, "async_unload", return_value=False),
         patch(TARGET) as mock_probe,
@@ -756,7 +789,7 @@ async def test_reconfigure_saves_nothing_when_the_flow_was_removed(
     hass: HomeAssistant, init_integration: MockConfigEntry
 ) -> None:
     """A flow aborted during the probe does not change the entry afterwards."""
-    result = await init_integration.start_reconfigure_flow(hass)
+    result = await _start_reconfigure(hass, init_integration)
     flow_id = result["flow_id"]
     with (
         _patch_temporary_unit(
@@ -787,7 +820,7 @@ async def test_reconfigure_saves_nothing_when_cancelled_during_the_probe(
         await proceed.wait()
         yield _seeded().for_unit(unit_id)
 
-    result = await init_integration.start_reconfigure_flow(hass)
+    result = await _start_reconfigure(hass, init_integration)
     with patch(TARGET, side_effect=_get_temporary_unit):
         request = hass.async_create_task(
             hass.config_entries.flow.async_configure(result["flow_id"], FASTER_INPUT)
@@ -817,7 +850,7 @@ async def test_reconfigure_survives_a_reload_during_the_probe(
         await hass.config_entries.async_setup(init_integration.entry_id)
         yield connection.for_unit(unit_id)
 
-    result = await init_integration.start_reconfigure_flow(hass)
+    result = await _start_reconfigure(hass, init_integration)
     with patch(TARGET, side_effect=_get_temporary_unit):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], FASTER_INPUT
@@ -834,3 +867,130 @@ async def test_reconfigure_survives_a_reload_during_the_probe(
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reconfigure_successful"
     assert init_integration.data == {**MOCK_ENTRY_DATA, CONF_BAUDRATE: 19200}
+
+
+TCP_PARAMS = ModbusTcpParams(host="192.168.1.50", port=502)
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_full_flow_through_a_tcp_bridge(hass: HomeAssistant) -> None:
+    """A gateway behind a Modbus TCP bridge is set up from its host and port."""
+    with _patch_temporary_unit(_seeded(), expected=TCP_PARAMS):
+        result = await _submit_link(hass, "tcp", MOCK_TCP_INPUT)
+    result = await _finish_features(hass, result)
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "INMBSMHI001R000"
+    assert result["data"] == MOCK_TCP_ENTRY_DATA
+    assert result["options"] == MOCK_ENTRY_OPTIONS
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_tcp_bridge_that_does_not_answer_can_be_retried(
+    hass: HomeAssistant,
+) -> None:
+    """A silent bridge shows cannot_connect and the flow can be retried."""
+    connection = _seeded()
+    connection.for_unit(1).fail_requests(ModbusTimeoutError())
+    with _patch_temporary_unit(connection, expected=TCP_PARAMS):
+        result = await _submit_link(hass, "tcp", MOCK_TCP_INPUT)
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "tcp"
+        assert result["errors"] == {"base": "cannot_connect"}
+        connection.for_unit(1).fail_requests(None)
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], MOCK_TCP_INPUT
+        )
+    result = await _finish_features(hass, result)
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"] == MOCK_TCP_ENTRY_DATA
+
+
+async def test_tcp_duplicate_aborts_whatever_the_case_of_the_host(
+    hass: HomeAssistant,
+) -> None:
+    """The same bridge and unit ID cannot be set up twice, however it is typed."""
+    MockConfigEntry(
+        domain=DOMAIN,
+        data={**MOCK_TCP_ENTRY_DATA, CONF_HOST: "bridge.local"},
+        options=MOCK_ENTRY_OPTIONS,
+        minor_version=2,
+    ).add_to_hass(hass)
+    result = await _submit_link(
+        hass, "tcp", {**MOCK_TCP_INPUT, CONF_HOST: " Bridge.LOCAL "}
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_reconfigure_moves_the_gateway_behind_a_tcp_bridge(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
+    """A gateway moved from a serial port to a bridge keeps its entry."""
+    mock_config_entry.add_to_hass(hass)
+    result = await _start_reconfigure(hass, mock_config_entry, "reconfigure_tcp")
+    schema = result["data_schema"].schema
+    assert get_schema_suggested_value(schema, CONF_UNIT_ID) == 1
+    assert get_schema_suggested_value(schema, CONF_HOST) is None
+    with _patch_temporary_unit(_seeded(), expected=TCP_PARAMS):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], MOCK_TCP_INPUT
+        )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert mock_config_entry.data == MOCK_TCP_ENTRY_DATA
+    assert mock_config_entry.options == MOCK_ENTRY_OPTIONS
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_reconfigure_of_a_tcp_entry_keeps_the_fields_left_out(
+    hass: HomeAssistant,
+) -> None:
+    """A submission with only a new host keeps the entry's port and unit ID."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={**MOCK_TCP_ENTRY_DATA, CONF_PORT: 4196, CONF_UNIT_ID: 2},
+        options=MOCK_ENTRY_OPTIONS,
+        minor_version=2,
+    )
+    entry.add_to_hass(hass)
+    connection = MockModbusConnection()
+    seed_single_unit(connection.for_unit(2))
+    result = await _start_reconfigure(hass, entry, "reconfigure_tcp")
+    with _patch_temporary_unit(
+        connection, expected=ModbusTcpParams(host="192.168.1.60", port=4196)
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_HOST: "192.168.1.60"}
+        )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert entry.data == {
+        **MOCK_TCP_ENTRY_DATA,
+        CONF_HOST: "192.168.1.60",
+        CONF_PORT: 4196,
+        CONF_UNIT_ID: 2,
+    }
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_reconfigure_moves_a_tcp_entry_to_a_serial_port(
+    hass: HomeAssistant,
+) -> None:
+    """A gateway moved from a bridge to a serial port drops the bridge settings."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data=MOCK_TCP_ENTRY_DATA,
+        options=MOCK_ENTRY_OPTIONS,
+        minor_version=2,
+    )
+    entry.add_to_hass(hass)
+    result = await _start_reconfigure(hass, entry)
+    with _patch_temporary_unit(_seeded()):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], MOCK_USER_INPUT
+        )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert entry.data == MOCK_ENTRY_DATA
+    assert entry.data[CONF_TYPE] == "serial"

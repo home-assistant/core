@@ -1,6 +1,7 @@
 """Config flow for the Intesis Modbus integration."""
 
 import asyncio
+from collections.abc import Mapping
 from typing import TYPE_CHECKING, Any, override
 
 from intesis_gw_modbus import GatewayModel, GatewayProbe, async_probe_gateway
@@ -14,7 +15,7 @@ from homeassistant.config_entries import (
     ConfigFlow,
     ConfigFlowResult,
 )
-from homeassistant.const import CONF_DEVICE
+from homeassistant.const import CONF_DEVICE, CONF_HOST, CONF_PORT, CONF_TYPE
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import AbortFlow
 from homeassistant.exceptions import HomeAssistantError
@@ -24,6 +25,7 @@ from homeassistant.helpers.selector import (
     NumberSelectorConfig,
     NumberSelectorMode,
     SerialPortSelector,
+    TextSelector,
 )
 
 from .const import (
@@ -33,11 +35,17 @@ from .const import (
     CONF_TEMPERATURE_FORMAT,
     CONF_UNIT_ID,
     DOMAIN,
+    TYPE_SERIAL,
+    TYPE_TCP,
 )
-from .helpers import create_modbus_params
+from .helpers import create_modbus_params, link_match
 
 DEFAULT_BAUDRATE = 9600
+DEFAULT_PORT = 502
 DEFAULT_UNIT_ID = 1
+
+STEP_RECONFIGURE_SERIAL = "reconfigure_serial"
+STEP_RECONFIGURE_TCP = "reconfigure_tcp"
 
 _BAUDRATE = probatio.All(
     NumberSelector(NumberSelectorConfig(mode=NumberSelectorMode.BOX, min=1)),
@@ -47,8 +55,12 @@ _UNIT_ID = probatio.All(
     NumberSelector(NumberSelectorConfig(mode=NumberSelectorMode.BOX, min=1, max=247)),
     probatio.Coerce(int),
 )
+_PORT = probatio.All(
+    NumberSelector(NumberSelectorConfig(mode=NumberSelectorMode.BOX, min=1, max=65535)),
+    probatio.Coerce(int),
+)
 
-STEP_USER_DATA_SCHEMA = probatio.Schema(
+STEP_SERIAL_DATA_SCHEMA = probatio.Schema(
     {
         probatio.Required(CONF_DEVICE): SerialPortSelector(),
         probatio.Required(CONF_BAUDRATE, default=DEFAULT_BAUDRATE): _BAUDRATE,
@@ -56,9 +68,35 @@ STEP_USER_DATA_SCHEMA = probatio.Schema(
     }
 )
 
+STEP_TCP_DATA_SCHEMA = probatio.Schema(
+    {
+        probatio.Required(CONF_HOST): TextSelector(),
+        probatio.Required(CONF_PORT, default=DEFAULT_PORT): _PORT,
+        probatio.Required(CONF_UNIT_ID, default=DEFAULT_UNIT_ID): _UNIT_ID,
+    }
+)
+
+# Per connection type: its form, and the fields a reconfigure must keep from
+# the entry when they are left out.
+LINK_SCHEMAS: dict[str, tuple[probatio.Schema, dict[str, Any]]] = {
+    TYPE_SERIAL: (
+        STEP_SERIAL_DATA_SCHEMA,
+        {CONF_BAUDRATE: _BAUDRATE, CONF_UNIT_ID: _UNIT_ID},
+    ),
+    TYPE_TCP: (STEP_TCP_DATA_SCHEMA, {CONF_PORT: _PORT, CONF_UNIT_ID: _UNIT_ID}),
+}
+
 STEP_FEATURES_DATA_SCHEMA = probatio.Schema(
     {probatio.Required(CONF_HAS_VANE, default=True): BooleanSelector()}
 )
+
+
+def _link_data(connection_type: str, user_input: dict[str, Any]) -> dict[str, Any]:
+    """The link settings as they are stored, with a host that compares equal."""
+    data = {CONF_TYPE: connection_type, **user_input}
+    if CONF_HOST in data:
+        data[CONF_HOST] = data[CONF_HOST].strip().lower()
+    return data
 
 
 def _entry_data(user_input: dict[str, Any], probe: GatewayProbe) -> dict[str, Any]:
@@ -77,6 +115,7 @@ class IntesisModbusConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle an Intesis Modbus config flow."""
 
     VERSION = 1
+    MINOR_VERSION = 2
 
     def __init__(self) -> None:
         """Initialize the flow."""
@@ -88,26 +127,42 @@ class IntesisModbusConfigFlow(ConfigFlow, domain=DOMAIN):
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Ask for the serial link, then probe the gateway behind it."""
+        """Let the user pick how the gateway is reached."""
+        return self.async_show_menu(
+            step_id="user", menu_options=[TYPE_SERIAL, TYPE_TCP]
+        )
+
+    async def async_step_serial(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle a gateway wired to a serial port."""
+        return await self._async_step_link(TYPE_SERIAL, user_input)
+
+    async def async_step_tcp(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle a gateway behind a Modbus TCP bridge."""
+        return await self._async_step_link(TYPE_TCP, user_input)
+
+    async def _async_step_link(
+        self, connection_type: str, user_input: dict[str, Any] | None
+    ) -> ConfigFlowResult:
+        """Ask for the link settings, then probe the gateway behind them."""
         errors: dict[str, str] = {}
         if user_input is not None:
-            self._async_abort_entries_match(
-                {
-                    CONF_DEVICE: user_input[CONF_DEVICE],
-                    CONF_UNIT_ID: user_input[CONF_UNIT_ID],
-                }
-            )
-            errors, probe = await self._async_validate(user_input)
+            data = _link_data(connection_type, user_input)
+            self._async_abort_entries_match(link_match(data))
+            errors, probe = await self._async_validate(data)
             if probe is not None:
                 self._model = probe.model
                 self._vane_reported = probe.vane_reported
-                self._data = _entry_data(user_input, probe)
+                self._data = _entry_data(data, probe)
                 return await self.async_step_features()
 
         return self.async_show_form(
-            step_id="user",
+            step_id=connection_type,
             data_schema=self.add_suggested_values_to_schema(
-                STEP_USER_DATA_SCHEMA, user_input
+                LINK_SCHEMAS[connection_type][0], user_input
             ),
             errors=errors,
         )
@@ -115,29 +170,60 @@ class IntesisModbusConfigFlow(ConfigFlow, domain=DOMAIN):
     async def async_step_reconfigure(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Point an existing entry at the serial link the gateway moved to."""
+        """Let the user pick how the gateway is reached from now on."""
+        return self.async_show_menu(
+            step_id="reconfigure",
+            menu_options=[STEP_RECONFIGURE_SERIAL, STEP_RECONFIGURE_TCP],
+        )
+
+    async def async_step_reconfigure_serial(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Reach this gateway over a serial port from now on."""
+        return await self._async_step_reconfigure_link(
+            STEP_RECONFIGURE_SERIAL, TYPE_SERIAL, user_input
+        )
+
+    async def async_step_reconfigure_tcp(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Reach this gateway through a Modbus TCP bridge from now on."""
+        return await self._async_step_reconfigure_link(
+            STEP_RECONFIGURE_TCP, TYPE_TCP, user_input
+        )
+
+    async def _async_step_reconfigure_link(
+        self, step_id: str, connection_type: str, user_input: dict[str, Any] | None
+    ) -> ConfigFlowResult:
+        """Ask for the link settings, then probe the gateway behind them."""
         reconfigure_entry = self._get_reconfigure_entry()
         errors: dict[str, str] = {}
         if user_input is not None:
             errors, result = await self._async_reconfigure(
-                reconfigure_entry, user_input
+                reconfigure_entry, _link_data(connection_type, user_input)
             )
             if result is not None:
                 return result
 
-        # A field left out keeps what the entry has, not the factory default
+        schema, kept = LINK_SCHEMAS[connection_type]
         data = reconfigure_entry.data
-        schema = STEP_USER_DATA_SCHEMA.extend(
+        if data[CONF_TYPE] == connection_type:
+            # A field left out keeps what the entry has, not the factory default
+            suggested: Mapping[str, Any] = data
+        else:
+            suggested = {CONF_UNIT_ID: data[CONF_UNIT_ID]}
+            kept = {CONF_UNIT_ID: _UNIT_ID}
+        schema = schema.extend(
             {
-                probatio.Required(
-                    CONF_BAUDRATE, default=data[CONF_BAUDRATE]
-                ): _BAUDRATE,
-                probatio.Required(CONF_UNIT_ID, default=data[CONF_UNIT_ID]): _UNIT_ID,
+                probatio.Required(key, default=data[key]): validator
+                for key, validator in kept.items()
             }
         )
         return self.async_show_form(
-            step_id="reconfigure",
-            data_schema=self.add_suggested_values_to_schema(schema, user_input or data),
+            step_id=step_id,
+            data_schema=self.add_suggested_values_to_schema(
+                schema, user_input or suggested
+            ),
             errors=errors,
         )
 
@@ -145,10 +231,7 @@ class IntesisModbusConfigFlow(ConfigFlow, domain=DOMAIN):
         self, entry: ConfigEntry, user_input: dict[str, Any]
     ) -> tuple[dict[str, str], ConfigFlowResult | None]:
         """Probe the new link and save it, returning form errors otherwise."""
-        match = {
-            CONF_DEVICE: user_input[CONF_DEVICE],
-            CONF_UNIT_ID: user_input[CONF_UNIT_ID],
-        }
+        match = link_match(user_input)
         self._async_abort_entries_match(match)
         # A loaded entry holds its port at the old baud rate, which refuses a
         # probe at another one, so it lets go of the port meanwhile.
@@ -181,7 +264,7 @@ class IntesisModbusConfigFlow(ConfigFlow, domain=DOMAIN):
                 self.hass.config_entries.flow.async_get(self.flow_id)
                 restore = False
                 return {}, self.async_update_reload_and_abort(
-                    entry, data_updates=_entry_data(user_input, probe)
+                    entry, data=_entry_data(user_input, probe)
                 )
         finally:
             if restore and unload is not None:
@@ -243,12 +326,7 @@ class IntesisModbusConfigFlow(ConfigFlow, domain=DOMAIN):
             assert self._model is not None
         if user_input is not None:
             # Another flow for the same gateway may have finished meanwhile
-            self._async_abort_entries_match(
-                {
-                    CONF_DEVICE: self._data[CONF_DEVICE],
-                    CONF_UNIT_ID: self._data[CONF_UNIT_ID],
-                }
-            )
+            self._async_abort_entries_match(link_match(self._data))
             return self.async_create_entry(
                 title=self._model.name, data=self._data, options=user_input
             )

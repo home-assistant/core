@@ -3,11 +3,17 @@
 from intesis_gw_modbus import MODELS, IntesisSingleUnitGateway, TemperatureFormat
 
 from homeassistant.components.modbus import async_get_unit
-from homeassistant.const import Platform
+from homeassistant.const import CONF_TYPE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
-from .const import CONF_MODEL, CONF_TEMPERATURE_FORMAT, CONF_UNIT_ID, DOMAIN
+from .const import (
+    CONF_MODEL,
+    CONF_TEMPERATURE_FORMAT,
+    CONF_UNIT_ID,
+    DOMAIN,
+    TYPE_SERIAL,
+)
 from .coordinator import (
     IntesisConfigEntry,
     IntesisCoordinator,
@@ -49,6 +55,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: IntesisConfigEntry) -> N
     )
     entry.runtime_data = IntesisData(gateway=gateway, unit=air_conditioner)
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+
+
+async def async_migrate_entry(hass: HomeAssistant, entry: IntesisConfigEntry) -> None:
+    """Migrate an old config entry."""
+    if entry.version == 1 and entry.minor_version == 1:
+        # 1.2 adds the connection type; until then every link was a serial one
+        hass.config_entries.async_update_entry(
+            entry, data={CONF_TYPE: TYPE_SERIAL, **entry.data}, minor_version=2
+        )
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: IntesisConfigEntry) -> None:
