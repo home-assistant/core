@@ -84,6 +84,7 @@ async def test_legacy_known_devices_issue(
         DOMAIN, _issue_id(mock_config_entry.entry_id)
     )
     assert issue is not None
+    assert issue.config_entry_id == mock_config_entry.entry_id
     assert issue.severity is ir.IssueSeverity.ERROR
     assert issue.is_fixable is False
     assert issue.translation_key == ISSUE_LEGACY_KNOWN_DEVICES
@@ -154,6 +155,7 @@ async def test_legacy_known_devices_issue_on_new_device(
         DOMAIN, _issue_id(mock_config_entry.entry_id)
     )
     assert issue is not None
+    assert issue.config_entry_id == mock_config_entry.entry_id
     assert issue.translation_placeholders == {
         "host": DEFAULT_HOST,
         "path": YAML_DEVICES,
@@ -194,12 +196,12 @@ async def test_legacy_known_devices_issue_cleared(
 
 
 @pytest.mark.usefixtures("mock_router")
-async def test_legacy_known_devices_issue_removed_on_unload(
+async def test_legacy_known_devices_issue_kept_on_unload(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     issue_registry: ir.IssueRegistry,
 ) -> None:
-    """Test unloading removes the router's legacy conflict issue."""
+    """Test unloading keeps the router's legacy conflict issue."""
     legacy_devices = [Device(hass, timedelta(0), True, "laptop", LAPTOP.mac)]
 
     with patch(
@@ -210,20 +212,73 @@ async def test_legacy_known_devices_issue_removed_on_unload(
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
 
-        assert (
-            issue_registry.async_get_issue(
-                DOMAIN, _issue_id(mock_config_entry.entry_id)
-            )
-            is not None
-        )
+    assert await hass.config_entries.async_unload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
 
-        await hass.config_entries.async_unload(mock_config_entry.entry_id)
+    assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
+    issue = issue_registry.async_get_issue(
+        DOMAIN, _issue_id(mock_config_entry.entry_id)
+    )
+    assert issue is not None
+    assert issue.config_entry_id == mock_config_entry.entry_id
+
+
+@pytest.mark.usefixtures("mock_router")
+async def test_legacy_known_devices_issue_removed_with_entry(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test removing the config entry removes its legacy conflict issue."""
+    legacy_devices = [Device(hass, timedelta(0), True, "laptop", LAPTOP.mac)]
+
+    with patch(
+        "homeassistant.components.sky_hub.async_load_config",
+        return_value=legacy_devices,
+    ):
+        mock_config_entry.add_to_hass(hass)
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
+
+    assert issue_registry.async_get_issue(DOMAIN, _issue_id(mock_config_entry.entry_id))
+
+    await hass.config_entries.async_remove(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
 
     assert (
         issue_registry.async_get_issue(DOMAIN, _issue_id(mock_config_entry.entry_id))
         is None
     )
+
+
+@pytest.mark.usefixtures("mock_router")
+async def test_legacy_known_devices_issue_ignore_survives_reload(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test an ignored legacy conflict issue stays ignored across a reload."""
+    legacy_devices = [Device(hass, timedelta(0), True, "laptop", LAPTOP.mac)]
+
+    with patch(
+        "homeassistant.components.sky_hub.async_load_config",
+        return_value=legacy_devices,
+    ):
+        mock_config_entry.add_to_hass(hass)
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+        ir.async_ignore_issue(hass, DOMAIN, _issue_id(mock_config_entry.entry_id), True)
+
+        assert await hass.config_entries.async_reload(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    issue = issue_registry.async_get_issue(
+        DOMAIN, _issue_id(mock_config_entry.entry_id)
+    )
+    assert issue is not None
+    assert issue.dismissed_version is not None
 
 
 async def test_legacy_known_devices_issue_per_entry(
@@ -253,6 +308,7 @@ async def test_legacy_known_devices_issue_per_entry(
         DOMAIN, _issue_id(mock_config_entry.entry_id)
     )
     assert issue is not None
+    assert issue.config_entry_id == mock_config_entry.entry_id
     assert issue.translation_placeholders == {
         "host": DEFAULT_HOST,
         "path": YAML_DEVICES,

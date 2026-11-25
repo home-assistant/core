@@ -49,7 +49,7 @@ rules:
 
   # Gold
   devices: done
-  diagnostics: todo
+  diagnostics: done
   discovery-update-info:
     status: exempt
     comment: DNS resolvers do not support discovery.
@@ -87,4 +87,4 @@ rules:
   inject-websession:
     status: exempt
     comment: Integration uses aiodns directly; no shared HTTP websession applies.
-  strict-typing: todo
+  strict-typing: done

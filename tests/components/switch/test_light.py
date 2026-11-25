@@ -3,9 +3,9 @@
 import pytest
 
 from homeassistant.components.light import (
-    ATTR_COLOR_MODE,
-    ATTR_SUPPORTED_COLOR_MODES,
     ColorMode,
+    LightEntityCapabilityAttribute,
+    LightEntityStateAttribute,
 )
 from homeassistant.components.switch import DOMAIN
 from homeassistant.core import HomeAssistant
@@ -46,8 +46,10 @@ async def test_default_state(hass: HomeAssistant) -> None:
     assert state.attributes.get("color_temp") is None
     assert state.attributes.get("effect_list") is None
     assert state.attributes.get("effect") is None
-    assert state.attributes.get(ATTR_SUPPORTED_COLOR_MODES) == [ColorMode.ONOFF]
-    assert state.attributes.get(ATTR_COLOR_MODE) is None
+    assert state.attributes.get(
+        LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES
+    ) == [ColorMode.ONOFF]
+    assert state.attributes.get(LightEntityStateAttribute.COLOR_MODE) is None
 
 
 async def test_light_service_calls(hass: HomeAssistant) -> None:
@@ -74,7 +76,9 @@ async def test_light_service_calls(hass: HomeAssistant) -> None:
     assert hass.states.get("switch.decorative_lights").state == "on"
     assert hass.states.get("light.light_switch").state == "on"
     assert (
-        hass.states.get("light.light_switch").attributes.get(ATTR_COLOR_MODE)
+        hass.states.get("light.light_switch").attributes.get(
+            LightEntityStateAttribute.COLOR_MODE
+        )
         == ColorMode.ONOFF
     )
 

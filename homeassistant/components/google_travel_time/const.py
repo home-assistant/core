@@ -1,8 +1,10 @@
 """Constants for Google Travel Time."""
 
 from enum import StrEnum
+from typing import Final
 
 from google_maps_routing_api import (
+    RoutingPreference,
     TrafficModel,
     TransitRoutingPreference,
     TransitTravelMode,
@@ -23,8 +25,11 @@ CONF_DEPARTURE_TIME = "departure_time"
 CONF_TRAFFIC_MODEL = "traffic_model"
 CONF_TRANSIT_MODE = "transit_mode"
 CONF_TRANSIT_ROUTING_PREFERENCE = "transit_routing_preference"
+CONF_TRAVEL_ROUTING_PREFERENCE = "travel_routing_preference"
 CONF_TIME_TYPE = "time_type"
 CONF_TIME = "time"
+CONF_REFERRER: Final = "referrer"
+SECTION_API_KEY_OPTIONS: Final = "api_key_options"
 
 ARRIVAL_TIME = "Arrival Time"
 DEPARTURE_TIME = "Departure Time"
@@ -99,6 +104,12 @@ TRANSPORT_TYPES_TO_API_ENUM = {
     "tram": TransitTravelMode.LIGHT_RAIL,
     "rail": TransitTravelMode.RAIL,
 }
+TRAVEL_PREFS = ["traffic_aware", "traffic_aware_optimal", "traffic_unaware"]
+TRAVEL_PREFS_TO_API_ENUM = {
+    "traffic_aware_optimal": RoutingPreference.TRAFFIC_AWARE_OPTIMAL,
+    "traffic_aware": RoutingPreference.TRAFFIC_AWARE,
+    "traffic_unaware": RoutingPreference.TRAFFIC_UNAWARE,
+}
 TRAVEL_MODES = ["driving", "walking", "bicycling", "transit"]
 TRAVEL_MODES_WITHOUT_TRANSIT = ["driving", "walking", "bicycling"]
 TRAVEL_MODES_TO_API_ENUM = {
@@ -145,3 +156,4 @@ class GoogleTravelTimeServiceArgument(StrEnum):
     TRANSIT_MODE = "transit_mode"
     TRANSIT_ROUTING_PREFERENCE = "transit_routing_preference"
     ARRIVAL_TIME = "arrival_time"
+    TRAVEL_ROUTING_PREFERENCE = "travel_routing_preference"

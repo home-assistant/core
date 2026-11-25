@@ -1575,21 +1575,25 @@ class EntityRegistry(BaseRegistry):
         self,
         entry: RegistryEntry,
         *,
+        area_id: str | Undefined | None = Undefined,
+        name: str | Undefined | None = Undefined,
         reserved_entity_ids: set[str] | None = None,
     ) -> str:
         """Regenerate an entity ID for an entry.
+
+        Pass `area_id` or `name` to preview the entity ID for unsaved changes.
 
         Entity ID conflicts are checked against registered and
         currently existing entities, as well as provided
         `reserved_entity_ids`.
         """
         return self._async_generate_entity_id(
-            area_id=entry.area_id,
+            area_id=entry.area_id if area_id is Undefined else area_id,
             current_entity_id=entry.entity_id,
             device_id=entry.device_id,
             domain=entry.domain,
             has_entity_name=entry.has_entity_name,
-            name=entry.name,
+            name=entry.name if name is Undefined else name,
             object_id_base=entry.object_id_base,
             platform=entry.platform,
             reserved_entity_ids=reserved_entity_ids,
@@ -2125,6 +2129,8 @@ class EntityRegistry(BaseRegistry):
                 new_values[attr_name] = value
                 old_values[attr_name] = getattr(old, attr_name)
 
+        _validate_area_and_labels(self.hass, new_values, old.labels)
+
         # Only validate if data has changed
         if new_values or new_unique_id is not Undefined:
             _validate_item(
@@ -2211,6 +2217,11 @@ class EntityRegistry(BaseRegistry):
 
             if child_device is not None:
                 child_device_new_area_id = new.area_id
+                # Validate before committing, so a rejected area changes nothing
+                if child_device_new_area_id != child_device.area_id:
+                    _validate_area_and_labels(
+                        self.hass, {"area_id": child_device_new_area_id}, set()
+                    )
                 new = attr.evolve(new, area_id=None)
                 old_values.pop("area_id", None)
                 new_values.pop("area_id", None)
@@ -2874,6 +2885,28 @@ def async_config_entry_disabled_by_changed(
         if disabled_by is entity.disabled_by:
             continue
         registry._async_update_entity(entity.entity_id, disabled_by=disabled_by)  # noqa: SLF001
+
+
+def _validate_area_and_labels(
+    hass: HomeAssistant, new_values: dict[str, Any], old_labels: set[str]
+) -> None:
+    """Raise ValueError if a new area or a newly added label does not exist.
+
+    Only new values are checked, so removing a label or an area still works
+    when the entry refers to one that no longer exists.
+    """
+    from . import label_registry as lr  # noqa: PLC0415
+
+    if (area_id := new_values.get("area_id")) is not None and ar.async_get(
+        hass
+    ).async_get_area(area_id) is None:
+        raise ValueError(f"Area '{area_id}' not found.")
+    if "labels" in new_values and (
+        missing := lr.async_get_missing_label_ids(
+            hass, set(new_values["labels"]) - old_labels
+        )
+    ):
+        raise ValueError(f"Labels not found: {', '.join(sorted(missing))}")
 
 
 @callback

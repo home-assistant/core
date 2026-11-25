@@ -13,11 +13,10 @@ from typing import TYPE_CHECKING, Any
 
 import aiounifi
 from aiounifi.interfaces.api_handlers import APIHandler, ItemEvent
-from aiounifi.models.api import ApiItem
 from aiounifi.models.client import Client
 
 from homeassistant.const import Platform
-from homeassistant.core import async_noop, callback
+from homeassistant.core import Event, async_noop, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -25,7 +24,11 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import dt as dt_util
 
 from ..const import CLIENT_RESTORE_MAX_AGE, LOGGER, UNIFI_WIRELESS_CLIENTS
-from ..coordinator import UPDATE_TIMEOUT, UnifiDataUpdateCoordinator
+from ..coordinator import (
+    UPDATE_TIMEOUT,
+    UnifiDataUpdateCoordinator,
+    UnifiDeviceDataUpdateCoordinator,
+)
 from ..entity import UnifiEntity, UnifiEntityDescription
 from .connection import ACCOUNT_ERRORS, LOGIN_ERRORS, NOT_READY_ERRORS, REQUEST_TIMEOUT
 
@@ -46,11 +49,13 @@ class UnifiEntityLoader:
 
         self._data_coordinators: dict[int, UnifiDataUpdateCoordinator[Any]] = {
             id(hub.api.clients): UnifiDataUpdateCoordinator(hub, hub.api.clients),
-            id(hub.api.devices): UnifiDataUpdateCoordinator(hub, hub.api.devices),
+            id(hub.api.devices): UnifiDeviceDataUpdateCoordinator(hub),
             id(hub.api.dpi_apps): UnifiDataUpdateCoordinator(hub, hub.api.dpi_apps),
             id(hub.api.dpi_groups): UnifiDataUpdateCoordinator(hub, hub.api.dpi_groups),
             id(hub.api.firewall_policies): UnifiDataUpdateCoordinator(
-                hub, hub.api.firewall_policies
+                hub,
+                hub.api.firewall_policies,
+                disable_polling_on_endpoint_not_found=True,
             ),
             id(hub.api.object_oriented_network_configs): UnifiDataUpdateCoordinator(
                 hub,
@@ -61,10 +66,14 @@ class UnifiEntityLoader:
                 hub, hub.api.port_forwarding
             ),
             id(hub.api.traffic_rules): UnifiDataUpdateCoordinator(
-                hub, hub.api.traffic_rules
+                hub,
+                hub.api.traffic_rules,
+                disable_polling_on_endpoint_not_found=True,
             ),
             id(hub.api.traffic_routes): UnifiDataUpdateCoordinator(
-                hub, hub.api.traffic_routes
+                hub,
+                hub.api.traffic_routes,
+                disable_polling_on_endpoint_not_found=True,
             ),
             id(hub.api.wlans): UnifiDataUpdateCoordinator(hub, hub.api.wlans),
         }
@@ -87,7 +96,24 @@ class UnifiEntityLoader:
         ] = []
 
         self.known_objects: set[tuple[str, str]] = set()
-        """Tuples of entity description key and object ID of loaded entities."""
+        """Tuples of entity description key and object ID that have an entity.
+
+        An object stays known while its entity is loaded, or while the
+        entity is not added because it is disabled, see known_but_disabled.
+        """
+        self.known_but_disabled: dict[str, tuple[str, str]] = {}
+        """Known objects whose entity is not added because it is disabled.
+
+        Keyed by entity ID, as a disabled entity only reports its removal
+        through the entity registry.
+        """
+        hub.config.entry.async_on_unload(
+            hub.hass.bus.async_listen(
+                er.EVENT_ENTITY_REGISTRY_UPDATED,
+                self._async_disabled_entity_updated,
+                event_filter=self._async_disabled_entity_filter,
+            )
+        )
 
     async def async_load_sites(self) -> None:
         """Load the sites of the console."""
@@ -320,13 +346,46 @@ class UnifiEntityLoader:
     ) -> bool:
         """Validate if entity is allowed and supported before creating it."""
         return bool(
-            (description.key, obj_id) not in self.known_objects
+            not self.is_known(description, obj_id)
             and description.allowed_fn(self.hub, obj_id)
             and description.supported_fn(self.hub, obj_id)
         )
 
     @callback
-    def get_data_update_coordinator[HandlerT: APIHandler[ApiItem]](
+    def is_known(self, description: UnifiEntityDescription, obj_id: str) -> bool:
+        """Return if the object has an entity, loaded or disabled."""
+        return (description.key, obj_id) in self.known_objects
+
+    @callback
+    def _async_disabled_entity_filter(
+        self, event_data: er.EventEntityRegistryUpdatedData
+    ) -> bool:
+        """Pass the removal or renaming of a disabled entity."""
+        if event_data["action"] == "remove":
+            return event_data["entity_id"] in self.known_but_disabled
+        return (
+            event_data["action"] == "update"
+            and "old_entity_id" in event_data
+            and event_data["old_entity_id"] in self.known_but_disabled
+        )
+
+    @callback
+    def _async_disabled_entity_updated(
+        self, event: Event[er.EventEntityRegistryUpdatedData]
+    ) -> None:
+        """Forget the object of a removed disabled entity, or follow its new ID."""
+        data = event.data
+        if data["action"] == "remove":
+            self.known_objects.discard(self.known_but_disabled.pop(data["entity_id"]))
+            return
+        if TYPE_CHECKING:
+            assert data["action"] == "update"
+        self.known_but_disabled[data["entity_id"]] = self.known_but_disabled.pop(
+            data["old_entity_id"]
+        )
+
+    @callback
+    def get_data_update_coordinator[HandlerT: APIHandler](
         self, handler: HandlerT
     ) -> UnifiDataUpdateCoordinator[HandlerT]:
         """Return the data coordinator for a handler."""
@@ -354,6 +413,7 @@ class UnifiEntityLoader:
             )
 
         add_unifi_entities()
+        self.hub.adoption.async_on_adoption(add_unifi_entities)
 
         self.hub.config.entry.async_on_unload(
             async_dispatcher_connect(

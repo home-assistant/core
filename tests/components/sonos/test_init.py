@@ -6,6 +6,7 @@ from functools import partial
 from http import HTTPStatus
 from itertools import chain, repeat
 import logging
+import socket
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, Mock, PropertyMock, patch
 
@@ -489,6 +490,51 @@ async def test_discovery_from_ssdp_advertisement(
     assert hass.states.get("media_player.zone_a")
 
 
+@pytest.mark.parametrize(
+    ("speaker_changes", "expected_subscribes"),
+    [
+        pytest.param([], 0, id="speaker_available"),
+        pytest.param([SsdpChange.BYEBYE], 1, id="speaker_unavailable"),
+    ],
+)
+async def test_discovery_unknown_uid_on_known_speaker_ip(
+    hass: HomeAssistant,
+    async_autosetup_sonos: None,
+    soco: MockSoCo,
+    discover: MagicMock,
+    speaker_changes: list[SsdpChange],
+    expected_subscribes: int,
+) -> None:
+    """Test an unknown uid on a known speaker's IP, e.g. an Arc headphone zone."""
+    ssdp_callback = discover.call_args.args[1]
+    for change in speaker_changes:
+        ssdp_callback(
+            SsdpServiceInfo(
+                ssdp_location=f"http://{soco.ip_address}:1400/",
+                ssdp_st=UPNP_ST,
+                ssdp_usn=f"uuid:{soco.uid}::{UPNP_ST}",
+                upnp={ATTR_UPNP_UDN: f"uuid:{soco.uid}"},
+            ),
+            change,
+        )
+    await hass.async_block_till_done(wait_background_tasks=True)
+    soco.zoneGroupTopology.subscribe.reset_mock()
+
+    headphone_uid = "RINCON_test01500"
+    ssdp_callback(
+        SsdpServiceInfo(
+            ssdp_location=f"http://{soco.ip_address}:1500/xml/device_description.xml",
+            ssdp_st=UPNP_ST,
+            ssdp_usn=f"uuid:{headphone_uid}::{UPNP_ST}",
+            upnp={ATTR_UPNP_UDN: f"uuid:{headphone_uid}"},
+        ),
+        SsdpChange.ALIVE,
+    )
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert soco.zoneGroupTopology.subscribe.await_count == expected_subscribes
+
+
 async def test_async_poll_manual_hosts_warnings(
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
@@ -499,7 +545,6 @@ async def test_async_poll_manual_hosts_warnings(
 
     soco = soco_factory.cache_mock(MockSoCo(), "10.10.10.1", "Bedroom")
     with (
-        caplog.at_level(logging.DEBUG),
         patch.object(
             type(soco), "visible_zones", new_callable=PropertyMock
         ) as mock_visible_zones,
@@ -685,6 +730,44 @@ async def test_async_poll_manual_hosts_uid_http_error(
     await hass.async_block_till_done(wait_background_tasks=True)
 
 
+async def test_async_poll_manual_hosts_lookup_error(
+    hass: HomeAssistant,
+    soco_factory: SoCoMockFactory,
+    entity_registry: er.EntityRegistry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test a host that can not be resolved does not stop the manual polling."""
+    soco_factory.cache_mock(MockSoCo(), "10.10.10.1", "Living Room")
+    soco_factory.cache_mock(MockSoCo(), "10.10.10.2", "Bedroom")
+    dns_down = True
+
+    def gethostbyname(host: str) -> str:
+        if dns_down and host == "10.10.10.1":
+            raise socket.gaierror(socket.EAI_AGAIN, "Temporary failure")
+        return host
+
+    with patch("socket.gethostbyname", side_effect=gethostbyname):
+        await _setup_hass(hass)
+        assert "media_player.bedroom" in entity_registry.entities
+        assert "media_player.living_room" not in entity_registry.entities
+
+        # Still failing, so not logged as a warning again
+        caplog.clear()
+        async_fire_time_changed(hass, dt_util.utcnow() + DISCOVERY_INTERVAL)
+        await hass.async_block_till_done(wait_background_tasks=True)
+        assert [
+            rec.levelname
+            for rec in caplog.records
+            if "Could not resolve Sonos host" in rec.message
+        ] == ["DEBUG", "DEBUG"]
+
+        # The next poll still runs and picks the speaker up
+        dns_down = False
+        async_fire_time_changed(hass, dt_util.utcnow() + 2 * DISCOVERY_INTERVAL)
+        await hass.async_block_till_done(wait_background_tasks=True)
+        assert "media_player.living_room" in entity_registry.entities
+
+
 async def test_async_poll_manual_hosts_2(
     hass: HomeAssistant,
     soco_factory: SoCoMockFactory,
@@ -802,23 +885,22 @@ async def test_async_poll_manual_hosts_5(
     soco_2.renderingControl.GetVolume = Mock()
     speaker_2_activity = SpeakerActivity(hass, soco_2)
 
-    with caplog.at_level(logging.DEBUG):
-        caplog.clear()
+    caplog.clear()
 
-        await _setup_hass(hass)
+    await _setup_hass(hass)
 
-        assert "media_player.bedroom" in entity_registry.entities
-        assert "media_player.living_room" in entity_registry.entities
+    assert "media_player.bedroom" in entity_registry.entities
+    assert "media_player.living_room" in entity_registry.entities
 
-        async_fire_time_changed(hass, dt_util.utcnow() + DISCOVERY_INTERVAL)
-        await hass.async_block_till_done()
-        await asyncio.gather(
-            *[speaker_1_activity.event.wait(), speaker_2_activity.event.wait()]
-        )
-        assert speaker_1_activity.call_count == 1
-        assert speaker_2_activity.call_count == 1
-        assert "Activity on Living Room" in caplog.text
-        assert "Activity on Bedroom" in caplog.text
+    async_fire_time_changed(hass, dt_util.utcnow() + DISCOVERY_INTERVAL)
+    await hass.async_block_till_done()
+    await asyncio.gather(
+        *[speaker_1_activity.event.wait(), speaker_2_activity.event.wait()]
+    )
+    assert speaker_1_activity.call_count == 1
+    assert speaker_2_activity.call_count == 1
+    assert "Activity on Living Room" in caplog.text
+    assert "Activity on Bedroom" in caplog.text
 
     await hass.async_block_till_done(wait_background_tasks=True)
 
@@ -858,7 +940,6 @@ async def test_async_poll_manual_hosts_6(
     soco_2.renderingControl.GetVolume.reset_mock()
 
     with (
-        caplog.at_level(logging.DEBUG),
         freeze_time(dt_util.utcnow()) as freezer,
     ):
         caplog.clear()
@@ -1053,10 +1134,9 @@ async def test_ipv6_not_supported(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Tests that invalid ipv4 addresses do not generate stack dump."""
-    with caplog.at_level(logging.DEBUG):
-        caplog.clear()
-        await _setup_hass_ipv6_address_not_supported(hass)
-        await hass.async_block_till_done()
+    caplog.clear()
+    await _setup_hass_ipv6_address_not_supported(hass)
+    await hass.async_block_till_done()
     assert "invalid ip_address received" in caplog.text
     assert "2001:db8:3333:4444:5555:6666:7777:8888" in caplog.text
 
@@ -1090,7 +1170,6 @@ async def test_no_exception_when_entry_unloaded_during_speaker_discovery(
             new_callable=PropertyMock,
             return_value={soco, new_soco},
         ),
-        caplog.at_level(logging.DEBUG),
     ):
         caplog.clear()
         sub_callback(SonosMockEvent(soco, soco.zoneGroupTopology, {}))

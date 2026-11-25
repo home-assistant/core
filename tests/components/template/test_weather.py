@@ -1,5 +1,7 @@
 """The tests for the Template Weather platform."""
 
+from enum import StrEnum
+from itertools import chain
 from typing import Any
 
 import pytest
@@ -13,24 +15,16 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components import template
 from homeassistant.components.template.const import CONF_PICTURE, DOMAIN
+from homeassistant.components.template.repairs import (
+    DEPRECATED_TEMPLATE_OPTIONS_ISSUE_ID,
+)
 from homeassistant.components.template.weather import DEFAULT_NAME
 from homeassistant.components.weather import (
-    ATTR_WEATHER_APPARENT_TEMPERATURE,
-    ATTR_WEATHER_CLOUD_COVERAGE,
-    ATTR_WEATHER_DEW_POINT,
-    ATTR_WEATHER_HUMIDITY,
-    ATTR_WEATHER_OZONE,
-    ATTR_WEATHER_PRESSURE,
-    ATTR_WEATHER_TEMPERATURE,
-    ATTR_WEATHER_UV_INDEX,
-    ATTR_WEATHER_VISIBILITY,
-    ATTR_WEATHER_WIND_BEARING,
-    ATTR_WEATHER_WIND_GUST_SPEED,
-    ATTR_WEATHER_WIND_SPEED,
     DOMAIN as WEATHER_DOMAIN,
-    SERVICE_GET_FORECASTS,
     Forecast,
+    WeatherEntityCapabilityAttribute,
     WeatherEntityStateAttribute,
+    WeatherService,
 )
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
@@ -41,6 +35,7 @@ from homeassistant.const import (
     STATE_UNKNOWN,
 )
 from homeassistant.core import Context, HomeAssistant, State
+from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.restore_state import STORAGE_KEY as RESTORE_STATE_KEY
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.setup import async_setup_component
@@ -53,6 +48,7 @@ from .conftest import (
     assert_state_and_attributes,
     async_get_flow_preview_state,
     async_trigger,
+    get_issues_with_prefix,
     make_test_trigger,
     setup_entity,
     setup_mock_template_entity_restore_state,
@@ -227,19 +223,23 @@ async def test_template_state_text(hass: HomeAssistant) -> None:
     """Test the state text of a template."""
     await async_trigger(hass, "sensor.condition", "sunny")
     for entity_id, v_attr, value in (
-        ("sensor.apparent_temperature", ATTR_WEATHER_APPARENT_TEMPERATURE, 25),
+        (
+            "sensor.apparent_temperature",
+            WeatherEntityStateAttribute.APPARENT_TEMPERATURE,
+            25,
+        ),
         ("sensor.attribution", ATTR_ATTRIBUTION, "Custom"),
-        ("sensor.cloud_coverage", ATTR_WEATHER_CLOUD_COVERAGE, 75),
-        ("sensor.dew_point", ATTR_WEATHER_DEW_POINT, 2.2),
-        ("sensor.humidity", ATTR_WEATHER_HUMIDITY, 60),
-        ("sensor.ozone", ATTR_WEATHER_OZONE, 25),
-        ("sensor.pressure", ATTR_WEATHER_PRESSURE, 1000),
-        ("sensor.temperature", ATTR_WEATHER_TEMPERATURE, 22.3),
-        ("sensor.uv_index", ATTR_WEATHER_UV_INDEX, 3.7),
-        ("sensor.visibility", ATTR_WEATHER_VISIBILITY, 4.6),
-        ("sensor.wind_bearing", ATTR_WEATHER_WIND_BEARING, 180),
-        ("sensor.wind_gust_speed", ATTR_WEATHER_WIND_GUST_SPEED, 30),
-        ("sensor.wind_speed", ATTR_WEATHER_WIND_SPEED, 20),
+        ("sensor.cloud_coverage", WeatherEntityStateAttribute.CLOUD_COVERAGE, 75),
+        ("sensor.dew_point", WeatherEntityStateAttribute.DEW_POINT, 2.2),
+        ("sensor.humidity", WeatherEntityStateAttribute.HUMIDITY, 60),
+        ("sensor.ozone", WeatherEntityStateAttribute.OZONE, 25),
+        ("sensor.pressure", WeatherEntityStateAttribute.PRESSURE, 1000),
+        ("sensor.temperature", WeatherEntityStateAttribute.TEMPERATURE, 22.3),
+        ("sensor.uv_index", WeatherEntityStateAttribute.UV_INDEX, 3.7),
+        ("sensor.visibility", WeatherEntityStateAttribute.VISIBILITY, 4.6),
+        ("sensor.wind_bearing", WeatherEntityStateAttribute.WIND_BEARING, 180),
+        ("sensor.wind_gust_speed", WeatherEntityStateAttribute.WIND_GUST_SPEED, 30),
+        ("sensor.wind_speed", WeatherEntityStateAttribute.WIND_SPEED, 20),
     ):
         await async_trigger(hass, entity_id, str(value))
         state = hass.states.get(TEST_WEATHER.entity_id)
@@ -315,7 +315,7 @@ async def test_forecasts(hass: HomeAssistant, snapshot: SnapshotAssertion) -> No
 
     response = await hass.services.async_call(
         WEATHER_DOMAIN,
-        SERVICE_GET_FORECASTS,
+        WeatherService.GET_FORECASTS,
         {"entity_id": TEST_WEATHER.entity_id, "type": "daily"},
         blocking=True,
         return_response=True,
@@ -323,7 +323,7 @@ async def test_forecasts(hass: HomeAssistant, snapshot: SnapshotAssertion) -> No
     assert response == snapshot
     response = await hass.services.async_call(
         WEATHER_DOMAIN,
-        SERVICE_GET_FORECASTS,
+        WeatherService.GET_FORECASTS,
         {"entity_id": TEST_WEATHER.entity_id, "type": "hourly"},
         blocking=True,
         return_response=True,
@@ -331,7 +331,7 @@ async def test_forecasts(hass: HomeAssistant, snapshot: SnapshotAssertion) -> No
     assert response == snapshot
     response = await hass.services.async_call(
         WEATHER_DOMAIN,
-        SERVICE_GET_FORECASTS,
+        WeatherService.GET_FORECASTS,
         {"entity_id": TEST_WEATHER.entity_id, "type": "twice_daily"},
         blocking=True,
         return_response=True,
@@ -355,7 +355,7 @@ async def test_forecasts(hass: HomeAssistant, snapshot: SnapshotAssertion) -> No
 
     response = await hass.services.async_call(
         WEATHER_DOMAIN,
-        SERVICE_GET_FORECASTS,
+        WeatherService.GET_FORECASTS,
         {"entity_id": TEST_WEATHER.entity_id, "type": "daily"},
         blocking=True,
         return_response=True,
@@ -459,7 +459,7 @@ async def test_forecasts_invalid(
     await hass.async_block_till_done()
     response = await hass.services.async_call(
         WEATHER_DOMAIN,
-        SERVICE_GET_FORECASTS,
+        WeatherService.GET_FORECASTS,
         {"entity_id": TEST_WEATHER.entity_id, "type": "hourly"},
         blocking=True,
         return_response=True,
@@ -468,7 +468,7 @@ async def test_forecasts_invalid(
 
     response = await hass.services.async_call(
         WEATHER_DOMAIN,
-        SERVICE_GET_FORECASTS,
+        WeatherService.GET_FORECASTS,
         {"entity_id": TEST_WEATHER.entity_id, "type": "daily"},
         blocking=True,
         return_response=True,
@@ -494,7 +494,7 @@ async def test_forecasts_invalid(
 
     response = await hass.services.async_call(
         WEATHER_DOMAIN,
-        SERVICE_GET_FORECASTS,
+        WeatherService.GET_FORECASTS,
         {"entity_id": TEST_WEATHER.entity_id, "type": "twice_daily"},
         blocking=True,
         return_response=True,
@@ -520,7 +520,7 @@ async def test_forecasts_invalid(
 
     response = await hass.services.async_call(
         WEATHER_DOMAIN,
-        SERVICE_GET_FORECASTS,
+        WeatherService.GET_FORECASTS,
         {"entity_id": TEST_WEATHER.entity_id, "type": "twice_daily"},
         blocking=True,
         return_response=True,
@@ -627,7 +627,7 @@ async def test_forecast_format_error(
 
     await hass.services.async_call(
         WEATHER_DOMAIN,
-        SERVICE_GET_FORECASTS,
+        WeatherService.GET_FORECASTS,
         {"entity_id": TEST_WEATHER.entity_id, "type": "daily"},
         blocking=True,
         return_response=True,
@@ -635,7 +635,7 @@ async def test_forecast_format_error(
     assert "expected a list of forecast dictionaries, got" in caplog.text
     await hass.services.async_call(
         WEATHER_DOMAIN,
-        SERVICE_GET_FORECASTS,
+        WeatherService.GET_FORECASTS,
         {"entity_id": TEST_WEATHER.entity_id, "type": "hourly"},
         blocking=True,
         return_response=True,
@@ -1049,7 +1049,7 @@ async def test_extra_template_attributes(
 
 @pytest.mark.parametrize(
     "attribute",
-    list(WeatherEntityStateAttribute),
+    list(chain(WeatherEntityCapabilityAttribute, WeatherEntityStateAttribute)),
 )
 @pytest.mark.parametrize(
     "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
@@ -1096,7 +1096,7 @@ async def test_attributes_template(
 
 @pytest.mark.parametrize(
     "attribute",
-    list(WeatherEntityStateAttribute),
+    list(chain(WeatherEntityCapabilityAttribute, WeatherEntityStateAttribute)),
 )
 @pytest.mark.parametrize(
     "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
@@ -1104,7 +1104,7 @@ async def test_attributes_template(
 async def test_attributes_template_with_blocked_attributes(
     hass: HomeAssistant,
     style: ConfigurationStyle,
-    attribute: WeatherEntityStateAttribute,
+    attribute: StrEnum,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test blocked attributes for a single attributes template."""
@@ -1123,3 +1123,26 @@ async def test_attributes_template_with_blocked_attributes(
 
     error = f"Unsupported attribute(s) found for {TEST_WEATHER.entity_id}: {attribute}"
     assert error in caplog.text
+
+
+@pytest.mark.parametrize(
+    "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
+)
+@pytest.mark.parametrize(
+    "config",
+    [
+        pytest.param(TEST_LEGACY_REQUIRED, id="deprecated"),
+        pytest.param(TEST_MODERN_REQUIRED, id="modern"),
+    ],
+)
+@pytest.mark.usefixtures("setup_weather")
+async def test_deprecated_template_options_issue(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test a repair issue is created only for deprecated *_template options."""
+    assert (
+        get_issues_with_prefix(issue_registry, DEPRECATED_TEMPLATE_OPTIONS_ISSUE_ID)
+        == snapshot
+    )

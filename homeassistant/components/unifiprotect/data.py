@@ -21,6 +21,7 @@ from uiprotect.data import (
     ProtectAdoptableDeviceModel,
     PTZPatrol,
     PublicDeviceModel,
+    PublicStoreChange,
     Relay,
     WSAction,
     WSSubscriptionMessage,
@@ -49,6 +50,7 @@ from .const import (
     DISPATCH_ADOPT,
     DISPATCH_CHANNELS,
     DISPATCH_CHIMES,
+    DISPATCH_EXTERNAL_ARM,
     DISPATCH_PUBLIC_ADD,
     DISPATCH_RELAYS,
     DOMAIN,
@@ -164,6 +166,7 @@ class ProtectData:
         self.add_signal = _async_dispatch_id(entry, DISPATCH_ADD)
         self.channels_signal = _async_dispatch_id(entry, DISPATCH_CHANNELS)
         self.chime_signal = _async_dispatch_id(entry, DISPATCH_CHIMES)
+        self.external_arm_signal = _async_dispatch_id(entry, DISPATCH_EXTERNAL_ARM)
         self.relay_signal = _async_dispatch_id(entry, DISPATCH_RELAYS)
         self.public_add_signal = _async_dispatch_id(entry, DISPATCH_PUBLIC_ADD)
         # PTZ patrol cache: camera_id -> list of patrols
@@ -311,14 +314,21 @@ class ProtectData:
         # arriving while update_public() primes are buffered and replayed by
         # the library, so the subscribe/prime order is not load-bearing.
         self._unsubs = [
-            api.subscribe_devices_websocket(
-                self._async_process_public_devices_ws_message
-            ),
+            # State callbacks first: unsubscribing the last message callback
+            # stops the websocket, and its disconnect would mark the entities
+            # unavailable at shutdown.
             api.subscribe_devices_websocket_state(self._async_public_ws_state_changed),
             # The events websocket is public in both modes (see
             # ``async_subscribe_public_events``), so track its state in both.
             api.subscribe_events_websocket_state(self._async_events_ws_state_changed),
+            api.subscribe_devices_websocket(
+                self._async_process_public_devices_ws_message
+            ),
             api.subscribe_public_resync(self._async_public_resync_done),
+            api.subscribe_external_arm_profiles_live(
+                self._async_external_arm_live_changed
+            ),
+            api.subscribe_public_store_changes(self._async_public_store_changed),
         ]
         if api.is_public_only:
             # No private session: the private websocket and the private poll
@@ -562,6 +572,17 @@ class ProtectData:
         self._async_offer_chimes()
 
     @callback
+    def _async_public_store_changed(self, change: PublicStoreChange) -> None:
+        """Signal the alarm panels when the external arm profiles changed."""
+        if change.store == "external_arm_profiles":
+            async_dispatcher_send(self._hass, self.external_arm_signal)
+
+    @callback
+    def _async_external_arm_live_changed(self, live: bool) -> None:
+        """Signal the alarm panels when the external arm profiles go stale or live."""
+        async_dispatcher_send(self._hass, self.external_arm_signal)
+
+    @callback
     def _async_signal_public_doorbell_settings(self) -> None:
         """Signal the public cameras so the doorbell text options follow the NVR."""
         for camera in list(self.api.public_bootstrap.cameras.values()):
@@ -669,6 +690,9 @@ class ProtectData:
                 self._auth_failures += 1
             else:
                 await self.async_stop()
+                # The stopped public websockets no longer report their state.
+                self.last_public_update_success = False
+                self._async_process_public_updates()
                 _LOGGER.exception("Reauthentication required")
                 self._entry.async_start_reauth(self._hass)
             self._async_update_change(False, exception=ex)

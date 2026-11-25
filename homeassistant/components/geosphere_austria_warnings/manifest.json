@@ -9,6 +9,6 @@
   "integration_type": "service",
   "iot_class": "cloud_polling",
   "loggers": ["pygeosphere_warnings"],
-  "quality_scale": "bronze",
-  "requirements": ["pygeosphere-warnings==0.1.1"]
+  "quality_scale": "silver",
+  "requirements": ["pygeosphere-warnings==0.2.1"]
 }

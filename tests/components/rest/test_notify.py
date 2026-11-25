@@ -8,7 +8,7 @@ import respx
 from homeassistant import config as hass_config
 from homeassistant.components import notify
 from homeassistant.components.rest import DOMAIN
-from homeassistant.const import SERVICE_RELOAD
+from homeassistant.components.rest.services import RestService
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
@@ -40,7 +40,7 @@ async def test_reload_notify(hass: HomeAssistant) -> None:
     with patch.object(hass_config, "YAML_CONFIG_FILE", yaml_path):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_RELOAD,
+            RestService.RELOAD,
             {},
             blocking=True,
         )

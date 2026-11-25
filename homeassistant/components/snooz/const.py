@@ -5,10 +5,6 @@ from homeassistant.const import Platform
 DOMAIN = "snooz"
 PLATFORMS: list[Platform] = [Platform.FAN]
 
-SERVICE_TRANSITION_ON = "transition_on"
-SERVICE_TRANSITION_OFF = "transition_off"
-
-ATTR_VOLUME = "volume"
-ATTR_DURATION = "duration"
+CONF_FIRMWARE_VERSION = "firmware_version"
 
 DEFAULT_TRANSITION_DURATION = 20
