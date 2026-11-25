@@ -500,7 +500,8 @@
       'children': dict({
       }),
       'entities': dict({
-        'sensor.kitchen_plug_temperature': 'Temperature',
+        'sensor.kitchen_plug_temperature_4': 'Temperature (4)',
+        'sensor.kitchen_plug_temperature_5': 'Temperature (5)',
         'switch.kitchen_plug': None,
       }),
       'name': 'Kitchen Plug',

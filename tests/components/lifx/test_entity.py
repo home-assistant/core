@@ -5,7 +5,12 @@ from pytest_homeassistant.common import MockConfigEntry
 from homeassistant.components.lifx.const import DOMAIN
 from homeassistant.components.lifx.entity import async_repair_device_registry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers import (
+    area_registry as ar,
+    device_registry as dr,
+    entity_registry as er,
+    label_registry as lr,
+)
 
 from .helpers import MAC_ADDRESS, SERIAL, create_mock_light
 
@@ -87,8 +92,10 @@ def test_incorrect_offset_mac_is_replaced_in_place(
 
 def test_repair_preserves_device_and_entity_metadata(
     hass: HomeAssistant,
+    area_registry: ar.AreaRegistry,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
+    label_registry: lr.LabelRegistry,
 ) -> None:
     """Test repair changes identity data without replacing customized records."""
     entry = _add_entry(hass)
@@ -97,6 +104,8 @@ def test_repair_preserves_device_and_entity_metadata(
         entry,
         connections={(dr.CONNECTION_NETWORK_MAC, INCORRECT_OFFSET_MAC)},
     )
+    area_registry.async_create("Living room")
+    label_registry.async_create("Favorite")
     device_registry.async_update_device(
         original.id,
         area_id="living_room",

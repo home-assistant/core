@@ -13,10 +13,11 @@ from opendisplay import (
     AuthenticationRequiredError,
     DitherMode,
     FitMode,
-    OpenDisplayDevice,
     OpenDisplayError,
     RefreshMode,
     Rotation,
+    Sec2KeyRequiredError,
+    connect,
 )
 from PIL import Image as PILImage, ImageOps
 import probatio
@@ -216,13 +217,17 @@ async def _async_upload_image(call: ServiceCall) -> None:
                 translation_domain=DOMAIN, translation_key="authentication_error"
             ) from err
 
-        async with OpenDisplayDevice(
-            mac_address=address,
+        async with connect(
+            address=address,
             ble_device=ble_device,
-            config=entry.runtime_data.device_config,
             encryption_key=encryption_key,
         ) as device:
-            await device.upload_image(
+            if device.legacy.capabilities is None:
+                raise HomeAssistantError(
+                    translation_domain=DOMAIN,
+                    translation_key="display_not_supported",
+                )
+            await device.legacy.upload_image(
                 pil_image,
                 refresh_mode=refresh_mode,
                 dither_mode=dither_mode,
@@ -232,7 +237,11 @@ async def _async_upload_image(call: ServiceCall) -> None:
             )
     except asyncio.CancelledError:
         return
-    except (AuthenticationFailedError, AuthenticationRequiredError) as err:
+    except (
+        AuthenticationFailedError,
+        AuthenticationRequiredError,
+        Sec2KeyRequiredError,
+    ) as err:
         entry.async_start_reauth(call.hass)
         raise HomeAssistantError(
             translation_domain=DOMAIN, translation_key="authentication_error"
