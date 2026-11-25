@@ -1,23 +1,29 @@
 """LLM tools for the config integration."""
 
 from collections import defaultdict
-from collections.abc import Iterable, Iterator
+from collections.abc import Iterable, Iterator, Mapping
 from contextlib import suppress
 import heapq
-from typing import Any, Literal, cast, override
+from typing import Any, Literal, override
 
 import probatio
 
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.llm import LLMTools, flow as llm_flow
+from homeassistant.components.sensor import (
+    DEVICE_CLASS_UNITS,
+    DOMAIN as SENSOR_DOMAIN,
+    UNIT_CONVERTERS,
+    SensorDeviceClass,
+)
 from homeassistant.config_entries import (
     ConfigEntry,
     ConfigEntryState,
-    ConfigFlow,
     ConfigFlowResult,
-    OptionsFlow,
+    ConfigSubentry,
+    SubentryFlowResult,
 )
-from homeassistant.const import ATTR_RESTORED
+from homeassistant.const import ATTR_RESTORED, CONF_UNIT_OF_MEASUREMENT
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import DependencyError, HomeAssistantError
 from homeassistant.generated.integration_categories import INTEGRATION_CATEGORIES
@@ -46,7 +52,7 @@ from homeassistant.loader import (
 )
 from homeassistant.util.json import JsonObjectType, JsonValueType
 
-from .const import DOMAIN
+from .const import DOMAIN, SUPPORTED_LABEL_THEME_COLORS
 from .core import UPDATE_CONFIG_SCHEMA, async_update_config
 
 _SEARCH_LIMIT = 15
@@ -69,8 +75,8 @@ _NON_EMPTY_STRING = probatio.All(str, probatio.Strip, probatio.NonEmpty())
 _DOMAIN_STRING = probatio.All(str, probatio.Strip, probatio.Lower, probatio.NonEmpty())
 _MIN_SHORT_ID_LEN = 4
 _OAUTH_RUNTIME_ERRORS = ("No current request in context", "No header in request")
-type _FlowCategory = Literal["config", "options"]
-_FLOW_TYPES = ["config", "options", "reconfigure"]
+type _FlowCategory = Literal["config", "options", "config_subentries"]
+_FLOW_TYPES = ["config", "options", "reconfigure", "subentry"]
 _UPDATE_CORE_CONFIG_SCHEMA = probatio.Schema(UPDATE_CONFIG_SCHEMA)
 
 
@@ -79,27 +85,30 @@ def _resolve_language(hass: HomeAssistant, language: str | None) -> str:
     return language if language and language != "*" else (hass.config.language or "en")
 
 
-def _format_short_entry_ids(entries: Iterable[ConfigEntry]) -> dict[str, str]:
-    """Return a mapping of full entry_id to short '<domain>:<suffix>' ID.
+def _format_short_ids(pairs: Iterable[tuple[str, str]]) -> dict[str, str]:
+    """Return a mapping of full ID to short '<prefix>:<suffix>' ID.
 
     Short IDs reduce token usage and LLM transcription errors across tool calls.
-    The trailing suffix starts at 4 characters and expands if another entry in the
-    same domain shares that suffix.
+    The trailing suffix starts at 4 characters and expands if another item with
+    the same prefix shares that suffix.
     """
     groups: defaultdict[tuple[str, str], list[str]] = defaultdict(list)
-    for entry in entries:
-        groups[(entry.domain, entry.entry_id[-_MIN_SHORT_ID_LEN:])].append(
-            entry.entry_id
-        )
+    for prefix, full_id in pairs:
+        groups[(prefix, full_id[-_MIN_SHORT_ID_LEN:])].append(full_id)
 
     result: dict[str, str] = {}
-    for (domain, _), group in groups.items():
+    for (prefix, _), group in groups.items():
         length = _MIN_SHORT_ID_LEN
-        while len(group) > 1 and len({eid[-length:] for eid in group}) < len(group):
+        while len(group) > 1 and len({fid[-length:] for fid in group}) < len(group):
             length += 1
-        for eid in group:
-            result[eid] = f"{domain}:{eid[-length:]}"
+        for fid in group:
+            result[fid] = f"{prefix}:{fid[-length:]}"
     return result
+
+
+def _format_short_entry_ids(entries: Iterable[ConfigEntry]) -> dict[str, str]:
+    """Return a mapping of full entry_id to short '<domain>:<suffix>' ID."""
+    return _format_short_ids((entry.domain, entry.entry_id) for entry in entries)
 
 
 def _resolve_short_entry_id(hass: HomeAssistant, entry_id: str) -> ConfigEntry:
@@ -115,6 +124,23 @@ def _resolve_short_entry_id(hass: HomeAssistant, entry_id: str) -> ConfigEntry:
     ]
     if len(matches) != 1:
         raise HomeAssistantError(f"Config entry '{entry_id}' not found.")
+
+    return matches[0]
+
+
+def _resolve_short_subentry_id(entry: ConfigEntry, subentry_id: str) -> ConfigSubentry:
+    """Resolve a ConfigSubentry from a '<subentry_type>:<suffix>' short ID."""
+    subentry_type, sep, suffix = subentry_id.rpartition(":")
+    if not sep or not subentry_type or len(suffix) < _MIN_SHORT_ID_LEN:
+        raise HomeAssistantError(f"Subentry '{subentry_id}' not found.")
+
+    matches = [
+        candidate
+        for candidate in entry.get_subentries_of_type(subentry_type)
+        if candidate.subentry_id.endswith(suffix)
+    ]
+    if len(matches) != 1:
+        raise HomeAssistantError(f"Subentry '{subentry_id}' not found.")
 
     return matches[0]
 
@@ -160,6 +186,28 @@ def _format_config_entry(entry: ConfigEntry, short_id: str) -> JsonObjectType:
         and entry.supports_reconfigure
     ):
         result["supports_reconfigure"] = True
+    if (
+        entry.disabled_by is None
+        and entry.source != config_entries.SOURCE_IGNORE
+        and entry.supported_subentry_types
+    ):
+        result["supported_subentry_types"] = {
+            sub_type: dict[str, JsonValueType](sub_meta)
+            for sub_type, sub_meta in entry.supported_subentry_types.items()
+        }
+    if entry.subentries:
+        short_subentry_ids = _format_short_ids(
+            (subentry.subentry_type, subentry.subentry_id)
+            for subentry in entry.subentries.values()
+        )
+        result["subentries"] = [
+            {
+                "subentry_id": short_subentry_ids[subentry.subentry_id],
+                "subentry_type": subentry.subentry_type,
+                "title": subentry.title,
+            }
+            for subentry in entry.subentries.values()
+        ]
     return result
 
 
@@ -230,8 +278,8 @@ class GetConfigEntriesTool(Tool):
         "Retrieve installed Home Assistant config entries (configured integrations "
         "and helpers). Use this to inspect which integrations are set up, check their "
         "status ('loaded', 'error', 'not_loaded'), see translated error reasons, and "
-        "find entry_ids and supported flow capabilities (supports_options, "
-        "supports_reconfigure)."
+        "find entry_ids, subentries, and supported flow capabilities "
+        "(supports_options, supports_reconfigure, supported_subentry_types)."
     )
     annotations = ToolAnnotations(
         read_only=True, destructive=False, idempotent=True, open_world=False
@@ -444,25 +492,47 @@ class SearchIntegrationsTool(Tool):
 
 def _resolve_short_flow_id(
     hass: HomeAssistant, flow_id: str
-) -> ConfigFlow | OptionsFlow:
-    """Resolve an active config or options flow from a '<domain>:<suffix>' short ID."""
+) -> tuple[
+    data_entry_flow.FlowManager[Any, Any, Any], ConfigFlowResult | SubentryFlowResult
+]:
+    """Resolve an active flow from a '<domain>:<suffix>' short ID."""
     domain, sep, suffix = flow_id.partition(":")
     if not sep or not domain or len(suffix) < _MIN_SHORT_ID_LEN:
         raise HomeAssistantError(f"Flow '{flow_id}' not found.")
 
     flow_mgr = hass.config_entries.flow
-    matches: list[ConfigFlow | OptionsFlow] = [
-        cast(ConfigFlow, flow_mgr._progress[flw["flow_id"]])  # noqa: SLF001
+    matches: list[
+        tuple[
+            data_entry_flow.FlowManager[Any, Any, Any],
+            ConfigFlowResult | SubentryFlowResult,
+        ]
+    ] = [
+        (flow_mgr, flw)
         for flw in flow_mgr.async_progress_by_handler(domain)
         if flw["flow_id"].endswith(suffix)
     ]
 
     options_mgr = hass.config_entries.options
-    for entry in hass.config_entries.async_entries(domain):
+    subentry_mgr = hass.config_entries.subentries
+    entry_ids = {entry.entry_id for entry in hass.config_entries.async_entries(domain)}
+    for entry_id in entry_ids:
         matches.extend(
-            cast(OptionsFlow, options_mgr._progress[flw["flow_id"]])  # noqa: SLF001
-            for flw in options_mgr.async_progress_by_handler(entry.entry_id)
+            (options_mgr, flw)
+            for flw in options_mgr.async_progress_by_handler(entry_id)
             if flw["flow_id"].endswith(suffix)
+        )
+    matches.extend(
+        (subentry_mgr, flw)
+        for flw in subentry_mgr.async_progress()
+        if flw["handler"][0] in entry_ids and flw["flow_id"].endswith(suffix)
+    )
+    if not matches:
+        # Allow aborting subentry flows whose parent entry was removed.
+        matches.extend(
+            (subentry_mgr, flw)
+            for flw in subentry_mgr.async_progress()
+            if flw["flow_id"].endswith(suffix)
+            and hass.config_entries.async_get_entry(flw["handler"][0]) is None
         )
 
     if len(matches) != 1:
@@ -493,11 +563,12 @@ def _build_external_step_error(domain: str, *, is_new_entry: bool = True) -> Too
 async def _async_finalize_flow_step(
     hass: HomeAssistant,
     flow_mgr: data_entry_flow.FlowManager[Any, Any, Any],
-    result: ConfigFlowResult,
+    result: ConfigFlowResult | SubentryFlowResult,
     domain: str,
     language: str | None,
     *,
     flow_category: _FlowCategory = "config",
+    subentry_type: str | None = None,
     is_new_entry: bool = True,
 ) -> ToolResult:
     """Handle external/OAuth steps or format a DataEntryFlow result with translations."""
@@ -526,7 +597,10 @@ async def _async_finalize_flow_step(
     title_trans = await translation.async_get_translations(
         hass, lang, "title", {domain}
     )
-    base_prefix = f"component.{trans_domain}.{flow_category}"
+    if flow_category == "config_subentries":
+        base_prefix = f"component.{trans_domain}.config_subentries.{subentry_type}"
+    else:
+        base_prefix = f"component.{trans_domain}.{flow_category}"
 
     fallback_abort: str | None = None
     if flow_type is data_entry_flow.FlowResultType.ABORT:
@@ -552,9 +626,8 @@ async def _async_finalize_flow_step(
         fallback_title=title_trans.get(f"component.{domain}.title"),
         fallback_abort_description=fallback_abort,
     )
-    if (
-        flow_type is data_entry_flow.FlowResultType.CREATE_ENTRY
-        and (created_entry := result.get("result")) is not None
+    if flow_type is data_entry_flow.FlowResultType.CREATE_ENTRY and isinstance(
+        created_entry := result.get("result"), ConfigEntry
     ):
         formatted["entry_id"] = _format_short_entry_ids(
             hass.config_entries.async_entries(created_entry.domain)
@@ -653,20 +726,61 @@ class GetFlowsInProgressTool(Tool):
         return ToolResult(data={"result": results})
 
 
-# Starting subentry flows on existing entries is not supported.
+def _resolve_subentry_start_params(
+    entry: ConfigEntry,
+    entry_id: str,
+    flow_type: str,
+    subentry_type: str | None,
+    subentry_id: str | None,
+) -> tuple[str, config_entries.SubentryFlowContext, str]:
+    """Validate and build (subentry_type, context, unsupported_msg) for a subentry flow."""
+    if flow_type == "reconfigure" and subentry_id is None:
+        raise HomeAssistantError(
+            "'subentry_id' is required when reconfiguring a subentry."
+        )
+    if subentry_id is not None:
+        subentry = _resolve_short_subentry_id(entry, subentry_id)
+        if subentry_type is not None and subentry.subentry_type != subentry_type:
+            raise HomeAssistantError(
+                f"Subentry '{subentry_id}' does not match subentry_type "
+                f"'{subentry_type}'."
+            )
+        return (
+            subentry.subentry_type,
+            {
+                "source": config_entries.SOURCE_RECONFIGURE,
+                "subentry_id": subentry.subentry_id,
+            },
+            f"Subentry '{subentry_id}' does not support reconfigure.",
+        )
+    if subentry_type is None:
+        raise HomeAssistantError(
+            "'subentry_type' is required when starting a subentry flow."
+        )
+    return (
+        subentry_type,
+        {"source": config_entries.SOURCE_USER},
+        f"Config entry '{entry_id}' does not support subentry type '{subentry_type}'.",
+    )
+
+
 class StartFlowTool(Tool):
-    """LLM Tool to start a configuration, options, or reconfigure flow."""
+    """LLM Tool to start a configuration, options, reconfigure, or subentry flow."""
 
     name = "config__start_flow"
     title = "Start configuration flow"
     description = (
-        "Start a configuration, options, or reconfigure flow in Home Assistant and "
-        "return its initial step.\n"
+        "Start a configuration, options, reconfigure, or subentry flow in Home "
+        "Assistant and return its initial step.\n"
         "- 'config' (default): set up a new integration or helper instance by 'domain'.\n"
         "- 'options': update runtime options on a loaded config entry by 'entry_id' "
         "(requires supports_options).\n"
         "- 'reconfigure': update connection or authentication settings on an existing "
-        "config entry by 'entry_id' (requires supports_reconfigure)."
+        "config entry by 'entry_id' (requires supports_reconfigure), or on an existing "
+        "subentry by also passing 'subentry_id'.\n"
+        "- 'subentry': add a child subentry on an existing config entry by 'entry_id' "
+        "and 'subentry_type' (from supported_subentry_types), or reconfigure an "
+        "existing subentry by passing 'subentry_id'."
     )
     annotations = ToolAnnotations(
         read_only=False, destructive=False, idempotent=False, open_world=True
@@ -678,7 +792,7 @@ class StartFlowTool(Tool):
                 "flow_type",
                 description=(
                     "Type of flow to start: 'config' (new entry, default), "
-                    "'options', or 'reconfigure'."
+                    "'options', 'reconfigure', or 'subentry'."
                 ),
                 default="config",
             ): probatio.All(str, probatio.Lower, probatio.In(_FLOW_TYPES)),
@@ -692,8 +806,23 @@ class StartFlowTool(Tool):
             probatio.Optional(
                 "entry_id",
                 description=(
-                    "The entry_id of the config entry when flow_type is 'options' "
-                    "or 'reconfigure' (e.g. 'hue:8K2M')."
+                    "The entry_id of the config entry when flow_type is 'options', "
+                    "'reconfigure', or 'subentry' (e.g. 'hue:8K2M')."
+                ),
+            ): _NON_EMPTY_STRING,
+            probatio.Optional(
+                "subentry_type",
+                description=(
+                    "Subentry type key from supported_subentry_types when adding a "
+                    "new subentry with flow_type 'subentry' (optional when "
+                    "'subentry_id' is given)."
+                ),
+            ): _NON_EMPTY_STRING,
+            probatio.Optional(
+                "subentry_id",
+                description=(
+                    "The subentry_id of an existing subentry to reconfigure "
+                    "(e.g. 'conversation:8K2M')."
                 ),
             ): _NON_EMPTY_STRING,
         }
@@ -708,25 +837,36 @@ class StartFlowTool(Tool):
         flow_type: str = args["flow_type"]
         domain: str | None = args.get("domain")
         entry_id: str | None = args.get("entry_id")
+        subentry_type: str | None = args.get("subentry_type")
+        subentry_id: str | None = args.get("subentry_id")
 
         if domain is not None and entry_id is not None:
             return _error_result("Cannot specify both 'domain' and 'entry_id'.")
+        if (subentry_type is not None or subentry_id is not None) and flow_type not in (
+            "subentry",
+            "reconfigure",
+        ):
+            return _error_result(
+                "'subentry_type' and 'subentry_id' are only valid when flow_type "
+                "is 'subentry' or 'reconfigure'."
+            )
 
         flow_mgr: data_entry_flow.FlowManager[Any, Any, Any]
+        handler: Any
+        context: Any
+        flow_category: _FlowCategory = "config"
         if flow_type == "config":
             if entry_id is not None:
                 return _error_result(
-                    "Specify 'flow_type' ('options' or 'reconfigure') when passing "
-                    "'entry_id'."
+                    "Specify 'flow_type' ('options', 'reconfigure', or 'subentry') "
+                    "when passing 'entry_id'."
                 )
             if domain is None:
                 return _error_result("'domain' is required when flow_type is 'config'.")
             flow_mgr = hass.config_entries.flow
             handler = domain
             target_domain = domain
-            context: config_entries.ConfigFlowContext = {
-                "source": config_entries.SOURCE_USER
-            }
+            context = {"source": config_entries.SOURCE_USER}
             unsupported_msg = f"Integration '{domain}' does not exist or does not support config flows."
         else:
             if entry_id is None:
@@ -746,8 +886,8 @@ class StartFlowTool(Tool):
                     f"Config entry '{entry_id}' cannot be configured because it is ignored."
                 )
             target_domain = entry.domain
-            unsupported_msg = f"Config entry '{entry_id}' does not support {flow_type}."
             if flow_type == "options":
+                unsupported_msg = f"Config entry '{entry_id}' does not support options."
                 if entry.state is not ConfigEntryState.LOADED:
                     return _error_result(
                         f"Config entry '{entry_id}' must be loaded to configure "
@@ -761,14 +901,34 @@ class StartFlowTool(Tool):
                     return _error_result(unsupported_msg)
                 flow_mgr = hass.config_entries.options
                 handler = entry.entry_id
+                flow_category = "options"
                 context = {}
-            else:
+            elif (
+                flow_type == "reconfigure"
+                and subentry_type is None
+                and subentry_id is None
+            ):
+                unsupported_msg = (
+                    f"Config entry '{entry_id}' does not support reconfigure."
+                )
                 flow_mgr = hass.config_entries.flow
                 handler = entry.domain
                 context = {
                     "source": config_entries.SOURCE_RECONFIGURE,
                     "entry_id": entry.entry_id,
                 }
+            else:
+                try:
+                    subentry_type, context, unsupported_msg = (
+                        _resolve_subentry_start_params(
+                            entry, entry_id, flow_type, subentry_type, subentry_id
+                        )
+                    )
+                except HomeAssistantError as err:
+                    return _error_result(str(err))
+                flow_mgr = hass.config_entries.subentries
+                handler = (entry.entry_id, subentry_type)
+                flow_category = "config_subentries"
 
         is_new_entry = flow_type == "config"
         try:
@@ -795,7 +955,8 @@ class StartFlowTool(Tool):
             result,
             target_domain,
             llm_context.language,
-            flow_category="options" if flow_type == "options" else "config",
+            flow_category=flow_category,
+            subentry_type=subentry_type,
             is_new_entry=is_new_entry,
         )
 
@@ -807,7 +968,7 @@ class ConfigureFlowTool(Tool):
     title = "Configure flow step"
     description = (
         "Inspect, submit input to, or abort an in-progress configuration, options, "
-        "or reconfigure flow by flow_id.\n"
+        "reconfigure, or subentry flow by flow_id.\n"
         "- To inspect the current step without submitting, omit both 'user_input' and 'next_step_id'.\n"
         "- To submit a 'form' step, pass field values in 'user_input' (pass {} for "
         "a confirmation form with no fields).\n"
@@ -857,22 +1018,32 @@ class ConfigureFlowTool(Tool):
         abort: bool = args["abort"]
 
         try:
-            flow_handler = _resolve_short_flow_id(hass, short_flow_id)
+            flow_mgr, flw = _resolve_short_flow_id(hass, short_flow_id)
         except HomeAssistantError as err:
             return _error_result(str(err))
 
-        if isinstance(flow_handler, OptionsFlow):
-            flow_mgr: data_entry_flow.FlowManager[Any, Any, Any] = (
-                hass.config_entries.options
-            )
-            domain = flow_handler.config_entry.domain
-            flow_category: _FlowCategory = "options"
+        flow_id = flw["flow_id"]
+        handler = flw["handler"]
+        subentry_type: str | None = None
+        if isinstance(handler, tuple):
+            entry_id, subentry_type = handler
+            if (entry := hass.config_entries.async_get_entry(entry_id)) is None:
+                if not abort:
+                    flow_mgr.async_abort(flow_id)
+                    return _error_result("Config entry or subentry no longer exists.")
+                domain = ""
+            else:
+                domain = entry.domain
+            flow_category: _FlowCategory = "config_subentries"
+            is_new_entry = False
+        elif flow_mgr is hass.config_entries.options:
+            domain = hass.config_entries.async_get_known_entry(handler).domain
+            flow_category = "options"
             is_new_entry = False
         else:
-            flow_mgr = hass.config_entries.flow
-            domain = flow_handler.handler
+            domain = handler
             flow_category = "config"
-            is_new_entry = flow_handler.context.get("source") not in (
+            is_new_entry = flw["context"].get("source") not in (
                 config_entries.SOURCE_REAUTH,
                 config_entries.SOURCE_RECONFIGURE,
             )
@@ -880,16 +1051,20 @@ class ConfigureFlowTool(Tool):
         try:
             step_result = await llm_flow.async_configure_step(
                 flow_mgr,
-                flow_handler.flow_id,
+                flow_id,
                 display_flow_id=short_flow_id,
                 user_input=user_input,
                 next_step_id=next_step_id,
                 abort=abort,
             )
+        except config_entries.UnknownEntry, config_entries.UnknownSubEntry:
+            with suppress(data_entry_flow.UnknownFlow):
+                flow_mgr.async_abort(flow_id)
+            return _error_result("Config entry or subentry no longer exists.")
         except RuntimeError as err:
             if str(err) not in _OAUTH_RUNTIME_ERRORS:
                 raise
-            flow_mgr.async_abort(flow_handler.flow_id)
+            flow_mgr.async_abort(flow_id)
             return _build_external_step_error(domain, is_new_entry=is_new_entry)
 
         if isinstance(step_result, ToolResult):
@@ -902,6 +1077,7 @@ class ConfigureFlowTool(Tool):
             domain,
             llm_context.language,
             flow_category=flow_category,
+            subentry_type=subentry_type,
             is_new_entry=is_new_entry,
         )
 
@@ -1058,7 +1234,7 @@ def _format_entity_settings(
     hass: HomeAssistant, entry: er.RegistryEntry
 ) -> JsonObjectType:
     """Format the settings of an entity for LLM consumption."""
-    return {
+    result: JsonObjectType = {
         "entity_id": entry.entity_id,
         "full_name": er.async_get_full_entity_name(hass, entry),
         "name": entry.name,
@@ -1074,9 +1250,37 @@ def _format_entity_settings(
         "labels": list[JsonValueType](sorted(entry.labels)),
         "platform": entry.platform,
     }
+    if entry.domain == SENSOR_DOMAIN:
+        sensor_options: Mapping[str, Any] = entry.options.get(SENSOR_DOMAIN, {})
+        for key in _SENSOR_OPTIONS:
+            result[key] = sensor_options.get(key)
+    return result
 
 
 _NULLABLE_STRING = probatio.Any(None, _NON_EMPTY_STRING)
+_SENSOR_OPTIONS = (CONF_UNIT_OF_MEASUREMENT, "display_precision")
+
+
+def _check_sensor_options(entry: er.RegistryEntry, options: dict[str, Any]) -> None:
+    """Raise if the sensor options do not apply to the entity."""
+    if entry.domain != SENSOR_DOMAIN:
+        raise HomeAssistantError(
+            f"Only sensors have a unit and display precision, not '{entry.entity_id}'."
+        )
+    if (unit := options.get(CONF_UNIT_OF_MEASUREMENT)) is None:
+        return
+    # The sensor converts with the device class of the integration, not the one
+    # set in the registry
+    device_class = entry.original_device_class
+    units: set[Any] = set()
+    if device_class is not None and device_class in UNIT_CONVERTERS:
+        units = DEVICE_CLASS_UNITS.get(SensorDeviceClass(device_class), set())
+    if unit not in units:
+        allowed = ", ".join(sorted(str(allowed) for allowed in units if allowed))
+        raise HomeAssistantError(
+            f"The unit of '{entry.entity_id}' cannot be '{unit}'."
+            + (f" Allowed units: {allowed}." if allowed else "")
+        )
 
 
 class GetEntitySettingsTool(Tool):
@@ -1178,6 +1382,20 @@ class UpdateEntitySettingsTool(Tool):
                 "labels",
                 description="The label_ids. This replaces all labels.",
             ): [_NON_EMPTY_STRING],
+            probatio.Optional(
+                CONF_UNIT_OF_MEASUREMENT,
+                description=(
+                    "Only for sensors. The unit to show the state in, like 'kWh'. "
+                    "null uses the default unit of the sensor."
+                ),
+            ): _NULLABLE_STRING,
+            probatio.Optional(
+                "display_precision",
+                description=(
+                    "Only for sensors. The number of decimals to show. null uses "
+                    "the default."
+                ),
+            ): probatio.Any(None, probatio.All(int, probatio.Range(min=0))),
         }
     )
 
@@ -1189,6 +1407,11 @@ class UpdateEntitySettingsTool(Tool):
         settings = self.parameters(tool_input.tool_args)
         entity_id = settings.pop("entity_id")
         entry = _get_entity_entry(hass, entity_id)
+        sensor_options = {
+            key: settings.pop(key) for key in _SENSOR_OPTIONS if key in settings
+        }
+        if sensor_options:
+            _check_sensor_options(entry, sensor_options)
         if (area_id := settings.get("area_id")) and ar.async_get(hass).async_get_area(
             area_id
         ) is None:
@@ -1210,10 +1433,22 @@ class UpdateEntitySettingsTool(Tool):
             ]
 
         was_disabled = entry.disabled_by is not None
+        registry = er.async_get(hass)
         try:
-            entry = er.async_get(hass).async_update_entity(entity_id, **settings)
+            entry = registry.async_update_entity(entity_id, **settings)
         except ValueError as err:
             raise HomeAssistantError(str(err)) from err
+        if sensor_options:
+            # The registry replaces all options of the domain
+            options = dict(entry.options.get(SENSOR_DOMAIN, {}))
+            for key, value in sensor_options.items():
+                if value is None:
+                    options.pop(key, None)
+                else:
+                    options[key] = value
+            entry = registry.async_update_entity_options(
+                entry.entity_id, SENSOR_DOMAIN, options or None
+            )
 
         result = _format_entity_settings(hass, entry)
         if was_disabled and entry.disabled_by is None:
@@ -1423,6 +1658,162 @@ class DeleteFloorTool(Tool):
         _get_floor(hass, floor_id)
         fr.async_get(hass).async_delete(floor_id)
         return ToolResult(data={"result": {"floor_id": floor_id}})
+
+
+def _get_label_entry(hass: HomeAssistant, label_id: str) -> lr.LabelEntry:
+    """Return the registry entry of a label."""
+    if (entry := lr.async_get(hass).async_get_label(label_id)) is None:
+        raise HomeAssistantError(f"Label '{label_id}' not found.")
+    return entry
+
+
+def _format_label_settings(entry: lr.LabelEntry) -> JsonObjectType:
+    """Format the settings of a label for LLM consumption."""
+    return {
+        "label_id": entry.label_id,
+        "name": entry.name,
+        "color": entry.color,
+        "icon": entry.icon,
+        "description": entry.description,
+    }
+
+
+def _label_color(value: str) -> str:
+    """Validate a theme color or a hex color."""
+    if value in SUPPORTED_LABEL_THEME_COLORS:
+        return value
+    return cv.color_hex(value)
+
+
+_LABEL_SETTINGS: VolDictType = {
+    probatio.Optional(
+        "color",
+        description=(
+            "A hex color like '#ff0000', or a theme color: "
+            f"{', '.join(sorted(SUPPORTED_LABEL_THEME_COLORS))}. null removes it."
+        ),
+    ): probatio.Any(None, probatio.All(str, _label_color)),
+    probatio.Optional(
+        "icon", description="The icon, like 'mdi:tag'. null removes it."
+    ): probatio.Any(None, probatio.All(str, cv.icon)),
+    probatio.Optional(
+        "description", description="What the label is for. null removes it."
+    ): probatio.Any(None, str),
+}
+
+
+class GetLabelSettingsTool(Tool):
+    """LLM Tool to get the settings of a label."""
+
+    name = "config__get_label_settings"
+    title = "Get label settings"
+    description = (
+        "Get the settings of the label with the given label_id. Use search__search "
+        "to find the label_id."
+    )
+    annotations = ToolAnnotations(
+        read_only=True, destructive=False, idempotent=True, open_world=False
+    )
+    integration = DOMAIN
+    parameters = probatio.Schema({probatio.Required("label_id"): _NON_EMPTY_STRING})
+
+    @override
+    async def async_call(
+        self, hass: HomeAssistant, tool_input: ToolInput, llm_context: LLMContext
+    ) -> ToolResult:
+        """Return the settings of the label."""
+        args = self.parameters(tool_input.tool_args)
+        entry = _get_label_entry(hass, args["label_id"])
+        return ToolResult(data={"result": _format_label_settings(entry)})
+
+
+class UpdateLabelSettingsTool(Tool):
+    """LLM Tool to update the settings of a label."""
+
+    name = "config__update_label_settings"
+    title = "Update label settings"
+    description = (
+        "Update the settings of the label with the given label_id. Only the given "
+        "settings change. Returns the new settings."
+    )
+    annotations = ToolAnnotations(
+        read_only=False, destructive=True, idempotent=True, open_world=False
+    )
+    integration = DOMAIN
+    parameters = probatio.Schema(
+        {
+            probatio.Required("label_id"): _NON_EMPTY_STRING,
+            probatio.Optional("name"): _NON_EMPTY_STRING,
+            **_LABEL_SETTINGS,
+        }
+    )
+
+    @override
+    async def async_call(
+        self, hass: HomeAssistant, tool_input: ToolInput, llm_context: LLMContext
+    ) -> ToolResult:
+        """Update the settings of the label and return the new settings."""
+        settings = self.parameters(tool_input.tool_args)
+        label_id = settings.pop("label_id")
+        _get_label_entry(hass, label_id)
+        try:
+            entry = lr.async_get(hass).async_update(label_id, **settings)
+        except ValueError as err:
+            raise HomeAssistantError(str(err)) from err
+        return ToolResult(data={"result": _format_label_settings(entry)})
+
+
+class CreateLabelTool(Tool):
+    """LLM Tool to create a label."""
+
+    name = "config__create_label"
+    title = "Create label"
+    description = "Create a label. Returns the settings of the new label."
+    annotations = ToolAnnotations(
+        read_only=False, destructive=False, idempotent=False, open_world=False
+    )
+    integration = DOMAIN
+    parameters = probatio.Schema(
+        {probatio.Required("name"): _NON_EMPTY_STRING, **_LABEL_SETTINGS}
+    )
+
+    @override
+    async def async_call(
+        self, hass: HomeAssistant, tool_input: ToolInput, llm_context: LLMContext
+    ) -> ToolResult:
+        """Create the label and return its settings."""
+        settings = self.parameters(tool_input.tool_args)
+        try:
+            entry = lr.async_get(hass).async_create(**settings)
+        except ValueError as err:
+            raise HomeAssistantError(str(err)) from err
+        return ToolResult(data={"result": _format_label_settings(entry)})
+
+
+class DeleteLabelTool(Tool):
+    """LLM Tool to delete a label."""
+
+    name = "config__delete_label"
+    title = "Delete label"
+    description = (
+        "Delete the label with the given label_id. It is removed from everything "
+        "that has it."
+    )
+    annotations = ToolAnnotations(
+        read_only=False, destructive=True, idempotent=True, open_world=False
+    )
+    integration = DOMAIN
+    parameters = probatio.Schema({probatio.Required("label_id"): _NON_EMPTY_STRING})
+
+    @override
+    async def async_call(
+        self, hass: HomeAssistant, tool_input: ToolInput, llm_context: LLMContext
+    ) -> ToolResult:
+        """Delete the label."""
+        label_id = self.parameters(tool_input.tool_args)["label_id"]
+        _get_label_entry(hass, label_id)
+        lr.async_get(hass).async_delete(label_id)
+        return ToolResult(data={"result": {"label_id": label_id}})
 
 
 def _get_area_entry(hass: HomeAssistant, area_id: str) -> ar.AreaEntry:
@@ -1635,6 +2026,10 @@ def async_get_tools(
             UpdateFloorSettingsTool(),
             CreateFloorTool(),
             DeleteFloorTool(),
+            GetLabelSettingsTool(),
+            UpdateLabelSettingsTool(),
+            CreateLabelTool(),
+            DeleteLabelTool(),
             GetAreaSettingsTool(),
             UpdateAreaSettingsTool(),
             CreateAreaTool(),
