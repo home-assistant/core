@@ -30,6 +30,7 @@ class WatergateBinarySensorEntityDescription(BinarySensorEntityDescription):
     value_fn: Callable[[WatergateAgregatedRequests], bool | None]
 
 
+# Despite their types, the state and networking are None after an empty response
 DESCRIPTIONS: list[WatergateBinarySensorEntityDescription] = [
     WatergateBinarySensorEntityDescription(
         value_fn=lambda data: data.state.water_flow_indicator if data.state else None,  # type: ignore[truthy-bool]

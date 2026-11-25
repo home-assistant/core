@@ -58,6 +58,8 @@ class WatergateSensorEntityDescription(SensorEntityDescription):
     ]
 
 
+# Despite their types, the state, telemetry and networking are None after an
+# empty response
 DESCRIPTIONS: list[WatergateSensorEntityDescription] = [
     WatergateSensorEntityDescription(
         value_fn=lambda data: (
