@@ -199,6 +199,26 @@ async def test_get_config(hass: HomeAssistant, llm_context: llm.LLMContext) -> N
     )
 
 
+@pytest.mark.usefixtures("setup_scenes")
+async def test_get_config_attribute_named_state(
+    hass: HomeAssistant, llm_context: llm.LLMContext
+) -> None:
+    """Test an attribute named state does not hide the state the scene sets."""
+    hass.states.async_set("sensor.mode", "eco", {"state": "attribute"})
+    await hass.services.async_call(
+        DOMAIN,
+        "create",
+        {"scene_id": "snapshot", "snapshot_entities": ["sensor.mode"]},
+        blocking=True,
+    )
+    tool = GetConfigTool()
+    result = await tool.async_call(
+        hass, llm.ToolInput(tool.name, {"entity_id": "scene.snapshot"}), llm_context
+    )
+
+    assert result.data["config"]["entities"]["sensor.mode"]["state"] == "eco"
+
+
 class _IntegrationScene(Scene):
     """A scene that comes from an integration."""
 

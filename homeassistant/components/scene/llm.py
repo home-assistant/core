@@ -158,7 +158,8 @@ class GetConfigTool(Tool):
         if scene_config.icon is not None:
             config["icon"] = scene_config.icon
         config["entities"] = {
-            scene_entity_id: {"state": state.state, **state.attributes}
+            # An attribute named state must not hide the state the scene sets
+            scene_entity_id: {**state.attributes, "state": state.state}
             for scene_entity_id, state in scene_config.states.items()
         }
         return ToolResult(
