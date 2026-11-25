@@ -111,7 +111,7 @@ class SENSiTDataUpdateCoordinator(DataUpdateCoordinator[list[TankData]]):
                     except KingspanAPIError as err:
                         if err.code == KingspanErrorCode.NO_DATA:
                             if tank_id not in self._unavailable_tanks:
-                                _LOGGER.warning(
+                                _LOGGER.info(
                                     "Skipping tank '%s' (missing data): %s",
                                     tank_name,
                                     err.message,
