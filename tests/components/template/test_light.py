@@ -3340,6 +3340,48 @@ async def test_deprecated_missing_actions_issue_file_and_line(
     )
 
 
+async def test_deprecated_missing_actions_issue_blueprint(
+    hass: HomeAssistant, issue_registry: ir.IssueRegistry
+) -> None:
+    """Test all instances of a light blueprint share one repair."""
+    assert await async_setup_component(
+        hass,
+        template.DOMAIN,
+        {
+            template.DOMAIN: [
+                {
+                    "use_blueprint": {
+                        "path": "test_light_with_missing_actions.yaml",
+                        "input": {"sensor": sensor},
+                    },
+                    "name": name,
+                }
+                for sensor, name in (
+                    ("sensor.first", "First"),
+                    ("sensor.second", "Second"),
+                )
+            ]
+        },
+    )
+    await hass.async_block_till_done()
+
+    issues = get_issues_with_prefix(
+        issue_registry, LIGHT_REQUIRED_ACTIONS_OPTIONS.translation_key
+    )
+    assert len(issues) == 1
+    assert (
+        issues[0].translation_key
+        == LIGHT_REQUIRED_ACTIONS_OPTIONS.blueprint_translation_key
+    )
+    assert issues[0].translation_placeholders == {
+        "blueprint": "test_light_with_missing_actions.yaml",
+        "options": (
+            "- `blueprints/template/test_light_with_missing_actions.yaml:18`: "
+            "`level` requires `set_level`"
+        ),
+    }
+
+
 async def test_deprecated_missing_actions_config_entry_issue(
     hass: HomeAssistant, issue_registry: ir.IssueRegistry
 ) -> None:
