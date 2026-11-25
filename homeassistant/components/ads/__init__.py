@@ -102,6 +102,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: AdsConfigEntry) -> None:
         ) from err
 
     entry.runtime_data = hub
+    hub.async_start_monitoring(hass)
 
     if previous_hub := hass.data.pop(DATA_ADS, None):
         # The previous hub stays the entities' registry while the entry is
@@ -128,6 +129,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: AdsConfigEntry) -> None:
         )
 
     async def _async_shutdown(event: Event) -> None:
+        hub.async_stop_monitoring()
         await hass.async_add_executor_job(hub.shutdown)
 
     entry.async_on_unload(
@@ -138,6 +140,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: AdsConfigEntry) -> None:
 async def async_unload_entry(hass: HomeAssistant, entry: AdsConfigEntry) -> None:
     """Unload an ADS config entry."""
     hub = entry.runtime_data
+    hub.async_stop_monitoring()
     # Entry tasks are only cancelled once this returns, so the resubscribe task
     # has to be stopped here or it would add notifications back during shutdown.
     if task := hub.resubscribe_task:

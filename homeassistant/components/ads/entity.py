@@ -26,7 +26,7 @@ class AdsEntity(Entity):
         self._state_dict[STATE_KEY_STATE] = None
         self._ads_hub = ads_hub
         self._ads_var = ads_var
-        self._notification_handles: list[int] = []
+        self._subscription_ids: list[int] = []
         self._removed = False
         self._attr_unique_id = ads_var
         self._attr_name = name
@@ -73,34 +73,48 @@ class AdsEntity(Entity):
         plctype: type,
         notification_callback: Callable[[str, Any], None],
     ) -> bool:
-        """Subscribe to a variable for this entity, returning whether it worked.
+        """Subscribe to a variable, returning whether the device notifies on it.
 
-        The handle is tracked, so removing the entity deletes it again.
+        The subscription is tracked, so removing the entity deletes it again.
+        One the device refused is kept on the hub and asked for again on the
+        next reconnect.
         """
-        handle = await self.hass.async_add_executor_job(
+        subscription_id = await self.hass.async_add_executor_job(
             self._ads_hub.add_device_notification,
             ads_var,
             plctype,
             notification_callback,
         )
-        if handle is None:
+        if subscription_id is None:
             # No notification is registered, so no first update will arrive.
             return False
         if self._removed:
             # Removed while this was subscribing, so the removal has already
-            # drained the handles and will not come back for this one.
+            # drained the subscriptions and will not come back for this one.
             await self.hass.async_add_executor_job(
-                self._ads_hub.delete_device_notification, handle
+                self._ads_hub.delete_device_notification, subscription_id
             )
             return False
-        self._notification_handles.append(handle)
-        return True
+        self._subscription_ids.append(subscription_id)
+        return await self.hass.async_add_executor_job(
+            self._ads_hub.is_registered, subscription_id
+        )
 
     @property
     @override
     def available(self) -> bool:
-        """Return False if state has not been updated yet."""
-        return self._state_dict[STATE_KEY_STATE] is not None
+        """Return whether the PLC runs and has sent a value.
+
+        Values that arrive while the PLC is stopped are kept, so the latest one
+        shows as soon as it runs again.
+        """
+        return self._ads_hub.connected and self._state_dict[STATE_KEY_STATE] is not None
+
+    @callback
+    def async_connection_changed(self) -> None:
+        """Update the state after the hub's connection came or went."""
+        if self.hass is not None and self.platform is not None:
+            self.async_write_ha_state()
 
     @override
     async def async_will_remove_from_hass(self) -> None:
@@ -112,11 +126,11 @@ class AdsEntity(Entity):
         # Set before the first await, so a subscription still in flight sees it
         # and cleans up after itself.
         self._removed = True
-        handles = self._notification_handles
-        self._notification_handles = []
-        for handle in handles:
+        subscription_ids = self._subscription_ids
+        self._subscription_ids = []
+        for subscription_id in subscription_ids:
             await self.hass.async_add_executor_job(
-                self._ads_hub.delete_device_notification, handle
+                self._ads_hub.delete_device_notification, subscription_id
             )
 
     def mark_unavailable(self) -> None:
@@ -135,7 +149,7 @@ class AdsEntity(Entity):
     def rebind(self, ads_hub: AdsHub) -> None:
         """Rebind this entity to a new hub after the entry is reloaded."""
         self._ads_hub = ads_hub
-        # The old hub's handles died with its connection, and pyads can hand
-        # out the same numbers again on the new one.
-        self._notification_handles.clear()
+        # The old hub's subscriptions died with it, and the new one hands out
+        # the same ids again.
+        self._subscription_ids.clear()
         ads_hub.register_device(self)

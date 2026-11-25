@@ -183,7 +183,9 @@ class AdsCover(AdsEntity, CoverEntity):
     @property
     @override
     def available(self) -> bool:
-        """Return False if state has not been updated yet."""
+        """Return whether the PLC runs and has sent a value."""
+        if not self._ads_hub.connected:
+            return False
         if self._ads_var is not None or self._ads_var_position is not None:
             return (
                 self._state_dict[STATE_KEY_STATE] is not None

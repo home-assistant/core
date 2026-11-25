@@ -3,6 +3,7 @@
 from collections.abc import Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 
+import pyads
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
@@ -57,6 +58,10 @@ def mock_pyads_connection(
 ) -> Generator[MagicMock]:
     """Mock the pyads Connection class."""
     with patch("pyads.Connection", autospec=True) as mock_connection:
+        mock_connection.return_value.read_state.return_value = (
+            pyads.ADSSTATE_RUN,
+            0,
+        )
         yield mock_connection
 
 
