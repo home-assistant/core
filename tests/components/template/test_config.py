@@ -15,12 +15,15 @@ from homeassistant import config as hass_config
 from homeassistant.components.template import DOMAIN
 from homeassistant.components.template.config import (
     CONFIG_SECTION_SCHEMA,
+    _merge_deprecated_options,
     async_validate_config,
     async_validate_config_section,
 )
-from homeassistant.components.template.const import PLATFORMS, TemplateService
-from homeassistant.components.template.repairs import (
-    DEPRECATED_TEMPLATE_OPTIONS_ISSUE_ID,
+from homeassistant.components.template.const import (
+    PLATFORMS,
+    WEATHER_DEPRECATED_OPTIONS,
+    DeprecatedTemplateOptions,
+    TemplateService,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import (
@@ -1514,7 +1517,7 @@ async def test_deprecated_template_options_issue_file_and_line(
     await async_setup_yaml_config(hass, yaml_config_dir, WEATHER_LEGACY_YAML)
 
     issues = get_issues_with_prefix(
-        issue_registry, DEPRECATED_TEMPLATE_OPTIONS_ISSUE_ID
+        issue_registry, WEATHER_DEPRECATED_OPTIONS.translation_key
     )
     assert [issue.translation_placeholders for issue in issues] == [
         {"identifier": "name: Test", "options": legacy_options(4)},
@@ -1527,7 +1530,9 @@ async def test_deprecated_template_options_issue_file_and_line(
     )
 
     assert (
-        get_issues_with_prefix(issue_registry, DEPRECATED_TEMPLATE_OPTIONS_ISSUE_ID)
+        get_issues_with_prefix(
+            issue_registry, WEATHER_DEPRECATED_OPTIONS.translation_key
+        )
         == []
     )
 
@@ -1550,7 +1555,7 @@ async def test_deprecated_template_options_issue_per_entity(
     )
 
     issues = get_issues_with_prefix(
-        issue_registry, DEPRECATED_TEMPLATE_OPTIONS_ISSUE_ID
+        issue_registry, WEATHER_DEPRECATED_OPTIONS.translation_key
     )
     assert [issue.translation_placeholders for issue in issues] == [
         {"identifier": "name: Test", "options": legacy_options(4)},
@@ -1566,7 +1571,7 @@ async def test_deprecated_template_options_issue_one_entity_fixed(
         hass, yaml_config_dir, WEATHER_LEGACY_YAML + WEATHER_SECOND_LEGACY_YAML
     )
     issues = get_issues_with_prefix(
-        issue_registry, DEPRECATED_TEMPLATE_OPTIONS_ISSUE_ID
+        issue_registry, WEATHER_DEPRECATED_OPTIONS.translation_key
     )
     assert [issue.translation_placeholders for issue in issues] == [
         {"identifier": "name: Test", "options": legacy_options(4)},
@@ -1583,7 +1588,7 @@ async def test_deprecated_template_options_issue_one_entity_fixed(
     )
 
     assert get_issues_with_prefix(
-        issue_registry, DEPRECATED_TEMPLATE_OPTIONS_ISSUE_ID
+        issue_registry, WEATHER_DEPRECATED_OPTIONS.translation_key
     ) == [second_issue]
 
 
@@ -1606,7 +1611,7 @@ template:
     )
 
     issues = get_issues_with_prefix(
-        issue_registry, DEPRECATED_TEMPLATE_OPTIONS_ISSUE_ID
+        issue_registry, WEATHER_DEPRECATED_OPTIONS.translation_key
     )
     assert [issue.translation_placeholders for issue in issues] == [
         {"identifier": "unique_id: kitchen", "options": legacy_options(5)},
@@ -1637,7 +1642,7 @@ template:
     )
 
     issues = get_issues_with_prefix(
-        issue_registry, DEPRECATED_TEMPLATE_OPTIONS_ISSUE_ID
+        issue_registry, WEATHER_DEPRECATED_OPTIONS.translation_key
     )
     assert [issue.translation_placeholders for issue in issues] == [
         {"identifier": "name: Test", "options": legacy_options(5)},
@@ -1666,7 +1671,7 @@ template:
     )
 
     assert get_issues_with_prefix(
-        issue_registry, DEPRECATED_TEMPLATE_OPTIONS_ISSUE_ID
+        issue_registry, WEATHER_DEPRECATED_OPTIONS.translation_key
     ) == [second_issue]
 
 
@@ -1676,7 +1681,7 @@ async def test_deprecated_template_options_issue_dismissed(
     """Test a dismissed repair stays dismissed until the configuration changes."""
     await async_setup_yaml_config(hass, yaml_config_dir, WEATHER_LEGACY_YAML)
     issues = get_issues_with_prefix(
-        issue_registry, DEPRECATED_TEMPLATE_OPTIONS_ISSUE_ID
+        issue_registry, WEATHER_DEPRECATED_OPTIONS.translation_key
     )
     assert len(issues) == 1
     dismissed_issue_id = issues[0].issue_id
@@ -1686,7 +1691,7 @@ async def test_deprecated_template_options_issue_dismissed(
     await async_reload_yaml_config(hass, yaml_config_dir, "\n" + WEATHER_LEGACY_YAML)
 
     issues = get_issues_with_prefix(
-        issue_registry, DEPRECATED_TEMPLATE_OPTIONS_ISSUE_ID
+        issue_registry, WEATHER_DEPRECATED_OPTIONS.translation_key
     )
     assert len(issues) == 1
     assert issues[0].issue_id == dismissed_issue_id
@@ -1697,7 +1702,7 @@ async def test_deprecated_template_options_issue_dismissed(
     )
 
     issues = get_issues_with_prefix(
-        issue_registry, DEPRECATED_TEMPLATE_OPTIONS_ISSUE_ID
+        issue_registry, WEATHER_DEPRECATED_OPTIONS.translation_key
     )
     assert len(issues) == 1
     assert issues[0].issue_id != dismissed_issue_id
@@ -1710,7 +1715,7 @@ async def test_deprecated_template_options_issue_not_changed_by_config_check(
     """Test validating the configuration without reloading keeps the repair."""
     await async_setup_yaml_config(hass, yaml_config_dir, WEATHER_LEGACY_YAML)
     issues = get_issues_with_prefix(
-        issue_registry, DEPRECATED_TEMPLATE_OPTIONS_ISSUE_ID
+        issue_registry, WEATHER_DEPRECATED_OPTIONS.translation_key
     )
     assert len(issues) == 1
 
@@ -1723,7 +1728,9 @@ async def test_deprecated_template_options_issue_not_changed_by_config_check(
     await async_validate_config(hass, fixed_config)
 
     assert (
-        get_issues_with_prefix(issue_registry, DEPRECATED_TEMPLATE_OPTIONS_ISSUE_ID)
+        get_issues_with_prefix(
+            issue_registry, WEATHER_DEPRECATED_OPTIONS.translation_key
+        )
         == issues
     )
 
@@ -1755,7 +1762,7 @@ async def test_deprecated_template_options_issue_kept_with_invalid_section(
     """Test an invalid section doesn't delete repairs or their ignore flag."""
     await async_setup_yaml_config(hass, yaml_config_dir, WEATHER_LEGACY_YAML)
     issues = get_issues_with_prefix(
-        issue_registry, DEPRECATED_TEMPLATE_OPTIONS_ISSUE_ID
+        issue_registry, WEATHER_DEPRECATED_OPTIONS.translation_key
     )
     assert len(issues) == 1
     issue_registry.async_ignore(DOMAIN, issues[0].issue_id, True)
@@ -1764,13 +1771,13 @@ async def test_deprecated_template_options_issue_kept_with_invalid_section(
     await async_reload_yaml_config(hass, yaml_config_dir, invalid_yaml)
 
     assert get_issues_with_prefix(
-        issue_registry, DEPRECATED_TEMPLATE_OPTIONS_ISSUE_ID
+        issue_registry, WEATHER_DEPRECATED_OPTIONS.translation_key
     ) == [issue]
 
     await async_reload_yaml_config(hass, yaml_config_dir, WEATHER_LEGACY_YAML)
 
     assert get_issues_with_prefix(
-        issue_registry, DEPRECATED_TEMPLATE_OPTIONS_ISSUE_ID
+        issue_registry, WEATHER_DEPRECATED_OPTIONS.translation_key
     ) == [issue]
 
 
@@ -1779,12 +1786,16 @@ async def test_deprecated_template_options_issue_removed_without_template_config
 ) -> None:
     """Test the repair is removed when the template configuration is removed."""
     await async_setup_yaml_config(hass, yaml_config_dir, WEATHER_LEGACY_YAML)
-    assert get_issues_with_prefix(issue_registry, DEPRECATED_TEMPLATE_OPTIONS_ISSUE_ID)
+    assert get_issues_with_prefix(
+        issue_registry, WEATHER_DEPRECATED_OPTIONS.translation_key
+    )
 
     await async_reload_yaml_config(hass, yaml_config_dir, "homeassistant:\n")
 
     assert (
-        get_issues_with_prefix(issue_registry, DEPRECATED_TEMPLATE_OPTIONS_ISSUE_ID)
+        get_issues_with_prefix(
+            issue_registry, WEATHER_DEPRECATED_OPTIONS.translation_key
+        )
         == []
     )
 
@@ -1811,7 +1822,7 @@ template:
     )
 
     issues = get_issues_with_prefix(
-        issue_registry, DEPRECATED_TEMPLATE_OPTIONS_ISSUE_ID
+        issue_registry, WEATHER_DEPRECATED_OPTIONS.translation_key
     )
     assert [issue.translation_placeholders for issue in issues] == [
         {
@@ -1841,7 +1852,7 @@ template:
     )
 
     remaining = get_issues_with_prefix(
-        issue_registry, DEPRECATED_TEMPLATE_OPTIONS_ISSUE_ID
+        issue_registry, WEATHER_DEPRECATED_OPTIONS.translation_key
     )
     assert [
         (issue.issue_id, issue.dismissed_version, issue.translation_placeholders)
@@ -1882,9 +1893,34 @@ async def test_deprecated_template_options_issue_blueprint(
     await hass.async_block_till_done()
 
     assert (
-        get_issues_with_prefix(issue_registry, DEPRECATED_TEMPLATE_OPTIONS_ISSUE_ID)
+        get_issues_with_prefix(
+            issue_registry, WEATHER_DEPRECATED_OPTIONS.translation_key
+        )
         == snapshot
     )
+
+
+def test_merge_deprecated_options_per_platform() -> None:
+    """Test deprecations of the same platform all keep their option locations."""
+    deprecations = [
+        DeprecatedTemplateOptions(
+            platform=platform,
+            options=options,
+            translation_key=key,
+            blueprint_translation_key=f"{key}_blueprint",
+            breaks_in_ha_version="2027.6.0",
+        )
+        for platform, options, key in (
+            (Platform.LIGHT, {"temperature": "temperature_kelvin"}, "first"),
+            (Platform.LIGHT, {"level": "set_level"}, "second"),
+            (Platform.COVER, {"position": "set_cover_position"}, "third"),
+        )
+    ]
+
+    assert _merge_deprecated_options(deprecations) == {
+        Platform.LIGHT: {"temperature", "level"},
+        Platform.COVER: {"position"},
+    }
 
 
 async def test_option_locations_only_deprecated_options(
