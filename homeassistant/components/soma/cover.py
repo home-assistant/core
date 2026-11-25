@@ -17,6 +17,8 @@ from . import SomaConfigEntry
 from .entity import SomaEntity
 from .utils import is_api_response_success
 
+OPEN_TILT_POSITION = 50
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -51,6 +53,8 @@ class SomaTilt(SomaEntity, CoverEntity):
         | CoverEntityFeature.STOP_TILT
         | CoverEntityFeature.SET_TILT_POSITION
     )
+    _attr_open_tilt_position = OPEN_TILT_POSITION
+    _attr_closed_tilt_positions = [0, 100]
     CLOSED_UP_THRESHOLD = 80
     CLOSED_DOWN_THRESHOLD = 20
 
@@ -84,12 +88,12 @@ class SomaTilt(SomaEntity, CoverEntity):
     @override
     def open_cover_tilt(self, **kwargs: Any) -> None:
         """Open the cover tilt."""
-        response = self.api.set_shade_position(self.device["mac"], -100)
+        response = self.api.set_shade_position(self.device["mac"], 0)
         if not is_api_response_success(response):
             raise HomeAssistantError(
                 f"Error while opening the cover ({self.name}): {response['msg']}"
             )
-        self.set_position(100)
+        self.set_position(OPEN_TILT_POSITION)
 
     @override
     def stop_cover_tilt(self, **kwargs: Any) -> None:
