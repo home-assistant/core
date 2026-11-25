@@ -19,7 +19,7 @@ from gkphomepython import (
 )
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
@@ -230,6 +230,7 @@ class GkpDeviceCoordinator(DataUpdateCoordinator[GkpDeviceData]):
             hub_coordinator.async_add_listener(self._handle_hub_update)
         )
 
+    @callback
     def _handle_hub_update(self) -> None:
         """Handle updates from hub coordinator.
 
