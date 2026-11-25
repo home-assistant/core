@@ -82,7 +82,7 @@ async def test_pressing_button(
         BUTTON_DOMAIN,
         SERVICE_PRESS,
         {
-            ATTR_ENTITY_ID: "button.test_dali_scan_start_system_extension",
+            ATTR_ENTITY_ID: "button.test_scan_start_system_extension",
         },
         blocking=True,
     )
@@ -94,7 +94,7 @@ async def test_pressing_button(
         BUTTON_DOMAIN,
         SERVICE_PRESS,
         {
-            ATTR_ENTITY_ID: "button.test_dali_scan_cancel",
+            ATTR_ENTITY_ID: "button.test_scan_cancel",
         },
         blocking=True,
     )
@@ -104,7 +104,7 @@ async def test_pressing_button(
         BUTTON_DOMAIN,
         SERVICE_PRESS,
         {
-            ATTR_ENTITY_ID: "button.test_dali_scan_start_new_installation",
+            ATTR_ENTITY_ID: "button.test_scan_start_new_installation",
         },
         blocking=True,
     )
@@ -116,7 +116,7 @@ async def test_pressing_button(
         BUTTON_DOMAIN,
         SERVICE_PRESS,
         {
-            ATTR_ENTITY_ID: "button.test_dali_scan_cancel",
+            ATTR_ENTITY_ID: "button.test_scan_cancel",
         },
         blocking=True,
     )
@@ -126,7 +126,7 @@ async def test_pressing_button(
         BUTTON_DOMAIN,
         SERVICE_PRESS,
         {
-            ATTR_ENTITY_ID: "button.test_dali_scan_read_current_devices",
+            ATTR_ENTITY_ID: "button.test_scan_read_current_devices",
         },
         blocking=True,
     )
@@ -138,7 +138,7 @@ async def test_pressing_button(
         BUTTON_DOMAIN,
         SERVICE_PRESS,
         {
-            ATTR_ENTITY_ID: "button.test_dali_scan_cancel",
+            ATTR_ENTITY_ID: "button.test_scan_cancel",
         },
         blocking=True,
     )
@@ -152,7 +152,7 @@ async def test_pressing_button(
             BUTTON_DOMAIN,
             SERVICE_PRESS,
             {
-                ATTR_ENTITY_ID: "button.test_dali_scan_cancel",
+                ATTR_ENTITY_ID: "button.test_scan_cancel",
             },
             blocking=True,
         )
@@ -180,15 +180,15 @@ async def test_pressing_button_handles_connection_error(
             BUTTON_DOMAIN,
             SERVICE_PRESS,
             {
-                ATTR_ENTITY_ID: "button.test_dali_scan_start_system_extension",
+                ATTR_ENTITY_ID: "button.test_scan_start_system_extension",
             },
             blocking=True,
         )
 
     assert err.value.translation_domain == DOMAIN
-    assert err.value.translation_key == "cannot_control_dali_scan"
+    assert err.value.translation_key == "cannot_control_scan"
     assert err.value.translation_placeholders == {
-        "entity": "button.test_dali_scan_start_system_extension"
+        "entity": "button.test_scan_start_system_extension"
     }
     assert isinstance(err.value.__cause__, aiohttp.ClientConnectionError)
 
@@ -218,7 +218,7 @@ async def test_cancel_scan_uses_refreshed_scan_state(
     await hass.services.async_call(
         BUTTON_DOMAIN,
         SERVICE_PRESS,
-        {ATTR_ENTITY_ID: "button.test_dali_scan_cancel"},
+        {ATTR_ENTITY_ID: "button.test_scan_cancel"},
         blocking=True,
     )
 
@@ -246,7 +246,7 @@ async def test_cancel_scan_aborts_when_refresh_fails(
         await hass.services.async_call(
             BUTTON_DOMAIN,
             SERVICE_PRESS,
-            {ATTR_ENTITY_ID: "button.test_dali_scan_cancel"},
+            {ATTR_ENTITY_ID: "button.test_scan_cancel"},
             blocking=True,
         )
 
@@ -288,7 +288,7 @@ async def test_pressing_line_scan_button(
     await hass.services.async_call(
         BUTTON_DOMAIN,
         SERVICE_PRESS,
-        {ATTR_ENTITY_ID: (f"button.dali_line_{line_id}_dali_scan_{entity_suffix}")},
+        {ATTR_ENTITY_ID: (f"button.dali_line_{line_id}_scan_{entity_suffix}")},
         blocking=True,
     )
 
@@ -344,7 +344,7 @@ async def test_line_scan_button_busy_target(
             SERVICE_PRESS,
             {
                 ATTR_ENTITY_ID: (
-                    f"button.dali_line_{line_id}_dali_scan_start_system_extension"
+                    f"button.dali_line_{line_id}_scan_start_system_extension"
                 )
             },
             blocking=True,
@@ -390,11 +390,7 @@ async def test_line_scan_button_idle_target_when_another_line_busy(
     await hass.services.async_call(
         BUTTON_DOMAIN,
         SERVICE_PRESS,
-        {
-            ATTR_ENTITY_ID: (
-                f"button.dali_line_{line_id}_dali_scan_start_system_extension"
-            )
-        },
+        {ATTR_ENTITY_ID: (f"button.dali_line_{line_id}_scan_start_system_extension")},
         blocking=True,
     )
 

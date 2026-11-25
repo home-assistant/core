@@ -87,9 +87,9 @@ async def test_sensor_value_update(
     await hass.async_block_till_done(wait_background_tasks=True)
 
     entity_states = get_entity_states()
-    assert entity_states["binary_sensor.test_dali_scan_status"] == STATE_ON
-    assert entity_states["binary_sensor.dali_line_0_dali_scan_status"] == STATE_ON
-    assert entity_states["binary_sensor.dali_line_1_dali_scan_status"] == STATE_OFF
+    assert entity_states["binary_sensor.test_scan_status"] == STATE_ON
+    assert entity_states["binary_sensor.dali_line_0_scan_status"] == STATE_ON
+    assert entity_states["binary_sensor.dali_line_1_scan_status"] == STATE_OFF
     assert coordinator.update_interval == fast_update_interval
 
     freezer.tick(fast_update_interval)
@@ -117,8 +117,8 @@ async def test_line_scan_status_removed_with_line(
     await setup_integration(hass, mock_config_entry)
 
     entity_ids = (
-        ("binary_sensor.dali_line_0_dali_scan_status", STATE_OFF),
-        ("binary_sensor.dali_line_1_dali_scan_status", STATE_OFF),
+        ("binary_sensor.dali_line_0_scan_status", STATE_OFF),
+        ("binary_sensor.dali_line_1_scan_status", STATE_OFF),
     )
     for entity_id, expected_state in entity_ids:
         entity = hass.states.get(entity_id)

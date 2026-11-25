@@ -244,7 +244,7 @@ class DALIScanButtonEntity(
             except aiohttp.ClientConnectionError as ex:
                 raise HomeAssistantError(
                     translation_domain=DOMAIN,
-                    translation_key="cannot_control_dali_scan",
+                    translation_key="cannot_control_scan",
                     translation_placeholders={"entity": self.entity_id},
                 ) from ex
 
