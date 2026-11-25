@@ -82,6 +82,7 @@
         'holding': dict({
           '57016': 15,
           '57017': 100,
+          '57020': 2,
         }),
       }),
       'raw_error': None,
@@ -89,6 +90,7 @@
         'b_soc_high': 100,
         'b_soc_low': 15,
         'd_serial': '**REDACTED**',
+        'd_working_mode': 2,
       }),
     }),
     'values': dict({

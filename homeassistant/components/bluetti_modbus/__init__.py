@@ -28,7 +28,7 @@ from .coordinator import (
 from .device import bms_device, restricted_device
 from .entity import bluetti_modbus_device_info
 
-PLATFORMS = [Platform.NUMBER, Platform.SENSOR]
+PLATFORMS = [Platform.NUMBER, Platform.SELECT, Platform.SENSOR]
 
 
 async def async_setup_entry(

@@ -21,14 +21,13 @@ SCAN_INTERVAL: Final = timedelta(seconds=15)
 # Settings read on their own, slower poll: they only change when the owner
 # changes them.
 SETTINGS_SCAN_INTERVAL: Final = timedelta(seconds=60)
-SETTINGS_FIELDS: Final = frozenset({"b_soc_low", "b_soc_high"})
+SETTINGS_FIELDS: Final = frozenset({"b_soc_low", "b_soc_high", "d_working_mode"})
 
 # Left out of the read plan as well as entity creation.
 EXCLUDED_FIELDS: Final = frozenset(
     {
         # Writable, but not exposed yet.
         "ac_o_switch",
-        "d_working_mode",
         # Writable, but the device's working mode can put them back right
         # after a write.
         "g_i_switch",
