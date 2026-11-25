@@ -1245,6 +1245,10 @@ async def test_thermostat_update_with_cooling_setpoint(
 
     def set_cooling_setpoint(payload: dict[str, Any]) -> None:
         """Replace the therm setpoint with a cooling one in the response."""
+        # The inactive heating mode must not leak into a cooling room.
+        for homesdata_home in payload.get("body", {}).get("homes", []):
+            homesdata_home["therm_mode"] = "away"
+
         home = payload.get("body", {}).get("home")
         if home is None:
             return
