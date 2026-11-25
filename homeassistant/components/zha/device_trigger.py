@@ -33,11 +33,12 @@ def _get_device_trigger_data(hass: HomeAssistant, device_id: str) -> tuple[str, 
 
     # Triggers belong to the ZHA device, not to its child devices
     if (
-        child_device := dr.async_get(hass).async_get(
+        dr.async_get(hass).async_get(
             device_id, include_main_devices=False, include_composite_devices=False
         )
-    ) is not None:
-        return _get_device_trigger_data(hass, child_device.parent_device_id)[0], {}
+        is not None
+    ):
+        return "", {}
 
     # First, try checking to see if the device itself is accessible
     try:

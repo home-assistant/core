@@ -4,7 +4,7 @@ from collections.abc import Callable, Coroutine
 from unittest.mock import patch
 
 import pytest
-from pytest_homeassistant.common import async_get_device_automations
+from pytest_homeassistant.common import MockConfigEntry, async_get_device_automations
 from zha.application.gateway import (
     DeviceFullInitEvent,
     DevicePairingStatus,
@@ -297,6 +297,7 @@ async def test_reconcile_child_devices(
 
 async def test_child_device_automations(
     hass: HomeAssistant,
+    config_entry: MockConfigEntry,
     device_registry: dr.DeviceRegistry,
     setup_zha: Callable[..., Coroutine[None]],
     zigpy_device_mock: Callable[..., ZigpyDevice],
@@ -329,6 +330,15 @@ async def test_child_device_automations(
         hass, DeviceAutomationType.ACTION, child.id
     )
     assert not any(action["domain"] == DOMAIN for action in actions)
+
+    # The device joined after ZHA started, so it isn't in the trigger cache. Listing
+    # the triggers of its child device still works after ZHA is unloaded.
+    await hass.config_entries.async_unload(config_entry.entry_id)
+    await hass.async_block_till_done()
+    triggers = await async_get_device_automations(
+        hass, DeviceAutomationType.TRIGGER, child.id
+    )
+    assert not any(trigger["domain"] == DOMAIN for trigger in triggers)
 
 
 async def test_disable_entity_on_child_device(
