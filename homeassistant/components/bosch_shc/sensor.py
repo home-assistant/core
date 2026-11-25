@@ -199,12 +199,13 @@ _BATTERY_LEVEL_DESCRIPTION: SHCSensorEntityDescription[SHCBatteryDevice] = (
         options=[
             "ok",
             "low_battery",
-            "critical_low",
             "critically_low_battery",
         ],
         value_fn=lambda device: (
             None
             if device.batterylevel is BatteryLevelService.State.NOT_AVAILABLE
+            else "critically_low_battery"
+            if device.batterylevel is BatteryLevelService.State.CRITICAL_LOW
             else device.batterylevel.value.lower()
         ),
     )

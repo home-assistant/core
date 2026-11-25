@@ -395,7 +395,7 @@ async def test_light_control_power_and_energy(
     [
         (BatteryLevelService.State.OK, "ok"),
         (BatteryLevelService.State.LOW_BATTERY, "low_battery"),
-        (BatteryLevelService.State.CRITICAL_LOW, "critical_low"),
+        (BatteryLevelService.State.CRITICAL_LOW, "critically_low_battery"),
         (
             BatteryLevelService.State.CRITICALLY_LOW_BATTERY,
             "critically_low_battery",

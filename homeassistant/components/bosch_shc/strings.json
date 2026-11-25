@@ -315,7 +315,6 @@
       "battery_level": {
         "name": "Battery level",
         "state": {
-          "critical_low": "Critical",
           "critically_low_battery": "Critically low",
           "low_battery": "[%key:common::state::low%]",
           "ok": "OK"
