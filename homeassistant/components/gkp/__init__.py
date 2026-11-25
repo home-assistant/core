@@ -8,6 +8,7 @@ from gkphomepython import GkpAuth, GkpClient
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import aiohttp_client, config_entry_oauth2_flow
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
@@ -88,7 +89,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: GkpConfigEntry) -> None:
 
     oauth_session = config_entry_oauth2_flow.OAuth2Session(hass, entry, implementation)
 
-    await oauth_session.async_ensure_token_valid()
+    try:
+        await oauth_session.async_ensure_token_valid()
+    except TimeoutError as err:
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN,
+            translation_key="failed_to_refresh_token",
+        ) from err
 
     client = GkpClient(
         GkpAuth(oauth_session), aiohttp_client.async_get_clientsession(hass)

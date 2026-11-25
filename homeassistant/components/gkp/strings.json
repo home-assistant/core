@@ -43,6 +43,9 @@
     "failed_to_refresh_device": {
       "message": "Failed to refresh device {device_id}"
     },
+    "failed_to_refresh_token": {
+      "message": "Failed to refresh the access token"
+    },
     "failed_to_update_devices": {
       "message": "Failed to update devices"
     },

@@ -95,6 +95,20 @@ async def test_oauth_implementation_not_available(
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
+async def test_token_refresh_timeout(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test setup is retried when the token refresh times out."""
+    with patch(
+        "homeassistant.helpers.config_entry_oauth2_flow.OAuth2Session.async_ensure_token_valid",
+        side_effect=TimeoutError,
+    ):
+        await setup_integration(hass, mock_config_entry)
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+
+
 @pytest.mark.parametrize(
     ("exception", "expected_state"),
     [
