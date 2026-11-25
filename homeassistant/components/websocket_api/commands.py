@@ -17,6 +17,7 @@ from homeassistant.const import (
     EVENT_STATE_CHANGED,
     MATCH_ALL,
     SIGNAL_BOOTSTRAP_INTEGRATIONS,
+    TargetKey,
 )
 from homeassistant.core import (
     Context,
@@ -411,9 +412,24 @@ async def handle_call_service(
             translation_placeholders=err.translation_placeholders,
         )
     except HomeAssistantError as err:
-        connection.logger.error(
-            "Error during service call to %s.%s: %s", msg["domain"], msg["service"], err
-        )
+        call_data = {**msg.get("service_data", {}), **msg.get("target", {})}
+        if target := {
+            key: value for key, value in call_data.items() if key in TargetKey
+        }:
+            connection.logger.error(
+                "Error during service call to %s.%s with target %s: %s",
+                msg["domain"],
+                msg["service"],
+                target,
+                err,
+            )
+        else:
+            connection.logger.error(
+                "Error during service call to %s.%s: %s",
+                msg["domain"],
+                msg["service"],
+                err,
+            )
         connection.logger.debug("", exc_info=True)
         connection.send_error(
             msg["id"],

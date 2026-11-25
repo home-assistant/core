@@ -20,7 +20,7 @@ from . import MockSchlageConfigEntry
 
 
 @patch(
-    "pyschlage.Auth",
+    "homeassistant.components.schlage.pyschlage.Auth",
     side_effect=WarrantException,
 )
 async def test_auth_failed(
