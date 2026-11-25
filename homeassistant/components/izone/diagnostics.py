@@ -14,18 +14,21 @@ TO_REDACT = {
     CONF_HOST,
     "device_ip",
     "source_ip",
+    # Free-text tags that users may fill with personal details such as an address.
+    "Tag1",
+    "Tag2",
 }
 
 
 def _redact_data(data: Any) -> Any:
-    """Redact host keys and scrub those host values from sibling strings."""
+    """Redact sensitive keys and scrub those values from sibling strings."""
     if isinstance(data, list):
         return [_redact_data(item) for item in data]
     if isinstance(data, Mapping):
-        hosts = {
+        secrets = {
             value
             for key, value in data.items()
-            if key in TO_REDACT and isinstance(value, str)
+            if key in TO_REDACT and isinstance(value, str) and value
         }
         result: dict[Any, Any] = {}
         for key, value in data.items():
@@ -33,9 +36,9 @@ def _redact_data(data: Any) -> Any:
                 result[key] = REDACTED
                 continue
             redacted = _redact_data(value)
-            if hosts and isinstance(redacted, str):
-                for host in hosts:
-                    redacted = redacted.replace(host, REDACTED)
+            if secrets and isinstance(redacted, str):
+                for secret in secrets:
+                    redacted = redacted.replace(secret, REDACTED)
             result[key] = redacted
         return result
     return data

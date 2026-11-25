@@ -17,6 +17,8 @@ from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers.restore_state import STORAGE_KEY as RESTORE_STATE_KEY
 from homeassistant.setup import async_setup_component
 
+from tests.components.zone.common import async_set_improved_presence_detection
+
 
 @pytest.fixture
 async def setup_zone(hass: HomeAssistant) -> None:
@@ -137,7 +139,8 @@ async def setup_zone(hass: HomeAssistant) -> None:
             },
             "School",
         ),
-        # Raw fix is accepted but not used, zone is determined by gps
+        # Raw fix is only used by improved presence detection, zone is
+        # determined by gps
         (
             {"gps": [10, 20], "raw_gps": [10, 22], "raw_gps_accuracy": 5},
             {
@@ -288,6 +291,112 @@ async def test_sending_location(
         "vertical_accuracy": 8,
         "in_zones": [],
     }
+
+
+# The app moved the fix into the home zone to agree with a zone event
+ADJUSTED_LOCATION = {"gps": [10, 20], "gps_accuracy": 30}
+# The raw fix only overlaps the home zone, ~221 m from its center
+RAW_LOCATION = {"raw_gps": [10.002, 20], "raw_gps_accuracy": 100}
+# (state, latitude, longitude, gps_accuracy, in_zones) of the tracker
+ADJUSTED_STATE = ("home", 10, 20, 30, ["zone.home"])
+RAW_STATE = ("not_home", 10.002, 20, 100, [])
+
+
+async def _async_send_location(
+    webhook_client: TestClient, webhook_id: str, data: dict[str, Any]
+) -> None:
+    """Send a location update."""
+    resp = await webhook_client.post(
+        f"/api/webhook/{webhook_id}",
+        json={"type": "update_location", "data": data},
+    )
+    assert resp.status == HTTPStatus.OK
+
+
+def _tracker_location(hass: HomeAssistant) -> tuple[str, float, float, float, list]:
+    """Return the state, location and zones of the tracker."""
+    state = hass.states.get("device_tracker.test_1_2")
+    return (
+        state.state,
+        state.attributes["latitude"],
+        state.attributes["longitude"],
+        state.attributes["gps_accuracy"],
+        state.attributes["in_zones"],
+    )
+
+
+@pytest.mark.usefixtures("setup_zone")
+@pytest.mark.parametrize(
+    ("improved_presence_detection", "raw_location", "expected"),
+    [
+        pytest.param(False, RAW_LOCATION, ADJUSTED_STATE, id="overlap-raw"),
+        pytest.param(True, RAW_LOCATION, RAW_STATE, id="containment-raw"),
+        pytest.param(True, {}, ADJUSTED_STATE, id="containment-no_raw"),
+        pytest.param(
+            True,
+            {"raw_gps": RAW_LOCATION["raw_gps"]},
+            ADJUSTED_STATE,
+            id="containment-raw_without_accuracy",
+        ),
+    ],
+    indirect=["improved_presence_detection"],
+)
+@pytest.mark.usefixtures("improved_presence_detection")
+async def test_sending_location_raw_fix(
+    hass: HomeAssistant,
+    create_registrations: tuple[dict[str, Any], dict[str, Any]],
+    webhook_client: TestClient,
+    raw_location: dict[str, Any],
+    expected: tuple[str, float, float, float, list[str]],
+) -> None:
+    """Test improved presence detection uses the raw fix sent by the app."""
+    await _async_send_location(
+        webhook_client,
+        create_registrations[1]["webhook_id"],
+        ADJUSTED_LOCATION | raw_location,
+    )
+    await hass.async_block_till_done()
+
+    assert _tracker_location(hass) == expected
+
+
+@pytest.mark.usefixtures("setup_zone")
+@pytest.mark.parametrize(
+    ("raw_location", "expected_raw_state"),
+    [
+        pytest.param(RAW_LOCATION, RAW_STATE, id="zones_change"),
+        # Only the location changes, the raw fix is also in the home zone
+        pytest.param(
+            {"raw_gps": [10.0005, 20], "raw_gps_accuracy": 50},
+            ("home", 10.0005, 20, 50, ["zone.home"]),
+            id="location_changes",
+        ),
+    ],
+)
+async def test_raw_fix_improved_presence_detection_toggled(
+    hass: HomeAssistant,
+    create_registrations: tuple[dict[str, Any], dict[str, Any]],
+    webhook_client: TestClient,
+    raw_location: dict[str, Any],
+    expected_raw_state: tuple[str, float, float, float, list[str]],
+) -> None:
+    """Test toggling improved presence detection switches between the fixes."""
+    await async_set_improved_presence_detection(hass, False)
+    await _async_send_location(
+        webhook_client,
+        create_registrations[1]["webhook_id"],
+        ADJUSTED_LOCATION | raw_location,
+    )
+    await hass.async_block_till_done()
+    assert _tracker_location(hass) == ADJUSTED_STATE
+
+    await async_set_improved_presence_detection(hass, True)
+    await hass.async_block_till_done()
+    assert _tracker_location(hass) == expected_raw_state
+
+    await async_set_improved_presence_detection(hass, False)
+    await hass.async_block_till_done()
+    assert _tracker_location(hass) == ADJUSTED_STATE
 
 
 async def test_restoring_location(

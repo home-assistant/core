@@ -1,8 +1,9 @@
 """Common fixtures for the Electra Smart tests."""
 
+from functools import partial
 from unittest.mock import AsyncMock, Mock, patch
 
-from electrasmart.device import OperationMode
+from electrasmart.device import ElectraAirConditioner, OperationMode
 from electrasmart.device.const import Feature
 from freezegun.api import FrozenDateTimeFactory
 import pytest
@@ -16,6 +17,14 @@ from homeassistant.components.electrasmart.const import (
 from homeassistant.const import CONF_TOKEN
 from homeassistant.core import HomeAssistant
 
+MEASUREMENTS = {
+    "WI_FI_RSSI": "-53",
+    "I_ICT": "21",
+    "O_OCT": "25",
+    "I_BAD_ICT": "NORM",
+    "I_BAD_RAT": "NORM",
+}
+
 
 def _mock_device(mac: str, name: str) -> Mock:
     """Return a mocked Electra AC device."""
@@ -23,6 +32,10 @@ def _mock_device(mac: str, name: str) -> Mock:
         mac=mac,
         model="Electra A/C",
         manufactor="Electra",
+        serial_number="J4B60300391",
+        fm_version="611V4-C20",
+        hw_version="1.0",
+        measurements=dict(MEASUREMENTS),
         features=[Feature.V_SWING, Feature.H_SWING],
         is_disconnected=Mock(return_value=False),
         is_on=Mock(return_value=False),
@@ -44,6 +57,11 @@ def _mock_device(mac: str, name: str) -> Mock:
     )
     # `name` is a reserved Mock kwarg, so it must be set after construction.
     device.name = name
+    # Bind the library's own accessor over the mocked telemetry, so a test that
+    # changes or drops a measurement sees the getter follow it.
+    device.get_measurement_temperature = Mock(
+        side_effect=partial(ElectraAirConditioner.get_measurement_temperature, device)
+    )
     return device
 
 
