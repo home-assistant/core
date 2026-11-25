@@ -1,8 +1,10 @@
 {
   "domain": "iotty",
   "name": "iotty",
+  "categories": ["plugs_switches", "blinds_curtains"],
   "codeowners": ["@shapournemati-iotty"],
   "config_flow": true,
+  "connectivity": ["cloud"],
   "dependencies": ["application_credentials"],
   "documentation": "https://www.home-assistant.io/integrations/iotty",
   "integration_type": "device",

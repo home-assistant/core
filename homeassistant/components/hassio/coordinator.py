@@ -35,7 +35,7 @@ from aiohasupervisor.models import (
 )
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_MANUFACTURER, ATTR_NAME, ATTR_STATE
+from homeassistant.const import ATTR_NAME, ATTR_STATE
 from homeassistant.core import (
     CALLBACK_TYPE,
     HomeAssistant,
@@ -102,15 +102,18 @@ from .const import (
     HASSIO_ISSUES_UPDATE_INTERVAL,
     HASSIO_MAIN_UPDATE_INTERVAL,
     HASSIO_STATS_UPDATE_INTERVAL,
+    ISSUE_BREAKS_IN_HA_VERSION,
     ISSUE_KEY_ADDON_APP_PORT_CONFLICT,
     ISSUE_KEY_ADDON_BOOT_FAIL,
     ISSUE_KEY_ADDON_DEPRECATED_ARCH,
     ISSUE_KEY_ADDON_DETACHED_ADDON_MISSING,
     ISSUE_KEY_ADDON_DETACHED_ADDON_REMOVED,
     ISSUE_KEY_ADDON_PWNED,
+    ISSUE_KEY_CORE_DEPRECATED_TCP_API_REQUEST,
     ISSUE_KEY_SYSTEM_DOCKER_CONFIG,
     ISSUE_KEY_SYSTEM_FREE_SPACE,
     ISSUE_KEY_SYSTEM_REBOOT_REQUIRED,
+    ISSUE_LEARN_MORE_URLS,
     ISSUE_MOUNT_MOUNT_FAILED,
     PLACEHOLDER_KEY_ADDON,
     PLACEHOLDER_KEY_ADDON_URL,
@@ -158,6 +161,7 @@ ISSUE_KEYS_FOR_REPAIRS = {
     ISSUE_KEY_ADDON_PWNED,
     ISSUE_KEY_ADDON_DEPRECATED_ARCH,
     "issue_system_ntp_sync_failed",
+    ISSUE_KEY_CORE_DEPRECATED_TCP_API_REQUEST,
 }
 
 
@@ -329,63 +333,53 @@ class SupervisorIssuesCoordinator(DataUpdateCoordinator[SupervisorIssuesData]):
             previous_issue == issue and previous_issue.suggestions == issue.suggestions
         )
 
-    def _process_reason_deltas(
-        self,
-        previous_data: SupervisorIssuesData,
-        current_data: SupervisorIssuesData,
-    ) -> None:
-        """Create/delete unhealthy and unsupported repairs based on reason deltas."""
-        for unhealthy in (
-            current_data.unhealthy_reasons - previous_data.unhealthy_reasons
+    def _update_unhealthy_issues(self, unhealthy_reasons: set[str]) -> None:
+        """Create unhealthy repairs and delete those whose reason is gone."""
+        with ir.async_refresh_issues(
+            self.hass, DOMAIN, issue_id_pattern=f"{ISSUE_ID_UNHEALTHY}_"
         ):
-            if unhealthy in UnhealthyReason:
-                translation_key = f"{ISSUE_KEY_UNHEALTHY}_{unhealthy}"
-                translation_placeholders = None
-            else:
-                translation_key = ISSUE_KEY_UNHEALTHY
-                translation_placeholders = {PLACEHOLDER_KEY_REASON: unhealthy}
+            for unhealthy in unhealthy_reasons:
+                if unhealthy in UnhealthyReason:
+                    translation_key = f"{ISSUE_KEY_UNHEALTHY}_{unhealthy}"
+                    translation_placeholders = None
+                else:
+                    translation_key = ISSUE_KEY_UNHEALTHY
+                    translation_placeholders = {PLACEHOLDER_KEY_REASON: unhealthy}
 
-            async_create_issue(
-                self.hass,
-                DOMAIN,
-                f"{ISSUE_ID_UNHEALTHY}_{unhealthy}",
-                is_fixable=False,
-                learn_more_url=f"{INFO_URL_UNHEALTHY}/{unhealthy}",
-                severity=IssueSeverity.CRITICAL,
-                translation_key=translation_key,
-                translation_placeholders=translation_placeholders,
-            )
+                async_create_issue(
+                    self.hass,
+                    DOMAIN,
+                    f"{ISSUE_ID_UNHEALTHY}_{unhealthy}",
+                    is_fixable=False,
+                    learn_more_url=f"{INFO_URL_UNHEALTHY}/{unhealthy}",
+                    severity=IssueSeverity.CRITICAL,
+                    translation_key=translation_key,
+                    translation_placeholders=translation_placeholders,
+                )
 
-        for fixed in previous_data.unhealthy_reasons - current_data.unhealthy_reasons:
-            async_delete_issue(self.hass, DOMAIN, f"{ISSUE_ID_UNHEALTHY}_{fixed}")
-
-        for unsupported in (
-            current_data.unsupported_reasons
-            - UNSUPPORTED_SKIP_REPAIR
-            - previous_data.unsupported_reasons
+    def _update_unsupported_issues(self, unsupported_reasons: set[str]) -> None:
+        """Create unsupported repairs and delete those whose reason is gone."""
+        with ir.async_refresh_issues(
+            self.hass, DOMAIN, issue_id_pattern=f"{ISSUE_ID_UNSUPPORTED}_"
         ):
-            if unsupported in UnsupportedReason:
-                translation_key = f"{ISSUE_KEY_UNSUPPORTED}_{unsupported}"
-                translation_placeholders = None
-            else:
-                translation_key = ISSUE_KEY_UNSUPPORTED
-                translation_placeholders = {PLACEHOLDER_KEY_REASON: unsupported}
+            for unsupported in unsupported_reasons - UNSUPPORTED_SKIP_REPAIR:
+                if unsupported in UnsupportedReason:
+                    translation_key = f"{ISSUE_KEY_UNSUPPORTED}_{unsupported}"
+                    translation_placeholders = None
+                else:
+                    translation_key = ISSUE_KEY_UNSUPPORTED
+                    translation_placeholders = {PLACEHOLDER_KEY_REASON: unsupported}
 
-            async_create_issue(
-                self.hass,
-                DOMAIN,
-                f"{ISSUE_ID_UNSUPPORTED}_{unsupported}",
-                is_fixable=False,
-                learn_more_url=f"{INFO_URL_UNSUPPORTED}/{unsupported}",
-                severity=IssueSeverity.WARNING,
-                translation_key=translation_key,
-                translation_placeholders=translation_placeholders,
-            )
-
-        for fixed in previous_data.unsupported_reasons - (
-            current_data.unsupported_reasons - UNSUPPORTED_SKIP_REPAIR
-        ):
-            async_delete_issue(self.hass, DOMAIN, f"{ISSUE_ID_UNSUPPORTED}_{fixed}")
+                async_create_issue(
+                    self.hass,
+                    DOMAIN,
+                    f"{ISSUE_ID_UNSUPPORTED}_{unsupported}",
+                    is_fixable=False,
+                    learn_more_url=f"{INFO_URL_UNSUPPORTED}/{unsupported}",
+                    severity=IssueSeverity.WARNING,
+                    translation_key=translation_key,
+                    translation_placeholders=translation_placeholders,
+                )
 
     def _create_or_update_issue_repair(self, issue: Issue) -> None:
         """Create/update a repair for an issue if needed."""
@@ -411,7 +405,7 @@ class SupervisorIssuesCoordinator(DataUpdateCoordinator[SupervisorIssuesData]):
                 ISSUE_KEY_ADDON_PWNED,
             }:
                 placeholders[PLACEHOLDER_KEY_ADDON_URL] = (
-                    f"/hassio/addon/{issue.reference}"
+                    f"/config/app/{issue.reference}"
                 )
                 addons_list = get_addons_list(self.hass) or []
                 placeholders[PLACEHOLDER_KEY_ADDON] = issue.reference
@@ -439,7 +433,9 @@ class SupervisorIssuesCoordinator(DataUpdateCoordinator[SupervisorIssuesData]):
             self.hass,
             DOMAIN,
             issue.uuid.hex,
+            breaks_in_ha_version=ISSUE_BREAKS_IN_HA_VERSION.get(issue.key),
             is_fixable=bool(presentable),
+            learn_more_url=ISSUE_LEARN_MORE_URLS.get(issue.key),
             severity=IssueSeverity.WARNING,
             translation_key=issue.key,
             translation_placeholders=placeholders or None,
@@ -555,12 +551,13 @@ class SupervisorIssuesCoordinator(DataUpdateCoordinator[SupervisorIssuesData]):
         raise_on_entry_error: bool = False,
     ) -> None:
         """Refresh issue data and apply repair/subscription deltas."""
-        previous_data = self.data or SupervisorIssuesData(set(), set(), {})
+        previous_data = self.data_or_none or SupervisorIssuesData(set(), set(), {})
         await super()._async_refresh(
             log_failures, raise_on_auth_failed, scheduled, raise_on_entry_error
         )
         if self.last_update_success and self.data is not None:
-            self._process_reason_deltas(previous_data, self.data)
+            self._update_unhealthy_issues(self.data.unhealthy_reasons)
+            self._update_unsupported_issues(self.data.unsupported_reasons)
             self._process_issue_deltas(previous_data, self.data)
 
     @override
@@ -585,7 +582,7 @@ class SupervisorIssuesCoordinator(DataUpdateCoordinator[SupervisorIssuesData]):
             self.config_entry.async_create_task(self.hass, self.async_refresh())
             return
 
-        previous_data = self.data or SupervisorIssuesData(set(), set(), {})
+        previous_data = self.data_or_none or SupervisorIssuesData(set(), set(), {})
 
         if event[ATTR_WS_EVENT] == EVENT_HEALTH_CHANGED:
             unhealthy_reasons = (
@@ -631,7 +628,10 @@ class SupervisorIssuesCoordinator(DataUpdateCoordinator[SupervisorIssuesData]):
             return
 
         self.async_set_updated_data(updated_data)
-        self._process_reason_deltas(previous_data, updated_data)
+        if event[ATTR_WS_EVENT] == EVENT_HEALTH_CHANGED:
+            self._update_unhealthy_issues(updated_data.unhealthy_reasons)
+        elif event[ATTR_WS_EVENT] == EVENT_SUPPORTED_CHANGED:
+            self._update_unsupported_issues(updated_data.unsupported_reasons)
         self._process_issue_deltas(previous_data, updated_data)
 
 
@@ -1123,11 +1123,13 @@ def async_register_addons_in_dev_reg(
             sw_version=addon.version,
             name=addon.name,
             entry_type=dr.DeviceEntryType.SERVICE,
-            configuration_url=f"homeassistant://hassio/addon/{addon.slug}",
+            configuration_url=f"homeassistant://config/app/{addon.slug}",
         )
         if manufacturer := addon_data.repository or addon.url:
-            params[ATTR_MANUFACTURER] = manufacturer
-        dev_reg.async_get_or_create(config_entry_id=entry_id, **params)
+            params.manufacturer = manufacturer
+        dev_reg.async_get_or_create_from_info(
+            config_entry_id=entry_id, device_info=params
+        )
 
 
 @callback
@@ -1146,7 +1148,9 @@ def async_register_mounts_in_dev_reg(
             name=mount.name,
             entry_type=dr.DeviceEntryType.SERVICE,
         )
-        dev_reg.async_get_or_create(config_entry_id=entry_id, **params)
+        dev_reg.async_get_or_create_from_info(
+            config_entry_id=entry_id, device_info=params
+        )
 
 
 @callback
@@ -1162,7 +1166,7 @@ def async_register_os_in_dev_reg(
         name="Home Assistant Operating System",
         entry_type=dr.DeviceEntryType.SERVICE,
     )
-    dev_reg.async_get_or_create(config_entry_id=entry_id, **params)
+    dev_reg.async_get_or_create_from_info(config_entry_id=entry_id, device_info=params)
 
 
 @callback
@@ -1178,7 +1182,7 @@ def async_register_host_in_dev_reg(
         name="Home Assistant Host",
         entry_type=dr.DeviceEntryType.SERVICE,
     )
-    dev_reg.async_get_or_create(config_entry_id=entry_id, **params)
+    dev_reg.async_get_or_create_from_info(config_entry_id=entry_id, device_info=params)
 
 
 @callback
@@ -1196,7 +1200,7 @@ def async_register_core_in_dev_reg(
         name="Home Assistant Core",
         entry_type=dr.DeviceEntryType.SERVICE,
     )
-    dev_reg.async_get_or_create(config_entry_id=entry_id, **params)
+    dev_reg.async_get_or_create_from_info(config_entry_id=entry_id, device_info=params)
 
 
 @callback
@@ -1214,7 +1218,7 @@ def async_register_supervisor_in_dev_reg(
         name="Home Assistant Supervisor",
         entry_type=dr.DeviceEntryType.SERVICE,
     )
-    dev_reg.async_get_or_create(config_entry_id=entry_id, **params)
+    dev_reg.async_get_or_create_from_info(config_entry_id=entry_id, device_info=params)
 
 
 @callback
@@ -1437,7 +1441,7 @@ class HassioAddOnDataUpdateCoordinator(DataUpdateCoordinator[HassioAddonData]):
     @override
     async def _async_update_data(self) -> HassioAddonData:
         """Update data via library."""
-        is_first_update = not self.data
+        is_first_update = self.data_or_none is None
         client = self.supervisor_client
 
         # Collect state change events arriving while fetching, as the fetched
@@ -1519,7 +1523,9 @@ class HassioAddOnDataUpdateCoordinator(DataUpdateCoordinator[HassioAddonData]):
         # If there are new add-ons, we should reload the config entry so we can
         # create new devices and entities. We can return the new data because
         # coordinator will be recreated.
-        if self.data and (set(new_data.addons) - set(self.data.addons)):
+        if (current_data := self.data_or_none) is not None and (
+            set(new_data.addons) - set(current_data.addons)
+        ):
             self.hass.async_create_task(
                 self.hass.config_entries.async_reload(self.entry_id)
             )
@@ -1603,7 +1609,11 @@ class HassioAddOnDataUpdateCoordinator(DataUpdateCoordinator[HassioAddonData]):
         finally:
             self._event_state_recorders.remove(event_states)
 
-        if info is not None and self.data and slug in self.data.addons:
+        if (
+            info is not None
+            and (current_data := self.data_or_none) is not None
+            and slug in current_data.addons
+        ):
             addon = _installed_addon_from_complete(info)
             # A state change event received while the info request was in
             # flight is at least as fresh as the fetched info
@@ -1612,10 +1622,10 @@ class HassioAddOnDataUpdateCoordinator(DataUpdateCoordinator[HassioAddonData]):
             updated = AddonData(
                 addon=addon,
                 auto_update=info.auto_update,
-                repository=self.data.addons[slug].repository,
+                repository=current_data.addons[slug].repository,
             )
             self.async_set_updated_data(
-                HassioAddonData(addons={**self.data.addons, slug: updated})
+                HassioAddonData(addons={**current_data.addons, slug: updated})
             )
 
             # Update addon info cache in hass.data
@@ -1690,7 +1700,7 @@ class HassioMainDataUpdateCoordinator(DataUpdateCoordinator[HassioMainData]):
     @override
     async def _async_update_data(self) -> HassioMainData:
         """Update data via library."""
-        is_first_update = not self.data
+        is_first_update = self.data_or_none is None
         client = self.supervisor_client
 
         try:
@@ -1789,7 +1799,9 @@ class HassioMainDataUpdateCoordinator(DataUpdateCoordinator[HassioMainData]):
         # If there are new mounts, we should reload the config entry so we can
         # create new devices and entities. We can return the new data because
         # coordinator will be recreated.
-        if self.data and (set(new_data.mounts) - set(self.data.mounts)):
+        if (current_data := self.data_or_none) is not None and (
+            set(new_data.mounts) - set(current_data.mounts)
+        ):
             self.hass.async_create_task(
                 self.hass.config_entries.async_reload(self.entry_id)
             )

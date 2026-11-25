@@ -7,6 +7,7 @@ from unittest.mock import Mock, patch
 
 from pyfritzhome import LoginError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from requests.exceptions import HTTPError
 
 from homeassistant.components.fritzbox.const import DOMAIN
@@ -29,8 +30,6 @@ from homeassistant.helpers.service_info.ssdp import (
 )
 
 from .const import CONF_FAKE_NAME, MOCK_CONFIG
-
-from tests.common import MockConfigEntry
 
 MOCK_USER_DATA = {
     CONF_URL: "http://10.0.0.1",

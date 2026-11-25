@@ -2,8 +2,8 @@
 
 from unittest.mock import call
 
-from broadlink.exceptions import BroadlinkException
-from broadlink.remote import pulses_to_data
+from broadlink_async.exceptions import BroadlinkException
+from broadlink_async.remote import pulses_to_data
 from infrared_protocols.commands.nec import NECCommand
 import pytest
 
@@ -80,6 +80,9 @@ async def test_infrared_send_command(
 
     assert mock_setup.api.send_data.call_count == 1
     assert mock_setup.api.send_data.call_args == call(expected_packet)
+    # NEC ends on its stop pulse. The packet must close with the off time a
+    # learned code ends with, or the device holds the last pulse too long.
+    assert expected_packet.endswith(b"\x00\x0d\x05")
 
 
 @pytest.mark.parametrize("error", [BroadlinkException("boom"), OSError("boom")])

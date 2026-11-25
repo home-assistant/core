@@ -3,6 +3,13 @@
 from typing import Any
 
 import pytest
+from pytest_homeassistant.common import (
+    MockPlatform,
+    async_mock_service,
+    mock_device_registry,
+    mock_platform,
+)
+from pytest_homeassistant.components.common import assert_trigger_options_supported
 
 from homeassistant.components import automation
 from homeassistant.components.todo import (
@@ -16,13 +23,13 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_AREA_ID,
     ATTR_DEVICE_ID,
-    ATTR_ENTITY_ID,
     ATTR_FLOOR_ID,
     ATTR_LABEL_ID,
     CONF_ENTITY_ID,
     CONF_PLATFORM,
     CONF_TARGET,
     STATE_UNKNOWN,
+    TargetKey,
 )
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import (
@@ -36,14 +43,6 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.setup import async_setup_component
 
 from . import TEST_DOMAIN, MockTodoListEntity, create_mock_platform
-
-from tests.common import (
-    MockPlatform,
-    async_mock_service,
-    mock_device_registry,
-    mock_platform,
-)
-from tests.components.common import assert_trigger_options_supported
 
 TODO_ENTITY_ID1 = "todo.list_one"
 TODO_ENTITY_ID2 = "todo.list_two"
@@ -232,7 +231,7 @@ async def _add_item(hass: HomeAssistant, entity_id: str, item: str) -> None:
     await hass.services.async_call(
         DOMAIN,
         TodoServices.ADD_ITEM,
-        {ATTR_ENTITY_ID: entity_id, ATTR_ITEM: item},
+        {TargetKey.ENTITY_ID: entity_id, ATTR_ITEM: item},
         blocking=True,
     )
 
@@ -241,7 +240,7 @@ async def _remove_item(hass: HomeAssistant, entity_id: str, item: str) -> None:
     await hass.services.async_call(
         DOMAIN,
         TodoServices.REMOVE_ITEM,
-        {ATTR_ENTITY_ID: entity_id, ATTR_ITEM: [item]},
+        {TargetKey.ENTITY_ID: entity_id, ATTR_ITEM: [item]},
         blocking=True,
     )
 
@@ -251,7 +250,7 @@ async def _complete_item(hass: HomeAssistant, entity_id: str, item: str) -> None
         DOMAIN,
         TodoServices.UPDATE_ITEM,
         {
-            ATTR_ENTITY_ID: entity_id,
+            TargetKey.ENTITY_ID: entity_id,
             ATTR_ITEM: item,
             ATTR_STATUS: TodoItemStatus.COMPLETED,
         },

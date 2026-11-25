@@ -4,6 +4,7 @@ from collections.abc import Awaitable, Callable
 from unittest.mock import AsyncMock, MagicMock
 
 from aiohomeconnect.model import (
+    ApplianceType,
     ArrayOfEvents,
     Event,
     EventKey,
@@ -14,6 +15,7 @@ from aiohomeconnect.model import (
 )
 from aiohomeconnect.model.error import HomeConnectApiError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.home_connect.const import (
     DOMAIN,
@@ -31,8 +33,6 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
-from tests.common import MockConfigEntry
-
 
 @pytest.fixture
 def platforms() -> list[Platform]:
@@ -40,7 +40,7 @@ def platforms() -> list[Platform]:
     return [Platform.BINARY_SENSOR]
 
 
-@pytest.mark.parametrize("appliance", ["Washer"], indirect=True)
+@pytest.mark.parametrize("appliance", [ApplianceType.WASHER], indirect=True)
 async def test_paired_depaired_devices_flow(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
@@ -102,7 +102,7 @@ async def test_paired_depaired_devices_flow(
     ("appliance", "keys_to_check"),
     [
         (
-            "Washer",
+            ApplianceType.WASHER,
             (StatusKey.BSH_COMMON_REMOTE_CONTROL_ACTIVE,),
         )
     ],
@@ -173,7 +173,7 @@ async def test_connected_devices(
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
-@pytest.mark.parametrize("appliance", ["Washer"], indirect=True)
+@pytest.mark.parametrize("appliance", [ApplianceType.WASHER], indirect=True)
 async def test_binary_sensors_entity_availability(
     hass: HomeAssistant,
     client: MagicMock,
@@ -232,42 +232,42 @@ async def test_binary_sensors_entity_availability(
             EventKey.BSH_COMMON_STATUS_REMOTE_CONTROL_ACTIVE,
             False,
             STATE_OFF,
-            "Washer",
+            ApplianceType.WASHER,
         ),
         (
             "binary_sensor.washer_remote_control",
             EventKey.BSH_COMMON_STATUS_REMOTE_CONTROL_ACTIVE,
             True,
             STATE_ON,
-            "Washer",
+            ApplianceType.WASHER,
         ),
         (
             "binary_sensor.washer_remote_control",
             EventKey.BSH_COMMON_STATUS_REMOTE_CONTROL_ACTIVE,
             "",
             STATE_UNKNOWN,
-            "Washer",
+            ApplianceType.WASHER,
         ),
         (
             "binary_sensor.fridgefreezer_refrigerator_door",
             EventKey.REFRIGERATION_COMMON_STATUS_DOOR_REFRIGERATOR,
             REFRIGERATION_STATUS_DOOR_CLOSED,
             STATE_OFF,
-            "FridgeFreezer",
+            ApplianceType.FRIDGE_FREEZER,
         ),
         (
             "binary_sensor.fridgefreezer_refrigerator_door",
             EventKey.REFRIGERATION_COMMON_STATUS_DOOR_REFRIGERATOR,
             REFRIGERATION_STATUS_DOOR_OPEN,
             STATE_ON,
-            "FridgeFreezer",
+            ApplianceType.FRIDGE_FREEZER,
         ),
         (
             "binary_sensor.fridgefreezer_refrigerator_door",
             EventKey.REFRIGERATION_COMMON_STATUS_DOOR_REFRIGERATOR,
             "",
             STATE_UNKNOWN,
-            "FridgeFreezer",
+            ApplianceType.FRIDGE_FREEZER,
         ),
     ],
     indirect=["appliance"],
@@ -310,7 +310,7 @@ async def test_binary_sensors_functionality(
     assert hass.states.is_state(entity_id, expected)
 
 
-@pytest.mark.parametrize("appliance", ["Washer"], indirect=True)
+@pytest.mark.parametrize("appliance", [ApplianceType.WASHER], indirect=True)
 async def test_connected_sensor_functionality(
     hass: HomeAssistant,
     client: MagicMock,

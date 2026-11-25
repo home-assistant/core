@@ -233,7 +233,7 @@ def _create_service_device_info(
         entry_type=DeviceEntryType.SERVICE,
     )
     if via_device_id is not None:
-        device_info["via_device_id"] = via_device_id
+        device_info.via_device_id = via_device_id
     return device_info
 
 

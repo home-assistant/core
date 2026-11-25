@@ -4,10 +4,12 @@ from collections.abc import Callable, Coroutine
 from unittest.mock import AsyncMock, PropertyMock, call, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.typing import WebSocketGenerator
 from zha.application.platforms.update import (
     FirmwareUpdateEntity as ZhaFirmwareUpdateEntity,
 )
-from zigpy.device import Device
+from zigpy.device import ZigbeeDevice
 from zigpy.exceptions import DeliveryError
 from zigpy.ota import OtaImagesResult, OtaImageWithMetadata
 import zigpy.ota.image as firmware
@@ -28,7 +30,7 @@ from homeassistant.components.update import (
     ATTR_LATEST_VERSION,
     ATTR_UPDATE_PERCENTAGE,
     DOMAIN as UPDATE_DOMAIN,
-    SERVICE_INSTALL,
+    UpdateService,
 )
 from homeassistant.components.zha.helpers import (
     ZHADeviceProxy,
@@ -37,16 +39,14 @@ from homeassistant.components.zha.helpers import (
     get_zha_gateway,
     get_zha_gateway_proxy,
 )
-from homeassistant.components.zha.update import (
-    OTA_MESSAGE_BATTERY_POWERED,
-    OTA_MESSAGE_RELIABILITY,
-)
+from homeassistant.components.zha.update import ZHA_DOCS_NETWORK_RELIABILITY
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     STATE_OFF,
     STATE_ON,
     STATE_UNKNOWN,
     Platform,
+    TargetKey,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -55,9 +55,6 @@ from homeassistant.setup import async_setup_component
 
 from .common import find_entity_id, update_attribute_cache
 from .conftest import SIG_EP_INPUT, SIG_EP_OUTPUT, SIG_EP_PROFILE, SIG_EP_TYPE
-
-from tests.common import MockConfigEntry
-from tests.typing import WebSocketGenerator
 
 
 @pytest.fixture(autouse=True)
@@ -77,7 +74,7 @@ def update_platform_only():
 
 async def setup_test_data(
     hass: HomeAssistant,
-    zigpy_device_mock: Callable[..., Device],
+    zigpy_device_mock: Callable[..., ZigbeeDevice],
     skip_attribute_plugs=False,
     file_not_found=False,
 ):
@@ -168,7 +165,7 @@ async def setup_test_data(
 async def test_firmware_update_notification_from_zigpy(
     hass: HomeAssistant,
     setup_zha: Callable[..., Coroutine[None]],
-    zigpy_device_mock: Callable[..., Device],
+    zigpy_device_mock: Callable[..., ZigbeeDevice],
 ) -> None:
     """Test ZHA update platform - firmware update notification."""
     await setup_zha()
@@ -211,7 +208,7 @@ async def test_firmware_update_notification_from_zigpy(
 async def test_firmware_update_notification_from_service_call(
     hass: HomeAssistant,
     setup_zha: Callable[..., Coroutine[None]],
-    zigpy_device_mock: Callable[..., Device],
+    zigpy_device_mock: Callable[..., ZigbeeDevice],
 ) -> None:
     """Test ZHA update platform - firmware update manual check."""
     await setup_zha()
@@ -273,7 +270,7 @@ async def test_firmware_update_poll_after_reload(
     hass: HomeAssistant,
     setup_zha: Callable[..., Coroutine[None]],
     config_entry: MockConfigEntry,
-    zigpy_device_mock: Callable[..., Device],
+    zigpy_device_mock: Callable[..., ZigbeeDevice],
 ) -> None:
     """Test polling a ZHA update entity still works after reloading ZHA."""
     await setup_zha()
@@ -336,7 +333,7 @@ def make_packet(zigpy_device, cluster, cmd_name: str, **kwargs):
 async def test_firmware_update_success(
     hass: HomeAssistant,
     setup_zha: Callable[..., Coroutine[None]],
-    zigpy_device_mock: Callable[..., Device],
+    zigpy_device_mock: Callable[..., ZigbeeDevice],
 ) -> None:
     """Test ZHA update platform - firmware update success."""
     await setup_zha()
@@ -517,9 +514,9 @@ async def test_firmware_update_success(
     ota_cluster.endpoint.reply = AsyncMock(side_effect=endpoint_reply)
     await hass.services.async_call(
         UPDATE_DOMAIN,
-        SERVICE_INSTALL,
+        UpdateService.INSTALL,
         {
-            ATTR_ENTITY_ID: entity_id,
+            TargetKey.ENTITY_ID: entity_id,
         },
         blocking=True,
     )
@@ -548,7 +545,7 @@ async def test_firmware_update_success(
 async def test_firmware_update_raises(
     hass: HomeAssistant,
     setup_zha: Callable[..., Coroutine[None]],
-    zigpy_device_mock: Callable[..., Device],
+    zigpy_device_mock: Callable[..., ZigbeeDevice],
 ) -> None:
     """Test ZHA update platform - firmware update raises."""
     await setup_zha()
@@ -619,9 +616,9 @@ async def test_firmware_update_raises(
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             UPDATE_DOMAIN,
-            SERVICE_INSTALL,
+            UpdateService.INSTALL,
             {
-                ATTR_ENTITY_ID: entity_id,
+                TargetKey.ENTITY_ID: entity_id,
             },
             blocking=True,
         )
@@ -635,9 +632,9 @@ async def test_firmware_update_raises(
     ):
         await hass.services.async_call(
             UPDATE_DOMAIN,
-            SERVICE_INSTALL,
+            UpdateService.INSTALL,
             {
-                ATTR_ENTITY_ID: entity_id,
+                TargetKey.ENTITY_ID: entity_id,
             },
             blocking=True,
         )
@@ -647,11 +644,82 @@ async def test_update_release_notes(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
     setup_zha: Callable[..., Coroutine[None]],
-    zigpy_device_mock: Callable[..., Device],
+    zigpy_device_mock: Callable[..., ZigbeeDevice],
 ) -> None:
     """Test ZHA update platform release notes."""
     await setup_zha()
-    zha_device, _, _, _ = await setup_test_data(hass, zigpy_device_mock)
+    zha_device, cluster, fw_image, installed_fw_version = await setup_test_data(
+        hass, zigpy_device_mock
+    )
+
+    entity_id = find_entity_id(Platform.UPDATE, zha_device, hass)
+    assert entity_id is not None
+
+    ws_client = await hass_ws_client(hass)
+
+    # No messages while no update is available
+    await ws_client.send_json(
+        {
+            "id": 1,
+            "type": "update/release_notes",
+            "entity_id": entity_id,
+        }
+    )
+    result = await ws_client.receive_json()
+    assert result["success"] is True
+    assert result["result"] == {"release_notes": None, "messages": []}
+
+    # Simulate an image available notification
+    await cluster._handle_query_next_image(
+        foundation.ZCLHeader.cluster(
+            tsn=0x12, command_id=general.Ota.ServerCommandDefs.query_next_image.id
+        ),
+        general.QueryNextImageCommand(
+            fw_image.firmware.header.field_control,
+            zha_device.device.manufacturer_code,
+            fw_image.firmware.header.image_type,
+            installed_fw_version,
+            fw_image.firmware.header.header_version,
+        ),
+    )
+    await hass.async_block_till_done()
+    assert hass.states.get(entity_id).state == STATE_ON
+
+    battery_message = {
+        "severity": "info",
+        "message": (
+            "Battery powered devices can sometimes take multiple hours to update and"
+            " you may need to wake the device for the update to begin."
+        ),
+    }
+    reliability_message = {
+        "severity": "info",
+        "message": (
+            "If you are having issues updating a specific device, make sure that"
+            " you've eliminated [common environmental issues]"
+            f"({ZHA_DOCS_NETWORK_RELIABILITY}) that could be affecting network"
+            " reliability. OTA updates require a reliable network."
+        ),
+    }
+
+    # An update without release notes of its own still gets the messages
+    with patch(
+        "zha.zigbee.device.ZigbeeDevice.is_mains_powered",
+        PropertyMock(return_value=True),
+    ):
+        await ws_client.send_json(
+            {
+                "id": 2,
+                "type": "update/release_notes",
+                "entity_id": entity_id,
+            }
+        )
+        result = await ws_client.receive_json()
+    assert result["success"] is True
+    assert result["result"] == {
+        "release_notes": None,
+        "messages": [reliability_message],
+    }
 
     zha_lib_entity = next(
         e
@@ -662,18 +730,14 @@ async def test_update_release_notes(
     zha_lib_entity.maybe_emit_state_changed_event()
     await hass.async_block_till_done()
 
-    entity_id = find_entity_id(Platform.UPDATE, zha_device, hass)
-    assert entity_id is not None
-
-    ws_client = await hass_ws_client(hass)
-
     # Mains-powered devices
     with patch(
-        "zha.zigbee.device.Device.is_mains_powered", PropertyMock(return_value=True)
+        "zha.zigbee.device.ZigbeeDevice.is_mains_powered",
+        PropertyMock(return_value=True),
     ):
         await ws_client.send_json(
             {
-                "id": 1,
+                "id": 3,
                 "type": "update/release_notes",
                 "entity_id": entity_id,
             }
@@ -681,17 +745,19 @@ async def test_update_release_notes(
 
         result = await ws_client.receive_json()
         assert result["success"] is True
-        assert "Some lengthy release notes" in result["result"]
-        assert OTA_MESSAGE_RELIABILITY in result["result"]
-        assert OTA_MESSAGE_BATTERY_POWERED not in result["result"]
+        assert result["result"] == {
+            "release_notes": "Some lengthy release notes",
+            "messages": [reliability_message],
+        }
 
     # Battery-powered devices
     with patch(
-        "zha.zigbee.device.Device.is_mains_powered", PropertyMock(return_value=False)
+        "zha.zigbee.device.ZigbeeDevice.is_mains_powered",
+        PropertyMock(return_value=False),
     ):
         await ws_client.send_json(
             {
-                "id": 2,
+                "id": 4,
                 "type": "update/release_notes",
                 "entity_id": entity_id,
             }
@@ -699,15 +765,16 @@ async def test_update_release_notes(
 
         result = await ws_client.receive_json()
         assert result["success"] is True
-        assert "Some lengthy release notes" in result["result"]
-        assert OTA_MESSAGE_RELIABILITY in result["result"]
-        assert OTA_MESSAGE_BATTERY_POWERED in result["result"]
+        assert result["result"] == {
+            "release_notes": "Some lengthy release notes",
+            "messages": [battery_message, reliability_message],
+        }
 
 
 async def test_update_version_sync_device_registry(
     hass: HomeAssistant,
     setup_zha: Callable[..., Coroutine[None]],
-    zigpy_device_mock: Callable[..., Device],
+    zigpy_device_mock: Callable[..., ZigbeeDevice],
     device_registry: dr.DeviceRegistry,
 ) -> None:
     """Test firmware version syncing between the ZHA device and Home Assistant."""

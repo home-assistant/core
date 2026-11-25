@@ -13,7 +13,7 @@ from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import FressnapfTrackerConfigEntry
+from .coordinator import FressnapfTrackerConfigEntry
 from .entity import FressnapfTrackerEntity
 from .services import handle_fressnapf_tracker_exception
 

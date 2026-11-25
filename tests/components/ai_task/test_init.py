@@ -7,6 +7,7 @@ from unittest.mock import patch
 from freezegun.api import FrozenDateTimeFactory
 import probatio
 import pytest
+from pytest_homeassistant.common import MockUser, flush_store
 
 from homeassistant.components import media_source
 from homeassistant.components.ai_task import (
@@ -23,8 +24,6 @@ from homeassistant.exceptions import ServiceValidationError, Unauthorized
 from homeassistant.helpers import selector
 
 from .conftest import TEST_ENTITY_ID, MockAITaskEntity
-
-from tests.common import MockUser, flush_store
 
 
 async def test_automatic_evaluation_without_setup(hass: HomeAssistant) -> None:

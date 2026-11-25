@@ -6,6 +6,8 @@ import time
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 from youtubeaio.models import YouTubeChannel
 
 from homeassistant.components.youtube.const import (
@@ -34,9 +36,6 @@ from .conftest import (
     ComponentSetup,
     mock_entry_data,
 )
-
-from tests.common import MockConfigEntry
-from tests.test_util.aiohttp import AiohttpClientMocker
 
 
 async def test_setup_success(

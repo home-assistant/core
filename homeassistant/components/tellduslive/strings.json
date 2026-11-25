@@ -14,6 +14,10 @@
         "description": "To link your Telldus Live account:\n1. Open the link below\n2. Log in to Telldus Live\n3. Authorize **{app_name}** (select **Yes**).\n4. Come back here and select **Submit**.\n\n[Link Telldus Live account]({auth_url})",
         "title": "Authenticate with Telldus Live"
       },
+      "reauth_confirm": {
+        "description": "Home Assistant can no longer access your Telldus Live account. Select **Submit** to authorize **Home Assistant** again.",
+        "title": "[%key:common::config_flow::title::reauth%]"
+      },
       "user": {
         "data": {
           "host": "[%key:common::config_flow::data::host%]"

@@ -3,16 +3,16 @@
 from datetime import timedelta
 from unittest.mock import MagicMock
 
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
+
 from homeassistant.components.tellduslive.const import DOMAIN
-from homeassistant.config_entries import ConfigEntryState
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 from homeassistant.util import dt as dt_util
 
 from .conftest import DEVICE_ID, HUB_ID
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 async def test_device_via_device_links(
@@ -85,7 +85,7 @@ async def test_setup_not_authorized(
     mock_config_entry: MockConfigEntry,
     mock_tellduslive: MagicMock,
 ) -> None:
-    """Test setup fails when the session is not authorized."""
+    """Test setup starts a reauth flow when the session is not authorized."""
     mock_tellduslive.is_authorized = False
     mock_config_entry.add_to_hass(hass)
 
@@ -94,6 +94,11 @@ async def test_setup_not_authorized(
 
     assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
     assert mock_config_entry.reason == "Authentication with Telldus Live failed"
+
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 1
+    assert flows[0]["context"]["source"] == SOURCE_REAUTH
+    assert flows[0]["context"]["entry_id"] == mock_config_entry.entry_id
 
 
 async def test_no_polling_after_unload(

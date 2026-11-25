@@ -1,6 +1,7 @@
 """Tests the lifx migration."""
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.lifx import DOMAIN
 from homeassistant.components.lifx.config_flow import LIFXConfigFlow
@@ -15,8 +16,6 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from . import IP_ADDRESS, LABEL, SERIAL
 from .helpers import LEGACY_SERIAL, MAC_ADDRESS
-
-from tests.common import MockConfigEntry
 
 
 @pytest.mark.parametrize(

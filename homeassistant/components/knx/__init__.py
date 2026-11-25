@@ -41,7 +41,10 @@ from .const import (
 from .expose import create_combined_knx_exposure
 from .knx_module import KNXModule
 from .llm_api import async_register_llm_api
-from .project import STORAGE_KEY as PROJECT_STORAGE_KEY
+from .project import (
+    STORAGE_KEY as PROJECT_STORAGE_KEY,
+    async_set_project as async_set_project,  # for other integrations
+)
 from .schema import (
     BinarySensorSchema,
     ButtonSchema,
@@ -278,9 +281,7 @@ async def async_remove_config_entry_device(
 ) -> bool:
     """Remove a config entry from a device."""
     knx_module = hass.data[KNX_MODULE_KEY]
-    if not device_entry.identifiers.isdisjoint(
-        knx_module.interface_device.device_info["identifiers"]
-    ):
+    if device_entry.id == knx_module.interface_device.device.id:
         # can not remove interface device
         return False
     ui_unique_ids = knx_module.config_store.get_entity_uids()

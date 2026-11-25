@@ -1,32 +1,36 @@
 """Tests for the SmartyPlants sensor platform."""
 
 from typing import Any
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 from pysmartyplants import (
-    SmartyPlantsAuthError,
     SmartyPlantsConnectionError,
     SmartyPlantsError,
     SmartyPlantsForbiddenError,
 )
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.smartyplants.const import DEFAULT_SCAN_INTERVAL, DOMAIN
-from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN
+from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.update_coordinator import UpdateFailed
 
 from . import setup_integration
 
-from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
-
 TEMPERATURE = "sensor.monstera_temperature"
 
 
-@pytest.mark.usefixtures("mock_smartyplants_client")
+@pytest.mark.usefixtures(
+    "mock_smartyplants_client", "entity_registry_enabled_by_default"
+)
 async def test_all_entities(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
@@ -34,7 +38,8 @@ async def test_all_entities(
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test every entity created from the first poll."""
-    await setup_integration(hass, mock_config_entry)
+    with patch("homeassistant.components.smartyplants.PLATFORMS", [Platform.SENSOR]):
+        await setup_integration(hass, mock_config_entry)
 
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
@@ -155,7 +160,6 @@ async def test_sensor_removed_from_account(
             {"error": "boom"},
             id="connection",
         ),
-        pytest.param(SmartyPlantsAuthError("nope"), "invalid_auth", None, id="auth"),
         pytest.param(
             SmartyPlantsForbiddenError(
                 "This API key does not allow requests from 198.51.100.7."
@@ -188,3 +192,23 @@ async def test_update_failure(
     assert isinstance(failure, UpdateFailed)
     assert failure.translation_key == translation_key
     assert failure.translation_placeholders == placeholders
+
+
+@pytest.mark.usefixtures(
+    "mock_smartyplants_client", "entity_registry_enabled_by_default"
+)
+async def test_last_reported_survives_going_offline(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    sensor_payloads: list[dict[str, Any]],
+) -> None:
+    """Test the timestamp still answers once the sensor goes offline."""
+    sensor_payloads[0]["isOnline"] = False
+
+    await setup_integration(hass, mock_config_entry)
+
+    assert hass.states.get(TEMPERATURE).state == STATE_UNAVAILABLE
+    assert (
+        hass.states.get("sensor.monstera_last_reported").state
+        == "2026-08-19T10:00:00+00:00"
+    )

@@ -15,6 +15,7 @@ from homeassistant.const import (
     ATTR_BATTERY_LEVEL,
     PERCENTAGE,
     EntityCategory,
+    UnitOfMass,
     UnitOfTime,
 )
 from homeassistant.core import HomeAssistant
@@ -34,12 +35,18 @@ from .entity import TractiveEntity
 
 PARALLEL_UPDATES = 0
 
+# Statuses Tractive reports while it has no value for a health metric
+HEALTH_STATUSES_WITHOUT_VALUE = frozenset(
+    {"calculating_baseline", "not_enough_data_today", "not_synced_yet"}
+)
+
 
 @dataclass(frozen=True, kw_only=True)
 class TractiveSensorEntityDescription(SensorEntityDescription):
     """Class describing Tractive sensor entities."""
 
     hardware_sensor: bool = False
+    health_sensor: bool = False
 
 
 class TractiveSensor(TractiveEntity, SensorEntity):
@@ -69,13 +76,9 @@ class TractiveSensor(TractiveEntity, SensorEntity):
             else self._pet_status
         )
         value: StateType = getattr(status, self.entity_description.key)
+        if value in HEALTH_STATUSES_WITHOUT_VALUE:
+            return None
         return value
-
-    @property
-    @override
-    def available(self) -> bool:
-        """Return if entity is available."""
-        return super().available and self.native_value is not None
 
 
 SENSOR_TYPES: tuple[TractiveSensorEntityDescription, ...] = (
@@ -103,6 +106,7 @@ SENSOR_TYPES: tuple[TractiveSensorEntityDescription, ...] = (
     TractiveSensorEntityDescription(
         key=ATTR_MINUTES_ACTIVE,
         translation_key="activity_time",
+        health_sensor=True,
         native_unit_of_measurement=UnitOfTime.MINUTES,
         device_class=SensorDeviceClass.DURATION,
         state_class=SensorStateClass.TOTAL,
@@ -110,6 +114,7 @@ SENSOR_TYPES: tuple[TractiveSensorEntityDescription, ...] = (
     TractiveSensorEntityDescription(
         key=ATTR_MINUTES_REST,
         translation_key="rest_time",
+        health_sensor=True,
         native_unit_of_measurement=UnitOfTime.MINUTES,
         device_class=SensorDeviceClass.DURATION,
         state_class=SensorStateClass.TOTAL,
@@ -117,12 +122,14 @@ SENSOR_TYPES: tuple[TractiveSensorEntityDescription, ...] = (
     TractiveSensorEntityDescription(
         key=ATTR_DAILY_GOAL,
         translation_key="daily_goal",
+        health_sensor=True,
         native_unit_of_measurement=UnitOfTime.MINUTES,
         device_class=SensorDeviceClass.DURATION,
     ),
     TractiveSensorEntityDescription(
         key=ATTR_MINUTES_DAY_SLEEP,
         translation_key="minutes_day_sleep",
+        health_sensor=True,
         native_unit_of_measurement=UnitOfTime.MINUTES,
         device_class=SensorDeviceClass.DURATION,
         state_class=SensorStateClass.TOTAL,
@@ -130,9 +137,39 @@ SENSOR_TYPES: tuple[TractiveSensorEntityDescription, ...] = (
     TractiveSensorEntityDescription(
         key=ATTR_MINUTES_NIGHT_SLEEP,
         translation_key="minutes_night_sleep",
+        health_sensor=True,
         native_unit_of_measurement=UnitOfTime.MINUTES,
         device_class=SensorDeviceClass.DURATION,
         state_class=SensorStateClass.TOTAL,
+    ),
+    TractiveSensorEntityDescription(
+        key="weight",
+        native_unit_of_measurement=UnitOfMass.GRAMS,
+        suggested_unit_of_measurement=UnitOfMass.KILOGRAMS,
+        suggested_display_precision=1,
+        device_class=SensorDeviceClass.WEIGHT,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    TractiveSensorEntityDescription(
+        key="resting_heart_rate_status",
+        translation_key="resting_heart_rate_status",
+        health_sensor=True,
+        device_class=SensorDeviceClass.ENUM,
+        options=["elevated", "normal"],
+    ),
+    TractiveSensorEntityDescription(
+        key="resting_respiratory_rate_status",
+        translation_key="resting_respiratory_rate_status",
+        health_sensor=True,
+        device_class=SensorDeviceClass.ENUM,
+        options=["elevated", "normal"],
+    ),
+    TractiveSensorEntityDescription(
+        key="scratch_status",
+        translation_key="scratch_status",
+        health_sensor=True,
+        device_class=SensorDeviceClass.ENUM,
+        options=["infrequent", "normal"],
     ),
 )
 
@@ -142,11 +179,12 @@ async def async_setup_entry(
     entry: TractiveConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Set up Tractive device trackers."""
+    """Set up Tractive sensors."""
     coordinator = entry.runtime_data
 
     async_add_entities(
         TractiveSensor(coordinator, trackable, description)
         for description in SENSOR_TYPES
         for trackable in coordinator.trackables
+        if not description.health_sensor or trackable.health_available
     )

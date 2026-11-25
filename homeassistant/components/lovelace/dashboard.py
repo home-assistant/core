@@ -11,7 +11,7 @@ import probatio
 
 from homeassistant.components import websocket_api
 from homeassistant.components.frontend import async_panel_exists
-from homeassistant.const import CONF_FILENAME
+from homeassistant.const import CONF_FILENAME, CONF_ICON, EVENT_LOVELACE_UPDATED
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import collection, storage
@@ -20,10 +20,8 @@ from homeassistant.util.yaml import Secrets, load_yaml_dict
 
 from .const import (
     CONF_ALLOW_SINGLE_WORD,
-    CONF_ICON,
     CONF_URL_PATH,
     DOMAIN,
-    EVENT_LOVELACE_UPDATED,
     LOVELACE_CONFIG_FILE,
     LOVELACE_DATA,
     MODE_STORAGE,

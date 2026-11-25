@@ -13,8 +13,9 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import aiohttp_client
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import YaleConfigEntry, YaleData
+from . import YaleConfigEntry
 from .const import DEFAULT_NAME, DEFAULT_TIMEOUT
+from .data import YaleData
 from .entity import YaleEntity
 
 _LOGGER = logging.getLogger(__name__)

@@ -7,6 +7,7 @@ import ssl
 from unittest.mock import patch
 
 import plexapi
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 import requests
 import requests_mock
 
@@ -29,8 +30,6 @@ from homeassistant.util import dt as dt_util
 
 from .const import DEFAULT_DATA, DEFAULT_OPTIONS, PLEX_DIRECT_URL
 from .helpers import trigger_plex_update, wait_for_debouncer
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 async def test_set_config_entry_unique_id(

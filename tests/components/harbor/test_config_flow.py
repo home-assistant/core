@@ -5,6 +5,7 @@ from types import SimpleNamespace
 from unittest.mock import AsyncMock
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, get_schema_suggested_value
 
 from homeassistant.components.harbor.const import (
     CONF_CERT_PEM,
@@ -27,8 +28,6 @@ from .conftest import (
     SERIAL,
     set_connected,
 )
-
-from tests.common import MockConfigEntry, get_schema_suggested_value
 
 USER_INPUT = {
     CONF_SERIAL: SERIAL,

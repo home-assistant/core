@@ -17,7 +17,7 @@ from aiohomekit.exceptions import (
 )
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_IDENTIFIERS, EVENT_HOMEASSISTANT_STOP
+from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import Event, HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv, device_registry as dr
@@ -124,10 +124,7 @@ async def async_remove_config_entry_device(
     """Remove homekit_controller config entry from a device."""
     hkid = config_entry.data["AccessoryPairingID"]
     connection: HKDevice = hass.data[KNOWN_DEVICES][hkid]
-    return not device_entry.identifiers.intersection(
-        identifier
+    return not any(
+        connection.accessory_identifier(accessory) in device_entry.identifiers
         for accessory in connection.entity_map.accessories
-        for identifier in connection.device_info_for_accessory(accessory)[
-            ATTR_IDENTIFIERS
-        ]
     )

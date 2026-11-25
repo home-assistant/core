@@ -1,8 +1,7 @@
-"""Switch platform for Flow-it."""
+"""Switch platform for AriaQ."""
 
 from typing import Any, override
 
-from flow_it_api.client import FlowItVMCMachine
 from flow_it_api.exceptions import FlowItAuthError, FlowItCommandError, FlowItError
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
@@ -12,8 +11,8 @@ from homeassistant.exceptions import ConfigEntryAuthFailed, HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import DOMAIN
-from .coordinator import FlowItConfigEntry, FlowItCoordinator
-from .entity import FlowItVmcEntity
+from .coordinator import AriaQConfigEntry
+from .entity import AriaQVmcEntity
 
 SWITCHES: tuple[SwitchEntityDescription, ...] = (
     SwitchEntityDescription(
@@ -31,30 +30,21 @@ SWITCHES: tuple[SwitchEntityDescription, ...] = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: FlowItConfigEntry,
+    config_entry: AriaQConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Set up the Flow-it switches."""
+    """Set up the AriaQ switches."""
     data = config_entry.runtime_data
     async_add_entities(
-        FlowItVmcFlowSwitch(data.coordinator, data.vmc, description)
+        AriaQVmcFlowSwitch(data.coordinator, data.vmc, description)
         for description in SWITCHES
     )
 
 
-class FlowItVmcFlowSwitch(FlowItVmcEntity, SwitchEntity):
-    """Flow-it flow switch entity."""
+class AriaQVmcFlowSwitch(AriaQVmcEntity, SwitchEntity):
+    """AriaQ flow switch entity."""
 
     entity_description: SwitchEntityDescription
-
-    def __init__(
-        self,
-        coordinator: FlowItCoordinator,
-        vmc: FlowItVMCMachine,
-        description: SwitchEntityDescription,
-    ) -> None:
-        """Initialize the switch."""
-        super().__init__(coordinator, vmc, description)
 
     @override
     @property

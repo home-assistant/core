@@ -8,13 +8,12 @@ from aiohttp import hdrs
 from freezegun.api import FrozenDateTimeFactory
 from multidict import CIMultiDict
 import pytest
+from pytest_homeassistant.common import async_fire_time_changed
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 
 from homeassistant.components.rest import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
-
-from tests.common import async_fire_time_changed
-from tests.test_util.aiohttp import AiohttpClientMocker
 
 
 async def test_rest_data_log_warning_on_error_status(
@@ -129,7 +128,7 @@ async def test_rest_data_with_incorrect_charset_in_header(
     await hass.async_block_till_done()
 
     with patch(
-        "tests.test_util.aiohttp.AiohttpClientMockResponse.text",
+        "pytest_homeassistant.test_util.aiohttp.AiohttpClientMockResponse.text",
         side_effect=UnicodeDecodeError("utf-8", b"", 1, 0, ""),
     ):
         freezer.tick(timedelta(minutes=1))
@@ -274,7 +273,6 @@ async def test_rest_data_debug_logging_shows_response_details(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test that debug logging shows response details."""
-    caplog.set_level(logging.DEBUG)
 
     aioclient_mock.get(
         "http://example.com/api",
@@ -314,7 +312,6 @@ async def test_rest_data_no_content_type_header(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test handling of responses without Content-Type header."""
-    caplog.set_level(logging.DEBUG)
 
     # Mock response without Content-Type header
     aioclient_mock.get(

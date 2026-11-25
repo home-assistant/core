@@ -2,12 +2,18 @@
 
 from dataclasses import dataclass
 import logging
-import os.path
 
 from homeassistant.components.homeassistant_hardware.coordinator import (
     FirmwareUpdateCoordinator,
 )
-from homeassistant.components.usb import USBDevice, async_register_port_event_callback
+from homeassistant.components.homeassistant_hardware.helpers import (
+    async_get_serial_port_via_device_id,
+)
+from homeassistant.components.usb import (
+    USBDevice,
+    async_is_serial_port_present,
+    async_register_port_event_callback,
+)
 from homeassistant.config_entries import SOURCE_IGNORE, ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
@@ -27,6 +33,7 @@ class HomeAssistantConnectZBT2Data:
     """Runtime data definition."""
 
     coordinator: FirmwareUpdateCoordinator
+    via_device_id: str | None
 
 
 CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
@@ -69,7 +76,7 @@ async def async_setup_entry(
 
     # Postpone loading the config entry if the device is missing
     device_path = entry.data[DEVICE]
-    if not await hass.async_add_executor_job(os.path.exists, device_path):
+    if not await async_is_serial_port_present(hass, device_path):
         raise ConfigEntryNotReady(
             translation_domain=DOMAIN,
             translation_key="device_disconnected",
@@ -83,7 +90,10 @@ async def async_setup_entry(
         session,
         NABU_CASA_FIRMWARE_RELEASES_URL,
     )
-    entry.runtime_data = HomeAssistantConnectZBT2Data(coordinator)
+    entry.runtime_data = HomeAssistantConnectZBT2Data(
+        coordinator=coordinator,
+        via_device_id=async_get_serial_port_via_device_id(hass, device_path),
+    )
 
     await hass.config_entries.async_forward_entry_setups(entry, ["switch", "update"])
 

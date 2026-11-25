@@ -1,13 +1,12 @@
 """The tests for the PG LAB Electronics  discovery device."""
 
+from pytest_homeassistant.typing import MqttMockHAClient
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
 from .test_common import get_device_discovery_payload, send_discovery_message
-
-from tests.typing import MqttMockHAClient
 
 
 async def test_device_discover(

@@ -4,15 +4,14 @@ import asyncio
 from unittest.mock import MagicMock
 
 from aiohttp import ClientError
+from pytest_homeassistant.common import MockConfigEntry, get_system_health_info
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 
 from homeassistant.components.airly.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from . import init_integration
-
-from tests.common import MockConfigEntry, get_system_health_info
-from tests.test_util.aiohttp import AiohttpClientMocker
 
 
 async def test_airly_system_health(

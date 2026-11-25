@@ -4,6 +4,7 @@ from collections.abc import AsyncGenerator
 from unittest.mock import MagicMock, call, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.fan import (
@@ -17,6 +18,8 @@ from homeassistant.components.fan import (
     SERVICE_TOGGLE,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
+    FanService,
+    FanServiceArgument,
 )
 from homeassistant.components.homee.const import (
     DOMAIN,
@@ -24,14 +27,12 @@ from homeassistant.components.homee.const import (
     PRESET_MANUAL,
     PRESET_SUMMER,
 )
-from homeassistant.const import ATTR_ENTITY_ID, Platform
+from homeassistant.const import ATTR_ENTITY_ID, Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import entity_registry as er
 
 from . import build_mock_node, setup_integration
-
-from tests.common import MockConfigEntry, snapshot_platform
 
 
 @pytest.fixture(autouse=True)
@@ -152,8 +153,11 @@ async def test_turn_on_preset_last_value_zero(
 
     await hass.services.async_call(
         FAN_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "fan.test_fan", ATTR_PRESET_MODE: PRESET_MANUAL},
+        FanService.TURN_ON,
+        {
+            TargetKey.ENTITY_ID: "fan.test_fan",
+            FanServiceArgument.PRESET_MODE: PRESET_MANUAL,
+        },
         blocking=True,
     )
 
@@ -175,8 +179,11 @@ async def test_turn_on_invalid_preset(
     with pytest.raises(ServiceValidationError) as exc_info:
         await hass.services.async_call(
             FAN_DOMAIN,
-            SERVICE_TURN_ON,
-            {ATTR_ENTITY_ID: "fan.test_fan", ATTR_PRESET_MODE: PRESET_AUTO},
+            FanService.TURN_ON,
+            {
+                TargetKey.ENTITY_ID: "fan.test_fan",
+                FanServiceArgument.PRESET_MODE: PRESET_AUTO,
+            },
             blocking=True,
         )
 

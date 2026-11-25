@@ -12,6 +12,13 @@ from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
 import probatio
 import pytest
+from pytest_homeassistant.common import (
+    MockModule,
+    MockPlatform,
+    get_test_config_dir,
+    mock_integration,
+    mock_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 import yaml
 
@@ -24,14 +31,6 @@ from homeassistant.helpers.redact import REDACTED
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import Integration, async_get_integration
 from homeassistant.util.yaml import SECRET_YAML, load_yaml_dict
-
-from .common import (
-    MockModule,
-    MockPlatform,
-    get_test_config_dir,
-    mock_integration,
-    mock_platform,
-)
 
 CONFIG_DIR = get_test_config_dir()
 YAML_PATH = os.path.join(CONFIG_DIR, config_util.YAML_CONFIG_FILE)
@@ -493,7 +492,7 @@ def test_process_config_upgrade(hass: HomeAssistant) -> None:
         opened_file = mock_open.return_value
         opened_file.readline.return_value = ha_version
 
-        config_util.process_ha_config_upgrade(hass)
+        assert config_util.process_ha_config_upgrade(hass) == ha_version
 
         assert opened_file.write.call_count == 1
         assert opened_file.write.call_args == mock.call("0.91.0")
@@ -508,7 +507,7 @@ def test_config_upgrade_same_version(hass: HomeAssistant) -> None:
         opened_file = mock_open.return_value
         opened_file.readline.return_value = ha_version
 
-        config_util.process_ha_config_upgrade(hass)
+        assert config_util.process_ha_config_upgrade(hass) is None
 
         assert opened_file.write.call_count == 0
 
@@ -519,7 +518,7 @@ def test_config_upgrade_no_file(hass: HomeAssistant) -> None:
     mock_open.side_effect = [FileNotFoundError(), mock.DEFAULT, mock.DEFAULT]
     with patch("homeassistant.config.open", mock_open, create=True):
         opened_file = mock_open.return_value
-        config_util.process_ha_config_upgrade(hass)
+        assert config_util.process_ha_config_upgrade(hass) is None
         assert opened_file.write.call_count == 1
         assert opened_file.write.call_args == mock.call(__version__)
 

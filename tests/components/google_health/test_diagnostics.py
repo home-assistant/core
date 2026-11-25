@@ -7,15 +7,14 @@ from unittest.mock import AsyncMock
 from google_health_api.exceptions import GoogleHealthApiError
 from google_health_api.model import ListDataPointResult, _ListDataPointsModel
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
+from pytest_homeassistant.components.diagnostics import get_diagnostics_for_config_entry
+from pytest_homeassistant.typing import ClientSessionGenerator
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.google_health.coordinator import POLLING_INTERVAL
 from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
-
-from tests.common import MockConfigEntry, async_fire_time_changed
-from tests.components.diagnostics import get_diagnostics_for_config_entry
-from tests.typing import ClientSessionGenerator
 
 
 @pytest.mark.freeze_time("2026-07-22 00:00:00+00:00")
@@ -53,16 +52,22 @@ async def test_diagnostics_empty_data(
     mock_google_health_client.active_energy_burned.today.return_value = None
     mock_google_health_client.total_calories.today.return_value = None
     mock_google_health_client.floors.today.return_value = None
+    mock_google_health_client.altitude.today.return_value = None
+    mock_google_health_client.active_minutes.today.return_value = None
+    mock_google_health_client.active_zone_minutes.today.return_value = None
+    mock_google_health_client.sedentary_period.today.return_value = None
 
-    mock_google_health_client.weight.list.return_value = ListDataPointResult(
-        _ListDataPointsModel(data_points=[])
+    empty_list = ListDataPointResult(_ListDataPointsModel(data_points=[]))
+    mock_google_health_client.weight.list.return_value = empty_list
+    mock_google_health_client.height.list.return_value = empty_list
+    mock_google_health_client.daily_resting_heart_rate.list.return_value = empty_list
+    mock_google_health_client.body_fat.list.return_value = empty_list
+    mock_google_health_client.daily_heart_rate_variability.list.return_value = (
+        empty_list
     )
-    mock_google_health_client.daily_resting_heart_rate.list.return_value = (
-        ListDataPointResult(_ListDataPointsModel(data_points=[]))
-    )
-    mock_google_health_client.body_fat.list.return_value = ListDataPointResult(
-        _ListDataPointsModel(data_points=[])
-    )
+    mock_google_health_client.daily_oxygen_saturation.list.return_value = empty_list
+    mock_google_health_client.daily_respiratory_rate.list.return_value = empty_list
+    mock_google_health_client.daily_vo2_max.list.return_value = empty_list
 
     mock_google_health_client.sleep.list.return_value = ListDataPointResult(
         _ListDataPointsModel(data_points=[])

@@ -11,11 +11,15 @@ from homeassistant.components.websocket_api import ERR_NOT_FOUND, require_admin
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import (
     config_validation as cv,
-    device_registry as dr,
     entity_registry as er,
     label_registry as lr,
 )
+from homeassistant.helpers.entityfilter import (
+    INCLUDE_EXCLUDE_BASE_FILTER_SCHEMA,
+    convert_include_exclude_filter,
+)
 from homeassistant.helpers.json import json_dumps
+from homeassistant.helpers.typing import Undefined
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -68,7 +72,11 @@ _ENTITY_CATEGORIES_JSON = json_dumps(er.ENTITY_CATEGORY_INDEX_TO_VALUE)
 
 
 @websocket_api.websocket_command(
-    {probatio.Required("type"): "config/entity_registry/list_for_display"}
+    {
+        probatio.Required("type"): "config/entity_registry/list_for_display",
+        probatio.Optional("entity_ids"): cv.entity_ids,
+        **INCLUDE_EXCLUDE_BASE_FILTER_SCHEMA.schema,
+    }
 )
 @callback
 def websocket_list_entities_for_display(
@@ -78,19 +86,35 @@ def websocket_list_entities_for_display(
 ) -> None:
     """Handle list registry entries command."""
     registry = er.async_get(hass)
+    entity_ids = set(msg.get("entity_ids", [])) or None
+    _filter = convert_include_exclude_filter(msg)
+    entity_filter = None if _filter.empty_filter else _filter.get_filter()
     # Build start of response message
     msg_json_prefix = (
         f'{{"id":{msg["id"]},"type":"{websocket_api.TYPE_RESULT}","success":true,'
         f'"result":{{"entity_categories":{_ENTITY_CATEGORIES_JSON},"entities":['
     ).encode()
     # Concatenate cached entity registry item JSON serializations
-    inner = b",".join(
-        [
-            entry.display_json_repr
-            for entry in registry.entities.values()
-            if entry.disabled_by is None and entry.display_json_repr is not None
-        ]
-    )
+    if entity_ids or entity_filter:
+        inner = b",".join(
+            [
+                entry.display_json_repr
+                for entry in registry.entities.values()
+                if entry.disabled_by is None
+                and entry.display_json_repr is not None
+                and (not entity_ids or entry.entity_id in entity_ids)
+                and (not entity_filter or entity_filter(entry.entity_id))
+            ]
+        )
+    else:
+        # Fast path when not filtering
+        inner = b",".join(
+            [
+                entry.display_json_repr
+                for entry in registry.entities.values()
+                if entry.disabled_by is None and entry.display_json_repr is not None
+            ]
+        )
     msg_json = b"".join((msg_json_prefix, inner, b"]}}"))
     connection.send_message(msg_json)
 
@@ -244,19 +268,6 @@ def websocket_update_entity(
         labels = set(msg["labels"])
         changes["labels"] = labels - lr.async_get_missing_label_ids(hass, labels)
 
-    if "disabled_by" in msg and msg["disabled_by"] is None:
-        # Don't allow enabling an entity of a disabled device
-        if entity_entry.device_id:
-            device_registry = dr.async_get(hass)
-            device = device_registry.async_get(entity_entry.device_id)
-            if device and device.disabled:
-                connection.send_message(
-                    websocket_api.error_message(
-                        msg["id"], "invalid_info", "Device is disabled"
-                    )
-                )
-                return
-
     # Update the categories if provided
     if "categories" in msg:
         categories = entity_entry.categories.copy()
@@ -268,6 +279,8 @@ def websocket_update_entity(
                 # Add or update the category for the given scope
                 categories[scope] = category_id
         changes["categories"] = categories
+
+    was_disabled = entity_entry.disabled_by is not None
 
     try:
         if changes:
@@ -293,7 +306,7 @@ def websocket_update_entity(
         return
 
     result: dict[str, Any] = {"entity_entry": entity_entry.extended_dict}
-    if "disabled_by" in changes and changes["disabled_by"] is None:
+    if was_disabled and entity_entry.disabled_by is None:
         # Enabling an entity requires a config entry reload, or HA restart
         if not (config_entry_id := entity_entry.config_entry_id) or (
             (config_entry := hass.config_entries.async_get_entry(config_entry_id))
@@ -338,6 +351,14 @@ def websocket_remove_entity(
     {
         probatio.Required("type"): "config/entity_registry/get_automatic_entity_ids",
         probatio.Required("entity_ids"): cv.entity_ids,
+        # Unsaved changes to use instead of the stored values, for example
+        # while the user is editing the entity
+        probatio.Optional("overrides"): {
+            cv.entity_id: {
+                probatio.Optional("area_id"): probatio.Any(str, None),
+                probatio.Optional("name"): probatio.Any(str, None),
+            }
+        },
     }
 )
 @callback
@@ -353,14 +374,18 @@ def websocket_get_automatic_entity_ids(
     registry = er.async_get(hass)
 
     entity_ids = msg["entity_ids"]
+    overrides: dict[str, dict[str, str | None]] = msg.get("overrides", {})
     automatic_entity_ids: dict[str, str | None] = {}
     reserved_entity_ids: set[str] = set()
     for entity_id in entity_ids:
         if not (entry := registry.entities.get(entity_id)):
             automatic_entity_ids[entity_id] = None
             continue
+        entity_overrides = overrides.get(entity_id, {})
         new_entity_id = registry.async_regenerate_entity_id(
             entry,
+            area_id=entity_overrides.get("area_id", Undefined),
+            name=entity_overrides.get("name", Undefined),
             reserved_entity_ids=reserved_entity_ids,
         )
         automatic_entity_ids[entity_id] = new_entity_id

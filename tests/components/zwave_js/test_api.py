@@ -11,6 +11,12 @@ from unittest.mock import AsyncMock, MagicMock, PropertyMock, call, patch
 
 from aiohttp import ClientError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, MockUser
+from pytest_homeassistant.typing import (
+    ClientSessionGenerator,
+    MockHAClientWebSocket,
+    WebSocketGenerator,
+)
 from zwave_js_server.const import (
     ExclusionStrategy,
     InclusionState,
@@ -100,13 +106,6 @@ from homeassistant.components.zwave_js.const import (
 from homeassistant.components.zwave_js.helpers import get_device_id
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
-
-from tests.common import MockConfigEntry, MockUser
-from tests.typing import (
-    ClientSessionGenerator,
-    MockHAClientWebSocket,
-    WebSocketGenerator,
-)
 
 CONTROLLER_PATCH_PREFIX = "zwave_js_server.model.controller.Controller"
 

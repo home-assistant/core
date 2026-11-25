@@ -1,8 +1,8 @@
 """Common test utilities for binary_sensor entity component tests."""
 
-from homeassistant.components.binary_sensor import BinarySensorEntity
+from pytest_homeassistant.common import MockEntity
 
-from tests.common import MockEntity
+from homeassistant.components.binary_sensor import BinarySensorEntity
 
 
 class MockBinarySensor(MockEntity, BinarySensorEntity):

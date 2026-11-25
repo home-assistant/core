@@ -15,6 +15,13 @@ from aiomealie import (
 )
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    async_load_fixture,
+    snapshot_platform,
+)
+from pytest_homeassistant.typing import WebSocketGenerator
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.mealie import DOMAIN
@@ -29,20 +36,12 @@ from homeassistant.components.todo import (
     DOMAIN as TODO_DOMAIN,
     TodoServices,
 )
-from homeassistant.const import ATTR_ENTITY_ID, Platform
+from homeassistant.const import Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
-
-from tests.common import (
-    MockConfigEntry,
-    async_fire_time_changed,
-    async_load_fixture,
-    snapshot_platform,
-)
-from tests.typing import WebSocketGenerator
 
 
 async def test_entities(
@@ -86,7 +85,7 @@ async def test_todo_actions(
         TODO_DOMAIN,
         service,
         data,
-        target={ATTR_ENTITY_ID: "todo.mealie_supermarket"},
+        target={TargetKey.ENTITY_ID: "todo.mealie_supermarket"},
         blocking=True,
     )
 
@@ -125,7 +124,7 @@ async def test_add_todo_item_parsed(
         TODO_DOMAIN,
         TodoServices.ADD_ITEM,
         {ATTR_ITEM: "1 can acorn squash"},
-        target={ATTR_ENTITY_ID: "todo.mealie_supermarket"},
+        target={TargetKey.ENTITY_ID: "todo.mealie_supermarket"},
         blocking=True,
     )
 
@@ -166,7 +165,7 @@ async def test_add_todo_item_parser_disabled(
         TODO_DOMAIN,
         TodoServices.ADD_ITEM,
         {ATTR_ITEM: "Misc Item"},
-        target={ATTR_ENTITY_ID: "todo.mealie_supermarket"},
+        target={TargetKey.ENTITY_ID: "todo.mealie_supermarket"},
         blocking=True,
     )
 
@@ -188,7 +187,7 @@ async def test_add_todo_item_parse_fallback(
         TODO_DOMAIN,
         TodoServices.ADD_ITEM,
         {ATTR_ITEM: "Misc Item"},
-        target={ATTR_ENTITY_ID: "todo.mealie_supermarket"},
+        target={TargetKey.ENTITY_ID: "todo.mealie_supermarket"},
         blocking=True,
     )
 
@@ -227,7 +226,7 @@ async def test_add_todo_item_low_confidence_fallback(
         TODO_DOMAIN,
         TodoServices.ADD_ITEM,
         {ATTR_ITEM: "Misc Item"},
-        target={ATTR_ENTITY_ID: "todo.mealie_supermarket"},
+        target={TargetKey.ENTITY_ID: "todo.mealie_supermarket"},
         blocking=True,
     )
 
@@ -266,7 +265,7 @@ async def test_add_todo_item_without_food_fallback(
         TODO_DOMAIN,
         TodoServices.ADD_ITEM,
         {ATTR_ITEM: "Misc Item"},
-        target={ATTR_ENTITY_ID: "todo.mealie_supermarket"},
+        target={TargetKey.ENTITY_ID: "todo.mealie_supermarket"},
         blocking=True,
     )
 
@@ -306,7 +305,7 @@ async def test_add_todo_item_without_unit_id_fallback(
         TODO_DOMAIN,
         TodoServices.ADD_ITEM,
         {ATTR_ITEM: "1 kg chicken"},
-        target={ATTR_ENTITY_ID: "todo.mealie_supermarket"},
+        target={TargetKey.ENTITY_ID: "todo.mealie_supermarket"},
         blocking=True,
     )
 
@@ -335,7 +334,7 @@ async def test_add_todo_item_parse_error_fallback(
         TODO_DOMAIN,
         TodoServices.ADD_ITEM,
         {ATTR_ITEM: "Misc Item"},
-        target={ATTR_ENTITY_ID: "todo.mealie_supermarket"},
+        target={TargetKey.ENTITY_ID: "todo.mealie_supermarket"},
         blocking=True,
     )
 
@@ -376,7 +375,7 @@ async def test_update_todo_item_parsed(
         TODO_DOMAIN,
         TodoServices.UPDATE_ITEM,
         {ATTR_ITEM: "aubergine", ATTR_RENAME: "1 can acorn squash"},
-        target={ATTR_ENTITY_ID: "todo.mealie_supermarket"},
+        target={TargetKey.ENTITY_ID: "todo.mealie_supermarket"},
         blocking=True,
     )
 
@@ -417,7 +416,7 @@ async def test_update_todo_item_parser_disabled(
         TODO_DOMAIN,
         TodoServices.UPDATE_ITEM,
         {ATTR_ITEM: "aubergine", ATTR_RENAME: "Eggplant"},
-        target={ATTR_ENTITY_ID: "todo.mealie_supermarket"},
+        target={TargetKey.ENTITY_ID: "todo.mealie_supermarket"},
         blocking=True,
     )
 
@@ -439,7 +438,7 @@ async def test_update_todo_item_parse_fallback(
         TODO_DOMAIN,
         TodoServices.UPDATE_ITEM,
         {ATTR_ITEM: "aubergine", ATTR_RENAME: "Eggplant"},
-        target={ATTR_ENTITY_ID: "todo.mealie_supermarket"},
+        target={TargetKey.ENTITY_ID: "todo.mealie_supermarket"},
         blocking=True,
     )
 
@@ -486,7 +485,7 @@ async def test_update_todo_item_without_unit_id_fallback(
         TODO_DOMAIN,
         TodoServices.UPDATE_ITEM,
         {ATTR_ITEM: "aubergine", ATTR_RENAME: "1 kg chicken"},
-        target={ATTR_ENTITY_ID: "todo.mealie_supermarket"},
+        target={TargetKey.ENTITY_ID: "todo.mealie_supermarket"},
         blocking=True,
     )
 
@@ -522,7 +521,7 @@ async def test_update_todo_item_parse_error_fallback(
         TODO_DOMAIN,
         TodoServices.UPDATE_ITEM,
         {ATTR_ITEM: "aubergine", ATTR_RENAME: "Eggplant"},
-        target={ATTR_ENTITY_ID: "todo.mealie_supermarket"},
+        target={TargetKey.ENTITY_ID: "todo.mealie_supermarket"},
         blocking=True,
     )
 
@@ -561,7 +560,7 @@ async def test_add_todo_list_item_error(
             TODO_DOMAIN,
             TodoServices.ADD_ITEM,
             {ATTR_ITEM: "Soda"},
-            target={ATTR_ENTITY_ID: "todo.mealie_supermarket"},
+            target={TargetKey.ENTITY_ID: "todo.mealie_supermarket"},
             blocking=True,
         )
 
@@ -583,7 +582,7 @@ async def test_update_todo_list_item_error(
             TODO_DOMAIN,
             TodoServices.UPDATE_ITEM,
             {ATTR_ITEM: "aubergine", ATTR_RENAME: "Eggplant", ATTR_STATUS: "completed"},
-            target={ATTR_ENTITY_ID: "todo.mealie_supermarket"},
+            target={TargetKey.ENTITY_ID: "todo.mealie_supermarket"},
             blocking=True,
         )
 
@@ -603,7 +602,7 @@ async def test_update_non_existent_item(
             TODO_DOMAIN,
             TodoServices.UPDATE_ITEM,
             {ATTR_ITEM: "eggplant", ATTR_RENAME: "Aubergine", ATTR_STATUS: "completed"},
-            target={ATTR_ENTITY_ID: "todo.mealie_supermarket"},
+            target={TargetKey.ENTITY_ID: "todo.mealie_supermarket"},
             blocking=True,
         )
 
@@ -626,7 +625,7 @@ async def test_delete_todo_list_item_error(
             TODO_DOMAIN,
             TodoServices.REMOVE_ITEM,
             {ATTR_ITEM: "aubergine"},
-            target={ATTR_ENTITY_ID: "todo.mealie_supermarket"},
+            target={TargetKey.ENTITY_ID: "todo.mealie_supermarket"},
             blocking=True,
         )
 

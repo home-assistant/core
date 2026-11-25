@@ -37,11 +37,12 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import SwitchbotCloudConfigEntry, SwitchBotCoordinator
+from . import SwitchbotCloudConfigEntry
 from .const import (
     CLIMATE_PRESET_SCHEDULE,
     SMART_RADIATOR_THERMOSTAT_AFTER_COMMAND_REFRESH,
 )
+from .coordinator import SwitchBotCoordinator
 from .entity import SwitchBotCloudEntity
 
 _LOGGER = getLogger(__name__)
@@ -325,7 +326,14 @@ class SwitchBotCloudSmartRadiatorThermostat(SwitchBotCloudEntity, ClimateEntity)
             self._attr_hvac_mode = HVACMode.OFF
         else:
             self._attr_hvac_mode = HVACMode.HEAT
-            if self.preset_mode == PRESET_HOME:
+            if (
+                "targetTemperature" in self.coordinator.data
+                and self.coordinator.data["targetTemperature"] is not None
+            ):
+                self._attr_native_target_temperature = float(
+                    self.coordinator.data["targetTemperature"]
+                )
+            elif self.preset_mode == PRESET_HOME:
                 self._attr_native_target_temperature = (
                     self._attr_native_current_temperature
                 )

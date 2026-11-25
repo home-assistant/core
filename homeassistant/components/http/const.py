@@ -27,6 +27,9 @@ CONF_SERVER_PORT: Final = "server_port"
 CONF_BASE_URL: Final = "base_url"
 CONF_SSL_CERTIFICATE: Final = "ssl_certificate"
 CONF_SSL_PEER_CERTIFICATE: Final = "ssl_peer_certificate"
+# Also require the peer certificate on remote access through Home Assistant
+# Cloud. Storage only, there is no YAML option for it.
+CONF_SSL_PEER_CERTIFICATE_REMOTE: Final = "ssl_peer_certificate_remote"
 CONF_SSL_KEY: Final = "ssl_key"
 CONF_CORS_ORIGINS: Final = "cors_allowed_origins"
 CONF_USE_X_FORWARDED_FOR: Final = "use_x_forwarded_for"
@@ -46,7 +49,7 @@ UNVERSIONED_SSL_PROFILES: Final = {
 }
 # Profiles following the current guidelines, recommended one first. A server
 # running any other profile with SSL gets a repair offering these.
-CURRENT_SSL_PROFILES: Final = (SSLProfile.MODERN_V6, SSLProfile.INTERMEDIATE_V6)
+CURRENT_SSL_PROFILES: Final = (SSLProfile.INTERMEDIATE_V6, SSLProfile.MODERN_V6)
 DEFAULT_SSL_PROFILE: Final = CURRENT_SSL_PROFILES[0]
 
 ISSUE_SSL_PROFILE_OUTDATED: Final = "ssl_profile_outdated"
@@ -62,6 +65,8 @@ SUPERVISOR_DEFAULT_PORT: Final = 80
 # My to be able to check url and version info.
 DEFAULT_CORS: Final[list[str]] = ["https://cast.home-assistant.io"]
 NO_LOGIN_ATTEMPT_THRESHOLD: Final = -1
+# Largest legitimate unauthenticated request (login flow, token) is a few KB
+MAX_UNAUTHENTICATED_BODY_SIZE: Final = 64 * 1024
 
 ATTR_CONFIG = "config"
 

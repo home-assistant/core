@@ -4,17 +4,16 @@ from unittest.mock import AsyncMock
 
 from aiotractive.exceptions import TractiveError, UnauthorizedError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.components.tractive.const import DOMAIN
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
-from homeassistant.const import STATE_UNAVAILABLE
+from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from . import init_integration
-
-from tests.common import MockConfigEntry
 
 BATTERY_ENTITY_ID = "sensor.tracker_device_id_123_battery"
 ACTIVITY_ENTITY_ID = "sensor.test_pet_activity_time"
@@ -129,12 +128,12 @@ async def test_pet_without_health_data(
     mock_tractive_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test pet sensors are unavailable until health data arrives."""
+    """Test pet sensors are unknown until health data arrives."""
     mock_tractive_client.status.pets.clear()
 
     await init_integration(hass, mock_config_entry)
 
-    assert hass.states.get(ACTIVITY_ENTITY_ID).state == STATE_UNAVAILABLE
+    assert hass.states.get(ACTIVITY_ENTITY_ID).state == STATE_UNKNOWN
 
     mock_tractive_client.set_pet_status(
         daily_goal=200,

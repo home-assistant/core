@@ -7,18 +7,23 @@ import os
 import shutil
 
 from velbusaio.controller import Velbus
-from velbusaio.exceptions import VelbusConnectionFailed
+from velbusaio.exceptions import VelbusAuthenticationFailed, VelbusConnectionFailed
 from velbusaio.helpers import get_property_key_map
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_PORT, Platform
+from homeassistant.const import CONF_ACCESS_TOKEN, CONF_PORT, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady, PlatformNotReady
+from homeassistant.exceptions import (
+    ConfigEntryAuthFailed,
+    ConfigEntryNotReady,
+    PlatformNotReady,
+)
 from homeassistant.helpers import (
     config_validation as cv,
     device_registry as dr,
     entity_registry as er,
 )
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.storage import STORAGE_DIR
 from homeassistant.helpers.typing import ConfigType
 
@@ -32,6 +37,7 @@ PLATFORMS = [
     Platform.BUTTON,
     Platform.CLIMATE,
     Platform.COVER,
+    Platform.EVENT,
     Platform.LIGHT,
     Platform.SELECT,
     Platform.SENSOR,
@@ -59,7 +65,8 @@ async def velbus_scan_task(
         await controller.start()
     except ConnectionError as ex:
         raise PlatformNotReady(
-            f"Connection error while connecting to Velbus {entry_id}: {ex}"
+            translation_domain=DOMAIN,
+            translation_key="connection_failed",
         ) from ex
     # create all modules
     dev_reg = dr.async_get(hass)
@@ -75,6 +82,56 @@ async def velbus_scan_task(
             name=f"{module.get_name()} ({module.get_type_name()})",
             sw_version=module.get_sw_version(),
             serial_number=module.get_serial(),
+        )
+    _migrate_via_devices_to_children(hass, entry_id)
+
+
+def _child_name_from_registry(
+    child_name: str | None, parent_name: str | None
+) -> str | None:
+    """Strip a legacy parent prefix from a channel device name."""
+    if child_name and parent_name:
+        prefix = f"{parent_name} - "
+        if child_name.startswith(prefix):
+            return child_name.removeprefix(prefix)
+    return child_name
+
+
+def _is_channel_subdevice_identifier(
+    child_identifiers: set[tuple[str, str]],
+    parent_identifiers: set[tuple[str, str]],
+) -> bool:
+    """Return whether the child identifier denotes a module channel."""
+    if len(child_identifiers) != 1 or len(parent_identifiers) != 1:
+        return False
+    _, child_id = next(iter(child_identifiers))
+    _, parent_id = next(iter(parent_identifiers))
+    if not child_id.startswith(f"{parent_id}-"):
+        return False
+    return bool(child_id.removeprefix(f"{parent_id}-"))
+
+
+def _migrate_via_devices_to_children(hass: HomeAssistant, entry_id: str) -> None:
+    """Convert legacy via_device channel devices to child devices."""
+    dev_reg = dr.async_get(hass)
+    for device in dr.async_entries_for_config_entry(dev_reg, entry_id):
+        if device.via_device_id is None:
+            continue
+        parent = dev_reg.async_get(device.via_device_id)
+        if parent is None or parent.config_entry_id != entry_id:
+            continue
+        if not _is_channel_subdevice_identifier(device.identifiers, parent.identifiers):
+            continue
+        _LOGGER.debug(
+            "Converting channel device %s to child of %s",
+            device.identifiers,
+            parent.identifiers,
+        )
+        dev_reg.async_get_or_create_child(
+            config_entry_id=entry_id,
+            identifiers=device.identifiers,
+            parent_device_id=parent.id,
+            name=_child_name_from_registry(device.name, parent.name),
         )
 
 
@@ -141,13 +198,22 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_setup_entry(hass: HomeAssistant, entry: VelbusConfigEntry) -> None:
     """Establish connection with velbus."""
+    port = entry.data[CONF_PORT]
+    session = async_get_clientsession(hass) if port.startswith("manager://") else None
     controller = Velbus(
-        dsn=entry.data[CONF_PORT],
+        dsn=port,
         cache_dir=hass.config.path(STORAGE_DIR, f"velbuscache-{entry.entry_id}"),
         vlp_file=entry.data.get(CONF_VLP_FILE),
+        session=session,
+        access_token=entry.data.get(CONF_ACCESS_TOKEN),
     )
     try:
         await controller.connect()
+    except VelbusAuthenticationFailed as error:
+        raise ConfigEntryAuthFailed(
+            translation_domain=DOMAIN,
+            translation_key="invalid_access_token",
+        ) from error
     except VelbusConnectionFailed as error:
         raise ConfigEntryNotReady(
             translation_domain=DOMAIN,
@@ -194,9 +260,8 @@ async def async_remove_config_entry_device(
     if device_entry.config_entry_id != config_entry.entry_id:
         return False
     dev_reg = dr.async_get(hass)
-    for sub_device in dr.async_entries_for_config_entry(dev_reg, config_entry.entry_id):
-        if sub_device.via_device_id == device_entry.id:
-            dev_reg.async_remove_device(sub_device.id)
+    for child in dr.async_entries_for_parent_device(dev_reg, device_entry.id):
+        dev_reg.async_remove_device(child.id)
     return True
 
 

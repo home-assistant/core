@@ -8,32 +8,34 @@ from aidot.device_client import DeviceStatusData
 from aidot.exceptions import AidotAuthFailed
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.aidot.coordinator import UPDATE_DEVICE_LIST_INTERVAL
 from homeassistant.components.light import (
-    ATTR_BRIGHTNESS,
     ATTR_COLOR_TEMP_KELVIN,
     ATTR_EFFECT,
     ATTR_EFFECT_LIST,
     ATTR_RGBW_COLOR,
     LightEntityFeature,
+    LightService,
+    LightServiceArgument,
 )
 from homeassistant.const import (
-    ATTR_ENTITY_ID,
     ATTR_SUPPORTED_FEATURES,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
     STATE_ON,
     STATE_UNAVAILABLE,
+    TargetKey,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from . import async_init_integration
 from .const import ENTITY_LIGHT, LIGHT_DOMAIN
-
-from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 
 async def test_state(
@@ -59,8 +61,8 @@ async def test_turn_on(
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: ENTITY_LIGHT},
+        LightService.TURN_ON,
+        {TargetKey.ENTITY_ID: ENTITY_LIGHT},
         blocking=True,
     )
     mocked_device_client.async_turn_on.assert_called_once()
@@ -78,8 +80,8 @@ async def test_turn_off(
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: ENTITY_LIGHT},
+        LightService.TURN_OFF,
+        {TargetKey.ENTITY_ID: ENTITY_LIGHT},
         blocking=True,
     )
     mocked_device_client.async_turn_off.assert_called_once()
@@ -97,8 +99,8 @@ async def test_turn_on_brightness(
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: ENTITY_LIGHT, ATTR_BRIGHTNESS: 100},
+        LightService.TURN_ON,
+        {TargetKey.ENTITY_ID: ENTITY_LIGHT, LightServiceArgument.BRIGHTNESS: 100},
         blocking=True,
     )
     mocked_device_client.async_set_brightness.assert_called_once()
@@ -117,8 +119,11 @@ async def test_turn_on_with_color_temp(
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: ENTITY_LIGHT, ATTR_COLOR_TEMP_KELVIN: 3000},
+        LightService.TURN_ON,
+        {
+            TargetKey.ENTITY_ID: ENTITY_LIGHT,
+            LightServiceArgument.COLOR_TEMP_KELVIN: 3000,
+        },
         blocking=True,
     )
     mocked_device_client.async_set_cct.assert_called_once()
@@ -136,8 +141,11 @@ async def test_turn_on_with_rgbw(
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: ENTITY_LIGHT, ATTR_RGBW_COLOR: (255, 255, 255, 255)},
+        LightService.TURN_ON,
+        {
+            TargetKey.ENTITY_ID: ENTITY_LIGHT,
+            LightServiceArgument.RGBW_COLOR: (255, 255, 255, 255),
+        },
         blocking=True,
     )
     mocked_device_client.async_set_rgbw.assert_called_once()
@@ -170,8 +178,8 @@ async def test_turn_on_with_effect(
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: ENTITY_LIGHT, ATTR_EFFECT: "Party"},
+        LightService.TURN_ON,
+        {TargetKey.ENTITY_ID: ENTITY_LIGHT, LightServiceArgument.EFFECT: "Party"},
         blocking=True,
     )
 
@@ -191,8 +199,12 @@ async def test_turn_on_with_brightness_and_effect(
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: ENTITY_LIGHT, ATTR_BRIGHTNESS: 100, ATTR_EFFECT: "Party"},
+        LightService.TURN_ON,
+        {
+            TargetKey.ENTITY_ID: ENTITY_LIGHT,
+            LightServiceArgument.BRIGHTNESS: 100,
+            LightServiceArgument.EFFECT: "Party",
+        },
         blocking=True,
     )
 
@@ -215,8 +227,11 @@ async def test_turn_on_with_color_clears_effect(
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: ENTITY_LIGHT, ATTR_RGBW_COLOR: (0, 0, 255, 0)},
+        LightService.TURN_ON,
+        {
+            TargetKey.ENTITY_ID: ENTITY_LIGHT,
+            LightServiceArgument.RGBW_COLOR: (0, 0, 255, 0),
+        },
         blocking=True,
     )
 
@@ -280,8 +295,12 @@ async def test_turn_on_with_brightness_and_color(
     # Scenes send brightness and color in a single call.
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: ENTITY_LIGHT, ATTR_BRIGHTNESS: 100, **color_data},
+        LightService.TURN_ON,
+        {
+            TargetKey.ENTITY_ID: ENTITY_LIGHT,
+            LightServiceArgument.BRIGHTNESS: 100,
+            **color_data,
+        },
         blocking=True,
     )
 

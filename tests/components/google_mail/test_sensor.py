@@ -6,6 +6,7 @@ from unittest.mock import Mock, patch
 from aiohttp.client_exceptions import ClientResponseError
 from httplib2 import Response
 import pytest
+from pytest_homeassistant.common import async_fire_time_changed, async_load_fixture
 
 from homeassistant import config_entries
 from homeassistant.components.google_mail.const import DOMAIN
@@ -20,8 +21,6 @@ from homeassistant.exceptions import (
 from homeassistant.util import dt as dt_util
 
 from .conftest import SENSOR, TOKEN, ComponentSetup
-
-from tests.common import async_fire_time_changed, async_load_fixture
 
 
 @pytest.mark.parametrize(

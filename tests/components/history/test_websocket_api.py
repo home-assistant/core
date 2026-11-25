@@ -10,6 +10,12 @@ from unittest.mock import ANY, patch
 from freezegun import freeze_time
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import MockUser, async_fire_time_changed
+from pytest_homeassistant.components.recorder.common import (
+    async_recorder_block_till_done,
+    async_wait_recording_done,
+)
+from pytest_homeassistant.typing import WebSocketGenerator
 
 from homeassistant.components import history
 from homeassistant.components.history import DOMAIN, websocket_api
@@ -23,13 +29,6 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
-
-from tests.common import MockUser, async_fire_time_changed
-from tests.components.recorder.common import (
-    async_recorder_block_till_done,
-    async_wait_recording_done,
-)
-from tests.typing import WebSocketGenerator
 
 
 def listeners_without_writes(listeners: dict[str, int]) -> dict[str, int]:

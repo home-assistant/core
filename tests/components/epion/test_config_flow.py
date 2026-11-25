@@ -4,14 +4,13 @@ from unittest.mock import MagicMock, patch
 
 from epion import EpionAuthenticationError, EpionConnectionError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries
 from homeassistant.components.epion.const import DOMAIN
 from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-
-from tests.common import MockConfigEntry
 
 API_KEY = "test-key-123"
 NEW_API_KEY = "new-key-456"
@@ -27,7 +26,7 @@ async def test_user_flow(hass: HomeAssistant, mock_epion: MagicMock) -> None:
 
     with patch(
         "homeassistant.components.epion.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ) as mock_setup_entry:
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -73,7 +72,7 @@ async def test_form_exceptions(
 
     with patch(
         "homeassistant.components.epion.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ) as mock_setup_entry:
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -129,7 +128,7 @@ async def test_reauth_flow(hass: HomeAssistant, mock_epion: MagicMock) -> None:
 
     with patch(
         "homeassistant.components.epion.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -180,7 +179,7 @@ async def test_reauth_flow_errors(
 
     with patch(
         "homeassistant.components.epion.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],

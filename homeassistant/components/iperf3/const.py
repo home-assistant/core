@@ -17,6 +17,5 @@ DEFAULT_INTERVAL = timedelta(minutes=60)
 ATTR_DOWNLOAD = "download"
 ATTR_UPLOAD = "upload"
 ATTR_VERSION = "Version"
-ATTR_HOST = "host"
 
 PROTOCOLS = ["tcp", "udp"]

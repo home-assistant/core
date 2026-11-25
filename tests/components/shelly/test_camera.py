@@ -12,10 +12,10 @@ from aioshelly.exceptions import (
     InvalidAuthError,
 )
 import pytest
+from pytest_homeassistant.common import snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.camera import (
-    DATA_COMPONENT,
     DOMAIN as CAMERA_DOMAIN,
     CameraState,
     get_camera_from_entity_id,
@@ -34,8 +34,6 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_registry import EntityRegistry
 
 from . import MOCK_MAC, init_integration, patch_platforms, register_entity
-
-from tests.common import snapshot_platform
 
 CAMERA_ENTITY_ID = "camera.test_name_stream_0"
 
@@ -255,9 +253,10 @@ async def test_camera_off_when_streamer_stopped(
 
     await init_integration(hass, 3, model=MODEL_CAMERA)
 
-    camera = hass.data[DATA_COMPONENT].get_entity(CAMERA_ENTITY_ID)
-    assert camera is not None
-    assert camera.is_on is False
+    with pytest.raises(HomeAssistantError) as exc_info:
+        get_camera_from_entity_id(hass, CAMERA_ENTITY_ID)
+
+    assert exc_info.value.translation_key == "camera_off"
 
 
 async def test_camera_properties_when_device_not_initialized(

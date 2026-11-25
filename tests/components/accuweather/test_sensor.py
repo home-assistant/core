@@ -6,6 +6,7 @@ from accuweather import ApiError, RequestsExceededError
 from aiohttp.client_exceptions import ClientConnectorError
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import async_fire_time_changed, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.accuweather.const import (
@@ -31,8 +32,6 @@ from homeassistant.setup import async_setup_component
 from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
 
 from . import init_integration
-
-from tests.common import async_fire_time_changed, snapshot_platform
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
@@ -217,3 +216,30 @@ async def test_state_update(
     assert state
     assert state.state != STATE_UNAVAILABLE
     assert state.state == "3300"
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+@pytest.mark.parametrize(
+    ("key", "value", "entity_id", "attribute", "expected"),
+    [
+        ("UVIndexText", "very high", "sensor.home_uv_index", "level", "very_high"),
+        ("PrecipitationType", "rain", "sensor.home_precipitation", "type", "rain"),
+    ],
+)
+async def test_current_conditions_attribute(
+    hass: HomeAssistant,
+    mock_accuweather_client: AsyncMock,
+    key: str,
+    value: str,
+    entity_id: str,
+    attribute: str,
+    expected: str,
+) -> None:
+    """Test attributes of the current conditions sensors are translation keys."""
+    mock_accuweather_client.async_get_current_conditions.return_value[key] = value
+
+    await init_integration(hass)
+
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.attributes[attribute] == expected

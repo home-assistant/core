@@ -36,6 +36,7 @@ PLATFORMS: list[Platform] = [
     Platform.SENSOR,
     Platform.SWITCH,
     Platform.TIME,
+    Platform.UPDATE,
 ]
 
 
@@ -92,6 +93,7 @@ def _async_check_legacy_sensors(
             DOMAIN,
             issue_id,
             breaks_in_ha_version=_LEGACY_SENSOR_BREAKS_IN_VERSION,
+            config_entry_id=config_entry.entry_id,
             is_fixable=False,
             severity=ir.IssueSeverity.WARNING,
             translation_key=translation_key,

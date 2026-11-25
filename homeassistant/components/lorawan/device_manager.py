@@ -1,22 +1,4 @@
-"""Support device integrations across all registered LoRaWAN connections.
-
-Device integrations build on DeviceManager by supplying factories for their device
-collection and coordinator. Platforms subscribe once to receive existing and newly
-added device coordinators from all current and future connections.
-
-The manager:
-- Owns a device collection per connection.
-- Shares one model and coordinator per device across entity platforms, keeping
-  identical DevEUIs on different connections separate.
-- Removes device registry records when devices or their providers are deleted.
-- Retains models and coordinators during temporary disconnections, marks affected
-  devices unavailable, and reconciles inventory when a replacement connection
-  registers.
-- Releases subscriptions, collections, coordinators, and tasks on unload.
-
-Device libraries decode payloads, and device integrations create entities from
-coordinators. Connection integrations own backend transport setup and reconnection.
-"""
+"""LoRaWAN device management."""
 
 import asyncio
 from collections.abc import Callable
@@ -82,7 +64,7 @@ class _CollectionConnection:
     async def async_subscribe(
         self,
         *,
-        brands: frozenset[tuple[str, int | str]] | None,
+        brands: frozenset[tuple[str, int | str]] | None = None,
         listener: Callable[[DeviceEvent], None],
     ) -> Unsubscribe:
         item = (brands, listener)

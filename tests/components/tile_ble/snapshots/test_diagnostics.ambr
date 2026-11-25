@@ -1,0 +1,30 @@
+# serializer version: 1
+# name: test_diagnostics
+  dict({
+    'available': True,
+    'config_entry_data': dict({
+      'auth_key': '**REDACTED**',
+    }),
+    'connectable': True,
+    'service_info': dict({
+      'connectable': True,
+      'rssi': -60,
+      'service_data': dict({
+        '0000feed-0000-1000-8000-00805f9b34fb': '0200c58aaccd312f479e',
+      }),
+      'service_uuids': list([
+        '0000feed-0000-1000-8000-00805f9b34fb',
+      ]),
+    }),
+  })
+# ---
+# name: test_diagnostics_out_of_range
+  dict({
+    'available': False,
+    'config_entry_data': dict({
+      'auth_key': '**REDACTED**',
+    }),
+    'connectable': False,
+    'service_info': None,
+  })
+# ---
