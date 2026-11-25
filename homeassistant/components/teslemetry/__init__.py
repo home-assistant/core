@@ -1242,7 +1242,9 @@ async def _async_setup_energy_site(
         ) from e
 
     live_coordinator = (
-        TeslemetryEnergySiteLiveCoordinator(hass, entry, energy_site, live_status)
+        TeslemetryEnergySiteLiveCoordinator(
+            hass, entry, energy_site, live_status, stream
+        )
         if isinstance(live_status, dict)
         else None
     )
