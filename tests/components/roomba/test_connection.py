@@ -6,7 +6,7 @@ from unittest.mock import AsyncMock
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
-from roombapy import RoombaConnectionError
+from roombapy import RoombaConnectionError, RoombaError
 
 from homeassistant.components.homeassistant import (
     DOMAIN as HA_DOMAIN,
@@ -98,7 +98,6 @@ async def test_periodic_poll_reconnects_and_releases(
     assert periodic_roomba.connected
 
     await _advance(hass, freezer, timedelta(seconds=TELEMETRY_SETTLE_SECONDS))
-    assert periodic_roomba.disconnect.await_count == 2
     assert not periodic_roomba.connected
 
 
@@ -288,3 +287,42 @@ async def test_unreachable_is_logged_once(
         await _advance(hass, freezer, PERIODIC_UPDATE_INTERVAL)
         await _advance(hass, freezer, timedelta(seconds=TELEMETRY_SETTLE_SECONDS))
     assert caplog.text.count("is reachable again") == 1
+
+
+async def test_reconnect_after_dropped_session(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_config_entry: MockConfigEntry,
+    periodic_roomba: AsyncMock,
+) -> None:
+    """Test a session that dropped on its own is torn down before reconnecting."""
+    reconnecting = False
+
+    async def _connect() -> None:
+        if reconnecting:
+            raise RoombaError("Already connected")
+        periodic_roomba.connected = True
+
+    async def _disconnect() -> None:
+        nonlocal reconnecting
+        reconnecting = False
+        periodic_roomba.connected = False
+
+    periodic_roomba.connect.side_effect = _connect
+    periodic_roomba.disconnect.side_effect = _disconnect
+    _set_phase(periodic_roomba, "run")
+    await _setup(hass, mock_config_entry, continuous=False)
+    await _advance(hass, freezer, timedelta(seconds=TELEMETRY_SETTLE_SECONDS))
+
+    # Wi-Fi drop mid-mission: the client is reconnecting in the background.
+    periodic_roomba.connected = False
+    reconnecting = True
+    await _advance(hass, freezer, PERIODIC_UPDATE_INTERVAL)
+    assert periodic_roomba.connected
+
+    periodic_roomba.connected = False
+    reconnecting = True
+    await hass.services.async_call(
+        VACUUM_DOMAIN, SERVICE_LOCATE, {ATTR_ENTITY_ID: VACUUM_ENTITY_ID}, blocking=True
+    )
+    periodic_roomba.send_command.assert_awaited_once_with("find", None)

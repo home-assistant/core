@@ -99,8 +99,15 @@ class RoombaConnection:
         async with self._lock:
             if not self.roomba.connected:
                 _LOGGER.debug("Connecting to send a command")
-                await self._connect(self.hass, self.roomba)
+                await self._async_open()
         self._schedule_release(COMMAND_HOLD_SECONDS)
+
+    async def _async_open(self) -> None:
+        """Open a session; the caller holds the lock."""
+        # A dropped session may still be reconnecting in the background, and
+        # the client refuses to connect again until it is torn down.
+        await self._disconnect(self.hass, self.roomba)
+        await self._connect(self.hass, self.roomba)
 
     async def _async_poll(self, _now: datetime) -> None:
         await self.async_refresh()
@@ -118,7 +125,7 @@ class RoombaConnection:
             else:
                 _LOGGER.debug("Refreshing state: connecting")
                 try:
-                    await self._connect(self.hass, self.roomba)
+                    await self._async_open()
                 except HomeAssistantError as err:
                     if not self._unreachable:
                         self._unreachable = True
