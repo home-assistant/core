@@ -951,6 +951,7 @@ async def test_include_attribute_changes_for_same_state(
     class MockLight(LightEntity):
         _attr_brightness = 100
         _attr_color_mode = ColorMode.BRIGHTNESS
+        _attr_force_update = True
         _attr_is_on = True
         _attr_name = "Kitchen"
         _attr_supported_color_modes = {ColorMode.BRIGHTNESS}
@@ -980,6 +981,57 @@ async def test_include_attribute_changes_for_same_state(
     assert len(response_json) == 2
     assert response_json[0]["domain"] == "homeassistant"
     assert response_json[1]["entity_id"] == "light.kitchen"
+
+
+@pytest.mark.usefixtures("recorder_mock", "set_utc")
+async def test_exclude_noop_when_recorder_exclusions_change(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+) -> None:
+    """Test recorder exclusion changes do not create historical activity."""
+    await asyncio.gather(
+        *[
+            async_setup_component(hass, domain, {})
+            for domain in ("homeassistant", "logbook")
+        ]
+    )
+    await async_recorder_block_till_done(hass)
+
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
+
+    class MockLight(LightEntity):
+        _attr_brightness = 100
+        _attr_color_mode = ColorMode.BRIGHTNESS
+        _attr_is_on = True
+        _attr_name = "Kitchen"
+        _attr_supported_color_modes = {ColorMode.BRIGHTNESS}
+
+    light = MockLight()
+    platform = MockEntityPlatform(hass, domain="light", platform_name="test")
+    await platform.async_add_entities([light])
+    await hass.async_block_till_done()
+
+    state = hass.states.get("light.kitchen")
+    assert state is not None
+    hass.states.async_set(
+        state.entity_id,
+        state.state,
+        dict(state.attributes),
+        force_update=True,
+    )
+    await hass.async_block_till_done()
+    await async_wait_recording_done(hass)
+
+    client = await hass_client()
+    start = dt_util.utcnow().date()
+    start_date = datetime(start.year, start.month, start.day, tzinfo=dt_util.UTC)
+
+    response = await client.get(f"/api/logbook/{start_date.isoformat()}")
+    assert response.status == HTTPStatus.OK
+    response_json = await response.json()
+
+    assert len(response_json) == 1
+    assert response_json[0]["domain"] == "homeassistant"
 
 
 @pytest.mark.usefixtures("recorder_mock", "set_utc")
