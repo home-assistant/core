@@ -2,7 +2,7 @@
 
 import asyncio
 from typing import Any
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock, _Call, call, patch
 
 import pytest
 from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
@@ -103,11 +103,16 @@ async def test_action(
 
 @pytest.mark.parametrize("mock_device_code", ["sp_rudejjigkywujjvs"])
 @pytest.mark.parametrize(
-    ("has_output", "available", "expect_refresh"),
+    ("outputs", "available", "expected_updates"),
     [
-        pytest.param(True, True, False, id="active"),
-        pytest.param(False, True, True, id="idle"),
-        pytest.param(True, False, True, id="failed"),
+        pytest.param({"hls": object()}, True, [], id="active"),
+        pytest.param({}, True, [call("rtsps://example.com/refreshed")], id="idle"),
+        pytest.param(
+            {"hls": object()},
+            False,
+            [call("rtsps://example.com/refreshed")],
+            id="failed",
+        ),
     ],
 )
 async def test_camera_stream_source_refresh(
@@ -115,9 +120,9 @@ async def test_camera_stream_source_refresh(
     mock_manager: Manager,
     mock_config_entry: MockConfigEntry,
     mock_device: CustomerDevice,
-    has_output: bool,
+    outputs: dict[str, object],
     available: bool,
-    expect_refresh: bool,
+    expected_updates: list[_Call],
 ) -> None:
     """Refresh idle or failed Tuya URLs, but keep a healthy active stream."""
     await initialize_entry(hass, mock_manager, mock_config_entry, mock_device)
@@ -127,7 +132,7 @@ async def test_camera_stream_source_refresh(
         "rtsps://example.com/refreshed",
     ]
     stream = MagicMock(spec=Stream)
-    stream.outputs.return_value = {"hls": object()} if has_output else {}
+    stream.outputs.return_value = outputs
     stream.available = available
 
     with patch(
@@ -136,12 +141,9 @@ async def test_camera_stream_source_refresh(
         assert await camera.async_create_stream() is stream
         assert await camera.async_create_stream() is stream
 
-    if expect_refresh:
-        stream.update_source.assert_called_once_with("rtsps://example.com/refreshed")
-    else:
-        stream.update_source.assert_not_called()
-    assert mock_manager.get_device_stream_allocate.call_count == (
-        2 if expect_refresh else 1
+    assert stream.update_source.call_args_list == expected_updates
+    assert mock_manager.get_device_stream_allocate.call_count == 1 + len(
+        expected_updates
     )
 
 
