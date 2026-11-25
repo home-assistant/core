@@ -892,6 +892,12 @@ def get_deprecated_attributes_issues(
     [
         pytest.param(
             1,
+            {**TEST_EVENT_CONFIG, "attributes": {"device_class": "button"}},
+            "- `attributes: device_class` → `device_class`",
+            id="device_class",
+        ),
+        pytest.param(
+            1,
             {
                 **TEST_EVENT_CONFIG,
                 "attributes": {"event_type": TEST_EVENT_TYPE_TEMPLATE},

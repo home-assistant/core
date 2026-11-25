@@ -98,6 +98,7 @@ WEATHER_DEPRECATED_TEMPLATE_OPTIONS = {
 # Attribute with a dedicated option to that option, deprecated in 2026.12
 BINARY_SENSOR_DEPRECATED_ATTRIBUTES_OPTIONS = {"device_class": "device_class"}
 EVENT_DEPRECATED_ATTRIBUTES_OPTIONS = {
+    "device_class": "device_class",
     "event_type": "event_type",
     "event_types": "event_types",
 }
