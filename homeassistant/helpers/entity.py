@@ -799,7 +799,7 @@ class Entity(
             is type.__getattribute__(Entity, "name")
             # The check for self.platform_data guards against integrations not using an
             # EntityComponent and can be removed in HA Core 2026.8
-            and self.platform_data
+            and self.platform_data  # type: ignore[truthy-bool]
         ):
             name = self._name_internal(
                 self._object_id_device_class_name,
@@ -815,7 +815,7 @@ class Entity(
         """Return the name of the entity."""
         # The check for self.platform_data guards against integrations not using an
         # EntityComponent and can be removed in HA Core 2026.8
-        if not self.platform_data:
+        if not self.platform_data:  # type: ignore[truthy-bool]
             return self._name_internal(None, {})
         return self._name_internal(
             self._device_class_name,
@@ -1226,7 +1226,7 @@ class Entity(
         """Write the state to the state machine."""
         # The check for self.platform guards against integrations not using an
         # EntityComponent (which has not been allowed since HA Core 2024.1)
-        if not self.platform:
+        if not self.platform:  # type: ignore[truthy-bool]
             if self._platform_state is EntityPlatformState.REMOVED:
                 # Don't write state if the entity is not added to the platform.
                 return
@@ -1645,7 +1645,7 @@ class Entity(
         """
         # The check for self.platform guards against integrations not using an
         # EntityComponent and can be removed in HA Core 2026.8
-        if self.platform:
+        if self.platform:  # type: ignore[truthy-bool]
             del entity_sources(self.hass)[self.entity_id]
 
         if self.__group is not None:
@@ -1910,7 +1910,7 @@ class Entity(
         """Suggest to report an issue."""
         # The check for self.platform_data guards against integrations not using an
         # EntityComponent and can be removed in HA Core 2026.8
-        platform_name = self.platform_data.platform_name if self.platform_data else None
+        platform_name = self.platform_data.platform_name if self.platform_data else None  # type: ignore[truthy-bool]
         return async_suggest_report_issue(
             self.hass, integration_domain=platform_name, module=type(self).__module__
         )
