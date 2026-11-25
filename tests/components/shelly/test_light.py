@@ -1247,7 +1247,7 @@ async def test_rpc_ledstrip_light_device_not_initialized(
 
     assert (state := hass.states.get(entity_id))
     assert state.state == STATE_UNAVAILABLE
-    # The effect list should still be available because come from the runtime data.
+    # The effect list should still be available because it comes from the runtime data.
     assert state.attributes[ATTR_EFFECT_LIST] == list(MOCK_LEDSTRIP_EFFECTS)
 
 
