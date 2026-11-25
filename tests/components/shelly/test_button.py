@@ -315,20 +315,29 @@ async def test_rpc_device_virtual_button(
     mock_rpc_device.button_trigger.assert_called_once_with(200, "single_push")
 
 
+@pytest.mark.parametrize(
+    ("object_id", "unique_id"),
+    [
+        pytest.param("test_name_button_200", "button:200", id="virtual_button"),
+        pytest.param("test_name_ir_code_99", "ircode:99-ircode", id="ir_code"),
+    ],
+)
 async def test_rpc_remove_virtual_button_when_orphaned(
     hass: HomeAssistant,
     entity_registry: EntityRegistry,
     device_registry: DeviceRegistry,
     mock_rpc_device: Mock,
+    object_id: str,
+    unique_id: str,
 ) -> None:
-    """Test virtual button removal from device configuration."""
+    """Test orphaned button removal from device configuration."""
     config_entry = await init_integration(hass, 3, skip_setup=True)
     device_entry = register_device(device_registry, config_entry)
     entity_id = register_entity(
         hass,
         BUTTON_DOMAIN,
-        "test_name_button_200",
-        "button:200",
+        object_id,
+        unique_id,
         config_entry,
         device_id=device_entry.id,
     )
@@ -602,3 +611,22 @@ async def test_rpc_ledstrip_next_effect_button(
     )
 
     mock_rpc_device.ledstrip_next_effect.assert_called_once_with(0)
+
+
+@pytest.mark.usefixtures("mock_ledstrip_rpc_device")
+async def test_rpc_ledstrip_next_effect_button_kept_on_reload(
+    hass: HomeAssistant,
+    entity_registry: EntityRegistry,
+) -> None:
+    """Test the LED strip next effect button is not removed as orphaned on reload."""
+    entity_id = "button.test_name_next_effect"
+
+    config_entry = await init_integration(hass, 4)
+    assert entity_registry.async_get(entity_id)
+
+    await hass.config_entries.async_reload(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert entity_registry.async_get(entity_id)
+    assert (state := hass.states.get(entity_id))
+    assert state.state == STATE_UNKNOWN

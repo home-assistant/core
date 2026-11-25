@@ -46,6 +46,7 @@ from .utils import (
     get_ir_device_info,
     get_rpc_custom_name,
     get_rpc_key_id,
+    get_rpc_key_instances,
     get_virtual_component_ids,
 )
 
@@ -179,8 +180,10 @@ async def async_setup_entry(
             config_entry.entry_id,
             coordinator.mac,
             BUTTON_DOMAIN,
-            virtual_button_component_ids,
-            "button",
+            [
+                *virtual_button_component_ids,
+                *get_rpc_key_instances(coordinator.device.status, "ledstrip"),
+            ],
         )
 
 
