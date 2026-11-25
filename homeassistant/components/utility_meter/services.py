@@ -44,7 +44,7 @@ def _validate_is_number(value):
 
 async def async_reset_meters(service_call: ServiceCall) -> None:
     """Reset all sensors of a meter."""
-    meters = service_call.data["entity_id"]
+    meters = service_call.data[TargetKey.ENTITY_ID]
 
     for meter in meters:
         _LOGGER.debug("resetting meter %s", meter)
