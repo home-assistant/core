@@ -4,6 +4,7 @@ from collections.abc import Callable
 from enum import StrEnum
 from itertools import chain
 import logging
+import math
 from typing import Any
 
 import probatio
@@ -321,24 +322,28 @@ def number(
         if check_result_for_none(result, **kwargs):
             return None
 
-        if (result_type := type(result)) is bool:
+        if type(result) is bool:
             log_validation_result_error(entity, attribute, result, message)
             return None
 
         if isinstance(result, (float, int)):
             value = result
-            if return_type is int and result_type is float:
-                value = int(value)
-            elif return_type is float and result_type is int:
-                value = float(value)
         else:
             try:
                 value = probatio.Coerce(float)(result)
-                if return_type is int:
-                    value = int(value)
             except probatio.Invalid:
                 log_validation_result_error(entity, attribute, result, message)
                 return None
+
+        # int() raises on NaN and infinity
+        if isinstance(value, float) and not math.isfinite(value):
+            log_validation_result_error(entity, attribute, result, message)
+            return None
+
+        if return_type is int and isinstance(value, float):
+            value = int(value)
+        elif return_type is float and isinstance(value, int):
+            value = float(value)
 
         if minimum is None and maximum is None:
             return value

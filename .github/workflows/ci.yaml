@@ -523,7 +523,7 @@ jobs:
         with:
           persist-credentials: false
       - name: Dependency review
-        uses: actions/dependency-review-action@v5.0.0
+        uses: actions/dependency-review-action@v5.0.1
         with:
           license-check: false # We use our own license audit checks
 

@@ -4,17 +4,14 @@ import pytest
 from pytest_homeassistant.common import async_mock_service
 
 from homeassistant.components.water_heater import (
-    ATTR_AWAY_MODE,
-    ATTR_OPERATION_MODE,
-    ATTR_TEMPERATURE,
     DOMAIN,
-    SERVICE_SET_AWAY_MODE,
-    SERVICE_SET_OPERATION_MODE,
-    SERVICE_SET_TEMPERATURE,
     STATE_ECO,
     STATE_GAS,
+    WaterHeaterService,
+    WaterHeaterServiceArgument,
+    WaterHeaterStateAttribute,
 )
-from homeassistant.const import SERVICE_TURN_OFF, SERVICE_TURN_ON, STATE_OFF, STATE_ON
+from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers.state import async_reproduce_state
 
@@ -24,33 +21,59 @@ async def test_reproducing_states(
 ) -> None:
     """Test reproducing Water heater states."""
     hass.states.async_set("water_heater.entity_off", STATE_OFF, {})
-    hass.states.async_set("water_heater.entity_on", STATE_ON, {ATTR_TEMPERATURE: 45})
-    hass.states.async_set("water_heater.entity_away", STATE_ON, {ATTR_AWAY_MODE: True})
+    hass.states.async_set(
+        "water_heater.entity_on",
+        STATE_ON,
+        {WaterHeaterStateAttribute.TARGET_TEMPERATURE: 45},
+    )
+    hass.states.async_set(
+        "water_heater.entity_away",
+        STATE_ON,
+        {WaterHeaterStateAttribute.AWAY_MODE: True},
+    )
     hass.states.async_set("water_heater.entity_gas", STATE_GAS, {})
     hass.states.async_set(
         "water_heater.entity_all",
         STATE_ECO,
-        {ATTR_AWAY_MODE: True, ATTR_TEMPERATURE: 45},
+        {
+            WaterHeaterStateAttribute.AWAY_MODE: True,
+            WaterHeaterStateAttribute.TARGET_TEMPERATURE: 45,
+        },
     )
 
-    turn_on_calls = async_mock_service(hass, DOMAIN, SERVICE_TURN_ON)
-    turn_off_calls = async_mock_service(hass, DOMAIN, SERVICE_TURN_OFF)
-    set_op_calls = async_mock_service(hass, DOMAIN, SERVICE_SET_OPERATION_MODE)
-    set_temp_calls = async_mock_service(hass, DOMAIN, SERVICE_SET_TEMPERATURE)
-    set_away_calls = async_mock_service(hass, DOMAIN, SERVICE_SET_AWAY_MODE)
+    turn_on_calls = async_mock_service(hass, DOMAIN, WaterHeaterService.TURN_ON)
+    turn_off_calls = async_mock_service(hass, DOMAIN, WaterHeaterService.TURN_OFF)
+    set_op_calls = async_mock_service(
+        hass, DOMAIN, WaterHeaterService.SET_OPERATION_MODE
+    )
+    set_temp_calls = async_mock_service(
+        hass, DOMAIN, WaterHeaterService.SET_TEMPERATURE
+    )
+    set_away_calls = async_mock_service(hass, DOMAIN, WaterHeaterService.SET_AWAY_MODE)
 
     # These calls should do nothing as entities already in desired state
     await async_reproduce_state(
         hass,
         [
             State("water_heater.entity_off", STATE_OFF),
-            State("water_heater.entity_on", STATE_ON, {ATTR_TEMPERATURE: 45}),
-            State("water_heater.entity_away", STATE_ON, {ATTR_AWAY_MODE: True}),
+            State(
+                "water_heater.entity_on",
+                STATE_ON,
+                {WaterHeaterStateAttribute.TARGET_TEMPERATURE: 45},
+            ),
+            State(
+                "water_heater.entity_away",
+                STATE_ON,
+                {WaterHeaterStateAttribute.AWAY_MODE: True},
+            ),
             State("water_heater.entity_gas", STATE_GAS, {}),
             State(
                 "water_heater.entity_all",
                 STATE_ECO,
-                {ATTR_AWAY_MODE: True, ATTR_TEMPERATURE: 45},
+                {
+                    WaterHeaterStateAttribute.AWAY_MODE: True,
+                    WaterHeaterStateAttribute.TARGET_TEMPERATURE: 45,
+                },
             ),
         ],
     )
@@ -78,13 +101,24 @@ async def test_reproducing_states(
         hass,
         [
             State("water_heater.entity_on", STATE_OFF),
-            State("water_heater.entity_off", STATE_ON, {ATTR_TEMPERATURE: 45}),
-            State("water_heater.entity_all", STATE_ECO, {ATTR_AWAY_MODE: False}),
+            State(
+                "water_heater.entity_off",
+                STATE_ON,
+                {WaterHeaterStateAttribute.TARGET_TEMPERATURE: 45},
+            ),
+            State(
+                "water_heater.entity_all",
+                STATE_ECO,
+                {WaterHeaterStateAttribute.AWAY_MODE: False},
+            ),
             State("water_heater.entity_away", STATE_GAS, {}),
             State(
                 "water_heater.entity_gas",
                 STATE_ECO,
-                {ATTR_AWAY_MODE: True, ATTR_TEMPERATURE: 45},
+                {
+                    WaterHeaterStateAttribute.AWAY_MODE: True,
+                    WaterHeaterStateAttribute.TARGET_TEMPERATURE: 45,
+                },
             ),
             # Should not raise
             State("water_heater.non_existing", "on"),
@@ -100,8 +134,14 @@ async def test_reproducing_states(
     assert turn_off_calls[0].data == {"entity_id": "water_heater.entity_on"}
 
     valid_op_calls = [
-        {"entity_id": "water_heater.entity_away", ATTR_OPERATION_MODE: STATE_GAS},
-        {"entity_id": "water_heater.entity_gas", ATTR_OPERATION_MODE: STATE_ECO},
+        {
+            "entity_id": "water_heater.entity_away",
+            WaterHeaterServiceArgument.OPERATION_MODE: STATE_GAS,
+        },
+        {
+            "entity_id": "water_heater.entity_gas",
+            WaterHeaterServiceArgument.OPERATION_MODE: STATE_ECO,
+        },
     ]
     assert len(set_op_calls) == 2
     for call in set_op_calls:
@@ -110,8 +150,14 @@ async def test_reproducing_states(
         valid_op_calls.remove(call.data)
 
     valid_temp_calls = [
-        {"entity_id": "water_heater.entity_off", ATTR_TEMPERATURE: 45},
-        {"entity_id": "water_heater.entity_gas", ATTR_TEMPERATURE: 45},
+        {
+            "entity_id": "water_heater.entity_off",
+            WaterHeaterServiceArgument.TEMPERATURE: 45,
+        },
+        {
+            "entity_id": "water_heater.entity_gas",
+            WaterHeaterServiceArgument.TEMPERATURE: 45,
+        },
     ]
     assert len(set_temp_calls) == 2
     for call in set_temp_calls:
@@ -120,8 +166,14 @@ async def test_reproducing_states(
         valid_temp_calls.remove(call.data)
 
     valid_away_calls = [
-        {"entity_id": "water_heater.entity_all", ATTR_AWAY_MODE: False},
-        {"entity_id": "water_heater.entity_gas", ATTR_AWAY_MODE: True},
+        {
+            "entity_id": "water_heater.entity_all",
+            WaterHeaterServiceArgument.AWAY_MODE: False,
+        },
+        {
+            "entity_id": "water_heater.entity_gas",
+            WaterHeaterServiceArgument.AWAY_MODE: True,
+        },
     ]
     assert len(set_away_calls) == 2
     for call in set_away_calls:
