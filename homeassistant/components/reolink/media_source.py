@@ -364,7 +364,7 @@ class ReolinkVODMediaSource(MediaSource):
             trigger=event_trigger,
         )
 
-        if event is None and host.api.is_nvr and not host.api.is_hub:
+        if event is None and host.api.supported(None, "replay_trigger"):
             triggers = VOD_trigger.NONE
             for file in vod_files:
                 triggers |= file.triggers

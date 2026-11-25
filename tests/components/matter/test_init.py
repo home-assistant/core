@@ -12,6 +12,7 @@ from matter_server.client.exceptions import (
     ServerVersionTooNew,
     ServerVersionTooOld,
 )
+from matter_server.client.models.node import MatterNode
 from matter_server.common.errors import MatterError
 import pytest
 from pytest_homeassistant.common import MockConfigEntry, mock_component
@@ -23,7 +24,12 @@ from homeassistant.components.matter import (
 )
 from homeassistant.components.matter.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryDisabler, ConfigEntryState
-from homeassistant.const import EVENT_HOMEASSISTANT_STOP, STATE_UNAVAILABLE, Platform
+from homeassistant.const import (
+    EVENT_HOMEASSISTANT_STOP,
+    STATE_UNAVAILABLE,
+    Platform,
+    __version__ as HA_VERSION,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import (
     device_registry as dr,
@@ -816,8 +822,12 @@ async def test_ipv6_disabled_repair(
         await hass.async_block_till_done()
 
     assert entry.state is ConfigEntryState.LOADED
-    issue = issue_registry.async_get_issue(DOMAIN, "ipv6_disabled")
-    assert (issue is not None) is issue_expected
+    issues = [
+        (issue.issue_id, issue.config_entry_id)
+        for issue in issue_registry.issues.values()
+        if issue.domain == DOMAIN
+    ]
+    assert issues == [("ipv6_disabled", entry.entry_id)] * issue_expected
 
 
 async def test_ipv6_repair_not_raised_without_supervisor(
@@ -908,6 +918,57 @@ async def test_ipv6_repair_resolves_on_reload(
         await hass.async_block_till_done()
 
     assert entry.state is ConfigEntryState.LOADED
+    assert not issue_registry.async_get_issue(DOMAIN, "ipv6_disabled")
+
+
+async def test_ipv6_repair_ignored_issue_linked_and_kept_ignored(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test an ignored unlinked IPv6 repair stays ignored once linked."""
+    ir.async_create_issue(
+        hass,
+        DOMAIN,
+        "ipv6_disabled",
+        is_fixable=False,
+        severity=ir.IssueSeverity.WARNING,
+        translation_key="ipv6_disabled",
+    )
+    ir.async_ignore_issue(hass, DOMAIN, "ipv6_disabled", True)
+    supervisor_client = MagicMock()
+    supervisor_client.network.info = AsyncMock(
+        return_value=MagicMock(
+            interfaces=[
+                _mock_network_interface(
+                    enabled=True, connected=True, ipv6_method=InterfaceMethod.DISABLED
+                )
+            ]
+        )
+    )
+
+    entry = MockConfigEntry(domain=DOMAIN, data={"url": "ws://localhost:5580/ws"})
+    entry.add_to_hass(hass)
+
+    with (
+        patch("homeassistant.components.matter.is_hassio", return_value=True),
+        patch(
+            "homeassistant.components.matter.get_supervisor_client",
+            return_value=supervisor_client,
+        ),
+    ):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.LOADED
+    issue = issue_registry.async_get_issue(DOMAIN, "ipv6_disabled")
+    assert issue
+    assert issue.config_entry_id == entry.entry_id
+    assert issue.dismissed_version == HA_VERSION
+
+    await hass.config_entries.async_remove(entry.entry_id)
+    await hass.async_block_till_done()
+
     assert not issue_registry.async_get_issue(DOMAIN, "ipv6_disabled")
 
 
@@ -1136,13 +1197,13 @@ async def test_remove_config_entry_device_no_node(
     assert not device_registry.async_get(device_entry.id)
 
 
-async def test_remove_config_entry_device_rejects_child_device(
+async def test_remove_config_entry_device_allows_orphan_child_device(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
     device_registry: dr.DeviceRegistry,
     integration: MockConfigEntry,
 ) -> None:
-    """Test that removing an unexpected child device is rejected."""
+    """Test that an orphan child device (its endpoint is gone) can be removed."""
     assert await async_setup_component(hass, "config", {})
     parent_device = device_registry.async_get_or_create(
         config_entry_id=integration.entry_id,
@@ -1156,12 +1217,57 @@ async def test_remove_config_entry_device_rejects_child_device(
 
     client = await hass_ws_client(hass)
     response = await client.remove_device(child_device.id)
-    assert not response["success"]
-    assert (
-        response["error"]["message"]
-        == "Failed to remove device entry, rejected by integration"
+    assert response["success"]
+    await hass.async_block_till_done()
+
+    assert not device_registry.async_get(child_device.id)
+
+
+@pytest.mark.usefixtures("matter_node")
+@pytest.mark.parametrize("node_fixture", ["eve_energy_20ecn4101"])
+async def test_remove_config_entry_device_rejects_active_child_device(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test removing a child device whose endpoint still needs one is rejected."""
+    assert await async_setup_component(hass, "config", {})
+    config_entry = hass.config_entries.async_entries(DOMAIN)[0]
+    children = dr.async_child_entries_for_config_entry(
+        device_registry, config_entry.entry_id
     )
-    assert device_registry.async_get(child_device.id)
+    assert children
+
+    client = await hass_ws_client(hass)
+    for child in children:
+        response = await client.remove_device(child.id)
+        assert not response["success"]
+        assert device_registry.async_get(child.id)
+
+
+@pytest.mark.parametrize("node_fixture", ["eve_energy_20ecn4101"])
+async def test_get_matter_device_info_child_device(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    matter_node: MatterNode,
+) -> None:
+    """Test Matter device info resolves a child device id to its node.
+
+    This underpins the Google Assistant SYNC response and device diagnostics for
+    entities that live on a split endpoint's child device.
+    """
+    config_entry = hass.config_entries.async_entries(DOMAIN)[0]
+    children = dr.async_child_entries_for_config_entry(
+        device_registry, config_entry.entry_id
+    )
+    assert children
+    expected_device_info = {
+        "unique_id": matter_node.device_info.uniqueID,
+        "vendor_id": hex(matter_node.device_info.vendorID),
+        "product_id": hex(matter_node.device_info.productID),
+    }
+    for child in children:
+        assert get_matter_device_info(hass, child.id) == expected_device_info
 
 
 async def test_get_matter_device_info(

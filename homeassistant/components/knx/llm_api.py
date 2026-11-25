@@ -22,12 +22,23 @@ from xknx.exceptions import XKNXException
 from xknxproject import mcp as xknxproject_mcp
 from xknxproject.models import KNXProject as KNXProjectModel
 
+from homeassistant.const import CONF_ENTITY_ID, CONF_PLATFORM
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import llm
+from homeassistant.helpers import device_registry as dr, llm
 from homeassistant.util.json import JsonObjectType
 
-from .const import DOMAIN
+from .const import DOMAIN, SUPPORTED_PLATFORMS_UI
+from .device import async_create_ui_device, async_remove_ui_entities_of_device
+from .storage.config_store import ConfigStoreException
+from .storage.const import CONF_DATA
+from .storage.entity_store_validation import (
+    EntityStoreValidationException,
+    validate_entity_data,
+)
+from .storage.entity_suggestions import async_get_entity_suggestions
+from .storage.entity_suggestions.const import SuggestionFilter
+from .storage.serialize import get_serialized_schema
 
 if TYPE_CHECKING:
     from .knx_module import KNXModule
@@ -36,10 +47,17 @@ LLM_API_ID = DOMAIN
 LLM_API_NAME = "KNX"
 API_PROMPT = (
     "Tools to inspect a KNX installation: stored bus telegrams, the loaded ETS "
-    "project (group addresses, devices, communication objects, functions, "
-    "topology), KNX data point types, and live bus "
+    "project (group addresses, devices and their channels, communication "
+    "objects, functions, topology), KNX data point types, and live bus "
     'reads and writes. Address formats: group addresses like "1/2/3", individual '
-    'device addresses like "1.1.5", DPTs like "9.001".'
+    'device addresses like "1.1.5", DPTs like "9.001".\n'
+    "Tools to create KNX entities in Home Assistant: start from "
+    "list_entity_suggestions and pass a suggestion id to create_entity, or look "
+    "up the options of a platform with get_entity_schema and the group addresses "
+    "in the ETS project. Use validate_entity to check a configuration without "
+    "creating anything. Entities can be grouped in a device made by create_device. "
+    "Entities created this way are listed by list_entities; update_entity "
+    "replaces the configuration get_entity_config returns."
 )
 
 
@@ -69,6 +87,19 @@ _BUS_PROBE = llm.ToolAnnotations(
 )
 _BUS_WRITE = llm.ToolAnnotations(
     read_only=False, destructive=True, idempotent=False, open_world=True
+)
+# Adds to the Home Assistant configuration; nothing existing is changed and
+# nothing is sent to the bus.
+_CONFIG_ADD = llm.ToolAnnotations(
+    read_only=False, destructive=False, idempotent=False, open_world=False
+)
+# Replaces or removes Home Assistant configuration. Replacing with the same
+# configuration again changes nothing; removing again fails.
+_CONFIG_REPLACE = llm.ToolAnnotations(
+    read_only=False, destructive=True, idempotent=True, open_world=False
+)
+_CONFIG_REMOVE = llm.ToolAnnotations(
+    read_only=False, destructive=True, idempotent=False, open_world=False
 )
 
 # The library ``_paginate`` helpers treat a negative limit as "no limit", which
@@ -209,7 +240,12 @@ class KNXTool(llm.Tool):
         args = self.parameters(tool_input.tool_args)
         try:
             result = await self._func(self._knx, args)
-        except (KnxTelegramStoreException, ValueError, XKNXException) as err:
+        except (
+            ConfigStoreException,
+            KnxTelegramStoreException,
+            ValueError,
+            XKNXException,
+        ) as err:
             # ``ValueError`` covers an unknown DPT name passed to the xknx DPT
             # tools - the likeliest way for a model to get an argument wrong.
             raise HomeAssistantError(
@@ -340,6 +376,54 @@ def _topology_func() -> _ToolFunc:
     return _call
 
 
+def _similar_channels_func() -> _ToolFunc:
+    """Page through the similar channels, which xknxproject returns in full.
+
+    Every output of every actuator of a kind matches at once, each with its
+    group objects aligned against the reference. The channels are the unit to
+    page on; the aligned group objects are cut down to the channels of the page
+    and the reference, so a page stays self-contained.
+    """
+
+    async def _call(knx: KNXModule, args: Mapping[str, Any]) -> Any:
+        result = await xknxproject_mcp.find_similar_channels(
+            await _require_project(knx),
+            xknxproject_mcp.FindSimilarChannelsInput(
+                device_address=args["device_address"],
+                channel_identifier=args["channel_identifier"],
+                match_functional_blocks=args["match_functional_blocks"],
+                match_module_definition=args["match_module_definition"],
+            ),
+        )
+        page = _paginate(result.channels, args, "channels")
+        shown = {
+            (channel.device_address, channel.identifier) for channel in page["channels"]
+        } | {(args["device_address"], args["channel_identifier"])}
+        aligned = [
+            {
+                "key": group.key,
+                "function_text": group.function_text,
+                "entries": entries,
+            }
+            for group in result.aligned_group_objects
+            if (
+                entries := [
+                    entry
+                    for entry in group.entries
+                    if (entry.device_address, entry.channel_identifier) in shown
+                ]
+            )
+        ]
+        return {
+            "found": result.found,
+            "reference": result.reference,
+            **page,
+            "aligned_group_objects": aligned,
+        }
+
+    return _call
+
+
 def _xknx_func(lib_func: Callable, *, takes_input: bool = True) -> _ToolFunc:
     async def _call(knx: KNXModule, args: Any) -> Any:
         if takes_input:
@@ -347,6 +431,220 @@ def _xknx_func(lib_func: Callable, *, takes_input: bool = True) -> _ToolFunc:
         return await lib_func(knx.xknx)
 
     return _call
+
+
+def _suggestions_func() -> _ToolFunc:
+    """Page through the entity suggestions, which are generated in full."""
+
+    async def _call(knx: KNXModule, args: Mapping[str, Any]) -> Any:
+        result = await async_get_entity_suggestions(
+            knx.hass,
+            knx,
+            SuggestionFilter(
+                platform=args["platform"],
+                group_id=args["group_id"],
+                include_configured=args["include_configured"],
+            ),
+        )
+        return {
+            **_paginate(result["suggestions"], args, "suggestions"),
+            "providers": result["providers"],
+        }
+
+    return _call
+
+
+async def _entity_schema(knx: KNXModule, args: Mapping[str, Any]) -> Any:
+    """The options of the `knx` part of an entity configuration."""
+    return {"schema": get_serialized_schema(args[CONF_PLATFORM])}
+
+
+async def _entity_store_data(knx: KNXModule, args: Mapping[str, Any]) -> dict[str, Any]:
+    """Assemble entity store data from tool arguments.
+
+    A suggestion provides the platform and the `knx` options; arguments given
+    next to it take precedence, so a suggestion can be adjusted on the way.
+    """
+    platform: str | None = args.get(CONF_PLATFORM)
+    entity: dict[str, Any] = dict(args.get("entity", {}))
+    knx_options: dict[str, Any] = {}
+    if (suggestion_id := args.get("suggestion_id")) is not None:
+        result = await async_get_entity_suggestions(knx.hass, knx)
+        suggestion = next(
+            (item for item in result["suggestions"] if item["id"] == suggestion_id),
+            None,
+        )
+        if suggestion is None:
+            raise ValueError(f"Entity suggestion not found: {suggestion_id}")
+        if platform is None:
+            platform = suggestion["platform_options"][0]
+        if platform not in suggestion["suggestions"]:
+            raise ValueError(
+                f"Entity suggestion {suggestion_id} is not available for {platform}; "
+                f"use one of {', '.join(suggestion['platform_options'])}"
+            )
+        knx_options = dict(suggestion["suggestions"][platform]["knx"])
+        if not entity.get("name") and entity.get("device_info") is None:
+            entity["name"] = suggestion["suggested_name"]
+    elif platform is None:
+        raise ValueError("One of `platform` or `suggestion_id` is required")
+    return {
+        CONF_PLATFORM: platform,
+        CONF_DATA: {"entity": entity, "knx": knx_options | args.get("knx", {})},
+    }
+
+
+def _entity_func(*, create: bool) -> _ToolFunc:
+    """Validate an entity configuration, and create the entity if asked to.
+
+    An invalid configuration is a result, not an error: it tells which option
+    is wrong and why, which is what a model needs to correct it.
+    """
+
+    async def _call(knx: KNXModule, args: Mapping[str, Any]) -> Any:
+        try:
+            validated = validate_entity_data(await _entity_store_data(knx, args))
+        except EntityStoreValidationException as err:
+            return err.validation_error
+        entity_id: str | None = None
+        if create:
+            entity_id = await knx.config_store.create_entity(
+                validated[CONF_PLATFORM], validated[CONF_DATA]
+            )
+        return {"success": True, "entity_id": entity_id}
+
+    return _call
+
+
+async def _create_device(knx: KNXModule, args: Mapping[str, Any]) -> Any:
+    """Create a device and tell how entities refer to it."""
+    device = async_create_ui_device(
+        knx.hass, knx.entry, args["name"], args.get("area_id")
+    )
+    return {
+        "device_id": device.id,
+        "device_info": next(
+            identifier for domain, identifier in device.identifiers if domain == DOMAIN
+        ),
+        "name": device.name,
+        "area_id": device.area_id,
+    }
+
+
+async def _list_entities(knx: KNXModule, args: Mapping[str, Any]) -> Any:
+    """The entities created from the UI or by create_entity, with their addresses."""
+    group_addresses: dict[tuple[str, str], list[str]] = {}
+    for group_address, users in knx.get_group_address_entities().items():
+        for user in users:
+            group_addresses.setdefault(
+                (user["platform"], user["unique_id"]), []
+            ).append(group_address)
+    entities = [
+        {
+            CONF_ENTITY_ID: entry.entity_id,
+            CONF_PLATFORM: entry.domain,
+            "name": entry.name or entry.original_name,
+            "device_id": entry.device_id,
+            "disabled": entry.disabled,
+            "group_addresses": sorted(
+                group_addresses.get((entry.domain, entry.unique_id), []),
+                key=_address_order,
+            ),
+        }
+        for entry in sorted(
+            knx.config_store.get_entity_entries(), key=lambda entry: entry.entity_id
+        )
+        if args[CONF_PLATFORM] in (None, entry.domain)
+    ]
+    return _paginate(entities, args, "entities")
+
+
+async def _get_entity_config(knx: KNXModule, args: Mapping[str, Any]) -> Any:
+    """The stored configuration of an entity."""
+    return knx.config_store.get_entity_config(args[CONF_ENTITY_ID])
+
+
+async def _update_entity(knx: KNXModule, args: Mapping[str, Any]) -> Any:
+    """Replace the configuration of an entity.
+
+    As for a new entity, an invalid configuration is a result, not an error.
+    """
+    entity_id: str = args[CONF_ENTITY_ID]
+    platform = knx.config_store.get_entity_config(entity_id)[CONF_PLATFORM]
+    try:
+        validated = validate_entity_data(
+            {
+                CONF_PLATFORM: platform,
+                CONF_DATA: {"entity": args["entity"], "knx": args["knx"]},
+            }
+        )
+    except EntityStoreValidationException as err:
+        return err.validation_error
+    await knx.config_store.update_entity(
+        validated[CONF_PLATFORM], entity_id, validated[CONF_DATA]
+    )
+    return {"success": True, CONF_ENTITY_ID: entity_id}
+
+
+async def _delete_entity(knx: KNXModule, args: Mapping[str, Any]) -> Any:
+    """Delete an entity and its configuration."""
+    await knx.config_store.delete_entity(args[CONF_ENTITY_ID])
+    return {"success": True}
+
+
+async def _delete_device(knx: KNXModule, args: Mapping[str, Any]) -> Any:
+    """Delete a device and its entities, as removing it in the UI does."""
+    device_id: str = args["device_id"]
+    device_registry = dr.async_get(knx.hass)
+    device = device_registry.async_get(device_id, include_composite_devices=False)
+    if device is None or device.config_entry_id != knx.entry.entry_id:
+        raise ValueError(f"KNX device not found: {device_id}")
+    if not await async_remove_ui_entities_of_device(knx.hass, knx, device):
+        raise ValueError(
+            f"Device {device_id} can not be removed: it is the KNX interface or "
+            "has entities configured in YAML"
+        )
+    if device_registry.async_get(device_id):
+        device_registry.async_remove_device(device_id)
+    return {"success": True}
+
+
+_PLATFORM_VALIDATOR = probatio.In(sorted(SUPPORTED_PLATFORMS_UI))
+_ENTITY_MARKERS: dict[Any, Any] = {
+    probatio.Optional(
+        CONF_PLATFORM,
+        description=(
+            "Entity platform. Required unless a suggestion is given, which "
+            "defaults to the first of its platform options."
+        ),
+    ): _PLATFORM_VALIDATOR,
+    probatio.Optional(
+        "suggestion_id",
+        description=(
+            "Id of a suggestion from list_entity_suggestions to take the platform "
+            "and `knx` options from."
+        ),
+    ): str,
+    probatio.Optional(
+        "entity",
+        description=(
+            "Common entity options: `name`, `device_info` (from create_device; "
+            "an entity without a name is the main entity of its device) and "
+            '`entity_category` ("config" or "diagnostic"). A name or a device is '
+            "required; a suggestion without either uses its suggested name."
+        ),
+    ): dict,
+    probatio.Optional(
+        "knx",
+        description=(
+            "Platform options as described by get_entity_schema. A group address "
+            'option is an object like {"write": "1/2/3", "state": "1/2/4", '
+            '"passive": [], "dpt": "9.001"} - `dpt` only where the schema lists '
+            "DPTs to choose from. Options given next to a suggestion replace "
+            "those of the suggestion."
+        ),
+    ): dict,
+}
 
 
 def _tool_specs() -> list[_ToolSpec]:
@@ -454,6 +752,77 @@ def _tool_specs() -> list[_ToolSpec]:
             _READ_ONLY,
         ),
         _ToolSpec(
+            "list_channels",
+            "List device channels",
+            "List device channels (e.g. one output of an actuator) with their "
+            "functional blocks. Devices whose application defines no channels "
+            "have none.",
+            _schema_from_dataclass(xknxproject_mcp.ChannelFilter),
+            _project_func(xknxproject_mcp.list_channels),
+            _READ_ONLY,
+        ),
+        _ToolSpec(
+            "describe_channel",
+            "Describe a device channel",
+            "Resolve one channel of a device to its communication objects and "
+            "their group addresses.",
+            probatio.Schema(
+                {
+                    probatio.Required(
+                        "device_address",
+                        description='Individual address of the device, e.g. "1.1.5".',
+                    ): str,
+                    probatio.Required(
+                        "channel_identifier",
+                        description=(
+                            'Channel identifier from list_channels, e.g. "CH-1".'
+                        ),
+                    ): str,
+                }
+            ),
+            _project_func(
+                xknxproject_mcp.describe_channel,
+                positional=("device_address", "channel_identifier"),
+            ),
+            _READ_ONLY,
+        ),
+        _ToolSpec(
+            "find_similar_channels",
+            "Find similar channels",
+            "Find channels sharing a functional block or module definition with a "
+            "reference channel, and align their group objects so the group "
+            "addresses of the same role can be read off per channel.",
+            probatio.Schema(
+                {
+                    **{
+                        probatio.Required(
+                            name,
+                            description=_field_description(
+                                xknxproject_mcp.FindSimilarChannelsInput, name
+                            ),
+                        ): str
+                        for name in ("device_address", "channel_identifier")
+                    },
+                    **{
+                        probatio.Optional(
+                            name,
+                            description=_field_description(
+                                xknxproject_mcp.FindSimilarChannelsInput, name
+                            ),
+                            default=True,
+                        ): bool
+                        for name in (
+                            "match_functional_blocks",
+                            "match_module_definition",
+                        )
+                    },
+                    **_PAGINATION_MARKERS,
+                }
+            ),
+            _similar_channels_func(),
+            _READ_ONLY,
+        ),
+        _ToolSpec(
             "get_topology",
             "Bus topology",
             "Bus topology, one entry per line: the line's area, medium type and "
@@ -487,6 +856,193 @@ def _tool_specs() -> list[_ToolSpec]:
                 xknxproject_mcp.describe_function, positional=("identifier",)
             ),
             _READ_ONLY,
+        ),
+        _ToolSpec(
+            "list_entity_suggestions",
+            "List entity suggestions",
+            "Entities that could be created, derived from the ETS project "
+            "(functional blocks of device channels, building functions) and from "
+            "entities already configured for similar channels. Each suggestion "
+            "has a ready-made configuration per platform it can be created as.",
+            probatio.Schema(
+                {
+                    probatio.Optional(
+                        CONF_PLATFORM,
+                        description=_field_description(SuggestionFilter, "platform"),
+                        default=None,
+                    ): probatio.Any(None, _PLATFORM_VALIDATOR),
+                    probatio.Optional(
+                        "group_id",
+                        description=_field_description(SuggestionFilter, "group_id"),
+                        default=None,
+                    ): probatio.Any(None, str),
+                    # Unlike the panel, which marks them, a model asks for
+                    # suggestions to find out what is still missing.
+                    probatio.Optional(
+                        "include_configured",
+                        description=_field_description(
+                            SuggestionFilter, "include_configured"
+                        ),
+                        default=False,
+                    ): bool,
+                    **_PAGINATION_MARKERS,
+                }
+            ),
+            _suggestions_func(),
+            _READ_ONLY,
+        ),
+        _ToolSpec(
+            "get_entity_schema",
+            "Entity options of a platform",
+            "The options of the `knx` part of an entity configuration of a platform: "
+            "their names, whether they are required, defaults, and for group "
+            "address options which of write/state/passive addresses and which "
+            "DPTs they accept.",
+            probatio.Schema(
+                {
+                    probatio.Required(
+                        CONF_PLATFORM, description='Entity platform, e.g. "light".'
+                    ): _PLATFORM_VALIDATOR
+                }
+            ),
+            _entity_schema,
+            _READ_ONLY,
+        ),
+        _ToolSpec(
+            "validate_entity",
+            "Validate an entity configuration",
+            "Check an entity configuration without creating the entity. Reports "
+            "the options that are invalid and why.",
+            probatio.Schema(dict(_ENTITY_MARKERS)),
+            _entity_func(create=False),
+            _READ_ONLY,
+        ),
+        _ToolSpec(
+            "create_entity",
+            "Create an entity",
+            "Create a KNX entity in Home Assistant from a suggestion, from a "
+            "configuration, or from a suggestion adjusted by a configuration. "
+            "Returns the entity id, or the invalid options if the configuration "
+            "is not valid.",
+            probatio.Schema(dict(_ENTITY_MARKERS)),
+            _entity_func(create=True),
+            _CONFIG_ADD,
+        ),
+        _ToolSpec(
+            "create_device",
+            "Create a device",
+            "Create a Home Assistant device to group KNX entities in, optionally "
+            "in an area. Returns the `device_info` to use in the entity options.",
+            probatio.Schema(
+                {
+                    probatio.Required("name", description="Name of the device."): str,
+                    probatio.Optional(
+                        "area_id",
+                        description="Id of the Home Assistant area of the device.",
+                    ): str,
+                }
+            ),
+            _create_device,
+            _CONFIG_ADD,
+        ),
+        _ToolSpec(
+            "list_entities",
+            "List configured entities",
+            "KNX entities created from the UI or by create_entity, with the "
+            "group addresses they use and the device they belong to. Entities "
+            "configured in YAML are not included.",
+            probatio.Schema(
+                {
+                    probatio.Optional(
+                        CONF_PLATFORM,
+                        description='Only entities of this platform, e.g. "light".',
+                        default=None,
+                    ): probatio.Any(None, _PLATFORM_VALIDATOR),
+                    **_PAGINATION_MARKERS,
+                }
+            ),
+            _list_entities,
+            _READ_ONLY,
+        ),
+        _ToolSpec(
+            "get_entity_config",
+            "Entity configuration",
+            "The stored configuration of an entity from list_entities: its "
+            "platform and the `entity` and `knx` options.",
+            probatio.Schema(
+                {
+                    probatio.Required(
+                        CONF_ENTITY_ID,
+                        description='Entity id, e.g. "light.kitchen".',
+                    ): str
+                }
+            ),
+            _get_entity_config,
+            _READ_ONLY,
+        ),
+        _ToolSpec(
+            "update_entity",
+            "Update an entity",
+            "Replace the configuration of an entity from list_entities. Options "
+            "left out are reset to their defaults, so start from "
+            "get_entity_config. The platform can not be changed. Returns the "
+            "invalid options if the configuration is not valid.",
+            probatio.Schema(
+                {
+                    probatio.Required(
+                        CONF_ENTITY_ID,
+                        description='Entity id, e.g. "light.kitchen".',
+                    ): str,
+                    probatio.Required(
+                        "entity",
+                        description=(
+                            "Common entity options: `name`, `device_info` and "
+                            "`entity_category`."
+                        ),
+                    ): dict,
+                    probatio.Required(
+                        "knx",
+                        description=(
+                            "Platform options as described by get_entity_schema."
+                        ),
+                    ): dict,
+                }
+            ),
+            _update_entity,
+            _CONFIG_REPLACE,
+        ),
+        _ToolSpec(
+            "delete_entity",
+            "Delete an entity",
+            "Delete an entity from list_entities together with its configuration.",
+            probatio.Schema(
+                {
+                    probatio.Required(
+                        CONF_ENTITY_ID,
+                        description='Entity id, e.g. "light.kitchen".',
+                    ): str
+                }
+            ),
+            _delete_entity,
+            _CONFIG_REMOVE,
+        ),
+        _ToolSpec(
+            "delete_device",
+            "Delete a device",
+            "Delete a device made by create_device or in the UI, together with "
+            "all entities assigned to it.",
+            probatio.Schema(
+                {
+                    probatio.Required(
+                        "device_id",
+                        description=(
+                            "Device id as returned by create_device or list_entities."
+                        ),
+                    ): str
+                }
+            ),
+            _delete_device,
+            _CONFIG_REMOVE,
         ),
         _ToolSpec(
             "list_dpts",
@@ -606,6 +1162,7 @@ def async_register_llm_api(hass: HomeAssistant, knx: KNXModule) -> CALLBACK_TYPE
             hass=hass,
             id=LLM_API_ID,
             name=LLM_API_NAME,
+            requires_admin=True,
             knx=knx,
         ),
     )

@@ -570,6 +570,36 @@ async def test_blind_open_close_stop_tilt_services(
     mock_blind.stop_orientation.assert_awaited_once_with(wait_for_completion=False)
 
 
+@pytest.mark.parametrize(
+    ("orientation", "open_calls", "close_calls"),
+    [
+        pytest.param(100, 1, 0, id="closed_at_0"),
+        pytest.param(0, 1, 0, id="closed_at_100"),
+        pytest.param(50, 0, 1, id="open"),
+    ],
+)
+async def test_blind_toggle_tilt(
+    hass: HomeAssistant,
+    mock_blind: AsyncMock,
+    orientation: int,
+    open_calls: int,
+    close_calls: int,
+) -> None:
+    """Test toggling the tilt opens the slats at both closed ends."""
+    mock_blind.orientation.position_percent = orientation
+    await update_callback_entity(hass, mock_blind)
+
+    await hass.services.async_call(
+        COVER_DOMAIN,
+        CoverService.TOGGLE_TILT,
+        {"entity_id": "cover.test_blind"},
+        blocking=True,
+    )
+
+    assert mock_blind.open_orientation.await_count == open_calls
+    assert mock_blind.close_orientation.await_count == close_calls
+
+
 async def test_blind_set_cover_tilt_position_inversion(
     hass: HomeAssistant, mock_blind: AsyncMock
 ) -> None:

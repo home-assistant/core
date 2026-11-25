@@ -189,7 +189,7 @@ async def test_duplicate_entry(
     assert result["reason"] == "already_configured"
 
 
-@pytest.mark.parametrize("subentry_type", ["stt", "tts"])
+@pytest.mark.parametrize("subentry_type", ["ai_task_evaluate", "stt", "tts"])
 @pytest.mark.parametrize(
     ("exception", "reason"),
     [
@@ -198,7 +198,7 @@ async def test_duplicate_entry(
         (Exception("unexpected"), "unknown"),
     ],
 )
-async def test_speech_subentry_exceptions(
+async def test_model_subentry_exceptions(
     hass: HomeAssistant,
     mock_openai_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
@@ -206,7 +206,7 @@ async def test_speech_subentry_exceptions(
     exception: Exception,
     reason: str,
 ) -> None:
-    """Test speech subentry flows abort when models cannot be fetched."""
+    """Test model subentry flows abort when models cannot be fetched."""
     await setup_integration(hass, mock_config_entry)
 
     with patch(
@@ -263,6 +263,42 @@ async def test_create_stt_subentry(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reconfigure_successful"
+
+
+@pytest.mark.usefixtures("mock_openai_client", "mock_models")
+async def test_create_ai_task_evaluate_subentry(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
+    """Test creating an AI task evaluation subentry and changing its model."""
+    await setup_integration(hass, mock_config_entry)
+
+    result = await hass.config_entries.subentries.async_init(
+        (mock_config_entry.entry_id, "ai_task_evaluate"),
+        context={"source": SOURCE_USER},
+    )
+    assert result["type"] is FlowResultType.FORM
+
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"], {CONF_MODEL: "openai/gpt-6-luna"}
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "openai/gpt-6-luna"
+    assert result["data"] == {CONF_MODEL: "openai/gpt-6-luna"}
+
+    subentry_id = get_subentry_id(mock_config_entry, "ai_task_evaluate")
+    result = await mock_config_entry.start_subentry_reconfigure_flow(hass, subentry_id)
+    assert result["type"] is FlowResultType.FORM
+
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"], {CONF_MODEL: "gpt-3.5-turbo"}
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    subentry = mock_config_entry.subentries[subentry_id]
+    assert subentry.title == "gpt-3.5-turbo"
+    assert subentry.data == {CONF_MODEL: "gpt-3.5-turbo"}
 
 
 @pytest.mark.usefixtures("mock_openai_client", "mock_models")
@@ -484,6 +520,8 @@ async def test_create_conversation_agent_no_control(
             "whisper-1",
             "tts-1",
             "text-embedding-3-small",
+            "decider",
+            "judge",
             "kokoro",
             "gpt-4o-alias",
         )
@@ -497,6 +535,8 @@ async def test_create_conversation_agent_no_control(
             "whisper-1": "audio_transcription",
             "tts-1": "audio_speech",
             "text-embedding-3-small": "embedding",
+            "decider": "decisions",
+            "judge": "evaluation",
             "kokoro": None,
         }
     ],
@@ -504,6 +544,11 @@ async def test_create_conversation_agent_no_control(
 @pytest.mark.parametrize(
     ("subentry_type", "expected_models"),
     [
+        pytest.param(
+            "ai_task_evaluate",
+            ["decider", "judge", "kokoro", "gpt-4o-alias"],
+            id="ai_task_evaluate",
+        ),
         pytest.param(
             "conversation", ["gpt-4o", "kokoro", "gpt-4o-alias"], id="conversation"
         ),
@@ -665,7 +710,9 @@ async def test_reconfigure_conversation_agent_disable_llm_api(
     assert key.default() == []
 
 
-@pytest.mark.parametrize("subentry_type", ["conversation", "stt", "tts"])
+@pytest.mark.parametrize(
+    "subentry_type", ["ai_task_evaluate", "conversation", "stt", "tts"]
+)
 async def test_reconfigure_entry_not_loaded(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
