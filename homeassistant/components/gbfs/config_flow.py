@@ -15,7 +15,6 @@ import probatio
 from yarl import URL
 
 from homeassistant.config_entries import (
-    SOURCE_RECONFIGURE,
     ConfigEntry,
     ConfigEntryState,
     ConfigFlow,
@@ -97,18 +96,6 @@ class GbfsConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Add a system by its auto-discovery URL."""
-        return await self._async_step_url("user", user_input, None)
-
-    async def async_step_reconfigure(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Move the system to a new auto-discovery URL."""
-        current_url: str = self._get_reconfigure_entry().data[CONF_URL]
-        return await self._async_step_url("reconfigure", user_input, current_url)
-
-    async def _async_step_url(
-        self, step_id: str, user_input: dict[str, Any] | None, current_url: str | None
-    ) -> ConfigFlowResult:
         errors: dict[str, str] = {}
         if user_input is not None:
             url: str = user_input[CONF_URL]
@@ -127,27 +114,14 @@ class GbfsConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "unknown"
             else:
                 await self.async_set_unique_id(system.system_id)
-                if self.source == SOURCE_RECONFIGURE:
-                    self._abort_if_unique_id_mismatch()
-                    entry = self._get_reconfigure_entry()
-                    # The update listener only exists once setup succeeded.
-                    if entry.state is ConfigEntryState.LOADED:
-                        return self.async_update_and_abort(
-                            entry, data_updates={CONF_URL: url}
-                        )
-                    return self.async_update_reload_and_abort(
-                        entry, data_updates={CONF_URL: url}
-                    )
                 self._abort_if_unique_id_configured()
                 return self.async_create_entry(
                     title=system.name or system.operator or URL(url).host or url,
                     data={CONF_URL: url},
                 )
         return self.async_show_form(
-            step_id=step_id,
-            data_schema=self.add_suggested_values_to_schema(
-                URL_SCHEMA, user_input or {CONF_URL: current_url}
-            ),
+            step_id="user",
+            data_schema=self.add_suggested_values_to_schema(URL_SCHEMA, user_input),
             errors=errors,
         )
 

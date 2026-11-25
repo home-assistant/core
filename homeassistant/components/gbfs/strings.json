@@ -1,8 +1,7 @@
 {
   "config": {
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]",
-      "unique_id_mismatch": "This URL belongs to a different GBFS system. Add it as a new system instead."
+      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]"
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
@@ -12,14 +11,6 @@
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "step": {
-      "reconfigure": {
-        "data": {
-          "url": "[%key:common::config_flow::data::url%]"
-        },
-        "data_description": {
-          "url": "[%key:component::gbfs::config::step::user::data_description::url%]"
-        }
-      },
       "user": {
         "data": {
           "url": "[%key:common::config_flow::data::url%]"

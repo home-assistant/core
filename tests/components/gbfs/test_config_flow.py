@@ -11,8 +11,6 @@ import pytest
 from pytest_homeassistant.common import (
     MockConfigEntry,
     async_fire_time_changed,
-    async_load_fixture,
-    get_schema_suggested_value,
     load_fixture,
 )
 from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
@@ -27,15 +25,7 @@ from homeassistant.const import CONF_URL
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from . import (
-    BASE_URL,
-    DOCKLESS_URL,
-    MIRROR_URL,
-    V2_URL,
-    V3_URL,
-    mock_feed,
-    serve_edited_v3_feed,
-)
+from . import BASE_URL, DOCKLESS_URL, V3_URL, mock_feed, serve_edited_v3_feed
 
 STATION_INFORMATION_TTL = timedelta(seconds=300)
 
@@ -165,127 +155,6 @@ async def test_user_flow_already_configured(
     )
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
-
-
-@pytest.mark.usefixtures("init_integration")
-async def test_reconfigure(
-    hass: HomeAssistant,
-    aioclient_mock: AiohttpClientMocker,
-    mock_config_entry: MockConfigEntry,
-) -> None:
-    """Test moving a loaded system to a new discovery URL reloads it."""
-    aioclient_mock.get(
-        MIRROR_URL,
-        text=await async_load_fixture(hass, "v3/gbfs.json", DOMAIN),
-    )
-    result = await mock_config_entry.start_reconfigure_flow(hass)
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "reconfigure"
-    assert get_schema_suggested_value(result["data_schema"].schema, CONF_URL) == V3_URL
-
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {CONF_URL: MIRROR_URL}
-    )
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "reconfigure_successful"
-    assert mock_config_entry.data == {CONF_URL: MIRROR_URL}
-    await hass.async_block_till_done()
-    assert mock_config_entry.state is ConfigEntryState.LOADED
-
-
-async def test_reconfigure_retrying_entry(
-    hass: HomeAssistant,
-    aioclient_mock: AiohttpClientMocker,
-    mock_config_entry: MockConfigEntry,
-) -> None:
-    """Test reconfiguring an entry whose setup failed reloads it."""
-    aioclient_mock.get(V3_URL, exc=ClientError())
-    mock_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
-
-    aioclient_mock.clear_requests()
-    mock_feed(aioclient_mock, "v3")
-    aioclient_mock.get(
-        MIRROR_URL, text=await async_load_fixture(hass, "v3/gbfs.json", DOMAIN)
-    )
-    result = await mock_config_entry.start_reconfigure_flow(hass)
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {CONF_URL: MIRROR_URL}
-    )
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "reconfigure_successful"
-    assert mock_config_entry.data == {CONF_URL: MIRROR_URL}
-    await hass.async_block_till_done()
-    assert mock_config_entry.state is ConfigEntryState.LOADED
-
-
-@pytest.mark.parametrize(("url", "serve", "error"), URL_ERROR_CASES)
-@pytest.mark.usefixtures("mock_setup_entry")
-async def test_reconfigure_errors(
-    hass: HomeAssistant,
-    aioclient_mock: AiohttpClientMocker,
-    mock_config_entry: MockConfigEntry,
-    url: str,
-    serve: Callable[[AiohttpClientMocker], None],
-    error: str,
-) -> None:
-    """Test errors are shown while reconfiguring and the flow recovers."""
-    mock_config_entry.add_to_hass(hass)
-    serve(aioclient_mock)
-    result = await mock_config_entry.start_reconfigure_flow(hass)
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {CONF_URL: url}
-    )
-    assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {"base": error}
-
-    aioclient_mock.clear_requests()
-    mock_feed(aioclient_mock, "v3")
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {CONF_URL: V3_URL}
-    )
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "reconfigure_successful"
-
-
-@pytest.mark.usefixtures("mock_v3_feed", "mock_setup_entry")
-async def test_reconfigure_unexpected_error(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry
-) -> None:
-    """Test an unexpected error while reconfiguring is shown and recovers."""
-    mock_config_entry.add_to_hass(hass)
-    result = await mock_config_entry.start_reconfigure_flow(hass)
-    with _unexpected_error():
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {CONF_URL: V3_URL}
-        )
-    assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {"base": "unknown"}
-
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {CONF_URL: V3_URL}
-    )
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "reconfigure_successful"
-
-
-@pytest.mark.usefixtures("mock_v3_feed", "mock_setup_entry")
-async def test_reconfigure_other_system(
-    hass: HomeAssistant,
-    aioclient_mock: AiohttpClientMocker,
-    mock_config_entry: MockConfigEntry,
-) -> None:
-    """Test a URL for a different system is refused."""
-    mock_config_entry.add_to_hass(hass)
-    mock_feed(aioclient_mock, "v2")
-    result = await mock_config_entry.start_reconfigure_flow(hass)
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {CONF_URL: V2_URL}
-    )
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "unique_id_mismatch"
-    assert mock_config_entry.data == {CONF_URL: V3_URL}
 
 
 @pytest.mark.usefixtures("init_integration")
