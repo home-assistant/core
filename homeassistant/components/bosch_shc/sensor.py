@@ -189,6 +189,12 @@ _FLOOR_TEMPERATURE_DESCRIPTION: SHCSensorEntityDescription[SHCRoomThermostat2] =
         value_fn=lambda device: device.terminal_temperature,
     )
 )
+_BATTERY_LEVEL_STATES: dict[BatteryLevelService.State, str] = {
+    BatteryLevelService.State.OK: "ok",
+    BatteryLevelService.State.LOW_BATTERY: "low_battery",
+    BatteryLevelService.State.CRITICAL_LOW: "critically_low_battery",
+    BatteryLevelService.State.CRITICALLY_LOW_BATTERY: "critically_low_battery",
+}
 _BATTERY_LEVEL_DESCRIPTION: SHCSensorEntityDescription[SHCBatteryDevice] = (
     SHCSensorEntityDescription(
         key=BATTERY_LEVEL_SENSOR,
@@ -201,13 +207,7 @@ _BATTERY_LEVEL_DESCRIPTION: SHCSensorEntityDescription[SHCBatteryDevice] = (
             "low_battery",
             "critically_low_battery",
         ],
-        value_fn=lambda device: (
-            None
-            if device.batterylevel is BatteryLevelService.State.NOT_AVAILABLE
-            else "critically_low_battery"
-            if device.batterylevel is BatteryLevelService.State.CRITICAL_LOW
-            else device.batterylevel.value.lower()
-        ),
+        value_fn=lambda device: _BATTERY_LEVEL_STATES.get(device.batterylevel),
     )
 )
 _TWINGUARD_TEMPERATURE_DESCRIPTION: SHCSensorEntityDescription[SHCTwinguard] = (

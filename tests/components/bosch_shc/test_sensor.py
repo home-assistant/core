@@ -391,30 +391,32 @@ async def test_light_control_power_and_energy(
 
 
 @pytest.mark.parametrize(
-    ("level", "expected"),
+    ("device_buckets", "expected"),
     [
-        (BatteryLevelService.State.OK, "ok"),
-        (BatteryLevelService.State.LOW_BATTERY, "low_battery"),
-        (BatteryLevelService.State.CRITICAL_LOW, "critically_low_battery"),
         (
-            BatteryLevelService.State.CRITICALLY_LOW_BATTERY,
-            "critically_low_battery",
-        ),
-        (BatteryLevelService.State.NOT_AVAILABLE, STATE_UNKNOWN),
+            {"motion_detectors": [battery_only_device(batterylevel=level)]},
+            expected,
+        )
+        for level, expected in (
+            (BatteryLevelService.State.OK, "ok"),
+            (BatteryLevelService.State.LOW_BATTERY, "low_battery"),
+            (BatteryLevelService.State.CRITICAL_LOW, "critically_low_battery"),
+            (
+                BatteryLevelService.State.CRITICALLY_LOW_BATTERY,
+                "critically_low_battery",
+            ),
+            (BatteryLevelService.State.NOT_AVAILABLE, STATE_UNKNOWN),
+        )
     ],
+    indirect=["device_buckets"],
 )
 @pytest.mark.usefixtures("mock_session", "entity_registry_enabled_by_default")
 async def test_battery_level_sensor(
     hass: HomeAssistant,
-    mock_session: MagicMock,
     mock_config_entry: MockConfigEntry,
-    level: BatteryLevelService.State,
     expected: str,
 ) -> None:
     """Battery devices report their granular battery level."""
-    mock_session.device_helper.motion_detectors = [
-        battery_only_device(batterylevel=level)
-    ]
     await setup_integration(hass, mock_config_entry)
 
     state = hass.states.get("sensor.motion_battery_level")
