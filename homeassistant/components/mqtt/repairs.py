@@ -19,15 +19,12 @@ from homeassistant.util import dt as dt_util
 
 from .const import (
     CONF_BROKER,
-    CONF_CERTIFICATE,
     CONF_CERTIFICATE_FILE,
-    CONF_CLIENT_CERT,
     CONF_CLIENT_CERT_FILE,
     CONF_CLIENT_KEY_FILE,
-    DEFAULT_ENCODING,
     DOMAIN,
 )
-from .util import load_certificate, load_certificate_file
+from .util import load_certificate_file
 
 URL_MQTT_BROKER_CONFIGURATION = (
     "https://www.home-assistant.io/integrations/mqtt/#broker-configuration"
@@ -106,26 +103,17 @@ class MQTTClientCertificateReload(RepairsFlow):
 
 
 async def async_setup_client_certificate_check(
-    hass: HomeAssistant, entry: ConfigEntry, config: dict[str, Any]
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    config: dict[str, Any],
+    loaded_certificate: Certificate | None,
 ) -> None:
     """Check the expiry of the loaded client certificate on setup and daily."""
-    # The client certificate is only used when TLS is enabled with a CA certificate
-    if not (config.get(CONF_CERTIFICATE_FILE) or config.get(CONF_CERTIFICATE)):
-        ir.async_delete_issue(hass, DOMAIN, ISSUE_CLIENT_CERTIFICATE)
-        return
-
-    loaded_certificate: Certificate | None = None
-    if client_cert_file := config.get(CONF_CLIENT_CERT_FILE):
-        loaded_certificate = await hass.async_add_executor_job(
-            load_certificate_file, client_cert_file
-        )
-    elif client_cert := config.get(CONF_CLIENT_CERT):
-        loaded_certificate = load_certificate(client_cert.encode(DEFAULT_ENCODING))
-
     if loaded_certificate is None:
         ir.async_delete_issue(hass, DOMAIN, ISSUE_CLIENT_CERTIFICATE)
         return
     loaded_expiry = loaded_certificate.not_valid_after_utc
+    client_cert_file: str | None = config.get(CONF_CLIENT_CERT_FILE)
 
     def _check_installed_certificate() -> Certificate | tuple[str, dict[str, str]]:
         """Check the installed certificate files.

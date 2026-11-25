@@ -443,14 +443,6 @@ def get_file_path(option: str, default: str | None = None) -> str | None:
     return str(temp_dir / option)
 
 
-def load_certificate(data: bytes) -> Certificate | None:
-    """Load PEM encoded certificate data."""
-    try:
-        return load_pem_x509_certificate(data)
-    except ValueError:
-        return None
-
-
 def load_certificate_file(certificate_file: str) -> Certificate | None:
     """Load a PEM encoded certificate file."""
     try:
@@ -458,7 +450,10 @@ def load_certificate_file(certificate_file: str) -> Certificate | None:
             data = file.read()
     except OSError:
         return None
-    return load_certificate(data)
+    try:
+        return load_pem_x509_certificate(data)
+    except ValueError:
+        return None
 
 
 def migrate_certificate_file_to_content(file_name_or_auto: str) -> str | None:

@@ -377,6 +377,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
         client = MQTT(hass, entry, conf)
         if DOMAIN in hass.data:
             mqtt_data = hass.data[DATA_MQTT]
+            # A client that failed to start is not unloaded, so keep its
+            # subscriptions to restore them on the new client
+            mqtt_data.subscriptions_to_restore |= mqtt_data.client.subscriptions
             mqtt_data.config = mqtt_yaml
             mqtt_data.client = client
         else:
@@ -431,7 +434,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
             hass, conf.get(CONF_DISCOVERY_PREFIX, DEFAULT_PREFIX), entry
         )
 
-    await async_setup_client_certificate_check(hass, entry, conf)
+    await async_setup_client_certificate_check(
+        hass, entry, conf, mqtt_data.client_certificate
+    )
 
 
 @websocket_api.websocket_command(

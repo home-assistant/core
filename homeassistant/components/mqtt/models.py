@@ -9,6 +9,7 @@ from enum import StrEnum
 import logging
 from typing import TYPE_CHECKING, Any, Required, TypedDict, override
 
+from cryptography.x509 import Certificate
 from paho.mqtt.client import MQTTMessage
 
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_NAME, Platform
@@ -543,6 +544,8 @@ class MqttData:
 
     client: MQTT
     config: list[ConfigType]
+    # The client certificate that was loaded when the client was set up
+    client_certificate: Certificate | None = None
     debug_info_entities: dict[str, EntityDebugInfo] = field(default_factory=dict)
     debug_info_triggers: dict[tuple[str, str], TriggerDebugInfo] = field(
         default_factory=dict

@@ -34,7 +34,7 @@ from pytest_homeassistant.components.repairs import (
     start_repair_fix_flow,
 )
 from pytest_homeassistant.plugins import ClientSessionGenerator
-from pytest_homeassistant.typing import MqttMockHAClientGenerator
+from pytest_homeassistant.typing import MqttMockHAClientGenerator, MqttMockPahoClient
 
 from homeassistant.components.mqtt.const import (
     CONF_BROKER,
@@ -583,6 +583,32 @@ async def test_installed_certificate_files_check_error(
         "expiry": expiry.date().isoformat(),
         "client_cert_file": str(tmp_path / "client.crt"),
     } | {key: str(tmp_path / file) for key, file in file_placeholders.items()}
+
+
+async def test_client_certificate_renewed_during_setup(
+    hass: HomeAssistant,
+    mqtt_client_mock: MqttMockPahoClient,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    issue_registry: ir.IssueRegistry,
+    tmp_path: Path,
+) -> None:
+    """Test the check tracks the certificate that was loaded for TLS."""
+    expiry = dt_util.utcnow() + timedelta(days=10)
+    await hass.async_add_executor_job(_install_certificate, tmp_path, expiry)
+    # Renew the certificate right after it was loaded for TLS
+    mqtt_client_mock.tls_set.side_effect = lambda *args, **kwargs: _install_certificate(
+        tmp_path, expiry + timedelta(days=90)
+    )
+    await _async_setup_entry(hass, mqtt_mock_entry, _certificate_file_data(tmp_path))
+
+    issue = issue_registry.async_get_issue(DOMAIN, ISSUE_CLIENT_CERTIFICATE)
+    assert issue is not None
+    assert issue.translation_key == "client_certificate_renewed"
+    assert issue.translation_placeholders == {
+        "broker": "mock-broker",
+        "expiry": expiry.date().isoformat(),
+        "client_cert_file": str(tmp_path / "client.crt"),
+    }
 
 
 async def test_ignored_client_certificate_issue_changes(

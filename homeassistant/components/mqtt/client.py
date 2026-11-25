@@ -17,6 +17,7 @@ from typing import TYPE_CHECKING, Any
 from uuid import uuid4
 
 import certifi
+from cryptography.x509 import Certificate
 import paho.mqtt.client as mqtt
 from paho.mqtt.matcher import MQTTMatcher
 
@@ -96,7 +97,12 @@ from .models import (
     PublishPayloadType,
     ReceiveMessage,
 )
-from .util import EnsureJobAfterCooldown, get_file_path, mqtt_config_entry_enabled
+from .util import (
+    EnsureJobAfterCooldown,
+    get_file_path,
+    load_certificate_file,
+    mqtt_config_entry_enabled,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -354,6 +360,7 @@ class MqttClientSetup:
         """
 
         self._config = config
+        self.client_certificate: Certificate | None = None
 
     def setup(self) -> None:
         """Set up the MQTT client.
@@ -429,6 +436,10 @@ class MqttClientSetup:
             ws_headers: dict[str, str] = config.get(CONF_WS_HEADERS, {})
             self._client.ws_set_options(ws_path, ws_headers)
         if certificate is not None:
+            # Read the client certificate right before paho loads it, so the
+            # expiry check tracks the certificate that is used, also during a renewal
+            if client_cert:
+                self.client_certificate = load_certificate_file(client_cert)
             self._client.tls_set(
                 certificate,
                 certfile=client_cert,
@@ -524,6 +535,7 @@ class MQTT:
         self._reconnect_task: asyncio.Task | None = None
         self._should_reconnect: bool = True
         self._available_future: asyncio.Future[bool] | None = None
+        self._client_initialized = False
 
         self._max_qos: defaultdict[str, int] = defaultdict(int)  # topic, max qos
         self._pending_subscriptions: dict[str, int] = {}  # topic, qos
@@ -630,6 +642,8 @@ class MQTT:
             )
 
         self._mqttc = mqttc
+        self._mqtt_data.client_certificate = mqttc_setup.client_certificate
+        self._client_initialized = True
 
     @callback
     def _async_reader_callback(self, client: mqtt.Client) -> None:
@@ -779,7 +793,7 @@ class MQTT:
     ) -> None:
         """Publish a MQTT message."""
         # The paho client is not set while the setup is retried
-        if not hasattr(self, "_mqttc"):
+        if not self._client_initialized:
             raise HomeAssistantError(
                 translation_key="mqtt_not_setup_cannot_publish",
                 translation_domain=DOMAIN,

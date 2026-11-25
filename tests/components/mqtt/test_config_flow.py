@@ -2882,6 +2882,67 @@ async def test_certificate_file_path_settings_invalid(
 
 
 @pytest.mark.usefixtures("mock_ssl_context")
+@pytest.mark.parametrize(
+    ("unreadable_file", "error"),
+    [
+        pytest.param(
+            CONF_CLIENT_CERT_FILE,
+            "cannot_read_client_cert_file",
+            id="unreadable_client_cert_file",
+        ),
+        pytest.param(
+            CONF_CLIENT_KEY_FILE,
+            "cannot_read_client_key_file",
+            id="unreadable_client_key_file",
+        ),
+    ],
+)
+async def test_certificate_file_cannot_be_read(
+    hass: HomeAssistant,
+    mock_try_connection: MagicMock,
+    mock_certificate_files: dict[str, str],
+    unreadable_file: str,
+    error: str,
+) -> None:
+    """Test an existing certificate file that cannot be read."""
+    mock_try_connection.return_value = True
+    user_input = {
+        mqtt.CONF_BROKER: "test-broker",
+        CONF_PORT: 8883,
+        CONF_PROTOCOL: "5",
+        OTHER_SETTINGS: {
+            SET_CA_CERT: "custom",
+            SET_CLIENT_CERT: True,
+            mqtt.CONF_TRANSPORT: "tcp",
+        }
+        | mock_certificate_files,
+    }
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    def _open(file: str, *args: Any, **kwargs: Any) -> Any:
+        """Refuse to open the unreadable file."""
+        if file == mock_certificate_files[unreadable_file]:
+            raise PermissionError(13, "Permission denied")
+        return open(file, *args, **kwargs)
+
+    with patch(
+        "homeassistant.components.mqtt.config_flow.open", side_effect=_open, create=True
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input=user_input
+        )
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": error}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=user_input
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
+
+@pytest.mark.usefixtures("mock_ssl_context")
 async def test_certificate_files_cannot_be_loaded(
     hass: HomeAssistant,
     mock_try_connection: MagicMock,

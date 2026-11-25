@@ -2037,12 +2037,24 @@ async def test_setup_certificates_cannot_be_loaded(
     # Waiters keep waiting while the setup is retried
     assert not waiter.done()
 
+    # Integrations can subscribe while the setup is retried
+    messages: list[ReceiveMessage] = []
+    unsubscribe = await mqtt.async_subscribe(hass, "test-topic", messages.append)
+
     mqtt_client_mock.tls_set.side_effect = None
     mock_try_connection_protocol_check.side_effect = None
     await hass.config_entries.async_reload(entry.entry_id)
     await hass.async_block_till_done()
     assert entry.state is ConfigEntryState.LOADED
     assert await waiter is True
+
+    # The subscription is restored on the client that was set up
+    async_fire_mqtt_message(hass, "test-topic", "test-payload")
+    await hass.async_block_till_done()
+    assert len(messages) == 1
+    assert messages[0].payload == "test-payload"
+
+    unsubscribe()
     assert await hass.config_entries.async_unload(entry.entry_id)
 
 
