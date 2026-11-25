@@ -1,88 +1,114 @@
 """Tests for Vallox number platform."""
 
+from unittest.mock import AsyncMock, patch
+
 import pytest
-from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
+from syrupy.assertion import SnapshotAssertion
+from vallox_websocket_api import Profile
 
 from homeassistant.components.number import (
-    ATTR_VALUE,
     DOMAIN as NUMBER_DOMAIN,
-    SERVICE_SET_VALUE,
+    NumberService,
+    NumberServiceArgument,
 )
-from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.const import STATE_UNKNOWN, Platform, TargetKey
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 
-from .conftest import patch_set_values
-
-TEST_TEMPERATURE_ENTITIES_DATA = [
-    (
-        "number.vallox_supply_air_temperature_home",
-        "A_CYC_HOME_AIR_TEMP_TARGET",
-        19.0,
-    ),
-    (
-        "number.vallox_supply_air_temperature_away",
-        "A_CYC_AWAY_AIR_TEMP_TARGET",
-        18.0,
-    ),
-    (
-        "number.vallox_supply_air_temperature_boost",
-        "A_CYC_BOOST_AIR_TEMP_TARGET",
-        17.0,
-    ),
-]
+from . import setup_integration
 
 
-@pytest.mark.parametrize(
-    ("entity_id", "metric_key", "value"), TEST_TEMPERATURE_ENTITIES_DATA
-)
-async def test_temperature_number_entities(
-    entity_id: str,
-    metric_key: str,
-    value: float,
-    mock_entry: MockConfigEntry,
+@pytest.mark.usefixtures("mock_vallox_client")
+async def test_all_entities(
     hass: HomeAssistant,
-    setup_fetch_metric_data_mock,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
 ) -> None:
-    """Test temperature entities."""
-    # Arrange
-    setup_fetch_metric_data_mock(metrics={metric_key: value})
+    """Test the number entities."""
+    with patch("homeassistant.components.vallox.PLATFORMS", [Platform.NUMBER]):
+        await setup_integration(hass, mock_config_entry)
 
-    # Act
-    await hass.config_entries.async_setup(mock_entry.entry_id)
-    await hass.async_block_till_done()
-
-    # Assert
-    sensor = hass.states.get(entity_id)
-    assert sensor.state == str(value)
-    assert sensor.attributes["unit_of_measurement"] == "°C"
+    await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
 
+@pytest.mark.usefixtures("init_integration")
+@pytest.mark.parametrize("metrics", [{"A_CYC_HOME_AIR_TEMP_TARGET": None}])
+async def test_number_value_missing(hass: HomeAssistant) -> None:
+    """Test a number value the unit does not report."""
+    state = hass.states.get("number.vallox_supply_air_temperature_home")
+    assert state
+    assert state.state == STATE_UNKNOWN
+
+
+@pytest.mark.usefixtures("init_integration")
 @pytest.mark.parametrize(
-    ("entity_id", "metric_key", "value"), TEST_TEMPERATURE_ENTITIES_DATA
+    ("entity_id", "value", "setter", "profile"),
+    [
+        pytest.param(
+            "number.vallox_supply_air_temperature_home",
+            22.0,
+            "set_temperature",
+            Profile.HOME,
+            id="supply_air_temperature_home",
+        ),
+        pytest.param(
+            "number.vallox_supply_air_temperature_away",
+            22.0,
+            "set_temperature",
+            Profile.AWAY,
+            id="supply_air_temperature_away",
+        ),
+        pytest.param(
+            "number.vallox_supply_air_temperature_boost",
+            22.0,
+            "set_temperature",
+            Profile.BOOST,
+            id="supply_air_temperature_boost",
+        ),
+        pytest.param(
+            "number.vallox_fan_speed_home",
+            45,
+            "set_fan_speed",
+            Profile.HOME,
+            id="fan_speed_home",
+        ),
+        pytest.param(
+            "number.vallox_fan_speed_away",
+            45,
+            "set_fan_speed",
+            Profile.AWAY,
+            id="fan_speed_away",
+        ),
+        pytest.param(
+            "number.vallox_fan_speed_boost",
+            45,
+            "set_fan_speed",
+            Profile.BOOST,
+            id="fan_speed_boost",
+        ),
+    ],
 )
-async def test_temperature_number_entity_set(
-    entity_id: str,
-    metric_key: str,
-    value: float,
-    mock_entry: MockConfigEntry,
+async def test_set_number_value(
     hass: HomeAssistant,
-    setup_fetch_metric_data_mock,
+    mock_vallox_client: AsyncMock,
+    entity_id: str,
+    value: float,
+    setter: str,
+    profile: Profile,
 ) -> None:
-    """Test temperature set."""
-    # Arrange
-    setup_fetch_metric_data_mock(metrics={metric_key: value})
+    """Test setting the number entities."""
+    await hass.services.async_call(
+        NUMBER_DOMAIN,
+        NumberService.SET_VALUE,
+        {
+            TargetKey.ENTITY_ID: entity_id,
+            NumberServiceArgument.VALUE: value,
+        },
+        blocking=True,
+    )
 
-    # Act
-    with patch_set_values() as set_values:
-        await hass.config_entries.async_setup(mock_entry.entry_id)
-        await hass.async_block_till_done()
-        await hass.services.async_call(
-            NUMBER_DOMAIN,
-            SERVICE_SET_VALUE,
-            service_data={
-                ATTR_ENTITY_ID: entity_id,
-                ATTR_VALUE: value,
-            },
-        )
-        await hass.async_block_till_done()
-        set_values.assert_called_once_with({metric_key: value})
+    getattr(mock_vallox_client, setter).assert_called_once_with(profile, value)
+    # One fetch at setup, and one refresh after the change.
+    assert mock_vallox_client.fetch_metric_data.call_count == 2

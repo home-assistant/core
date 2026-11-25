@@ -4,6 +4,7 @@
   "categories": ["vehicles_transport.cars_evs", "presence_location.trackers"],
   "codeowners": ["@shmuelzon"],
   "config_flow": true,
+  "connectivity": ["cloud"],
   "documentation": "https://www.home-assistant.io/integrations/ituran",
   "integration_type": "hub",
   "iot_class": "cloud_polling",

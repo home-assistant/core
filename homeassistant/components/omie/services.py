@@ -8,7 +8,6 @@ import aiohttp
 import probatio
 from pyomie import QUARTER_HOURLY_START_DATE
 
-from homeassistant.const import ATTR_DATE
 from homeassistant.core import (
     HomeAssistant,
     ServiceCall,
@@ -23,7 +22,18 @@ from .const import DOMAIN
 from .coordinator import OMIEConfigEntry
 from .util import CET, pick_series_cet
 
-ATTR_COUNTRIES: Final = "countries"
+
+class OMIEService(StrEnum):
+    """Store keys for OMIE services."""
+
+    GET_PRICES_FOR_DATE = "get_prices_for_date"
+
+
+class OMIEServiceArgument(StrEnum):
+    """Store keys for OMIE service arguments."""
+
+    COUNTRIES = "countries"
+    DATE = "date"
 
 
 class Country(StrEnum):
@@ -33,12 +43,11 @@ class Country(StrEnum):
     PT = "pt"
 
 
-SERVICE_GET_PRICES_FOR_DATE: Final = "get_prices_for_date"
 SERVICE_GET_PRICES_SCHEMA: Final = probatio.Schema(
     {
-        probatio.Required(ATTR_DATE): cv.date,
+        probatio.Required(OMIEServiceArgument.DATE): cv.date,
         probatio.Required(
-            ATTR_COUNTRIES, default=[Country.ES, Country.PT]
+            OMIEServiceArgument.COUNTRIES, default=[Country.ES, Country.PT]
         ): probatio.All(probatio.EnsureList(), [probatio.Coerce(Country)]),
     }
 )
@@ -58,8 +67,8 @@ async def _get_prices_for_date(call: ServiceCall) -> ServiceResponse:
             translation_key="entry_not_loaded",
         )
     entry = loaded_entries[0]
-    market_date: dt.date = call.data[ATTR_DATE]
-    countries: list[Country] = call.data[ATTR_COUNTRIES]
+    market_date: dt.date = call.data[OMIEServiceArgument.DATE]
+    countries: list[Country] = call.data[OMIEServiceArgument.COUNTRIES]
 
     if market_date < QUARTER_HOURLY_START_DATE:
         raise ServiceValidationError(
@@ -112,7 +121,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
     """Set up the services for the OMIE integration."""
     hass.services.async_register(
         DOMAIN,
-        SERVICE_GET_PRICES_FOR_DATE,
+        OMIEService.GET_PRICES_FOR_DATE,
         _get_prices_for_date,
         schema=SERVICE_GET_PRICES_SCHEMA,
         supports_response=SupportsResponse.ONLY,

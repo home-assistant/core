@@ -16,9 +16,9 @@
         'role': 'assistant',
       }),
     ]),
-    'model': 'claude-haiku-5-5',
+    'model': 'claude-sonnet-4-6',
     'output_config': dict({
-      'effort': 'low',
+      'effort': 'medium',
       'format': dict({
         'schema': dict({
           'additionalProperties': False,
@@ -52,8 +52,7 @@
       }),
     ]),
     'thinking': dict({
-      'display': 'summarized',
-      'type': 'adaptive',
+      'type': 'disabled',
     }),
   })
 # ---

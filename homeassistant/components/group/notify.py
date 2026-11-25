@@ -18,18 +18,19 @@ from homeassistant.components.notify import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    ATTR_ENTITY_ID,
     CONF_ACTION,
     CONF_ENTITIES,
     CONF_SERVICE,
     STATE_UNAVAILABLE,
     EntityStateAttribute,
+    TargetKey,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
+from .const import GroupEntityStateAttribute
 from .entity import GroupEntity
 
 CONF_SERVICES = "services"
@@ -167,16 +168,18 @@ class NotifyGroup(GroupEntity, NotifyEntity):
         """Initialize a NotifyGroup."""
         self._entity_ids = entity_ids
         self._attr_name = name
-        self._attr_extra_state_attributes = {ATTR_ENTITY_ID: entity_ids}
+        self._attr_extra_state_attributes = {
+            GroupEntityStateAttribute.ENTITY_ID: entity_ids
+        }
         self._attr_unique_id = unique_id
 
     @override
     async def async_send_message(self, message: str, title: str | None = None) -> None:
         """Send a message to all members of the group."""
 
-        data = {
+        data: dict[str, Any] = {
             NotifyServiceArgument.MESSAGE: message,
-            ATTR_ENTITY_ID: self._entity_ids,
+            TargetKey.ENTITY_ID: self._entity_ids,
         }
 
         # add title only if supported and provided

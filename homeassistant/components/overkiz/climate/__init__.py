@@ -2,8 +2,9 @@
 
 from enum import StrEnum, unique
 
-from pyoverkiz.enums import Protocol
+from pyoverkiz.enums import OverkizCommand, Protocol
 from pyoverkiz.enums.ui import UIWidget
+from pyoverkiz.models import Device
 
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
@@ -11,11 +12,15 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .. import OverkizDataConfigEntry
+from ..entity import OverkizEntity
 from .atlantic_electrical_heater import AtlanticElectricalHeater
 from .atlantic_electrical_heater_with_adjustable_temperature_setpoint import (
     AtlanticElectricalHeaterWithAdjustableTemperatureSetpoint,
 )
 from .atlantic_electrical_towel_dryer import AtlanticElectricalTowelDryer
+from .atlantic_electrical_towel_dryer_heating_level import (
+    AtlanticElectricalTowelDryerHeatingLevel,
+)
 from .atlantic_heat_recovery_ventilation import AtlanticHeatRecoveryVentilation
 from .atlantic_pass_apc_heat_pump_main_component import (
     AtlanticPassAPCHeatPumpMainComponent,
@@ -47,7 +52,7 @@ class Controllable(StrEnum):
     )
 
 
-WIDGET_TO_CLIMATE_ENTITY = {
+WIDGET_TO_CLIMATE_ENTITY: dict[UIWidget, type[OverkizEntity]] = {
     UIWidget.ATLANTIC_ELECTRICAL_HEATER: AtlanticElectricalHeater,
     UIWidget.ATLANTIC_ELECTRICAL_HEATER_WITH_ADJUSTABLE_TEMPERATURE_SETPOINT: (
         AtlanticElectricalHeaterWithAdjustableTemperatureSetpoint
@@ -94,6 +99,16 @@ WIDGET_AND_PROTOCOL_TO_CLIMATE_ENTITY = {
 PARALLEL_UPDATES = 0
 
 
+def _widget_climate_entity(device: Device) -> type[OverkizEntity]:
+    """Return the climate entity class for a device matched on its widget."""
+    # Some towel dryers (e.g. Atlantic Adélis 2 Digit) only support heating levels
+    if device.widget == UIWidget.ATLANTIC_ELECTRICAL_TOWEL_DRYER and not (
+        device.supports_command(OverkizCommand.SET_TOWEL_DRYER_OPERATING_MODE)
+    ):
+        return AtlanticElectricalTowelDryerHeatingLevel
+    return WIDGET_TO_CLIMATE_ENTITY[device.widget]
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: OverkizDataConfigEntry,
@@ -104,7 +119,7 @@ async def async_setup_entry(
 
     # Match devices based on the widget.
     entities_based_on_widget: list[Entity] = [
-        WIDGET_TO_CLIMATE_ENTITY[device.widget](device.device_url, data.coordinator)
+        _widget_climate_entity(device)(device.device_url, data.coordinator)
         for device in data.platforms[Platform.CLIMATE]
         if device.widget in WIDGET_TO_CLIMATE_ENTITY
     ]

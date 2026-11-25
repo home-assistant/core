@@ -1,0 +1,23 @@
+{
+  "entity": {
+    "binary_sensor": {
+      "charging_limited_by_forecast": {
+        "default": "mdi:weather-partly-cloudy"
+      },
+      "charging_locked": {
+        "default": "mdi:battery-lock"
+      },
+      "discharging_locked": {
+        "default": "mdi:battery-lock"
+      },
+      "feed_in_limited": {
+        "default": "mdi:transmission-tower-export"
+      }
+    },
+    "sensor": {
+      "inverter_mode": {
+        "default": "mdi:sine-wave"
+      }
+    }
+  }
+}

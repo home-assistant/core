@@ -61,9 +61,9 @@ from homeassistant.components.recorder.statistics import (
 )
 from homeassistant.components.recorder.util import get_instance, session_scope
 from homeassistant.components.sensor import (
-    ATTR_OPTIONS,
     DOMAIN,
     SensorDeviceClass,
+    SensorEntityCapabilityAttribute,
     SensorStateClass,
 )
 from homeassistant.components.sensor.recorder import (
@@ -71,7 +71,12 @@ from homeassistant.components.sensor.recorder import (
     STATE_CLASS_REMOVED_ISSUE,
     UNITS_CHANGED_ISSUE,
 )
-from homeassistant.const import ATTR_FRIENDLY_NAME, DEGREE, STATE_UNAVAILABLE, Platform
+from homeassistant.const import (
+    DEGREE,
+    STATE_UNAVAILABLE,
+    EntityStateAttribute,
+    Platform,
+)
 from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.setup import async_setup_component
@@ -202,6 +207,7 @@ def assert_issues(
             active=True,
             breaks_in_ha_version=None,
             config_entry_id=None,
+            config_subentry_id=None,
             created=ANY,
             data=expected_issue_data,
             dismissed_version=None,
@@ -7069,8 +7075,8 @@ async def test_exclude_attributes(hass: HomeAssistant) -> None:
 
     states: list[State] = await hass.async_add_executor_job(_fetch_states)
     assert len(states) == 1
-    assert ATTR_OPTIONS not in states[0].attributes
-    assert ATTR_FRIENDLY_NAME in states[0].attributes
+    assert SensorEntityCapabilityAttribute.OPTIONS not in states[0].attributes
+    assert EntityStateAttribute.FRIENDLY_NAME in states[0].attributes
 
 
 @pytest.mark.parametrize("ignore_translations_for_mock_domains", ["test"])
@@ -7098,6 +7104,7 @@ async def test_clean_up_repairs(
             "issues": [
                 {
                     "config_entry_id": None,
+                    "config_subentry_id": None,
                     "created": "2022-07-19T09:41:13.746514+00:00",
                     "dismissed_version": None,
                     "domain": DOMAIN,

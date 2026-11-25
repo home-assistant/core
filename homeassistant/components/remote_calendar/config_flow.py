@@ -88,14 +88,13 @@ class RemoteCalendarConfigFlow(ConfigFlow, domain=DOMAIN):
         client = get_async_client(self.hass, verify_ssl=data[CONF_VERIFY_SSL])
         try:
             res = await get_calendar(client, data[CONF_URL])
-            if res.status_code == HTTPStatus.UNAUTHORIZED:
-                www_auth = res.headers.get("www-authenticate", "").lower()
-                if "basic" in www_auth:
-                    self.data = data
-                    return await self.async_step_auth()
+            needs_auth = (
+                res.status_code == HTTPStatus.UNAUTHORIZED
+                and "basic" in res.headers.get("www-authenticate", "").lower()
+            )
             if res.status_code == HTTPStatus.FORBIDDEN:
                 errors["base"] = "forbidden"
-            else:
+            elif not needs_auth:
                 res.raise_for_status()
         except TimeoutException as err:
             errors["base"] = "timeout_connect"
@@ -106,6 +105,9 @@ class RemoteCalendarConfigFlow(ConfigFlow, domain=DOMAIN):
             errors["base"] = "cannot_connect"
             _LOGGER.debug("An error occurred: %s", str(err) or type(err).__name__)
         else:
+            if needs_auth:
+                self.data = data
+                return await self.async_step_auth()
             if not errors:
                 try:
                     await parse_calendar(self.hass, res.text)
@@ -147,9 +149,7 @@ class RemoteCalendarConfigFlow(ConfigFlow, domain=DOMAIN):
             )
             if res.status_code == HTTPStatus.UNAUTHORIZED:
                 errors["base"] = "invalid_auth"
-            elif res.status_code == HTTPStatus.FORBIDDEN:
-                return self.async_abort(reason="forbidden")
-            else:
+            elif res.status_code != HTTPStatus.FORBIDDEN:
                 res.raise_for_status()
         except TimeoutException as err:
             errors["base"] = "timeout_connect"
@@ -160,6 +160,8 @@ class RemoteCalendarConfigFlow(ConfigFlow, domain=DOMAIN):
             errors["base"] = "cannot_connect"
             _LOGGER.debug("An error occurred: %s", str(err) or type(err).__name__)
         else:
+            if res.status_code == HTTPStatus.FORBIDDEN:
+                return self.async_abort(reason="forbidden")
             if not errors:
                 try:
                     await parse_calendar(self.hass, res.text)

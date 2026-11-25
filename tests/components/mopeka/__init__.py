@@ -42,3 +42,13 @@ PRO_GOOD_SIGNAL_SERVICE_INFO = BluetoothServiceInfo(
     service_uuids=["0000fee5-0000-1000-8000-00805f9b34fb"],
     source="local",
 )
+
+PRO_200B_SERVICE_INFO = BluetoothServiceInfo(
+    name="",
+    address="aa:bb:cc:dd:ee:ff",
+    rssi=-60,
+    manufacturer_data={89: b"\x12b<\xa4\xc0\xc9BEo?"},
+    service_data={},
+    service_uuids=["0000fee5-0000-1000-8000-00805f9b34fb"],
+    source="local",
+)

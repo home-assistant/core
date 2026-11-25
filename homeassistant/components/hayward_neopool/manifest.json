@@ -1,0 +1,6 @@
+{
+  "domain": "hayward_neopool",
+  "name": "Hayward",
+  "integration_type": "virtual",
+  "supported_by": "neopool"
+}

@@ -4,6 +4,7 @@
   "categories": ["sensors.air_quality"],
   "codeowners": ["@danielhiversen", "@LaStrada"],
   "config_flow": true,
+  "connectivity": ["cloud"],
   "dhcp": [
     {
       "hostname": "airthings-view"

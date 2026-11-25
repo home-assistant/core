@@ -4,7 +4,7 @@ from typing import Any, override
 
 from pyfibaro.fibaro_device import DeviceModel
 
-from homeassistant.components.switch import ENTITY_ID_FORMAT, SwitchEntity
+from homeassistant.components.switch import SwitchEntity
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -35,9 +35,8 @@ class FibaroSwitch(FibaroEntity, SwitchEntity):
     def __init__(
         self, fibaro_device: DeviceModel, controller: FibaroController
     ) -> None:
-        """Initialize the Fibaro device."""
-        super().__init__(fibaro_device, controller)
-        self.entity_id = ENTITY_ID_FORMAT.format(self.ha_id)
+        """Initialize the switch."""
+        super().__init__(fibaro_device, controller, use_child_device_info=True)
 
     @override
     def turn_on(self, **kwargs: Any) -> None:

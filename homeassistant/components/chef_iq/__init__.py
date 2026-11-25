@@ -5,18 +5,17 @@ import logging
 from chefiq_ble import ChefIqBluetoothDeviceData
 
 from homeassistant.components.bluetooth import BluetoothScanningMode
-from homeassistant.components.bluetooth.passive_update_processor import (
-    PassiveBluetoothProcessorCoordinator,
-)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
+
+from .coordinator import ChefIqPassiveBluetoothProcessorCoordinator
 
 PLATFORMS: list[Platform] = [Platform.SENSOR]
 
 _LOGGER = logging.getLogger(__name__)
 
-type ChefIqConfigEntry = ConfigEntry[PassiveBluetoothProcessorCoordinator]
+type ChefIqConfigEntry = ConfigEntry[ChefIqPassiveBluetoothProcessorCoordinator]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ChefIqConfigEntry) -> None:
@@ -25,7 +24,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ChefIqConfigEntry) -> No
     assert address is not None
     data = ChefIqBluetoothDeviceData()
 
-    coordinator = entry.runtime_data = PassiveBluetoothProcessorCoordinator(
+    coordinator = entry.runtime_data = ChefIqPassiveBluetoothProcessorCoordinator(
         hass,
         _LOGGER,
         address=address,

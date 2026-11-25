@@ -88,7 +88,11 @@ rules:
   icon-translations:
     status: exempt
     comment: No icons are defined for this integration.
-  reconfiguration-flow: todo
+  reconfiguration-flow:
+    status: todo
+    comment: |
+      Only the subentries support reconfiguration. The config entry itself
+      cannot be reconfigured yet.
   repair-issues:
     status: exempt
     comment: No repair issues are defined for this integration.

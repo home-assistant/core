@@ -1,0 +1,47 @@
+[
+  {
+    "duplex": "full",
+    "mac_list": [
+      {
+        "mac": "8C:97:EA:00:00:00",
+        "hostname": "d633d0c8-958c-43cc-e807-d881b076924b"
+      }
+    ],
+    "name": "Ethernet 1",
+    "link": "up",
+    "id": 1,
+    "mode": "1000BaseT-FD",
+    "speed": "1000",
+    "rrd_id": "1"
+  },
+  {
+    "duplex": "half",
+    "name": "Ethernet 2",
+    "link": "down",
+    "id": 2,
+    "mode": "10BaseT-HD",
+    "speed": "10",
+    "rrd_id": "2",
+    "mac_list": []
+  },
+  {
+    "duplex": "full",
+    "name": "Freeplug",
+    "link": "down",
+    "id": 5,
+    "mode": "100BaseTX-FD",
+    "speed": "100",
+    "rrd_id": "freeplug",
+    "mac_list": []
+  },
+  {
+    "duplex": "auto",
+    "mac_list": [],
+    "name": "Sfp lan",
+    "link": "down",
+    "id": 9999,
+    "mode": "10000-FD",
+    "speed": "10000",
+    "rrd_id": "sfp_lan"
+  }
+]

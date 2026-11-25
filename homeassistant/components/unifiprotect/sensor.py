@@ -10,12 +10,10 @@ from typing import Any, cast, override
 
 from uiprotect.data import (
     NVR,
-    AlarmHubConnectionState,
     Camera,
     Fob,
     FobAwayState,
     Light,
-    LinkStation,
     ModelType,
     ProtectAdoptableDeviceModel,
     ProtectDeviceModel,
@@ -49,11 +47,9 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from .data import ProtectData, ProtectDeviceType, UFPConfigEntry
 from .entity import (
     BaseProtectEntity,
-    EventEntityMixin,
     PermRequired,
     ProtectDeviceEntity,
     ProtectEntityDescription,
-    ProtectEventMixin,
     ProtectNVREntity,
     T,
     async_all_device_entities,
@@ -91,13 +87,6 @@ class ProtectSensorEntityDescription(
     def _rounded_value(self, precision: int, getter: Callable[[T], Any], obj: T) -> Any:
         """Round value to precision if set."""
         return None if (v := getter(obj)) is None else round(v, precision)
-
-
-@dataclass(frozen=True, kw_only=True)
-class ProtectSensorEventEntityDescription(
-    ProtectEventMixin[T], SensorEntityDescription
-):
-    """Describes UniFi Protect Sensor entity."""
 
 
 def _get_uptime(obj: ProtectDeviceModel) -> datetime | None:
@@ -224,8 +213,8 @@ CAMERA_SENSORS: tuple[ProtectSensorEntityDescription, ...] = (
         native_unit_of_measurement=PERCENTAGE,
         entity_category=EntityCategory.DIAGNOSTIC,
         ufp_required_field="has_mic",
-        ufp_value="mic_volume",
-        ufp_enabled="feature_flags.has_mic",
+        ufp_public_value="mic_volume",
+        ufp_public_enabled_fn=operator.attrgetter("feature_flags.has_mic"),
         ufp_perm=PermRequired.NO_WRITE,
     ),
     ProtectSensorEntityDescription(
@@ -248,7 +237,7 @@ CAMERA_SENSORS: tuple[ProtectSensorEntityDescription, ...] = (
         translation_key="doorbell_text",
         entity_category=EntityCategory.DIAGNOSTIC,
         ufp_required_field="feature_flags.has_lcd_screen",
-        ufp_value="lcd_message.text",
+        ufp_public_value="lcd_message_text",
         ufp_perm=PermRequired.NO_WRITE,
     ),
     ProtectSensorEntityDescription(
@@ -594,51 +583,6 @@ _MODEL_DESCRIPTIONS: dict[ModelType, Sequence[ProtectEntityDescription]] = {
 }
 
 
-@dataclass(frozen=True, kw_only=True)
-class ProtectAlarmHubSensorEntityDescription(SensorEntityDescription):
-    """Describes a UniFi Protect alarm hub (public API) sensor."""
-
-    value_fn: Callable[[LinkStation], datetime | float | str | None]
-
-
-def _alarm_hub_battery_voltage(hub: LinkStation) -> float | None:
-    """Return the backup-battery voltage, or None when no battery is connected.
-
-    A disconnected, removed or fully flat backup battery all report
-    ``connection: disconnected`` with ``voltage: 0``; reading unknown rather
-    than 0.0 V avoids implying a real measurement when there is no usable cell.
-    """
-    battery = hub.alarm_hub_battery
-    if battery is None or battery.connection is not AlarmHubConnectionState.CONNECTED:
-        return None
-    return battery.voltage
-
-
-def _alarm_hub_last_event(hub: LinkStation) -> datetime | None:
-    """Return the last-event timestamp, if reported."""
-    return hub.last_event
-
-
-ALARM_HUB_SENSORS: tuple[ProtectAlarmHubSensorEntityDescription, ...] = (
-    ProtectAlarmHubSensorEntityDescription(
-        key="battery_voltage",
-        translation_key="alarm_hub_battery_voltage",
-        device_class=SensorDeviceClass.VOLTAGE,
-        native_unit_of_measurement=UnitOfElectricPotential.VOLT,
-        state_class=SensorStateClass.MEASUREMENT,
-        entity_category=EntityCategory.DIAGNOSTIC,
-        value_fn=_alarm_hub_battery_voltage,
-    ),
-    ProtectAlarmHubSensorEntityDescription(
-        key="last_event",
-        translation_key="alarm_hub_last_event",
-        device_class=SensorDeviceClass.TIMESTAMP,
-        entity_category=EntityCategory.DIAGNOSTIC,
-        value_fn=_alarm_hub_last_event,
-    ),
-)
-
-
 def _fob_battery_level(fob: Fob) -> int | None:
     """Return the key fob battery percentage, if it has been reported."""
     if (battery := fob.wireless_connection_state.battery_status) is not None:
@@ -717,23 +661,6 @@ FOB_SENSORS: tuple[ProtectFobSensorEntityDescription, ...] = (
 )
 
 
-class ProtectAlarmHubSensor(ProtectDeviceEntity, SensorEntity):
-    """A sensor entity for a UniFi Protect alarm hub."""
-
-    entity_description: ProtectAlarmHubSensorEntityDescription
-    _state_attrs = ("_attr_available", "_attr_native_value")
-    _ufp_uses_public = True
-
-    @callback
-    @override
-    def _async_update_device_from_protect(self, device: ProtectDeviceType) -> None:
-        super()._async_update_device_from_protect(device)
-        if (hub := self._ufp_public_obj) is not None:
-            self._attr_native_value = self.entity_description.value_fn(
-                cast(LinkStation, hub)
-            )
-
-
 class ProtectFobSensor(ProtectDeviceEntity, SensorEntity):
     """A sensor entity for a UniFi Protect key fob (Public API)."""
 
@@ -757,13 +684,6 @@ def _async_public_entities(
     if isinstance(device, Fob):
         return [
             ProtectFobSensor(data, device, description) for description in FOB_SENSORS
-        ]
-    if isinstance(device, LinkStation):
-        if not device.is_alarm_hub:
-            return []
-        return [
-            ProtectAlarmHubSensor(data, device, description)
-            for description in ALARM_HUB_SENSORS
         ]
     return list(
         async_all_device_entities(
@@ -795,13 +715,11 @@ async def async_setup_entry(
 
     entities: list[Entity] = []
     # The public bootstrap is primed only with an API key and supported NVR
-    # firmware; without it there are no fobs or alarm hubs to expose.
+    # firmware; without it there are no fobs to expose.
     api = data.api
     if api.has_public_bootstrap:
         for fob in api.public_bootstrap.fobs.values():
             entities.extend(_async_public_entities(data, fob))
-        for hub in api.public_bootstrap.alarm_hubs.values():
-            entities.extend(_async_public_entities(data, hub))
 
     if api.is_public_only:
         # The remaining sensors read the private bootstrap; the migrated ones
@@ -895,6 +813,7 @@ class BaseProtectSensor(BaseProtectEntity, SensorEntity):
     entity_description: ProtectSensorEntityDescription
     _state_attrs = ("_attr_available", "_attr_native_value")
 
+    @callback
     @override
     def _async_update_device_from_protect(self, device: ProtectDeviceType) -> None:
         super()._async_update_device_from_protect(device)
@@ -909,14 +828,3 @@ class ProtectDeviceSensor(BaseProtectSensor, ProtectDeviceEntity):
 
 class ProtectNVRSensor(BaseProtectSensor, ProtectNVREntity):
     """A Ubiquiti UniFi Protect Sensor."""
-
-
-class ProtectEventSensor(EventEntityMixin, SensorEntity):
-    """A UniFi Protect Device Sensor with access tokens."""
-
-    entity_description: ProtectSensorEventEntityDescription
-    _state_attrs = (
-        "_attr_available",
-        "_attr_native_value",
-        "_attr_extra_state_attributes",
-    )

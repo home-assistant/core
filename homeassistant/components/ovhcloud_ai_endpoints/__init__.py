@@ -7,6 +7,10 @@ from openai import (
     OpenAIError,
     PermissionDeniedError,
 )
+
+# The client imports its chat resource lazily on first use,
+# which would happen inside the event loop. Import it with the integration.
+from openai.resources.chat import AsyncChat  # noqa: F401
 from openai.types.chat import ChatCompletionUserMessageParam
 
 from homeassistant.config_entries import ConfigEntry
@@ -55,6 +59,10 @@ async def async_setup_entry(
 ) -> None:
     """Set up OVHcloud AI Endpoints from a config entry."""
     client = _create_client(hass, entry.data[CONF_API_KEY])
+
+    # Cache current platform data which gets added to each request
+    # (caching done by library)
+    _ = await hass.async_add_executor_job(client.platform_headers)
 
     try:
         await _validate_api_key(client)

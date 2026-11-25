@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_switch_entities[switch.test_player_1_enhancer-entry]
+# name: test_switch_entities[101][switch.my_super_test_player_2_autoplay-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -7,7 +7,307 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('music_assistant', '00:00:00:00:00:02')]>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'switch.my_super_test_player_2_autoplay',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Autoplay',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Autoplay',
+    'platform': 'music_assistant',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'queue_autoplay',
+    'unique_id': '00:00:00:00:00:02_queue_autoplay',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_switch_entities[101][switch.my_super_test_player_2_autoplay-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'My Super Test Player 2 Autoplay',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.my_super_test_player_2_autoplay',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_switch_entities[101][switch.my_super_test_player_2_crossfade-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('music_assistant', '00:00:00:00:00:02')]>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'switch.my_super_test_player_2_crossfade',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Crossfade',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Crossfade',
+    'platform': 'music_assistant',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'queue_crossfade',
+    'unique_id': '00:00:00:00:00:02_queue_crossfade',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_switch_entities[101][switch.my_super_test_player_2_crossfade-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'My Super Test Player 2 Crossfade',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.my_super_test_player_2_crossfade',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_switch_entities[101][switch.test_group_player_1_autoplay-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('music_assistant', 'test_group_player_1')]>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'switch.test_group_player_1_autoplay',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Autoplay',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Autoplay',
+    'platform': 'music_assistant',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'queue_autoplay',
+    'unique_id': 'test_group_player_1_queue_autoplay',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_switch_entities[101][switch.test_group_player_1_autoplay-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Group Player 1 Autoplay',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.test_group_player_1_autoplay',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_switch_entities[101][switch.test_group_player_1_crossfade-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('music_assistant', 'test_group_player_1')]>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'switch.test_group_player_1_crossfade',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Crossfade',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Crossfade',
+    'platform': 'music_assistant',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'queue_crossfade',
+    'unique_id': 'test_group_player_1_queue_crossfade',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_switch_entities[101][switch.test_group_player_1_crossfade-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Group Player 1 Crossfade',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.test_group_player_1_crossfade',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_switch_entities[101][switch.test_player_1_autoplay-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('music_assistant', '00:00:00:00:00:01')]>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'switch.test_player_1_autoplay',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Autoplay',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Autoplay',
+    'platform': 'music_assistant',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'queue_autoplay',
+    'unique_id': '00:00:00:00:00:01_queue_autoplay',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_switch_entities[101][switch.test_player_1_autoplay-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Player 1 Autoplay',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.test_player_1_autoplay',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_switch_entities[101][switch.test_player_1_crossfade-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('music_assistant', '00:00:00:00:00:01')]>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'switch.test_player_1_crossfade',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Crossfade',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Crossfade',
+    'platform': 'music_assistant',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'queue_crossfade',
+    'unique_id': '00:00:00:00:00:01_queue_crossfade',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_switch_entities[101][switch.test_player_1_crossfade-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Player 1 Crossfade',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.test_player_1_crossfade',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_switch_entities[101][switch.test_player_1_enhancer-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
     'device_id': <DeviceEntry identifiers=[('music_assistant', '00:00:00:00:00:01')]>,
     'disabled_by': None,
@@ -36,7 +336,57 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_switch_entities[switch.test_player_1_enhancer-state]
+# name: test_switch_entities[101][switch.test_player_1_enhancer-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Player 1 Enhancer',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.test_player_1_enhancer',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_switch_entities[1][switch.test_player_1_enhancer-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('music_assistant', '00:00:00:00:00:01')]>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'switch.test_player_1_enhancer',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Enhancer',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Enhancer',
+    'platform': 'music_assistant',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'enhancer',
+    'unique_id': '00:00:00:00:00:01_enhancer',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_switch_entities[1][switch.test_player_1_enhancer-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Player 1 Enhancer',

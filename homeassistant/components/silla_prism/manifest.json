@@ -4,6 +4,7 @@
   "categories": ["energy.ev_charging"],
   "codeowners": ["@ebaschiera"],
   "config_flow": true,
+  "connectivity": ["mqtt"],
   "dependencies": ["mqtt"],
   "documentation": "https://www.home-assistant.io/integrations/silla_prism",
   "integration_type": "device",

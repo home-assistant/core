@@ -12,7 +12,6 @@ from homeassistant.components.blueprint import CONF_USE_BLUEPRINT
 from homeassistant.components.trace import ATTR_ITEM_ID, ATTR_RUN_ID
 from homeassistant.const import (
     ATTR_ENTITY_ID,
-    ATTR_MODE,
     ATTR_NAME,
     CONF_ALIAS,
     CONF_DESCRIPTION,
@@ -39,8 +38,6 @@ from homeassistant.helpers.issue_registry import (
 )
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.script import (
-    ATTR_CUR,
-    ATTR_MAX,
     CONF_MAX,
     CONF_MAX_EXCEEDED,
     Script,
@@ -54,13 +51,12 @@ from homeassistant.util.dt import parse_datetime
 
 from .config import ValidationStatus
 from .const import (
-    ATTR_LAST_ACTION,
-    ATTR_LAST_TRIGGERED,
     CONF_FIELDS,
     CONF_TRACE,
     DOMAIN,
     ENTITY_ID_FORMAT,
     EVENT_SCRIPT_STARTED,
+    ScriptEntityStateAttribute,
 )
 from .trace import trace_script
 
@@ -71,10 +67,18 @@ class BaseScriptEntity(ToggleEntity, ABC):
     """Base class for script entities."""
 
     _entity_component_unrecorded_attributes = frozenset(
-        {ATTR_LAST_TRIGGERED, ATTR_MODE, ATTR_CUR, ATTR_MAX, ATTR_LAST_ACTION}
+        {
+            ScriptEntityStateAttribute.LAST_TRIGGERED,
+            ScriptEntityStateAttribute.MODE,
+            ScriptEntityStateAttribute.CURRENT,
+            ScriptEntityStateAttribute.MAX,
+            ScriptEntityStateAttribute.LAST_ACTION,
+        }
     )
 
     raw_config: ConfigType | None
+    # The configuration as written, with use_blueprint, when it uses a blueprint
+    raw_blueprint_inputs: ConfigType | None
 
     @cached_property
     @abstractmethod
@@ -128,7 +132,7 @@ class UnavailableScriptEntity(BaseScriptEntity):
         self._attr_name = raw_config.get(CONF_ALIAS, key) if raw_config else key
         self._attr_unique_id = key
         self.raw_config = raw_config
-        self._raw_blueprint_inputs = raw_blueprint_inputs
+        self.raw_blueprint_inputs = raw_blueprint_inputs
         self._validation_error = validation_error
         self._validation_status = validation_status
 
@@ -156,7 +160,7 @@ class UnavailableScriptEntity(BaseScriptEntity):
         """Return referenced blueprint or None."""
         # The config is invalid, but it can still point at its blueprint. Once
         # the blueprint was applied, only its inputs hold that reference.
-        for config in (self._raw_blueprint_inputs, self.raw_config):
+        for config in (self.raw_blueprint_inputs, self.raw_config):
             if (
                 config is not None
                 and isinstance(blueprint := config.get(CONF_USE_BLUEPRINT), dict)
@@ -268,7 +272,7 @@ class ScriptEntity(BaseScriptEntity, RestoreEntity):
         self._changed = asyncio.Event()
         self.raw_config = raw_config
         self._trace_config = cfg[CONF_TRACE]
-        self._blueprint_inputs = blueprint_inputs
+        self.raw_blueprint_inputs = blueprint_inputs
         self._attr_name = self.script.name
 
     @property
@@ -276,15 +280,15 @@ class ScriptEntity(BaseScriptEntity, RestoreEntity):
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes."""
         script = self.script
-        attrs = {
-            ATTR_LAST_TRIGGERED: script.last_triggered,
-            ATTR_MODE: script.script_mode,
-            ATTR_CUR: script.runs,
+        attrs: dict[str, Any] = {
+            ScriptEntityStateAttribute.LAST_TRIGGERED: script.last_triggered,
+            ScriptEntityStateAttribute.MODE: script.script_mode,
+            ScriptEntityStateAttribute.CURRENT: script.runs,
         }
         if script.supports_max:
-            attrs[ATTR_MAX] = script.max_runs
+            attrs[ScriptEntityStateAttribute.MAX] = script.max_runs
         if script.last_action:
-            attrs[ATTR_LAST_ACTION] = script.last_action
+            attrs[ScriptEntityStateAttribute.LAST_ACTION] = script.last_action
         return attrs
 
     @property
@@ -315,9 +319,9 @@ class ScriptEntity(BaseScriptEntity, RestoreEntity):
     @override
     def referenced_blueprint(self) -> str | None:
         """Return referenced blueprint or None."""
-        if self._blueprint_inputs is None:
+        if self.raw_blueprint_inputs is None:
             return None
-        path: str = self._blueprint_inputs[CONF_USE_BLUEPRINT][CONF_PATH]
+        path: str = self.raw_blueprint_inputs[CONF_USE_BLUEPRINT][CONF_PATH]
         return path
 
     @cached_property
@@ -388,7 +392,7 @@ class ScriptEntity(BaseScriptEntity, RestoreEntity):
             self.hass,
             self._attr_unique_id,
             self.raw_config,
-            self._blueprint_inputs,
+            self.raw_blueprint_inputs,
             context,
             self._trace_config,
         ) as script_trace:
@@ -456,7 +460,9 @@ class ScriptEntity(BaseScriptEntity, RestoreEntity):
         async_set_service_schema(hass, DOMAIN, unique_id, service_desc)
 
         if (state := await self.async_get_last_state()) and (
-            last_triggered := state.attributes.get("last_triggered")
+            last_triggered := state.attributes.get(
+                ScriptEntityStateAttribute.LAST_TRIGGERED
+            )
         ):
             self.script.last_triggered = parse_datetime(last_triggered)
 

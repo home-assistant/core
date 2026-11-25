@@ -23,11 +23,11 @@ from homeassistant.components.homeassistant import (
 )
 from homeassistant.components.matter.update import SCAN_INTERVAL
 from homeassistant.components.update import (
-    ATTR_VERSION,
     DOMAIN as UPDATE_DOMAIN,
-    SERVICE_INSTALL,
+    UpdateService,
+    UpdateServiceArgument,
 )
-from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON
+from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON, TargetKey
 from homeassistant.core import HomeAssistant, State
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.restore_state import STORAGE_KEY as RESTORE_STATE_KEY
@@ -220,23 +220,58 @@ async def test_update_check_with_same_version_string(
 
 
 @pytest.mark.parametrize(
-    ("update_source", "expect_warning"),
+    ("update_source", "expected_source_warning"),
     [
-        (UpdateSource.MAIN_NET_DCL, False),
-        (UpdateSource.LOCAL, True),
+        (UpdateSource.MAIN_NET_DCL, []),
+        (
+            UpdateSource.LOCAL,
+            [
+                {
+                    "severity": "warning",
+                    "message": (
+                        "Update provided by local. Installing this update is at"
+                        " your own risk and you may run into unexpected problems"
+                        " such as the need to re-add and factory reset your device."
+                    ),
+                }
+            ],
+        ),
+        (
+            UpdateSource.TEST_NET_DCL,
+            [
+                {
+                    "severity": "warning",
+                    "message": (
+                        "Update provided by test-net-dcl. Installing this update is"
+                        " at your own risk and you may run into unexpected problems"
+                        " such as the need to re-add and factory reset your device."
+                    ),
+                }
+            ],
+        ),
     ],
 )
 @pytest.mark.parametrize("node_fixture", ["mock_dimmable_light"])
 async def test_release_notes(
     hass: HomeAssistant,
-    matter_client: MagicMock,
+    hass_ws_client: WebSocketGenerator,
     check_node_update: AsyncMock,
     matter_node: MatterNode,
-    hass_ws_client: WebSocketGenerator,
     update_source: UpdateSource,
-    expect_warning: bool,
+    expected_source_warning: list[dict[str, str]],
 ) -> None:
-    """Test release notes are translated and warn about non-official update sources."""
+    """Test the release notes messages."""
+    entity_id = "update.mock_dimmable_light_firmware"
+    ws_client = await hass_ws_client(hass)
+
+    # No messages while no update is available
+    await ws_client.send_json(
+        {"id": 1, "type": "update/release_notes", "entity_id": entity_id}
+    )
+    result = await ws_client.receive_json()
+    assert result["success"] is True
+    assert result["result"] == {"release_notes": None, "messages": []}
+
     check_node_update.return_value = MatterSoftwareVersion(
         vid=65521,
         pid=32768,
@@ -248,30 +283,42 @@ async def test_release_notes(
         release_notes_url="http://home-assistant.io/non-existing-product",
         update_source=update_source,
     )
-
     await async_setup_component(hass, HA_DOMAIN, {})
     await hass.services.async_call(
         HA_DOMAIN,
         SERVICE_UPDATE_ENTITY,
-        {
-            ATTR_ENTITY_ID: "update.mock_dimmable_light_firmware",
-        },
+        {ATTR_ENTITY_ID: entity_id},
         blocking=True,
     )
+    assert hass.states.get(entity_id).state == STATE_ON
 
-    ws_client = await hass_ws_client(hass)
     await ws_client.send_json(
-        {
-            "id": 1,
-            "type": "update/release_notes",
-            "entity_id": "update.mock_dimmable_light_firmware",
-        }
+        {"id": 2, "type": "update/release_notes", "entity_id": entity_id}
     )
     result = await ws_client.receive_json()
-
-    release_notes = result["result"]
-    assert "The update process can take a while" in release_notes
-    assert ("Update provided by" in release_notes) is expect_warning
+    assert result["success"] is True
+    assert result["result"] == {
+        "release_notes": None,
+        "messages": [
+            *expected_source_warning,
+            {
+                "severity": "warning",
+                "message": (
+                    "Do not restart, remove power from, or otherwise interrupt the"
+                    " device while the update is in progress."
+                ),
+            },
+            {
+                "severity": "info",
+                "message": (
+                    "The update process can take a while, especially for battery"
+                    " powered devices. Please be patient and wait until the update"
+                    " process is fully completed. The device may restart during the"
+                    " update process and be unavailable for several minutes."
+                ),
+            },
+        ],
+    }
 
 
 @pytest.mark.parametrize("node_fixture", ["mock_dimmable_light"])
@@ -360,9 +407,9 @@ async def test_update_install(
 
     await hass.services.async_call(
         UPDATE_DOMAIN,
-        SERVICE_INSTALL,
+        UpdateService.INSTALL,
         {
-            ATTR_ENTITY_ID: "update.mock_dimmable_light_firmware",
+            TargetKey.ENTITY_ID: "update.mock_dimmable_light_firmware",
         },
         blocking=True,
     )
@@ -467,10 +514,10 @@ async def test_update_install_failure(
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             UPDATE_DOMAIN,
-            SERVICE_INSTALL,
+            UpdateService.INSTALL,
             {
-                ATTR_ENTITY_ID: "update.mock_dimmable_light_firmware",
-                ATTR_VERSION: "v3.0",
+                TargetKey.ENTITY_ID: "update.mock_dimmable_light_firmware",
+                UpdateServiceArgument.VERSION: "v3.0",
             },
             blocking=True,
         )
@@ -480,10 +527,10 @@ async def test_update_install_failure(
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             UPDATE_DOMAIN,
-            SERVICE_INSTALL,
+            UpdateService.INSTALL,
             {
-                ATTR_ENTITY_ID: "update.mock_dimmable_light_firmware",
-                ATTR_VERSION: "v3.0",
+                TargetKey.ENTITY_ID: "update.mock_dimmable_light_firmware",
+                UpdateServiceArgument.VERSION: "v3.0",
             },
             blocking=True,
         )
@@ -542,6 +589,7 @@ async def test_update_state_save_and_restore(
 
 async def test_update_state_restore(
     hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
     matter_client: MagicMock,
     check_node_update: AsyncMock,
     update_node: AsyncMock,
@@ -576,11 +624,31 @@ async def test_update_state_restore(
     assert state.state == STATE_ON
     assert state.attributes.get("latest_version") == "v2.0"
 
+    # The update source warning is based on the restored extra data
+    ws_client = await hass_ws_client(hass)
+    await ws_client.send_json(
+        {
+            "id": 1,
+            "type": "update/release_notes",
+            "entity_id": "update.mock_dimmable_light_firmware",
+        }
+    )
+    result = await ws_client.receive_json()
+    assert result["success"] is True
+    assert result["result"]["messages"][0] == {
+        "severity": "warning",
+        "message": (
+            "Update provided by local. Installing this update is at your own risk"
+            " and you may run into unexpected problems such as the need to re-add"
+            " and factory reset your device."
+        ),
+    }
+
     await hass.services.async_call(
         UPDATE_DOMAIN,
-        SERVICE_INSTALL,
+        UpdateService.INSTALL,
         {
-            ATTR_ENTITY_ID: "update.mock_dimmable_light_firmware",
+            TargetKey.ENTITY_ID: "update.mock_dimmable_light_firmware",
         },
         blocking=True,
     )

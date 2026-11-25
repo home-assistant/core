@@ -2,22 +2,17 @@
 
 from collections import deque
 from contextlib import suppress
-from datetime import datetime, timedelta
+from datetime import timedelta
 import logging
 from typing import Any, override
 
 from homeassistant.components.recorder import get_instance, history
 from homeassistant.const import (
-    ATTR_UNIT_OF_MEASUREMENT,
-    LIGHT_LUX,
-    PERCENTAGE,
     STATE_OK,
     STATE_PROBLEM,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
     EntityStateAttribute,
-    UnitOfConductivity,
-    UnitOfTemperature,
 )
 from homeassistant.core import Event, EventStateChangedData, State, callback
 from homeassistant.exceptions import HomeAssistantError
@@ -65,26 +60,21 @@ class Plant(Entity):
 
     READINGS = {
         READING_BATTERY: {
-            ATTR_UNIT_OF_MEASUREMENT: PERCENTAGE,
             "min": CONF_MIN_BATTERY_LEVEL,
         },
         READING_TEMPERATURE: {
-            ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.CELSIUS,
             "min": CONF_MIN_TEMPERATURE,
             "max": CONF_MAX_TEMPERATURE,
         },
         READING_MOISTURE: {
-            ATTR_UNIT_OF_MEASUREMENT: PERCENTAGE,
             "min": CONF_MIN_MOISTURE,
             "max": CONF_MAX_MOISTURE,
         },
         READING_CONDUCTIVITY: {
-            ATTR_UNIT_OF_MEASUREMENT: UnitOfConductivity.MICROSIEMENS_PER_CM,
             "min": CONF_MIN_CONDUCTIVITY,
             "max": CONF_MAX_CONDUCTIVITY,
         },
         READING_BRIGHTNESS: {
-            ATTR_UNIT_OF_MEASUREMENT: LIGHT_LUX,
             "min": CONF_MIN_BRIGHTNESS,
             "max": CONF_MAX_BRIGHTNESS,
         },
@@ -314,7 +304,7 @@ class DailyHistory:
 
     def add_measurement(self, value, timestamp=None):
         """Add a new measurement for a certain day."""
-        day = (timestamp or datetime.now()).date()  # pylint: disable=home-assistant-enforce-naive-now
+        day = dt_util.as_local(timestamp or dt_util.now()).date()
         if not isinstance(value, (int, float)):
             return
         if self._days is None:

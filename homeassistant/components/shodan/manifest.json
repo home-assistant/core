@@ -3,6 +3,7 @@
   "name": "Shodan",
   "categories": ["computers_network.monitoring"],
   "codeowners": ["@fabaff"],
+  "connectivity": ["cloud"],
   "documentation": "https://www.home-assistant.io/integrations/shodan",
   "iot_class": "cloud_polling",
   "loggers": ["shodan"],

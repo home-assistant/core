@@ -7,7 +7,7 @@ from homeassistant.components.diagnostics import (
     device_entry_as_dict,
     entity_entry_as_dict,
 )
-from homeassistant.const import ATTR_CONNECTIONS, ATTR_IDENTIFIERS, CONF_UNIQUE_ID
+from homeassistant.const import CONF_UNIQUE_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
@@ -15,7 +15,7 @@ from . import AndroidTVConfigEntry
 from .const import DOMAIN, PROP_ETHMAC, PROP_SERIALNO, PROP_WIFIMAC
 
 TO_REDACT = {CONF_UNIQUE_ID}  # UniqueID contain MAC Address
-TO_REDACT_DEV = {ATTR_CONNECTIONS, ATTR_IDENTIFIERS}
+TO_REDACT_DEV = {"connections", "identifiers"}
 TO_REDACT_DEV_PROP = {PROP_ETHMAC, PROP_SERIALNO, PROP_WIFIMAC}
 
 

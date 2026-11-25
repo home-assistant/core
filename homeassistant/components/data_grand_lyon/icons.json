@@ -8,6 +8,11 @@
         }
       }
     },
+    "calendar": {
+      "alerts": {
+        "default": "mdi:transit-detour"
+      }
+    },
     "sensor": {
       "accessible_spaces": {
         "default": "mdi:wheelchair-accessibility"

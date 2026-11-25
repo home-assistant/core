@@ -11,13 +11,12 @@ from pytest_homeassistant.common import (
 )
 
 from homeassistant.components import light, scene
-from homeassistant.components.scene import DOMAIN
+from homeassistant.components.scene import DOMAIN, SceneService
 from homeassistant.const import (
-    ATTR_ENTITY_ID,
     ENTITY_MATCH_ALL,
-    SERVICE_TURN_ON,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
+    TargetKey,
 )
 from homeassistant.core import HomeAssistant, State
 from homeassistant.setup import async_setup_component
@@ -228,18 +227,20 @@ async def activate(hass: HomeAssistant, entity_id: str = ENTITY_MATCH_ALL) -> No
     data = {}
 
     if entity_id:
-        data[ATTR_ENTITY_ID] = entity_id
+        data[TargetKey.ENTITY_ID] = entity_id
 
-    await hass.services.async_call(scene.DOMAIN, SERVICE_TURN_ON, data, blocking=True)
+    await hass.services.async_call(
+        scene.DOMAIN, SceneService.TURN_ON, data, blocking=True
+    )
 
 
 async def test_services_registered(hass: HomeAssistant) -> None:
     """Test we register services with empty config."""
     assert await async_setup_component(hass, DOMAIN, {})
     await hass.async_block_till_done()
-    assert hass.services.has_service("scene", "reload")
+    assert hass.services.has_service("scene", SceneService.RELOAD)
     assert hass.services.has_service("scene", "turn_on")
-    assert hass.services.has_service("scene", "apply")
+    assert hass.services.has_service("scene", SceneService.APPLY)
 
 
 async def setup_lights(

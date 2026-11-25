@@ -416,6 +416,16 @@ NUMBER_OPTIONS = {
             {},
         ),
         (
+            "media_player",
+            {"state": "{{ states('media_player.one') }}"},
+            "playing",
+            {"one": "playing", "two": "paused"},
+            {},
+            {},
+            {},
+            {},
+        ),
+        (
             "vacuum",
             {"state": "{{ states('vacuum.one') }}"},
             "docked",
@@ -697,6 +707,12 @@ async def test_config_flow_sensor_unit_of_measurement_context(
             {"installed_version": "{{ states('update.one') }}"},
             {"latest_version": "{{ '2.0' }}"},
             {"latest_version": "{{ '2.0' }}"},
+        ),
+        (
+            "media_player",
+            {"state": "{{ states('media_player.one') }}"},
+            {},
+            {},
         ),
         (
             "vacuum",
@@ -1048,6 +1064,17 @@ async def test_config_flow_device(
             None,
         ),
         (
+            "media_player",
+            {"state": "{{ states('media_player.one') }}"},
+            {"state": "{{ states('media_player.two') }}"},
+            ["playing", "paused"],
+            {"one": "playing", "two": "paused"},
+            {},
+            {},
+            "state",
+            None,
+        ),
+        (
             "vacuum",
             {"state": "{{ states('vacuum.one') }}"},
             {"state": "{{ states('vacuum.two') }}"},
@@ -1306,6 +1333,121 @@ async def test_options_remove_device_class(
         **extra_options,
     }
     assert "device_class" not in config_entry.options
+
+
+LIGHT_OPTIONS = {
+    "name": "My template",
+    "template_type": "light",
+    "turn_on": [],
+    "turn_off": [],
+    "set_temperature": [],
+}
+
+
+def _get_schema_key(data_schema: probatio.Schema, key: str) -> probatio.Marker | None:
+    """Return the marker of a key in a schema."""
+    return next((marker for marker in data_schema.schema if marker == key), None)
+
+
+async def test_config_flow_light_temperature_kelvin(hass: HomeAssistant) -> None:
+    """Test the light config flow only offers the color temperature in kelvin."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"next_step_id": "light"}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert _get_schema_key(result["data_schema"], "temperature_kelvin") is not None
+    assert _get_schema_key(result["data_schema"], "temperature") is None
+
+
+async def test_options_light_without_temperature(hass: HomeAssistant) -> None:
+    """Test the light options flow hides the temperature when it is not configured."""
+    config_entry = MockConfigEntry(
+        data={}, domain=DOMAIN, options=LIGHT_OPTIONS, title="My template"
+    )
+    config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    result = await hass.config_entries.options.async_init(config_entry.entry_id)
+    assert result["type"] is FlowResultType.FORM
+    assert _get_schema_key(result["data_schema"], "temperature_kelvin") is not None
+    assert _get_schema_key(result["data_schema"], "temperature") is None
+
+
+@pytest.mark.parametrize(
+    ("user_input", "expected_options"),
+    [
+        pytest.param(
+            {"set_temperature": []},
+            {"set_temperature": [], "temperature": "{{ 500 }}"},
+            id="keep_temperature",
+        ),
+        pytest.param(
+            {"set_temperature": [], "temperature": "{{ 500 }}"},
+            {"set_temperature": [], "temperature": "{{ 500 }}"},
+            id="keep_submitted_temperature",
+        ),
+        pytest.param(
+            {"set_temperature": [], "temperature_kelvin": "{{ 2000 }}"},
+            {"set_temperature": [], "temperature_kelvin": "{{ 2000 }}"},
+            id="replace_temperature",
+        ),
+        pytest.param(
+            {
+                "set_temperature": [],
+                "temperature": "{{ 500 }}",
+                "temperature_kelvin": "{{ 2000 }}",
+            },
+            {"set_temperature": [], "temperature_kelvin": "{{ 2000 }}"},
+            id="replace_submitted_temperature",
+        ),
+        pytest.param({}, {}, id="remove_temperature_action"),
+        pytest.param(
+            {"temperature": "{{ 500 }}"}, {}, id="remove_temperature_action_submitted"
+        ),
+    ],
+)
+async def test_options_light_deprecated_temperature(
+    hass: HomeAssistant,
+    user_input: dict[str, Any],
+    expected_options: dict[str, Any],
+) -> None:
+    """Test the deprecated light temperature is read only in the options flow."""
+    config_entry = MockConfigEntry(
+        data={},
+        domain=DOMAIN,
+        options={**LIGHT_OPTIONS, "temperature": "{{ 500 }}"},
+        title="My template",
+    )
+    config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    result = await hass.config_entries.options.async_init(config_entry.entry_id)
+    assert result["type"] is FlowResultType.FORM
+    data_schema = result["data_schema"]
+    temperature_key = _get_schema_key(data_schema, "temperature")
+    assert temperature_key is not None
+    assert data_schema.schema[temperature_key].config["read_only"] is True
+    assert get_schema_suggested_value(data_schema.schema, "temperature") == (
+        "{{ 500 }}"
+    )
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={"turn_on": [], "turn_off": [], **user_input},
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert config_entry.options == {
+        "name": "My template",
+        "template_type": "light",
+        "turn_on": [],
+        "turn_off": [],
+        **expected_options,
+    }
 
 
 def _assert_number_unit_of_measurement_context(data_schema: probatio.Schema) -> None:
@@ -1596,6 +1738,10 @@ async def test_config_flow_preview(
 
 
 EARLY_END_ERROR = "invalid template (TemplateSyntaxError: unexpected 'end of template')"
+REQUIRED_OPTION_ERROR = (
+    "Required option: '{0}' is missing for option '{1}'. "
+    "Remove '{1}' from your config or add '{0}'."
+)
 
 
 @pytest.mark.parametrize(
@@ -1603,6 +1749,34 @@ EARLY_END_ERROR = "invalid template (TemplateSyntaxError: unexpected 'end of tem
     [
         ("binary_sensor", "{{", {}, {"state": EARLY_END_ERROR}),
         ("sensor", "{{", {}, {"state": EARLY_END_ERROR}),
+        (
+            "media_player",
+            "",
+            {"source": "{{ 'TV' }}"},
+            {"source": REQUIRED_OPTION_ERROR.format("source_list", "source")},
+        ),
+        (
+            "media_player",
+            "",
+            {"select_source": []},
+            {
+                "select_source": REQUIRED_OPTION_ERROR.format(
+                    "source_list", "select_source"
+                )
+            },
+        ),
+        (
+            "media_player",
+            "",
+            {"volume_up": []},
+            {"volume_up": REQUIRED_OPTION_ERROR.format("volume_down", "volume_up")},
+        ),
+        (
+            "media_player",
+            "",
+            {"volume_down": []},
+            {"volume_down": REQUIRED_OPTION_ERROR.format("volume_up", "volume_down")},
+        ),
         (
             "sensor",
             "",
@@ -1706,6 +1880,70 @@ async def test_config_flow_preview_bad_input(
     assert msg["error"] == {
         "code": "invalid_user_input",
         "message": error,
+    }
+
+
+@pytest.mark.parametrize(
+    ("user_input", "error", "missing_option"),
+    [
+        pytest.param(
+            {"source": "{{ 'TV' }}"},
+            "source_list_required",
+            {"source_list": "{{ ['TV'] }}"},
+            id="source_without_list",
+        ),
+        pytest.param(
+            {"select_source": []},
+            "source_list_required",
+            {"source_list": "{{ ['TV'] }}"},
+            id="select_source_without_list",
+        ),
+        pytest.param(
+            {"volume_up": []},
+            "volume_up_and_down_required",
+            {"volume_down": []},
+            id="volume_up_only",
+        ),
+        pytest.param(
+            {"volume_down": []},
+            "volume_up_and_down_required",
+            {"volume_up": []},
+            id="volume_down_only",
+        ),
+    ],
+)
+async def test_config_flow_media_player_required_options(
+    hass: HomeAssistant,
+    user_input: dict[str, Any],
+    error: str,
+    missing_option: dict[str, Any],
+) -> None:
+    """Test media player options are rejected without the option they require."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {"next_step_id": "media_player"},
+    )
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {"name": "My template", **user_input},
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": error}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {"name": "My template", **user_input, **missing_option},
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["options"] == {
+        "name": "My template",
+        "template_type": "media_player",
+        **user_input,
+        **missing_option,
     }
 
 
@@ -2038,6 +2276,46 @@ async def test_option_flow_preview(
     assert len(hass.states.async_all()) == 3
 
 
+async def test_option_flow_preview_light_deprecated_temperature(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
+    """Test the options flow preview of a light helper with a temperature in mireds."""
+    client = await hass_ws_client(hass)
+    config_entry = MockConfigEntry(
+        data={},
+        domain=DOMAIN,
+        options={**LIGHT_OPTIONS, "temperature": "{{ 500 }}"},
+        title="My template",
+    )
+    config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    result = await hass.config_entries.options.async_init(config_entry.entry_id)
+    assert result["preview"] == "template"
+
+    await client.send_json_auto_id(
+        {
+            "type": "template/start_preview",
+            "flow_id": result["flow_id"],
+            "flow_type": "options_flow",
+            "user_input": {
+                "state": "{{ true }}",
+                "turn_on": [],
+                "turn_off": [],
+                "set_temperature": [],
+                "temperature": "{{ 500 }}",
+            },
+        }
+    )
+    msg = await client.receive_json()
+    assert msg["success"]
+
+    msg = await client.receive_json()
+    assert msg["event"]["state"] == "on"
+    assert msg["event"]["attributes"]["color_temp_kelvin"] == 2000
+
+
 async def test_option_flow_sensor_preview_config_entry_removed(
     hass: HomeAssistant, hass_ws_client: WebSocketGenerator
 ) -> None:
@@ -2203,6 +2481,12 @@ async def test_option_flow_sensor_preview_config_entry_removed(
             {"installed_version": "{{ states('update.one') }}"},
             {"latest_version": "{{ '2.0' }}"},
             {"latest_version": "{{ '2.0' }}"},
+        ),
+        (
+            "media_player",
+            {"state": "{{ states('media_player.one') }}"},
+            {},
+            {},
         ),
         (
             "vacuum",
