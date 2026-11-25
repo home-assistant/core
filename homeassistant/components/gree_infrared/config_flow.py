@@ -5,7 +5,7 @@ from typing import Any, override
 import probatio
 
 from homeassistant.components.climate import HVACMode
-from homeassistant.components.infrared import InfraredConsumerReconfigureConfigFlow
+from homeassistant.components.infrared import InfraredConsumerConfigFlow
 from homeassistant.core import callback
 from homeassistant.helpers.selector import (
     SelectSelector,
@@ -30,7 +30,7 @@ _HVAC_MODE_OPTIONS = [
 ]
 
 
-class GreeIrConfigFlow(InfraredConsumerReconfigureConfigFlow, domain=DOMAIN):
+class GreeIrConfigFlow(InfraredConsumerConfigFlow, domain=DOMAIN):
     """Handle config flow for Gree IR."""
 
     VERSION = 1

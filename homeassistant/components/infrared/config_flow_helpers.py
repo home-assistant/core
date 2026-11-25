@@ -20,7 +20,7 @@ class InfraredConsumerConfigFlow(ConfigFlow, metaclass=ABCMeta):
     """Base config flow for integrations that consume infrared entities.
 
     Subclasses need the `no_infrared_emitters` and `already_configured` abort
-    translations.
+    translations, and the `reconfigure` step translations.
     """
 
     INFRARED_EMITTER_KEY: str
@@ -58,6 +58,36 @@ class InfraredConsumerConfigFlow(ConfigFlow, metaclass=ABCMeta):
 
         return self.async_show_form(
             step_id="user", data_schema=self._async_infrared_schema()
+        )
+
+    @callback
+    def _async_infrared_reconfigure_schema(self) -> probatio.Schema:
+        """Return the schema of the reconfigure step."""
+        return probatio.Schema(self._async_infrared_entity_fields())
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle reconfiguration of the entry."""
+        entry = self._get_reconfigure_entry()
+        self._async_abort_if_no_infrared_emitters()
+        schema = self._async_infrared_reconfigure_schema()
+
+        if user_input is not None:
+            # Keep the data the form does not show, and drop cleared optional fields.
+            data = {
+                key: value
+                for key, value in entry.data.items()
+                if key not in schema.schema
+            } | user_input
+            self._async_abort_infrared_entities_match(
+                data, self._async_infrared_match_dict(data)
+            )
+            return self.async_update_reload_and_abort(entry, data=data)
+
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=self.add_suggested_values_to_schema(schema, entry.data),
         )
 
     @callback
@@ -114,40 +144,3 @@ class InfraredConsumerConfigFlow(ConfigFlow, metaclass=ABCMeta):
         if (entry := er.async_get(self.hass).async_get(entity_id)) is None:
             return entity_id
         return er.async_get_full_entity_name(self.hass, entry) or entity_id
-
-
-class InfraredConsumerReconfigureConfigFlow(InfraredConsumerConfigFlow):
-    """Base config flow for infrared consumers that support reconfiguration.
-
-    Subclasses also need the `reconfigure` step translations.
-    """
-
-    @callback
-    def _async_infrared_reconfigure_schema(self) -> probatio.Schema:
-        """Return the schema of the reconfigure step."""
-        return probatio.Schema(self._async_infrared_entity_fields())
-
-    async def async_step_reconfigure(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Handle reconfiguration of the entry."""
-        entry = self._get_reconfigure_entry()
-        self._async_abort_if_no_infrared_emitters()
-        schema = self._async_infrared_reconfigure_schema()
-
-        if user_input is not None:
-            # Keep the data the form does not show, and drop cleared optional fields.
-            data = {
-                key: value
-                for key, value in entry.data.items()
-                if key not in schema.schema
-            } | user_input
-            self._async_abort_infrared_entities_match(
-                data, self._async_infrared_match_dict(data)
-            )
-            return self.async_update_reload_and_abort(entry, data=data)
-
-        return self.async_show_form(
-            step_id="reconfigure",
-            data_schema=self.add_suggested_values_to_schema(schema, entry.data),
-        )

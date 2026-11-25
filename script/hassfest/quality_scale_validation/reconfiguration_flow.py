@@ -19,12 +19,12 @@ def _has_step_reconfigure_function(module: ast.Module) -> bool:
     )
 
 
-def _is_infrared_consumer_reconfigure_flow(module: ast.Module) -> bool:
-    """Test if the module subclasses the infrared consumer reconfigure config flow.
+def _is_infrared_consumer_flow(module: ast.Module) -> bool:
+    """Test if the module subclasses the infrared consumer config flow.
 
     It implements `async_step_reconfigure`.
     """
-    return has_base_class(module, {"InfraredConsumerReconfigureConfigFlow"})
+    return has_base_class(module, {"InfraredConsumerConfigFlow"})
 
 
 def validate(
@@ -37,7 +37,7 @@ def validate(
 
     if not (
         _has_step_reconfigure_function(config_flow)
-        or _is_infrared_consumer_reconfigure_flow(config_flow)
+        or _is_infrared_consumer_flow(config_flow)
     ):
         return [
             "Integration does not support a reconfiguration flow "

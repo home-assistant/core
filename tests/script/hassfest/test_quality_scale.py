@@ -148,12 +148,6 @@ def test_pull_request_reference_in_comment(
         ),
         pytest.param(
             "unique-config-entry",
-            "class Flow(InfraredConsumerReconfigureConfigFlow, domain='test'):\n"
-            "    pass\n",
-            id="unique_config_entry_infrared_consumer_reconfigure_flow",
-        ),
-        pytest.param(
-            "unique-config-entry",
             "class Flow(infrared.InfraredConsumerConfigFlow, domain='test'):\n"
             "    pass\n",
             id="unique_config_entry_infrared_consumer_flow_module",
@@ -174,15 +168,14 @@ def test_pull_request_reference_in_comment(
         ),
         pytest.param(
             "reconfiguration-flow",
-            "class Flow(InfraredConsumerReconfigureConfigFlow, domain='test'):\n"
-            "    pass\n",
-            id="reconfiguration_flow_infrared_consumer_reconfigure_flow",
+            "class Flow(InfraredConsumerConfigFlow, domain='test'):\n    pass\n",
+            id="reconfiguration_flow_infrared_consumer_flow",
         ),
         pytest.param(
             "reconfiguration-flow",
-            "class Flow(infrared.InfraredConsumerReconfigureConfigFlow, domain='test'):\n"
+            "class Flow(infrared.InfraredConsumerConfigFlow, domain='test'):\n"
             "    pass\n",
-            id="reconfiguration_flow_infrared_consumer_reconfigure_flow_module",
+            id="reconfiguration_flow_infrared_consumer_flow_module",
         ),
     ],
 )
@@ -220,13 +213,6 @@ def test_config_flow_rule_done(
             "Integration does not support a reconfiguration flow"
             " (is missing `async_step_reconfigure` in {config_flow_file})",
             id="reconfiguration_flow_config_flow",
-        ),
-        pytest.param(
-            "reconfiguration-flow",
-            "class Flow(InfraredConsumerConfigFlow, domain='test'):\n    pass\n",
-            "Integration does not support a reconfiguration flow"
-            " (is missing `async_step_reconfigure` in {config_flow_file})",
-            id="reconfiguration_flow_infrared_consumer_flow",
         ),
     ],
 )

@@ -25,19 +25,13 @@ def _has_abort_entries_match(module: ast.Module) -> bool:
     return _has_method_call(module, "_async_abort_entries_match")
 
 
-_INFRARED_CONSUMER_FLOWS = {
-    "InfraredConsumerConfigFlow",
-    "InfraredConsumerReconfigureConfigFlow",
-}
-
-
 def _has_infrared_consumer_duplicate_check(module: ast.Module) -> bool:
     """Test if the module relies on the infrared consumer duplicate check.
 
-    The default user step of the infrared consumer config flows does the check,
+    The default user step of the infrared consumer config flow does the check,
     so a module that defines its own user step must call it.
     """
-    if not has_base_class(module, _INFRARED_CONSUMER_FLOWS):
+    if not has_base_class(module, {"InfraredConsumerConfigFlow"}):
         return False
     defines_step_user = any(
         isinstance(item, (ast.FunctionDef, ast.AsyncFunctionDef))

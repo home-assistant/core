@@ -12,10 +12,7 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.typing import ConfigType
 
-from .config_flow_helpers import (
-    InfraredConsumerConfigFlow,
-    InfraredConsumerReconfigureConfigFlow,
-)
+from .config_flow_helpers import InfraredConsumerConfigFlow
 from .const import DATA_COMPONENT, DOMAIN
 from .entity import (
     InfraredDeviceClass,
@@ -40,7 +37,6 @@ __all__ = [
     "DOMAIN",
     "InfraredCommand",
     "InfraredConsumerConfigFlow",
-    "InfraredConsumerReconfigureConfigFlow",
     "InfraredDeviceClass",
     "InfraredEmitterConsumerEntity",
     "InfraredEmitterEntity",

@@ -19,11 +19,7 @@ from pytest_homeassistant.components.infrared import (
 )
 from pytest_homeassistant.components.infrared.common import MockInfraredEmitterEntity
 
-from homeassistant.components.infrared import (
-    DATA_COMPONENT,
-    InfraredConsumerConfigFlow,
-    InfraredConsumerReconfigureConfigFlow,
-)
+from homeassistant.components.infrared import DATA_COMPONENT, InfraredConsumerConfigFlow
 from homeassistant.config_entries import SOURCE_USER, ConfigFlowResult
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import FlowResultType, InvalidData
@@ -72,12 +68,6 @@ class MockDeviceTypeConsumerFlow(MockInfraredConsumerFlow):
     def _async_infrared_match_dict(self, user_input: dict[str, Any]) -> dict[str, Any]:
         """Return the device type."""
         return {CONF_DEVICE_TYPE: user_input[CONF_DEVICE_TYPE]}
-
-
-class MockReconfigureConsumerFlow(
-    MockDeviceTypeConsumerFlow, InfraredConsumerReconfigureConfigFlow
-):
-    """Config flow that also supports reconfiguring the infrared entities."""
 
 
 @pytest.fixture
@@ -300,7 +290,7 @@ async def test_infrared_entities_match(
     assert result.get("reason") == expected_reason
 
 
-@pytest.mark.parametrize("consumer_flow", [MockReconfigureConsumerFlow])
+@pytest.mark.parametrize("consumer_flow", [MockDeviceTypeConsumerFlow])
 @pytest.mark.usefixtures(
     "mock_infrared_emitter_entity", "mock_infrared_receiver_entity"
 )
@@ -334,7 +324,7 @@ async def test_reconfigure(hass: HomeAssistant) -> None:
     assert entry.data == {CONF_DEVICE_TYPE: "tv", EMITTER_KEY: EMITTER_ENTITY_ID}
 
 
-@pytest.mark.parametrize("consumer_flow", [MockReconfigureConsumerFlow])
+@pytest.mark.parametrize("consumer_flow", [MockDeviceTypeConsumerFlow])
 @pytest.mark.parametrize(
     ("other_entry_data", "user_input"),
     [
@@ -390,7 +380,7 @@ async def test_reconfigure_infrared_entities_match(
     assert entry.data[EMITTER_KEY] == expected_emitter
 
 
-@pytest.mark.parametrize("consumer_flow", [MockReconfigureConsumerFlow])
+@pytest.mark.parametrize("consumer_flow", [MockDeviceTypeConsumerFlow])
 @pytest.mark.usefixtures("init_infrared")
 async def test_reconfigure_abort_no_emitters(hass: HomeAssistant) -> None:
     """Test the reconfigure flow aborts when there are no infrared emitters."""
