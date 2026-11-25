@@ -1,7 +1,8 @@
 """Define const for Volvo unit tests."""
 
-CLIENT_ID = "1234"
+CLIENT_ID = "vid-dc-1234"
 CLIENT_SECRET = "5678"
+LEGACY_CLIENT_ID = "dc-1234"
 
 DEFAULT_API_KEY = "abcdef0123456879abcdef"
 DEFAULT_MODEL = "xc40_electric_2024"

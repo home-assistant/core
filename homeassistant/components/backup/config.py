@@ -374,6 +374,9 @@ class RetentionConfig(BaseRetentionConfig):
                 """Return backups older than days to delete."""
                 # we need to check here since we await before
                 # this filter is applied
+                backups = _enabled_agents_filter(
+                    backups, manager.config.data.create_backup.agent_ids
+                )
                 agents_retention = {
                     agent_id: agent_config.retention
                     for agent_id, agent_config in manager.config.data.agents.items()
@@ -699,6 +702,26 @@ def _automatic_backups_filter(
     }
 
 
+def _enabled_agents_filter(
+    backups: dict[str, ManagerBackup], enabled_agent_ids: list[str]
+) -> dict[str, ManagerBackup]:
+    """Return backups limited to agents enabled for automatic backups."""
+    filtered_backups: dict[str, ManagerBackup] = {}
+    for backup_id, backup in backups.items():
+        agents = {
+            agent_id: agent_backup_status
+            for agent_id, agent_backup_status in backup.agents.items()
+            if agent_id in enabled_agent_ids
+        }
+        if not agents:
+            continue
+        if len(agents) == len(backup.agents):
+            filtered_backups[backup_id] = backup
+        else:
+            filtered_backups[backup_id] = replace(backup, agents=agents)
+    return filtered_backups
+
+
 async def delete_backups_exceeding_configured_count(manager: BackupManager) -> None:
     """Delete backups exceeding the configured retention count."""
 
@@ -706,6 +729,9 @@ async def delete_backups_exceeding_configured_count(manager: BackupManager) -> N
         backups: dict[str, ManagerBackup],
     ) -> dict[str, ManagerBackup]:
         """Return oldest backups more numerous than copies to delete."""
+        backups = _enabled_agents_filter(
+            backups, manager.config.data.create_backup.agent_ids
+        )
         agents_retention = {
             agent_id: agent_config.retention
             for agent_id, agent_config in manager.config.data.agents.items()

@@ -5,10 +5,10 @@ from functools import partial
 import logging
 from typing import Any, cast, override
 
+import aiohttp
 from google import genai
 from google.genai.errors import APIError, ClientError
 import probatio
-from requests.exceptions import Timeout
 
 from homeassistant import data_entry_flow
 from homeassistant.config_entries import (
@@ -91,14 +91,17 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> None:
     client = await hass.async_add_executor_job(
         partial(genai.Client, api_key=data[CONF_API_KEY])
     )
-    await client.aio.models.list(
-        config={
-            "http_options": {
-                "timeout": TIMEOUT_MILLIS,
-            },
-            "query_base": True,
-        }
-    )
+    try:
+        await client.aio.models.list(
+            config={
+                "http_options": {
+                    "timeout": TIMEOUT_MILLIS,
+                },
+                "query_base": True,
+            }
+        )
+    finally:
+        await client.aio.aclose()
 
 
 class GoogleGenerativeAIConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -116,7 +119,7 @@ class GoogleGenerativeAIConfigFlow(ConfigFlow, domain=DOMAIN):
             self._async_abort_entries_match(user_input)
             try:
                 await validate_input(self.hass, user_input)
-            except (APIError, Timeout) as err:
+            except (APIError, TimeoutError, aiohttp.ClientError) as err:
                 if isinstance(err, ClientError) and "API_KEY_INVALID" in str(err):
                     errors["base"] = "invalid_auth"
                 else:

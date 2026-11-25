@@ -14,7 +14,7 @@
       'is_private': None,
       'light': 1,
       'maximum_target_humidity': 20,
-      'measured_humidity': None,
+      'measured_humidity': 12,
       'payment_end_date': None,
       'remote_safety_state': None,
       'sauna_config': dict({

@@ -16,7 +16,7 @@ from homeassistant.components.select import (
     SelectService,
     SelectServiceArgument,
 )
-from homeassistant.const import CommonServiceArgument
+from homeassistant.const import TargetKey
 from homeassistant.core import HomeAssistant
 
 from . import setup_integration
@@ -39,7 +39,7 @@ async def test_select(
         SELECT_DOMAIN,
         SelectService.SELECT_OPTION,
         {
-            CommonServiceArgument.ENTITY_ID: f"select.{name}_{select}",
+            TargetKey.ENTITY_ID: f"select.{name}_{select}",
             SelectServiceArgument.OPTION: MotionSpeedLevel.HIGH.value,
         },
         blocking=True,

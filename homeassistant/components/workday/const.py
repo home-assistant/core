@@ -18,6 +18,19 @@ CONF_OFFSET = "days_offset"
 CONF_ADD_HOLIDAYS = "add_holidays"
 CONF_REMOVE_HOLIDAYS = "remove_holidays"
 CONF_CATEGORY = "category"
+CONF_HINDU_SHOW_ESTIMATED = "hindu_show_estimated"
+CONF_INCLUDE_SUNDAYS = "include_sundays"
+CONF_ISLAMIC_SHOW_ESTIMATED = "islamic_show_estimated"
+
+# Country specific options of the holidays library that can be configured
+COUNTRY_OPTIONS = [
+    CONF_INCLUDE_SUNDAYS,
+    CONF_ISLAMIC_SHOW_ESTIMATED,
+    CONF_HINDU_SHOW_ESTIMATED,
+]
+
+SECTION_COUNTRY_SETTINGS = "country_settings"
+SECTION_CUSTOM_HOLIDAYS = "custom_holidays"
 
 # By default, Monday - Friday are workdays
 DEFAULT_WORKDAYS = ["mon", "tue", "wed", "thu", "fri"]

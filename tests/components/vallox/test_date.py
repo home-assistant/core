@@ -7,8 +7,12 @@ import pytest
 from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.date import DOMAIN as DATE_DOMAIN, SERVICE_SET_VALUE
-from homeassistant.const import ATTR_DATE, ATTR_ENTITY_ID, STATE_UNKNOWN, Platform
+from homeassistant.components.date import (
+    DOMAIN as DATE_DOMAIN,
+    DateService,
+    DateServiceArgument,
+)
+from homeassistant.const import STATE_UNKNOWN, Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -47,8 +51,8 @@ async def test_set_filter_change_date(
     """Test setting the filter change date."""
     await hass.services.async_call(
         DATE_DOMAIN,
-        SERVICE_SET_VALUE,
-        {ATTR_ENTITY_ID: DATE_ENTITY_ID, ATTR_DATE: "2024-02-25"},
+        DateService.SET_VALUE,
+        {TargetKey.ENTITY_ID: DATE_ENTITY_ID, DateServiceArgument.DATE: "2024-02-25"},
         blocking=True,
     )
 

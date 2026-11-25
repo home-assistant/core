@@ -12,7 +12,7 @@ from homeassistant.components.number import (
 from homeassistant.components.tplink.const import DOMAIN
 from homeassistant.components.tplink.entity import EXCLUDED_FEATURES
 from homeassistant.components.tplink.number import NUMBER_DESCRIPTIONS
-from homeassistant.const import CONF_HOST, CommonServiceArgument, Platform
+from homeassistant.const import CONF_HOST, Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
@@ -153,7 +153,7 @@ async def test_number_set(
     await hass.services.async_call(
         NUMBER_DOMAIN,
         NumberService.SET_VALUE,
-        {CommonServiceArgument.ENTITY_ID: entity_id, NumberServiceArgument.VALUE: 50},
+        {TargetKey.ENTITY_ID: entity_id, NumberServiceArgument.VALUE: 50},
         blocking=True,
     )
     new_feature.set_value.assert_called_with(50)

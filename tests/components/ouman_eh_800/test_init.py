@@ -23,7 +23,7 @@ from homeassistant.components.select import (
     SelectServiceArgument,
 )
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
-from homeassistant.const import STATE_UNAVAILABLE, CommonServiceArgument, Platform
+from homeassistant.const import STATE_UNAVAILABLE, Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr
@@ -167,7 +167,7 @@ async def test_reauth_started_on_action_auth_failure(
             SELECT_DOMAIN,
             SelectService.SELECT_OPTION,
             {
-                CommonServiceArgument.ENTITY_ID: "select.ouman_eh_800_home_away_mode",
+                TargetKey.ENTITY_ID: "select.ouman_eh_800_home_away_mode",
                 SelectServiceArgument.OPTION: "away",
             },
             blocking=True,

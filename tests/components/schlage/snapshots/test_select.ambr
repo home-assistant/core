@@ -8,13 +8,11 @@
     'capabilities': dict({
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         '0',
-        '5',
         '15',
         '30',
         '60',
         '120',
         '240',
-        '300',
         '360',
         '600',
       ]),
@@ -55,13 +53,11 @@
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Vault Door Auto-lock time',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         '0',
-        '5',
         '15',
         '30',
         '60',
         '120',
         '240',
-        '300',
         '360',
         '600',
       ]),
