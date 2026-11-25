@@ -12,6 +12,7 @@ from homeassistant.components.cover import (
     ATTR_CURRENT_POSITION,
     ATTR_CURRENT_TILT_POSITION,
     CoverDeviceClass,
+    CoverEntityCapabilityAttribute,
     CoverEntityFeature,
     CoverService,
     CoverServiceArgument,
@@ -51,6 +52,7 @@ def shutterbox_fixture():
         is_position_inverted=True,
         cover_type=None,
         tilt_only=False,
+        is_tilt_180=False,
     )
     product = feature.product
     type(product).name = PropertyMock(return_value="My shutter")
@@ -553,6 +555,36 @@ async def test_open_tilt(
     )
 
     feature_mock.async_set_tilt_position.assert_called_once_with(expected_tilt_position)
+
+
+@pytest.mark.parametrize(
+    ("is_tilt_180", "open_tilt_position", "closed_tilt_positions"),
+    [
+        pytest.param(False, 100, [0], id="tilt_90"),
+        pytest.param(True, 50, [0, 100], id="tilt_180"),
+    ],
+)
+async def test_tilt_positions(
+    shutterbox,
+    hass: HomeAssistant,
+    is_tilt_180: bool,
+    open_tilt_position: int,
+    closed_tilt_positions: list[int],
+) -> None:
+    """Test the open and closed tilt positions of 90-degree and 180-degree shutters."""
+    feature_mock, entity_id = shutterbox
+    feature_mock.is_tilt_180 = is_tilt_180
+    await async_setup_entity(hass, entity_id)
+
+    state = hass.states.get(entity_id)
+    assert (
+        state.attributes[CoverEntityCapabilityAttribute.OPEN_TILT_POSITION]
+        == open_tilt_position
+    )
+    assert (
+        state.attributes[CoverEntityCapabilityAttribute.CLOSED_TILT_POSITIONS]
+        == closed_tilt_positions
+    )
 
 
 async def test_close_tilt(shutterbox, hass: HomeAssistant) -> None:
