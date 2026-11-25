@@ -48,7 +48,7 @@ from homeassistant.helpers.config_entry_oauth2_flow import (
 from homeassistant.helpers.httpx_client import SERVER_SOFTWARE
 from homeassistant.helpers.service_info.hassio import HassioServiceInfo
 
-from .conftest import API_TOKEN, MCP_SERVER_URL, TEST_API_NAME
+from .conftest import API_TOKEN, MCP_SERVER_URL, TEST_API_NAME, TEST_SERVER_NAME
 
 SEARCH_MEMORY_TOOL = Tool(
     name="search_memory",
@@ -170,7 +170,9 @@ class FakeMcpServer:
             result = InitializeResult(
                 protocolVersion="2025-03-26",
                 capabilities=ServerCapabilities(tools=ToolsCapability()),
-                serverInfo=Implementation(name=TEST_API_NAME, version="1.0.0"),
+                serverInfo=Implementation(
+                    name=TEST_SERVER_NAME, title=TEST_API_NAME, version="1.0.0"
+                ),
             )
             return self._jsonrpc_result(request_id, result)
 
@@ -536,6 +538,31 @@ async def test_list_tools_failure(
     assert config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
+async def test_llm_api_tool_prefix_for_servers_with_same_name(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    fake_mcp_server: FakeMcpServer,
+) -> None:
+    """Test servers that share a name get distinct tool prefixes."""
+    other_entry = MockConfigEntry(
+        domain=DOMAIN, data={CONF_URL: MCP_SERVER_URL}, title=TEST_API_NAME
+    )
+    other_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    assert config_entry.state is ConfigEntryState.LOADED
+    assert other_entry.state is ConfigEntryState.LOADED
+
+    prefixes = set()
+    for api in llm.async_get_apis(hass):
+        if api.name != TEST_API_NAME:
+            continue
+        api_instance = await api.async_get_api_instance(create_llm_context())
+        prefixes.add(api_instance.tools[0].name.partition("__")[0])
+
+    assert len(prefixes) == 2
+    assert all(prefix.startswith(f"{TEST_SERVER_NAME}-") for prefix in prefixes)
+
+
 async def test_llm_get_api_tools(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
@@ -554,7 +581,7 @@ async def test_llm_get_api_tools(
     api_instance = await api.async_get_api_instance(create_llm_context())
     assert len(api_instance.tools) == 2
     tool = api_instance.tools[0]
-    assert tool.name == "search_memory"
+    assert tool.name == f"{TEST_SERVER_NAME}__search_memory"
     assert tool.description == "Search memory for relevant context based on a query."
     with pytest.raises(
         probatio.Invalid, match=re.escape("required key not provided at 'query'")
@@ -563,7 +590,7 @@ async def test_llm_get_api_tools(
     assert tool.parameters({"query": "frogs"}) == {"query": "frogs"}
 
     tool = api_instance.tools[1]
-    assert tool.name == "save_memory"
+    assert tool.name == f"{TEST_SERVER_NAME}__save_memory"
     assert tool.description == "Save a memory context."
     with pytest.raises(
         probatio.Invalid, match=re.escape("required key not provided at 'context'")
@@ -671,7 +698,7 @@ async def test_call_tool(
     api_instance = await api.async_get_api_instance(create_llm_context())
     assert len(api_instance.tools) == 1
     tool = api_instance.tools[0]
-    assert tool.name == "search_memory"
+    assert tool.name == f"{TEST_SERVER_NAME}__search_memory"
 
     fake_mcp_server.call_tool_result = call_tool_result
     result = await tool.async_call(
@@ -771,7 +798,7 @@ async def test_call_tool_fails(
     api_instance = await api.async_get_api_instance(create_llm_context())
     assert len(api_instance.tools) == 1
     tool = api_instance.tools[0]
-    assert tool.name == "search_memory"
+    assert tool.name == f"{TEST_SERVER_NAME}__search_memory"
 
     fake_mcp_server.call_tool_error = error
     with pytest.raises(HomeAssistantError, match=expected_message):

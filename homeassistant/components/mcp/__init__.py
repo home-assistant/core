@@ -4,9 +4,11 @@ from dataclasses import dataclass
 from typing import cast, override
 
 from homeassistant.components.application_credentials import AuthorizationServer
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_API_TOKEN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_entry_oauth2_flow, llm
+from homeassistant.util import slugify
 
 from .application_credentials import authorization_server_context
 from .const import CONF_AUTHORIZATION_URL, CONF_SLUG, CONF_TOKEN_URL, DOMAIN
@@ -121,9 +123,36 @@ class ModelContextProtocolAPI(llm.API):
         self, llm_context: llm.LLMContext
     ) -> llm.APIInstance:
         """Return the instance of the API."""
+        namespace = self._namespace()
         return llm.APIInstance(
             self,
             API_PROMPT.format(name=self.name),
             llm_context,
-            tools=self.coordinator.data,
+            tools=[
+                llm.NamespacedTool(namespace, tool) for tool in self.coordinator.data
+            ],
         )
+
+    def _namespace(self) -> str:
+        """Return the prefix that groups the tools of this server.
+
+        Remote tool names are not unique across servers. Servers that report
+        the same name get the end of their entry ID added, so the prefixes
+        stay unique.
+        """
+        entry = self.coordinator.config_entry
+        namespace = _server_slug(self.coordinator)
+        if any(
+            other.entry_id != entry.entry_id
+            and other.state is ConfigEntryState.LOADED
+            and _server_slug(other.runtime_data) == namespace
+            for other in self.hass.config_entries.async_entries(DOMAIN)
+        ):
+            return f"{namespace}-{entry.entry_id[-4:].lower()}"
+        return namespace
+
+
+def _server_slug(coordinator: ModelContextProtocolCoordinator) -> str:
+    """Return the slug of the name the MCP server reports for itself."""
+    assert coordinator.server_info is not None
+    return slugify(coordinator.server_info.server_info.name, separator="-")
