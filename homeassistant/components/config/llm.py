@@ -1,7 +1,7 @@
 """LLM tools for the config integration."""
 
 from collections import defaultdict
-from collections.abc import Iterable, Iterator
+from collections.abc import Iterable, Iterator, Mapping
 from contextlib import suppress
 import heapq
 from typing import TYPE_CHECKING, Any, Literal, override
@@ -10,6 +10,12 @@ import probatio
 
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.llm import LLMTools, flow as llm_flow
+from homeassistant.components.sensor import (
+    DEVICE_CLASS_UNITS,
+    DOMAIN as SENSOR_DOMAIN,
+    UNIT_CONVERTERS,
+    SensorDeviceClass,
+)
 from homeassistant.config_entries import (
     ConfigEntry,
     ConfigEntryState,
@@ -17,7 +23,7 @@ from homeassistant.config_entries import (
     ConfigSubentry,
     SubentryFlowResult,
 )
-from homeassistant.const import ATTR_RESTORED
+from homeassistant.const import ATTR_RESTORED, CONF_UNIT_OF_MEASUREMENT
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import DependencyError, HomeAssistantError
 from homeassistant.generated.integration_categories import INTEGRATION_CATEGORIES
@@ -39,6 +45,7 @@ from homeassistant.helpers.llm import (
     ToolResult,
 )
 from homeassistant.helpers.network import NoURLAvailableError, get_url
+from homeassistant.helpers.typing import VolDictType
 from homeassistant.loader import (
     IntegrationNotFound,
     async_get_integration,
@@ -46,7 +53,7 @@ from homeassistant.loader import (
 )
 from homeassistant.util.json import JsonObjectType, JsonValueType
 
-from .const import DOMAIN
+from .const import DOMAIN, SUPPORTED_LABEL_THEME_COLORS
 from .core import UPDATE_CONFIG_SCHEMA, async_update_config
 
 _SEARCH_LIMIT = 15
@@ -1228,7 +1235,7 @@ def _format_entity_settings(
     hass: HomeAssistant, entry: er.RegistryEntry
 ) -> JsonObjectType:
     """Format the settings of an entity for LLM consumption."""
-    return {
+    result: JsonObjectType = {
         "entity_id": entry.entity_id,
         "full_name": er.async_get_full_entity_name(hass, entry),
         "name": entry.name,
@@ -1244,9 +1251,37 @@ def _format_entity_settings(
         "labels": list[JsonValueType](sorted(entry.labels)),
         "platform": entry.platform,
     }
+    if entry.domain == SENSOR_DOMAIN:
+        sensor_options: Mapping[str, Any] = entry.options.get(SENSOR_DOMAIN, {})
+        for key in _SENSOR_OPTIONS:
+            result[key] = sensor_options.get(key)
+    return result
 
 
 _NULLABLE_STRING = probatio.Any(None, _NON_EMPTY_STRING)
+_SENSOR_OPTIONS = (CONF_UNIT_OF_MEASUREMENT, "display_precision")
+
+
+def _check_sensor_options(entry: er.RegistryEntry, options: dict[str, Any]) -> None:
+    """Raise if the sensor options do not apply to the entity."""
+    if entry.domain != SENSOR_DOMAIN:
+        raise HomeAssistantError(
+            f"Only sensors have a unit and display precision, not '{entry.entity_id}'."
+        )
+    if (unit := options.get(CONF_UNIT_OF_MEASUREMENT)) is None:
+        return
+    # The sensor converts with the device class of the integration, not the one
+    # set in the registry
+    device_class = entry.original_device_class
+    units: set[Any] = set()
+    if device_class is not None and device_class in UNIT_CONVERTERS:
+        units = DEVICE_CLASS_UNITS.get(SensorDeviceClass(device_class), set())
+    if unit not in units:
+        allowed = ", ".join(sorted(str(allowed) for allowed in units if allowed))
+        raise HomeAssistantError(
+            f"The unit of '{entry.entity_id}' cannot be '{unit}'."
+            + (f" Allowed units: {allowed}." if allowed else "")
+        )
 
 
 class GetEntitySettingsTool(Tool):
@@ -1348,6 +1383,20 @@ class UpdateEntitySettingsTool(Tool):
                 "labels",
                 description="The label_ids. This replaces all labels.",
             ): [_NON_EMPTY_STRING],
+            probatio.Optional(
+                CONF_UNIT_OF_MEASUREMENT,
+                description=(
+                    "Only for sensors. The unit to show the state in, like 'kWh'. "
+                    "null uses the default unit of the sensor."
+                ),
+            ): _NULLABLE_STRING,
+            probatio.Optional(
+                "display_precision",
+                description=(
+                    "Only for sensors. The number of decimals to show. null uses "
+                    "the default."
+                ),
+            ): probatio.Any(None, probatio.All(int, probatio.Range(min=0))),
         }
     )
 
@@ -1359,6 +1408,11 @@ class UpdateEntitySettingsTool(Tool):
         settings = self.parameters(tool_input.tool_args)
         entity_id = settings.pop("entity_id")
         entry = _get_entity_entry(hass, entity_id)
+        sensor_options = {
+            key: settings.pop(key) for key in _SENSOR_OPTIONS if key in settings
+        }
+        if sensor_options:
+            _check_sensor_options(entry, sensor_options)
         if (area_id := settings.get("area_id")) and ar.async_get(hass).async_get_area(
             area_id
         ) is None:
@@ -1380,10 +1434,22 @@ class UpdateEntitySettingsTool(Tool):
             ]
 
         was_disabled = entry.disabled_by is not None
+        registry = er.async_get(hass)
         try:
-            entry = er.async_get(hass).async_update_entity(entity_id, **settings)
+            entry = registry.async_update_entity(entity_id, **settings)
         except ValueError as err:
             raise HomeAssistantError(str(err)) from err
+        if sensor_options:
+            # The registry replaces all options of the domain
+            options = dict(entry.options.get(SENSOR_DOMAIN, {}))
+            for key, value in sensor_options.items():
+                if value is None:
+                    options.pop(key, None)
+                else:
+                    options[key] = value
+            entry = registry.async_update_entity_options(
+                entry.entity_id, SENSOR_DOMAIN, options or None
+            )
 
         result = _format_entity_settings(hass, entry)
         if was_disabled and entry.disabled_by is None:
@@ -1595,6 +1661,162 @@ class DeleteFloorTool(Tool):
         return ToolResult(data={"result": {"floor_id": floor_id}})
 
 
+def _get_label_entry(hass: HomeAssistant, label_id: str) -> lr.LabelEntry:
+    """Return the registry entry of a label."""
+    if (entry := lr.async_get(hass).async_get_label(label_id)) is None:
+        raise HomeAssistantError(f"Label '{label_id}' not found.")
+    return entry
+
+
+def _format_label_settings(entry: lr.LabelEntry) -> JsonObjectType:
+    """Format the settings of a label for LLM consumption."""
+    return {
+        "label_id": entry.label_id,
+        "name": entry.name,
+        "color": entry.color,
+        "icon": entry.icon,
+        "description": entry.description,
+    }
+
+
+def _label_color(value: str) -> str:
+    """Validate a theme color or a hex color."""
+    if value in SUPPORTED_LABEL_THEME_COLORS:
+        return value
+    return cv.color_hex(value)
+
+
+_LABEL_SETTINGS: VolDictType = {
+    probatio.Optional(
+        "color",
+        description=(
+            "A hex color like '#ff0000', or a theme color: "
+            f"{', '.join(sorted(SUPPORTED_LABEL_THEME_COLORS))}. null removes it."
+        ),
+    ): probatio.Any(None, probatio.All(str, _label_color)),
+    probatio.Optional(
+        "icon", description="The icon, like 'mdi:tag'. null removes it."
+    ): probatio.Any(None, probatio.All(str, cv.icon)),
+    probatio.Optional(
+        "description", description="What the label is for. null removes it."
+    ): probatio.Any(None, str),
+}
+
+
+class GetLabelSettingsTool(Tool):
+    """LLM Tool to get the settings of a label."""
+
+    name = "config__get_label_settings"
+    title = "Get label settings"
+    description = (
+        "Get the settings of the label with the given label_id. Use search__search "
+        "to find the label_id."
+    )
+    annotations = ToolAnnotations(
+        read_only=True, destructive=False, idempotent=True, open_world=False
+    )
+    integration = DOMAIN
+    parameters = probatio.Schema({probatio.Required("label_id"): _NON_EMPTY_STRING})
+
+    @override
+    async def async_call(
+        self, hass: HomeAssistant, tool_input: ToolInput, llm_context: LLMContext
+    ) -> ToolResult:
+        """Return the settings of the label."""
+        args = self.parameters(tool_input.tool_args)
+        entry = _get_label_entry(hass, args["label_id"])
+        return ToolResult(data={"result": _format_label_settings(entry)})
+
+
+class UpdateLabelSettingsTool(Tool):
+    """LLM Tool to update the settings of a label."""
+
+    name = "config__update_label_settings"
+    title = "Update label settings"
+    description = (
+        "Update the settings of the label with the given label_id. Only the given "
+        "settings change. Returns the new settings."
+    )
+    annotations = ToolAnnotations(
+        read_only=False, destructive=True, idempotent=True, open_world=False
+    )
+    integration = DOMAIN
+    parameters = probatio.Schema(
+        {
+            probatio.Required("label_id"): _NON_EMPTY_STRING,
+            probatio.Optional("name"): _NON_EMPTY_STRING,
+            **_LABEL_SETTINGS,
+        }
+    )
+
+    @override
+    async def async_call(
+        self, hass: HomeAssistant, tool_input: ToolInput, llm_context: LLMContext
+    ) -> ToolResult:
+        """Update the settings of the label and return the new settings."""
+        settings = self.parameters(tool_input.tool_args)
+        label_id = settings.pop("label_id")
+        _get_label_entry(hass, label_id)
+        try:
+            entry = lr.async_get(hass).async_update(label_id, **settings)
+        except ValueError as err:
+            raise HomeAssistantError(str(err)) from err
+        return ToolResult(data={"result": _format_label_settings(entry)})
+
+
+class CreateLabelTool(Tool):
+    """LLM Tool to create a label."""
+
+    name = "config__create_label"
+    title = "Create label"
+    description = "Create a label. Returns the settings of the new label."
+    annotations = ToolAnnotations(
+        read_only=False, destructive=False, idempotent=False, open_world=False
+    )
+    integration = DOMAIN
+    parameters = probatio.Schema(
+        {probatio.Required("name"): _NON_EMPTY_STRING, **_LABEL_SETTINGS}
+    )
+
+    @override
+    async def async_call(
+        self, hass: HomeAssistant, tool_input: ToolInput, llm_context: LLMContext
+    ) -> ToolResult:
+        """Create the label and return its settings."""
+        settings = self.parameters(tool_input.tool_args)
+        try:
+            entry = lr.async_get(hass).async_create(**settings)
+        except ValueError as err:
+            raise HomeAssistantError(str(err)) from err
+        return ToolResult(data={"result": _format_label_settings(entry)})
+
+
+class DeleteLabelTool(Tool):
+    """LLM Tool to delete a label."""
+
+    name = "config__delete_label"
+    title = "Delete label"
+    description = (
+        "Delete the label with the given label_id. It is removed from everything "
+        "that has it."
+    )
+    annotations = ToolAnnotations(
+        read_only=False, destructive=True, idempotent=True, open_world=False
+    )
+    integration = DOMAIN
+    parameters = probatio.Schema({probatio.Required("label_id"): _NON_EMPTY_STRING})
+
+    @override
+    async def async_call(
+        self, hass: HomeAssistant, tool_input: ToolInput, llm_context: LLMContext
+    ) -> ToolResult:
+        """Delete the label."""
+        label_id = self.parameters(tool_input.tool_args)["label_id"]
+        _get_label_entry(hass, label_id)
+        lr.async_get(hass).async_delete(label_id)
+        return ToolResult(data={"result": {"label_id": label_id}})
+
+
 def _get_device_entry(hass: HomeAssistant, device_id: str) -> dr.AnyDeviceEntry:
     """Return the registry entry of a device."""
     if (
@@ -1771,6 +1993,10 @@ def async_get_tools(
             UpdateFloorSettingsTool(),
             CreateFloorTool(),
             DeleteFloorTool(),
+            GetLabelSettingsTool(),
+            UpdateLabelSettingsTool(),
+            CreateLabelTool(),
+            DeleteLabelTool(),
             GetDeviceSettingsTool(),
             UpdateDeviceSettingsTool(),
         ]

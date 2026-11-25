@@ -22,13 +22,16 @@ from homeassistant.components import config as config_component
 from homeassistant.components.config.llm import (
     ConfigureFlowTool,
     CreateFloorTool,
+    CreateLabelTool,
     DeleteFloorTool,
+    DeleteLabelTool,
     GetConfigEntriesTool,
     GetCoreConfigTool,
     GetDeviceSettingsTool,
     GetEntitySettingsTool,
     GetFloorSettingsTool,
     GetFlowsInProgressTool,
+    GetLabelSettingsTool,
     ReloadConfigEntryTool,
     RemoveEntityTool,
     SearchIntegrationsTool,
@@ -37,6 +40,7 @@ from homeassistant.components.config.llm import (
     UpdateDeviceSettingsTool,
     UpdateEntitySettingsTool,
     UpdateFloorSettingsTool,
+    UpdateLabelSettingsTool,
     async_get_tools,
 )
 from homeassistant.config_entries import (
@@ -140,6 +144,10 @@ async def test_async_get_tools(
         "config__update_floor_settings",
         "config__create_floor",
         "config__delete_floor",
+        "config__get_label_settings",
+        "config__update_label_settings",
+        "config__create_label",
+        "config__delete_label",
         "config__get_device_settings",
         "config__update_device_settings",
     ]
@@ -163,6 +171,10 @@ def test_parameters_openapi(snapshot: SnapshotAssertion) -> None:
         UpdateFloorSettingsTool(),
         CreateFloorTool(),
         DeleteFloorTool(),
+        GetLabelSettingsTool(),
+        UpdateLabelSettingsTool(),
+        CreateLabelTool(),
+        DeleteLabelTool(),
         GetDeviceSettingsTool(),
         UpdateDeviceSettingsTool(),
     ]
@@ -2240,6 +2252,11 @@ async def test_update_entity_settings(
             "Entity with this ID is already registered",
             id="entity_id_taken",
         ),
+        pytest.param(
+            {"entity_id": "switch.coffee", "display_precision": 2},
+            "Only sensors have a unit and display precision, not 'switch.coffee'.",
+            id="sensor_option_not_sensor",
+        ),
     ],
 )
 async def test_update_entity_settings_errors(
@@ -2264,6 +2281,121 @@ async def test_update_entity_settings_errors(
     assert str(exc_info.value) == error
 
 
+async def test_update_sensor_settings(
+    hass: HomeAssistant,
+    llm_context: llm.LLMContext,
+    entity_registry: er.EntityRegistry,
+    entity_tools: dict[str, llm.Tool],
+) -> None:
+    """Test setting the unit and display precision of a sensor."""
+    entity_registry.async_get_or_create(
+        "sensor",
+        "test",
+        "1234",
+        suggested_object_id="outside",
+        original_device_class="temperature",
+    )
+    entity_registry.async_update_entity_options(
+        "sensor.outside", "sensor", {"suggested_display_precision": 1}
+    )
+    tool = entity_tools["config__update_entity_settings"]
+
+    result = await tool.async_call(
+        hass,
+        llm.ToolInput(
+            tool.name,
+            {
+                "entity_id": "sensor.outside",
+                "unit_of_measurement": "°F",
+                "display_precision": 2,
+            },
+        ),
+        llm_context,
+    )
+    assert result.data["result"]["unit_of_measurement"] == "°F"
+    assert result.data["result"]["display_precision"] == 2
+    assert entity_registry.async_get("sensor.outside").options["sensor"] == {
+        "suggested_display_precision": 1,
+        "unit_of_measurement": "°F",
+        "display_precision": 2,
+    }
+
+    result = await tool.async_call(
+        hass,
+        llm.ToolInput(
+            tool.name, {"entity_id": "sensor.outside", "unit_of_measurement": None}
+        ),
+        llm_context,
+    )
+    assert result.data["result"]["unit_of_measurement"] is None
+    assert entity_registry.async_get("sensor.outside").options["sensor"] == {
+        "suggested_display_precision": 1,
+        "display_precision": 2,
+    }
+
+    result = await entity_tools["config__get_entity_settings"].async_call(
+        hass,
+        llm.ToolInput("config__get_entity_settings", {"entity_id": "sensor.outside"}),
+        llm_context,
+    )
+    assert result.data["result"]["display_precision"] == 2
+
+    with pytest.raises(HomeAssistantError) as exc_info:
+        await tool.async_call(
+            hass,
+            llm.ToolInput(
+                tool.name, {"entity_id": "sensor.outside", "unit_of_measurement": "kWh"}
+            ),
+            llm_context,
+        )
+    assert str(exc_info.value) == (
+        "The unit of 'sensor.outside' cannot be 'kWh'. Allowed units: K, °C, °F."
+    )
+
+    # The sensor converts with the device class of the integration, so a device
+    # class set in the registry does not change the allowed units
+    entity_registry.async_update_entity("sensor.outside", device_class="energy")
+    with pytest.raises(HomeAssistantError):
+        await tool.async_call(
+            hass,
+            llm.ToolInput(
+                tool.name, {"entity_id": "sensor.outside", "unit_of_measurement": "kWh"}
+            ),
+            llm_context,
+        )
+    result = await tool.async_call(
+        hass,
+        llm.ToolInput(
+            tool.name, {"entity_id": "sensor.outside", "unit_of_measurement": "°F"}
+        ),
+        llm_context,
+    )
+    assert result.data["result"]["unit_of_measurement"] == "°F"
+
+
+async def test_update_sensor_settings_unit_not_convertible(
+    hass: HomeAssistant,
+    llm_context: llm.LLMContext,
+    entity_registry: er.EntityRegistry,
+    entity_tools: dict[str, llm.Tool],
+) -> None:
+    """Test that a sensor without a convertible device class keeps its unit."""
+    entity_registry.async_get_or_create(
+        "sensor", "test", "1234", suggested_object_id="count"
+    )
+    tool = entity_tools["config__update_entity_settings"]
+
+    with pytest.raises(HomeAssistantError) as exc_info:
+        await tool.async_call(
+            hass,
+            llm.ToolInput(
+                tool.name, {"entity_id": "sensor.count", "unit_of_measurement": "items"}
+            ),
+            llm_context,
+        )
+    assert str(exc_info.value) == "The unit of 'sensor.count' cannot be 'items'."
+
+
 @pytest.mark.parametrize(
     "invalid_args",
     [
@@ -2272,6 +2404,7 @@ async def test_update_entity_settings_errors(
         pytest.param({"entity_id": "switch.coffee", "icon": "lamp"}),
         pytest.param({"entity_id": "switch.coffee", "new_entity_id": "coffee"}),
         pytest.param({"entity_id": "switch.coffee", "unknown": "value"}),
+        pytest.param({"entity_id": "sensor.outside", "display_precision": -1}),
     ],
 )
 async def test_update_entity_settings_invalid_args(
@@ -2609,6 +2742,213 @@ async def test_delete_floor(
         await tool.async_call(
             hass, llm.ToolInput(tool.name, {"floor_id": floor.floor_id}), llm_context
         )
+
+
+@pytest.fixture
+def label_tools() -> dict[str, llm.Tool]:
+    """Return the label registry tools by name."""
+    return {
+        tool.name: tool
+        for tool in (
+            GetLabelSettingsTool(),
+            UpdateLabelSettingsTool(),
+            CreateLabelTool(),
+            DeleteLabelTool(),
+        )
+    }
+
+
+async def test_get_label_settings(
+    hass: HomeAssistant,
+    llm_context: llm.LLMContext,
+    label_registry: lr.LabelRegistry,
+    label_tools: dict[str, llm.Tool],
+) -> None:
+    """Test getting the settings of a label."""
+    label_registry.async_create(
+        "Energy", color="green", icon="mdi:flash", description="Uses power"
+    )
+
+    tool = label_tools["config__get_label_settings"]
+    result = await tool.async_call(
+        hass, llm.ToolInput(tool.name, {"label_id": "energy"}), llm_context
+    )
+    assert result == llm.ToolResult(
+        data={
+            "result": {
+                "label_id": "energy",
+                "name": "Energy",
+                "color": "green",
+                "icon": "mdi:flash",
+                "description": "Uses power",
+            }
+        }
+    )
+
+    with pytest.raises(HomeAssistantError, match="Label 'unknown' not found."):
+        await tool.async_call(
+            hass, llm.ToolInput(tool.name, {"label_id": "unknown"}), llm_context
+        )
+
+
+async def test_update_label_settings(
+    hass: HomeAssistant,
+    llm_context: llm.LLMContext,
+    label_registry: lr.LabelRegistry,
+    label_tools: dict[str, llm.Tool],
+) -> None:
+    """Test updating the settings of a label."""
+    label_registry.async_create("Energy", color="green", icon="mdi:flash")
+
+    tool = label_tools["config__update_label_settings"]
+    result = await tool.async_call(
+        hass,
+        llm.ToolInput(
+            tool.name,
+            {
+                "label_id": "energy",
+                "name": "Power",
+                "color": "#ff0000",
+                "description": "Uses power",
+            },
+        ),
+        llm_context,
+    )
+    expected = {
+        "label_id": "energy",
+        "name": "Power",
+        "color": "#ff0000",
+        "icon": "mdi:flash",
+        "description": "Uses power",
+    }
+    assert result == llm.ToolResult(data={"result": expected})
+    entry = label_registry.async_get_label("energy")
+    assert entry is not None
+    assert entry.name == "Power"
+
+    result = await tool.async_call(
+        hass,
+        llm.ToolInput(
+            tool.name,
+            {"label_id": "energy", "color": None, "icon": None, "description": None},
+        ),
+        llm_context,
+    )
+    assert result == llm.ToolResult(
+        data={"result": {**expected, "color": None, "icon": None, "description": None}}
+    )
+
+
+async def test_update_label_settings_errors(
+    hass: HomeAssistant,
+    llm_context: llm.LLMContext,
+    label_registry: lr.LabelRegistry,
+    label_tools: dict[str, llm.Tool],
+) -> None:
+    """Test errors when updating the settings of a label."""
+    label_registry.async_create("Energy")
+    label_registry.async_create("Power")
+
+    tool = label_tools["config__update_label_settings"]
+    with pytest.raises(HomeAssistantError, match="Label 'unknown' not found."):
+        await tool.async_call(
+            hass,
+            llm.ToolInput(tool.name, {"label_id": "unknown", "name": "Water"}),
+            llm_context,
+        )
+
+    with pytest.raises(HomeAssistantError, match="already in use"):
+        await tool.async_call(
+            hass,
+            llm.ToolInput(tool.name, {"label_id": "energy", "name": "power"}),
+            llm_context,
+        )
+
+
+async def test_create_label(
+    hass: HomeAssistant,
+    llm_context: llm.LLMContext,
+    label_registry: lr.LabelRegistry,
+    label_tools: dict[str, llm.Tool],
+) -> None:
+    """Test creating a label."""
+    tool = label_tools["config__create_label"]
+    result = await tool.async_call(
+        hass,
+        llm.ToolInput(tool.name, {"name": "Energy", "color": "amber"}),
+        llm_context,
+    )
+    assert result == llm.ToolResult(
+        data={
+            "result": {
+                "label_id": "energy",
+                "name": "Energy",
+                "color": "amber",
+                "icon": None,
+                "description": None,
+            }
+        }
+    )
+    assert label_registry.async_get_label("energy") is not None
+
+    with pytest.raises(HomeAssistantError, match="already in use"):
+        await tool.async_call(
+            hass, llm.ToolInput(tool.name, {"name": "energy"}), llm_context
+        )
+
+
+async def test_delete_label(
+    hass: HomeAssistant,
+    llm_context: llm.LLMContext,
+    label_registry: lr.LabelRegistry,
+    label_tools: dict[str, llm.Tool],
+) -> None:
+    """Test deleting a label."""
+    label_registry.async_create("Energy")
+
+    tool = label_tools["config__delete_label"]
+    result = await tool.async_call(
+        hass, llm.ToolInput(tool.name, {"label_id": "energy"}), llm_context
+    )
+    assert result == llm.ToolResult(data={"result": {"label_id": "energy"}})
+    assert label_registry.async_get_label("energy") is None
+
+    with pytest.raises(HomeAssistantError, match="Label 'energy' not found."):
+        await tool.async_call(
+            hass, llm.ToolInput(tool.name, {"label_id": "energy"}), llm_context
+        )
+
+
+@pytest.mark.parametrize(
+    ("tool_name", "invalid_args"),
+    [
+        pytest.param("config__get_label_settings", {}, id="get_missing_label_id"),
+        pytest.param("config__create_label", {}, id="create_missing_name"),
+        pytest.param("config__create_label", {"name": " "}, id="create_empty_name"),
+        pytest.param("config__create_label", {"name": "Energy", "color": "rainbow"}),
+        pytest.param(
+            "config__update_label_settings", {"label_id": "energy", "color": "#ff00"}
+        ),
+        pytest.param(
+            "config__update_label_settings", {"label_id": "energy", "icon": "flash"}
+        ),
+        pytest.param(
+            "config__update_label_settings", {"label_id": "energy", "name": None}
+        ),
+        pytest.param("config__delete_label", {"label_id": ""}),
+    ],
+)
+async def test_label_tools_invalid_args(
+    hass: HomeAssistant,
+    llm_context: llm.LLMContext,
+    label_tools: dict[str, llm.Tool],
+    tool_name: str,
+    invalid_args: dict[str, Any],
+) -> None:
+    """Test that invalid arguments raise probatio.Invalid."""
+    tool = label_tools[tool_name]
+    with pytest.raises(probatio.Invalid):
+        await tool.async_call(hass, llm.ToolInput(tool.name, invalid_args), llm_context)
 
 
 def _create_parent_and_child(
