@@ -207,21 +207,23 @@ class HueFlowHandler(ConfigFlow, domain=DOMAIN):
             self.hass.config.location_name, max_length=19
         )
         websession = aiohttp_client.async_get_clientsession(self.hass, verify_ssl=False)
-        async with asyncio.timeout(LINK_TIMEOUT):
-            while True:
-                try:
-                    # A request that hangs must not be reported as a missed
-                    # button press when the outer timeout expires
-                    async with asyncio.timeout(LINK_REQUEST_TIMEOUT):
-                        return await create_app_key(
-                            bridge.host,
-                            f"home-assistant#{device_name}",
-                            websession=websession,
-                        )
-                except LinkButtonNotPressed:
-                    await asyncio.sleep(LINK_POLL_INTERVAL)
-                except TimeoutError as err:
-                    raise CannotConnect from err
+        # The deadline is only checked after the bridge answers, so a request
+        # that hangs is reported as a connection failure, not a missed press
+        deadline = self.hass.loop.time() + LINK_TIMEOUT
+        while True:
+            try:
+                async with asyncio.timeout(LINK_REQUEST_TIMEOUT):
+                    return await create_app_key(
+                        bridge.host,
+                        f"home-assistant#{device_name}",
+                        websession=websession,
+                    )
+            except LinkButtonNotPressed:
+                if self.hass.loop.time() >= deadline:
+                    raise TimeoutError from None
+                await asyncio.sleep(LINK_POLL_INTERVAL)
+            except TimeoutError as err:
+                raise CannotConnect from err
 
     async def async_step_wait_for_button(
         self, user_input: dict[str, Any] | None = None

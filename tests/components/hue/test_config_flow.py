@@ -1,5 +1,6 @@
 """Tests for Philips Hue config flow."""
 
+import asyncio
 from datetime import timedelta
 from ipaddress import ip_address
 from unittest.mock import AsyncMock, Mock, patch
@@ -394,6 +395,43 @@ async def test_flow_link_cannot_connect(
     result = await _start_link_flow(hass)
 
     result = await _press_link_button(hass, result["flow_id"])
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "cannot_connect"
+
+
+async def test_flow_link_request_hangs_past_deadline(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_create_app_key: AsyncMock,
+) -> None:
+    """Test a request that hangs past the link deadline aborts with cannot_connect."""
+
+    async def _hang(*args: object, **kwargs: object) -> str:
+        await asyncio.Event().wait()
+        raise AssertionError("unreachable")
+
+    mock_create_app_key.side_effect = LinkButtonNotPressed
+    result = await _start_link_flow(hass)
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={}
+    )
+    assert result["type"] is FlowResultType.SHOW_PROGRESS
+    await hass.async_block_till_done()
+
+    # The next request starts after the deadline and never gets an answer
+    mock_create_app_key.side_effect = _hang
+    freezer.tick(timedelta(seconds=60))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert mock_create_app_key.call_count == 2
+
+    freezer.tick(timedelta(seconds=10))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "cannot_connect"
