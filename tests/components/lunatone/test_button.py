@@ -15,10 +15,10 @@ import pytest
 from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
+from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, ButtonService
 from homeassistant.components.lunatone.const import DOMAIN
 from homeassistant.components.lunatone.coordinator import DEFAULT_INFO_UPDATE_INTERVAL
-from homeassistant.const import ATTR_ENTITY_ID, Platform
+from homeassistant.const import Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
@@ -80,9 +80,9 @@ async def test_pressing_button(
 
     await hass.services.async_call(
         BUTTON_DOMAIN,
-        SERVICE_PRESS,
+        ButtonService.PRESS,
         {
-            ATTR_ENTITY_ID: "button.test_scan_start_system_extension",
+            TargetKey.ENTITY_ID: "button.test_scan_start_system_extension",
         },
         blocking=True,
     )
@@ -92,9 +92,9 @@ async def test_pressing_button(
 
     await hass.services.async_call(
         BUTTON_DOMAIN,
-        SERVICE_PRESS,
+        ButtonService.PRESS,
         {
-            ATTR_ENTITY_ID: "button.test_scan_cancel",
+            TargetKey.ENTITY_ID: "button.test_scan_cancel",
         },
         blocking=True,
     )
@@ -102,9 +102,9 @@ async def test_pressing_button(
 
     await hass.services.async_call(
         BUTTON_DOMAIN,
-        SERVICE_PRESS,
+        ButtonService.PRESS,
         {
-            ATTR_ENTITY_ID: "button.test_scan_start_new_installation",
+            TargetKey.ENTITY_ID: "button.test_scan_start_new_installation",
         },
         blocking=True,
     )
@@ -114,9 +114,9 @@ async def test_pressing_button(
 
     await hass.services.async_call(
         BUTTON_DOMAIN,
-        SERVICE_PRESS,
+        ButtonService.PRESS,
         {
-            ATTR_ENTITY_ID: "button.test_scan_cancel",
+            TargetKey.ENTITY_ID: "button.test_scan_cancel",
         },
         blocking=True,
     )
@@ -124,9 +124,9 @@ async def test_pressing_button(
 
     await hass.services.async_call(
         BUTTON_DOMAIN,
-        SERVICE_PRESS,
+        ButtonService.PRESS,
         {
-            ATTR_ENTITY_ID: "button.test_scan_read_current_devices",
+            TargetKey.ENTITY_ID: "button.test_scan_read_current_devices",
         },
         blocking=True,
     )
@@ -136,9 +136,9 @@ async def test_pressing_button(
 
     await hass.services.async_call(
         BUTTON_DOMAIN,
-        SERVICE_PRESS,
+        ButtonService.PRESS,
         {
-            ATTR_ENTITY_ID: "button.test_scan_cancel",
+            TargetKey.ENTITY_ID: "button.test_scan_cancel",
         },
         blocking=True,
     )
@@ -150,9 +150,9 @@ async def test_pressing_button(
     ):
         await hass.services.async_call(
             BUTTON_DOMAIN,
-            SERVICE_PRESS,
+            ButtonService.PRESS,
             {
-                ATTR_ENTITY_ID: "button.test_scan_cancel",
+                TargetKey.ENTITY_ID: "button.test_scan_cancel",
             },
             blocking=True,
         )
@@ -178,9 +178,9 @@ async def test_pressing_button_handles_connection_error(
     with pytest.raises(HomeAssistantError) as err:
         await hass.services.async_call(
             BUTTON_DOMAIN,
-            SERVICE_PRESS,
+            ButtonService.PRESS,
             {
-                ATTR_ENTITY_ID: "button.test_scan_start_system_extension",
+                TargetKey.ENTITY_ID: "button.test_scan_start_system_extension",
             },
             blocking=True,
         )
@@ -217,8 +217,8 @@ async def test_cancel_scan_uses_refreshed_scan_state(
 
     await hass.services.async_call(
         BUTTON_DOMAIN,
-        SERVICE_PRESS,
-        {ATTR_ENTITY_ID: "button.test_scan_cancel"},
+        ButtonService.PRESS,
+        {TargetKey.ENTITY_ID: "button.test_scan_cancel"},
         blocking=True,
     )
 
@@ -245,8 +245,8 @@ async def test_cancel_scan_aborts_when_refresh_fails(
     with pytest.raises(HomeAssistantError) as err:
         await hass.services.async_call(
             BUTTON_DOMAIN,
-            SERVICE_PRESS,
-            {ATTR_ENTITY_ID: "button.test_scan_cancel"},
+            ButtonService.PRESS,
+            {TargetKey.ENTITY_ID: "button.test_scan_cancel"},
             blocking=True,
         )
 
@@ -287,8 +287,8 @@ async def test_pressing_line_scan_button(
 
     await hass.services.async_call(
         BUTTON_DOMAIN,
-        SERVICE_PRESS,
-        {ATTR_ENTITY_ID: (f"button.dali_line_{line_id}_scan_{entity_suffix}")},
+        ButtonService.PRESS,
+        {TargetKey.ENTITY_ID: (f"button.dali_line_{line_id}_scan_{entity_suffix}")},
         blocking=True,
     )
 
@@ -341,9 +341,9 @@ async def test_line_scan_button_busy_target(
     ):
         await hass.services.async_call(
             BUTTON_DOMAIN,
-            SERVICE_PRESS,
+            ButtonService.PRESS,
             {
-                ATTR_ENTITY_ID: (
+                TargetKey.ENTITY_ID: (
                     f"button.dali_line_{line_id}_scan_start_system_extension"
                 )
             },
@@ -389,8 +389,12 @@ async def test_line_scan_button_idle_target_when_another_line_busy(
 
     await hass.services.async_call(
         BUTTON_DOMAIN,
-        SERVICE_PRESS,
-        {ATTR_ENTITY_ID: (f"button.dali_line_{line_id}_scan_start_system_extension")},
+        ButtonService.PRESS,
+        {
+            TargetKey.ENTITY_ID: (
+                f"button.dali_line_{line_id}_scan_start_system_extension"
+            )
+        },
         blocking=True,
     )
 
