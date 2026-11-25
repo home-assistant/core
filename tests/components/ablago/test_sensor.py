@@ -72,15 +72,21 @@ async def test_unreachable(
     assert hass.states.get(NEW_MAIL).state == "3"
 
 
+@pytest.mark.usefixtures("init_integration")
 async def test_key_revoked(
     hass: HomeAssistant,
-    init_integration: MockConfigEntry,
     mock_ablago_client: MagicMock,
     freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Test a key revoked while running makes the entities unavailable."""
+    """Test a key revoked while running makes the entities unavailable and stops polling."""
     mock_ablago_client.zaehler.side_effect = AblagoAuthError("401", status=401)
     freezer.tick(UPDATE_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
     assert hass.states.get(NEW_MAIL).state == STATE_UNAVAILABLE
+    calls = mock_ablago_client.zaehler.call_count
+
+    freezer.tick(UPDATE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert mock_ablago_client.zaehler.call_count == calls

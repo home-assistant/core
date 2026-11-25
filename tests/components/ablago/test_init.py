@@ -47,7 +47,8 @@ async def test_setup_auth_failed(
     mock_config_entry: MockConfigEntry,
     mock_ablago_client: MagicMock,
 ) -> None:
-    """Test a rejected key stops the setup."""
+    """Test a rejected key stops the setup as an authentication failure."""
     mock_ablago_client.zaehler.side_effect = AblagoAuthError("401", status=401)
     await setup_integration(hass, mock_config_entry)
     assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
+    assert mock_config_entry.error_reason_translation_key == "invalid_auth"
