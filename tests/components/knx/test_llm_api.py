@@ -50,6 +50,8 @@ _EXPECTED_TOOLS = {
     "create_device",
     "create_entity",
     "decode_payload",
+    "delete_device",
+    "delete_entity",
     "describe_dpt",
     "describe_channel",
     "describe_function",
@@ -57,6 +59,7 @@ _EXPECTED_TOOLS = {
     "encode_value",
     "find_similar_channels",
     "get_connection_status",
+    "get_entity_config",
     "get_entity_schema",
     "get_last_values",
     "get_project_info",
@@ -67,10 +70,12 @@ _EXPECTED_TOOLS = {
     "list_communication_objects",
     "list_devices",
     "list_dpts",
+    "list_entities",
     "list_entity_suggestions",
     "list_functions",
     "list_group_addresses",
     "query_telegrams",
+    "update_entity",
     "validate_entity",
     *_BUS_TOOLS,
 }
@@ -162,6 +167,10 @@ async def test_llm_api_registered_after_setup(
         pytest.param("validate_entity", True, False, True, False, id="validate"),
         pytest.param("create_entity", False, False, False, False, id="create_entity"),
         pytest.param("create_device", False, False, False, False, id="create_device"),
+        pytest.param("list_entities", True, False, True, False, id="list_entities"),
+        pytest.param("update_entity", False, True, True, False, id="update_entity"),
+        pytest.param("delete_entity", False, True, False, False, id="delete_entity"),
+        pytest.param("delete_device", False, True, False, False, id="delete_device"),
     ],
 )
 async def test_tools_declare_their_safety_hints(
@@ -1080,3 +1089,168 @@ async def test_create_device(
 
     with pytest.raises(HomeAssistantError, match="Area garage not found"):
         await _call_api(hass, "create_device", {"name": "Other", "area_id": "garage"})
+
+
+async def _create_switch(
+    hass: HomeAssistant, name: str, write: str, device_info: str | None = None
+) -> str:
+    """Create a switch and return its entity id."""
+    result = await _call_api(
+        hass,
+        "create_entity",
+        {
+            "platform": "switch",
+            "entity": {"name": name, "device_info": device_info},
+            "knx": {"ga_switch": {"write": write}},
+        },
+    )
+    assert result["success"] is True
+    return result["entity_id"]
+
+
+async def test_list_entities(hass: HomeAssistant, knx: KNXTestKit) -> None:
+    """Entities are listed with their group addresses, filtered and paginated."""
+    await knx.setup_integration()
+    device = await _call_api(hass, "create_device", {"name": "Actuator"})
+    await _create_switch(hass, "B", "1/2/4", device["device_info"])
+    await _create_switch(hass, "A", "1/2/3")
+
+    result = await _call_api(hass, "list_entities", {})
+    assert result["total_count"] == 2
+    assert result["entities"] == [
+        {
+            "entity_id": "switch.a",
+            "platform": "switch",
+            "name": "A",
+            "device_id": None,
+            "disabled": False,
+            "group_addresses": ["1/2/3"],
+        },
+        {
+            "entity_id": "switch.actuator_b",
+            "platform": "switch",
+            "name": "B",
+            "device_id": device["device_id"],
+            "disabled": False,
+            "group_addresses": ["1/2/4"],
+        },
+    ]
+
+    result = await _call_api(hass, "list_entities", {"limit": 1})
+    assert [entity["entity_id"] for entity in result["entities"]] == ["switch.a"]
+    assert result["next_offset"] == 1
+
+    result = await _call_api(hass, "list_entities", {"platform": "light"})
+    assert result["entities"] == []
+
+
+async def test_update_entity(hass: HomeAssistant, knx: KNXTestKit) -> None:
+    """The configuration read back can be changed and written again."""
+    await knx.setup_integration()
+    entity_id = await _create_switch(hass, "Socket", "1/2/3")
+
+    config = await _call_api(hass, "get_entity_config", {"entity_id": entity_id})
+    assert config["platform"] == "switch"
+    assert config["data"]["entity"]["name"] == "Socket"
+    assert config["data"]["knx"]["ga_switch"]["write"] == "1/2/3"
+
+    config["data"]["knx"]["ga_switch"]["write"] = "1/2/9"
+    result = await _call_api(
+        hass, "update_entity", {"entity_id": entity_id, **config["data"]}
+    )
+    assert result == {"success": True, "entity_id": entity_id}
+
+    await hass.services.async_call(
+        "switch", "turn_on", {"entity_id": entity_id}, blocking=True
+    )
+    await knx.assert_write("1/2/9", True)
+    config = await _call_api(hass, "get_entity_config", {"entity_id": entity_id})
+    assert config["data"]["knx"]["ga_switch"]["write"] == "1/2/9"
+
+
+async def test_update_entity_invalid_configuration_is_a_result(
+    hass: HomeAssistant, knx: KNXTestKit
+) -> None:
+    """An invalid configuration tells what to correct and changes nothing."""
+    await knx.setup_integration()
+    entity_id = await _create_switch(hass, "Socket", "1/2/3")
+
+    result = await _call_api(
+        hass,
+        "update_entity",
+        {"entity_id": entity_id, "entity": {"name": "Socket"}, "knx": {}},
+    )
+
+    assert result["success"] is False
+    assert result["errors"][0]["path"][:3] == ["data", "knx", "ga_switch"]
+    config = await _call_api(hass, "get_entity_config", {"entity_id": entity_id})
+    assert config["data"]["knx"]["ga_switch"]["write"] == "1/2/3"
+
+
+async def test_delete_entity(
+    hass: HomeAssistant, knx: KNXTestKit, entity_registry: er.EntityRegistry
+) -> None:
+    """An entity is removed with its configuration."""
+    await knx.setup_integration()
+    entity_id = await _create_switch(hass, "Socket", "1/2/3")
+
+    assert await _call_api(hass, "delete_entity", {"entity_id": entity_id}) == {
+        "success": True
+    }
+
+    assert entity_registry.async_get(entity_id) is None
+    assert not hass.data[KNX_MODULE_KEY].config_store.get_entity_uids()
+
+
+@pytest.mark.parametrize(
+    ("tool_name", "args"),
+    [
+        pytest.param("get_entity_config", {}, id="get_entity_config"),
+        pytest.param("delete_entity", {}, id="delete_entity"),
+        pytest.param("update_entity", {"entity": {}, "knx": {}}, id="update_entity"),
+    ],
+)
+async def test_unknown_entity_is_a_tool_error(
+    hass: HomeAssistant, knx: KNXTestKit, tool_name: str, args: dict[str, Any]
+) -> None:
+    """An entity that is not a KNX UI entity is reported as a tool error."""
+    await knx.setup_integration()
+
+    with pytest.raises(HomeAssistantError, match="Entity not found") as err:
+        await _call_api(hass, tool_name, {"entity_id": "switch.unknown", **args})
+    assert err.value.translation_key == "llm_tool_failed"
+
+
+async def test_delete_device(
+    hass: HomeAssistant,
+    knx: KNXTestKit,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """A device is removed together with its entities; others stay."""
+    await knx.setup_integration()
+    device = await _call_api(hass, "create_device", {"name": "Actuator"})
+    in_device = await _create_switch(hass, "A", "1/2/3", device["device_info"])
+    standalone = await _create_switch(hass, "B", "1/2/4")
+
+    assert await _call_api(
+        hass, "delete_device", {"device_id": device["device_id"]}
+    ) == {"success": True}
+
+    assert device_registry.async_get(device["device_id"]) is None
+    assert entity_registry.async_get(in_device) is None
+    assert entity_registry.async_get(standalone) is not None
+
+
+async def test_delete_device_refuses_other_devices(
+    hass: HomeAssistant, knx: KNXTestKit, device_registry: dr.DeviceRegistry
+) -> None:
+    """The interface device and devices of other integrations are left alone."""
+    await knx.setup_integration()
+    interface = hass.data[KNX_MODULE_KEY].interface_device.device
+
+    with pytest.raises(HomeAssistantError, match="can not be removed"):
+        await _call_api(hass, "delete_device", {"device_id": interface.id})
+    with pytest.raises(HomeAssistantError, match="KNX device not found"):
+        await _call_api(hass, "delete_device", {"device_id": "unknown"})
+    assert device_registry.async_get(interface.id) is not None

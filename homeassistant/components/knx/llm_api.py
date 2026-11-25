@@ -22,14 +22,14 @@ from xknx.exceptions import XKNXException
 from xknxproject import mcp as xknxproject_mcp
 from xknxproject.models import KNXProject as KNXProjectModel
 
-from homeassistant.const import CONF_PLATFORM
+from homeassistant.const import CONF_ENTITY_ID, CONF_PLATFORM
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import llm
+from homeassistant.helpers import device_registry as dr, llm
 from homeassistant.util.json import JsonObjectType
 
 from .const import DOMAIN, SUPPORTED_PLATFORMS_UI
-from .device import async_create_ui_device
+from .device import async_create_ui_device, async_remove_ui_entities_of_device
 from .storage.config_store import ConfigStoreException
 from .storage.const import CONF_DATA
 from .storage.entity_store_validation import (
@@ -55,7 +55,9 @@ API_PROMPT = (
     "list_entity_suggestions and pass a suggestion id to create_entity, or look "
     "up the options of a platform with get_entity_schema and the group addresses "
     "in the ETS project. Use validate_entity to check a configuration without "
-    "creating anything. Entities can be grouped in a device made by create_device."
+    "creating anything. Entities can be grouped in a device made by create_device. "
+    "Entities created this way are listed by list_entities; update_entity "
+    "replaces the configuration get_entity_config returns."
 )
 
 
@@ -90,6 +92,14 @@ _BUS_WRITE = llm.ToolAnnotations(
 # nothing is sent to the bus.
 _CONFIG_ADD = llm.ToolAnnotations(
     read_only=False, destructive=False, idempotent=False, open_world=False
+)
+# Replaces or removes Home Assistant configuration. Replacing with the same
+# configuration again changes nothing; removing again fails.
+_CONFIG_REPLACE = llm.ToolAnnotations(
+    read_only=False, destructive=True, idempotent=True, open_world=False
+)
+_CONFIG_REMOVE = llm.ToolAnnotations(
+    read_only=False, destructive=True, idempotent=False, open_world=False
 )
 
 # The library ``_paginate`` helpers treat a negative limit as "no limit", which
@@ -521,6 +531,84 @@ async def _create_device(knx: KNXModule, args: Mapping[str, Any]) -> Any:
     }
 
 
+async def _list_entities(knx: KNXModule, args: Mapping[str, Any]) -> Any:
+    """The entities created from the UI or by create_entity, with their addresses."""
+    group_addresses: dict[tuple[str, str], list[str]] = {}
+    for group_address, users in knx.get_group_address_entities().items():
+        for user in users:
+            group_addresses.setdefault(
+                (user["platform"], user["unique_id"]), []
+            ).append(group_address)
+    entities = [
+        {
+            CONF_ENTITY_ID: entry.entity_id,
+            CONF_PLATFORM: entry.domain,
+            "name": entry.name or entry.original_name,
+            "device_id": entry.device_id,
+            "disabled": entry.disabled,
+            "group_addresses": sorted(
+                group_addresses.get((entry.domain, entry.unique_id), []),
+                key=_address_order,
+            ),
+        }
+        for entry in sorted(
+            knx.config_store.get_entity_entries(), key=lambda entry: entry.entity_id
+        )
+        if args[CONF_PLATFORM] in (None, entry.domain)
+    ]
+    return _paginate(entities, args, "entities")
+
+
+async def _get_entity_config(knx: KNXModule, args: Mapping[str, Any]) -> Any:
+    """The stored configuration of an entity."""
+    return knx.config_store.get_entity_config(args[CONF_ENTITY_ID])
+
+
+async def _update_entity(knx: KNXModule, args: Mapping[str, Any]) -> Any:
+    """Replace the configuration of an entity.
+
+    As for a new entity, an invalid configuration is a result, not an error.
+    """
+    entity_id: str = args[CONF_ENTITY_ID]
+    platform = knx.config_store.get_entity_config(entity_id)[CONF_PLATFORM]
+    try:
+        validated = validate_entity_data(
+            {
+                CONF_PLATFORM: platform,
+                CONF_DATA: {"entity": args["entity"], "knx": args["knx"]},
+            }
+        )
+    except EntityStoreValidationException as err:
+        return err.validation_error
+    await knx.config_store.update_entity(
+        validated[CONF_PLATFORM], entity_id, validated[CONF_DATA]
+    )
+    return {"success": True, CONF_ENTITY_ID: entity_id}
+
+
+async def _delete_entity(knx: KNXModule, args: Mapping[str, Any]) -> Any:
+    """Delete an entity and its configuration."""
+    await knx.config_store.delete_entity(args[CONF_ENTITY_ID])
+    return {"success": True}
+
+
+async def _delete_device(knx: KNXModule, args: Mapping[str, Any]) -> Any:
+    """Delete a device and its entities, as removing it in the UI does."""
+    device_id: str = args["device_id"]
+    device_registry = dr.async_get(knx.hass)
+    device = device_registry.async_get(device_id, include_composite_devices=False)
+    if device is None or device.config_entry_id != knx.entry.entry_id:
+        raise ValueError(f"KNX device not found: {device_id}")
+    if not await async_remove_ui_entities_of_device(knx.hass, knx, device):
+        raise ValueError(
+            f"Device {device_id} can not be removed: it is the KNX interface or "
+            "has entities configured in YAML"
+        )
+    if device_registry.async_get(device_id):
+        device_registry.async_remove_device(device_id)
+    return {"success": True}
+
+
 _PLATFORM_VALIDATOR = probatio.In(sorted(SUPPORTED_PLATFORMS_UI))
 _ENTITY_MARKERS: dict[Any, Any] = {
     probatio.Optional(
@@ -856,6 +944,105 @@ def _tool_specs() -> list[_ToolSpec]:
             ),
             _create_device,
             _CONFIG_ADD,
+        ),
+        _ToolSpec(
+            "list_entities",
+            "List configured entities",
+            "KNX entities created from the UI or by create_entity, with the "
+            "group addresses they use and the device they belong to. Entities "
+            "configured in YAML are not included.",
+            probatio.Schema(
+                {
+                    probatio.Optional(
+                        CONF_PLATFORM,
+                        description='Only entities of this platform, e.g. "light".',
+                        default=None,
+                    ): probatio.Any(None, _PLATFORM_VALIDATOR),
+                    **_PAGINATION_MARKERS,
+                }
+            ),
+            _list_entities,
+            _READ_ONLY,
+        ),
+        _ToolSpec(
+            "get_entity_config",
+            "Entity configuration",
+            "The stored configuration of an entity from list_entities: its "
+            "platform and the `entity` and `knx` options.",
+            probatio.Schema(
+                {
+                    probatio.Required(
+                        CONF_ENTITY_ID,
+                        description='Entity id, e.g. "light.kitchen".',
+                    ): str
+                }
+            ),
+            _get_entity_config,
+            _READ_ONLY,
+        ),
+        _ToolSpec(
+            "update_entity",
+            "Update an entity",
+            "Replace the configuration of an entity from list_entities. Options "
+            "left out are reset to their defaults, so start from "
+            "get_entity_config. The platform can not be changed. Returns the "
+            "invalid options if the configuration is not valid.",
+            probatio.Schema(
+                {
+                    probatio.Required(
+                        CONF_ENTITY_ID,
+                        description='Entity id, e.g. "light.kitchen".',
+                    ): str,
+                    probatio.Required(
+                        "entity",
+                        description=(
+                            "Common entity options: `name`, `device_info` and "
+                            "`entity_category`."
+                        ),
+                    ): dict,
+                    probatio.Required(
+                        "knx",
+                        description=(
+                            "Platform options as described by get_entity_schema."
+                        ),
+                    ): dict,
+                }
+            ),
+            _update_entity,
+            _CONFIG_REPLACE,
+        ),
+        _ToolSpec(
+            "delete_entity",
+            "Delete an entity",
+            "Delete an entity from list_entities together with its configuration.",
+            probatio.Schema(
+                {
+                    probatio.Required(
+                        CONF_ENTITY_ID,
+                        description='Entity id, e.g. "light.kitchen".',
+                    ): str
+                }
+            ),
+            _delete_entity,
+            _CONFIG_REMOVE,
+        ),
+        _ToolSpec(
+            "delete_device",
+            "Delete a device",
+            "Delete a device made by create_device or in the UI, together with "
+            "all entities assigned to it.",
+            probatio.Schema(
+                {
+                    probatio.Required(
+                        "device_id",
+                        description=(
+                            "Device id as returned by create_device or list_entities."
+                        ),
+                    ): str
+                }
+            ),
+            _delete_device,
+            _CONFIG_REMOVE,
         ),
         _ToolSpec(
             "list_dpts",
