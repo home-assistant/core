@@ -43,7 +43,10 @@ from homeassistant.config_entries import (
     ConfigEntryState,
     ConfigFlow,
     ConfigFlowResult,
+    ConfigSubentryData,
+    ConfigSubentryFlow,
     OptionsFlow,
+    SubentryFlowResult,
 )
 from homeassistant.core import Context, HomeAssistant, callback
 from homeassistant.exceptions import (
@@ -3097,8 +3100,87 @@ async def test_reconfigure_oauth_errors(
         ),
         pytest.param(
             {"entry_id": f"{TEST_DOMAIN}:6001"},
-            "Specify 'flow_type' ('options' or 'reconfigure') when passing 'entry_id'.",
+            "Specify 'flow_type' ('options', 'reconfigure', or 'subentry') when passing 'entry_id'.",
             id="entry_id_without_flow_type",
+        ),
+        pytest.param(
+            {"domain": TEST_DOMAIN, "subentry_type": "agent"},
+            "'subentry_type' and 'subentry_id' are only valid when flow_type is 'subentry' or 'reconfigure'.",
+            id="subentry_type_with_config_flow",
+        ),
+        pytest.param(
+            {
+                "flow_type": "options",
+                "entry_id": f"{TEST_DOMAIN}:6001",
+                "subentry_id": "agent:7001",
+            },
+            "'subentry_type' and 'subentry_id' are only valid when flow_type is 'subentry' or 'reconfigure'.",
+            id="subentry_id_with_options_flow",
+        ),
+        pytest.param(
+            {"flow_type": "subentry"},
+            "'entry_id' is required when flow_type is 'subentry'.",
+            id="missing_entry_id_for_subentry",
+        ),
+        pytest.param(
+            {"flow_type": "subentry", "entry_id": f"{TEST_DOMAIN}:6001"},
+            "'subentry_type' is required when starting a subentry flow.",
+            id="missing_subentry_type",
+        ),
+        pytest.param(
+            {
+                "flow_type": "reconfigure",
+                "entry_id": f"{TEST_DOMAIN}:6001",
+                "subentry_type": "agent",
+            },
+            "'subentry_id' is required when reconfiguring a subentry.",
+            id="reconfigure_subentry_missing_id",
+        ),
+        pytest.param(
+            {
+                "flow_type": "subentry",
+                "entry_id": f"{TEST_DOMAIN}:6001",
+                "subentry_id": "invalid",
+            },
+            "Subentry 'invalid' not found.",
+            id="malformed_subentry_id",
+        ),
+        pytest.param(
+            {
+                "flow_type": "subentry",
+                "entry_id": f"{TEST_DOMAIN}:6001",
+                "subentry_id": "agent:9999",
+            },
+            "Subentry 'agent:9999' not found.",
+            id="unknown_subentry_id",
+        ),
+        pytest.param(
+            {
+                "flow_type": "subentry",
+                "entry_id": f"{TEST_DOMAIN}:6001",
+                "subentry_type": "other",
+                "subentry_id": "agent:7001",
+            },
+            "Subentry 'agent:7001' does not match subentry_type 'other'.",
+            id="mismatched_subentry_type",
+        ),
+        pytest.param(
+            {
+                "flow_type": "subentry",
+                "entry_id": f"{TEST_DOMAIN}:6001",
+                "subentry_type": "unsupported",
+            },
+            f"Config entry '{TEST_DOMAIN}:6001' does not support subentry type 'unsupported'.",
+            id="unsupported_subentry_type",
+        ),
+        pytest.param(
+            {
+                "flow_type": "subentry",
+                "entry_id": f"{TEST_DOMAIN}:6001",
+                "subentry_id": "agent:7001",
+            },
+            "Subentry 'agent:7001' does not support reconfigure.",
+            id="unsupported_subentry_reconfigure",
         ),
         pytest.param(
             {},
@@ -3173,6 +3255,15 @@ async def test_start_flow_entry_validation_errors(
         title="Basic",
         entry_id="01J00000000000000000006001",
         state=ConfigEntryState.LOADED,
+        subentries_data=[
+            ConfigSubentryData(
+                data={},
+                subentry_id="01J00000000000000000007001",
+                subentry_type="agent",
+                title="Basic Agent",
+                unique_id=None,
+            )
+        ],
     ).add_to_hass(hass)
     MockConfigEntry(
         domain=TEST_DOMAIN,
@@ -3199,8 +3290,24 @@ async def test_start_flow_entry_validation_errors(
         state=ConfigEntryState.SETUP_ERROR,
     ).add_to_hass(hass)
 
+    class NoReconfigureSubentryFlow(ConfigSubentryFlow):
+        """Subentry flow without reconfigure support."""
+
+        async def async_step_user(
+            self, user_input: dict[str, Any] | None = None
+        ) -> SubentryFlowResult:
+            return self.async_show_form(step_id="user")
+
     class BasicFlow(ConfigFlow):
         """Basic flow without options or reconfigure."""
+
+        @classmethod
+        @callback
+        @override
+        def async_get_supported_subentry_types(
+            cls, config_entry: ConfigEntry
+        ) -> dict[str, type[ConfigSubentryFlow]]:
+            return {"agent": NoReconfigureSubentryFlow}
 
     with mock_config_flow(TEST_DOMAIN, BasicFlow):
         res = await llm_api.async_call_tool(
@@ -3208,3 +3315,664 @@ async def test_start_flow_entry_validation_errors(
         )
 
     assert res == llm.ToolResult(data={"error": expected_error}, error=True)
+
+
+@pytest.mark.parametrize("ignore_translations_for_mock_domains", [TEST_DOMAIN])
+@pytest.mark.usefixtures("ignore_translations_for_mock_domains")
+async def test_get_config_entries_subentries(
+    hass: HomeAssistant, llm_api: llm.APIInstance
+) -> None:
+    """Test GetConfigEntriesTool exposes supported_subentry_types and short subentry IDs."""
+    mock_integration(hass, MockModule(TEST_DOMAIN))
+    mock_platform(hass, f"{TEST_DOMAIN}.config_flow", None)
+
+    class ReconfigurableSubentryFlow(ConfigSubentryFlow):
+        """Subentry flow supporting reconfigure."""
+
+        async def async_step_user(
+            self, user_input: dict[str, Any] | None = None
+        ) -> SubentryFlowResult:
+            return self.async_show_form(step_id="user")
+
+        async def async_step_reconfigure(
+            self, user_input: dict[str, Any] | None = None
+        ) -> SubentryFlowResult:
+            return self.async_show_form(step_id="reconfigure")
+
+    class StaticSubentryFlow(ConfigSubentryFlow):
+        """Subentry flow without reconfigure."""
+
+        async def async_step_user(
+            self, user_input: dict[str, Any] | None = None
+        ) -> SubentryFlowResult:
+            return self.async_show_form(step_id="user")
+
+    class FlowWithSubentries(ConfigFlow):
+        """Config flow with subentry support."""
+
+        @classmethod
+        @callback
+        @override
+        def async_get_supported_subentry_types(
+            cls, config_entry: ConfigEntry
+        ) -> dict[str, type[ConfigSubentryFlow]]:
+            return {
+                "agent": ReconfigurableSubentryFlow,
+                "task": StaticSubentryFlow,
+            }
+
+    MockConfigEntry(
+        domain=TEST_DOMAIN,
+        title="AI Hub",
+        entry_id="01J00000000000000000008001",
+        state=ConfigEntryState.LOADED,
+        subentries_data=[
+            ConfigSubentryData(
+                data={},
+                subentry_id="01J000000000000000000A8K2M",
+                subentry_type="agent",
+                title="Agent One",
+                unique_id=None,
+            ),
+            ConfigSubentryData(
+                data={},
+                subentry_id="01J000000000000000000B8K2M",
+                subentry_type="agent",
+                title="Agent Two",
+                unique_id=None,
+            ),
+            ConfigSubentryData(
+                data={},
+                subentry_id="01J00000000000000000009001",
+                subentry_type="task",
+                title="Task Runner",
+                unique_id=None,
+            ),
+        ],
+    ).add_to_hass(hass)
+    MockConfigEntry(
+        domain=TEST_DOMAIN,
+        title="Disabled Hub",
+        entry_id="01J00000000000000000008002",
+        disabled_by=ConfigEntryDisabler.USER,
+    ).add_to_hass(hass)
+
+    with mock_config_flow(TEST_DOMAIN, FlowWithSubentries):
+        res = await llm_api.async_call_tool(
+            llm.ToolInput("config__get_config_entries", {"domain": TEST_DOMAIN})
+        )
+        ambiguous = await llm_api.async_call_tool(
+            llm.ToolInput(
+                "config__start_flow",
+                {
+                    "flow_type": "subentry",
+                    "entry_id": f"{TEST_DOMAIN}:8001",
+                    "subentry_id": "agent:8K2M",
+                },
+            )
+        )
+
+    assert ambiguous == llm.ToolResult(
+        data={"error": "Subentry 'agent:8K2M' not found."}, error=True
+    )
+
+    assert res == llm.ToolResult(
+        data={
+            "result": [
+                {
+                    "entry_id": f"{TEST_DOMAIN}:8001",
+                    "domain": TEST_DOMAIN,
+                    "title": "AI Hub",
+                    "state": "loaded",
+                    "supported_subentry_types": {
+                        "agent": {"supports_reconfigure": True},
+                        "task": {"supports_reconfigure": False},
+                    },
+                    "subentries": [
+                        {
+                            "subentry_id": "agent:A8K2M",
+                            "subentry_type": "agent",
+                            "title": "Agent One",
+                        },
+                        {
+                            "subentry_id": "agent:B8K2M",
+                            "subentry_type": "agent",
+                            "title": "Agent Two",
+                        },
+                        {
+                            "subentry_id": "task:9001",
+                            "subentry_type": "task",
+                            "title": "Task Runner",
+                        },
+                    ],
+                },
+                {
+                    "entry_id": f"{TEST_DOMAIN}:8002",
+                    "domain": TEST_DOMAIN,
+                    "title": "Disabled Hub",
+                    "state": "not_loaded",
+                    "disabled_by": "user",
+                },
+            ]
+        }
+    )
+
+
+@pytest.mark.parametrize("ignore_translations_for_mock_domains", [TEST_DOMAIN])
+@pytest.mark.parametrize(
+    "mock_translations",
+    [
+        {
+            "config_subentries": {
+                f"component.{TEST_DOMAIN}.config_subentries.agent.step.user.title": "Add agent",
+                f"component.{TEST_DOMAIN}.config_subentries.agent.step.user.data.name": "Agent name",
+                f"component.{TEST_DOMAIN}.config_subentries.agent.error.invalid_name": "Invalid agent name",
+                f"component.{TEST_DOMAIN}.config_subentries.agent.create_entry.default": "Agent created",
+            }
+        }
+    ],
+    indirect=True,
+)
+@pytest.mark.usefixtures("ignore_translations_for_mock_domains", "mock_translations")
+async def test_subentry_create_flow(
+    hass: HomeAssistant, llm_api: llm.APIInstance
+) -> None:
+    """Test creating a subentry via start_flow and configure_flow."""
+    mock_integration(hass, MockModule(TEST_DOMAIN))
+    mock_platform(hass, f"{TEST_DOMAIN}.config_flow", None)
+
+    entry = MockConfigEntry(
+        domain=TEST_DOMAIN,
+        title="AI Hub",
+        entry_id="01J00000000000000000008101",
+        state=ConfigEntryState.LOADED,
+    )
+    entry.add_to_hass(hass)
+
+    class AgentSubentryFlow(ConfigSubentryFlow):
+        """Subentry flow for adding an agent."""
+
+        async def async_step_user(
+            self, user_input: dict[str, Any] | None = None
+        ) -> SubentryFlowResult:
+            errors: dict[str, str] = {}
+            if user_input is not None:
+                if user_input["name"] == "bad":
+                    errors["name"] = "invalid_name"
+                else:
+                    return self.async_create_entry(
+                        title=user_input["name"],
+                        data={"name": user_input["name"]},
+                    )
+            return self.async_show_form(
+                step_id="user",
+                data_schema=probatio.Schema({probatio.Required("name"): str}),
+                errors=errors,
+            )
+
+    class FlowWithSubentry(ConfigFlow):
+        """Config flow with agent subentry."""
+
+        @classmethod
+        @callback
+        @override
+        def async_get_supported_subentry_types(
+            cls, config_entry: ConfigEntry
+        ) -> dict[str, type[ConfigSubentryFlow]]:
+            return {"agent": AgentSubentryFlow}
+
+    with mock_config_flow(TEST_DOMAIN, FlowWithSubentry):
+        started = await llm_api.async_call_tool(
+            llm.ToolInput(
+                "config__start_flow",
+                {
+                    "flow_type": "subentry",
+                    "entry_id": f"{TEST_DOMAIN}:8101",
+                    "subentry_type": "agent",
+                },
+            )
+        )
+        assert started.error is False
+        assert isinstance(step := started.data["result"], dict)
+        flow_id = step["flow_id"]
+        assert step["title"] == "Add agent"
+        assert step["fields"] == [
+            {
+                "name": "name",
+                "required": True,
+                "type": "string",
+                "label": "Agent name",
+            }
+        ]
+
+        inspected = await llm_api.async_call_tool(
+            llm.ToolInput("config__configure_flow", {"flow_id": flow_id})
+        )
+        assert inspected == started
+
+        err_res = await llm_api.async_call_tool(
+            llm.ToolInput(
+                "config__configure_flow",
+                {"flow_id": flow_id, "user_input": {"name": "bad"}},
+            )
+        )
+        assert err_res.error is False
+        assert isinstance(err_step := err_res.data["result"], dict)
+        assert err_step["errors"] == {"name": "Invalid agent name"}
+
+        created = await llm_api.async_call_tool(
+            llm.ToolInput(
+                "config__configure_flow",
+                {"flow_id": flow_id, "user_input": {"name": "Home Assistant"}},
+            )
+        )
+
+    assert created == llm.ToolResult(
+        data={
+            "result": {
+                "flow_id": flow_id,
+                "type": "create_entry",
+                "title": "Home Assistant",
+                "description": "Agent created",
+            }
+        }
+    )
+    subentries = list(entry.subentries.values())
+    assert len(subentries) == 1
+    assert subentries[0].subentry_type == "agent"
+    assert subentries[0].title == "Home Assistant"
+    assert subentries[0].data == {"name": "Home Assistant"}
+
+
+@pytest.mark.parametrize("ignore_translations_for_mock_domains", [TEST_DOMAIN])
+@pytest.mark.parametrize(
+    "mock_translations",
+    [
+        {
+            "config_subentries": {
+                f"component.{TEST_DOMAIN}.config_subentries.agent.step.reconfigure.title": "Reconfigure agent",
+                f"component.{TEST_DOMAIN}.config_subentries.agent.step.reconfigure.data.model": "Model",
+            }
+        }
+    ],
+    indirect=True,
+)
+@pytest.mark.usefixtures("ignore_translations_for_mock_domains", "mock_translations")
+@pytest.mark.parametrize(
+    "start_args",
+    [
+        pytest.param(
+            {
+                "flow_type": "subentry",
+                "entry_id": f"{TEST_DOMAIN}:8201",
+                "subentry_id": "agent:9201",
+            },
+            id="via_subentry_flow_type",
+        ),
+        pytest.param(
+            {
+                "flow_type": "reconfigure",
+                "entry_id": f"{TEST_DOMAIN}:8201",
+                "subentry_type": "agent",
+                "subentry_id": "agent:9201",
+            },
+            id="via_reconfigure_flow_type",
+        ),
+    ],
+)
+async def test_subentry_reconfigure_flow(
+    hass: HomeAssistant,
+    llm_api: llm.APIInstance,
+    start_args: dict[str, Any],
+) -> None:
+    """Test reconfiguring an existing subentry and aborting a subentry flow."""
+    mock_integration(hass, MockModule(TEST_DOMAIN))
+    mock_platform(hass, f"{TEST_DOMAIN}.config_flow", None)
+
+    entry = MockConfigEntry(
+        domain=TEST_DOMAIN,
+        title="AI Hub",
+        entry_id="01J00000000000000000008201",
+        state=ConfigEntryState.LOADED,
+        subentries_data=[
+            ConfigSubentryData(
+                data={"model": "v1"},
+                subentry_id="01J00000000000000000009201",
+                subentry_type="agent",
+                title="Main Agent",
+                unique_id=None,
+            )
+        ],
+    )
+    entry.add_to_hass(hass)
+
+    class ReconfAgentSubentryFlow(ConfigSubentryFlow):
+        """Subentry flow supporting reconfigure."""
+
+        async def async_step_reconfigure(
+            self, user_input: dict[str, Any] | None = None
+        ) -> SubentryFlowResult:
+            subentry = self._get_reconfigure_subentry()
+            if user_input is not None:
+                return self.async_update_and_abort(
+                    self._get_entry(),
+                    subentry,
+                    data_updates={"model": user_input["model"]},
+                )
+            schema = self.add_suggested_values_to_schema(
+                probatio.Schema({probatio.Required("model"): str}),
+                subentry.data,
+            )
+            return self.async_show_form(step_id="reconfigure", data_schema=schema)
+
+    class FlowWithSubentry(ConfigFlow):
+        """Config flow with reconfigurable agent subentry."""
+
+        @classmethod
+        @callback
+        @override
+        def async_get_supported_subentry_types(
+            cls, config_entry: ConfigEntry
+        ) -> dict[str, type[ConfigSubentryFlow]]:
+            return {"agent": ReconfAgentSubentryFlow}
+
+    with mock_config_flow(TEST_DOMAIN, FlowWithSubentry):
+        started = await llm_api.async_call_tool(
+            llm.ToolInput("config__start_flow", start_args)
+        )
+        assert started.error is False
+        assert isinstance(step := started.data["result"], dict)
+        flow_id = step["flow_id"]
+        assert step["title"] == "Reconfigure agent"
+        assert step["fields"] == [
+            {
+                "name": "model",
+                "required": True,
+                "type": "string",
+                "suggested_value": "v1",
+                "label": "Model",
+            }
+        ]
+
+        done = await llm_api.async_call_tool(
+            llm.ToolInput(
+                "config__configure_flow",
+                {"flow_id": flow_id, "user_input": {"model": "v2"}},
+            )
+        )
+
+        # Also verify aborting an in-progress subentry flow
+        started_abort = await llm_api.async_call_tool(
+            llm.ToolInput("config__start_flow", start_args)
+        )
+        assert isinstance(abort_step := started_abort.data["result"], dict)
+        aborted = await llm_api.async_call_tool(
+            llm.ToolInput(
+                "config__configure_flow",
+                {"flow_id": abort_step["flow_id"], "abort": True},
+            )
+        )
+
+    assert done == llm.ToolResult(
+        data={
+            "result": {
+                "flow_id": flow_id,
+                "type": "abort",
+                "reason": "reconfigure_successful",
+                "description": "Reconfiguration was successful",
+            }
+        }
+    )
+    assert entry.subentries["01J00000000000000000009201"].data == {"model": "v2"}
+    assert aborted == llm.ToolResult(
+        data={
+            "result": {
+                "flow_id": abort_step["flow_id"],
+                "type": "abort",
+                "reason": "aborted",
+            }
+        }
+    )
+    assert hass.config_entries.subentries.async_progress() == []
+
+
+@pytest.mark.parametrize("ignore_translations_for_mock_domains", [TEST_DOMAIN])
+@pytest.mark.parametrize(
+    "mock_translations",
+    [
+        {
+            "config_subentries": {
+                f"component.{TEST_DOMAIN}.config_subentries.agent.abort.entry_not_loaded": "Parent entry must be loaded",
+            }
+        }
+    ],
+    indirect=True,
+)
+@pytest.mark.usefixtures("ignore_translations_for_mock_domains", "mock_translations")
+async def test_subentry_custom_abort_and_deleted_mid_flow(
+    hass: HomeAssistant, llm_api: llm.APIInstance
+) -> None:
+    """Test custom subentry abort translation and subentry deletion mid-flow."""
+    mock_integration(hass, MockModule(TEST_DOMAIN))
+    mock_platform(hass, f"{TEST_DOMAIN}.config_flow", None)
+
+    entry = MockConfigEntry(
+        domain=TEST_DOMAIN,
+        title="AI Hub",
+        entry_id="01J00000000000000000008301",
+        state=ConfigEntryState.LOADED,
+        subentries_data=[
+            ConfigSubentryData(
+                data={"model": "v1"},
+                subentry_id="01J00000000000000000009301",
+                subentry_type="agent",
+                title="Main Agent",
+                unique_id=None,
+            )
+        ],
+    )
+    entry.add_to_hass(hass)
+
+    class SubentryEdgeFlow(ConfigSubentryFlow):
+        """Subentry flow that aborts on create and reconfigures an existing subentry."""
+
+        async def async_step_user(
+            self, user_input: dict[str, Any] | None = None
+        ) -> SubentryFlowResult:
+            return self.async_abort(reason="entry_not_loaded")
+
+        async def async_step_reconfigure(
+            self, user_input: dict[str, Any] | None = None
+        ) -> SubentryFlowResult:
+            subentry = self._get_reconfigure_subentry()
+            if user_input is not None:
+                return self.async_update_and_abort(
+                    self._get_entry(), subentry, data_updates=user_input
+                )
+            return self.async_show_form(
+                step_id="reconfigure",
+                data_schema=probatio.Schema({probatio.Required("model"): str}),
+            )
+
+    class FlowWithSubentry(ConfigFlow):
+        """Config flow with agent subentry."""
+
+        @classmethod
+        @callback
+        @override
+        def async_get_supported_subentry_types(
+            cls, config_entry: ConfigEntry
+        ) -> dict[str, type[ConfigSubentryFlow]]:
+            return {"agent": SubentryEdgeFlow}
+
+    with mock_config_flow(TEST_DOMAIN, FlowWithSubentry):
+        aborted = await llm_api.async_call_tool(
+            llm.ToolInput(
+                "config__start_flow",
+                {
+                    "flow_type": "subentry",
+                    "entry_id": f"{TEST_DOMAIN}:8301",
+                    "subentry_type": "agent",
+                },
+            )
+        )
+        assert aborted.error is False
+        assert isinstance(abort_res := aborted.data["result"], dict)
+        assert abort_res["type"] == "abort"
+        assert abort_res["reason"] == "entry_not_loaded"
+        assert abort_res["description"] == "Parent entry must be loaded"
+
+        started = await llm_api.async_call_tool(
+            llm.ToolInput(
+                "config__start_flow",
+                {
+                    "flow_type": "subentry",
+                    "entry_id": f"{TEST_DOMAIN}:8301",
+                    "subentry_id": "agent:9301",
+                },
+            )
+        )
+        assert isinstance(step := started.data["result"], dict)
+
+        # Delete the subentry before submitting the reconfigure form
+        hass.config_entries.async_remove_subentry(entry, "01J00000000000000000009301")
+
+        deleted_res = await llm_api.async_call_tool(
+            llm.ToolInput(
+                "config__configure_flow",
+                {"flow_id": step["flow_id"], "user_input": {"model": "v2"}},
+            )
+        )
+
+    assert deleted_res == llm.ToolResult(
+        data={"error": "Config entry or subentry no longer exists."}, error=True
+    )
+    assert hass.config_entries.subentries.async_progress() == []
+
+
+@pytest.mark.parametrize("ignore_translations_for_mock_domains", [TEST_DOMAIN])
+@pytest.mark.usefixtures("ignore_translations_for_mock_domains")
+async def test_subentry_parent_entry_removed_mid_flow(
+    hass: HomeAssistant, llm_api: llm.APIInstance
+) -> None:
+    """Test subentry flows stay abortable and fail cleanly when the parent entry is removed."""
+    mock_integration(hass, MockModule(TEST_DOMAIN))
+    mock_platform(hass, f"{TEST_DOMAIN}.config_flow", None)
+
+    progress_started = asyncio.Event()
+    progress_cancelled = asyncio.Event()
+
+    async def _slow_task() -> None:
+        progress_started.set()
+        try:
+            await asyncio.Future()
+        except asyncio.CancelledError:
+            progress_cancelled.set()
+            raise
+
+    class ProgressSubentryFlow(ConfigSubentryFlow):
+        """Subentry flow with a background progress task."""
+
+        async def async_step_user(
+            self, user_input: dict[str, Any] | None = None
+        ) -> SubentryFlowResult:
+            task = hass.async_create_task(_slow_task())
+            return self.async_show_progress(
+                step_id="user", progress_action="working", progress_task=task
+            )
+
+    class FormSubentryFlow(ConfigSubentryFlow):
+        """Subentry flow showing a simple form."""
+
+        async def async_step_user(
+            self, user_input: dict[str, Any] | None = None
+        ) -> SubentryFlowResult:
+            return self.async_show_form(
+                step_id="user",
+                data_schema=probatio.Schema({probatio.Required("name"): str}),
+            )
+
+    class FlowWithSubentries(ConfigFlow):
+        """Config flow with progress and form subentries."""
+
+        @classmethod
+        @callback
+        @override
+        def async_get_supported_subentry_types(
+            cls, config_entry: ConfigEntry
+        ) -> dict[str, type[ConfigSubentryFlow]]:
+            return {"progress": ProgressSubentryFlow, "form": FormSubentryFlow}
+
+    entry1 = MockConfigEntry(
+        domain=TEST_DOMAIN,
+        title="Hub 1",
+        entry_id="01J00000000000000000008401",
+    )
+    entry1.add_to_hass(hass)
+    entry2 = MockConfigEntry(
+        domain=TEST_DOMAIN,
+        title="Hub 2",
+        entry_id="01J00000000000000000008402",
+    )
+    entry2.add_to_hass(hass)
+
+    with mock_config_flow(TEST_DOMAIN, FlowWithSubentries):
+        # 1. Start progress subentry flow, remove parent entry, then abort
+        started_progress = await llm_api.async_call_tool(
+            llm.ToolInput(
+                "config__start_flow",
+                {
+                    "flow_type": "subentry",
+                    "entry_id": f"{TEST_DOMAIN}:8401",
+                    "subentry_type": "progress",
+                },
+            )
+        )
+        assert isinstance(progress_step := started_progress.data["result"], dict)
+        await progress_started.wait()
+
+        await hass.config_entries.async_remove(entry1.entry_id)
+
+        aborted = await llm_api.async_call_tool(
+            llm.ToolInput(
+                "config__configure_flow",
+                {"flow_id": progress_step["flow_id"], "abort": True},
+            )
+        )
+        await progress_cancelled.wait()
+
+        # 2. Start form subentry flow, remove parent entry, then try to submit
+        started_form = await llm_api.async_call_tool(
+            llm.ToolInput(
+                "config__start_flow",
+                {
+                    "flow_type": "subentry",
+                    "entry_id": f"{TEST_DOMAIN}:8402",
+                    "subentry_type": "form",
+                },
+            )
+        )
+        assert isinstance(form_step := started_form.data["result"], dict)
+
+        await hass.config_entries.async_remove(entry2.entry_id)
+
+        submitted = await llm_api.async_call_tool(
+            llm.ToolInput(
+                "config__configure_flow",
+                {"flow_id": form_step["flow_id"], "user_input": {"name": "test"}},
+            )
+        )
+
+    assert aborted == llm.ToolResult(
+        data={
+            "result": {
+                "flow_id": progress_step["flow_id"],
+                "type": "abort",
+                "reason": "aborted",
+            }
+        }
+    )
+    assert submitted == llm.ToolResult(
+        data={"error": "Config entry or subentry no longer exists."}, error=True
+    )
+    assert hass.config_entries.subentries.async_progress() == []
