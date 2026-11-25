@@ -15,8 +15,14 @@ import respx
 from yarl import URL
 
 from homeassistant import config_entries
+from homeassistant.components.mcp import async_get_config_entry_implementation
+from homeassistant.components.mcp.application_credentials import (
+    McpClientMetadataImplementation,
+)
 from homeassistant.components.mcp.auth import AuthenticateHeader
 from homeassistant.components.mcp.const import (
+    CIMD_AUTH_IMPLEMENTATION,
+    CIMD_CLIENT_ID,
     CONF_AUTHORIZATION_URL,
     CONF_SCOPE,
     CONF_SLUG,
@@ -1818,3 +1824,233 @@ async def test_resource_metadata_unexpected_fetch_result(
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "cannot_connect"
     assert "Unexpected fetch result: CancelledError" in caplog.text
+
+
+def _enable_my_home_assistant(hass: HomeAssistant) -> None:
+    """Mark My Home Assistant as loaded.
+
+    The published client metadata document uses the My Home Assistant redirect
+    URL, so the config flow only offers that path when the integration is loaded.
+    """
+    hass.config.components.add("my")
+
+
+def _oauth_server_metadata(**extra: Any) -> httpx2.Response:
+    """Return authorization server metadata, optionally with extra fields."""
+    payload: dict[str, Any] = {
+        "authorization_endpoint": OAUTH_AUTHORIZE_URL,
+        "token_endpoint": OAUTH_TOKEN_URL,
+        "scopes_supported": ["read", "write"],
+    }
+    payload.update(extra)
+    return httpx2.Response(200, json=payload)
+
+
+async def _start_oauth_discovery(
+    hass: HomeAssistant, mock_mcp_client: Mock, metadata: httpx2.Response
+) -> config_entries.ConfigFlowResult:
+    """Run user setup until OAuth discovery finishes."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    mock_mcp_client.side_effect = httpx2.HTTPStatusError(
+        "Authentication required", request=None, response=httpx2.Response(401)
+    )
+    respx.get(OAUTH_DISCOVERY_ENDPOINT).mock(return_value=metadata)
+    return await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_URL: MCP_SERVER_URL}
+    )
+
+
+def test_client_metadata_constants() -> None:
+    """The published client id is the URL that serves the metadata document."""
+    assert CIMD_CLIENT_ID == "https://www.home-assistant.io/mcp/oauth-client.json"
+    assert CIMD_AUTH_IMPLEMENTATION == "mcp_client_metadata"
+
+
+@respx.mock
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_client_metadata_document_creates_an_entry(
+    hass: HomeAssistant,
+    mock_mcp_client: Mock,
+    aioclient_mock: AiohttpClientMocker,
+    hass_client_no_auth: ClientSessionGenerator,
+) -> None:
+    """A server that supports client id metadata skips application credentials."""
+    _enable_my_home_assistant(hass)
+    result = await _start_oauth_discovery(
+        hass,
+        mock_mcp_client,
+        _oauth_server_metadata(client_id_metadata_document_supported=True),
+    )
+    assert result["type"] is FlowResultType.EXTERNAL_STEP
+    query = URL(result["url"]).query
+    assert query["client_id"] == CIMD_CLIENT_ID
+    assert query["redirect_uri"] == config_entry_oauth2_flow.MY_AUTH_CALLBACK_PATH
+    assert query["code_challenge_method"] == "S256"
+    assert query["code_challenge"]
+    assert query["resource"] == MCP_SERVER_URL
+    assert query["scope"] == "read write"
+    assert "POST" not in [call.request.method for call in respx.calls]
+
+    state = config_entry_oauth2_flow._encode_jwt(
+        hass,
+        {
+            "flow_id": result["flow_id"],
+            "redirect_uri": config_entry_oauth2_flow.MY_AUTH_CALLBACK_PATH,
+        },
+    )
+    client = await hass_client_no_auth()
+    response = await client.get(f"{CALLBACK_PATH}?code=abcd&state={state}")
+    assert response.status == 200
+
+    aioclient_mock.post(OAUTH_TOKEN_URL, json=OAUTH_TOKEN_PAYLOAD)
+    mock_mcp_client.side_effect = None
+    initialized = Mock()
+    initialized.server_info.name = TEST_API_NAME
+    mock_mcp_client.return_value.initialize.return_value = initialized
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == TEST_API_NAME
+    assert result["result"].unique_id is None
+    assert result["data"]["auth_implementation"] == CIMD_AUTH_IMPLEMENTATION
+    assert result["data"][CONF_URL] == MCP_SERVER_URL
+    assert result["data"][CONF_SCOPE] == ["read", "write"]
+    result["data"].pop(CONF_TOKEN)
+
+    _method, _url, body, _headers = aioclient_mock.mock_calls[0]
+    assert body["client_id"] == CIMD_CLIENT_ID
+    assert body["resource"] == MCP_SERVER_URL
+    assert "code_verifier" in body
+    assert "client_secret" not in body
+
+
+@pytest.mark.parametrize(
+    "supported",
+    [False, "true", 1, None],
+)
+@respx.mock
+async def test_client_metadata_is_not_used_unless_explicitly_supported(
+    hass: HomeAssistant, mock_mcp_client: Mock, supported: Any
+) -> None:
+    """Only a JSON true enables the published client id."""
+    _enable_my_home_assistant(hass)
+    result = await _start_oauth_discovery(
+        hass,
+        mock_mcp_client,
+        _oauth_server_metadata(client_id_metadata_document_supported=supported),
+    )
+    assert result["reason"] == "missing_credentials"
+
+
+@respx.mock
+async def test_client_metadata_requires_my_home_assistant(
+    hass: HomeAssistant, mock_mcp_client: Mock
+) -> None:
+    """Client metadata is not used when My Home Assistant is disabled."""
+    result = await _start_oauth_discovery(
+        hass,
+        mock_mcp_client,
+        _oauth_server_metadata(client_id_metadata_document_supported=True),
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "missing_credentials"
+
+
+@respx.mock
+async def test_credentials_choice_offers_client_metadata(
+    hass: HomeAssistant, mock_mcp_client: Mock, credential: None
+) -> None:
+    """A credential stored for another server does not hide the metadata client."""
+    _enable_my_home_assistant(hass)
+    result = await _start_oauth_discovery(
+        hass,
+        mock_mcp_client,
+        _oauth_server_metadata(client_id_metadata_document_supported=True),
+    )
+    assert result["type"] is FlowResultType.MENU
+    assert result["step_id"] == "credentials_choice"
+    assert result["menu_options"] == [
+        "client_metadata",
+        "pick_implementation",
+        "new_credentials",
+    ]
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"next_step_id": "client_metadata"}
+    )
+    assert result["type"] is FlowResultType.EXTERNAL_STEP
+    query = URL(result["url"]).query
+    assert query["client_id"] == CIMD_CLIENT_ID
+    assert query["redirect_uri"] == config_entry_oauth2_flow.MY_AUTH_CALLBACK_PATH
+    assert query["resource"] == MCP_SERVER_URL
+
+
+@respx.mock
+async def test_credentials_choice_hides_client_metadata_without_my(
+    hass: HomeAssistant, mock_mcp_client: Mock, credential: None
+) -> None:
+    """My Home Assistant must be loaded to offer the metadata client."""
+    result = await _start_oauth_discovery(
+        hass,
+        mock_mcp_client,
+        _oauth_server_metadata(client_id_metadata_document_supported=True),
+    )
+    assert result["type"] is FlowResultType.MENU
+    assert result["step_id"] == "credentials_choice"
+    assert result["menu_options"] == ["pick_implementation", "new_credentials"]
+
+
+@respx.mock
+async def test_credentials_choice_without_client_metadata(
+    hass: HomeAssistant, mock_mcp_client: Mock, credential: None
+) -> None:
+    """The metadata client is only offered when the server supports it."""
+    _enable_my_home_assistant(hass)
+    result = await _start_oauth_discovery(
+        hass, mock_mcp_client, _oauth_server_metadata()
+    )
+    assert result["type"] is FlowResultType.MENU
+    assert result["step_id"] == "credentials_choice"
+    assert result["menu_options"] == ["pick_implementation", "new_credentials"]
+
+
+async def test_client_metadata_entry_reuses_the_published_client(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
+    """Token refresh for a metadata entry uses the same public client."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            "auth_implementation": CIMD_AUTH_IMPLEMENTATION,
+            CONF_AUTHORIZATION_URL: OAUTH_AUTHORIZE_URL,
+            CONF_TOKEN_URL: OAUTH_TOKEN_URL,
+            CONF_URL: MCP_SERVER_URL,
+        },
+    )
+    entry.add_to_hass(hass)
+    implementation = await async_get_config_entry_implementation(hass, entry)
+    assert isinstance(implementation, McpClientMetadataImplementation)
+    assert implementation.client_id == CIMD_CLIENT_ID
+    assert implementation.client_secret == ""
+    assert implementation.redirect_uri == config_entry_oauth2_flow.MY_AUTH_CALLBACK_PATH
+    assert implementation.name == "Home Assistant"
+    assert implementation.service_domain == DOMAIN
+
+    aioclient_mock.post(
+        OAUTH_TOKEN_URL,
+        json={
+            "access_token": "refreshed",
+            "refresh_token": "next",
+            "expires_in": 60,
+        },
+    )
+    token = await implementation.async_refresh_token(
+        {"access_token": "old", "refresh_token": "refresh", "expires_in": 1}
+    )
+    assert token["access_token"] == "refreshed"
+    _method, _url, body, _headers = aioclient_mock.mock_calls[0]
+    assert body["client_id"] == CIMD_CLIENT_ID
+    assert body["resource"] == MCP_SERVER_URL
+    assert body["grant_type"] == "refresh_token"
+    assert "client_secret" not in body

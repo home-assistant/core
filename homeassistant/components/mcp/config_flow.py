@@ -28,7 +28,10 @@ from homeassistant.helpers.config_entry_oauth2_flow import (
 from homeassistant.helpers.service_info.hassio import HassioServiceInfo
 
 from . import async_get_config_entry_implementation
-from .application_credentials import authorization_server_context
+from .application_credentials import (
+    McpClientMetadataImplementation,
+    authorization_server_context,
+)
 from .auth import AuthenticateHeader
 from .const import CONF_AUTHORIZATION_URL, CONF_SCOPE, CONF_SLUG, CONF_TOKEN_URL, DOMAIN
 from .coordinator import (
@@ -76,6 +79,7 @@ class OAuthConfig:
 
     authorization_server: AuthorizationServer
     scopes: list[str] | None = None
+    client_id_metadata_document_supported: bool = False
 
 
 async def async_discover_authorization_server(
@@ -110,12 +114,16 @@ async def async_discover_authorization_server(
     # We have no way to know the minimum set of scopes needed, so request
     # all of them and let the user limit during the authorization step.
     scopes = data.get("scopes_supported")
+    client_id_metadata_document_supported = (
+        data.get("client_id_metadata_document_supported") is True
+    )
     return OAuthConfig(
         authorization_server=AuthorizationServer(
             authorize_url=authorize_url,
             token_url=token_url,
         ),
         scopes=scopes,
+        client_id_metadata_document_supported=client_id_metadata_document_supported,
     )
 
 
@@ -374,12 +382,39 @@ class ModelContextProtocolConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
         should be used given they may be for another existing server.
         """
         with authorization_server_context(self.authorization_server()):
-            if not await async_get_implementations(self.hass, self.DOMAIN):
-                return await self.async_step_new_credentials()
-            return self.async_show_menu(
-                step_id="credentials_choice",
-                menu_options=["pick_implementation", "new_credentials"],
-            )
+            implementations = await async_get_implementations(self.hass, self.DOMAIN)
+        # The published client metadata document lists the My Home Assistant
+        # redirect URL, so this path is only available when that integration
+        # is loaded.
+        client_metadata_supported = (
+            self.oauth_config is not None
+            and self.oauth_config.client_id_metadata_document_supported
+            and "my" in self.hass.config.components
+        )
+        if not implementations:
+            if client_metadata_supported:
+                return await self.async_step_client_metadata()
+            return await self.async_step_new_credentials()
+        menu_options = ["pick_implementation", "new_credentials"]
+        if client_metadata_supported:
+            # Credentials stored for another server must not hide this option
+            menu_options.insert(0, "client_metadata")
+        return self.async_show_menu(
+            step_id="credentials_choice",
+            menu_options=menu_options,
+        )
+
+    async def async_step_client_metadata(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Sign in with the Home Assistant client ID metadata document."""
+        self.flow_impl = McpClientMetadataImplementation(
+            self.hass,
+            self.data[CONF_AUTHORIZATION_URL],
+            self.data[CONF_TOKEN_URL],
+            self.data[CONF_URL],
+        )
+        return await self.async_step_auth()
 
     async def async_step_new_credentials(
         self, user_input: dict[str, Any] | None = None
