@@ -690,13 +690,15 @@ async def test_reproducing_state_with_tilt_positions(
         "cover.entity",
         current_state,
         {
-            ATTR_CURRENT_TILT_POSITION: current_tilt,
-            ATTR_SUPPORTED_FEATURES: CoverEntityFeature.SET_TILT_POSITION,
+            CoverEntityStateAttribute.CURRENT_TILT_POSITION: current_tilt,
+            EntityStateAttribute.SUPPORTED_FEATURES: CoverEntityFeature.SET_TILT_POSITION,
             **tilt_attributes,
         },
     )
-    calls = async_mock_service(hass, DOMAIN, SERVICE_SET_COVER_TILT_POSITION)
+    calls = async_mock_service(hass, DOMAIN, CoverService.SET_TILT_POSITION)
 
     await async_reproduce_state(hass, [State("cover.entity", target_state)])
 
-    assert [call.data[ATTR_TILT_POSITION] for call in calls] == expected_tilt_positions
+    assert [
+        call.data[CoverServiceArgument.TILT_POSITION] for call in calls
+    ] == expected_tilt_positions
