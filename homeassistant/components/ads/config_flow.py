@@ -42,7 +42,9 @@ def _is_valid_net_id(net_id: str) -> bool:
     """Return whether the AMS NetID is six numbers from 0 to 255, separated by dots."""
     parts = net_id.split(".")
     return len(parts) == 6 and all(
-        part.isdigit() and 0 <= int(part) <= 255 for part in parts
+        # isdigit() alone accepts digits like "²" that int() rejects.
+        part.isascii() and part.isdigit() and len(part) <= 3 and int(part) <= 255
+        for part in parts
     )
 
 

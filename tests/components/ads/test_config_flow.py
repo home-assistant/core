@@ -111,7 +111,9 @@ async def test_user_flow_errors(
     assert result["data"] == ADS_CONFIG
 
 
-@pytest.mark.parametrize("net_id", ["abc", "1.2.3", "1.2.3.4.5.256"])
+@pytest.mark.parametrize(
+    "net_id", ["abc", "1.2.3", "1.2.3.4.5.256", "1.2.3.4.5.²", "1.2.3.4.5.0001"]
+)
 async def test_user_flow_invalid_net_id(
     hass: HomeAssistant,
     mock_pyads_connection: MagicMock,
@@ -213,7 +215,15 @@ async def test_import_flow_offline(
 
 
 @pytest.mark.parametrize(
-    "net_id", ["bad", "1.2.3.4.5", "1.2.3.4.5.256", "1.2.3.4.5.x", "1.2.3.4.5.6.7"]
+    "net_id",
+    [
+        "bad",
+        "1.2.3.4.5",
+        "1.2.3.4.5.256",
+        "1.2.3.4.5.x",
+        "1.2.3.4.5.²",
+        "1.2.3.4.5.6.7",
+    ],
 )
 async def test_import_flow_invalid_net_id(hass: HomeAssistant, net_id: str) -> None:
     """Test the import aborts on an AMS NetID that cannot be valid."""
