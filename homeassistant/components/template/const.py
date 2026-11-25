@@ -152,7 +152,7 @@ class DeprecatedTemplateOptions:
     # The options are only deprecated while the option they map to is missing
     requires_mapped_option: bool = False
 
-    def options_config(self, entity_config: ConfigType) -> Mapping[Any, Any]:
+    def options_config(self, entity_config: Mapping[str, Any]) -> Mapping[Any, Any]:
         """Return the config holding the deprecated options of an entity."""
         if self.parent_option is None:
             return entity_config
@@ -160,6 +160,18 @@ class DeprecatedTemplateOptions:
         if isinstance(options := entity_config.get(self.parent_option), dict):
             return options
         return {}
+
+    def deprecated_options(self, entity_config: Mapping[str, Any]) -> list[str]:
+        """Return the deprecated options set in the config of an entity."""
+        options_config = self.options_config(entity_config)
+        return [
+            key
+            for key in options_config
+            if key in self.options
+            and not (
+                self.requires_mapped_option and self.options[key] in options_config
+            )
+        ]
 
 
 WEATHER_DEPRECATED_OPTIONS = DeprecatedTemplateOptions(

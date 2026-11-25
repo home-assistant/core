@@ -15,7 +15,10 @@
   },
   "config": {
     "error": {
+      "hs_action_required": "Actions on set HS color are required when an HS color is set.",
+      "level_action_required": "Actions on set level are required when a brightness level is set.",
       "source_list_required": "A source list is required when a source or the select source actions are set.",
+      "temperature_action_required": "Actions on set color temperature are required when a color temperature is set.",
       "volume_up_and_down_required": "Volume up and volume down actions must be set together."
     },
     "step": {
@@ -843,7 +846,10 @@
   },
   "options": {
     "error": {
+      "hs_action_required": "[%key:component::template::config::error::hs_action_required%]",
+      "level_action_required": "[%key:component::template::config::error::level_action_required%]",
       "source_list_required": "[%key:component::template::config::error::source_list_required%]",
+      "temperature_action_required": "[%key:component::template::config::error::temperature_action_required%]",
       "volume_up_and_down_required": "[%key:component::template::config::error::volume_up_and_down_required%]"
     },
     "step": {

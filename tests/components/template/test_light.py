@@ -3233,20 +3233,34 @@ async def test_optimistic_effect(
 @pytest.mark.parametrize(
     ("extra_config", "options"),
     [
-        ({"hs": "{{ (40, 50) }}"}, "- `hs` requires `set_hs`"),
-        ({"level": "{{ 100 }}"}, "- `level` requires `set_level`"),
-        ({"rgb": "{{ (160, 78, 192) }}"}, "- `rgb` requires `set_rgb`"),
-        ({"rgbw": "{{ (160, 78, 192, 25) }}"}, "- `rgbw` requires `set_rgbw`"),
-        (
+        pytest.param({"hs": "{{ (40, 50) }}"}, "- `hs` requires `set_hs`", id="hs"),
+        pytest.param(
+            {"level": "{{ 100 }}"}, "- `level` requires `set_level`", id="level"
+        ),
+        pytest.param(
+            {"rgb": "{{ (160, 78, 192) }}"}, "- `rgb` requires `set_rgb`", id="rgb"
+        ),
+        pytest.param(
+            {"rgbw": "{{ (160, 78, 192, 25) }}"},
+            "- `rgbw` requires `set_rgbw`",
+            id="rgbw",
+        ),
+        pytest.param(
             {"rgbww": "{{ (160, 78, 192, 25, 50) }}"},
             "- `rgbww` requires `set_rgbww`",
+            id="rgbww",
         ),
-        ({"temperature": "{{ 250 }}"}, "- `temperature` requires `set_temperature`"),
-        (
+        pytest.param(
+            {"temperature": "{{ 250 }}"},
+            "- `temperature` requires `set_temperature`",
+            id="temperature",
+        ),
+        pytest.param(
             {"temperature_kelvin": "{{ 3000 }}"},
             "- `temperature_kelvin` requires `set_temperature`",
+            id="temperature_kelvin",
         ),
-        ({"xy": "{{ (0.2, 0.5) }}"}, "- `xy` requires `set_xy`"),
+        pytest.param({"xy": "{{ (0.2, 0.5) }}"}, "- `xy` requires `set_xy`", id="xy"),
     ],
 )
 async def test_deprecated_missing_actions_issue(
@@ -3271,15 +3285,27 @@ async def test_deprecated_missing_actions_issue(
 @pytest.mark.parametrize(
     ("config", "extra_config"),
     [
-        (ON_OFF_HS_ACTIONS, {"hs": "{{ (40, 50) }}"}),
-        (ON_OFF_SET_LEVEL_ACTIONS, {"level": "{{ 100 }}"}),
-        (ON_OFF_RGB_ACTIONS, {"rgb": "{{ (160, 78, 192) }}"}),
-        (ON_OFF_RGBW_ACTIONS, {"rgbw": "{{ (160, 78, 192, 25) }}"}),
-        (ON_OFF_RGBWW_ACTIONS, {"rgbww": "{{ (160, 78, 192, 25, 50) }}"}),
-        (ON_OFF_COLOR_TEMP_ACTIONS, {"temperature": "{{ 250 }}"}),
-        (ON_OFF_COLOR_TEMP_ACTIONS, {"temperature_kelvin": "{{ 3000 }}"}),
-        (ON_OFF_XY_ACTIONS, {"xy": "{{ (0.2, 0.5) }}"}),
-        (ON_OFF_SET_LEVEL_ACTIONS, {}),
+        pytest.param(ON_OFF_HS_ACTIONS, {"hs": "{{ (40, 50) }}"}, id="hs"),
+        pytest.param(ON_OFF_SET_LEVEL_ACTIONS, {"level": "{{ 100 }}"}, id="level"),
+        pytest.param(ON_OFF_RGB_ACTIONS, {"rgb": "{{ (160, 78, 192) }}"}, id="rgb"),
+        pytest.param(
+            ON_OFF_RGBW_ACTIONS, {"rgbw": "{{ (160, 78, 192, 25) }}"}, id="rgbw"
+        ),
+        pytest.param(
+            ON_OFF_RGBWW_ACTIONS,
+            {"rgbww": "{{ (160, 78, 192, 25, 50) }}"},
+            id="rgbww",
+        ),
+        pytest.param(
+            ON_OFF_COLOR_TEMP_ACTIONS, {"temperature": "{{ 250 }}"}, id="temperature"
+        ),
+        pytest.param(
+            ON_OFF_COLOR_TEMP_ACTIONS,
+            {"temperature_kelvin": "{{ 3000 }}"},
+            id="temperature_kelvin",
+        ),
+        pytest.param(ON_OFF_XY_ACTIONS, {"xy": "{{ (0.2, 0.5) }}"}, id="xy"),
+        pytest.param(ON_OFF_SET_LEVEL_ACTIONS, {}, id="level_action_only"),
     ],
 )
 async def test_no_deprecated_missing_actions_issue(
@@ -3404,7 +3430,7 @@ async def test_deprecated_missing_actions_config_entry_issue(
     assert issue.translation_placeholders == {
         "name": "My template",
         "breaks_in_ha_version": "2027.6.0",
-        "options": "- `hs` requires `set_hs`\n- `level` requires `set_level`",
+        "options": "- `level` requires `set_level`\n- `hs` requires `set_hs`",
     }
 
     hass.config_entries.async_update_entry(
