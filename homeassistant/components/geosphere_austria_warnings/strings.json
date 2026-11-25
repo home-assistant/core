@@ -29,6 +29,37 @@
           "orange": "Orange",
           "red": "Red",
           "yellow": "Yellow"
+        },
+        "state_attributes": {
+          "end": {
+            "name": "End"
+          },
+          "level": {
+            "name": "Level",
+            "state": {
+              "orange": "[%key:component::geosphere_austria_warnings::entity::sensor::active_warning_level::state::orange%]",
+              "red": "[%key:component::geosphere_austria_warnings::entity::sensor::active_warning_level::state::red%]",
+              "yellow": "[%key:component::geosphere_austria_warnings::entity::sensor::active_warning_level::state::yellow%]"
+            }
+          },
+          "start": {
+            "name": "Start"
+          },
+          "type": {
+            "name": "Type",
+            "state": {
+              "black_ice": "Black ice",
+              "cold": "Cold",
+              "heat": "Heat",
+              "rain": "Rain",
+              "snow": "Snow",
+              "storm": "Storm",
+              "thunderstorm": "Thunderstorm"
+            }
+          },
+          "warning_id": {
+            "name": "Warning ID"
+          }
         }
       },
       "active_warnings": {
@@ -42,6 +73,37 @@
           "orange": "Orange",
           "red": "Red",
           "yellow": "Yellow"
+        },
+        "state_attributes": {
+          "end": {
+            "name": "[%key:component::geosphere_austria_warnings::entity::sensor::active_warning_level::state_attributes::end::name%]"
+          },
+          "level": {
+            "name": "[%key:component::geosphere_austria_warnings::entity::sensor::active_warning_level::state_attributes::level::name%]",
+            "state": {
+              "orange": "[%key:component::geosphere_austria_warnings::entity::sensor::active_warning_level::state::orange%]",
+              "red": "[%key:component::geosphere_austria_warnings::entity::sensor::active_warning_level::state::red%]",
+              "yellow": "[%key:component::geosphere_austria_warnings::entity::sensor::active_warning_level::state::yellow%]"
+            }
+          },
+          "start": {
+            "name": "[%key:component::geosphere_austria_warnings::entity::sensor::active_warning_level::state_attributes::start::name%]"
+          },
+          "type": {
+            "name": "[%key:component::geosphere_austria_warnings::entity::sensor::active_warning_level::state_attributes::type::name%]",
+            "state": {
+              "black_ice": "[%key:component::geosphere_austria_warnings::entity::sensor::active_warning_level::state_attributes::type::state::black_ice%]",
+              "cold": "[%key:component::geosphere_austria_warnings::entity::sensor::active_warning_level::state_attributes::type::state::cold%]",
+              "heat": "[%key:component::geosphere_austria_warnings::entity::sensor::active_warning_level::state_attributes::type::state::heat%]",
+              "rain": "[%key:component::geosphere_austria_warnings::entity::sensor::active_warning_level::state_attributes::type::state::rain%]",
+              "snow": "[%key:component::geosphere_austria_warnings::entity::sensor::active_warning_level::state_attributes::type::state::snow%]",
+              "storm": "[%key:component::geosphere_austria_warnings::entity::sensor::active_warning_level::state_attributes::type::state::storm%]",
+              "thunderstorm": "[%key:component::geosphere_austria_warnings::entity::sensor::active_warning_level::state_attributes::type::state::thunderstorm%]"
+            }
+          },
+          "warning_id": {
+            "name": "[%key:component::geosphere_austria_warnings::entity::sensor::active_warning_level::state_attributes::warning_id::name%]"
+          }
         }
       },
       "advance_warnings": {
