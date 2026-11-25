@@ -19,8 +19,6 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from .coordinator import LoqedConfigEntry, LoqedDataCoordinator, StatusMessage
 from .entity import LoqedEntity
 
-PARALLEL_UPDATES = 0
-
 SENSORS: Final[tuple[SensorEntityDescription, ...]] = (
     SensorEntityDescription(
         key="ble_strength",
