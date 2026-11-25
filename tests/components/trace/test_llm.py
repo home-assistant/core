@@ -147,26 +147,37 @@ async def test_get_trace(hass: HomeAssistant, llm_context: llm.LLMContext) -> No
     assert [step["path"] for step in script_result["steps"]] == ["sequence/0"]
 
 
-async def test_get_trace_with_nan(
+class _Unserializable:
+    """A value that JSON cannot hold."""
+
+    def __repr__(self) -> str:
+        """Return the representation of the value."""
+        return "<unserializable>"
+
+
+async def test_get_trace_with_values_json_cannot_hold(
     hass: HomeAssistant, llm_context: llm.LLMContext
 ) -> None:
-    """Test a run whose variables hold NaN, which JSON cannot hold."""
+    """Test a run whose variables hold values that JSON cannot hold."""
     assert await async_setup_component(
         hass,
         "automation",
         {
             "automation": {
-                "id": "nan",
-                "alias": "NaN",
+                "id": "odd_values",
+                "alias": "Odd values",
                 "triggers": {"trigger": "event", "event_type": "test_event"},
                 "actions": [],
             }
         },
     )
-    hass.bus.async_fire("test_event", {"value": math.nan})
+    hass.bus.async_fire(
+        "test_event",
+        {"nan": math.nan, "big": 2**64, "object": _Unserializable()},
+    )
     await hass.async_block_till_done()
     listed = await _call(
-        hass, llm_context, ListTracesTool(), {"entity_id": "automation.nan"}
+        hass, llm_context, ListTracesTool(), {"entity_id": "automation.odd_values"}
     )
 
     result = await _call(
@@ -176,9 +187,13 @@ async def test_get_trace_with_nan(
         {"trace_id": listed["traces"][0]["trace_id"]},
     )
 
-    trigger = result["steps"][0]["changed_variables"]["trigger"]
-    assert trigger["event"]["data"]["value"] is None
-    # The mock storage of the tests cannot save NaN when Home Assistant stops
+    event = result["steps"][0]["changed_variables"]["trigger"]["event"]
+    assert event["event_type"] == "test_event"
+    assert event["data"]["nan"] is None
+    assert event["data"]["big"] == str(2**64)
+    assert event["data"]["object"]["repr"] == "<unserializable>"
+    # The mock storage of the tests cannot save these values when Home Assistant
+    # stops
     hass.data[DATA_TRACE].clear()
 
 

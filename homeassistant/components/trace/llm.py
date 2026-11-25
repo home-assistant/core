@@ -2,16 +2,16 @@
 
 from collections.abc import Iterator
 from datetime import datetime
+import json
 from typing import Any, override
 
-import orjson
 import probatio
 
 from homeassistant.components.llm import LLMTools
 from homeassistant.core import HomeAssistant, callback, split_entity_id
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, entity_registry as er
-from homeassistant.helpers.json import json_encoder_default
+from homeassistant.helpers.json import ExtendedJSONEncoder
 from homeassistant.helpers.llm import (
     LLM_API_HOME_ASSISTANT,
     SHORT_ID_MIN_LENGTH,
@@ -22,7 +22,7 @@ from homeassistant.helpers.llm import (
     ToolResult,
     format_short_ids,
 )
-from homeassistant.util.json import JsonObjectType, json_loads_object
+from homeassistant.util.json import JsonObjectType
 
 from . import DOMAIN
 from .const import DATA_TRACE
@@ -45,12 +45,10 @@ def _short_trace_ids(hass: HomeAssistant, domain: str) -> dict[str, str]:
     )
 
 
-def _json_default(obj: Any) -> Any:
-    """Encode Home Assistant objects, and any other object by its repr."""
-    try:
-        return json_encoder_default(obj)
-    except TypeError:
-        return {"__type": str(type(obj)), "repr": repr(obj)}
+def _parse_int(value: str) -> int | str:
+    """Return an integer, or its text when it does not fit in 64 bits."""
+    number = int(value)
+    return number if -(2**63) <= number < 2**64 else value
 
 
 def _isoformat(value: Any) -> Any:
@@ -200,15 +198,15 @@ class GetTraceTool(Tool):
             ),
             "steps": steps,
         }
-        # Trace steps hold any variable: orjson writes NaN as null, and unknown
-        # types fall back to their repr
-        return ToolResult(
-            data=json_loads_object(
-                orjson.dumps(
-                    result, default=_json_default, option=orjson.OPT_NON_STR_KEYS
-                )
-            )
+        # Trace steps hold any variable. Each value that JSON cannot hold falls
+        # back to its repr, NaN and infinity become null, and integers too big
+        # for the JSON encoders of Home Assistant become text.
+        data: JsonObjectType = json.loads(
+            json.dumps(result, cls=ExtendedJSONEncoder),
+            parse_constant=lambda _: None,
+            parse_int=_parse_int,
         )
+        return ToolResult(data=data)
 
 
 @callback
