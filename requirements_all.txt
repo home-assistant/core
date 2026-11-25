@@ -112,7 +112,7 @@ RestrictedPython==8.5
 
 # homeassistant.components.recorder
 # homeassistant.components.sql
-SQLAlchemy==2.1.8
+SQLAlchemy==2.1.9
 
 # homeassistant.components.tami4
 Tami4EdgeAPI==3.0
@@ -2656,7 +2656,7 @@ pyrisco==0.8.1
 pyroute2==0.9.6
 
 # homeassistant.components.rympro
-pyrympro==0.0.9
+pyrympro==0.0.10
 
 # homeassistant.components.sabnzbd
 pysabnzbd==1.1.1
@@ -2665,7 +2665,7 @@ pysabnzbd==1.1.1
 pysaunum==0.7.0
 
 # homeassistant.components.schlage
-pyschlage==2026.11.0
+pyschlage==2026.11.1
 
 # homeassistant.components.scorpiontrack
 pyscorpiontrack==0.1.2
@@ -3267,7 +3267,7 @@ steamloop==1.2.1
 steamodd==5.0
 
 # homeassistant.components.stookwijzer
-stookwijzer==1.6.2
+stookwijzer==1.7.1
 
 # homeassistant.components.streamlabswater
 streamlabswater==1.0.1
@@ -3323,7 +3323,7 @@ temperusb==1.6.1
 # homeassistant.components.tesla_fleet
 # homeassistant.components.teslemetry
 # homeassistant.components.tessie
-tesla-fleet-api==1.23.1
+tesla-fleet-api==1.24.0
 
 # homeassistant.components.powerwall
 tesla-powerwall==0.5.3

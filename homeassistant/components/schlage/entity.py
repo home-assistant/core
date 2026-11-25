@@ -31,6 +31,7 @@ class SchlageEntity(CoordinatorEntity[SchlageDataUpdateCoordinator]):
             name=self._lock.name,
             manufacturer=MANUFACTURER,
             model=self._lock.model_name,
+            serial_number=self._lock.serial_number,
             sw_version=self._lock.firmware_version,
         )
 

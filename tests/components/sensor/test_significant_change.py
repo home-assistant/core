@@ -3,42 +3,38 @@
 import pytest
 
 from homeassistant.components.sensor import SensorDeviceClass, significant_change
-from homeassistant.const import (
-    ATTR_DEVICE_CLASS,
-    ATTR_UNIT_OF_MEASUREMENT,
-    UnitOfTemperature,
-)
+from homeassistant.const import EntityStateAttribute, UnitOfTemperature
 
 AQI_ATTRS = {
-    ATTR_DEVICE_CLASS: SensorDeviceClass.AQI,
+    EntityStateAttribute.DEVICE_CLASS: SensorDeviceClass.AQI,
 }
 
 BATTERY_ATTRS = {
-    ATTR_DEVICE_CLASS: SensorDeviceClass.BATTERY,
+    EntityStateAttribute.DEVICE_CLASS: SensorDeviceClass.BATTERY,
 }
 
 HUMIDITY_ATTRS = {
-    ATTR_DEVICE_CLASS: SensorDeviceClass.HUMIDITY,
+    EntityStateAttribute.DEVICE_CLASS: SensorDeviceClass.HUMIDITY,
 }
 
 TEMP_CELSIUS_ATTRS = {
-    ATTR_DEVICE_CLASS: SensorDeviceClass.TEMPERATURE,
-    ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.CELSIUS,
+    EntityStateAttribute.DEVICE_CLASS: SensorDeviceClass.TEMPERATURE,
+    EntityStateAttribute.UNIT_OF_MEASUREMENT: UnitOfTemperature.CELSIUS,
 }
 
 TEMP_FREEDOM_ATTRS = {
-    ATTR_DEVICE_CLASS: SensorDeviceClass.TEMPERATURE,
-    ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.FAHRENHEIT,
+    EntityStateAttribute.DEVICE_CLASS: SensorDeviceClass.TEMPERATURE,
+    EntityStateAttribute.UNIT_OF_MEASUREMENT: UnitOfTemperature.FAHRENHEIT,
 }
 
 TEMP_DELTA_CELSIUS_ATTRS = {
-    ATTR_DEVICE_CLASS: SensorDeviceClass.TEMPERATURE_DELTA,
-    ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.CELSIUS,
+    EntityStateAttribute.DEVICE_CLASS: SensorDeviceClass.TEMPERATURE_DELTA,
+    EntityStateAttribute.UNIT_OF_MEASUREMENT: UnitOfTemperature.CELSIUS,
 }
 
 TEMP_DELTA_FAHRENHEIT_ATTRS = {
-    ATTR_DEVICE_CLASS: SensorDeviceClass.TEMPERATURE_DELTA,
-    ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.FAHRENHEIT,
+    EntityStateAttribute.DEVICE_CLASS: SensorDeviceClass.TEMPERATURE_DELTA,
+    EntityStateAttribute.UNIT_OF_MEASUREMENT: UnitOfTemperature.FAHRENHEIT,
 }
 
 
