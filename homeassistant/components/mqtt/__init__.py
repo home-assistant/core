@@ -380,7 +380,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
             mqtt_data = hass.data[DATA_MQTT]
             # A client that failed to start is not unloaded, so keep its
             # subscriptions to restore them on the new client
-            mqtt_data.subscriptions_to_restore |= mqtt_data.client.subscriptions
+            if not mqtt_data.client.client_initialized:
+                mqtt_data.subscriptions_to_restore |= mqtt_data.client.subscriptions
             mqtt_data.config = mqtt_yaml
             mqtt_data.client = client
         else:

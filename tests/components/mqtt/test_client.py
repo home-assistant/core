@@ -2039,7 +2039,16 @@ async def test_setup_certificates_cannot_be_loaded(
 
     # Integrations can subscribe while the setup is retried
     messages: list[ReceiveMessage] = []
+    removed_messages: list[ReceiveMessage] = []
     unsubscribe = await mqtt.async_subscribe(hass, "test-topic", messages.append)
+    unsubscribe_removed = await mqtt.async_subscribe(
+        hass, "test-topic", removed_messages.append
+    )
+
+    # Unsubscribing between two failed attempts removes the subscription
+    assert not await hass.config_entries.async_reload(entry.entry_id)
+    assert entry.state is ConfigEntryState.SETUP_RETRY
+    unsubscribe_removed()
 
     mqtt_client_mock.tls_set.side_effect = None
     mock_try_connection_protocol_check.side_effect = None
@@ -2053,8 +2062,13 @@ async def test_setup_certificates_cannot_be_loaded(
     await hass.async_block_till_done()
     assert len(messages) == 1
     assert messages[0].payload == "test-payload"
+    assert not removed_messages
 
+    # Unsubscribing after the setup succeeded removes the restored subscription
     unsubscribe()
+    async_fire_mqtt_message(hass, "test-topic", "test-payload")
+    await hass.async_block_till_done()
+    assert len(messages) == 1
     assert await hass.config_entries.async_unload(entry.entry_id)
 
 

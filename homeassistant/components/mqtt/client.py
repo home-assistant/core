@@ -536,7 +536,7 @@ class MQTT:
         self._reconnect_task: asyncio.Task | None = None
         self._should_reconnect: bool = True
         self._available_future: asyncio.Future[bool] | None = None
-        self._client_initialized = False
+        self.client_initialized = False
 
         self._max_qos: defaultdict[str, int] = defaultdict(int)  # topic, max qos
         self._pending_subscriptions: dict[str, int] = {}  # topic, qos
@@ -644,7 +644,7 @@ class MQTT:
 
         self._mqttc = mqttc
         self._mqtt_data.client_certificate = mqttc_setup.client_certificate
-        self._client_initialized = True
+        self.client_initialized = True
 
     @callback
     def _async_reader_callback(self, client: mqtt.Client) -> None:
@@ -794,7 +794,7 @@ class MQTT:
     ) -> None:
         """Publish a MQTT message."""
         # The paho client is not set while the setup is retried
-        if not self._client_initialized:
+        if not self.client_initialized:
             raise HomeAssistantError(
                 translation_key="mqtt_not_setup_cannot_publish",
                 translation_domain=DOMAIN,
