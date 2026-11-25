@@ -325,32 +325,25 @@ async def test_no_stream_for_ble_camera(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize(
-    ("create", "two_way_audio"),
+    ("aid", "create", "two_way_audio"),
     [
-        pytest.param(create_doorbell_camera, True, id="speaker"),
-        pytest.param(create_camera, False, id="no_speaker"),
+        pytest.param(1, create_doorbell_camera, True, id="speaker"),
+        pytest.param(1, create_camera, False, id="no_speaker"),
+        # A camera behind a bridge can't stream, so it can't talk either
+        pytest.param(2, create_doorbell_camera, False, id="no_stream"),
     ],
 )
 async def test_two_way_audio(
     hass: HomeAssistant,
+    aid: int,
     create: Callable[[Accessory], None],
     two_way_audio: bool,
 ) -> None:
     """Test streaming cameras with a speaker declare two way audio."""
-    helper = await setup_test_component(hass, 1, create, connection="IP")
+    helper = await setup_test_component(hass, aid, create, connection="IP")
 
     entity = get_camera_from_entity_id(hass, helper.entity_id)
     assert entity.camera_entity_capabilities.two_way_audio is two_way_audio
-
-
-async def test_no_two_way_audio_without_stream(hass: HomeAssistant) -> None:
-    """Test a camera that can't stream doesn't declare two way audio."""
-    helper = await setup_test_component(
-        hass, 2, create_doorbell_camera, connection="IP"
-    )
-
-    entity = get_camera_from_entity_id(hass, helper.entity_id)
-    assert entity.camera_entity_capabilities.two_way_audio is False
 
 
 @pytest.mark.parametrize(
