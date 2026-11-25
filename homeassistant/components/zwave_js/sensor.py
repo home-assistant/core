@@ -27,9 +27,14 @@ from zwave_js_server.const.command_class.multilevel_sensor import (
     HUMIDITY_SENSORS,
     ILLUMINANCE_SENSORS,
     TEMPERATURE_SENSORS,
+    AirPressureScale,
+    BloodPressureScale,
+    CarbonDioxideLevelScale,
+    CarbonMonoxideLevelScale,
     HumidityScale,
     IlluminanceScale,
     MultilevelSensorType,
+    PressureScale,
     TemperatureScale,
     UltravioletScale,
 )
@@ -93,7 +98,6 @@ from .const import (
     ENTITY_DESC_KEY_BATTERY_MAXIMUM_CAPACITY,
     ENTITY_DESC_KEY_BATTERY_TEMPERATURE,
     ENTITY_DESC_KEY_CO,
-    ENTITY_DESC_KEY_CO2,
     ENTITY_DESC_KEY_CURRENT,
     ENTITY_DESC_KEY_ENERGY_MEASUREMENT,
     ENTITY_DESC_KEY_ENERGY_PRODUCTION_TIME,
@@ -105,7 +109,6 @@ from .const import (
     ENTITY_DESC_KEY_MEASUREMENT,
     ENTITY_DESC_KEY_POWER,
     ENTITY_DESC_KEY_POWER_FACTOR,
-    ENTITY_DESC_KEY_PRESSURE,
     ENTITY_DESC_KEY_SIGNAL_STRENGTH,
     ENTITY_DESC_KEY_TARGET_TEMPERATURE,
     ENTITY_DESC_KEY_TOTAL_INCREASING,
@@ -193,42 +196,6 @@ ENTITY_DESCRIPTION_KEY_UNIT_MAP: dict[tuple[str, str], SensorEntityDescription] 
         device_class=SensorDeviceClass.POWER_FACTOR,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
-    ),
-    (ENTITY_DESC_KEY_CO, UnitOfRatio.PARTS_PER_MILLION): SensorEntityDescription(
-        key=ENTITY_DESC_KEY_CO,
-        device_class=SensorDeviceClass.CO,
-        state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=UnitOfRatio.PARTS_PER_MILLION,
-    ),
-    (ENTITY_DESC_KEY_CO2, UnitOfRatio.PARTS_PER_MILLION): SensorEntityDescription(
-        key=ENTITY_DESC_KEY_CO2,
-        device_class=SensorDeviceClass.CO2,
-        state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=UnitOfRatio.PARTS_PER_MILLION,
-    ),
-    (ENTITY_DESC_KEY_PRESSURE, UnitOfPressure.KPA): SensorEntityDescription(
-        key=ENTITY_DESC_KEY_PRESSURE,
-        device_class=SensorDeviceClass.PRESSURE,
-        state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=UnitOfPressure.KPA,
-    ),
-    (ENTITY_DESC_KEY_PRESSURE, UnitOfPressure.PSI): SensorEntityDescription(
-        key=ENTITY_DESC_KEY_PRESSURE,
-        device_class=SensorDeviceClass.PRESSURE,
-        state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=UnitOfPressure.PSI,
-    ),
-    (ENTITY_DESC_KEY_PRESSURE, UnitOfPressure.INHG): SensorEntityDescription(
-        key=ENTITY_DESC_KEY_PRESSURE,
-        device_class=SensorDeviceClass.PRESSURE,
-        state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=UnitOfPressure.INHG,
-    ),
-    (ENTITY_DESC_KEY_PRESSURE, UnitOfPressure.MMHG): SensorEntityDescription(
-        key=ENTITY_DESC_KEY_PRESSURE,
-        device_class=SensorDeviceClass.PRESSURE,
-        state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=UnitOfPressure.MMHG,
     ),
     (
         ENTITY_DESC_KEY_SIGNAL_STRENGTH,
@@ -1265,6 +1232,139 @@ DISCOVERY_SCHEMAS: list[NewZWaveDiscoverySchema] = [
             key="uv_index",
             state_class=SensorStateClass.MEASUREMENT,
             native_unit_of_measurement=UV_INDEX,
+        ),
+    ),
+    NewZWaveDiscoverySchema(
+        platform=Platform.SENSOR,
+        primary_value=ZWaveValueDiscoverySchema(
+            command_class={CommandClass.SENSOR_MULTILEVEL},
+            type={ValueType.NUMBER},
+            all_available_cc_specific={
+                (CC_SPECIFIC_SENSOR_TYPE, MultilevelSensorType.CARBON_MONOXIDE_LEVEL),
+                (
+                    MULTILEVEL_SENSOR_CC_SPECIFIC_SCALE,
+                    CarbonMonoxideLevelScale.PARTS_MILLION,
+                ),
+            },
+        ),
+        entity_class=NewZWaveNumericSensor,
+        entity_description=SensorEntityDescription(
+            key="co_ppm",
+            device_class=SensorDeviceClass.CO,
+            state_class=SensorStateClass.MEASUREMENT,
+            native_unit_of_measurement=UnitOfRatio.PARTS_PER_MILLION,
+        ),
+    ),
+    NewZWaveDiscoverySchema(
+        platform=Platform.SENSOR,
+        primary_value=ZWaveValueDiscoverySchema(
+            command_class={CommandClass.SENSOR_MULTILEVEL},
+            type={ValueType.NUMBER},
+            all_available_cc_specific={
+                (CC_SPECIFIC_SENSOR_TYPE, MultilevelSensorType.CARBON_DIOXIDE_LEVEL),
+                (
+                    MULTILEVEL_SENSOR_CC_SPECIFIC_SCALE,
+                    CarbonDioxideLevelScale.PARTS_MILLION,
+                ),
+            },
+        ),
+        entity_class=NewZWaveNumericSensor,
+        entity_description=SensorEntityDescription(
+            key="co2_ppm",
+            device_class=SensorDeviceClass.CO2,
+            state_class=SensorStateClass.MEASUREMENT,
+            native_unit_of_measurement=UnitOfRatio.PARTS_PER_MILLION,
+        ),
+    ),
+    NewZWaveDiscoverySchema(
+        platform=Platform.SENSOR,
+        primary_value=ZWaveValueDiscoverySchema(
+            command_class={CommandClass.SENSOR_MULTILEVEL},
+            type={ValueType.NUMBER},
+            all_available_cc_specific={
+                # The air and water pressure kPa scales have the same value.
+                (MULTILEVEL_SENSOR_CC_SPECIFIC_SCALE, PressureScale.KILOPASCAL),
+            },
+            any_available_cc_specific={
+                (CC_SPECIFIC_SENSOR_TYPE, MultilevelSensorType.WATER_PRESSURE),
+                (CC_SPECIFIC_SENSOR_TYPE, MultilevelSensorType.SUCTION_PRESSURE),
+                (CC_SPECIFIC_SENSOR_TYPE, MultilevelSensorType.DISCHARGE_PRESSURE),
+                (CC_SPECIFIC_SENSOR_TYPE, MultilevelSensorType.BAROMETRIC_PRESSURE),
+                (CC_SPECIFIC_SENSOR_TYPE, MultilevelSensorType.ATMOSPHERIC_PRESSURE),
+            },
+        ),
+        entity_class=NewZWaveNumericSensor,
+        entity_description=SensorEntityDescription(
+            key="pressure_kpa",
+            device_class=SensorDeviceClass.PRESSURE,
+            state_class=SensorStateClass.MEASUREMENT,
+            native_unit_of_measurement=UnitOfPressure.KPA,
+        ),
+    ),
+    NewZWaveDiscoverySchema(
+        platform=Platform.SENSOR,
+        primary_value=ZWaveValueDiscoverySchema(
+            command_class={CommandClass.SENSOR_MULTILEVEL},
+            type={ValueType.NUMBER},
+            all_available_cc_specific={
+                (
+                    MULTILEVEL_SENSOR_CC_SPECIFIC_SCALE,
+                    PressureScale.POUND_PER_SQUARE_INCH,
+                ),
+            },
+            any_available_cc_specific={
+                (CC_SPECIFIC_SENSOR_TYPE, MultilevelSensorType.SUCTION_PRESSURE),
+                (CC_SPECIFIC_SENSOR_TYPE, MultilevelSensorType.DISCHARGE_PRESSURE),
+            },
+        ),
+        entity_class=NewZWaveNumericSensor,
+        entity_description=SensorEntityDescription(
+            key="pressure_psi",
+            device_class=SensorDeviceClass.PRESSURE,
+            state_class=SensorStateClass.MEASUREMENT,
+            native_unit_of_measurement=UnitOfPressure.PSI,
+        ),
+    ),
+    NewZWaveDiscoverySchema(
+        platform=Platform.SENSOR,
+        primary_value=ZWaveValueDiscoverySchema(
+            command_class={CommandClass.SENSOR_MULTILEVEL},
+            type={ValueType.NUMBER},
+            all_available_cc_specific={
+                (
+                    MULTILEVEL_SENSOR_CC_SPECIFIC_SCALE,
+                    AirPressureScale.INCHES_OF_MERCURY,
+                ),
+            },
+            any_available_cc_specific={
+                (CC_SPECIFIC_SENSOR_TYPE, MultilevelSensorType.BAROMETRIC_PRESSURE),
+                (CC_SPECIFIC_SENSOR_TYPE, MultilevelSensorType.ATMOSPHERIC_PRESSURE),
+            },
+        ),
+        entity_class=NewZWaveNumericSensor,
+        entity_description=SensorEntityDescription(
+            key="pressure_inhg",
+            device_class=SensorDeviceClass.PRESSURE,
+            state_class=SensorStateClass.MEASUREMENT,
+            native_unit_of_measurement=UnitOfPressure.INHG,
+        ),
+    ),
+    NewZWaveDiscoverySchema(
+        platform=Platform.SENSOR,
+        primary_value=ZWaveValueDiscoverySchema(
+            command_class={CommandClass.SENSOR_MULTILEVEL},
+            type={ValueType.NUMBER},
+            all_available_cc_specific={
+                (CC_SPECIFIC_SENSOR_TYPE, MultilevelSensorType.BLOOD_PRESSURE),
+                (MULTILEVEL_SENSOR_CC_SPECIFIC_SCALE, BloodPressureScale.SYSTOLIC),
+            },
+        ),
+        entity_class=NewZWaveNumericSensor,
+        entity_description=SensorEntityDescription(
+            key="pressure_mmhg",
+            device_class=SensorDeviceClass.PRESSURE,
+            state_class=SensorStateClass.MEASUREMENT,
+            native_unit_of_measurement=UnitOfPressure.MMHG,
         ),
     ),
     NewZWaveDiscoverySchema(
