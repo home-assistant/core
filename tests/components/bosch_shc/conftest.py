@@ -361,6 +361,8 @@ def smart_plug_device(
     state_after_power_outage: PowerSwitchConfigurationService.StateAfterPowerOutage
     | None = None,
     led_brightness: int | None = None,
+    supports_power_switch_warning: bool = False,
+    warning_suppressed: bool = False,
 ) -> SHCSmartPlug:
     """Build a minimal device double for the smart_plugs bucket."""
     device = create_autospec(SHCSmartPlug, instance=True, spec_set=True)
@@ -384,6 +386,8 @@ def smart_plug_device(
     device.led_brightness_min = 0
     device.led_brightness_max = 100
     device.led_brightness_step = 1
+    device.supports_power_switch_warning = supports_power_switch_warning
+    device.warning_suppressed = warning_suppressed
     device.state_after_power_outage = state_after_power_outage
     return device
 
@@ -398,6 +402,8 @@ def smart_plug_compact_device(
     state_after_power_outage: PowerSwitchConfigurationService.StateAfterPowerOutage
     | None = None,
     led_brightness: int | None = None,
+    supports_power_switch_warning: bool = False,
+    warning_suppressed: bool = False,
 ) -> SHCSmartPlugCompact:
     """Build a minimal device double for the smart_plugs_compact bucket."""
     device = create_autospec(SHCSmartPlugCompact, instance=True, spec_set=True)
@@ -420,6 +426,8 @@ def smart_plug_compact_device(
     device.led_brightness_min = 0
     device.led_brightness_max = 100
     device.led_brightness_step = 1
+    device.supports_power_switch_warning = supports_power_switch_warning
+    device.warning_suppressed = warning_suppressed
     device.state_after_power_outage = state_after_power_outage
     return device
 

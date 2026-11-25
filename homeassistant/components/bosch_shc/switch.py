@@ -174,6 +174,15 @@ SWITCH_TYPES: dict[str, SHCSwitchEntityDescription] = {
         on_value=True,
         should_poll=False,
     ),
+    "warning_suppressed": SHCSwitchEntityDescription(
+        key="warning_suppressed",
+        translation_key="warning_suppressed",
+        device_class=SwitchDeviceClass.SWITCH,
+        entity_category=EntityCategory.CONFIG,
+        on_key="warning_suppressed",
+        on_value=True,
+        should_poll=False,
+    ),
     "humidity_warning_enabled": SHCSwitchEntityDescription(
         key="humidity_warning_enabled",
         translation_key="humidity_warning_enabled",
@@ -582,6 +591,32 @@ async def async_setup_entry(
         )
         for switch in session.device_helper.smart_plugs_compact
         if switch.supports_energy_saving_mode
+    )
+
+    entities.extend(
+        SHCSwitch(
+            hass=hass,
+            device=switch,
+            parent_id=shc_info.unique_id,
+            entry_id=config_entry.entry_id,
+            description=SWITCH_TYPES["warning_suppressed"],
+            unique_id_suffix="warning_suppressed",
+        )
+        for switch in session.device_helper.smart_plugs
+        if switch.supports_power_switch_warning
+    )
+
+    entities.extend(
+        SHCSwitch(
+            hass=hass,
+            device=switch,
+            parent_id=shc_info.unique_id,
+            entry_id=config_entry.entry_id,
+            description=SWITCH_TYPES["warning_suppressed"],
+            unique_id_suffix="warning_suppressed",
+        )
+        for switch in session.device_helper.smart_plugs_compact
+        if switch.supports_power_switch_warning
     )
 
     entities.extend(

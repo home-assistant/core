@@ -1284,3 +1284,66 @@ async def test_camera_outdoor_gen2_front_light(
         blocking=True,
     )
     assert device.camerafrontlight is False
+
+
+@pytest.mark.parametrize(
+    "device_buckets",
+    [
+        {
+            "smart_plugs": [
+                smart_plug_device(supports_power_switch_warning=True),
+            ],
+            "smart_plugs_compact": [
+                smart_plug_compact_device(
+                    supports_power_switch_warning=True, warning_suppressed=True
+                )
+            ],
+        }
+    ],
+    indirect=True,
+)
+@pytest.mark.usefixtures("mock_session")
+async def test_plug_warning_suppressed(
+    hass: HomeAssistant,
+    mock_session: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """The power switch warning can be suppressed on both plug types."""
+    await setup_integration(hass, mock_config_entry)
+    plug = mock_session.device_helper.smart_plugs[0]
+    compact = mock_session.device_helper.smart_plugs_compact[0]
+
+    assert hass.states.get("switch.smart_plug_warning_suppressed").state == "off"
+    assert hass.states.get("switch.smart_plug_compact_warning_suppressed").state == "on"
+
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        SwitchService.TURN_ON,
+        {TargetKey.ENTITY_ID: "switch.smart_plug_warning_suppressed"},
+        blocking=True,
+    )
+    assert plug.warning_suppressed is True
+
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        SwitchService.TURN_OFF,
+        {TargetKey.ENTITY_ID: "switch.smart_plug_compact_warning_suppressed"},
+        blocking=True,
+    )
+    assert compact.warning_suppressed is False
+
+
+@pytest.mark.parametrize(
+    "device_buckets",
+    [{"smart_plugs": [smart_plug_device(supports_power_switch_warning=False)]}],
+    indirect=True,
+)
+@pytest.mark.usefixtures("mock_session")
+async def test_plug_no_warning_suppressed_support(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """No switch is created for a plug without a power switch warning."""
+    await setup_integration(hass, mock_config_entry)
+
+    assert hass.states.get("switch.smart_plug_warning_suppressed") is None
