@@ -1747,6 +1747,35 @@ async def test_preload_no_change_when_already_disabled(
     rest_client.preload.disable.assert_not_called()
 
 
+@pytest.mark.usefixtures("init_integration", "ws_client")
+async def test_preload_client_error_hides_stream_source(
+    hass: HomeAssistant,
+    rest_client: AsyncMock,
+    init_test_integration: MockCamera,
+) -> None:
+    """Test a client error while updating preload doesn't chain the source."""
+    camera = init_test_integration
+    await _setup_camera_prefs(
+        hass,
+        camera.entity_id,
+        DynamicStreamSettings(
+            orientation=Orientation.NO_TRANSFORM, preload_stream=True
+        ),
+    )
+    rest_client.streams.add.side_effect = Go2RtcClientError(
+        "PUT /api/streams?src=rtsp://user:secret@stream failed"
+    )
+    provider = camera.webrtc_provider
+    with pytest.raises(
+        HomeAssistantError, match="Unable to update the preload stream in go2rtc"
+    ) as exc_info:
+        await provider.async_register_camera(camera)
+    assert exc_info.value.__cause__ is None
+    assert exc_info.value.__suppress_context__ is True
+    assert "secret" not in str(exc_info.value)
+    rest_client.preload.enable.assert_not_called()
+
+
 @pytest.mark.usefixtures("init_integration")
 async def test_offer_go2rtc_error_is_sent_not_logged(
     hass_ws_client: WebSocketGenerator,
