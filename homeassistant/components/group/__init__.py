@@ -28,11 +28,14 @@ from . import config_flow as config_flow_pre_import  # noqa: F401
 from .const import (
     CONF_ALL,
     CONF_HIDE_MEMBERS,
+    CONF_IGNORE_NON_NUMERIC,
     DATA_COMPONENT,
     DOMAIN,
     REG_KEY,
     SERVICE_REMOVE,
     SERVICE_SET,
+    GroupService,
+    GroupServiceArgument,
 )
 from .entity import Group
 from .registry import async_setup as async_setup_registry
@@ -46,6 +49,8 @@ __all__ = [
     "SERVICE_REMOVE",
     "SERVICE_SET",
     "Group",
+    "GroupService",
+    "GroupServiceArgument",
     "expand_entity_ids",
     "get_entity_ids",
     "groups_with_entity",
@@ -153,6 +158,16 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     await hass.config_entries.async_unload_platforms_or_raise(
         entry, (entry.options["group_type"],)
     )
+
+
+async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
+    """Migrate an old config entry."""
+    if entry.version == 1 and entry.minor_version < 2:
+        options = dict(entry.options)
+        # Sensor groups without the option used to ignore non-numeric members
+        if options["group_type"] == "sensor":
+            options.setdefault(CONF_IGNORE_NON_NUMERIC, True)
+        hass.config_entries.async_update_entry(entry, options=options, minor_version=2)
 
 
 async def async_remove_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:

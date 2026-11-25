@@ -76,7 +76,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: NetgearConfigEntry) -> N
 
     # Register the router device before platforms so tracked devices can always
     # resolve it as their via_device parent, regardless of platform setup order.
-    dr.async_get(hass).async_get_or_create_device(
+    dr.async_get(hass).async_get_or_create_from_info(
         config_entry_id=entry.entry_id, device_info=router.device_info
     )
 

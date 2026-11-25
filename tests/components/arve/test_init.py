@@ -11,7 +11,7 @@ from homeassistant.core import HomeAssistant
 
 async def test_migrate_entry_minor_version_1_2(hass: HomeAssistant) -> None:
     """Test migrating a 1.1 config entry to 1.2."""
-    with patch("homeassistant.components.arve.async_setup_entry", return_value=True):
+    with patch("homeassistant.components.arve.async_setup_entry", return_value=None):
         entry = MockConfigEntry(
             domain=DOMAIN,
             data={CONF_ACCESS_TOKEN: "mock", CONF_CLIENT_SECRET: "mock"},

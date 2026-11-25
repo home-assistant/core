@@ -12,6 +12,8 @@ from awesomeversion import (
     AwesomeVersionException,
     AwesomeVersionStrategy,
 )
+from hassfest.manifest_util import sort_manifest as util_sort_manifest
+from hassfest.model import Config, Integration, IntegrationType, ScaledQualityScaleTiers
 import probatio
 from probatio.humanize import humanize_error
 
@@ -20,8 +22,6 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.loader import LORAWAN_SCHEMA
 
 from .icons import integration_category_keys
-from .manifest_util import sort_manifest as util_sort_manifest
-from .model import Config, Integration, IntegrationType, ScaledQualityScaleTiers
 
 DOCUMENTATION_URL_SCHEMA = "https"
 DOCUMENTATION_URL_HOST = "www.home-assistant.io"
@@ -147,6 +147,12 @@ NO_CATEGORIES_INTEGRATION_TYPES = {
 CATEGORIES_DOCUMENTATION_URL = (
     "https://contributors.home-assistant.io/core/integrations/categories/"
 )
+
+# Built-in plumbing and entity platforms don't reach any devices or service
+NO_CONNECTIVITY_INTEGRATION_TYPES = {
+    IntegrationType.ENTITY,
+    IntegrationType.SYSTEM,
+}
 
 
 def core_documentation_url(value: str) -> str:
@@ -334,6 +340,16 @@ INTEGRATION_MANIFEST_SCHEMA = probatio.Schema(
             probatio.Length(min=1, max=3),
             probatio.Unique(),
         ),
+        probatio.Optional("connectivity"): probatio.All(
+            [
+                probatio.Match(
+                    r"^[a-z0-9_]+$",
+                    msg="Expected a connectivity like `zigbee` or `cloud`",
+                )
+            ],
+            probatio.Length(min=1),
+            probatio.Unique(),
+        ),
         probatio.Optional("single_config_entry"): bool,
         probatio.Optional("preview_features"): probatio.Schema(
             {
@@ -409,6 +425,21 @@ def load_known_categories(config: Config) -> set[str] | None:
         return None
 
 
+def load_known_connectivity(config: Config) -> set[str] | None:
+    """Return the known connectivity values, like `zigbee` and `cloud`.
+
+    Read from the source strings, so a new value can be used before
+    integration_connectivity.json is regenerated.
+    """
+    # Invalid strings are reported by the json and translations plugins, and the
+    # strings are missing when validating integrations outside a core checkout
+    try:
+        strings = json.loads((config.root / HOMEASSISTANT_STRINGS_PATH).read_text())
+        return set(strings.get("integration_connectivity", {}))
+    except OSError, ValueError, AttributeError, TypeError:
+        return None
+
+
 def validate_categories(integration: Integration, known_categories: set[str]) -> None:
     """Validate the categories of an integration."""
     if not (categories := integration.manifest.get("categories")):
@@ -451,10 +482,37 @@ def validate_categories(integration: Integration, known_categories: set[str]) ->
             )
 
 
+def validate_connectivity(
+    integration: Integration, known_connectivity: set[str]
+) -> None:
+    """Validate the connectivity of an integration."""
+    if not (connectivity := integration.manifest.get("connectivity")):
+        return
+
+    if integration.integration_type in NO_CONNECTIVITY_INTEGRATION_TYPES:
+        integration.add_error(
+            "manifest",
+            f"Integrations of type {integration.integration_type} "
+            "can't have connectivity",
+        )
+
+    # Custom integrations only get a warning, so a value that is renamed
+    # or removed in core never breaks an existing repository
+    report = integration.add_error if integration.core else integration.add_warning
+    for value in connectivity:
+        if value not in known_connectivity:
+            report(
+                "manifest",
+                f"Unknown connectivity `{value}`, "
+                f"see {HOMEASSISTANT_STRINGS_PATH} for the known values",
+            )
+
+
 def validate_manifest(
     integration: Integration,
     core_components_dir: Path,
     known_categories: set[str] | None,
+    known_connectivity: set[str] | None,
 ) -> None:
     """Validate manifest."""
     try:
@@ -469,6 +527,8 @@ def validate_manifest(
     else:
         if known_categories is not None:
             validate_categories(integration, known_categories)
+        if known_connectivity is not None:
+            validate_connectivity(integration, known_connectivity)
 
     if (domain := integration.manifest["domain"]) != integration.path.name:
         integration.add_error("manifest", "Domain does not match dir name")
@@ -543,9 +603,12 @@ def validate(integrations: dict[str, Integration], config: Config) -> None:
     """Handle all integrations manifests."""
     core_components_dir = config.root / "homeassistant/components"
     known_categories = load_known_categories(config)
+    known_connectivity = load_known_connectivity(config)
     manifests_resorted = []
     for integration in integrations.values():
-        validate_manifest(integration, core_components_dir, known_categories)
+        validate_manifest(
+            integration, core_components_dir, known_categories, known_connectivity
+        )
         if not integration.errors:
             if sort_manifest(integration, config):
                 manifests_resorted.append(integration.manifest_path)

@@ -19,7 +19,7 @@ def _patch_meter_check_success() -> Generator[None]:
     """Patch a successful meter check and entry setup."""
     with (
         patch("peco.PecoOutageApi.meter_check", return_value=True),
-        patch("homeassistant.components.peco.async_setup_entry", return_value=True),
+        patch("homeassistant.components.peco.async_setup_entry", return_value=None),
     ):
         yield
 
@@ -35,7 +35,7 @@ async def test_form(hass: HomeAssistant) -> None:
 
     with patch(
         "homeassistant.components.peco.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -64,7 +64,7 @@ async def test_invalid_county(hass: HomeAssistant) -> None:
     with (
         patch(
             "homeassistant.components.peco.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ),
         pytest.raises(Invalid),
     ):

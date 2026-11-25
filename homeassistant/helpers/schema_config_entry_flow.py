@@ -20,7 +20,7 @@ from homeassistant.core import HomeAssistant, callback, split_entity_id
 from homeassistant.data_entry_flow import UnknownHandler
 
 from . import entity_registry as er, selector
-from .typing import UNDEFINED, UndefinedType
+from .typing import Undefined
 
 
 class SchemaFlowError(Exception):
@@ -81,12 +81,12 @@ class SchemaFlowFormStep(SchemaFlowStep):
 
     suggested_values: (
         Callable[[SchemaCommonFlowHandler], Coroutine[Any, Any, dict[str, Any]]]
-        | UndefinedType
+        | Undefined
         | None
-    ) = UNDEFINED
+    ) = Undefined
     """Optional property to populate suggested values.
 
-    - If `suggested_values` is UNDEFINED, each key in the schema will get a suggested
+    - If `suggested_values` is Undefined, each key in the schema will get a suggested
       value from an option with the same key.
 
     Note: if a step is retried due to a validation failure, then the user input will
@@ -98,8 +98,8 @@ class SchemaFlowFormStep(SchemaFlowStep):
 
     description_placeholders: (
         Callable[[SchemaCommonFlowHandler], Coroutine[Any, Any, dict[str, str]]]
-        | UndefinedType
-    ) = UNDEFINED
+        | Undefined
+    ) = Undefined
     """Optional property to populate description placeholders."""
 
 
@@ -260,11 +260,11 @@ class SchemaCommonFlowHandler:
             return await self._show_next_step_or_create_entry(form_step)
 
         description_placeholders: dict[str, str] | None = None
-        if form_step.description_placeholders is not UNDEFINED:
+        if form_step.description_placeholders is not Undefined:
             description_placeholders = await form_step.description_placeholders(self)
 
         suggested_values: dict[str, Any] = {}
-        if form_step.suggested_values is UNDEFINED:
+        if form_step.suggested_values is Undefined:
             suggested_values = self._options
         elif form_step.suggested_values:
             suggested_values = await form_step.suggested_values(self)

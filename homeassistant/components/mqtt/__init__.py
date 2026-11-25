@@ -2,6 +2,7 @@
 
 import asyncio
 from collections.abc import Callable
+from contextlib import suppress
 import logging
 from typing import Any, cast
 
@@ -83,6 +84,8 @@ from .const import (
     PROTOCOL_311,
     SERVICE_PUBLISH,
     TEMPLATE_ERRORS,
+    MqttService,
+    MqttServiceArgument,
 )
 from .models import (
     DATA_MQTT,
@@ -95,6 +98,7 @@ from .models import (
     ReceiveMessage,
     convert_outgoing_mqtt_payload,
 )
+from .repairs import async_setup_client_certificate_check
 from .services import async_setup_services
 from .subscription import (
     EntitySubscription,
@@ -106,7 +110,7 @@ from .util import (
     async_check_config_schema,
     async_create_certificate_temp_files,
     async_forward_entry_setup_and_setup_discovery,
-    async_remove_mqtt_issues,
+    async_refresh_mqtt_issues,
     async_wait_for_mqtt_client,
     mqtt_config_entry_enabled,
     platforms_from_config,
@@ -158,6 +162,8 @@ __all__ = [
     "EntitySubscription",
     "MqttCommandTemplate",
     "MqttData",
+    "MqttService",
+    "MqttServiceArgument",
     "MqttValueTemplate",
     "PayloadSentinel",
     "PublishPayloadType",
@@ -322,10 +328,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
         await async_create_certificate_temp_files(hass, new_entry_data)
         # Try the connection with protocol version 5
         # And update the protocol if successful
-        if await hass.async_add_executor_job(
-            try_connection,
-            {CONF_PORT: DEFAULT_PORT} | new_entry_data,
-        ):
+        migrated: bool | None = None
+        # When the certificates cannot be loaded, the client setup below fails
+        # and is retried, and the migration is tried again then
+        with suppress(OSError):
+            migrated = await hass.async_add_executor_job(
+                try_connection,
+                {CONF_PORT: DEFAULT_PORT} | new_entry_data,
+            )
+        if migrated:
             hass.config_entries.async_update_entry(
                 entry,
                 data=new_entry_data,
@@ -334,12 +345,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
             _LOGGER.info(
                 "The MQTT protocol version was successfully updated to version 5"
             )
-        else:
+        elif migrated is not None:
             broker: str = entry.data[CONF_BROKER]
             async_create_issue(
                 hass,
                 DOMAIN,
                 "protocol_5_migration",
+                config_entry_id=entry.entry_id,
                 issue_domain=DOMAIN,
                 is_fixable=False,
                 breaks_in_ha_version="2027.1.0",
@@ -365,6 +377,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
         client = MQTT(hass, entry, conf)
         if DOMAIN in hass.data:
             mqtt_data = hass.data[DATA_MQTT]
+            # A client that failed to start is not unloaded, so keep its
+            # subscriptions to restore them on the new client
+            if not mqtt_data.client.client_initialized:
+                mqtt_data.subscriptions_to_restore |= mqtt_data.client.subscriptions
             mqtt_data.config = mqtt_yaml
             mqtt_data.client = client
         else:
@@ -408,14 +424,20 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     # messages on connect
     await mqtt_data.client.async_connect(client_available)
 
-    # setup platforms and discovery
-    await async_forward_entry_setup_and_setup_discovery(hass, entry, platforms_used)
+    # setup platforms and discovery, this re-creates the issues of manually
+    # configured items which are still invalid, also those stored before a restart
+    with async_refresh_mqtt_issues(hass):
+        await async_forward_entry_setup_and_setup_discovery(hass, entry, platforms_used)
 
     # Setup discovery
     if conf.get(CONF_DISCOVERY, DEFAULT_DISCOVERY):
         await discovery.async_start(
             hass, conf.get(CONF_DISCOVERY_PREFIX, DEFAULT_PREFIX), entry
         )
+
+    await async_setup_client_certificate_check(
+        hass, entry, conf, mqtt_data.client_certificate
+    )
 
 
 @websocket_api.websocket_command(
@@ -519,9 +541,13 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     # Stop the discovery
     await discovery.async_stop(hass)
     try:
-        # Unload the platforms
+        # Unload the entity platforms
+        loaded_entity_platforms = mqtt_data.platforms_loaded - {
+            "device_automation",
+            "tag",
+        }
         await hass.config_entries.async_unload_platforms_or_raise(
-            entry, mqtt_data.platforms_loaded
+            entry, loaded_entity_platforms
         )
     finally:
         mqtt_data.platforms_loaded = set()
@@ -545,6 +571,3 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
         # when the entry is set up again
         if subscriptions := mqtt_client.subscriptions:
             mqtt_data.subscriptions_to_restore = subscriptions
-
-        # Remove repair issues
-        async_remove_mqtt_issues(hass, mqtt_data)

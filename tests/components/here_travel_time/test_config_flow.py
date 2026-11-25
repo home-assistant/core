@@ -48,7 +48,7 @@ def bypass_setup_fixture():
     """Prevent setup."""
     with patch(
         "homeassistant.components.here_travel_time.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ):
         yield
 

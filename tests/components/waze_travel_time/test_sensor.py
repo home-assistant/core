@@ -148,10 +148,14 @@ async def test_excl_filter(hass: HomeAssistant) -> None:
     ("error_fixture", "log_message"),
     [
         pytest.param(
-            "mock_update_wrcerror", "Error on retrieving data: ", id="wrcerror"
+            "mock_update_wrcerror",
+            "An error occurred while retrieving data from Waze",
+            id="wrcerror",
         ),
         pytest.param(
-            "mock_update_connect_error", "Connection error: ", id="connect_error"
+            "mock_update_connect_error",
+            "An error occurred while connecting to Waze",
+            id="connect_error",
         ),
     ],
 )

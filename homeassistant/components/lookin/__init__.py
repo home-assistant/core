@@ -185,7 +185,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: LookinConfigEntry) -> No
 
     # Register the lookin device so entities on the controlled devices can link
     # to it via via_device_id, regardless of which platform is set up first.
-    dr.async_get(hass).async_get_or_create_device(
+    dr.async_get(hass).async_get_or_create_from_info(
         config_entry_id=entry.entry_id,
         device_info=_lookin_device_to_device_info(lookin_device, host),
     )

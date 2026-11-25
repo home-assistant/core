@@ -22,8 +22,8 @@ from homeassistant.components.websocket_api import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_EVENT
-from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import HomeAssistantError, Unauthorized
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant, callback
+from homeassistant.exceptions import ConfigEntryError, HomeAssistantError, Unauthorized
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.typing import ConfigType
@@ -58,6 +58,8 @@ from .const import (
     CalendarEntityFeature,
     CalendarEntityStateAttribute,
     CalendarEventStatus,
+    CalendarService,
+    CalendarServiceArgument,
 )
 from .entity import CalendarEntity, CalendarEntityDescription, CalendarEvent
 from .helper import (
@@ -135,6 +137,8 @@ __all__ = [
     "CalendarEntityStateAttribute",
     "CalendarEvent",
     "CalendarEventStatus",
+    "CalendarService",
+    "CalendarServiceArgument",
     "extract_offset",
     "is_offset_reached",
 ]
@@ -161,14 +165,19 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Set up a config entry."""
-    return await hass.data[DATA_COMPONENT].async_setup_entry(entry)
+    if not await hass.data[DATA_COMPONENT].async_setup_entry(entry):
+        raise ConfigEntryError(
+            translation_domain=HOMEASSISTANT_DOMAIN,
+            translation_key="platform_setup_failed",
+            translation_placeholders={"platform": entry.domain, "domain": DOMAIN},
+        )
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.data[DATA_COMPONENT].async_unload_entry(entry)
+    await hass.data[DATA_COMPONENT].async_unload_entry(entry)
 
 
 def get_date(date: dict[str, Any]) -> dt.datetime:

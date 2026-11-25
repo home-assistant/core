@@ -15,7 +15,7 @@ from homeassistant.const import CONF_ACCESS_TOKEN, CONF_HOST, CONF_NAME, Platfor
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
-        "homeassistant.components.yardian.async_setup_entry", return_value=True
+        "homeassistant.components.yardian.async_setup_entry", return_value=None
     ) as patched_setup_entry:
         yield patched_setup_entry
 
@@ -71,6 +71,19 @@ def mock_yardian_client() -> Generator[AsyncMock]:
         )
 
         yield client
+
+
+@pytest.fixture
+def mock_yardian_client_create(
+    mock_yardian_client: AsyncMock,
+) -> Generator[AsyncMock]:
+    """Mock the network factory separately from the returned client."""
+    with patch(
+        "homeassistant.components.yardian.AsyncYardianClient.create",
+        new_callable=AsyncMock,
+        return_value=mock_yardian_client,
+    ) as create:
+        yield create
 
 
 @pytest.fixture

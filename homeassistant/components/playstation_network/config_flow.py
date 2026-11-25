@@ -15,14 +15,12 @@ from psnawp_api.utils.misc import parse_npsso_token
 
 from homeassistant.config_entries import (
     SOURCE_REAUTH,
-    ConfigEntry,
     ConfigEntryState,
     ConfigFlow,
     ConfigFlowResult,
     ConfigSubentryFlow,
     SubentryFlowResult,
 )
-from homeassistant.const import CONF_NAME
 from homeassistant.core import callback
 from homeassistant.helpers.selector import (
     SelectOptionDict,
@@ -46,7 +44,7 @@ class PlaystationNetworkConfigFlow(ConfigFlow, domain=DOMAIN):
     @callback
     @override
     def async_get_supported_subentry_types(
-        cls, config_entry: ConfigEntry
+        cls, config_entry: PlaystationNetworkConfigEntry
     ) -> dict[str, type[ConfigSubentryFlow]]:
         """Return subentries supported by this integration."""
         return {"friend": FriendSubentryFlowHandler}
@@ -146,7 +144,7 @@ class PlaystationNetworkConfigFlow(ConfigFlow, domain=DOMAIN):
                 self._abort_if_unique_id_mismatch(
                     description_placeholders={
                         "wrong_account": user.online_id,
-                        CONF_NAME: entry.title,
+                        "name": entry.title,
                     }
                 )
 

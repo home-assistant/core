@@ -5,8 +5,7 @@ from pathlib import Path
 from typing import Any
 
 import attr
-
-from script.hassfest.manifest_util import sort_manifest
+from hassfest.manifest_util import sort_manifest
 
 from .const import COMPONENT_DIR, TESTS_DIR
 
@@ -25,6 +24,7 @@ class Info:
     discoverable: str = attr.ib(default=None)
     oauth2: str = attr.ib(default=None)
     integration_type: str = attr.ib(default=None)
+    categories: list[str] = attr.ib(default=None)
 
     files_added: set[Path] = attr.ib(factory=set)
     tests_added: set[Path] = attr.ib(factory=set)

@@ -17,8 +17,15 @@ from homeassistant.components.hassio.const import (
     HASSIO_STATS_UPDATE_INTERVAL,
     REQUEST_REFRESH_DELAY,
 )
+from homeassistant.components.sensor import ATTR_STATE_CLASS, SensorStateClass
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import STATE_UNAVAILABLE
+from homeassistant.const import (
+    ATTR_UNIT_OF_MEASUREMENT,
+    PERCENTAGE,
+    STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
+    EntityCategory,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
@@ -134,13 +141,56 @@ async def test_sensor(
 
     # There is a REQUEST_REFRESH_DELAYs cooldown on the debouncer
     async_fire_time_changed(
-        hass, dt_util.now() + timedelta(seconds=REQUEST_REFRESH_DELAY)
+        hass, dt_util.utcnow() + timedelta(seconds=REQUEST_REFRESH_DELAY)
     )
     await hass.async_block_till_done()
 
     # Verify that the entity have the expected state.
     state = hass.states.get(entity_id)
     assert state.state == expected
+
+
+@pytest.mark.parametrize(
+    ("store_addons", "store_repositories"), [(MOCK_STORE_ADDONS, MOCK_REPOSITORIES)]
+)
+@pytest.mark.parametrize(
+    ("disk_life_time", "expected"),
+    [
+        pytest.param(12.5, "12.5", id="reported"),
+        # Supervisor only reports a lifetime for NVMe and eMMC disks.
+        pytest.param(None, STATE_UNKNOWN, id="not_reported"),
+    ],
+)
+@patch.dict(os.environ, MOCK_ENVIRON)
+async def test_disk_lifetime_sensor(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    host_info: AsyncMock,
+    disk_life_time: float | None,
+    expected: str,
+) -> None:
+    """Test the disk lifetime sensor."""
+    entity_id = "sensor.home_assistant_host_disk_lifetime"
+    host_info.return_value = replace(
+        host_info.return_value, disk_life_time=disk_life_time
+    )
+    config_entry = MockConfigEntry(domain=DOMAIN, data={}, unique_id=DOMAIN)
+    config_entry.add_to_hass(hass)
+    assert await async_setup_component(hass, DOMAIN, {"hassio": {}})
+    await hass.async_block_till_done()
+
+    entry = entity_registry.async_get(entity_id)
+    assert entry.entity_category is EntityCategory.DIAGNOSTIC
+    assert entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
+
+    entity_registry.async_update_entity(entity_id, disabled_by=None)
+    await hass.config_entries.async_reload(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state.state == expected
+    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == PERCENTAGE
+    assert state.attributes[ATTR_STATE_CLASS] == SensorStateClass.MEASUREMENT
 
 
 @pytest.mark.parametrize(

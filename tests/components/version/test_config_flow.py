@@ -59,7 +59,7 @@ async def test_basic_form(hass: HomeAssistant) -> None:
 
     with patch(
         "homeassistant.components.version.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ) as mock_setup_entry:
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -100,7 +100,7 @@ async def test_form_pypi(hass: HomeAssistant) -> None:
 
     with patch(
         "homeassistant.components.version.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ) as mock_setup_entry:
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], {CONF_BETA: True}
@@ -141,7 +141,7 @@ async def test_form_container(hass: HomeAssistant) -> None:
 
     with patch(
         "homeassistant.components.version.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ) as mock_setup_entry:
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], {CONF_IMAGE: "odroid-n2-homeassistant"}
@@ -182,7 +182,7 @@ async def test_form_supervisor(hass: HomeAssistant) -> None:
 
     with patch(
         "homeassistant.components.version.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ) as mock_setup_entry:
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],

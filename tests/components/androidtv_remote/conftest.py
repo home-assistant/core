@@ -15,7 +15,7 @@ def mock_setup_entry() -> Generator[AsyncMock]:
     """Mock setting up a config entry."""
     with patch(
         "homeassistant.components.androidtv_remote.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ) as mock_setup_entry:
         yield mock_setup_entry
 
@@ -25,7 +25,7 @@ def mock_unload_entry() -> Generator[AsyncMock]:
     """Mock unloading a config entry."""
     with patch(
         "homeassistant.components.androidtv_remote.async_unload_entry",
-        return_value=True,
+        return_value=None,
     ) as mock_unload_entry:
         yield mock_unload_entry
 

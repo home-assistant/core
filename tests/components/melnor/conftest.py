@@ -254,7 +254,7 @@ def mock_melnor_device():
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Patch async setup entry to return True."""
     with patch(
-        "homeassistant.components.melnor.async_setup_entry", return_value=True
+        "homeassistant.components.melnor.async_setup_entry", return_value=None
     ) as mock_setup:
         yield mock_setup
 

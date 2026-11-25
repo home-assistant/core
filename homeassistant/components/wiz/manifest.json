@@ -4,6 +4,7 @@
   "categories": ["lighting.bulbs_lamps", "plugs_switches"],
   "codeowners": ["@sbidy", "@arturpragacz"],
   "config_flow": true,
+  "connectivity": ["network"],
   "dependencies": ["network"],
   "dhcp": [
     {
@@ -28,5 +29,5 @@
   "documentation": "https://www.home-assistant.io/integrations/wiz",
   "integration_type": "device",
   "iot_class": "local_push",
-  "requirements": ["pywizlight==0.6.3"]
+  "requirements": ["pywizlight==0.6.7"]
 }

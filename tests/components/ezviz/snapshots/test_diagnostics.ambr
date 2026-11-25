@@ -1,0 +1,45 @@
+# serializer version: 1
+# name: test_diagnostics[mock_camera_config_entry]
+  dict({
+    'options': dict({
+      'ffmpeg_arguments': '/Streaming/Channels/102',
+      'timeout': 25,
+    }),
+    'type': 'CAMERA_ACCOUNT',
+  })
+# ---
+# name: test_diagnostics[mock_config_entry]
+  dict({
+    'devices': list([
+      dict({
+        'alarm_notify': False,
+        'alarm_sound_mod': 'SOFT',
+        'battery_camera_work_mode': 1,
+        'battery_level': 85,
+        'device_category': 'BatteryCamera',
+        'device_sub_category': 'CAMERA',
+        'encrypted': False,
+        'last_alarm_type_code': '2701',
+        'last_alarm_type_name': 'Motion Detected',
+        'local_rtsp_port': 554,
+        'status': 1,
+        'supportExt': dict({
+          '119': '1',
+        }),
+        'switches': dict({
+          '21': False,
+          '7': True,
+        }),
+        'upgrade_available': False,
+        'upgrade_in_progress': False,
+        'upgrade_percent': 0,
+        'version': '1.0.0',
+      }),
+    ]),
+    'options': dict({
+      'ffmpeg_arguments': '/Streaming/Channels/102',
+      'timeout': 25,
+    }),
+    'type': 'EZVIZ_CLOUD_ACCOUNT',
+  })
+# ---

@@ -5,7 +5,7 @@ from unittest.mock import call, patch
 
 import pytest
 from zha.application.platforms.fan.const import PRESET_MODE_ON
-from zigpy.device import Device
+from zigpy.device import ZigbeeDevice
 from zigpy.profiles import zha
 from zigpy.typing import UNDEFINED
 from zigpy.zcl.clusters import general, hvac
@@ -14,8 +14,7 @@ from homeassistant.components.fan import (
     ATTR_PERCENTAGE,
     ATTR_PRESET_MODE,
     DOMAIN as FAN_DOMAIN,
-    SERVICE_SET_PERCENTAGE,
-    SERVICE_SET_PRESET_MODE,
+    FanService,
     NotValidPresetModeError,
 )
 from homeassistant.components.zha.helpers import (
@@ -24,14 +23,7 @@ from homeassistant.components.zha.helpers import (
     get_zha_gateway,
     get_zha_gateway_proxy,
 )
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
-    STATE_OFF,
-    STATE_ON,
-    Platform,
-)
+from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON, Platform
 from homeassistant.core import HomeAssistant
 
 from .common import find_entity_id, send_attributes_report
@@ -64,7 +56,7 @@ def fan_platform_only():
 async def test_fan(
     hass: HomeAssistant,
     setup_zha: Callable[..., Coroutine[None]],
-    zigpy_device_mock: Callable[..., Device],
+    zigpy_device_mock: Callable[..., ZigbeeDevice],
 ) -> None:
     """Test ZHA fan platform."""
 
@@ -156,14 +148,14 @@ async def async_turn_on(hass: HomeAssistant, entity_id, percentage=None):
         if value is not None
     }
 
-    await hass.services.async_call(FAN_DOMAIN, SERVICE_TURN_ON, data, blocking=True)
+    await hass.services.async_call(FAN_DOMAIN, FanService.TURN_ON, data, blocking=True)
 
 
 async def async_turn_off(hass: HomeAssistant, entity_id):
     """Turn fan off."""
     data = {ATTR_ENTITY_ID: entity_id} if entity_id else {}
 
-    await hass.services.async_call(FAN_DOMAIN, SERVICE_TURN_OFF, data, blocking=True)
+    await hass.services.async_call(FAN_DOMAIN, FanService.TURN_OFF, data, blocking=True)
 
 
 async def async_set_percentage(hass: HomeAssistant, entity_id, percentage=None):
@@ -175,7 +167,7 @@ async def async_set_percentage(hass: HomeAssistant, entity_id, percentage=None):
     }
 
     await hass.services.async_call(
-        FAN_DOMAIN, SERVICE_SET_PERCENTAGE, data, blocking=True
+        FAN_DOMAIN, FanService.SET_PERCENTAGE, data, blocking=True
     )
 
 
@@ -188,5 +180,5 @@ async def async_set_preset_mode(hass: HomeAssistant, entity_id, preset_mode=None
     }
 
     await hass.services.async_call(
-        FAN_DOMAIN, SERVICE_SET_PRESET_MODE, data, blocking=True
+        FAN_DOMAIN, FanService.SET_PRESET_MODE, data, blocking=True
     )

@@ -1,5 +1,7 @@
 """Constants for the Hue component."""
 
+from enum import StrEnum
+
 from aiohue.v2.models.button import ButtonEvent
 from aiohue.v2.models.relative_rotary import (
     RelativeRotaryAction,
@@ -13,14 +15,6 @@ CONF_IGNORE_AVAILABILITY = "ignore_availability"
 CONF_SUBTYPE = "subtype"
 
 ATTR_HUE_EVENT = "hue_event"
-SERVICE_ACTIVATE_SCENE = "activate_scene"
-SERVICE_HUE_ACTIVATE_SCENE = "hue_activate_scene"
-ATTR_GROUP_NAME = "group_name"
-ATTR_SCENE_NAME = "scene_name"
-ATTR_TRANSITION = "transition"
-ATTR_DYNAMIC = "dynamic"
-ATTR_SPEED = "speed"
-ATTR_BRIGHTNESS = "brightness"
 
 
 # V1 API SPECIFIC CONSTANTS ##################
@@ -64,3 +58,21 @@ DEVICE_SPECIFIC_EVENT_TYPES = {
     # device specific overrides of specific supported button events
     "Hue tap switch": (ButtonEvent.INITIAL_PRESS,),
 }
+
+
+class HueService(StrEnum):
+    """Store keys for Philips Hue services."""
+
+    HUE_ACTIVATE_SCENE = "hue_activate_scene"
+    ACTIVATE_SCENE = "activate_scene"
+
+
+class HueServiceArgument(StrEnum):
+    """Store keys for Philips Hue service arguments."""
+
+    GROUP_NAME = "group_name"
+    SCENE_NAME = "scene_name"
+    DYNAMIC = "dynamic"
+    TRANSITION = "transition"
+    SPEED = "speed"
+    BRIGHTNESS = "brightness"

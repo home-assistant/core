@@ -1,15 +1,21 @@
 """Teslemetry helper functions."""
 
 import asyncio
-from collections.abc import Awaitable
+from collections.abc import Awaitable, Callable
 from typing import Any, cast
 
 from aiohttp import ClientError
-from aiopowerwall import PowerwallAuthenticationError, PowerwallClient
 from tesla_fleet_api.exceptions import TeslaFleetError
 from tesla_fleet_api.tesla import EnergySiteRouter
 from tesla_fleet_api.tesla.bluetooth import TeslaBluetooth
-from tesla_fleet_api.teslemetry import EnergySite
+from tesla_fleet_api.tesla.powerwall import (
+    PowerwallAuthenticationError,
+    PowerwallClient,
+    PowerwallCommandError,
+    PowerwallError,
+    PowerwallNotSupportedError,
+)
+from tesla_fleet_api.teslemetry import EnergySite, Vehicle
 from tesla_fleet_api.teslemetry.energysite import TeslemetryEnergySite
 
 from homeassistant.core import HomeAssistant, callback
@@ -17,11 +23,25 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import BLE_PARENT_KEY, BLE_PARENT_LOCK_KEY, DOMAIN, LOGGER, VEHICLE_KEY_FILE
+from .const import (
+    BLE_PARENT_KEY,
+    BLE_PARENT_LOCK_KEY,
+    DOMAIN,
+    ISSUE_GATEWAY_NOT_FOUND,
+    LOGGER,
+    VEHICLE_KEY_FILE,
+)
+
+GATEWAY_OUT_OF_RANGE = 11
 
 
 class PowerwallKeyRejectedError(Exception):
     """Signal that the gateway refused a v1r-signed read with our RSA key."""
+
+
+def gateway_issue_id(entry_id: str, site_id: int) -> str:
+    """Return the repair issue id for a site whose local gateway was not found."""
+    return f"{ISSUE_GATEWAY_NOT_FOUND}_{entry_id}_{site_id}"
 
 
 def cloud_energy_site(api: EnergySite | EnergySiteRouter) -> TeslemetryEnergySite:
@@ -119,6 +139,38 @@ async def handle_command(command: Awaitable[dict[str, Any]]) -> dict[str, Any]:
     return result
 
 
+async def handle_energy_site_command(
+    command: Awaitable[dict[str, Any]],
+) -> dict[str, Any]:
+    """Handle a command that a paired energy site may send to its local Powerwall gateway."""
+    try:
+        return await handle_command(command)
+    except PowerwallNotSupportedError as e:
+        raise HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key="local_command_not_supported",
+        ) from e
+    except PowerwallCommandError as e:
+        # pylint: disable-next=home-assistant-log-and-raise
+        LOGGER.error("Local Powerwall gateway command failed: %s", e)
+        if e.code == GATEWAY_OUT_OF_RANGE:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="local_command_out_of_range",
+            ) from e
+        raise HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key="local_command_failed",
+        ) from e
+    except PowerwallError as e:
+        # pylint: disable-next=home-assistant-log-and-raise
+        LOGGER.error("Local Powerwall gateway command failed: %s", e)
+        raise HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key="local_command_failed",
+        ) from e
+
+
 async def handle_vehicle_command(command: Awaitable[dict[str, Any]]) -> Any:
     """Handle a vehicle command."""
     result = await handle_command(command)
@@ -151,6 +203,30 @@ async def handle_vehicle_command(command: Awaitable[dict[str, Any]]) -> Any:
         )
     # Response with result of true
     return result
+
+
+async def async_set_charge_on_solar(
+    send: Callable[[Awaitable[dict[str, Any]]], Awaitable[Any]],
+    api: Vehicle,
+    *,
+    enabled: bool,
+    lower_charge_limit: int,
+    charge_limit_soc: int | None,
+) -> int:
+    """Send a charge-on-solar command, omitting the upper bound if it isn't known yet.
+
+    Returns the lower limit actually sent, clamped to the upper bound if it is known.
+    """
+    if charge_limit_soc is not None:
+        lower_charge_limit = min(lower_charge_limit, charge_limit_soc)
+    await send(
+        api.charge_on_solar(
+            enabled=enabled,
+            lower_charge_limit=lower_charge_limit,
+            upper_charge_limit=charge_limit_soc,
+        )
+    )
+    return lower_charge_limit
 
 
 @callback

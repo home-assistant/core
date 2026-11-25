@@ -11,6 +11,7 @@ from fressnapftracker import (
     LedBrightness,
     PhoneVerificationResponse,
     Position,
+    ServiceBooking,
     SmsCodeResponse,
     Tracker,
     TrackerFeatures,
@@ -44,6 +45,7 @@ def create_mock_tracker() -> Tracker:
         name="Fluffy",
         battery=85,
         charging=False,
+        last_seen_timestamp="2024-01-15T12:30:00Z",
         position=Position(
             lat=52.520008,
             lng=13.404954,
@@ -66,6 +68,10 @@ def create_mock_tracker() -> Tracker:
             not_charging=True,
             overall=True,
         ),
+        servicebooking=ServiceBooking(
+            has_current_servicebooking=True,
+            servicebooking_until="2027-06-30T12:00:00Z",
+        ),
         icon="http://res.cloudinary.com/iot-venture/image/upload/v1717594357/kyaqq7nfitrdvaoakb8s.jpg",
     )
 
@@ -75,7 +81,7 @@ def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
         "homeassistant.components.fressnapf_tracker.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ) as mock_setup_entry:
         yield mock_setup_entry
 

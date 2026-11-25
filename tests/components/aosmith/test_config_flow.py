@@ -134,7 +134,7 @@ async def test_reauth_flow(
             "homeassistant.components.aosmith.config_flow.AOSmithAPIClient.get_energy_use_data",
             return_value=[],
         ),
-        patch("homeassistant.components.aosmith.async_setup_entry", return_value=True),
+        patch("homeassistant.components.aosmith.async_setup_entry", return_value=None),
     ):
         result2 = await hass.config_entries.flow.async_configure(
             flows[0]["flow_id"],
@@ -188,7 +188,7 @@ async def test_reauth_flow_retry(
             "homeassistant.components.aosmith.config_flow.AOSmithAPIClient.get_devices",
             return_value=[],
         ),
-        patch("homeassistant.components.aosmith.async_setup_entry", return_value=True),
+        patch("homeassistant.components.aosmith.async_setup_entry", return_value=None),
     ):
         result3 = await hass.config_entries.flow.async_configure(
             flows[0]["flow_id"],

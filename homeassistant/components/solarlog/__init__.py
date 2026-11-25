@@ -80,15 +80,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: SolarlogConfigEntry) -> 
     # Register the controller device so inverter entities can resolve it as
     # their via_device parent when they are added.
     device_registry = dr.async_get(hass)
-    device_registry.async_get_or_create_device(
+    device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
-        device_info=dr.DeviceInfo(
-            identifiers={(DOMAIN, entry.entry_id)},
-            manufacturer="Solar-Log",
-            model="Controller",
-            name="SolarLog",
-            configuration_url=solarlog.host,
-        ),
+        identifiers={(DOMAIN, entry.entry_id)},
+        manufacturer="Solar-Log",
+        model="Controller",
+        name="SolarLog",
+        configuration_url=solarlog.host,
     )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)

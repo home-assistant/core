@@ -6,7 +6,8 @@ import logging
 from typing import Any, cast
 from unittest.mock import patch
 
-from aiohttp import ServerDisconnectedError, WSMsgType, web
+from aiohttp import ClientConnectionResetError, ServerDisconnectedError, WSMsgType, web
+from aiohttp.http import WebSocketWriter
 import pytest
 from pytest_homeassistant.common import (
     async_call_logger_set_level,
@@ -25,9 +26,14 @@ from homeassistant.components.websocket_api import (
     http,
     websocket_command,
 )
+from homeassistant.components.websocket_api.auth import (
+    AUTH_OK_MESSAGE,
+    AUTH_REQUIRED_MESSAGE,
+)
 from homeassistant.components.websocket_api.connection import ActiveConnection
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.redact import REDACTED
 from homeassistant.setup import async_setup_component
 from homeassistant.util.dt import utcnow
 
@@ -462,6 +468,67 @@ async def test_auth_timeout_logs_at_debug(
             assert "Did not receive auth message" not in msg
 
 
+@pytest.mark.parametrize(
+    "failing_message",
+    [
+        pytest.param(AUTH_REQUIRED_MESSAGE, id="auth_required"),
+        pytest.param(AUTH_OK_MESSAGE, id="auth_ok"),
+    ],
+)
+async def test_connection_reset_during_auth_logs_at_debug(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    hass_access_token: str,
+    caplog: pytest.LogCaptureFixture,
+    failing_message: bytes,
+) -> None:
+    """Test a connection reset while sending an auth message is logged at debug."""
+    assert await async_setup_component(hass, DOMAIN, {})
+    client = await hass_client()
+
+    disconnected = asyncio.Event()
+
+    @callback
+    def track_disconnected() -> None:
+        disconnected.set()
+
+    async_dispatcher_connect(
+        hass, const.SIGNAL_WEBSOCKET_DISCONNECTED, track_disconnected
+    )
+
+    send_frame = WebSocketWriter.send_frame
+
+    async def send_frame_or_reset(
+        self: WebSocketWriter, message: bytes, *args: Any, **kwargs: Any
+    ) -> None:
+        # Only the server writes the auth messages
+        if message == failing_message:
+            raise ClientConnectionResetError("Cannot write to closing transport")
+        await send_frame(self, message, *args, **kwargs)
+
+    with (
+        caplog.at_level(logging.DEBUG, "homeassistant.components.websocket_api"),
+        patch.object(WebSocketWriter, "send_frame", send_frame_or_reset),
+    ):
+        ws = await client.ws_connect("/api/websocket")
+        # Sent before reading, the server never gets to it when auth_required fails
+        await ws.send_json({"type": "auth", "access_token": hass_access_token})
+        # Reading until the close frame lets the client answer it
+        async for _ in ws:
+            pass
+        await disconnected.wait()
+
+    assert any(
+        record.levelno == logging.DEBUG
+        and "Disconnected during auth phase: Connection reset by peer"
+        in record.getMessage()
+        for record in caplog.records
+    )
+    assert not [
+        record for record in caplog.records if record.levelno >= logging.WARNING
+    ]
+
+
 async def test_enable_coalesce(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
@@ -611,3 +678,30 @@ async def test_enable_disable_debug_logging(
         assert msg["id"] == 2
         assert msg["type"] == "pong"
         assert 'Sending b\'{"id":2,"type":"pong"}\'' not in caplog.text
+
+
+async def test_received_secrets_are_redacted_in_debug_log(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    hass_access_token: str,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test secrets in received messages don't reach the debug log."""
+    with caplog.at_level(logging.DEBUG, "homeassistant.components.websocket_api"):
+        client = await hass_ws_client(hass, hass_access_token)
+        await client.send_json(
+            {"id": 1, "type": "ping", "data": {"password": "nested-secret"}}
+        )
+        await client.receive_json()
+        await client.send_json([{"id": 2, "type": "ping", "new_password": "batched"}])
+        await client.receive_json()
+
+    received = "\n".join(
+        record.getMessage()
+        for record in caplog.records
+        if "Received" in record.getMessage()
+    )
+    assert hass_access_token not in received
+    assert "nested-secret" not in received
+    assert "batched" not in received
+    assert received.count(REDACTED) == 3

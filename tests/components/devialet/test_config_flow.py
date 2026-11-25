@@ -56,7 +56,7 @@ async def test_cannot_connect(
     aioclient_mock.clear_requests()
     mock_playing(aioclient_mock)
     with patch(
-        "homeassistant.components.devialet.async_setup_entry", return_value=True
+        "homeassistant.components.devialet.async_setup_entry", return_value=None
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -99,7 +99,7 @@ async def test_full_user_flow_implementation(
 
     user_input = MOCK_USER_INPUT.copy()
     with patch(
-        "homeassistant.components.devialet.async_setup_entry", return_value=True
+        "homeassistant.components.devialet.async_setup_entry", return_value=None
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -128,7 +128,7 @@ async def test_zeroconf_devialet(
 
     with patch(
         "homeassistant.components.devialet.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ) as mock_setup_entry:
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -172,7 +172,7 @@ async def test_async_step_confirm(
     mock_playing(aioclient_mock)
     with patch(
         "homeassistant.components.devialet.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],

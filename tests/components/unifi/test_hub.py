@@ -1,6 +1,8 @@
 """Test UniFi Network."""
 
-from http import HTTPStatus
+import asyncio
+from datetime import timedelta
+import logging
 from types import MappingProxyType
 from typing import Any
 from unittest.mock import patch
@@ -9,17 +11,28 @@ import aiounifi
 from aiounifi import EndpointNotFound
 from aiounifi.interfaces.api_handlers import ItemEvent
 from aiounifi.models.message import MessageKey
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.components.unifi.const import CONF_BLOCK_CLIENT, DOMAIN
-from homeassistant.components.unifi.coordinator import IDLE_POLL_INTERVAL, POLL_INTERVAL
-from homeassistant.components.unifi.errors import AuthenticationRequired, CannotConnect
+from homeassistant.components.unifi.coordinator import (
+    IDLE_POLL_INTERVAL,
+    POLL_INTERVAL,
+    UPDATE_TIMEOUT,
+    WEBSOCKET_FALLBACK_INTERVAL,
+)
+from homeassistant.components.unifi.errors import (
+    AuthenticationRequired,
+    CannotConnect,
+    MfaRequired,
+)
 from homeassistant.components.unifi.hub import get_unifi_api
-from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import CONF_HOST, EVENT_STATE_REPORTED, Platform
+from homeassistant.components.unifi.hub.connection import REQUEST_TIMEOUT
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
+from homeassistant.const import EVENT_STATE_REPORTED, Platform
 from homeassistant.core import Event, EventStateReportedData, HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr
 from homeassistant.util import dt as dt_util
@@ -28,6 +41,12 @@ from .conftest import (
     ConfigEntryFactoryType,
     WebsocketMessageMock,
     WebsocketStateManager,
+    invalid_json,
+)
+
+SITES_UPDATE = "aiounifi.interfaces.sites.Sites.update"
+SYSTEM_INFORMATION_UPDATE = (
+    "aiounifi.interfaces.system_information.SystemInformationHandler.update"
 )
 
 
@@ -50,6 +69,7 @@ async def test_hub_setup(
             Platform.DEVICE_TRACKER,
             Platform.IMAGE,
             Platform.LIGHT,
+            Platform.SELECT,
             Platform.SENSOR,
             Platform.SWITCH,
             Platform.UPDATE,
@@ -73,8 +93,8 @@ async def test_coordinators_preserve_handler_update_sources(
 
     clients_coordinator = loader.get_data_update_coordinator(api.clients)
     devices_coordinator = loader.get_data_update_coordinator(api.devices)
-    assert clients_coordinator.update_interval is None
-    assert devices_coordinator.update_interval is None
+    assert clients_coordinator.update_interval == WEBSOCKET_FALLBACK_INTERVAL
+    assert devices_coordinator.update_interval == WEBSOCKET_FALLBACK_INTERVAL
 
     assert loader.get_data_update_coordinator(api.ports) is devices_coordinator
     assert loader.get_data_update_coordinator(api.outlets) is devices_coordinator
@@ -97,6 +117,64 @@ async def test_get_data_update_coordinator_requires_registered_handler(
 
     with pytest.raises(KeyError):
         loader.get_data_update_coordinator(api.sites)
+
+
+async def test_websocket_fallback_refresh_and_push_reset(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    config_entry_setup: MockConfigEntry,
+    mock_websocket_message: WebsocketMessageMock,
+) -> None:
+    """A handler update postpones its fallback, which repeats while quiet."""
+    api = config_entry_setup.runtime_data.api
+    coordinator = (
+        config_entry_setup.runtime_data.entity_loader.get_data_update_coordinator(
+            api.clients
+        )
+    )
+    with patch.object(api.clients, "update", wraps=api.clients.update) as update:
+        freezer.tick(timedelta(seconds=20))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+        update.assert_not_called()
+
+        mock_websocket_message(
+            message=MessageKey.CLIENT,
+            data={"mac": "00:00:00:00:00:01", "hostname": "client"},
+        )
+        await hass.async_block_till_done()
+
+        freezer.tick(timedelta(seconds=15))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+        update.assert_not_called()
+
+        freezer.tick(timedelta(seconds=16))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done(wait_background_tasks=True)
+        assert update.call_count == 1
+        assert coordinator.update_interval == WEBSOCKET_FALLBACK_INTERVAL
+
+        freezer.tick(WEBSOCKET_FALLBACK_INTERVAL + timedelta(seconds=1))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done(wait_background_tasks=True)
+        assert update.call_count == 2
+
+
+async def test_websocket_fallback_respects_disabled_polling(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    config_entry_factory: ConfigEntryFactoryType,
+) -> None:
+    """Do not schedule fallback polling when polling is disabled."""
+    hass.config_entries.async_update_entry(config_entry, pref_disable_polling=True)
+    await config_entry_factory()
+    api = config_entry.runtime_data.api
+
+    with patch.object(api.devices, "update", wraps=api.devices.update) as update:
+        async_fire_time_changed(hass, dt_util.utcnow() + WEBSOCKET_FALLBACK_INTERVAL)
+        await hass.async_block_till_done(wait_background_tasks=True)
+        update.assert_not_called()
 
 
 async def test_polling_coordinator_refreshes_after_interval(
@@ -129,23 +207,37 @@ async def test_polling_coordinator_refreshes_after_interval(
     assert mock_update.call_count >= 1
 
 
-async def test_endpoint_not_found_disables_object_oriented_network_config_polling(
+@pytest.mark.parametrize(
+    ("handler_name", "unaffected_handler_name"),
+    [
+        pytest.param(
+            "object_oriented_network_configs",
+            "firewall_policies",
+            id="object_oriented_network_configs",
+        ),
+        pytest.param("firewall_policies", "traffic_rules", id="firewall_policies"),
+        pytest.param("traffic_rules", "firewall_policies", id="traffic_rules"),
+        pytest.param("traffic_routes", "firewall_policies", id="traffic_routes"),
+    ],
+)
+async def test_endpoint_not_found_disables_optional_endpoint_polling(
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
     config_entry_setup: MockConfigEntry,
+    handler_name: str,
+    unaffected_handler_name: str,
 ) -> None:
     """Ensure an unavailable optional endpoint stops polling after one warning."""
     loader = config_entry_setup.runtime_data.entity_loader
     api = config_entry_setup.runtime_data.api
-    coordinator = loader.get_data_update_coordinator(
-        api.object_oriented_network_configs
+    handler = getattr(api, handler_name)
+    coordinator = loader.get_data_update_coordinator(handler)
+    unaffected_coordinator = loader.get_data_update_coordinator(
+        getattr(api, unaffected_handler_name)
     )
-    traffic_rules_coordinator = loader.get_data_update_coordinator(api.traffic_rules)
 
     with patch.object(
-        coordinator.handler,
-        "update",
-        side_effect=EndpointNotFound("endpoint not found"),
+        handler, "update", side_effect=EndpointNotFound("endpoint not found")
     ) as mock_update:
         async_fire_time_changed(hass, dt_util.utcnow() + IDLE_POLL_INTERVAL)
         await hass.async_block_till_done(wait_background_tasks=True)
@@ -164,10 +256,10 @@ async def test_endpoint_not_found_disables_object_oriented_network_config_pollin
         await hass.async_block_till_done()
 
     assert mock_update.call_count == 2
-    assert traffic_rules_coordinator.update_interval == IDLE_POLL_INTERVAL
+    assert unaffected_coordinator.update_interval == IDLE_POLL_INTERVAL
     assert (
         caplog.text.count(
-            "UniFi ObjectOrientedNetworkConfigs endpoint is unavailable; disabling polling"
+            f"UniFi {type(handler).__name__} endpoint is unavailable; disabling polling"
         )
         == 1
     )
@@ -232,6 +324,151 @@ async def test_entity_unavailable_on_polling_coordinator_failure(
     state = hass.states.get(entity_id)
     assert state is not None
     assert state.state != "unavailable"
+
+
+@pytest.mark.parametrize(
+    ("target", "exception"),
+    [
+        pytest.param(
+            SYSTEM_INFORMATION_UPDATE, aiounifi.ServiceUnavailable, id="starting"
+        ),
+        pytest.param(SYSTEM_INFORMATION_UPDATE, TimeoutError, id="timeout"),
+        pytest.param(
+            SYSTEM_INFORMATION_UPDATE, aiounifi.LoginRequired, id="login_required"
+        ),
+        pytest.param(SYSTEM_INFORMATION_UPDATE, invalid_json(), id="invalid_json"),
+        pytest.param(
+            SYSTEM_INFORMATION_UPDATE,
+            aiounifi.AuthenticationRateLimitError,
+            id="rate_limited",
+        ),
+        pytest.param(SYSTEM_INFORMATION_UPDATE, aiounifi.Forbidden, id="forbidden"),
+        pytest.param(
+            SYSTEM_INFORMATION_UPDATE, aiounifi.NoPermission, id="no_permission"
+        ),
+        pytest.param(
+            SYSTEM_INFORMATION_UPDATE, aiounifi.Unauthorized, id="unauthorized"
+        ),
+        pytest.param(SITES_UPDATE, aiounifi.ServiceUnavailable, id="no_site_list"),
+        pytest.param(SITES_UPDATE, invalid_json(), id="invalid_site_list"),
+        pytest.param(SITES_UPDATE, aiounifi.Forbidden, id="site_list_rejected"),
+        # Without a side effect the patched update leaves the site list empty
+        pytest.param(SITES_UPDATE, None, id="no_sites_yet"),
+    ],
+)
+async def test_setup_retries_when_network_application_not_ready(
+    config_entry_factory: ConfigEntryFactoryType,
+    target: str,
+    exception: type[Exception] | None,
+) -> None:
+    """Retry setup while the Network application cannot answer yet."""
+    with patch(target, side_effect=exception):
+        config_entry = await config_entry_factory()
+
+    assert config_entry.state is ConfigEntryState.SETUP_RETRY
+
+
+@pytest.mark.parametrize(
+    "target",
+    [
+        pytest.param(SITES_UPDATE, id="sites"),
+        pytest.param(SYSTEM_INFORMATION_UPDATE, id="system_information"),
+    ],
+)
+async def test_setup_asks_for_reauth_when_account_needs_mfa(
+    hass: HomeAssistant,
+    config_entry_factory: ConfigEntryFactoryType,
+    target: str,
+) -> None:
+    """Only the user can resolve multi-factor authentication."""
+    with patch(target, side_effect=aiounifi.TwoFaTokenRequired):
+        config_entry = await config_entry_factory()
+
+    assert config_entry.state is ConfigEntryState.SETUP_ERROR
+    assert list(config_entry.async_get_active_flows(hass, {SOURCE_REAUTH}))
+
+
+async def test_setup_continues_when_system_information_answers_an_error(
+    config_entry_factory: ConfigEntryFactoryType,
+) -> None:
+    """An application that answers with an error is up."""
+    with patch(SYSTEM_INFORMATION_UPDATE, side_effect=aiounifi.ResponseError):
+        config_entry = await config_entry_factory()
+
+    assert config_entry.state is ConfigEntryState.LOADED
+
+
+@pytest.mark.parametrize(
+    ("target", "timeout", "state"),
+    [
+        pytest.param(
+            SITES_UPDATE,
+            REQUEST_TIMEOUT,
+            ConfigEntryState.SETUP_RETRY,
+            id="sites",
+        ),
+        pytest.param(
+            SYSTEM_INFORMATION_UPDATE,
+            REQUEST_TIMEOUT,
+            ConfigEntryState.SETUP_RETRY,
+            id="system_information",
+        ),
+        pytest.param(
+            "aiounifi.interfaces.clients_all.ClientsAll.update",
+            UPDATE_TIMEOUT,
+            ConfigEntryState.LOADED,
+            id="inactive_clients",
+        ),
+    ],
+)
+async def test_setup_gives_up_on_hanging_request(
+    hass: HomeAssistant,
+    config_entry_factory: ConfigEntryFactoryType,
+    target: str,
+    timeout: int,
+    state: ConfigEntryState,
+) -> None:
+    """Setup does not wait forever for a request that never answers."""
+    started = asyncio.Event()
+
+    async def hang(*args: object) -> None:
+        started.set()
+        await asyncio.Event().wait()
+
+    with patch(target, side_effect=hang):
+        setup = hass.async_create_task(config_entry_factory())
+        await started.wait()
+        async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=timeout + 1))
+        config_entry = await setup
+
+    assert config_entry.state is state
+
+
+@pytest.mark.parametrize(
+    "request_suffix",
+    ["/stat/sta", "/stat/device", "/trafficrules", "/rest/wlanconf"],
+)
+async def test_recovery_refetches_each_handler_once(
+    aioclient_mock: AiohttpClientMocker,
+    config_entry_setup: MockConfigEntry,
+    mock_websocket_state: WebsocketStateManager,
+    request_suffix: str,
+) -> None:
+    """Refetch every handler exactly once after the connection is restored."""
+
+    def request_count() -> int:
+        return sum(
+            1
+            for call in aioclient_mock.mock_calls
+            if str(call[1]).endswith(request_suffix)
+        )
+
+    requests_before = request_count()
+
+    await mock_websocket_state.disconnect()
+    await mock_websocket_state.reconnect()
+
+    assert request_count() == requests_before + 1
 
 
 async def test_websocket_updates_notify_coordinator(
@@ -422,7 +659,19 @@ def site(name: str, site_id: str) -> list[dict[str, Any]]:
     return [{"desc": "Site name", "name": name, "role": "admin", "_id": site_id}]
 
 
-@pytest.mark.parametrize("site_payload", [site("site_id", NEW_SITE_ID)])
+@pytest.mark.parametrize(
+    "site_payload",
+    [
+        pytest.param(site("site_id", NEW_SITE_ID), id="one_site"),
+        pytest.param(
+            [
+                *site("other", "1b2c3d4e-5f6a-4b7c-8d9e-0f1a2b3c4d5e"),
+                *site("site_id", NEW_SITE_ID),
+            ],
+            id="several_sites",
+        ),
+    ],
+)
 async def test_site_id_changed(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
@@ -488,10 +737,45 @@ async def test_site_id_changed_not_followed(
     hass.config_entries.async_update_entry(config_entry, unique_id=unique_id)
     MockConfigEntry(domain=DOMAIN, unique_id=other_entry_unique_id).add_to_hass(hass)
 
-    await config_entry_factory()
+    # Requests for a site that is gone get 401, which must not retry the setup
+    with patch(
+        SYSTEM_INFORMATION_UPDATE,
+        side_effect=aiounifi.LoginRequired,
+    ):
+        await config_entry_factory()
 
     assert config_entry.state is ConfigEntryState.SETUP_ERROR
+    assert config_entry.reason == "The configured UniFi Network site no longer exists"
     assert config_entry.unique_id == unique_id
+
+
+@pytest.mark.parametrize(
+    ("side_effect", "raised_exception"),
+    [
+        (TimeoutError, CannotConnect),
+        (aiounifi.BadGateway, CannotConnect),
+        (aiounifi.Forbidden, CannotConnect),
+        (aiounifi.ServiceUnavailable, CannotConnect),
+        (aiounifi.RequestError, CannotConnect),
+        (aiounifi.ResponseError, CannotConnect),
+        (aiounifi.AuthenticationRateLimitError, CannotConnect),
+        (aiounifi.Unauthorized, AuthenticationRequired),
+        (aiounifi.LoginRequired, AuthenticationRequired),
+        (aiounifi.AiounifiException, AuthenticationRequired),
+    ],
+)
+async def test_get_unifi_api_fails_to_connect(
+    hass: HomeAssistant,
+    side_effect: Exception,
+    raised_exception: Exception,
+    config_entry_data: MappingProxyType[str, Any],
+) -> None:
+    """Check that get_unifi_api can handle UniFi Network being unavailable."""
+    with (
+        patch("aiounifi.Controller.login", side_effect=side_effect),
+        pytest.raises(raised_exception),
+    ):
+        await get_unifi_api(hass, config_entry_data)
 
 
 async def test_reset_after_successful_setup(
@@ -519,109 +803,18 @@ async def test_reset_fails(
         assert config_entry_setup.reason == "Failed to unload UniFi Network"
 
 
-@pytest.mark.usefixtures("mock_device_registry")
-async def test_connection_state_signalling(
+async def test_get_unifi_api_mfa_required(
     hass: HomeAssistant,
-    config_entry_factory: ConfigEntryFactoryType,
-    mock_websocket_state: WebsocketStateManager,
-    client_payload: list[dict[str, Any]],
-) -> None:
-    """Verify connection statesignalling and connection state are working."""
-    client_payload.append(
-        {
-            "hostname": "client",
-            "ip": "10.0.0.1",
-            "is_wired": True,
-            "last_seen": dt_util.as_timestamp(dt_util.utcnow()),
-            "mac": "00:00:00:00:00:01",
-        }
-    )
-    await config_entry_factory()
-
-    # Controller is connected
-    assert hass.states.get("device_tracker.client").state == "home"
-
-    await mock_websocket_state.disconnect()
-    # Controller is disconnected
-    assert hass.states.get("device_tracker.client").state == "unavailable"
-
-    await mock_websocket_state.reconnect()
-    # Controller is once again connected
-    assert hass.states.get("device_tracker.client").state == "home"
-
-
-async def test_reconnect_mechanism(
-    aioclient_mock: AiohttpClientMocker,
-    config_entry_setup: MockConfigEntry,
-    mock_websocket_state: WebsocketStateManager,
-) -> None:
-    """Verify reconnect prints only on first reconnection try."""
-    aioclient_mock.clear_requests()
-    aioclient_mock.get(
-        f"https://{config_entry_setup.data[CONF_HOST]}:1234/",
-        status=HTTPStatus.BAD_GATEWAY,
-    )
-
-    await mock_websocket_state.disconnect()
-    assert aioclient_mock.call_count == 0
-
-    await mock_websocket_state.reconnect(fail=True)
-    assert aioclient_mock.call_count == 1
-
-    await mock_websocket_state.reconnect(fail=True)
-    assert aioclient_mock.call_count == 2
-
-
-@pytest.mark.parametrize(
-    "exception",
-    [
-        TimeoutError,
-        aiounifi.BadGateway,
-        aiounifi.ServiceUnavailable,
-        aiounifi.AiounifiException,
-    ],
-)
-@pytest.mark.usefixtures("config_entry_setup")
-async def test_reconnect_mechanism_exceptions(
-    mock_websocket_state: WebsocketStateManager,
-    exception: Exception,
-) -> None:
-    """Verify async_reconnect calls expected methods."""
-    with (
-        patch("aiounifi.Controller.login", side_effect=exception),
-        patch(
-            "homeassistant.components.unifi.hub.hub.UnifiWebsocket.reconnect"
-        ) as mock_reconnect,
-    ):
-        await mock_websocket_state.disconnect()
-
-        await mock_websocket_state.reconnect()
-        mock_reconnect.assert_called_once()
-
-
-@pytest.mark.parametrize(
-    ("side_effect", "raised_exception"),
-    [
-        (TimeoutError, CannotConnect),
-        (aiounifi.BadGateway, CannotConnect),
-        (aiounifi.Forbidden, CannotConnect),
-        (aiounifi.ServiceUnavailable, CannotConnect),
-        (aiounifi.RequestError, CannotConnect),
-        (aiounifi.ResponseError, CannotConnect),
-        (aiounifi.Unauthorized, AuthenticationRequired),
-        (aiounifi.LoginRequired, AuthenticationRequired),
-        (aiounifi.AiounifiException, AuthenticationRequired),
-    ],
-)
-async def test_get_unifi_api_fails_to_connect(
-    hass: HomeAssistant,
-    side_effect: Exception,
-    raised_exception: Exception,
+    caplog: pytest.LogCaptureFixture,
     config_entry_data: MappingProxyType[str, Any],
 ) -> None:
-    """Check that get_unifi_api can handle UniFi Network being unavailable."""
+    """Check that a login requiring MFA is reported as such without a traceback."""
     with (
-        patch("aiounifi.Controller.login", side_effect=side_effect),
-        pytest.raises(raised_exception),
+        patch("aiounifi.Controller.login", side_effect=aiounifi.TwoFaTokenRequired),
+        pytest.raises(MfaRequired),
     ):
         await get_unifi_api(hass, config_entry_data)
+    (record,) = [r for r in caplog.records if r.name.startswith("homeassistant")]
+    assert record.levelno == logging.WARNING
+    assert record.exc_info is None
+    assert "requires multi-factor authentication" in record.getMessage()

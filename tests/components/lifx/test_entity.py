@@ -5,9 +5,14 @@ from pytest_homeassistant.common import MockConfigEntry
 from homeassistant.components.lifx.const import DOMAIN
 from homeassistant.components.lifx.entity import async_repair_device_registry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers import (
+    area_registry as ar,
+    device_registry as dr,
+    entity_registry as er,
+    label_registry as lr,
+)
 
-from .helpers import MAC_ADDRESS, SERIAL, create_mock_light_state
+from .helpers import MAC_ADDRESS, SERIAL, create_mock_light
 
 INCORRECT_OFFSET_MAC = "d0:73:d5:dd:ee:cd"
 OTHER_SERIAL = "d0:73:d5:dd:ee:cd"
@@ -53,12 +58,7 @@ def test_firmware_four_state_uses_unmodified_library_mac(
         entry,
         connections={(dr.CONNECTION_NETWORK_MAC, MAC_ADDRESS)},
     )
-    state = create_mock_light_state(
-        serial=SERIAL,
-        mac_address=SERIAL,
-    )
-
-    async_repair_device_registry(hass, entry, state)
+    async_repair_device_registry(hass, entry, create_mock_light().state)
 
     repaired = device_registry.async_get(original.id)
     assert repaired is not None
@@ -80,7 +80,7 @@ def test_incorrect_offset_mac_is_replaced_in_place(
         connections={(dr.CONNECTION_NETWORK_MAC, INCORRECT_OFFSET_MAC)},
     )
 
-    async_repair_device_registry(hass, entry, create_mock_light_state())
+    async_repair_device_registry(hass, entry, create_mock_light().state)
 
     repaired = device_registry.async_get(original.id)
     assert repaired is not None
@@ -92,8 +92,10 @@ def test_incorrect_offset_mac_is_replaced_in_place(
 
 def test_repair_preserves_device_and_entity_metadata(
     hass: HomeAssistant,
+    area_registry: ar.AreaRegistry,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
+    label_registry: lr.LabelRegistry,
 ) -> None:
     """Test repair changes identity data without replacing customized records."""
     entry = _add_entry(hass)
@@ -102,6 +104,8 @@ def test_repair_preserves_device_and_entity_metadata(
         entry,
         connections={(dr.CONNECTION_NETWORK_MAC, INCORRECT_OFFSET_MAC)},
     )
+    area_registry.async_create("Living room")
+    label_registry.async_create("Favorite")
     device_registry.async_update_device(
         original.id,
         area_id="living_room",
@@ -117,7 +121,7 @@ def test_repair_preserves_device_and_entity_metadata(
         device_id=original.id,
     )
 
-    async_repair_device_registry(hass, entry, create_mock_light_state())
+    async_repair_device_registry(hass, entry, create_mock_light().state)
 
     repaired = device_registry.async_get(original.id)
     repaired_entity = entity_registry.async_get(entity.entity_id)
@@ -146,7 +150,7 @@ def test_repair_preserves_unrelated_connections(
         },
     )
 
-    async_repair_device_registry(hass, entry, create_mock_light_state())
+    async_repair_device_registry(hass, entry, create_mock_light().state)
 
     repaired = device_registry.async_get(original.id)
     assert repaired is not None
@@ -175,7 +179,7 @@ def test_obsolete_mac_collision_does_not_mutate_other_physical_device(
         connections={(dr.CONNECTION_NETWORK_MAC, INCORRECT_OFFSET_MAC)},
     )
 
-    async_repair_device_registry(hass, entry, create_mock_light_state())
+    async_repair_device_registry(hass, entry, create_mock_light().state)
 
     repaired = device_registry.async_get(original.id)
     preserved_other = device_registry.async_get(other.id)
@@ -206,7 +210,7 @@ def test_matching_mac_from_other_integration_is_not_mutated(
         connections={(dr.CONNECTION_NETWORK_MAC, MAC_ADDRESS)},
     )
 
-    async_repair_device_registry(hass, entry, create_mock_light_state())
+    async_repair_device_registry(hass, entry, create_mock_light().state)
 
     repaired = device_registry.async_get(original.id)
     preserved_other = device_registry.async_get(other.id)

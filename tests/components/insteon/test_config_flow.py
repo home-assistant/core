@@ -89,7 +89,7 @@ async def _device_form(
         ),
         patch(
             PATCH_ASYNC_SETUP_ENTRY,
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
     ):
         result = await hass.config_entries.flow.async_configure(flow_id, user_input)

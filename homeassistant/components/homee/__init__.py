@@ -81,16 +81,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: HomeeConfigEntry) -> Non
 
     # create device register entry
     device_registry = dr.async_get(hass)
-    device_registry.async_get_or_create_device(
+    device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
-        device_info=dr.DeviceInfo(
-            connections={(dr.CONNECTION_NETWORK_MAC, homee.settings.mac_address)},
-            identifiers={(DOMAIN, homee.settings.uid)},
-            manufacturer="homee",
-            name=homee.settings.homee_name,
-            model="homee",
-            sw_version=homee.settings.version,
-        ),
+        connections={(dr.CONNECTION_NETWORK_MAC, homee.settings.mac_address)},
+        identifiers={(DOMAIN, homee.settings.uid)},
+        manufacturer="homee",
+        name=homee.settings.homee_name,
+        model="homee",
+        sw_version=homee.settings.version,
     )
 
     # Remove devices that are no longer present in homee.

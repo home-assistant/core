@@ -138,7 +138,7 @@ async def async_setup_entry(
     )
     if device.mac:
         device_info.connections = {(dr.CONNECTION_NETWORK_MAC, device.mac)}
-    dr.async_get(hass).async_get_or_create_device(
+    dr.async_get(hass).async_get_or_create_from_info(
         config_entry_id=entry.entry_id,
         device_info=device_info,
     )

@@ -26,12 +26,21 @@ PARALLEL_UPDATES = 1
 class AdGuardHomeSwitchEntityDescription(SwitchEntityDescription):
     """Describes AdGuard Home switch entity."""
 
-    is_on_fn: Callable[[AdGuardHomeState], bool]
+    is_on_fn: Callable[[AdGuardHomeState], bool | None]
     turn_on_fn: Callable[[AdGuardHome], Callable[[], Coroutine[Any, Any, None]]]
     turn_off_fn: Callable[[AdGuardHome], Callable[[], Coroutine[Any, Any, None]]]
+    supported_fn: Callable[[AdGuardHomeState], bool] = lambda _: True
 
 
 SWITCHES: tuple[AdGuardHomeSwitchEntityDescription, ...] = (
+    AdGuardHomeSwitchEntityDescription(
+        key="dhcp",
+        translation_key="dhcp",
+        is_on_fn=lambda data: data.dhcp_enabled,
+        turn_on_fn=lambda adguard: adguard.dhcp.enable,
+        turn_off_fn=lambda adguard: adguard.dhcp.disable,
+        supported_fn=lambda data: data.status.dhcp_available,
+    ),
     AdGuardHomeSwitchEntityDescription(
         key="protection",
         translation_key="protection",
@@ -86,7 +95,9 @@ async def async_setup_entry(
     coordinator = entry.runtime_data.state
 
     async_add_entities(
-        AdGuardHomeSwitch(coordinator, description) for description in SWITCHES
+        AdGuardHomeSwitch(coordinator, description)
+        for description in SWITCHES
+        if description.supported_fn(coordinator.data)
     )
 
 
@@ -134,6 +145,12 @@ class AdGuardHomeSwitch(AdGuardHomeEntity[AdGuardHomeStateCoordinator], SwitchEn
 
     @property
     @override
-    def is_on(self) -> bool:
+    def available(self) -> bool:
+        """Return whether the switch state could be read."""
+        return super().available and self.is_on is not None
+
+    @property
+    @override
+    def is_on(self) -> bool | None:
         """Return the state of the switch."""
         return self.entity_description.is_on_fn(self.coordinator.data)

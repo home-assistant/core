@@ -38,7 +38,7 @@ def _typed_budgets(data: dict[str, Any]) -> dict[str, MonarchBudget]:
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
-        "homeassistant.components.monarch_money.async_setup_entry", return_value=True
+        "homeassistant.components.monarch_money.async_setup_entry", return_value=None
     ) as mock_setup_entry:
         yield mock_setup_entry
 

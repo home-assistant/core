@@ -63,7 +63,7 @@ async def mock_add_config_entry(
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
-        "homeassistant.components.schlage.async_setup_entry", return_value=True
+        "homeassistant.components.schlage.async_setup_entry", return_value=None
     ) as mock_setup_entry:
         yield mock_setup_entry
 
@@ -71,14 +71,18 @@ def mock_setup_entry() -> Generator[AsyncMock]:
 @pytest.fixture
 def mock_schlage() -> Generator[Mock]:
     """Mock pyschlage.Schlage."""
-    with patch("pyschlage.Schlage", autospec=True) as mock_schlage:
+    with patch(
+        "homeassistant.components.schlage.pyschlage.Schlage", autospec=True
+    ) as mock_schlage:
         yield mock_schlage.return_value
 
 
 @pytest.fixture
 def mock_pyschlage_auth() -> Generator[Mock]:
     """Mock pyschlage.Auth."""
-    with patch("pyschlage.Auth", autospec=True) as mock_auth:
+    with patch(
+        "homeassistant.components.schlage.pyschlage.Auth", autospec=True
+    ) as mock_auth:
         mock_auth.return_value.user_id = "abc123"
         yield mock_auth.return_value
 
@@ -91,6 +95,7 @@ def mock_lock(mock_lock_attrs: dict[str, Any]) -> Mock:
     mock_lock.logs.return_value = []
     mock_lock.last_changed_by.return_value = "thumbturn"
     mock_lock.keypad_disabled.return_value = False
+    mock_lock.auto_lock_times.return_value = (0, 15, 30, 60, 120, 240, 360, 600)
     return mock_lock
 
 
@@ -106,6 +111,7 @@ def mock_lock_attrs() -> dict[str, Any]:
         "battery_level": 20,
         "auto_lock_time": 15,
         "firmware_version": "1.0",
+        "serial_number": "d34db33f",
         "lock_and_leave_enabled": True,
         "beeper_enabled": True,
         "connected": True,

@@ -2,9 +2,12 @@
 
 from typing import Any, Final, override
 
+from aioairzone.common import EcoAdapt, WebServerInterface
 from aioairzone.const import (
+    AZD_ECO_ADAPT,
     AZD_HOT_WATER,
     AZD_HUMIDITY,
+    AZD_INTERFACE,
     AZD_TEMP,
     AZD_TEMP_UNIT,
     AZD_THERMOSTAT_BATTERY,
@@ -20,7 +23,6 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     PERCENTAGE,
     SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
@@ -48,7 +50,19 @@ HOT_WATER_SENSOR_TYPES: Final[tuple[SensorEntityDescription, ...]] = (
     ),
 )
 
+WEBSERVER_INTERFACES: Final[dict[WebServerInterface, str]] = {
+    WebServerInterface.ETHERNET: "ethernet",
+    WebServerInterface.WIFI: "wifi",
+}
+
 WEBSERVER_SENSOR_TYPES: Final[tuple[SensorEntityDescription, ...]] = (
+    SensorEntityDescription(
+        device_class=SensorDeviceClass.ENUM,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        key=AZD_INTERFACE,
+        options=list(WEBSERVER_INTERFACES.values()),
+        translation_key="interface",
+    ),
     SensorEntityDescription(
         device_class=SensorDeviceClass.SIGNAL_STRENGTH,
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -78,6 +92,13 @@ ZONE_SENSOR_TYPES: Final[tuple[SensorEntityDescription, ...]] = (
         key=AZD_THERMOSTAT_BATTERY,
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
+    ),
+    SensorEntityDescription(
+        device_class=SensorDeviceClass.ENUM,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        key=AZD_ECO_ADAPT,
+        options=[option.value for option in EcoAdapt],
+        translation_key="eco_adapt",
     ),
     SensorEntityDescription(
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -178,7 +199,7 @@ class AirzoneHotWaterSensor(AirzoneHotWaterEntity, AirzoneSensor):
         self,
         coordinator: AirzoneUpdateCoordinator,
         description: SensorEntityDescription,
-        entry: ConfigEntry,
+        entry: AirzoneConfigEntry,
     ) -> None:
         """Initialize."""
         super().__init__(coordinator, entry)
@@ -200,13 +221,26 @@ class AirzoneWebServerSensor(AirzoneWebServerEntity, AirzoneSensor):
         self,
         coordinator: AirzoneUpdateCoordinator,
         description: SensorEntityDescription,
-        entry: ConfigEntry,
+        entry: AirzoneConfigEntry,
     ) -> None:
         """Initialize."""
         super().__init__(coordinator, entry)
         self._attr_unique_id = f"{self._attr_unique_id}_ws_{description.key}"
         self.entity_description = description
         self._async_update_attrs()
+
+    @callback
+    @override
+    def _async_update_attrs(self) -> None:
+        """Update sensor attributes."""
+        super()._async_update_attrs()
+        if self.entity_description.key == AZD_INTERFACE:
+            interface = self._attr_native_value
+            self._attr_native_value = (
+                WEBSERVER_INTERFACES.get(interface)
+                if isinstance(interface, WebServerInterface)
+                else None
+            )
 
 
 class AirzoneZoneSensor(AirzoneZoneEntity, AirzoneSensor):
@@ -216,7 +250,7 @@ class AirzoneZoneSensor(AirzoneZoneEntity, AirzoneSensor):
         self,
         coordinator: AirzoneUpdateCoordinator,
         description: SensorEntityDescription,
-        entry: ConfigEntry,
+        entry: AirzoneConfigEntry,
         system_zone_id: str,
         zone_data: dict[str, Any],
     ) -> None:

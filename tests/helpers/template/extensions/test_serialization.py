@@ -87,6 +87,25 @@ def test_to_json_ensure_ascii(hass: HomeAssistant) -> None:
     assert actual_result == expected_result
 
 
+def test_to_json_ensure_ascii_sort_keys_non_str_keys(hass: HomeAssistant) -> None:
+    """Test to_json with ensure_ascii sorts dicts with mixed key types."""
+    value = {"b": 1, 2: 2, None: 3, "a": {1: 4, "x": 5}}
+    actual_result = render(
+        hass,
+        "{{ value | to_json(sort_keys=True, ensure_ascii=True) }}",
+        {"value": value},
+        parse_result=False,
+    )
+    assert actual_result == '{"2": 2, "a": {"1": 4, "x": 5}, "b": 1, "null": 3}'
+    default_result = render(
+        hass,
+        "{{ value | to_json(sort_keys=True) }}",
+        {"value": value},
+        parse_result=False,
+    )
+    assert json.loads(actual_result) == json.loads(default_result)
+
+
 @pytest.mark.parametrize(
     ("value", "expected"),
     [
