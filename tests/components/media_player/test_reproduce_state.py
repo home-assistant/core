@@ -195,32 +195,40 @@ async def test_attribute_no_state(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize(
-    ("service", "attribute", "supported_feature"),
+    ("service", "attribute", "argument", "supported_feature"),
     [
         (
             MediaPlayerService.VOLUME_SET,
             MediaPlayerEntityStateAttribute.MEDIA_VOLUME_LEVEL,
+            MediaPlayerServiceArgument.VOLUME_LEVEL,
             MediaPlayerEntityFeature.VOLUME_SET,
         ),
         (
             MediaPlayerService.VOLUME_MUTE,
             MediaPlayerEntityStateAttribute.MEDIA_VOLUME_MUTED,
+            MediaPlayerServiceArgument.IS_VOLUME_MUTED,
             MediaPlayerEntityFeature.VOLUME_MUTE,
         ),
         (
             MediaPlayerService.SELECT_SOURCE,
             MediaPlayerEntityStateAttribute.INPUT_SOURCE,
+            MediaPlayerServiceArgument.SOURCE,
             MediaPlayerEntityFeature.SELECT_SOURCE,
         ),
         (
             MediaPlayerService.SELECT_SOUND_MODE,
             MediaPlayerEntityStateAttribute.SOUND_MODE,
+            MediaPlayerServiceArgument.SOUND_MODE,
             MediaPlayerEntityFeature.SELECT_SOUND_MODE,
         ),
     ],
 )
 async def test_attribute(
-    hass: HomeAssistant, service, attribute, supported_feature
+    hass: HomeAssistant,
+    service: str,
+    attribute: str,
+    argument: str,
+    supported_feature: MediaPlayerEntityFeature,
 ) -> None:
     """Test that service call is made for each attribute."""
     hass.states.async_set(
@@ -238,7 +246,7 @@ async def test_attribute(
     await hass.async_block_till_done()
 
     assert len(calls_1) == 1
-    assert calls_1[0].data == {"entity_id": ENTITY_1, attribute: value}
+    assert calls_1[0].data == {"entity_id": ENTITY_1, argument: value}
 
 
 async def test_play_media(hass: HomeAssistant) -> None:
