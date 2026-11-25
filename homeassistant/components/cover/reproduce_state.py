@@ -10,7 +10,12 @@ from homeassistant.const import EntityStateAttribute, TargetKey
 from homeassistant.core import Context, HomeAssistant, ServiceResponse, State
 from homeassistant.util.enum import try_parse_enum
 
-from . import CoverEntityFeature, CoverEntityStateAttribute, CoverState
+from . import (
+    CoverEntityCapabilityAttribute,
+    CoverEntityFeature,
+    CoverEntityStateAttribute,
+    CoverState,
+)
 from .const import DOMAIN, CoverService, CoverServiceArgument
 
 _LOGGER = logging.getLogger(__name__)
@@ -104,6 +109,7 @@ async def _async_close_cover(
     features: CoverEntityFeature,
     set_position: bool,
     set_tilt: bool,
+    closed_tilt_position: int,
 ) -> None:
     """Close the cover if it was not closed by setting the position."""
     if not set_position:
@@ -120,7 +126,8 @@ async def _async_close_cover(
         elif CoverEntityFeature.SET_TILT_POSITION in features:
             await service_call(
                 CoverService.SET_TILT_POSITION,
-                service_data | {CoverServiceArgument.TILT_POSITION: FULL_CLOSE},
+                service_data
+                | {CoverServiceArgument.TILT_POSITION: closed_tilt_position},
             )
 
 
@@ -130,6 +137,7 @@ async def _async_open_cover(
     features: CoverEntityFeature,
     set_position: bool,
     set_tilt: bool,
+    open_tilt_position: int,
 ) -> None:
     """Open the cover if it was not opened by setting the position."""
     if not set_position:
@@ -146,7 +154,7 @@ async def _async_open_cover(
         elif CoverEntityFeature.SET_TILT_POSITION in features:
             await service_call(
                 CoverService.SET_TILT_POSITION,
-                service_data | {CoverServiceArgument.TILT_POSITION: FULL_OPEN},
+                service_data | {CoverServiceArgument.TILT_POSITION: open_tilt_position},
             )
 
 
@@ -218,12 +226,26 @@ async def _async_reproduce_state(
 
     if target_state in CLOSING_STATES:
         await _async_close_cover(
-            service_call, service_data, features, set_position, set_tilt
+            service_call,
+            service_data,
+            features,
+            set_position,
+            set_tilt,
+            current_attrs.get(
+                CoverEntityCapabilityAttribute.CLOSED_TILT_POSITIONS, [FULL_CLOSE]
+            )[0],
         )
 
     elif target_state in OPENING_STATES:
         await _async_open_cover(
-            service_call, service_data, features, set_position, set_tilt
+            service_call,
+            service_data,
+            features,
+            set_position,
+            set_tilt,
+            current_attrs.get(
+                CoverEntityCapabilityAttribute.OPEN_TILT_POSITION, FULL_OPEN
+            ),
         )
 
 

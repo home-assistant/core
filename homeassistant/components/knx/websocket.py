@@ -23,11 +23,9 @@ from homeassistant.components.frontend import async_panel_exists
 from homeassistant.components.http import StaticPathConfig
 from homeassistant.const import CONF_ENTITY_ID, CONF_PLATFORM, Platform
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import config_validation as cv, device_registry as dr
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.typing import Undefined
 from homeassistant.util import dt as dt_util
-from homeassistant.util.ulid import ulid_now
 
 from .const import (
     CONF_KNX_TELEGRAM_DB_LOAD_HOURS,
@@ -36,8 +34,8 @@ from .const import (
     SIGNAL_KNX_DATA_SECURE_ISSUE_TELEGRAM,
     SIGNAL_KNX_TELEGRAM,
     SUPPORTED_PLATFORMS_UI,
-    UI_DEVICE_ID_PREFIX,
 )
+from .device import async_create_ui_device
 from .dpt import get_supported_dpts
 from .project import async_set_project
 from .storage.config_store import ConfigStoreException
@@ -784,20 +782,14 @@ def ws_create_device(
     msg: dict,
 ) -> None:
     """Create a new KNX device."""
-    identifier = f"{UI_DEVICE_ID_PREFIX}{ulid_now()}"
-    device_registry = dr.async_get(hass)
-    _device = device_registry.async_get_or_create(
-        config_entry_id=knx.entry.entry_id,
-        manufacturer="KNX",
-        name=msg["name"],
-        identifiers={(DOMAIN, identifier)},
-    )
-    device_registry.async_update_device(
-        _device.id,
-        area_id=msg.get("area_id") or Undefined,
-        configuration_url=f"homeassistant://knx/entities/view?device_id={_device.id}",
-    )
-    connection.send_result(msg["id"], _device.dict_repr)
+    try:
+        device = async_create_ui_device(
+            hass, knx.entry, msg["name"], msg.get("area_id")
+        )
+    except ValueError as err:
+        connection.send_error(msg["id"], websocket_api.ERR_NOT_FOUND, str(err))
+        return
+    connection.send_result(msg["id"], device.dict_repr)
 
 
 ########

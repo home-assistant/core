@@ -1,4 +1,9 @@
 {
+  "common": {
+    "legend_code_orange": "Code orange",
+    "legend_code_red": "Code red",
+    "legend_code_yellow": "Code yellow"
+  },
   "config": {
     "error": {
       "unknown": "[%key:common::config_flow::error::unknown%]"
@@ -16,6 +21,11 @@
     }
   },
   "entity": {
+    "image": {
+      "map": {
+        "name": "Map"
+      }
+    },
     "sensor": {
       "advice": {
         "name": "Advice code",

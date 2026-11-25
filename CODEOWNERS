@@ -236,12 +236,16 @@ AGENTS.md @home-assistant/core
 /tests/components/baf/ @bdraco @jfroy
 /homeassistant/components/balboa/ @garbled1 @natekspencer
 /tests/components/balboa/ @garbled1 @natekspencer
+/homeassistant/components/bambu_lab/ @joostlek @piitaya
+/tests/components/bambu_lab/ @joostlek @piitaya
 /homeassistant/components/bang_olufsen/ @mj23000
 /tests/components/bang_olufsen/ @mj23000
 /homeassistant/components/battery/ @home-assistant/core
 /tests/components/battery/ @home-assistant/core
 /homeassistant/components/bayesian/ @HarvsG
 /tests/components/bayesian/ @HarvsG
+/homeassistant/components/benq_projector_infrared/ @rrooggiieerr
+/tests/components/benq_projector_infrared/ @rrooggiieerr
 /homeassistant/components/besen/ @moryoav
 /tests/components/besen/ @moryoav
 /homeassistant/components/binary_sensor/ @home-assistant/core
@@ -300,6 +304,8 @@ AGENTS.md @home-assistant/core
 /tests/components/bthome/ @Ernst79 @thecode
 /homeassistant/components/buienradar/ @mjj4791 @ties @Robbie1221
 /tests/components/buienradar/ @mjj4791 @ties @Robbie1221
+/homeassistant/components/busybar/ @truetug @gornekich
+/tests/components/busybar/ @truetug @gornekich
 /homeassistant/components/button/ @home-assistant/core
 /tests/components/button/ @home-assistant/core
 /homeassistant/components/calendar/ @home-assistant/core
@@ -381,6 +387,8 @@ AGENTS.md @home-assistant/core
 /tests/components/cync/ @Kinachi249
 /homeassistant/components/daikin/ @fredrike
 /tests/components/daikin/ @fredrike
+/homeassistant/components/daikin_infrared/ @javitonino
+/tests/components/daikin_infrared/ @javitonino
 /homeassistant/components/data_grand_lyon/ @Crocmagnon
 /tests/components/data_grand_lyon/ @Crocmagnon
 /homeassistant/components/datadog/ @bm1549
@@ -508,6 +516,8 @@ AGENTS.md @home-assistant/core
 /tests/components/electrasmart/ @jafar-atili @noamokman
 /homeassistant/components/electric_kiwi/ @mikey0000
 /tests/components/electric_kiwi/ @mikey0000
+/homeassistant/components/electrolux/ @electrolux-oss
+/tests/components/electrolux/ @electrolux-oss
 /homeassistant/components/elevenlabs/ @sorgfresser
 /tests/components/elevenlabs/ @sorgfresser
 /homeassistant/components/elgato/ @frenck
@@ -1148,6 +1158,8 @@ AGENTS.md @home-assistant/core
 /tests/components/logger/ @home-assistant/core
 /homeassistant/components/lojack/ @devinslick
 /tests/components/lojack/ @devinslick
+/homeassistant/components/london_air/ @MichaelMKKelly
+/tests/components/london_air/ @MichaelMKKelly
 /homeassistant/components/london_underground/ @jpbede
 /tests/components/london_underground/ @jpbede
 /homeassistant/components/lookin/ @ANMalko @bdraco
@@ -1215,6 +1227,8 @@ AGENTS.md @home-assistant/core
 /tests/components/melissa/ @kennedyshead
 /homeassistant/components/melnor/ @vanstinator
 /tests/components/melnor/ @vanstinator
+/homeassistant/components/meraki/ @felixblang
+/tests/components/meraki/ @felixblang
 /homeassistant/components/met/ @danielhiversen
 /tests/components/met/ @danielhiversen
 /homeassistant/components/met_eireann/ @DylanGore
@@ -1492,6 +1506,8 @@ AGENTS.md @home-assistant/core
 /tests/components/paj_gps/ @skipperro
 /homeassistant/components/palazzetti/ @dotvav
 /tests/components/palazzetti/ @dotvav
+/homeassistant/components/panasonic_viera/ @jerome-pouiller
+/tests/components/panasonic_viera/ @jerome-pouiller
 /homeassistant/components/panel_custom/ @home-assistant/frontend
 /tests/components/panel_custom/ @home-assistant/frontend
 /homeassistant/components/paperless_ngx/ @fvgarrel

@@ -18,7 +18,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import OverkizDataConfigEntry
-from .entity import OverkizDescriptiveEntity
+from .entity import OverkizExecutableEntity
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -107,6 +107,16 @@ SWITCH_DESCRIPTIONS: list[OverkizSwitchDescription] = [
             select_state(OverkizState.CORE_ON_OFF) == OverkizCommandParam.ON
         ),
     ),
+    # Oven/DynamicOven
+    OverkizSwitchDescription(
+        key=UIClass.OVEN,
+        turn_on=OverkizCommand.START,
+        turn_off=OverkizCommand.STOP,
+        is_on=lambda select_state: (
+            select_state(OverkizState.CORE_STARTED_STOPPED)
+            == OverkizCommandParam.STARTED
+        ),
+    ),
 ]
 
 SUPPORTED_DEVICES = {
@@ -139,7 +149,7 @@ async def async_setup_entry(
     )
 
 
-class OverkizSwitch(OverkizDescriptiveEntity, SwitchEntity):
+class OverkizSwitch(OverkizExecutableEntity, SwitchEntity):
     """Representation of an Overkiz Switch."""
 
     entity_description: OverkizSwitchDescription

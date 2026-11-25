@@ -123,11 +123,28 @@ async def setup_items(
     entity_registry.async_update_entity(
         "automation.kitchen_lights", aliases=["Cooking lights"]
     )
+    entity_registry.async_get_or_create(
+        "sensor",
+        "test",
+        "oven",
+        suggested_object_id="kitchen_oven",
+        original_name="Kitchen oven",
+        disabled_by=er.RegistryEntryDisabler.USER,
+    )
+    entity_registry.async_get_or_create(
+        "script",
+        "test",
+        "evening_news",
+        suggested_object_id="evening_news",
+        original_name="Evening news",
+        disabled_by=er.RegistryEntryDisabler.USER,
+    )
 
     return {
         search_item_ids["device"]: "<sensor device>",
         search_item_ids["child_device"]: "<child device>",
         renamed_device.id: "<hub device>",
+        disabled_device.id: "<disabled device>",
     }
 
 
@@ -182,6 +199,16 @@ def test_parameters_openapi(snapshot: SnapshotAssertion) -> None:
         pytest.param({"query": "counter"}, id="partial_alias"),
         pytest.param({"query": "cooking lights"}, id="automation_alias"),
         pytest.param({"query": "kitchen_lights"}, id="entity_id"),
+        pytest.param(
+            {"query": "kitchen oven", "include_disabled": True}, id="disabled_entity"
+        ),
+        pytest.param(
+            {"query": "kitchen disabled", "include_disabled": True},
+            id="disabled_device",
+        ),
+        pytest.param(
+            {"query": "evening news", "include_disabled": True}, id="disabled_script"
+        ),
         pytest.param({"query": "nothing"}, id="no_match"),
     ],
 )

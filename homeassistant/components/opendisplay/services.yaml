@@ -9,6 +9,7 @@ upload_image:
       required: true
       selector:
         media:
+          image_upload: true
           accept:
             - image/*
     additional_fields:
