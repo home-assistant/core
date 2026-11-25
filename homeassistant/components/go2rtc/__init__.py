@@ -701,7 +701,7 @@ class WebRTCProvider(CameraWebRTCProvider):
         if add:
             # Unknown until the write succeeds, as go2rtc may apply a write that
             # fails here, so a retry always writes
-            self._added_sources.pop(identifier, None)
+            self._added_sources[identifier] = []
             await self._rest_client.streams.add(identifier, sources)
         # Also when go2rtc has the stream already, e.g. after a reload, so
         # later source changes reach it

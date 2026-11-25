@@ -2569,9 +2569,26 @@ async def test_running_transcodes_of_escaped_identifier(
 
 
 @pytest.mark.usefixtures("init_integration")
+@pytest.mark.parametrize(
+    ("source_a", "source_b", "reported_url"),
+    [
+        # go2rtc runs B, which it reports without a URL
+        pytest.param("rtsp://a", "rtsp://b", "", id="running"),
+        # go2rtc hasn't started B, and masks the credentials it differs by
+        pytest.param(
+            "rtsp://user:a@host/s",
+            "rtsp://user:b@host/s",
+            "rtsp://***@host/s",
+            id="credentials",
+        ),
+    ],
+)
 async def test_failed_write_written_again(
     init_test_integration: MockCamera,
     rest_client: AsyncMock,
+    source_a: str,
+    source_b: str,
+    reported_url: str,
 ) -> None:
     """Test a write that failed here is written again, even for the same sources.
 
@@ -2582,7 +2599,7 @@ async def test_failed_write_written_again(
     assert isinstance(provider, WebRTCProvider)
     identifier = get_camera_identifier(camera)
     camera.set_stream_source(None)
-    source = "rtsp://a"
+    source = source_a
 
     async def _webrtc_source() -> str:
         return source
@@ -2591,17 +2608,25 @@ async def test_failed_write_written_again(
         assert await provider.async_get_stream_source(camera)
 
         # go2rtc applies B, but the request fails here
-        source = "rtsp://b"
+        source = source_b
         rest_client.streams.add.side_effect = Go2RtcClientError
         with pytest.raises(HomeAssistantError):
             await provider.async_get_stream_source(camera)
 
-        # Back to A while go2rtc runs B, which it reports without a URL
-        source = "rtsp://a"
+        # Back to A while go2rtc has B
+        source = source_a
         rest_client.streams.add.side_effect = None
         rest_client.streams.add.reset_mock()
-        rest_client.streams.list.return_value = {identifier: Stream([Producer("")])}
+        rest_client.streams.list.return_value = {
+            identifier: Stream(
+                [
+                    Producer(reported_url),
+                    Producer(f"ffmpeg:{identifier}#audio=opus#query=log_level=debug"),
+                    Producer(f"ffmpeg:{identifier}#audio=aac#query=log_level=debug"),
+                ]
+            )
+        }
         assert await provider.async_get_stream_source(camera)
 
     rest_client.streams.add.assert_called_once()
-    assert rest_client.streams.add.call_args[0][1][0] == "rtsp://a"
+    assert rest_client.streams.add.call_args[0][1][0] == source_a
