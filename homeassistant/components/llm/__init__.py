@@ -23,6 +23,7 @@ from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import async_get_issue_integration
 from homeassistant.util.hass_dict import HassKey
 
+from . import flow
 from .const import DOMAIN
 from .websocket_api import async_setup as async_setup_ws_api
 
@@ -39,6 +40,7 @@ DATA_PLATFORMS: HassKey[LazyIntegrationPlatforms[LLMToolsPlatformProtocol]] = Ha
 __all__ = [
     "DOMAIN",
     "LLMTools",
+    "flow",
 ]
 
 

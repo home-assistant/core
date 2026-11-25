@@ -27,13 +27,12 @@ from homeassistant.components.unifi.const import (
 )
 from homeassistant.config_entries import RELOAD_AFTER_UPDATE_DELAY
 from homeassistant.const import (
-    ATTR_ENTITY_ID,
     CONF_HOST,
     STATE_OFF,
     STATE_ON,
     STATE_UNAVAILABLE,
-    CommonServiceArgument,
     Platform,
+    TargetKey,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -1532,7 +1531,7 @@ async def test_outlet_switches(
     await hass.services.async_call(
         SWITCH_DOMAIN,
         SwitchService.TURN_OFF,
-        {ATTR_ENTITY_ID: f"switch.{entity_id}"},
+        {TargetKey.ENTITY_ID: f"switch.{entity_id}"},
         blocking=True,
     )
 
@@ -1548,7 +1547,7 @@ async def test_outlet_switches(
     await hass.services.async_call(
         SWITCH_DOMAIN,
         SwitchService.TURN_ON,
-        {ATTR_ENTITY_ID: f"switch.{entity_id}"},
+        {TargetKey.ENTITY_ID: f"switch.{entity_id}"},
         blocking=True,
     )
 
@@ -2031,7 +2030,7 @@ async def test_switch_turn_on_request_failed(
         await hass.services.async_call(
             SWITCH_DOMAIN,
             SwitchService.TURN_ON,
-            {CommonServiceArgument.ENTITY_ID: "switch.block_client_1_blocked"},
+            {TargetKey.ENTITY_ID: "switch.block_client_1_blocked"},
             blocking=True,
         )
     assert exc_info.value.translation_domain == DOMAIN
@@ -2058,7 +2057,7 @@ async def test_switch_turn_off_request_failed(
         await hass.services.async_call(
             SWITCH_DOMAIN,
             SwitchService.TURN_OFF,
-            {CommonServiceArgument.ENTITY_ID: "switch.block_client_1_blocked"},
+            {TargetKey.ENTITY_ID: "switch.block_client_1_blocked"},
             blocking=True,
         )
     assert exc_info.value.translation_domain == DOMAIN

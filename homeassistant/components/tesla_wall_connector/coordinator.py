@@ -1,6 +1,5 @@
 """DataUpdateCoordinator for the Tesla Wall Connector integration."""
 
-import asyncio
 from dataclasses import dataclass
 from datetime import timedelta
 import logging
@@ -68,11 +67,10 @@ class WallConnectorCoordinator(DataUpdateCoordinator[dict]):
     async def _async_update_data(self) -> dict:
         """Fetch new data from the Wall Connector."""
         try:
-            vitals, lifetime, wifi_status = await asyncio.gather(
-                self._wall_connector.async_get_vitals(),
-                self._wall_connector.async_get_lifetime(),
-                self._wall_connector.async_get_wifi_status(),
-            )
+            # Concurrent requests can overwhelm the Wall Connector's HTTP server.
+            vitals = await self._wall_connector.async_get_vitals()
+            lifetime = await self._wall_connector.async_get_lifetime()
+            wifi_status = await self._wall_connector.async_get_wifi_status()
         except WallConnectorConnectionTimeoutError as ex:
             raise UpdateFailed(
                 f"Could not fetch data from Tesla WallConnector at {self._hostname}:"

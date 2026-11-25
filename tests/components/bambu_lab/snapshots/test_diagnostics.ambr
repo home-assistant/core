@@ -1,0 +1,55 @@
+# serializer version: 1
+# name: test_diagnostics
+  dict({
+    'available': True,
+    'config_entry_data': dict({
+      'access_code': '**REDACTED**',
+      'host': '**REDACTED**',
+      'serial_number': '**REDACTED**',
+    }),
+    'info': dict({
+      'firmware_version': '01.08.02.00',
+      'hardware_version': 'AP05',
+      'model': 'X1 Carbon',
+      'model_name': 'X1 Carbon',
+      'serial': '**REDACTED**',
+    }),
+    'state': dict({
+      'accepts_commands': True,
+      'ams': list([
+      ]),
+      'aux_fan_speed': None,
+      'available_firmware_version': None,
+      'bed_target_temperature': 60,
+      'bed_temperature': 60,
+      'camera_stream_enabled': None,
+      'chamber_fan_speed': None,
+      'chamber_light_on': True,
+      'chamber_temperature': 38,
+      'current_layer': 96,
+      'errors': list([
+      ]),
+      'external_spool': None,
+      'external_spool_active': False,
+      'heatbreak_fan_speed': None,
+      'job_name': '**REDACTED**',
+      'nozzle_diameter': None,
+      'nozzle_target_temperature': 220,
+      'nozzle_temperature': 220,
+      'nozzle_type': None,
+      'part_fan_speed': None,
+      'print_error': None,
+      'print_state': 'printing',
+      'progress': 42,
+      'recording_enabled': None,
+      'remaining_minutes': 73,
+      'sd_card_present': None,
+      'speed_percentage': None,
+      'speed_profile': 'standard',
+      'stage': None,
+      'timelapse_enabled': None,
+      'total_layers': 240,
+      'wifi_signal': -58,
+    }),
+  })
+# ---

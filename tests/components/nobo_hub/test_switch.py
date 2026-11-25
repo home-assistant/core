@@ -21,7 +21,7 @@ from homeassistant.helpers import entity_registry as er
 from . import entity_unique_ids, fire_hub_update
 from .conftest import SERIAL
 
-SWITCH_ENTITY = "switch.living_room_living_room_disable_global_overrides"
+SWITCH_ENTITY = "switch.living_room_heating_disable_global_overrides"
 
 
 @pytest.fixture

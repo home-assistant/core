@@ -17,7 +17,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.util.hass_dict import HassKey
-from homeassistant.util.ulid import ulid
+from homeassistant.util.ulid import secure_ulid_now
 
 from .const import DATA_COMPONENT, DOMAIN, StreamType
 from .helper import get_camera_from_entity_id
@@ -288,7 +288,7 @@ async def ws_webrtc_offer(
     Async friendly.
     """
     offer = msg["offer"]
-    session_id = ulid()
+    session_id = secure_ulid_now()
     connection.subscriptions[msg["id"]] = partial(
         camera.close_webrtc_session, session_id
     )

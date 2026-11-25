@@ -7,15 +7,18 @@ from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from sn2 import ConnectionStatus, StateChange
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.light import ATTR_BRIGHTNESS, DOMAIN as LIGHT_DOMAIN
+from homeassistant.components.light import (
+    ATTR_BRIGHTNESS,
+    DOMAIN as LIGHT_DOMAIN,
+    LightService,
+    LightServiceArgument,
+)
 from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
     STATE_OFF,
     STATE_ON,
     STATE_UNAVAILABLE,
     Platform,
+    TargetKey,
 )
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.entity_registry as er
@@ -87,8 +90,8 @@ async def test_light_control_operations(
     # Test turn on without brightness
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: entity_id},
+        LightService.TURN_ON,
+        {TargetKey.ENTITY_ID: entity_id},
         blocking=True,
     )
     device.turn_on.assert_called_once()
@@ -98,8 +101,8 @@ async def test_light_control_operations(
     # Test turn on with brightness=128 (50% in HA scale 0-255)
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: entity_id, ATTR_BRIGHTNESS: 128},
+        LightService.TURN_ON,
+        {TargetKey.ENTITY_ID: entity_id, LightServiceArgument.BRIGHTNESS: 128},
         blocking=True,
     )
     device.set_brightness.assert_called_once_with(128 / 255)
@@ -109,8 +112,8 @@ async def test_light_control_operations(
     # Test turn on with brightness=255 (100% in HA scale)
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: entity_id, ATTR_BRIGHTNESS: 255},
+        LightService.TURN_ON,
+        {TargetKey.ENTITY_ID: entity_id, LightServiceArgument.BRIGHTNESS: 255},
         blocking=True,
     )
     device.set_brightness.assert_called_once_with(255 / 255)
@@ -119,8 +122,8 @@ async def test_light_control_operations(
     # Test turn on with brightness=1 (minimum non-zero in HA scale)
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: entity_id, ATTR_BRIGHTNESS: 1},
+        LightService.TURN_ON,
+        {TargetKey.ENTITY_ID: entity_id, LightServiceArgument.BRIGHTNESS: 1},
         blocking=True,
     )
     device.set_brightness.assert_called_once_with(1 / 255)
@@ -129,8 +132,8 @@ async def test_light_control_operations(
     # Test turn off
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: entity_id},
+        LightService.TURN_OFF,
+        {TargetKey.ENTITY_ID: entity_id},
         blocking=True,
     )
     device.turn_off.assert_called_once()

@@ -19,6 +19,7 @@ from homeassistant.components.zone import (
     DOMAIN as ZONE_DOMAIN,
     ENTITY_ID_FORMAT as ZONE_ENTITY_ID_FORMAT,
     HOME_ZONE,
+    async_is_improved_presence_detection_enabled,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -64,7 +65,8 @@ LOCATION_UPDATE_SCHEMA = probatio.All(
             probatio.Optional(ATTR_COURSE): cv.positive_int,
             probatio.Optional(ATTR_VERTICAL_ACCURACY): cv.positive_int,
             probatio.Optional(ATTR_IN_ZONES): cv.entities_domain(ZONE_DOMAIN),
-            # The fix before the app adjusted gps to agree with a zone event
+            # The fix before the app adjusted gps to agree with a zone event,
+            # used by improved presence detection
             probatio.Optional(ATTR_RAW_GPS): cv.gps,
             probatio.Optional(ATTR_RAW_GPS_ACCURACY): cv.positive_float,
         },
@@ -144,17 +146,32 @@ class MobileAppEntity(TrackerEntity, RestoreEntity):
         """Return the zones the device is currently in."""
         return self._data.get(ATTR_IN_ZONES)
 
+    def _location(self) -> tuple[tuple[float, float] | None, float]:
+        """Return the reported location and its accuracy.
+
+        The app may adjust the location to agree with a zone event, which
+        defeats improved presence detection, so the raw fix is used instead
+        when the feature is enabled and the app sent one.
+        """
+        if (
+            ATTR_RAW_GPS in self._data
+            and ATTR_RAW_GPS_ACCURACY in self._data
+            and async_is_improved_presence_detection_enabled(self.hass)
+        ):
+            return self._data[ATTR_RAW_GPS], self._data[ATTR_RAW_GPS_ACCURACY]
+        return self._data.get(ATTR_GPS), self._data.get(ATTR_GPS_ACCURACY, 0)
+
     @property
     @override
     def location_accuracy(self) -> float:
         """Return the gps accuracy of the device."""
-        return self._data.get(ATTR_GPS_ACCURACY, 0)
+        return self._location()[1]
 
     @property
     @override
     def latitude(self) -> float | None:
         """Return latitude value of the device."""
-        if (gps := self._data.get(ATTR_GPS)) is None:
+        if (gps := self._location()[0]) is None:
             return None
 
         return gps[0]
@@ -163,7 +180,7 @@ class MobileAppEntity(TrackerEntity, RestoreEntity):
     @override
     def longitude(self) -> float | None:
         """Return longitude value of the device."""
-        if (gps := self._data.get(ATTR_GPS)) is None:
+        if (gps := self._location()[0]) is None:
             return None
 
         return gps[1]

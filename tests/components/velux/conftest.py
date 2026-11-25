@@ -122,6 +122,7 @@ def mock_blind() -> AsyncMock:
     blind.is_closing = False
     # Orientation/tilt-related attributes and methods
     blind.orientation = MagicMock(position_percent=25, known=True)
+    blind.open_orientation_target = 50
     blind.open_orientation = AsyncMock()
     blind.close_orientation = AsyncMock()
     blind.stop_orientation = AsyncMock()

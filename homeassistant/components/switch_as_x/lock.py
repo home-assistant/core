@@ -3,15 +3,9 @@
 from typing import Any, override
 
 from homeassistant.components.lock import DOMAIN as LOCK_DOMAIN, LockEntity
-from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
+from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN, SwitchService
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    CONF_ENTITY_ID,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
-    STATE_ON,
-)
+from homeassistant.const import CONF_ENTITY_ID, STATE_ON, TargetKey
 from homeassistant.core import Event, EventStateChangedData, HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -53,8 +47,8 @@ class LockSwitch(BaseInvertableEntity, LockEntity):
         """Lock the lock."""
         await self.hass.services.async_call(
             SWITCH_DOMAIN,
-            SERVICE_TURN_ON if self._invert_state else SERVICE_TURN_OFF,
-            {ATTR_ENTITY_ID: self._switch_entity_id},
+            SwitchService.TURN_ON if self._invert_state else SwitchService.TURN_OFF,
+            {TargetKey.ENTITY_ID: self._switch_entity_id},
             blocking=True,
             context=self._context,
         )
@@ -64,8 +58,8 @@ class LockSwitch(BaseInvertableEntity, LockEntity):
         """Unlock the lock."""
         await self.hass.services.async_call(
             SWITCH_DOMAIN,
-            SERVICE_TURN_OFF if self._invert_state else SERVICE_TURN_ON,
-            {ATTR_ENTITY_ID: self._switch_entity_id},
+            SwitchService.TURN_OFF if self._invert_state else SwitchService.TURN_ON,
+            {TargetKey.ENTITY_ID: self._switch_entity_id},
             blocking=True,
             context=self._context,
         )

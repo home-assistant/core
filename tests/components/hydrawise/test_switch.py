@@ -16,8 +16,8 @@ from homeassistant.const import (
     ATTR_ENTITY_ID,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
-    CommonServiceArgument,
     Platform,
+    TargetKey,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -50,9 +50,7 @@ async def test_manual_watering_services(
     await hass.services.async_call(
         SWITCH_DOMAIN,
         SwitchService.TURN_ON,
-        service_data={
-            CommonServiceArgument.ENTITY_ID: "switch.zone_one_manual_watering"
-        },
+        service_data={TargetKey.ENTITY_ID: "switch.zone_one_manual_watering"},
         blocking=True,
     )
     mock_pydrawise.start_zone.assert_called_once_with(
@@ -66,9 +64,7 @@ async def test_manual_watering_services(
     await hass.services.async_call(
         SWITCH_DOMAIN,
         SwitchService.TURN_OFF,
-        service_data={
-            CommonServiceArgument.ENTITY_ID: "switch.zone_one_manual_watering"
-        },
+        service_data={TargetKey.ENTITY_ID: "switch.zone_one_manual_watering"},
         blocking=True,
     )
     mock_pydrawise.stop_zone.assert_called_once_with(zones[0])
@@ -88,9 +84,7 @@ async def test_auto_watering_services(
     await hass.services.async_call(
         SWITCH_DOMAIN,
         SwitchService.TURN_OFF,
-        service_data={
-            CommonServiceArgument.ENTITY_ID: "switch.zone_one_automatic_watering"
-        },
+        service_data={TargetKey.ENTITY_ID: "switch.zone_one_automatic_watering"},
         blocking=True,
     )
     mock_pydrawise.suspend_zone.assert_called_once_with(
@@ -104,9 +98,7 @@ async def test_auto_watering_services(
     await hass.services.async_call(
         SWITCH_DOMAIN,
         SwitchService.TURN_ON,
-        service_data={
-            CommonServiceArgument.ENTITY_ID: "switch.zone_one_automatic_watering"
-        },
+        service_data={TargetKey.ENTITY_ID: "switch.zone_one_automatic_watering"},
         blocking=True,
     )
     mock_pydrawise.resume_zone.assert_called_once_with(zones[0])

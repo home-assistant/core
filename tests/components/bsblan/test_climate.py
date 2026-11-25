@@ -25,9 +25,10 @@ from homeassistant.components.climate import (
     PRESET_COMFORT,
     PRESET_ECO,
     SERVICE_SET_HVAC_MODE,
-    SERVICE_SET_PRESET_MODE,
     SERVICE_SET_TEMPERATURE,
     ClimateEntityFeature,
+    ClimateService,
+    ClimateServiceArgument,
     HVACAction,
     HVACMode,
 )
@@ -36,6 +37,7 @@ from homeassistant.const import (
     ATTR_TEMPERATURE,
     STATE_UNAVAILABLE,
     Platform,
+    TargetKey,
 )
 from homeassistant.core import HomeAssistant, State as HassState
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
@@ -419,8 +421,8 @@ async def test_set_hvac_mode_already_active(
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_HVAC_MODE,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_HVAC_MODE: mode},
+        ClimateService.SET_HVAC_MODE,
+        {TargetKey.ENTITY_ID: ENTITY_ID, ClimateServiceArgument.HVAC_MODE: mode},
         blocking=True,
     )
 
@@ -453,8 +455,11 @@ async def test_async_set_preset_mode_success(
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_PRESET_MODE,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_PRESET_MODE: preset_mode},
+        ClimateService.SET_PRESET_MODE,
+        {
+            TargetKey.ENTITY_ID: ENTITY_ID,
+            ClimateServiceArgument.PRESET_MODE: preset_mode,
+        },
         blocking=True,
     )
 
@@ -501,8 +506,8 @@ async def test_async_set_data(
     # Test setting temperature
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_TEMPERATURE,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_TEMPERATURE: 19},
+        ClimateService.SET_TEMPERATURE,
+        {TargetKey.ENTITY_ID: ENTITY_ID, ClimateServiceArgument.TEMPERATURE: 19},
         blocking=True,
     )
     mock_bsblan.thermostat.assert_called_once_with(target_temperature=19, circuit=1)
@@ -511,8 +516,11 @@ async def test_async_set_data(
     # Test setting HVAC mode - should convert to integer (1=auto)
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_HVAC_MODE,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_HVAC_MODE: HVACMode.AUTO},
+        ClimateService.SET_HVAC_MODE,
+        {
+            TargetKey.ENTITY_ID: ENTITY_ID,
+            ClimateServiceArgument.HVAC_MODE: HVACMode.AUTO,
+        },
         blocking=True,
     )
     mock_bsblan.thermostat.assert_called_once_with(hvac_mode=1, circuit=1)  # 1 = auto
@@ -521,8 +529,11 @@ async def test_async_set_data(
     # Test setting preset mode to ECO in heat mode - should use integer 2
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_PRESET_MODE,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_PRESET_MODE: PRESET_ECO},
+        ClimateService.SET_PRESET_MODE,
+        {
+            TargetKey.ENTITY_ID: ENTITY_ID,
+            ClimateServiceArgument.PRESET_MODE: PRESET_ECO,
+        },
         blocking=True,
     )
     mock_bsblan.thermostat.assert_called_once_with(
@@ -535,8 +546,8 @@ async def test_async_set_data(
     with pytest.raises(HomeAssistantError) as exc:
         await hass.services.async_call(
             CLIMATE_DOMAIN,
-            SERVICE_SET_TEMPERATURE,
-            {ATTR_ENTITY_ID: ENTITY_ID, ATTR_TEMPERATURE: 20},
+            ClimateService.SET_TEMPERATURE,
+            {TargetKey.ENTITY_ID: ENTITY_ID, ClimateServiceArgument.TEMPERATURE: 20},
             blocking=True,
         )
     assert exc.value.translation_domain == DOMAIN
@@ -714,8 +725,11 @@ async def test_set_temperature_writes_permanent_level(
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_TEMPERATURE,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_TEMPERATURE: temperature},
+        ClimateService.SET_TEMPERATURE,
+        {
+            TargetKey.ENTITY_ID: ENTITY_ID,
+            ClimateServiceArgument.TEMPERATURE: temperature,
+        },
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -754,7 +768,7 @@ async def test_set_temperature_ignored_in_auto_or_off(
         service_data[ATTR_HVAC_MODE] = service_hvac_mode
 
     await hass.services.async_call(
-        CLIMATE_DOMAIN, SERVICE_SET_TEMPERATURE, service_data, blocking=True
+        CLIMATE_DOMAIN, ClimateService.SET_TEMPERATURE, service_data, blocking=True
     )
 
     assert mock_bsblan.thermostat.call_args_list == expected_calls
@@ -855,11 +869,11 @@ async def test_set_temperature_with_auto_matching_setpoint(
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_TEMPERATURE,
+        ClimateService.SET_TEMPERATURE,
         {
-            ATTR_ENTITY_ID: ENTITY_ID,
-            ATTR_TEMPERATURE: 17.0,
-            ATTR_HVAC_MODE: HVACMode.AUTO,
+            TargetKey.ENTITY_ID: ENTITY_ID,
+            ClimateServiceArgument.TEMPERATURE: 17.0,
+            ClimateServiceArgument.HVAC_MODE: HVACMode.AUTO,
         },
         blocking=True,
     )
@@ -878,11 +892,11 @@ async def test_set_temperature_with_hvac_mode(
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_TEMPERATURE,
+        ClimateService.SET_TEMPERATURE,
         {
-            ATTR_ENTITY_ID: ENTITY_ID,
-            ATTR_TEMPERATURE: 19.5,
-            ATTR_HVAC_MODE: HVACMode.HEAT,
+            TargetKey.ENTITY_ID: ENTITY_ID,
+            ClimateServiceArgument.TEMPERATURE: 19.5,
+            ClimateServiceArgument.HVAC_MODE: HVACMode.HEAT,
         },
         blocking=True,
     )
@@ -919,8 +933,11 @@ async def test_set_temperature_rejects_setpoint_order(
     with pytest.raises(ServiceValidationError) as exc:
         await hass.services.async_call(
             CLIMATE_DOMAIN,
-            SERVICE_SET_TEMPERATURE,
-            {ATTR_ENTITY_ID: ENTITY_ID, ATTR_TEMPERATURE: temperature},
+            ClimateService.SET_TEMPERATURE,
+            {
+                TargetKey.ENTITY_ID: ENTITY_ID,
+                ClimateServiceArgument.TEMPERATURE: temperature,
+            },
             blocking=True,
         )
 
@@ -940,11 +957,11 @@ async def test_set_temperature_with_heat_writes_comfort(
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_TEMPERATURE,
+        ClimateService.SET_TEMPERATURE,
         {
-            ATTR_ENTITY_ID: ENTITY_ID,
-            ATTR_TEMPERATURE: 21.0,
-            ATTR_HVAC_MODE: HVACMode.HEAT,
+            TargetKey.ENTITY_ID: ENTITY_ID,
+            ClimateServiceArgument.TEMPERATURE: 21.0,
+            ClimateServiceArgument.HVAC_MODE: HVACMode.HEAT,
         },
         blocking=True,
     )
@@ -967,8 +984,8 @@ async def test_set_data_rereads_only_the_circuit(
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_TEMPERATURE,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_TEMPERATURE: 19},
+        ClimateService.SET_TEMPERATURE,
+        {TargetKey.ENTITY_ID: ENTITY_ID, ClimateServiceArgument.TEMPERATURE: 19},
         blocking=True,
     )
 
@@ -988,8 +1005,8 @@ async def test_set_data_ignores_failed_reread(
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_TEMPERATURE,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_TEMPERATURE: 19},
+        ClimateService.SET_TEMPERATURE,
+        {TargetKey.ENTITY_ID: ENTITY_ID, ClimateServiceArgument.TEMPERATURE: 19},
         blocking=True,
     )
 
@@ -1012,8 +1029,8 @@ async def test_write_keeps_poll_schedule(
     await hass.async_block_till_done()
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_TEMPERATURE,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_TEMPERATURE: 19},
+        ClimateService.SET_TEMPERATURE,
+        {TargetKey.ENTITY_ID: ENTITY_ID, ClimateServiceArgument.TEMPERATURE: 19},
         blocking=True,
     )
     mock_bsblan.sensor.reset_mock()
@@ -1054,8 +1071,8 @@ async def test_reread_waits_for_running_poll(
     write = hass.async_create_task(
         hass.services.async_call(
             CLIMATE_DOMAIN,
-            SERVICE_SET_TEMPERATURE,
-            {ATTR_ENTITY_ID: ENTITY_ID, ATTR_TEMPERATURE: 19.5},
+            ClimateService.SET_TEMPERATURE,
+            {TargetKey.ENTITY_ID: ENTITY_ID, ClimateServiceArgument.TEMPERATURE: 19.5},
             blocking=True,
         )
     )

@@ -198,24 +198,24 @@ class NestRTSPEntity(NestCameraBaseEntity):
     async def stream_source(self) -> str | None:
         """Return the source of the stream."""
         async with self._create_stream_url_lock:
-            if not self._rtsp_stream:
+            if (rtsp_stream := self._rtsp_stream) is None:
                 _LOGGER.debug("Fetching stream url")
                 try:
-                    self._rtsp_stream = (
+                    rtsp_stream = (
                         await self._rtsp_live_stream_trait.generate_rtsp_stream()
                     )
                 except ApiException as err:
                     raise HomeAssistantError(f"Nest API error: {err}") from err
+                self._rtsp_stream = rtsp_stream
                 refresh = StreamRefresh(
                     self.hass,
-                    self._rtsp_stream.expires_at,
+                    rtsp_stream.expires_at,
                     self._async_refresh_stream,
                 )
                 self._refresh_unsub = refresh.unsub
-        assert self._rtsp_stream
-        if self._rtsp_stream.expires_at < utcnow():
+        if rtsp_stream.expires_at < utcnow():
             _LOGGER.warning("Stream already expired")
-        return self._rtsp_stream.rtsp_stream_url
+        return rtsp_stream.rtsp_stream_url
 
     async def _async_refresh_stream(self) -> dt.datetime | None:
         """Refresh stream to extend expiration time."""

@@ -91,6 +91,15 @@
       "channel_2_temperature": {
         "name": "Channel 2 temperature"
       },
+      "client_role": {
+        "name": "Client role",
+        "state": {
+          "admin": "Administrator",
+          "restricted_user": "Restricted user",
+          "urm_deactivated_fallback": "User rights management off",
+          "user": "User"
+        }
+      },
       "delta_temperature": {
         "name": "Delta temperature"
       },
@@ -130,6 +139,20 @@
       },
       "today_rain": {
         "name": "Today rain"
+      },
+      "valve_state": {
+        "name": "Valve state {channel}",
+        "state": {
+          "adaption_done": "Adaptation completed",
+          "adaption_in_progress": "Adaptation in progress",
+          "adjustment_too_big": "Adjustment too large",
+          "adjustment_too_small": "Adjustment too small",
+          "error_position": "Position error",
+          "run_to_start": "Running to start position",
+          "state_not_available": "State not available",
+          "too_tight": "Too tight",
+          "wait_for_adaption": "Waiting for adaptation"
+        }
       },
       "water_flow": {
         "name": "Water flow"
