@@ -341,12 +341,14 @@ async def test_cover_image_transient_error_retried(
     freezer: FrozenDateTimeFactory,
     error: PyLastError,
 ) -> None:
-    """Test the album art is requested again after a transient error."""
+    """Test a failed album art request is retried on the next update only."""
     entity_id = "sensor.lastfm_testaccount1_top_track"
     with patch.object(
         Track, "get_cover_image", autospec=True, side_effect=error
     ) as mock_cover:
         await setup_integration(config_entry, default_user)
+        # The same track is playing, last played and top track
+        assert mock_cover.call_count == 1
         assert hass.states.get(entity_id).attributes.get(ATTR_ENTITY_PICTURE) is None
 
         mock_cover.side_effect = None
@@ -356,6 +358,7 @@ async def test_cover_image_transient_error_retried(
             async_fire_time_changed(hass)
             await hass.async_block_till_done(wait_background_tasks=True)
 
+    assert mock_cover.call_count == 2
     assert hass.states.get(entity_id).attributes[ATTR_ENTITY_PICTURE] == COVER_IMAGE
 
 

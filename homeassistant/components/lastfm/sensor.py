@@ -53,7 +53,7 @@ SENSOR_TYPES: tuple[LastFMSensorEntityDescription, ...] = (
     LastFMSensorEntityDescription(
         key="play_count",
         translation_key="play_count",
-        state_class=SensorStateClass.TOTAL_INCREASING,
+        state_class=SensorStateClass.TOTAL,
         value_fn=lambda data: data.play_count,
     ),
 )
