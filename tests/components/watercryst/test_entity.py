@@ -2,10 +2,9 @@
 
 from pytest_homeassistant.common import MockConfigEntry
 
-from homeassistant.components.sensor import SensorEntityDescription
 from homeassistant.components.watercryst.const import DOMAIN
-from homeassistant.components.watercryst.entity import WatercrystEntity
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 
 from .conftest import (
@@ -21,39 +20,35 @@ from .conftest import (
 )
 
 
-async def test_state_entity_initialization(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+async def test_initialization(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
+    mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test WATERCryst state entity attributes."""
+    """Test WATERCryst entity device info attributes."""
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    description = SensorEntityDescription(key="pressure")
+    entity_entry = entity_registry.async_get("sensor.ha_device_device_mode")
 
-    entity = WatercrystEntity(
-        config_entry=mock_config_entry,
-        coordinator=mock_config_entry.runtime_data,
-        sub_coordinator=mock_config_entry.runtime_data.state,
-        entity_description=description,
-    )
+    assert entity_entry is not None
+    assert entity_entry.unique_id == f"{BIOCAT_SERIAL}_mode_id"
 
-    assert entity.unique_id == f"{BIOCAT_SERIAL}_pressure"
-    assert entity.entity_description is description
-    assert entity.device_info.identifiers == {(DOMAIN, BIOCAT_SERIAL)}
-    assert entity.device_info.connections == {
-        (CONNECTION_NETWORK_MAC, SYSTEM_MAC_NORMALIZED)
-    }
-    assert entity.device_info.manufacturer == DEVICE_MANUFACTURER
-    assert entity.device_info.model == f"{DEVICE_TYPE_LINE} {DEVICE_TYPE_SERIES}"
-    assert entity.device_info.model_id == DEVICE_TYPE_NUMBER
-    assert entity.device_info.name == DEVICE_NAME
-    assert entity.device_info.serial_number == BIOCAT_SERIAL
-    assert entity.device_info.sw_version == FW_VERSION
-    assert entity.device_info.hw_version == HW_VERSION
+    device_entry = device_registry.async_get(entity_entry.device_id)
+
+    assert device_entry is not None
+    assert device_entry.identifiers == {(DOMAIN, BIOCAT_SERIAL)}
+    assert device_entry.connections == {(CONNECTION_NETWORK_MAC, SYSTEM_MAC_NORMALIZED)}
+    assert device_entry.manufacturer == DEVICE_MANUFACTURER
+    assert device_entry.model == f"{DEVICE_TYPE_LINE} {DEVICE_TYPE_SERIES}"
+    assert device_entry.model_id == DEVICE_TYPE_NUMBER
+    assert device_entry.name == DEVICE_NAME
+    assert device_entry.serial_number == BIOCAT_SERIAL
+    assert device_entry.sw_version == FW_VERSION
+    assert device_entry.hw_version == HW_VERSION
     assert (
-        entity.device_info.configuration_url
+        device_entry.configuration_url
         == f"https://app.watercryst.com/devices/{BIOCAT_SERIAL}"
     )
-    assert entity.should_poll is False
-    assert entity.has_entity_name is True

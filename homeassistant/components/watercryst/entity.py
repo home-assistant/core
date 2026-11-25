@@ -71,5 +71,6 @@ class WatercrystEntity[CoordinatorT: DataUpdateCoordinator[Any]](
         return (
             super().available
             and self.state_coordinator.last_update_success
+            and self.state_coordinator.data is not None
             and self.state_coordinator.data.online is True
         )
