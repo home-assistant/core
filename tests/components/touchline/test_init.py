@@ -3,15 +3,19 @@
 from dataclasses import replace
 from unittest.mock import MagicMock
 
+from freezegun.api import FrozenDateTimeFactory
 import pytest
-from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
+from pytest_homeassistant.typing import WebSocketGenerator
 from pytouchline_extended import TouchlineConnectionError
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.touchline.const import DOMAIN
+from homeassistant.components.touchline.coordinator import UPDATE_INTERVAL
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
+from homeassistant.setup import async_setup_component
 
 from .conftest import CONTROLLER_STATUS, ROOM_STATUS, TEST_UNIQUE_ID, make_state
 
@@ -110,3 +114,45 @@ async def test_controller_device_without_mac(
     )
     assert controller is not None
     assert controller.connections == set()
+
+
+async def test_remove_stale_device(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    device_registry: dr.DeviceRegistry,
+    hass_ws_client: WebSocketGenerator,
+    init_integration: MockConfigEntry,
+    mock_touchline_controller: MagicMock,
+) -> None:
+    """Test a thermostat can only be removed once the controller stops reporting it."""
+    assert await async_setup_component(hass, "config", {})
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "1_0"), init_integration.entry_id
+    )
+    assert device is not None
+    client = await hass_ws_client(hass)
+
+    response = await client.remove_device(device.id)
+    assert not response["success"]
+
+    mock_touchline_controller.fetch_async.return_value = make_state()
+    freezer.tick(UPDATE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    response = await client.remove_device(device.id)
+    assert response["success"]
+
+    # The controller itself can never be removed.
+    controller = device_registry.async_get_device_by_identifier(
+        (DOMAIN, TEST_UNIQUE_ID), init_integration.entry_id
+    )
+    assert controller is not None
+    response = await client.remove_device(controller.id)
+    assert not response["success"]
+    assert (
+        device_registry.async_get_device_by_identifier(
+            (DOMAIN, "1_0"), init_integration.entry_id
+        )
+        is None
+    )

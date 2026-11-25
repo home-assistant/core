@@ -321,3 +321,23 @@ async def test_thermostat_identity_after_reindexing(
         2, 1
     )
     mock_touchline_controller.set_room_week_program_async.assert_called_once_with(2, 0)
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_new_thermostat_added(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_touchline_controller: MagicMock,
+) -> None:
+    """Test a thermostat paired after setup gets an entity."""
+    assert hass.states.get("climate.zone_2") is None
+
+    mock_touchline_controller.fetch_async.return_value = make_state(
+        ROOM_STATUS, replace(ROOM_STATUS, index=1, device_id=1, name="Zone 2")
+    )
+    freezer.tick(UPDATE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert hass.states.get("climate.zone_2").state == HVACMode.HEAT
+    assert len(hass.states.async_entity_ids("climate")) == 2
