@@ -5079,6 +5079,9 @@
           "categories": [
             "climate.heat_pumps_air_conditioning"
           ],
+          "connectivity": [
+            "infrared"
+          ],
           "name": "Fujitsu Infrared"
         }
       }
@@ -9962,6 +9965,9 @@
           "categories": [
             "media_entertainment.speakers_audio"
           ],
+          "connectivity": [
+            "infrared"
+          ],
           "name": "NAD Infrared"
         }
       }
@@ -10750,6 +10756,9 @@
           "supported_by": "fujitsu_infrared",
           "categories": [
             "climate.heat_pumps_air_conditioning"
+          ],
+          "connectivity": [
+            "infrared"
           ],
           "name": "O General Infrared"
         }

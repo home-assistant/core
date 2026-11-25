@@ -406,8 +406,7 @@ class IndiAllSkyDynamicHardwareSensor(IndiAllSkyEntity, SensorEntity):
     @override
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
-        if isinstance(self._get_sensor_item(), dict):
-            self._update_attributes()
+        if isinstance(self._get_sensor_item(), dict) and self._update_attributes():
             self.async_registry_entry_updated()
         super()._handle_coordinator_update()
 
@@ -418,7 +417,13 @@ class IndiAllSkyDynamicHardwareSensor(IndiAllSkyEntity, SensorEntity):
             return self.coordinator.data.sensor.sensors.get(self._sensor_key)
         return None
 
-    def _update_attributes(self) -> None:
+    def _update_attributes(self) -> bool:
+        previous = (
+            getattr(self, "_attr_name", None),
+            getattr(self, "_attr_device_class", None),
+            getattr(self, "_attr_native_unit_of_measurement", None),
+            getattr(self, "_attr_state_class", None),
+        )
         item = self._get_sensor_item()
         raw_name: str | None = None
         raw_device_class: str | None = None
@@ -443,6 +448,13 @@ class IndiAllSkyDynamicHardwareSensor(IndiAllSkyEntity, SensorEntity):
         self._attr_device_class = device_class
         self._attr_native_unit_of_measurement = unit
         self._attr_state_class = state_class
+        current = (
+            getattr(self, "_attr_name", None),
+            self._attr_device_class,
+            self._attr_native_unit_of_measurement,
+            self._attr_state_class,
+        )
+        return current != previous
 
     @property
     @override

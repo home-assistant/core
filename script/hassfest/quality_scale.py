@@ -557,7 +557,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "message_bird",
     "met",
     "met_eireann",
-    "meteo_france",
     "meteoclimatic",
     "mfi",
     "microbees",
