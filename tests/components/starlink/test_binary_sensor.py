@@ -3,12 +3,13 @@
 from copy import deepcopy
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.const import STATE_OFF, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
+from homeassistant.util.json import JsonArrayType
 
-from . import setup_integration
-from .patchers import STATUS_DATA_FIXTURE
+from . import STATUS_DATA_FIXTURE
 
 # Alerts that a dish which does not support roaming stops reporting. The
 # library builds the alert dict from the fields the dish actually sends, so
@@ -20,6 +21,21 @@ MISSING_ALERTS = (
 )
 
 
+def _status_without_missing_alerts() -> JsonArrayType:
+    """Return status data where the dish omits the missing alerts."""
+    status_data = deepcopy(STATUS_DATA_FIXTURE)
+    for alert in MISSING_ALERTS:
+        del status_data[2][alert]
+    return status_data
+
+
+def _status_with_motors_stuck() -> JsonArrayType:
+    """Return status data where the dish reports stuck motors."""
+    status_data = _status_without_missing_alerts()
+    status_data[2]["alert_motors_stuck"] = True
+    return status_data
+
+
 @pytest.mark.parametrize(
     "entity_id",
     [
@@ -28,14 +44,17 @@ MISSING_ALERTS = (
         "binary_sensor.starlink_sleep",
     ],
 )
-async def test_alert_reported_by_dish(hass: HomeAssistant, entity_id: str) -> None:
+async def test_alert_reported_by_dish(
+    hass: HomeAssistant, init_integration: MockConfigEntry, entity_id: str
+) -> None:
     """Test that an alert the dish reports is used as the state."""
-    await setup_integration(hass, deepcopy(STATUS_DATA_FIXTURE))
-
     assert hass.states.get(entity_id).state == STATE_OFF
 
 
 @pytest.mark.parametrize(
+    "status_data", [_status_without_missing_alerts()], indirect=True
+)
+@pytest.mark.parametrize(
     "entity_id",
     [
         "binary_sensor.starlink_roaming_mode",
@@ -43,25 +62,17 @@ async def test_alert_reported_by_dish(hass: HomeAssistant, entity_id: str) -> No
         "binary_sensor.starlink_sleep",
     ],
 )
-async def test_alert_not_reported_by_dish(hass: HomeAssistant, entity_id: str) -> None:
+async def test_alert_not_reported_by_dish(
+    hass: HomeAssistant, init_integration: MockConfigEntry, entity_id: str
+) -> None:
     """Test that an alert the dish omits is unknown instead of raising."""
-    status_data = deepcopy(STATUS_DATA_FIXTURE)
-    for alert in MISSING_ALERTS:
-        del status_data[2][alert]
-
-    await setup_integration(hass, status_data)
-
     assert hass.states.get(entity_id).state == STATE_UNKNOWN
 
 
-async def test_remaining_alerts_unaffected(hass: HomeAssistant) -> None:
+@pytest.mark.parametrize("status_data", [_status_with_motors_stuck()], indirect=True)
+async def test_remaining_alerts_unaffected(
+    hass: HomeAssistant, init_integration: MockConfigEntry
+) -> None:
     """Test that alerts the dish still reports keep working."""
-    status_data = deepcopy(STATUS_DATA_FIXTURE)
-    for alert in MISSING_ALERTS:
-        del status_data[2][alert]
-    status_data[2]["alert_motors_stuck"] = True
-
-    await setup_integration(hass, status_data)
-
     assert hass.states.get("binary_sensor.starlink_motors_stuck").state == "on"
     assert hass.states.get("binary_sensor.starlink_thermal_throttle").state == STATE_OFF

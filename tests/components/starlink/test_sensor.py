@@ -3,34 +3,40 @@
 from copy import deepcopy
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.const import PERCENTAGE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
+from homeassistant.util.json import JsonArrayType
 
-from . import setup_integration
-from .patchers import STATUS_DATA_FIXTURE
+from . import STATUS_DATA_FIXTURE
 
 ENTITY_ID = "sensor.starlink_signal_quality"
 
 
-@pytest.mark.usefixtures("entity_registry_enabled_by_default")
-@pytest.mark.parametrize(
-    ("signal_quality", "expected_state"),
-    [
-        pytest.param(0.7, "70.0", id="reported"),
-        pytest.param(0.0, "0.0", id="zero"),
-        pytest.param(None, STATE_UNKNOWN, id="not_reported"),
-    ],
-)
-async def test_signal_quality(
-    hass: HomeAssistant, signal_quality: float | None, expected_state: str
-) -> None:
-    """Test the signal quality sensor."""
+def _status_with_signal_quality(signal_quality: float | None) -> JsonArrayType:
+    """Return status data with the given signal quality."""
     status_data = deepcopy(STATUS_DATA_FIXTURE)
     status_data[0]["signal_quality"] = signal_quality
+    return status_data
 
-    await setup_integration(hass, status_data)
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+@pytest.mark.parametrize(
+    ("status_data", "expected_state"),
+    [
+        pytest.param(_status_with_signal_quality(0.7), "70.0", id="reported"),
+        pytest.param(_status_with_signal_quality(0.0), "0.0", id="zero"),
+        pytest.param(
+            _status_with_signal_quality(None), STATE_UNKNOWN, id="not_reported"
+        ),
+    ],
+    indirect=["status_data"],
+)
+async def test_signal_quality(
+    hass: HomeAssistant, init_integration: MockConfigEntry, expected_state: str
+) -> None:
+    """Test the signal quality sensor."""
     state = hass.states.get(ENTITY_ID)
     assert state is not None
     assert state.state == expected_state
