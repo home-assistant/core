@@ -69,11 +69,11 @@ dependencies = [
   "orjson==3.13.0",
   "packaging>=23.1",
   "psutil-home-assistant==0.0.1",
-  "python-slugify==9.1.3",
+  "python-slugify==9.2.0",
   "PyYAML==6.0.3",
   "requests==2.34.2",
   "securetar==2026.10.0",
-  "SQLAlchemy==2.1.8",
+  "SQLAlchemy==2.1.9",
   "standard-aifc==3.13.0",
   "standard-telnetlib==3.13.0",
   # truststore.SSLContext is replaced in homeassistant/__init__.py

@@ -858,13 +858,10 @@ async def test_contracts_retry_epex_refresh_during_unload_adds_no_entities(
     """Test an EPEX refresh finishing during unload adds no entities."""
     client = mock_engie_client.return_value
     client.async_get_energy_contracts.side_effect = EngieBeCommunicationError("boom")
+    client.async_get_epex_prices.side_effect = EngieBeCommunicationError("boom")
     mock_config_entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
-
-    epex_coordinator = mock_config_entry.runtime_data.epex
-    assert epex_coordinator is not None
-    epex_coordinator.data = None
 
     release_epex = asyncio.Event()
     epex_refresh_started = asyncio.Event()
@@ -1104,14 +1101,10 @@ async def test_epex_refresh_auth_error_starts_reauth(
     await setup_dynamic_entry(hass, mock_config_entry, mock_engie_client)
     assert not hass.config_entries.flow.async_progress()
 
-    epex_coordinator = mock_config_entry.runtime_data.epex
-    assert epex_coordinator is not None
-    epex_coordinator.data = None
-
     mock_engie_client.return_value.async_get_epex_prices.side_effect = (
         EngieBeAuthenticationError("boom")
     )
-    freezer.tick(EPEX_SCAN_INTERVAL)
+    freezer.tick(timedelta(days=1))
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
 

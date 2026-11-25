@@ -1,14 +1,19 @@
 """Handle KNX project data."""
 
 import asyncio
+from collections.abc import Mapping
 from dataclasses import dataclass
 import logging
-from typing import Final
+from typing import Any, Final
 
+from awesomeversion import AwesomeVersion, AwesomeVersionException
+import probatio
 from xknx import XKNX
 from xknx.dpt import DPTBase
+from xknx.exceptions import CouldNotParseAddress
 from xknx.telegram.address import DeviceAddressableType, GroupAddress, GroupAddressType
 from xknxproject import XKNXProj
+from xknxproject.__version__ import __version__ as XKNXPROJECT_VERSION
 from xknxproject.models import (
     Device,
     DPTType,
@@ -21,14 +26,112 @@ from xknxproject.models import (
 from homeassistant.components.file_upload import process_uploaded_file
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.storage import Store
 
 from .const import DOMAIN
+from .services import get_knx_module
 
 _LOGGER = logging.getLogger(__name__)
 
 STORAGE_VERSION: Final = 1
 STORAGE_KEY: Final = f"{DOMAIN}/knx_project.json"
+
+
+def _group_addresses(value: dict[str, Any]) -> dict[str, Any]:
+    """Validate group addresses beyond their types."""
+    for key, group_address in value.items():
+        address = group_address["address"]
+        try:
+            GroupAddress(address)
+        except CouldNotParseAddress as err:
+            raise probatio.Invalid(f"invalid group address `{address}`") from err
+        if key != address:
+            raise probatio.Invalid(f"group address `{address}` is keyed as `{key}`")
+    return value
+
+
+def _info(value: dict[str, Any]) -> dict[str, Any]:
+    """Validate the project info beyond its types."""
+    probatio.In([style.value for style in XknxProjectGroupAddressStyle])(
+        value["group_address_style"]
+    )
+    return value
+
+
+# Project data in the format of the installed xknxproject, built from its types.
+PROJECT_DATA_SCHEMA: Final = probatio.TypedDictSchema(
+    KNXProjectModel,
+    {"group_addresses": _group_addresses, "info": _info},
+    extra=probatio.ALLOW_EXTRA,
+)
+
+
+def _check_parser_version(project: Any) -> None:
+    """Refuse data of a minor version of xknxproject other than the installed one.
+
+    A minor version can add required keys, which the schema would only report
+    as missing. Data without a version is left to the schema to report.
+    """
+    info = project.get("info") if isinstance(project, Mapping) else None
+    version = info.get("xknxproject_version") if isinstance(info, Mapping) else None
+    if not isinstance(version, str):
+        return
+    try:
+        data_version = AwesomeVersion(version)
+        installed_version = AwesomeVersion(XKNXPROJECT_VERSION)
+        compatible = (data_version.major, data_version.minor) == (
+            installed_version.major,
+            installed_version.minor,
+        )
+    except AwesomeVersionException:
+        compatible = False
+    if not compatible:
+        raise HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key="project_data_incompatible",
+            translation_placeholders={
+                "version": version,
+                "installed_version": XKNXPROJECT_VERSION,
+            },
+        )
+
+
+def validate_project_data(project: Any) -> KNXProjectModel:
+    """Validate project data in the format of the installed xknxproject.
+
+    Raises HomeAssistantError when the data was created for another minor
+    version of xknxproject, or doesn't have its format.
+    """
+    _check_parser_version(project)
+    try:
+        data = PROJECT_DATA_SCHEMA(project)
+    except probatio.Invalid as err:
+        raise HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key="project_data_invalid",
+            translation_placeholders={"error": str(err)},
+        ) from err
+    return data
+
+
+async def async_set_project(hass: HomeAssistant, project: Mapping[str, Any]) -> None:
+    """Replace the KNX project with project data in the format of xknxproject.
+
+    For integrations and tools that provide project data from another source
+    than a project file, eg. a project editor keeping it up to date while it is
+    edited. The data is validated first; it is stored and loaded as an uploaded
+    project file is.
+
+    Each call writes the whole project to storage and reloads its group
+    addresses. Debouncing frequent updates is left to the caller.
+
+    Raises HomeAssistantError when the KNX integration is not loaded, or the
+    data is invalid or incompatible. The current project is kept then.
+    """
+    knx_module = get_knx_module(hass)
+    data = validate_project_data(project)
+    await knx_module.project.async_store_project(data)
 
 
 @dataclass
@@ -70,9 +173,11 @@ class KNXProject:
         self,
         hass: HomeAssistant,
         entry: ConfigEntry,
+        xknx: XKNX,
     ) -> None:
         """Initialize project data."""
         self.hass = hass
+        self._xknx = xknx
         self._store = Store[KNXProjectModel](hass, STORAGE_VERSION, STORAGE_KEY)
         # Serializes the cached project against upload and removal, so a load
         # in flight cannot resurrect a project that was replaced or removed.
@@ -88,37 +193,39 @@ class KNXProject:
         self.info = None
         self._project = None
 
-    async def load_project(
-        self, xknx: XKNX, data: KNXProjectModel | None = None
-    ) -> None:
-        """Load project data from storage."""
-        if project := data or await self._store.async_load():
-            self.devices = project["devices"]
-            self.info = project["info"]
+    async def load_project(self, data: KNXProjectModel | None = None) -> None:
+        """Load project data from storage.
+
+        Also sets the address format xknx shows group addresses in, for the
+        whole process: the project's, or the 3-level format without a project.
+        """
+        if not (project := data or await self._store.async_load()):
             GroupAddress.address_format = self.get_address_format()
-            xknx.group_address_dpt.clear()
-            xknx_ga_dict: dict[DeviceAddressableType, DPTType] = {}
-            # Replace rather than extend: addresses of a previous project don't stay.
-            group_addresses: dict[str, GroupAddressInfo] = {}
+            return
+        self.devices = project["devices"]
+        self.info = project["info"]
+        GroupAddress.address_format = self.get_address_format()
+        self._xknx.group_address_dpt.clear()
+        xknx_ga_dict: dict[DeviceAddressableType, DPTType] = {}
+        # Replace rather than extend: addresses of a previous project don't stay.
+        group_addresses: dict[str, GroupAddressInfo] = {}
 
-            for ga_model in project["group_addresses"].values():
-                ga_info = _create_group_address_info(ga_model)
-                group_addresses[ga_info.address] = ga_info
-                if (dpt_model := ga_model.get("dpt")) is not None:
-                    xknx_ga_dict[ga_model["address"]] = dpt_model
+        for ga_model in project["group_addresses"].values():
+            ga_info = _create_group_address_info(ga_model)
+            group_addresses[ga_info.address] = ga_info
+            if (dpt_model := ga_model.get("dpt")) is not None:
+                xknx_ga_dict[ga_model["address"]] = dpt_model
 
-            xknx.group_address_dpt.set(xknx_ga_dict)
-            self.group_addresses = group_addresses
+        self._xknx.group_address_dpt.set(xknx_ga_dict)
+        self.group_addresses = group_addresses
 
-            _LOGGER.debug(
-                "Loaded KNX project data with %s group addresses from storage",
-                len(self.group_addresses),
-            )
-            self.loaded = True
+        _LOGGER.debug(
+            "Loaded KNX project data with %s group addresses from storage",
+            len(self.group_addresses),
+        )
+        self.loaded = True
 
-    async def process_project_file(
-        self, xknx: XKNX, file_id: str, password: str
-    ) -> None:
+    async def process_project_file(self, file_id: str, password: str) -> None:
         """Process an uploaded project file."""
 
         def _parse_project() -> KNXProjectModel:
@@ -131,18 +238,25 @@ class KNXProject:
                 return xknxproj.parse()
 
         project = await self.hass.async_add_executor_job(_parse_project)
+        await self.async_store_project(project)
+
+    async def async_store_project(self, project: KNXProjectModel) -> None:
+        """Store and load parsed project data, replacing the current project."""
         async with self._project_lock:
             await self._store.async_save(project)
             # Invalidate rather than populate: whether the full project is held
             # is left to whoever asks for it.
             self._project = None
-            await self.load_project(xknx, data=project)
+            await self.load_project(data=project)
 
     async def remove_project_file(self) -> None:
         """Remove project file from storage."""
         async with self._project_lock:
             await self._store.async_remove()
             self.initial_state()
+            # what the project set in xknx goes with it
+            self._xknx.group_address_dpt.clear()
+            GroupAddress.address_format = self.get_address_format()
 
     async def get_knxproject(self) -> KNXProjectModel | None:
         """Return the full project, reading it from local storage on first use.
