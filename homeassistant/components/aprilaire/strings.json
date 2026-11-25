@@ -132,6 +132,9 @@
   "issues": {
     "wrong_device": {
       "fix_flow": {
+        "abort": {
+          "reconfigure": "Continue in the reconfigure flow to enter the host and port of the original thermostat."
+        },
         "step": {
           "confirm": {
             "description": "The thermostat at {host} is not the one that was set up for {title}. It reports the MAC address {found}.\n\nSelect **Submit** to enter the host and port of the original thermostat. If you replaced the thermostat, remove this entry and add the new thermostat instead.",

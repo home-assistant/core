@@ -5,6 +5,7 @@ from typing import TYPE_CHECKING
 from homeassistant.components.repairs import FlowType, RepairsFlow, RepairsFlowResult
 from homeassistant.config_entries import SOURCE_RECONFIGURE
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import issue_registry as ir
 
 from .const import DOMAIN
 
@@ -27,12 +28,20 @@ class WrongDeviceRepairFlow(RepairsFlow):
     ) -> RepairsFlowResult:
         """Start the reconfigure flow once the user confirms."""
         if user_input is None:
-            return self.async_show_form(step_id="confirm")
+            issue = ir.async_get(self.hass).async_get_issue(DOMAIN, self.issue_id)
+            return self.async_show_form(
+                step_id="confirm",
+                description_placeholders=issue.translation_placeholders
+                if issue
+                else None,
+            )
         result = await self.hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_RECONFIGURE, "entry_id": self._entry_id}
         )
-        return self.async_create_entry(
-            data={}, next_flow=(FlowType.CONFIG_FLOW, result["flow_id"])
+        # Abort keeps the issue: a successful setup after reconfiguring deletes it
+        return self.async_abort(
+            reason="reconfigure",
+            next_flow=(FlowType.CONFIG_FLOW, result["flow_id"]),
         )
 
 
