@@ -12,6 +12,7 @@ from aiohttp import ClientError
 import pytest
 from pytest_homeassistant.common import MockConfigEntry, MockUser
 from pytest_homeassistant.test_util.aiohttp import AiohttpClientMockResponse
+from pytest_homeassistant.typing import WebSocketGenerator
 from yarl import URL
 
 from homeassistant.components.marketplace.base import (
@@ -34,7 +35,10 @@ from homeassistant.components.marketplace.exceptions import (
     ExecutionInProgressError,
     ExpectedError,
 )
-from homeassistant.components.marketplace.repositories.base import Repository
+from homeassistant.components.marketplace.repositories.base import (
+    Repository,
+    RepositoryManifest,
+)
 from homeassistant.components.marketplace.utils.url import github_raw_file
 from homeassistant.core import HomeAssistant
 
@@ -241,6 +245,128 @@ async def test_catalog_integration_categories(
         )
 
     assert repository.data.integration_categories == expected
+
+
+async def _async_take_over_catalog_name(
+    marketplace: MarketplaceManager,
+    repository: Repository,
+    manifest: dict[str, Any],
+    age: float,
+) -> None:
+    """Take over a catalog entry that is age seconds newer than the repository."""
+    feed = {
+        repository.data.id: {
+            "domain": repository.data.domain,
+            "full_name": repository.data.full_name,
+            "last_fetched": repository.data.last_fetched.timestamp() + age,
+            "manifest": manifest,
+            "manifest_name": "Example",
+        }
+    }
+    with patch.object(marketplace.data_client, "async_get_category", return_value=feed):
+        await marketplace.async_get_category_repositories_from_catalog(
+            RepositoryCategory.INTEGRATION
+        )
+
+
+@pytest.mark.parametrize(
+    ("installed", "manifest", "stored_manifest", "expected"),
+    [
+        pytest.param(False, {}, {}, "Example", id="manifest_name"),
+        pytest.param(
+            False, {"name": "Catalog"}, {"name": "Catalog"}, "Catalog", id="hacs_json"
+        ),
+        pytest.param(False, {"name": ""}, {"name": ""}, "", id="empty_hacs_json"),
+        pytest.param(True, {}, {"name": "Old"}, "Old", id="installed"),
+        pytest.param(
+            True, {"name": "Catalog"}, {"name": "Old"}, "Old", id="installed_named"
+        ),
+    ],
+)
+async def test_catalog_name_survives_a_restart(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    marketplace: MarketplaceManager,
+    installed: bool,
+    manifest: dict[str, Any],
+    stored_manifest: dict[str, Any],
+    expected: str,
+) -> None:
+    """Test the catalog name of a repository that is not installed is stored."""
+    repository = marketplace.repositories.get_by_full_name(REPOSITORY_INTEGRATION)
+    repository.data.installed = installed
+    repository.repository_manifest = RepositoryManifest.from_dict({"name": "Old"})
+    await _async_take_over_catalog_name(marketplace, repository, manifest, 1)
+
+    marketplace.data.async_store_repository_data(repository)
+    stored = marketplace.data.content[repository.data.id]
+    assert stored["repository_manifest"] == stored_manifest
+
+    marketplace.data.async_restore_repository(repository.data.id, stored)
+    client = await hass_ws_client(hass)
+    await client.send_json_auto_id({"type": "marketplace/repositories/list"})
+    response = await client.receive_json()
+
+    assert response["success"]
+    assert [
+        listed["name"]
+        for listed in response["result"]
+        if listed["id"] == repository.data.id
+    ] == [expected]
+
+
+@pytest.mark.parametrize(
+    ("installed", "name", "manifest_name", "age", "manifest", "expected"),
+    [
+        pytest.param(False, None, None, 0, {}, "Example", id="manifest_name"),
+        pytest.param(
+            False, None, None, 0, {"name": "Catalog"}, "Catalog", id="hacs_json"
+        ),
+        pytest.param(False, None, None, 0, {"name": ""}, "", id="empty_hacs_json"),
+        pytest.param(False, None, "Stored", 0, {}, "Stored", id="keeps_manifest_name"),
+        pytest.param(
+            False,
+            "Stored",
+            None,
+            0,
+            {"name": "Catalog"},
+            "Stored",
+            id="keeps_hacs_json",
+        ),
+        pytest.param(
+            False,
+            None,
+            "Stored",
+            -5e-7,
+            {"name": "Catalog"},
+            "Stored",
+            id="older_entry",
+        ),
+        pytest.param(
+            False, None, None, -1, {}, "Integration Basic", id="older_manifest_name"
+        ),
+        pytest.param(
+            True, None, "Stored", 0, {"name": "Catalog"}, "Stored", id="installed"
+        ),
+    ],
+)
+async def test_catalog_name_fills_in_what_storage_lacks(
+    marketplace: MarketplaceManager,
+    installed: bool,
+    name: str | None,
+    manifest_name: str | None,
+    age: float,
+    manifest: dict[str, Any],
+    expected: str,
+) -> None:
+    """Test a catalog entry that is not newer only adds a missing name."""
+    repository = marketplace.repositories.get_by_full_name(REPOSITORY_INTEGRATION)
+    repository.data.installed = installed
+    repository.data.manifest_name = manifest_name
+    repository.repository_manifest.name = name
+    await _async_take_over_catalog_name(marketplace, repository, manifest, age)
+
+    assert repository.display_name == expected
 
 
 OTHER_INTEGRATION_FEED = {

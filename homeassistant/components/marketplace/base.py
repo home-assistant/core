@@ -1271,6 +1271,13 @@ class MarketplaceManager:
             # Storage keeps versions for installed repositories only
             repository.data.last_version = repo_data.get("last_version")
             repository.data.last_commit = repo_data.get("last_commit")
+            if repository.data.last_fetched.timestamp() == repo_data["last_fetched"]:
+                if repository.data.manifest_name is None:
+                    repository.data.manifest_name = repo_data.get("manifest_name")
+                if repository.repository_manifest.name is None:
+                    repository.repository_manifest.name = (
+                        repo_data.get("manifest") or {}
+                    ).get("name")
 
     def _async_unregister_stale_custom_repositories(
         self, category: RepositoryCategory

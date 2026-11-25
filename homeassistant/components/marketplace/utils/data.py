@@ -49,6 +49,7 @@ EXPORTED_REPOSITORY_DATA: tuple[tuple[str, Any], ...] = (
     ("hide", False),
     ("integration_categories", []),
     ("last_updated", 0),
+    ("manifest_name", None),
     ("stargazers_count", 0),
     ("topics", []),
 )
@@ -64,7 +65,6 @@ EXPORTED_INSTALLED_REPOSITORY_DATA: tuple[tuple[str, Any], ...] = (
     ("installed", False),
     ("last_commit", None),
     ("last_version", None),
-    ("manifest_name", None),
     ("open_issues", 0),
     ("prerelease", None),
     ("published_tags", []),
@@ -139,9 +139,12 @@ class MarketplaceData:
     def async_store_repository_data(self, repository: Repository) -> None:
         """Store the repository data."""
         # Copies, the data is encoded in the executor while the loop moves on
-        data: dict[str, Any] = {
-            "repository_manifest": dict(repository.repository_manifest.manifest)
-        }
+        manifest = dict(repository.repository_manifest.manifest)
+        if not repository.data.installed:
+            manifest.pop("name", None)
+            if (name := repository.repository_manifest.name) is not None:
+                manifest["name"] = name
+        data: dict[str, Any] = {"repository_manifest": manifest}
 
         for key, default in (
             EXPORTED_INSTALLED_REPOSITORY_DATA
