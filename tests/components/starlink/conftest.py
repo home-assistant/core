@@ -72,7 +72,7 @@ def mock_sleep_config(sleep_config: JsonArrayType) -> Generator[MagicMock]:
 
 
 @pytest.fixture(autouse=True)
-def mock_starlink(status_data: JsonArrayType) -> Generator[MagicMock]:
+def mock_status_data(status_data: JsonArrayType) -> Generator[MagicMock]:
     """Mock the Starlink library calls."""
     with (
         patch(LOCATION_DATA_TARGET, return_value=LOCATION_DATA_FIXTURE),

@@ -96,7 +96,7 @@ async def test_restore_cache_with_accumulation(
 async def test_last_restart_state(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_starlink: MagicMock,
+    mock_status_data: MagicMock,
     status_data: JsonArrayType,
 ) -> None:
     """Test Starlink last restart state."""
@@ -111,7 +111,7 @@ async def test_last_restart_state(
     with patch.object(
         mock_config_entry.runtime_data, "always_update", return_value=True
     ):
-        mock_starlink.return_value = _status_with_uptime(status_data, 804144)
+        mock_status_data.return_value = _status_with_uptime(status_data, 804144)
 
         with freeze_time(utc_now + timedelta(seconds=5)):
             async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=5))
@@ -119,7 +119,7 @@ async def test_last_restart_state(
 
         assert hass.states.get(entity_id).state == "2025-10-13T06:09:11+00:00"
 
-        mock_starlink.return_value = _status_with_uptime(status_data, 804134)
+        mock_status_data.return_value = _status_with_uptime(status_data, 804134)
 
         with freeze_time(utc_now + timedelta(seconds=10)):
             async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=10))
@@ -127,7 +127,7 @@ async def test_last_restart_state(
 
         assert hass.states.get(entity_id).state == "2025-10-13T06:09:11+00:00"
 
-        mock_starlink.return_value = _status_with_uptime(status_data, 100)
+        mock_status_data.return_value = _status_with_uptime(status_data, 100)
 
         with freeze_time(utc_now + timedelta(seconds=15)):
             async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=15))

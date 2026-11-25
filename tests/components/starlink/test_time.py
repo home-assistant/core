@@ -15,7 +15,11 @@ ENTITY_ID = "time.starlink_sleep_start"
 
 
 @pytest.mark.freeze_time("2026-06-01 12:00:00+00:00")
-@pytest.mark.parametrize("sleep_config", [[0, 60, True]], indirect=True)
+@pytest.mark.parametrize(
+    "sleep_config",
+    [pytest.param([0, 60, True], id="sleep_enabled")],
+    indirect=True,
+)
 @pytest.mark.usefixtures("init_integration")
 async def test_unavailable_on_update_failure(
     hass: HomeAssistant,
