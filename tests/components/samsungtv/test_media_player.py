@@ -1569,3 +1569,57 @@ async def test_upnp_failed_re_subscribe_events(
     state = hass.states.get(ENTITY_ID)
     assert state.state == STATE_ON
     assert "Device rejected re-subscription" in caplog.text
+
+
+@pytest.mark.usefixtures("rest_api", "upnp_notify_server", "remote_websocket")
+async def test_upnp_re_subscribe_backoff(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    dmr_device: Mock,
+) -> None:
+    """Test failed re-subscriptions back off instead of retrying on every update."""
+    await setup_samsungtv_entry(hass, MOCK_ENTRY_WS)
+    assert hass.states.get(ENTITY_ID).state == STATE_ON
+    assert dmr_device.async_subscribe_services.call_count == 1
+
+    async def _tick(seconds: int) -> None:
+        freezer.tick(timedelta(seconds=seconds))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+    # The subscription is lost while the TV stays on, and the TV refuses it
+    dmr_device.is_subscribed = False
+    dmr_device.async_subscribe_services.side_effect = UpnpCommunicationError
+
+    await _tick(10)
+    assert dmr_device.async_subscribe_services.call_count == 2
+
+    # No retry on the next updates while backing off (30 s)
+    await _tick(10)
+    await _tick(10)
+    assert dmr_device.async_subscribe_services.call_count == 2
+    await _tick(10)
+    assert dmr_device.async_subscribe_services.call_count == 3
+
+    # The backoff doubles after each failure (60 s)
+    for _ in range(5):
+        await _tick(10)
+    assert dmr_device.async_subscribe_services.call_count == 3
+    await _tick(10)
+    assert dmr_device.async_subscribe_services.call_count == 4
+
+    # A successful re-subscription resets the backoff
+    def _subscribe(auto_resubscribe: bool = False) -> None:
+        dmr_device.is_subscribed = True
+
+    dmr_device.async_subscribe_services.side_effect = _subscribe
+    await _tick(120)
+    assert dmr_device.async_subscribe_services.call_count == 5
+    assert dmr_device.is_subscribed
+
+    dmr_device.is_subscribed = False
+    dmr_device.async_subscribe_services.side_effect = UpnpCommunicationError
+    await _tick(10)
+    assert dmr_device.async_subscribe_services.call_count == 6
+    await _tick(10)
+    assert dmr_device.async_subscribe_services.call_count == 6
