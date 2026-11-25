@@ -71,6 +71,9 @@
       "ping_drop_rate": {
         "name": "Ping drop rate"
       },
+      "signal_quality": {
+        "name": "Signal quality"
+      },
       "uplink_throughput": {
         "name": "Uplink throughput"
       },

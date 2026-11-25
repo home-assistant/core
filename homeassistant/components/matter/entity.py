@@ -133,13 +133,16 @@ class MatterEntity(Entity):
         self._attr_available = (
             self._endpoint.node.available and self._get_bridged_reachable()
         )
-        # mark endpoint postfix if the device has the primary
-        # attribute on multiple endpoints
-        if not self._endpoint.node.is_bridge_device and any(
+        # mark endpoint postfix if another endpoint of the same HA device has the
+        # primary attribute. Bridged endpoints only share a device with their
+        # composed parts, so this also covers a composed device behind a bridge
+        # (e.g. a bridged heat pump exposing two Thermostat endpoints).
+        if any(
             ep
             for ep in self._endpoint.node.endpoints.values()
             if ep != self._endpoint
             and ep.has_attribute(None, entity_info.primary_attribute)
+            and get_device_id(server_info, ep) == node_device_id
         ):
             self._name_postfix = str(self._endpoint.endpoint_id)
         # Always set translation_key for state_attributes translations.

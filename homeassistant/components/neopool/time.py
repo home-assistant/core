@@ -5,9 +5,13 @@ from dataclasses import dataclass
 from datetime import time as dt_time
 from typing import Any, Literal, override
 
-from neopool_modbus.registers import is_valid_relay_gpio
+from neopool_modbus.registers import aux_relay_available, is_valid_relay_gpio
 
-from homeassistant.components.time import TimeEntity, TimeEntityDescription
+from homeassistant.components.time import (
+    DOMAIN as TIME_DOMAIN,
+    TimeEntity,
+    TimeEntityDescription,
+)
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -21,6 +25,7 @@ from .const import (
 )
 from .coordinator import NeoPoolConfigEntry, NeoPoolCoordinator
 from .entity import NeoPoolDebouncedWriteEntity
+from .helpers import cleanup_occupied_aux_entities
 
 # The platform coalesces rapid writes per entity via a debounce timer. Each
 # start/stop entity flushes its own endpoint independently, so a platform
@@ -38,13 +43,6 @@ class NeoPoolTimeEntityDescription(TimeEntityDescription):
     translation_placeholders: dict[str, str] | None = None
 
 
-def _option_supported(
-    opt_flag: str,
-) -> Callable[[dict[str, Any], Mapping[str, Any]], bool]:
-    """Return a supported_fn gating an entity on the given option flag."""
-    return lambda _data, opts: bool(opts.get(opt_flag))
-
-
 def _light_supported(data: dict[str, Any], opts: Mapping[str, Any]) -> bool:
     """Gate the light timer on its option and a valid lighting GPIO.
 
@@ -52,6 +50,15 @@ def _light_supported(data: dict[str, Any], opts: Mapping[str, Any]) -> bool:
     """
     return bool(opts.get(CONF_USE_LIGHT)) and is_valid_relay_gpio(
         data.get("MBF_PAR_LIGHTING_GPIO", 0) or 0
+    )
+
+
+def _aux_supported(
+    opt_flag: str, aux_number: int
+) -> Callable[[dict[str, Any], Mapping[str, Any]], bool]:
+    """Return a supported_fn gating an AUX timer on its option and relay availability."""
+    return lambda data, opts: (
+        bool(opts.get(opt_flag)) and aux_relay_available(aux_number, data)
     )
 
 
@@ -96,8 +103,10 @@ def _build_descriptions() -> dict[str, NeoPoolTimeEntityDescription]:
                 supported_fn: (
                     Callable[[dict[str, Any], Mapping[str, Any]], bool] | None
                 ) = _light_supported
-            elif opt_flag is not None:
-                supported_fn = _option_supported(opt_flag)
+            elif block.startswith("relay_aux") and opt_flag is not None:
+                digits = block.removeprefix("relay_aux")
+                aux_number = int(digits.rstrip("b"))
+                supported_fn = _aux_supported(opt_flag, aux_number)
             else:
                 supported_fn = None
             out[key] = NeoPoolTimeEntityDescription(
@@ -123,6 +132,8 @@ async def async_setup_entry(
 ) -> None:
     """Set up NeoPool time entities from a config entry."""
     coordinator = entry.runtime_data
+
+    cleanup_occupied_aux_entities(hass, entry.entry_id, TIME_DOMAIN, coordinator.data)
 
     async_add_entities(
         NeoPoolTime(coordinator, key, desc)
@@ -173,6 +184,18 @@ class NeoPoolTime(NeoPoolDebouncedWriteEntity[int], TimeEntity):
             hour=seconds // 3600,
             minute=(seconds % 3600) // 60,
             second=seconds % 60,
+        )
+
+    @property
+    @override
+    def available(self) -> bool:
+        """Return False when the relay becomes occupied after setup."""
+        desc = self.entity_description
+        return super().available and (
+            desc.supported_fn is None
+            or desc.supported_fn(
+                self.coordinator.data, self.coordinator.config_entry.options
+            )
         )
 
     @property

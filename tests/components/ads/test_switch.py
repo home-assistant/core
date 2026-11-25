@@ -40,7 +40,9 @@ async def test_switch(
     """Test the switch is created from YAML with the PLC's value."""
     mock_ads_device.values[ADS_VAR] = BOOL_TRUE
 
-    assert await setup_ads_platform(hass, SWITCH_DOMAIN, platform_config)
+    assert await setup_ads_platform(
+        hass, mock_ads_device, SWITCH_DOMAIN, platform_config
+    )
 
     assert entity_registry.async_get(entity_id) == snapshot(name="entry")
     assert hass.states.get(entity_id) == snapshot(name="state")
@@ -51,7 +53,9 @@ async def test_state_follows_the_plc(
 ) -> None:
     """Test the switch follows the values the PLC pushes."""
     mock_ads_device.values[ADS_VAR] = BOOL_TRUE
-    assert await setup_ads_platform(hass, SWITCH_DOMAIN, PLATFORM_CONFIG)
+    assert await setup_ads_platform(
+        hass, mock_ads_device, SWITCH_DOMAIN, PLATFORM_CONFIG
+    )
     assert hass.states.get(ENTITY_ID).state == STATE_ON
 
     await mock_ads_device.async_push(hass, ADS_VAR, BOOL_FALSE)
@@ -75,7 +79,9 @@ async def test_actions_write_to_the_plc(
 ) -> None:
     """Test the actions write the variable, leaving the state to the PLC."""
     mock_ads_device.values[ADS_VAR] = initial
-    assert await setup_ads_platform(hass, SWITCH_DOMAIN, PLATFORM_CONFIG)
+    assert await setup_ads_platform(
+        hass, mock_ads_device, SWITCH_DOMAIN, PLATFORM_CONFIG
+    )
     state = hass.states.get(ENTITY_ID).state
 
     await hass.services.async_call(
@@ -97,7 +103,9 @@ async def test_write_error(
 ) -> None:
     """Test a failing write is logged instead of raised at the caller."""
     mock_ads_device.values[ADS_VAR] = BOOL_FALSE
-    assert await setup_ads_platform(hass, SWITCH_DOMAIN, PLATFORM_CONFIG)
+    assert await setup_ads_platform(
+        hass, mock_ads_device, SWITCH_DOMAIN, PLATFORM_CONFIG
+    )
     mock_pyads_connection.return_value.write_by_name.side_effect = pyads.ADSError(
         err_code=1861
     )
