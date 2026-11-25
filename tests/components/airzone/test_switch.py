@@ -73,8 +73,8 @@ async def test_airzone_anti_freeze_switch_off(hass: HomeAssistant) -> None:
     ) as mock_put:
         await hass.services.async_call(
             SWITCH_DOMAIN,
-            SERVICE_TURN_OFF,
-            {ATTR_ENTITY_ID: "switch.dorm_1_anti_freeze"},
+            SwitchService.TURN_OFF,
+            {TargetKey.ENTITY_ID: "switch.dorm_1_anti_freeze"},
             blocking=True,
         )
 
