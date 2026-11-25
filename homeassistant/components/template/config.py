@@ -1,6 +1,6 @@
 """Template config validator."""
 
-from collections.abc import Callable, Collection
+from collections.abc import Callable
 from contextlib import suppress
 import itertools
 import logging
@@ -82,9 +82,9 @@ from . import (
 )
 from .const import (
     CONF_TRIGGER_VARIABLES,
+    DEPRECATED_TEMPLATE_OPTIONS,
     DOMAIN,
     PLATFORMS,
-    WEATHER_DEPRECATED_TEMPLATE_OPTIONS,
     TemplateConfig,
     TemplateConfigSections,
 )
@@ -428,28 +428,29 @@ async def _async_validate_triggers_and_conditions(
             raise
 
 
-# Deprecated options per platform whose file and line are kept for repairs
-DEPRECATED_OPTIONS_WITH_LOCATIONS: dict[str, Collection[str]] = {
-    WEATHER_DOMAIN: WEATHER_DEPRECATED_TEMPLATE_OPTIONS,
-}
-
-
 def _get_option_locations(
     config: TemplateConfig,
 ) -> dict[str, list[dict[str, tuple[str, int]]]]:
     """Return the file and line of the deprecated entity options loaded from YAML."""
-    return {
-        platform: [
-            {
-                key: (key.__config_file__, key.__line__)
-                for key in entity_config
-                if key in options and hasattr(key, "__config_file__")
-            }
-            for entity_config in config[platform]
-        ]
-        for platform, options in DEPRECATED_OPTIONS_WITH_LOCATIONS.items()
-        if platform in config
-    }
+    locations: dict[str, list[dict[str, tuple[str, int]]]] = {}
+    for deprecation in DEPRECATED_TEMPLATE_OPTIONS:
+        if (platform := deprecation.platform) not in config:
+            continue
+        # A platform can have several deprecations, keep the locations of all
+        platform_locations = locations.setdefault(
+            platform, [{} for _ in config[platform]]
+        )
+        for entity_locations, entity_config in zip(
+            platform_locations, config[platform], strict=True
+        ):
+            entity_locations.update(
+                {
+                    key: (key.__config_file__, key.__line__)
+                    for key in deprecation.options_config(entity_config)
+                    if key in deprecation.options and hasattr(key, "__config_file__")
+                }
+            )
+    return locations
 
 
 async def async_validate_config_section(

@@ -1,4 +1,184 @@
 # serializer version: 1
+# name: test_all_entities[number.vallox_fan_speed_away-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 100.0,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 1.0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1.0,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('vallox', '00050006-0007-0008-0009-000a000b000c')]>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'number.vallox_fan_speed_away',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Fan speed (Away)',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Fan speed (Away)',
+    'platform': 'vallox',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'fan_speed_away',
+    'unique_id': '00050006-0007-0008-0009-000a000b000c-fan_speed_away',
+    'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
+  })
+# ---
+# name: test_all_entities[number.vallox_fan_speed_away-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Vallox Fan speed (Away)',
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 100.0,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 1.0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1.0,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PERCENTAGE: '%'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.vallox_fan_speed_away',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '10',
+  })
+# ---
+# name: test_all_entities[number.vallox_fan_speed_boost-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 100.0,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 1.0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1.0,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('vallox', '00050006-0007-0008-0009-000a000b000c')]>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'number.vallox_fan_speed_boost',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Fan speed (Boost)',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Fan speed (Boost)',
+    'platform': 'vallox',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'fan_speed_boost',
+    'unique_id': '00050006-0007-0008-0009-000a000b000c-fan_speed_boost',
+    'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
+  })
+# ---
+# name: test_all_entities[number.vallox_fan_speed_boost-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Vallox Fan speed (Boost)',
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 100.0,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 1.0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1.0,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PERCENTAGE: '%'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.vallox_fan_speed_boost',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '80',
+  })
+# ---
+# name: test_all_entities[number.vallox_fan_speed_home-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 100.0,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 1.0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1.0,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('vallox', '00050006-0007-0008-0009-000a000b000c')]>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'number.vallox_fan_speed_home',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Fan speed (Home)',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Fan speed (Home)',
+    'platform': 'vallox',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'fan_speed_home',
+    'unique_id': '00050006-0007-0008-0009-000a000b000c-fan_speed_home',
+    'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
+  })
+# ---
+# name: test_all_entities[number.vallox_fan_speed_home-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Vallox Fan speed (Home)',
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 100.0,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 1.0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1.0,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PERCENTAGE: '%'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.vallox_fan_speed_home',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '30',
+  })
+# ---
 # name: test_all_entities[number.vallox_supply_air_temperature_away-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
