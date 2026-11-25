@@ -1005,7 +1005,7 @@ class AbstractOAuth2DeviceFlowHandler(AbstractOAuth2BaseFlowHandler, metaclass=A
                 self.flow_impl.async_check_device_activation(self._device_authorization)
             )
 
-        result = self.async_show_progress(
+        return self.async_show_progress(
             step_id="device_flow",
             progress_action="wait_for_device",
             description_placeholders={
@@ -1018,10 +1018,9 @@ class AbstractOAuth2DeviceFlowHandler(AbstractOAuth2BaseFlowHandler, metaclass=A
                 "code": self._device_authorization.user_code,
             },
             progress_task=self._login_task,
+            # The progress string is shared, like the abort reasons
+            translation_domain=HOMEASSISTANT_DOMAIN,
         )
-        # The progress string is shared, like the abort reasons
-        result["translation_domain"] = HOMEASSISTANT_DOMAIN
-        return result
 
     async def async_step_device_flow_complete(
         self, user_input: dict[str, Any] | None = None

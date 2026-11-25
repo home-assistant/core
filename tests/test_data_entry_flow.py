@@ -682,6 +682,38 @@ async def test_show_progress(hass: HomeAssistant, manager: MockFlowManager) -> N
     assert result["title"] == "Hello"
 
 
+@pytest.mark.parametrize(
+    "translation_domain",
+    [None, "homeassistant"],
+    ids=["own_domain", "shared_domain"],
+)
+async def test_show_progress_translation_domain(
+    hass: HomeAssistant, manager: MockFlowManager, translation_domain: str | None
+) -> None:
+    """Test the progress action can be translated by another integration."""
+    manager.hass = hass
+    task = hass.async_create_task(asyncio.Event().wait())
+
+    @manager.mock_reg_handler("test")
+    class TestFlow(data_entry_flow.FlowHandler):
+        async def async_step_init(self, user_input=None):
+            return self.async_show_progress(
+                step_id="init",
+                progress_action="task_one",
+                progress_task=task,
+                translation_domain=translation_domain,
+            )
+
+    result = await manager.async_init("test")
+
+    assert result["type"] is data_entry_flow.FlowResultType.SHOW_PROGRESS
+    assert result["progress_action"] == "task_one"
+    assert result.get("translation_domain") == translation_domain
+
+    # Cancels the pending progress task
+    manager.async_abort(result["flow_id"])
+
+
 async def test_show_progress_error(
     hass: HomeAssistant, manager: MockFlowManager
 ) -> None:
