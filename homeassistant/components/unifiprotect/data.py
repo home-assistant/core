@@ -21,6 +21,7 @@ from uiprotect.data import (
     ProtectAdoptableDeviceModel,
     PTZPatrol,
     PublicDeviceModel,
+    PublicStoreChange,
     Relay,
     WSAction,
     WSSubscriptionMessage,
@@ -49,6 +50,7 @@ from .const import (
     DISPATCH_ADOPT,
     DISPATCH_CHANNELS,
     DISPATCH_CHIMES,
+    DISPATCH_EXTERNAL_ARM,
     DISPATCH_PUBLIC_ADD,
     DISPATCH_RELAYS,
     DOMAIN,
@@ -164,6 +166,7 @@ class ProtectData:
         self.add_signal = _async_dispatch_id(entry, DISPATCH_ADD)
         self.channels_signal = _async_dispatch_id(entry, DISPATCH_CHANNELS)
         self.chime_signal = _async_dispatch_id(entry, DISPATCH_CHIMES)
+        self.external_arm_signal = _async_dispatch_id(entry, DISPATCH_EXTERNAL_ARM)
         self.relay_signal = _async_dispatch_id(entry, DISPATCH_RELAYS)
         self.public_add_signal = _async_dispatch_id(entry, DISPATCH_PUBLIC_ADD)
         # PTZ patrol cache: camera_id -> list of patrols
@@ -322,6 +325,10 @@ class ProtectData:
                 self._async_process_public_devices_ws_message
             ),
             api.subscribe_public_resync(self._async_public_resync_done),
+            api.subscribe_external_arm_profiles_live(
+                self._async_external_arm_live_changed
+            ),
+            api.subscribe_public_store_changes(self._async_public_store_changed),
         ]
         if api.is_public_only:
             # No private session: the private websocket and the private poll
@@ -563,6 +570,17 @@ class ProtectData:
         for relay in list(public_bootstrap.relays.values()):
             async_dispatcher_send(self._hass, self.relay_signal, relay)
         self._async_offer_chimes()
+
+    @callback
+    def _async_public_store_changed(self, change: PublicStoreChange) -> None:
+        """Signal the alarm panels when the external arm profiles changed."""
+        if change.store == "external_arm_profiles":
+            async_dispatcher_send(self._hass, self.external_arm_signal)
+
+    @callback
+    def _async_external_arm_live_changed(self, live: bool) -> None:
+        """Signal the alarm panels when the external arm profiles go stale or live."""
+        async_dispatcher_send(self._hass, self.external_arm_signal)
 
     @callback
     def _async_signal_public_doorbell_settings(self) -> None:

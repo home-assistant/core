@@ -52,6 +52,7 @@ from .exceptions import (
     ReolinkSetupException,
     UserNotAdmin,
 )
+from .hls import async_remove_leftover_hls_files
 from .host import ReolinkHost
 from .services import async_setup_services
 from .util import ReolinkConfigEntry, ReolinkData, get_device_uid_and_ch, get_store
@@ -81,6 +82,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up Reolink shared code."""
 
     async_setup_services(hass)
+    await async_remove_leftover_hls_files(hass)
     return True
 
 

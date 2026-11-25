@@ -19,7 +19,7 @@ class OndiloClient(Ondilo):
         self,
         hass: core.HomeAssistant,
         config_entry: OndiloIcoConfigEntry,
-        implementation: config_entry_oauth2_flow.AbstractOAuth2Implementation,
+        implementation: config_entry_oauth2_flow.AbstractOAuth2BaseImplementation,
     ) -> None:
         """Initialize Ondilo ICO Auth."""
         self.hass = hass
