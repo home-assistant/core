@@ -9,6 +9,7 @@ from electrolux_group_developer_sdk.client.appliances.appliance_data import (
 
 from homeassistant.components.fan import FanEntity, FanEntityFeature
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util.percentage import (
     percentage_to_ranged_value,
@@ -16,6 +17,7 @@ from homeassistant.util.percentage import (
 )
 from homeassistant.util.scaling import int_states_in_range
 
+from .const import DOMAIN
 from .coordinator import ElectroluxConfigEntry, ElectroluxDataUpdateCoordinator
 from .entity import ElectroluxBaseEntity
 from .entity_helper import async_setup_entities_helper
@@ -164,11 +166,16 @@ class AirPurifierFanEntity(ElectroluxBaseEntity[APAppliance], FanEntity):
         """Send set fan speed command. If fan speed percentage is 0 turn off the appliance."""
         if percentage == 0:
             await self.async_turn_off()
-        else:
-            command = self._appliance_data.get_fan_speed_command(
-                self._percentage_to_fan_speed(percentage)
+            return
+
+        if self._get_current_mode() in ["smart", "auto"]:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN, translation_key="fan_speed_not_available"
             )
-            await self.coordinator.send_command(command)
+        command = self._appliance_data.get_fan_speed_command(
+            self._percentage_to_fan_speed(percentage)
+        )
+        await self.coordinator.send_command(command)
 
     @override
     async def async_turn_off(self, **kwargs: Any) -> None:
@@ -192,11 +199,12 @@ class AirPurifierFanEntity(ElectroluxBaseEntity[APAppliance], FanEntity):
         else:
             commands.append(self._appliance_data.get_turn_on_command())
         if percentage is not None:
-            commands.append(
-                self._appliance_data.get_fan_speed_command(
-                    self._percentage_to_fan_speed(percentage)
+            if preset_mode not in ["smart", "auto"]:
+                commands.append(
+                    self._appliance_data.get_fan_speed_command(
+                        self._percentage_to_fan_speed(percentage)
+                    )
                 )
-            )
         for command in commands:
             await self.coordinator.send_command(command, refresh=False)
         await self.coordinator.async_refresh()
