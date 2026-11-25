@@ -97,6 +97,8 @@ class RoombaConnection:
             return
         self._hold_until = time.monotonic() + COMMAND_HOLD_SECONDS
         async with self._lock:
+            if self._closed:
+                return
             if not self.roomba.connected:
                 _LOGGER.debug("Connecting to send a command")
                 await self._async_open()
@@ -166,11 +168,8 @@ class RoombaConnection:
     async def _async_release(self) -> None:
         """Disconnect unless the session is still needed."""
         async with self._lock:
-            if (
-                self._closed
-                or not self.roomba.connected
-                or time.monotonic() < self._hold_until
-            ):
+            # A dropped session is torn down too, so it stops reconnecting.
+            if self._closed or time.monotonic() < self._hold_until:
                 return
             if self.robot_active:
                 _LOGGER.debug("Robot on a mission, keeping the session open")

@@ -326,3 +326,37 @@ async def test_reconnect_after_dropped_session(
         VACUUM_DOMAIN, SERVICE_LOCATE, {ATTR_ENTITY_ID: VACUUM_ENTITY_ID}, blocking=True
     )
     periodic_roomba.send_command.assert_awaited_once_with("find", None)
+
+
+async def test_idle_release_stops_background_reconnect(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_config_entry: MockConfigEntry,
+    periodic_roomba: AsyncMock,
+) -> None:
+    """Test a session that dropped while idle is torn down, not left retrying."""
+    await _setup(hass, mock_config_entry, continuous=False)
+    # Dropped on its own; the client would keep reconnecting in the background.
+    periodic_roomba.connected = False
+
+    await _advance(hass, freezer, timedelta(seconds=TELEMETRY_SETTLE_SECONDS))
+
+    periodic_roomba.disconnect.assert_awaited_once()
+
+
+async def test_no_session_after_stop(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    periodic_roomba: AsyncMock,
+) -> None:
+    """Test a late command does not reopen a session once the entry is stopped."""
+    await _setup(hass, mock_config_entry, continuous=False)
+    connection = mock_config_entry.runtime_data.connection
+    await hass.config_entries.async_unload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert not periodic_roomba.connected
+
+    await connection.async_ensure_connected()
+
+    periodic_roomba.connect.assert_awaited_once()
+    assert not periodic_roomba.connected
