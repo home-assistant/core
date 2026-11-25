@@ -82,6 +82,7 @@ send_chat_action:
           multiple: true
           reorder: true
     chat_action:
+      required: true
       selector:
         select:
           options:
@@ -888,6 +889,7 @@ edit_message:
       selector:
         text:
     message:
+      required: true
       example: The garage door has been open for 10 minutes.
       selector:
         text:
@@ -940,6 +942,7 @@ edit_message_media:
       selector:
         text:
     media_type:
+      required: true
       selector:
         select:
           options:

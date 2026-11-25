@@ -12,7 +12,6 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.device_registry import AnyDeviceEntry
 from homeassistant.helpers.reload import async_integration_yaml_config
 from homeassistant.helpers.storage import STORAGE_DIR
@@ -38,10 +37,14 @@ from .const import (
     SUPPORTED_PLATFORMS_UI,
     SUPPORTED_PLATFORMS_YAML,
 )
+from .device import async_remove_ui_entities_of_device
 from .expose import create_combined_knx_exposure
 from .knx_module import KNXModule
 from .llm_api import async_register_llm_api
-from .project import STORAGE_KEY as PROJECT_STORAGE_KEY
+from .project import (
+    STORAGE_KEY as PROJECT_STORAGE_KEY,
+    async_set_project as async_set_project,  # for other integrations
+)
 from .schema import (
     BinarySensorSchema,
     ButtonSchema,
@@ -277,20 +280,6 @@ async def async_remove_config_entry_device(
     hass: HomeAssistant, config_entry: ConfigEntry, device_entry: AnyDeviceEntry
 ) -> bool:
     """Remove a config entry from a device."""
-    knx_module = hass.data[KNX_MODULE_KEY]
-    if device_entry.id == knx_module.interface_device.device.id:
-        # can not remove interface device
-        return False
-    ui_unique_ids = knx_module.config_store.get_entity_uids()
-    entity_registry = er.async_get(hass)
-    if any(
-        entity.config_entry_id == config_entry.entry_id
-        and entity.unique_id not in ui_unique_ids
-        for entity in er.async_entries_for_device(entity_registry, device_entry.id)
-    ):
-        # device still has YAML-configured KNX entities; it would be recreated after reload
-        return False
-    for entity in knx_module.config_store.get_entity_entries():
-        if entity.device_id == device_entry.id:
-            await knx_module.config_store.delete_entity(entity.entity_id)
-    return True
+    return await async_remove_ui_entities_of_device(
+        hass, hass.data[KNX_MODULE_KEY], device_entry
+    )

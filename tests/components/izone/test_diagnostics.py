@@ -41,6 +41,8 @@ async def test_config_entry_diagnostics(
     assert result["controller"]["device_uid"] == "000000001"
     assert result["controller"]["system_settings"]["RAS"] == "master"
     assert result["controller"]["system_settings"]["CtrlZone"] == 1
+    assert result["controller"]["system_settings"]["Tag1"] == str(REDACTED)
+    assert result["controller"]["system_settings"]["Tag2"] == str(REDACTED)
     assert result["controller"]["zones"][0]["Name"] == "Living Room"
     assert result["controller"]["connected"] is True
     assert result["controller"]["fan_modes"] == ["low", "med", "high", "auto"]
@@ -131,3 +133,22 @@ async def test_config_entry_diagnostics_without_discovery(
     assert result["entry"]["unique_id"] == "000000001"
     assert result["controller"]["device_uid"] == "000000001"
     assert result["controller"]["device_ip"] == str(REDACTED)
+
+
+async def test_config_entry_diagnostics_empty_tags(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    init_integration: MockConfigEntry,
+) -> None:
+    """Empty tags are redacted without scrubbing sibling strings."""
+    settings = init_integration.runtime_data.controller._system_settings
+    settings["Tag1"] = ""
+    settings["Tag2"] = ""
+
+    result = await get_diagnostics_for_config_entry(hass, hass_client, init_integration)
+
+    system_settings = result["controller"]["system_settings"]
+    assert system_settings["Tag1"] == str(REDACTED)
+    assert system_settings["Tag2"] == str(REDACTED)
+    assert system_settings["SysMode"] == "cool"
+    assert system_settings["RAS"] == "master"

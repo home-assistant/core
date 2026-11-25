@@ -2,23 +2,23 @@
   "config": {
     "abort": {
       "already_configured": "This LG device has already been configured with this infrared entity.",
-      "no_infrared_emitters": "[%key:common::config_flow::abort::no_infrared_emitters%]",
-      "no_infrared_entities": "[%key:common::config_flow::abort::no_infrared_entities%]"
+      "no_infrared_emitters": "[%key:component::infrared::common::no_infrared_emitters%]",
+      "no_infrared_entities": "[%key:component::infrared::common::no_infrared_entities%]"
     },
     "error": {
-      "missing_infrared_entity": "Select an infrared emitter or receiver.",
+      "missing_infrared_entity": "[%key:component::infrared::common::missing_infrared_entity%]",
       "no_hvac_modes": "Select at least one supported mode."
     },
     "step": {
       "ac": {
         "data": {
           "hvac_modes": "Supported modes",
-          "infrared_entity_id": "[%key:common::config_flow::data::infrared_entity_id%]",
-          "infrared_receiver_entity_id": "[%key:common::config_flow::data::infrared_receiver_entity_id%]"
+          "infrared_entity_id": "[%key:component::infrared::common::infrared_entity_id%]",
+          "infrared_receiver_entity_id": "[%key:component::infrared::common::infrared_receiver_entity_id%]"
         },
         "data_description": {
           "hvac_modes": "Select the operating modes your AC unit supports. Heat is not available on all models.",
-          "infrared_entity_id": "[%key:common::config_flow::data_description::infrared_entity_id%]",
+          "infrared_entity_id": "[%key:component::infrared::common::infrared_entity_id_description%]",
           "infrared_receiver_entity_id": "Optional — allows the integration to update state when the physical remote is used."
         },
         "description": "Select an infrared emitter and the modes your LG AC supports.",
@@ -26,10 +26,10 @@
       },
       "home_theater": {
         "data": {
-          "infrared_entity_id": "[%key:common::config_flow::data::infrared_entity_id%]"
+          "infrared_entity_id": "[%key:component::infrared::common::infrared_entity_id%]"
         },
         "data_description": {
-          "infrared_entity_id": "[%key:common::config_flow::data_description::infrared_entity_id%]"
+          "infrared_entity_id": "[%key:component::infrared::common::infrared_entity_id_description%]"
         },
         "description": "Select an infrared emitter to use with your LG Home Theater.",
         "title": "Set up LG Home Theater"
@@ -37,25 +37,25 @@
       "reconfigure": {
         "data": {
           "hvac_modes": "[%key:component::lg_infrared::config::step::ac::data::hvac_modes%]",
-          "infrared_entity_id": "[%key:common::config_flow::data::infrared_entity_id%]",
-          "infrared_receiver_entity_id": "[%key:common::config_flow::data::infrared_receiver_entity_id%]"
+          "infrared_entity_id": "[%key:component::infrared::common::infrared_entity_id%]",
+          "infrared_receiver_entity_id": "[%key:component::infrared::common::infrared_receiver_entity_id%]"
         },
         "data_description": {
           "hvac_modes": "[%key:component::lg_infrared::config::step::ac::data_description::hvac_modes%]",
-          "infrared_entity_id": "[%key:common::config_flow::data_description::infrared_entity_id%]",
-          "infrared_receiver_entity_id": "[%key:component::lg_infrared::config::step::tv::data_description::infrared_receiver_entity_id%]"
+          "infrared_entity_id": "[%key:component::infrared::common::infrared_entity_id_description%]",
+          "infrared_receiver_entity_id": "[%key:component::infrared::common::infrared_receiver_entity_id_description%]"
         },
         "description": "Change the infrared entities used by your LG device. For an air conditioner, you can also change its supported modes.",
         "title": "Reconfigure LG device"
       },
       "tv": {
         "data": {
-          "infrared_entity_id": "[%key:common::config_flow::data::infrared_entity_id%]",
-          "infrared_receiver_entity_id": "[%key:common::config_flow::data::infrared_receiver_entity_id%]"
+          "infrared_entity_id": "[%key:component::infrared::common::infrared_entity_id%]",
+          "infrared_receiver_entity_id": "[%key:component::infrared::common::infrared_receiver_entity_id%]"
         },
         "data_description": {
-          "infrared_entity_id": "[%key:common::config_flow::data_description::infrared_entity_id%]",
-          "infrared_receiver_entity_id": "The infrared receiver entity to use for receiving signals."
+          "infrared_entity_id": "[%key:component::infrared::common::infrared_entity_id_description%]",
+          "infrared_receiver_entity_id": "[%key:component::infrared::common::infrared_receiver_entity_id_description%]"
         },
         "description": "Select at least one infrared emitter or receiver to use with your LG TV.",
         "title": "Set up LG TV"

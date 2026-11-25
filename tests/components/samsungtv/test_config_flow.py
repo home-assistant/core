@@ -1386,10 +1386,8 @@ async def test_autodetect_websocket(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.usefixtures("remote_encrypted_websocket_failing")
-async def test_websocket_no_mac(hass: HomeAssistant, mac_address: Mock) -> None:
-    """Test for send key with autodetection of protocol."""
-    mac_address.return_value = "gg:ee:tt:mm:aa:cc"
-
+async def test_websocket_no_mac(hass: HomeAssistant) -> None:
+    """Test websocket setup when the device info has no mac address."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -1434,7 +1432,7 @@ async def test_websocket_no_mac(hass: HomeAssistant, mac_address: Mock) -> None:
         assert result["type"] is FlowResultType.CREATE_ENTRY
         assert result["data"][CONF_METHOD] == "websocket"
         assert result["data"][CONF_TOKEN] == "123456789"
-        assert result["data"][CONF_MAC] == "gg:ee:tt:mm:aa:cc"
+        assert result["data"][CONF_MAC] is None
         assert result["data"][CONF_PORT] == 8002
         remote_websocket.assert_called_once_with(**AUTODETECT_WEBSOCKET_SSL)
         rest_api_class.assert_called_once_with(**DEVICEINFO_WEBSOCKET_SSL)
@@ -1442,7 +1440,7 @@ async def test_websocket_no_mac(hass: HomeAssistant, mac_address: Mock) -> None:
 
     entries = hass.config_entries.async_entries(DOMAIN)
     assert len(entries) == 1
-    assert entries[0].data[CONF_MAC] == "gg:ee:tt:mm:aa:cc"
+    assert entries[0].data[CONF_MAC] is None
 
 
 @pytest.mark.usefixtures("rest_api_failing")

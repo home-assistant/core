@@ -40,7 +40,6 @@ from homeassistant.components.vacuum import (
 )
 from homeassistant.components.valve import ValveService
 from homeassistant.const import (
-    ATTR_ENTITY_ID,
     CONF_TYPE,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
@@ -49,6 +48,7 @@ from homeassistant.const import (
     STATE_OPEN,
     STATE_OPENING,
     EntityStateAttribute,
+    TargetKey,
 )
 from homeassistant.core import HomeAssistant, State, callback, split_entity_id
 from homeassistant.helpers.event import async_call_later
@@ -140,7 +140,7 @@ class Outlet(HomeAccessory):
     def set_state(self, value: bool) -> None:
         """Move switch state to value if call came from HomeKit."""
         _LOGGER.debug("%s: Set switch state to %s", self.entity_id, value)
-        params = {ATTR_ENTITY_ID: self.entity_id}
+        params: dict[str, Any] = {TargetKey.ENTITY_ID: self.entity_id}
         service = SwitchService.TURN_ON if value else SwitchService.TURN_OFF
         self.async_call_service(SWITCH_DOMAIN, service, params)
 
@@ -190,7 +190,7 @@ class Switch(HomeAccessory):
             _LOGGER.debug("%s: Ignoring turn_off call", self.entity_id)
             return
 
-        params = {ATTR_ENTITY_ID: self.entity_id}
+        params: dict[str, Any] = {TargetKey.ENTITY_ID: self.entity_id}
         if self._domain == "script":
             service = self._object_id
             params = {}
@@ -243,7 +243,7 @@ class Vacuum(Switch):
             service = VacuumService.STOP
 
         self.async_call_service(
-            VACUUM_DOMAIN, service, {ATTR_ENTITY_ID: self.entity_id}
+            VACUUM_DOMAIN, service, {TargetKey.ENTITY_ID: self.entity_id}
         )
 
     @callback
@@ -268,7 +268,7 @@ class LawnMower(Switch):
 
         service = LawnMowerService.START_MOWING if value else LawnMowerService.DOCK
         self.async_call_service(
-            LAWN_MOWER_DOMAIN, service, {ATTR_ENTITY_ID: self.entity_id}
+            LAWN_MOWER_DOMAIN, service, {TargetKey.ENTITY_ID: self.entity_id}
         )
 
     @callback
@@ -377,7 +377,7 @@ class ValveBase(HomeAccessory):
         """Move value state to value if call came from HomeKit."""
         _LOGGER.debug("%s: Set switch state to %s", self.entity_id, value)
         self.char_in_use.set_value(value)
-        params = {ATTR_ENTITY_ID: self.entity_id}
+        params: dict[str, Any] = {TargetKey.ENTITY_ID: self.entity_id}
         service = self.on_service if value else self.off_service
         self.async_call_service(self.domain, service, params)
 
@@ -407,7 +407,7 @@ class ValveBase(HomeAccessory):
             split_entity_id(self.linked_duration_entity)[0],
             INPUT_NUMBER_SERVICE_SET_VALUE,
             {
-                ATTR_ENTITY_ID: self.linked_duration_entity,
+                TargetKey.ENTITY_ID: self.linked_duration_entity,
                 INPUT_NUMBER_ATTR_VALUE: value,
             },
             value,
@@ -566,7 +566,7 @@ class SelectSwitch(HomeAccessory):
     def select_option(self, option: str) -> None:
         """Set option from HomeKit."""
         _LOGGER.debug("%s: Set option to %s", self.entity_id, option)
-        params = {ATTR_ENTITY_ID: self.entity_id, "option": option}
+        params: dict[str, Any] = {TargetKey.ENTITY_ID: self.entity_id, "option": option}
         self.async_call_service(self.domain, SERVICE_SELECT_OPTION, params)
 
     @callback

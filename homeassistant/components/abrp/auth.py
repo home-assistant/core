@@ -1,19 +1,20 @@
 """HA-side authentication adapter for the aioabrp library.
 
-The library treats ``AbrpAuthError`` as terminal (it stops the stream and fires
-``AUTH_FAILED``) and every other exception as transient (it backs off and
-retries), so only the OAuth2 helper's own terminal verdict —
-``OAuth2TokenRequestReauthError`` — maps to ``AbrpAuthError``. Everything else,
-including the helper's transient errors, propagates unchanged so the library's
-backoff gets its chance. ``ConfigEntryAuthFailed`` is deliberately not raised
-here: it is inert inside the library's background task.
+Only the OAuth2 helper's terminal verdict, ``OAuth2TokenRequestReauthError``,
+maps to ``AbrpAuthError``, which the library treats as terminal. Other refresh
+failures map to ``AbrpApiError``: REST calls then fail like any API error, and
+the stream backs off and retries. ``ConfigEntryAuthFailed`` is deliberately not
+raised here: it is inert inside the library's background task.
 """
 
 from typing import cast, override
 
-from aioabrp import AbrpAuthError, AbstractAuth
+from aioabrp import AbrpApiError, AbrpAuthError, AbstractAuth
 
-from homeassistant.exceptions import OAuth2TokenRequestReauthError
+from homeassistant.exceptions import (
+    OAuth2TokenRequestBaseError,
+    OAuth2TokenRequestReauthError,
+)
 from homeassistant.helpers.config_entry_oauth2_flow import OAuth2Session
 
 
@@ -31,4 +32,9 @@ class AbrpAuth(AbstractAuth):
             await self._oauth_session.async_ensure_token_valid()
         except OAuth2TokenRequestReauthError as err:
             raise AbrpAuthError from err
+        # The helper wraps HTTP and connection failures, but not a bare timeout.
+        except (OAuth2TokenRequestBaseError, TimeoutError) as err:
+            raise AbrpApiError(
+                f"token refresh failed: {type(err).__name__}: {err}"
+            ) from err
         return cast(str, self._oauth_session.token["access_token"])

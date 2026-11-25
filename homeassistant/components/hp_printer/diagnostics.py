@@ -11,11 +11,16 @@ from .coordinator import HpPrinterConfigEntry
 
 TO_REDACT = {
     CONF_HOST,
+    "friendly_name",
+    # Job log entries: the print driver's user and document name.
+    "name",
     "printer_id",
     "serial_number",
     "ssid_prefix",
     "supply_serial_number",
     "unique_id",
+    "user_id",
+    "uuid",
 }
 
 
