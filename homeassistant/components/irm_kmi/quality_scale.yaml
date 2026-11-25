@@ -70,10 +70,7 @@ rules:
   entity-translations: done
   exception-translations: done
   icon-translations: done
-  reconfiguration-flow:
-    status: exempt
-    comment: >
-      There is no configuration per se, just a zone to pick.
+  reconfiguration-flow: done
   repair-issues: done
   stale-devices: done
 
