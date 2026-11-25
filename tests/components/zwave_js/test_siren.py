@@ -4,9 +4,8 @@ import pytest
 from zwave_js_server.event import Event
 
 from homeassistant.components.siren import (
-    ATTR_AVAILABLE_TONES,
-    ATTR_TONE,
-    ATTR_VOLUME_LEVEL,
+    SirenEntityCapabilityAttribute,
+    SirenServiceArgument,
 )
 from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
@@ -80,7 +79,7 @@ async def test_siren(
 
     assert state
     assert state.state == STATE_UNKNOWN
-    assert state.attributes.get(ATTR_AVAILABLE_TONES) == {
+    assert state.attributes.get(SirenEntityCapabilityAttribute.AVAILABLE_TONES) == {
         0: "off",
         1: "01DING~1 (5 sec)",
         2: "02DING~1 (9 sec)",
@@ -164,8 +163,8 @@ async def test_siren(
         "turn_on",
         {
             "entity_id": SIREN_ENTITY,
-            ATTR_TONE: "01DING~1 (5 sec)",
-            ATTR_VOLUME_LEVEL: 0.5,
+            SirenServiceArgument.TONE: "01DING~1 (5 sec)",
+            SirenServiceArgument.VOLUME_LEVEL: 0.5,
         },
         blocking=True,
     )
@@ -190,8 +189,8 @@ async def test_siren(
         "turn_on",
         {
             "entity_id": SIREN_ENTITY,
-            ATTR_TONE: 1,
-            ATTR_VOLUME_LEVEL: 0.5,
+            SirenServiceArgument.TONE: 1,
+            SirenServiceArgument.VOLUME_LEVEL: 0.5,
         },
         blocking=True,
     )

@@ -16,10 +16,10 @@ from homeassistant.components.control4.director_utils import (
     gather_entry_variables,
     to_bool,
 )
-from homeassistant.config_entries import ConfigEntryState
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.util import dt as dt_util
 
 from . import setup_integration
@@ -191,7 +191,7 @@ async def test_setup_bad_credentials(
     mock_config_entry: MockConfigEntry,
     mock_c4_account: MagicMock,
 ) -> None:
-    """Test setup fails with invalid credentials."""
+    """Test setup fails with invalid credentials and starts a reauth flow."""
     mock_c4_account.get_account_bearer_token.side_effect = BadCredentials(
         "Invalid credentials"
     )
@@ -203,6 +203,11 @@ async def test_setup_bad_credentials(
         "Error authenticating with the Control4 account API, incorrect username or"
         " password"
     )
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 1
+    assert flows[0]["step_id"] == "reauth_confirm"
+    assert flows[0]["context"]["source"] == SOURCE_REAUTH
+    assert flows[0]["context"]["entry_id"] == mock_config_entry.entry_id
 
 
 @pytest.mark.usefixtures("mock_c4_account", "mock_c4_director")
@@ -313,20 +318,22 @@ async def test_token_refresh_retries_on_connection_error(
 async def test_token_refresh_bad_credentials(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Bad credentials during a background token refresh are logged, not retried."""
+    """Bad credentials during a background token refresh start reauth, not a retry."""
     await setup_integration(hass, mock_config_entry)
 
     obj = RefreshTokensObject(hass, mock_config_entry)
     with patch(
         "homeassistant.components.control4.refresh_tokens",
-        new=AsyncMock(side_effect=ConfigEntryError),
+        new=AsyncMock(side_effect=ConfigEntryAuthFailed),
     ):
         await obj.refresh_tokens(dt_util.utcnow())
+    await hass.async_block_till_done()
 
     assert obj.retries == 0
-    assert "Control4 credentials are no longer valid" in caplog.text
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 1
+    assert flows[0]["context"]["source"] == SOURCE_REAUTH
 
 
 @pytest.mark.usefixtures("mock_c4_account")

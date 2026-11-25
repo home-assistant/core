@@ -2,7 +2,8 @@
 
 from collections.abc import Awaitable, Callable
 from decimal import Decimal, DecimalException
-from typing import Any, Final, cast
+from enum import StrEnum
+from typing import Any, cast
 
 from aiohttp import ClientError
 from monzopy import AuthorisationExpiredError, InvalidMonzoAPIResponseError
@@ -24,12 +25,21 @@ from .const import (
 )
 from .coordinator import MonzoConfigEntry, MonzoCoordinator
 
-ATTR_ACCOUNT: Final = "account"
-ATTR_AMOUNT: Final = "amount"
-ATTR_POT: Final = "pot"
 
-SERVICE_DEPOSIT_INTO_POT: Final = "deposit_into_pot"
-SERVICE_WITHDRAW_FROM_POT: Final = "withdraw_from_pot"
+class MonzoService(StrEnum):
+    """Store keys for Monzo services."""
+
+    DEPOSIT_INTO_POT = "deposit_into_pot"
+    WITHDRAW_FROM_POT = "withdraw_from_pot"
+
+
+class MonzoServiceArgument(StrEnum):
+    """Store keys for Monzo service arguments."""
+
+    ACCOUNT = "account"
+    POT = "pot"
+    AMOUNT = "amount"
+
 
 type TransferFunction = Callable[[str, str, int], Awaitable[bool]]
 
@@ -68,7 +78,7 @@ def _transfer_rejection_reason(error: InvalidMonzoAPIResponseError) -> str | Non
 
 TRANSFER_SCHEMA = probatio.Schema(
     {
-        probatio.Required(ATTR_ACCOUNT): selector.DeviceSelector(
+        probatio.Required(MonzoServiceArgument.ACCOUNT): selector.DeviceSelector(
             {
                 "filter": {
                     "integration": DOMAIN,
@@ -76,7 +86,7 @@ TRANSFER_SCHEMA = probatio.Schema(
                 }
             }
         ),
-        probatio.Required(ATTR_POT): selector.DeviceSelector(
+        probatio.Required(MonzoServiceArgument.POT): selector.DeviceSelector(
             {
                 "filter": {
                     "integration": DOMAIN,
@@ -84,7 +94,7 @@ TRANSFER_SCHEMA = probatio.Schema(
                 }
             }
         ),
-        probatio.Required(ATTR_AMOUNT): _amount_to_minor_units,
+        probatio.Required(MonzoServiceArgument.AMOUNT): _amount_to_minor_units,
     }
 )
 
@@ -112,10 +122,10 @@ def _async_resolve_transfer(
 ) -> tuple[MonzoCoordinator, str, str]:
     """Resolve and validate the account and pot selected for a transfer."""
     account_device, account_entry = service.async_get_device_and_config_entry(
-        call.hass, DOMAIN, call.data[ATTR_ACCOUNT]
+        call.hass, DOMAIN, call.data[MonzoServiceArgument.ACCOUNT]
     )
     pot_device, pot_entry = service.async_get_device_and_config_entry(
-        call.hass, DOMAIN, call.data[ATTR_POT]
+        call.hass, DOMAIN, call.data[MonzoServiceArgument.POT]
     )
     if account_entry.entry_id != pot_entry.entry_id:
         raise ServiceValidationError(
@@ -177,7 +187,7 @@ async def _async_transfer(
 
     try:
         transfer_succeeded = await transfer_fn(coordinator)(
-            account_id, pot_id, call.data[ATTR_AMOUNT]
+            account_id, pot_id, call.data[MonzoServiceArgument.AMOUNT]
         )
     except (AuthorisationExpiredError, OAuth2TokenRequestReauthError) as err:
         coordinator.config_entry.async_start_reauth(call.hass)
@@ -236,14 +246,14 @@ def async_setup_services(hass: HomeAssistant) -> None:
     service.async_register_admin_service(
         hass,
         DOMAIN,
-        SERVICE_DEPOSIT_INTO_POT,
+        MonzoService.DEPOSIT_INTO_POT,
         _async_deposit_into_pot,
         TRANSFER_SCHEMA,
     )
     service.async_register_admin_service(
         hass,
         DOMAIN,
-        SERVICE_WITHDRAW_FROM_POT,
+        MonzoService.WITHDRAW_FROM_POT,
         _async_withdraw_from_pot,
         TRANSFER_SCHEMA,
     )

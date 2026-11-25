@@ -8,20 +8,14 @@ from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.climate import (
-    ATTR_FAN_MODE,
-    ATTR_HVAC_MODE,
-    ATTR_TARGET_TEMP_HIGH,
-    ATTR_TARGET_TEMP_LOW,
-    ATTR_TEMPERATURE,
     DOMAIN as CLIMATE_DOMAIN,
-    SERVICE_SET_FAN_MODE,
-    SERVICE_SET_HVAC_MODE,
-    SERVICE_SET_TEMPERATURE,
     ClimateEntityFeature,
+    ClimateService,
+    ClimateServiceArgument,
     HVACAction,
     HVACMode,
 )
-from homeassistant.const import ATTR_ENTITY_ID, Platform
+from homeassistant.const import Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
@@ -248,8 +242,8 @@ async def test_set_hvac_mode(
     """Test setting HVAC mode."""
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_HVAC_MODE,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_HVAC_MODE: hvac_mode},
+        ClimateService.SET_HVAC_MODE,
+        {TargetKey.ENTITY_ID: ENTITY_ID, ClimateServiceArgument.HVAC_MODE: hvac_mode},
         blocking=True,
     )
     mock_c4_climate.set_hvac_mode.assert_called_once_with(expected_c4_mode)
@@ -294,8 +288,8 @@ async def test_set_temperature(
     """Test setting temperature in different modes."""
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_TEMPERATURE,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_TEMPERATURE: 70.0},
+        ClimateService.SET_TEMPERATURE,
+        {TargetKey.ENTITY_ID: ENTITY_ID, ClimateServiceArgument.TEMPERATURE: 70.0},
         blocking=True,
     )
     getattr(mock_c4_climate, method_name).assert_called_once_with(70.0)
@@ -321,11 +315,11 @@ async def test_set_temperature_range_auto_mode(
     """Test setting temperature range in auto mode."""
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_TEMPERATURE,
+        ClimateService.SET_TEMPERATURE,
         {
-            ATTR_ENTITY_ID: ENTITY_ID,
-            ATTR_TARGET_TEMP_LOW: 65.0,
-            ATTR_TARGET_TEMP_HIGH: 78.0,
+            TargetKey.ENTITY_ID: ENTITY_ID,
+            ClimateServiceArgument.TARGET_TEMP_LOW: 65.0,
+            ClimateServiceArgument.TARGET_TEMP_HIGH: 78.0,
         },
         blocking=True,
     )
@@ -516,8 +510,8 @@ async def test_set_fan_mode(
     """Test setting fan mode."""
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_FAN_MODE,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_FAN_MODE: "on"},
+        ClimateService.SET_FAN_MODE,
+        {TargetKey.ENTITY_ID: ENTITY_ID, ClimateServiceArgument.FAN_MODE: "on"},
         blocking=True,
     )
     # Verify the Control4 API is called with the C4 format ("On" not "on")
@@ -605,8 +599,8 @@ async def test_set_temperature_calls_correct_api(
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_TEMPERATURE,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_TEMPERATURE: 70.0},
+        ClimateService.SET_TEMPERATURE,
+        {TargetKey.ENTITY_ID: ENTITY_ID, ClimateServiceArgument.TEMPERATURE: 70.0},
         blocking=True,
     )
     getattr(mock_c4_climate, expected_method).assert_called_once_with(70.0)

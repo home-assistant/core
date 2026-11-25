@@ -33,7 +33,7 @@
       },
       "provision": {
         "data": {
-          "password": "Password",
+          "password": "[%key:common::config_flow::data::password%]",
           "ssid": "SSID"
         },
         "description": "Enter Wi-Fi credentials to connect the device to your network."
