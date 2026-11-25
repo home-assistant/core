@@ -261,6 +261,64 @@ async def test_dhcp_discovery_updates_host(
     assert entry.data == {CONF_HOST: DISCOVERED_HOST}
 
 
+@pytest.mark.parametrize(
+    ("source", "data"),
+    [
+        pytest.param(
+            config_entries.SOURCE_USER, {CONF_HOST: "http://roth.local"}, id="hostname"
+        ),
+        pytest.param(config_entries.SOURCE_IGNORE, {}, id="ignored"),
+    ],
+)
+async def test_dhcp_discovery_keeps_entry(
+    hass: HomeAssistant,
+    mock_touchline_controller: MagicMock,
+    source: str,
+    data: dict[str, str],
+) -> None:
+    """Test discovery does not replace a hostname or touch an ignored entry."""
+    entry = MockConfigEntry(
+        domain=DOMAIN, source=source, data=data, unique_id=TEST_UNIQUE_ID
+    )
+    entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_DHCP},
+        data=DHCP_DISCOVERY,
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert entry.data == data
+
+
+async def test_manual_setup_while_discovery_pending(
+    hass: HomeAssistant,
+    mock_touchline_controller: MagicMock,
+    mock_setup_entry: MagicMock,
+) -> None:
+    """Test a controller can be entered manually while its discovery card waits."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_DHCP},
+        data=DHCP_DISCOVERY,
+    )
+    assert result["step_id"] == "discovery_confirm"
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=TEST_DATA
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == TEST_UNIQUE_ID
+    # Creating the entry closes the discovery card.
+    assert not hass.config_entries.flow.async_progress()
+
+
 async def test_dhcp_discovery_host_already_configured(
     hass: HomeAssistant, mock_touchline_controller: MagicMock
 ) -> None:

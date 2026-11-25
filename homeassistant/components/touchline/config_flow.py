@@ -11,9 +11,10 @@ from pytouchline_extended import (
     TouchlineError,
     discover_controllers,
 )
+from yarl import URL
 
 from homeassistant.components import network
-from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import SOURCE_IGNORE, ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_DEVICE, CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -25,6 +26,7 @@ from homeassistant.helpers.selector import (
     SelectSelectorMode,
 )
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
+from homeassistant.util.network import is_ip_address
 
 from .const import DOMAIN
 
@@ -174,7 +176,7 @@ class TouchlineConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "unknown"
 
             if not errors:
-                await self.async_set_unique_id(unique_id)
+                await self.async_set_unique_id(unique_id, raise_on_progress=False)
                 self._abort_if_unique_id_configured()
                 return self.async_create_entry(
                     title=user_input[CONF_HOST], data=user_input
@@ -199,8 +201,17 @@ class TouchlineConfigFlow(ConfigFlow, domain=DOMAIN):
         except CannotConnect:
             return self.async_abort(reason="cannot_connect")
 
-        await self.async_set_unique_id(unique_id)
-        self._abort_if_unique_id_configured(updates={CONF_HOST: host})
+        existing_entry = await self.async_set_unique_id(unique_id)
+        updates = None
+        # A hostname the user entered is kept; only an IP address is replaced.
+        if (
+            existing_entry is not None
+            and existing_entry.source != SOURCE_IGNORE
+            and (stored_host := URL(existing_entry.data[CONF_HOST]).host) is not None
+            and is_ip_address(stored_host)
+        ):
+            updates = {CONF_HOST: host}
+        self._abort_if_unique_id_configured(updates=updates)
 
         self._discovered_host = host
         self.context["title_placeholders"] = {"host": host}
