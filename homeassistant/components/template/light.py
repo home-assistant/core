@@ -3,6 +3,7 @@
 from collections.abc import Callable
 import contextlib
 from dataclasses import dataclass
+from functools import partial
 import logging
 from typing import TYPE_CHECKING, Any, Self, override
 
@@ -40,17 +41,23 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import config_validation as cv
+from homeassistant.exceptions import TemplateError
+from homeassistant.helpers import config_validation as cv, issue_registry as ir
 from homeassistant.helpers.entity_platform import (
     AddConfigEntryEntitiesCallback,
     AddEntitiesCallback,
 )
 from homeassistant.helpers.restore_state import ExtraStoredData, RestoreEntity
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.helpers.typing import UNDEFINED, ConfigType, DiscoveryInfoType
 from homeassistant.util import color as color_util
 
 from . import validators as tcv
-from .const import DEFAULT_NAMES, DOMAIN
+from .const import (
+    DEFAULT_NAMES,
+    DOMAIN,
+    LIGHT_DEPRECATED_OPTIONS,
+    LIGHT_REQUIRED_ACTIONS_OPTIONS,
+)
 from .coordinator import TriggerUpdateCoordinator
 from .entity import AbstractTemplateEntity
 from .helpers import (
@@ -58,6 +65,7 @@ from .helpers import (
     async_setup_template_platform,
     async_setup_template_preview,
 )
+from .repairs import format_deprecated_options
 from .schemas import (
     TEMPLATE_ENTITY_COMMON_CONFIG_ENTRY_SCHEMA,
     TEMPLATE_ENTITY_OPTIMISTIC_SCHEMA,
@@ -81,17 +89,24 @@ CONF_EFFECT_ACTION = "set_effect"
 CONF_EFFECT_LIST = "effect_list"
 CONF_LEVEL = "level"
 CONF_LEVEL_ACTION = "set_level"
+CONF_MAX_KELVIN = "max_kelvin"
 CONF_MAX_MIREDS = "max_mireds"
+CONF_MIN_KELVIN = "min_kelvin"
 CONF_MIN_MIREDS = "min_mireds"
 CONF_OFF_ACTION = "turn_off"
 CONF_ON_ACTION = "turn_on"
 CONF_SUPPORTS_TRANSITION = "supports_transition"
 CONF_TEMPERATURE_ACTION = "set_temperature"
 CONF_TEMPERATURE = "temperature"
+CONF_TEMPERATURE_KELVIN = "temperature_kelvin"
 CONF_XY_ACTION = "set_xy"
 
-DEFAULT_MIN_MIREDS = 153
-DEFAULT_MAX_MIREDS = 500
+DEPRECATED_TEMPERATURE_ISSUE_ID = "deprecated_light_temperature"
+DEPRECATED_HELPER_MISSING_ACTIONS_ISSUE_ID = "deprecated_light_helper_missing_actions"
+
+# Above this, the mireds convert to 0 kelvin
+MAX_MIREDS = 1_000_000
+
 
 DEFAULT_NAME = DEFAULT_NAMES[Platform.LIGHT]
 
@@ -117,7 +132,9 @@ LIGHT_COMMON_SCHEMA = probatio.Schema(
         probatio.Optional(CONF_HS): cv.template,
         probatio.Optional(CONF_LEVEL_ACTION): cv.SCRIPT_SCHEMA,
         probatio.Optional(CONF_LEVEL): cv.template,
+        probatio.Optional(CONF_MAX_KELVIN): cv.template,
         probatio.Optional(CONF_MAX_MIREDS): cv.template,
+        probatio.Optional(CONF_MIN_KELVIN): cv.template,
         probatio.Optional(CONF_MIN_MIREDS): cv.template,
         probatio.Required(CONF_OFF_ACTION): cv.SCRIPT_SCHEMA,
         probatio.Required(CONF_ON_ACTION): cv.SCRIPT_SCHEMA,
@@ -131,13 +148,28 @@ LIGHT_COMMON_SCHEMA = probatio.Schema(
         probatio.Optional(CONF_SUPPORTS_TRANSITION): cv.template,
         probatio.Optional(CONF_TEMPERATURE_ACTION): cv.SCRIPT_SCHEMA,
         probatio.Optional(CONF_TEMPERATURE): cv.template,
+        probatio.Optional(CONF_TEMPERATURE_KELVIN): cv.template,
         probatio.Optional(CONF_XY): cv.template,
         probatio.Optional(CONF_XY_ACTION): cv.SCRIPT_SCHEMA,
     }
 )
 
+
+def _validate_color_temp_range(config: dict[str, Any]) -> dict[str, Any]:
+    """Validate that the color temperature range is not set in mireds and kelvin."""
+    if any(option in config for option in (CONF_MIN_MIREDS, CONF_MAX_MIREDS)) and any(
+        option in config for option in (CONF_MIN_KELVIN, CONF_MAX_KELVIN)
+    ):
+        raise probatio.Invalid(
+            f"'{CONF_MIN_KELVIN}' and '{CONF_MAX_KELVIN}' cannot be used together with"
+            f" '{CONF_MIN_MIREDS}' or '{CONF_MAX_MIREDS}'"
+        )
+    return config
+
+
 _LIGHT_VALIDATION = (
     tcv.inclusive_group("effect", CONF_EFFECT, CONF_EFFECT_LIST, CONF_EFFECT_ACTION),
+    _validate_color_temp_range,
 )
 
 _BLOCKED_ATTRIBUTES = tcv.BlockedTemplateAttributes(
@@ -184,6 +216,51 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Initialize config entry."""
+    issue_id = f"{DEPRECATED_TEMPERATURE_ISSUE_ID}_{config_entry.entry_id}"
+    if CONF_TEMPERATURE in config_entry.options:
+        ir.async_create_issue(
+            hass,
+            DOMAIN,
+            issue_id,
+            breaks_in_ha_version=LIGHT_DEPRECATED_OPTIONS.breaks_in_ha_version,
+            config_entry_id=config_entry.entry_id,
+            is_fixable=False,
+            severity=ir.IssueSeverity.WARNING,
+            translation_key=DEPRECATED_TEMPERATURE_ISSUE_ID,
+            translation_placeholders={
+                "name": config_entry.title,
+                "breaks_in_ha_version": LIGHT_DEPRECATED_OPTIONS.breaks_in_ha_version,
+            },
+        )
+    else:
+        ir.async_delete_issue(hass, DOMAIN, issue_id)
+
+    issue_id = f"{DEPRECATED_HELPER_MISSING_ACTIONS_ISSUE_ID}_{config_entry.entry_id}"
+    if missing := LIGHT_REQUIRED_ACTIONS_OPTIONS.deprecated_options(
+        config_entry.options
+    ):
+        ir.async_create_issue(
+            hass,
+            DOMAIN,
+            issue_id,
+            breaks_in_ha_version=LIGHT_REQUIRED_ACTIONS_OPTIONS.breaks_in_ha_version,
+            config_entry_id=config_entry.entry_id,
+            is_fixable=False,
+            severity=ir.IssueSeverity.WARNING,
+            translation_key=DEPRECATED_HELPER_MISSING_ACTIONS_ISSUE_ID,
+            translation_placeholders={
+                "name": config_entry.title,
+                "breaks_in_ha_version": (
+                    LIGHT_REQUIRED_ACTIONS_OPTIONS.breaks_in_ha_version
+                ),
+                "options": format_deprecated_options(
+                    hass, LIGHT_REQUIRED_ACTIONS_OPTIONS, missing, {}
+                ),
+            },
+        )
+    else:
+        ir.async_delete_issue(hass, DOMAIN, issue_id)
+
     await async_setup_template_entry(
         hass,
         config_entry,
@@ -408,15 +485,61 @@ class AbstractTemplateLight(AbstractTemplateEntity, LightEntity, RestoreEntity):
         )
         self.add_assumed_attribute("_attr_brightness", CONF_LEVEL, CONF_LEVEL_ACTION)
 
-        # Setup Color temperature
+        # Min/Max temperature templates, set up first to validate the temperature
         self.setup_template(
-            CONF_TEMPERATURE,
+            CONF_MAX_MIREDS,
+            "_attr_min_color_temp_kelvin",
+            tcv.number(self, CONF_MAX_MIREDS, 1, MAX_MIREDS),
+            partial(
+                self._update_min_kelvin,
+                convert=color_util.color_temperature_mired_to_kelvin,
+            ),
+            none_on_template_error=False,
+        )
+        self.setup_template(
+            CONF_MIN_MIREDS,
+            "_attr_max_color_temp_kelvin",
+            tcv.number(self, CONF_MIN_MIREDS, 1, MAX_MIREDS),
+            partial(
+                self._update_max_kelvin,
+                convert=color_util.color_temperature_mired_to_kelvin,
+            ),
+            none_on_template_error=False,
+        )
+        self.setup_template(
+            CONF_MIN_KELVIN,
+            "_attr_min_color_temp_kelvin",
+            tcv.number(self, CONF_MIN_KELVIN, 1, None, int),
+            self._update_min_kelvin,
+            none_on_template_error=False,
+        )
+        self.setup_template(
+            CONF_MAX_KELVIN,
+            "_attr_max_color_temp_kelvin",
+            tcv.number(self, CONF_MAX_KELVIN, 1, None, int),
+            self._update_max_kelvin,
+            none_on_template_error=False,
+        )
+
+        # Setup Color temperature, temperature_kelvin takes precedence over the
+        # deprecated temperature option
+        self._temperature_option = CONF_TEMPERATURE_KELVIN
+        self._temperature_validator = self._validate_temperature_kelvin
+        if CONF_TEMPERATURE in config and CONF_TEMPERATURE_KELVIN not in config:
+            self._temperature_option = CONF_TEMPERATURE
+            self._temperature_validator = self._validate_temperature
+        # The raw result is cached to revalidate it when the min/max range changes
+        self._rendered_temperature: Any = UNDEFINED
+        self.setup_template(
+            self._temperature_option,
             "_attr_color_temp_kelvin",
-            self._validate_temperature,
-            self._update_color("_attr_color_temp_kelvin", ColorMode.COLOR_TEMP),
+            on_update=self._update_temperature,
+            none_on_template_error=False,
         )
         self.add_assumed_attribute(
-            "_attr_color_temp_kelvin", CONF_TEMPERATURE, CONF_TEMPERATURE_ACTION
+            "_attr_color_temp_kelvin",
+            self._temperature_option,
+            CONF_TEMPERATURE_ACTION,
         )
 
         # Setup Hue Saturation
@@ -474,20 +597,6 @@ class AbstractTemplateLight(AbstractTemplateEntity, LightEntity, RestoreEntity):
         )
         self.add_assumed_attribute("_attr_effect", CONF_EFFECT, CONF_EFFECT_ACTION)
 
-        # Min/Max temperature templates
-        self.setup_template(
-            CONF_MAX_MIREDS,
-            "_attr_max_color_temp_kelvin",
-            tcv.number(self, CONF_MAX_MIREDS),
-            self._update_max_mireds,
-        )
-        self.setup_template(
-            CONF_MIN_MIREDS,
-            "_attr_min_color_temp_kelvin",
-            tcv.number(self, CONF_MIN_MIREDS),
-            self._update_min_mireds,
-        )
-
         # Transition
         self.setup_template(
             CONF_SUPPORTS_TRANSITION,
@@ -498,6 +607,7 @@ class AbstractTemplateLight(AbstractTemplateEntity, LightEntity, RestoreEntity):
 
         # Stored values for template attributes
         self._supports_transition = False
+        self._inverted_color_temp_range = False
 
         color_modes = {ColorMode.ONOFF}
         for action_id, color_mode in (
@@ -575,9 +685,14 @@ class AbstractTemplateLight(AbstractTemplateEntity, LightEntity, RestoreEntity):
             optimistic_set = True
 
         for option, attr, color_mode, validator in (
-            (CONF_TEMPERATURE, ATTR_COLOR_TEMP_KELVIN, ColorMode.COLOR_TEMP, None),
             (
-                CONF_TEMPERATURE,
+                self._temperature_option,
+                ATTR_COLOR_TEMP_KELVIN,
+                ColorMode.COLOR_TEMP,
+                None,
+            ),
+            (
+                self._temperature_option,
                 ATTR_COLOR_TEMP,
                 ColorMode.COLOR_TEMP,
                 color_util.color_temperature_mired_to_kelvin,
@@ -617,7 +732,7 @@ class AbstractTemplateLight(AbstractTemplateEntity, LightEntity, RestoreEntity):
             self._attr_color_mode = color_mode
 
             for _option in (
-                CONF_TEMPERATURE,
+                self._temperature_option,
                 CONF_HS,
                 CONF_RGB,
                 CONF_RGBW,
@@ -772,20 +887,84 @@ class AbstractTemplateLight(AbstractTemplateEntity, LightEntity, RestoreEntity):
         return update
 
     @callback
+    def _update_temperature(self, result: Any) -> None:
+        """Store the rendered temperature and validate it against the range."""
+        if isinstance(result, TemplateError):
+            result = None
+        self._rendered_temperature = result
+        self._update_color("_attr_color_temp_kelvin", ColorMode.COLOR_TEMP)(
+            self._temperature_validator(result)
+        )
+
+    @callback
+    def _revalidate_temperature(self) -> None:
+        """Revalidate the rendered temperature after the range changed."""
+        if self._rendered_temperature is UNDEFINED:
+            return
+
+        self._attr_color_temp_kelvin = self._temperature_validator(
+            self._rendered_temperature
+        )
+        # Another color mode stays active, only an unset mode switches over
+        if self._attr_color_temp_kelvin is not None and self._attr_color_mode in (
+            None,
+            ColorMode.UNKNOWN,
+        ):
+            self._attr_color_mode = ColorMode.COLOR_TEMP
+
+    @property
+    def _color_temp_range(self) -> tuple[int, int]:
+        """Return the color temperature range, the default range when inverted."""
+        min_kelvin = self._attr_min_color_temp_kelvin
+        max_kelvin = self._attr_max_color_temp_kelvin
+        if min_kelvin is None or max_kelvin is None or min_kelvin > max_kelvin:
+            return DEFAULT_MIN_KELVIN, DEFAULT_MAX_KELVIN
+        return min_kelvin, max_kelvin
+
+    @property
+    @override
+    def min_color_temp_kelvin(self) -> int:
+        """Return the warmest color temperature this light supports."""
+        return self._color_temp_range[0]
+
+    @property
+    @override
+    def max_color_temp_kelvin(self) -> int:
+        """Return the coldest color temperature this light supports."""
+        return self._color_temp_range[1]
+
+    @property
+    @override
+    def capability_attributes(self) -> dict[str, Any]:
+        """Return capability attributes, warning once about an inverted range."""
+        # Checked on write, the bounds can be inverted between their updates
+        inverted = (
+            self._attr_min_color_temp_kelvin is not None
+            and self._attr_max_color_temp_kelvin is not None
+            and self._attr_min_color_temp_kelvin > self._attr_max_color_temp_kelvin
+        )
+        if inverted and not self._inverted_color_temp_range:
+            _LOGGER.warning(
+                "The color temperature range of %s is inverted, min %s K is above "
+                "max %s K, using the default range %s-%s K",
+                self.entity_id,
+                self._attr_min_color_temp_kelvin,
+                self._attr_max_color_temp_kelvin,
+                DEFAULT_MIN_KELVIN,
+                DEFAULT_MAX_KELVIN,
+            )
+        self._inverted_color_temp_range = inverted
+        return super().capability_attributes
+
+    @callback
     def _validate_temperature(self, result: Any) -> int | None:
         """Validate the temperature from the template."""
         if tcv.check_result_for_none(result):
             return None
 
-        if (min_kelvin := self._attr_min_color_temp_kelvin) is not None:
-            max_mireds = color_util.color_temperature_kelvin_to_mired(min_kelvin)
-        else:
-            max_mireds = DEFAULT_MAX_MIREDS
-
-        if (max_kelvin := self._attr_max_color_temp_kelvin) is not None:
-            min_mireds = color_util.color_temperature_kelvin_to_mired(max_kelvin)
-        else:
-            min_mireds = DEFAULT_MIN_MIREDS
+        min_kelvin, max_kelvin = self._color_temp_range
+        max_mireds = color_util.color_temperature_kelvin_to_mired(min_kelvin)
+        min_mireds = color_util.color_temperature_kelvin_to_mired(max_kelvin)
 
         if isinstance(result, (int, float)) and min_mireds <= result <= max_mireds:
             return color_util.color_temperature_mired_to_kelvin(result)
@@ -799,40 +978,68 @@ class AbstractTemplateLight(AbstractTemplateEntity, LightEntity, RestoreEntity):
         return None
 
     @callback
-    def _update_max_mireds(self, render):
-        """Update the max mireds from the template."""
-        if render is None:
-            self._attr_min_color_temp_kelvin = DEFAULT_MIN_KELVIN
-            return
+    def _validate_temperature_kelvin(self, result: Any) -> int | None:
+        """Validate the temperature in kelvin from the template."""
+        if tcv.check_result_for_none(result):
+            return None
 
-        try:
-            self._attr_min_color_temp_kelvin = (
-                color_util.color_temperature_mired_to_kelvin(int(render))
-            )
-        except ValueError:
-            _LOGGER.exception(
-                "Template must supply an integer temperature within the range for"
-                " this light, or 'None'"
-            )
-            self._attr_min_color_temp_kelvin = DEFAULT_MIN_KELVIN
+        min_kelvin, max_kelvin = self._color_temp_range
+        if (
+            isinstance(result, (int, float))
+            and not isinstance(result, bool)
+            and min_kelvin <= result <= max_kelvin
+        ):
+            return round(result)
+
+        tcv.log_validation_result_error(
+            self,
+            CONF_TEMPERATURE_KELVIN,
+            result,
+            f"expected a number between {min_kelvin} and {max_kelvin}",
+        )
+        return None
 
     @callback
-    def _update_min_mireds(self, render):
-        """Update the min mireds from the template."""
-        if render is None:
-            self._attr_max_color_temp_kelvin = DEFAULT_MAX_KELVIN
+    def _update_min_kelvin(
+        self, render: Any, convert: Callable[[int], int] | None = None
+    ) -> None:
+        """Update the min kelvin from the template."""
+        if render is None or isinstance(render, TemplateError):
+            self._attr_min_color_temp_kelvin = DEFAULT_MIN_KELVIN
+            self._revalidate_temperature()
             return
 
         try:
-            self._attr_max_color_temp_kelvin = (
-                color_util.color_temperature_mired_to_kelvin(int(render))
+            value = int(render)
+            self._attr_min_color_temp_kelvin = convert(value) if convert else value
+        except ValueError:
+            _LOGGER.exception(
+                "Template must supply an integer temperature within the range for"
+                " this light, or 'None'"
             )
+            self._attr_min_color_temp_kelvin = DEFAULT_MIN_KELVIN
+        self._revalidate_temperature()
+
+    @callback
+    def _update_max_kelvin(
+        self, render: Any, convert: Callable[[int], int] | None = None
+    ) -> None:
+        """Update the max kelvin from the template."""
+        if render is None or isinstance(render, TemplateError):
+            self._attr_max_color_temp_kelvin = DEFAULT_MAX_KELVIN
+            self._revalidate_temperature()
+            return
+
+        try:
+            value = int(render)
+            self._attr_max_color_temp_kelvin = convert(value) if convert else value
         except ValueError:
             _LOGGER.exception(
                 "Template must supply an integer temperature within the range for"
                 " this light, or 'None'"
             )
             self._attr_max_color_temp_kelvin = DEFAULT_MAX_KELVIN
+        self._revalidate_temperature()
 
     @callback
     def _update_supports_transition(self, render):

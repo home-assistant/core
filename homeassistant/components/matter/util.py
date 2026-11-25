@@ -3,6 +3,14 @@
 XY_COLOR_FACTOR = 65536
 
 
+def get_clean_name(name: str | None) -> str | None:
+    """Strip spaces and null char from the name."""
+    if name is None:
+        return name
+    name = name.replace("\x00", "")
+    return name.strip() or None
+
+
 def renormalize(
     number: float, from_range: tuple[float, float], to_range: tuple[float, float]
 ) -> float:

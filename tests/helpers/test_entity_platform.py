@@ -3357,3 +3357,21 @@ async def test_device_info_parent_device_id_routing(
         )
         is None
     )
+
+
+async def test_reset_cancels_polling_timer_without_entities(
+    hass: HomeAssistant,
+) -> None:
+    """Test reset stops polling when every entity was removed beforehand."""
+    platform = MockEntityPlatform(hass)
+    entity = MockEntity(name="test", should_poll=True)
+    await platform.async_add_entities([entity])
+    assert platform._async_polling_timer is not None
+
+    await entity.async_remove()
+    assert not platform.entities
+    assert platform._async_polling_timer is not None
+
+    await platform.async_reset()
+
+    assert platform._async_polling_timer is None

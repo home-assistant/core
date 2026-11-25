@@ -378,6 +378,27 @@ async def test_update_invalid_group(
     assert user.groups == []
 
 
+async def test_update_not_found(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
+    """Test update command with an unknown user."""
+    client = await hass_ws_client(hass)
+
+    await client.send_json(
+        {
+            "id": 5,
+            "type": "config/auth/update",
+            "user_id": "non-existing-user",
+            "name": "Updated name",
+        }
+    )
+
+    result = await client.receive_json()
+    assert not result["success"], result
+    assert result["error"]["code"] == "not_found"
+    assert result["error"]["message"] == "User not found"
+
+
 async def test_deactivate(
     hass: HomeAssistant, hass_ws_client: WebSocketGenerator
 ) -> None:

@@ -57,7 +57,7 @@ class SleepIQBedEntity[_SleepIQCoordinatorT: _DataCoordinatorType](
 ):
     """Implementation of a SleepIQ sensor."""
 
-    _attr_icon = ICON_OCCUPIED
+    _attr_icon: str | None = ICON_OCCUPIED
 
     def __init__(
         self,
@@ -88,7 +88,7 @@ class SleepIQSleeperEntity[_SleepIQCoordinatorT: _DataCoordinatorType](
 ):
     """Implementation of a SleepIQ sensor."""
 
-    _attr_icon = ICON_OCCUPIED
+    _attr_icon: str | None = ICON_OCCUPIED
 
     def __init__(
         self,
