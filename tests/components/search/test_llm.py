@@ -13,6 +13,7 @@ from homeassistant.helpers import (
     area_registry as ar,
     device_registry as dr,
     entity_registry as er,
+    floor_registry as fr,
     label_registry as lr,
     llm,
 )
@@ -39,6 +40,7 @@ async def setup_items(
     area_registry: ar.AreaRegistry,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
+    floor_registry: fr.FloorRegistry,
     label_registry: lr.LabelRegistry,
 ) -> dict[str, str]:
     """Add items of every type to the shared search items.
@@ -71,6 +73,9 @@ async def setup_items(
     )
 
     area_registry.async_update(search_item_ids["area"], aliases={"Cooking room"})
+    floor = floor_registry.async_get_floor_by_name("First floor")
+    assert floor is not None
+    floor_registry.async_update(floor.floor_id, aliases={"Ground level"})
     label_registry.async_create("Kitchen appliances")
 
     device_registry.async_update_device(
@@ -118,11 +123,28 @@ async def setup_items(
     entity_registry.async_update_entity(
         "automation.kitchen_lights", aliases=["Cooking lights"]
     )
+    entity_registry.async_get_or_create(
+        "sensor",
+        "test",
+        "oven",
+        suggested_object_id="kitchen_oven",
+        original_name="Kitchen oven",
+        disabled_by=er.RegistryEntryDisabler.USER,
+    )
+    entity_registry.async_get_or_create(
+        "script",
+        "test",
+        "evening_news",
+        suggested_object_id="evening_news",
+        original_name="Evening news",
+        disabled_by=er.RegistryEntryDisabler.USER,
+    )
 
     return {
         search_item_ids["device"]: "<sensor device>",
         search_item_ids["child_device"]: "<child device>",
         renamed_device.id: "<hub device>",
+        disabled_device.id: "<disabled device>",
     }
 
 
@@ -172,10 +194,21 @@ def test_parameters_openapi(snapshot: SnapshotAssertion) -> None:
         pytest.param({"query": "kitchen", "type": "device"}, id="device_model"),
         pytest.param({"query": "acme", "type": "device"}, id="device_manufacturer"),
         pytest.param({"query": "cooking", "type": "area"}, id="area_alias"),
+        pytest.param({"query": "ground"}, id="floor_alias"),
         pytest.param({"query": "counter light"}, id="exact_alias"),
         pytest.param({"query": "counter"}, id="partial_alias"),
         pytest.param({"query": "cooking lights"}, id="automation_alias"),
         pytest.param({"query": "kitchen_lights"}, id="entity_id"),
+        pytest.param(
+            {"query": "kitchen oven", "include_disabled": True}, id="disabled_entity"
+        ),
+        pytest.param(
+            {"query": "kitchen disabled", "include_disabled": True},
+            id="disabled_device",
+        ),
+        pytest.param(
+            {"query": "evening news", "include_disabled": True}, id="disabled_script"
+        ),
         pytest.param({"query": "nothing"}, id="no_match"),
     ],
 )
@@ -213,7 +246,7 @@ async def test_offset_without_type(
     [
         pytest.param({}, id="missing_query"),
         pytest.param({"query": ""}, id="empty_query"),
-        pytest.param({"query": "kitchen", "type": "floor"}, id="unknown_type"),
+        pytest.param({"query": "kitchen", "type": "person"}, id="unknown_type"),
         pytest.param({"query": "kitchen", "offset": -1}, id="negative_offset"),
     ],
 )

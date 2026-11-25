@@ -93,5 +93,19 @@
         }
       }
     }
+  },
+  "exceptions": {
+    "cannot_connect": {
+      "message": "[%key:common::config_flow::error::cannot_connect%]"
+    },
+    "rate_limit_exceeded": {
+      "message": "[%key:component::fuelprices_dk::config::abort::rate_limit_exceeded%]"
+    },
+    "request_timeout": {
+      "message": "[%key:common::config_flow::error::timeout_connect%]"
+    },
+    "server_error": {
+      "message": "Fuelprices.dk returned a server error."
+    }
   }
 }

@@ -111,6 +111,13 @@ VACUUM_DEPRECATED_ATTRIBUTES_OPTIONS = {
     "fan_speed_list": "fan_speeds",
 }
 
+# Light option in mireds to its replacement in kelvin, deprecated in 2026.12
+LIGHT_DEPRECATED_MIREDS_OPTIONS = {
+    "temperature": "temperature_kelvin",
+    "max_mireds": "min_kelvin",
+    "min_mireds": "max_kelvin",
+}
+
 
 @dataclass(frozen=True, kw_only=True)
 class DeprecatedTemplateOptions:
@@ -180,12 +187,21 @@ VACUUM_DEPRECATED_ATTRIBUTES = DeprecatedTemplateOptions(
     parent_option=CONF_ATTRIBUTES,
 )
 
+LIGHT_DEPRECATED_OPTIONS = DeprecatedTemplateOptions(
+    platform=Platform.LIGHT,
+    options=LIGHT_DEPRECATED_MIREDS_OPTIONS,
+    translation_key="deprecated_light_mireds_options",
+    blueprint_translation_key="deprecated_light_mireds_options_blueprint",
+    breaks_in_ha_version="2027.6.0",
+)
+
 DEPRECATED_TEMPLATE_OPTIONS = (
     WEATHER_DEPRECATED_OPTIONS,
     BINARY_SENSOR_DEPRECATED_ATTRIBUTES,
     EVENT_DEPRECATED_ATTRIBUTES,
     SENSOR_DEPRECATED_ATTRIBUTES,
     VACUUM_DEPRECATED_ATTRIBUTES,
+    LIGHT_DEPRECATED_OPTIONS,
 )
 
 
