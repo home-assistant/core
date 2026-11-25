@@ -30,9 +30,10 @@ from homeassistant.const import (
     CONF_USERNAME,
     UnitOfTemperature,
 )
-from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant, callback
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import (
     AddConfigEntryEntitiesCallback,
     AddEntitiesCallback,
@@ -41,7 +42,7 @@ from homeassistant.helpers.issue_registry import IssueSeverity, async_create_iss
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import EphEmberConfigEntry
-from .const import DOMAIN
+from .const import DOMAIN, signal_zone_update
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -140,7 +141,7 @@ async def async_setup_entry(
     """Set up a climate entity for each zone."""
     data = entry.runtime_data
     async_add_entities(
-        EphEmberThermostat(data.ember, zone)
+        EphEmberThermostat(data.ember, zone, entry.entry_id)
         for home in data.homes
         for zone in home["zones"]
     )
@@ -152,9 +153,10 @@ class EphEmberThermostat(ClimateEntity):
     _attr_hvac_modes = OPERATION_LIST
     _attr_native_temperature_unit = UnitOfTemperature.CELSIUS
 
-    def __init__(self, ember, zone) -> None:
+    def __init__(self, ember, zone, entry_id: str) -> None:
         """Initialize the thermostat."""
         self._ember = ember
+        self._entry_id = entry_id
         self._zone_name = zone_name(zone)
         self._zone = zone
         self._attr_unique_id = zone["zoneid"]
@@ -246,6 +248,25 @@ class EphEmberThermostat(ClimateEntity):
             return zone_target_temperature(self._zone)
 
         return 35.0
+
+    @override
+    async def async_added_to_hass(self) -> None:
+        """Listen for live updates of this zone."""
+        await super().async_added_to_hass()
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass,
+                signal_zone_update(self._entry_id, self._zone["zoneid"]),
+                self._async_zone_updated,
+            )
+        )
+
+    @callback
+    def _async_zone_updated(self, zone: dict[str, Any]) -> None:
+        """Show a live update from the EPH Ember cloud."""
+        self._zone = zone
+        self._attr_available = True
+        self.async_write_ha_state()
 
     def update(self) -> None:
         """Get the latest data."""
