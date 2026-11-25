@@ -2087,7 +2087,7 @@ async def test_media_player_play_queue_item_action(
         DOMAIN,
         MusicAssistantService.PLAY_QUEUE_ITEM,
         {
-            ATTR_ENTITY_ID: "media_player.test_group_player_1",
+            TargetKey.ENTITY_ID: "media_player.test_group_player_1",
             MusicAssistantServiceArgument.QUEUE_ITEM_ID: "queue_item_1",
         }
         | extra_data,
@@ -2117,7 +2117,7 @@ async def test_media_player_play_queue_item_action_older_server(
             DOMAIN,
             MusicAssistantService.PLAY_QUEUE_ITEM,
             {
-                ATTR_ENTITY_ID: "media_player.test_group_player_1",
+                TargetKey.ENTITY_ID: "media_player.test_group_player_1",
                 MusicAssistantServiceArgument.QUEUE_ITEM_ID: "queue_item_1",
                 MusicAssistantServiceArgument.USERNAME: "john",
             },
@@ -2138,7 +2138,7 @@ async def test_media_player_play_queue_item_action_no_active_queue(
             DOMAIN,
             MusicAssistantService.PLAY_QUEUE_ITEM,
             {
-                ATTR_ENTITY_ID: "media_player.test_group_player_1",
+                TargetKey.ENTITY_ID: "media_player.test_group_player_1",
                 MusicAssistantServiceArgument.QUEUE_ITEM_ID: "queue_item_1",
             },
             blocking=True,
