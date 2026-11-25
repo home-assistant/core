@@ -10,6 +10,7 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
+from homeassistant.const import MAX_LENGTH_STATE_STATE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -193,4 +194,5 @@ class LastFmUserSensor(LastFmEntity):
         """Return value of sensor."""
         if self.user_data is None:
             return None
-        return self.entity_description.value_fn(self.user_data)
+        value = self.entity_description.value_fn(self.user_data)
+        return value[:MAX_LENGTH_STATE_STATE] if isinstance(value, str) else value

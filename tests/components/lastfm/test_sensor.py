@@ -4,7 +4,14 @@ from datetime import timedelta
 from unittest.mock import patch
 
 from freezegun.api import FrozenDateTimeFactory
-from pylast import LastFMNetwork, PyLastError, Track, WSError
+from pylast import (
+    LastFMNetwork,
+    MalformedResponseError,
+    NetworkError,
+    PyLastError,
+    Track,
+    WSError,
+)
 import pytest
 from pytest_homeassistant.common import (
     MockConfigEntry,
@@ -20,11 +27,15 @@ from homeassistant.components.lastfm.const import (
     DOMAIN,
     STATE_NOT_SCROBBLING,
 )
-from homeassistant.const import ATTR_ENTITY_PICTURE, CONF_API_KEY
+from homeassistant.const import (
+    ATTR_ENTITY_PICTURE,
+    CONF_API_KEY,
+    MAX_LENGTH_STATE_STATE,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from . import API_KEY, API_SECRET, COVER_IMAGE, SESSION_KEY, MockUser
+from . import API_KEY, API_SECRET, COVER_IMAGE, SESSION_KEY, MockNetwork, MockUser
 from .conftest import ComponentSetup
 
 
@@ -308,3 +319,97 @@ async def test_cover_image_requested_once(
             await hass.async_block_till_done(wait_background_tasks=True)
 
     assert mock_cover.call_count == 1
+
+
+@pytest.mark.parametrize(
+    "error",
+    [
+        pytest.param(NetworkError("network", OSError()), id="network_error"),
+        pytest.param(
+            MalformedResponseError("network", ValueError()), id="malformed_response"
+        ),
+        pytest.param(
+            WSError("network", "11", "Service Offline"), id="retryable_api_error"
+        ),
+    ],
+)
+async def test_cover_image_transient_error_retried(
+    hass: HomeAssistant,
+    setup_integration: ComponentSetup,
+    config_entry: MockConfigEntry,
+    default_user: MockUser,
+    freezer: FrozenDateTimeFactory,
+    error: PyLastError,
+) -> None:
+    """Test the album art is requested again after a transient error."""
+    entity_id = "sensor.lastfm_testaccount1_top_track"
+    with patch.object(
+        Track, "get_cover_image", autospec=True, side_effect=error
+    ) as mock_cover:
+        await setup_integration(config_entry, default_user)
+        assert hass.states.get(entity_id).attributes.get(ATTR_ENTITY_PICTURE) is None
+
+        mock_cover.side_effect = None
+        mock_cover.return_value = COVER_IMAGE
+        with patch("pylast.User", return_value=default_user):
+            freezer.tick(timedelta(seconds=30))
+            async_fire_time_changed(hass)
+            await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert hass.states.get(entity_id).attributes[ATTR_ENTITY_PICTURE] == COVER_IMAGE
+
+
+async def test_cover_image_permanent_error_cached(
+    hass: HomeAssistant,
+    setup_integration: ComponentSetup,
+    config_entry: MockConfigEntry,
+    default_user: MockUser,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test the album art is not requested again after a permanent error."""
+    with patch.object(
+        Track,
+        "get_cover_image",
+        autospec=True,
+        side_effect=WSError("network", "6", "Track not found"),
+    ) as mock_cover:
+        await setup_integration(config_entry, default_user)
+
+        with patch("pylast.User", return_value=default_user):
+            freezer.tick(timedelta(seconds=30))
+            async_fire_time_changed(hass)
+            await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert mock_cover.call_count == 1
+    assert (
+        hass.states.get("sensor.lastfm_testaccount1_top_track").attributes.get(
+            ATTR_ENTITY_PICTURE
+        )
+        is None
+    )
+
+
+@pytest.mark.parametrize(
+    "entity_id",
+    [
+        "sensor.lastfm_testaccount1_last_played",
+        "sensor.lastfm_testaccount1_top_track",
+    ],
+)
+async def test_long_track_state_truncated(
+    hass: HomeAssistant,
+    setup_integration: ComponentSetup,
+    config_entry: MockConfigEntry,
+    entity_id: str,
+) -> None:
+    """Test track states longer than the state limit are truncated."""
+    track = Track(
+        "artist",
+        "t" * MAX_LENGTH_STATE_STATE,
+        MockNetwork("lastfm"),
+        info={"image": []},
+    )
+    await setup_integration(config_entry, MockUser(recent_tracks=[track]))
+
+    state = hass.states.get(entity_id).state
+    assert state == f"artist - {'t' * MAX_LENGTH_STATE_STATE}"[:MAX_LENGTH_STATE_STATE]

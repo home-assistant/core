@@ -4,7 +4,14 @@ from dataclasses import dataclass
 from datetime import timedelta
 from typing import override
 
-from pylast import LastFMNetwork, PyLastError, Track, WSError
+from pylast import (
+    LastFMNetwork,
+    MalformedResponseError,
+    NetworkError,
+    PyLastError,
+    Track,
+    WSError,
+)
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_KEY
@@ -19,6 +26,7 @@ from .const import (
     DOMAIN,
     ERROR_CODE_INVALID_SESSION_KEY,
     ERROR_CODE_LOGIN_REQUIRED,
+    ERROR_CODES_RETRYABLE,
     LOGGER,
 )
 
@@ -172,6 +180,12 @@ class LastFMDataUpdateCoordinator(DataUpdateCoordinator[dict[str, LastFMUserData
         else:
             try:
                 image = track.get_cover_image()
+            except NetworkError, MalformedResponseError:
+                return None
+            except WSError as exc:
+                if str(exc.status) in ERROR_CODES_RETRYABLE:
+                    return None
+                image = None
             # pylast raises IndexError when Last.fm returns no images
             except PyLastError, IndexError:
                 image = None
