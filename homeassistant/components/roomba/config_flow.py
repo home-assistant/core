@@ -12,7 +12,11 @@ from roombapy import (
     generate_tls_context,
 )
 
-from homeassistant.config_entries import ConfigFlow, ConfigFlowResult, OptionsFlow
+from homeassistant.config_entries import (
+    ConfigFlow,
+    ConfigFlowResult,
+    OptionsFlowWithReload,
+)
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PASSWORD
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
@@ -331,7 +335,7 @@ class RoombaConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
 
-class RoombaOptionsFlowHandler(OptionsFlow):
+class RoombaOptionsFlowHandler(OptionsFlowWithReload):
     """Handle options."""
 
     async def async_step_init(

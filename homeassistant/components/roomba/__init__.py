@@ -74,9 +74,6 @@ async def async_setup_entry(
     config_entry.async_on_unload(
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _async_disconnect_roomba)
     )
-    config_entry.async_on_unload(
-        config_entry.add_update_listener(_async_update_options)
-    )
 
     config_entry.runtime_data = RoombaData(
         roomba, config_entry.data[CONF_BLID], connection
@@ -84,13 +81,6 @@ async def async_setup_entry(
 
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
     connection.async_start()
-
-
-async def _async_update_options(
-    hass: HomeAssistant, config_entry: RoombaConfigEntry
-) -> None:
-    """Reload the entry when the options change."""
-    await hass.config_entries.async_reload(config_entry.entry_id)
 
 
 async def async_create_roomba(
