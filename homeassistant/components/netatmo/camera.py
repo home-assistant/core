@@ -450,7 +450,9 @@ class NetatmoCamera(NetatmoBaseCamera):
     async def async_turn_off(self) -> None:
         """Turn off camera."""
         async with self._lock:
-            if not self._is_monitoring:
+            if self._override_on is False or (
+                self._override_on is None and self.device.monitoring is False
+            ):
                 return
             try:
                 await self.device.async_monitoring_off()
