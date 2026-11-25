@@ -16,7 +16,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .coordinator import SmartyPlantsConfigEntry, SmartyPlantsCoordinator
-from .entity import SmartyPlantsEntity
+from .entity import SmartyPlantsEntity, async_add_entities_for_sensors
 
 # Read-only and coordinator-driven, so updates need not be serialized.
 PARALLEL_UPDATES = 0
@@ -62,10 +62,14 @@ async def async_setup_entry(
     """Create the binary sensors for every physical sensor."""
     coordinator = entry.runtime_data
 
-    async_add_entities(
-        SmartyPlantsBinarySensor(coordinator, sensor_id, description)
-        for sensor_id in coordinator.data
-        for description in BINARY_SENSOR_TYPES
+    async_add_entities_for_sensors(
+        entry,
+        coordinator,
+        async_add_entities,
+        lambda sensor_id: (
+            SmartyPlantsBinarySensor(coordinator, sensor_id, description)
+            for description in BINARY_SENSOR_TYPES
+        ),
     )
 
 

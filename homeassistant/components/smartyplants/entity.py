@@ -1,14 +1,17 @@
 """Shared base entity — this is where each sensor becomes an HA device."""
 
+from collections.abc import Callable, Iterable
 from typing import override
 
 from pysmartyplants import Sensor
 
+from homeassistant.core import callback
 from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN, MANUFACTURER, MODEL
-from .coordinator import SmartyPlantsCoordinator
+from .coordinator import SmartyPlantsConfigEntry, SmartyPlantsCoordinator
 
 
 class SmartyPlantsEntity(CoordinatorEntity[SmartyPlantsCoordinator]):
@@ -47,3 +50,35 @@ class SmartyPlantsEntity(CoordinatorEntity[SmartyPlantsCoordinator]):
         if not super().available or self._sensor_id not in self.coordinator.data:
             return False
         return self.sensor.is_online or not self._requires_online
+
+
+@callback
+def async_add_entities_for_sensors(
+    entry: SmartyPlantsConfigEntry,
+    coordinator: SmartyPlantsCoordinator,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+    build: Callable[[str], Iterable[SmartyPlantsEntity]],
+) -> None:
+    """Add entities for sensors as they appear, including after setup.
+
+    A sensor paired in the SmartyPlants app shows up in a later poll, so the
+    platforms follow the coordinator rather than only its first refresh.
+    """
+    known: set[str] = set()
+
+    @callback
+    def _async_add_new() -> None:
+        current = set(coordinator.data)
+        # Forget ids that have gone, otherwise a sensor that is removed and
+        # later paired again would never get its entities back.
+        known.intersection_update(current)
+
+        if not (new_ids := current - known):
+            return
+        known.update(new_ids)
+        async_add_entities(
+            entity for sensor_id in sorted(new_ids) for entity in build(sensor_id)
+        )
+
+    _async_add_new()
+    entry.async_on_unload(coordinator.async_add_listener(_async_add_new))
