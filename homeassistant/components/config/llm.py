@@ -1399,16 +1399,8 @@ class UpdateEntitySettingsTool(Tool):
         }
         if sensor_options:
             _check_sensor_options(hass, entry, sensor_options)
-        if (area_id := settings.get("area_id")) and ar.async_get(hass).async_get_area(
-            area_id
-        ) is None:
-            raise HomeAssistantError(f"Area '{area_id}' not found.")
         if "labels" in settings:
             settings["labels"] = set(settings["labels"])
-            if missing := lr.async_get_missing_label_ids(hass, settings["labels"]):
-                raise HomeAssistantError(
-                    f"Labels not found: {', '.join(sorted(missing))}"
-                )
         if settings.get("disabled_by"):
             settings["disabled_by"] = er.RegistryEntryDisabler.USER
         if settings.get("hidden_by"):
