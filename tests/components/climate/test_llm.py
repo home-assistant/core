@@ -5,10 +5,10 @@ from pytest_homeassistant.common import async_mock_service
 
 from homeassistant.components import llm as llm_component
 from homeassistant.components.climate import (
-    ATTR_TEMPERATURE,
     DOMAIN,
-    SERVICE_SET_TEMPERATURE,
     ClimateEntityFeature,
+    ClimateService,
+    ClimateServiceArgument,
     llm as climate_llm,
 )
 from homeassistant.components.homeassistant.exposed_entities import async_expose_entity
@@ -85,7 +85,7 @@ async def test_set_temperature_omits_empty_optional_targets(
 ) -> None:
     """Test empty optional targets do not invalidate a climate LLM tool call."""
     api = await llm.async_get_api(hass, "assist", _llm_context())
-    calls = async_mock_service(hass, DOMAIN, SERVICE_SET_TEMPERATURE)
+    calls = async_mock_service(hass, DOMAIN, ClimateService.SET_TEMPERATURE)
 
     response = await api.async_call_tool(
         llm.ToolInput(
@@ -97,7 +97,7 @@ async def test_set_temperature_omits_empty_optional_targets(
     assert len(calls) == 1
     assert calls[0].data == {
         "entity_id": ENTITY_ID,
-        ATTR_TEMPERATURE: 25,
+        ClimateServiceArgument.TEMPERATURE: 25,
     }
     assert response.data["response_type"] == "action_done"
 

@@ -26,6 +26,7 @@ from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
 TEST_API_NAME = "Memory Server"
+TEST_SERVER_NAME = "memory"
 MCP_SERVER_URL = "http://1.1.1.1:8080/mcp"
 CLIENT_ID = "test-client-id"
 CLIENT_SECRET = "test-client-secret"

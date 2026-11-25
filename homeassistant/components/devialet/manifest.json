@@ -9,6 +9,6 @@
   "documentation": "https://www.home-assistant.io/integrations/devialet",
   "integration_type": "device",
   "iot_class": "local_polling",
-  "requirements": ["devialet==1.5.7"],
+  "requirements": ["devialet==1.5.9"],
   "zeroconf": ["_devialet-http._tcp.local."]
 }

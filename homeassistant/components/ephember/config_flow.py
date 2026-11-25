@@ -1,5 +1,6 @@
 """Config flow for EPH Controls Ember."""
 
+from collections.abc import Mapping
 from typing import Any, override
 
 import probatio
@@ -15,17 +16,19 @@ from homeassistant.helpers.selector import (
 
 from .const import DOMAIN, LOGGER
 
+PASSWORD_SELECTOR = TextSelector(
+    TextSelectorConfig(type=TextSelectorType.PASSWORD, autocomplete="current-password")
+)
 STEP_USER_DATA_SCHEMA = probatio.Schema(
     {
         probatio.Required(CONF_USERNAME): TextSelector(
             TextSelectorConfig(type=TextSelectorType.EMAIL, autocomplete="email")
         ),
-        probatio.Required(probatio.Secret(CONF_PASSWORD)): TextSelector(
-            TextSelectorConfig(
-                type=TextSelectorType.PASSWORD, autocomplete="current-password"
-            )
-        ),
+        probatio.Required(probatio.Secret(CONF_PASSWORD)): PASSWORD_SELECTOR,
     }
+)
+STEP_REAUTH_DATA_SCHEMA = probatio.Schema(
+    {probatio.Required(probatio.Secret(CONF_PASSWORD)): PASSWORD_SELECTOR}
 )
 
 
@@ -86,4 +89,35 @@ class EphEmberConfigFlow(ConfigFlow, domain=DOMAIN):
                 CONF_USERNAME: import_data[CONF_USERNAME],
                 CONF_PASSWORD: import_data[CONF_PASSWORD],
             },
+        )
+
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
+        """Handle a rejected password."""
+        return await self.async_step_reauth_confirm()
+
+    async def async_step_reauth_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Ask for the new password."""
+        errors: dict[str, str] = {}
+        reauth_entry = self._get_reauth_entry()
+        if user_input is not None:
+            user_id, errors = await self.hass.async_add_executor_job(
+                _get_user_id,
+                reauth_entry.data[CONF_USERNAME],
+                user_input[CONF_PASSWORD],
+            )
+            if not errors:
+                await self.async_set_unique_id(user_id)
+                self._abort_if_unique_id_mismatch()
+                return self.async_update_reload_and_abort(
+                    reauth_entry, data_updates=user_input
+                )
+        return self.async_show_form(
+            step_id="reauth_confirm",
+            data_schema=STEP_REAUTH_DATA_SCHEMA,
+            description_placeholders={"username": reauth_entry.data[CONF_USERNAME]},
+            errors=errors,
         )

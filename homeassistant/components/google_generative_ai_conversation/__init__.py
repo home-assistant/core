@@ -3,9 +3,9 @@
 from functools import partial
 from types import MappingProxyType
 
+import aiohttp
 from google.genai import Client
-from google.genai.errors import APIError, ClientError
-from requests.exceptions import Timeout
+from google.genai.errors import APIError, ClientError, ServerError
 
 from homeassistant.config_entries import ConfigEntry, ConfigSubentry
 from homeassistant.const import CONF_API_KEY, Platform
@@ -60,22 +60,28 @@ async def async_setup_entry(
 ) -> None:
     """Set up Google Generative AI Conversation from a config entry."""
 
+    client = await hass.async_add_executor_job(
+        partial(Client, api_key=entry.data[CONF_API_KEY])
+    )
     try:
-        client = await hass.async_add_executor_job(
-            partial(Client, api_key=entry.data[CONF_API_KEY])
-        )
         await client.aio.models.get(
             model=RECOMMENDED_CHAT_MODEL,
             config={"http_options": {"timeout": TIMEOUT_MILLIS}},
         )
-    except (APIError, Timeout) as err:
+    except (TimeoutError, aiohttp.ClientError) as err:
+        await client.aio.aclose()
+        raise ConfigEntryNotReady(err) from err
+    except APIError as err:
+        await client.aio.aclose()
         if isinstance(err, ClientError) and "API_KEY_INVALID" in str(err):
             raise ConfigEntryAuthFailed(err.message) from err
-        if isinstance(err, Timeout):
+        if isinstance(err, ServerError) or (
+            err.code and (err.code >= 500 or err.code in (408, 429))
+        ):
             raise ConfigEntryNotReady(err) from err
         raise ConfigEntryError(err) from err
-    else:
-        entry.runtime_data = client
+
+    entry.runtime_data = client
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 

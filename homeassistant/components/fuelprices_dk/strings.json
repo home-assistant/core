@@ -87,8 +87,25 @@
             "station": "[%key:component::fuelprices_dk::config::step::station_selection::data_description::station%]"
           },
           "description": "[%key:component::fuelprices_dk::config::step::station_selection::description%]"
+        },
+        "user": {
+          "description": "Try again to load the list of fuel companies."
         }
       }
+    }
+  },
+  "exceptions": {
+    "cannot_connect": {
+      "message": "[%key:common::config_flow::error::cannot_connect%]"
+    },
+    "rate_limit_exceeded": {
+      "message": "[%key:component::fuelprices_dk::config::abort::rate_limit_exceeded%]"
+    },
+    "request_timeout": {
+      "message": "[%key:common::config_flow::error::timeout_connect%]"
+    },
+    "server_error": {
+      "message": "Fuelprices.dk returned a server error."
     }
   }
 }

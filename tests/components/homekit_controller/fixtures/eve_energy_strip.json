@@ -1,0 +1,391 @@
+[
+  {
+    "aid": 1,
+    "services": [
+      {
+        "characteristics": [
+          {
+            "description": "Identify",
+            "format": "bool",
+            "iid": 2,
+            "perms": ["pw"],
+            "type": "00000014-0000-1000-8000-0026BB765291"
+          },
+          {
+            "description": "Manufacturer",
+            "format": "string",
+            "iid": 3,
+            "maxLen": 64,
+            "perms": ["pr"],
+            "type": "00000020-0000-1000-8000-0026BB765291",
+            "value": "Eve Systems"
+          },
+          {
+            "description": "Model",
+            "format": "string",
+            "iid": 4,
+            "maxLen": 64,
+            "perms": ["pr"],
+            "type": "00000021-0000-1000-8000-0026BB765291",
+            "value": "Eve Energy Strip 20EAZ8301"
+          },
+          {
+            "description": "Name",
+            "format": "string",
+            "iid": 5,
+            "maxLen": 64,
+            "perms": ["pr"],
+            "type": "00000023-0000-1000-8000-0026BB765291",
+            "value": "Eve Energy Strip 3655"
+          },
+          {
+            "description": "Serial Number",
+            "format": "string",
+            "iid": 6,
+            "maxLen": 64,
+            "perms": ["pr"],
+            "type": "00000030-0000-1000-8000-0026BB765291",
+            "value": "AA00A0A00000"
+          },
+          {
+            "description": "Firmware Revision",
+            "format": "string",
+            "iid": 7,
+            "maxLen": 64,
+            "perms": ["pr"],
+            "type": "00000052-0000-1000-8000-0026BB765291",
+            "value": "1.0.10"
+          },
+          {
+            "format": "data",
+            "iid": 100,
+            "perms": ["pr"],
+            "type": "00000220-0000-1000-8000-0026BB765291",
+            "value": "IHdXc5lQJm8="
+          },
+          {
+            "description": "Hardware Revision",
+            "format": "string",
+            "iid": 8,
+            "maxLen": 64,
+            "perms": ["pr"],
+            "type": "00000053-0000-1000-8000-0026BB765291",
+            "value": "1"
+          }
+        ],
+        "iid": 1,
+        "type": "0000003E-0000-1000-8000-0026BB765291"
+      },
+      {
+        "characteristics": [
+          {
+            "description": "Version",
+            "format": "string",
+            "iid": 10,
+            "maxLen": 64,
+            "perms": ["pr"],
+            "type": "00000037-0000-1000-8000-0026BB765291",
+            "value": "1.1.0"
+          }
+        ],
+        "iid": 9,
+        "type": "000000A2-0000-1000-8000-0026BB765291"
+      },
+      {
+        "characteristics": [
+          {
+            "description": "Service Label Namespace",
+            "format": "uint8",
+            "iid": 12,
+            "maxValue": 1,
+            "minStep": 1,
+            "minValue": 0,
+            "perms": ["pr"],
+            "type": "000000CD-0000-1000-8000-0026BB765291",
+            "value": 0
+          }
+        ],
+        "iid": 11,
+        "type": "000000CC-0000-1000-8000-0026BB765291"
+      },
+      {
+        "characteristics": [
+          {
+            "description": "On",
+            "format": "bool",
+            "iid": 14,
+            "perms": ["pw", "pr", "ev"],
+            "type": "00000025-0000-1000-8000-0026BB765291",
+            "value": false
+          },
+          {
+            "description": "Outlet In Use",
+            "format": "bool",
+            "iid": 15,
+            "perms": ["pr", "ev"],
+            "type": "00000026-0000-1000-8000-0026BB765291",
+            "value": true
+          },
+          {
+            "description": "Name",
+            "format": "string",
+            "iid": 16,
+            "maxLen": 64,
+            "perms": ["pr"],
+            "type": "00000023-0000-1000-8000-0026BB765291",
+            "value": "Eve Energy Strip 1"
+          },
+          {
+            "description": "Service Label Index",
+            "format": "uint8",
+            "iid": 17,
+            "maxValue": 255,
+            "minStep": 1,
+            "minValue": 1,
+            "perms": ["pr"],
+            "type": "000000CB-0000-1000-8000-0026BB765291",
+            "value": 1
+          },
+          {
+            "description": "Status Active",
+            "format": "bool",
+            "iid": 18,
+            "perms": ["pr", "ev"],
+            "type": "00000075-0000-1000-8000-0026BB765291",
+            "value": true
+          },
+          {
+            "format": "uint32",
+            "iid": 19,
+            "maxValue": 4294967295,
+            "minStep": 1,
+            "minValue": 0,
+            "perms": ["pr"],
+            "type": "E863F11A-079E-48FF-8F27-9C2605A29F52",
+            "value": 91584538
+          }
+        ],
+        "iid": 13,
+        "type": "00000047-0000-1000-8000-0026BB765291"
+      },
+      {
+        "characteristics": [
+          {
+            "description": "On",
+            "format": "bool",
+            "iid": 21,
+            "perms": ["pw", "pr", "ev"],
+            "type": "00000025-0000-1000-8000-0026BB765291",
+            "value": true
+          },
+          {
+            "description": "Outlet In Use",
+            "format": "bool",
+            "iid": 22,
+            "perms": ["pr", "ev"],
+            "type": "00000026-0000-1000-8000-0026BB765291",
+            "value": true
+          },
+          {
+            "description": "Name",
+            "format": "string",
+            "iid": 23,
+            "maxLen": 64,
+            "perms": ["pr"],
+            "type": "00000023-0000-1000-8000-0026BB765291",
+            "value": "Eve Energy Strip 2"
+          },
+          {
+            "description": "Service Label Index",
+            "format": "uint8",
+            "iid": 24,
+            "maxValue": 255,
+            "minStep": 1,
+            "minValue": 1,
+            "perms": ["pr"],
+            "type": "000000CB-0000-1000-8000-0026BB765291",
+            "value": 2
+          },
+          {
+            "description": "Status Active",
+            "format": "bool",
+            "iid": 25,
+            "perms": ["pr", "ev"],
+            "type": "00000075-0000-1000-8000-0026BB765291",
+            "value": true
+          },
+          {
+            "format": "uint32",
+            "iid": 26,
+            "maxValue": 4294967295,
+            "minStep": 1,
+            "minValue": 0,
+            "perms": ["pr"],
+            "type": "E863F11A-079E-48FF-8F27-9C2605A29F52",
+            "value": 84715585
+          }
+        ],
+        "iid": 20,
+        "type": "00000047-0000-1000-8000-0026BB765291"
+      },
+      {
+        "characteristics": [
+          {
+            "description": "On",
+            "format": "bool",
+            "iid": 28,
+            "perms": ["pw", "pr", "ev"],
+            "type": "00000025-0000-1000-8000-0026BB765291",
+            "value": false
+          },
+          {
+            "description": "Outlet In Use",
+            "format": "bool",
+            "iid": 29,
+            "perms": ["pr", "ev"],
+            "type": "00000026-0000-1000-8000-0026BB765291",
+            "value": true
+          },
+          {
+            "description": "Name",
+            "format": "string",
+            "iid": 30,
+            "maxLen": 64,
+            "perms": ["pr"],
+            "type": "00000023-0000-1000-8000-0026BB765291",
+            "value": "Eve Energy Strip 3"
+          },
+          {
+            "description": "Service Label Index",
+            "format": "uint8",
+            "iid": 31,
+            "maxValue": 255,
+            "minStep": 1,
+            "minValue": 1,
+            "perms": ["pr"],
+            "type": "000000CB-0000-1000-8000-0026BB765291",
+            "value": 3
+          },
+          {
+            "description": "Status Active",
+            "format": "bool",
+            "iid": 32,
+            "perms": ["pr", "ev"],
+            "type": "00000075-0000-1000-8000-0026BB765291",
+            "value": true
+          },
+          {
+            "format": "uint32",
+            "iid": 33,
+            "maxValue": 4294967295,
+            "minStep": 1,
+            "minValue": 0,
+            "perms": ["pr"],
+            "type": "E863F11A-079E-48FF-8F27-9C2605A29F52",
+            "value": 91584540
+          }
+        ],
+        "iid": 27,
+        "type": "00000047-0000-1000-8000-0026BB765291"
+      },
+      {
+        "characteristics": [
+          {
+            "format": "tlv8",
+            "iid": 35,
+            "perms": ["pr"],
+            "type": "E863F131-079E-48FF-8F27-9C2605A29F52",
+            "value": "AA=="
+          },
+          {
+            "format": "tlv8",
+            "iid": 36,
+            "perms": ["pw"],
+            "type": "E863F11D-079E-48FF-8F27-9C2605A29F52"
+          },
+          {
+            "format": "data",
+            "iid": 37,
+            "perms": ["pw"],
+            "type": "E863F11C-079E-48FF-8F27-9C2605A29F52"
+          },
+          {
+            "format": "data",
+            "iid": 38,
+            "perms": ["pr"],
+            "type": "E863F116-079E-48FF-8F27-9C2605A29F52",
+            "value": "lfh5BZLJeQVne6EwAg4BBwK1DwAQAIUCAD7tVQUBAA=="
+          },
+          {
+            "format": "data",
+            "iid": 39,
+            "perms": ["pr"],
+            "type": "E863F117-079E-48FF-8F27-9C2605A29F52",
+            "value": "DACFAgA+7VUFAgAA"
+          },
+          {
+            "format": "data",
+            "iid": 40,
+            "perms": ["pw"],
+            "type": "E863F121-079E-48FF-8F27-9C2605A29F52"
+          }
+        ],
+        "iid": 34,
+        "type": "E863F007-079E-48FF-8F27-9C2605A29F52"
+      },
+      {
+        "characteristics": [
+          {
+            "format": "float",
+            "iid": 42,
+            "perms": ["pr"],
+            "type": "E863F10A-079E-48FF-8F27-9C2605A29F52",
+            "value": 220
+          },
+          {
+            "format": "float",
+            "iid": 43,
+            "perms": ["pr"],
+            "type": "E863F126-079E-48FF-8F27-9C2605A29F52",
+            "value": 0
+          },
+          {
+            "format": "float",
+            "iid": 44,
+            "perms": ["pr"],
+            "type": "E863F10D-079E-48FF-8F27-9C2605A29F52",
+            "value": 0
+          },
+          {
+            "format": "float",
+            "iid": 45,
+            "perms": ["pr"],
+            "type": "E863F10C-079E-48FF-8F27-9C2605A29F52",
+            "value": 0.460751
+          },
+          {
+            "description": "Status Fault",
+            "format": "uint8",
+            "iid": 46,
+            "perms": ["pr", "ev"],
+            "type": "00000077-0000-1000-8000-0026BB765291",
+            "value": 0
+          },
+          {
+            "description": "Lock Physical Controls",
+            "format": "uint8",
+            "iid": 47,
+            "maxValue": 1,
+            "minStep": 1,
+            "minValue": 0,
+            "perms": ["pw", "pr", "ev"],
+            "type": "000000A7-0000-1000-8000-0026BB765291",
+            "value": 0
+          }
+        ],
+        "iid": 41,
+        "type": "E863F008-079E-48FF-8F27-9C2605A29F52"
+      }
+    ]
+  }
+]
