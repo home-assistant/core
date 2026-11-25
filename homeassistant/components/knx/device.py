@@ -8,12 +8,19 @@ from xknx.io.gateway_scanner import GatewayDescriptor
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import area_registry as ar, device_registry as dr
+from homeassistant.helpers import (
+    area_registry as ar,
+    device_registry as dr,
+    entity_registry as er,
+)
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.typing import Undefined
 from homeassistant.util.ulid import ulid_now
 
 from .const import DOMAIN, UI_DEVICE_ID_PREFIX
+
+if TYPE_CHECKING:
+    from .knx_module import KNXModule
 
 
 @callback
@@ -41,6 +48,31 @@ def async_create_ui_device(
     if TYPE_CHECKING:
         assert updated is not None
     return updated
+
+
+async def async_remove_ui_entities_of_device(
+    hass: HomeAssistant, knx_module: KNXModule, device_entry: dr.AnyDeviceEntry
+) -> bool:
+    """Remove the UI entities of a device so that the device can be removed.
+
+    Return False - without removing anything - if the device has to stay.
+    """
+    if device_entry.id == knx_module.interface_device.device.id:
+        # can not remove interface device
+        return False
+    ui_unique_ids = knx_module.config_store.get_entity_uids()
+    entity_registry = er.async_get(hass)
+    if any(
+        entity.config_entry_id == knx_module.entry.entry_id
+        and entity.unique_id not in ui_unique_ids
+        for entity in er.async_entries_for_device(entity_registry, device_entry.id)
+    ):
+        # device still has YAML-configured KNX entities; it would be recreated after reload
+        return False
+    for entity in knx_module.config_store.get_entity_entries():
+        if entity.device_id == device_entry.id:
+            await knx_module.config_store.delete_entity(entity.entity_id)
+    return True
 
 
 class KNXInterfaceDevice:
