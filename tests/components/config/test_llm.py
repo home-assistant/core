@@ -2275,6 +2275,7 @@ async def test_update_sensor_settings(
         "1234",
         suggested_object_id="outside",
         original_device_class="temperature",
+        unit_of_measurement="°C",
     )
     entity_registry.async_update_entity_options(
         "sensor.outside", "sensor", {"suggested_display_precision": 1}
@@ -2354,27 +2355,74 @@ async def test_update_sensor_settings(
     assert result.data["result"]["unit_of_measurement"] == "°F"
 
 
-async def test_update_sensor_settings_unit_not_convertible(
+async def test_update_sensor_settings_state_unit(
     hass: HomeAssistant,
     llm_context: llm.LLMContext,
     entity_registry: er.EntityRegistry,
     entity_tools: dict[str, llm.Tool],
 ) -> None:
-    """Test that a sensor without a convertible device class keeps its unit."""
+    """Test setting the unit of a sensor whose unit is only on its state."""
     entity_registry.async_get_or_create(
-        "sensor", "test", "1234", suggested_object_id="count"
+        "sensor",
+        "test",
+        "1234",
+        suggested_object_id="outside",
+        original_device_class="temperature",
+    )
+    hass.states.async_set("sensor.outside", "20", {"unit_of_measurement": "°C"})
+    tool = entity_tools["config__update_entity_settings"]
+
+    result = await tool.async_call(
+        hass,
+        llm.ToolInput(
+            tool.name, {"entity_id": "sensor.outside", "unit_of_measurement": "°F"}
+        ),
+        llm_context,
+    )
+    assert result.data["result"]["unit_of_measurement"] == "°F"
+
+
+@pytest.mark.parametrize(
+    ("object_id", "original_device_class", "native_unit", "target_unit"),
+    [
+        pytest.param("count", None, None, "items", id="no_device_class"),
+        pytest.param("outside", "temperature", None, "°F", id="missing_native_unit"),
+        pytest.param("pf", "power_factor", "Cos φ", "%", id="incompatible_native_unit"),
+    ],
+)
+async def test_update_sensor_settings_unit_not_convertible(
+    hass: HomeAssistant,
+    llm_context: llm.LLMContext,
+    entity_registry: er.EntityRegistry,
+    entity_tools: dict[str, llm.Tool],
+    object_id: str,
+    original_device_class: str | None,
+    native_unit: str | None,
+    target_unit: str,
+) -> None:
+    """Test that a sensor without a convertible device class or unit cannot change unit."""
+    entity_registry.async_get_or_create(
+        "sensor",
+        "test",
+        "1234",
+        suggested_object_id=object_id,
+        original_device_class=original_device_class,
+        unit_of_measurement=native_unit,
     )
     tool = entity_tools["config__update_entity_settings"]
+    entity_id = f"sensor.{object_id}"
 
     with pytest.raises(HomeAssistantError) as exc_info:
         await tool.async_call(
             hass,
             llm.ToolInput(
-                tool.name, {"entity_id": "sensor.count", "unit_of_measurement": "items"}
+                tool.name, {"entity_id": entity_id, "unit_of_measurement": target_unit}
             ),
             llm_context,
         )
-    assert str(exc_info.value) == "The unit of 'sensor.count' cannot be 'items'."
+    assert (
+        str(exc_info.value) == f"The unit of '{entity_id}' cannot be '{target_unit}'."
+    )
 
 
 @pytest.mark.parametrize(

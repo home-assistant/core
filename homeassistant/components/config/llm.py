@@ -35,6 +35,7 @@ from homeassistant.helpers import (
     label_registry as lr,
     translation,
 )
+from homeassistant.helpers.entity import get_unit_of_measurement
 from homeassistant.helpers.llm import (
     LLM_API_HOME_ASSISTANT,
     LLMContext,
@@ -1260,7 +1261,9 @@ _NULLABLE_STRING = probatio.Any(None, _NON_EMPTY_STRING)
 _SENSOR_OPTIONS = (CONF_UNIT_OF_MEASUREMENT, "display_precision")
 
 
-def _check_sensor_options(entry: er.RegistryEntry, options: dict[str, Any]) -> None:
+def _check_sensor_options(
+    hass: HomeAssistant, entry: er.RegistryEntry, options: dict[str, Any]
+) -> None:
     """Raise if the sensor options do not apply to the entity."""
     if entry.domain != SENSOR_DOMAIN:
         raise HomeAssistantError(
@@ -1272,7 +1275,11 @@ def _check_sensor_options(entry: er.RegistryEntry, options: dict[str, Any]) -> N
     # set in the registry
     device_class = entry.original_device_class
     units: set[Any] = set()
-    if device_class is not None and device_class in UNIT_CONVERTERS:
+    if (
+        device_class is not None
+        and (converter := UNIT_CONVERTERS.get(device_class)) is not None
+        and get_unit_of_measurement(hass, entry.entity_id) in converter.VALID_UNITS
+    ):
         units = DEVICE_CLASS_UNITS.get(SensorDeviceClass(device_class), set())
     if unit not in units:
         allowed = ", ".join(sorted(str(allowed) for allowed in units if allowed))
@@ -1410,7 +1417,7 @@ class UpdateEntitySettingsTool(Tool):
             key: settings.pop(key) for key in _SENSOR_OPTIONS if key in settings
         }
         if sensor_options:
-            _check_sensor_options(entry, sensor_options)
+            _check_sensor_options(hass, entry, sensor_options)
         if (area_id := settings.get("area_id")) and ar.async_get(hass).async_get_area(
             area_id
         ) is None:
