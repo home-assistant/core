@@ -605,13 +605,8 @@ class RpcShellyLedStrip(RpcShellyLightBase):
     def effect_list(self) -> list[str]:
         """Return the list of supported effects."""
         if (
-            self.coordinator.device.initialized
-            and (
-                effects
-                := self.coordinator.config_entry.runtime_data.rpc_ledstrip_effects
-            )
-            is not None
-        ):
+            effects := self.coordinator.config_entry.runtime_data.rpc_ledstrip_effects
+        ) is not None:
             return list(effects)
 
         return []
