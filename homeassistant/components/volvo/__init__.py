@@ -16,7 +16,7 @@ from homeassistant.exceptions import (
 from homeassistant.helpers import config_validation as cv, issue_registry as ir
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.config_entry_oauth2_flow import (
-    AbstractOAuth2Implementation,
+    AbstractOAuth2BaseImplementation,
     LocalOAuth2Implementation,
     OAuth2Session,
     async_get_config_entry_implementation,
@@ -151,7 +151,7 @@ async def _async_load_supported_commands(api: VolvoCarsApi) -> list[str]:
 def _async_check_volvoid_migration(
     hass: HomeAssistant,
     entry: VolvoConfigEntry,
-    implementation: AbstractOAuth2Implementation,
+    implementation: AbstractOAuth2BaseImplementation,
 ) -> None:
     issue_id = f"volvoid_migration_{entry.entry_id}"
 
