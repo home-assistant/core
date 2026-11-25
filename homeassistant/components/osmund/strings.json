@@ -51,7 +51,7 @@
   },
   "exceptions": {
     "api_error": {
-      "message": "The Osmund API answered with an error: {error}"
+      "message": "The Osmund API answered with an error."
     },
     "cannot_connect": {
       "message": "Could not reach the Osmund API."
