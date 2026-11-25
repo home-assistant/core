@@ -3,7 +3,9 @@ rules:
   action-setup: done
   appropriate-polling:
     status: exempt
-    comment: The integration is push based and does not poll.
+    comment: |
+      Entities are push based. The hub only reads the device state every 30
+      seconds, to notice a lost connection the device never announces.
   brands: done
   common-modules: done
   config-flow-test-coverage: done
@@ -40,9 +42,9 @@ rules:
     status: exempt
     comment: The integration has no options flow.
   docs-installation-parameters: done
-  entity-unavailable: todo
+  entity-unavailable: done
   integration-owner: done
-  log-when-unavailable: todo
+  log-when-unavailable: done
   parallel-updates: todo
   reauthentication-flow:
     status: exempt
