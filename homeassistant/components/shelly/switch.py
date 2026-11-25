@@ -46,7 +46,6 @@ from .utils import (
     async_remove_orphaned_entities,
     get_device_entry_gen,
     get_rpc_channel_name,
-    get_rpc_key,
     get_virtual_component_ids,
     is_block_exclude_from_relay,
     is_rpc_exclude_from_relay,
@@ -84,7 +83,6 @@ class RpcSwitchDescription(RpcEntityDescription, SwitchEntityDescription):
     """Class to describe a RPC virtual switch."""
 
     is_on: Callable[[dict[str, Any]], bool]
-    # "{component}" in a method name is replaced by the component of the entity
     method_on: str
     method_off: str
     method_params_fn: Callable[[int | None, bool], tuple]
@@ -113,10 +111,8 @@ class RpcSwitch(ShellyRpcAttributeEntity, SwitchEntity):
             self._attr_name = get_rpc_channel_name(coordinator.device, key)
 
     def _get_method(self, name: str) -> Callable[..., Awaitable[Any]]:
-        """Return the device method, resolved for the component of the entity."""
-        method = getattr(
-            self.coordinator.device, name.format(component=get_rpc_key(self.key)[1])
-        )
+        """Return the device method."""
+        method = getattr(self.coordinator.device, name)
 
         if TYPE_CHECKING:
             assert method is not None
@@ -567,15 +563,28 @@ RPC_SWITCHES = (
         entity_class=RpcLedStripSwitch,
     ),
     RpcSwitchDescription(
-        key="in_locked",
-        components=("switch", "cover"),
+        key="switch_in_locked",
+        components=("switch",),
         translation_key="input_lock",
         entity_category=EntityCategory.CONFIG,
         entity_registry_enabled_default=False,
         removal_condition=lambda config, _status, key: "in_locked" not in config[key],
         is_on=lambda config: bool(config["in_locked"]),
-        method_on="{component}_setconfig",
-        method_off="{component}_setconfig",
+        method_on="switch_setconfig",
+        method_off="switch_setconfig",
+        method_params_fn=lambda id, value: (id, {"in_locked": value}),
+        entity_class=RpcConfigSwitch,
+    ),
+    RpcSwitchDescription(
+        key="cover_in_locked",
+        components=("cover",),
+        translation_key="input_lock",
+        entity_category=EntityCategory.CONFIG,
+        entity_registry_enabled_default=False,
+        removal_condition=lambda config, _status, key: "in_locked" not in config[key],
+        is_on=lambda config: bool(config["in_locked"]),
+        method_on="cover_setconfig",
+        method_off="cover_setconfig",
         method_params_fn=lambda id, value: (id, {"in_locked": value}),
         entity_class=RpcConfigSwitch,
     ),
