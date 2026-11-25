@@ -1,0 +1,102 @@
+# serializer version: 1
+# name: test_warning[binary_sensor.brussels_warning-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('irm_kmi', '01JIRMKMI00000000000000000')]>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.brussels_warning',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Warning',
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.SAFETY: 'safety'>,
+    'original_icon': None,
+    'original_name': 'Warning',
+    'platform': 'irm_kmi',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'warning',
+    'unique_id': 'brussels be-warning',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_warning[binary_sensor.brussels_warning-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Weather data from the Royal Meteorological Institute of Belgium meteo.be',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'safety',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Brussels Warning',
+      'warnings': list([
+        dict({
+          'ends_at': datetime.datetime(2023, 12, 28, 20, 0, tzinfo=datetime.timezone(datetime.timedelta(seconds=3600))),
+          'friendly_name': 'Fog',
+          'id': 7,
+          'is_active': True,
+          'level': 1,
+          'slug': <WarningType.FOG: 'fog'>,
+          'starts_at': datetime.datetime(2023, 12, 28, 16, 0, tzinfo=datetime.timezone(datetime.timedelta(seconds=3600))),
+          'text': 'Visibility is locally reduced to less than 200 meters.',
+        }),
+        dict({
+          'ends_at': datetime.datetime(2023, 12, 29, 12, 0, tzinfo=datetime.timezone(datetime.timedelta(seconds=3600))),
+          'friendly_name': 'Ice or snow',
+          'id': 2,
+          'is_active': False,
+          'level': 2,
+          'slug': <WarningType.ICE_OR_SNOW: 'ice_or_snow'>,
+          'starts_at': datetime.datetime(2023, 12, 29, 6, 0, tzinfo=datetime.timezone(datetime.timedelta(seconds=3600))),
+          'text': 'Roads are slippery in the morning.',
+        }),
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.brussels_warning',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_warning_from_a_recorded_forecast[antwerp_with_heat_warning.json]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Weather data from the Royal Meteorological Institute of Belgium meteo.be',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'safety',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Brussels Warning',
+      'warnings': list([
+        dict({
+          'ends_at': HAFakeDatetime(2025, 6, 23, 0, 0, tzinfo=datetime.timezone(datetime.timedelta(seconds=7200))),
+          'friendly_name': 'Heat',
+          'id': 10,
+          'is_active': True,
+          'level': 1,
+          'slug': <WarningType.HEAT: 'heat'>,
+          'starts_at': HAFakeDatetime(2025, 6, 18, 0, 0, tzinfo=datetime.timezone(datetime.timedelta(seconds=7200))),
+          'text': 'By such temperatures, measures should be taken to protect older and weaker persons by giving them more often to drink and to not let them stand or sit in direct sunlight. Be careful.',
+        }),
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.brussels_warning',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---

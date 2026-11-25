@@ -16,7 +16,7 @@ from homeassistant.components.media_player import (
     MediaPlayerService,
     MediaPlayerServiceArgument,
 )
-from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.const import TargetKey
 from homeassistant.core import (
     HomeAssistant,
     ServiceCall,
@@ -74,7 +74,7 @@ class MediaExtractor:
 
     def get_entities(self) -> list[str]:
         """Return list of entities."""
-        return self.call_data.get(ATTR_ENTITY_ID, [])  # type: ignore[no-any-return]
+        return self.call_data.get(TargetKey.ENTITY_ID, [])  # type: ignore[no-any-return]
 
     def extract_and_send(self) -> None:
         """Extract exact stream format for each entity_id and play it."""
@@ -154,11 +154,11 @@ class MediaExtractor:
             _LOGGER.error("Wrong query format: %s", stream_query)
             return
         _LOGGER.debug("Selected the following stream: %s", stream_url)
-        data = {k: v for k, v in self.call_data.items() if k != ATTR_ENTITY_ID}
+        data = {k: v for k, v in self.call_data.items() if k != TargetKey.ENTITY_ID}
         data[MediaPlayerServiceArgument.MEDIA_CONTENT_ID] = stream_url
 
         if entity_id:
-            data[ATTR_ENTITY_ID] = entity_id
+            data[TargetKey.ENTITY_ID] = entity_id
 
         self.hass.create_task(
             self.hass.services.async_call(

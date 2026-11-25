@@ -6,13 +6,7 @@ from typing import override
 from python_opensky import OpenSky, OpenSkyError, StateVector
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    ATTR_LATITUDE,
-    ATTR_LONGITUDE,
-    CONF_LATITUDE,
-    CONF_LONGITUDE,
-    CONF_RADIUS,
-)
+from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE, CONF_RADIUS
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -30,6 +24,10 @@ from .const import (
 )
 
 type OpenSkyConfigEntry = ConfigEntry[OpenSkyDataUpdateCoordinator]
+
+
+ATTR_LATITUDE = "latitude"
+ATTR_LONGITUDE = "longitude"
 
 
 class OpenSkyDataUpdateCoordinator(DataUpdateCoordinator[int]):

@@ -7,7 +7,7 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import MusicAssistantConfigEntry
+from . import MusicAssistantConfigEntry, PlatformHandlers
 from .entity import MusicAssistantEntity
 from .helpers import catch_musicassistant_error
 
@@ -30,7 +30,9 @@ async def async_setup_entry(
         )
 
     # register callback to add players when they are discovered
-    entry.runtime_data.platform_handlers.setdefault(Platform.BUTTON, add_player)
+    entry.runtime_data.platform_handlers.setdefault(
+        Platform.BUTTON, PlatformHandlers(add_player=add_player)
+    )
 
 
 class MusicAssistantFavoriteButton(MusicAssistantEntity, ButtonEntity):

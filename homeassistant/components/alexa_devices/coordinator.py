@@ -13,6 +13,7 @@ from aioamazondevices.exceptions import (
     CannotConnect,
     CannotRetrieveData,
     CannotSetFeature,
+    InvalidInputError,
     NoOnlineDevicesError,
 )
 from aioamazondevices.structures import (
@@ -23,6 +24,7 @@ from aioamazondevices.structures import (
     AmazonListItem,
     AmazonMediaState,
     AmazonSaveDataConfig,
+    AmazonSchedule,
     AmazonVocalRecord,
     AmazonVolumeState,
 )
@@ -35,9 +37,11 @@ from homeassistant.exceptions import (
     ConfigEntryAuthFailed,
     ConfigEntryNotReady,
     HomeAssistantError,
+    ServiceValidationError,
 )
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.debounce import Debouncer
+from homeassistant.helpers.storage import STORAGE_DIR
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import slugify
 
@@ -76,6 +80,11 @@ async def alexa_api_call(
             translation_domain=DOMAIN,
             translation_key="cannot_retrieve_data_with_error",
             translation_placeholders={"error": repr(err)},
+        ) from err
+    except InvalidInputError as err:
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="invalid_user_input",
         ) from err
     except CannotSetFeature as err:
         raise HomeAssistantError(
@@ -147,7 +156,7 @@ class AmazonDevicesCoordinator(DataUpdateCoordinator[dict[str, AmazonDevice]]):
             entry.data[CONF_PASSWORD],
             login_data=entry.data[CONF_LOGIN_DATA],
             save_data=AmazonSaveDataConfig(
-                path=Path(hass.config.path(DOMAIN)),
+                path=Path(hass.config.path(STORAGE_DIR, DOMAIN)),
             ),
         )
         device_registry = dr.async_get(hass)
@@ -195,6 +204,10 @@ class AmazonDevicesCoordinator(DataUpdateCoordinator[dict[str, AmazonDevice]]):
         self._dnd_states: dict[str, bool] = {}
         self.api.on_dnd_event.append(self.dnd_event_handler)
         self.api.on_dnd_event.freeze()
+
+        self._notifications: dict[str, dict[str, AmazonSchedule]] = {}
+        self.api.on_notification_event.append(self.notification_event_handler)
+        self.api.on_notification_event.freeze()
 
         self.api.on_sensor_event.append(self.sensor_event_handler)
         self.api.on_sensor_event.freeze()
@@ -261,7 +274,11 @@ class AmazonDevicesCoordinator(DataUpdateCoordinator[dict[str, AmazonDevice]]):
 
     async def _async_sync_on_device_list_change(self) -> None:
         """Sync per-device state on first refresh and after the device list changes."""
-        for sync_call in (self.sync_dnd_state, self.sync_media_state):
+        for sync_call in (
+            self.sync_dnd_state,
+            self.sync_media_state,
+            self.sync_notifications,
+        ):
             try:
                 await sync_call()
             except ConfigEntryNotReady as err:
@@ -407,6 +424,11 @@ class AmazonDevicesCoordinator(DataUpdateCoordinator[dict[str, AmazonDevice]]):
         """Vocal records of devices."""
         return self._vocal_records
 
+    async def sync_notifications(self) -> None:
+        """Sync notifications."""
+        async with alexa_config_entry_errors():
+            await self.api.sync_notifications()
+
     async def sync_media_state(self) -> None:
         """Sync media state."""
         async with alexa_config_entry_errors():
@@ -454,6 +476,18 @@ class AmazonDevicesCoordinator(DataUpdateCoordinator[dict[str, AmazonDevice]]):
     def dnd_states(self) -> Mapping[str, bool]:
         """DND states of devices."""
         return self._dnd_states
+
+    async def notification_event_handler(
+        self, notifications: dict[str, dict[str, AmazonSchedule]]
+    ) -> None:
+        """Handle pushed notification events."""
+        self._notifications = notifications
+        self.async_update_listeners()
+
+    @property
+    def notifications(self) -> dict[str, dict[str, AmazonSchedule]]:
+        """Notifications of devices."""
+        return self._notifications
 
     async def sensor_event_handler(self) -> None:
         """Handle pushed sensor events."""

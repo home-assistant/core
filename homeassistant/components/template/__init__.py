@@ -13,6 +13,7 @@ from homeassistant.helpers.typing import ConfigType
 from .const import CONF_ADDITIONAL_OPTIONS, CONF_MAX, CONF_MIN, CONF_STEP, DOMAIN
 from .helpers import async_get_blueprints, process_config
 from .image_cache import async_prune_image_cache, async_remove_entry_image_cache
+from .repairs import async_update_deprecated_template_options_issues
 from .services import async_setup_services
 
 _LOGGER = logging.getLogger(__name__)
@@ -37,6 +38,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     # Before any image entity is added, so no cache file is in use.
     await async_prune_image_cache(hass)
+
+    async_update_deprecated_template_options_issues(hass, config.get(DOMAIN))
 
     if DOMAIN in config:
         await process_config(hass, config)

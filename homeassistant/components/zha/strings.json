@@ -1751,7 +1751,17 @@
         "name": "Humidity alarm"
       },
       "hvac_action": {
-        "name": "HVAC action"
+        "name": "HVAC action",
+        "state": {
+          "cooling": "[%key:component::climate::entity_component::_::state_attributes::hvac_action::state::cooling%]",
+          "defrosting": "[%key:component::climate::entity_component::_::state_attributes::hvac_action::state::defrosting%]",
+          "drying": "[%key:component::climate::entity_component::_::state_attributes::hvac_action::state::drying%]",
+          "fan": "[%key:component::climate::entity_component::_::state_attributes::hvac_action::state::fan%]",
+          "heating": "[%key:component::climate::entity_component::_::state_attributes::hvac_action::state::heating%]",
+          "idle": "[%key:common::state::idle%]",
+          "off": "[%key:common::state::off%]",
+          "preheating": "[%key:component::climate::entity_component::_::state_attributes::hvac_action::state::preheating%]"
+        }
       },
       "instantaneous_demand": {
         "name": "Instantaneous demand"
@@ -2375,11 +2385,26 @@
       "window_open": {
         "name": "Window open"
       }
+    },
+    "update": {
+      "release_notes_messages": {
+        "battery_powered": "Battery powered devices can sometimes take multiple hours to update and you may need to wake the device for the update to begin.",
+        "network_reliability": "If you are having issues updating a specific device, make sure that you've eliminated [common environmental issues]({docs_url}) that could be affecting network reliability. OTA updates require a reliable network."
+      }
     }
   },
   "exceptions": {
+    "device_not_found": {
+      "message": "Device {ieee} was not found."
+    },
+    "group_not_found": {
+      "message": "Group {group_id} was not found."
+    },
     "no_gateway": {
       "message": "ZHA is not loaded, so this action cannot be performed."
+    },
+    "no_warning_device": {
+      "message": "Device {ieee} is not an IAS warning device, so this action cannot be performed."
     },
     "not_zigbee_device": {
       "message": "Device {ieee} is not a Zigbee device, so this action cannot be performed."
@@ -2689,16 +2714,6 @@
         }
       },
       "name": "Permit"
-    },
-    "reconfigure_device": {
-      "description": "Reconfigures a ZHA device (heal device). Use this if you are having issues with the device. If the device in question is a battery-powered device, ensure it is awake and accepting commands when you use this action.",
-      "fields": {
-        "ieee": {
-          "description": "IEEE address of the device to reconfigure.",
-          "name": "[%key:component::zha::services::permit::fields::ieee::name%]"
-        }
-      },
-      "name": "Reconfigure device"
     },
     "remove": {
       "description": "Removes a node from the Zigbee network.",

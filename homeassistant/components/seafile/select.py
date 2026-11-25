@@ -10,7 +10,6 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from .const import CONF_LIBRARY_ID, SUBENTRY_TYPE_LIBRARY
 from .coordinator import SeafileConfigEntry
 from .entity import SeafileEntity
-from .utils import handle_seafile_errors
 
 PARALLEL_UPDATES = 0
 
@@ -92,9 +91,4 @@ class SeafileHistorySelect(SeafileEntity, SelectEntity):
             HISTORY_KEEP_NONE: KEEP_DAYS_NONE,
             HISTORY_LIMITED: DEFAULT_KEEP_DAYS,
         }[option]
-        async with handle_seafile_errors():
-            keep_days = await self.coordinator.client.set_library_history_limit(
-                self.library_id, keep_days
-            )
-        self.coordinator.data.history_limits[self.library_id] = keep_days
-        self.async_write_ha_state()
+        await self.coordinator.async_set_history_limit(self.library_id, keep_days)

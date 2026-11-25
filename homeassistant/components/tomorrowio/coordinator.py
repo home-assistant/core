@@ -64,6 +64,9 @@ from .const import (
 
 type TomorrowioConfigEntry = ConfigEntry[TomorrowioDataUpdateCoordinator]
 
+# Forecast data does not change often enough to justify polling faster
+MIN_UPDATE_INTERVAL = timedelta(minutes=5)
+
 
 def calculate_update_interval(
     num_locations: int, num_api_requests: int, max_requests_per_day: int
@@ -73,24 +76,25 @@ def calculate_update_interval(
     Calculate the interval to not exceed the allowed number of requests for all
     configured locations. Divide 90% of max_requests by the number of API calls
     because we want a buffer in the number of API calls left at the end of the
-    day.
+    day. Never poll more often than MIN_UPDATE_INTERVAL.
     """
     minutes = ceil(
         (24 * 60 * num_locations * num_api_requests) / (max_requests_per_day * 0.9)
     )
+    update_interval = max(timedelta(minutes=minutes), MIN_UPDATE_INTERVAL)
     LOGGER.debug(
         (
             "Number of locations: %s\n"
             "Number of API Requests per call: %s\n"
             "Max requests per day: %s\n"
-            "Update interval: %s minutes"
+            "Update interval: %s"
         ),
         num_locations,
         num_api_requests,
         max_requests_per_day,
-        minutes,
+        update_interval,
     )
-    return timedelta(minutes=minutes)
+    return update_interval
 
 
 class TomorrowioDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
@@ -111,11 +115,6 @@ class TomorrowioDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             LOGGER,
             config_entry=config_entry,
             name=f"{DOMAIN}_{api.api_key_masked}",
-            update_interval=calculate_update_interval(
-                len(config_entry.get_subentries_of_type(SUBENTRY_TYPE_LOCATION)),
-                api.num_api_requests,
-                api.max_requests_per_day,
-            ),
         )
 
     @override
@@ -192,4 +191,10 @@ class TomorrowioDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             ) as error:
                 raise UpdateFailed from error
 
+        # The request count and daily limit are only known after an API call
+        self.update_interval = calculate_update_interval(
+            len(subentries),
+            self._api.num_api_requests,
+            self._api.max_requests_per_day,
+        )
         return data

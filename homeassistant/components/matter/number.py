@@ -89,10 +89,12 @@ class MatterRangeNumberEntityDescription(
     # attribute descriptors to get the min and max value
     min_attribute: type[ClusterAttributeDescriptor] | None = None
     max_attribute: type[ClusterAttributeDescriptor]
+    step_attribute: type[ClusterAttributeDescriptor] | None = None
 
-    # Functions to format the min and max values for display or conversion
+    # Functions to format the min, max and step values for display or conversion
     format_min_value: Callable[[float], float] = lambda x: x
     format_max_value: Callable[[float], float] = lambda x: x
+    format_step_value: Callable[[float], float] = lambda x: x
 
     # command: a custom callback to create the command to send to the device
     # the callback's argument will be the converted device value from ha_to_device
@@ -176,6 +178,16 @@ class MatterRangeNumber(MatterEntity, NumberEntity):
         if max_value is not None:
             max_convert = self.entity_description.format_max_value
             self._attr_native_max_value = max_convert(max_value)
+
+        # step is optional on the cluster, the NumberEntity default of 1 applies otherwise
+        if self.entity_description.step_attribute:
+            step_value = self.get_matter_attribute_value(
+                self.entity_description.step_attribute
+            )
+            # Step is 1 to (Max - Min) per spec, ignore out-of-range values such as 0
+            if step_value and step_value > 0:
+                step_convert = self.entity_description.format_step_value
+                self._attr_native_step = step_convert(step_value)
 
 
 class MatterStartUpColorTemperatureNumber(MatterRangeNumber):
@@ -661,6 +673,8 @@ DISCOVERY_SCHEMAS = [
             format_max_value=lambda x: x / 100,
             min_attribute=clusters.TemperatureControl.Attributes.MinTemperature,
             max_attribute=clusters.TemperatureControl.Attributes.MaxTemperature,
+            step_attribute=clusters.TemperatureControl.Attributes.Step,
+            format_step_value=lambda x: x / 100,
             mode=NumberMode.SLIDER,
         ),
         entity_class=MatterRangeNumber,
@@ -669,6 +683,7 @@ DISCOVERY_SCHEMAS = [
             clusters.TemperatureControl.Attributes.MinTemperature,
             clusters.TemperatureControl.Attributes.MaxTemperature,
         ),
+        optional_attributes=(clusters.TemperatureControl.Attributes.Step,),
     ),
     MatterDiscoverySchema(
         platform=Platform.NUMBER,

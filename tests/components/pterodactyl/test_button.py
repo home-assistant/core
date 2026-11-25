@@ -8,14 +8,9 @@ import pytest
 from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
+from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, ButtonService
 from homeassistant.components.pterodactyl.api import PterodactylCommand
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    STATE_UNAVAILABLE,
-    STATE_UNKNOWN,
-    Platform,
-)
+from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN, Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
@@ -113,8 +108,8 @@ async def test_button_press(
 
         await hass.services.async_call(
             BUTTON_DOMAIN,
-            SERVICE_PRESS,
-            {ATTR_ENTITY_ID: entity_id},
+            ButtonService.PRESS,
+            {TargetKey.ENTITY_ID: entity_id},
             blocking=True,
         )
 
@@ -179,8 +174,8 @@ async def test_button_press_error(
         with pytest.raises(HomeAssistantError) as err:
             await hass.services.async_call(
                 BUTTON_DOMAIN,
-                SERVICE_PRESS,
-                {ATTR_ENTITY_ID: entity_id},
+                ButtonService.PRESS,
+                {TargetKey.ENTITY_ID: entity_id},
                 blocking=True,
             )
 

@@ -1,6 +1,6 @@
 """The tests for sensor recorder platform."""
 
-from collections.abc import Generator
+from collections.abc import Callable, Generator
 from datetime import timedelta
 import re
 from typing import Any, Literal
@@ -861,25 +861,7 @@ async def test_statistics_duplicated(
         caplog.clear()
 
 
-# Integration frame mocked because of deprecation warnings about missing
-# unit_class, can be removed in HA Core 2025.11
-@pytest.mark.parametrize("integration_frame_path", ["custom_components/my_integration"])
-@pytest.mark.usefixtures("mock_integration_frame")
 @pytest.mark.parametrize("last_reset_str", ["2022-01-01T00:00:00+02:00", None])
-@pytest.mark.parametrize(
-    ("external_metadata_extra"),
-    [
-        {},
-        {"unit_class": "energy"},
-    ],
-)
-@pytest.mark.parametrize(
-    ("external_metadata_extra_2"),
-    [
-        {"has_mean": False},
-        {"mean_type": StatisticMeanType.NONE},
-    ],
-)
 @pytest.mark.parametrize(
     ("source", "statistic_id", "import_fn"),
     [
@@ -892,8 +874,6 @@ async def test_import_statistics(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
     caplog: pytest.LogCaptureFixture,
-    external_metadata_extra: dict[str, str],
-    external_metadata_extra_2: dict[str, Any],
     source,
     statistic_id,
     import_fn,
@@ -924,17 +904,15 @@ async def test_import_statistics(
         "sum": 3,
     }
 
-    external_metadata = (
-        {
-            "has_sum": True,
-            "name": "Total imported energy",
-            "source": source,
-            "statistic_id": statistic_id,
-            "unit_of_measurement": "kWh",
-        }
-        | external_metadata_extra
-        | external_metadata_extra_2
-    )
+    external_metadata = {
+        "has_sum": True,
+        "mean_type": StatisticMeanType.NONE,
+        "name": "Total imported energy",
+        "source": source,
+        "statistic_id": statistic_id,
+        "unit_class": "energy",
+        "unit_of_measurement": "kWh",
+    }
 
     import_fn(hass, external_metadata, (external_statistics1, external_statistics2))
     await async_wait_recording_done(hass)
@@ -1277,6 +1255,43 @@ async def test_import_statistics_batch(
     assert [tuple(row) for row in rows] == expected
 
 
+@pytest.mark.parametrize("missing_key", ["mean_type", "unit_class"])
+@pytest.mark.parametrize(
+    ("source", "statistic_id", "import_fn"),
+    [
+        ("test", "test:total_energy_import", async_add_external_statistics),
+        ("recorder", "sensor.total_energy_import", async_import_statistics),
+    ],
+)
+async def test_import_statistics_missing_metadata_key(
+    hass: HomeAssistant,
+    setup_recorder: None,
+    missing_key: str,
+    source: str,
+    statistic_id: str,
+    import_fn: Callable[..., None],
+) -> None:
+    """Test importing statistics without mean_type or unit_class fails."""
+    period = dt_util.utcnow().replace(minute=0, second=0, microsecond=0)
+    metadata = {
+        "has_sum": True,
+        "mean_type": StatisticMeanType.NONE,
+        "name": "Total imported energy",
+        "source": source,
+        "statistic_id": statistic_id,
+        "unit_class": "energy",
+        "unit_of_measurement": "kWh",
+    }
+    del metadata[missing_key]
+
+    with pytest.raises(
+        HomeAssistantError, match=f"Statistics metadata must specify {missing_key}"
+    ):
+        import_fn(hass, metadata, ({"start": period, "state": 0, "sum": 2},))
+    await async_wait_recording_done(hass)
+    assert get_metadata(hass, statistic_ids={statistic_id}) == {}
+
+
 async def test_import_statistics_errors(
     hass: HomeAssistant, setup_recorder: None, caplog: pytest.LogCaptureFixture
 ) -> None:
@@ -1366,10 +1381,6 @@ async def test_import_statistics_errors(
     assert get_metadata(hass, statistic_ids={"sensor.total_energy_import"}) == {}
 
 
-# Integration frame mocked because of deprecation warnings about missing
-# unit_class, can be removed in HA Core 2025.11
-@pytest.mark.parametrize("integration_frame_path", ["custom_components/my_integration"])
-@pytest.mark.usefixtures("mock_integration_frame")
 @pytest.mark.parametrize(
     (
         "requested_new_unit",
@@ -1379,11 +1390,8 @@ async def test_import_statistics_errors(
         "new_display_unit",
     ),
     [
-        ("dogs", {}, "dogs", None, "dogs"),
         ("dogs", {"new_unit_class": None}, "dogs", None, "dogs"),
-        (None, {}, None, "unitless", None),
         (None, {"new_unit_class": "unitless"}, None, "unitless", None),
-        ("W", {}, "W", "power", "kW"),
         ("W", {"new_unit_class": "power"}, "W", "power", "kW"),
         # Note: Display unit is guessed even if unit_class is None
         ("W", {"new_unit_class": None}, "W", None, "kW"),
@@ -1481,6 +1489,11 @@ async def test_update_statistics_metadata(
         "error_message",
     ),
     [
+        (
+            "dogs",
+            {},
+            "new_unit_class must be specified with new_unit_of_measurement",
+        ),
         ("dogs", {"new_unit_class": "cats"}, "Unsupported unit_class: 'cats'"),
         (
             "dogs",
@@ -1677,7 +1690,7 @@ async def test_statistics_during_period_stream_error_falls_back(
                 }
             ],
         }
-    assert "Error reading statistics, retrying" in caplog.text
+    assert "Error reading rows, retrying" in caplog.text
 
 
 @pytest.mark.parametrize(
