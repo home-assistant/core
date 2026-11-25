@@ -76,6 +76,16 @@ class BambuLabStreamCamera(BambuLabCamera):
         return True
 
     @override
+    async def async_camera_image(
+        self, width: int | None = None, height: int | None = None
+    ) -> bytes | None:
+        """Return an image from the video stream."""
+        stream = await self.async_create_stream()
+        return (
+            await stream.async_get_image(width=width, height=height) if stream else None
+        )
+
+    @override
     async def stream_source(self) -> str | None:
         """Return the address of the video stream."""
         return self._client.camera_stream_url

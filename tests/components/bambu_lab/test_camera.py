@@ -7,6 +7,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 from aiobambulab import BambuLabConnectionError
 import pytest
 from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
+from pytest_homeassistant.typing import ClientSessionGenerator
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.camera import (
@@ -166,4 +167,28 @@ async def test_image_from_stream(
         image = await async_get_image(hass, CAMERA)
 
     assert image.content == b"frame"
+    assert mock_create_stream.call_args.args[1] == STREAM_URL
+
+
+@pytest.mark.usefixtures("mock_stream_camera")
+async def test_mjpeg_from_stream(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test the MJPEG stream of a camera with a video stream has its images."""
+    await setup_integration(hass, mock_config_entry)
+    client = await hass_client()
+
+    with patch(
+        "homeassistant.components.camera.entity.create_stream"
+    ) as mock_create_stream:
+        mock_create_stream.return_value.async_get_image = AsyncMock(
+            return_value=b"frame"
+        )
+        response = await client.get(f"/api/camera_proxy_stream/{CAMERA}")
+        chunk = await response.content.readuntil(b"frame")
+        response.close()
+
+    assert chunk.endswith(b"frame")
     assert mock_create_stream.call_args.args[1] == STREAM_URL

@@ -5,6 +5,7 @@
   "codeowners": ["@joostlek", "@piitaya"],
   "config_flow": true,
   "connectivity": ["network"],
+  "dependencies": ["stream"],
   "documentation": "https://www.home-assistant.io/integrations/bambu_lab",
   "integration_type": "device",
   "iot_class": "local_push",
