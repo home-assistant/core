@@ -197,24 +197,32 @@ async def test_get_trace_with_values_json_cannot_hold(
     hass.data[DATA_TRACE].clear()
 
 
-@pytest.mark.parametrize("domain", ["automation", "script"])
+@pytest.mark.parametrize(
+    ("domain", "config"),
+    [
+        (
+            "automation",
+            {
+                "automation": [
+                    {"id": "sun", "alias": "Sun", "triggers": [], "actions": []}
+                ]
+            },
+        ),
+        ("script", {"script": {"sun": {"sequence": []}}}),
+    ],
+)
 async def test_restored_traces(
     hass: HomeAssistant,
     hass_storage: dict[str, Any],
     llm_context: llm.LLMContext,
     domain: str,
+    config: dict[str, Any],
 ) -> None:
     """Test listing and getting runs restored from storage."""
     hass.set_state(CoreState.not_running)
     hass_storage["trace.saved_traces"] = await async_load_json_object_fixture(
         hass, f"{domain}_saved_traces.json", "trace"
     )
-    if domain == "automation":
-        config = {
-            "automation": [{"id": "sun", "alias": "Sun", "triggers": [], "actions": []}]
-        }
-    else:
-        config = {"script": {"sun": {"sequence": []}}}
     assert await async_setup_component(hass, domain, config)
     await hass.async_start()
     await hass.async_block_till_done()

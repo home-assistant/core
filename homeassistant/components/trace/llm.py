@@ -25,10 +25,9 @@ from homeassistant.helpers.llm import (
 from homeassistant.util.json import JsonObjectType
 
 from . import DOMAIN
-from .const import DATA_TRACE
+from .const import DATA_TRACE, TRACE_DOMAINS
 from .models import BaseTrace
 from .util import async_restore_traces
-from .websocket_api import TRACE_DOMAINS
 
 
 def _domain_traces(hass: HomeAssistant, domain: str) -> Iterator[BaseTrace]:
