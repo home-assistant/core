@@ -1,7 +1,7 @@
 """LLM tools for the config integration."""
 
 from collections import defaultdict
-from collections.abc import Iterable, Iterator
+from collections.abc import Iterable, Iterator, Mapping
 from contextlib import suppress
 import heapq
 from typing import Any, Literal, override
@@ -10,6 +10,12 @@ import probatio
 
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.llm import LLMTools, flow as llm_flow
+from homeassistant.components.sensor import (
+    DEVICE_CLASS_UNITS,
+    DOMAIN as SENSOR_DOMAIN,
+    UNIT_CONVERTERS,
+    SensorDeviceClass,
+)
 from homeassistant.config_entries import (
     ConfigEntry,
     ConfigEntryState,
@@ -17,7 +23,7 @@ from homeassistant.config_entries import (
     ConfigSubentry,
     SubentryFlowResult,
 )
-from homeassistant.const import ATTR_RESTORED
+from homeassistant.const import ATTR_RESTORED, CONF_UNIT_OF_MEASUREMENT
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import DependencyError, HomeAssistantError
 from homeassistant.generated.integration_categories import INTEGRATION_CATEGORIES
@@ -1227,7 +1233,7 @@ def _format_entity_settings(
     hass: HomeAssistant, entry: er.RegistryEntry
 ) -> JsonObjectType:
     """Format the settings of an entity for LLM consumption."""
-    return {
+    result: JsonObjectType = {
         "entity_id": entry.entity_id,
         "full_name": er.async_get_full_entity_name(hass, entry),
         "name": entry.name,
@@ -1243,9 +1249,37 @@ def _format_entity_settings(
         "labels": list[JsonValueType](sorted(entry.labels)),
         "platform": entry.platform,
     }
+    if entry.domain == SENSOR_DOMAIN:
+        sensor_options: Mapping[str, Any] = entry.options.get(SENSOR_DOMAIN, {})
+        for key in _SENSOR_OPTIONS:
+            result[key] = sensor_options.get(key)
+    return result
 
 
 _NULLABLE_STRING = probatio.Any(None, _NON_EMPTY_STRING)
+_SENSOR_OPTIONS = (CONF_UNIT_OF_MEASUREMENT, "display_precision")
+
+
+def _check_sensor_options(entry: er.RegistryEntry, options: dict[str, Any]) -> None:
+    """Raise if the sensor options do not apply to the entity."""
+    if entry.domain != SENSOR_DOMAIN:
+        raise HomeAssistantError(
+            f"Only sensors have a unit and display precision, not '{entry.entity_id}'."
+        )
+    if (unit := options.get(CONF_UNIT_OF_MEASUREMENT)) is None:
+        return
+    # The sensor converts with the device class of the integration, not the one
+    # set in the registry
+    device_class = entry.original_device_class
+    units: set[Any] = set()
+    if device_class is not None and device_class in UNIT_CONVERTERS:
+        units = DEVICE_CLASS_UNITS.get(SensorDeviceClass(device_class), set())
+    if unit not in units:
+        allowed = ", ".join(sorted(str(allowed) for allowed in units if allowed))
+        raise HomeAssistantError(
+            f"The unit of '{entry.entity_id}' cannot be '{unit}'."
+            + (f" Allowed units: {allowed}." if allowed else "")
+        )
 
 
 class GetEntitySettingsTool(Tool):
@@ -1347,6 +1381,20 @@ class UpdateEntitySettingsTool(Tool):
                 "labels",
                 description="The label_ids. This replaces all labels.",
             ): [_NON_EMPTY_STRING],
+            probatio.Optional(
+                CONF_UNIT_OF_MEASUREMENT,
+                description=(
+                    "Only for sensors. The unit to show the state in, like 'kWh'. "
+                    "null uses the default unit of the sensor."
+                ),
+            ): _NULLABLE_STRING,
+            probatio.Optional(
+                "display_precision",
+                description=(
+                    "Only for sensors. The number of decimals to show. null uses "
+                    "the default."
+                ),
+            ): probatio.Any(None, probatio.All(int, probatio.Range(min=0))),
         }
     )
 
@@ -1358,6 +1406,11 @@ class UpdateEntitySettingsTool(Tool):
         settings = self.parameters(tool_input.tool_args)
         entity_id = settings.pop("entity_id")
         entry = _get_entity_entry(hass, entity_id)
+        sensor_options = {
+            key: settings.pop(key) for key in _SENSOR_OPTIONS if key in settings
+        }
+        if sensor_options:
+            _check_sensor_options(entry, sensor_options)
         if (area_id := settings.get("area_id")) and ar.async_get(hass).async_get_area(
             area_id
         ) is None:
@@ -1379,10 +1432,22 @@ class UpdateEntitySettingsTool(Tool):
             ]
 
         was_disabled = entry.disabled_by is not None
+        registry = er.async_get(hass)
         try:
-            entry = er.async_get(hass).async_update_entity(entity_id, **settings)
+            entry = registry.async_update_entity(entity_id, **settings)
         except ValueError as err:
             raise HomeAssistantError(str(err)) from err
+        if sensor_options:
+            # The registry replaces all options of the domain
+            options = dict(entry.options.get(SENSOR_DOMAIN, {}))
+            for key, value in sensor_options.items():
+                if value is None:
+                    options.pop(key, None)
+                else:
+                    options[key] = value
+            entry = registry.async_update_entity_options(
+                entry.entity_id, SENSOR_DOMAIN, options or None
+            )
 
         result = _format_entity_settings(hass, entry)
         if was_disabled and entry.disabled_by is None:
