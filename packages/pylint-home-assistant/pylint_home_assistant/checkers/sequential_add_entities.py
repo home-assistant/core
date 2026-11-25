@@ -1,7 +1,9 @@
 """Checker for sequential async_add_entities calls.
 
 Multiple sequential ``async_add_entities()`` calls should be grouped into a
-single call, so all entities are added to the platform in one go.
+single call, so all entities are added to the platform in one go. Calls are
+sequential when only statements that can't suspend or leave the function run
+between them, also when the later call is nested in an ``if`` or ``with``.
 
 Calls with different arguments besides the entities (for example a different
 ``config_subentry_id`` or ``update_before_add``) cannot be grouped and are not
@@ -20,6 +22,18 @@ PLATFORM_SETUP_FUNCTIONS = {
     "async_setup_platform",
     "setup_platform",
 }
+
+# Grouping calls across these changes when (or whether) entities are added
+BARRIER_NODES = (
+    nodes.Await,
+    nodes.Yield,
+    nodes.YieldFrom,
+    nodes.Return,
+    nodes.Raise,
+    nodes.Break,
+    nodes.Continue,
+)
+SCOPE_NODES = (nodes.FunctionDef, nodes.Lambda, nodes.ClassDef)
 
 
 def _get_add_entities_call(node: nodes.NodeNG) -> nodes.Call | None:
@@ -47,6 +61,22 @@ def _get_add_entities_call(node: nodes.NodeNG) -> nodes.Call | None:
         return None
 
     return call
+
+
+def _contains_add_entities_call(node: nodes.NodeNG) -> bool:
+    """Return whether *node* contains an ``async_add_entities(...)`` statement."""
+    return any(
+        _get_add_entities_call(expr) is not None
+        for expr in node.nodes_of_class(nodes.Expr, skip_klass=SCOPE_NODES)
+    )
+
+
+def _is_barrier(node: nodes.NodeNG) -> bool:
+    """Return whether *node* can suspend or leave the function."""
+    return (
+        next(node.nodes_of_class(BARRIER_NODES, skip_klass=SCOPE_NODES), None)
+        is not None
+    )
 
 
 def _extra_arguments(call: nodes.Call) -> list[str] | None:
@@ -99,10 +129,13 @@ class SequentialAddEntitiesChecker(BaseChecker):
 
     visit_asyncfunctiondef = visit_functiondef
 
-    def _check_body(self, body: list[nodes.NodeNG]) -> None:
-        """Check a list of statements for sequential async_add_entities calls."""
-        prev_arguments: list[str] | None = None
+    def _check_body(
+        self, body: list[nodes.NodeNG], prev_arguments: list[str] | None = None
+    ) -> None:
+        """Check a list of statements for sequential async_add_entities calls.
 
+        *prev_arguments* are the arguments of a call that precedes the block.
+        """
         for stmt in body:
             if (call := _get_add_entities_call(stmt)) is not None:
                 arguments = _extra_arguments(call)
@@ -115,23 +148,42 @@ class SequentialAddEntitiesChecker(BaseChecker):
                 prev_arguments = arguments
                 continue
 
-            prev_arguments = None
+            # Defining a nested function runs none of its body
+            if isinstance(stmt, SCOPE_NODES):
+                continue
 
-            # Recurse into control flow blocks (but not nested functions)
+            if not _contains_add_entities_call(stmt):
+                if _is_barrier(stmt):
+                    prev_arguments = None
+                continue
+
+            # A preceding call carries into branches, but not into loops, which
+            # can run the nested call more than once
             if isinstance(stmt, nodes.If):
-                self._check_body(stmt.body)
-                self._check_body(stmt.orelse)
+                carried = None if _is_barrier(stmt.test) else prev_arguments
+                self._check_body(stmt.body, carried)
+                self._check_body(stmt.orelse, carried)
             elif isinstance(stmt, nodes.Try):
-                self._check_body(stmt.body)
+                self._check_body(stmt.body, prev_arguments)
                 for handler in stmt.handlers:
                     self._check_body(handler.body)
                 self._check_body(stmt.orelse)
                 self._check_body(stmt.finalbody)
-            elif isinstance(stmt, (nodes.With, nodes.AsyncWith)):
+            elif isinstance(stmt, nodes.AsyncWith):
                 self._check_body(stmt.body)
+            elif isinstance(stmt, nodes.With):
+                carried = (
+                    None
+                    if any(_is_barrier(item) for item, _ in stmt.items)
+                    else prev_arguments
+                )
+                self._check_body(stmt.body, carried)
             elif isinstance(stmt, (nodes.For, nodes.AsyncFor, nodes.While)):
                 self._check_body(stmt.body)
                 self._check_body(stmt.orelse)
+
+            # Which nested calls ran is only known at runtime
+            prev_arguments = None
 
 
 def register(linter: PyLinter) -> None:

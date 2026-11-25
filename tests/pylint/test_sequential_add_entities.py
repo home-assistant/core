@@ -35,21 +35,84 @@ async def async_setup_entry(hass, entry, async_add_entities):
             """
 async def async_setup_entry(hass, entry, async_add_entities):
     async_add_entities([SensorA()])
-    coordinator = entry.runtime_data
-    async_add_entities([SensorB(coordinator)])
+    await coordinator.async_refresh()
+    async_add_entities([SensorB()])
 """,
             INTEGRATION_MODULE,
-            id="separated_by_other_statement",
+            id="separated_by_await",
+        ),
+        pytest.param(
+            """
+async def async_setup_entry(hass, entry, async_add_entities):
+    async_add_entities([SensorA()])
+    if not entry.data["extra"]:
+        return
+    async_add_entities([SensorB()])
+""",
+            INTEGRATION_MODULE,
+            id="separated_by_early_return",
+        ),
+        pytest.param(
+            """
+async def async_setup_entry(hass, entry, async_add_entities):
+    async_add_entities([SensorA()])
+    if await coordinator.async_has_extra():
+        async_add_entities([SensorB()])
+""",
+            INTEGRATION_MODULE,
+            id="condition_with_await",
         ),
         pytest.param(
             """
 async def async_setup_entry(hass, entry, async_add_entities):
     async_add_entities([SensorA()])
     if entry.data["extra"]:
+        await coordinator.async_refresh()
         async_add_entities([SensorB()])
 """,
             INTEGRATION_MODULE,
-            id="separated_by_control_flow",
+            id="await_in_branch_before_call",
+        ),
+        pytest.param(
+            """
+async def async_setup_entry(hass, entry, async_add_entities):
+    if entry.data["extra"]:
+        async_add_entities([SensorA()])
+    async_add_entities([SensorB()])
+""",
+            INTEGRATION_MODULE,
+            id="call_after_branch",
+        ),
+        pytest.param(
+            """
+async def async_setup_entry(hass, entry, async_add_entities):
+    async_add_entities([SensorA()])
+    for device in coordinator.data.devices:
+        async_add_entities([SensorB(device)])
+""",
+            INTEGRATION_MODULE,
+            id="call_in_loop",
+        ),
+        pytest.param(
+            """
+async def async_setup_entry(hass, entry, async_add_entities):
+    async_add_entities([SensorA()])
+    async with lock:
+        async_add_entities([SensorB()])
+""",
+            INTEGRATION_MODULE,
+            id="inside_async_with",
+        ),
+        pytest.param(
+            """
+async def async_setup_entry(hass, entry, async_add_entities):
+    try:
+        async_add_entities([SensorA()])
+    except ValueError:
+        async_add_entities([SensorB()])
+""",
+            INTEGRATION_MODULE,
+            id="call_in_except_handler",
         ),
         pytest.param(
             """
@@ -273,6 +336,103 @@ async def async_setup_entry(hass, entry, async_add_entities):
             [6],
             "async_add_entities",
             id="nested_callback",
+        ),
+        pytest.param(
+            """
+async def async_setup_entry(hass, entry, async_add_entities):
+    async_add_entities([SensorA()])
+    coordinator = entry.runtime_data
+    async_add_entities([SensorB(coordinator)])
+""",
+            [5],
+            "async_add_entities",
+            id="separated_by_other_statement",
+        ),
+        pytest.param(
+            """
+async def async_setup_entry(hass, entry, async_add_entities):
+    async_add_entities([SensorA()])
+    if entry.data["extra"]:
+        async_add_entities([SensorB()])
+""",
+            [5],
+            "async_add_entities",
+            id="inside_if_after_call",
+        ),
+        pytest.param(
+            """
+async def async_setup_entry(hass, entry, async_add_entities):
+    async_add_entities([SensorA()])
+    if entry.data["extra"]:
+        async_add_entities([SensorB()])
+    else:
+        async_add_entities([SensorC()])
+""",
+            [5, 7],
+            "async_add_entities",
+            id="inside_if_and_else_after_call",
+        ),
+        pytest.param(
+            """
+async def async_setup_entry(hass, entry, async_add_entities):
+    async_add_entities([SensorA()])
+    screensaver = coordinator.data.screensaver
+    if screensaver and screensaver.modes:
+        async_add_entities([SensorB()])
+""",
+            [6],
+            "async_add_entities",
+            id="inside_if_after_other_statement",
+        ),
+        pytest.param(
+            """
+async def async_setup_entry(hass, entry, async_add_entities):
+    async_add_entities([SensorA()])
+    with suppress(KeyError):
+        async_add_entities([SensorB(entry.data["extra"])])
+""",
+            [5],
+            "async_add_entities",
+            id="inside_with_after_call",
+        ),
+        pytest.param(
+            """
+async def async_setup_entry(hass, entry, async_add_entities):
+    async_add_entities([SensorA()])
+    try:
+        async_add_entities([SensorB()])
+    except ValueError:
+        pass
+""",
+            [5],
+            "async_add_entities",
+            id="inside_try_after_call",
+        ),
+        pytest.param(
+            """
+async def async_setup_entry(hass, entry, async_add_entities):
+    async_add_entities([SensorA()])
+    for description in DESCRIPTIONS:
+        entities.append(SensorB(description))
+    async_add_entities(entities)
+""",
+            [6],
+            "async_add_entities",
+            id="separated_by_loop_without_call",
+        ),
+        pytest.param(
+            """
+async def async_setup_entry(hass, entry, async_add_entities):
+    async_add_entities([SensorA()])
+
+    async def _async_refresh():
+        await coordinator.async_refresh()
+
+    async_add_entities([SensorB()])
+""",
+            [8],
+            "async_add_entities",
+            id="separated_by_nested_function",
         ),
         pytest.param(
             """
