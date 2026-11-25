@@ -210,6 +210,33 @@ async def async_setup(hass, config):
 """,
             id="executor_rebound_by_job",
         ),
+        pytest.param(
+            """
+async def async_setup(hass, config):
+    await hass.async_add_executor_job(call_a)
+    cm = asyncio.timeout(10)
+    await hass.async_add_executor_job(call_b)
+""",
+            id="timeout_between_jobs",
+        ),
+        pytest.param(
+            """
+async def async_setup(hass, config):
+    await hass.async_add_executor_job(call_a)
+    hass._async_add_hass_job(job)
+    await hass.async_add_executor_job(call_b)
+""",
+            id="private_async_call_between_jobs",
+        ),
+        pytest.param(
+            """
+async def async_setup(hass, config):
+    await loop.run_in_executor(pools[0], call_a)
+    pools[0] = other_pool
+    await loop.run_in_executor(pools[0], call_b)
+""",
+            id="executor_subscript_reassigned",
+        ),
     ],
 )
 def test_no_warning(
@@ -721,6 +748,26 @@ async def async_setup(hass, config):
         tasks = asyncio.all_tasks()
 """,
             id="all_tasks",
+        ),
+        pytest.param(
+            """
+async def async_setup(hass, config):
+    for item in items:
+        await hass.async_add_executor_job(call_a, item)
+
+        class Helper:
+            loop = asyncio.get_running_loop()
+""",
+            id="loop_only_call_in_class_body",
+        ),
+        pytest.param(
+            """
+async def async_setup(hass, config):
+    for item in items:
+        await loop.run_in_executor(pools[0], call_a, item)
+        del pools[0]
+""",
+            id="executor_subscript_deleted",
         ),
     ],
 )

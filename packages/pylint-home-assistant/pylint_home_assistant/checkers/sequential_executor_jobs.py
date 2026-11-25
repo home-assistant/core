@@ -11,6 +11,7 @@ from collections.abc import Collection, Iterator
 import re
 
 from astroid import nodes
+from astroid.const import Context
 from pylint.checkers import BaseChecker
 from pylint.lint import PyLinter
 
@@ -49,6 +50,7 @@ _LOOP_ONLY_FUNCTIONS = frozenset(
         "ensure_future",
         "get_event_loop",
         "get_running_loop",
+        "timeout",
     }
 )
 
@@ -115,7 +117,9 @@ def _eager_nodes(
             # The body of a generator expression runs only when it is consumed
             stack.append(current.generators[0].iter)
             continue
-        if isinstance(current, _NEW_SCOPE_NODES):
+        if isinstance(current, _NEW_SCOPE_NODES) and not isinstance(
+            current, nodes.ClassDef
+        ):
             # Only the decorators and default values run at definition time
             stack.extend(
                 child
@@ -180,7 +184,7 @@ def _calls_loop_only_api(
         if isinstance(func, nodes.Name):
             name = func.name
         if name is not None and (
-            name.startswith("async_") or name in _LOOP_ONLY_FUNCTIONS
+            name.lstrip("_").startswith("async_") or name in _LOOP_ONLY_FUNCTIONS
         ):
             return True
     return False
@@ -254,11 +258,21 @@ def _rebinds_executor(node: nodes.NodeNG, executor: str) -> bool:
         return False
     expression = executor.removeprefix("import:")
     for target in node.nodes_of_class(
-        (nodes.AssignName, nodes.DelName, nodes.AssignAttr, nodes.DelAttr),
+        (
+            nodes.AssignName,
+            nodes.DelName,
+            nodes.AssignAttr,
+            nodes.DelAttr,
+            nodes.Subscript,
+        ),
         skip_klass=_NEW_SCOPE_NODES,
     ):
         if isinstance(target, (nodes.AssignName, nodes.DelName)):
             name = target.name
+        elif isinstance(target, nodes.Subscript):
+            if target.ctx == Context.Load:
+                continue
+            name = target.value.as_string()
         else:
             name = f"{target.expr.as_string()}.{target.attrname}"
         # Any name the expression refers to, such as a subscript index or a
