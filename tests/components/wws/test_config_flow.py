@@ -206,7 +206,7 @@ async def test_setup_entry_fetches_data_on_startup(
         {
             "start": (start := datetime(2024, 1, 1, 12, minute, tzinfo=UTC)),
             "end": start + timedelta(minutes=15),
-            "price_ct_kwh": value,
+            "price_eur_kwh": value,
         }
         for minute, value in ((0, 35), (15, 35), (30, 34), (45, 34))
     ]
@@ -233,8 +233,8 @@ async def test_setup_entry_fetches_data_on_startup(
 
     await hass.async_block_till_done()
 
-    assert hass.states.get("sensor.wws_price_ct_kwh").state == "0.35"
-    assert hass.states.get("sensor.wws_next_price_ct_kwh").state == "0.35"
+    assert hass.states.get("sensor.wws_price_eur_kwh").state == "0.35"
+    assert hass.states.get("sensor.wws_next_price_eur_kwh").state == "0.35"
     assert hass.states.get("sensor.wws_consumption_kwh").state == "0.03"
 
 
@@ -254,7 +254,7 @@ async def test_price_rolls_over_at_quarter_hour(
         {
             "start": (start := datetime(2024, 1, 1, 12, minute, tzinfo=UTC)),
             "end": start + timedelta(minutes=15),
-            "price_ct_kwh": value,
+            "price_eur_kwh": value,
         }
         for minute, value in ((0, 35), (15, 35), (30, 34), (45, 34))
     ]
@@ -273,15 +273,15 @@ async def test_price_rolls_over_at_quarter_hour(
         assert await hass.config_entries.async_setup(mock_entry.entry_id)
         await hass.async_block_till_done()
 
-        assert hass.states.get("sensor.wws_price_ct_kwh").state == "0.35"
-        assert hass.states.get("sensor.wws_next_price_ct_kwh").state == "0.34"
+        assert hass.states.get("sensor.wws_price_eur_kwh").state == "0.35"
+        assert hass.states.get("sensor.wws_next_price_eur_kwh").state == "0.34"
 
         freezer.move_to(datetime(2024, 1, 1, 12, 30, tzinfo=UTC))
         async_fire_time_changed(hass, datetime(2024, 1, 1, 12, 30, tzinfo=UTC))
         await hass.async_block_till_done()
 
-    assert hass.states.get("sensor.wws_price_ct_kwh").state == "0.34"
-    assert hass.states.get("sensor.wws_next_price_ct_kwh").state == "0.34"
+    assert hass.states.get("sensor.wws_price_eur_kwh").state == "0.34"
+    assert hass.states.get("sensor.wws_next_price_eur_kwh").state == "0.34"
     assert mock_get_latest_prices.await_count == 1
     assert mock_get_latest_measurements.await_count == 1
 

@@ -34,19 +34,19 @@ class WwsSensorEntityDescription(SensorEntityDescription):
 
 SENSORS: tuple[WwsSensorEntityDescription, ...] = (
     WwsSensorEntityDescription(
-        key="price_ct_kwh",
+        key="price_eur_kwh",
         translation_key="current_energy_price",
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=PRICE_UNIT,
         suggested_display_precision=3,
-        value_fn=lambda entity: _price_value(entity.current_period, "price_ct_kwh"),
+        value_fn=lambda entity: _price_value(entity.current_period, "price_eur_kwh"),
     ),
     WwsSensorEntityDescription(
-        key="next_price_ct_kwh",
+        key="next_price_eur_kwh",
         translation_key="next_energy_price",
         native_unit_of_measurement=PRICE_UNIT,
         suggested_display_precision=3,
-        value_fn=lambda entity: _price_value(entity.next_period, "price_ct_kwh"),
+        value_fn=lambda entity: _price_value(entity.next_period, "price_eur_kwh"),
     ),
     WwsSensorEntityDescription(
         key="consumption_kwh",
@@ -116,7 +116,7 @@ class WwsSensor(CoordinatorEntity[WwsCoordinator], SensorEntity):
 
         period: dict[str, Any] | None = (
             self.next_period
-            if self.entity_description.key == "next_price_ct_kwh"
+            if self.entity_description.key == "next_price_eur_kwh"
             else self.current_period
         )
         attributes: dict[str, Any] = (
@@ -128,12 +128,13 @@ class WwsSensor(CoordinatorEntity[WwsCoordinator], SensorEntity):
             if period is not None
             else {}
         )
-        if self.entity_description.key == "price_ct_kwh":
+        if self.entity_description.key == "price_eur_kwh":
             price_points = sorted(
                 [
                     (_parse_datetime(price_period["start"]), price)
                     for price_period in self._price_periods
-                    if (price := _price_value(price_period, "price_ct_kwh")) is not None
+                    if (price := _price_value(price_period, "price_eur_kwh"))
+                    is not None
                 ],
                 key=lambda point: point[0],
             )
