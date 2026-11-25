@@ -11,7 +11,6 @@ from yarl import URL
 from homeassistant import data_entry_flow
 from homeassistant.config_entries import (
     SOURCE_USER,
-    ConfigEntry,
     ConfigEntryState,
     ConfigFlow,
     ConfigFlowResult,
@@ -42,12 +41,31 @@ from .const import (
     CONF_STT_CUSTOM_PROMPT_KEYWORDS,
     CONF_STT_KEYWORDS,
     CONF_STT_PROMPT,
+    CONF_TTS_VOICE,
     DOMAIN,
     PLACEHOLDER_API_KEY,
     RECOMMENDED_CONVERSATION_OPTIONS,
 )
+from .coordinator import LiteLLMConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
+
+OPENAI_VOICES = [
+    "alloy",
+    "ash",
+    "ballad",
+    "cedar",
+    "coral",
+    "echo",
+    "fable",
+    "marin",
+    "nova",
+    "onyx",
+    "sage",
+    "shimmer",
+    "verse",
+]
+DEFAULT_VOICE = "alloy"
 
 
 class CannotConnect(HomeAssistantError):
@@ -67,25 +85,52 @@ def _normalize_url(url: str) -> str:
     return str(parsed.with_path(path))
 
 
-async def _get_models(hass: HomeAssistant, url: str, api_key: str | None) -> list[str]:
+async def _get_models(
+    hass: HomeAssistant,
+    url: str,
+    api_key: str | None,
+    modes: frozenset[str] | None = None,
+) -> list[str]:
     """Fetch the available model names from the LiteLLM proxy.
 
     Uses the OpenAI-compatible `/v1/models` endpoint, which a LiteLLM proxy
-    serves with the configured model names.
+    serves with the configured model names. When `modes` is given, the models
+    whose LiteLLM mode is in `modes` or unknown are kept.
     """
     client = AsyncOpenAI(
         base_url=url,
         api_key=api_key or PLACEHOLDER_API_KEY,
         http_client=get_async_client(hass),
-    )
+    ).with_options(timeout=10.0)
     try:
-        return [
-            model.id async for model in client.with_options(timeout=10.0).models.list()
-        ]
+        models = [model.id async for model in client.models.list()]
     except (AuthenticationError, PermissionDeniedError) as err:
         raise InvalidAuth from err
     except OpenAIError as err:
         raise CannotConnect from err
+
+    if modes is None:
+        return models
+
+    # Keys limited to a subset of routes may not reach `/model/info`
+    try:
+        info = await client.get("/model/info", cast_to=dict[str, Any])
+    except OpenAIError as err:
+        _LOGGER.debug("Could not fetch model modes from the proxy: %s", err)
+        return models
+
+    model_modes: dict[str, set[str | None]] = {}
+    for deployment in info["data"]:
+        model_modes.setdefault(deployment["model_name"], set()).add(
+            deployment["model_info"].get("mode")
+        )
+    # Custom backends often have no mode, so they stay selectable
+    allowed = {None, *modes}
+    return [
+        model
+        for model in models
+        if model not in model_modes or not model_modes[model].isdisjoint(allowed)
+    ]
 
 
 class LiteLLMConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -97,12 +142,14 @@ class LiteLLMConfigFlow(ConfigFlow, domain=DOMAIN):
     @callback
     @override
     def async_get_supported_subentry_types(
-        cls, config_entry: ConfigEntry
+        cls, config_entry: LiteLLMConfigEntry
     ) -> dict[str, type[ConfigSubentryFlow]]:
         """Return subentries supported by this handler."""
         return {
             "conversation": ConversationFlowHandler,
+            "ai_task_evaluate": EvaluationFlowHandler,
             "stt": STTFlowHandler,
+            "tts": TTSFlowHandler,
         }
 
     async def _async_validate(self, url: str, api_key: str | None) -> dict[str, str]:
@@ -184,7 +231,7 @@ class LiteLLMConfigFlow(ConfigFlow, domain=DOMAIN):
             data_schema=probatio.Schema(
                 {probatio.Required(probatio.Secret(CONF_API_KEY)): str}
             ),
-            description_placeholders={CONF_URL: reauth_entry.data[CONF_URL]},
+            description_placeholders={"url": reauth_entry.data[CONF_URL]},
             errors=errors,
         )
 
@@ -192,20 +239,27 @@ class LiteLLMConfigFlow(ConfigFlow, domain=DOMAIN):
 class LiteLLMSubentryFlowHandler(ConfigSubentryFlow):
     """Handle subentry flow for LiteLLM."""
 
+    model_modes: frozenset[str]
+
     def __init__(self) -> None:
         """Initialize the subentry flow."""
         self.models: list[str] = []
 
     async def _fetch_models(self) -> None:
-        """Fetch models from the LiteLLM proxy."""
+        """Fetch the models of this subentry's modes from the LiteLLM proxy."""
         entry = self._get_entry()
         self.models = await _get_models(
-            self.hass, entry.data[CONF_URL], entry.data.get(CONF_API_KEY)
+            self.hass,
+            entry.data[CONF_URL],
+            entry.data.get(CONF_API_KEY),
+            self.model_modes,
         )
 
 
 class ConversationFlowHandler(LiteLLMSubentryFlowHandler):
     """Handle conversation subentry flow."""
+
+    model_modes = frozenset({"chat", "responses"})
 
     def __init__(self) -> None:
         """Initialize the subentry flow."""
@@ -305,7 +359,11 @@ class ConversationFlowHandler(LiteLLMSubentryFlowHandler):
                             RECOMMENDED_CONVERSATION_OPTIONS[CONF_LLM_HASS_API],
                         ),
                     ): SelectSelector(
-                        SelectSelectorConfig(options=hass_apis, multiple=True)
+                        SelectSelectorConfig(
+                            options=hass_apis,
+                            multiple=True,
+                            mode=SelectSelectorMode.LIST,
+                        )
                     ),
                 }
             ),
@@ -314,6 +372,8 @@ class ConversationFlowHandler(LiteLLMSubentryFlowHandler):
 
 class STTFlowHandler(LiteLLMSubentryFlowHandler):
     """Handle STT subentry flow."""
+
+    model_modes = frozenset({"audio_transcription"})
 
     def __init__(self) -> None:
         """Initialize the subentry flow."""
@@ -410,4 +470,158 @@ class STTFlowHandler(LiteLLMSubentryFlowHandler):
         return self.async_show_form(
             step_id="init",
             data_schema=probatio.Schema(schema),
+        )
+
+
+class TTSFlowHandler(LiteLLMSubentryFlowHandler):
+    """Handle TTS subentry flow."""
+
+    model_modes = frozenset({"audio_speech"})
+
+    def __init__(self) -> None:
+        """Initialize the subentry flow."""
+        super().__init__()
+        self.options: dict[str, Any] = {}
+
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> SubentryFlowResult:
+        """User flow to create a TTS entity."""
+        self.options = {CONF_TTS_VOICE: DEFAULT_VOICE}
+        return await self.async_step_init(user_input)
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> SubentryFlowResult:
+        """Handle reconfiguration of a TTS entity."""
+        self.options = self._get_reconfigure_subentry().data.copy()
+        return await self.async_step_init(user_input)
+
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> SubentryFlowResult:
+        """Manage TTS configuration."""
+        if self._get_entry().state is not ConfigEntryState.LOADED:
+            return self.async_abort(reason="entry_not_loaded")
+
+        if user_input is not None:
+            if self.source == SOURCE_USER:
+                return self.async_create_entry(
+                    title=user_input[CONF_MODEL], data=user_input
+                )
+            return self.async_update_and_abort(
+                self._get_entry(),
+                self._get_reconfigure_subentry(),
+                title=user_input[CONF_MODEL],
+                data=user_input,
+            )
+
+        try:
+            await self._fetch_models()
+        except InvalidAuth:
+            return self.async_abort(reason="invalid_auth")
+        except CannotConnect:
+            return self.async_abort(reason="cannot_connect")
+        except Exception:
+            _LOGGER.exception("Unexpected exception")
+            return self.async_abort(reason="unknown")
+
+        return self.async_show_form(
+            step_id="init",
+            data_schema=probatio.Schema(
+                {
+                    probatio.Required(
+                        CONF_MODEL, default=self.options.get(CONF_MODEL)
+                    ): SelectSelector(
+                        SelectSelectorConfig(
+                            options=[
+                                SelectOptionDict(value=model, label=model)
+                                for model in self.models
+                            ],
+                            mode=SelectSelectorMode.DROPDOWN,
+                            sort=True,
+                        )
+                    ),
+                    probatio.Required(
+                        CONF_TTS_VOICE, default=self.options[CONF_TTS_VOICE]
+                    ): SelectSelector(
+                        SelectSelectorConfig(
+                            options=OPENAI_VOICES,
+                            custom_value=True,
+                            mode=SelectSelectorMode.DROPDOWN,
+                        )
+                    ),
+                }
+            ),
+        )
+
+
+class EvaluationFlowHandler(LiteLLMSubentryFlowHandler):
+    """Handle AI task evaluation subentry flow."""
+
+    model_modes = frozenset({"decisions", "evaluation"})
+
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> SubentryFlowResult:
+        """User flow to create an AI task evaluation entity."""
+        return await self.async_step_init(user_input)
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> SubentryFlowResult:
+        """Handle reconfiguration of an AI task evaluation entity."""
+        return await self.async_step_init(user_input)
+
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> SubentryFlowResult:
+        """Manage AI task evaluation configuration."""
+        if self._get_entry().state is not ConfigEntryState.LOADED:
+            return self.async_abort(reason="entry_not_loaded")
+
+        if user_input is not None:
+            if self.source == SOURCE_USER:
+                return self.async_create_entry(
+                    title=user_input[CONF_MODEL], data=user_input
+                )
+            return self.async_update_and_abort(
+                self._get_entry(),
+                self._get_reconfigure_subentry(),
+                title=user_input[CONF_MODEL],
+                data=user_input,
+            )
+
+        try:
+            await self._fetch_models()
+        except InvalidAuth:
+            return self.async_abort(reason="invalid_auth")
+        except CannotConnect:
+            return self.async_abort(reason="cannot_connect")
+        except Exception:
+            _LOGGER.exception("Unexpected exception")
+            return self.async_abort(reason="unknown")
+
+        default_model = None
+        if self.source != SOURCE_USER:
+            default_model = self._get_reconfigure_subentry().data[CONF_MODEL]
+        return self.async_show_form(
+            step_id="init",
+            data_schema=probatio.Schema(
+                {
+                    probatio.Required(
+                        CONF_MODEL, default=default_model
+                    ): SelectSelector(
+                        SelectSelectorConfig(
+                            options=[
+                                SelectOptionDict(value=model, label=model)
+                                for model in self.models
+                            ],
+                            custom_value=True,
+                            mode=SelectSelectorMode.DROPDOWN,
+                            sort=True,
+                        )
+                    ),
+                }
+            ),
         )

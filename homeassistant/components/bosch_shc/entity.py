@@ -48,7 +48,9 @@ class SHCBaseEntity(Entity):
                 self.schedule_update_ha_state()
 
         self._device.subscribe_callback(self.unique_id, on_state_changed)
-        self.async_on_remove(partial(self._device.unsubscribe_callback, self.unique_id))
+        self.async_on_remove(
+            partial(self._device.unsubscribe_callback, self.unique_id, on_state_changed)
+        )
 
     @property
     def device_id(self) -> str:
@@ -92,7 +94,9 @@ class SHCEntity(SHCBaseEntity):
 
         for service in self._device.device_services:
             service.subscribe_callback(self.unique_id, on_state_changed)
-            self.async_on_remove(partial(service.unsubscribe_callback, self.unique_id))
+            self.async_on_remove(
+                partial(service.unsubscribe_callback, self.unique_id, on_state_changed)
+            )
 
     @property
     @override

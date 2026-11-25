@@ -1,0 +1,73 @@
+{
+  "observations": [
+    {
+      "station": "Helsinki Kaisaniemi",
+      "distance": "1 km N",
+      "time": "2026-11-06T16:40:00+02:00",
+      "temperature": 3.9,
+      "feelsLikeTemp": 1,
+      "symbol": "n200",
+      "windDirString": "NW",
+      "windDir": 296,
+      "windSpeed": 3.2,
+      "windGust": 4.8,
+      "pressure": 1026.3,
+      "relHumidity": 71,
+      "visibility": 20000,
+      "snowDepth": null,
+      "longitude": 24.94,
+      "latitude": 60.18,
+      "elevation": 4,
+      "precipitation": [
+        { "period": "1h", "endtime": "2026-11-06T16:00:00+02:00", "accum": 0 },
+        { "period": "24h", "endtime": "2026-11-06T08:00:00+02:00", "accum": 0 }
+      ]
+    },
+    {
+      "station": "Helsinki Kumpula",
+      "distance": "4 km N",
+      "time": "2026-11-06T16:40:00+02:00",
+      "temperature": 2.5,
+      "feelsLikeTemp": -1.2,
+      "symbol": "n100",
+      "windDirString": "NW",
+      "windDir": 293,
+      "windSpeed": 4,
+      "windGust": 5.3,
+      "pressure": 1026.4,
+      "relHumidity": 76,
+      "visibility": 50000,
+      "snowDepth": null,
+      "longitude": 24.96,
+      "latitude": 60.2,
+      "elevation": 26,
+      "precipitation": [
+        { "period": "1h", "endtime": "2026-11-06T16:00:00+02:00", "accum": 0 },
+        { "period": "24h", "endtime": "2026-11-06T08:00:00+02:00", "accum": 0 }
+      ]
+    },
+    {
+      "station": "Espoo Tapiola",
+      "distance": "8 km W",
+      "time": "2026-11-06T16:40:00+02:00",
+      "temperature": 3.1,
+      "feelsLikeTemp": 0.5,
+      "symbol": "n000",
+      "windDirString": "W",
+      "windDir": 278,
+      "windSpeed": 2.7,
+      "windGust": 4,
+      "pressure": 1026.5,
+      "relHumidity": 74,
+      "visibility": 41196,
+      "snowDepth": null,
+      "longitude": 24.79,
+      "latitude": 60.18,
+      "elevation": 6,
+      "precipitation": [
+        { "period": "1h", "endtime": "2026-11-06T16:00:00+02:00", "accum": 0 },
+        { "period": "24h", "endtime": "2026-11-06T08:00:00+02:00", "accum": 0 }
+      ]
+    }
+  ]
+}

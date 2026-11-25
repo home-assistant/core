@@ -4,9 +4,10 @@
   "categories": ["messaging_notifications.chat_apps"],
   "codeowners": ["@LukasQ"],
   "config_flow": true,
+  "connectivity": ["cloud"],
   "documentation": "https://www.home-assistant.io/integrations/threema",
   "integration_type": "service",
   "iot_class": "cloud_push",
   "quality_scale": "silver",
-  "requirements": ["aiothreema==0.2.0"]
+  "requirements": ["aiothreema==0.3.0"]
 }

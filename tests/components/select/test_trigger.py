@@ -15,7 +15,7 @@ from pytest_homeassistant.components.common import (
 )
 
 from homeassistant.components.select.trigger import TRIGGERS
-from homeassistant.const import CONF_ENTITY_ID, STATE_UNAVAILABLE, STATE_UNKNOWN
+from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN, TargetKey
 from homeassistant.core import HomeAssistant
 
 
@@ -222,7 +222,7 @@ async def test_select_trigger_fires_for_both_domains(
         hass,
         "select.selection_changed",
         None,
-        {CONF_ENTITY_ID: [entity_id_select, entity_id_input_select]},
+        {TargetKey.ENTITY_ID: [entity_id_select, entity_id_input_select]},
         calls,
     )
 

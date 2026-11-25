@@ -56,6 +56,7 @@ def mock_client() -> Generator[MagicMock]:
         client.async_login.return_value = TOKEN
         client.async_ensure_access_token.return_value = None
         client.async_list_chargers.return_value = [CHARGER]
+        client.async_list_load_balancers.return_value = []
         client.async_get_charger_status.return_value = CHARGER_STATUS
         yield client
 

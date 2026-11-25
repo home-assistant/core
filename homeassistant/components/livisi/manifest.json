@@ -4,6 +4,7 @@
   "categories": ["hubs_protocols.smart_home_hubs"],
   "codeowners": ["@StefanIacobLivisi", "@planbnet"],
   "config_flow": true,
+  "connectivity": ["network"],
   "documentation": "https://www.home-assistant.io/integrations/livisi",
   "integration_type": "hub",
   "iot_class": "local_polling",

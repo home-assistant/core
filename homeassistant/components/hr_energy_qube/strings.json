@@ -225,6 +225,18 @@
       },
       "temp_supply": {
         "name": "Supply temperature CH"
+      },
+      "working_hours_cooling": {
+        "name": "Working hours cooling"
+      },
+      "working_hours_dhw": {
+        "name": "Working hours DHW"
+      },
+      "working_hours_heater": {
+        "name": "Working hours heater {number}"
+      },
+      "working_hours_heating": {
+        "name": "Working hours heating"
       }
     },
     "switch": {
@@ -253,6 +265,9 @@
     },
     "communication_error": {
       "message": "Error communicating with the Qube heat pump: {error}"
+    },
+    "link_settings_in_use": {
+      "message": "The Qube heat pump cannot be set up with these link settings: {error}"
     },
     "no_data": {
       "message": "No data received from the Qube heat pump."

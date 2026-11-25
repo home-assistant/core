@@ -5,14 +5,20 @@ from datetime import timedelta
 from typing import Any
 
 import pytest
-from pytest_homeassistant.common import assert_setup_component, async_fire_time_changed
+from pytest_homeassistant.common import (
+    assert_setup_component,
+    async_fire_time_changed,
+    setup_test_component_platform,
+)
 
 from homeassistant.components.cover import (
     ATTR_CURRENT_POSITION,
     ATTR_CURRENT_TILT_POSITION,
-    ATTR_POSITION,
-    ATTR_TILT_POSITION,
     DOMAIN as COVER_DOMAIN,
+    CoverEntityCapabilityAttribute,
+    CoverEntityFeature,
+    CoverService,
+    CoverServiceArgument,
     CoverState,
 )
 from homeassistant.components.group.cover import DEFAULT_NAME
@@ -23,29 +29,26 @@ from homeassistant.const import (
     ATTR_SUPPORTED_FEATURES,
     CONF_ENTITIES,
     CONF_UNIQUE_ID,
-    SERVICE_CLOSE_COVER,
-    SERVICE_CLOSE_COVER_TILT,
-    SERVICE_OPEN_COVER,
-    SERVICE_OPEN_COVER_TILT,
-    SERVICE_SET_COVER_POSITION,
-    SERVICE_SET_COVER_TILT_POSITION,
-    SERVICE_STOP_COVER,
-    SERVICE_STOP_COVER_TILT,
-    SERVICE_TOGGLE,
-    SERVICE_TOGGLE_COVER_TILT,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
+    TargetKey,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
+from tests.components.cover.common import MockCover
+
 COVER_GROUP = "cover.cover_group"
 DEMO_COVER = "cover.kitchen_window"
 DEMO_COVER_POS = "cover.hall_window"
 DEMO_COVER_TILT = "cover.living_room_window"
 DEMO_TILT = "cover.tilt_demo"
+SLOW_FAST_COVER = "cover.slow_fast"
+SILENT_FAST_COVER = "cover.silent_fast"
+NO_SPEED_COVER = "cover.no_speed"
+OUTER_GROUP = "cover.outer_group"
 
 CONFIG_ALL = {
     COVER_DOMAIN: [
@@ -426,6 +429,40 @@ async def test_attributes(
     assert entry.unique_id == "unique_identifier"
 
 
+@pytest.mark.parametrize("config_count", [(CONFIG_ATTRIBUTES, 1)])
+@pytest.mark.parametrize(
+    ("positions", "expected"),
+    [
+        pytest.param((0, 0, 0, 0), 0, id="all_closed"),
+        pytest.param((2, 0, 0, 0), 1, id="one_slightly_open"),
+        pytest.param((100, 100, 100, 98), 99, id="one_not_fully_open"),
+        pytest.param((100, 100, 100, 100), 100, id="all_open"),
+    ],
+)
+@pytest.mark.usefixtures("setup_comp")
+async def test_position_mean(
+    hass: HomeAssistant, positions: tuple[int, ...], expected: int
+) -> None:
+    """Test the group position is 0 or 100 only when every member is."""
+    for entity_id, position in zip(
+        CONFIG_ATTRIBUTES[COVER_DOMAIN][CONF_ENTITIES], positions, strict=True
+    ):
+        hass.states.async_set(
+            entity_id,
+            CoverState.OPEN,
+            {
+                ATTR_SUPPORTED_FEATURES: 132,
+                ATTR_CURRENT_POSITION: position,
+                ATTR_CURRENT_TILT_POSITION: position,
+            },
+        )
+    await hass.async_block_till_done()
+
+    state = hass.states.get(COVER_GROUP)
+    assert state.attributes[ATTR_CURRENT_POSITION] == expected
+    assert state.attributes[ATTR_CURRENT_TILT_POSITION] == expected
+
+
 @pytest.mark.parametrize("config_count", [(CONFIG_TILT_ONLY, 2)])
 @pytest.mark.usefixtures("setup_comp")
 async def test_cover_that_only_supports_tilt_removed(hass: HomeAssistant) -> None:
@@ -460,7 +497,10 @@ async def test_cover_that_only_supports_tilt_removed(hass: HomeAssistant) -> Non
 async def test_open_covers(hass: HomeAssistant) -> None:
     """Test open cover function."""
     await hass.services.async_call(
-        COVER_DOMAIN, SERVICE_OPEN_COVER, {ATTR_ENTITY_ID: COVER_GROUP}, blocking=True
+        COVER_DOMAIN,
+        CoverService.OPEN,
+        {TargetKey.ENTITY_ID: COVER_GROUP},
+        blocking=True,
     )
 
     for _ in range(10):
@@ -482,7 +522,10 @@ async def test_open_covers(hass: HomeAssistant) -> None:
 async def test_close_covers(hass: HomeAssistant) -> None:
     """Test close cover function."""
     await hass.services.async_call(
-        COVER_DOMAIN, SERVICE_CLOSE_COVER, {ATTR_ENTITY_ID: COVER_GROUP}, blocking=True
+        COVER_DOMAIN,
+        CoverService.CLOSE,
+        {TargetKey.ENTITY_ID: COVER_GROUP},
+        blocking=True,
     )
 
     for _ in range(10):
@@ -505,7 +548,10 @@ async def test_toggle_covers(hass: HomeAssistant) -> None:
     """Test toggle cover function."""
     # Start covers in open state
     await hass.services.async_call(
-        COVER_DOMAIN, SERVICE_OPEN_COVER, {ATTR_ENTITY_ID: COVER_GROUP}, blocking=True
+        COVER_DOMAIN,
+        CoverService.OPEN,
+        {TargetKey.ENTITY_ID: COVER_GROUP},
+        blocking=True,
     )
     for _ in range(10):
         future = dt_util.utcnow() + timedelta(seconds=1)
@@ -517,7 +563,10 @@ async def test_toggle_covers(hass: HomeAssistant) -> None:
 
     # Toggle will close covers
     await hass.services.async_call(
-        COVER_DOMAIN, SERVICE_TOGGLE, {ATTR_ENTITY_ID: COVER_GROUP}, blocking=True
+        COVER_DOMAIN,
+        CoverService.TOGGLE,
+        {TargetKey.ENTITY_ID: COVER_GROUP},
+        blocking=True,
     )
     for _ in range(10):
         future = dt_util.utcnow() + timedelta(seconds=1)
@@ -534,7 +583,10 @@ async def test_toggle_covers(hass: HomeAssistant) -> None:
 
     # Toggle again will open covers
     await hass.services.async_call(
-        COVER_DOMAIN, SERVICE_TOGGLE, {ATTR_ENTITY_ID: COVER_GROUP}, blocking=True
+        COVER_DOMAIN,
+        CoverService.TOGGLE,
+        {TargetKey.ENTITY_ID: COVER_GROUP},
+        blocking=True,
     )
     for _ in range(10):
         future = dt_util.utcnow() + timedelta(seconds=1)
@@ -555,14 +607,20 @@ async def test_toggle_covers(hass: HomeAssistant) -> None:
 async def test_stop_covers(hass: HomeAssistant) -> None:
     """Test stop cover function."""
     await hass.services.async_call(
-        COVER_DOMAIN, SERVICE_OPEN_COVER, {ATTR_ENTITY_ID: COVER_GROUP}, blocking=True
+        COVER_DOMAIN,
+        CoverService.OPEN,
+        {TargetKey.ENTITY_ID: COVER_GROUP},
+        blocking=True,
     )
     future = dt_util.utcnow() + timedelta(seconds=1)
     async_fire_time_changed(hass, future)
     await hass.async_block_till_done()
 
     await hass.services.async_call(
-        COVER_DOMAIN, SERVICE_STOP_COVER, {ATTR_ENTITY_ID: COVER_GROUP}, blocking=True
+        COVER_DOMAIN,
+        CoverService.STOP,
+        {TargetKey.ENTITY_ID: COVER_GROUP},
+        blocking=True,
     )
     future = dt_util.utcnow() + timedelta(seconds=1)
     async_fire_time_changed(hass, future)
@@ -583,8 +641,8 @@ async def test_set_cover_position(hass: HomeAssistant) -> None:
     """Test set cover position function."""
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_SET_COVER_POSITION,
-        {ATTR_ENTITY_ID: COVER_GROUP, ATTR_POSITION: 50},
+        CoverService.SET_POSITION,
+        {TargetKey.ENTITY_ID: COVER_GROUP, CoverServiceArgument.POSITION: 50},
         blocking=True,
     )
     for _ in range(4):
@@ -607,8 +665,8 @@ async def test_open_tilts(hass: HomeAssistant) -> None:
     """Test open tilt function."""
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_OPEN_COVER_TILT,
-        {ATTR_ENTITY_ID: COVER_GROUP},
+        CoverService.OPEN_TILT,
+        {TargetKey.ENTITY_ID: COVER_GROUP},
         blocking=True,
     )
     for _ in range(5):
@@ -631,8 +689,8 @@ async def test_close_tilts(hass: HomeAssistant) -> None:
     """Test close tilt function."""
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_CLOSE_COVER_TILT,
-        {ATTR_ENTITY_ID: COVER_GROUP},
+        CoverService.CLOSE_TILT,
+        {TargetKey.ENTITY_ID: COVER_GROUP},
         blocking=True,
     )
     for _ in range(5):
@@ -654,8 +712,8 @@ async def test_toggle_tilts(hass: HomeAssistant) -> None:
     # Start tilted open
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_OPEN_COVER_TILT,
-        {ATTR_ENTITY_ID: COVER_GROUP},
+        CoverService.OPEN_TILT,
+        {TargetKey.ENTITY_ID: COVER_GROUP},
         blocking=True,
     )
     for _ in range(10):
@@ -674,8 +732,8 @@ async def test_toggle_tilts(hass: HomeAssistant) -> None:
     # Toggle will tilt closed
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_TOGGLE_COVER_TILT,
-        {ATTR_ENTITY_ID: COVER_GROUP},
+        CoverService.TOGGLE_TILT,
+        {TargetKey.ENTITY_ID: COVER_GROUP},
         blocking=True,
     )
     for _ in range(10):
@@ -692,8 +750,8 @@ async def test_toggle_tilts(hass: HomeAssistant) -> None:
     # Toggle again will tilt open
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_TOGGLE_COVER_TILT,
-        {ATTR_ENTITY_ID: COVER_GROUP},
+        CoverService.TOGGLE_TILT,
+        {TargetKey.ENTITY_ID: COVER_GROUP},
         blocking=True,
     )
     for _ in range(10):
@@ -716,8 +774,8 @@ async def test_stop_tilts(hass: HomeAssistant) -> None:
     """Test stop tilts function."""
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_OPEN_COVER_TILT,
-        {ATTR_ENTITY_ID: COVER_GROUP},
+        CoverService.OPEN_TILT,
+        {TargetKey.ENTITY_ID: COVER_GROUP},
         blocking=True,
     )
     future = dt_util.utcnow() + timedelta(seconds=1)
@@ -726,8 +784,8 @@ async def test_stop_tilts(hass: HomeAssistant) -> None:
 
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_STOP_COVER_TILT,
-        {ATTR_ENTITY_ID: COVER_GROUP},
+        CoverService.STOP_TILT,
+        {TargetKey.ENTITY_ID: COVER_GROUP},
         blocking=True,
     )
     future = dt_util.utcnow() + timedelta(seconds=1)
@@ -747,8 +805,8 @@ async def test_set_tilt_positions(hass: HomeAssistant) -> None:
     """Test set tilt position function."""
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_SET_COVER_TILT_POSITION,
-        {ATTR_ENTITY_ID: COVER_GROUP, ATTR_TILT_POSITION: 80},
+        CoverService.SET_TILT_POSITION,
+        {TargetKey.ENTITY_ID: COVER_GROUP, CoverServiceArgument.TILT_POSITION: 80},
         blocking=True,
     )
     for _ in range(3):
@@ -768,7 +826,10 @@ async def test_set_tilt_positions(hass: HomeAssistant) -> None:
 async def test_is_opening_closing(hass: HomeAssistant) -> None:
     """Test is_opening property."""
     await hass.services.async_call(
-        COVER_DOMAIN, SERVICE_OPEN_COVER, {ATTR_ENTITY_ID: COVER_GROUP}, blocking=True
+        COVER_DOMAIN,
+        CoverService.OPEN,
+        {TargetKey.ENTITY_ID: COVER_GROUP},
+        blocking=True,
     )
     await hass.async_block_till_done()
 
@@ -783,7 +844,10 @@ async def test_is_opening_closing(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
 
     await hass.services.async_call(
-        COVER_DOMAIN, SERVICE_CLOSE_COVER, {ATTR_ENTITY_ID: COVER_GROUP}, blocking=True
+        COVER_DOMAIN,
+        CoverService.CLOSE,
+        {TargetKey.ENTITY_ID: COVER_GROUP},
+        blocking=True,
     )
 
     # Both covers closing -> closing
@@ -946,11 +1010,273 @@ async def test_nested_group(hass: HomeAssistant) -> None:
     async with asyncio.timeout(0.5):
         await hass.services.async_call(
             COVER_DOMAIN,
-            SERVICE_CLOSE_COVER,
-            {ATTR_ENTITY_ID: "cover.nested_group"},
+            CoverService.CLOSE,
+            {TargetKey.ENTITY_ID: "cover.nested_group"},
             blocking=True,
         )
     assert hass.states.get(DEMO_COVER_POS).state == CoverState.CLOSING
     assert hass.states.get(DEMO_COVER_TILT).state == CoverState.CLOSING
     assert hass.states.get("cover.bedroom_group").state == CoverState.CLOSING
     assert hass.states.get("cover.nested_group").state == CoverState.CLOSING
+
+
+@pytest.mark.parametrize("config_count", [(CONFIG_ATTRIBUTES, 1)])
+@pytest.mark.usefixtures("setup_comp")
+async def test_speeds(hass: HomeAssistant) -> None:
+    """Test the group merges the speeds of its members."""
+    speed_features = (
+        CoverEntityFeature.OPEN | CoverEntityFeature.CLOSE | CoverEntityFeature.SPEED
+    )
+    # A member with the speed feature but without speeds adds nothing
+    hass.states.async_set(
+        DEMO_TILT, CoverState.OPEN, {ATTR_SUPPORTED_FEATURES: speed_features}
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get(COVER_GROUP)
+    assert CoverEntityCapabilityAttribute.SUPPORTED_SPEEDS not in state.attributes
+    assert not state.attributes[ATTR_SUPPORTED_FEATURES] & CoverEntityFeature.SPEED
+
+    # The speeds keep the order of the members
+    hass.states.async_set(
+        DEMO_COVER_TILT,
+        CoverState.OPEN,
+        {
+            ATTR_SUPPORTED_FEATURES: speed_features,
+            CoverEntityCapabilityAttribute.SUPPORTED_SPEEDS: ["silent", "fast"],
+        },
+    )
+    hass.states.async_set(
+        DEMO_COVER_POS,
+        CoverState.OPEN,
+        {
+            ATTR_SUPPORTED_FEATURES: speed_features,
+            CoverEntityCapabilityAttribute.SUPPORTED_SPEEDS: ["slow", "fast"],
+        },
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get(COVER_GROUP)
+    assert state.attributes[CoverEntityCapabilityAttribute.SUPPORTED_SPEEDS] == [
+        "slow",
+        "fast",
+        "silent",
+    ]
+    assert state.attributes[ATTR_SUPPORTED_FEATURES] & CoverEntityFeature.SPEED
+
+    # The hall window drops its speeds, so "slow" is gone
+    hass.states.async_set(
+        DEMO_COVER_POS, CoverState.OPEN, {ATTR_SUPPORTED_FEATURES: 11}
+    )
+    # The speeds count even without the speed feature, like the cover entity,
+    # which checks the list, not the feature
+    hass.states.async_set(
+        DEMO_COVER,
+        CoverState.OPEN,
+        {
+            ATTR_SUPPORTED_FEATURES: CoverEntityFeature.OPEN | CoverEntityFeature.CLOSE,
+            CoverEntityCapabilityAttribute.SUPPORTED_SPEEDS: ["quiet"],
+        },
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get(COVER_GROUP)
+    assert state.attributes[CoverEntityCapabilityAttribute.SUPPORTED_SPEEDS] == [
+        "quiet",
+        "silent",
+        "fast",
+    ]
+
+    hass.states.async_remove(DEMO_COVER)
+    hass.states.async_remove(DEMO_COVER_TILT)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(COVER_GROUP)
+    assert CoverEntityCapabilityAttribute.SUPPORTED_SPEEDS not in state.attributes
+    assert not state.attributes[ATTR_SUPPORTED_FEATURES] & CoverEntityFeature.SPEED
+
+
+@pytest.fixture
+async def mock_speed_covers(hass: HomeAssistant) -> list[MockCover]:
+    """Set up covers with different speeds and a group of them."""
+    features = (
+        CoverEntityFeature.OPEN
+        | CoverEntityFeature.CLOSE
+        | CoverEntityFeature.SET_POSITION
+    )
+    entities = [
+        MockCover(
+            name="Slow fast",
+            unique_id="slow_fast",
+            supported_features=features | CoverEntityFeature.SPEED,
+            supported_speeds=["slow", "fast"],
+            current_cover_position=50,
+        ),
+        MockCover(
+            name="Silent fast",
+            unique_id="silent_fast",
+            supported_features=features | CoverEntityFeature.SPEED,
+            supported_speeds=["silent", "fast"],
+            current_cover_position=50,
+        ),
+        MockCover(
+            name="No speed",
+            unique_id="no_speed",
+            supported_features=features,
+            current_cover_position=50,
+        ),
+    ]
+    setup_test_component_platform(hass, COVER_DOMAIN, entities)
+    assert await async_setup_component(
+        hass,
+        COVER_DOMAIN,
+        {
+            COVER_DOMAIN: [
+                {"platform": "test"},
+                {
+                    "platform": "group",
+                    CONF_ENTITIES: [SLOW_FAST_COVER, SILENT_FAST_COVER, NO_SPEED_COVER],
+                },
+            ]
+        },
+    )
+    await hass.async_block_till_done()
+    await hass.async_start()
+    await hass.async_block_till_done()
+    return entities
+
+
+@pytest.mark.parametrize(
+    ("service", "data", "expected_kwargs"),
+    [
+        pytest.param(
+            CoverService.OPEN,
+            {CoverServiceArgument.SPEED: "fast"},
+            [
+                {CoverServiceArgument.SPEED: "fast"},
+                {CoverServiceArgument.SPEED: "fast"},
+                {},
+            ],
+            id="open_speed_of_two_members",
+        ),
+        pytest.param(
+            CoverService.SET_POSITION,
+            {CoverServiceArgument.POSITION: 30, CoverServiceArgument.SPEED: "fast"},
+            [
+                {CoverServiceArgument.POSITION: 30, CoverServiceArgument.SPEED: "fast"},
+                {CoverServiceArgument.POSITION: 30, CoverServiceArgument.SPEED: "fast"},
+                {CoverServiceArgument.POSITION: 30},
+            ],
+            id="set_position_speed_of_two_members",
+        ),
+        pytest.param(
+            CoverService.CLOSE,
+            {CoverServiceArgument.SPEED: "slow"},
+            [{CoverServiceArgument.SPEED: "slow"}, {}, {}],
+            id="close_speed_of_one_member",
+        ),
+        pytest.param(
+            CoverService.SET_POSITION,
+            {CoverServiceArgument.POSITION: 30, CoverServiceArgument.SPEED: "silent"},
+            [
+                {CoverServiceArgument.POSITION: 30},
+                {
+                    CoverServiceArgument.POSITION: 30,
+                    CoverServiceArgument.SPEED: "silent",
+                },
+                {CoverServiceArgument.POSITION: 30},
+            ],
+            id="set_position_speed_of_one_member",
+        ),
+        pytest.param(
+            CoverService.OPEN,
+            {CoverServiceArgument.SPEED: "turbo"},
+            [{}, {}, {}],
+            id="open_speed_of_no_member",
+        ),
+        pytest.param(CoverService.OPEN, {}, [{}, {}, {}], id="open_without_speed"),
+        pytest.param(
+            CoverService.SET_POSITION,
+            {CoverServiceArgument.POSITION: 30},
+            [
+                {CoverServiceArgument.POSITION: 30},
+                {CoverServiceArgument.POSITION: 30},
+                {CoverServiceArgument.POSITION: 30},
+            ],
+            id="set_position_without_speed",
+        ),
+    ],
+)
+async def test_speed_forwarded(
+    hass: HomeAssistant,
+    mock_speed_covers: list[MockCover],
+    service: str,
+    data: dict[str, Any],
+    expected_kwargs: list[dict[str, Any]],
+) -> None:
+    """Test the speed reaches the members that list it, the others move without it."""
+    state = hass.states.get(COVER_GROUP)
+    assert state.attributes[CoverEntityCapabilityAttribute.SUPPORTED_SPEEDS] == [
+        "slow",
+        "fast",
+        "silent",
+    ]
+
+    await hass.services.async_call(
+        COVER_DOMAIN,
+        service,
+        {TargetKey.ENTITY_ID: COVER_GROUP, **data},
+        blocking=True,
+    )
+
+    assert [entity.last_kwargs for entity in mock_speed_covers] == expected_kwargs
+
+
+async def test_nested_group_speed(hass: HomeAssistant) -> None:
+    """Test a nested group forwards the speed."""
+    entity = MockCover(
+        name="Slow fast",
+        unique_id="slow_fast",
+        supported_features=CoverEntityFeature.OPEN
+        | CoverEntityFeature.CLOSE
+        | CoverEntityFeature.SPEED,
+        supported_speeds=["slow", "fast"],
+    )
+    setup_test_component_platform(hass, COVER_DOMAIN, [entity])
+    assert await async_setup_component(
+        hass,
+        COVER_DOMAIN,
+        {
+            COVER_DOMAIN: [
+                {"platform": "test"},
+                {
+                    "platform": "group",
+                    CONF_ENTITIES: ["cover.inner_group"],
+                    "name": "Outer Group",
+                },
+                {
+                    "platform": "group",
+                    CONF_ENTITIES: [SLOW_FAST_COVER],
+                    "name": "Inner Group",
+                },
+            ]
+        },
+    )
+    await hass.async_block_till_done()
+    await hass.async_start()
+    await hass.async_block_till_done()
+
+    state = hass.states.get(OUTER_GROUP)
+    assert state.attributes[CoverEntityCapabilityAttribute.SUPPORTED_SPEEDS] == [
+        "slow",
+        "fast",
+    ]
+
+    await hass.services.async_call(
+        COVER_DOMAIN,
+        CoverService.CLOSE,
+        {TargetKey.ENTITY_ID: OUTER_GROUP, CoverServiceArgument.SPEED: "slow"},
+        blocking=True,
+    )
+
+    assert entity.last_kwargs == {CoverServiceArgument.SPEED: "slow"}
