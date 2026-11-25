@@ -1447,11 +1447,11 @@ async def test_nice_ibt4zwave_cover(
         pytest.param(50, 0, id="open"),
     ],
 )
+@pytest.mark.usefixtures("integration")
 async def test_iblinds_v3_toggle_tilt(
     hass: HomeAssistant,
     client: MagicMock,
     iblinds_v3: Node,
-    integration: MockConfigEntry,
     slat_value: int,
     sent_value: int,
 ) -> None:
