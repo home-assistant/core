@@ -120,6 +120,21 @@ LIGHT_DEPRECATED_MIREDS_OPTIONS = {
     "min_mireds": "max_kelvin",
 }
 
+# Light option to the action it requires, deprecated in 2026.12
+LIGHT_REQUIRED_ACTIONS = {
+    "hs": "set_hs",
+    "level": "set_level",
+    "rgb": "set_rgb",
+    "rgbw": "set_rgbw",
+    "rgbww": "set_rgbww",
+    "temperature": "set_temperature",
+    "temperature_kelvin": "set_temperature",
+    "xy": "set_xy",
+}
+
+# Cover option to the action it requires, deprecated in 2026.12
+COVER_REQUIRED_ACTIONS = {"tilt": "set_cover_tilt_position"}
+
 
 @dataclass(frozen=True, kw_only=True)
 class TemplateOptionsDeprecation(ABC):
@@ -163,19 +178,30 @@ class TemplateOptionsDeprecation(ABC):
 class DeprecatedTemplateOptions(TemplateOptionsDeprecation):
     """Deprecated YAML options of a template platform that are replaced."""
 
-    # Deprecated option to the option that replaces it
+    # Deprecated option to the option that replaces it, or to the option it
+    # requires when requires_mapped_option is set
     options: Mapping[str, str]
+    # The options are only deprecated while the option they map to is missing
+    requires_mapped_option: bool = False
 
     @override
     def deprecated_options(self, entity_config: Mapping[str, Any]) -> list[str]:
         """Return the deprecated options set in the config of an entity."""
+        options_config = self.options_config(entity_config)
         return [
-            key for key in self.options_config(entity_config) if key in self.options
+            key
+            for key in options_config
+            if key in self.options
+            and not (
+                self.requires_mapped_option and self.options[key] in options_config
+            )
         ]
 
     @override
     def describe_option(self, option: str) -> str:
-        """Return the deprecated option and the option that replaces it."""
+        """Return the deprecated option and how to fix it."""
+        if self.requires_mapped_option:
+            return f"`{self.option_name(option)}` requires `{self.options[option]}`"
         return f"`{self.option_name(option)}` → `{self.options[option]}`"
 
 
@@ -264,6 +290,25 @@ LIGHT_DEPRECATED_OPTIONS = DeprecatedTemplateOptions(
     breaks_in_ha_version="2027.6.0",
 )
 
+LIGHT_REQUIRED_ACTIONS_OPTIONS = DeprecatedTemplateOptions(
+    platform=Platform.LIGHT,
+    options=LIGHT_REQUIRED_ACTIONS,
+    translation_key="deprecated_light_missing_actions",
+    blueprint_translation_key="deprecated_light_missing_actions_blueprint",
+    breaks_in_ha_version="2027.6.0",
+    requires_mapped_option=True,
+)
+
+COVER_REQUIRED_ACTIONS_OPTIONS = DeprecatedTemplateOptions(
+    platform=Platform.COVER,
+    options=COVER_REQUIRED_ACTIONS,
+    translation_key="deprecated_cover_missing_actions",
+    blueprint_translation_key="deprecated_cover_missing_actions_blueprint",
+    breaks_in_ha_version="2027.6.0",
+    requires_mapped_option=True,
+)
+
+
 FAN_INCOMPLETE_PRESET_MODE_OPTIONS = IncompleteTemplateOptionGroup(
     platform=Platform.FAN,
     options=("preset_mode", "preset_modes", "set_preset_mode"),
@@ -289,6 +334,8 @@ DEPRECATED_TEMPLATE_OPTIONS: tuple[TemplateOptionsDeprecation, ...] = (
     SENSOR_DEPRECATED_ATTRIBUTES,
     VACUUM_DEPRECATED_ATTRIBUTES,
     LIGHT_DEPRECATED_OPTIONS,
+    LIGHT_REQUIRED_ACTIONS_OPTIONS,
+    COVER_REQUIRED_ACTIONS_OPTIONS,
     FAN_INCOMPLETE_PRESET_MODE_OPTIONS,
     VACUUM_INCOMPLETE_FAN_SPEED_OPTIONS,
 )

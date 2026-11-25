@@ -195,7 +195,17 @@ _SCHEMA_STATE: dict[probatio.Marker, Any] = {
 }
 
 # (option, the option it requires, error when missing)
+# Option, the option it requires and the error when it is missing
 _REQUIRED_OPTIONS: dict[str, tuple[tuple[str, str, str], ...]] = {
+    Platform.LIGHT: (
+        (CONF_HS, CONF_HS_ACTION, "hs_action_required"),
+        (CONF_LEVEL, CONF_LEVEL_ACTION, "level_action_required"),
+        (
+            CONF_TEMPERATURE_KELVIN,
+            CONF_TEMPERATURE_ACTION,
+            "temperature_action_required",
+        ),
+    ),
     Platform.MEDIA_PLAYER: (
         (CONF_SOURCE, CONF_SOURCE_LIST, "source_list_required"),
         (SERVICE_SELECT_SOURCE, CONF_SOURCE_LIST, "source_list_required"),

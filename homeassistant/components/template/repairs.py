@@ -90,7 +90,7 @@ class CompositeDeviceIdRepairFlow(RepairsFlow):
         )
 
 
-def _format_deprecated_options(
+def format_deprecated_options(
     hass: HomeAssistant,
     deprecation: TemplateOptionsDeprecation,
     deprecated: list[str],
@@ -168,7 +168,7 @@ def _async_update_deprecated_options_issues(
 
             # Identical entities share a fingerprint, one issue lists all of them
             issues.setdefault(fingerprint, (translation_key, label, []))[2].append(
-                _format_deprecated_options(
+                format_deprecated_options(
                     hass,
                     deprecation,
                     deprecated,
