@@ -16,9 +16,8 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.calendar import (
     DOMAIN as CALENDAR_DOMAIN,
-    EVENT_END_DATETIME,
-    EVENT_START_DATETIME,
-    SERVICE_GET_EVENTS,
+    CalendarService,
+    CalendarServiceArgument,
 )
 from homeassistant.components.gtfs.calendar import departures
 from homeassistant.components.gtfs.const import (
@@ -29,7 +28,7 @@ from homeassistant.components.gtfs.const import (
     SUBENTRY_TYPE_ROUTE,
 )
 from homeassistant.config_entries import ConfigSubentryDataWithId
-from homeassistant.const import ATTR_ENTITY_ID, CONF_URL, STATE_OFF, STATE_ON
+from homeassistant.const import CONF_URL, STATE_OFF, STATE_ON, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
@@ -137,11 +136,11 @@ async def test_get_events(
 
     response = await hass.services.async_call(
         CALENDAR_DOMAIN,
-        SERVICE_GET_EVENTS,
+        CalendarService.GET_EVENTS,
         {
-            ATTR_ENTITY_ID: ROUTE_ENTITY_ID,
-            EVENT_START_DATETIME: "2026-10-20T00:00:00-04:00",
-            EVENT_END_DATETIME: "2026-10-22T00:00:00-04:00",
+            TargetKey.ENTITY_ID: ROUTE_ENTITY_ID,
+            CalendarServiceArgument.START_DATE_TIME: "2026-10-20T00:00:00-04:00",
+            CalendarServiceArgument.END_DATE_TIME: "2026-10-22T00:00:00-04:00",
         },
         blocking=True,
         return_response=True,
