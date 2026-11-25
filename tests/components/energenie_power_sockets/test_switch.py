@@ -13,8 +13,8 @@ from homeassistant.components.homeassistant import (
 )
 from homeassistant.components.switch import (
     DOMAIN as SWITCH_DOMAIN,
-    SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
+    SwitchService,
 )
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import STATE_OFF, STATE_ON
@@ -29,7 +29,7 @@ async def _test_switch_on_off(
     """Call switch on/off service."""
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        SERVICE_TURN_ON,
+        SwitchService.TURN_ON,
         {"entity_id": entity_id},
         blocking=True,
     )
@@ -37,7 +37,7 @@ async def _test_switch_on_off(
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        SERVICE_TURN_OFF,
+        SwitchService.TURN_OFF,
         {"entity_id": entity_id},
         blocking=True,
     )
@@ -68,7 +68,7 @@ async def _test_switch_off_exeception(
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             SWITCH_DOMAIN,
-            SERVICE_TURN_OFF,
+            SwitchService.TURN_OFF,
             {"entity_id": entity_id},
             blocking=True,
         )

@@ -10,19 +10,13 @@ import wave
 
 from hass_nabucasa.voice import VoiceError, VoiceTokenError
 from hass_nabucasa.voice_data import TTS_VOICES
-import probatio
 import pytest
 from pytest_homeassistant.common import async_mock_service
 from pytest_homeassistant.typing import ClientSessionGenerator
 
 from homeassistant.components.assist_pipeline.pipeline import STORAGE_KEY  # pylint: disable=home-assistant-component-root-import
 from homeassistant.components.cloud.const import DEFAULT_TTS_DEFAULT_VOICE, DOMAIN
-from homeassistant.components.cloud.tts import (
-    DEFAULT_VOICES,
-    PLATFORM_SCHEMA,
-    SUPPORT_LANGUAGES,
-    Voice,
-)
+from homeassistant.components.cloud.tts import DEFAULT_VOICES, SUPPORT_LANGUAGES, Voice
 from homeassistant.components.media_player import (
     ATTR_MEDIA_CONTENT_ID,
     DOMAIN as MP_DOMAIN,
@@ -38,7 +32,6 @@ from homeassistant.components.tts import (
 from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 from homeassistant.core_config import async_process_ha_core_config
-from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.entity_registry import EntityRegistry
 from homeassistant.setup import async_setup_component
 
@@ -82,48 +75,11 @@ def test_default_voice_is_valid(language: str, voice: str) -> None:
     assert voice in TTS_VOICES[language]
 
 
-def test_schema() -> None:
-    """Test schema."""
-    assert "nl-NL" in SUPPORT_LANGUAGES
-
-    processed = PLATFORM_SCHEMA({"platform": "cloud", "language": "nl-NL"})
-    assert processed["gender"] == "female"
-
-    with pytest.raises(probatio.Invalid):
-        PLATFORM_SCHEMA(
-            {"platform": "cloud", "language": "non-existing", "gender": "female"}
-        )
-
-    with pytest.raises(probatio.Invalid):
-        PLATFORM_SCHEMA(
-            {"platform": "cloud", "language": "nl-NL", "gender": "not-supported"}
-        )
-
-    # Should not raise
-    PLATFORM_SCHEMA({"platform": "cloud", "language": "nl-NL", "gender": "female"})
-    PLATFORM_SCHEMA({"platform": "cloud"})
-
-
 @pytest.mark.parametrize(
-    ("engine_id", "platform_config"),
+    "engine_id",
     [
-        (
-            DOMAIN,
-            None,
-        ),
-        (
-            DOMAIN,
-            {
-                "platform": DOMAIN,
-                "service_name": "yaml",
-                "language": "fr-FR",
-                "gender": "female",
-            },
-        ),
-        (
-            "tts.home_assistant_cloud",
-            None,
-        ),
+        DOMAIN,
+        "tts.home_assistant_link",
     ],
 )
 async def test_prefs_default_voice(
@@ -131,11 +87,10 @@ async def test_prefs_default_voice(
     cloud: MagicMock,
     set_cloud_prefs: Callable[[dict[str, Any]], Coroutine[Any, Any, None]],
     engine_id: str,
-    platform_config: dict[str, Any] | None,
 ) -> None:
     """Test cloud provider uses the preferences."""
     assert await async_setup_component(hass, "homeassistant", {})
-    assert await async_setup_component(hass, TTS_DOMAIN, {TTS_DOMAIN: platform_config})
+    assert await async_setup_component(hass, TTS_DOMAIN, {TTS_DOMAIN: None})
     await hass.async_block_till_done()
     assert await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
     await hass.async_block_till_done()
@@ -149,7 +104,6 @@ async def test_prefs_default_voice(
     engine = get_engine_instance(hass, engine_id)
 
     assert engine is not None
-    # The platform config provider will be overridden by the discovery info provider.
     assert engine.default_language == "en-US"
     assert engine.default_options == {"audio_output": "mp3"}
 
@@ -160,31 +114,29 @@ async def test_prefs_default_voice(
     assert engine.default_options == {"audio_output": "mp3"}
 
 
-async def test_deprecated_platform_config(
-    hass: HomeAssistant,
-    issue_registry: ir.IssueRegistry,
-    cloud: MagicMock,
+@pytest.mark.usefixtures("cloud")
+async def test_yaml_platform_config_not_supported(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
-    """Test cloud provider uses the preferences."""
+    """Test the cloud text-to-speech platform can't be configured in YAML."""
+    assert await async_setup_component(hass, "homeassistant", {})
     assert await async_setup_component(
-        hass, TTS_DOMAIN, {TTS_DOMAIN: {"platform": DOMAIN}}
+        hass, TTS_DOMAIN, {TTS_DOMAIN: {"platform": DOMAIN, "service_name": "yaml"}}
     )
     await hass.async_block_till_done()
 
-    issue = issue_registry.async_get_issue(DOMAIN, "deprecated_tts_platform_config")
-    assert issue is not None
-    assert issue.breaks_in_ha_version == "2024.9.0"
-    assert issue.is_fixable is False
-    assert issue.is_persistent is False
-    assert issue.severity == ir.IssueSeverity.WARNING
-    assert issue.translation_key == "deprecated_tts_platform_config"
+    assert not hass.services.has_service(TTS_DOMAIN, "yaml")
+    assert (
+        "Configuring the cloud text-to-speech platform in YAML is no longer supported"
+        in caplog.text
+    )
 
 
 @pytest.mark.parametrize(
     "engine_id",
     [
         DOMAIN,
-        "tts.home_assistant_cloud",
+        "tts.home_assistant_link",
     ],
 )
 async def test_provider_properties(
@@ -216,7 +168,7 @@ async def test_provider_properties(
     [
         ({"platform": DOMAIN}, DOMAIN),
         ({"engine_id": DOMAIN}, DOMAIN),
-        ({"engine_id": "tts.home_assistant_cloud"}, "tts.home_assistant_cloud"),
+        ({"engine_id": "tts.home_assistant_link"}, "tts.home_assistant_link"),
     ],
 )
 @pytest.mark.parametrize(
@@ -365,7 +317,7 @@ async def test_tts_entity(
     on_start_callback = cloud.register_on_start.call_args[0][0]
     await on_start_callback()
     client = await hass_client()
-    entity_id = "tts.home_assistant_cloud"
+    entity_id = "tts.home_assistant_link"
 
     state = hass.states.get(entity_id)
     assert state
@@ -417,7 +369,7 @@ async def test_migrating_pipelines(
     hass_storage: dict[str, Any],
 ) -> None:
     """Test migrating pipelines when cloud tts entity is added."""
-    entity_id = "tts.home_assistant_cloud"
+    entity_id = "tts.home_assistant_link"
     mock_process_tts = AsyncMock(
         return_value=b"",
     )
@@ -443,7 +395,7 @@ async def test_migrating_pipelines(
     # The stt/tts engines should have been updated to the new cloud engine ids.
     assert (
         hass_storage[STORAGE_KEY]["data"]["items"][0]["stt_engine"]
-        == "stt.home_assistant_cloud"
+        == "stt.home_assistant_link"
     )
     assert hass_storage[STORAGE_KEY]["data"]["items"][0]["tts_engine"] == entity_id
 
@@ -462,7 +414,7 @@ async def test_migrating_pipelines(
     )
     assert hass_storage[STORAGE_KEY]["data"]["items"][0]["language"] == "language_1"
     assert (
-        hass_storage[STORAGE_KEY]["data"]["items"][0]["name"] == "Home Assistant Cloud"
+        hass_storage[STORAGE_KEY]["data"]["items"][0]["name"] == "Home Assistant Link"
     )
     assert hass_storage[STORAGE_KEY]["data"]["items"][0]["stt_language"] == "language_1"
     assert hass_storage[STORAGE_KEY]["data"]["items"][0]["tts_language"] == "language_1"
@@ -475,6 +427,13 @@ async def test_migrating_pipelines(
     assert hass_storage[STORAGE_KEY]["data"]["items"][1] == PIPELINE_DATA["items"][1]
     assert hass_storage[STORAGE_KEY]["data"]["items"][2] == PIPELINE_DATA["items"][2]
 
+    # A cloud pipeline with a custom name gets its engines migrated but keeps its name.
+    assert hass_storage[STORAGE_KEY]["data"]["items"][3] == {
+        **PIPELINE_DATA["items"][3],
+        "stt_engine": "stt.home_assistant_link",
+        "tts_engine": entity_id,
+    }
+
 
 @pytest.mark.parametrize(
     ("service", "service_data"),
@@ -482,7 +441,7 @@ async def test_migrating_pipelines(
         (
             "speak",
             {
-                ATTR_ENTITY_ID: "tts.home_assistant_cloud",
+                ATTR_ENTITY_ID: "tts.home_assistant_link",
                 ATTR_LANGUAGE: "id-ID",
                 ATTR_MEDIA_PLAYER_ENTITY_ID: "media_player.something",
                 ATTR_MESSAGE: "There is someone at the door.",

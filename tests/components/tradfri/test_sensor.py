@@ -236,3 +236,20 @@ async def test_unique_id_migration(
         entity_registry.async_get_entity_id(SENSOR_DOMAIN, DOMAIN, old_unique_id)
         is None
     )
+
+
+@pytest.mark.parametrize("device", ["air_purifier_without_values"], indirect=True)
+@pytest.mark.parametrize(
+    "entity_id", ["sensor.test_air_quality", "sensor.test_filter_time_left"]
+)
+@pytest.mark.usefixtures("device")
+async def test_air_purifier_sensor_without_values(
+    hass: HomeAssistant,
+    entity_id: str,
+) -> None:
+    """Test air purifier sensors whose control reports no values."""
+    await setup_integration(hass)
+
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == STATE_UNKNOWN

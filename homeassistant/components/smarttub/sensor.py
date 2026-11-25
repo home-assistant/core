@@ -11,7 +11,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from .const import ATTR_DURATION, ATTR_START_HOUR
+from .const import ATTR_DURATION, ATTR_START_HOUR, SmartTubServiceArgument
 from .controller import SmartTubConfigEntry
 from .entity import SmartTubOnboardSensorBase
 
@@ -117,8 +117,8 @@ class SmartTubPrimaryFiltrationCycle(SmartTubBuiltinSensor):
     async def async_set_primary_filtration(self, **kwargs):
         """Update primary filtration settings."""
         await self.cycle.set(
-            duration=kwargs.get(ATTR_DURATION),
-            start_hour=kwargs.get(ATTR_START_HOUR),
+            duration=kwargs.get(SmartTubServiceArgument.DURATION),
+            start_hour=kwargs.get(SmartTubServiceArgument.START_HOUR),
         )
         await self.coordinator.async_request_refresh()
 
@@ -158,7 +158,7 @@ class SmartTubSecondaryFiltrationCycle(SmartTubBuiltinSensor):
     async def async_set_secondary_filtration(self, **kwargs):
         """Update primary filtration settings."""
         mode = smarttub.SpaSecondaryFiltrationCycle.SecondaryFiltrationMode[
-            kwargs[ATTR_MODE].upper()
+            kwargs[SmartTubServiceArgument.MODE].upper()
         ]
         await self.cycle.set_mode(mode)
         await self.coordinator.async_request_refresh()

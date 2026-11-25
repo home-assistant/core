@@ -119,6 +119,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: MatterConfigEntry) -> No
                     hass,
                     DOMAIN,
                     "server_version_version_too_old",
+                    config_entry_id=entry.entry_id,
                     is_fixable=False,
                     severity=IssueSeverity.ERROR,
                     translation_key="server_version_version_too_old",
@@ -128,6 +129,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: MatterConfigEntry) -> No
                 hass,
                 DOMAIN,
                 "server_version_version_too_new",
+                config_entry_id=entry.entry_id,
                 is_fixable=False,
                 severity=IssueSeverity.ERROR,
                 translation_key="server_version_version_too_new",
@@ -144,7 +146,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: MatterConfigEntry) -> No
     async_delete_issue(hass, DOMAIN, "server_version_version_too_old")
     async_delete_issue(hass, DOMAIN, "server_version_version_too_new")
 
-    await _async_check_ipv6_enabled(hass)
+    await _async_check_ipv6_enabled(hass, entry)
 
     ble_proxy: MatterBleProxy | None = None
 
@@ -304,7 +306,9 @@ def _derive_ble_proxy_url(matter_ws_url: str) -> str | None:
     return str(parsed.with_path(new_path))
 
 
-async def _async_check_ipv6_enabled(hass: HomeAssistant) -> None:
+async def _async_check_ipv6_enabled(
+    hass: HomeAssistant, entry: MatterConfigEntry
+) -> None:
     """Raise a repair issue when IPv6 is disabled in Supervisor network settings.
 
     Matter relies on IPv6 to communicate with devices. On Supervised/HAOS
@@ -344,6 +348,7 @@ async def _async_check_ipv6_enabled(hass: HomeAssistant) -> None:
         hass,
         DOMAIN,
         "ipv6_disabled",
+        config_entry_id=entry.entry_id,
         is_fixable=False,
         severity=IssueSeverity.WARNING,
         translation_key="ipv6_disabled",
@@ -445,9 +450,9 @@ async def async_remove_config_entry_device(
     device_entry: dr.AnyDeviceEntry,
 ) -> bool:
     """Remove a config entry from a device."""
-    if not isinstance(device_entry, dr.DeviceEntry):
-        # This integration does not create child devices.
-        return False
+    if isinstance(device_entry, dr.ChildDeviceEntry):
+        # Only an orphaned child device, whose endpoint is gone, can be removed.
+        return get_node_from_device_entry(hass, device_entry) is None
     node = get_node_from_device_entry(hass, device_entry)
 
     if node is None:

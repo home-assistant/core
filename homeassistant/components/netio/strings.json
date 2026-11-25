@@ -29,6 +29,31 @@
       }
     }
   },
+  "entity": {
+    "sensor": {
+      "current": {
+        "name": "{output_name} current"
+      },
+      "energy": {
+        "name": "{output_name} energy"
+      },
+      "load": {
+        "name": "{output_name} load"
+      },
+      "power_factor": {
+        "name": "{output_name} power factor"
+      },
+      "reverse_energy": {
+        "name": "{output_name} reverse energy"
+      },
+      "total_energy": {
+        "name": "{output_name} total energy"
+      },
+      "total_reverse_energy": {
+        "name": "{output_name} total reverse energy"
+      }
+    }
+  },
   "issues": {
     "deprecated_yaml": {
       "description": "Configuring the Netio switch platform using YAML is being removed. The integration now connects to your device using the JSON API, which requires a new setup.\n\nTo set up your device:\n\n1. Open the web interface of your Netio device and enable the **JSON API** protocol (**Settings** > **M2M API Protocols** > **JSON API**), creating an account with read-write access.\n2. [Add the Netio integration]({url}) and enter the connection details, using the JSON API account credentials.\n3. Remove the `netio` switch platform configuration from your `configuration.yaml` file and restart Home Assistant.\n\nAfterwards, your device outputs are available as switch entities again.",

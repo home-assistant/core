@@ -23,3 +23,14 @@ def test_add_pending_after_reset_does_not_reseed_oldest_ts() -> None:
     manager.add_pending("sensor.test", States(last_updated_ts=99.0))
 
     assert manager.oldest_ts == 10.0
+
+
+def test_evict_purged_state_ids_drops_pending_last_reported() -> None:
+    """Test purged states have no pending last reported update."""
+    manager = StatesManager()
+    manager.update_pending_last_reported(1, 123.0)
+    manager.update_pending_last_reported(2, 456.0)
+
+    manager.evict_purged_state_ids({1, 3})
+
+    assert manager.get_pending_last_reported_timestamp() == {2: 456.0}

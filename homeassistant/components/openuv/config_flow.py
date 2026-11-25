@@ -103,8 +103,8 @@ class OpenUvFlowHandler(ConfigFlow, domain=DOMAIN):
                 data_schema=error_schema,
                 errors={CONF_API_KEY: "invalid_api_key"},
                 description_placeholders={
-                    CONF_LATITUDE: str(data.latitude),
-                    CONF_LONGITUDE: str(data.longitude),
+                    "latitude": str(data.latitude),
+                    "longitude": str(data.longitude),
                 },
             )
 

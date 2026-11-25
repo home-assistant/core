@@ -49,6 +49,8 @@ async def init_integration(
     options: dict[str, Any] | None = None,
     skip_setup: bool = False,
     data: dict[str, Any] | None = None,
+    unique_id: str = MOCK_MAC,
+    entry_id: str | None = None,
 ) -> MockConfigEntry:
     """Set up the Shelly integration in Home Assistant."""
     if data is None:
@@ -63,10 +65,11 @@ async def init_integration(
     entry = MockConfigEntry(
         domain=DOMAIN,
         data=data,
-        unique_id=MOCK_MAC,
+        unique_id=unique_id,
         options=options,
         title="Test name",
         minor_version=3,
+        entry_id=entry_id,
     )
     entry.add_to_hass(hass)
 

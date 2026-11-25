@@ -251,6 +251,7 @@ class KrakenSensor(
         await super().async_added_to_hass()
         self._update_internal_state()
 
+    @callback
     @override
     def _handle_coordinator_update(self) -> None:
         self._update_internal_state()

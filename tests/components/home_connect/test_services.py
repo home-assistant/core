@@ -5,6 +5,7 @@ from typing import Any
 from unittest.mock import AsyncMock, MagicMock
 
 from aiohomeconnect.model import (
+    ApplianceType,
     HomeAppliance,
     Option,
     OptionKey,
@@ -148,7 +149,7 @@ def test_services_yaml_set_program_and_options_option_keys() -> None:
                 )
 
 
-@pytest.mark.parametrize("appliance", ["Washer"], indirect=True)
+@pytest.mark.parametrize("appliance", [ApplianceType.WASHER], indirect=True)
 @pytest.mark.parametrize("service_call", SERVICE_KV_CALL_PARAMS)
 async def test_key_value_services(
     hass: HomeAssistant,
@@ -177,7 +178,7 @@ async def test_key_value_services(
     )
 
 
-@pytest.mark.parametrize("appliance", ["Washer"], indirect=True)
+@pytest.mark.parametrize("appliance", [ApplianceType.WASHER], indirect=True)
 @pytest.mark.parametrize(
     ("service_call", "called_method"),
     zip(
@@ -219,7 +220,7 @@ async def test_set_program_and_options(
     assert method_mock.call_args == snapshot
 
 
-@pytest.mark.parametrize("appliance", ["Washer"], indirect=True)
+@pytest.mark.parametrize("appliance", [ApplianceType.WASHER], indirect=True)
 @pytest.mark.parametrize(
     ("service_call", "error_regex"),
     zip(
@@ -257,7 +258,7 @@ async def test_set_program_and_options_exceptions(
         await hass.services.async_call(**service_call)
 
 
-@pytest.mark.parametrize("appliance", ["Dishwasher"], indirect=True)
+@pytest.mark.parametrize("appliance", [ApplianceType.DISHWASHER], indirect=True)
 @pytest.mark.parametrize(
     "additional_service_data",
     [
@@ -387,7 +388,7 @@ async def test_start_selected_program(
 @pytest.mark.parametrize(
     "get_active_program_side_effect", [None, NoProgramActiveError("error.key")]
 )
-@pytest.mark.parametrize("appliance", ["Dishwasher"], indirect=True)
+@pytest.mark.parametrize("appliance", [ApplianceType.DISHWASHER], indirect=True)
 async def test_start_select_program_non_writtable_options_discarded(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
@@ -473,7 +474,7 @@ async def test_start_select_program_non_writtable_options_discarded(
 @pytest.mark.parametrize(
     "get_active_program_side_effect", [None, NoProgramActiveError("error.key")]
 )
-@pytest.mark.parametrize("appliance", ["Dishwasher"], indirect=True)
+@pytest.mark.parametrize("appliance", [ApplianceType.DISHWASHER], indirect=True)
 async def test_start_selected_favorite_program(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
@@ -535,7 +536,7 @@ async def test_start_selected_favorite_program(
     }
 
 
-@pytest.mark.parametrize("appliance", ["Dishwasher"], indirect=True)
+@pytest.mark.parametrize("appliance", [ApplianceType.DISHWASHER], indirect=True)
 @pytest.mark.parametrize(
     ("mock_attr", "error_regex", "get_active_program_side_effect"),
     [
@@ -596,7 +597,7 @@ async def test_start_selected_program_and_options_exceptions(
         )
 
 
-@pytest.mark.parametrize("appliance", ["Washer"], indirect=True)
+@pytest.mark.parametrize("appliance", [ApplianceType.WASHER], indirect=True)
 async def test_start_selected_program_user_option_not_writable_raises(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
@@ -688,7 +689,7 @@ async def test_no_program_error(
 @pytest.mark.parametrize(
     "get_active_program_side_effect", [None, NoProgramActiveError("error.key")]
 )
-@pytest.mark.parametrize("appliance", ["Dishwasher"], indirect=True)
+@pytest.mark.parametrize("appliance", [ApplianceType.DISHWASHER], indirect=True)
 async def test_start_selected_favorite_program_no_base_program(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
@@ -790,7 +791,7 @@ async def test_services_appliance_not_found(
         await hass.services.async_call(**service_call)
 
 
-@pytest.mark.parametrize("appliance", ["Washer"], indirect=True)
+@pytest.mark.parametrize("appliance", [ApplianceType.WASHER], indirect=True)
 @pytest.mark.parametrize(
     "service_call",
     SERVICE_KV_CALL_PARAMS,
@@ -854,7 +855,7 @@ async def test_not_possible_to_use_favorite_program(
         )
 
 
-@pytest.mark.parametrize("appliance", ["Dishwasher"], indirect=True)
+@pytest.mark.parametrize("appliance", [ApplianceType.DISHWASHER], indirect=True)
 @pytest.mark.parametrize(
     ("temperature_option", "service_option"),
     [
@@ -984,7 +985,7 @@ async def test_temperature_options_convert(
     )
 
 
-@pytest.mark.parametrize("appliance", ["Dishwasher"], indirect=True)
+@pytest.mark.parametrize("appliance", [ApplianceType.DISHWASHER], indirect=True)
 @pytest.mark.parametrize(
     "service_option",
     [
@@ -1089,7 +1090,7 @@ async def test_temperature_options_convert_missing_option(
     assert call_options[0].value == 35
 
 
-@pytest.mark.parametrize("appliance", ["Dishwasher"], indirect=True)
+@pytest.mark.parametrize("appliance", [ApplianceType.DISHWASHER], indirect=True)
 @pytest.mark.parametrize(
     "service_option",
     [
