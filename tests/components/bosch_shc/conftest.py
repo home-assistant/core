@@ -47,6 +47,7 @@ from boschshcpy import (
     SHCThermostatGen2,
     SHCTwinguard,
     SHCUniversalSwitch,
+    SHCWaterAlarmSystem,
     ShutterContactService,
     ShutterControlService,
     SilentModeService,
@@ -166,6 +167,7 @@ def mock_session(device_buckets: dict[str, Any]) -> Generator[MagicMock]:
     session.information.version = "2.0"
     session.device_helper = SimpleNamespace(**device_buckets)
     session.intrusion_system = intrusion_system_device()
+    session.water_alarm_system = None
     with patch("homeassistant.components.bosch_shc.SHCSession", return_value=session):
         yield session
 
@@ -634,6 +636,18 @@ def intrusion_system_device(
     device.arming_state = arming_state
     device.alarm_state = alarm_state
     device.active_configuration_profile = profile
+    return device
+
+
+def water_alarm_system_device() -> SHCWaterAlarmSystem:
+    """Build a minimal double for session.water_alarm_system."""
+    device = create_autospec(SHCWaterAlarmSystem, instance=True, spec_set=True)
+    device.id = "com.bosch.tt.wateralarm.system"
+    device.name = "Water Alarm System"
+    device.root_device_id = "test-mac"
+    device.manufacturer = "Bosch"
+    device.device_model = "WATER_ALARM"
+    device.deleted = False
     return device
 
 

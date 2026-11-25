@@ -11,15 +11,19 @@ from boschshcpy import (
     SHCSmartPlug,
     SHCSmartPlugCompact,
     SHCSmokeDetector,
+    SHCWaterAlarmSystem,
 )
 from boschshcpy.device import SHCDevice
 
 from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import BoschConfigEntry
+from .const import DOMAIN
 from .entity import SHCEntity
 
 PARALLEL_UPDATES = 1
@@ -165,6 +169,16 @@ async def async_setup_entry(
             PREVIEW_MIN_BRIGHTNESS_DESCRIPTION,
         )
     )
+    if (water_alarm := session.water_alarm_system) is not None:
+        async_add_entities(
+            [
+                *entities,
+                SHCWaterAlarmMuteButton(
+                    hass=hass, device=water_alarm, entry_id=config_entry.entry_id
+                ),
+            ]
+        )
+        return
     async_add_entities(entities)
 
 
@@ -193,3 +207,36 @@ class SHCButton[_DeviceT: SHCDevice](SHCEntity, ButtonEntity):
     def press(self) -> None:
         """Press the button."""
         self.entity_description.press_fn(self._device)
+
+
+class SHCWaterAlarmMuteButton(ButtonEntity):
+    """Button that mutes a triggered water alarm."""
+
+    _attr_should_poll = False
+    _attr_has_entity_name = True
+    _attr_translation_key = "water_alarm_mute"
+
+    def __init__(
+        self, hass: HomeAssistant, device: SHCWaterAlarmSystem, entry_id: str
+    ) -> None:
+        """Initialize the mute button on the water alarm system's device."""
+        self._device = device
+        self._attr_unique_id = f"{device.root_device_id}_{device.id}_mute"
+        device_info = DeviceInfo(
+            identifiers={(DOMAIN, device.id)},
+            translation_key="water_alarm_system",
+            manufacturer=device.manufacturer,
+            model=device.device_model,
+        )
+        if device.root_device_id is not None and (
+            hub := dr.async_get(hass).async_get_device_by_identifier(
+                (DOMAIN, device.root_device_id), entry_id
+            )
+        ):
+            device_info.via_device_id = hub.id
+        self._attr_device_info = device_info
+
+    @override
+    def press(self) -> None:
+        """Mute the active water alarm."""
+        self._device.mute()
