@@ -48,7 +48,7 @@ from homeassistant.helpers.entity_platform import (
     AddEntitiesCallback,
 )
 from homeassistant.helpers.restore_state import ExtraStoredData, RestoreEntity
-from homeassistant.helpers.typing import UNDEFINED, ConfigType, DiscoveryInfoType
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, Undefined
 from homeassistant.util import color as color_util
 
 from . import validators as tcv
@@ -529,7 +529,7 @@ class AbstractTemplateLight(AbstractTemplateEntity, LightEntity, RestoreEntity):
             self._temperature_option = CONF_TEMPERATURE
             self._temperature_validator = self._validate_temperature
         # The raw result is cached to revalidate it when the min/max range changes
-        self._rendered_temperature: Any = UNDEFINED
+        self._rendered_temperature: Any = Undefined
         self.setup_template(
             self._temperature_option,
             "_attr_color_temp_kelvin",
@@ -899,7 +899,7 @@ class AbstractTemplateLight(AbstractTemplateEntity, LightEntity, RestoreEntity):
     @callback
     def _revalidate_temperature(self) -> None:
         """Revalidate the rendered temperature after the range changed."""
-        if self._rendered_temperature is UNDEFINED:
+        if self._rendered_temperature is Undefined:
             return
 
         self._attr_color_temp_kelvin = self._temperature_validator(
