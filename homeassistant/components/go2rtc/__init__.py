@@ -11,7 +11,7 @@ from secrets import token_hex
 import shutil
 from tempfile import mkdtemp
 from typing import override
-from urllib.parse import quote, urlparse
+from urllib.parse import quote, unquote, urlparse
 
 from aiohttp import ClientSession, UnixConnector, encode_basic_auth
 from aiohttp.client_exceptions import ClientConnectionError, ServerConnectionError
@@ -699,6 +699,9 @@ class WebRTCProvider(CameraWebRTCProvider):
                 producer.url == aac_source for producer in stream.producers
             )
         if add:
+            # Unknown until the write succeeds, as go2rtc may apply a write that
+            # fails here, so a retry always writes
+            self._added_sources.pop(identifier, None)
             await self._rest_client.streams.add(identifier, sources)
         # Also when go2rtc has the stream already, e.g. after a reload, so
         # later source changes reach it
@@ -726,7 +729,8 @@ class WebRTCProvider(CameraWebRTCProvider):
         if (
             url.scheme == "rtsp"
             and url.hostname in ("127.0.0.1", "localhost")
-            and url.path == f"/{identifier}"
+            # The path is URL-escaped, e.g. % as %25
+            and unquote(url.path) == f"/{identifier}"
         ):
             return True
         # The input of an FFmpeg source, e.g. one transformed for orientation
