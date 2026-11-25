@@ -19,9 +19,9 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from .const import CONF_ADS_VAR, DATA_ADS, STATE_KEY_STATE
+from .const import CONF_ADS_VAR, STATE_KEY_STATE
 from .entity import AdsEntity
-from .hub import AdsHub
+from .hub import AdsHub, async_wait_for_hub
 
 DEFAULT_NAME = "ADS Cover"
 
@@ -54,7 +54,7 @@ async def async_setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the cover platform for ADS."""
-    ads_hub = hass.data[DATA_ADS]
+    ads_hub = await async_wait_for_hub(hass)
 
     ads_var_is_closed: str = config[CONF_ADS_VAR]
     ads_var_position: str | None = config.get(CONF_ADS_VAR_POSITION)
@@ -123,8 +123,8 @@ class AdsCover(AdsEntity, CoverEntity):
             self._attr_supported_features |= CoverEntityFeature.SET_POSITION
 
     @override
-    async def async_added_to_hass(self) -> None:
-        """Register device notification."""
+    async def async_subscribe(self) -> None:
+        """Subscribe to the PLC variables of this entity."""
         if self._ads_var is not None:
             await self.async_initialize_device(self._ads_var, pyads.PLCTYPE_BOOL)
 
@@ -183,7 +183,9 @@ class AdsCover(AdsEntity, CoverEntity):
     @property
     @override
     def available(self) -> bool:
-        """Return False if state has not been updated yet."""
+        """Return whether the PLC runs and has sent a value."""
+        if not self._connection_available:
+            return False
         if self._ads_var is not None or self._ads_var_position is not None:
             return (
                 self._state_dict[STATE_KEY_STATE] is not None

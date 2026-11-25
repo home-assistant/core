@@ -24,12 +24,11 @@ from .const import (
     CONF_ADS_FACTOR,
     CONF_ADS_TYPE,
     CONF_ADS_VAR,
-    DATA_ADS,
     STATE_KEY_STATE,
     AdsType,
 )
 from .entity import AdsEntity
-from .hub import AdsHub
+from .hub import AdsHub, async_wait_for_hub
 
 DEFAULT_NAME = "ADS sensor"
 
@@ -71,7 +70,7 @@ async def async_setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up an ADS sensor device."""
-    ads_hub = hass.data[DATA_ADS]
+    ads_hub = await async_wait_for_hub(hass)
 
     ads_var: str = config[CONF_ADS_VAR]
     ads_type: AdsType = config[CONF_ADS_TYPE]
@@ -118,8 +117,8 @@ class AdsSensor(AdsEntity, SensorEntity):
         self._attr_native_unit_of_measurement = unit_of_measurement
 
     @override
-    async def async_added_to_hass(self) -> None:
-        """Register device notification."""
+    async def async_subscribe(self) -> None:
+        """Subscribe to the PLC variables of this entity."""
         await self.async_initialize_device(
             self._ads_var,
             ADS_TYPEMAP[self._ads_type],

@@ -12,6 +12,7 @@ import pyads
 from pytest_homeassistant.common import async_fire_time_changed
 
 from homeassistant.components.ads.const import DOMAIN
+from homeassistant.components.ads.hub import AdsHub
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
@@ -123,3 +124,9 @@ async def async_run_past_first_update(
         async_fire_time_changed(hass, dt_util.utcnow() + FIRST_UPDATE_TIMEOUT)
         await asyncio.sleep(0.01)
     return await task
+
+
+def get_hub(hass: HomeAssistant) -> AdsHub:
+    """Return the hub of the loaded ADS config entry."""
+    (entry,) = hass.config_entries.async_loaded_entries(DOMAIN)
+    return entry.runtime_data

@@ -34,6 +34,7 @@ FLOWS = {
         "actron_air",
         "adax",
         "adguard",
+        "ads",
         "advantage_air",
         "aemet",
         "aerosmart",

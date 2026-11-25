@@ -15,9 +15,9 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from .const import CONF_ADS_VAR, DATA_ADS
+from .const import CONF_ADS_VAR
 from .entity import AdsEntity
-from .hub import AdsHub
+from .hub import AdsHub, async_wait_for_hub
 
 DEFAULT_NAME = "ADS select"
 
@@ -39,7 +39,7 @@ async def async_setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up an ADS select device."""
-    ads_hub = hass.data[DATA_ADS]
+    ads_hub = await async_wait_for_hub(hass)
 
     ads_var: str = config[CONF_ADS_VAR]
     name: str = config[CONF_NAME]
@@ -66,8 +66,8 @@ class AdsSelect(AdsEntity, SelectEntity):
         self._attr_current_option = None
 
     @override
-    async def async_added_to_hass(self) -> None:
-        """Register device notification."""
+    async def async_subscribe(self) -> None:
+        """Subscribe to the PLC variables of this entity."""
         await self.async_initialize_device(self._ads_var, pyads.PLCTYPE_INT)
         await self.async_add_notification(
             self._ads_var, pyads.PLCTYPE_INT, self._handle_ads_value
