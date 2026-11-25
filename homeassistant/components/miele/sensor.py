@@ -929,7 +929,7 @@ async def async_setup_entry(
             if _enabled_aux_sensor(definition, level)
         )
 
-    if aux_coordinator.data:
+    if aux_coordinator.data:  # type: ignore[truthy-bool]
         _async_add_aux_sensors()
         return
 
