@@ -10,7 +10,6 @@ from homeassistant.components import bluetooth
 from homeassistant.components.bluetooth import BluetoothScanningMode
 from homeassistant.components.shelly.const import (
     CONF_BLE_ALLOWED_ADDRESSES,
-    CONF_BLE_MIN_INTERVAL,
     CONF_BLE_MIN_RSSI,
     CONF_BLE_SCANNER_MODE,
     BLEScannerMode,
@@ -219,26 +218,19 @@ async def test_scanner_auto_mode_starts_passive_and_binds_provider(
     [
         pytest.param(
             {},
-            {"allowed_addresses": None, "min_rssi": None, "min_interval": 0},
+            {"allowed_addresses": None, "min_rssi": None},
             id="no_filter",
         ),
         pytest.param(
             {
                 CONF_BLE_ALLOWED_ADDRESSES: ["AA:BB:CC:DD:EE:FF"],
                 CONF_BLE_MIN_RSSI: -85.0,
-                CONF_BLE_MIN_INTERVAL: 30,
             },
             {
                 "allowed_addresses": ["AA:BB:CC:DD:EE:FF"],
                 "min_rssi": -85,
-                "min_interval": 30,
             },
             id="all_filters",
-        ),
-        pytest.param(
-            {CONF_BLE_MIN_INTERVAL: 30},
-            {"allowed_addresses": None, "min_rssi": None, "min_interval": 0},
-            id="interval_ignored_without_addresses",
         ),
     ],
 )

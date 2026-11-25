@@ -11,12 +11,7 @@ from homeassistant.components.bluetooth import (
 )
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback as hass_callback
 
-from ..const import (
-    CONF_BLE_ALLOWED_ADDRESSES,
-    CONF_BLE_MIN_INTERVAL,
-    CONF_BLE_MIN_RSSI,
-    BLEScannerMode,
-)
+from ..const import CONF_BLE_ALLOWED_ADDRESSES, CONF_BLE_MIN_RSSI, BLEScannerMode
 
 if TYPE_CHECKING:
     from ..coordinator import ShellyRpcCoordinator
@@ -81,9 +76,6 @@ async def async_connect_scanner(
         data_version=BLE_SCAN_RESULT_VERSION,
         allowed_addresses=allowed_addresses,
         min_rssi=None if min_rssi is None else int(min_rssi),
-        min_interval=(
-            entry.options.get(CONF_BLE_MIN_INTERVAL, 0) if allowed_addresses else 0
-        ),
     )
 
     @hass_callback

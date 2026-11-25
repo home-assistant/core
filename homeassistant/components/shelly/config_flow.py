@@ -60,7 +60,6 @@ from homeassistant.const import (
     CONF_USERNAME,
     CONF_VERIFY_SSL,
     SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
-    UnitOfTime,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import AbortFlow
@@ -88,7 +87,6 @@ from .ble_provisioning import (
 )
 from .const import (
     CONF_BLE_ALLOWED_ADDRESSES,
-    CONF_BLE_MIN_INTERVAL,
     CONF_BLE_MIN_RSSI,
     CONF_BLE_SCANNER_MODE,
     CONF_GEN,
@@ -1467,8 +1465,6 @@ class OptionsFlowHandler(OptionsFlowWithReload):
                     break
                 if formatted not in addresses:
                     addresses.append(formatted)
-            if user_input.get(CONF_BLE_MIN_INTERVAL) and not addresses:
-                errors[CONF_BLE_MIN_INTERVAL] = "min_interval_requires_addresses"
             if not errors:
                 options = {**user_input}
                 # Leave unset filter options out of the entry so the
@@ -1476,8 +1472,6 @@ class OptionsFlowHandler(OptionsFlowWithReload):
                 options.pop(CONF_BLE_ALLOWED_ADDRESSES, None)
                 if addresses:
                     options[CONF_BLE_ALLOWED_ADDRESSES] = addresses
-                if not options.get(CONF_BLE_MIN_INTERVAL):
-                    options.pop(CONF_BLE_MIN_INTERVAL, None)
                 return self.async_create_entry(data=options)
 
         current = user_input or self.config_entry.options
@@ -1511,15 +1505,6 @@ class OptionsFlowHandler(OptionsFlowWithReload):
                         step=1,
                         mode=NumberSelectorMode.BOX,
                         unit_of_measurement=SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
-                    ),
-                ),
-                probatio.Optional(CONF_BLE_MIN_INTERVAL): NumberSelector(
-                    NumberSelectorConfig(
-                        min=0,
-                        max=3600,
-                        step=1,
-                        mode=NumberSelectorMode.BOX,
-                        unit_of_measurement=UnitOfTime.SECONDS,
                     ),
                 ),
             }
