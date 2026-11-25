@@ -263,19 +263,30 @@
           'description': "Integration domain to set up when flow_type is 'config' (e.g. 'local_todo', 'template').",
         }),
         'entry_id': dict({
-          'description': "The entry_id of the config entry when flow_type is 'options' or 'reconfigure' (e.g. 'hue:8K2M').",
+          'description': "The entry_id of the config entry when flow_type is 'options', 'reconfigure', or 'subentry' (e.g. 'hue:8K2M').",
           'format': 'strip',
           'type': 'string',
         }),
         'flow_type': dict({
           'default': 'config',
-          'description': "Type of flow to start: 'config' (new entry, default), 'options', or 'reconfigure'.",
+          'description': "Type of flow to start: 'config' (new entry, default), 'options', 'reconfigure', or 'subentry'.",
           'enum': list([
             'config',
             'options',
             'reconfigure',
+            'subentry',
           ]),
           'format': 'lower',
+          'type': 'string',
+        }),
+        'subentry_id': dict({
+          'description': "The subentry_id of an existing subentry to reconfigure (e.g. 'conversation:8K2M').",
+          'format': 'strip',
+          'type': 'string',
+        }),
+        'subentry_type': dict({
+          'description': "Subentry type key from supported_subentry_types when adding a new subentry with flow_type 'subentry' (optional when 'subentry_id' is given).",
+          'format': 'strip',
           'type': 'string',
         }),
       }),
