@@ -282,7 +282,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 continue
             try:
                 stream = await camera.async_create_stream()
-            except HomeAssistantError as err:
+            except (HomeAssistantError, TimeoutError) as err:
                 # One camera's stream, e.g. a WebRTC provider's restream, mustn't
                 # stop the others from preloading
                 _LOGGER.warning(
