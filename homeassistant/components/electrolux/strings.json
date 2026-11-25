@@ -911,6 +911,9 @@
     "command_validation_failed": {
       "message": "The requested command could not be executed because it failed validation. Please check the command parameters and try again."
     },
+    "fan_speed_not_available": {
+      "message": "The fan speed could not be set, because the appliance is in a mode that does not allow manual fan speed adjustment."
+    },
     "generic_error": {
       "message": "An unexpected error occurred. Please try again later."
     },

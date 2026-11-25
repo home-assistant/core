@@ -212,6 +212,11 @@ _REQUIRED_OPTIONS: dict[str, tuple[tuple[str, str, str], ...]] = {
         (SERVICE_VOLUME_UP, SERVICE_VOLUME_DOWN, "volume_up_and_down_required"),
         (SERVICE_VOLUME_DOWN, SERVICE_VOLUME_UP, "volume_up_and_down_required"),
     ),
+    Platform.VACUUM: (
+        (CONF_FAN_SPEED, CONF_FAN_SPEED_LIST, "fan_speeds_required"),
+        (SERVICE_SET_FAN_SPEED, CONF_FAN_SPEED_LIST, "fan_speeds_required"),
+        (CONF_FAN_SPEED_LIST, SERVICE_SET_FAN_SPEED, "set_fan_speed_required"),
+    ),
 }
 
 # Device class can only be chosen when the entity is created.
@@ -687,7 +692,7 @@ def validate_user_input(
     """Do post validation of user input.
 
     For sensors: Validate unit of measurement.
-    For media players: Validate options that require another option.
+    For media players and vacuums: Validate options that require another option.
     For all domaines: Set template type.
     """
 
@@ -711,6 +716,10 @@ def validate_user_input(
             # with temperature_kelvin or by removing the color temperature action
             handler.options.pop(CONF_TEMPERATURE, None)
             user_input.pop(CONF_TEMPERATURE, None)
+        if template_type == Platform.VACUUM and not user_input.get(CONF_FAN_SPEED_LIST):
+            # The frontend sends an empty list when all fan speeds are removed
+            handler.options.pop(CONF_FAN_SPEED_LIST, None)
+            user_input.pop(CONF_FAN_SPEED_LIST, None)
         for option, required_option, error in _REQUIRED_OPTIONS.get(template_type, ()):
             if option in user_input and required_option not in user_input:
                 raise SchemaFlowError(error)
@@ -1050,9 +1059,16 @@ def ws_start_preview(
             except probatio.Invalid as ex:
                 errors[CONF_STATE_CLASS] = str(ex.msg)
 
+        required_input = user_input
+        if domain == Platform.VACUUM and not user_input.get(CONF_FAN_SPEED_LIST):
+            required_input = {
+                key: value
+                for key, value in user_input.items()
+                if key != CONF_FAN_SPEED_LIST
+            }
         for option, required_option, _ in _REQUIRED_OPTIONS.get(domain, ()):
             try:
-                tcv.requires_option(option, required_option)(user_input)
+                tcv.requires_option(option, required_option)(required_input)
             except probatio.Invalid as ex:
                 errors[option] = str(ex.msg)
 

@@ -80,7 +80,7 @@ rules:
   icon-translations:
     status: exempt
     comment: The climate entity uses the default mode-based icons.
-  reconfiguration-flow: todo
+  reconfiguration-flow: done
   repair-issues: todo
   stale-devices:
     status: exempt
