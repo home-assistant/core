@@ -11,6 +11,7 @@ from homeassistant.components.llm import LLMTools
 from homeassistant.components.recorder import get_instance, statistics
 from homeassistant.components.recorder.models import StatisticMeanType
 from homeassistant.core import HomeAssistant, callback, valid_entity_id
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.llm import (
     LLM_API_HOME_ASSISTANT,
     LLMContext,
@@ -320,7 +321,8 @@ class SearchStatisticsTool(Tool):
             probatio.Optional(
                 "query",
                 description=(
-                    "Text to find in the statistic name or ID, case-insensitive."
+                    "Text to find in the statistic name, entity alias or ID, "
+                    "case-insensitive."
                 ),
             ): probatio.All(str, probatio.Strip, probatio.NonEmpty()),
             probatio.Optional(
@@ -355,6 +357,7 @@ class SearchStatisticsTool(Tool):
         unit_class: str | None = args.get("unit_class")
         offset: int = args["offset"]
 
+        ent_reg = er.async_get(hass)
         matches: list[tuple[int, str, str, JsonObjectType]] = []
         for item in await statistics.async_list_statistic_ids(
             hass, statistic_type=args.get("statistic_type")
@@ -370,7 +373,12 @@ class SearchStatisticsTool(Tool):
                 0
                 if query is None
                 else rank_name_match(
-                    query, (name,) if name else (), (), (statistic_id,)
+                    query,
+                    (name,) if name else (),
+                    er.async_get_entity_aliases(hass, entry)
+                    if (entry := ent_reg.async_get(statistic_id))
+                    else (),
+                    (statistic_id,),
                 )
             )
             if rank is None:

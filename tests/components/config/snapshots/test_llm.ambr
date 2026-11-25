@@ -30,6 +30,50 @@
       ]),
       'type': 'object',
     }),
+    'config__create_floor': dict({
+      'additionalProperties': False,
+      'properties': dict({
+        'aliases': dict({
+          'description': 'Other names that voice assistants know the floor by. This replaces all aliases.',
+          'items': dict({
+            'format': 'strip',
+            'type': 'string',
+          }),
+          'type': 'array',
+        }),
+        'icon': dict({
+          'description': "The icon, like 'mdi:home-floor-1'. null removes it.",
+          'nullable': True,
+          'type': 'string',
+        }),
+        'level': dict({
+          'description': 'The level of the floor, to sort floors. 0 is the ground floor, -1 the floor below it. null removes it.',
+          'nullable': True,
+          'type': 'integer',
+        }),
+        'name': dict({
+          'format': 'strip',
+          'type': 'string',
+        }),
+      }),
+      'required': list([
+        'name',
+      ]),
+      'type': 'object',
+    }),
+    'config__delete_floor': dict({
+      'additionalProperties': False,
+      'properties': dict({
+        'floor_id': dict({
+          'format': 'strip',
+          'type': 'string',
+        }),
+      }),
+      'required': list([
+        'floor_id',
+      ]),
+      'type': 'object',
+    }),
     'config__get_config_entries': dict({
       'additionalProperties': False,
       'properties': dict({
@@ -74,6 +118,19 @@
       }),
       'required': list([
         'entity_id',
+      ]),
+      'type': 'object',
+    }),
+    'config__get_floor_settings': dict({
+      'additionalProperties': False,
+      'properties': dict({
+        'floor_id': dict({
+          'format': 'strip',
+          'type': 'string',
+        }),
+      }),
+      'required': list([
+        'floor_id',
       ]),
       'type': 'object',
     }),
@@ -193,19 +250,30 @@
           'description': "Integration domain to set up when flow_type is 'config' (e.g. 'local_todo', 'template').",
         }),
         'entry_id': dict({
-          'description': "The entry_id of the config entry when flow_type is 'options' or 'reconfigure' (e.g. 'hue:8K2M').",
+          'description': "The entry_id of the config entry when flow_type is 'options', 'reconfigure', or 'subentry' (e.g. 'hue:8K2M').",
           'format': 'strip',
           'type': 'string',
         }),
         'flow_type': dict({
           'default': 'config',
-          'description': "Type of flow to start: 'config' (new entry, default), 'options', or 'reconfigure'.",
+          'description': "Type of flow to start: 'config' (new entry, default), 'options', 'reconfigure', or 'subentry'.",
           'enum': list([
             'config',
             'options',
             'reconfigure',
+            'subentry',
           ]),
           'format': 'lower',
+          'type': 'string',
+        }),
+        'subentry_id': dict({
+          'description': "The subentry_id of an existing subentry to reconfigure (e.g. 'conversation:8K2M').",
+          'format': 'strip',
+          'type': 'string',
+        }),
+        'subentry_type': dict({
+          'description': "Subentry type key from supported_subentry_types when adding a new subentry with flow_type 'subentry' (optional when 'subentry_id' is given).",
+          'format': 'strip',
           'type': 'string',
         }),
       }),
@@ -302,6 +370,12 @@
           'nullable': True,
           'type': 'string',
         }),
+        'display_precision': dict({
+          'description': 'Only for sensors. The number of decimals to show. null uses the default.',
+          'minimum': 0,
+          'nullable': True,
+          'type': 'integer',
+        }),
         'entity_id': dict({
           'format': 'strip',
           'type': 'string',
@@ -338,9 +412,50 @@
           'description': 'A new entity_id. Automations and scripts that use the old one are not updated.',
           'type': 'string',
         }),
+        'unit_of_measurement': dict({
+          'description': "Only for sensors. The unit to show the state in, like 'kWh'. null uses the default unit of the sensor.",
+          'format': 'strip',
+          'nullable': True,
+          'type': 'string',
+        }),
       }),
       'required': list([
         'entity_id',
+      ]),
+      'type': 'object',
+    }),
+    'config__update_floor_settings': dict({
+      'additionalProperties': False,
+      'properties': dict({
+        'aliases': dict({
+          'description': 'Other names that voice assistants know the floor by. This replaces all aliases.',
+          'items': dict({
+            'format': 'strip',
+            'type': 'string',
+          }),
+          'type': 'array',
+        }),
+        'floor_id': dict({
+          'format': 'strip',
+          'type': 'string',
+        }),
+        'icon': dict({
+          'description': "The icon, like 'mdi:home-floor-1'. null removes it.",
+          'nullable': True,
+          'type': 'string',
+        }),
+        'level': dict({
+          'description': 'The level of the floor, to sort floors. 0 is the ground floor, -1 the floor below it. null removes it.',
+          'nullable': True,
+          'type': 'integer',
+        }),
+        'name': dict({
+          'format': 'strip',
+          'type': 'string',
+        }),
+      }),
+      'required': list([
+        'floor_id',
       ]),
       'type': 'object',
     }),
