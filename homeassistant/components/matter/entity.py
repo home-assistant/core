@@ -202,6 +202,7 @@ class MatterEntity(Entity):
     _attr_has_entity_name = True
     _attr_should_poll = False
     _name_postfix: str | None = None
+    _name_postfix_is_area_tag = False
     _platform_translation_key: str | None = None
     # Cooldown in seconds to debounce state writes on updates from the device.
     # Platforms which derive their state from multiple attributes can set this
@@ -238,13 +239,22 @@ class MatterEntity(Entity):
         )
         # mark endpoint postfix if the device has the primary
         # attribute on multiple endpoints
-        if not self._endpoint.node.is_bridge_device and any(
+        sibling_endpoints = [
             ep
             for ep in self._endpoint.node.endpoints.values()
             if ep != self._endpoint
             and ep.has_attribute(None, entity_info.primary_attribute)
-        ):
+        ]
+        if not self._endpoint.node.is_bridge_device and sibling_endpoints:
             self._name_postfix = str(self._endpoint.endpoint_id)
+        # Common Area tags name the endpoint after its room. This is set before
+        # the primary entity name is suppressed below, so bridged endpoints keep it.
+        if area_key := self._get_area_tag_key(self._endpoint):
+            if any(self._get_area_tag_key(ep) == area_key for ep in sibling_endpoints):
+                self._name_postfix = str(self._endpoint.endpoint_id)
+            else:
+                self._name_postfix = area_key
+                self._name_postfix_is_area_tag = True
         # Always set translation_key for state_attributes translations.
         # For primary entities (no postfix), suppress the translated name,
         # so only the device name is used.
@@ -255,8 +265,9 @@ class MatterEntity(Entity):
 
         # Matter labels can be used to modify the entity name
         # by appending the text.
-        if name_modifier := self._get_name_modifier():
-            self._name_postfix = name_modifier
+        if found_labels := self._find_matching_labels():
+            self._name_postfix = found_labels[0]
+            self._name_postfix_is_area_tag = False
 
         # make sure to update the attributes once
         self._update_from_device()
@@ -291,11 +302,12 @@ class MatterEntity(Entity):
         ]
         return found_labels
 
-    def _get_area_tag_name(self) -> str | None:
+    @staticmethod
+    def _get_area_tag_key(endpoint: MatterEndpoint) -> str | None:
         """Get the translation key for the endpoint's Common Area tag, if any."""
 
         tag_list: list[clusters.Globals.Structs.semtag] = (
-            self.get_matter_attribute_value(clusters.Descriptor.Attributes.TagList)
+            endpoint.get_attribute_value(None, clusters.Descriptor.Attributes.TagList)
             or []
         )
         for tag in tag_list:
@@ -306,15 +318,6 @@ class MatterEntity(Entity):
                 continue
             if translation_key := AREA_TAG_TRANSLATION_KEYS.get(tag.tag):
                 return translation_key
-        return None
-
-    def _get_name_modifier(self) -> str | None:
-        """Get the name modifier for the entity."""
-
-        if found_labels := self._find_matching_labels():
-            return found_labels[0]
-        if area_tag_name := self._get_area_tag_name():
-            return area_tag_name
         return None
 
     @override
@@ -417,15 +420,14 @@ class MatterEntity(Entity):
             return self._attr_name
         name = super().name
         if name and self._name_postfix:
-            # the postfix may be a translation key, e.g. for an area tag name;
-            # a non-translatable postfix (an endpoint number or a vendor label)
-            # is not found in the translations and is used as-is
-            translations = async_get_cached_translations(
-                self.hass, self.hass.config.language, "common", DOMAIN
-            )
-            postfix = translations.get(
-                f"component.{DOMAIN}.common.{self._name_postfix}", self._name_postfix
-            )
+            postfix = self._name_postfix
+            if self._name_postfix_is_area_tag:
+                translations = async_get_cached_translations(
+                    self.hass, self.hass.config.language, "common", DOMAIN
+                )
+                postfix = translations.get(
+                    f"component.{DOMAIN}.common.{postfix}", postfix
+                )
             name = f"{name} ({postfix})"
         return name
 

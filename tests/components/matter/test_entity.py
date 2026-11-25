@@ -136,7 +136,13 @@ async def test_label_modified_entity_translation_key(
 
 
 @pytest.mark.usefixtures("matter_node")
-@pytest.mark.parametrize("node_fixture", ["mock_thermostat_area_tags"])
+@pytest.mark.parametrize(
+    "node_fixture",
+    [
+        pytest.param("mock_thermostat_area_tags", id="standard"),
+        pytest.param("mock_thermostat_area_tags_bridge", id="bridge"),
+    ],
+)
 async def test_area_tag_modified_entity_translation_key(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
@@ -168,6 +174,34 @@ async def test_area_tag_modified_entity_translation_key(
     state_2 = hass.states.get("climate.mock_thermostat_thermostat_living_room")
     assert state_2 is not None
     assert state_2.name == "Mock Thermostat Thermostat (Living Room)"
+
+
+@pytest.mark.usefixtures("matter_node")
+@pytest.mark.parametrize("node_fixture", ["mock_thermostat_area_tags_shared_room"])
+async def test_area_tag_shared_by_siblings_uses_endpoint_id(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test that sibling endpoints in the same room keep their endpoint ID postfix."""
+    entry_1 = entity_registry.async_get("climate.mock_thermostat_thermostat_1")
+    assert entry_1 is not None
+    assert entry_1.original_name == "Thermostat (1)"
+
+    entry_2 = entity_registry.async_get("climate.mock_thermostat_thermostat_2")
+    assert entry_2 is not None
+    assert entry_2.original_name == "Thermostat (2)"
+
+
+@pytest.mark.usefixtures("matter_node")
+@pytest.mark.parametrize("node_fixture", ["mock_thermostat_area_tags_label"])
+async def test_label_matching_area_key_is_not_translated(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test that a vendor label is used as-is even if it matches an area key."""
+    entry = entity_registry.async_get("climate.mock_thermostat_thermostat_area_bedroom")
+    assert entry is not None
+    assert entry.original_name == "Thermostat (area_bedroom)"
 
 
 @pytest.mark.usefixtures("matter_node")
