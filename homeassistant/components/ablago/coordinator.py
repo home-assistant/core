@@ -1,6 +1,7 @@
 """Data update coordinator for the Ablago integration."""
 
-from typing import override
+from collections.abc import Mapping
+from typing import Any, override
 
 from ablago import (
     AblagoAuthError,
@@ -27,12 +28,12 @@ from .const import DOMAIN, LOGGER, UPDATE_INTERVAL
 type AblagoConfigEntry = ConfigEntry[AblagoCounterCoordinator]
 
 
-def create_client(hass: HomeAssistant, data: dict[str, object]) -> AblagoClient:
+def create_client(hass: HomeAssistant, data: Mapping[str, Any]) -> AblagoClient:
     """Create a client that uses the shared Home Assistant session."""
-    verify_ssl = bool(data.get(CONF_VERIFY_SSL, True))
+    verify_ssl: bool = data[CONF_VERIFY_SSL]
     return AblagoClient(
-        str(data[CONF_URL]),
-        str(data[CONF_API_KEY]),
+        data[CONF_URL],
+        data[CONF_API_KEY],
         session=async_get_clientsession(hass, verify_ssl),
         verify_ssl=verify_ssl,
     )

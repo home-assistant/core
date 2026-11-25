@@ -85,20 +85,19 @@ async def test_user_flow_errors(
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
-@pytest.mark.usefixtures("mock_ablago_client")
-async def test_user_flow_invalid_url(hass: HomeAssistant) -> None:
+async def test_user_flow_invalid_url(
+    hass: HomeAssistant, mock_ablago_client_class: MagicMock
+) -> None:
     """Test an address without http:// or https:// is rejected."""
     flow_id = await _start_user_flow(hass)
-    with patch(
-        "homeassistant.components.ablago.coordinator.AblagoClient",
-        side_effect=ValueError,
-    ):
-        result = await hass.config_entries.flow.async_configure(
-            flow_id, {**USER_INPUT, CONF_URL: "ablago.example.org"}
-        )
+    mock_ablago_client_class.side_effect = ValueError
+    result = await hass.config_entries.flow.async_configure(
+        flow_id, {**USER_INPUT, CONF_URL: "ablago.example.org"}
+    )
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {CONF_URL: "invalid_url"}
 
+    mock_ablago_client_class.side_effect = None
     result = await hass.config_entries.flow.async_configure(flow_id, USER_INPUT)
     assert result["type"] is FlowResultType.CREATE_ENTRY
 

@@ -22,14 +22,21 @@ def counters_data() -> dict[str, Any]:
 
 
 @pytest.fixture
-def mock_ablago_client(counters_data: dict[str, Any]) -> Generator[MagicMock]:
-    """Mock the Ablago client wherever the integration creates one."""
+def mock_ablago_client_class(counters_data: dict[str, Any]) -> Generator[MagicMock]:
+    """Mock the Ablago client class wherever the integration creates a client."""
     with patch(
         "homeassistant.components.ablago.coordinator.AblagoClient", autospec=True
     ) as client_class:
-        client = client_class.return_value
-        client.zaehler = AsyncMock(return_value=Zaehlerstand.from_api(counters_data))
-        yield client
+        client_class.return_value.zaehler = AsyncMock(
+            return_value=Zaehlerstand.from_api(counters_data)
+        )
+        yield client_class
+
+
+@pytest.fixture
+def mock_ablago_client(mock_ablago_client_class: MagicMock) -> MagicMock:
+    """Return the mocked Ablago client."""
+    return mock_ablago_client_class.return_value
 
 
 @pytest.fixture
