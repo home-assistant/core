@@ -30,17 +30,16 @@ class WatergateBinarySensorEntityDescription(BinarySensorEntityDescription):
     value_fn: Callable[[WatergateAgregatedRequests], bool | None]
 
 
-# Despite their types, the state and networking are None after an empty response
 DESCRIPTIONS: list[WatergateBinarySensorEntityDescription] = [
     WatergateBinarySensorEntityDescription(
-        value_fn=lambda data: data.state.water_flow_indicator if data.state else None,  # type: ignore[truthy-bool]
+        value_fn=lambda data: data.state.water_flow_indicator if data.state else None,  # type: ignore[truthy-bool]  # None after an empty response
         translation_key="water_flowing",
         key="water_flowing",
         device_class=BinarySensorDeviceClass.RUNNING,
     ),
     WatergateBinarySensorEntityDescription(
         value_fn=lambda data: (
-            data.networking.mqtt_connected if data.networking else None  # type: ignore[truthy-bool]
+            data.networking.mqtt_connected if data.networking else None  # type: ignore[truthy-bool]  # None after an empty response
         ),
         translation_key="mqtt_connected",
         key="mqtt_connected",
@@ -50,7 +49,7 @@ DESCRIPTIONS: list[WatergateBinarySensorEntityDescription] = [
     ),
     WatergateBinarySensorEntityDescription(
         value_fn=lambda data: (
-            data.networking.wifi_connected if data.networking else None  # type: ignore[truthy-bool]
+            data.networking.wifi_connected if data.networking else None  # type: ignore[truthy-bool]  # None after an empty response
         ),
         translation_key="wifi_connected",
         key="wifi_connected",
@@ -60,7 +59,7 @@ DESCRIPTIONS: list[WatergateBinarySensorEntityDescription] = [
     ),
     WatergateBinarySensorEntityDescription(
         value_fn=lambda data: (
-            "external" in data.state.power_supply if data.state else None  # type: ignore[truthy-bool]
+            "external" in data.state.power_supply if data.state else None  # type: ignore[truthy-bool]  # None after an empty response
         ),
         translation_key="external_power",
         key="external_power",

@@ -47,9 +47,8 @@ class SonicValve(WatergateEntity, ValveEntity):
     ) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator, ENTITY_NAME)
-        # Despite its type, the state is None after an empty response
         self._valve_state = (
-            coordinator.data.state.valve_state if coordinator.data.state else None  # type: ignore[truthy-bool]
+            coordinator.data.state.valve_state if coordinator.data.state else None  # type: ignore[truthy-bool]  # None after an empty response
         )
 
     @property
@@ -75,10 +74,9 @@ class SonicValve(WatergateEntity, ValveEntity):
     def _handle_coordinator_update(self) -> None:
         """Handle data update."""
         self._attr_available = self.coordinator.data is not None
-        # Despite its type, the state is None after an empty response
         self._valve_state = (
             self.coordinator.data.state.valve_state
-            if self.coordinator.data.state  # type: ignore[truthy-bool]
+            if self.coordinator.data.state  # type: ignore[truthy-bool]  # None after an empty response
             else None
         )
         self.async_write_ha_state()

@@ -117,7 +117,6 @@ async def async_get_config_entry_diagnostics(
     return {
         "config_entry": async_redact_data(entry.as_dict(), TO_REDACT),
         "last_update_success": coordinator.last_update_success,
-        # Without data the first refresh has not succeeded (the entry is retrying setup).
         "data": (
             async_redact_data(
                 {
@@ -129,7 +128,7 @@ async def async_get_config_entry_diagnostics(
                 },
                 TO_REDACT,
             )
-            if data  # type: ignore[truthy-bool]
+            if data  # type: ignore[truthy-bool]  # None until the first refresh succeeds (the entry is retrying setup)
             else None
         ),
     }

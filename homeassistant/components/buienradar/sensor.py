@@ -772,8 +772,7 @@ class BrSensor(SensorEntity):
     def data_updated(self, data: BrData):
         """Handle data update."""
         self._data = data
-        # hass is None until the entity is added, not needed once on a coordinator
-        if not self.hass:  # type: ignore[truthy-bool]
+        if not self.hass:  # type: ignore[truthy-bool]  # None until added, not needed once on a coordinator
             return
         self._update()
 
