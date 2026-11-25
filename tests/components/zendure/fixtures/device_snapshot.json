@@ -9,7 +9,7 @@
     "outputPackPower": 220,
     "outputHomePower": 120,
     "remainOutTime": 420,
-    "packState": 1,
+    "packState": "charging",
     "electricLevel": 57,
     "gridInputPower": 0,
     "solarInputPower": 340,

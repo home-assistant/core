@@ -41,7 +41,7 @@ async def test_unknown_values(
     snapshot = build_snapshot()
     mock_read.return_value = replace(
         snapshot,
-        properties={**snapshot.properties, "remainOutTime": None, "packState": 9},
+        properties={**snapshot.properties, "remainOutTime": None, "packState": None},
     )
     freezer.tick(timedelta(seconds=15))
     async_fire_time_changed(hass)
