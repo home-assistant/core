@@ -9,6 +9,18 @@
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "step": {
+      "reauth_confirm": {
+        "data": {
+          "authority_id": "[%key:component::azure_data_explorer::config::step::user::data::authority_id%]",
+          "client_id": "[%key:component::azure_data_explorer::config::step::user::data::client_id%]",
+          "client_secret": "[%key:component::azure_data_explorer::config::step::user::data::client_secret%]"
+        },
+        "data_description": {
+          "authority_id": "[%key:component::azure_data_explorer::config::step::user::data_description::authority_id%]"
+        },
+        "description": "The app registration credentials for Azure Data Explorer are no longer valid. Enter new credentials.",
+        "title": "[%key:common::config_flow::title::reauth%]"
+      },
       "user": {
         "data": {
           "authority_id": "Authority ID",

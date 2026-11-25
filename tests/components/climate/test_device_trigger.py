@@ -16,6 +16,7 @@ from pytest_unordered import unordered
 from homeassistant.components import automation
 from homeassistant.components.climate import (
     DOMAIN,
+    ClimateEntityStateAttribute,
     HVACAction,
     HVACMode,
     const,
@@ -52,9 +53,9 @@ async def test_get_triggers(
         entity_entry.entity_id,
         HVACMode.COOL,
         {
-            const.ATTR_HVAC_ACTION: HVACAction.IDLE,
-            const.ATTR_CURRENT_HUMIDITY: 23,
-            const.ATTR_CURRENT_TEMPERATURE: 18,
+            ClimateEntityStateAttribute.HVAC_ACTION: HVACAction.IDLE,
+            ClimateEntityStateAttribute.CURRENT_HUMIDITY: 23,
+            ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 18,
         },
     )
     expected_triggers = [
@@ -113,9 +114,9 @@ async def test_get_triggers_hidden_auxiliary(
         entity_entry.entity_id,
         HVACMode.COOL,
         {
-            const.ATTR_HVAC_ACTION: HVACAction.IDLE,
-            const.ATTR_CURRENT_HUMIDITY: 23,
-            const.ATTR_CURRENT_TEMPERATURE: 18,
+            ClimateEntityStateAttribute.HVAC_ACTION: HVACAction.IDLE,
+            ClimateEntityStateAttribute.CURRENT_HUMIDITY: 23,
+            ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 18,
         },
     )
     expected_triggers = [
@@ -160,9 +161,9 @@ async def test_if_fires_on_state_change(
         entry.entity_id,
         HVACMode.COOL,
         {
-            const.ATTR_HVAC_ACTION: HVACAction.IDLE,
-            const.ATTR_CURRENT_HUMIDITY: 23,
-            const.ATTR_CURRENT_TEMPERATURE: 18,
+            ClimateEntityStateAttribute.HVAC_ACTION: HVACAction.IDLE,
+            ClimateEntityStateAttribute.CURRENT_HUMIDITY: 23,
+            ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 18,
         },
     )
 
@@ -222,9 +223,9 @@ async def test_if_fires_on_state_change(
         entry.entity_id,
         HVACMode.AUTO,
         {
-            const.ATTR_HVAC_ACTION: HVACAction.COOLING,
-            const.ATTR_CURRENT_HUMIDITY: 23,
-            const.ATTR_CURRENT_TEMPERATURE: 18,
+            ClimateEntityStateAttribute.HVAC_ACTION: HVACAction.COOLING,
+            ClimateEntityStateAttribute.CURRENT_HUMIDITY: 23,
+            ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 18,
         },
     )
     await hass.async_block_till_done()
@@ -236,9 +237,9 @@ async def test_if_fires_on_state_change(
         entry.entity_id,
         HVACMode.AUTO,
         {
-            const.ATTR_HVAC_ACTION: HVACAction.COOLING,
-            const.ATTR_CURRENT_HUMIDITY: 23,
-            const.ATTR_CURRENT_TEMPERATURE: 23,
+            ClimateEntityStateAttribute.HVAC_ACTION: HVACAction.COOLING,
+            ClimateEntityStateAttribute.CURRENT_HUMIDITY: 23,
+            ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 23,
         },
     )
     await hass.async_block_till_done()
@@ -250,9 +251,9 @@ async def test_if_fires_on_state_change(
         entry.entity_id,
         HVACMode.AUTO,
         {
-            const.ATTR_HVAC_ACTION: HVACAction.COOLING,
-            const.ATTR_CURRENT_HUMIDITY: 7,
-            const.ATTR_CURRENT_TEMPERATURE: 23,
+            ClimateEntityStateAttribute.HVAC_ACTION: HVACAction.COOLING,
+            ClimateEntityStateAttribute.CURRENT_HUMIDITY: 7,
+            ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 23,
         },
     )
     await hass.async_block_till_done()
@@ -265,12 +266,12 @@ async def test_if_fires_on_state_change(
     [
         pytest.param(
             {"type": "hvac_mode_changed", "to": HVACMode.AUTO},
-            {const.ATTR_CURRENT_TEMPERATURE: 18},
+            {ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 18},
             id="hvac_mode_changed",
         ),
         pytest.param(
             {"type": "current_temperature_changed", "above": 20},
-            {const.ATTR_CURRENT_TEMPERATURE: 23},
+            {ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 23},
             id="current_temperature_changed",
         ),
     ],
@@ -296,7 +297,9 @@ async def test_if_fires_on_state_change_with_for(
     )
 
     hass.states.async_set(
-        entry.entity_id, HVACMode.COOL, {const.ATTR_CURRENT_TEMPERATURE: 18}
+        entry.entity_id,
+        HVACMode.COOL,
+        {ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 18},
     )
 
     assert await async_setup_component(
@@ -354,9 +357,9 @@ async def test_if_fires_on_state_change_legacy(
         entry.entity_id,
         HVACMode.COOL,
         {
-            const.ATTR_HVAC_ACTION: HVACAction.IDLE,
-            const.ATTR_CURRENT_HUMIDITY: 23,
-            const.ATTR_CURRENT_TEMPERATURE: 18,
+            ClimateEntityStateAttribute.HVAC_ACTION: HVACAction.IDLE,
+            ClimateEntityStateAttribute.CURRENT_HUMIDITY: 23,
+            ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 18,
         },
     )
 
@@ -388,9 +391,9 @@ async def test_if_fires_on_state_change_legacy(
         entry.entity_id,
         HVACMode.AUTO,
         {
-            const.ATTR_HVAC_ACTION: HVACAction.COOLING,
-            const.ATTR_CURRENT_HUMIDITY: 23,
-            const.ATTR_CURRENT_TEMPERATURE: 18,
+            ClimateEntityStateAttribute.HVAC_ACTION: HVACAction.COOLING,
+            ClimateEntityStateAttribute.CURRENT_HUMIDITY: 23,
+            ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 18,
         },
     )
     await hass.async_block_till_done()

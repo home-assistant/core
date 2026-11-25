@@ -3,6 +3,8 @@
 from typing import override
 
 from aiohomekit.model import Accessory, Transport
+from aiohomekit.model.characteristics import CharacteristicsTypes
+from aiohomekit.model.characteristics.structs import SupportedVideoStreamConfiguration
 from aiohomekit.model.services import ServicesTypes
 from yarl import URL
 
@@ -112,6 +114,11 @@ class HomeKitCamera(AccessoryEntity, Camera):
         """Return a jpeg with the current camera snapshot."""
         width = width or DEFAULT_IMAGE_WIDTH
         height = height or DEFAULT_IMAGE_HEIGHT
+        # Some accessories never answer a size they don't list, so the request
+        # times out before the fallback below can run. Ask for a listed size;
+        # the camera component scales the result to the requested size.
+        if (sizes := self._listed_sizes()) and (width, height) not in sizes:
+            width, height = _snapshot_size(sizes, width, height)
         pairing = self._accessory.pairing
         image: bytes | None = await pairing.image(self._aid, width, height)  # type: ignore[attr-defined]
         if image is None and (width, height) != (
@@ -125,6 +132,50 @@ class HomeKitCamera(AccessoryEntity, Camera):
                 self._aid, DEFAULT_IMAGE_WIDTH, DEFAULT_IMAGE_HEIGHT
             )
         return image
+
+    def _listed_sizes(self) -> set[tuple[int, int]]:
+        """Return the video sizes the camera lists for its streams."""
+        sizes: set[tuple[int, int]] = set()
+        for service in self.accessory.services.filter(
+            service_type=ServicesTypes.CAMERA_RTP_STREAM_MANAGEMENT
+        ):
+            if not service.has(
+                CharacteristicsTypes.SUPPORTED_VIDEO_STREAM_CONFIGURATION
+            ):
+                continue
+            config = service[
+                CharacteristicsTypes.SUPPORTED_VIDEO_STREAM_CONFIGURATION
+            ].value
+            if not isinstance(config, SupportedVideoStreamConfiguration):
+                continue
+            sizes.update(
+                (attrs.width, attrs.height)
+                for codec in config.config or ()
+                for attrs in codec.video_attrs or ()
+                if attrs.width and attrs.height
+            )
+        return sizes
+
+
+def _snapshot_size(
+    sizes: set[tuple[int, int]], width: int, height: int
+) -> tuple[int, int]:
+    """Return the smallest listed size in the camera's shape covering the request.
+
+    The camera's shape is that of its largest size. Without a covering size,
+    that largest size is used.
+    """
+    native_width, native_height = max(sizes, key=lambda size: size[0] * size[1])
+    covering = [
+        (size_width, size_height)
+        for size_width, size_height in sizes
+        if size_width * native_height == size_height * native_width
+        and size_width >= width
+        and size_height >= height
+    ]
+    if not covering:
+        return native_width, native_height
+    return min(covering, key=lambda size: size[0] * size[1])
 
 
 async def async_setup_entry(

@@ -947,9 +947,15 @@ async def test_setup_with_version_error(
     expected_log_message: str,
 ) -> None:
     """Test setup integration entry fails."""
-    rest_client.validate_server_version.side_effect = [None, go2rtc_error]
-    assert await async_setup_component(hass, DOMAIN, config)
-    await hass.async_block_till_done(wait_background_tasks=True)
+    rest_client.validate_server_version.side_effect = go2rtc_error
+    # The server checks the version too, at start and in its watchdog, which
+    # can run before the entry setup, so it gets a client of its own
+    with patch(
+        "homeassistant.components.go2rtc.server.Go2RtcRestClient",
+        return_value=AsyncMock(),
+    ):
+        assert await async_setup_component(hass, DOMAIN, config)
+        await hass.async_block_till_done(wait_background_tasks=True)
     config_entries = hass.config_entries.async_entries(DOMAIN)
     assert len(config_entries) == 1
     assert config_entries[0].state is expected_config_entry_state

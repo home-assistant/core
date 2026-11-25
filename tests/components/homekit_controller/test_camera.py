@@ -22,6 +22,13 @@ from homeassistant.helpers import entity_registry as er
 
 from .common import TEST_IP_PAIRING_DATA, Helper, setup_test_component
 
+# Supported Video Stream Configuration of an Aqara G410 doorbell: H.264 at
+# 1600x1200, 1280x960, 640x480, 480x360 and 320x240
+G410_VIDEO_CONFIGURATION = (
+    "AVwBAQACDgEBAQIBAAAAAgECAwEAAwsBAkAGAgKwBAMBHgAAAwsBAgAFAgLAAwMBHgAAAwsBAoAC"
+    "AgLgAQMBHgAAAwsBAuABAgJoAQMBHgAAAwsBAkABAgLwAAMBHg=="
+)
+
 
 def create_camera(accessory: Accessory) -> None:
     """Define camera characteristics."""
@@ -33,6 +40,17 @@ def create_doorbell_camera(accessory: Accessory) -> None:
     create_camera(accessory)
     speaker = accessory.add_service(ServicesTypes.SPEAKER)
     speaker.add_char(CharacteristicsTypes.MUTE, value=False)
+
+
+def create_camera_with_sizes(accessory: Accessory) -> None:
+    """Define a camera that lists the sizes of its video streams."""
+    service = accessory.add_service(ServicesTypes.CAMERA_RTP_STREAM_MANAGEMENT)
+    configuration = service.add_char(
+        CharacteristicsTypes.SUPPORTED_VIDEO_STREAM_CONFIGURATION
+    )
+    configuration.value = G410_VIDEO_CONFIGURATION
+    # Read it as an accessory sends it, not decoded as the fake pairing would
+    configuration.get_value = lambda: G410_VIDEO_CONFIGURATION
 
 
 async def test_migrate_unique_ids(
@@ -310,3 +328,64 @@ async def test_no_two_way_audio_without_stream(hass: HomeAssistant) -> None:
 
     entity = get_camera_from_entity_id(hass, helper.entity_id)
     assert entity.camera_entity_capabilities.two_way_audio is False
+
+
+@pytest.mark.parametrize(
+    ("requested", "expected"),
+    [
+        # Card sizes on a dashboard: the smallest listed size covering them
+        ((534, 301), (640, 480)),
+        ((267, 150), (320, 240)),
+        # A listed size is passed through
+        ((480, 360), (480, 360)),
+        # Larger than any listed size: the largest
+        ((3000, 2000), (1600, 1200)),
+        # No size: the default, which is listed
+        ((None, None), (640, 480)),
+    ],
+)
+async def test_get_image_listed_size(
+    hass: HomeAssistant,
+    get_next_aid: Callable[[], int],
+    requested: tuple[int | None, int | None],
+    expected: tuple[int, int],
+) -> None:
+    """Test a size the camera lists is requested.
+
+    Some cameras never answer a size they don't list, so the request times out.
+    """
+    helper = await setup_test_component(hass, get_next_aid(), create_camera_with_sizes)
+
+    with patch.object(
+        helper.pairing, "image", return_value=base64.b64decode(FAKE_CAMERA_IMAGE)
+    ) as mock_image:
+        image = await camera.async_get_image(
+            hass, helper.entity_id, width=requested[0], height=requested[1]
+        )
+
+    assert image.content
+    mock_image.assert_awaited_once_with(ANY, *expected)
+
+
+async def test_get_image_listed_size_rejected_falls_back_to_default(
+    hass: HomeAssistant, get_next_aid: Callable[[], int]
+) -> None:
+    """Test falling back to the default size when a listed size is rejected."""
+    helper = await setup_test_component(hass, get_next_aid(), create_camera_with_sizes)
+
+    async def _image(aid: int, width: int, height: int) -> bytes | None:
+        """Mimic a G410, which lists 1280x960 but rejects it for snapshots."""
+        if (width, height) == (1280, 960):
+            return None
+        return base64.b64decode(FAKE_CAMERA_IMAGE)
+
+    with patch.object(helper.pairing, "image", side_effect=_image) as mock_image:
+        image = await camera.async_get_image(
+            hass, helper.entity_id, width=1000, height=750
+        )
+
+    assert image.content
+    assert [call.args[1:] for call in mock_image.await_args_list] == [
+        (1280, 960),
+        (640, 480),
+    ]
