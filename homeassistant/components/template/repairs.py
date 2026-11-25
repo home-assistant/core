@@ -1,7 +1,9 @@
 """Repairs platform for the template integration."""
 
+from collections.abc import Mapping
 import hashlib
 import os
+from typing import Any
 
 import probatio
 
@@ -93,16 +95,16 @@ class CompositeDeviceIdRepairFlow(RepairsFlow):
 
 
 def _get_deprecated_options(
-    deprecation: TemplateOptionsDeprecation, entity_config: TemplateConfig
+    deprecation: TemplateOptionsDeprecation, options_config: Mapping[str, Any]
 ) -> tuple[list[str], dict[str, str]]:
     """Return the options of an entity the repair lists and its extra placeholders."""
     if not isinstance(deprecation, IncompleteTemplateOptionGroup):
-        return [key for key in entity_config if key in deprecation.options], {}
+        return [key for key in options_config if key in deprecation.options], {}
     if not (
-        missing := tcv.inclusive_group_missing(entity_config, *deprecation.options)
+        missing := tcv.inclusive_group_missing(options_config, *deprecation.options)
     ):
         return [], {}
-    return [key for key in deprecation.options if key in entity_config], {
+    return [key for key in deprecation.options if key in options_config], {
         "missing": ", ".join(f"`{key}`" for key in sorted(missing))
     }
 
@@ -114,9 +116,10 @@ def _format_deprecated_options(
     locations: dict[str, tuple[str, int]],
 ) -> str:
     """Return the deprecated options, and their replacements, as a markdown list."""
+    prefix = f"{deprecation.parent_option}: " if deprecation.parent_option else ""
     changes: list[str] = []
     for key in deprecated:
-        change = f"`{key}`"
+        change = f"`{prefix}{key}`"
         if isinstance(deprecation, DeprecatedTemplateOptions):
             change = f"{change} → `{deprecation.options[key]}`"
         if (location := locations.get(key)) is not None:
@@ -151,8 +154,9 @@ def _async_update_deprecated_options_issues(
             blueprint_path = section.raw_blueprint_inputs[CONF_USE_BLUEPRINT][CONF_PATH]
 
         for index, entity_config in enumerate(section.get(platform, [])):
+            options_config = deprecation.options_config(entity_config)
             deprecated, placeholders = _get_deprecated_options(
-                deprecation, entity_config
+                deprecation, options_config
             )
             if not deprecated:
                 continue
@@ -177,7 +181,7 @@ def _async_update_deprecated_options_issues(
                         ),
                         *(
                             f"{key}="
-                            f"{getattr(entity_config[key], 'template', entity_config[key])}"
+                            f"{getattr(options_config[key], 'template', options_config[key])}"
                             for key in sorted(deprecated)
                         ),
                     ]
@@ -215,7 +219,8 @@ def _async_update_deprecated_options_issues(
                 translation_key=translation_key,
                 translation_placeholders={**label, "options": "\n".join(options)},
                 learn_more_url=(
-                    f"https://www.home-assistant.io/integrations/template/#{platform}"
+                    "https://www.home-assistant.io/integrations/template/"
+                    f"#{platform.replace('_', '-')}"
                 ),
             )
 
