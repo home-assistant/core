@@ -92,6 +92,12 @@ EVE_CLUSTER_WEATHER_MAP = {
     14: "stormy",
 }
 
+METER_TYPE_MAP = {
+    0: "utility",
+    1: "private",
+    2: "generic",
+}
+
 OPERATIONAL_STATE_MAP = {
     # enum with known Operation state values which we can translate
     clusters.OperationalState.Enums.OperationalStateEnum.kStopped: "stopped",
@@ -1913,5 +1919,54 @@ DISCOVERY_SCHEMAS = [
         ),
         entity_class=MatterSensor,
         required_attributes=(clusters.GeneralDiagnostics.Attributes.BootReason,),
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.SENSOR,
+        entity_description=MatterSensorEntityDescription(
+            key="MeterIdentificationMeterSerialNumber",
+            translation_key="meter_serial_number",
+            entity_category=EntityCategory.DIAGNOSTIC,
+        ),
+        entity_class=MatterSensor,
+        required_attributes=(
+            clusters.MeterIdentification.Attributes.MeterSerialNumber,
+        ),
+        allow_none_value=True,
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.SENSOR,
+        entity_description=MatterSensorEntityDescription(
+            key="MeterIdentificationMeterType",
+            translation_key="meter_type",
+            device_class=SensorDeviceClass.ENUM,
+            entity_category=EntityCategory.DIAGNOSTIC,
+            options=list(METER_TYPE_MAP.values()),
+            device_to_ha=lambda value: METER_TYPE_MAP.get(int(value)),
+        ),
+        entity_class=MatterSensor,
+        required_attributes=(clusters.MeterIdentification.Attributes.MeterType,),
+        allow_none_value=True,
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.SENSOR,
+        entity_description=MatterSensorEntityDescription(
+            key="MeterIdentificationPointOfDelivery",
+            translation_key="point_of_delivery",
+            entity_category=EntityCategory.DIAGNOSTIC,
+        ),
+        entity_class=MatterSensor,
+        required_attributes=(clusters.MeterIdentification.Attributes.PointOfDelivery,),
+        allow_none_value=True,
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.SENSOR,
+        entity_description=MatterSensorEntityDescription(
+            key="MeterIdentificationProtocolVersion",
+            translation_key="protocol_version",
+            entity_category=EntityCategory.DIAGNOSTIC,
+        ),
+        entity_class=MatterSensor,
+        required_attributes=(clusters.MeterIdentification.Attributes.ProtocolVersion,),
+        allow_none_value=True,
     ),
 ]

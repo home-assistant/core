@@ -139,11 +139,23 @@
       "hepa_filter_condition": {
         "default": "mdi:filter-check"
       },
+      "meter_serial_number": {
+        "default": "mdi:information-outline"
+      },
+      "meter_type": {
+        "default": "mdi:meter-electric"
+      },
       "operational_error": {
         "default": "mdi:alert-circle"
       },
       "operational_state": {
         "default": "mdi:play-pause"
+      },
+      "point_of_delivery": {
+        "default": "mdi:transmission-tower"
+      },
+      "protocol_version": {
+        "default": "mdi:numeric"
       },
       "pump_control_mode": {
         "default": "mdi:pipe-wrench"
