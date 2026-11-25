@@ -211,7 +211,9 @@ PARAMETER_ID_TO_EXCLUDE_F730 = (
 PARAMETER_ID_TO_INCLUDE_SMO20 = (
     "40013",
     "40033",
+    "40067",
     "40940",
+    "40941",
     "44069",
     "44071",
     "44073",
@@ -220,6 +222,7 @@ PARAMETER_ID_TO_INCLUDE_SMO20 = (
     "47028",
     "47032",
     "47398",
+    "49994",
     "50004",
 )
 
@@ -243,7 +246,7 @@ def skip_entity(model: str, device_point: DevicePoint) -> bool:
             return True
         if device_point.parameter_id in PARAMETER_ID_TO_EXCLUDE_F730:
             return True
-    if device_point.category.lower() in ["scheduling", "energy log"]:
+    if device_point.category.lower() == "scheduling":
         return True
     return False
 

@@ -150,52 +150,6 @@ async def test_config_entry_migration_v2(hass: HomeAssistant) -> None:
             },
             "9e2adbd75b8beb119fe564a0f320645d",
         ),
-        # Two entries with identical unique IDs for the same dongle
-        (
-            {
-                "unique_id": (
-                    "10C4:EA60_3c0ed67c628beb11b1cd64a0f320645d"
-                    "_Nabu_Casa_SkyConnect v1.0"
-                ),
-                "source": "usb",
-                "data": {
-                    "description": "SkyConnect v1.0",
-                    "device": (
-                        "/dev/serial/by-id/"
-                        "usb-Nabu_Casa_SkyConnect_v1.0_3c0ed67c628beb11b1cd64a0f320645d-if00-port0"
-                    ),
-                    "vid": "10C4",
-                    "pid": "EA60",
-                    "serial_number": "3c0ed67c628beb11b1cd64a0f320645d",
-                    "manufacturer": "Nabu Casa",
-                    "product": "SkyConnect v1.0",
-                    "firmware": "ezsp",
-                    "firmware_version": "7.4.4.0",
-                },
-            },
-            {
-                "unique_id": (
-                    "10C4:EA60_3c0ed67c628beb11b1cd64a0f320645d"
-                    "_Nabu_Casa_SkyConnect v1.0"
-                ),
-                "source": "import",
-                "data": {
-                    "description": "SkyConnect v1.0",
-                    "device": (
-                        "/dev/serial/by-id/"
-                        "usb-Nabu_Casa_SkyConnect_v1.0_3c0ed67c628beb11b1cd64a0f320645d-if00-port0"
-                    ),
-                    "vid": "10C4",
-                    "pid": "EA60",
-                    "serial_number": "3c0ed67c628beb11b1cd64a0f320645d",
-                    "manufacturer": "Nabu Casa",
-                    "product": "SkyConnect v1.0",
-                    "firmware": "spinel",
-                    "firmware_version": "SL-OPENTHREAD/2.7.2.0_GitHub-fb0446f53; EFR32",
-                },
-            },
-            "3c0ed67c628beb11b1cd64a0f320645d",
-        ),
     ],
 )
 async def test_config_entry_migration_v5_collapses_duplicates(

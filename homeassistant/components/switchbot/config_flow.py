@@ -24,7 +24,7 @@ from homeassistant.components.bluetooth import (
     BluetoothServiceInfoBleak,
     async_discovered_service_info,
 )
-from homeassistant.config_entries import ConfigEntry, ConfigFlowResult, OptionsFlow
+from homeassistant.config_entries import ConfigFlowResult, OptionsFlow
 from homeassistant.const import (
     CONF_ACCESS_TOKEN,
     CONF_ADDRESS,
@@ -58,6 +58,7 @@ from .const import (
     SUPPORTED_MODEL_TYPES,
     SupportedModels,
 )
+from .coordinator import SwitchbotConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -91,7 +92,7 @@ class SwitchbotConfigFlow(
     @callback
     @override
     def async_get_options_flow(
-        config_entry: ConfigEntry,
+        config_entry: SwitchbotConfigEntry,
     ) -> SwitchbotOptionsFlowHandler:
         """Get the options flow for this handler."""
         return SwitchbotOptionsFlowHandler()

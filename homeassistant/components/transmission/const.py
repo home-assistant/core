@@ -24,11 +24,9 @@ SUPPORTED_ORDER_MODES: dict[str, Callable[[list[Torrent]], list[Torrent]]] = {
         torrents, key=lambda t: t.ratio, reverse=True
     ),
 }
-CONF_ENTRY_ID = "entry_id"
 CONF_LIMIT = "limit"
 CONF_ORDER = "order"
 
-DEFAULT_DELETE_DATA = False
 DEFAULT_LIMIT = 10
 DEFAULT_ORDER = ORDER_OLDEST_FIRST
 DEFAULT_NAME = "Transmission"
@@ -39,19 +37,6 @@ DEFAULT_SCAN_INTERVAL = 120
 
 STATE_ATTR_TORRENT_INFO = "torrent_info"
 
-ATTR_DELETE_DATA = "delete_data"
-ATTR_LABELS = "labels"
-ATTR_TORRENT = "torrent"
-ATTR_TORRENTS = "torrents"
-ATTR_DOWNLOAD_PATH = "download_path"
-ATTR_TORRENT_FILTER = "torrent_filter"
-
-SERVICE_ADD_TORRENT = "add_torrent"
-SERVICE_GET_TORRENTS = "get_torrents"
-SERVICE_REMOVE_TORRENT = "remove_torrent"
-SERVICE_START_TORRENT = "start_torrent"
-SERVICE_STOP_TORRENT = "stop_torrent"
-
 EVENT_STARTED_TORRENT = "transmission_started_torrent"
 EVENT_REMOVED_TORRENT = "transmission_removed_torrent"
 EVENT_DOWNLOADED_TORRENT = "transmission_downloaded_torrent"
@@ -59,6 +44,9 @@ EVENT_DOWNLOADED_TORRENT = "transmission_downloaded_torrent"
 EVENT_TYPE_STARTED = "started"
 EVENT_TYPE_REMOVED = "removed"
 EVENT_TYPE_DOWNLOADED = "downloaded"
+
+EVENT_ATTR_DOWNLOAD_PATH = "download_path"
+EVENT_ATTR_LABELS = "labels"
 
 STATE_UP_DOWN = "up_down"
 STATE_SEEDING = "seeding"

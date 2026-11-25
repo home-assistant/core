@@ -3,13 +3,25 @@
 from collections.abc import Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from pyforeca import CurrentWeather, DailyForecast, HourlyForecast, Location
+from pyforeca import (
+    AirQualityDailyForecast,
+    AirQualityForecast,
+    CurrentWeather,
+    DailyForecast,
+    FifteenMinuteForecast,
+    HourlyForecast,
+    Location,
+    MinutelyForecast,
+    MinutelyForecastList,
+)
 import pytest
-from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.common import MockConfigEntry, load_json_object_fixture
 
 from homeassistant.components.foreca.const import DOMAIN, SUBENTRY_TYPE_LOCATION
 from homeassistant.config_entries import ConfigSubentryData
 from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE
+
+from . import load_observation
 
 CURRENT = CurrentWeather(
     time="2026-09-01T17:00+03:00",
@@ -46,8 +58,11 @@ HOURLY = [
         cloudiness=60,
         uv_index=1,
         precip_type="rain",
+        snow_accum=0.3,
+        thunder_prob=12,
+        visibility=24000,
         solar_radiation=141.0,
-        snow_depth=0.0,
+        snow_depth=2.0,
     )
 ]
 
@@ -57,14 +72,47 @@ DAILY = [
         symbol="d310",
         max_temp=18.0,
         min_temp=9.0,
+        max_feels_like_temp=16.6,
+        cloudiness=55,
         precip_accum=1.2,
         precip_prob=40,
         max_wind_speed=6.0,
         max_wind_gust=11.0,
         wind_dir=225,
         uv_index=3,
+        min_feels_like_temp=7.4,
+        max_rel_humidity=93,
+        min_rel_humidity=51,
+        min_dew_point=4.6,
+        min_visibility=8000,
+        snow_accum=1.5,
+        snow_depth=4.0,
         sunhours=6.4,
+        solar_radiation_sum=2875,
+        sunrise_epoch=1788318000,
+        sunset_epoch=1788368400,
         confidence="g",
+        max_temp_ensemble={
+            "p000": 16.4,
+            "p025": 17.5,
+            "p050": 18.1,
+            "p075": 18.6,
+            "p100": 19.9,
+        },
+        min_temp_ensemble={
+            "p000": 7.2,
+            "p025": 8.4,
+            "p050": 9.1,
+            "p075": 9.6,
+            "p100": 10.8,
+        },
+        precip_accum_ensemble={
+            "p010": None,
+            "p025": 0.3,
+            "p050": 1.1,
+            "p075": 2.4,
+            "p090": 4.7,
+        },
     ),
     DailyForecast(
         date="2026-09-03",
@@ -77,6 +125,67 @@ DAILY = [
     ),
 ]
 
+MINUTELY = MinutelyForecastList(
+    [
+        MinutelyForecast(time="2026-09-01T17:01+03:00", precip_rate=0.0),
+        MinutelyForecast(time="2026-09-01T17:02+03:00", precip_rate=0.4),
+        MinutelyForecast(time="2026-09-01T17:03+03:00", precip_rate=1.27),
+        MinutelyForecast(time="2026-09-01T17:04+03:00", precip_rate=None),
+    ],
+    resolution=1,
+)
+
+FIFTEEN_MINUTE = [
+    FifteenMinuteForecast.from_api(
+        {
+            "time": "2026-11-06T11:00+02:00",
+            "symbol": "d200",
+            "symbolPhrase": "partly cloudy",
+            "temperature": 3,
+            "feelsLikeTemp": -1,
+            "relHumidity": 77,
+            "dewPoint": -1,
+            "windDir": 325,
+            "windSpeed": 5,
+            "windGust": 8,
+            "windDirString": "NW",
+            "precipProb": 1,
+            "snowRate": 0,
+            "precipRate": 0,
+            "cloudiness": 66,
+            "thunderProb": 0,
+            "uvIndex": 0,
+            "pressure": 1026.04,
+            "visibility": 10000,
+            "precipType": "rain",
+        }
+    ),
+    FifteenMinuteForecast.from_api(
+        {
+            "time": "2026-11-06T11:15+02:00",
+            "symbol": "d322",
+            "symbolPhrase": "partly cloudy",
+            "temperature": 3,
+            "feelsLikeTemp": -1,
+            "relHumidity": 76,
+            "dewPoint": -1,
+            "windDir": 324,
+            "windSpeed": 4,
+            "windGust": 8,
+            "windDirString": "NW",
+            "precipProb": 70,
+            "snowRate": 0.8,
+            "precipRate": 1.2,
+            "cloudiness": 49,
+            "thunderProb": 0,
+            "uvIndex": 0,
+            "pressure": 1026.03,
+            "visibility": 11620,
+            "precipType": "snow",
+        }
+    ),
+]
+
 LOCATION = Location(
     id=100658225,
     name="Helsinki",
@@ -84,6 +193,37 @@ LOCATION = Location(
     timezone="Europe/Helsinki",
     lon=24.94,
     lat=60.17,
+)
+
+
+AIR_QUALITY = AirQualityForecast.from_api(
+    {
+        "time": "2026-11-05T10:00+02:00",
+        "pollutant": "Ozone",
+        "pollutantPhrase": "Ozone",
+        "AQI": 31,
+        "AQI_CO": 1,
+        "AQI_NO2": 3,
+        "AQI_O3": 31,
+        "AQI_SO2": 0,
+        "AQI_PM10": 4,
+        "AQI_PM2P5": 8,
+    }
+)
+
+AIR_QUALITY_DAILY = AirQualityDailyForecast.from_api(
+    {
+        "date": "2026-11-06",
+        "AQI": 26,
+        "pollutant": "Ozone",
+        "pollutantPhrase": "Ozone",
+        "AQI_CO": 2,
+        "AQI_NO2": 6,
+        "AQI_GO3": 26,
+        "AQI_SO2": 0,
+        "AQI_PM2P5": 8,
+        "AQI_PM10": 5,
+    }
 )
 
 
@@ -114,6 +254,23 @@ def mock_foreca_client() -> Generator[MagicMock]:
         client.current = AsyncMock(return_value=CURRENT)
         client.forecast_hourly = AsyncMock(return_value=HOURLY)
         client.forecast_daily = AsyncMock(return_value=DAILY)
+        client.forecast_3hourly = AsyncMock(
+            return_value=[
+                HourlyForecast.from_api(step)
+                for step in load_json_object_fixture("forecast_3hourly.json", DOMAIN)[
+                    "forecast"
+                ]
+            ]
+        )
+        client.forecast_minutely = AsyncMock(return_value=MINUTELY)
+        client.forecast_15minutely = AsyncMock(return_value=FIFTEEN_MINUTE)
+        client.observation_latest = AsyncMock(
+            return_value=load_observation(
+                "observation_hourly_precipitation_helsinki.json"
+            )
+        )
+        client.air_quality_hourly = AsyncMock(return_value=[AIR_QUALITY])
+        client.air_quality_daily = AsyncMock(return_value=[AIR_QUALITY_DAILY])
         yield client
 
 

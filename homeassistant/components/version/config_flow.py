@@ -8,7 +8,6 @@ from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_SOURCE
 
 from .const import (
-    ATTR_VERSION_SOURCE,
     CONF_BETA,
     CONF_BOARD,
     CONF_CHANNEL,
@@ -116,7 +115,7 @@ class VersionConfigFlow(ConfigFlow, domain=DOMAIN):
                 step_id=STEP_VERSION_SOURCE,
                 data_schema=data_schema,
                 description_placeholders={
-                    ATTR_VERSION_SOURCE: self._entry_data[CONF_VERSION_SOURCE]
+                    "version_source": self._entry_data[CONF_VERSION_SOURCE]
                 },
             )
         self._entry_data.update(user_input)

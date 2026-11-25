@@ -60,7 +60,8 @@ async def async_setup_entry(
 
     manage_water_heater_fallback_issue(
         hass=hass,
-        water_heater_names=[e.zone_name for e in entities],
+        entry=entry,
+        has_water_heaters=bool(entities),
         integration_overlay_fallback=coordinator.fallback,
     )
 

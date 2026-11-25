@@ -205,6 +205,6 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
             ),
             errors=errors,
             description_placeholders={
-                CONF_USERNAME: reconfigure_entry.data[CONF_USERNAME]
+                "username": reconfigure_entry.data[CONF_USERNAME]
             },
         )

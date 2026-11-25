@@ -8,37 +8,21 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.weather import (
     ATTR_CONDITION_SUNNY,
-    ATTR_WEATHER_APPARENT_TEMPERATURE,
-    ATTR_WEATHER_OZONE,
-    ATTR_WEATHER_PRECIPITATION_UNIT,
-    ATTR_WEATHER_PRESSURE,
-    ATTR_WEATHER_PRESSURE_UNIT,
-    ATTR_WEATHER_TEMPERATURE,
-    ATTR_WEATHER_TEMPERATURE_UNIT,
-    ATTR_WEATHER_UV_INDEX,
-    ATTR_WEATHER_VISIBILITY,
-    ATTR_WEATHER_VISIBILITY_UNIT,
-    ATTR_WEATHER_WIND_BEARING,
-    ATTR_WEATHER_WIND_GUST_SPEED,
-    ATTR_WEATHER_WIND_SPEED,
-    ATTR_WEATHER_WIND_SPEED_UNIT,
     DOMAIN,
-    SERVICE_GET_FORECASTS,
     Forecast,
     WeatherEntity,
+    WeatherEntityCapabilityAttribute,
     WeatherEntityFeature,
+    WeatherEntityStateAttribute,
+    WeatherService,
 )
-from homeassistant.components.weather.const import (
-    ATTR_WEATHER_CLOUD_COVERAGE,
-    ATTR_WEATHER_DEW_POINT,
-    ATTR_WEATHER_HUMIDITY,
-    ROUNDING_PRECISION,
-)
+from homeassistant.components.weather.const import ROUNDING_PRECISION
 from homeassistant.components.weather.entity import round_temperature
 from homeassistant.const import (
     PRECISION_HALVES,
     PRECISION_TENTHS,
     PRECISION_WHOLE,
+    STATE_UNAVAILABLE,
     UnitOfLength,
     UnitOfPressure,
     UnitOfSpeed,
@@ -134,16 +118,19 @@ async def test_temperature(
     expected = state_value
     apparent_expected = apparent_state_value
     dew_point_expected = dew_point_state_value
-    assert float(state.attributes[ATTR_WEATHER_TEMPERATURE]) == pytest.approx(
-        expected, rel=0.1
+    assert float(
+        state.attributes[WeatherEntityStateAttribute.TEMPERATURE]
+    ) == pytest.approx(expected, rel=0.1)
+    assert float(
+        state.attributes[WeatherEntityStateAttribute.APPARENT_TEMPERATURE]
+    ) == pytest.approx(apparent_expected, rel=0.1)
+    assert float(
+        state.attributes[WeatherEntityStateAttribute.DEW_POINT]
+    ) == pytest.approx(dew_point_expected, rel=0.1)
+    assert (
+        state.attributes[WeatherEntityCapabilityAttribute.TEMPERATURE_UNIT]
+        == state_unit
     )
-    assert float(state.attributes[ATTR_WEATHER_APPARENT_TEMPERATURE]) == pytest.approx(
-        apparent_expected, rel=0.1
-    )
-    assert float(state.attributes[ATTR_WEATHER_DEW_POINT]) == pytest.approx(
-        dew_point_expected, rel=0.1
-    )
-    assert state.attributes[ATTR_WEATHER_TEMPERATURE_UNIT] == state_unit
 
 
 @pytest.mark.parametrize("native_unit", [None])
@@ -184,16 +171,19 @@ async def test_temperature_no_unit(
     expected = state_value
     dew_point_expected = dew_point_state_value
     expected_apparent_temp = apparent_temp_state_value
-    assert float(state.attributes[ATTR_WEATHER_TEMPERATURE]) == pytest.approx(
-        expected, rel=0.1
+    assert float(
+        state.attributes[WeatherEntityStateAttribute.TEMPERATURE]
+    ) == pytest.approx(expected, rel=0.1)
+    assert float(
+        state.attributes[WeatherEntityStateAttribute.DEW_POINT]
+    ) == pytest.approx(dew_point_expected, rel=0.1)
+    assert float(
+        state.attributes[WeatherEntityStateAttribute.APPARENT_TEMPERATURE]
+    ) == pytest.approx(expected_apparent_temp, rel=0.1)
+    assert (
+        state.attributes[WeatherEntityCapabilityAttribute.TEMPERATURE_UNIT]
+        == state_unit
     )
-    assert float(state.attributes[ATTR_WEATHER_DEW_POINT]) == pytest.approx(
-        dew_point_expected, rel=0.1
-    )
-    assert float(state.attributes[ATTR_WEATHER_APPARENT_TEMPERATURE]) == pytest.approx(
-        expected_apparent_temp, rel=0.1
-    )
-    assert state.attributes[ATTR_WEATHER_TEMPERATURE_UNIT] == state_unit
 
 
 @pytest.mark.parametrize(
@@ -222,9 +212,9 @@ async def test_pressure(
     state = hass.states.get(entity0.entity_id)
 
     expected = state_value
-    assert float(state.attributes[ATTR_WEATHER_PRESSURE]) == pytest.approx(
-        expected, rel=1e-2
-    )
+    assert float(
+        state.attributes[WeatherEntityStateAttribute.PRESSURE]
+    ) == pytest.approx(expected, rel=1e-2)
 
 
 @pytest.mark.parametrize("native_unit", [None])
@@ -251,9 +241,9 @@ async def test_pressure_no_unit(
     state = hass.states.get(entity0.entity_id)
 
     expected = state_value
-    assert float(state.attributes[ATTR_WEATHER_PRESSURE]) == pytest.approx(
-        expected, rel=1e-2
-    )
+    assert float(
+        state.attributes[WeatherEntityStateAttribute.PRESSURE]
+    ) == pytest.approx(expected, rel=1e-2)
 
 
 @pytest.mark.parametrize(
@@ -290,9 +280,9 @@ async def test_wind_speed(
     state = hass.states.get(entity0.entity_id)
 
     expected = state_value
-    assert float(state.attributes[ATTR_WEATHER_WIND_SPEED]) == pytest.approx(
-        expected, rel=1e-2
-    )
+    assert float(
+        state.attributes[WeatherEntityStateAttribute.WIND_SPEED]
+    ) == pytest.approx(expected, rel=1e-2)
 
 
 @pytest.mark.parametrize(
@@ -332,9 +322,9 @@ async def test_wind_gust_speed(
     state = hass.states.get(entity0.entity_id)
 
     expected = state_value
-    assert float(state.attributes[ATTR_WEATHER_WIND_GUST_SPEED]) == pytest.approx(
-        expected, rel=1e-2
-    )
+    assert float(
+        state.attributes[WeatherEntityStateAttribute.WIND_GUST_SPEED]
+    ) == pytest.approx(expected, rel=1e-2)
 
 
 @pytest.mark.parametrize("native_unit", [None])
@@ -364,9 +354,9 @@ async def test_wind_speed_no_unit(
     state = hass.states.get(entity0.entity_id)
 
     expected = state_value
-    assert float(state.attributes[ATTR_WEATHER_WIND_SPEED]) == pytest.approx(
-        expected, rel=1e-2
-    )
+    assert float(
+        state.attributes[WeatherEntityStateAttribute.WIND_SPEED]
+    ) == pytest.approx(expected, rel=1e-2)
 
 
 async def test_wind_bearing_ozone_and_cloud_coverage_and_uv_index(
@@ -389,10 +379,10 @@ async def test_wind_bearing_ozone_and_cloud_coverage_and_uv_index(
     entity0 = await create_entity(hass, MockWeatherTest, None, **kwargs)
 
     state = hass.states.get(entity0.entity_id)
-    assert float(state.attributes[ATTR_WEATHER_WIND_BEARING]) == 180
-    assert float(state.attributes[ATTR_WEATHER_OZONE]) == 10
-    assert float(state.attributes[ATTR_WEATHER_CLOUD_COVERAGE]) == 75
-    assert float(state.attributes[ATTR_WEATHER_UV_INDEX]) == 1.2
+    assert float(state.attributes[WeatherEntityStateAttribute.WIND_BEARING]) == 180
+    assert float(state.attributes[WeatherEntityStateAttribute.OZONE]) == 10
+    assert float(state.attributes[WeatherEntityStateAttribute.CLOUD_COVERAGE]) == 75
+    assert float(state.attributes[WeatherEntityStateAttribute.UV_INDEX]) == 1.2
 
 
 async def test_humidity(
@@ -407,7 +397,7 @@ async def test_humidity(
     entity0 = await create_entity(hass, MockWeatherTest, None, **kwargs)
 
     state = hass.states.get(entity0.entity_id)
-    assert float(state.attributes[ATTR_WEATHER_HUMIDITY]) == 80
+    assert float(state.attributes[WeatherEntityStateAttribute.HUMIDITY]) == 80
 
 
 async def test_custom_units(
@@ -476,33 +466,38 @@ async def test_custom_units(
         ROUNDING_PRECISION,
     )
 
-    assert float(state.attributes[ATTR_WEATHER_WIND_SPEED]) == pytest.approx(
-        expected_wind_speed
-    )
-    assert float(state.attributes[ATTR_WEATHER_TEMPERATURE]) == pytest.approx(
-        expected_temperature, rel=0.1
-    )
-    assert float(state.attributes[ATTR_WEATHER_PRESSURE]) == pytest.approx(
-        expected_pressure
-    )
-    assert float(state.attributes[ATTR_WEATHER_VISIBILITY]) == pytest.approx(
-        expected_visibility
-    )
+    assert float(
+        state.attributes[WeatherEntityStateAttribute.WIND_SPEED]
+    ) == pytest.approx(expected_wind_speed)
+    assert float(
+        state.attributes[WeatherEntityStateAttribute.TEMPERATURE]
+    ) == pytest.approx(expected_temperature, rel=0.1)
+    assert float(
+        state.attributes[WeatherEntityStateAttribute.PRESSURE]
+    ) == pytest.approx(expected_pressure)
+    assert float(
+        state.attributes[WeatherEntityStateAttribute.VISIBILITY]
+    ) == pytest.approx(expected_visibility)
 
     assert (
-        state.attributes[ATTR_WEATHER_PRECIPITATION_UNIT]
+        state.attributes[WeatherEntityCapabilityAttribute.PRECIPITATION_UNIT]
         == set_options["precipitation_unit"]
     )
-    assert state.attributes[ATTR_WEATHER_PRESSURE_UNIT] == set_options["pressure_unit"]
     assert (
-        state.attributes[ATTR_WEATHER_TEMPERATURE_UNIT]
+        state.attributes[WeatherEntityCapabilityAttribute.PRESSURE_UNIT]
+        == set_options["pressure_unit"]
+    )
+    assert (
+        state.attributes[WeatherEntityCapabilityAttribute.TEMPERATURE_UNIT]
         == set_options["temperature_unit"]
     )
     assert (
-        state.attributes[ATTR_WEATHER_VISIBILITY_UNIT] == set_options["visibility_unit"]
+        state.attributes[WeatherEntityCapabilityAttribute.VISIBILITY_UNIT]
+        == set_options["visibility_unit"]
     )
     assert (
-        state.attributes[ATTR_WEATHER_WIND_SPEED_UNIT] == set_options["wind_speed_unit"]
+        state.attributes[WeatherEntityCapabilityAttribute.WIND_SPEED_UNIT]
+        == set_options["wind_speed_unit"]
     )
 
 
@@ -559,9 +554,12 @@ async def test_precision_for_temperature(
     state = hass.states.get(entity0.entity_id)
 
     assert state.state == ATTR_CONDITION_SUNNY
-    assert state.attributes[ATTR_WEATHER_TEMPERATURE] == 23.5
-    assert state.attributes[ATTR_WEATHER_DEW_POINT] == 2.5
-    assert state.attributes[ATTR_WEATHER_TEMPERATURE_UNIT] == UnitOfTemperature.CELSIUS
+    assert state.attributes[WeatherEntityStateAttribute.TEMPERATURE] == 23.5
+    assert state.attributes[WeatherEntityStateAttribute.DEW_POINT] == 2.5
+    assert (
+        state.attributes[WeatherEntityCapabilityAttribute.TEMPERATURE_UNIT]
+        == UnitOfTemperature.CELSIUS
+    )
 
 
 async def test_forecast_twice_daily_missing_is_daytime(
@@ -648,7 +646,7 @@ async def test_get_forecast(
 
     response = await hass.services.async_call(
         DOMAIN,
-        SERVICE_GET_FORECASTS,
+        WeatherService.GET_FORECASTS,
         {
             "entity_id": entity0.entity_id,
             "type": forecast_type,
@@ -682,7 +680,7 @@ async def test_get_forecast_no_forecast(
 
     response = await hass.services.async_call(
         DOMAIN,
-        SERVICE_GET_FORECASTS,
+        WeatherService.GET_FORECASTS,
         {
             "entity_id": entity0.entity_id,
             "type": "daily",
@@ -745,7 +743,7 @@ async def test_get_forecast_unsupported(
         ):
             await hass.services.async_call(
                 DOMAIN,
-                SERVICE_GET_FORECASTS,
+                WeatherService.GET_FORECASTS,
                 {
                     "entity_id": weather_entity.entity_id,
                     "type": forecast_type,
@@ -756,3 +754,31 @@ async def test_get_forecast_unsupported(
 
 
 ISSUE_TRACKER = "https://blablabla.com"
+
+
+async def test_units_when_unavailable(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry, config_flow_fixture: None
+) -> None:
+    """Test the units, including custom units, are kept when unavailable."""
+    set_options = {
+        WeatherEntityCapabilityAttribute.WIND_SPEED_UNIT: UnitOfSpeed.MILES_PER_HOUR,
+        WeatherEntityCapabilityAttribute.PRECIPITATION_UNIT: UnitOfLength.INCHES,
+        WeatherEntityCapabilityAttribute.PRESSURE_UNIT: UnitOfPressure.INHG,
+        WeatherEntityCapabilityAttribute.TEMPERATURE_UNIT: (
+            UnitOfTemperature.FAHRENHEIT
+        ),
+        WeatherEntityCapabilityAttribute.VISIBILITY_UNIT: UnitOfLength.MILES,
+    }
+    entry = entity_registry.async_get_or_create("weather", "test", "very_unique")
+    entity_registry.async_update_entity_options(entry.entity_id, "weather", set_options)
+    await hass.async_block_till_done()
+
+    entity0 = await create_entity(
+        hass, MockWeatherTest, None, unique_id="very_unique", available=False
+    )
+
+    state = hass.states.get(entity0.entity_id)
+    assert state.state == STATE_UNAVAILABLE
+    assert {key: state.attributes[key] for key in set_options} == set_options
+    # The entity registry restores the capabilities before the entity is added
+    assert entity_registry.async_get(entity0.entity_id).capabilities == set_options

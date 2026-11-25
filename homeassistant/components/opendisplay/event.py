@@ -5,6 +5,7 @@ from typing import override
 
 from homeassistant.components.event import (
     DOMAIN as EVENT_DOMAIN,
+    ButtonEventType,
     EventDeviceClass,
     EventEntity,
     EventEntityDescription,
@@ -17,6 +18,11 @@ from . import OpenDisplayConfigEntry
 from .entity import OpenDisplayEntity
 
 PARALLEL_UPDATES = 0
+
+_EVENT_TYPE_MAP = {
+    "button_down": ButtonEventType.PRESS_START,
+    "button_up": ButtonEventType.PRESS_END,
+}
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -47,7 +53,8 @@ async def async_setup_entry(
                         translation_key="button",
                         translation_placeholders={"number": str(button_number)},
                         device_class=EventDeviceClass.BUTTON,
-                        event_types=["button_down", "button_up"],
+                        # Library event types are deprecated; remove in 2027.6
+                        event_types=[*_EVENT_TYPE_MAP.values(), *_EVENT_TYPE_MAP],
                         byte_index=bi.button_data_byte_index,
                         button_id=button_id,
                     )
@@ -87,8 +94,12 @@ class OpenDisplayEventEntity(OpenDisplayEntity, EventEntity):
                 if (
                     event.byte_index == self.entity_description.byte_index
                     and event.button_id == self.entity_description.button_id
-                    and event.event_type in self.event_types
+                    and (event_type := _EVENT_TYPE_MAP.get(event.event_type))
                 ):
-                    self._trigger_event(event.event_type)
+                    # Library event type is deprecated; remove in 2027.6.
+                    # Standard event last, so it is the resulting state.
+                    for fired_event_type in (event.event_type, event_type):
+                        self._trigger_event(fired_event_type)
+                        self.async_write_ha_state()
             self._last_processed_data = data
             self.async_write_ha_state()

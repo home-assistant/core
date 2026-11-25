@@ -15,28 +15,24 @@ from homeassistant.components.fan import (
     DIRECTION_FORWARD,
     DIRECTION_REVERSE,
     DOMAIN as FAN_DOMAIN,
-    SERVICE_SET_DIRECTION,
-    SERVICE_SET_PERCENTAGE,
-    SERVICE_SET_PRESET_MODE,
     FanEntityFeature,
+    FanService,
+    FanServiceArgument,
 )
-from homeassistant.components.modern_forms.const import (
-    ATTR_SLEEP_TIME,
-    DOMAIN,
-    SERVICE_CLEAR_FAN_SLEEP_TIMER,
-    SERVICE_SET_FAN_SLEEP_TIMER,
-)
+from homeassistant.components.modern_forms.const import DOMAIN
 from homeassistant.components.modern_forms.fan import (
     PRESET_MODE_BREEZE,
     PRESET_MODE_NORMAL,
 )
+from homeassistant.components.modern_forms.services import (
+    ModernFormsService,
+    ModernFormsServiceArgument,
+)
 from homeassistant.const import (
-    ATTR_ENTITY_ID,
     ATTR_SUPPORTED_FEATURES,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
     STATE_ON,
     STATE_UNAVAILABLE,
+    TargetKey,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -80,8 +76,8 @@ async def test_change_state(
     with patch("aiomodernforms.ModernFormsDevice.fan") as fan_mock:
         await hass.services.async_call(
             FAN_DOMAIN,
-            SERVICE_TURN_OFF,
-            {ATTR_ENTITY_ID: "fan.modernformsfan_fan"},
+            FanService.TURN_OFF,
+            {TargetKey.ENTITY_ID: "fan.modernformsfan_fan"},
             blocking=True,
         )
         await hass.async_block_till_done()
@@ -92,10 +88,10 @@ async def test_change_state(
     with patch("aiomodernforms.ModernFormsDevice.fan") as fan_mock:
         await hass.services.async_call(
             FAN_DOMAIN,
-            SERVICE_TURN_ON,
+            FanService.TURN_ON,
             {
-                ATTR_ENTITY_ID: "fan.modernformsfan_fan",
-                ATTR_PERCENTAGE: 100,
+                TargetKey.ENTITY_ID: "fan.modernformsfan_fan",
+                FanServiceArgument.PERCENTAGE: 100,
             },
             blocking=True,
         )
@@ -114,8 +110,11 @@ async def test_sleep_timer_services(
     with patch("aiomodernforms.ModernFormsDevice.fan") as fan_mock:
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_SET_FAN_SLEEP_TIMER,
-            {ATTR_ENTITY_ID: "fan.modernformsfan_fan", ATTR_SLEEP_TIME: 1},
+            ModernFormsService.SET_FAN_SLEEP_TIMER,
+            {
+                TargetKey.ENTITY_ID: "fan.modernformsfan_fan",
+                ModernFormsServiceArgument.SLEEP_TIME: 1,
+            },
             blocking=True,
         )
         await hass.async_block_till_done()
@@ -124,8 +123,8 @@ async def test_sleep_timer_services(
     with patch("aiomodernforms.ModernFormsDevice.fan") as fan_mock:
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_CLEAR_FAN_SLEEP_TIMER,
-            {ATTR_ENTITY_ID: "fan.modernformsfan_fan"},
+            ModernFormsService.CLEAR_FAN_SLEEP_TIMER,
+            {TargetKey.ENTITY_ID: "fan.modernformsfan_fan"},
             blocking=True,
         )
         await hass.async_block_till_done()
@@ -143,10 +142,10 @@ async def test_change_direction(
     with patch("aiomodernforms.ModernFormsDevice.fan") as fan_mock:
         await hass.services.async_call(
             FAN_DOMAIN,
-            SERVICE_SET_DIRECTION,
+            FanService.SET_DIRECTION,
             {
-                ATTR_ENTITY_ID: "fan.modernformsfan_fan",
-                ATTR_DIRECTION: DIRECTION_REVERSE,
+                TargetKey.ENTITY_ID: "fan.modernformsfan_fan",
+                FanServiceArgument.DIRECTION: DIRECTION_REVERSE,
             },
             blocking=True,
         )
@@ -166,10 +165,10 @@ async def test_set_percentage(
     with patch("aiomodernforms.ModernFormsDevice.fan") as fan_mock:
         await hass.services.async_call(
             FAN_DOMAIN,
-            SERVICE_SET_PERCENTAGE,
+            FanService.SET_PERCENTAGE,
             {
-                ATTR_ENTITY_ID: "fan.modernformsfan_fan",
-                ATTR_PERCENTAGE: 100,
+                TargetKey.ENTITY_ID: "fan.modernformsfan_fan",
+                FanServiceArgument.PERCENTAGE: 100,
             },
             blocking=True,
         )
@@ -179,14 +178,13 @@ async def test_set_percentage(
             speed=6,
         )
 
-    await init_integration(hass, aioclient_mock)
     with patch("aiomodernforms.ModernFormsDevice.fan") as fan_mock:
         await hass.services.async_call(
             FAN_DOMAIN,
-            SERVICE_SET_PERCENTAGE,
+            FanService.SET_PERCENTAGE,
             {
-                ATTR_ENTITY_ID: "fan.modernformsfan_fan",
-                ATTR_PERCENTAGE: 0,
+                TargetKey.ENTITY_ID: "fan.modernformsfan_fan",
+                FanServiceArgument.PERCENTAGE: 0,
             },
             blocking=True,
         )
@@ -213,8 +211,8 @@ async def test_fan_error(
     ):
         await hass.services.async_call(
             FAN_DOMAIN,
-            SERVICE_TURN_OFF,
-            {ATTR_ENTITY_ID: "fan.modernformsfan_fan"},
+            FanService.TURN_OFF,
+            {TargetKey.ENTITY_ID: "fan.modernformsfan_fan"},
             blocking=True,
         )
 
@@ -240,8 +238,8 @@ async def test_fan_connection_error(
     ):
         await hass.services.async_call(
             FAN_DOMAIN,
-            SERVICE_TURN_OFF,
-            {ATTR_ENTITY_ID: "fan.modernformsfan_fan"},
+            FanService.TURN_OFF,
+            {TargetKey.ENTITY_ID: "fan.modernformsfan_fan"},
             blocking=True,
         )
 
@@ -306,10 +304,10 @@ async def test_set_breeze_preset_mode(
     with patch("aiomodernforms.ModernFormsDevice.fan") as fan_mock:
         await hass.services.async_call(
             FAN_DOMAIN,
-            SERVICE_SET_PRESET_MODE,
+            FanService.SET_PRESET_MODE,
             {
-                ATTR_ENTITY_ID: "fan.modernformsfan_fan",
-                ATTR_PRESET_MODE: PRESET_MODE_BREEZE,
+                TargetKey.ENTITY_ID: "fan.modernformsfan_fan",
+                FanServiceArgument.PRESET_MODE: PRESET_MODE_BREEZE,
             },
             blocking=True,
         )
@@ -319,10 +317,10 @@ async def test_set_breeze_preset_mode(
     with patch("aiomodernforms.ModernFormsDevice.fan") as fan_mock:
         await hass.services.async_call(
             FAN_DOMAIN,
-            SERVICE_SET_PRESET_MODE,
+            FanService.SET_PRESET_MODE,
             {
-                ATTR_ENTITY_ID: "fan.modernformsfan_fan",
-                ATTR_PRESET_MODE: PRESET_MODE_NORMAL,
+                TargetKey.ENTITY_ID: "fan.modernformsfan_fan",
+                FanServiceArgument.PRESET_MODE: PRESET_MODE_NORMAL,
             },
             blocking=True,
         )
@@ -342,10 +340,10 @@ async def test_turn_on_with_breeze_preset_mode(
     with patch("aiomodernforms.ModernFormsDevice.fan") as fan_mock:
         await hass.services.async_call(
             FAN_DOMAIN,
-            SERVICE_TURN_ON,
+            FanService.TURN_ON,
             {
-                ATTR_ENTITY_ID: "fan.modernformsfan_fan",
-                ATTR_PRESET_MODE: PRESET_MODE_BREEZE,
+                TargetKey.ENTITY_ID: "fan.modernformsfan_fan",
+                FanServiceArgument.PRESET_MODE: PRESET_MODE_BREEZE,
             },
             blocking=True,
         )
@@ -365,11 +363,11 @@ async def test_turn_on_with_percentage_and_preset_mode(
     with patch("aiomodernforms.ModernFormsDevice.fan") as fan_mock:
         await hass.services.async_call(
             FAN_DOMAIN,
-            SERVICE_TURN_ON,
+            FanService.TURN_ON,
             {
-                ATTR_ENTITY_ID: "fan.modernformsfan_fan",
-                ATTR_PERCENTAGE: 100,
-                ATTR_PRESET_MODE: PRESET_MODE_BREEZE,
+                TargetKey.ENTITY_ID: "fan.modernformsfan_fan",
+                FanServiceArgument.PERCENTAGE: 100,
+                FanServiceArgument.PRESET_MODE: PRESET_MODE_BREEZE,
             },
             blocking=True,
         )
@@ -389,8 +387,8 @@ async def test_turn_off_does_not_touch_wind(
     with patch("aiomodernforms.ModernFormsDevice.fan") as fan_mock:
         await hass.services.async_call(
             FAN_DOMAIN,
-            SERVICE_TURN_OFF,
-            {ATTR_ENTITY_ID: "fan.modernformsfan_fan"},
+            FanService.TURN_OFF,
+            {TargetKey.ENTITY_ID: "fan.modernformsfan_fan"},
             blocking=True,
         )
         await hass.async_block_till_done()
@@ -407,8 +405,11 @@ async def test_fan_sleep_timer_not_supported_gen4(
     with pytest.raises(HomeAssistantError) as exc_info:
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_SET_FAN_SLEEP_TIMER,
-            {ATTR_ENTITY_ID: "fan.modernformsfan_fan", ATTR_SLEEP_TIME: 1},
+            ModernFormsService.SET_FAN_SLEEP_TIMER,
+            {
+                TargetKey.ENTITY_ID: "fan.modernformsfan_fan",
+                ModernFormsServiceArgument.SLEEP_TIME: 1,
+            },
             blocking=True,
         )
 
@@ -426,8 +427,8 @@ async def test_clear_fan_sleep_timer_not_supported_gen4(
     with pytest.raises(HomeAssistantError) as exc_info:
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_CLEAR_FAN_SLEEP_TIMER,
-            {ATTR_ENTITY_ID: "fan.modernformsfan_fan"},
+            ModernFormsService.CLEAR_FAN_SLEEP_TIMER,
+            {TargetKey.ENTITY_ID: "fan.modernformsfan_fan"},
             blocking=True,
         )
 

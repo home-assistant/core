@@ -1,0 +1,43 @@
+get_15_minute_forecast:
+  target:
+    entity:
+      domain: weather
+      integration: foreca
+get_3_hour_forecast:
+  target:
+    entity:
+      domain: weather
+      integration: foreca
+get_air_quality_forecast:
+  target:
+    entity:
+      domain: weather
+      integration: foreca
+  fields:
+    type:
+      required: true
+      selector:
+        select:
+          options:
+            - "daily"
+            - "hourly"
+          translation_key: forecast_type
+get_forecasts_extra:
+  target:
+    entity:
+      domain: weather
+      integration: foreca
+  fields:
+    type:
+      required: true
+      selector:
+        select:
+          options:
+            - "daily"
+            - "hourly"
+          translation_key: forecast_type
+get_minute_forecast:
+  target:
+    entity:
+      domain: weather
+      integration: foreca
