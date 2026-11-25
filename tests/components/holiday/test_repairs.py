@@ -165,3 +165,50 @@ async def test_repair_flow_already_configured(
     assert result["reason"] == "already_configured"
     assert entry.data == {"country": "DE", "province": "XX"}
     assert issue_registry.async_get_issue(DOMAIN, issue_id)
+
+
+@pytest.mark.parametrize(
+    ("data", "options", "issue", "expected"),
+    [
+        pytest.param(
+            {"country": "DE", "province": "XX"},
+            {"categories": ["catholic"]},
+            "unsupported_province",
+            {"categories": ["catholic"]},
+            id="province",
+        ),
+        pytest.param(
+            {"country": "DE", "province": "BW"},
+            {"categories": ["bogus"]},
+            "unsupported_categories",
+            {"province": "BW"},
+            id="categories",
+        ),
+    ],
+)
+async def test_repair_flow_suggests_valid_settings(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    data: dict[str, str],
+    options: dict[str, list[str]],
+    issue: str,
+    expected: dict[str, Any],
+) -> None:
+    """Test the fix flow fills in the saved settings that are still valid."""
+    assert await async_setup_component(hass, "repairs", {})
+    entry = MockConfigEntry(
+        domain=DOMAIN, title="Test", data=data, options=options, minor_version=2
+    )
+    entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    client = await hass_client()
+    result = await start_repair_fix_flow(client, DOMAIN, f"{issue}_{entry.entry_id}")
+
+    assert result["step_id"] == "options"
+    assert {
+        field["name"]: field["description"]["suggested_value"]
+        for field in result["data_schema"]
+        if "description" in field
+    } == expected

@@ -20,7 +20,20 @@ from .config_flow import (
     get_entry_options,
     get_options_schema,
 )
-from .const import CONF_CATEGORIES, CONF_PROVINCE, DOMAIN, ISSUE_UNSUPPORTED_COUNTRY
+from .const import (
+    CONF_CATEGORIES,
+    CONF_PROVINCE,
+    DOMAIN,
+    ISSUE_UNSUPPORTED_CATEGORIES,
+    ISSUE_UNSUPPORTED_COUNTRY,
+    ISSUE_UNSUPPORTED_PROVINCE,
+)
+
+# The setting an issue is about, which the repair form doesn't fill in
+BROKEN_SETTING = {
+    ISSUE_UNSUPPORTED_PROVINCE: CONF_PROVINCE,
+    ISSUE_UNSUPPORTED_CATEGORIES: CONF_CATEGORIES,
+}
 
 
 class UnsupportedConfigurationFixFlow(RepairsFlow):
@@ -93,9 +106,20 @@ class UnsupportedConfigurationFixFlow(RepairsFlow):
         options_schema = await self.hass.async_add_executor_job(
             get_options_schema, self.country
         )
+        # Keep the saved settings that are still valid, only the broken one is empty
+        suggested_values: dict[str, Any] = {}
+        if self.country == self.entry.data[CONF_COUNTRY]:
+            broken = BROKEN_SETTING.get(self.issue)
+            suggested_values = {
+                key: value
+                for key, value in {**self.entry.data, **self.entry.options}.items()
+                if key != broken
+            }
         return self.async_show_form(
             step_id="options",
-            data_schema=options_schema,
+            data_schema=self.add_suggested_values_to_schema(
+                options_schema, suggested_values
+            ),
             description_placeholders={
                 **self._placeholders(),
                 "country": self.country,
