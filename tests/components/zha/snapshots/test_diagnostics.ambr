@@ -86,6 +86,9 @@
       'device_config': dict({
       }),
       'enable_quirks': False,
+      'zigpy_config': dict({
+        'blocked_devices': '**REDACTED**',
+      }),
     }),
     'config_entry': dict({
       'data': dict({
