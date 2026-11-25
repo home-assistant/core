@@ -1010,7 +1010,8 @@ async def test_pb_service_write(
     }
     mock_modbus_with_pymodbus.reset_mock()
     caplog.clear()
-    caplog.set_level(logging.DEBUG)
+    # The mock_modbus_with_pymodbus fixture sets the caplog level to ERROR
+    caplog.set_level(logging.DEBUG)  # pylint: disable=home-assistant-tests-redundant-caplog-level
     func_name[do_write[FUNC]].return_value = do_return[VALUE]
     await hass.services.async_call(DOMAIN, do_write[SERVICE], data, blocking=True)
     assert func_name[do_write[FUNC]].called
@@ -1808,7 +1809,8 @@ async def test_pb_service_write_no_slave(
     }
     mock_modbus_with_pymodbus.reset_mock()
     caplog.clear()
-    caplog.set_level(logging.DEBUG)
+    # The mock_modbus_with_pymodbus fixture sets the caplog level to ERROR
+    caplog.set_level(logging.DEBUG)  # pylint: disable=home-assistant-tests-redundant-caplog-level
     func_name[do_write[FUNC]].return_value = do_return[VALUE]
     await hass.services.async_call(DOMAIN, do_write[SERVICE], data, blocking=True)
     assert func_name[do_write[FUNC]].called
