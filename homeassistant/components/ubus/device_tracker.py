@@ -235,7 +235,11 @@ def _async_merge_device(
         )
         entity_registry.async_update_entity(survivor.entity_id, device_id=dup_device.id)
         return
-    for device_entry in er.async_entries_for_device(entity_registry, dup_device.id):
+    # The device removal below deletes the registry entries the entry still
+    # holds on it, so the disabled entities must be moved along too.
+    for device_entry in er.async_entries_for_device(
+        entity_registry, dup_device.id, include_disabled_entities=True
+    ):
         entity_registry.async_update_entity(
             device_entry.entity_id, device_id=survivor_device.id
         )
