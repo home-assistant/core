@@ -1,5 +1,7 @@
 """Services for Matter devices."""
 
+from collections.abc import Callable
+
 import probatio
 
 from homeassistant.components.climate import ATTR_PRESET_MODE, DOMAIN as CLIMATE_DOMAIN
@@ -23,6 +25,17 @@ from .const import (
     MatterService,
     MatterServiceArgument,
 )
+
+
+def _max_utf8_bytes(max_bytes: int) -> Callable[[str], str]:
+    """Return a validator for a string of at most `max_bytes` UTF-8 bytes."""
+
+    def validate(value: str) -> str:
+        if len(value.encode()) > max_bytes:
+            raise probatio.Invalid(f"must be at most {max_bytes} bytes long")
+        return value
+
+    return validate
 
 
 @callback
@@ -59,7 +72,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
                 PRESET_SCENARIO_REVERSE_MAP.keys()
             ),
             probatio.Optional(ATTR_PRESET_NAME): probatio.All(
-                cv.string, probatio.Length(max=64)
+                cv.string, _max_utf8_bytes(64)
             ),
             probatio.Optional(ATTR_HEATING_SETPOINT): probatio.All(
                 probatio.Coerce(float), probatio.Range(min=-50, max=100)

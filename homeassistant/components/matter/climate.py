@@ -92,34 +92,54 @@ def _preset_handle(
 def _preset_names(
     presets: list[clusters.Thermostat.Structs.PresetStruct],
 ) -> list[str]:
-    """Return unique preset names, keeping scenario names stable by preset handle.
+    """Return unique preset names, keeping each name with its preset.
 
     The plain scenario name goes to the scenario's built-in preset, or to its
     lowest handle when none is built in. Other presets of that scenario get
     their device name, which is unique per scenario, or their handle appended.
+    A user-defined name that equals a scenario name or `none` gets its handle
+    appended, wherever the preset sorts.
     """
-    names: dict[int, str] = {}
-    used_names = {PRESET_NONE}
-    for index in sorted(
+    order = sorted(
         range(len(presets)),
         key=lambda i: (
             presets[i].builtIn is not True,
             _preset_handle(presets[i]) or b"",
         ),
-    ):
+    )
+    owners: set[int] = set()
+    claimed_scenarios: set[int] = set()
+    for index in order:
+        scenario = presets[index].presetScenario
+        if (
+            scenario in PRESET_SCENARIO_TO_HA_PRESET
+            and scenario not in claimed_scenarios
+        ):
+            claimed_scenarios.add(scenario)
+            owners.add(index)
+
+    reserved_names = {PRESET_NONE, *PRESET_SCENARIO_TO_HA_PRESET.values()}
+    names: dict[int, str] = {}
+    used_names: set[str] = set()
+    for index in sorted(order, key=lambda i: i not in owners):
         preset = presets[index]
         handle = _preset_handle(preset)
+        handle_suffix = handle.hex() if handle is not None else str(index + 1)
         device_name = (
             "" if preset.name in (None, NullValue) else str(preset.name).strip()
         )
         if translation := PRESET_SCENARIO_TO_HA_PRESET.get(preset.presetScenario):
             name = translation
-            if name in used_names and (suffix := device_name or (handle or b"").hex()):
-                name = f"{translation} ({suffix})"
+            if index not in owners:
+                name = f"{translation} ({device_name or handle_suffix})"
+        elif not device_name:
+            name = f"Preset ({handle_suffix})"
+        elif device_name in reserved_names:
+            name = f"{device_name} ({handle_suffix})"
         else:
-            name = device_name or f"Preset{index + 1}"
-        if name in used_names and handle:
-            name = f"{name} ({handle.hex()})"
+            name = device_name
+        if name in used_names:
+            name = f"{name} ({handle_suffix})"
         name = _unique_preset_name(name, used_names)
         used_names.add(name)
         names[index] = name
@@ -312,7 +332,7 @@ class MatterClimate(MatterEntity, ClimateEntity, RestoreEntity):
         # MatterEntity.__init__() calls _update_from_device()
         # which needs this attribute
         self._matter_presets = []
-        self._preset_write_in_progress = False
+        self._preset_writes_in_progress = 0
         self._preset_handle_by_name: dict[str, bytes | None] = {}
         self._preset_name_by_handle: dict[bytes | None, str] = {}
         super().__init__(*args, **kwargs)
@@ -439,9 +459,14 @@ class MatterClimate(MatterEntity, ClimateEntity, RestoreEntity):
         return self._preset_handle_by_name[preset_mode]
 
     @contextmanager
-    def _preset_write(self) -> Iterator[None]:
-        """Translate client errors of a preset write and refresh presets after it."""
-        self._preset_write_in_progress = True
+    def _preset_write(self, *, leaves_presets: bool = True) -> Iterator[None]:
+        """Translate client errors of a preset write and refresh presets after it.
+
+        While a write that leaves presets behind runs, an empty Presets report is
+        an intermediate state of the atomic write and is not shown.
+        """
+        if leaves_presets:
+            self._preset_writes_in_progress += 1
         try:
             yield
         except ServerVersionTooOld as err:
@@ -453,8 +478,9 @@ class MatterClimate(MatterEntity, ClimateEntity, RestoreEntity):
                 translation_domain=DOMAIN, translation_key="preset_update_failed"
             ) from err
         finally:
-            self._preset_write_in_progress = False
             self._update_presets()
+            if leaves_presets:
+                self._preset_writes_in_progress -= 1
             self.async_write_ha_state()
 
     async def async_set_thermostat_preset(self, **kwargs: Any) -> None:
@@ -525,7 +551,7 @@ class MatterClimate(MatterEntity, ClimateEntity, RestoreEntity):
             raise ServiceValidationError(
                 translation_domain=DOMAIN, translation_key="preset_active_not_removable"
             )
-        with self._preset_write():
+        with self._preset_write(leaves_presets=len(self._matter_presets) > 1):
             await remove_thermostat_preset(
                 self.matter_client, self._endpoint, preset_handle
             )
@@ -603,7 +629,7 @@ class MatterClimate(MatterEntity, ClimateEntity, RestoreEntity):
             or []
         )
         # The device may report an empty list in the middle of an atomic write.
-        if presets or not self._preset_write_in_progress:
+        if presets or not self._preset_writes_in_progress:
             self._matter_presets = presets
         self._preset_handle_by_name.clear()
         self._preset_name_by_handle.clear()

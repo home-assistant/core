@@ -45,6 +45,10 @@ _PRESET_WRITE_HINTS: dict[int, str] = {
     _Status.kInvalidInState: "preset_write_invalid_in_state",
 }
 
+# Matter defaults of the Abs{Min,Max}{Heat,Cool}SetpointLimit attributes, in centidegrees.
+_DEFAULT_HEAT_SETPOINT_LIMITS = (700, 3000)
+_DEFAULT_COOL_SETPOINT_LIMITS = (1600, 3200)
+
 
 class PresetsNotSupportedError(ServiceValidationError):
     """Thermostat does not support the Presets feature."""
@@ -140,6 +144,7 @@ def _validate_setpoint(
     setpoint: int | None,
     min_attribute: type[clusters.ClusterAttributeDescriptor],
     max_attribute: type[clusters.ClusterAttributeDescriptor],
+    default_limits: tuple[int, int],
     translation_key: str,
 ) -> None:
     """Raise if `setpoint` is outside the thermostat's absolute limits."""
@@ -147,15 +152,13 @@ def _validate_setpoint(
         return
     minimum = _normalize(endpoint.get_attribute_value(None, min_attribute))
     maximum = _normalize(endpoint.get_attribute_value(None, max_attribute))
-    if (minimum is not None and setpoint < minimum) or (
-        maximum is not None and setpoint > maximum
-    ):
+    default_minimum, default_maximum = default_limits
+    minimum = default_minimum if minimum is None else minimum
+    maximum = default_maximum if maximum is None else maximum
+    if not minimum <= setpoint <= maximum:
         raise InvalidPresetDataError(
             translation_key,
-            {
-                "min": "-" if minimum is None else str(minimum / 100),
-                "max": "-" if maximum is None else str(maximum / 100),
-            },
+            {"min": str(minimum / 100), "max": str(maximum / 100)},
         )
 
 
@@ -170,6 +173,7 @@ def _validate_setpoints(
         heating_setpoint,
         clusters.Thermostat.Attributes.AbsMinHeatSetpointLimit,
         clusters.Thermostat.Attributes.AbsMaxHeatSetpointLimit,
+        _DEFAULT_HEAT_SETPOINT_LIMITS,
         "preset_heating_setpoint_out_of_range",
     )
     _validate_setpoint(
@@ -177,6 +181,7 @@ def _validate_setpoints(
         cooling_setpoint,
         clusters.Thermostat.Attributes.AbsMinCoolSetpointLimit,
         clusters.Thermostat.Attributes.AbsMaxCoolSetpointLimit,
+        _DEFAULT_COOL_SETPOINT_LIMITS,
         "preset_cooling_setpoint_out_of_range",
     )
 
@@ -188,10 +193,22 @@ def _validate_new_preset(
     name: str | None,
     heating_setpoint: int | None,
     cooling_setpoint: int | None,
-) -> None:
-    """Raise if the device's write rules (§4.3.11.50) would refuse a new preset."""
-    if preset_scenario == _PresetScenario.kUserDefined and not (name and name.strip()):
-        raise InvalidPresetDataError("preset_name_required")
+) -> Any:
+    """Raise if the device's write rules (§4.3.11.50) would refuse a new preset.
+
+    Returns the scenario's PresetType. The preset limits are checked against
+    the list read before the write, in `_validate_preset_limits`.
+    """
+    preset_type = next(
+        (pt for pt in preset_types if pt.presetScenario == preset_scenario), None
+    )
+    if preset_type is None:
+        raise InvalidPresetDataError("preset_scenario_not_supported")
+    if preset_scenario == _PresetScenario.kUserDefined:
+        if not _preset_type_supports_names(preset_types, preset_scenario):
+            raise InvalidPresetDataError("preset_user_defined_names_unsupported")
+        if not (name and name.strip()):
+            raise InvalidPresetDataError("preset_name_required")
     feature_map = (
         endpoint.get_attribute_value(None, clusters.Thermostat.Attributes.FeatureMap)
         or 0
@@ -200,14 +217,16 @@ def _validate_new_preset(
         raise InvalidPresetDataError("preset_heating_setpoint_required")
     if feature_map & _ThermostatFeature.kCooling and cooling_setpoint is None:
         raise InvalidPresetDataError("preset_cooling_setpoint_required")
-    preset_type = next(
-        (pt for pt in preset_types if pt.presetScenario == preset_scenario), None
-    )
-    if preset_type is None:
-        raise InvalidPresetDataError("preset_scenario_not_supported")
-    current_presets = (
-        endpoint.get_attribute_value(None, clusters.Thermostat.Attributes.Presets) or []
-    )
+    _validate_setpoints(endpoint, heating_setpoint, cooling_setpoint)
+    return preset_type
+
+
+def _validate_preset_limits(
+    endpoint: MatterEndpoint,
+    current_presets: list[Any],
+    preset_type: Any,
+) -> None:
+    """Raise if the total or per-scenario preset limit is already reached."""
     max_presets = _normalize(
         endpoint.get_attribute_value(
             None, clusters.Thermostat.Attributes.NumberOfPresets
@@ -218,14 +237,15 @@ def _validate_new_preset(
             "preset_limit_reached", {"limit": str(max_presets)}
         )
     scenario_count = sum(
-        1 for preset in current_presets if preset.presetScenario == preset_scenario
+        1
+        for preset in current_presets
+        if preset.presetScenario == preset_type.presetScenario
     )
     if scenario_count >= preset_type.numberOfPresets:
         raise InvalidPresetDataError(
             "preset_scenario_limit_reached",
             {"limit": str(preset_type.numberOfPresets)},
         )
-    _validate_setpoints(endpoint, heating_setpoint, cooling_setpoint)
 
 
 def _write_error_status(result: Any) -> int | None:
@@ -318,7 +338,7 @@ async def set_thermostat_preset(
     if preset_handle is None:
         if preset_scenario is None:
             raise InvalidPresetDataError("preset_scenario_required")
-        _validate_new_preset(
+        preset_type = _validate_new_preset(
             endpoint,
             preset_types,
             preset_scenario,
@@ -336,6 +356,7 @@ async def set_thermostat_preset(
         )
 
         def build_add(current_presets: list[Any]) -> list[Any]:
+            _validate_preset_limits(endpoint, current_presets, preset_type)
             resolved_name = new_preset.name
 
             _validate_unique_preset_name(

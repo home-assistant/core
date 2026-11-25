@@ -946,8 +946,8 @@ async def test_preset_mode_with_unnamed_preset(
     """Test preset mode when a preset has no name or empty name.
 
     This tests the fallback preset naming case where a preset does not have
-    a mapped presetScenario and also has no device-provided name, requiring
-    the fallback Preset{i} naming pattern.
+    a mapped presetScenario and also has no device-provided name, so it is
+    named after its handle.
     """
     entity_id = "climate.eve_thermo_20ecd1701"
 
@@ -979,10 +979,10 @@ async def test_preset_mode_with_unnamed_preset(
     # Trigger subscription callback to update entity
     await trigger_subscription_callback(hass, matter_client)
 
-    # Verify the preset was added with the fallback name "Preset8"
+    # Verify the preset was added with the fallback name based on its handle
     state = hass.states.get(entity_id)
     assert state
-    assert "Preset8" in state.attributes["preset_modes"]
+    assert "Preset (ff)" in state.attributes["preset_modes"]
 
     # Test that the unnamed preset can be set as active
     await hass.services.async_call(
@@ -990,13 +990,13 @@ async def test_preset_mode_with_unnamed_preset(
         "set_preset_mode",
         {
             "entity_id": entity_id,
-            "preset_mode": "Preset8",
+            "preset_mode": "Preset (ff)",
         },
         blocking=True,
     )
     state = hass.states.get(entity_id)
     assert state
-    assert state.attributes["preset_mode"] == "Preset8"
+    assert state.attributes["preset_mode"] == "Preset (ff)"
 
     # Test that preset_mode is PRESET_NONE when ActivePresetHandle is cleared
     set_node_attribute(
@@ -2192,7 +2192,7 @@ async def test_set_thermostat_preset_add_refused_by_limits(
     service_data: dict[str, Any],
     translation_key: str,
 ) -> None:
-    """A new preset the device's limits rule out is refused before reading."""
+    """A new preset the device's limits rule out is refused before writing."""
     _mock_preset_write(matter_client)
     with pytest.raises(ServiceValidationError) as err:
         await hass.services.async_call(
@@ -2202,7 +2202,7 @@ async def test_set_thermostat_preset_add_refused_by_limits(
             blocking=True,
         )
     assert err.value.translation_key == translation_key
-    matter_client.read.assert_not_called()
+    matter_client.write_atomic_attribute.assert_not_called()
 
 
 @pytest.mark.parametrize("node_fixture", ["eve_thermo_v5"])

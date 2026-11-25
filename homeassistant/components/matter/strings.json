@@ -886,6 +886,9 @@
     "preset_update_failed": {
       "message": "Failed to update the thermostat presets. Check the logs for details."
     },
+    "preset_user_defined_names_unsupported": {
+      "message": "This thermostat can't name user-defined presets, so it can't add one."
+    },
     "preset_write_busy": {
       "message": "Failed to update presets: another preset change is already running on the thermostat. Try again."
     },
