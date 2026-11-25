@@ -13466,5 +13466,22 @@
     ],
     "scaleValue": "1",
     "zoneId": null
+  },
+  {
+    "category": "SMO 20",
+    "parameterId": "40941",
+    "parameterName": "Degree minutes",
+    "parameterUnit": "",
+    "writable": false,
+    "timestamp": "2024-03-15T09:30:01+00:00",
+    "value": -120,
+    "strVal": "-120",
+    "smartHomeCategories": [],
+    "minValue": null,
+    "maxValue": null,
+    "stepValue": 1,
+    "enumValues": [],
+    "scaleValue": "0.1",
+    "zoneId": null
   }
 ]

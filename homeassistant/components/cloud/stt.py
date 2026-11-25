@@ -62,7 +62,7 @@ async def async_setup_entry(
 class CloudProviderEntity(SpeechToTextEntity):
     """Home Assistant Cloud speech API provider."""
 
-    _attr_name = "Home Assistant Cloud"
+    _attr_name = "Home Assistant Link"
     _attr_unique_id = STT_ENTITY_UNIQUE_ID
 
     def __init__(self, cloud: Cloud[CloudClient]) -> None:

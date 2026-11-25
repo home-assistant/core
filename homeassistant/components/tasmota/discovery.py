@@ -72,7 +72,8 @@ def warn_if_topic_duplicated(
     duplicated = False
     offenders = []
     for other_mac, other_config in hass.data[DISCOVERY_DATA].items():
-        if own_mac and other_mac == own_mac:
+        # A removed device keeps an empty config in the discovery data
+        if (own_mac and other_mac == own_mac) or not other_config:
             continue
         if command_topic == get_topic_command(other_config):
             offenders.append((other_mac, tasmota_get_device_config(other_config)))

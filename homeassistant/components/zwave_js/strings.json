@@ -117,6 +117,7 @@
       "not_zwave_js_addon": "Discovered app is not the official Z-Wave JS app.",
       "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
       "reset_failed": "Failed to reset adapter.",
+      "serial_proxy_not_supported": "Z-Wave JS can't use an ESPHome serial proxy. Use the ESPHome Z-Wave proxy instead.",
       "usb_ports_failed": "Failed to get USB devices."
     },
     "error": {
@@ -383,6 +384,12 @@
       "timeout_response": {
         "name": "Timed out responses"
       }
+    },
+    "update": {
+      "release_notes_messages": {
+        "sleeping_device": "This is a battery powered sleeping device. You may need to wake it up manually for the update to begin.",
+        "sleeping_device_wakeup": "This is a battery powered sleeping device. You may need to wake it up manually for the update to begin. To wake up this device:\n\n{wakeup_instructions}"
+      }
     }
   },
   "exceptions": {
@@ -394,6 +401,9 @@
     },
     "clear_lock_usercode_failed": {
       "message": "Unable to clear lock usercode on lock {entity_id} code_slot {code_slot}: {error}"
+    },
+    "controller_firmware_update_in_progress": {
+      "message": "The controller firmware is being updated. Try again after the controller update has finished."
     },
     "credential_data_invalid_length": {
       "message": "Credential of type {credential_type} must be between {min_length} and {max_length} characters long."
@@ -464,6 +474,9 @@
     "no_available_user_slots": {
       "message": "No available user slots on this device"
     },
+    "no_entities_found": {
+      "message": "None of the given entities are Z-Wave entities."
+    },
     "no_nodes_found": {
       "message": "No Z-Wave devices found for the given targets."
     },
@@ -494,6 +507,10 @@
     "deprecated_legacy_door_tilt_state": {
       "description": "The binary sensor `{entity_id}` is deprecated because it has been replaced with the binary sensor `{replacement_entity_id}`.\n\nThe entity was found in the following automations or scripts:\n{items}\n\nPlease update the above automations or scripts to use the binary sensor `{replacement_entity_id}` and disable the binary sensor `{entity_id}` and then restart Home Assistant, to fix this issue.\n\nNote that `{replacement_entity_id}` is on only when the door or window is tilted.",
       "title": "Deprecation: {entity_name}"
+    },
+    "deprecated_ping_action": {
+      "description": "The `{action}` action is deprecated and will be removed in Home Assistant 2027.6. Use the **Ping** button entity of each Z-Wave device with the `button.press` action instead, and update any automations or scripts that use `{action}`.",
+      "title": "The `{action}` action is being removed"
     },
     "device_config_file_changed": {
       "fix_flow": {

@@ -63,6 +63,7 @@ def mock_bed() -> MagicMock:
     bed.id = BED_ID
     bed.mac_addr = "12:34:56:78:AB:CD"
     bed.model = "C10"
+    bed.timezone = "America/Chicago"
     bed.paused = False
     sleeper_l = create_autospec(SleepIQSleeper)
     sleeper_r = create_autospec(SleepIQSleeper)
@@ -73,6 +74,8 @@ def mock_bed() -> MagicMock:
     sleeper_l.in_bed = True
     sleeper_l.sleep_number = 40
     sleeper_l.fav_sleep_number = 50
+    sleeper_l.responsive_air = True
+    sleeper_l.has_responsive_air.return_value = True
     sleeper_l.pressure = 1000
     sleeper_l.sleeper_id = SLEEPER_L_ID
     sleeper_l.sleep_data = SleepData(
@@ -81,6 +84,8 @@ def mock_bed() -> MagicMock:
         heart_rate=60,
         respiratory_rate=14,
         hrv=68,
+        start_date="2026-01-15T22:30:00",
+        end_date="2026-01-16T06:45:00",
     )
 
     sleeper_r.side = Side.RIGHT
@@ -88,6 +93,8 @@ def mock_bed() -> MagicMock:
     sleeper_r.in_bed = False
     sleeper_r.sleep_number = 80
     sleeper_r.fav_sleep_number = 65
+    sleeper_r.responsive_air = False
+    sleeper_r.has_responsive_air.return_value = True
     sleeper_r.pressure = 1400
     sleeper_r.sleeper_id = SLEEPER_R_ID
     sleeper_r.sleep_data = SleepData(
@@ -96,6 +103,8 @@ def mock_bed() -> MagicMock:
         heart_rate=65,
         respiratory_rate=15,
         hrv=72,
+        start_date="2026-01-15T23:10:00",
+        end_date="2026-01-16T06:50:00",
     )
 
     bed.foundation = create_autospec(SleepIQFoundation)

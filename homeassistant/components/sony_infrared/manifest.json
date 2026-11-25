@@ -1,0 +1,13 @@
+{
+  "domain": "sony_infrared",
+  "name": "Sony Infrared",
+  "categories": ["media_entertainment.tv_streaming"],
+  "codeowners": ["@googanhiem"],
+  "config_flow": true,
+  "connectivity": ["infrared"],
+  "dependencies": ["infrared"],
+  "documentation": "https://www.home-assistant.io/integrations/sony_infrared",
+  "integration_type": "device",
+  "iot_class": "assumed_state",
+  "quality_scale": "bronze"
+}

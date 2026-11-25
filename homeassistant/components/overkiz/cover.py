@@ -37,7 +37,7 @@ from homeassistant.helpers.issue_registry import (
 from homeassistant.helpers.start import async_at_started
 
 from . import OverkizDataConfigEntry
-from .const import DOMAIN, LOGGER
+from .const import DOMAIN, LOGGER, OverkizServiceArgument
 from .coordinator import OverkizDataUpdateCoordinator, OverkizDeviceCommand
 from .entity import OverkizDescriptiveEntity
 
@@ -68,6 +68,9 @@ class OverkizCoverDescription(CoverEntityDescription):
     close_tilt_command: OverkizCommand | None = None
     close_tilt_command_args: tuple[OverkizStateType, ...] = ()
     stop_tilt_command: OverkizCommand | None = None
+    open_tilt_position: int | None = None
+    tilt_start_angle: int | None = None
+    tilt_end_angle: int | None = None
 
 
 COVER_DESCRIPTIONS: list[OverkizCoverDescription] = [
@@ -231,6 +234,9 @@ COVER_DESCRIPTIONS: list[OverkizCoverDescription] = [
         open_tilt_command=OverkizCommand.OPEN_SLATS,
         close_tilt_command=OverkizCommand.CLOSE_SLATS,
         stop_tilt_command=OverkizCommand.STOP,
+        open_tilt_position=60,
+        tilt_start_angle=-90,
+        tilt_end_angle=60,
     ),
     # Needs override since PositionableGarageDoor reports
     # core:OpenClosedUnknownState instead of core:OpenClosedState
@@ -677,6 +683,7 @@ def _async_check_deprecated_low_speed_cover(
         DOMAIN,
         issue_id,
         breaks_in_ha_version="2027.5.0",
+        config_entry_id=entity_entry.config_entry_id,
         is_fixable=False,
         severity=IssueSeverity.WARNING,
         translation_key=(
@@ -704,6 +711,10 @@ class OverkizCover(OverkizDescriptiveEntity, CoverEntity):
 
         # Use device url as unique ID for backwards compatibility
         self._attr_unique_id = self.device.device_url
+
+        self._attr_open_tilt_position = description.open_tilt_position
+        self._attr_tilt_start_angle = description.tilt_start_angle
+        self._attr_tilt_end_angle = description.tilt_end_angle
 
         # Overkiz does support covers where only tilt commands are supported
         # and HA sets by default open/close as supported feature which conflicts
@@ -938,8 +949,8 @@ class OverkizCover(OverkizDescriptiveEntity, CoverEntity):
                 translation_key="unsupported_set_position_and_tilt",
             )
 
-        position = kwargs[ATTR_POSITION]
-        tilt_position = kwargs[ATTR_TILT_POSITION]
+        position = kwargs[OverkizServiceArgument.POSITION]
+        tilt_position = kwargs[OverkizServiceArgument.TILT_POSITION]
 
         if self.entity_description.invert_position:
             position = 100 - position
@@ -955,7 +966,9 @@ class OverkizCover(OverkizDescriptiveEntity, CoverEntity):
     @override
     async def async_open_cover_tilt(self, **kwargs: Any) -> None:
         """Open the cover tilt."""
-        if command := self.entity_description.open_tilt_command:
+        if (position := self.entity_description.open_tilt_position) is not None:
+            await self.async_set_cover_tilt_position(**{ATTR_TILT_POSITION: position})
+        elif command := self.entity_description.open_tilt_command:
             await self.executor.async_execute_command(
                 command, *self.entity_description.open_tilt_command_args
             )

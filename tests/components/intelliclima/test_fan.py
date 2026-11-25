@@ -1,6 +1,7 @@
 """Test IntelliClima Fans."""
 
 from collections.abc import AsyncGenerator
+from copy import deepcopy
 from unittest.mock import AsyncMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
@@ -14,20 +15,19 @@ from homeassistant.components.fan import (
     ATTR_PERCENTAGE,
     ATTR_PRESET_MODE,
     DOMAIN as FAN_DOMAIN,
-    SERVICE_SET_PERCENTAGE,
-    SERVICE_SET_PRESET_MODE,
+    FanService,
+    FanServiceArgument,
 )
 from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
     STATE_OFF,
     STATE_ON,
+    STATE_UNAVAILABLE,
     STATE_UNKNOWN,
     Platform,
+    TargetKey,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers import entity_registry as er
 
 from . import async_poll, setup_integration
 
@@ -39,8 +39,10 @@ async def setup_intelliclima_fan_only(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_cloud_interface: AsyncMock,
+    mixed_eco_devices: IntelliClimaDevices,
 ) -> AsyncGenerator[None]:
     """Set up IntelliClima integration with only the fan platform."""
+    mock_cloud_interface.get_all_device_status.return_value = mixed_eco_devices
     with patch("homeassistant.components.intelliclima.PLATFORMS", [Platform.FAN]):
         await setup_integration(hass, mock_config_entry)
         # Let tests run against this initialized state
@@ -52,26 +54,11 @@ async def test_all_fan_entities(
     snapshot: SnapshotAssertion,
     mock_config_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
-    device_registry: dr.DeviceRegistry,
     mock_cloud_interface: AsyncMock,
 ) -> None:
     """Test all entities."""
 
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
-
-    # There should be exactly one fan entity
-    fan_entries = [
-        entry
-        for entry in entity_registry.entities.values()
-        if entry.platform == "intelliclima" and entry.domain == FAN_DOMAIN
-    ]
-    assert len(fan_entries) == 1
-    entity_entry = fan_entries[0]
-
-    # Device should exist and match snapshot
-    assert entity_entry.device_id
-    assert (device_entry := device_registry.async_get(entity_entry.device_id))
-    assert device_entry == snapshot
 
 
 async def test_fan_turn_off_service_calls_api(
@@ -81,8 +68,8 @@ async def test_fan_turn_off_service_calls_api(
     """fan.turn_off should call ecocomfort.turn_off and refresh."""
     await hass.services.async_call(
         FAN_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: FAN_ENTITY_ID},
+        FanService.TURN_OFF,
+        {TargetKey.ENTITY_ID: FAN_ENTITY_ID},
         blocking=True,
     )
 
@@ -98,10 +85,10 @@ async def test_fan_turn_on_service_calls_api(
     """fan.turn_on should call ecocomfort.turn_on and refresh."""
     await hass.services.async_call(
         FAN_DOMAIN,
-        SERVICE_TURN_ON,
+        FanService.TURN_ON,
         {
-            ATTR_ENTITY_ID: FAN_ENTITY_ID,
-            ATTR_PERCENTAGE: 30,
+            TargetKey.ENTITY_ID: FAN_ENTITY_ID,
+            FanServiceArgument.PERCENTAGE: 30,
         },
         blocking=True,
     )
@@ -120,8 +107,8 @@ async def test_fan_set_percentage_maps_to_speed(
     # 15% is closest to 25% (sleep).
     await hass.services.async_call(
         FAN_DOMAIN,
-        SERVICE_SET_PERCENTAGE,
-        {ATTR_ENTITY_ID: FAN_ENTITY_ID, ATTR_PERCENTAGE: 15},
+        FanService.SET_PERCENTAGE,
+        {TargetKey.ENTITY_ID: FAN_ENTITY_ID, FanServiceArgument.PERCENTAGE: 15},
         blocking=True,
     )
     # Initial mode_set=FanMode.inward from single_eco_device.
@@ -139,8 +126,8 @@ async def test_fan_set_preset_mode_service(
 
     await hass.services.async_call(
         FAN_DOMAIN,
-        SERVICE_SET_PRESET_MODE,
-        {ATTR_ENTITY_ID: FAN_ENTITY_ID, ATTR_PRESET_MODE: "auto"},
+        FanService.SET_PRESET_MODE,
+        {TargetKey.ENTITY_ID: FAN_ENTITY_ID, FanServiceArgument.PRESET_MODE: "auto"},
         blocking=True,
     )
 
@@ -157,8 +144,8 @@ async def test_fan_set_percentage_zero_turns_off(
     """Setting percentage to 0 should call turn_off, not set_mode_speed."""
     await hass.services.async_call(
         FAN_DOMAIN,
-        SERVICE_SET_PERCENTAGE,
-        {ATTR_ENTITY_ID: FAN_ENTITY_ID, ATTR_PERCENTAGE: 0},
+        FanService.SET_PERCENTAGE,
+        {TargetKey.ENTITY_ID: FAN_ENTITY_ID, FanServiceArgument.PERCENTAGE: 0},
         blocking=True,
     )
 
@@ -185,11 +172,11 @@ async def test_fan_turn_on_defaulting_behavior(
     expected_speed: FanSpeed,
 ) -> None:
     """turn_on defaults percentage/preset as expected."""
-    data = {ATTR_ENTITY_ID: FAN_ENTITY_ID} | service_data
+    data = {TargetKey.ENTITY_ID: FAN_ENTITY_ID} | service_data
 
     await hass.services.async_call(
         FAN_DOMAIN,
-        SERVICE_TURN_ON,
+        FanService.TURN_ON,
         data,
         blocking=True,
     )
@@ -214,8 +201,8 @@ async def test_fan_turn_on_when_off_without_percentage(
 
     await hass.services.async_call(
         FAN_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: FAN_ENTITY_ID},
+        FanService.TURN_ON,
+        {TargetKey.ENTITY_ID: FAN_ENTITY_ID},
         blocking=True,
     )
 
@@ -233,8 +220,8 @@ async def test_fan_turn_on_defaulting_behavior_auto_preset(
 
     await hass.services.async_call(
         FAN_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: FAN_ENTITY_ID, ATTR_PRESET_MODE: "auto"},
+        FanService.TURN_ON,
+        {TargetKey.ENTITY_ID: FAN_ENTITY_ID, FanServiceArgument.PRESET_MODE: "auto"},
         blocking=True,
     )
 
@@ -244,6 +231,13 @@ async def test_fan_turn_on_defaulting_behavior_auto_preset(
     mock_cloud_interface.ecocomfort2.turn_off.assert_not_awaited()
 
 
+@pytest.mark.parametrize(
+    ("device_family", "device_id", "entity_id"),
+    [
+        pytest.param("ecocomfort2_devices", "56789", "fan.test_vmc", id="eco2"),
+        pytest.param("ecocomfort3_devices", "33333", "fan.test_vmc_3", id="eco3"),
+    ],
+)
 @pytest.mark.parametrize(
     ("mode_state", "speed_state", "state", "percentage", "preset_mode"),
     [
@@ -263,7 +257,10 @@ async def test_fan_turn_on_defaulting_behavior_auto_preset(
 async def test_fan_running_state(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
-    single_eco_device: IntelliClimaDevices,
+    mixed_eco_devices: IntelliClimaDevices,
+    device_family: str,
+    device_id: str,
+    entity_id: str,
     mode_state: str,
     speed_state: str,
     state: str,
@@ -271,12 +268,12 @@ async def test_fan_running_state(
     preset_mode: str | None,
 ) -> None:
     """Test the fan reports the running state rather than the commanded one."""
-    eco = single_eco_device.ecocomfort2_devices["56789"]
+    eco = getattr(mixed_eco_devices, device_family)[device_id]
     eco.mode_state = mode_state
     eco.speed_state = speed_state
     await async_poll(hass, freezer)
 
-    assert (fan_state := hass.states.get(FAN_ENTITY_ID))
+    assert (fan_state := hass.states.get(entity_id))
     assert fan_state.state == state
     assert fan_state.attributes.get(ATTR_PERCENTAGE) == percentage
     assert fan_state.attributes.get(ATTR_PRESET_MODE) == preset_mode
@@ -295,11 +292,110 @@ async def test_fan_turn_on_during_boost_keeps_commanded_speed(
 
     await hass.services.async_call(
         FAN_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: FAN_ENTITY_ID},
+        FanService.TURN_ON,
+        {TargetKey.ENTITY_ID: FAN_ENTITY_ID},
         blocking=True,
     )
 
     mock_cloud_interface.ecocomfort2.set_mode_speed.assert_awaited_once_with(
         "11223344", FanMode.inward, FanSpeed.medium
     )
+
+
+@pytest.mark.parametrize(
+    ("service", "data", "method", "args"),
+    [
+        pytest.param(FanService.TURN_OFF, {}, "turn_off", ("AABBCCDD",), id="off"),
+        pytest.param(
+            FanService.SET_PRESET_MODE,
+            {FanServiceArgument.PRESET_MODE: "auto"},
+            "set_mode_speed_auto",
+            ("AABBCCDD",),
+            id="auto",
+        ),
+        pytest.param(
+            FanService.SET_PERCENTAGE,
+            {FanServiceArgument.PERCENTAGE: 75},
+            "set_mode_speed",
+            ("AABBCCDD", FanMode.sensor, FanSpeed.medium),
+            id="speed",
+        ),
+    ],
+)
+async def test_eco3_commands_use_own_api(
+    hass: HomeAssistant,
+    mock_cloud_interface: AsyncMock,
+    service: FanService,
+    data: dict[str, str | int],
+    method: str,
+    args: tuple[str | FanMode | FanSpeed, ...],
+) -> None:
+    """Route ECO3 fan commands to its API without commanding the ECO2 unit."""
+    await hass.services.async_call(
+        FAN_DOMAIN,
+        service,
+        {TargetKey.ENTITY_ID: "fan.test_vmc_3"} | data,
+        blocking=True,
+    )
+    getattr(mock_cloud_interface.ecocomfort3, method).assert_awaited_once_with(*args)
+    mock_cloud_interface.ecocomfort2.turn_off.assert_not_awaited()
+    mock_cloud_interface.ecocomfort2.set_mode_speed_auto.assert_not_awaited()
+    mock_cloud_interface.ecocomfort2.set_mode_speed.assert_not_awaited()
+
+
+async def test_eco3_turn_on_preserves_commanded_speed(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_cloud_interface: AsyncMock,
+    mixed_eco_devices: IntelliClimaDevices,
+) -> None:
+    """Turning ECO3 on during boost preserves the commanded speed."""
+    device = mixed_eco_devices.ecocomfort3_devices["33333"]
+    device.speed_set = FanSpeed.low
+    device.speed_state = "67"
+    await async_poll(hass, freezer)
+
+    await hass.services.async_call(
+        FAN_DOMAIN,
+        FanService.TURN_ON,
+        {TargetKey.ENTITY_ID: "fan.test_vmc_3"},
+        blocking=True,
+    )
+    mock_cloud_interface.ecocomfort3.set_mode_speed.assert_awaited_once_with(
+        "AABBCCDD", FanMode.sensor, FanSpeed.low
+    )
+
+
+async def test_mixed_account_refresh(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_cloud_interface: AsyncMock,
+    mixed_eco_devices: IntelliClimaDevices,
+) -> None:
+    """Each model reads the replacement device map supplied by the next poll."""
+    updated_devices = deepcopy(mixed_eco_devices)
+    updated_devices.ecocomfort2_devices["56789"].speed_state = "3"
+    updated_devices.ecocomfort3_devices["33333"].speed_state = "4"
+    mock_cloud_interface.get_all_device_status.reset_mock()
+    mock_cloud_interface.get_all_device_status.return_value = updated_devices
+    await async_poll(hass, freezer)
+
+    mock_cloud_interface.get_all_device_status.assert_awaited_once()
+    assert hass.states.get(FAN_ENTITY_ID).attributes[ATTR_PERCENTAGE] == 75
+    assert hass.states.get("fan.test_vmc_3").attributes[ATTR_PERCENTAGE] == 100
+
+
+async def test_device_disappears_from_mixed_account(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_cloud_interface: AsyncMock,
+    single_eco_device: IntelliClimaDevices,
+) -> None:
+    """A missing ECO3 becomes unavailable while ECO2 remains available."""
+    mock_cloud_interface.get_all_device_status.reset_mock()
+    mock_cloud_interface.get_all_device_status.return_value = single_eco_device
+    await async_poll(hass, freezer)
+
+    mock_cloud_interface.get_all_device_status.assert_awaited_once()
+    assert hass.states.get(FAN_ENTITY_ID).state == STATE_ON
+    assert hass.states.get("fan.test_vmc_3").state == STATE_UNAVAILABLE

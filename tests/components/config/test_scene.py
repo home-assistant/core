@@ -119,6 +119,36 @@ async def test_update_scene(
 
 @pytest.mark.parametrize("scene_config", [{}])
 @pytest.mark.usefixtures("setup_scene")
+async def test_update_scene_with_error(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    hass_config_store: dict[str, Any],
+) -> None:
+    """Test updating a scene with an invalid config."""
+    with patch.object(config, "SECTIONS", [scene]):
+        await async_setup_component(hass, DOMAIN, {})
+
+    client = await hass_client()
+
+    orig_data = [{"id": "light_on"}]
+    hass_config_store["scenes.yaml"] = orig_data
+
+    resp = await client.post(
+        "/api/config/scene/config/light_on",
+        data=json.dumps({"entities": {"light.test": {"state": "on"}}}),
+    )
+    await hass.async_block_till_done()
+
+    assert resp.status == HTTPStatus.BAD_REQUEST
+    # There is no list of errors, the path is not a path in the posted config
+    assert await resp.json() == {
+        "message": "Message malformed: required key not provided at 'states[0].name'"
+    }
+    assert hass_config_store["scenes.yaml"] == [{"id": "light_on"}]
+
+
+@pytest.mark.parametrize("scene_config", [{}])
+@pytest.mark.usefixtures("setup_scene")
 async def test_bad_formatted_scene(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,

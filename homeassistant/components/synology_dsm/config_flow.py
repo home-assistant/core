@@ -21,8 +21,8 @@ from synology_dsm.exceptions import (
 )
 
 from homeassistant.config_entries import (
+    SOURCE_REAUTH,
     SOURCE_RECONFIGURE,
-    ConfigEntry,
     ConfigEntryState,
     ConfigFlow,
     ConfigFlowResult,
@@ -270,6 +270,15 @@ class SynologyDSMFlowHandler(ConfigFlow, domain=DOMAIN):
         if user_input.get(CONF_VOLUMES):
             config_data[CONF_VOLUMES] = user_input[CONF_VOLUMES]
 
+        # Reauth keeps the backup location from the entry options
+        if self.source == SOURCE_REAUTH:
+            await self.async_set_unique_id(serial, raise_on_progress=False)
+            reauth_entry = self._get_reauth_entry()
+            # Without a stored unique ID there is no serial to verify the NAS against
+            if reauth_entry.unique_id is not None:
+                self._abort_if_unique_id_mismatch(reason="wrong_nas")
+            return self.async_update_reload_and_abort(reauth_entry, data=config_data)
+
         if self.source == SOURCE_RECONFIGURE:
             await self.async_set_unique_id(serial)
             self._abort_if_unique_id_mismatch()
@@ -290,11 +299,11 @@ class SynologyDSMFlowHandler(ConfigFlow, domain=DOMAIN):
         existing_entry = await self.async_set_unique_id(serial, raise_on_progress=False)
 
         if existing_entry:
-            reason = (
-                "reauth_successful" if self.reauth_conf else "reconfigure_successful"
-            )
             return self.async_update_reload_and_abort(
-                existing_entry, data=config_data, options=config_options, reason=reason
+                existing_entry,
+                data=config_data,
+                options=config_options,
+                reason="reconfigure_successful",
             )
 
         return self.async_create_entry(
@@ -493,7 +502,9 @@ class SynologyDSMFlowHandler(ConfigFlow, domain=DOMAIN):
             {**self.saved_user_input, **user_input}, step_id="user"
         )
 
-    def _async_get_existing_entry(self, discovered_mac: str) -> ConfigEntry | None:
+    def _async_get_existing_entry(
+        self, discovered_mac: str
+    ) -> SynologyDSMConfigEntry | None:
         """See if we already have a configured NAS with this MAC address."""
         for entry in self._async_current_entries():
             if discovered_mac in [

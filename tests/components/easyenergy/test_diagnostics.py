@@ -47,7 +47,7 @@ async def test_diagnostics_no_gas_today(
     await hass.services.async_call(
         HOMEASSISTANT_DOMAIN,
         SERVICE_UPDATE_ENTITY,
-        {ATTR_ENTITY_ID: ["sensor.easyenergy_today_gas_current_hour_price"]},
+        {ATTR_ENTITY_ID: ["sensor.gas_market_price_current_hour"]},
         blocking=True,
     )
     await hass.async_block_till_done()

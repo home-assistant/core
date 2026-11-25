@@ -28,6 +28,9 @@
     },
     {
       "local_name": "LD-0003"
+    },
+    {
+      "local_name": "Trick-*"
     }
   ],
   "categories": ["lighting.led_strips_controllers"],

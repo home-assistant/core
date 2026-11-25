@@ -284,6 +284,7 @@ async def test_removed_repository_repair_reads_as_a_sentence(
         DOMAIN, f"removed_{REPOSITORY_INTEGRATION_ID}"
     )
     assert issue is not None
+    assert issue.config_entry_id == marketplace.configuration.config_entry.entry_id
     assert issue.translation_key == translation_key
     assert (
         issue.translation_placeholders

@@ -24,7 +24,6 @@ from homeassistant.config_entries import (
     SOURCE_IGNORE,
     SOURCE_USB,
     SOURCE_ZEROCONF,
-    ConfigEntry,
     ConfigEntryState,
     ConfigFlow,
     ConfigFlowResult,
@@ -205,6 +204,10 @@ IGNORED_USB_DEVICES = {
     ("Nabu Casa", "ZBT-2"),
 }
 
+# Only Home Assistant can open these ports. Z-Wave JS runs in its own process
+# and reaches an ESPHome device through its Z-Wave proxy instead.
+ESPHOME_SERIAL_PROXY_SCHEME = "esphome-hass://"
+
 
 def get_manual_schema(user_input: dict[str, Any]) -> probatio.Schema:
     """Return a schema for the manual step."""
@@ -238,6 +241,8 @@ async def async_get_usb_ports(hass: HomeAssistant) -> dict[str, str]:
     port_descriptions = {}
     for port in await usb.async_scan_serial_ports(hass):
         if (port.manufacturer, port.description) in IGNORED_USB_DEVICES:
+            continue
+        if port.device.startswith(ESPHOME_SERIAL_PROXY_SCHEME):
             continue
 
         human_name = usb.human_readable_device_name(
@@ -624,6 +629,8 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
     @override
     async def async_step_usb(self, discovery_info: UsbServiceInfo) -> ConfigFlowResult:
         """Handle USB Discovery."""
+        if discovery_info.device.startswith(ESPHOME_SERIAL_PROXY_SCHEME):
+            return self.async_abort(reason="serial_proxy_not_supported")
         if not is_hassio(self.hass):
             return self.async_abort(reason="discovery_requires_supervisor")
         if any(
@@ -1702,7 +1709,7 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
         # deduplicated against a pending prompt or an ignored entry.
         placeholder_unique_id = f"esphome_{discovery_info.name}"
         if discovery_info.zwave_home_id:
-            existing_entry: ConfigEntry | None = None
+            existing_entry: ZwaveJSConfigEntry | None = None
             if (
                 (
                     current_config_entries := self._async_current_entries(

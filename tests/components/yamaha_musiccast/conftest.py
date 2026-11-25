@@ -21,6 +21,68 @@ from homeassistant.const import CONF_HOST
 TEST_DEVICE_ID = "1234567890"
 TEST_ZONE = "zone2"
 
+# Attribute bits of a netusb list entry: b[1] can be selected, b[2] can be played.
+FOLDER = 0b10
+TRACK = 0b100
+
+# The Net Radio menu of the mocked device: name and entries of each folder.
+STATIONS = [f"Station {i}" for i in range(30)]
+NET_RADIO_MENU: dict[str, tuple[str, list[tuple[str, int]]]] = {
+    "": ("Net Radio", [("Favorites", FOLDER), ("Countries", FOLDER)]),
+    "0": ("Favorites", [(station, TRACK) for station in STATIONS]),
+    "1": ("Countries", [("Poland", FOLDER)]),
+    "1.0": ("Poland", [("Radio 357", TRACK)]),
+}
+
+
+class NetUsbMenu:
+    """The netusb list of a device: one cursor, moved by every request.
+
+    Implements getListInfo (8 entries per page), select and return like the
+    device does, for the Net Radio input.
+    """
+
+    def __init__(self) -> None:
+        """Start at the root menu."""
+        self.path: list[str] = []
+
+    @property
+    def _key(self) -> str:
+        return ".".join(self.path)
+
+    async def get_list_info(self, source: str, start_index: int) -> dict:
+        """Return a page of the list the cursor is on."""
+        assert source == "net_radio"
+        name, entries = NET_RADIO_MENU[self._key]
+        return {
+            "response_code": 0,
+            "input": source,
+            "menu_layer": len(self.path),
+            "max_line": len(entries),
+            "index": start_index,
+            "menu_name": name,
+            "list_info": [
+                {
+                    "text": text,
+                    "thumbnail": f"http://127.0.0.1/thumb/{text}.png",
+                    "attribute": attribute,
+                }
+                for text, attribute in entries[start_index : start_index + 8]
+            ],
+        }
+
+    async def select_list_item(self, item: str | int, zone_id: str) -> None:
+        """Open a folder of the current list."""
+        _, entries = NET_RADIO_MENU[self._key]
+        index = int(item)
+        if entries[index][1] & FOLDER:
+            self.path.append(str(index))
+
+    async def return_in_list(self, zone_id: str) -> None:
+        """Go back to the parent list."""
+        if self.path:
+            self.path.pop()
+
 
 @pytest.fixture(autouse=True)
 def silent_ssdp_scanner() -> Generator[None]:
@@ -107,6 +169,11 @@ def mock_musiccast_device() -> Generator[MagicMock]:
     ]
     data.zones = {DEFAULT_ZONE: main_zone, TEST_ZONE: sub_zone}
 
+    data.netusb_preset_list = {
+        1: ("net_radio", "My Station"),
+        3: ("server", "Album"),
+    }
+
     device = MagicMock()
     device.data = data
     device.ip = "127.0.0.1"
@@ -115,6 +182,17 @@ def mock_musiccast_device() -> Generator[MagicMock]:
     device.build_capabilities = MagicMock()
     device.device = MagicMock()
     device.device.enable_polling = AsyncMock()
+    device.media_image_url = "http://127.0.0.1/artwork.jpg"
+    device.turn_on = AsyncMock()
+    device.play_list_media = AsyncMock()
+    device.recall_netusb_preset = AsyncMock()
+    device.play_url_media = AsyncMock()
+
+    menu = NetUsbMenu()
+    device.get_list_info = AsyncMock(side_effect=menu.get_list_info)
+    device.select_list_item = AsyncMock(side_effect=menu.select_list_item)
+    device.return_in_list = AsyncMock(side_effect=menu.return_in_list)
+    device.list_menu = menu
 
     with patch(
         "homeassistant.components.yamaha_musiccast.MusicCastDevice",

@@ -40,7 +40,11 @@ from .const import (
     SYSTEM_UPDATE_SIGNAL,
     TYPE_LOCAL,
 )
-from .coordinator import RiscoDataUpdateCoordinator, RiscoEventsDataUpdateCoordinator
+from .coordinator import (
+    RiscoDataUpdateCoordinator,
+    RiscoEventsDataUpdateCoordinator,
+    last_event_store,
+)
 from .models import CloudData, LocalData, RiscoConfigEntry, RiscoData
 from .services import async_setup_services
 
@@ -197,6 +201,11 @@ async def async_unload_entry(hass: HomeAssistant, entry: RiscoConfigEntry) -> No
                 entry.title,
                 entry.data.get(CONF_HOST, "unknown"),
             )
+
+
+async def async_remove_entry(hass: HomeAssistant, entry: RiscoConfigEntry) -> None:
+    """Remove the stored last event timestamp."""
+    await last_event_store(hass, entry.entry_id).async_remove()
 
 
 async def _update_listener(hass: HomeAssistant, entry: RiscoConfigEntry) -> None:
