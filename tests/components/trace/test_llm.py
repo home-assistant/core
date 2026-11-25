@@ -243,4 +243,3 @@ async def test_call_through_api(
     assert tool.annotations == llm.ToolAnnotations(
         read_only=True, destructive=False, idempotent=True, open_world=False
     )
-
