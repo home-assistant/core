@@ -2,13 +2,23 @@
 
 from unittest.mock import patch
 
-from pytest_homeassistant.common import MockConfigEntry
+from freezegun.api import FrozenDateTimeFactory
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
-from homeassistant.components.homekit.const import DOMAIN
+from homeassistant.components.homekit.const import DOMAIN, TARGET_CHANGE_RELOAD_COOLDOWN
 from homeassistant.const import CONF_NAME, CONF_PORT
 from homeassistant.core import HomeAssistant
 
 PATH_HOMEKIT = "homeassistant.components.homekit"
+
+
+async def async_fire_target_change_cooldown(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
+    """Fire the target change reload cooldown timer."""
+    freezer.tick(TARGET_CHANGE_RELOAD_COOLDOWN)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
 
 
 async def async_init_integration(hass: HomeAssistant) -> MockConfigEntry:
