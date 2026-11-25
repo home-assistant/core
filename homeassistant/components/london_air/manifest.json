@@ -2,10 +2,13 @@
   "domain": "london_air",
   "name": "London Air",
   "categories": ["weather_alerts.air_quality_pollen"],
-  "codeowners": [],
+  "codeowners": ["@MichaelMKKelly"],
+  "config_flow": true,
   "connectivity": ["cloud"],
   "documentation": "https://www.home-assistant.io/integrations/london_air",
+  "integration_type": "service",
   "iot_class": "cloud_polling",
   "quality_scale": "legacy",
-  "requirements": ["pylondonair==0.1.1"]
+  "requirements": ["pylondonair==0.1.1"],
+  "single_config_entry": true
 }
