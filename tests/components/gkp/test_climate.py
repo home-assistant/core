@@ -442,6 +442,42 @@ async def test_set_temperature_before_mode_is_reported(
     )
 
 
+async def test_set_temperature_in_requested_auto_mode(
+    hass: HomeAssistant,
+    mock_gkp_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+    device_contents: dict[str, dict[str, Any]],
+) -> None:
+    """Test the boost started from a requested AUTO mode is shown once reported."""
+    device_contents[LIVING_ROOM_ID]["Cm"]["value"] = GkpMode.OFF.value
+    await setup_integration(hass, mock_config_entry)
+
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_HVAC_MODE,
+        {ATTR_ENTITY_ID: LIVING_ROOM_ENTITY_ID, ATTR_HVAC_MODE: HVACMode.AUTO},
+        blocking=True,
+    )
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_TEMPERATURE,
+        {ATTR_ENTITY_ID: LIVING_ROOM_ENTITY_ID, ATTR_TEMPERATURE: 22.0},
+        blocking=True,
+    )
+
+    mock_gkp_client.set_temperature.assert_called_once_with(
+        LIVING_ROOM_ID, GkpMode.AUTO, 22.0
+    )
+
+    device_contents[LIVING_ROOM_ID]["Cm"]["value"] = GkpMode.BOOST.value
+    await advance_time(hass, freezer, FAST_POLLING_INTERVAL)
+
+    state = hass.states.get(LIVING_ROOM_ENTITY_ID)
+    assert state is not None
+    assert state.attributes[ATTR_PRESET_MODE] == PRESET_BOOST
+
+
 @pytest.mark.usefixtures("mock_gkp_client")
 async def test_requested_mode_not_reported(
     hass: HomeAssistant,

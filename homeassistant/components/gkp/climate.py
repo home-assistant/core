@@ -174,6 +174,8 @@ class GkpClimate(GkpEntity, ClimateEntity):
                 translation_key="setpoint_not_adjustable",
                 translation_placeholders={"entity_id": self.entity_id},
             )
+        if mode is GkpMode.AUTO:
+            requested_mode = GkpMode.BOOST
 
         await self._async_send_command(
             self.coordinator.client.set_temperature(self.device_id, mode, temperature),
