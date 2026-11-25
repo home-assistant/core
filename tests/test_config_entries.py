@@ -12054,6 +12054,32 @@ async def test_async_update_title_placeholders(hass: HomeAssistant) -> None:
         assert len(events) == 2
 
 
+async def test_flow_first_step_exception_removes_flow_from_in_progress(
+    hass: HomeAssistant,
+) -> None:
+    """Test an exception in the first step removes the flow from in progress."""
+    mock_integration(hass, MockModule("comp"))
+    mock_platform(hass, "comp.config_flow", None)
+
+    class TestFlow(config_entries.ConfigFlow):
+        """Test flow."""
+
+        VERSION = 1
+
+        async def async_step_user(
+            self, user_input: dict[str, Any] | None = None
+        ) -> config_entries.ConfigFlowResult:
+            """Fail in the first step."""
+            raise ValueError("Boom")
+
+    with mock_config_flow("comp", TestFlow), pytest.raises(ValueError, match="Boom"):
+        await hass.config_entries.flow.async_init(
+            "comp", context={"source": config_entries.SOURCE_USER}
+        )
+
+    assert hass.config_entries.flow.async_progress(include_uninitialized=True) == []
+
+
 async def test_config_flow_abort_with_next_flow(hass: HomeAssistant) -> None:
     """Test that ConfigFlow.async_abort() can include next_flow parameter."""
 

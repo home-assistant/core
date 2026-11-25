@@ -12,6 +12,8 @@ from modbus_connection.model import UpdateReport
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryError
+from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import (
     DataUpdateCoordinator,
     UpdateFailed,
@@ -82,6 +84,11 @@ class IntesisCoordinator(DataUpdateCoordinator[UpdateReport]):
         self._log_component_changes(report)
         return report
 
+    @property
+    def device_info(self) -> DeviceInfo:
+        """The gateway, which the entry registers when it sets up."""
+        return DeviceInfo(identifiers={(DOMAIN, self.config_entry.entry_id)})
+
     def _log_component_changes(self, report: UpdateReport) -> None:
         """Log a sub-system's first failure and its recovery, once each."""
         for name, cause in report.failed.items():
@@ -122,6 +129,22 @@ class IntesisUnitCoordinator(DataUpdateCoordinator[UpdateReport]):
         )
         self.gateway = gateway
         self.device = gateway.device
+
+    @property
+    def device_info(self) -> DeviceInfo:
+        """The air conditioner, a device of its own behind the gateway."""
+        entry = self.config_entry
+        return DeviceInfo(
+            identifiers={(DOMAIN, f"{entry.entry_id}_unit")},
+            manufacturer=self.device.brand.name,
+            translation_key="air_conditioner",
+            translation_placeholders={"gateway": entry.title},
+            via_device_id=dr.async_get_device_id_by_identifier(
+                self.hass,
+                (DOMAIN, entry.entry_id),
+                config_entry_id=entry.entry_id,
+            ),
+        )
 
     @callback
     def async_follow_gateway(self) -> None:

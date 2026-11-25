@@ -1,0 +1,87 @@
+{
+  "applianceId": "944035064_00:27032025-443E073D97B2",
+  "connectionState": "connected",
+  "status": "enabled",
+  "properties": {
+    "reported": {
+      "cleaningReminder": true,
+      "displayLight": "DISPLAY_LIGHT_3",
+      "temperatureRepresentation": "CELSIUS",
+      "remoteControl": "ENABLED",
+      "language": "ENGLISH",
+      "clockStyle": "NOT_SELECTED",
+      "localTimeAutomaticMode": "MANUAL",
+      "soundVolume": 2,
+      "keySoundTone": "CLICK",
+      "upperOven": {
+        "applianceState": "READY_TO_START",
+        "doorState": "CLOSED",
+        "targetTemperatureF": 356,
+        "targetTemperatureC": 180,
+        "runningTime": -2147483648,
+        "program": "STEAMIFY",
+        "executeCommand": "STOPRESET",
+        "targetMicrowavePower": 0,
+        "waterTankLevel": "OK",
+        "foodProbeInsertionState": "NOT_INSERTED",
+        "cavityLight": false,
+        "targetDuration": 0,
+        "startTime": -2147483648,
+        "waterTrayInsertionState": "INSERTED",
+        "reminderTime": -2147483648,
+        "fastHeatUpFeature": "DISABLED",
+        "messageQueueSync": {
+          "activeMessageIndex": 0,
+          "messageBehaviour": "INVALID",
+          "messageQueueId": 0,
+          "messageQueueType": "INVALID"
+        },
+        "favoriteSelect": "255",
+        "processPhase": "NONE",
+        "displayTemperatureC": 30,
+        "displayTemperatureF": 86,
+        "displayFoodProbeTemperatureC": null,
+        "displayFoodProbeTemperatureF": null,
+        "timeToEnd": 3599
+      },
+      "waterHardness": "STEP_4",
+      "oTA3TargetVersion": "\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000",
+      "applianceInfo": {
+        "applianceType": "SO",
+        "capabilityHash": "4d0d5929a62cb8772f346348875e59bd758a3a88e247f39fc1c607e258cbbc00"
+      },
+      "oTA3CurrentVersion": "S0005330604\u0000",
+      "applianceUiConfigVersion": "Oven_C000000062_0.0.31",
+      "cpv": "03",
+      "oTA3State": "IDLE",
+      "applianceState": "OFF",
+      "applianceLocalTimeOffset": -417172230,
+      "favoriteSelect": "255",
+      "alerts": [],
+      "oTA3LastResult": "NONE",
+      "fastHeatUpFeature": "DISABLED",
+      "networkInterface": {
+        "swVersion": "v4.6.06_argo",
+        "otaState": "IDLE",
+        "autoLocalTimeOffset": 7200,
+        "niuSwUpdateCurrentDescription": "A24559613B-S00031107A",
+        "timeZoneDatabaseName": "Europe/Stockholm",
+        "swAncAndRevision": "S00031107A",
+        "linkQualityIndicator": "VERY_GOOD",
+        "oTA3TargetVersion": "\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000",
+        "oTA3LastResult": "NONE",
+        "oTA3CurrentVersion": "S0005330604\u0000",
+        "oTA3State": "IDLE"
+      },
+      "childLock": false,
+      "descalingReminderState": false,
+      "connectivityState": "connected",
+      "messageQueueSync": {
+        "activeMessageIndex": 0,
+        "messageBehaviour": "INVALID",
+        "messageQueueId": 0,
+        "messageQueueType": "INVALID"
+      }
+    }
+  }
+}

@@ -1,0 +1,6 @@
+{
+  "domain": "ogeneral_infrared",
+  "name": "O General Infrared",
+  "integration_type": "virtual",
+  "supported_by": "fujitsu_infrared"
+}

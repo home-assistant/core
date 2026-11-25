@@ -52,7 +52,12 @@ from homeassistant.helpers.typing import UNDEFINED, ConfigType, DiscoveryInfoTyp
 from homeassistant.util import color as color_util
 
 from . import validators as tcv
-from .const import DEFAULT_NAMES, DOMAIN, LIGHT_DEPRECATED_OPTIONS
+from .const import (
+    DEFAULT_NAMES,
+    DOMAIN,
+    LIGHT_DEPRECATED_OPTIONS,
+    LIGHT_REQUIRED_ACTIONS_OPTIONS,
+)
 from .coordinator import TriggerUpdateCoordinator
 from .entity import AbstractTemplateEntity
 from .helpers import (
@@ -60,6 +65,7 @@ from .helpers import (
     async_setup_template_platform,
     async_setup_template_preview,
 )
+from .repairs import format_deprecated_options
 from .schemas import (
     TEMPLATE_ENTITY_COMMON_CONFIG_ENTRY_SCHEMA,
     TEMPLATE_ENTITY_OPTIMISTIC_SCHEMA,
@@ -96,6 +102,7 @@ CONF_TEMPERATURE_KELVIN = "temperature_kelvin"
 CONF_XY_ACTION = "set_xy"
 
 DEPRECATED_TEMPERATURE_ISSUE_ID = "deprecated_light_temperature"
+DEPRECATED_HELPER_MISSING_ACTIONS_ISSUE_ID = "deprecated_light_helper_missing_actions"
 
 # Above this, the mireds convert to 0 kelvin
 MAX_MIREDS = 1_000_000
@@ -223,6 +230,32 @@ async def async_setup_entry(
             translation_placeholders={
                 "name": config_entry.title,
                 "breaks_in_ha_version": LIGHT_DEPRECATED_OPTIONS.breaks_in_ha_version,
+            },
+        )
+    else:
+        ir.async_delete_issue(hass, DOMAIN, issue_id)
+
+    issue_id = f"{DEPRECATED_HELPER_MISSING_ACTIONS_ISSUE_ID}_{config_entry.entry_id}"
+    if missing := LIGHT_REQUIRED_ACTIONS_OPTIONS.deprecated_options(
+        config_entry.options
+    ):
+        ir.async_create_issue(
+            hass,
+            DOMAIN,
+            issue_id,
+            breaks_in_ha_version=LIGHT_REQUIRED_ACTIONS_OPTIONS.breaks_in_ha_version,
+            config_entry_id=config_entry.entry_id,
+            is_fixable=False,
+            severity=ir.IssueSeverity.WARNING,
+            translation_key=DEPRECATED_HELPER_MISSING_ACTIONS_ISSUE_ID,
+            translation_placeholders={
+                "name": config_entry.title,
+                "breaks_in_ha_version": (
+                    LIGHT_REQUIRED_ACTIONS_OPTIONS.breaks_in_ha_version
+                ),
+                "options": format_deprecated_options(
+                    hass, LIGHT_REQUIRED_ACTIONS_OPTIONS, missing, {}
+                ),
             },
         )
     else:
