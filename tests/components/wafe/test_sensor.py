@@ -18,19 +18,15 @@ from homeassistant.helpers import entity_registry as er
 STATE_ENTITY = "sensor.wafe_w201_state"
 
 
-@pytest.mark.usefixtures("entity_registry_enabled_by_default", "mock_get_unit")
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_all_entities(
     hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
+    init_integration: MockConfigEntry,
     entity_registry: er.EntityRegistry,
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test all sensors match their snapshot."""
-    mock_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
+    await snapshot_platform(hass, entity_registry, snapshot, init_integration.entry_id)
 
 
 @pytest.mark.parametrize(
