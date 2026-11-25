@@ -10,7 +10,7 @@ import pytest
 from homeassistant.components.hue.const import DOMAIN, HueService
 from homeassistant.components.hue.v2.light import GRADIENT_COALESCE_DELAY
 from homeassistant.components.light import ColorMode
-from homeassistant.const import ATTR_ENTITY_ID, Platform
+from homeassistant.const import Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er
@@ -1646,7 +1646,7 @@ async def test_flash(
     await hass.services.async_call(
         DOMAIN,
         HueService.FLASH,
-        {ATTR_ENTITY_ID: entity_id, **service_data},
+        {TargetKey.ENTITY_ID: entity_id, **service_data},
         blocking=True,
     )
 
@@ -1668,7 +1668,7 @@ async def test_stop_flash(
     await setup_platform(hass, mock_bridge_v2, Platform.LIGHT)
 
     await hass.services.async_call(
-        DOMAIN, HueService.STOP_FLASH, {ATTR_ENTITY_ID: entity_id}, blocking=True
+        DOMAIN, HueService.STOP_FLASH, {TargetKey.ENTITY_ID: entity_id}, blocking=True
     )
 
     assert mock_bridge_v2.mock_requests == [
@@ -1693,7 +1693,7 @@ async def test_flash_multiple_targets(
         DOMAIN,
         HueService.FLASH,
         {
-            ATTR_ENTITY_ID: [
+            TargetKey.ENTITY_ID: [
                 COLOR_LIGHT_ENTITY_ID,
                 NO_SIGNALING_LIGHT_ENTITY_ID,
                 WHITE_LIGHT_ENTITY_ID,
@@ -1717,7 +1717,7 @@ async def test_flash_multiple_targets(
     [
         pytest.param(
             HueService.FLASH,
-            {ATTR_ENTITY_ID: NO_SIGNALING_LIGHT_ENTITY_ID, "duration": 5},
+            {TargetKey.ENTITY_ID: NO_SIGNALING_LIGHT_ENTITY_ID, "duration": 5},
             "flash_not_supported",
             {"entities": NO_SIGNALING_LIGHT_ENTITY_ID},
             id="no_signaling_feature",
@@ -1725,7 +1725,7 @@ async def test_flash_multiple_targets(
         pytest.param(
             HueService.FLASH,
             {
-                ATTR_ENTITY_ID: WHITE_LIGHT_ENTITY_ID,
+                TargetKey.ENTITY_ID: WHITE_LIGHT_ENTITY_ID,
                 "duration": 5,
                 "rgb_color": [255, 0, 0],
             },
@@ -1736,7 +1736,10 @@ async def test_flash_multiple_targets(
         pytest.param(
             HueService.FLASH,
             {
-                ATTR_ENTITY_ID: [WHITE_LIGHT_ENTITY_ID, NO_SIGNALING_LIGHT_ENTITY_ID],
+                TargetKey.ENTITY_ID: [
+                    WHITE_LIGHT_ENTITY_ID,
+                    NO_SIGNALING_LIGHT_ENTITY_ID,
+                ],
                 "duration": 5,
                 "rgb_color": [255, 0, 0],
                 "second_rgb_color": [0, 0, 255],
@@ -1748,7 +1751,7 @@ async def test_flash_multiple_targets(
         pytest.param(
             HueService.FLASH,
             {
-                ATTR_ENTITY_ID: COLOR_LIGHT_ENTITY_ID,
+                TargetKey.ENTITY_ID: COLOR_LIGHT_ENTITY_ID,
                 "duration": 5,
                 "second_rgb_color": [0, 0, 255],
             },
@@ -1758,7 +1761,7 @@ async def test_flash_multiple_targets(
         ),
         pytest.param(
             HueService.STOP_FLASH,
-            {ATTR_ENTITY_ID: NO_SIGNALING_LIGHT_ENTITY_ID},
+            {TargetKey.ENTITY_ID: NO_SIGNALING_LIGHT_ENTITY_ID},
             "stop_flash_not_supported",
             {"entities": NO_SIGNALING_LIGHT_ENTITY_ID},
             id="stop_not_supported",
@@ -1810,7 +1813,7 @@ async def test_flash_invalid_schema(
         await hass.services.async_call(
             DOMAIN,
             HueService.FLASH,
-            {ATTR_ENTITY_ID: COLOR_LIGHT_ENTITY_ID, **service_data},
+            {TargetKey.ENTITY_ID: COLOR_LIGHT_ENTITY_ID, **service_data},
             blocking=True,
         )
 
