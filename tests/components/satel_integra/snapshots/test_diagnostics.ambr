@@ -16,6 +16,9 @@
       }),
       'language_code': 0,
       'model': dict({
+        'max_outputs': 64,
+        'max_partitions': 32,
+        'max_zones': 64,
         'name': 'INTEGRA 64',
       }),
       'settings_stored_in_flash': True,
@@ -86,6 +89,9 @@
       }),
       'language_code': 0,
       'model': dict({
+        'max_outputs': 64,
+        'max_partitions': 32,
+        'max_zones': 64,
         'name': 'INTEGRA 64',
       }),
       'settings_stored_in_flash': True,

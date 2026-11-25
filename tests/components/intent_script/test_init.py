@@ -7,7 +7,8 @@ from pytest_homeassistant.common import async_mock_service, get_fixture_path
 
 from homeassistant import config as hass_config
 from homeassistant.components.intent_script.const import DOMAIN
-from homeassistant.const import ATTR_FRIENDLY_NAME, CONF_ACTION, SERVICE_RELOAD
+from homeassistant.components.intent_script.services import IntentScriptService
+from homeassistant.const import ATTR_FRIENDLY_NAME, CONF_ACTION
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import (
     area_registry as ar,
@@ -397,7 +398,11 @@ async def test_intent_script_action_validation(
     )
 
     # Verify that the invalid intent logged an error
-    assert "Failed to validate actions for intent InvalidIntent" in caplog.text
+    assert (
+        "Failed to validate actions for intent InvalidIntent: "
+        f"Unknown entity registry entry {non_existent_registry_id} "
+        "at 'action[0].choose[0].conditions[0]'"
+    ) in caplog.text
 
     # The invalid intent should not be registered
     with pytest.raises(intent.UnknownIntent):
@@ -442,7 +447,7 @@ async def test_reload(hass: HomeAssistant) -> None:
     with patch.object(hass_config, "YAML_CONFIG_FILE", yaml_path):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_RELOAD,
+            IntentScriptService.RELOAD,
             {},
             blocking=True,
         )
@@ -458,7 +463,7 @@ async def test_reload(hass: HomeAssistant) -> None:
     with patch.object(hass_config, "YAML_CONFIG_FILE", yaml_path):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_RELOAD,
+            IntentScriptService.RELOAD,
             {},
             blocking=True,
         )
@@ -498,7 +503,9 @@ async def test_reload_unloads_scripts(hass: HomeAssistant) -> None:
             action_script, "async_unload", wraps=action_script.async_unload
         ) as unload_mock,
     ):
-        await hass.services.async_call(DOMAIN, SERVICE_RELOAD, blocking=True)
+        await hass.services.async_call(
+            DOMAIN, IntentScriptService.RELOAD, blocking=True
+        )
         await hass.async_block_till_done()
 
     stop_mock.assert_called_once()

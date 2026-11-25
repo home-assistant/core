@@ -1,6 +1,6 @@
 {
   "domain": "flic",
-  "name": "Flic",
+  "name": "Flic (legacy)",
   "categories": ["buttons_remotes"],
   "codeowners": [],
   "connectivity": ["network"],

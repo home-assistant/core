@@ -15,6 +15,7 @@ from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_ADDRESS
 from homeassistant.core import callback
 
+from . import MopekaConfigEntry
 from .const import CONF_MEDIUM_TYPE, DEFAULT_MEDIUM_TYPE, DOMAIN
 
 
@@ -54,7 +55,7 @@ class MopekaConfigFlow(ConfigFlow, domain=DOMAIN):
     @staticmethod
     @override
     def async_get_options_flow(
-        config_entry: config_entries.ConfigEntry,
+        config_entry: MopekaConfigEntry,
     ) -> MopekaOptionsFlow:
         """Return the options flow for this handler."""
         return MopekaOptionsFlow()

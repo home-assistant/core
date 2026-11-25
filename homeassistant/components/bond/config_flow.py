@@ -168,8 +168,8 @@ class BondConfigFlow(ConfigFlow, domain=DOMAIN):
         self.context.update(
             {
                 "title_placeholders": {
-                    CONF_HOST: self._discovered[CONF_HOST],
-                    CONF_NAME: self._discovered[CONF_NAME],
+                    "host": self._discovered[CONF_HOST],
+                    "name": self._discovered[CONF_NAME],
                 }
             }
         )

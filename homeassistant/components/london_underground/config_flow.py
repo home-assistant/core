@@ -8,7 +8,6 @@ from london_tube_status import TubeData
 import probatio
 
 from homeassistant.config_entries import (
-    ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
     OptionsFlowWithReload,
@@ -18,6 +17,7 @@ from homeassistant.helpers import selector
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import CONF_LINE, DEFAULT_LINES, DOMAIN, TUBE_LINES
+from .coordinator import LondonUndergroundConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -32,7 +32,7 @@ class LondonUndergroundConfigFlow(ConfigFlow, domain=DOMAIN):
     @callback
     @override
     def async_get_options_flow(
-        _: ConfigEntry,
+        _: LondonUndergroundConfigEntry,
     ) -> LondonUndergroundOptionsFlow:
         """Get the options flow for this handler."""
         return LondonUndergroundOptionsFlow()

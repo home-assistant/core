@@ -36,12 +36,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: LocalTodoConfigEntry) ->
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
+async def async_unload_entry(hass: HomeAssistant, entry: LocalTodoConfigEntry) -> None:
     """Unload a config entry."""
     await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
 
 
-async def async_remove_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
+async def async_remove_entry(hass: HomeAssistant, entry: LocalTodoConfigEntry) -> None:
     """Handle removal of an entry."""
     key = slugify(entry.data[CONF_TODO_LIST_NAME])
     path = Path(hass.config.path(STORAGE_PATH.format(key=key)))

@@ -2,6 +2,7 @@
 
 from datetime import timedelta
 import logging
+from zoneinfo import ZoneInfo
 
 DOMAIN = "engie_be"
 ATTRIBUTION = "Data provided by ENGIE Belgium"
@@ -15,7 +16,10 @@ USER_MANAGEMENT_URL = (
     "https://www.engie.be/nl/energiedesk/usermanagement/manage-access/"
 )
 
+BRUSSELS_TIME_ZONE = ZoneInfo("Europe/Brussels")
+
 CONTRACTS_RETRY_INTERVAL = timedelta(minutes=5)
 
 PRICES_SCAN_INTERVAL = timedelta(hours=1)
 EPEX_SCAN_INTERVAL = timedelta(hours=1)
+PEAKS_SCAN_INTERVAL = timedelta(hours=1)

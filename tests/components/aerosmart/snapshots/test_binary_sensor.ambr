@@ -1,0 +1,2421 @@
+# serializer version: 1
+# name: test_all_entities[binary_sensor.aerosmart_aggregate_fault-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('aerosmart', '01JZ8M2Q4T6Y9V3B5N7K1W0XAE')]>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.aerosmart_aggregate_fault',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Aggregate fault',
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
+    'original_icon': None,
+    'original_name': 'Aggregate fault',
+    'platform': 'aerosmart',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'aggregate_fault_stoerung_summenstoerung',
+    'unique_id': '01JZ8M2Q4T6Y9V3B5N7K1W0XAE_aggregate_fault_stoerung_summenstoerung',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[binary_sensor.aerosmart_aggregate_fault-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'aerosmart Aggregate fault',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.aerosmart_aggregate_fault',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_all_entities[binary_sensor.aerosmart_aggregate_fault_2-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('aerosmart', '01JZ8M2Q4T6Y9V3B5N7K1W0XAE')]>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.aerosmart_aggregate_fault_2',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Aggregate fault 2',
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
+    'original_icon': None,
+    'original_name': 'Aggregate fault 2',
+    'platform': 'aerosmart',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'aggregate_fault_stoerung_summenstoerung2',
+    'unique_id': '01JZ8M2Q4T6Y9V3B5N7K1W0XAE_aggregate_fault_stoerung_summenstoerung2',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[binary_sensor.aerosmart_aggregate_fault_2-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'aerosmart Aggregate fault 2',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.aerosmart_aggregate_fault_2',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_all_entities[binary_sensor.aerosmart_boiler_overheating_imbalance_request-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('aerosmart', '01JZ8M2Q4T6Y9V3B5N7K1W0XAE')]>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.aerosmart_boiler_overheating_imbalance_request',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Boiler overheating imbalance request',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Boiler overheating imbalance request',
+    'platform': 'aerosmart',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'hot_water_ventilation_anforderung_disbalance_boilerueberwaermung',
+    'unique_id': '01JZ8M2Q4T6Y9V3B5N7K1W0XAE_hot_water_ventilation_anforderung_disbalance_boilerueberwaermung',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[binary_sensor.aerosmart_boiler_overheating_imbalance_request-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'aerosmart Boiler overheating imbalance request',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.aerosmart_boiler_overheating_imbalance_request',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_all_entities[binary_sensor.aerosmart_boiler_overtemperature_fault-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('aerosmart', '01JZ8M2Q4T6Y9V3B5N7K1W0XAE')]>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.aerosmart_boiler_overtemperature_fault',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Boiler overtemperature fault',
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
+    'original_icon': None,
+    'original_name': 'Boiler overtemperature fault',
+    'platform': 'aerosmart',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'hot_water_ventilation_stoerung_boiler_uebertemperatur',
+    'unique_id': '01JZ8M2Q4T6Y9V3B5N7K1W0XAE_hot_water_ventilation_stoerung_boiler_uebertemperatur',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[binary_sensor.aerosmart_boiler_overtemperature_fault-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'aerosmart Boiler overtemperature fault',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.aerosmart_boiler_overtemperature_fault',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_all_entities[binary_sensor.aerosmart_co2_sensor_fault-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('aerosmart', '01JZ8M2Q4T6Y9V3B5N7K1W0XAE')]>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.aerosmart_co2_sensor_fault',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'CO2 sensor fault',
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
+    'original_icon': None,
+    'original_name': 'CO2 sensor fault',
+    'platform': 'aerosmart',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'carbon_dioxide_stoerung_co2_sensor',
+    'unique_id': '01JZ8M2Q4T6Y9V3B5N7K1W0XAE_carbon_dioxide_stoerung_co2_sensor',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[binary_sensor.aerosmart_co2_sensor_fault-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'aerosmart CO2 sensor fault',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.aerosmart_co2_sensor_fault',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_all_entities[binary_sensor.aerosmart_co2_sensor_installed-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('aerosmart', '01JZ8M2Q4T6Y9V3B5N7K1W0XAE')]>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.aerosmart_co2_sensor_installed',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'CO2 sensor installed',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'CO2 sensor installed',
+    'platform': 'aerosmart',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'carbon_dioxide_co2_sensor_available',
+    'unique_id': '01JZ8M2Q4T6Y9V3B5N7K1W0XAE_carbon_dioxide_co2_sensor_available',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[binary_sensor.aerosmart_co2_sensor_installed-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'aerosmart CO2 sensor installed',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.aerosmart_co2_sensor_installed',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_all_entities[binary_sensor.aerosmart_coarse_dust_filter_installed-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('aerosmart', '01JZ8M2Q4T6Y9V3B5N7K1W0XAE')]>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.aerosmart_coarse_dust_filter_installed',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Coarse dust filter installed',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Coarse dust filter installed',
+    'platform': 'aerosmart',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'coarse_dust_filter_grobstaubfilter_vorhanden',
+    'unique_id': '01JZ8M2Q4T6Y9V3B5N7K1W0XAE_coarse_dust_filter_grobstaubfilter_vorhanden',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[binary_sensor.aerosmart_coarse_dust_filter_installed-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'aerosmart Coarse dust filter installed',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.aerosmart_coarse_dust_filter_installed',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_all_entities[binary_sensor.aerosmart_controller_participant_unreachable-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('aerosmart', '01JZ8M2Q4T6Y9V3B5N7K1W0XAE')]>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.aerosmart_controller_participant_unreachable',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Controller participant unreachable',
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
+    'original_icon': None,
+    'original_name': 'Controller participant unreachable',
+    'platform': 'aerosmart',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'ventilation_stoerung_teilnehmer_nicht_erreichbar',
+    'unique_id': '01JZ8M2Q4T6Y9V3B5N7K1W0XAE_ventilation_stoerung_teilnehmer_nicht_erreichbar',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[binary_sensor.aerosmart_controller_participant_unreachable-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'aerosmart Controller participant unreachable',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.aerosmart_controller_participant_unreachable',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_all_entities[binary_sensor.aerosmart_cooling_installed-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('aerosmart', '01JZ8M2Q4T6Y9V3B5N7K1W0XAE')]>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.aerosmart_cooling_installed',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Cooling installed',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Cooling installed',
+    'platform': 'aerosmart',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'cooling_kuehlung_vorhanden',
+    'unique_id': '01JZ8M2Q4T6Y9V3B5N7K1W0XAE_cooling_kuehlung_vorhanden',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[binary_sensor.aerosmart_cooling_installed-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'aerosmart Cooling installed',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.aerosmart_cooling_installed',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_all_entities[binary_sensor.aerosmart_defrost_request-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('aerosmart', '01JZ8M2Q4T6Y9V3B5N7K1W0XAE')]>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.aerosmart_defrost_request',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Defrost request',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Defrost request',
+    'platform': 'aerosmart',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'ventilation_anforderung_abtauen',
+    'unique_id': '01JZ8M2Q4T6Y9V3B5N7K1W0XAE_ventilation_anforderung_abtauen',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[binary_sensor.aerosmart_defrost_request-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'aerosmart Defrost request',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.aerosmart_defrost_request',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_all_entities[binary_sensor.aerosmart_electric_heater_fault-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('aerosmart', '01JZ8M2Q4T6Y9V3B5N7K1W0XAE')]>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.aerosmart_electric_heater_fault',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Electric heater fault',
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
+    'original_icon': None,
+    'original_name': 'Electric heater fault',
+    'platform': 'aerosmart',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'hot_water_ventilation_stoerung_elektroheizstab',
+    'unique_id': '01JZ8M2Q4T6Y9V3B5N7K1W0XAE_hot_water_ventilation_stoerung_elektroheizstab',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[binary_sensor.aerosmart_electric_heater_fault-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'aerosmart Electric heater fault',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.aerosmart_electric_heater_fault',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_all_entities[binary_sensor.aerosmart_electric_heater_installed-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('aerosmart', '01JZ8M2Q4T6Y9V3B5N7K1W0XAE')]>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.aerosmart_electric_heater_installed',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Electric heater installed',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Electric heater installed',
+    'platform': 'aerosmart',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'hot_water_heat_pump_wp_elektroheizstab_vorhanden',
+    'unique_id': '01JZ8M2Q4T6Y9V3B5N7K1W0XAE_hot_water_heat_pump_wp_elektroheizstab_vorhanden',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[binary_sensor.aerosmart_electric_heater_installed-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'aerosmart Electric heater installed',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.aerosmart_electric_heater_installed',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_all_entities[binary_sensor.aerosmart_electric_heater_utility_lockout-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('aerosmart', '01JZ8M2Q4T6Y9V3B5N7K1W0XAE')]>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.aerosmart_electric_heater_utility_lockout',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Electric heater utility lockout',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Electric heater utility lockout',
+    'platform': 'aerosmart',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'utility_lockout_evu_sperre_elektroheizstab_aktiv',
+    'unique_id': '01JZ8M2Q4T6Y9V3B5N7K1W0XAE_utility_lockout_evu_sperre_elektroheizstab_aktiv',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[binary_sensor.aerosmart_electric_heater_utility_lockout-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'aerosmart Electric heater utility lockout',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.aerosmart_electric_heater_utility_lockout',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_all_entities[binary_sensor.aerosmart_evaporator_temperature_sensor_fault-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('aerosmart', '01JZ8M2Q4T6Y9V3B5N7K1W0XAE')]>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.aerosmart_evaporator_temperature_sensor_fault',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Evaporator temperature sensor fault',
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
+    'original_icon': None,
+    'original_name': 'Evaporator temperature sensor fault',
+    'platform': 'aerosmart',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'ventilation_stoerung_temperaturfuehler_verdampferregister',
+    'unique_id': '01JZ8M2Q4T6Y9V3B5N7K1W0XAE_ventilation_stoerung_temperaturfuehler_verdampferregister',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[binary_sensor.aerosmart_evaporator_temperature_sensor_fault-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'aerosmart Evaporator temperature sensor fault',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.aerosmart_evaporator_temperature_sensor_fault',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_all_entities[binary_sensor.aerosmart_external_fan_level_3_request-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('aerosmart', '01JZ8M2Q4T6Y9V3B5N7K1W0XAE')]>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.aerosmart_external_fan_level_3_request',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'External fan level 3 request',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'External fan level 3 request',
+    'platform': 'aerosmart',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'ventilation_anforderung_st3_ext',
+    'unique_id': '01JZ8M2Q4T6Y9V3B5N7K1W0XAE_ventilation_anforderung_st3_ext',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[binary_sensor.aerosmart_external_fan_level_3_request-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'aerosmart External fan level 3 request',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.aerosmart_external_fan_level_3_request',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_all_entities[binary_sensor.aerosmart_external_heat_pump_relay_contact-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('aerosmart', '01JZ8M2Q4T6Y9V3B5N7K1W0XAE')]>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.aerosmart_external_heat_pump_relay_contact',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'External heat pump relay contact',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'External heat pump relay contact',
+    'platform': 'aerosmart',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'heat_pump_wp_relaiskontakt_ext',
+    'unique_id': '01JZ8M2Q4T6Y9V3B5N7K1W0XAE_heat_pump_wp_relaiskontakt_ext',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[binary_sensor.aerosmart_external_heat_pump_relay_contact-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'aerosmart External heat pump relay contact',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.aerosmart_external_heat_pump_relay_contact',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_all_entities[binary_sensor.aerosmart_external_ventilation_relay_contact-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('aerosmart', '01JZ8M2Q4T6Y9V3B5N7K1W0XAE')]>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.aerosmart_external_ventilation_relay_contact',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'External ventilation relay contact',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'External ventilation relay contact',
+    'platform': 'aerosmart',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'general_relaykontakt_ext_lu',
+    'unique_id': '01JZ8M2Q4T6Y9V3B5N7K1W0XAE_general_relaykontakt_ext_lu',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[binary_sensor.aerosmart_external_ventilation_relay_contact-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'aerosmart External ventilation relay contact',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.aerosmart_external_ventilation_relay_contact',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_all_entities[binary_sensor.aerosmart_extract_air_fan_fault-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('aerosmart', '01JZ8M2Q4T6Y9V3B5N7K1W0XAE')]>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.aerosmart_extract_air_fan_fault',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Extract air fan fault',
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
+    'original_icon': None,
+    'original_name': 'Extract air fan fault',
+    'platform': 'aerosmart',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'fans_stoerung_abluftventilator',
+    'unique_id': '01JZ8M2Q4T6Y9V3B5N7K1W0XAE_fans_stoerung_abluftventilator',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[binary_sensor.aerosmart_extract_air_fan_fault-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'aerosmart Extract air fan fault',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.aerosmart_extract_air_fan_fault',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_all_entities[binary_sensor.aerosmart_fan_request_from_heat_pump-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('aerosmart', '01JZ8M2Q4T6Y9V3B5N7K1W0XAE')]>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.aerosmart_fan_request_from_heat_pump',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Fan request from heat pump',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Fan request from heat pump',
+    'platform': 'aerosmart',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'fans_anforderung_ventilatoren_durch_waermepumpe',
+    'unique_id': '01JZ8M2Q4T6Y9V3B5N7K1W0XAE_fans_anforderung_ventilatoren_durch_waermepumpe',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[binary_sensor.aerosmart_fan_request_from_heat_pump-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'aerosmart Fan request from heat pump',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.aerosmart_fan_request_from_heat_pump',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_all_entities[binary_sensor.aerosmart_fan_request_from_zone_control-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('aerosmart', '01JZ8M2Q4T6Y9V3B5N7K1W0XAE')]>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.aerosmart_fan_request_from_zone_control',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Fan request from zone control',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Fan request from zone control',
+    'platform': 'aerosmart',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'fans_anforderung_ventilatoren_durch_zonenregelung',
+    'unique_id': '01JZ8M2Q4T6Y9V3B5N7K1W0XAE_fans_anforderung_ventilatoren_durch_zonenregelung',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[binary_sensor.aerosmart_fan_request_from_zone_control-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'aerosmart Fan request from zone control',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.aerosmart_fan_request_from_zone_control',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_all_entities[binary_sensor.aerosmart_fine_dust_filter_installed-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('aerosmart', '01JZ8M2Q4T6Y9V3B5N7K1W0XAE')]>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.aerosmart_fine_dust_filter_installed',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Fine dust filter installed',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Fine dust filter installed',
+    'platform': 'aerosmart',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'fine_dust_filter_feinstaubfilter_vorhanden',
+    'unique_id': '01JZ8M2Q4T6Y9V3B5N7K1W0XAE_fine_dust_filter_feinstaubfilter_vorhanden',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[binary_sensor.aerosmart_fine_dust_filter_installed-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'aerosmart Fine dust filter installed',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.aerosmart_fine_dust_filter_installed',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_all_entities[binary_sensor.aerosmart_fire_alarm-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('aerosmart', '01JZ8M2Q4T6Y9V3B5N7K1W0XAE')]>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.aerosmart_fire_alarm',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Fire alarm',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Fire alarm',
+    'platform': 'aerosmart',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'fire_alarm_brandmeldealarm',
+    'unique_id': '01JZ8M2Q4T6Y9V3B5N7K1W0XAE_fire_alarm_brandmeldealarm',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[binary_sensor.aerosmart_fire_alarm-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'aerosmart Fire alarm',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.aerosmart_fire_alarm',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_all_entities[binary_sensor.aerosmart_fire_alarm_contact-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('aerosmart', '01JZ8M2Q4T6Y9V3B5N7K1W0XAE')]>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.aerosmart_fire_alarm_contact',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Fire alarm contact',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Fire alarm contact',
+    'platform': 'aerosmart',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'fire_alarm_kontakt_brandmeldealarm',
+    'unique_id': '01JZ8M2Q4T6Y9V3B5N7K1W0XAE_fire_alarm_kontakt_brandmeldealarm',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[binary_sensor.aerosmart_fire_alarm_contact-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'aerosmart Fire alarm contact',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.aerosmart_fire_alarm_contact',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_all_entities[binary_sensor.aerosmart_fire_alarm_system_installed-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('aerosmart', '01JZ8M2Q4T6Y9V3B5N7K1W0XAE')]>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.aerosmart_fire_alarm_system_installed',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Fire alarm system installed',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Fire alarm system installed',
+    'platform': 'aerosmart',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'fire_alarm_brandmeldealarm_vorhanden',
+    'unique_id': '01JZ8M2Q4T6Y9V3B5N7K1W0XAE_fire_alarm_brandmeldealarm_vorhanden',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[binary_sensor.aerosmart_fire_alarm_system_installed-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'aerosmart Fire alarm system installed',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.aerosmart_fire_alarm_system_installed',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_all_entities[binary_sensor.aerosmart_heat_pump_boiler_sensor_fault-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('aerosmart', '01JZ8M2Q4T6Y9V3B5N7K1W0XAE')]>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.aerosmart_heat_pump_boiler_sensor_fault',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Heat pump boiler sensor fault',
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
+    'original_icon': None,
+    'original_name': 'Heat pump boiler sensor fault',
+    'platform': 'aerosmart',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'hot_water_ventilation_stoerung_boilerfuehler_waermepumpe',
+    'unique_id': '01JZ8M2Q4T6Y9V3B5N7K1W0XAE_hot_water_ventilation_stoerung_boilerfuehler_waermepumpe',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[binary_sensor.aerosmart_heat_pump_boiler_sensor_fault-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'aerosmart Heat pump boiler sensor fault',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.aerosmart_heat_pump_boiler_sensor_fault',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_all_entities[binary_sensor.aerosmart_heat_pump_high_pressure_fault-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('aerosmart', '01JZ8M2Q4T6Y9V3B5N7K1W0XAE')]>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.aerosmart_heat_pump_high_pressure_fault',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Heat pump high pressure fault',
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
+    'original_icon': None,
+    'original_name': 'Heat pump high pressure fault',
+    'platform': 'aerosmart',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'ventilation_stoerung_waermepumpe_hochdruck',
+    'unique_id': '01JZ8M2Q4T6Y9V3B5N7K1W0XAE_ventilation_stoerung_waermepumpe_hochdruck',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[binary_sensor.aerosmart_heat_pump_high_pressure_fault-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'aerosmart Heat pump high pressure fault',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.aerosmart_heat_pump_high_pressure_fault',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_all_entities[binary_sensor.aerosmart_heat_pump_low_pressure_fault-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('aerosmart', '01JZ8M2Q4T6Y9V3B5N7K1W0XAE')]>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.aerosmart_heat_pump_low_pressure_fault',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Heat pump low pressure fault',
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
+    'original_icon': None,
+    'original_name': 'Heat pump low pressure fault',
+    'platform': 'aerosmart',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'ventilation_stoerung_waermepumpe_niederdruck',
+    'unique_id': '01JZ8M2Q4T6Y9V3B5N7K1W0XAE_ventilation_stoerung_waermepumpe_niederdruck',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[binary_sensor.aerosmart_heat_pump_low_pressure_fault-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'aerosmart Heat pump low pressure fault',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.aerosmart_heat_pump_low_pressure_fault',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_all_entities[binary_sensor.aerosmart_hot_water_electric_heater_request-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('aerosmart', '01JZ8M2Q4T6Y9V3B5N7K1W0XAE')]>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.aerosmart_hot_water_electric_heater_request',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Hot water electric heater request',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Hot water electric heater request',
+    'platform': 'aerosmart',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'hot_water_ventilation_anforderung_brauchwasserheizung_elektroheizstab',
+    'unique_id': '01JZ8M2Q4T6Y9V3B5N7K1W0XAE_hot_water_ventilation_anforderung_brauchwasserheizung_elektroheizstab',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[binary_sensor.aerosmart_hot_water_electric_heater_request-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'aerosmart Hot water electric heater request',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.aerosmart_hot_water_electric_heater_request',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_all_entities[binary_sensor.aerosmart_hot_water_heat_pump_request-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('aerosmart', '01JZ8M2Q4T6Y9V3B5N7K1W0XAE')]>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.aerosmart_hot_water_heat_pump_request',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Hot water heat pump request',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Hot water heat pump request',
+    'platform': 'aerosmart',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'hot_water_ventilation_anforderung_brauchwasserheizung_waermepumpe',
+    'unique_id': '01JZ8M2Q4T6Y9V3B5N7K1W0XAE_hot_water_ventilation_anforderung_brauchwasserheizung_waermepumpe',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[binary_sensor.aerosmart_hot_water_heat_pump_request-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'aerosmart Hot water heat pump request',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.aerosmart_hot_water_heat_pump_request',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_all_entities[binary_sensor.aerosmart_hot_water_utility_lockout-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('aerosmart', '01JZ8M2Q4T6Y9V3B5N7K1W0XAE')]>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.aerosmart_hot_water_utility_lockout',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Hot water utility lockout',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Hot water utility lockout',
+    'platform': 'aerosmart',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'utility_lockout_evu_sperre_brauchwasser_aktiv',
+    'unique_id': '01JZ8M2Q4T6Y9V3B5N7K1W0XAE_utility_lockout_evu_sperre_brauchwasser_aktiv',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[binary_sensor.aerosmart_hot_water_utility_lockout-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'aerosmart Hot water utility lockout',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.aerosmart_hot_water_utility_lockout',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_all_entities[binary_sensor.aerosmart_invalid_controller_value-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('aerosmart', '01JZ8M2Q4T6Y9V3B5N7K1W0XAE')]>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.aerosmart_invalid_controller_value',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Invalid controller value',
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
+    'original_icon': None,
+    'original_name': 'Invalid controller value',
+    'platform': 'aerosmart',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'ventilation_stoerung_wert_nicht_zulaessig',
+    'unique_id': '01JZ8M2Q4T6Y9V3B5N7K1W0XAE_ventilation_stoerung_wert_nicht_zulaessig',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[binary_sensor.aerosmart_invalid_controller_value-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'aerosmart Invalid controller value',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.aerosmart_invalid_controller_value',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_all_entities[binary_sensor.aerosmart_outdoor_air_sensor_installed-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('aerosmart', '01JZ8M2Q4T6Y9V3B5N7K1W0XAE')]>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.aerosmart_outdoor_air_sensor_installed',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Outdoor air sensor installed',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Outdoor air sensor installed',
+    'platform': 'aerosmart',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'outside_temperature_aussenluftfuehler_vorhanden',
+    'unique_id': '01JZ8M2Q4T6Y9V3B5N7K1W0XAE_outside_temperature_aussenluftfuehler_vorhanden',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[binary_sensor.aerosmart_outdoor_air_sensor_installed-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'aerosmart Outdoor air sensor installed',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.aerosmart_outdoor_air_sensor_installed',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_all_entities[binary_sensor.aerosmart_outdoor_air_temperature_sensor_fault-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('aerosmart', '01JZ8M2Q4T6Y9V3B5N7K1W0XAE')]>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.aerosmart_outdoor_air_temperature_sensor_fault',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Outdoor air temperature sensor fault',
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
+    'original_icon': None,
+    'original_name': 'Outdoor air temperature sensor fault',
+    'platform': 'aerosmart',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'outside_temperature_stoerung_temperaturfuehler_aussenluft',
+    'unique_id': '01JZ8M2Q4T6Y9V3B5N7K1W0XAE_outside_temperature_stoerung_temperaturfuehler_aussenluft',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[binary_sensor.aerosmart_outdoor_air_temperature_sensor_fault-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'aerosmart Outdoor air temperature sensor fault',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.aerosmart_outdoor_air_temperature_sensor_fault',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_all_entities[binary_sensor.aerosmart_outdoor_brine_temperature_sensor_fault-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('aerosmart', '01JZ8M2Q4T6Y9V3B5N7K1W0XAE')]>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.aerosmart_outdoor_brine_temperature_sensor_fault',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Outdoor brine temperature sensor fault',
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
+    'original_icon': None,
+    'original_name': 'Outdoor brine temperature sensor fault',
+    'platform': 'aerosmart',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'outside_temperature_stoerung_temperaturfuehler_sole_aussenluft',
+    'unique_id': '01JZ8M2Q4T6Y9V3B5N7K1W0XAE_outside_temperature_stoerung_temperaturfuehler_sole_aussenluft',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[binary_sensor.aerosmart_outdoor_brine_temperature_sensor_fault-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'aerosmart Outdoor brine temperature sensor fault',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.aerosmart_outdoor_brine_temperature_sensor_fault',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_all_entities[binary_sensor.aerosmart_replace_coarse_dust_filter-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('aerosmart', '01JZ8M2Q4T6Y9V3B5N7K1W0XAE')]>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.aerosmart_replace_coarse_dust_filter',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Replace coarse dust filter',
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
+    'original_icon': None,
+    'original_name': 'Replace coarse dust filter',
+    'platform': 'aerosmart',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'coarse_dust_filter_grobstaubfilter_wechseln',
+    'unique_id': '01JZ8M2Q4T6Y9V3B5N7K1W0XAE_coarse_dust_filter_grobstaubfilter_wechseln',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[binary_sensor.aerosmart_replace_coarse_dust_filter-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'aerosmart Replace coarse dust filter',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.aerosmart_replace_coarse_dust_filter',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_all_entities[binary_sensor.aerosmart_replace_fine_dust_filter-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('aerosmart', '01JZ8M2Q4T6Y9V3B5N7K1W0XAE')]>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.aerosmart_replace_fine_dust_filter',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Replace fine dust filter',
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
+    'original_icon': None,
+    'original_name': 'Replace fine dust filter',
+    'platform': 'aerosmart',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'fine_dust_filter_feinstaubfilter_wechseln',
+    'unique_id': '01JZ8M2Q4T6Y9V3B5N7K1W0XAE_fine_dust_filter_feinstaubfilter_wechseln',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[binary_sensor.aerosmart_replace_fine_dust_filter-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'aerosmart Replace fine dust filter',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.aerosmart_replace_fine_dust_filter',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_all_entities[binary_sensor.aerosmart_room_heating_stage_1_request-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('aerosmart', '01JZ8M2Q4T6Y9V3B5N7K1W0XAE')]>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.aerosmart_room_heating_stage_1_request',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Room heating stage 1 request',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Room heating stage 1 request',
+    'platform': 'aerosmart',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'room_temperature_anforderung_raum_heizstufe_1',
+    'unique_id': '01JZ8M2Q4T6Y9V3B5N7K1W0XAE_room_temperature_anforderung_raum_heizstufe_1',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[binary_sensor.aerosmart_room_heating_stage_1_request-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'aerosmart Room heating stage 1 request',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.aerosmart_room_heating_stage_1_request',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_all_entities[binary_sensor.aerosmart_room_heating_stage_2_request-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('aerosmart', '01JZ8M2Q4T6Y9V3B5N7K1W0XAE')]>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.aerosmart_room_heating_stage_2_request',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Room heating stage 2 request',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Room heating stage 2 request',
+    'platform': 'aerosmart',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'room_temperature_anforderung_raum_heizstufe_2',
+    'unique_id': '01JZ8M2Q4T6Y9V3B5N7K1W0XAE_room_temperature_anforderung_raum_heizstufe_2',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[binary_sensor.aerosmart_room_heating_stage_2_request-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'aerosmart Room heating stage 2 request',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.aerosmart_room_heating_stage_2_request',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_all_entities[binary_sensor.aerosmart_room_target_temperature_timeout-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('aerosmart', '01JZ8M2Q4T6Y9V3B5N7K1W0XAE')]>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.aerosmart_room_target_temperature_timeout',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Room target temperature timeout',
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
+    'original_icon': None,
+    'original_name': 'Room target temperature timeout',
+    'platform': 'aerosmart',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'room_temperature_timeout_soll_temp_raum',
+    'unique_id': '01JZ8M2Q4T6Y9V3B5N7K1W0XAE_room_temperature_timeout_soll_temp_raum',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[binary_sensor.aerosmart_room_target_temperature_timeout-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'aerosmart Room target temperature timeout',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.aerosmart_room_target_temperature_timeout',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_all_entities[binary_sensor.aerosmart_room_temperature_sensor_fault-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('aerosmart', '01JZ8M2Q4T6Y9V3B5N7K1W0XAE')]>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.aerosmart_room_temperature_sensor_fault',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Room temperature sensor fault',
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
+    'original_icon': None,
+    'original_name': 'Room temperature sensor fault',
+    'platform': 'aerosmart',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'room_temperature_stoerung_temperaturfuehler_raum',
+    'unique_id': '01JZ8M2Q4T6Y9V3B5N7K1W0XAE_room_temperature_stoerung_temperaturfuehler_raum',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[binary_sensor.aerosmart_room_temperature_sensor_fault-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'aerosmart Room temperature sensor fault',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.aerosmart_room_temperature_sensor_fault',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_all_entities[binary_sensor.aerosmart_room_temperature_sensor_timeout-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('aerosmart', '01JZ8M2Q4T6Y9V3B5N7K1W0XAE')]>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.aerosmart_room_temperature_sensor_timeout',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Room temperature sensor timeout',
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
+    'original_icon': None,
+    'original_name': 'Room temperature sensor timeout',
+    'platform': 'aerosmart',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'room_temperature_timeout_temp_fuehler_raum',
+    'unique_id': '01JZ8M2Q4T6Y9V3B5N7K1W0XAE_room_temperature_timeout_temp_fuehler_raum',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[binary_sensor.aerosmart_room_temperature_sensor_timeout-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'aerosmart Room temperature sensor timeout',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.aerosmart_room_temperature_sensor_timeout',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_all_entities[binary_sensor.aerosmart_shading_request-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('aerosmart', '01JZ8M2Q4T6Y9V3B5N7K1W0XAE')]>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.aerosmart_shading_request',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Shading request',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Shading request',
+    'platform': 'aerosmart',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'ventilation_anforderung_beschattung',
+    'unique_id': '01JZ8M2Q4T6Y9V3B5N7K1W0XAE_ventilation_anforderung_beschattung',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[binary_sensor.aerosmart_shading_request-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'aerosmart Shading request',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.aerosmart_shading_request',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_all_entities[binary_sensor.aerosmart_space_heating_utility_lockout-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('aerosmart', '01JZ8M2Q4T6Y9V3B5N7K1W0XAE')]>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.aerosmart_space_heating_utility_lockout',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Space heating utility lockout',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Space heating utility lockout',
+    'platform': 'aerosmart',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'utility_lockout_evu_sperre_raumheizung_aktiv',
+    'unique_id': '01JZ8M2Q4T6Y9V3B5N7K1W0XAE_utility_lockout_evu_sperre_raumheizung_aktiv',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[binary_sensor.aerosmart_space_heating_utility_lockout-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'aerosmart Space heating utility lockout',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.aerosmart_space_heating_utility_lockout',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_all_entities[binary_sensor.aerosmart_summer_bypass-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('aerosmart', '01JZ8M2Q4T6Y9V3B5N7K1W0XAE')]>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.aerosmart_summer_bypass',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Summer bypass',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Summer bypass',
+    'platform': 'aerosmart',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'summer_bypass_function_sommerautomatik',
+    'unique_id': '01JZ8M2Q4T6Y9V3B5N7K1W0XAE_summer_bypass_function_sommerautomatik',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[binary_sensor.aerosmart_summer_bypass-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'aerosmart Summer bypass',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.aerosmart_summer_bypass',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_all_entities[binary_sensor.aerosmart_summer_bypass_request-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('aerosmart', '01JZ8M2Q4T6Y9V3B5N7K1W0XAE')]>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.aerosmart_summer_bypass_request',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Summer bypass request',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Summer bypass request',
+    'platform': 'aerosmart',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'summer_bypass_anforderung_sommerautomatik',
+    'unique_id': '01JZ8M2Q4T6Y9V3B5N7K1W0XAE_summer_bypass_anforderung_sommerautomatik',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[binary_sensor.aerosmart_summer_bypass_request-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'aerosmart Summer bypass request',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.aerosmart_summer_bypass_request',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_all_entities[binary_sensor.aerosmart_supply_air_fan_fault-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('aerosmart', '01JZ8M2Q4T6Y9V3B5N7K1W0XAE')]>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.aerosmart_supply_air_fan_fault',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Supply air fan fault',
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
+    'original_icon': None,
+    'original_name': 'Supply air fan fault',
+    'platform': 'aerosmart',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'fans_stoerung_zuluftventilator',
+    'unique_id': '01JZ8M2Q4T6Y9V3B5N7K1W0XAE_fans_stoerung_zuluftventilator',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[binary_sensor.aerosmart_supply_air_fan_fault-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'aerosmart Supply air fan fault',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.aerosmart_supply_air_fan_fault',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_all_entities[binary_sensor.aerosmart_utility_contact-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('aerosmart', '01JZ8M2Q4T6Y9V3B5N7K1W0XAE')]>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.aerosmart_utility_contact',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Utility contact',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Utility contact',
+    'platform': 'aerosmart',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'heat_pump_wp_kontakt_evu',
+    'unique_id': '01JZ8M2Q4T6Y9V3B5N7K1W0XAE_heat_pump_wp_kontakt_evu',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[binary_sensor.aerosmart_utility_contact-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'aerosmart Utility contact',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.aerosmart_utility_contact',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_all_entities[binary_sensor.aerosmart_utility_control_installed-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('aerosmart', '01JZ8M2Q4T6Y9V3B5N7K1W0XAE')]>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.aerosmart_utility_control_installed',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Utility control installed',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Utility control installed',
+    'platform': 'aerosmart',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'utility_lockout_evu_vorhanden',
+    'unique_id': '01JZ8M2Q4T6Y9V3B5N7K1W0XAE_utility_lockout_evu_vorhanden',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[binary_sensor.aerosmart_utility_control_installed-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'aerosmart Utility control installed',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.aerosmart_utility_control_installed',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---

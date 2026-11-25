@@ -18,7 +18,6 @@ from homeassistant.config_entries import SOURCE_USER, ConfigFlow, ConfigFlowResu
 from homeassistant.const import (
     CONF_BASE,
     CONF_HOST,
-    CONF_NAME,
     CONF_PASSWORD,
     CONF_PORT,
     CONF_USERNAME,
@@ -170,7 +169,7 @@ class PlugwiseConfigFlow(ConfigFlow, domain=DOMAIN):
 
         self.context.update(
             {
-                "title_placeholders": {CONF_NAME: _name},
+                "title_placeholders": {"name": _name},
                 "configuration_url": (
                     f"http://{discovery_info.host}:{discovery_info.port}"
                 ),
