@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING, override
 from aioesphomeapi import APIConnectionError, VoiceAssistantTimerEventType
 
 from homeassistant.components.timer_list import (
-    InMemoryTimerListEntity,
+    RestoreTimerListEntity,
     TimerListEvent,
     TimerListEventType,
     TimerStatus,
@@ -57,14 +57,14 @@ async def async_setup_entry(
     async_add_entities([EsphomeTimerList(entry_data, device_info.mac_address)])
 
 
-class EsphomeTimerList(InMemoryTimerListEntity):
+class EsphomeTimerList(RestoreTimerListEntity):
     """Timers of an ESPHome voice satellite, which the device shows and rings.
 
     Timers are kept in Home Assistant, so they keep running while the device is
-    disconnected. Once it listens again, it is sent every running timer and
-    told to drop the ones that ended in the meantime. It listens once the
-    satellite has subscribed to its voice assistant: the firmware drops timer
-    events from a connection that has not.
+    disconnected, and across restarts of Home Assistant. Once it listens again,
+    it is sent every running timer and told to drop the ones that ended in the
+    meantime. It listens once the satellite has subscribed to its voice
+    assistant: the firmware drops timer events from a connection that has not.
     """
 
     _attr_has_entity_name = True
@@ -86,12 +86,16 @@ class EsphomeTimerList(InMemoryTimerListEntity):
     async def async_added_to_hass(self) -> None:
         """Send timer changes to the device."""
         await super().async_added_to_hass()
+        # The device was told about the timers running before a restart
+        self._device_timers.update(self._restored_running)
         self.async_on_remove(self.async_subscribe_updates(self._async_send_event))
         self.async_on_remove(
             self._entry_data.async_subscribe_voice_assistant_subscribed(
                 self._async_sync_device
             )
         )
+        if self._entry_data.voice_assistant_subscribed:
+            self._async_sync_device()
 
     @callback
     def _async_sync_device(self) -> None:

@@ -12,12 +12,15 @@ from aioesphomeapi import (
 )
 from freezegun.api import FrozenDateTimeFactory
 import pytest
-from pytest_homeassistant.common import async_fire_time_changed
+from pytest_homeassistant.common import (
+    async_fire_time_changed,
+    mock_restore_cache_with_extra_data,
+)
 
 from homeassistant.components.esphome.const import DOMAIN
 from homeassistant.components.timer_list import DOMAIN as TIMER_LIST_DOMAIN
 from homeassistant.const import Platform, TargetKey
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers import device_registry as dr, entity_registry as er, intent
 
 from .common import get_satellite_entity
@@ -502,3 +505,84 @@ async def test_timer_list_follows_timers_feature(
     entity_id = _timer_list_entity_id(hass, mock_device)
     assert entity_id is not None
     assert hass.states.get(entity_id).state == "0"
+
+
+@pytest.mark.freeze_time("2026-11-25T12:00:00+00:00")
+async def test_timers_restored_after_restart(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_esphome_device: MockESPHomeDeviceType,
+) -> None:
+    """Test timers survive a restart and the device is brought up to date."""
+
+    def stored(timer_id: str, status: str, **fields: Any) -> dict[str, Any]:
+        return {
+            "timer_id": timer_id,
+            "name": timer_id,
+            "status": status,
+            "created_duration": 900.0,
+            "created_at": "2026-11-25T11:50:00+00:00",
+            "total_duration": 900.0,
+            "finishes_at": None,
+            "paused_remaining": None,
+            "ended_at": None,
+        } | fields
+
+    mock_restore_cache_with_extra_data(
+        hass,
+        [
+            (
+                State("timer_list.test_timers", "2"),
+                {
+                    "timers": [
+                        stored(
+                            "running", "active", finishes_at="2026-11-25T12:05:00+00:00"
+                        ),
+                        stored("paused", "paused", paused_remaining=120.0),
+                        stored(
+                            "overdue", "active", finishes_at="2026-11-25T11:58:00+00:00"
+                        ),
+                        stored(
+                            "archived",
+                            "cancelled",
+                            ended_at="2026-11-25T11:55:00+00:00",
+                        ),
+                    ]
+                },
+            )
+        ],
+    )
+
+    device = await mock_esphome_device(
+        mock_client=mock_client,
+        device_info={"voice_assistant_feature_flags": TIMER_FLAGS},
+    )
+    await hass.async_block_till_done()
+
+    assert _timer_list_entity_id(hass, device) == "timer_list.test_timers"
+    assert hass.states.get("timer_list.test_timers").state == "1"
+    assert mock_client.send_voice_assistant_timer_event.mock_calls == [
+        # Ran out while Home Assistant was stopped: dropped without ringing
+        call(CANCELLED, "overdue", "overdue", 0, 0, False),
+        call(UPDATED, "running", "running", 900, 300, True),
+        call(UPDATED, "paused", "paused", 900, 120, False),
+    ]
+
+
+@pytest.mark.usefixtures("freezer")
+async def test_timers_kept_on_reload(
+    hass: HomeAssistant, mock_client: APIClient, mock_device: MockESPHomeDevice
+) -> None:
+    """Test reloading the integration keeps the timers."""
+    entity_id = _timer_list_entity_id(hass, mock_device)
+    assert entity_id is not None
+    result = await _call(hass, entity_id, "create_timer", duration={"seconds": 60})
+    mock_client.send_voice_assistant_timer_event.reset_mock()
+
+    assert await hass.config_entries.async_reload(mock_device.entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert hass.states.get(entity_id).state == "1"
+    mock_client.send_voice_assistant_timer_event.assert_called_once_with(
+        UPDATED, result["timer_id"], None, 60, 60, True
+    )
