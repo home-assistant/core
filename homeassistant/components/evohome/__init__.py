@@ -72,13 +72,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Evohome integration."""
 
     # Remove any (persistent) repair issues for deprecations that have been completed
-    # (drop this in 2027.7.0, with the YAML import)
     for issue_id in (
-        "deprecated_clear_zone_override_service",
-        "deprecated_preset_reset",
-        "deprecated_refresh_system_service",
-        "deprecated_reset_system_service",
-        "deprecated_set_system_mode_service",
+        "deprecated_clear_zone_override_service",  # Remove in 2027.5.0
+        "deprecated_preset_reset",  # Remove in 2027.5.0
+        "deprecated_refresh_system_service",  # Remove in 2027.7.0
+        "deprecated_reset_system_service",  # Remove in 2027.5.0
+        "deprecated_set_system_mode_service",  # Remove in 2027.5.0
     ):
         ir.async_delete_issue(hass, DOMAIN, issue_id)
 
