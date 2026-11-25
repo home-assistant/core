@@ -75,6 +75,7 @@
         'ulfrequency': '1969700kHz',
         'wdlfreq': None,
       }),
+      'dhcp_settings': '**REDACTED**',
       'dialup_mobile_dataswitch': dict({
         'dataswitch': '1',
       }),

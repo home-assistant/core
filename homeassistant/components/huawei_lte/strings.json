@@ -368,6 +368,9 @@
       }
     },
     "switch": {
+      "dhcp": {
+        "name": "DHCP server"
+      },
       "mobile_data": {
         "name": "Mobile data"
       },
@@ -377,6 +380,12 @@
     }
   },
   "exceptions": {
+    "dhcp_command_failed": {
+      "message": "Failed to change the DHCP server state"
+    },
+    "dhcp_state_not_confirmed": {
+      "message": "The router did not confirm the requested DHCP server state"
+    },
     "send_message_failed": {
       "message": "Failed to send SMS to {targets}: {error}"
     },

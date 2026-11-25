@@ -2,6 +2,7 @@
 
 from unittest.mock import MagicMock
 
+from huawei_lte_api.api.Dhcp import DhcpSettings
 from huawei_lte_api.enums.cradle import ConnectionStatusEnum
 
 
@@ -313,6 +314,15 @@ def magic_client() -> MagicMock:
 
     return MagicMock(
         device=device,
+        dhcp=MagicMock(
+            settings=MagicMock(
+                return_value=DhcpSettings(
+                    dhcp_ip_address="192.168.1.254",
+                    dhcp_status=False,
+                    primary_dns="192.168.1.1",
+                )
+            )
+        ),
         monitoring=monitoring,
         net=net,
         sms=sms,

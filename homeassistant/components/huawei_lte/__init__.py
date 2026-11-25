@@ -63,6 +63,7 @@ from .const import (
     KEY_DEVICE_BASIC_INFORMATION,
     KEY_DEVICE_INFORMATION,
     KEY_DEVICE_SIGNAL,
+    KEY_DHCP_SETTINGS,
     KEY_DIALUP_MOBILE_DATASWITCH,
     KEY_LAN_HOST_INFO,
     KEY_MONITORING_CHECK_NOTIFICATIONS,
@@ -150,6 +151,14 @@ class Router:
             connections.add((dr.CONNECTION_UPNP, udn))
         return connections
 
+    def _get_dhcp_settings(self) -> dict[str, str | None]:
+        """Return the DHCP settings as a dictionary."""
+        try:
+            return self.client.dhcp.settings().to_dict()
+        except (KeyError, TypeError, ValueError) as err:
+            _LOGGER.debug("Could not parse DHCP settings: %s", err)
+            return {}
+
     def _get_data(self, key: str, func: Callable[[], Any]) -> None:
         if not self.subscriptions.get(key):
             return
@@ -210,6 +219,7 @@ class Router:
             KEY_DEVICE_BASIC_INFORMATION, self.client.device.basic_information
         )
         self._get_data(KEY_DEVICE_SIGNAL, self.client.device.signal)
+        self._get_data(KEY_DHCP_SETTINGS, self._get_dhcp_settings)
         self._get_data(
             KEY_DIALUP_MOBILE_DATASWITCH, self.client.dial_up.mobile_dataswitch
         )
