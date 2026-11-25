@@ -219,25 +219,26 @@ class ModbusWaterHeater(ModbusStructEntity, WaterHeaterEntity):
         target_temperature = (
             temperature - self._target_temp_offset
         ) / self._target_temp_scale
+        not_encodable = ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="temp_not_encodable",
+            translation_placeholders={"temperature": str(temperature)},
+        )
         if self._value_is_int:
             # keep the rounded register value within the configured limits
             low, high = sorted(
-                (limit - self._target_temp_offset) / self._target_temp_scale
+                round((limit - self._target_temp_offset) / self._target_temp_scale, 6)
                 for limit in (self.min_temp, self.max_temp)
             )
-            target_temperature = round(target_temperature)
-            if target_temperature > high:
-                target_temperature = math.floor(high)
-            elif target_temperature < low:
-                target_temperature = math.ceil(low)
+            target_temperature = min(
+                max(round(target_temperature), math.ceil(low)), math.floor(high)
+            )
+            if target_temperature < low:
+                raise not_encodable
         try:
             as_bytes = struct.pack(self._structure, target_temperature)
         except struct.error, OverflowError:
-            raise ServiceValidationError(
-                translation_domain=DOMAIN,
-                translation_key="temp_not_encodable",
-                translation_placeholders={"temperature": str(temperature)},
-            ) from None
+            raise not_encodable from None
         registers = self._swap_registers(
             [
                 int.from_bytes(as_bytes[i : i + 2], "big")

@@ -767,16 +767,32 @@ async def test_set_temperature_out_of_range(
 @pytest.mark.parametrize(
     "do_config",
     [
-        {
-            CONF_WATER_HEATERS: [
-                {
-                    **BASE_CONFIG,
-                    CONF_ONOFF_REGISTER: ONOFF_ADDRESS,
-                    CONF_OPERATION_MODE_REGISTER: MODE_REGISTER_CONFIG,
-                    CONF_TARGET_TEMP_SCALE: 0.001,
-                },
-            ]
-        },
+        pytest.param(
+            {
+                CONF_WATER_HEATERS: [
+                    {
+                        **BASE_CONFIG,
+                        CONF_ONOFF_REGISTER: ONOFF_ADDRESS,
+                        CONF_OPERATION_MODE_REGISTER: MODE_REGISTER_CONFIG,
+                        CONF_TARGET_TEMP_SCALE: 0.001,
+                    },
+                ]
+            },
+            id="out_of_data_type",
+        ),
+        pytest.param(
+            {
+                CONF_WATER_HEATERS: [
+                    {
+                        **BASE_CONFIG,
+                        CONF_ONOFF_REGISTER: ONOFF_ADDRESS,
+                        CONF_OPERATION_MODE_REGISTER: MODE_REGISTER_CONFIG,
+                        CONF_TARGET_TEMP_SCALE: 100,
+                    },
+                ]
+            },
+            id="no_value_within_limits",
+        ),
     ],
 )
 async def test_set_temperature_not_encodable(
