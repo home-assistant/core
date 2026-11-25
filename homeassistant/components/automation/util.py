@@ -180,7 +180,12 @@ async def async_process_config(
         automation: BaseAutomationEntity, config: AutomationEntityConfig
     ) -> bool:
         name = _automation_name(config)
-        return automation.name == name and automation.raw_config == config.raw_config
+        return (
+            automation.name == name
+            and automation.raw_config == config.raw_config
+            # An input the blueprint does not use leaves raw_config the same
+            and automation.raw_blueprint_inputs == config.raw_blueprint_inputs
+        )
 
     def find_matches(
         automations: list[BaseAutomationEntity],

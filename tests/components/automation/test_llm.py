@@ -1,5 +1,6 @@
 """Tests for the automation LLM tools."""
 
+from typing import Any
 from unittest.mock import patch
 
 import probatio
@@ -315,3 +316,41 @@ async def test_get_config_of_blueprint_automation(
         "alias": "From blueprint",
         "use_blueprint": use_blueprint,
     }
+
+
+async def test_get_config_after_reload_of_unused_input(
+    hass: HomeAssistant, llm_context: llm.LLMContext
+) -> None:
+    """Test the configuration follows a change of an input the blueprint ignores."""
+
+    def automation_config(a_number: int) -> dict[str, Any]:
+        return {
+            DOMAIN: {
+                "id": "from_blueprint",
+                "alias": "From blueprint",
+                "use_blueprint": {
+                    "path": "test_event_service.yaml",
+                    "input": {
+                        "trigger_event": "blueprint_event",
+                        "service_to_call": "test.automation",
+                        "a_number": a_number,
+                    },
+                },
+            }
+        }
+
+    assert await async_setup_component(hass, DOMAIN, automation_config(5))
+    with patch(
+        "homeassistant.config.load_yaml_config_file",
+        return_value=automation_config(6),
+    ):
+        await hass.services.async_call(DOMAIN, "reload", blocking=True)
+
+    tool = GetConfigTool()
+    result = await tool.async_call(
+        hass,
+        llm.ToolInput(tool.name, {"entity_id": "automation.from_blueprint"}),
+        llm_context,
+    )
+
+    assert result.data["config"]["use_blueprint"]["input"]["a_number"] == 6
