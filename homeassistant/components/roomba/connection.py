@@ -16,7 +16,7 @@ refreshed on request, e.g. by a user automation calling
 
 import asyncio
 from collections.abc import Awaitable, Callable
-from datetime import datetime
+from datetime import datetime, timedelta
 import logging
 import time
 
@@ -26,15 +26,16 @@ from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.event import async_call_later, async_track_time_interval
 
-from .const import (
-    ACTIVE_PHASES,
-    COMMAND_HOLD_SECONDS,
-    PERIODIC_UPDATE_INTERVAL,
-    TELEMETRY_MAX_SECONDS,
-    TELEMETRY_QUIET_SECONDS,
-)
-
 _LOGGER = logging.getLogger(__name__)
+
+PERIODIC_UPDATE_INTERVAL = timedelta(minutes=5)
+# 900-series robots on 2.x firmware publish their state in many messages over
+# several seconds, newer ones in a single message.
+TELEMETRY_QUIET_SECONDS = 2
+TELEMETRY_MAX_SECONDS = 30
+COMMAND_HOLD_SECONDS = 120
+MISSION_CHECK_SECONDS = 60
+ACTIVE_PHASES = frozenset({"run", "hmMidMsn", "hmPostMsn", "hmUsrDock", "evac"})
 
 type SessionCallable = Callable[[HomeAssistant, RoombaClient], Awaitable[object]]
 
@@ -64,10 +65,12 @@ class RoombaConnection:
         self._lock = asyncio.Lock()
         self._hold_until = 0.0
         self._unsub_interval: CALLBACK_TYPE | None = None
+        self._unsub_settle: CALLBACK_TYPE | None = None
         self._unsub_release: CALLBACK_TYPE | None = None
         self._unsub_message: CALLBACK_TYPE | None = None
         self._session_start = 0.0
         self._last_message: float | None = None
+        self._fresh = asyncio.Event()
         self._closed = False
         self._unreachable = False
 
@@ -75,8 +78,12 @@ class RoombaConnection:
     def robot_active(self) -> bool:
         """Return True while the robot is on a mission."""
         reported = self.roomba.master_state.get("state", {}).get("reported", {})
-        phase = reported.get("cleanMissionStatus", {}).get("phase")
-        return phase in ACTIVE_PHASES
+        status = reported.get("cleanMissionStatus", {})
+        phase = status.get("phase")
+        if phase in ACTIVE_PHASES:
+            return True
+        # Recharging on the dock in the middle of a mission.
+        return phase == "charge" and status.get("cycle") not in (None, "none")
 
     @callback
     def async_start(self) -> None:
@@ -98,10 +105,13 @@ class RoombaConnection:
         if self._unsub_interval:
             self._unsub_interval()
             self._unsub_interval = None
+        self._cancel_settle()
         self._cancel_release()
         if self._unsub_message:
             self._unsub_message()
             self._unsub_message = None
+        # Do not leave anyone waiting for state that will not come.
+        self._fresh.set()
         async with self._lock:
             await self._disconnect(self.hass, self.roomba)
 
@@ -112,11 +122,14 @@ class RoombaConnection:
         if len(reported) > 1 or (reported and "signal" not in reported):
             self._last_message = time.monotonic()
 
-    async def async_ensure_connected(self) -> None:
-        """Open a session, if needed, before a command is sent."""
+    async def async_ensure_connected(self, *, wait: bool = False) -> None:
+        """Open a session if needed before a command.
+
+        With ``wait``, also wait for fresh state, for commands that depend on
+        the current mission state.
+        """
         if self.continuous:
             return
-        self._hold_until = time.monotonic() + COMMAND_HOLD_SECONDS
         async with self._lock:
             if self._closed:
                 return
@@ -124,30 +137,24 @@ class RoombaConnection:
                 _LOGGER.debug("Connecting to send a command")
                 await self._async_open()
                 self._mark_reachable()
-        self._schedule_release(COMMAND_HOLD_SECONDS)
+            self._hold_until = time.monotonic() + COMMAND_HOLD_SECONDS
+            self._schedule_release(COMMAND_HOLD_SECONDS)
+        if wait:
+            await self._async_wait_fresh()
 
-    async def _async_open(self) -> None:
-        """Open a session; the caller holds the lock."""
-        # A dropped session may still be reconnecting in the background, and
-        # the client refuses to connect again until it is torn down.
-        await self._disconnect(self.hass, self.roomba)
-        self._last_message = None
-        await self._connect(self.hass, self.roomba)
-        self._session_start = time.monotonic()
+    async def async_refresh(self, *, wait: bool = False) -> None:
+        """Refresh the state with a short-lived session.
 
-    async def _async_poll(self, _now: datetime) -> None:
-        await self.async_refresh()
-
-    async def async_refresh(self) -> None:
-        """Refresh the state with a short-lived session."""
+        With ``wait``, return only once the robot has published its state, so
+        that a caller such as ``homeassistant.update_entity`` sees fresh data.
+        """
         if self.continuous:
             return
         async with self._lock:
-            if self._closed or self._unsub_release:
-                # Already collecting telemetry or holding after a command.
+            if self._closed:
                 return
-            if self.roomba.connected:
-                connected_now = False
+            if self._unsub_settle or self.roomba.connected:
+                check_release = not self._unsub_settle
             else:
                 _LOGGER.debug("Refreshing state: connecting")
                 try:
@@ -165,11 +172,35 @@ class RoombaConnection:
                         )
                     return
                 self._mark_reachable()
-                connected_now = True
-        if connected_now:
-            self._schedule_settle()
-        else:
+                check_release = False
+        if check_release:
             await self._async_release()
+        if wait:
+            await self._async_wait_fresh()
+
+    async def _async_poll(self, _now: datetime) -> None:
+        await self.async_refresh()
+
+    async def _async_open(self) -> None:
+        """Open a session; the caller holds the lock."""
+        # A dropped session may still be reconnecting in the background, and
+        # the client refuses to connect again until it is torn down.
+        await self._disconnect(self.hass, self.roomba)
+        self._fresh.clear()
+        self._last_message = None
+        await self._connect(self.hass, self.roomba)
+        self._session_start = time.monotonic()
+        self._schedule_settle()
+
+    async def _async_wait_fresh(self) -> None:
+        """Wait until the current session has collected the robot's state."""
+        if self._fresh.is_set():
+            return
+        try:
+            async with asyncio.timeout(TELEMETRY_MAX_SECONDS + 1):
+                await self._fresh.wait()
+        except TimeoutError:
+            _LOGGER.debug("Timed out waiting for state from %s", self.host)
 
     @callback
     def _mark_reachable(self) -> None:
@@ -178,33 +209,27 @@ class RoombaConnection:
             _LOGGER.info("Roomba at %s is reachable again", self.host)
 
     @callback
-    def _schedule_release(self, delay: float) -> None:
-        """Release the session after a delay, replacing a pending release."""
-        self._cancel_release()
-
-        async def _release(_now: datetime) -> None:
-            self._unsub_release = None
-            await self._async_release()
-
-        self._unsub_release = async_call_later(self.hass, delay, _release)
-
-    @callback
     def _schedule_settle(self) -> None:
-        """Release the session once the robot has finished publishing."""
-        self._cancel_release()
+        """Mark the state fresh once the robot has finished publishing."""
+        self._cancel_settle()
 
         async def _check(_now: datetime) -> None:
-            self._unsub_release = None
+            self._unsub_settle = None
             if self._telemetry_wait() > 0:
                 self._schedule_settle()
                 return
             if self._last_message is None:
                 _LOGGER.debug("No state received within %s s", TELEMETRY_MAX_SECONDS)
+            self._fresh.set()
             await self._async_release()
 
-        self._unsub_release = async_call_later(
-            self.hass, self._telemetry_wait(), _check
-        )
+        self._unsub_settle = async_call_later(self.hass, self._telemetry_wait(), _check)
+
+    @callback
+    def _cancel_settle(self) -> None:
+        if self._unsub_settle:
+            self._unsub_settle()
+            self._unsub_settle = None
 
     def _telemetry_wait(self) -> float:
         """Return how much longer to wait for the robot to go quiet."""
@@ -218,19 +243,39 @@ class RoombaConnection:
         return min(max(quiet_left, 0), remaining)
 
     @callback
+    def _schedule_release(self, delay: float) -> None:
+        """Check whether to release the session after a delay."""
+        self._cancel_release()
+
+        async def _release(_now: datetime) -> None:
+            self._unsub_release = None
+            await self._async_release()
+
+        self._unsub_release = async_call_later(self.hass, delay, _release)
+
+    @callback
     def _cancel_release(self) -> None:
         if self._unsub_release:
             self._unsub_release()
             self._unsub_release = None
 
     async def _async_release(self) -> None:
-        """Disconnect unless the session is still needed."""
+        """Disconnect unless the session is still needed.
+
+        Every reason to keep the session schedules another check, so it is
+        released even with polling disabled.
+        """
         async with self._lock:
-            # A dropped session is torn down too, so it stops reconnecting.
-            if self._closed or time.monotonic() < self._hold_until:
+            if self._closed or self._unsub_settle:
+                return
+            if (hold_left := self._hold_until - time.monotonic()) > 0:
+                self._schedule_release(hold_left)
                 return
             if self.robot_active:
                 _LOGGER.debug("Robot on a mission, keeping the session open")
+                self._schedule_release(MISSION_CHECK_SECONDS)
                 return
+            self._cancel_release()
+            # A dropped session is torn down too, so it stops reconnecting.
             _LOGGER.debug("Robot idle, closing the session so it can sleep")
             await self._disconnect(self.hass, self.roomba)

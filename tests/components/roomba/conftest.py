@@ -22,6 +22,7 @@ def mock_config_entry() -> MockConfigEntry:
             CONF_PASSWORD: "pass123",
         },
         unique_id="blid123",
+        minor_version=2,
     )
 
 

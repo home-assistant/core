@@ -2,7 +2,7 @@
 
 import asyncio
 from datetime import timedelta
-from unittest.mock import AsyncMock, call, patch
+from unittest.mock import AsyncMock
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
@@ -13,17 +13,26 @@ from homeassistant.components.homeassistant import (
     DOMAIN as HA_DOMAIN,
     SERVICE_UPDATE_ENTITY,
 )
-from homeassistant.components.roomba.const import (
+from homeassistant.components.roomba.connection import (
     COMMAND_HOLD_SECONDS,
-    CONF_CONTINUOUS,
+    MISSION_CHECK_SECONDS,
     PERIODIC_UPDATE_INTERVAL,
-    SESSION_CONNECT_TIMEOUT,
     TELEMETRY_MAX_SECONDS,
     TELEMETRY_QUIET_SECONDS,
 )
-from homeassistant.components.vacuum import DOMAIN as VACUUM_DOMAIN, SERVICE_LOCATE
+from homeassistant.components.roomba.const import CONF_BLID, CONF_CONTINUOUS, DOMAIN
+from homeassistant.components.vacuum import (
+    DOMAIN as VACUUM_DOMAIN,
+    SERVICE_LOCATE,
+    SERVICE_START,
+)
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import ATTR_ENTITY_ID, EVENT_HOMEASSISTANT_STOP
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    CONF_HOST,
+    CONF_PASSWORD,
+    EVENT_HOMEASSISTANT_STOP,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.setup import async_setup_component
@@ -64,6 +73,40 @@ async def _setup(
     hass.config_entries.async_update_entry(entry, options={CONF_CONTINUOUS: continuous})
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
+
+
+async def _tick_until_done(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory, *tasks: asyncio.Task[None]
+) -> None:
+    """Advance time in 1 s steps until tasks waiting for the robot finish."""
+    for _ in range(TELEMETRY_MAX_SECONDS + 2):
+        for _ in range(5):
+            await asyncio.sleep(0)
+        if all(task.done() for task in tasks):
+            break
+        freezer.tick(timedelta(seconds=1))
+        async_fire_time_changed(hass)
+    for task in tasks:
+        await task
+
+
+def _call(hass: HomeAssistant, domain: str, service: str) -> asyncio.Task[None]:
+    """Start a blocking service call on the vacuum entity."""
+    return hass.async_create_task(
+        hass.services.async_call(
+            domain, service, {ATTR_ENTITY_ID: VACUUM_ENTITY_ID}, blocking=True
+        )
+    )
+
+
+async def _call_while_ticking(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    domain: str,
+    service: str,
+) -> None:
+    """Run a service call that waits for the robot's state."""
+    await _tick_until_done(hass, freezer, _call(hass, domain, service))
 
 
 async def _advance(
@@ -128,8 +171,9 @@ async def test_periodic_keeps_session_during_mission(
     assert periodic_roomba.connect.await_count == 1
 
     _set_phase(periodic_roomba, "charge")
-    await _advance(hass, freezer, PERIODIC_UPDATE_INTERVAL)
+    await _advance(hass, freezer, timedelta(seconds=MISSION_CHECK_SECONDS))
     periodic_roomba.disconnect.assert_awaited_once()
+    assert not periodic_roomba.connected
 
 
 async def test_periodic_command_connects_and_holds(
@@ -238,16 +282,10 @@ async def test_polling_disabled_refreshes_on_request(
     await _advance(hass, freezer, PERIODIC_UPDATE_INTERVAL * 3)
     periodic_roomba.connect.assert_awaited_once()
 
-    await hass.services.async_call(
-        HA_DOMAIN,
-        SERVICE_UPDATE_ENTITY,
-        {ATTR_ENTITY_ID: VACUUM_ENTITY_ID},
-        blocking=True,
-    )
-    assert periodic_roomba.connect.await_count == 2
-    assert periodic_roomba.connected
+    await _call_while_ticking(hass, freezer, HA_DOMAIN, SERVICE_UPDATE_ENTITY)
 
-    await _advance(hass, freezer, timedelta(seconds=TELEMETRY_QUIET_SECONDS))
+    # update_entity returns once the state is in and the robot is released.
+    assert periodic_roomba.connect.await_count == 2
     assert not periodic_roomba.connected
 
 
@@ -257,22 +295,19 @@ async def test_refresh_does_not_cut_telemetry_short(
     mock_config_entry: MockConfigEntry,
     periodic_roomba: AsyncMock,
 ) -> None:
-    """Test a second refresh right after a reconnect keeps the session open."""
+    """Test a refresh joining one in progress waits for the same session."""
     assert await async_setup_component(hass, HA_DOMAIN, {})
     await _setup(hass, mock_config_entry, continuous=False)
     await _advance(hass, freezer, timedelta(seconds=TELEMETRY_QUIET_SECONDS))
 
-    for _ in range(2):
-        await hass.services.async_call(
-            HA_DOMAIN,
-            SERVICE_UPDATE_ENTITY,
-            {ATTR_ENTITY_ID: VACUUM_ENTITY_ID},
-            blocking=True,
-        )
-    assert periodic_roomba.connect.await_count == 2
-    assert periodic_roomba.connected
+    await _tick_until_done(
+        hass,
+        freezer,
+        _call(hass, HA_DOMAIN, SERVICE_UPDATE_ENTITY),
+        _call(hass, HA_DOMAIN, SERVICE_UPDATE_ENTITY),
+    )
 
-    await _advance(hass, freezer, timedelta(seconds=TELEMETRY_QUIET_SECONDS))
+    assert periodic_roomba.connect.await_count == 2
     assert not periodic_roomba.connected
 
 
@@ -437,42 +472,66 @@ async def test_silent_robot_released_after_max_wait(
     assert not periodic_roomba.connected
 
 
-async def test_session_uses_longer_connect_timeout(
+@pytest.mark.parametrize(
+    ("connect_seconds", "connected"),
+    [
+        pytest.param(15, True, id="slow_but_within_timeout"),
+        pytest.param(31, False, id="beyond_timeout"),
+    ],
+)
+async def test_poll_waits_for_slow_connect(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
     mock_config_entry: MockConfigEntry,
     periodic_roomba: AsyncMock,
+    connect_seconds: int,
+    connected: bool,
 ) -> None:
-    """Test polls connect with the longer timeout that slow robots need."""
+    """Test a poll gives a slow robot 30 seconds to accept the connection."""
     await _setup(hass, mock_config_entry, continuous=False)
     await _advance(hass, freezer, timedelta(seconds=TELEMETRY_QUIET_SECONDS))
+    accepted = asyncio.Event()
 
-    with patch(
-        "homeassistant.components.roomba.asyncio.timeout",
-        wraps=asyncio.timeout,
-    ) as mock_timeout:
-        await _advance(hass, freezer, PERIODIC_UPDATE_INTERVAL)
+    async def _slow_connect() -> None:
+        await accepted.wait()
+        periodic_roomba.connected = True
 
-    assert call(SESSION_CONNECT_TIMEOUT) in mock_timeout.call_args_list
-
-
-async def test_options_from_before_removal_select_periodic_mode(
-    hass: HomeAssistant,
-    freezer: FrozenDateTimeFactory,
-    mock_config_entry: MockConfigEntry,
-    periodic_roomba: AsyncMock,
-) -> None:
-    """Test options stored before 2026.11 still turn the periodic mode on."""
-    mock_config_entry.add_to_hass(hass)
-    hass.config_entries.async_update_entry(
-        mock_config_entry, options={CONF_CONTINUOUS: False, "delay": 1}
-    )
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    periodic_roomba.connect.side_effect = _slow_connect
+    freezer.tick(PERIODIC_UPDATE_INTERVAL)
+    async_fire_time_changed(hass)
+    for _ in range(connect_seconds):
+        await asyncio.sleep(0)
+        freezer.tick(timedelta(seconds=1))
+        async_fire_time_changed(hass)
+    await asyncio.sleep(0)
+    accepted.set()
     await hass.async_block_till_done()
 
-    await _advance(hass, freezer, timedelta(seconds=TELEMETRY_QUIET_SECONDS))
+    assert periodic_roomba.connected is connected
 
-    assert not periodic_roomba.connected
+
+async def test_migration_drops_options_from_before_roombapy_2(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    periodic_roomba: AsyncMock,
+) -> None:
+    """Test old Continuous and Delay options are dropped, keeping a permanent session."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_HOST: "192.168.0.30", CONF_BLID: "blid123", CONF_PASSWORD: "pw"},
+        options={CONF_CONTINUOUS: False, "delay": 1},
+        unique_id="blid123",
+        minor_version=1,
+    )
+    entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert entry.minor_version == 2
+    assert entry.options == {}
+    await _advance(hass, freezer, PERIODIC_UPDATE_INTERVAL)
+    assert periodic_roomba.connected
+    periodic_roomba.disconnect.assert_not_awaited()
 
 
 async def test_command_fails_cleanly_when_unreachable(
@@ -540,3 +599,109 @@ async def test_command_logs_recovery(
     )
 
     assert "is reachable again" in caplog.text
+
+
+@pytest.mark.parametrize(
+    ("cycle", "connected"),
+    [
+        pytest.param("clean", True, id="recharging_mid_mission"),
+        pytest.param("none", False, id="charging_after_mission"),
+    ],
+)
+async def test_recharge_mid_mission_keeps_session(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_config_entry: MockConfigEntry,
+    periodic_roomba: AsyncMock,
+    cycle: str,
+    connected: bool,
+) -> None:
+    """Test charging during a mission keeps the session, ordinary charging does not."""
+    status = periodic_roomba.master_state["state"]["reported"]["cleanMissionStatus"]
+    status.update(phase="charge", cycle=cycle)
+    await _setup(hass, mock_config_entry, continuous=False)
+
+    await _advance(hass, freezer, timedelta(seconds=TELEMETRY_QUIET_SECONDS))
+
+    assert periodic_roomba.connected is connected
+
+
+async def test_mission_released_after_docking_without_polling(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_config_entry: MockConfigEntry,
+    periodic_roomba: AsyncMock,
+) -> None:
+    """Test a mission session is released after docking even with polling disabled."""
+    _set_phase(periodic_roomba, "run")
+    mock_config_entry.add_to_hass(hass)
+    hass.config_entries.async_update_entry(
+        mock_config_entry,
+        options={CONF_CONTINUOUS: False},
+        pref_disable_polling=True,
+    )
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    await _advance(hass, freezer, timedelta(seconds=TELEMETRY_QUIET_SECONDS))
+    assert periodic_roomba.connected
+
+    _set_phase(periodic_roomba, "charge")
+    await _advance(hass, freezer, timedelta(seconds=MISSION_CHECK_SECONDS))
+
+    assert not periodic_roomba.connected
+
+
+async def test_failed_command_does_not_pin_the_session(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_config_entry: MockConfigEntry,
+    periodic_roomba: AsyncMock,
+) -> None:
+    """Test a failed command leaves no hold that keeps a later session open."""
+    assert await async_setup_component(hass, HA_DOMAIN, {})
+    mock_config_entry.add_to_hass(hass)
+    hass.config_entries.async_update_entry(
+        mock_config_entry,
+        options={CONF_CONTINUOUS: False},
+        pref_disable_polling=True,
+    )
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    await _advance(hass, freezer, timedelta(seconds=TELEMETRY_QUIET_SECONDS))
+    connect = periodic_roomba.connect.side_effect
+    periodic_roomba.connect.side_effect = RoombaConnectionError
+    with pytest.raises(HomeAssistantError):
+        await hass.services.async_call(
+            VACUUM_DOMAIN,
+            SERVICE_LOCATE,
+            {ATTR_ENTITY_ID: VACUUM_ENTITY_ID},
+            blocking=True,
+        )
+
+    periodic_roomba.connect.side_effect = connect
+    await _call_while_ticking(hass, freezer, HA_DOMAIN, SERVICE_UPDATE_ENTITY)
+
+    assert not periodic_roomba.connected
+
+
+async def test_start_uses_fresh_state(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_config_entry: MockConfigEntry,
+    periodic_roomba: AsyncMock,
+) -> None:
+    """Test start resumes a mission paused while Home Assistant was disconnected."""
+    await _setup(hass, mock_config_entry, continuous=False)
+    await _advance(hass, freezer, timedelta(seconds=TELEMETRY_QUIET_SECONDS))
+    assert hass.states.get(VACUUM_ENTITY_ID).state == "docked"
+
+    async def _connect_paused() -> None:
+        periodic_roomba.connected = True
+        status = periodic_roomba.master_state["state"]["reported"]["cleanMissionStatus"]
+        status.update(phase="pause", cycle="clean")
+        _publish(periodic_roomba, {"cleanMissionStatus": status})
+
+    periodic_roomba.connect.side_effect = _connect_paused
+    await _call_while_ticking(hass, freezer, VACUUM_DOMAIN, SERVICE_START)
+
+    periodic_roomba.send_command.assert_awaited_once_with("resume", None)

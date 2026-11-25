@@ -218,6 +218,7 @@ class IRobotVacuum(IRobotEntity, StateVacuumEntity):
     @override
     async def async_start(self) -> None:
         """Start or resume the cleaning task."""
+        await self._async_ensure_connected(wait=True)
         if self.state == VacuumActivity.PAUSED:
             await self._async_send_command("resume")
         else:
@@ -236,6 +237,7 @@ class IRobotVacuum(IRobotEntity, StateVacuumEntity):
     @override
     async def async_return_to_base(self, **kwargs: Any) -> None:
         """Set the vacuum cleaner to return to the dock."""
+        await self._async_ensure_connected(wait=True)
         if self.state == VacuumActivity.CLEANING:
             await self.async_pause()
             for _ in range(10):
@@ -262,12 +264,12 @@ class IRobotVacuum(IRobotEntity, StateVacuumEntity):
 
     async def async_update(self) -> None:
         """Refresh the robot state on request, e.g. from update_entity."""
-        await self._connection.async_refresh()
+        await self._connection.async_refresh(wait=True)
 
-    async def _async_ensure_connected(self) -> None:
+    async def _async_ensure_connected(self, *, wait: bool = False) -> None:
         """Open a session if the robot is polled rather than held."""
         try:
-            await self._connection.async_ensure_connected()
+            await self._connection.async_ensure_connected(wait=wait)
         except HomeAssistantError as err:
             raise HomeAssistantError(
                 translation_domain=DOMAIN, translation_key="not_connected"

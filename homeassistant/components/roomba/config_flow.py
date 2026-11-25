@@ -72,6 +72,7 @@ class RoombaConfigFlow(ConfigFlow, domain=DOMAIN):
     """Roomba configuration flow."""
 
     VERSION = 1
+    MINOR_VERSION = 2
 
     name: str | None = None
     blid: str

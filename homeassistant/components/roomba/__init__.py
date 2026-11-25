@@ -30,11 +30,27 @@ from .const import (
     DOMAIN,
     PLATFORMS,
     ROOMBA_SESSION,
-    SESSION_CONNECT_TIMEOUT,
 )
 from .models import RoombaConfigEntry, RoombaData
 
 _LOGGER = logging.getLogger(__name__)
+
+# Polls and commands allow for 900-series robots on 2.x firmware, which can
+# take over 10 s to accept a connection.
+SESSION_CONNECT_TIMEOUT = 30
+
+
+async def async_migrate_entry(
+    hass: HomeAssistant, config_entry: RoombaConfigEntry
+) -> None:
+    """Migrate a Roomba config entry to the current version."""
+    if config_entry.minor_version < 2:
+        # The Continuous and Delay options belonged to the connection mode
+        # removed with roombapy 2.0; these entries have used a permanent
+        # connection since.
+        hass.config_entries.async_update_entry(
+            config_entry, options={}, minor_version=2
+        )
 
 
 async def async_setup_entry(
