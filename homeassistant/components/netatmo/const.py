@@ -126,6 +126,11 @@ CAMERA_TRIGGERS = [
     EVENT_TYPE_ON,
 ]
 
+DOORBELL_TRIGGERS = [
+    EVENT_TYPE_CONNECTION,
+    EVENT_TYPE_DISCONNECTION,
+]
+
 OUTDOOR_CAMERA_TRIGGERS = [
     EVENT_TYPE_ANIMAL,
     EVENT_TYPE_HUMAN,
@@ -241,3 +246,6 @@ class NetatmoServiceArgument(StrEnum):
     TIME_PERIOD = "time_period"
     PERSONS = "persons"
     PERSON = "person"
+
+
+NETATMO_DOORBELLS = ["NDB"]
