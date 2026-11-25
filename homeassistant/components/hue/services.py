@@ -17,7 +17,7 @@ from homeassistant.components.light import ATTR_RGB_COLOR, DOMAIN as LIGHT_DOMAI
 from homeassistant.components.scene import DOMAIN as SCENE_DOMAIN
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import ServiceValidationError
-from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers import config_validation as cv, selector
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.service import (
     async_register_batched_platform_entity_service,
@@ -45,16 +45,13 @@ ACTIVATE_SCENE_SCHEMA: VolDictType = {
     ),
 }
 
-RGB_COLOR_SCHEMA = probatio.All(
-    probatio.Coerce(tuple), probatio.ExactSequence((cv.byte,) * 3)
-)
 FLASH_SCHEMA: VolDictType = {
     probatio.Required(HueServiceArgument.DURATION): probatio.All(
         cv.time_period,
         probatio.Range(min=timedelta(seconds=1), max=timedelta(seconds=65534)),
     ),
-    probatio.Optional(ATTR_RGB_COLOR): RGB_COLOR_SCHEMA,
-    probatio.Optional(HueServiceArgument.SECOND_RGB_COLOR): RGB_COLOR_SCHEMA,
+    probatio.Optional(ATTR_RGB_COLOR): selector.ColorRGBSelector(),
+    probatio.Optional(HueServiceArgument.SECOND_RGB_COLOR): selector.ColorRGBSelector(),
 }
 FLASH_SIGNAL_BY_COLOR_COUNT = {
     0: Signal.ON_OFF,
