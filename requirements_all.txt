@@ -229,9 +229,6 @@ aioazuredevops==2.2.2
 # homeassistant.components.baf
 aiobafi6==0.9.0
 
-# homeassistant.components.bambu_lab
-aiobambulab==0.0.1
-
 # homeassistant.components.amazon_polly
 # homeassistant.components.aws
 # homeassistant.components.aws_s3
