@@ -194,13 +194,13 @@ class GetConfigTool(Tool):
         if (
             component is None
             or (entity := component.get_entity(entity_id)) is None
-            or entity.raw_config is None
+            or (config := entity.raw_blueprint_inputs or entity.raw_config) is None
         ):
             raise HomeAssistantError(f"Script '{entity_id}' not found.")
         return ToolResult(
             data={
                 "entity_id": entity_id,
-                "config": json_loads_object(json_dumps(entity.raw_config)),
+                "config": json_loads_object(json_dumps(config)),
             }
         )
 

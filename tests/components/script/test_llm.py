@@ -267,3 +267,26 @@ async def test_get_config_not_found(
         await tool.async_call(
             hass, llm.ToolInput(tool.name, {"entity_id": entity_id}), _llm_context()
         )
+
+
+async def test_get_config_of_blueprint_script(hass: HomeAssistant) -> None:
+    """Test a script made from a blueprint returns the blueprint and its inputs."""
+    use_blueprint = {
+        "path": "test_service.yaml",
+        "input": {"service_to_call": "test.script"},
+    }
+    with patch(
+        "homeassistant.config.load_yaml_config_file",
+        return_value={"script": {"from_blueprint": {"use_blueprint": use_blueprint}}},
+    ):
+        await hass.services.async_call("script", "reload", blocking=True)
+
+    tool = script_llm.GetConfigTool()
+    result = await tool.async_call(
+        hass,
+        llm.ToolInput(tool.name, {"entity_id": "script.from_blueprint"}),
+        _llm_context(),
+    )
+
+    assert hass.states.get("script.from_blueprint").state == "off"
+    assert result.data["config"] == {"use_blueprint": use_blueprint}
