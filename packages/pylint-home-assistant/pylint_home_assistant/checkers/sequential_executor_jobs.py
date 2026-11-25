@@ -17,7 +17,8 @@ from pylint.lint import PyLinter
 
 from pylint_home_assistant.helpers.module_info import is_integration_module
 
-_DEFAULT_EXECUTOR = "default"
+# Not a valid expression, so no executor expression can collide with it
+_DEFAULT_EXECUTOR = "<default>"
 
 _EXECUTOR_JOB_STATEMENTS = (
     nodes.Assign,
@@ -48,6 +49,7 @@ _LOOP_ONLY_FUNCTIONS = frozenset(
         "create_task",
         "current_task",
         "ensure_future",
+        "Future",
         "get_event_loop",
         "get_running_loop",
         "timeout",
@@ -246,7 +248,11 @@ def _in_executor_loop(node: nodes.NodeNG) -> bool:
     """Return True if an enclosing loop of *node* can move into an executor job."""
     parent = node.parent
     while parent is not None and not isinstance(parent, _NEW_SCOPE_NODES):
-        if isinstance(parent, (nodes.For, nodes.While)) and _loop_executor_key(parent):
+        if (
+            isinstance(parent, (nodes.For, nodes.While))
+            and not isinstance(parent, nodes.AsyncFor)
+            and _loop_executor_key(parent)
+        ):
             return True
         parent = parent.parent
     return False

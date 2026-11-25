@@ -214,6 +214,23 @@ async def async_setup(hass, config):
             """
 async def async_setup(hass, config):
     await hass.async_add_executor_job(call_a)
+    await loop.run_in_executor(default, call_b)
+""",
+            id="executor_named_default",
+        ),
+        pytest.param(
+            """
+async def async_setup(hass, config):
+    await hass.async_add_executor_job(call_a)
+    future = asyncio.Future()
+    await hass.async_add_executor_job(call_b)
+""",
+            id="future_between_jobs",
+        ),
+        pytest.param(
+            """
+async def async_setup(hass, config):
+    await hass.async_add_executor_job(call_a)
     cm = asyncio.timeout(10)
     await hass.async_add_executor_job(call_b)
 """,
@@ -562,6 +579,15 @@ async def async_setup(hass, config):
         pytest.param(
             """
 async def async_setup(hass, config):
+    async for group in groups:
+        for item in group:
+            await hass.async_add_executor_job(call_a, item)
+""",
+            id="for_loop_in_async_for",
+        ),
+        pytest.param(
+            """
+async def async_setup(hass, config):
     while await hass.async_add_executor_job(has_more):
         result = do_something()
 """,
@@ -748,6 +774,14 @@ async def async_setup(hass, config):
         tasks = asyncio.all_tasks()
 """,
             id="all_tasks",
+        ),
+        pytest.param(
+            """
+async def async_setup(hass, config):
+    for default in pools:
+        await loop.run_in_executor(default, call_a)
+""",
+            id="executor_named_default_rebound_by_target",
         ),
         pytest.param(
             """
