@@ -21,14 +21,14 @@ from pytest_homeassistant.components.infrared.common import (
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.benq_projector_infrared import PLATFORMS
-from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
+from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, ButtonService
 from homeassistant.components.infrared import InfraredReceivedSignal
 from homeassistant.components.media_player import (
     DOMAIN as MEDIA_PLAYER_DOMAIN,
     MediaPlayerService,
     MediaPlayerState,
 )
-from homeassistant.const import ATTR_ENTITY_ID, Platform, TargetKey
+from homeassistant.const import Platform, TargetKey
 from homeassistant.core import HomeAssistant, State
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
@@ -47,7 +47,10 @@ def platforms() -> list[Platform]:
 async def _press(hass: HomeAssistant, entity_id: str) -> None:
     """Press a button."""
     await hass.services.async_call(
-        BUTTON_DOMAIN, SERVICE_PRESS, {ATTR_ENTITY_ID: entity_id}, blocking=True
+        BUTTON_DOMAIN,
+        ButtonService.PRESS,
+        {TargetKey.ENTITY_ID: entity_id},
+        blocking=True,
     )
 
 
