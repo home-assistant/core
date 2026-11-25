@@ -133,7 +133,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: AdGuardConfigEntry) -> N
 
     # Checking for updates needs AdGuard Home to reach the internet, which not
     # every installation can. That should not keep the rest from working.
-    update = AdGuardHomeUpdateCoordinator(hass, entry, adguard)
+    update = AdGuardHomeUpdateCoordinator(hass, entry, adguard, state)
     await update.async_refresh()
 
     entry.runtime_data = AdGuardData(
