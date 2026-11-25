@@ -21,7 +21,7 @@ from homeassistant.components.number import (
     NumberService,
     NumberServiceArgument,
 )
-from homeassistant.const import CommonServiceArgument, Platform
+from homeassistant.const import Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
@@ -66,7 +66,7 @@ async def test_setting_threshold_calls_client(
     await hass.services.async_call(
         NUMBER_DOMAIN,
         NumberService.SET_VALUE,
-        {CommonServiceArgument.ENTITY_ID: entity_id, NumberServiceArgument.VALUE: 250},
+        {TargetKey.ENTITY_ID: entity_id, NumberServiceArgument.VALUE: 250},
         blocking=True,
     )
 
@@ -90,7 +90,7 @@ async def test_setting_fractional_threshold_rounds_to_integer(
         NUMBER_DOMAIN,
         NumberService.SET_VALUE,
         {
-            CommonServiceArgument.ENTITY_ID: VOLUME_ENTITY_ID,
+            TargetKey.ENTITY_ID: VOLUME_ENTITY_ID,
             NumberServiceArgument.VALUE: 250.6,
         },
         blocking=True,
@@ -155,7 +155,7 @@ async def test_number_raises_on_client_failure(
             NUMBER_DOMAIN,
             NumberService.SET_VALUE,
             {
-                CommonServiceArgument.ENTITY_ID: entity_id,
+                TargetKey.ENTITY_ID: entity_id,
                 NumberServiceArgument.VALUE: 250,
             },
             blocking=True,

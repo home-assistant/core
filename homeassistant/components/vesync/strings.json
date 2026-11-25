@@ -38,6 +38,9 @@
   },
   "entity": {
     "binary_sensor": {
+      "sync_chambers": {
+        "name": "Sync baskets"
+      },
       "water_lacks": {
         "name": "Low water"
       },
@@ -46,8 +49,26 @@
       }
     },
     "button": {
+      "pause_cooking": {
+        "name": "Pause cooking"
+      },
+      "pause_cooking_basket": {
+        "name": "Basket {basket} pause cooking"
+      },
       "reset_filter": {
         "name": "Reset filter"
+      },
+      "resume_cooking": {
+        "name": "Resume cooking"
+      },
+      "resume_cooking_basket": {
+        "name": "Basket {basket} resume cooking"
+      },
+      "stop_cooking": {
+        "name": "Stop cooking"
+      },
+      "stop_cooking_basket": {
+        "name": "Basket {basket} stop cooking"
       }
     },
     "fan": {
@@ -91,6 +112,14 @@
       }
     },
     "select": {
+      "auto_preference": {
+        "name": "Auto mode preference",
+        "state": {
+          "default": "Default",
+          "efficient": "Efficient",
+          "quiet": "Quiet"
+        }
+      },
       "night_light_level": {
         "name": "Night light level",
         "state": {
@@ -104,19 +133,53 @@
     },
     "sensor": {
       "air_quality": {
-        "name": "Air quality"
+        "name": "Air quality",
+        "state": {
+          "excellent": "Excellent",
+          "good": "Good",
+          "moderate": "Moderate",
+          "poor": "Poor"
+        }
       },
       "co2": {
         "name": "Carbon dioxide"
       },
+      "cook_end_time": {
+        "name": "Cooking end"
+      },
+      "cook_end_time_basket": {
+        "name": "Basket {basket} cooking end"
+      },
       "cook_set_temp": {
         "name": "Cooking set temperature"
+      },
+      "cook_set_temp_basket": {
+        "name": "Basket {basket} cooking set temperature"
       },
       "cook_set_time": {
         "name": "Cooking set time"
       },
+      "cook_set_time_basket": {
+        "name": "Basket {basket} cooking set time"
+      },
       "cook_status": {
         "name": "Cooking status",
+        "state": {
+          "appointing": "Appointing",
+          "cooking": "Cooking",
+          "cooking_end": "Cooking finished",
+          "cooking_stop": "Cooking stopped",
+          "heating": "Preheating",
+          "hold": "Hold",
+          "preheat_end": "Preheating finished",
+          "preheat_stop": "Preheating stopped",
+          "pull_out": "Drawer pulled out",
+          "ready": "Ready",
+          "standby": "[%key:common::state::standby%]"
+        }
+      },
+      "cook_status_basket": {
+        "name": "Basket {basket} cooking status",
         "state": {
           "appointing": "Appointing",
           "cooking": "Cooking",
@@ -137,6 +200,9 @@
       "current_temp": {
         "name": "Current temperature"
       },
+      "current_temp_basket": {
+        "name": "Basket {basket} current temperature"
+      },
       "current_voltage": {
         "name": "Current voltage"
       },
@@ -155,8 +221,17 @@
       "filter_life": {
         "name": "Filter lifetime"
       },
+      "hepa_filter_life": {
+        "name": "HEPA filter lifetime"
+      },
       "preheat_set_time": {
         "name": "Preheating set time"
+      },
+      "preheat_set_time_basket": {
+        "name": "Basket {basket} preheating set time"
+      },
+      "voc": {
+        "name": "Volatile organic compounds"
       }
     },
     "switch": {
@@ -183,6 +258,9 @@
   "exceptions": {
     "api_response_error": {
       "message": "Invalid response from the VeSync API"
+    },
+    "auto_preference_not_supported": {
+      "message": "This device does not support auto mode preferences"
     },
     "invalid_auth": {
       "message": "[%key:common::config_flow::error::invalid_auth%]"

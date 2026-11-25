@@ -17,7 +17,7 @@ from homeassistant.components.casper_glow.const import (
     SORTED_BRIGHTNESS_LEVELS,
 )
 from homeassistant.components.select import DOMAIN as SELECT_DOMAIN, SelectService
-from homeassistant.const import STATE_UNKNOWN, CommonServiceArgument, Platform
+from homeassistant.const import STATE_UNKNOWN, Platform, TargetKey
 from homeassistant.core import HomeAssistant, State
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
@@ -70,7 +70,7 @@ async def test_select_option(
     await hass.services.async_call(
         SELECT_DOMAIN,
         SelectService.SELECT_OPTION,
-        {CommonServiceArgument.ENTITY_ID: ENTITY_ID, "option": DIMMING_TIME_OPTIONS[1]},
+        {TargetKey.ENTITY_ID: ENTITY_ID, "option": DIMMING_TIME_OPTIONS[1]},
         blocking=True,
     )
 
@@ -106,7 +106,7 @@ async def test_select_option_error(
             SELECT_DOMAIN,
             SelectService.SELECT_OPTION,
             {
-                CommonServiceArgument.ENTITY_ID: ENTITY_ID,
+                TargetKey.ENTITY_ID: ENTITY_ID,
                 "option": DIMMING_TIME_OPTIONS[1],
             },
             blocking=True,
@@ -133,7 +133,7 @@ async def test_select_state_update_via_callback_after_command_failure(
             SELECT_DOMAIN,
             SelectService.SELECT_OPTION,
             {
-                CommonServiceArgument.ENTITY_ID: ENTITY_ID,
+                TargetKey.ENTITY_ID: ENTITY_ID,
                 "option": DIMMING_TIME_OPTIONS[1],
             },
             blocking=True,

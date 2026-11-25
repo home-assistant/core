@@ -18,7 +18,8 @@ from homeassistant.components.climate import (
     ATTR_HVAC_MODE,
     DOMAIN as CLIMATE_DOMAIN,
     SERVICE_SET_HVAC_MODE,
-    SERVICE_SET_TEMPERATURE,
+    ClimateService,
+    ClimateServiceArgument,
     HVACMode,
 )
 from homeassistant.const import (
@@ -28,6 +29,7 @@ from homeassistant.const import (
     SERVICE_TURN_ON,
     STATE_UNAVAILABLE,
     Platform,
+    TargetKey,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, HomeAssistantError
@@ -207,8 +209,11 @@ async def test_climate_set_temperature(
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_TEMPERATURE,
-        {ATTR_ENTITY_ID: "climate.my_pv_ac_elwa_2", ATTR_TEMPERATURE: 22.5},
+        ClimateService.SET_TEMPERATURE,
+        {
+            TargetKey.ENTITY_ID: "climate.my_pv_ac_elwa_2",
+            ClimateServiceArgument.TEMPERATURE: 22.5,
+        },
         blocking=True,
     )
     mock_my_pv_client.set_target_temperature.assert_awaited_once_with(22.5)
@@ -230,8 +235,11 @@ async def test_climate_set_temperature_returns_false(
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             CLIMATE_DOMAIN,
-            SERVICE_SET_TEMPERATURE,
-            {ATTR_ENTITY_ID: "climate.my_pv_ac_elwa_2", ATTR_TEMPERATURE: 22.5},
+            ClimateService.SET_TEMPERATURE,
+            {
+                TargetKey.ENTITY_ID: "climate.my_pv_ac_elwa_2",
+                ClimateServiceArgument.TEMPERATURE: 22.5,
+            },
             blocking=True,
         )
     mock_my_pv_client.set_target_temperature.assert_awaited_once_with(22.5)
@@ -263,8 +271,11 @@ async def test_climate_set_temperature_raises_error(
     with pytest.raises(expected_ha_error):
         await hass.services.async_call(
             CLIMATE_DOMAIN,
-            SERVICE_SET_TEMPERATURE,
-            {ATTR_ENTITY_ID: "climate.my_pv_ac_elwa_2", ATTR_TEMPERATURE: 22.5},
+            ClimateService.SET_TEMPERATURE,
+            {
+                TargetKey.ENTITY_ID: "climate.my_pv_ac_elwa_2",
+                ClimateServiceArgument.TEMPERATURE: 22.5,
+            },
             blocking=True,
         )
     mock_my_pv_client.set_target_temperature.assert_awaited_once_with(22.5)

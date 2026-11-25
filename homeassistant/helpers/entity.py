@@ -799,7 +799,7 @@ class Entity(
             is type.__getattribute__(Entity, "name")
             # The check for self.platform_data guards against integrations not using an
             # EntityComponent and can be removed in HA Core 2026.8
-            and self.platform_data
+            and self.platform_data  # type: ignore[truthy-bool]
         ):
             name = self._name_internal(
                 self._object_id_device_class_name,
@@ -815,7 +815,7 @@ class Entity(
         """Return the name of the entity."""
         # The check for self.platform_data guards against integrations not using an
         # EntityComponent and can be removed in HA Core 2026.8
-        if not self.platform_data:
+        if not self.platform_data:  # type: ignore[truthy-bool]
             return self._name_internal(None, {})
         return self._name_internal(
             self._device_class_name,
@@ -1085,7 +1085,7 @@ class Entity(
     @callback
     def _async_write_ha_state_from_call_soon_threadsafe(self) -> None:
         """Write the state to the state machine from the event loop thread."""
-        if not self.hass or not self._verified_state_writable:
+        if self.hass is None or not self._verified_state_writable:
             self._async_verify_state_writable()
         self._async_write_ha_state()
 
@@ -1097,7 +1097,7 @@ class Entity(
         Note: Integrations which need to customize state write should
         override _async_write_ha_state, not this method.
         """
-        if not self.hass or not self._verified_state_writable:
+        if self.hass is None or not self._verified_state_writable:
             self._async_verify_state_writable()
         if self.hass.loop_thread_id != threading.get_ident():
             report_non_thread_safe_operation("async_write_ha_state")
@@ -1226,7 +1226,7 @@ class Entity(
         """Write the state to the state machine."""
         # The check for self.platform guards against integrations not using an
         # EntityComponent (which has not been allowed since HA Core 2024.1)
-        if not self.platform:
+        if not self.platform:  # type: ignore[truthy-bool]
             if self._platform_state is EntityPlatformState.REMOVED:
                 # Don't write state if the entity is not added to the platform.
                 return
@@ -1409,7 +1409,11 @@ class Entity(
 
         # Process update sequential
         if self.parallel_updates:
-            await self.parallel_updates.acquire()
+            try:
+                await self.parallel_updates.acquire()
+            except asyncio.CancelledError:
+                self._update_staged = False
+                raise
 
         if warning:
             update_warn = hass.loop.call_at(
@@ -1520,31 +1524,32 @@ class Entity(
 
         self._call_on_remove_callbacks()
 
-        await self.async_internal_will_remove_from_hass()
-        await self.async_will_remove_from_hass()
-
-        # Check if entry still exists in entity registry (e.g. unloading config entry)
-        if (
-            not force_remove
-            and self.registry_entry
-            and not self.registry_entry.disabled
-            # Check if entity is still in the entity registry
-            # by checking self._removed_from_registry
-            #
-            # Because self.registry_entry is unset in a task,
-            # its possible that the entity has been removed but
-            # the task has not yet been executed.
-            #
-            # self._removed_from_registry is set to True in a
-            # callback which does not have the same issue.
-            #
-            and not self._removed_from_registry
-        ):
-            # Set the entity's state will to unavailable and
-            # EntityStateAttribute.RESTORED: True
-            self.registry_entry.write_unavailable_state(self.hass)
-        else:
-            self.hass.states.async_remove(self.entity_id, context=self._context)
+        try:
+            await self.async_internal_will_remove_from_hass()
+            await self.async_will_remove_from_hass()
+        finally:
+            # Check if entry still exists in entity registry (e.g. unloading config entry)
+            if (
+                not force_remove
+                and self.registry_entry
+                and not self.registry_entry.disabled
+                # Check if entity is still in the entity registry
+                # by checking self._removed_from_registry
+                #
+                # Because self.registry_entry is unset in a task,
+                # its possible that the entity has been removed but
+                # the task has not yet been executed.
+                #
+                # self._removed_from_registry is set to True in a
+                # callback which does not have the same issue.
+                #
+                and not self._removed_from_registry
+            ):
+                # Set the entity's state will to unavailable and
+                # EntityStateAttribute.RESTORED: True
+                self.registry_entry.write_unavailable_state(self.hass)
+            else:
+                self.hass.states.async_remove(self.entity_id, context=self._context)
 
     async def async_prepare_to_add_to_hass(self) -> None:
         """Run before the entity is added to hass.
@@ -1640,7 +1645,7 @@ class Entity(
         """
         # The check for self.platform guards against integrations not using an
         # EntityComponent and can be removed in HA Core 2026.8
-        if self.platform:
+        if self.platform:  # type: ignore[truthy-bool]
             del entity_sources(self.hass)[self.entity_id]
 
         if self.__group is not None:
@@ -1905,7 +1910,7 @@ class Entity(
         """Suggest to report an issue."""
         # The check for self.platform_data guards against integrations not using an
         # EntityComponent and can be removed in HA Core 2026.8
-        platform_name = self.platform_data.platform_name if self.platform_data else None
+        platform_name = self.platform_data.platform_name if self.platform_data else None  # type: ignore[truthy-bool]
         return async_suggest_report_issue(
             self.hass, integration_domain=platform_name, module=type(self).__module__
         )

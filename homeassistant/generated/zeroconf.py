@@ -501,6 +501,10 @@ ZEROCONF = {
             "domain": "modern_forms",
             "name": "wac*",
         },
+        {
+            "domain": "modern_forms",
+            "name": "mf_fan*",
+        },
     ],
     "_ecobee._tcp.local.": [
         {
@@ -605,6 +609,10 @@ ZEROCONF = {
         {
             "domain": "awair",
             "name": "awair*",
+        },
+        {
+            "domain": "bluetti_modbus",
+            "name": "bluetti hems*",
         },
         {
             "domain": "bosch_shc",
@@ -1112,6 +1120,11 @@ ZEROCONF = {
     "_technove-stations._tcp.local.": [
         {
             "domain": "technove",
+        },
+    ],
+    "_tlight._tcp.local.": [
+        {
+            "domain": "trimlight",
         },
     ],
     "_touch-able._tcp.local.": [

@@ -10,7 +10,7 @@ from homeassistant.components.update import (
     SCAN_INTERVAL as UPDATER_SCAN_INTERVAL,
     UpdateService,
 )
-from homeassistant.const import STATE_OFF, STATE_ON, CommonServiceArgument
+from homeassistant.const import STATE_OFF, STATE_ON, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.util import dt as dt_util
@@ -40,7 +40,7 @@ async def test_plex_update(
         }
     )
     result = await ws_client.receive_json()
-    assert result["result"] is None
+    assert result["result"]["release_notes"] is None
 
     apply_mock = requests_mock.put("/updater/apply")
 
@@ -64,7 +64,7 @@ async def test_plex_update(
             UPDATE_DOMAIN,
             UpdateService.INSTALL,
             {
-                CommonServiceArgument.ENTITY_ID: UPDATE_ENTITY,
+                TargetKey.ENTITY_ID: UPDATE_ENTITY,
             },
             blocking=True,
         )
@@ -86,14 +86,14 @@ async def test_plex_update(
         }
     )
     result = await ws_client.receive_json()
-    assert result["result"] == "* Summary of\n* release notes"
+    assert result["result"]["release_notes"] == "* Summary of\n* release notes"
 
     # Successful upgrade request
     await hass.services.async_call(
         UPDATE_DOMAIN,
         UpdateService.INSTALL,
         {
-            CommonServiceArgument.ENTITY_ID: UPDATE_ENTITY,
+            TargetKey.ENTITY_ID: UPDATE_ENTITY,
         },
         blocking=True,
     )
@@ -106,7 +106,7 @@ async def test_plex_update(
             UPDATE_DOMAIN,
             UpdateService.INSTALL,
             {
-                CommonServiceArgument.ENTITY_ID: UPDATE_ENTITY,
+                TargetKey.ENTITY_ID: UPDATE_ENTITY,
             },
             blocking=True,
         )

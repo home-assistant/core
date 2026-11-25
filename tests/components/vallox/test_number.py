@@ -5,13 +5,14 @@ from unittest.mock import AsyncMock, patch
 import pytest
 from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
+from vallox_websocket_api import Profile
 
 from homeassistant.components.number import (
     DOMAIN as NUMBER_DOMAIN,
     NumberService,
     NumberServiceArgument,
 )
-from homeassistant.const import STATE_UNKNOWN, CommonServiceArgument, Platform
+from homeassistant.const import STATE_UNKNOWN, Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -43,22 +44,49 @@ async def test_number_value_missing(hass: HomeAssistant) -> None:
 
 @pytest.mark.usefixtures("init_integration")
 @pytest.mark.parametrize(
-    ("entity_id", "metric_key"),
+    ("entity_id", "value", "setter", "profile"),
     [
         pytest.param(
             "number.vallox_supply_air_temperature_home",
-            "A_CYC_HOME_AIR_TEMP_TARGET",
+            22.0,
+            "set_temperature",
+            Profile.HOME,
             id="supply_air_temperature_home",
         ),
         pytest.param(
             "number.vallox_supply_air_temperature_away",
-            "A_CYC_AWAY_AIR_TEMP_TARGET",
+            22.0,
+            "set_temperature",
+            Profile.AWAY,
             id="supply_air_temperature_away",
         ),
         pytest.param(
             "number.vallox_supply_air_temperature_boost",
-            "A_CYC_BOOST_AIR_TEMP_TARGET",
+            22.0,
+            "set_temperature",
+            Profile.BOOST,
             id="supply_air_temperature_boost",
+        ),
+        pytest.param(
+            "number.vallox_fan_speed_home",
+            45,
+            "set_fan_speed",
+            Profile.HOME,
+            id="fan_speed_home",
+        ),
+        pytest.param(
+            "number.vallox_fan_speed_away",
+            45,
+            "set_fan_speed",
+            Profile.AWAY,
+            id="fan_speed_away",
+        ),
+        pytest.param(
+            "number.vallox_fan_speed_boost",
+            45,
+            "set_fan_speed",
+            Profile.BOOST,
+            id="fan_speed_boost",
         ),
     ],
 )
@@ -66,21 +94,21 @@ async def test_set_number_value(
     hass: HomeAssistant,
     mock_vallox_client: AsyncMock,
     entity_id: str,
-    metric_key: str,
+    value: float,
+    setter: str,
+    profile: Profile,
 ) -> None:
     """Test setting the number entities."""
-    value = 22.0
-
     await hass.services.async_call(
         NUMBER_DOMAIN,
         NumberService.SET_VALUE,
         {
-            CommonServiceArgument.ENTITY_ID: entity_id,
+            TargetKey.ENTITY_ID: entity_id,
             NumberServiceArgument.VALUE: value,
         },
         blocking=True,
     )
 
-    mock_vallox_client.set_values.assert_called_once_with({metric_key: value})
+    getattr(mock_vallox_client, setter).assert_called_once_with(profile, value)
     # One fetch at setup, and one refresh after the change.
     assert mock_vallox_client.fetch_metric_data.call_count == 2
