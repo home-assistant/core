@@ -1,8 +1,7 @@
 {
   "config": {
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
-      "wrong_account": "The new credentials belong to a different account."
+      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]"
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
@@ -10,18 +9,6 @@
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "step": {
-      "reauth_confirm": {
-        "data": {
-          "api_key": "[%key:common::config_flow::data::api_key%]",
-          "refresh_token": "Refresh token"
-        },
-        "data_description": {
-          "api_key": "[%key:component::atomberg::config::step::user::data_description::api_key%]",
-          "refresh_token": "[%key:component::atomberg::config::step::user::data_description::refresh_token%]"
-        },
-        "description": "The Atomberg credentials are no longer valid. Enter a new API key and refresh token for the same account.",
-        "title": "[%key:common::config_flow::title::reauth%]"
-      },
       "user": {
         "data": {
           "api_key": "[%key:common::config_flow::data::api_key%]",

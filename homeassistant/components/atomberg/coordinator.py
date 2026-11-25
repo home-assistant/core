@@ -103,8 +103,6 @@ class AtombergCoordinator(DataUpdateCoordinator[dict[str, dict[str, Any]]]):
                 translation_placeholders={"error": str(err)},
             ) from err
         except AtombergAuthError as err:
-            # Ask for new credentials now instead of waiting for the next poll.
-            self.config_entry.async_start_reauth(self.hass)
             raise HomeAssistantError(
                 translation_domain=DOMAIN, translation_key="invalid_auth"
             ) from err

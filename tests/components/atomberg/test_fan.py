@@ -10,7 +10,7 @@ from freezegun.api import FrozenDateTimeFactory
 import pytest
 from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
-from homeassistant.components.atomberg.const import DOMAIN, UPDATE_INTERVAL
+from homeassistant.components.atomberg.const import UPDATE_INTERVAL
 from homeassistant.components.fan import (
     ATTR_PERCENTAGE,
     DOMAIN as FAN_DOMAIN,
@@ -215,9 +215,6 @@ async def test_other_command_errors(
         await hass.services.async_call(
             FAN_DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: ON_FAN}, blocking=True
         )
-
-    flows = hass.config_entries.flow.async_progress_by_handler(DOMAIN)
-    assert bool(flows) is (exception is AtombergAuthError)
 
 
 async def test_command_error(
