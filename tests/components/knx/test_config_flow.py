@@ -1764,7 +1764,7 @@ async def test_reconfigure_update_keyfile(
         gateway_ip="192.168.0.1",
         gateway_port=3675,
         local_ip=None,
-        route_back=False,
+        route_back=True,
     )
     _assert_mock_entry_data(
         mock_config_entry,
@@ -1859,6 +1859,7 @@ async def test_reconfigure_keyfile_upload(
     (
         "connection_type",
         "request_description_mock",
+        "expected_route_back",
         "stored",
         "expected_result",
         "expected_data_update",
@@ -1867,6 +1868,7 @@ async def test_reconfigure_keyfile_upload(
         pytest.param(
             CONF_KNX_TUNNELING_TCP,
             AsyncMock(side_effect=CommunicationError("No response")),
+            True,
             True,
             {
                 "type": FlowResultType.FORM,
@@ -1889,6 +1891,7 @@ async def test_reconfigure_keyfile_upload(
                     individual_address=IndividualAddress("5.0.0"),
                 )
             ),
+            True,
             False,
             {
                 "type": FlowResultType.FORM,
@@ -1904,6 +1907,7 @@ async def test_reconfigure_keyfile_upload(
         pytest.param(
             CONF_KNX_TUNNELING,
             AsyncMock(return_value=_gateway_descriptor("192.168.0.1", 3675)),
+            False,
             True,
             {
                 "type": FlowResultType.ABORT,
@@ -1928,6 +1932,7 @@ async def test_reconfigure_keyfile_upload_configured_gateway(
     knx_setup: AsyncMock,
     connection_type: str,
     request_description_mock: AsyncMock,
+    expected_route_back: bool,
     stored: bool,
     expected_result: dict[str, Any],
     expected_data_update: dict[str, Any],
@@ -1939,7 +1944,7 @@ async def test_reconfigure_keyfile_upload_configured_gateway(
         CONF_HOST: "192.168.0.1",
         CONF_PORT: 3675,
         CONF_KNX_INDIVIDUAL_ADDRESS: "0.0.240",
-        CONF_KNX_ROUTE_BACK: True,
+        CONF_KNX_ROUTE_BACK: False,
         CONF_KNX_LOCAL_IP: "192.168.0.10",
         CONF_KNX_TUNNEL_ENDPOINT_IA: None,
     }
@@ -1979,7 +1984,7 @@ async def test_reconfigure_keyfile_upload_configured_gateway(
         gateway_ip="192.168.0.1",
         gateway_port=3675,
         local_ip="192.168.0.10",
-        route_back=True,
+        route_back=expected_route_back,
     )
     assert {
         "type": result["type"],

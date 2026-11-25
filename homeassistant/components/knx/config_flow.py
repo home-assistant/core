@@ -735,12 +735,17 @@ class KNXConfigFlow(ConfigFlow, domain=DOMAIN):
         if self._configured_gateway_described or self._selected_tunnel is not None:
             return
         self._configured_gateway_described = True
+        connection_type = self.initial_data[CONF_KNX_CONNECTION_TYPE]
         if (
-            self.initial_data[CONF_KNX_CONNECTION_TYPE]
-            not in CONF_KNX_TUNNELING_TYPE_LABELS
+            connection_type not in CONF_KNX_TUNNELING_TYPE_LABELS
             or CONF_HOST not in self.initial_data
         ):
             return
+        # the description is requested over UDP - TCP entries have no route back
+        # setting, so use it to also reach gateways behind NAT
+        route_back = connection_type != CONF_KNX_TUNNELING or self.initial_data.get(
+            CONF_KNX_ROUTE_BACK, False
+        )
         try:
             gateway_ip = await xknx_validate_ip(self.initial_data[CONF_HOST])
             local_ip = (
@@ -752,7 +757,7 @@ class KNXConfigFlow(ConfigFlow, domain=DOMAIN):
                 gateway_ip=gateway_ip,
                 gateway_port=self.initial_data[CONF_PORT],
                 local_ip=local_ip,
-                route_back=self.initial_data.get(CONF_KNX_ROUTE_BACK, False),
+                route_back=route_back,
             )
         except XKNXException:
             return
