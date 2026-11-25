@@ -40,6 +40,22 @@ class RoombaSensorEntityDescription(SensorEntityDescription):
     refresh_on_signal: bool = False
 
 
+def _battery_cycles(entity: IRobotEntity) -> int | None:
+    """Return the battery cycles, falling back to the battery's own count."""
+    return next(
+        (
+            value
+            for value in (
+                entity.battery_stats.get("nLithChrg"),
+                entity.battery_stats.get("nNimhChrg"),
+                entity.battery_info.get("cCount"),
+            )
+            if value is not None
+        ),
+        None,
+    )
+
+
 def _total_cleaning_minutes(entity: IRobotEntity) -> int | None:
     """Return the lifetime cleaning time in minutes."""
     hours = entity.run_stats.get("hr")
@@ -79,9 +95,7 @@ SENSORS: list[RoombaSensorEntityDescription] = [
         translation_key="battery_cycles",
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
-        value_fn=lambda self: (
-            self.battery_stats.get("nLithChrg") or self.battery_stats.get("nNimhChrg")
-        ),
+        value_fn=_battery_cycles,
     ),
     RoombaSensorEntityDescription(
         key="total_cleaning_time",

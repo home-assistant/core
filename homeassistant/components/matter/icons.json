@@ -97,6 +97,9 @@
       "battery_voltage": {
         "default": "mdi:current-dc"
       },
+      "commodity_price": {
+        "default": "mdi:cash"
+      },
       "contamination_state": {
         "default": "mdi:air-filter"
       },

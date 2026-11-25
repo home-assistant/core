@@ -1481,6 +1481,18 @@
       "config_flow": true,
       "iot_class": "local_push"
     },
+    "bambu_lab": {
+      "name": "Bambu Lab",
+      "integration_type": "device",
+      "categories": [
+        "computers_network.printers"
+      ],
+      "connectivity": [
+        "network"
+      ],
+      "config_flow": true,
+      "iot_class": "local_push"
+    },
     "bang_olufsen": {
       "name": "Bang & Olufsen",
       "integration_type": "device",
@@ -14502,6 +14514,18 @@
             "infrared"
           ],
           "name": "Sony Infrared"
+        },
+        "sony_tv_rs232": {
+          "integration_type": "device",
+          "config_flow": true,
+          "iot_class": "local_polling",
+          "categories": [
+            "media_entertainment.tv_streaming"
+          ],
+          "connectivity": [
+            "serial"
+          ],
+          "name": "Sony TV RS-232"
         }
       }
     },

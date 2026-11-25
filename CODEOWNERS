@@ -236,6 +236,8 @@ AGENTS.md @home-assistant/core
 /tests/components/baf/ @bdraco @jfroy
 /homeassistant/components/balboa/ @garbled1 @natekspencer
 /tests/components/balboa/ @garbled1 @natekspencer
+/homeassistant/components/bambu_lab/ @joostlek @piitaya
+/tests/components/bambu_lab/ @joostlek @piitaya
 /homeassistant/components/bang_olufsen/ @mj23000
 /tests/components/bang_olufsen/ @mj23000
 /homeassistant/components/battery/ @home-assistant/core
@@ -1888,6 +1890,8 @@ AGENTS.md @home-assistant/core
 /tests/components/sonos/ @peterager @jjlawren
 /homeassistant/components/sony_infrared/ @googanhiem
 /tests/components/sony_infrared/ @googanhiem
+/homeassistant/components/sony_tv_rs232/ @bbangert
+/tests/components/sony_tv_rs232/ @bbangert
 /homeassistant/components/soundtouch/ @kroimon
 /tests/components/soundtouch/ @kroimon
 /homeassistant/components/spaceapi/ @fabaff

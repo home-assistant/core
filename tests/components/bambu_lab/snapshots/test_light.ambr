@@ -1,0 +1,60 @@
+# serializer version: 1
+# name: test_lights[light.x1_carbon_chamber_light-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
+        <ColorMode.ONOFF: 'onoff'>,
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('bambu_lab', '01P00A000000001')]>,
+    'disabled_by': None,
+    'domain': 'light',
+    'entity_category': None,
+    'entity_id': 'light.x1_carbon_chamber_light',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Chamber light',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Chamber light',
+    'platform': 'bambu_lab',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'chamber_light',
+    'unique_id': '01P00A000000001_chamber',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_lights[light.x1_carbon_chamber_light-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <LightEntityStateAttribute.COLOR_MODE: 'color_mode'>: <ColorMode.ONOFF: 'onoff'>,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'X1 Carbon Chamber light',
+      <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
+        <ColorMode.ONOFF: 'onoff'>,
+      ]),
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <LightEntityFeature: 0>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'light.x1_carbon_chamber_light',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
