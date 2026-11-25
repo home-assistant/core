@@ -41,8 +41,6 @@ async def test_capacity_tariff_sensors(
     power_state = hass.states.get(power_entity_id)
     assert power_state is not None
     assert power_state.state == "4.2"
-    assert power_state.attributes["peak_month"] == "2026-10"
-    assert power_state.attributes["peak_is_fallback"] is False
 
     energy_entity_id = entity_registry.async_get_entity_id(
         "sensor", DOMAIN, f"{BAN}_capacity_tariff_monthly_energy_peak"
@@ -87,34 +85,6 @@ async def test_capacity_tariff_sensors(
         assert timestamp_entry.entity_category == er.EntityCategory.DIAGNOSTIC
 
 
-@pytest.mark.usefixtures(
-    "mock_engie_client", "frozen_afternoon", "entity_registry_enabled_by_default"
-)
-async def test_capacity_tariff_daily_peak(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    entity_registry: er.EntityRegistry,
-) -> None:
-    """Test the latest daily peak value and its daily_peaks attribute."""
-    await setup_entry(hass, mock_config_entry)
-
-    daily_entity_id = entity_registry.async_get_entity_id(
-        "sensor", DOMAIN, f"{BAN}_capacity_tariff_daily_power_peak"
-    )
-    assert daily_entity_id is not None
-    daily_state = hass.states.get(daily_entity_id)
-    assert daily_state is not None
-    assert daily_state.state == "4.2"
-    assert daily_state.attributes["daily_peaks"] == [
-        {
-            "power_kw": 4.2,
-            "energy_kwh": 1.05,
-            "start": "2026-10-15T18:00:00+02:00",
-            "end": "2026-10-15T18:15:00+02:00",
-        }
-    ]
-
-
 @pytest.mark.usefixtures("mock_engie_client", "frozen_afternoon")
 async def test_capacity_tariff_fallback_to_previous_month(
     hass: HomeAssistant,
@@ -142,50 +112,12 @@ async def test_capacity_tariff_fallback_to_previous_month(
     power_state = hass.states.get(power_entity_id)
     assert power_state is not None
     assert power_state.state == "3.1"
-    assert power_state.attributes["peak_month"] == "2026-09"
-    assert power_state.attributes["peak_is_fallback"] is True
 
     start_entity_id = entity_registry.async_get_entity_id(
         "sensor", DOMAIN, f"{BAN}_capacity_tariff_monthly_peak_start"
     )
     assert start_entity_id is not None
     assert hass.states.get(start_entity_id).state == "2026-09-20T17:30:00+00:00"
-
-
-@pytest.mark.usefixtures("mock_engie_client", "frozen_afternoon")
-async def test_capacity_tariff_previous_peak_attribute(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_engie_client: MagicMock,
-    entity_registry: er.EntityRegistry,
-) -> None:
-    """Test the replaced lower peak of the month is exposed as an attribute."""
-    current = build_peak(
-        datetime(2026, 10, 15, 18, 0, tzinfo=BRUSSELS_TIME_ZONE), power_kw=5.0
-    )
-    replaced = build_peak(
-        datetime(2026, 10, 3, 12, 0, tzinfo=BRUSSELS_TIME_ZONE), power_kw=4.2
-    )
-
-    def _peaks(ban: str, year: int, month: int, *, day: int | None = None):
-        return build_monthly_peaks(2026, 10, peak=current, previous_peak=replaced)
-
-    mock_engie_client.return_value.async_get_monthly_peaks.side_effect = _peaks
-    await setup_entry(hass, mock_config_entry)
-
-    power_entity_id = entity_registry.async_get_entity_id(
-        "sensor", DOMAIN, f"{BAN}_capacity_tariff_monthly_power_peak"
-    )
-    assert power_entity_id is not None
-    power_state = hass.states.get(power_entity_id)
-    assert power_state is not None
-    assert power_state.state == "5.0"
-    assert power_state.attributes["previous_peak"] == {
-        "power_kw": 4.2,
-        "energy_kwh": 1.05,
-        "start": "2026-10-03T12:00:00+02:00",
-        "end": "2026-10-03T12:15:00+02:00",
-    }
 
 
 @pytest.mark.usefixtures("mock_engie_client", "frozen_afternoon")
@@ -208,8 +140,6 @@ async def test_capacity_tariff_no_peak_yet(
     power_state = hass.states.get(power_entity_id)
     assert power_state is not None
     assert power_state.state == "unknown"
-    assert power_state.attributes["peak_month"] is None
-    assert power_state.attributes["peak_is_fallback"] is False
 
 
 @pytest.mark.usefixtures("mock_engie_client")
@@ -242,8 +172,6 @@ async def test_capacity_tariff_scheduled_refresh_across_year_rollover(
     power_state = hass.states.get(power_entity_id)
     assert power_state is not None
     assert power_state.state == "3.3"
-    assert power_state.attributes["peak_month"] == "2026-11"
-    assert power_state.attributes["peak_is_fallback"] is True
 
     freezer.tick(timedelta(days=1, seconds=30))
     async_fire_time_changed(hass)
@@ -254,8 +182,6 @@ async def test_capacity_tariff_scheduled_refresh_across_year_rollover(
     power_state = hass.states.get(power_entity_id)
     assert power_state is not None
     assert power_state.state == "unknown"
-    assert power_state.attributes["peak_month"] is None
-    assert power_state.attributes["peak_is_fallback"] is False
 
     january_peak = build_peak(
         datetime(2027, 1, 10, 18, 30, tzinfo=BRUSSELS_TIME_ZONE), power_kw=5.1
@@ -276,8 +202,6 @@ async def test_capacity_tariff_scheduled_refresh_across_year_rollover(
     power_state = hass.states.get(power_entity_id)
     assert power_state is not None
     assert power_state.state == "5.1"
-    assert power_state.attributes["peak_month"] == "2027-01"
-    assert power_state.attributes["peak_is_fallback"] is False
 
 
 @pytest.mark.usefixtures("mock_engie_client", "frozen_afternoon")

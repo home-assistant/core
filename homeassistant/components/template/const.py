@@ -1,5 +1,7 @@
 """Constants for the Template Platform Components."""
 
+from collections.abc import Mapping
+from dataclasses import dataclass
 from enum import StrEnum
 
 from homeassistant.const import Platform
@@ -71,11 +73,123 @@ DEFAULT_NAMES: dict[Platform, str] = {
 }
 
 
+# Legacy weather option to its replacement, deprecated in 2026.12
+WEATHER_DEPRECATED_TEMPLATE_OPTIONS = {
+    "apparent_temperature_template": "apparent_temperature",
+    "attribution_template": "attribution",
+    "cloud_coverage_template": "cloud_coverage",
+    "condition_template": "condition",
+    "dew_point_template": "dew_point",
+    "forecast_daily_template": "forecast_daily",
+    "forecast_hourly_template": "forecast_hourly",
+    "forecast_twice_daily_template": "forecast_twice_daily",
+    "humidity_template": "humidity",
+    "ozone_template": "ozone",
+    "pressure_template": "pressure",
+    "temperature_template": "temperature",
+    "uv_index_template": "uv_index",
+    "visibility_template": "visibility",
+    "wind_bearing_template": "wind_bearing",
+    "wind_gust_speed_template": "wind_gust_speed",
+    "wind_speed_template": "wind_speed",
+}
+
+# Light option in mireds to its replacement in kelvin, deprecated in 2026.12
+LIGHT_DEPRECATED_MIREDS_OPTIONS = {
+    "temperature": "temperature_kelvin",
+    "max_mireds": "min_kelvin",
+    "min_mireds": "max_kelvin",
+}
+
+# Light option to the action it requires, deprecated in 2026.12
+LIGHT_REQUIRED_ACTIONS = {
+    "hs": "set_hs",
+    "level": "set_level",
+    "rgb": "set_rgb",
+    "rgbw": "set_rgbw",
+    "rgbww": "set_rgbww",
+    "temperature": "set_temperature",
+    "temperature_kelvin": "set_temperature",
+    "xy": "set_xy",
+}
+
+# Cover option to the action it requires, deprecated in 2026.12
+COVER_REQUIRED_ACTIONS = {"tilt": "set_cover_tilt_position"}
+
+
+@dataclass(frozen=True, kw_only=True)
+class DeprecatedTemplateOptions:
+    """Deprecated YAML options of a template platform that create repairs."""
+
+    platform: Platform
+    # Deprecated option to the option that replaces it, or to the option it
+    # requires when requires_mapped_option is set
+    options: Mapping[str, str]
+    # Also the prefix of the issue ids
+    translation_key: str
+    blueprint_translation_key: str
+    breaks_in_ha_version: str
+    # The options are only deprecated while the option they map to is missing
+    requires_mapped_option: bool = False
+
+
+WEATHER_DEPRECATED_OPTIONS = DeprecatedTemplateOptions(
+    platform=Platform.WEATHER,
+    options=WEATHER_DEPRECATED_TEMPLATE_OPTIONS,
+    translation_key="deprecated_weather_template_options",
+    blueprint_translation_key="deprecated_weather_template_options_blueprint",
+    breaks_in_ha_version="2027.6.0",
+)
+
+LIGHT_DEPRECATED_OPTIONS = DeprecatedTemplateOptions(
+    platform=Platform.LIGHT,
+    options=LIGHT_DEPRECATED_MIREDS_OPTIONS,
+    translation_key="deprecated_light_mireds_options",
+    blueprint_translation_key="deprecated_light_mireds_options_blueprint",
+    breaks_in_ha_version="2027.6.0",
+)
+
+LIGHT_REQUIRED_ACTIONS_OPTIONS = DeprecatedTemplateOptions(
+    platform=Platform.LIGHT,
+    options=LIGHT_REQUIRED_ACTIONS,
+    translation_key="deprecated_light_missing_actions",
+    blueprint_translation_key="deprecated_light_missing_actions_blueprint",
+    breaks_in_ha_version="2027.6.0",
+    requires_mapped_option=True,
+)
+
+COVER_REQUIRED_ACTIONS_OPTIONS = DeprecatedTemplateOptions(
+    platform=Platform.COVER,
+    options=COVER_REQUIRED_ACTIONS,
+    translation_key="deprecated_cover_missing_actions",
+    blueprint_translation_key="deprecated_cover_missing_actions_blueprint",
+    breaks_in_ha_version="2027.6.0",
+    requires_mapped_option=True,
+)
+
+DEPRECATED_TEMPLATE_OPTIONS = (
+    WEATHER_DEPRECATED_OPTIONS,
+    LIGHT_DEPRECATED_OPTIONS,
+    LIGHT_REQUIRED_ACTIONS_OPTIONS,
+    COVER_REQUIRED_ACTIONS_OPTIONS,
+)
+
+
 class TemplateConfig(dict):
     """Dummy class to allow adding attributes."""
 
     raw_config: ConfigType | None = None
     raw_blueprint_inputs: ConfigType | None = None
+    # The file and line annotations are dropped from the config after validation,
+    # keep them for the deprecated options per platform and entity for repairs
+    option_locations: dict[str, list[dict[str, tuple[str, int]]]] | None = None
+
+
+class TemplateConfigSections(list[TemplateConfig]):
+    """Validated template config sections."""
+
+    # Sections which failed validation are left out of the list
+    has_invalid_sections: bool = False
 
 
 class TemplateService(StrEnum):

@@ -17,8 +17,11 @@ from homeassistant.components.cover import (
     CoverEntityCapabilityAttribute,
     CoverEntityFeature,
     CoverEntityStateAttribute,
+    CoverService,
+    CoverServiceArgument,
     CoverState,
 )
+from homeassistant.components.template.const import COVER_REQUIRED_ACTIONS_OPTIONS
 from homeassistant.components.template.cover import DEFAULT_NAME
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -28,13 +31,13 @@ from homeassistant.const import (
     SERVICE_OPEN_COVER_TILT,
     SERVICE_SET_COVER_POSITION,
     SERVICE_SET_COVER_TILT_POSITION,
-    SERVICE_STOP_COVER,
     SERVICE_TOGGLE,
     SERVICE_TOGGLE_COVER_TILT,
     STATE_OFF,
     STATE_ON,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
+    TargetKey,
 )
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import entity_registry as er, issue_registry as ir
@@ -52,7 +55,7 @@ from .conftest import (
     assert_state_and_attributes,
     async_get_flow_preview_state,
     async_trigger,
-    get_deprecated_missing_actions_issues,
+    get_issues_with_prefix,
     make_test_action,
     make_test_trigger,
     setup_and_test_nested_unique_id,
@@ -404,8 +407,8 @@ async def test_template_position(
     # Test to make sure optimistic is not set with only a position template.
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_SET_COVER_POSITION,
-        {ATTR_ENTITY_ID: TEST_COVER.entity_id, "position": 10},
+        CoverService.SET_POSITION,
+        {TargetKey.ENTITY_ID: TEST_COVER.entity_id, "position": 10},
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -434,8 +437,8 @@ async def test_template_not_optimistic(
     # Test to make sure optimistic is not set with only a position template.
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_OPEN_COVER,
-        {ATTR_ENTITY_ID: TEST_COVER.entity_id},
+        CoverService.OPEN,
+        {TargetKey.ENTITY_ID: TEST_COVER.entity_id},
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -446,8 +449,8 @@ async def test_template_not_optimistic(
     # Test to make sure optimistic is not set with only a position template.
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_CLOSE_COVER,
-        {ATTR_ENTITY_ID: TEST_COVER.entity_id},
+        CoverService.CLOSE,
+        {TargetKey.ENTITY_ID: TEST_COVER.entity_id},
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -586,8 +589,8 @@ async def test_open_action(hass: HomeAssistant, calls: list[ServiceCall]) -> Non
 
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_OPEN_COVER,
-        {ATTR_ENTITY_ID: TEST_COVER.entity_id},
+        CoverService.OPEN,
+        {TargetKey.ENTITY_ID: TEST_COVER.entity_id},
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -613,16 +616,16 @@ async def test_close_stop_action(hass: HomeAssistant, calls: list[ServiceCall]) 
 
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_CLOSE_COVER,
-        {ATTR_ENTITY_ID: TEST_COVER.entity_id},
+        CoverService.CLOSE,
+        {TargetKey.ENTITY_ID: TEST_COVER.entity_id},
         blocking=True,
     )
     await hass.async_block_till_done()
 
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_STOP_COVER,
-        {ATTR_ENTITY_ID: TEST_COVER.entity_id},
+        CoverService.STOP,
+        {TargetKey.ENTITY_ID: TEST_COVER.entity_id},
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -892,8 +895,8 @@ async def test_set_position_optimistic(
 
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_SET_COVER_POSITION,
-        {ATTR_ENTITY_ID: TEST_COVER.entity_id, ATTR_POSITION: 42},
+        CoverService.SET_POSITION,
+        {TargetKey.ENTITY_ID: TEST_COVER.entity_id, CoverServiceArgument.POSITION: 42},
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -940,8 +943,8 @@ async def test_non_optimistic_template_with_optimistic_state(
 
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_SET_COVER_POSITION,
-        {ATTR_ENTITY_ID: TEST_COVER.entity_id, ATTR_POSITION: 42},
+        CoverService.SET_POSITION,
+        {TargetKey.ENTITY_ID: TEST_COVER.entity_id, CoverServiceArgument.POSITION: 42},
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -980,8 +983,11 @@ async def test_set_tilt_position_optimistic(
 
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_SET_COVER_TILT_POSITION,
-        {ATTR_ENTITY_ID: TEST_COVER.entity_id, ATTR_TILT_POSITION: 42},
+        CoverService.SET_TILT_POSITION,
+        {
+            TargetKey.ENTITY_ID: TEST_COVER.entity_id,
+            CoverServiceArgument.TILT_POSITION: 42,
+        },
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -1030,8 +1036,11 @@ async def test_set_tilt_position_optimistic_with_tilt_optimistic_true(
 
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_SET_COVER_TILT_POSITION,
-        {ATTR_ENTITY_ID: TEST_COVER.entity_id, ATTR_TILT_POSITION: 42},
+        CoverService.SET_TILT_POSITION,
+        {
+            TargetKey.ENTITY_ID: TEST_COVER.entity_id,
+            CoverServiceArgument.TILT_POSITION: 42,
+        },
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -1084,8 +1093,11 @@ async def test_set_tilt_position_optimistic_with_tilt_optimistic_false(
 
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_SET_COVER_TILT_POSITION,
-        {ATTR_ENTITY_ID: TEST_COVER.entity_id, ATTR_TILT_POSITION: 42},
+        CoverService.SET_TILT_POSITION,
+        {
+            TargetKey.ENTITY_ID: TEST_COVER.entity_id,
+            CoverServiceArgument.TILT_POSITION: 42,
+        },
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -1755,7 +1767,10 @@ async def test_deprecated_missing_actions_issue(
         hass, TEST_COVER, style, 1, COVER_ACTIONS, extra_config={"tilt": "{{ 50 }}"}
     )
     assert_deprecated_missing_actions_issue(
-        issue_registry, TEST_COVER, "- `tilt` requires `set_cover_tilt_position`"
+        issue_registry,
+        COVER_REQUIRED_ACTIONS_OPTIONS,
+        TEST_COVER,
+        "- `tilt` requires `set_cover_tilt_position`",
     )
 
 
@@ -1776,4 +1791,9 @@ async def test_no_deprecated_missing_actions_issue(
         {**COVER_ACTIONS, **SET_COVER_TILT_POSITION},
         extra_config={"tilt": "{{ 50 }}"},
     )
-    assert get_deprecated_missing_actions_issues(issue_registry) == []
+    assert (
+        get_issues_with_prefix(
+            issue_registry, COVER_REQUIRED_ACTIONS_OPTIONS.translation_key
+        )
+        == []
+    )

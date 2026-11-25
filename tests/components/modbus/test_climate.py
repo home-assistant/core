@@ -7,7 +7,6 @@ from homeassistant.components.climate import (
     ATTR_FAN_MODE,
     ATTR_FAN_MODES,
     ATTR_HVAC_ACTION,
-    ATTR_HVAC_MODE,
     ATTR_HVAC_MODES,
     ATTR_SWING_MODE,
     ATTR_SWING_MODES,
@@ -22,17 +21,13 @@ from homeassistant.components.climate import (
     FAN_OFF,
     FAN_ON,
     FAN_TOP,
-    SERVICE_SET_FAN_MODE,
-    SERVICE_SET_HVAC_MODE,
-    SERVICE_SET_SWING_MODE,
-    SERVICE_SET_TEMPERATURE,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
     SWING_BOTH,
     SWING_HORIZONTAL,
     SWING_OFF,
     SWING_ON,
     SWING_VERTICAL,
+    ClimateService,
+    ClimateServiceArgument,
     HVACAction,
     HVACMode,
 )
@@ -105,6 +100,7 @@ from homeassistant.const import (
     CONF_TEMPERATURE_UNIT,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
+    TargetKey,
     UnitOfTemperature,
 )
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant, State
@@ -471,8 +467,8 @@ async def test_hvac_onoff_values(hass: HomeAssistant, mock_modbus) -> None:
     """Run configuration test for On/Off register values."""
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: ENTITY_ID},
+        ClimateService.TURN_ON,
+        {TargetKey.ENTITY_ID: ENTITY_ID},
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -481,8 +477,8 @@ async def test_hvac_onoff_values(hass: HomeAssistant, mock_modbus) -> None:
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: ENTITY_ID},
+        ClimateService.TURN_OFF,
+        {TargetKey.ENTITY_ID: ENTITY_ID},
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -510,8 +506,8 @@ async def test_hvac_onoff_coil(hass: HomeAssistant, mock_modbus) -> None:
     """Run configuration test for On/Off coil values."""
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: ENTITY_ID},
+        ClimateService.TURN_ON,
+        {TargetKey.ENTITY_ID: ENTITY_ID},
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -520,8 +516,8 @@ async def test_hvac_onoff_coil(hass: HomeAssistant, mock_modbus) -> None:
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: ENTITY_ID},
+        ClimateService.TURN_OFF,
+        {TargetKey.ENTITY_ID: ENTITY_ID},
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -1376,10 +1372,10 @@ async def test_service_climate_set_temperature(
     mock_modbus_ha.read_holding_registers.return_value = ReadResult(result)
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_TEMPERATURE,
+        ClimateService.SET_TEMPERATURE,
         {
-            ATTR_ENTITY_ID: ENTITY_ID,
-            ATTR_TEMPERATURE: temperature,
+            TargetKey.ENTITY_ID: ENTITY_ID,
+            ClimateServiceArgument.TEMPERATURE: temperature,
         },
         blocking=True,
     )
@@ -1487,10 +1483,10 @@ async def test_service_set_hvac_mode(
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_HVAC_MODE,
+        ClimateService.SET_HVAC_MODE,
         {
-            ATTR_ENTITY_ID: ENTITY_ID,
-            ATTR_HVAC_MODE: hvac_mode,
+            TargetKey.ENTITY_ID: ENTITY_ID,
+            ClimateServiceArgument.HVAC_MODE: hvac_mode,
         },
         blocking=True,
     )
@@ -1550,10 +1546,10 @@ async def test_service_set_fan_mode(
     mock_modbus_ha.read_holding_registers.return_value = ReadResult(result)
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_FAN_MODE,
+        ClimateService.SET_FAN_MODE,
         {
-            ATTR_ENTITY_ID: ENTITY_ID,
-            ATTR_FAN_MODE: fan_mode,
+            TargetKey.ENTITY_ID: ENTITY_ID,
+            ClimateServiceArgument.FAN_MODE: fan_mode,
         },
         blocking=True,
     )
@@ -1613,10 +1609,10 @@ async def test_service_set_swing_mode(
     mock_modbus_ha.read_holding_registers.return_value = ReadResult(result)
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_SWING_MODE,
+        ClimateService.SET_SWING_MODE,
         {
-            ATTR_ENTITY_ID: ENTITY_ID,
-            ATTR_SWING_MODE: swing_mode,
+            TargetKey.ENTITY_ID: ENTITY_ID,
+            ClimateServiceArgument.SWING_MODE: swing_mode,
         },
         blocking=True,
     )

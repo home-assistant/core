@@ -26,6 +26,7 @@ homeassistant.helpers.script_variables
 homeassistant.helpers.singleton
 homeassistant.helpers.sun
 homeassistant.helpers.translation
+homeassistant.helpers.validation_errors
 homeassistant.loader
 homeassistant.requirements
 homeassistant.runner
@@ -119,6 +120,7 @@ homeassistant.components.backup.*
 homeassistant.components.baf.*
 homeassistant.components.bang_olufsen.*
 homeassistant.components.bayesian.*
+homeassistant.components.benq_projector_infrared.*
 homeassistant.components.besen.*
 homeassistant.components.binary_sensor.*
 homeassistant.components.bitcoin.*
@@ -165,6 +167,7 @@ homeassistant.components.cover.*
 homeassistant.components.cpuspeed.*
 homeassistant.components.croma_infrared.*
 homeassistant.components.crownstone.*
+homeassistant.components.daikin_infrared.*
 homeassistant.components.data_grand_lyon.*
 homeassistant.components.date.*
 homeassistant.components.datetime.*
@@ -246,6 +249,7 @@ homeassistant.components.fritzbox_callmonitor.*
 homeassistant.components.fronius.*
 homeassistant.components.frontend.*
 homeassistant.components.fujitsu_fglair.*
+homeassistant.components.fujitsu_infrared.*
 homeassistant.components.fully_kiosk.*
 homeassistant.components.fumis.*
 homeassistant.components.fyta.*
@@ -417,6 +421,7 @@ homeassistant.components.mealie.*
 homeassistant.components.media_extractor.*
 homeassistant.components.media_player.*
 homeassistant.components.media_source.*
+homeassistant.components.melcloud_home.*
 homeassistant.components.met_eireann.*
 homeassistant.components.metoffice.*
 homeassistant.components.midea.*
@@ -508,6 +513,7 @@ homeassistant.components.powerwall.*
 homeassistant.components.private_ble_device.*
 homeassistant.components.prometheus.*
 homeassistant.components.proximity.*
+homeassistant.components.proxmoxve.*
 homeassistant.components.prusalink.*
 homeassistant.components.ptdevices.*
 homeassistant.components.pure_energie.*
@@ -647,10 +653,12 @@ homeassistant.components.threema.*
 homeassistant.components.threshold.*
 homeassistant.components.tibber.*
 homeassistant.components.tile.*
+homeassistant.components.tile_ble.*
 homeassistant.components.tilt_ble.*
 homeassistant.components.time.*
 homeassistant.components.time_date.*
 homeassistant.components.timer.*
+homeassistant.components.timer_list.*
 homeassistant.components.tod.*
 homeassistant.components.todo.*
 homeassistant.components.tolo.*

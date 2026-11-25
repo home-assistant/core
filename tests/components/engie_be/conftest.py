@@ -3,7 +3,6 @@
 from collections.abc import Generator, Iterable
 from datetime import UTC, date, datetime, timedelta, timezone
 from unittest.mock import AsyncMock, MagicMock, patch
-from zoneinfo import ZoneInfo
 
 from aioengiebelgium import (
     AccountRelation,
@@ -35,6 +34,7 @@ import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.engie_be.const import (
+    BRUSSELS_TIME_ZONE,
     CONF_MFA_METHOD,
     CONF_REFRESH_TOKEN,
     DOMAIN,
@@ -44,7 +44,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util import dt as dt_util
 
-BRUSSELS_TIME_ZONE = ZoneInfo("Europe/Brussels")
 EMAIL = "user@example.com"
 PASSWORD = "hunter2"
 SUBJECT = "auth0|69f5b418f3be21cc2ede9c98"
@@ -285,7 +284,6 @@ def build_monthly_peaks(
     *,
     peak: Peak | None = None,
     daily_peaks: tuple[Peak, ...] = (),
-    previous_peak: Peak | None = None,
 ) -> MonthlyPeaks:
     """Build a monthly peaks response for the given month."""
     return MonthlyPeaks(
@@ -293,7 +291,6 @@ def build_monthly_peaks(
         month=month,
         peak_of_the_month=peak,
         daily_peaks=daily_peaks,
-        previous_peak_of_the_month=previous_peak,
     )
 
 

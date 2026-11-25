@@ -464,6 +464,12 @@ async def project_data(hass: HomeAssistant) -> dict[str, Any]:
 
 
 @pytest.fixture
+async def current_project_data(hass: HomeAssistant) -> dict[str, Any]:
+    """Return project data in the format of the installed xknxproject."""
+    return await async_load_json_object_fixture(hass, "project_current.json", DOMAIN)
+
+
+@pytest.fixture
 async def load_knxproj(
     project_data: dict[str, Any], hass_storage: dict[str, Any]
 ) -> None:
