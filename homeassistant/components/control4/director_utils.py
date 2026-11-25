@@ -93,7 +93,12 @@ async def gather_entry_variables(
     for item_id, result in zip(item_ids, results, strict=True):
         if isinstance(
             result,
-            (TimeoutError, client_exceptions.ClientError, ConfigEntryNotReady),
+            (
+                TimeoutError,
+                client_exceptions.ClientError,
+                JSONDecodeError,
+                ConfigEntryNotReady,
+            ),
         ):
             raise PlatformNotReady(
                 f"Failed to fetch initial variables for item {item_id}"

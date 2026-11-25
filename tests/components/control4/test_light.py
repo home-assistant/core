@@ -2,6 +2,7 @@
 
 from collections.abc import Generator
 from datetime import timedelta
+from json import JSONDecodeError
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
@@ -303,14 +304,17 @@ async def test_light_not_created_when_no_initial_data(hass: HomeAssistant) -> No
     assert hass.states.get(SWITCH_ENTITY_ID) is None
 
 
-@pytest.mark.parametrize("error", [TimeoutError, ConfigEntryNotReady])
+@pytest.mark.parametrize(
+    "error",
+    [TimeoutError, ConfigEntryNotReady, JSONDecodeError("Expecting value", "", 0)],
+)
 @pytest.mark.usefixtures("mock_c4_account", "mock_light_update_variables")
 async def test_light_setup_retried_after_initial_timeout(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
     mock_config_entry: MockConfigEntry,
     mock_c4_director: MagicMock,
-    error: type[Exception],
+    error: type[Exception] | Exception,
 ) -> None:
     """A transient failure on the initial variable read retries light setup."""
     get_item_variables = mock_c4_director.get_item_variables.side_effect
