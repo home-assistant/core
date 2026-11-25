@@ -316,8 +316,6 @@ async def _async_check_ipv6_enabled(
     which silently breaks Matter, so we surface a repair pointing the user at
     the network settings.
     """
-    # Remove the issue created before it was keyed per config entry.
-    async_delete_issue(hass, DOMAIN, "ipv6_disabled")
     if not is_hassio(hass):
         return
 
@@ -338,19 +336,18 @@ async def _async_check_ipv6_enabled(
     if not connected_interfaces:
         return
 
-    issue_id = f"ipv6_disabled_{entry.entry_id}"
     if any(
         interface.ipv6 is not None
         and interface.ipv6.method is not InterfaceMethod.DISABLED
         for interface in connected_interfaces
     ):
-        async_delete_issue(hass, DOMAIN, issue_id)
+        async_delete_issue(hass, DOMAIN, "ipv6_disabled")
         return
 
     async_create_issue(
         hass,
         DOMAIN,
-        issue_id,
+        "ipv6_disabled",
         config_entry_id=entry.entry_id,
         is_fixable=False,
         severity=IssueSeverity.WARNING,

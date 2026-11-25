@@ -23,7 +23,12 @@ from homeassistant.components.matter import (
 )
 from homeassistant.components.matter.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryDisabler, ConfigEntryState
-from homeassistant.const import EVENT_HOMEASSISTANT_STOP, STATE_UNAVAILABLE, Platform
+from homeassistant.const import (
+    EVENT_HOMEASSISTANT_STOP,
+    STATE_UNAVAILABLE,
+    Platform,
+    __version__ as HA_VERSION,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import (
     device_registry as dr,
@@ -821,9 +826,7 @@ async def test_ipv6_disabled_repair(
         for issue in issue_registry.issues.values()
         if issue.domain == DOMAIN
     }
-    assert (
-        (f"ipv6_disabled_{entry.entry_id}", entry.entry_id) in issues
-    ) is issue_expected
+    assert (("ipv6_disabled", entry.entry_id) in issues) is issue_expected
 
 
 async def test_ipv6_repair_not_raised_without_supervisor(
@@ -842,7 +845,7 @@ async def test_ipv6_repair_not_raised_without_supervisor(
 
     assert entry.state is ConfigEntryState.LOADED
     get_supervisor_client.assert_not_called()
-    assert not issue_registry.async_get_issue(DOMAIN, f"ipv6_disabled_{entry.entry_id}")
+    assert not issue_registry.async_get_issue(DOMAIN, "ipv6_disabled")
 
 
 async def test_ipv6_repair_supervisor_error(
@@ -868,7 +871,7 @@ async def test_ipv6_repair_supervisor_error(
         await hass.async_block_till_done()
 
     assert entry.state is ConfigEntryState.LOADED
-    assert not issue_registry.async_get_issue(DOMAIN, f"ipv6_disabled_{entry.entry_id}")
+    assert not issue_registry.async_get_issue(DOMAIN, "ipv6_disabled")
 
 
 async def test_ipv6_repair_resolves_on_reload(
@@ -901,7 +904,7 @@ async def test_ipv6_repair_resolves_on_reload(
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
-        assert issue_registry.async_get_issue(DOMAIN, f"ipv6_disabled_{entry.entry_id}")
+        assert issue_registry.async_get_issue(DOMAIN, "ipv6_disabled")
 
         supervisor_client.network.info.return_value = MagicMock(
             interfaces=[
@@ -914,20 +917,15 @@ async def test_ipv6_repair_resolves_on_reload(
         await hass.async_block_till_done()
 
     assert entry.state is ConfigEntryState.LOADED
-    assert not issue_registry.async_get_issue(DOMAIN, f"ipv6_disabled_{entry.entry_id}")
+    assert not issue_registry.async_get_issue(DOMAIN, "ipv6_disabled")
 
 
-@pytest.mark.parametrize(
-    "is_hassio",
-    [pytest.param(True, id="hassio"), pytest.param(False, id="not_hassio")],
-)
-async def test_ipv6_repair_legacy_issue_removed(
+async def test_ipv6_repair_ignored_issue_linked_and_kept_ignored(
     hass: HomeAssistant,
     matter_client: MagicMock,
     issue_registry: ir.IssueRegistry,
-    is_hassio: bool,
 ) -> None:
-    """Test the legacy unlinked IPv6 repair is removed on setup."""
+    """Test an ignored unlinked IPv6 repair stays ignored once linked."""
     ir.async_create_issue(
         hass,
         DOMAIN,
@@ -936,40 +934,7 @@ async def test_ipv6_repair_legacy_issue_removed(
         severity=ir.IssueSeverity.WARNING,
         translation_key="ipv6_disabled",
     )
-    supervisor_client = MagicMock()
-    supervisor_client.network.info = AsyncMock(
-        return_value=MagicMock(
-            interfaces=[
-                _mock_network_interface(
-                    enabled=True, connected=True, ipv6_method=InterfaceMethod.AUTO
-                )
-            ]
-        )
-    )
-
-    entry = MockConfigEntry(domain=DOMAIN, data={"url": "ws://localhost:5580/ws"})
-    entry.add_to_hass(hass)
-
-    with (
-        patch("homeassistant.components.matter.is_hassio", return_value=is_hassio),
-        patch(
-            "homeassistant.components.matter.get_supervisor_client",
-            return_value=supervisor_client,
-        ),
-    ):
-        await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
-
-    assert entry.state is ConfigEntryState.LOADED
-    assert not issue_registry.async_get_issue(DOMAIN, "ipv6_disabled")
-
-
-async def test_ipv6_repair_per_config_entry(
-    hass: HomeAssistant,
-    matter_client: MagicMock,
-    issue_registry: ir.IssueRegistry,
-) -> None:
-    """Test the IPv6 repair is linked to its entry and removed with it."""
+    ir.async_ignore_issue(hass, DOMAIN, "ipv6_disabled", True)
     supervisor_client = MagicMock()
     supervisor_client.network.info = AsyncMock(
         return_value=MagicMock(
@@ -981,10 +946,8 @@ async def test_ipv6_repair_per_config_entry(
         )
     )
 
-    entry_1 = MockConfigEntry(domain=DOMAIN, data={"url": "ws://host1:5580/ws"})
-    entry_1.add_to_hass(hass)
-    entry_2 = MockConfigEntry(domain=DOMAIN, data={"url": "ws://host2:5580/ws"})
-    entry_2.add_to_hass(hass)
+    entry = MockConfigEntry(domain=DOMAIN, data={"url": "ws://localhost:5580/ws"})
+    entry.add_to_hass(hass)
 
     with (
         patch("homeassistant.components.matter.is_hassio", return_value=True),
@@ -993,29 +956,19 @@ async def test_ipv6_repair_per_config_entry(
             return_value=supervisor_client,
         ),
     ):
-        await hass.config_entries.async_setup(entry_1.entry_id)
+        await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
-    assert entry_1.state is ConfigEntryState.LOADED
-    assert entry_2.state is ConfigEntryState.LOADED
-    issue_1 = issue_registry.async_get_issue(
-        DOMAIN, f"ipv6_disabled_{entry_1.entry_id}"
-    )
-    assert issue_1
-    assert issue_1.config_entry_id == entry_1.entry_id
-    issue_2 = issue_registry.async_get_issue(
-        DOMAIN, f"ipv6_disabled_{entry_2.entry_id}"
-    )
-    assert issue_2
-    assert issue_2.config_entry_id == entry_2.entry_id
+    assert entry.state is ConfigEntryState.LOADED
+    issue = issue_registry.async_get_issue(DOMAIN, "ipv6_disabled")
+    assert issue
+    assert issue.config_entry_id == entry.entry_id
+    assert issue.dismissed_version == HA_VERSION
 
-    await hass.config_entries.async_remove(entry_1.entry_id)
+    await hass.config_entries.async_remove(entry.entry_id)
     await hass.async_block_till_done()
 
-    assert not issue_registry.async_get_issue(
-        DOMAIN, f"ipv6_disabled_{entry_1.entry_id}"
-    )
-    assert issue_registry.async_get_issue(DOMAIN, f"ipv6_disabled_{entry_2.entry_id}")
+    assert not issue_registry.async_get_issue(DOMAIN, "ipv6_disabled")
 
 
 @pytest.mark.parametrize(
