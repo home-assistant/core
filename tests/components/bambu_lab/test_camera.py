@@ -1,5 +1,6 @@
 """Tests for the Bambu Lab camera platform."""
 
+import asyncio
 from collections.abc import Generator
 from dataclasses import replace
 from unittest.mock import AsyncMock, MagicMock, patch
@@ -196,3 +197,30 @@ async def test_mjpeg_from_stream(
     mock_create_stream.return_value.async_get_image.assert_called_with(
         width=None, height=None, wait_for_next_keyframe=True
     )
+
+
+@pytest.mark.usefixtures("mock_stream_camera")
+async def test_mjpeg_from_stream_without_images(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test the MJPEG stream ends when the video stream gives no image."""
+    await setup_integration(hass, mock_config_entry)
+    client = await hass_client()
+
+    async def never_an_image(**kwargs: object) -> bytes | None:
+        await asyncio.Event().wait()
+        return None
+
+    with (
+        patch(
+            "homeassistant.components.camera.entity.create_stream"
+        ) as mock_create_stream,
+        patch("homeassistant.components.bambu_lab.camera.STREAM_IMAGE_TIMEOUT", 0),
+    ):
+        mock_create_stream.return_value.async_get_image = never_an_image
+        response = await client.get(f"/api/camera_proxy_stream/{CAMERA}")
+        body = await response.read()
+
+    assert b"frame" not in body

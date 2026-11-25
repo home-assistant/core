@@ -1,5 +1,6 @@
 """Camera platform for the Bambu Lab integration."""
 
+import asyncio
 import logging
 from typing import override
 
@@ -15,6 +16,9 @@ from .entity import BambuLabEntity
 _LOGGER = logging.getLogger(__name__)
 
 PARALLEL_UPDATES = 0
+
+# How long to wait for an image of a video stream, in seconds.
+STREAM_IMAGE_TIMEOUT = 10
 
 
 async def async_setup_entry(
@@ -82,14 +86,19 @@ class BambuLabStreamCamera(BambuLabCamera):
         """Return an image from the video stream."""
         stream = await self.async_create_stream()
         # A stream that just started has no image yet. Wait for one, instead
-        # of ending the response without an image.
-        return (
-            await stream.async_get_image(
-                width=width, height=height, wait_for_next_keyframe=True
-            )
-            if stream
-            else None
-        )
+        # of ending the response without an image. Do not wait forever: the
+        # printer may have stopped sending video.
+        try:
+            async with asyncio.timeout(STREAM_IMAGE_TIMEOUT):
+                return (
+                    await stream.async_get_image(
+                        width=width, height=height, wait_for_next_keyframe=True
+                    )
+                    if stream
+                    else None
+                )
+        except TimeoutError:
+            return None
 
     @override
     async def stream_source(self) -> str | None:
