@@ -857,6 +857,9 @@
       "inactive_power_threshold": {
         "name": "Inactive power threshold"
       },
+      "indicator_luminance_level": {
+        "name": "Indicator luminance level"
+      },
       "installation_height": {
         "name": "Height from sensor to tank bottom"
       },
@@ -1468,6 +1471,9 @@
       "increased_non_neutral_output": {
         "name": "Increased non-neutral output"
       },
+      "indicator_mode": {
+        "name": "Indicator mode"
+      },
       "input_mode": {
         "name": "Input mode"
       },
@@ -1494,6 +1500,9 @@
       },
       "liquid_state": {
         "name": "Liquid state"
+      },
+      "local_control_mode": {
+        "name": "Local control mode"
       },
       "local_temperature_source": {
         "name": "Local temperature source"
@@ -1824,6 +1833,9 @@
           "off": "[%key:common::state::off%]",
           "preheating": "[%key:component::climate::entity_component::_::state_attributes::hvac_action::state::preheating%]"
         }
+      },
+      "illumination": {
+        "name": "Illumination"
       },
       "instantaneous_demand": {
         "name": "Instantaneous demand"
@@ -2299,6 +2311,9 @@
       },
       "linkage_alarm": {
         "name": "Linkage alarm"
+      },
+      "local_control": {
+        "name": "Local control"
       },
       "local_control_id": {
         "name": "{id} local control"
