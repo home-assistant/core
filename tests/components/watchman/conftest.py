@@ -90,7 +90,7 @@ class MockAsyncTank:
         return self._level
 
     @property
-    async def serial_number(self) -> str:
+    def serial_number(self) -> str:
         """Mock tank serial number."""
         if self._tank_num is None:
             return MOCK_TANK_SERIAL_NUMBER
