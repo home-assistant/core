@@ -548,13 +548,8 @@ async def test_list_groupable_devices_device_bound_entities(
         for entity_ref in entity_refs
     }
 
-    def _no_endpoint(entity: RSSISensor) -> None:
-        raise AttributeError("device-bound entities have no endpoint")
-
-    # Device-bound entities have no endpoint once the library's compat property is gone
-    with patch.object(RSSISensor, "endpoint", property(_no_endpoint)):
-        await zha_client.send_json({ID: 10, TYPE: "zha/devices/groupable"})
-        msg = await zha_client.receive_json()
+    await zha_client.send_json({ID: 10, TYPE: "zha/devices/groupable"})
+    msg = await zha_client.receive_json()
 
     assert msg["success"]
     [endpoint] = [

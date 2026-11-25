@@ -2089,6 +2089,15 @@
       ],
       "supported_by": "opower"
     },
+    "busybar": {
+      "name": "BUSY Bar",
+      "integration_type": "device",
+      "categories": [
+        "sensors"
+      ],
+      "config_flow": true,
+      "iot_class": "local_polling"
+    },
     "bwt": {
       "name": "BWT",
       "integration_type": "virtual",
@@ -4949,6 +4958,15 @@
       "iot_standards": [
         "zigbee"
       ]
+    },
+    "frigidaire": {
+      "name": "Frigidaire",
+      "integration_type": "virtual",
+      "categories": [
+        "appliances_cleaning",
+        "climate"
+      ],
+      "supported_by": "electrolux"
     },
     "fritzbox": {
       "name": "FRITZ!",
