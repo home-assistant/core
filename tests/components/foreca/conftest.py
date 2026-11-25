@@ -1,9 +1,12 @@
 """Common fixtures for the Foreca tests."""
 
 from collections.abc import Generator
-from unittest.mock import AsyncMock, MagicMock, patch
+from typing import Any
+from unittest.mock import DEFAULT, AsyncMock, MagicMock, patch
 
 from pyforeca import (
+    AirQualityDailyForecast,
+    AirQualityForecast,
     CurrentWeather,
     DailyForecast,
     FifteenMinuteForecast,
@@ -19,6 +22,8 @@ from pytest_homeassistant.common import MockConfigEntry, load_json_object_fixtur
 from homeassistant.components.foreca.const import DOMAIN, SUBENTRY_TYPE_LOCATION
 from homeassistant.config_entries import ConfigSubentryData
 from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE
+
+from . import load_observation
 
 CURRENT = CurrentWeather(
     time="2026-09-01T17:00+03:00",
@@ -193,25 +198,33 @@ LOCATION = Location(
 )
 
 
-OBSERVATION = Observation.from_api(
+AIR_QUALITY = AirQualityForecast.from_api(
     {
-        "station": "Helsinki Kaisaniemi",
-        "distance": "1 km N",
-        "time": "2026-11-05T10:40:00+02:00",
-        "temperature": 8,
-        "feelsLikeTemp": 4,
-        "symbol": "d000",
-        "windDirString": "NW",
-        "windDir": 306,
-        "windSpeed": 6,
-        "windGust": 9,
-        "pressure": 1018.8,
-        "relHumidity": 69,
-        "visibility": 20000,
-        "snowDepth": None,
-        "longitude": 24.94,
-        "latitude": 60.18,
-        "elevation": 4,
+        "time": "2026-11-05T10:00+02:00",
+        "pollutant": "Ozone",
+        "pollutantPhrase": "Ozone",
+        "AQI": 31,
+        "AQI_CO": 1,
+        "AQI_NO2": 3,
+        "AQI_O3": 31,
+        "AQI_SO2": 0,
+        "AQI_PM10": 4,
+        "AQI_PM2P5": 8,
+    }
+)
+
+AIR_QUALITY_DAILY = AirQualityDailyForecast.from_api(
+    {
+        "date": "2026-11-06",
+        "AQI": 26,
+        "pollutant": "Ozone",
+        "pollutantPhrase": "Ozone",
+        "AQI_CO": 2,
+        "AQI_NO2": 6,
+        "AQI_GO3": 26,
+        "AQI_SO2": 0,
+        "AQI_PM2P5": 8,
+        "AQI_PM10": 5,
     }
 )
 
@@ -226,8 +239,28 @@ def mock_setup_entry() -> Generator[AsyncMock]:
 
 
 @pytest.fixture
-def mock_foreca_client() -> Generator[MagicMock]:
+def precipitation_totals() -> Observation | None:
+    """Return the observation that a request for station totals gets."""
+    return load_observation("observation_precipitation_totals_helsinki.json")
+
+
+@pytest.fixture
+def mock_foreca_client(
+    precipitation_totals: Observation | None,
+) -> Generator[MagicMock]:
     """Mock the Foreca API client."""
+
+    async def observation_latest(
+        location: str,
+        *,
+        precipitation: str | None = None,
+        rounding: int | None = None,
+    ) -> Any:
+        """Answer a request for station totals; leave the others to return_value."""
+        if precipitation == "latest":
+            return precipitation_totals
+        return DEFAULT
+
     with (
         patch(
             "homeassistant.components.foreca.ForecaApiClient",
@@ -253,7 +286,14 @@ def mock_foreca_client() -> Generator[MagicMock]:
         )
         client.forecast_minutely = AsyncMock(return_value=MINUTELY)
         client.forecast_15minutely = AsyncMock(return_value=FIFTEEN_MINUTE)
-        client.observation_latest = AsyncMock(return_value=OBSERVATION)
+        client.observation_latest = AsyncMock(
+            side_effect=observation_latest,
+            return_value=load_observation(
+                "observation_hourly_precipitation_helsinki.json"
+            ),
+        )
+        client.air_quality_hourly = AsyncMock(return_value=[AIR_QUALITY])
+        client.air_quality_daily = AsyncMock(return_value=[AIR_QUALITY_DAILY])
         yield client
 
 

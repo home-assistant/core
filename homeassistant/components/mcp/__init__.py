@@ -25,7 +25,7 @@ API_PROMPT = "The following tools are available from a remote server named {name
 
 async def async_get_config_entry_implementation(
     hass: HomeAssistant, entry: ModelContextProtocolConfigEntry
-) -> config_entry_oauth2_flow.AbstractOAuth2Implementation | None:
+) -> config_entry_oauth2_flow.AbstractOAuth2BaseImplementation | None:
     """OAuth implementation for the config entry."""
     if "auth_implementation" not in entry.data:
         return None

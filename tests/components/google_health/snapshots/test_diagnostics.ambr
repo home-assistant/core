@@ -14,9 +14,15 @@
       'total_calories': False,
     }),
     'body_coordinator': dict({
+      'bmi': False,
       'body_fat': False,
+      'heart_rate_variability': False,
+      'height': False,
       'last_update_success': True,
+      'oxygen_saturation': False,
+      'respiratory_rate': False,
       'resting_heart_rate': False,
+      'vo2_max': False,
       'weight': False,
     }),
     'config_entry': dict({
@@ -50,9 +56,15 @@
       'total_calories': True,
     }),
     'body_coordinator': dict({
+      'bmi': True,
       'body_fat': True,
+      'heart_rate_variability': True,
+      'height': True,
       'last_update_success': True,
+      'oxygen_saturation': True,
+      'respiratory_rate': True,
       'resting_heart_rate': True,
+      'vo2_max': True,
       'weight': True,
     }),
     'config_entry': dict({
@@ -114,9 +126,15 @@
       'total_calories': True,
     }),
     'body_coordinator': dict({
+      'bmi': True,
       'body_fat': True,
+      'heart_rate_variability': True,
+      'height': True,
       'last_update_success': True,
+      'oxygen_saturation': True,
+      'respiratory_rate': True,
       'resting_heart_rate': True,
+      'vo2_max': True,
       'weight': True,
     }),
     'config_entry': dict({

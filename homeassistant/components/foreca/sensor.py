@@ -2,10 +2,15 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import override
 
-from pyforeca import Observation
+from pyforeca import (
+    AirQualityForecast,
+    Observation,
+    ObservedHourlyPrecipitation,
+    ObservedPrecipitation,
+)
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -30,6 +35,7 @@ from homeassistant.const import (
     PERCENTAGE,
     EntityCategory,
     UnitOfLength,
+    UnitOfPrecipitationDepth,
     UnitOfPressure,
     UnitOfSpeed,
     UnitOfTemperature,
@@ -40,7 +46,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.util import dt as dt_util
 
-from .const import symbol_to_condition
+from .const import POLLUTANTS, symbol_to_condition
 from .coordinator import ForecaConfigEntry, ForecaCoordinator, ForecaWeatherData
 from .entity import ForecaEntity
 
@@ -52,6 +58,7 @@ class ForecaSensorEntityDescription[DataT](SensorEntityDescription):
     """Describes a Foreca sensor entity."""
 
     value_fn: Callable[[DataT], StateType | datetime]
+    last_reset_fn: Callable[[DataT], datetime | None] = lambda _: None
 
 
 CONDITIONS = [
@@ -68,17 +75,118 @@ CONDITIONS = [
 ]
 
 
-def _observed(
-    value_fn: Callable[[Observation], StateType | datetime],
-) -> Callable[[Observation | None], StateType | datetime]:
+def _observed[T](
+    value_fn: Callable[[Observation], T],
+) -> Callable[[Observation | None], T | None]:
     """Read a value from the nearest station's latest observation."""
 
-    def read(observation: Observation | None) -> StateType | datetime:
+    def read(observation: Observation | None) -> T | None:
         if observation is None:
             return None
         return value_fn(observation)
 
     return read
+
+
+PRECIPITATION_TYPES = ["hail", "icing", "rain", "sleet", "snow"]
+ONE_HOUR = timedelta(hours=1)
+
+
+def _window_start(
+    observation: Observation, endtime: str | None, period: timedelta
+) -> datetime | None:
+    """Return when a station's accumulation window began, or None if it is stale.
+
+    Stations skip reports, so their newest window can be hours old. A window
+    counts until an hour after the next one should have ended.
+    """
+    if observation.time is None or endtime is None:
+        return None
+    time = dt_util.parse_datetime(observation.time)
+    end = dt_util.parse_datetime(endtime)
+    if time is None or end is None or time - end > period + ONE_HOUR:
+        return None
+    return end - period
+
+
+def _last_hour(observation: Observation) -> ObservedHourlyPrecipitation | None:
+    """Return the station's last full hour of precipitation, unless it is stale."""
+    hour = observation.latest_hourly_precipitation
+    if hour is None or _window_start(observation, hour.endtime, ONE_HOUR) is None:
+        return None
+    return hour
+
+
+def _last_hour_start(observation: Observation) -> datetime | None:
+    """Return when the station's last full hour began, unless it is stale."""
+    hour = observation.latest_hourly_precipitation
+    if hour is None:
+        return None
+    return _window_start(observation, hour.endtime, ONE_HOUR)
+
+
+def _last_hour_precipitation(observation: Observation) -> float | None:
+    """Return the precipitation the station measured over its last full hour."""
+    hour = _last_hour(observation)
+    return hour.accum if hour else None
+
+
+def _last_hour_precipitation_type(observation: Observation) -> str | None:
+    """Return the type of the last full hour's precipitation.
+
+    The API reports a type even for an hour without precipitation, and
+    "undefined" when the station could not tell the type.
+    """
+    hour = _last_hour(observation)
+    if hour is None or not hour.accum or hour.prectype not in PRECIPITATION_TYPES:
+        return None
+    return hour.prectype
+
+
+def _station_total(
+    observation: Observation, hours: int
+) -> ObservedPrecipitation | None:
+    """Return the station's own total over a number of hours, if it reports one."""
+    return next(
+        (total for total in observation.precipitation if total.period == f"{hours}h"),
+        None,
+    )
+
+
+def _total_start(observation: Observation, hours: int) -> datetime | None:
+    """Return when the station's total over the hours began, unless it is stale."""
+    total = _station_total(observation, hours)
+    if total is None:
+        return None
+    return _window_start(observation, total.endtime, timedelta(hours=hours))
+
+
+def _total(observation: Observation, hours: int) -> float | None:
+    """Return the station's own total over the hours, unless it is stale."""
+    total = _station_total(observation, hours)
+    if total is None or _total_start(observation, hours) is None:
+        return None
+    return total.accum
+
+
+def _air_quality(
+    value_fn: Callable[[AirQualityForecast], StateType],
+) -> Callable[[AirQualityForecast | None], StateType]:
+    """Read a value from the air quality of the hour in progress."""
+
+    def read(air_quality: AirQualityForecast | None) -> StateType:
+        if air_quality is None:
+            return None
+        return value_fn(air_quality)
+
+    return read
+
+
+def _pollutant(air_quality: AirQualityForecast) -> str | None:
+    """Return the dominant pollutant as an option key."""
+    if air_quality.pollutant is None:
+        return None
+    return POLLUTANTS.get(air_quality.pollutant)
 
 
 CURRENT_SENSORS: tuple[ForecaSensorEntityDescription[ForecaWeatherData], ...] = (
@@ -221,6 +329,133 @@ OBSERVATION_SENSORS: tuple[ForecaSensorEntityDescription[Observation | None], ..
         entity_registry_enabled_default=False,
         value_fn=_observed(lambda obs: obs.snow_depth),
     ),
+    ForecaSensorEntityDescription(
+        key="observed_precipitation",
+        translation_key="observed_precipitation",
+        device_class=SensorDeviceClass.PRECIPITATION,
+        native_unit_of_measurement=UnitOfPrecipitationDepth.MILLIMETERS,
+        state_class=SensorStateClass.TOTAL,
+        suggested_display_precision=1,
+        value_fn=_observed(_last_hour_precipitation),
+        last_reset_fn=_observed(_last_hour_start),
+    ),
+    ForecaSensorEntityDescription(
+        key="observed_precipitation_type",
+        translation_key="observed_precipitation_type",
+        device_class=SensorDeviceClass.ENUM,
+        options=PRECIPITATION_TYPES,
+        entity_registry_enabled_default=False,
+        value_fn=_observed(_last_hour_precipitation_type),
+    ),
+)
+
+PRECIPITATION_TOTALS_SENSORS: tuple[
+    ForecaSensorEntityDescription[Observation | None], ...
+] = (
+    ForecaSensorEntityDescription(
+        key="observed_precipitation_3h",
+        translation_key="observed_precipitation_3h",
+        device_class=SensorDeviceClass.PRECIPITATION,
+        native_unit_of_measurement=UnitOfPrecipitationDepth.MILLIMETERS,
+        state_class=SensorStateClass.TOTAL,
+        suggested_display_precision=1,
+        entity_registry_enabled_default=False,
+        value_fn=_observed(lambda obs: _total(obs, 3)),
+        last_reset_fn=_observed(lambda obs: _total_start(obs, 3)),
+    ),
+    ForecaSensorEntityDescription(
+        key="observed_precipitation_6h",
+        translation_key="observed_precipitation_6h",
+        device_class=SensorDeviceClass.PRECIPITATION,
+        native_unit_of_measurement=UnitOfPrecipitationDepth.MILLIMETERS,
+        state_class=SensorStateClass.TOTAL,
+        suggested_display_precision=1,
+        entity_registry_enabled_default=False,
+        value_fn=_observed(lambda obs: _total(obs, 6)),
+        last_reset_fn=_observed(lambda obs: _total_start(obs, 6)),
+    ),
+    ForecaSensorEntityDescription(
+        key="observed_precipitation_12h",
+        translation_key="observed_precipitation_12h",
+        device_class=SensorDeviceClass.PRECIPITATION,
+        native_unit_of_measurement=UnitOfPrecipitationDepth.MILLIMETERS,
+        state_class=SensorStateClass.TOTAL,
+        suggested_display_precision=1,
+        entity_registry_enabled_default=False,
+        value_fn=_observed(lambda obs: _total(obs, 12)),
+        last_reset_fn=_observed(lambda obs: _total_start(obs, 12)),
+    ),
+    ForecaSensorEntityDescription(
+        key="observed_precipitation_24h",
+        translation_key="observed_precipitation_24h",
+        device_class=SensorDeviceClass.PRECIPITATION,
+        native_unit_of_measurement=UnitOfPrecipitationDepth.MILLIMETERS,
+        state_class=SensorStateClass.TOTAL,
+        suggested_display_precision=1,
+        value_fn=_observed(lambda obs: _total(obs, 24)),
+        last_reset_fn=_observed(lambda obs: _total_start(obs, 24)),
+    ),
+)
+
+
+AIR_QUALITY_SENSORS: tuple[
+    ForecaSensorEntityDescription[AirQualityForecast | None], ...
+] = (
+    ForecaSensorEntityDescription(
+        key="aqi",
+        device_class=SensorDeviceClass.AQI,
+        state_class=SensorStateClass.MEASUREMENT,
+        value_fn=_air_quality(lambda aq: aq.aqi),
+    ),
+    ForecaSensorEntityDescription(
+        key="dominant_pollutant",
+        translation_key="dominant_pollutant",
+        device_class=SensorDeviceClass.ENUM,
+        options=list(POLLUTANTS.values()),
+        value_fn=_air_quality(_pollutant),
+    ),
+    ForecaSensorEntityDescription(
+        key="aqi_co",
+        translation_key="aqi_co",
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_registry_enabled_default=False,
+        value_fn=_air_quality(lambda aq: aq.aqi_co),
+    ),
+    ForecaSensorEntityDescription(
+        key="aqi_no2",
+        translation_key="aqi_no2",
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_registry_enabled_default=False,
+        value_fn=_air_quality(lambda aq: aq.aqi_no2),
+    ),
+    ForecaSensorEntityDescription(
+        key="aqi_o3",
+        translation_key="aqi_o3",
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_registry_enabled_default=False,
+        value_fn=_air_quality(lambda aq: aq.aqi_o3),
+    ),
+    ForecaSensorEntityDescription(
+        key="aqi_so2",
+        translation_key="aqi_so2",
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_registry_enabled_default=False,
+        value_fn=_air_quality(lambda aq: aq.aqi_so2),
+    ),
+    ForecaSensorEntityDescription(
+        key="aqi_pm10",
+        translation_key="aqi_pm10",
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_registry_enabled_default=False,
+        value_fn=_air_quality(lambda aq: aq.aqi_pm10),
+    ),
+    ForecaSensorEntityDescription(
+        key="aqi_pm25",
+        translation_key="aqi_pm25",
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_registry_enabled_default=False,
+        value_fn=_air_quality(lambda aq: aq.aqi_pm2p5),
+    ),
 )
 
 
@@ -231,19 +466,27 @@ async def async_setup_entry(
 ) -> None:
     """Add Foreca sensors for every configured location."""
     for subentry_id, coordinators in entry.runtime_data.items():
-        async_add_entities(
-            [
-                *(
-                    ForecaSensor(coordinators.weather, subentry_id, description)
-                    for description in CURRENT_SENSORS
-                ),
-                *(
-                    ForecaSensor(coordinators.observation, subentry_id, description)
-                    for description in OBSERVATION_SENSORS
-                ),
-            ],
-            config_subentry_id=subentry_id,
-        )
+        entities: list[SensorEntity] = [
+            *(
+                ForecaSensor(coordinators.weather, subentry_id, description)
+                for description in CURRENT_SENSORS
+            ),
+            *(
+                ForecaSensor(coordinators.observation, subentry_id, description)
+                for description in OBSERVATION_SENSORS
+            ),
+            *(
+                ForecaSensor(
+                    coordinators.precipitation_totals, subentry_id, description
+                )
+                for description in PRECIPITATION_TOTALS_SENSORS
+            ),
+            *(
+                ForecaSensor(coordinators.air_quality, subentry_id, description)
+                for description in AIR_QUALITY_SENSORS
+            ),
+        ]
+        async_add_entities(entities, config_subentry_id=subentry_id)
 
 
 class ForecaSensor[DataT](ForecaEntity[ForecaCoordinator[DataT]], SensorEntity):
@@ -268,3 +511,9 @@ class ForecaSensor[DataT](ForecaEntity[ForecaCoordinator[DataT]], SensorEntity):
     def native_value(self) -> StateType | datetime:
         """Return the state of the sensor."""
         return self.entity_description.value_fn(self.coordinator.data)
+
+    @property
+    @override
+    def last_reset(self) -> datetime | None:
+        """Return when the window of an accumulated amount began."""
+        return self.entity_description.last_reset_fn(self.coordinator.data)
