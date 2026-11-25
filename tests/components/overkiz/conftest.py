@@ -16,7 +16,14 @@ from homeassistant.components.overkiz.const import DOMAIN
 from homeassistant.core import HomeAssistant
 
 from . import DEFAULT_SETUP_FIXTURE, load_setup_fixture
-from .test_config_flow import TEST_EMAIL, TEST_GATEWAY_ID, TEST_PASSWORD, TEST_SERVER
+from .test_config_flow import (
+    TEST_EMAIL,
+    TEST_GATEWAY_ID,
+    TEST_HOST,
+    TEST_PASSWORD,
+    TEST_SERVER,
+    TEST_TOKEN,
+)
 
 type SetupOverkizIntegration = Callable[..., Awaitable[MockConfigEntry]]
 
@@ -114,6 +121,27 @@ def mock_config_entry() -> MockConfigEntry:
 
 
 @pytest.fixture
+def mock_cloud_with_local_config_entry() -> MockConfigEntry:
+    """Return a cloud config entry that also uses the local API."""
+    return MockConfigEntry(
+        title="Somfy TaHoma Switch",
+        domain=DOMAIN,
+        unique_id=TEST_GATEWAY_ID,
+        data={
+            "username": TEST_EMAIL,
+            "password": TEST_PASSWORD,
+            "hub": TEST_SERVER,
+            "local_api": {
+                "host": TEST_HOST,
+                "token": TEST_TOKEN,
+                "verify_ssl": True,
+            },
+        },
+        minor_version=OverkizConfigFlow.MINOR_VERSION,
+    )
+
+
+@pytest.fixture
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Mock setting up a config entry."""
     with patch(
@@ -177,6 +205,21 @@ def mock_somfy_config_entry() -> MockConfigEntry:
 def mock_client() -> MockOverkizClient:
     """Return a configurable mock Overkiz client."""
     return MockOverkizClient()
+
+
+@pytest.fixture
+def mock_local_client() -> MockOverkizClient:
+    """Return a configurable mock Overkiz client of the local API."""
+    return MockOverkizClient(
+        server_config=ServerConfig(
+            name="Somfy Developer Mode (Local API)",
+            endpoint="https://gateway-1234-5678-9123.local:8443/enduser-mobile-web/1/enduserAPI",
+            manufacturer="Somfy",
+            configuration_url=None,
+            server=None,
+            api_type=APIType.LOCAL,
+        )
+    )
 
 
 @pytest.fixture

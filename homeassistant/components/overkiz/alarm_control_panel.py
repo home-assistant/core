@@ -224,7 +224,7 @@ async def async_setup_entry(
     async_add_entities(
         OverkizAlarmControlPanel(
             device.device_url,
-            data.coordinator,
+            data.coordinator_for(device),
             description,
         )
         for device in data.platforms[Platform.ALARM_CONTROL_PANEL]

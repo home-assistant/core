@@ -2,6 +2,7 @@
 
 from collections import defaultdict
 from dataclasses import dataclass
+from datetime import datetime
 from typing import cast
 
 from aiohttp import ClientError
@@ -31,7 +32,7 @@ from pyoverkiz.exceptions import (
     SomfyServiceError,
     TooManyRequestsError,
 )
-from pyoverkiz.models import Device, PersistedActionGroup
+from pyoverkiz.models import Device, PersistedActionGroup, Place, Setup
 from pyoverkiz.utils import create_local_server_config
 
 from homeassistant.components.application_credentials import (
@@ -62,12 +63,15 @@ from homeassistant.helpers import (
     entity_registry as er,
 )
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
+from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
+    API_RETRY_INTERVAL,
     CONF_API_TYPE,
     CONF_GATEWAY_ID,
     CONF_HUB,
+    CONF_LOCAL_API,
     CONF_REFRESH_TOKEN,
     CONF_SITE_OID,
     DOMAIN,
@@ -89,8 +93,31 @@ class HomeAssistantOverkizData:
     """Overkiz data stored in the runtime data object."""
 
     coordinator: OverkizDataUpdateCoordinator
+    # A cloud entry can also use the local API, for the devices exposed by it
+    local_coordinator: OverkizDataUpdateCoordinator | None
     platforms: defaultdict[Platform, list[Device]]
     scenarios: list[PersistedActionGroup]
+
+    @property
+    def devices(self) -> list[Device]:
+        """Return the devices of all coordinators."""
+        if self.local_coordinator is None:
+            return list(self.coordinator.data.values())
+
+        return [
+            *self.coordinator.data.values(),
+            *self.local_coordinator.data.values(),
+        ]
+
+    def coordinator_for(self, device: Device) -> OverkizDataUpdateCoordinator:
+        """Return the coordinator that handles the device."""
+        if (
+            self.local_coordinator is not None
+            and device.device_url in self.local_coordinator.data
+        ):
+            return self.local_coordinator
+
+        return self.coordinator
 
 
 type OverkizDataConfigEntry = ConfigEntry[HomeAssistantOverkizData]
@@ -140,11 +167,97 @@ async def create_client(
     )
 
 
+def create_additional_local_client(
+    hass: HomeAssistant, entry: OverkizDataConfigEntry
+) -> OverkizClient | None:
+    """Create the local client that a cloud entry uses next to its cloud client."""
+    if (local_api := entry.data.get(CONF_LOCAL_API)) is None:
+        return None
+
+    return create_local_client(
+        hass,
+        host=local_api[CONF_HOST],
+        token=local_api[CONF_TOKEN],
+        verify_ssl=local_api[CONF_VERIFY_SSL],
+    )
+
+
 async def async_setup_entry(hass: HomeAssistant, entry: OverkizDataConfigEntry) -> None:
     """Set up Overkiz from a config entry."""
     api_type = entry.data.get(CONF_API_TYPE, APIType.CLOUD)
     client = await create_client(hass, entry)
 
+    if (local_client := create_additional_local_client(hass, entry)) is None:
+        setup, scenarios = await _async_login_and_get_setup(client, api_type)
+        coordinator = await _async_create_coordinator(
+            hass, entry, client, api_type, setup, setup.devices
+        )
+        local_coordinator = None
+    else:
+        (
+            coordinator,
+            local_coordinator,
+            setup,
+            scenarios,
+        ) = await _async_create_cloud_and_local_coordinators(
+            hass, entry, client, local_client
+        )
+
+    entry.runtime_data = data = HomeAssistantOverkizData(
+        coordinator=coordinator,
+        local_coordinator=local_coordinator,
+        platforms=defaultdict(list),
+        scenarios=scenarios,
+    )
+
+    # Map Overkiz entities to Home Assistant platform
+    for device in data.devices:
+        if platform := OVERKIZ_DEVICE_TO_PLATFORM.get(
+            device.widget
+        ) or OVERKIZ_DEVICE_TO_PLATFORM.get(device.ui_class):
+            data.platforms[platform].append(device)
+
+    device_registry = dr.async_get(hass)
+    server_config = coordinator.client.server_config
+
+    registered_gateway_ids = {gateway.id for gateway in setup.gateways}
+
+    for gateway in setup.gateways:
+        device_registry.async_get_or_create(
+            config_entry_id=entry.entry_id,
+            identifiers={(DOMAIN, gateway.id)},
+            model=gateway.type.beautify_name if gateway.type else None,
+            model_id=str(gateway.type),
+            manufacturer=server_config.manufacturer,
+            name=gateway.type.beautify_name if gateway.type else gateway.id,
+            sw_version=gateway.connectivity.protocol_version,
+            hw_version=f"{gateway.type}:{gateway.sub_type}"
+            if gateway.type and gateway.sub_type
+            else None,
+            configuration_url=server_config.configuration_url,
+        )
+
+    # Some devices reference a gateway that is not part of setup.gateways
+    # (e.g. a secondary box hosting a device). Register a device for each such
+    # gateway so the via_device link of its child devices resolves.
+    for gateway_id in {
+        device.identifier.gateway_id for device in data.devices
+    } - registered_gateway_ids:
+        device_registry.async_get_or_create(
+            config_entry_id=entry.entry_id,
+            identifiers={(DOMAIN, gateway_id)},
+            manufacturer=server_config.manufacturer,
+            name=gateway_id,
+            configuration_url=server_config.configuration_url,
+        )
+
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+
+
+async def _async_login_and_get_setup(
+    client: OverkizClient, api_type: APIType
+) -> tuple[Setup, list[PersistedActionGroup]]:
+    """Log in and return the setup and the scenarios of an API."""
     try:
         await client.login()
         setup = await client.get_setup()
@@ -175,14 +288,30 @@ async def async_setup_entry(hass: HomeAssistant, entry: OverkizDataConfigEntry) 
     except SomfyServiceError as exception:
         raise ConfigEntryNotReady("Somfy service error") from exception
 
+    return setup, scenarios
+
+
+async def _async_create_coordinator(
+    hass: HomeAssistant,
+    entry: OverkizDataConfigEntry,
+    client: OverkizClient,
+    api_type: APIType,
+    setup: Setup,
+    devices: list[Device],
+    *,
+    places: Place | None = None,
+    excluded_device_urls: frozenset[str] = frozenset(),
+) -> OverkizDataUpdateCoordinator:
+    """Create the coordinator that handles the given devices through an API."""
     coordinator = OverkizDataUpdateCoordinator(
         hass,
         entry,
         LOGGER,
         client=client,
-        devices=setup.devices,
+        devices=devices,
         gateways=setup.gateways,
-        places=setup.root_place,
+        places=places or setup.root_place,
+        excluded_device_urls=excluded_device_urls,
     )
 
     await coordinator.async_config_entry_first_refresh()
@@ -201,8 +330,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: OverkizDataConfigEntry) 
             UPDATE_INTERVAL_LOCAL,
         )
         coordinator.set_update_interval(UPDATE_INTERVAL_LOCAL)
-
-    if entry.data[CONF_HUB] == Server.SAUTER_SMART_CONTROL:
+    elif entry.data[CONF_HUB] == Server.SAUTER_SMART_CONTROL:
         LOGGER.debug(
             "Sauter Smart Control listening sessions expire within 30 seconds."
             " Update interval has been reduced to: %s",
@@ -210,53 +338,135 @@ async def async_setup_entry(hass: HomeAssistant, entry: OverkizDataConfigEntry) 
         )
         coordinator.set_update_interval(UPDATE_INTERVAL_SAUTER_SMART_CONTROL)
 
-    platforms: defaultdict[Platform, list[Device]] = defaultdict(list)
+    return coordinator
 
-    entry.runtime_data = HomeAssistantOverkizData(
-        coordinator=coordinator, platforms=platforms, scenarios=scenarios
+
+async def _async_create_cloud_and_local_coordinators(
+    hass: HomeAssistant,
+    entry: OverkizDataConfigEntry,
+    cloud_client: OverkizClient,
+    local_client: OverkizClient,
+) -> tuple[
+    OverkizDataUpdateCoordinator,
+    OverkizDataUpdateCoordinator | None,
+    Setup,
+    list[PersistedActionGroup],
+]:
+    """Create the coordinators of a cloud entry that also uses the local API.
+
+    The local API handles the devices it exposes, the cloud API the other ones.
+    If one of both cannot be reached, the other one handles what it can on its
+    own and the entry is reloaded once the missing API is back.
+    """
+    try:
+        cloud_setup, scenarios = await _async_login_and_get_setup(
+            cloud_client, APIType.CLOUD
+        )
+    except ConfigEntryNotReady as cloud_error:
+        try:
+            local_setup, _ = await _async_login_and_get_setup(
+                local_client, APIType.LOCAL
+            )
+            local_coordinator = await _async_create_coordinator(
+                hass,
+                entry,
+                local_client,
+                APIType.LOCAL,
+                local_setup,
+                local_setup.devices,
+            )
+        except ConfigEntryAuthFailed, ConfigEntryNotReady:
+            raise cloud_error from None
+
+        LOGGER.warning(
+            "Cloud API cannot be reached, only the devices of the local API are set up"
+        )
+        _async_reload_once_reachable(hass, entry, cloud_client, APIType.CLOUD)
+        return local_coordinator, None, local_setup, []
+
+    try:
+        local_setup, _ = await _async_login_and_get_setup(local_client, APIType.LOCAL)
+        local_coordinator = await _async_create_coordinator(
+            hass,
+            entry,
+            local_client,
+            APIType.LOCAL,
+            local_setup,
+            local_setup.devices,
+            # The local API does not know the places, which become the areas
+            places=cloud_setup.root_place,
+        )
+    except (ConfigEntryAuthFailed, ConfigEntryNotReady) as local_error:
+        LOGGER.warning(
+            "Local API cannot be used, all devices are set up through the cloud API: %s",
+            local_error,
+        )
+        _async_reload_once_reachable(hass, entry, local_client, APIType.LOCAL)
+
+        coordinator = await _async_create_coordinator(
+            hass, entry, cloud_client, APIType.CLOUD, cloud_setup, cloud_setup.devices
+        )
+        return coordinator, None, cloud_setup, scenarios
+
+    local_device_urls = frozenset(device.device_url for device in local_setup.devices)
+
+    try:
+        coordinator = await _async_create_coordinator(
+            hass,
+            entry,
+            cloud_client,
+            APIType.CLOUD,
+            cloud_setup,
+            [
+                device
+                for device in cloud_setup.devices
+                if device.device_url not in local_device_urls
+            ],
+            excluded_device_urls=local_device_urls,
+        )
+    except ConfigEntryNotReady:
+        LOGGER.warning(
+            "Cloud API cannot be reached, only the devices of the local API are set up"
+        )
+        _async_reload_once_reachable(hass, entry, cloud_client, APIType.CLOUD)
+        return local_coordinator, None, local_setup, []
+
+    return coordinator, local_coordinator, cloud_setup, scenarios
+
+
+@callback
+def _async_reload_once_reachable(
+    hass: HomeAssistant,
+    entry: OverkizDataConfigEntry,
+    client: OverkizClient,
+    api_type: APIType,
+) -> None:
+    """Reload the entry once the API that failed during setup can be used."""
+
+    async def _async_reload_if_reachable() -> None:
+        try:
+            await _async_login_and_get_setup(client, api_type)
+        except ConfigEntryNotReady:
+            return
+        except ConfigEntryAuthFailed:
+            if api_type == APIType.LOCAL:
+                return
+            # Setting up the entry again asks for the cloud credentials
+        else:
+            LOGGER.info("%s API can be used again", api_type.name.capitalize())
+
+        hass.config_entries.async_schedule_reload(entry.entry_id)
+
+    @callback
+    def _async_try_api(now: datetime) -> None:
+        # A task of the entry is cancelled when the entry is unloaded
+        entry.async_create_background_task(
+            hass, _async_reload_if_reachable(), f"overkiz_{api_type}_api_retry"
+        )
+
+    entry.async_on_unload(
+        async_track_time_interval(hass, _async_try_api, API_RETRY_INTERVAL)
     )
-
-    # Map Overkiz entities to Home Assistant platform
-    for device in coordinator.data.values():
-        if platform := OVERKIZ_DEVICE_TO_PLATFORM.get(
-            device.widget
-        ) or OVERKIZ_DEVICE_TO_PLATFORM.get(device.ui_class):
-            platforms[platform].append(device)
-
-    device_registry = dr.async_get(hass)
-
-    registered_gateway_ids = {gateway.id for gateway in setup.gateways}
-
-    for gateway in setup.gateways:
-        device_registry.async_get_or_create(
-            config_entry_id=entry.entry_id,
-            identifiers={(DOMAIN, gateway.id)},
-            model=gateway.type.beautify_name if gateway.type else None,
-            model_id=str(gateway.type),
-            manufacturer=client.server_config.manufacturer,
-            name=gateway.type.beautify_name if gateway.type else gateway.id,
-            sw_version=gateway.connectivity.protocol_version,
-            hw_version=f"{gateway.type}:{gateway.sub_type}"
-            if gateway.type and gateway.sub_type
-            else None,
-            configuration_url=client.server_config.configuration_url,
-        )
-
-    # Some devices reference a gateway that is not part of setup.gateways
-    # (e.g. a secondary box hosting a device). Register a device for each such
-    # gateway so the via_device link of its child devices resolves.
-    for gateway_id in {
-        device.identifier.gateway_id for device in coordinator.data.values()
-    } - registered_gateway_ids:
-        device_registry.async_get_or_create(
-            config_entry_id=entry.entry_id,
-            identifiers={(DOMAIN, gateway_id)},
-            manufacturer=client.server_config.manufacturer,
-            name=gateway_id,
-            configuration_url=client.server_config.configuration_url,
-        )
-
-    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
 
 async def async_unload_entry(

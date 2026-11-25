@@ -30,7 +30,7 @@ async def async_setup_entry(
     data = entry.runtime_data
 
     async_add_entities(
-        OverkizLight(device.device_url, data.coordinator)
+        OverkizLight(device.device_url, data.coordinator_for(device))
         for device in data.platforms[Platform.LIGHT]
     )
 

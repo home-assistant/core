@@ -189,7 +189,7 @@ async def async_setup_entry(
     data = entry.runtime_data
     entities: list[OverkizBinarySensor] = []
 
-    for device in data.coordinator.data.values():
+    for device in data.devices:
         if (
             device.widget in IGNORED_OVERKIZ_DEVICES
             or device.ui_class in IGNORED_OVERKIZ_DEVICES
@@ -199,7 +199,7 @@ async def async_setup_entry(
         entities.extend(
             OverkizBinarySensor(
                 device.device_url,
-                data.coordinator,
+                data.coordinator_for(device),
                 description,
             )
             for state in device.definition.states

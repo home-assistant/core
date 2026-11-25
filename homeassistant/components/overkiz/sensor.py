@@ -555,12 +555,12 @@ async def async_setup_entry(
     data = entry.runtime_data
     entities: list[SensorEntity] = []
 
-    for device in data.coordinator.data.values():
+    for device in data.devices:
         if device.widget == UIWidget.HOMEKIT_STACK:
             entities.append(
                 OverkizHomeKitSetupCodeSensor(
                     device.device_url,
-                    data.coordinator,
+                    data.coordinator_for(device),
                 )
             )
 
@@ -573,7 +573,7 @@ async def async_setup_entry(
         entities.extend(
             OverkizStateSensor(
                 device.device_url,
-                data.coordinator,
+                data.coordinator_for(device),
                 description,
             )
             for state in device.definition.states

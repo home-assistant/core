@@ -40,13 +40,13 @@ async def async_setup_entry(
         if device.controllable_name in CONTROLLABLE_NAME_TO_WATER_HEATER_ENTITY:
             entities.append(
                 CONTROLLABLE_NAME_TO_WATER_HEATER_ENTITY[device.controllable_name](
-                    device.device_url, data.coordinator
+                    device.device_url, data.coordinator_for(device)
                 )
             )
         elif device.widget in WIDGET_TO_WATER_HEATER_ENTITY:
             entities.append(
                 WIDGET_TO_WATER_HEATER_ENTITY[device.widget](
-                    device.device_url, data.coordinator
+                    device.device_url, data.coordinator_for(device)
                 )
             )
 

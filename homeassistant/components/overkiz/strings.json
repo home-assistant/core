@@ -52,7 +52,7 @@
           "api_type": "API type"
         },
         "data_description": {
-          "api_type": "The local API is only available on [certain gateways]({local_api_docs}). Climate devices and scenarios are **not** available via the local API."
+          "api_type": "The local API is only available on [certain gateways]({local_api_docs}). Climate devices and scenarios are **not** available via the local API. An entry that uses the cloud API can be reconfigured to also use the local API for the devices it supports."
         },
         "description": "Choose how you want to connect to your gateway."
       },

@@ -40,6 +40,7 @@ CONF_HUB: Final = "hub"
 CONF_GATEWAY_ID: Final = "gateway_id"
 CONF_REFRESH_TOKEN: Final = "refresh_token"
 CONF_SITE_OID: Final = "site_oid"
+CONF_LOCAL_API: Final = "local_api"
 DEFAULT_SERVER: Final = Server.SOMFY
 DEFAULT_HOST: Final = "gateway-xxxx-xxxx-xxxx.local:8443"
 
@@ -49,6 +50,9 @@ UPDATE_INTERVAL_ALL_ASSUMED_STATE: Final = timedelta(minutes=60)
 UPDATE_INTERVAL_SAUTER_SMART_CONTROL: Final = timedelta(seconds=25)
 # fetch_events allows 1 call per second, and refresh timing jitters, so leave margin.
 UPDATE_INTERVAL_EXECUTION: Final = timedelta(seconds=2)
+
+# How often an API that could not be reached during setup is tried again
+API_RETRY_INTERVAL: Final = timedelta(minutes=1)
 RATE_LIMIT_RETRY_AFTER: Final = timedelta(minutes=1)
 
 PLATFORMS: list[Platform] = [
