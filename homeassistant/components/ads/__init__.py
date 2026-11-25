@@ -135,7 +135,7 @@ def _async_take_over_entities(
 
     async def _async_resubscribe_device(device: AdsEntity) -> None:
         try:
-            await device.async_subscribe()
+            await device.async_run_subscribe()
         except Exception:
             _LOGGER.exception("Error resubscribing %s", device.entity_id)
 

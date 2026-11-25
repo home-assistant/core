@@ -496,6 +496,51 @@ async def test_reload_resubscribes_concurrently(
         await hass.async_block_till_done()
 
 
+async def test_reload_cancels_initial_subscription(
+    hass: HomeAssistant, mock_ads_device: MockAdsDevice
+) -> None:
+    """Test a reload stops the first subscription so it does not subscribe twice."""
+    initial_started = asyncio.Event()
+    resubscribed = asyncio.Event()
+    initial_cancelled = False
+
+    async def _async_subscribe(self: AdsEntity) -> None:
+        nonlocal initial_cancelled
+        if initial_started.is_set():
+            resubscribed.set()
+            return
+        initial_started.set()
+        try:
+            # Still waiting for the first value when the entry reloads.
+            await asyncio.Event().wait()
+        except asyncio.CancelledError:
+            initial_cancelled = True
+            raise
+
+    with patch.object(AdsSwitch, "async_subscribe", _async_subscribe):
+        hass.async_create_task(
+            async_setup_component(
+                hass,
+                SWITCH_DOMAIN,
+                {
+                    DOMAIN: ADS_CONFIG,
+                    SWITCH_DOMAIN: {"platform": DOMAIN, **SWITCH_CONFIG},
+                },
+            )
+        )
+        async with asyncio.timeout(1):
+            await initial_started.wait()
+        (entry,) = hass.config_entries.async_entries(DOMAIN)
+
+        await hass.config_entries.async_reload(entry.entry_id)
+        async with asyncio.timeout(1):
+            await resubscribed.wait()
+        await hass.async_block_till_done()
+
+    assert initial_cancelled
+    assert hass.states.get(SWITCH_ID) is not None
+
+
 async def test_unload_cancels_resubscribe(
     hass: HomeAssistant, mock_ads_device: MockAdsDevice
 ) -> None:

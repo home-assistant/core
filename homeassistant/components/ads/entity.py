@@ -28,6 +28,7 @@ class AdsEntity(Entity):
         self._ads_var = ads_var
         self._notification_handles: list[int] = []
         self._removed = False
+        self._subscribe_task: asyncio.Task[None] | None = None
         self._attr_unique_id = ads_var
         self._attr_name = name
         ads_hub.register_device(self)
@@ -38,7 +39,23 @@ class AdsEntity(Entity):
     @override
     async def async_added_to_hass(self) -> None:
         """Subscribe once the entity is added."""
-        await self.async_subscribe()
+        await self.async_run_subscribe()
+
+    async def async_run_subscribe(self) -> None:
+        """Run async_subscribe in a task that a rebind to a new hub cancels.
+
+        Otherwise a subscription still waiting for a first value would carry on
+        against the new hub next to its replacement and subscribe twice.
+        """
+        self._subscribe_task = task = self.hass.async_create_task(
+            self.async_subscribe(), f"ads subscribe {self._ads_var}"
+        )
+        try:
+            await task
+        except asyncio.CancelledError:
+            # Only swallow the cancellation of the subscription itself.
+            if (current := asyncio.current_task()) and current.cancelling():
+                raise
 
     async def async_subscribe(self) -> None:
         """Subscribe to the PLC variables of this entity.
@@ -147,6 +164,9 @@ class AdsEntity(Entity):
 
     def rebind(self, ads_hub: AdsHub) -> None:
         """Rebind this entity to a new hub after the entry is reloaded."""
+        if self._subscribe_task is not None:
+            self._subscribe_task.cancel()
+            self._subscribe_task = None
         self._ads_hub = ads_hub
         # The old hub's handles died with its connection, and pyads can hand
         # out the same numbers again on the new one.
