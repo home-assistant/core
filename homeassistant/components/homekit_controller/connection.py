@@ -70,7 +70,6 @@ IDENTIFIER_SERVICE_ID = "homekit_controller:service-id"
 CHILD_DEVICE_SERVICE_TYPES = {
     ServicesTypes.LIGHTBULB: "light",
     ServicesTypes.OUTLET: "outlet",
-    ServicesTypes.SWITCH: "switch",
 }
 
 _LOGGER = logging.getLogger(__name__)
@@ -446,8 +445,12 @@ class HKDevice:
         """Return the services of an accessory that get their own child device."""
         services_by_type: dict[str, list[Service]] = defaultdict(list)
         for service in accessory.services:
-            if service.type in CHILD_DEVICE_SERVICE_TYPES:
-                services_by_type[service.type].append(service)
+            if service.type not in CHILD_DEVICE_SERVICE_TYPES:
+                continue
+            # A service that another service links to is a part of that service
+            if accessory.services.first(child_service=service) is not None:
+                continue
+            services_by_type[service.type].append(service)
         return [
             service
             for services in services_by_type.values()

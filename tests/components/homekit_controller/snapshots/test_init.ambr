@@ -18612,28 +18612,6 @@
             'state': '0',
           }),
         }),
-      ]),
-    }),
-    dict({
-      'device': DeviceRegistryEntrySnapshot({
-        'area_id': None,
-        'config_entry_id': <ANY>,
-        'config_subentry_id': None,
-        'disabled_by': None,
-        'id': <ANY>,
-        'identifiers': set({
-          tuple(
-            'homekit_controller:service-id',
-            '00:00:00:00:00:00:aid:1:iid:8',
-          ),
-        }),
-        'labels': set({
-        }),
-        'name': 'Switch 1',
-        'name_by_user': None,
-        'parent_device_id': <DeviceEntry identifiers=[('homekit_controller:accessory-id', '00:00:00:00:00:00:aid:1')]>,
-      }),
-      'entities': list([
         dict({
           'entry': EntityRegistryEntrySnapshot({
             'aliases': list([
@@ -18644,24 +18622,24 @@
             'config_entry_id': <ANY>,
             'config_subentry_id': None,
             'device_class': None,
-            'device_id': <ChildDeviceEntry identifiers=[('homekit_controller:service-id', '00:00:00:00:00:00:aid:1:iid:8')]>,
+            'device_id': <DeviceEntry identifiers=[('homekit_controller:accessory-id', '00:00:00:00:00:00:aid:1')]>,
             'disabled_by': None,
             'domain': 'switch',
             'entity_category': None,
             'entity_id': 'switch.koogeek_sw2_187a91_switch_1',
-            'has_entity_name': True,
+            'has_entity_name': False,
             'hidden_by': None,
             'icon': None,
             'id': <ANY>,
             'labels': set({
             }),
             'name': None,
-            'object_id_base': None,
+            'object_id_base': 'Koogeek-SW2-187A91 Switch 1',
             'options': dict({
             }),
             'original_device_class': None,
             'original_icon': None,
-            'original_name': None,
+            'original_name': 'Koogeek-SW2-187A91 Switch 1',
             'platform': 'homekit_controller',
             'previous_unique_id': None,
             'suggested_object_id': None,
@@ -18672,34 +18650,12 @@
           }),
           'state': dict({
             'attributes': dict({
-              <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Switch 1',
+              <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Koogeek-SW2-187A91 Switch 1',
             }),
             'entity_id': 'switch.koogeek_sw2_187a91_switch_1',
             'state': 'off',
           }),
         }),
-      ]),
-    }),
-    dict({
-      'device': DeviceRegistryEntrySnapshot({
-        'area_id': None,
-        'config_entry_id': <ANY>,
-        'config_subentry_id': None,
-        'disabled_by': None,
-        'id': <ANY>,
-        'identifiers': set({
-          tuple(
-            'homekit_controller:service-id',
-            '00:00:00:00:00:00:aid:1:iid:11',
-          ),
-        }),
-        'labels': set({
-        }),
-        'name': 'Switch 2',
-        'name_by_user': None,
-        'parent_device_id': <DeviceEntry identifiers=[('homekit_controller:accessory-id', '00:00:00:00:00:00:aid:1')]>,
-      }),
-      'entities': list([
         dict({
           'entry': EntityRegistryEntrySnapshot({
             'aliases': list([
@@ -18710,24 +18666,24 @@
             'config_entry_id': <ANY>,
             'config_subentry_id': None,
             'device_class': None,
-            'device_id': <ChildDeviceEntry identifiers=[('homekit_controller:service-id', '00:00:00:00:00:00:aid:1:iid:11')]>,
+            'device_id': <DeviceEntry identifiers=[('homekit_controller:accessory-id', '00:00:00:00:00:00:aid:1')]>,
             'disabled_by': None,
             'domain': 'switch',
             'entity_category': None,
             'entity_id': 'switch.koogeek_sw2_187a91_switch_2',
-            'has_entity_name': True,
+            'has_entity_name': False,
             'hidden_by': None,
             'icon': None,
             'id': <ANY>,
             'labels': set({
             }),
             'name': None,
-            'object_id_base': None,
+            'object_id_base': 'Koogeek-SW2-187A91 Switch 2',
             'options': dict({
             }),
             'original_device_class': None,
             'original_icon': None,
-            'original_name': None,
+            'original_name': 'Koogeek-SW2-187A91 Switch 2',
             'platform': 'homekit_controller',
             'previous_unique_id': None,
             'suggested_object_id': None,
@@ -18738,7 +18694,7 @@
           }),
           'state': dict({
             'attributes': dict({
-              <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Switch 2',
+              <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Koogeek-SW2-187A91 Switch 2',
             }),
             'entity_id': 'switch.koogeek_sw2_187a91_switch_2',
             'state': 'off',

@@ -56,9 +56,6 @@
     },
     "outlet": {
       "name": "Outlet {index}"
-    },
-    "switch": {
-      "name": "Switch {index}"
     }
   },
   "device_automation": {

@@ -976,3 +976,49 @@ async def test_child_device_names(
     assert sorted(state.attributes["friendly_name"] for state in states) == (
         expected_names
     )
+
+
+def create_two_switches(accessory: Accessory) -> None:
+    """Define two switches."""
+    for _ in range(2):
+        service = accessory.add_service(ServicesTypes.SWITCH)
+        on_char = service.add_char(CharacteristicsTypes.ON)
+        on_char.value = False
+
+
+def create_lightbulbs_with_linked_lightbulb(accessory: Accessory) -> None:
+    """Define three lightbulbs, of which the first links to the last."""
+    services = []
+    for _ in range(3):
+        service = accessory.add_service(ServicesTypes.LIGHTBULB)
+        on_char = service.add_char(CharacteristicsTypes.ON)
+        on_char.value = False
+        services.append(service)
+    services[0].add_linked_service(services[2])
+
+
+@pytest.mark.parametrize(
+    ("setup_accessory", "expected_names"),
+    [
+        pytest.param(create_two_switches, [], id="switches"),
+        pytest.param(
+            create_lightbulbs_with_linked_lightbulb,
+            ["Light 1", "Light 2"],
+            id="linked_lightbulb",
+        ),
+    ],
+)
+async def test_services_without_child_device(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    get_next_aid: Callable[[], int],
+    setup_accessory: Callable[[Accessory], None],
+    expected_names: list[str],
+) -> None:
+    """Test switches and linked services don't get a child device."""
+    helper = await setup_test_component(hass, get_next_aid(), setup_accessory)
+
+    child_devices = dr.async_child_entries_for_config_entry(
+        device_registry, helper.config_entry.entry_id
+    )
+    assert sorted(device.name for device in child_devices) == expected_names
