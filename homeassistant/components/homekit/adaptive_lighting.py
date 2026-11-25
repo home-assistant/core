@@ -15,7 +15,7 @@ import struct
 import time
 from typing import TYPE_CHECKING, Any
 
-from homeassistant.components.light import ATTR_BRIGHTNESS
+from homeassistant.components.light import LightEntityStateAttribute
 from homeassistant.const import STATE_ON
 from homeassistant.core import Event, EventStateChangedData, HomeAssistant, callback
 from homeassistant.helpers.event import (
@@ -805,8 +805,8 @@ class AdaptiveLightingController:
         if (
             old_state is not None
             and old_state.state == STATE_ON
-            and old_state.attributes.get(ATTR_BRIGHTNESS)
-            == new_state.attributes.get(ATTR_BRIGHTNESS)
+            and old_state.attributes.get(LightEntityStateAttribute.BRIGHTNESS)
+            == new_state.attributes.get(LightEntityStateAttribute.BRIGHTNESS)
         ):
             return
         self._schedule(self._async_update())
