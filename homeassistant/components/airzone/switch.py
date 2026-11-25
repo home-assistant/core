@@ -3,13 +3,14 @@
 from dataclasses import dataclass
 from typing import Any, Final, override
 
-from aioairzone.const import API_ON, AZD_ON, AZD_ZONES
+from aioairzone.const import API_ANTI_FREEZE, API_ON, AZD_ANTI_FREEZE, AZD_ON, AZD_ZONES
 
 from homeassistant.components.switch import (
     SwitchDeviceClass,
     SwitchEntity,
     SwitchEntityDescription,
 )
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -29,6 +30,13 @@ ZONE_SWITCH_TYPES: Final[tuple[AirzoneSwitchDescription, ...]] = (
         api_param=API_ON,
         device_class=SwitchDeviceClass.SWITCH,
         key=AZD_ON,
+        name=None,
+    ),
+    AirzoneSwitchDescription(
+        api_param=API_ANTI_FREEZE,
+        entity_category=EntityCategory.CONFIG,
+        key=AZD_ANTI_FREEZE,
+        translation_key="anti_freeze",
     ),
 )
 
@@ -100,7 +108,6 @@ class AirzoneZoneSwitch(AirzoneZoneEntity, AirzoneBaseSwitch):
         """Initialize."""
         super().__init__(coordinator, entry, system_zone_id, zone_data)
 
-        self._attr_name = None
         self._attr_unique_id = (
             f"{self._attr_unique_id}_{system_zone_id}_{description.key}"
         )

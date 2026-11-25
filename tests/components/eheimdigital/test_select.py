@@ -12,7 +12,7 @@ from homeassistant.components.select import (
     SelectService,
     SelectServiceArgument,
 )
-from homeassistant.const import CommonServiceArgument, Platform
+from homeassistant.const import Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -144,7 +144,7 @@ async def test_set_value(
             SELECT_DOMAIN,
             SelectService.SELECT_OPTION,
             {
-                CommonServiceArgument.ENTITY_ID: item[0],
+                TargetKey.ENTITY_ID: item[0],
                 SelectServiceArgument.OPTION: item[1],
             },
             blocking=True,

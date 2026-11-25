@@ -7,7 +7,7 @@ from pytest_homeassistant.common import MockConfigEntry
 from rainbowminer_api_client import RainbowMinerAuthError, RainbowMinerConnectionError
 
 from homeassistant.components.rainbowminer.const import DOMAIN
-from homeassistant.config_entries import ConfigEntryState
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 
@@ -50,16 +50,18 @@ async def test_setup_with_auth(
 
 
 @pytest.mark.parametrize(
-    ("exception", "expected_state"),
+    ("exception", "expected_state", "expected_reauth_flows"),
     [
         pytest.param(
             RainbowMinerConnectionError("Connection refused"),
             ConfigEntryState.SETUP_RETRY,
+            0,
             id="connection_error",
         ),
         pytest.param(
             RainbowMinerAuthError("Unauthorized"),
             ConfigEntryState.SETUP_ERROR,
+            1,
             id="invalid_auth",
         ),
     ],
@@ -70,9 +72,14 @@ async def test_setup_errors(
     mock_config_entry: MockConfigEntry,
     exception: Exception,
     expected_state: ConfigEntryState,
+    expected_reauth_flows: int,
 ) -> None:
     """Test setup fails when the version request fails."""
     mock_rainbowminer_client.get_version.side_effect = exception
     await setup_integration(hass, mock_config_entry)
 
     assert mock_config_entry.state is expected_state
+    assert (
+        len(list(mock_config_entry.async_get_active_flows(hass, {SOURCE_REAUTH})))
+        == expected_reauth_flows
+    )

@@ -2,8 +2,6 @@
 
 from typing import override
 
-from pyschlage.lock import AUTO_LOCK_TIMES
-
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
@@ -12,12 +10,13 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from .coordinator import LockData, SchlageConfigEntry, SchlageDataUpdateCoordinator
 from .entity import SchlageEntity
 
+PARALLEL_UPDATES = 1
+
 _DESCRIPTIONS = (
     SelectEntityDescription(
         key="auto_lock_time",
         translation_key="auto_lock_time",
         entity_category=EntityCategory.CONFIG,
-        options=[str(n) for n in AUTO_LOCK_TIMES],
     ),
 )
 
@@ -58,6 +57,7 @@ class SchlageSelect(SchlageEntity, SelectEntity):
         super().__init__(coordinator, device_id)
         self.entity_description = description
         self._attr_unique_id = f"{device_id}_{self.entity_description.key}"
+        self._attr_options = [str(n) for n in self._lock.auto_lock_times()]
 
     @property
     @override
@@ -66,6 +66,6 @@ class SchlageSelect(SchlageEntity, SelectEntity):
         return str(self._lock_data.lock.auto_lock_time)
 
     @override
-    def select_option(self, option: str) -> None:
+    async def async_select_option(self, option: str) -> None:
         """Set the current option."""
-        self._lock.set_auto_lock_time(int(option))
+        await self._async_send_command(self._lock.set_auto_lock_time, int(option))

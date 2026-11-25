@@ -1,5 +1,8 @@
 {
   "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    },
     "error": {
       "address": "Invalid remote address specified. Address must be an IP address or a resolvable hostname.",
       "address_in_use": "The selected listening port is already in use on this system.",
@@ -18,7 +21,8 @@
         },
         "data_description": {
           "modbus_unit": "Unit identification for your heat pump. Can usually be left at 0.",
-          "modbus_url": "Modbus URL that describes the connection to your heat pump or MODBUS40 unit. It should be in the form:\n - `{tcp}` for Modbus TCP connection\n - `{serial}` for a local Modbus RTU connection\n - `{rfc2217}` for a remote Telnet-based Modbus RTU connection."
+          "modbus_url": "Modbus URL that describes the connection to your heat pump or MODBUS40 unit. It should be in the form:\n - `{tcp}` for Modbus TCP connection\n - `{serial}` for a local Modbus RTU connection\n - `{rfc2217}` for a remote Telnet-based Modbus RTU connection.",
+          "model": "The model of your heat pump. It decides which values the integration can read and set."
         }
       },
       "nibegw": {
@@ -32,6 +36,7 @@
         "data_description": {
           "ip_address": "The address of the NibeGW unit. The device should have been configured with a static address.",
           "listening_port": "The local port on this system, that the NibeGW unit is configured to send data to.",
+          "model": "[%key:component::nibe_heatpump::config::step::modbus::data_description::model%]",
           "remote_read_port": "The port the NibeGW unit is listening for read requests on.",
           "remote_write_port": "The port the NibeGW unit is listening for write requests on."
         },
@@ -46,12 +51,37 @@
       }
     }
   },
+  "entity": {
+    "image": {
+      "heating_curve": {
+        "name": "Heating curve {system}"
+      }
+    }
+  },
   "exceptions": {
+    "address_in_use": {
+      "message": "The listening port {port} is already in use on this system"
+    },
+    "modbus_url_invalid": {
+      "message": "The Modbus URL {url} is not well formed or not supported"
+    },
     "write_failed": {
       "message": "Writing of coil {address} with value `{value}` failed with error `{error}`"
     },
     "write_timeout": {
       "message": "Timeout while writing coil {address}"
+    }
+  },
+  "options": {
+    "step": {
+      "log_set": {
+        "description": "A LOG.SET file selects the registers the pump sends without being asked. Download {link} and load it from a USB stick on the pump.\n\nThe pump only sends the first 20 slots, where 32-bit registers take two. Read-only registers are placed first, and the remaining registers are polled.",
+        "title": "LOG.SET for MODBUS40"
+      },
+      "log_set_unavailable": {
+        "description": "A LOG.SET file selects the registers the pump sends without being asked. It can only be created while the integration is loaded.",
+        "title": "LOG.SET for MODBUS40"
+      }
     }
   }
 }

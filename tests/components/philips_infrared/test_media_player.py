@@ -31,10 +31,11 @@ from homeassistant.components.media_player import (
     SERVICE_VOLUME_DOWN,
     SERVICE_VOLUME_MUTE,
     SERVICE_VOLUME_UP,
+    MediaPlayerService,
     MediaPlayerState,
 )
 from homeassistant.components.philips_infrared.const import DOMAIN
-from homeassistant.const import ATTR_ENTITY_ID, STATE_UNKNOWN, Platform
+from homeassistant.const import ATTR_ENTITY_ID, STATE_UNKNOWN, Platform, TargetKey
 from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
@@ -153,8 +154,8 @@ async def test_play_pause_alternates(
     for _ in range(3):
         await hass.services.async_call(
             MEDIA_PLAYER_DOMAIN,
-            SERVICE_MEDIA_PLAY_PAUSE,
-            {ATTR_ENTITY_ID: MEDIA_PLAYER_ENTITY_ID},
+            MediaPlayerService.MEDIA_PLAY_PAUSE,
+            {TargetKey.ENTITY_ID: MEDIA_PLAYER_ENTITY_ID},
             blocking=True,
         )
 
@@ -219,8 +220,8 @@ async def test_toggle_flips_between_commands(
     for _ in range(4):
         await hass.services.async_call(
             MEDIA_PLAYER_DOMAIN,
-            SERVICE_VOLUME_UP,
-            {ATTR_ENTITY_ID: MEDIA_PLAYER_ENTITY_ID},
+            MediaPlayerService.VOLUME_UP,
+            {TargetKey.ENTITY_ID: MEDIA_PLAYER_ENTITY_ID},
             blocking=True,
         )
 

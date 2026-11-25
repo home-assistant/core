@@ -7,6 +7,7 @@ from pytest_homeassistant.common import (
 
 MOCK_HOST = "myrouter.freeboxos.fr"
 MOCK_PORT = 1234
+MOCK_REGISTRATION_NAME = "my-home-assistant"
 
 # router
 DATA_SYSTEM_GET_CONFIG = load_json_object_fixture("freebox/system_get_config.json")
@@ -21,6 +22,12 @@ DATA_CALL_GET_CALLS_LOG = load_json_array_fixture("freebox/call_get_calls_log.js
 DATA_STORAGE_GET_DISKS = load_json_array_fixture("freebox/storage_get_disks.json")
 
 DATA_STORAGE_GET_RAIDS = load_json_array_fixture("freebox/storage_get_raids.json")
+
+DATA_SWITCH_GET_STATUS = load_json_array_fixture("freebox/switch_get_status.json")
+
+DATA_SWITCH_GET_PORT_STATS = load_json_object_fixture(
+    "freebox/switch_get_port_stats.json"
+)
 
 # switch
 DATA_WIFI_GET_GLOBAL_CONFIG = load_json_object_fixture(

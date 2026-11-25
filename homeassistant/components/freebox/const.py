@@ -1,17 +1,18 @@
 """Freebox component constants."""
 
 import enum
-import socket
+from typing import Literal
 
 from homeassistant.const import Platform
 
 DOMAIN = "freebox"
 
+CONF_REGISTRATION_NAME = "registration_name"
+
 APP_DESC = {
     "app_id": "hass",
     "app_name": "Home Assistant",
     "app_version": "0.106",
-    "device_name": socket.gethostname(),
 }
 API_VERSION = "v6"
 
@@ -44,6 +45,9 @@ CONNECTION_SENSORS_KEYS = {
 }
 # Only returned by the API while the connection is up
 CONNECTION_IP_SENSORS_KEYS = {"ipv4", "ipv6"}
+
+type LanPortStatsFailed = Literal["failed"]
+LAN_PORT_STATS_FAILED: LanPortStatsFailed = "failed"
 
 # Icons
 DEVICE_ICONS = {

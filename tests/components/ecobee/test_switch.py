@@ -10,7 +10,7 @@ import pytest
 
 from homeassistant.components.ecobee.switch import DATE_FORMAT
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN, SwitchService
-from homeassistant.const import CommonServiceArgument
+from homeassistant.const import TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
 
@@ -94,7 +94,7 @@ async def test_turn_on_20min_ventilator(hass: HomeAssistant) -> None:
         await hass.services.async_call(
             SWITCH_DOMAIN,
             SwitchService.TURN_ON,
-            {CommonServiceArgument.ENTITY_ID: VENTILATOR_20MIN_ID},
+            {TargetKey.ENTITY_ID: VENTILATOR_20MIN_ID},
             blocking=True,
         )
         await hass.async_block_till_done()
@@ -112,7 +112,7 @@ async def test_turn_off_20min_ventilator(hass: HomeAssistant) -> None:
         await hass.services.async_call(
             SWITCH_DOMAIN,
             SwitchService.TURN_OFF,
-            {CommonServiceArgument.ENTITY_ID: VENTILATOR_20MIN_ID},
+            {TargetKey.ENTITY_ID: VENTILATOR_20MIN_ID},
             blocking=True,
         )
         await hass.async_block_till_done()
@@ -130,7 +130,7 @@ async def test_aux_heat_only_turn_on(hass: HomeAssistant) -> None:
         await hass.services.async_call(
             SWITCH_DOMAIN,
             SwitchService.TURN_ON,
-            {CommonServiceArgument.ENTITY_ID: DEVICE_ID},
+            {TargetKey.ENTITY_ID: DEVICE_ID},
             blocking=True,
         )
         mock_turn_on.assert_called_once_with(1, "auxHeatOnly")
@@ -144,7 +144,7 @@ async def test_aux_heat_only_turn_off(hass: HomeAssistant) -> None:
         await hass.services.async_call(
             SWITCH_DOMAIN,
             SwitchService.TURN_OFF,
-            {CommonServiceArgument.ENTITY_ID: DEVICE_ID},
+            {TargetKey.ENTITY_ID: DEVICE_ID},
             blocking=True,
         )
         mock_turn_off.assert_called_once_with(1, "auto")

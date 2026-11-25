@@ -14,7 +14,7 @@ from homeassistant.components.time import (
     TimeService,
     TimeServiceArgument,
 )
-from homeassistant.const import CommonServiceArgument, Platform
+from homeassistant.const import Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
@@ -40,7 +40,7 @@ async def test_sleep_mode_start_time(
         TIME_DOMAIN,
         TimeService.SET_VALUE,
         {
-            CommonServiceArgument.ENTITY_ID: SLEEP_START_TIME_ENTITY_ID,
+            TargetKey.ENTITY_ID: SLEEP_START_TIME_ENTITY_ID,
             TimeServiceArgument.TIME: time(23, 0),
         },
         blocking=True,
@@ -59,7 +59,7 @@ async def test_time_command_exception(
             TIME_DOMAIN,
             TimeService.SET_VALUE,
             {
-                CommonServiceArgument.ENTITY_ID: SLEEP_START_TIME_ENTITY_ID,
+                TargetKey.ENTITY_ID: SLEEP_START_TIME_ENTITY_ID,
                 TimeServiceArgument.TIME: time(23, 0),
             },
             blocking=True,
@@ -127,7 +127,7 @@ async def test_litter_robot_5_sleep_schedule(
         TIME_DOMAIN,
         TimeService.SET_VALUE,
         {
-            CommonServiceArgument.ENTITY_ID: entity_id,
+            TargetKey.ENTITY_ID: entity_id,
             TimeServiceArgument.TIME: time(1, 30),
         },
         blocking=True,
@@ -152,7 +152,7 @@ async def test_litter_robot_5_no_sleep_schedule(
         TIME_DOMAIN,
         TimeService.SET_VALUE,
         {
-            CommonServiceArgument.ENTITY_ID: "time.test_sunday_sleep_mode_start_time",
+            TargetKey.ENTITY_ID: "time.test_sunday_sleep_mode_start_time",
             TimeServiceArgument.TIME: time(22, 0),
         },
         blocking=True,
@@ -176,7 +176,7 @@ async def test_litter_robot_5_set_time_failed(
             TIME_DOMAIN,
             TimeService.SET_VALUE,
             {
-                CommonServiceArgument.ENTITY_ID: "time.test_sunday_sleep_mode_start_time",
+                TargetKey.ENTITY_ID: "time.test_sunday_sleep_mode_start_time",
                 TimeServiceArgument.TIME: time(22, 0),
             },
             blocking=True,

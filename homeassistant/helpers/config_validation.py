@@ -24,11 +24,6 @@ from uuid import UUID
 import probatio
 
 from homeassistant.const import (
-    ATTR_AREA_ID,
-    ATTR_DEVICE_ID,
-    ATTR_ENTITY_ID,
-    ATTR_FLOOR_ID,
-    ATTR_LABEL_ID,
     CONF_ABOVE,
     CONF_ACTION,
     CONF_ALIAS,
@@ -90,6 +85,7 @@ from homeassistant.const import (
     SUN_EVENT_SUNRISE,
     SUN_EVENT_SUNSET,
     WEEKDAYS,
+    TargetKey,
     UnitOfTemperature,
 )
 from homeassistant.core import (
@@ -313,11 +309,20 @@ def isdir(value: Any) -> str:
 ensure_list = probatio.EnsureList()
 
 
+def _is_item_list(value: Any) -> bool:
+    """Return if _list_of takes a value for a list of items, not for one item."""
+    return isinstance(value, list)
+
+
 def _list_of(item_validator: Callable[[Any], Any]) -> Callable[[Any], list[Any]]:
     """Validate a list of items, or a single item which is wrapped in a list.
 
     Unlike All(ensure_list, [item_validator]), errors of a single item have no
     list index in their path, so the path is valid in the config as written.
+
+    script.async_validate_block_collect_errors follows the forms accepted here
+    to find the items of a config as written: a new form needs a rule there,
+    and a test case.
     """
     list_schema = probatio.Schema([item_validator])
     # A schema, to raise MultipleInvalid like the list schema does
@@ -326,7 +331,7 @@ def _list_of(item_validator: Callable[[Any], Any]) -> Callable[[Any], list[Any]]
     def validate(value: Any) -> list[Any]:
         if value is None:
             return []
-        if isinstance(value, list):
+        if _is_item_list(value):
             return cast(list[Any], list_schema(value))
         return [item_schema(value)]
 
@@ -1341,19 +1346,21 @@ PLATFORM_SCHEMA_BASE = PLATFORM_SCHEMA.extend({}, extra=probatio.ALLOW_EXTRA)
 # The keys which select what a target refers to. A target may additionally
 # contain an exclude block, which uses the same keys.
 TARGET_ID_KEYS = (
-    ATTR_ENTITY_ID,
-    ATTR_DEVICE_ID,
-    ATTR_AREA_ID,
-    ATTR_FLOOR_ID,
-    ATTR_LABEL_ID,
+    TargetKey.ENTITY_ID,
+    TargetKey.DEVICE_ID,
+    TargetKey.AREA_ID,
+    TargetKey.FLOOR_ID,
+    TargetKey.LABEL_ID,
 )
 
 TARGET_ID_FIELDS: VolDictType = {
-    probatio.Optional(ATTR_ENTITY_ID): probatio.All(ensure_list, [strict_entity_id]),
-    probatio.Optional(ATTR_DEVICE_ID): probatio.All(ensure_list, [str]),
-    probatio.Optional(ATTR_AREA_ID): probatio.All(ensure_list, [str]),
-    probatio.Optional(ATTR_FLOOR_ID): probatio.All(ensure_list, [str]),
-    probatio.Optional(ATTR_LABEL_ID): probatio.All(ensure_list, [str]),
+    probatio.Optional(TargetKey.ENTITY_ID): probatio.All(
+        ensure_list, [strict_entity_id]
+    ),
+    probatio.Optional(TargetKey.DEVICE_ID): probatio.All(ensure_list, [str]),
+    probatio.Optional(TargetKey.AREA_ID): probatio.All(ensure_list, [str]),
+    probatio.Optional(TargetKey.FLOOR_ID): probatio.All(ensure_list, [str]),
+    probatio.Optional(TargetKey.LABEL_ID): probatio.All(ensure_list, [str]),
 }
 
 TARGET_EXCLUDE_SCHEMA = probatio.Schema(TARGET_ID_FIELDS)
@@ -1375,20 +1382,20 @@ def exclude_requires_target(value: dict[str, Any]) -> dict[str, Any]:
 
 
 ENTITY_SERVICE_FIELDS: VolDictType = {
-    probatio.Optional(ATTR_ENTITY_ID): comp_entity_ids,
-    probatio.Optional(ATTR_DEVICE_ID): probatio.Any(
+    probatio.Optional(TargetKey.ENTITY_ID): comp_entity_ids,
+    probatio.Optional(TargetKey.DEVICE_ID): probatio.Any(
         ENTITY_MATCH_NONE,
         probatio.All(ensure_list, [str]),
     ),
-    probatio.Optional(ATTR_AREA_ID): probatio.Any(
+    probatio.Optional(TargetKey.AREA_ID): probatio.Any(
         ENTITY_MATCH_NONE,
         probatio.All(ensure_list, [str]),
     ),
-    probatio.Optional(ATTR_FLOOR_ID): probatio.Any(
+    probatio.Optional(TargetKey.FLOOR_ID): probatio.Any(
         ENTITY_MATCH_NONE,
         probatio.All(ensure_list, [str]),
     ),
-    probatio.Optional(ATTR_LABEL_ID): probatio.Any(
+    probatio.Optional(TargetKey.LABEL_ID): probatio.Any(
         ENTITY_MATCH_NONE,
         probatio.All(ensure_list, [str]),
     ),
@@ -1399,7 +1406,7 @@ TARGET_SERVICE_FIELDS: VolDictType = {
     # Same as ENTITY_SERVICE_FIELDS but supports specifying entity
     # by entity registry ID.
     **ENTITY_SERVICE_FIELDS,
-    probatio.Optional(ATTR_ENTITY_ID): comp_entity_ids_or_uuids,
+    probatio.Optional(TargetKey.ENTITY_ID): comp_entity_ids_or_uuids,
 }
 
 _TARGET_SERVICE_FIELDS_TEMPLATED: VolDictType = {
@@ -1410,35 +1417,35 @@ _TARGET_SERVICE_FIELDS_TEMPLATED: VolDictType = {
     #
     # The schema supports templates as it is meant to be used in the initial validation
     # before templates are automatically rendered by the core logic.
-    probatio.Optional(ATTR_ENTITY_ID): probatio.Any(
+    probatio.Optional(TargetKey.ENTITY_ID): probatio.Any(
         comp_entity_ids_or_uuids,
         dynamic_template,
         probatio.All(list, template_complex),
     ),
-    probatio.Optional(ATTR_DEVICE_ID): probatio.Any(
+    probatio.Optional(TargetKey.DEVICE_ID): probatio.Any(
         ENTITY_MATCH_NONE,
         dynamic_template,
         probatio.All(ensure_list, [probatio.Any(dynamic_template, str)]),
     ),
-    probatio.Optional(ATTR_AREA_ID): probatio.Any(
+    probatio.Optional(TargetKey.AREA_ID): probatio.Any(
         ENTITY_MATCH_NONE,
         dynamic_template,
         probatio.All(ensure_list, [probatio.Any(dynamic_template, str)]),
     ),
-    probatio.Optional(ATTR_FLOOR_ID): probatio.Any(
+    probatio.Optional(TargetKey.FLOOR_ID): probatio.Any(
         ENTITY_MATCH_NONE,
         dynamic_template,
         probatio.All(ensure_list, [probatio.Any(dynamic_template, str)]),
     ),
-    probatio.Optional(ATTR_LABEL_ID): probatio.Any(
+    probatio.Optional(TargetKey.LABEL_ID): probatio.Any(
         ENTITY_MATCH_NONE,
         dynamic_template,
         probatio.All(ensure_list, [probatio.Any(dynamic_template, str)]),
     ),
     probatio.Optional(CONF_EXCLUDE): probatio.Schema(
         {
-            probatio.Optional(ATTR_ENTITY_ID): probatio.Any(
-                TARGET_ID_FIELDS[ATTR_ENTITY_ID],
+            probatio.Optional(TargetKey.ENTITY_ID): probatio.Any(
+                TARGET_ID_FIELDS[TargetKey.ENTITY_ID],
                 dynamic_template,
                 probatio.All(list, template_complex),
             ),
@@ -1447,7 +1454,12 @@ _TARGET_SERVICE_FIELDS_TEMPLATED: VolDictType = {
                     dynamic_template,
                     probatio.All(ensure_list, [probatio.Any(dynamic_template, str)]),
                 )
-                for key in (ATTR_DEVICE_ID, ATTR_AREA_ID, ATTR_FLOOR_ID, ATTR_LABEL_ID)
+                for key in (
+                    TargetKey.DEVICE_ID,
+                    TargetKey.AREA_ID,
+                    TargetKey.FLOOR_ID,
+                    TargetKey.LABEL_ID,
+                )
             },
         }
     ),
@@ -1838,6 +1850,25 @@ def _condition_shorthand(value: Any) -> tuple[str, str, probatio.Schema] | None:
     return None
 
 
+def _condition_list_key(value: Any) -> str | None:
+    """Return the key which holds the conditions of an `and`, `or` or `not` condition.
+
+    The key is the one in the condition as written, also for a shorthand.
+
+    script.async_validate_block_collect_errors uses this to find the items of
+    a config as written: a new form needs a rule there, and a test case.
+    """
+    if (shorthand := _condition_shorthand(value)) is not None:
+        return shorthand[0]
+    if (
+        isinstance(value, dict)
+        and CONF_CONDITIONS in value
+        and value.get(CONF_CONDITION) in ("and", "or", "not")
+    ):
+        return CONF_CONDITIONS
+    return None
+
+
 def _condition_validator(
     default_schema: VolSchemaType | Callable[[Any], dict[str, Any]],
 ) -> Callable[[Any], dict[Hashable, Any]]:
@@ -1955,9 +1986,18 @@ _TRIGGER_SUBLIST_SCHEMA = probatio.Schema(
 )
 
 
+def _is_trigger_sublist(value: Any) -> bool:
+    """Return if an item of a trigger list is a 'triggers:' sublist.
+
+    script.async_validate_block_collect_errors uses this to find the items of
+    a config as written: a new form needs a rule there, and a test case.
+    """
+    return isinstance(value, dict) and CONF_TRIGGERS in value and len(value) == 1
+
+
 def _trigger_list_item(value: Any) -> list[Any]:
     """Validate an item of a trigger list, a 'triggers:' sublist gives several."""
-    if isinstance(value, dict) and CONF_TRIGGERS in value and len(value) == 1:
+    if _is_trigger_sublist(value):
         return cast(list[Any], _TRIGGER_SUBLIST_SCHEMA(value)[CONF_TRIGGERS])
     return [_TRIGGER_ITEM_SCHEMA(value)]
 
@@ -2103,13 +2143,22 @@ _SCRIPT_SEQUENCE_SCHEMA = probatio.Schema(
 )
 
 
-def _parallel_branch(value: Any) -> dict[str, Any]:
-    """Validate a parallel branch, wrapping shorthand actions in a sequence."""
-    if (
+def _is_parallel_sequence_branch(value: Any) -> bool:
+    """Return if a parallel branch is a sequence action, not a shorthand.
+
+    script.async_validate_block_collect_errors uses this to find the items of
+    a config as written: a new form needs a rule there, and a test case.
+    """
+    return (
         isinstance(value, dict)
         and CONF_SEQUENCE in value
         and determine_script_action(value) == SCRIPT_ACTION_SEQUENCE
-    ):
+    )
+
+
+def _parallel_branch(value: Any) -> dict[str, Any]:
+    """Validate a parallel branch, wrapping shorthand actions in a sequence."""
+    if _is_parallel_sequence_branch(value):
         return cast(dict[str, Any], _SCRIPT_SEQUENCE_SCHEMA(value))
     return {CONF_SEQUENCE: SCRIPT_SCHEMA(value)}
 
