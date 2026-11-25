@@ -11,7 +11,7 @@ ATTR_NEW_VERSION = "new_version"
 ATTR_STATUS = "status"
 ATTR_UPTIME = "uptime"
 DEFAULT_HOST = "192.168.86.1"
-DEFAULT_NAME = "google_wifi"
+DEFAULT_NAME = "Google Wifi"
 DOMAIN = "google_wifi"
 ENDPOINT = "/api/v1/status"
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=1)
