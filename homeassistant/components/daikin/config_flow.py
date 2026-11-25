@@ -22,6 +22,8 @@ from .const import DOMAIN, KEY_MAC, TIMEOUT_SEC
 
 _LOGGER = logging.getLogger(__name__)
 
+DAIKIN_DISCOVERY_LOCK = "daikin_discovery_lock"
+
 
 class FlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle a config flow."""
@@ -149,7 +151,10 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Prepare configuration for a discovered Daikin device."""
         _LOGGER.debug("Zeroconf user_input: %s", discovery_info)
-        devices = Discovery().poll(ip=discovery_info.host)
+        async with self.hass.data.setdefault(DAIKIN_DISCOVERY_LOCK, asyncio.Lock()):
+            devices = await self.hass.async_add_executor_job(
+                lambda: Discovery().poll(ip=discovery_info.host)
+            )
         device = next(iter(devices), None)
         if device is None:
             _LOGGER.debug(

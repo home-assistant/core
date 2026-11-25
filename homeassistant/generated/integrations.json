@@ -159,6 +159,15 @@
       "config_flow": true,
       "iot_class": "local_polling"
     },
+    "aeg": {
+      "name": "AEG",
+      "integration_type": "virtual",
+      "categories": [
+        "appliances_cleaning",
+        "climate"
+      ],
+      "supported_by": "electrolux"
+    },
     "aemet": {
       "name": "AEMET OpenData",
       "integration_type": "service",
@@ -1472,6 +1481,18 @@
       "config_flow": true,
       "iot_class": "local_push"
     },
+    "bambu_lab": {
+      "name": "Bambu Lab",
+      "integration_type": "device",
+      "categories": [
+        "computers_network.printers"
+      ],
+      "connectivity": [
+        "network"
+      ],
+      "config_flow": true,
+      "iot_class": "local_push"
+    },
     "bang_olufsen": {
       "name": "Bang & Olufsen",
       "integration_type": "device",
@@ -2080,6 +2101,15 @@
       ],
       "supported_by": "opower"
     },
+    "busybar": {
+      "name": "BUSY Bar",
+      "integration_type": "device",
+      "categories": [
+        "sensors"
+      ],
+      "config_flow": true,
+      "iot_class": "local_polling"
+    },
     "bwt": {
       "name": "BWT",
       "integration_type": "virtual",
@@ -2319,14 +2349,11 @@
         },
         "meraki": {
           "integration_type": "hub",
-          "config_flow": false,
+          "config_flow": true,
           "iot_class": "cloud_polling",
           "categories": [
             "presence_location.network_presence",
             "computers_network.routers_network"
-          ],
-          "connectivity": [
-            "cloud"
           ],
           "name": "Meraki"
         }
@@ -4941,6 +4968,15 @@
         "zigbee"
       ]
     },
+    "frigidaire": {
+      "name": "Frigidaire",
+      "integration_type": "virtual",
+      "categories": [
+        "appliances_cleaning",
+        "climate"
+      ],
+      "supported_by": "electrolux"
+    },
     "fritzbox": {
       "name": "FRITZ!",
       "integrations": {
@@ -5054,6 +5090,9 @@
           "iot_class": "assumed_state",
           "categories": [
             "climate.heat_pumps_air_conditioning"
+          ],
+          "connectivity": [
+            "infrared"
           ],
           "name": "Fujitsu Infrared"
         }
@@ -9938,6 +9977,9 @@
           "categories": [
             "media_entertainment.speakers_audio"
           ],
+          "connectivity": [
+            "infrared"
+          ],
           "name": "NAD Infrared"
         }
       }
@@ -10707,14 +10749,32 @@
     },
     "ogeneral": {
       "name": "O General",
-      "integration_type": "virtual",
-      "categories": [
-        "climate.heat_pumps_air_conditioning"
-      ],
-      "connectivity": [
-        "cloud"
-      ],
-      "supported_by": "fujitsu_fglair"
+      "integrations": {
+        "ogeneral": {
+          "integration_type": "virtual",
+          "config_flow": false,
+          "supported_by": "fujitsu_fglair",
+          "categories": [
+            "climate.heat_pumps_air_conditioning"
+          ],
+          "connectivity": [
+            "cloud"
+          ],
+          "name": "O General"
+        },
+        "ogeneral_infrared": {
+          "integration_type": "virtual",
+          "config_flow": false,
+          "supported_by": "fujitsu_infrared",
+          "categories": [
+            "climate.heat_pumps_air_conditioning"
+          ],
+          "connectivity": [
+            "infrared"
+          ],
+          "name": "O General Infrared"
+        }
+      }
     },
     "ohmconnect": {
       "name": "OhmConnect",
@@ -11745,6 +11805,15 @@
       ],
       "config_flow": true,
       "iot_class": "local_polling"
+    },
+    "plus_home": {
+      "name": "+Home",
+      "integration_type": "virtual",
+      "categories": [
+        "appliances_cleaning",
+        "climate"
+      ],
+      "supported_by": "electrolux"
     },
     "pocketcasts": {
       "name": "Pocket Casts",
@@ -14445,6 +14514,18 @@
             "infrared"
           ],
           "name": "Sony Infrared"
+        },
+        "sony_tv_rs232": {
+          "integration_type": "device",
+          "config_flow": true,
+          "iot_class": "local_polling",
+          "categories": [
+            "media_entertainment.tv_streaming"
+          ],
+          "connectivity": [
+            "serial"
+          ],
+          "name": "Sony TV RS-232"
         }
       }
     },
