@@ -53,8 +53,8 @@ class SomaTilt(SomaEntity, CoverEntity):
         | CoverEntityFeature.STOP_TILT
         | CoverEntityFeature.SET_TILT_POSITION
     )
-    _attr_open_tilt_position = OPEN_TILT_POSITION
-    _attr_closed_tilt_positions = [0, 100]
+    _attr_tilt_start_angle = -90
+    _attr_tilt_end_angle = 90
     CLOSED_UP_THRESHOLD = 80
     CLOSED_DOWN_THRESHOLD = 20
 

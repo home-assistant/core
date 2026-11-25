@@ -88,3 +88,33 @@ async def test_open_and_close_tilt(
     )
 
     mock_set_shade_position.assert_called_once_with(MAC, api_position)
+
+
+@pytest.mark.parametrize(
+    ("shade_state", "api_position"),
+    [
+        pytest.param({"position": 100}, 0, id="closed_down"),
+        pytest.param({"position": 100, "closed_upwards": True}, 0, id="closed_up"),
+        pytest.param({"position": 0}, 100, id="open"),
+    ],
+)
+async def test_toggle_tilt(
+    hass: HomeAssistant,
+    mock_set_shade_position: MagicMock,
+    shade_state: dict[str, int | bool],
+    api_position: int,
+) -> None:
+    """Test toggling the tilt opens the slats at both closed ends."""
+    with patch.object(
+        SomaApi, "get_shade_state", return_value={"result": "success", **shade_state}
+    ):
+        await _setup_integration(hass)
+
+        await hass.services.async_call(
+            COVER_DOMAIN,
+            CoverService.TOGGLE_TILT,
+            {TargetKey.ENTITY_ID: ENTITY_ID},
+            blocking=True,
+        )
+
+    mock_set_shade_position.assert_called_once_with(MAC, api_position)
