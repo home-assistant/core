@@ -1,5 +1,8 @@
 """Tests for the script LLM tools platform."""
 
+from unittest.mock import patch
+
+import probatio
 import pytest
 
 from homeassistant.components import llm as llm_component
@@ -8,6 +11,7 @@ from homeassistant.components.script import llm as script_llm
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.helpers import entity_registry as er, llm
 from homeassistant.setup import async_setup_component
+from homeassistant.util.json import JsonObjectType
 
 ENTITY_ID = "script.test_script"
 
@@ -112,3 +116,85 @@ async def test_script_tool_description_includes_aliases(
     assert tool.description == (
         "This is a test script. Aliases: ['barkeep', 'pour a drink']"
     )
+
+
+def _list_scripts_expected(last_triggered: str | None) -> list[JsonObjectType]:
+    """Return the listed scripts of the fixture, sorted by name."""
+    return [
+        {
+            "entity_id": "script.123456",
+            "name": "123456",
+            "state": "off",
+            "last_triggered": None,
+        },
+        {
+            "entity_id": ENTITY_ID,
+            "name": "test script",
+            "state": "off",
+            "last_triggered": last_triggered,
+            "description": "This is a test script",
+        },
+        {
+            "entity_id": "script.unexposed_script",
+            "name": "unexposed_script",
+            "state": "off",
+            "last_triggered": None,
+        },
+    ]
+
+
+async def _list_scripts(
+    hass: HomeAssistant, tool_args: JsonObjectType
+) -> JsonObjectType:
+    """Call the list scripts tool and return its result."""
+    tool = script_llm.ListScriptsTool()
+    result = await tool.async_call(
+        hass, llm.ToolInput(tool.name, tool_args), _llm_context()
+    )
+    assert result.error is False
+    return result.data
+
+
+async def test_home_assistant_api_tools(hass: HomeAssistant) -> None:
+    """Test the Home Assistant API gets the list tool, not the script tools."""
+    tools = script_llm.async_get_tools(hass, _llm_context(), llm.LLM_API_HOME_ASSISTANT)
+    assert tools is not None
+    assert [tool.name for tool in tools.tools] == ["script__list_scripts"]
+
+
+@pytest.mark.freeze_time("2026-11-24 12:00:00+00:00")
+async def test_list_scripts(hass: HomeAssistant) -> None:
+    """Test listing the scripts sorted by name."""
+    await hass.services.async_call(
+        "script", "turn_on", {"entity_id": ENTITY_ID}, blocking=True
+    )
+    await hass.async_block_till_done()
+
+    assert await _list_scripts(hass, {}) == {
+        "scripts": _list_scripts_expected("2026-11-24T12:00:00+00:00"),
+        "total": 3,
+    }
+
+
+async def test_list_scripts_pages(hass: HomeAssistant) -> None:
+    """Test the next_offset points to the next page."""
+    with patch("homeassistant.components.script.llm._LIMIT", 2):
+        first = await _list_scripts(hass, {})
+        second = await _list_scripts(hass, {"offset": first["next_offset"]})
+
+    assert first == {
+        "scripts": _list_scripts_expected(None)[:2],
+        "total": 3,
+        "next_offset": 2,
+    }
+    assert second == {"scripts": _list_scripts_expected(None)[2:], "total": 3}
+
+
+@pytest.mark.parametrize("offset", [-1, "first"])
+async def test_list_scripts_invalid_offset(hass: HomeAssistant, offset: object) -> None:
+    """Test an invalid offset is rejected by the schema."""
+    tool = script_llm.ListScriptsTool()
+    with pytest.raises(probatio.Invalid):
+        await tool.async_call(
+            hass, llm.ToolInput(tool.name, {"offset": offset}), _llm_context()
+        )
