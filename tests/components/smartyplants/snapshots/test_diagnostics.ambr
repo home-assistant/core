@@ -1,0 +1,106 @@
+# serializer version: 1
+# name: test_diagnostics
+  dict({
+    'entry_data': dict({
+      'api_key': '**REDACTED**',
+      'webhook_id': '**REDACTED**',
+      'webhook_secret': '**REDACTED**',
+    }),
+    'last_update_success': True,
+    'sensors': list([
+      dict({
+        'battery_percentage': 87,
+        'health': dict({
+          'classifications': list([
+          ]),
+          'is_healthy': True,
+          'needs_attention_count': 0,
+          'score': 82,
+        }),
+        'id': '**REDACTED**',
+        'identifier': '**REDACTED**',
+        'is_online': True,
+        'last_data_received': '2026-08-19T10:00:00+00:00',
+        'plant': dict({
+          'common_names': list([
+            'Swiss cheese plant',
+          ]),
+          'environment': 'Living Room',
+          'id': '**REDACTED**',
+          'image_url': '**REDACTED**',
+          'name': 'Monstera',
+          'species': 'Monstera deliciosa',
+        }),
+        'readings': dict({
+          'battery': dict({
+            'is_calculating': False,
+            'maximum': None,
+            'minimum': None,
+            'optimal_range': None,
+            'status': 'OK',
+            'unit': '%',
+            'value': 87,
+          }),
+          'fertiliser': dict({
+            'days_until_fertilise': 21,
+            'is_calculating': False,
+            'status': 'OK',
+          }),
+          'humidity': dict({
+            'is_calculating': False,
+            'maximum': 100,
+            'minimum': 0,
+            'optimal_range': None,
+            'status': 'OK',
+            'unit': '%',
+            'value': 55,
+          }),
+          'light': dict({
+            'is_calculating': False,
+            'maximum': 10000,
+            'minimum': 0,
+            'optimal_range': None,
+            'status': 'OK',
+            'unit': 'lx',
+            'value': 1200,
+          }),
+          'light_quality': dict({
+            'is_calculating': False,
+            'maximum': 100,
+            'minimum': 0,
+            'optimal_range': dict({
+              'high': 100,
+              'low': 40,
+            }),
+            'status': 'OPTIMAL',
+            'unit': None,
+            'value': 78,
+          }),
+          'moisture': dict({
+            'is_calculating': False,
+            'maximum': 100,
+            'minimum': 0,
+            'optimal_range': None,
+            'status': 'OK',
+            'unit': '%',
+            'value': 41,
+          }),
+          'temperature': dict({
+            'is_calculating': False,
+            'maximum': 50,
+            'minimum': 0,
+            'optimal_range': dict({
+              'high': 26,
+              'low': 18,
+            }),
+            'status': 'OK',
+            'unit': '°C',
+            'value': 22.5,
+          }),
+          'updated_at': '2026-08-19T10:00:00+00:00',
+        }),
+      }),
+    ]),
+    'webhook_configured': True,
+  })
+# ---
