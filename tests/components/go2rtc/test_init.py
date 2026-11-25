@@ -2560,3 +2560,79 @@ async def test_no_update_after_teardown_starts(
         await hass.async_block_till_done()
 
     rest_client.streams.add.assert_not_called()
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_running_transcodes_of_escaped_identifier(
+    init_test_integration: MockCamera,
+    rest_client: AsyncMock,
+) -> None:
+    """Test go2rtc's own transcodes count as ours with a URL-escaped name."""
+    camera = init_test_integration
+    provider = camera.webrtc_provider
+    assert isinstance(provider, WebRTCProvider)
+    camera.set_stream_source(None)
+    identifier = "camera_AA%3ABB"
+
+    with (
+        patch(
+            "homeassistant.components.go2rtc.get_camera_identifier",
+            return_value=identifier,
+        ),
+        patch.object(camera, "webrtc_source", return_value="rtsp://native"),
+    ):
+        assert await provider.async_get_stream_source(camera)
+        rest_client.streams.add.reset_mock()
+
+        escaped = quote(identifier)
+        rest_client.streams.list.return_value = {
+            identifier: Stream(
+                [
+                    Producer(""),
+                    Producer(f"rtsp://127.0.0.1:18554/{escaped}?video&audio=opus"),
+                    Producer(f"rtsp://127.0.0.1:18554/{escaped}?video&audio=aac"),
+                ]
+            )
+        }
+        assert await provider.async_get_stream_source(camera)
+
+    rest_client.streams.add.assert_not_called()
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_failed_write_written_again(
+    init_test_integration: MockCamera,
+    rest_client: AsyncMock,
+) -> None:
+    """Test a write that failed here is written again, even for the same sources.
+
+    go2rtc may have applied it, e.g. B before the camera went back to A.
+    """
+    camera = init_test_integration
+    provider = camera.webrtc_provider
+    assert isinstance(provider, WebRTCProvider)
+    identifier = get_camera_identifier(camera)
+    camera.set_stream_source(None)
+    source = "rtsp://a"
+
+    async def _webrtc_source() -> str:
+        return source
+
+    with patch.object(camera, "webrtc_source", _webrtc_source):
+        assert await provider.async_get_stream_source(camera)
+
+        # go2rtc applies B, but the request fails here
+        source = "rtsp://b"
+        rest_client.streams.add.side_effect = Go2RtcClientError
+        with pytest.raises(HomeAssistantError):
+            await provider.async_get_stream_source(camera)
+
+        # Back to A while go2rtc runs B, which it reports without a URL
+        source = "rtsp://a"
+        rest_client.streams.add.side_effect = None
+        rest_client.streams.add.reset_mock()
+        rest_client.streams.list.return_value = {identifier: Stream([Producer("")])}
+        assert await provider.async_get_stream_source(camera)
+
+    rest_client.streams.add.assert_called_once()
+    assert rest_client.streams.add.call_args[0][1][0] == "rtsp://a"
