@@ -10,10 +10,26 @@ from homeassistant import config_entries
 from homeassistant.components.schlage.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers.service_info.bluetooth import BluetoothServiceInfo
 
 from . import MockSchlageConfigEntry
 
 pytestmark = pytest.mark.usefixtures("mock_setup_entry")
+
+
+def _bluetooth_discovery(address: str = "AA:BB:CC:DD:EE:FF") -> BluetoothServiceInfo:
+    """Return an advertisement as sent by a Schlage Encode."""
+    return BluetoothServiceInfo(
+        name="SCHLAGE00112233",
+        address=address,
+        rssi=-60,
+        manufacturer_data={
+            315: bytes.fromhex("01000902010049aabbccddeeffb5000000"),
+        },
+        service_data={},
+        service_uuids=[],
+        source="local",
+    )
 
 
 @pytest.mark.parametrize(
@@ -219,3 +235,92 @@ async def test_reauth_wrong_account(
         "password": "hunter2",
     }
     assert len(mock_setup_entry.mock_calls) == 1
+
+
+async def test_bluetooth_discovery(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    mock_pyschlage_auth: Mock,
+) -> None:
+    """Test a lock discovered over Bluetooth, including error recovery."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_BLUETOOTH},
+        data=_bluetooth_discovery(),
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert result["errors"] == {}
+
+    mock_pyschlage_auth.authenticate.side_effect = NotAuthorizedError
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {"username": "test-username", "password": "test-password"},
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "invalid_auth"}
+
+    mock_pyschlage_auth.authenticate.side_effect = None
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {"username": "test-username", "password": "test-password"},
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "test-username"
+    assert result["data"] == {
+        "username": "test-username",
+        "password": "test-password",
+    }
+    assert result["result"].unique_id == "abc123"
+    assert len(mock_setup_entry.mock_calls) == 1
+
+
+@pytest.mark.usefixtures("mock_added_config_entry")
+async def test_bluetooth_discovery_already_configured(hass: HomeAssistant) -> None:
+    """Test Bluetooth discovery aborts when an account is already configured."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_BLUETOOTH},
+        data=_bluetooth_discovery(),
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+
+
+async def test_bluetooth_discovery_multiple_locks(hass: HomeAssistant) -> None:
+    """Test a second discovered lock does not start another flow."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_BLUETOOTH},
+        data=_bluetooth_discovery(),
+    )
+    assert result["type"] is FlowResultType.FORM
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_BLUETOOTH},
+        data=_bluetooth_discovery("AA:BB:CC:DD:EE:00"),
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_in_progress"
+
+
+async def test_user_flow_replaces_bluetooth_discovery(
+    hass: HomeAssistant, mock_pyschlage_auth: Mock
+) -> None:
+    """Test setting up the account manually dismisses the discovered flow."""
+    await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_BLUETOOTH},
+        data=_bluetooth_discovery(),
+    )
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {"username": "test-username", "password": "test-password"},
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == "abc123"
+    assert not hass.config_entries.flow.async_progress_by_handler(DOMAIN)
