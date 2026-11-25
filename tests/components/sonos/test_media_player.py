@@ -1770,7 +1770,7 @@ async def test_service_update_alarm(
     await hass.services.async_call(
         SWITCH_DOMAIN,
         SwitchService.TURN_OFF,
-        {ATTR_ENTITY_ID: "switch.zone_a_daily_alarm_07_00"},
+        {TargetKey.ENTITY_ID: "switch.zone_a_daily_alarm_07_00"},
         blocking=True,
     )
     assert soco.alarmClock.UpdateAlarm.call_count == 2
