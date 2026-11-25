@@ -224,7 +224,7 @@
         }),
       }),
       'UVIndex': 6,
-      'UVIndexText': 'High',
+      'UVIndexText': 'high',
       'Visibility': dict({
         'Imperial': dict({
           'Unit': 'mi',

@@ -142,6 +142,8 @@ class LegacyZoneTrigger(Trigger):
         entity_id: list[str] = self._options[CONF_ENTITY_ID]
         zone_entity_id: str = self._options[CONF_ZONE]
         event: str = self._options[CONF_EVENT]
+        # Zone match per entity, an ambiguous location keeps the previous match
+        matches: dict[str, bool] = {}
 
         @callback
         def zone_automation_listener(zone_event: Event[EventStateChangedData]) -> None:
@@ -162,10 +164,19 @@ class LegacyZoneTrigger(Trigger):
                 )
                 return
 
+            previous_match = matches.pop(entity, False)
             from_match = (
-                condition.zone(self._hass, zone_state, from_s) if from_s else False
+                condition.zone(self._hass, zone_state, from_s, previous_match)
+                if from_s
+                else False
             )
-            to_match = condition.zone(self._hass, zone_state, to_s) if to_s else False
+            to_match = (
+                condition.zone(self._hass, zone_state, to_s, from_match)
+                if to_s
+                else False
+            )
+            if to_s:
+                matches[entity] = to_match
 
             if (event == EVENT_ENTER and not from_match and to_match) or (
                 event == EVENT_LEAVE and from_match and not to_match

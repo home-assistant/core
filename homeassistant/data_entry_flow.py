@@ -354,7 +354,13 @@ class FlowManager(abc.ABC, Generic[_FlowContextT, _FlowResultT, _HandlerT]):
         flow.init_data = data
         self._async_add_flow_progress(flow)
 
-        return await self._async_handle_step(flow, flow.init_step, data)
+        try:
+            return await self._async_handle_step(flow, flow.init_step, data)
+        except BaseException:
+            # The caller never gets the flow id of a flow that fails to start.
+            if flow.flow_id in self._progress:
+                self._async_remove_flow_progress(flow.flow_id)
+            raise
 
     async def async_configure(
         self, flow_id: str, user_input: dict | None = None
