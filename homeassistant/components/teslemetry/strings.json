@@ -1461,6 +1461,10 @@
       },
       "title": "Pair the virtual key for {vehicle}"
     },
+    "local_control_failed": {
+      "description": "Home Assistant could not load the local control key file `{key_file}` in your configuration directory, so local control of {site} is unavailable and commands are sent through the cloud. Check that the file is readable and contains a valid private key, then reload the integration.",
+      "title": "[%key:component::teslemetry::issues::gateway_not_found::title%]"
+    },
     "missing_scopes": {
       "description": "Tesla is refusing to share vehicle data with Teslemetry because your Tesla authorization is missing the required permissions. Select **Learn more** to sign in with Tesla again and grant the missing permissions, including Vehicle Information, then reload the integration.",
       "title": "Tesla authorization is missing permissions"

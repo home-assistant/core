@@ -33,6 +33,7 @@ POWERWALL_KEY_FILE = "tesla_powerwall.key"
 RSA_PARENT_KEY = f"{DOMAIN}_rsa_parent"
 ISSUE_GATEWAY_NOT_FOUND = "gateway_not_found"
 ISSUE_ENERGY_SITE_NOT_PAIRED = "energy_site_not_paired"
+ISSUE_LOCAL_CONTROL_FAILED = "local_control_failed"
 
 ENERGY_HISTORY_FIELDS = [
     "solar_energy_exported",

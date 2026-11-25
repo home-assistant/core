@@ -1419,6 +1419,8 @@ NEW_HOST = "192.168.91.2"
 PASSWORD = "abcde"
 ENTRY_ID = "01JTESLEMETRYENTRY00000000"
 GATEWAY_ISSUE_ID = f"gateway_not_found_{ENTRY_ID}_{SITE_ID}"
+LOCAL_CONTROL_ISSUE_ID = f"local_control_failed_{ENTRY_ID}_{SITE_ID}"
+OTHER_SITE_ID = 98765
 
 # PowerwallClient parses the PEM at construction time, so tests
 # that build one need a real (if undersized, for speed) RSA key rather than
@@ -1560,6 +1562,7 @@ async def test_no_subentry_created_at_setup(hass: HomeAssistant) -> None:
 )
 async def test_local_control_failure_falls_back_to_cloud(
     hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
     local_error: Exception,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
@@ -1588,6 +1591,14 @@ async def test_local_control_failure_falls_back_to_cloud(
         record.levelname == "WARNING" and str(SITE_ID) in record.message
         for record in caplog.records
     )
+    issue = issue_registry.async_get_issue(DOMAIN, LOCAL_CONTROL_ISSUE_ID)
+    assert issue is not None
+    assert not issue.is_fixable
+    assert issue.translation_key == "local_control_failed"
+    assert issue.translation_placeholders == {
+        "site": "Energy Site",
+        "key_file": "tesla_powerwall.key",
+    }
 
 
 @pytest.mark.parametrize(
@@ -1626,6 +1637,95 @@ async def test_local_control_key_load_failure_falls_back_to_cloud(
     assert not isinstance(energysite.api, EnergySiteRouter)
     assert energysite.can_local_control
     assert "falling back to cloud control" in caplog.text
+
+
+async def test_local_control_failure_raises_repair_per_site(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+    mock_powerwall_connect: AsyncMock,
+) -> None:
+    """Each paired site whose local control fails raises a repair naming that site."""
+    products = deepcopy(PRODUCTS)
+    other_site = next(
+        product
+        for product in products["response"]
+        if product.get("energy_site_id") == OTHER_SITE_ID
+    )
+    other_site["components"]["battery"] = True
+    metadata = deepcopy(METADATA)
+    metadata["energy_sites"][str(OTHER_SITE_ID)] = {
+        "access": True,
+        "name": "Other Site",
+    }
+    entry = _entry_with_powerwall()
+    entry.add_to_hass(hass)
+    hass.config_entries.async_add_subentry(
+        entry,
+        ConfigSubentry(
+            data=MappingProxyType(
+                {
+                    CONF_SITE_ID: OTHER_SITE_ID,
+                    CONF_HOST: NEW_HOST,
+                    CONF_PASSWORD: PASSWORD,
+                }
+            ),
+            subentry_type=SUBENTRY_TYPE_ENERGY_SITE,
+            title="Other Site",
+            unique_id=str(OTHER_SITE_ID),
+        ),
+    )
+
+    with (
+        patch("tesla_fleet_api.teslemetry.Teslemetry.products", return_value=products),
+        patch("tesla_fleet_api.teslemetry.Teslemetry.metadata", return_value=metadata),
+        # aiopowerwall rejects a key file that is not a PEM private key.
+        patch(
+            "homeassistant.components.teslemetry._async_get_rsa_key_pem",
+            return_value=b"not a private key",
+        ),
+        patch("homeassistant.components.teslemetry.PLATFORMS", []),
+    ):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.LOADED
+    mock_powerwall_connect.assert_not_awaited()
+    for site_id, site in ((SITE_ID, "Energy Site"), (OTHER_SITE_ID, "Other Site")):
+        issue = issue_registry.async_get_issue(
+            DOMAIN, f"local_control_failed_{entry.entry_id}_{site_id}"
+        )
+        assert issue is not None
+        assert issue.translation_placeholders == {
+            "site": site,
+            "key_file": "tesla_powerwall.key",
+        }
+
+
+async def test_local_control_repair_cleared_after_local_success(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+    mock_powerwall_connect: AsyncMock,
+) -> None:
+    """The local control repair clears once a later setup resolves local control."""
+    entry = _entry_with_powerwall()
+    entry.add_to_hass(hass)
+
+    with (
+        patch(
+            "homeassistant.components.teslemetry._async_get_rsa_key_pem",
+            side_effect=OSError("disk gone"),
+        ),
+        patch("homeassistant.components.teslemetry.PLATFORMS", []),
+    ):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+    assert issue_registry.async_get_issue(DOMAIN, LOCAL_CONTROL_ISSUE_ID) is not None
+
+    await hass.config_entries.async_unload(entry.entry_id)
+    await _setup_entry_with_powerwall(hass, entry, AsyncMock(return_value=None))
+
+    mock_powerwall_connect.assert_awaited_once()
+    assert issue_registry.async_get_issue(DOMAIN, LOCAL_CONTROL_ISSUE_ID) is None
 
 
 async def test_local_control_unexpected_typeerror_is_not_swallowed(
@@ -2123,6 +2223,35 @@ async def test_local_gateway_repair_cleared_without_subentry(
     entry = mock_config_entry()
     entry.add_to_hass(hass)
     issue_id = _create_gateway_issue(hass, SITE_ID, entry.entry_id, entry.entry_id)
+
+    with patch("homeassistant.components.teslemetry.PLATFORMS", []):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.LOADED
+    assert issue_registry.async_get_issue(DOMAIN, issue_id) is None
+
+
+async def test_local_control_repair_cleared_without_subentry(
+    hass: HomeAssistant, issue_registry: ir.IssueRegistry
+) -> None:
+    """The local control repair clears once the site is no longer set up for it."""
+    entry = mock_config_entry()
+    entry.add_to_hass(hass)
+    issue_id = f"local_control_failed_{entry.entry_id}_{SITE_ID}"
+    ir.async_create_issue(
+        hass,
+        DOMAIN,
+        issue_id,
+        config_entry_id=entry.entry_id,
+        is_fixable=False,
+        severity=ir.IssueSeverity.WARNING,
+        translation_key="local_control_failed",
+        translation_placeholders={
+            "site": "Energy Site",
+            "key_file": "tesla_powerwall.key",
+        },
+    )
 
     with patch("homeassistant.components.teslemetry.PLATFORMS", []):
         await hass.config_entries.async_setup(entry.entry_id)
