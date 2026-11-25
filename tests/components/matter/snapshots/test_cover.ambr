@@ -221,7 +221,12 @@
       None,
     ]),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      <CoverEntityCapabilityAttribute.CLOSED_TILT_POSITIONS: 'closed_tilt_positions'>: list([
+        0,
+      ]),
+      <CoverEntityCapabilityAttribute.OPEN_TILT_POSITION: 'open_tilt_position'>: 100,
+    }),
     'config_entry_id': <ANY>,
     'config_subentry_id': None,
     'device_class': None,
@@ -255,11 +260,15 @@
 # name: test_covers[mock_window_covering_full][cover.mock_full_window_covering-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      <CoverEntityCapabilityAttribute.CLOSED_TILT_POSITIONS: 'closed_tilt_positions'>: list([
+        0,
+      ]),
       <CoverEntityStateAttribute.CURRENT_POSITION: 'current_position'>: 100,
       <CoverEntityStateAttribute.CURRENT_TILT_POSITION: 'current_tilt_position'>: 100,
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'shutter',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Full Window Covering',
       <CoverEntityStateAttribute.IS_CLOSED: 'is_closed'>: False,
+      <CoverEntityCapabilityAttribute.OPEN_TILT_POSITION: 'open_tilt_position'>: 100,
       <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CoverEntityFeature: 143>,
     }),
     'context': <ANY>,
@@ -437,7 +446,12 @@
       None,
     ]),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      <CoverEntityCapabilityAttribute.CLOSED_TILT_POSITIONS: 'closed_tilt_positions'>: list([
+        0,
+      ]),
+      <CoverEntityCapabilityAttribute.OPEN_TILT_POSITION: 'open_tilt_position'>: 100,
+    }),
     'config_entry_id': <ANY>,
     'config_subentry_id': None,
     'device_class': None,
@@ -471,10 +485,14 @@
 # name: test_covers[mock_window_covering_pa_tilt][cover.mock_pa_tilt_window_covering-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      <CoverEntityCapabilityAttribute.CLOSED_TILT_POSITIONS: 'closed_tilt_positions'>: list([
+        0,
+      ]),
       <CoverEntityStateAttribute.CURRENT_TILT_POSITION: 'current_tilt_position'>: 100,
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'blind',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock PA Tilt Window Covering',
       <CoverEntityStateAttribute.IS_CLOSED: 'is_closed'>: False,
+      <CoverEntityCapabilityAttribute.OPEN_TILT_POSITION: 'open_tilt_position'>: 100,
       <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CoverEntityFeature: 240>,
     }),
     'context': <ANY>,
@@ -491,7 +509,12 @@
       None,
     ]),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      <CoverEntityCapabilityAttribute.CLOSED_TILT_POSITIONS: 'closed_tilt_positions'>: list([
+        0,
+      ]),
+      <CoverEntityCapabilityAttribute.OPEN_TILT_POSITION: 'open_tilt_position'>: 100,
+    }),
     'config_entry_id': <ANY>,
     'config_subentry_id': None,
     'device_class': None,
@@ -525,9 +548,13 @@
 # name: test_covers[mock_window_covering_tilt][cover.mock_tilt_window_covering-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      <CoverEntityCapabilityAttribute.CLOSED_TILT_POSITIONS: 'closed_tilt_positions'>: list([
+        0,
+      ]),
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'blind',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Tilt Window Covering',
       <CoverEntityStateAttribute.IS_CLOSED: 'is_closed'>: None,
+      <CoverEntityCapabilityAttribute.OPEN_TILT_POSITION: 'open_tilt_position'>: 100,
       <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CoverEntityFeature: 240>,
     }),
     'context': <ANY>,
