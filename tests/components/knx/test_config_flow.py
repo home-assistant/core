@@ -1285,6 +1285,10 @@ async def test_configure_secure_knxkeys(hass: HomeAssistant, knx_setup) -> None:
         )
     assert secure_knxkeys["type"] is FlowResultType.FORM
     assert secure_knxkeys["step_id"] == "knxkeys_tunnel_select"
+    endpoint_selector = secure_knxkeys["data_schema"].schema[
+        CONF_KNX_TUNNEL_ENDPOINT_IA
+    ]
+    assert endpoint_selector.config["translation_key"] == "tunnel_endpoint"
     secure_knxkeys = await hass.config_entries.flow.async_configure(
         secure_knxkeys["flow_id"],
         {CONF_KNX_TUNNEL_ENDPOINT_IA: CONF_KNX_AUTOMATIC},
