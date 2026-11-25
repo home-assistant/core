@@ -7,11 +7,7 @@ rules:
   has-entity-name:
     status: exempt
     comment: Integration does not have entities
-  action-setup:
-    status: todo
-    comment: |
-      The integration does action setup in `async_setup_entry` which needs to be
-      moved to `async_setup`.
+  action-setup: done
   appropriate-polling: done
   test-before-configure: done
   docs-triggers:
