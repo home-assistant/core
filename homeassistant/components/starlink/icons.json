@@ -19,6 +19,9 @@
       "ping": {
         "default": "mdi:speedometer"
       },
+      "signal_quality": {
+        "default": "mdi:signal"
+      },
       "uplink_throughput": {
         "default": "mdi:upload"
       },
