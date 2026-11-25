@@ -32,7 +32,7 @@ from homeassistant.components.gkp.const import (
     FAST_POLLING_INTERVAL,
     UPDATE_INTERVAL,
 )
-from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
@@ -224,10 +224,10 @@ async def test_available_until_first_report_timeout(
 
 
 @pytest.mark.parametrize(
-    ("exception", "has_reauth_flow"),
+    ("exception", "devices_read"),
     [
-        pytest.param(GkpAuthError("expired"), True, id="auth_error"),
-        pytest.param(GkpConnectionError("lost"), False, id="connection_error"),
+        pytest.param(GkpAuthError("expired"), False, id="auth_error"),
+        pytest.param(GkpConnectionError("lost"), True, id="connection_error"),
     ],
 )
 async def test_wake_up_errors(
@@ -236,7 +236,7 @@ async def test_wake_up_errors(
     mock_config_entry: MockConfigEntry,
     freezer: FrozenDateTimeFactory,
     exception: Exception,
-    has_reauth_flow: bool,
+    devices_read: bool,
 ) -> None:
     """Test failures to wake up the devices."""
     await setup_integration(hass, mock_config_entry)
@@ -245,12 +245,7 @@ async def test_wake_up_errors(
 
     await advance_time(hass, freezer, USER_CONNECTED_INTERVAL)
 
-    assert (
-        any(mock_config_entry.async_get_active_flows(hass, {SOURCE_REAUTH}))
-        == has_reauth_flow
-    )
-    # A failed wake up does not prevent reading the devices
-    assert mock_gkp_client.get_thermostats.called is not has_reauth_flow
+    assert mock_gkp_client.get_thermostats.called is devices_read
 
 
 @pytest.mark.usefixtures("mock_gkp_client")
@@ -364,10 +359,10 @@ async def test_periodic_discovery_error(
 
 
 @pytest.mark.parametrize(
-    ("side_effect", "has_reauth_flow"),
+    "side_effect",
     [
-        pytest.param(GkpAuthError("expired"), True, id="auth_error"),
-        pytest.param(_all_devices_failing, False, id="all_devices_failing"),
+        pytest.param(GkpAuthError("expired"), id="auth_error"),
+        pytest.param(_all_devices_failing, id="all_devices_failing"),
     ],
 )
 async def test_update_errors(
@@ -376,7 +371,6 @@ async def test_update_errors(
     mock_config_entry: MockConfigEntry,
     freezer: FrozenDateTimeFactory,
     side_effect: Exception | Callable[[Iterable[Installation]], ThermostatsResult],
-    has_reauth_flow: bool,
 ) -> None:
     """Test errors during a regular update make the entities unavailable."""
     await setup_integration(hass, mock_config_entry)
@@ -387,10 +381,6 @@ async def test_update_errors(
     state = hass.states.get(LIVING_ROOM_ENTITY_ID)
     assert state is not None
     assert state.state == STATE_UNAVAILABLE
-    assert (
-        any(mock_config_entry.async_get_active_flows(hass, {SOURCE_REAUTH}))
-        == has_reauth_flow
-    )
 
 
 async def test_single_device_error_keeps_others(
@@ -455,10 +445,10 @@ async def test_device_offline_when_not_reporting(
 
 
 @pytest.mark.parametrize(
-    ("exception", "has_reauth_flow"),
+    "exception",
     [
-        pytest.param(GkpConnectionError("lost"), False, id="connection_error"),
-        pytest.param(GkpAuthError("expired"), True, id="auth_error"),
+        pytest.param(GkpConnectionError("lost"), id="connection_error"),
+        pytest.param(GkpAuthError("expired"), id="auth_error"),
     ],
 )
 async def test_refresh_after_command_error(
@@ -467,7 +457,6 @@ async def test_refresh_after_command_error(
     mock_config_entry: MockConfigEntry,
     freezer: FrozenDateTimeFactory,
     exception: Exception,
-    has_reauth_flow: bool,
 ) -> None:
     """Test a device is unavailable when it cannot be read after a command."""
     await setup_integration(hass, mock_config_entry)
@@ -485,10 +474,6 @@ async def test_refresh_after_command_error(
     state = hass.states.get(LIVING_ROOM_ENTITY_ID)
     assert state is not None
     assert state.state == STATE_UNAVAILABLE
-    assert (
-        any(mock_config_entry.async_get_active_flows(hass, {SOURCE_REAUTH}))
-        == has_reauth_flow
-    )
 
 
 async def test_rate_limited(

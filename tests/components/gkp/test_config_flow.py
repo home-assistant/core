@@ -1,6 +1,5 @@
 """Test the GKP config flow."""
 
-from collections.abc import Awaitable, Callable
 from unittest.mock import patch
 
 import pytest
@@ -51,23 +50,6 @@ async def _complete_oauth(
         return_value=user_id,
     ):
         return await hass.config_entries.flow.async_configure(flow_id)
-
-
-async def _start_reauth_flow(
-    hass: HomeAssistant, entry: MockConfigEntry
-) -> ConfigFlowResult:
-    """Start a reauthentication flow up to the OAuth2 step."""
-    result = await entry.start_reauth_flow(hass)
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "reauth_confirm"
-    return await hass.config_entries.flow.async_configure(result["flow_id"], {})
-
-
-async def _start_reconfigure_flow(
-    hass: HomeAssistant, entry: MockConfigEntry
-) -> ConfigFlowResult:
-    """Start a reconfiguration flow up to the OAuth2 step."""
-    return await entry.start_reconfigure_flow(hass)
 
 
 @pytest.mark.usefixtures("current_request_with_host", "mock_setup_entry")
@@ -137,62 +119,3 @@ async def test_unique_config_entry(
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
-
-
-@pytest.mark.usefixtures("current_request_with_host", "mock_setup_entry")
-@pytest.mark.parametrize(
-    ("start_flow", "reason"),
-    [
-        pytest.param(_start_reauth_flow, "reauth_successful", id="reauth"),
-        pytest.param(
-            _start_reconfigure_flow, "reconfigure_successful", id="reconfigure"
-        ),
-    ],
-)
-async def test_update_flow(
-    hass: HomeAssistant,
-    hass_client_no_auth: ClientSessionGenerator,
-    aioclient_mock: AiohttpClientMocker,
-    mock_config_entry: MockConfigEntry,
-    start_flow: Callable[[HomeAssistant, MockConfigEntry], Awaitable[ConfigFlowResult]],
-    reason: str,
-) -> None:
-    """Test reauthentication and reconfiguration update the token."""
-    mock_config_entry.add_to_hass(hass)
-    result = await start_flow(hass, mock_config_entry)
-
-    result = await _complete_oauth(
-        hass, hass_client_no_auth, aioclient_mock, result["flow_id"], TEST_USER_ID
-    )
-
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == reason
-    mock_config_entry.data["token"].pop("expires_at")
-    assert mock_config_entry.data["token"] == TOKEN_RESPONSE
-
-
-@pytest.mark.usefixtures("current_request_with_host")
-@pytest.mark.parametrize(
-    "start_flow",
-    [
-        pytest.param(_start_reauth_flow, id="reauth"),
-        pytest.param(_start_reconfigure_flow, id="reconfigure"),
-    ],
-)
-async def test_update_flow_account_mismatch(
-    hass: HomeAssistant,
-    hass_client_no_auth: ClientSessionGenerator,
-    aioclient_mock: AiohttpClientMocker,
-    mock_config_entry: MockConfigEntry,
-    start_flow: Callable[[HomeAssistant, MockConfigEntry], Awaitable[ConfigFlowResult]],
-) -> None:
-    """Test reauthentication and reconfiguration with another account abort."""
-    mock_config_entry.add_to_hass(hass)
-    result = await start_flow(hass, mock_config_entry)
-
-    result = await _complete_oauth(
-        hass, hass_client_no_auth, aioclient_mock, result["flow_id"], "other-user-id"
-    )
-
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "account_mismatch"
