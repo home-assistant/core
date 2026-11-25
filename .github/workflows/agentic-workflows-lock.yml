@@ -6,6 +6,9 @@ on:
     branches:
       - dev
     paths:
+      - ".claude/agents/**"
+      - ".github/agents/**"
+      - ".github/aw/**"
       - ".github/workflows/*.md"
       - ".github/workflows/*.lock.yml"
       - ".github/workflows/agentic-workflows-lock.yml"
@@ -14,6 +17,9 @@ on:
     branches:
       - dev
     paths:
+      - ".claude/agents/**"
+      - ".github/agents/**"
+      - ".github/aw/**"
       - ".github/workflows/*.md"
       - ".github/workflows/*.lock.yml"
       - ".github/workflows/agentic-workflows-lock.yml"
