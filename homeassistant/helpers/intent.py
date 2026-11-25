@@ -14,7 +14,7 @@ import probatio
 from propcache.api import cached_property
 
 from homeassistant.components.homeassistant.exposed_entities import async_should_expose
-from homeassistant.const import ATTR_ENTITY_ID, EntityStateAttribute
+from homeassistant.const import EntityStateAttribute, TargetKey
 from homeassistant.core import Context, HomeAssistant, State, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.util.hass_dict import HassKey
@@ -1244,7 +1244,7 @@ class DynamicServiceIntentHandler(IntentHandler):
         """Call service on entity."""
         hass = intent_obj.hass
 
-        service_data: dict[str, Any] = {ATTR_ENTITY_ID: state.entity_id}
+        service_data: dict[str, Any] = {TargetKey.ENTITY_ID: state.entity_id}
         if self.required_slots:
             for key, slot_info in self.required_slots.items():
                 service_data[slot_info.service_data_name or key] = intent_obj.slots[

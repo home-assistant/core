@@ -1,22 +1,19 @@
 """Config flow for Omnilogic integration."""
 
+from collections.abc import Mapping
 import logging
 from typing import Any, override
 
 from omnilogic import LoginException, OmniLogic, OmniLogicException
 import probatio
 
-from homeassistant.config_entries import (
-    ConfigEntry,
-    ConfigFlow,
-    ConfigFlowResult,
-    OptionsFlow,
-)
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult, OptionsFlow
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import callback
 from homeassistant.helpers import aiohttp_client
 
 from .const import DEFAULT_PH_OFFSET, DOMAIN
+from .coordinator import OmniLogicConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -30,7 +27,7 @@ class OmniLogicConfigFlow(ConfigFlow, domain=DOMAIN):
     @callback
     @override
     def async_get_options_flow(
-        config_entry: ConfigEntry,
+        config_entry: OmniLogicConfigEntry,
     ) -> OptionsFlowHandler:
         """Get the options flow for this handler."""
         return OptionsFlowHandler()
@@ -71,6 +68,49 @@ class OmniLogicConfigFlow(ConfigFlow, domain=DOMAIN):
                     probatio.Required(probatio.Secret(CONF_PASSWORD)): str,
                 }
             ),
+            errors=errors,
+        )
+
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
+        """Handle reauthentication."""
+        return await self.async_step_reauth_confirm()
+
+    async def async_step_reauth_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Confirm reauthentication with a new password."""
+        errors: dict[str, str] = {}
+        reauth_entry = self._get_reauth_entry()
+
+        if user_input is not None:
+            session = aiohttp_client.async_get_clientsession(self.hass)
+            omni = OmniLogic(
+                reauth_entry.data[CONF_USERNAME], user_input[CONF_PASSWORD], session
+            )
+
+            try:
+                await omni.connect()
+            except LoginException:
+                errors["base"] = "invalid_auth"
+            except OmniLogicException:
+                errors["base"] = "cannot_connect"
+            except Exception:
+                _LOGGER.exception("Unexpected exception")
+                errors["base"] = "unknown"
+            else:
+                return self.async_update_reload_and_abort(
+                    reauth_entry,
+                    data_updates={CONF_PASSWORD: user_input[CONF_PASSWORD]},
+                )
+
+        return self.async_show_form(
+            step_id="reauth_confirm",
+            data_schema=probatio.Schema(
+                {probatio.Required(probatio.Secret(CONF_PASSWORD)): str}
+            ),
+            description_placeholders={"username": reauth_entry.data[CONF_USERNAME]},
             errors=errors,
         )
 

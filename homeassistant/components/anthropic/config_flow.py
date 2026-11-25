@@ -65,7 +65,7 @@ from .const import (
     TOOL_SEARCH_UNSUPPORTED_MODELS,
     PromptCaching,
 )
-from .coordinator import async_create_client, model_alias
+from .coordinator import async_create_client
 from .model_options import (
     get_supported_efforts,
     get_supported_thinking_types,
@@ -286,7 +286,13 @@ class ConversationSubentryFlowHandler(ConfigSubentryFlow):
                     probatio.Optional(CONF_PROMPT): TemplateSelector(),
                     probatio.Optional(
                         CONF_LLM_HASS_API,
-                    ): SelectSelector({"options": hass_apis, "multiple": True}),
+                    ): SelectSelector(
+                        {
+                            "options": hass_apis,
+                            "multiple": True,
+                            "mode": SelectSelectorMode.LIST,
+                        }
+                    ),
                 }
             )
 
@@ -567,11 +573,10 @@ class ConversationSubentryFlowHandler(ConfigSubentryFlow):
         return [
             {
                 "label": model_info.display_name,
-                "value": model_alias(model_info.id),
+                "value": model_info.id,
             }
             for model_info in coordinator.data or []
-            if coordinator.get_model_info(model_alias(model_info.id))[0].lifecycle
-            != "retired"
+            if model_info.lifecycle != "retired"
             and (
                 self._subentry_type != "ai_task_data"
                 or (

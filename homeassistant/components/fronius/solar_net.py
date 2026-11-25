@@ -34,6 +34,8 @@ from .coordinator import (
 )
 from .modbus import FroniusModbus
 
+type FroniusConfigEntry = ConfigEntry[FroniusSolarNet]
+
 _LOGGER: Final = logging.getLogger(__name__)
 
 
@@ -41,7 +43,7 @@ class FroniusSolarNet:
     """Discover the devices of a SolarNet system and hold their coordinators."""
 
     def __init__(
-        self, hass: HomeAssistant, entry: ConfigEntry, fronius: FroniusSolarApi
+        self, hass: HomeAssistant, entry: FroniusConfigEntry, fronius: FroniusSolarApi
     ) -> None:
         """Initialize FroniusSolarNet class."""
         self.hass = hass
@@ -238,6 +240,7 @@ class FroniusSolarNet:
                 },
             ) from err
 
+        device_registry = dr.async_get(self.hass)
         for solar_net_id, inverter in response.data.items():
             unique_id = inverter.unique_id
             model = inverter.model
@@ -252,9 +255,14 @@ class FroniusSolarNet:
                     config_entry_id=self.config_entry.entry_id,
                 ),
             )
+            device_entry = device_registry.async_get_or_create_from_info(
+                config_entry_id=self.config_entry.entry_id,
+                device_info=device_info,
+            )
             inverter_infos.append(
                 FroniusDeviceInfo(
                     device_info=device_info,
+                    device_id=device_entry.id,
                     solar_net_id=solar_net_id,
                     unique_id=unique_id,
                 )

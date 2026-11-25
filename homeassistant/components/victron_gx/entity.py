@@ -1,30 +1,66 @@
 """Base entity for entities in victron_gx integration."""
 
 from abc import abstractmethod
-from typing import override
+from typing import TYPE_CHECKING, override
 
 from victron_mqtt import (
     Device as VictronVenusDevice,
     Metric as VictronVenusMetric,
     MetricType,
     MetricValue,
+    NotConnectedError,
+    PublishError,
+    WritableMetric as VictronVenusWritableMetric,
 )
 
 from homeassistant.const import EntityCategory
 from homeassistant.core import callback
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity
+
+from .const import DOMAIN
 
 # Entities that should be marked as diagnostic
 ENTITIES_CATEGORY_DIAGNOSTIC = [
     "system_heartbeat",
+    "platform_device_hq_serial_number",
+    "platform_device_model",
+    "platform_device_product_id",
     "platform_device_reboot",
+    "platform_device_unique_id",
+    "platform_firmware_installed_build",
+    "platform_firmware_installed_image_type",
+    "platform_firmware_large_image_support",
+    "platform_firmware_online_available_build",
+    "platform_network_ethernet_gateway_enabled",
+    "platform_network_ethernet_link_local_ip_address",
+    "platform_network_has_bluetooth_support",
+    "platform_network_wifi_gateway_enabled",
+    "platform_network_wifi_scan",
+    "platform_network_wifi_signal_strength",
+    "platform_services_access_point_enabled",
     "solarcharger_device_off_reason",
 ]
 # Entities that should be disabled by default
 ENTITIES_DISABLE_BY_DEFAULT = [
     "system_heartbeat",
+    "platform_device_hq_serial_number",
+    "platform_device_model",
+    "platform_device_product_id",
     "platform_device_reboot",
+    "platform_device_unique_id",
+    "platform_firmware_installed_build",
+    "platform_firmware_installed_image_type",
+    "platform_firmware_large_image_support",
+    "platform_firmware_online_available_build",
+    "platform_network_ethernet_gateway_enabled",
+    "platform_network_ethernet_link_local_ip_address",
+    "platform_network_has_bluetooth_support",
+    "platform_network_wifi_gateway_enabled",
+    "platform_network_wifi_scan",
+    "platform_network_wifi_signal_strength",
+    "platform_services_access_point_enabled",
     "solarcharger_device_off_reason",
     # Per-tracker solar charger entities can multiply quickly on multi-tracker chargers.
     "solarcharger_tracker_{tracker}_power",
@@ -88,6 +124,29 @@ class VictronBaseEntity(Entity):
         self._attr_entity_registry_enabled_default = (
             metric.generic_short_id not in ENTITIES_DISABLE_BY_DEFAULT
         )
+
+    @callback
+    def _set_metric_value(self, value: MetricValue) -> None:
+        """Write a metric value and translate library errors."""
+        if TYPE_CHECKING:
+            assert isinstance(self._metric, VictronVenusWritableMetric)
+        try:
+            self._metric.set(value)
+        except ValueError as err:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="invalid_value",
+            ) from err
+        except NotConnectedError as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="not_connected",
+            ) from err
+        except PublishError as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="publish_failed",
+            ) from err
 
     def _resolve_native_unit_of_measurement(self) -> str | None:
         """Resolve native unit of measurement for platforms that support it."""

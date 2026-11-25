@@ -6,6 +6,7 @@
     "presence_location.network_presence"
   ],
   "codeowners": [],
+  "connectivity": ["network"],
   "dependencies": ["ffmpeg"],
   "documentation": "https://www.home-assistant.io/integrations/xiaomi",
   "iot_class": "local_polling",

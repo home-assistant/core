@@ -4,6 +4,7 @@ import datetime as dt
 from unittest.mock import patch
 
 from homematicip.base.enums import AbsenceType
+from homematicip.connection.rest_connection import RestResult
 from homematicip.functionalHomes import IndoorClimateHome
 import pytest
 
@@ -28,7 +29,7 @@ from homeassistant.components.homematicip_cloud.entity import (
 )
 from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ServiceValidationError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 
 from .helper import (
     HAPID,
@@ -82,6 +83,24 @@ async def test_hmip_heating_group_heat(
     await async_manipulate_test_data(hass, hmip_device, "actualTemperature", 22.5)
     ha_state = hass.states.get(entity_id)
     assert ha_state.attributes[ATTR_CURRENT_TEMPERATURE] == 22.5
+
+    # Temperature is below the minimum.
+    with pytest.raises(ServiceValidationError):
+        await hass.services.async_call(
+            "climate",
+            "set_temperature",
+            {"entity_id": entity_id, "temperature": 4.0},
+            blocking=True,
+        )
+
+    # Temperature is above the maximum.
+    with pytest.raises(ServiceValidationError):
+        await hass.services.async_call(
+            "climate",
+            "set_temperature",
+            {"entity_id": entity_id, "temperature": 31.0},
+            blocking=True,
+        )
 
     await hass.services.async_call(
         "climate",
@@ -430,6 +449,48 @@ async def test_hmip_heating_group_heat_with_radiator(
         PRESET_ECO,
         "Default",
     ]
+
+
+async def test_hmip_heating_group_set_hvac_mode_error(
+    hass: HomeAssistant, default_mock_hap_factory: HomeFactory
+) -> None:
+    """Test error when setting the heating control mode."""
+    entity_id = "climate.badezimmer"
+    entity_name = "Badezimmer"
+
+    mock_hap = await default_mock_hap_factory.async_get_mock_hap(
+        test_devices=["Wandthermostat", "Heizkörperthermostat3"],
+        test_groups=[entity_name],
+    )
+
+    ha_state, hmip_device = get_and_check_entity_basics(
+        hass, mock_hap, entity_id, entity_name, None
+    )
+
+    assert ha_state.state == HVACMode.AUTO
+
+    with (
+        patch.object(
+            hmip_device,
+            "set_control_mode_async",
+            return_value=RestResult(
+                status=400,
+                text='{"errorCode": "INVALID_REQUEST"}',
+            ),
+        ) as mock_set_control_mode,
+        pytest.raises(HomeAssistantError, match="INVALID_REQUEST"),
+    ):
+        await hass.services.async_call(
+            "climate",
+            "set_hvac_mode",
+            {"entity_id": entity_id, "hvac_mode": HVACMode.HEAT},
+            blocking=True,
+        )
+
+    assert mock_set_control_mode.await_count == 1
+
+    ha_state = hass.states.get(entity_id)
+    assert ha_state.state == HVACMode.AUTO
 
 
 async def test_hmip_heating_group_availability(

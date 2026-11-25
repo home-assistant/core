@@ -7,7 +7,13 @@ from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.ubus.const import CONF_DHCP_SOFTWARE, DOMAIN
 from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER
-from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import (
+    CONF_HOST,
+    CONF_PASSWORD,
+    CONF_SSL,
+    CONF_USERNAME,
+    CONF_VERIFY_SSL,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -17,6 +23,8 @@ USER_INPUT = {
     CONF_HOST: MOCK_HOST,
     CONF_USERNAME: "root",
     CONF_PASSWORD: "password",
+    CONF_SSL: False,
+    CONF_VERIFY_SSL: True,
 }
 
 
@@ -36,6 +44,42 @@ async def test_user_flow_success(
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == MOCK_HOST
     assert result["data"] == MOCK_CONFIG
+
+
+@pytest.mark.parametrize(
+    ("ssl", "verify_ssl"),
+    [
+        pytest.param(False, False, id="http"),
+        pytest.param(True, False, id="https"),
+        pytest.param(True, True, id="https_verified"),
+    ],
+)
+async def test_user_flow_ssl_options(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    mock_ubus: MagicMock,
+    ssl: bool,
+    verify_ssl: bool,
+) -> None:
+    """Test the user flow stores the selected SSL options."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={**USER_INPUT, CONF_SSL: ssl, CONF_VERIFY_SSL: verify_ssl},
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"][CONF_SSL] is ssl
+    assert result["data"][CONF_VERIFY_SSL] is verify_ssl
+    mock_ubus.assert_called_once_with(
+        f"{'https' if ssl else 'http'}://{MOCK_HOST}/ubus",
+        "root",
+        "password",
+        verify=verify_ssl,
+    )
 
 
 async def test_user_flow_cannot_connect(
@@ -163,6 +207,39 @@ async def test_import_flow_preserves_dhcp_software(
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"][CONF_DHCP_SOFTWARE] == "odhcpd"
+
+
+@pytest.mark.parametrize(
+    ("ssl", "verify_ssl"),
+    [
+        pytest.param(False, False, id="http"),
+        pytest.param(True, False, id="https"),
+        pytest.param(True, True, id="https_verified"),
+    ],
+)
+async def test_import_flow_preserves_ssl_options(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    mock_ubus: MagicMock,
+    ssl: bool,
+    verify_ssl: bool,
+) -> None:
+    """Test the SSL options survive the import."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_IMPORT},
+        data={**MOCK_CONFIG, CONF_SSL: ssl, CONF_VERIFY_SSL: verify_ssl},
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"][CONF_SSL] is ssl
+    assert result["data"][CONF_VERIFY_SSL] is verify_ssl
+    mock_ubus.assert_called_once_with(
+        f"{'https' if ssl else 'http'}://{MOCK_HOST}/ubus",
+        "root",
+        "password",
+        verify=verify_ssl,
+    )
 
 
 @pytest.mark.parametrize(
