@@ -278,7 +278,6 @@ async def test_get_image_http_fetch_failure_logging(
     debug_detail: str,
 ) -> None:
     """Test a failed fetch logs only the host at warning and the URL at debug."""
-    caplog.set_level(logging.DEBUG)
     with patch(
         "homeassistant.components.demo.media_player.DemoYoutubePlayer.media_image_url",
         url,
