@@ -1,15 +1,22 @@
 """Test the APsystems Local API config flow."""
 
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
-from homeassistant.components.apsystems.const import DOMAIN
+from homeassistant.components.apsystems.const import (
+    CONF_DEVICE_TYPE,
+    DEVICE_TYPE_LAKE6,
+    DOMAIN,
+)
+from homeassistant.components.apsystems.lake6.client import Lake6ApiError
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_IP_ADDRESS, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+
+from . import LAKE6_DEV_ID, LAKE6_IP
 
 
 @pytest.mark.usefixtures("mock_setup_entry")
@@ -153,3 +160,50 @@ async def test_form_unique_id_already_configured(
     )
     assert result["reason"] == "already_configured"
     assert result.get("type") is FlowResultType.ABORT
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_form_create_lake6(
+    hass: HomeAssistant, mock_lake6_config_flow: MagicMock
+) -> None:
+    """Test a Lake_6 unit is identified by the model it reports."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_DEVICE_TYPE: DEVICE_TYPE_LAKE6,
+            CONF_IP_ADDRESS: LAKE6_IP,
+        },
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "Ema"
+    assert result["result"].unique_id == LAKE6_DEV_ID
+    assert result["data"][CONF_DEVICE_TYPE] == DEVICE_TYPE_LAKE6
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_form_lake6_cannot_connect(
+    hass: HomeAssistant, mock_lake6_config_flow: MagicMock
+) -> None:
+    """Test an unreachable Lake_6 unit reports cannot_connect."""
+    mock_lake6_config_flow.return_value.async_get_device.side_effect = Lake6ApiError(
+        "unreachable"
+    )
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_DEVICE_TYPE: DEVICE_TYPE_LAKE6,
+            CONF_IP_ADDRESS: LAKE6_IP,
+        },
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "cannot_connect"}

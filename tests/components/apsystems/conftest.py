@@ -7,8 +7,30 @@ from APsystemsEZ1 import ReturnAlarmInfo, ReturnDeviceInfo, ReturnOutputData
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
-from homeassistant.components.apsystems.const import DOMAIN
+from homeassistant.components.apsystems.const import (
+    CONF_DEVICE_TYPE,
+    DEVICE_TYPE_LAKE6,
+    DOMAIN,
+)
+from homeassistant.components.apsystems.lake6.client import (
+    parse_alarms,
+    parse_control_panel,
+    parse_device,
+    parse_energies,
+    parse_modes,
+)
 from homeassistant.const import CONF_IP_ADDRESS
+
+from . import (
+    LAKE6_ACTIVE_PAYLOAD,
+    LAKE6_ALARMS_PAYLOAD,
+    LAKE6_DEV_ID,
+    LAKE6_DEVICES_PAYLOAD,
+    LAKE6_ENERGIES_PAYLOAD,
+    LAKE6_IDLE_PAYLOAD,
+    LAKE6_IP,
+    LAKE6_MODES_PAYLOAD,
+)
 
 
 @pytest.fixture
@@ -72,4 +94,67 @@ def mock_config_entry() -> MockConfigEntry:
             CONF_IP_ADDRESS: "127.0.0.1",
         },
         unique_id="MY_SERIAL_NUMBER",
+    )
+
+
+@pytest.fixture
+def mock_lake6() -> Generator[MagicMock]:
+    """Mock the Lake_6 API client used by the component at runtime."""
+    with patch(
+        "homeassistant.components.apsystems.Lake6ApiClient", autospec=True
+    ) as mock_client:
+        client = mock_client.return_value
+        client.async_get_device.return_value = parse_device(LAKE6_DEVICES_PAYLOAD)
+        client.async_get_energies.return_value = parse_energies(LAKE6_ENERGIES_PAYLOAD)
+        client.async_get_alarms.return_value = parse_alarms(LAKE6_ALARMS_PAYLOAD)
+        client.async_get_modes.return_value = parse_modes(LAKE6_MODES_PAYLOAD)
+        client.async_get_control_panel.return_value = parse_control_panel(
+            LAKE6_IDLE_PAYLOAD
+        )
+        yield client
+
+
+@pytest.fixture
+def mock_lake6_control_panel() -> Generator[MagicMock]:
+    """Mock the Lake_6 API client with a running manual control window."""
+    with patch(
+        "homeassistant.components.apsystems.Lake6ApiClient", autospec=True
+    ) as mock_client:
+        client = mock_client.return_value
+        client.async_get_device.return_value = parse_device(LAKE6_DEVICES_PAYLOAD)
+        client.async_get_energies.return_value = parse_energies(LAKE6_ENERGIES_PAYLOAD)
+        client.async_get_alarms.return_value = parse_alarms(LAKE6_ALARMS_PAYLOAD)
+        client.async_get_modes.return_value = parse_modes(LAKE6_MODES_PAYLOAD)
+        client.async_get_control_panel.return_value = parse_control_panel(
+            LAKE6_ACTIVE_PAYLOAD
+        )
+        yield client
+
+
+@pytest.fixture
+def mock_lake6_config_flow() -> Generator[MagicMock]:
+    """Mock the Lake_6 API client used while probing in the config flow."""
+    with patch(
+        "homeassistant.components.apsystems.config_flow.Lake6ApiClient",
+        autospec=True,
+    ) as mock_client:
+        mock_client.return_value.async_get_device.return_value = parse_device(
+            LAKE6_DEVICES_PAYLOAD
+        )
+        yield mock_client
+
+
+@pytest.fixture
+def mock_lake6_config_entry() -> MockConfigEntry:
+    """Mock a Lake_6 config entry."""
+    return MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_DEVICE_TYPE: DEVICE_TYPE_LAKE6,
+            CONF_IP_ADDRESS: LAKE6_IP,
+        },
+        unique_id=LAKE6_DEV_ID,
+        # MockConfigEntry defaults to version 1, which would run the EZ1
+        # migration and overwrite device_type.
+        version=2,
     )
