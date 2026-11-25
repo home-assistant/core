@@ -37,6 +37,9 @@ from homeassistant.components.light import (
     ATTR_WHITE,
     DOMAIN as LIGHT_DOMAIN,
     ColorMode,
+    LightEntityCapabilityAttribute,
+    LightEntityStateAttribute,
+    LightServiceArgument,
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -367,7 +370,10 @@ async def test_colour_only_write_does_not_turn_on_an_off_light(
     hass.states.async_set(
         entity_id,
         STATE_OFF,
-        {ATTR_SUPPORTED_COLOR_MODES: ["color_temp"], ATTR_COLOR_TEMP_KELVIN: 5263},
+        {
+            LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: ["color_temp"],
+            LightEntityStateAttribute.COLOR_TEMP_KELVIN: 5263,
+        },
     )
     await hass.async_block_till_done()
     acc = Light(
@@ -414,13 +420,16 @@ async def test_colour_only_write_does_not_turn_on_an_off_light(
     )
     await _wait_for_light_coalesce(hass)
     assert len(call_turn_on) == 1
-    assert call_turn_on[0].data[ATTR_COLOR_TEMP_KELVIN] == 4000
+    assert call_turn_on[0].data[LightServiceArgument.COLOR_TEMP_KELVIN] == 4000
 
     # And once the light is on, colour keeps being applied as before.
     hass.states.async_set(
         entity_id,
         STATE_ON,
-        {ATTR_SUPPORTED_COLOR_MODES: ["color_temp"], ATTR_COLOR_TEMP_KELVIN: 5263},
+        {
+            LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: ["color_temp"],
+            LightEntityStateAttribute.COLOR_TEMP_KELVIN: 5263,
+        },
     )
     await hass.async_block_till_done()
     set_chars([colour_write])
@@ -437,7 +446,7 @@ async def test_max_color_temp_kelvin_override_rounds_inward(
     hass.states.async_set(
         entity_id,
         STATE_ON,
-        {ATTR_SUPPORTED_COLOR_MODES: ["color_temp"]},
+        {LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: ["color_temp"]},
     )
     await hass.async_block_till_done()
     acc = Light(
@@ -463,7 +472,10 @@ async def test_colour_only_write_turns_on_a_light_without_adaptive(
     hass.states.async_set(
         entity_id,
         STATE_OFF,
-        {ATTR_SUPPORTED_COLOR_MODES: ["color_temp"], ATTR_COLOR_TEMP_KELVIN: 5263},
+        {
+            LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: ["color_temp"],
+            LightEntityStateAttribute.COLOR_TEMP_KELVIN: 5263,
+        },
     )
     await hass.async_block_till_done()
     acc = Light(hass, hk_driver, "Light", entity_id, 1, None)
@@ -489,7 +501,7 @@ async def test_colour_only_write_turns_on_a_light_without_adaptive(
     await _wait_for_light_coalesce(hass)
 
     assert len(call_turn_on) == 1
-    assert call_turn_on[0].data[ATTR_COLOR_TEMP_KELVIN] == 4000
+    assert call_turn_on[0].data[LightServiceArgument.COLOR_TEMP_KELVIN] == 4000
 
 
 async def test_colour_write_after_turn_on_is_not_dropped(
@@ -506,7 +518,10 @@ async def test_colour_write_after_turn_on_is_not_dropped(
     hass.states.async_set(
         entity_id,
         STATE_OFF,
-        {ATTR_SUPPORTED_COLOR_MODES: ["color_temp"], ATTR_COLOR_TEMP_KELVIN: 5263},
+        {
+            LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: ["color_temp"],
+            LightEntityStateAttribute.COLOR_TEMP_KELVIN: 5263,
+        },
     )
     await hass.async_block_till_done()
     acc = Light(
@@ -555,7 +570,7 @@ async def test_colour_write_after_turn_on_is_not_dropped(
     await _wait_for_light_coalesce(hass)
 
     assert len(call_turn_on) == 2
-    assert call_turn_on[1].data[ATTR_COLOR_TEMP_KELVIN] == 4000
+    assert call_turn_on[1].data[LightServiceArgument.COLOR_TEMP_KELVIN] == 4000
 
 
 @pytest.mark.parametrize(
@@ -2128,10 +2143,13 @@ async def test_light_below_the_white_floor_uses_the_warm_colour(
         entity_id,
         STATE_ON,
         {
-            ATTR_SUPPORTED_COLOR_MODES: [ColorMode.COLOR_TEMP, ColorMode.HS],
-            ATTR_MIN_COLOR_TEMP_KELVIN: 2000,
-            ATTR_MAX_COLOR_TEMP_KELVIN: 6500,
-            ATTR_BRIGHTNESS: 255,
+            LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: [
+                ColorMode.COLOR_TEMP,
+                ColorMode.HS,
+            ],
+            LightEntityCapabilityAttribute.MIN_COLOR_TEMP_KELVIN: 2000,
+            LightEntityCapabilityAttribute.MAX_COLOR_TEMP_KELVIN: 6500,
+            LightEntityStateAttribute.BRIGHTNESS: 255,
         },
     )
     await hass.async_block_till_done()
@@ -2160,16 +2178,16 @@ async def test_light_below_the_white_floor_uses_the_warm_colour(
         return call_turn_on[-1].data
 
     # The warmest end of the range is the configured colour.
-    assert (await set_mireds(500))[ATTR_RGB_COLOR] == (255, 124, 7)
+    assert (await set_mireds(500))[LightServiceArgument.RGB_COLOR] == (255, 124, 7)
     # In between, the colour is blended from the floor's white.
-    red, green, blue = (await set_mireds(425))[ATTR_RGB_COLOR]
+    red, green, blue = (await set_mireds(425))[LightServiceArgument.RGB_COLOR]
     assert red == 255
     assert 124 < green < 167
     assert 7 < blue < 87
     # At or above the floor the white channel is used as before.
     data = await set_mireds(370)
-    assert data[ATTR_COLOR_TEMP_KELVIN] == 2702
-    assert ATTR_RGB_COLOR not in data
+    assert data[LightServiceArgument.COLOR_TEMP_KELVIN] == 2702
+    assert LightServiceArgument.RGB_COLOR not in data
 
 
 async def test_light_below_the_white_floor_starts_from_the_floor_colour(
@@ -2181,9 +2199,12 @@ async def test_light_below_the_white_floor_starts_from_the_floor_colour(
         entity_id,
         STATE_ON,
         {
-            ATTR_SUPPORTED_COLOR_MODES: [ColorMode.COLOR_TEMP, ColorMode.HS],
-            ATTR_MIN_COLOR_TEMP_KELVIN: 2000,
-            ATTR_MAX_COLOR_TEMP_KELVIN: 6500,
+            LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: [
+                ColorMode.COLOR_TEMP,
+                ColorMode.HS,
+            ],
+            LightEntityCapabilityAttribute.MIN_COLOR_TEMP_KELVIN: 2000,
+            LightEntityCapabilityAttribute.MAX_COLOR_TEMP_KELVIN: 6500,
         },
     )
     await hass.async_block_till_done()
@@ -2212,7 +2233,7 @@ async def test_light_below_the_white_floor_starts_from_the_floor_colour(
     )
     await _wait_for_light_coalesce(hass)
 
-    assert call_turn_on[-1].data[ATTR_RGB_COLOR] == (255, 130, 30)
+    assert call_turn_on[-1].data[LightServiceArgument.RGB_COLOR] == (255, 130, 30)
 
 
 async def test_light_without_colour_ignores_the_warm_colour(
@@ -2224,9 +2245,11 @@ async def test_light_without_colour_ignores_the_warm_colour(
         entity_id,
         STATE_ON,
         {
-            ATTR_SUPPORTED_COLOR_MODES: [ColorMode.COLOR_TEMP],
-            ATTR_MIN_COLOR_TEMP_KELVIN: 2000,
-            ATTR_MAX_COLOR_TEMP_KELVIN: 6500,
+            LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: [
+                ColorMode.COLOR_TEMP
+            ],
+            LightEntityCapabilityAttribute.MIN_COLOR_TEMP_KELVIN: 2000,
+            LightEntityCapabilityAttribute.MAX_COLOR_TEMP_KELVIN: 6500,
         },
     )
     await hass.async_block_till_done()
@@ -2251,5 +2274,5 @@ async def test_light_without_colour_ignores_the_warm_colour(
     )
     await _wait_for_light_coalesce(hass)
 
-    assert call_turn_on[0].data[ATTR_COLOR_TEMP_KELVIN] == 2000
-    assert ATTR_RGB_COLOR not in call_turn_on[0].data
+    assert call_turn_on[0].data[LightServiceArgument.COLOR_TEMP_KELVIN] == 2000
+    assert LightServiceArgument.RGB_COLOR not in call_turn_on[0].data

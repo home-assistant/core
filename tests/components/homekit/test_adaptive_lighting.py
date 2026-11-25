@@ -54,11 +54,11 @@ from homeassistant.components.homekit.type_lights import (
     Light,
 )
 from homeassistant.components.light import (
-    ATTR_BRIGHTNESS,
-    ATTR_COLOR_TEMP_KELVIN,
-    ATTR_SUPPORTED_COLOR_MODES,
     DOMAIN as LIGHT_DOMAIN,
     ColorMode,
+    LightEntityCapabilityAttribute,
+    LightEntityStateAttribute,
+    LightServiceArgument,
 )
 from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
@@ -186,9 +186,11 @@ async def _setup_light(hass: HomeAssistant, hk_driver, state: str = STATE_ON) ->
         entity_id,
         state,
         {
-            ATTR_SUPPORTED_COLOR_MODES: [ColorMode.COLOR_TEMP],
-            ATTR_BRIGHTNESS: 255,
-            ATTR_COLOR_TEMP_KELVIN: 4000,
+            LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: [
+                ColorMode.COLOR_TEMP
+            ],
+            LightEntityStateAttribute.BRIGHTNESS: 255,
+            LightEntityStateAttribute.COLOR_TEMP_KELVIN: 4000,
         },
     )
     await hass.async_block_till_done()
@@ -239,7 +241,9 @@ async def test_adaptive_lighting_is_off_without_the_option(
 ) -> None:
     """Without the option the light behaves exactly as before."""
     hass.states.async_set(
-        "light.demo", STATE_ON, {ATTR_SUPPORTED_COLOR_MODES: [ColorMode.COLOR_TEMP]}
+        "light.demo",
+        STATE_ON,
+        {LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: [ColorMode.COLOR_TEMP]},
     )
     await hass.async_block_till_done()
     acc = Light(hass, hk_driver, "Light", "light.demo", 1, None)
@@ -264,7 +268,7 @@ async def test_a_schedule_applies_a_colour_temperature(
     assert acc.adaptive_lighting.char_active_count.value == 1
     assert acc.adaptive_lighting.transition is not None
     assert len(call_turn_on) == 1
-    assert ATTR_COLOR_TEMP_KELVIN in call_turn_on[0].data
+    assert LightServiceArgument.COLOR_TEMP_KELVIN in call_turn_on[0].data
     # The schedule is stored so it survives a restart.
     assert "/light.demo" in hass_storage["homekit.adaptive_lighting"]["data"]
 
@@ -635,7 +639,7 @@ async def test_brightness_shifts_the_colour_temperature(
 
     await _write_control(hass, acc, TRANSITION_CONTROL_WRITE)
     await _wait_for_light_coalesce(hass)
-    at_full = call_turn_on[0].data[ATTR_COLOR_TEMP_KELVIN]
+    at_full = call_turn_on[0].data[LightServiceArgument.COLOR_TEMP_KELVIN]
 
     # Dimming re-applies the same curve point with a smaller multiplier.
     acc.adaptive_lighting.char_brightness.set_value(10)
@@ -644,7 +648,7 @@ async def test_brightness_shifts_the_colour_temperature(
     await _wait_for_light_coalesce(hass)
 
     assert len(call_turn_on) == 2
-    assert call_turn_on[1].data[ATTR_COLOR_TEMP_KELVIN] != at_full
+    assert call_turn_on[1].data[LightServiceArgument.COLOR_TEMP_KELVIN] != at_full
 
 
 async def test_switching_the_light_on_applies_the_curve_at_once(
@@ -660,16 +664,18 @@ async def test_switching_the_light_on_applies_the_curve_at_once(
         "light.demo",
         STATE_ON,
         {
-            ATTR_SUPPORTED_COLOR_MODES: [ColorMode.COLOR_TEMP],
-            ATTR_BRIGHTNESS: 255,
-            ATTR_COLOR_TEMP_KELVIN: 4000,
+            LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: [
+                ColorMode.COLOR_TEMP
+            ],
+            LightEntityStateAttribute.BRIGHTNESS: 255,
+            LightEntityStateAttribute.COLOR_TEMP_KELVIN: 4000,
         },
     )
     await hass.async_block_till_done()
     await _wait_for_light_coalesce(hass)
 
     assert len(call_turn_on) == 1
-    assert ATTR_COLOR_TEMP_KELVIN in call_turn_on[0].data
+    assert LightServiceArgument.COLOR_TEMP_KELVIN in call_turn_on[0].data
 
 
 async def test_a_brightness_change_applies_the_curve_at_once(
@@ -684,7 +690,7 @@ async def test_a_brightness_change_applies_the_curve_at_once(
     await _write_control(hass, acc, TRANSITION_CONTROL_WRITE)
     await _wait_for_light_coalesce(hass)
     assert len(call_turn_on) == 1
-    at_full = call_turn_on[0].data[ATTR_COLOR_TEMP_KELVIN]
+    at_full = call_turn_on[0].data[LightServiceArgument.COLOR_TEMP_KELVIN]
 
     # Dimming lands on another point of the curve, with no update in between.
     acc.adaptive_lighting.char_brightness.set_value(10)
@@ -692,16 +698,18 @@ async def test_a_brightness_change_applies_the_curve_at_once(
         "light.demo",
         STATE_ON,
         {
-            ATTR_SUPPORTED_COLOR_MODES: [ColorMode.COLOR_TEMP],
-            ATTR_BRIGHTNESS: 26,
-            ATTR_COLOR_TEMP_KELVIN: 4000,
+            LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: [
+                ColorMode.COLOR_TEMP
+            ],
+            LightEntityStateAttribute.BRIGHTNESS: 26,
+            LightEntityStateAttribute.COLOR_TEMP_KELVIN: 4000,
         },
     )
     await hass.async_block_till_done()
     await _wait_for_light_coalesce(hass)
 
     assert len(call_turn_on) == 2
-    assert call_turn_on[1].data[ATTR_COLOR_TEMP_KELVIN] != at_full
+    assert call_turn_on[1].data[LightServiceArgument.COLOR_TEMP_KELVIN] != at_full
 
 
 def _control_write(configuration: bytes) -> str:
