@@ -188,18 +188,28 @@ async def test_lock_offline_at_setup_is_logged(
     assert state.state == STATE_UNAVAILABLE
 
 
+@pytest.mark.parametrize(
+    "status_has_lock_online",
+    [pytest.param(True, id="with_lock_online"), pytest.param(False, id="ble_only")],
+)
 async def test_refresh_updates_lock_availability(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     freezer: FrozenDateTimeFactory,
     caplog: pytest.LogCaptureFixture,
+    status_has_lock_online: bool,
 ) -> None:
     """Test a status refresh updates availability after a missed webhook."""
     config_entry.add_to_hass(hass)
     assert await async_setup_component(hass, "homeassistant", {})
     online_status = await async_load_json_object_fixture(hass, "status_ok.json", DOMAIN)
     offline_status = {**online_status, "lock_online": 0, "ble_strength": -1}
+    # The lock starts with lock_online = 0, as set by a disconnect webhook
     lock = loqed.Lock(dict(offline_status), "secret", "bridgekey", 1, "Home", Mock())
+    if not status_has_lock_online:
+        # The library then derives availability from ble_strength
+        del online_status["lock_online"]
+        del offline_status["lock_online"]
     lock.getWebhooks = AsyncMock(
         return_value=await async_load_json_array_fixture(
             hass, "get_all_webhooks.json", DOMAIN

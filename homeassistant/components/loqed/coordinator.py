@@ -116,8 +116,9 @@ class LoqedDataCoordinator(DataUpdateCoordinator[StatusMessage]):
             raise
         if "bolt_state" in data:
             await self.lock.updateState(data["bolt_state"])
-        # Lock.online reads raw_data, so keep it in sync with the polled status
-        self.lock.raw_data.update(data)
+        # Lock.online reads raw_data. Replace it, like Lock.update() does, so a
+        # lock_online flag set by an earlier webhook does not outlive this status.
+        self.lock.raw_data = dict(data)
         self._async_log_lock_availability()
         return data
 
