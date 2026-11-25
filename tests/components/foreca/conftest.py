@@ -302,7 +302,7 @@ def mock_config_entry() -> MockConfigEntry:
     """Return a mock config entry with one location subentry."""
     return MockConfigEntry(
         domain=DOMAIN,
-        title="Foreca",
+        title="Foreca Weather",
         entry_id="01JZ4Q1F0RECA0000000000000",
         data={CONF_API_KEY: "test-key"},
         subentries_data=[
