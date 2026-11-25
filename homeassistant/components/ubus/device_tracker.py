@@ -337,12 +337,15 @@ async def async_setup_entry(
 
     @callback
     def _async_update_devices() -> None:
-        # Track every client this router sees, plus every tracker this entry
-        # owns, so it keeps reporting clients connected to another router.
-        owned = {
+        # Track every client this router sees, plus every tracker any ubus
+        # entry holds in the registry: this entry keeps reporting clients
+        # connected to another router, and adopts trackers left behind by an
+        # entry which no longer hosts them.
+        tracker_macs = {
             registry_entry.unique_id
+            for entry in hass.config_entries.async_entries(DOMAIN)
             for registry_entry in er.async_entries_for_config_entry(
-                entity_registry, config_entry.entry_id
+                entity_registry, entry.entry_id
             )
             if registry_entry.domain == DEVICE_TRACKER_DOMAIN
             and registry_entry.platform == DOMAIN
@@ -353,7 +356,7 @@ async def async_setup_entry(
         seen: set[str] = (
             set(coordinator.data) if coordinator.last_update_success else set()
         )
-        new_macs = [mac for mac in seen | owned if mac not in tracked]
+        new_macs = [mac for mac in seen | tracker_macs if mac not in tracked]
         claimed: list[str] = []
         for mac in new_macs:
             # One tracker per MAC: an entry only creates a tracker it owns, so

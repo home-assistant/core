@@ -636,7 +636,7 @@ async def test_merge_preserves_disabled_entity_on_duplicate_device(
     a previously shared device; removing it must not delete their registry
     entries, so the merge moves the disabled ones to the survivor's device
     as well. The other router is disabled, so the tracker's entry keeps
-    its user disabled state and nothing re-derives its device.
+    its user disabled state; the loaded entry adopts it.
     """
     _mock, _ = mock_ubus_by_host
     entry_a = MockConfigEntry(domain=DOMAIN, data=MOCK_CONFIG, title=MOCK_HOST)
@@ -692,11 +692,17 @@ async def test_merge_preserves_disabled_entity_on_duplicate_device(
     await hass.async_block_till_done()
 
     # The duplicate tracker and its device are gone; the disabled tracker
-    # kept its registry entry, its disabled state and its settings, moved
-    # to the survivor's device.
+    # kept its registry entry, its disabled state and its settings, and the
+    # loaded entry adopted it with its own device for the client.
     assert device_registry.async_get(duplicate_device.id) is None
     assert entity_registry.async_get(disabled.entity_id) is not None
-    assert entity_registry.async_get(disabled.entity_id).device_id == survivor_device.id
+    assert (
+        entity_registry.async_get(disabled.entity_id).config_entry_id
+        == entry_a.entry_id
+    )
+    adopted_device = entity_registry.async_get(disabled.entity_id).device_id
+    assert adopted_device is not None
+    assert device_registry.async_get(adopted_device).config_entry_id == entry_a.entry_id
     assert (
         entity_registry.async_get(disabled.entity_id).disabled_by
         is er.RegistryEntryDisabler.USER
@@ -1064,6 +1070,116 @@ async def test_unloaded_entry_tracker_adopted_by_other_entry(
     assert state.state == STATE_HOME
     assert state.attributes["source"] == MOCK_HOST
     assert entity_registry.async_get(entity_id).config_entry_id == entry_a.entry_id
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_unloaded_entry_tracker_adopted_from_retained_sighting(
+    hass: HomeAssistant,
+    mock_ubus_by_host: tuple[MagicMock, dict[str, MagicMock]],
+    two_router_entries: tuple[MockConfigEntry, MockConfigEntry],
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test an entry adopts a left-behind tracker from its own retained sighting.
+
+    The adopting entry's current scan is empty, so the tracker is adopted
+    from its retained stamp and reports not home while it stays available.
+    """
+    _mock, ubus = mock_ubus_by_host
+    entry_a, entry_b = two_router_entries
+
+    # The device is on router A, so entry A owns its tracker.
+    ubus[MOCK_HOST].get_hostapd_clients.return_value = {
+        "clients": {MAC_PHONE: {"authorized": True}}
+    }
+    freezer.tick(timedelta(seconds=30))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    entity_id = entity_registry.async_get_entity_id(
+        DEVICE_TRACKER_DOMAIN, DOMAIN, MAC_PHONE
+    )
+    assert entity_id is not None
+    assert entity_registry.async_get(entity_id).config_entry_id == entry_a.entry_id
+
+    # The device visits router B, then leaves it, so entry B retains a
+    # sighting while its current scan is empty.
+    ubus[MOCK_HOST_B].get_hostapd_clients.return_value = {
+        "clients": {MAC_PHONE: {"authorized": True}}
+    }
+    freezer.tick(timedelta(seconds=30))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+    ubus[MOCK_HOST_B].get_hostapd_clients.return_value = {"clients": {}}
+    freezer.tick(DEFAULT_CONSIDER_HOME + timedelta(seconds=30))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == STATE_HOME
+
+    # Unloading the owning entry releases its stamps and claim, and entry B
+    # adopts the tracker from its retained, now stale, sighting.
+    assert await hass.config_entries.async_unload(entry_a.entry_id)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == STATE_NOT_HOME
+    assert "source" not in state.attributes
+    assert entity_registry.async_get(entity_id).config_entry_id == entry_b.entry_id
+    assert device_registry.async_get_device_by_connection(
+        (dr.CONNECTION_NETWORK_MAC, MAC_PHONE), entry_b.entry_id
+    )
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_unloaded_entry_tracker_adopted_without_sighting(
+    hass: HomeAssistant,
+    mock_ubus_by_host: tuple[MagicMock, dict[str, MagicMock]],
+    two_router_entries: tuple[MockConfigEntry, MockConfigEntry],
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test an entry adopts a left-behind tracker it has never seen.
+
+    The adopting entry never reported the client, so the adopted tracker
+    is unavailable rather than missing.
+    """
+    _mock, ubus = mock_ubus_by_host
+    entry_a, entry_b = two_router_entries
+
+    # The device is on router A, so entry A owns its tracker; router B has
+    # never seen it.
+    ubus[MOCK_HOST].get_hostapd_clients.return_value = {
+        "clients": {MAC_PHONE: {"authorized": True}}
+    }
+    freezer.tick(timedelta(seconds=30))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    entity_id = entity_registry.async_get_entity_id(
+        DEVICE_TRACKER_DOMAIN, DOMAIN, MAC_PHONE
+    )
+    assert entity_id is not None
+    assert entity_registry.async_get(entity_id).config_entry_id == entry_a.entry_id
+
+    # Unloading the owning entry releases its stamps and claim, and entry B
+    # adopts the tracker and the client's device.
+    assert await hass.config_entries.async_unload(entry_a.entry_id)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == STATE_UNAVAILABLE
+    assert "source" not in state.attributes
+    assert entity_registry.async_get(entity_id).config_entry_id == entry_b.entry_id
+    assert device_registry.async_get_device_by_connection(
+        (dr.CONNECTION_NETWORK_MAC, MAC_PHONE), entry_b.entry_id
+    )
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
