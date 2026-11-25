@@ -18,6 +18,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
@@ -35,6 +36,7 @@ from .const import (
     DEFAULT_NIGHTLIGHT_SWITCH,
     DEFAULT_SAVE_ON_CHANGE,
     DEFAULT_TRANSITION,
+    DEVICE_ANNOUNCED,
     DOMAIN,
     NIGHTLIGHT_SWITCH_TYPE_LIGHT,
     PLATFORMS,
@@ -198,7 +200,47 @@ async def async_setup_entry(hass: HomeAssistant, entry: YeelightConfigEntry) -> 
             f"expected {expected_unique_id}, found {found_unique_id}"
         )
 
+    _async_reconnect_on_announcement(hass, entry, device)
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+
+
+@callback
+def _async_reconnect_on_announcement(
+    hass: HomeAssistant, entry: YeelightConfigEntry, device: YeelightDevice
+) -> None:
+    """Reconnect the bulb when it announces itself, e.g. after a power cut."""
+    if not (unique_id := entry.unique_id or device.unique_id):
+        # Announcements carry the bulb id, so without one they cannot be matched
+        _LOGGER.debug(
+            "No id known for %s, not reconnecting on announcements", device.host
+        )
+        return
+
+    async def _async_reconnect() -> None:
+        try:
+            await device.async_reconnect()
+        except (TimeoutError, OSError, BulbException) as ex:
+            _LOGGER.debug("Failed to reconnect to %s: %s", device.host, ex)
+        except Exception:
+            _LOGGER.exception("Unexpected error reconnecting to %s", device.host)
+        else:
+            return
+        # The library stopped retrying when the connection was dropped
+        hass.config_entries.async_schedule_reload(entry.entry_id)
+
+    @callback
+    def _async_announced(announced_host: str) -> None:
+        # An address change is left to the discovery flow, which reloads the entry
+        if announced_host == device.host and not hass.is_stopping:
+            entry.async_create_background_task(
+                hass, _async_reconnect(), f"yeelight {device.host} reconnect"
+            )
+
+    entry.async_on_unload(
+        async_dispatcher_connect(
+            hass, DEVICE_ANNOUNCED.format(unique_id), _async_announced
+        )
+    )
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: YeelightConfigEntry) -> None:
