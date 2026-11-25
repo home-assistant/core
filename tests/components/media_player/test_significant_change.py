@@ -117,6 +117,21 @@ async def test_significant_state_change() -> None:
             {ATTR_MEDIA_POSITION_UPDATED_AT: "new_value"},
             False,
         ),
+        # unhashable attribute values
+        (
+            {ATTR_MEDIA_CONTENT_ID: {"tvdb": "1"}},
+            {ATTR_MEDIA_CONTENT_ID: {"tvdb": "1"}},
+            False,
+        ),
+        (
+            {ATTR_MEDIA_CONTENT_ID: {"tvdb": "1"}},
+            {ATTR_MEDIA_CONTENT_ID: {"tvdb": "2"}},
+            True,
+        ),
+        ({}, {ATTR_MEDIA_CONTENT_ID: {"tvdb": "1"}}, True),
+        # an attribute that appears or disappears is a change, even as None
+        ({}, {ATTR_MEDIA_TITLE: None}, True),
+        ({ATTR_MEDIA_TITLE: None}, {}, True),
         ({"unknown_attr": "old_value"}, {"unknown_attr": "old_value"}, False),
         ({"unknown_attr": "old_value"}, {"unknown_attr": "new_value"}, False),
     ],

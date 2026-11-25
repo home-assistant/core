@@ -97,6 +97,7 @@ BLUETOOTH: Final[list[dict[str, bool | str | int | list[int]]]] = [
         "connectable": True,
         "domain": "casper_glow",
         "local_name": "Jar*",
+        "manufacturer_id": 65535,
     },
     {
         "connectable": False,
@@ -832,6 +833,10 @@ BLUETOOTH: Final[list[dict[str, bool | str | int | list[int]]]] = [
     {
         "domain": "led_ble",
         "local_name": "LD-0003",
+    },
+    {
+        "domain": "led_ble",
+        "local_name": "Trick-*",
     },
     {
         "domain": "medcom_ble",
