@@ -2,7 +2,6 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from functools import partial
 from typing import Any, override
 
 from pyschlage.lock import Lock
@@ -101,15 +100,11 @@ class SchlageSwitch(SchlageEntity, SwitchEntity):
     @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
-        await self.hass.async_add_executor_job(
-            partial(self.entity_description.on_fn, self._lock)
-        )
+        await self._async_send_command(self.entity_description.on_fn, self._lock)
         await self.coordinator.async_request_refresh()
 
     @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
-        await self.hass.async_add_executor_job(
-            partial(self.entity_description.off_fn, self._lock)
-        )
+        await self._async_send_command(self.entity_description.off_fn, self._lock)
         await self.coordinator.async_request_refresh()
