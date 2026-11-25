@@ -30,6 +30,16 @@ async def test_sensors(
         assert state == snapshot(name=f"{state.entity_id}-state")
 
 
+@pytest.mark.parametrize("keba_fixture", ["p30_plugged.json", "p30_charging.json"])
+async def test_sensor_states(hass: HomeAssistant, snapshot: SnapshotAssertion) -> None:
+    """Test the sensor states with a car plugged in, and with a car charging."""
+    states = sorted(
+        hass.states.async_all(SENSOR_DOMAIN), key=lambda state: state.entity_id
+    )
+    assert len(states) == 5
+    assert states == snapshot
+
+
 async def test_sensors_follow_the_station(
     hass: HomeAssistant,
     keba_data: dict[str, Any],

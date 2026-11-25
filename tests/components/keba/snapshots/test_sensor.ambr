@@ -1,4 +1,162 @@
 # serializer version: 1
+# name: test_sensor_states[p30_charging.json]
+  list([
+    StateSnapshot({
+      'attributes': ReadOnlyDict({
+        'current_i1': '15.843',
+        'current_i2': '15.7',
+        'current_i3': '15.837',
+        <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
+        <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'KEBA P30 Charging Power',
+        'power_factor': 0.997,
+        <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+        <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfPower.KILO_WATT: 'kW'>,
+        'voltage_u1': '223',
+        'voltage_u2': '227',
+        'voltage_u3': '225',
+      }),
+      'context': <ANY>,
+      'entity_id': 'sensor.keba_p30_charging_power',
+      'last_changed': <ANY>,
+      'last_reported': <ANY>,
+      'last_updated': <ANY>,
+      'state': '10.66',
+    }),
+    StateSnapshot({
+      'attributes': ReadOnlyDict({
+        <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
+        <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'KEBA P30 Energy Target',
+        <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+      }),
+      'context': <ANY>,
+      'entity_id': 'sensor.keba_p30_energy_target',
+      'last_changed': <ANY>,
+      'last_reported': <ANY>,
+      'last_updated': <ANY>,
+      'state': '0.0',
+    }),
+    StateSnapshot({
+      'attributes': ReadOnlyDict({
+        <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'current',
+        <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'KEBA P30 Max Current',
+        'max_current_hardware': 16000,
+        <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfElectricCurrent.AMPERE: 'A'>,
+      }),
+      'context': <ANY>,
+      'entity_id': 'sensor.keba_p30_max_current',
+      'last_changed': <ANY>,
+      'last_reported': <ANY>,
+      'last_updated': <ANY>,
+      'state': '16.0',
+    }),
+    StateSnapshot({
+      'attributes': ReadOnlyDict({
+        <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
+        <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'KEBA P30 Session Energy',
+        <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+      }),
+      'context': <ANY>,
+      'entity_id': 'sensor.keba_p30_session_energy',
+      'last_changed': <ANY>,
+      'last_reported': <ANY>,
+      'last_updated': <ANY>,
+      'state': '1.46',
+    }),
+    StateSnapshot({
+      'attributes': ReadOnlyDict({
+        <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
+        <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'KEBA P30 Total Energy',
+        <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+        <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+      }),
+      'context': <ANY>,
+      'entity_id': 'sensor.keba_p30_total_energy',
+      'last_changed': <ANY>,
+      'last_reported': <ANY>,
+      'last_updated': <ANY>,
+      'state': '4857.06',
+    }),
+  ])
+# ---
+# name: test_sensor_states[p30_plugged.json]
+  list([
+    StateSnapshot({
+      'attributes': ReadOnlyDict({
+        'current_i1': '0.0',
+        'current_i2': '0.0',
+        'current_i3': '0.0',
+        <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
+        <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'KEBA P30 Charging Power',
+        'power_factor': 0.0,
+        <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+        <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfPower.KILO_WATT: 'kW'>,
+        'voltage_u1': '0',
+        'voltage_u2': '0',
+        'voltage_u3': '0',
+      }),
+      'context': <ANY>,
+      'entity_id': 'sensor.keba_p30_charging_power',
+      'last_changed': <ANY>,
+      'last_reported': <ANY>,
+      'last_updated': <ANY>,
+      'state': '0.0',
+    }),
+    StateSnapshot({
+      'attributes': ReadOnlyDict({
+        <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
+        <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'KEBA P30 Energy Target',
+        <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+      }),
+      'context': <ANY>,
+      'entity_id': 'sensor.keba_p30_energy_target',
+      'last_changed': <ANY>,
+      'last_reported': <ANY>,
+      'last_updated': <ANY>,
+      'state': '0.0',
+    }),
+    StateSnapshot({
+      'attributes': ReadOnlyDict({
+        <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'current',
+        <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'KEBA P30 Max Current',
+        'max_current_hardware': 16000,
+        <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfElectricCurrent.AMPERE: 'A'>,
+      }),
+      'context': <ANY>,
+      'entity_id': 'sensor.keba_p30_max_current',
+      'last_changed': <ANY>,
+      'last_reported': <ANY>,
+      'last_updated': <ANY>,
+      'state': '16.0',
+    }),
+    StateSnapshot({
+      'attributes': ReadOnlyDict({
+        <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
+        <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'KEBA P30 Session Energy',
+        <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+      }),
+      'context': <ANY>,
+      'entity_id': 'sensor.keba_p30_session_energy',
+      'last_changed': <ANY>,
+      'last_reported': <ANY>,
+      'last_updated': <ANY>,
+      'state': '0.0',
+    }),
+    StateSnapshot({
+      'attributes': ReadOnlyDict({
+        <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
+        <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'KEBA P30 Total Energy',
+        <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+        <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+      }),
+      'context': <ANY>,
+      'entity_id': 'sensor.keba_p30_total_energy',
+      'last_changed': <ANY>,
+      'last_reported': <ANY>,
+      'last_updated': <ANY>,
+      'state': '4855.65',
+    }),
+  ])
+# ---
 # name: test_sensors[sensor.keba_p30_charging_power-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
