@@ -9,8 +9,16 @@ import probatio
 from homeassistant.components.homeassistant import async_should_expose
 from homeassistant.components.llm import LLMTools
 from homeassistant.core import HomeAssistant, callback, split_entity_id
-from homeassistant.helpers import entity_registry as er
+from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import (
+    area_registry as ar,
+    category_registry as cr,
+    config_validation as cv,
+    entity_registry as er,
+    label_registry as lr,
+)
 from homeassistant.helpers.entity_component import EntityComponent
+from homeassistant.helpers.json import json_dumps
 from homeassistant.helpers.llm import (
     LLM_API_ASSIST,
     LLM_API_HOME_ASSISTANT,
@@ -21,7 +29,7 @@ from homeassistant.helpers.llm import (
     ToolInput,
     ToolResult,
 )
-from homeassistant.util.json import JsonObjectType, JsonValueType
+from homeassistant.util.json import JsonObjectType, JsonValueType, json_loads_object
 
 from .const import ATTR_LAST_TRIGGERED, DOMAIN
 
@@ -72,7 +80,7 @@ class ListScriptsTool(Tool):
     title = "List scripts"
     description = (
         "List the scripts, sorted by name, with their state, when they were last "
-        "triggered and their description. A script that is on is running now, and "
+        "triggered, their description, area, category and labels. A script that is on is running now, and "
         "one that is unavailable has an error in its configuration. Returns at "
         f"most {_LIMIT} scripts per call."
     )
@@ -104,6 +112,10 @@ class ListScriptsTool(Tool):
             key=lambda state: (state.name.casefold(), state.entity_id),
         )
         component: EntityComponent[BaseScriptEntity] | None = hass.data.get(DOMAIN)
+        ent_reg = er.async_get(hass)
+        area_reg = ar.async_get(hass)
+        cat_reg = cr.async_get(hass)
+        lab_reg = lr.async_get(hass)
 
         scripts: list[JsonValueType] = []
         for state in states[offset : offset + _LIMIT]:
@@ -125,6 +137,23 @@ class ListScriptsTool(Tool):
             ):
                 # The raw configuration is not validated, so it may hold a number
                 script["description"] = str(description)
+            if entry := ent_reg.async_get(state.entity_id):
+                if (area_id := er.async_get_effective_area_id(hass, entry)) and (
+                    area := area_reg.async_get_area(area_id)
+                ):
+                    script["area"] = area.name
+                if (category_id := entry.categories.get(DOMAIN)) and (
+                    category := cat_reg.async_get_category(
+                        scope=DOMAIN, category_id=category_id
+                    )
+                ):
+                    script["category"] = category.name
+                if labels := sorted(
+                    label.name
+                    for label_id in entry.labels
+                    if (label := lab_reg.async_get_label(label_id))
+                ):
+                    script["labels"] = list[JsonValueType](labels)
             scripts.append(script)
 
         result: JsonObjectType = {"scripts": scripts, "total": len(states)}
@@ -133,13 +162,56 @@ class ListScriptsTool(Tool):
         return ToolResult(data=result)
 
 
+class GetConfigTool(Tool):
+    """LLM Tool to get the configuration of a script."""
+
+    name = "script__get_config"
+    title = "Get script configuration"
+    description = (
+        "Get the configuration of a script: its fields and sequence of actions, or "
+        "the blueprint it uses with its inputs. Use script__list_scripts or "
+        "search__search to find the entity_id."
+    )
+    annotations = ToolAnnotations(
+        read_only=True, destructive=False, idempotent=True, open_world=False
+    )
+    integration = DOMAIN
+    parameters = probatio.Schema(
+        {
+            probatio.Required(
+                "entity_id", description="The entity_id of the script."
+            ): cv.entity_domain(DOMAIN),
+        }
+    )
+
+    @override
+    async def async_call(
+        self, hass: HomeAssistant, tool_input: ToolInput, llm_context: LLMContext
+    ) -> ToolResult:
+        """Return the configuration of the script."""
+        entity_id: str = self.parameters(tool_input.tool_args)["entity_id"]
+        component: EntityComponent[BaseScriptEntity] | None = hass.data.get(DOMAIN)
+        if (
+            component is None
+            or (entity := component.get_entity(entity_id)) is None
+            or entity.raw_config is None
+        ):
+            raise HomeAssistantError(f"Script '{entity_id}' not found.")
+        return ToolResult(
+            data={
+                "entity_id": entity_id,
+                "config": json_loads_object(json_dumps(entity.raw_config)),
+            }
+        )
+
+
 @callback
 def async_get_tools(
     hass: HomeAssistant, llm_context: LLMContext, api_id: str
 ) -> LLMTools | None:
     """Return the script list tool, or a tool for each exposed script for Assist."""
     if api_id == LLM_API_HOME_ASSISTANT:
-        return LLMTools(tools=[ListScriptsTool()])
+        return LLMTools(tools=[ListScriptsTool(), GetConfigTool()])
     if api_id != LLM_API_ASSIST:
         return None
 

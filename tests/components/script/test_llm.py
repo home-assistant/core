@@ -9,7 +9,14 @@ from homeassistant.components import llm as llm_component
 from homeassistant.components.homeassistant.exposed_entities import async_expose_entity
 from homeassistant.components.script import llm as script_llm
 from homeassistant.core import Context, HomeAssistant
-from homeassistant.helpers import entity_registry as er, llm
+from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import (
+    area_registry as ar,
+    category_registry as cr,
+    entity_registry as er,
+    label_registry as lr,
+    llm,
+)
 from homeassistant.setup import async_setup_component
 from homeassistant.util.json import JsonObjectType
 
@@ -160,21 +167,45 @@ async def test_home_assistant_api_tools(hass: HomeAssistant) -> None:
     """Test the Home Assistant API gets the list tool, not the script tools."""
     tools = script_llm.async_get_tools(hass, _llm_context(), llm.LLM_API_HOME_ASSISTANT)
     assert tools is not None
-    assert [tool.name for tool in tools.tools] == ["script__list_scripts"]
+    assert [tool.name for tool in tools.tools] == [
+        "script__list_scripts",
+        "script__get_config",
+    ]
 
 
 @pytest.mark.freeze_time("2026-11-24 12:00:00+00:00")
-async def test_list_scripts(hass: HomeAssistant) -> None:
-    """Test listing the scripts sorted by name."""
+async def test_list_scripts(
+    hass: HomeAssistant,
+    area_registry: ar.AreaRegistry,
+    category_registry: cr.CategoryRegistry,
+    entity_registry: er.EntityRegistry,
+    label_registry: lr.LabelRegistry,
+) -> None:
+    """Test listing the scripts sorted by name, with their area, category and labels."""
+    entity_registry.async_update_entity(
+        ENTITY_ID,
+        area_id=area_registry.async_create("Kitchen").id,
+        categories={
+            "script": category_registry.async_create(
+                scope="script", name="Drinks"
+            ).category_id
+        },
+        labels={
+            label_registry.async_create(name).label_id for name in ("Party", "Bar")
+        },
+    )
     await hass.services.async_call(
         "script", "turn_on", {"entity_id": ENTITY_ID}, blocking=True
     )
     await hass.async_block_till_done()
 
-    assert await _list_scripts(hass, {}) == {
-        "scripts": _list_scripts_expected("2026-11-24T12:00:00+00:00"),
-        "total": 3,
+    expected = _list_scripts_expected("2026-11-24T12:00:00+00:00")
+    expected[1] |= {
+        "area": "Kitchen",
+        "category": "Drinks",
+        "labels": ["Bar", "Party"],
     }
+    assert await _list_scripts(hass, {}) == {"scripts": expected, "total": 3}
 
 
 async def test_list_scripts_pages(hass: HomeAssistant) -> None:
@@ -198,4 +229,41 @@ async def test_list_scripts_invalid_offset(hass: HomeAssistant, offset: object) 
     with pytest.raises(probatio.Invalid):
         await tool.async_call(
             hass, llm.ToolInput(tool.name, {"offset": offset}), _llm_context()
+        )
+
+
+async def test_get_config(hass: HomeAssistant) -> None:
+    """Test getting the configuration of a script."""
+    tool = script_llm.GetConfigTool()
+    result = await tool.async_call(
+        hass, llm.ToolInput(tool.name, {"entity_id": ENTITY_ID}), _llm_context()
+    )
+
+    assert result.data["entity_id"] == ENTITY_ID
+    assert result.data["config"] == {
+        "alias": "test script",
+        "description": "This is a test script",
+        "sequence": [
+            {"variables": {"result": {"drinks": 2}}},
+            {"stop": True, "response_variable": "result"},
+        ],
+        "fields": {"beer": {"description": "Number of beers", "required": True}},
+    }
+
+
+@pytest.mark.parametrize(
+    ("entity_id", "error"),
+    [
+        ("script.unknown", HomeAssistantError),
+        ("automation.test_script", probatio.Invalid),
+    ],
+)
+async def test_get_config_not_found(
+    hass: HomeAssistant, entity_id: str, error: type[Exception]
+) -> None:
+    """Test an unknown script or another domain is rejected."""
+    tool = script_llm.GetConfigTool()
+    with pytest.raises(error):
+        await tool.async_call(
+            hass, llm.ToolInput(tool.name, {"entity_id": entity_id}), _llm_context()
         )
