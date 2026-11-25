@@ -27,6 +27,10 @@ class CoverEntityCapabilityAttribute(StrEnum):
     """Capability attributes for cover entities."""
 
     SUPPORTED_SPEEDS = "supported_speeds"
+    OPEN_TILT_POSITION = "open_tilt_position"
+    CLOSED_TILT_POSITIONS = "closed_tilt_positions"
+    TILT_START_ANGLE = "tilt_start_angle"
+    TILT_END_ANGLE = "tilt_end_angle"
 
 
 class CoverEntityStateAttribute(StrEnum):

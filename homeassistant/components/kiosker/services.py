@@ -1,6 +1,7 @@
 """Services for the Kiosker integration."""
 
 from collections.abc import Awaitable, Callable, Coroutine
+from enum import StrEnum
 import functools
 from typing import Any
 
@@ -14,58 +15,72 @@ from kiosker import (
 )
 import probatio
 
-from homeassistant.const import ATTR_DEVICE_ID, ATTR_ICON
+from homeassistant.const import CommonServiceArgument
 from homeassistant.core import HomeAssistant, ServiceCall, ServiceResponse, callback
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import config_validation as cv, selector, service
 
-from .const import (
-    ATTR_BACKGROUND,
-    ATTR_BUTTON_BACKGROUND,
-    ATTR_BUTTON_FOREGROUND,
-    ATTR_BUTTON_TEXT,
-    ATTR_DISMISSIBLE,
-    ATTR_EXPIRE,
-    ATTR_FOREGROUND,
-    ATTR_SOUND,
-    ATTR_TEXT,
-    ATTR_URL,
-    ATTR_VISIBLE,
-    DOMAIN,
-)
+from .const import DOMAIN
 from .coordinator import KioskerConfigEntry, KioskerDataUpdateCoordinator
+
+
+class KioskerService(StrEnum):
+    """Store keys for Kiosker services."""
+
+    NAVIGATE_URL = "navigate_url"
+    SET_BLACKOUT = "set_blackout"
+
+
+class KioskerServiceArgument(StrEnum):
+    """Store keys for Kiosker service arguments."""
+
+    URL = "url"
+    VISIBLE = "visible"
+    TEXT = "text"
+    BACKGROUND = "background"
+    FOREGROUND = "foreground"
+    ICON = "icon"
+    EXPIRE = "expire"
+    DISMISSIBLE = "dismissible"
+    BUTTON_BACKGROUND = "button_background"
+    BUTTON_FOREGROUND = "button_foreground"
+    BUTTON_TEXT = "button_text"
+    SOUND = "sound"
+
 
 NAVIGATE_URL_SCHEMA = probatio.Schema(
     {
-        probatio.Required(ATTR_DEVICE_ID): str,
-        probatio.Required(ATTR_URL): str,
+        probatio.Required(CommonServiceArgument.DEVICE_ID): str,
+        probatio.Required(KioskerServiceArgument.URL): str,
     }
 )
 
 SET_BLACKOUT_SCHEMA = probatio.Schema(
     {
-        probatio.Required(ATTR_DEVICE_ID): str,
-        probatio.Optional(ATTR_VISIBLE, default=True): cv.boolean,
-        probatio.Optional(ATTR_TEXT): str,
+        probatio.Required(CommonServiceArgument.DEVICE_ID): str,
+        probatio.Optional(KioskerServiceArgument.VISIBLE, default=True): cv.boolean,
+        probatio.Optional(KioskerServiceArgument.TEXT): str,
         probatio.Optional(
-            ATTR_BACKGROUND, default=[0, 0, 0]
+            KioskerServiceArgument.BACKGROUND, default=[0, 0, 0]
         ): selector.ColorRGBSelector(),
         probatio.Optional(
-            ATTR_FOREGROUND, default=[255, 255, 255]
+            KioskerServiceArgument.FOREGROUND, default=[255, 255, 255]
         ): selector.ColorRGBSelector(),
-        probatio.Optional(ATTR_ICON): str,
-        probatio.Optional(ATTR_EXPIRE, default=60): probatio.All(
+        probatio.Optional(KioskerServiceArgument.ICON): str,
+        probatio.Optional(KioskerServiceArgument.EXPIRE, default=60): probatio.All(
             probatio.Coerce(int), probatio.Range(min=0, max=100000)
         ),
-        probatio.Optional(ATTR_DISMISSIBLE, default=False): cv.boolean,
         probatio.Optional(
-            ATTR_BUTTON_BACKGROUND, default=[255, 255, 255]
+            KioskerServiceArgument.DISMISSIBLE, default=False
+        ): cv.boolean,
+        probatio.Optional(
+            KioskerServiceArgument.BUTTON_BACKGROUND, default=[255, 255, 255]
         ): selector.ColorRGBSelector(),
         probatio.Optional(
-            ATTR_BUTTON_FOREGROUND, default=[0, 0, 0]
+            KioskerServiceArgument.BUTTON_FOREGROUND, default=[0, 0, 0]
         ): selector.ColorRGBSelector(),
-        probatio.Optional(ATTR_BUTTON_TEXT): str,
-        probatio.Optional(ATTR_SOUND): str,
+        probatio.Optional(KioskerServiceArgument.BUTTON_TEXT): str,
+        probatio.Optional(KioskerServiceArgument.SOUND): str,
     }
 )
 
@@ -105,7 +120,7 @@ async def _get_coordinator(
     """Get the coordinator for the targeted device."""
     config_entry: KioskerConfigEntry
     _, config_entry = service.async_get_device_and_config_entry(
-        call.hass, DOMAIN, call.data[ATTR_DEVICE_ID]
+        call.hass, DOMAIN, call.data[CommonServiceArgument.DEVICE_ID]
     )
     return config_entry.runtime_data
 
@@ -120,7 +135,7 @@ async def navigate_url(call: ServiceCall) -> None:
     """Navigate to a URL on the Kiosker device."""
     coordinator = await _get_coordinator(call)
     await call.hass.async_add_executor_job(
-        coordinator.api.navigate_url, call.data[ATTR_URL]
+        coordinator.api.navigate_url, call.data[KioskerServiceArgument.URL]
     )
 
 
@@ -128,17 +143,21 @@ async def navigate_url(call: ServiceCall) -> None:
 async def set_blackout(call: ServiceCall) -> None:
     """Set blackout mode on the Kiosker device."""
     blackout = Blackout(
-        visible=call.data[ATTR_VISIBLE],
-        text=call.data.get(ATTR_TEXT),
-        background=_rgb_to_hex(call.data[ATTR_BACKGROUND]),
-        foreground=_rgb_to_hex(call.data[ATTR_FOREGROUND]),
-        icon=call.data.get(ATTR_ICON),
-        expire=call.data[ATTR_EXPIRE],
-        dismissible=call.data[ATTR_DISMISSIBLE],
-        buttonBackground=_rgb_to_hex(call.data[ATTR_BUTTON_BACKGROUND]),
-        buttonForeground=_rgb_to_hex(call.data[ATTR_BUTTON_FOREGROUND]),
-        buttonText=call.data.get(ATTR_BUTTON_TEXT),
-        sound=call.data.get(ATTR_SOUND),
+        visible=call.data[KioskerServiceArgument.VISIBLE],
+        text=call.data.get(KioskerServiceArgument.TEXT),
+        background=_rgb_to_hex(call.data[KioskerServiceArgument.BACKGROUND]),
+        foreground=_rgb_to_hex(call.data[KioskerServiceArgument.FOREGROUND]),
+        icon=call.data.get(KioskerServiceArgument.ICON),
+        expire=call.data[KioskerServiceArgument.EXPIRE],
+        dismissible=call.data[KioskerServiceArgument.DISMISSIBLE],
+        buttonBackground=_rgb_to_hex(
+            call.data[KioskerServiceArgument.BUTTON_BACKGROUND]
+        ),
+        buttonForeground=_rgb_to_hex(
+            call.data[KioskerServiceArgument.BUTTON_FOREGROUND]
+        ),
+        buttonText=call.data.get(KioskerServiceArgument.BUTTON_TEXT),
+        sound=call.data.get(KioskerServiceArgument.SOUND),
     )
 
     coordinator = await _get_coordinator(call)
@@ -150,8 +169,8 @@ async def set_blackout(call: ServiceCall) -> None:
 def async_setup_services(hass: HomeAssistant) -> None:
     """Set up the services for the Kiosker integration."""
     hass.services.async_register(
-        DOMAIN, "navigate_url", navigate_url, schema=NAVIGATE_URL_SCHEMA
+        DOMAIN, KioskerService.NAVIGATE_URL, navigate_url, schema=NAVIGATE_URL_SCHEMA
     )
     hass.services.async_register(
-        DOMAIN, "set_blackout", set_blackout, schema=SET_BLACKOUT_SCHEMA
+        DOMAIN, KioskerService.SET_BLACKOUT, set_blackout, schema=SET_BLACKOUT_SCHEMA
     )

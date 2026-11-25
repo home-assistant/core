@@ -28,6 +28,9 @@
       "health_idx": {
         "default": "mdi:cloud"
       },
+      "heating_power_request": {
+        "default": "mdi:radiator"
+      },
       "pressure_trend": {
         "default": "mdi:trending-up"
       },
@@ -39,6 +42,9 @@
       },
       "temp_trend": {
         "default": "mdi:trending-up"
+      },
+      "therm_setpoint_mode": {
+        "default": "mdi:thermostat"
       },
       "wifi_strength": {
         "default": "mdi:wifi"

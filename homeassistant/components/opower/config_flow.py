@@ -17,7 +17,7 @@ from opower import (
 import probatio
 
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlow, ConfigFlowResult
-from homeassistant.const import CONF_NAME, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
 from homeassistant.helpers.typing import VolDictType
@@ -200,7 +200,7 @@ class OpowerConfigFlow(ConfigFlow, domain=DOMAIN):
         # pylint: disable-next=home-assistant-step_id-match-method
         return self.async_show_form(
             step_id="reauth_confirm",
-            description_placeholders={CONF_NAME: reauth_entry.title},
+            description_placeholders={"name": reauth_entry.title},
         )
 
     async def async_step_reauth_confirm(
@@ -238,5 +238,5 @@ class OpowerConfigFlow(ConfigFlow, domain=DOMAIN):
                 probatio.Schema(schema_dict), self._data
             ),
             errors=errors,
-            description_placeholders={CONF_NAME: reauth_entry.title},
+            description_placeholders={"name": reauth_entry.title},
         )

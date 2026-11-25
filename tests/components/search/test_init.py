@@ -1113,6 +1113,101 @@ async def test_search(
     }
 
 
+async def test_search_script_reference_cycle(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
+    """Test search follows scripts that reference each other only once."""
+    assert await async_setup_component(hass, DOMAIN, {})
+    assert await async_setup_component(
+        hass,
+        "script",
+        {
+            "script": {
+                "script_a": {
+                    "sequence": [
+                        {
+                            "condition": "state",
+                            "entity_id": "script.script_b",
+                            "state": "on",
+                        },
+                        {"action": "light.turn_on", "entity_id": "light.kitchen"},
+                    ]
+                },
+                "script_b": {
+                    "sequence": [
+                        {
+                            "condition": "state",
+                            "entity_id": "script.script_a",
+                            "state": "on",
+                        },
+                        {"action": "light.turn_on", "entity_id": "light.hallway"},
+                    ]
+                },
+            }
+        },
+    )
+    assert await async_setup_component(
+        hass,
+        "automation",
+        {
+            "automation": {
+                "id": "calls_script_a",
+                "alias": "Calls script A",
+                "triggers": {"trigger": "event", "event_type": "test_event"},
+                "actions": {
+                    "action": "script.turn_on",
+                    "target": {"entity_id": "script.script_a"},
+                },
+            }
+        },
+    )
+
+    client = await hass_ws_client(hass)
+    await client.send_json(
+        {
+            "id": 1,
+            "type": "search/related",
+            "item_type": "script",
+            "item_id": "script.script_a",
+        }
+    )
+    response = await client.receive_json()
+    assert response["success"]
+    assert response["result"] == {
+        ItemType.ENTITY: unordered(
+            [
+                "light.hallway",
+                "light.kitchen",
+                "script.script_a",
+                "script.script_b",
+            ]
+        ),
+        ItemType.SCRIPT: ["script.script_b"],
+    }
+
+    await client.send_json(
+        {
+            "id": 2,
+            "type": "search/related",
+            "item_type": "automation",
+            "item_id": "automation.calls_script_a",
+        }
+    )
+    response = await client.receive_json()
+    assert response["success"]
+    assert response["result"] == {
+        ItemType.ENTITY: unordered(
+            [
+                "light.hallway",
+                "light.kitchen",
+                "script.script_a",
+                "script.script_b",
+            ]
+        ),
+        ItemType.SCRIPT: unordered(["script.script_a", "script.script_b"]),
+    }
+
+
 async def test_search_pre_migration_composite_device(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,

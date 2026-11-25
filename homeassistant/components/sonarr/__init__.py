@@ -5,7 +5,6 @@ from dataclasses import fields
 from aiopyarr.models.host_configuration import PyArrHostConfiguration
 from aiopyarr.sonarr_client import SonarrClient
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_API_KEY,
     CONF_HOST,
@@ -98,7 +97,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: SonarrConfigEntry) -> No
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
 
-async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
+async def async_migrate_entry(hass: HomeAssistant, entry: SonarrConfigEntry) -> None:
     """Migrate old entry."""
     LOGGER.debug("Migrating from version %s", entry.version)
 

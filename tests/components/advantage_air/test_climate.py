@@ -10,23 +10,16 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.advantage_air.climate import ADVANTAGE_AIR_MYAUTO
 from homeassistant.components.climate import (
-    ATTR_FAN_MODE,
-    ATTR_HVAC_MODE,
-    ATTR_PRESET_MODE,
-    ATTR_TARGET_TEMP_HIGH,
-    ATTR_TARGET_TEMP_LOW,
     DOMAIN as CLIMATE_DOMAIN,
     FAN_AUTO,
     FAN_LOW,
-    SERVICE_SET_FAN_MODE,
-    SERVICE_SET_HVAC_MODE,
-    SERVICE_SET_PRESET_MODE,
-    SERVICE_SET_TEMPERATURE,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
+    ClimateService,
+    ClimateServiceArgument,
     HVACMode,
 )
-from homeassistant.const import ATTR_ENTITY_ID, ATTR_TEMPERATURE, Platform
+from homeassistant.const import ATTR_ENTITY_ID, Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er
@@ -83,8 +76,8 @@ async def test_set_hvac_mode(
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_HVAC_MODE,
-        {ATTR_ENTITY_ID: [entity_id], ATTR_HVAC_MODE: hvac_mode},
+        ClimateService.SET_HVAC_MODE,
+        {TargetKey.ENTITY_ID: [entity_id], ClimateServiceArgument.HVAC_MODE: hvac_mode},
         blocking=True,
     )
     mock_update.assert_called_once()
@@ -105,8 +98,8 @@ async def test_set_temperature(
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_TEMPERATURE,
-        {ATTR_ENTITY_ID: [entity_id], ATTR_TEMPERATURE: 25},
+        ClimateService.SET_TEMPERATURE,
+        {TargetKey.ENTITY_ID: [entity_id], ClimateServiceArgument.TEMPERATURE: 25},
         blocking=True,
     )
     mock_update.assert_called_once()
@@ -140,8 +133,11 @@ async def test_set_fan_mode(hass: HomeAssistant, mock_update: AsyncMock) -> None
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_FAN_MODE,
-        {ATTR_ENTITY_ID: ["climate.myzone"], ATTR_FAN_MODE: FAN_LOW},
+        ClimateService.SET_FAN_MODE,
+        {
+            TargetKey.ENTITY_ID: ["climate.myzone"],
+            ClimateServiceArgument.FAN_MODE: FAN_LOW,
+        },
         blocking=True,
     )
     mock_update.assert_called_once()
@@ -157,8 +153,11 @@ async def test_set_preset_mode(
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_PRESET_MODE,
-        {ATTR_ENTITY_ID: ["climate.myzone"], ATTR_PRESET_MODE: ADVANTAGE_AIR_MYAUTO},
+        ClimateService.SET_PRESET_MODE,
+        {
+            TargetKey.ENTITY_ID: ["climate.myzone"],
+            ClimateServiceArgument.PRESET_MODE: ADVANTAGE_AIR_MYAUTO,
+        },
         blocking=True,
     )
     mock_update.assert_called_once()
@@ -176,8 +175,11 @@ async def test_set_hvac_mode_unsupported(
     with pytest.raises(ServiceValidationError):
         await hass.services.async_call(
             CLIMATE_DOMAIN,
-            SERVICE_SET_HVAC_MODE,
-            {ATTR_ENTITY_ID: ["climate.myzone"], ATTR_HVAC_MODE: HVACMode.HEAT_COOL},
+            ClimateService.SET_HVAC_MODE,
+            {
+                TargetKey.ENTITY_ID: ["climate.myzone"],
+                ClimateServiceArgument.HVAC_MODE: HVACMode.HEAT_COOL,
+            },
             blocking=True,
         )
 
@@ -192,11 +194,11 @@ async def test_myauto_set_temperature_range(
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_TEMPERATURE,
+        ClimateService.SET_TEMPERATURE,
         {
-            ATTR_ENTITY_ID: ["climate.myauto"],
-            ATTR_TARGET_TEMP_LOW: 21,
-            ATTR_TARGET_TEMP_HIGH: 23,
+            TargetKey.ENTITY_ID: ["climate.myauto"],
+            ClimateServiceArgument.TARGET_TEMP_LOW: 21,
+            ClimateServiceArgument.TARGET_TEMP_HIGH: 23,
         },
         blocking=True,
     )
@@ -214,8 +216,11 @@ async def test_myauto_set_fan_mode(
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_FAN_MODE,
-        {ATTR_ENTITY_ID: ["climate.myauto"], ATTR_FAN_MODE: FAN_AUTO},
+        ClimateService.SET_FAN_MODE,
+        {
+            TargetKey.ENTITY_ID: ["climate.myauto"],
+            ClimateServiceArgument.FAN_MODE: FAN_AUTO,
+        },
         blocking=True,
     )
     mock_update.assert_called_once()
@@ -234,8 +239,11 @@ async def test_climate_async_failed_update(
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             CLIMATE_DOMAIN,
-            SERVICE_SET_TEMPERATURE,
-            {ATTR_ENTITY_ID: ["climate.myzone"], ATTR_TEMPERATURE: 25},
+            ClimateService.SET_TEMPERATURE,
+            {
+                TargetKey.ENTITY_ID: ["climate.myzone"],
+                ClimateServiceArgument.TEMPERATURE: 25,
+            },
             blocking=True,
         )
 

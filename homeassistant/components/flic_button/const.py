@@ -12,17 +12,13 @@ DEVICE_TYPE_MODEL_NAMES: Final = {
     DeviceType.TWIST: "Flic Twist",
 }
 
-# Config entry data keys
 CONF_PAIRING_ID: Final = "pairing_id"
 CONF_PAIRING_KEY: Final = "pairing_key"
 CONF_SERIAL_NUMBER: Final = "serial_number"
 CONF_DEVICE_TYPE: Final = "device_type"
-CONF_SIG_BITS: Final = (
-    "sig_bits"  # Ed25519 signature variant (0-3) for Twist quick verify
-)
+# The Ed25519 signature variant found when pairing a Twist, 0 for other buttons
+CONF_SIG_BITS: Final = "sig_bits"
 
-# Event classes
 EVENT_CLASS_BUTTON: Final = "button"
 
-# Options constants
 CONF_PUSH_TWIST_MODE: Final = "push_twist_mode"

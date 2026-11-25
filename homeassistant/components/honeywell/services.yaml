@@ -1,0 +1,18 @@
+set_hold_until:
+  target:
+    entity:
+      domain: climate
+      integration: honeywell
+  fields:
+    until:
+      required: true
+      example: "22:30:00"
+      selector:
+        time:
+    temperature:
+      selector:
+        number:
+          min: 0
+          max: 250
+          step: 0.1
+          mode: box

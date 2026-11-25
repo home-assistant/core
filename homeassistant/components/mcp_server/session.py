@@ -39,7 +39,7 @@ class SessionManager:
     @asynccontextmanager
     async def create(self, session: Session) -> AsyncGenerator[str]:
         """Context manager to create a new session ID and close when done."""
-        session_id = ulid_util.ulid_now()
+        session_id = ulid_util.secure_ulid_now()
         _LOGGER.debug("Creating session: %s", session_id)
         self._sessions[session_id] = session
         try:

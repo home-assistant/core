@@ -1,5 +1,7 @@
 """Provides device automations for Climate."""
 
+from typing import Any
+
 import probatio
 
 from homeassistant.components.device_automation import (
@@ -7,11 +9,11 @@ from homeassistant.components.device_automation import (
     async_validate_entity_schema,
 )
 from homeassistant.const import (
-    ATTR_ENTITY_ID,
     CONF_DEVICE_ID,
     CONF_DOMAIN,
     CONF_ENTITY_ID,
     CONF_TYPE,
+    TargetKey,
 )
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -94,7 +96,7 @@ async def async_call_action_from_config(
     context: Context | None,
 ) -> None:
     """Execute a device action."""
-    service_data = {ATTR_ENTITY_ID: config[CONF_ENTITY_ID]}
+    service_data: dict[str, Any] = {TargetKey.ENTITY_ID: config[CONF_ENTITY_ID]}
 
     if config[CONF_TYPE] == "set_hvac_mode":
         service = ClimateService.SET_HVAC_MODE

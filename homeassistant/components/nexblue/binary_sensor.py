@@ -9,12 +9,11 @@ from homeassistant.components.binary_sensor import (
 )
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN
 from .coordinator import NexBlueConfigEntry, NexBlueDataUpdateCoordinator
+from .entity import charger_device_info
 
 BINARY_SENSOR_DESCRIPTIONS: tuple[BinarySensorEntityDescription, ...] = (
     BinarySensorEntityDescription(
@@ -64,12 +63,7 @@ class NexBlueBinarySensor(
         self._serial_number = serial_number
         self.entity_description = description
         self._attr_unique_id = f"{serial_number}_{description.key}"
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, serial_number)},
-            manufacturer="NexBlue",
-            name=serial_number,
-            serial_number=serial_number,
-        )
+        self._attr_device_info = charger_device_info(serial_number)
 
     @property
     @override

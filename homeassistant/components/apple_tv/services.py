@@ -7,7 +7,7 @@ from pyatv.const import KeyboardFocusState
 from pyatv.exceptions import NotSupportedError, ProtocolError
 from pyatv.interface import AppleTV as AppleTVInterface
 
-from homeassistant.const import ATTR_CONFIG_ENTRY_ID
+from homeassistant.const import CommonServiceArgument
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import config_validation as cv, service
@@ -31,21 +31,21 @@ class AppleTVServiceArgument(StrEnum):
 
 SERVICE_SET_KEYBOARD_TEXT_SCHEMA = probatio.Schema(
     {
-        probatio.Required(ATTR_CONFIG_ENTRY_ID): cv.string,
+        probatio.Required(CommonServiceArgument.CONFIG_ENTRY_ID): cv.string,
         probatio.Required(AppleTVServiceArgument.TEXT): cv.string,
     }
 )
 
 SERVICE_APPEND_KEYBOARD_TEXT_SCHEMA = probatio.Schema(
     {
-        probatio.Required(ATTR_CONFIG_ENTRY_ID): cv.string,
+        probatio.Required(CommonServiceArgument.CONFIG_ENTRY_ID): cv.string,
         probatio.Required(AppleTVServiceArgument.TEXT): cv.string,
     }
 )
 
 SERVICE_CLEAR_KEYBOARD_TEXT_SCHEMA = probatio.Schema(
     {
-        probatio.Required(ATTR_CONFIG_ENTRY_ID): cv.string,
+        probatio.Required(CommonServiceArgument.CONFIG_ENTRY_ID): cv.string,
     }
 )
 
@@ -53,7 +53,7 @@ SERVICE_CLEAR_KEYBOARD_TEXT_SCHEMA = probatio.Schema(
 def _get_atv(call: ServiceCall) -> AppleTVInterface:
     """Get the AppleTVInterface for a service call."""
     entry = service.async_get_config_entry(
-        call.hass, DOMAIN, call.data[ATTR_CONFIG_ENTRY_ID]
+        call.hass, DOMAIN, call.data[CommonServiceArgument.CONFIG_ENTRY_ID]
     )
     atv: AppleTVInterface | None = entry.runtime_data.atv
     if atv is None:

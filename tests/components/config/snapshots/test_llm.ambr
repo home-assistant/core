@@ -1,25 +1,218 @@
 # serializer version: 1
 # name: test_parameters_openapi
   dict({
+    'config__configure_flow': dict({
+      'additionalProperties': False,
+      'properties': dict({
+        'abort': dict({
+          'default': False,
+          'description': 'Set to true to cancel and abort the flow (default: false).',
+          'type': 'boolean',
+        }),
+        'flow_id': dict({
+          'description': "The flow_id of the in-progress flow (e.g. 'random:8K2M').",
+          'format': 'strip',
+          'type': 'string',
+        }),
+        'next_step_id': dict({
+          'description': "Menu option key to select when the current step has type 'menu'.",
+          'format': 'strip',
+          'type': 'string',
+        }),
+        'user_input': dict({
+          'additionalProperties': True,
+          'description': "Field values to submit when the current step has type 'form' (pass {} to confirm an empty form). Omit to fetch the current step state.",
+          'type': 'object',
+        }),
+      }),
+      'required': list([
+        'flow_id',
+      ]),
+      'type': 'object',
+    }),
+    'config__create_area': dict({
+      'additionalProperties': False,
+      'properties': dict({
+        'aliases': dict({
+          'description': 'Other names that voice assistants know the area by. This replaces all aliases.',
+          'items': dict({
+            'format': 'strip',
+            'type': 'string',
+          }),
+          'type': 'array',
+        }),
+        'floor_id': dict({
+          'description': 'The floor_id. null removes the area from its floor.',
+          'format': 'strip',
+          'nullable': True,
+          'type': 'string',
+        }),
+        'humidity_entity_id': dict({
+          'description': 'The sensor that gives the humidity of the area. null removes it.',
+          'format': 'strip',
+          'nullable': True,
+          'type': 'string',
+        }),
+        'icon': dict({
+          'description': "The icon, like 'mdi:sofa'. null removes the icon.",
+          'nullable': True,
+          'type': 'string',
+        }),
+        'labels': dict({
+          'description': 'The label_ids. This replaces all labels.',
+          'items': dict({
+            'format': 'strip',
+            'type': 'string',
+          }),
+          'type': 'array',
+        }),
+        'name': dict({
+          'format': 'strip',
+          'type': 'string',
+        }),
+        'temperature_entity_id': dict({
+          'description': 'The sensor that gives the temperature of the area. null removes it.',
+          'format': 'strip',
+          'nullable': True,
+          'type': 'string',
+        }),
+      }),
+      'required': list([
+        'name',
+      ]),
+      'type': 'object',
+    }),
+    'config__create_floor': dict({
+      'additionalProperties': False,
+      'properties': dict({
+        'aliases': dict({
+          'description': 'Other names that voice assistants know the floor by. This replaces all aliases.',
+          'items': dict({
+            'format': 'strip',
+            'type': 'string',
+          }),
+          'type': 'array',
+        }),
+        'icon': dict({
+          'description': "The icon, like 'mdi:home-floor-1'. null removes it.",
+          'nullable': True,
+          'type': 'string',
+        }),
+        'level': dict({
+          'description': 'The level of the floor, to sort floors. 0 is the ground floor, -1 the floor below it. null removes it.',
+          'nullable': True,
+          'type': 'integer',
+        }),
+        'name': dict({
+          'format': 'strip',
+          'type': 'string',
+        }),
+      }),
+      'required': list([
+        'name',
+      ]),
+      'type': 'object',
+    }),
+    'config__create_label': dict({
+      'additionalProperties': False,
+      'properties': dict({
+        'color': dict({
+          'description': "A hex color like '#ff0000', or a theme color: accent, amber, black, blue, blue-grey, brown, cyan, dark-grey, deep-orange, deep-purple, disabled, green, grey, indigo, light-blue, light-green, light-grey, lime, orange, pink, primary, purple, red, teal, white, yellow. null removes it.",
+          'nullable': True,
+          'type': 'string',
+        }),
+        'description': dict({
+          'description': 'What the label is for. null removes it.',
+          'nullable': True,
+          'type': 'string',
+        }),
+        'icon': dict({
+          'description': "The icon, like 'mdi:tag'. null removes it.",
+          'nullable': True,
+          'type': 'string',
+        }),
+        'name': dict({
+          'format': 'strip',
+          'type': 'string',
+        }),
+      }),
+      'required': list([
+        'name',
+      ]),
+      'type': 'object',
+    }),
+    'config__delete_area': dict({
+      'additionalProperties': False,
+      'properties': dict({
+        'area_id': dict({
+          'format': 'strip',
+          'type': 'string',
+        }),
+      }),
+      'required': list([
+        'area_id',
+      ]),
+      'type': 'object',
+    }),
+    'config__delete_floor': dict({
+      'additionalProperties': False,
+      'properties': dict({
+        'floor_id': dict({
+          'format': 'strip',
+          'type': 'string',
+        }),
+      }),
+      'required': list([
+        'floor_id',
+      ]),
+      'type': 'object',
+    }),
+    'config__delete_label': dict({
+      'additionalProperties': False,
+      'properties': dict({
+        'label_id': dict({
+          'format': 'strip',
+          'type': 'string',
+        }),
+      }),
+      'required': list([
+        'label_id',
+      ]),
+      'type': 'object',
+    }),
+    'config__get_area_settings': dict({
+      'additionalProperties': False,
+      'properties': dict({
+        'area_id': dict({
+          'format': 'strip',
+          'type': 'string',
+        }),
+      }),
+      'required': list([
+        'area_id',
+      ]),
+      'type': 'object',
+    }),
     'config__get_config_entries': dict({
       'additionalProperties': False,
       'properties': dict({
         'domain': dict({
-          'anyOf': list([
-            dict({
-              'format': 'strip',
-              'type': 'string',
-            }),
-            dict({
-              'items': dict({
-                'format': 'strip',
+          'description': "Filter by integration domain (e.g. 'hue', 'zwave_js'). Accepts a single domain or a list of domains.",
+          'items': dict({
+            'allOf': list([
+              dict({
                 'type': 'string',
               }),
-              'minItems': 1,
-              'type': 'array',
-            }),
-          ]),
-          'description': "Filter by integration domain (e.g. 'hue', 'zwave_js'). Accepts a single domain or a list of domains.",
+              dict({
+                'format': 'strip',
+              }),
+              dict({
+                'format': 'lower',
+              }),
+            ]),
+          }),
+          'minItems': 1,
+          'type': 'array',
         }),
         'status': dict({
           'description': "Filter by status: 'loaded' (working normally), 'error' (failed setup, retrying, migration error, or failed unload), or 'not_loaded' (including disabled or ignored entries).",
@@ -32,6 +225,78 @@
           'type': 'string',
         }),
       }),
+      'type': 'object',
+    }),
+    'config__get_device_settings': dict({
+      'additionalProperties': False,
+      'properties': dict({
+        'device_id': dict({
+          'format': 'strip',
+          'type': 'string',
+        }),
+      }),
+      'required': list([
+        'device_id',
+      ]),
+      'type': 'object',
+    }),
+    'config__get_entity_settings': dict({
+      'additionalProperties': False,
+      'properties': dict({
+        'entity_id': dict({
+          'format': 'strip',
+          'type': 'string',
+        }),
+      }),
+      'required': list([
+        'entity_id',
+      ]),
+      'type': 'object',
+    }),
+    'config__get_floor_settings': dict({
+      'additionalProperties': False,
+      'properties': dict({
+        'floor_id': dict({
+          'format': 'strip',
+          'type': 'string',
+        }),
+      }),
+      'required': list([
+        'floor_id',
+      ]),
+      'type': 'object',
+    }),
+    'config__get_flows_in_progress': dict({
+      'additionalProperties': False,
+      'properties': dict({
+        'domain': dict({
+          'allOf': list([
+            dict({
+              'type': 'string',
+            }),
+            dict({
+              'format': 'strip',
+            }),
+            dict({
+              'format': 'lower',
+            }),
+          ]),
+          'description': 'Filter in-progress flows by integration domain.',
+        }),
+      }),
+      'type': 'object',
+    }),
+    'config__get_label_settings': dict({
+      'additionalProperties': False,
+      'properties': dict({
+        'label_id': dict({
+          'format': 'strip',
+          'type': 'string',
+        }),
+      }),
+      'required': list([
+        'label_id',
+      ]),
       'type': 'object',
     }),
     'config__reload_config_entry': dict({
@@ -48,26 +313,424 @@
       ]),
       'type': 'object',
     }),
-    'config__search_integrations': dict({
+    'config__remove_entity': dict({
       'additionalProperties': False,
       'properties': dict({
-        'query': dict({
-          'description': 'Search text to match against integration name, domain, or brand (case-insensitive).',
+        'entity_id': dict({
           'format': 'strip',
-          'type': 'string',
-        }),
-        'type': dict({
-          'description': "Filter results by type: 'integration' or 'helper'.",
-          'enum': list([
-            'integration',
-            'helper',
-          ]),
-          'format': 'lower',
           'type': 'string',
         }),
       }),
       'required': list([
-        'query',
+        'entity_id',
+      ]),
+      'type': 'object',
+    }),
+    'config__search_integrations': dict({
+      'additionalProperties': False,
+      'properties': dict({
+        'category': dict({
+          'description': "Filter results by category. Use 'helpers' to find helpers, and 'local_services' for waste collection, power outages and other city or utility information.",
+          'enum': list([
+            'ai_voice',
+            'appliances_cleaning',
+            'blinds_curtains',
+            'buttons_remotes',
+            'climate',
+            'computers_network',
+            'diy_makers',
+            'energy',
+            'finance',
+            'garden_plants',
+            'health_wellbeing',
+            'helpers',
+            'hubs_protocols',
+            'lighting',
+            'local_services',
+            'media_entertainment',
+            'messaging_notifications',
+            'news_social_media',
+            'other_ecosystems',
+            'pets',
+            'plugs_switches',
+            'presence_location',
+            'productivity_information',
+            'security_safety',
+            'sensors',
+            'vehicles_transport',
+            'water',
+            'weather_alerts',
+          ]),
+          'type': 'string',
+        }),
+        'offset': dict({
+          'default': 0,
+          'description': 'Number of results to skip. Use the next_offset of the previous result.',
+          'minimum': 0,
+          'type': 'integer',
+        }),
+        'query': dict({
+          'description': "Search text to match against integration name, domain, or brand (case-insensitive). Required if 'category' is not given.",
+          'format': 'strip',
+          'type': 'string',
+        }),
+      }),
+      'type': 'object',
+    }),
+    'config__start_flow': dict({
+      'additionalProperties': False,
+      'properties': dict({
+        'domain': dict({
+          'allOf': list([
+            dict({
+              'type': 'string',
+            }),
+            dict({
+              'format': 'strip',
+            }),
+            dict({
+              'format': 'lower',
+            }),
+          ]),
+          'description': "Integration domain to set up when flow_type is 'config' (e.g. 'local_todo', 'template').",
+        }),
+        'entry_id': dict({
+          'description': "The entry_id of the config entry when flow_type is 'options', 'reconfigure', or 'subentry' (e.g. 'hue:8K2M').",
+          'format': 'strip',
+          'type': 'string',
+        }),
+        'flow_type': dict({
+          'default': 'config',
+          'description': "Type of flow to start: 'config' (new entry, default), 'options', 'reconfigure', or 'subentry'.",
+          'enum': list([
+            'config',
+            'options',
+            'reconfigure',
+            'subentry',
+          ]),
+          'format': 'lower',
+          'type': 'string',
+        }),
+        'subentry_id': dict({
+          'description': "The subentry_id of an existing subentry to reconfigure (e.g. 'conversation:8K2M').",
+          'format': 'strip',
+          'type': 'string',
+        }),
+        'subentry_type': dict({
+          'description': "Subentry type key from supported_subentry_types when adding a new subentry with flow_type 'subentry' (optional when 'subentry_id' is given).",
+          'format': 'strip',
+          'type': 'string',
+        }),
+      }),
+      'type': 'object',
+    }),
+    'config__update_area_settings': dict({
+      'additionalProperties': False,
+      'properties': dict({
+        'aliases': dict({
+          'description': 'Other names that voice assistants know the area by. This replaces all aliases.',
+          'items': dict({
+            'format': 'strip',
+            'type': 'string',
+          }),
+          'type': 'array',
+        }),
+        'area_id': dict({
+          'format': 'strip',
+          'type': 'string',
+        }),
+        'floor_id': dict({
+          'description': 'The floor_id. null removes the area from its floor.',
+          'format': 'strip',
+          'nullable': True,
+          'type': 'string',
+        }),
+        'humidity_entity_id': dict({
+          'description': 'The sensor that gives the humidity of the area. null removes it.',
+          'format': 'strip',
+          'nullable': True,
+          'type': 'string',
+        }),
+        'icon': dict({
+          'description': "The icon, like 'mdi:sofa'. null removes the icon.",
+          'nullable': True,
+          'type': 'string',
+        }),
+        'labels': dict({
+          'description': 'The label_ids. This replaces all labels.',
+          'items': dict({
+            'format': 'strip',
+            'type': 'string',
+          }),
+          'type': 'array',
+        }),
+        'name': dict({
+          'format': 'strip',
+          'type': 'string',
+        }),
+        'temperature_entity_id': dict({
+          'description': 'The sensor that gives the temperature of the area. null removes it.',
+          'format': 'strip',
+          'nullable': True,
+          'type': 'string',
+        }),
+      }),
+      'required': list([
+        'area_id',
+      ]),
+      'type': 'object',
+    }),
+    'config__update_core_config': dict({
+      'additionalProperties': False,
+      'properties': dict({
+        'country': dict({
+          'description': "ISO 3166-1 alpha-2 country code, e.g. 'NL'.",
+          'type': 'string',
+        }),
+        'currency': dict({
+          'description': "ISO 4217 currency code, e.g. 'EUR'.",
+          'type': 'string',
+        }),
+        'elevation': dict({
+          'description': 'Elevation in meters above sea level.',
+          'type': 'integer',
+        }),
+        'external_url': dict({
+          'description': 'URL of Home Assistant on the internet. Only set it when the URL in use does not work. null lets Home Assistant find it.',
+          'nullable': True,
+          'type': 'string',
+        }),
+        'internal_url': dict({
+          'description': 'URL of Home Assistant on the local network. Only set it when the URL in use does not work. null lets Home Assistant find it.',
+          'nullable': True,
+          'type': 'string',
+        }),
+        'language': dict({
+          'description': "Language code, e.g. 'en' or 'pt-BR'.",
+          'type': 'string',
+        }),
+        'latitude': dict({
+          'type': 'number',
+        }),
+        'location_name': dict({
+          'description': 'The name of the home.',
+          'type': 'string',
+        }),
+        'longitude': dict({
+          'type': 'number',
+        }),
+        'radius': dict({
+          'description': 'Radius of the home zone in meters.',
+          'type': 'integer',
+        }),
+        'time_zone': dict({
+          'description': "IANA time zone, e.g. 'Europe/Amsterdam'.",
+          'type': 'string',
+        }),
+        'unit_system': dict({
+          'description': 'A new unit system also changes the units of sensors, except units the user set.',
+          'enum': list([
+            'metric',
+            'us_customary',
+          ]),
+          'type': 'string',
+        }),
+      }),
+      'type': 'object',
+    }),
+    'config__update_device_settings': dict({
+      'additionalProperties': False,
+      'properties': dict({
+        'area_id': dict({
+          'description': 'The area_id. null removes the area, and a child device then uses the area of its parent.',
+          'format': 'strip',
+          'nullable': True,
+          'type': 'string',
+        }),
+        'device_id': dict({
+          'format': 'strip',
+          'type': 'string',
+        }),
+        'disabled_by': dict({
+          'description': "'user' disables the device and its entities, null enables it.",
+          'enum': list([
+            'user',
+            None,
+          ]),
+          'nullable': True,
+          'type': 'string',
+        }),
+        'labels': dict({
+          'description': 'The label_ids. This replaces all labels.',
+          'items': dict({
+            'format': 'strip',
+            'type': 'string',
+          }),
+          'type': 'array',
+        }),
+        'name_by_user': dict({
+          'description': 'The name of the device. null uses the name from the integration.',
+          'format': 'strip',
+          'nullable': True,
+          'type': 'string',
+        }),
+      }),
+      'required': list([
+        'device_id',
+      ]),
+      'type': 'object',
+    }),
+    'config__update_entity_settings': dict({
+      'additionalProperties': False,
+      'properties': dict({
+        'aliases': dict({
+          'description': 'The names that voice assistants know the entity by. This replaces all aliases. null stands for the name of the entity.',
+          'items': dict({
+            'format': 'strip',
+            'nullable': True,
+            'type': 'string',
+          }),
+          'type': 'array',
+        }),
+        'area_id': dict({
+          'description': 'The area_id. null uses the area of the device.',
+          'format': 'strip',
+          'nullable': True,
+          'type': 'string',
+        }),
+        'device_class': dict({
+          'description': "The device class, like 'outlet' for a switch. null uses the device class from the integration.",
+          'format': 'strip',
+          'nullable': True,
+          'type': 'string',
+        }),
+        'disabled_by': dict({
+          'description': "'user' disables the entity, null enables it. A disabled entity has no state.",
+          'enum': list([
+            'user',
+            None,
+          ]),
+          'nullable': True,
+          'type': 'string',
+        }),
+        'display_precision': dict({
+          'description': 'Only for sensors. The number of decimals to show. null uses the default.',
+          'minimum': 0,
+          'nullable': True,
+          'type': 'integer',
+        }),
+        'entity_id': dict({
+          'format': 'strip',
+          'type': 'string',
+        }),
+        'hidden_by': dict({
+          'description': "'user' hides the entity from auto-populated dashboards, null shows it.",
+          'enum': list([
+            'user',
+            None,
+          ]),
+          'nullable': True,
+          'type': 'string',
+        }),
+        'icon': dict({
+          'description': "The icon, like 'mdi:lamp'. null uses the icon from the integration.",
+          'nullable': True,
+          'type': 'string',
+        }),
+        'labels': dict({
+          'description': 'The label_ids. This replaces all labels.',
+          'items': dict({
+            'format': 'strip',
+            'type': 'string',
+          }),
+          'type': 'array',
+        }),
+        'name': dict({
+          'description': 'The name of the entity. null uses the name from the integration. An empty string names the entity after its device only.',
+          'format': 'strip',
+          'nullable': True,
+          'type': 'string',
+        }),
+        'new_entity_id': dict({
+          'description': 'A new entity_id. Automations and scripts that use the old one are not updated.',
+          'type': 'string',
+        }),
+        'unit_of_measurement': dict({
+          'description': "Only for sensors. The unit to show the state in, like 'kWh'. null uses the default unit of the sensor.",
+          'format': 'strip',
+          'nullable': True,
+          'type': 'string',
+        }),
+      }),
+      'required': list([
+        'entity_id',
+      ]),
+      'type': 'object',
+    }),
+    'config__update_floor_settings': dict({
+      'additionalProperties': False,
+      'properties': dict({
+        'aliases': dict({
+          'description': 'Other names that voice assistants know the floor by. This replaces all aliases.',
+          'items': dict({
+            'format': 'strip',
+            'type': 'string',
+          }),
+          'type': 'array',
+        }),
+        'floor_id': dict({
+          'format': 'strip',
+          'type': 'string',
+        }),
+        'icon': dict({
+          'description': "The icon, like 'mdi:home-floor-1'. null removes it.",
+          'nullable': True,
+          'type': 'string',
+        }),
+        'level': dict({
+          'description': 'The level of the floor, to sort floors. 0 is the ground floor, -1 the floor below it. null removes it.',
+          'nullable': True,
+          'type': 'integer',
+        }),
+        'name': dict({
+          'format': 'strip',
+          'type': 'string',
+        }),
+      }),
+      'required': list([
+        'floor_id',
+      ]),
+      'type': 'object',
+    }),
+    'config__update_label_settings': dict({
+      'additionalProperties': False,
+      'properties': dict({
+        'color': dict({
+          'description': "A hex color like '#ff0000', or a theme color: accent, amber, black, blue, blue-grey, brown, cyan, dark-grey, deep-orange, deep-purple, disabled, green, grey, indigo, light-blue, light-green, light-grey, lime, orange, pink, primary, purple, red, teal, white, yellow. null removes it.",
+          'nullable': True,
+          'type': 'string',
+        }),
+        'description': dict({
+          'description': 'What the label is for. null removes it.',
+          'nullable': True,
+          'type': 'string',
+        }),
+        'icon': dict({
+          'description': "The icon, like 'mdi:tag'. null removes it.",
+          'nullable': True,
+          'type': 'string',
+        }),
+        'label_id': dict({
+          'format': 'strip',
+          'type': 'string',
+        }),
+        'name': dict({
+          'format': 'strip',
+          'type': 'string',
+        }),
+      }),
+      'required': list([
+        'label_id',
       ]),
       'type': 'object',
     }),

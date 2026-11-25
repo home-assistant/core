@@ -134,7 +134,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: FlicButtonConfigEntry) -
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    # Reload entry when options change (e.g. push_twist_mode)
     entry.async_on_unload(entry.add_update_listener(_async_update_listener))
 
 

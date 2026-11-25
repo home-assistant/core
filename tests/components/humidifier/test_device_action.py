@@ -11,7 +11,12 @@ from pytest_unordered import unordered
 
 from homeassistant.components import automation
 from homeassistant.components.device_automation import DeviceAutomationType
-from homeassistant.components.humidifier import DOMAIN, const, device_action
+from homeassistant.components.humidifier import (
+    DOMAIN,
+    HumidifierEntityCapabilityAttribute,
+    const,
+    device_action,
+)
 from homeassistant.const import STATE_ON, EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import (
@@ -158,7 +163,12 @@ async def test_action(
     hass.states.async_set(
         entry.entity_id,
         STATE_ON,
-        {const.ATTR_AVAILABLE_MODES: [const.MODE_HOME, const.MODE_AWAY]},
+        {
+            HumidifierEntityCapabilityAttribute.AVAILABLE_MODES: [
+                const.MODE_HOME,
+                const.MODE_AWAY,
+            ]
+        },
     )
 
     assert await async_setup_component(
@@ -317,7 +327,12 @@ async def test_action_legacy(
     hass.states.async_set(
         entry.entity_id,
         STATE_ON,
-        {const.ATTR_AVAILABLE_MODES: [const.MODE_HOME, const.MODE_AWAY]},
+        {
+            HumidifierEntityCapabilityAttribute.AVAILABLE_MODES: [
+                const.MODE_HOME,
+                const.MODE_AWAY,
+            ]
+        },
     )
 
     assert await async_setup_component(
@@ -391,7 +406,12 @@ async def test_action_legacy(
         ),
         (
             False,
-            {const.ATTR_AVAILABLE_MODES: [const.MODE_HOME, const.MODE_AWAY]},
+            {
+                HumidifierEntityCapabilityAttribute.AVAILABLE_MODES: [
+                    const.MODE_HOME,
+                    const.MODE_AWAY,
+                ]
+            },
             {},
             "set_mode",
             [
@@ -433,7 +453,12 @@ async def test_action_legacy(
         (
             True,
             {},
-            {const.ATTR_AVAILABLE_MODES: [const.MODE_HOME, const.MODE_AWAY]},
+            {
+                HumidifierEntityCapabilityAttribute.AVAILABLE_MODES: [
+                    const.MODE_HOME,
+                    const.MODE_AWAY,
+                ]
+            },
             "set_mode",
             [
                 {
@@ -535,7 +560,12 @@ async def test_capabilities(
         ),
         (
             False,
-            {const.ATTR_AVAILABLE_MODES: [const.MODE_HOME, const.MODE_AWAY]},
+            {
+                HumidifierEntityCapabilityAttribute.AVAILABLE_MODES: [
+                    const.MODE_HOME,
+                    const.MODE_AWAY,
+                ]
+            },
             {},
             "set_mode",
             [
@@ -577,7 +607,12 @@ async def test_capabilities(
         (
             True,
             {},
-            {const.ATTR_AVAILABLE_MODES: [const.MODE_HOME, const.MODE_AWAY]},
+            {
+                HumidifierEntityCapabilityAttribute.AVAILABLE_MODES: [
+                    const.MODE_HOME,
+                    const.MODE_AWAY,
+                ]
+            },
             "set_mode",
             [
                 {

@@ -4,7 +4,7 @@ from enum import StrEnum
 
 import probatio
 
-from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.const import CommonServiceArgument
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import config_validation as cv
 
@@ -23,7 +23,9 @@ class BlackbirdServiceArgument(StrEnum):
     SOURCE = "source"
 
 
-MEDIA_PLAYER_SCHEMA = probatio.Schema({ATTR_ENTITY_ID: cv.comp_entity_ids})
+MEDIA_PLAYER_SCHEMA = probatio.Schema(
+    {CommonServiceArgument.ENTITY_ID: cv.comp_entity_ids}
+)
 
 BLACKBIRD_SETALLZONES_SCHEMA = MEDIA_PLAYER_SCHEMA.extend(
     {probatio.Required(BlackbirdServiceArgument.SOURCE): cv.string}
@@ -32,7 +34,7 @@ BLACKBIRD_SETALLZONES_SCHEMA = MEDIA_PLAYER_SCHEMA.extend(
 
 def _service_handle(service: ServiceCall) -> None:
     """Handle for services."""
-    entity_ids = service.data.get(ATTR_ENTITY_ID)
+    entity_ids = service.data.get(CommonServiceArgument.ENTITY_ID)
     source = service.data.get(BlackbirdServiceArgument.SOURCE)
     zones = service.hass.data.get(DATA_BLACKBIRD, {})
     if entity_ids:

@@ -5,7 +5,7 @@ from enum import StrEnum
 from amberelectric.models.channel import ChannelType
 import probatio
 
-from homeassistant.const import ATTR_CONFIG_ENTRY_ID
+from homeassistant.const import CommonServiceArgument
 from homeassistant.core import (
     HomeAssistant,
     ServiceCall,
@@ -37,7 +37,9 @@ class AmberElectricServiceArgument(StrEnum):
 
 GET_FORECASTS_SCHEMA = probatio.Schema(
     {
-        ATTR_CONFIG_ENTRY_ID: ConfigEntrySelector({"integration": DOMAIN}),
+        CommonServiceArgument.CONFIG_ENTRY_ID: ConfigEntrySelector(
+            {"integration": DOMAIN}
+        ),
         AmberElectricServiceArgument.CHANNEL_TYPE: probatio.In(
             [GENERAL_CHANNEL, CONTROLLED_LOAD_CHANNEL, FEED_IN_CHANNEL]
         ),
@@ -101,7 +103,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
     async def handle_get_forecasts(call: ServiceCall) -> ServiceResponse:
         channel_type = call.data[AmberElectricServiceArgument.CHANNEL_TYPE]
         entry: AmberConfigEntry = service.async_get_config_entry(
-            hass, DOMAIN, call.data[ATTR_CONFIG_ENTRY_ID]
+            hass, DOMAIN, call.data[CommonServiceArgument.CONFIG_ENTRY_ID]
         )
         coordinator = entry.runtime_data
         forecasts = get_forecasts(channel_type, coordinator.data)

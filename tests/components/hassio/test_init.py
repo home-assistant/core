@@ -1,15 +1,20 @@
 """The tests for the hassio component."""
 
+from collections.abc import AsyncIterator
 from dataclasses import replace
 from datetime import timedelta
 import logging
 import os
-from pathlib import PurePath
+from pathlib import Path, PurePath
 from typing import Any
 from unittest.mock import AsyncMock, Mock, call, patch
 from uuid import uuid4
 
-from aiohasupervisor import SupervisorBadRequestError, SupervisorError
+from aiohasupervisor import (
+    SupervisorBadRequestError,
+    SupervisorError,
+    SupervisorTimeoutError,
+)
 from aiohasupervisor.models import (
     AddonsStats,
     AddonStage,
@@ -20,6 +25,7 @@ from aiohasupervisor.models import (
     HomeAssistantOptions,
     InstalledAddon,
     InstalledAddonComplete,
+    LogsOptions,
     MountsInfo,
     MountState,
     MountType,
@@ -34,8 +40,8 @@ from freezegun.api import FrozenDateTimeFactory
 from probatio import Invalid
 import pytest
 from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
-from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 from pytest_homeassistant.typing import WebSocketGenerator
+from yarl import URL
 
 from homeassistant.auth.const import GROUP_ID_ADMIN
 from homeassistant.auth.models import User
@@ -68,6 +74,7 @@ from homeassistant.components.hassio.const import (
     OPTION_CORE_BACKUP_BEFORE_UPDATE,
     REQUEST_REFRESH_DELAY,
 )
+from homeassistant.components.hassio.handler import KEY_SUPERVISOR_CONNECTION
 from homeassistant.components.hassio.services import (
     HassioService,
     HassioServiceArgument,
@@ -89,6 +96,16 @@ from homeassistant.util import dt as dt_util
 from homeassistant.util.yaml import load_yaml_dict
 
 MOCK_ENVIRON = {"SUPERVISOR": "127.0.0.1", "SUPERVISOR_TOKEN": "abcdefgh"}
+
+
+def _stream(text: str) -> AsyncIterator[str]:
+    """Return the lines of a log as the client streams them."""
+
+    async def _lines() -> AsyncIterator[str]:
+        for line in text.splitlines():
+            yield line
+
+    return _lines()
 
 
 @pytest.fixture(autouse=True)
@@ -188,13 +205,12 @@ async def test_setup_api_ping(
     assert is_hassio(hass)
 
 
-@pytest.mark.usefixtures("supervisor_client")
 @pytest.mark.parametrize(
-    ("response", "expected", "logged"),
+    ("logs", "expected", "logged"),
     [
         pytest.param(
             {
-                "text": (
+                "return_value": _stream(
                     "2026-10-29 10:00:00.000 INFO (MainThread) [homeassistant.setup]"
                     " Setup\n"
                     "2026-10-29 10:00:01.000 ERROR (MainThread)"
@@ -203,31 +219,34 @@ async def test_setup_api_ping(
                 )
             },
             [
-                "2026-10-29 10:00:01.000 ERROR (MainThread)"
-                " [homeassistant.components.demo] Failed",
+                (
+                    "2026-10-29 10:00:01.000 ERROR (MainThread)"
+                    " [homeassistant.components.demo] Failed"
+                ),
                 "ValueError: boom",
             ],
             False,
             id="read",
         ),
-        pytest.param({"exc": aiohttp.ClientError()}, [], True, id="error"),
+        pytest.param({"side_effect": SupervisorError("boom")}, [], True, id="error"),
+        pytest.param(
+            {"side_effect": SupervisorTimeoutError("stalled")}, [], True, id="timeout"
+        ),
     ],
 )
 async def test_core_log_reader(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
-    aioclient_mock: AiohttpClientMocker,
+    supervisor_client: AsyncMock,
     caplog: pytest.LogCaptureFixture,
-    response: dict[str, Any],
+    logs: dict[str, Any],
     expected: list[str],
     logged: bool,
 ) -> None:
     """Test the raw log starts with the Supervisor journal without a log file."""
     caplog.set_level(logging.DEBUG, logger="homeassistant.components.hassio")
     hass.data[KEY_DATA_LOGGING] = None
-    aioclient_mock.get(
-        "http://127.0.0.1/core/logs/latest", params={"lines": 5000}, **response
-    )
+    supervisor_client.homeassistant.logs.configure_mock(**logs)
     with patch.dict(os.environ, MOCK_ENVIRON):
         assert await async_setup_component(hass, "system_log", {})
         assert await async_setup_component(hass, DOMAIN, {})
@@ -241,7 +260,54 @@ async def test_core_log_reader(
     assert msg["success"]
     msg = await client.receive_json()
     assert msg["event"] == expected
+    assert supervisor_client.homeassistant.logs.mock_calls == [
+        call(LogsOptions(lines=50_000), latest=True, read_timeout=30)
+    ]
     assert ("Could not read the Home Assistant log" in caplog.text) is logged
+
+
+@pytest.mark.parametrize(
+    ("environ", "base_url", "unix_socket"),
+    [
+        pytest.param(MOCK_ENVIRON, "http://127.0.0.1", None, id="tcp"),
+        pytest.param(
+            {
+                **MOCK_ENVIRON,
+                "SUPERVISOR_SOCKET": "/run/supervisor/api/supervisor.sock",
+            },
+            "http://localhost",
+            Path("/run/supervisor/api/supervisor.sock"),
+            id="unix_socket",
+        ),
+        pytest.param(
+            {
+                "SUPERVISOR": "127.0.0.1",
+                "SUPERVISOR_SOCKET": "/run/supervisor/api/supervisor.sock",
+            },
+            "http://localhost",
+            Path("/run/supervisor/api/supervisor.sock"),
+            id="unix_socket_without_token",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("supervisor_client")
+async def test_setup_supervisor_transport(
+    hass: HomeAssistant,
+    environ: dict[str, str],
+    base_url: str,
+    unix_socket: Path | None,
+) -> None:
+    """Test Supervisor is reached over its Unix socket when one is provided."""
+    with patch.dict(os.environ, environ, clear=True):
+        assert await async_setup_component(hass, DOMAIN, {})
+        await hass.async_block_till_done()
+
+    connection = hass.data[KEY_SUPERVISOR_CONNECTION]
+    assert connection.base_url == URL(base_url)
+    assert connection.unix_socket == unix_socket
+    assert isinstance(connection.session.connector, aiohttp.UnixConnector) is (
+        unix_socket is not None
+    )
 
 
 async def test_setup_api_ping_fails(
@@ -713,11 +779,37 @@ async def test_setup_hassio_no_additional_data(
     assert len(supervisor_client.mock_calls) == 17
 
 
-async def test_fail_setup_without_environ_var(hass: HomeAssistant) -> None:
-    """Fail setup if no environ variable set."""
-    with patch.dict(os.environ, {}, clear=True):
+@pytest.mark.parametrize(
+    ("environ", "missing"),
+    [
+        pytest.param({}, "SUPERVISOR", id="none"),
+        pytest.param(
+            {
+                "SUPERVISOR_TOKEN": "abcdefgh",
+                "SUPERVISOR_SOCKET": "/run/supervisor/api/supervisor.sock",
+            },
+            "SUPERVISOR",
+            id="no_supervisor",
+        ),
+        pytest.param(
+            {"SUPERVISOR": "127.0.0.1"},
+            "SUPERVISOR_SOCKET or SUPERVISOR_TOKEN",
+            id="no_token_or_socket",
+        ),
+    ],
+)
+async def test_fail_setup_without_environ_var(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    environ: dict[str, str],
+    missing: str,
+) -> None:
+    """Fail setup if required environ variables are not set."""
+    with patch.dict(os.environ, environ, clear=True):
         result = await async_setup_component(hass, DOMAIN, {})
         assert not result
+
+    assert f"Missing {missing} environment variable" in caplog.text
 
 
 async def test_warn_when_cannot_connect(
@@ -1095,95 +1187,58 @@ async def test_invalid_service_calls_folder_duplicates(hass: HomeAssistant) -> N
         )
 
 
-@pytest.mark.usefixtures("hassio_env")
-async def test_partial_backup_legacy_homeassistant_folder(
-    hass: HomeAssistant,
-    issue_registry: ir.IssueRegistry,
-    supervisor_client: AsyncMock,
-) -> None:
-    """Test legacy "homeassistant" folder is translated to homeassistant=True."""
-    assert await async_setup_component(hass, DOMAIN, {})
-    supervisor_client.backups.partial_backup.return_value = NewBackup(
-        job_id=uuid4(), slug="partial"
-    )
-
-    await hass.services.async_call(
-        DOMAIN,
-        HassioService.BACKUP_PARTIAL,
-        {
-            HassioServiceArgument.FOLDERS: ["homeassistant", "ssl"],
-            HassioServiceArgument.NAME: "test",
-        },
-        blocking=True,
-    )
-    supervisor_client.backups.partial_backup.assert_called_once_with(
-        PartialBackupOptions(
-            name="test",
-            homeassistant=True,
-            folders={Folder.SSL},
-        )
-    )
-    assert (
-        issue_registry.async_get_issue("hassio", "legacy_homeassistant_folder")
-        is not None
-    )
-
-
-@pytest.mark.usefixtures("hassio_env")
-async def test_partial_restore_legacy_homeassistant_folder(
-    hass: HomeAssistant, supervisor_client: AsyncMock
-) -> None:
-    """Test that the legacy "homeassistant" folder is translated for restore too."""
-    assert await async_setup_component(hass, DOMAIN, {})
-
-    await hass.services.async_call(
-        DOMAIN,
-        HassioService.RESTORE_PARTIAL,
-        {
-            HassioServiceArgument.SLUG: "test",
-            HassioServiceArgument.FOLDERS: ["homeassistant", "ssl"],
-        },
-        blocking=True,
-    )
-    supervisor_client.backups.partial_restore.assert_called_once_with(
-        "test",
-        PartialRestoreOptions(
-            homeassistant=True,
-            folders={Folder.SSL},
+@pytest.mark.parametrize(
+    ("service", "service_data"),
+    [
+        pytest.param(HassioService.BACKUP_PARTIAL, {}, id="backup"),
+        pytest.param(
+            HassioService.RESTORE_PARTIAL,
+            {HassioServiceArgument.SLUG: "test"},
+            id="restore",
         ),
+    ],
+)
+@pytest.mark.parametrize("folder", ["bogus", "homeassistant"])
+@pytest.mark.usefixtures("hassio_env", "supervisor_client")
+async def test_partial_invalid_folder(
+    hass: HomeAssistant,
+    service: HassioService,
+    service_data: dict[str, str],
+    folder: str,
+) -> None:
+    """Test that an unknown or the removed legacy folder name is rejected."""
+    assert await async_setup_component(hass, DOMAIN, {})
+
+    with pytest.raises(Invalid, match="expected Folder"):
+        await hass.services.async_call(
+            DOMAIN,
+            service,
+            {**service_data, HassioServiceArgument.FOLDERS: [folder]},
+        )
+
+
+@pytest.mark.parametrize(
+    "ignore_missing_translations",
+    ["component.hassio.issues.legacy_homeassistant_folder.title"],
+)
+@pytest.mark.usefixtures("hassio_env", "supervisor_client")
+async def test_legacy_homeassistant_folder_issue_removed(
+    hass: HomeAssistant, issue_registry: ir.IssueRegistry
+) -> None:
+    """Test the persistent issue of the removed legacy folder alias is deleted."""
+    ir.async_create_issue(
+        hass,
+        DOMAIN,
+        "legacy_homeassistant_folder",
+        is_fixable=True,
+        is_persistent=True,
+        severity=ir.IssueSeverity.WARNING,
+        translation_key="legacy_homeassistant_folder",
     )
 
-
-@pytest.mark.usefixtures("hassio_env", "supervisor_client")
-async def test_partial_backup_invalid_folder(hass: HomeAssistant) -> None:
-    """Test that an unknown folder name is rejected."""
     assert await async_setup_component(hass, DOMAIN, {})
 
-    with pytest.raises(Invalid, match="not a valid value"):
-        await hass.services.async_call(
-            DOMAIN,
-            HassioService.BACKUP_PARTIAL,
-            {HassioServiceArgument.FOLDERS: ["bogus"]},
-        )
-
-
-@pytest.mark.usefixtures("hassio_env", "supervisor_client")
-async def test_partial_backup_legacy_homeassistant_folder_conflict(
-    hass: HomeAssistant,
-) -> None:
-    """Reject combining homeassistant=False with the legacy "homeassistant" folder."""
-    assert await async_setup_component(hass, DOMAIN, {})
-
-    with pytest.raises(ServiceValidationError, match="conflicts"):
-        await hass.services.async_call(
-            DOMAIN,
-            HassioService.BACKUP_PARTIAL,
-            {
-                HassioServiceArgument.HOMEASSISTANT: False,
-                HassioServiceArgument.FOLDERS: ["homeassistant"],
-            },
-            blocking=True,
-        )
+    assert not issue_registry.async_get_issue(DOMAIN, "legacy_homeassistant_folder")
 
 
 @pytest.mark.usefixtures("addon_installed")

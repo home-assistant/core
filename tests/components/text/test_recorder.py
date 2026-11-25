@@ -10,8 +10,8 @@ from pytest_homeassistant.components.recorder.common import async_wait_recording
 from homeassistant.components import text
 from homeassistant.components.recorder import Recorder
 from homeassistant.components.recorder.history import get_significant_states
-from homeassistant.components.text import ATTR_MAX, ATTR_MIN, ATTR_MODE, ATTR_PATTERN
-from homeassistant.const import ATTR_FRIENDLY_NAME, Platform
+from homeassistant.components.text import TextEntityCapabilityAttribute
+from homeassistant.const import EntityStateAttribute, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
@@ -43,6 +43,11 @@ async def test_exclude_attributes(recorder_mock: Recorder, hass: HomeAssistant) 
     assert len(states) >= 1
     for entity_states in states.values():
         for state in entity_states:
-            for attr in (ATTR_MAX, ATTR_MIN, ATTR_MODE, ATTR_PATTERN):
+            for attr in (
+                TextEntityCapabilityAttribute.MAX,
+                TextEntityCapabilityAttribute.MIN,
+                TextEntityCapabilityAttribute.MODE,
+                TextEntityCapabilityAttribute.PATTERN,
+            ):
                 assert attr not in state.attributes
-            assert ATTR_FRIENDLY_NAME in state.attributes
+            assert EntityStateAttribute.FRIENDLY_NAME in state.attributes

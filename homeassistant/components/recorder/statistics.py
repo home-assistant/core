@@ -26,7 +26,6 @@ from sqlalchemy import (
     text,
     update,
 )
-from sqlalchemy.engine import Result
 from sqlalchemy.engine.row import Row
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm.session import Session
@@ -39,7 +38,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback, valid_entity_id
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.frame import report_usage
 from homeassistant.helpers.recorder import DATA_RECORDER, get_instance, session_scope
 from homeassistant.helpers.singleton import singleton
 from homeassistant.helpers.typing import Undefined
@@ -110,9 +108,9 @@ from .models import (
     process_timestamp,
 )
 from .util import (
-    _rollback_read_only_session,
     execute,
     execute_stmt_lambda_element,
+    execute_stmt_lambda_element_streamed,
     filter_unique_constraint_integrity_error,
     retryable_database_job,
 )
@@ -1042,13 +1040,8 @@ def async_update_statistics_metadata(
     """Update statistics metadata for a statistic_id."""
     if new_unit_of_measurement is not Undefined and new_unit_class is Undefined:
         if not _called_from_ws_api:
-            report_usage(
-                (
-                    "doesn't specify unit_class when calling "
-                    "async_update_statistics_metadata"
-                ),
-                breaks_in_ha_version="2026.11",
-                exclude_integrations={DOMAIN},
+            raise HomeAssistantError(
+                "new_unit_class must be specified with new_unit_of_measurement"
             )
 
         unit = new_unit_of_measurement
@@ -1707,7 +1700,7 @@ def _get_oldest_sum_statistic(
         table: type[StatisticsBase],
         metadata_id: int,
     ) -> float | None:
-        """Return the oldest non-NULL sum during the period."""
+        """Return the non-NULL sum the period's change is measured from."""
         stmt = lambda_stmt(
             lambda: (
                 select(table.sum)
@@ -1726,6 +1719,24 @@ def _get_oldest_sum_statistic(
                 period = start_time.replace(minute=0, second=0, microsecond=0)
             prev_period = period - table.duration
             prev_period_ts = prev_period.timestamp()
+            # Not for short-term: its data may stop while imported long-term
+            # rows continue, so an older short-term sum would be stale
+            if table == Statistics:
+                newest_before_stmt = lambda_stmt(
+                    lambda: (
+                        select(table.sum)
+                        .filter(table.metadata_id == metadata_id)
+                        .filter(table.sum.is_not(None))
+                        .filter(table.start_ts <= prev_period_ts)
+                        .order_by(table.start_ts.desc())
+                        .limit(1)
+                    )
+                )
+                if stats := cast(
+                    Sequence[Row],
+                    execute_stmt_lambda_element(session, newest_before_stmt),
+                ):
+                    return cast(float, stats[0].sum)
             stmt += lambda q: q.filter(table.start_ts >= prev_period_ts)
         stats = cast(Sequence[Row], execute_stmt_lambda_element(session, stmt))
         return stats[0].sum if stats else None
@@ -1958,7 +1969,9 @@ def statistic_during_period(
                 types,
             )
 
-        if "change" in types:
+        if "change" in types and not metadata[1]["has_sum"]:
+            result["change"] = None
+        elif "change" in types:
             oldest_sum: float | None
             if start_time is None:
                 oldest_sum = 0.0
@@ -2225,20 +2238,9 @@ def _statistics_during_period_with_session(
         types=types,
         reducer=reducer,
     )
-    stats = cast(
-        Result, execute_stmt_lambda_element(session, stmt, orm_rows=False, stream=True)
+    result = execute_stmt_lambda_element_streamed(
+        session, stmt, lambda rows, fields: to_dict(rows, fields=fields)
     )
-    try:
-        result = to_dict(stats, fields=stats.keys())
-    except SQLAlchemyError as err:
-        # Streamed rows are read outside the retry loop of
-        # execute_stmt_lambda_element, fall back to reading all rows at once
-        _LOGGER.error("Error reading statistics, retrying: %s", err)
-        _rollback_read_only_session(session)
-        rows = cast(
-            Sequence[Row], execute_stmt_lambda_element(session, stmt, orm_rows=False)
-        )
-        result = to_dict(rows, fields=stats.keys())
     if not result:
         return {}
 
@@ -2792,6 +2794,17 @@ def update_statistics_issues(hass: HomeAssistant) -> None:
                 )
 
 
+def _validate_metadata_keys(
+    metadata: StatisticMetaData, called_from_ws_api: bool
+) -> None:
+    """Raise if the metadata misses mean_type or unit_class."""
+    if called_from_ws_api:
+        return
+    for key in ("mean_type", "unit_class"):
+        if key not in metadata:
+            raise HomeAssistantError(f"Statistics metadata must specify {key}")
+
+
 @callback
 def _async_import_statistics(
     hass: HomeAssistant,
@@ -2873,18 +2886,7 @@ def async_import_statistics(
     if not metadata["source"] or metadata["source"] != DOMAIN:
         raise HomeAssistantError("Invalid source")
 
-    if "mean_type" not in metadata and not _called_from_ws_api:  # type: ignore[unreachable]
-        report_usage(  # type: ignore[unreachable]
-            "doesn't specify mean_type when calling async_import_statistics",
-            breaks_in_ha_version="2026.11",
-            exclude_integrations={DOMAIN},
-        )
-    if "unit_class" not in metadata and not _called_from_ws_api:  # type: ignore[unreachable]
-        report_usage(  # type: ignore[unreachable]
-            "doesn't specify unit_class when calling async_import_statistics",
-            breaks_in_ha_version="2026.11",
-            exclude_integrations={DOMAIN},
-        )
+    _validate_metadata_keys(metadata, _called_from_ws_api)
 
     _async_import_statistics(hass, metadata, statistics)
 
@@ -2910,18 +2912,7 @@ def async_add_external_statistics(
     if not metadata["source"] or metadata["source"] != domain:
         raise HomeAssistantError("Invalid source")
 
-    if "mean_type" not in metadata and not _called_from_ws_api:  # type: ignore[unreachable]
-        report_usage(  # type: ignore[unreachable]
-            "doesn't specify mean_type when calling async_add_external_statistics",
-            breaks_in_ha_version="2026.11",
-            exclude_integrations={DOMAIN},
-        )
-    if "unit_class" not in metadata and not _called_from_ws_api:  # type: ignore[unreachable]
-        report_usage(  # type: ignore[unreachable]
-            "doesn't specify unit_class when calling async_add_external_statistics",
-            breaks_in_ha_version="2026.11",
-            exclude_integrations={DOMAIN},
-        )
+    _validate_metadata_keys(metadata, _called_from_ws_api)
 
     _async_import_statistics(hass, metadata, statistics)
 

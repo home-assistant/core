@@ -17,23 +17,31 @@ from homeassistant.components.google_travel_time.const import (
     CONF_DEPARTURE_TIME,
     CONF_DESTINATION,
     CONF_ORIGIN,
+    CONF_REFERRER,
     CONF_TIME,
     CONF_TIME_TYPE,
     CONF_TRAFFIC_MODEL,
     CONF_TRANSIT_MODE,
     CONF_TRANSIT_ROUTING_PREFERENCE,
+    CONF_TRAVEL_ROUTING_PREFERENCE,
     CONF_UNITS,
     DEFAULT_NAME,
     DEPARTURE_TIME,
     DOMAIN,
+    SECTION_API_KEY_OPTIONS,
     UNITS_IMPERIAL,
 )
 from homeassistant.config_entries import SOURCE_USER, ConfigFlowResult
 from homeassistant.const import CONF_API_KEY, CONF_LANGUAGE, CONF_MODE
 from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.data_entry_flow import FlowResultType, section
 
-from .const import DEFAULT_OPTIONS, MOCK_CONFIG, RECONFIGURE_CONFIG
+from .const import (
+    DEFAULT_OPTIONS,
+    MOCK_CONFIG,
+    MOCK_CONFIG_REFERRER,
+    RECONFIGURE_CONFIG,
+)
 
 
 async def assert_common_reconfigure_steps(
@@ -135,6 +143,14 @@ async def test_minimum_fields(hass: HomeAssistant) -> None:
             GoogleMapsRoutingApiAuthError("Unauthenticated.", status="UNAUTHENTICATED"),
             "invalid_auth",
         ),
+        (
+            GoogleMapsRoutingApiAuthError(
+                "Requests from referer <empty> are blocked.",
+                status="PERMISSION_DENIED",
+                reason="API_KEY_HTTP_REFERRER_BLOCKED",
+            ),
+            "invalid_referrer",
+        ),
     ],
 )
 async def test_errors(
@@ -160,6 +176,40 @@ async def test_errors(
     await assert_common_create_steps(hass, result)
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_referrer(hass: HomeAssistant, routes_mock: AsyncMock) -> None:
+    """Test creating an entry with an HTTP referrer."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    assert result["type"] is FlowResultType.FORM
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            **MOCK_CONFIG,
+            SECTION_API_KEY_OPTIONS: {CONF_REFERRER: "https://example.com/"},
+        },
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"] == MOCK_CONFIG_REFERRER
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_form_shows_referrer_section(hass: HomeAssistant) -> None:
+    """Test the user form contains the optional API key options section."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    assert result["type"] is FlowResultType.FORM
+
+    schema = result["data_schema"].schema
+    assert any(
+        key.schema == SECTION_API_KEY_OPTIONS and isinstance(value, section)
+        for key, value in schema.items()
+    )
+
+
 @pytest.mark.parametrize(
     ("data", "options"),
     [(MOCK_CONFIG, DEFAULT_OPTIONS)],
@@ -174,6 +224,113 @@ async def test_reconfigure(
     assert result["step_id"] == "reconfigure"
 
     await assert_common_reconfigure_steps(hass, result, routes_mock)
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
+@pytest.mark.parametrize(
+    ("data", "options"),
+    [(MOCK_CONFIG_REFERRER, DEFAULT_OPTIONS)],
+)
+async def test_reconfigure_referrer(
+    hass: HomeAssistant, mock_config: MockConfigEntry, routes_mock: AsyncMock
+) -> None:
+    """Test reconfiguring an entry with an HTTP referrer."""
+    result = await mock_config.start_reconfigure_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+
+    routes_mock.async_compute_routes.return_value = None
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            **MOCK_CONFIG,
+            SECTION_API_KEY_OPTIONS: {CONF_REFERRER: "https://example.org/"},
+        },
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    await hass.async_block_till_done()
+
+    entry = hass.config_entries.async_entries(DOMAIN)[0]
+    assert entry.data == {**MOCK_CONFIG, CONF_REFERRER: "https://example.org/"}
+
+    # Clearing the referrer removes it from the entry data
+    result = await mock_config.start_reconfigure_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            **MOCK_CONFIG,
+            SECTION_API_KEY_OPTIONS: {CONF_REFERRER: ""},
+        },
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    await hass.async_block_till_done()
+
+    entry = hass.config_entries.async_entries(DOMAIN)[0]
+    assert entry.data == MOCK_CONFIG
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
+@pytest.mark.parametrize(
+    ("data", "options"),
+    [(MOCK_CONFIG_REFERRER, DEFAULT_OPTIONS)],
+)
+async def test_reconfigure_error_keeps_submitted_values(
+    hass: HomeAssistant, mock_config: MockConfigEntry, routes_mock: AsyncMock
+) -> None:
+    """Test the form shows the submitted values again when validation fails."""
+    result = await mock_config.start_reconfigure_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+
+    routes_mock.async_compute_routes.side_effect = GoogleMapsRoutingApiAuthError(
+        "Requests from referer <empty> are blocked.",
+        status="PERMISSION_DENIED",
+        reason="API_KEY_HTTP_REFERRER_BLOCKED",
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            **RECONFIGURE_CONFIG,
+            SECTION_API_KEY_OPTIONS: {CONF_REFERRER: "https://example.org/"},
+        },
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "invalid_referrer"}
+
+    schema = result["data_schema"].schema
+    suggested = {
+        key.schema: key.description["suggested_value"]
+        for key in schema
+        if key.description and "suggested_value" in key.description
+    }
+    assert suggested[CONF_API_KEY] == RECONFIGURE_CONFIG[CONF_API_KEY]
+    assert suggested[CONF_ORIGIN] == RECONFIGURE_CONFIG[CONF_ORIGIN]
+    section_schema = schema[SECTION_API_KEY_OPTIONS].schema.schema
+    referrer_key = next(key for key in section_schema if key == CONF_REFERRER)
+    assert referrer_key.description["suggested_value"] == "https://example.org/"
+
+    # Fixing the referrer lets the flow finish
+    routes_mock.async_compute_routes.side_effect = None
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            **RECONFIGURE_CONFIG,
+            SECTION_API_KEY_OPTIONS: {CONF_REFERRER: "https://example.com/"},
+        },
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    await hass.async_block_till_done()
+
+    entry = hass.config_entries.async_entries(DOMAIN)[0]
+    assert entry.data == {
+        **RECONFIGURE_CONFIG,
+        CONF_REFERRER: "https://example.com/",
+    }
 
 
 @pytest.mark.usefixtures("mock_setup_entry")
@@ -195,6 +352,14 @@ async def test_reconfigure(
                 reason="API_KEY_INVALID",
             ),
             "invalid_auth",
+        ),
+        (
+            GoogleMapsRoutingApiAuthError(
+                "Requests from referer <empty> are blocked.",
+                status="PERMISSION_DENIED",
+                reason="API_KEY_HTTP_REFERRER_BLOCKED",
+            ),
+            "invalid_referrer",
         ),
     ],
 )
@@ -248,6 +413,7 @@ async def test_options_flow(hass: HomeAssistant, mock_config: MockConfigEntry) -
             CONF_TIME_TYPE: ARRIVAL_TIME,
             CONF_TIME: "08:00",
             CONF_TRAFFIC_MODEL: "best_guess",
+            CONF_TRAVEL_ROUTING_PREFERENCE: "traffic_aware_optimal",
             CONF_TRANSIT_MODE: "train",
             CONF_TRANSIT_ROUTING_PREFERENCE: "less_walking",
         },
@@ -263,6 +429,7 @@ async def test_options_flow(hass: HomeAssistant, mock_config: MockConfigEntry) -
         CONF_TRAFFIC_MODEL: "best_guess",
         CONF_TRANSIT_MODE: "train",
         CONF_TRANSIT_ROUTING_PREFERENCE: "less_walking",
+        CONF_TRAVEL_ROUTING_PREFERENCE: "traffic_aware_optimal",
     }
 
     assert mock_config.options == {
@@ -274,6 +441,7 @@ async def test_options_flow(hass: HomeAssistant, mock_config: MockConfigEntry) -
         CONF_TRAFFIC_MODEL: "best_guess",
         CONF_TRANSIT_MODE: "train",
         CONF_TRANSIT_ROUTING_PREFERENCE: "less_walking",
+        CONF_TRAVEL_ROUTING_PREFERENCE: "traffic_aware_optimal",
     }
 
 
@@ -327,6 +495,81 @@ async def test_options_flow_departure_time(
         CONF_TRAFFIC_MODEL: "best_guess",
         CONF_TRANSIT_MODE: "train",
         CONF_TRANSIT_ROUTING_PREFERENCE: "less_walking",
+    }
+
+
+@pytest.mark.parametrize(
+    ("data", "options"),
+    [(MOCK_CONFIG, DEFAULT_OPTIONS)],
+)
+@pytest.mark.parametrize(
+    "travel_routing_preference",
+    ["traffic_aware", "traffic_unaware"],
+)
+@pytest.mark.parametrize(
+    "traffic_model",
+    ["best_guess", "pessimistic", "optimistic"],
+)
+@pytest.mark.usefixtures("routes_mock")
+async def test_options_flow_traffic_model_error(
+    hass: HomeAssistant,
+    mock_config: MockConfigEntry,
+    travel_routing_preference: str,
+    traffic_model: str,
+) -> None:
+    """Test options flow for traffic model error."""
+    result = await hass.config_entries.options.async_init(mock_config.entry_id)
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "init"
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_MODE: "driving",
+            CONF_UNITS: UNITS_IMPERIAL,
+            CONF_TIME_TYPE: ARRIVAL_TIME,
+            CONF_TIME: "08:00",
+            CONF_TRAFFIC_MODEL: traffic_model,
+            CONF_TRAVEL_ROUTING_PREFERENCE: travel_routing_preference,
+        },
+    )
+
+    # Verify the expected error, and the data schema contains all expected fields.
+    assert result["type"] == FlowResultType.FORM
+    assert result["errors"] == {"base": "traffic_model_not_allowed"}
+    data_schema = result["data_schema"].schema
+    assert set(data_schema) == {
+        CONF_AVOID,
+        CONF_UNITS,
+        CONF_LANGUAGE,
+        CONF_TRANSIT_MODE,
+        CONF_TRANSIT_ROUTING_PREFERENCE,
+        CONF_MODE,
+        CONF_TIME_TYPE,
+        CONF_TIME,
+        CONF_TRAFFIC_MODEL,
+        CONF_TRAVEL_ROUTING_PREFERENCE,
+    }
+
+    # Removing the traffic model allows the user to finish the flow
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_MODE: "driving",
+            CONF_UNITS: UNITS_IMPERIAL,
+            CONF_TIME_TYPE: ARRIVAL_TIME,
+            CONF_TIME: "08:00",
+            CONF_TRAVEL_ROUTING_PREFERENCE: travel_routing_preference,
+        },
+    )
+
+    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["data"] == {
+        CONF_MODE: "driving",
+        CONF_UNITS: UNITS_IMPERIAL,
+        CONF_ARRIVAL_TIME: "08:00",
+        CONF_TRAVEL_ROUTING_PREFERENCE: travel_routing_preference,
     }
 
 
@@ -441,6 +684,7 @@ async def test_reset_arrival_time(
                 CONF_TRAFFIC_MODEL: "best_guess",
                 CONF_TRANSIT_MODE: "train",
                 CONF_TRANSIT_ROUTING_PREFERENCE: "less_walking",
+                CONF_TRAVEL_ROUTING_PREFERENCE: "traffic_aware_optimal",
             },
         )
     ],

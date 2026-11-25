@@ -9,6 +9,7 @@ import probatio
 from probatio.humanize import humanize_error
 
 from homeassistant.components.blueprint import (
+    CONF_USE_BLUEPRINT,
     BlueprintException,
     is_blueprint_instance_config,
 )
@@ -30,10 +31,16 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.script import (
     SCRIPT_MODE_SINGLE,
     async_validate_actions_config,
+    async_validate_block_collect_errors,
     make_script_schema,
 )
 from homeassistant.helpers.selector import validate_selector
 from homeassistant.helpers.typing import ConfigType
+from homeassistant.helpers.validation_errors import (
+    ValidationErrorInfo,
+    ValidationErrors,
+    iter_validation_errors,
+)
 from homeassistant.util.yaml.input import UndefinedSubstitution
 
 from .const import (
@@ -150,28 +157,24 @@ async def _async_validate_config_item(
     def _set_validation_status(
         script_config: ScriptConfig,
         validation_status: ValidationStatus,
-        validation_error: Exception,
-        config: ConfigType,
+        validation_error: str,
     ) -> None:
         """Set validation status."""
         if uses_blueprint:
             validation_status = ValidationStatus.FAILED_BLUEPRINT
         script_config.validation_status = validation_status
-        script_config.validation_error = _humanize(validation_error, config)
+        script_config.validation_error = validation_error
 
     def _minimal_config(
         validation_status: ValidationStatus,
-        validation_error: Exception,
-        config: ConfigType,
+        validation_error: str,
     ) -> ScriptConfig:
         """Try validating id, alias and description."""
         minimal_config = _MINIMAL_SCRIPT_ENTITY_SCHEMA(config)
         script_config = ScriptConfig(minimal_config)
         script_config.raw_blueprint_inputs = raw_blueprint_inputs
         script_config.raw_config = raw_config
-        _set_validation_status(
-            script_config, validation_status, validation_error, config
-        )
+        _set_validation_status(script_config, validation_status, validation_error)
         return script_config
 
     if is_blueprint_instance_config(config):
@@ -187,7 +190,7 @@ async def _async_validate_config_item(
                 )
             if raise_on_errors:
                 raise
-            return _minimal_config(ValidationStatus.FAILED_BLUEPRINT, err, config)
+            return _minimal_config(ValidationStatus.FAILED_BLUEPRINT, str(err))
 
         raw_blueprint_inputs = blueprint_inputs.config_with_inputs
 
@@ -204,7 +207,7 @@ async def _async_validate_config_item(
                 )
             if raise_on_errors:
                 raise HomeAssistantError(err) from err
-            return _minimal_config(ValidationStatus.FAILED_BLUEPRINT, err, config)
+            return _minimal_config(ValidationStatus.FAILED_BLUEPRINT, str(err))
 
     script_name = f"Script with object id '{object_id}'"
     if isinstance(config, Mapping):
@@ -222,7 +225,7 @@ async def _async_validate_config_item(
         _log_invalid_script(err, script_name, "could not be validated", config)
         if raise_on_errors:
             raise
-        return _minimal_config(ValidationStatus.FAILED_SCHEMA, err, config)
+        return _minimal_config(ValidationStatus.FAILED_SCHEMA, _humanize(err, config))
 
     script_config = ScriptConfig(validated_config)
     script_config.raw_blueprint_inputs = raw_blueprint_inputs
@@ -236,13 +239,17 @@ async def _async_validate_config_item(
         probatio.Invalid,
         HomeAssistantError,
     ) as err:
+        if isinstance(err, probatio.Invalid):
+            err.prepend([CONF_SEQUENCE])
         _log_invalid_script(
             err, script_name, "failed to setup sequence", validated_config
         )
         if raise_on_errors:
             raise
         _set_validation_status(
-            script_config, ValidationStatus.FAILED_SEQUENCE, err, validated_config
+            script_config,
+            ValidationStatus.FAILED_SEQUENCE,
+            _humanize(err, validated_config),
         )
         return script_config
 
@@ -279,13 +286,86 @@ async def _try_async_validate_config_item(
         return None
 
 
+async def _async_collect_errors(
+    hass: HomeAssistant, config: Any
+) -> list[ValidationErrorInfo]:
+    """Return all errors of a config item, located in the validated config.
+
+    The errors of the schema come first. They are followed by the errors of
+    the sequence which are not among them, also when the schema failed.
+    """
+    try:
+        SCRIPT_ENTITY_SCHEMA(config)
+    except probatio.Invalid as err:
+        errors = list(iter_validation_errors(err))
+    else:
+        errors = []
+
+    if not isinstance(config, dict) or CONF_SEQUENCE not in config:
+        return errors
+
+    reported = {(info.path, info.message) for info in errors}
+    try:
+        await async_validate_block_collect_errors(
+            hass, "actions", config[CONF_SEQUENCE]
+        )
+    except ValidationErrors as err:
+        errors.extend(
+            info
+            for info in iter_validation_errors(err, [CONF_SEQUENCE])
+            if (info.path, info.message) not in reported
+        )
+    return errors
+
+
 async def async_validate_config_item(
     hass: HomeAssistant,
     object_id: str,
     config: dict[str, Any],
 ) -> ScriptConfig | None:
-    """Validate config item, called by EditScriptConfigView."""
-    return await _async_validate_config_item(hass, object_id, config, True, False)
+    """Validate config item, called by EditScriptConfigView.
+
+    Raises ValidationErrors if the config is not valid, with all errors which
+    were found. The path of each error is its path in config as it was passed.
+    The errors of a blueprint script which are not about a key of config are
+    located at use_blueprint.
+    """
+    try:
+        return await _async_validate_config_item(hass, object_id, config, True, False)
+    except (probatio.Invalid, HomeAssistantError) as err:
+        fail_fast_errors = list(iter_validation_errors(err))
+
+    # Not done in the except block: each error would be chained to the one above
+    submitted_keys = set(config) if isinstance(config, dict) else set()
+    uses_blueprint = is_blueprint_instance_config(config)
+    if uses_blueprint:
+        try:
+            blueprint_inputs = await async_get_blueprints(
+                hass
+            ).async_inputs_from_config(config)
+            config = blueprint_inputs.async_substitute()
+        except BlueprintException, UndefinedSubstitution:
+            # No config was generated, the error says why
+            raise ValidationErrors(fail_fast_errors) from None
+
+    try:
+        _SCRIPT_OBJECT_ID_SCHEMA(object_id)
+    except probatio.Invalid as err:
+        # Not about the config, so not located at use_blueprint
+        raise ValidationErrors(iter_validation_errors(err)) from None
+
+    # Keep the error if validating again does not give any
+    errors = await _async_collect_errors(hass, config) or fail_fast_errors
+    if not uses_blueprint:
+        raise ValidationErrors(errors)
+    raise ValidationErrors(
+        [
+            info
+            if info.path and info.path[0] in submitted_keys
+            else ValidationErrorInfo(info.exception, (CONF_USE_BLUEPRINT,))
+            for info in errors
+        ]
+    )
 
 
 async def async_validate_config(hass: HomeAssistant, config: ConfigType) -> ConfigType:
