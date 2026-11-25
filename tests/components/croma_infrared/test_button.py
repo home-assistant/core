@@ -13,9 +13,9 @@ from pytest_homeassistant.components.common import (
 from pytest_homeassistant.components.infrared.common import MockInfraredEmitterEntity
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
+from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, ButtonService
 from homeassistant.components.media_player import MediaPlayerState
-from homeassistant.const import ATTR_ENTITY_ID, Platform
+from homeassistant.const import Platform, TargetKey
 from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
@@ -91,8 +91,8 @@ async def test_button_press_sends_correct_code(
     """Test pressing a button sends the correct IR code."""
     await hass.services.async_call(
         BUTTON_DOMAIN,
-        SERVICE_PRESS,
-        {ATTR_ENTITY_ID: entity_id},
+        ButtonService.PRESS,
+        {TargetKey.ENTITY_ID: entity_id},
         blocking=True,
     )
 
@@ -116,8 +116,8 @@ async def test_power_button_keeps_media_player_state(
 
     await hass.services.async_call(
         BUTTON_DOMAIN,
-        SERVICE_PRESS,
-        {ATTR_ENTITY_ID: BUTTON_ENTITY_ID_POWER},
+        ButtonService.PRESS,
+        {TargetKey.ENTITY_ID: BUTTON_ENTITY_ID_POWER},
         blocking=True,
     )
 
