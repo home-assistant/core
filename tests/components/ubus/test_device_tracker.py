@@ -2015,6 +2015,88 @@ async def test_tracker_unavailable_while_all_routers_unreachable(
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default", "two_router_entries")
+async def test_tracker_unavailable_while_roamed_to_unreachable_router(
+    hass: HomeAssistant,
+    mock_ubus_by_host: tuple[MagicMock, dict[str, MagicMock]],
+    entity_registry: er.EntityRegistry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a roamed device is unavailable, not away, while unverifiable.
+
+    The device demonstrably left the reachable router, so it must not be
+    reported away while its freshest sighting is on a router which no
+    longer updates.
+    """
+    _mock, ubus = mock_ubus_by_host
+
+    # The device is on router A, so entry A owns its tracker.
+    ubus[MOCK_HOST].get_hostapd_clients.return_value = {
+        "clients": {MAC_PHONE: {"authorized": True}}
+    }
+    freezer.tick(timedelta(seconds=30))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    entity_id = entity_registry.async_get_entity_id(
+        DEVICE_TRACKER_DOMAIN, DOMAIN, MAC_PHONE
+    )
+    assert entity_id is not None
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == STATE_HOME
+    assert state.attributes["source"] == MOCK_HOST
+
+    # The device roams to router B, which then becomes unreachable.
+    ubus[MOCK_HOST].get_hostapd_clients.return_value = {"clients": {}}
+    ubus[MOCK_HOST_B].get_hostapd_clients.return_value = {
+        "clients": {MAC_PHONE: {"authorized": True}}
+    }
+    freezer.tick(timedelta(seconds=30))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == STATE_HOME
+    assert state.attributes["source"] == MOCK_HOST_B
+
+    # Router B misses a poll; the device stays home on router A's recent
+    # stamp while it is still recent.
+    ubus[MOCK_HOST_B].get_hostapd_clients.side_effect = ConnectionError
+    freezer.tick(timedelta(seconds=30))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == STATE_HOME
+    assert state.attributes["source"] == MOCK_HOST
+
+    # Router A's stamp ages out; the device's freshest sighting is on the
+    # unreachable router, so the tracker is unavailable rather than not
+    # home.
+    freezer.tick(DEFAULT_CONSIDER_HOME + timedelta(seconds=30))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == STATE_UNAVAILABLE
+    assert "source" not in state.attributes
+
+    # Router B recovers and still reports the device.
+    ubus[MOCK_HOST_B].get_hostapd_clients.side_effect = None
+    freezer.tick(timedelta(seconds=30))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == STATE_HOME
+    assert state.attributes["source"] == MOCK_HOST_B
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default", "two_router_entries")
 async def test_tracker_unavailable_while_sole_reporter_unreachable(
     hass: HomeAssistant,
     mock_ubus_by_host: tuple[MagicMock, dict[str, MagicMock]],

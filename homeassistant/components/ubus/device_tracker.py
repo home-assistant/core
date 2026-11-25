@@ -517,9 +517,9 @@ class UbusScannerEntity(CoordinatorEntity[UbusDataUpdateCoordinator], ScannerEnt
     @property
     @override
     def available(self) -> bool:
-        """Return whether any healthy ubus router has seen the device."""
+        """Return whether the device's state is grounded on a reachable router."""
         shared: UbusSharedState = self.hass.data[DOMAIN]
-        return shared.has_healthy_stamp(self._mac)
+        return shared.has_reportable_stamp(self._mac)
 
     @property
     @override

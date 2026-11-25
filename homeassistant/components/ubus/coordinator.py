@@ -56,7 +56,9 @@ class UbusSharedState:
 
     A client is home while its most recent stamp from a healthy entry is
     within ``DEFAULT_CONSIDER_HOME``. It is unavailable while no healthy
-    entry has stamped it.
+    entry has stamped it, or while its freshest stamp is from an entry
+    which no longer updates and its most recent healthy stamp is older
+    than ``DEFAULT_CONSIDER_HOME``.
     """
 
     presence: dict[str, dict[str, ClientStamp]]
@@ -105,11 +107,20 @@ class UbusSharedState:
             return None
         return entry_id, stamp
 
-    def has_healthy_stamp(self, mac: str) -> bool:
-        """Return whether any healthy entry has stamped this client."""
-        return any(
-            self.health.get(entry, True) for entry in self.presence.get(mac.lower(), {})
-        )
+    def has_reportable_stamp(self, mac: str) -> bool:
+        """Return whether the client's state is grounded on a reachable router.
+
+        The client is reported while its freshest stamp is from a healthy
+        entry, or while a healthy entry has seen it within
+        ``DEFAULT_CONSIDER_HOME``. A fresher stamp on an entry which no
+        longer updates is unverifiable, so once no healthy entry has seen
+        the client recently, it is unavailable rather than not home.
+        """
+        stamps = self.presence.get(mac.lower())
+        if not stamps:
+            return False
+        latest = max(stamps, key=lambda entry: stamps[entry].seq)
+        return self.health.get(latest, True) or self.latest_stamp(mac) is not None
 
     def known_hostname(self, mac: str) -> str | None:
         """Return the most recent non-empty hostname stamped for a client."""
