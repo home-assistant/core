@@ -17,7 +17,7 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import CONF_ADS_VAR, STATE_KEY_STATE
 from .entity import AdsEntity
-from .hub import async_get_hub
+from .hub import async_wait_for_hub
 
 DEFAULT_NAME = "ADS Switch"
 
@@ -36,7 +36,7 @@ async def async_setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up switch platform for ADS."""
-    ads_hub = async_get_hub(hass)
+    ads_hub = await async_wait_for_hub(hass)
 
     name: str = config[CONF_NAME]
     ads_var: str = config[CONF_ADS_VAR]
