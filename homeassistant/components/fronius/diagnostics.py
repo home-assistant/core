@@ -6,8 +6,8 @@ from typing import Any
 from homeassistant.components.diagnostics import async_redact_data
 from homeassistant.core import HomeAssistant
 
-from . import FroniusConfigEntry
 from .coordinator import FroniusCoordinatorBase
+from .solar_net import FroniusConfigEntry
 
 TO_REDACT = {"unique_id", "serial"}
 

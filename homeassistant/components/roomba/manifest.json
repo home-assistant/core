@@ -4,6 +4,7 @@
   "categories": ["appliances_cleaning.cleaning"],
   "codeowners": ["@pschmitt", "@cyr-ius", "@shenxn"],
   "config_flow": true,
+  "connectivity": ["network"],
   "dhcp": [
     {
       "hostname": "irobot-*",

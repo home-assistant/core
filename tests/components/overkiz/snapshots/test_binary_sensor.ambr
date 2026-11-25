@@ -254,6 +254,107 @@
     'state': 'off',
   })
 # ---
+# name: test_binary_sensor_entities_snapshot[cloud_sauter_sop6615lb.json][binary_sensor.oven_door-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('overkiz', 'ogp://1234-5678-9123/16000211')]>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.oven_door',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Door',
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.DOOR: 'door'>,
+    'original_icon': None,
+    'original_name': 'Door',
+    'platform': 'overkiz',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'ogp://1234-5678-9123/16000211-core:OpenState',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_binary_sensor_entities_snapshot[cloud_sauter_sop6615lb.json][binary_sensor.oven_door-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'door',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Oven Door',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.oven_door',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_binary_sensor_entities_snapshot[cloud_sauter_sop6615lb.json][binary_sensor.oven_temperature_reached-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('overkiz', 'ogp://1234-5678-9123/16000211')]>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.oven_temperature_reached',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Temperature reached',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Temperature reached',
+    'platform': 'overkiz',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'ogp://1234-5678-9123/16000211-core:TargetTemperatureReachedState',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_binary_sensor_entities_snapshot[cloud_sauter_sop6615lb.json][binary_sensor.oven_temperature_reached-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Oven Temperature reached',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.oven_temperature_reached',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
 # name: test_binary_sensor_entities_snapshot[cloud_somfy_tahoma_v2_europe.json][binary_sensor.family_wing_fenetre_garage_contact-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([

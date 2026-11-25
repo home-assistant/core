@@ -6,6 +6,7 @@ from copy import deepcopy
 from datetime import datetime, timedelta
 from functools import partial
 import json
+import operator
 import pathlib
 import time
 from typing import Any
@@ -36,9 +37,43 @@ from homeassistant.helpers import (
     device_registry as dr,
     entity_registry as er,
     frame,
+    label_registry as lr,
 )
-from homeassistant.helpers.typing import UNDEFINED, UndefinedType
+from homeassistant.helpers.typing import Undefined
 from homeassistant.util.dt import utcnow
+
+VIA_DEVICE_DEPRECATION = (
+    "calls `device_registry.async_get_or_create` with a deprecated `via_device` "
+    "parameter"
+)
+
+
+@pytest.fixture
+def areas_and_labels(
+    area_registry: ar.AreaRegistry, label_registry: lr.LabelRegistry
+) -> None:
+    """Create the areas and labels that the tests assign to entries."""
+    for name in (
+        "12345a",
+        "12345b",
+        "attic",
+        "bedroom",
+        "garage",
+        "garden",
+        "kitchen",
+        "mock_area_id",
+    ):
+        area_registry.async_create(name)
+    for name in (
+        "label1",
+        "label2",
+        "label3",
+        "mock_label1",
+        "mock_label2",
+        "outdoor",
+        "xmas",
+    ):
+        label_registry.async_create(name)
 
 
 @pytest.fixture(autouse=True)
@@ -396,7 +431,7 @@ async def test_loading_from_storage(
             ],
             "devices": [
                 {
-                    "area_id": "12345A",
+                    "area_id": "12345a",
                     "config_entry_id": mock_config_entry.entry_id,
                     "config_subentry_id": None,
                     "composite_device_id": None,
@@ -426,7 +461,7 @@ async def test_loading_from_storage(
             ],
             "deleted_devices": [
                 {
-                    "area_id": "12345A",
+                    "area_id": "12345a",
                     "config_entry_id": mock_config_entry.entry_id,
                     "config_subentry_id": None,
                     "has_composite_identifiers": False,
@@ -460,7 +495,7 @@ async def test_loading_from_storage(
     assert loaded_child.identifiers == {("test", "strip_outlet_1")}
 
     assert registry._deleted_devices["bcdefghijklmn"] == dr.DeletedDeviceEntry(
-        area_id="12345A",
+        area_id="12345a",
         config_entry_id=mock_config_entry.entry_id,
         config_subentry_id=None,
         connections={("Zigbee", "23.45.67.89.01")},
@@ -482,7 +517,7 @@ async def test_loading_from_storage(
         model="model",
     )
     assert entry == dr.DeviceEntry(
-        area_id="12345A",
+        area_id="12345a",
         config_entry_id=mock_config_entry.entry_id,
         config_subentry_id=None,
         configuration_url="https://example.com/config",
@@ -516,7 +551,7 @@ async def test_loading_from_storage(
         model="model",
     )
     assert entry == dr.DeviceEntry(
-        area_id="12345A",
+        area_id="12345a",
         config_entry_id=mock_config_entry.entry_id,
         config_subentry_id=None,
         connections={("Zigbee", "23.45.67.89.01")},
@@ -602,7 +637,7 @@ async def test_migration_from_1_1(
     assert entry.id == "abcdefghijklm"
 
     deleted_entry = registry._deleted_devices["deletedid"]
-    assert deleted_entry.disabled_by is UNDEFINED
+    assert deleted_entry.disabled_by is Undefined
 
     # Update to trigger a store
     entry = registry.async_get_or_create(
@@ -2777,6 +2812,46 @@ async def test_async_update_device_fans_out_to_migration_composite(
     assert device_registry.async_get(device_2.id).name_by_user == "merged"
 
 
+async def test_async_update_device_composite_unknown_area_changes_nothing(
+    hass: HomeAssistant, device_registry: dr.DeviceRegistry
+) -> None:
+    """Test a composite update with an unknown area for one split changes nothing.
+
+    The first split already has the stale area, so only the second split rejects
+    it. The update must be rejected before any split changes.
+    """
+    entry_1 = MockConfigEntry(domain="test")
+    entry_1.add_to_hass(hass)
+    entry_2 = MockConfigEntry(domain="test")
+    entry_2.add_to_hass(hass)
+    device_1 = device_registry.async_get_or_create(
+        config_entry_id=entry_1.entry_id, identifiers={("test", "1")}
+    )
+    device_2 = device_registry.async_get_or_create(
+        config_entry_id=entry_2.entry_id, identifiers={("test", "2")}
+    )
+    old_id = "composite00000000000000000000ab"
+    # Simulate a migration split: both devices carry the pre-migration composite id,
+    # and the first one holds an area that no longer exists
+    device_1 = device_registry._devices[device_1.id] = attr.evolve(
+        device_1, composite_device_id=old_id, area_id="stale"
+    )
+    device_2 = device_registry._devices[device_2.id] = attr.evolve(
+        device_2, composite_device_id=old_id
+    )
+    events = async_capture_events(hass, dr.EVENT_DEVICE_REGISTRY_UPDATED)
+
+    with pytest.raises(ValueError, match="Area 'stale' not found."):
+        device_registry.async_update_device(
+            old_id, area_id="stale", name_by_user="merged"
+        )
+    await hass.async_block_till_done()
+
+    assert device_registry.async_get(device_1.id) == device_1
+    assert device_registry.async_get(device_2.id) == device_2
+    assert not events
+
+
 async def test_get_entry_by_connection_without_config_entry_scope(
     hass: HomeAssistant, device_registry: dr.DeviceRegistry
 ) -> None:
@@ -2975,6 +3050,7 @@ async def test_add_current_config_entry_is_noop(
     ["light", None],
     ids=["explicit-domain", "auto-resolved-domain"],
 )
+@pytest.mark.usefixtures("areas_and_labels")
 async def test_reregister_restores_orphan(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
@@ -4027,6 +4103,7 @@ async def test_deleted_device_removing_config_subentries(
     )
 
 
+@pytest.mark.usefixtures("areas_and_labels")
 async def test_removing_area_id(
     device_registry: dr.DeviceRegistry, mock_config_entry: MockConfigEntry
 ) -> None:
@@ -4039,15 +4116,16 @@ async def test_removing_area_id(
         model="model",
     )
 
-    entry_w_area = device_registry.async_update_device(entry.id, area_id="12345A")
+    entry_w_area = device_registry.async_update_device(entry.id, area_id="12345a")
 
-    device_registry.async_clear_area_id("12345A")
+    device_registry.async_clear_area_id("12345a")
     entry_wo_area = device_registry.async_get_device(identifiers={("bridgeid", "0123")})
 
     assert not entry_wo_area.area_id
     assert entry_w_area != entry_wo_area
 
 
+@pytest.mark.usefixtures("areas_and_labels")
 async def test_removing_area_id_deleted_device(
     device_registry: dr.DeviceRegistry, mock_config_entry: MockConfigEntry
 ) -> None:
@@ -4067,13 +4145,13 @@ async def test_removing_area_id_deleted_device(
         model="model",
     )
 
-    entry1_w_area = device_registry.async_update_device(entry1.id, area_id="12345A")
-    entry2_w_area = device_registry.async_update_device(entry2.id, area_id="12345B")
+    entry1_w_area = device_registry.async_update_device(entry1.id, area_id="12345a")
+    entry2_w_area = device_registry.async_update_device(entry2.id, area_id="12345b")
 
     device_registry.async_remove_device(entry1.id)
     device_registry.async_remove_device(entry2.id)
 
-    device_registry.async_clear_area_id("12345A")
+    device_registry.async_clear_area_id("12345a")
     entry1_restored = device_registry.async_get_or_create(
         config_entry_id=mock_config_entry.entry_id,
         connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
@@ -4086,7 +4164,7 @@ async def test_removing_area_id_deleted_device(
     )
 
     assert not entry1_restored.area_id
-    assert entry2_restored.area_id == "12345B"
+    assert entry2_restored.area_id == "12345b"
     assert entry1_w_area != entry1_restored
     assert entry2_w_area != entry2_restored
 
@@ -4134,11 +4212,8 @@ async def test_specifying_via_device_create(
         model="light",
         via_device=("hue", "non_existing_123"),
     )
-    assert {
-        "calls `device_registry.async_get_or_create` "
-        "referencing a non existing `via_device` "
-        '("hue","non_existing_123")' in caplog.text
-    }
+    assert caplog.text.count(VIA_DEVICE_DEPRECATION) == 2
+    assert caplog.text.count("`via_device`") == 2
     assert light_via_nonexisting_parent_device is not None
     assert light_via_nonexisting_parent_device.via_device_id is None
     nonexisting_parent_device = device_registry.async_get_device(
@@ -4200,11 +4275,8 @@ async def test_specifying_via_device_update(
         name="New light",
         via_device=("hue", "non_existing_abc"),
     )
-    assert {
-        "calls `device_registry.async_get_or_create` "
-        "referencing a non existing `via_device` "
-        '("hue","non_existing_123")' in caplog.text
-    }
+    assert caplog.text.count(VIA_DEVICE_DEPRECATION) == 3
+    assert caplog.text.count("`via_device`") == 3
     # Assert the name was updated correctly
     assert light.via_device_id == via.id
     assert light.name == "New light"
@@ -4492,6 +4564,46 @@ async def test_devices_membership_by_entry_supported_by_id_deprecated(
 
 
 @pytest.mark.parametrize(
+    "integration_frame_path", ["custom_components/test_integration"]
+)
+@pytest.mark.usefixtures("mock_integration_frame")
+async def test_get_or_create_reports_deprecation_once(
+    device_registry: dr.DeviceRegistry,
+    mock_config_entry: MockConfigEntry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test a deprecated argument is reported once over repeated calls."""
+    deprecated = "with a deprecated `default_manufacturer` parameter"
+
+    with patch.object(frame, "_REPORTED_INTEGRATIONS", set()):
+        for _ in range(2):
+            device_registry.async_get_or_create(
+                config_entry_id=mock_config_entry.entry_id,
+                identifiers={("bridgeid", "0123")},
+                default_manufacturer="manufacturer",
+            )
+
+    assert caplog.text.count(deprecated) == 1
+
+
+@pytest.mark.parametrize("field", ["default_manufacturer", "default_model"])
+async def test_get_or_create_deprecated_defaults_invalid_type(
+    device_registry: dr.DeviceRegistry,
+    mock_config_entry: MockConfigEntry,
+    field: str,
+) -> None:
+    """Test the deprecated default fields reject non-string values."""
+    with pytest.raises(
+        TypeError, match=f"Device registry field {field} must be a string, got int"
+    ):
+        device_registry.async_get_or_create(
+            config_entry_id=mock_config_entry.entry_id,
+            identifiers={("bridgeid", "0123")},
+            **{field: 123},
+        )
+
+
+@pytest.mark.parametrize(
     ("integration_frame_path", "expectation", "expected_log"),
     [
         pytest.param(
@@ -4660,14 +4772,168 @@ def test_device_info_deprecated_parameters(parameter: str, value: Any) -> None:
     integration can still set them until they are removed. Passing them on to
     async_get_or_create is covered by its own deprecation tests.
     """
-    assert dict(dr.DeviceInfo(**{parameter: value})) == {parameter: value}
+    assert dr.DeviceInfo(**{parameter: value}).as_dict() == {parameter: value}
 
     device_info = dr.DeviceInfo()
-    device_info[parameter] = value
-    assert dict(device_info) == {parameter: value}
+    setattr(device_info, parameter, value)
+    assert device_info.as_dict() == {parameter: value}
 
 
-def test_device_info_membership() -> None:
+@pytest.mark.parametrize(
+    ("use", "what"),
+    [
+        pytest.param(
+            lambda device_info: device_info["name"],
+            "reads `DeviceInfo['name']`",
+            id="getitem",
+        ),
+        pytest.param(
+            lambda device_info: operator.setitem(device_info, "name", "new"),
+            "sets `DeviceInfo['name']`",
+            id="setitem",
+        ),
+        pytest.param(
+            lambda device_info: "name" in device_info,
+            "checks if 'name' is in a `DeviceInfo`",
+            id="contains",
+        ),
+        pytest.param(
+            lambda device_info: device_info == {"name": "name"},
+            "compares a `DeviceInfo` to a mapping",
+            id="compare_to_mapping",
+        ),
+        pytest.param(
+            lambda device_info: device_info.keys(),
+            "calls `DeviceInfo.keys()` or unpacks it",
+            id="keys",
+        ),
+        pytest.param(dict, "calls `DeviceInfo.keys()` or unpacks it", id="dict"),
+        pytest.param(
+            lambda device_info: device_info.items(),
+            "calls `DeviceInfo.items()`",
+            id="items",
+        ),
+        pytest.param(
+            lambda device_info: device_info.get("name"),
+            "calls `DeviceInfo.get('name')`",
+            id="get",
+        ),
+        pytest.param(
+            lambda device_info: device_info.update({"model": "model"}),
+            "calls `DeviceInfo.update()`",
+            id="update",
+        ),
+        pytest.param(
+            lambda device_info: type(device_info).__required_keys__,
+            "reads `DeviceInfo.__required_keys__`",
+            id="required_keys",
+        ),
+        pytest.param(
+            lambda device_info: type(device_info).__optional_keys__,
+            "reads `DeviceInfo.__optional_keys__`",
+            id="optional_keys",
+        ),
+    ],
+)
+@pytest.mark.parametrize(
+    ("integration_frame_path", "expectation", "expected_log"),
+    [
+        pytest.param(
+            "homeassistant/test_core", pytest.raises(RuntimeError), 0, id="core"
+        ),
+        pytest.param(
+            "homeassistant/components/test_integration",
+            nullcontext(),
+            1,
+            id="core integration",
+        ),
+        pytest.param(
+            "custom_components/test_integration",
+            nullcontext(),
+            1,
+            id="custom integration",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("hass", "mock_integration_frame")
+async def test_device_info_mapping_use_deprecated(
+    caplog: pytest.LogCaptureFixture,
+    use: Callable[[dr.DeviceInfo], Any],
+    what: str,
+    expectation: AbstractContextManager,
+    expected_log: int,
+) -> None:
+    """Test dict-style use of a device info is deprecated.
+
+    It logs for core and custom integrations, and raises for core.
+    """
+    device_info = dr.DeviceInfo(name="name")
+
+    with patch.object(frame, "_REPORTED_INTEGRATIONS", set()), expectation:
+        use(device_info)
+
+    assert caplog.text.count(what) == expected_log
+
+
+def test_device_info_mapping_use_without_frame_helper(
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test dict-style use of a device info logs before the frame helper is set up."""
+    device_info = dr.DeviceInfo(name="name")
+
+    with patch.object(frame._hass, "hass", None):
+        assert device_info["name"] == "name"
+
+    assert "Detected code that reads `DeviceInfo['name']`" in caplog.text
+
+
+@pytest.mark.parametrize(
+    "integration_frame_path", ["custom_components/test_integration"]
+)
+@pytest.mark.usefixtures("hass", "mock_integration_frame")
+async def test_device_info_mapping_access() -> None:
+    """Test reading and setting fields by key, until the deprecation ends."""
+    device_info = dr.DeviceInfo(name="name")
+
+    assert device_info["name"] == "name"
+    with pytest.raises(KeyError):
+        device_info["model"]
+    assert device_info.get("name") == "name"
+    assert device_info.get("model", "default") == "default"
+
+    device_info["model"] = "model"
+    assert device_info.model == "model"
+    assert device_info.keys() == ("model", "name")
+    assert device_info.items() == (("model", "model"), ("name", "name"))
+    assert dict(device_info) == {"model": "model", "name": "name"}
+    assert device_info == {"model": "model", "name": "name"}
+
+
+@pytest.mark.parametrize(
+    "integration_frame_path", ["custom_components/test_integration"]
+)
+@pytest.mark.usefixtures("hass", "mock_integration_frame")
+async def test_device_info_update() -> None:
+    """Test update sets the fields of a mapping or another device info."""
+    device_info = dr.DeviceInfo(name="name")
+
+    device_info.update({"model": "model"})
+    device_info.update(dr.DeviceInfo(manufacturer="manufacturer"))
+    assert device_info.as_dict() == {
+        "manufacturer": "manufacturer",
+        "model": "model",
+        "name": "name",
+    }
+
+    with pytest.raises(KeyError):
+        device_info.update({"config_entry_id": "entry_id"})
+
+
+@pytest.mark.parametrize(
+    "integration_frame_path", ["custom_components/test_integration"]
+)
+@pytest.mark.usefixtures("hass", "mock_integration_frame")
+async def test_device_info_membership() -> None:
     """Test `in` reports the set fields, while a device info is not iterable."""
     device_info = dr.DeviceInfo(name="name")
 
@@ -4678,7 +4944,11 @@ def test_device_info_membership() -> None:
         list(device_info)
 
 
-def test_device_info_typed_dict_keys() -> None:
+@pytest.mark.parametrize(
+    "integration_frame_path", ["custom_components/test_integration"]
+)
+@pytest.mark.usefixtures("hass", "mock_integration_frame")
+async def test_device_info_typed_dict_keys() -> None:
     """Test the TypedDict key attributes integrations read to check for a field."""
     assert dr.DeviceInfo.__required_keys__ == frozenset()
     assert "via_device_id" in dr.DeviceInfo.__optional_keys__
@@ -4692,7 +4962,11 @@ def test_device_info_typed_dict_keys() -> None:
     }
 
 
-def test_device_info_rejects_unknown_key() -> None:
+@pytest.mark.parametrize(
+    "integration_frame_path", ["custom_components/test_integration"]
+)
+@pytest.mark.usefixtures("hass", "mock_integration_frame")
+async def test_device_info_rejects_unknown_key() -> None:
     """Test a device info rejects setting a key which is not a field."""
     device_info = dr.DeviceInfo(name="name")
     with pytest.raises(KeyError):
@@ -4892,7 +5166,7 @@ async def test_get_or_create_via_device_self_reference_ignored(
     device_registry: dr.DeviceRegistry,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """A device referencing itself via the deprecated via_device is ignored and logged."""
+    """A device referencing itself via the deprecated via_device is ignored."""
     config_entry = MockConfigEntry()
     config_entry.add_to_hass(hass)
     device = device_registry.async_get_or_create(
@@ -4907,10 +5181,9 @@ async def test_get_or_create_via_device_self_reference_ignored(
 
     assert updated.id == device.id
     assert updated.via_device_id is None
-    assert (
-        "calls `device_registry.async_get_or_create` with a `via_device` "
-        "referencing the device itself" in caplog.text
-    )
+    # Only the deprecation of via_device itself is reported
+    assert caplog.text.count(VIA_DEVICE_DEPRECATION) == 1
+    assert caplog.text.count("`via_device`") == 1
 
 
 async def test_get_or_create_via_device_id_self_reference_raises(
@@ -5179,6 +5452,7 @@ async def test_via_device_prefers_same_domain(
     assert device.via_device_id == via_same_domain.id
 
 
+@pytest.mark.usefixtures("areas_and_labels")
 async def test_loading_saving_data(
     hass: HomeAssistant, device_registry: dr.DeviceRegistry
 ) -> None:
@@ -5274,9 +5548,9 @@ async def test_loading_saving_data(
 
     orig_via = device_registry.async_update_device(
         orig_via.id,
-        area_id="mock-area-id",
+        area_id="mock_area_id",
         name_by_user="mock-name-by-user",
-        labels={"mock-label1", "mock-label2"},
+        labels={"mock_label1", "mock_label2"},
     )
 
     # Now load written data in new registry
@@ -5364,6 +5638,7 @@ async def test_format_mac(
         assert list(invalid_mac_entry.connections)[0][1] == invalid
 
 
+@pytest.mark.usefixtures("areas_and_labels")
 async def test_update(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
@@ -5396,7 +5671,7 @@ async def test_update(
     with patch.object(device_registry, "async_schedule_save") as mock_save:
         updated_entry = device_registry.async_update_device(
             entry.id,
-            area_id="12345A",
+            area_id="12345a",
             configuration_url="https://example.com/config",
             disabled_by=dr.DeviceEntryDisabler.USER,
             entry_type=dr.DeviceEntryType.SERVICE,
@@ -5417,7 +5692,7 @@ async def test_update(
     assert mock_save.call_count == 1
     assert updated_entry != entry
     assert updated_entry == dr.DeviceEntry(
-        area_id="12345A",
+        area_id="12345a",
         config_entry_id=mock_config_entry.entry_id,
         config_subentry_id=None,
         configuration_url="https://example.com/config",
@@ -6059,7 +6334,7 @@ async def test_create_reflects_config_entry_disabled_state(
     device_registry.async_remove_device(device.id)
     deleted_entry = device_registry._deleted_devices[device.id]
     device_registry._deleted_devices[device.id] = attr.evolve(
-        deleted_entry, disabled_by=UNDEFINED
+        deleted_entry, disabled_by=Undefined
     )
     restored = device_registry.async_get_or_create(
         config_entry_id=disabled_entry.entry_id, identifiers={("test", "1")}
@@ -6908,8 +7183,9 @@ async def test_cleanup_entity_registry_change(
         assert len(mock_call.mock_calls) == 2
 
 
-@pytest.mark.parametrize("initial_area", [None, "12345A"])
+@pytest.mark.parametrize("initial_area", [None, "12345a"])
 @pytest.mark.usefixtures("freezer")
+@pytest.mark.usefixtures("areas_and_labels")
 async def test_restore_device(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
@@ -7181,7 +7457,7 @@ async def test_deleted_device_to_device_entry_uses_reregistered_identity(
         (dr.DeviceEntryDisabler.CONFIG_ENTRY, None),
         (dr.DeviceEntryDisabler.INTEGRATION, dr.DeviceEntryDisabler.INTEGRATION),
         (dr.DeviceEntryDisabler.USER, dr.DeviceEntryDisabler.USER),
-        (UNDEFINED, None),
+        (Undefined, None),
     ],
 )
 @pytest.mark.usefixtures("freezer")
@@ -7189,7 +7465,7 @@ async def test_restore_migrated_device_disabled_by(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     mock_config_entry: MockConfigEntry,
-    device_disabled_by: dr.DeviceEntryDisabler | UndefinedType | None,
+    device_disabled_by: dr.DeviceEntryDisabler | Undefined | None,
     expected_disabled_by: dr.DeviceEntryDisabler | None,
 ) -> None:
     """Check how the disabled_by flag is treated when restoring a device."""
@@ -7224,7 +7500,7 @@ async def test_restore_migrated_device_disabled_by(
 
     deleted_entry = device_registry._deleted_devices[entry.id]
     device_registry._deleted_devices[entry.id] = attr.evolve(
-        deleted_entry, disabled_by=UNDEFINED
+        deleted_entry, disabled_by=Undefined
     )
 
     # This will restore the original device, user customizations of
@@ -7716,10 +7992,8 @@ async def test_disable_config_entry_disables_devices(
         (URL("https://"), pytest.raises(ValueError)),
         (URL("gopher://localhost"), pytest.raises(ValueError)),
         (URL("homeassistant://"), pytest.raises(ValueError)),
-        # Exception implements __str__
-        (Exception("https://example.com"), nullcontext()),
-        (Exception("https://"), pytest.raises(ValueError)),
-        (Exception(), pytest.raises(ValueError)),
+        (Exception("https://example.com"), pytest.raises(TypeError)),
+        (1, pytest.raises(TypeError)),
     ],
 )
 async def test_device_info_configuration_url_validation(
@@ -7764,25 +8038,14 @@ async def test_device_info_configuration_url_validation(
         "sw_version",
     ],
 )
-@pytest.mark.parametrize(
-    ("value", "stored_value", "expected_log"),
-    [
-        (1.0, "1.0", "passes a non-string value of type float as {field}"),
-        ((1, 2), "(1, 2)", "passes a non-string value of type tuple as {field}"),
-        ("hw-1", "hw-1", ""),
-        (None, None, ""),
-    ],
-)
+@pytest.mark.parametrize("value", ["hw-1", None])
 async def test_device_info_string_field_validation(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
-    caplog: pytest.LogCaptureFixture,
     field: str,
-    value: Any,
-    stored_value: str | None,
-    expected_log: str,
+    value: str | None,
 ) -> None:
-    """Test string device info fields are validated and coerced."""
+    """Test string device info fields accept strings and None."""
     config_entry_1 = MockConfigEntry()
     config_entry_1.add_to_hass(hass)
     config_entry_2 = MockConfigEntry()
@@ -7794,7 +8057,7 @@ async def test_device_info_string_field_validation(
         name="name",
         **{field: value},
     )
-    assert getattr(entry, field) == stored_value
+    assert getattr(entry, field) == value
 
     update_device = device_registry.async_get_or_create(
         config_entry_id=config_entry_2.entry_id,
@@ -7803,9 +8066,50 @@ async def test_device_info_string_field_validation(
     )
     updated = device_registry.async_update_device(update_device.id, **{field: value})
     assert updated is not None
-    assert getattr(updated, field) == stored_value
+    assert getattr(updated, field) == value
 
-    assert expected_log.format(field=field) in caplog.text
+
+@pytest.mark.parametrize(
+    "field",
+    [
+        "hw_version",
+        "manufacturer",
+        "model",
+        "model_id",
+        "serial_number",
+        "sw_version",
+    ],
+)
+@pytest.mark.parametrize(("value", "type_name"), [(1.0, "float"), ((1, 2), "tuple")])
+async def test_device_info_string_field_invalid_type(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    field: str,
+    value: Any,
+    type_name: str,
+) -> None:
+    """Test string device info fields reject non-string values."""
+    config_entry_1 = MockConfigEntry()
+    config_entry_1.add_to_hass(hass)
+    config_entry_2 = MockConfigEntry()
+    config_entry_2.add_to_hass(hass)
+    expected = f"Device registry field {field} must be a string, got {type_name}"
+
+    with pytest.raises(TypeError, match=expected):
+        device_registry.async_get_or_create(
+            config_entry_id=config_entry_1.entry_id,
+            identifiers={("something", "1234")},
+            name="name",
+            **{field: value},
+        )
+
+    update_device = device_registry.async_get_or_create(
+        config_entry_id=config_entry_2.entry_id,
+        identifiers={("something", "5678")},
+        name="name",
+    )
+    with pytest.raises(TypeError, match=expected):
+        device_registry.async_update_device(update_device.id, **{field: value})
 
 
 @pytest.mark.parametrize("load_registries", [False])
@@ -7865,6 +8169,7 @@ async def test_loading_invalid_configuration_url_from_storage(
     assert entry.configuration_url == "invalid"
 
 
+@pytest.mark.usefixtures("areas_and_labels")
 async def test_removing_labels(
     hass: HomeAssistant, device_registry: dr.DeviceRegistry
 ) -> None:
@@ -7896,6 +8201,7 @@ async def test_removing_labels(
     assert not entry_cleared_label2.labels
 
 
+@pytest.mark.usefixtures("areas_and_labels")
 async def test_removing_labels_deleted_device(
     hass: HomeAssistant, device_registry: dr.DeviceRegistry
 ) -> None:
@@ -7955,6 +8261,7 @@ async def test_removing_labels_deleted_device(
     assert entry2_restored.labels == {"label3"}
 
 
+@pytest.mark.usefixtures("areas_and_labels")
 async def test_entries_for_label(
     hass: HomeAssistant, device_registry: dr.DeviceRegistry
 ) -> None:
@@ -8570,6 +8877,57 @@ async def test_update_device_empty_identity_rejected_before_mutation(
     # device_1 is untouched, and the sibling's pending move survives the rejected update
     assert device_registry._devices[device_1.id].config_entry_id == entry_1.entry_id
     assert device_registry._devices[device_1.id].identifiers == {("test", "1")}
+    assert device_registry._devices[device_2.id]._pending_move == pending_move
+
+
+@pytest.mark.parametrize(
+    ("changes", "message"),
+    [
+        pytest.param({"area_id": "unknown"}, "Area 'unknown' not found.", id="area"),
+        pytest.param({"labels": {"unknown"}}, "Labels not found: unknown", id="labels"),
+    ],
+)
+async def test_update_device_unknown_area_or_label_rejected_before_mutation(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    changes: dict[str, Any],
+    message: str,
+) -> None:
+    """Test an unknown area or label is rejected before any sibling state changes.
+
+    Completing a composite split's move clears its siblings' pending moves. An update
+    combining that move with an unknown area or label must reject before that
+    mutation, so the rejected update leaves no partial state behind.
+    """
+    entry_1 = MockConfigEntry(domain="test")
+    entry_1.add_to_hass(hass)
+    entry_2 = MockConfigEntry(domain="test")
+    entry_2.add_to_hass(hass)
+    entry_3 = MockConfigEntry(domain="test")
+    entry_3.add_to_hass(hass)
+    device_1 = device_registry.async_get_or_create(
+        config_entry_id=entry_1.entry_id, identifiers={("test", "1")}
+    )
+    device_2 = device_registry.async_get_or_create(
+        config_entry_id=entry_2.entry_id, identifiers={("test", "2")}
+    )
+    old_id = "composite00000000000000000000ab"
+    # Simulate two migration splits of one composite, each with a pending move to entry_3
+    pending_move = dr._PendingMove(entry_3.entry_id, None, None)
+    device_registry._devices[device_1.id] = attr.evolve(
+        device_1, composite_device_id=old_id, pending_move=pending_move
+    )
+    device_registry._devices[device_2.id] = attr.evolve(
+        device_2, composite_device_id=old_id, pending_move=pending_move
+    )
+
+    with pytest.raises(ValueError, match=message):
+        device_registry.async_update_device(
+            device_1.id, remove_config_entry_id=entry_1.entry_id, **changes
+        )
+
+    # device_1 is untouched, and the sibling's pending move survives the rejected update
+    assert device_registry._devices[device_1.id].config_entry_id == entry_1.entry_id
     assert device_registry._devices[device_2.id]._pending_move == pending_move
 
 
@@ -10612,7 +10970,7 @@ def _create_parent_and_child(
     device_registry: dr.DeviceRegistry,
     config_entry_id: str,
     *,
-    config_subentry_id: str | UndefinedType = UNDEFINED,
+    config_subentry_id: str | Undefined = Undefined,
 ) -> tuple[dr.DeviceEntry, dr.ChildDeviceEntry]:
     """Create a parent device with one child device."""
     parent = device_registry.async_get_or_create(
@@ -11022,6 +11380,7 @@ async def test_child_device_subentry(
     )
 
 
+@pytest.mark.usefixtures("areas_and_labels")
 async def test_child_device_update(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
@@ -11135,7 +11494,7 @@ async def test_get_or_create_disabled_by_device_does_not_restore_deleted_device(
 ) -> None:
     """Test disabled_by=DEVICE matching a deleted device restores nothing.
 
-    A legacy deleted device (its stored disabled_by is UNDEFINED) restores with the
+    A legacy deleted device (its stored disabled_by is Undefined) restores with the
     caller's disabled_by verbatim, so without an early guard a caller-passed DEVICE
     would restore a main device disabled by DEVICE. The rejection must run before the
     restore.
@@ -11143,12 +11502,12 @@ async def test_get_or_create_disabled_by_device_does_not_restore_deleted_device(
     match = "disabled_by=DeviceEntryDisabler.DEVICE is only valid for a child device"
     identifiers = {("test", "restore")}
     device_id = "restore-device-id"
-    # A legacy deleted device carries no recorded disabled_by (UNDEFINED), so restore
+    # A legacy deleted device carries no recorded disabled_by (Undefined), so restore
     # returns the caller's disabled_by verbatim - no config-entry reconciliation clears
     # a DEVICE value.
     device_registry._deleted_devices[device_id] = attr.evolve(
         _mock_deleted_device(device_id, mock_config_entry.entry_id, identifiers),
-        disabled_by=UNDEFINED,
+        disabled_by=Undefined,
     )
 
     with pytest.raises(HomeAssistantError, match=match):
@@ -11161,7 +11520,7 @@ async def test_get_or_create_disabled_by_device_does_not_restore_deleted_device(
     # Nothing was restored: no main device exists and the deleted entry is untouched
     assert len(device_registry.devices) == 0
     assert device_id in device_registry._deleted_devices
-    assert device_registry._deleted_devices[device_id].disabled_by is UNDEFINED
+    assert device_registry._deleted_devices[device_id].disabled_by is Undefined
 
 
 @pytest.mark.usefixtures("hass")
@@ -11287,6 +11646,7 @@ async def test_remove_parent_cascades_to_children(
 
 
 @pytest.mark.usefixtures("hass")
+@pytest.mark.usefixtures("areas_and_labels")
 async def test_remove_child_device_and_restore(
     device_registry: dr.DeviceRegistry,
     mock_config_entry: MockConfigEntry,
@@ -11317,6 +11677,7 @@ async def test_remove_child_device_and_restore(
 
 
 @pytest.mark.usefixtures("hass")
+@pytest.mark.usefixtures("areas_and_labels")
 async def test_restore_child_deleted_via_parent_cascade(
     device_registry: dr.DeviceRegistry,
     mock_config_entry: MockConfigEntry,
@@ -11636,6 +11997,7 @@ async def test_move_parent_with_children_rejected(
     assert len(device_registry.child_devices) == 1
 
 
+@pytest.mark.usefixtures("areas_and_labels")
 async def test_convert_device_to_child_device(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
@@ -11950,6 +12312,7 @@ async def test_update_device_via_device_id_naming_child_raises(
 
 
 @pytest.mark.usefixtures("hass")
+@pytest.mark.usefixtures("areas_and_labels")
 async def test_deleted_device_restored_as_child_device(
     device_registry: dr.DeviceRegistry,
     mock_config_entry: MockConfigEntry,
@@ -11992,6 +12355,7 @@ async def test_deleted_device_restored_as_child_device(
     assert restored_device.area_id == "garden"
 
 
+@pytest.mark.usefixtures("areas_and_labels")
 async def test_child_device_orphan_restore(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
@@ -12025,6 +12389,7 @@ async def test_child_device_orphan_restore(
     assert restored.config_entry_id == new_entry.entry_id
 
 
+@pytest.mark.usefixtures("areas_and_labels")
 async def test_child_device_load_and_save(
     hass: HomeAssistant,
     hass_storage: dict[str, Any],
@@ -12061,6 +12426,7 @@ async def test_child_device_load_and_save(
     assert hass_storage[dr.STORAGE_KEY]["data"] == first_save
 
 
+@pytest.mark.usefixtures("areas_and_labels")
 async def test_child_device_stored_fragment(
     hass_storage: dict[str, Any],
     device_registry: dr.DeviceRegistry,
@@ -12273,6 +12639,7 @@ async def test_loading_drops_empty_deleted_devices(
     assert stored_ids == {"with_identifiers", "with_connections"}
 
 
+@pytest.mark.usefixtures("areas_and_labels")
 async def test_effective_area_id(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
@@ -12308,6 +12675,7 @@ async def test_effective_area_id(
 
 
 @pytest.mark.usefixtures("hass")
+@pytest.mark.usefixtures("areas_and_labels")
 async def test_next_name_part(
     device_registry: dr.DeviceRegistry,
     mock_config_entry: MockConfigEntry,
@@ -12332,6 +12700,7 @@ async def test_next_name_part(
 
 
 @pytest.mark.usefixtures("hass")
+@pytest.mark.usefixtures("areas_and_labels")
 async def test_entries_for_area_with_child_devices(
     device_registry: dr.DeviceRegistry,
     mock_config_entry: MockConfigEntry,
@@ -12365,6 +12734,7 @@ async def test_entries_for_area_with_child_devices(
 
 
 @pytest.mark.usefixtures("hass")
+@pytest.mark.usefixtures("areas_and_labels")
 async def test_clear_area_id_with_child_devices(
     device_registry: dr.DeviceRegistry,
     mock_config_entry: MockConfigEntry,
@@ -12389,6 +12759,7 @@ async def test_clear_area_id_with_child_devices(
 
 
 @pytest.mark.usefixtures("hass")
+@pytest.mark.usefixtures("areas_and_labels")
 async def test_clear_label_id_with_child_devices(
     device_registry: dr.DeviceRegistry,
     mock_config_entry: MockConfigEntry,
@@ -12411,6 +12782,7 @@ async def test_clear_label_id_with_child_devices(
 
 
 @pytest.mark.usefixtures("hass")
+@pytest.mark.usefixtures("areas_and_labels")
 async def test_entries_for_label_includes_child_devices(
     device_registry: dr.DeviceRegistry,
     mock_config_entry: MockConfigEntry,
@@ -13528,3 +13900,42 @@ async def test_get_or_create_from_info(
     assert same_device.id == device.id
     assert same_device.manufacturer == "Acme"
     assert same_device.name == "Power strip"
+
+
+async def test_update_device_unknown_area_or_label(
+    device_registry: dr.DeviceRegistry,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test an update with an unknown area or label raises and changes nothing."""
+    device = device_registry.async_get_or_create(
+        config_entry_id=mock_config_entry.entry_id,
+        identifiers={("bridgeid", "0123")},
+    )
+
+    with pytest.raises(ValueError, match="Area 'unknown' not found."):
+        device_registry.async_update_device(device.id, area_id="unknown")
+    with pytest.raises(ValueError, match="Labels not found: missing, unknown"):
+        device_registry.async_update_device(device.id, labels={"unknown", "missing"})
+    assert device_registry.async_get(device.id) == device
+
+
+async def test_update_child_device_unknown_area_or_label(
+    device_registry: dr.DeviceRegistry,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test a child device update with an unknown area or label raises."""
+    parent = device_registry.async_get_or_create(
+        config_entry_id=mock_config_entry.entry_id,
+        identifiers={("bridgeid", "0123")},
+    )
+    child = device_registry.async_get_or_create_child(
+        config_entry_id=mock_config_entry.entry_id,
+        identifiers={("bridgeid", "0123-1")},
+        parent_device_id=parent.id,
+    )
+
+    with pytest.raises(ValueError, match="Area 'unknown' not found."):
+        device_registry.async_update_child_device(child.id, area_id="unknown")
+    with pytest.raises(ValueError, match="Labels not found: unknown"):
+        device_registry.async_update_child_device(child.id, labels={"unknown"})
+    assert device_registry.async_get(child.id) == child

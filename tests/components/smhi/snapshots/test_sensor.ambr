@@ -880,6 +880,123 @@
     'state': 'rain',
   })
 # ---
+# name: test_sensor_setup[load_platforms0][sensor.test_radar_precipitation_intensity-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('smhi', '59.32624, 17.84197')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.test_radar_precipitation_intensity',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Radar precipitation intensity',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.PRECIPITATION_INTENSITY: 'precipitation_intensity'>,
+    'original_icon': None,
+    'original_name': 'Radar precipitation intensity',
+    'platform': 'smhi',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'radar_precipitation_intensity',
+    'unique_id': '59.32624, 17.84197-radar_precipitation_intensity',
+    'unit_of_measurement': <UnitOfVolumetricFlux.MILLIMETERS_PER_HOUR: 'mm/h'>,
+  })
+# ---
+# name: test_sensor_setup[load_platforms0][sensor.test_radar_precipitation_intensity-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Swedish weather institute (SMHI)',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'precipitation_intensity',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Radar precipitation intensity',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfVolumetricFlux.MILLIMETERS_PER_HOUR: 'mm/h'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_radar_precipitation_intensity',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '1.25',
+  })
+# ---
+# name: test_sensor_setup[load_platforms0][sensor.test_radar_reflectivity-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('smhi', '59.32624, 17.84197')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.test_radar_reflectivity',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Radar reflectivity',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Radar reflectivity',
+    'platform': 'smhi',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'radar_reflectivity',
+    'unique_id': '59.32624, 17.84197-radar_reflectivity',
+    'unit_of_measurement': 'dBZ',
+  })
+# ---
+# name: test_sensor_setup[load_platforms0][sensor.test_radar_reflectivity-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Swedish weather institute (SMHI)',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Radar reflectivity',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'dBZ',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_radar_reflectivity',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '27.6',
+  })
+# ---
 # name: test_sensor_setup[load_platforms0][sensor.test_thunder_probability-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([

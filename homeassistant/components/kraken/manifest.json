@@ -4,6 +4,7 @@
   "categories": ["finance"],
   "codeowners": ["@eifinger"],
   "config_flow": true,
+  "connectivity": ["cloud"],
   "documentation": "https://www.home-assistant.io/integrations/kraken",
   "integration_type": "service",
   "iot_class": "cloud_polling",

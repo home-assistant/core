@@ -403,12 +403,9 @@ async def async_setup_entry(
 ) -> None:
     """Set up Škoda sensors from ConfigEntry runtime_data."""
     coordinator = entry.runtime_data.coordinator
-    vehicle_response = coordinator.data.vehicle_response if coordinator.data else None
-    capabilities = (
-        vehicle_response.supported_capabilities() if vehicle_response else set()
-    )
-    vin = vehicle_response.vehicle.vin if vehicle_response else None
-    _LOGGER.debug("[%s] CAPABILITIES: %s", vin, capabilities)
+    vehicle_response = coordinator.data.vehicle_response
+    capabilities = vehicle_response.supported_capabilities()
+    _LOGGER.debug("[%s] CAPABILITIES: %s", vehicle_response.vehicle.vin, capabilities)
 
     async_add_entities(
         SkodaSensor(coordinator, description)

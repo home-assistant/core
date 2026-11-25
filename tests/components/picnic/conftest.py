@@ -16,7 +16,7 @@ from homeassistant.util import dt as dt_util
 
 ENTITY_ID = "todo.mock_title_shopping_cart"
 
-SetupDeliveryFixture = Callable[
+type SetupDeliveryFixture = Callable[
     [str, tuple[timedelta, timedelta] | None, tuple[timedelta, timedelta]],
     Awaitable[DeliverySummary],
 ]

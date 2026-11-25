@@ -2,6 +2,7 @@
 
 import asyncio
 from collections.abc import Callable, Coroutine
+from enum import StrEnum
 import logging
 from typing import Any, cast
 
@@ -16,12 +17,7 @@ from uiprotect.utils import normalize_mac
 
 from homeassistant.components.binary_sensor import BinarySensorDeviceClass
 from homeassistant.components.event import EventDeviceClass
-from homeassistant.const import (
-    ATTR_CONFIG_ENTRY_ID,
-    ATTR_DEVICE_ID,
-    ATTR_NAME,
-    Platform,
-)
+from homeassistant.const import CommonServiceArgument, Platform
 from homeassistant.core import (
     HomeAssistant,
     ServiceCall,
@@ -44,7 +40,6 @@ from homeassistant.util.json import JsonValueType
 from homeassistant.util.read_only_dict import ReadOnlyDict
 
 from .const import (
-    ATTR_MESSAGE,
     DOMAIN,
     KEYRINGS_KEY_TYPE,
     KEYRINGS_KEY_TYPE_ID_FINGERPRINT,
@@ -55,57 +50,69 @@ from .const import (
 )
 from .data import UFPConfigEntry
 
+
+class ProtectService(StrEnum):
+    """Store keys for UniFi Protect services."""
+
+    ADD_DOORBELL_TEXT = "add_doorbell_text"
+    REMOVE_DOORBELL_TEXT = "remove_doorbell_text"
+    SET_CHIME_PAIRED_DOORBELLS = "set_chime_paired_doorbells"
+    REMOVE_PRIVACY_ZONE = "remove_privacy_zone"
+    GET_USER_KEYRING_INFO = "get_user_keyring_info"
+    PTZ_GOTO_PRESET = "ptz_goto_preset"
+    TRIGGER_ALARM_WEBHOOK = "trigger_alarm_webhook"
+
+
+class ProtectServiceArgument(StrEnum):
+    """Store keys for UniFi Protect service arguments."""
+
+    MESSAGE = "message"
+    DOORBELLS = "doorbells"
+    NAME = "name"
+    PRESET = "preset"
+    TRIGGER_ID = "trigger_id"
+
+
 _LOGGER = logging.getLogger(__name__)
-
-SERVICE_ADD_DOORBELL_TEXT = "add_doorbell_text"
-SERVICE_REMOVE_DOORBELL_TEXT = "remove_doorbell_text"
-SERVICE_REMOVE_PRIVACY_ZONE = "remove_privacy_zone"
-SERVICE_SET_CHIME_PAIRED = "set_chime_paired_doorbells"
-SERVICE_GET_USER_KEYRING_INFO = "get_user_keyring_info"
-SERVICE_PTZ_GOTO_PRESET = "ptz_goto_preset"
-SERVICE_TRIGGER_ALARM_WEBHOOK = "trigger_alarm_webhook"
-
-ATTR_PRESET = "preset"
-ATTR_TRIGGER_ID = "trigger_id"
 
 DOORBELL_TEXT_SCHEMA = probatio.Schema(
     {
-        probatio.Required(ATTR_DEVICE_ID): str,
-        probatio.Required(ATTR_MESSAGE): cv.string,
+        probatio.Required(CommonServiceArgument.DEVICE_ID): str,
+        probatio.Required(ProtectServiceArgument.MESSAGE): cv.string,
     },
 )
 
 CHIME_PAIRED_SCHEMA = probatio.Schema(
     {
-        probatio.Required(ATTR_DEVICE_ID): str,
-        "doorbells": cv.ENTITY_SERVICE_FIELDS,
+        probatio.Required(CommonServiceArgument.DEVICE_ID): str,
+        ProtectServiceArgument.DOORBELLS: cv.ENTITY_SERVICE_FIELDS,
     },
 )
 
 REMOVE_PRIVACY_ZONE_SCHEMA = probatio.Schema(
     {
-        probatio.Required(ATTR_DEVICE_ID): str,
-        probatio.Required(ATTR_NAME): cv.string,
+        probatio.Required(CommonServiceArgument.DEVICE_ID): str,
+        probatio.Required(ProtectServiceArgument.NAME): cv.string,
     },
 )
 
 GET_USER_KEYRING_INFO_SCHEMA = probatio.Schema(
     {
-        probatio.Required(ATTR_DEVICE_ID): str,
+        probatio.Required(CommonServiceArgument.DEVICE_ID): str,
     },
 )
 
 PTZ_GOTO_PRESET_SCHEMA = probatio.Schema(
     {
-        probatio.Required(ATTR_DEVICE_ID): str,
-        probatio.Required(ATTR_PRESET): cv.string,
+        probatio.Required(CommonServiceArgument.DEVICE_ID): str,
+        probatio.Required(ProtectServiceArgument.PRESET): cv.string,
     },
 )
 
 TRIGGER_ALARM_WEBHOOK_SCHEMA = probatio.Schema(
     {
-        probatio.Required(ATTR_CONFIG_ENTRY_ID): str,
-        probatio.Required(ATTR_TRIGGER_ID): probatio.All(
+        probatio.Required(CommonServiceArgument.CONFIG_ENTRY_ID): str,
+        probatio.Required(ProtectServiceArgument.TRIGGER_ID): probatio.All(
             cv.string, probatio.Length(min=1)
         ),
     },
@@ -181,20 +188,20 @@ async def _async_service_call_nvr(
 
 async def add_doorbell_text(call: ServiceCall) -> None:
     """Add a custom doorbell text message."""
-    message: str = call.data[ATTR_MESSAGE]
+    message: str = call.data[ProtectServiceArgument.MESSAGE]
     await _async_service_call_nvr(call, "add_custom_doorbell_message", message)
 
 
 async def remove_doorbell_text(call: ServiceCall) -> None:
     """Remove a custom doorbell text message."""
-    message: str = call.data[ATTR_MESSAGE]
+    message: str = call.data[ProtectServiceArgument.MESSAGE]
     await _async_service_call_nvr(call, "remove_custom_doorbell_message", message)
 
 
 async def remove_privacy_zone(call: ServiceCall) -> None:
     """Remove privacy zone from camera."""
 
-    name: str = call.data[ATTR_NAME]
+    name: str = call.data[ProtectServiceArgument.NAME]
     camera = _async_get_ufp_camera(call)
 
     remove_index: int | None = None
@@ -295,13 +302,13 @@ _DOORBELL_ENTITY_CLASSES = {
 
 async def set_chime_paired_doorbells(call: ServiceCall) -> None:
     """Set paired doorbells on chime."""
-    chime_device_id: str = call.data[ATTR_DEVICE_ID]
+    chime_device_id: str = call.data[CommonServiceArgument.DEVICE_ID]
     instance = _async_get_ufp_instance(call.hass, chime_device_id)
     public_bootstrap = instance.public_bootstrap
     chime = _async_get_public_chime(call.hass, public_bootstrap, chime_device_id)
 
     entity_registry = er.async_get(call.hass)
-    call.data = ReadOnlyDict(call.data.get("doorbells") or {})
+    call.data = ReadOnlyDict(call.data.get(ProtectServiceArgument.DOORBELLS) or {})
     doorbell_refs = async_extract_referenced_entity_ids(
         call.hass, TargetSelection(call.data)
     )
@@ -378,7 +385,7 @@ async def ptz_goto_preset(call: ServiceCall) -> None:
     """Move a PTZ camera to a preset position."""
     camera = _async_get_ptz_camera(call)
     public = _async_get_public_camera(camera)
-    preset_name: str = call.data[ATTR_PRESET]
+    preset_name: str = call.data[ProtectServiceArgument.PRESET]
 
     if preset_name.lower() == "home":
         await _async_ptz_command(public.ptz_goto_preset, slot=-1)
@@ -444,11 +451,11 @@ async def get_user_keyring_info(call: ServiceCall) -> ServiceResponse:
 async def trigger_alarm_webhook(call: ServiceCall) -> None:
     """Fire an Alarm Manager webhook trigger."""
     entry: UFPConfigEntry = service.async_get_config_entry(
-        call.hass, DOMAIN, call.data[ATTR_CONFIG_ENTRY_ID]
+        call.hass, DOMAIN, call.data[CommonServiceArgument.CONFIG_ENTRY_ID]
     )
     try:
         await entry.runtime_data.api.send_alarm_webhook_public(
-            call.data[ATTR_TRIGGER_ID]
+            call.data[ProtectServiceArgument.TRIGGER_ID]
         )
     except ClientError as err:
         raise HomeAssistantError(
@@ -460,37 +467,37 @@ async def trigger_alarm_webhook(call: ServiceCall) -> None:
 
 SERVICES = [
     (
-        SERVICE_ADD_DOORBELL_TEXT,
+        ProtectService.ADD_DOORBELL_TEXT,
         add_doorbell_text,
         DOORBELL_TEXT_SCHEMA,
         SupportsResponse.NONE,
     ),
     (
-        SERVICE_REMOVE_DOORBELL_TEXT,
+        ProtectService.REMOVE_DOORBELL_TEXT,
         remove_doorbell_text,
         DOORBELL_TEXT_SCHEMA,
         SupportsResponse.NONE,
     ),
     (
-        SERVICE_SET_CHIME_PAIRED,
+        ProtectService.SET_CHIME_PAIRED_DOORBELLS,
         set_chime_paired_doorbells,
         CHIME_PAIRED_SCHEMA,
         SupportsResponse.NONE,
     ),
     (
-        SERVICE_REMOVE_PRIVACY_ZONE,
+        ProtectService.REMOVE_PRIVACY_ZONE,
         remove_privacy_zone,
         REMOVE_PRIVACY_ZONE_SCHEMA,
         SupportsResponse.NONE,
     ),
     (
-        SERVICE_GET_USER_KEYRING_INFO,
+        ProtectService.GET_USER_KEYRING_INFO,
         get_user_keyring_info,
         GET_USER_KEYRING_INFO_SCHEMA,
         SupportsResponse.ONLY,
     ),
     (
-        SERVICE_PTZ_GOTO_PRESET,
+        ProtectService.PTZ_GOTO_PRESET,
         ptz_goto_preset,
         PTZ_GOTO_PRESET_SCHEMA,
         SupportsResponse.NONE,
@@ -510,7 +517,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
     service.async_register_admin_service(
         hass,
         DOMAIN,
-        SERVICE_TRIGGER_ALARM_WEBHOOK,
+        ProtectService.TRIGGER_ALARM_WEBHOOK,
         trigger_alarm_webhook,
         schema=TRIGGER_ALARM_WEBHOOK_SCHEMA,
     )

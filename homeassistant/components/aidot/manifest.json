@@ -4,6 +4,7 @@
   "categories": ["lighting.bulbs_lamps"],
   "codeowners": ["@s1eedz", "@HongBryan"],
   "config_flow": true,
+  "connectivity": ["network"],
   "dhcp": [
     {
       "hostname": "aidot"

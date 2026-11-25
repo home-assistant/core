@@ -8,7 +8,7 @@ import probatio
 from songpal import Device, SongpalException
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
-from homeassistant.const import CONF_HOST, CONF_NAME
+from homeassistant.const import CONF_NAME
 from homeassistant.helpers.service_info.ssdp import (
     ATTR_UPNP_FRIENDLY_NAME,
     ATTR_UPNP_UDN,
@@ -88,8 +88,8 @@ class SongpalConfigFlow(ConfigFlow, domain=DOMAIN):
             return self.async_show_form(
                 step_id="init",
                 description_placeholders={
-                    CONF_NAME: self.conf.name,
-                    CONF_HOST: self.conf.host,
+                    "name": self.conf.name,
+                    "host": self.conf.host,
                 },
             )
 
@@ -129,8 +129,8 @@ class SongpalConfigFlow(ConfigFlow, domain=DOMAIN):
             assert isinstance(hostname, str)
 
         self.context["title_placeholders"] = {
-            CONF_NAME: friendly_name,
-            CONF_HOST: hostname,
+            "name": friendly_name,
+            "host": hostname,
         }
 
         self.conf = SongpalConfig(friendly_name, hostname, endpoint)
@@ -142,6 +142,7 @@ class SongpalConfigFlow(ConfigFlow, domain=DOMAIN):
         name = import_data.get(CONF_NAME)
         endpoint = import_data[CONF_ENDPOINT]
         parsed_url = urlparse(endpoint)
+        self._async_abort_entries_match({CONF_ENDPOINT: endpoint})
 
         # Try to connect to test the endpoint
         try:

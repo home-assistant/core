@@ -7,6 +7,7 @@ from typing import Any, Self, final, override
 
 from propcache.api import cached_property
 
+from homeassistant.core import callback
 from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.restore_state import ExtraStoredData, RestoreEntity
 from homeassistant.util import dt as dt_util
@@ -177,6 +178,7 @@ class EventEntity(RestoreEntity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_)
             self.__last_event_attributes = event_data.last_event_attributes
 
     @final
+    @callback
     @override
     def _async_write_ha_state(self) -> None:
         """Write the state to the state machine.

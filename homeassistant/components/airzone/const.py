@@ -6,6 +6,7 @@ from aioairzone.common import TemperatureUnit
 
 from homeassistant.const import UnitOfTemperature
 
+CONF_MQTT_TOPIC: Final = "mqtt_topic"
 DOMAIN: Final = "airzone"
 MANUFACTURER: Final = "Airzone"
 

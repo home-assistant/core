@@ -12,7 +12,6 @@ from pyrisco import (
 )
 from pyrisco.common import Partition, System, Zone
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_HOST,
     CONF_PASSWORD,
@@ -41,7 +40,11 @@ from .const import (
     SYSTEM_UPDATE_SIGNAL,
     TYPE_LOCAL,
 )
-from .coordinator import RiscoDataUpdateCoordinator, RiscoEventsDataUpdateCoordinator
+from .coordinator import (
+    RiscoDataUpdateCoordinator,
+    RiscoEventsDataUpdateCoordinator,
+    last_event_store,
+)
 from .models import CloudData, LocalData, RiscoConfigEntry, RiscoData
 from .services import async_setup_services
 
@@ -58,7 +61,7 @@ _LOGGER = logging.getLogger(__name__)
 CLOCK_TIMEOUT_ERROR_FRAGMENT = "Timeout in command: CLOCK"
 
 
-def is_local(entry: ConfigEntry) -> bool:
+def is_local(entry: RiscoConfigEntry) -> bool:
     """Return whether the entry represents an instance with local communication."""
     return entry.data.get(CONF_TYPE) == TYPE_LOCAL
 
@@ -198,6 +201,11 @@ async def async_unload_entry(hass: HomeAssistant, entry: RiscoConfigEntry) -> No
                 entry.title,
                 entry.data.get(CONF_HOST, "unknown"),
             )
+
+
+async def async_remove_entry(hass: HomeAssistant, entry: RiscoConfigEntry) -> None:
+    """Remove the stored last event timestamp."""
+    await last_event_store(hass, entry.entry_id).async_remove()
 
 
 async def _update_listener(hass: HomeAssistant, entry: RiscoConfigEntry) -> None:

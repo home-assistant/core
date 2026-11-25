@@ -84,9 +84,17 @@
       "setpoint_status": {
         "name": "Setpoint status"
       }
+    },
+    "switch": {
+      "emergency_heat": {
+        "name": "Emergency heat"
+      }
     }
   },
   "exceptions": {
+    "failed_to_set_emergency_heat": {
+      "message": "Failed to set emergency heat"
+    },
     "failed_to_set_fan_mode": {
       "message": "Failed to set fan mode"
     },

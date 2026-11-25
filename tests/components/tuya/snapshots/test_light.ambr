@@ -1,4 +1,63 @@
 # serializer version: 1
+# name: test_platform_setup_and_discovery[light.8zrzjldq07tlxnlv_indicator_light-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
+        <ColorMode.ONOFF: 'onoff'>,
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('tuya', 'vlnxlt70qdljzrz8ps')]>,
+    'disabled_by': None,
+    'domain': 'light',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'light.8zrzjldq07tlxnlv_indicator_light',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Indicator light',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Indicator light',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'tuya.vlnxlt70qdljzrz8psbasic_indicator',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_platform_setup_and_discovery[light.8zrzjldq07tlxnlv_indicator_light-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <LightEntityStateAttribute.COLOR_MODE: 'color_mode'>: None,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '8zrzjldq07tlxnlv Indicator light',
+      <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
+        <ColorMode.ONOFF: 'onoff'>,
+      ]),
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <LightEntityFeature: 0>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'light.8zrzjldq07tlxnlv_indicator_light',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
 # name: test_platform_setup_and_discovery[light.ab1-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([

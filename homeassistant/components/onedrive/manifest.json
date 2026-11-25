@@ -5,6 +5,7 @@
   "categories": ["productivity_information.documents_photos"],
   "codeowners": ["@zweckj"],
   "config_flow": true,
+  "connectivity": ["cloud"],
   "dependencies": ["application_credentials"],
   "documentation": "https://www.home-assistant.io/integrations/onedrive",
   "integration_type": "service",
