@@ -1,10 +1,11 @@
 """INDI Allsky Media Source Implementation."""
 
 import base64
+from collections.abc import Awaitable, Callable, Sequence
 import logging
 import mimetypes
 from pathlib import PurePath
-from typing import override
+from typing import Protocol, override
 from urllib.parse import unquote
 
 from aiohttp import ClientError, ClientTimeout, web
@@ -242,6 +243,83 @@ async def async_get_media_source(hass: HomeAssistant) -> IndiAllSkyMediaSource:
     """Set up INDI Allsky media source."""
     hass.http.register_view(IndiAllSkyMediaProxyView(hass))
     return IndiAllSkyMediaSource(hass)
+
+
+class _CatalogMonth(Protocol):
+    """Protocol for catalog month objects returned by the client."""
+
+    month: int
+    name: str
+
+
+def _build_directory(
+    identifier: str,
+    title: str,
+    *,
+    children: list[BrowseMediaSource] | None = None,
+    children_media_class: MediaClass | None = None,
+) -> BrowseMediaSource:
+    """Build a directory BrowseMediaSource item."""
+    return BrowseMediaSource(
+        domain=DOMAIN,
+        identifier=identifier,
+        media_class=MediaClass.DIRECTORY,
+        media_content_type="",
+        title=title,
+        can_play=False,
+        can_expand=True,
+        children=children,
+        children_media_class=children_media_class,
+    )
+
+
+async def _browse_years(
+    entry: IndiAllSkyConfigEntry,
+    category: str,
+    get_years: Callable[[], Awaitable[Sequence[int]]],
+) -> BrowseMediaSource:
+    """Build year-level directory for a media category."""
+    years = await get_years()
+    children = [
+        _build_directory(
+            f"{entry.entry_id}#{category}#{yr}",
+            str(yr),
+            children_media_class=MediaClass.DIRECTORY,
+        )
+        for yr in years
+    ]
+    return _build_directory(
+        f"{entry.entry_id}#{category}",
+        CATEGORY_NAMES[category],
+        children=children,
+        children_media_class=MediaClass.DIRECTORY,
+    )
+
+
+async def _browse_months(
+    entry: IndiAllSkyConfigEntry,
+    category: str,
+    year: int,
+    get_months: Callable[[int], Awaitable[Sequence[_CatalogMonth]]],
+    *,
+    month_children_media_class: MediaClass | None = None,
+) -> BrowseMediaSource:
+    """Build month-level directory for a media category."""
+    months = await get_months(year)
+    children = [
+        _build_directory(
+            f"{entry.entry_id}#{category}#{year}#{m.month}",
+            m.name,
+            children_media_class=month_children_media_class,
+        )
+        for m in months
+    ]
+    return _build_directory(
+        f"{entry.entry_id}#{category}#{year}",
+        str(year),
+        children=children,
+        children_media_class=MediaClass.DIRECTORY,
+    )
 
 
 class IndiAllSkyMediaSource(MediaSource):
@@ -518,63 +596,18 @@ class IndiAllSkyMediaSource(MediaSource):
         client = entry.runtime_data.client
 
         if not path_parts:
-            years = await client.get_video_years()
-            children = [
-                BrowseMediaSource(
-                    domain=DOMAIN,
-                    identifier=f"{entry.entry_id}#{CATEGORY_VIDEOS}#{yr}",
-                    media_class=MediaClass.DIRECTORY,
-                    media_content_type="",
-                    title=str(yr),
-                    can_play=False,
-                    can_expand=True,
-                    children_media_class=MediaClass.DIRECTORY,
-                )
-                for yr in years
-            ]
-            return BrowseMediaSource(
-                domain=DOMAIN,
-                identifier=f"{entry.entry_id}#{CATEGORY_VIDEOS}",
-                media_class=MediaClass.DIRECTORY,
-                media_content_type="",
-                title=CATEGORY_NAMES[CATEGORY_VIDEOS],
-                can_play=False,
-                can_expand=True,
-                children=children,
-                children_media_class=MediaClass.DIRECTORY,
-            )
+            return await _browse_years(entry, CATEGORY_VIDEOS, client.get_video_years)
 
         year = int(path_parts[0])
 
         if len(path_parts) == 1:
-            months = await client.get_video_months(year)
-            children = [
-                BrowseMediaSource(
-                    domain=DOMAIN,
-                    identifier=f"{entry.entry_id}#{CATEGORY_VIDEOS}#{year}#{m.month}",
-                    media_class=MediaClass.DIRECTORY,
-                    media_content_type="",
-                    title=m.name,
-                    can_play=False,
-                    can_expand=True,
-                )
-                for m in months
-            ]
-            return BrowseMediaSource(
-                domain=DOMAIN,
-                identifier=f"{entry.entry_id}#{CATEGORY_VIDEOS}#{year}",
-                media_class=MediaClass.DIRECTORY,
-                media_content_type="",
-                title=str(year),
-                can_play=False,
-                can_expand=True,
-                children=children,
-                children_media_class=MediaClass.DIRECTORY,
+            return await _browse_months(
+                entry, CATEGORY_VIDEOS, year, client.get_video_months
             )
 
         month = int(path_parts[1])
         videos = await client.get_videos(year, month)
-        children = []
+        children: list[BrowseMediaSource] = []
         seen_media_urls: set[str] = set()
 
         for vid in videos:
@@ -594,50 +627,30 @@ class IndiAllSkyMediaSource(MediaSource):
                     )
                 )
 
-            if vid.keogram_url and vid.keogram_url not in seen_media_urls:
-                seen_media_urls.add(vid.keogram_url)
-                keo_thumb = vid.keogram_thumbnail_url or vid.keogram_url
-                children.append(
-                    BrowseMediaSource(
-                        domain=DOMAIN,
-                        identifier=f"{entry.entry_id}#media#{vid.keogram_url}",
-                        media_class=MediaClass.IMAGE,
-                        media_content_type=MediaType.IMAGE,
-                        title=f"{tod_str} keogram - {date_str}",
-                        can_play=True,
-                        can_expand=False,
-                        thumbnail=_build_media_proxy_path(entry.entry_id, keo_thumb)
-                        if keo_thumb
-                        else None,
+            for url, thumb_url, kind in (
+                (vid.keogram_url, vid.keogram_thumbnail_url, "keogram"),
+                (vid.startrail_url, vid.startrail_thumbnail_url, "star trail"),
+            ):
+                if url and url not in seen_media_urls:
+                    seen_media_urls.add(url)
+                    children.append(
+                        BrowseMediaSource(
+                            domain=DOMAIN,
+                            identifier=f"{entry.entry_id}#media#{url}",
+                            media_class=MediaClass.IMAGE,
+                            media_content_type=MediaType.IMAGE,
+                            title=f"{tod_str} {kind} - {date_str}",
+                            can_play=True,
+                            can_expand=False,
+                            thumbnail=_build_media_proxy_path(
+                                entry.entry_id, thumb_url or url
+                            ),
+                        )
                     )
-                )
 
-            if vid.startrail_url and vid.startrail_url not in seen_media_urls:
-                seen_media_urls.add(vid.startrail_url)
-                st_thumb = vid.startrail_thumbnail_url or vid.startrail_url
-                children.append(
-                    BrowseMediaSource(
-                        domain=DOMAIN,
-                        identifier=f"{entry.entry_id}#media#{vid.startrail_url}",
-                        media_class=MediaClass.IMAGE,
-                        media_content_type=MediaType.IMAGE,
-                        title=f"{tod_str} star trail - {date_str}",
-                        can_play=True,
-                        can_expand=False,
-                        thumbnail=_build_media_proxy_path(entry.entry_id, st_thumb)
-                        if st_thumb
-                        else None,
-                    )
-                )
-
-        return BrowseMediaSource(
-            domain=DOMAIN,
-            identifier=f"{entry.entry_id}#{CATEGORY_VIDEOS}#{year}#{month}",
-            media_class=MediaClass.DIRECTORY,
-            media_content_type="",
-            title=f"{year} - {month:02d}",
-            can_play=False,
-            can_expand=True,
+        return _build_directory(
+            f"{entry.entry_id}#{CATEGORY_VIDEOS}#{year}#{month}",
+            f"{year} - {month:02d}",
             children=children,
         )
 
@@ -648,85 +661,33 @@ class IndiAllSkyMediaSource(MediaSource):
         client = entry.runtime_data.client
 
         if not path_parts:
-            years = await client.get_image_years()
-            children = [
-                BrowseMediaSource(
-                    domain=DOMAIN,
-                    identifier=f"{entry.entry_id}#{CATEGORY_IMAGES}#{yr}",
-                    media_class=MediaClass.DIRECTORY,
-                    media_content_type="",
-                    title=str(yr),
-                    can_play=False,
-                    can_expand=True,
-                    children_media_class=MediaClass.DIRECTORY,
-                )
-                for yr in years
-            ]
-            return BrowseMediaSource(
-                domain=DOMAIN,
-                identifier=f"{entry.entry_id}#{CATEGORY_IMAGES}",
-                media_class=MediaClass.DIRECTORY,
-                media_content_type="",
-                title=CATEGORY_NAMES[CATEGORY_IMAGES],
-                can_play=False,
-                can_expand=True,
-                children=children,
-                children_media_class=MediaClass.DIRECTORY,
-            )
+            return await _browse_years(entry, CATEGORY_IMAGES, client.get_image_years)
 
         year = int(path_parts[0])
 
         if len(path_parts) == 1:
-            months = await client.get_image_months(year)
-            children = [
-                BrowseMediaSource(
-                    domain=DOMAIN,
-                    identifier=f"{entry.entry_id}#{CATEGORY_IMAGES}#{year}#{m.month}",
-                    media_class=MediaClass.DIRECTORY,
-                    media_content_type="",
-                    title=m.name,
-                    can_play=False,
-                    can_expand=True,
-                    children_media_class=MediaClass.DIRECTORY,
-                )
-                for m in months
-            ]
-            return BrowseMediaSource(
-                domain=DOMAIN,
-                identifier=f"{entry.entry_id}#{CATEGORY_IMAGES}#{year}",
-                media_class=MediaClass.DIRECTORY,
-                media_content_type="",
-                title=str(year),
-                can_play=False,
-                can_expand=True,
-                children=children,
-                children_media_class=MediaClass.DIRECTORY,
+            return await _browse_months(
+                entry,
+                CATEGORY_IMAGES,
+                year,
+                client.get_image_months,
+                month_children_media_class=MediaClass.DIRECTORY,
             )
 
         month = int(path_parts[1])
         if len(path_parts) == 2:
             days = await client.get_image_days(year, month)
             children = [
-                BrowseMediaSource(
-                    domain=DOMAIN,
-                    identifier=f"{entry.entry_id}#{CATEGORY_IMAGES}#{year}#{month}#{day}",
-                    media_class=MediaClass.DIRECTORY,
-                    media_content_type="",
-                    title=f"Day {day:02d}",
-                    can_play=False,
-                    can_expand=True,
+                _build_directory(
+                    f"{entry.entry_id}#{CATEGORY_IMAGES}#{year}#{month}#{day}",
+                    f"Day {day:02d}",
                     children_media_class=MediaClass.DIRECTORY,
                 )
                 for day in days
             ]
-            return BrowseMediaSource(
-                domain=DOMAIN,
-                identifier=f"{entry.entry_id}#{CATEGORY_IMAGES}#{year}#{month}",
-                media_class=MediaClass.DIRECTORY,
-                media_content_type="",
-                title=f"{year} - {month:02d}",
-                can_play=False,
-                can_expand=True,
+            return _build_directory(
+                f"{entry.entry_id}#{CATEGORY_IMAGES}#{year}#{month}",
+                f"{year} - {month:02d}",
                 children=children,
                 children_media_class=MediaClass.DIRECTORY,
             )
@@ -735,26 +696,16 @@ class IndiAllSkyMediaSource(MediaSource):
         if len(path_parts) == 3:
             hours = await client.get_image_hours(year, month, day)
             children = [
-                BrowseMediaSource(
-                    domain=DOMAIN,
-                    identifier=f"{entry.entry_id}#{CATEGORY_IMAGES}#{year}#{month}#{day}#{hr}",
-                    media_class=MediaClass.DIRECTORY,
-                    media_content_type="",
-                    title=f"{hr:02d}:00 - {hr:02d}:59",
-                    can_play=False,
-                    can_expand=True,
+                _build_directory(
+                    f"{entry.entry_id}#{CATEGORY_IMAGES}#{year}#{month}#{day}#{hr}",
+                    f"{hr:02d}:00 - {hr:02d}:59",
                     children_media_class=MediaClass.IMAGE,
                 )
                 for hr in hours
             ]
-            return BrowseMediaSource(
-                domain=DOMAIN,
-                identifier=f"{entry.entry_id}#{CATEGORY_IMAGES}#{year}#{month}#{day}",
-                media_class=MediaClass.DIRECTORY,
-                media_content_type="",
-                title=f"{year}-{month:02d}-{day:02d}",
-                can_play=False,
-                can_expand=True,
+            return _build_directory(
+                f"{entry.entry_id}#{CATEGORY_IMAGES}#{year}#{month}#{day}",
+                f"{year}-{month:02d}-{day:02d}",
                 children=children,
                 children_media_class=MediaClass.DIRECTORY,
             )
@@ -774,14 +725,9 @@ class IndiAllSkyMediaSource(MediaSource):
             for img in images
             if img.url
         ]
-        return BrowseMediaSource(
-            domain=DOMAIN,
-            identifier=f"{entry.entry_id}#{CATEGORY_IMAGES}#{year}#{month}#{day}#{hour}",
-            media_class=MediaClass.DIRECTORY,
-            media_content_type="",
-            title=f"{year}-{month:02d}-{day:02d} {hour:02d}:00",
-            can_play=False,
-            can_expand=True,
+        return _build_directory(
+            f"{entry.entry_id}#{CATEGORY_IMAGES}#{year}#{month}#{day}#{hour}",
+            f"{year}-{month:02d}-{day:02d} {hour:02d}:00",
             children=children,
             children_media_class=MediaClass.IMAGE,
         )
