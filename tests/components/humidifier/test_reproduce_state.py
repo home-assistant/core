@@ -3,23 +3,18 @@
 import pytest
 from pytest_homeassistant.common import async_mock_service
 
+from homeassistant.components.humidifier import (
+    HumidifierEntityStateAttribute,
+    HumidifierService,
+)
 from homeassistant.components.humidifier.const import (
-    ATTR_HUMIDITY,
     DOMAIN,
     MODE_AWAY,
     MODE_ECO,
     MODE_NORMAL,
-    SERVICE_SET_HUMIDITY,
-    SERVICE_SET_MODE,
 )
 from homeassistant.components.humidifier.reproduce_state import async_reproduce_states
-from homeassistant.const import (
-    ATTR_MODE,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
-    STATE_OFF,
-    STATE_ON,
-)
+from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.core import Context, HomeAssistant, State
 from homeassistant.helpers.state import async_reproduce_state
 
@@ -31,20 +26,48 @@ async def test_reproducing_on_off_states(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test reproducing humidifier states."""
-    hass.states.async_set(ENTITY_1, "off", {ATTR_MODE: MODE_NORMAL, ATTR_HUMIDITY: 45})
-    hass.states.async_set(ENTITY_2, "on", {ATTR_MODE: MODE_NORMAL, ATTR_HUMIDITY: 45})
+    hass.states.async_set(
+        ENTITY_1,
+        "off",
+        {
+            HumidifierEntityStateAttribute.MODE: MODE_NORMAL,
+            HumidifierEntityStateAttribute.HUMIDITY: 45,
+        },
+    )
+    hass.states.async_set(
+        ENTITY_2,
+        "on",
+        {
+            HumidifierEntityStateAttribute.MODE: MODE_NORMAL,
+            HumidifierEntityStateAttribute.HUMIDITY: 45,
+        },
+    )
 
-    turn_on_calls = async_mock_service(hass, DOMAIN, SERVICE_TURN_ON)
-    turn_off_calls = async_mock_service(hass, DOMAIN, SERVICE_TURN_OFF)
-    mode_calls = async_mock_service(hass, DOMAIN, SERVICE_SET_MODE)
-    humidity_calls = async_mock_service(hass, DOMAIN, SERVICE_SET_HUMIDITY)
+    turn_on_calls = async_mock_service(hass, DOMAIN, HumidifierService.TURN_ON)
+    turn_off_calls = async_mock_service(hass, DOMAIN, HumidifierService.TURN_OFF)
+    mode_calls = async_mock_service(hass, DOMAIN, HumidifierService.SET_MODE)
+    humidity_calls = async_mock_service(hass, DOMAIN, HumidifierService.SET_HUMIDITY)
 
     # These calls should do nothing as entities already in desired state
     await async_reproduce_state(
         hass,
         [
-            State(ENTITY_1, "off", {ATTR_MODE: MODE_NORMAL, ATTR_HUMIDITY: 45}),
-            State(ENTITY_2, "on", {ATTR_MODE: MODE_NORMAL, ATTR_HUMIDITY: 45}),
+            State(
+                ENTITY_1,
+                "off",
+                {
+                    HumidifierEntityStateAttribute.MODE: MODE_NORMAL,
+                    HumidifierEntityStateAttribute.HUMIDITY: 45,
+                },
+            ),
+            State(
+                ENTITY_2,
+                "on",
+                {
+                    HumidifierEntityStateAttribute.MODE: MODE_NORMAL,
+                    HumidifierEntityStateAttribute.HUMIDITY: 45,
+                },
+            ),
         ],
     )
 
@@ -90,13 +113,23 @@ async def test_multiple_attrs(hass: HomeAssistant) -> None:
     """Test turn on with multiple attributes."""
     hass.states.async_set(ENTITY_1, STATE_OFF, {})
 
-    turn_on_calls = async_mock_service(hass, DOMAIN, SERVICE_TURN_ON)
-    turn_off_calls = async_mock_service(hass, DOMAIN, SERVICE_TURN_OFF)
-    mode_calls = async_mock_service(hass, DOMAIN, SERVICE_SET_MODE)
-    humidity_calls = async_mock_service(hass, DOMAIN, SERVICE_SET_HUMIDITY)
+    turn_on_calls = async_mock_service(hass, DOMAIN, HumidifierService.TURN_ON)
+    turn_off_calls = async_mock_service(hass, DOMAIN, HumidifierService.TURN_OFF)
+    mode_calls = async_mock_service(hass, DOMAIN, HumidifierService.SET_MODE)
+    humidity_calls = async_mock_service(hass, DOMAIN, HumidifierService.SET_HUMIDITY)
 
     await async_reproduce_states(
-        hass, [State(ENTITY_1, STATE_ON, {ATTR_MODE: MODE_NORMAL, ATTR_HUMIDITY: 45})]
+        hass,
+        [
+            State(
+                ENTITY_1,
+                STATE_ON,
+                {
+                    HumidifierEntityStateAttribute.MODE: MODE_NORMAL,
+                    HumidifierEntityStateAttribute.HUMIDITY: 45,
+                },
+            )
+        ],
     )
 
     await hass.async_block_till_done()
@@ -114,13 +147,23 @@ async def test_turn_off_multiple_attrs(hass: HomeAssistant) -> None:
     """Test set mode and humidity for off state."""
     hass.states.async_set(ENTITY_1, STATE_ON, {})
 
-    turn_on_calls = async_mock_service(hass, DOMAIN, SERVICE_TURN_ON)
-    turn_off_calls = async_mock_service(hass, DOMAIN, SERVICE_TURN_OFF)
-    mode_calls = async_mock_service(hass, DOMAIN, SERVICE_SET_MODE)
-    humidity_calls = async_mock_service(hass, DOMAIN, SERVICE_SET_HUMIDITY)
+    turn_on_calls = async_mock_service(hass, DOMAIN, HumidifierService.TURN_ON)
+    turn_off_calls = async_mock_service(hass, DOMAIN, HumidifierService.TURN_OFF)
+    mode_calls = async_mock_service(hass, DOMAIN, HumidifierService.SET_MODE)
+    humidity_calls = async_mock_service(hass, DOMAIN, HumidifierService.SET_HUMIDITY)
 
     await async_reproduce_states(
-        hass, [State(ENTITY_1, STATE_OFF, {ATTR_MODE: MODE_NORMAL, ATTR_HUMIDITY: 45})]
+        hass,
+        [
+            State(
+                ENTITY_1,
+                STATE_OFF,
+                {
+                    HumidifierEntityStateAttribute.MODE: MODE_NORMAL,
+                    HumidifierEntityStateAttribute.HUMIDITY: 45,
+                },
+            )
+        ],
     )
 
     await hass.async_block_till_done()
@@ -137,16 +180,30 @@ async def test_multiple_modes(hass: HomeAssistant) -> None:
     hass.states.async_set(ENTITY_1, STATE_OFF, {})
     hass.states.async_set(ENTITY_2, STATE_OFF, {})
 
-    turn_on_calls = async_mock_service(hass, DOMAIN, SERVICE_TURN_ON)
-    turn_off_calls = async_mock_service(hass, DOMAIN, SERVICE_TURN_OFF)
-    mode_calls = async_mock_service(hass, DOMAIN, SERVICE_SET_MODE)
-    humidity_calls = async_mock_service(hass, DOMAIN, SERVICE_SET_HUMIDITY)
+    turn_on_calls = async_mock_service(hass, DOMAIN, HumidifierService.TURN_ON)
+    turn_off_calls = async_mock_service(hass, DOMAIN, HumidifierService.TURN_OFF)
+    mode_calls = async_mock_service(hass, DOMAIN, HumidifierService.SET_MODE)
+    humidity_calls = async_mock_service(hass, DOMAIN, HumidifierService.SET_HUMIDITY)
 
     await async_reproduce_states(
         hass,
         [
-            State(ENTITY_1, STATE_ON, {ATTR_MODE: MODE_ECO, ATTR_HUMIDITY: 40}),
-            State(ENTITY_2, STATE_ON, {ATTR_MODE: MODE_NORMAL, ATTR_HUMIDITY: 50}),
+            State(
+                ENTITY_1,
+                STATE_ON,
+                {
+                    HumidifierEntityStateAttribute.MODE: MODE_ECO,
+                    HumidifierEntityStateAttribute.HUMIDITY: 40,
+                },
+            ),
+            State(
+                ENTITY_2,
+                STATE_ON,
+                {
+                    HumidifierEntityStateAttribute.MODE: MODE_NORMAL,
+                    HumidifierEntityStateAttribute.HUMIDITY: 50,
+                },
+            ),
         ],
     )
 
@@ -176,10 +233,10 @@ async def test_state_with_none(hass: HomeAssistant) -> None:
     """Test that none is not a humidifier state."""
     hass.states.async_set(ENTITY_1, STATE_OFF, {})
 
-    turn_on_calls = async_mock_service(hass, DOMAIN, SERVICE_TURN_ON)
-    turn_off_calls = async_mock_service(hass, DOMAIN, SERVICE_TURN_OFF)
-    mode_calls = async_mock_service(hass, DOMAIN, SERVICE_SET_MODE)
-    humidity_calls = async_mock_service(hass, DOMAIN, SERVICE_SET_HUMIDITY)
+    turn_on_calls = async_mock_service(hass, DOMAIN, HumidifierService.TURN_ON)
+    turn_off_calls = async_mock_service(hass, DOMAIN, HumidifierService.TURN_OFF)
+    mode_calls = async_mock_service(hass, DOMAIN, HumidifierService.SET_MODE)
+    humidity_calls = async_mock_service(hass, DOMAIN, HumidifierService.SET_HUMIDITY)
 
     await async_reproduce_states(hass, [State(ENTITY_1, None)])
 
@@ -195,16 +252,25 @@ async def test_state_with_context(hass: HomeAssistant) -> None:
     """Test that context is forwarded."""
     hass.states.async_set(ENTITY_1, STATE_OFF, {})
 
-    turn_on_calls = async_mock_service(hass, DOMAIN, SERVICE_TURN_ON)
-    turn_off_calls = async_mock_service(hass, DOMAIN, SERVICE_TURN_OFF)
-    mode_calls = async_mock_service(hass, DOMAIN, SERVICE_SET_MODE)
-    humidity_calls = async_mock_service(hass, DOMAIN, SERVICE_SET_HUMIDITY)
+    turn_on_calls = async_mock_service(hass, DOMAIN, HumidifierService.TURN_ON)
+    turn_off_calls = async_mock_service(hass, DOMAIN, HumidifierService.TURN_OFF)
+    mode_calls = async_mock_service(hass, DOMAIN, HumidifierService.SET_MODE)
+    humidity_calls = async_mock_service(hass, DOMAIN, HumidifierService.SET_HUMIDITY)
 
     context = Context()
 
     await async_reproduce_states(
         hass,
-        [State(ENTITY_1, STATE_ON, {ATTR_MODE: MODE_AWAY, ATTR_HUMIDITY: 45})],
+        [
+            State(
+                ENTITY_1,
+                STATE_ON,
+                {
+                    HumidifierEntityStateAttribute.MODE: MODE_AWAY,
+                    HumidifierEntityStateAttribute.HUMIDITY: 45,
+                },
+            )
+        ],
         context=context,
     )
 
@@ -224,14 +290,17 @@ async def test_state_with_context(hass: HomeAssistant) -> None:
 
 @pytest.mark.parametrize(
     ("service", "attribute"),
-    [(SERVICE_SET_MODE, ATTR_MODE), (SERVICE_SET_HUMIDITY, ATTR_HUMIDITY)],
+    [
+        (HumidifierService.SET_MODE, HumidifierEntityStateAttribute.MODE),
+        (HumidifierService.SET_HUMIDITY, HumidifierEntityStateAttribute.HUMIDITY),
+    ],
 )
 async def test_attribute(hass: HomeAssistant, service, attribute) -> None:
     """Test that service call is made for each attribute."""
     hass.states.async_set(ENTITY_1, STATE_ON, {})
 
-    turn_on_calls = async_mock_service(hass, DOMAIN, SERVICE_TURN_ON)
-    turn_off_calls = async_mock_service(hass, DOMAIN, SERVICE_TURN_OFF)
+    turn_on_calls = async_mock_service(hass, DOMAIN, HumidifierService.TURN_ON)
+    turn_off_calls = async_mock_service(hass, DOMAIN, HumidifierService.TURN_OFF)
     calls_1 = async_mock_service(hass, DOMAIN, service)
 
     value = "dummy"
