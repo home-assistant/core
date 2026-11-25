@@ -360,6 +360,29 @@ async def test_integration_discovery(hass: HomeAssistant) -> None:
     assert result["result"].unique_id == "asdawdqwdqwd"
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_integration_discovery_configured_before_confirmation(
+    hass: HomeAssistant, mock_govee_api: AsyncMock
+) -> None:
+    """Test confirming does not replace an entry the lamp got in the meantime."""
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_INTEGRATION_DISCOVERY},
+        data={**DISCOVERY_INFO, CONF_IP_ADDRESS: "192.168.1.150"},
+    )
+    assert result["type"] is FlowResultType.FORM
+
+    entry = create_entry(hass, create_device(mock_govee_api))
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert hass.config_entries.async_entries(DOMAIN) == [entry]
+    assert entry.data == {CONF_IP_ADDRESS: "192.168.1.150"}
+
+
 @pytest.mark.parametrize(
     ("source", "onboarded"),
     [

@@ -88,6 +88,10 @@ class GoveeConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Confirm discovery."""
         if user_input is not None or not onboarding.async_is_onboarded(self.hass):
+            # The lamp can have got its entry while the form was open.
+            self._abort_if_unique_id_configured(
+                updates={CONF_IP_ADDRESS: self._ip_address}
+            )
             return self.async_create_entry(
                 title=self._model, data={CONF_IP_ADDRESS: self._ip_address}
             )
