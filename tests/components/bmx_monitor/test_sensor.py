@@ -105,8 +105,10 @@ class Clock:
     """Monotonic time shared by injected advertisements and the poll timer."""
 
     def __init__(self) -> None:
-        """Start at the real monotonic time."""
-        self.now = monotonic()
+        """Start at the real monotonic time, rounded down to a whole second."""
+        # Whole seconds keep elapsed times exact, so the tests can check a read
+        # becomes due exactly at MIN_POLL_INTERVAL.
+        self.now = float(int(monotonic()))
         self._elapsed = 0.0
 
     def __call__(self) -> float:
