@@ -289,6 +289,57 @@
     'state': '5.0',
   })
 # ---
+# name: test_sensors[sensor.test_device_last_reported-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('nepviewer', 'TEST_SN')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.test_device_last_reported',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Last reported',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_icon': None,
+    'original_name': 'Last reported',
+    'platform': 'nepviewer',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'last_reported',
+    'unique_id': 'TEST_SN_last_reported',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.test_device_last_reported-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'timestamp',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Device Last reported',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_device_last_reported',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2026-11-25T15:00:00+00:00',
+  })
+# ---
 # name: test_sensors[sensor.test_device_lifetime_energy-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([

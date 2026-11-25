@@ -3,7 +3,7 @@
 from collections.abc import Generator
 from contextlib import contextmanager
 from dataclasses import dataclass
-from datetime import timedelta
+from datetime import datetime, timedelta, tzinfo
 import logging
 from typing import override
 
@@ -28,12 +28,18 @@ from homeassistant.helpers.update_coordinator import (
     UpdateFailed,
     UpdateFailedUnreachable,
 )
+from homeassistant.util import dt as dt_util
 
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
 SCAN_INTERVAL = timedelta(minutes=5)
+
+# Inverters normally report every few minutes, but gaps of an hour are common.
+REPORT_TIMEOUT = timedelta(minutes=90)
+# Inverters do not report at night, after a last report of 0 W.
+IDLE_REPORT_TIMEOUT = timedelta(days=1)
 
 type NepViewerConfigEntry = ConfigEntry[NepViewerCoordinator]
 
@@ -90,6 +96,7 @@ class NepViewerCoordinator(DataUpdateCoordinator[NepViewerData]):
         self.sites: list[Site] = []
         self.devices: list[Device] = []
         self.site_details: dict[str, SiteDetail] = {}
+        self._time_zones: dict[str, tzinfo | None] = {}
 
     @override
     async def _async_setup(self) -> None:
@@ -105,6 +112,9 @@ class NepViewerCoordinator(DataUpdateCoordinator[NepViewerData]):
                     _LOGGER.debug("Could not fetch site detail for %s", site.sid)
                 else:
                     self.site_details[site.sid] = detail
+                    self._time_zones[site.sid] = await dt_util.async_get_time_zone(
+                        detail.timezone
+                    )
 
     @override
     async def _async_update_data(self) -> NepViewerData:
@@ -131,3 +141,28 @@ class NepViewerCoordinator(DataUpdateCoordinator[NepViewerData]):
             device_overviews=device_overviews,
             device_modules=device_modules,
         )
+
+    def last_reported(self, device: Device) -> datetime | None:
+        """Return when the device last reported to the cloud."""
+        timestamp = self.data.device_overviews[device.sn].last_update_time
+        time_zone = self._time_zones.get(device.sid)
+        if not timestamp or not time_zone:
+            return None
+        # The timestamp is the local time of the site encoded as if it were UTC.
+        return dt_util.utc_from_timestamp(timestamp).replace(tzinfo=time_zone)
+
+    def is_device_reporting(self, device: Device) -> bool:
+        """Return if the values of the device are recent enough to be trusted."""
+        if (reported := self.last_reported(device)) is None:
+            return True
+        timeout = (
+            REPORT_TIMEOUT
+            if self.data.device_overviews[device.sn].total_now
+            else IDLE_REPORT_TIMEOUT
+        )
+        return dt_util.utcnow() - reported <= timeout
+
+    def is_site_reporting(self, sid: str) -> bool:
+        """Return if any device of the site is reporting."""
+        devices = [device for device in self.devices if device.sid == sid]
+        return not devices or any(map(self.is_device_reporting, devices))

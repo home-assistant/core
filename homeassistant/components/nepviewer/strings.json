@@ -46,6 +46,9 @@
       },
       "energy_total": {
         "name": "Lifetime energy"
+      },
+      "last_reported": {
+        "name": "Last reported"
       }
     }
   },

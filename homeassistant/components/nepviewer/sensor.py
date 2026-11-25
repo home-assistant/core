@@ -2,6 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from datetime import datetime
 from typing import override
 
 from aionepviewer import Device, DeviceStatisticsOverview, Module, SiteOverview
@@ -12,7 +13,7 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.const import UnitOfEnergy, UnitOfPower
+from homeassistant.const import EntityCategory, UnitOfEnergy, UnitOfPower
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -88,6 +89,13 @@ DEVICE_SENSOR_DESCRIPTIONS: tuple[
     ),
 )
 
+LAST_REPORTED_DESCRIPTION = SensorEntityDescription(
+    key="last_reported",
+    translation_key="last_reported",
+    device_class=SensorDeviceClass.TIMESTAMP,
+    entity_category=EntityCategory.DIAGNOSTIC,
+)
+
 MODULE_SENSOR_DESCRIPTIONS: tuple[NepViewerSensorEntityDescription[Module], ...] = (
     NepViewerSensorEntityDescription(
         key="current_power",
@@ -130,9 +138,15 @@ async def async_setup_entry(
         for description in SITE_SENSOR_DESCRIPTIONS
     ]
     entities.extend(
-        NepViewerDeviceSensorEntity(coordinator, device.sn, description)
+        NepViewerDeviceSensorEntity(coordinator, device, description)
         for device in coordinator.devices
         for description in DEVICE_SENSOR_DESCRIPTIONS
+    )
+    entities.extend(
+        NepViewerLastReportedSensorEntity(
+            coordinator, device, LAST_REPORTED_DESCRIPTION
+        )
+        for device in coordinator.devices
     )
     panels = [
         (device, plc_sn)
@@ -154,6 +168,14 @@ class NepViewerSiteSensorEntity(NepViewerEntity, SensorEntity):
 
     @property
     @override
+    def available(self) -> bool:
+        """Return if the site is reporting."""
+        return super().available and self.coordinator.is_site_reporting(
+            self._identifier
+        )
+
+    @property
+    @override
     def native_value(self) -> float:
         """Return the sensor value."""
         return self.entity_description.value_fn(
@@ -166,6 +188,22 @@ class NepViewerDeviceSensorEntity(NepViewerEntity, SensorEntity):
 
     entity_description: NepViewerSensorEntityDescription[DeviceStatisticsOverview]
 
+    def __init__(
+        self,
+        coordinator: NepViewerCoordinator,
+        device: Device,
+        description: NepViewerSensorEntityDescription[DeviceStatisticsOverview],
+    ) -> None:
+        """Initialize the sensor."""
+        super().__init__(coordinator, device.sn, description)
+        self._device = device
+
+    @property
+    @override
+    def available(self) -> bool:
+        """Return if the device is reporting."""
+        return super().available and self.coordinator.is_device_reporting(self._device)
+
     @property
     @override
     def native_value(self) -> float:
@@ -173,6 +211,26 @@ class NepViewerDeviceSensorEntity(NepViewerEntity, SensorEntity):
         return self.entity_description.value_fn(
             self.coordinator.data.device_overviews[self._identifier]
         )
+
+
+class NepViewerLastReportedSensorEntity(NepViewerEntity, SensorEntity):
+    """A sensor for when a device last reported, available even if it stopped."""
+
+    def __init__(
+        self,
+        coordinator: NepViewerCoordinator,
+        device: Device,
+        description: SensorEntityDescription,
+    ) -> None:
+        """Initialize the sensor."""
+        super().__init__(coordinator, device.sn, description)
+        self._device = device
+
+    @property
+    @override
+    def native_value(self) -> datetime | None:
+        """Return when the device last reported."""
+        return self.coordinator.last_reported(self._device)
 
 
 class NepViewerModuleSensorEntity(NepViewerEntity, SensorEntity):
@@ -190,7 +248,7 @@ class NepViewerModuleSensorEntity(NepViewerEntity, SensorEntity):
     ) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator, plc_sn, description)
-        self._device_sn = device.sn
+        self._device = device
         site_detail = coordinator.site_details.get(device.sid)
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, plc_sn)},
@@ -209,11 +267,12 @@ class NepViewerModuleSensorEntity(NepViewerEntity, SensorEntity):
     @property
     @override
     def available(self) -> bool:
-        """Return if the panel is still reported by the API."""
+        """Return if the panel is reporting."""
         return (
             super().available
+            and self.coordinator.is_device_reporting(self._device)
             and self._identifier
-            in self.coordinator.data.device_modules.get(self._device_sn, {})
+            in self.coordinator.data.device_modules.get(self._device.sn, {})
         )
 
     @property
@@ -221,5 +280,5 @@ class NepViewerModuleSensorEntity(NepViewerEntity, SensorEntity):
     def native_value(self) -> float:
         """Return the sensor value."""
         return self.entity_description.value_fn(
-            self.coordinator.data.device_modules[self._device_sn][self._identifier]
+            self.coordinator.data.device_modules[self._device.sn][self._identifier]
         )

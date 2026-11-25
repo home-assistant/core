@@ -1,7 +1,9 @@
 """Common fixtures for the NEPViewer tests."""
 
 from collections.abc import Generator
+from datetime import UTC, datetime
 from unittest.mock import AsyncMock, MagicMock, patch
+from zoneinfo import ZoneInfo
 
 from aionepviewer import (
     AuthData,
@@ -17,6 +19,14 @@ from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.nepviewer.const import DOMAIN
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
+
+LAST_REPORTED = datetime(2026, 11, 25, 15, tzinfo=UTC)
+
+
+def api_timestamp(value: datetime) -> int:
+    """Return a timestamp like the API does, with the local time of the site as UTC."""
+    local = value.astimezone(ZoneInfo("America/Sao_Paulo"))
+    return int(local.replace(tzinfo=UTC).timestamp())
 
 
 @pytest.fixture
@@ -72,6 +82,7 @@ def mock_nepviewer() -> Generator[MagicMock]:
     mock_device_overview = DeviceStatisticsOverview(
         {
             "totalNow": 1500.0,
+            "lastUpdateTime": api_timestamp(LAST_REPORTED),
             "production": {"today": "5.0", "total": "100.0"},
         }
     )
@@ -101,6 +112,7 @@ def mock_nepviewer() -> Generator[MagicMock]:
             "companyName": "NEP",
             "pvRemark": "Test Panel Brand",
             "model": "Test Panel Model",
+            "timezone": "America/Sao_Paulo",
         }
     )
 
