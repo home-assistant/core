@@ -123,6 +123,7 @@ class TPLinkClimateEntity(CoordinatedTPLinkModuleEntity, ClimateEntity):
         """Initialize the climate entity."""
         super().__init__(device, coordinator, description, parent=parent)
         self._thermostat_module = device.modules[Module.Thermostat]
+        self._humidity_module = device.modules.get(Module.HumiditySensor)
 
         if target_feature := self._thermostat_module.get_feature("target_temperature"):
             self._attr_min_temp = target_feature.minimum_value
@@ -181,6 +182,8 @@ class TPLinkClimateEntity(CoordinatedTPLinkModuleEntity, ClimateEntity):
         self._attr_native_target_temperature = (
             self._thermostat_module.target_temperature
         )
+        if self._humidity_module:
+            self._attr_current_humidity = self._humidity_module.humidity
 
         self._attr_hvac_mode = (
             HVACMode.HEAT if self._thermostat_module.state else HVACMode.OFF

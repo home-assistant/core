@@ -98,6 +98,9 @@
       "initiate_flow": {
         "account": "Add account"
       },
+      "progress": {
+        "oauth2_wait_for_device": "Open [{url}]({url_complete}) and enter the code below to authorize Home Assistant:\n\n```\n{code}\n```"
+      },
       "title": {
         "oauth2_pick_implementation": "Pick authentication method",
         "reauth": "Authentication expired for {name}",
