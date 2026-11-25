@@ -127,6 +127,13 @@ async def _async_execute_action[_T](
             translation_key="device_communication_error",
             translation_placeholders={"device": config_entry.title},
         ) from err
+    except InvalidAuthError as err:
+        await runtime_data.rpc.async_shutdown_device_and_start_reauth()
+        raise HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key="auth_error",
+            translation_placeholders={"device": config_entry.title},
+        ) from err
 
 
 async def async_command(call: ServiceCall) -> ServiceResponse:
