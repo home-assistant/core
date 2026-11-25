@@ -2,10 +2,10 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import override
 
-from pyforeca import AirQualityForecast, Observation
+from pyforeca import AirQualityForecast, Observation, ObservedHourlyPrecipitation
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -30,6 +30,7 @@ from homeassistant.const import (
     PERCENTAGE,
     EntityCategory,
     UnitOfLength,
+    UnitOfPrecipitationDepth,
     UnitOfPressure,
     UnitOfSpeed,
     UnitOfTemperature,
@@ -52,6 +53,7 @@ class ForecaSensorEntityDescription[DataT](SensorEntityDescription):
     """Describes a Foreca sensor entity."""
 
     value_fn: Callable[[DataT], StateType | datetime]
+    last_reset_fn: Callable[[DataT], datetime | None] = lambda _: None
 
 
 CONDITIONS = [
@@ -68,17 +70,72 @@ CONDITIONS = [
 ]
 
 
-def _observed(
-    value_fn: Callable[[Observation], StateType | datetime],
-) -> Callable[[Observation | None], StateType | datetime]:
+def _observed[T](
+    value_fn: Callable[[Observation], T],
+) -> Callable[[Observation | None], T | None]:
     """Read a value from the nearest station's latest observation."""
 
-    def read(observation: Observation | None) -> StateType | datetime:
+    def read(observation: Observation | None) -> T | None:
         if observation is None:
             return None
         return value_fn(observation)
 
     return read
+
+
+PRECIPITATION_TYPES = ["hail", "icing", "rain", "sleet", "snow"]
+ONE_HOUR = timedelta(hours=1)
+
+
+def _window_start(
+    observation: Observation, endtime: str | None, period: timedelta
+) -> datetime | None:
+    """Return when a station's accumulation window began, or None if it is stale.
+
+    Stations skip reports, so their newest window can be hours old. A window
+    counts until an hour after the next one should have ended.
+    """
+    if observation.time is None or endtime is None:
+        return None
+    time = dt_util.parse_datetime(observation.time)
+    end = dt_util.parse_datetime(endtime)
+    if time is None or end is None or time - end > period + ONE_HOUR:
+        return None
+    return end - period
+
+
+def _last_hour(observation: Observation) -> ObservedHourlyPrecipitation | None:
+    """Return the station's last full hour of precipitation, unless it is stale."""
+    hour = observation.latest_hourly_precipitation
+    if hour is None or _window_start(observation, hour.endtime, ONE_HOUR) is None:
+        return None
+    return hour
+
+
+def _last_hour_start(observation: Observation) -> datetime | None:
+    """Return when the station's last full hour began, unless it is stale."""
+    hour = observation.latest_hourly_precipitation
+    if hour is None:
+        return None
+    return _window_start(observation, hour.endtime, ONE_HOUR)
+
+
+def _last_hour_precipitation(observation: Observation) -> float | None:
+    """Return the precipitation the station measured over its last full hour."""
+    hour = _last_hour(observation)
+    return hour.accum if hour else None
+
+
+def _last_hour_precipitation_type(observation: Observation) -> str | None:
+    """Return the type of the last full hour's precipitation.
+
+    The API reports a type even for an hour without precipitation, and
+    "undefined" when the station could not tell the type.
+    """
+    hour = _last_hour(observation)
+    if hour is None or not hour.accum or hour.prectype not in PRECIPITATION_TYPES:
+        return None
+    return hour.prectype
 
 
 def _air_quality(
@@ -241,6 +298,24 @@ OBSERVATION_SENSORS: tuple[ForecaSensorEntityDescription[Observation | None], ..
         entity_registry_enabled_default=False,
         value_fn=_observed(lambda obs: obs.snow_depth),
     ),
+    ForecaSensorEntityDescription(
+        key="observed_precipitation",
+        translation_key="observed_precipitation",
+        device_class=SensorDeviceClass.PRECIPITATION,
+        native_unit_of_measurement=UnitOfPrecipitationDepth.MILLIMETERS,
+        state_class=SensorStateClass.TOTAL,
+        suggested_display_precision=1,
+        value_fn=_observed(_last_hour_precipitation),
+        last_reset_fn=_observed(_last_hour_start),
+    ),
+    ForecaSensorEntityDescription(
+        key="observed_precipitation_type",
+        translation_key="observed_precipitation_type",
+        device_class=SensorDeviceClass.ENUM,
+        options=PRECIPITATION_TYPES,
+        entity_registry_enabled_default=False,
+        value_fn=_observed(_last_hour_precipitation_type),
+    ),
 )
 
 
@@ -351,3 +426,9 @@ class ForecaSensor[DataT](ForecaEntity[ForecaCoordinator[DataT]], SensorEntity):
     def native_value(self) -> StateType | datetime:
         """Return the state of the sensor."""
         return self.entity_description.value_fn(self.coordinator.data)
+
+    @property
+    @override
+    def last_reset(self) -> datetime | None:
+        """Return when the window of an accumulated amount began."""
+        return self.entity_description.last_reset_fn(self.coordinator.data)

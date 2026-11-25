@@ -6,7 +6,7 @@ from unittest.mock import AsyncMock, patch
 from bosch_shc_camera_client.cameras import Camera, CameraModel
 from bosch_shc_camera_client.cloud import CloudPutResult
 from bosch_shc_camera_client.settings import SettingWriteResult
-from bosch_shc_camera_client.states import CameraAccountStates, MotionSettings
+from bosch_shc_camera_client.states import CameraAccountStates, MotionSettings, WifiInfo
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
@@ -96,6 +96,17 @@ def mock_set_motion_enabled() -> Generator[AsyncMock]:
         "bosch_shc_camera_client.client.set_motion_enabled",
         autospec=True,
         return_value=SettingWriteResult(status=204, response=None, sent=None),
+    ) as mock:
+        yield mock
+
+
+@pytest.fixture(autouse=True)
+def mock_get_wifi_info() -> Generator[AsyncMock]:
+    """Mock the Wi-Fi signal strength of the library."""
+    with patch(
+        "homeassistant.components.bosch_smart_camera.coordinator.get_wifi_info",
+        autospec=True,
+        return_value=WifiInfo(signal_strength=72),
     ) as mock:
         yield mock
 

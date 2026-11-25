@@ -23,7 +23,11 @@ from homeassistant.components.frontend import async_panel_exists
 from homeassistant.components.http import StaticPathConfig
 from homeassistant.const import CONF_ENTITY_ID, CONF_PLATFORM, Platform
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import config_validation as cv, device_registry as dr
+from homeassistant.helpers import (
+    area_registry as ar,
+    config_validation as cv,
+    device_registry as dr,
+)
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.typing import Undefined
 from homeassistant.util import dt as dt_util
@@ -784,6 +788,12 @@ def ws_create_device(
     msg: dict,
 ) -> None:
     """Create a new KNX device."""
+    area_id = msg.get("area_id")
+    if area_id and ar.async_get(hass).async_get_area(area_id) is None:
+        connection.send_error(
+            msg["id"], websocket_api.ERR_NOT_FOUND, f"Area {area_id} not found"
+        )
+        return
     identifier = f"{UI_DEVICE_ID_PREFIX}{ulid_now()}"
     device_registry = dr.async_get(hass)
     _device = device_registry.async_get_or_create(
@@ -794,7 +804,7 @@ def ws_create_device(
     )
     device_registry.async_update_device(
         _device.id,
-        area_id=msg.get("area_id") or Undefined,
+        area_id=area_id or Undefined,
         configuration_url=f"homeassistant://knx/entities/view?device_id={_device.id}",
     )
     connection.send_result(msg["id"], _device.dict_repr)
