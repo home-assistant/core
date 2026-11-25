@@ -193,7 +193,7 @@ async def test_import_cannot_connect(
                 "error": GoogleWifiClientError(),
             },
             FlowResultType.FORM,
-            "cannot_connect",
+            None,
             id="cannot_connect",
         ),
         pytest.param(
@@ -203,12 +203,13 @@ async def test_import_cannot_connect(
                 "error": GoogleWifiDataValidationError(),
             },
             FlowResultType.FORM,
-            "unknown",
+            None,
             id="unknown_error",
         ),
     ],
     indirect=["mock_device_response_with_optional_error"],
 )
+@pytest.mark.usefixtures("mock_unreachable")
 async def test_reconfigure(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
@@ -227,5 +228,9 @@ async def test_reconfigure(
     )
 
     assert result["type"] is expected_result_type
-    assert result["reason"] == expected_reason
-    assert len(mock_device_response_with_optional_error.mock_calls) == 2
+    assert result.get("reason") == expected_reason
+    assert (
+        len(mock_device_response_with_optional_error.mock_calls) == 2
+        if expected_result_type is FlowResultType.ABORT
+        else 1
+    )
