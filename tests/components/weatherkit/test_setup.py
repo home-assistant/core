@@ -6,14 +6,13 @@ from apple_weatherkit.client import (
     WeatherKitApiClientAuthenticationError,
     WeatherKitApiClientError,
 )
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.weatherkit.const import DOMAIN
-from homeassistant.config_entries import ConfigEntryState
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.core import HomeAssistant
 
 from . import EXAMPLE_CONFIG_DATA
-
-from tests.common import MockConfigEntry
 
 
 async def test_auth_error_handling(hass: HomeAssistant) -> None:
@@ -40,6 +39,14 @@ async def test_auth_error_handling(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
 
     assert setup_result is False
+    assert entry.state is ConfigEntryState.SETUP_ERROR
+    assert (
+        entry.reason == "Authentication error initializing the WeatherKit integration"
+    )
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 1
+    assert flows[0]["context"]["source"] == SOURCE_REAUTH
+    assert flows[0]["context"]["entry_id"] == entry.entry_id
 
 
 async def test_client_error_handling(hass: HomeAssistant) -> None:

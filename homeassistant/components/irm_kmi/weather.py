@@ -16,11 +16,15 @@ from homeassistant.const import (
     UnitOfSpeed,
     UnitOfTemperature,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, ServiceResponse, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.util.json import JsonValueType
 
+from .const import DOMAIN
 from .coordinator import IrmKmiConfigEntry, IrmKmiCoordinator
 from .entity import IrmKmiBaseEntity
+from .utils import current_radar_frame
 
 
 async def async_setup_entry(
@@ -36,8 +40,21 @@ async def async_setup_entry(
 PARALLEL_UPDATES = 0
 
 
+def _with_templow(forecast: Forecast, templow: float | None) -> Forecast:
+    """Return a copy of the forecast with templow, swapped if above the high."""
+    result: Forecast = {**forecast, "native_templow": templow}
+    if (
+        templow is not None
+        and result["native_temperature"] is not None
+        and templow > result["native_temperature"]
+    ):
+        result["native_templow"] = result["native_temperature"]
+        result["native_temperature"] = templow
+    return result
+
+
 class IrmKmiWeather(
-    IrmKmiBaseEntity,  # WeatherEntity
+    IrmKmiBaseEntity[IrmKmiCoordinator],  # WeatherEntity
     SingleCoordinatorWeatherEntity[IrmKmiCoordinator],
 ):
     """Weather entity for IRM KMI weather."""
@@ -55,8 +72,9 @@ class IrmKmiWeather(
 
     def __init__(self, entry: IrmKmiConfigEntry) -> None:
         """Create a new instance of the weather entity from a configuration entry."""
-        IrmKmiBaseEntity.__init__(self, entry)
-        SingleCoordinatorWeatherEntity.__init__(self, entry.runtime_data)
+        coordinator = entry.runtime_data.weather
+        IrmKmiBaseEntity.__init__(self, entry, coordinator)
+        SingleCoordinatorWeatherEntity.__init__(self, coordinator)
         self._attr_unique_id = entry.data[CONF_UNIQUE_ID]
 
     @property
@@ -112,16 +130,20 @@ class IrmKmiWeather(
         """Return the UV index."""
         return self.current_weather.get("uv_index")
 
+    @callback
     @override
     def _async_forecast_twice_daily(self) -> list[Forecast] | None:
         """Return the daily forecast in native units."""
-        return self.coordinator.data.daily_forecast
+        forecast: list[Forecast] = list(self.coordinator.data.daily_forecast)
+        return forecast
 
+    @callback
     @override
     def _async_forecast_daily(self) -> list[Forecast] | None:
         """Return the daily forecast in native units."""
         return self.daily_forecast()
 
+    @callback
     @override
     def _async_forecast_hourly(self) -> list[Forecast] | None:
         """Return the hourly forecast in native units."""
@@ -129,7 +151,7 @@ class IrmKmiWeather(
 
     def daily_forecast(self) -> list[Forecast] | None:
         """Return the daily forecast in native units."""
-        data: list[Forecast] = self.coordinator.data.daily_forecast
+        data: list[Forecast] = list(self.coordinator.data.daily_forecast)
 
         # The data in daily_forecast might contain nighttime forecast.
         # The following handles the lowest temperature
@@ -139,16 +161,11 @@ class IrmKmiWeather(
             and not data[0].get("is_daytime")
             and data[1].get("native_templow") is None
         ):
-            data[1]["native_templow"] = data[0].get("native_templow")
-            if (
-                data[1]["native_templow"] is not None
-                and data[1]["native_temperature"] is not None
-                and data[1]["native_templow"] > data[1]["native_temperature"]
-            ):
-                (data[1]["native_templow"], data[1]["native_temperature"]) = (
-                    data[1]["native_temperature"],
-                    data[1]["native_templow"],
-                )
+            data = [
+                data[0],
+                _with_templow(data[1], data[0].get("native_templow")),
+                *data[2:],
+            ]
 
         if len(data) > 0 and not data[0].get("is_daytime"):
             return data
@@ -158,15 +175,33 @@ class IrmKmiWeather(
             and data[0].get("native_templow") is None
             and not data[1].get("is_daytime")
         ):
-            data[0]["native_templow"] = data[1].get("native_templow")
-            if (
-                data[0]["native_templow"] is not None
-                and data[0]["native_temperature"] is not None
-                and data[0]["native_templow"] > data[0]["native_temperature"]
-            ):
-                (data[0]["native_templow"], data[0]["native_temperature"]) = (
-                    data[0]["native_temperature"],
-                    data[0]["native_templow"],
-                )
+            data = [
+                _with_templow(data[0], data[1].get("native_templow")),
+                *data[1:],
+            ]
 
         return [f for f in data if f.get("is_daytime")]
+
+    async def async_get_forecasts_radar(
+        self, include_past_forecasts: bool
+    ) -> ServiceResponse:
+        """Return the rain radar forecast, which only carries precipitation."""
+        if not (radar_forecast := self.coordinator.data.radar_forecast):
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="no_radar_forecast",
+            )
+
+        start = 0 if include_past_forecasts else current_radar_frame(radar_forecast)
+        forecast: list[JsonValueType] = [
+            {
+                "datetime": frame["datetime"],
+                "precipitation": frame["native_precipitation"],
+                "rain_forecast_max": frame["rain_forecast_max"],
+                "rain_forecast_min": frame["rain_forecast_min"],
+                "might_rain": frame["might_rain"],
+                "unit": frame["unit"],
+            }
+            for frame in radar_forecast[start:]
+        ]
+        return {"forecast": forecast}

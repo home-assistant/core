@@ -43,10 +43,8 @@ rules:
   log-when-unavailable:
     status: exempt
     comment: Notify entities are stateless send-only.
-  parallel-updates:
-    status: exempt
-    comment: No polling or data updates.
-  reauthentication-flow: todo
+  parallel-updates: done
+  reauthentication-flow: done
   test-coverage: done
 
   # Gold
@@ -72,9 +70,7 @@ rules:
   dynamic-devices:
     status: exempt
     comment: No devices in current scope.
-  entity-category:
-    status: exempt
-    comment: Notify entities have no applicable category.
+  entity-category: done
   entity-device-class:
     status: exempt
     comment: No applicable device class for notify entities.

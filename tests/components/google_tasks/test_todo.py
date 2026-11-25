@@ -9,6 +9,8 @@ from unittest.mock import Mock
 from freezegun.api import FrozenDateTimeFactory
 from httplib2 import Response
 import pytest
+from pytest_homeassistant.common import async_fire_time_changed
+from pytest_homeassistant.typing import WebSocketGenerator
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.google_tasks.coordinator import UPDATE_INTERVAL
@@ -21,7 +23,7 @@ from homeassistant.components.todo import (
     DOMAIN as TODO_DOMAIN,
     TodoServices,
 )
-from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE, Platform
+from homeassistant.const import STATE_UNAVAILABLE, Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 
@@ -30,9 +32,6 @@ from .conftest import (
     LIST_TASKS_RESPONSE_WATER,
     create_response_object,
 )
-
-from tests.common import async_fire_time_changed
-from tests.typing import WebSocketGenerator
 
 ENTITY_ID = "todo.my_tasks"
 EMPTY_RESPONSE = {}
@@ -380,7 +379,7 @@ async def test_create_todo_list_item(
         TODO_DOMAIN,
         TodoServices.ADD_ITEM,
         {ATTR_ITEM: "Soda", **item_data},
-        target={ATTR_ENTITY_ID: "todo.my_tasks"},
+        target={TargetKey.ENTITY_ID: "todo.my_tasks"},
         blocking=True,
     )
     assert len(mock_http_response.call_args_list) == 4
@@ -420,7 +419,7 @@ async def test_create_todo_list_item_error(
             TODO_DOMAIN,
             TodoServices.ADD_ITEM,
             {ATTR_ITEM: "Soda"},
-            target={ATTR_ENTITY_ID: "todo.my_tasks"},
+            target={TargetKey.ENTITY_ID: "todo.my_tasks"},
             blocking=True,
         )
 
@@ -445,7 +444,7 @@ async def test_update_todo_list_item(
         TODO_DOMAIN,
         TodoServices.UPDATE_ITEM,
         {ATTR_ITEM: "some-task-id", ATTR_RENAME: "Soda", ATTR_STATUS: "completed"},
-        target={ATTR_ENTITY_ID: "todo.my_tasks"},
+        target={TargetKey.ENTITY_ID: "todo.my_tasks"},
         blocking=True,
     )
     assert len(mock_http_response.call_args_list) == 4
@@ -478,7 +477,7 @@ async def test_update_due_date(
         TODO_DOMAIN,
         TodoServices.UPDATE_ITEM,
         {ATTR_ITEM: "some-task-id", ATTR_DUE_DATE: "2024-12-5"},
-        target={ATTR_ENTITY_ID: "todo.my_tasks"},
+        target={TargetKey.ENTITY_ID: "todo.my_tasks"},
         blocking=True,
     )
     assert len(mock_http_response.call_args_list) == 4
@@ -518,7 +517,7 @@ async def test_update_todo_list_item_error(
             TODO_DOMAIN,
             TodoServices.UPDATE_ITEM,
             {ATTR_ITEM: "some-task-id", ATTR_RENAME: "Soda", ATTR_STATUS: "completed"},
-            target={ATTR_ENTITY_ID: "todo.my_tasks"},
+            target={TargetKey.ENTITY_ID: "todo.my_tasks"},
             blocking=True,
         )
 
@@ -562,7 +561,7 @@ async def test_partial_update(
         TODO_DOMAIN,
         TodoServices.UPDATE_ITEM,
         {ATTR_ITEM: "some-task-id", **item_data},
-        target={ATTR_ENTITY_ID: "todo.my_tasks"},
+        target={TargetKey.ENTITY_ID: "todo.my_tasks"},
         blocking=True,
     )
     assert len(mock_http_response.call_args_list) == 4
@@ -592,7 +591,7 @@ async def test_partial_update_status(
         TODO_DOMAIN,
         TodoServices.UPDATE_ITEM,
         {ATTR_ITEM: "some-task-id", ATTR_STATUS: "needs_action"},
-        target={ATTR_ENTITY_ID: "todo.my_tasks"},
+        target={TargetKey.ENTITY_ID: "todo.my_tasks"},
         blocking=True,
     )
     assert len(mock_http_response.call_args_list) == 4
@@ -636,7 +635,7 @@ async def test_delete_todo_list_item(
         TODO_DOMAIN,
         TodoServices.REMOVE_ITEM,
         {ATTR_ITEM: ["some-task-id-1", "some-task-id-2", "some-task-id-3"]},
-        target={ATTR_ENTITY_ID: "todo.my_tasks"},
+        target={TargetKey.ENTITY_ID: "todo.my_tasks"},
         blocking=True,
     )
     assert len(mock_http_response.call_args_list) == 4
@@ -684,7 +683,7 @@ async def test_delete_partial_failure(
             TODO_DOMAIN,
             TodoServices.REMOVE_ITEM,
             {ATTR_ITEM: ["some-task-id-1", "some-task-id-2", "some-task-id-3"]},
-            target={ATTR_ENTITY_ID: "todo.my_tasks"},
+            target={TargetKey.ENTITY_ID: "todo.my_tasks"},
             blocking=True,
         )
 
@@ -725,7 +724,7 @@ async def test_delete_invalid_json_response(
             TODO_DOMAIN,
             TodoServices.REMOVE_ITEM,
             {ATTR_ITEM: ["some-task-id-1"]},
-            target={ATTR_ENTITY_ID: "todo.my_tasks"},
+            target={TargetKey.ENTITY_ID: "todo.my_tasks"},
             blocking=True,
         )
 
@@ -764,7 +763,7 @@ async def test_delete_server_error(
             TODO_DOMAIN,
             TodoServices.REMOVE_ITEM,
             {ATTR_ITEM: ["some-task-id-1"]},
-            target={ATTR_ENTITY_ID: "todo.my_tasks"},
+            target={TargetKey.ENTITY_ID: "todo.my_tasks"},
             blocking=True,
         )
 
@@ -956,7 +955,7 @@ async def test_susbcribe(
         TODO_DOMAIN,
         TodoServices.UPDATE_ITEM,
         {ATTR_ITEM: uid, ATTR_RENAME: "Milk"},
-        target={ATTR_ENTITY_ID: "todo.my_tasks"},
+        target={TargetKey.ENTITY_ID: "todo.my_tasks"},
         blocking=True,
     )
 

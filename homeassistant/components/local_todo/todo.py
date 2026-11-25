@@ -1,7 +1,7 @@
 """A Local To-do todo platform."""
 
 import asyncio
-import datetime
+import datetime as dt
 import logging
 from typing import override
 
@@ -24,7 +24,7 @@ from homeassistant.setup import SetupPhases, async_pause_setup
 from homeassistant.util import dt as dt_util
 
 from . import LocalTodoConfigEntry
-from .const import CONF_TODO_LIST_NAME
+from .const import CONF_TODO_LIST_NAME, DOMAIN
 from .store import LocalTodoListStore
 
 _LOGGER = logging.getLogger(__name__)
@@ -57,9 +57,9 @@ def _migrate_calendar(calendar: Calendar) -> bool:
         return False
     migrated = False
     for todo in calendar.todos:
-        if todo.due is None or isinstance(todo.due, datetime.datetime):
+        if todo.due is None or isinstance(todo.due, dt.datetime):
             continue
-        todo.due += datetime.timedelta(days=1)
+        todo.due += dt.timedelta(days=1)
         migrated = True
     return migrated
 
@@ -129,8 +129,8 @@ def _convert_item(item: TodoItem) -> Todo:
     if item.status:
         todo.status = ICS_TODO_STATUS_MAP_INV[item.status]
     todo.due = item.due
-    if todo.due and not isinstance(todo.due, datetime.datetime):
-        todo.due += datetime.timedelta(days=1)
+    if todo.due and not isinstance(todo.due, dt.datetime):
+        todo.due += dt.timedelta(days=1)
     todo.description = item.description
     return todo
 
@@ -171,8 +171,8 @@ class LocalTodoListEntity(TodoListEntity):
         """Update entity state based on the local To-do items."""
         todo_items = []
         for item in self._calendar.todos:
-            if (due := item.due) and not isinstance(due, datetime.datetime):
-                due -= datetime.timedelta(days=1)
+            if (due := item.due) and not isinstance(due, dt.datetime):
+                due -= dt.timedelta(days=1)
             todo_items.append(
                 TodoItem(
                     uid=item.uid,
@@ -230,11 +230,18 @@ class LocalTodoListEntity(TodoListEntity):
             item_idx: dict[str, int] = {itm.uid: idx for idx, itm in enumerate(todos)}
             if uid not in item_idx:
                 raise HomeAssistantError(
-                    f"Item '{uid}' not found in todo list {self.entity_id}"
+                    translation_domain=DOMAIN,
+                    translation_key="item_not_found",
+                    translation_placeholders={"uid": uid, "entity_id": self.entity_id},
                 )
             if previous_uid and previous_uid not in item_idx:
                 raise HomeAssistantError(
-                    f"Item '{previous_uid}' not found in todo list {self.entity_id}"
+                    translation_domain=DOMAIN,
+                    translation_key="item_not_found",
+                    translation_placeholders={
+                        "uid": previous_uid,
+                        "entity_id": self.entity_id,
+                    },
                 )
             dst_idx = item_idx[previous_uid] + 1 if previous_uid else 0
             src_idx = item_idx[uid]

@@ -112,7 +112,7 @@ def validate_event_data(obj: dict) -> dict:
 
 _OPTIONS_SCHEMA_DICT = {
     probatio.Optional(ATTR_CONFIG_ENTRY_ID): str,
-    probatio.Optional(ATTR_DEVICE_ID): probatio.All(cv.ensure_list, [cv.string]),
+    probatio.Optional(ATTR_DEVICE_ID): probatio.All(probatio.EnsureList(), [cv.string]),
     probatio.Optional(ATTR_ENTITY_ID): cv.entity_ids,
     probatio.Required(ATTR_EVENT_SOURCE): probatio.In(["controller", "driver", "node"]),
     probatio.Required(ATTR_EVENT): cv.string,

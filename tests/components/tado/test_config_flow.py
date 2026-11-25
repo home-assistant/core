@@ -6,6 +6,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 from PyTado.http import DeviceActivationStatus
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.tado.config_flow import TadoException
 from homeassistant.components.tado.const import (
@@ -22,8 +23,6 @@ from homeassistant.helpers.service_info.zeroconf import (
     ATTR_PROPERTIES_ID,
     ZeroconfServiceInfo,
 )
-
-from tests.common import MockConfigEntry
 
 
 async def test_full_flow(
@@ -55,6 +54,7 @@ async def test_full_flow(
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "home name"
     assert result["data"] == {CONF_REFRESH_TOKEN: "refresh"}
+    assert result["result"].unique_id == "1"
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -103,6 +103,7 @@ async def test_full_flow_reauth(hass: HomeAssistant, mock_tado_api: MagicMock) -
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "home name"
     assert result["data"] == {CONF_REFRESH_TOKEN: "refresh"}
+    assert result["result"].unique_id == "1"
 
 
 async def test_auth_timeout(
@@ -179,6 +180,24 @@ async def test_no_homes(hass: HomeAssistant, mock_tado_api: MagicMock) -> None:
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "no_homes"
+
+
+async def test_tado_x_home_aborts(
+    hass: HomeAssistant, mock_tado_api: MagicMock
+) -> None:
+    """Test that a Tado X (LINE_X generation) home aborts the config flow."""
+    mock_tado_api.get_me.return_value["homes"][0]["generation"] = "LINE_X"
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    assert result["type"] is FlowResultType.SHOW_PROGRESS_DONE
+    assert result["step_id"] == "finish_login"
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "tado_x_unsupported"
 
 
 async def test_tado_creation(hass: HomeAssistant) -> None:
@@ -294,6 +313,7 @@ async def test_show_progress_polling(
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"])
     assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == "1"
 
 
 async def test_homekit(hass: HomeAssistant, mock_tado_api: MagicMock) -> None:

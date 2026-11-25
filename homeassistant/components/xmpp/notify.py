@@ -1,4 +1,4 @@
-"""Jabber (XMPP) notification service."""
+"""XMPP notification service."""
 
 from concurrent.futures import TimeoutError as FutTimeoutError
 from http import HTTPStatus
@@ -58,8 +58,10 @@ XEP_0363_TIMEOUT = 10
 PLATFORM_SCHEMA = NOTIFY_PLATFORM_SCHEMA.extend(
     {
         probatio.Required(CONF_SENDER): cv.string,
-        probatio.Required(CONF_PASSWORD): cv.string,
-        probatio.Required(CONF_RECIPIENT): probatio.All(cv.ensure_list, [cv.string]),
+        probatio.Required(probatio.Secret(CONF_PASSWORD)): cv.string,
+        probatio.Required(CONF_RECIPIENT): probatio.All(
+            probatio.EnsureList(), [cv.string]
+        ),
         probatio.Optional(CONF_RESOURCE, default=DEFAULT_RESOURCE): cv.string,
         probatio.Optional(CONF_ROOM, default=""): cv.string,
         probatio.Optional(CONF_TLS, default=True): cv.boolean,
@@ -73,7 +75,7 @@ async def async_get_service(
     config: ConfigType,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> XmppNotificationService:
-    """Get the Jabber (XMPP) notification service."""
+    """Get the XMPP notification service."""
     return XmppNotificationService(
         config.get(CONF_SENDER),
         config.get(CONF_RESOURCE),
@@ -87,7 +89,7 @@ async def async_get_service(
 
 
 class XmppNotificationService(BaseNotificationService):
-    """Implement the notification service for Jabber (XMPP)."""
+    """Implement the notification service for XMPP."""
 
     def __init__(self, sender, resource, password, recipient, tls, verify, room, hass):
         """Initialize the service."""
@@ -138,10 +140,10 @@ async def async_send_message(  # noqa: C901
     """Send a message over XMPP."""
 
     class SendNotificationBot(slixmpp.ClientXMPP):
-        """Service for sending Jabber (XMPP) messages."""
+        """Service for sending XMPP messages."""
 
         def __init__(self):
-            """Initialize the Jabber Bot."""
+            """Initialize the XMPP bot."""
             super().__init__(sender, password)
 
             self.loop = hass.loop
@@ -235,9 +237,9 @@ async def async_send_message(  # noqa: C901
                 _LOGGER.error("The server did not respond in time, %s", ex)
 
         async def upload_file(self, timeout=None):
-            """Upload file to Jabber server and return new URL.
+            """Upload file to XMPP server and return new URL.
 
-            upload a file with Jabber XEP_0363 from a remote URL or a local
+            upload a file with XMPP XEP_0363 from a remote URL or a local
             file path and return a URL of that file.
             """
             if data.get(ATTR_URL_TEMPLATE):

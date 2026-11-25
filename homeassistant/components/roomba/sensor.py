@@ -4,7 +4,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from typing import override
 
-from roombapy import Roomba
+from roombapy import RoombaClient
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -23,7 +23,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
-from .entity import IRobotEntity, roomba_reported_state
+from . import roomba_reported_state
+from .entity import IRobotEntity
 from .models import RoombaConfigEntry
 
 
@@ -37,6 +38,22 @@ class RoombaSensorEntityDescription(SensorEntityDescription):
     # "signal", so that a Wi-Fi update does not wake every entity. Sensors that
     # actually read "signal" have to opt back in or they never refresh.
     refresh_on_signal: bool = False
+
+
+def _battery_cycles(entity: IRobotEntity) -> int | None:
+    """Return the battery cycles, falling back to the battery's own count."""
+    return next(
+        (
+            value
+            for value in (
+                entity.battery_stats.get("nLithChrg"),
+                entity.battery_stats.get("nNimhChrg"),
+                entity.battery_info.get("cCount"),
+            )
+            if value is not None
+        ),
+        None,
+    )
 
 
 DOCK_SENSORS: list[RoombaSensorEntityDescription] = [
@@ -69,9 +86,7 @@ SENSORS: list[RoombaSensorEntityDescription] = [
         translation_key="battery_cycles",
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
-        value_fn=lambda self: (
-            self.battery_stats.get("nLithChrg") or self.battery_stats.get("nNimhChrg")
-        ),
+        value_fn=_battery_cycles,
     ),
     RoombaSensorEntityDescription(
         key="total_cleaning_time",
@@ -190,7 +205,7 @@ class RoombaSensor(IRobotEntity, SensorEntity):
 
     def __init__(
         self,
-        roomba: Roomba,
+        roomba: RoombaClient,
         blid: str,
         entity_description: RoombaSensorEntityDescription,
     ) -> None:

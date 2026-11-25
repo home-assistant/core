@@ -12,7 +12,6 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.device_registry import AnyDeviceEntry
 from homeassistant.helpers.reload import async_integration_yaml_config
 from homeassistant.helpers.storage import STORAGE_DIR
@@ -38,9 +37,14 @@ from .const import (
     SUPPORTED_PLATFORMS_UI,
     SUPPORTED_PLATFORMS_YAML,
 )
+from .device import async_remove_ui_entities_of_device
 from .expose import create_combined_knx_exposure
 from .knx_module import KNXModule
-from .project import STORAGE_KEY as PROJECT_STORAGE_KEY
+from .llm_api import async_register_llm_api
+from .project import (
+    STORAGE_KEY as PROJECT_STORAGE_KEY,
+    async_set_project as async_set_project,  # for other integrations
+)
 from .schema import (
     BinarySensorSchema,
     ButtonSchema,
@@ -112,7 +116,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Load a config entry."""
     # `_KNX_YAML_CONFIG` is only set in async_setup.
     # It's None when reloading the integration or no `knx` key in configuration.yaml
@@ -132,9 +136,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     hass.data[KNX_MODULE_KEY] = knx_module
 
-    knx_module.ui_time_server_controller.start(
-        knx_module.xknx, knx_module.config_store.get_time_server_config()
-    )
+    entry.async_on_unload(async_register_llm_api(hass, knx_module))
+
+    if (time_server := knx_module.config_store.get_time_server()) is not None:
+        knx_module.ui_time_server_controller.start(knx_module.xknx, time_server)
     knx_module.ui_expose_controller.start(
         hass, knx_module.xknx, knx_module.config_store.get_exposes()
     )
@@ -161,10 +166,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     )
 
     await register_panel(hass)
-    return True
 
 
-async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Migrate old entry."""
     _LOGGER.debug("Migrating from version %s", entry.version)
 
@@ -208,15 +212,13 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         )
         _LOGGER.info("Migration to version 2.2 successful")
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Unloading the KNX platforms."""
     knx_module = hass.data.get(KNX_MODULE_KEY)
     if not knx_module:
         #  if not loaded directly return
-        return True
+        return
 
     for exposure in knx_module.yaml_exposures:
         exposure.async_remove()
@@ -230,7 +232,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         for platform in SUPPORTED_PLATFORMS_YAML
         if platform in knx_module.config_yaml
     }
-    unload_ok = await hass.config_entries.async_unload_platforms(
+    await hass.config_entries.async_unload_platforms_or_raise(
         entry,
         {
             # always unload system entities
@@ -243,11 +245,8 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             *configured_platforms_yaml,
         },
     )
-    if unload_ok:
-        await knx_module.stop()
-        hass.data.pop(DOMAIN)
-
-    return unload_ok
+    await knx_module.stop()
+    hass.data.pop(DOMAIN)
 
 
 async def async_remove_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
@@ -281,22 +280,6 @@ async def async_remove_config_entry_device(
     hass: HomeAssistant, config_entry: ConfigEntry, device_entry: AnyDeviceEntry
 ) -> bool:
     """Remove a config entry from a device."""
-    knx_module = hass.data[KNX_MODULE_KEY]
-    if not device_entry.identifiers.isdisjoint(
-        knx_module.interface_device.device_info["identifiers"]
-    ):
-        # can not remove interface device
-        return False
-    ui_unique_ids = knx_module.config_store.get_entity_uids()
-    entity_registry = er.async_get(hass)
-    if any(
-        entity.config_entry_id == config_entry.entry_id
-        and entity.unique_id not in ui_unique_ids
-        for entity in er.async_entries_for_device(entity_registry, device_entry.id)
-    ):
-        # device still has YAML-configured KNX entities; it would be recreated after reload
-        return False
-    for entity in knx_module.config_store.get_entity_entries():
-        if entity.device_id == device_entry.id:
-            await knx_module.config_store.delete_entity(entity.entity_id)
-    return True
+    return await async_remove_ui_entities_of_device(
+        hass, hass.data[KNX_MODULE_KEY], device_entry
+    )

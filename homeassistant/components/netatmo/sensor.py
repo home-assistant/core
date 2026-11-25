@@ -8,7 +8,10 @@ from typing import Any, Final, cast, override
 
 import pyatmo
 from pyatmo.modules import PublicWeatherArea
-from pyatmo.modules.device_types import DeviceCategory as NetatmoDeviceCategory
+from pyatmo.modules.device_types import (
+    DeviceCategory as NetatmoDeviceCategory,
+    DeviceType,
+)
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -37,6 +40,7 @@ from homeassistant.helpers.dispatcher import (
 )
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
+from homeassistant.util import dt as dt_util
 
 from .const import (
     CONF_URL_CONTROL,
@@ -45,6 +49,10 @@ from .const import (
     CONF_URL_SECURITY,
     CONF_WEATHER_AREAS,
     DOMAIN,
+    EVENT_TYPE_CANCEL_SET_POINT,
+    EVENT_TYPE_SET_POINT,
+    EVENT_TYPE_THERM_MODE,
+    NETATMO_CREATE_CLIMATE,
     NETATMO_CREATE_CLIMATE_BATTERY_SENSOR,
     NETATMO_CREATE_LEGACY_SENSOR,
     NETATMO_CREATE_ROOM_SENSOR,
@@ -462,6 +470,7 @@ DEVICE_CATEGORY_LEGACY_SENSORS: Final[
 ] = {
     NetatmoDeviceCategory.meter: NETATMO_WEATHER_SENSOR_DESCRIPTIONS,
     NetatmoDeviceCategory.switch: NETATMO_WEATHER_SENSOR_DESCRIPTIONS,
+    NetatmoDeviceCategory.dimmer: NETATMO_WEATHER_SENSOR_DESCRIPTIONS,
     NetatmoDeviceCategory.climate: NETATMO_WEATHER_SENSOR_DESCRIPTIONS,
 }
 
@@ -470,6 +479,7 @@ DEVICE_CATEGORY_SENSOR_URLS: Final[dict[NetatmoDeviceCategory, str]] = {
     NetatmoDeviceCategory.meter: CONF_URL_ENERGY,
     NetatmoDeviceCategory.opening: CONF_URL_SECURITY,
     NetatmoDeviceCategory.switch: CONF_URL_CONTROL,
+    NetatmoDeviceCategory.dimmer: CONF_URL_CONTROL,
 }
 
 
@@ -575,6 +585,45 @@ async def async_setup_entry(
         )
     )
 
+    @callback
+    def _create_therm_setpoint_mode_sensor(netatmo_device: NetatmoRoom) -> None:
+        if not netatmo_device.room.climate_type:
+            return
+
+        async_add_entities([NetatmoThermSetpointModeSensor(netatmo_device)])
+
+    entry.async_on_unload(
+        async_dispatcher_connect(
+            hass, NETATMO_CREATE_CLIMATE, _create_therm_setpoint_mode_sensor
+        )
+    )
+
+    @callback
+    def _create_heating_power_request_sensor(netatmo_device: NetatmoRoom) -> None:
+        if netatmo_device.room.climate_type != DeviceType.NRV:
+            return
+
+        async_add_entities([NetatmoHeatingPowerRequestSensor(netatmo_device)])
+
+    entry.async_on_unload(
+        async_dispatcher_connect(
+            hass, NETATMO_CREATE_CLIMATE, _create_heating_power_request_sensor
+        )
+    )
+
+    @callback
+    def _create_setpoint_end_time_sensor(netatmo_device: NetatmoRoom) -> None:
+        if not netatmo_device.room.climate_type:
+            return
+
+        async_add_entities([NetatmoSetpointEndTimeSensor(netatmo_device)])
+
+    entry.async_on_unload(
+        async_dispatcher_connect(
+            hass, NETATMO_CREATE_CLIMATE, _create_setpoint_end_time_sensor
+        )
+    )
+
     device_registry = dr.async_get(hass)
     data_handler = entry.runtime_data
 
@@ -626,8 +675,10 @@ async def async_setup_entry(
 
         async_add_entities(new_entities)
 
-    async_dispatcher_connect(
-        hass, f"signal-{DOMAIN}-public-update-{entry.entry_id}", add_public_entities
+    entry.async_on_unload(
+        async_dispatcher_connect(
+            hass, f"signal-{DOMAIN}-public-update-{entry.entry_id}", add_public_entities
+        )
     )
 
     await add_public_entities(False)
@@ -910,6 +961,180 @@ class NetatmoRoomSensor(NetatmoRoomEntity, NetatmoLegacyReachableSensor):
 
         self._attr_available = True
         self._attr_native_value = getattr(self.device, self.entity_description.key)
+
+        self.async_write_ha_state()
+
+
+# Raw Netatmo setpoint mode values, as returned by the API / pyatmo.
+THERM_SETPOINT_MODE_OPTIONS = [
+    "away",
+    "hg",
+    "home",
+    "manual",
+    "max",
+    "off",
+    "schedule",
+]
+
+
+class NetatmoThermSetpointModeSensor(NetatmoRoomEntity, NetatmoLegacyReachableSensor):
+    """Implementation of a Netatmo room setpoint mode sensor."""
+
+    _attr_device_class = SensorDeviceClass.ENUM
+    _attr_translation_key = "therm_setpoint_mode"
+    _attr_options = THERM_SETPOINT_MODE_OPTIONS
+
+    def __init__(self, netatmo_room: NetatmoRoom) -> None:
+        """Initialize the sensor."""
+        super().__init__(netatmo_room)
+
+        self._signal_name = netatmo_room.signal_name
+        self._publishers.extend(
+            [
+                {
+                    "name": HOME,
+                    "home_id": self.home.entity_id,
+                    SIGNAL_NAME: self._signal_name,
+                },
+            ]
+        )
+
+        self._attr_unique_id = f"{self.device.entity_id}-therm_setpoint_mode"
+
+    @override
+    async def async_added_to_hass(self) -> None:
+        """Entity created."""
+        await super().async_added_to_hass()
+
+        for event_type in (
+            EVENT_TYPE_SET_POINT,
+            EVENT_TYPE_THERM_MODE,
+            EVENT_TYPE_CANCEL_SET_POINT,
+        ):
+            self.async_on_remove(
+                async_dispatcher_connect(
+                    self.hass,
+                    f"signal-{DOMAIN}-webhook-{event_type}",
+                    self._handle_webhook_event,
+                )
+            )
+
+    @callback
+    def _handle_webhook_event(self, event: dict) -> None:
+        """Handle webhook events, which arrive faster than the next poll."""
+        data = event["data"]
+
+        if self.home.entity_id != data["home_id"]:
+            return
+
+        home = data["home"]
+
+        if self.home.entity_id != home["id"]:
+            return
+
+        if data["event_type"] == EVENT_TYPE_THERM_MODE:
+            home_mode = home[EVENT_TYPE_THERM_MODE]
+            if home_mode in ("away", "hg"):
+                self._attr_native_value = home_mode
+                self.async_write_ha_state()
+            return
+
+        for room in home.get("rooms", []):
+            if room["id"] != self.device.entity_id:
+                continue
+
+            if data["event_type"] == EVENT_TYPE_SET_POINT:
+                self._attr_native_value = room["therm_setpoint_mode"]
+                self.async_write_ha_state()
+            elif data["event_type"] == EVENT_TYPE_CANCEL_SET_POINT:
+                self.data_handler.async_force_update(self._signal_name)
+            return
+
+    @callback
+    @override
+    def async_update_callback(self) -> None:
+        """Update the entity's state."""
+        if self._async_set_unavailable_if_unreachable():
+            return
+
+        self._attr_available = True
+        self._attr_native_value = (
+            self.device.therm_setpoint_mode or self.device.cooling_setpoint_mode
+        )
+
+        self.async_write_ha_state()
+
+
+class NetatmoHeatingPowerRequestSensor(NetatmoRoomEntity, NetatmoLegacyReachableSensor):
+    """Implementation of a Netatmo valve heating power request sensor."""
+
+    _attr_native_unit_of_measurement = UnitOfRatio.PERCENTAGE
+    _attr_state_class = SensorStateClass.MEASUREMENT
+    _attr_translation_key = "heating_power_request"
+
+    def __init__(self, netatmo_room: NetatmoRoom) -> None:
+        """Initialize the sensor."""
+        super().__init__(netatmo_room)
+
+        self._publishers.extend(
+            [
+                {
+                    "name": HOME,
+                    "home_id": self.home.entity_id,
+                    SIGNAL_NAME: netatmo_room.signal_name,
+                },
+            ]
+        )
+
+        self._attr_unique_id = f"{self.device.entity_id}-heating_power_request"
+
+    @callback
+    @override
+    def async_update_callback(self) -> None:
+        """Update the entity's state."""
+        if self._async_set_unavailable_if_unreachable():
+            return
+
+        self._attr_available = True
+        self._attr_native_value = self.device.heating_power_request
+
+        self.async_write_ha_state()
+
+
+class NetatmoSetpointEndTimeSensor(NetatmoRoomEntity, NetatmoLegacyReachableSensor):
+    """Implementation of a Netatmo room setpoint end time sensor."""
+
+    _attr_device_class = SensorDeviceClass.TIMESTAMP
+    _attr_translation_key = "setpoint_end_time"
+
+    def __init__(self, netatmo_room: NetatmoRoom) -> None:
+        """Initialize the sensor."""
+        super().__init__(netatmo_room)
+
+        self._publishers.extend(
+            [
+                {
+                    "name": HOME,
+                    "home_id": self.home.entity_id,
+                    SIGNAL_NAME: netatmo_room.signal_name,
+                },
+            ]
+        )
+
+        self._attr_unique_id = f"{self.device.entity_id}-setpoint_end_time"
+
+    @callback
+    @override
+    def async_update_callback(self) -> None:
+        """Update the entity's state."""
+        if self._async_set_unavailable_if_unreachable():
+            return
+
+        self._attr_available = True
+        end_time = self.device.therm_setpoint_end_time
+        self._attr_native_value = (
+            dt_util.utc_from_timestamp(end_time) if end_time else None
+        )
 
         self.async_write_ha_state()
 

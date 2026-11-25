@@ -1,6 +1,12 @@
 """Test repair flows for KNX integration."""
 
 import pytest
+from pytest_homeassistant.components.repairs import (
+    get_repairs,
+    process_repair_fix_flow,
+    start_repair_fix_flow,
+)
+from pytest_homeassistant.typing import ClientSessionGenerator, WebSocketGenerator
 from xknx.exceptions.exception import InvalidSecureConfiguration
 
 from homeassistant.components.knx import repairs
@@ -15,13 +21,6 @@ from homeassistant.helpers import issue_registry as ir
 
 from .conftest import KNXTestKit
 from .test_config_flow import FIXTURE_UPLOAD_UUID, patch_file_upload
-
-from tests.components.repairs import (
-    get_repairs,
-    process_repair_fix_flow,
-    start_repair_fix_flow,
-)
-from tests.typing import ClientSessionGenerator, WebSocketGenerator
 
 
 async def test_create_fix_flow_raises_on_unknown_issue_id(hass: HomeAssistant) -> None:
@@ -57,6 +56,35 @@ async def test_data_secure_group_key_issue_only_for_configured_group_address(
     assert bool(issue_registry.issues) is (configured_group_address == "1/2/5")
 
 
+async def test_data_secure_group_key_issue_links_existing_issue(
+    hass: HomeAssistant,
+    knx: KNXTestKit,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test a repeated telegram links an issue raised before it was linked."""
+    await knx.setup_integration({"switch": {"name": "Test", "address": "1/2/5"}})
+    data = {"1/2/5": "1.0.1"}
+    issue_registry.async_get_or_create(
+        DOMAIN,
+        REPAIR_ISSUE_DATA_SECURE_GROUP_KEY,
+        data=data,
+        is_fixable=True,
+        is_persistent=True,
+        severity=ir.IssueSeverity.ERROR,
+        translation_key=REPAIR_ISSUE_DATA_SECURE_GROUP_KEY,
+        translation_placeholders={"addresses": "`1/2/5` from 1.0.1"},
+    )
+    issue_registry.async_ignore(DOMAIN, REPAIR_ISSUE_DATA_SECURE_GROUP_KEY, True)
+
+    knx.receive_data_secure_issue("1/2/5", source="1.0.1")
+
+    issue = issue_registry.async_get_issue(DOMAIN, REPAIR_ISSUE_DATA_SECURE_GROUP_KEY)
+    assert issue is not None
+    assert issue.config_entry_id == knx.mock_config_entry.entry_id
+    assert issue.data == data
+    assert issue.dismissed_version is not None
+
+
 async def test_data_secure_group_key_issue_repair_flow(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
@@ -79,6 +107,7 @@ async def test_data_secure_group_key_issue_repair_flow(
     knx.receive_data_secure_issue("1/2/5", source="1.0.1")
     issue = issue_registry.async_get_issue(DOMAIN, REPAIR_ISSUE_DATA_SECURE_GROUP_KEY)
     assert issue is not None
+    assert issue.config_entry_id == knx.mock_config_entry.entry_id
     assert issue.translation_placeholders == {
         "addresses": "`1/2/5` from 1.0.1, 1.0.10\n`11/0/0` from 1.0.1",  # check sorting
         "interface": "0.0.0",

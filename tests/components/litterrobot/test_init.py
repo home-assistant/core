@@ -8,28 +8,28 @@ from freezegun.api import FrozenDateTimeFactory
 from pylitterbot import LitterRobot4
 from pylitterbot.exceptions import LitterRobotException, LitterRobotLoginException
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
+from pytest_homeassistant.typing import WebSocketGenerator
 
 from homeassistant.components.litterrobot.coordinator import UPDATE_INTERVAL
 from homeassistant.components.vacuum import (
     DOMAIN as VACUUM_DOMAIN,
-    SERVICE_START,
     VacuumActivity,
+    VacuumService,
 )
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    EVENT_HOMEASSISTANT_STOP,
-    STATE_UNAVAILABLE,
-)
+from homeassistant.const import EVENT_HOMEASSISTANT_STOP, STATE_UNAVAILABLE, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
 
 from .common import ACCOUNT_USER_ID, CONFIG, DOMAIN, VACUUM_ENTITY_ID
-from .conftest import ROBOT_4_DATA, setup_integration
-
-from tests.common import MockConfigEntry, async_fire_time_changed
-from tests.typing import WebSocketGenerator
+from .conftest import (
+    ROBOT_4_DATA,
+    create_mock_account,
+    create_mock_pet,
+    setup_integration,
+)
 
 
 async def test_unload_entry(hass: HomeAssistant, mock_account: MagicMock) -> None:
@@ -42,8 +42,8 @@ async def test_unload_entry(hass: HomeAssistant, mock_account: MagicMock) -> Non
 
     await hass.services.async_call(
         VACUUM_DOMAIN,
-        SERVICE_START,
-        {ATTR_ENTITY_ID: VACUUM_ENTITY_ID},
+        VacuumService.START,
+        {TargetKey.ENTITY_ID: VACUUM_ENTITY_ID},
         blocking=True,
     )
     mock_account.robots[0].start_cleaning.assert_called_once()
@@ -197,8 +197,29 @@ async def test_unique_id_migration_conflict(
     assert entry.minor_version == 2
 
 
+@pytest.mark.parametrize(
+    ("side_effect", "state", "reason"),
+    [
+        pytest.param(
+            LitterRobotLoginException,
+            ConfigEntryState.MIGRATION_ERROR,
+            "Invalid credentials. Please check your username and password, then"
+            " try again",
+            id="invalid_credentials",
+        ),
+        pytest.param(
+            LitterRobotException,
+            ConfigEntryState.SETUP_RETRY,
+            "Unable to connect to the Whisker API to migrate the configuration",
+            id="cannot_connect",
+        ),
+    ],
+)
 async def test_unique_id_migration_connection_failure(
     hass: HomeAssistant,
+    side_effect: type[Exception],
+    state: ConfigEntryState,
+    reason: str,
 ) -> None:
     """Test migration fails when API is unreachable for unique_id."""
     entry = MockConfigEntry(
@@ -211,14 +232,15 @@ async def test_unique_id_migration_connection_failure(
 
     with patch(
         "homeassistant.components.litterrobot.Account.connect",
-        side_effect=LitterRobotException,
+        side_effect=side_effect,
     ):
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
     assert entry.unique_id is None
     assert entry.minor_version == 1
-    assert entry.state is ConfigEntryState.MIGRATION_ERROR
+    assert entry.state is state
+    assert entry.reason == reason
 
 
 async def test_device_remove_devices(
@@ -324,3 +346,29 @@ async def test_dynamic_devices(
 
     # Fourth check -> removed 1 device after reload
     assert len(dr.async_entries_for_config_entry(device_registry, entry.entry_id)) == 0
+
+
+@pytest.mark.parametrize(
+    ("breeds", "expected_model"),
+    [
+        pytest.param(["sphynx"], "Sphynx cat", id="single_breed"),
+        pytest.param(["sphynx", "maine_coon"], "Mixed-breed cat", id="mixed_breed"),
+        pytest.param(None, "Unknown cat", id="unknown_breed"),
+    ],
+)
+async def test_pet_device_model(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    breeds: list[str] | None,
+    expected_model: str,
+) -> None:
+    """Test the pet device model is derived from its breed and type."""
+    account = create_mock_account(skip_robots=True)
+    account.pets = [create_mock_pet({"breeds": breeds}, account)]
+    entry = await setup_integration(hass, account)
+
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "PET-123"), entry.entry_id
+    )
+    assert device
+    assert device.model == expected_model

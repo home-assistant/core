@@ -2,7 +2,7 @@
 
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
-from datetime import UTC, datetime, time, tzinfo
+from datetime import UTC, time, tzinfo
 import math
 from typing import override
 
@@ -22,6 +22,8 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up all time entities for this entry."""
+    if config_entry.runtime_data.data.sleep is None:
+        return
     async_add_entities(
         StarlinkTimeEntity(config_entry.runtime_data, description)
         for description in TIMES
@@ -54,7 +56,9 @@ class StarlinkTimeEntity(StarlinkEntity, TimeEntity):
     @override
     def available(self) -> bool:
         """Return True if entity is available."""
-        return self.entity_description.available_fn(self.coordinator.data)
+        return super().available and self.entity_description.available_fn(
+            self.coordinator.data
+        )
 
     @override
     async def async_set_value(self, value: time) -> None:
@@ -78,9 +82,9 @@ def _utc_minutes_to_time(utc_minutes: int, timezone: tzinfo) -> time:
 
 def _time_to_utc_minutes(t: time, timezone: tzinfo) -> int:
     try:
-        zoned_time = datetime.now(  # pylint: disable=home-assistant-enforce-now
-            timezone
-        ).replace(hour=t.hour, minute=t.minute, second=0, microsecond=0)
+        zoned_time = dt_util.now(timezone).replace(
+            hour=t.hour, minute=t.minute, second=0, microsecond=0
+        )
     except ValueError as exc:
         raise HomeAssistantError from exc
     utc_time = zoned_time.astimezone(UTC).time()
@@ -91,21 +95,25 @@ TIMES = [
     StarlinkTimeEntityDescription(
         key="sleep_start",
         translation_key="sleep_start",
-        value_fn=lambda data, timezone: _utc_minutes_to_time(data.sleep[0], timezone),
+        value_fn=lambda data, timezone: (
+            _utc_minutes_to_time(data.sleep[0], timezone) if data.sleep else None
+        ),
         update_fn=lambda coordinator, time: coordinator.async_set_sleep_start(
             _time_to_utc_minutes(time, coordinator.timezone)
         ),
-        available_fn=lambda data: data.sleep[2],
+        available_fn=lambda data: data.sleep is not None and data.sleep[2],
     ),
     StarlinkTimeEntityDescription(
         key="sleep_end",
         translation_key="sleep_end",
-        value_fn=lambda data, timezone: _utc_minutes_to_time(
-            data.sleep[0] + data.sleep[1], timezone
+        value_fn=lambda data, timezone: (
+            _utc_minutes_to_time(data.sleep[0] + data.sleep[1], timezone)
+            if data.sleep
+            else None
         ),
         update_fn=lambda coordinator, time: coordinator.async_set_sleep_duration(
             _time_to_utc_minutes(time, coordinator.timezone)
         ),
-        available_fn=lambda data: data.sleep[2],
+        available_fn=lambda data: data.sleep is not None and data.sleep[2],
     ),
 ]

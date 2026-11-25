@@ -1,0 +1,488 @@
+"""Tests for the Bosch SHC event platform."""
+
+from unittest.mock import MagicMock
+
+from boschshcpy import AlarmService, KeypadService
+import pytest
+from pytest_homeassistant.common import MockConfigEntry
+
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
+
+from .conftest import (
+    motion_detector2_device,
+    motion_detector_device,
+    setup_integration,
+    smoke_detector_device,
+    universal_switch_device,
+)
+
+
+@pytest.mark.parametrize(
+    "device_buckets",
+    [{"motion_detectors": [motion_detector_device()]}],
+    indirect=True,
+)
+@pytest.mark.usefixtures("mock_session")
+async def test_motion_detector_no_motion_yet(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """A Motion Detector's event entity exists but has no state before a motion event fires."""
+    await setup_integration(hass, mock_config_entry)
+
+    state = hass.states.get("event.motion_detector")
+    assert state is not None
+    assert state.state == "unknown"
+
+
+@pytest.mark.parametrize(
+    "device_buckets",
+    [{"motion_detectors": [motion_detector_device()]}],
+    indirect=True,
+)
+async def test_motion_detector_fires_on_new_timestamp(
+    hass: HomeAssistant,
+    mock_session: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """A LatestMotion push updates the event entity's state and attributes."""
+    await setup_integration(hass, mock_config_entry)
+    device = mock_session.device_helper.motion_detectors[0]
+    latest_motion_service = device.device_services[0]
+
+    device.latestmotion = "2026-09-25T12:00:00.000Z"
+    latest_motion_service._event_callbacks[device.id]()
+    await hass.async_block_till_done()
+
+    state = hass.states.get("event.motion_detector")
+    assert state is not None
+    assert state.state != "unknown"
+    assert state.attributes["event_type"] == "motion"
+    assert state.attributes["last_time_triggered"] == "2026-09-25T12:00:00.000Z"
+
+
+@pytest.mark.parametrize(
+    "device_buckets",
+    [{"motion_detectors": [motion_detector_device()]}],
+    indirect=True,
+)
+async def test_motion_detector_dedup_guard(
+    hass: HomeAssistant,
+    mock_session: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """A phantom replay of the same latestmotion timestamp does not refire the event."""
+    await setup_integration(hass, mock_config_entry)
+    device = mock_session.device_helper.motion_detectors[0]
+    latest_motion_service = device.device_services[0]
+
+    device.latestmotion = "2026-09-25T12:00:00.000Z"
+    latest_motion_service._event_callbacks[device.id]()
+    await hass.async_block_till_done()
+    first_state = hass.states.get("event.motion_detector")
+    assert first_state is not None
+
+    latest_motion_service._event_callbacks[device.id]()
+    await hass.async_block_till_done()
+    second_state = hass.states.get("event.motion_detector")
+    assert second_state is not None
+    assert second_state.last_changed == first_state.last_changed
+
+
+@pytest.mark.parametrize(
+    "device_buckets",
+    [
+        {
+            "motion_detectors": [
+                motion_detector_device(latestmotion="2026-09-25T09:00:00.000Z")
+            ]
+        }
+    ],
+    indirect=True,
+)
+async def test_motion_detector_no_replay_on_startup(
+    hass: HomeAssistant,
+    mock_session: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """A pre-existing latestmotion value is not replayed as a new event on startup."""
+    await setup_integration(hass, mock_config_entry)
+    device = mock_session.device_helper.motion_detectors[0]
+    latest_motion_service = device.device_services[0]
+
+    latest_motion_service._event_callbacks[device.id]()
+    await hass.async_block_till_done()
+
+    state = hass.states.get("event.motion_detector")
+    assert state is not None
+    assert state.state == "unknown"
+
+
+@pytest.mark.parametrize(
+    "device_buckets",
+    [{"motion_detectors": [motion_detector_device()]}],
+    indirect=True,
+)
+async def test_motion_detector_unregisters_callback_on_unload(
+    hass: HomeAssistant,
+    mock_session: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Unloading the entity removes its LatestMotion callback registration."""
+    await setup_integration(hass, mock_config_entry)
+    device = mock_session.device_helper.motion_detectors[0]
+    latest_motion_service = device.device_services[0]
+    assert device.id in latest_motion_service._event_callbacks
+
+    await hass.config_entries.async_unload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert device.id not in latest_motion_service._event_callbacks
+
+
+@pytest.mark.parametrize(
+    "device_buckets",
+    [{"motion_detectors": [motion_detector_device()]}],
+    indirect=True,
+)
+async def test_motion_detector_unregisters_callback_on_failed_add(
+    hass: HomeAssistant,
+    mock_session: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """An aborted add removes the LatestMotion callback registration."""
+    await setup_integration(hass, mock_config_entry)
+    device = mock_session.device_helper.motion_detectors[0]
+    latest_motion_service = device.device_services[0]
+    assert device.id in latest_motion_service._event_callbacks
+
+    entity = next(iter(hass.data["entity_components"]["event"].entities))
+    entity.add_to_platform_abort()
+
+    assert device.id not in latest_motion_service._event_callbacks
+
+
+@pytest.mark.parametrize(
+    "device_buckets",
+    [{"motion_detectors2": [motion_detector2_device()]}],
+    indirect=True,
+)
+@pytest.mark.usefixtures("mock_session")
+async def test_motion_detector2_no_motion_yet(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """A gen2 Motion Detector's event entity exists but has no state before a motion event fires."""
+    await setup_integration(hass, mock_config_entry)
+
+    state = hass.states.get("event.motion_detector")
+    assert state is not None
+    assert state.state == "unknown"
+
+
+@pytest.mark.parametrize(
+    "device_buckets",
+    [{"motion_detectors2": [motion_detector2_device()]}],
+    indirect=True,
+)
+async def test_motion_detector2_fires_on_new_timestamp(
+    hass: HomeAssistant,
+    mock_session: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """A LatestMotion push updates a gen2 event entity's state and attributes."""
+    await setup_integration(hass, mock_config_entry)
+    device = mock_session.device_helper.motion_detectors2[0]
+    latest_motion_service = device.device_services[0]
+
+    device.latestmotion = "2026-09-25T12:00:00.000Z"
+    latest_motion_service._event_callbacks[device.id]()
+    await hass.async_block_till_done()
+
+    state = hass.states.get("event.motion_detector")
+    assert state is not None
+    assert state.state != "unknown"
+    assert state.attributes["event_type"] == "motion"
+    assert state.attributes["last_time_triggered"] == "2026-09-25T12:00:00.000Z"
+
+
+@pytest.mark.parametrize(
+    "device_buckets",
+    [{"smoke_detectors": [smoke_detector_device()]}],
+    indirect=True,
+)
+@pytest.mark.usefixtures("mock_session")
+async def test_smoke_detector_no_alarm_yet(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """A Smoke Detector's event entity exists but has no state before an Alarm push."""
+    await setup_integration(hass, mock_config_entry)
+
+    state = hass.states.get("event.smoke_detector")
+    assert state is not None
+    assert state.state == "unknown"
+
+
+@pytest.mark.parametrize(
+    "device_buckets",
+    [{"smoke_detectors": [smoke_detector_device()]}],
+    indirect=True,
+)
+async def test_smoke_detector_fires_on_alarm(
+    hass: HomeAssistant,
+    mock_session: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """An Alarm push updates the event entity's state to the new alarm state."""
+    await setup_integration(hass, mock_config_entry)
+    device = mock_session.device_helper.smoke_detectors[0]
+    alarm_service = device.device_services[0]
+
+    device.alarmstate = AlarmService.State.PRIMARY_ALARM
+    alarm_service._event_callbacks[device.id]()
+    await hass.async_block_till_done()
+
+    state = hass.states.get("event.smoke_detector")
+    assert state is not None
+    assert state.state != "unknown"
+    assert state.attributes["event_type"] == "primary_alarm"
+
+
+@pytest.mark.parametrize(
+    "device_buckets",
+    [{"smoke_detectors": [smoke_detector_device()]}],
+    indirect=True,
+)
+async def test_smoke_detector_dedup_guard(
+    hass: HomeAssistant,
+    mock_session: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """A phantom replay of the same alarm state does not refire the event."""
+    await setup_integration(hass, mock_config_entry)
+    device = mock_session.device_helper.smoke_detectors[0]
+    alarm_service = device.device_services[0]
+
+    device.alarmstate = AlarmService.State.PRIMARY_ALARM
+    alarm_service._event_callbacks[device.id]()
+    await hass.async_block_till_done()
+    first_state = hass.states.get("event.smoke_detector")
+    assert first_state is not None
+
+    alarm_service._event_callbacks[device.id]()
+    await hass.async_block_till_done()
+    second_state = hass.states.get("event.smoke_detector")
+    assert second_state is not None
+    assert second_state.last_changed == first_state.last_changed
+
+
+@pytest.mark.parametrize(
+    "device_buckets",
+    [
+        {
+            "smoke_detectors": [
+                smoke_detector_device(alarmstate=AlarmService.State.PRIMARY_ALARM)
+            ]
+        }
+    ],
+    indirect=True,
+)
+async def test_smoke_detector_no_replay_on_startup(
+    hass: HomeAssistant,
+    mock_session: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """A pre-existing alarm state is not replayed as a new event on startup."""
+    await setup_integration(hass, mock_config_entry)
+    device = mock_session.device_helper.smoke_detectors[0]
+    alarm_service = device.device_services[0]
+
+    alarm_service._event_callbacks[device.id]()
+    await hass.async_block_till_done()
+
+    state = hass.states.get("event.smoke_detector")
+    assert state is not None
+    assert state.state == "unknown"
+
+
+@pytest.mark.parametrize(
+    "device_buckets",
+    [{"smoke_detectors": [smoke_detector_device()]}],
+    indirect=True,
+)
+async def test_smoke_detector_unregisters_callback_on_unload(
+    hass: HomeAssistant,
+    mock_session: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Unloading the entity removes its Alarm callback registration."""
+    await setup_integration(hass, mock_config_entry)
+    device = mock_session.device_helper.smoke_detectors[0]
+    alarm_service = device.device_services[0]
+    assert device.id in alarm_service._event_callbacks
+
+    await hass.config_entries.async_unload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert device.id not in alarm_service._event_callbacks
+
+
+@pytest.mark.parametrize(
+    "device_buckets",
+    [
+        {
+            "universal_switches": [
+                universal_switch_device(
+                    keystates=("LOWER_BUTTON", "UPPER_BUTTON"),
+                )
+            ]
+        }
+    ],
+    indirect=True,
+)
+async def test_universal_switch_key_events(
+    hass: HomeAssistant,
+    mock_session: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Each key of a Universal Switch fires its own press events."""
+    await setup_integration(hass, mock_config_entry)
+    device = mock_session.device_helper.universal_switches[0]
+    keypad = device.device_services[0]
+
+    lower = entity_registry.async_get("event.universal_switch_lower_key")
+    assert lower is not None
+    assert lower.unique_id == "test-mac_hdm:HomeMaticIP:switch1_LOWER_BUTTON"
+    assert hass.states.get("event.universal_switch_upper_key").state == "unknown"
+
+    device.eventtype = KeypadService.KeyEvent.PRESS_LONG
+    device.eventtimestamp = 1000
+    keypad._event_callbacks["LOWER_BUTTON"]()
+    await hass.async_block_till_done()
+
+    state = hass.states.get("event.universal_switch_lower_key")
+    assert state.attributes["event_type"] == "long_press_start"
+    assert hass.states.get("event.universal_switch_upper_key").state == "unknown"
+
+
+@pytest.mark.parametrize(
+    "device_buckets",
+    [{"universal_switches": [universal_switch_device()]}],
+    indirect=True,
+)
+async def test_universal_switch_ignores_replays_and_motor_events(
+    hass: HomeAssistant,
+    mock_session: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """A repeated timestamp or a non-press event type does not fire."""
+    await setup_integration(hass, mock_config_entry)
+    device = mock_session.device_helper.universal_switches[0]
+    keypad = device.device_services[0]
+
+    device.eventtype = KeypadService.KeyEvent.PRESS_SHORT
+    device.eventtimestamp = 1000
+    keypad._event_callbacks["UPPER_BUTTON"]()
+    await hass.async_block_till_done()
+    first = hass.states.get("event.universal_switch_upper_key").state
+
+    keypad._event_callbacks["UPPER_BUTTON"]()
+    await hass.async_block_till_done()
+    assert hass.states.get("event.universal_switch_upper_key").state == first
+
+    device.eventtype = KeypadService.KeyEvent.SWITCH_ON
+    device.eventtimestamp = 2000
+    keypad._event_callbacks["UPPER_BUTTON"]()
+    await hass.async_block_till_done()
+    assert hass.states.get("event.universal_switch_upper_key").state == first
+
+
+@pytest.mark.parametrize(
+    "device_buckets",
+    [{"universal_switches": [universal_switch_device()]}],
+    indirect=True,
+)
+async def test_universal_switch_no_replay_on_startup(
+    hass: HomeAssistant,
+    mock_session: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """A key event that predates startup is not replayed as a new press."""
+    mock_session.device_helper.universal_switches[0].eventtimestamp = 500
+    mock_session.device_helper.universal_switches[
+        0
+    ].eventtype = KeypadService.KeyEvent.PRESS_SHORT
+    await setup_integration(hass, mock_config_entry)
+    device = mock_session.device_helper.universal_switches[0]
+    keypad = device.device_services[0]
+
+    keypad._event_callbacks["LOWER_BUTTON"]()
+    await hass.async_block_till_done()
+
+    assert hass.states.get("event.universal_switch_lower_key").state == "unknown"
+
+
+@pytest.mark.parametrize(
+    "device_buckets",
+    [
+        {
+            "universal_switches": [
+                universal_switch_device(
+                    keystates=("LOWER_BUTTON", "UPPER_BUTTON"),
+                )
+            ]
+        }
+    ],
+    indirect=True,
+)
+async def test_universal_switch_unregisters_callbacks_on_unload(
+    hass: HomeAssistant,
+    mock_session: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Unloading removes every key's Keypad callback registration."""
+    await setup_integration(hass, mock_config_entry)
+    keypad = mock_session.device_helper.universal_switches[0].device_services[0]
+    assert set(keypad._event_callbacks) == {"LOWER_BUTTON", "UPPER_BUTTON"}
+
+    await hass.config_entries.async_unload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert not keypad._event_callbacks
+
+
+@pytest.mark.parametrize(
+    "device_buckets",
+    [{"universal_switches": [universal_switch_device()]}],
+    indirect=True,
+)
+@pytest.mark.parametrize(
+    ("key_event", "timestamp", "expected"),
+    [
+        (KeypadService.KeyEvent.PRESS_SHORT, 7001, "single_press"),
+        (KeypadService.KeyEvent.PRESS_LONG, 7002, "long_press_start"),
+        (KeypadService.KeyEvent.PRESS_LONG_RELEASED, 7003, "long_press_end"),
+    ],
+)
+async def test_universal_switch_standard_event_types(
+    hass: HomeAssistant,
+    mock_session: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    key_event: KeypadService.KeyEvent,
+    timestamp: int,
+    expected: str,
+) -> None:
+    """The SHC key events map onto the standard button event types."""
+    await setup_integration(hass, mock_config_entry)
+    device = mock_session.device_helper.universal_switches[0]
+
+    device.eventtype = key_event
+    device.eventtimestamp = timestamp
+    device.device_services[0]._event_callbacks["LOWER_BUTTON"]()
+    await hass.async_block_till_done()
+
+    state = hass.states.get("event.universal_switch_lower_key")
+    assert state.attributes["event_type"] == expected

@@ -42,7 +42,7 @@ PROD = "prod"
 
 PLATFORM_SCHEMA = IMAGE_PROCESSING_PLATFORM_SCHEMA.extend(
     {
-        probatio.Required(CONF_API_KEY): cv.string,
+        probatio.Required(probatio.Secret(CONF_API_KEY)): cv.string,
         probatio.Optional(CONF_ACCOUNT_TYPE, default=DEV): probatio.In([DEV, PROD]),
         probatio.Optional(CONF_SAVE_FILE_FOLDER): cv.isdir,
         probatio.Optional(CONF_SAVE_TIMESTAMPTED_FILE, default=False): cv.boolean,

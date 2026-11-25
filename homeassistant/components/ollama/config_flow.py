@@ -6,12 +6,11 @@ import logging
 import sys
 from typing import Any, override
 
-import httpx
+import httpx2
 import ollama
 import probatio
 
 from homeassistant.config_entries import (
-    ConfigEntry,
     ConfigEntryState,
     ConfigFlow,
     ConfigFlowResult,
@@ -36,6 +35,7 @@ from homeassistant.helpers.selector import (
     SelectOptionDict,
     SelectSelector,
     SelectSelectorConfig,
+    SelectSelectorMode,
     TemplateSelector,
     TextSelector,
     TextSelectorConfig,
@@ -70,7 +70,7 @@ STEP_USER_DATA_SCHEMA = probatio.Schema(
         probatio.Required(CONF_URL): TextSelector(
             TextSelectorConfig(type=TextSelectorType.URL)
         ),
-        probatio.Optional(CONF_API_KEY): TextSelector(
+        probatio.Optional(probatio.Secret(CONF_API_KEY)): TextSelector(
             TextSelectorConfig(type=TextSelectorType.PASSWORD)
         ),
     },
@@ -78,7 +78,7 @@ STEP_USER_DATA_SCHEMA = probatio.Schema(
 
 STEP_REAUTH_DATA_SCHEMA = probatio.Schema(
     {
-        probatio.Optional(CONF_API_KEY): TextSelector(
+        probatio.Optional(probatio.Secret(CONF_API_KEY)): TextSelector(
             TextSelectorConfig(type=TextSelectorType.PASSWORD)
         ),
     }
@@ -231,7 +231,7 @@ class OllamaConfigFlow(ConfigFlow, domain=DOMAIN):
     @callback
     @override
     def async_get_supported_subentry_types(
-        cls, config_entry: ConfigEntry
+        cls, config_entry: OllamaConfigEntry
     ) -> dict[str, type[ConfigSubentryFlow]]:
         """Return subentries supported by this integration."""
         return {
@@ -278,7 +278,7 @@ class OllamaSubentryFlowHandler(ConfigSubentryFlow):
                 downloaded_models: set[str] = {
                     model_info["model"] for model_info in response.get("models", [])
                 }
-            except TimeoutError, httpx.HTTPError, ConnectionError:
+            except TimeoutError, httpx2.HTTPError, ConnectionError:
                 _LOGGER.exception("Failed to get models from Ollama server")
                 return self.async_abort(reason="cannot_connect")
 
@@ -319,19 +319,18 @@ class OllamaSubentryFlowHandler(ConfigSubentryFlow):
         try:
             async with asyncio.timeout(DEFAULT_TIMEOUT):
                 response = await self._client.list()
-
-            currently_downloaded_models: set[str] = {
-                model_info["model"] for model_info in response.get("models", [])
-            }
-
-            if self._model not in currently_downloaded_models:
-                # Store the user input to use after download
-                self._config_data = user_input
-                # Ollama server needs to download model first
-                return await self.async_step_download()
         except Exception:
             _LOGGER.exception("Failed to check model availability")
             return self.async_abort(reason="cannot_connect")
+
+        currently_downloaded_models: set[str] = {
+            model_info["model"] for model_info in response.get("models", [])
+        }
+        if self._model not in currently_downloaded_models:
+            # Store the user input to use after download
+            self._config_data = user_input
+            # Ollama server needs to download model first
+            return await self.async_step_download()
 
         # Model is already downloaded, create/update the entry
         if self._is_new:
@@ -470,6 +469,7 @@ def ollama_config_option_schema(
                             for api in llm.async_get_apis(hass)
                         ],
                         multiple=True,
+                        mode=SelectSelectorMode.LIST,
                     )
                 ),
             }

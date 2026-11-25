@@ -7,12 +7,11 @@ from unittest.mock import AsyncMock, Mock
 import weakref
 
 import pytest
+from pytest_homeassistant.common import async_fire_time_changed
 
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import debounce
 from homeassistant.util.dt import utcnow
-
-from tests.common import async_fire_time_changed
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -554,6 +553,8 @@ async def test_shutdown_releases_parent_class(hass: HomeAssistant) -> None:
     calls = []
 
     class SomeClass:
+        # Executor workers briefly keep the job after completion, so run in the loop
+        @callback
         def run_func(self) -> None:
             calls.append(None)
 

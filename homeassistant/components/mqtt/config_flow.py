@@ -8,11 +8,13 @@ from dataclasses import dataclass
 from enum import IntEnum
 import json
 import logging
+import os
 from ssl import PROTOCOL_TLS_CLIENT, SSLContext, SSLError
 from types import MappingProxyType
 from typing import TYPE_CHECKING, Any, cast, override
 from uuid import uuid4
 
+from cryptography.exceptions import UnsupportedAlgorithm
 from cryptography.hazmat.primitives.serialization import (
     Encoding,
     NoEncryption,
@@ -127,6 +129,8 @@ from homeassistant.helpers.selector import (
     TextSelector,
     TextSelectorConfig,
     TextSelectorType,
+    UnitOfMeasurementSelector,
+    UnitOfMeasurementSelectorConfig,
 )
 from homeassistant.helpers.service_info.hassio import HassioServiceInfo
 from homeassistant.util.json import JSON_DECODE_EXCEPTIONS, json_loads
@@ -155,8 +159,11 @@ from .const import (
     CONF_BRIGHTNESS_VALUE_TEMPLATE,
     CONF_BROKER,
     CONF_CERTIFICATE,
+    CONF_CERTIFICATE_FILE,
     CONF_CLIENT_CERT,
+    CONF_CLIENT_CERT_FILE,
     CONF_CLIENT_KEY,
+    CONF_CLIENT_KEY_FILE,
     CONF_CODE_ARM_REQUIRED,
     CONF_CODE_DISARM_REQUIRED,
     CONF_CODE_FORMAT,
@@ -477,7 +484,7 @@ _CODE_VALIDATION_MODE = {
 EXCLUDE_FROM_CONFIG_IF_NONE = {CONF_ENTITY_CATEGORY, CONF_UNIT_OF_MEASUREMENT}
 PWD_NOT_CHANGED = "__**password_not_changed**__"
 
-DEVELOPER_DOCUMENTATION_URL = "https://developers.home-assistant.io/"
+DEVELOPER_DOCUMENTATION_URL = "https://contributors.home-assistant.io/"
 USER_DOCUMENTATION_URL = "https://www.home-assistant.io/"
 TZ_ZONE_ABBR_URL = (
     "https://en.wikipedia.org/wiki/List_of_tz_database_time_zones"
@@ -489,11 +496,11 @@ TEMPLATING_URL = f"{USER_DOCUMENTATION_URL}docs/configuration/templating/"
 COMMAND_TEMPLATING_URL = f"{TEMPLATING_URL}#using-command-templates-with-mqtt"
 VALUE_TEMPLATING_URL = f"{TEMPLATING_URL}#using-value-templates-with-mqtt"
 AVAILABLE_STATE_CLASSES_URL = (
-    f"{DEVELOPER_DOCUMENTATION_URL}docs/core/entity/sensor/#available-state-classes"
+    f"{DEVELOPER_DOCUMENTATION_URL}core/entities/sensor/#state-classes"
 )
 NAMING_ENTITIES_URL = f"{INTEGRATION_URL}#naming-of-mqtt-entities"
 REGISTRY_PROPERTIES_URL = (
-    f"{DEVELOPER_DOCUMENTATION_URL}docs/core/entity/#registry-properties"
+    f"{DEVELOPER_DOCUMENTATION_URL}core/entities/registry/#entity-categories"
 )
 
 TRANSLATION_DESCRIPTION_PLACEHOLDERS = {
@@ -762,6 +769,17 @@ SENSOR_ENTITY_CATEGORY_SELECTOR = SelectSelector(
     )
 )
 SENSOR_STATE_CLASS_SELECTOR = StateClassSelector()
+NUMBER_UNIT_OF_MEASUREMENT_SELECTOR = UnitOfMeasurementSelector(
+    UnitOfMeasurementSelectorConfig(context={"filter_device_class": CONF_DEVICE_CLASS})
+)
+SENSOR_UNIT_OF_MEASUREMENT_SELECTOR = UnitOfMeasurementSelector(
+    UnitOfMeasurementSelectorConfig(
+        context={
+            "filter_device_class": CONF_DEVICE_CLASS,
+            "filter_state_class": CONF_STATE_CLASS,
+        }
+    )
+)
 STEP_SELECTOR = NumberSelector(NumberSelectorConfig(min=1e-3, step=1e-3))
 SUPPORTED_COLOR_MODES_SELECTOR = SelectSelector(
     SelectSelectorConfig(
@@ -918,49 +936,6 @@ def temperature_step_selector(config: dict[str, Any]) -> Selector:
 
 
 @callback
-def unit_of_measurement_selector(user_data: dict[str, Any | None]) -> Selector:
-    """Return a context based unit of measurement selector."""
-
-    if (state_class := user_data.get(CONF_STATE_CLASS)) in STATE_CLASS_UNITS:
-        return SelectSelector(
-            SelectSelectorConfig(
-                options=[str(uom) for uom in STATE_CLASS_UNITS[state_class]],
-                sort=True,
-                custom_value=True,
-            )
-        )
-
-    if (
-        device_class := user_data.get(CONF_DEVICE_CLASS)
-    ) is None or device_class not in DEVICE_CLASS_UNITS:
-        return TEXT_SELECTOR
-    return SelectSelector(
-        SelectSelectorConfig(
-            options=[str(uom) for uom in DEVICE_CLASS_UNITS[device_class]],
-            sort=True,
-            custom_value=True,
-        )
-    )
-
-
-@callback
-def number_unit_of_measurement_selector(user_data: dict[str, Any | None]) -> Selector:
-    """Return a context based unit of measurement selector for number entities."""
-
-    if (
-        device_class := user_data.get(CONF_DEVICE_CLASS)
-    ) is None or device_class not in NUMBER_DEVICE_CLASS_UNITS:
-        return TEXT_SELECTOR
-    return SelectSelector(
-        SelectSelectorConfig(
-            options=[str(uom) for uom in NUMBER_DEVICE_CLASS_UNITS[device_class]],
-            sort=True,
-            custom_value=True,
-        )
-    )
-
-
-@callback
 def validate(validator: Callable[[Any], Any]) -> Callable[[Any], Any]:
     """Run validator, then return the unmodified input."""
 
@@ -1095,6 +1070,7 @@ def validate_number_platform_config(config: dict[str, Any]) -> dict[str, str]:
         errors[CONF_MIN] = "max_below_min"
         errors[CONF_MAX] = "max_below_min"
 
+    # Existing subentries can still hold the legacy "None" string
     if (unit_of_measurement := config.get(CONF_UNIT_OF_MEASUREMENT)) == "None":
         unit_of_measurement = None
 
@@ -1130,19 +1106,18 @@ def validate_sensor_platform_config(
     ):
         errors[CONF_OPTIONS] = "options_with_enum_device_class"
 
-    unit_of_measurement: str | None = None
-    if (
-        device_class in DEVICE_CLASS_UNITS
-        and (unit_of_measurement := config.get(CONF_UNIT_OF_MEASUREMENT)) is None
-        and errors is not None
-    ):
-        # Do not allow an empty unit of measurement in a subentry data flow
-        errors[CONF_UNIT_OF_MEASUREMENT] = "uom_required_for_device_class"
-        return errors
-
-    if unit_of_measurement == "None":
+    # Existing subentries can still hold the legacy "None" string
+    if (unit_of_measurement := config.get(CONF_UNIT_OF_MEASUREMENT)) == "None":
         unit_of_measurement = None
         config.pop(CONF_UNIT_OF_MEASUREMENT)
+
+    if (
+        device_class in DEVICE_CLASS_UNITS
+        and unit_of_measurement is None
+        and None not in DEVICE_CLASS_UNITS[device_class]
+    ):
+        errors[CONF_UNIT_OF_MEASUREMENT] = "uom_required_for_device_class"
+        return errors
 
     if (
         device_class is not None
@@ -1219,7 +1194,9 @@ ENTITY_CONFIG_VALIDATOR: dict[
 class PlatformField:
     """Stores a platform config field schema, required flag and validator."""
 
-    selector: Selector[Any] | Callable[[dict[str, Any]], Selector[Any]]
+    selector: (
+        Selector[Any] | probatio.All[Any] | Callable[[dict[str, Any]], Selector[Any]]
+    )
     required: bool
     validator: Callable[[Any], Any] | None = None
     error: str | None = None
@@ -1439,9 +1416,8 @@ PLATFORM_ENTITY_FIELDS: dict[Platform, dict[str, PlatformField]] = {
             required=False,
         ),
         CONF_UNIT_OF_MEASUREMENT: PlatformField(
-            selector=number_unit_of_measurement_selector,
+            selector=NUMBER_UNIT_OF_MEASUREMENT_SELECTOR,
             required=False,
-            custom_filtering=True,
         ),
     },
     Platform.SELECT: {},
@@ -1453,9 +1429,8 @@ PLATFORM_ENTITY_FIELDS: dict[Platform, dict[str, PlatformField]] = {
             selector=SENSOR_STATE_CLASS_SELECTOR, required=False
         ),
         CONF_UNIT_OF_MEASUREMENT: PlatformField(
-            selector=unit_of_measurement_selector,
+            selector=SENSOR_UNIT_OF_MEASUREMENT_SELECTOR,
             required=False,
-            custom_filtering=True,
         ),
         CONF_SUGGESTED_DISPLAY_PRECISION: PlatformField(
             selector=SUGGESTED_DISPLAY_PRECISION_SELECTOR,
@@ -4014,7 +3989,7 @@ def update_password_from_user_input(
 REAUTH_SCHEMA = probatio.Schema(
     {
         probatio.Required(CONF_USERNAME): TEXT_SELECTOR,
-        probatio.Required(CONF_PASSWORD): PASSWORD_SELECTOR,
+        probatio.Required(probatio.Secret(CONF_PASSWORD)): PASSWORD_SELECTOR,
     }
 )
 
@@ -4024,10 +3999,13 @@ OTHER_SETTINGS_SCHEMA = probatio.Schema(
         probatio.Optional(CONF_KEEPALIVE): KEEPALIVE_SELECTOR,
         probatio.Required(SET_CLIENT_CERT): BOOLEAN_SELECTOR,
         probatio.Optional(CONF_CLIENT_CERT): CERT_UPLOAD_SELECTOR,
-        probatio.Optional(CONF_CLIENT_KEY): CERT_KEY_UPLOAD_SELECTOR,
-        probatio.Optional(CONF_CLIENT_KEY_PASSWORD): PASSWORD_SELECTOR,
+        probatio.Optional(CONF_CLIENT_CERT_FILE): TEXT_SELECTOR,
+        probatio.Optional(probatio.Secret(CONF_CLIENT_KEY)): CERT_KEY_UPLOAD_SELECTOR,
+        probatio.Optional(CONF_CLIENT_KEY_FILE): TEXT_SELECTOR,
+        probatio.Optional(probatio.Secret(CONF_CLIENT_KEY_PASSWORD)): PASSWORD_SELECTOR,
         probatio.Required(SET_CA_CERT): BROKER_VERIFICATION_SELECTOR,
         probatio.Optional(CONF_CERTIFICATE): CA_CERT_UPLOAD_SELECTOR,
+        probatio.Optional(CONF_CERTIFICATE_FILE): TEXT_SELECTOR,
         probatio.Optional(CONF_TLS_INSECURE): BOOLEAN_SELECTOR,
         probatio.Required(
             CONF_TRANSPORT, default=DEFAULT_TRANSPORT
@@ -4042,7 +4020,7 @@ CONFIG_DATAFLOW_SCHEMA = probatio.Schema(
         probatio.Required(CONF_PORT, default=DEFAULT_PORT): PORT_SELECTOR,
         probatio.Required(CONF_PROTOCOL, default=DEFAULT_PROTOCOL): PROTOCOL_SELECTOR,
         probatio.Optional(CONF_USERNAME): TEXT_SELECTOR,
-        probatio.Optional(CONF_PASSWORD): PASSWORD_SELECTOR,
+        probatio.Optional(probatio.Secret(CONF_PASSWORD)): PASSWORD_SELECTOR,
         probatio.Required(OTHER_SETTINGS): section(
             OTHER_SETTINGS_SCHEMA, SectionConfig({"collapsed": True})
         ),
@@ -4303,13 +4281,19 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
                 reauth_entry.data.get(CONF_PASSWORD), substituted_used_data
             )
             new_entry_data = {**reauth_entry.data, **substituted_used_data}
-            if await self.hass.async_add_executor_job(
-                try_connection,
-                new_entry_data,
-            ):
-                return self.async_update_and_abort(reauth_entry, data=new_entry_data)
-
-            errors["base"] = "invalid_auth"
+            try:
+                can_connect = await self.hass.async_add_executor_job(
+                    try_connection,
+                    new_entry_data,
+                )
+            except OSError:
+                errors["base"] = "cannot_load_certificates"
+            else:
+                if can_connect:
+                    return self.async_update_and_abort(
+                        reauth_entry, data=new_entry_data
+                    )
+                errors["base"] = "invalid_auth"
 
         schema = self.add_suggested_values_to_schema(
             REAUTH_SCHEMA,
@@ -4333,9 +4317,9 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
             for key in OTHER_SETTINGS_SCHEMA.schema
             if key in data
         }
-        other_settings[SET_CLIENT_CERT] = (CONF_CLIENT_CERT in other_settings) and (
-            CONF_CLIENT_KEY in other_settings
-        )
+        other_settings[SET_CLIENT_CERT] = bool(
+            {CONF_CLIENT_CERT, CONF_CLIENT_CERT_FILE} & other_settings.keys()
+        ) and bool({CONF_CLIENT_KEY, CONF_CLIENT_KEY_FILE} & other_settings.keys())
         other_settings.pop(CONF_CLIENT_CERT, None)
         other_settings.pop(CONF_CLIENT_KEY, None)
         conf_cert = other_settings.pop(CONF_CERTIFICATE, None)
@@ -4343,7 +4327,7 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
             "auto"
             if conf_cert == "auto"
             else "custom"
-            if conf_cert is not None
+            if conf_cert is not None or CONF_CERTIFICATE_FILE in other_settings
             else "off"
         )
         if CONF_WS_HEADERS in other_settings:
@@ -4381,6 +4365,13 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
             errors,
         ):
             if is_reconfigure:
+                # The update listener that reloads MQTT is only registered
+                # when the client was set up
+                if not reconfigure_entry.update_listeners:
+                    return self.async_update_reload_and_abort(
+                        reconfigure_entry,
+                        data=entry_config_update,
+                    )
                 return self.async_update_and_abort(
                     reconfigure_entry,
                     data=entry_config_update,
@@ -4975,7 +4966,7 @@ class MQTTSubentryFlowHandler(ConfigSubentryFlow):
             title=self._subentry_data[CONF_DEVICE][CONF_NAME],
             description_placeholders={
                 "entity": full_entity_name,
-                CONF_PLATFORM: platform,
+                "platform": platform,
             },
         )
 
@@ -5266,6 +5257,52 @@ async def _get_uploaded_file(hass: HomeAssistant, id: str) -> bytes:
     return await hass.async_add_executor_job(_proces_uploaded_file)
 
 
+def _validate_certificate_settings(
+    other_settings: dict[str, Any], file_paths: dict[str, str]
+) -> str | None:
+    """Validate the uploaded certificates and certificate file paths."""
+    if any(
+        other_settings.get(upload) and file_path in file_paths
+        for upload, file_path in (
+            (CONF_CERTIFICATE, CONF_CERTIFICATE_FILE),
+            (CONF_CLIENT_CERT, CONF_CLIENT_CERT_FILE),
+            (CONF_CLIENT_KEY, CONF_CLIENT_KEY_FILE),
+        )
+    ):
+        return "upload_and_file_path"
+    # A relative path would resolve against the working directory of the process
+    if not all(os.path.isabs(file_path) for file_path in file_paths.values()):
+        return "file_path_not_absolute"
+    if CONF_CLIENT_KEY_FILE in file_paths and other_settings.get(
+        CONF_CLIENT_KEY_PASSWORD
+    ):
+        return "client_key_password_with_file"
+    # The client certificate and key must both be uploaded, or both be files
+    if bool(other_settings.get(CONF_CLIENT_CERT)) != bool(
+        other_settings.get(CONF_CLIENT_KEY)
+    ) or (CONF_CLIENT_CERT_FILE in file_paths) != (CONF_CLIENT_KEY_FILE in file_paths):
+        return "invalid_inclusion"
+    return None
+
+
+def _missing_certificate_error(
+    entry_config_update: dict[str, Any], set_ca_cert: str, set_client_cert: bool
+) -> str | None:
+    """Return an error when a selected certificate is not configured."""
+    # Without a certificate TLS or client authentication would be disabled silently
+    if set_ca_cert == "custom" and not (
+        CONF_CERTIFICATE in entry_config_update
+        or CONF_CERTIFICATE_FILE in entry_config_update
+    ):
+        return "ca_certificate_missing"
+    if set_client_cert and not (
+        CONF_CLIENT_CERT in entry_config_update
+        or CONF_CLIENT_CERT_FILE in entry_config_update
+    ):
+        return "client_certificate_missing"
+    return None
+
+
 async def async_validate_broker_settings(
     flow: FlowHandler,
     entry_config: MappingProxyType[str, Any] | None,
@@ -5322,14 +5359,41 @@ async def async_validate_broker_settings(
         CONF_CLIENT_CERT,
         CONF_CLIENT_KEY,
         CONF_CLIENT_KEY_PASSWORD,
+        CONF_CERTIFICATE_FILE,
+        CONF_CLIENT_CERT_FILE,
+        CONF_CLIENT_KEY_FILE,
     ):
         entry_config_update.pop(key, None)
 
-    # Get current CA certificate settings from config entry
-    if (set_ca_cert := user_input[OTHER_SETTINGS][SET_CA_CERT]) == "auto":
+    other_settings: dict[str, Any] = user_input[OTHER_SETTINGS]
+    set_ca_cert = other_settings[SET_CA_CERT]
+    set_client_cert = other_settings[SET_CLIENT_CERT]
+    # The form is pre-filled with the file paths, so ignore them when disabled
+    file_paths: dict[str, str] = {
+        key: file_path
+        for key, enabled in (
+            (CONF_CERTIFICATE_FILE, set_ca_cert == "custom"),
+            (CONF_CLIENT_CERT_FILE, set_client_cert),
+            (CONF_CLIENT_KEY_FILE, set_client_cert),
+        )
+        if enabled and (file_path := other_settings.get(key))
+    }
+    if error := _validate_certificate_settings(other_settings, file_paths):
+        errors["base"] = error
+        return False
+
+    entry_config_update |= file_paths
+    certificate_file = file_paths.get(CONF_CERTIFICATE_FILE)
+    client_cert_file = file_paths.get(CONF_CLIENT_CERT_FILE)
+    client_key_file = file_paths.get(CONF_CLIENT_KEY_FILE)
+
+    # Get current CA certificate settings from config entry,
+    # a CA certificate file takes precedence
+    if set_ca_cert == "auto":
         entry_config_update[CONF_CERTIFICATE] = "auto"
     elif (
-        entry_config is not None
+        not certificate_file
+        and entry_config is not None
         and set_ca_cert == "custom"
         and (current_cert := entry_config.get(CONF_CERTIFICATE))
     ):
@@ -5337,19 +5401,10 @@ async def async_validate_broker_settings(
 
     # Prepare entry update with uploaded certificate files
     # converted to PEM format
-    new_client_certificate: str | None = user_input[OTHER_SETTINGS].get(
-        CONF_CLIENT_CERT
-    )
-    new_client_key: str | None = user_input[OTHER_SETTINGS].get(CONF_CLIENT_KEY)
-    set_client_cert = user_input[OTHER_SETTINGS][SET_CLIENT_CERT]
+    new_client_certificate: str | None = other_settings.get(CONF_CLIENT_CERT)
+    new_client_key: str | None = other_settings.get(CONF_CLIENT_KEY)
 
-    if (new_client_certificate and not new_client_key) or (
-        not new_client_certificate and new_client_key
-    ):
-        errors["base"] = "invalid_inclusion"
-        return False
-
-    if new_certificate := user_input[OTHER_SETTINGS].get(CONF_CERTIFICATE):
+    if new_certificate := other_settings.get(CONF_CERTIFICATE):
         if not await _async_process_file_upload(
             new_certificate, CONF_CERTIFICATE, PEMType.CERTIFICATE, "bad_certificate"
         ):
@@ -5364,7 +5419,8 @@ async def async_validate_broker_settings(
         ):
             return False
     elif (
-        entry_config is not None
+        not client_cert_file
+        and entry_config is not None
         and set_client_cert
         and (client_cert := entry_config.get(CONF_CLIENT_CERT))
     ):
@@ -5380,17 +5436,24 @@ async def async_validate_broker_settings(
         ):
             return False
     elif (
-        entry_config is not None
+        not client_key_file
+        and entry_config is not None
         and set_client_cert
         and (client_key := entry_config.get(CONF_CLIENT_KEY))
     ):
         entry_config_update[CONF_CLIENT_KEY] = client_key
 
+    if error := _missing_certificate_error(
+        entry_config_update, set_ca_cert, set_client_cert
+    ):
+        errors["base"] = error
+        return False
+
     # We temporarily create the current and new uploaded certificate files
     # and we check the certificate chain.
     await async_create_certificate_temp_files(hass, entry_config_update)
     if error := await hass.async_add_executor_job(
-        check_certicate_chain,
+        check_certicate_chain, entry_config_update
     ):
         errors["base"] = error
         return False
@@ -5415,44 +5478,73 @@ async def async_validate_broker_settings(
         update_password_from_user_input(
             entry_config.get(CONF_PASSWORD), entry_config_update
         )
-    if await hass.async_add_executor_job(
-        try_connection,
-        entry_config_update,
-    ):
+    return await _async_test_connection(hass, entry_config_update, errors)
+
+
+async def _async_test_connection(
+    hass: HomeAssistant, entry_config_update: dict[str, Any], errors: dict[str, str]
+) -> bool:
+    """Test the connection to the MQTT broker."""
+    try:
+        can_connect = await hass.async_add_executor_job(
+            try_connection,
+            entry_config_update,
+        )
+    except OSError:
+        # The certificate files can be replaced after they were checked
+        errors["base"] = "cannot_load_certificates"
+        return False
+    if can_connect:
         return True
 
     errors["base"] = "cannot_connect"
     return False
 
 
-def check_certicate_chain() -> str | None:
+def check_certicate_chain(config: dict[str, Any]) -> str | None:
     """Check the MQTT certificates."""
-    if client_certificate := get_file_path(CONF_CLIENT_CERT):
+    client_certificate = config.get(CONF_CLIENT_CERT_FILE) or get_file_path(
+        CONF_CLIENT_CERT
+    )
+    private_key = config.get(CONF_CLIENT_KEY_FILE) or get_file_path(CONF_CLIENT_KEY)
+    ca_cert = config.get(CONF_CERTIFICATE_FILE) or get_file_path(CONF_CERTIFICATE)
+    if ca_cert and not (os.path.isfile(ca_cert) and os.access(ca_cert, os.R_OK)):
+        return "cannot_read_certificate_file"
+
+    if client_certificate:
         try:
             with open(client_certificate, "rb") as client_certificate_file:
-                load_pem_x509_certificate(client_certificate_file.read())
+                data = client_certificate_file.read()
+        except OSError:
+            return "cannot_read_client_cert_file"
+        try:
+            load_pem_x509_certificate(data)
         except ValueError:
             return "bad_client_cert"
     # Check we can serialize the private key file
-    if private_key := get_file_path(CONF_CLIENT_KEY):
+    if private_key:
         try:
             with open(private_key, "rb") as client_key_file:
-                load_pem_private_key(client_key_file.read(), password=None)
-        except TypeError, ValueError:
+                data = client_key_file.read()
+        except OSError:
+            return "cannot_read_client_key_file"
+        try:
+            load_pem_private_key(data, password=None)
+        except TypeError, ValueError, UnsupportedAlgorithm:
             return "client_key_error"
     # Check the certificate chain
     context = SSLContext(PROTOCOL_TLS_CLIENT)
     if client_certificate and private_key:
         try:
             context.load_cert_chain(client_certificate, private_key)
-        except SSLError:
+        except OSError:
             return "bad_client_cert_key"
     # try to load the custom CA file
-    if (ca_cert := get_file_path(CONF_CERTIFICATE)) is None:
+    if ca_cert is None:
         return None
 
     try:
         context.load_verify_locations(ca_cert)
-    except SSLError:
+    except OSError:
         return "bad_certificate"
     return None

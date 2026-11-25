@@ -5,8 +5,7 @@ from typing import Any
 
 from pyliebherrhomeapi import (
     DeviceControl,
-    LiebherrConnectionError,
-    LiebherrTimeoutError,
+    LiebherrError,
     TemperatureControl,
     ZonePosition,
 )
@@ -61,7 +60,7 @@ class LiebherrEntity(CoordinatorEntity[LiebherrCoordinator]):
         """Send a command and optimistically apply its successful result."""
         try:
             await command
-        except (LiebherrConnectionError, LiebherrTimeoutError) as err:
+        except LiebherrError as err:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="communication_error",

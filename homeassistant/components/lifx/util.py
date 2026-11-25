@@ -2,14 +2,16 @@
 
 from ipaddress import ip_address
 import re
-from socket import gethostbyname
+from socket import SOCK_DGRAM
 from typing import TYPE_CHECKING, Any, TypedDict
 
-from lifx import HSBK, Colors, LifxError
+from lifx import HSBK, Colors, LifxError, Theme, ThemeLibrary
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_BRIGHTNESS_PCT,
+    ATTR_BRIGHTNESS_STEP,
+    ATTR_BRIGHTNESS_STEP_PCT,
     ATTR_COLOR_NAME,
     ATTR_COLOR_TEMP_KELVIN,
     ATTR_HS_COLOR,
@@ -24,6 +26,52 @@ from .const import CONF_SERIAL, DOMAIN, LOGGER
 
 if TYPE_CHECKING:
     from .coordinator import LIFXConfigEntry
+
+
+def _theme_sort_key(slug: str) -> tuple[str, str]:
+    """Order themes as the LIFX app does: by category, then by name."""
+    theme = ThemeLibrary.get(slug)
+    if TYPE_CHECKING:
+        # Only custom themes lack these; every library theme has both
+        assert theme.category is not None
+        assert theme.unicode_name is not None
+    return theme.category, theme.unicode_name.casefold()
+
+
+# A rename alias would repeat its successor's label, so dropdowns leave it out
+THEME_OPTIONS = sorted(
+    (
+        slug
+        for slug in ThemeLibrary.get_available_themes()
+        if ThemeLibrary.get(slug).disposition != "renamed"
+    ),
+    key=_theme_sort_key,
+)
+
+
+def _theme_select_sort_key(slug: str) -> tuple[str, str, bool]:
+    """Order themes as the app does, with each rename alias after its successor."""
+    return *_theme_sort_key(slug), ThemeLibrary.get(slug).disposition == "renamed"
+
+
+# The Theme select offered rename aliases before the rename, so automations may
+# still pick them
+THEME_SELECT_OPTIONS = sorted(
+    ThemeLibrary.get_available_themes(), key=_theme_select_sort_key
+)
+
+
+def resolve_renamed_theme(name: str) -> Theme:
+    """Return a library theme, following a rename to the theme it became.
+
+    The library records the slug it paints, and the dropdowns only offer the
+    successor, so painting the alias itself would leave the selects blank.
+    """
+    theme = ThemeLibrary.get(name)
+    if theme.disposition == "renamed" and theme.replaced_by is not None:
+        return ThemeLibrary.get(theme.replaced_by)
+    return theme
+
 
 _SERIAL_PATTERN = re.compile(
     r"(?:[0-9a-f]{12}|(?:[0-9a-f]{2}:){5}[0-9a-f]{2})", re.IGNORECASE
@@ -42,8 +90,18 @@ async def async_resolve_host(hass: HomeAssistant, host: str) -> str:
     try:
         ip_address(host)
     except ValueError:
-        return await hass.async_add_executor_job(gethostbyname, host)
-    return host
+        pass
+    else:
+        return host
+    results = await hass.loop.getaddrinfo(host, None, type=SOCK_DGRAM)
+    sockaddr = results[0][4]
+    address = sockaddr[0]
+    if TYPE_CHECKING:
+        assert isinstance(address, str)
+    # The library rejects a link-local address without its interface
+    if len(sockaddr) == 4 and sockaddr[3]:
+        return f"{address}%{sockaddr[3]}"
+    return address
 
 
 @callback
@@ -145,10 +203,15 @@ def overwrites_existing_color(changes: HSBKChanges) -> bool:
     )
 
 
+def requested(changes: HSBKChanges) -> bool:
+    """Return whether a service call asked for any color component."""
+    return any(value is not None for value in changes.values())
+
+
 def find_hsbk(base: HSBK, **kwargs: Any) -> HSBK | None:
     """Return a requested color merged onto a base color, or None if unchanged."""
     changes = parse_hsbk_changes(**kwargs)
-    if all(value is None for value in changes.values()):
+    if not requested(changes):
         return None
     return replace_hsbk(base, changes)
 
@@ -158,3 +221,17 @@ def palette_fraction(value: float) -> float:
     # The action examples give these as either a fraction or a percentage, so a
     # value of one or less is a fraction and anything larger is a percentage
     return value if value <= 1 else value / 100
+
+
+def resolve_brightness_step(kwargs: dict[str, Any], current_brightness: int) -> None:
+    """Turn a relative brightness step into the absolute brightness it asks for."""
+    if ATTR_BRIGHTNESS_STEP in kwargs:
+        brightness = current_brightness + kwargs.pop(ATTR_BRIGHTNESS_STEP)
+    elif ATTR_BRIGHTNESS_STEP_PCT in kwargs:
+        brightness_pct = round(current_brightness / 255 * 100)
+        brightness = round(
+            (brightness_pct + kwargs.pop(ATTR_BRIGHTNESS_STEP_PCT)) / 100 * 255
+        )
+    else:
+        return
+    kwargs[ATTR_BRIGHTNESS] = max(0, min(255, brightness))

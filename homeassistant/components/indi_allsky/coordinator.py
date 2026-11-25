@@ -1,21 +1,45 @@
 """DataUpdateCoordinator for INDI Allsky integration."""
 
+import asyncio
+from collections.abc import Callable
 from dataclasses import dataclass
+from datetime import datetime, timedelta
 import logging
 from typing import override
 
-from aioindiallsky import ExposureData, IndiAllSkyClient, IndiAllSkyError
+import aiohttp
+from aioindiallsky import (
+    ExposureData,
+    IndiAllSkyAuthError,
+    IndiAllSkyClient,
+    IndiAllSkyError,
+    MediaData,
+    SensorData,
+)
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST, CONF_PORT, CONF_SSL, CONF_VERIFY_SSL
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.const import (
+    CONF_HOST,
+    CONF_PASSWORD,
+    CONF_PORT,
+    CONF_SSL,
+    CONF_USERNAME,
+    CONF_VERIFY_SSL,
+)
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import ConfigEntryAuthFailed
+from homeassistant.helpers.aiohttp_client import async_create_clientsession
+from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.util import dt as dt_util
+from homeassistant.util.unit_conversion import TemperatureConverter
 
 from .const import DOMAIN
 from .util import get_ssl_context
 
 _LOGGER = logging.getLogger(__name__)
+
+SCAN_INTERVAL = timedelta(minutes=10)
 
 type IndiAllSkyConfigEntry = ConfigEntry[IndiAllSkyDataUpdateCoordinator]
 
@@ -25,13 +49,27 @@ class IndiAllSkyData:
     """Data model for INDI Allsky coordinator data."""
 
     exposure: ExposureData | None = None
+    latest_keogram: MediaData | None = None
+    latest_keogram_image: bytes | None = None
+    latest_keogram_updated: datetime | None = None
+    latest_startrail: MediaData | None = None
+    latest_startrail_image: bytes | None = None
+    latest_startrail_updated: datetime | None = None
+    sensor: SensorData | None = None
 
 
 class IndiAllSkyDataUpdateCoordinator(DataUpdateCoordinator[IndiAllSkyData]):
     """Class to manage fetching INDI Allsky data from the API."""
 
+    config_entry: IndiAllSkyConfigEntry
+
     def __init__(self, hass: HomeAssistant, entry: IndiAllSkyConfigEntry) -> None:
         """Initialize the coordinator."""
+        self.session = async_create_clientsession(
+            hass,
+            verify_ssl=entry.data[CONF_VERIFY_SSL],
+            cookie_jar=aiohttp.CookieJar(unsafe=True),
+        )
         self.client = IndiAllSkyClient(
             host=entry.data[CONF_HOST],
             port=int(entry.data[CONF_PORT]),
@@ -39,15 +77,49 @@ class IndiAllSkyDataUpdateCoordinator(DataUpdateCoordinator[IndiAllSkyData]):
                 entry.data[CONF_SSL],
                 entry.data[CONF_VERIFY_SSL],
             ),
-            session=async_get_clientsession(hass),
+            username=entry.data.get(CONF_USERNAME),
+            password=entry.data.get(CONF_PASSWORD),
+            session=self.session,
         )
         self.latest_exposure: ExposureData | None = None
+        self.latest_keogram: MediaData | None = None
+        self.latest_keogram_image: bytes | None = None
+        self.latest_keogram_updated: datetime | None = None
+        self.latest_startrail: MediaData | None = None
+        self.latest_startrail_image: bytes | None = None
+        self.latest_startrail_updated: datetime | None = None
+        self.latest_sensor: SensorData | None = None
+        self._sensor_fetch_task: asyncio.Task[None] | None = None
+        self._sensor_fetch_queued = False
+        self._sensor_fetch_failed = False
 
-        unsub = self.client.register_callback(
-            "exposure_complete", self._handle_exposure_complete
+        entry.async_on_unload(
+            self.client.register_callback(
+                "exposure_complete", self._handle_exposure_complete
+            )
         )
-        entry.async_on_unload(unsub)
+        entry.async_on_unload(
+            self.client.register_callback(
+                "keogram_complete", self._handle_keogram_complete
+            )
+        )
+        entry.async_on_unload(
+            self.client.register_callback(
+                "startrail_complete", self._handle_startrail_complete
+            )
+        )
+        entry.async_on_unload(
+            self.client.register_callback("sensor_update", self._handle_sensor_update)
+        )
         entry.async_on_unload(self.client.disconnect)
+        if not entry.pref_disable_polling:
+            entry.async_on_unload(
+                async_track_time_interval(
+                    hass,
+                    self._async_handle_interval_refresh,
+                    SCAN_INTERVAL,
+                )
+            )
 
         super().__init__(
             hass,
@@ -57,22 +129,317 @@ class IndiAllSkyDataUpdateCoordinator(DataUpdateCoordinator[IndiAllSkyData]):
             update_interval=None,
         )
 
+    def _build_data(self) -> IndiAllSkyData:
+        """Build a snapshot of coordinator data."""
+        return IndiAllSkyData(
+            exposure=self.latest_exposure,
+            latest_keogram=self.latest_keogram,
+            latest_keogram_image=self.latest_keogram_image,
+            latest_keogram_updated=self.latest_keogram_updated,
+            latest_startrail=self.latest_startrail,
+            latest_startrail_image=self.latest_startrail_image,
+            latest_startrail_updated=self.latest_startrail_updated,
+            sensor=self.latest_sensor,
+        )
+
+    def _publish_data(self) -> None:
+        """Publish latest data without clearing an active sensor-fetch failure."""
+        data = self._build_data()
+        if self._sensor_fetch_failed:
+            self.data = data
+            return
+        self.async_set_updated_data(data)
+
+    async def _async_handle_interval_refresh(self, _now: datetime) -> None:
+        """Handle periodic fallback sensor polling."""
+        self._async_trigger_fetch_sensors()
+
     def _handle_exposure_complete(self, exposure: ExposureData) -> None:
         """Handle new exposure_complete event from WebSocket stream."""
         self.latest_exposure = exposure
-        self.async_set_updated_data(IndiAllSkyData(exposure=exposure))
+        self._async_trigger_fetch_sensors()
+        self._publish_data()
+
+    def _async_trigger_fetch_sensors(self) -> None:
+        """Trigger sensor fetch if no fetch task is active, or queue a trailing run."""
+        if self._sensor_fetch_task is not None and not self._sensor_fetch_task.done():
+            self._sensor_fetch_queued = True
+            return
+        self._sensor_fetch_task = self.config_entry.async_create_background_task(
+            self.hass,
+            self._async_fetch_sensors(),
+            "indi_allsky_fetch_sensors",
+        )
+
+    async def _async_fetch_sensors(self) -> None:
+        """Fetch sensor update from indi-allsky, processing any queued trailing fetch."""
+        while True:
+            self._sensor_fetch_queued = False
+            try:
+                try:
+                    await self.client.fetch_sensors()
+                except IndiAllSkyAuthError as err:
+                    self._sensor_fetch_failed = True
+                    self.async_set_update_error(err)
+                    self.config_entry.async_start_reauth(self.hass)
+                except IndiAllSkyError as err:
+                    self._sensor_fetch_failed = True
+                    self.async_set_update_error(err)
+                else:
+                    if self._sensor_fetch_failed:
+                        self._sensor_fetch_failed = False
+                        _LOGGER.info("Fetching %s data recovered", self.name)
+                        self._publish_data()
+            finally:
+                if not self._sensor_fetch_queued:
+                    self._sensor_fetch_task = None
+            if not self._sensor_fetch_queued:
+                break
+
+    def _handle_keogram_complete(self, media: MediaData) -> None:
+        """Handle new keogram_complete event from WebSocket stream."""
+        self.latest_keogram = media
+        self.latest_keogram_image = None
+        self.latest_keogram_updated = None
+        self.config_entry.async_create_background_task(
+            self.hass,
+            self._async_fetch_media_and_update(
+                "keogram", "latestkeogram", media, self.async_set_keogram_image
+            ),
+            "indi_allsky_fetch_keogram",
+        )
+
+    @callback
+    def async_set_keogram_image(
+        self, media: MediaData, image_bytes: bytes | None
+    ) -> None:
+        """Update cached keogram image if media matches current."""
+        if media is not self.latest_keogram:
+            return
+        if image_bytes is None and self.latest_keogram_image is not None:
+            return
+        self.latest_keogram_image = image_bytes
+        self.latest_keogram_updated = (
+            dt_util.utcnow() if image_bytes is not None else None
+        )
+        self._publish_data()
+
+    def _handle_startrail_complete(self, media: MediaData) -> None:
+        """Handle new startrail_complete event from WebSocket stream."""
+        self.latest_startrail = media
+        self.latest_startrail_image = None
+        self.latest_startrail_updated = None
+        self.config_entry.async_create_background_task(
+            self.hass,
+            self._async_fetch_media_and_update(
+                "startrail", "lateststartrail", media, self.async_set_startrail_image
+            ),
+            "indi_allsky_fetch_startrail",
+        )
+
+    @callback
+    def async_set_startrail_image(
+        self, media: MediaData, image_bytes: bytes | None
+    ) -> None:
+        """Update cached startrail image if media matches current."""
+        if media is not self.latest_startrail:
+            return
+        if image_bytes is None and self.latest_startrail_image is not None:
+            return
+        self.latest_startrail_image = image_bytes
+        self.latest_startrail_updated = (
+            dt_util.utcnow() if image_bytes is not None else None
+        )
+        self._publish_data()
+
+    async def _async_fetch_media_and_update(
+        self,
+        media_kind: str,
+        endpoint: str,
+        media: MediaData,
+        set_image_fn: Callable[[MediaData, bytes | None], None],
+    ) -> None:
+        """Fetch latest media image and update coordinator."""
+        image_bytes: bytes | None
+        try:
+            image_bytes = await self.client.fetch_image(endpoint)
+        except IndiAllSkyAuthError:
+            self.config_entry.async_start_reauth(self.hass)
+            image_bytes = None
+        except IndiAllSkyError as err:
+            _LOGGER.warning("Failed to fetch latest %s image: %s", media_kind, err)
+            image_bytes = None
+        set_image_fn(media, image_bytes)
+
+    def _handle_sensor_update(self, sensor: SensorData) -> None:
+        """Handle new sensor_update event from WebSocket stream."""
+        if self.latest_sensor is not None:
+            merged_sensors = dict(self.latest_sensor.sensors)
+            for key, val in sensor.sensors.items():
+                existing = merged_sensors.get(key)
+                if isinstance(existing, dict):
+                    if isinstance(val, dict):
+                        merged_entry = {
+                            **existing,
+                            **{
+                                k: v
+                                for k, v in val.items()
+                                if k == "value" or v is not None
+                            },
+                        }
+                        if (
+                            val.get("unit") is not None
+                            and val.get("unit") != existing.get("unit")
+                            and "value" not in val
+                        ):
+                            merged_entry["value"] = None
+                        merged_sensors[key] = merged_entry
+                    else:
+                        merged_sensors[key] = {**existing, "value": val}
+                else:
+                    merged_sensors[key] = val
+
+            merged_temp = (
+                list(sensor.raw_temp)
+                if sensor.raw_temp
+                else list(self.latest_sensor.raw_temp)
+            )
+            merged_user = (
+                list(sensor.raw_user)
+                if sensor.raw_user
+                else list(self.latest_sensor.raw_user)
+            )
+
+            merged_data = dict(self.latest_sensor.raw_data or {})
+            if sensor.raw_data:
+                merged_data.update(sensor.raw_data)
+
+            has_declared_temp_unit = (
+                bool(sensor.raw_data and sensor.raw_data.get("temp_unit"))
+                or any(
+                    isinstance(entry := sensor.sensors.get(key), dict)
+                    and bool(entry.get("unit"))
+                    for key in (
+                        "dew_point",
+                        "frost_point",
+                        "heat_index",
+                        "camera_temp",
+                        "sensor_temp_10",
+                        "cpu_temperature",
+                    )
+                )
+                or sensor.temp_unit != "°C"
+            )
+            old_temp_unit = self.latest_sensor.temp_unit
+            new_temp_unit = (
+                sensor.temp_unit if has_declared_temp_unit else old_temp_unit
+            )
+
+            has_retained_declared_temp_unit = (
+                has_declared_temp_unit
+                or bool(merged_data and merged_data.get("temp_unit"))
+                or new_temp_unit != "°C"
+                or any(
+                    isinstance(entry := merged_sensors.get(key), dict)
+                    and bool(entry.get("unit"))
+                    for key in (
+                        "dew_point",
+                        "frost_point",
+                        "heat_index",
+                        "camera_temp",
+                        "sensor_temp_10",
+                        "cpu_temperature",
+                    )
+                )
+            )
+
+            if has_retained_declared_temp_unit:
+                for key, val in sensor.sensors.items():
+                    entry = merged_sensors.get(key)
+                    if (
+                        isinstance(entry, dict)
+                        and entry.get("unit") in ("°C", "°F", "K")
+                        and entry.get("unit") != new_temp_unit
+                        and (not isinstance(val, dict) or val.get("unit") is None)
+                        and (not isinstance(val, dict) or "value" in val)
+                    ):
+                        merged_sensors[key] = {**entry, "unit": new_temp_unit}
+
+            def _retain_temp(
+                new_val: float | None, old_val: float | None
+            ) -> float | None:
+                if new_val is not None:
+                    return new_val
+                if old_val is None or old_temp_unit == new_temp_unit:
+                    return old_val
+                return round(
+                    TemperatureConverter.convert(old_val, old_temp_unit, new_temp_unit),
+                    2,
+                )
+
+            self.latest_sensor = SensorData(
+                last_update=sensor.last_update or self.latest_sensor.last_update,
+                sensors=merged_sensors,
+                raw_temp=merged_temp,
+                raw_user=merged_user,
+                raw_data=merged_data,
+                temp_unit=new_temp_unit,
+                dew_heater=sensor.dew_heater
+                if sensor.dew_heater is not None
+                else self.latest_sensor.dew_heater,
+                dew_point=_retain_temp(sensor.dew_point, self.latest_sensor.dew_point),
+                frost_point=_retain_temp(
+                    sensor.frost_point, self.latest_sensor.frost_point
+                ),
+                fan_duty_cycle=sensor.fan_duty_cycle
+                if sensor.fan_duty_cycle is not None
+                else self.latest_sensor.fan_duty_cycle,
+                heat_index=_retain_temp(
+                    sensor.heat_index, self.latest_sensor.heat_index
+                ),
+                wind_direction=sensor.wind_direction
+                if sensor.wind_direction is not None
+                else self.latest_sensor.wind_direction,
+                device_sqm=sensor.device_sqm
+                if sensor.device_sqm is not None
+                else self.latest_sensor.device_sqm,
+                camera_sqm=sensor.camera_sqm
+                if sensor.camera_sqm is not None
+                else self.latest_sensor.camera_sqm,
+                camera_sqm_adu=sensor.camera_sqm_adu
+                if sensor.camera_sqm_adu is not None
+                else self.latest_sensor.camera_sqm_adu,
+                cpu_temperature=_retain_temp(
+                    sensor.cpu_temperature, self.latest_sensor.cpu_temperature
+                ),
+            )
+        else:
+            self.latest_sensor = sensor
+
+        if self._sensor_fetch_failed:
+            self._sensor_fetch_failed = False
+            _LOGGER.info("Fetching %s data recovered", self.name)
+        self._publish_data()
 
     @override
     async def _async_update_data(self) -> IndiAllSkyData:
         """Fetch INDI Allsky metadata and verify connection."""
         try:
-            await self.client.fetch_image("latestimage")
+            if self.latest_exposure is None:
+                await self.client.fetch_image("latestimage")
             if not self.client.is_connected:
                 await self.client.connect()
+            await self.client.fetch_sensors()
+        except IndiAllSkyAuthError as err:
+            raise ConfigEntryAuthFailed(
+                translation_domain=DOMAIN,
+                translation_key="invalid_auth",
+            ) from err
         except IndiAllSkyError as err:
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="update_failed",
             ) from err
 
-        return IndiAllSkyData(exposure=self.latest_exposure)
+        self._sensor_fetch_failed = False
+        return self._build_data()

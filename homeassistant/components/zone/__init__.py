@@ -1,6 +1,7 @@
 """Support for the definition of zones."""
 
-from collections.abc import Callable
+from collections.abc import Callable, Collection
+from dataclasses import dataclass
 import logging
 from operator import attrgetter
 import sys
@@ -9,11 +10,8 @@ from typing import Any, Self, cast, override
 import probatio
 
 from homeassistant import config_entries
-from homeassistant.const import (  # noqa: F401
-    ATTR_EDITABLE,
-    ATTR_LATITUDE,
-    ATTR_LONGITUDE,
-    ATTR_PERSONS,
+from homeassistant.components.labs import async_is_preview_feature_enabled
+from homeassistant.const import (
     CONF_ICON,
     CONF_ID,
     CONF_LATITUDE,
@@ -30,7 +28,6 @@ from homeassistant.core import (
     Event,
     EventStateChangedData,
     HomeAssistant,
-    ServiceCall,
     State,
     callback,
 )
@@ -39,21 +36,24 @@ from homeassistant.helpers import (
     config_validation as cv,
     entity_component,
     event,
-    service,
     storage,
 )
 from homeassistant.helpers.typing import ConfigType, VolDictType
 from homeassistant.util.hass_dict import HassKey
 from homeassistant.util.location import distance
 
-from .const import (  # noqa: F401
+from .const import (
     ATTR_PASSIVE,
     ATTR_RADIUS,
     CONF_PASSIVE,
+    DATA_ZONE,
     DOMAIN,
     HOME_ZONE,
+    PREVIEW_FEATURE_IMPROVED_PRESENCE_DETECTION,
     ZoneEntityStateAttribute,
+    ZoneRelation,
 )
+from .services import async_setup_services
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -84,6 +84,35 @@ UPDATE_FIELDS: VolDictType = {
     probatio.Optional(CONF_ICON): cv.icon,
 }
 
+__all__ = [
+    "ATTR_PASSIVE",
+    "ATTR_RADIUS",
+    "CONF_ICON",
+    "CONF_LATITUDE",
+    "CONF_LONGITUDE",
+    "CONF_NAME",
+    "CONF_PASSIVE",
+    "CONF_RADIUS",
+    "CREATE_FIELDS",
+    "DOMAIN",
+    "ENTITY_ID_FORMAT",
+    "ENTITY_ID_HOME",
+    "HOME_ZONE",
+    "ICON_IMPORT",
+    "PREVIEW_FEATURE_IMPROVED_PRESENCE_DETECTION",
+    "SERVICE_RELOAD",
+    "UPDATE_FIELDS",
+    "Zone",
+    "ZoneEntityStateAttribute",
+    "ZoneRelation",
+    "ZoneStorageCollection",
+    "async_active_zone",
+    "async_get_enclosing_zones",
+    "async_in_zones",
+    "async_is_improved_presence_detection_enabled",
+    "zone_relation",
+]
+
 
 def empty_value(value: Any) -> Any:
     """Test if the user has the default config value from adding "zone:"."""
@@ -96,14 +125,13 @@ def empty_value(value: Any) -> Any:
 CONFIG_SCHEMA = probatio.Schema(
     {
         probatio.Optional(DOMAIN, default=[]): probatio.Any(
-            probatio.All(cv.ensure_list, [probatio.Schema(CREATE_FIELDS)]),
+            probatio.All(probatio.EnsureList(), [probatio.Schema(CREATE_FIELDS)]),
             empty_value,
         )
     },
     extra=probatio.ALLOW_EXTRA,
 )
 
-RELOAD_SERVICE_SCHEMA = probatio.Schema({})
 STORAGE_KEY = DOMAIN
 STORAGE_VERSION = 1
 
@@ -111,12 +139,77 @@ ENTITY_ID_SORTER = attrgetter("entity_id")
 
 ZONE_ENTITY_IDS = "zone_entity_ids"
 
-DATA_ZONE_STORAGE_COLLECTION: HassKey[ZoneStorageCollection] = HassKey(DOMAIN)
 DATA_ZONE_ENTITY_IDS: HassKey[list[str]] = HassKey(ZONE_ENTITY_IDS)
 
 
+@dataclass(slots=True)
+class ZoneData:
+    """Runtime data for the zone integration."""
+
+    component: entity_component.EntityComponent[Zone]
+    storage_collection: ZoneStorageCollection
+    yaml_collection: collection.IDLessCollection
+
+
+@callback
+def async_is_improved_presence_detection_enabled(hass: HomeAssistant) -> bool:
+    """Return if the improved presence detection labs feature is enabled."""
+    return async_is_preview_feature_enabled(
+        hass, DOMAIN, PREVIEW_FEATURE_IMPROVED_PRESENCE_DETECTION
+    )
+
+
+def _zone_relation(
+    zone_dist: float, zone_radius: float, radius: float | None
+) -> ZoneRelation:
+    """Return the relation between an accuracy circle and a zone.
+
+    A missing, zero or negative radius is treated as an exact point.
+    """
+    radius = max(radius or 0, 0)
+    if zone_dist - radius >= zone_radius:
+        return ZoneRelation.SEPARATED
+    if zone_dist + radius <= zone_radius:
+        return ZoneRelation.CONTAINED
+    return ZoneRelation.OVERLAPPING
+
+
+def zone_relation(
+    zone: State, latitude: float, longitude: float, radius: float | None = 0
+) -> ZoneRelation | None:
+    """Return the relation between an accuracy circle and the given zone.
+
+    Returns None if the zone is unavailable or the relation cannot be
+    calculated.
+
+    Async friendly.
+    """
+    if zone.state == STATE_UNAVAILABLE:
+        return None
+
+    zone_dist = distance(
+        latitude,
+        longitude,
+        zone.attributes[EntityStateAttribute.LATITUDE],
+        zone.attributes[EntityStateAttribute.LONGITUDE],
+    )
+
+    if (
+        zone_dist is None
+        or (zone_radius := zone.attributes[ZoneEntityStateAttribute.RADIUS]) is None
+    ):
+        return None
+    return _zone_relation(zone_dist, zone_radius, radius)
+
+
 def async_in_zones(
-    hass: HomeAssistant, latitude: float, longitude: float, radius: float = 0
+    hass: HomeAssistant,
+    latitude: float,
+    longitude: float,
+    radius: float = 0,
+    previous_in_zones: Collection[str] = (),
+    *,
+    force_overlap: bool = False,
 ) -> tuple[State | None, list[str]]:
     """Find zones which contain the given latitude and longitude.
 
@@ -126,12 +219,21 @@ def async_in_zones(
     is sorted by radius and then by distance so that the smallest and closest
     zone is first.
 
+    By default, a zone contains the location if the accuracy circle overlaps
+    the zone. If improved presence detection is enabled, a zone contains the
+    location if the accuracy circle is fully contained in the zone, or if it
+    overlaps the zone and the zone is in previous_in_zones. If force_overlap is
+    set, the default is used regardless of improved presence detection.
+
     This method must be run in the event loop.
     """
     min_radius: float = sys.maxsize
     min_dist: float = sys.maxsize
     active_zone: State | None = None
     zones: list[tuple[str, float, float]] = []
+    containment = not force_overlap and async_is_improved_presence_detection_enabled(
+        hass
+    )
 
     # This can be called before async_setup by device tracker
     zone_entity_ids = hass.data.get(DATA_ZONE_ENTITY_IDS, ())
@@ -144,23 +246,22 @@ def async_in_zones(
         ):
             continue
         zone_attrs = zone.attributes
+        # Skip zones where we cannot calculate distance
         if (
-            # Skip zones where we cannot calculate distance
-            (
-                zone_dist := distance(
-                    latitude,
-                    longitude,
-                    zone_attrs[EntityStateAttribute.LATITUDE],
-                    zone_attrs[EntityStateAttribute.LONGITUDE],
-                )
+            zone_dist := distance(
+                latitude,
+                longitude,
+                zone_attrs[EntityStateAttribute.LATITUDE],
+                zone_attrs[EntityStateAttribute.LONGITUDE],
             )
-            is None
-            # Skip zone that are outside the radius aka the
-            # lat/long is outside the zone
-            or not (
-                zone_dist - (zone_radius := zone_attrs[ZoneEntityStateAttribute.RADIUS])
-                < radius
-            )
+        ) is None:
+            continue
+        zone_radius = zone_attrs[ZoneEntityStateAttribute.RADIUS]
+        relation = _zone_relation(zone_dist, zone_radius, radius)
+        if relation is ZoneRelation.SEPARATED or (
+            containment
+            and relation is ZoneRelation.OVERLAPPING
+            and entity_id not in previous_in_zones
         ):
             continue
 
@@ -247,13 +348,22 @@ def async_get_enclosing_zones(hass: HomeAssistant, zone_entity_id: str) -> list[
 
 
 def async_active_zone(
-    hass: HomeAssistant, latitude: float, longitude: float, radius: float = 0
+    hass: HomeAssistant,
+    latitude: float,
+    longitude: float,
+    radius: float = 0,
+    *,
+    force_overlap: bool = False,
 ) -> State | None:
     """Find the active zone for given latitude, longitude.
 
+    See async_in_zones for force_overlap.
+
     This method must be run in the event loop.
     """
-    return async_in_zones(hass, latitude, longitude, radius)[0]
+    return async_in_zones(
+        hass, latitude, longitude, radius, force_overlap=force_overlap
+    )[0]
 
 
 @callback
@@ -281,25 +391,18 @@ def async_setup_track_zone_entity_ids(hass: HomeAssistant) -> None:
     event.async_track_state_removed_domain(hass, DOMAIN, _async_remove_zone_entity_id)
 
 
-def in_zone(zone: State, latitude: float, longitude: float, radius: float = 0) -> bool:
+def in_zone(
+    zone: State, latitude: float, longitude: float, radius: float | None = 0
+) -> bool:
     """Test if given latitude, longitude is in given zone.
+
+    The location is in the zone if its accuracy circle overlaps the zone.
 
     Async friendly.
     """
-    if zone.state == STATE_UNAVAILABLE:
-        return False
-
-    zone_dist = distance(
-        latitude,
-        longitude,
-        zone.attributes[EntityStateAttribute.LATITUDE],
-        zone.attributes[EntityStateAttribute.LONGITUDE],
-    )
-
-    if zone_dist is None or zone.attributes[ZoneEntityStateAttribute.RADIUS] is None:
-        return False
-    return zone_dist - radius < cast(
-        float, zone.attributes[ZoneEntityStateAttribute.RADIUS]
+    return zone_relation(zone, latitude, longitude, radius) in (
+        ZoneRelation.CONTAINED,
+        ZoneRelation.OVERLAPPING,
     )
 
 
@@ -358,18 +461,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         storage_collection, DOMAIN, DOMAIN, CREATE_FIELDS, UPDATE_FIELDS
     ).async_setup(hass)
 
-    async def reload_service_handler(service_call: ServiceCall) -> None:
-        """Remove all zones and load new ones from config."""
-        conf = await component.async_prepare_reload(skip_reset=True)
-        await yaml_collection.async_load(conf[DOMAIN])
+    hass.data[DATA_ZONE] = ZoneData(component, storage_collection, yaml_collection)
 
-    service.async_register_admin_service(
-        hass,
-        DOMAIN,
-        SERVICE_RELOAD,
-        reload_service_handler,
-        schema=RELOAD_SERVICE_SCHEMA,
-    )
+    async_setup_services(hass)
 
     if component.get_entity("zone.home"):
         return True
@@ -383,8 +477,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         await home_zone.async_update_config(_home_conf(hass))
 
     hass.bus.async_listen(EVENT_CORE_CONFIG_UPDATE, core_config_updated)
-
-    hass.data[DATA_ZONE_STORAGE_COLLECTION] = storage_collection
 
     return True
 
@@ -404,26 +496,23 @@ def _home_conf(hass: HomeAssistant) -> dict:
 
 async def async_setup_entry(
     hass: HomeAssistant, config_entry: config_entries.ConfigEntry
-) -> bool:
+) -> None:
     """Set up zone as config entry."""
     data = dict(config_entry.data)
     data.setdefault(CONF_PASSIVE, DEFAULT_PASSIVE)
     data.setdefault(CONF_RADIUS, DEFAULT_RADIUS)
 
-    await hass.data[DATA_ZONE_STORAGE_COLLECTION].async_create_item(data)
+    await hass.data[DATA_ZONE].storage_collection.async_create_item(data)
 
     hass.async_create_task(
         hass.config_entries.async_remove(config_entry.entry_id), eager_start=True
     )
 
-    return True
-
 
 async def async_unload_entry(
     hass: HomeAssistant, config_entry: config_entries.ConfigEntry
-) -> bool:
+) -> None:
     """Will be called once we remove it."""
-    return True
 
 
 class Zone(collection.CollectionEntity):
@@ -562,9 +651,7 @@ class Zone(collection.CollectionEntity):
     def _state_is_in_zone(self, state: State | None) -> bool:
         """Return if given state is in zone."""
 
-        from homeassistant.components.device_tracker import (  # noqa: PLC0415
-            ATTR_IN_ZONES,
-        )
+        from homeassistant.components.device_tracker import ATTR_IN_ZONES  # noqa: PLC0415
 
         return (
             state is not None

@@ -4,6 +4,7 @@ from datetime import timedelta
 from unittest.mock import MagicMock, PropertyMock
 
 from freezegun.api import FrozenDateTimeFactory
+from pytest_homeassistant.common import async_fire_time_changed
 
 from homeassistant.components.binary_sensor import BinarySensorDeviceClass
 from homeassistant.components.zoneminder.const import DOMAIN
@@ -12,8 +13,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from .conftest import MOCK_HOST, MOCK_HOST_2
-
-from tests.common import async_fire_time_changed
 
 # The entity_id uses the hostname with dots replaced by underscores
 ENTITY_ID = f"binary_sensor.{MOCK_HOST.replace('.', '_')}"

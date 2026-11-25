@@ -2,6 +2,7 @@
 # name: test_attributes_set
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'speaker',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'player-name1111',
       <MediaPlayerEntityStateAttribute.GROUP_MEMBERS: 'group_members'>: None,
       <MediaPlayerEntityStateAttribute.MEDIA_VOLUME_MUTED: 'is_volume_muted'>: False,

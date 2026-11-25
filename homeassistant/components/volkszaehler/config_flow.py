@@ -12,7 +12,6 @@ from volkszaehler.exceptions import (
 )
 
 from homeassistant.config_entries import (
-    ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
     ConfigSubentry,
@@ -24,19 +23,34 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import DEFAULT_PORT, DOMAIN, SUBENTRY_TYPE_CHANNEL
+from . import VolkszaehlerConfigEntry
+from .const import (
+    CONF_MIDDLEWARE,
+    DEFAULT_MIDDLEWARE,
+    DEFAULT_PORT,
+    DOMAIN,
+    SUBENTRY_TYPE_CHANNEL,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
 STEP_USER_DATA_SCHEMA = probatio.Schema(
     {
         probatio.Required(CONF_HOST): cv.string,
-        probatio.Required(CONF_PORT, default=DEFAULT_PORT): cv.port,
+        probatio.Required(CONF_PORT, default=DEFAULT_PORT): probatio.Port(),
         probatio.Required(CONF_UUID): cv.string,
+        probatio.Required(CONF_MIDDLEWARE, default=DEFAULT_MIDDLEWARE): bool,
     }
 )
 
 STEP_SUBENTRY_DATA_SCHEMA = probatio.Schema({probatio.Required(CONF_UUID): cv.string})
+RECONFIGURE_SCHEMA = probatio.Schema(
+    {
+        probatio.Required(CONF_HOST): cv.string,
+        probatio.Required(CONF_PORT, default=DEFAULT_PORT): probatio.Port(),
+        probatio.Required(CONF_MIDDLEWARE, default=DEFAULT_MIDDLEWARE): bool,
+    }
+)
 
 
 async def _validate_input(hass: HomeAssistant, data: dict[str, Any]) -> None:
@@ -46,6 +60,7 @@ async def _validate_input(hass: HomeAssistant, data: dict[str, Any]) -> None:
         uuid=data[CONF_UUID],
         host=data[CONF_HOST],
         port=data[CONF_PORT],
+        middleware=data.get(CONF_MIDDLEWARE, DEFAULT_MIDDLEWARE),
     )
     await api.get_data()
 
@@ -84,7 +99,7 @@ class VolkszaehlerConfigFlow(ConfigFlow, domain=DOMAIN):
     @callback
     @override
     def async_get_supported_subentry_types(
-        cls, config_entry: ConfigEntry
+        cls, config_entry: VolkszaehlerConfigEntry
     ) -> dict[str, type[ConfigSubentryFlow]]:
         """Return subentries supported by this handler."""
         return {SUBENTRY_TYPE_CHANNEL: VolkszaehlerSubentryFlow}
@@ -122,6 +137,55 @@ class VolkszaehlerConfigFlow(ConfigFlow, domain=DOMAIN):
             subentries=[channel_subentry.as_dict()],
         )
 
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle reconfiguration of an existing entry."""
+        entry = self._get_reconfigure_entry()
+
+        if user_input is not None:
+            self._async_abort_entries_match(
+                {CONF_HOST: user_input[CONF_HOST], CONF_PORT: user_input[CONF_PORT]}
+            )
+            for subentry in entry.get_subentries_of_type(SUBENTRY_TYPE_CHANNEL):
+                if error := await _async_validate_input_errors(
+                    self.hass,
+                    {
+                        CONF_HOST: user_input[CONF_HOST],
+                        CONF_PORT: user_input[CONF_PORT],
+                        CONF_UUID: subentry.data[CONF_UUID],
+                        CONF_MIDDLEWARE: user_input[CONF_MIDDLEWARE],
+                    },
+                ):
+                    return self.async_show_form(
+                        step_id="reconfigure",
+                        data_schema=self.add_suggested_values_to_schema(
+                            RECONFIGURE_SCHEMA, user_input
+                        ),
+                        errors={"base": error},
+                    )
+
+            return self.async_update_reload_and_abort(
+                entry,
+                data_updates=user_input,
+                title=user_input[CONF_HOST],
+                reason="reconfigure_successful",
+            )
+
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=self.add_suggested_values_to_schema(
+                RECONFIGURE_SCHEMA,
+                {
+                    CONF_HOST: entry.data[CONF_HOST],
+                    CONF_PORT: entry.data.get(CONF_PORT, DEFAULT_PORT),
+                    CONF_MIDDLEWARE: entry.data.get(
+                        CONF_MIDDLEWARE, DEFAULT_MIDDLEWARE
+                    ),
+                },
+            ),
+        )
+
     @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -145,6 +209,7 @@ class VolkszaehlerConfigFlow(ConfigFlow, domain=DOMAIN):
                     data={
                         CONF_HOST: user_input[CONF_HOST],
                         CONF_PORT: user_input[CONF_PORT],
+                        CONF_MIDDLEWARE: user_input[CONF_MIDDLEWARE],
                     },
                     subentries=[
                         {
@@ -187,6 +252,9 @@ class VolkszaehlerSubentryFlow(ConfigSubentryFlow):
                     CONF_HOST: entry.data[CONF_HOST],
                     CONF_PORT: entry.data[CONF_PORT],
                     CONF_UUID: user_input[CONF_UUID],
+                    CONF_MIDDLEWARE: entry.data.get(
+                        CONF_MIDDLEWARE, DEFAULT_MIDDLEWARE
+                    ),
                 },
             ):
                 errors["base"] = error

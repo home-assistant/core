@@ -26,7 +26,6 @@ from nio.responses import (
 from PIL import Image
 import probatio
 
-from homeassistant.components.notify import ATTR_DATA, ATTR_MESSAGE, ATTR_TARGET
 from homeassistant.const import (
     CONF_NAME,
     CONF_PASSWORD,
@@ -36,7 +35,7 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP,
 )
 from homeassistant.core import Event as HassEvent, HomeAssistant, ServiceCall
-from homeassistant.exceptions import ConfigEntryAuthFailed, HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.json import save_json
 from homeassistant.helpers.typing import ConfigType
@@ -45,13 +44,11 @@ from homeassistant.util.json import JsonObjectType, load_json_object
 from .const import (
     ATTR_FORMAT,
     ATTR_IMAGES,
-    ATTR_MESSAGE_ID,
-    ATTR_REACTION,
-    ATTR_ROOM,
     ATTR_THREAD_ID,
     CONF_ROOMS_REGEX,
     DOMAIN,
     FORMAT_HTML,
+    MatrixServiceArgument,
 )
 from .services import async_setup_services
 
@@ -99,11 +96,11 @@ COMMAND_SCHEMA = probatio.All(
             probatio.Exclusive(CONF_REACTION, "trigger"): cv.string,
             probatio.Required(CONF_NAME): cv.string,
             probatio.Optional(CONF_ROOMS): probatio.All(
-                cv.ensure_list, [cv.matches_regex(CONF_ROOMS_REGEX)]
+                probatio.EnsureList(), [cv.matches_regex(CONF_ROOMS_REGEX)]
             ),
         }
     ),
-    cv.has_at_least_one_key(CONF_WORD, CONF_EXPRESSION, CONF_REACTION),
+    probatio.AtLeastOne(CONF_WORD, CONF_EXPRESSION, CONF_REACTION),
 )
 
 CONFIG_SCHEMA = probatio.Schema(
@@ -113,9 +110,9 @@ CONFIG_SCHEMA = probatio.Schema(
                 probatio.Required(CONF_HOMESERVER): cv.url,
                 probatio.Optional(CONF_VERIFY_SSL, default=True): cv.boolean,
                 probatio.Required(CONF_USERNAME): cv.matches_regex(CONF_USERNAME_REGEX),
-                probatio.Required(CONF_PASSWORD): cv.string,
+                probatio.Required(probatio.Secret(CONF_PASSWORD)): cv.string,
                 probatio.Optional(CONF_ROOMS, default=[]): probatio.All(
-                    cv.ensure_list, [cv.matches_regex(CONF_ROOMS_REGEX)]
+                    probatio.EnsureList(), [cv.matches_regex(CONF_ROOMS_REGEX)]
                 ),
                 probatio.Optional(CONF_COMMANDS, default=[]): [COMMAND_SCHEMA],
             }
@@ -198,7 +195,8 @@ class MatrixBot:
         async def handle_startup(event: HassEvent) -> None:
             """Run once when Home Assistant finished startup."""
             self._access_tokens = await self._get_auth_tokens()
-            await self._login()
+            if not await self._login():
+                return
             await self._resolve_room_aliases(listening_rooms)
             self._load_commands(commands)
             await self._join_rooms()
@@ -413,12 +411,11 @@ class MatrixBot:
             True,  # private=True
         )
 
-    async def _login(self) -> None:
-        """Log in to the Matrix homeserver.
+    async def _login(self) -> bool:
+        """Log in to the Matrix homeserver and return if it succeeded.
 
         Attempts to use the stored access token.
         If that fails, then tries using the password.
-        If that also fails, raises LocalProtocolError.
         """
 
         # If we have an access token
@@ -460,11 +457,11 @@ class MatrixBot:
                 )
 
         if not self._client.logged_in:
-            raise ConfigEntryAuthFailed(
-                "Login failed, both token and username/password are invalid"
-            )
+            _LOGGER.error("Login failed, both token and username/password are invalid")
+            return False
 
         await self._store_auth_token(self._client.access_token)
+        return True
 
     async def _handle_room_send(
         self, target_room: RoomAnyID, message_type: str, content: dict
@@ -613,15 +610,15 @@ class MatrixBot:
     async def handle_send_message(self, service: ServiceCall) -> None:
         """Handle the send_message service."""
         await self._send_message(
-            service.data[ATTR_MESSAGE],
-            service.data[ATTR_TARGET],
-            service.data.get(ATTR_DATA),
+            service.data[MatrixServiceArgument.MESSAGE],
+            service.data[MatrixServiceArgument.TARGET],
+            service.data.get(MatrixServiceArgument.DATA),
         )
 
     async def handle_send_reaction(self, service: ServiceCall) -> None:
         """Handle the react service."""
         await self._send_reaction(
-            service.data[ATTR_REACTION],
-            service.data[ATTR_ROOM],
-            service.data[ATTR_MESSAGE_ID],
+            service.data[MatrixServiceArgument.REACTION],
+            service.data[MatrixServiceArgument.ROOM],
+            service.data[MatrixServiceArgument.MESSAGE_ID],
         )

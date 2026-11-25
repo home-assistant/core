@@ -9,25 +9,23 @@ from typing import Any
 from freezegun import freeze_time
 import probatio
 import pytest
+from pytest_homeassistant.common import MockUser, async_fire_time_changed
+from pytest_homeassistant.typing import ClientSessionGenerator, WebSocketGenerator
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.calendar import (
-    CREATE_EVENT_SERVICE,
     DOMAIN,
-    SERVICE_GET_EVENTS,
     CalendarEntity,
     CalendarEntityDescription,
+    CalendarService,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceNotSupported
 from homeassistant.helpers import entity_registry as er
-from homeassistant.helpers.typing import UNDEFINED
+from homeassistant.helpers.typing import Undefined
 from homeassistant.util import dt as dt_util
 
 from .conftest import MockCalendarEntity, MockConfigEntry
-
-from tests.common import MockUser, async_fire_time_changed
-from tests.typing import ClientSessionGenerator, WebSocketGenerator
 
 
 @pytest.fixture(name="frozen_time")
@@ -233,7 +231,7 @@ async def test_unsupported_create_event_service(hass: HomeAssistant) -> None:
     ):
         await hass.services.async_call(
             DOMAIN,
-            CREATE_EVENT_SERVICE,
+            CalendarService.CREATE_EVENT,
             {
                 "start_date_time": "1997-07-14T17:00:00+00:00",
                 "end_date_time": "1997-07-15T04:00:00+00:00",
@@ -250,7 +248,7 @@ async def test_unsupported_create_event_service(hass: HomeAssistant) -> None:
         (
             {},
             probatio.error.MultipleInvalid,
-            "must contain at least one of start_date, start_date_time, in",
+            "at least one of ['start_date', 'start_date_time', 'in'] is required",
         ),
         (
             {
@@ -264,7 +262,7 @@ async def test_unsupported_create_event_service(hass: HomeAssistant) -> None:
                 "end_date": "2022-04-02",
             },
             probatio.error.MultipleInvalid,
-            "must contain at least one of start_date, start_date_time, in.",
+            "at least one of ['start_date', 'start_date_time', 'in'] is required",
         ),
         (
             {
@@ -278,7 +276,7 @@ async def test_unsupported_create_event_service(hass: HomeAssistant) -> None:
                 "end_date_time": "2022-04-02T07:00:00",
             },
             probatio.error.MultipleInvalid,
-            "must contain at least one of start_date, start_date_time, in.",
+            "at least one of ['start_date', 'start_date_time', 'in'] is required",
         ),
         (
             {
@@ -287,7 +285,7 @@ async def test_unsupported_create_event_service(hass: HomeAssistant) -> None:
                 "end_date_time": "2022-04-02T07:00:00",
             },
             probatio.error.MultipleInvalid,
-            "must contain at most one of start_date, start_date_time, in.",
+            "at most one of ['start_date', 'start_date_time', 'in'] is allowed",
         ),
         (
             {
@@ -333,7 +331,7 @@ async def test_unsupported_create_event_service(hass: HomeAssistant) -> None:
                 },
             },
             probatio.error.MultipleInvalid,
-            "must contain at most one of start_date, start_date_time, in.",
+            "at most one of ['start_date', 'start_date_time', 'in'] is allowed",
         ),
         (
             {
@@ -344,7 +342,7 @@ async def test_unsupported_create_event_service(hass: HomeAssistant) -> None:
                 },
             },
             probatio.error.MultipleInvalid,
-            "must contain at most one of start_date, start_date_time, in.",
+            "at most one of ['start_date', 'start_date_time', 'in'] is allowed",
         ),
         (
             {
@@ -406,10 +404,10 @@ async def test_create_event_service_invalid_params(
 ) -> None:
     """Test creating an event using the create_event service."""
 
-    with pytest.raises(expected_error, match=error_match):
+    with pytest.raises(expected_error, match=re.escape(error_match)):
         await hass.services.async_call(
             DOMAIN,
-            CREATE_EVENT_SERVICE,
+            CalendarService.CREATE_EVENT,
             {
                 "summary": "Bastille Day Party",
                 **date_fields,
@@ -426,7 +424,7 @@ async def test_create_event_service_invalid_params(
     ("service", "expected"),
     [
         (
-            SERVICE_GET_EVENTS,
+            CalendarService.GET_EVENTS,
             {
                 "calendar.calendar_1": {
                     "events": [
@@ -482,7 +480,7 @@ async def test_list_events_service(
 @pytest.mark.parametrize(
     ("service"),
     [
-        SERVICE_GET_EVENTS,
+        CalendarService.GET_EVENTS,
     ],
 )
 @pytest.mark.parametrize(
@@ -523,7 +521,7 @@ async def test_list_events_positive_duration(hass: HomeAssistant) -> None:
     with pytest.raises(probatio.Invalid, match="should be positive"):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_GET_EVENTS,
+            CalendarService.GET_EVENTS,
             {
                 "entity_id": "calendar.calendar_1",
                 "duration": "-01:00:00",
@@ -540,7 +538,7 @@ async def test_list_events_exclusive_fields(hass: HomeAssistant) -> None:
     with pytest.raises(probatio.Invalid, match="at most one of"):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_GET_EVENTS,
+            CalendarService.GET_EVENTS,
             {
                 "entity_id": "calendar.calendar_1",
                 "end_date_time": end,
@@ -556,7 +554,7 @@ async def test_list_events_missing_fields(hass: HomeAssistant) -> None:
     with pytest.raises(probatio.Invalid, match="at least one of"):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_GET_EVENTS,
+            CalendarService.GET_EVENTS,
             {
                 "entity_id": "calendar.calendar_1",
             },
@@ -611,7 +609,7 @@ async def test_list_events_service_same_dates(
     with pytest.raises(probatio.error.MultipleInvalid, match=re.escape(error_msg)):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_GET_EVENTS,
+            CalendarService.GET_EVENTS,
             service_data={
                 "entity_id": "calendar.calendar_1",
                 **service_data,
@@ -676,13 +674,13 @@ async def test_calendar_initial_color_none(
     ("description_color", "attr_color", "expected_color"),
     [
         # no description and no attr_initial_color
-        (UNDEFINED, UNDEFINED, None),
+        (Undefined, Undefined, None),
         # no description and attr_initial_color "A"
-        (UNDEFINED, "#AAAAAA", "#AAAAAA"),
+        (Undefined, "#AAAAAA", "#AAAAAA"),
         # no description and attr_initial_color None
-        (UNDEFINED, None, None),
+        (Undefined, None, None),
         # description setting the color "B", and no attr_initial_color
-        ("#BBBBBB", UNDEFINED, "#BBBBBB"),
+        ("#BBBBBB", Undefined, "#BBBBBB"),
         # description setting the color "B", but overridden by attr_initial_color "A"
         ("#BBBBBB", "#AAAAAA", "#AAAAAA"),
         # description setting the color "B", but overridden by attr_initial_color None
@@ -710,15 +708,15 @@ async def test_calendar_initial_color_precedence(
             self._attr_name = "Test"
             self._attr_unique_id = "test_precedence"
 
-            # Only set entity_description if description_color is not UNDEFINED
-            if description_color is not UNDEFINED:
+            # Only set entity_description if description_color is not Undefined
+            if description_color is not Undefined:
                 self.entity_description = CalendarEntityDescription(
                     key="test",
                     initial_color=description_color,
                 )
 
-            # Only set _attr_initial_color if attr_color is not UNDEFINED
-            if attr_color is not UNDEFINED:
+            # Only set _attr_initial_color if attr_color is not Undefined
+            if attr_color is not Undefined:
                 self._attr_initial_color = attr_color
 
     entity = TestCalendarEntity(description_color, attr_color)
@@ -759,6 +757,42 @@ async def test_websocket_handle_subscribe_calendar_events(
     assert events[0]["uid"] == "calendar-event-uid-1"
     assert events[0]["rrule"] == "FREQ=WEEKLY;COUNT=3"
     assert events[0]["recurrence_id"] == "20260415"
+
+
+async def test_websocket_subscribers_share_one_fetch(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    test_entities: list[MockCalendarEntity],
+) -> None:
+    """Test subscribers watching the same range share a single event fetch."""
+    entity = test_entities[0]
+    start = dt_util.now()
+    end = start + timedelta(days=1)
+
+    for _ in range(3):
+        client = await hass_ws_client(hass)
+        await client.send_json_auto_id(
+            {
+                "type": "calendar/event/subscribe",
+                "entity_id": "calendar.calendar_1",
+                "start": start.isoformat(),
+                "end": end.isoformat(),
+            }
+        )
+        assert (await client.receive_json())["success"]
+        assert (await client.receive_json())["type"] == "event"
+
+    entity.async_get_events.reset_mock()
+
+    entity.create_event(
+        start=start + timedelta(hours=2),
+        end=start + timedelta(hours=3),
+        summary="New Event",
+    )
+    entity.async_write_ha_state()
+    await hass.async_block_till_done()
+
+    assert entity.async_get_events.call_count == 1
 
 
 async def test_websocket_subscribe_updates_on_state_change(

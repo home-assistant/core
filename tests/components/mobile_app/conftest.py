@@ -5,6 +5,7 @@ from typing import Any
 
 from aiohttp.test_utils import TestClient
 import pytest
+from pytest_homeassistant.typing import ClientSessionGenerator
 
 from homeassistant.components.mobile_app.const import DOMAIN
 from homeassistant.core import HomeAssistant
@@ -12,7 +13,7 @@ from homeassistant.setup import async_setup_component
 
 from .const import REGISTER, REGISTER_CLEARTEXT
 
-from tests.typing import ClientSessionGenerator
+from tests.components.zone.common import improved_presence_detection  # noqa: F401
 
 
 @pytest.fixture

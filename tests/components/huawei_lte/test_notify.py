@@ -4,6 +4,7 @@ from unittest.mock import MagicMock, patch
 
 from huawei_lte_api.exceptions import ResponseErrorException
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.huawei_lte.const import (
     DEFAULT_NOTIFY_SERVICE_NAME,
@@ -19,8 +20,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 
 from . import magic_client
-
-from tests.common import MockConfigEntry
 
 MOCK_CONF_URL = "http://huawei-lte.example.com"
 

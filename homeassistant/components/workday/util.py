@@ -1,21 +1,26 @@
 """Helpers functions for the Workday component."""
 
+from collections.abc import Mapping
 from datetime import date, timedelta
 from functools import partial
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from holidays import PUBLIC, DateLike, HolidayBase, country_holidays
 
-from homeassistant.const import CONF_COUNTRY
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryError
-from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
+from homeassistant.helpers.issue_registry import (
+    IssueSeverity,
+    async_create_issue,
+    async_delete_issue,
+)
 from homeassistant.setup import SetupPhases, async_pause_setup
 from homeassistant.util import dt as dt_util, slugify
 
+from .const import COUNTRY_OPTIONS, DOMAIN, LOGGER
+
 if TYPE_CHECKING:
     from . import WorkdayConfigEntry
-from .const import CONF_REMOVE_HOLIDAYS, DOMAIN, LOGGER
 
 
 async def async_validate_country_and_province(
@@ -25,8 +30,12 @@ async def async_validate_country_and_province(
     province: str | None,
 ) -> None:
     """Validate country and province."""
+    bad_country_issue_id = f"bad_country-{entry.entry_id}"
+    bad_province_issue_id = f"bad_province-{entry.entry_id}"
 
     if not country:
+        async_delete_issue(hass, DOMAIN, bad_country_issue_id)
+        async_delete_issue(hass, DOMAIN, bad_province_issue_id)
         return
     try:
         with async_pause_setup(hass, SetupPhases.WAIT_IMPORT_PACKAGES):
@@ -38,7 +47,8 @@ async def async_validate_country_and_province(
         async_create_issue(
             hass,
             DOMAIN,
-            "bad_country",
+            bad_country_issue_id,
+            config_entry_id=entry.entry_id,
             is_fixable=True,
             is_persistent=False,
             severity=IssueSeverity.ERROR,
@@ -47,8 +57,10 @@ async def async_validate_country_and_province(
             data={"entry_id": entry.entry_id, "country": None},
         )
         raise ConfigEntryError(f"Selected country {country} is not valid") from ex
+    async_delete_issue(hass, DOMAIN, bad_country_issue_id)
 
     if not province:
+        async_delete_issue(hass, DOMAIN, bad_province_issue_id)
         return
     try:
         with async_pause_setup(hass, SetupPhases.WAIT_IMPORT_PACKAGES):
@@ -62,13 +74,14 @@ async def async_validate_country_and_province(
         async_create_issue(
             hass,
             DOMAIN,
-            "bad_province",
+            bad_province_issue_id,
+            config_entry_id=entry.entry_id,
             is_fixable=True,
             is_persistent=False,
             severity=IssueSeverity.ERROR,
             translation_key="bad_province",
             translation_placeholders={
-                CONF_COUNTRY: country,
+                "country": country,
                 "title": entry.title,
             },
             data={"entry_id": entry.entry_id, "country": country},
@@ -76,6 +89,7 @@ async def async_validate_country_and_province(
         raise ConfigEntryError(
             f"Selected province {province} for country {country} is not valid"
         ) from ex
+    async_delete_issue(hass, DOMAIN, bad_province_issue_id)
 
 
 def validate_dates(holiday_list: list[str]) -> list[str]:
@@ -98,84 +112,55 @@ def validate_dates(holiday_list: list[str]) -> list[str]:
     return calc_holidays
 
 
+def _get_language(entity: HolidayBase, language: str | None) -> str | None:
+    """Return the supported language that is closest to the requested language."""
+    if not (default_language := entity.default_language):
+        return language
+    if not language:
+        return default_language
+    supported_languages = entity.supported_languages
+    if language in supported_languages:
+        return language
+    if language.startswith("en"):
+        if default_language.startswith("en"):
+            return default_language
+        for supported_language in supported_languages:
+            if supported_language.startswith("en"):
+                return supported_language
+    return default_language
+
+
 def get_holidays_object(
     country: str | None,
     province: str | None,
     year: int,
     language: str | None,
     categories: list[str] | None,
+    options: Mapping[str, Any],
 ) -> HolidayBase:
     """Get the object for the requested country and year."""
     if not country:
         return HolidayBase()
 
-    set_categories = None
-    if categories:
-        category_list = [PUBLIC]
-        category_list.extend(categories)
-        set_categories = tuple(category_list)
+    # Without years, no holidays are calculated, but the metadata is available
+    entity = country_holidays(country)
+    if (holidays_language := _get_language(entity, language)) != language:
+        LOGGER.debug("Changing language from %s to %s", language, holidays_language)
 
-    obj_holidays: HolidayBase = country_holidays(
+    # A repair can change the country, and the library raises on unsupported options
+    supported_options = entity.get_supported_options()
+    return country_holidays(
         country,
         subdiv=province,
         years=[year, year + 1],
-        language=language,
-        categories=set_categories,
+        language=holidays_language,
+        categories=(PUBLIC, *categories) if categories else None,
+        **{
+            option: options[option]
+            for option in COUNTRY_OPTIONS
+            if option in options and option in supported_options
+        },
     )
-
-    supported_languages = obj_holidays.supported_languages
-    default_language = obj_holidays.default_language
-
-    if default_language and not language:
-        # If no language is set, use the default language
-        LOGGER.debug("Changing language from None to %s", default_language)
-        return country_holidays(  # Return default if no language
-            country,
-            subdiv=province,
-            years=year,
-            language=default_language,
-            categories=set_categories,
-        )
-
-    if (
-        default_language
-        and language
-        and language not in supported_languages
-        and language.startswith("en")
-    ):
-        # If language does not match supported languages, use the first English variant
-        if default_language.startswith("en"):
-            LOGGER.debug("Changing language from %s to %s", language, default_language)
-            return country_holidays(  # Return default English if default language
-                country,
-                subdiv=province,
-                years=year,
-                language=default_language,
-                categories=set_categories,
-            )
-        for lang in supported_languages:
-            if lang.startswith("en"):
-                LOGGER.debug("Changing language from %s to %s", language, lang)
-                return country_holidays(
-                    country,
-                    subdiv=province,
-                    years=year,
-                    language=lang,
-                    categories=set_categories,
-                )
-
-    if default_language and language and language not in supported_languages:
-        # If language does not match supported languages, use the default language
-        LOGGER.debug("Changing language from %s to %s", language, default_language)
-        return country_holidays(  # Return default English if default language
-            country,
-            subdiv=province,
-            years=year,
-            language=default_language,
-            categories=set_categories,
-        )
-
-    return obj_holidays
 
 
 def add_remove_custom_holidays(
@@ -217,14 +202,15 @@ def add_remove_custom_holidays(
                         hass,
                         DOMAIN,
                         f"bad_date_holiday-{entry.entry_id}-{slugify(remove_holiday)}",
+                        config_entry_id=entry.entry_id,
                         is_fixable=True,
                         is_persistent=False,
                         severity=IssueSeverity.WARNING,
                         translation_key="bad_date_holiday",
                         translation_placeholders={
-                            CONF_COUNTRY: country or "-",
+                            "country": country or "-",
                             "title": entry.title,
-                            CONF_REMOVE_HOLIDAYS: remove_holiday,
+                            "remove_holidays": remove_holiday,
                         },
                         data={
                             "entry_id": entry.entry_id,
@@ -237,14 +223,15 @@ def add_remove_custom_holidays(
                     hass,
                     DOMAIN,
                     f"bad_named_holiday-{entry.entry_id}-{slugify(remove_holiday)}",
+                    config_entry_id=entry.entry_id,
                     is_fixable=True,
                     is_persistent=False,
                     severity=IssueSeverity.WARNING,
                     translation_key="bad_named_holiday",
                     translation_placeholders={
-                        CONF_COUNTRY: country or "-",
+                        "country": country or "-",
                         "title": entry.title,
-                        CONF_REMOVE_HOLIDAYS: remove_holiday,
+                        "remove_holidays": remove_holiday,
                     },
                     data={
                         "entry_id": entry.entry_id,

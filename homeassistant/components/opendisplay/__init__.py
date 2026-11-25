@@ -10,9 +10,11 @@ from opendisplay import (
     AuthenticationRequiredError,
     BLEConnectionError,
     BLETimeoutError,
+    ColorScheme,
     GlobalConfig,
-    OpenDisplayDevice,
     OpenDisplayError,
+    Sec2KeyRequiredError,
+    connect,
 )
 
 from homeassistant.components.bluetooth import (
@@ -23,17 +25,21 @@ from homeassistant.components.bluetooth import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.exceptions import (
+    ConfigEntryAuthFailed,
+    ConfigEntryError,
+    ConfigEntryNotReady,
+)
 from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.device_registry import CONNECTION_BLUETOOTH
 from homeassistant.helpers.typing import ConfigType
 
-if TYPE_CHECKING:
-    from opendisplay.models import FirmwareVersion
-
 from .const import CONF_ENCRYPTION_KEY, DOMAIN
 from .coordinator import OpenDisplayCoordinator
 from .services import async_setup_services
+
+if TYPE_CHECKING:
+    from opendisplay.models import FirmwareVersion
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
@@ -80,7 +86,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: OpenDisplayConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: OpenDisplayConfigEntry) -> None:
     """Set up OpenDisplay from a config entry."""
     address = entry.unique_id
     if TYPE_CHECKING:
@@ -103,12 +109,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: OpenDisplayConfigEntry) 
     encryption_key = _get_encryption_key(entry)
 
     try:
-        async with OpenDisplayDevice(
-            mac_address=address, ble_device=ble_device, encryption_key=encryption_key
+        async with connect(
+            address=address, ble_device=ble_device, encryption_key=encryption_key
         ) as device:
-            fw = await device.read_firmware_version()
-            is_flex = device.is_flex
-    except (AuthenticationFailedError, AuthenticationRequiredError) as err:
+            fw = device.profile.firmware
+            is_flex = device.legacy.is_flex
+            device_config = device.config.cached
+    except (
+        AuthenticationFailedError,
+        AuthenticationRequiredError,
+        Sec2KeyRequiredError,
+    ) as err:
         raise ConfigEntryAuthFailed(
             translation_domain=DOMAIN,
             translation_key="authentication_error",
@@ -118,9 +129,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: OpenDisplayConfigEntry) 
             translation_domain=DOMAIN,
             translation_key="setup_connection_error",
         ) from err
-    device_config = device.config
-    if TYPE_CHECKING:
-        assert device_config is not None
+    if device_config is None or not device_config.displays:
+        raise ConfigEntryError(
+            translation_domain=DOMAIN,
+            translation_key="device_not_configured",
+        )
 
     coordinator = OpenDisplayCoordinator(hass, address)
 
@@ -128,9 +141,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: OpenDisplayConfigEntry) 
     display = device_config.displays[0]
     color_scheme_enum = display.color_scheme_enum
     color_scheme = (
-        str(color_scheme_enum)
-        if isinstance(color_scheme_enum, int)
-        else color_scheme_enum.name
+        color_scheme_enum.name
+        if isinstance(color_scheme_enum, ColorScheme)
+        else str(color_scheme_enum)
     )
     size = (
         f'{display.screen_diagonal_inches:.1f}"'
@@ -166,18 +179,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: OpenDisplayConfigEntry) 
     )
     entry.async_on_unload(coordinator.async_start())
 
-    return True
-
 
 async def async_unload_entry(
     hass: HomeAssistant, entry: OpenDisplayConfigEntry
-) -> bool:
+) -> None:
     """Unload a config entry."""
     if (task := entry.runtime_data.upload_task) and not task.done():
         task.cancel()
         with contextlib.suppress(asyncio.CancelledError):
             await task
 
-    return await hass.config_entries.async_unload_platforms(
+    await hass.config_entries.async_unload_platforms_or_raise(
         entry, FLEX_PLATFORMS if entry.runtime_data.is_flex else BASE_PLATFORMS
     )

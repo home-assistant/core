@@ -2,6 +2,8 @@
 
 import attr
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.typing import WebSocketGenerator
 from pytest_unordered import unordered
 
 from homeassistant.components.search import DOMAIN, ItemType, Searcher
@@ -15,9 +17,6 @@ from homeassistant.helpers import (
 )
 from homeassistant.helpers.entity import EntityInfo
 from homeassistant.setup import async_setup_component
-
-from tests.common import MockConfigEntry
-from tests.typing import WebSocketGenerator
 
 
 async def test_search(
@@ -108,6 +107,7 @@ async def test_search(
         suggested_object_id="wled segment 2",
         config_entry=wled_config_entry,
         device_id=wled_device.id,
+        original_name="Segment 2",
     )
     entity_registry.async_update_entity(
         wled_segment_2_entity.entity_id, area_id=bedroom_area.id
@@ -1110,6 +1110,101 @@ async def test_search(
             ["scene.scene_hue_seg_1", scene_wled_hue_entity.entity_id]
         ),
         ItemType.SCRIPT: unordered(["script.device", "script.hue"]),
+    }
+
+
+async def test_search_script_reference_cycle(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
+    """Test search follows scripts that reference each other only once."""
+    assert await async_setup_component(hass, DOMAIN, {})
+    assert await async_setup_component(
+        hass,
+        "script",
+        {
+            "script": {
+                "script_a": {
+                    "sequence": [
+                        {
+                            "condition": "state",
+                            "entity_id": "script.script_b",
+                            "state": "on",
+                        },
+                        {"action": "light.turn_on", "entity_id": "light.kitchen"},
+                    ]
+                },
+                "script_b": {
+                    "sequence": [
+                        {
+                            "condition": "state",
+                            "entity_id": "script.script_a",
+                            "state": "on",
+                        },
+                        {"action": "light.turn_on", "entity_id": "light.hallway"},
+                    ]
+                },
+            }
+        },
+    )
+    assert await async_setup_component(
+        hass,
+        "automation",
+        {
+            "automation": {
+                "id": "calls_script_a",
+                "alias": "Calls script A",
+                "triggers": {"trigger": "event", "event_type": "test_event"},
+                "actions": {
+                    "action": "script.turn_on",
+                    "target": {"entity_id": "script.script_a"},
+                },
+            }
+        },
+    )
+
+    client = await hass_ws_client(hass)
+    await client.send_json(
+        {
+            "id": 1,
+            "type": "search/related",
+            "item_type": "script",
+            "item_id": "script.script_a",
+        }
+    )
+    response = await client.receive_json()
+    assert response["success"]
+    assert response["result"] == {
+        ItemType.ENTITY: unordered(
+            [
+                "light.hallway",
+                "light.kitchen",
+                "script.script_a",
+                "script.script_b",
+            ]
+        ),
+        ItemType.SCRIPT: ["script.script_b"],
+    }
+
+    await client.send_json(
+        {
+            "id": 2,
+            "type": "search/related",
+            "item_type": "automation",
+            "item_id": "automation.calls_script_a",
+        }
+    )
+    response = await client.receive_json()
+    assert response["success"]
+    assert response["result"] == {
+        ItemType.ENTITY: unordered(
+            [
+                "light.hallway",
+                "light.kitchen",
+                "script.script_a",
+                "script.script_b",
+            ]
+        ),
+        ItemType.SCRIPT: unordered(["script.script_a", "script.script_b"]),
     }
 
 

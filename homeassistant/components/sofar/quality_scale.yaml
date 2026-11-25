@@ -40,7 +40,7 @@ rules:
   parallel-updates: done
   reauthentication-flow:
     status: exempt
-    comment: Local Modbus TCP; there is no authentication that can expire or be invalidated.
+    comment: A local Modbus link has no authentication that can expire or be invalidated.
   test-coverage: done
 
   # Gold
@@ -48,10 +48,10 @@ rules:
   diagnostics: done
   discovery-update-info:
     status: exempt
-    comment: Modbus TCP gateways have no discovery protocol to update network info from.
+    comment: Modbus devices have no discovery protocol to update connection info from.
   discovery:
     status: exempt
-    comment: Modbus TCP gateways are not announced over any discoverable protocol.
+    comment: Modbus devices are not announced over any discoverable protocol.
   docs-data-update: done
   docs-examples: done
   docs-known-limitations: done
@@ -76,5 +76,5 @@ rules:
   async-dependency: done
   inject-websession:
     status: exempt
-    comment: This integration communicates over Modbus TCP, not HTTP.
+    comment: This integration communicates over Modbus, not HTTP.
   strict-typing: done

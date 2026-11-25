@@ -5,12 +5,11 @@ from unittest.mock import MagicMock
 from nexblue_api import NexBlueAuthError, NexBlueConnectionError
 from nexblue_api.models import TokenBundle
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.nexblue.const import CONF_REFRESH_TOKEN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry
 
 
 async def test_setup_entry(
@@ -20,7 +19,7 @@ async def test_setup_entry(
 ) -> None:
     """Test a config entry sets up coordinator and sensors."""
     assert init_integration.state is ConfigEntryState.LOADED
-    mock_client.async_ensure_access_token.assert_awaited_once()
+    assert mock_client.async_ensure_access_token.await_count == 2
     mock_client.async_list_chargers.assert_awaited_once()
     mock_client.async_get_charger_status.assert_awaited_once()
 
@@ -31,7 +30,7 @@ async def test_setup_entry_recovers_from_invalid_refresh_token(
     mock_client: MagicMock,
 ) -> None:
     """Test a saved password recovers an expired refresh token once."""
-    mock_client.async_ensure_access_token.side_effect = NexBlueAuthError
+    mock_client.async_ensure_access_token.side_effect = [NexBlueAuthError, None]
     mock_config_entry.add_to_hass(hass)
 
     await hass.config_entries.async_setup(mock_config_entry.entry_id)

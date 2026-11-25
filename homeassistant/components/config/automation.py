@@ -4,9 +4,7 @@ from typing import Any, override
 import uuid
 
 from homeassistant.components.automation import DOMAIN as AUTOMATION_DOMAIN
-from homeassistant.components.automation.config import (  # pylint: disable=home-assistant-component-root-import
-    async_validate_config_item,
-)
+from homeassistant.components.automation.config import async_validate_config_item  # pylint: disable=home-assistant-component-root-import
 from homeassistant.config import AUTOMATION_CONFIG_PATH
 from homeassistant.const import CONF_ID, SERVICE_RELOAD
 from homeassistant.core import HomeAssistant, callback
@@ -54,6 +52,8 @@ def async_setup(hass: HomeAssistant) -> bool:
 
 class EditAutomationConfigView(EditIdBasedConfigView):
     """Edit automation config."""
+
+    structured_errors = True
 
     @override
     def _write_value(

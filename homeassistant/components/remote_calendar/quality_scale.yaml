@@ -90,9 +90,7 @@ rules:
   icon-translations:
     status: exempt
     comment: Only the default icon is used.
-  reconfiguration-flow:
-    status: exempt
-    comment: no configuration possible
+  reconfiguration-flow: done
   repair-issues: todo
   stale-devices:
     status: exempt

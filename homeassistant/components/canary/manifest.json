@@ -1,8 +1,10 @@
 {
   "domain": "canary",
   "name": "Canary",
+  "categories": ["security_safety.cameras", "security_safety.alarm_systems"],
   "codeowners": [],
   "config_flow": true,
+  "connectivity": ["cloud"],
   "dependencies": ["ffmpeg"],
   "documentation": "https://www.home-assistant.io/integrations/canary",
   "integration_type": "hub",

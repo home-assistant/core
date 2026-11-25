@@ -1,16 +1,29 @@
 """Tests for the INDI Allsky integration."""
 
-from unittest.mock import AsyncMock
+from datetime import timedelta
+from unittest.mock import AsyncMock, patch
 
-from aioindiallsky import IndiAllSkyConnectionError
+import aiohttp
+from aioindiallsky import (
+    ExposureData,
+    IndiAllSkyAuthError,
+    IndiAllSkyConnectionError,
+    MediaData,
+    SensorData,
+)
+from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
+import yarl
 
-from homeassistant.config_entries import ConfigEntryState
+from homeassistant.components.indi_allsky.const import DOMAIN
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
+from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.aiohttp_client import async_create_clientsession
+from homeassistant.setup import async_setup_component
 
 from . import setup_integration
-
-from tests.common import MockConfigEntry
 
 
 async def test_setup_and_unload_entry(
@@ -21,10 +34,9 @@ async def test_setup_and_unload_entry(
     """Test successful setup and unload of entry."""
     await setup_integration(hass, mock_config_entry)
 
-    assert mock_config_entry.state is ConfigEntryState.LOADED
     mock_indi_allsky_client.listen.assert_called_once_with(auto_reconnect=True)
 
-    await hass.config_entries.async_unload(mock_config_entry.entry_id)
+    assert await hass.config_entries.async_unload(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
     assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
@@ -49,3 +61,252 @@ async def test_setup_failure_retry(
     await setup_integration(hass, mock_config_entry)
 
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+
+
+async def test_setup_failure_auth(
+    hass: HomeAssistant,
+    mock_indi_allsky_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test that an authentication failure during initial setup marks the entry as SETUP_ERROR."""
+    mock_indi_allsky_client.fetch_image.side_effect = IndiAllSkyAuthError(
+        "Invalid username or password"
+    )
+
+    await setup_integration(hass, mock_config_entry)
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
+
+
+async def test_setup_with_credentials(
+    hass: HomeAssistant,
+    mock_indi_allsky_client: AsyncMock,
+) -> None:
+    """Test that configured credentials are forwarded to IndiAllSkyClient."""
+    entry = MockConfigEntry(
+        domain="indi_allsky",
+        title="INDI Allsky (127.0.0.1)",
+        data={
+            "host": "127.0.0.1",
+            "port": 443,
+            "ssl": True,
+            "verify_ssl": True,
+            "username": "test_username",
+            "password": "test_password",
+        },
+        entry_id="test_entry_credentials",
+    )
+    with patch(
+        "homeassistant.components.indi_allsky.coordinator.IndiAllSkyClient",
+        return_value=mock_indi_allsky_client,
+    ) as mock_client_cls:
+        await setup_integration(hass, entry)
+        mock_client_cls.assert_called_once()
+        assert mock_client_cls.call_args.kwargs["username"] == "test_username"
+        assert mock_client_cls.call_args.kwargs["password"] == "test_password"
+
+
+async def test_entry_session_accepts_ip_cookies(
+    hass: HomeAssistant,
+    mock_indi_allsky_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test the entry session uses a cookie jar that accepts cookies from IP hosts."""
+    with patch(
+        "homeassistant.components.indi_allsky.coordinator.async_create_clientsession",
+        wraps=async_create_clientsession,
+    ) as mock_create_session:
+        await setup_integration(hass, mock_config_entry)
+
+    mock_create_session.assert_called_once()
+    kwargs = mock_create_session.call_args.kwargs
+    assert kwargs["verify_ssl"] is True
+    cookie_jar: aiohttp.CookieJar = kwargs["cookie_jar"]
+    assert mock_config_entry.runtime_data.session.cookie_jar is cookie_jar
+
+    login_url = yarl.URL("https://127.0.0.1/indi-allsky/login")
+    cookie_jar.update_cookies({"session": "abc"}, response_url=login_url)
+    assert "session" in cookie_jar.filter_cookies(login_url)
+
+
+async def test_background_sensor_fetch_auth_failure_triggers_reauth(
+    hass: HomeAssistant,
+    mock_indi_allsky_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test that authentication failure during background sensor fetch triggers reauth."""
+    await setup_integration(hass, mock_config_entry)
+
+    mock_indi_allsky_client.fetch_sensors.side_effect = IndiAllSkyAuthError(
+        "Unauthorized"
+    )
+
+    freezer.tick(timedelta(minutes=10))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    flows = hass.config_entries.flow.async_progress_by_handler(
+        DOMAIN, match_context={"source": SOURCE_REAUTH}
+    )
+    assert len(flows) == 1
+    assert flows[0]["context"]["entry_id"] == mock_config_entry.entry_id
+
+
+async def test_background_sensor_fetch_unavailable_and_recovery(
+    hass: HomeAssistant,
+    mock_indi_allsky_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test background sensor fetch marks entities unavailable once and logs recovery."""
+    await setup_integration(hass, mock_config_entry)
+
+    state = hass.states.get("binary_sensor.indi_allsky_night")
+    assert state is not None
+    assert state.state != STATE_UNAVAILABLE
+
+    mock_indi_allsky_client.fetch_sensors.side_effect = IndiAllSkyConnectionError(
+        "Connection lost"
+    )
+
+    freezer.tick(timedelta(minutes=10))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    state = hass.states.get("binary_sensor.indi_allsky_night")
+    assert state is not None
+    assert state.state == STATE_UNAVAILABLE
+    assert caplog.text.count("Error requesting indi_allsky data") == 1
+
+    freezer.tick(timedelta(minutes=10))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert caplog.text.count("Error requesting indi_allsky data") == 1
+
+    # Unrelated exposure push updates must not clear the sensor-fetch failure
+    # state, emit duplicate error logs, or suppress the later recovery log.
+    for cb in mock_indi_allsky_client.callbacks["exposure_complete"]:
+        cb(
+            ExposureData(
+                filename="next.jpg",
+                create_date="2026-08-13 23:03:41",
+                exposure=1.0,
+                gain=100.0,
+                binmode=1,
+                night=True,
+                camera_id=1,
+            )
+        )
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    state = hass.states.get("binary_sensor.indi_allsky_night")
+    assert state is not None
+    assert state.state == STATE_UNAVAILABLE
+    assert caplog.text.count("Error requesting indi_allsky data") == 1
+
+    mock_indi_allsky_client.fetch_sensors.side_effect = None
+    freezer.tick(timedelta(minutes=10))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    state = hass.states.get("binary_sensor.indi_allsky_night")
+    assert state is not None
+    assert state.state != STATE_UNAVAILABLE
+    assert "Fetching indi_allsky data recovered" in caplog.text
+
+
+async def test_manual_refresh_clears_sensor_fetch_failure(
+    hass: HomeAssistant,
+    mock_indi_allsky_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test manual coordinator refresh clears sensor failure so push updates resume."""
+    await setup_integration(hass, mock_config_entry)
+
+    mock_indi_allsky_client.fetch_sensors.side_effect = IndiAllSkyConnectionError(
+        "Connection lost"
+    )
+    freezer.tick(timedelta(minutes=10))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    state = hass.states.get("binary_sensor.indi_allsky_night")
+    assert state is not None
+    assert state.state == STATE_UNAVAILABLE
+
+    mock_indi_allsky_client.fetch_sensors.side_effect = None
+    assert await async_setup_component(hass, "homeassistant", {})
+    await hass.services.async_call(
+        "homeassistant",
+        "update_entity",
+        {"entity_id": "binary_sensor.indi_allsky_night"},
+        blocking=True,
+    )
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    initial_keogram = hass.states.get("image.indi_allsky_latest_keogram")
+    assert initial_keogram is not None
+    initial_keogram_state = initial_keogram.state
+
+    for cb in mock_indi_allsky_client.callbacks["keogram_complete"]:
+        cb(
+            MediaData(
+                media_type="keogram",
+                filename="keogram_20260813.jpg",
+                day_date="2026-08-13",
+                night=True,
+                camera_id=1,
+            )
+        )
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    keogram_state = hass.states.get("image.indi_allsky_latest_keogram")
+    assert keogram_state is not None
+    assert keogram_state.state != STATE_UNAVAILABLE
+    assert keogram_state.state != initial_keogram_state
+
+
+async def test_websocket_sensor_update_clears_sensor_fetch_failure(
+    hass: HomeAssistant,
+    mock_indi_allsky_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test valid WebSocket sensor_update clears prior fetch failure and logs recovery."""
+    await setup_integration(hass, mock_config_entry)
+
+    mock_indi_allsky_client.fetch_sensors.side_effect = IndiAllSkyConnectionError(
+        "Connection lost"
+    )
+    freezer.tick(timedelta(minutes=10))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    state = hass.states.get("binary_sensor.indi_allsky_night")
+    assert state is not None
+    assert state.state == STATE_UNAVAILABLE
+
+    for cb in mock_indi_allsky_client.callbacks["sensor_update"]:
+        cb(
+            SensorData(
+                last_update="2026-08-13 23:13:41",
+                sensors={},
+                raw_user=[],
+                raw_temp=[],
+                dew_heater=55.0,
+            )
+        )
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    state = hass.states.get("binary_sensor.indi_allsky_night")
+    assert state is not None
+    assert state.state != STATE_UNAVAILABLE
+    sensor_state = hass.states.get("sensor.indi_allsky_dew_heater_duty_cycle")
+    assert sensor_state is not None
+    assert sensor_state.state == "55.0"
+    assert "Fetching indi_allsky data recovered" in caplog.text

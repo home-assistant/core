@@ -104,6 +104,9 @@ class AuthPhase:
                 await process_wrong_login(self._request)
                 raise Disconnect
 
+            self._hass.auth.async_log_access_token_usage(
+                refresh_token, self._request.remote
+            )
             conn = ActiveConnection(
                 self._logger,
                 self._hass,
@@ -111,10 +114,11 @@ class AuthPhase:
                 refresh_token.user,
                 refresh_token,
                 remote=self._request.remote,
+                cancel_ws=self._cancel_ws,
             )
             conn.subscriptions["auth"] = (
                 self._hass.auth.async_register_revoke_token_callback(
-                    refresh_token.id, self._cancel_ws
+                    refresh_token.id, conn.async_auth_revoked
                 )
             )
             await self._send_bytes_text(AUTH_OK_MESSAGE)

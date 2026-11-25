@@ -13,9 +13,14 @@ from neopool_modbus.capabilities import (
     is_ph_module_present,
     is_redox_module_present,
 )
-from neopool_modbus.registers import is_valid_relay_gpio
+from neopool_modbus.registers import (
+    HIDRO_COVER_ENABLE_BIT,
+    aux_relay_available,
+    is_valid_relay_gpio,
+)
 
 from homeassistant.components.binary_sensor import (
+    DOMAIN as BINARY_SENSOR_DOMAIN,
     BinarySensorDeviceClass,
     BinarySensorEntity,
     BinarySensorEntityDescription,
@@ -34,6 +39,7 @@ from .const import (
 )
 from .coordinator import NeoPoolConfigEntry, NeoPoolCoordinator
 from .entity import NeoPoolEntity
+from .helpers import cleanup_occupied_aux_entities
 
 PARALLEL_UPDATES = 0
 
@@ -56,9 +62,11 @@ def _gpio_ok(gpio_key: str) -> _SupportedFn:
 def _pool_cover_open(data: dict[str, Any], hass: HomeAssistant) -> bool | None:
     """Invert the raw cover state for the OPENING device class.
 
-    The cover bit is only valid while filtration runs; otherwise report unknown.
+    The cover bit is only valid when cover detection is enabled
+    (the HIDRO_COVER_ENABLE bit of the shared register, which also packs the
+    temperature-shutdown flag); otherwise report unknown.
     """
-    if data.get("Filtration Pump") is not True:
+    if not int(data.get("MBF_PAR_HIDRO_COVER_ENABLE", 0) or 0) & HIDRO_COVER_ENABLE_BIT:
         return None
     value = data.get("Pool Cover")
     if value is None:
@@ -73,6 +81,13 @@ BINARY_SENSOR_DESCRIPTIONS: dict[str, NeoPoolBinarySensorEntityDescription] = {
         device_class=BinarySensorDeviceClass.RUNNING,
         entity_category=EntityCategory.DIAGNOSTIC,
         supported_fn=_gpio_ok("MBF_PAR_PH_ACID_RELAY_GPIO"),
+    ),
+    "pH Base Pump": NeoPoolBinarySensorEntityDescription(
+        key="pH Base Pump",
+        translation_key="ph_base_pump",
+        device_class=BinarySensorDeviceClass.RUNNING,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        supported_fn=_gpio_ok("MBF_PAR_PH_BASE_RELAY_GPIO"),
     ),
     "Filtration Pump": NeoPoolBinarySensorEntityDescription(
         key="Filtration Pump",
@@ -91,24 +106,28 @@ BINARY_SENSOR_DESCRIPTIONS: dict[str, NeoPoolBinarySensorEntityDescription] = {
         translation_key="aux",
         translation_placeholders={"number": "1"},
         device_class=BinarySensorDeviceClass.POWER,
+        supported_fn=lambda data: aux_relay_available(1, data),
     ),
     "AUX2": NeoPoolBinarySensorEntityDescription(
         key="AUX2",
         translation_key="aux",
         translation_placeholders={"number": "2"},
         device_class=BinarySensorDeviceClass.POWER,
+        supported_fn=lambda data: aux_relay_available(2, data),
     ),
     "AUX3": NeoPoolBinarySensorEntityDescription(
         key="AUX3",
         translation_key="aux",
         translation_placeholders={"number": "3"},
         device_class=BinarySensorDeviceClass.POWER,
+        supported_fn=lambda data: aux_relay_available(3, data),
     ),
     "AUX4": NeoPoolBinarySensorEntityDescription(
         key="AUX4",
         translation_key="aux",
         translation_placeholders={"number": "4"},
         device_class=BinarySensorDeviceClass.POWER,
+        supported_fn=lambda data: aux_relay_available(4, data),
     ),
     "pH module control status": NeoPoolBinarySensorEntityDescription(
         key="pH module control status",
@@ -348,6 +367,10 @@ async def async_setup_entry(
     coordinator = entry.runtime_data
     options = entry.options
 
+    cleanup_occupied_aux_entities(
+        hass, entry.entry_id, BINARY_SENSOR_DOMAIN, coordinator.data
+    )
+
     async_add_entities(
         NeoPoolBinarySensor(coordinator, key, desc)
         for key, desc in BINARY_SENSOR_DESCRIPTIONS.items()
@@ -362,7 +385,6 @@ async def async_setup_entry(
 class NeoPoolBinarySensor(NeoPoolEntity, BinarySensorEntity):
     """Representation of a NeoPool binary sensor."""
 
-    _winter_mode_active = False
     entity_description: NeoPoolBinarySensorEntityDescription
 
     def __init__(
@@ -377,6 +399,15 @@ class NeoPoolBinarySensor(NeoPoolEntity, BinarySensorEntity):
         self._key = key
         self._attr_unique_id = (
             f"{self.coordinator.config_entry.unique_id}_{key.lower()}"
+        )
+
+    @property
+    @override
+    def available(self) -> bool:
+        """Return False when the relay becomes occupied after setup."""
+        desc = self.entity_description
+        return super().available and (
+            desc.supported_fn is None or desc.supported_fn(self.coordinator.data)
         )
 
     @property

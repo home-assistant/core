@@ -51,6 +51,11 @@ SERVER_SOFTWARE = (
 
 WARN_CLOSE_MSG = "closes the Home Assistant aiohttp session"
 
+# c-ares derives per-try timeouts from observed server latency with a 250 ms
+# floor, so fast cached answers leave cache misses little time for upstream
+# recursion. Each extra try doubles the timeout of the previous one.
+DNS_RESOLVER_TRIES = 4
+
 _LOCALHOST = "localhost"
 _TRAILING_LOCAL_HOST = f".{_LOCALHOST}"
 
@@ -156,6 +161,10 @@ async def _async_is_blocked_host(
 #
 MAXIMUM_CONNECTIONS = 4096
 MAXIMUM_CONNECTIONS_PER_HOST = 100
+
+# aiohttp's 8190 byte default is too small for some servers, e.g. GitHub's
+# release download redirects carry a ~9 KiB Content-Security-Policy header.
+MAXIMUM_HEADER_SIZE = 65536
 
 
 class HassAsyncDNSResolver(AsyncDualMDNSResolver):
@@ -289,6 +298,9 @@ def _async_create_clientsession(
         _ssrf_redirect_middleware,
         *kwargs.pop("middlewares", ()),
     )
+
+    kwargs.setdefault("max_line_size", MAXIMUM_HEADER_SIZE)
+    kwargs.setdefault("max_field_size", MAXIMUM_HEADER_SIZE)
 
     clientsession = aiohttp.ClientSession(
         connector=_async_get_connector(hass, verify_ssl, family, ssl_cipher),
@@ -507,4 +519,7 @@ def _async_get_or_create_resolver(hass: HomeAssistant) -> HassAsyncDNSResolver:
 
 @callback
 def _async_make_resolver(hass: HomeAssistant) -> HassAsyncDNSResolver:
-    return HassAsyncDNSResolver(async_zeroconf=zeroconf.async_get_async_zeroconf(hass))
+    return HassAsyncDNSResolver(
+        async_zeroconf=zeroconf.async_get_async_zeroconf(hass),
+        tries=DNS_RESOLVER_TRIES,
+    )

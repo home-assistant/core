@@ -47,7 +47,6 @@ from homeassistant.const import (
     UnitOfVolumeFlowRate,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
@@ -265,7 +264,7 @@ SENSOR_TYPES = (
 PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
         probatio.Optional(CONF_RESOURCES, default=[]): probatio.All(
-            cv.ensure_list, [probatio.In([desc.key for desc in SENSOR_TYPES])]
+            probatio.EnsureList(), [probatio.In([desc.key for desc in SENSOR_TYPES])]
         )
     }
 )

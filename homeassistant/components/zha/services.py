@@ -11,16 +11,9 @@ from zha.application.const import (
     ATTR_CLUSTER_TYPE,
     ATTR_COMMAND_TYPE,
     ATTR_ENDPOINT_ID,
-    ATTR_IEEE,
-    ATTR_LEVEL,
     ATTR_MANUFACTURER,
     ATTR_PARAMS,
     ATTR_VALUE,
-    ATTR_WARNING_DEVICE_DURATION,
-    ATTR_WARNING_DEVICE_MODE,
-    ATTR_WARNING_DEVICE_STROBE,
-    ATTR_WARNING_DEVICE_STROBE_DUTY_CYCLE,
-    ATTR_WARNING_DEVICE_STROBE_INTENSITY,
     CLUSTER_TYPE_IN,
 )
 from zha.application.gateway import Gateway
@@ -32,42 +25,43 @@ from zha.application.platforms.siren import (
     StrobeLevel,
     WarningMode,
 )
+from zha.zigbee.device import BaseDevice, ZigbeeDevice
+from zha.zigbee.group import Group
 from zigpy.types.named import EUI64, KeyData
 from zigpy.typing import (
     UNDEFINED as ZIGPY_UNDEFINED,
     UndefinedType as ZigpyUndefinedType,
 )
 
+from homeassistant.components.lock import DOMAIN as LOCK_DOMAIN
 from homeassistant.const import ATTR_COMMAND, Platform
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.service import async_register_admin_service
-from homeassistant.helpers.typing import VolSchemaType
+from homeassistant.helpers.service import (
+    async_register_admin_service,
+    async_register_platform_entity_service,
+)
+from homeassistant.helpers.typing import VolDictType, VolSchemaType
 
 from .const import (
-    ATTR_DURATION,
-    ATTR_INSTALL_CODE,
-    ATTR_QR_CODE,
-    ATTR_SOURCE_IEEE,
     DOMAIN,
     MFG_CLUSTER_ID_START,
     RESPONSE,
+    ZHAService,
+    ZHAServiceArgument,
 )
-from .helpers import IEEE_SCHEMA, SERVICE_PERMIT_PARAMS, get_zha_data
+from .helpers import (
+    IEEE_SCHEMA,
+    SERVICE_PERMIT_PARAMS,
+    convert_zha_error_to_ha_error,
+    get_zha_data,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
-ATTR_GROUP = "group"
 ATTR_IEEE_ADDRESS = "ieee_address"
 
-SERVICE_PERMIT = "permit"
-SERVICE_REMOVE = "remove"
-SERVICE_SET_ZIGBEE_CLUSTER_ATTRIBUTE = "set_zigbee_cluster_attribute"
-SERVICE_ISSUE_ZIGBEE_CLUSTER_COMMAND = "issue_zigbee_cluster_command"
-SERVICE_ISSUE_ZIGBEE_GROUP_COMMAND = "issue_zigbee_group_command"
-SERVICE_WARNING_DEVICE_SQUAWK = "warning_device_squawk"
-SERVICE_WARNING_DEVICE_WARN = "warning_device_warn"
 
 IEEE_SERVICE = "ieee_based_service"
 
@@ -80,96 +74,108 @@ def _ensure_list_if_present[_T](value: _T | None) -> list[_T] | list[Any] | None
 
 
 SERVICE_SCHEMAS: dict[str, VolSchemaType] = {
-    SERVICE_PERMIT: probatio.Schema(
+    ZHAService.PERMIT: probatio.Schema(
         probatio.All(
-            cv.deprecated(ATTR_IEEE_ADDRESS, replacement_key=ATTR_IEEE),
+            cv.deprecated(ATTR_IEEE_ADDRESS, replacement_key=ZHAServiceArgument.IEEE),
             SERVICE_PERMIT_PARAMS,
         )
     ),
     IEEE_SERVICE: probatio.Schema(
         probatio.All(
-            cv.deprecated(ATTR_IEEE_ADDRESS, replacement_key=ATTR_IEEE),
-            {probatio.Required(ATTR_IEEE): IEEE_SCHEMA},
+            cv.deprecated(ATTR_IEEE_ADDRESS, replacement_key=ZHAServiceArgument.IEEE),
+            {probatio.Required(ZHAServiceArgument.IEEE): IEEE_SCHEMA},
         )
     ),
-    SERVICE_SET_ZIGBEE_CLUSTER_ATTRIBUTE: probatio.Schema(
+    ZHAService.SET_ZIGBEE_CLUSTER_ATTRIBUTE: probatio.Schema(
         {
-            probatio.Required(ATTR_IEEE): IEEE_SCHEMA,
-            probatio.Required(ATTR_ENDPOINT_ID): cv.positive_int,
-            probatio.Required(ATTR_CLUSTER_ID): cv.positive_int,
-            probatio.Optional(ATTR_CLUSTER_TYPE, default=CLUSTER_TYPE_IN): cv.string,
-            probatio.Required(ATTR_ATTRIBUTE): probatio.Any(cv.positive_int, str),
-            probatio.Required(ATTR_VALUE): probatio.Any(int, cv.boolean, cv.string),
-            probatio.Optional(ATTR_MANUFACTURER): probatio.All(
+            probatio.Required(ZHAServiceArgument.IEEE): IEEE_SCHEMA,
+            probatio.Required(ZHAServiceArgument.ENDPOINT_ID): cv.positive_int,
+            probatio.Required(ZHAServiceArgument.CLUSTER_ID): cv.positive_int,
+            probatio.Optional(
+                ZHAServiceArgument.CLUSTER_TYPE, default=CLUSTER_TYPE_IN
+            ): cv.string,
+            probatio.Required(ZHAServiceArgument.ATTRIBUTE): probatio.Any(
+                cv.positive_int, str
+            ),
+            probatio.Required(ZHAServiceArgument.VALUE): probatio.Any(
+                int, cv.boolean, cv.string
+            ),
+            probatio.Optional(ZHAServiceArgument.MANUFACTURER): probatio.All(
                 probatio.Coerce(int), probatio.Range(min=-1)
             ),
         }
     ),
-    SERVICE_WARNING_DEVICE_SQUAWK: probatio.Schema(
+    ZHAService.WARNING_DEVICE_SQUAWK: probatio.Schema(
         {
-            probatio.Required(ATTR_IEEE): IEEE_SCHEMA,
+            probatio.Required(ZHAServiceArgument.IEEE): IEEE_SCHEMA,
             probatio.Optional(
-                ATTR_WARNING_DEVICE_MODE, default=SquawkMode.Armed
+                ZHAServiceArgument.MODE, default=SquawkMode.Armed
             ): cv.positive_int,
             probatio.Optional(
-                ATTR_WARNING_DEVICE_STROBE, default=Strobe.Strobe
+                ZHAServiceArgument.STROBE, default=Strobe.Strobe
             ): cv.positive_int,
             probatio.Optional(
-                ATTR_LEVEL, default=SirenLevel.High_level_sound
+                ZHAServiceArgument.LEVEL, default=SirenLevel.High_level_sound
             ): cv.positive_int,
         }
     ),
-    SERVICE_WARNING_DEVICE_WARN: probatio.Schema(
+    ZHAService.WARNING_DEVICE_WARN: probatio.Schema(
         {
-            probatio.Required(ATTR_IEEE): IEEE_SCHEMA,
+            probatio.Required(ZHAServiceArgument.IEEE): IEEE_SCHEMA,
             probatio.Optional(
-                ATTR_WARNING_DEVICE_MODE, default=WarningMode.Emergency
+                ZHAServiceArgument.MODE, default=WarningMode.Emergency
             ): cv.positive_int,
             probatio.Optional(
-                ATTR_WARNING_DEVICE_STROBE, default=Strobe.Strobe
+                ZHAServiceArgument.STROBE, default=Strobe.Strobe
             ): cv.positive_int,
             probatio.Optional(
-                ATTR_LEVEL, default=SirenLevel.High_level_sound
+                ZHAServiceArgument.LEVEL, default=SirenLevel.High_level_sound
             ): cv.positive_int,
-            probatio.Optional(ATTR_WARNING_DEVICE_DURATION, default=5): cv.positive_int,
+            probatio.Optional(ZHAServiceArgument.DURATION, default=5): cv.positive_int,
             probatio.Optional(
-                ATTR_WARNING_DEVICE_STROBE_DUTY_CYCLE, default=0x00
+                ZHAServiceArgument.DUTY_CYCLE, default=0x00
             ): cv.positive_int,
             probatio.Optional(
-                ATTR_WARNING_DEVICE_STROBE_INTENSITY,
+                ZHAServiceArgument.INTENSITY,
                 default=StrobeLevel.High_level_strobe,
             ): cv.positive_int,
         }
     ),
-    SERVICE_ISSUE_ZIGBEE_CLUSTER_COMMAND: probatio.All(
+    ZHAService.ISSUE_ZIGBEE_CLUSTER_COMMAND: probatio.All(
         probatio.Schema(
             {
-                probatio.Required(ATTR_IEEE): IEEE_SCHEMA,
-                probatio.Required(ATTR_ENDPOINT_ID): cv.positive_int,
-                probatio.Required(ATTR_CLUSTER_ID): cv.positive_int,
+                probatio.Required(ZHAServiceArgument.IEEE): IEEE_SCHEMA,
+                probatio.Required(ZHAServiceArgument.ENDPOINT_ID): cv.positive_int,
+                probatio.Required(ZHAServiceArgument.CLUSTER_ID): cv.positive_int,
                 probatio.Optional(
-                    ATTR_CLUSTER_TYPE, default=CLUSTER_TYPE_IN
+                    ZHAServiceArgument.CLUSTER_TYPE, default=CLUSTER_TYPE_IN
                 ): cv.string,
-                probatio.Required(ATTR_COMMAND): cv.positive_int,
-                probatio.Required(ATTR_COMMAND_TYPE): cv.string,
-                probatio.Exclusive(ATTR_ARGS, "attrs_params"): _ensure_list_if_present,
-                probatio.Exclusive(ATTR_PARAMS, "attrs_params"): dict,
-                probatio.Optional(ATTR_MANUFACTURER): probatio.All(
+                probatio.Required(ZHAServiceArgument.COMMAND): cv.positive_int,
+                probatio.Required(ZHAServiceArgument.COMMAND_TYPE): cv.string,
+                probatio.Exclusive(
+                    ZHAServiceArgument.ARGS, "attrs_params"
+                ): _ensure_list_if_present,
+                probatio.Exclusive(ZHAServiceArgument.PARAMS, "attrs_params"): dict,
+                probatio.Optional(ZHAServiceArgument.MANUFACTURER): probatio.All(
                     probatio.Coerce(int), probatio.Range(min=-1)
                 ),
             }
         ),
-        cv.deprecated(ATTR_ARGS),
-        cv.has_at_least_one_key(ATTR_ARGS, ATTR_PARAMS),
+        cv.deprecated(ZHAServiceArgument.ARGS),
+        probatio.AtLeastOne(ZHAServiceArgument.ARGS, ZHAServiceArgument.PARAMS),
     ),
-    SERVICE_ISSUE_ZIGBEE_GROUP_COMMAND: probatio.Schema(
+    ZHAService.ISSUE_ZIGBEE_GROUP_COMMAND: probatio.Schema(
         {
-            probatio.Required(ATTR_GROUP): cv.positive_int,
-            probatio.Required(ATTR_CLUSTER_ID): cv.positive_int,
-            probatio.Optional(ATTR_CLUSTER_TYPE, default=CLUSTER_TYPE_IN): cv.string,
-            probatio.Required(ATTR_COMMAND): cv.positive_int,
-            probatio.Optional(ATTR_ARGS, default=[]): cv.ensure_list,
-            probatio.Optional(ATTR_MANUFACTURER): probatio.All(
+            probatio.Required(ZHAServiceArgument.GROUP): cv.positive_int,
+            probatio.Required(ZHAServiceArgument.CLUSTER_ID): cv.positive_int,
+            probatio.Optional(
+                ZHAServiceArgument.CLUSTER_TYPE, default=CLUSTER_TYPE_IN
+            ): cv.string,
+            probatio.Required(ZHAServiceArgument.COMMAND): cv.positive_int,
+            probatio.Optional(
+                ZHAServiceArgument.ARGS, default=[]
+            ): probatio.EnsureList(),
+            probatio.Optional(ZHAServiceArgument.MANUFACTURER): probatio.All(
                 probatio.Coerce(int), probatio.Range(min=-1)
             ),
         }
@@ -188,60 +194,113 @@ def _get_gateway(service: ServiceCall) -> Gateway:
     return gateway_proxy.gateway
 
 
+def _get_device(zha_gateway: Gateway, ieee: EUI64) -> BaseDevice:
+    """Return the device, raising a user-facing error if it is unknown."""
+    if (zha_device := zha_gateway.get_device(ieee)) is None:
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="device_not_found",
+            translation_placeholders={"ieee": str(ieee)},
+        )
+
+    return zha_device
+
+
+def _get_zigbee_device(zha_gateway: Gateway, ieee: EUI64) -> ZigbeeDevice:
+    """Return the Zigbee device, raising if it is missing or not a Zigbee device."""
+    zha_device = _get_device(zha_gateway, ieee)
+    if not isinstance(zha_device, ZigbeeDevice):
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="not_zigbee_device",
+            translation_placeholders={"ieee": str(ieee)},
+        )
+
+    return zha_device
+
+
+def _get_warning_device(zha_gateway: Gateway, ieee: EUI64) -> BaseSiren:
+    """Return the IAS warning device entity of a device, raising if it has none."""
+    zha_device = _get_device(zha_gateway, ieee)
+    try:
+        return zha_device.get_entity(Platform.SIREN, pick_first=True)
+    except LookupError as err:
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="no_warning_device",
+            translation_placeholders={"ieee": str(ieee)},
+        ) from err
+
+
+def _get_group(zha_gateway: Gateway, group_id: int) -> Group:
+    """Return the group, raising a user-facing error if it is unknown."""
+    if (group := zha_gateway.get_group(group_id)) is None:
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="group_not_found",
+            translation_placeholders={"group_id": str(group_id)},
+        )
+
+    return group
+
+
 async def _permit(service: ServiceCall) -> None:
     """Allow devices to join this network."""
     application_controller = _get_gateway(service).application_controller
-    duration: int = service.data[ATTR_DURATION]
-    ieee: EUI64 | None = service.data.get(ATTR_IEEE)
+    duration: int = service.data[ZHAServiceArgument.DURATION]
+    ieee: EUI64 | None = service.data.get(ZHAServiceArgument.IEEE)
     src_ieee: EUI64
     link_key: KeyData
-    if ATTR_SOURCE_IEEE in service.data:
-        src_ieee = service.data[ATTR_SOURCE_IEEE]
-        link_key = service.data[ATTR_INSTALL_CODE]
+    if ZHAServiceArgument.SOURCE_IEEE in service.data:
+        src_ieee = service.data[ZHAServiceArgument.SOURCE_IEEE]
+        link_key = service.data[ZHAServiceArgument.INSTALL_CODE]
         _LOGGER.info("Allowing join for %s device with link key", src_ieee)
-        await application_controller.permit_with_link_key(
-            time_s=duration, node=src_ieee, link_key=link_key
-        )
+        async with convert_zha_error_to_ha_error():
+            await application_controller.permit_with_link_key(
+                time_s=duration, node=src_ieee, link_key=link_key
+            )
         return
 
-    if ATTR_QR_CODE in service.data:
-        src_ieee, link_key = service.data[ATTR_QR_CODE]
+    if ZHAServiceArgument.QR_CODE in service.data:
+        src_ieee, link_key = service.data[ZHAServiceArgument.QR_CODE]
         _LOGGER.info("Allowing join for %s device with link key", src_ieee)
-        await application_controller.permit_with_link_key(
-            time_s=duration, node=src_ieee, link_key=link_key
-        )
+        async with convert_zha_error_to_ha_error():
+            await application_controller.permit_with_link_key(
+                time_s=duration, node=src_ieee, link_key=link_key
+            )
         return
 
     if ieee:
         _LOGGER.info("Permitting joins for %ss on %s device", duration, ieee)
     else:
         _LOGGER.info("Permitting joins for %ss", duration)
-    await application_controller.permit(time_s=duration, node=ieee)
+    async with convert_zha_error_to_ha_error():
+        await application_controller.permit(time_s=duration, node=ieee)
 
 
 async def _remove(service: ServiceCall) -> None:
     """Remove a node from the network."""
     zha_gateway = _get_gateway(service)
-    ieee: EUI64 = service.data[ATTR_IEEE]
+    ieee: EUI64 = service.data[ZHAServiceArgument.IEEE]
     _LOGGER.info("Removing node %s", ieee)
-    await zha_gateway.async_remove_device(ieee)
+    async with convert_zha_error_to_ha_error():
+        await zha_gateway.async_remove_device(ieee)
 
 
 async def _set_zigbee_cluster_attributes(service: ServiceCall) -> None:
     """Set zigbee attribute for cluster on zha entity."""
     zha_gateway = _get_gateway(service)
-    ieee: EUI64 = service.data[ATTR_IEEE]
-    endpoint_id: int = service.data[ATTR_ENDPOINT_ID]
-    cluster_id: int = service.data[ATTR_CLUSTER_ID]
-    cluster_type: str = service.data[ATTR_CLUSTER_TYPE]
-    attribute: int | str = service.data[ATTR_ATTRIBUTE]
-    value: int | bool | str = service.data[ATTR_VALUE]
+    ieee: EUI64 = service.data[ZHAServiceArgument.IEEE]
+    endpoint_id: int = service.data[ZHAServiceArgument.ENDPOINT_ID]
+    cluster_id: int = service.data[ZHAServiceArgument.CLUSTER_ID]
+    cluster_type: str = service.data[ZHAServiceArgument.CLUSTER_TYPE]
+    attribute: int | str = service.data[ZHAServiceArgument.ATTRIBUTE]
+    value: int | bool | str = service.data[ZHAServiceArgument.VALUE]
     manufacturer: int | ZigpyUndefinedType = service.data.get(
-        ATTR_MANUFACTURER, ZIGPY_UNDEFINED
+        ZHAServiceArgument.MANUFACTURER, ZIGPY_UNDEFINED
     )
-    zha_device = zha_gateway.get_device(ieee)
-    response = None
-    if zha_device is not None:
+    zha_device = _get_zigbee_device(zha_gateway, ieee)
+    async with convert_zha_error_to_ha_error():
         response = await zha_device.write_zigbee_attribute(
             endpoint_id,
             cluster_id,
@@ -250,8 +309,6 @@ async def _set_zigbee_cluster_attributes(service: ServiceCall) -> None:
             cluster_type=cluster_type,
             manufacturer=manufacturer,
         )
-    else:
-        raise ValueError(f"Device with IEEE {ieee!s} not found")
 
     _LOGGER.debug(
         (
@@ -278,22 +335,22 @@ async def _set_zigbee_cluster_attributes(service: ServiceCall) -> None:
 async def _issue_zigbee_cluster_command(service: ServiceCall) -> None:
     """Issue command on zigbee cluster on ZHA entity."""
     zha_gateway = _get_gateway(service)
-    ieee: EUI64 = service.data[ATTR_IEEE]
-    endpoint_id: int = service.data[ATTR_ENDPOINT_ID]
-    cluster_id: int = service.data[ATTR_CLUSTER_ID]
-    cluster_type: str = service.data[ATTR_CLUSTER_TYPE]
-    command: int = service.data[ATTR_COMMAND]
-    command_type: str = service.data[ATTR_COMMAND_TYPE]
-    args: list | None = service.data.get(ATTR_ARGS)
-    params: dict | None = service.data.get(ATTR_PARAMS)
+    ieee: EUI64 = service.data[ZHAServiceArgument.IEEE]
+    endpoint_id: int = service.data[ZHAServiceArgument.ENDPOINT_ID]
+    cluster_id: int = service.data[ZHAServiceArgument.CLUSTER_ID]
+    cluster_type: str = service.data[ZHAServiceArgument.CLUSTER_TYPE]
+    command: int = service.data[ZHAServiceArgument.COMMAND]
+    command_type: str = service.data[ZHAServiceArgument.COMMAND_TYPE]
+    args: list | None = service.data.get(ZHAServiceArgument.ARGS)
+    params: dict | None = service.data.get(ZHAServiceArgument.PARAMS)
     manufacturer: int | ZigpyUndefinedType = service.data.get(
-        ATTR_MANUFACTURER, ZIGPY_UNDEFINED
+        ZHAServiceArgument.MANUFACTURER, ZIGPY_UNDEFINED
     )
-    zha_device = zha_gateway.get_device(ieee)
-    if zha_device is not None:
-        if cluster_id >= MFG_CLUSTER_ID_START and manufacturer is None:
-            manufacturer = zha_device.manufacturer_code
+    zha_device = _get_zigbee_device(zha_gateway, ieee)
+    if cluster_id >= MFG_CLUSTER_ID_START and manufacturer is None:
+        manufacturer = zha_device.manufacturer_code
 
+    async with convert_zha_error_to_ha_error():
         await zha_device.issue_cluster_command(
             endpoint_id,
             cluster_id,
@@ -304,48 +361,45 @@ async def _issue_zigbee_cluster_command(service: ServiceCall) -> None:
             cluster_type=cluster_type,
             manufacturer=manufacturer,
         )
-        _LOGGER.debug(
-            (
-                "Issued command for: %s: [%s] %s: [%s] %s: [%s] %s: [%s] %s: [%s]"
-                " %s: [%s] %s: [%s] %s: [%s]"
-            ),
-            ATTR_CLUSTER_ID,
-            cluster_id,
-            ATTR_CLUSTER_TYPE,
-            cluster_type,
-            ATTR_ENDPOINT_ID,
-            endpoint_id,
-            ATTR_COMMAND,
-            command,
-            ATTR_COMMAND_TYPE,
-            command_type,
-            ATTR_ARGS,
-            args,
-            ATTR_PARAMS,
-            params,
-            ATTR_MANUFACTURER,
-            manufacturer,
-        )
-    else:
-        raise ValueError(f"Device with IEEE {ieee!s} not found")
+    _LOGGER.debug(
+        (
+            "Issued command for: %s: [%s] %s: [%s] %s: [%s] %s: [%s] %s: [%s]"
+            " %s: [%s] %s: [%s] %s: [%s]"
+        ),
+        ATTR_CLUSTER_ID,
+        cluster_id,
+        ATTR_CLUSTER_TYPE,
+        cluster_type,
+        ATTR_ENDPOINT_ID,
+        endpoint_id,
+        ATTR_COMMAND,
+        command,
+        ATTR_COMMAND_TYPE,
+        command_type,
+        ATTR_ARGS,
+        args,
+        ATTR_PARAMS,
+        params,
+        ATTR_MANUFACTURER,
+        manufacturer,
+    )
 
 
 async def _issue_zigbee_group_command(service: ServiceCall) -> None:
     """Issue command on zigbee cluster on a zigbee group."""
     zha_gateway = _get_gateway(service)
-    group_id: int = service.data[ATTR_GROUP]
-    cluster_id: int = service.data[ATTR_CLUSTER_ID]
-    command: int = service.data[ATTR_COMMAND]
-    args: list = service.data[ATTR_ARGS]
+    group_id: int = service.data[ZHAServiceArgument.GROUP]
+    cluster_id: int = service.data[ZHAServiceArgument.CLUSTER_ID]
+    command: int = service.data[ZHAServiceArgument.COMMAND]
+    args: list = service.data[ZHAServiceArgument.ARGS]
     manufacturer: int | ZigpyUndefinedType = service.data.get(
-        ATTR_MANUFACTURER, ZIGPY_UNDEFINED
+        ZHAServiceArgument.MANUFACTURER, ZIGPY_UNDEFINED
     )
-    group = zha_gateway.get_group(group_id)
+    group = _get_group(zha_gateway, group_id)
     if cluster_id >= MFG_CLUSTER_ID_START and manufacturer is None:
         _LOGGER.error("Missing manufacturer attribute for cluster: %d", cluster_id)
-    response = None
-    if group is not None:
-        cluster = group.endpoint[cluster_id]
+    cluster = group.endpoint[cluster_id]
+    async with convert_zha_error_to_ha_error():
         response = await cluster.command(
             command, *args, manufacturer=manufacturer, expect_reply=True
         )
@@ -367,39 +421,49 @@ async def _issue_zigbee_group_command(service: ServiceCall) -> None:
 async def _warning_device_squawk(service: ServiceCall) -> None:
     """Issue the squawk command for an IAS warning device."""
     zha_gateway = _get_gateway(service)
-    ieee: EUI64 = service.data[ATTR_IEEE]
-    mode: int = service.data[ATTR_WARNING_DEVICE_MODE]
-    strobe: int = service.data[ATTR_WARNING_DEVICE_STROBE]
-    level: int = service.data[ATTR_LEVEL]
+    ieee: EUI64 = service.data[ZHAServiceArgument.IEEE]
+    mode: int = service.data[ZHAServiceArgument.MODE]
+    strobe: int = service.data[ZHAServiceArgument.STROBE]
+    level: int = service.data[ZHAServiceArgument.LEVEL]
 
-    device = zha_gateway.get_device(ieee)
-    siren: BaseSiren = device.get_entity(Platform.SIREN, pick_first=True)
+    siren = _get_warning_device(zha_gateway, ieee)
 
-    await siren.async_squawk(mode=mode, strobe=strobe, squawk_level=level)
+    async with convert_zha_error_to_ha_error():
+        await siren.async_squawk(mode=mode, strobe=strobe, squawk_level=level)
 
 
 async def _warning_device_warn(service: ServiceCall) -> None:
     """Issue the warning command for an IAS warning device."""
     zha_gateway = _get_gateway(service)
-    ieee: EUI64 = service.data[ATTR_IEEE]
-    mode: int = service.data[ATTR_WARNING_DEVICE_MODE]
-    strobe: int = service.data[ATTR_WARNING_DEVICE_STROBE]
-    level: int = service.data[ATTR_LEVEL]
-    duration: int = service.data[ATTR_WARNING_DEVICE_DURATION]
-    duty_mode: int = service.data[ATTR_WARNING_DEVICE_STROBE_DUTY_CYCLE]
-    intensity: int = service.data[ATTR_WARNING_DEVICE_STROBE_INTENSITY]
+    ieee: EUI64 = service.data[ZHAServiceArgument.IEEE]
+    mode: int = service.data[ZHAServiceArgument.MODE]
+    strobe: int = service.data[ZHAServiceArgument.STROBE]
+    level: int = service.data[ZHAServiceArgument.LEVEL]
+    duration: int = service.data[ZHAServiceArgument.DURATION]
+    duty_mode: int = service.data[ZHAServiceArgument.DUTY_CYCLE]
+    intensity: int = service.data[ZHAServiceArgument.INTENSITY]
 
-    device = zha_gateway.get_device(ieee)
-    siren: BaseSiren = device.get_entity(Platform.SIREN, pick_first=True)
+    siren = _get_warning_device(zha_gateway, ieee)
 
-    await siren.async_turn_on(
-        tone=mode,
-        volume_level=level,
-        duration=duration,
-        strobe=strobe,
-        strobe_duty_cycle=duty_mode,
-        strobe_intensity=intensity,
-    )
+    async with convert_zha_error_to_ha_error():
+        await siren.async_turn_on(
+            tone=mode,
+            volume_level=level,
+            duration=duration,
+            strobe=strobe,
+            strobe_duty_cycle=duty_mode,
+            strobe_intensity=intensity,
+        )
+
+
+LOCK_CODE_SLOT_SCHEMA: VolDictType = {
+    probatio.Required(ZHAServiceArgument.CODE_SLOT): probatio.Coerce(int)
+}
+
+LOCK_SET_USER_CODE_SCHEMA: VolDictType = {
+    **LOCK_CODE_SLOT_SCHEMA,
+    probatio.Required(ZHAServiceArgument.USER_CODE): cv.string,
+}
 
 
 @callback
@@ -408,45 +472,68 @@ def async_setup_services(hass: HomeAssistant) -> None:
     async_register_admin_service(
         hass,
         DOMAIN,
-        SERVICE_PERMIT,
+        ZHAService.PERMIT,
         _permit,
-        schema=SERVICE_SCHEMAS[SERVICE_PERMIT],
+        schema=SERVICE_SCHEMAS[ZHAService.PERMIT],
     )
     async_register_admin_service(
-        hass, DOMAIN, SERVICE_REMOVE, _remove, schema=SERVICE_SCHEMAS[IEEE_SERVICE]
+        hass, DOMAIN, ZHAService.REMOVE, _remove, schema=SERVICE_SCHEMAS[IEEE_SERVICE]
     )
     async_register_admin_service(
         hass,
         DOMAIN,
-        SERVICE_SET_ZIGBEE_CLUSTER_ATTRIBUTE,
+        ZHAService.SET_ZIGBEE_CLUSTER_ATTRIBUTE,
         _set_zigbee_cluster_attributes,
-        schema=SERVICE_SCHEMAS[SERVICE_SET_ZIGBEE_CLUSTER_ATTRIBUTE],
+        schema=SERVICE_SCHEMAS[ZHAService.SET_ZIGBEE_CLUSTER_ATTRIBUTE],
     )
     async_register_admin_service(
         hass,
         DOMAIN,
-        SERVICE_ISSUE_ZIGBEE_CLUSTER_COMMAND,
+        ZHAService.ISSUE_ZIGBEE_CLUSTER_COMMAND,
         _issue_zigbee_cluster_command,
-        schema=SERVICE_SCHEMAS[SERVICE_ISSUE_ZIGBEE_CLUSTER_COMMAND],
+        schema=SERVICE_SCHEMAS[ZHAService.ISSUE_ZIGBEE_CLUSTER_COMMAND],
     )
     async_register_admin_service(
         hass,
         DOMAIN,
-        SERVICE_ISSUE_ZIGBEE_GROUP_COMMAND,
+        ZHAService.ISSUE_ZIGBEE_GROUP_COMMAND,
         _issue_zigbee_group_command,
-        schema=SERVICE_SCHEMAS[SERVICE_ISSUE_ZIGBEE_GROUP_COMMAND],
+        schema=SERVICE_SCHEMAS[ZHAService.ISSUE_ZIGBEE_GROUP_COMMAND],
     )
     async_register_admin_service(
         hass,
         DOMAIN,
-        SERVICE_WARNING_DEVICE_SQUAWK,
+        ZHAService.WARNING_DEVICE_SQUAWK,
         _warning_device_squawk,
-        schema=SERVICE_SCHEMAS[SERVICE_WARNING_DEVICE_SQUAWK],
+        schema=SERVICE_SCHEMAS[ZHAService.WARNING_DEVICE_SQUAWK],
     )
     async_register_admin_service(
         hass,
         DOMAIN,
-        SERVICE_WARNING_DEVICE_WARN,
+        ZHAService.WARNING_DEVICE_WARN,
         _warning_device_warn,
-        schema=SERVICE_SCHEMAS[SERVICE_WARNING_DEVICE_WARN],
+        schema=SERVICE_SCHEMAS[ZHAService.WARNING_DEVICE_WARN],
+    )
+
+    for service_name, func in (
+        (ZHAService.ENABLE_LOCK_USER_CODE, "async_enable_lock_user_code"),
+        (ZHAService.DISABLE_LOCK_USER_CODE, "async_disable_lock_user_code"),
+        (ZHAService.CLEAR_LOCK_USER_CODE, "async_clear_lock_user_code"),
+    ):
+        async_register_platform_entity_service(
+            hass,
+            DOMAIN,
+            service_name,
+            entity_domain=LOCK_DOMAIN,
+            schema=LOCK_CODE_SLOT_SCHEMA,
+            func=func,
+        )
+
+    async_register_platform_entity_service(
+        hass,
+        DOMAIN,
+        ZHAService.SET_LOCK_USER_CODE,
+        entity_domain=LOCK_DOMAIN,
+        schema=LOCK_SET_USER_CODE_SCHEMA,
+        func="async_set_lock_user_code",
     )

@@ -1,21 +1,20 @@
 """Tests for the climate LLM tools platform."""
 
 import pytest
+from pytest_homeassistant.common import async_mock_service
 
 from homeassistant.components import llm as llm_component
 from homeassistant.components.climate import (
-    ATTR_TEMPERATURE,
     DOMAIN,
-    SERVICE_SET_TEMPERATURE,
     ClimateEntityFeature,
+    ClimateService,
+    ClimateServiceArgument,
     llm as climate_llm,
 )
 from homeassistant.components.homeassistant.exposed_entities import async_expose_entity
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.helpers import llm
 from homeassistant.setup import async_setup_component
-
-from tests.common import async_mock_service
 
 ENTITY_ID = "climate.test"
 
@@ -58,7 +57,14 @@ async def _tool_names(hass: HomeAssistant) -> set[str]:
 
 async def test_intent_tool_exposed(hass: HomeAssistant) -> None:
     """Test the intent tool is offered for an exposed climate entity."""
-    assert "climate__HassClimateSetTemperature" in await _tool_names(hass)
+    result = await llm_component.async_get_tools(hass, _llm_context(), "assist")
+    tools = {tool.name: tool for tool in result.tools}
+    assert "climate__HassClimateSetTemperature" in tools
+
+    tool = tools["climate__HassClimateSetTemperature"]
+    assert tool.title == "Set temperature"
+    assert tool.integration == DOMAIN
+    assert tool.annotations == llm.ToolAnnotations(idempotent=True, open_world=False)
 
 
 @pytest.mark.parametrize(
@@ -79,7 +85,7 @@ async def test_set_temperature_omits_empty_optional_targets(
 ) -> None:
     """Test empty optional targets do not invalidate a climate LLM tool call."""
     api = await llm.async_get_api(hass, "assist", _llm_context())
-    calls = async_mock_service(hass, DOMAIN, SERVICE_SET_TEMPERATURE)
+    calls = async_mock_service(hass, DOMAIN, ClimateService.SET_TEMPERATURE)
 
     response = await api.async_call_tool(
         llm.ToolInput(
@@ -91,7 +97,7 @@ async def test_set_temperature_omits_empty_optional_targets(
     assert len(calls) == 1
     assert calls[0].data == {
         "entity_id": ENTITY_ID,
-        ATTR_TEMPERATURE: 25,
+        ClimateServiceArgument.TEMPERATURE: 25,
     }
     assert response.data["response_type"] == "action_done"
 

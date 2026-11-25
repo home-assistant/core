@@ -13,6 +13,7 @@ from airgradient import (
     ConfigurationControl,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.airgradient.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER, SOURCE_ZEROCONF
@@ -20,8 +21,6 @@ from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
-
-from tests.common import MockConfigEntry
 
 OLD_ZEROCONF_DISCOVERY = ZeroconfServiceInfo(
     ip_address=ip_address("10.0.0.131"),
@@ -285,6 +284,7 @@ async def test_zeroconf_flow_cloud_device(
         {},
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == "84fce612f5b8"
     mock_cloud_airgradient_client.set_configuration_control.assert_not_called()
 
 
@@ -406,6 +406,7 @@ async def test_zeroconf_flow_v1_hint(
     result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == "84fce612f5b8"
 
 
 @pytest.mark.parametrize(
@@ -437,6 +438,7 @@ async def test_zeroconf_flow_probes_for_missing_or_unknown_api_hint(
     result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == "84fce612f5b8"
 
 
 @pytest.mark.usefixtures("mock_airgradient_client", "mock_setup_entry")
@@ -476,6 +478,7 @@ async def test_user_flow_v1_skips_legacy_firmware_gate(
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == "84fce612f5b8"
 
 
 @pytest.mark.parametrize(
@@ -545,6 +548,7 @@ async def test_user_flow_works_discovery(
         {CONF_HOST: "10.0.0.131"},
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == "84fce612f5b8"
 
     # Verify the discovery flow was aborted
     assert not hass.config_entries.flow.async_progress(DOMAIN)

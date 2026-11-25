@@ -3,6 +3,7 @@
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 from weheat.abstractions.discovery import HeatPumpDiscovery
 
@@ -11,8 +12,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
-
-from tests.common import MockConfigEntry, snapshot_platform
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
@@ -47,4 +46,4 @@ async def test_create_binary_entities(
         await setup_integration(hass, mock_config_entry)
 
     await hass.async_block_till_done()
-    assert len(hass.states.async_all()) == 4
+    assert len(hass.states.async_all()) == 5

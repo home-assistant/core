@@ -15,24 +15,23 @@ from pyliebherrhomeapi import (
 )
 from pyliebherrhomeapi.exceptions import LiebherrConnectionError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.number import (
-    ATTR_VALUE,
     DEFAULT_MAX_VALUE,
     DEFAULT_MIN_VALUE,
     DOMAIN as NUMBER_DOMAIN,
-    SERVICE_SET_VALUE,
+    NumberService,
+    NumberServiceArgument,
 )
-from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE, Platform
+from homeassistant.const import STATE_UNAVAILABLE, Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
 
 from .conftest import MOCK_DEVICE, MOCK_DEVICE_STATE, SSEStreamHelper
-
-from tests.common import MockConfigEntry, snapshot_platform
 
 
 @pytest.fixture
@@ -56,6 +55,35 @@ async def test_temperature_step(hass: HomeAssistant) -> None:
     assert bottom_zone is not None
     assert top_zone.attributes["step"] == 2
     assert bottom_zone.attributes["step"] == 1
+
+
+async def test_non_uniform_temperature_steps(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_liebherr_client: MagicMock,
+    platforms: list[Platform],
+) -> None:
+    """Test non-uniform temperature steps fall back to one degree."""
+    device_state = copy.deepcopy(MOCK_DEVICE_STATE)
+    temperature_control = device_state.controls[0]
+    assert isinstance(temperature_control, TemperatureControl)
+    device_state.controls[0] = replace(
+        temperature_control,
+        set_temperature_steps=[2, 4, 7],
+        set_temperature_steps_enabled=True,
+    )
+    mock_liebherr_client.get_device_state.side_effect = lambda *a, **kw: copy.deepcopy(
+        device_state
+    )
+
+    mock_config_entry.add_to_hass(hass)
+    with patch("homeassistant.components.liebherr.PLATFORMS", platforms):
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    state = hass.states.get("number.test_fridge_top_zone_setpoint")
+    assert state is not None
+    assert state.attributes["step"] == 1
 
 
 @pytest.mark.usefixtures("init_integration")
@@ -123,8 +151,8 @@ async def test_set_temperature(
 
     await hass.services.async_call(
         NUMBER_DOMAIN,
-        SERVICE_SET_VALUE,
-        {ATTR_ENTITY_ID: entity_id, ATTR_VALUE: 6},
+        NumberService.SET_VALUE,
+        {TargetKey.ENTITY_ID: entity_id, NumberServiceArgument.VALUE: 6},
         blocking=True,
     )
 
@@ -158,10 +186,10 @@ async def test_set_temperature_preserves_sse_update_during_command(
     service_call = hass.async_create_task(
         hass.services.async_call(
             NUMBER_DOMAIN,
-            SERVICE_SET_VALUE,
+            NumberService.SET_VALUE,
             {
-                ATTR_ENTITY_ID: "number.test_fridge_top_zone_setpoint",
-                ATTR_VALUE: 6,
+                TargetKey.ENTITY_ID: "number.test_fridge_top_zone_setpoint",
+                NumberServiceArgument.VALUE: 6,
             },
             blocking=True,
         )
@@ -208,10 +236,10 @@ async def test_set_temperature_preserves_sse_disconnect_during_command(
     service_call = hass.async_create_task(
         hass.services.async_call(
             NUMBER_DOMAIN,
-            SERVICE_SET_VALUE,
+            NumberService.SET_VALUE,
             {
-                ATTR_ENTITY_ID: "number.test_fridge_top_zone_setpoint",
-                ATTR_VALUE: 6,
+                TargetKey.ENTITY_ID: "number.test_fridge_top_zone_setpoint",
+                NumberServiceArgument.VALUE: 6,
             },
             blocking=True,
         )
@@ -245,10 +273,10 @@ async def test_set_temperature_after_unit_conversion(
 
     await hass.services.async_call(
         NUMBER_DOMAIN,
-        SERVICE_SET_VALUE,
+        NumberService.SET_VALUE,
         {
-            ATTR_ENTITY_ID: "number.test_fridge_top_zone_setpoint",
-            ATTR_VALUE: 39,
+            TargetKey.ENTITY_ID: "number.test_fridge_top_zone_setpoint",
+            NumberServiceArgument.VALUE: 39,
         },
         blocking=True,
     )
@@ -275,10 +303,10 @@ async def test_set_temperature_not_in_allowed_steps(
     ):
         await hass.services.async_call(
             NUMBER_DOMAIN,
-            SERVICE_SET_VALUE,
+            NumberService.SET_VALUE,
             {
-                ATTR_ENTITY_ID: "number.test_fridge_top_zone_setpoint",
-                ATTR_VALUE: value,
+                TargetKey.ENTITY_ID: "number.test_fridge_top_zone_setpoint",
+                NumberServiceArgument.VALUE: value,
             },
             blocking=True,
         )
@@ -304,8 +332,11 @@ async def test_set_temperature_failure(
     ):
         await hass.services.async_call(
             NUMBER_DOMAIN,
-            SERVICE_SET_VALUE,
-            {ATTR_ENTITY_ID: entity_id, ATTR_VALUE: 6},
+            NumberService.SET_VALUE,
+            {
+                TargetKey.ENTITY_ID: entity_id,
+                NumberServiceArgument.VALUE: 6,
+            },
             blocking=True,
         )
 

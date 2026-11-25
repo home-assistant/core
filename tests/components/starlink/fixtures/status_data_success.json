@@ -19,7 +19,11 @@
     "obstruction_interval": null,
     "direction_azimuth": -179.00344848632812,
     "direction_elevation": 68.67173767089844,
-    "is_snr_above_noise_floor": true
+    "is_snr_above_noise_floor": true,
+    "gps_ready": true,
+    "gps_enabled": true,
+    "gps_sats": 12,
+    "signal_quality": 0.7
   },
   {
     "wedges_fraction_obstructed[]": [
@@ -66,5 +70,10 @@
     "alert_is_power_save_idle": false,
     "alert_moving_while_not_mobile": false,
     "alert_moving_fast_while_not_aviation": false
+  },
+  {
+    "software_update_progress": null,
+    "software_update_reboot_ready": null,
+    "seconds_until_software_update_reboot_possible": null
   }
 ]

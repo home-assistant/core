@@ -1,15 +1,18 @@
 """Select for Shelly."""
 
+from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Final, override
+from typing import TYPE_CHECKING, Any, Final, cast, override
 
 from aioshelly.const import RPC_GENERATIONS
+from aioshelly.rpc_device import RpcDevice
 
 from homeassistant.components.select import (
     DOMAIN as SELECT_DOMAIN,
     SelectEntity,
     SelectEntityDescription,
 )
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -25,6 +28,7 @@ from .utils import (
     async_remove_orphaned_entities,
     get_device_entry_gen,
     get_virtual_component_ids,
+    is_rpc_ledstrip_control_available,
     is_view_for_platform,
 )
 
@@ -35,7 +39,7 @@ PARALLEL_UPDATES = 0
 class RpcSelectDescription(RpcEntityDescription, SelectEntityDescription):
     """Class to describe a RPC select entity."""
 
-    method: str
+    method: Callable[[RpcDevice, int, str], Awaitable[Any]]
 
 
 class RpcSelect(ShellyRpcAttributeEntity, SelectEntity):
@@ -70,15 +74,10 @@ class RpcSelect(ShellyRpcAttributeEntity, SelectEntity):
     @override
     async def async_select_option(self, option: str) -> None:
         """Change the value."""
-        method = getattr(self.coordinator.device, self.entity_description.method)
-
-        if TYPE_CHECKING:
-            assert method is not None
-
         if self.reversed_option_map:
-            await method(self._id, self.reversed_option_map[option])
-        else:
-            await method(self._id, option)
+            option = self.reversed_option_map[option]
+
+        await self.entity_description.method(self.coordinator.device, self._id, option)
 
 
 class RpcCuryModeSelect(RpcSelect):
@@ -97,9 +96,63 @@ class RpcCuryModeSelect(RpcSelect):
         return self.attribute_value
 
 
-RPC_SELECT_ENTITIES: Final = {
-    "cury_mode": RpcSelectDescription(
-        key="cury",
+class RpcLedStripPaletteSelect(RpcSelect):
+    """Represent a RPC LED strip palette select entity."""
+
+    def __init__(
+        self,
+        coordinator: ShellyRpcCoordinator,
+        key: str,
+        attribute: str,
+        description: RpcSelectDescription,
+    ) -> None:
+        """Initialize select."""
+        super().__init__(coordinator, key, attribute, description)
+
+        palettes = coordinator.config_entry.runtime_data.rpc_ledstrip_palettes
+
+        if TYPE_CHECKING:
+            assert palettes is not None
+
+        self._attr_options = list(palettes)
+
+    @property
+    @override
+    def available(self) -> bool:
+        """Return if entity is available."""
+        if TYPE_CHECKING:
+            assert self.entity_description.sub_key is not None
+
+        return super().available and is_rpc_ledstrip_control_available(
+            self.coordinator.config_entry.runtime_data.rpc_ledstrip_effects,
+            self.status,
+            self.entity_description.sub_key,
+        )
+
+    @property
+    @override
+    def current_option(self) -> str | None:
+        """Return the selected entity option to represent the entity state."""
+        if TYPE_CHECKING:
+            assert isinstance(self.attribute_value, str)
+
+        return self.attribute_value
+
+
+class RpcUiLedModeSelect(RpcSelect):
+    """Represent a RPC select entity for the plug/power strip LED mode."""
+
+    @property
+    @override
+    def current_option(self) -> str | None:
+        """Return the selected entity option to represent the entity state."""
+        return cast(str, self.coordinator.device.config[self.key]["leds"]["mode"])
+
+
+RPC_SELECT_ENTITIES: Final = (
+    RpcSelectDescription(
+        key="cury_mode",
+        components=("cury",),
         sub_key="mode",
         translation_key="cury_mode",
         options=[
@@ -111,19 +164,55 @@ RPC_SELECT_ENTITIES: Final = {
             "reception",
             "workplace",
         ],
-        method="cury_set_mode",
+        method=lambda device, id_, option: device.cury_set_mode(id_, option),
         entity_class=RpcCuryModeSelect,
     ),
-    "enum_generic": RpcSelectDescription(
-        key="enum",
+    RpcSelectDescription(
+        key="enum_generic",
+        components=("enum",),
         sub_key="value",
         removal_condition=lambda config, _status, key: (
             not is_view_for_platform(config, key, SELECT_DOMAIN)
         ),
-        method="enum_set",
+        method=lambda device, id_, option: device.enum_set(id_, option),
         role=ROLE_GENERIC,
     ),
-}
+    RpcSelectDescription(
+        key="ledstrip_palette",
+        components=("ledstrip",),
+        sub_key="palette",
+        translation_key="effect_palette",
+        method=lambda device, id_, option: device.ledstrip_set(
+            id_, {"palette": option}
+        ),
+        supported=lambda _: True,
+        entity_class=RpcLedStripPaletteSelect,
+    ),
+    RpcSelectDescription(
+        key="plugs_ui_led_mode",
+        components=("plugs_ui",),
+        translation_key="led_mode",
+        entity_category=EntityCategory.CONFIG,
+        options=["power", "switch", "off"],
+        method=lambda device, _id, option: device.plugs_ui_setconfig(
+            {"leds": {"mode": option}}
+        ),
+        supported=lambda _: True,
+        entity_class=RpcUiLedModeSelect,
+    ),
+    RpcSelectDescription(
+        key="powerstrip_ui_led_mode",
+        components=("powerstrip_ui",),
+        translation_key="led_mode",
+        entity_category=EntityCategory.CONFIG,
+        options=["power", "switch", "off"],
+        method=lambda device, _id, option: device.powerstrip_ui_setconfig(
+            {"leds": {"mode": option}}
+        ),
+        supported=lambda _: True,
+        entity_class=RpcUiLedModeSelect,
+    ),
+)
 
 
 async def async_setup_entry(

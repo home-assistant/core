@@ -8,7 +8,6 @@ import probatio
 from pynetgear import DEFAULT_HOST, DEFAULT_PORT, DEFAULT_USER
 
 from homeassistant.config_entries import (
-    ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
     OptionsFlowWithReload,
@@ -39,6 +38,7 @@ from .const import (
     PORT_80,
     PORT_5555,
 )
+from .coordinator import NetgearConfigEntry
 from .errors import CannotLoginException
 from .router import get_api
 
@@ -61,10 +61,14 @@ def _user_schema_with_defaults(user_input):
 def _ordered_shared_schema(schema_input):
     return {
         probatio.Optional(
+            CONF_PORT, default=schema_input.get(CONF_PORT, DEFAULT_PORT)
+        ): probatio.Port(),
+        probatio.Optional(CONF_SSL, default=schema_input.get(CONF_SSL, False)): bool,
+        probatio.Optional(
             CONF_USERNAME, default=schema_input.get(CONF_USERNAME, "")
         ): str,
         probatio.Required(
-            CONF_PASSWORD, default=schema_input.get(CONF_PASSWORD, "")
+            probatio.Secret(CONF_PASSWORD), default=schema_input.get(CONF_PASSWORD, "")
         ): str,
     }
 
@@ -101,10 +105,10 @@ class NetgearFlowHandler(ConfigFlow, domain=DOMAIN):
     def __init__(self) -> None:
         """Initialize the netgear config flow."""
         self.placeholders = {
-            CONF_HOST: DEFAULT_HOST,
-            CONF_PORT: DEFAULT_PORT,
-            CONF_USERNAME: DEFAULT_USER,
-            CONF_SSL: False,
+            "host": DEFAULT_HOST,
+            "port": DEFAULT_PORT,
+            "username": DEFAULT_USER,
+            "ssl": False,
         }
         self.discovered = False
 
@@ -112,7 +116,7 @@ class NetgearFlowHandler(ConfigFlow, domain=DOMAIN):
     @callback
     @override
     def async_get_options_flow(
-        config_entry: ConfigEntry,
+        config_entry: NetgearConfigEntry,
     ) -> OptionsFlowHandler:
         """Get the options flow."""
         return OptionsFlowHandler()
@@ -127,7 +131,9 @@ class NetgearFlowHandler(ConfigFlow, domain=DOMAIN):
             user_input = {}
 
         if self.discovered:
-            data_schema = _discovery_schema_with_defaults(user_input)
+            data_schema = _discovery_schema_with_defaults(
+                self.placeholders | user_input
+            )
         else:
             data_schema = _user_schema_with_defaults(user_input)
 
@@ -195,8 +201,8 @@ class NetgearFlowHandler(ConfigFlow, domain=DOMAIN):
             return await self._show_setup_form()
 
         host = user_input.get(CONF_HOST, self.placeholders[CONF_HOST])
-        port = self.placeholders[CONF_PORT]
-        ssl = self.placeholders[CONF_SSL]
+        port = user_input.get(CONF_PORT, self.placeholders[CONF_PORT])
+        ssl = user_input.get(CONF_SSL, self.placeholders[CONF_SSL])
         username = user_input.get(CONF_USERNAME, self.placeholders[CONF_USERNAME])
         password = user_input[CONF_PASSWORD]
         if not username:

@@ -1,5 +1,6 @@
 """Constants for the Matter integration."""
 
+from enum import StrEnum
 import logging
 from typing import Final
 
@@ -18,20 +19,54 @@ ID_TYPE_DEVICE_ID = "deviceid"
 ID_TYPE_SERIAL = "serial"
 
 FEATUREMAP_ATTRIBUTE_ID = 65532
+CLUSTER_REVISION_ATTRIBUTE_ID = 65533
+
+# Maximum Mireds value per the Matter spec is 65279
+# Conversion between Kelvin and Mireds is 1,000,000 / Kelvin,
+# so this corresponds to a minimum color temperature of ~15.3K
+# Which is shown in UI as 15 Kelvin due to rounding.
+# But converting 15 Kelvin back to Mireds gives 66666 which is above the maximum,
+# and causes Invoke error, so cap values over maximum when sending
+MATTER_MAX_MIREDS = 65279
+
+
+class MatterService(StrEnum):
+    """Store keys for Matter services."""
+
+    CLEAR_LOCK_CREDENTIAL = "clear_lock_credential"
+    CLEAR_LOCK_USER = "clear_lock_user"
+    GET_LOCK_CREDENTIAL_STATUS = "get_lock_credential_status"
+    GET_LOCK_INFO = "get_lock_info"
+    GET_LOCK_USERS = "get_lock_users"
+    SET_LOCK_CREDENTIAL = "set_lock_credential"
+    SET_LOCK_USER = "set_lock_user"
+    WATER_HEATER_BOOST = "water_heater_boost"
+
+
+class MatterServiceArgument(StrEnum):
+    """Store keys for Matter service arguments."""
+
+    CREDENTIAL_TYPE = "credential_type"
+    CREDENTIAL_INDEX = "credential_index"
+    USER_INDEX = "user_index"
+    CREDENTIAL_DATA = "credential_data"
+    USER_STATUS = "user_status"
+    USER_TYPE = "user_type"
+    USER_NAME = "user_name"
+    CREDENTIAL_RULE = "credential_rule"
+    DURATION = "duration"
+    EMERGENCY_BOOST = "emergency_boost"
+    TEMPORARY_SETPOINT = "temporary_setpoint"
+
 
 # --- Lock domain constants ---
 
 # Shared field keys
-ATTR_CREDENTIAL_RULE = "credential_rule"
 ATTR_MAX_CREDENTIALS_PER_USER = "max_credentials_per_user"
 ATTR_MAX_PIN_USERS = "max_pin_users"
 ATTR_MAX_RFID_USERS = "max_rfid_users"
 ATTR_MAX_USERS = "max_users"
 ATTR_SUPPORTS_USER_MGMT = "supports_user_management"
-ATTR_USER_INDEX = "user_index"
-ATTR_USER_NAME = "user_name"
-ATTR_USER_STATUS = "user_status"
-ATTR_USER_TYPE = "user_type"
 
 # Magic values
 CLEAR_ALL_INDEX = 0xFFFE  # Matter spec: pass to ClearUser/ClearCredential to clear all
@@ -40,10 +75,6 @@ CLEAR_ALL_INDEX = 0xFFFE  # Matter spec: pass to ClearUser/ClearCredential to cl
 # 10 seconds accounts for Thread network latency and retransmissions.
 LOCK_TIMED_REQUEST_TIMEOUT_MS = 10000
 
-# Credential field keys
-ATTR_CREDENTIAL_DATA = "credential_data"
-ATTR_CREDENTIAL_INDEX = "credential_index"
-ATTR_CREDENTIAL_TYPE = "credential_type"
 
 # Credential type strings
 CRED_TYPE_FACE = "face"
@@ -117,3 +148,6 @@ SERVICE_CREDENTIAL_TYPES = [
 ]
 
 CONCENTRATION_BECQUERELS_PER_CUBIC_METER: Final = "Bq/m³"
+
+# Seconds from Matter 2000 epoch to Unix epoch
+MATTER_2000_TO_UNIX_EPOCH_OFFSET: Final = 946684800

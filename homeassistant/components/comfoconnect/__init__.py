@@ -43,7 +43,9 @@ CONFIG_SCHEMA = probatio.Schema(
                 probatio.Optional(
                     CONF_USER_AGENT, default=DEFAULT_USER_AGENT
                 ): cv.string,
-                probatio.Optional(CONF_PIN, default=DEFAULT_PIN): cv.positive_int,
+                probatio.Optional(
+                    probatio.Secret(CONF_PIN), default=DEFAULT_PIN
+                ): cv.positive_int,
             }
         )
     },

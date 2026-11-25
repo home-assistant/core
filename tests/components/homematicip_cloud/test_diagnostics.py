@@ -1,13 +1,12 @@
 """Tests for HomematicIP Cloud diagnostics."""
 
+from pytest_homeassistant.common import async_load_json_object_fixture
+from pytest_homeassistant.components.diagnostics import get_diagnostics_for_config_entry
+from pytest_homeassistant.typing import ClientSessionGenerator
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.homematicip_cloud.const import DOMAIN
 from homeassistant.core import HomeAssistant
-
-from tests.common import async_load_json_object_fixture
-from tests.components.diagnostics import get_diagnostics_for_config_entry
-from tests.typing import ClientSessionGenerator
 
 
 async def test_diagnostics(

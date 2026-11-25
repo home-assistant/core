@@ -7,12 +7,21 @@ from unittest.mock import MagicMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 from pyliebherrhomeapi import Device, DeviceState, DeviceType, PresentationLightControl
-from pyliebherrhomeapi.exceptions import LiebherrConnectionError
+from pyliebherrhomeapi.exceptions import LiebherrServerError
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.liebherr.const import DOMAIN
-from homeassistant.components.light import ATTR_BRIGHTNESS, DOMAIN as LIGHT_DOMAIN
+from homeassistant.components.light import (
+    ATTR_BRIGHTNESS,
+    DOMAIN as LIGHT_DOMAIN,
+    LightService,
+)
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     SERVICE_TURN_OFF,
@@ -22,14 +31,13 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
     Platform,
+    TargetKey,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
 from .conftest import MOCK_DEVICE, MOCK_DEVICE_STATE, SSEStreamHelper
-
-from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 pytestmark = pytest.mark.usefixtures("entity_registry_enabled_by_default")
 
@@ -107,8 +115,8 @@ async def test_light_updates_optimistically(hass: HomeAssistant) -> None:
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: entity_id},
+        LightService.TURN_OFF,
+        {TargetKey.ENTITY_ID: entity_id},
         blocking=True,
     )
 
@@ -122,10 +130,10 @@ async def test_light_failure(
     hass: HomeAssistant,
     mock_liebherr_client: MagicMock,
 ) -> None:
-    """Test light fails gracefully on connection error."""
+    """Test light fails gracefully on a library error."""
     entity_id = "light.test_fridge_presentation_light"
-    mock_liebherr_client.set_presentation_light.side_effect = LiebherrConnectionError(
-        "Connection failed"
+    mock_liebherr_client.set_presentation_light.side_effect = LiebherrServerError(
+        "Server error"
     )
 
     with pytest.raises(
@@ -134,8 +142,8 @@ async def test_light_failure(
     ):
         await hass.services.async_call(
             LIGHT_DOMAIN,
-            SERVICE_TURN_ON,
-            {ATTR_ENTITY_ID: entity_id},
+            LightService.TURN_ON,
+            {TargetKey.ENTITY_ID: entity_id},
             blocking=True,
         )
 

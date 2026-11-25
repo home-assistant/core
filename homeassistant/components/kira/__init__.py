@@ -51,7 +51,7 @@ SENSOR_SCHEMA = probatio.Schema(
     {
         probatio.Optional(CONF_NAME, default=DOMAIN): cv.string,
         probatio.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
-        probatio.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+        probatio.Optional(CONF_PORT, default=DEFAULT_PORT): probatio.Port(),
     }
 )
 
@@ -59,7 +59,7 @@ REMOTE_SCHEMA = probatio.Schema(
     {
         probatio.Optional(CONF_NAME, default=DOMAIN): cv.string,
         probatio.Required(CONF_HOST): cv.string,
-        probatio.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+        probatio.Optional(CONF_PORT, default=DEFAULT_PORT): probatio.Port(),
     }
 )
 

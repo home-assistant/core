@@ -11,21 +11,23 @@ from opendisplay import (
     AuthenticationFailedError,
     AuthenticationRequiredError,
     BLEConnectionError,
+    DitherMode,
+    Sec2KeyRequiredError,
 )
 from PIL import Image as PILImage
 import probatio
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 
 from homeassistant import config_entries
+from homeassistant.components.media_source import MediaImage
 from homeassistant.components.opendisplay.const import CONF_ENCRYPTION_KEY, DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import device_registry as dr
 
 from . import ENCRYPTION_KEY
-
-from tests.common import MockConfigEntry
-from tests.test_util.aiohttp import AiohttpClientMocker
 
 
 @pytest.fixture(autouse=True)
@@ -38,7 +40,7 @@ async def setup_entry(hass: HomeAssistant, mock_config_entry: MockConfigEntry) -
 
 @pytest.fixture
 def mock_upload_device(mock_opendisplay_device: MagicMock) -> MagicMock:
-    """Return the mock OpenDisplayDevice for upload service tests."""
+    """Return the mock device for upload service tests."""
     return mock_opendisplay_device
 
 
@@ -87,7 +89,8 @@ async def test_upload_image_local_file(
         blocking=True,
     )
 
-    mock_upload_device.upload_image.assert_called_once()
+    mock_upload_device.legacy.upload_image.assert_called_once()
+    assert mock_upload_device.legacy.upload_image.call_args.kwargs["tone"] == 0.5
 
 
 async def test_upload_image_remote_url(
@@ -125,7 +128,54 @@ async def test_upload_image_remote_url(
             blocking=True,
         )
 
-    mock_upload_device.upload_image.assert_called_once()
+    mock_upload_device.legacy.upload_image.assert_called_once()
+    assert mock_upload_device.legacy.upload_image.call_args.kwargs["tone"] == 0.0
+
+
+@pytest.mark.parametrize(
+    "media_content_id",
+    [
+        pytest.param("media-source://image/image.collection", id="image_entity"),
+        pytest.param("media-source://camera/camera.front_door", id="camera_entity"),
+    ],
+)
+async def test_upload_image_from_entity(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_upload_device: MagicMock,
+    media_content_id: str,
+) -> None:
+    """Test uploading a single image from an image or camera entity."""
+    device_id = _device_id(hass, mock_config_entry)
+
+    buf = io.BytesIO()
+    PILImage.new("RGB", (10, 10)).save(buf, format="PNG")
+
+    with (
+        patch(
+            "homeassistant.components.opendisplay.services.async_get_media_image",
+            return_value=MediaImage(buf.getvalue(), "image/png"),
+        ) as mock_get_image,
+        patch(
+            "homeassistant.components.opendisplay.services.async_resolve_media"
+        ) as mock_resolve,
+    ):
+        await hass.services.async_call(
+            DOMAIN,
+            "upload_image",
+            {
+                "device_id": device_id,
+                "image": {
+                    "media_content_id": media_content_id,
+                    "media_content_type": "image/png",
+                },
+            },
+            blocking=True,
+        )
+
+    mock_get_image.assert_awaited_once_with(hass, media_content_id)
+    mock_resolve.assert_not_called()
+    mock_upload_device.legacy.upload_image.assert_called_once()
 
 
 async def test_upload_image_invalid_device_id(
@@ -205,6 +255,34 @@ async def test_upload_image_ble_error(
         )
 
 
+async def test_upload_image_display_not_supported(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_opendisplay_device: MagicMock,
+    mock_resolve_media: MagicMock,
+) -> None:
+    """Test that a display the uploader cannot describe raises a clear error."""
+    device_id = _device_id(hass, mock_config_entry)
+    mock_opendisplay_device.legacy.capabilities = None
+
+    with pytest.raises(HomeAssistantError) as exc_info:
+        await hass.services.async_call(
+            DOMAIN,
+            "upload_image",
+            {
+                "device_id": device_id,
+                "image": {
+                    "media_content_id": "media-source://local/test.png",
+                    "media_content_type": "image/png",
+                },
+            },
+            blocking=True,
+        )
+
+    assert exc_info.value.translation_key == "display_not_supported"
+    mock_opendisplay_device.legacy.upload_image.assert_not_called()
+
+
 async def test_upload_image_download_error(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
@@ -241,6 +319,51 @@ async def test_upload_image_download_error(
             },
             blocking=True,
         )
+
+
+@pytest.mark.parametrize(
+    ("dither_mode", "expected"),
+    [
+        ("none", DitherMode.NONE),
+        ("burkes", DitherMode.BURKES),
+        ("ordered", DitherMode.ORDERED),
+        ("floyd_steinberg", DitherMode.FLOYD_STEINBERG),
+        ("atkinson", DitherMode.ATKINSON),
+        ("stucki", DitherMode.STUCKI),
+        ("sierra", DitherMode.SIERRA),
+        ("sierra_lite", DitherMode.SIERRA_LITE),
+        ("jarvis_judice_ninke", DitherMode.JARVIS_JUDICE_NINKE),
+    ],
+)
+async def test_upload_image_dither_modes(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_upload_device: MagicMock,
+    mock_resolve_media: MagicMock,
+    dither_mode: str,
+    expected: DitherMode,
+) -> None:
+    """Test that each dither mode offered in services.yaml reaches the device."""
+    device_id = _device_id(hass, mock_config_entry)
+
+    await hass.services.async_call(
+        DOMAIN,
+        "upload_image",
+        {
+            "device_id": device_id,
+            "image": {
+                "media_content_id": "media-source://local/test.png",
+                "media_content_type": "image/png",
+            },
+            "dither_mode": dither_mode,
+        },
+        blocking=True,
+    )
+
+    assert (
+        mock_upload_device.legacy.upload_image.call_args.kwargs["dither_mode"]
+        is expected
+    )
 
 
 @pytest.mark.parametrize(
@@ -303,10 +426,10 @@ async def test_upload_image_cancels_previous_task(
 async def test_upload_image_with_encryption_key(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_opendisplay_device_class: MagicMock,
+    mock_connect: MagicMock,
     mock_resolve_media: MagicMock,
 ) -> None:
-    """Test that upload_image passes the encryption key to OpenDisplayDevice."""
+    """Test that upload_image passes the encryption key to connect."""
     hass.config_entries.async_update_entry(
         mock_config_entry,
         data={**mock_config_entry.data, CONF_ENCRYPTION_KEY: ENCRYPTION_KEY},
@@ -327,9 +450,9 @@ async def test_upload_image_with_encryption_key(
         blocking=True,
     )
 
-    assert mock_opendisplay_device_class.call_args.kwargs[
-        "encryption_key"
-    ] == bytes.fromhex(ENCRYPTION_KEY)
+    assert mock_connect.call_args.kwargs["encryption_key"] == bytes.fromhex(
+        ENCRYPTION_KEY
+    )
 
 
 @pytest.mark.parametrize(
@@ -337,6 +460,7 @@ async def test_upload_image_with_encryption_key(
     [
         AuthenticationFailedError("wrong key"),
         AuthenticationRequiredError("auth required"),
+        Sec2KeyRequiredError(1),
     ],
 )
 async def test_upload_image_auth_error(

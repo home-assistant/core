@@ -1,9 +1,12 @@
 """Tests for the Avea integration."""
 
+from pytest_homeassistant.components.bluetooth import (
+    generate_advertisement_data,
+    generate_ble_device,
+)
+
 from homeassistant.components.avea.const import AVEA_SERVICE_UUID
 from homeassistant.components.bluetooth import BluetoothServiceInfoBleak
-
-from tests.components.bluetooth import generate_advertisement_data, generate_ble_device
 
 AVEA_FIRMWARE_VERSION = "2.4.6 (135)"
 AVEA_SERIAL_NUMBER = "FFEEDDCCBBAA"

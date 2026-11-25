@@ -90,9 +90,6 @@
       "battery_discharge_energy": {
         "name": "Discharge energy today"
       },
-      "battery_power": {
-        "name": "Power"
-      },
       "battery_state_of_charge": {
         "name": "State of charge"
       },
@@ -176,6 +173,26 @@
       "storage_power": {
         "name": "Storage power"
       }
+    }
+  },
+  "exceptions": {
+    "api_request_failed": {
+      "message": "Error requesting {service} data: {status}"
+    },
+    "cannot_retrieve_details": {
+      "message": "Could not retrieve details from SolarEdge API"
+    },
+    "data_unavailable": {
+      "message": "{service} data not available from API"
+    },
+    "missing_data": {
+      "message": "Missing {service} data, skipping update"
+    },
+    "missing_details": {
+      "message": "Missing details data in SolarEdge response"
+    },
+    "site_not_active": {
+      "message": "The SolarEdge site is not active"
     }
   }
 }

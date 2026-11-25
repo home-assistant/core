@@ -1,11 +1,29 @@
 """Support for water heater devices."""
 
 from enum import IntFlag, StrEnum
-from typing import Final
+from typing import TYPE_CHECKING, Final
 
 from homeassistant.helpers.deprecation import EnumWithDeprecatedMembers
+from homeassistant.util.hass_dict import HassKey
+
+if TYPE_CHECKING:
+    from homeassistant.helpers.entity_component import EntityComponent
+
+    from .entity import WaterHeaterEntity
 
 DOMAIN: Final = "water_heater"
+
+DEFAULT_MIN_TEMP = 110
+DEFAULT_MAX_TEMP = 140
+
+ATTR_AWAY_MODE: Final = "away_mode"
+ATTR_OPERATION_MODE: Final = "operation_mode"
+
+SERVICE_SET_AWAY_MODE: Final = "set_away_mode"
+SERVICE_SET_OPERATION_MODE: Final = "set_operation_mode"
+SERVICE_SET_TEMPERATURE: Final = "set_temperature"
+
+DATA_COMPONENT: HassKey[EntityComponent[WaterHeaterEntity]] = HassKey(DOMAIN)
 
 
 class WaterHeaterCapabilityAttribute(StrEnum):
@@ -15,13 +33,18 @@ class WaterHeaterCapabilityAttribute(StrEnum):
     MAX_TEMP = "max_temp"
     TARGET_TEMP_STEP = "target_temp_step"
     OPERATION_LIST = "operation_list"
+    TEMPERATURE_UNIT = "temperature_unit"
 
 
 class WaterHeaterStateAttribute(
     StrEnum,
     metaclass=EnumWithDeprecatedMembers,
     deprecated={
-        "TEMPERATURE": ("ClimateEntityStateAttribute.TARGET_TEMPERATURE", "2027.3.0"),
+        "TEMPERATURE": ("WaterHeaterStateAttribute.TARGET_TEMPERATURE", "2027.3.0"),
+        "TEMPERATURE_UNIT": (
+            "WaterHeaterCapabilityAttribute.TEMPERATURE_UNIT",
+            "2027.6.0",
+        ),
     },
 ):
     """State attributes for water heater entities."""
@@ -33,6 +56,7 @@ class WaterHeaterStateAttribute(
     TARGET_TEMP_LOW = "target_temp_low"
     OPERATION_MODE = "operation_mode"
     AWAY_MODE = "away_mode"
+    TEMPERATURE_UNIT = "temperature_unit"  # Deprecated, moved to capability attributes
 
 
 STATE_ECO = "eco"
@@ -50,3 +74,21 @@ class WaterHeaterEntityFeature(IntFlag):
     OPERATION_MODE = 2
     AWAY_MODE = 4
     ON_OFF = 8
+
+
+class WaterHeaterService(StrEnum):
+    """Store keys for water heater services."""
+
+    SET_AWAY_MODE = "set_away_mode"
+    SET_OPERATION_MODE = "set_operation_mode"
+    SET_TEMPERATURE = "set_temperature"
+    TURN_OFF = "turn_off"
+    TURN_ON = "turn_on"
+
+
+class WaterHeaterServiceArgument(StrEnum):
+    """Store keys for water heater service arguments."""
+
+    AWAY_MODE = "away_mode"
+    OPERATION_MODE = "operation_mode"
+    TEMPERATURE = "temperature"

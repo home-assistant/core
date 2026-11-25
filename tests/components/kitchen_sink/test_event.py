@@ -6,9 +6,15 @@ from unittest.mock import patch
 from freezegun.api import FrozenDateTimeFactory
 from infrared_protocols.commands.nec import NECCommand
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.components.infrared import (
+    EMITTER_ENTITY_ID,
+    RECEIVER_ENTITY_ID,
+)
+from pytest_homeassistant.components.infrared.common import MockInfraredReceiverEntity
 
 from homeassistant import config_entries
-from homeassistant.components.event import ATTR_EVENT_TYPE
+from homeassistant.components.event import EventEntityStateAttribute
 from homeassistant.components.infrared import InfraredReceivedSignal
 from homeassistant.components.kitchen_sink import DOMAIN
 from homeassistant.components.kitchen_sink.const import (
@@ -20,10 +26,6 @@ from homeassistant.components.kitchen_sink.const import (
 from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
-
-from tests.common import MockConfigEntry
-from tests.components.infrared import EMITTER_ENTITY_ID, RECEIVER_ENTITY_ID
-from tests.components.infrared.common import MockInfraredReceiverEntity
 
 ENTITY_RECEIVED_IR_EVENT = "event.living_room_fan_received_ir_event"
 
@@ -88,7 +90,7 @@ async def test_event_receives_signal(
 
     assert (state := hass.states.get(ENTITY_RECEIVED_IR_EVENT)) is not None
     assert state.state == now.isoformat(timespec="milliseconds")
-    assert state.attributes[ATTR_EVENT_TYPE] == "power_on"
+    assert state.attributes[EventEntityStateAttribute.EVENT_TYPE] == "power_on"
     assert state.attributes["raw_code"] == raw_timings
 
 

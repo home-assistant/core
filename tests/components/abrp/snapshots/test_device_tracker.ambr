@@ -1,0 +1,60 @@
+# serializer version: 1
+# name: test_device_tracker_snapshot[device_tracker.rivian_r2_2027_standard_long_range_location-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <DeviceTrackerEntityCapabilityAttribute.TRACKING_TYPE: 'tracking_type'>: <TrackingType.POSITION: 'position'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('abrp', 'abrp-test-sub_123456789012')]>,
+    'disabled_by': None,
+    'domain': 'device_tracker',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'device_tracker.rivian_r2_2027_standard_long_range_location',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Location',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Location',
+    'platform': 'abrp',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'location',
+    'unique_id': 'abrp-test-sub_123456789012_location',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_device_tracker_snapshot[device_tracker.rivian_r2_2027_standard_long_range_location-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Rivian R2 2027 Standard Long Range Location',
+      <TrackerEntityStateAttribute.GPS_ACCURACY: 'gps_accuracy'>: 0,
+      <DeviceTrackerEntityStateAttribute.IN_ZONES: 'in_zones'>: list([
+      ]),
+      <EntityStateAttribute.LATITUDE: 'latitude'>: 59.3293,
+      <EntityStateAttribute.LONGITUDE: 'longitude'>: 18.0686,
+      <DeviceTrackerEntityStateAttribute.SOURCE_TYPE: 'source_type'>: <SourceType.GPS: 'gps'>,
+      <DeviceTrackerEntityCapabilityAttribute.TRACKING_TYPE: 'tracking_type'>: <TrackingType.POSITION: 'position'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'device_tracker.rivian_r2_2027_standard_long_range_location',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'not_home',
+  })
+# ---

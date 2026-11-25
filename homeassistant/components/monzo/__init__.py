@@ -62,7 +62,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_migrate_entry(hass: HomeAssistant, entry: MonzoConfigEntry) -> bool:
+async def async_migrate_entry(hass: HomeAssistant, entry: MonzoConfigEntry) -> None:
     """Migrate entry."""
     _LOGGER.debug("Migrating from version %s.%s", entry.version, entry.minor_version)
 
@@ -90,10 +90,8 @@ async def async_migrate_entry(hass: HomeAssistant, entry: MonzoConfigEntry) -> b
 
     _LOGGER.debug("Migration successful")
 
-    return True
 
-
-async def async_setup_entry(hass: HomeAssistant, entry: MonzoConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: MonzoConfigEntry) -> None:
     """Set up Monzo from a config entry."""
     external_api = await _async_create_api(hass, entry)
 
@@ -112,15 +110,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: MonzoConfigEntry) -> boo
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     await webhook_manager.async_setup()
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: MonzoConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: MonzoConfigEntry) -> None:
     """Unload a config entry."""
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-    if unload_ok:
-        await entry.runtime_data.webhook_manager.async_unload()
-    return unload_ok
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
+    await entry.runtime_data.webhook_manager.async_unload()
 
 
 async def async_remove_entry(hass: HomeAssistant, entry: MonzoConfigEntry) -> None:

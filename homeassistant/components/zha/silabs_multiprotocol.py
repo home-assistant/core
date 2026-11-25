@@ -3,6 +3,8 @@
 import asyncio
 import contextlib
 
+from zigpy.backups import NetworkBackup
+
 from homeassistant.components.homeassistant_hardware.silabs_multiprotocol_addon import (
     is_multiprotocol_url,
 )
@@ -23,7 +25,7 @@ def _get_zha_url(hass: HomeAssistant) -> str | None:
 
 async def _get_zha_channel(hass: HomeAssistant) -> int | None:
     """Get ZHA channel, or None if there's no ZHA config entry."""
-    zha_network_settings: api.NetworkBackup | None
+    zha_network_settings: NetworkBackup | None
     with contextlib.suppress(ValueError):
         zha_network_settings = await api.async_get_network_settings(hass)
     if not zha_network_settings:

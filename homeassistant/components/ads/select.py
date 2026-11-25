@@ -25,15 +25,17 @@ PLATFORM_SCHEMA = SELECT_PLATFORM_SCHEMA.extend(
     {
         probatio.Required(CONF_ADS_VAR): cv.string,
         probatio.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        probatio.Required(CONF_OPTIONS): probatio.All(cv.ensure_list, [cv.string]),
+        probatio.Required(CONF_OPTIONS): probatio.All(
+            probatio.EnsureList(), [cv.string]
+        ),
     }
 )
 
 
-def setup_platform(
+async def async_setup_platform(
     hass: HomeAssistant,
     config: ConfigType,
-    add_entities: AddEntitiesCallback,
+    async_add_entities: AddEntitiesCallback,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up an ADS select device."""
@@ -45,7 +47,7 @@ def setup_platform(
 
     entity = AdsSelect(ads_hub, ads_var, name, options)
 
-    add_entities([entity])
+    async_add_entities([entity])
 
 
 class AdsSelect(AdsEntity, SelectEntity):
@@ -67,7 +69,7 @@ class AdsSelect(AdsEntity, SelectEntity):
     async def async_added_to_hass(self) -> None:
         """Register device notification."""
         await self.async_initialize_device(self._ads_var, pyads.PLCTYPE_INT)
-        self._ads_hub.add_device_notification(
+        await self.async_add_notification(
             self._ads_var, pyads.PLCTYPE_INT, self._handle_ads_value
         )
 

@@ -1,5 +1,6 @@
 """Config flow for Azure Data Explorer integration."""
 
+from collections.abc import Mapping
 import logging
 from typing import Any, override
 
@@ -10,7 +11,7 @@ from homeassistant import config_entries
 from homeassistant.config_entries import ConfigFlowResult
 from homeassistant.helpers.selector import BooleanSelector
 
-from . import AzureDataExplorerClient
+from .client import AzureDataExplorerClient
 from .const import (
     CONF_ADX_CLUSTER_INGEST_URI,
     CONF_ADX_DATABASE_NAME,
@@ -31,9 +32,17 @@ STEP_USER_DATA_SCHEMA = probatio.Schema(
         probatio.Required(CONF_ADX_DATABASE_NAME): str,
         probatio.Required(CONF_ADX_TABLE_NAME): str,
         probatio.Required(CONF_APP_REG_ID): str,
-        probatio.Required(CONF_APP_REG_SECRET): str,
+        probatio.Required(probatio.Secret(CONF_APP_REG_SECRET)): str,
         probatio.Required(CONF_AUTHORITY_ID): str,
         probatio.Required(CONF_USE_QUEUED_CLIENT, default=False): BooleanSelector(),
+    }
+)
+
+STEP_REAUTH_DATA_SCHEMA = probatio.Schema(
+    {
+        probatio.Required(CONF_APP_REG_ID): str,
+        probatio.Required(probatio.Secret(CONF_APP_REG_SECRET)): str,
+        probatio.Required(CONF_AUTHORITY_ID): str,
     }
 )
 
@@ -94,4 +103,38 @@ class ADXConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             data_schema=data_schema,
             errors=errors,
             last_step=True,
+        )
+
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
+        """Handle a reauthentication flow."""
+        return await self.async_step_reauth_confirm()
+
+    async def async_step_reauth_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Confirm reauthentication with new app registration credentials."""
+        errors: dict[str, str] = {}
+        reauth_entry = self._get_reauth_entry()
+        suggested_values: Mapping[str, Any] = reauth_entry.data
+
+        if user_input is not None:
+            errors = await self.validate_input({**reauth_entry.data, **user_input})
+            if not errors:
+                return self.async_update_reload_and_abort(
+                    reauth_entry, data_updates=user_input
+                )
+            suggested_values = user_input
+
+        return self.async_show_form(
+            step_id="reauth_confirm",
+            data_schema=self.add_suggested_values_to_schema(
+                STEP_REAUTH_DATA_SCHEMA,
+                {
+                    CONF_APP_REG_ID: suggested_values[CONF_APP_REG_ID],
+                    CONF_AUTHORITY_ID: suggested_values[CONF_AUTHORITY_ID],
+                },
+            ),
+            errors=errors,
         )

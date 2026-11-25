@@ -8,14 +8,13 @@ from pyintelliclima.api import (
     IntelliClimaDevices,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.intelliclima.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-
-from tests.common import MockConfigEntry
 
 DATA_CONFIG = {
     CONF_USERNAME: "SuperUser",
@@ -24,7 +23,7 @@ DATA_CONFIG = {
 
 
 @pytest.mark.usefixtures("mock_setup_entry")
-async def test_user_flow(hass: HomeAssistant, mock_cloud_interface) -> None:
+async def test_user_flow(hass: HomeAssistant, mock_cloud_interface: AsyncMock) -> None:
     """Test the full config flow."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
@@ -86,16 +85,23 @@ async def test_form_auth_errors(
 
 
 @pytest.mark.usefixtures("mock_setup_entry")
+@pytest.mark.parametrize(
+    "devices",
+    [
+        pytest.param(
+            IntelliClimaDevices(ecocomfort2_devices={}, c800_devices={}),
+            id="no_devices",
+        ),
+    ],
+)
 async def test_form_no_devices(
     hass: HomeAssistant,
     mock_cloud_interface: AsyncMock,
     single_eco_device: IntelliClimaDevices,
+    devices: IntelliClimaDevices,
 ) -> None:
-    """Test we handle no devices found error."""
-    # Return empty devices list
-    mock_cloud_interface.get_all_device_status.return_value = IntelliClimaDevices(
-        ecocomfort2_devices={}, c800_devices={}
-    )
+    """Test we handle no supported devices found error."""
+    mock_cloud_interface.get_all_device_status.return_value = devices
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
@@ -117,6 +123,26 @@ async def test_form_no_devices(
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "IntelliClima (SuperUser)"
+    assert result["data"] == DATA_CONFIG
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_user_flow_ecocomfort3(
+    hass: HomeAssistant,
+    mock_cloud_interface: AsyncMock,
+    single_eco3_device: IntelliClimaDevices,
+) -> None:
+    """An account containing only an ECOCOMFORT 3 can be configured."""
+    mock_cloud_interface.get_all_device_status.return_value = single_eco3_device
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    assert result["type"] is FlowResultType.FORM
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], DATA_CONFIG
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == DATA_CONFIG
 
 

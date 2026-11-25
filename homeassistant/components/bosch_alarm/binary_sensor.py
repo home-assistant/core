@@ -15,8 +15,8 @@ from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import BoschAlarmConfigEntry
 from .entity import BoschAlarmAreaEntity, BoschAlarmEntity, BoschAlarmPointEntity
+from .types import BoschAlarmConfigEntry
 
 
 @dataclass(kw_only=True, frozen=True)

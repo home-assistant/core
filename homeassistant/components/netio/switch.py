@@ -29,10 +29,10 @@ from homeassistant.helpers.entity_platform import (
     AddEntitiesCallback,
 )
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
 from .coordinator import NetioConfigEntry, NetioDataUpdateCoordinator
+from .entity import NetioOutputEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -57,9 +57,9 @@ URL_API_NETIO_EP = "/api/netio/{host}"
 PLATFORM_SCHEMA = SWITCH_PLATFORM_SCHEMA.extend(
     {
         probatio.Required(CONF_HOST): cv.string,
-        probatio.Required(CONF_PORT, default=DEFAULT_PORT): cv.port,
+        probatio.Required(CONF_PORT, default=DEFAULT_PORT): probatio.Port(),
         probatio.Required(CONF_USERNAME, default=DEFAULT_USERNAME): cv.string,
-        probatio.Required(CONF_PASSWORD): cv.string,
+        probatio.Required(probatio.Secret(CONF_PASSWORD)): cv.string,
         probatio.Optional(CONF_OUTLETS): {cv.string: cv.string},
     }
 )
@@ -171,38 +171,25 @@ class NetioApiView(HomeAssistantView):
         return self.json(True)
 
 
-class NetioOutputSwitch(CoordinatorEntity[NetioDataUpdateCoordinator], SwitchEntity):
+class NetioOutputSwitch(NetioOutputEntity, SwitchEntity):
     """Switch for a single output of a Netio device."""
-
-    _attr_has_entity_name = True
 
     def __init__(self, coordinator: NetioDataUpdateCoordinator, output_id: int) -> None:
         """Initialize the switch."""
-        super().__init__(coordinator)
-        self._output_id = output_id
+        super().__init__(coordinator, output_id)
         self._attr_unique_id = f"{coordinator.device.SerialNumber}_{output_id}"
-        self._attr_device_info = coordinator.device_info
-
-    @property
-    @override
-    def available(self) -> bool:
-        """Return True if the output is present in coordinator data."""
-        return super().available and self._output_id in self.coordinator.data
 
     @property
     @override
     def name(self) -> str:
         """Return the output name configured on the device."""
-        output = self.coordinator.data.get(self._output_id)
-        if output is None or not output.Name:
-            return f"Output {self._output_id}"
-        return output.Name
+        return self.output_name
 
     @property
     @override
     def is_on(self) -> bool | None:
         """Return true if the output is on."""
-        if (output := self.coordinator.data.get(self._output_id)) is None:
+        if (output := self.output) is None:
             return None
         return output.State == 1
 

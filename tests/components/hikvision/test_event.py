@@ -5,12 +5,13 @@ from unittest.mock import MagicMock
 
 from pyhik.constants import SENSOR_MAP
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.event import (
-    ATTR_EVENT_TYPE,
-    ATTR_EVENT_TYPES,
     DOMAIN as EVENT_DOMAIN,
     EventDeviceClass,
+    EventEntityCapabilityAttribute,
+    EventEntityStateAttribute,
 )
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
@@ -23,8 +24,6 @@ from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
 from .conftest import TEST_DEVICE_ID
-
-from tests.common import MockConfigEntry
 
 MOTION_ENTITY_ID = "event.front_camera_motion"
 LINE_CROSSING_ENTITY_ID = "event.front_camera_line_crossing"
@@ -76,9 +75,10 @@ async def test_events_created(
     assert state is not None
     assert state.state == STATE_UNKNOWN
     assert state.attributes[ATTR_DEVICE_CLASS] == EventDeviceClass.MOTION
-    assert state.attributes[ATTR_EVENT_TYPES] == [
+    assert state.attributes[EventEntityCapabilityAttribute.EVENT_TYPES] == [
         "triggered",
         "human",
+        "others",
         "pet",
         "vehicle",
     ]
@@ -119,6 +119,7 @@ async def test_events_no_sensors(
     [
         pytest.param("human", "human", id="human"),
         pytest.param("vehicle", "vehicle", id="vehicle"),
+        pytest.param("others", "others", id="others"),
         pytest.param("pet", "pet", id="pet"),
         pytest.param(None, "triggered", id="no_detection_target"),
         pytest.param("bicycle", "triggered", id="unrecognized_detection_target"),
@@ -141,7 +142,7 @@ async def test_event_triggered_with_detection_target(
     state = hass.states.get(MOTION_ENTITY_ID)
     assert state is not None
     assert state.state != STATE_UNKNOWN
-    assert state.attributes[ATTR_EVENT_TYPE] == expected_event_type
+    assert state.attributes[EventEntityStateAttribute.EVENT_TYPE] == expected_event_type
     # The detection target is the event type, never an extra state attribute.
     assert "detection_target" not in state.attributes
 
@@ -177,7 +178,7 @@ async def test_event_only_triggered_on_a_new_trip(
 
     state = hass.states.get(MOTION_ENTITY_ID)
     assert state is not None
-    assert state.attributes[ATTR_EVENT_TYPE] == "human"
+    assert state.attributes[EventEntityStateAttribute.EVENT_TYPE] == "human"
 
     # pyhik keeps updating while the event is active; that is the same trip.
     set_event_state(mock_hikcamera, True, "vehicle")
@@ -186,7 +187,7 @@ async def test_event_only_triggered_on_a_new_trip(
 
     state = hass.states.get(MOTION_ENTITY_ID)
     assert state is not None
-    assert state.attributes[ATTR_EVENT_TYPE] == "human"
+    assert state.attributes[EventEntityStateAttribute.EVENT_TYPE] == "human"
 
     set_event_state(mock_hikcamera, False, None)
     callbacks[MOTION_CALLBACK_ID]("motion cleared")
@@ -198,7 +199,7 @@ async def test_event_only_triggered_on_a_new_trip(
 
     state = hass.states.get(MOTION_ENTITY_ID)
     assert state is not None
-    assert state.attributes[ATTR_EVENT_TYPE] == "vehicle"
+    assert state.attributes[EventEntityStateAttribute.EVENT_TYPE] == "vehicle"
 
 
 async def test_event_active_at_setup_is_not_replayed(
@@ -256,7 +257,7 @@ async def test_event_fires_for_a_trip_that_ends_before_the_loop_runs(
 
     state = hass.states.get(MOTION_ENTITY_ID)
     assert state is not None
-    assert state.attributes[ATTR_EVENT_TYPE] == "human"
+    assert state.attributes[EventEntityStateAttribute.EVENT_TYPE] == "human"
 
 
 @pytest.mark.parametrize("amount_of_channels", [2])
