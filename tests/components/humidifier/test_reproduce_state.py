@@ -6,6 +6,7 @@ from pytest_homeassistant.common import async_mock_service
 from homeassistant.components.humidifier import (
     HumidifierEntityStateAttribute,
     HumidifierService,
+    HumidifierServiceArgument,
 )
 from homeassistant.components.humidifier.const import (
     DOMAIN,
@@ -289,13 +290,26 @@ async def test_state_with_context(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize(
-    ("service", "attribute"),
+    ("service", "attribute", "argument"),
     [
-        (HumidifierService.SET_MODE, HumidifierEntityStateAttribute.MODE),
-        (HumidifierService.SET_HUMIDITY, HumidifierEntityStateAttribute.HUMIDITY),
+        (
+            HumidifierService.SET_MODE,
+            HumidifierEntityStateAttribute.MODE,
+            HumidifierServiceArgument.MODE,
+        ),
+        (
+            HumidifierService.SET_HUMIDITY,
+            HumidifierEntityStateAttribute.HUMIDITY,
+            HumidifierServiceArgument.HUMIDITY,
+        ),
     ],
 )
-async def test_attribute(hass: HomeAssistant, service, attribute) -> None:
+async def test_attribute(
+    hass: HomeAssistant,
+    service: str,
+    attribute: str,
+    argument: str,
+) -> None:
     """Test that service call is made for each attribute."""
     hass.states.async_set(ENTITY_1, STATE_ON, {})
 
@@ -312,4 +326,4 @@ async def test_attribute(hass: HomeAssistant, service, attribute) -> None:
     assert len(turn_on_calls) == 0
     assert len(turn_off_calls) == 0
     assert len(calls_1) == 1
-    assert calls_1[0].data == {"entity_id": ENTITY_1, attribute: value}
+    assert calls_1[0].data == {"entity_id": ENTITY_1, argument: value}
