@@ -157,12 +157,11 @@ class SwitchbotConfigFlow(
                 return self.async_abort(reason="oauth_unauthorized")
             except (SwitchbotApiError, SwitchbotAccountConnectionError) as ex:
                 _LOGGER.debug(
-                    "Failed to connect to SwitchBot API: %s", ex, exc_info=True
+                    "Failed to retrieve devices from the SwitchBot cloud API: %s",
+                    ex,
+                    exc_info=True,
                 )
-                return self.async_abort(
-                    reason="api_error",
-                    description_placeholders={"error_detail": str(ex)},
-                )
+                return self.async_abort(reason="api_error")
             except Exception:
                 _LOGGER.exception("Unexpected error during OAuth cloud login")
                 return self.async_abort(reason="unknown")
@@ -186,11 +185,12 @@ class SwitchbotConfigFlow(
             _LOGGER.debug("Authentication failed: %s", ex, exc_info=True)
             return self.async_abort(reason="oauth_unauthorized")
         except (SwitchbotApiError, SwitchbotAccountConnectionError) as ex:
-            _LOGGER.debug("Failed to connect to SwitchBot API: %s", ex, exc_info=True)
-            return self.async_abort(
-                reason="api_error",
-                description_placeholders={"error_detail": str(ex)},
+            _LOGGER.debug(
+                "Failed to retrieve encryption key from the SwitchBot cloud API: %s",
+                ex,
+                exc_info=True,
             )
+            return self.async_abort(reason="api_error")
         except Exception:
             _LOGGER.exception("Unexpected error retrieving encryption key with OAuth")
             return self.async_abort(reason="unknown")
@@ -326,9 +326,7 @@ class SwitchbotConfigFlow(
                 _LOGGER.debug(
                     "Failed to connect to SwitchBot API: %s", ex, exc_info=True
                 )
-                raise AbortFlow(
-                    "api_error", description_placeholders={"error_detail": str(ex)}
-                ) from ex
+                raise AbortFlow("api_error") from ex
             except SwitchbotAuthenticationError as ex:
                 _LOGGER.debug("Authentication failed: %s", ex, exc_info=True)
                 errors = {"base": "auth_failed"}
@@ -479,9 +477,7 @@ class SwitchbotConfigFlow(
                 _LOGGER.debug(
                     "Failed to connect to SwitchBot API: %s", ex, exc_info=True
                 )
-                raise AbortFlow(
-                    "api_error", description_placeholders={"error_detail": str(ex)}
-                ) from ex
+                raise AbortFlow("api_error") from ex
             except SwitchbotAuthenticationError as ex:
                 _LOGGER.debug("Authentication failed: %s", ex, exc_info=True)
                 errors = {"base": "auth_failed"}

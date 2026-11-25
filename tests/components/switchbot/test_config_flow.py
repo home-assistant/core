@@ -1129,7 +1129,7 @@ async def test_user_setup_woencrypted_auth_switchbot_api_down(
         await hass.async_block_till_done()
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "api_error"
-    assert result["description_placeholders"] == {"error_detail": "Switchbot API down"}
+    assert result["description_placeholders"] is None
 
 
 @pytest.mark.usefixtures("mock_scanners_all_passive")
@@ -1471,7 +1471,7 @@ async def test_user_cloud_login_api_error(hass: HomeAssistant) -> None:
         )
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "api_error"
-    assert result["description_placeholders"] == {"error_detail": "API is down"}
+    assert result["description_placeholders"] is None
 
 
 @pytest.mark.usefixtures("mock_scanners_all_passive")
@@ -2062,7 +2062,7 @@ async def test_user_setup_worelay_switch_1pm_auth_switchbot_api_down(
         await hass.async_block_till_done()
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "api_error"
-    assert result["description_placeholders"] == {"error_detail": "Switchbot API down"}
+    assert result["description_placeholders"] is None
 
 
 async def test_user_show_menu_when_passive_scanner_present(hass: HomeAssistant) -> None:
@@ -2316,30 +2316,26 @@ async def test_encrypted_device_oauth_login(
 
 @pytest.mark.usefixtures("current_request_with_host")
 @pytest.mark.parametrize(
-    ("exception", "reason", "description_placeholders"),
+    ("exception", "reason"),
     [
         pytest.param(
             SwitchbotAuthenticationError("invalid token"),
             "oauth_unauthorized",
-            None,
             id="authentication",
         ),
         pytest.param(
             SwitchbotAccountConnectionError("API unavailable"),
             "api_error",
-            {"error_detail": "API unavailable"},
             id="connection",
         ),
         pytest.param(
             SwitchbotApiError("API error"),
             "api_error",
-            {"error_detail": "API error"},
             id="api",
         ),
         pytest.param(
             Exception("unexpected"),
             "unknown",
-            None,
             id="unknown",
         ),
     ],
@@ -2350,7 +2346,6 @@ async def test_encrypted_device_oauth_error(
     aioclient_mock: AiohttpClientMocker,
     exception: Exception,
     reason: str,
-    description_placeholders: dict[str, str] | None,
 ) -> None:
     """Test errors retrieving an encrypted device key with an OAuth token."""
     result = await hass.config_entries.flow.async_init(
@@ -2381,7 +2376,7 @@ async def test_encrypted_device_oauth_error(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == reason
-    assert result.get("description_placeholders") == description_placeholders
+    assert result["description_placeholders"] is None
 
 
 @pytest.mark.usefixtures("current_request_with_host", "mock_scanners_all_passive")
@@ -2639,6 +2634,7 @@ async def test_oauth_cloud_error(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == reason
+    assert result["description_placeholders"] is None
 
 
 @pytest.mark.usefixtures("current_request_with_host", "mock_scanners_all_passive")
