@@ -393,9 +393,10 @@ async def test_light_control_power_and_energy(
 @pytest.mark.parametrize(
     ("device_buckets", "expected"),
     [
-        (
+        pytest.param(
             {"motion_detectors": [battery_only_device(batterylevel=level)]},
             expected,
+            id=level.name.lower(),
         )
         for level, expected in (
             (BatteryLevelService.State.OK, "ok"),
