@@ -11,6 +11,7 @@ from homeassistant.helpers.update_coordinator import (
 
 from .const import DOMAIN
 from .coordinator import LunatoneInfoDataUpdateCoordinator
+from .helpers import format_device_identifier
 
 T = TypeVar("T", bound=DataUpdateCoordinator[Any])
 
@@ -51,7 +52,7 @@ class LunatoneEntity(CoordinatorEntity[T]):
         config_entry_id = config_entry.entry_id
         device_registry = dr.async_get(self.hass)
         linked_device = device_registry.async_get_device_by_identifier(
-            (DOMAIN, f"{config_entry.unique_id}-line{self.line_id}"),
+            (DOMAIN, format_device_identifier(config_entry.unique_id, self.line_id)),
             config_entry_id,
         )
 
