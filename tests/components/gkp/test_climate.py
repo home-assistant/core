@@ -409,6 +409,69 @@ async def test_fast_polling(
     mock_gkp_client.get_thermostat.assert_not_called()
 
 
+async def test_set_temperature_before_mode_is_reported(
+    hass: HomeAssistant,
+    mock_gkp_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    device_contents: dict[str, dict[str, Any]],
+) -> None:
+    """Test the requested mode is used until the device reports it."""
+    device_contents[LIVING_ROOM_ID]["Cm"]["value"] = GkpMode.OFF.value
+    await setup_integration(hass, mock_config_entry)
+
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_HVAC_MODE,
+        {ATTR_ENTITY_ID: LIVING_ROOM_ENTITY_ID, ATTR_HVAC_MODE: HVACMode.HEAT},
+        blocking=True,
+    )
+
+    state = hass.states.get(LIVING_ROOM_ENTITY_ID)
+    assert state is not None
+    assert state.state == HVACMode.HEAT
+
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_TEMPERATURE,
+        {ATTR_ENTITY_ID: LIVING_ROOM_ENTITY_ID, ATTR_TEMPERATURE: 21.0},
+        blocking=True,
+    )
+
+    mock_gkp_client.set_temperature.assert_called_once_with(
+        LIVING_ROOM_ID, GkpMode.COMFORT, 21.0
+    )
+
+
+@pytest.mark.usefixtures("mock_gkp_client")
+async def test_requested_mode_not_reported(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+    device_contents: dict[str, dict[str, Any]],
+) -> None:
+    """Test the reported mode is shown again when fast polling ends."""
+    device_contents[LIVING_ROOM_ID]["Cm"]["value"] = GkpMode.OFF.value
+    await setup_integration(hass, mock_config_entry)
+
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_HVAC_MODE,
+        {ATTR_ENTITY_ID: LIVING_ROOM_ENTITY_ID, ATTR_HVAC_MODE: HVACMode.HEAT},
+        blocking=True,
+    )
+
+    await advance_time(hass, freezer, timedelta(minutes=1))
+    state = hass.states.get(LIVING_ROOM_ENTITY_ID)
+    assert state is not None
+    assert state.state == HVACMode.HEAT
+
+    await advance_time(hass, freezer, FAST_POLLING_INTERVAL)
+
+    state = hass.states.get(LIVING_ROOM_ENTITY_ID)
+    assert state is not None
+    assert state.state == HVACMode.OFF
+
+
 @pytest.mark.parametrize(
     ("service", "data", "client_method", "translation_key"),
     [

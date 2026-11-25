@@ -149,7 +149,7 @@ class GkpClimate(GkpEntity, ClimateEntity):
             self.coordinator.client.set_mode(self.device_id, mode), error_key
         )
         _LOGGER.debug("Successfully set mode %s for %s", mode.name, self.device_id)
-        await self._async_refresh_after_command()
+        await self._async_refresh_after_command(mode)
 
     @override
     async def async_set_temperature(self, **kwargs: Any) -> None:
@@ -159,16 +159,15 @@ class GkpClimate(GkpEntity, ClimateEntity):
         boost at the requested temperature, like the GKP application.
         """
         temperature: float = kwargs[ATTR_TEMPERATURE]
-        hvac_mode: HVACMode | None = kwargs.get(ATTR_HVAC_MODE)
-        if hvac_mode is not None:
+        requested_mode: GkpMode | None = None
+        if (hvac_mode := kwargs.get(ATTR_HVAC_MODE)) is not None:
             self._valid_mode_or_raise("hvac", hvac_mode, self.hvac_modes)
-        mode = (
-            self.thermostat.mode if hvac_mode is None else HVAC_TO_GKP_MODE[hvac_mode]
-        )
+            requested_mode = HVAC_TO_GKP_MODE[hvac_mode]
+        mode = self.thermostat.mode if requested_mode is None else requested_mode
         if (
             mode is None
             or not mode.setpoint_adjustable
-            or (hvac_mode is not None and mode is GkpMode.AUTO)
+            or requested_mode is GkpMode.AUTO
         ):
             raise ServiceValidationError(
                 translation_domain=DOMAIN,
@@ -186,7 +185,7 @@ class GkpClimate(GkpEntity, ClimateEntity):
             mode.name,
             self.device_id,
         )
-        await self._async_refresh_after_command()
+        await self._async_refresh_after_command(requested_mode)
 
     async def _async_send_command(
         self, command: Coroutine[Any, Any, None], error_key: str
@@ -206,7 +205,9 @@ class GkpClimate(GkpEntity, ClimateEntity):
                 translation_key=error_key,
             ) from err
 
-    async def _async_refresh_after_command(self) -> None:
+    async def _async_refresh_after_command(
+        self, requested_mode: GkpMode | None
+    ) -> None:
         """Poll the device quickly until the command is reflected."""
-        self.coordinator.trigger_fast_polling()
+        self.coordinator.trigger_fast_polling(requested_mode)
         await self.coordinator.async_refresh()

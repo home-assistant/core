@@ -1,6 +1,6 @@
 """Data coordinators for GKP integration."""
 
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from datetime import datetime
 import logging
 import time
@@ -12,6 +12,7 @@ from gkphomepython import (
     GkpAuthError,
     GkpClient,
     GkpError,
+    GkpMode,
     GkpRateLimitError,
     Installation,
     Thermostat,
@@ -223,6 +224,7 @@ class GkpDeviceCoordinator(DataUpdateCoordinator[GkpDeviceData]):
         self.installation = hub_coordinator.device_installations[device_id]
         self.hub_coordinator = hub_coordinator
         self.fast_polling_until: float | None = None
+        self._requested_mode: GkpMode | None = None
 
         config_entry.async_on_unload(
             hub_coordinator.async_add_listener(self._handle_hub_update)
@@ -239,7 +241,9 @@ class GkpDeviceCoordinator(DataUpdateCoordinator[GkpDeviceData]):
             self.async_update_listeners()
         elif self.hub_coordinator.data and self.device_id in self.hub_coordinator.data:
             self.data = GkpDeviceData(
-                thermostat=self.hub_coordinator.data[self.device_id]
+                thermostat=self._apply_requested_mode(
+                    self.hub_coordinator.data[self.device_id]
+                )
             )
             self.last_update_success = True
             self.async_update_listeners()
@@ -274,10 +278,27 @@ class GkpDeviceCoordinator(DataUpdateCoordinator[GkpDeviceData]):
             ) from err
 
         _LOGGER.debug("Refreshed device %s", self.device_id)
-        return GkpDeviceData(thermostat=thermostat)
+        return GkpDeviceData(thermostat=self._apply_requested_mode(thermostat))
 
-    def trigger_fast_polling(self, duration_seconds: int = 60) -> None:
+    def _apply_requested_mode(self, thermostat: Thermostat) -> Thermostat:
+        """Report the requested mode until the device confirms it."""
+        if self._requested_mode is None:
+            return thermostat
+        if (
+            thermostat.mode is self._requested_mode
+            or not self.fast_polling_until
+            or time.time() > self.fast_polling_until
+        ):
+            self._requested_mode = None
+            return thermostat
+        return replace(thermostat, mode=self._requested_mode)
+
+    def trigger_fast_polling(
+        self, requested_mode: GkpMode | None, duration_seconds: int = 60
+    ) -> None:
         """Activate fast polling for a specified duration after a command."""
+        if requested_mode is not None:
+            self._requested_mode = requested_mode
         self.fast_polling_until = time.time() + duration_seconds
         self.update_interval = FAST_POLLING_INTERVAL
         _LOGGER.debug(
