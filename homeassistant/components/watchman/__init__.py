@@ -3,42 +3,20 @@
 import logging
 
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
-from homeassistant.helpers import device_registry as dr, issue_registry as ir
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.httpx_client import get_async_client
 
 from .const import DOMAIN, PLATFORMS
-from .coordinator import SENSiTConfigEntry, SENSiTDataUpdateCoordinator
+from .coordinator import (
+    SENSiTConfigEntry,
+    SENSiTDataUpdateCoordinator,
+    async_create_repair_issue,
+    async_delete_repair_issue,
+)
 
 _LOGGER: logging.Logger = logging.getLogger(__package__)
-
-
-@callback
-def _async_create_repair_issue(
-    hass: HomeAssistant, config_entry: SENSiTConfigEntry
-) -> None:
-    """Create a repair issue for an entry that cannot authenticate."""
-    ir.async_create_issue(
-        hass,
-        DOMAIN,
-        f"credentials_{config_entry.entry_id}",
-        is_fixable=False,
-        is_persistent=True,
-        issue_domain=DOMAIN,
-        severity=ir.IssueSeverity.ERROR,
-        translation_key="auth_failed",
-        translation_placeholders={"title": config_entry.title},
-        config_entry_id=config_entry.entry_id,
-    )
-
-
-@callback
-def _async_delete_repair_issue(
-    hass: HomeAssistant, config_entry: SENSiTConfigEntry
-) -> None:
-    """Delete the repair issue for a config entry when it has been fixed."""
-    ir.async_delete_issue(hass, DOMAIN, f"credentials_{config_entry.entry_id}")
 
 
 async def async_setup_entry(
@@ -49,7 +27,7 @@ async def async_setup_entry(
     password = config_entry.data.get(CONF_PASSWORD)
 
     if not username or not password:
-        _async_create_repair_issue(hass, config_entry)
+        async_create_repair_issue(hass, config_entry)
         raise ConfigEntryAuthFailed(
             translation_domain=DOMAIN,
             translation_key="credentials_not_set",
@@ -61,20 +39,16 @@ async def async_setup_entry(
         httpx_client=get_async_client(hass),
     )
 
-    try:
-        await coordinator.async_config_entry_first_refresh()
-    except ConfigEntryAuthFailed:
-        _async_create_repair_issue(hass, config_entry)
-        raise
+    await coordinator.async_config_entry_first_refresh()
 
     if not coordinator.data:
-        _async_delete_repair_issue(hass, config_entry)
+        async_delete_repair_issue(hass, config_entry)
         raise ConfigEntryNotReady(translation_domain=DOMAIN, translation_key="no_data")
 
     config_entry.runtime_data = coordinator
 
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
-    _async_delete_repair_issue(hass, config_entry)
+    async_delete_repair_issue(hass, config_entry)
 
 
 async def async_unload_entry(
@@ -82,7 +56,7 @@ async def async_unload_entry(
 ) -> None:
     """Handle removal of an entry."""
     await hass.config_entries.async_unload_platforms_or_raise(config_entry, PLATFORMS)
-    _async_delete_repair_issue(hass, config_entry)
+    async_delete_repair_issue(hass, config_entry)
 
 
 async def async_remove_config_entry_device(

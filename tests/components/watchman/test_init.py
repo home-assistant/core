@@ -293,3 +293,42 @@ async def test_remove_device_after_failed_setup(
     assert not await hass.config_entries.async_setup(entry.entry_id)
     assert entry.state == ConfigEntryState.SETUP_ERROR
     assert await async_remove_config_entry_device(hass, entry, device) is False
+
+
+async def test_coordinator_auth_reppair_issue_created(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_sensor_client,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Scheduled refresh auth failure should create a credentials repair issue."""
+    config_entry = MockConfigEntry(domain=DOMAIN, data=MOCK_CONFIG)
+    config_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    coordinator = config_entry.runtime_data
+    assert coordinator.last_update_success is True
+
+    with patch(
+        "homeassistant.components.watchman.coordinator.AsyncSensorClient"
+    ) as mock_class:
+        mock_instance = AsyncMock()
+        mock_instance.__aenter__.return_value = mock_instance
+        mock_instance.login.side_effect = KingspanInvalidCredentialsError(
+            "test bad auth"
+        )
+        mock_class.return_value = mock_instance
+
+        freezer.tick(timedelta(hours=DEFAULT_UPDATE_INTERVAL))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+
+    assert coordinator.last_update_success is False
+    issue = issue_registry.async_get_issue(
+        DOMAIN, f"credentials_{config_entry.entry_id}"
+    )
+    assert issue is not None
+    assert issue.is_fixable is False
+    assert issue.config_entry_id == config_entry.entry_id

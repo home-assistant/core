@@ -16,8 +16,9 @@ import httpx2
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed
+from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util.dt import as_local
 
@@ -121,6 +122,7 @@ class SENSiTDataUpdateCoordinator(DataUpdateCoordinator[list[TankData]]):
 
         except KingspanAPIError as err:
             if err.code == KingspanErrorCode.AUTH_FAILED:
+                async_create_repair_issue(self.hass, self.config_entry)
                 raise ConfigEntryAuthFailed(
                     translation_domain=DOMAIN,
                     translation_key="credentials_invalid",
@@ -144,3 +146,30 @@ class SENSiTDataUpdateCoordinator(DataUpdateCoordinator[list[TankData]]):
             ) from err
 
         return results
+
+
+@callback
+def async_create_repair_issue(
+    hass: HomeAssistant, config_entry: SENSiTConfigEntry
+) -> None:
+    """Create a repair issue for an entry that cannot authenticate."""
+    ir.async_create_issue(
+        hass,
+        DOMAIN,
+        f"credentials_{config_entry.entry_id}",
+        is_fixable=False,
+        is_persistent=True,
+        issue_domain=DOMAIN,
+        severity=ir.IssueSeverity.ERROR,
+        translation_key="auth_failed",
+        translation_placeholders={"title": config_entry.title},
+        config_entry_id=config_entry.entry_id,
+    )
+
+
+@callback
+def async_delete_repair_issue(
+    hass: HomeAssistant, config_entry: SENSiTConfigEntry
+) -> None:
+    """Delete the repair issue for a config entry when it has been fixed."""
+    ir.async_delete_issue(hass, DOMAIN, f"credentials_{config_entry.entry_id}")
