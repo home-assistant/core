@@ -4,13 +4,7 @@ from datetime import timedelta
 import logging
 from typing import override
 
-from aiogithubapi import (
-    GitHubAPI,
-    GitHubConnectionException,
-    GitHubException,
-    GitHubRatelimitException,
-    GitHubReleaseModel,
-)
+from aiogithubapi import GitHubAPI, GitHubException, GitHubReleaseModel
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -18,6 +12,9 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 type TasmotaConfigEntry = ConfigEntry[TasmotaLatestReleaseUpdateCoordinator]
+
+
+RETRY_AFTER_UPDATE_FAILURE = timedelta(minutes=30).total_seconds()
 
 
 class TasmotaLatestReleaseUpdateCoordinator(DataUpdateCoordinator[GitHubReleaseModel]):
@@ -39,12 +36,10 @@ class TasmotaLatestReleaseUpdateCoordinator(DataUpdateCoordinator[GitHubReleaseM
         """Get new data."""
         try:
             response = await self.client.repos.releases.latest("arendst/Tasmota")
-            if response.data is None:
-                raise UpdateFailed("No data received")
-        except (GitHubConnectionException, GitHubRatelimitException) as ex:
-            # Expected/transient, just wrap as failure
-            raise UpdateFailed(ex) from ex
         except GitHubException as ex:
-            raise UpdateFailed(ex) from ex
-        else:
-            return response.data
+            raise UpdateFailed(ex, retry_after=RETRY_AFTER_UPDATE_FAILURE) from ex
+        if response.data is None:
+            raise UpdateFailed(
+                "No data received", retry_after=RETRY_AFTER_UPDATE_FAILURE
+            )
+        return response.data
