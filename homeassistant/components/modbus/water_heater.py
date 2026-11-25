@@ -28,6 +28,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.temperature import display_temp
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import get_hub
@@ -182,10 +183,28 @@ class ModbusWaterHeater(ModbusStructEntity, WaterHeaterEntity):
         """Handle entity which will be added."""
         await self.async_base_added_to_hass()
 
+    def _snap_to_displayed_limit(self, temperature: float) -> float:
+        """Map a request for a displayed limit back to the native limit.
+
+        The limits are shown converted and rounded, so selecting a displayed
+        limit can land just outside the native range after unit conversion.
+        """
+        if self.min_temp <= temperature <= self.max_temp:
+            return temperature
+        shown = display_temp(
+            self.hass, temperature, self.native_temperature_unit, self.precision
+        )
+        for limit in (self.min_temp, self.max_temp):
+            if shown == display_temp(
+                self.hass, limit, self.native_temperature_unit, self.precision
+            ):
+                return limit
+        return temperature
+
     @override
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
-        temperature = float(kwargs[ATTR_TEMPERATURE])
+        temperature = self._snap_to_displayed_limit(float(kwargs[ATTR_TEMPERATURE]))
         if not self.min_temp <= temperature <= self.max_temp:
             raise ServiceValidationError(
                 translation_domain=DOMAIN,

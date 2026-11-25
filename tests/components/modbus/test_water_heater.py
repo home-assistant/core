@@ -732,6 +732,46 @@ async def test_set_temperature_out_of_range(
 
 
 @pytest.mark.parametrize(
+    "do_config",
+    [
+        {
+            CONF_WATER_HEATERS: [
+                {
+                    **BASE_CONFIG,
+                    CONF_TEMPERATURE_UNIT: "F",
+                    CONF_MIN_TEMP: 95,
+                    CONF_MAX_TEMP: 150,
+                }
+            ]
+        },
+    ],
+)
+@pytest.mark.parametrize(
+    ("temperature", "written"),
+    [
+        pytest.param(35, 95, id="displayed_min"),
+        pytest.param(66, 150, id="displayed_max"),
+    ],
+)
+async def test_set_temperature_displayed_limit(
+    hass: HomeAssistant,
+    mock_modbus_ha: mock.AsyncMock,
+    temperature: float,
+    written: int,
+) -> None:
+    """Test the displayed limits are accepted and written as the native limits."""
+    await hass.services.async_call(
+        WATER_HEATER_DOMAIN,
+        SERVICE_SET_TEMPERATURE,
+        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_TEMPERATURE: temperature},
+        blocking=True,
+    )
+    assert mock_modbus_ha.write_register.call_args_list == [
+        mock.call(TARGET_TEMP_ADDRESS, device_id=10, value=written)
+    ]
+
+
+@pytest.mark.parametrize(
     ("do_config", "min_temp", "max_temp"),
     [
         pytest.param({CONF_WATER_HEATERS: [BASE_CONFIG]}, 40, 60, id="default_celsius"),
