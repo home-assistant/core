@@ -198,7 +198,10 @@ _FUNCTION_MATCH: dict[str, list[TypeHintMatch]] = {
                 1: "str",
                 2: "ClientCredential",
             },
-            return_type="AbstractOAuth2Implementation",
+            return_type=[
+                "AbstractOAuth2Implementation",
+                "AbstractAuthorizationCodeImplementation",
+            ],
             mandatory=True,
             coroutine=True,
         ),
@@ -606,10 +609,18 @@ _CLASS_MATCH: dict[str, list[ClassTypeHintMatch]] = {
             ],
         ),
     ],
-    "repairs": [
+    Module.REPAIRS: [
         ClassTypeHintMatch(
             base_class="RepairsFlow",
             matches=[
+                TypeHintMatch(
+                    function_name="async_step_init",
+                    named_arg_types={
+                        "user_input": ["dict[str, Any] | None", "dict[str, str] | None"]
+                    },
+                    return_type="RepairsFlowResult",
+                    mandatory=True,
+                ),
                 TypeHintMatch(
                     function_name="async_step_*",
                     arg_types={},

@@ -62,6 +62,7 @@ FIXTURES = [
     "inovelli_vtm31",
     "lifx_switch_115",
     "lifx_switch_89",
+    "lixee_zlinky_tic",
     "longan_link_thermostat",
     "mock_air_purifier",
     "mock_battery_solar_bridge",
@@ -82,6 +83,7 @@ FIXTURES = [
     "mock_door_lock",
     "mock_door_lock_with_unbolt",
     "mock_doorbell",
+    "mock_electrical_utility_meter",
     "mock_extractor_hood",
     "mock_fan",
     "mock_flow_sensor",
@@ -147,6 +149,30 @@ FIXTURES = [
     "zemismart_mt25b",
     "zemismart_wifi_smart_switch",
 ]
+
+
+# An On/Off Light endpoint 3 as a part of the top outlet (endpoint 1).
+EVE_ENERGY_LIGHT_PART_ATTRIBUTES = {
+    "0/29/3": [1, 2, 3],
+    "1/29/3": [3],
+    "3/29/0": [{"0": 256, "1": 1}],
+    "3/29/1": [6, 29],
+    "3/29/2": [],
+    "3/29/3": [],
+    "3/6/0": False,
+    "3/6/65532": 0,
+    "3/6/65531": [0, 65528, 65529, 65531, 65532, 65533],
+}
+
+
+# Common Number tags 1 to 6 on the outlets (endpoints 1 to 6), so they split.
+TAPO_STRIP_NUMBER_TAG_ATTRIBUTES = {
+    **{
+        f"{endpoint_id}/29/4": [{"0": None, "1": 7, "2": endpoint_id}]
+        for endpoint_id in range(1, 7)
+    },
+    **{f"{endpoint_id}/29/65532": 1 for endpoint_id in range(1, 7)},
+}
 
 
 @cache
