@@ -119,8 +119,7 @@ class InfraredConsumerConfigFlow(ConfigFlow, metaclass=ABCMeta):
 class InfraredConsumerReconfigureConfigFlow(InfraredConsumerConfigFlow):
     """Base config flow for infrared consumers that support reconfiguration.
 
-    Subclasses also need the `reconfigure` step and the `reconfigure_successful`
-    abort translations.
+    Subclasses also need the `reconfigure` step translations.
     """
 
     @callback
