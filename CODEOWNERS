@@ -512,6 +512,8 @@ AGENTS.md @home-assistant/core
 /tests/components/electrasmart/ @jafar-atili @noamokman
 /homeassistant/components/electric_kiwi/ @mikey0000
 /tests/components/electric_kiwi/ @mikey0000
+/homeassistant/components/electrolux/ @electrolux-oss
+/tests/components/electrolux/ @electrolux-oss
 /homeassistant/components/elevenlabs/ @sorgfresser
 /tests/components/elevenlabs/ @sorgfresser
 /homeassistant/components/elgato/ @frenck
@@ -1152,6 +1154,8 @@ AGENTS.md @home-assistant/core
 /tests/components/logger/ @home-assistant/core
 /homeassistant/components/lojack/ @devinslick
 /tests/components/lojack/ @devinslick
+/homeassistant/components/london_air/ @MichaelMKKelly
+/tests/components/london_air/ @MichaelMKKelly
 /homeassistant/components/london_underground/ @jpbede
 /tests/components/london_underground/ @jpbede
 /homeassistant/components/lookin/ @ANMalko @bdraco

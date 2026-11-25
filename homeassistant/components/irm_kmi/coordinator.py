@@ -10,6 +10,7 @@ from irm_kmi_api import (
     IrmKmiApiError,
     PollenLevel,
     PollenName,
+    RadarAnimationData,
     RadarForecast,
 )
 
@@ -28,9 +29,9 @@ from homeassistant.helpers.update_coordinator import (
 )
 from homeassistant.util import dt as dt_util
 
-from .const import DOMAIN
+from .const import DOMAIN, TIMEZONE
 from .data import ProcessedCoordinatorData
-from .utils import preferred_language
+from .utils import preferred_language, radar_options
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -98,7 +99,7 @@ class IrmKmiCoordinator(TimestampDataUpdateCoordinator[ProcessedCoordinatorData]
             name="IRM KMI weather",
             update_interval=UPDATE_INTERVAL,
         )
-        self._api = api_client
+        self.api = api_client
         self._location = entry.data[CONF_LOCATION]
         # last_update_success_time is also renewed while serving old data
         self._last_api_success_time: datetime | None = None
@@ -112,10 +113,10 @@ class IrmKmiCoordinator(TimestampDataUpdateCoordinator[ProcessedCoordinatorData]
     @override
     async def _async_update_data(self) -> ProcessedCoordinatorData:
         """Fetch and process the IRM KMI data."""
-        self._api.expire_cache()
+        self.api.expire_cache()
 
         try:
-            await self._api.refresh_forecasts_coord(
+            await self.api.refresh_forecasts_coord(
                 {
                     "lat": self._location[CONF_LATITUDE],
                     "long": self._location[CONF_LONGITUDE],
@@ -138,18 +139,27 @@ class IrmKmiCoordinator(TimestampDataUpdateCoordinator[ProcessedCoordinatorData]
 
     async def process_api_data(self) -> ProcessedCoordinatorData:
         """From the API data, create the object that will be used in the entities."""
-        tz = await dt_util.async_get_time_zone("Europe/Brussels")
+        tz = await dt_util.async_get_time_zone(TIMEZONE)
         if TYPE_CHECKING:
             assert tz is not None
+
         lang = preferred_language(self.hass, self.config_entry)
+        style, dark_mode = radar_options(self.config_entry)
+
+        animation: RadarAnimationData | None
+        try:
+            animation = self.api.get_animation_data(tz, lang, style, dark_mode)
+        except ValueError:
+            animation = None
 
         return ProcessedCoordinatorData(
-            current_weather=self._api.get_current_weather(tz),
-            daily_forecast=self._api.get_daily_forecast(tz, lang),
-            hourly_forecast=self._api.get_hourly_forecast(tz),
-            country=self._api.get_country(),
-            warnings=self._api.get_warnings(lang),
-            radar_forecast=_in_mm_per_hour(self._api.get_radar_forecast()),
+            current_weather=self.api.get_current_weather(tz),
+            daily_forecast=self.api.get_daily_forecast(tz, lang),
+            hourly_forecast=self.api.get_hourly_forecast(tz),
+            country=self.api.get_country(),
+            warnings=self.api.get_warnings(lang),
+            radar_forecast=_in_mm_per_hour(self.api.get_radar_forecast()),
+            animation=animation,
         )
 
 
