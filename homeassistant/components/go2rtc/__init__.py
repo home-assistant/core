@@ -76,6 +76,8 @@ from .util import get_camera_identifier, get_go2rtc_unix_socket_path
 _LOGGER = logging.getLogger(__name__)
 
 _FFMPEG = "ffmpeg"
+# go2rtc handles these sources natively, and ffmpeg can't open them
+_SCHEMES_WITHOUT_FFMPEG = frozenset({"nest"})
 _AUTH = "auth"
 # Mirrors go2rtc 1.9.15+, which masks the userinfo of URLs in its API responses
 _USERINFO = re.compile(r"://[A-Za-z0-9\-._~!$&'()*+,;=%:]+@")
@@ -434,7 +436,11 @@ class WebRTCProvider(CameraWebRTCProvider):
         camera_prefs = await get_dynamic_camera_stream_settings(
             self._hass, camera.entity_id
         )
-        if camera_prefs.orientation is not Orientation.NO_TRANSFORM:
+        if (
+            camera_prefs.orientation is not Orientation.NO_TRANSFORM
+            # The orientation is applied with ffmpeg
+            and stream_source.partition(":")[0] not in _SCHEMES_WITHOUT_FFMPEG
+        ):
             # Camera orientation manually set by user
             if not stream_source.startswith(_FFMPEG):
                 stream_source = _FFMPEG + ":" + stream_source

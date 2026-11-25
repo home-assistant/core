@@ -63,6 +63,7 @@ _APP_MODULES = (
     "ffmpeg",
     "http",
     "mjpeg",
+    "nest",  # Nest WebRTC cameras, used for still images
     "onvif",
     "rtmp",
     "rtsp",
@@ -106,12 +107,13 @@ _LOG_LEVEL_MAP = {
 }
 
 
-# go2rtc logs stream urls verbatim, which may embed camera credentials.
-# Upstream strips the url userinfo since AlexxIT/go2rtc#2051, but no release
-# includes it yet (v1.9.14 is the newest). It does not touch query parameters.
+# go2rtc logs stream urls, which may embed camera credentials. Since
+# v1.9.15 it masks the url userinfo (see AlexxIT/go2rtc#2051), but not query
+# parameters. Older go2rtc versions don't mask the userinfo.
 _URL_USERINFO = re.compile(r"://[^/?#\s@]+@")
 _URL_CREDENTIAL_QUERY = re.compile(
-    r"([?&](?:auth|user|password)=)[^&\s]+", re.IGNORECASE
+    r"([?&](?:auth|user|password|client_secret|refresh_token)=)[^&\s]+",
+    re.IGNORECASE,
 )
 
 
