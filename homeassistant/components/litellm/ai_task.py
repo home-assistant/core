@@ -157,34 +157,44 @@ class LiteLLMEvaluationEntity(LiteLLMEntity, ai_task.AITaskEntity):
                 raise HomeAssistantError(
                     f"LiteLLM refused evaluation question {question_id}"
                 )
-            if answer.type == "predicate":
+            question = task.questions[question_id]
+            if question["type"] == "noul" and answer.type == "predicate":
                 answers[question_id] = ai_task.NoulAnswer(noul=answer.probability)
-            elif answer.type == "choice":
-                if not isinstance(answer.choice, str) or any(
-                    not isinstance(option.value, str) for option in answer.probabilities
-                ):
-                    raise HomeAssistantError("LiteLLM returned an invalid choice")
+            elif question["type"] == "choice" and answer.type == "choice":
                 probabilities = {
-                    str(option.value): option.probability
+                    option.value: option.probability
                     for option in answer.probabilities
+                    if isinstance(option.value, str)
                 }
-                if len(probabilities) != len(answer.probabilities):
+                if (
+                    not isinstance(answer.choice, str)
+                    or answer.choice not in question["criteria"]
+                    or len(probabilities) != len(answer.probabilities)
+                    or probabilities.keys() != question["criteria"].keys()
+                ):
                     raise HomeAssistantError(
-                        "LiteLLM returned duplicate choice probabilities"
+                        f"LiteLLM returned an invalid choice for {question_id}"
                     )
                 answers[question_id] = ai_task.ChoiceAnswer(
                     choice=answer.choice, probabilities=probabilities
                 )
-            elif answer.type == "score":
+            elif question["type"] == "score" and answer.type == "score":
                 levels = sorted(answer.probabilities, key=lambda level: level.value)
-                if [level.value for level in levels] != list(range(len(levels))):
-                    raise HomeAssistantError("LiteLLM returned invalid score levels")
+                if [level.value for level in levels] != list(
+                    range(len(question["criteria"]))
+                ):
+                    raise HomeAssistantError(
+                        f"LiteLLM returned invalid score levels for {question_id}"
+                    )
                 answers[question_id] = ai_task.ScoreAnswer(
                     score=answer.score,
                     probabilities=[level.probability for level in levels],
                 )
             else:
-                raise HomeAssistantError("LiteLLM returned an unsupported answer type")
+                raise HomeAssistantError(
+                    f"LiteLLM returned a {answer.type} answer for "
+                    f"{question['type']} question {question_id}"
+                )
 
         # LiteLLM forwards to many backends, and a backend may skip a question
         if missing := task.questions.keys() - answers.keys():

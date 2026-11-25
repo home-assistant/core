@@ -268,16 +268,34 @@ async def test_evaluate_unsupported_attachment(
             id="refusal",
         ),
         pytest.param(
+            [ANSWERS[0], {**ANSWERS[0], "name": "location"}, ANSWERS[2]],
+            "predicate answer for choice question location",
+            id="mismatched-type",
+        ),
+        pytest.param(
             [ANSWERS[0], {**ANSWERS[1], "choice": True}],
-            "invalid choice",
+            "invalid choice for location",
             id="boolean-choice",
+        ),
+        pytest.param(
+            [
+                ANSWERS[0],
+                {
+                    **ANSWERS[1],
+                    "choice": "garage",
+                    "probabilities": [{"value": "garage", "probability": 1.0}],
+                },
+                ANSWERS[2],
+            ],
+            "invalid choice for location",
+            id="unrequested-choice",
         ),
         pytest.param(
             [
                 ANSWERS[0],
                 {**ANSWERS[1], "probabilities": [ANSWERS[1]["probabilities"][0]] * 2},
             ],
-            "duplicate choice probabilities",
+            "invalid choice for location",
             id="duplicate-probability",
         ),
         pytest.param(
@@ -286,8 +304,17 @@ async def test_evaluate_unsupported_attachment(
                 ANSWERS[1],
                 {**ANSWERS[2], "probabilities": [ANSWERS[2]["probabilities"][0]] * 3},
             ],
-            "invalid score levels",
+            "invalid score levels for attention",
             id="duplicate-level",
+        ),
+        pytest.param(
+            [
+                ANSWERS[0],
+                ANSWERS[1],
+                {**ANSWERS[2], "probabilities": ANSWERS[2]["probabilities"][1:]},
+            ],
+            "invalid score levels for attention",
+            id="missing-level",
         ),
     ],
 )

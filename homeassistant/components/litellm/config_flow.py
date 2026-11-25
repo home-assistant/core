@@ -617,6 +617,7 @@ class EvaluationFlowHandler(LiteLLMSubentryFlowHandler):
                                 SelectOptionDict(value=model, label=model)
                                 for model in self.models
                             ],
+                            custom_value=True,
                             mode=SelectSelectorMode.DROPDOWN,
                             sort=True,
                         )

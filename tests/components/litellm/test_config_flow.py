@@ -279,12 +279,12 @@ async def test_create_ai_task_evaluate_subentry(
     assert result["type"] is FlowResultType.FORM
 
     result = await hass.config_entries.subentries.async_configure(
-        result["flow_id"], {CONF_MODEL: "gpt-4"}
+        result["flow_id"], {CONF_MODEL: "openai/gpt-6-luna"}
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "gpt-4"
-    assert result["data"] == {CONF_MODEL: "gpt-4"}
+    assert result["title"] == "openai/gpt-6-luna"
+    assert result["data"] == {CONF_MODEL: "openai/gpt-6-luna"}
 
     subentry_id = get_subentry_id(mock_config_entry, "ai_task_evaluate")
     result = await mock_config_entry.start_subentry_reconfigure_flow(hass, subentry_id)
