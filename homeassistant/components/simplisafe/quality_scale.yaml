@@ -1,0 +1,76 @@
+rules:
+  # Bronze
+  action-setup: done
+  appropriate-polling: done
+  brands: done
+  common-modules: done
+  config-flow-test-coverage: done
+  config-flow: done
+  dependency-transparency: done
+  docs-actions: done
+  docs-conditions:
+    status: exempt
+    comment: The integration does not register any conditions.
+  docs-high-level-description: done
+  docs-installation-instructions: done
+  docs-removal-instructions: done
+  docs-triggers:
+    status: exempt
+    comment: The integration does not register any new triggers.
+  entity-event-setup: done
+  entity-unique-id: done
+  has-entity-name: done
+  runtime-data: done
+  test-before-configure: done
+  test-before-setup: done
+  unique-config-entry: done
+
+  # Silver
+  action-exceptions: done
+  config-entry-unloading: done
+  docs-configuration-parameters: todo
+  docs-installation-parameters: todo
+  entity-unavailable: done
+  integration-owner: done
+  log-when-unavailable: todo
+  parallel-updates: todo
+  reauthentication-flow: done
+  test-coverage: todo
+
+  # Gold
+  devices: done
+  diagnostics: done
+  discovery-update-info:
+    status: todo
+    comment: Since discovery is not yet implemented, this rule is not complete either.
+  discovery:
+    status: todo
+    comment: DHCP discovery is declared in manifest.json, but config_flow.py does not implement the required async_step_dhcp handler.
+  docs-data-update: done
+  docs-examples: done
+  docs-known-limitations: todo
+  docs-supported-devices: done
+  docs-supported-functions: done
+  docs-troubleshooting: todo
+  docs-use-cases: done
+  dynamic-devices: todo
+  entity-category: done
+  entity-device-class: done
+  entity-disabled-by-default:
+    status: todo
+    comment: No entities are disabled by default.
+  entity-translations:
+    status: todo
+    comment: Some entities are translated, but not all.
+  exception-translations:
+    status: todo
+    comment: Some exceptions are translated, but not all.
+  icon-translations: done
+  reconfiguration-flow: todo
+  repair-issues: todo
+  stale-devices: todo
+
+  # Platinum
+  async-dependency: done
+  inject-websession: done
+  strict-typing: done
