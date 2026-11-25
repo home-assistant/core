@@ -998,3 +998,99 @@ async def test_firewall_policy_entities_move_to_child_device(
     assert migrated_switch.entity_id == "switch.custom_firewall_policy"
     assert migrated_switch.device_id == policy_device.id
     assert hass.states.get(switch.entity_id) is not None
+
+
+DELETED_POLICY_ID = "6800000000000000000000ff"
+
+
+def _add_firewall_policy_device(
+    device_registry: dr.DeviceRegistry,
+    config_entry: MockConfigEntry,
+    policy_id: str,
+) -> dr.ChildDeviceEntry:
+    """Register a firewall policy's child device under UniFi Network."""
+    assert config_entry.unique_id is not None
+    network = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        identifiers={(SWITCH_DOMAIN, config_entry.unique_id)},
+    )
+    return device_registry.async_get_or_create_child(
+        config_entry_id=config_entry.entry_id,
+        identifiers={(DOMAIN, f"firewall_policy-{policy_id}")},
+        parent_device_id=network.id,
+    )
+
+
+@pytest.mark.parametrize("firewall_policy_payload", [[FIREWALL_POLICY]])
+async def test_devices_of_deleted_firewall_policies_pruned(
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    config_entry: MockConfigEntry,
+    config_entry_factory: ConfigEntryFactoryType,
+) -> None:
+    """Remove the device and entities of a policy that is no longer listed."""
+    deleted = _add_firewall_policy_device(
+        device_registry, config_entry, DELETED_POLICY_ID
+    )
+    disabled_entity = entity_registry.async_get_or_create(
+        Platform.SELECT,
+        DOMAIN,
+        f"firewall_policy_schedule_mode-{DELETED_POLICY_ID}",
+        config_entry=config_entry,
+        device_id=deleted.id,
+        disabled_by=er.RegistryEntryDisabler.INTEGRATION,
+    )
+    listed = _add_firewall_policy_device(
+        device_registry, config_entry, FIREWALL_POLICY["_id"]
+    )
+
+    await config_entry_factory()
+
+    assert device_registry.async_get(deleted.id) is None
+    assert entity_registry.async_get(disabled_entity.entity_id) is None
+    assert device_registry.async_get(listed.id) is not None
+
+
+@pytest.mark.parametrize("firewall_policy_payload", [[]])
+async def test_firewall_policy_devices_kept_without_listed_policies(
+    device_registry: dr.DeviceRegistry,
+    config_entry: MockConfigEntry,
+    config_entry_factory: ConfigEntryFactoryType,
+) -> None:
+    """Keep policy devices when no policies were loaded."""
+    device = _add_firewall_policy_device(
+        device_registry, config_entry, DELETED_POLICY_ID
+    )
+
+    await config_entry_factory()
+
+    assert device_registry.async_get(device.id) is not None
+
+
+@pytest.mark.parametrize("firewall_policy_payload", [[FIREWALL_POLICY]])
+async def test_remove_device_of_deleted_firewall_policy(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    device_registry: dr.DeviceRegistry,
+    config_entry: MockConfigEntry,
+    config_entry_factory: ConfigEntryFactoryType,
+) -> None:
+    """Allow removing the device of a policy only once it is no longer listed."""
+    await config_entry_factory()
+    assert await async_setup_component(hass, "config", {})
+    listed = device_registry.async_get_child_device_by_identifier(
+        (DOMAIN, f"firewall_policy-{FIREWALL_POLICY['_id']}"), config_entry.entry_id
+    )
+    assert listed is not None
+    deleted = _add_firewall_policy_device(
+        device_registry, config_entry, DELETED_POLICY_ID
+    )
+
+    client = await hass_ws_client(hass)
+    response = await client.remove_device(listed.id)
+    assert not response["success"]
+    assert device_registry.async_get(listed.id) is not None
+
+    response = await client.remove_device(deleted.id)
+    assert response["success"]
+    assert device_registry.async_get(deleted.id) is None

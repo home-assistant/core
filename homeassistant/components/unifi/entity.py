@@ -152,6 +152,18 @@ async_port_device_info_fn = partial(async_child_device_info_fn, kind="port")
 async_outlet_device_info_fn = partial(async_child_device_info_fn, kind="outlet")
 
 
+FIREWALL_POLICY_DEVICE_PREFIX = "firewall_policy-"
+
+
+@callback
+def async_firewall_policy_id_of_device(device: dr.ChildDeviceEntry) -> str | None:
+    """Return the ID of the firewall policy a child device was created for."""
+    for domain, identifier in device.identifiers:
+        if domain == DOMAIN and identifier.startswith(FIREWALL_POLICY_DEVICE_PREFIX):
+            return identifier.removeprefix(FIREWALL_POLICY_DEVICE_PREFIX)
+    return None
+
+
 @callback
 def async_firewall_policy_device_info_fn(hub: UnifiHub, obj_id: str) -> ChildDeviceInfo:
     """Create device information for a firewall policy."""
@@ -161,7 +173,7 @@ def async_firewall_policy_device_info_fn(hub: UnifiHub, obj_id: str) -> ChildDev
         device_info=async_unifi_network_device_info_fn(hub, obj_id),
     )
     return ChildDeviceInfo(
-        identifiers={(DOMAIN, f"firewall_policy-{obj_id}")},
+        identifiers={(DOMAIN, f"{FIREWALL_POLICY_DEVICE_PREFIX}{obj_id}")},
         name=hub.api.firewall_policies[obj_id].name,
         parent_device_id=parent.id,
     )

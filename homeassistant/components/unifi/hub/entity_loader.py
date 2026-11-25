@@ -29,7 +29,11 @@ from ..coordinator import (
     UnifiDataUpdateCoordinator,
     UnifiDeviceDataUpdateCoordinator,
 )
-from ..entity import UnifiEntity, UnifiEntityDescription
+from ..entity import (
+    UnifiEntity,
+    UnifiEntityDescription,
+    async_firewall_policy_id_of_device,
+)
 from .connection import ACCOUNT_ERRORS, LOGIN_ERRORS, NOT_READY_ERRORS, REQUEST_TIMEOUT
 
 if TYPE_CHECKING:
@@ -162,6 +166,7 @@ class UnifiEntityLoader:
         self._restore_inactive_clients()
         self._prune_entities_of_unlisted_clients()
         self._prune_entities_of_unlisted_devices()
+        self._prune_devices_of_unlisted_firewall_policies()
         self.wireless_clients.update_clients(set(self.hub.api.clients.values()))
 
     async def _async_update_clients_all(self) -> None:
@@ -312,6 +317,38 @@ class UnifiEntityLoader:
         if pruned:
             LOGGER.debug(
                 "Pruned %s UniFi device registry entries no longer listed", pruned
+            )
+
+    @callback
+    def _prune_devices_of_unlisted_firewall_policies(self) -> None:
+        """Remove the child devices of firewall policies no longer listed.
+
+        Firewall policies are only polled, so a deleted policy is noticed when
+        the list is loaded at startup. Removing a child device removes the
+        entities attached to it, disabled ones included.
+        """
+        policies = self.hub.api.firewall_policies
+        coordinator = self._data_coordinators[id(policies)]
+        # A failed fetch leaves the list empty, while a loaded list always has
+        # the predefined policies
+        if not coordinator.last_update_success or not policies.values():
+            return
+
+        device_registry = dr.async_get(self.hub.hass)
+        pruned = 0
+        for device in dr.async_child_entries_for_config_entry(
+            device_registry, self.hub.config.entry.entry_id
+        ):
+            policy_id = async_firewall_policy_id_of_device(device)
+            if policy_id is None or policy_id in policies:
+                continue
+            device_registry.async_remove_device(device.id)
+            pruned += 1
+
+        if pruned:
+            LOGGER.debug(
+                "Pruned the devices of %s UniFi firewall policies no longer listed",
+                pruned,
             )
 
     @callback
