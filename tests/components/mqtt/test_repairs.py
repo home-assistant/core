@@ -414,6 +414,41 @@ async def test_uploaded_client_certificate_expiring(
     assert issue_registry.async_get_issue(DOMAIN, ISSUE_CLIENT_CERTIFICATE) is None
 
 
+@pytest.mark.parametrize(
+    ("valid_days_before", "valid_days_after", "issue_created"),
+    [
+        # A certificate valid for 9 days gets a warning in the last 3 days
+        pytest.param(1, 8, False, id="short_lived_not_expiring"),
+        pytest.param(7, 2, True, id="short_lived_expiring"),
+    ],
+)
+async def test_short_lived_client_certificate_expiring(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    issue_registry: ir.IssueRegistry,
+    valid_days_before: int,
+    valid_days_after: int,
+    issue_created: bool,
+) -> None:
+    """Test the warning window is shorter for short-lived certificates."""
+    now = dt_util.utcnow()
+    certificate, key = _generate_certificate(
+        now + timedelta(days=valid_days_after), now - timedelta(days=valid_days_before)
+    )
+    await _async_setup_entry(
+        hass,
+        mqtt_mock_entry,
+        {
+            CONF_CERTIFICATE: "auto",
+            CONF_CLIENT_CERT: certificate.decode(),
+            CONF_CLIENT_KEY: key.decode(),
+        },
+    )
+    assert (
+        issue_registry.async_get_issue(DOMAIN, ISSUE_CLIENT_CERTIFICATE) is not None
+    ) is issue_created
+
+
 async def test_client_certificate_file_expiring(
     hass: HomeAssistant,
     mqtt_mock_entry: MqttMockHAClientGenerator,

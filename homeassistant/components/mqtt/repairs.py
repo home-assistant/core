@@ -113,6 +113,11 @@ async def async_setup_client_certificate_check(
         ir.async_delete_issue(hass, DOMAIN, ISSUE_CLIENT_CERTIFICATE)
         return
     loaded_expiry = loaded_certificate.not_valid_after_utc
+    # Short-lived certificates are renewed in the last third of their validity
+    expiry_warning = min(
+        CERTIFICATE_EXPIRY_WARNING,
+        (loaded_expiry - loaded_certificate.not_valid_before_utc) / 3,
+    )
     client_cert_file: str | None = config.get(CONF_CLIENT_CERT_FILE)
 
     def _check_installed_certificate() -> Certificate | tuple[str, dict[str, str]]:
@@ -150,7 +155,7 @@ async def async_setup_client_certificate_check(
 
     async def _async_check_client_certificate(now: datetime) -> None:
         """Create or remove the client certificate issue."""
-        if loaded_expiry - now > CERTIFICATE_EXPIRY_WARNING:
+        if loaded_expiry - now > expiry_warning:
             ir.async_delete_issue(hass, DOMAIN, ISSUE_CLIENT_CERTIFICATE)
             return
 

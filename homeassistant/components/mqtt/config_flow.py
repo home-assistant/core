@@ -59,6 +59,7 @@ from homeassistant.components.valve import ValveState
 from homeassistant.config_entries import (
     SOURCE_RECONFIGURE,
     ConfigEntry,
+    ConfigEntryState,
     ConfigFlow,
     ConfigFlowResult,
     ConfigSubentryFlow,
@@ -4365,6 +4366,16 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
             errors,
         ):
             if is_reconfigure:
+                # The update listener that reloads MQTT is only registered
+                # when the setup succeeded
+                if reconfigure_entry.state in (
+                    ConfigEntryState.SETUP_ERROR,
+                    ConfigEntryState.SETUP_RETRY,
+                ):
+                    return self.async_update_reload_and_abort(
+                        reconfigure_entry,
+                        data=entry_config_update,
+                    )
                 return self.async_update_and_abort(
                     reconfigure_entry,
                     data=entry_config_update,
@@ -5278,6 +5289,24 @@ def _validate_certificate_settings(
     return None
 
 
+def _missing_certificate_error(
+    entry_config_update: dict[str, Any], set_ca_cert: str, set_client_cert: bool
+) -> str | None:
+    """Return an error when a selected certificate is not configured."""
+    # Without a certificate TLS or client authentication would be disabled silently
+    if set_ca_cert == "custom" and not (
+        CONF_CERTIFICATE in entry_config_update
+        or CONF_CERTIFICATE_FILE in entry_config_update
+    ):
+        return "ca_certificate_missing"
+    if set_client_cert and not (
+        CONF_CLIENT_CERT in entry_config_update
+        or CONF_CLIENT_CERT_FILE in entry_config_update
+    ):
+        return "client_certificate_missing"
+    return None
+
+
 async def async_validate_broker_settings(
     flow: FlowHandler,
     entry_config: MappingProxyType[str, Any] | None,
@@ -5418,6 +5447,12 @@ async def async_validate_broker_settings(
     ):
         entry_config_update[CONF_CLIENT_KEY] = client_key
 
+    if error := _missing_certificate_error(
+        entry_config_update, set_ca_cert, set_client_cert
+    ):
+        errors["base"] = error
+        return False
+
     # We temporarily create the current and new uploaded certificate files
     # and we check the certificate chain.
     await async_create_certificate_temp_files(hass, entry_config_update)
@@ -5447,6 +5482,13 @@ async def async_validate_broker_settings(
         update_password_from_user_input(
             entry_config.get(CONF_PASSWORD), entry_config_update
         )
+    return await _async_test_connection(hass, entry_config_update, errors)
+
+
+async def _async_test_connection(
+    hass: HomeAssistant, entry_config_update: dict[str, Any], errors: dict[str, str]
+) -> bool:
+    """Test the connection to the MQTT broker."""
     try:
         can_connect = await hass.async_add_executor_job(
             try_connection,

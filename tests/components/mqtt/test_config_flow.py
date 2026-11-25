@@ -89,7 +89,11 @@ from homeassistant.components.mqtt.const import (
     DOMAIN,
 )
 from homeassistant.components.mqtt.util import learn_more_url
-from homeassistant.config_entries import ConfigSubentry, ConfigSubentryData
+from homeassistant.config_entries import (
+    ConfigEntryState,
+    ConfigSubentry,
+    ConfigSubentryData,
+)
 from homeassistant.const import (
     CONF_CLIENT_ID,
     CONF_PASSWORD,
@@ -2628,6 +2632,55 @@ async def test_reconfigure_with_certificate_files(
 
 @pytest.mark.usefixtures("mock_ssl_context")
 @pytest.mark.parametrize(
+    ("entry_state", "reloads"),
+    [
+        # The update listener reloads a loaded entry
+        pytest.param(ConfigEntryState.LOADED, 0, id="loaded"),
+        pytest.param(ConfigEntryState.SETUP_RETRY, 1, id="setup_retry"),
+        pytest.param(ConfigEntryState.SETUP_ERROR, 1, id="setup_error"),
+    ],
+)
+async def test_reconfigure_reloads_entry_that_failed_to_set_up(
+    hass: HomeAssistant,
+    mock_try_connection: MagicMock,
+    mock_certificate_files: dict[str, str],
+    entry_state: ConfigEntryState,
+    reloads: int,
+) -> None:
+    """Test reconfiguring an entry that failed to set up reloads it."""
+    mock_try_connection.return_value = True
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        version=mqtt.CONFIG_ENTRY_VERSION,
+        minor_version=mqtt.CONFIG_ENTRY_MINOR_VERSION,
+        data={mqtt.CONF_BROKER: "test-broker", CONF_PORT: 8883, CONF_PROTOCOL: "5"},
+        state=entry_state,
+    )
+    config_entry.add_to_hass(hass)
+
+    result = await config_entry.start_reconfigure_flow(hass)
+    with patch.object(hass.config_entries, "async_schedule_reload") as mock_reload:
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={
+                mqtt.CONF_BROKER: "test-broker",
+                CONF_PORT: 8883,
+                CONF_PROTOCOL: "5",
+                OTHER_SETTINGS: {
+                    SET_CA_CERT: "custom",
+                    SET_CLIENT_CERT: True,
+                    mqtt.CONF_TRANSPORT: "tcp",
+                }
+                | mock_certificate_files,
+            },
+        )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert mock_reload.call_count == reloads
+
+
+@pytest.mark.usefixtures("mock_ssl_context")
+@pytest.mark.parametrize(
     ("set_ca_cert", "expected_ca_settings"),
     [
         pytest.param("off", {}, id="ca_validation_off"),
@@ -2735,24 +2788,38 @@ async def test_reconfigure_ignores_file_paths_of_disabled_settings(
         ),
         pytest.param(
             (),
-            (CONF_CLIENT_KEY_FILE,),
+            (CONF_CERTIFICATE_FILE, CONF_CLIENT_KEY_FILE),
             (CONF_CLIENT_CERT_FILE,),
             "cannot_read_client_cert_file",
             id="missing_client_cert_file",
         ),
         pytest.param(
             (),
-            (CONF_CLIENT_CERT_FILE,),
+            (CONF_CERTIFICATE_FILE, CONF_CLIENT_CERT_FILE),
             (CONF_CLIENT_KEY_FILE,),
             "cannot_read_client_key_file",
             id="missing_client_key_file",
         ),
         pytest.param(
             (),
-            (),
+            (CONF_CLIENT_CERT_FILE, CONF_CLIENT_KEY_FILE),
             (CONF_CERTIFICATE_FILE,),
             "cannot_read_certificate_file",
             id="missing_ca_cert_file",
+        ),
+        pytest.param(
+            (),
+            (CONF_CLIENT_CERT_FILE, CONF_CLIENT_KEY_FILE),
+            (),
+            "ca_certificate_missing",
+            id="custom_ca_cert_without_certificate",
+        ),
+        pytest.param(
+            (),
+            (CONF_CERTIFICATE_FILE,),
+            (),
+            "client_certificate_missing",
+            id="client_cert_without_certificate",
         ),
     ],
 )
