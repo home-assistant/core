@@ -1065,6 +1065,36 @@ BLUETOOTH: Final[list[dict[str, bool | str | int | list[int]]]] = [
     },
     {
         "connectable": False,
+        "domain": "schlage",
+        "manufacturer_data_start": [
+            1,
+            0,
+            9,
+        ],
+        "manufacturer_id": 315,
+    },
+    {
+        "connectable": False,
+        "domain": "schlage",
+        "manufacturer_data_start": [
+            1,
+            0,
+            23,
+        ],
+        "manufacturer_id": 315,
+    },
+    {
+        "connectable": False,
+        "domain": "schlage",
+        "manufacturer_data_start": [
+            1,
+            0,
+            24,
+        ],
+        "manufacturer_id": 315,
+    },
+    {
+        "connectable": False,
         "domain": "sensirion_ble",
         "manufacturer_id": 1749,
     },

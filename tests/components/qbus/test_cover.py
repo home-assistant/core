@@ -9,6 +9,7 @@ from homeassistant.components.cover import (
     ATTR_CURRENT_POSITION,
     ATTR_CURRENT_TILT_POSITION,
     DOMAIN as COVER_DOMAIN,
+    CoverEntityCapabilityAttribute,
     CoverEntityFeature,
     CoverService,
     CoverServiceArgument,
@@ -204,6 +205,8 @@ async def test_cover_slats(
         | CoverEntityFeature.CLOSE_TILT
         | CoverEntityFeature.SET_TILT_POSITION
     )
+    assert attributes[CoverEntityCapabilityAttribute.OPEN_TILT_POSITION] == 50
+    assert attributes[CoverEntityCapabilityAttribute.CLOSED_TILT_POSITIONS] == [0, 100]
 
     # Start with a fully closed cover
     mock_publish_state.reset_mock()
