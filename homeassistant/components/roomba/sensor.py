@@ -132,10 +132,13 @@ SENSORS: list[RoombaSensorEntityDescription] = [
     RoombaSensorEntityDescription(
         key="total_cleaned_area",
         translation_key="total_cleaned_area",
-        native_unit_of_measurement=UnitOfArea.SQUARE_METERS,
+        device_class=SensorDeviceClass.AREA,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        native_unit_of_measurement=UnitOfArea.SQUARE_FEET,
         entity_category=EntityCategory.DIAGNOSTIC,
+        # Reported in hundreds of square feet
         value_fn=lambda self: (
-            None if (sqft := self.run_stats.get("sqft")) is None else sqft * 9.29
+            None if (sqft := self.run_stats.get("sqft")) is None else sqft * 100
         ),
         suggested_display_precision=0,
         entity_registry_enabled_default=False,

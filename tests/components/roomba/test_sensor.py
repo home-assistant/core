@@ -9,9 +9,16 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.roomba.const import CONF_BLID, DOMAIN
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
-from homeassistant.const import CONF_HOST, CONF_PASSWORD, Platform
+from homeassistant.const import (
+    ATTR_UNIT_OF_MEASUREMENT,
+    CONF_HOST,
+    CONF_PASSWORD,
+    Platform,
+    UnitOfArea,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
+from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
 
 
 def _config_entry(blid: str) -> MockConfigEntry:
@@ -135,6 +142,34 @@ async def test_rssi_refreshes_on_wifi_only_message(
     assert hass.states.get(entity_id).state == "-62"
 
 
+async def test_total_cleaned_area_keeps_square_meters_for_existing_entity(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_roomba: AsyncMock,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test an entity registered before the square feet change is still in m²."""
+    hass.config.units = US_CUSTOMARY_SYSTEM
+    mock_roomba.master_state["state"]["reported"]["bbrun"] = {"sqft": 716}
+    mock_config_entry.add_to_hass(hass)
+    entity_registry.async_get_or_create(
+        SENSOR_DOMAIN,
+        DOMAIN,
+        f"total_cleaned_area_{mock_config_entry.data[CONF_BLID]}",
+        suggested_object_id="test_roomba_total_cleaned_area",
+        config_entry=mock_config_entry,
+        unit_of_measurement=UnitOfArea.SQUARE_METERS,
+    )
+
+    with patch("homeassistant.components.roomba.PLATFORMS", [Platform.SENSOR]):
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.test_roomba_total_cleaned_area")
+    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == UnitOfArea.SQUARE_METERS
+    assert state.state == "6651.857664"
+
+
 @pytest.mark.parametrize(
     ("bbrun", "runtime_stats"),
     [
@@ -183,5 +218,5 @@ async def test_lifetime_stats_from_run_report(
     await hass.async_block_till_done()
 
     assert hass.states.get("sensor.test_roomba_total_cleaning_time").state == "120"
-    assert hass.states.get("sensor.test_roomba_total_cleaned_area").state == "2322.5"
+    assert hass.states.get("sensor.test_roomba_total_cleaned_area").state == "2322.576"
     assert hass.states.get("sensor.test_roomba_scrubs").state == "1"
