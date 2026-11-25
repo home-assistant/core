@@ -400,9 +400,10 @@ def format_short_ids(pairs: Iterable[tuple[str, str]]) -> dict[str, str]:
     The trailing suffix starts at 4 characters and expands if another item with
     the same prefix shares that suffix.
     """
-    groups: defaultdict[tuple[str, str], list[str]] = defaultdict(list)
+    # A dict, so a full ID listed twice does not keep the suffix growing forever
+    groups: defaultdict[tuple[str, str], dict[str, None]] = defaultdict(dict)
     for prefix, full_id in pairs:
-        groups[(prefix, full_id[-SHORT_ID_MIN_LENGTH:])].append(full_id)
+        groups[(prefix, full_id[-SHORT_ID_MIN_LENGTH:])][full_id] = None
 
     result: dict[str, str] = {}
     for (prefix, _), group in groups.items():
