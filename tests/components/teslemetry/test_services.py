@@ -1,20 +1,22 @@
 """Test the Teslemetry services."""
 
+from copy import deepcopy
 from datetime import time
+from typing import Any
 from unittest.mock import patch
 
-from aiopowerwall import (
+from cryptography.hazmat.primitives import serialization
+from cryptography.hazmat.primitives.asymmetric import rsa
+import probatio
+import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from tesla_fleet_api.tesla.powerwall import (
     PowerwallCommandError,
     PowerwallConnectionError,
     PowerwallError,
     PowerwallNotSupportedError,
     PowerwallProtocolError,
 )
-from cryptography.hazmat.primitives import serialization
-from cryptography.hazmat.primitives.asymmetric import rsa
-import probatio
-import pytest
-from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.teslemetry.const import (
     CONF_SITE_ID,
@@ -38,14 +40,14 @@ from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from . import mock_config_entry, setup_platform
-from .const import COMMAND_ERROR, COMMAND_OK
+from .const import COMMAND_ERROR, COMMAND_OK, METADATA
 
 lat = -27.9699373
 lon = 153.3726526
 
 SITE_ID = 123456
 
-# aiopowerwall's PowerwallClient parses the PEM at construction time, so tests
+# PowerwallClient parses the PEM at construction time, so tests
 # that build one need a real (if undersized, for speed) RSA key rather than
 # arbitrary bytes.
 _TEST_RSA_KEY_PEM = rsa.generate_private_key(
@@ -608,7 +610,9 @@ async def test_local_battery_services(
     )
     assert device
 
-    with patch(f"aiopowerwall.PowerwallClient.{method}") as mock_method:
+    with patch(
+        f"tesla_fleet_api.tesla.powerwall.PowerwallClient.{method}"
+    ) as mock_method:
         await hass.services.async_call(
             DOMAIN,
             service,
@@ -665,7 +669,10 @@ async def test_local_battery_services_errors(
     assert device
 
     with (
-        patch(f"aiopowerwall.PowerwallClient.{method}", side_effect=error),
+        patch(
+            f"tesla_fleet_api.tesla.powerwall.PowerwallClient.{method}",
+            side_effect=error,
+        ),
         patch(
             f"tesla_fleet_api.teslemetry.energysite.TeslemetryEnergySite.{method}"
         ) as mock_cloud,
@@ -696,7 +703,7 @@ async def test_dispatch_battery_power_out_of_range_message(
 
     with (
         patch(
-            "aiopowerwall.PowerwallClient.dispatch_battery_power",
+            "tesla_fleet_api.tesla.powerwall.PowerwallClient.dispatch_battery_power",
             side_effect=PowerwallCommandError(
                 "dispatch_battery_power",
                 11,
@@ -740,7 +747,7 @@ async def test_local_battery_services_unreachable_gateway(
 
     with (
         patch(
-            f"aiopowerwall.PowerwallClient.{method}",
+            f"tesla_fleet_api.tesla.powerwall.PowerwallClient.{method}",
             side_effect=PowerwallConnectionError("unreachable"),
         ) as mock_local,
         patch(
@@ -818,7 +825,9 @@ async def test_battery_services_cloud(
             f"tesla_fleet_api.teslemetry.energysite.TeslemetryEnergySite.{method}",
             return_value=COMMAND_OK,
         ) as mock_method,
-        patch(f"aiopowerwall.PowerwallClient.{method}") as mock_local,
+        patch(
+            f"tesla_fleet_api.tesla.powerwall.PowerwallClient.{method}"
+        ) as mock_local,
     ):
         await hass.services.async_call(
             DOMAIN,
@@ -853,7 +862,9 @@ async def test_dispatch_battery_power_out_of_range(
     assert device
 
     with (
-        patch("aiopowerwall.PowerwallClient.dispatch_battery_power") as mock_method,
+        patch(
+            "tesla_fleet_api.tesla.powerwall.PowerwallClient.dispatch_battery_power"
+        ) as mock_method,
         pytest.raises(probatio.Invalid),
     ):
         await hass.services.async_call(
@@ -867,3 +878,103 @@ async def test_dispatch_battery_power_out_of_range(
             blocking=True,
         )
     mock_method.assert_not_called()
+
+
+def _metadata_with_paired(paired: bool | None) -> dict[str, Any]:
+    """Return a copy of the metadata with the energy site paired flag set."""
+    metadata = deepcopy(METADATA)
+    metadata["energy_sites"][str(SITE_ID)]["paired"] = paired
+    return metadata
+
+
+@pytest.mark.parametrize(("service", "data", "method"), LOCAL_BATTERY_SERVICES)
+@pytest.mark.parametrize(
+    ("subentries", "paired", "local_calls", "cloud_calls"),
+    [
+        pytest.param([PAIRED_SITE], False, 1, 0, id="local_only"),
+        pytest.param([], True, 0, 1, id="paired_only"),
+        pytest.param([PAIRED_SITE], True, 1, 0, id="local_and_paired"),
+    ],
+)
+async def test_battery_services_signed_command_available(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    service: str,
+    data: dict[str, int],
+    method: str,
+    subentries: list[ConfigSubentryData],
+    paired: bool,
+    local_calls: int,
+    cloud_calls: int,
+) -> None:
+    """Test the battery services send when the site is local or paired with Teslemetry."""
+    with patch(
+        "tesla_fleet_api.teslemetry.Teslemetry.metadata",
+        return_value=_metadata_with_paired(paired),
+    ):
+        entry = await _setup_site(hass, subentries)
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, str(SITE_ID)), entry.entry_id
+    )
+    assert device
+
+    with (
+        patch(
+            f"tesla_fleet_api.tesla.powerwall.PowerwallClient.{method}"
+        ) as mock_local,
+        patch(
+            f"tesla_fleet_api.teslemetry.energysite.TeslemetryEnergySite.{method}",
+            return_value=COMMAND_OK,
+        ) as mock_cloud,
+    ):
+        await hass.services.async_call(
+            DOMAIN,
+            service,
+            {CommonServiceArgument.DEVICE_ID: device.id, **data},
+            blocking=True,
+        )
+    assert mock_local.await_count == local_calls
+    assert mock_cloud.await_count == cloud_calls
+
+
+@pytest.mark.parametrize(("service", "data", "method"), LOCAL_BATTERY_SERVICES)
+@pytest.mark.parametrize(
+    "paired", [pytest.param(False, id="not_paired"), pytest.param(None, id="unknown")]
+)
+async def test_battery_services_refused_without_pairing(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    service: str,
+    data: dict[str, int],
+    method: str,
+    paired: bool | None,
+) -> None:
+    """Test the battery services refuse a site neither local nor paired with Teslemetry."""
+    with patch(
+        "tesla_fleet_api.teslemetry.Teslemetry.metadata",
+        return_value=_metadata_with_paired(paired),
+    ):
+        entry = await _setup_site(hass, [])
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, str(SITE_ID)), entry.entry_id
+    )
+    assert device
+
+    with (
+        patch(
+            f"tesla_fleet_api.teslemetry.energysite.TeslemetryEnergySite.{method}"
+        ) as mock_cloud,
+        pytest.raises(ServiceValidationError) as exc_info,
+    ):
+        await hass.services.async_call(
+            DOMAIN,
+            service,
+            {CommonServiceArgument.DEVICE_ID: device.id, **data},
+            blocking=True,
+        )
+    assert exc_info.value.translation_key == "energy_site_not_paired"
+    assert str(exc_info.value) == (
+        "Teslemetry is not paired with the Powerwall system for Energy Site, "
+        "pair it in the Teslemetry console or set up local control"
+    )
+    mock_cloud.assert_not_called()

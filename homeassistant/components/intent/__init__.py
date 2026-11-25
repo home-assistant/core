@@ -31,10 +31,10 @@ from homeassistant.components.valve import (
     ValveService,
 )
 from homeassistant.const import (
-    ATTR_ENTITY_ID,
     SERVICE_TOGGLE,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
+    TargetKey,
 )
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant, State
 from homeassistant.helpers import (
@@ -188,7 +188,7 @@ class OnOffIntentHandler(intent.ServiceIntentHandler):
                     hass.services.async_call(
                         state.domain,
                         SERVICE_PRESS_BUTTON,
-                        {ATTR_ENTITY_ID: state.entity_id},
+                        {TargetKey.ENTITY_ID: state.entity_id},
                         context=intent_obj.context,
                         blocking=True,
                     )
@@ -209,7 +209,7 @@ class OnOffIntentHandler(intent.ServiceIntentHandler):
                     hass.services.async_call(
                         COVER_DOMAIN,
                         service_name,
-                        {ATTR_ENTITY_ID: state.entity_id},
+                        {TargetKey.ENTITY_ID: state.entity_id},
                         context=intent_obj.context,
                         blocking=True,
                     )
@@ -230,7 +230,7 @@ class OnOffIntentHandler(intent.ServiceIntentHandler):
                     hass.services.async_call(
                         LOCK_DOMAIN,
                         service_name,
-                        {ATTR_ENTITY_ID: state.entity_id},
+                        {TargetKey.ENTITY_ID: state.entity_id},
                         context=intent_obj.context,
                         blocking=True,
                     )
@@ -251,7 +251,7 @@ class OnOffIntentHandler(intent.ServiceIntentHandler):
                     hass.services.async_call(
                         VALVE_DOMAIN,
                         service_name,
-                        {ATTR_ENTITY_ID: state.entity_id},
+                        {TargetKey.ENTITY_ID: state.entity_id},
                         context=intent_obj.context,
                         blocking=True,
                     )

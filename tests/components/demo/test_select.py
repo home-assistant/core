@@ -10,7 +10,7 @@ from homeassistant.components.select import (
     SelectService,
     SelectServiceArgument,
 )
-from homeassistant.const import CommonServiceArgument, Platform
+from homeassistant.const import Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.setup import async_setup_component
@@ -61,7 +61,7 @@ async def test_select_option_bad_attr(hass: HomeAssistant) -> None:
             SelectService.SELECT_OPTION,
             {
                 SelectServiceArgument.OPTION: "slow_speed",
-                CommonServiceArgument.ENTITY_ID: ENTITY_SPEED,
+                TargetKey.ENTITY_ID: ENTITY_SPEED,
             },
             blocking=True,
         )
@@ -83,7 +83,7 @@ async def test_select_option(hass: HomeAssistant) -> None:
         SelectService.SELECT_OPTION,
         {
             SelectServiceArgument.OPTION: "light_speed",
-            CommonServiceArgument.ENTITY_ID: ENTITY_SPEED,
+            TargetKey.ENTITY_ID: ENTITY_SPEED,
         },
         blocking=True,
     )

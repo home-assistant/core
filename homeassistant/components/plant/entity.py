@@ -2,7 +2,7 @@
 
 from collections import deque
 from contextlib import suppress
-from datetime import datetime, timedelta
+from datetime import timedelta
 import logging
 from typing import Any, override
 
@@ -304,7 +304,7 @@ class DailyHistory:
 
     def add_measurement(self, value, timestamp=None):
         """Add a new measurement for a certain day."""
-        day = (timestamp or datetime.now()).date()  # pylint: disable=home-assistant-enforce-naive-now
+        day = dt_util.as_local(timestamp or dt_util.now()).date()
         if not isinstance(value, (int, float)):
             return
         if self._days is None:

@@ -14,7 +14,7 @@ from syrupy.assertion import SnapshotAssertion
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, ButtonService
 from homeassistant.components.ecovacs.const import DOMAIN
 from homeassistant.components.ecovacs.controller import EcovacsController
-from homeassistant.const import STATE_UNKNOWN, CommonServiceArgument, Platform
+from homeassistant.const import STATE_UNKNOWN, Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
@@ -108,12 +108,16 @@ def platforms() -> Platform | list[Platform]:
                     ResetLifeSpan(LifeSpan.CLEANING_SOLUTION),
                 ),
                 (
+                    "button.t80_omni_reset_dust_bag_lifespan",
+                    ResetLifeSpan(LifeSpan.DUST_BAG),
+                ),
+                (
                     "button.t80_omni_reset_filter_lifespan",
                     ResetLifeSpan(LifeSpan.FILTER),
                 ),
                 (
-                    "button.t80_omni_reset_hand_filter_lifespan",
-                    ResetLifeSpan(LifeSpan.HAND_FILTER),
+                    "button.t80_omni_reset_round_mop_lifespan",
+                    ResetLifeSpan(LifeSpan.ROUND_MOP),
                 ),
                 (
                     "button.t80_omni_reset_sewage_box_lifespan",
@@ -126,6 +130,10 @@ def platforms() -> Platform | list[Platform]:
                 (
                     "button.t80_omni_reset_unit_care_lifespan",
                     ResetLifeSpan(LifeSpan.UNIT_CARE),
+                ),
+                (
+                    "button.t80_omni_reset_water_sink_lifespan",
+                    ResetLifeSpan(LifeSpan.WATER_SINK),
                 ),
                 (
                     "button.t80_omni_empty_dustbin",
@@ -221,7 +229,7 @@ async def test_buttons(
         await hass.services.async_call(
             BUTTON_DOMAIN,
             ButtonService.PRESS,
-            {CommonServiceArgument.ENTITY_ID: entity_id},
+            {TargetKey.ENTITY_ID: entity_id},
             blocking=True,
         )
         device._execute_command.assert_called_with(command)

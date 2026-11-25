@@ -11,6 +11,7 @@
   "current_l1": 0.0,
   "fw_version": "1.44",
   "led_max_brightness": 20,
+  "precise_pwm_mode": true,
   "dynamic_current": 32,
   "user_current": 32,
   "lb_mode": 0,

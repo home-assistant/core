@@ -1,12 +1,15 @@
 """Support for Axis camera streaming."""
 
-from typing import override
+import asyncio
+from typing import TYPE_CHECKING, Any, override
 from urllib.parse import quote, urlencode
+
+from aiohttp import web
 
 from homeassistant.components.camera import CameraEntityFeature
 from homeassistant.components.mjpeg import MjpegCamera, filter_urllib3_logging
 from homeassistant.const import HTTP_BASIC_AUTHENTICATION, HTTP_DIGEST_AUTHENTICATION
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -43,10 +46,12 @@ class AxisCamera(AxisEntity, MjpegCamera):
     _still_image_url: str
     _mjpeg_url: str
     _stream_source: str
+    _active_streams: set[asyncio.Task[Any]]
 
     def __init__(self, hub: AxisHub) -> None:
         """Initialize Axis Communications camera component."""
         AxisEntity.__init__(self, hub)
+        self._active_streams = set()
 
         self._generate_sources()
 
@@ -68,6 +73,7 @@ class AxisCamera(AxisEntity, MjpegCamera):
     @override
     async def async_added_to_hass(self) -> None:
         """Subscribe camera events."""
+        self.async_on_remove(self._cancel_active_streams)
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass, self.hub.signal_new_address, self._generate_sources
@@ -75,6 +81,27 @@ class AxisCamera(AxisEntity, MjpegCamera):
         )
 
         await super().async_added_to_hass()
+
+    @override
+    async def handle_async_mjpeg_stream(
+        self, request: web.Request
+    ) -> web.StreamResponse | None:
+        """Track the stream request so it can be cancelled on entity removal."""
+        task = asyncio.current_task()
+        if TYPE_CHECKING:
+            assert task is not None
+
+        self._active_streams.add(task)
+        try:
+            return await super().handle_async_mjpeg_stream(request)
+        finally:
+            self._active_streams.discard(task)
+
+    @callback
+    def _cancel_active_streams(self) -> None:
+        """Cancel active stream requests when the entity is removed."""
+        for task in self._active_streams:
+            task.cancel()
 
     def _generate_sources(self) -> None:
         """Generate sources.

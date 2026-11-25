@@ -4,6 +4,9 @@
       "mute_alarm": {
         "default": "mdi:volume-mute"
       },
+      "next_effect": {
+        "default": "mdi:skip-next"
+      },
       "self_test": {
         "default": "mdi:progress-wrench"
       },
@@ -24,6 +27,9 @@
       }
     },
     "number": {
+      "display_brightness": {
+        "default": "mdi:brightness-6"
+      },
       "effect_intensity": {
         "default": "mdi:brightness-percent"
       },
@@ -32,6 +38,9 @@
       },
       "external_temperature": {
         "default": "mdi:thermometer-check"
+      },
+      "min_auto_display_brightness": {
+        "default": "mdi:brightness-4"
       },
       "valve_position": {
         "default": "mdi:pipe-valve"
@@ -126,6 +135,9 @@
       }
     },
     "switch": {
+      "auto_brightness": {
+        "default": "mdi:brightness-auto"
+      },
       "boost": {
         "default": "mdi:rocket-launch"
       },
@@ -145,6 +157,18 @@
       },
       "effect_reverse": {
         "default": "mdi:swap-horizontal"
+      },
+      "input_lock": {
+        "default": "mdi:lock-open-outline",
+        "state": {
+          "on": "mdi:lock-outline"
+        }
+      },
+      "input_lock_with_channel_name": {
+        "default": "mdi:lock-open-outline",
+        "state": {
+          "on": "mdi:lock-outline"
+        }
       },
       "left_slot": {
         "default": "mdi:scent",
@@ -176,6 +200,9 @@
     }
   },
   "services": {
+    "command": {
+      "service": "mdi:console"
+    },
     "get_kvs_value": {
       "service": "mdi:import"
     },

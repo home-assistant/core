@@ -1,0 +1,6 @@
+{
+  "domain": "aquarite_neopool",
+  "name": "AquaRite",
+  "integration_type": "virtual",
+  "supported_by": "neopool"
+}

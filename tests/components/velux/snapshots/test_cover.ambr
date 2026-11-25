@@ -6,6 +6,11 @@
     ]),
     'area_id': None,
     'capabilities': dict({
+      <CoverEntityCapabilityAttribute.CLOSED_TILT_POSITIONS: 'closed_tilt_positions'>: list([
+        0,
+        100,
+      ]),
+      <CoverEntityCapabilityAttribute.OPEN_TILT_POSITION: 'open_tilt_position'>: 50,
       <CoverEntityCapabilityAttribute.SUPPORTED_SPEEDS: 'supported_speeds'>: list([
         <CoverSpeed.SLOW: 'slow'>,
         <CoverSpeed.FAST: 'fast'>,
@@ -44,11 +49,16 @@
 # name: test_blind_entity_setup[mock_blind][cover.test_blind-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      <CoverEntityCapabilityAttribute.CLOSED_TILT_POSITIONS: 'closed_tilt_positions'>: list([
+        0,
+        100,
+      ]),
       <CoverEntityStateAttribute.CURRENT_POSITION: 'current_position'>: 60,
       <CoverEntityStateAttribute.CURRENT_TILT_POSITION: 'current_tilt_position'>: 75,
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'blind',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Blind',
       <CoverEntityStateAttribute.IS_CLOSED: 'is_closed'>: False,
+      <CoverEntityCapabilityAttribute.OPEN_TILT_POSITION: 'open_tilt_position'>: 50,
       <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CoverEntityFeature: 511>,
       <CoverEntityCapabilityAttribute.SUPPORTED_SPEEDS: 'supported_speeds'>: list([
         <CoverSpeed.SLOW: 'slow'>,

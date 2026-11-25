@@ -871,6 +871,72 @@ async def test_reauth_multiple_servers_available(
     mock_setup_entry.assert_called_once()
 
 
+@pytest.mark.usefixtures("current_request_with_host", "mock_plex_calls")
+async def test_reauth_server_not_found(
+    hass: HomeAssistant,
+    entry: MockConfigEntry,
+    mock_setup_entry: AsyncMock,
+    requests_mock: requests_mock.Mocker,
+    plextv_resources_other_server: str,
+    plextv_resources: str,
+) -> None:
+    """Test reauth recovers after signing in to an account without the entry's server."""
+    requests_mock.get(
+        "https://plex.tv/api/v2/resources",
+        text=plextv_resources_other_server,
+    )
+
+    entry.add_to_hass(hass)
+
+    result = await entry.start_reauth_flow(hass)
+    assert result["type"] is FlowResultType.MENU
+    assert result["step_id"] == "user"
+
+    with (
+        patch("plexauth.PlexAuth.initiate_auth"),
+        patch("plexauth.PlexAuth.token", return_value="BRAND_NEW_TOKEN"),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={"next_step_id": "website_auth"},
+        )
+        assert result["type"] is FlowResultType.EXTERNAL_STEP
+
+        result = await hass.config_entries.flow.async_configure(result["flow_id"])
+        assert result["type"] is FlowResultType.EXTERNAL_STEP_DONE
+
+        result = await hass.config_entries.flow.async_configure(result["flow_id"])
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "website_auth"
+        assert result["errors"]["base"] == "server_not_found"
+
+        requests_mock.get("https://plex.tv/api/v2/resources", text=plextv_resources)
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={},
+        )
+        assert result["type"] is FlowResultType.EXTERNAL_STEP
+
+        result = await hass.config_entries.flow.async_configure(result["flow_id"])
+        assert result["type"] is FlowResultType.EXTERNAL_STEP_DONE
+
+        result = await hass.config_entries.flow.async_configure(result["flow_id"])
+        assert result["type"] is FlowResultType.ABORT
+        assert result["reason"] == "reauth_successful"
+
+    assert len(hass.config_entries.flow.async_progress()) == 0
+    assert len(hass.config_entries.async_entries(DOMAIN)) == 1
+
+    assert entry.state is ConfigEntryState.LOADED
+    assert entry.data[CONF_SERVER] == "Plex Server 1"
+    assert entry.data[CONF_SERVER_IDENTIFIER] == "unique_id_123"
+    assert entry.data[PLEX_SERVER_CONFIG][CONF_URL] == PLEX_DIRECT_URL
+    assert entry.data[PLEX_SERVER_CONFIG][CONF_TOKEN] == "BRAND_NEW_TOKEN"
+
+    mock_setup_entry.assert_called_once()
+
+
 async def test_client_request_missing(hass: HomeAssistant) -> None:
     """Test when client headers are not set properly."""
     result = await hass.config_entries.flow.async_init(

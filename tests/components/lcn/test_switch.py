@@ -22,8 +22,8 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
     STATE_UNAVAILABLE,
-    CommonServiceArgument,
     Platform,
+    TargetKey,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -62,7 +62,7 @@ async def test_output_turn_on(hass: HomeAssistant, entry: MockConfigEntry) -> No
         await hass.services.async_call(
             SWITCH_DOMAIN,
             SwitchService.TURN_ON,
-            {CommonServiceArgument.ENTITY_ID: SWITCH_OUTPUT1},
+            {TargetKey.ENTITY_ID: SWITCH_OUTPUT1},
             blocking=True,
         )
 
@@ -78,7 +78,7 @@ async def test_output_turn_on(hass: HomeAssistant, entry: MockConfigEntry) -> No
         await hass.services.async_call(
             SWITCH_DOMAIN,
             SwitchService.TURN_ON,
-            {CommonServiceArgument.ENTITY_ID: SWITCH_OUTPUT1},
+            {TargetKey.ENTITY_ID: SWITCH_OUTPUT1},
             blocking=True,
         )
 
@@ -96,7 +96,7 @@ async def test_output_turn_off(hass: HomeAssistant, entry: MockConfigEntry) -> N
         await hass.services.async_call(
             SWITCH_DOMAIN,
             SwitchService.TURN_ON,
-            {CommonServiceArgument.ENTITY_ID: SWITCH_OUTPUT1},
+            {TargetKey.ENTITY_ID: SWITCH_OUTPUT1},
             blocking=True,
         )
 
@@ -106,7 +106,7 @@ async def test_output_turn_off(hass: HomeAssistant, entry: MockConfigEntry) -> N
         await hass.services.async_call(
             SWITCH_DOMAIN,
             SwitchService.TURN_OFF,
-            {CommonServiceArgument.ENTITY_ID: SWITCH_OUTPUT1},
+            {TargetKey.ENTITY_ID: SWITCH_OUTPUT1},
             blocking=True,
         )
 
@@ -122,7 +122,7 @@ async def test_output_turn_off(hass: HomeAssistant, entry: MockConfigEntry) -> N
         await hass.services.async_call(
             SWITCH_DOMAIN,
             SwitchService.TURN_OFF,
-            {CommonServiceArgument.ENTITY_ID: SWITCH_OUTPUT1},
+            {TargetKey.ENTITY_ID: SWITCH_OUTPUT1},
             blocking=True,
         )
 
@@ -146,7 +146,7 @@ async def test_relay_turn_on(hass: HomeAssistant, entry: MockConfigEntry) -> Non
         await hass.services.async_call(
             SWITCH_DOMAIN,
             SwitchService.TURN_ON,
-            {CommonServiceArgument.ENTITY_ID: SWITCH_RELAY1},
+            {TargetKey.ENTITY_ID: SWITCH_RELAY1},
             blocking=True,
         )
 
@@ -162,7 +162,7 @@ async def test_relay_turn_on(hass: HomeAssistant, entry: MockConfigEntry) -> Non
         await hass.services.async_call(
             SWITCH_DOMAIN,
             SwitchService.TURN_ON,
-            {CommonServiceArgument.ENTITY_ID: SWITCH_RELAY1},
+            {TargetKey.ENTITY_ID: SWITCH_RELAY1},
             blocking=True,
         )
 
@@ -183,7 +183,7 @@ async def test_relay_turn_off(hass: HomeAssistant, entry: MockConfigEntry) -> No
         await hass.services.async_call(
             SWITCH_DOMAIN,
             SwitchService.TURN_ON,
-            {CommonServiceArgument.ENTITY_ID: SWITCH_RELAY1},
+            {TargetKey.ENTITY_ID: SWITCH_RELAY1},
             blocking=True,
         )
 
@@ -193,7 +193,7 @@ async def test_relay_turn_off(hass: HomeAssistant, entry: MockConfigEntry) -> No
         await hass.services.async_call(
             SWITCH_DOMAIN,
             SwitchService.TURN_OFF,
-            {CommonServiceArgument.ENTITY_ID: SWITCH_RELAY1},
+            {TargetKey.ENTITY_ID: SWITCH_RELAY1},
             blocking=True,
         )
 
@@ -209,7 +209,7 @@ async def test_relay_turn_off(hass: HomeAssistant, entry: MockConfigEntry) -> No
         await hass.services.async_call(
             SWITCH_DOMAIN,
             SwitchService.TURN_OFF,
-            {CommonServiceArgument.ENTITY_ID: SWITCH_RELAY1},
+            {TargetKey.ENTITY_ID: SWITCH_RELAY1},
             blocking=True,
         )
 
@@ -232,7 +232,7 @@ async def test_regulatorlock_turn_on(
         await hass.services.async_call(
             SWITCH_DOMAIN,
             SwitchService.TURN_ON,
-            {CommonServiceArgument.ENTITY_ID: SWITCH_REGULATOR1},
+            {TargetKey.ENTITY_ID: SWITCH_REGULATOR1},
             blocking=True,
         )
 
@@ -248,7 +248,7 @@ async def test_regulatorlock_turn_on(
         await hass.services.async_call(
             SWITCH_DOMAIN,
             SwitchService.TURN_ON,
-            {CommonServiceArgument.ENTITY_ID: SWITCH_REGULATOR1},
+            {TargetKey.ENTITY_ID: SWITCH_REGULATOR1},
             blocking=True,
         )
 
@@ -268,7 +268,7 @@ async def test_regulatorlock_turn_off(
         await hass.services.async_call(
             SWITCH_DOMAIN,
             SwitchService.TURN_ON,
-            {CommonServiceArgument.ENTITY_ID: SWITCH_REGULATOR1},
+            {TargetKey.ENTITY_ID: SWITCH_REGULATOR1},
             blocking=True,
         )
 
@@ -278,7 +278,7 @@ async def test_regulatorlock_turn_off(
         await hass.services.async_call(
             SWITCH_DOMAIN,
             SwitchService.TURN_OFF,
-            {CommonServiceArgument.ENTITY_ID: SWITCH_REGULATOR1},
+            {TargetKey.ENTITY_ID: SWITCH_REGULATOR1},
             blocking=True,
         )
 
@@ -294,7 +294,7 @@ async def test_regulatorlock_turn_off(
         await hass.services.async_call(
             SWITCH_DOMAIN,
             SwitchService.TURN_OFF,
-            {CommonServiceArgument.ENTITY_ID: SWITCH_REGULATOR1},
+            {TargetKey.ENTITY_ID: SWITCH_REGULATOR1},
             blocking=True,
         )
 
@@ -318,7 +318,7 @@ async def test_keylock_turn_on(hass: HomeAssistant, entry: MockConfigEntry) -> N
         await hass.services.async_call(
             SWITCH_DOMAIN,
             SwitchService.TURN_ON,
-            {CommonServiceArgument.ENTITY_ID: SWITCH_KEYLOCKK1},
+            {TargetKey.ENTITY_ID: SWITCH_KEYLOCKK1},
             blocking=True,
         )
 
@@ -334,7 +334,7 @@ async def test_keylock_turn_on(hass: HomeAssistant, entry: MockConfigEntry) -> N
         await hass.services.async_call(
             SWITCH_DOMAIN,
             SwitchService.TURN_ON,
-            {CommonServiceArgument.ENTITY_ID: SWITCH_KEYLOCKK1},
+            {TargetKey.ENTITY_ID: SWITCH_KEYLOCKK1},
             blocking=True,
         )
 
@@ -355,7 +355,7 @@ async def test_keylock_turn_off(hass: HomeAssistant, entry: MockConfigEntry) -> 
         await hass.services.async_call(
             SWITCH_DOMAIN,
             SwitchService.TURN_ON,
-            {CommonServiceArgument.ENTITY_ID: SWITCH_KEYLOCKK1},
+            {TargetKey.ENTITY_ID: SWITCH_KEYLOCKK1},
             blocking=True,
         )
 
@@ -365,7 +365,7 @@ async def test_keylock_turn_off(hass: HomeAssistant, entry: MockConfigEntry) -> 
         await hass.services.async_call(
             SWITCH_DOMAIN,
             SwitchService.TURN_OFF,
-            {CommonServiceArgument.ENTITY_ID: SWITCH_KEYLOCKK1},
+            {TargetKey.ENTITY_ID: SWITCH_KEYLOCKK1},
             blocking=True,
         )
 
@@ -381,7 +381,7 @@ async def test_keylock_turn_off(hass: HomeAssistant, entry: MockConfigEntry) -> 
         await hass.services.async_call(
             SWITCH_DOMAIN,
             SwitchService.TURN_OFF,
-            {CommonServiceArgument.ENTITY_ID: SWITCH_KEYLOCKK1},
+            {TargetKey.ENTITY_ID: SWITCH_KEYLOCKK1},
             blocking=True,
         )
 

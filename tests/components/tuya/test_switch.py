@@ -10,7 +10,7 @@ from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 import requests
 from syrupy.assertion import SnapshotAssertion
 from tuya_sharing import CustomerDevice, Manager
-from tuya_sharing.exceptions import ApiRequestException
+from tuya_sharing.exceptions import ApiRequestException, TuyaSDKException
 
 from homeassistant.components.switch import (
     DOMAIN as SWITCH_DOMAIN,
@@ -19,12 +19,7 @@ from homeassistant.components.switch import (
     SwitchService,
 )
 from homeassistant.components.tuya.const import DOMAIN
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    STATE_UNKNOWN,
-    CommonServiceArgument,
-    Platform,
-)
+from homeassistant.const import ATTR_ENTITY_ID, STATE_UNKNOWN, Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er, issue_registry as ir
@@ -228,7 +223,33 @@ async def test_action(
     ("side_effect", "expected_message"),
     [
         pytest.param(
+            ApiRequestException(
+                error_code=2008, error_message="command or value not support"
+            ),
+            "The Tuya cloud does not accept this command or value for this device (error 2008)",
+            id="not_accepted",
+        ),
+        pytest.param(
             ApiRequestException(error_code="-9999999", error_message="sign invalid"),
+            "The Tuya cloud rejected the command because the request signature is invalid",
+            id="sign_invalid",
+        ),
+        pytest.param(
+            ApiRequestException(
+                error_code="-9999999", error_message="API_QPS_LIMIT_OR_DEGRADE"
+            ),
+            "The Tuya cloud is limiting requests, try again later",
+            id="rate_limited",
+        ),
+        pytest.param(
+            ApiRequestException(
+                error_code="-9999999", error_message="Remote api run unknown failed"
+            ),
+            "The Tuya cloud rejected the command (error -9999999)",
+            id="rejected_with_reason",
+        ),
+        pytest.param(
+            TuyaSDKException(),
             "The Tuya cloud rejected the command",
             id="rejected",
         ),
@@ -260,7 +281,7 @@ async def test_action_error(
         await hass.services.async_call(
             SWITCH_DOMAIN,
             SwitchService.TURN_ON,
-            {CommonServiceArgument.ENTITY_ID: "switch.din_socket"},
+            {TargetKey.ENTITY_ID: "switch.din_socket"},
             blocking=True,
         )
 
@@ -315,7 +336,7 @@ async def test_hwsb_switch_with_quirk(
     await hass.services.async_call(
         SWITCH_DOMAIN,
         SwitchService.TURN_OFF,
-        {CommonServiceArgument.ENTITY_ID: entity_id},
+        {TargetKey.ENTITY_ID: entity_id},
         blocking=True,
     )
     mock_manager.send_commands.assert_called_once_with(

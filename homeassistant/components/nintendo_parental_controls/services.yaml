@@ -5,8 +5,8 @@ add_bonus_time:
       example: 30
       selector:
         number:
-          min: -1
-          max: 1440
+          min: 5
+          max: 30
           unit_of_measurement: minutes
           mode: box
     device_id:
