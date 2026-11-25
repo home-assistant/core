@@ -11,6 +11,7 @@ from homeassistant.helpers import (
     area_registry as ar,
     device_registry as dr,
     entity_registry as er,
+    label_registry as lr,
 )
 
 
@@ -27,11 +28,13 @@ async def test_preserve_registry_identifiers(
     entity_registry: er.EntityRegistry,
     device_registry: dr.DeviceRegistry,
     area_registry: ar.AreaRegistry,
+    label_registry: lr.LabelRegistry,
     unique_id: str,
 ) -> None:
     """Test existing light and device customizations survive setup and reload."""
     mock_config_entry.add_to_hass(hass)
     area = area_registry.async_get_or_create("Porch")
+    label_registry.async_create("Outside")
     device = device_registry.async_get_or_create(
         config_entry_id=mock_config_entry.entry_id,
         identifiers={(DOMAIN, unique_id)},
@@ -100,10 +103,12 @@ async def test_preserve_device_without_entity(
     entity_registry: er.EntityRegistry,
     device_registry: dr.DeviceRegistry,
     area_registry: ar.AreaRegistry,
+    label_registry: lr.LabelRegistry,
 ) -> None:
     """Test an offline light reuses its device after its entity was removed."""
     mock_config_entry.add_to_hass(hass)
     area = area_registry.async_get_or_create("Porch")
+    label_registry.async_create("Outside")
     device = device_registry.async_get_or_create(
         config_entry_id=mock_config_entry.entry_id,
         identifiers={(DOMAIN, "1000-1112")},

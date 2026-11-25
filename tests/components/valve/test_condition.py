@@ -16,7 +16,7 @@ from pytest_homeassistant.components.common import (
     target_entities,
 )
 
-from homeassistant.components.valve import ATTR_IS_CLOSED
+from homeassistant.components.valve import ValveEntityStateAttribute
 from homeassistant.components.valve.condition import CONDITIONS
 from homeassistant.components.valve.const import ValveState
 from homeassistant.core import HomeAssistant
@@ -73,25 +73,25 @@ def test_condition_target_support() -> None:
         *parametrize_condition_states_any(
             condition="valve.is_open",
             target_states=[
-                (ValveState.OPEN, {ATTR_IS_CLOSED: False}),
-                (ValveState.OPENING, {ATTR_IS_CLOSED: False}),
-                (ValveState.CLOSING, {ATTR_IS_CLOSED: False}),
+                (ValveState.OPEN, {ValveEntityStateAttribute.IS_CLOSED: False}),
+                (ValveState.OPENING, {ValveEntityStateAttribute.IS_CLOSED: False}),
+                (ValveState.CLOSING, {ValveEntityStateAttribute.IS_CLOSED: False}),
             ],
             other_states=[
-                (ValveState.CLOSED, {ATTR_IS_CLOSED: True}),
-                (ValveState.CLOSING, {ATTR_IS_CLOSED: True}),
+                (ValveState.CLOSED, {ValveEntityStateAttribute.IS_CLOSED: True}),
+                (ValveState.CLOSING, {ValveEntityStateAttribute.IS_CLOSED: True}),
             ],
         ),
         *parametrize_condition_states_any(
             condition="valve.is_closed",
             target_states=[
-                (ValveState.CLOSED, {ATTR_IS_CLOSED: True}),
-                (ValveState.CLOSING, {ATTR_IS_CLOSED: True}),
+                (ValveState.CLOSED, {ValveEntityStateAttribute.IS_CLOSED: True}),
+                (ValveState.CLOSING, {ValveEntityStateAttribute.IS_CLOSED: True}),
             ],
             other_states=[
-                (ValveState.OPEN, {ATTR_IS_CLOSED: False}),
-                (ValveState.OPENING, {ATTR_IS_CLOSED: False}),
-                (ValveState.CLOSING, {ATTR_IS_CLOSED: False}),
+                (ValveState.OPEN, {ValveEntityStateAttribute.IS_CLOSED: False}),
+                (ValveState.OPENING, {ValveEntityStateAttribute.IS_CLOSED: False}),
+                (ValveState.CLOSING, {ValveEntityStateAttribute.IS_CLOSED: False}),
             ],
         ),
     ],
@@ -129,25 +129,25 @@ async def test_valve_condition_behavior_any(
         *parametrize_condition_states_all(
             condition="valve.is_open",
             target_states=[
-                (ValveState.OPEN, {ATTR_IS_CLOSED: False}),
-                (ValveState.OPENING, {ATTR_IS_CLOSED: False}),
-                (ValveState.CLOSING, {ATTR_IS_CLOSED: False}),
+                (ValveState.OPEN, {ValveEntityStateAttribute.IS_CLOSED: False}),
+                (ValveState.OPENING, {ValveEntityStateAttribute.IS_CLOSED: False}),
+                (ValveState.CLOSING, {ValveEntityStateAttribute.IS_CLOSED: False}),
             ],
             other_states=[
-                (ValveState.CLOSED, {ATTR_IS_CLOSED: True}),
-                (ValveState.CLOSING, {ATTR_IS_CLOSED: True}),
+                (ValveState.CLOSED, {ValveEntityStateAttribute.IS_CLOSED: True}),
+                (ValveState.CLOSING, {ValveEntityStateAttribute.IS_CLOSED: True}),
             ],
         ),
         *parametrize_condition_states_all(
             condition="valve.is_closed",
             target_states=[
-                (ValveState.CLOSED, {ATTR_IS_CLOSED: True}),
-                (ValveState.CLOSING, {ATTR_IS_CLOSED: True}),
+                (ValveState.CLOSED, {ValveEntityStateAttribute.IS_CLOSED: True}),
+                (ValveState.CLOSING, {ValveEntityStateAttribute.IS_CLOSED: True}),
             ],
             other_states=[
-                (ValveState.OPEN, {ATTR_IS_CLOSED: False}),
-                (ValveState.OPENING, {ATTR_IS_CLOSED: False}),
-                (ValveState.CLOSING, {ATTR_IS_CLOSED: False}),
+                (ValveState.OPEN, {ValveEntityStateAttribute.IS_CLOSED: False}),
+                (ValveState.OPENING, {ValveEntityStateAttribute.IS_CLOSED: False}),
+                (ValveState.CLOSING, {ValveEntityStateAttribute.IS_CLOSED: False}),
             ],
         ),
     ],

@@ -159,6 +159,15 @@
       "config_flow": true,
       "iot_class": "local_polling"
     },
+    "aeg": {
+      "name": "AEG",
+      "integration_type": "virtual",
+      "categories": [
+        "appliances_cleaning",
+        "climate"
+      ],
+      "supported_by": "electrolux"
+    },
     "aemet": {
       "name": "AEMET OpenData",
       "integration_type": "service",
@@ -2766,16 +2775,33 @@
       "supported_by": "neopool"
     },
     "daikin": {
-      "name": "Daikin AC",
-      "integration_type": "device",
-      "categories": [
-        "climate.heat_pumps_air_conditioning"
-      ],
-      "connectivity": [
-        "network"
-      ],
-      "config_flow": true,
-      "iot_class": "local_polling"
+      "name": "Daikin",
+      "integrations": {
+        "daikin": {
+          "integration_type": "device",
+          "config_flow": true,
+          "iot_class": "local_polling",
+          "categories": [
+            "climate.heat_pumps_air_conditioning"
+          ],
+          "connectivity": [
+            "network"
+          ],
+          "name": "Daikin AC"
+        },
+        "daikin_infrared": {
+          "integration_type": "device",
+          "config_flow": true,
+          "iot_class": "assumed_state",
+          "categories": [
+            "climate.heat_pumps_air_conditioning"
+          ],
+          "connectivity": [
+            "infrared"
+          ],
+          "name": "Daikin Infrared"
+        }
+      }
     },
     "danfoss_air": {
       "name": "Danfoss Air",
@@ -3700,6 +3726,16 @@
       ],
       "config_flow": true,
       "iot_class": "cloud_polling"
+    },
+    "electrolux": {
+      "name": "Electrolux",
+      "integration_type": "hub",
+      "categories": [
+        "appliances_cleaning",
+        "climate"
+      ],
+      "config_flow": true,
+      "iot_class": "cloud_push"
     },
     "elevenlabs": {
       "name": "ElevenLabs",
@@ -8618,15 +8654,16 @@
     },
     "london_air": {
       "name": "London Air",
-      "integration_type": "hub",
+      "integration_type": "service",
       "categories": [
         "weather_alerts.air_quality_pollen"
       ],
       "connectivity": [
         "cloud"
       ],
-      "config_flow": false,
-      "iot_class": "cloud_polling"
+      "config_flow": true,
+      "iot_class": "cloud_polling",
+      "single_config_entry": true
     },
     "london_underground": {
       "name": "London Underground",
@@ -10679,14 +10716,29 @@
     },
     "ogeneral": {
       "name": "O General",
-      "integration_type": "virtual",
-      "categories": [
-        "climate.heat_pumps_air_conditioning"
-      ],
-      "connectivity": [
-        "cloud"
-      ],
-      "supported_by": "fujitsu_fglair"
+      "integrations": {
+        "ogeneral": {
+          "integration_type": "virtual",
+          "config_flow": false,
+          "supported_by": "fujitsu_fglair",
+          "categories": [
+            "climate.heat_pumps_air_conditioning"
+          ],
+          "connectivity": [
+            "cloud"
+          ],
+          "name": "O General"
+        },
+        "ogeneral_infrared": {
+          "integration_type": "virtual",
+          "config_flow": false,
+          "supported_by": "fujitsu_infrared",
+          "categories": [
+            "climate.heat_pumps_air_conditioning"
+          ],
+          "name": "O General Infrared"
+        }
+      }
     },
     "ohmconnect": {
       "name": "OhmConnect",
@@ -11717,6 +11769,15 @@
       ],
       "config_flow": true,
       "iot_class": "local_polling"
+    },
+    "plus_home": {
+      "name": "+Home",
+      "integration_type": "virtual",
+      "categories": [
+        "appliances_cleaning",
+        "climate"
+      ],
+      "supported_by": "electrolux"
     },
     "pocketcasts": {
       "name": "Pocket Casts",
