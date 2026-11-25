@@ -8,15 +8,6 @@
       "missing_infrared_entity": "Select an infrared emitter."
     },
     "step": {
-      "reconfigure": {
-        "data": {
-          "infrared_entity_id": "[%key:component::infrared::common::infrared_entity_id%]"
-        },
-        "data_description": {
-          "infrared_entity_id": "[%key:component::infrared::common::infrared_entity_id_description%]"
-        },
-        "title": "Reconfigure Ceiling Fan Infrared device"
-      },
       "user": {
         "data": {
           "infrared_entity_id": "[%key:component::infrared::common::infrared_entity_id%]"

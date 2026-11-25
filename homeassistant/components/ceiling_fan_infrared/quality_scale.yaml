@@ -103,7 +103,7 @@ rules:
   icon-translations:
     status: exempt
     comment: This integration does not use custom icons.
-  reconfiguration-flow: done
+  reconfiguration-flow: todo
   repair-issues:
     status: exempt
     comment: |

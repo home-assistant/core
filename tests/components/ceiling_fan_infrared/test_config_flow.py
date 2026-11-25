@@ -229,97 +229,10 @@ async def test_user_flow_already_configured_after_a_rename_while_unloaded(
 
 
 @pytest.mark.usefixtures("mock_infrared_emitter_entity", "mock_setup_entry")
-async def test_reconfigure_flow(
-    hass: HomeAssistant,
-    config_entry: MockConfigEntry,
-    entity_registry: er.EntityRegistry,
+async def test_user_flow_aborts_when_a_stale_entity_id_hides_the_same_emitter(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
 ) -> None:
-    """Test the reconfigure flow."""
-    config_entry.add_to_hass(hass)
-
-    result = await config_entry.start_reconfigure_flow(hass)
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "reconfigure"
-
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        user_input={CONF_INFRARED_ENTITY_ID: EMITTER_ENTITY_ID},
-    )
-    await hass.async_block_till_done()
-
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "reconfigure_successful"
-    assert config_entry.data == _expected_data(entity_registry, EMITTER_ENTITY_ID)
-
-
-@pytest.mark.usefixtures("mock_infrared_emitter_entity", "mock_setup_entry")
-async def test_reconfigure_flow_missing_emitter(
-    hass: HomeAssistant,
-    config_entry: MockConfigEntry,
-    entity_registry: er.EntityRegistry,
-) -> None:
-    """Test the reconfigure flow shows an error when no emitter is selected."""
-    config_entry.add_to_hass(hass)
-
-    result = await config_entry.start_reconfigure_flow(hass)
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        user_input={},
-    )
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {"base": "missing_infrared_entity"}
-
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        user_input={CONF_INFRARED_ENTITY_ID: EMITTER_ENTITY_ID},
-    )
-    await hass.async_block_till_done()
-
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "reconfigure_successful"
-    assert config_entry.data == _expected_data(entity_registry, EMITTER_ENTITY_ID)
-
-
-@pytest.mark.usefixtures("mock_setup_entry")
-async def test_reconfigure_flow_emitter_used_by_another_entry(
-    hass: HomeAssistant,
-    config_entry: MockConfigEntry,
-    entity_registry: er.EntityRegistry,
-    mock_infrared_emitter_entity: MockInfraredEmitterEntity,
-) -> None:
-    """Test the reconfigure flow aborts when another entry uses the emitter."""
-    config_entry.add_to_hass(hass)
-
-    other_emitter = MockInfraredEmitterEntity("other_ir_emitter", "Other IR emitter")
-    await hass.data[DATA_COMPONENT].async_add_entities([other_emitter])
-    await hass.async_block_till_done()
-
-    MockConfigEntry(
-        domain=DOMAIN,
-        title="Ceiling fan via Other IR emitter",
-        data={CONF_INFRARED_ENTITY_ID: "infrared.other_ir_emitter"},
-    ).add_to_hass(hass)
-
-    result = await config_entry.start_reconfigure_flow(hass)
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        user_input={CONF_INFRARED_ENTITY_ID: "infrared.other_ir_emitter"},
-    )
-
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "already_configured"
-    assert config_entry.data == {CONF_INFRARED_ENTITY_ID: EMITTER_ENTITY_ID}
-
-
-@pytest.mark.usefixtures("mock_infrared_emitter_entity", "mock_setup_entry")
-async def test_reconfigure_flow_emitter_used_after_a_rename_while_unloaded(
-    hass: HomeAssistant,
-    config_entry: MockConfigEntry,
-    entity_registry: er.EntityRegistry,
-) -> None:
-    """Test a stale entity ID does not hide an entry that uses the same emitter."""
+    """Test a stale saved entity ID does not hide an entry that uses the emitter."""
     registry_entry = entity_registry.async_get(EMITTER_ENTITY_ID)
     assert registry_entry is not None
     MockConfigEntry(
@@ -331,9 +244,9 @@ async def test_reconfigure_flow_emitter_used_after_a_rename_while_unloaded(
         },
     ).add_to_hass(hass)
 
-    config_entry.add_to_hass(hass)
-
-    result = await config_entry.start_reconfigure_flow(hass)
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         user_input={CONF_INFRARED_ENTITY_ID: EMITTER_ENTITY_ID},
@@ -341,20 +254,6 @@ async def test_reconfigure_flow_emitter_used_after_a_rename_while_unloaded(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
-    assert config_entry.data == {CONF_INFRARED_ENTITY_ID: EMITTER_ENTITY_ID}
-
-
-@pytest.mark.usefixtures("init_infrared")
-async def test_reconfigure_flow_no_emitters(
-    hass: HomeAssistant, config_entry: MockConfigEntry
-) -> None:
-    """Test the reconfigure flow aborts when there are no infrared emitters."""
-    config_entry.add_to_hass(hass)
-
-    result = await config_entry.start_reconfigure_flow(hass)
-
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "no_infrared_entities"
 
 
 @pytest.mark.usefixtures("mock_setup_entry")
