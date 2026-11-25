@@ -218,6 +218,15 @@ SWITCH_TYPES: dict[str, SHCSwitchEntityDescription] = {
         on_value=True,
         should_poll=False,
     ),
+    "pre_alarm_enabled": SHCSwitchEntityDescription(
+        key="pre_alarm_enabled",
+        translation_key="pre_alarm_enabled",
+        device_class=SwitchDeviceClass.SWITCH,
+        entity_category=EntityCategory.CONFIG,
+        on_key="pre_alarm_enabled",
+        on_value=True,
+        should_poll=False,
+    ),
     "silent_mode": SHCSwitchEntityDescription(
         key="silent_mode",
         translation_key="silent_mode",
@@ -556,6 +565,32 @@ async def async_setup_entry(
         )
         for switch in session.device_helper.twinguards
         if switch.supports_nightly_promise
+    )
+
+    entities.extend(
+        SHCSwitch(
+            hass=hass,
+            device=switch,
+            parent_id=shc_info.unique_id,
+            entry_id=config_entry.entry_id,
+            description=SWITCH_TYPES["pre_alarm_enabled"],
+            unique_id_suffix="pre_alarm",
+        )
+        for switch in session.device_helper.twinguards
+        if switch.supports_smoke_sensitivity
+    )
+
+    entities.extend(
+        SHCSwitch(
+            hass=hass,
+            device=switch,
+            parent_id=shc_info.unique_id,
+            entry_id=config_entry.entry_id,
+            description=SWITCH_TYPES["pre_alarm_enabled"],
+            unique_id_suffix="pre_alarm",
+        )
+        for switch in session.device_helper.smoke_detectors
+        if switch.supports_smoke_sensitivity
     )
 
     entities.extend(

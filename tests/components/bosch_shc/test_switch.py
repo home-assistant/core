@@ -1284,3 +1284,66 @@ async def test_camera_outdoor_gen2_front_light(
         blocking=True,
     )
     assert device.camerafrontlight is False
+
+
+@pytest.mark.parametrize(
+    "device_buckets",
+    [
+        {
+            "smoke_detectors": [
+                smoke_detector_device(
+                    supports_smoke_sensitivity=True, pre_alarm_enabled=True
+                )
+            ],
+            "twinguards": [
+                twinguard_device(supports_smoke_sensitivity=True),
+            ],
+        }
+    ],
+    indirect=True,
+)
+@pytest.mark.usefixtures("mock_session")
+async def test_pre_alarm_switch(
+    hass: HomeAssistant,
+    mock_session: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Smoke detectors and Twinguards expose a pre-alarm configuration switch."""
+    await setup_integration(hass, mock_config_entry)
+    smoke_detector = mock_session.device_helper.smoke_detectors[0]
+    twinguard = mock_session.device_helper.twinguards[0]
+
+    assert hass.states.get("switch.smoke_detector_pre_alarm").state == "on"
+    assert hass.states.get("switch.twinguard_pre_alarm").state == "off"
+
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        SwitchService.TURN_OFF,
+        {TargetKey.ENTITY_ID: "switch.smoke_detector_pre_alarm"},
+        blocking=True,
+    )
+    assert smoke_detector.pre_alarm_enabled is False
+
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        SwitchService.TURN_ON,
+        {TargetKey.ENTITY_ID: "switch.twinguard_pre_alarm"},
+        blocking=True,
+    )
+    assert twinguard.pre_alarm_enabled is True
+
+
+@pytest.mark.parametrize(
+    "device_buckets",
+    [{"smoke_detectors": [smoke_detector_device(supports_smoke_sensitivity=False)]}],
+    indirect=True,
+)
+@pytest.mark.usefixtures("mock_session")
+async def test_no_pre_alarm_without_support(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """No pre-alarm switch is created for a device without smoke sensitivity."""
+    await setup_integration(hass, mock_config_entry)
+
+    assert hass.states.get("switch.smoke_detector_pre_alarm") is None
