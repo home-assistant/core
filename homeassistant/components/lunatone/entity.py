@@ -1,6 +1,6 @@
 """Base entity for Lunatone."""
 
-from typing import Any, TypeVar, override
+from typing import TYPE_CHECKING, Any, TypeVar, override
 
 from homeassistant.core import callback
 from homeassistant.helpers import device_registry as dr
@@ -43,11 +43,10 @@ class LunatoneEntity(CoordinatorEntity[T]):
 
     @callback
     def _handle_info_update(self) -> None:
-        assert self.line_id is not None
-
         config_entry = self.coordinator.config_entry
-        assert config_entry is not None
-        assert config_entry.unique_id is not None
+        if TYPE_CHECKING:
+            assert config_entry is not None
+            assert config_entry.unique_id is not None
 
         config_entry_id = config_entry.entry_id
         device_registry = dr.async_get(self.hass)

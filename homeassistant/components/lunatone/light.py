@@ -3,7 +3,7 @@
 from collections.abc import Callable
 import contextlib
 from functools import partial
-from typing import Any, override
+from typing import TYPE_CHECKING, Any, override
 
 import aiohttp
 from lunatone_rest_api_client import DALIBroadcast
@@ -122,7 +122,8 @@ class LunatoneLight(LunatoneEntity[LunatoneDevicesDataUpdateCoordinator], LightE
         """Initialize a Lunatone light."""
         super().__init__(coordinator_devices, coordinator_info, line_id)
         self._device_id = device_id
-        assert self.line_id is not None
+        if TYPE_CHECKING:
+            assert self.line_id is not None
         self._device = self.coordinator.data[self.line_id][device_id]
 
         unique_id = self.construct_unique_id(config_entry_unique_id, device_id)
@@ -153,7 +154,8 @@ class LunatoneLight(LunatoneEntity[LunatoneDevicesDataUpdateCoordinator], LightE
     @override
     def available(self) -> bool:
         """Return True if entity is available."""
-        assert self.line_id is not None
+        if TYPE_CHECKING:
+            assert self.line_id is not None
         return super().available and self._device_id in self.coordinator.data.get(
             self.line_id, {}
         )
@@ -227,7 +229,8 @@ class LunatoneLight(LunatoneEntity[LunatoneDevicesDataUpdateCoordinator], LightE
     @override
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
-        assert self.line_id is not None
+        if TYPE_CHECKING:
+            assert self.line_id is not None
         with contextlib.suppress(KeyError):
             self._device = self.coordinator.data[self.line_id][self._device_id]
         self.async_write_ha_state()
