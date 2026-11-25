@@ -2,6 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from datetime import datetime
 from typing import override
 
 from pysmartyplants import Reading, Readings, Sensor
@@ -75,9 +76,10 @@ def _temperature_unit(sensor: Sensor) -> str | None:
 class SmartyPlantsSensorDescription(SensorEntityDescription):
     """Describes one SmartyPlants sensor entity."""
 
-    value_fn: Callable[[Sensor], float | None]
+    value_fn: Callable[[Sensor], float | datetime | None]
     # Set where the backend reports the unit alongside the reading.
     unit_fn: Callable[[Sensor], str | None] | None = None
+    requires_online: bool = True
 
 
 SENSOR_TYPES: tuple[SmartyPlantsSensorDescription, ...] = (
@@ -148,6 +150,17 @@ SENSOR_TYPES: tuple[SmartyPlantsSensorDescription, ...] = (
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=_battery,
     ),
+    SmartyPlantsSensorDescription(
+        key="last_reported",
+        translation_key="last_reported",
+        device_class=SensorDeviceClass.TIMESTAMP,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        # Useful when chasing a problem, noise the rest of the time: the
+        # connectivity entity already says whether data is arriving.
+        entity_registry_enabled_default=False,
+        requires_online=False,
+        value_fn=lambda sensor: sensor.last_data_received,
+    ),
 )
 
 
@@ -181,6 +194,7 @@ class SmartyPlantsSensor(SmartyPlantsEntity, SensorEntity):
         super().__init__(coordinator, sensor_id)
         self.entity_description = description
         self._attr_unique_id = f"{sensor_id}_{description.key}"
+        self._requires_online = description.requires_online
 
     @property
     @override
@@ -194,6 +208,6 @@ class SmartyPlantsSensor(SmartyPlantsEntity, SensorEntity):
 
     @property
     @override
-    def native_value(self) -> float | None:
+    def native_value(self) -> float | datetime | None:
         """Return the current value for this metric."""
         return self.entity_description.value_fn(self.sensor)

@@ -9,7 +9,7 @@ import pytest
 import tibber
 
 from homeassistant.components.tibber.const import DOMAIN
-from homeassistant.components.tibber.services import PRICE_SERVICE_NAME
+from homeassistant.components.tibber.services import TibberService
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 
@@ -80,7 +80,7 @@ async def test_get_prices(
     mock_tibber_setup.get_homes.return_value = generate_mock_home_data()
 
     result = await hass.services.async_call(
-        DOMAIN, PRICE_SERVICE_NAME, data, blocking=True, return_response=True
+        DOMAIN, TibberService.GET_PRICES, data, blocking=True, return_response=True
     )
     await hass.async_block_till_done()
 
@@ -123,7 +123,7 @@ async def test_get_prices_start_tomorrow(
 
     result = await hass.services.async_call(
         DOMAIN,
-        PRICE_SERVICE_NAME,
+        TibberService.GET_PRICES,
         {"start": tomorrow.isoformat()},
         blocking=True,
         return_response=True,
@@ -178,7 +178,7 @@ async def test_get_prices_with_timezones(
 
     result = await hass.services.async_call(
         DOMAIN,
-        PRICE_SERVICE_NAME,
+        TibberService.GET_PRICES,
         {"start": start_time},
         blocking=True,
         return_response=True,
@@ -240,7 +240,7 @@ async def test_get_prices_with_wrong_timezones(
 
     result = await hass.services.async_call(
         DOMAIN,
-        PRICE_SERVICE_NAME,
+        TibberService.GET_PRICES,
         {"start": start_time, "end": tomorrow.isoformat()},
         blocking=True,
         return_response=True,
@@ -259,7 +259,7 @@ async def test_get_prices_invalid_input(
     with pytest.raises(ServiceValidationError):
         await hass.services.async_call(
             DOMAIN,
-            PRICE_SERVICE_NAME,
+            TibberService.GET_PRICES,
             {"start": "test"},
             blocking=True,
             return_response=True,
@@ -293,7 +293,7 @@ async def test_get_prices_refresh_raises_handled_exception(
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             DOMAIN,
-            PRICE_SERVICE_NAME,
+            TibberService.GET_PRICES,
             {},
             blocking=True,
             return_response=True,

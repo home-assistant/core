@@ -3,7 +3,7 @@
 from collections.abc import Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from pykoplenti import ApiClient, ExtendedApiClient, SettingsData
+from pykoplenti import ApiClient, ExtendedApiClient, VersionData
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
@@ -26,26 +26,14 @@ def mock_apiclient() -> Generator[ApiClient]:
         yield apiclient
 
 
-async def test_plenticore_async_setup_g1(
+async def test_plenticore_async_setup(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_apiclient: ApiClient,
 ) -> None:
-    """Tests the async_setup() method of the Plenticore class for G1 models."""
-    mock_apiclient.get_settings = AsyncMock(
-        return_value={
-            "scb:network": [
-                SettingsData(
-                    min="1",
-                    max="63",
-                    default=None,
-                    access="readwrite",
-                    unit=None,
-                    id="Hostname",
-                    type="string",
-                )
-            ]
-        }
+    """Tests the async_setup() method of the Plenticore."""
+    mock_apiclient.get_version = AsyncMock(
+        return_value=VersionData(hostname="scb", api_version="", name="", sw_version="")
     )
     mock_apiclient.get_setting_values = AsyncMock(
         # G1 model has the entry id "Hostname"
@@ -56,60 +44,7 @@ async def test_plenticore_async_setup_g1(
                 "Branding:ProductName2": "plus 10",
                 "Properties:VersionIOC": "01.45",
                 "Properties:VersionMC": "01.46",
-            },
-            "scb:network": {"Hostname": "scb"},
-        }
-    )
-
-    mock_config_entry.add_to_hass(hass)
-
-    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    plenticore = mock_config_entry.runtime_data
-
-    assert plenticore.device_info == DeviceInfo(
-        configuration_url="http://192.168.1.2",
-        identifiers={(DOMAIN, "12345")},
-        manufacturer="Kostal",
-        model="PLENTICORE plus 10",
-        name="scb",
-        sw_version="IOC: 01.45 MC: 01.46",
-    )
-
-
-async def test_plenticore_async_setup_g2(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_apiclient: ApiClient,
-) -> None:
-    """Tests the async_setup() method of the Plenticore class for G2 models."""
-    mock_apiclient.get_settings = AsyncMock(
-        return_value={
-            "scb:network": [
-                SettingsData(
-                    min="1",
-                    max="63",
-                    default=None,
-                    access="readwrite",
-                    unit=None,
-                    id="Network:Hostname",
-                    type="string",
-                )
-            ]
-        }
-    )
-    mock_apiclient.get_setting_values = AsyncMock(
-        # G1 model has the entry id "Hostname"
-        return_value={
-            "devices:local": {
-                "Properties:SerialNo": "12345",
-                "Branding:ProductName1": "PLENTICORE",
-                "Branding:ProductName2": "plus 10",
-                "Properties:VersionIOC": "01.45",
-                "Properties:VersionMC": "01.46",
-            },
-            "scb:network": {"Network:Hostname": "scb"},
+            }
         }
     )
 

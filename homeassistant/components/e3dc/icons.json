@@ -13,6 +13,11 @@
       "feed_in_limited": {
         "default": "mdi:transmission-tower-export"
       }
+    },
+    "sensor": {
+      "inverter_mode": {
+        "default": "mdi:sine-wave"
+      }
     }
   }
 }

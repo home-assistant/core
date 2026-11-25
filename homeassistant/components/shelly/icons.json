@@ -4,6 +4,9 @@
       "mute_alarm": {
         "default": "mdi:volume-mute"
       },
+      "next_effect": {
+        "default": "mdi:skip-next"
+      },
       "self_test": {
         "default": "mdi:progress-wrench"
       },
@@ -11,7 +14,22 @@
         "default": "mdi:volume-high"
       }
     },
+    "fan": {
+      "fan": {
+        "state_attributes": {
+          "preset_mode": {
+            "state": {
+              "auto": "mdi:fan-auto",
+              "manual": "mdi:hand-back-right"
+            }
+          }
+        }
+      }
+    },
     "number": {
+      "display_brightness": {
+        "default": "mdi:brightness-6"
+      },
       "effect_intensity": {
         "default": "mdi:brightness-percent"
       },
@@ -20,6 +38,9 @@
       },
       "external_temperature": {
         "default": "mdi:thermometer-check"
+      },
+      "min_auto_display_brightness": {
+        "default": "mdi:brightness-4"
       },
       "valve_position": {
         "default": "mdi:pipe-valve"
@@ -48,6 +69,9 @@
       },
       "gas_detected": {
         "default": "mdi:gas-burner"
+      },
+      "humidity_level": {
+        "default": "mdi:water-outline"
       },
       "illuminance_level": {
         "default": "mdi:brightness-5"
@@ -111,6 +135,12 @@
       }
     },
     "switch": {
+      "auto_brightness": {
+        "default": "mdi:brightness-auto"
+      },
+      "boost": {
+        "default": "mdi:rocket-launch"
+      },
       "camera_privacy": {
         "default": "mdi:eye-outline",
         "state": {
@@ -127,6 +157,18 @@
       },
       "effect_reverse": {
         "default": "mdi:swap-horizontal"
+      },
+      "input_lock": {
+        "default": "mdi:lock-open-outline",
+        "state": {
+          "on": "mdi:lock-outline"
+        }
+      },
+      "input_lock_with_channel_name": {
+        "default": "mdi:lock-open-outline",
+        "state": {
+          "on": "mdi:lock-outline"
+        }
       },
       "left_slot": {
         "default": "mdi:scent",
@@ -158,6 +200,9 @@
     }
   },
   "services": {
+    "command": {
+      "service": "mdi:console"
+    },
     "get_kvs_value": {
       "service": "mdi:import"
     },

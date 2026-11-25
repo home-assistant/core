@@ -38,3 +38,14 @@ class EvoService(StrEnum):
     SET_SYSTEM_MODE = "set_system_mode"
     SET_ZONE_OVERRIDE = "set_zone_override"
     SET_DHW_OVERRIDE = "set_dhw_override"
+
+
+@unique
+class EvoServiceArgument(StrEnum):
+    """The Evohome service arguments."""
+
+    MODE = "mode"
+    PERIOD = "period"
+    DURATION = "duration"
+    SETPOINT = "setpoint"
+    STATE = "state"

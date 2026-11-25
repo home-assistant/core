@@ -356,6 +356,9 @@ CREATE_PREVIEW_ENTITY: dict[
 class GroupConfigFlowHandler(SchemaConfigFlowHandler, domain=DOMAIN):
     """Handle a config or options flow for groups."""
 
+    VERSION = 1
+    MINOR_VERSION = 2
+
     config_flow = CONFIG_FLOW
     options_flow = OPTIONS_FLOW
     options_flow_reloads = True
