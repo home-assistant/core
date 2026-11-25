@@ -15,6 +15,11 @@ from homeassistant.core import HomeAssistant
 from .const import DEFAULT_RESPONSE, RESOURCE_URL
 
 
+def _resource_url_for_host(host: str) -> str:
+    """Return the resource URL for a given host."""
+    return f"http://{host}/api/v1/status"
+
+
 @pytest.fixture
 async def mock_config_entry(hass: HomeAssistant) -> MockConfigEntry:
     """Return a Google Wifi config entry."""
@@ -59,6 +64,26 @@ def mock_device_response(
 ) -> AiohttpClientMocker:
     """Mock a Google Wifi response for a different device."""
     aioclient_mock.get(RESOURCE_URL, json=device_response)
+    return aioclient_mock
+
+
+@pytest.fixture
+def mock_device_response_with_optional_error(
+    aioclient_mock: AiohttpClientMocker,
+    request: pytest.FixtureRequest,
+) -> AiohttpClientMocker:
+    """Mock a Google Wifi response for a different device with an optional error.
+
+    Parametrize with a dict: {"host": str, "response": dict, "error": Exception | None}.
+    Defaults to {"host": "192.168.86.1", "response": DEFAULT_RESPONSE, "error": None}.
+    """
+    resource = _resource_url_for_host(request.param.get("host", "192.168.86.1"))
+    if error := request.param.get("error"):
+        aioclient_mock.get(resource, exc=error)
+    else:
+        aioclient_mock.get(
+            resource, json=request.param.get("response", DEFAULT_RESPONSE)
+        )
     return aioclient_mock
 
 

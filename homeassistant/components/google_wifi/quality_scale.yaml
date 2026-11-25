@@ -6,7 +6,7 @@ rules:
   appropriate-polling: done
   brands: todo
   common-modules: todo
-  config-flow: todo
+  config-flow: done
   config-flow-test-coverage: todo
   dependency-transparency: done
   docs-actions:
@@ -29,7 +29,7 @@ rules:
   runtime-data: todo
   test-before-configure: todo
   test-before-setup: todo
-  unique-config-entry: todo
+  unique-config-entry: done
 
   # Silver
   action-exceptions:
@@ -66,7 +66,7 @@ rules:
   entity-translations: todo
   exception-translations: todo
   icon-translations: todo
-  reconfiguration-flow: todo
+  reconfiguration-flow: done
   repair-issues: todo
   stale-devices: todo
 

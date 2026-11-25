@@ -12,6 +12,14 @@
       "confirm": {
         "description": "[%key:common::config_flow::description::confirm_setup%]"
       },
+      "reconfigure": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]"
+        },
+        "data_description": {
+          "host": "The hostname or IP address of your Google Wifi device."
+        }
+      },
       "user": {
         "data": {
           "host": "[%key:common::config_flow::data::host%]"

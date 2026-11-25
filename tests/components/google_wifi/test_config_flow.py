@@ -5,12 +5,15 @@ from unittest.mock import AsyncMock, patch
 from googlewifiapi.exception import GoogleWifiClientError, GoogleWifiDataValidationError
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 
 from homeassistant.components.google_wifi import CONF_HOST, DOMAIN
 from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER
 from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+
+from .const import DEFAULT_RESPONSE
 
 
 @pytest.mark.usefixtures("mock_success")
@@ -168,3 +171,61 @@ async def test_import_cannot_connect(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == reason
+
+
+@pytest.mark.parametrize(
+    (
+        "mock_device_response_with_optional_error",
+        "expected_result_type",
+        "expected_reason",
+    ),
+    [
+        pytest.param(
+            {"response": DEFAULT_RESPONSE, "host": "192.168.86.2", "error": None},
+            FlowResultType.ABORT,
+            "reconfigure_successful",
+            id="normal_conditions",
+        ),
+        pytest.param(
+            {
+                "response": DEFAULT_RESPONSE,
+                "host": "192.168.86.2",
+                "error": GoogleWifiClientError(),
+            },
+            FlowResultType.FORM,
+            "cannot_connect",
+            id="cannot_connect",
+        ),
+        pytest.param(
+            {
+                "response": DEFAULT_RESPONSE,
+                "host": "192.168.86.2",
+                "error": GoogleWifiDataValidationError(),
+            },
+            FlowResultType.FORM,
+            "unknown",
+            id="unknown_error",
+        ),
+    ],
+    indirect=["mock_device_response_with_optional_error"],
+)
+async def test_reconfigure(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    expected_result_type: FlowResultType,
+    expected_reason: str,
+    mock_device_response_with_optional_error: AiohttpClientMocker,
+) -> None:
+    """Test reconfigure flow."""
+    mock_config_entry.add_to_hass(hass)
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_HOST: "192.168.86.2"},
+    )
+
+    assert result["type"] is expected_result_type
+    assert result["reason"] == expected_reason
+    assert len(mock_device_response_with_optional_error.mock_calls) == 2
