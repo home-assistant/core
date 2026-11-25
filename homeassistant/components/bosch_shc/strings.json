@@ -137,6 +137,20 @@
           }
         }
       },
+      "smoke_detector_alarm": {
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "idle_off": "Idle",
+              "intrusion_alarm": "Intrusion alarm",
+              "intrusion_alarm_off_requested": "Intrusion alarm off requested",
+              "intrusion_alarm_on_requested": "Intrusion alarm on requested",
+              "primary_alarm": "Primary alarm",
+              "secondary_alarm": "Secondary alarm"
+            }
+          }
+        }
+      },
       "upper_button": {
         "name": "Upper key",
         "state_attributes": {
@@ -169,20 +183,6 @@
               "press_long": "Long press",
               "press_long_released": "Long press released",
               "press_short": "Short press"
-            }
-          }
-        }
-      },
-      "smoke_detector_alarm": {
-        "state_attributes": {
-          "event_type": {
-            "state": {
-              "idle_off": "Idle",
-              "intrusion_alarm": "Intrusion alarm",
-              "intrusion_alarm_off_requested": "Intrusion alarm off requested",
-              "intrusion_alarm_on_requested": "Intrusion alarm on requested",
-              "primary_alarm": "Primary alarm",
-              "secondary_alarm": "Secondary alarm"
             }
           }
         }
