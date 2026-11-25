@@ -113,20 +113,20 @@ class MatterEntity(Entity):
         self._attr_available = (
             self._endpoint.node.available and self._get_bridged_reachable()
         )
-        # mark endpoint postfix if another endpoint on the same device has the
-        # primary attribute; a child device's own endpoint is named by the child
+        # mark endpoint postfix if another endpoint of the same HA device has the
+        # primary attribute; a child device's own endpoint is named by the child.
+        # Bridged endpoints only share a device with their composed parts, so this
+        # also covers a composed device behind a bridge (e.g. a bridged heat pump
+        # exposing two Thermostat endpoints).
         owner = self._child_device_endpoint
-        if (
-            not self._endpoint.node.is_bridge_device
-            and owner != self._endpoint
-            and any(
-                ep
-                for ep in self._endpoint.node.endpoints.values()
-                if ep != self._endpoint
-                and ep.has_attribute(None, entity_info.primary_attribute)
-                and get_entity_child_device_owner(ep, entity_info.primary_attribute)
-                == owner
-            )
+        if owner != self._endpoint and any(
+            ep
+            for ep in self._endpoint.node.endpoints.values()
+            if ep != self._endpoint
+            and ep.has_attribute(None, entity_info.primary_attribute)
+            and get_device_id(server_info, ep) == node_device_id
+            and get_entity_child_device_owner(ep, entity_info.primary_attribute)
+            == owner
         ):
             self._name_postfix = str(self._endpoint.endpoint_id)
         # Always set translation_key for state_attributes translations.

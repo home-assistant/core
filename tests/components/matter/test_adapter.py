@@ -1520,7 +1520,7 @@ async def test_device_registry_composed_bridged_device(
 
     assert len(device_registry.devices) == 2
     assert hass.states.get("switch.kitchen_plug")
-    assert hass.states.get("sensor.kitchen_plug_temperature")
+    assert hass.states.get("sensor.kitchen_plug_temperature_4")
 
 
 @pytest.mark.parametrize("node_fixture", ["mock_composed_bridge"])
@@ -1597,7 +1597,7 @@ async def test_bridged_device_readded_after_removal(
     fire_node_updated_event(matter_client, matter_node)
     await hass.async_block_till_done()
     assert entity_registry.async_get("switch.kitchen_plug") is None
-    assert entity_registry.async_get("sensor.kitchen_plug_temperature") is None
+    assert entity_registry.async_get("sensor.kitchen_plug_temperature_4") is None
 
     matter_node.update(matter_node.node_data)
     fire_node_updated_event(matter_client, matter_node)
@@ -1608,7 +1608,7 @@ async def test_bridged_device_readded_after_removal(
     await hass.async_block_till_done()
 
     assert entity_registry.async_get("switch.kitchen_plug") is not None
-    assert entity_registry.async_get("sensor.kitchen_plug_temperature") is not None
+    assert entity_registry.async_get("sensor.kitchen_plug_temperature_4") is not None
 
 
 @pytest.mark.parametrize("node_fixture", ["mock_composed_bridge"])
@@ -1624,7 +1624,7 @@ async def test_bridged_device_part_removed_and_readded(
     fire_node_updated_event(matter_client, matter_node)
     await hass.async_block_till_done()
     assert entity_registry.async_get("switch.kitchen_plug") is None
-    assert entity_registry.async_get("sensor.kitchen_plug_temperature") is not None
+    assert entity_registry.async_get("sensor.kitchen_plug_temperature_4") is not None
 
     matter_node.update(matter_node.node_data)
     fire_node_updated_event(matter_client, matter_node)
@@ -1653,7 +1653,7 @@ async def test_bridged_device_nested_part_readded_after_removal(
         remove_endpoint(matter_client, matter_node, endpoint_id)
     fire_node_updated_event(matter_client, matter_node)
     await hass.async_block_till_done()
-    assert entity_registry.async_get("sensor.kitchen_plug_temperature") is None
+    assert entity_registry.async_get("sensor.kitchen_plug_temperature_4") is None
 
     matter_node.update(matter_node.node_data)
     fire_node_updated_event(matter_client, matter_node)
@@ -1664,7 +1664,7 @@ async def test_bridged_device_nested_part_readded_after_removal(
     await hass.async_block_till_done()
 
     assert entity_registry.async_get("switch.kitchen_plug") is not None
-    assert entity_registry.async_get("sensor.kitchen_plug_temperature") is not None
+    assert entity_registry.async_get("sensor.kitchen_plug_temperature_4") is not None
 
 
 @pytest.mark.parametrize("node_fixture", ["mock_air_purifier"])

@@ -5,7 +5,7 @@
   },
   "config": {
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
       "wrong_account": "The user credentials provided do not match this Schlage account."
     },
     "error": {
@@ -75,6 +75,9 @@
     },
     "schlage_code_exists": {
       "message": "A PIN code with this value already exists on the lock."
+    },
+    "schlage_command_failed": {
+      "message": "Failed to send the command to the lock."
     },
     "schlage_delete_code_failed": {
       "message": "Failed to delete PIN code from the lock."

@@ -835,6 +835,12 @@
         "name": "Visual alarm enabled"
       }
     },
+    "update": {
+      "release_notes_messages": {
+        "non_main_net_update_source": "Update provided by {update_source}. Installing this update is at your own risk and you may run into unexpected problems such as the need to re-add and factory reset your device.",
+        "update_duration": "The update process can take a while, especially for battery powered devices. Please be patient and wait until the update process is fully completed. The device may restart during the update process and be unavailable for several minutes."
+      }
+    },
     "vacuum": {
       "vacuum": {
         "name": "[%key:component::vacuum::title%]"
