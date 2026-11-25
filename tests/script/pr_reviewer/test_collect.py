@@ -771,13 +771,24 @@ def test_snapshots_size(
 
 
 def test_only_snapshots(gh: FakeGh, collector: Collector) -> None:
-    """Test a pull request changing only test snapshots is skipped."""
+    """Test a pull request changing only test snapshots is reviewed."""
     gh.json(FILES, [[changed_file(SNAPSHOT)]])
     gh.reply(COMPARE_HEAD, Reply(file_diff(SNAPSHOT)))
 
     collector.run()
 
-    collector.assert_skipped(f"No diff for #{NUMBER} outside test snapshots")
+    collector.assert_reviewed()
+    assert (collector.out_dir / "pr.diff").read_bytes() == file_diff(SNAPSHOT)
+
+
+def test_only_long_snapshots(gh: FakeGh, collector: Collector) -> None:
+    """Test a pull request changing only test snapshots too long to check is skipped."""
+    gh.json(FILES, [[changed_file(SNAPSHOT)]])
+    gh.reply(COMPARE_HEAD, Reply(snapshot_diff(collect.MAX_SNAPSHOT_DIFF_LINES + 1)))
+
+    collector.run()
+
+    collector.assert_skipped(f"No diff for #{NUMBER} to review")
     assert not (collector.out_dir / "pr.diff").exists()
 
 

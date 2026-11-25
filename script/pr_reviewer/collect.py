@@ -289,12 +289,13 @@ def collect(
         raise Skip(f"#{number} was already reviewed at {head_sha}")
 
     diff = pr_diff(repo, base, head_sha)
-    code_diff, snapshot_diff = split_snapshots(diff)
-    if not code_diff:
-        raise Skip(f"No diff for #{number} outside test snapshots")
+    _, snapshot_diff = split_snapshots(diff)
     # The review leaves out test snapshots too long to check.
     with_snapshots = snapshot_diff.count(b"\n") <= MAX_SNAPSHOT_DIFF_LINES
-    (out / "pr.diff").write_bytes(review_diff(diff, with_snapshots))
+    to_review = review_diff(diff, with_snapshots)
+    if not to_review:
+        raise Skip(f"No diff for #{number} to review")
+    (out / "pr.diff").write_bytes(to_review)
     if reviewed_head:
         # Merges from dev bring in changes to any file: keep the PR's files, then and now.
         paths = diff_paths(diff)
@@ -303,7 +304,7 @@ def collect(
             reviewed_diff = pr_diff(repo, base, reviewed_head)
             # Only dev merged in since the last review: the diff to review is unchanged.
             if diff_id(review_diff(reviewed_diff, with_snapshots)) == diff_id(
-                review_diff(diff, with_snapshots)
+                to_review
             ):
                 raise Skip(f"The diff of #{number} is unchanged since {reviewed_head}")
             paths |= diff_paths(reviewed_diff)

@@ -202,7 +202,7 @@ When `task.review` is false, post nothing, call `noop` with a one-line reason, a
   - Do the steps they hand to subagents yourself.
   - Skip the quality scale verification: the quality scale reviewer workflow covers it.
   - Use the `ha-pr-comment-audit` results only to skip points already raised and to check your earlier requested changes. Don't post the audit.
-  - Tag every finding. Post those tagged `[CRITICAL]`, `[PROBLEM]` or `[NIT]`; drop any tagged `[SUGGESTION]` or `[PRE-EXISTING]`, even with another tag.
+  - Tag every finding: the tags decide how it is posted below.
 - Read the surrounding code in the workspace.
 - Read the existing reviews and comments. Skip points already raised.
 - With earlier reviews of yours, also cut short ones: check each change you requested in them against the head. This makes it a re-review.
@@ -212,14 +212,15 @@ When `task.review` is false, post nothing, call `noop` with a one-line reason, a
 ## Posting a review
 
 - Post nothing until the review is finished. Then post the inline comments and submit the review right after them.
-- Each finding on a line inside a hunk of `pr.diff` goes only in an inline comment: `create_pull_request_review_comment` with `path`, `line`, optional `start_line`, and `side: RIGHT`. No severity tag; start nits with `nit: `. Add a `suggestion` block when the fix is a small, exact replacement of those lines. At most 20 inline comments: put findings on other lines, and any beyond 20, in the body.
+- Each finding not tagged `[PRE-EXISTING]` on a line inside a hunk of `pr.diff` goes only in an inline comment: `create_pull_request_review_comment` with `path`, `line`, optional `start_line`, and `side: RIGHT`. No severity tag; start suggestions with `suggestion: ` and nits with `nit: `. Add a `suggestion` block when the fix is a small, exact replacement of those lines. At most 20 inline comments: put findings on other lines, and any beyond 20, in the body.
 - Then `submit_pull_request_review` with event `COMMENT`. Every review ends with it, also one without findings. This body:
   - With critical or problem findings:
     - short summary of the assessment, without restating the inline comments.
     - Numbered list of the requested changes not in an inline comment, each starting with `[CRITICAL]` or `[PROBLEM]`, with file and line. None: no list.
     - On a re-review: the numbered list holds the earlier requested changes still open and the new findings not in an inline comment; the fixed ones go in a separate list, without `[CRITICAL]` or `[PROBLEM]`.
   - Without problem findings: `LGTM.` and no summary, also on a re-review: no list of fixed changes. Add a short note after it only for something the maintainer should know, such as the code doing something the PR body doesn't say.
-  - Nits not in an inline comment go last, in a list, each starting with `nit: `, with file and line.
+  - Suggestions and nits not in an inline comment go next, in a list, each starting with `suggestion: ` or `nit: `, with file and line.
+  - Findings tagged `[PRE-EXISTING]`, go last, under `Pre-existing (for a separate PR):`, in a list with file and line. Word them as follow-ups for another PR, not as changes to make here.
   - Close it with this block, without the code fence, with `<model>` replaced by the ID of the model you run on. It marks the review as finished:
 
     ```markdown
