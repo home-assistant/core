@@ -9965,6 +9965,9 @@
           "categories": [
             "media_entertainment.speakers_audio"
           ],
+          "connectivity": [
+            "infrared"
+          ],
           "name": "NAD Infrared"
         }
       }
