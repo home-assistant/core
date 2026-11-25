@@ -31,6 +31,7 @@ class FlussDataUpdateCoordinator(DataUpdateCoordinator[dict[str, dict[str, Any]]
     ) -> None:
         """Initialize the coordinator."""
         self.api = FlussApiClient(api_key, session=async_get_clientsession(hass))
+        self._status_errors: set[str] = set()
         super().__init__(
             hass,
             LOGGER,
@@ -54,8 +55,13 @@ class FlussDataUpdateCoordinator(DataUpdateCoordinator[dict[str, dict[str, Any]]
         except FlussApiClientError as err:
             # Best effort: the trigger buttons work without status, and the API can
             # refuse reads for account-level reasons (e.g. an exhausted quota).
-            LOGGER.warning("Error fetching status for %s: %s", device_id, err)
+            if device_id not in self._status_errors:
+                self._status_errors.add(device_id)
+                LOGGER.info("Error fetching status for %s: %s", device_id, err)
             return {}
+        if device_id in self._status_errors:
+            self._status_errors.discard(device_id)
+            LOGGER.info("Status for %s is available again", device_id)
         return response["status"]
 
     @override

@@ -1,5 +1,6 @@
 """Test script for Fluss+ integration initialization."""
 
+import logging
 from typing import Any
 from unittest.mock import AsyncMock
 
@@ -9,9 +10,11 @@ from fluss_api import (
     FlussApiClientError,
     FlussDeviceOfflineError,
 )
+from freezegun.api import FrozenDateTimeFactory
 import pytest
-from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
+from homeassistant.components.fluss.const import UPDATE_INTERVAL
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
@@ -105,3 +108,48 @@ async def test_failed_status_does_not_fail_update(
     # device_1 has no status; it stays usable as a trigger button
     assert hass.states.get("button.device_1").state == STATE_UNKNOWN
     assert hass.states.get("button.device_2").state == STATE_UNKNOWN
+
+
+async def test_status_error_logged_once_until_recovery(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_api_client: AsyncMock,
+    freezer: FrozenDateTimeFactory,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """A refused status read is logged once, and its recovery is logged once."""
+    caplog.set_level(logging.INFO, logger="homeassistant.components.fluss")
+    await setup_integration(hass, mock_config_entry)
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+
+    failed = "Error fetching status for 2a303030sdj1"
+    recovered = "Status for 2a303030sdj1 is available again"
+
+    def _logged(message: str) -> list[logging.LogRecord]:
+        return [record for record in caplog.records if message in record.message]
+
+    caplog.clear()
+    mock_api_client.async_get_device_status.side_effect = FlussApiClientError(
+        "API usage limit exceeded"
+    )
+    for _ in range(2):
+        freezer.tick(UPDATE_INTERVAL)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert len(_logged(failed)) == 1
+    assert _logged(failed)[0].levelno == logging.INFO
+
+    mock_api_client.async_get_device_status.side_effect = None
+    freezer.tick(UPDATE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert len(_logged(recovered)) == 1
+    assert _logged(recovered)[0].levelno == logging.INFO
+
+    freezer.tick(UPDATE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert len(_logged(recovered)) == 1
