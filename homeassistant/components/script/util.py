@@ -97,12 +97,7 @@ async def async_process_config(
     def script_matches_config(
         script: BaseScriptEntity, config: ScriptEntityConfig
     ) -> bool:
-        return (
-            script.unique_id == config.key
-            and script.raw_config == config.raw_config
-            # An input the blueprint does not use leaves raw_config the same
-            and script.raw_blueprint_inputs == config.raw_blueprint_inputs
-        )
+        return script.unique_id == config.key and script.raw_config == config.raw_config
 
     def find_matches(
         scripts: list[BaseScriptEntity],
