@@ -45,17 +45,20 @@ class GeoSphereWarningEvent(GeoSphereEntity, EventEntity):
         self._known_changes = self._current_changes()
 
     def _current_changes(self) -> dict[tuple[int, int], int]:
-        """Return the change ID of every current warning course."""
-        data = self.coordinator.data
+        """Return the change ID of every published warning course."""
+        # Include expired courses, so extending one reports an update.
         return {
             (warning.warning_id, warning.course_id): warning.change_id
-            for warning in (*data.active_warnings, *data.advance_warnings)
+            for warning in self.coordinator.data.location_warnings.warnings
         }
 
     @callback
     @override
     def _handle_coordinator_update(self) -> None:
         """Fire an event for every new or changed warning."""
+        # Publish the recovered state first, so automations ignoring transitions
+        # from unavailable do not miss the first event after a failed update.
+        super()._handle_coordinator_update()
         data = self.coordinator.data
         for warning in sort_warnings((*data.active_warnings, *data.advance_warnings)):
             known_change = self._known_changes.get(
@@ -69,4 +72,3 @@ class GeoSphereWarningEvent(GeoSphereEntity, EventEntity):
             )
             self.async_write_ha_state()
         self._known_changes = self._current_changes()
-        super()._handle_coordinator_update()
