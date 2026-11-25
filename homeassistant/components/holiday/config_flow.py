@@ -3,7 +3,7 @@
 from typing import Any, override
 
 from babel import Locale, UnknownLocaleError
-from holidays import PUBLIC, country_holidays, list_supported_countries
+from holidays import PUBLIC, HolidayBase, country_holidays, list_supported_countries
 import probatio
 
 from homeassistant.config_entries import (
@@ -23,14 +23,13 @@ from homeassistant.helpers.selector import (
     SelectSelectorConfig,
     SelectSelectorMode,
 )
-from homeassistant.util import dt as dt_util
 
 from .const import CONF_CATEGORIES, CONF_PROVINCE, COUNTRY_OPTIONS, DOMAIN
 
 SUPPORTED_COUNTRIES = list_supported_countries(include_aliases=False)
 
 
-def get_optional_provinces(country: str) -> list[Any]:
+def get_optional_provinces(country_data: HolidayBase) -> list[Any]:
     """Return the country provinces (territories).
 
     Some territories can have extra or different holidays
@@ -39,8 +38,7 @@ def get_optional_provinces(country: str) -> list[Any]:
     """
     province_options: list[Any] = []
 
-    if provinces := SUPPORTED_COUNTRIES[country]:
-        country_data = country_holidays(country, years=dt_util.utcnow().year)
+    if provinces := SUPPORTED_COUNTRIES[country_data.country]:
         if country_data.subdivisions_aliases and (
             subdiv_aliases := country_data.get_subdivision_aliases()
         ):
@@ -54,21 +52,22 @@ def get_optional_provinces(country: str) -> list[Any]:
     return province_options
 
 
-def get_optional_categories(country: str) -> list[str]:
+def get_optional_categories(country_data: HolidayBase) -> list[str]:
     """Return the country categories.
 
     public holidays are always included so they
     don't need to be presented to the user.
     """
-    country_data = country_holidays(country, years=dt_util.utcnow().year)
     return [
         category for category in country_data.supported_categories if category != PUBLIC
     ]
 
 
-def get_country_options_schema(country: str) -> dict[probatio.Optional, Any]:
+def get_country_options_schema(
+    country_data: HolidayBase,
+) -> dict[probatio.Optional, Any]:
     """Return the schema for the country specific options of the holidays library."""
-    supported_options = country_holidays(country).get_supported_options()
+    supported_options = country_data.get_supported_options()
     return {
         probatio.Optional(option, default=supported_options[option]): BooleanSelector()
         for option in COUNTRY_OPTIONS
@@ -76,9 +75,9 @@ def get_country_options_schema(country: str) -> dict[probatio.Optional, Any]:
     }
 
 
-def get_categories_schema(country: str) -> dict[probatio.Optional, Any]:
+def get_categories_schema(country_data: HolidayBase) -> dict[probatio.Optional, Any]:
     """Return the schema for the additional categories."""
-    if not (categories := get_optional_categories(country)):
+    if not (categories := get_optional_categories(country_data)):
         return {}
     return {
         probatio.Optional(CONF_CATEGORIES): SelectSelector(
@@ -104,8 +103,10 @@ def get_entry_options(user_input: dict[str, Any]) -> dict[str, Any]:
 
 def get_options_schema(country: str) -> probatio.Schema:
     """Return the options schema."""
+    # Without years, no holidays are calculated, but the metadata is available
+    country_data = country_holidays(country)
     schema = {}
-    if provinces := get_optional_provinces(country):
+    if provinces := get_optional_provinces(country_data):
         schema[probatio.Optional(CONF_PROVINCE)] = SelectSelector(
             SelectSelectorConfig(
                 options=provinces,
@@ -115,16 +116,20 @@ def get_options_schema(country: str) -> probatio.Schema:
     return probatio.Schema(
         {
             **schema,
-            **get_categories_schema(country),
-            **get_country_options_schema(country),
+            **get_categories_schema(country_data),
+            **get_country_options_schema(country_data),
         }
     )
 
 
 def get_options_flow_schema(country: str) -> probatio.Schema:
     """Return the schema of the options flow."""
+    country_data = country_holidays(country)
     return probatio.Schema(
-        {**get_categories_schema(country), **get_country_options_schema(country)}
+        {
+            **get_categories_schema(country_data),
+            **get_country_options_schema(country_data),
+        }
     )
 
 

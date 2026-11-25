@@ -32,7 +32,7 @@ async def async_get_config_entry_diagnostics(
     # coordinator: the download then says so instead of failing.
     if entry.state is not ConfigEntryState.LOADED:
         return diagnostics
-    coordinator = entry.runtime_data
+    coordinator = entry.runtime_data.gateway
     # The most recent poll, also when it failed; none if nothing answered
     if (report := coordinator.last_report) is not None:
         diagnostics["updated"] = sorted(report.updated)

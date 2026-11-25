@@ -82,6 +82,7 @@ from .const import (
 from .storage.keyring import (
     DEFAULT_KNX_KEYRING_FILENAME,
     load_stored_knxkeys_file,
+    remove_knxkeys_file,
     save_uploaded_knxkeys_file,
 )
 from .validation import ia_validator, ip_v4_validator
@@ -208,6 +209,7 @@ class KNXConfigFlow(ConfigFlow, domain=DOMAIN):
         self._found_gateways: list[GatewayDescriptor] = []
         self._found_tunnels: list[GatewayDescriptor] = []
         self._selected_tunnel: GatewayDescriptor | None = None
+        self._configured_gateway_described = False
         self._tunnel_endpoints: list[XMLInterface] = []
 
         self._gatewayscanner: GatewayScanner | None = None
@@ -282,20 +284,63 @@ class KNXConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle reconfiguration of existing entry."""
         entry = self._get_reconfigure_entry()
         self.initial_data = dict(entry.data)  # type: ignore[assignment]
-        if (stored_keyring := await self._async_get_stored_keyring()) is not None:
-            keyring_project = stored_keyring.keyring.project_name
-        else:
-            keyring_project = self.initial_data.get(CONF_KNX_KNXKEY_FILENAME) or "-"
+        menu_options = ["connection_type", "secure_knxkeys"]
+        if self.initial_data.get(CONF_KNX_KNXKEY_FILENAME) is not None:
+            menu_options.append("remove_knxkeys")
         return self.async_show_menu(
             step_id="reconfigure",
-            menu_options=[
-                "connection_type",
-                "secure_knxkeys",
-            ],
+            menu_options=menu_options,
             description_placeholders={
                 "current_connection": _describe_connection(self.initial_data),
-                "keyring_project": keyring_project,
+                **await self._async_keyring_placeholders(),
             },
+        )
+
+    async def _async_keyring_placeholders(self) -> dict[str, str]:
+        """Describe the imported keyring: project name and Data Secure usage."""
+        if (stored_keyring := await self._async_get_stored_keyring()) is None:
+            return {
+                "keyring_project": self.initial_data.get(CONF_KNX_KNXKEY_FILENAME)
+                or "-",
+                "data_secure_count": "0",
+            }
+        return {
+            "keyring_project": stored_keyring.keyring.project_name,
+            "data_secure_count": str(
+                len(stored_keyring.keyring.get_data_secure_group_keys())
+            ),
+        }
+
+    async def async_step_remove_knxkeys(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Remove the imported keyring file after confirmation."""
+        connection_type = self.initial_data[CONF_KNX_CONNECTION_TYPE]
+        if (
+            connection_type == CONF_KNX_TUNNELING_TCP_SECURE
+            and self.initial_data.get(CONF_KNX_SECURE_USER_ID) is None
+        ) or (
+            connection_type == CONF_KNX_ROUTING_SECURE
+            and self.initial_data.get(CONF_KNX_ROUTING_BACKBONE_KEY) is None
+        ):
+            return self.async_abort(reason="keyring_required")
+
+        if user_input is not None:
+            filename = self.initial_data.get(CONF_KNX_KNXKEY_FILENAME)
+            if TYPE_CHECKING:
+                # only offered in the reconfigure menu when a keyring is imported
+                assert filename is not None
+            await remove_knxkeys_file(self.hass, filename)
+            self.new_entry_data |= KNXConfigEntryData(
+                knxkeys_filename=None,
+                knxkeys_password=None,
+            )
+            return self.finish_flow()
+
+        return self.async_show_form(
+            step_id="remove_knxkeys",
+            data_schema=probatio.Schema({}),
+            description_placeholders=await self._async_keyring_placeholders(),
         )
 
     async def async_step_connection_type(
@@ -564,7 +609,11 @@ class KNXConfigFlow(ConfigFlow, domain=DOMAIN):
                         gateway_ip=_host_ip,
                         gateway_port=user_input[CONF_PORT],
                         local_ip=_local_ip,
-                        route_back=route_back,
+                        # requested over UDP - use route back for TCP types
+                        # to also reach gateways behind NAT
+                        route_back=(
+                            selected_tunneling_type != CONF_KNX_TUNNELING or route_back
+                        ),
                     )
                 except CommunicationError:
                     errors["base"] = "cannot_connect"
@@ -681,6 +730,42 @@ class KNXConfigFlow(ConfigFlow, domain=DOMAIN):
         self._stored_keyring = StoredKeyring(keyring, filename, password)
         return self._stored_keyring
 
+    async def _async_describe_configured_gateway(self) -> None:
+        """Request the description of the configured tunneling gateway.
+
+        `_selected_tunnel` stays None if the gateway doesn't respond, so the
+        keyring is used unfiltered.
+        """
+        if self._configured_gateway_described or self._selected_tunnel is not None:
+            return
+        self._configured_gateway_described = True
+        connection_type = self.initial_data[CONF_KNX_CONNECTION_TYPE]
+        if (
+            connection_type not in CONF_KNX_TUNNELING_TYPE_LABELS
+            or CONF_HOST not in self.initial_data
+        ):
+            return
+        # the description is requested over UDP - TCP entries have no route back
+        # setting, so use it to also reach gateways behind NAT
+        route_back = connection_type != CONF_KNX_TUNNELING or self.initial_data.get(
+            CONF_KNX_ROUTE_BACK, False
+        )
+        try:
+            gateway_ip = await xknx_validate_ip(self.initial_data[CONF_HOST])
+            local_ip = (
+                await xknx_validate_ip(_local)
+                if (_local := self.initial_data.get(CONF_KNX_LOCAL_IP))
+                else None
+            )
+            self._selected_tunnel = await request_description(
+                gateway_ip=gateway_ip,
+                gateway_port=self.initial_data[CONF_PORT],
+                local_ip=local_ip,
+                route_back=route_back,
+            )
+        except XKNXException:
+            return
+
     def _validate_keyring(
         self, keyring: Keyring
     ) -> tuple[dict[str, str], dict[str, str]]:
@@ -712,6 +797,9 @@ class KNXConfigFlow(ConfigFlow, domain=DOMAIN):
             sync_latency_tolerance=None,
         )
         if self.connection_type in (CONF_KNX_ROUTING, CONF_KNX_ROUTING_SECURE):
+            return self.finish_flow()
+        if self.connection_type == CONF_KNX_TUNNELING:
+            # UDP tunnels ignore the tunnel endpoint address
             return self.finish_flow()
 
         # Tunneling / Automatic
@@ -953,6 +1041,7 @@ class KNXConfigFlow(ConfigFlow, domain=DOMAIN):
         description_placeholders: dict[str, str] = {}
 
         if user_input is not None:
+            await self._async_describe_configured_gateway()
             if (
                 result := await self._async_handle_keyring_source(
                     KEY_SOURCE_KNXKEYS_UPLOAD,

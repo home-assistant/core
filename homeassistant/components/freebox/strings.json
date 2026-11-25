@@ -11,6 +11,12 @@
     },
     "step": {
       "link": {
+        "data": {
+          "registration_name": "Registration name"
+        },
+        "data_description": {
+          "registration_name": "The name under which Home Assistant is registered on the Freebox. Keep it the same across reinstalls, for example when the Home Assistant container is recreated, to avoid having to register again."
+        },
         "description": "Select **Submit**, then touch the right arrow on the router to register Freebox with Home Assistant.\n\n![Location of button on the router](/static/images/config_freebox.png)",
         "title": "Link Freebox router"
       },

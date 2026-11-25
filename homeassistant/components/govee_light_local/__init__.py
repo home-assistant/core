@@ -1,7 +1,6 @@
 """The Govee Light local integration."""
 
 import asyncio
-from contextlib import suppress
 from errno import EADDRINUSE, EADDRNOTAVAIL, EMFILE, ENETDOWN, ENETUNREACH, ENOBUFS
 import logging
 
@@ -42,14 +41,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: GoveeLocalConfigEntry) -
         hass=hass, config_entry=entry, listening_addresses=listening_addresses
     )
 
-    async def await_cleanup() -> None:
-        # Wait for a running rebind, so cleanup() does not race a bind in flight.
-        await coordinator.async_wait_rebind()
-        cleanup_complete_event = coordinator.cleanup()
-        with suppress(TimeoutError):
-            await asyncio.wait_for(cleanup_complete_event.wait(), 1)
-
-    entry.async_on_unload(await_cleanup)
+    entry.async_on_unload(coordinator.async_cleanup)
 
     try:
         await coordinator.start()

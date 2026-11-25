@@ -12,7 +12,6 @@ from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
 from .coordinator import (
@@ -20,6 +19,8 @@ from .coordinator import (
     LunatoneInfoDataUpdateCoordinator,
     LunatoneScanDataUpdateCoordinator,
 )
+from .entity import LunatoneEntity
+from .helpers import add_entities_from_builder, format_device_identifier
 
 PARALLEL_UPDATES = 0
 
@@ -44,24 +45,6 @@ async def async_setup_entry(
         ]
     )
 
-    def _add_entities(
-        entity_builder: dict[str, Callable[[], BinarySensorEntity]],
-        known_entities: set[str],
-    ) -> None:
-        current_entities = entity_builder.keys()
-        new_entities = current_entities - known_entities
-        stale_entities = known_entities - current_entities
-
-        if new_entities:
-            async_add_entities(
-                [
-                    entity_builder[entity_unique_id]()
-                    for entity_unique_id in new_entities
-                ]
-            )
-            known_entities.update(new_entities)
-        known_entities.difference_update(stale_entities)
-
     known_entities: set[str] = set()
 
     @callback
@@ -78,20 +61,20 @@ async def async_setup_entry(
                 config_entry_unique_id,
                 line_id,
             )
-        _add_entities(entity_builder, known_entities)
+        add_entities_from_builder(entity_builder, known_entities, async_add_entities)
 
     _check_entities()
     config_entry.async_on_unload(coordinator_info.async_add_listener(_check_entities))
 
 
 class LunatoneDALIScanStatus(
-    CoordinatorEntity[LunatoneScanDataUpdateCoordinator], BinarySensorEntity
+    LunatoneEntity[LunatoneScanDataUpdateCoordinator],
+    BinarySensorEntity,
 ):
     """Representation of a Lunatone DALI scan status."""
 
     _attr_device_class = BinarySensorDeviceClass.RUNNING
     _attr_entity_category = EntityCategory.DIAGNOSTIC
-    _attr_has_entity_name = True
     _attr_translation_key = "scan_status"
 
     def __init__(
@@ -102,65 +85,37 @@ class LunatoneDALIScanStatus(
         line: int | None = None,
     ) -> None:
         """Initialize a Lunatone DALI scan status."""
-        super().__init__(coordinator_scan)
-        self._coordinator_info = coordinator_info
-
-        self._line = line
-
-        device_unique_id = config_entry_unique_id
-        if line is not None:
-            device_unique_id += f"-line{line}"
+        super().__init__(coordinator_scan, coordinator_info, line)
 
         self._attr_device_info = DeviceInfo(
             identifiers={
-                (DOMAIN, self.construct_device_unique_id(config_entry_unique_id, line))
+                (DOMAIN, format_device_identifier(config_entry_unique_id, line))
             },
         )
         self._attr_unique_id = self.construct_unique_id(config_entry_unique_id, line)
-
-    @staticmethod
-    def construct_device_unique_id(
-        config_entry_unique_id: str, line_id: int | None = None
-    ) -> str:
-        """Returns the unique_id of the parent device."""
-        suffix = f"-line{line_id}" if line_id is not None else ""
-        return f"{config_entry_unique_id}{suffix}"
 
     @staticmethod
     def construct_unique_id(
         config_entry_unique_id: str, line_id: int | None = None
     ) -> str:
         """Returns the unique_id for a device ID."""
-        return f"{
-            LunatoneDALIScanStatus.construct_device_unique_id(
-                config_entry_unique_id, line_id
-            )
-        }-scan-progress"
-
-    @override
-    async def async_added_to_hass(self) -> None:
-        """Register callbacks."""
-        await super().async_added_to_hass()
-        self.async_on_remove(
-            self._coordinator_info.async_add_listener(self._handle_info_update)
+        return (
+            f"{format_device_identifier(config_entry_unique_id, line_id)}-scan-progress"
         )
-
-    @callback
-    def _handle_info_update(self) -> None:
-        self.async_write_ha_state()
 
     @property
     @override
     def available(self) -> bool:
         return super().available and (
-            self._line is None or str(self._line) in self._coordinator_info.data.lines
+            self.line_id is None
+            or str(self.line_id) in self.coordinator_info.data.lines
         )
 
     @property
     @override
     def is_on(self) -> bool:
         """Return true if the DALI scan is on."""
-        if self._line is None:
+        if self.line_id is None:
             return self.coordinator.data.busy
-        line_scan_status = self.coordinator.line_scan_status.get(self._line)
+        line_scan_status = self.coordinator.line_scan_status.get(self.line_id)
         return line_scan_status.busy if line_scan_status is not None else False

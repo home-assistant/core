@@ -13,7 +13,12 @@ from homeassistant.components.remote import (
     RemoteService,
     RemoteServiceArgument,
 )
-from homeassistant.const import ATTR_ENTITY_ID, STATE_ON, EntityStateAttribute
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    STATE_ON,
+    EntityStateAttribute,
+    TargetKey,
+)
 from homeassistant.core import State, callback
 
 from .accessories import TYPES, HomeAccessory
@@ -231,7 +236,7 @@ class ActivityRemote(RemoteInputSelectAccessory):
         """Move switch state to value if call came from HomeKit."""
         _LOGGER.debug('%s: Set switch state for "on_off" to %s', self.entity_id, value)
         service = RemoteService.TURN_ON if value else RemoteService.TURN_OFF
-        params = {ATTR_ENTITY_ID: self.entity_id}
+        params: dict[str, Any] = {TargetKey.ENTITY_ID: self.entity_id}
         self.async_call_service(REMOTE_DOMAIN, service, params)
 
     @override
@@ -239,8 +244,8 @@ class ActivityRemote(RemoteInputSelectAccessory):
         """Send input set value if call came from HomeKit."""
         _LOGGER.debug("%s: Set current input to %s", self.entity_id, value)
         source = self._mapped_sources[self.sources[value]]
-        params = {
-            ATTR_ENTITY_ID: self.entity_id,
+        params: dict[str, Any] = {
+            TargetKey.ENTITY_ID: self.entity_id,
             RemoteServiceArgument.ACTIVITY: source,
         }
         self.async_call_service(REMOTE_DOMAIN, RemoteService.TURN_ON, params)
