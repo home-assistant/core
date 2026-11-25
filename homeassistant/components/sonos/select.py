@@ -10,7 +10,6 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import (
-    ATTR_DIALOG_LEVEL,
     ATTR_DIALOG_LEVEL_ENUM,
     MODELS_ULTRA_SOUNDBARS,
     SONOS_CREATE_SELECTS,
@@ -34,7 +33,7 @@ SELECT_TYPES: list[SonosSelectEntityDescription] = [
     SonosSelectEntityDescription(
         key=SPEECH_DIALOG_LEVEL,
         translation_key=SPEECH_DIALOG_LEVEL,
-        soco_attribute=ATTR_DIALOG_LEVEL,
+        soco_attribute="speech_enhance_level",
         speaker_attribute=ATTR_DIALOG_LEVEL_ENUM,
         speaker_models=MODELS_ULTRA_SOUNDBARS,
         options=["off", "low", "medium", "high", "max"],

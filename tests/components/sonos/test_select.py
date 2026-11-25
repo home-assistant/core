@@ -39,9 +39,9 @@ async def platform_binary_sensor_fixture():
     [
         (0, "off"),
         (1, "low"),
-        ("2", "medium"),
-        ("3", "high"),
-        ("4", "max"),
+        (2, "medium"),
+        (3, "high"),
+        (4, "max"),
     ],
 )
 async def test_select_dialog_level(
@@ -50,14 +50,14 @@ async def test_select_dialog_level(
     soco,
     entity_registry: er.EntityRegistry,
     speaker_info: dict[str, str],
-    level: int | str,
+    level: int,
     result: str,
 ) -> None:
     """Test dialog level select entity."""
 
     speaker_info["model_name"] = MODEL_SONOS_ARC_ULTRA.lower()
     soco.get_speaker_info.return_value = speaker_info
-    soco.dialog_level = level
+    soco.speech_enhance_level = level
 
     await async_setup_sonos()
 
@@ -78,11 +78,11 @@ async def test_select_dialog_invalid_level(
 
     speaker_info["model_name"] = MODEL_SONOS_ARC_ULTRA.lower()
     soco.get_speaker_info.return_value = speaker_info
-    soco.dialog_level = 10
+    soco.speech_enhance_level = 10
 
     with caplog.at_level(logging.WARNING):
         await async_setup_sonos()
-    assert "Invalid option 10 for dialog_level" in caplog.text
+    assert "Invalid option 10 for speech_enhance_level" in caplog.text
 
     dialog_level_select = entity_registry.entities[SELECT_DIALOG_LEVEL_ENTITY]
     dialog_level_state = hass.states.get(dialog_level_select.entity_id)
@@ -110,7 +110,7 @@ async def test_select_dialog_value_error(
 
     speaker_info["model_name"] = MODEL_SONOS_ARC_ULTRA.lower()
     soco.get_speaker_info.return_value = speaker_info
-    soco.dialog_level = value
+    soco.speech_enhance_level = value
 
     with caplog.at_level(logging.WARNING):
         await async_setup_sonos()
@@ -141,7 +141,7 @@ async def test_select_dialog_level_set(
 
     speaker_info["model_name"] = MODEL_SONOS_ARC_ULTRA.lower()
     soco.get_speaker_info.return_value = speaker_info
-    soco.dialog_level = 0
+    soco.speech_enhance_level = 0
 
     await async_setup_sonos()
 
@@ -155,7 +155,7 @@ async def test_select_dialog_level_set(
         blocking=True,
     )
 
-    assert soco.dialog_level == result
+    assert soco.speech_enhance_level == result
 
 
 @pytest.mark.parametrize(
@@ -173,7 +173,7 @@ async def test_select_dialog_level_ultra_soundbars(
 
     speaker_info["model_name"] = model
     soco.get_speaker_info.return_value = speaker_info
-    soco.dialog_level = 2
+    soco.speech_enhance_level = 2
 
     await async_setup_sonos()
 
@@ -206,7 +206,7 @@ async def test_select_dialog_level_event(
 
     speaker_info["model_name"] = MODEL_SONOS_ARC_ULTRA.lower()
     soco.get_speaker_info.return_value = speaker_info
-    soco.dialog_level = "0"
+    soco.speech_enhance_level = 0
 
     await async_setup_sonos()
 
@@ -232,11 +232,11 @@ async def test_select_dialog_level_poll(
 
     speaker_info["model_name"] = MODEL_SONOS_ARC_ULTRA.lower()
     soco.get_speaker_info.return_value = speaker_info
-    soco.dialog_level = "0"
+    soco.speech_enhance_level = 0
 
     await async_setup_sonos()
 
-    soco.dialog_level = "4"
+    soco.speech_enhance_level = 4
 
     freezer.tick(SCAN_INTERVAL)
     async_fire_time_changed(hass)
