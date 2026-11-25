@@ -195,12 +195,24 @@ _SCHEMA_STATE: dict[probatio.Marker, Any] = {
 }
 
 # (option, the option it requires, error when missing)
-_MEDIA_PLAYER_REQUIRED_OPTIONS = (
-    (CONF_SOURCE, CONF_SOURCE_LIST, "source_list_required"),
-    (SERVICE_SELECT_SOURCE, CONF_SOURCE_LIST, "source_list_required"),
-    (SERVICE_VOLUME_UP, SERVICE_VOLUME_DOWN, "volume_up_and_down_required"),
-    (SERVICE_VOLUME_DOWN, SERVICE_VOLUME_UP, "volume_up_and_down_required"),
-)
+# Option, the option it requires and the error when it is missing
+_REQUIRED_OPTIONS: dict[str, tuple[tuple[str, str, str], ...]] = {
+    Platform.LIGHT: (
+        (CONF_HS, CONF_HS_ACTION, "hs_action_required"),
+        (CONF_LEVEL, CONF_LEVEL_ACTION, "level_action_required"),
+        (
+            CONF_TEMPERATURE_KELVIN,
+            CONF_TEMPERATURE_ACTION,
+            "temperature_action_required",
+        ),
+    ),
+    Platform.MEDIA_PLAYER: (
+        (CONF_SOURCE, CONF_SOURCE_LIST, "source_list_required"),
+        (SERVICE_SELECT_SOURCE, CONF_SOURCE_LIST, "source_list_required"),
+        (SERVICE_VOLUME_UP, SERVICE_VOLUME_DOWN, "volume_up_and_down_required"),
+        (SERVICE_VOLUME_DOWN, SERVICE_VOLUME_UP, "volume_up_and_down_required"),
+    ),
+}
 
 # Device class can only be chosen when the entity is created.
 _CONFIG_DEVICE_CLASS_DOMAINS = (
@@ -699,10 +711,9 @@ def validate_user_input(
             # with temperature_kelvin or by removing the color temperature action
             handler.options.pop(CONF_TEMPERATURE, None)
             user_input.pop(CONF_TEMPERATURE, None)
-        if template_type == Platform.MEDIA_PLAYER:
-            for option, required_option, error in _MEDIA_PLAYER_REQUIRED_OPTIONS:
-                if option in user_input and required_option not in user_input:
-                    raise SchemaFlowError(error)
+        for option, required_option, error in _REQUIRED_OPTIONS.get(template_type, ()):
+            if option in user_input and required_option not in user_input:
+                raise SchemaFlowError(error)
         if template_type == Platform.WATER_HEATER:
             tcv.requires_option(
                 CONF_WATER_HEATER_TARGET_TEMPERATURE,
@@ -1039,12 +1050,11 @@ def ws_start_preview(
             except probatio.Invalid as ex:
                 errors[CONF_STATE_CLASS] = str(ex.msg)
 
-        if domain == Platform.MEDIA_PLAYER:
-            for option, required_option, _ in _MEDIA_PLAYER_REQUIRED_OPTIONS:
-                try:
-                    tcv.requires_option(option, required_option)(user_input)
-                except probatio.Invalid as ex:
-                    errors[option] = str(ex.msg)
+        for option, required_option, _ in _REQUIRED_OPTIONS.get(domain, ()):
+            try:
+                tcv.requires_option(option, required_option)(user_input)
+            except probatio.Invalid as ex:
+                errors[option] = str(ex.msg)
 
         return errors
 
