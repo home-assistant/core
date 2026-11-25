@@ -8,7 +8,7 @@ import probatio
 
 from homeassistant.components.select import DOMAIN as SELECT_DOMAIN
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
-from homeassistant.const import CommonServiceArgument
+from homeassistant.const import TargetKey
 from homeassistant.core import HomeAssistant, ServiceCall, callback, split_entity_id
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_send
@@ -67,11 +67,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
         UtilityMeterService.RESET,
         async_reset_meters,
         probatio.Schema(
-            {
-                CommonServiceArgument.ENTITY_ID: probatio.All(
-                    probatio.EnsureList(), [cv.entity_id]
-                )
-            }
+            {TargetKey.ENTITY_ID: probatio.All(probatio.EnsureList(), [cv.entity_id])}
         ),
     )
 
