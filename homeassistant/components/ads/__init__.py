@@ -67,7 +67,8 @@ async def _async_import(hass: HomeAssistant, conf: ConfigType) -> None:
     ):
         # The connection and its YAML entities stay unavailable until the user
         # acts, so this is more than a deprecation notice.
-        issue_id = f"deprecated_yaml_import_issue_{result['reason']}"
+        # Only a malformed AMS NetID aborts the import.
+        issue_id = "deprecated_yaml_import_issue_invalid_net_id"
         severity = IssueSeverity.ERROR
     else:
         issue_id = "deprecated_yaml"
@@ -124,7 +125,7 @@ async def _async_setup_entry(hass: HomeAssistant, entry: AdsConfigEntry) -> None
 
         async def _async_resubscribe_device(device: AdsEntity) -> None:
             try:
-                await device.async_added_to_hass()
+                await device.async_subscribe()
             except Exception:
                 _LOGGER.exception("Error resubscribing %s", device.entity_id)
 
@@ -155,5 +156,6 @@ async def async_unload_entry(hass: HomeAssistant, entry: AdsConfigEntry) -> None
         with suppress(asyncio.CancelledError):
             await task
     # Keep the hub as the registry for the YAML entities that outlive the entry.
+    # When the entry is deleted rather than reloaded, it stays until restart.
     hass.data[DATA_ADS] = hub
     await hass.async_add_executor_job(hub.shutdown)

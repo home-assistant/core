@@ -121,8 +121,8 @@ class AdsLight(AdsEntity, LightEntity):
             )
 
     @override
-    async def async_added_to_hass(self) -> None:
-        """Register device notification."""
+    async def async_subscribe(self) -> None:
+        """Subscribe to the PLC variables of this entity."""
         await self.async_initialize_device(self._ads_var, pyads.PLCTYPE_BOOL)
 
         if self._ads_var_brightness is not None:

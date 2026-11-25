@@ -123,8 +123,8 @@ class AdsCover(AdsEntity, CoverEntity):
             self._attr_supported_features |= CoverEntityFeature.SET_POSITION
 
     @override
-    async def async_added_to_hass(self) -> None:
-        """Register device notification."""
+    async def async_subscribe(self) -> None:
+        """Subscribe to the PLC variables of this entity."""
         if self._ads_var is not None:
             await self.async_initialize_device(self._ads_var, pyads.PLCTYPE_BOOL)
 

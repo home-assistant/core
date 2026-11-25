@@ -70,8 +70,6 @@ class AdsConfigFlow(ConfigFlow, domain=DOMAIN):
         """Validate the connection and return an error key on failure."""
         try:
             await self.hass.async_add_executor_job(_validate_connection, data)
-        except ValueError:
-            return "invalid_net_id"
         except pyads.ADSError, OSError, RuntimeError:
             # A device that does not answer raises OSError and the AMS router
             # refusing to open a port raises RuntimeError; setup treats both as
@@ -91,7 +89,11 @@ class AdsConfigFlow(ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             user_input = _drop_blank_optionals(user_input)
-            if (error := await self._async_validate(user_input)) is None:
+            if not _is_valid_net_id(user_input[CONF_DEVICE]):
+                # Checked first: without an IP address the NetID also names
+                # the host, and a malformed one would only fail to connect.
+                errors[CONF_DEVICE] = "invalid_net_id"
+            elif (error := await self._async_validate(user_input)) is None:
                 if self.source == SOURCE_RECONFIGURE:
                     return self.async_update_reload_and_abort(
                         self._get_reconfigure_entry(),
@@ -101,7 +103,8 @@ class AdsConfigFlow(ConfigFlow, domain=DOMAIN):
                 return self.async_create_entry(
                     title=user_input[CONF_DEVICE], data=user_input
                 )
-            errors["base"] = error
+            else:
+                errors["base"] = error
 
         suggested_values = user_input
         if suggested_values is None and self.source == SOURCE_RECONFIGURE:
