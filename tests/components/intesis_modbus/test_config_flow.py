@@ -708,6 +708,37 @@ async def test_reconfigure_finishes_when_the_request_is_cancelled(
     assert init_integration.state is ConfigEntryState.LOADED
 
 
+async def test_reconfigure_saves_nothing_when_cancelled_during_the_probe(
+    hass: HomeAssistant, init_integration: MockConfigEntry
+) -> None:
+    """A request dropped during a probe that would succeed changes nothing."""
+    probing = asyncio.Event()
+    proceed = asyncio.Event()
+
+    @asynccontextmanager
+    async def _get_temporary_unit(
+        hass: HomeAssistant, params: ModbusSerialParams, unit_id: int
+    ) -> AsyncIterator[MockModbusUnit]:
+        probing.set()
+        await proceed.wait()
+        yield _seeded().for_unit(unit_id)
+
+    result = await init_integration.start_reconfigure_flow(hass)
+    with patch(TARGET, side_effect=_get_temporary_unit):
+        request = hass.async_create_task(
+            hass.config_entries.flow.async_configure(result["flow_id"], FASTER_INPUT)
+        )
+        await probing.wait()
+        assert init_integration.state is ConfigEntryState.NOT_LOADED
+        request.cancel()
+        with pytest.raises(asyncio.CancelledError):
+            await request
+        proceed.set()
+        await hass.async_block_till_done()
+    assert init_integration.data == MOCK_ENTRY_DATA
+    assert init_integration.state is ConfigEntryState.LOADED
+
+
 async def test_reconfigure_survives_a_reload_during_the_probe(
     hass: HomeAssistant, init_integration: MockConfigEntry
 ) -> None:

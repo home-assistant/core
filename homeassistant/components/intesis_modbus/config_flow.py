@@ -15,6 +15,7 @@ from homeassistant.config_entries import (
     ConfigFlowResult,
 )
 from homeassistant.const import CONF_DEVICE
+from homeassistant.core import callback
 from homeassistant.data_entry_flow import AbortFlow
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.selector import (
@@ -117,13 +118,8 @@ class IntesisModbusConfigFlow(ConfigFlow, domain=DOMAIN):
         reconfigure_entry = self._get_reconfigure_entry()
         errors: dict[str, str] = {}
         if user_input is not None:
-            # The entry may be unloaded for the probe. A request that gets
-            # cancelled half way must not leave it so, hence the shielded task.
-            errors, result = await asyncio.shield(
-                self.hass.async_create_task(
-                    self._async_reconfigure(reconfigure_entry, user_input),
-                    f"{DOMAIN} reconfigure {reconfigure_entry.entry_id}",
-                )
+            errors, result = await self._async_reconfigure(
+                reconfigure_entry, user_input
             )
             if result is not None:
                 return result
@@ -146,27 +142,55 @@ class IntesisModbusConfigFlow(ConfigFlow, domain=DOMAIN):
         }
         self._async_abort_entries_match(match)
         # A loaded entry holds its port at the old baud rate, which refuses
-        # a probe at another one, so it lets go of the port meanwhile.
-        released = False
+        # a probe at another one, so it lets go of the port meanwhile. A
+        # request that is cancelled half way must not leave it unloaded: the
+        # unload and the way back run to their end, the probe does not.
+        unload: asyncio.Task[bool] | None = None
         if entry.state in (ConfigEntryState.LOADED, ConfigEntryState.SETUP_RETRY):
             current = create_modbus_params(entry.data)
             new = create_modbus_params(user_input)
             if new.endpoint == current.endpoint and new != current:
-                released = await self.hass.config_entries.async_unload(entry.entry_id)
-        saved = False
+                unload = self.hass.async_create_task(
+                    self.hass.config_entries.async_unload(entry.entry_id),
+                    f"{DOMAIN} unload {entry.entry_id}",
+                )
+        restore = unload is not None
         try:
-            errors, probe = await self._async_validate(user_input)
+            try:
+                if unload is not None:
+                    await asyncio.shield(unload)
+                errors, probe = await self._async_validate(user_input)
+            except asyncio.CancelledError:
+                # The request is gone and cannot wait: the way back runs alone
+                if unload is not None:
+                    self._async_restore(entry, unload)
+                restore = False
+                raise
             if probe is not None:
                 # Another flow may have claimed the gateway meanwhile
                 self._async_abort_entries_match(match)
-                saved = True
+                restore = False
                 return {}, self.async_update_reload_and_abort(
                     entry, data_updates=_entry_data(user_input, probe)
                 )
         finally:
-            if released and not saved:
-                await self.hass.config_entries.async_reload(entry.entry_id)
+            if restore and unload is not None:
+                await asyncio.shield(self._async_restore(entry, unload))
         return errors, None
+
+    @callback
+    def _async_restore(
+        self, entry: ConfigEntry, unload: asyncio.Task[bool]
+    ) -> asyncio.Task[None]:
+        """Load an entry again that was unloaded for a probe."""
+
+        async def _restore() -> None:
+            if await unload:
+                await self.hass.config_entries.async_reload(entry.entry_id)
+
+        return self.hass.async_create_task(
+            _restore(), f"{DOMAIN} restore {entry.entry_id}"
+        )
 
     async def _async_validate(
         self, user_input: dict[str, Any]
