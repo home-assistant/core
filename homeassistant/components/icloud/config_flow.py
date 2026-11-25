@@ -310,6 +310,22 @@ class IcloudFlowHandler(ConfigFlow, domain=DOMAIN):
             CONF_INCLUDE_COMPLETED: self._include_completed,
         }
 
+    def _simple_login_error_form(
+        self, error: Exception, user_input: Any, step_id: str
+    ) -> ConfigFlowResult:
+        """Return the form for a login failure with a fixed, known cause."""
+        if isinstance(error, PyiCloudAccountLockedException):
+            _LOGGER.error("Apple Account is locked: %s", error)
+            errors = {CONF_PASSWORD: "account_locked"}
+        elif isinstance(error, PyiCloudFailedLoginException):
+            _LOGGER.error("Error logging into iCloud service: %s", error)
+            errors = {CONF_PASSWORD: "invalid_auth"}
+        else:
+            _LOGGER.error("Error connecting to iCloud service: %s", error)
+            errors = {"base": "cannot_connect"}
+        self.api = None
+        return self._show_setup_form(user_input, errors, step_id)
+
     def _login_error_form(
         self, error: Exception, user_input: Any, step_id: str
     ) -> ConfigFlowResult | None:
@@ -382,21 +398,13 @@ class IcloudFlowHandler(ConfigFlow, domain=DOMAIN):
                 )
             except PyiCloudAcceptTermsException as error:
                 return await self._async_terms_required(error)
-            except PyiCloudAccountLockedException as error:
-                _LOGGER.error("Apple Account is locked: %s", error)
-                self.api = None
-                errors = {CONF_PASSWORD: "account_locked"}
-                return self._show_setup_form(user_input, errors, step_id)
-            except PyiCloudFailedLoginException as error:
-                _LOGGER.error("Error logging into iCloud service: %s", error)
-                self.api = None
-                errors = {CONF_PASSWORD: "invalid_auth"}
-                return self._show_setup_form(user_input, errors, step_id)
-            except (PyiCloudConnectionException, HTTPError) as error:
-                _LOGGER.error("Error connecting to iCloud service: %s", error)
-                self.api = None
-                errors = {"base": "cannot_connect"}
-                return self._show_setup_form(user_input, errors, step_id)
+            except (
+                PyiCloudAccountLockedException,
+                PyiCloudFailedLoginException,
+                PyiCloudConnectionException,
+                HTTPError,
+            ) as error:
+                return self._simple_login_error_form(error, user_input, step_id)
             except (
                 PyiCloud2FARequiredException,
                 PyiCloudAuthRequiredException,

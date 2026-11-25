@@ -1620,3 +1620,34 @@ async def test_spent_challenge_requests_a_replacement_code(
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["result"].unique_id == USERNAME
+
+
+async def test_login_api_error_without_a_server_status_is_reported(
+    hass: HomeAssistant,
+) -> None:
+    """Test that a non-auth, non-server API error clears the unusable login."""
+    with patch(
+        "homeassistant.components.icloud.config_flow.PyiCloudService",
+        side_effect=PyiCloudAPIResponseException("Bad request", 400),
+    ):
+        result = await _submit_user_form(hass)
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert result["errors"] == {"base": "unknown"}
+
+    working = MagicMock()
+    working.requires_2fa = False
+    working.requires_2sa = False
+    working.devices = [MagicMock()]
+    with patch(
+        "homeassistant.components.icloud.config_flow.PyiCloudService",
+        return_value=working,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD},
+        )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == USERNAME

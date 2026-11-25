@@ -13,13 +13,14 @@ from pyicloud.exceptions import (
     PyiCloudAPIResponseException,
     PyiCloudConnectionException,
     PyiCloudFailedLoginException,
+    PyiCloudServiceUnavailable,
 )
 from pyicloud.services.findmyiphone import AppleDevice
 import pytest
 from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 from requests import HTTPError, Response
 
-from homeassistant.components.icloud.account import IcloudAccount
+from homeassistant.components.icloud.account import IcloudAccount, is_server_error
 from homeassistant.components.icloud.const import (
     ATTR_BATTERY,
     ATTR_LOW_POWER_MODE,
@@ -1694,3 +1695,19 @@ async def test_setup_server_error_retries_without_a_password_repair(
         for flow in hass.config_entries.flow.async_progress()
         if flow["context"]["source"] == "reauth"
     ]
+
+
+@pytest.mark.parametrize(
+    "error",
+    [
+        pytest.param(
+            PyiCloudServiceUnavailable("unavailable"), id="service-unavailable"
+        ),
+        pytest.param(
+            PyiCloudAPIResponseException("Server error", "503"), id="string-status"
+        ),
+    ],
+)
+def test_server_error_detection_covers_non_numeric_shapes(error: Exception) -> None:
+    """Test that all library outage shapes are recognised as server errors."""
+    assert is_server_error(error)
