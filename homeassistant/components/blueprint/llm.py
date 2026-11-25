@@ -63,7 +63,8 @@ class ListBlueprintsTool(Tool):
         wanted_domain: str | None = self.parameters(tool_input.tool_args).get("domain")
 
         blueprints: list[JsonObjectType] = []
-        for domain, domain_blueprints in _domain_blueprints(hass).items():
+        # Copied, as a domain can register while blueprints load
+        for domain, domain_blueprints in list(_domain_blueprints(hass).items()):
             if wanted_domain is not None and domain != wanted_domain:
                 continue
             for path, value in (await domain_blueprints.async_get_blueprints()).items():
@@ -106,9 +107,10 @@ class GetBlueprintTool(Tool):
             probatio.Required(
                 "domain", description="The domain, like automation or script."
             ): _NON_EMPTY_STRING,
+            # Not stripped, as the path must match a listed file exactly
             probatio.Required(
                 "path", description="The path of the blueprint."
-            ): _NON_EMPTY_STRING,
+            ): probatio.All(str, probatio.NonEmpty()),
         }
     )
 
