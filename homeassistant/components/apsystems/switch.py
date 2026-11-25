@@ -1,6 +1,6 @@
 """The power switch which can be toggled via the APsystems local API integration."""
 
-from typing import Any, override
+from typing import Any, cast, override
 
 from aiohttp.client_exceptions import ClientConnectionError
 from APsystemsEZ1 import InverterReturnedError
@@ -11,6 +11,8 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .coordinator import ApSystemsConfigEntry, ApSystemsData
 from .entity import ApSystemsEntity
+from .lake6.coordinator import Lake6ConfigEntry, Lake6RuntimeData
+from .lake6.switch import async_setup_entry as async_setup_lake6_switches
 
 
 async def async_setup_entry(
@@ -19,6 +21,11 @@ async def async_setup_entry(
     add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the switch platform."""
+    if isinstance(config_entry.runtime_data, Lake6RuntimeData):
+        await async_setup_lake6_switches(
+            hass, cast(Lake6ConfigEntry, config_entry), add_entities
+        )
+        return
 
     add_entities([ApSystemsInverterSwitch(config_entry.runtime_data)], True)
 

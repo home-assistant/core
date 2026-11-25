@@ -2,7 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import override
+from typing import cast, override
 
 from APsystemsEZ1 import ReturnOutputData
 
@@ -20,6 +20,8 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .coordinator import ApSystemsConfigEntry, ApSystemsData, ApSystemsDataCoordinator
 from .entity import ApSystemsEntity
+from .lake6.coordinator import Lake6ConfigEntry, Lake6RuntimeData
+from .lake6.sensor import async_setup_entry as async_setup_lake6_sensors
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -113,6 +115,11 @@ async def async_setup_entry(
 ) -> None:
     """Set up the sensor platform."""
     config = config_entry.runtime_data
+    if isinstance(config, Lake6RuntimeData):
+        await async_setup_lake6_sensors(
+            hass, cast(Lake6ConfigEntry, config_entry), add_entities
+        )
+        return
 
     add_entities(
         ApSystemsSensorWithDescription(

@@ -2,7 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import override
+from typing import cast, override
 
 from APsystemsEZ1 import ReturnAlarmInfo
 
@@ -18,6 +18,8 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .coordinator import ApSystemsConfigEntry, ApSystemsData, ApSystemsDataCoordinator
 from .entity import ApSystemsEntity
+from .lake6.binary_sensor import async_setup_entry as async_setup_lake6_binary_sensors
+from .lake6.coordinator import Lake6ConfigEntry, Lake6RuntimeData
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -66,6 +68,11 @@ async def async_setup_entry(
 ) -> None:
     """Set up the binary sensor platform."""
     config = config_entry.runtime_data
+    if isinstance(config, Lake6RuntimeData):
+        await async_setup_lake6_binary_sensors(
+            hass, cast(Lake6ConfigEntry, config_entry), add_entities
+        )
+        return
 
     add_entities(
         ApSystemsBinarySensorWithDescription(

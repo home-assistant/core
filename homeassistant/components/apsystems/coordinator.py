@@ -16,6 +16,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN, LOGGER
+from .lake6.coordinator import Lake6RuntimeData
 
 
 @dataclass
@@ -34,7 +35,10 @@ class ApSystemsData:
     device_id: str
 
 
-type ApSystemsConfigEntry = ConfigEntry[ApSystemsData]
+# A single config entry carries either device generation and platforms
+# dispatch with isinstance. The union leaves the EZ1 branch unchanged in both
+# typing and runtime behaviour.
+type ApSystemsConfigEntry = ConfigEntry[ApSystemsData | Lake6RuntimeData]
 
 
 class ApSystemsDataCoordinator(DataUpdateCoordinator[ApSystemsSensorData]):

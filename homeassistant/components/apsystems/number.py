@@ -1,6 +1,6 @@
 """The output limit which can be set in the APsystems local API integration."""
 
-from typing import override
+from typing import cast, override
 
 from aiohttp import ClientConnectorError
 
@@ -12,6 +12,8 @@ from homeassistant.helpers.typing import DiscoveryInfoType
 
 from .coordinator import ApSystemsConfigEntry, ApSystemsData
 from .entity import ApSystemsEntity
+from .lake6.coordinator import Lake6ConfigEntry, Lake6RuntimeData
+from .lake6.number import async_setup_entry as async_setup_lake6_number_entities
 
 
 async def async_setup_entry(
@@ -21,6 +23,11 @@ async def async_setup_entry(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the sensor platform."""
+    if isinstance(config_entry.runtime_data, Lake6RuntimeData):
+        await async_setup_lake6_number_entities(
+            hass, cast(Lake6ConfigEntry, config_entry), add_entities
+        )
+        return
 
     add_entities([ApSystemsMaxOutputNumber(config_entry.runtime_data)], True)
 
