@@ -72,7 +72,10 @@
       "snoring": 1080,
       "snoringepisodecount": 18,
       "sleep_score": 37,
-      "apnea_hypopnea_index": 9
+      "apnea_hypopnea_index": 9,
+      "total_timeinbed": 22080,
+      "rmssd_start_avg": 41.5,
+      "rmssd_end_avg": 48.2
     },
     "created": 1620237476,
     "modified": 1620237476

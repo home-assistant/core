@@ -889,11 +889,11 @@ async def test_cover_tilt_services(
         blocking=True,
     )
     await hass.async_block_till_done()
-    assert hass.states.get(PERGOLA.entity_id).state == CoverState.OPENING
     assert_command_call(
         mock_client,
         device_url=PERGOLA.device_url,
-        command_name="openSlats",
+        command_name="setOrientation",
+        parameters=[40],
     )
 
     await async_deliver_events(

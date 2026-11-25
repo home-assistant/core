@@ -1,6 +1,7 @@
 """Config flow to configure the Freebox integration."""
 
 import logging
+import socket
 from typing import Any, override
 
 from aiohttp import ClientError
@@ -11,7 +12,7 @@ from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
-from .const import DOMAIN
+from .const import CONF_REGISTRATION_NAME, DOMAIN
 from .router import (
     async_forget_registration,
     get_api,
@@ -20,6 +21,13 @@ from .router import (
 )
 
 _LOGGER = logging.getLogger(__name__)
+
+
+def _link_schema(registration_name: str) -> probatio.Schema:
+    """Return the schema of the link step."""
+    return probatio.Schema(
+        {probatio.Required(CONF_REGISTRATION_NAME, default=registration_name): str}
+    )
 
 
 class FreeboxFlowHandler(ConfigFlow, domain=DOMAIN):
@@ -67,11 +75,16 @@ class FreeboxFlowHandler(ConfigFlow, domain=DOMAIN):
         to connect to the router.
         """
         if user_input is None:
-            return self.async_show_form(step_id="link")
+            return self.async_show_form(
+                step_id="link", data_schema=_link_schema(socket.gethostname())
+            )
 
         errors = {}
+        self._data[CONF_REGISTRATION_NAME] = user_input[CONF_REGISTRATION_NAME]
 
-        fbx = await get_api(self.hass, self._data[CONF_HOST])
+        fbx = await get_api(
+            self.hass, self._data[CONF_HOST], self._data[CONF_REGISTRATION_NAME]
+        )
         try:
             # Open connection and check authentication
             await fbx.open(self._data[CONF_HOST], self._data[CONF_PORT])
@@ -112,7 +125,11 @@ class FreeboxFlowHandler(ConfigFlow, domain=DOMAIN):
                 data=self._data,
             )
 
-        return self.async_show_form(step_id="link", errors=errors)
+        return self.async_show_form(
+            step_id="link",
+            data_schema=_link_schema(self._data[CONF_REGISTRATION_NAME]),
+            errors=errors,
+        )
 
     @override
     async def async_step_zeroconf(
