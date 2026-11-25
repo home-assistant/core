@@ -1,9 +1,10 @@
 """Tests for the KNX LLM API."""
 
+import asyncio
 from dataclasses import fields
 from datetime import UTC, date, datetime, time
 import json
-from typing import Any
+from typing import Any, override
 from unittest.mock import AsyncMock, Mock, patch
 
 from knx_telegram_store.mcp import (
@@ -17,10 +18,25 @@ import pytest
 from xknx.dpt import DPTArray, DPTTime
 
 from homeassistant.components.knx import llm_api
-from homeassistant.components.knx.const import KNX_MODULE_KEY
+from homeassistant.components.knx.const import DOMAIN, KNX_MODULE_KEY
+from homeassistant.components.knx.storage.entity_suggestions.base import (
+    SuggestionProvider,
+)
+from homeassistant.components.knx.storage.entity_suggestions.const import (
+    PlatformSuggestion,
+    ProviderResult,
+    ProviderSuggestion,
+    SuggestedGroupAddress,
+)
+from homeassistant.const import STATE_ON
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import llm
+from homeassistant.helpers import (
+    area_registry as ar,
+    device_registry as dr,
+    entity_registry as er,
+    llm,
+)
 
 from .conftest import KNXTestKit
 
@@ -31,6 +47,8 @@ _BUS_TOOLS = {"read_group_value", "send_group_value_read", "send_group_value_wri
 # drives its size, and it needs depth/space_id in xknxproject first.
 _EXPECTED_TOOLS = {
     "count_telegrams",
+    "create_device",
+    "create_entity",
     "decode_payload",
     "describe_dpt",
     "describe_channel",
@@ -39,6 +57,7 @@ _EXPECTED_TOOLS = {
     "encode_value",
     "find_similar_channels",
     "get_connection_status",
+    "get_entity_schema",
     "get_last_values",
     "get_project_info",
     "get_store_capabilities",
@@ -48,9 +67,11 @@ _EXPECTED_TOOLS = {
     "list_communication_objects",
     "list_devices",
     "list_dpts",
+    "list_entity_suggestions",
     "list_functions",
     "list_group_addresses",
     "query_telegrams",
+    "validate_entity",
     *_BUS_TOOLS,
 }
 
@@ -135,6 +156,12 @@ async def test_llm_api_registered_after_setup(
         pytest.param(
             "send_group_value_write", False, True, False, True, id="bus_write"
         ),
+        pytest.param(
+            "list_entity_suggestions", True, False, True, False, id="suggestions"
+        ),
+        pytest.param("validate_entity", True, False, True, False, id="validate"),
+        pytest.param("create_entity", False, False, False, False, id="create_entity"),
+        pytest.param("create_device", False, False, False, False, id="create_device"),
     ],
 )
 async def test_tools_declare_their_safety_hints(
@@ -779,3 +806,277 @@ async def test_find_similar_channels_unknown_reference(hass: HomeAssistant) -> N
     assert result["found"] is False
     assert result["channels"] == []
     assert result["aligned_group_objects"] == []
+
+
+def _suggestion(suggestion_id: str, platforms: list[str], address: str) -> Any:
+    """Build a suggestion as a provider would return it."""
+    return ProviderSuggestion(
+        id=suggestion_id,
+        suggested_name=f"Suggested {suggestion_id}",
+        group_id="1.1.1",
+        group_name="Device",
+        secondary_info="Channel",
+        platform_options=platforms,
+        suggestions={
+            platform: PlatformSuggestion(
+                knx={"ga_switch": {"write": address}},
+                matched_group_addresses=[
+                    SuggestedGroupAddress(address=address, name=f"GA {address}")
+                ],
+                unmatched=[],
+            )
+            for platform in platforms
+        },
+        metadata={},
+    )
+
+
+class _StubProvider(SuggestionProvider):
+    """Provider returning a fixed set of suggestions."""
+
+    provider_id = "stub"
+
+    @override
+    async def async_get_suggestions(
+        self, hass: HomeAssistant, knx: Any
+    ) -> ProviderResult:
+        """Return three suggestions, the first one for two platforms."""
+        return ProviderResult(
+            suggestions=[
+                _suggestion("a", ["switch", "light"], "1/2/3"),
+                _suggestion("b", ["switch"], "1/2/4"),
+                _suggestion("c", ["switch"], "1/2/5"),
+            ],
+            hints={"state": "ok"},
+        )
+
+
+@pytest.fixture
+def stub_suggestions() -> Any:
+    """Replace the suggestion providers by one with known suggestions."""
+    with patch(
+        "homeassistant.components.knx.storage.entity_suggestions.SUGGESTION_PROVIDERS",
+        [_StubProvider()],
+    ):
+        yield
+
+
+async def _call_api(hass: HomeAssistant, name: str, args: dict[str, Any]) -> Any:
+    """Call a tool of the registered KNX API."""
+    instance = await _api_instance(hass)
+    result = await instance.async_call_tool(
+        llm.ToolInput(tool_name=name, tool_args=args)
+    )
+    return result.data
+
+
+async def _state_read_started() -> None:
+    """Let the initial state read of a new entity reach the outgoing queue.
+
+    The state updater reads in a task of its own, which neither the tool call
+    nor `async_block_till_done` waits for.
+    """
+    for _ in range(5):
+        await asyncio.sleep(0)
+
+
+@pytest.mark.usefixtures("stub_suggestions")
+async def test_list_entity_suggestions(hass: HomeAssistant, knx: KNXTestKit) -> None:
+    """Suggestions are paginated and leave out what is configured already."""
+    await knx.setup_integration()
+
+    result = await _call_api(hass, "list_entity_suggestions", {"limit": 2})
+    assert [item["id"] for item in result["suggestions"]] == ["stub_a", "stub_b"]
+    assert result["total_count"] == 3
+    assert result["next_offset"] == 2
+    assert result["providers"] == {"stub": {"state": "ok"}}
+
+    result = await _call_api(hass, "list_entity_suggestions", {"platform": "light"})
+    assert [item["id"] for item in result["suggestions"]] == ["stub_a"]
+
+    assert (await _call_api(hass, "create_entity", {"suggestion_id": "stub_b"}))[
+        "success"
+    ]
+    result = await _call_api(hass, "list_entity_suggestions", {})
+    assert [item["id"] for item in result["suggestions"]] == ["stub_a", "stub_c"]
+    result = await _call_api(
+        hass, "list_entity_suggestions", {"include_configured": True}
+    )
+    assert result["total_count"] == 3
+    assert result["suggestions"][1]["existing_entity_ids"] == ["switch.suggested_b"]
+
+
+async def test_get_entity_schema(hass: HomeAssistant) -> None:
+    """The options of a platform are described as the panel gets them."""
+    tool = _tool(llm_api._build_tools(_mock_knx()), "get_entity_schema")
+    result = (
+        await tool.async_call(
+            hass,
+            llm.ToolInput(tool_name=tool.name, tool_args={"platform": "switch"}),
+            _llm_context(),
+        )
+    ).data
+
+    ga_switch = next(
+        option for option in result["schema"] if option["name"] == "ga_switch"
+    )
+    assert ga_switch["required"] is True
+    assert ga_switch["options"]["write"] == {"required": True}
+    json.dumps(result)  # must not raise
+
+    with pytest.raises(probatio.Invalid):
+        tool.parameters({"platform": "vacuum"})
+
+
+@pytest.mark.parametrize("tool_name", ["validate_entity", "create_entity"])
+async def test_invalid_entity_configuration_is_a_result(
+    hass: HomeAssistant, knx: KNXTestKit, tool_name: str
+) -> None:
+    """An invalid configuration tells what to correct instead of raising."""
+    await knx.setup_integration()
+
+    result = await _call_api(
+        hass,
+        tool_name,
+        {
+            "platform": "switch",
+            "entity": {"name": "Test"},
+            "knx": {"ga_switch": {"state": "1/2/3"}},
+        },
+    )
+
+    assert result["success"] is False
+    assert result["errors"][0]["path"][:3] == ["data", "knx", "ga_switch"]
+    assert not hass.data[KNX_MODULE_KEY].config_store.get_entity_uids()
+
+
+async def test_validate_entity_does_not_create(
+    hass: HomeAssistant, knx: KNXTestKit
+) -> None:
+    """A valid configuration is confirmed without creating the entity."""
+    await knx.setup_integration()
+
+    result = await _call_api(
+        hass,
+        "validate_entity",
+        {
+            "platform": "switch",
+            "entity": {"name": "Test"},
+            "knx": {"ga_switch": {"write": "1/2/3"}},
+        },
+    )
+
+    assert result == {"success": True, "entity_id": None}
+    assert not hass.data[KNX_MODULE_KEY].config_store.get_entity_uids()
+
+
+async def test_create_entity_from_configuration(
+    hass: HomeAssistant, knx: KNXTestKit, entity_registry: er.EntityRegistry
+) -> None:
+    """An entity is created in a device made for it, and works on the bus."""
+    await knx.setup_integration()
+
+    device = await _call_api(hass, "create_device", {"name": "Actuator"})
+    result = await _call_api(
+        hass,
+        "create_entity",
+        {
+            "platform": "switch",
+            "entity": {"name": "Socket", "device_info": device["device_info"]},
+            "knx": {"ga_switch": {"write": "1/2/3", "state": "1/2/4"}},
+        },
+    )
+
+    assert result == {"success": True, "entity_id": "switch.actuator_socket"}
+    entry = entity_registry.async_get("switch.actuator_socket")
+    assert entry is not None
+    assert entry.device_id == device["device_id"]
+    await _state_read_started()
+    await knx.assert_read("1/2/4", response=True)
+    assert hass.states.get("switch.actuator_socket").state == STATE_ON
+    # the entity is stored, so it is there again after a restart
+    assert (
+        hass.data[KNX_MODULE_KEY].config_store.get_entity_config(
+            "switch.actuator_socket"
+        )["data"]["knx"]["ga_switch"]["write"]
+        == "1/2/3"
+    )
+
+
+@pytest.mark.usefixtures("stub_suggestions")
+async def test_create_entity_from_suggestion(
+    hass: HomeAssistant, knx: KNXTestKit
+) -> None:
+    """A suggestion is all it takes; arguments next to it adjust it."""
+    await knx.setup_integration()
+    config_store = hass.data[KNX_MODULE_KEY].config_store
+
+    result = await _call_api(hass, "create_entity", {"suggestion_id": "stub_a"})
+    # the first platform option and the suggested name are the defaults
+    assert result == {"success": True, "entity_id": "switch.suggested_a"}
+
+    result = await _call_api(
+        hass,
+        "create_entity",
+        {
+            "suggestion_id": "stub_a",
+            "platform": "light",
+            "entity": {"name": "Ceiling"},
+            "knx": {"ga_switch": {"write": "1/2/3", "state": "1/2/9"}},
+        },
+    )
+    assert result == {"success": True, "entity_id": "light.ceiling"}
+    await _state_read_started()
+    await knx.assert_read("1/2/9", response=True)
+    assert config_store.get_entity_config("light.ceiling")["data"]["knx"][
+        "ga_switch"
+    ] == {"write": "1/2/3", "state": "1/2/9", "passive": []}
+
+
+@pytest.mark.usefixtures("stub_suggestions")
+@pytest.mark.parametrize(
+    ("args", "error"),
+    [
+        pytest.param({"suggestion_id": "stub_x"}, "suggestion not found", id="unknown"),
+        pytest.param(
+            {"suggestion_id": "stub_b", "platform": "light"},
+            "not available for light",
+            id="platform_not_offered",
+        ),
+        pytest.param({"entity": {"name": "Test"}}, "is required", id="no_platform"),
+    ],
+)
+async def test_create_entity_argument_errors(
+    hass: HomeAssistant, knx: KNXTestKit, args: dict[str, Any], error: str
+) -> None:
+    """Arguments that can not be resolved to a configuration are tool errors."""
+    await knx.setup_integration()
+
+    with pytest.raises(HomeAssistantError, match=error) as err:
+        await _call_api(hass, "create_entity", args)
+    assert err.value.translation_key == "llm_tool_failed"
+
+
+async def test_create_device(
+    hass: HomeAssistant,
+    knx: KNXTestKit,
+    area_registry: ar.AreaRegistry,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """A device is created in an area and reports how entities refer to it."""
+    await knx.setup_integration()
+    area = area_registry.async_create("Kitchen")
+
+    result = await _call_api(
+        hass, "create_device", {"name": "Actuator", "area_id": area.id}
+    )
+
+    device = device_registry.async_get(result["device_id"])
+    assert device is not None
+    assert device.name == "Actuator"
+    assert device.area_id == area.id
+    assert device.identifiers == {(DOMAIN, result["device_info"])}
+    assert result["area_id"] == area.id
+
+    with pytest.raises(HomeAssistantError, match="Area garage not found"):
+        await _call_api(hass, "create_device", {"name": "Other", "area_id": "garage"})
