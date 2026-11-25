@@ -101,6 +101,78 @@
       }
     },
     "event": {
+      "lower_button": {
+        "name": "Lower key",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "press_long": "Long press",
+              "press_long_released": "Long press released",
+              "press_short": "Short press"
+            }
+          }
+        }
+      },
+      "lower_left_button": {
+        "name": "Lower left key",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "press_long": "Long press",
+              "press_long_released": "Long press released",
+              "press_short": "Short press"
+            }
+          }
+        }
+      },
+      "lower_right_button": {
+        "name": "Lower right key",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "press_long": "Long press",
+              "press_long_released": "Long press released",
+              "press_short": "Short press"
+            }
+          }
+        }
+      },
+      "upper_button": {
+        "name": "Upper key",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "press_long": "Long press",
+              "press_long_released": "Long press released",
+              "press_short": "Short press"
+            }
+          }
+        }
+      },
+      "upper_left_button": {
+        "name": "Upper left key",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "press_long": "Long press",
+              "press_long_released": "Long press released",
+              "press_short": "Short press"
+            }
+          }
+        }
+      },
+      "upper_right_button": {
+        "name": "Upper right key",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "press_long": "Long press",
+              "press_long_released": "Long press released",
+              "press_short": "Short press"
+            }
+          }
+        }
+      },
       "smoke_detector_alarm": {
         "state_attributes": {
           "event_type": {

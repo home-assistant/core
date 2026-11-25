@@ -3,7 +3,13 @@
 from functools import partial
 from typing import TYPE_CHECKING, Any, override
 
-from boschshcpy import SHCMotionDetector, SHCMotionDetector2, SHCSmokeDetector
+from boschshcpy import (
+    KeypadService,
+    SHCMotionDetector,
+    SHCMotionDetector2,
+    SHCSmokeDetector,
+    SHCUniversalSwitch,
+)
 
 from homeassistant.components.event import EventDeviceClass, EventEntity
 from homeassistant.const import ATTR_DEVICE_ID, ATTR_ID, ATTR_NAME
@@ -56,6 +62,17 @@ async def async_setup_entry(
             entry_id=config_entry.entry_id,
         )
         for smoke_detector in session.device_helper.smoke_detectors
+    )
+    entities.extend(
+        UniversalSwitchEvent(
+            hass=hass,
+            device=switch,
+            parent_id=shc_info.unique_id,
+            entry_id=config_entry.entry_id,
+            key_id=key_id,
+        )
+        for switch in session.device_helper.universal_switches
+        for key_id in switch.keystates
     )
 
     async_add_entities(entities)
@@ -184,4 +201,69 @@ class SmokeDetectorEvent(SHCEntity, EventEntity):
             ATTR_NAME: self._device.name,
         }
         self._trigger_event(alarm_state, event_attributes)
+        self.async_write_ha_state()
+
+
+class UniversalSwitchEvent(SHCEntity, EventEntity):
+    """Representation of one key of a SHC Universal Switch."""
+
+    _attr_device_class = EventDeviceClass.BUTTON
+    _attr_event_types = ["press_short", "press_long", "press_long_released"]
+    _device: SHCUniversalSwitch
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        device: SHCUniversalSwitch,
+        parent_id: str,
+        entry_id: str,
+        key_id: str,
+    ) -> None:
+        """Initialize the key event entity."""
+        super().__init__(
+            hass=hass, device=device, parent_id=parent_id, entry_id=entry_id
+        )
+        self._key_id = key_id
+        self._attr_translation_key = key_id.lower()
+        self._attr_unique_id = f"{device.root_device_id}_{device.id}_{key_id}"
+        # The SHC replays the last key event on unrelated long-poll updates.
+        self._last_fired_timestamp = -1
+
+    @override
+    async def async_added_to_hass(self) -> None:
+        """Subscribe to SHC events."""
+        await super().async_added_to_hass()
+        self._last_fired_timestamp = self._device.eventtimestamp
+        for service in self._device.device_services:
+            if service.id == "Keypad":
+                service.register_event(self._key_id, self._event_callback)
+                self.async_on_remove(partial(service.unregister_event, self._key_id))
+
+    def _event_callback(self) -> None:
+        """Handle a Keypad update from the SHC polling thread."""
+        event_type = self._device.eventtype
+        if event_type not in (
+            KeypadService.KeyEvent.PRESS_SHORT,
+            KeypadService.KeyEvent.PRESS_LONG,
+            KeypadService.KeyEvent.PRESS_LONG_RELEASED,
+        ):
+            return
+        timestamp = self._device.eventtimestamp
+        if timestamp == self._last_fired_timestamp:
+            return
+        self._last_fired_timestamp = timestamp
+        self.hass.loop.call_soon_threadsafe(
+            self._dispatch_event, event_type.name.lower(), timestamp
+        )
+
+    @callback
+    def _dispatch_event(self, event_type: str, timestamp: int) -> None:
+        """Trigger the event and write state on the event loop."""
+        event_attributes: dict[str, Any] = {
+            ATTR_DEVICE_ID: self.device_id,
+            ATTR_ID: self._device.id,
+            ATTR_NAME: self._device.name,
+            ATTR_LAST_TIME_TRIGGERED: timestamp,
+        }
+        self._trigger_event(event_type, event_attributes)
         self.async_write_ha_state()

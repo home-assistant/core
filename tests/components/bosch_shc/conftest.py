@@ -46,6 +46,7 @@ from boschshcpy import (
     SHCThermostat,
     SHCThermostatGen2,
     SHCTwinguard,
+    SHCUniversalSwitch,
     ShutterContactService,
     ShutterControlService,
     SilentModeService,
@@ -878,6 +879,30 @@ class FakeLatestMotionService:
         self.callbacks.pop(entity, None)
 
 
+class FakeKeypadService:
+    """Minimal double of a Keypad DeviceService's event-callback API."""
+
+    id = "Keypad"
+
+    def __init__(self) -> None:
+        """Initialize the fake service's callback registry."""
+        self._event_callbacks: dict[str, Any] = {}
+
+    def register_event(self, event: str, callback: Any) -> None:
+        """Register a callback for the given key."""
+        self._event_callbacks[event] = callback
+
+    def unregister_event(self, event: str) -> None:
+        """Remove the callback for the given key."""
+        self._event_callbacks.pop(event, None)
+
+    def subscribe_callback(self, entity: Any, callback: Any) -> None:
+        """No-op: SHCEntity subscribes to every device service's generic callback."""
+
+    def unsubscribe_callback(self, entity: Any, callback: Any = None) -> None:
+        """No-op counterpart to subscribe_callback."""
+
+
 class FakeAlarmService:
     """Minimal double of an Alarm DeviceService's event-callback API."""
 
@@ -933,6 +958,28 @@ def smoke_detection_system_device(
     system.device_services = [FakeSurveillanceAlarmService()]
     system.triggered_device_ids.return_value = triggered or set()
     return system
+
+
+def universal_switch_device(
+    device_id: str = "hdm:HomeMaticIP:switch1",
+    name: str = "Universal Switch",
+    keystates: tuple[str, ...] = ("LOWER_BUTTON", "UPPER_BUTTON"),
+) -> SHCUniversalSwitch:
+    """Build a minimal device double for the universal_switches bucket."""
+    device = create_autospec(SHCUniversalSwitch, instance=True, spec_set=True)
+    device.name = name
+    device.id = device_id
+    device.root_device_id = "test-mac"
+    device.serial = f"serial-{device_id}"
+    device.manufacturer = "Bosch"
+    device.device_model = "WRC2"
+    device.device_services = [FakeKeypadService()]
+    device.deleted = False
+    device.status = "AVAILABLE"
+    device.keystates = list(keystates)
+    device.eventtype = None
+    device.eventtimestamp = 0
+    return device
 
 
 def motion_detector_device(
