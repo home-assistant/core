@@ -109,9 +109,11 @@ class MyUplinkDevicePointSwitch(MyUplinkEntity, SwitchEntity):
 
     @property
     @override
-    def is_on(self) -> bool:
+    def is_on(self) -> bool | None:
         """Switch state value."""
-        device_point = self.coordinator.data.points[self.device_id][self.point_id]
+        device_point = self.coordinator.data.points[self.device_id].get(self.point_id)
+        if device_point is None:
+            return None
         return int(device_point.value) != 0
 
     @override
