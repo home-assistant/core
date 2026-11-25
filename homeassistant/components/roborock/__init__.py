@@ -217,9 +217,9 @@ async def async_setup_device(
     if device.duid in entry.runtime_data:
         return
     device_registry = dr.async_get(hass)
-    device_registry.async_get_or_create(
+    device_registry.async_get_or_create_from_info(
         config_entry_id=entry.entry_id,
-        **get_device_info(device),
+        device_info=get_device_info(device),
     )
     if _is_device_disabled(device_registry, entry, device):
         _LOGGER.debug("Device %s is disabled, skipping setup", device.duid)

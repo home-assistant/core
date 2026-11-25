@@ -141,8 +141,13 @@ class Schedule(CollectionEntity):
                     for timestamp in times
                     if (
                         possible_next_event := (
-                            datetime.combine(now.date(), timestamp, tzinfo=now.tzinfo)
-                            + timedelta(days=day)
+                            # Keep the fold of now so the repeated DST hour is
+                            # compared against the same occurrence.
+                            datetime.combine(
+                                now.date() + timedelta(days=day),
+                                timestamp.replace(fold=now.fold),
+                                tzinfo=now.tzinfo,
+                            )
                             if timestamp != time.max
                             # Special case for midnight of the following day.
                             else datetime.combine(now.date(), time(), tzinfo=now.tzinfo)

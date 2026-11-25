@@ -71,8 +71,8 @@ class MockCalendarEntity(CalendarEntity):
 
     def create_event(
         self,
-        start: dt.datetime,
-        end: dt.datetime,
+        start: dt.date | dt.datetime,
+        end: dt.date | dt.datetime,
         summary: str | None = None,
         description: str | None = None,
         location: str | None = None,
@@ -95,14 +95,25 @@ class MockCalendarEntity(CalendarEntity):
         end_date: dt.datetime,
     ) -> list[CalendarEvent]:
         """Return calendar events within a datetime range."""
-        assert start_date < end_date
-        events = []
-        for event in self._events:
-            if event.start_datetime_local >= end_date:
-                continue
-            if event.end_datetime_local < start_date:
-                continue
-            events.append(event)
+        assert start_date.tzinfo == dt_util.get_default_time_zone()
+        assert end_date.tzinfo == dt_util.get_default_time_zone()
+        start_utc = dt_util.as_utc(start_date)
+        end_utc = dt_util.as_utc(end_date)
+        assert start_utc < end_utc
+
+        def _as_utc(value: dt.date | dt.datetime) -> dt.datetime:
+            if isinstance(value, dt.datetime):
+                return dt_util.as_utc(value)
+            return dt_util.as_utc(
+                dt.datetime.combine(value, dt.time(), tzinfo=start_date.tzinfo)
+            )
+
+        events = [
+            event
+            for event in self._events
+            if _as_utc(event.start) < end_utc and _as_utc(event.end) >= start_utc
+        ]
+        events.sort(key=lambda event: _as_utc(event.start))
         return events
 
 
@@ -133,21 +144,19 @@ def mock_setup_integration(
 
     async def async_setup_entry_init(
         hass: HomeAssistant, config_entry: ConfigEntry
-    ) -> bool:
+    ) -> None:
         """Set up test config entry."""
         await hass.config_entries.async_forward_entry_setups(
             config_entry, [Platform.CALENDAR]
         )
-        return True
 
     async def async_unload_entry_init(
         hass: HomeAssistant,
         config_entry: ConfigEntry,
-    ) -> bool:
+    ) -> None:
         await hass.config_entries.async_unload_platforms(
             config_entry, [Platform.CALENDAR]
         )
-        return True
 
     mock_platform(hass, f"{TEST_DOMAIN}.config_flow")
     mock_integration(

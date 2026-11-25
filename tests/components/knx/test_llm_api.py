@@ -33,15 +33,18 @@ _EXPECTED_TOOLS = {
     "count_telegrams",
     "decode_payload",
     "describe_dpt",
+    "describe_channel",
     "describe_function",
     "describe_group_address",
     "encode_value",
+    "find_similar_channels",
     "get_connection_status",
     "get_last_values",
     "get_project_info",
     "get_store_capabilities",
     "get_store_stats",
     "get_topology",
+    "list_channels",
     "list_communication_objects",
     "list_devices",
     "list_dpts",
@@ -122,6 +125,9 @@ async def test_llm_api_registered_after_setup(
         pytest.param("query_telegrams", True, False, True, False, id="store_read"),
         pytest.param("list_dpts", True, False, True, False, id="dpt_lookup"),
         pytest.param("get_topology", True, False, True, False, id="project_read"),
+        pytest.param(
+            "find_similar_channels", True, False, True, False, id="channel_read"
+        ),
         pytest.param("read_group_value", False, False, True, True, id="bus_read"),
         pytest.param(
             "send_group_value_read", False, False, True, True, id="bus_read_request"
@@ -344,6 +350,14 @@ def test_serialize_normalizes_nested_containers(
         pytest.param("list_dpts", {"limit": 0}, id="zero_limit"),
         pytest.param("list_dpts", {"limit": 1001}, id="limit_above_maximum"),
         pytest.param("list_dpts", {"offset": -1}, id="negative_offset"),
+        pytest.param(
+            "list_channels", {"limit": 1001}, id="channels_limit_above_maximum"
+        ),
+        pytest.param(
+            "find_similar_channels",
+            {"device_address": "1.1.1", "channel_identifier": "CH-1", "limit": 1001},
+            id="similar_channels_limit_above_maximum",
+        ),
         pytest.param(
             "query_telegrams", {"delta_before_ms": -1}, id="negative_delta_before"
         ),
@@ -604,3 +618,164 @@ async def test_get_topology_is_paginated_by_line(hass: HomeAssistant) -> None:
     assert result["limit_reached"] is True
     # The area grouping survives the flattening.
     assert result["lines"][0]["area"] == "Area 0"
+
+
+def _channel_project(devices: int = 2, channels: int = 3) -> dict[str, Any]:
+    """A project of switch actuators: each channel has a switch and a status object."""
+    project: dict[str, Any] = {"devices": {}, "communication_objects": {}}
+    for device in range(1, devices + 1):
+        address = f"1.1.{device}"
+        device_channels = {}
+        for channel in range(1, channels + 1):
+            co_ids = []
+            for number, (dpa, text) in enumerate(
+                (("DPA-417-1", "Switch"), ("DPA-417-2", "Status"))
+            ):
+                co_id = f"{address}/O-{channel}{number}"
+                co_ids.append(co_id)
+                project["communication_objects"][co_id] = {
+                    "name": text,
+                    "number": channel * 10 + number,
+                    "text": text,
+                    "function_text": text,
+                    "description": "",
+                    "device_address": address,
+                    "device_application": None,
+                    "module": None,
+                    "module_def": None,
+                    "channel": f"CH-{channel}",
+                    "dpts": [{"main": 1, "sub": 1}],
+                    "dpas": [dpa],
+                    "object_size": "1 Bit",
+                    "group_address_links": [f"{device}/{channel}/{number}"],
+                    "flags": {
+                        "read": bool(number),
+                        "write": not number,
+                        "communication": True,
+                        "transmit": bool(number),
+                        "update": False,
+                        "read_on_init": False,
+                    },
+                }
+            device_channels[f"CH-{channel}"] = {
+                "identifier": f"CH-{channel}",
+                "name": f"Output {channel}",
+                "functional_blocks": ["417"],
+                "communication_object_ids": co_ids,
+            }
+        project["devices"][address] = {
+            "individual_address": address,
+            "channels": device_channels,
+        }
+    return project
+
+
+async def _call(hass: HomeAssistant, project: dict, name: str, args: dict) -> Any:
+    tool = _tool(llm_api._build_tools(_mock_knx(project=project)), name)
+    return (
+        await tool.async_call(
+            hass, llm.ToolInput(tool_name=name, tool_args=args), _llm_context()
+        )
+    ).data
+
+
+async def test_list_channels_tool_call(hass: HomeAssistant) -> None:
+    """Channels are listed across devices and paginated by the library."""
+    result = await _call(
+        hass,
+        _channel_project(),
+        "list_channels",
+        {"functional_block": "417", "limit": 2},
+    )
+
+    assert result["total_count"] == 6
+    assert result["next_offset"] == 2
+    assert [
+        (channel["device_address"], channel["identifier"])
+        for channel in result["channels"]
+    ] == [("1.1.1", "CH-1"), ("1.1.1", "CH-2")]
+
+
+async def test_describe_channel_tool_call(hass: HomeAssistant) -> None:
+    """A channel resolves to its communication objects and group addresses."""
+    result = await _call(
+        hass,
+        _channel_project(),
+        "describe_channel",
+        {"device_address": "1.1.2", "channel_identifier": "CH-3"},
+    )
+
+    assert result["found"] is True
+    assert result["channel"]["name"] == "Output 3"
+    assert result["group_addresses"] == ["2/3/0", "2/3/1"]
+    assert [co["dpas"] for co in result["communication_objects"]] == [
+        ["DPA-417-1"],
+        ["DPA-417-2"],
+    ]
+
+
+async def test_describe_channel_unknown_channel(hass: HomeAssistant) -> None:
+    """An unknown channel is reported as not found rather than raised."""
+    result = await _call(
+        hass,
+        _channel_project(),
+        "describe_channel",
+        {"device_address": "1.1.2", "channel_identifier": "CH-9"},
+    )
+
+    assert result["found"] is False
+    assert result["communication_objects"] == []
+
+
+def test_describe_channel_requires_both_arguments() -> None:
+    """A channel identifier is only unique within its device."""
+    tool = _tool(llm_api._build_tools(_mock_knx()), "describe_channel")
+    with pytest.raises(probatio.Invalid):
+        tool.parameters({"device_address": "1.1.1"})
+
+
+async def test_find_similar_channels_is_paginated(hass: HomeAssistant) -> None:
+    """Xknxproject returns every similar channel at once, aligned objects included.
+
+    The aligned group objects are cut down to the channels of the page and the
+    reference, so that a page does not carry the whole installation.
+    """
+    result = await _call(
+        hass,
+        _channel_project(devices=4),
+        "find_similar_channels",
+        {"device_address": "1.1.1", "channel_identifier": "CH-1", "limit": 2},
+    )
+
+    assert result["found"] is True
+    assert result["reference"]["identifier"] == "CH-1"
+    # Four devices of three channels, less the reference itself.
+    assert result["total_count"] == 11
+    assert result["next_offset"] == 2
+    assert result["limit_reached"] is True
+    assert [
+        (channel["device_address"], channel["identifier"])
+        for channel in result["channels"]
+    ] == [("1.1.1", "CH-2"), ("1.1.1", "CH-3")]
+    assert [group["key"] for group in result["aligned_group_objects"]] == [
+        "DPA-417-1",
+        "DPA-417-2",
+    ]
+    assert [
+        (entry["channel_identifier"], entry["group_addresses"])
+        for entry in result["aligned_group_objects"][0]["entries"]
+    ] == [("CH-1", ["1/1/0"]), ("CH-2", ["1/2/0"]), ("CH-3", ["1/3/0"])]
+
+
+async def test_find_similar_channels_unknown_reference(hass: HomeAssistant) -> None:
+    """An unknown reference channel is reported as not found rather than raised."""
+    result = await _call(
+        hass,
+        _channel_project(),
+        "find_similar_channels",
+        {"device_address": "9.9.9", "channel_identifier": "CH-1"},
+    )
+
+    assert result["found"] is False
+    assert result["channels"] == []
+    assert result["aligned_group_objects"] == []

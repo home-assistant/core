@@ -107,11 +107,16 @@ class SmhiFlowHandler(ConfigFlow, domain=DOMAIN):
                     if entity_entry.unique_id == old_id or (
                         entity_entry.unique_id.startswith(f"{old_id}-")
                     ):
-                        entity_reg.async_update_entity(
-                            entity_entry.entity_id,
-                            new_unique_id=new_id
-                            + entity_entry.unique_id.removeprefix(old_id),
+                        new_unique_id = new_id + entity_entry.unique_id.removeprefix(
+                            old_id
                         )
+                        # A stale entity of an earlier location can hold it already
+                        if not entity_reg.async_get_entity_id(
+                            entity_entry.domain, DOMAIN, new_unique_id
+                        ):
+                            entity_reg.async_update_entity(
+                                entity_entry.entity_id, new_unique_id=new_unique_id
+                            )
 
                 device_reg = dr.async_get(self.hass)
                 if device := device_reg.async_get_device_by_identifier(

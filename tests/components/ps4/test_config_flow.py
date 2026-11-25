@@ -92,7 +92,7 @@ def ps4_setup_fixture():
     """Patch ps4 setup entry."""
     with patch(
         "homeassistant.components.ps4.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ):
         yield
 

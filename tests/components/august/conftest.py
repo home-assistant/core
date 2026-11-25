@@ -157,6 +157,6 @@ def skip_cloud_fixture():
 def mock_setup_entry():
     """Mock setup entry."""
     with patch(
-        "homeassistant.components.august.async_setup_entry", return_value=True
+        "homeassistant.components.august.async_setup_entry", return_value=None
     ) as mock_setup_entry:
         yield mock_setup_entry

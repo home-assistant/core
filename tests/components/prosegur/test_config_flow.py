@@ -24,7 +24,7 @@ def _patch_success(contracts: list[dict[str, str]]) -> Generator[None]:
         ),
         patch(
             "homeassistant.components.prosegur.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ),
     ):
         yield
@@ -46,7 +46,7 @@ async def test_form(hass: HomeAssistant, mock_list_contracts) -> None:
         ) as mock_retrieve,
         patch(
             "homeassistant.components.prosegur.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -227,7 +227,7 @@ async def test_reauth_flow(hass: HomeAssistant, mock_list_contracts) -> None:
         ) as mock_installation,
         patch(
             "homeassistant.components.prosegur.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
     ):
         result2 = await hass.config_entries.flow.async_configure(

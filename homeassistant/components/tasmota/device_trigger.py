@@ -10,6 +10,7 @@ import probatio
 
 from homeassistant.components.device_automation import DEVICE_TRIGGER_BASE_SCHEMA
 from homeassistant.components.homeassistant.triggers import event as event_trigger
+from homeassistant.components.homeassistant.triggers.event import EventTriggerArgument
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_DEVICE_ID, CONF_DOMAIN, CONF_PLATFORM, CONF_TYPE
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
@@ -56,9 +57,9 @@ class TriggerInstance:
         """Attach event trigger."""
         assert self.trigger.tasmota_trigger is not None
         event_config = {
-            event_trigger.CONF_PLATFORM: "event",
-            event_trigger.CONF_EVENT_TYPE: TASMOTA_EVENT,
-            event_trigger.CONF_EVENT_DATA: {
+            EventTriggerArgument.PLATFORM: "event",
+            EventTriggerArgument.EVENT_TYPE: TASMOTA_EVENT,
+            EventTriggerArgument.EVENT_DATA: {
                 "mac": self.trigger.tasmota_trigger.cfg.mac,
                 "source": self.trigger.tasmota_trigger.cfg.subtype,
                 "event": self.trigger.tasmota_trigger.cfg.event,
@@ -258,15 +259,14 @@ async def async_remove_triggers(hass: HomeAssistant, device_id: str) -> None:
     device_triggers: dict[str, Trigger] = hass.data[DEVICE_TRIGGERS]
     for trig in triggers:
         device_trigger = device_triggers.pop(trig[CONF_DISCOVERY_ID])
-        if device_trigger:
-            discovery_hash = device_trigger.discovery_hash
+        discovery_hash = device_trigger.discovery_hash
 
-            assert device_trigger.tasmota_trigger
-            await device_trigger.tasmota_trigger.unsubscribe_topics()
-            device_trigger.detach_trigger()
-            clear_discovery_hash(hass, discovery_hash)
-            assert device_trigger.remove_update_signal
-            device_trigger.remove_update_signal()
+        assert device_trigger.tasmota_trigger
+        await device_trigger.tasmota_trigger.unsubscribe_topics()
+        device_trigger.detach_trigger()
+        clear_discovery_hash(hass, discovery_hash)
+        assert device_trigger.remove_update_signal
+        device_trigger.remove_update_signal()
 
 
 async def async_get_triggers(

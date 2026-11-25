@@ -5,12 +5,13 @@
   "categories": ["security_safety.locks_access"],
   "codeowners": ["@mikewoudenberg"],
   "config_flow": true,
+  "connectivity": ["network"],
   "dependencies": ["webhook"],
   "documentation": "https://www.home-assistant.io/integrations/loqed",
   "integration_type": "device",
   "iot_class": "local_push",
   "quality_scale": "bronze",
-  "requirements": ["loqedAPI==2.1.16"],
+  "requirements": ["loqedAPI==2.1.18"],
   "zeroconf": [
     {
       "name": "loqed*",

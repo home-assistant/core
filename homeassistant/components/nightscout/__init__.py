@@ -1,22 +1,23 @@
 """The Nightscout integration."""
 
-from aiohttp import ClientError
 from py_nightscout import Api as NightscoutAPI
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_KEY, CONF_URL, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.entity import SLOW_UPDATE_WARNING
 
 from .const import DOMAIN
+from .coordinator import (
+    NightscoutConfigEntry,
+    NightscoutData,
+    NightscoutGlucoseCoordinator,
+    NightscoutStatusCoordinator,
+)
 
 PLATFORMS = [Platform.SENSOR]
 _API_TIMEOUT = SLOW_UPDATE_WARNING - 1
-
-type NightscoutConfigEntry = ConfigEntry[NightscoutAPI]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: NightscoutConfigEntry) -> None:
@@ -25,12 +26,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: NightscoutConfigEntry) -
     api_key = entry.data.get(CONF_API_KEY)
     session = async_get_clientsession(hass)
     api = NightscoutAPI(server_url, session=session, api_secret=api_key)
-    try:
-        status = await api.get_server_status()
-    except (ClientError, TimeoutError, OSError) as error:
-        raise ConfigEntryNotReady from error
 
-    entry.runtime_data = api
+    status_coordinator = NightscoutStatusCoordinator(hass, entry, api)
+    await status_coordinator.async_config_entry_first_refresh()
+    status = status_coordinator.data
+
+    glucose_coordinator = NightscoutGlucoseCoordinator(hass, entry, api)
+    await glucose_coordinator.async_config_entry_first_refresh()
+
+    entry.runtime_data = NightscoutData(
+        glucose=glucose_coordinator, status=status_coordinator
+    )
 
     device_registry = dr.async_get(hass)
     device_registry.async_get_or_create(

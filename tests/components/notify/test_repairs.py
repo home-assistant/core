@@ -42,7 +42,7 @@ async def test_notify_migration_repair_flow(
         hass,
         MockModule(
             "test",
-            async_setup_entry=AsyncMock(return_value=True),
+            async_setup_entry=AsyncMock(return_value=None),
         ),
     )
     assert await hass.config_entries.async_setup(config_entry.entry_id)

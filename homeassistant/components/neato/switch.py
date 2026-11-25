@@ -13,10 +13,9 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import NeatoConfigEntry
 from .const import DOMAIN, SCAN_INTERVAL_MINUTES
 from .entity import NeatoEntity
-from .hub import NeatoHub
+from .hub import NeatoConfigEntry, NeatoHub
 
 _LOGGER = logging.getLogger(__name__)
 

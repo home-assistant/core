@@ -36,14 +36,14 @@ LLM_API_ID = DOMAIN
 LLM_API_NAME = "KNX"
 API_PROMPT = (
     "Tools to inspect a KNX installation: stored bus telegrams, the loaded ETS "
-    "project (group addresses, devices, communication objects, functions, "
-    "topology), KNX data point types, and live bus "
+    "project (group addresses, devices and their channels, communication "
+    "objects, functions, topology), KNX data point types, and live bus "
     'reads and writes. Address formats: group addresses like "1/2/3", individual '
     'device addresses like "1.1.5", DPTs like "9.001".'
 )
 
 
-type _ToolFunc = Callable[["KNXModule", Any], Awaitable[Any]]
+type _ToolFunc = Callable[[KNXModule, Any], Awaitable[Any]]
 
 
 class _ToolSpec(NamedTuple):
@@ -340,6 +340,54 @@ def _topology_func() -> _ToolFunc:
     return _call
 
 
+def _similar_channels_func() -> _ToolFunc:
+    """Page through the similar channels, which xknxproject returns in full.
+
+    Every output of every actuator of a kind matches at once, each with its
+    group objects aligned against the reference. The channels are the unit to
+    page on; the aligned group objects are cut down to the channels of the page
+    and the reference, so a page stays self-contained.
+    """
+
+    async def _call(knx: KNXModule, args: Mapping[str, Any]) -> Any:
+        result = await xknxproject_mcp.find_similar_channels(
+            await _require_project(knx),
+            xknxproject_mcp.FindSimilarChannelsInput(
+                device_address=args["device_address"],
+                channel_identifier=args["channel_identifier"],
+                match_functional_blocks=args["match_functional_blocks"],
+                match_module_definition=args["match_module_definition"],
+            ),
+        )
+        page = _paginate(result.channels, args, "channels")
+        shown = {
+            (channel.device_address, channel.identifier) for channel in page["channels"]
+        } | {(args["device_address"], args["channel_identifier"])}
+        aligned = [
+            {
+                "key": group.key,
+                "function_text": group.function_text,
+                "entries": entries,
+            }
+            for group in result.aligned_group_objects
+            if (
+                entries := [
+                    entry
+                    for entry in group.entries
+                    if (entry.device_address, entry.channel_identifier) in shown
+                ]
+            )
+        ]
+        return {
+            "found": result.found,
+            "reference": result.reference,
+            **page,
+            "aligned_group_objects": aligned,
+        }
+
+    return _call
+
+
 def _xknx_func(lib_func: Callable, *, takes_input: bool = True) -> _ToolFunc:
     async def _call(knx: KNXModule, args: Any) -> Any:
         if takes_input:
@@ -451,6 +499,77 @@ def _tool_specs() -> list[_ToolSpec]:
             "group address.",
             _schema_from_dataclass(xknxproject_mcp.CommunicationObjectFilter),
             _project_func(xknxproject_mcp.list_communication_objects),
+            _READ_ONLY,
+        ),
+        _ToolSpec(
+            "list_channels",
+            "List device channels",
+            "List device channels (e.g. one output of an actuator) with their "
+            "functional blocks. Devices whose application defines no channels "
+            "have none.",
+            _schema_from_dataclass(xknxproject_mcp.ChannelFilter),
+            _project_func(xknxproject_mcp.list_channels),
+            _READ_ONLY,
+        ),
+        _ToolSpec(
+            "describe_channel",
+            "Describe a device channel",
+            "Resolve one channel of a device to its communication objects and "
+            "their group addresses.",
+            probatio.Schema(
+                {
+                    probatio.Required(
+                        "device_address",
+                        description='Individual address of the device, e.g. "1.1.5".',
+                    ): str,
+                    probatio.Required(
+                        "channel_identifier",
+                        description=(
+                            'Channel identifier from list_channels, e.g. "CH-1".'
+                        ),
+                    ): str,
+                }
+            ),
+            _project_func(
+                xknxproject_mcp.describe_channel,
+                positional=("device_address", "channel_identifier"),
+            ),
+            _READ_ONLY,
+        ),
+        _ToolSpec(
+            "find_similar_channels",
+            "Find similar channels",
+            "Find channels sharing a functional block or module definition with a "
+            "reference channel, and align their group objects so the group "
+            "addresses of the same role can be read off per channel.",
+            probatio.Schema(
+                {
+                    **{
+                        probatio.Required(
+                            name,
+                            description=_field_description(
+                                xknxproject_mcp.FindSimilarChannelsInput, name
+                            ),
+                        ): str
+                        for name in ("device_address", "channel_identifier")
+                    },
+                    **{
+                        probatio.Optional(
+                            name,
+                            description=_field_description(
+                                xknxproject_mcp.FindSimilarChannelsInput, name
+                            ),
+                            default=True,
+                        ): bool
+                        for name in (
+                            "match_functional_blocks",
+                            "match_module_definition",
+                        )
+                    },
+                    **_PAGINATION_MARKERS,
+                }
+            ),
+            _similar_channels_func(),
             _READ_ONLY,
         ),
         _ToolSpec(

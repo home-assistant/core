@@ -6,6 +6,7 @@ from unittest.mock import MagicMock, patch
 
 import aiohttp
 from aiomodernforms import ModernFormsConnectionError
+import pytest
 from pytest_homeassistant.common import async_load_fixture
 from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 
@@ -39,7 +40,7 @@ async def test_full_user_flow_implementation(
 
     with patch(
         "homeassistant.components.modern_forms.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ) as mock_setup_entry:
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input={CONF_HOST: "192.168.1.123"}
@@ -54,10 +55,26 @@ async def test_full_user_flow_implementation(
     assert len(mock_setup_entry.mock_calls) == 1
 
 
+@pytest.mark.parametrize(
+    ("hostname", "properties", "expected_name"),
+    [
+        pytest.param("example.local.", {}, "example", id="wac"),
+        pytest.param(
+            "MF_Fan_123456.local.",
+            {"Protocol": "com.modernforms.fan", "MAC": "11:22:33:44:55:66"},
+            "MF_Fan_123456",
+            id="mf_fan",
+        ),
+    ],
+)
 async def test_full_zeroconf_flow_implementation(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    hostname: str,
+    properties: dict[str, str],
+    expected_name: str,
 ) -> None:
-    """Test the full manual user flow from start to finish."""
+    """Test the full zeroconf flow from start to finish."""
     aioclient_mock.post(
         "http://192.168.1.123:80/mf",
         text=await async_load_fixture(hass, "device_info.json", DOMAIN),
@@ -70,10 +87,10 @@ async def test_full_zeroconf_flow_implementation(
         data=ZeroconfServiceInfo(
             ip_address=ip_address("192.168.1.123"),
             ip_addresses=[ip_address("192.168.1.123")],
-            hostname="example.local.",
+            hostname=hostname,
             name="mock_name",
             port=None,
-            properties={},
+            properties=properties,
             type="mock_type",
         ),
     )
@@ -81,19 +98,19 @@ async def test_full_zeroconf_flow_implementation(
     flows = hass.config_entries.flow.async_progress()
     assert len(flows) == 1
 
-    assert result.get("description_placeholders") == {CONF_NAME: "example"}
+    assert result.get("description_placeholders") == {CONF_NAME: expected_name}
     assert result.get("step_id") == "zeroconf_confirm"
     assert result.get("type") is FlowResultType.FORM
 
     flow = hass.config_entries.flow._progress[flows[0]["flow_id"]]
     assert flow.host == "192.168.1.123"
-    assert flow.name == "example"
+    assert flow.name == expected_name
 
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input={}
     )
 
-    assert result2.get("title") == "example"
+    assert result2.get("title") == expected_name
     assert result2.get("type") is FlowResultType.CREATE_ENTRY
 
     assert "data" in result2
@@ -131,7 +148,7 @@ async def test_connection_error(
     update_mock.return_value.info.device_name = "ModernFormsFan"
     with patch(
         "homeassistant.components.modern_forms.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -272,7 +289,7 @@ async def test_full_user_flow_gen4(
 
     with patch(
         "homeassistant.components.modern_forms.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input={CONF_HOST: "192.168.1.123"}

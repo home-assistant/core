@@ -21,6 +21,7 @@ from .const import (
     EVENT_AUTOMATION_RELOADED,
     EVENT_AUTOMATION_TRIGGERED,
     LOGGER,
+    AutomationService,
 )
 from .entity import AutomationEntity, BaseAutomationEntity, UnavailableAutomationEntity
 from .helpers import async_get_blueprints
@@ -43,6 +44,7 @@ __all__ = [
     "SERVICE_TURN_OFF",
     "SERVICE_TURN_ON",
     "AutomationEntity",
+    "AutomationService",
     "BaseAutomationEntity",
     "UnavailableAutomationEntity",
     "areas_in_automation",

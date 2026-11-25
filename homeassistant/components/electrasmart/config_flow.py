@@ -8,17 +8,24 @@ from electrasmart.api import STATUS_SUCCESS, Attributes, ElectraAPI, ElectraApiE
 from electrasmart.api.utils import generate_imei
 import probatio
 
-from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_TOKEN
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
+from . import ElectraSmartConfigEntry
 from .const import CONF_IMEI, CONF_OTP, CONF_PHONE_NUMBER, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
 
 class ElectraSmartConfigFlow(ConfigFlow, domain=DOMAIN):
-    """Handle a config flow for Electra Air Conditioner."""
+    """Handle a config flow for Electra Air Conditioner.
+
+    DHCP discovery is handled by the default `ConfigFlow.async_step_dhcp`, which
+    starts the regular user flow: a discovered device cannot be attributed to an
+    account, because entries are created per Electra account and its devices are
+    only known through the cloud API.
+    """
 
     VERSION = 1
 
@@ -30,7 +37,7 @@ class ElectraSmartConfigFlow(ConfigFlow, domain=DOMAIN):
         self._imei: str | None = None
         self._token: str | None = None
         self._api: ElectraAPI | None = None
-        self._reauth_entry: ConfigEntry | None = None
+        self._reauth_entry: ElectraSmartConfigEntry | None = None
 
     @override
     async def async_step_user(
@@ -84,10 +91,8 @@ class ElectraSmartConfigFlow(ConfigFlow, domain=DOMAIN):
         self._phone_number = user_input[CONF_PHONE_NUMBER]
         self._imei = generate_imei()
 
-        # Check if already configured
-        if self.unique_id is None:
-            await self.async_set_unique_id(self._phone_number)
-            self._abort_if_unique_id_configured()
+        await self.async_set_unique_id(self._phone_number)
+        self._abort_if_unique_id_configured()
 
         assert isinstance(self._api, ElectraAPI)
 

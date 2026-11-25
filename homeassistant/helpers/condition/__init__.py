@@ -20,6 +20,7 @@ from homeassistant.const import (
     CONF_DEVICE_ID,
     CONF_ENABLED,
     CONF_ENTITY_ID,
+    CONF_EXCLUDE,
     CONF_FOR,
     CONF_ID,
     CONF_MATCH,
@@ -605,11 +606,13 @@ async def async_validate_condition_config(
     condition_key: str = config[CONF_CONDITION]
 
     if condition_key in ("and", "not", "or"):
-        conditions = []
-        for sub_cond in config["conditions"]:
-            sub_cond = await async_validate_condition_config(hass, sub_cond)
-            conditions.append(sub_cond)
-        config["conditions"] = conditions
+        try:
+            config["conditions"] = await async_validate_conditions_config(
+                hass, config["conditions"]
+            )
+        except probatio.Invalid as err:
+            err.prepend(["conditions"])
+            raise
         return config
 
     platform_domain, platform = await _async_get_condition_platform(hass, condition_key)
@@ -643,7 +646,14 @@ async def async_validate_conditions_config(
     """Validate config."""
     # No gather here because async_validate_condition_config is unlikely
     # to suspend and the overhead of creating many tasks is not worth it
-    return [await async_validate_condition_config(hass, cond) for cond in conditions]
+    validated: list[ConfigType | Template] = []
+    for index, cond in enumerate(conditions):
+        try:
+            validated.append(await async_validate_condition_config(hass, cond))
+        except probatio.Invalid as err:
+            err.prepend([index])
+            raise
+    return validated
 
 
 async def async_conditions_from_config(
@@ -772,10 +782,11 @@ def _get_targets_from_condition_config(
     config: ConfigType,
     target: Literal["entity_id", "device_id", "area_id", "floor_id", "label_id"],
 ) -> list[str]:
-    """Extract targets from a condition target config."""
+    """Extract targets from a condition target config, including the exclude block."""
     if not (target_conf := config.get(CONF_TARGET)):
         return []
-    if not (targets := target_conf.get(target)):
-        return []
-
-    return [targets] if isinstance(targets, str) else targets
+    found: list[str] = []
+    for conf in (target_conf, target_conf.get(CONF_EXCLUDE, {})):
+        if targets := conf.get(target):
+            found.extend([targets] if isinstance(targets, str) else targets)
+    return found

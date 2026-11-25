@@ -1,32 +1,53 @@
 """Tests for the Withings component."""
 
+from dataclasses import replace
 from datetime import timedelta
 from unittest.mock import AsyncMock, patch
 
-from aiowithings import Goals
+from aiowithings import (
+    DeviceModel,
+    DeviceType,
+    Goals,
+    MeasurementGroup,
+    NotificationCategory,
+)
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from pytest_homeassistant.common import (
     MockConfigEntry,
     async_fire_time_changed,
+    async_load_json_array_fixture,
     snapshot_platform,
 )
+from pytest_homeassistant.typing import ClientSessionGenerator
 from syrupy.assertion import SnapshotAssertion
 
+from homeassistant.components.sensor import ATTR_STATE_CLASS, SensorStateClass
 from homeassistant.components.withings import DOMAIN
-from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN, Platform
+from homeassistant.const import (
+    ATTR_UNIT_OF_MEASUREMENT,
+    STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
+    EntityStateAttribute,
+    Platform,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from . import (
+    call_webhook,
     load_activity_fixture,
     load_device_fixture,
     load_goals_fixture,
     load_measurements_fixture,
     load_sleep_fixture,
     load_workout_fixture,
+    prepare_webhook_setup,
     setup_integration,
 )
+from .conftest import USER_ID, WEBHOOK_ID
+
+BMR_ENTITY_ID = "sensor.henk_basal_metabolic_rate"
 
 
 @pytest.mark.freeze_time("2023-10-21 12:00:00")
@@ -45,6 +66,104 @@ async def test_all_entities(
     await snapshot_platform(
         hass, entity_registry, snapshot, polling_config_entry.entry_id
     )
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+@pytest.mark.parametrize(
+    ("value", "unit", "expected_state"),
+    [
+        pytest.param(2252, 0, "2252", id="whole-number"),
+        pytest.param(22525, -1, "2252.5", id="negative-exponent"),
+        pytest.param(225, 1, "2250", id="positive-exponent"),
+    ],
+)
+async def test_basal_metabolic_rate(
+    hass: HomeAssistant,
+    withings: AsyncMock,
+    polling_config_entry: MockConfigEntry,
+    value: int,
+    unit: int,
+    expected_state: str,
+) -> None:
+    """Test BMR uses the library-scaled value in kcal per day."""
+    measurements = await async_load_json_array_fixture(
+        hass, "withings/measurements_bmr.json"
+    )
+    measurements[0]["measures"][0].update(value=value, unit=unit)
+    withings.get_measurement_in_period.return_value = [
+        MeasurementGroup.from_dict(group) for group in measurements
+    ]
+
+    await setup_integration(hass, polling_config_entry, False)
+
+    state = hass.states.get(BMR_ENTITY_ID)
+    assert state is not None
+    assert state.state == expected_state
+    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == "kcal/day"
+    assert state.attributes[ATTR_STATE_CLASS] == SensorStateClass.MEASUREMENT
+
+
+async def test_basal_metabolic_rate_disabled_by_default(
+    hass: HomeAssistant,
+    withings: AsyncMock,
+    polling_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test the additional metabolic measurement is disabled by default."""
+    withings.get_measurement_in_period.return_value = load_measurements_fixture(
+        "withings/measurements_bmr.json"
+    )
+
+    await setup_integration(hass, polling_config_entry, False)
+
+    entry = entity_registry.async_get(BMR_ENTITY_ID)
+    assert entry is not None
+    assert entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
+    assert hass.states.get(BMR_ENTITY_ID) is None
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_basal_metabolic_rate_added_and_updated_on_refresh(
+    hass: HomeAssistant,
+    withings: AsyncMock,
+    polling_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test BMR appears only when returned and then follows new readings."""
+    withings.get_measurement_in_period.return_value = load_measurements_fixture(
+        "withings/measurements_1.json"
+    )
+    await setup_integration(hass, polling_config_entry, False)
+    assert entity_registry.async_get(BMR_ENTITY_ID) is None
+    weight = hass.states.get("sensor.henk_weight")
+    assert weight is not None
+
+    withings.get_measurement_since.return_value = load_measurements_fixture(
+        "withings/measurements_bmr.json"
+    )
+    freezer.tick(timedelta(minutes=10))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(BMR_ENTITY_ID)
+    assert state is not None
+    assert state.state == "2252"
+    assert hass.states.get("sensor.henk_weight").state == weight.state
+
+    measurements = await async_load_json_array_fixture(
+        hass, "withings/measurements_bmr.json"
+    )
+    measurements[0]["date"] += 600
+    measurements[0]["measures"][0].update(value=21005, unit=-1)
+    withings.get_measurement_since.return_value = [
+        MeasurementGroup.from_dict(group) for group in measurements
+    ]
+    freezer.tick(timedelta(minutes=10))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert hass.states.get(BMR_ENTITY_ID).state == "2100.5"
 
 
 async def test_update_failed(
@@ -109,6 +228,67 @@ async def test_update_updates_incrementally(
     assert len(withings.get_measurement_in_period.call_args_list) == 1
 
 
+async def test_workout_sensor_keeps_latest_workout_after_webhook_updates(
+    hass: HomeAssistant,
+    withings: AsyncMock,
+    webhook_config_entry: MockConfigEntry,
+    hass_client_no_auth: ClientSessionGenerator,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test webhook updates accept newer/equal workouts and ignore older ones."""
+    initial = replace(load_workout_fixture()[0], distance=100)
+    newer = replace(
+        initial,
+        end_date=initial.end_date + timedelta(hours=1),
+        distance=200,
+    )
+    older = replace(
+        initial,
+        end_date=initial.end_date - timedelta(minutes=1),
+        distance=50,
+    )
+    equal = replace(newer, distance=250)
+    withings.get_workouts_in_period.return_value = [initial]
+    withings.get_workouts_since.side_effect = [[older, newer], [older], [equal]]
+
+    await setup_integration(hass, webhook_config_entry)
+    await prepare_webhook_setup(hass, freezer)
+    client = await hass_client_no_auth()
+    sensor = "sensor.henk_distance_travelled_last_workout"
+    calendar = "calendar.henk_workouts"
+
+    async def _webhook_update(expected_distance: str) -> None:
+        response = await call_webhook(
+            hass,
+            WEBHOOK_ID,
+            {"userid": USER_ID, "appli": NotificationCategory.ACTIVITY},
+            client,
+        )
+        assert response.message_code == 0
+        state = hass.states.get(sensor)
+        assert state is not None
+        assert state.state == expected_distance
+        assert hass.states.get(calendar) is not None
+        freezer.tick(timedelta(minutes=1))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+
+    state = hass.states.get(sensor)
+    assert state is not None
+    assert state.state == "100"
+    assert hass.states.get(calendar) is not None
+
+    await _webhook_update("200")
+    await _webhook_update("200")
+    await _webhook_update("250")
+
+    assert [call.args[0] for call in withings.get_workouts_since.call_args_list] == [
+        initial.end_date,
+        newer.end_date,
+        newer.end_date,
+    ]
+
+
 async def test_update_new_measurement_creates_new_sensor(
     hass: HomeAssistant,
     withings: AsyncMock,
@@ -130,6 +310,42 @@ async def test_update_new_measurement_creates_new_sensor(
     await hass.async_block_till_done()
 
     assert hass.states.get("sensor.henk_fat_mass")
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+@pytest.mark.parametrize(
+    "entity_id", ["sensor.henk_weight", "sensor.henk_fat_mass_in_torso"]
+)
+async def test_measurement_sensors_created_when_existed(
+    hass: HomeAssistant,
+    withings: AsyncMock,
+    polling_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+    caplog: pytest.LogCaptureFixture,
+    entity_id: str,
+) -> None:
+    """Test measurement sensors are added if they existed before."""
+    await setup_integration(hass, polling_config_entry, False)
+
+    assert hass.states.get(entity_id).state != STATE_UNKNOWN
+
+    withings.get_measurement_in_period.return_value = []
+
+    await hass.config_entries.async_reload(polling_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state.state == STATE_UNKNOWN
+    assert not state.attributes.get(EntityStateAttribute.RESTORED)
+
+    withings.get_measurement_in_period.return_value = load_measurements_fixture()
+
+    freezer.tick(timedelta(minutes=10))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert hass.states.get(entity_id).state != STATE_UNKNOWN
+    assert "Platform withings does not generate unique IDs" not in caplog.text
 
 
 async def test_update_new_goals_creates_new_sensor(
@@ -311,6 +527,24 @@ async def test_sleep_sensors_created_when_receive_sleep_data(
     assert hass.states.get("sensor.henk_deep_sleep")
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_apnea_hypopnea_index_no_reading(
+    hass: HomeAssistant,
+    withings: AsyncMock,
+    polling_config_entry: MockConfigEntry,
+) -> None:
+    """Test a negative apnea-hypopnea index (no reading) is reported as unknown."""
+    withings.get_sleep_summary_since.return_value = [
+        replace(sleep_summary, apnea_hypopnea_index=-1)
+        for sleep_summary in load_sleep_fixture()
+    ]
+    await setup_integration(hass, polling_config_entry, False)
+
+    state = hass.states.get("sensor.henk_apnea_hypopnea_index")
+    assert state is not None
+    assert state.state == STATE_UNKNOWN
+
+
 async def test_workout_sensors_created_when_existed(
     hass: HomeAssistant,
     withings: AsyncMock,
@@ -415,6 +649,53 @@ async def test_device_sensors_created_when_device_data_received(
     assert not device_registry.async_get_device_by_identifier(
         (DOMAIN, "f998be4b9ccc9e136fd8cd8e8e344c31ec3b271d"),
         polling_config_entry.entry_id,
+    )
+
+
+async def test_no_battery_sensor_for_aura_sensor_v2(
+    hass: HomeAssistant,
+    withings: AsyncMock,
+    polling_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test the wired Aura Sensor V2 gets a device, but no battery sensor."""
+    device = replace(
+        load_device_fixture()[0],
+        device_type=DeviceType.SLEEP_MONITOR,
+        model=DeviceModel.AURA_SENSOR_V2,
+        raw_model="Aura Sensor V2",
+    )
+    withings.get_devices.return_value = [device]
+    await setup_integration(hass, polling_config_entry, False)
+
+    assert (
+        entity_registry.async_get_entity_id(
+            "sensor", DOMAIN, f"{device.device_id}_battery"
+        )
+        is None
+    )
+    device_entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, device.device_id), polling_config_entry.entry_id
+    )
+    assert device_entry
+    assert device_entry.name == "Aura Sensor V2"
+    assert device_entry.via_device_id == (
+        device_registry.async_get_device_by_identifier(
+            (DOMAIN, str(polling_config_entry.unique_id)),
+            polling_config_entry.entry_id,
+        ).id
+    )
+
+    withings.get_devices.return_value = []
+
+    freezer.tick(timedelta(hours=1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert not device_registry.async_get_device_by_identifier(
+        (DOMAIN, device.device_id), polling_config_entry.entry_id
     )
 
 

@@ -1,11 +1,13 @@
 """Tests for various Plex services."""
 
 from http import HTTPStatus
+from types import SimpleNamespace
 from unittest.mock import patch
 
 import plexapi.audio
 from plexapi.exceptions import NotFound
 import plexapi.playqueue
+import plexapi.video
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
 import requests_mock
@@ -17,9 +19,8 @@ from homeassistant.components.plex.const import (
     DOMAIN,
     PLEX_SERVER_CONFIG,
     PLEX_URI_SCHEME,
-    SERVICE_REFRESH_LIBRARY,
 )
-from homeassistant.components.plex.services import process_plex_payload
+from homeassistant.components.plex.services import PlexService, process_plex_payload
 from homeassistant.const import CONF_URL
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -46,7 +47,7 @@ async def test_refresh_library(
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_REFRESH_LIBRARY,
+            PlexService.REFRESH_LIBRARY,
             {"server_name": "Not a Server", "library_name": "Movies"},
             True,
         )
@@ -55,7 +56,7 @@ async def test_refresh_library(
     # Test with non-existent library
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_REFRESH_LIBRARY,
+        PlexService.REFRESH_LIBRARY,
         {"library_name": "Not a Library"},
         True,
     )
@@ -64,7 +65,7 @@ async def test_refresh_library(
     # Test with valid library
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_REFRESH_LIBRARY,
+        PlexService.REFRESH_LIBRARY,
         {"library_name": "Movies"},
         True,
     )
@@ -97,7 +98,7 @@ async def test_refresh_library(
     with pytest.raises(HomeAssistantError) as excinfo:
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_REFRESH_LIBRARY,
+            PlexService.REFRESH_LIBRARY,
             {"library_name": "Movies"},
             True,
         )
@@ -251,4 +252,30 @@ async def test_lookup_media_with_urls(hass: HomeAssistant, mock_plex_server) -> 
     )
     assert isinstance(result.media, plexapi.audio.Track)
     assert result.continuous is True
+    assert result.offset == 0
+
+
+async def test_play_show_resumes_on_deck_episode(
+    hass: HomeAssistant, mock_plex_server
+) -> None:
+    """Test a show resolves to its on deck episode only when resume is set."""
+    content_id = f"{PLEX_URI_SCHEME}{DEFAULT_DATA[CONF_SERVER_IDENTIFIER]}/30"
+
+    result = process_plex_payload(
+        hass, MediaType.TVSHOW, content_id, supports_playqueues=False
+    )
+    assert isinstance(result.media, plexapi.video.Show)
+
+    on_deck_episode = SimpleNamespace(type="episode")
+    with patch.object(plexapi.video.Show, "onDeck", return_value=on_deck_episode):
+        result = process_plex_payload(
+            hass, MediaType.TVSHOW, f"{content_id}?resume=1", supports_playqueues=False
+        )
+    assert result.media is on_deck_episode
+
+    with patch.object(plexapi.video.Show, "onDeck", return_value=None):
+        result = process_plex_payload(
+            hass, MediaType.TVSHOW, f"{content_id}?resume=1", supports_playqueues=False
+        )
+    assert isinstance(result.media, plexapi.video.Show)
     assert result.offset == 0

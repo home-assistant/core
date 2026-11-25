@@ -42,7 +42,7 @@ from .entity_registry import EntityRegistry, RegistryEntryDisabler, RegistryEntr
 from .event import async_call_later
 from .frame import ReportBehavior, report_usage
 from .issue_registry import IssueSeverity, async_create_issue
-from .typing import UNDEFINED, ConfigType, DiscoveryInfoType, VolDictType, VolSchemaType
+from .typing import ConfigType, DiscoveryInfoType, Undefined, VolDictType, VolSchemaType
 
 if TYPE_CHECKING:
     from .entity import Entity
@@ -538,7 +538,8 @@ class EntityPlatform:
                 self._async_cancel_retry_setup = hass.bus.async_listen_once(
                     EVENT_HOMEASSISTANT_STARTED, setup_again
                 )
-            return False
+            # Not a failure, setup is retried in the background
+            return True
         except TimeoutError:
             logger.error(
                 (
@@ -845,20 +846,30 @@ class EntityPlatform:
         A device info with fields gets or creates the device, otherwise the device
         entry set on the entity is used.
         """
-        device_info = entity.device_info
-        device_info_fields: dict[str, Any]
-        if device_info is None:
-            device_info_fields = {}
-        elif isinstance(device_info, dr.DeviceInfo | dr.ChildDeviceInfo):
-            device_info_fields = device_info.as_dict()
-        else:
-            # An integration can still describe its device with a plain
-            # mapping, which its type does not allow. To be deprecated.
-            device_info_fields = dict(device_info)  # type: ignore[unreachable]
+        if (device_info := entity.device_info) is None:
+            return entity.device_entry
+        dev_reg = dr.async_get(self.hass)
+        if isinstance(device_info, dr.ChildDeviceInfo):
+            return dev_reg.async_get_or_create_child_from_info(
+                config_entry_id=config_entry_id,
+                config_subentry_id=config_subentry_id,
+                device_info=device_info,
+            )
+        if isinstance(device_info, dr.DeviceInfo):
+            # A device info without any field means no device
+            if not device_info.as_dict():
+                return entity.device_entry
+            return dev_reg.async_get_or_create_from_info(
+                config_entry_id=config_entry_id,
+                config_subentry_id=config_subentry_id,
+                device_info=device_info,
+            )
+        # An integration can still describe its device with a plain mapping, which
+        # its type does not allow. To be deprecated.
+        device_info_fields = dict(device_info)  # type: ignore[unreachable]
         # A device info without any field means no device
         if not device_info_fields:
             return entity.device_entry
-        dev_reg = dr.async_get(self.hass)
         # An explicit parent_device_id of None, as a dynamically built device info
         # may carry, means a main device
         if (
@@ -992,7 +1003,7 @@ class EntityPlatform:
                 return None
 
         entity_name = entity.name
-        if entity_name is UNDEFINED:
+        if entity_name is Undefined:
             entity_name = None
 
         suggested_object_id: str | None = None
@@ -1086,7 +1097,7 @@ class EntityPlatform:
 
             suggested_object_id, object_id_base = _async_derive_object_ids(entity, self)
 
-            disabled_by: RegistryEntryDisabler | None = None
+            disabled_by: RegistryEntryDisabler | Undefined = Undefined
             if not entity.entity_registry_enabled_default:
                 disabled_by = RegistryEntryDisabler.INTEGRATION
 
@@ -1095,7 +1106,7 @@ class EntityPlatform:
                 hidden_by = RegistryEntryHider.INTEGRATION
 
             if (
-                disabled_by is None
+                disabled_by is Undefined
                 and not registered_entity_id
                 and self.config_entry is not None
                 and self.config_entry.domain not in ENTITY_LIMIT_EXEMPT_DOMAINS
@@ -1154,11 +1165,6 @@ class EntityPlatform:
                 entity.add_to_platform_abort()
                 return None
 
-            if device and device.disabled and not entry.disabled:
-                entry = entity_registry.async_update_entity(
-                    entry.entity_id, disabled_by=RegistryEntryDisabler.DEVICE
-                )
-
             entity.registry_entry = entry
             entity.entity_id = entry.entity_id
 
@@ -1209,9 +1215,6 @@ class EntityPlatform:
         """
         self.async_cancel_retry_setup()
         self._entity_limit_warned = False
-
-        if not self.entities:
-            return
 
         # Removals are awaited in series since in most
         # cases calling async_remove will not yield control
@@ -1340,10 +1343,11 @@ class EntityPlatform:
                 # If we know we will update sequentially, we want to avoid scheduling
                 # the coroutines as tasks that will wait on the semaphore lock.
                 for entity in list(self.entities.values()):
-                    # If the entity is removed from hass during the previous
-                    # entity being updated, we need to skip updating the
-                    # entity.
-                    if entity.should_poll and entity.hass:
+                    # Skip entities removed while a previous entity was updating
+                    if (
+                        entity.should_poll
+                        and self.entities.get(entity.entity_id) is entity
+                    ):
                         await entity.async_update_ha_state(True)
                 return
 

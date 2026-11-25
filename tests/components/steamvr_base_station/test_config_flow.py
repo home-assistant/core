@@ -26,7 +26,7 @@ def mock_setup_entry() -> Generator[None]:
     """Prevent the integration from setting up after the flow."""
     with patch(
         "homeassistant.components.steamvr_base_station.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ):
         yield
 

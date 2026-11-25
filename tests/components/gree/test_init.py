@@ -18,11 +18,11 @@ async def test_setup_simple(hass: HomeAssistant) -> None:
     with (
         patch(
             "homeassistant.components.gree.climate.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as climate_setup,
         patch(
             "homeassistant.components.gree.switch.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as switch_setup,
     ):
         assert await async_setup_component(hass, DOMAIN, {})

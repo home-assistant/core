@@ -5,13 +5,18 @@ from typing import override
 
 from homeassistant.components.event import EventEntity, EventEntityDescription
 from homeassistant.const import EntityCategory
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import PortainerConfigEntry
 from .const import CONTAINER_STATE_EVENT_TYPES
-from .coordinator import PortainerContainerData, PortainerCoordinator
-from .entity import PortainerContainerEntity, PortainerCoordinatorData
+from .coordinator import (
+    PortainerContainerData,
+    PortainerCoordinator,
+    PortainerCoordinatorData,
+)
+from .entity import PortainerContainerEntity
+from .util import async_add_entities_by_subentry
 
 PARALLEL_UPDATES = 0
 
@@ -35,11 +40,18 @@ async def async_setup_entry(
         containers: list[tuple[PortainerCoordinatorData, PortainerContainerData]],
     ) -> None:
         """Add new container event entities."""
-        async_add_entities(
-            PortainerContainerEventEntity(
-                coordinator, CONTAINER_EVENT_DESCRIPTION, container, endpoint
-            )
-            for (endpoint, container) in containers
+        async_add_entities_by_subentry(
+            async_add_entities,
+            coordinator.subentry_id_for_endpoint,
+            (
+                (
+                    PortainerContainerEventEntity(
+                        coordinator, CONTAINER_EVENT_DESCRIPTION, container, endpoint
+                    ),
+                    endpoint.id,
+                )
+                for (endpoint, container) in containers
+            ),
         )
 
     coordinator.new_containers_callbacks.append(_async_add_new_containers)
@@ -58,6 +70,7 @@ class PortainerContainerEventEntity(PortainerContainerEntity, EventEntity):
     entity_description: EventEntityDescription
     coordinator: PortainerCoordinator
 
+    @callback
     @override
     def _handle_coordinator_update(self) -> None:
         """Fire an event if the container reported a new Docker event."""

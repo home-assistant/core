@@ -30,7 +30,7 @@ def _patch_device_list(requests_mock: Mocker) -> Generator[None]:
     requests_mock.register_uri(
         "GET", DEVICE_LIST_URL, status_code=HTTPStatus.OK, json={"data": DEVICE_LIST}
     )
-    with patch("homeassistant.components.flume.async_setup_entry", return_value=True):
+    with patch("homeassistant.components.flume.async_setup_entry", return_value=None):
         yield
 
 
@@ -47,7 +47,7 @@ async def test_form(hass: HomeAssistant) -> None:
     with (
         patch(
             "homeassistant.components.flume.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -215,7 +215,7 @@ async def test_reauth(hass: HomeAssistant, requests_mock: Mocker) -> None:
     with (
         patch(
             "homeassistant.components.flume.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
     ):
         result4 = await hass.config_entries.flow.async_configure(

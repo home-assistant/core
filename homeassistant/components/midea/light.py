@@ -140,7 +140,7 @@ class MideaLight(MideaEntity, LightEntity):
         return EFFECT_OFF if value == "none" else value
 
     @override
-    def turn_on(self, **kwargs: Any) -> None:
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Midea light turn on."""
         with midea_api_call():
             if not self.is_on:
@@ -161,7 +161,7 @@ class MideaLight(MideaEntity, LightEntity):
                 )
 
     @override
-    def turn_off(self, **kwargs: Any) -> None:
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Midea light turn off."""
         with midea_api_call():
             self._device.set_attribute(attr="power", value=False)

@@ -18,7 +18,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import SynoApi
+from .common import SynoApi
 from .const import DOMAIN
 from .coordinator import SynologyDSMConfigEntry
 
