@@ -14,15 +14,28 @@ CALLER = f"HomeAssistant/{HA_VERSION} HomeAssistant"
 
 async def async_create_client(hass: HomeAssistant, api_key: str) -> AsyncDashboardAPI:
     """Create a Dashboard API client."""
-    # The client loads SSL certificates when it is created, which blocks.
+    # The library creates its own httpx client, which loads SSL certificates
+    # when it is created. That blocks, and the library takes no client from us.
     return await hass.async_add_executor_job(
         partial(
             AsyncDashboardAPI,
+            # The library falls back to an environment variable without a key.
             api_key=api_key,
             caller=CALLER,
-            suppress_logging=True,
-            # Smart flow persists a cache in the home directory.
+            # Log through the "meraki" logger only, without the library's own
+            # log file in the working directory or console output.
+            inherit_logging_config=True,
+            output_log=False,
+            print_console=False,
+            # Smart flow writes a cache to the home directory. It also cannot map
+            # the networks of getOrganizationNetworks to their organization, so it
+            # would not throttle the client requests.
             smart_flow_enabled=False,
+            # The library defaults (60 s timeout, 5 attempts, 60 s waits on 429)
+            # are too long for an update every minute.
+            single_request_timeout=10,
+            maximum_retries=2,
+            nginx_429_retry_wait_time=5,
         )
     )
 

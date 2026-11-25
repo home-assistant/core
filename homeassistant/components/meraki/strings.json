@@ -35,6 +35,9 @@
     },
     "update_failed": {
       "message": "Error communicating with the Meraki Dashboard API: {error}"
+    },
+    "update_timeout": {
+      "message": "Fetching the clients from the Meraki Dashboard API took too long."
     }
   },
   "issues": {

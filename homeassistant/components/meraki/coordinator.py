@@ -1,9 +1,10 @@
 """Data update coordinator for the Meraki integration."""
 
 import asyncio
-from collections.abc import Awaitable
+from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 from datetime import datetime, timedelta
+from functools import partial
 import logging
 from typing import Any, override
 
@@ -22,6 +23,14 @@ from .const import CONF_ORGANIZATION_ID, DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 UPDATE_INTERVAL = timedelta(minutes=1)
+
+# A request can take 30 s with retries, and a 429 response can ask for a longer
+# wait. This keeps an update shorter than the update interval.
+UPDATE_TIMEOUT = 50
+
+# Meraki allows 10 requests per second per organization. A request takes a few
+# hundred milliseconds, so this many in parallel stays below that limit.
+MAX_PARALLEL_REQUESTS = 3
 
 # Clients seen in this window are returned, connected or not.
 CLIENT_TIMESPAN = timedelta(hours=1)
@@ -72,13 +81,25 @@ class MerakiDataUpdateCoordinator(DataUpdateCoordinator[MerakiData]):
         )
         self.client = client
         self.organization_id: str = config_entry.data[CONF_ORGANIZATION_ID]
+        self._request_limit = asyncio.Semaphore(MAX_PARALLEL_REQUESTS)
 
     @override
     async def _async_update_data(self) -> MerakiData:
         """Fetch the clients of all networks of the organization."""
+        try:
+            async with asyncio.timeout(UPDATE_TIMEOUT):
+                return await self._async_fetch_clients()
+        except TimeoutError as err:
+            raise UpdateFailed(
+                translation_domain=DOMAIN, translation_key="update_timeout"
+            ) from err
+
+    async def _async_fetch_clients(self) -> MerakiData:
         networks = await self._async_call(
-            self.client.organizations.getOrganizationNetworks(
-                self.organization_id, total_pages="all"
+            partial(
+                self.client.organizations.getOrganizationNetworks,
+                self.organization_id,
+                total_pages="all",
             )
         )
         client_networks = [
@@ -91,8 +112,12 @@ class MerakiDataUpdateCoordinator(DataUpdateCoordinator[MerakiData]):
         results = await asyncio.gather(
             *(
                 self._async_call(
-                    self.client.networks.getNetworkClients(
-                        network_id, total_pages="all", perPage=5000, timespan=timespan
+                    partial(
+                        self.client.networks.getNetworkClients,
+                        network_id,
+                        total_pages="all",
+                        perPage=5000,
+                        timespan=timespan,
                     )
                 )
                 for network_id in client_networks
@@ -116,10 +141,11 @@ class MerakiDataUpdateCoordinator(DataUpdateCoordinator[MerakiData]):
 
         return MerakiData(clients=clients)
 
-    async def _async_call[_T](self, request: Awaitable[_T]) -> _T:
-        """Await an API request and translate its errors."""
+    async def _async_call[_T](self, request: Callable[[], Awaitable[_T]]) -> _T:
+        """Send an API request and translate its errors."""
         try:
-            return await request
+            async with self._request_limit:
+                return await request()
         except APIError as err:
             if is_auth_error(err):
                 raise ConfigEntryError(
