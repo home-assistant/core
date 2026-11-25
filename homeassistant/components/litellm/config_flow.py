@@ -147,6 +147,7 @@ class LiteLLMConfigFlow(ConfigFlow, domain=DOMAIN):
         """Return subentries supported by this handler."""
         return {
             "conversation": ConversationFlowHandler,
+            "ai_task_evaluate": EvaluationFlowHandler,
             "stt": STTFlowHandler,
             "tts": TTSFlowHandler,
         }
@@ -548,6 +549,76 @@ class TTSFlowHandler(LiteLLMSubentryFlowHandler):
                             options=OPENAI_VOICES,
                             custom_value=True,
                             mode=SelectSelectorMode.DROPDOWN,
+                        )
+                    ),
+                }
+            ),
+        )
+
+
+class EvaluationFlowHandler(LiteLLMSubentryFlowHandler):
+    """Handle AI task evaluation subentry flow."""
+
+    model_modes = frozenset({"decisions", "evaluation"})
+
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> SubentryFlowResult:
+        """User flow to create an AI task evaluation entity."""
+        return await self.async_step_init(user_input)
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> SubentryFlowResult:
+        """Handle reconfiguration of an AI task evaluation entity."""
+        return await self.async_step_init(user_input)
+
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> SubentryFlowResult:
+        """Manage AI task evaluation configuration."""
+        if self._get_entry().state is not ConfigEntryState.LOADED:
+            return self.async_abort(reason="entry_not_loaded")
+
+        if user_input is not None:
+            if self.source == SOURCE_USER:
+                return self.async_create_entry(
+                    title=user_input[CONF_MODEL], data=user_input
+                )
+            return self.async_update_and_abort(
+                self._get_entry(),
+                self._get_reconfigure_subentry(),
+                title=user_input[CONF_MODEL],
+                data=user_input,
+            )
+
+        try:
+            await self._fetch_models()
+        except InvalidAuth:
+            return self.async_abort(reason="invalid_auth")
+        except CannotConnect:
+            return self.async_abort(reason="cannot_connect")
+        except Exception:
+            _LOGGER.exception("Unexpected exception")
+            return self.async_abort(reason="unknown")
+
+        default_model = None
+        if self.source != SOURCE_USER:
+            default_model = self._get_reconfigure_subentry().data[CONF_MODEL]
+        return self.async_show_form(
+            step_id="init",
+            data_schema=probatio.Schema(
+                {
+                    probatio.Required(
+                        CONF_MODEL, default=default_model
+                    ): SelectSelector(
+                        SelectSelectorConfig(
+                            options=[
+                                SelectOptionDict(value=model, label=model)
+                                for model in self.models
+                            ],
+                            mode=SelectSelectorMode.DROPDOWN,
+                            sort=True,
                         )
                     ),
                 }
