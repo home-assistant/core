@@ -7,7 +7,7 @@ import probatio
 
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import ATTR_DEVICE_ID, CONF_OPTIONS
-from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
+from homeassistant.core import CALLBACK_TYPE, HomeAssistant, async_noop, callback
 from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.trigger import (
@@ -16,7 +16,7 @@ from homeassistant.helpers.trigger import (
     TriggerConfig,
     TriggerNotTriggeredReporter,
 )
-from homeassistant.helpers.typing import UNDEFINED, ConfigType, UndefinedType
+from homeassistant.helpers.typing import ConfigType, Undefined
 
 from .const import DOMAIN
 from .coordinator import (
@@ -38,17 +38,17 @@ _CONFIG_SCHEMA = probatio.Schema(
 
 def _get_alert(
     coordinator: FumisDataUpdateCoordinator,
-) -> StoveAlert | UndefinedType | None:
-    """Return the active stove alert, or UNDEFINED when it is not known.
+) -> StoveAlert | Undefined | None:
+    """Return the active stove alert, or Undefined when it is not known.
 
     Like entity triggers ignore unavailable and unknown states, a failed
     update or an unrecognized alert code is never compared against.
     """
     if not coordinator.last_update_success:
-        return UNDEFINED
+        return Undefined
 
     if (alert := coordinator.data.controller.stove_alert) is StoveAlert.UNKNOWN:
-        return UNDEFINED
+        return Undefined
 
     return alert
 
@@ -122,7 +122,7 @@ class FuelBecameLowTrigger(Trigger):
         description = f"fuel became low on {device.name_by_user or device.name}"
         tracked_coordinator: FumisDataUpdateCoordinator | None = None
         remove_coordinator_listener: CALLBACK_TYPE | None = None
-        previous_alert: StoveAlert | UndefinedType | None = UNDEFINED
+        previous_alert: StoveAlert | Undefined | None = Undefined
 
         @callback
         def async_track_coordinator(coordinator: FumisDataUpdateCoordinator) -> None:
@@ -134,7 +134,7 @@ class FuelBecameLowTrigger(Trigger):
             # A coordinator only polls while something listens to it, and the
             # stove might not have any enabled entities doing that.
             tracked_coordinator = coordinator
-            remove_coordinator_listener = coordinator.async_add_listener(lambda: None)
+            remove_coordinator_listener = coordinator.async_add_listener(async_noop)
 
         if entry.state is ConfigEntryState.LOADED:
             async_track_coordinator(entry.runtime_data)
@@ -157,10 +157,10 @@ class FuelBecameLowTrigger(Trigger):
             # against, just like for an entity trigger.
             if coordinator is not tracked_coordinator:
                 async_track_coordinator(coordinator)
-                previous_alert = UNDEFINED
+                previous_alert = Undefined
 
             alert = _get_alert(coordinator)
-            if alert not in (StoveAlert.LOW_FUEL, None, UNDEFINED):
+            if alert not in (StoveAlert.LOW_FUEL, None, Undefined):
                 return
 
             if previous_alert is None and alert is StoveAlert.LOW_FUEL:

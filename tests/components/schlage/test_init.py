@@ -7,6 +7,7 @@ from freezegun.api import FrozenDateTimeFactory
 from pycognito.exceptions import WarrantException
 from pyschlage.exceptions import Error, NotAuthorizedError
 from pyschlage.lock import Lock
+from pytest_homeassistant.common import async_fire_time_changed
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.schlage.const import DOMAIN, UPDATE_INTERVAL
@@ -17,11 +18,9 @@ from homeassistant.helpers.device_registry import DeviceRegistry
 
 from . import MockSchlageConfigEntry
 
-from tests.common import async_fire_time_changed
-
 
 @patch(
-    "pyschlage.Auth",
+    "homeassistant.components.schlage.pyschlage.Auth",
     side_effect=WarrantException,
 )
 async def test_auth_failed(

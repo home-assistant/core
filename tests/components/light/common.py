@@ -6,38 +6,20 @@ components. Instead call the service directly.
 
 from typing import Any, Literal
 
+from pytest_homeassistant.common import MockToggleEntity
+
 from homeassistant.components.light import (
-    ATTR_BRIGHTNESS,
-    ATTR_BRIGHTNESS_PCT,
-    ATTR_COLOR_NAME,
-    ATTR_COLOR_TEMP_KELVIN,
-    ATTR_EFFECT,
-    ATTR_FLASH,
-    ATTR_HS_COLOR,
-    ATTR_PROFILE,
-    ATTR_RGB_COLOR,
-    ATTR_RGBW_COLOR,
-    ATTR_RGBWW_COLOR,
-    ATTR_TRANSITION,
-    ATTR_WHITE,
-    ATTR_XY_COLOR,
     DEFAULT_MAX_KELVIN,
     DEFAULT_MIN_KELVIN,
     DOMAIN,
     ColorMode,
     LightEntity,
     LightEntityFeature,
+    LightService,
+    LightServiceArgument,
 )
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    ENTITY_MATCH_ALL,
-    SERVICE_TOGGLE,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
-)
+from homeassistant.const import ENTITY_MATCH_ALL, TargetKey
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockToggleEntity
 
 
 async def async_turn_on(
@@ -62,26 +44,26 @@ async def async_turn_on(
     data = {
         key: value
         for key, value in (
-            (ATTR_ENTITY_ID, entity_id),
-            (ATTR_PROFILE, profile),
-            (ATTR_TRANSITION, transition),
-            (ATTR_BRIGHTNESS, brightness),
-            (ATTR_BRIGHTNESS_PCT, brightness_pct),
-            (ATTR_RGB_COLOR, rgb_color),
-            (ATTR_RGBW_COLOR, rgbw_color),
-            (ATTR_RGBWW_COLOR, rgbww_color),
-            (ATTR_XY_COLOR, xy_color),
-            (ATTR_HS_COLOR, hs_color),
-            (ATTR_COLOR_TEMP_KELVIN, color_temp_kelvin),
-            (ATTR_FLASH, flash),
-            (ATTR_EFFECT, effect),
-            (ATTR_COLOR_NAME, color_name),
-            (ATTR_WHITE, white),
+            (TargetKey.ENTITY_ID, entity_id),
+            (LightServiceArgument.PROFILE, profile),
+            (LightServiceArgument.TRANSITION, transition),
+            (LightServiceArgument.BRIGHTNESS, brightness),
+            (LightServiceArgument.BRIGHTNESS_PCT, brightness_pct),
+            (LightServiceArgument.RGB_COLOR, rgb_color),
+            (LightServiceArgument.RGBW_COLOR, rgbw_color),
+            (LightServiceArgument.RGBWW_COLOR, rgbww_color),
+            (LightServiceArgument.XY_COLOR, xy_color),
+            (LightServiceArgument.HS_COLOR, hs_color),
+            (LightServiceArgument.COLOR_TEMP_KELVIN, color_temp_kelvin),
+            (LightServiceArgument.FLASH, flash),
+            (LightServiceArgument.EFFECT, effect),
+            (LightServiceArgument.COLOR_NAME, color_name),
+            (LightServiceArgument.WHITE, white),
         )
         if value is not None
     }
 
-    await hass.services.async_call(DOMAIN, SERVICE_TURN_ON, data, blocking=True)
+    await hass.services.async_call(DOMAIN, LightService.TURN_ON, data, blocking=True)
 
 
 async def async_turn_off(
@@ -94,14 +76,14 @@ async def async_turn_off(
     data = {
         key: value
         for key, value in (
-            (ATTR_ENTITY_ID, entity_id),
-            (ATTR_TRANSITION, transition),
-            (ATTR_FLASH, flash),
+            (TargetKey.ENTITY_ID, entity_id),
+            (LightServiceArgument.TRANSITION, transition),
+            (LightServiceArgument.FLASH, flash),
         )
         if value is not None
     }
 
-    await hass.services.async_call(DOMAIN, SERVICE_TURN_OFF, data, blocking=True)
+    await hass.services.async_call(DOMAIN, LightService.TURN_OFF, data, blocking=True)
 
 
 async def async_toggle(
@@ -123,23 +105,23 @@ async def async_toggle(
     data = {
         key: value
         for key, value in (
-            (ATTR_ENTITY_ID, entity_id),
-            (ATTR_PROFILE, profile),
-            (ATTR_TRANSITION, transition),
-            (ATTR_BRIGHTNESS, brightness),
-            (ATTR_BRIGHTNESS_PCT, brightness_pct),
-            (ATTR_RGB_COLOR, rgb_color),
-            (ATTR_XY_COLOR, xy_color),
-            (ATTR_HS_COLOR, hs_color),
-            (ATTR_COLOR_TEMP_KELVIN, color_temp_kelvin),
-            (ATTR_FLASH, flash),
-            (ATTR_EFFECT, effect),
-            (ATTR_COLOR_NAME, color_name),
+            (TargetKey.ENTITY_ID, entity_id),
+            (LightServiceArgument.PROFILE, profile),
+            (LightServiceArgument.TRANSITION, transition),
+            (LightServiceArgument.BRIGHTNESS, brightness),
+            (LightServiceArgument.BRIGHTNESS_PCT, brightness_pct),
+            (LightServiceArgument.RGB_COLOR, rgb_color),
+            (LightServiceArgument.XY_COLOR, xy_color),
+            (LightServiceArgument.HS_COLOR, hs_color),
+            (LightServiceArgument.COLOR_TEMP_KELVIN, color_temp_kelvin),
+            (LightServiceArgument.FLASH, flash),
+            (LightServiceArgument.EFFECT, effect),
+            (LightServiceArgument.COLOR_NAME, color_name),
         )
         if value is not None
     }
 
-    await hass.services.async_call(DOMAIN, SERVICE_TOGGLE, data, blocking=True)
+    await hass.services.async_call(DOMAIN, LightService.TOGGLE, data, blocking=True)
 
 
 TURN_ON_ARG_TO_COLOR_MODE = {

@@ -23,7 +23,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import (
     AIR_QUALITY_CATEGORY_MAP,
@@ -34,7 +33,6 @@ from .const import (
     ATTR_LEVEL,
     ATTR_SPEED,
     ATTR_VALUE,
-    ATTRIBUTION,
     MAX_FORECAST_DAYS,
     POLLEN_CATEGORY_MAP,
 )
@@ -43,6 +41,7 @@ from .coordinator import (
     AccuWeatherDailyForecastDataUpdateCoordinator,
     AccuWeatherObservationDataUpdateCoordinator,
 )
+from .entity import AccuWeatherEntity
 
 PARALLEL_UPDATES = 1
 
@@ -91,6 +90,7 @@ FORECAST_SENSOR_TYPES: tuple[AccuWeatherSensorDescription, ...] = (
     ),
     AccuWeatherSensorDescription(
         key="HoursOfSun",
+        device_class=SensorDeviceClass.DURATION,
         native_unit_of_measurement=UnitOfTime.HOURS,
         value_fn=lambda data: cast(float, data),
         translation_key="hours_of_sun",
@@ -208,7 +208,7 @@ FORECAST_SENSOR_TYPES: tuple[AccuWeatherSensorDescription, ...] = (
         entity_registry_enabled_default=False,
         native_unit_of_measurement=UnitOfSpeed.KILOMETERS_PER_HOUR,
         value_fn=lambda data: cast(float, data[ATTR_SPEED][ATTR_VALUE]),
-        attr_fn=lambda data: {"direction": data[ATTR_DIRECTION][ATTR_ENGLISH]},
+        attr_fn=lambda data: {"direction": data[ATTR_DIRECTION][ATTR_ENGLISH].lower()},
         translation_key="wind_gust_speed_day",
     ),
     AccuWeatherSensorDescription(
@@ -217,7 +217,7 @@ FORECAST_SENSOR_TYPES: tuple[AccuWeatherSensorDescription, ...] = (
         entity_registry_enabled_default=False,
         native_unit_of_measurement=UnitOfSpeed.KILOMETERS_PER_HOUR,
         value_fn=lambda data: cast(float, data[ATTR_SPEED][ATTR_VALUE]),
-        attr_fn=lambda data: {"direction": data[ATTR_DIRECTION][ATTR_ENGLISH]},
+        attr_fn=lambda data: {"direction": data[ATTR_DIRECTION][ATTR_ENGLISH].lower()},
         translation_key="wind_gust_speed_night",
     ),
     AccuWeatherSensorDescription(
@@ -225,7 +225,7 @@ FORECAST_SENSOR_TYPES: tuple[AccuWeatherSensorDescription, ...] = (
         device_class=SensorDeviceClass.WIND_SPEED,
         native_unit_of_measurement=UnitOfSpeed.KILOMETERS_PER_HOUR,
         value_fn=lambda data: cast(float, data[ATTR_SPEED][ATTR_VALUE]),
-        attr_fn=lambda data: {"direction": data[ATTR_DIRECTION][ATTR_ENGLISH]},
+        attr_fn=lambda data: {"direction": data[ATTR_DIRECTION][ATTR_ENGLISH].lower()},
         translation_key="wind_speed_day",
     ),
     AccuWeatherSensorDescription(
@@ -233,7 +233,7 @@ FORECAST_SENSOR_TYPES: tuple[AccuWeatherSensorDescription, ...] = (
         device_class=SensorDeviceClass.WIND_SPEED,
         native_unit_of_measurement=UnitOfSpeed.KILOMETERS_PER_HOUR,
         value_fn=lambda data: cast(float, data[ATTR_SPEED][ATTR_VALUE]),
-        attr_fn=lambda data: {"direction": data[ATTR_DIRECTION][ATTR_ENGLISH]},
+        attr_fn=lambda data: {"direction": data[ATTR_DIRECTION][ATTR_ENGLISH].lower()},
         translation_key="wind_speed_night",
     ),
 )
@@ -298,7 +298,6 @@ SENSOR_TYPES: tuple[AccuWeatherSensorDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=PERCENTAGE,
         value_fn=lambda data: cast(int, data),
-        translation_key="humidity",
     ),
     AccuWeatherSensorDescription(
         key="Precipitation",
@@ -317,7 +316,6 @@ SENSOR_TYPES: tuple[AccuWeatherSensorDescription, ...] = (
         suggested_display_precision=0,
         native_unit_of_measurement=UnitOfPressure.HPA,
         value_fn=lambda data: cast(float, data[API_METRIC][ATTR_VALUE]),
-        translation_key="pressure",
     ),
     AccuWeatherSensorDescription(
         key="PressureTendency",
@@ -333,7 +331,6 @@ SENSOR_TYPES: tuple[AccuWeatherSensorDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         value_fn=lambda data: cast(float, data[API_METRIC][ATTR_VALUE]),
-        translation_key="temperature",
     ),
     AccuWeatherSensorDescription(
         key="UVIndex",
@@ -341,7 +338,7 @@ SENSOR_TYPES: tuple[AccuWeatherSensorDescription, ...] = (
         entity_registry_enabled_default=False,
         native_unit_of_measurement=UV_INDEX,
         value_fn=lambda data: cast(int, data),
-        attr_fn=lambda data: {ATTR_LEVEL: data["UVIndexText"]},
+        attr_fn=lambda data: {ATTR_LEVEL: data["UVIndexText"].replace(" ", "_")},
         translation_key="uv_index",
     ),
     AccuWeatherSensorDescription(
@@ -369,7 +366,6 @@ SENSOR_TYPES: tuple[AccuWeatherSensorDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfSpeed.KILOMETERS_PER_HOUR,
         value_fn=lambda data: cast(float, data[ATTR_SPEED][API_METRIC][ATTR_VALUE]),
-        translation_key="wind_speed",
     ),
     AccuWeatherSensorDescription(
         key="WindGust",
@@ -414,12 +410,10 @@ async def async_setup_entry(
 
 
 class AccuWeatherSensor(
-    CoordinatorEntity[AccuWeatherObservationDataUpdateCoordinator], SensorEntity
+    AccuWeatherEntity[AccuWeatherObservationDataUpdateCoordinator], SensorEntity
 ):
     """Define an AccuWeather entity."""
 
-    _attr_attribution = ATTRIBUTION
-    _attr_has_entity_name = True
     entity_description: AccuWeatherSensorDescription
 
     def __init__(
@@ -433,7 +427,6 @@ class AccuWeatherSensor(
         self.entity_description = description
         self._sensor_data = self._get_sensor_data(coordinator.data, description.key)
         self._attr_unique_id = f"{coordinator.location_key}-{description.key}".lower()
-        self._attr_device_info = coordinator.device_info
 
     @property
     @override
@@ -469,12 +462,10 @@ class AccuWeatherSensor(
 
 
 class AccuWeatherForecastSensor(
-    CoordinatorEntity[AccuWeatherDailyForecastDataUpdateCoordinator], SensorEntity
+    AccuWeatherEntity[AccuWeatherDailyForecastDataUpdateCoordinator], SensorEntity
 ):
     """Define an AccuWeather entity."""
 
-    _attr_attribution = ATTRIBUTION
-    _attr_has_entity_name = True
     entity_description: AccuWeatherSensorDescription
 
     def __init__(
@@ -493,7 +484,6 @@ class AccuWeatherForecastSensor(
         self._attr_unique_id = (
             f"{coordinator.location_key}-{description.key}-{forecast_day}".lower()
         )
-        self._attr_device_info = coordinator.device_info
         self._attr_translation_placeholders = {"forecast_day": str(forecast_day)}
         self.forecast_day = forecast_day
 

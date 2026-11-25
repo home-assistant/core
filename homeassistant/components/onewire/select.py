@@ -11,12 +11,8 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .entity import OneWireEntity
-from .onewirehub import (
-    SIGNAL_NEW_DEVICE_CONNECTED,
-    OneWireConfigEntry,
-    OneWireHub,
-    OWDeviceDescription,
-)
+from .model import OWDeviceDescription
+from .onewirehub import SIGNAL_NEW_DEVICE_CONNECTED, OneWireConfigEntry, OneWireHub
 
 # the library uses non-persistent connections
 # and concurrent access to the bus is managed by the server

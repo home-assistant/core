@@ -1,5 +1,6 @@
 """Support for Abode Security System cameras."""
 
+from collections.abc import Callable
 from datetime import timedelta
 from functools import partial
 from typing import Any, cast, override
@@ -11,7 +12,7 @@ import requests
 from requests.models import Response
 
 from homeassistant.components.camera import Camera
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect, dispatcher_send
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import Throttle
@@ -51,6 +52,7 @@ class AbodeCamera(AbodeDevice, Camera):
 
     _device: AbodeCam
     _attr_name = None
+    _unsub_capture_signal: Callable[[], None]
 
     def __init__(self, data: AbodeSystem, device: Device, timeline_signal: str) -> None:
         """Initialize the Abode device."""
@@ -70,8 +72,26 @@ class AbodeCamera(AbodeDevice, Camera):
             )
         )
 
-        signal = f"abode_camera_capture_{self.entity_id}"
-        self.async_on_remove(async_dispatcher_connect(self.hass, signal, self.capture))
+        self._async_connect_capture_signal()
+        # The lambda is needed because _unsub_capture_signal is reassigned
+        # on entity id change.
+        # pylint: disable-next=unnecessary-lambda
+        self.async_on_remove(lambda: self._unsub_capture_signal())
+
+    @callback
+    @override
+    def async_entity_id_changed(self, old_entity_id: str) -> None:
+        """Reconnect the capture signal, which is keyed on the entity_id."""
+        super().async_entity_id_changed(old_entity_id)
+        self._unsub_capture_signal()
+        self._async_connect_capture_signal()
+
+    @callback
+    def _async_connect_capture_signal(self) -> None:
+        """Connect the capture signal for the current entity_id."""
+        self._unsub_capture_signal = async_dispatcher_connect(
+            self.hass, f"abode_camera_capture_{self.entity_id}", self.capture
+        )
 
     def capture(self) -> bool:
         """Request a new image capture."""

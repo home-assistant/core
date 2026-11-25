@@ -3,7 +3,7 @@
 import asyncio
 from collections.abc import Callable
 from datetime import timedelta
-from enum import IntEnum
+from enum import IntEnum, StrEnum
 import io
 from typing import TYPE_CHECKING, Any
 
@@ -13,23 +13,26 @@ from opendisplay import (
     AuthenticationRequiredError,
     DitherMode,
     FitMode,
-    OpenDisplayDevice,
     OpenDisplayError,
     RefreshMode,
     Rotation,
+    Sec2KeyRequiredError,
+    connect,
 )
 from PIL import Image as PILImage, ImageOps
 import probatio
 
-from homeassistant.components import camera, image as image_component
 from homeassistant.components.bluetooth import (
     BluetoothReachabilityIntent,
     async_address_reachability_diagnostics,
     async_ble_device_from_address,
 )
 from homeassistant.components.http.auth import async_sign_path
-from homeassistant.components.media_source import async_resolve_media
-from homeassistant.const import ATTR_DEVICE_ID
+from homeassistant.components.media_source import (
+    async_get_media_image,
+    async_resolve_media,
+)
+from homeassistant.const import CommonServiceArgument
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, service
@@ -37,17 +40,27 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.network import get_url
 from homeassistant.helpers.selector import MediaSelector, MediaSelectorConfig
 
+from .const import CONF_ENCRYPTION_KEY, DOMAIN
+
 if TYPE_CHECKING:
     from . import OpenDisplayConfigEntry
 
-from .const import CONF_ENCRYPTION_KEY, DOMAIN
 
-ATTR_IMAGE = "image"
-ATTR_ROTATION = "rotation"
-ATTR_DITHER_MODE = "dither_mode"
-ATTR_REFRESH_MODE = "refresh_mode"
-ATTR_FIT_MODE = "fit_mode"
-ATTR_TONE_COMPRESSION = "tone_compression"
+class OpenDisplayService(StrEnum):
+    """Store keys for OpenDisplay services."""
+
+    UPLOAD_IMAGE = "upload_image"
+
+
+class OpenDisplayServiceArgument(StrEnum):
+    """Store keys for OpenDisplay service arguments."""
+
+    DITHER_MODE = "dither_mode"
+    FIT_MODE = "fit_mode"
+    IMAGE = "image"
+    REFRESH_MODE = "refresh_mode"
+    ROTATION = "rotation"
+    TONE_COMPRESSION = "tone_compression"
 
 
 def _str_to_int_enum(enum_class: type[IntEnum]) -> Callable[[str], Any]:
@@ -64,21 +77,23 @@ def _str_to_int_enum(enum_class: type[IntEnum]) -> Callable[[str], Any]:
 
 SCHEMA_UPLOAD_IMAGE = probatio.Schema(
     {
-        probatio.Required(ATTR_DEVICE_ID): cv.string,
-        probatio.Required(ATTR_IMAGE): MediaSelector(
+        probatio.Required(CommonServiceArgument.DEVICE_ID): cv.string,
+        probatio.Required(OpenDisplayServiceArgument.IMAGE): MediaSelector(
             MediaSelectorConfig(accept=["image/*"])
         ),
-        probatio.Optional(ATTR_ROTATION, default=Rotation.ROTATE_0): probatio.All(
-            probatio.Coerce(int), probatio.Coerce(Rotation)
-        ),
-        probatio.Optional(ATTR_DITHER_MODE, default="burkes"): _str_to_int_enum(
-            DitherMode
-        ),
-        probatio.Optional(ATTR_REFRESH_MODE, default="full"): _str_to_int_enum(
-            RefreshMode
-        ),
-        probatio.Optional(ATTR_FIT_MODE, default="contain"): _str_to_int_enum(FitMode),
-        probatio.Optional(ATTR_TONE_COMPRESSION): probatio.All(
+        probatio.Optional(
+            OpenDisplayServiceArgument.ROTATION, default=Rotation.ROTATE_0
+        ): probatio.All(probatio.Coerce(int), probatio.Coerce(Rotation)),
+        probatio.Optional(
+            OpenDisplayServiceArgument.DITHER_MODE, default="burkes"
+        ): probatio.Coerce(DitherMode),
+        probatio.Optional(
+            OpenDisplayServiceArgument.REFRESH_MODE, default="full"
+        ): _str_to_int_enum(RefreshMode),
+        probatio.Optional(
+            OpenDisplayServiceArgument.FIT_MODE, default="contain"
+        ): _str_to_int_enum(FitMode),
+        probatio.Optional(OpenDisplayServiceArgument.TONE_COMPRESSION): probatio.All(
             probatio.Coerce(float), probatio.Range(min=0.0, max=100.0)
         ),
     }
@@ -89,7 +104,7 @@ def _get_entry_for_device(call: ServiceCall) -> OpenDisplayConfigEntry:
     """Return the config entry for the device targeted by a service call."""
     config_entry: OpenDisplayConfigEntry
     _, config_entry = service.async_get_device_and_config_entry(
-        call.hass, DOMAIN, call.data[ATTR_DEVICE_ID]
+        call.hass, DOMAIN, call.data[CommonServiceArgument.DEVICE_ID]
     )
     return config_entry
 
@@ -135,17 +150,9 @@ async def _async_get_pil_image(
     """Return a PIL Image for the selected media."""
     media_content_id: str = image_data["media_content_id"]
 
-    # Camera and image entities resolve to never-ending MJPEG streams,
-    # so fetch a single snapshot from the entity instead.
-    for integration in camera, image_component:
-        media_source_prefix = f"media-source://{integration.DOMAIN}/"
-        if not media_content_id.startswith(media_source_prefix):
-            continue
-
-        entity_id = media_content_id.removeprefix(media_source_prefix)
-        snapshot = await integration.async_get_image(hass, entity_id)
+    if (media_image := await async_get_media_image(hass, media_content_id)) is not None:
         return await hass.async_add_executor_job(
-            _load_image_from_bytes, snapshot.content
+            _load_image_from_bytes, media_image.content
         )
 
     media = await async_resolve_media(hass, media_content_id, None)
@@ -160,14 +167,16 @@ async def _async_upload_image(call: ServiceCall) -> None:
     address = entry.unique_id
     assert address is not None
 
-    image_data: dict[str, Any] = call.data[ATTR_IMAGE]
-    rotation: Rotation = call.data[ATTR_ROTATION]
-    dither_mode: DitherMode = call.data[ATTR_DITHER_MODE]
-    refresh_mode: RefreshMode = call.data[ATTR_REFRESH_MODE]
-    fit_mode: FitMode = call.data[ATTR_FIT_MODE]
-    tone_compression_pct: float | None = call.data.get(ATTR_TONE_COMPRESSION)
-    tone_compression: float | str = (
-        tone_compression_pct / 100.0 if tone_compression_pct is not None else "auto"
+    image_data: dict[str, Any] = call.data[OpenDisplayServiceArgument.IMAGE]
+    rotation: Rotation = call.data[OpenDisplayServiceArgument.ROTATION]
+    dither_mode: DitherMode = call.data[OpenDisplayServiceArgument.DITHER_MODE]
+    refresh_mode: RefreshMode = call.data[OpenDisplayServiceArgument.REFRESH_MODE]
+    fit_mode: FitMode = call.data[OpenDisplayServiceArgument.FIT_MODE]
+    tone_compression_pct: float | None = call.data.get(
+        OpenDisplayServiceArgument.TONE_COMPRESSION
+    )
+    tone_compression = (
+        tone_compression_pct / 100.0 if tone_compression_pct is not None else 0.0
     )
 
     ble_device = async_ble_device_from_address(call.hass, address, connectable=True)
@@ -208,13 +217,17 @@ async def _async_upload_image(call: ServiceCall) -> None:
                 translation_domain=DOMAIN, translation_key="authentication_error"
             ) from err
 
-        async with OpenDisplayDevice(
-            mac_address=address,
+        async with connect(
+            address=address,
             ble_device=ble_device,
-            config=entry.runtime_data.device_config,
             encryption_key=encryption_key,
         ) as device:
-            await device.upload_image(
+            if device.legacy.capabilities is None:
+                raise HomeAssistantError(
+                    translation_domain=DOMAIN,
+                    translation_key="display_not_supported",
+                )
+            await device.legacy.upload_image(
                 pil_image,
                 refresh_mode=refresh_mode,
                 dither_mode=dither_mode,
@@ -224,7 +237,11 @@ async def _async_upload_image(call: ServiceCall) -> None:
             )
     except asyncio.CancelledError:
         return
-    except (AuthenticationFailedError, AuthenticationRequiredError) as err:
+    except (
+        AuthenticationFailedError,
+        AuthenticationRequiredError,
+        Sec2KeyRequiredError,
+    ) as err:
         entry.async_start_reauth(call.hass)
         raise HomeAssistantError(
             translation_domain=DOMAIN, translation_key="authentication_error"
@@ -243,7 +260,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
     """Register OpenDisplay services."""
     hass.services.async_register(
         DOMAIN,
-        "upload_image",
+        OpenDisplayService.UPLOAD_IMAGE,
         _async_upload_image,
         schema=SCHEMA_UPLOAD_IMAGE,
     )

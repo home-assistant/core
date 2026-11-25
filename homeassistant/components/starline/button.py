@@ -2,12 +2,13 @@
 
 from typing import override
 
+from starline import StarlineDevice
+
 from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import StarlineConfigEntry
-from .account import StarlineAccount, StarlineDevice
+from .account import StarlineAccount, StarlineConfigEntry
 from .entity import StarlineEntity
 
 BUTTON_TYPES: tuple[ButtonEntityDescription, ...] = (

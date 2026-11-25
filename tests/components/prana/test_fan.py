@@ -4,26 +4,21 @@ from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.fan import (
-    ATTR_PERCENTAGE,
-    ATTR_PRESET_MODE,
     DOMAIN as FAN_DOMAIN,
-    SERVICE_SET_PERCENTAGE,
-    SERVICE_SET_PRESET_MODE,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
+    FanService,
+    FanServiceArgument,
 )
 from homeassistant.components.prana.fan import PRANA_SPEED_MULTIPLIER
-from homeassistant.const import ATTR_ENTITY_ID, Platform
+from homeassistant.const import Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util.percentage import percentage_to_ranged_value
 
 from . import async_init_integration
-
-from tests.common import MockConfigEntry, snapshot_platform
 
 FAN_TEST_CASES = [
     ("supply", False, "supply"),
@@ -100,8 +95,8 @@ async def test_fans_turn_on_off(
 
     await hass.services.async_call(
         FAN_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: target},
+        FanService.TURN_OFF,
+        {TargetKey.ENTITY_ID: target},
         blocking=True,
     )
     mock_prana_api.set_speed_is_on.assert_called_with(False, expected_api_key)
@@ -112,8 +107,8 @@ async def test_fans_turn_on_off(
 
     await hass.services.async_call(
         FAN_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: target},
+        FanService.TURN_ON,
+        {TargetKey.ENTITY_ID: target},
         blocking=True,
     )
     mock_prana_api.set_speed_is_on.assert_called_with(True, expected_api_key)
@@ -147,8 +142,8 @@ async def test_fans_set_percentage(
 
     await hass.services.async_call(
         FAN_DOMAIN,
-        SERVICE_SET_PERCENTAGE,
-        {ATTR_ENTITY_ID: target, ATTR_PERCENTAGE: 50},
+        FanService.SET_PERCENTAGE,
+        {TargetKey.ENTITY_ID: target, FanServiceArgument.PERCENTAGE: 50},
         blocking=True,
     )
     expected_speed = (
@@ -163,8 +158,8 @@ async def test_fans_set_percentage(
 
     await hass.services.async_call(
         FAN_DOMAIN,
-        SERVICE_SET_PERCENTAGE,
-        {ATTR_ENTITY_ID: target, ATTR_PERCENTAGE: 0},
+        FanService.SET_PERCENTAGE,
+        {TargetKey.ENTITY_ID: target, FanServiceArgument.PERCENTAGE: 0},
         blocking=True,
     )
     mock_prana_api.set_speed_is_on.assert_called_with(False, expected_api_key)
@@ -212,8 +207,8 @@ async def test_fans_percentage_maps_to_nearest_step(
 
     await hass.services.async_call(
         FAN_DOMAIN,
-        SERVICE_SET_PERCENTAGE,
-        {ATTR_ENTITY_ID: target, ATTR_PERCENTAGE: percentage},
+        FanService.SET_PERCENTAGE,
+        {TargetKey.ENTITY_ID: target, FanServiceArgument.PERCENTAGE: percentage},
         blocking=True,
     )
     mock_prana_api.set_speed.assert_called_once_with(
@@ -247,8 +242,8 @@ async def test_fans_set_preset_mode(
 
     await hass.services.async_call(
         FAN_DOMAIN,
-        SERVICE_SET_PRESET_MODE,
-        {ATTR_ENTITY_ID: target, ATTR_PRESET_MODE: "night"},
+        FanService.SET_PRESET_MODE,
+        {TargetKey.ENTITY_ID: target, FanServiceArgument.PRESET_MODE: "night"},
         blocking=True,
     )
     mock_prana_api.set_switch.assert_called_with("night", True)

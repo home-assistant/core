@@ -4,6 +4,12 @@ from datetime import timedelta
 
 from freezegun import freeze_time
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_get_device_automation_capabilities,
+    async_get_device_automations,
+    setup_test_component_platform,
+)
 from pytest_unordered import unordered
 
 from homeassistant.components import automation
@@ -17,13 +23,6 @@ from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
 from .common import MockLight
-
-from tests.common import (
-    MockConfigEntry,
-    async_get_device_automation_capabilities,
-    async_get_device_automations,
-    setup_test_component_platform,
-)
 
 
 async def test_get_conditions(

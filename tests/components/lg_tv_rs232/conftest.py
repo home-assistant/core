@@ -4,14 +4,13 @@ from unittest.mock import AsyncMock, patch
 
 from lg_rs232_tv import LGTV, InputSource, PowerState, TVState
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.lg_tv_rs232.const import CONF_SET_ID, DOMAIN
 from homeassistant.const import CONF_DEVICE
 from homeassistant.core import HomeAssistant
 
 from . import MOCK_DEVICE, MOCK_SET_ID
-
-from tests.common import MockConfigEntry
 
 
 class MockLGTV(LGTV):

@@ -1,8 +1,12 @@
 {
   "domain": "microsoft",
   "name": "Microsoft Text-to-Speech (TTS)",
-  "codeowners": [],
+  "categories": ["ai_voice.speech"],
+  "codeowners": ["@mib1185"],
+  "config_flow": true,
+  "connectivity": ["cloud"],
   "documentation": "https://www.home-assistant.io/integrations/microsoft",
+  "integration_type": "service",
   "iot_class": "cloud_push",
   "loggers": ["pycsspeechtts"],
   "quality_scale": "legacy",

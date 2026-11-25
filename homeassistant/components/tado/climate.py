@@ -227,7 +227,7 @@ async def create_climate_entity(
 class TadoClimate(TadoZoneEntity, ClimateEntity):
     """Representation of a Tado climate entity."""
 
-    _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_native_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_name = None
     _attr_translation_key = DOMAIN
     _available = False
@@ -356,7 +356,7 @@ class TadoClimate(TadoZoneEntity, ClimateEntity):
 
     @property
     @override
-    def current_temperature(self) -> float | None:
+    def native_current_temperature(self) -> float | None:
         """Return the sensor temperature."""
         return self._tado_zone_data.current_temp
 
@@ -444,7 +444,7 @@ class TadoClimate(TadoZoneEntity, ClimateEntity):
 
     @property
     @override
-    def target_temperature(self) -> float | None:
+    def native_target_temperature(self) -> float | None:
         """Return the temperature we try to reach."""
         if self._current_tado_hvac_mode == CONST_MODE_OFF:
             return TADO_DEFAULT_MIN_TEMP
@@ -627,8 +627,18 @@ class TadoClimate(TadoZoneEntity, ClimateEntity):
         # This can happen when we switch from Off to On
         if self._target_temp is None:
             self._target_temp = self._tado_zone_data.current_temp
-        elif self._current_tado_hvac_mode == CONST_MODE_COOL:
-            self._target_temp = adjust_temp(self._cool_min_temp, self._cool_max_temp)
+        if self._target_temp is None:
+            return
+
+        # tado silently ignores an overlay whose temperature is outside the mode limits
+        capabilities: str | dict[str, Any] = self._current_tado_capabilities.get(
+            self._current_tado_hvac_mode, {}
+        )
+        if isinstance(capabilities, dict) and "temperatures" in capabilities:
+            celsius = capabilities["temperatures"]["celsius"]
+            self._target_temp = adjust_temp(
+                float(celsius["min"]), float(celsius["max"])
+            )
         elif self._current_tado_hvac_mode == CONST_MODE_HEAT:
             self._target_temp = adjust_temp(self._heat_min_temp, self._heat_max_temp)
 

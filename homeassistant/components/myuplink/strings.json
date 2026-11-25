@@ -46,8 +46,17 @@
     "config_entry_not_ready": {
       "message": "Error while loading the integration."
     },
+    "get_datapoint_error": {
+      "message": "Failed to get value for datapoint {point} on device {device}."
+    },
     "incorrect_oauth2_scope": {
       "message": "Stored permissions are invalid. Please login again to update permissions."
+    },
+    "invalid_target": {
+      "message": "Invalid device targeted."
+    },
+    "set_datapoint_error": {
+      "message": "Failed to set new value {value} for datapoint {point} on device {device}."
     },
     "set_number_error": {
       "message": "Failed to set new value {value} for {point}/{entity}."
@@ -57,6 +66,50 @@
     },
     "set_switch_error": {
       "message": "Failed to set state for {entity}."
+    }
+  },
+  "selector": {
+    "datapoint": {
+      "fields": {
+        "datapoint_id": {
+          "description": "The ID of the datapoint. Typically a five-digit number.",
+          "name": "Datapoint"
+        }
+      }
+    }
+  },
+  "services": {
+    "get_datapoints": {
+      "description": "Gets the values for a list of datapoint on a device.",
+      "fields": {
+        "datapoints": {
+          "description": "A list of datapoints to get, each containing a datapoint ID.",
+          "name": "Datapoints"
+        },
+        "device_id": {
+          "description": "The target device for this action.",
+          "name": "Device"
+        }
+      },
+      "name": "Get datapoints"
+    },
+    "set_datapoint": {
+      "description": "Sets the value for a datapoint on a device.",
+      "fields": {
+        "datapoint_id": {
+          "description": "The ID of the datapoint to set, typically a five-digit number.",
+          "name": "Datapoint ID"
+        },
+        "device_id": {
+          "description": "The target device for this action.",
+          "name": "Device"
+        },
+        "value": {
+          "description": "The value to set for the datapoint.",
+          "name": "Value"
+        }
+      },
+      "name": "Set datapoint"
     }
   }
 }

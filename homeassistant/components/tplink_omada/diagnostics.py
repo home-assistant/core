@@ -25,6 +25,7 @@ RUNTIME_TO_REDACT = {
     "ip",
     "priDns",
     "priDns2",
+    "psk",
     "sndDns",
     "sndDns2",
     "ssid",

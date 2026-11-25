@@ -11,9 +11,9 @@ from homeassistant.components.repairs import (
     RepairsFlow,
     RepairsFlowResult,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 
+from . import HomeAssistantYellowConfigEntry
 from .config_flow import HomeAssistantYellowMultiPanOptionsFlowHandler
 
 
@@ -22,7 +22,9 @@ class YellowMultiPanMigrationRepairFlow(
 ):
     """Multi-PAN migration repair flow for Home Assistant Yellow."""
 
-    def __init__(self, hass: HomeAssistant, config_entry: ConfigEntry) -> None:
+    def __init__(
+        self, hass: HomeAssistant, config_entry: HomeAssistantYellowConfigEntry
+    ) -> None:
         """Initialize the repair flow."""
         HomeAssistantYellowMultiPanOptionsFlowHandler.__init__(self, hass, config_entry)
         self._repair_config_entry = config_entry

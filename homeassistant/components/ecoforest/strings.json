@@ -1,7 +1,8 @@
 {
   "config": {
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "wrong_device": "The credentials belong to a different Ecoforest device than the one this entry is set up for."
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
@@ -9,6 +10,18 @@
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "step": {
+      "reauth_confirm": {
+        "data": {
+          "password": "[%key:common::config_flow::data::password%]",
+          "username": "[%key:common::config_flow::data::username%]"
+        },
+        "data_description": {
+          "password": "[%key:component::ecoforest::config::step::user::data_description::password%]",
+          "username": "[%key:component::ecoforest::config::step::user::data_description::username%]"
+        },
+        "description": "Authentication on the Ecoforest device at {host} failed. Enter the credentials again.",
+        "title": "[%key:common::config_flow::title::reauth%]"
+      },
       "user": {
         "data": {
           "host": "[%key:common::config_flow::data::host%]",
@@ -16,7 +29,9 @@
           "username": "[%key:common::config_flow::data::username%]"
         },
         "data_description": {
-          "host": "The hostname or IP address of your Ecoforest device."
+          "host": "The hostname or IP address of your Ecoforest device.",
+          "password": "The password of your Ecoforest device.",
+          "username": "The username of your Ecoforest device."
         }
       }
     }
@@ -86,6 +101,14 @@
       "working_state": {
         "name": "Working state"
       }
+    }
+  },
+  "exceptions": {
+    "authentication_failed": {
+      "message": "Authentication on device {host} failed"
+    },
+    "cannot_connect": {
+      "message": "Error communicating with device {host}"
     }
   }
 }

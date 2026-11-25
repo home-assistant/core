@@ -1,12 +1,20 @@
 """Test the Tradfri config flow."""
 
+from collections.abc import Generator
 from ipaddress import ip_address
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries
 from homeassistant.components.tradfri import DOMAIN, config_flow
+from homeassistant.components.tradfri.const import (
+    CONF_GATEWAY_ID,
+    CONF_IDENTITY,
+    CONF_KEY,
+)
+from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.zeroconf import (
@@ -14,9 +22,7 @@ from homeassistant.helpers.service_info.zeroconf import (
     ZeroconfServiceInfo,
 )
 
-from . import TRADFRI_PATH
-
-from tests.common import MockConfigEntry
+from . import GATEWAY_ID, TRADFRI_PATH
 
 
 @pytest.fixture(name="mock_auth")
@@ -26,7 +32,8 @@ def mock_auth_fixture():
         yield auth
 
 
-async def test_already_paired(hass: HomeAssistant, mock_entry_setup) -> None:
+@pytest.mark.usefixtures("mock_entry_setup")
+async def test_already_paired(hass: HomeAssistant) -> None:
     """Test Gateway already paired."""
     with patch(
         f"{TRADFRI_PATH}.config_flow.APIFactory",
@@ -45,6 +52,20 @@ async def test_already_paired(hass: HomeAssistant, mock_entry_setup) -> None:
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "cannot_authenticate"}
 
+    with patch(
+        f"{TRADFRI_PATH}.config_flow.APIFactory",
+        autospec=True,
+    ) as mock_lib:
+        mock_it = AsyncMock()
+        mock_it.generate_psk.return_value = "abcd-key"
+        mock_it.request.return_value.id = "bla"
+        mock_lib.init.return_value = mock_it
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {"host": "123.123.123.123", "security_code": "abcd"}
+        )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
 
 async def test_user_connection_successful(
     hass: HomeAssistant, mock_auth, mock_entry_setup
@@ -62,6 +83,7 @@ async def test_user_connection_successful(
 
     assert len(mock_entry_setup.mock_calls) == 1
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["result"].data == {
         "host": "123.123.123.123",
@@ -70,7 +92,7 @@ async def test_user_connection_successful(
 
 
 async def test_user_connection_timeout(
-    hass: HomeAssistant, mock_auth, mock_entry_setup
+    hass: HomeAssistant, mock_auth: MagicMock, mock_entry_setup: AsyncMock
 ) -> None:
     """Test a connection timeout."""
     mock_auth.side_effect = config_flow.AuthError("timeout")
@@ -88,9 +110,16 @@ async def test_user_connection_timeout(
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "timeout"}
 
+    mock_auth.side_effect = None
+    mock_auth.return_value = {"host": "127.0.0.1", "gateway_id": "bla"}
+    result = await hass.config_entries.flow.async_configure(
+        flow["flow_id"], {"host": "127.0.0.1", "security_code": "abcd"}
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
 
 async def test_user_connection_bad_key(
-    hass: HomeAssistant, mock_auth, mock_entry_setup
+    hass: HomeAssistant, mock_auth: MagicMock, mock_entry_setup: AsyncMock
 ) -> None:
     """Test a connection with bad key."""
     mock_auth.side_effect = config_flow.AuthError("invalid_security_code")
@@ -107,6 +136,13 @@ async def test_user_connection_bad_key(
 
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "invalid_security_code"}
+
+    mock_auth.side_effect = None
+    mock_auth.return_value = {"host": "127.0.0.1", "gateway_id": "bla"}
+    result = await hass.config_entries.flow.async_configure(
+        flow["flow_id"], {"host": "127.0.0.1", "security_code": "abcd"}
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_discovery_connection(
@@ -233,3 +269,107 @@ async def test_discovery_updates_unique_id(hass: HomeAssistant) -> None:
     assert flow["reason"] == "already_configured"
 
     assert entry.unique_id == "homekit-id"
+
+
+@pytest.fixture(name="mock_gateway_info")
+def mock_gateway_info_fixture() -> Generator[AsyncMock]:
+    """Mock get_gateway_info."""
+    with patch(
+        f"{TRADFRI_PATH}.config_flow.get_gateway_info",
+        return_value={CONF_GATEWAY_ID: GATEWAY_ID},
+    ) as gateway_info:
+        yield gateway_info
+
+
+@pytest.fixture(name="mock_config_entry")
+def mock_config_entry_fixture() -> MockConfigEntry:
+    """Return a Tradfri config entry."""
+    return MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_HOST: "123.123.123.123",
+            CONF_IDENTITY: "mock-identity",
+            CONF_KEY: "mock-key",
+            CONF_GATEWAY_ID: GATEWAY_ID,
+        },
+    )
+
+
+@pytest.mark.usefixtures("mock_entry_setup")
+async def test_reconfigure(
+    hass: HomeAssistant,
+    mock_gateway_info: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test changing the host of the gateway."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+    assert result["errors"] == {}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_HOST: "123.123.123.124"}
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert mock_config_entry.data == {
+        CONF_HOST: "123.123.123.124",
+        CONF_IDENTITY: "mock-identity",
+        CONF_KEY: "mock-key",
+        CONF_GATEWAY_ID: GATEWAY_ID,
+    }
+    mock_gateway_info.assert_awaited_once_with(
+        hass, "123.123.123.124", "mock-identity", "mock-key"
+    )
+
+
+@pytest.mark.usefixtures("mock_entry_setup")
+async def test_reconfigure_cannot_connect(
+    hass: HomeAssistant,
+    mock_gateway_info: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test reconfigure shows an error and can recover."""
+    mock_config_entry.add_to_hass(hass)
+    mock_gateway_info.side_effect = config_flow.AuthError("cannot_connect")
+
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_HOST: "123.123.123.124"}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+    assert result["errors"] == {"base": "cannot_connect"}
+
+    mock_gateway_info.side_effect = None
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_HOST: "123.123.123.124"}
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert mock_config_entry.data[CONF_HOST] == "123.123.123.124"
+
+
+@pytest.mark.usefixtures("mock_entry_setup")
+async def test_reconfigure_wrong_gateway(
+    hass: HomeAssistant,
+    mock_gateway_info: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test reconfiguring to a different gateway aborts."""
+    mock_config_entry.add_to_hass(hass)
+    mock_gateway_info.return_value = {CONF_GATEWAY_ID: "other-gateway"}
+
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_HOST: "123.123.123.124"}
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "wrong_gateway"
+    assert mock_config_entry.data[CONF_HOST] == "123.123.123.123"

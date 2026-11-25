@@ -4,14 +4,13 @@ from unittest.mock import AsyncMock, MagicMock
 
 from pvo import PVOutputAuthenticationError, PVOutputConnectionError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.pvoutput.const import CONF_SYSTEM_ID, DOMAIN
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-
-from tests.common import MockConfigEntry
 
 
 async def test_full_user_flow(
@@ -36,7 +35,7 @@ async def test_full_user_flow(
     )
 
     assert result2.get("type") is FlowResultType.CREATE_ENTRY
-    assert result2.get("title") == "12345"
+    assert result2.get("title") == "Frenck's Solar Farm"
     assert result2.get("data") == {
         CONF_SYSTEM_ID: 12345,
         CONF_API_KEY: "tadaaa",
@@ -91,7 +90,7 @@ async def test_user_flow_errors(
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "12345"
+    assert result["title"] == "Frenck's Solar Farm"
     assert result["data"] == {
         CONF_SYSTEM_ID: 12345,
         CONF_API_KEY: "tadaaa",

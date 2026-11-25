@@ -7,8 +7,19 @@ import probatio
 
 from homeassistant.components.counter import DOMAIN as COUNTER_DOMAIN
 from homeassistant.components.input_number import DOMAIN as INPUT_NUMBER_DOMAIN
-from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
-from homeassistant.const import CONF_METHOD, CONF_NAME, EntityStateAttribute, UnitOfTime
+from homeassistant.components.sensor import (
+    DEVICE_CLASS_STATE_CLASSES,
+    DOMAIN as SENSOR_DOMAIN,
+    SensorDeviceClass,
+    SensorStateClass,
+)
+from homeassistant.const import (
+    CONF_DEVICE_CLASS,
+    CONF_METHOD,
+    CONF_NAME,
+    EntityStateAttribute,
+    UnitOfTime,
+)
 from homeassistant.core import callback
 from homeassistant.helpers import selector
 from homeassistant.helpers.schema_config_entry_flow import (
@@ -106,6 +117,20 @@ async def _get_options_dict(handler: SchemaCommonFlowHandler | None) -> dict:
         probatio.Optional(CONF_MAX_SUB_INTERVAL): selector.DurationSelector(
             selector.DurationSelectorConfig(allow_negative=False)
         ),
+        probatio.Optional(CONF_DEVICE_CLASS): selector.SelectSelector(
+            selector.SelectSelectorConfig(
+                options=[
+                    cls.value
+                    for cls in SensorDeviceClass
+                    if cls != SensorDeviceClass.ENUM
+                    and (state_cls := DEVICE_CLASS_STATE_CLASSES.get(cls)) is not None
+                    and SensorStateClass.TOTAL in state_cls
+                ],
+                mode=selector.SelectSelectorMode.DROPDOWN,
+                translation_key=CONF_DEVICE_CLASS,
+                sort=True,
+            ),
+        ),
     }
 
 
@@ -155,6 +180,7 @@ class ConfigFlowHandler(SchemaConfigFlowHandler, domain=DOMAIN):
     options_flow = OPTIONS_FLOW
     options_flow_reloads = True
 
+    @callback
     @override
     def async_config_entry_title(self, options: Mapping[str, Any]) -> str:
         """Return config entry title."""

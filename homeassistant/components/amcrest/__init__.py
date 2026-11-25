@@ -11,7 +11,7 @@ from typing import Any, override
 
 import aiohttp
 from amcrest import AmcrestError, ApiWrapper, LoginError
-import httpx
+import httpx2
 import probatio
 
 from homeassistant.const import (
@@ -193,7 +193,7 @@ class AmcrestChecker(ApiWrapper):
         return ret
 
     @override
-    async def async_command(self, *args: Any, **kwargs: Any) -> httpx.Response:
+    async def async_command(self, *args: Any, **kwargs: Any) -> httpx2.Response:
         """amcrest.ApiWrapper.command wrapper to catch errors."""
         async with self._async_command_wrapper():
             return await super().async_command(*args, **kwargs)
@@ -202,7 +202,7 @@ class AmcrestChecker(ApiWrapper):
     @override
     async def async_stream_command(
         self, *args: Any, **kwargs: Any
-    ) -> AsyncGenerator[httpx.Response]:
+    ) -> AsyncGenerator[httpx2.Response]:
         """amcrest.ApiWrapper.command wrapper to catch errors."""
         async with (
             self._async_command_wrapper(),

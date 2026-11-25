@@ -1,13 +1,19 @@
 """Support for HomematicIP Cloud devices."""
 
+import asyncio
 import logging
 
 import probatio
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_NAME, EVENT_HOMEASSISTANT_STOP
-from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import config_validation as cv, entity_registry as er
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant, callback
+from homeassistant.exceptions import ConfigEntryError
+from homeassistant.helpers import (
+    config_validation as cv,
+    entity_registry as er,
+    issue_registry as ir,
+)
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
@@ -47,13 +53,24 @@ CONFIG_SCHEMA = probatio.Schema(
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the HomematicIP Cloud integration."""
-    accesspoints = config.get(DOMAIN, [])
+    if accesspoints := config.get(DOMAIN, []):
+        hass.async_create_task(_async_import_yaml(hass, accesspoints))
 
-    for conf in accesspoints:
-        if conf[CONF_ACCESSPOINT] not in {
-            entry.data[HMIPC_HAPID]
-            for entry in hass.config_entries.async_entries(DOMAIN)
-        }:
+    async_setup_services(hass)
+
+    return True
+
+
+async def _async_import_yaml(
+    hass: HomeAssistant, accesspoints: list[ConfigType]
+) -> None:
+    """Import YAML access points into config entries."""
+    configured = {
+        entry.data[HMIPC_HAPID] for entry in hass.config_entries.async_entries(DOMAIN)
+    }
+    # Eager tasks register the import flows before setup waits for them.
+    await asyncio.gather(
+        *(
             hass.async_create_task(
                 hass.config_entries.flow.async_init(
                     DOMAIN,
@@ -65,13 +82,29 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                     },
                 )
             )
+            for conf in accesspoints
+            if conf[CONF_ACCESSPOINT] not in configured
+        )
+    )
 
-    async_setup_services(hass)
+    # The import flow can only create an entry or abort as already configured.
+    ir.async_create_issue(
+        hass,
+        HOMEASSISTANT_DOMAIN,
+        f"deprecated_yaml_{DOMAIN}",
+        breaks_in_ha_version="2027.6.0",
+        is_fixable=False,
+        issue_domain=DOMAIN,
+        severity=ir.IssueSeverity.WARNING,
+        translation_key="deprecated_yaml",
+        translation_placeholders={
+            "domain": DOMAIN,
+            "integration_title": "HomematicIP Cloud",
+        },
+    )
 
-    return True
 
-
-async def async_setup_entry(hass: HomeAssistant, entry: HomematicIPConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: HomematicIPConfigEntry) -> None:
     """Set up an access point from a config entry."""
 
     # 0.104 introduced config entry unique id, this makes upgrading possible
@@ -86,30 +119,31 @@ async def async_setup_entry(hass: HomeAssistant, entry: HomematicIPConfigEntry) 
 
     entry.runtime_data = hap
     if not await hap.async_setup():
-        return False
+        raise ConfigEntryError(
+            translation_domain=DOMAIN,
+            translation_key="setup_failed",
+        )
 
     # Register on HA stop event to gracefully shutdown HomematicIP Cloud connection
     hap.reset_connection_listener = hass.bus.async_listen_once(
         EVENT_HOMEASSISTANT_STOP, hap.shutdown
     )
 
-    return True
-
 
 async def async_unload_entry(
     hass: HomeAssistant, entry: HomematicIPConfigEntry
-) -> bool:
+) -> None:
     """Unload a config entry."""
     hap = entry.runtime_data
     assert hap.reset_connection_listener is not None
     hap.reset_connection_listener()
 
-    return await hap.async_reset()
+    await hap.async_reset()
 
 
 async def async_migrate_entry(
-    hass: HomeAssistant, config_entry: config_entries.ConfigEntry
-) -> bool:
+    hass: HomeAssistant, config_entry: HomematicIPConfigEntry
+) -> None:
     """Migrate the config entry from version 1 to version 2."""
 
     if config_entry.version == 1:
@@ -228,5 +262,3 @@ async def async_migrate_entry(
 
         hass.config_entries.async_update_entry(config_entry, version=2)
         _LOGGER.info("Migration to version 2 successful")
-
-    return True

@@ -16,7 +16,11 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.exceptions import (
+    ConfigEntryAuthFailed,
+    ConfigEntryError,
+    ConfigEntryNotReady,
+)
 from homeassistant.helpers import (
     config_validation as cv,
     device_registry as dr,
@@ -71,7 +75,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: RainbirdConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: RainbirdConfigEntry) -> None:
     """Set up the config entry for Rain Bird."""
 
     clientsession = async_create_clientsession()
@@ -92,7 +96,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: RainbirdConfigEntry) -> 
         raise ConfigEntryNotReady from err
 
     if not (await _async_fix_unique_id(hass, controller, entry)):
-        return False
+        raise ConfigEntryError(
+            translation_domain=DOMAIN,
+            translation_key="duplicate_entry",
+        )
     if mac_address := entry.data.get(CONF_MAC):
         _async_fix_entity_unique_id(
             er.async_get(hass),
@@ -136,15 +143,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: RainbirdConfigEntry) -> 
     # can resolve their via_device_id link during platform setup, regardless of
     # which platform loads first.
     if device_info := data.coordinator.device_info:
-        dr.async_get(hass).async_get_or_create(
-            config_entry_id=entry.entry_id, **device_info
+        dr.async_get(hass).async_get_or_create_from_info(
+            config_entry_id=entry.entry_id, device_info=device_info
         )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     entry.async_on_unload(entry.add_update_listener(async_update_listener))
-
-    return True
 
 
 async def _async_fix_unique_id(
@@ -282,9 +287,9 @@ def _async_fix_device_id(
         )
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: RainbirdConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: RainbirdConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
 
 
 async def async_update_listener(

@@ -250,9 +250,6 @@
       "tip_voltage": {
         "name": "Raw tip voltage"
       },
-      "uptime": {
-        "name": "Uptime"
-      },
       "voltage": {
         "name": "DC input voltage"
       }

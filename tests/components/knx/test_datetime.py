@@ -1,9 +1,11 @@
 """Test KNX date."""
 
+from pytest_homeassistant.common import mock_restore_cache
+
 from homeassistant.components.datetime import (
-    ATTR_DATETIME,
     DOMAIN as DATETIME_DOMAIN,
-    SERVICE_SET_VALUE,
+    DateTimeService,
+    DateTimeServiceArgument,
 )
 from homeassistant.components.knx.const import (
     CONF_RESPOND_TO_READ,
@@ -16,8 +18,6 @@ from homeassistant.core import HomeAssistant, State
 
 from . import KnxEntityGenerator
 from .conftest import KNXTestKit
-
-from tests.common import mock_restore_cache
 
 # KNX DPT 19.001 doesn't provide timezone information so we send local time
 
@@ -37,8 +37,11 @@ async def test_datetime(hass: HomeAssistant, knx: KNXTestKit) -> None:
     # set value
     await hass.services.async_call(
         DATETIME_DOMAIN,
-        SERVICE_SET_VALUE,
-        {"entity_id": "datetime.test", ATTR_DATETIME: "2020-01-02T03:04:05+00:00"},
+        DateTimeService.SET_VALUE,
+        {
+            "entity_id": "datetime.test",
+            DateTimeServiceArgument.DATETIME: "2020-01-02T03:04:05+00:00",
+        },
         blocking=True,
     )
     await knx.assert_write(

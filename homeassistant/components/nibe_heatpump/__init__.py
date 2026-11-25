@@ -13,7 +13,8 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import config_validation as cv, device_registry as dr
+from homeassistant.helpers.typing import ConfigType
 
 from .const import (
     CONF_CONNECTION_TYPE,
@@ -28,11 +29,15 @@ from .const import (
     DOMAIN,
 )
 from .coordinator import CoilCoordinator, NibeHeatpumpConfigEntry
+from .http import LogSetView
+
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 PLATFORMS: list[Platform] = [
     Platform.BINARY_SENSOR,
     Platform.BUTTON,
     Platform.CLIMATE,
+    Platform.IMAGE,
     Platform.NUMBER,
     Platform.SELECT,
     Platform.SENSOR,
@@ -42,9 +47,15 @@ PLATFORMS: list[Platform] = [
 COIL_READ_RETRIES = 5
 
 
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up the Nibe Heat Pump integration."""
+    hass.http.register_view(LogSetView)
+    return True
+
+
 async def async_setup_entry(
     hass: HomeAssistant, entry: NibeHeatpumpConfigEntry
-) -> bool:
+) -> None:
     """Set up Nibe Heat Pump from a config entry."""
 
     heatpump = HeatPump(Model[entry.data[CONF_MODEL]])
@@ -107,12 +118,13 @@ async def async_setup_entry(
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     # Trigger a refresh again now that all platforms have registered
-    hass.async_create_task(coordinator.async_refresh())
-    return True
+    entry.async_create_background_task(
+        hass, coordinator.async_refresh(), "NIBE initial refresh"
+    )
 
 
 async def async_unload_entry(
     hass: HomeAssistant, entry: NibeHeatpumpConfigEntry
-) -> bool:
+) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

@@ -9,14 +9,13 @@ import urllib
 
 from aiohttp import ClientWebSocketResponse
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.typing import ClientSessionGenerator, WebSocketGenerator
 
 from homeassistant.components.local_calendar import LocalCalendarStore
 from homeassistant.components.local_calendar.const import CONF_CALENDAR_NAME, DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
-
-from tests.common import MockConfigEntry
-from tests.typing import ClientSessionGenerator, WebSocketGenerator
 
 CALENDAR_NAME = "Light Schedule"
 FRIENDLY_NAME = "Light Schedule"
@@ -38,6 +37,7 @@ class FakeStore(LocalCalendarStore):
         mock_path.read_text.return_value = ics_content
         mock_path.read_text.side_effect = read_side_effect
         mock_path.write_text = self._mock_write_text
+        mock_path.__str__ = Mock(return_value=str(path))
         super().__init__(hass, mock_path)
 
     def _mock_exists(self) -> bool:

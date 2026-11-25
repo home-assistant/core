@@ -4,6 +4,7 @@ from collections.abc import Callable
 from dataclasses import dataclass, field
 from typing import override
 
+from pajgps_api.models.device import Device
 from pajgps_api.models.sensordata import SensorData
 from pajgps_api.models.trackpoint import TrackPoint
 
@@ -22,8 +23,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import PajGpsConfigEntry
-from .coordinator import Device, PajGpsCoordinator
+from .coordinator import PajGpsConfigEntry, PajGpsCoordinator
 from .entity import PajGpsEntity
 
 PARALLEL_UPDATES = 0

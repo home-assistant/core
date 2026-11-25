@@ -14,10 +14,13 @@ from homeassistant.components.notify import (
 )
 from homeassistant.const import CONF_API_KEY, CONF_SENDER
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 _LOGGER = logging.getLogger(__name__)
+
+DOMAIN = "message_bird"
 
 PLATFORM_SCHEMA = NOTIFY_PLATFORM_SCHEMA.extend(
     {
@@ -61,12 +64,19 @@ class MessageBirdNotificationService(BaseNotificationService):
             _LOGGER.error("No target specified")
             return
 
+        failed_targets: list[str] = []
         for target in targets:
             try:
                 self.client.message_create(
                     self.sender, target, message, {"reference": "HA"}
                 )
-            # pylint: disable-next=home-assistant-action-swallowed-exception
-            except ErrorException as exception:
-                _LOGGER.error("Failed to notify %s: %s", target, exception)
-                continue
+            except ErrorException as err:
+                _LOGGER.debug("Failed to notify %s: %s", target, err)
+                failed_targets.append(target)
+
+        if failed_targets:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="send_message_failed",
+                translation_placeholders={"targets": ", ".join(failed_targets)},
+            )

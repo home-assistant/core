@@ -31,6 +31,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from .const import DOMAIN
 from .entity import HomematicipGenericEntity
 from .hap import HomematicIPConfigEntry, HomematicipHAP
+from .helpers import handle_errors
 
 HEATING_PROFILES = {"PROFILE_1": 0, "PROFILE_2": 1, "PROFILE_3": 2}
 COOLING_PROFILES = {"PROFILE_4": 3, "PROFILE_5": 4, "PROFILE_6": 5}
@@ -79,7 +80,7 @@ class HomematicipHeatingGroup(HomematicipGenericEntity, ClimateEntity):
     _attr_supported_features = (
         ClimateEntityFeature.PRESET_MODE | ClimateEntityFeature.TARGET_TEMPERATURE
     )
-    _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_native_temperature_unit = UnitOfTemperature.CELSIUS
 
     def __init__(self, hap: HomematicipHAP, device: HeatingGroup) -> None:
         """Initialize heating group."""
@@ -121,13 +122,13 @@ class HomematicipHeatingGroup(HomematicipGenericEntity, ClimateEntity):
 
     @property
     @override
-    def target_temperature(self) -> float:
+    def native_target_temperature(self) -> float:
         """Return the temperature we try to reach."""
         return self._device.setPointTemperature
 
     @property
     @override
-    def current_temperature(self) -> float:
+    def native_current_temperature(self) -> float:
         """Return the current temperature."""
         if self._simple_heating:
             return self._simple_heating.valveActualTemperature
@@ -236,23 +237,20 @@ class HomematicipHeatingGroup(HomematicipGenericEntity, ClimateEntity):
         """Return the maximum temperature."""
         return self._device.maxTemperature
 
+    @handle_errors
     @override
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
-        if (temperature := kwargs.get(ATTR_TEMPERATURE)) is None:
-            return
+        return await self._device.set_point_temperature_async(kwargs[ATTR_TEMPERATURE])
 
-        if self.min_temp <= temperature <= self.max_temp:
-            await self._device.set_point_temperature_async(temperature)
-
+    @handle_errors
     @override
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target hvac mode."""
-
         if hvac_mode == HVACMode.AUTO:
-            await self._device.set_control_mode_async(HMIP_AUTOMATIC_CM)
-        else:
-            await self._device.set_control_mode_async(HMIP_MANUAL_CM)
+            return await self._device.set_control_mode_async(HMIP_AUTOMATIC_CM)
+
+        return await self._device.set_control_mode_async(HMIP_MANUAL_CM)
 
     @override
     async def async_set_preset_mode(self, preset_mode: str) -> None:

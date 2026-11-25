@@ -19,7 +19,7 @@ type RuckusUnleashedConfigEntry = ConfigEntry[RuckusDataUpdateCoordinator]
 _LOGGER = logging.getLogger(__package__)
 
 
-class RuckusDataUpdateCoordinator(DataUpdateCoordinator):
+class RuckusDataUpdateCoordinator(DataUpdateCoordinator[dict]):
     """Coordinator to manage data from Ruckus client."""
 
     config_entry: RuckusUnleashedConfigEntry

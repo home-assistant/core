@@ -13,12 +13,15 @@ from homewizard_energy.models import (
     Token,
 )
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    get_fixture_path,
+    load_json_object_fixture,
+)
 
 from homeassistant.components.homewizard.const import DOMAIN
 from homeassistant.const import CONF_IP_ADDRESS, CONF_TOKEN
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry, get_fixture_path, load_json_object_fixture
 
 
 @pytest.fixture
@@ -154,7 +157,7 @@ def mock_homewizardenergy_v2(
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Mock setting up a config entry."""
     with patch(
-        "homeassistant.components.homewizard.async_setup_entry", return_value=True
+        "homeassistant.components.homewizard.async_setup_entry", return_value=None
     ) as mock_setup:
         yield mock_setup
 
@@ -202,6 +205,21 @@ async def init_integration(
     await hass.async_block_till_done()
 
     return mock_config_entry
+
+
+@pytest.fixture
+async def init_integration_v2(
+    hass: HomeAssistant,
+    mock_config_entry_v2: MockConfigEntry,
+    mock_homewizardenergy_v2: AsyncMock,
+) -> MockConfigEntry:
+    """Set up the HomeWizard integration using the v2 API for testing."""
+    mock_config_entry_v2.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(mock_config_entry_v2.entry_id)
+    await hass.async_block_till_done()
+
+    return mock_config_entry_v2
 
 
 @pytest.fixture

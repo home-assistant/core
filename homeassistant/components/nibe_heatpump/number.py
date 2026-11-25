@@ -25,7 +25,7 @@ async def async_setup_entry(
     async_add_entities(
         Number(coordinator, coil)
         for coil in coordinator.coils
-        if coil.is_writable and not coil.mappings
+        if coil.is_writable and not coil.mappings and not coil.is_date
     )
 
 

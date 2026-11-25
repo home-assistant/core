@@ -43,9 +43,13 @@ class OpenMeteoDataUpdateCoordinator(DataUpdateCoordinator[Forecast]):
 
     @override
     async def _async_update_data(self) -> Forecast:
-        """Fetch data from Sensibo."""
+        """Fetch data from Open-Meteo."""
         if (zone := self.hass.states.get(self.config_entry.data[CONF_ZONE])) is None:
-            raise UpdateFailed(f"Zone '{self.config_entry.data[CONF_ZONE]}' not found")
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="zone_not_found",
+                translation_placeholders={"zone": self.config_entry.data[CONF_ZONE]},
+            )
 
         try:
             return await self.open_meteo.forecast(
@@ -86,4 +90,7 @@ class OpenMeteoDataUpdateCoordinator(DataUpdateCoordinator[Forecast]):
                 wind_speed_unit=WindSpeedUnit.KILOMETERS_PER_HOUR,
             )
         except OpenMeteoError as err:
-            raise UpdateFailed("Open-Meteo API communication error") from err
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="communication_error",
+            ) from err

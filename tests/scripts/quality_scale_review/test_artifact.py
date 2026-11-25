@@ -16,6 +16,8 @@ _PR = PullRequest(
     deletions=12,
     changed_files=3,
     file_statuses={"homeassistant/components/peblar/sensor.py": "modified"},
+    snapshot_lines=0,
+    snapshot_files=0,
 )
 _RESULTS = Results(
     pr_number=42,
@@ -23,8 +25,6 @@ _RESULTS = Results(
     skip=False,
     too_long=False,
     skip_reason="",
-    changed_lines=42,
-    changed_files=3,
     domains=["adax", "peblar"],
 )
 
@@ -48,8 +48,6 @@ def test_domains_file_is_empty_without_domains(tmp_path: Path) -> None:
         skip=True,
         too_long=False,
         skip_reason="touches no integration with a quality_scale.yaml",
-        changed_lines=42,
-        changed_files=3,
         domains=[],
     )
 
@@ -63,6 +61,34 @@ def test_write_diff(tmp_path: Path) -> None:
     artifact.write_diff(tmp_path, "diff --git a/x b/x\n")
 
     assert (tmp_path / "pr-diff.patch").read_text() == "diff --git a/x b/x\n"
+
+
+def test_write_diff_drops_test_snapshots(tmp_path: Path) -> None:
+    """The sections of test snapshot files are left out of the diff."""
+    sensor = (
+        "diff --git a/homeassistant/components/peblar/sensor.py "
+        "b/homeassistant/components/peblar/sensor.py\n"
+        "@@ -1 +1 @@\n"
+        "-old\n"
+        "+new\n"
+    )
+    snapshot = (
+        "diff --git a/tests/components/peblar/snapshots/test_sensor.ambr "
+        "b/tests/components/peblar/snapshots/test_sensor.ambr\n"
+        "@@ -1 +1 @@\n"
+        "-diff --git a/fake b/fake\n"
+        "+snapshot\n"
+    )
+    init = (
+        "diff --git a/homeassistant/components/peblar/__init__.py "
+        "b/homeassistant/components/peblar/__init__.py\n"
+        "@@ -1 +1 @@\n"
+        "-old\n"
+        "+new\n"
+    )
+    artifact.write_diff(tmp_path, sensor + snapshot + init)
+
+    assert (tmp_path / "pr-diff.patch").read_text() == sensor + init
 
 
 def test_write_rules(tmp_path: Path) -> None:

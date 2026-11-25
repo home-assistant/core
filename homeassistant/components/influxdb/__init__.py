@@ -12,15 +12,16 @@ from typing import Any, override
 
 from influxdb import InfluxDBClient, exceptions
 from influxdb_client import InfluxDBClient as InfluxDBClientV2
-from influxdb_client.client.write_api import ASYNCHRONOUS, SYNCHRONOUS
+from influxdb_client.client.write_api import SYNCHRONOUS
 from influxdb_client.rest import ApiException
 import probatio
 import requests.exceptions
 import urllib3.exceptions
 
 from homeassistant import config as conf_util
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
+    CONF_API_VERSION,
     CONF_DOMAIN,
     CONF_ENTITY_ID,
     CONF_EXCLUDE,
@@ -42,7 +43,6 @@ from homeassistant.const import (
     EntityStateAttribute,
 )
 from homeassistant.core import Event, HomeAssistant, State, callback
-from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv, state as state_helper
 from homeassistant.helpers.entity_values import EntityValues
@@ -50,7 +50,6 @@ from homeassistant.helpers.entityfilter import (
     INCLUDE_EXCLUDE_BASE_FILTER_SCHEMA,
     convert_include_exclude_filter,
 )
-from homeassistant.helpers.typing import ConfigType
 
 from .const import (
     API_VERSION_2,
@@ -60,9 +59,6 @@ from .const import (
     CLIENT_ERROR_V1,
     CLIENT_ERROR_V2,
     CODE_INVALID_INPUTS,
-    COMPONENT_CONFIG_SCHEMA_CONNECTION,
-    COMPONENT_CONFIG_SCHEMA_CONNECTION_VALIDATORS,
-    CONF_API_VERSION,
     CONF_BUCKET,
     CONF_COMPONENT_CONFIG,
     CONF_COMPONENT_CONFIG_DOMAIN,
@@ -104,7 +100,6 @@ from .const import (
     WRITE_ERROR,
     WROTE_MESSAGE,
 )
-from .issue import async_create_deprecated_yaml_issue
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -169,8 +164,9 @@ _CUSTOMIZE_ENTITY_SCHEMA = probatio.Schema(
     }
 )
 
-_INFLUX_BASE_SCHEMA = INCLUDE_EXCLUDE_BASE_FILTER_SCHEMA.extend(
+INFLUX_SCHEMA = INCLUDE_EXCLUDE_BASE_FILTER_SCHEMA.extend(
     {
+        probatio.Optional(CONF_PRECISION): probatio.In(["ms", "s", "us", "ns"]),
         probatio.Optional(CONF_RETRY_COUNT, default=0): cv.positive_int,
         probatio.Optional(CONF_DEFAULT_MEASUREMENT): cv.string,
         probatio.Optional(
@@ -198,13 +194,25 @@ _INFLUX_BASE_SCHEMA = INCLUDE_EXCLUDE_BASE_FILTER_SCHEMA.extend(
     }
 )
 
-INFLUX_SCHEMA = _INFLUX_BASE_SCHEMA.extend(
-    COMPONENT_CONFIG_SCHEMA_CONNECTION_VALIDATORS
-)
-
-
 CONFIG_SCHEMA = probatio.Schema(
-    {DOMAIN: probatio.All(INFLUX_SCHEMA, validate_version_specific_config)},
+    {
+        DOMAIN: probatio.All(
+            cv.removed(CONF_API_VERSION, raise_if_present=False),
+            cv.removed(CONF_HOST, raise_if_present=False),
+            cv.removed(CONF_PORT, raise_if_present=False),
+            cv.removed(CONF_SSL, raise_if_present=False),
+            cv.removed(CONF_VERIFY_SSL, raise_if_present=False),
+            cv.removed(CONF_SSL_CA_CERT, raise_if_present=False),
+            cv.removed(CONF_USERNAME, raise_if_present=False),
+            cv.removed(CONF_PASSWORD, raise_if_present=False),
+            cv.removed(CONF_DB_NAME, raise_if_present=False),
+            cv.removed(CONF_TOKEN, raise_if_present=False),
+            cv.removed(CONF_ORG, raise_if_present=False),
+            cv.removed(CONF_BUCKET, raise_if_present=False),
+            cv.removed(CONF_PATH, raise_if_present=False),
+            INFLUX_SCHEMA,
+        )
+    },
     extra=probatio.ALLOW_EXTRA,
 )
 
@@ -383,8 +391,8 @@ def get_influx_connection(  # noqa: C901
         bucket = conf.get(CONF_BUCKET)
         influx = InfluxDBClientV2(**kwargs)
         query_api = influx.query_api()
-        initial_write_mode = SYNCHRONOUS if test_write else ASYNCHRONOUS
-        write_api = influx.write_api(write_options=initial_write_mode)
+        # Asynchronous writes hide errors from the retry logic of InfluxThread
+        write_api = influx.write_api(write_options=SYNCHRONOUS)
 
         def write_v2(json):
             """Write data to V2 influx."""
@@ -423,7 +431,6 @@ def get_influx_connection(  # noqa: C901
             # Then invalid inputs is returned. Anything else is a broken config
             with suppress(ValueError):
                 write_v2(b"")
-            write_api = influx.write_api(write_options=ASYNCHRONOUS)
 
         if test_read:
             tables = query_v2(TEST_QUERY_V2)
@@ -507,38 +514,7 @@ def get_influx_connection(  # noqa: C901
     return InfluxClient(databases, write_v1, query_v1, close_v1)
 
 
-async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Set up the InfluxDB component."""
-    if DOMAIN not in config:
-        return True
-
-    hass.async_create_task(_async_setup(hass, config[DOMAIN]))
-
-    return True
-
-
-async def _async_setup(hass: HomeAssistant, config: dict[str, Any]) -> None:
-    """Import YAML configuration into a config entry."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_IMPORT},
-        data=config,
-    )
-    if (
-        result.get("type") is FlowResultType.ABORT
-        and (reason := result["reason"]) != "single_instance_allowed"
-    ):
-        async_create_deprecated_yaml_issue(hass, error=reason)
-        return
-
-    # If we are here, the entry already exists (single instance allowed)
-    if config.keys() & (
-        {k.schema for k in COMPONENT_CONFIG_SCHEMA_CONNECTION} - {CONF_PRECISION}
-    ):
-        async_create_deprecated_yaml_issue(hass)
-
-
-async def async_setup_entry(hass: HomeAssistant, entry: InfluxDBConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: InfluxDBConfigEntry) -> None:
     """Set up InfluxDB from a config entry."""
     data = entry.data
 
@@ -583,17 +559,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: InfluxDBConfigEntry) -> 
 
     entry.runtime_data = influx_thread
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: InfluxDBConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: InfluxDBConfigEntry) -> None:
     """Unload a config entry."""
     influx_thread = entry.runtime_data
 
     # Run shutdown in the executor so the event loop isn't blocked
     await hass.async_add_executor_job(influx_thread.shutdown)
-
-    return True
 
 
 class InfluxThread(threading.Thread):
@@ -644,6 +616,7 @@ class InfluxThread(threading.Thread):
 
         count = 0
         json = []
+        done_events: list[threading.Event] = []
 
         dropped = 0
 
@@ -665,12 +638,12 @@ class InfluxThread(threading.Thread):
                     else:
                         dropped += 1
                 elif isinstance(item, threading.Event):
-                    item.set()
+                    done_events.append(item)
 
         if dropped:
             _LOGGER.warning(CATCHING_UP_MESSAGE, dropped)
 
-        return count, json
+        return count, json, done_events
 
     def write_to_influxdb(self, json):
         """Write preprocessed events to influxdb, with retry."""
@@ -699,9 +672,14 @@ class InfluxThread(threading.Thread):
     def run(self):
         """Process incoming events."""
         while not self._shutdown:
-            _, json = self.get_events_json()
-            if json:
-                self.write_to_influxdb(json)
+            _, json, done_events = self.get_events_json()
+            try:
+                if json:
+                    self.write_to_influxdb(json)
+            finally:
+                # Set the events of block_till_done only after the batch is written
+                for done_event in done_events:
+                    done_event.set()
 
     def block_till_done(self):
         """Block till all events processed.

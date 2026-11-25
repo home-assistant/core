@@ -1,27 +1,81 @@
 """Test the Hive config flow."""
 
+from collections.abc import Generator
+from contextlib import contextmanager
 from unittest.mock import AsyncMock, patch
 
 from apyhiveapi.helper import hive_exceptions
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries
-from homeassistant.components.hive.const import CONF_CODE, CONF_DEVICE_NAME, DOMAIN
+from homeassistant.components.hive.const import CONF_CODE, DOMAIN
+from homeassistant.config_entries import ConfigFlowResult
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-
-from tests.common import MockConfigEntry
 
 USERNAME = "username@home-assistant.com"
 UPDATED_USERNAME = "updated_username@home-assistant.com"
 PASSWORD = "test-password"
 UPDATED_PASSWORD = "updated-password"
 INCORRECT_PASSWORD = "incorrect-password"
-DEVICE_NAME = "Test Home Assistant"
 MFA_CODE = "1234"
 MFA_RESEND_CODE = "0000"
 MFA_INVALID_CODE = "HIVE"
+AUTH_SUCCESS = {
+    "ChallengeName": "SUCCESS",
+    "AuthenticationResult": {
+        "RefreshToken": "mock-refresh-token",
+        "AccessToken": "mock-access-token",
+    },
+}
+
+
+@contextmanager
+def _patch_login_success() -> Generator[None]:
+    """Patch a successful login and entry setup."""
+    with (
+        patch(
+            "homeassistant.components.hive.config_flow.Auth.login",
+            return_value=AUTH_SUCCESS,
+        ),
+        patch("homeassistant.components.hive.async_setup_entry", return_value=None),
+    ):
+        yield
+
+
+async def _finish_2fa(hass: HomeAssistant, flow_id: str) -> ConfigFlowResult:
+    """Enter a valid 2FA code and register the device."""
+    with patch(
+        "homeassistant.components.hive.config_flow.Auth.sms_2fa",
+        return_value=AUTH_SUCCESS,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            flow_id, {CONF_CODE: MFA_CODE}
+        )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "configuration"
+
+    with (
+        patch(
+            "homeassistant.components.hive.config_flow.Auth.device_registration",
+            return_value=True,
+        ) as mock_device_registration,
+        patch(
+            "homeassistant.components.hive.config_flow.Auth.get_device_data",
+            return_value=[
+                "mock-device-group-key",
+                "mock-device-key",
+                "mock-device-password",
+            ],
+        ),
+        patch("homeassistant.components.hive.async_setup_entry", return_value=None),
+    ):
+        result = await hass.config_entries.flow.async_configure(flow_id, {})
+        await hass.async_block_till_done()
+    mock_device_registration.assert_called_once_with("Home Assistant")
+    return result
 
 
 @pytest.mark.parametrize(
@@ -42,7 +96,7 @@ async def test_user_flow(hass: HomeAssistant, username: str) -> None:
         patch("homeassistant.components.hive.config_flow.Auth") as mock_auth,
         patch(
             "homeassistant.components.hive.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
     ):
         mock_auth.return_value.login = AsyncMock(
@@ -129,14 +183,12 @@ async def test_user_flow_with_no_2fa(hass: HomeAssistant) -> None:
         ),
         patch(
             "homeassistant.components.hive.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {
-                CONF_DEVICE_NAME: DEVICE_NAME,
-            },
+            {},
         )
         await hass.async_block_till_done()
 
@@ -162,6 +214,7 @@ async def test_user_flow_with_no_2fa(hass: HomeAssistant) -> None:
             "mock-device-password",
         ],
     }
+    assert result["result"].unique_id == USERNAME
 
     assert len(mock_setup_entry.mock_calls) == 1
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
@@ -230,14 +283,12 @@ async def test_user_flow_2fa(hass: HomeAssistant) -> None:
         ),
         patch(
             "homeassistant.components.hive.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {
-                CONF_DEVICE_NAME: DEVICE_NAME,
-            },
+            {},
         )
         await hass.async_block_till_done()
 
@@ -259,6 +310,7 @@ async def test_user_flow_2fa(hass: HomeAssistant) -> None:
             "mock-device-password",
         ],
     }
+    assert result["result"].unique_id == USERNAME
 
     assert len(mock_setup_entry.mock_calls) == 1
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
@@ -367,7 +419,7 @@ async def test_reauth_2fa_flow(hass: HomeAssistant) -> None:
         ),
         patch(
             "homeassistant.components.hive.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
     ):
         result = await hass.config_entries.flow.async_configure(
@@ -462,14 +514,12 @@ async def test_reauth_2fa_flow_device_not_registered(hass: HomeAssistant) -> Non
         ),
         patch(
             "homeassistant.components.hive.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {
-                CONF_DEVICE_NAME: DEVICE_NAME,
-            },
+            {},
         )
         await hass.async_block_till_done()
 
@@ -561,7 +611,7 @@ async def test_reauth_2fa_flow_device_registration_check_fails(
         ),
         patch(
             "homeassistant.components.hive.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
     ):
         result = await hass.config_entries.flow.async_configure(
@@ -658,12 +708,10 @@ async def test_user_flow_2fa_send_new_code(hass: HomeAssistant) -> None:
         ),
         patch(
             "homeassistant.components.hive.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
     ):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {CONF_DEVICE_NAME: DEVICE_NAME}
-        )
+        result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
         await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
@@ -684,6 +732,7 @@ async def test_user_flow_2fa_send_new_code(hass: HomeAssistant) -> None:
             "mock-device-password",
         ],
     }
+    assert result["result"].unique_id == USERNAME
     assert len(mock_setup_entry.mock_calls) == 1
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
 
@@ -738,6 +787,15 @@ async def test_user_flow_invalid_username(hass: HomeAssistant) -> None:
     assert result["step_id"] == "user"
     assert result["errors"] == {"base": "invalid_username"}
 
+    with _patch_login_success():
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD},
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
 
 async def test_user_flow_invalid_password(hass: HomeAssistant) -> None:
     """Test user flow with invalid password."""
@@ -760,6 +818,15 @@ async def test_user_flow_invalid_password(hass: HomeAssistant) -> None:
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {"base": "invalid_password"}
+
+    with _patch_login_success():
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD},
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_user_flow_no_internet_connection(hass: HomeAssistant) -> None:
@@ -784,6 +851,15 @@ async def test_user_flow_no_internet_connection(hass: HomeAssistant) -> None:
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {"base": "no_internet_available"}
+
+    with _patch_login_success():
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD},
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_user_flow_2fa_no_internet_connection(hass: HomeAssistant) -> None:
@@ -824,6 +900,9 @@ async def test_user_flow_2fa_no_internet_connection(hass: HomeAssistant) -> None
     assert result["step_id"] == CONF_CODE
     assert result["errors"] == {"base": "no_internet_available"}
 
+    result = await _finish_2fa(hass, result["flow_id"])
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
 
 async def test_user_flow_2fa_invalid_code(hass: HomeAssistant) -> None:
     """Test user flow with 2FA."""
@@ -861,6 +940,9 @@ async def test_user_flow_2fa_invalid_code(hass: HomeAssistant) -> None:
     assert result["step_id"] == CONF_CODE
     assert result["errors"] == {"base": "invalid_code"}
 
+    result = await _finish_2fa(hass, result["flow_id"])
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
 
 async def test_user_flow_unknown_error(hass: HomeAssistant) -> None:
     """Test user flow when unknown error occurs."""
@@ -883,6 +965,15 @@ async def test_user_flow_unknown_error(hass: HomeAssistant) -> None:
 
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "unknown"}
+
+    with _patch_login_success():
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD},
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_user_flow_2fa_unknown_error(hass: HomeAssistant) -> None:
@@ -937,10 +1028,11 @@ async def test_user_flow_2fa_unknown_error(hass: HomeAssistant) -> None:
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {CONF_DEVICE_NAME: DEVICE_NAME},
+            {},
         )
         await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "configuration"
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "unknown"}
