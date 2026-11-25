@@ -48,9 +48,10 @@ async def test_write_data_by_name(
         blocking=True,
     )
 
-    mock_pyads_connection.return_value.write_by_name.assert_called_once_with(
-        ADS_VAR, written, plc_datatype
-    )
+    write_by_name = mock_pyads_connection.return_value.write_by_name
+    write_by_name.assert_called_once_with(ADS_VAR, written, plc_datatype)
+    # Equality alone would let 1 pass for True and 21 for 21.0.
+    assert type(write_by_name.call_args.args[1]) is type(written)
 
 
 @pytest.mark.usefixtures("setup_ads")
