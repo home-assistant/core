@@ -479,9 +479,11 @@ async def test_rpc_device_switch_type_lights_mode(
         blocking=True,
     )
 
+    mock_rpc_device.switch_set.assert_called_once_with(0, True)
     assert (state := hass.states.get(entity_id))
     assert state.state == STATE_ON
 
+    mock_rpc_device.switch_set.reset_mock()
     mutate_rpc_device_status(monkeypatch, mock_rpc_device, "switch:0", "output", False)
     await hass.services.async_call(
         LIGHT_DOMAIN,
@@ -490,6 +492,8 @@ async def test_rpc_device_switch_type_lights_mode(
         blocking=True,
     )
     mock_rpc_device.mock_update()
+
+    mock_rpc_device.switch_set.assert_called_once_with(0, False)
 
     assert (state := hass.states.get(entity_id))
     assert state.state == STATE_OFF
@@ -517,14 +521,14 @@ async def test_rpc_light(
         blocking=True,
     )
 
-    mock_rpc_device.call_rpc.assert_called_once_with("Light.Set", {"id": 0, "on": True})
+    mock_rpc_device.light_set.assert_called_once_with(0, {"on": True})
 
     assert (state := hass.states.get(entity_id))
     assert state.state == STATE_ON
     assert state.attributes[ATTR_BRIGHTNESS] == 135
 
     # Turn off
-    mock_rpc_device.call_rpc.reset_mock()
+    mock_rpc_device.light_set.reset_mock()
     mutate_rpc_device_status(monkeypatch, mock_rpc_device, "light:0", "output", False)
     await hass.services.async_call(
         LIGHT_DOMAIN,
@@ -534,15 +538,13 @@ async def test_rpc_light(
     )
 
     mock_rpc_device.mock_update()
-    mock_rpc_device.call_rpc.assert_called_once_with(
-        "Light.Set", {"id": 0, "on": False}
-    )
+    mock_rpc_device.light_set.assert_called_once_with(0, {"on": False})
 
     assert (state := hass.states.get(entity_id))
     assert state.state == STATE_OFF
 
     # Turn on, brightness = 33
-    mock_rpc_device.call_rpc.reset_mock()
+    mock_rpc_device.light_set.reset_mock()
     await hass.services.async_call(
         LIGHT_DOMAIN,
         LightService.TURN_ON,
@@ -554,16 +556,14 @@ async def test_rpc_light(
     mutate_rpc_device_status(monkeypatch, mock_rpc_device, "light:0", "brightness", 13)
     mock_rpc_device.mock_update()
 
-    mock_rpc_device.call_rpc.assert_called_once_with(
-        "Light.Set", {"id": 0, "on": True, "brightness": 13}
-    )
+    mock_rpc_device.light_set.assert_called_once_with(0, {"on": True, "brightness": 13})
 
     assert (state := hass.states.get(entity_id))
     assert state.state == STATE_ON
     assert state.attributes[ATTR_BRIGHTNESS] == 33
 
     # Turn on, transition = 10.1
-    mock_rpc_device.call_rpc.reset_mock()
+    mock_rpc_device.light_set.reset_mock()
     await hass.services.async_call(
         LIGHT_DOMAIN,
         LightService.TURN_ON,
@@ -573,15 +573,15 @@ async def test_rpc_light(
 
     mock_rpc_device.mock_update()
 
-    mock_rpc_device.call_rpc.assert_called_once_with(
-        "Light.Set", {"id": 0, "on": True, "transition_duration": 10.1}
+    mock_rpc_device.light_set.assert_called_once_with(
+        0, {"on": True, "transition_duration": 10.1}
     )
 
     assert (state := hass.states.get(entity_id))
     assert state.state == STATE_ON
 
     # Turn off, transition = 0.4, should be limited to 0.5
-    mock_rpc_device.call_rpc.reset_mock()
+    mock_rpc_device.light_set.reset_mock()
     await hass.services.async_call(
         LIGHT_DOMAIN,
         LightService.TURN_OFF,
@@ -592,8 +592,8 @@ async def test_rpc_light(
     mutate_rpc_device_status(monkeypatch, mock_rpc_device, "light:0", "output", False)
     mock_rpc_device.mock_update()
 
-    mock_rpc_device.call_rpc.assert_called_once_with(
-        "Light.Set", {"id": 0, "on": False, "transition_duration": 0.5}
+    mock_rpc_device.light_set.assert_called_once_with(
+        0, {"on": False, "transition_duration": 0.5}
     )
 
     assert (state := hass.states.get(entity_id))
@@ -634,8 +634,8 @@ async def test_rpc_device_rgb_profile(
     mutate_rpc_device_status(monkeypatch, mock_rpc_device, "rgb:0", "rgb", [70, 80, 90])
     mock_rpc_device.mock_update()
 
-    mock_rpc_device.call_rpc.assert_called_once_with(
-        "RGB.Set", {"id": 0, "on": True, "rgb": [70, 80, 90]}
+    mock_rpc_device.rgb_set.assert_called_once_with(
+        0, {"on": True, "rgb": [70, 80, 90]}
     )
 
     assert (state := hass.states.get(entity_id))
@@ -684,8 +684,8 @@ async def test_rpc_device_rgbw_profile(
     mutate_rpc_device_status(monkeypatch, mock_rpc_device, "rgbw:0", "white", 128)
     mock_rpc_device.mock_update()
 
-    mock_rpc_device.call_rpc.assert_called_once_with(
-        "RGBW.Set", {"id": 0, "on": True, "rgb": [72, 82, 92], "white": 128}
+    mock_rpc_device.rgbw_set.assert_called_once_with(
+        0, {"on": True, "rgb": [72, 82, 92], "white": 128}
     )
 
     assert (state := hass.states.get(entity_id))
@@ -846,13 +846,13 @@ async def test_rpc_cct_light(
         blocking=True,
     )
 
-    mock_rpc_device.call_rpc.assert_called_once_with("CCT.Set", {"id": 0, "on": False})
+    mock_rpc_device.cct_set.assert_called_once_with(0, {"on": False})
 
     assert (state := hass.states.get(entity_id))
     assert state.state == STATE_OFF
 
     # Turn on
-    mock_rpc_device.call_rpc.reset_mock()
+    mock_rpc_device.cct_set.reset_mock()
     mutate_rpc_device_status(monkeypatch, mock_rpc_device, "cct:0", "output", True)
     await hass.services.async_call(
         LIGHT_DOMAIN,
@@ -862,7 +862,7 @@ async def test_rpc_cct_light(
     )
 
     mock_rpc_device.mock_update()
-    mock_rpc_device.call_rpc.assert_called_once_with("CCT.Set", {"id": 0, "on": True})
+    mock_rpc_device.cct_set.assert_called_once_with(0, {"on": True})
 
     assert (state := hass.states.get(entity_id))
     assert state.state == STATE_ON
@@ -873,7 +873,7 @@ async def test_rpc_cct_light(
     assert state.attributes[ATTR_MAX_COLOR_TEMP_KELVIN] == 5555
 
     # Turn on, brightness = 88
-    mock_rpc_device.call_rpc.reset_mock()
+    mock_rpc_device.cct_set.reset_mock()
     await hass.services.async_call(
         LIGHT_DOMAIN,
         LightService.TURN_ON,
@@ -884,16 +884,14 @@ async def test_rpc_cct_light(
     mutate_rpc_device_status(monkeypatch, mock_rpc_device, "cct:0", "brightness", 88)
     mock_rpc_device.mock_update()
 
-    mock_rpc_device.call_rpc.assert_called_once_with(
-        "CCT.Set", {"id": 0, "on": True, "brightness": 88}
-    )
+    mock_rpc_device.cct_set.assert_called_once_with(0, {"on": True, "brightness": 88})
 
     assert (state := hass.states.get(entity_id))
     assert state.state == STATE_ON
     assert state.attributes[ATTR_BRIGHTNESS] == 224  # 88% of 255
 
     # Turn on, color temp = 4444 K
-    mock_rpc_device.call_rpc.reset_mock()
+    mock_rpc_device.cct_set.reset_mock()
     await hass.services.async_call(
         LIGHT_DOMAIN,
         LightService.TURN_ON,
@@ -905,9 +903,7 @@ async def test_rpc_cct_light(
 
     mock_rpc_device.mock_update()
 
-    mock_rpc_device.call_rpc.assert_called_once_with(
-        "CCT.Set", {"id": 0, "on": True, "ct": 4444}
-    )
+    mock_rpc_device.cct_set.assert_called_once_with(0, {"on": True, "ct": 4444})
 
     assert (state := hass.states.get(entity_id))
     assert state.state == STATE_ON
@@ -1005,15 +1001,13 @@ async def test_rpc_rgbcct_light(
         blocking=True,
     )
 
-    mock_rpc_device.call_rpc.assert_called_once_with(
-        "RGBCCT.Set", {"id": 0, "on": False}
-    )
+    mock_rpc_device.rgbcct_set.assert_called_once_with(0, {"on": False})
 
     assert (state := hass.states.get(entity_id))
     assert state.state == STATE_OFF
 
     # Turn on
-    mock_rpc_device.call_rpc.reset_mock()
+    mock_rpc_device.rgbcct_set.reset_mock()
     mutate_rpc_device_status(monkeypatch, mock_rpc_device, "rgbcct:0", "output", True)
     await hass.services.async_call(
         LIGHT_DOMAIN,
@@ -1022,9 +1016,7 @@ async def test_rpc_rgbcct_light(
         blocking=True,
     )
 
-    mock_rpc_device.call_rpc.assert_called_once_with(
-        "RGBCCT.Set", {"id": 0, "on": True}
-    )
+    mock_rpc_device.rgbcct_set.assert_called_once_with(0, {"on": True})
     mock_rpc_device.mock_update()
 
     assert (state := hass.states.get(entity_id))
@@ -1036,7 +1028,7 @@ async def test_rpc_rgbcct_light(
     assert state.attributes[ATTR_MAX_COLOR_TEMP_KELVIN] == 6500
 
     # Turn on, brightness = 88
-    mock_rpc_device.call_rpc.reset_mock()
+    mock_rpc_device.rgbcct_set.reset_mock()
     await hass.services.async_call(
         LIGHT_DOMAIN,
         LightService.TURN_ON,
@@ -1047,8 +1039,8 @@ async def test_rpc_rgbcct_light(
     mutate_rpc_device_status(monkeypatch, mock_rpc_device, "rgbcct:0", "brightness", 88)
     mock_rpc_device.mock_update()
 
-    mock_rpc_device.call_rpc.assert_called_once_with(
-        "RGBCCT.Set", {"id": 0, "on": True, "brightness": 88}
+    mock_rpc_device.rgbcct_set.assert_called_once_with(
+        0, {"on": True, "brightness": 88}
     )
 
     assert (state := hass.states.get(entity_id))
@@ -1056,7 +1048,7 @@ async def test_rpc_rgbcct_light(
     assert state.attributes[ATTR_BRIGHTNESS] == 224  # 88% of 255
 
     # Turn on, color temp = 4444 K
-    mock_rpc_device.call_rpc.reset_mock()
+    mock_rpc_device.rgbcct_set.reset_mock()
     await hass.services.async_call(
         LIGHT_DOMAIN,
         LightService.TURN_ON,
@@ -1067,8 +1059,8 @@ async def test_rpc_rgbcct_light(
     mutate_rpc_device_status(monkeypatch, mock_rpc_device, "rgbcct:0", "ct", 4444)
     mock_rpc_device.mock_update()
 
-    mock_rpc_device.call_rpc.assert_called_once_with(
-        "RGBCCT.Set", {"id": 0, "on": True, "ct": 4444, "mode": "cct"}
+    mock_rpc_device.rgbcct_set.assert_called_once_with(
+        0, {"on": True, "ct": 4444, "mode": "cct"}
     )
 
     assert (state := hass.states.get(entity_id))
@@ -1076,7 +1068,7 @@ async def test_rpc_rgbcct_light(
     assert state.attributes[ATTR_COLOR_TEMP_KELVIN] == 4444
 
     # Turn on, color 100, 150, 200
-    mock_rpc_device.call_rpc.reset_mock()
+    mock_rpc_device.rgbcct_set.reset_mock()
     await hass.services.async_call(
         LIGHT_DOMAIN,
         LightService.TURN_ON,
@@ -1093,8 +1085,8 @@ async def test_rpc_rgbcct_light(
     mutate_rpc_device_status(monkeypatch, mock_rpc_device, "rgbcct:0", "mode", "rgb")
     mock_rpc_device.mock_update()
 
-    mock_rpc_device.call_rpc.assert_called_once_with(
-        "RGBCCT.Set", {"id": 0, "on": True, "rgb": [100, 150, 200], "mode": "rgb"}
+    mock_rpc_device.rgbcct_set.assert_called_once_with(
+        0, {"on": True, "rgb": [100, 150, 200], "mode": "rgb"}
     )
 
     assert (state := hass.states.get(entity_id))
@@ -1128,11 +1120,9 @@ async def test_rpc_ledstrip_light(
         blocking=True,
     )
 
-    mock_ledstrip_rpc_device.call_rpc.assert_called_once_with(
-        "LedStrip.Set", {"id": 0, "on": False}
-    )
+    mock_ledstrip_rpc_device.ledstrip_set.assert_called_once_with(0, {"on": False})
 
-    mock_ledstrip_rpc_device.call_rpc.reset_mock()
+    mock_ledstrip_rpc_device.ledstrip_set.reset_mock()
     mutate_rpc_device_status(
         monkeypatch, mock_ledstrip_rpc_device, "ledstrip:0", "on", True
     )
@@ -1143,9 +1133,7 @@ async def test_rpc_ledstrip_light(
         blocking=True,
     )
 
-    mock_ledstrip_rpc_device.call_rpc.assert_called_once_with(
-        "LedStrip.Set", {"id": 0, "on": True}
-    )
+    mock_ledstrip_rpc_device.ledstrip_set.assert_called_once_with(0, {"on": True})
     mock_ledstrip_rpc_device.mock_update()
 
     assert (state := hass.states.get(entity_id))
@@ -1155,7 +1143,7 @@ async def test_rpc_ledstrip_light(
     assert state.attributes[ATTR_RGB_COLOR] is None
     assert state.attributes[ATTR_EFFECT] == "rainbow"
 
-    mock_ledstrip_rpc_device.call_rpc.reset_mock()
+    mock_ledstrip_rpc_device.ledstrip_set.reset_mock()
     await hass.services.async_call(
         LIGHT_DOMAIN,
         LightService.TURN_ON,
@@ -1168,15 +1156,15 @@ async def test_rpc_ledstrip_light(
     )
     mock_ledstrip_rpc_device.mock_update()
 
-    mock_ledstrip_rpc_device.call_rpc.assert_called_once_with(
-        "LedStrip.Set", {"id": 0, "on": True, "brightness": 88}
+    mock_ledstrip_rpc_device.ledstrip_set.assert_called_once_with(
+        0, {"on": True, "brightness": 88}
     )
 
     assert (state := hass.states.get(entity_id))
     assert state.state == STATE_ON
     assert state.attributes[ATTR_BRIGHTNESS] == 224  # 88% of 255
 
-    mock_ledstrip_rpc_device.call_rpc.reset_mock()
+    mock_ledstrip_rpc_device.ledstrip_set.reset_mock()
     await hass.services.async_call(
         LIGHT_DOMAIN,
         LightService.TURN_ON,
@@ -1196,9 +1184,9 @@ async def test_rpc_ledstrip_light(
     )
     mock_ledstrip_rpc_device.mock_update()
 
-    mock_ledstrip_rpc_device.call_rpc.assert_called_once_with(
-        "LedStrip.Set",
-        {"id": 0, "on": True, "rgb": [100, 150, 200], "effect": "solid"},
+    mock_ledstrip_rpc_device.ledstrip_set.assert_called_once_with(
+        0,
+        {"on": True, "rgb": [100, 150, 200], "effect": "solid"},
     )
 
     assert (state := hass.states.get(entity_id))
@@ -1206,7 +1194,7 @@ async def test_rpc_ledstrip_light(
     assert state.attributes[ATTR_EFFECT] == "solid"
     assert state.attributes[ATTR_RGB_COLOR] == (100, 150, 200)
 
-    mock_ledstrip_rpc_device.call_rpc.reset_mock()
+    mock_ledstrip_rpc_device.ledstrip_set.reset_mock()
     await hass.services.async_call(
         LIGHT_DOMAIN,
         LightService.TURN_ON,
@@ -1219,8 +1207,8 @@ async def test_rpc_ledstrip_light(
     )
     mock_ledstrip_rpc_device.mock_update()
 
-    mock_ledstrip_rpc_device.call_rpc.assert_called_once_with(
-        "LedStrip.Set", {"id": 0, "on": True, "effect": "fade"}
+    mock_ledstrip_rpc_device.ledstrip_set.assert_called_once_with(
+        0, {"on": True, "effect": "fade"}
     )
 
     assert (state := hass.states.get(entity_id))
