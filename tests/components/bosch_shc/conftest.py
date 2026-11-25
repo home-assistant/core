@@ -182,6 +182,8 @@ def battery_only_device(
     device_id: str = "hdm:HomeMaticIP:motion1",
     name: str = "Motion",
     device_services: list[Any] | None = None,
+    batterylevel: BatteryLevelService.State = BatteryLevelService.State.OK,
+    supports_batterylevel: bool = True,
 ) -> SHCBatteryDevice:
     """Build a minimal device double for the motion_detectors bucket.
 
@@ -195,7 +197,8 @@ def battery_only_device(
     device.id = device_id
     device.root_device_id = "test-mac"
     device.serial = f"serial-{device_id}"
-    device.batterylevel = BatteryLevelService.State.OK
+    device.batterylevel = batterylevel
+    device.supports_batterylevel = supports_batterylevel
     device.device_services = device_services or []
     device.manufacturer = "Bosch"
     device.device_model = "MD"

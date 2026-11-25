@@ -64,6 +64,8 @@ async def _get_wifi_networks_list(avm_wrapper: AvmWrapper) -> dict[int, dict[str
     LOGGER.debug("WiFi networks count: %s", wifi_count)
     networks: dict[int, dict[str, Any]] = {}
     for i in range(1, wifi_count + 1):
+        if i == wifi_count and not avm_wrapper.has_guest_wifi:
+            continue
         network_info = await avm_wrapper.async_get_wlan_configuration(i)
         if (switch_name := _wifi_naming(i, wifi_count)) is None:
             continue
