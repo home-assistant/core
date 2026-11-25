@@ -15,12 +15,15 @@ from homeassistant import config as hass_config
 from homeassistant.components.template import DOMAIN
 from homeassistant.components.template.config import (
     CONFIG_SECTION_SCHEMA,
-    _merge_deprecated_options,
     async_validate_config,
     async_validate_config_section,
 )
 from homeassistant.components.template.const import (
+    BINARY_SENSOR_DEPRECATED_ATTRIBUTES,
+    EVENT_DEPRECATED_ATTRIBUTES,
     PLATFORMS,
+    SENSOR_DEPRECATED_ATTRIBUTES,
+    VACUUM_DEPRECATED_ATTRIBUTES,
     WEATHER_DEPRECATED_OPTIONS,
     DeprecatedTemplateOptions,
     TemplateService,
@@ -1900,27 +1903,48 @@ async def test_deprecated_template_options_issue_blueprint(
     )
 
 
-def test_merge_deprecated_options_per_platform() -> None:
+async def test_option_locations_several_deprecations_per_platform(
+    hass: HomeAssistant, yaml_config_dir: Path
+) -> None:
     """Test deprecations of the same platform all keep their option locations."""
-    deprecations = [
-        DeprecatedTemplateOptions(
-            platform=platform,
-            options=options,
-            translation_key=key,
-            blueprint_translation_key=f"{key}_blueprint",
-            breaks_in_ha_version="2027.6.0",
-        )
-        for platform, options, key in (
-            (Platform.LIGHT, {"temperature": "temperature_kelvin"}, "first"),
-            (Platform.LIGHT, {"level": "set_level"}, "second"),
-            (Platform.COVER, {"position": "set_cover_position"}, "third"),
-        )
-    ]
+    yaml_path = yaml_config_dir / "configuration.yaml"
+    await hass.async_add_executor_job(
+        yaml_path.write_text,
+        """\
+template:
+  - sensor:
+      - name: Test
+        state: "{{ 1 }}"
+        attributes:
+          device_class: energy
+        unit_of_measurement: kWh
+""",
+    )
+    config = await hass.async_add_executor_job(load_yaml_dict, yaml_path)
+    unit_deprecation = DeprecatedTemplateOptions(
+        platform=Platform.SENSOR,
+        options={"unit_of_measurement": "unit"},
+        translation_key="deprecated_sensor_unit",
+        blueprint_translation_key="deprecated_sensor_unit_blueprint",
+        breaks_in_ha_version="2027.6.0",
+    )
 
-    assert _merge_deprecated_options(deprecations) == {
-        Platform.LIGHT: {"temperature", "level"},
-        Platform.COVER: {"position"},
-    }
+    with patch(
+        "homeassistant.components.template.config.DEPRECATED_TEMPLATE_OPTIONS",
+        (SENSOR_DEPRECATED_ATTRIBUTES, unit_deprecation),
+    ):
+        validated = await async_validate_config(hass, config)
+
+    assert [section.option_locations for section in validated[DOMAIN]] == [
+        {
+            "sensor": [
+                {
+                    "attributes: device_class": (str(yaml_path), 6),
+                    "unit_of_measurement": (str(yaml_path), 7),
+                }
+            ]
+        },
+    ]
 
 
 async def test_option_locations_only_deprecated_options(
@@ -1935,6 +1959,17 @@ async def test_option_locations_only_deprecated_options(
   - sensor:
       - name: Sensor
         state: "{{ 1 }}"
+        attributes:
+          device_class: energy
+          other: "{{ 2 }}"
+      - name: Template
+        state: "{{ 1 }}"
+        attributes: "{{ {'device_class': 'energy'} }}"
+  - switch:
+      - name: Switch
+        state: "{{ True }}"
+        turn_on: []
+        turn_off: []
 """,
     )
     config = await hass.async_add_executor_job(load_yaml_dict, yaml_path)
@@ -1951,5 +1986,161 @@ async def test_option_locations_only_deprecated_options(
                 }
             ]
         },
+        {"sensor": [{"attributes: device_class": (str(yaml_path), 11)}, {}]},
         {},
     ]
+
+
+DEPRECATED_ATTRIBUTES_SENSOR_YAML = """\
+template:
+  - sensor:
+      - name: Test
+        state: "{{ 1 }}"
+        attributes:
+          device_class: energy
+          other: "{{ 2 }}"
+"""
+
+
+def get_deprecated_sensor_attributes_issues(
+    issue_registry: ir.IssueRegistry,
+) -> list[ir.IssueEntry]:
+    """Return the deprecated sensor attributes issues."""
+    return get_issues_with_prefix(
+        issue_registry, SENSOR_DEPRECATED_ATTRIBUTES.translation_key
+    )
+
+
+async def test_deprecated_attributes_issue_file_and_line(
+    hass: HomeAssistant, issue_registry: ir.IssueRegistry, yaml_config_dir: Path
+) -> None:
+    """Test the repair lists file and line, and is removed after a fix."""
+    await async_setup_yaml_config(
+        hass, yaml_config_dir, DEPRECATED_ATTRIBUTES_SENSOR_YAML
+    )
+
+    issues = get_deprecated_sensor_attributes_issues(issue_registry)
+    assert [issue.translation_placeholders for issue in issues] == [
+        {
+            "identifier": "name: Test",
+            "options": (
+                "- `configuration.yaml:6`: `attributes: device_class` → `device_class`"
+            ),
+        }
+    ]
+
+    await async_reload_yaml_config(
+        hass,
+        yaml_config_dir,
+        DEPRECATED_ATTRIBUTES_SENSOR_YAML.replace(
+            "        attributes:\n          device_class: energy\n",
+            "        device_class: energy\n        attributes:\n",
+        ),
+    )
+
+    assert get_deprecated_sensor_attributes_issues(issue_registry) == []
+
+
+async def test_deprecated_attributes_issue_dismissed(
+    hass: HomeAssistant, issue_registry: ir.IssueRegistry, yaml_config_dir: Path
+) -> None:
+    """Test a dismissed repair stays dismissed until the attribute changes."""
+    await async_setup_yaml_config(
+        hass, yaml_config_dir, DEPRECATED_ATTRIBUTES_SENSOR_YAML
+    )
+    issues = get_deprecated_sensor_attributes_issues(issue_registry)
+    assert len(issues) == 1
+    dismissed_issue_id = issues[0].issue_id
+    issue_registry.async_ignore(DOMAIN, dismissed_issue_id, True)
+
+    # Moving the attributes to other lines is not a configuration change
+    await async_reload_yaml_config(
+        hass, yaml_config_dir, "\n" + DEPRECATED_ATTRIBUTES_SENSOR_YAML
+    )
+
+    issues = get_deprecated_sensor_attributes_issues(issue_registry)
+    assert len(issues) == 1
+    assert issues[0].issue_id == dismissed_issue_id
+    assert issues[0].dismissed_version is not None
+
+    await async_reload_yaml_config(
+        hass,
+        yaml_config_dir,
+        DEPRECATED_ATTRIBUTES_SENSOR_YAML.replace("energy", "power"),
+    )
+
+    issues = get_deprecated_sensor_attributes_issues(issue_registry)
+    assert len(issues) == 1
+    assert issues[0].issue_id != dismissed_issue_id
+    assert issues[0].dismissed_version is None
+
+
+async def test_no_deprecated_attributes_issue_other_platform(
+    hass: HomeAssistant, issue_registry: ir.IssueRegistry
+) -> None:
+    """Test attributes of platforms without deprecated attributes create no repair."""
+    assert await async_setup_component(
+        hass,
+        DOMAIN,
+        {
+            DOMAIN: [
+                {
+                    "switch": {
+                        "state": "{{ True }}",
+                        "turn_on": [],
+                        "turn_off": [],
+                        "attributes": {"fan_speed": "{{ 'low' }}"},
+                    }
+                }
+            ]
+        },
+    )
+    await hass.async_block_till_done()
+
+    for deprecation in (
+        BINARY_SENSOR_DEPRECATED_ATTRIBUTES,
+        EVENT_DEPRECATED_ATTRIBUTES,
+        SENSOR_DEPRECATED_ATTRIBUTES,
+        VACUUM_DEPRECATED_ATTRIBUTES,
+    ):
+        assert get_issues_with_prefix(issue_registry, deprecation.translation_key) == []
+
+
+async def test_deprecated_attributes_issue_blueprint(
+    hass: HomeAssistant, issue_registry: ir.IssueRegistry
+) -> None:
+    """Test all instances of a sensor blueprint share one repair."""
+    assert await async_setup_component(
+        hass,
+        DOMAIN,
+        {
+            DOMAIN: [
+                {
+                    "use_blueprint": {
+                        "path": "test_sensor_with_deprecated_attributes.yaml",
+                        "input": {"sensor": sensor},
+                    },
+                    "name": name,
+                }
+                for sensor, name in (
+                    ("sensor.first", "First"),
+                    ("sensor.second", "Second"),
+                )
+            ]
+        },
+    )
+    await hass.async_block_till_done()
+
+    issues = get_deprecated_sensor_attributes_issues(issue_registry)
+    assert len(issues) == 1
+    assert (
+        issues[0].translation_key
+        == SENSOR_DEPRECATED_ATTRIBUTES.blueprint_translation_key
+    )
+    assert issues[0].translation_placeholders == {
+        "blueprint": "test_sensor_with_deprecated_attributes.yaml",
+        "options": (
+            "- `blueprints/template/test_sensor_with_deprecated_attributes.yaml:17`: "
+            "`attributes: device_class` → `device_class`"
+        ),
+    }

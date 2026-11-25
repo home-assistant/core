@@ -1,11 +1,13 @@
 """Support for services."""
 
+from collections.abc import Awaitable, Callable
 import posixpath
 from typing import Any, cast
 
 from aiohttp import ClientResponseError
 from aioshelly.const import RPC_GENERATIONS
 from aioshelly.exceptions import DeviceConnectionError, InvalidAuthError, RpcCallError
+from aioshelly.rpc_device import RpcDevice
 import probatio
 
 from homeassistant.components.cover import DOMAIN as COVER_DOMAIN, CoverEntityFeature
@@ -96,9 +98,9 @@ def async_get_config_entry_for_service_call(
     return config_entry
 
 
-async def _async_execute_action(
-    call: ServiceCall, method: str, args: tuple
-) -> dict[str, Any]:
+async def _async_execute_action[_T](
+    call: ServiceCall, action: Callable[[RpcDevice], Awaitable[_T]]
+) -> _T:
     """Execute action on the device."""
     config_entry = async_get_config_entry_for_service_call(call)
 
@@ -111,10 +113,8 @@ async def _async_execute_action(
             translation_placeholders={"device": config_entry.title},
         )
 
-    action_method = getattr(runtime_data.rpc.device, method)
-
     try:
-        response = await action_method(*args)
+        return await action(runtime_data.rpc.device)
     except RpcCallError as err:
         raise HomeAssistantError(
             translation_domain=DOMAIN,
@@ -127,8 +127,6 @@ async def _async_execute_action(
             translation_key="device_communication_error",
             translation_placeholders={"device": config_entry.title},
         ) from err
-    else:
-        return cast(dict[str, Any], response)
 
 
 async def async_command(call: ServiceCall) -> ServiceResponse:
@@ -252,7 +250,7 @@ async def async_get_kvs_value(call: ServiceCall) -> ServiceResponse:
     """Handle the get_kvs_value service call."""
     key = call.data[ShellyServiceArgument.KEY]
 
-    response = await _async_execute_action(call, "kvs_get", (key,))
+    response = await _async_execute_action(call, lambda device: device.kvs_get(key))
 
     result: dict[str, JsonValueType] = {}
     result["value"] = response["value"]
@@ -262,14 +260,10 @@ async def async_get_kvs_value(call: ServiceCall) -> ServiceResponse:
 
 async def async_set_kvs_value(call: ServiceCall) -> None:
     """Handle the set_kvs_value service call."""
-    await _async_execute_action(
-        call,
-        "kvs_set",
-        (
-            call.data[ShellyServiceArgument.KEY],
-            call.data[ShellyServiceArgument.VALUE],
-        ),
-    )
+    key = call.data[ShellyServiceArgument.KEY]
+    value = call.data[ShellyServiceArgument.VALUE]
+
+    await _async_execute_action(call, lambda device: device.kvs_set(key, value))
 
 
 @callback

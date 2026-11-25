@@ -247,6 +247,9 @@
       "mute_alarm": {
         "name": "Mute alarm"
       },
+      "next_effect": {
+        "name": "Next effect"
+      },
       "open": {
         "name": "Open"
       },
