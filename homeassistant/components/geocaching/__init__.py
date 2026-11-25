@@ -24,7 +24,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: GeocachingConfigEntry) -
     await coordinator.async_config_entry_first_refresh()
 
     entry.runtime_data = coordinator
+    entry.async_on_unload(entry.add_update_listener(async_update_entry))
+    await async_update_entry(hass, entry)
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+
+
+async def async_update_entry(hass: HomeAssistant, entry: GeocachingConfigEntry) -> None:
+    """Reload the config entry when its subentries are updated."""
+    if (subentry_ids := frozenset(entry.subentries)) != entry.runtime_data.subentry_ids:
+        entry.runtime_data.subentry_ids = subentry_ids
+        hass.config_entries.async_schedule_reload(entry.entry_id)
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: GeocachingConfigEntry) -> None:

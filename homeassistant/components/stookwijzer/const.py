@@ -6,4 +6,4 @@ from typing import Final
 DOMAIN: Final = "stookwijzer"
 LOGGER = logging.getLogger(__package__)
 
-SERVICE_GET_FORECAST = "get_forecast"
+ADVICE_LEVELS: Final = ["code_yellow", "code_orange", "code_red"]

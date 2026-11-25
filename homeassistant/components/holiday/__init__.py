@@ -15,6 +15,7 @@ from homeassistant.setup import SetupPhases, async_pause_setup
 from .const import (
     CONF_CATEGORIES,
     CONF_PROVINCE,
+    COUNTRY_OPTIONS,
     DOMAIN,
     ISSUE_UNSUPPORTED_CATEGORIES,
     ISSUE_UNSUPPORTED_COUNTRY,
@@ -103,6 +104,25 @@ def _async_raise_unsupported(
         translation_key=issue,
         translation_placeholders=placeholders,
     ) from err
+
+
+async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
+    """Migrate an old config entry."""
+    if entry.version == 1 and entry.minor_version < 2:
+        options = dict(entry.options)
+        try:
+            country_data = await hass.async_add_import_executor_job(
+                country_holidays, entry.data[CONF_COUNTRY]
+            )
+        except NotImplementedError:
+            supported_options = {}
+        else:
+            supported_options = country_data.get_supported_options()
+        # Store the defaults, so equal calendars are found as duplicates
+        for option in COUNTRY_OPTIONS:
+            if option in supported_options:
+                options.setdefault(option, supported_options[option])
+        hass.config_entries.async_update_entry(entry, options=options, minor_version=2)
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:

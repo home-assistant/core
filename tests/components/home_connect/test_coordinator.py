@@ -223,6 +223,7 @@ async def test_coordinator_failure_refresh_and_stream(
 async def test_coordinator_not_fetching_on_disconnected_appliance(
     client: MagicMock,
     config_entry: MockConfigEntry,
+    caplog: pytest.LogCaptureFixture,
     integration_setup: Callable[[MagicMock], Awaitable[bool]],
     appliance: HomeAppliance,
 ) -> None:
@@ -234,6 +235,8 @@ async def test_coordinator_not_fetching_on_disconnected_appliance(
 
     for method in INITIAL_FETCH_CLIENT_METHODS:
         assert getattr(client, method).call_count == 0
+    assert "is unavailable" in caplog.text
+    assert "Error fetching" not in caplog.text
 
 
 @pytest.mark.parametrize(
