@@ -5,6 +5,7 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any, override
 
 from boschshcpy import (
+    SHCBatteryDevice,
     SHCLightControl,
     SHCLightSwitchBSM,
     SHCMicromoduleShutterControl,
@@ -77,6 +78,7 @@ FLOOR_TEMPERATURE_SENSOR = "floor_temperature"
 SIREN_BATTERY_SENSOR = "siren_battery"
 SIREN_MAIN_POWER_SENSOR = "siren_main_power"
 SIREN_SOLAR_CHARGING_SENSOR = "siren_solar_charging"
+BATTERY_LEVEL_SENSOR = "battery_level"
 
 _FLOOR_SENSOR_TERMINAL_TYPES = {
     TerminalConfiguration.Type.FLOOR_SENSOR_CONNECTED,
@@ -184,6 +186,23 @@ _FLOOR_TEMPERATURE_DESCRIPTION: SHCSensorEntityDescription[SHCRoomThermostat2] =
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         value_fn=lambda device: device.terminal_temperature,
+    )
+)
+_BATTERY_LEVEL_DESCRIPTION: SHCSensorEntityDescription[SHCBatteryDevice] = (
+    SHCSensorEntityDescription(
+        key=BATTERY_LEVEL_SENSOR,
+        translation_key=BATTERY_LEVEL_SENSOR,
+        device_class=SensorDeviceClass.ENUM,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+        options=[
+            "ok",
+            "low_battery",
+            "critical_low",
+            "critically_low_battery",
+            "not_available",
+        ],
+        value_fn=lambda device: device.batterylevel.value.lower(),
     )
 )
 _TWINGUARD_TEMPERATURE_DESCRIPTION: SHCSensorEntityDescription[SHCTwinguard] = (
@@ -414,6 +433,31 @@ async def async_setup_entry(
             _HUMIDITY_RATING_DESCRIPTION,
             _PURITY_RATING_DESCRIPTION,
         )
+    )
+
+    entities.extend(
+        SHCSensor(
+            hass,
+            device,
+            _BATTERY_LEVEL_DESCRIPTION,
+            shc_info.unique_id,
+            config_entry.entry_id,
+        )
+        for device in (
+            *session.device_helper.motion_detectors,
+            *session.device_helper.motion_detectors2,
+            *session.device_helper.shutter_contacts,
+            *session.device_helper.shutter_contacts2,
+            *session.device_helper.smoke_detectors,
+            *session.device_helper.thermostats,
+            *session.device_helper.twinguards,
+            *session.device_helper.universal_switches,
+            *session.device_helper.wallthermostats,
+            *session.device_helper.roomthermostats,
+            *session.device_helper.water_leakage_detectors,
+            *session.device_helper.outdoor_sirens,
+        )
+        if device.supports_batterylevel
     )
 
     power_meter_devices: list[_PowerMeterDevice] = [
