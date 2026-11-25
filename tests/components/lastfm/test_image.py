@@ -100,6 +100,45 @@ async def test_no_album_art(
     assert status == HTTPStatus.INTERNAL_SERVER_ERROR
 
 
+@pytest.mark.parametrize(
+    "user",
+    [
+        pytest.param(MockUser(), id="stopped_playing"),
+        pytest.param(
+            MockUser(
+                now_playing_result=Track(
+                    "other artist",
+                    "other title",
+                    MockNetwork("lastfm"),
+                    info={"image": []},
+                )
+            ),
+            id="no_album_art",
+        ),
+    ],
+)
+@respx.mock
+async def test_album_art_cleared(
+    hass: HomeAssistant,
+    setup_integration: ComponentSetup,
+    config_entry: MockConfigEntry,
+    default_user: MockUser,
+    hass_client: ClientSessionGenerator,
+    freezer: FrozenDateTimeFactory,
+    user: MockUser,
+) -> None:
+    """Test the previous album art is no longer served once it is gone."""
+    respx.get(COVER_IMAGE).respond(content_type="image/png", content=b"cover")
+
+    await setup_integration(config_entry, default_user)
+    assert await _async_get_image(hass, hass_client) == (HTTPStatus.OK, b"cover")
+
+    await _async_update(hass, freezer, user)
+
+    status, _ = await _async_get_image(hass, hass_client)
+    assert status == HTTPStatus.INTERNAL_SERVER_ERROR
+
+
 async def test_album_art_requested_once(
     hass: HomeAssistant,
     setup_integration: ComponentSetup,
