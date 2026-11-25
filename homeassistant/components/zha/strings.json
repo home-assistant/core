@@ -495,14 +495,98 @@
       }
     },
     "event": {
+      "aux_config_button": {
+        "name": "Aux config button"
+      },
+      "aux_down_button": {
+        "name": "Aux down button"
+      },
+      "aux_up_button": {
+        "name": "Aux up button"
+      },
+      "both_buttons": {
+        "name": "Both buttons"
+      },
+      "button": {
+        "name": "[%key:component::event::entity_component::button::name%]"
+      },
       "button_numbered": {
         "name": "Button {number}"
+      },
+      "button_numbered_off": {
+        "name": "Off button {number}"
+      },
+      "button_numbered_on": {
+        "name": "On button {number}"
+      },
+      "center_button": {
+        "name": "Center button"
+      },
+      "close_button": {
+        "name": "Close button"
+      },
+      "config_button": {
+        "name": "Config button"
+      },
+      "dim_down_button": {
+        "name": "Dim down button"
+      },
+      "dim_up_button": {
+        "name": "Dim up button"
+      },
+      "down_button": {
+        "name": "Down button"
+      },
+      "hue_button": {
+        "name": "Hue button"
+      },
+      "left_button": {
+        "name": "Left button"
+      },
+      "minus_button": {
+        "name": "Minus button"
+      },
+      "next_button": {
+        "name": "Next button"
+      },
+      "off_button": {
+        "name": "Off button"
+      },
+      "on_button": {
+        "name": "On button"
+      },
+      "open_button": {
+        "name": "Open button"
+      },
+      "play_pause_button": {
+        "name": "Play/pause button"
+      },
+      "plus_button": {
+        "name": "Plus button"
+      },
+      "previous_button": {
+        "name": "Previous button"
+      },
+      "right_button": {
+        "name": "Right button"
       },
       "rocker_bottom": {
         "name": "Rocker {rocker} bottom"
       },
       "rocker_top": {
         "name": "Rocker {rocker} top"
+      },
+      "toggle_button": {
+        "name": "Toggle button"
+      },
+      "up_button": {
+        "name": "Up button"
+      },
+      "volume_down_button": {
+        "name": "Volume down button"
+      },
+      "volume_up_button": {
+        "name": "Volume up button"
       }
     },
     "fan": {
