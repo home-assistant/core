@@ -12,7 +12,7 @@ from roombapy import (
     generate_tls_context,
 )
 
-from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult, OptionsFlow
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PASSWORD
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
@@ -24,7 +24,14 @@ from . import (
     async_create_roomba,
     async_disconnect_or_timeout,
 )
-from .const import CONF_BLID, DOMAIN, ROOMBA_SESSION
+from .const import (
+    CONF_BLID,
+    CONF_CONTINUOUS,
+    DEFAULT_CONTINUOUS,
+    DOMAIN,
+    ROOMBA_SESSION,
+)
+from .models import RoombaConfigEntry
 
 ROOMBA_DISCOVERY_LOCK = "roomba_discovery_lock"
 ALL_ATTEMPTS = 2
@@ -69,6 +76,15 @@ class RoombaConfigFlow(ConfigFlow, domain=DOMAIN):
     def __init__(self) -> None:
         """Initialize the roomba flow."""
         self.discovered_robots: dict[str, RoombaInfo] = {}
+
+    @staticmethod
+    @callback
+    @override
+    def async_get_options_flow(
+        config_entry: RoombaConfigEntry,
+    ) -> RoombaOptionsFlowHandler:
+        """Get the options flow for this handler."""
+        return RoombaOptionsFlowHandler()
 
     @override
     async def async_step_zeroconf(
@@ -312,6 +328,31 @@ class RoombaConfigFlow(ConfigFlow, domain=DOMAIN):
                 {probatio.Required(probatio.Secret(CONF_PASSWORD)): str}
             ),
             errors=errors,
+        )
+
+
+class RoombaOptionsFlowHandler(OptionsFlow):
+    """Handle options."""
+
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Manage the options."""
+        if user_input is not None:
+            return self.async_create_entry(data=user_input)
+
+        return self.async_show_form(
+            step_id="init",
+            data_schema=probatio.Schema(
+                {
+                    probatio.Optional(
+                        CONF_CONTINUOUS,
+                        default=self.config_entry.options.get(
+                            CONF_CONTINUOUS, DEFAULT_CONTINUOUS
+                        ),
+                    ): bool,
+                }
+            ),
         )
 
 

@@ -122,5 +122,18 @@
     "spray_amount_not_a_number": {
       "message": "Invalid spray amount {spray_amount}. Expected a whole number."
     }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "continuous": "Continuous connection"
+        },
+        "data_description": {
+          "continuous": "Keep a permanent connection to the robot. Some robots cannot sleep on the dock and keep their lights on while connected. When disabled, the robot is checked every 5 minutes and stays connected only while it is cleaning or right after a command. For a different schedule, disable polling in the system options of this integration and call homeassistant.update_entity on the vacuum entity from an automation."
+        },
+        "title": "Connection"
+      }
+    }
   }
 }

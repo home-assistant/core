@@ -6,6 +6,8 @@ from roombapy import RoombaClient
 
 from homeassistant.config_entries import ConfigEntry
 
+from .connection import RoombaConnection
+
 type RoombaConfigEntry = ConfigEntry[RoombaData]
 
 
@@ -15,3 +17,4 @@ class RoombaData:
 
     roomba: RoombaClient
     blid: str
+    connection: RoombaConnection
