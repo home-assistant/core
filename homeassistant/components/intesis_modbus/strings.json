@@ -2,6 +2,7 @@
   "config": {
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "unload_failed": "The gateway could not be stopped to try the new settings. Restart Home Assistant and reconfigure the gateway again.",
       "unsupported_brand": "This is a {brand} gateway. Its code and error tables are not written yet, so it cannot be set up. See the intesis-gw-modbus library for how to contribute them."
     },
     "error": {

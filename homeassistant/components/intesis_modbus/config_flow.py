@@ -39,19 +39,20 @@ from .helpers import create_modbus_params
 DEFAULT_BAUDRATE = 9600
 DEFAULT_UNIT_ID = 1
 
+_BAUDRATE = probatio.All(
+    NumberSelector(NumberSelectorConfig(mode=NumberSelectorMode.BOX, min=1)),
+    probatio.Coerce(int),
+)
+_UNIT_ID = probatio.All(
+    NumberSelector(NumberSelectorConfig(mode=NumberSelectorMode.BOX, min=1, max=247)),
+    probatio.Coerce(int),
+)
+
 STEP_USER_DATA_SCHEMA = probatio.Schema(
     {
         probatio.Required(CONF_DEVICE): SerialPortSelector(),
-        probatio.Required(CONF_BAUDRATE, default=DEFAULT_BAUDRATE): probatio.All(
-            NumberSelector(NumberSelectorConfig(mode=NumberSelectorMode.BOX, min=1)),
-            probatio.Coerce(int),
-        ),
-        probatio.Required(CONF_UNIT_ID, default=DEFAULT_UNIT_ID): probatio.All(
-            NumberSelector(
-                NumberSelectorConfig(mode=NumberSelectorMode.BOX, min=1, max=247)
-            ),
-            probatio.Coerce(int),
-        ),
+        probatio.Required(CONF_BAUDRATE, default=DEFAULT_BAUDRATE): _BAUDRATE,
+        probatio.Required(CONF_UNIT_ID, default=DEFAULT_UNIT_ID): _UNIT_ID,
     }
 )
 
@@ -124,11 +125,19 @@ class IntesisModbusConfigFlow(ConfigFlow, domain=DOMAIN):
             if result is not None:
                 return result
 
+        # A field left out keeps what the entry has, not the factory default
+        data = reconfigure_entry.data
+        schema = STEP_USER_DATA_SCHEMA.extend(
+            {
+                probatio.Required(
+                    CONF_BAUDRATE, default=data[CONF_BAUDRATE]
+                ): _BAUDRATE,
+                probatio.Required(CONF_UNIT_ID, default=data[CONF_UNIT_ID]): _UNIT_ID,
+            }
+        )
         return self.async_show_form(
             step_id="reconfigure",
-            data_schema=self.add_suggested_values_to_schema(
-                STEP_USER_DATA_SCHEMA, user_input or reconfigure_entry.data
-            ),
+            data_schema=self.add_suggested_values_to_schema(schema, user_input or data),
             errors=errors,
         )
 
@@ -141,10 +150,8 @@ class IntesisModbusConfigFlow(ConfigFlow, domain=DOMAIN):
             CONF_UNIT_ID: user_input[CONF_UNIT_ID],
         }
         self._async_abort_entries_match(match)
-        # A loaded entry holds its port at the old baud rate, which refuses
-        # a probe at another one, so it lets go of the port meanwhile. A
-        # request that is cancelled half way must not leave it unloaded: the
-        # unload and the way back run to their end, the probe does not.
+        # A loaded entry holds its port at the old baud rate, which refuses a
+        # probe at another one, so it lets go of the port meanwhile.
         unload: asyncio.Task[bool] | None = None
         if entry.state in (ConfigEntryState.LOADED, ConfigEntryState.SETUP_RETRY):
             current = create_modbus_params(entry.data)
@@ -157,8 +164,9 @@ class IntesisModbusConfigFlow(ConfigFlow, domain=DOMAIN):
         restore = unload is not None
         try:
             try:
-                if unload is not None:
-                    await asyncio.shield(unload)
+                if unload is not None and not await asyncio.shield(unload):
+                    # The port is still held, so the probe could only fail
+                    raise AbortFlow("unload_failed")
                 errors, probe = await self._async_validate(user_input)
             except asyncio.CancelledError:
                 # The request is gone and cannot wait: the way back runs alone
@@ -167,8 +175,10 @@ class IntesisModbusConfigFlow(ConfigFlow, domain=DOMAIN):
                 restore = False
                 raise
             if probe is not None:
-                # Another flow may have claimed the gateway meanwhile
+                # Another flow may have claimed the gateway meanwhile, and this
+                # one may have been removed: the lookup raises for a flow gone.
                 self._async_abort_entries_match(match)
+                self.hass.config_entries.flow.async_get(self.flow_id)
                 restore = False
                 return {}, self.async_update_reload_and_abort(
                     entry, data_updates=_entry_data(user_input, probe)

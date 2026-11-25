@@ -25,7 +25,7 @@ from homeassistant.components.intesis_modbus.const import (
 from homeassistant.config_entries import SOURCE_USER, ConfigEntryState, ConfigFlowResult
 from homeassistant.const import CONF_DEVICE, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.data_entry_flow import FlowResultType, UnknownFlow
 from homeassistant.exceptions import HomeAssistantError
 
 from . import (
@@ -348,6 +348,32 @@ async def test_reconfigure_moves_the_gateway_to_another_port(
     assert result["reason"] == "reconfigure_successful"
     assert mock_config_entry.data == {**MOCK_ENTRY_DATA, CONF_DEVICE: "/dev/ttyUSB1"}
     assert mock_config_entry.options == MOCK_ENTRY_OPTIONS
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_reconfigure_keeps_the_fields_left_out(hass: HomeAssistant) -> None:
+    """A submission with only a new port keeps the entry's baud rate and unit ID."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={**MOCK_ENTRY_DATA, CONF_BAUDRATE: 19200, CONF_UNIT_ID: 2},
+        options=MOCK_ENTRY_OPTIONS,
+    )
+    entry.add_to_hass(hass)
+    connection = MockModbusConnection()
+    seed_single_unit(connection.for_unit(2))
+    result = await entry.start_reconfigure_flow(hass)
+    with _patch_temporary_unit(connection, "/dev/ttyUSB1", baudrate=19200):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_DEVICE: "/dev/ttyUSB1"}
+        )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert entry.data == {
+        **MOCK_ENTRY_DATA,
+        CONF_DEVICE: "/dev/ttyUSB1",
+        CONF_BAUDRATE: 19200,
+        CONF_UNIT_ID: 2,
+    }
 
 
 @pytest.mark.usefixtures("mock_setup_entry")
@@ -704,6 +730,44 @@ async def test_reconfigure_finishes_when_the_request_is_cancelled(
             await request
         proceed.set()
         await hass.async_block_till_done()
+    assert init_integration.data == MOCK_ENTRY_DATA
+    assert init_integration.state is ConfigEntryState.LOADED
+
+
+async def test_reconfigure_aborts_when_the_entry_does_not_unload(
+    hass: HomeAssistant, init_integration: MockConfigEntry
+) -> None:
+    """An entry that keeps holding its port cannot be probed at another rate."""
+    result = await init_integration.start_reconfigure_flow(hass)
+    with (
+        patch.object(hass.config_entries, "async_unload", return_value=False),
+        patch(TARGET) as mock_probe,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], FASTER_INPUT
+        )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "unload_failed"
+    assert mock_probe.call_count == 0
+    assert init_integration.data == MOCK_ENTRY_DATA
+
+
+async def test_reconfigure_saves_nothing_when_the_flow_was_removed(
+    hass: HomeAssistant, init_integration: MockConfigEntry
+) -> None:
+    """A flow aborted during the probe does not change the entry afterwards."""
+    result = await init_integration.start_reconfigure_flow(hass)
+    flow_id = result["flow_id"]
+    with (
+        _patch_temporary_unit(
+            _seeded(),
+            baudrate=19200,
+            on_probe=lambda: hass.config_entries.flow.async_abort(flow_id),
+        ),
+        pytest.raises(UnknownFlow),
+    ):
+        await hass.config_entries.flow.async_configure(flow_id, FASTER_INPUT)
+    await hass.async_block_till_done()
     assert init_integration.data == MOCK_ENTRY_DATA
     assert init_integration.state is ConfigEntryState.LOADED
 
