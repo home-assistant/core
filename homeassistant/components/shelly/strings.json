@@ -939,6 +939,12 @@
     "rpc_call_error": {
       "message": "RPC call error occurred for {device}"
     },
+    "storage_unavailable": {
+      "message": "Storage unavailable for {device}"
+    },
+    "unexpected_identifier": {
+      "message": "Unexpected identifier: {identifier}"
+    },
     "unsupported_media_content_type": {
       "message": "Unsupported media content type for Shelly device: {media_content_type}"
     },
