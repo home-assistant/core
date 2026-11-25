@@ -188,7 +188,7 @@ class EvoAccountCoordinator(_EvoCoordinator[_HighPrecisionTemps]):
             _log_api_call_failure(self.logger, err)
             raise UpdateFailedUnreachable(
                 translation_domain=DOMAIN,
-                translation_key=_api_call_error_key(err),
+                translation_key="api_connection_failed",
             ) from err
 
         except ec2.ApiCallFailedError as err:
@@ -381,7 +381,7 @@ class EvoLocationCoordinator(_EvoCoordinator[EvoLocStatusT]):
             _log_api_call_failure(self.logger, err)
             raise UpdateFailedUnreachable(
                 translation_domain=DOMAIN,
-                translation_key=_api_call_error_key(err),
+                translation_key="api_connection_failed",
             ) from err
 
         except ec2.ApiCallFailedError as err:
