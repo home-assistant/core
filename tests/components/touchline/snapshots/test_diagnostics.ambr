@@ -1,0 +1,66 @@
+# serializer version: 1
+# name: test_entry_diagnostics
+  dict({
+    'controller': dict({
+      'actuator_app_version': '1.0',
+      'actuator_bootloader_version': '1.0',
+      'controller_id': 1,
+      'dew_point_active': False,
+      'error_code': 0,
+      'hostname': '**REDACTED**',
+      'ip_address': '**REDACTED**',
+      'is_master': True,
+      'mac_address': '**REDACTED**',
+      'operation_mode': 0,
+      'paired_devices': 1,
+      'safety_tripped': False,
+      'slave_controllers': 0,
+      'stm_app_version': 'A.FA',
+      'stm_bootloader_version': '1.0',
+      'system_status': 0,
+      'timestamp': 0,
+      'total_devices': 1,
+      'unique_id': '**REDACTED**',
+      'week_program_warning': False,
+    }),
+    'entry': dict({
+      'data': dict({
+        'host': '**REDACTED**',
+      }),
+      'disabled_by': None,
+      'discovery_keys': dict({
+      }),
+      'domain': 'touchline',
+      'minor_version': 1,
+      'options': dict({
+      }),
+      'pref_disable_new_entities': False,
+      'pref_disable_polling': False,
+      'source': 'user',
+      'subentries': list([
+      ]),
+      'title': '**REDACTED**',
+      'unique_id': '**REDACTED**',
+      'version': 1,
+    }),
+    'rooms': dict({
+      '1_0': dict({
+        'controller_id': 1,
+        'device_id': 0,
+        'index': 0,
+        'max_temperature': 30.0,
+        'min_temperature': 5.0,
+        'name': 'Zone 1',
+        'operation_mode': 0,
+        'operation_mode_enabled': True,
+        'target_temperature': 22.0,
+        'temperature': 21.5,
+        'temperature_step': 0.5,
+        'temperature_unit': 0,
+        'unique_id': '**REDACTED**',
+        'week_program': 0,
+        'week_program_enabled': True,
+      }),
+    }),
+  })
+# ---
