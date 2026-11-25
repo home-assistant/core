@@ -81,6 +81,9 @@
       }
     },
     "button": {
+      "intrusion_alarm_mute": {
+        "name": "Mute alarm"
+      },
       "preview_max_brightness": {
         "name": "Preview max brightness"
       },

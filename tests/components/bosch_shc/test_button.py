@@ -6,10 +6,11 @@ from unittest.mock import MagicMock, patch
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
+from homeassistant.components.bosch_shc.const import DOMAIN
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, ButtonService
 from homeassistant.const import Platform, TargetKey
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from .conftest import (
     micromodule_dimmer_device,
@@ -253,3 +254,31 @@ async def test_dimmer_preview_buttons_disabled_by_default(
         entry = entity_registry.async_get(entity_id)
         assert entry is not None
         assert entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
+
+
+@pytest.mark.usefixtures("mock_session")
+async def test_intrusion_alarm_mute_button(
+    hass: HomeAssistant,
+    mock_session: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """The mute button sits on the alarm system's device and mutes the alarm."""
+    await setup_integration(hass, mock_config_entry)
+
+    entry = entity_registry.async_get("button.alarm_system_mute_alarm")
+    assert entry is not None
+    assert entry.unique_id == "test-mac_com.bosch.tt.intrusion.system_mute"
+    device = device_registry.async_get(entry.device_id)
+    assert device is not None
+    assert device.identifiers == {(DOMAIN, "test-mac_com.bosch.tt.intrusion.system")}
+
+    await hass.services.async_call(
+        BUTTON_DOMAIN,
+        ButtonService.PRESS,
+        {TargetKey.ENTITY_ID: "button.alarm_system_mute_alarm"},
+        blocking=True,
+    )
+
+    mock_session.intrusion_system.mute.assert_called_once_with()
