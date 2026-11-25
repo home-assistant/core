@@ -1939,7 +1939,7 @@ template:
         {
             "sensor": [
                 {
-                    "device_class": (str(yaml_path), 6),
+                    "attributes: device_class": (str(yaml_path), 6),
                     "unit_of_measurement": (str(yaml_path), 7),
                 }
             ]
@@ -1986,7 +1986,7 @@ async def test_option_locations_only_deprecated_options(
                 }
             ]
         },
-        {"sensor": [{"device_class": (str(yaml_path), 11)}, {}]},
+        {"sensor": [{"attributes: device_class": (str(yaml_path), 11)}, {}]},
         {},
     ]
 
