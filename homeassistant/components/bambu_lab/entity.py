@@ -1,34 +1,13 @@
 """Base entity for the Bambu Lab integration."""
 
-from collections.abc import Awaitable, Callable, Coroutine
-from functools import wraps
-from typing import Any, Concatenate, override
+from typing import override
 
-from aiobambulab import BambuLabClient, BambuLabError
+from aiobambulab import BambuLabClient
 
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity
 
 from .const import DOMAIN
-
-
-def command[_EntityT: BambuLabEntity, **_P](
-    func: Callable[Concatenate[_EntityT, _P], Awaitable[None]],
-) -> Callable[Concatenate[_EntityT, _P], Coroutine[Any, Any, None]]:
-    """Raise a Home Assistant error when a command cannot be sent."""
-
-    @wraps(func)
-    async def wrapper(self: _EntityT, *args: _P.args, **kwargs: _P.kwargs) -> None:
-        try:
-            await func(self, *args, **kwargs)
-        except BambuLabError as err:
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="command_error",
-            ) from err
-
-    return wrapper
 
 
 class BambuLabEntity(Entity):
