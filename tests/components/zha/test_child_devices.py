@@ -95,15 +95,14 @@ async def _reinterview(hass: HomeAssistant, device_proxy: ZHADeviceProxy) -> Non
 
 def _switch_entity_ids(entity_registry: er.EntityRegistry) -> list[str]:
     """Return the entity ids of the switches, in endpoint order."""
-    return [
-        entity_id
-        for endpoint_id in (1, 2)
-        if (
-            entity_id := entity_registry.async_get_entity_id(
-                Platform.SWITCH, DOMAIN, f"{IEEE}-{endpoint_id}"
-            )
+    entity_ids = []
+    for endpoint_id in (1, 2):
+        entity_id = entity_registry.async_get_entity_id(
+            Platform.SWITCH, DOMAIN, f"{IEEE}-{endpoint_id}"
         )
-    ]
+        assert entity_id is not None
+        entity_ids.append(entity_id)
+    return entity_ids
 
 
 async def test_child_devices(
