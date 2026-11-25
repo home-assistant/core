@@ -12,7 +12,7 @@ import probatio
 
 from homeassistant.components.repairs import RepairsFlow, RepairsFlowResult
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr, issue_registry as ir
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.util import dt as dt_util
@@ -32,7 +32,19 @@ URL_MQTT_BROKER_CONFIGURATION = (
 
 CERTIFICATE_CHECK_INTERVAL = timedelta(days=1)
 CERTIFICATE_EXPIRY_WARNING = timedelta(days=30)
-ISSUE_CLIENT_CERTIFICATE = "client_certificate"
+ISSUE_CLIENT_CERTIFICATE_EXPIRED = "client_certificate_expired"
+ISSUE_CLIENT_CERTIFICATE_RENEWED = "client_certificate_renewed"
+# One issue per problem, so ignoring one problem does not hide another
+CLIENT_CERTIFICATE_ISSUES = (
+    "client_certificate_expiring",
+    "client_certificate_file_expiring",
+    ISSUE_CLIENT_CERTIFICATE_EXPIRED,
+    ISSUE_CLIENT_CERTIFICATE_RENEWED,
+    "client_certificate_file_invalid",
+    "client_key_file_invalid",
+    "client_certificate_key_mismatch",
+    "ca_certificate_file_invalid",
+)
 
 
 class MQTTDeviceEntryMigration(RepairsFlow):
@@ -102,6 +114,16 @@ class MQTTClientCertificateReload(RepairsFlow):
         )
 
 
+@callback
+def _async_delete_client_certificate_issues(
+    hass: HomeAssistant, keep: str | None = None
+) -> None:
+    """Delete the client certificate issues, except the issue to keep."""
+    for issue_id in CLIENT_CERTIFICATE_ISSUES:
+        if issue_id != keep:
+            ir.async_delete_issue(hass, DOMAIN, issue_id)
+
+
 async def async_setup_client_certificate_check(
     hass: HomeAssistant,
     entry: ConfigEntry,
@@ -110,7 +132,7 @@ async def async_setup_client_certificate_check(
 ) -> None:
     """Check the expiry of the loaded client certificate on setup and daily."""
     if loaded_certificate is None:
-        ir.async_delete_issue(hass, DOMAIN, ISSUE_CLIENT_CERTIFICATE)
+        _async_delete_client_certificate_issues(hass)
         return
     loaded_expiry = loaded_certificate.not_valid_after_utc
     # Short-lived certificates are renewed in the last third of their validity
@@ -156,44 +178,50 @@ async def async_setup_client_certificate_check(
     async def _async_check_client_certificate(now: datetime) -> None:
         """Create or remove the client certificate issue."""
         if loaded_expiry - now > expiry_warning:
-            ir.async_delete_issue(hass, DOMAIN, ISSUE_CLIENT_CERTIFICATE)
+            _async_delete_client_certificate_issues(hass)
             return
 
         placeholders = {
             "broker": config[CONF_BROKER],
             "expiry": loaded_expiry.date().isoformat(),
         }
-        is_fixable = False
+        expired = loaded_expiry <= now
         if not client_cert_file:
-            translation_key = "client_certificate_expiring"
+            issue_id = (
+                ISSUE_CLIENT_CERTIFICATE_EXPIRED
+                if expired
+                else "client_certificate_expiring"
+            )
         else:
             placeholders["client_cert_file"] = client_cert_file
             result = await hass.async_add_executor_job(_check_installed_certificate)
             if isinstance(result, tuple):
-                translation_key, problem_placeholders = result
+                issue_id, problem_placeholders = result
                 placeholders |= problem_placeholders
             elif (
                 result.not_valid_after_utc > loaded_expiry
                 and result.not_valid_before_utc <= now
             ):
-                translation_key = "client_certificate_renewed"
-                is_fixable = True
+                issue_id = ISSUE_CLIENT_CERTIFICATE_RENEWED
+            elif expired:
+                issue_id = ISSUE_CLIENT_CERTIFICATE_EXPIRED
             else:
-                translation_key = "client_certificate_file_expiring"
+                issue_id = "client_certificate_file_expiring"
 
+        _async_delete_client_certificate_issues(hass, keep=issue_id)
         ir.async_create_issue(
             hass,
             DOMAIN,
-            ISSUE_CLIENT_CERTIFICATE,
+            issue_id,
             config_entry_id=entry.entry_id,
-            is_fixable=is_fixable,
+            is_fixable=issue_id == ISSUE_CLIENT_CERTIFICATE_RENEWED,
             severity=(
                 ir.IssueSeverity.ERROR
-                if loaded_expiry <= now
+                if issue_id == ISSUE_CLIENT_CERTIFICATE_EXPIRED
                 else ir.IssueSeverity.WARNING
             ),
             data={"entry_id": entry.entry_id, **placeholders},
-            translation_key=translation_key,
+            translation_key=issue_id,
             translation_placeholders=placeholders,
         )
 
@@ -203,9 +231,7 @@ async def async_setup_client_certificate_check(
             hass, _async_check_client_certificate, CERTIFICATE_CHECK_INTERVAL
         )
     )
-    entry.async_on_unload(
-        partial(ir.async_delete_issue, hass, DOMAIN, ISSUE_CLIENT_CERTIFICATE)
-    )
+    entry.async_on_unload(partial(_async_delete_client_certificate_issues, hass))
 
 
 async def async_create_fix_flow(
@@ -216,7 +242,7 @@ async def async_create_fix_flow(
     """Create flow."""
     if TYPE_CHECKING:
         assert data is not None
-    if issue_id == ISSUE_CLIENT_CERTIFICATE:
+    if issue_id == ISSUE_CLIENT_CERTIFICATE_RENEWED:
         return MQTTClientCertificateReload(
             entry_id=str(data["entry_id"]),
             placeholders={
