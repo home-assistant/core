@@ -105,7 +105,7 @@ def _bad_request_error(err: ec2.BadApiRequestError) -> ServiceValidationError:
     )
 
 
-def _log_api_call_failure(logger: logging.Logger, err: ec2.ApiCallFailedError) -> None:
+def _log_api_failure(logger: logging.Logger, err: ec2.ApiCallFailedError) -> None:
     """Log (as debug) what the translated error of a failed API call leaves out."""
     logger.debug(
         "The request to the vendor's API failed: %s (reason=%s, status=%s, errors=%s)",
@@ -116,7 +116,7 @@ def _log_api_call_failure(logger: logging.Logger, err: ec2.ApiCallFailedError) -
     )
 
 
-def _log_bad_api_exchange(
+def _log_api_error(
     logger: logging.Logger, err: ec2.BadApiRequestError | ec2.BadApiResponseError
 ) -> None:
     """Log (as debug) what the translated error of a bad request/response leaves out."""
@@ -198,14 +198,14 @@ class EvoAccountCoordinator(_EvoCoordinator[_HighPrecisionTemps]):
             await self.client.setup()  # only config for now
 
         except ec2.ApiConnectionFailedError as err:
-            _log_api_call_failure(self.logger, err)
+            _log_api_failure(self.logger, err)
             raise UpdateFailedUnreachable(
                 translation_domain=DOMAIN,
                 translation_key="api_connection_failed",
             ) from err
 
         except ec2.ApiCallFailedError as err:
-            _log_api_call_failure(self.logger, err)
+            _log_api_failure(self.logger, err)
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key=_api_call_error_key(err),
@@ -213,7 +213,7 @@ class EvoAccountCoordinator(_EvoCoordinator[_HighPrecisionTemps]):
             ) from err
 
         except ec2.BadApiResponseError as err:
-            _log_bad_api_exchange(self.logger, err)
+            _log_api_error(self.logger, err)
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="api_response_invalid",
@@ -364,14 +364,14 @@ class EvoLocationCoordinator(_EvoCoordinator[EvoLocStatusT]):
             result = await client_api
 
         except ec2.ApiCallFailedError as err:  # incl. AuthenticationFailedError
-            _log_api_call_failure(self.logger, err)
+            _log_api_failure(self.logger, err)
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key=_api_call_error_key(err),
             ) from err
 
         except ec2.BadApiRequestError as err:  # e.g. InvalidSetModeError
-            _log_bad_api_exchange(self.logger, err)
+            _log_api_error(self.logger, err)
             raise _bad_request_error(err) from err
 
         if request_refresh:  # wait a moment for system to quiesce before updating state
@@ -386,14 +386,14 @@ class EvoLocationCoordinator(_EvoCoordinator[EvoLocStatusT]):
             status = await self.loc.get_status()
 
         except ec2.ApiConnectionFailedError as err:
-            _log_api_call_failure(self.logger, err)
+            _log_api_failure(self.logger, err)
             raise UpdateFailedUnreachable(
                 translation_domain=DOMAIN,
                 translation_key="api_connection_failed",
             ) from err
 
         except ec2.ApiCallFailedError as err:
-            _log_api_call_failure(self.logger, err)
+            _log_api_failure(self.logger, err)
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key=_api_call_error_key(err),
@@ -401,7 +401,7 @@ class EvoLocationCoordinator(_EvoCoordinator[EvoLocStatusT]):
             ) from err
 
         except ec2.BadApiResponseError as err:
-            _log_bad_api_exchange(self.logger, err)
+            _log_api_error(self.logger, err)
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="api_response_invalid",
