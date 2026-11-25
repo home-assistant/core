@@ -1286,6 +1286,8 @@ async def test_iblinds_v3_cover(
     assert state.attributes[ATTR_CURRENT_TILT_POSITION] == 0
     # The open slat value 50 of the 0-99 scale reads back as 51
     assert state.attributes[CoverEntityCapabilityAttribute.OPEN_TILT_POSITION] == 51
+    assert state.attributes[CoverEntityCapabilityAttribute.TILT_START_ANGLE] == -90
+    assert state.attributes[CoverEntityCapabilityAttribute.TILT_END_ANGLE] == 90
     assert state.attributes[CoverEntityCapabilityAttribute.CLOSED_TILT_POSITIONS] == [
         0,
         100,
