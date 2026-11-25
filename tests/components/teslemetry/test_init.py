@@ -9,7 +9,7 @@ import logging
 import time
 from types import MappingProxyType
 from typing import Any
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock, PropertyMock, patch
 
 from aiohttp import ClientConnectionError, ClientError, ClientResponseError
 from bleak.exc import BleakError
@@ -92,6 +92,7 @@ from homeassistant.components.teslemetry.const import (
 from homeassistant.components.teslemetry.coordinator import (
     ENERGY_CONFIG_INTERVAL,
     ENERGY_LIVE_INTERVAL,
+    ENERGY_LIVE_STREAM_TIMEOUT,
     INSUFFICIENT_CREDITS_RETRY_AFTER,
     METADATA_INTERVAL,
     VEHICLE_INTERVAL,
@@ -2585,6 +2586,53 @@ async def test_energy_stream_disconnect_marks_unavailable_and_recovers(
     ]
 
 
+LIVE_STATUS_TIMEOUT_MESSAGE = "No live status received from the Teslemetry stream"
+
+
+async def test_energy_live_stream_timeout_marks_unavailable_and_recovers(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    freezer: FrozenDateTimeFactory,
+    mock_energy_live_stream: MagicMock,
+) -> None:
+    """A connected stream without live_status fails the live coordinator."""
+    await setup_platform(hass, [Platform.SENSOR])
+
+    await _tick(
+        hass,
+        freezer,
+        ENERGY_LIVE_STREAM_TIMEOUT - timedelta(seconds=1),
+        wait_background_tasks=True,
+    )
+    assert hass.states.get("sensor.energy_site_solar_power").state == "1.185"
+
+    await _tick(hass, freezer, timedelta(seconds=1), wait_background_tasks=True)
+    assert hass.states.get("sensor.energy_site_solar_power").state == STATE_UNAVAILABLE
+
+    # Continued silence does not log again.
+    await _tick(hass, freezer, ENERGY_LIVE_STREAM_TIMEOUT, wait_background_tasks=True)
+    assert [
+        record.levelno
+        for record in caplog.records
+        if LIVE_STATUS_TIMEOUT_MESSAGE in record.getMessage()
+    ] == [logging.ERROR]
+
+    live_status = deepcopy(LIVE_STATUS["response"])
+    live_status["solar_power"] = 456
+    mock_energy_live_stream.send(live_status)
+    await hass.async_block_till_done()
+    assert hass.states.get("sensor.energy_site_solar_power").state == "0.456"
+
+    # The document restarted the timeout.
+    await _tick(
+        hass,
+        freezer,
+        ENERGY_LIVE_STREAM_TIMEOUT - timedelta(seconds=1),
+        wait_background_tasks=True,
+    )
+    assert hass.states.get("sensor.energy_site_solar_power").state == "0.456"
+
+
 async def test_energy_stream_quick_reconnect_stays_available(
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
@@ -2666,6 +2714,75 @@ async def test_energy_stream_grace_expiring_while_stopping(
     assert hass.states.get("sensor.energy_site_solar_power").state == "1.185"
     assert hass.states.get("calendar.energy_site_buy_tariff").state != STATE_UNAVAILABLE
     assert "Disconnected from the Teslemetry stream" not in caplog.text
+
+
+async def test_energy_live_stream_timeout_keeps_disconnect_error(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    freezer: FrozenDateTimeFactory,
+    mock_add_connection_listener: MagicMock,
+    mock_energy_live_stream: MagicMock,
+) -> None:
+    """A dropped stream reports its disconnect, not a live_status timeout."""
+    await setup_platform(hass, [Platform.SENSOR])
+
+    with patch(
+        "teslemetry_stream.TeslemetryStream.connected",
+        new_callable=PropertyMock,
+        return_value=False,
+    ):
+        mock_add_connection_listener.send(False)
+        await _tick(
+            hass, freezer, ENERGY_LIVE_STREAM_TIMEOUT, wait_background_tasks=True
+        )
+
+    assert hass.states.get("sensor.energy_site_solar_power").state == STATE_UNAVAILABLE
+    assert "Disconnected from the Teslemetry stream" in caplog.text
+    assert LIVE_STATUS_TIMEOUT_MESSAGE not in caplog.text
+
+    mock_add_connection_listener.send(True)
+    mock_energy_live_stream.send(deepcopy(LIVE_STATUS["response"]))
+    await hass.async_block_till_done()
+    assert hass.states.get("sensor.energy_site_solar_power").state == "1.185"
+
+
+async def test_energy_live_stream_timeout_rechecks_after_reconnect(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """A timeout during a drop waits for the reconnected stream to stay silent."""
+    await setup_platform(hass, [Platform.SENSOR])
+
+    with patch(
+        "teslemetry_stream.TeslemetryStream.connected",
+        new_callable=PropertyMock,
+        return_value=False,
+    ):
+        await _tick(
+            hass, freezer, ENERGY_LIVE_STREAM_TIMEOUT, wait_background_tasks=True
+        )
+
+    assert hass.states.get("sensor.energy_site_solar_power").state == "1.185"
+    assert LIVE_STATUS_TIMEOUT_MESSAGE not in caplog.text
+
+    await _tick(hass, freezer, ENERGY_LIVE_STREAM_TIMEOUT, wait_background_tasks=True)
+    assert hass.states.get("sensor.energy_site_solar_power").state == STATE_UNAVAILABLE
+    assert LIVE_STATUS_TIMEOUT_MESSAGE in caplog.text
+
+
+async def test_energy_live_stream_timeout_cancelled_on_unload(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Unloading cancels the pending energy live stream timeout."""
+    entry = await setup_platform(hass, [Platform.SENSOR])
+
+    await hass.config_entries.async_unload(entry.entry_id)
+    await _tick(hass, freezer, ENERGY_LIVE_STREAM_TIMEOUT, wait_background_tasks=True)
+
+    assert LIVE_STATUS_TIMEOUT_MESSAGE not in caplog.text
 
 
 CLOUD_RESULT = {"response": {"result": True, "reason": "cloud"}}
@@ -3543,12 +3660,16 @@ STREAM_GRACE = timedelta(seconds=STREAM_DISCONNECT_GRACE)
 
 
 async def _tick(
-    hass: HomeAssistant, freezer: FrozenDateTimeFactory, interval: timedelta
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    interval: timedelta,
+    *,
+    wait_background_tasks: bool = False,
 ) -> None:
     """Advance time by one interval and let the timers run."""
     freezer.tick(interval)
     async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=wait_background_tasks)
 
 
 async def _tick_local_live(

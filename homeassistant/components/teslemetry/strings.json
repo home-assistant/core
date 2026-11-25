@@ -1345,6 +1345,9 @@
     "energy_site_not_paired": {
       "message": "Teslemetry is not paired with the Powerwall system for {site}, pair it in the Teslemetry console or set up local control"
     },
+    "live_status_timeout": {
+      "message": "No live status received from the Teslemetry stream for energy site {site_id} in {minutes} minutes"
+    },
     "local_command_failed": {
       "message": "The Powerwall gateway could not complete the command, check the logs for details"
     },
