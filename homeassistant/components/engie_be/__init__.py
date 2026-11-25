@@ -41,7 +41,6 @@ class EngieBeHouseholdCoordinators:
 class EngieBeRuntimeData:
     """Runtime data for the ENGIE Belgium integration."""
 
-    client: EngieBeClient
     relations: EngieBeRelationsCoordinator
     epex: EngieBeEpexCoordinator | None
     households: dict[str, EngieBeHouseholdCoordinators]
@@ -169,7 +168,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: EngieBeConfigEntry) -> N
             LOGGER.warning("EPEX prices unavailable at setup: %s", err.__cause__)
 
     entry.runtime_data = EngieBeRuntimeData(
-        client=client,
         relations=relations,
         epex=epex,
         households=households,
@@ -179,14 +177,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: EngieBeConfigEntry) -> N
         household.is_dynamic is None for household in households.values()
     ):
         LOGGER.warning("Tariff lookup failed, EPEX entities wait for a retry")
-        _async_start_tariff_retry(hass, entry, epex)
+        _async_start_tariff_retry(hass, entry, client, epex)
 
     await hass.config_entries.async_forward_entry_setups(entry, _PLATFORMS)
 
 
 @callback
 def _async_start_tariff_retry(
-    hass: HomeAssistant, entry: EngieBeConfigEntry, epex: EngieBeEpexCoordinator
+    hass: HomeAssistant,
+    entry: EngieBeConfigEntry,
+    client: EngieBeClient,
+    epex: EngieBeEpexCoordinator,
 ) -> None:
     """Retry the tariff lookup of the households whose lookup failed at setup."""
     runtime_data = entry.runtime_data
@@ -199,7 +200,7 @@ def _async_start_tariff_retry(
         ]
         try:
             results = await asyncio.gather(
-                *(_async_is_dynamic(runtime_data.client, ban) for ban in pending)
+                *(_async_is_dynamic(client, ban) for ban in pending)
             )
         except ConfigEntryAuthFailed:
             cancel_retry()

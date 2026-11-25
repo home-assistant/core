@@ -26,6 +26,7 @@ from boschshcpy import (
     SHCHeatingCircuit,
     SHCInformation,
     SHCIntrusionSystem,
+    SHCLightControl,
     SHCLightSwitchBSM,
     SHCMicromoduleBlinds,
     SHCMicromoduleDimmer,
@@ -45,6 +46,7 @@ from boschshcpy import (
     SHCThermostat,
     SHCThermostatGen2,
     SHCTwinguard,
+    SHCUniversalSwitch,
     ShutterContactService,
     ShutterControlService,
     SilentModeService,
@@ -115,6 +117,7 @@ _EMPTY_DEVICE_BUCKETS: dict[str, Any] = {
         "micromodule_blinds",
         "micromodule_dimmers",
         "micromodule_impulse_relays",
+        "micromodule_light_controls",
         "micromodule_light_attached",
         "micromodule_relays",
         "micromodule_shutter_controls",
@@ -180,6 +183,8 @@ def battery_only_device(
     device_id: str = "hdm:HomeMaticIP:motion1",
     name: str = "Motion",
     device_services: list[Any] | None = None,
+    batterylevel: BatteryLevelService.State = BatteryLevelService.State.OK,
+    supports_batterylevel: bool = True,
 ) -> SHCBatteryDevice:
     """Build a minimal device double for the motion_detectors bucket.
 
@@ -193,7 +198,8 @@ def battery_only_device(
     device.id = device_id
     device.root_device_id = "test-mac"
     device.serial = f"serial-{device_id}"
-    device.batterylevel = BatteryLevelService.State.OK
+    device.batterylevel = batterylevel
+    device.supports_batterylevel = supports_batterylevel
     device.device_services = device_services or []
     device.manufacturer = "Bosch"
     device.device_model = "MD"
@@ -652,7 +658,12 @@ def micromodule_dimmer_device(
     device.edge_phase_control_mode = edge_phase_control_mode
     device.dimming_speed = dimming_speed
     device.dimmer_configuration = (
-        SimpleNamespace(min_brightness=min_brightness, max_brightness=max_brightness)
+        SimpleNamespace(
+            min_brightness=min_brightness,
+            max_brightness=max_brightness,
+            preview_max_brightness=MagicMock(),
+            preview_min_brightness=MagicMock(),
+        )
         if supports_dimmer_configuration
         else None
     )
@@ -698,6 +709,28 @@ def micromodule_relay_device(
         )
     else:
         device.impulse_length = impulse_length
+    return device
+
+
+def light_control_device(
+    device_id: str = "hdm:ZigBee:lightcontrol1",
+    name: str = "Light Control",
+    power: float = 12.5,
+    energy: float = 3000.0,
+) -> SHCLightControl:
+    """Build a minimal device double for the micromodule_light_controls bucket."""
+    device = create_autospec(SHCLightControl, instance=True, spec_set=True)
+    device.name = name
+    device.id = device_id
+    device.root_device_id = "test-mac"
+    device.serial = f"serial-{device_id}"
+    device.manufacturer = "Bosch"
+    device.device_model = "MICROMODULE_LIGHT_CONTROL"
+    device.device_services = []
+    device.deleted = False
+    device.status = "AVAILABLE"
+    device.powerconsumption = power
+    device.energyconsumption = energy
     return device
 
 
@@ -849,6 +882,30 @@ class FakeLatestMotionService:
         self.callbacks.pop(entity, None)
 
 
+class FakeKeypadService:
+    """Minimal double of a Keypad DeviceService's event-callback API."""
+
+    id = "Keypad"
+
+    def __init__(self) -> None:
+        """Initialize the fake service's callback registry."""
+        self._event_callbacks: dict[str, Any] = {}
+
+    def register_event(self, event: str, callback: Any) -> None:
+        """Register a callback for the given key."""
+        self._event_callbacks[event] = callback
+
+    def unregister_event(self, event: str) -> None:
+        """Remove the callback for the given key."""
+        self._event_callbacks.pop(event, None)
+
+    def subscribe_callback(self, entity: Any, callback: Any) -> None:
+        """No-op: SHCEntity subscribes to every device service's generic callback."""
+
+    def unsubscribe_callback(self, entity: Any, callback: Any = None) -> None:
+        """No-op counterpart to subscribe_callback."""
+
+
 class FakeAlarmService:
     """Minimal double of an Alarm DeviceService's event-callback API."""
 
@@ -904,6 +961,28 @@ def smoke_detection_system_device(
     system.device_services = [FakeSurveillanceAlarmService()]
     system.triggered_device_ids.return_value = triggered or set()
     return system
+
+
+def universal_switch_device(
+    device_id: str = "hdm:HomeMaticIP:switch1",
+    name: str = "Universal Switch",
+    keystates: tuple[str, ...] = ("LOWER_BUTTON", "UPPER_BUTTON"),
+) -> SHCUniversalSwitch:
+    """Build a minimal device double for the universal_switches bucket."""
+    device = create_autospec(SHCUniversalSwitch, instance=True, spec_set=True)
+    device.name = name
+    device.id = device_id
+    device.root_device_id = "test-mac"
+    device.serial = f"serial-{device_id}"
+    device.manufacturer = "Bosch"
+    device.device_model = "WRC2"
+    device.device_services = [FakeKeypadService()]
+    device.deleted = False
+    device.status = "AVAILABLE"
+    device.keystates = list(keystates)
+    device.eventtype = None
+    device.eventtimestamp = 0
+    return device
 
 
 def motion_detector_device(

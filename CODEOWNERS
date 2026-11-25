@@ -242,6 +242,8 @@ AGENTS.md @home-assistant/core
 /tests/components/battery/ @home-assistant/core
 /homeassistant/components/bayesian/ @HarvsG
 /tests/components/bayesian/ @HarvsG
+/homeassistant/components/benq_projector_infrared/ @rrooggiieerr
+/tests/components/benq_projector_infrared/ @rrooggiieerr
 /homeassistant/components/besen/ @moryoav
 /tests/components/besen/ @moryoav
 /homeassistant/components/binary_sensor/ @home-assistant/core
@@ -381,6 +383,8 @@ AGENTS.md @home-assistant/core
 /tests/components/cync/ @Kinachi249
 /homeassistant/components/daikin/ @fredrike
 /tests/components/daikin/ @fredrike
+/homeassistant/components/daikin_infrared/ @javitonino
+/tests/components/daikin_infrared/ @javitonino
 /homeassistant/components/data_grand_lyon/ @Crocmagnon
 /tests/components/data_grand_lyon/ @Crocmagnon
 /homeassistant/components/datadog/ @bm1549
@@ -508,6 +512,8 @@ AGENTS.md @home-assistant/core
 /tests/components/electrasmart/ @jafar-atili @noamokman
 /homeassistant/components/electric_kiwi/ @mikey0000
 /tests/components/electric_kiwi/ @mikey0000
+/homeassistant/components/electrolux/ @electrolux-oss
+/tests/components/electrolux/ @electrolux-oss
 /homeassistant/components/elevenlabs/ @sorgfresser
 /tests/components/elevenlabs/ @sorgfresser
 /homeassistant/components/elgato/ @frenck
@@ -1148,6 +1154,8 @@ AGENTS.md @home-assistant/core
 /tests/components/logger/ @home-assistant/core
 /homeassistant/components/lojack/ @devinslick
 /tests/components/lojack/ @devinslick
+/homeassistant/components/london_air/ @MichaelMKKelly
+/tests/components/london_air/ @MichaelMKKelly
 /homeassistant/components/london_underground/ @jpbede
 /tests/components/london_underground/ @jpbede
 /homeassistant/components/lookin/ @ANMalko @bdraco
@@ -1231,6 +1239,8 @@ AGENTS.md @home-assistant/core
 /tests/components/metoffice/ @MrHarcombe @avee87
 /homeassistant/components/microbees/ @microBeesTech
 /tests/components/microbees/ @microBeesTech
+/homeassistant/components/microsoft/ @mib1185
+/tests/components/microsoft/ @mib1185
 /homeassistant/components/midea/ @chemelli74 @rokam
 /tests/components/midea/ @chemelli74 @rokam
 /homeassistant/components/miele/ @astrandb

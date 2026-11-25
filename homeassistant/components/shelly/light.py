@@ -44,6 +44,7 @@ from .entity import (
     ShellyRpcAttributeEntity,
     async_setup_entry_block,
     async_setup_entry_rpc,
+    rpc_call,
 )
 from .utils import (
     async_remove_orphaned_entities,
@@ -378,7 +379,7 @@ class RpcShellyLightBase(ShellyRpcAttributeEntity, LightEntity):
     """Base Entity for RPC based Shelly devices."""
 
     entity_description: RpcLightDescription
-    _component: str = "Light"
+    _id: int
 
     def __init__(
         self,
@@ -422,10 +423,15 @@ class RpcShellyLightBase(ShellyRpcAttributeEntity, LightEntity):
         """Return the CT color value in Kelvin."""
         return cast(int, self.status["ct"])
 
+    async def _async_set(self, params: dict[str, Any]) -> None:
+        """Set the light parameters."""
+        await self.coordinator.device.light_set(self._id, params)
+
+    @rpc_call
     @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on light."""
-        params: dict[str, Any] = {"id": self._id, "on": True}
+        params: dict[str, Any] = {"on": True}
 
         if ATTR_BRIGHTNESS in kwargs:
             params["brightness"] = brightness_to_percentage(kwargs[ATTR_BRIGHTNESS])
@@ -454,34 +460,36 @@ class RpcShellyLightBase(ShellyRpcAttributeEntity, LightEntity):
             elif ATTR_RGB_COLOR in kwargs:
                 params["mode"] = "rgb"
 
-        await self.call_rpc(f"{self._component}.Set", params)
+        await self._async_set(params)
 
+    @rpc_call
     @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off light."""
-        params: dict[str, Any] = {"id": self._id, "on": False}
+        params: dict[str, Any] = {"on": False}
 
         if ATTR_TRANSITION in kwargs:
             params["transition_duration"] = max(
                 kwargs[ATTR_TRANSITION], RPC_MIN_TRANSITION_TIME_SEC
             )
 
-        await self.call_rpc(f"{self._component}.Set", params)
+        await self._async_set(params)
 
 
 class RpcShellySwitchAsLight(RpcShellyLightBase):
     """Entity that controls a relay as light on RPC based Shelly devices."""
 
-    _component = "Switch"
-
     _attr_color_mode = ColorMode.ONOFF
     _attr_supported_color_modes = {ColorMode.ONOFF}
+
+    @override
+    async def _async_set(self, params: dict[str, Any]) -> None:
+        """Set the switch output."""
+        await self.coordinator.device.switch_set(self._id, params["on"])
 
 
 class RpcShellyLight(RpcShellyLightBase):
     """Entity that controls a light on RPC based Shelly devices."""
-
-    _component = "Light"
 
     _attr_color_mode = ColorMode.BRIGHTNESS
     _attr_supported_color_modes = {ColorMode.BRIGHTNESS}
@@ -490,8 +498,6 @@ class RpcShellyLight(RpcShellyLightBase):
 
 class RpcShellyCctLight(RpcShellyLightBase):
     """Entity that controls a CCT light on RPC based Shelly devices."""
-
-    _component = "CCT"
 
     _attr_color_mode = ColorMode.COLOR_TEMP
     _attr_supported_color_modes = {ColorMode.COLOR_TEMP}
@@ -513,11 +519,14 @@ class RpcShellyCctLight(RpcShellyLightBase):
             self._attr_min_color_temp_kelvin = KELVIN_MIN_VALUE_WHITE
             self._attr_max_color_temp_kelvin = KELVIN_MAX_VALUE
 
+    @override
+    async def _async_set(self, params: dict[str, Any]) -> None:
+        """Set the light parameters."""
+        await self.coordinator.device.cct_set(self._id, params)
+
 
 class RpcShellyRgbCctLight(RpcShellyLightBase):
     """Entity that controls a RGBCCT light on RPC based Shelly devices."""
-
-    _component = "RGBCCT"
 
     _attr_supported_color_modes = {ColorMode.COLOR_TEMP, ColorMode.RGB}
     _attr_supported_features = LightEntityFeature.TRANSITION
@@ -533,11 +542,14 @@ class RpcShellyRgbCctLight(RpcShellyLightBase):
 
         return ColorMode.RGB
 
+    @override
+    async def _async_set(self, params: dict[str, Any]) -> None:
+        """Set the light parameters."""
+        await self.coordinator.device.rgbcct_set(self._id, params)
+
 
 class RpcShellyLedStrip(RpcShellyLightBase):
     """Entity that controls a LED strip on RPC based Shelly devices."""
-
-    _component = "LedStrip"
 
     _attr_color_mode = ColorMode.RGB
     _attr_supported_color_modes = {ColorMode.RGB}
@@ -573,25 +585,36 @@ class RpcShellyLedStrip(RpcShellyLightBase):
         """Return the current effect."""
         return cast(str, self.status["effect"])
 
+    @override
+    async def _async_set(self, params: dict[str, Any]) -> None:
+        """Set the light parameters."""
+        await self.coordinator.device.ledstrip_set(self._id, params)
+
 
 class RpcShellyRgbLight(RpcShellyLightBase):
     """Entity that controls a RGB light on RPC based Shelly devices."""
-
-    _component = "RGB"
 
     _attr_color_mode = ColorMode.RGB
     _attr_supported_color_modes = {ColorMode.RGB}
     _attr_supported_features = LightEntityFeature.TRANSITION
 
+    @override
+    async def _async_set(self, params: dict[str, Any]) -> None:
+        """Set the light parameters."""
+        await self.coordinator.device.rgb_set(self._id, params)
+
 
 class RpcShellyRgbwLight(RpcShellyLightBase):
     """Entity that controls a RGBW light on RPC based Shelly devices."""
 
-    _component = "RGBW"
-
     _attr_color_mode = ColorMode.RGBW
     _attr_supported_color_modes = {ColorMode.RGBW}
     _attr_supported_features = LightEntityFeature.TRANSITION
+
+    @override
+    async def _async_set(self, params: dict[str, Any]) -> None:
+        """Set the light parameters."""
+        await self.coordinator.device.rgbw_set(self._id, params)
 
 
 LIGHTS: Final = (

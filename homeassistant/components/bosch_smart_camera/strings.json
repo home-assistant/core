@@ -27,9 +27,19 @@
         "name": "Camera light"
       }
     },
+    "sensor": {
+      "wifi_signal_strength": {
+        "name": "Wi-Fi signal strength"
+      }
+    },
     "switch": {
       "privacy_mode": {
         "name": "Privacy mode"
+      }
+    },
+    "update": {
+      "firmware": {
+        "name": "Firmware"
       }
     }
   },

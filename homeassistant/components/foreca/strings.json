@@ -114,6 +114,31 @@
       "observed_humidity": {
         "name": "Observed humidity"
       },
+      "observed_precipitation": {
+        "name": "Observed hourly precipitation"
+      },
+      "observed_precipitation_12h": {
+        "name": "Observed 12-hour precipitation"
+      },
+      "observed_precipitation_24h": {
+        "name": "Observed 24-hour precipitation"
+      },
+      "observed_precipitation_3h": {
+        "name": "Observed 3-hour precipitation"
+      },
+      "observed_precipitation_6h": {
+        "name": "Observed 6-hour precipitation"
+      },
+      "observed_precipitation_type": {
+        "name": "Observed precipitation type",
+        "state": {
+          "hail": "Hail",
+          "icing": "Icing",
+          "rain": "Rain",
+          "sleet": "Sleet",
+          "snow": "Snow"
+        }
+      },
       "observed_pressure": {
         "name": "Observed pressure"
       },
@@ -144,6 +169,9 @@
     }
   },
   "exceptions": {
+    "air_quality_forecast_error": {
+      "message": "Error fetching the air quality forecast."
+    },
     "air_quality_update_error": {
       "message": "Error fetching the air quality."
     },
@@ -173,6 +201,16 @@
     "get_3_hour_forecast": {
       "description": "Retrieves the forecast in 3-hour steps for the next 14 days, in the weather entity's units, with the values weather.get_forecasts has no place for. Every call makes a request to the Foreca Weather API and counts toward the daily limit of your plan.",
       "name": "Get 3-hour forecast"
+    },
+    "get_air_quality_forecast": {
+      "description": "Retrieves the air quality index forecast, hourly for up to 85 hours or daily for 4 days. Every call makes a request to the Foreca Weather API and counts toward the daily limit of your plan.",
+      "fields": {
+        "type": {
+          "description": "The forecast to return.",
+          "name": "Forecast type"
+        }
+      },
+      "name": "Get air quality forecast"
     },
     "get_forecasts_extra": {
       "description": "Retrieves the forecast values that weather.get_forecasts has no place for, such as precipitation type, snow, solar radiation, sunshine, sunrise and the ensemble range of the daily forecast. They come from the forecast already fetched, so the action makes no API requests.",

@@ -16,6 +16,7 @@ from homeassistant.components.sensor import (
 from homeassistant.const import (
     PERCENTAGE,
     EntityCategory,
+    UnitOfArea,
     UnitOfEnergy,
     UnitOfLength,
     UnitOfMass,
@@ -258,6 +259,73 @@ BODY_SENSORS: list[
         value_fn=lambda data: (
             data.body_fat.percentage if data and data.body_fat else None
         ),
+    ),
+    GoogleHealthSensorEntityDescription[GoogleHealthBodyCoordinator, float | None](
+        key="heart_rate_variability",
+        translation_key="heart_rate_variability",
+        native_unit_of_measurement=UnitOfTime.MILLISECONDS,
+        suggested_display_precision=0,
+        state_class=SensorStateClass.MEASUREMENT,
+        value_fn=lambda data: (
+            data.heart_rate_variability.average_heart_rate_variability_milliseconds
+            if data and data.heart_rate_variability
+            else None
+        ),
+    ),
+    GoogleHealthSensorEntityDescription[GoogleHealthBodyCoordinator, float | None](
+        key="oxygen_saturation",
+        translation_key="oxygen_saturation",
+        native_unit_of_measurement=PERCENTAGE,
+        suggested_display_precision=1,
+        state_class=SensorStateClass.MEASUREMENT,
+        value_fn=lambda data: (
+            data.oxygen_saturation.average_percentage
+            if data and data.oxygen_saturation
+            else None
+        ),
+    ),
+    GoogleHealthSensorEntityDescription[GoogleHealthBodyCoordinator, float | None](
+        key="respiratory_rate",
+        translation_key="respiratory_rate",
+        native_unit_of_measurement="br/min",
+        suggested_display_precision=1,
+        state_class=SensorStateClass.MEASUREMENT,
+        value_fn=lambda data: (
+            data.respiratory_rate.breaths_per_minute
+            if data and data.respiratory_rate
+            else None
+        ),
+    ),
+    GoogleHealthSensorEntityDescription[GoogleHealthBodyCoordinator, float | None](
+        key="height",
+        translation_key="height",
+        # Meters auto-convert to feet in US customary
+        native_unit_of_measurement=UnitOfLength.METERS,
+        suggested_display_precision=2,
+        device_class=SensorDeviceClass.DISTANCE,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_registry_enabled_default=False,
+        value_fn=lambda data: (
+            data.height.height_millimeters / 1000.0 if data and data.height else None
+        ),
+    ),
+    GoogleHealthSensorEntityDescription[GoogleHealthBodyCoordinator, float | None](
+        key="body_mass_index",
+        translation_key="body_mass_index",
+        native_unit_of_measurement=f"{UnitOfMass.KILOGRAMS}/{UnitOfArea.SQUARE_METERS}",
+        suggested_display_precision=1,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_registry_enabled_default=False,
+        value_fn=lambda data: data.bmi.bmi if data and data.bmi else None,
+    ),
+    GoogleHealthSensorEntityDescription[GoogleHealthBodyCoordinator, float | None](
+        key="vo2_max",
+        translation_key="vo2_max",
+        native_unit_of_measurement="ml/min/kg",
+        suggested_display_precision=1,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_registry_enabled_default=False,
+        value_fn=lambda data: data.vo2_max.vo2_max if data and data.vo2_max else None,
     ),
 ]
 
