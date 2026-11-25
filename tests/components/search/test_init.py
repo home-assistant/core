@@ -1511,3 +1511,89 @@ async def test_search_related_resolves_entity_registry_ids(
     assert response["result"][ItemType.ENTITY] == unordered(
         [entity.entity_id, "light.missing"]
     )
+
+
+@pytest.mark.parametrize("item_type", [ItemType.AUTOMATION, ItemType.SCRIPT])
+async def test_search_related_real_device_action_registry_ids(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    hass_ws_client: WebSocketGenerator,
+    item_type: ItemType,
+) -> None:
+    """Find entities from real automation and script device-action configs."""
+    config_entry = MockConfigEntry(domain="test")
+    config_entry.add_to_hass(hass)
+    device = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        identifiers={("test", "search-registry-device-action")},
+    )
+    entity = entity_registry.async_get_or_create(
+        "light",
+        "test",
+        "search-registry-device-action",
+        suggested_object_id="registry_device_action",
+        config_entry=config_entry,
+        device_id=device.id,
+    )
+
+    # UI-created device actions store registry UUIDs rather than entity IDs.
+    device_action = {
+        "domain": "light",
+        "device_id": device.id,
+        "entity_id": entity.id,
+        "type": "turn_on",
+    }
+    assert entity.id != entity.entity_id
+
+    if item_type == ItemType.AUTOMATION:
+        component = "automation"
+        config = {
+            component: [
+                {
+                    "alias": "registry_device_action",
+                    "trigger": {
+                        "platform": "template",
+                        "value_template": "true",
+                    },
+                    "action": [device_action],
+                }
+            ]
+        }
+    else:
+        component = "script"
+        config = {
+            component: {
+                "registry_device_action": {"sequence": [device_action]},
+            }
+        }
+
+    assert await async_setup_component(hass, component, config)
+    await hass.async_block_till_done()
+    item_id = f"{component}.registry_device_action"
+    assert hass.states.get(item_id) is not None
+
+    # Read references from actual loaded configurations, not mocked extractors.
+    references = (
+        automation.entities_in_automation(hass, item_id)
+        if item_type == ItemType.AUTOMATION
+        else script.entities_in_script(hass, item_id)
+    )
+    assert entity.id in references or entity.entity_id in references
+
+    assert await async_setup_component(hass, DOMAIN, {})
+    assert Searcher(hass, {}).async_search(item_type, item_id)[ItemType.ENTITY] == {
+        entity.entity_id
+    }
+
+    client = await hass_ws_client(hass)
+    await client.send_json_auto_id(
+        {
+            "type": "search/related",
+            "item_type": item_type,
+            "item_id": item_id,
+        }
+    )
+    response = await client.receive_json()
+    assert response["success"], response
+    assert response["result"][ItemType.ENTITY] == unordered([entity.entity_id])
