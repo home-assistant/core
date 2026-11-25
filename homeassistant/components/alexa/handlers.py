@@ -33,6 +33,7 @@ from homeassistant.components.climate import (
 )
 from homeassistant.components.cover import (
     DOMAIN as COVER_DOMAIN,
+    CoverEntityCapabilityAttribute,
     CoverEntityStateAttribute,
     CoverService,
     CoverServiceArgument,
@@ -1638,6 +1639,16 @@ async def async_api_toggle_off(
     return response
 
 
+def _cover_tilt_open_and_closed_positions(entity: ha.State) -> tuple[int, int]:
+    """Return the open tilt position and the first closed one of a cover."""
+    return (
+        entity.attributes.get(CoverEntityCapabilityAttribute.OPEN_TILT_POSITION, 100),
+        entity.attributes.get(
+            CoverEntityCapabilityAttribute.CLOSED_TILT_POSITIONS, [0]
+        )[0],
+    )
+
+
 @HANDLERS.register(("Alexa.RangeController", "SetRangeValue"))
 async def async_api_set_range(
     hass: ha.HomeAssistant,
@@ -1668,9 +1679,16 @@ async def async_api_set_range(
     # Cover Tilt
     elif instance == f"{COVER_DOMAIN}.tilt":
         range_value = int(range_value)
-        if supported & cover.CoverEntityFeature.CLOSE_TILT and range_value == 0:
+        open_position, closed_position = _cover_tilt_open_and_closed_positions(entity)
+        if (
+            supported & cover.CoverEntityFeature.CLOSE_TILT
+            and range_value == closed_position
+        ):
             service = CoverService.CLOSE_TILT
-        elif supported & cover.CoverEntityFeature.OPEN_TILT and range_value == 100:
+        elif (
+            supported & cover.CoverEntityFeature.OPEN_TILT
+            and range_value == open_position
+        ):
             service = CoverService.OPEN_TILT
         else:
             service = CoverService.SET_TILT_POSITION
@@ -1799,9 +1817,10 @@ async def async_api_adjust_range(
             msg = f"Unable to determine {entity.entity_id} current tilt position"
             raise AlexaInvalidValueError(msg)
         tilt_position = response_value = min(100, max(0, range_delta + current))
-        if tilt_position == 100:
+        open_position, closed_position = _cover_tilt_open_and_closed_positions(entity)
+        if tilt_position == open_position:
             service = CoverService.OPEN_TILT
-        elif tilt_position == 0:
+        elif tilt_position == closed_position:
             service = CoverService.CLOSE_TILT
         else:
             data[CoverServiceArgument.TILT_POSITION] = tilt_position

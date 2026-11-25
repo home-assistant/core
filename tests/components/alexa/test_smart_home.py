@@ -23,7 +23,11 @@ from homeassistant.components.climate import (
     ClimateEntityCapabilityAttribute,
     ClimateEntityFeature,
 )
-from homeassistant.components.cover import CoverDeviceClass, CoverEntityFeature
+from homeassistant.components.cover import (
+    CoverDeviceClass,
+    CoverEntityCapabilityAttribute,
+    CoverEntityFeature,
+)
 from homeassistant.components.media_player import MediaPlayerEntityFeature
 from homeassistant.components.vacuum import VacuumEntityFeature
 from homeassistant.components.valve import SERVICE_STOP_VALVE, ValveEntityFeature
@@ -4732,6 +4736,76 @@ async def test_cover_tilt_position(
     assert properties["name"] == "rangeValue"
     assert properties["namespace"] == "Alexa.RangeController"
     assert properties["value"] == tilt_position
+
+
+async def test_cover_tilt_open_in_the_middle(hass: HomeAssistant) -> None:
+    """Test a cover that is open at tilt 50 and closed at 0 and 100."""
+    device = (
+        "cover.test_tilt_middle",
+        "open",
+        {
+            "friendly_name": "Test cover tilt middle",
+            "device_class": "blind",
+            "supported_features": CoverEntityFeature.SET_TILT_POSITION
+            | CoverEntityFeature.OPEN_TILT
+            | CoverEntityFeature.CLOSE_TILT,
+            "current_tilt_position": 30,
+            CoverEntityCapabilityAttribute.OPEN_TILT_POSITION: 50,
+            CoverEntityCapabilityAttribute.CLOSED_TILT_POSITIONS: [0, 100],
+        },
+    )
+    appliance = await discovery_test(device, hass)
+    capabilities = assert_endpoint_capabilities(
+        appliance,
+        "Alexa.PowerController",
+        "Alexa.RangeController",
+        "Alexa.EndpointHealth",
+        "Alexa",
+    )
+    semantics = get_capability(capabilities, "Alexa.RangeController")["semantics"]
+    assert {
+        "@type": "ActionsToDirective",
+        "actions": ["Alexa.Actions.Open"],
+        "directive": {"name": "SetRangeValue", "payload": {"rangeValue": 50}},
+    } in semantics["actionMappings"]
+    assert {
+        "@type": "ActionsToDirective",
+        "actions": ["Alexa.Actions.Close"],
+        "directive": {"name": "SetRangeValue", "payload": {"rangeValue": 0}},
+    } in semantics["actionMappings"]
+    assert semantics["stateMappings"] == [
+        {"@type": "StatesToValue", "states": ["Alexa.States.Closed"], "value": 0},
+        {
+            "@type": "StatesToRange",
+            "states": ["Alexa.States.Open"],
+            "range": {"minimumValue": 1, "maximumValue": 99},
+        },
+    ]
+
+    for range_value, service in (
+        (50, "cover.open_cover_tilt"),
+        (0, "cover.close_cover_tilt"),
+        (100, "cover.set_cover_tilt_position"),
+    ):
+        await assert_request_calls_service(
+            "Alexa.RangeController",
+            "SetRangeValue",
+            "cover#test_tilt_middle",
+            service,
+            hass,
+            payload={"rangeValue": range_value},
+            instance="cover.tilt",
+        )
+
+    await assert_request_calls_service(
+        "Alexa.RangeController",
+        "AdjustRangeValue",
+        "cover#test_tilt_middle",
+        "cover.open_cover_tilt",
+        hass,
+        payload={"rangeValueDelta": 20, "rangeValueDeltaDefault": False},
+        instance="cover.tilt",
+    )
 
 
 async def test_cover_tilt_position_range(hass: HomeAssistant) -> None:

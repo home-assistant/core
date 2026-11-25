@@ -29,6 +29,7 @@ from homeassistant.components.climate import (
 )
 from homeassistant.components.cover import (
     DOMAIN as COVER_DOMAIN,
+    CoverEntityCapabilityAttribute,
     CoverEntityStateAttribute,
     CoverServiceArgument,
 )
@@ -2242,16 +2243,30 @@ class AlexaRangeController(AlexaCapability):
 
         # Cover Tilt
         if self.instance == f"{COVER_DOMAIN}.tilt":
+            open_position = self.entity.attributes.get(
+                CoverEntityCapabilityAttribute.OPEN_TILT_POSITION, 100
+            )
+            closed_positions = self.entity.attributes.get(
+                CoverEntityCapabilityAttribute.CLOSED_TILT_POSITIONS, [0]
+            )
             self._semantics = AlexaSemantics()
             self._semantics.add_action_to_directive(
-                [AlexaSemantics.ACTION_CLOSE], "SetRangeValue", {"rangeValue": 0}
+                [AlexaSemantics.ACTION_CLOSE],
+                "SetRangeValue",
+                {"rangeValue": closed_positions[0]},
             )
             self._semantics.add_action_to_directive(
-                [AlexaSemantics.ACTION_OPEN], "SetRangeValue", {"rangeValue": 100}
+                [AlexaSemantics.ACTION_OPEN],
+                "SetRangeValue",
+                {"rangeValue": open_position},
             )
-            self._semantics.add_states_to_value([AlexaSemantics.STATES_CLOSED], value=0)
+            self._semantics.add_states_to_value(
+                [AlexaSemantics.STATES_CLOSED], value=closed_positions[0]
+            )
             self._semantics.add_states_to_range(
-                [AlexaSemantics.STATES_OPEN], min_value=1, max_value=100
+                [AlexaSemantics.STATES_OPEN],
+                min_value=0 if 0 not in closed_positions else 1,
+                max_value=100 if 100 not in closed_positions else 99,
             )
             return self._semantics.serialize_semantics()
 
