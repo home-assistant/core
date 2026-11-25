@@ -119,6 +119,9 @@ async def async_process_config(
                     # Only allow a script config to match at most once
                     continue
                 if script_matches_config(script, script_config):
+                    # Matching ignores the blueprint inputs, so the kept entity
+                    # takes the new ones.
+                    script.raw_blueprint_inputs = script_config.raw_blueprint_inputs
                     script_matches.add(script_idx)
                     config_matches.add(config_idx)
                     # Only allow a script to match at most once

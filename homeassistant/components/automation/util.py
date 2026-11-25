@@ -2,7 +2,7 @@
 
 import asyncio
 from dataclasses import dataclass
-from typing import Any, cast
+from typing import TYPE_CHECKING, Any, cast
 
 from homeassistant.const import (
     CONF_ACTIONS,
@@ -215,6 +215,11 @@ async def async_process_config(
                     automation.unique_id
                 )
                 if automation_matches_config(automation, automation_config):
+                    # Matching ignores the blueprint inputs, so the kept entity
+                    # takes the new ones.
+                    automation.raw_blueprint_inputs = (
+                        automation_config.raw_blueprint_inputs
+                    )
                     automation_matches.add(automation_idx)
                     config_matches.add(config_idx)
                 continue
@@ -224,6 +229,9 @@ async def async_process_config(
                     # Only allow an automation config to match at most once
                     continue
                 if automation_matches_config(automation, automation_config):
+                    automation.raw_blueprint_inputs = (
+                        automation_config.raw_blueprint_inputs
+                    )
                     automation_matches.add(automation_idx)
                     config_matches.add(config_idx)
                     # Only allow an automation to match at most once
@@ -309,6 +317,11 @@ async def async_process_single_config(
     automation_config = automation_configs[0] if automation_configs else None
 
     if _automation_matches_config(automation, automation_config):
+        if TYPE_CHECKING:
+            assert automation is not None
+            assert automation_config is not None
+        # Matching ignores the blueprint inputs, so the kept entity takes the new ones
+        automation.raw_blueprint_inputs = automation_config.raw_blueprint_inputs
         return
 
     await _async_replace_automations(

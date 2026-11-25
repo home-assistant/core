@@ -1568,6 +1568,100 @@ async def test_reload_automation_when_blueprint_changes(
         assert len(calls) == 3
 
 
+def _blueprint_automation_config(a_number: int) -> dict[str, Any]:
+    """Return a config of the test_event_service.yaml blueprint."""
+    return {
+        "use_blueprint": {
+            "path": "test_event_service.yaml",
+            "input": {
+                "trigger_event": "test_event",
+                "service_to_call": "test.automation",
+                # The blueprint does not use this input
+                "a_number": a_number,
+            },
+        }
+    }
+
+
+# The configuration that test_event_service.yaml expands to
+PLAIN_AUTOMATION_CONFIG = {
+    "triggers": {"trigger": "event", "event_type": "test_event"},
+    "actions": {"service": "test.automation", "entity_id": "light.kitchen"},
+}
+
+
+@pytest.mark.parametrize(
+    ("extra_config", "service_data"),
+    [
+        pytest.param({}, {}, id="reload_without_id"),
+        pytest.param({"id": "sun"}, {}, id="reload_with_id"),
+        pytest.param({"id": "sun"}, {CONF_ID: "sun"}, id="reload_single"),
+    ],
+)
+@pytest.mark.parametrize(
+    ("old_config", "new_config", "expected_blueprint", "expected_automations"),
+    [
+        pytest.param(
+            _blueprint_automation_config(5),
+            _blueprint_automation_config(6),
+            "test_event_service.yaml",
+            ["automation.automation_0"],
+            id="unused_input_changed",
+        ),
+        pytest.param(
+            _blueprint_automation_config(5),
+            PLAIN_AUTOMATION_CONFIG,
+            None,
+            [],
+            id="take_control",
+        ),
+        pytest.param(
+            PLAIN_AUTOMATION_CONFIG,
+            _blueprint_automation_config(5),
+            "test_event_service.yaml",
+            ["automation.automation_0"],
+            id="plain_to_blueprint",
+        ),
+    ],
+)
+async def test_reload_unchanged_automation_updates_blueprint_inputs(
+    hass: HomeAssistant,
+    extra_config: dict[str, str],
+    service_data: dict[str, str],
+    old_config: dict[str, Any],
+    new_config: dict[str, Any],
+    expected_blueprint: str | None,
+    expected_automations: list[str],
+) -> None:
+    """Test a kept automation takes the blueprint inputs of the new config."""
+    entity_id = "automation.automation_0"
+    assert await async_setup_component(
+        hass, automation.DOMAIN, {automation.DOMAIN: [old_config | extra_config]}
+    )
+    component = hass.data[automation.DATA_COMPONENT]
+    entity = component.get_entity(entity_id)
+    assert entity is not None
+
+    with patch(
+        "homeassistant.config.load_yaml_config_file",
+        autospec=True,
+        return_value={automation.DOMAIN: [new_config | extra_config]},
+    ):
+        await hass.services.async_call(
+            automation.DOMAIN, AutomationService.RELOAD, service_data, blocking=True
+        )
+
+    assert component.get_entity(entity_id) is entity
+    assert (entity.raw_blueprint_inputs or {}).get("use_blueprint") == new_config.get(
+        "use_blueprint"
+    )
+    assert automation.blueprint_in_automation(hass, entity_id) == expected_blueprint
+    assert (
+        automation.automations_with_blueprint(hass, "test_event_service.yaml")
+        == expected_automations
+    )
+
+
 async def test_automation_restore_state(hass: HomeAssistant) -> None:
     """Ensure states are restored on startup."""
     time = dt_util.utcnow()

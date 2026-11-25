@@ -681,6 +681,90 @@ async def test_reload_unchanged_script(
         assert len(calls) == 2
 
 
+def _blueprint_script_config(a_number: int) -> dict[str, Any]:
+    """Return a config of the test_service.yaml blueprint."""
+    return {
+        "use_blueprint": {
+            "path": "test_service.yaml",
+            "input": {"service_to_call": "test.script", "a_number": a_number},
+        }
+    }
+
+
+# The configuration that test_service.yaml expands to
+PLAIN_SCRIPT_CONFIG = {
+    "sequence": {"service": "test.script", "entity_id": "light.kitchen"},
+}
+
+
+@pytest.mark.parametrize(
+    ("old_config", "new_config", "expected_blueprint", "expected_scripts"),
+    [
+        pytest.param(
+            _blueprint_script_config(5),
+            _blueprint_script_config(6),
+            "test_service.yaml",
+            [ENTITY_ID],
+            id="unused_input_changed",
+        ),
+        pytest.param(
+            _blueprint_script_config(5),
+            PLAIN_SCRIPT_CONFIG,
+            None,
+            [],
+            id="take_control",
+        ),
+        pytest.param(
+            PLAIN_SCRIPT_CONFIG,
+            _blueprint_script_config(5),
+            "test_service.yaml",
+            [ENTITY_ID],
+            id="plain_to_blueprint",
+        ),
+    ],
+)
+async def test_reload_unchanged_script_updates_blueprint_inputs(
+    hass: HomeAssistant,
+    old_config: dict[str, Any],
+    new_config: dict[str, Any],
+    expected_blueprint: str | None,
+    expected_scripts: list[str],
+) -> None:
+    """Test a kept script takes the blueprint inputs of the new config."""
+    blueprint_path = script.async_get_blueprints(hass).blueprint_folder
+    blueprint_config = yaml_util.load_yaml(blueprint_path / "test_service.yaml")
+    # An input that the blueprint does not use
+    blueprint_config["blueprint"]["input"]["a_number"] = None
+
+    with patch(
+        "homeassistant.components.blueprint.models.yaml_util.load_yaml_dict",
+        autospec=True,
+        return_value=blueprint_config,
+    ):
+        assert await async_setup_component(
+            hass, script.DOMAIN, {script.DOMAIN: {"test": old_config}}
+        )
+        component = hass.data[script.DOMAIN]
+        entity = component.get_entity(ENTITY_ID)
+        assert entity is not None
+
+        with patch(
+            "homeassistant.config.load_yaml_config_file",
+            autospec=True,
+            return_value={script.DOMAIN: {"test": new_config}},
+        ):
+            await hass.services.async_call(
+                script.DOMAIN, ScriptService.RELOAD, blocking=True
+            )
+
+    assert component.get_entity(ENTITY_ID) is entity
+    assert (entity.raw_blueprint_inputs or {}).get("use_blueprint") == new_config.get(
+        "use_blueprint"
+    )
+    assert script.blueprint_in_script(hass, ENTITY_ID) == expected_blueprint
+    assert script.scripts_with_blueprint(hass, "test_service.yaml") == expected_scripts
+
+
 async def test_service_descriptions(hass: HomeAssistant) -> None:
     """Test that service descriptions are loaded and reloaded correctly."""
     # Test 1: has "description" but no "fields"
