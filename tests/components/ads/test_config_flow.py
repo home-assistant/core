@@ -145,22 +145,44 @@ async def test_import_flow(hass: HomeAssistant) -> None:
     assert result["data"] == ADS_CONFIG
 
 
-@pytest.mark.parametrize(("configure_mock", "reason"), CONNECT_ERRORS)
-async def test_import_flow_errors(
+@pytest.mark.parametrize(
+    "configure_mock",
+    [
+        pytest.param(param.values[0], id=param.id)
+        for param in CONNECT_ERRORS
+        if param.id != "invalid_net_id"
+    ],
+)
+async def test_import_flow_offline(
     hass: HomeAssistant,
     mock_pyads_connection: MagicMock,
     configure_mock: Callable[[MagicMock], None],
-    reason: str,
 ) -> None:
-    """Test the import aborts when the device does not answer."""
+    """Test the import creates the entry without connecting to the device."""
     configure_mock(mock_pyads_connection)
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_IMPORT}, data=ADS_CONFIG
     )
 
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"] == ADS_CONFIG
+    mock_pyads_connection.assert_not_called()
+
+
+@pytest.mark.parametrize(
+    "net_id", ["bad", "1.2.3.4.5", "1.2.3.4.5.256", "1.2.3.4.5.x", "1.2.3.4.5.6.7"]
+)
+async def test_import_flow_invalid_net_id(hass: HomeAssistant, net_id: str) -> None:
+    """Test the import aborts on an AMS NetID that cannot be valid."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_IMPORT},
+        data={**ADS_CONFIG, CONF_DEVICE: net_id},
+    )
+
     assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == reason
+    assert result["reason"] == "invalid_net_id"
     assert not hass.config_entries.async_entries(DOMAIN)
 
 

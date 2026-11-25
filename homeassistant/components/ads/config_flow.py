@@ -37,6 +37,14 @@ def _drop_blank_optionals(data: dict[str, Any]) -> dict[str, Any]:
     }
 
 
+def _is_valid_net_id(net_id: str) -> bool:
+    """Return whether the AMS NetID is six numbers from 0 to 255, separated by dots."""
+    parts = net_id.split(".")
+    return len(parts) == 6 and all(
+        part.isdigit() and 0 <= int(part) <= 255 for part in parts
+    )
+
+
 def _validate_connection(data: dict[str, Any]) -> None:
     """Open a connection and read the device state."""
     client = pyads.Connection(
@@ -111,8 +119,13 @@ class AdsConfigFlow(ConfigFlow, domain=DOMAIN):
         return await self.async_step_user(user_input)
 
     async def async_step_import(self, import_data: dict[str, Any]) -> ConfigFlowResult:
-        """Import the ADS connection from configuration.yaml."""
+        """Import the ADS connection from configuration.yaml.
+
+        The connection is not tested here: a device that is offline when Home
+        Assistant upgrades would otherwise leave the YAML entities without a
+        connection. Setting up the entry retries until the device answers.
+        """
         import_data = _drop_blank_optionals(import_data)
-        if (error := await self._async_validate(import_data)) is not None:
-            return self.async_abort(reason=error)
+        if not _is_valid_net_id(import_data[CONF_DEVICE]):
+            return self.async_abort(reason="invalid_net_id")
         return self.async_create_entry(title=import_data[CONF_DEVICE], data=import_data)

@@ -2,13 +2,14 @@
 
 import asyncio
 from collections.abc import Callable
+from datetime import timedelta
 import logging
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, call, patch
 
 import pyads
 import pytest
-from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components.ads.const import DOMAIN
 from homeassistant.components.ads.entity import AdsEntity
@@ -17,6 +18,7 @@ from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
+    CONF_DEVICE,
     EVENT_HOMEASSISTANT_STOP,
     STATE_OFF,
     STATE_ON,
@@ -25,6 +27,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er, issue_registry as ir
 from homeassistant.setup import async_setup_component
+from homeassistant.util import dt as dt_util
 
 from . import ADS_CONFIG, MockAdsDevice, get_hub, setup_ads_platform
 from .const import AMS_NET_ID, IP_ADDRESS, PORT
@@ -218,35 +221,56 @@ async def test_yaml_import_already_configured(
     assert issue_registry.async_get_issue(DOMAIN, "deprecated_yaml")
 
 
-@pytest.mark.parametrize(
-    ("validate_error", "reason"),
-    [
-        pytest.param(pyads.ADSError(err_code=1861), "cannot_connect", id="timeout"),
-        pytest.param(ValueError("invalid literal"), "invalid_net_id", id="net_id"),
-        pytest.param(TypeError, "unknown", id="unknown"),
-    ],
-)
-async def test_yaml_import_failed(
-    hass: HomeAssistant,
-    mock_validate_connection: MagicMock,
-    mock_pyads_connection: MagicMock,
-    issue_registry: ir.IssueRegistry,
-    validate_error: Exception,
-    reason: str,
+async def test_yaml_import_invalid_net_id(
+    hass: HomeAssistant, issue_registry: ir.IssueRegistry
 ) -> None:
     """Test a failed import raises an error issue instead of the deprecation."""
-    mock_validate_connection.side_effect = validate_error
-
-    assert await async_setup_component(hass, DOMAIN, {DOMAIN: ADS_CONFIG})
+    assert await async_setup_component(
+        hass, DOMAIN, {DOMAIN: {**ADS_CONFIG, CONF_DEVICE: "bad"}}
+    )
     await hass.async_block_till_done()
 
     assert not hass.config_entries.async_entries(DOMAIN)
     issue = issue_registry.async_get_issue(
-        DOMAIN, f"deprecated_yaml_import_issue_{reason}"
+        DOMAIN, "deprecated_yaml_import_issue_invalid_net_id"
     )
     # The connection stays down until the user acts, so this is not a notice.
     assert issue.severity is ir.IssueSeverity.ERROR
     assert not issue_registry.async_get_issue(DOMAIN, "deprecated_yaml")
+
+
+async def test_yaml_import_device_offline(
+    hass: HomeAssistant,
+    mock_pyads_connection: MagicMock,
+    mock_ads_device: MockAdsDevice,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test a device offline at import still gets an entry that retries setup.
+
+    The YAML entities then come up as soon as the device answers, instead of
+    waiting for the user to restart Home Assistant.
+    """
+    client = mock_pyads_connection.return_value
+    client.read_state.side_effect = pyads.ADSError(err_code=1861)
+    mock_ads_device.values[SWITCH_VAR] = b"\x01"
+
+    assert await setup_ads_platform(hass, mock_ads_device, SWITCH_DOMAIN, SWITCH_CONFIG)
+
+    (entry,) = hass.config_entries.async_entries(DOMAIN)
+    assert entry.state is ConfigEntryState.SETUP_RETRY
+    assert hass.states.get(SWITCH_ID) is None
+    assert issue_registry.async_get_issue(DOMAIN, "deprecated_yaml")
+
+    client.read_state.side_effect = None
+    client.read_state.return_value = (pyads.ADSSTATE_RUN, 0)
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=5))
+    await hass.async_block_till_done()
+    for delivery in mock_ads_device.deliveries:
+        await hass.async_add_executor_job(delivery.join)
+    await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.LOADED
+    assert hass.states.get(SWITCH_ID).state == STATE_ON
 
 
 async def test_setup_and_unload(
