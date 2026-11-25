@@ -8,9 +8,10 @@ from pydaikin.exceptions import DaikinException
 import pytest
 
 from homeassistant.components.daikin.const import DOMAIN
-from homeassistant.components.daikin.demand_control import (
-    async_select_demand_control_option,
-    async_set_demand_control_max_power,
+from homeassistant.components.number import (
+    DOMAIN as NUMBER_DOMAIN,
+    NumberService,
+    NumberServiceArgument,
 )
 from homeassistant.components.select import (
     DOMAIN as SELECT_DOMAIN,
@@ -168,9 +169,10 @@ async def test_select_demand_control_communication_error(
 
 async def test_concurrent_demand_control_updates(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
     zone_device: ZoneDevice,
 ) -> None:
-    """Serialize select and number updates, including coordinator refresh."""
+    """Serialize concurrent select and number service calls."""
     demand_control = {"en_demand": "1", "mode": "0", "max_pow": "50"}
     zone_device.support_demand_control = True
     zone_device.get_demand_control.side_effect = demand_control.copy
@@ -193,16 +195,30 @@ async def test_concurrent_demand_control_updates(
         await release_refresh.wait()
 
     zone_device.set_demand_control = AsyncMock(side_effect=set_demand_control)
-    config_entry = await async_setup_daikin(hass, zone_device)
+    await async_setup_daikin(hass, zone_device)
     zone_device.update_status.side_effect = update_status
+    select_entity_id = _demand_control_select_entity_id(
+        entity_registry, zone_device.mac
+    )
+    number_entity_id = entity_registry.async_get_entity_id(
+        NUMBER_DOMAIN,
+        DOMAIN,
+        f"{zone_device.mac}-demand_control_max_power",
+    )
+    assert select_entity_id is not None
+    assert number_entity_id is not None
 
-    async def select_auto() -> None:
-        await async_select_demand_control_option(config_entry.runtime_data, "auto")
-
-    async def set_max_power() -> None:
-        await async_set_demand_control_max_power(config_entry.runtime_data, 75)
-
-    select_task = asyncio.create_task(select_auto())
+    select_task = asyncio.create_task(
+        hass.services.async_call(
+            SELECT_DOMAIN,
+            SelectService.SELECT_OPTION,
+            {
+                TargetKey.ENTITY_ID: select_entity_id,
+                SelectServiceArgument.OPTION: "auto",
+            },
+            blocking=True,
+        )
+    )
     tasks = [select_task]
     try:
         await first_write_started.wait()
@@ -211,7 +227,15 @@ async def test_concurrent_demand_control_updates(
 
         async def set_power() -> None:
             number_started.set()
-            await set_max_power()
+            await hass.services.async_call(
+                NUMBER_DOMAIN,
+                NumberService.SET_VALUE,
+                {
+                    TargetKey.ENTITY_ID: number_entity_id,
+                    NumberServiceArgument.VALUE: 75.0,
+                },
+                blocking=True,
+            )
 
         number_task = asyncio.create_task(set_power())
         tasks.append(number_task)
