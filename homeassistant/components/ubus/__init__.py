@@ -47,10 +47,14 @@ async def async_remove_entry(hass: HomeAssistant, entry: UbusConfigEntry) -> Non
     if not remaining or (shared := hass.data.get(DOMAIN)) is None:
         return
     # A loaded entry has the live platform which recreates the handed-over
-    # trackers right away; an inactive entry cannot until it loads.
+    # trackers right away; a disabled entry only does so when the user
+    # re-enables it, so prefer an entry which will load on its own.
     target = next(
         (entry for entry in remaining if entry.state is ConfigEntryState.LOADED),
-        remaining[0],
+        next(
+            (entry for entry in remaining if entry.disabled_by is None),
+            remaining[0],
+        ),
     )
     device_registry = dr.async_get(hass)
     entity_registry = er.async_get(hass)

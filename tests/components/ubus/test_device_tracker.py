@@ -1445,6 +1445,89 @@ async def test_tracker_handed_to_loaded_entry_on_removal(
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_tracker_handed_to_retrying_entry_over_disabled_entry(
+    hass: HomeAssistant,
+    mock_ubus_by_host: tuple[MagicMock, dict[str, MagicMock]],
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test removal hands a tracker to a retrying entry over a disabled one.
+
+    With no router loaded, the tracker must not be left on a disabled
+    entry, which only loads when the user re-enables it; a disconnected
+    client would then have no live tracker to report its away state when
+    another router recovers.
+    """
+    _mock, _ = mock_ubus_by_host
+    entry_a = MockConfigEntry(domain=DOMAIN, data=MOCK_CONFIG, title=MOCK_HOST)
+    entry_a.add_to_hass(hass)
+    entry_b = MockConfigEntry(
+        domain=DOMAIN,
+        data={**MOCK_CONFIG, CONF_HOST: MOCK_HOST_B},
+        title=MOCK_HOST_B,
+    )
+    entry_b.disabled_by = ConfigEntryDisabler.USER
+    entry_b.add_to_hass(hass)
+    entry_c = MockConfigEntry(
+        domain=DOMAIN,
+        data={**MOCK_CONFIG, CONF_HOST: MOCK_HOST_C},
+        title=MOCK_HOST_C,
+    )
+    entry_c.add_to_hass(hass)
+
+    # Router C cannot be reached, so its entry awaits a setup retry.
+    router_c = _mock(f"http://{MOCK_HOST_C}/ubus", "root", "password", verify=True)
+
+    def _connect() -> str:
+        router_c.session_id = "session-id"
+        return "session-id"
+
+    router_c.connect.side_effect = ConnectionError
+
+    router_a = _mock(f"http://{MOCK_HOST}/ubus", "root", "password", verify=True)
+    router_a.get_hostapd_clients.return_value = {
+        "clients": {MAC_PHONE: {"authorized": True}}
+    }
+    assert await hass.config_entries.async_setup(entry_a.entry_id)
+    await hass.async_block_till_done()
+    assert entry_b.state is ConfigEntryState.NOT_LOADED
+    assert entry_c.state is ConfigEntryState.SETUP_RETRY
+
+    entity_id = entity_registry.async_get_entity_id(
+        DEVICE_TRACKER_DOMAIN, DOMAIN, MAC_PHONE
+    )
+    assert entity_id is not None
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == STATE_HOME
+    device = device_registry.async_get_device_by_connection(
+        (dr.CONNECTION_NETWORK_MAC, MAC_PHONE), entry_a.entry_id
+    )
+
+    # Removing router A leaves no loaded router; the tracker and its
+    # device go to the entry which will load on its own, not the
+    # disabled one.
+    assert await hass.config_entries.async_remove(entry_a.entry_id)
+    await hass.async_block_till_done()
+
+    assert entity_registry.async_get(entity_id).config_entry_id == entry_c.entry_id
+    assert device_registry.async_get(device.id).config_entry_id == entry_c.entry_id
+
+    # Router C recovers; the client is no longer connected anywhere, so
+    # the tracker reports it.
+    router_c.connect.side_effect = _connect
+    freezer.tick(timedelta(seconds=90))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+    assert entry_c.state is ConfigEntryState.LOADED
+
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == STATE_UNAVAILABLE
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_tracker_handed_to_entry_with_failed_poll(
     hass: HomeAssistant,
     mock_ubus_by_host: tuple[MagicMock, dict[str, MagicMock]],
