@@ -438,7 +438,9 @@ class NetatmoThermostat(NetatmoRoomEntity, ClimateEntity):
             setpoint_mode == STATE_NETATMO_HOME
             or setpoint_mode not in NETATMO_MAP_PRESET
         ):
-            setpoint_mode = home_therm_mode or self.home.therm_mode
+            setpoint_mode = (
+                home_therm_mode or self.home.therm_mode or STATE_NETATMO_SCHEDULE
+            )
 
         self._attr_preset_mode = NETATMO_MAP_PRESET.get(setpoint_mode, PRESET_SCHEDULE)
         self._attr_hvac_mode = HVAC_MAP_NETATMO[self._attr_preset_mode]
