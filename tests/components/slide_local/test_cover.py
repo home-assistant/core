@@ -231,6 +231,7 @@ async def test_set_position(
         },
         blocking=True,
     )
+    assert hass.states.get("cover.slide_bedroom").state == CoverState.CLOSING
 
     mock_slide_api.slide_info.return_value = {**get_data(), "pos": 1.0}
 

@@ -105,14 +105,13 @@ class SlideCoverLocal(SlideEntity, CoverEntity):
     @override
     async def async_set_cover_position(self, **kwargs: Any) -> None:
         """Move the cover to a specific position."""
-        position = kwargs[ATTR_POSITION] / 100
-        if not self.invert:
-            position = 1 - position
+        target = kwargs[ATTR_POSITION] / 100
+        position = target if self.invert else 1 - target
 
         await self.coordinator.slide.slide_set_position(self.coordinator.host, position)
 
         if self.coordinator.data["pos"] is not None:
-            if position > self.coordinator.data["pos"]:
+            if target < self.coordinator.data["pos"]:
                 self.coordinator.data["state"] = STATE_CLOSING
             else:
                 self.coordinator.data["state"] = STATE_OPENING
