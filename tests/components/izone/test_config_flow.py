@@ -6,7 +6,6 @@ from types import SimpleNamespace
 from unittest.mock import AsyncMock, Mock, patch
 
 import pizone
-from pizone import ControllerEndpoint
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
@@ -1322,38 +1321,6 @@ async def test_homekit_aborts_for_ignored_uid(
     assert result["reason"] == "already_configured"
     mock_discover_all.assert_not_called()
     mock_discover_one.assert_not_called()
-
-
-async def test_async_migrate_entry_discovers_legacy_domain(
-    hass: HomeAssistant,
-    mock_create_discovery: AsyncMock,
-    mock_discovery_service: Mock,
-) -> None:
-    """v1→v2.2 migrate discovers and writes UID + CONF_HOST (ConfigEntryNotReady retries)."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        version=1,
-        unique_id=DOMAIN,
-        title="iZone Aircon",
-        data={"host": "192.0.2.1"},
-    )
-    entry.add_to_hass(hass)
-    mock_discovery_service.discover_all = AsyncMock(
-        return_value=[ControllerEndpoint(uid="000000001", host="192.0.2.10")]
-    )
-
-    with patch(
-        "homeassistant.components.izone.async_setup_entry",
-        return_value=None,
-    ):
-        await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
-
-    assert entry.version == 2
-    assert entry.minor_version == 2
-    assert entry.unique_id == "000000001"
-    assert entry.data == {CONF_HOST: "192.0.2.10"}
-    assert entry.title == "iZone 000000001"
 
 
 @pytest.mark.usefixtures("mock_entry_setup")

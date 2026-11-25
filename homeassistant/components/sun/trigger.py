@@ -7,7 +7,6 @@ import astral.sun
 import probatio
 
 from homeassistant.const import (
-    ATTR_ENTITY_ID,
     CONF_EVENT,
     CONF_FOR,
     CONF_OFFSET,
@@ -17,6 +16,7 @@ from homeassistant.const import (
     EVENT_CORE_CONFIG_UPDATE,
     SUN_EVENT_SUNRISE,
     SUN_EVENT_SUNSET,
+    TargetKey,
 )
 from homeassistant.core import CALLBACK_TYPE, Event, HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
@@ -147,7 +147,7 @@ class SunElevationTrigger(EntityNumericalStateTriggerBase):
             hass,
             TriggerConfig(
                 key=config.key,
-                target={ATTR_ENTITY_ID: [_SUN_ENTITY_ID]},
+                target={TargetKey.ENTITY_ID: [_SUN_ENTITY_ID]},
                 options=config.options,
             ),
         )
