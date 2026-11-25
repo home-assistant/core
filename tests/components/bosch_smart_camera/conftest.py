@@ -5,11 +5,7 @@ from unittest.mock import AsyncMock, patch
 
 from bosch_shc_camera_client.cameras import Camera, CameraModel
 from bosch_shc_camera_client.cloud import CloudPutResult
-from bosch_shc_camera_client.states import (
-    CameraAccountStates,
-    FirmwareStatus,
-    WifiInfo,
-)
+from bosch_shc_camera_client.states import CameraAccountStates, FirmwareStatus, WifiInfo
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
