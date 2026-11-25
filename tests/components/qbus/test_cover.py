@@ -296,9 +296,9 @@ async def test_cover_slats(
         pytest.param(50, 0, id="open"),
     ],
 )
+@pytest.mark.usefixtures("setup_integration")
 async def test_cover_slats_toggle_tilt(
     hass: HomeAssistant,
-    setup_integration: None,
     mock_publish_state: AsyncMock,
     slat_position: int,
     sent_slat_position: int,
