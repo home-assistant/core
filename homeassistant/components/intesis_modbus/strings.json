@@ -35,6 +35,11 @@
       }
     }
   },
+  "device": {
+    "air_conditioner": {
+      "name": "{gateway} air conditioner"
+    }
+  },
   "entity": {
     "climate": {
       "air_conditioner": {
@@ -58,6 +63,9 @@
     }
   },
   "exceptions": {
+    "gateway_unavailable": {
+      "message": "The gateway does not answer."
+    },
     "modbus_error": {
       "message": "Could not read the gateway."
     },

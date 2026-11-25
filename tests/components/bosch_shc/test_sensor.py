@@ -17,6 +17,7 @@ from homeassistant.helpers.entity_component import async_update_entity
 from homeassistant.util import dt as dt_util
 
 from .conftest import (
+    light_control_device,
     motion_detector2_device,
     outdoor_siren_device,
     setup_integration,
@@ -369,3 +370,20 @@ async def test_motion_detector2_temperature_push_update(
     await hass.async_block_till_done()
 
     assert hass.states.get("sensor.motion_detector_temperature").state == "19.0"
+
+
+@pytest.mark.parametrize(
+    "device_buckets",
+    [{"micromodule_light_controls": [light_control_device()]}],
+    indirect=True,
+)
+@pytest.mark.usefixtures("mock_session")
+async def test_light_control_power_and_energy(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """The Light Control reports power and energy."""
+    await setup_integration(hass, mock_config_entry)
+
+    assert hass.states.get("sensor.light_control_power").state == "12.5"
+    assert hass.states.get("sensor.light_control_energy").state == "3.0"

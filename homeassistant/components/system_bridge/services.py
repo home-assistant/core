@@ -51,6 +51,7 @@ class SystemBridgeService(StrEnum):
     OPEN_PATH = "open_path"
     OPEN_URL = "open_url"
     SEND_MESSAGE = "send_message"
+    DISMISS_MESSAGE = "dismiss_message"
     SEND_KEYPRESS = "send_keypress"
     SEND_TEXT = "send_text"
     POWER_COMMAND = "power_command"
@@ -83,6 +84,22 @@ BUTTON_ID_DEFAULT = "default"
 MAX_BUTTONS = 3
 URGENCIES = ["low", "normal", "critical"]
 CLICK_ACTION = "click_action"
+
+
+def _whole_number(value: Any) -> int:
+    """Validate a whole number, which Coerce(int) would truncate a fraction to."""
+    if isinstance(value, bool):
+        raise probatio.Invalid("expected a whole number")
+    if isinstance(value, int):
+        return value
+    if isinstance(value, float) and value.is_integer():
+        return int(value)
+    if isinstance(value, str):
+        try:
+            return int(value)
+        except ValueError:
+            pass
+    raise probatio.Invalid("expected a whole number")
 
 
 @callback
@@ -131,6 +148,18 @@ def async_setup_services(hass: HomeAssistant) -> None:
         description_placeholders={
             "icon_naming_url": "https://specifications.freedesktop.org/icon-naming/latest/"
         },
+    )
+    service.async_register_platform_entity_service(
+        hass,
+        DOMAIN,
+        SystemBridgeService.DISMISS_MESSAGE,
+        entity_domain=NOTIFY_DOMAIN,
+        schema={
+            probatio.Required(SystemBridgeServiceArgument.ID): probatio.All(
+                _whole_number, probatio.Range(min=1)
+            ),
+        },
+        func="system_bridge_dismiss_message",
     )
 
     hass.services.async_register(
@@ -295,7 +324,7 @@ async def handle_get_processes_by_name(
     }
 
 
-async def _async_send_command(
+async def async_send_command(
     coordinator: SystemBridgeDataUpdateCoordinator,
     action: str,
     command: Awaitable[Response],
@@ -330,7 +359,7 @@ async def handle_open_path(service_call: ServiceCall) -> ServiceResponse:
     coordinator = _get_coordinator(
         service_call.hass, service_call.data[SystemBridgeServiceArgument.BRIDGE]
     )
-    return await _async_send_command(
+    return await async_send_command(
         coordinator,
         service_call.service,
         coordinator.websocket_client.open_path(
@@ -345,7 +374,7 @@ async def handle_power_command(service_call: ServiceCall) -> ServiceResponse:
     coordinator = _get_coordinator(
         service_call.hass, service_call.data[SystemBridgeServiceArgument.BRIDGE]
     )
-    return await _async_send_command(
+    return await async_send_command(
         coordinator,
         service_call.service,
         getattr(
@@ -361,7 +390,7 @@ async def handle_open_url(service_call: ServiceCall) -> ServiceResponse:
     coordinator = _get_coordinator(
         service_call.hass, service_call.data[SystemBridgeServiceArgument.BRIDGE]
     )
-    return await _async_send_command(
+    return await async_send_command(
         coordinator,
         service_call.service,
         coordinator.websocket_client.open_url(
@@ -375,7 +404,7 @@ async def handle_send_keypress(service_call: ServiceCall) -> ServiceResponse:
     coordinator = _get_coordinator(
         service_call.hass, service_call.data[SystemBridgeServiceArgument.BRIDGE]
     )
-    return await _async_send_command(
+    return await async_send_command(
         coordinator,
         service_call.service,
         coordinator.websocket_client.keyboard_keypress(
@@ -389,7 +418,7 @@ async def handle_send_text(service_call: ServiceCall) -> ServiceResponse:
     coordinator = _get_coordinator(
         service_call.hass, service_call.data[SystemBridgeServiceArgument.BRIDGE]
     )
-    return await _async_send_command(
+    return await async_send_command(
         coordinator,
         service_call.service,
         coordinator.websocket_client.keyboard_text(
