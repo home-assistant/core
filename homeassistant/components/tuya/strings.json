@@ -1434,6 +1434,9 @@
     "action_dpcode_not_found": {
       "message": "Unable to process action as the device does not provide a corresponding function code (expected one of {expected} in {available})."
     },
+    "cannot_connect": {
+      "message": "Unable to connect to the Tuya cloud."
+    },
     "command_not_accepted": {
       "message": "The Tuya cloud does not accept this command or value for this device (error {code})."
     },

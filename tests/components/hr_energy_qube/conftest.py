@@ -85,6 +85,12 @@ def mock_qube_client(mock_qube_client_cls: MagicMock) -> MagicMock:
     state.status_code = 1
     state.status = StatusCode.STANDBY
     state.setpoint_dhw = 50.0
+    state.workinghours_dhw_hrsret = 1250
+    state.workinghours_heat_hrsret = 8400
+    state.workinghours_cool_hrsret = 310
+    state.workinghours_heater1_hrs = 12
+    state.workinghours_heater2_hrs = 0
+    state.workinghours_heater3_hrs = 0
 
     # Binary sensors - Outputs
     state.dout_srcpmp_val = True
