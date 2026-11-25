@@ -7,8 +7,13 @@ import pytest
 from pytest_homeassistant.common import MockUser
 
 from homeassistant.components.automation import DOMAIN
-from homeassistant.components.automation.llm import ListAutomationsTool, async_get_tools
+from homeassistant.components.automation.llm import (
+    GetConfigTool,
+    ListAutomationsTool,
+    async_get_tools,
+)
 from homeassistant.core import Context, HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import llm
 from homeassistant.setup import async_setup_component
 from homeassistant.util.json import JsonObjectType
@@ -82,7 +87,10 @@ async def test_async_get_tools(
 
     tools = async_get_tools(hass, llm_context, llm.LLM_API_HOME_ASSISTANT)
     assert tools is not None
-    assert [tool.name for tool in tools.tools] == ["automation__list_automations"]
+    assert [tool.name for tool in tools.tools] == [
+        "automation__list_automations",
+        "automation__get_config",
+    ]
 
 
 @pytest.mark.freeze_time("2026-11-24 12:00:00+00:00")
@@ -168,3 +176,78 @@ async def test_call_through_api(
     assert await api.async_call_tool(llm.ToolInput(tool.name, {})) == llm.ToolResult(
         data={"automations": [], "total": 0}
     )
+
+
+@pytest.mark.usefixtures("setup_automations")
+async def test_get_config(hass: HomeAssistant, llm_context: llm.LLMContext) -> None:
+    """Test getting the configuration of an automation."""
+    tool = GetConfigTool()
+    result = await tool.async_call(
+        hass,
+        llm.ToolInput(tool.name, {"entity_id": "automation.kitchen_lights"}),
+        llm_context,
+    )
+
+    assert result == llm.ToolResult(
+        data={
+            "entity_id": "automation.kitchen_lights",
+            "config": {
+                "id": "kitchen",
+                "alias": "Kitchen lights",
+                "description": "Turn on the kitchen lights in the evening",
+                "triggers": {"trigger": "event", "event_type": "test_event"},
+                "actions": [],
+            },
+        }
+    )
+
+
+@pytest.mark.usefixtures("setup_automations")
+async def test_get_config_of_broken_automation(
+    hass: HomeAssistant, llm_context: llm.LLMContext
+) -> None:
+    """Test the configuration of an automation with an error is returned."""
+    tool = GetConfigTool()
+    result = await tool.async_call(
+        hass, llm.ToolInput(tool.name, {"entity_id": "automation.broken"}), llm_context
+    )
+
+    assert result.data["config"]["triggers"] == {"trigger": "unknown_platform"}
+
+
+@pytest.mark.usefixtures("setup_automations")
+async def test_get_config_not_found(
+    hass: HomeAssistant, llm_context: llm.LLMContext
+) -> None:
+    """Test an unknown automation is not found."""
+    tool = GetConfigTool()
+    with pytest.raises(HomeAssistantError, match="not found"):
+        await tool.async_call(
+            hass,
+            llm.ToolInput(tool.name, {"entity_id": "automation.unknown"}),
+            llm_context,
+        )
+
+
+async def test_get_config_without_automations(
+    hass: HomeAssistant, llm_context: llm.LLMContext
+) -> None:
+    """Test no automation is found when the integration is not set up."""
+    tool = GetConfigTool()
+    with pytest.raises(HomeAssistantError, match="not found"):
+        await tool.async_call(
+            hass,
+            llm.ToolInput(tool.name, {"entity_id": "automation.kitchen_lights"}),
+            llm_context,
+        )
+
+
+async def test_get_config_only_automations(
+    hass: HomeAssistant, llm_context: llm.LLMContext
+) -> None:
+    """Test only automation entity IDs are accepted."""
+    tool = GetConfigTool()
+    with pytest.raises(probatio.Invalid):
+        await tool.async_call(
+            hass, llm.ToolInput(tool.name, {"entity_id": "script.test"}), llm_context
+        )

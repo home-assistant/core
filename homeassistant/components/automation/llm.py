@@ -7,6 +7,9 @@ import probatio
 
 from homeassistant.components.llm import LLMTools
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.json import json_dumps
 from homeassistant.helpers.llm import (
     LLM_API_HOME_ASSISTANT,
     LLMContext,
@@ -15,7 +18,7 @@ from homeassistant.helpers.llm import (
     ToolInput,
     ToolResult,
 )
-from homeassistant.util.json import JsonObjectType, JsonValueType
+from homeassistant.util.json import JsonObjectType, JsonValueType, json_loads_object
 
 from . import ATTR_LAST_TRIGGERED
 from .const import DATA_COMPONENT, DOMAIN
@@ -92,6 +95,48 @@ class ListAutomationsTool(Tool):
         return ToolResult(data=result)
 
 
+class GetConfigTool(Tool):
+    """LLM Tool to get the configuration of an automation."""
+
+    name = "automation__get_config"
+    title = "Get automation configuration"
+    description = (
+        "Get the configuration of an automation: its triggers, conditions and "
+        "actions, or the blueprint it uses with its inputs. Use "
+        "automation__list_automations or search__search to find the entity_id."
+    )
+    annotations = ToolAnnotations(
+        read_only=True, destructive=False, idempotent=True, open_world=False
+    )
+    integration = DOMAIN
+    parameters = probatio.Schema(
+        {
+            probatio.Required(
+                "entity_id", description="The entity_id of the automation."
+            ): cv.entity_domain(DOMAIN),
+        }
+    )
+
+    @override
+    async def async_call(
+        self, hass: HomeAssistant, tool_input: ToolInput, llm_context: LLMContext
+    ) -> ToolResult:
+        """Return the configuration of the automation."""
+        entity_id: str = self.parameters(tool_input.tool_args)["entity_id"]
+        if (
+            (component := hass.data.get(DATA_COMPONENT)) is None
+            or (entity := component.get_entity(entity_id)) is None
+            or entity.raw_config is None
+        ):
+            raise HomeAssistantError(f"Automation '{entity_id}' not found.")
+        return ToolResult(
+            data={
+                "entity_id": entity_id,
+                "config": json_loads_object(json_dumps(entity.raw_config)),
+            }
+        )
+
+
 @callback
 def async_get_tools(
     hass: HomeAssistant, llm_context: LLMContext, api_id: str
@@ -100,4 +145,4 @@ def async_get_tools(
     if api_id != LLM_API_HOME_ASSISTANT:
         return None
 
-    return LLMTools(tools=[ListAutomationsTool()])
+    return LLMTools(tools=[ListAutomationsTool(), GetConfigTool()])
