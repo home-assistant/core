@@ -1409,7 +1409,11 @@ class Entity(
 
         # Process update sequential
         if self.parallel_updates:
-            await self.parallel_updates.acquire()
+            try:
+                await self.parallel_updates.acquire()
+            except asyncio.CancelledError:
+                self._update_staged = False
+                raise
 
         if warning:
             update_warn = hass.loop.call_at(
