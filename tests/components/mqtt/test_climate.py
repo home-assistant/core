@@ -160,6 +160,22 @@ async def test_preset_none_in_preset_modes(
     assert "preset_modes must not include preset mode 'none'" in caplog.text
 
 
+@pytest.mark.parametrize(
+    "hass_config",
+    [help_custom_config(climate.DOMAIN, DEFAULT_CONFIG, ({"modes": ["on", "off"]},))],
+)
+async def test_invalid_hvac_mode_in_modes(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+) -> None:
+    """Test an invalid hvac mode in the modes list is rejected."""
+    assert await mqtt_mock_entry()
+    assert hass.states.get(ENTITY_CLIMATE) is None
+    assert "value must be one of" in caplog.text
+    assert "at 'modes[0]'" in caplog.text
+
+
 @pytest.mark.parametrize("hass_config", [DEFAULT_CONFIG])
 async def test_supported_features(
     hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
