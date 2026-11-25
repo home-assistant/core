@@ -606,7 +606,7 @@
           "name": "Queue item ID"
         },
         "username": {
-          "description": "Music Assistant username to run this action as. Defaults to the Music Assistant user linked to the Home Assistant user making the request.",
+          "description": "Music Assistant username to run this action as. Defaults to the Music Assistant user linked to the Home Assistant user making the request. If there is no linked user, the request runs as the default account.",
           "name": "[%key:component::music_assistant::services::get_library::fields::username::name%]"
         }
       },
