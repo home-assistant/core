@@ -7,7 +7,11 @@ from pyaprilaire.const import Attribute
 from homeassistant.const import CONF_HOST, CONF_PORT, EVENT_HOMEASSISTANT_STOP, Platform
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
-from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers import (
+    device_registry as dr,
+    entity_registry as er,
+    issue_registry as ir,
+)
 from homeassistant.helpers.device_registry import format_mac
 
 from .const import DOMAIN
@@ -36,14 +40,31 @@ async def async_setup_entry(hass: HomeAssistant, entry: AprilaireConfigEntry) ->
         if ready:
             mac_address = format_mac(coordinator.data[Attribute.MAC_ADDRESS])
 
+            issue_id = f"wrong_device_{entry.entry_id}"
             if mac_address != entry.unique_id:
                 coordinator.stop_listen()
 
+                ir.async_create_issue(
+                    hass,
+                    DOMAIN,
+                    issue_id,
+                    is_fixable=True,
+                    severity=ir.IssueSeverity.ERROR,
+                    translation_key="wrong_device",
+                    translation_placeholders={
+                        "title": entry.title,
+                        "host": host,
+                        "found": mac_address,
+                    },
+                    config_entry_id=entry.entry_id,
+                    data={"entry_id": entry.entry_id},
+                )
                 raise ConfigEntryError(
                     f"Unexpected device found at {host}; expected {entry.unique_id},"
                     f" found {mac_address}"
                 )
 
+            ir.async_delete_issue(hass, DOMAIN, issue_id)
             entry.runtime_data = coordinator
             entry.async_on_unload(coordinator.stop_listen)
 

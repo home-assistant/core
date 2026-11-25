@@ -11,7 +11,11 @@ from homeassistant.components.aprilaire.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers import (
+    device_registry as dr,
+    entity_registry as er,
+    issue_registry as ir,
+)
 
 DEVICE_IDENTIFIER = (DOMAIN, "12:34:56:78:90:ab")
 
@@ -105,8 +109,10 @@ def _mock_client(mac_address: str) -> AsyncMock:
     return client
 
 
-async def test_unexpected_device(hass: HomeAssistant) -> None:
-    """Test setup fails when a different device answers at the host."""
+async def test_unexpected_device(
+    hass: HomeAssistant, issue_registry: ir.IssueRegistry
+) -> None:
+    """Test setup fails and raises a repair issue when a different device answers."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
         unique_id="12:34:56:78:90:ab",
@@ -129,6 +135,50 @@ async def test_unexpected_device(hass: HomeAssistant) -> None:
         " found 12:34:56:78:90:cd"
     )
     client.stop_listen.assert_called_once()
+
+    issue = issue_registry.async_get_issue(
+        DOMAIN, f"wrong_device_{config_entry.entry_id}"
+    )
+    assert issue is not None
+    assert issue.is_fixable
+    assert issue.config_entry_id == config_entry.entry_id
+    assert issue.translation_key == "wrong_device"
+    assert issue.translation_placeholders == {
+        "title": config_entry.title,
+        "host": "localhost",
+        "found": "12:34:56:78:90:cd",
+    }
+
+
+async def test_expected_device_deletes_issue(
+    hass: HomeAssistant, issue_registry: ir.IssueRegistry
+) -> None:
+    """Test a successful setup deletes the wrong device issue."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="12:34:56:78:90:ab",
+        data={CONF_HOST: "localhost", CONF_PORT: 7000},
+        minor_version=2,
+    )
+    config_entry.add_to_hass(hass)
+    issue_id = f"wrong_device_{config_entry.entry_id}"
+    ir.async_create_issue(
+        hass,
+        DOMAIN,
+        issue_id,
+        is_fixable=True,
+        severity=ir.IssueSeverity.ERROR,
+        translation_key="wrong_device",
+        translation_placeholders={
+            "title": config_entry.title,
+            "host": "localhost",
+            "found": "12:34:56:78:90:cd",
+        },
+    )
+
+    await _async_setup_entry(hass, config_entry, "12:34:56:78:90:ab")
+
+    assert issue_registry.async_get_issue(DOMAIN, issue_id) is None
 
 
 async def _async_setup_entry(
