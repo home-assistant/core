@@ -1,7 +1,8 @@
 """Tests for the Roomba periodic connection mode."""
 
+import asyncio
 from datetime import timedelta
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, call, patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
@@ -16,7 +17,9 @@ from homeassistant.components.roomba.const import (
     COMMAND_HOLD_SECONDS,
     CONF_CONTINUOUS,
     PERIODIC_UPDATE_INTERVAL,
-    TELEMETRY_SETTLE_SECONDS,
+    SESSION_CONNECT_TIMEOUT,
+    TELEMETRY_MAX_SECONDS,
+    TELEMETRY_QUIET_SECONDS,
 )
 from homeassistant.components.vacuum import DOMAIN as VACUUM_DOMAIN, SERVICE_LOCATE
 from homeassistant.config_entries import ConfigEntryState
@@ -33,6 +36,7 @@ def periodic_roomba(mock_roomba: AsyncMock) -> AsyncMock:
 
     async def _connect() -> None:
         mock_roomba.connected = True
+        _publish(mock_roomba, {"batPct": 100})
 
     async def _disconnect() -> None:
         mock_roomba.connected = False
@@ -40,6 +44,12 @@ def periodic_roomba(mock_roomba: AsyncMock) -> AsyncMock:
     mock_roomba.connect.side_effect = _connect
     mock_roomba.disconnect.side_effect = _disconnect
     return mock_roomba
+
+
+def _publish(roomba: AsyncMock, reported: dict[str, object]) -> None:
+    """Deliver a message from the robot to every registered callback."""
+    for registration in roomba.register_on_message_callback.call_args_list:
+        registration.args[0]({"state": {"reported": reported}})
 
 
 def _set_phase(roomba: AsyncMock, phase: str) -> None:
@@ -74,7 +84,7 @@ async def test_periodic_releases_robot_after_setup(
     assert mock_config_entry.state is ConfigEntryState.LOADED
     periodic_roomba.disconnect.assert_not_awaited()
 
-    await _advance(hass, freezer, timedelta(seconds=TELEMETRY_SETTLE_SECONDS))
+    await _advance(hass, freezer, timedelta(seconds=TELEMETRY_QUIET_SECONDS))
 
     periodic_roomba.disconnect.assert_awaited_once()
     assert not periodic_roomba.connected
@@ -90,14 +100,14 @@ async def test_periodic_poll_reconnects_and_releases(
 ) -> None:
     """Test each poll opens a short-lived session."""
     await _setup(hass, mock_config_entry, continuous=False)
-    await _advance(hass, freezer, timedelta(seconds=TELEMETRY_SETTLE_SECONDS))
+    await _advance(hass, freezer, timedelta(seconds=TELEMETRY_QUIET_SECONDS))
     assert periodic_roomba.connect.await_count == 1
 
     await _advance(hass, freezer, PERIODIC_UPDATE_INTERVAL)
     assert periodic_roomba.connect.await_count == 2
     assert periodic_roomba.connected
 
-    await _advance(hass, freezer, timedelta(seconds=TELEMETRY_SETTLE_SECONDS))
+    await _advance(hass, freezer, timedelta(seconds=TELEMETRY_QUIET_SECONDS))
     assert not periodic_roomba.connected
 
 
@@ -111,7 +121,7 @@ async def test_periodic_keeps_session_during_mission(
     _set_phase(periodic_roomba, "run")
     await _setup(hass, mock_config_entry, continuous=False)
 
-    await _advance(hass, freezer, timedelta(seconds=TELEMETRY_SETTLE_SECONDS))
+    await _advance(hass, freezer, timedelta(seconds=TELEMETRY_QUIET_SECONDS))
     await _advance(hass, freezer, PERIODIC_UPDATE_INTERVAL)
     periodic_roomba.disconnect.assert_not_awaited()
     assert periodic_roomba.connect.await_count == 1
@@ -129,7 +139,7 @@ async def test_periodic_command_connects_and_holds(
 ) -> None:
     """Test a command reconnects and the session is held for a while."""
     await _setup(hass, mock_config_entry, continuous=False)
-    await _advance(hass, freezer, timedelta(seconds=TELEMETRY_SETTLE_SECONDS))
+    await _advance(hass, freezer, timedelta(seconds=TELEMETRY_QUIET_SECONDS))
     assert not periodic_roomba.connected
 
     await hass.services.async_call(
@@ -153,7 +163,7 @@ async def test_periodic_poll_failure_retries(
 ) -> None:
     """Test an unreachable robot during a poll is retried on the next one."""
     await _setup(hass, mock_config_entry, continuous=False)
-    await _advance(hass, freezer, timedelta(seconds=TELEMETRY_SETTLE_SECONDS))
+    await _advance(hass, freezer, timedelta(seconds=TELEMETRY_QUIET_SECONDS))
 
     connect = periodic_roomba.connect.side_effect
     periodic_roomba.connect.side_effect = RoombaConnectionError
@@ -201,7 +211,7 @@ async def test_options_flow_switches_mode(
     assert mock_config_entry.state is ConfigEntryState.LOADED
     disconnects = periodic_roomba.disconnect.await_count
 
-    await _advance(hass, freezer, timedelta(seconds=TELEMETRY_SETTLE_SECONDS))
+    await _advance(hass, freezer, timedelta(seconds=TELEMETRY_QUIET_SECONDS))
     assert periodic_roomba.disconnect.await_count == disconnects + 1
 
 
@@ -221,7 +231,7 @@ async def test_polling_disabled_refreshes_on_request(
     )
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
-    await _advance(hass, freezer, timedelta(seconds=TELEMETRY_SETTLE_SECONDS))
+    await _advance(hass, freezer, timedelta(seconds=TELEMETRY_QUIET_SECONDS))
     assert not periodic_roomba.connected
 
     await _advance(hass, freezer, PERIODIC_UPDATE_INTERVAL * 3)
@@ -236,7 +246,7 @@ async def test_polling_disabled_refreshes_on_request(
     assert periodic_roomba.connect.await_count == 2
     assert periodic_roomba.connected
 
-    await _advance(hass, freezer, timedelta(seconds=TELEMETRY_SETTLE_SECONDS))
+    await _advance(hass, freezer, timedelta(seconds=TELEMETRY_QUIET_SECONDS))
     assert not periodic_roomba.connected
 
 
@@ -249,7 +259,7 @@ async def test_refresh_does_not_cut_telemetry_short(
     """Test a second refresh right after a reconnect keeps the session open."""
     assert await async_setup_component(hass, HA_DOMAIN, {})
     await _setup(hass, mock_config_entry, continuous=False)
-    await _advance(hass, freezer, timedelta(seconds=TELEMETRY_SETTLE_SECONDS))
+    await _advance(hass, freezer, timedelta(seconds=TELEMETRY_QUIET_SECONDS))
 
     for _ in range(2):
         await hass.services.async_call(
@@ -261,7 +271,7 @@ async def test_refresh_does_not_cut_telemetry_short(
     assert periodic_roomba.connect.await_count == 2
     assert periodic_roomba.connected
 
-    await _advance(hass, freezer, timedelta(seconds=TELEMETRY_SETTLE_SECONDS))
+    await _advance(hass, freezer, timedelta(seconds=TELEMETRY_QUIET_SECONDS))
     assert not periodic_roomba.connected
 
 
@@ -274,7 +284,7 @@ async def test_unreachable_is_logged_once(
 ) -> None:
     """Test losing and regaining the robot is logged once each."""
     await _setup(hass, mock_config_entry, continuous=False)
-    await _advance(hass, freezer, timedelta(seconds=TELEMETRY_SETTLE_SECONDS))
+    await _advance(hass, freezer, timedelta(seconds=TELEMETRY_QUIET_SECONDS))
 
     connect = periodic_roomba.connect.side_effect
     periodic_roomba.connect.side_effect = RoombaConnectionError
@@ -285,7 +295,7 @@ async def test_unreachable_is_logged_once(
     periodic_roomba.connect.side_effect = connect
     for _ in range(2):
         await _advance(hass, freezer, PERIODIC_UPDATE_INTERVAL)
-        await _advance(hass, freezer, timedelta(seconds=TELEMETRY_SETTLE_SECONDS))
+        await _advance(hass, freezer, timedelta(seconds=TELEMETRY_QUIET_SECONDS))
     assert caplog.text.count("is reachable again") == 1
 
 
@@ -312,7 +322,7 @@ async def test_reconnect_after_dropped_session(
     periodic_roomba.disconnect.side_effect = _disconnect
     _set_phase(periodic_roomba, "run")
     await _setup(hass, mock_config_entry, continuous=False)
-    await _advance(hass, freezer, timedelta(seconds=TELEMETRY_SETTLE_SECONDS))
+    await _advance(hass, freezer, timedelta(seconds=TELEMETRY_QUIET_SECONDS))
 
     # Wi-Fi drop mid-mission: the client is reconnecting in the background.
     periodic_roomba.connected = False
@@ -339,7 +349,7 @@ async def test_idle_release_stops_background_reconnect(
     # Dropped on its own; the client would keep reconnecting in the background.
     periodic_roomba.connected = False
 
-    await _advance(hass, freezer, timedelta(seconds=TELEMETRY_SETTLE_SECONDS))
+    await _advance(hass, freezer, timedelta(seconds=TELEMETRY_QUIET_SECONDS))
 
     periodic_roomba.disconnect.assert_awaited_once()
 
@@ -360,3 +370,84 @@ async def test_no_session_after_stop(
 
     periodic_roomba.connect.assert_awaited_once()
     assert not periodic_roomba.connected
+
+
+async def test_slow_robot_gets_time_to_publish(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_config_entry: MockConfigEntry,
+    periodic_roomba: AsyncMock,
+) -> None:
+    """Test the session stays open while the robot keeps publishing state."""
+    await _setup(hass, mock_config_entry, continuous=False)
+    await _advance(hass, freezer, timedelta(seconds=TELEMETRY_QUIET_SECONDS))
+    await _advance(hass, freezer, PERIODIC_UPDATE_INTERVAL)
+    assert periodic_roomba.connected
+
+    # A 900-series robot trickles its state in over several seconds.
+    for _ in range(8):
+        await _advance(hass, freezer, timedelta(seconds=1))
+        _publish(periodic_roomba, {"bin": {"present": True, "full": False}})
+        assert periodic_roomba.connected
+
+    await _advance(hass, freezer, timedelta(seconds=TELEMETRY_QUIET_SECONDS))
+    assert not periodic_roomba.connected
+
+
+async def test_wifi_stats_do_not_extend_the_session(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_config_entry: MockConfigEntry,
+    periodic_roomba: AsyncMock,
+) -> None:
+    """Test Wi-Fi-only messages do not count as the robot still publishing."""
+    await _setup(hass, mock_config_entry, continuous=False)
+    await _advance(hass, freezer, timedelta(seconds=TELEMETRY_QUIET_SECONDS))
+    await _advance(hass, freezer, PERIODIC_UPDATE_INTERVAL)
+
+    await _advance(hass, freezer, timedelta(seconds=1))
+    _publish(periodic_roomba, {"signal": {"rssi": -50}})
+    await _advance(hass, freezer, timedelta(seconds=TELEMETRY_QUIET_SECONDS - 1))
+
+    assert not periodic_roomba.connected
+
+
+async def test_silent_robot_released_after_max_wait(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_config_entry: MockConfigEntry,
+    periodic_roomba: AsyncMock,
+) -> None:
+    """Test a robot that publishes nothing is released after the upper bound."""
+    await _setup(hass, mock_config_entry, continuous=False)
+    await _advance(hass, freezer, timedelta(seconds=TELEMETRY_QUIET_SECONDS))
+
+    async def _silent_connect() -> None:
+        periodic_roomba.connected = True
+
+    periodic_roomba.connect.side_effect = _silent_connect
+    await _advance(hass, freezer, PERIODIC_UPDATE_INTERVAL)
+    await _advance(hass, freezer, timedelta(seconds=TELEMETRY_MAX_SECONDS - 1))
+    assert periodic_roomba.connected
+
+    await _advance(hass, freezer, timedelta(seconds=1))
+    assert not periodic_roomba.connected
+
+
+async def test_session_uses_longer_connect_timeout(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_config_entry: MockConfigEntry,
+    periodic_roomba: AsyncMock,
+) -> None:
+    """Test polls connect with the longer timeout that slow robots need."""
+    await _setup(hass, mock_config_entry, continuous=False)
+    await _advance(hass, freezer, timedelta(seconds=TELEMETRY_QUIET_SECONDS))
+
+    with patch(
+        "homeassistant.components.roomba.asyncio.timeout",
+        wraps=asyncio.timeout,
+    ) as mock_timeout:
+        await _advance(hass, freezer, PERIODIC_UPDATE_INTERVAL)
+
+    assert call(SESSION_CONNECT_TIMEOUT) in mock_timeout.call_args_list

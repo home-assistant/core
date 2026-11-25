@@ -5,6 +5,10 @@ session is open. Unless continuous mode is enabled, the robot is polled
 instead: connect, collect telemetry, disconnect. The session stays open while
 the robot is on a mission and for a short while after a command.
 
+Robots answer at very different speeds depending on model and firmware, so
+instead of a fixed delay the session is released once the robot has gone
+quiet after publishing its state, with an upper bound.
+
 With polling disabled in the entry's system options, the robot is only
 refreshed on request, e.g. by a user automation calling
 ``homeassistant.update_entity`` on its own schedule.
@@ -16,7 +20,7 @@ from datetime import datetime
 import logging
 import time
 
-from roombapy import RoombaClient
+from roombapy import RoombaClient, RoombaMessage
 
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
@@ -26,7 +30,8 @@ from .const import (
     ACTIVE_PHASES,
     COMMAND_HOLD_SECONDS,
     PERIODIC_UPDATE_INTERVAL,
-    TELEMETRY_SETTLE_SECONDS,
+    TELEMETRY_MAX_SECONDS,
+    TELEMETRY_QUIET_SECONDS,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -60,6 +65,9 @@ class RoombaConnection:
         self._hold_until = 0.0
         self._unsub_interval: CALLBACK_TYPE | None = None
         self._unsub_release: CALLBACK_TYPE | None = None
+        self._unsub_message: CALLBACK_TYPE | None = None
+        self._session_start = 0.0
+        self._last_message: float | None = None
         self._closed = False
         self._unreachable = False
 
@@ -75,11 +83,14 @@ class RoombaConnection:
         """Start polling; the robot is already connected at this point."""
         if self.continuous:
             return
+        self._unsub_message = self.roomba.register_on_message_callback(self._on_message)
         if self.polling:
             self._unsub_interval = async_track_time_interval(
                 self.hass, self._async_poll, PERIODIC_UPDATE_INTERVAL
             )
-        self._schedule_release(TELEMETRY_SETTLE_SECONDS)
+        # The state was just collected during setup.
+        self._session_start = self._last_message = time.monotonic()
+        self._schedule_settle()
 
     async def async_stop(self) -> None:
         """Stop polling and close the session."""
@@ -88,8 +99,18 @@ class RoombaConnection:
             self._unsub_interval()
             self._unsub_interval = None
         self._cancel_release()
+        if self._unsub_message:
+            self._unsub_message()
+            self._unsub_message = None
         async with self._lock:
             await self._disconnect(self.hass, self.roomba)
+
+    @callback
+    def _on_message(self, message: RoombaMessage) -> None:
+        """Note when the robot last published something other than Wi-Fi stats."""
+        reported = message.get("state", {}).get("reported", {})
+        if len(reported) > 1 or "signal" not in reported:
+            self._last_message = time.monotonic()
 
     async def async_ensure_connected(self) -> None:
         """Open a session, if needed, before a command is sent."""
@@ -109,7 +130,9 @@ class RoombaConnection:
         # A dropped session may still be reconnecting in the background, and
         # the client refuses to connect again until it is torn down.
         await self._disconnect(self.hass, self.roomba)
+        self._last_message = None
         await self._connect(self.hass, self.roomba)
+        self._session_start = time.monotonic()
 
     async def _async_poll(self, _now: datetime) -> None:
         await self.async_refresh()
@@ -133,7 +156,9 @@ class RoombaConnection:
                         self._unreachable = True
                         _LOGGER.info(
                             "Roomba at %s is unreachable, showing its last known"
-                            " state until it responds again: %s",
+                            " state until it responds again. It accepts one local"
+                            " connection at a time, so another client such as the"
+                            " iRobot app on the home network can also block it: %s",
                             self.host,
                             err,
                         )
@@ -143,8 +168,7 @@ class RoombaConnection:
                     _LOGGER.info("Roomba at %s is reachable again", self.host)
                 connected_now = True
         if connected_now:
-            # Give the robot time to publish its full state.
-            self._schedule_release(TELEMETRY_SETTLE_SECONDS)
+            self._schedule_settle()
         else:
             await self._async_release()
 
@@ -158,6 +182,35 @@ class RoombaConnection:
             await self._async_release()
 
         self._unsub_release = async_call_later(self.hass, delay, _release)
+
+    @callback
+    def _schedule_settle(self) -> None:
+        """Release the session once the robot has finished publishing."""
+        self._cancel_release()
+
+        async def _check(_now: datetime) -> None:
+            self._unsub_release = None
+            if self._telemetry_wait() > 0:
+                self._schedule_settle()
+                return
+            if self._last_message is None:
+                _LOGGER.debug("No state received within %s s", TELEMETRY_MAX_SECONDS)
+            await self._async_release()
+
+        self._unsub_release = async_call_later(
+            self.hass, self._telemetry_wait(), _check
+        )
+
+    def _telemetry_wait(self) -> float:
+        """Return how much longer to wait for the robot to go quiet."""
+        now = time.monotonic()
+        remaining = self._session_start + TELEMETRY_MAX_SECONDS - now
+        if remaining <= 0:
+            return 0
+        if self._last_message is None:
+            return min(TELEMETRY_QUIET_SECONDS, remaining)
+        quiet_left = self._last_message + TELEMETRY_QUIET_SECONDS - now
+        return min(max(quiet_left, 0), remaining)
 
     @callback
     def _cancel_release(self) -> None:

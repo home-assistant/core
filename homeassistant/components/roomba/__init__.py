@@ -2,6 +2,7 @@
 
 import asyncio
 import contextlib
+from functools import partial
 import logging
 from typing import Any
 
@@ -29,6 +30,7 @@ from .const import (
     DOMAIN,
     PLATFORMS,
     ROOMBA_SESSION,
+    SESSION_CONNECT_TIMEOUT,
 )
 from .models import RoombaConfigEntry, RoombaData
 
@@ -62,7 +64,7 @@ async def async_setup_entry(
         config_entry.data[CONF_HOST],
         continuous=config_entry.options.get(CONF_CONTINUOUS, DEFAULT_CONTINUOUS),
         polling=not config_entry.pref_disable_polling,
-        connect=async_connect_or_timeout,
+        connect=partial(async_connect_or_timeout, timeout=SESSION_CONNECT_TIMEOUT),
         disconnect=async_disconnect_or_timeout,
     )
 
@@ -102,12 +104,12 @@ async def async_create_roomba(
 
 
 async def async_connect_or_timeout(
-    hass: HomeAssistant, roomba: RoombaClient
+    hass: HomeAssistant, roomba: RoombaClient, timeout: float = 10
 ) -> dict[str, Any]:
     """Connect to vacuum."""
     try:
         name = None
-        async with asyncio.timeout(10):
+        async with asyncio.timeout(timeout):
             _LOGGER.debug("Initialize connection to vacuum")
             await roomba.connect()
             while not roomba.connected or not roomba_reported_state(roomba):
