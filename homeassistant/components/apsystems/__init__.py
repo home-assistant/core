@@ -9,10 +9,16 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import CONF_DEVICE_TYPE, DEFAULT_PORT, DEVICE_TYPE_EZ1, DEVICE_TYPE_LAKE6
-from .coordinator import ApSystemsConfigEntry, ApSystemsData, ApSystemsDataCoordinator
+from .coordinator import (
+    ApSystemsConfigEntry,
+    ApSystemsData,
+    ApSystemsDataCoordinator,
+    Lake6ConfigEntry,
+    Lake6Coordinator,
+    Lake6RuntimeData,
+)
 from .lake6.client import Lake6ApiClient
 from .lake6.const import LAKE6_DEFAULT_PORT
-from .lake6.coordinator import Lake6ConfigEntry, Lake6Coordinator, Lake6RuntimeData
 
 # EZ1 has no select or text platform. The two lists are kept apart so EZ1 does
 # not load empty platforms.

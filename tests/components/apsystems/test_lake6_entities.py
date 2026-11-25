@@ -21,7 +21,7 @@ from homeassistant.components.text import (
     DOMAIN as TEXT_DOMAIN,
     SERVICE_SET_VALUE as SERVICE_SET_TEXT,
 )
-from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.const import TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import issue_registry as ir
@@ -48,7 +48,7 @@ async def test_number_writes_dod(
         NUMBER_DOMAIN,
         SERVICE_SET_VALUE,
         service_data={ATTR_VALUE: 20.7},
-        target={ATTR_ENTITY_ID: DOD_ENTITY_ID},
+        target={TargetKey.ENTITY_ID: DOD_ENTITY_ID},
         blocking=True,
     )
 
@@ -70,7 +70,7 @@ async def test_switch_writes_flag(
     await hass.services.async_call(
         SWITCH_DOMAIN,
         SERVICE_TURN_ON,
-        target={ATTR_ENTITY_ID: ECO_ENTITY_ID},
+        target={TargetKey.ENTITY_ID: ECO_ENTITY_ID},
         blocking=True,
     )
 
@@ -90,7 +90,7 @@ async def test_select_writes_mode(
         SELECT_DOMAIN,
         SERVICE_SELECT_OPTION,
         service_data={ATTR_OPTION: "self_consumption"},
-        target={ATTR_ENTITY_ID: MODE_ENTITY_ID},
+        target={TargetKey.ENTITY_ID: MODE_ENTITY_ID},
         blocking=True,
     )
 
@@ -111,7 +111,7 @@ async def test_select_ai_is_rejected(
             SELECT_DOMAIN,
             SERVICE_SELECT_OPTION,
             service_data={ATTR_OPTION: "ai"},
-            target={ATTR_ENTITY_ID: MODE_ENTITY_ID},
+            target={TargetKey.ENTITY_ID: MODE_ENTITY_ID},
             blocking=True,
         )
 
@@ -131,7 +131,7 @@ async def test_text_writes_plan(
         TEXT_DOMAIN,
         SERVICE_SET_TEXT,
         service_data={ATTR_TEXT_VALUE: "20:00-21:00|charge|500|67|1"},
-        target={ATTR_ENTITY_ID: PLAN_ENTITY_ID},
+        target={TargetKey.ENTITY_ID: PLAN_ENTITY_ID},
         blocking=True,
     )
 
@@ -166,7 +166,7 @@ async def test_text_rejects_invalid_plan(
             TEXT_DOMAIN,
             SERVICE_SET_TEXT,
             service_data={ATTR_TEXT_VALUE: "20:00|charge|500|67|1"},
-            target={ATTR_ENTITY_ID: PLAN_ENTITY_ID},
+            target={TargetKey.ENTITY_ID: PLAN_ENTITY_ID},
             blocking=True,
         )
 
@@ -187,7 +187,7 @@ async def test_text_reports_dropped_power(
         TEXT_DOMAIN,
         SERVICE_SET_TEXT,
         service_data={ATTR_TEXT_VALUE: "20:00-21:00|self|500|67|1"},
-        target={ATTR_ENTITY_ID: PLAN_ENTITY_ID},
+        target={TargetKey.ENTITY_ID: PLAN_ENTITY_ID},
         blocking=True,
     )
 
@@ -199,7 +199,7 @@ async def test_text_reports_dropped_power(
         TEXT_DOMAIN,
         SERVICE_SET_TEXT,
         service_data={ATTR_TEXT_VALUE: "20:00-21:00|self|-|67|1"},
-        target={ATTR_ENTITY_ID: PLAN_ENTITY_ID},
+        target={TargetKey.ENTITY_ID: PLAN_ENTITY_ID},
         blocking=True,
     )
 

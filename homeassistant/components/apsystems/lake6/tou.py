@@ -17,7 +17,7 @@ translates into a ServiceValidationError.
 
 import copy
 from dataclasses import dataclass
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from .client import Lake6TouRule
 from .const import (
@@ -35,7 +35,9 @@ from .const import (
     LAKE6_TOU_TEXT_WEEKDAY_LIST_SEPARATOR,
     LAKE6_TOU_TEXT_WEEKDAY_RANGE_SEPARATOR,
 )
-from .coordinator import Lake6Coordinator
+
+if TYPE_CHECKING:
+    from ..coordinator import Lake6Coordinator
 
 _FALSE_FLAGS = frozenset({"0", "off", "false", "no"})
 _TRUE_FLAGS = frozenset({"1", "on", "true", "yes"})

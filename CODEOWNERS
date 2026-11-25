@@ -168,8 +168,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/aprilaire/ @chamberlain2007
 /homeassistant/components/aprs/ @PhilRW
 /tests/components/aprs/ @PhilRW
-/homeassistant/components/apsystems/ @mawoka-myblock @SonnenladenGmbH
-/tests/components/apsystems/ @mawoka-myblock @SonnenladenGmbH
+/homeassistant/components/apsystems/ @mawoka-myblock @SonnenladenGmbH @gozexixi-afk
+/tests/components/apsystems/ @mawoka-myblock @SonnenladenGmbH @gozexixi-afk
 /homeassistant/components/aquacell/ @Jordi1990
 /tests/components/aquacell/ @Jordi1990
 /homeassistant/components/aqvify/ @astrandb

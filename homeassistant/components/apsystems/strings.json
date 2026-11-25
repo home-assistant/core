@@ -77,6 +77,14 @@
         "name": "Output fault status"
       }
     },
+    "button": {
+      "manual_control_apply": {
+        "name": "Send Instant Manual Control"
+      },
+      "manual_control_interrupt": {
+        "name": "Stop Instant Manual Control"
+      }
+    },
     "number": {
       "depth_of_discharge": {
         "name": "Backup SOC"
@@ -205,14 +213,6 @@
       "tou_plan": {
         "name": "Time-of-Use Plan"
       }
-    },
-    "button": {
-      "manual_control_apply": {
-        "name": "Send Instant Manual Control"
-      },
-      "manual_control_interrupt": {
-        "name": "Stop Instant Manual Control"
-      }
     }
   },
   "exceptions": {
@@ -229,19 +229,19 @@
       "message": "Manual control is missing {fields}. Fill it in before pressing this button."
     },
     "manual_control_not_applied": {
-      "message": "The device accepted the request but did not start the one-time run, so the manual control did not take effect."
-    },
-    "tou_invalid_plan": {
-      "message": "Invalid time-of-use plan: {error}. Format: start-end|function|power|weekdays|enabled, rules separated by ';'. Function is charge, discharge, or self, where self uses '-' as power."
+      "message": "The device accepted the request for {power} W during {duration} min but did not start the one-time run, so the manual control did not take effect."
     },
     "manual_control_still_running": {
       "message": "The device still reports the one-time run after the stop request."
+    },
+    "tou_invalid_plan": {
+      "message": "Invalid time-of-use plan: {error}. Format: start-end|function|power|weekdays|enabled, rules separated by ';'. Function is charge, discharge, or self, where self uses '-' as power."
     }
   },
   "issues": {
     "tou_power_dropped": {
-      "title": "Time-of-use plan adjusted",
-      "description": "Rules {rules} use self-consumption, which carries no power on the device, so their power values were dropped and sent as \"-\"."
+      "description": "Rules {rules} use self-consumption, which carries no power on the device, so their power values were dropped and sent as \"-\".",
+      "title": "Time-of-use plan adjusted"
     }
   },
   "selector": {

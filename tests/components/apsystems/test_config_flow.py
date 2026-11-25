@@ -207,3 +207,15 @@ async def test_form_lake6_cannot_connect(
 
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "cannot_connect"}
+
+    mock_lake6_config_flow.return_value.async_get_device.side_effect = None
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_DEVICE_TYPE: DEVICE_TYPE_LAKE6,
+            CONF_IP_ADDRESS: LAKE6_IP,
+        },
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == LAKE6_DEV_ID

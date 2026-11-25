@@ -20,7 +20,7 @@ from homeassistant.components.select import (
     DOMAIN as SELECT_DOMAIN,
     SERVICE_SELECT_OPTION,
 )
-from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.const import TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 
@@ -46,7 +46,7 @@ APPLIED_PAYLOAD = {
 def mock_settle() -> Generator[AsyncMock]:
     """Skip the one second settle wait without freezing the loop clock."""
     with patch(
-        "homeassistant.components.apsystems.lake6.coordinator.asyncio.sleep",
+        "homeassistant.components.apsystems.coordinator.asyncio.sleep",
         new_callable=AsyncMock,
     ) as mock_sleep:
         yield mock_sleep
@@ -69,21 +69,21 @@ async def test_apply_charge(
         SELECT_DOMAIN,
         SERVICE_SELECT_OPTION,
         service_data={ATTR_OPTION: "charge"},
-        target={ATTR_ENTITY_ID: MODE_ENTITY_ID},
+        target={TargetKey.ENTITY_ID: MODE_ENTITY_ID},
         blocking=True,
     )
     await hass.services.async_call(
         NUMBER_DOMAIN,
         SERVICE_SET_VALUE,
         service_data={ATTR_VALUE: 500},
-        target={ATTR_ENTITY_ID: POWER_ENTITY_ID},
+        target={TargetKey.ENTITY_ID: POWER_ENTITY_ID},
         blocking=True,
     )
     await hass.services.async_call(
         NUMBER_DOMAIN,
         SERVICE_SET_VALUE,
         service_data={ATTR_VALUE: 30},
-        target={ATTR_ENTITY_ID: DURATION_ENTITY_ID},
+        target={TargetKey.ENTITY_ID: DURATION_ENTITY_ID},
         blocking=True,
     )
 
@@ -92,7 +92,7 @@ async def test_apply_charge(
     await hass.services.async_call(
         BUTTON_DOMAIN,
         SERVICE_PRESS,
-        target={ATTR_ENTITY_ID: APPLY_ENTITY_ID},
+        target={TargetKey.ENTITY_ID: APPLY_ENTITY_ID},
         blocking=True,
     )
 
@@ -119,14 +119,14 @@ async def test_apply_standby_without_power(
         SELECT_DOMAIN,
         SERVICE_SELECT_OPTION,
         service_data={ATTR_OPTION: "standby"},
-        target={ATTR_ENTITY_ID: MODE_ENTITY_ID},
+        target={TargetKey.ENTITY_ID: MODE_ENTITY_ID},
         blocking=True,
     )
     await hass.services.async_call(
         NUMBER_DOMAIN,
         SERVICE_SET_VALUE,
         service_data={ATTR_VALUE: 10},
-        target={ATTR_ENTITY_ID: DURATION_ENTITY_ID},
+        target={TargetKey.ENTITY_ID: DURATION_ENTITY_ID},
         blocking=True,
     )
 
@@ -135,7 +135,7 @@ async def test_apply_standby_without_power(
     await hass.services.async_call(
         BUTTON_DOMAIN,
         SERVICE_PRESS,
-        target={ATTR_ENTITY_ID: APPLY_ENTITY_ID},
+        target={TargetKey.ENTITY_ID: APPLY_ENTITY_ID},
         blocking=True,
     )
 
@@ -164,7 +164,7 @@ async def test_apply_button_hidden_when_incomplete(
         SELECT_DOMAIN,
         SERVICE_SELECT_OPTION,
         service_data={ATTR_OPTION: "charge"},
-        target={ATTR_ENTITY_ID: MODE_ENTITY_ID},
+        target={TargetKey.ENTITY_ID: MODE_ENTITY_ID},
         blocking=True,
     )
 
@@ -200,21 +200,21 @@ async def test_apply_not_applied(
         SELECT_DOMAIN,
         SERVICE_SELECT_OPTION,
         service_data={ATTR_OPTION: "discharge"},
-        target={ATTR_ENTITY_ID: MODE_ENTITY_ID},
+        target={TargetKey.ENTITY_ID: MODE_ENTITY_ID},
         blocking=True,
     )
     await hass.services.async_call(
         NUMBER_DOMAIN,
         SERVICE_SET_VALUE,
         service_data={ATTR_VALUE: 300},
-        target={ATTR_ENTITY_ID: POWER_ENTITY_ID},
+        target={TargetKey.ENTITY_ID: POWER_ENTITY_ID},
         blocking=True,
     )
     await hass.services.async_call(
         NUMBER_DOMAIN,
         SERVICE_SET_VALUE,
         service_data={ATTR_VALUE: 5},
-        target={ATTR_ENTITY_ID: DURATION_ENTITY_ID},
+        target={TargetKey.ENTITY_ID: DURATION_ENTITY_ID},
         blocking=True,
     )
 
@@ -222,7 +222,7 @@ async def test_apply_not_applied(
         await hass.services.async_call(
             BUTTON_DOMAIN,
             SERVICE_PRESS,
-            target={ATTR_ENTITY_ID: APPLY_ENTITY_ID},
+            target={TargetKey.ENTITY_ID: APPLY_ENTITY_ID},
             blocking=True,
         )
 
@@ -249,14 +249,14 @@ async def test_interrupt(
         SELECT_DOMAIN,
         SERVICE_SELECT_OPTION,
         service_data={ATTR_OPTION: "discharge"},
-        target={ATTR_ENTITY_ID: MODE_ENTITY_ID},
+        target={TargetKey.ENTITY_ID: MODE_ENTITY_ID},
         blocking=True,
     )
 
     await hass.services.async_call(
         BUTTON_DOMAIN,
         SERVICE_PRESS,
-        target={ATTR_ENTITY_ID: INTERRUPT_ENTITY_ID},
+        target={TargetKey.ENTITY_ID: INTERRUPT_ENTITY_ID},
         blocking=True,
     )
 
@@ -284,27 +284,27 @@ async def test_finished_run_clears_staged_request(
         SELECT_DOMAIN,
         SERVICE_SELECT_OPTION,
         service_data={ATTR_OPTION: "discharge"},
-        target={ATTR_ENTITY_ID: MODE_ENTITY_ID},
+        target={TargetKey.ENTITY_ID: MODE_ENTITY_ID},
         blocking=True,
     )
     await hass.services.async_call(
         NUMBER_DOMAIN,
         SERVICE_SET_VALUE,
         service_data={ATTR_VALUE: 300},
-        target={ATTR_ENTITY_ID: POWER_ENTITY_ID},
+        target={TargetKey.ENTITY_ID: POWER_ENTITY_ID},
         blocking=True,
     )
     await hass.services.async_call(
         NUMBER_DOMAIN,
         SERVICE_SET_VALUE,
         service_data={ATTR_VALUE: 5},
-        target={ATTR_ENTITY_ID: DURATION_ENTITY_ID},
+        target={TargetKey.ENTITY_ID: DURATION_ENTITY_ID},
         blocking=True,
     )
     await hass.services.async_call(
         BUTTON_DOMAIN,
         SERVICE_PRESS,
-        target={ATTR_ENTITY_ID: APPLY_ENTITY_ID},
+        target={TargetKey.ENTITY_ID: APPLY_ENTITY_ID},
         blocking=True,
     )
 
