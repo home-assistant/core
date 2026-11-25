@@ -279,7 +279,7 @@ async def test_device_registry_composed_bridged_device(
 
     assert len(device_registry.devices) == 2
     assert hass.states.get("switch.kitchen_plug")
-    assert hass.states.get("sensor.kitchen_plug_temperature")
+    assert hass.states.get("sensor.kitchen_plug_temperature_4")
 
 
 @pytest.mark.parametrize("node_fixture", ["mock_composed_bridge"])

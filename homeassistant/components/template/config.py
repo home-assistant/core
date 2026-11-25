@@ -1,6 +1,6 @@
 """Template config validator."""
 
-from collections.abc import Callable, Collection
+from collections.abc import Callable, Collection, Iterable
 from contextlib import suppress
 import itertools
 import logging
@@ -82,9 +82,10 @@ from . import (
 )
 from .const import (
     CONF_TRIGGER_VARIABLES,
+    DEPRECATED_TEMPLATE_OPTIONS,
     DOMAIN,
     PLATFORMS,
-    WEATHER_DEPRECATED_TEMPLATE_OPTIONS,
+    DeprecatedTemplateOptions,
     TemplateConfig,
     TemplateConfigSections,
 )
@@ -428,10 +429,20 @@ async def _async_validate_triggers_and_conditions(
             raise
 
 
+def _merge_deprecated_options(
+    deprecations: Iterable[DeprecatedTemplateOptions],
+) -> dict[str, Collection[str]]:
+    """Return the deprecated options of every deprecation, merged per platform."""
+    merged: dict[str, set[str]] = {}
+    for deprecation in deprecations:
+        merged.setdefault(deprecation.platform, set()).update(deprecation.options)
+    return dict(merged)
+
+
 # Deprecated options per platform whose file and line are kept for repairs
-DEPRECATED_OPTIONS_WITH_LOCATIONS: dict[str, Collection[str]] = {
-    WEATHER_DOMAIN: WEATHER_DEPRECATED_TEMPLATE_OPTIONS,
-}
+DEPRECATED_OPTIONS_WITH_LOCATIONS = _merge_deprecated_options(
+    DEPRECATED_TEMPLATE_OPTIONS
+)
 
 
 def _get_option_locations(
