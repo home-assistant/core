@@ -284,6 +284,7 @@ class WLEDDataUpdateCoordinator(DataUpdateCoordinator[WLEDDevice]):
             device.info.websocket is not None
             and not self.wled.connected
             and not self.unsub
+            and not self.hass.is_stopping
         ):
             self._use_websocket()
 
