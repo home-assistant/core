@@ -14,7 +14,7 @@ from homeassistant.const import (
     CONF_PORT,
     EVENT_HOMEASSISTANT_STOP,
 )
-from homeassistant.core import Event, HomeAssistant
+from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv
@@ -23,7 +23,7 @@ from homeassistant.helpers.typing import ConfigType
 
 from .const import DATA_ADS, DATA_SETUP_DONE, DOMAIN
 from .entity import AdsEntity
-from .hub import AdsConfigEntry, connect
+from .hub import AdsConfigEntry, AdsHub, connect
 from .services import async_setup_services
 
 _LOGGER = logging.getLogger(__name__)
@@ -90,60 +90,63 @@ async def _async_import(hass: HomeAssistant, conf: ConfigType) -> None:
 async def async_setup_entry(hass: HomeAssistant, entry: AdsConfigEntry) -> None:
     """Set up ADS from a config entry."""
     try:
-        await _async_setup_entry(hass, entry)
+        try:
+            hub = await hass.async_add_executor_job(
+                connect,
+                entry.data[CONF_DEVICE],
+                entry.data[CONF_PORT],
+                entry.data.get(CONF_IP_ADDRESS),
+            )
+        except (pyads.ADSError, OSError, RuntimeError) as err:
+            raise ConfigEntryNotReady(
+                translation_domain=DOMAIN,
+                translation_key="cannot_connect",
+                translation_placeholders={"error": str(err)},
+            ) from err
+
+        entry.runtime_data = hub
+        hub.async_start_monitoring(hass)
+        _async_take_over_entities(hass, entry, hub)
+
+        async def _async_shutdown(event: Event) -> None:
+            hub.async_stop_monitoring()
+            await hass.async_add_executor_job(hub.shutdown)
+
+        entry.async_on_unload(
+            hass.bus.async_listen(EVENT_HOMEASSISTANT_STOP, _async_shutdown)
+        )
     finally:
         hass.data[DATA_SETUP_DONE].set()
 
 
-async def _async_setup_entry(hass: HomeAssistant, entry: AdsConfigEntry) -> None:
-    """Connect, and hand the entities of an earlier setup to the new hub."""
-    try:
-        hub = await hass.async_add_executor_job(
-            connect,
-            entry.data[CONF_DEVICE],
-            entry.data[CONF_PORT],
-            entry.data.get(CONF_IP_ADDRESS),
-        )
-    except (pyads.ADSError, OSError, RuntimeError) as err:
-        raise ConfigEntryNotReady(
-            translation_domain=DOMAIN,
-            translation_key="cannot_connect",
-            translation_placeholders={"error": str(err)},
-        ) from err
+@callback
+def _async_take_over_entities(
+    hass: HomeAssistant, entry: AdsConfigEntry, hub: AdsHub
+) -> None:
+    """Hand the YAML entities of an earlier setup of the entry to the new hub."""
+    if (previous_hub := hass.data.pop(DATA_ADS, None)) is None:
+        return
+    # The previous hub stays the entities' registry while the entry is
+    # unloaded, so entities removed in the meantime are already gone here.
+    devices = previous_hub.devices
+    # Rebind synchronously so a concurrent reload sees every device on the
+    # new hub, then resubscribe in the background since each one can wait
+    # up to 10s for its first value.
+    for device in devices:
+        device.rebind(hub)
 
-    entry.runtime_data = hub
-    hub.async_start_monitoring(hass)
+    async def _async_resubscribe_device(device: AdsEntity) -> None:
+        try:
+            await device.async_subscribe()
+        except Exception:
+            _LOGGER.exception("Error resubscribing %s", device.entity_id)
 
-    if previous_hub := hass.data.pop(DATA_ADS, None):
-        # The previous hub stays the entities' registry while the entry is
-        # unloaded, so entities removed in the meantime are already gone here.
-        devices = previous_hub.devices
-        # Rebind synchronously so a concurrent reload sees every device on the
-        # new hub, then resubscribe in the background since each one can wait
-        # up to 10s for its first value.
-        for device in devices:
-            device.rebind(hub)
+    async def _async_resubscribe_devices() -> None:
+        # A symbol the PLC never answers must not hold up the rest.
+        await asyncio.gather(*(_async_resubscribe_device(d) for d in devices))
 
-        async def _async_resubscribe_device(device: AdsEntity) -> None:
-            try:
-                await device.async_subscribe()
-            except Exception:
-                _LOGGER.exception("Error resubscribing %s", device.entity_id)
-
-        async def _async_resubscribe_devices() -> None:
-            # A symbol the PLC never answers must not hold up the rest.
-            await asyncio.gather(*(_async_resubscribe_device(d) for d in devices))
-
-        hub.resubscribe_task = entry.async_create_task(
-            hass, _async_resubscribe_devices(), "ads resubscribe devices"
-        )
-
-    async def _async_shutdown(event: Event) -> None:
-        hub.async_stop_monitoring()
-        await hass.async_add_executor_job(hub.shutdown)
-
-    entry.async_on_unload(
-        hass.bus.async_listen(EVENT_HOMEASSISTANT_STOP, _async_shutdown)
+    hub.resubscribe_task = entry.async_create_task(
+        hass, _async_resubscribe_devices(), "ads resubscribe devices"
     )
 
 
