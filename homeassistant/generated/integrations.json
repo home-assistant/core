@@ -1481,6 +1481,18 @@
       "config_flow": true,
       "iot_class": "local_push"
     },
+    "bambu_lab": {
+      "name": "Bambu Lab",
+      "integration_type": "device",
+      "categories": [
+        "computers_network.printers"
+      ],
+      "connectivity": [
+        "network"
+      ],
+      "config_flow": true,
+      "iot_class": "local_push"
+    },
     "bang_olufsen": {
       "name": "Bang & Olufsen",
       "integration_type": "device",
@@ -2089,6 +2101,15 @@
       ],
       "supported_by": "opower"
     },
+    "busybar": {
+      "name": "BUSY Bar",
+      "integration_type": "device",
+      "categories": [
+        "sensors"
+      ],
+      "config_flow": true,
+      "iot_class": "local_polling"
+    },
     "bwt": {
       "name": "BWT",
       "integration_type": "virtual",
@@ -2328,14 +2349,11 @@
         },
         "meraki": {
           "integration_type": "hub",
-          "config_flow": false,
+          "config_flow": true,
           "iot_class": "cloud_polling",
           "categories": [
             "presence_location.network_presence",
             "computers_network.routers_network"
-          ],
-          "connectivity": [
-            "cloud"
           ],
           "name": "Meraki"
         }
@@ -4950,6 +4968,15 @@
         "zigbee"
       ]
     },
+    "frigidaire": {
+      "name": "Frigidaire",
+      "integration_type": "virtual",
+      "categories": [
+        "appliances_cleaning",
+        "climate"
+      ],
+      "supported_by": "electrolux"
+    },
     "fritzbox": {
       "name": "FRITZ!",
       "integrations": {
@@ -5063,6 +5090,9 @@
           "iot_class": "assumed_state",
           "categories": [
             "climate.heat_pumps_air_conditioning"
+          ],
+          "connectivity": [
+            "infrared"
           ],
           "name": "Fujitsu Infrared"
         }
@@ -9947,6 +9977,9 @@
           "categories": [
             "media_entertainment.speakers_audio"
           ],
+          "connectivity": [
+            "infrared"
+          ],
           "name": "NAD Infrared"
         }
       }
@@ -10735,6 +10768,9 @@
           "supported_by": "fujitsu_infrared",
           "categories": [
             "climate.heat_pumps_air_conditioning"
+          ],
+          "connectivity": [
+            "infrared"
           ],
           "name": "O General Infrared"
         }
