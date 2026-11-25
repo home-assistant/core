@@ -383,7 +383,7 @@ aionanoleaf2==1.2.1
 aionatureremo==0.4.0
 
 # homeassistant.components.nepviewer
-aionepviewer==0.1.1
+aionepviewer==0.1.2
 
 # homeassistant.components.notion
 aionotion==2024.03.0
