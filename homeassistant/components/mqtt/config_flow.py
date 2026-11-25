@@ -59,7 +59,6 @@ from homeassistant.components.valve import ValveState
 from homeassistant.config_entries import (
     SOURCE_RECONFIGURE,
     ConfigEntry,
-    ConfigEntryState,
     ConfigFlow,
     ConfigFlowResult,
     ConfigSubentryFlow,
@@ -4367,11 +4366,8 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
         ):
             if is_reconfigure:
                 # The update listener that reloads MQTT is only registered
-                # when the setup succeeded
-                if reconfigure_entry.state in (
-                    ConfigEntryState.SETUP_ERROR,
-                    ConfigEntryState.SETUP_RETRY,
-                ):
+                # when the client was set up
+                if not reconfigure_entry.update_listeners:
                     return self.async_update_reload_and_abort(
                         reconfigure_entry,
                         data=entry_config_update,

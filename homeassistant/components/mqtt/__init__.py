@@ -2,6 +2,7 @@
 
 import asyncio
 from collections.abc import Callable
+from contextlib import suppress
 import logging
 from typing import Any, cast
 
@@ -327,16 +328,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
         await async_create_certificate_temp_files(hass, new_entry_data)
         # Try the connection with protocol version 5
         # And update the protocol if successful
-        migrated: bool | None
-        try:
+        migrated: bool | None = None
+        # When the certificates cannot be loaded, the client setup below fails
+        # and is retried, and the migration is tried again then
+        with suppress(OSError):
             migrated = await hass.async_add_executor_job(
                 try_connection,
                 {CONF_PORT: DEFAULT_PORT} | new_entry_data,
             )
-        except OSError:
-            # The client cannot load the certificates either, so the setup below
-            # is retried, and the migration is tried again then
-            migrated = None
         if migrated:
             hass.config_entries.async_update_entry(
                 entry,

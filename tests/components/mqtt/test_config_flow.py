@@ -2632,31 +2632,32 @@ async def test_reconfigure_with_certificate_files(
 
 @pytest.mark.usefixtures("mock_ssl_context")
 @pytest.mark.parametrize(
-    ("entry_state", "reloads"),
+    ("update_listeners", "reloads"),
     [
-        # The update listener reloads a loaded entry
-        pytest.param(ConfigEntryState.LOADED, 0, id="loaded"),
-        pytest.param(ConfigEntryState.SETUP_RETRY, 1, id="setup_retry"),
-        pytest.param(ConfigEntryState.SETUP_ERROR, 1, id="setup_error"),
+        # The update listener reloads the entry
+        pytest.param([AsyncMock()], 0, id="update_listener"),
+        # The client failed to set up before the update listener was registered
+        pytest.param([], 1, id="no_update_listener"),
     ],
 )
 async def test_reconfigure_reloads_entry_that_failed_to_set_up(
     hass: HomeAssistant,
     mock_try_connection: MagicMock,
     mock_certificate_files: dict[str, str],
-    entry_state: ConfigEntryState,
+    update_listeners: list[AsyncMock],
     reloads: int,
 ) -> None:
-    """Test reconfiguring an entry that failed to set up reloads it."""
+    """Test reconfiguring an entry without an update listener reloads it."""
     mock_try_connection.return_value = True
     config_entry = MockConfigEntry(
         domain=DOMAIN,
         version=mqtt.CONFIG_ENTRY_VERSION,
         minor_version=mqtt.CONFIG_ENTRY_MINOR_VERSION,
         data={mqtt.CONF_BROKER: "test-broker", CONF_PORT: 8883, CONF_PROTOCOL: "5"},
-        state=entry_state,
+        state=ConfigEntryState.SETUP_RETRY,
     )
     config_entry.add_to_hass(hass)
+    config_entry.update_listeners.extend(update_listeners)
 
     result = await config_entry.start_reconfigure_flow(hass)
     with patch.object(hass.config_entries, "async_schedule_reload") as mock_reload:
@@ -2962,6 +2963,11 @@ async def test_certificate_file_path_settings_invalid(
             "cannot_read_client_key_file",
             id="unreadable_client_key_file",
         ),
+        pytest.param(
+            CONF_CERTIFICATE_FILE,
+            "cannot_read_certificate_file",
+            id="unreadable_ca_cert_file",
+        ),
     ],
 )
 async def test_certificate_file_cannot_be_read(
@@ -2994,8 +3000,20 @@ async def test_certificate_file_cannot_be_read(
             raise PermissionError(13, "Permission denied")
         return open(file, *args, **kwargs)
 
-    with patch(
-        "homeassistant.components.mqtt.config_flow.open", side_effect=_open, create=True
+    def _access(path: str, mode: int) -> bool:
+        """Refuse access to the unreadable file."""
+        return path != mock_certificate_files[unreadable_file]
+
+    with (
+        patch(
+            "homeassistant.components.mqtt.config_flow.open",
+            side_effect=_open,
+            create=True,
+        ),
+        patch(
+            "homeassistant.components.mqtt.config_flow.os.access",
+            side_effect=_access,
+        ),
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input=user_input
