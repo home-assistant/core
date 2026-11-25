@@ -202,7 +202,8 @@ class EvoAccountCoordinator(_EvoCoordinator[_HighPrecisionTemps]):
         except ec2.BadApiResponseError as err:
             self.logger.debug("The response from the vendor's API is invalid: %s", err)
             raise UpdateFailed(
-                translation_domain=DOMAIN, translation_key="api_response_invalid"
+                translation_domain=DOMAIN,
+                translation_key="api_response_invalid",
             ) from err
 
     @override
@@ -394,13 +395,15 @@ class EvoLocationCoordinator(_EvoCoordinator[EvoLocStatusT]):
         except ec2.BadApiResponseError as err:
             self.logger.debug("The response from the vendor's API is invalid: %s", err)
             raise UpdateFailed(
-                translation_domain=DOMAIN, translation_key="api_response_invalid"
+                translation_domain=DOMAIN,
+                translation_key="api_response_invalid",
             ) from err
 
         except ec2.StaleConfigError as err:
             self.logger.debug("The location's config is stale: %s", err)
             raise UpdateFailed(
-                translation_domain=DOMAIN, translation_key="config_stale"
+                translation_domain=DOMAIN,
+                translation_key="config_stale",
             ) from err
 
         self.logger.debug("Status = %s", status)
