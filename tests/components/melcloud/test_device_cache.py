@@ -1,12 +1,12 @@
 """Tests for the MELCloud device configuration cache."""
 
-from datetime import timedelta
-from unittest.mock import AsyncMock
+  from datetime import timedelta
+  from unittest.mock import AsyncMock
 
-from homeassistant.config_entries import ConfigEntryState
-from homeassistant.core import HomeAssistant
+  from pytest_homeassistant.common import MockConfigEntry
 
-from pytest_homeassistant.common import MockConfigEntry
+  from homeassistant.config_entries import ConfigEntryState
+  from homeassistant.core import HomeAssistant
 
 
 async def test_device_configuration_cache_interval(
