@@ -33,11 +33,14 @@ MATTER_MAX_MIREDS = 65279
 class MatterService(StrEnum):
     """Store keys for Matter services."""
 
+    CLEAR_CAMERA_ZONE = "clear_camera_zone"
     CLEAR_LOCK_CREDENTIAL = "clear_lock_credential"
     CLEAR_LOCK_USER = "clear_lock_user"
+    GET_CAMERA_ZONES = "get_camera_zones"
     GET_LOCK_CREDENTIAL_STATUS = "get_lock_credential_status"
     GET_LOCK_INFO = "get_lock_info"
     GET_LOCK_USERS = "get_lock_users"
+    SET_CAMERA_ZONE = "set_camera_zone"
     SET_LOCK_CREDENTIAL = "set_lock_credential"
     SET_LOCK_USER = "set_lock_user"
     WATER_HEATER_BOOST = "water_heater_boost"
@@ -57,6 +60,11 @@ class MatterServiceArgument(StrEnum):
     DURATION = "duration"
     EMERGENCY_BOOST = "emergency_boost"
     TEMPORARY_SETPOINT = "temporary_setpoint"
+    ZONE_ID = "zone_id"
+    NAME = "name"
+    USE = "use"
+    VERTICES = "vertices"
+    COLOR = "color"
 
 
 # --- Lock domain constants ---
@@ -146,6 +154,25 @@ SERVICE_CREDENTIAL_TYPES = [
     CRED_TYPE_FINGER_VEIN,
     CRED_TYPE_FACE,
 ]
+
+_ZoneUse = clusters.ZoneManagement.Enums.ZoneUseEnum
+CAMERA_ZONE_USE_MAP: dict[int, str] = {
+    _ZoneUse.kMotion: "motion",
+    _ZoneUse.kPrivacy: "privacy",
+    _ZoneUse.kFocus: "focus",
+}
+CAMERA_ZONE_USE_REVERSE_MAP: dict[str, int] = {
+    v: k for k, v in CAMERA_ZONE_USE_MAP.items()
+}
+
+_ZoneSource = clusters.ZoneManagement.Enums.ZoneSourceEnum
+CAMERA_ZONE_SOURCE_MAP: dict[int, str] = {
+    _ZoneSource.kMfg: "manufacturer",
+    _ZoneSource.kUser: "user",
+}
+
+# Motion zones only act through triggers, which aren't supported.
+SERVICE_CAMERA_ZONE_USES = ["privacy", "focus"]
 
 CONCENTRATION_BECQUERELS_PER_CUBIC_METER: Final = "Bq/m³"
 
