@@ -169,7 +169,7 @@ def _tilt_cover(**values: Any) -> MockCover:
     )
 
 
-def _tilt_attributes(hass: HomeAssistant, ent: MockCover) -> dict[str, Any]:
+def _tilt_attributes(hass: HomeAssistant, ent: Entity) -> dict[str, Any]:
     """Return the tilt capability attributes of the state of a cover."""
     attributes = hass.states.get(ent.entity_id).attributes
     return {
@@ -184,7 +184,7 @@ def _tilt_attributes(hass: HomeAssistant, ent: MockCover) -> dict[str, Any]:
     }
 
 
-async def _setup_cover(hass: HomeAssistant, ent: MockCover) -> None:
+async def _setup_cover(hass: HomeAssistant, ent: Entity) -> None:
     """Set up a cover entity."""
     setup_test_component_platform(hass, cover.DOMAIN, [ent])
     assert await async_setup_component(
@@ -241,6 +241,11 @@ def _angles(start: int, end: int) -> dict[str, int]:
             _angles(-90, 45),
             {"open_tilt_position": 67, "closed_tilt_positions": [0]} | _angles(-90, 45),
             id="rounded_open_position",
+        ),
+        pytest.param(
+            _angles(-90, 54),
+            {"open_tilt_position": 62, "closed_tilt_positions": [0]} | _angles(-90, 54),
+            id="rounded_open_position_tie_to_even",
         ),
         pytest.param(
             _angles(-60, 60),
@@ -345,6 +350,16 @@ async def test_tilt_capability_attributes(
             id="closed_position_twice",
         ),
         pytest.param(
+            {"open_tilt_position": 50, "closed_tilt_positions": [False]},
+            "invalid closed tilt positions",
+            id="closed_position_is_a_bool",
+        ),
+        pytest.param(
+            {"open_tilt_position": 50, "closed_tilt_positions": [0.0]},
+            "invalid closed tilt positions",
+            id="closed_position_not_an_integer",
+        ),
+        pytest.param(
             {"open_tilt_position": 100, "closed_tilt_positions": [0, 100]},
             "in its closed tilt positions",
             id="open_position_in_the_closed_positions",
@@ -367,6 +382,29 @@ def test_invalid_tilt_values(values: dict[str, Any], match: str) -> None:
 
     with pytest.raises(ValueError, match=match):
         _ = ent.capability_attributes
+
+
+async def test_tilt_capability_attributes_from_attr(hass: HomeAssistant) -> None:
+    """Test the tilt capability attributes set with the _attr_ shorthands."""
+
+    class AttrCover(cover.CoverEntity):
+        _attr_name = "Cover"
+        _attr_unique_id = "cover"
+        _attr_supported_features = TILT_FEATURES
+        _attr_current_cover_tilt_position = 50
+        _attr_is_closed = False
+        _attr_open_tilt_position = 40
+        _attr_closed_tilt_positions = [100, 0]
+        _attr_tilt_start_angle = -90
+        _attr_tilt_end_angle = 90
+
+    ent = AttrCover()
+    await _setup_cover(hass, ent)
+
+    assert _tilt_attributes(hass, ent) == {
+        "open_tilt_position": 40,
+        "closed_tilt_positions": [0, 100],
+    } | _angles(-90, 90)
 
 
 @pytest.mark.parametrize(
