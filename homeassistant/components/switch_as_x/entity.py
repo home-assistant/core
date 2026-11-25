@@ -3,14 +3,8 @@
 from typing import Any, override
 
 from homeassistant.components.homeassistant import exposed_entities
-from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
-    STATE_ON,
-    STATE_UNAVAILABLE,
-)
+from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN, SwitchService
+from homeassistant.const import STATE_ON, STATE_UNAVAILABLE, TargetKey
 from homeassistant.core import Event, EventStateChangedData, HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.entity import Entity, ToggleEntity
@@ -148,8 +142,8 @@ class BaseToggleEntity(BaseEntity, ToggleEntity):
         """Forward the turn_on command to the switch in this light switch."""
         await self.hass.services.async_call(
             SWITCH_DOMAIN,
-            SERVICE_TURN_ON,
-            {ATTR_ENTITY_ID: self._switch_entity_id},
+            SwitchService.TURN_ON,
+            {TargetKey.ENTITY_ID: self._switch_entity_id},
             blocking=True,
             context=self._context,
         )
@@ -159,8 +153,8 @@ class BaseToggleEntity(BaseEntity, ToggleEntity):
         """Forward the turn_off command to the switch in this light switch."""
         await self.hass.services.async_call(
             SWITCH_DOMAIN,
-            SERVICE_TURN_OFF,
-            {ATTR_ENTITY_ID: self._switch_entity_id},
+            SwitchService.TURN_OFF,
+            {TargetKey.ENTITY_ID: self._switch_entity_id},
             blocking=True,
             context=self._context,
         )

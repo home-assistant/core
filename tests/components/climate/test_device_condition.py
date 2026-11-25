@@ -6,7 +6,14 @@ from pytest_homeassistant.common import MockConfigEntry, async_get_device_automa
 from pytest_unordered import unordered
 
 from homeassistant.components import automation
-from homeassistant.components.climate import DOMAIN, HVACMode, const, device_condition
+from homeassistant.components.climate import (
+    DOMAIN,
+    ClimateEntityCapabilityAttribute,
+    ClimateEntityStateAttribute,
+    HVACMode,
+    const,
+    device_condition,
+)
 from homeassistant.components.device_automation import DeviceAutomationType
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, ServiceCall
@@ -212,7 +219,7 @@ async def test_if_state(
         entry.entity_id,
         HVACMode.COOL,
         {
-            const.ATTR_PRESET_MODE: const.PRESET_AWAY,
+            ClimateEntityStateAttribute.PRESET_MODE: const.PRESET_AWAY,
         },
     )
 
@@ -225,7 +232,7 @@ async def test_if_state(
         entry.entity_id,
         HVACMode.AUTO,
         {
-            const.ATTR_PRESET_MODE: const.PRESET_AWAY,
+            ClimateEntityStateAttribute.PRESET_MODE: const.PRESET_AWAY,
         },
     )
 
@@ -244,7 +251,7 @@ async def test_if_state(
         entry.entity_id,
         HVACMode.AUTO,
         {
-            const.ATTR_PRESET_MODE: const.PRESET_HOME,
+            ClimateEntityStateAttribute.PRESET_MODE: const.PRESET_HOME,
         },
     )
 
@@ -324,7 +331,12 @@ async def test_if_state_legacy(
     [
         (
             False,
-            {const.ATTR_HVAC_MODES: [HVACMode.COOL, HVACMode.OFF]},
+            {
+                ClimateEntityCapabilityAttribute.HVAC_MODES: [
+                    HVACMode.COOL,
+                    HVACMode.OFF,
+                ]
+            },
             {},
             "is_hvac_mode",
             [
@@ -338,7 +350,12 @@ async def test_if_state_legacy(
         ),
         (
             False,
-            {const.ATTR_PRESET_MODES: [const.PRESET_HOME, const.PRESET_AWAY]},
+            {
+                ClimateEntityCapabilityAttribute.PRESET_MODES: [
+                    const.PRESET_HOME,
+                    const.PRESET_AWAY,
+                ]
+            },
             {},
             "is_preset_mode",
             [
@@ -353,7 +370,12 @@ async def test_if_state_legacy(
         (
             True,
             {},
-            {const.ATTR_HVAC_MODES: [HVACMode.COOL, HVACMode.OFF]},
+            {
+                ClimateEntityCapabilityAttribute.HVAC_MODES: [
+                    HVACMode.COOL,
+                    HVACMode.OFF,
+                ]
+            },
             "is_hvac_mode",
             [
                 {
@@ -367,7 +389,12 @@ async def test_if_state_legacy(
         (
             True,
             {},
-            {const.ATTR_PRESET_MODES: [const.PRESET_HOME, const.PRESET_AWAY]},
+            {
+                ClimateEntityCapabilityAttribute.PRESET_MODES: [
+                    const.PRESET_HOME,
+                    const.PRESET_AWAY,
+                ]
+            },
             "is_preset_mode",
             [
                 {
@@ -443,7 +470,12 @@ async def test_capabilities(
     [
         (
             False,
-            {const.ATTR_HVAC_MODES: [HVACMode.COOL, HVACMode.OFF]},
+            {
+                ClimateEntityCapabilityAttribute.HVAC_MODES: [
+                    HVACMode.COOL,
+                    HVACMode.OFF,
+                ]
+            },
             {},
             "is_hvac_mode",
             [
@@ -457,7 +489,12 @@ async def test_capabilities(
         ),
         (
             False,
-            {const.ATTR_PRESET_MODES: [const.PRESET_HOME, const.PRESET_AWAY]},
+            {
+                ClimateEntityCapabilityAttribute.PRESET_MODES: [
+                    const.PRESET_HOME,
+                    const.PRESET_AWAY,
+                ]
+            },
             {},
             "is_preset_mode",
             [
@@ -472,7 +509,12 @@ async def test_capabilities(
         (
             True,
             {},
-            {const.ATTR_HVAC_MODES: [HVACMode.COOL, HVACMode.OFF]},
+            {
+                ClimateEntityCapabilityAttribute.HVAC_MODES: [
+                    HVACMode.COOL,
+                    HVACMode.OFF,
+                ]
+            },
             "is_hvac_mode",
             [
                 {
@@ -486,7 +528,12 @@ async def test_capabilities(
         (
             True,
             {},
-            {const.ATTR_PRESET_MODES: [const.PRESET_HOME, const.PRESET_AWAY]},
+            {
+                ClimateEntityCapabilityAttribute.PRESET_MODES: [
+                    const.PRESET_HOME,
+                    const.PRESET_AWAY,
+                ]
+            },
             "is_preset_mode",
             [
                 {

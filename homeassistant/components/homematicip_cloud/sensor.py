@@ -26,6 +26,7 @@ from homeassistant.components.sensor import (
 from homeassistant.const import (
     DEGREE,
     LIGHT_LUX,
+    EntityCategory,
     UnitOfDensity,
     UnitOfEnergy,
     UnitOfLength,
@@ -124,6 +125,8 @@ class HmipSensorDescription(SensorEntityDescription):
     # sensors that predate the lookup by channel type keep the fixed channel of
     # their unique id, even where the channel sits at another index
     unique_id_channel: int | None = None
+    # one sensor per channel, told apart by the channel label in the name
+    name_by_channel: bool = False
 
 
 ATTR_ACCELERATION_SENSOR_NEUTRAL_POSITION = "acceleration_sensor_neutral_position"
@@ -171,6 +174,7 @@ ILLUMINATION_DEVICE_ATTRIBUTES = {
 }
 
 TILT_STATE_VALUES = ["neutral", "tilted", "non_neutral"]
+VALVE_STATE_VALUES = [valve_state.name.lower() for valve_state in ValveState]
 WINDOW_STATE_VALUES = ["open", "closed", "tilted"]
 
 
@@ -363,6 +367,19 @@ VALVE_POSITION_DESC = HmipSensorDescription(
     unique_id_channel=1,
 )
 
+VALVE_STATE_DESC = HmipSensorDescription(
+    key="ftb_valve_state",
+    translation_key="valve_state",
+    device_class=SensorDeviceClass.ENUM,
+    entity_category=EntityCategory.DIAGNOSTIC,
+    options=VALVE_STATE_VALUES,
+    value_fn=lambda channel: (
+        channel.valveState.name.lower() if channel.valveState is not None else None
+    ),
+    exists_fn=lambda channel: getattr(channel, "valveState", None) is not None,
+    name_by_channel=True,
+)
+
 PASSAGE_COUNTER_DESC = HmipSensorDescription(
     key="passage_counter",
     value_fn=lambda channel: channel.leftRightCounterDelta,
@@ -428,6 +445,7 @@ SENSOR_DESCRIPTIONS_BY_CHANNEL: dict[
         VALVE_POSITION_DESC,
         TEMPERATURE_DESC,
     ),
+    FunctionalChannelType.FLOOR_TERMINAL_BLOCK_MECHANIC_CHANNEL: (VALVE_STATE_DESC,),
     FunctionalChannelType.WALL_MOUNTED_THERMOSTAT_PRO_CHANNEL: (
         TEMPERATURE_DESC,
         HUMIDITY_DESC,
@@ -985,6 +1003,7 @@ class HmipEsiGasCurrentGasFlow(HmipEsiSensorEntity):
     _attr_device_class = SensorDeviceClass.VOLUME_FLOW_RATE
     _attr_native_unit_of_measurement = UnitOfVolumeFlowRate.CUBIC_METERS_PER_HOUR
     _attr_state_class = SensorStateClass.MEASUREMENT
+    _attr_suggested_display_precision = 2
 
     def __init__(self, hap: HomematicipHAP, device) -> None:
         """Initialize the device."""
@@ -1110,6 +1129,10 @@ class HomematicipSensor(HomematicipGenericEntity, SensorEntity):
         self._unique_id_channel = (
             description.unique_id_channel if keep_unique_id_channel else None
         )
+        if description.name_by_channel:
+            self._attr_translation_placeholders = {
+                "channel": channel.label or str(channel.index)
+            }
 
     @property
     @override

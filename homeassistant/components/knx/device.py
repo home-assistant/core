@@ -1,15 +1,46 @@
 """Handle Home Assistant Devices for the KNX integration."""
 
+from typing import TYPE_CHECKING
+
 from xknx import XKNX
 from xknx.core import XknxConnectionState
 from xknx.io.gateway_scanner import GatewayDescriptor
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import area_registry as ar, device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.typing import Undefined
+from homeassistant.util.ulid import ulid_now
 
-from .const import DOMAIN
+from .const import DOMAIN, UI_DEVICE_ID_PREFIX
+
+
+@callback
+def async_create_ui_device(
+    hass: HomeAssistant, entry: ConfigEntry, name: str, area_id: str | None = None
+) -> dr.DeviceEntry:
+    """Create a device UI entities can be assigned to.
+
+    Raise ValueError if the area does not exist.
+    """
+    if area_id and ar.async_get(hass).async_get_area(area_id) is None:
+        raise ValueError(f"Area {area_id} not found")
+    device_registry = dr.async_get(hass)
+    device = device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        manufacturer="KNX",
+        name=name,
+        identifiers={(DOMAIN, f"{UI_DEVICE_ID_PREFIX}{ulid_now()}")},
+    )
+    updated = device_registry.async_update_device(
+        device.id,
+        area_id=area_id or Undefined,
+        configuration_url=f"homeassistant://knx/entities/view?device_id={device.id}",
+    )
+    if TYPE_CHECKING:
+        assert updated is not None
+    return updated
 
 
 class KNXInterfaceDevice:

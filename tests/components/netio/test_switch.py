@@ -22,6 +22,7 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
     STATE_UNAVAILABLE,
+    Platform,
     TargetKey,
 )
 from homeassistant.core import HomeAssistant
@@ -42,7 +43,8 @@ async def test_entities(
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test the switch entities and their states."""
-    await setup_integration(hass, mock_config_entry)
+    with patch("homeassistant.components.netio.PLATFORMS", [Platform.SWITCH]):
+        await setup_integration(hass, mock_config_entry)
 
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 

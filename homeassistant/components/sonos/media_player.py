@@ -953,6 +953,15 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
                     translation_key="speaker_not_found",
                     translation_placeholders={"entity_id": entity_id},
                 )
+            if speaker.household_id != self.speaker.household_id:
+                raise ServiceValidationError(
+                    translation_domain=DOMAIN,
+                    translation_key="join_different_household",
+                    translation_placeholders={
+                        "entity_id": entity_id,
+                        "target_entity_id": self.entity_id,
+                    },
+                )
 
             speakers.append(speaker)
 

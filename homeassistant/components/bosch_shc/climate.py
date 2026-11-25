@@ -186,18 +186,15 @@ class ClimateControl(SHCEntity, ClimateEntity):
         if self._device.low:
             self._device.low = False
 
+        # Heating, cooling and off are one atomic write, as in the Bosch app.
         if hvac_mode == HVACMode.OFF:
-            self._device.summer_mode = True
+            self._device.set_hvac_control_mode("OFF")
             return
-
-        if self._device.summer_mode:
-            self._device.summer_mode = False
         if hvac_mode == HVACMode.COOL:
-            self._device.cooling_mode = True
+            self._device.set_hvac_control_mode("COOLING")
             return
 
-        if self._device.supports_cooling:
-            self._device.cooling_mode = False
+        self._device.set_hvac_control_mode("HEATING")
         self._device.operation_mode = (
             RoomClimateControlService.OperationMode.AUTOMATIC
             if hvac_mode == HVACMode.AUTO
@@ -219,8 +216,18 @@ class ClimateControl(SHCEntity, ClimateEntity):
 
     @override
     def turn_on(self) -> None:
-        """Turn the climate device on."""
-        self.set_hvac_mode(HVACMode.AUTO)
+        """Turn the climate device on, resuming its previous operation mode."""
+        if self.hvac_mode != HVACMode.OFF:
+            return
+        if self._device.low:
+            self._device.low = False
+        # Off only changes the control mode, so writing it back keeps the
+        # operation mode (automatic or manual) the room had before.
+        self._device.set_hvac_control_mode(
+            "COOLING"
+            if self._device.supports_cooling and self._device.cooling_mode
+            else "HEATING"
+        )
 
     @override
     def turn_off(self) -> None:
