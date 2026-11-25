@@ -160,9 +160,9 @@ async def test_setup_waits_for_a_location_with_api_access(
     assert hass.states.get(PRICE_NOW).state != STATE_UNAVAILABLE
 
 
+@pytest.mark.usefixtures("init_integration")
 async def test_prices_are_unavailable_while_no_location_has_access(
     hass: HomeAssistant,
-    init_integration: MockConfigEntry,
     mock_client: AsyncMock,
     freezer: FrozenDateTimeFactory,
 ) -> None:

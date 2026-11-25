@@ -21,8 +21,8 @@ from homeassistant.data_entry_flow import FlowResultType
 from .conftest import KEY, LOCATIONS
 
 
-@pytest.mark.usefixtures("mock_setup_entry")
-async def test_create_entry(hass: HomeAssistant, mock_client: AsyncMock) -> None:
+@pytest.mark.usefixtures("mock_setup_entry", "mock_client")
+async def test_create_entry(hass: HomeAssistant) -> None:
     """A key that reads the prices of a location creates the entry."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
@@ -179,9 +179,9 @@ async def test_no_location_with_api_access(
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
-@pytest.mark.usefixtures("mock_setup_entry")
+@pytest.mark.usefixtures("mock_setup_entry", "mock_client")
 async def test_only_one_entry(
-    hass: HomeAssistant, mock_client: AsyncMock, mock_config_entry: MockConfigEntry
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
 ) -> None:
     """A key reads every location of a customer, so one entry is enough."""
     mock_config_entry.add_to_hass(hass)

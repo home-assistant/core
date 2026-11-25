@@ -111,7 +111,8 @@ class OsmundCoordinator(DataUpdateCoordinator[OsmundData]):
     async def _async_update_data(self) -> OsmundData:
         """Read the locations, then only the price days that are missing or not complete."""
         now = danish_now()
-        held = self.data.prices if self.data else {}
+        # Before the first update there is no data yet.
+        held = self.data.prices if self.data is not None else {}
         try:
             locations = await self.client.locations()
         except OsmundError as err:

@@ -47,7 +47,7 @@ async def test_sensors(
     snapshot: SnapshotAssertion,
     init_integration: MockConfigEntry,
 ) -> None:
-    """Three price sensors for the location with access, and none for the other."""
+    """Seven price sensors for the location with access, and none for the other."""
     await snapshot_platform(hass, entity_registry, snapshot, init_integration.entry_id)
 
     assert not [
@@ -59,9 +59,9 @@ async def test_sensors(
     ]
 
 
+@pytest.mark.usefixtures("init_integration")
 async def test_the_price_now_moves_on_the_quarter_hour_without_a_call(
     hass: HomeAssistant,
-    init_integration: MockConfigEntry,
     mock_client: AsyncMock,
     at_twenty_to_eleven: FrozenDateTimeFactory,
 ) -> None:
@@ -75,9 +75,9 @@ async def test_the_price_now_moves_on_the_quarter_hour_without_a_call(
     assert mock_client.prices.call_count == 1
 
 
+@pytest.mark.usefixtures("init_integration")
 async def test_tomorrow_is_read_from_the_afternoon(
     hass: HomeAssistant,
-    init_integration: MockConfigEntry,
     mock_client: AsyncMock,
     at_twenty_to_eleven: FrozenDateTimeFactory,
 ) -> None:
@@ -93,9 +93,9 @@ async def test_tomorrow_is_read_from_the_afternoon(
     ]
 
 
+@pytest.mark.usefixtures("init_integration")
 async def test_tomorrow_is_asked_again_until_it_is_published(
     hass: HomeAssistant,
-    init_integration: MockConfigEntry,
     mock_client: AsyncMock,
     at_twenty_to_eleven: FrozenDateTimeFactory,
 ) -> None:
@@ -141,9 +141,9 @@ async def test_a_price_that_is_not_there_is_unknown(
     assert hass.states.get(PRICE_NOW).state == STATE_UNKNOWN
 
 
+@pytest.mark.usefixtures("init_integration")
 async def test_a_busy_api_is_asked_again_when_it_says(
     hass: HomeAssistant,
-    init_integration: MockConfigEntry,
     mock_client: AsyncMock,
     at_twenty_to_eleven: FrozenDateTimeFactory,
 ) -> None:
@@ -160,9 +160,9 @@ async def test_a_busy_api_is_asked_again_when_it_says(
     assert float(hass.states.get(PRICE_NOW).state) == pytest.approx(1.11)
 
 
+@pytest.mark.usefixtures("init_integration")
 async def test_a_location_that_loses_its_access(
     hass: HomeAssistant,
-    init_integration: MockConfigEntry,
     mock_client: AsyncMock,
     at_twenty_to_eleven: FrozenDateTimeFactory,
 ) -> None:
@@ -228,8 +228,9 @@ async def test_a_location_without_access_at_setup_gets_its_prices_later(
     assert float(hass.states.get(PRICE_NOW).state) == pytest.approx(1.11)
 
 
+@pytest.mark.usefixtures("init_integration")
 async def test_the_days_prices_and_when_they_are_lowest_and_highest(
-    hass: HomeAssistant, init_integration: MockConfigEntry
+    hass: HomeAssistant,
 ) -> None:
     """The hour h costs 1 + h / 100: cheapest at midnight, most expensive at 23:00."""
     states = {
@@ -256,9 +257,9 @@ async def test_the_days_prices_and_when_they_are_lowest_and_highest(
     )
 
 
+@pytest.mark.usefixtures("init_integration")
 async def test_the_next_price_after_23_is_tomorrows_first(
     hass: HomeAssistant,
-    init_integration: MockConfigEntry,
     at_twenty_to_eleven: FrozenDateTimeFactory,
 ) -> None:
     """Tomorrow's prices are held from the afternoon, so the last hour has a next price."""
@@ -269,9 +270,9 @@ async def test_the_next_price_after_23_is_tomorrows_first(
     ) == pytest.approx(1.00)
 
 
+@pytest.mark.usefixtures("init_integration")
 async def test_without_tomorrow_the_last_hour_has_no_next_price(
     hass: HomeAssistant,
-    init_integration: MockConfigEntry,
     mock_client: AsyncMock,
     at_twenty_to_eleven: FrozenDateTimeFactory,
 ) -> None:
