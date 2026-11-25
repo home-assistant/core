@@ -154,6 +154,7 @@
         }),
         'last_event_received_at': '2026-05-08T12:00:00+00:00',
         'online_refreshed_at': None,
+        'sleep_timer_ends_at': None,
         'status': dict({
           'active_card': None,
           'ambient_light_sensor_reading': None,

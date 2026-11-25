@@ -5,10 +5,11 @@ from functools import partial
 import logging
 import os
 from typing import TYPE_CHECKING, Any, override
-from urllib.parse import urlparse
+from urllib.parse import quote, urlparse
 
-from soco import SoCo, alarms
+from soco import SoCo
 from soco.core import (
+    MUSIC_SRC_LIBRARY,
     MUSIC_SRC_LINE_IN,
     MUSIC_SRC_RADIO,
     PLAY_MODE_BY_MEANING,
@@ -505,6 +506,7 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
         Playlist name.  Otherwise, media_id should be a URI.
         """
         is_radio = False
+        mime_type: str | None = None
 
         if media_source.is_media_source_id(media_id):
             is_radio = media_id.startswith("media-source://radio_browser/")
@@ -513,6 +515,7 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
                 self.hass, media_id, self.entity_id
             )
             media_id = async_process_play_media_url(self.hass, media.url)
+            mime_type = media.mime_type
 
         if kwargs.get(ATTR_MEDIA_ANNOUNCE):
             volume = kwargs.get("extra", {}).get("volume")
@@ -569,16 +572,31 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
                 media_id = spotify.spotify_uri_from_media_browser_url(media_id)
 
         await self.hass.async_add_executor_job(
-            partial(self._play_media, media_type, media_id, is_radio, **kwargs)
+            partial(
+                self._play_media,
+                media_type,
+                media_id,
+                is_radio,
+                mime_type,
+                **kwargs,
+            )
         )
 
     @soco_error()
     def _play_media(
-        self, media_type: MediaType | str, media_id: str, is_radio: bool, **kwargs: Any
+        self,
+        media_type: MediaType | str,
+        media_id: str,
+        is_radio: bool,
+        mime_type: str | None,
+        **kwargs: Any,
     ) -> None:
         """Wrap sync calls to async_play_media."""
         _LOGGER.debug("_play_media media_type %s media_id %s", media_type, media_id)
         enqueue = kwargs.get(ATTR_MEDIA_ENQUEUE, MediaPlayerEnqueue.REPLACE)
+        mime_type_kwargs = (
+            {} if mime_type is None or is_radio else {"mime_type": mime_type}
+        )
 
         if media_type == "favorite_item_id":
             favorite = self.speaker.favorites.lookup_by_item_id(media_id)
@@ -635,19 +653,24 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
             media_id = async_process_play_media_url(self.hass, media_id)
 
             if enqueue == MediaPlayerEnqueue.ADD:
-                soco.add_uri_to_queue(media_id, timeout=LONG_SERVICE_TIMEOUT)
+                soco.add_uri_to_queue(
+                    media_id, timeout=LONG_SERVICE_TIMEOUT, **mime_type_kwargs
+                )
             elif enqueue in (
                 MediaPlayerEnqueue.NEXT,
                 MediaPlayerEnqueue.PLAY,
             ):
                 pos = (self.media.queue_position or 0) + 1
                 new_pos = soco.add_uri_to_queue(
-                    media_id, position=pos, timeout=LONG_SERVICE_TIMEOUT
+                    media_id,
+                    position=pos,
+                    timeout=LONG_SERVICE_TIMEOUT,
+                    **mime_type_kwargs,
                 )
                 if enqueue == MediaPlayerEnqueue.PLAY:
                     soco.play_from_queue(new_pos - 1)
             elif enqueue == MediaPlayerEnqueue.REPLACE:
-                soco.play_uri(media_id, force_radio=is_radio)
+                soco.play_uri(media_id, force_radio=is_radio, **mime_type_kwargs)
         elif media_type == MediaType.PLAYLIST:
             if media_id.startswith("S:"):
                 playlist = media_browser.get_media(
@@ -785,11 +808,9 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
         include_linked_zones: bool | None = None,
     ) -> None:
         """Set the alarm clock on the player."""
-        alarm: alarms.Alarm | None = None
-        for one_alarm in alarms.get_alarms(self.coordinator.soco):
-            if one_alarm.alarm_id == str(alarm_id):
-                alarm = one_alarm
-        if alarm is None:
+        household_alarms = self.speaker.alarms.alarms
+        household_alarms.update(self.coordinator.soco)
+        if (alarm := household_alarms.get(str(alarm_id))) is None:
             raise ServiceValidationError(
                 translation_domain=DOMAIN,
                 translation_key="invalid_alarm_id",
@@ -865,6 +886,17 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
             )
             if image_url := getattr(item, "album_art_uri", None):
                 return await self._async_fetch_image(image_url)
+        elif media_content_type == MediaType.TRACK and media_content_id:
+            # The speaker serves a track's art from its URI; music service
+            # tracks need s=1, local library tracks must not have it.
+            is_library = (
+                SoCo.music_source_from_uri(media_content_id) == MUSIC_SRC_LIBRARY
+            )
+            service = "" if is_library else "s=1&"
+            image_url = self.media.library.build_album_art_full_uri(
+                f"/getaa?{service}u={quote(media_content_id, safe='')}"
+            )
+            return await self._async_fetch_image(image_url)
 
         return (None, None)
 
@@ -920,6 +952,15 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
                     translation_domain=DOMAIN,
                     translation_key="speaker_not_found",
                     translation_placeholders={"entity_id": entity_id},
+                )
+            if speaker.household_id != self.speaker.household_id:
+                raise ServiceValidationError(
+                    translation_domain=DOMAIN,
+                    translation_key="join_different_household",
+                    translation_placeholders={
+                        "entity_id": entity_id,
+                        "target_entity_id": self.entity_id,
+                    },
                 )
 
             speakers.append(speaker)

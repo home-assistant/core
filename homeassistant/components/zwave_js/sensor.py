@@ -24,8 +24,14 @@ from zwave_js_server.const.command_class.meter import (
 from zwave_js_server.const.command_class.multilevel_sensor import (
     CC_SPECIFIC_SCALE as MULTILEVEL_SENSOR_CC_SPECIFIC_SCALE,
     CC_SPECIFIC_SENSOR_TYPE,
+    HUMIDITY_SENSORS,
+    ILLUMINANCE_SENSORS,
     TEMPERATURE_SENSORS,
+    HumidityScale,
+    IlluminanceScale,
+    MultilevelSensorType,
     TemperatureScale,
+    UltravioletScale,
 )
 from zwave_js_server.exceptions import (
     BaseZwaveJSServerError,
@@ -56,7 +62,6 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     LIGHT_LUX,
     SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
@@ -104,7 +109,6 @@ from .const import (
     ENTITY_DESC_KEY_SIGNAL_STRENGTH,
     ENTITY_DESC_KEY_TARGET_TEMPERATURE,
     ENTITY_DESC_KEY_TOTAL_INCREASING,
-    ENTITY_DESC_KEY_UV_INDEX,
     ENTITY_DESC_KEY_VOLTAGE,
     LOGGER,
 )
@@ -201,18 +205,6 @@ ENTITY_DESCRIPTION_KEY_UNIT_MAP: dict[tuple[str, str], SensorEntityDescription] 
         device_class=SensorDeviceClass.CO2,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfRatio.PARTS_PER_MILLION,
-    ),
-    (ENTITY_DESC_KEY_HUMIDITY, UnitOfRatio.PERCENTAGE): SensorEntityDescription(
-        key=ENTITY_DESC_KEY_HUMIDITY,
-        device_class=SensorDeviceClass.HUMIDITY,
-        state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
-    ),
-    (ENTITY_DESC_KEY_ILLUMINANCE, LIGHT_LUX): SensorEntityDescription(
-        key=ENTITY_DESC_KEY_ILLUMINANCE,
-        device_class=SensorDeviceClass.ILLUMINANCE,
-        state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=LIGHT_LUX,
     ),
     (ENTITY_DESC_KEY_PRESSURE, UnitOfPressure.KPA): SensorEntityDescription(
         key=ENTITY_DESC_KEY_PRESSURE,
@@ -342,11 +334,6 @@ ENTITY_DESCRIPTION_KEY_MAP = {
     ENTITY_DESC_KEY_TOTAL_INCREASING: SensorEntityDescription(
         key=ENTITY_DESC_KEY_TOTAL_INCREASING,
         state_class=SensorStateClass.TOTAL_INCREASING,
-    ),
-    ENTITY_DESC_KEY_UV_INDEX: SensorEntityDescription(
-        key=ENTITY_DESC_KEY_UV_INDEX,
-        state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=UV_INDEX,
     ),
 }
 
@@ -808,7 +795,7 @@ class NewZWaveNumericSensor(ZWaveBaseEntity, SensorEntity):
 
     def __init__(
         self,
-        config_entry: ConfigEntry,
+        config_entry: ZwaveJSConfigEntry,
         driver: Driver,
         info: NewZwaveDiscoveryInfo,
     ) -> None:
@@ -844,11 +831,19 @@ class NewZWaveNumericSensor(ZWaveBaseEntity, SensorEntity):
     @callback
     @override
     def on_value_update(self) -> None:
-        """Handle scale changes for this value on value updated event."""
-        # TODO: Try to limit this to metadata updated event.  # pylint: disable=fixme
-        scale_type = self._get_scale_type()
-        if scale_type is not self._scale_type:
-            self.hass.config_entries.async_schedule_reload(self.config_entry.entry_id)
+        """Rediscover the entity when the scale has changed."""
+        # Wait for the value update that follows the scale's metadata update,
+        # so the rediscovered entity doesn't report the old value in the new scale.
+        # The eagerly started task removes this entity before its state is written.
+        if self._get_scale_type() is not self._scale_type:
+            LOGGER.debug(
+                "[%s] Scale changed for %s, removing for rediscovery",
+                self.entity_id,
+                self.info.primary_value.value_id,
+            )
+            self.config_entry.async_create_task(
+                self.hass, self._async_remove_and_rediscover(self.info.primary_value)
+            )
 
     @property
     @override
@@ -1211,6 +1206,65 @@ DISCOVERY_SCHEMAS: list[NewZWaveDiscoverySchema] = [
             device_class=SensorDeviceClass.TEMPERATURE,
             state_class=SensorStateClass.MEASUREMENT,
             native_unit_of_measurement=UnitOfTemperature.FAHRENHEIT,
+        ),
+    ),
+    NewZWaveDiscoverySchema(
+        platform=Platform.SENSOR,
+        primary_value=ZWaveValueDiscoverySchema(
+            command_class={CommandClass.SENSOR_MULTILEVEL},
+            type={ValueType.NUMBER},
+            all_available_cc_specific={
+                (MULTILEVEL_SENSOR_CC_SPECIFIC_SCALE, HumidityScale.PERCENTAGE_VALUE),
+            },
+            any_available_cc_specific={
+                (CC_SPECIFIC_SENSOR_TYPE, sensor_type)
+                for sensor_type in HUMIDITY_SENSORS
+            },
+        ),
+        entity_class=NewZWaveNumericSensor,
+        entity_description=SensorEntityDescription(
+            key="humidity_percentage",
+            device_class=SensorDeviceClass.HUMIDITY,
+            state_class=SensorStateClass.MEASUREMENT,
+            native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
+        ),
+    ),
+    NewZWaveDiscoverySchema(
+        platform=Platform.SENSOR,
+        primary_value=ZWaveValueDiscoverySchema(
+            command_class={CommandClass.SENSOR_MULTILEVEL},
+            type={ValueType.NUMBER},
+            all_available_cc_specific={
+                (MULTILEVEL_SENSOR_CC_SPECIFIC_SCALE, IlluminanceScale.LUX),
+            },
+            any_available_cc_specific={
+                (CC_SPECIFIC_SENSOR_TYPE, sensor_type)
+                for sensor_type in ILLUMINANCE_SENSORS
+            },
+        ),
+        entity_class=NewZWaveNumericSensor,
+        entity_description=SensorEntityDescription(
+            key="illuminance_lux",
+            device_class=SensorDeviceClass.ILLUMINANCE,
+            state_class=SensorStateClass.MEASUREMENT,
+            native_unit_of_measurement=LIGHT_LUX,
+        ),
+    ),
+    NewZWaveDiscoverySchema(
+        platform=Platform.SENSOR,
+        primary_value=ZWaveValueDiscoverySchema(
+            command_class={CommandClass.SENSOR_MULTILEVEL},
+            type={ValueType.NUMBER},
+            all_available_cc_specific={
+                (CC_SPECIFIC_SENSOR_TYPE, MultilevelSensorType.ULTRAVIOLET),
+                (MULTILEVEL_SENSOR_CC_SPECIFIC_SCALE, UltravioletScale.UV_INDEX),
+            },
+        ),
+        entity_class=NewZWaveNumericSensor,
+        entity_description=SensorEntityDescription(
+            key="uv_index",
+            state_class=SensorStateClass.MEASUREMENT,
+            native_unit_of_measurement=UV_INDEX,
         ),
     ),
     NewZWaveDiscoverySchema(

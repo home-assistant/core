@@ -1,7 +1,8 @@
 """Models for Repairs."""
 
 from collections.abc import Mapping
-from typing import Any, Protocol, override
+from dataclasses import dataclass
+from typing import TYPE_CHECKING, Any, Protocol, override
 
 from homeassistant import data_entry_flow
 from homeassistant.config_entries import (
@@ -11,8 +12,12 @@ from homeassistant.config_entries import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.frame import report_usage
+from homeassistant.helpers.integration_platform import LazyIntegrationPlatforms
 
 from .const import DOMAIN, FlowType
+
+if TYPE_CHECKING:
+    from .issue_handler import RepairsFlowManager
 
 
 class RepairsFlowContext(data_entry_flow.FlowContext, total=False):
@@ -158,3 +163,11 @@ class RepairsProtocol(Protocol):
         data: dict[str, str | int | float | None] | None,
     ) -> RepairsFlow:
         """Create a flow to fix a fixable issue."""
+
+
+@dataclass
+class RepairsData:
+    """Dataclass to hold HassKey data."""
+
+    flow_manager: RepairsFlowManager
+    platforms: LazyIntegrationPlatforms[RepairsProtocol]

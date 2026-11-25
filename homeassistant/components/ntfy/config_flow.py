@@ -2,8 +2,8 @@
 
 from collections.abc import Mapping
 import logging
-import random
 import re
+import secrets
 import string
 from typing import TYPE_CHECKING, Any, override
 
@@ -19,7 +19,6 @@ from yarl import URL
 from homeassistant import data_entry_flow
 from homeassistant.config_entries import (
     SOURCE_USER,
-    ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
     ConfigSubentryFlow,
@@ -59,6 +58,7 @@ from .const import (
     SECTION_FILTER,
     SUBENTRY_TYPE_TOPIC,
 )
+from .coordinator import NtfyConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -170,7 +170,7 @@ class NtfyConfigFlow(ConfigFlow, domain=DOMAIN):
     @callback
     @override
     def async_get_supported_subentry_types(
-        cls, config_entry: ConfigEntry
+        cls, config_entry: NtfyConfigEntry
     ) -> dict[str, type[ConfigSubentryFlow]]:
         """Return subentries supported by this integration."""
         return {SUBENTRY_TYPE_TOPIC: TopicSubentryFlowHandler}
@@ -439,10 +439,7 @@ class TopicSubentryFlowHandler(ConfigSubentryFlow):
     ) -> SubentryFlowResult:
         """User flow to add a new topic."""
         topic = "".join(
-            random.choices(
-                string.ascii_lowercase + string.ascii_uppercase + string.digits,
-                k=16,
-            )
+            secrets.choice(string.ascii_letters + string.digits) for _ in range(16)
         )
         # pylint: disable-next=home-assistant-step_id-match-method
         return self.async_show_form(

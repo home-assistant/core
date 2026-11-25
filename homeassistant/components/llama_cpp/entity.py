@@ -241,11 +241,7 @@ async def _transform_stream(
                 yield_dict["content"] = delta.content
             if yield_dict:
                 yield yield_dict
-        elif (
-            delta.tool_calls
-            and (delta_tool_call := delta.tool_calls[0])
-            and delta_tool_call.function
-        ):
+        elif delta.tool_calls and (delta_tool_call := delta.tool_calls[0]).function:
             if (
                 current_tool_call
                 and delta_tool_call.index == current_tool_call["index"]

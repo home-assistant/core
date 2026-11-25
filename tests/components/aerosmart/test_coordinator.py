@@ -7,6 +7,7 @@ from modbus_connection import (
     ModbusTimeoutError,
 )
 from modbus_connection.mock import MockModbusUnit
+import pytest
 from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components.aerosmart.const import DOMAIN, READINGS_SCAN_INTERVAL
@@ -23,7 +24,7 @@ async def test_device_info_includes_model_and_software_version(
     mock_modbus_unit_ventilation: MockModbusUnit,
 ) -> None:
     """Device metadata is included when the controller provides it."""
-    mock_modbus_unit_ventilation.holding[5000] = [0, 3]
+    mock_modbus_unit_ventilation.holding[5000] = [0, 5]
     mock_modbus_unit_ventilation.holding[1156] = [0, 42]
 
     mock_config_entry.add_to_hass(hass)
@@ -34,16 +35,25 @@ async def test_device_info_includes_model_and_software_version(
         (DOMAIN, mock_config_entry.entry_id), mock_config_entry.entry_id
     )
     assert device is not None
-    assert device.model == "3"
+    assert device.model == "aerosmart m"
     assert device.sw_version == "42"
 
 
+@pytest.mark.parametrize(
+    ("device_type", "expected_model"),
+    [
+        pytest.param(5, "aerosmart m", id="known"),
+        pytest.param(3, "3", id="unknown"),
+    ],
+)
 async def test_device_info_recovers_after_initial_general_failure(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     freezer: FrozenDateTimeFactory,
     mock_config_entry: MockConfigEntry,
     mock_modbus_unit_ventilation: MockModbusUnit,
+    device_type: int,
+    expected_model: str,
 ) -> None:
     """Device metadata is updated when the general subsystem recovers."""
     mock_modbus_unit_ventilation.fail_read(
@@ -73,7 +83,7 @@ async def test_device_info_recovers_after_initial_general_failure(
     assert outside_temperature.state == "0.456"
 
     mock_modbus_unit_ventilation.fail_read(5000, None)
-    mock_modbus_unit_ventilation.holding[5000] = [0, 3]
+    mock_modbus_unit_ventilation.holding[5000] = [0, device_type]
     mock_modbus_unit_ventilation.holding[1156] = [0, 42]
     freezer.tick(READINGS_SCAN_INTERVAL)
     async_fire_time_changed(hass)
@@ -81,7 +91,7 @@ async def test_device_info_recovers_after_initial_general_failure(
 
     device = device_registry.async_get(device.id)
     assert device is not None
-    assert device.model == "3"
+    assert device.model == expected_model
     assert device.sw_version == "42"
 
 

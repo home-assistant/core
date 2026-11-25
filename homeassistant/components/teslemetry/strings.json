@@ -1342,6 +1342,12 @@
     "command_reason": {
       "message": "Command was rejected: {reason}"
     },
+    "energy_site_not_paired": {
+      "message": "Teslemetry is not paired with the Powerwall system for {site}, pair it in the Teslemetry console or set up local control"
+    },
+    "live_status_timeout": {
+      "message": "No live status received from the Teslemetry stream for energy site {site_id} in {minutes} minutes"
+    },
     "local_command_failed": {
       "message": "The Powerwall gateway could not complete the command, check the logs for details"
     },
@@ -1362,9 +1368,6 @@
     },
     "no_energy_site_data_for_device": {
       "message": "No energy site data for device ID: {device_id}"
-    },
-    "no_local_powerwall": {
-      "message": "{name} is not connected to its Powerwall for local control, add it as a local energy site or restore its local connection"
     },
     "no_vehicle_data_for_device": {
       "message": "No vehicle data for device ID: {device_id}"
@@ -1396,6 +1399,9 @@
     "update_failed_insufficient_credits": {
       "message": "Teslemetry account has insufficient command credits, pausing updates until credits are added"
     },
+    "update_failed_missing_scopes": {
+      "message": "Tesla authorization is missing the permissions to read vehicle data"
+    },
     "wake_up_failed": {
       "message": "Failed to wake up vehicle: {message}"
     },
@@ -1404,6 +1410,20 @@
     }
   },
   "issues": {
+    "energy_site_not_paired": {
+      "fix_flow": {
+        "error": {
+          "not_resolved": "Teslemetry still appears to be unpaired. Please complete the pairing at {link}, then try again."
+        },
+        "step": {
+          "confirm": {
+            "description": "Home Assistant cannot send battery commands, such as dispatching battery power, to {site} because Teslemetry is not paired with its Powerwall system and local control is not set up. Teslemetry can only send these commands through the cloud once its key is verified on the Powerwall gateway.\n\n1. Open {link}.\n2. Follow the prompts to pair Teslemetry with the Powerwall system.\n3. Select **Submit** below to re-check.\n\nAlternatively, set up local control for {site}.",
+            "title": "[%key:component::teslemetry::issues::energy_site_not_paired::title%]"
+          }
+        }
+      },
+      "title": "Pair Teslemetry with the Powerwall system for {site}"
+    },
     "gateway_not_found": {
       "fix_flow": {
         "abort": {
@@ -1437,12 +1457,20 @@
         },
         "step": {
           "confirm": {
-            "description": "Home Assistant cannot send commands to {vehicle} because the Teslemetry virtual key is not paired with the vehicle. Until it is paired, commands such as locking, climate control and charging will not work.\n\n1. Open {link}.\n2. Follow the prompts to add the virtual key to {vehicle}.\n3. Select **Submit** below to re-check.",
+            "description": "Home Assistant cannot receive data from or send commands to {vehicle} because the Teslemetry virtual key is not paired with the vehicle. Until it is paired, the vehicle's data will not update and commands such as locking, climate control and charging will not work.\n\n1. Open {link}.\n2. Follow the prompts to add the virtual key to {vehicle}.\n3. Select **Submit** below to re-check.",
             "title": "[%key:component::teslemetry::issues::key::title%]"
           }
         }
       },
       "title": "Pair the virtual key for {vehicle}"
+    },
+    "missing_scopes": {
+      "description": "Tesla is refusing to share vehicle data with Teslemetry because your Tesla authorization is missing the required permissions. Select **Learn more** to sign in with Tesla again and grant the missing permissions, including Vehicle Information, then reload the integration.",
+      "title": "Tesla authorization is missing permissions"
+    },
+    "streaming_allowance": {
+      "description": "Teslemetry refused the streaming configuration for {vehicle} because it is over the streaming allowance of the vehicle's plan. The streaming values in that configuration will not update.\n\nDo at least one of the following, then reload the Teslemetry integration:\n\n- Disable the {vehicle} entities you do not need, so that Home Assistant stops requesting their fields.\n- On the **Fields** page for {vehicle} in the Teslemetry Console, remove fields or raise their **Minimum Interval Seconds**. Home Assistant requests a removed field again while its entity is enabled.\n- Move {vehicle} to a higher Teslemetry plan.",
+      "title": "Streaming allowance exceeded for {vehicle}"
     },
     "streaming_toggle": {
       "fix_flow": {
@@ -1562,7 +1590,7 @@
       "name": "Add precondition schedule"
     },
     "dispatch_battery_power": {
-      "description": "Charges or discharges the Powerwall at a set power for a set time over the local gateway connection.",
+      "description": "Charges or discharges the Powerwall at a set power for a set time.",
       "fields": {
         "device_id": {
           "description": "Energy site paired with its local Powerwall gateway.",
