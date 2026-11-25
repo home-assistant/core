@@ -6,7 +6,7 @@ from unittest.mock import AsyncMock
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 
-from tests.common import MockConfigEntry
+from pytest_homeassistant.common import MockConfigEntry
 
 
 async def test_device_configuration_cache_interval(
