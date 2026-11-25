@@ -58,8 +58,8 @@ async def test_thermostat_base(
     # test entity attributes
     state = hass.states.get("climate.longan_link_hvac")
     assert state
-    assert state.attributes["min_temp"] == 7
-    assert state.attributes["max_temp"] == 35
+    assert state.attributes["min_temp"] == 16
+    assert state.attributes["max_temp"] == 30
     assert state.attributes["temperature"] is None
     assert state.state == HVACMode.COOL
 
@@ -73,15 +73,15 @@ async def test_thermostat_base(
     assert state.attributes["supported_features"] & mask == mask
 
     # test common state updates from device
-    set_node_attribute(matter_node, 1, 513, 3, 1600)
-    set_node_attribute(matter_node, 1, 513, 4, 3000)
-    set_node_attribute(matter_node, 1, 513, 5, 1600)
-    set_node_attribute(matter_node, 1, 513, 6, 3000)
+    set_node_attribute(matter_node, 1, 513, 3, 1800)
+    set_node_attribute(matter_node, 1, 513, 4, 2800)
+    set_node_attribute(matter_node, 1, 513, 5, 1800)
+    set_node_attribute(matter_node, 1, 513, 6, 2800)
     await trigger_subscription_callback(hass, matter_client)
     state = hass.states.get("climate.longan_link_hvac")
     assert state
-    assert state.attributes["min_temp"] == 16
-    assert state.attributes["max_temp"] == 30
+    assert state.attributes["min_temp"] == 18
+    assert state.attributes["max_temp"] == 28
     assert state.attributes["hvac_modes"] == [
         HVACMode.OFF,
         HVACMode.HEAT,
@@ -331,7 +331,7 @@ async def test_thermostat_service_calls(
         "set_temperature",
         {
             "entity_id": "climate.longan_link_hvac",
-            "target_temp_low": 10,
+            "target_temp_low": 18,
             "target_temp_high": 30,
         },
         blocking=True,
@@ -341,7 +341,7 @@ async def test_thermostat_service_calls(
     assert matter_client.write_attribute.call_args_list[0] == call(
         node_id=matter_node.node_id,
         attribute_path="1/513/18",
-        value=1000,
+        value=1800,
     )
     assert matter_client.write_attribute.call_args_list[1] == call(
         node_id=matter_node.node_id,
@@ -351,20 +351,20 @@ async def test_thermostat_service_calls(
     matter_client.write_attribute.reset_mock()
 
     # test changing only target_temp_high when target_temp_low stays the same
-    set_node_attribute(matter_node, 1, 513, 18, 1000)
+    set_node_attribute(matter_node, 1, 513, 18, 1800)
     set_node_attribute(matter_node, 1, 513, 17, 2500)
     await trigger_subscription_callback(hass, matter_client)
     state = hass.states.get("climate.longan_link_hvac")
     assert state
     assert state.attributes["target_temp_high"] == 25
-    assert state.attributes["target_temp_low"] == 10
+    assert state.attributes["target_temp_low"] == 18
 
     await hass.services.async_call(
         "climate",
         "set_temperature",
         {
             "entity_id": "climate.longan_link_hvac",
-            "target_temp_low": 10,  # Same as current
+            "target_temp_low": 18,  # Same as current
             "target_temp_high": 28,  # Different from current
         },
         blocking=True,
@@ -430,14 +430,14 @@ async def test_thermostat_service_calls(
     )
     matter_client.write_attribute.reset_mock()
 
-    # fractional setpoints must round, not truncate: 10.2 * 100 is 1019.9999…
-    # in IEEE 754, so int() would produce 1019 instead of 1020.
+    # fractional setpoints must round, not truncate: 20.4 * 100 is 2039.9999…
+    # in IEEE 754, so int() would produce 2039 instead of 2040.
     await hass.services.async_call(
         "climate",
         "set_temperature",
         {
             "entity_id": "climate.longan_link_hvac",
-            "temperature": 10.2,
+            "temperature": 20.4,
             "hvac_mode": HVACMode.HEAT,
         },
         blocking=True,
@@ -445,7 +445,7 @@ async def test_thermostat_service_calls(
     assert matter_client.write_attribute.call_args_list[-1] == call(
         node_id=matter_node.node_id,
         attribute_path="1/513/18",
-        value=1020,
+        value=2040,
     )
     matter_client.write_attribute.reset_mock()
 
@@ -1235,3 +1235,99 @@ async def test_failed_power_on_does_not_write_mode(
             "climate", "turn_on", {"entity_id": ROOM_AC_ENTITY_ID}, blocking=True
         )
     matter_client.write_attribute.assert_not_called()
+
+
+@pytest.mark.parametrize("node_fixture", ["mock_room_airconditioner"])
+@pytest.mark.parametrize(
+    ("attributes", "expected_hvac_mode"),
+    [
+        (
+            {
+                "1/6/0": False,
+                "1/513/65532": 2,
+                "1/513/28": 0,
+                "1/513/5": 1000,
+                "1/513/6": 3200,
+                "1/513/23": 1600,
+                "1/513/24": 3000,
+            },
+            HVACMode.OFF,
+        ),
+        (
+            {
+                "1/6/0": True,
+                "1/513/65532": 2,
+                "1/513/28": 3,
+                "1/513/5": 1000,
+                "1/513/6": 3200,
+                "1/513/23": 1600,
+                "1/513/24": 3000,
+            },
+            HVACMode.COOL,
+        ),
+        (
+            {
+                "1/6/0": True,
+                "1/513/65532": 2,
+                "1/513/28": 7,
+                "1/513/5": 1000,
+                "1/513/6": 3200,
+                "1/513/23": 1600,
+                "1/513/24": 3000,
+            },
+            HVACMode.FAN_ONLY,
+        ),
+        (
+            {
+                "1/6/0": True,
+                "1/513/65532": 2,
+                "1/513/28": 8,
+                "1/513/5": 1000,
+                "1/513/6": 3200,
+                "1/513/23": 1600,
+                "1/513/24": 3000,
+            },
+            HVACMode.DRY,
+        ),
+    ],
+)
+async def test_cooling_only_setpoint_limits(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+    expected_hvac_mode: HVACMode,
+) -> None:
+    """Test cooling-only devices use Min/MaxCoolSetpointLimit across modes."""
+    state = hass.states.get(ROOM_AC_ENTITY_ID)
+    assert state
+    assert state.state == expected_hvac_mode
+    assert state.attributes["min_temp"] == 16
+    assert state.attributes["max_temp"] == 30
+
+    # Verify fallback to AbsMin/AbsMaxCoolSetpointLimit when Min/Max are absent
+    set_node_attribute(matter_node, 1, 513, 23, None)
+    set_node_attribute(matter_node, 1, 513, 24, None)
+    await trigger_subscription_callback(hass, matter_client, attribute_path="1/513/23")
+    await trigger_subscription_callback(hass, matter_client, attribute_path="1/513/24")
+    state = hass.states.get(ROOM_AC_ENTITY_ID)
+    assert state
+    assert state.attributes["min_temp"] == 10
+    assert state.attributes["max_temp"] == 32
+
+    # Verify AbsMin/AbsMax still clamp if Min/Max report a wider range
+    set_node_attribute(matter_node, 1, 513, 5, 1600)
+    set_node_attribute(matter_node, 1, 513, 23, 1400)
+    set_node_attribute(matter_node, 1, 513, 24, 3300)
+    await trigger_subscription_callback(hass, matter_client, attribute_path="1/513/23")
+    state = hass.states.get(ROOM_AC_ENTITY_ID)
+    assert state
+    assert state.attributes["min_temp"] == 16
+    assert state.attributes["max_temp"] == 32
+
+    # Verify 0 (0.0 °C) is treated as a valid limit rather than missing
+    set_node_attribute(matter_node, 1, 513, 5, -1000)
+    set_node_attribute(matter_node, 1, 513, 23, 0)
+    await trigger_subscription_callback(hass, matter_client, attribute_path="1/513/23")
+    state = hass.states.get(ROOM_AC_ENTITY_ID)
+    assert state
+    assert state.attributes["min_temp"] == 0.0

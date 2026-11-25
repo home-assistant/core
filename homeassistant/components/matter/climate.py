@@ -1,5 +1,6 @@
 """Matter climate platform."""
 
+from collections.abc import Callable
 from dataclasses import dataclass
 from enum import IntEnum
 from typing import Any, override
@@ -570,21 +571,48 @@ class MatterClimate(MatterEntity, ClimateEntity, RestoreEntity):
     @callback
     def _update_temperature_limits(self) -> None:
         """Update min and max temperature limits."""
+        feature_map = self._feature_map or 0
+        supports_cool = bool(feature_map & ThermostatFeature.kCooling)
+        supports_heat = bool(feature_map & ThermostatFeature.kHeating)
+        is_cool_only = supports_cool and not supports_heat
+
         # update min_temp
-        if self._attr_hvac_mode == HVACMode.COOL:
-            attribute = clusters.Thermostat.Attributes.AbsMinCoolSetpointLimit
+        if self._attr_hvac_mode == HVACMode.COOL or (
+            is_cool_only
+            and self._attr_hvac_mode not in (HVACMode.HEAT, HVACMode.HEAT_COOL)
+        ):
+            min_attrs = (
+                clusters.Thermostat.Attributes.MinCoolSetpointLimit,
+                clusters.Thermostat.Attributes.AbsMinCoolSetpointLimit,
+            )
         else:
-            attribute = clusters.Thermostat.Attributes.AbsMinHeatSetpointLimit
-        if (value := self._get_temperature_in_degrees(attribute)) is not None:
+            min_attrs = (
+                clusters.Thermostat.Attributes.MinHeatSetpointLimit,
+                clusters.Thermostat.Attributes.AbsMinHeatSetpointLimit,
+            )
+        if (
+            value := self._get_effective_temperature_limit(max, *min_attrs)
+        ) is not None:
             self._attr_min_temp = value
         else:
             self._attr_min_temp = DEFAULT_MIN_TEMP
+
         # update max_temp
-        if self._attr_hvac_mode in (HVACMode.COOL, HVACMode.HEAT_COOL):
-            attribute = clusters.Thermostat.Attributes.AbsMaxCoolSetpointLimit
+        if self._attr_hvac_mode in (HVACMode.COOL, HVACMode.HEAT_COOL) or (
+            is_cool_only and self._attr_hvac_mode != HVACMode.HEAT
+        ):
+            max_attrs = (
+                clusters.Thermostat.Attributes.MaxCoolSetpointLimit,
+                clusters.Thermostat.Attributes.AbsMaxCoolSetpointLimit,
+            )
         else:
-            attribute = clusters.Thermostat.Attributes.AbsMaxHeatSetpointLimit
-        if (value := self._get_temperature_in_degrees(attribute)) is not None:
+            max_attrs = (
+                clusters.Thermostat.Attributes.MaxHeatSetpointLimit,
+                clusters.Thermostat.Attributes.AbsMaxHeatSetpointLimit,
+            )
+        if (
+            value := self._get_effective_temperature_limit(min, *max_attrs)
+        ) is not None:
             self._attr_max_temp = value
         else:
             self._attr_max_temp = DEFAULT_MAX_TEMP
@@ -633,11 +661,25 @@ class MatterClimate(MatterEntity, ClimateEntity, RestoreEntity):
             self._attr_supported_features |= ClimateEntityFeature.TURN_ON
 
     @callback
+    def _get_effective_temperature_limit(
+        self,
+        pick_limit: Callable[[list[float]], float],
+        *attributes: type[clusters.ClusterAttributeDescriptor],
+    ) -> float | None:
+        """Return the tightest non-None temperature limit across attributes."""
+        values = [
+            value
+            for attribute in attributes
+            if (value := self._get_temperature_in_degrees(attribute)) is not None
+        ]
+        return pick_limit(values) if values else None
+
+    @callback
     def _get_temperature_in_degrees(
         self, attribute: type[clusters.ClusterAttributeDescriptor]
     ) -> float | None:
         """Return the scaled temperature value for the given attribute."""
-        if value := self.get_matter_attribute_value(attribute):
+        if (value := self.get_matter_attribute_value(attribute)) is not None:
             return float(value) / TEMPERATURE_SCALING_FACTOR
         return None
 
@@ -655,6 +697,14 @@ DISCOVERY_SCHEMAS = [
         optional_attributes=(
             clusters.Thermostat.Attributes.FeatureMap,
             clusters.Thermostat.Attributes.ControlSequenceOfOperation,
+            clusters.Thermostat.Attributes.AbsMinHeatSetpointLimit,
+            clusters.Thermostat.Attributes.AbsMaxHeatSetpointLimit,
+            clusters.Thermostat.Attributes.AbsMinCoolSetpointLimit,
+            clusters.Thermostat.Attributes.AbsMaxCoolSetpointLimit,
+            clusters.Thermostat.Attributes.MinHeatSetpointLimit,
+            clusters.Thermostat.Attributes.MaxHeatSetpointLimit,
+            clusters.Thermostat.Attributes.MinCoolSetpointLimit,
+            clusters.Thermostat.Attributes.MaxCoolSetpointLimit,
             clusters.Thermostat.Attributes.NumberOfPresets,
             clusters.Thermostat.Attributes.Occupancy,
             clusters.Thermostat.Attributes.OccupiedCoolingSetpoint,
