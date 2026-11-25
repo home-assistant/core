@@ -97,12 +97,13 @@ def _format_deprecated_options(
     locations: dict[str, tuple[str, int]],
 ) -> str:
     """Return the deprecated options and their replacements as a markdown list."""
+    prefix = f"{deprecation.parent_option}: " if deprecation.parent_option else ""
     changes: list[str] = []
     for key in deprecated:
         if deprecation.requires_mapped_option:
-            change = f"`{key}` requires `{deprecation.options[key]}`"
+            change = f"`{prefix}{key}` requires `{deprecation.options[key]}`"
         else:
-            change = f"`{key}` → `{deprecation.options[key]}`"
+            change = f"`{prefix}{key}` → `{deprecation.options[key]}`"
         if (location := locations.get(key)) is not None:
             path = os.path.relpath(location[0], hass.config.config_dir)
             change = f"`{path}:{location[1]}`: {change}"
@@ -135,13 +136,14 @@ def _async_update_deprecated_options_issues(
             blueprint_path = section.raw_blueprint_inputs[CONF_USE_BLUEPRINT][CONF_PATH]
 
         for index, entity_config in enumerate(section.get(platform, [])):
+            options_config = deprecation.options_config(entity_config)
             deprecated = [
                 key
-                for key in entity_config
+                for key in options_config
                 if key in deprecation.options
                 and not (
                     deprecation.requires_mapped_option
-                    and deprecation.options[key] in entity_config
+                    and deprecation.options[key] in options_config
                 )
             ]
             if not deprecated:
@@ -167,7 +169,7 @@ def _async_update_deprecated_options_issues(
                         ),
                         *(
                             f"{key}="
-                            f"{getattr(entity_config[key], 'template', entity_config[key])}"
+                            f"{getattr(options_config[key], 'template', options_config[key])}"
                             for key in sorted(deprecated)
                         ),
                     ]
@@ -204,7 +206,8 @@ def _async_update_deprecated_options_issues(
                 translation_key=translation_key,
                 translation_placeholders={**label, "options": "\n".join(options)},
                 learn_more_url=(
-                    f"https://www.home-assistant.io/integrations/template/#{platform}"
+                    "https://www.home-assistant.io/integrations/template/"
+                    f"#{platform.replace('_', '-')}"
                 ),
             )
 

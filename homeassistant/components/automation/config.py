@@ -1,6 +1,6 @@
 """Config validation helper for the automation integration."""
 
-from collections.abc import Mapping
+from collections.abc import Collection, Mapping
 from contextlib import suppress
 from enum import StrEnum
 from typing import Any, Literal
@@ -64,6 +64,14 @@ _RENAMED_KEYS = {
     CONF_CONDITIONS: CONF_CONDITION,
     CONF_ACTIONS: CONF_ACTION,
 }
+
+
+def _has_key_conflict(keys: Collection[str]) -> bool:
+    """Return if keys has both a key and the key it is renamed to."""
+    return any(
+        old_key in keys and new_key in keys
+        for new_key, old_key in _RENAMED_KEYS.items()
+    )
 
 
 def _backward_compat_schema(value: Any | None) -> Any:
@@ -150,28 +158,24 @@ async def _async_validate_config_item(  # noqa: C901
     def _set_validation_status(
         automation_config: AutomationConfig,
         validation_status: ValidationStatus,
-        validation_error: Exception,
-        config: ConfigType,
+        validation_error: str,
     ) -> None:
         """Set validation status."""
         if uses_blueprint:
             validation_status = ValidationStatus.FAILED_BLUEPRINT
         automation_config.validation_status = validation_status
-        automation_config.validation_error = _humanize(validation_error, config)
+        automation_config.validation_error = validation_error
 
     def _minimal_config(
         validation_status: ValidationStatus,
-        validation_error: Exception,
-        config: ConfigType,
+        validation_error: str,
     ) -> AutomationConfig:
         """Try validating id, alias and description."""
         minimal_config = _MINIMAL_PLATFORM_SCHEMA(config)
         automation_config = AutomationConfig(minimal_config)
         automation_config.raw_blueprint_inputs = raw_blueprint_inputs
         automation_config.raw_config = raw_config
-        _set_validation_status(
-            automation_config, validation_status, validation_error, config
-        )
+        _set_validation_status(automation_config, validation_status, validation_error)
         return automation_config
 
     if blueprint.is_blueprint_instance_config(config):
@@ -189,7 +193,7 @@ async def _async_validate_config_item(  # noqa: C901
                 )
             if raise_on_errors:
                 raise
-            return _minimal_config(ValidationStatus.FAILED_BLUEPRINT, err, config)
+            return _minimal_config(ValidationStatus.FAILED_BLUEPRINT, str(err))
 
         raw_blueprint_inputs = blueprint_inputs.config_with_inputs
 
@@ -206,7 +210,7 @@ async def _async_validate_config_item(  # noqa: C901
                 )
             if raise_on_errors:
                 raise HomeAssistantError(err) from err
-            return _minimal_config(ValidationStatus.FAILED_BLUEPRINT, err, config)
+            return _minimal_config(ValidationStatus.FAILED_BLUEPRINT, str(err))
 
     automation_name = "Unnamed automation"
     if isinstance(config, Mapping):
@@ -221,75 +225,44 @@ async def _async_validate_config_item(  # noqa: C901
         _log_invalid_automation(err, automation_name, "could not be validated", config)
         if raise_on_errors:
             raise
-        return _minimal_config(ValidationStatus.FAILED_SCHEMA, err, config)
+        return _minimal_config(ValidationStatus.FAILED_SCHEMA, _humanize(err, config))
 
     automation_config = AutomationConfig(validated_config)
     automation_config.raw_blueprint_inputs = raw_blueprint_inputs
     automation_config.raw_config = raw_config
 
-    try:
-        automation_config[CONF_TRIGGERS] = await async_validate_trigger_config(
-            hass, validated_config[CONF_TRIGGERS]
-        )
-    except (
-        probatio.Invalid,
-        HomeAssistantError,
-    ) as err:
-        if isinstance(err, probatio.Invalid):
-            err.prepend([CONF_TRIGGERS])
-        _log_invalid_automation(
-            err, automation_name, "failed to setup triggers", validated_config
-        )
-        if raise_on_errors:
-            raise
-        _set_validation_status(
-            automation_config, ValidationStatus.FAILED_TRIGGERS, err, validated_config
-        )
-        return automation_config
-
-    if CONF_CONDITIONS in validated_config:
+    for key, validator, validation_status in (
+        (
+            CONF_TRIGGERS,
+            async_validate_trigger_config,
+            ValidationStatus.FAILED_TRIGGERS,
+        ),
+        (
+            CONF_CONDITIONS,
+            async_validate_conditions_config,
+            ValidationStatus.FAILED_CONDITIONS,
+        ),
+        (
+            CONF_ACTIONS,
+            script.async_validate_actions_config,
+            ValidationStatus.FAILED_ACTIONS,
+        ),
+    ):
+        if key not in validated_config:
+            continue
+        problem = f"failed to setup {key}"
         try:
-            automation_config[CONF_CONDITIONS] = await async_validate_conditions_config(
-                hass, validated_config[CONF_CONDITIONS]
-            )
-        except (
-            probatio.Invalid,
-            HomeAssistantError,
-        ) as err:
+            automation_config[key] = await validator(hass, validated_config[key])
+        except (probatio.Invalid, HomeAssistantError) as err:
             if isinstance(err, probatio.Invalid):
-                err.prepend([CONF_CONDITIONS])
-            _log_invalid_automation(
-                err, automation_name, "failed to setup conditions", validated_config
-            )
+                err.prepend([key])
+            _log_invalid_automation(err, automation_name, problem, validated_config)
             if raise_on_errors:
                 raise
             _set_validation_status(
-                automation_config,
-                ValidationStatus.FAILED_CONDITIONS,
-                err,
-                validated_config,
+                automation_config, validation_status, _humanize(err, validated_config)
             )
             return automation_config
-
-    try:
-        automation_config[CONF_ACTIONS] = await script.async_validate_actions_config(
-            hass, validated_config[CONF_ACTIONS]
-        )
-    except (
-        probatio.Invalid,
-        HomeAssistantError,
-    ) as err:
-        if isinstance(err, probatio.Invalid):
-            err.prepend([CONF_ACTIONS])
-        _log_invalid_automation(
-            err, automation_name, "failed to setup actions", validated_config
-        )
-        if raise_on_errors:
-            raise
-        _set_validation_status(
-            automation_config, ValidationStatus.FAILED_ACTIONS, err, validated_config
-        )
-        return automation_config
 
     return automation_config
 
@@ -360,6 +333,28 @@ async def _async_collect_errors(
     return errors
 
 
+async def _async_collect_located_errors(
+    hass: HomeAssistant,
+    config: Any,
+    fail_fast_errors: list[ValidationErrorInfo],
+    submitted_keys: Collection[str],
+) -> list[ValidationErrorInfo]:
+    """Return all errors of a config item which failed validation.
+
+    The path of each error is its path in config as it was written. The schema
+    renames keys of config in place, submitted_keys are the keys it had before
+    it was validated. fail_fast_errors are the errors validation stopped at.
+    """
+    # Keep the error if validating again does not give any
+    errors = await _async_collect_errors(hass, config) or fail_fast_errors
+    return [
+        ValidationErrorInfo(info.exception, (_RENAMED_KEYS[path[0]], *path[1:]))
+        if (path := info.path) and _RENAMED_KEYS.get(path[0]) in submitted_keys
+        else info
+        for info in errors
+    ]
+
+
 async def async_validate_config_item(
     hass: HomeAssistant,
     config_key: str,
@@ -381,10 +376,7 @@ async def async_validate_config_item(
     except (probatio.Invalid, HomeAssistantError) as err:
         fail_fast_errors = list(iter_validation_errors(err))
 
-    if any(
-        old_key in submitted_keys and new_key in submitted_keys
-        for new_key, old_key in _RENAMED_KEYS.items()
-    ):
+    if _has_key_conflict(submitted_keys):
         raise ValidationErrors(fail_fast_errors)
 
     # Not done in the except block: each error would be chained to the one above
@@ -399,17 +391,17 @@ async def async_validate_config_item(
             # No config was generated, the error says why
             raise ValidationErrors(fail_fast_errors) from None
 
-    # Keep the error if validating again does not give any
-    errors = await _async_collect_errors(hass, config) or fail_fast_errors
-    located: list[ValidationErrorInfo] = []
-    for info in errors:
-        path = info.path
-        if path and _RENAMED_KEYS.get(path[0]) in submitted_keys:
-            path = (_RENAMED_KEYS[path[0]], *path[1:])
-        if uses_blueprint and not (path and path[0] in submitted_keys):
-            path = (blueprint.CONF_USE_BLUEPRINT,)
-        located.append(ValidationErrorInfo(info.exception, path))
-    raise ValidationErrors(located)
+    errors = await _async_collect_located_errors(
+        hass, config, fail_fast_errors, submitted_keys
+    )
+    if uses_blueprint:
+        errors = [
+            info
+            if info.path and info.path[0] in submitted_keys
+            else ValidationErrorInfo(info.exception, (blueprint.CONF_USE_BLUEPRINT,))
+            for info in errors
+        ]
+    raise ValidationErrors(errors)
 
 
 async def async_validate_config(hass: HomeAssistant, config: ConfigType) -> ConfigType:

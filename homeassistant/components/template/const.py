@@ -3,6 +3,7 @@
 from collections.abc import Mapping
 from dataclasses import dataclass
 from enum import StrEnum
+from typing import Any
 
 from homeassistant.const import Platform
 from homeassistant.helpers.typing import ConfigType
@@ -94,6 +95,23 @@ WEATHER_DEPRECATED_TEMPLATE_OPTIONS = {
     "wind_speed_template": "wind_speed",
 }
 
+# Attribute with a dedicated option to that option, deprecated in 2026.12
+BINARY_SENSOR_DEPRECATED_ATTRIBUTES_OPTIONS = {"device_class": "device_class"}
+EVENT_DEPRECATED_ATTRIBUTES_OPTIONS = {
+    "device_class": "device_class",
+    "event_type": "event_type",
+    "event_types": "event_types",
+}
+SENSOR_DEPRECATED_ATTRIBUTES_OPTIONS = {
+    "device_class": "device_class",
+    "state_class": "state_class",
+    "last_reset": "last_reset",
+}
+VACUUM_DEPRECATED_ATTRIBUTES_OPTIONS = {
+    "fan_speed": "fan_speed",
+    "fan_speed_list": "fan_speeds",
+}
+
 # Light option in mireds to its replacement in kelvin, deprecated in 2026.12
 LIGHT_DEPRECATED_MIREDS_OPTIONS = {
     "temperature": "temperature_kelvin",
@@ -129,8 +147,19 @@ class DeprecatedTemplateOptions:
     translation_key: str
     blueprint_translation_key: str
     breaks_in_ha_version: str
+    # The entity option holding the deprecated options, the entity config when None
+    parent_option: str | None = None
     # The options are only deprecated while the option they map to is missing
     requires_mapped_option: bool = False
+
+    def options_config(self, entity_config: ConfigType) -> Mapping[Any, Any]:
+        """Return the config holding the deprecated options of an entity."""
+        if self.parent_option is None:
+            return entity_config
+        # A parent option rendered from a single template can't hold options
+        if isinstance(options := entity_config.get(self.parent_option), dict):
+            return options
+        return {}
 
 
 WEATHER_DEPRECATED_OPTIONS = DeprecatedTemplateOptions(
@@ -139,6 +168,42 @@ WEATHER_DEPRECATED_OPTIONS = DeprecatedTemplateOptions(
     translation_key="deprecated_weather_template_options",
     blueprint_translation_key="deprecated_weather_template_options_blueprint",
     breaks_in_ha_version="2027.6.0",
+)
+
+BINARY_SENSOR_DEPRECATED_ATTRIBUTES = DeprecatedTemplateOptions(
+    platform=Platform.BINARY_SENSOR,
+    options=BINARY_SENSOR_DEPRECATED_ATTRIBUTES_OPTIONS,
+    translation_key="deprecated_binary_sensor_attributes",
+    blueprint_translation_key="deprecated_binary_sensor_attributes_blueprint",
+    breaks_in_ha_version="2027.6.0",
+    parent_option=CONF_ATTRIBUTES,
+)
+
+EVENT_DEPRECATED_ATTRIBUTES = DeprecatedTemplateOptions(
+    platform=Platform.EVENT,
+    options=EVENT_DEPRECATED_ATTRIBUTES_OPTIONS,
+    translation_key="deprecated_event_attributes",
+    blueprint_translation_key="deprecated_event_attributes_blueprint",
+    breaks_in_ha_version="2027.6.0",
+    parent_option=CONF_ATTRIBUTES,
+)
+
+SENSOR_DEPRECATED_ATTRIBUTES = DeprecatedTemplateOptions(
+    platform=Platform.SENSOR,
+    options=SENSOR_DEPRECATED_ATTRIBUTES_OPTIONS,
+    translation_key="deprecated_sensor_attributes",
+    blueprint_translation_key="deprecated_sensor_attributes_blueprint",
+    breaks_in_ha_version="2027.6.0",
+    parent_option=CONF_ATTRIBUTES,
+)
+
+VACUUM_DEPRECATED_ATTRIBUTES = DeprecatedTemplateOptions(
+    platform=Platform.VACUUM,
+    options=VACUUM_DEPRECATED_ATTRIBUTES_OPTIONS,
+    translation_key="deprecated_vacuum_attributes",
+    blueprint_translation_key="deprecated_vacuum_attributes_blueprint",
+    breaks_in_ha_version="2027.6.0",
+    parent_option=CONF_ATTRIBUTES,
 )
 
 LIGHT_DEPRECATED_OPTIONS = DeprecatedTemplateOptions(
@@ -169,6 +234,10 @@ COVER_REQUIRED_ACTIONS_OPTIONS = DeprecatedTemplateOptions(
 
 DEPRECATED_TEMPLATE_OPTIONS = (
     WEATHER_DEPRECATED_OPTIONS,
+    BINARY_SENSOR_DEPRECATED_ATTRIBUTES,
+    EVENT_DEPRECATED_ATTRIBUTES,
+    SENSOR_DEPRECATED_ATTRIBUTES,
+    VACUUM_DEPRECATED_ATTRIBUTES,
     LIGHT_DEPRECATED_OPTIONS,
     LIGHT_REQUIRED_ACTIONS_OPTIONS,
     COVER_REQUIRED_ACTIONS_OPTIONS,
