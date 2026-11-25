@@ -88,14 +88,25 @@ class MockAdsDevice:
 
 
 async def setup_ads_platform(
-    hass: HomeAssistant, platform: str, platform_config: dict[str, Any]
+    hass: HomeAssistant,
+    device: MockAdsDevice,
+    platform: str,
+    platform_config: dict[str, Any],
 ) -> bool:
-    """Set up the ADS connection and one of its entity platforms from YAML."""
+    """Set up the ADS connection and one of its entity platforms from YAML.
+
+    The entities subscribe once the setup is done, and only wait for the first
+    value of some of their subscriptions, so this also waits for every first
+    value to be delivered and handled.
+    """
     result = await async_setup_component(
         hass,
         platform,
         {DOMAIN: ADS_CONFIG, platform: {"platform": DOMAIN, **platform_config}},
     )
+    await hass.async_block_till_done()
+    for delivery in device.deliveries:
+        await hass.async_add_executor_job(delivery.join)
     await hass.async_block_till_done()
     return result
 

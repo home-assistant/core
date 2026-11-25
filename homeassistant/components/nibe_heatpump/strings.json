@@ -18,7 +18,8 @@
         },
         "data_description": {
           "modbus_unit": "Unit identification for your heat pump. Can usually be left at 0.",
-          "modbus_url": "Modbus URL that describes the connection to your heat pump or MODBUS40 unit. It should be in the form:\n - `{tcp}` for Modbus TCP connection\n - `{serial}` for a local Modbus RTU connection\n - `{rfc2217}` for a remote Telnet-based Modbus RTU connection."
+          "modbus_url": "Modbus URL that describes the connection to your heat pump or MODBUS40 unit. It should be in the form:\n - `{tcp}` for Modbus TCP connection\n - `{serial}` for a local Modbus RTU connection\n - `{rfc2217}` for a remote Telnet-based Modbus RTU connection.",
+          "model": "The model of your heat pump. It decides which values the integration can read and set."
         }
       },
       "nibegw": {
@@ -32,6 +33,7 @@
         "data_description": {
           "ip_address": "The address of the NibeGW unit. The device should have been configured with a static address.",
           "listening_port": "The local port on this system, that the NibeGW unit is configured to send data to.",
+          "model": "[%key:component::nibe_heatpump::config::step::modbus::data_description::model%]",
           "remote_read_port": "The port the NibeGW unit is listening for read requests on.",
           "remote_write_port": "The port the NibeGW unit is listening for write requests on."
         },

@@ -104,6 +104,9 @@
       "pause_container": {
         "name": "Pause container"
       },
+      "pull_image": {
+        "name": "Pull image"
+      },
       "recreate_container": {
         "name": "Recreate container"
       },
@@ -155,6 +158,9 @@
       },
       "container_disk_usage_total_size": {
         "name": "Container disk usage total size"
+      },
+      "container_exit_code": {
+        "name": "Last exit code"
       },
       "container_health_state": {
         "name": "Health",
@@ -287,6 +293,12 @@
   "exceptions": {
     "cannot_connect": {
       "message": "An error occurred while trying to connect to the Portainer instance."
+    },
+    "image_pull_failed": {
+      "message": "Failed to pull image {image}. If the image is in a private registry, recreate the container instead."
+    },
+    "image_pull_timeout": {
+      "message": "Pulling the image took too long."
     },
     "instance_id_failed": {
       "message": "Failed to fetch the Portainer instance ID."

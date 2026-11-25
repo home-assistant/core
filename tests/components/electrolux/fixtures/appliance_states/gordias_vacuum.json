@@ -1,0 +1,71 @@
+{
+  "applianceId": "900402278332000201139298",
+  "connectionState": "Connected",
+  "properties": {
+    "reported": {
+      "TimeZoneDaylightRule": ":GMT+1:GMT+2:0100:(1900)040102-0:110103-0",
+      "TimeZoneStandardName": "Europe/Stockholm",
+      "VmNo_MCU": "VM231_A_03.07.53_GORDIAS",
+      "VmNo_NIU": "VM225_A_04.49.02_GORDIAS",
+      "applianceInfo": {
+        "capabilityHash": "317565d88ba33b83620f66e666cbec0032e6ad9a0520f04ea9ac5c61a23ef8f9"
+      },
+      "batteryStatus": 100,
+      "capabilities": {},
+      "chargingStatus": "fullyCharged",
+      "cleaningMode": "notSet",
+      "dataModelVersion": "1.0.1",
+      "dndEnabled": false,
+      "dndEndTime": 1440,
+      "dndStartTime": 0,
+      "dockType": "charger",
+      "faultCode": 2105,
+      "inCharger": true,
+      "logE": 1340,
+      "logW": 753,
+      "mopInstalled": false,
+      "niuStatus": "available",
+      "roomSelected": false,
+      "selectedRoomId": 0,
+      "soundPackFile": "en_2",
+      "state": "idle",
+      "tasks": {},
+      "upgradeProgress": 0,
+      "upgradeState": "idle",
+      "vacuumMode": "quiet",
+      "voiceVolume": 6,
+      "waterPumpRate": "off",
+      "mainBrushUsage": 3,
+      "cleanTime": 12,
+      "dustboxUsage": 183,
+      "mopUsage": 4,
+      "mapListInfo": [
+        {
+          "currentMap": true,
+          "mapId": 1761859100,
+          "mapName": "Map1"
+        },
+        {
+          "currentMap": false,
+          "mapId": 1762351298,
+          "mapName": "Map1"
+        },
+        {
+          "currentMap": false,
+          "mapId": 1784726809,
+          "mapName": "Map2"
+        },
+        {
+          "currentMap": false,
+          "mapId": 1785767235,
+          "mapName": "Map3"
+        }
+      ],
+      "sideBrushUsage": 0,
+      "dustbagUsage": 0,
+      "cleanSize": 808,
+      "filterUsage": 3
+    }
+  },
+  "status": "enabled"
+}

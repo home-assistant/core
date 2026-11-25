@@ -789,7 +789,7 @@ async def test_alarms_multiple_households(
         await hass.services.async_call(
             SWITCH_DOMAIN,
             SwitchService.TOGGLE,
-            {ATTR_ENTITY_ID: switch},
+            {TargetKey.ENTITY_ID: switch},
             blocking=True,
         )
         assert alarm_clock_mock.UpdateAlarm.call_count == 2
