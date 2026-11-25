@@ -1,24 +1,49 @@
 """The tests for lastfm."""
 
+from threading import Event
 from typing import Any
 from unittest.mock import patch
 
-from pylast import PyLastError, Track
+from pylast import PyLastError, Track, WSError
 
-from homeassistant.components.lastfm.const import CONF_MAIN_USER, CONF_USERS
+from homeassistant.components.lastfm.const import (
+    CONF_API_SECRET,
+    CONF_MAIN_USER,
+    CONF_SESSION_KEY,
+    CONF_USERS,
+    DOMAIN as DOMAIN,
+)
 from homeassistant.const import CONF_API_KEY
 from homeassistant.helpers.typing import Undefined
 
 API_KEY = "asdasdasdasdasd"
+API_SECRET = "testapisecret"
+SESSION_KEY = "testsessionkey"
+NEW_SESSION_KEY = "newtestsessionkey"
+AUTH_TOKEN = "testauthtoken"
+AUTH_URL = f"https://www.last.fm/api/auth/?api_key={API_KEY}&token={AUTH_TOKEN}"
 USERNAME_1 = "testaccount1"
 USERNAME_2 = "testaccount2"
+LOGIN_REQUIRED_ERROR = WSError("network", "17", "Login: User required to be logged in")
 
 CONF_DATA = {
     CONF_API_KEY: API_KEY,
     CONF_MAIN_USER: USERNAME_1,
     CONF_USERS: [USERNAME_1, USERNAME_2],
 }
+CONF_DATA_WITH_SESSION_KEY = {
+    CONF_API_KEY: API_KEY,
+    CONF_API_SECRET: API_SECRET,
+    CONF_MAIN_USER: USERNAME_1,
+    CONF_SESSION_KEY: SESSION_KEY,
+    CONF_USERS: [USERNAME_1, USERNAME_2],
+}
 CONF_USER_DATA = {CONF_API_KEY: API_KEY, CONF_MAIN_USER: USERNAME_1}
+CONF_USER_DATA_WITH_SECRET = {
+    CONF_API_KEY: API_KEY,
+    CONF_API_SECRET: API_SECRET,
+    CONF_MAIN_USER: USERNAME_1,
+}
 CONF_FRIENDS_DATA = {CONF_USERS: [USERNAME_2]}
 
 
@@ -94,8 +119,6 @@ class MockUser:
 
     def get_now_playing(self) -> Track:
         """Get mock now playing."""
-        if self._recent_tracks_error:
-            raise self._recent_tracks_error
         return self._now_playing_result
 
     def get_friends(self) -> list[Any]:
@@ -103,6 +126,63 @@ class MockUser:
         if len(self._friends) == 0:
             raise PyLastError("network", "status", "Page not found")
         return self._friends
+
+
+class BlockingUser(MockUser):
+    """Pause recent-tracks validation while another flow changes the entry."""
+
+    def __init__(self, thrown_error: Exception | None = None) -> None:
+        """Initialize validation events."""
+        super().__init__(thrown_error=thrown_error)
+        self.validation_started = Event()
+        self.validation_release = Event()
+
+    def get_recent_tracks(self, limit: int) -> list[MockLastTrack]:
+        """Wait until reconfiguration has finished before returning tracks."""
+        self.validation_started.set()
+        assert self.validation_release.wait(5)
+        return super().get_recent_tracks(limit)
+
+
+class BlockingAccountUser(BlockingUser):
+    """Pause account validation during reconfiguration."""
+
+    def get_playcount(self) -> int:
+        """Wait until the entry credentials change before finishing validation."""
+        self.validation_started.set()
+        assert self.validation_release.wait(5)
+        return super().get_playcount()
+
+
+class MockSessionKeyGenerator:
+    """Mock SessionKeyGenerator object for pylast."""
+
+    def __init__(
+        self,
+        web_auth_url_error: Exception | None = None,
+        session_key_error: Exception | None = None,
+        session_key: str = SESSION_KEY,
+        session_username: str = USERNAME_1,
+    ) -> None:
+        """Initialize the mock."""
+        self.web_auth_url_error = web_auth_url_error
+        self.session_key_error = session_key_error
+        self.session_key = session_key
+        self.session_username = session_username
+
+    def get_web_auth_url(self) -> str:
+        """Get mock web auth URL."""
+        if self.web_auth_url_error:
+            raise self.web_auth_url_error
+        return AUTH_URL
+
+    def get_web_auth_session_key_username(
+        self, url: str, token: str = ""
+    ) -> tuple[str, str]:
+        """Get mock session key and username."""
+        if self.session_key_error:
+            raise self.session_key_error
+        return self.session_key, self.session_username
 
 
 def patch_user(user: MockUser) -> MockUser:

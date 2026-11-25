@@ -35,7 +35,7 @@ workflows:
         - 'actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9'
         - 'actions/cache@v6.1.0'
         - 'actions/checkout@v7.0.1'
-        - 'actions/dependency-review-action@v5.0.0'
+        - 'actions/dependency-review-action@v5.0.1'
         - 'actions/download-artifact@v8.0.2'
         - 'actions/upload-artifact@v7.0.2'
         - 'astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2'
@@ -133,9 +133,9 @@ dependencies:
         commit: 'sha1-64ab729a6294000f5aa4a4bc0b73d1f32bc45510'
         owner_id: 44036562
         repo_id: 642580244
-    'actions/dependency-review-action@v5.0.0':
-        ref: 'v5.0.0'
-        commit: 'sha1-a1d282b36b6f3519aa1f3fc636f609c47dddb294'
+    'actions/dependency-review-action@v5.0.1':
+        ref: 'v5.0.1'
+        commit: 'sha1-bbc44d14a204704ccc493733616cd1e93a0321ec'
         owner_id: 44036562
         repo_id: 476372928
     'actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333':

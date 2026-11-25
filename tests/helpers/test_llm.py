@@ -1880,3 +1880,36 @@ async def test_deprecated_async_render_no_api_prompt(
         "The deprecated function async_render_no_api_prompt was called. It will be "
         "removed in HA Core 2027.2. Use an empty string instead"
     ) in caplog.text
+
+
+@pytest.mark.parametrize(
+    ("pairs", "expected"),
+    [
+        pytest.param([], {}, id="empty"),
+        pytest.param(
+            [("hue", "01aa1234"), ("zha", "01bb5678")],
+            {"01aa1234": "hue:1234", "01bb5678": "zha:5678"},
+            id="unique_suffixes",
+        ),
+        pytest.param(
+            [("hue", "01aa1234"), ("hue", "01bb1234")],
+            {"01aa1234": "hue:a1234", "01bb1234": "hue:b1234"},
+            id="shared_suffix_expands",
+        ),
+        pytest.param(
+            [("hue", "01aa1234"), ("zha", "01bb1234")],
+            {"01aa1234": "hue:1234", "01bb1234": "zha:1234"},
+            id="shared_suffix_other_prefix",
+        ),
+        pytest.param(
+            [("hue", "01aa1234"), ("hue", "01aa1234"), ("hue", "01bb5678")],
+            {"01aa1234": "hue:1234", "01bb5678": "hue:5678"},
+            id="duplicate_id",
+        ),
+    ],
+)
+def test_format_short_ids(
+    pairs: list[tuple[str, str]], expected: dict[str, str]
+) -> None:
+    """Test full IDs get the shortest suffix that is unique for their prefix."""
+    assert llm.format_short_ids(pairs) == expected
