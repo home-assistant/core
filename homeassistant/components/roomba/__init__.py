@@ -59,6 +59,7 @@ async def async_setup_entry(
     connection = RoombaConnection(
         hass,
         roomba,
+        config_entry.data[CONF_HOST],
         continuous=config_entry.options.get(CONF_CONTINUOUS, DEFAULT_CONTINUOUS),
         polling=not config_entry.pref_disable_polling,
         connect=async_connect_or_timeout,

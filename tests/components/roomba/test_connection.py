@@ -264,3 +264,27 @@ async def test_refresh_does_not_cut_telemetry_short(
 
     await _advance(hass, freezer, timedelta(seconds=TELEMETRY_SETTLE_SECONDS))
     assert not periodic_roomba.connected
+
+
+async def test_unreachable_is_logged_once(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_config_entry: MockConfigEntry,
+    periodic_roomba: AsyncMock,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test losing and regaining the robot is logged once each."""
+    await _setup(hass, mock_config_entry, continuous=False)
+    await _advance(hass, freezer, timedelta(seconds=TELEMETRY_SETTLE_SECONDS))
+
+    connect = periodic_roomba.connect.side_effect
+    periodic_roomba.connect.side_effect = RoombaConnectionError
+    for _ in range(3):
+        await _advance(hass, freezer, PERIODIC_UPDATE_INTERVAL)
+    assert caplog.text.count("is unreachable") == 1
+
+    periodic_roomba.connect.side_effect = connect
+    for _ in range(2):
+        await _advance(hass, freezer, PERIODIC_UPDATE_INTERVAL)
+        await _advance(hass, freezer, timedelta(seconds=TELEMETRY_SETTLE_SECONDS))
+    assert caplog.text.count("is reachable again") == 1

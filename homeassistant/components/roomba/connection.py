@@ -41,6 +41,7 @@ class RoombaConnection:
         self,
         hass: HomeAssistant,
         roomba: RoombaClient,
+        host: str,
         *,
         continuous: bool,
         polling: bool,
@@ -50,6 +51,7 @@ class RoombaConnection:
         """Initialize the connection handler."""
         self.hass = hass
         self.roomba = roomba
+        self.host = host
         self.continuous = continuous
         self.polling = polling
         self._connect = connect
@@ -59,6 +61,7 @@ class RoombaConnection:
         self._unsub_interval: CALLBACK_TYPE | None = None
         self._unsub_release: CALLBACK_TYPE | None = None
         self._closed = False
+        self._unreachable = False
 
     @property
     def robot_active(self) -> bool:
@@ -117,8 +120,18 @@ class RoombaConnection:
                 try:
                     await self._connect(self.hass, self.roomba)
                 except HomeAssistantError as err:
-                    _LOGGER.debug("Refresh failed, retrying later: %s", err)
+                    if not self._unreachable:
+                        self._unreachable = True
+                        _LOGGER.info(
+                            "Roomba at %s is unreachable, showing its last known"
+                            " state until it responds again: %s",
+                            self.host,
+                            err,
+                        )
                     return
+                if self._unreachable:
+                    self._unreachable = False
+                    _LOGGER.info("Roomba at %s is reachable again", self.host)
                 connected_now = True
         if connected_now:
             # Give the robot time to publish its full state.
