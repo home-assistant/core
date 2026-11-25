@@ -181,6 +181,9 @@
     },
     "top": {
       "name": "Top"
+    },
+    "valve": {
+      "name": "Valve {index}"
     }
   },
   "device_automation": {
@@ -1214,12 +1217,6 @@
       "valve_countdown": {
         "name": "Irrigation time"
       },
-      "valve_countdown_1": {
-        "name": "Irrigation time 1"
-      },
-      "valve_countdown_2": {
-        "name": "Irrigation time 2"
-      },
       "valve_duration": {
         "name": "Irrigation duration"
       },
@@ -1750,14 +1747,8 @@
       "internal_temp_monitor": {
         "name": "Internal temperature"
       },
-      "irriation_duration_2": {
-        "name": "Irrigation duration 2"
-      },
       "irrigation_duration": {
         "name": "Last irrigation duration"
-      },
-      "irrigation_duration_1": {
-        "name": "Irrigation duration 1"
       },
       "irrigation_end_time": {
         "name": "Irrigation end time"
@@ -2051,12 +2042,6 @@
       },
       "valve_status": {
         "name": "Valve status"
-      },
-      "valve_status_1": {
-        "name": "Status 1"
-      },
-      "valve_status_2": {
-        "name": "Status 2"
       },
       "voc_index": {
         "name": "VOC index"

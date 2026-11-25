@@ -191,6 +191,7 @@ async def test_not_allowlisted(
         ("right", None, "Right"),
         ("top", None, "Top"),
         ("bottom", None, "Bottom"),
+        ("valve", {"index": "2"}, "Valve 2"),
         # A custom quirk with a new translation key uses the fallback name
         ("custom_key", None, "Fallback"),
         (None, None, "Fallback"),
