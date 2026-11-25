@@ -159,6 +159,22 @@ class Light(HomeAccessory):
             )
             # Ensure min is less than max
             self.min_mireds, self.max_mireds = get_min_max(min_mireds, max_mireds)
+            # The override only changes what HomeKit advertises. Mixing the
+            # white channels still has to use the range the entity reports.
+            self._entity_min_mireds, self._entity_max_mireds = get_min_max(
+                color_temperature_kelvin_to_mired(
+                    attributes.get(
+                        LightEntityCapabilityAttribute.MAX_COLOR_TEMP_KELVIN,
+                        DEFAULT_MAX_COLOR_TEMP,
+                    )
+                ),
+                color_temperature_kelvin_to_mired(
+                    attributes.get(
+                        LightEntityCapabilityAttribute.MIN_COLOR_TEMP_KELVIN,
+                        DEFAULT_MIN_COLOR_TEMP,
+                    )
+                ),
+            )
             if not self.color_temp_supported and not self.rgbww_supported:
                 self.max_mireds = self.min_mireds
             self.char_color_temp = serv_light.configure_char(
@@ -332,8 +348,8 @@ class Light(HomeAccessory):
                 params[LightServiceArgument.RGBWW_COLOR] = color_temperature_to_rgbww(
                     color_temperature_mired_to_kelvin(temp),
                     bright_val,
-                    color_temperature_mired_to_kelvin(self.max_mireds),
-                    color_temperature_mired_to_kelvin(self.min_mireds),
+                    color_temperature_mired_to_kelvin(self._entity_max_mireds),
+                    color_temperature_mired_to_kelvin(self._entity_min_mireds),
                 )
             elif self.rgbw_supported:
                 params[LightServiceArgument.RGBW_COLOR] = (*(0,) * 3, bright_val)

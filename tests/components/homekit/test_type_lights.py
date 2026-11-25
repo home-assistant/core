@@ -13,6 +13,7 @@ from homeassistant.components.homekit.const import (
     CONF_ADAPTIVE_LIGHTING,
     CONF_FLOOR_RGB_COLOR,
     CONF_MAX_COLOR_TEMP_KELVIN,
+    CONF_MIN_COLOR_TEMP_KELVIN,
     CONF_RGB_BELOW_KELVIN,
     CONF_WARM_RGB_COLOR,
     PROP_MAX_VALUE,
@@ -53,6 +54,7 @@ from homeassistant.const import (
 from homeassistant.core import CoreState, Event, HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util import dt as dt_util
+from homeassistant.util.color import color_temperature_to_rgbww
 
 
 async def _wait_for_light_coalesce(hass: HomeAssistant) -> None:
@@ -461,6 +463,60 @@ async def test_max_color_temp_kelvin_override_rounds_inward(
     # 1e6 / 6500 = 153.8 mireds: floor would advertise 153 (6535 K, above the
     # configured ceiling), ceil advertises 154 (6493 K).
     assert acc.char_color_temp.properties[PROP_MIN_VALUE] == 154
+
+
+async def test_rgbww_mixing_uses_the_range_the_entity_reports(
+    hass: HomeAssistant, hk_driver
+) -> None:
+    """Narrowing the advertised range does not move the white channel endpoints."""
+    entity_id = "light.demo"
+    hass.states.async_set(
+        entity_id,
+        STATE_ON,
+        {
+            LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: [ColorMode.RGBWW],
+            LightEntityCapabilityAttribute.MIN_COLOR_TEMP_KELVIN: 2000,
+            LightEntityCapabilityAttribute.MAX_COLOR_TEMP_KELVIN: 6500,
+            LightEntityStateAttribute.BRIGHTNESS: 255,
+        },
+    )
+    await hass.async_block_till_done()
+    acc = Light(
+        hass,
+        hk_driver,
+        "Light",
+        entity_id,
+        1,
+        {CONF_MIN_COLOR_TEMP_KELVIN: 2700},
+    )
+    hk_driver.add_accessory(acc)
+    acc.run()
+    await hass.async_block_till_done()
+    call_turn_on = async_mock_service(hass, LIGHT_DOMAIN, "turn_on")
+
+    # HomeKit only sees the 2700 K override as the warmest end.
+    assert acc.char_color_temp.properties[PROP_MAX_VALUE] == 370
+
+    char_color_temp_iid = acc.char_color_temp.to_HAP()[HAP_REPR_IID]
+    hk_driver.set_characteristics(
+        {
+            HAP_REPR_CHARS: [
+                {
+                    HAP_REPR_AID: acc.aid,
+                    HAP_REPR_IID: char_color_temp_iid,
+                    HAP_REPR_VALUE: 370,
+                }
+            ]
+        },
+        "mock_addr",
+    )
+    await _wait_for_light_coalesce(hass)
+
+    # The bulb is asked for 2702 K inside its real 2000-6500 K range, not for
+    # the full warm channel of a range that starts at 2700 K.
+    assert call_turn_on[0].data[LightServiceArgument.RGBWW_COLOR] == (
+        color_temperature_to_rgbww(2702, 255, 2000, 6500)
+    )
 
 
 async def test_colour_only_write_turns_on_a_light_without_adaptive(
