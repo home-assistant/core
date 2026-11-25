@@ -40,8 +40,7 @@ DESCRIPTIONS: list[WatergateBinarySensorEntityDescription] = [
     ),
     WatergateBinarySensorEntityDescription(
         value_fn=lambda data: (
-            # Despite its type, the networking is None after an empty response
-            data.networking.mqtt_connected if data.networking else None  # type: ignore[truthy-bool]
+            data.networking.mqtt_connected if data.networking else None
         ),
         translation_key="mqtt_connected",
         key="mqtt_connected",
@@ -51,8 +50,7 @@ DESCRIPTIONS: list[WatergateBinarySensorEntityDescription] = [
     ),
     WatergateBinarySensorEntityDescription(
         value_fn=lambda data: (
-            # Despite its type, the networking is None after an empty response
-            data.networking.wifi_connected if data.networking else None  # type: ignore[truthy-bool]
+            data.networking.wifi_connected if data.networking else None
         ),
         translation_key="wifi_connected",
         key="wifi_connected",
