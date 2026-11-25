@@ -1823,6 +1823,191 @@ class DeleteLabelTool(Tool):
         return ToolResult(data={"result": {"label_id": label_id}})
 
 
+def _get_area_entry(hass: HomeAssistant, area_id: str) -> ar.AreaEntry:
+    """Return the registry entry of an area."""
+    if (area := ar.async_get(hass).async_get_area(area_id)) is None:
+        raise HomeAssistantError(f"Area '{area_id}' not found.")
+    return area
+
+
+def _format_area_settings(area: ar.AreaEntry) -> JsonObjectType:
+    """Format the settings of an area for LLM consumption."""
+    return {
+        "area_id": area.id,
+        "name": area.name,
+        "aliases": list[JsonValueType](sorted(area.aliases)),
+        "floor_id": area.floor_id,
+        "icon": area.icon,
+        "labels": list[JsonValueType](sorted(area.labels)),
+        "temperature_entity_id": area.temperature_entity_id,
+        "humidity_entity_id": area.humidity_entity_id,
+    }
+
+
+def _prepare_area_settings(hass: HomeAssistant, settings: dict[str, Any]) -> None:
+    """Check the floor and labels of the settings and convert the lists to sets."""
+    if (floor_id := settings.get("floor_id")) and fr.async_get(hass).async_get_floor(
+        floor_id
+    ) is None:
+        raise HomeAssistantError(f"Floor '{floor_id}' not found.")
+    if "labels" in settings:
+        settings["labels"] = set(settings["labels"])
+        if missing := lr.async_get_missing_label_ids(hass, settings["labels"]):
+            raise HomeAssistantError(f"Labels not found: {', '.join(sorted(missing))}")
+    if "aliases" in settings:
+        settings["aliases"] = set(settings["aliases"])
+
+
+_AREA_SETTINGS: VolDictType = {
+    probatio.Optional(
+        "aliases",
+        description=(
+            "Other names that voice assistants know the area by. This replaces all "
+            "aliases."
+        ),
+    ): [_NON_EMPTY_STRING],
+    probatio.Optional(
+        "floor_id", description="The floor_id. null removes the area from its floor."
+    ): _NULLABLE_STRING,
+    probatio.Optional(
+        "icon", description="The icon, like 'mdi:sofa'. null removes the icon."
+    ): probatio.Any(None, probatio.All(str, cv.icon)),
+    probatio.Optional(
+        "labels", description="The label_ids. This replaces all labels."
+    ): [_NON_EMPTY_STRING],
+    probatio.Optional(
+        "temperature_entity_id",
+        description=(
+            "The sensor that gives the temperature of the area. null removes it."
+        ),
+    ): _NULLABLE_STRING,
+    probatio.Optional(
+        "humidity_entity_id",
+        description="The sensor that gives the humidity of the area. null removes it.",
+    ): _NULLABLE_STRING,
+}
+
+
+class GetAreaSettingsTool(Tool):
+    """LLM Tool to get the settings of an area."""
+
+    name = "config__get_area_settings"
+    title = "Get area settings"
+    description = (
+        "Get the settings of the area with the given area_id. Use search__search "
+        "to find the area_id."
+    )
+    annotations = ToolAnnotations(
+        read_only=True, destructive=False, idempotent=True, open_world=False
+    )
+    integration = DOMAIN
+    parameters = probatio.Schema({probatio.Required("area_id"): _NON_EMPTY_STRING})
+
+    @override
+    async def async_call(
+        self, hass: HomeAssistant, tool_input: ToolInput, llm_context: LLMContext
+    ) -> ToolResult:
+        """Return the settings of the area."""
+        args = self.parameters(tool_input.tool_args)
+        area = _get_area_entry(hass, args["area_id"])
+        return ToolResult(data={"result": _format_area_settings(area)})
+
+
+class UpdateAreaSettingsTool(Tool):
+    """LLM Tool to update the settings of an area."""
+
+    name = "config__update_area_settings"
+    title = "Update area settings"
+    description = (
+        "Update the settings of the area with the given area_id. Only the given "
+        "settings change. Use search__search to find area_ids and label_ids. "
+        "Returns the new settings."
+    )
+    annotations = ToolAnnotations(
+        read_only=False, destructive=True, idempotent=True, open_world=False
+    )
+    integration = DOMAIN
+    parameters = probatio.Schema(
+        {
+            probatio.Required("area_id"): _NON_EMPTY_STRING,
+            probatio.Optional("name"): _NON_EMPTY_STRING,
+            **_AREA_SETTINGS,
+        }
+    )
+
+    @override
+    async def async_call(
+        self, hass: HomeAssistant, tool_input: ToolInput, llm_context: LLMContext
+    ) -> ToolResult:
+        """Update the settings of the area and return the new settings."""
+        settings = self.parameters(tool_input.tool_args)
+        area_id = settings.pop("area_id")
+        _get_area_entry(hass, area_id)
+        _prepare_area_settings(hass, settings)
+        try:
+            area = ar.async_get(hass).async_update(area_id, **settings)
+        except ValueError as err:
+            raise HomeAssistantError(str(err)) from err
+        return ToolResult(data={"result": _format_area_settings(area)})
+
+
+class CreateAreaTool(Tool):
+    """LLM Tool to create an area."""
+
+    name = "config__create_area"
+    title = "Create area"
+    description = (
+        "Create an area, like a room. Use search__search to find label_ids. "
+        "Returns the settings of the new area."
+    )
+    annotations = ToolAnnotations(
+        read_only=False, destructive=False, idempotent=False, open_world=False
+    )
+    integration = DOMAIN
+    parameters = probatio.Schema(
+        {probatio.Required("name"): _NON_EMPTY_STRING, **_AREA_SETTINGS}
+    )
+
+    @override
+    async def async_call(
+        self, hass: HomeAssistant, tool_input: ToolInput, llm_context: LLMContext
+    ) -> ToolResult:
+        """Create the area and return its settings."""
+        settings = self.parameters(tool_input.tool_args)
+        _prepare_area_settings(hass, settings)
+        try:
+            area = ar.async_get(hass).async_create(**settings)
+        except ValueError as err:
+            raise HomeAssistantError(str(err)) from err
+        return ToolResult(data={"result": _format_area_settings(area)})
+
+
+class DeleteAreaTool(Tool):
+    """LLM Tool to delete an area."""
+
+    name = "config__delete_area"
+    title = "Delete area"
+    description = (
+        "Delete the area with the given area_id. Its devices and entities stay, "
+        "without an area. An entity without an area uses the area of its device."
+    )
+    annotations = ToolAnnotations(
+        read_only=False, destructive=True, idempotent=True, open_world=False
+    )
+    integration = DOMAIN
+    parameters = probatio.Schema({probatio.Required("area_id"): _NON_EMPTY_STRING})
+
+    @override
+    async def async_call(
+        self, hass: HomeAssistant, tool_input: ToolInput, llm_context: LLMContext
+    ) -> ToolResult:
+        """Delete the area."""
+        area_id = self.parameters(tool_input.tool_args)["area_id"]
+        _get_area_entry(hass, area_id)
+        ar.async_get(hass).async_delete(area_id)
+        return ToolResult(data={"result": {"area_id": area_id}})
+
+
 @callback
 def async_get_tools(
     hass: HomeAssistant, llm_context: LLMContext, api_id: str
@@ -1852,5 +2037,9 @@ def async_get_tools(
             UpdateLabelSettingsTool(),
             CreateLabelTool(),
             DeleteLabelTool(),
+            GetAreaSettingsTool(),
+            UpdateAreaSettingsTool(),
+            CreateAreaTool(),
+            DeleteAreaTool(),
         ]
     )
