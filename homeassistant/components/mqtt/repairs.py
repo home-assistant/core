@@ -195,16 +195,19 @@ async def async_setup_client_certificate_check(
         else:
             placeholders["client_cert_file"] = client_cert_file
             result = await hass.async_add_executor_job(_check_installed_certificate)
-            if isinstance(result, tuple):
-                issue_id, problem_placeholders = result
-                placeholders |= problem_placeholders
-            elif (
-                result.not_valid_after_utc > loaded_expiry
+            # An expired certificate takes precedence over invalid files,
+            # so an ignored file issue cannot hide it
+            if (
+                not isinstance(result, tuple)
+                and result.not_valid_after_utc > max(loaded_expiry, now)
                 and result.not_valid_before_utc <= now
             ):
                 issue_id = ISSUE_CLIENT_CERTIFICATE_RENEWED
             elif expired:
                 issue_id = ISSUE_CLIENT_CERTIFICATE_EXPIRED
+            elif isinstance(result, tuple):
+                issue_id, problem_placeholders = result
+                placeholders |= problem_placeholders
             else:
                 issue_id = "client_certificate_file_expiring"
 

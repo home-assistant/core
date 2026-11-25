@@ -701,6 +701,11 @@ def _install_invalid_key_file(cert_dir: Path, expiry: datetime) -> None:
     _install_invalid_key(cert_dir)
 
 
+def _install_soon_expired_replacement(cert_dir: Path, expiry: datetime) -> None:
+    """Install a replacement certificate that expires 5 days after the loaded one."""
+    _install_certificate(cert_dir, expiry + timedelta(days=5))
+
+
 @pytest.mark.parametrize(
     ("first_change", "first_issue_id", "second_change", "days", "second_issue_id"),
     [
@@ -735,6 +740,22 @@ def _install_invalid_key_file(cert_dir: Path, expiry: datetime) -> None:
             1,
             "client_certificate_file_expiring",
             id="invalid_to_expiring",
+        ),
+        pytest.param(
+            _install_invalid_key_file,
+            "client_key_file_invalid",
+            _keep_certificate,
+            10,
+            "client_certificate_expired",
+            id="invalid_to_expired",
+        ),
+        pytest.param(
+            _keep_certificate,
+            "client_certificate_file_expiring",
+            _install_soon_expired_replacement,
+            20,
+            "client_certificate_expired",
+            id="expiring_to_expired_with_expired_replacement",
         ),
     ],
 )
