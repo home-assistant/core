@@ -125,6 +125,14 @@ class CanarySensor(CoordinatorEntity[CanaryDataUpdateCoordinator], SensorEntity)
         self._attr_icon = sensor_type[2]
 
     @property
+    @override
+    def available(self) -> bool:
+        """Return if the device is online."""
+        return (
+            super().available and self._device_id in self.coordinator.data["readings"]
+        )
+
+    @property
     def reading(self) -> float | None:
         """Return the device sensor reading."""
         readings = self.coordinator.data["readings"][self._device_id]
