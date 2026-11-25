@@ -263,14 +263,58 @@ async def test_yaml_import_device_offline(
 
     client.read_state.side_effect = None
     client.read_state.return_value = (pyads.ADSSTATE_RUN, 0)
+    # The entry retries first; the platform then retries on its own timer.
     async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=5))
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
+    assert entry.state is ConfigEntryState.LOADED
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=10))
+    await hass.async_block_till_done(wait_background_tasks=True)
     for delivery in mock_ads_device.deliveries:
         await hass.async_add_executor_job(delivery.join)
     await hass.async_block_till_done()
 
-    assert entry.state is ConfigEntryState.LOADED
     assert hass.states.get(SWITCH_ID).state == STATE_ON
+
+
+async def test_setup_device_unreachable(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_pyads_connection: MagicMock,
+    mock_create_connection: MagicMock,
+) -> None:
+    """Test an unreachable device fails setup at once, without pyads.
+
+    The AMS router would otherwise keep retrying the TCP connection for
+    minutes before the first request returned.
+    """
+    mock_create_connection.side_effect = TimeoutError("timed out")
+    mock_config_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+    mock_create_connection.assert_called_once_with((IP_ADDRESS, 48898), timeout=5)
+    mock_pyads_connection.assert_not_called()
+
+
+async def test_setup_derives_address_from_net_id(
+    hass: HomeAssistant,
+    mock_pyads_connection: MagicMock,
+    mock_create_connection: MagicMock,
+) -> None:
+    """Test the reachability check uses the address pyads derives from the NetID."""
+    entry = MockConfigEntry(
+        domain=DOMAIN, title=AMS_NET_ID, data={"device": AMS_NET_ID, "port": PORT}
+    )
+    entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.LOADED
+    host = ".".join(AMS_NET_ID.split(".")[:4])
+    mock_create_connection.assert_called_once_with((host, 48898), timeout=5)
 
 
 async def test_setup_and_unload(
