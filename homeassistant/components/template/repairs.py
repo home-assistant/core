@@ -100,7 +100,7 @@ def format_deprecated_options(
     changes: list[str] = []
     for key in deprecated:
         change = deprecation.describe_option(key)
-        if (location := locations.get(key)) is not None:
+        if (location := locations.get(deprecation.option_name(key))) is not None:
             path = os.path.relpath(location[0], hass.config.config_dir)
             change = f"`{path}:{location[1]}`: {change}"
         changes.append(f"- {change}")

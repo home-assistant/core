@@ -1773,6 +1773,45 @@ async def test_incomplete_fan_speed_options_issue_file_and_line(
     assert get_incomplete_fan_speed_options_issues(issue_registry) == []
 
 
+async def test_nested_and_top_level_option_locations(
+    hass: HomeAssistant, issue_registry: ir.IssueRegistry, tmp_path: Path
+) -> None:
+    """Test an attribute and an option with the same name keep their own line."""
+    hass.config.config_dir = str(tmp_path)
+    yaml_path = tmp_path / "configuration.yaml"
+    await hass.async_add_executor_job(
+        yaml_path.write_text,
+        """\
+template:
+  - vacuum:
+      - name: Test
+        start: []
+        fan_speed: "{{ 'high' }}"
+        attributes:
+          fan_speed: "{{ 'high' }}"
+""",
+    )
+    config = await hass.async_add_executor_job(load_yaml_dict, yaml_path)
+    assert await async_setup_component(hass, template.DOMAIN, config)
+    await hass.async_block_till_done()
+
+    issues = get_incomplete_fan_speed_options_issues(issue_registry)
+    assert len(issues) == 1
+    assert issues[0].translation_placeholders == {
+        "identifier": "name: Test",
+        "options": (
+            "- `configuration.yaml:5`: `fan_speed` requires `fan_speeds`"
+            " and `set_fan_speed`"
+        ),
+    }
+    issues = get_deprecated_attributes_issues(issue_registry)
+    assert len(issues) == 1
+    assert issues[0].translation_placeholders == {
+        "identifier": "name: Test",
+        "options": "- `configuration.yaml:7`: `attributes: fan_speed` → `fan_speed`",
+    }
+
+
 async def test_incomplete_fan_speed_options_issue_blueprint(
     hass: HomeAssistant, issue_registry: ir.IssueRegistry
 ) -> None:
