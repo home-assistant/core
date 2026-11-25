@@ -1,8 +1,9 @@
 """Helpers functions for the Workday component."""
 
+from collections.abc import Mapping
 from datetime import date, timedelta
 from functools import partial
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from holidays import PUBLIC, DateLike, HolidayBase, country_holidays
 
@@ -16,7 +17,7 @@ from homeassistant.helpers.issue_registry import (
 from homeassistant.setup import SetupPhases, async_pause_setup
 from homeassistant.util import dt as dt_util, slugify
 
-from .const import DOMAIN, LOGGER
+from .const import COUNTRY_OPTIONS, DOMAIN, LOGGER
 
 if TYPE_CHECKING:
     from . import WorkdayConfigEntry
@@ -111,12 +112,24 @@ def validate_dates(holiday_list: list[str]) -> list[str]:
     return calc_holidays
 
 
+def get_country_options(country: str, options: Mapping[str, Any]) -> dict[str, Any]:
+    """Return the configured options that the country supports."""
+    # A repair can change the country, and the library raises on unsupported options
+    supported_options = country_holidays(country).get_supported_options()
+    return {
+        option: options[option]
+        for option in COUNTRY_OPTIONS
+        if option in options and option in supported_options
+    }
+
+
 def get_holidays_object(
     country: str | None,
     province: str | None,
     year: int,
     language: str | None,
     categories: list[str] | None,
+    options: Mapping[str, Any],
 ) -> HolidayBase:
     """Get the object for the requested country and year."""
     if not country:
@@ -128,12 +141,15 @@ def get_holidays_object(
         category_list.extend(categories)
         set_categories = tuple(category_list)
 
+    country_options = get_country_options(country, options)
+
     obj_holidays: HolidayBase = country_holidays(
         country,
         subdiv=province,
         years=[year, year + 1],
         language=language,
         categories=set_categories,
+        **country_options,
     )
 
     supported_languages = obj_holidays.supported_languages
@@ -145,9 +161,10 @@ def get_holidays_object(
         return country_holidays(  # Return default if no language
             country,
             subdiv=province,
-            years=year,
+            years=[year, year + 1],
             language=default_language,
             categories=set_categories,
+            **country_options,
         )
 
     if (
@@ -162,9 +179,10 @@ def get_holidays_object(
             return country_holidays(  # Return default English if default language
                 country,
                 subdiv=province,
-                years=year,
+                years=[year, year + 1],
                 language=default_language,
                 categories=set_categories,
+                **country_options,
             )
         for lang in supported_languages:
             if lang.startswith("en"):
@@ -172,9 +190,10 @@ def get_holidays_object(
                 return country_holidays(
                     country,
                     subdiv=province,
-                    years=year,
+                    years=[year, year + 1],
                     language=lang,
                     categories=set_categories,
+                    **country_options,
                 )
 
     if default_language and language and language not in supported_languages:
@@ -183,9 +202,10 @@ def get_holidays_object(
         return country_holidays(  # Return default English if default language
             country,
             subdiv=province,
-            years=year,
+            years=[year, year + 1],
             language=default_language,
             categories=set_categories,
+            **country_options,
         )
 
     return obj_holidays

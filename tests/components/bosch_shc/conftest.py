@@ -26,6 +26,7 @@ from boschshcpy import (
     SHCHeatingCircuit,
     SHCInformation,
     SHCIntrusionSystem,
+    SHCLightControl,
     SHCLightSwitchBSM,
     SHCMicromoduleBlinds,
     SHCMicromoduleDimmer,
@@ -115,6 +116,7 @@ _EMPTY_DEVICE_BUCKETS: dict[str, Any] = {
         "micromodule_blinds",
         "micromodule_dimmers",
         "micromodule_impulse_relays",
+        "micromodule_light_controls",
         "micromodule_light_attached",
         "micromodule_relays",
         "micromodule_shutter_controls",
@@ -652,7 +654,12 @@ def micromodule_dimmer_device(
     device.edge_phase_control_mode = edge_phase_control_mode
     device.dimming_speed = dimming_speed
     device.dimmer_configuration = (
-        SimpleNamespace(min_brightness=min_brightness, max_brightness=max_brightness)
+        SimpleNamespace(
+            min_brightness=min_brightness,
+            max_brightness=max_brightness,
+            preview_max_brightness=MagicMock(),
+            preview_min_brightness=MagicMock(),
+        )
         if supports_dimmer_configuration
         else None
     )
@@ -698,6 +705,28 @@ def micromodule_relay_device(
         )
     else:
         device.impulse_length = impulse_length
+    return device
+
+
+def light_control_device(
+    device_id: str = "hdm:ZigBee:lightcontrol1",
+    name: str = "Light Control",
+    power: float = 12.5,
+    energy: float = 3000.0,
+) -> SHCLightControl:
+    """Build a minimal device double for the micromodule_light_controls bucket."""
+    device = create_autospec(SHCLightControl, instance=True, spec_set=True)
+    device.name = name
+    device.id = device_id
+    device.root_device_id = "test-mac"
+    device.serial = f"serial-{device_id}"
+    device.manufacturer = "Bosch"
+    device.device_model = "MICROMODULE_LIGHT_CONTROL"
+    device.device_services = []
+    device.deleted = False
+    device.status = "AVAILABLE"
+    device.powerconsumption = power
+    device.energyconsumption = energy
     return device
 
 
@@ -893,6 +922,13 @@ def smoke_detection_system_device(
     """Build a minimal double of the smoke detection system."""
     system = MagicMock()
     system.id = "hdm:ZigBee:smokedetectionsystem"
+    system.name = "Smoke Detection System"
+    system.root_device_id = "test-mac"
+    system.serial = "serial-smokedetectionsystem"
+    system.manufacturer = "Bosch"
+    system.device_model = "SMOKE_DETECTION_SYSTEM"
+    system.deleted = False
+    system.status = "AVAILABLE"
     system.alarm = alarm
     system.device_services = [FakeSurveillanceAlarmService()]
     system.triggered_device_ids.return_value = triggered or set()

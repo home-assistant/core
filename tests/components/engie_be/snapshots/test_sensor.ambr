@@ -43,14 +43,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by ENGIE Belgium',
-      'daily_peaks': list([
-        dict({
-          'end': '2026-10-15T18:15:00+02:00',
-          'energy_kwh': 1.05,
-          'power_kw': 4.2,
-          'start': '2026-10-15T18:00:00+02:00',
-        }),
-      ]),
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Main street 1, 1000 Brussels Capacity tariff daily power peak',
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfPower.KILO_WATT: 'kW'>,
@@ -269,8 +261,6 @@
       <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by ENGIE Belgium',
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Main street 1, 1000 Brussels Capacity tariff monthly power peak',
-      'peak_is_fallback': False,
-      'peak_month': '2026-10',
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfPower.KILO_WATT: 'kW'>,
     }),
     'context': <ANY>,
@@ -1381,14 +1371,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by ENGIE Belgium',
-      'daily_peaks': list([
-        dict({
-          'end': '2026-11-15T18:15:00+01:00',
-          'energy_kwh': 1.05,
-          'power_kw': 4.2,
-          'start': '2026-11-15T18:00:00+01:00',
-        }),
-      ]),
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Main street 1, 1000 Brussels Capacity tariff daily power peak',
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfPower.KILO_WATT: 'kW'>,
@@ -1607,8 +1589,6 @@
       <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by ENGIE Belgium',
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Main street 1, 1000 Brussels Capacity tariff monthly power peak',
-      'peak_is_fallback': False,
-      'peak_month': '2026-11',
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfPower.KILO_WATT: 'kW'>,
     }),
     'context': <ANY>,

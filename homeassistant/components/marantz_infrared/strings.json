@@ -36,6 +36,8 @@
         "state_attributes": {
           "source": {
             "state": {
+              "aux_1": "Aux",
+              "aux_pm8006": "Aux",
               "cd": "CD",
               "coax": "Coax",
               "laserdisc": "LaserDisc",
@@ -52,6 +54,17 @@
             }
           }
         }
+      }
+    },
+    "switch": {
+      "power_amp_direct": {
+        "name": "Power amp direct"
+      },
+      "speaker_a": {
+        "name": "Speaker A"
+      },
+      "speaker_b": {
+        "name": "Speaker B"
       }
     }
   }

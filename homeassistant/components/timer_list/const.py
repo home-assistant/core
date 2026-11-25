@@ -28,7 +28,7 @@ ATTR_TIMER = "timer"
 ATTR_TIMERS = "timers"
 
 
-class TimerListServices(StrEnum):
+class TimerListService(StrEnum):
     """Services for the Timer list integration."""
 
     CREATE_TIMER = "create_timer"
