@@ -29,6 +29,9 @@
     "cannot_connect": {
       "message": "Could not connect to the ADS device: {error}"
     },
+    "not_connected": {
+      "message": "Could not write {variable}: the connection to the ADS device is lost."
+    },
     "not_loaded": {
       "message": "The ADS integration is not set up."
     }

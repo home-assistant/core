@@ -19,7 +19,7 @@ import pyads
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
-from homeassistant.exceptions import PlatformNotReady
+from homeassistant.exceptions import HomeAssistantError, PlatformNotReady
 from homeassistant.helpers.event import async_call_later, async_track_time_interval
 
 from .const import DATA_SETUP_DONE, DOMAIN
@@ -120,6 +120,10 @@ class AdsHub:
         self._subscription_ids = count(1)
         self._subscription_ids_by_hnotify: dict[int, int] = {}
         self._state = ConnectionState.RUNNING
+        # Whether the client's port is open. Written under self._lock by the
+        # threads that open and close it, unlike self._state, which the event
+        # loop owns.
+        self._port_open = True
         self._closed = False
         self._lock = threading.Lock()
         # Held across a notification delete, so shutdown cannot close the
@@ -131,6 +135,7 @@ class AdsHub:
         self._cancel_probe: CALLBACK_TYPE | None = None
         self._cancel_reconnect: CALLBACK_TYPE | None = None
         self._probing = False
+        self._monitoring = False
 
     @property
     def connected(self) -> bool:
@@ -145,13 +150,18 @@ class AdsHub:
         dropped stays open on this side, so it has to be probed.
         """
         self._hass = hass
+        self._monitoring = True
         self._cancel_probe = async_track_time_interval(
             hass, self._async_probe, PROBE_INTERVAL
         )
 
     @callback
     def async_stop_monitoring(self) -> None:
-        """Stop probing and reconnecting."""
+        """Stop probing and reconnecting.
+
+        A probe or reconnect already running finishes, but schedules nothing.
+        """
+        self._monitoring = False
         if self._cancel_probe is not None:
             self._cancel_probe()
             self._cancel_probe = None
@@ -171,7 +181,7 @@ class AdsHub:
             )
         finally:
             self._probing = False
-        if self._closed:
+        if not self._monitoring:
             return
         if ads_state is None:
             _LOGGER.info("Lost the connection to the ADS device: %s", error)
@@ -218,6 +228,8 @@ class AdsHub:
         """
         with self._teardown_lock:
             with self._lock:
+                # Nothing registers on the port from here on.
+                self._port_open = False
                 handles = [
                     subscription.handles
                     for subscription in self._subscriptions.values()
@@ -245,7 +257,7 @@ class AdsHub:
     def _async_schedule_reconnect(self, delay: float) -> None:
         """Try again after a delay that grows while the device stays away."""
         assert self._hass is not None
-        if self._closed:
+        if not self._monitoring:
             return
         self._cancel_reconnect = async_call_later(
             self._hass, delay, partial(self._async_reconnect, delay)
@@ -255,10 +267,10 @@ class AdsHub:
         """Rebuild the connection and the subscriptions once the device answers."""
         assert self._hass is not None
         self._cancel_reconnect = None
-        if self._closed:
+        if not self._monitoring:
             return
         ads_state = await self._hass.async_add_executor_job(self._reconnect)
-        if self._closed:
+        if not self._monitoring:
             return
         if ads_state is None:
             self._async_schedule_reconnect(min(delay * 2, RECONNECT_MAX_INTERVAL))
@@ -296,9 +308,10 @@ class AdsHub:
                 with suppress(pyads.ADSError):
                     self._client.close()
                 return None
+            self._port_open = True
             subscription_ids = list(self._subscriptions)
         for subscription_id in subscription_ids:
-            self._register(subscription_id, reconnecting=True)
+            self._register(subscription_id)
         return state[0]
 
     def shutdown(self, *args, **kwargs):
@@ -308,14 +321,17 @@ class AdsHub:
         with self._teardown_lock:
             with self._lock:
                 self._closed = True
+                port_open = self._port_open
+                self._port_open = False
                 handles = [
                     subscription.handles
                     for subscription in self._subscriptions.values()
                     if subscription.handles is not None
                 ]
-                if self._state is ConnectionState.LOST:
-                    # Already closed by the drop.
-                    handles = []
+                if port_open:
+                    # A device that went away unnoticed would make each
+                    # deletion wait the full timeout.
+                    self._client.set_timeout(TEARDOWN_TIMEOUT)
             # Deleting a notification waits for its in-flight callbacks, which
             # take self._lock themselves, so this has to run outside it. The
             # subscriptions stay registered until then, so those callbacks
@@ -329,7 +345,7 @@ class AdsHub:
             with self._lock:
                 self._subscriptions.clear()
                 self._subscription_ids_by_hnotify.clear()
-            if self._state is not ConnectionState.LOST:
+            if port_open:
                 try:
                     self._client.close()
                 except pyads.ADSError as err:
@@ -365,7 +381,11 @@ class AdsHub:
         return state
 
     def write_by_name(self, name, value, plc_datatype):
-        """Write a value to the device."""
+        """Write a value to the device.
+
+        Raises HomeAssistantError while the connection is lost, since pyads
+        would silently drop a write to the closed port.
+        """
 
         with self._lock:
             # The lock is released again before the client is closed, so I/O
@@ -373,6 +393,12 @@ class AdsHub:
             if self._closed:
                 _LOGGER.debug("Not writing %s, the hub is shut down", name)
                 return None
+            if not self._port_open:
+                raise HomeAssistantError(
+                    translation_domain=DOMAIN,
+                    translation_key="not_connected",
+                    translation_placeholders={"variable": name},
+                )
             try:
                 return self._client.write_by_name(name, value, plc_datatype)
             except pyads.ADSError as err:
@@ -417,19 +443,22 @@ class AdsHub:
             subscription = self._subscriptions.get(subscription_id)
             return subscription is not None and subscription.handles is not None
 
-    def _register(self, subscription_id: int, *, reconnecting: bool = False) -> None:
+    def _register(self, subscription_id: int) -> None:
         """Ask the device to notify on a subscription's variable.
 
         While the connection is lost this waits for the reconnect, which
-        registers every subscription again.
+        registers every subscription again. The teardown lock keeps a delete,
+        a drop or shutdown from running between the check and the
+        registration, which would leave a notification nobody deletes.
         """
+        with self._teardown_lock:
+            self._register_locked(subscription_id)
+
+    def _register_locked(self, subscription_id: int) -> None:
+        """Register a subscription; the caller holds the teardown lock."""
         with self._lock:
             subscription = self._subscriptions.get(subscription_id)
-            if (
-                subscription is None
-                or self._closed
-                or (self._state is ConnectionState.LOST and not reconnecting)
-            ):
+            if subscription is None or self._closed or not self._port_open:
                 return
             attr = pyads.NotificationAttrib(ctypes.sizeof(subscription.plc_datatype))
             try:
@@ -508,7 +537,9 @@ class AdsHub:
             )
 
         if not subscription:
-            _LOGGER.error("Unknown device notification handle: %d", hnotify)
+            # Expected for a notification still in flight when its
+            # subscription was deleted or the connection dropped.
+            _LOGGER.debug("Unknown device notification handle: %d", hnotify)
             return
 
         # Data parsing based on PLC data type

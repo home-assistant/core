@@ -1,7 +1,10 @@
 """Test the ADS hub's connection helpers."""
 
+import asyncio
 from datetime import timedelta
 import logging
+import threading
+from typing import Any
 from unittest.mock import MagicMock, call, patch
 
 from freezegun.api import FrozenDateTimeFactory
@@ -20,7 +23,8 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import PlatformNotReady
+from homeassistant.exceptions import HomeAssistantError, PlatformNotReady
+from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 
 from . import MockAdsDevice, get_hub, setup_ads_platform
@@ -300,14 +304,174 @@ async def test_probe_skipped_while_one_runs(
     mock_ads_device: MockAdsDevice,
 ) -> None:
     """Test a slow probe is not started a second time."""
-    hub = await _async_setup_switch(hass, mock_ads_device)
+    await _async_setup_switch(hass, mock_ads_device)
     client = mock_pyads_connection.return_value
     client.read_state.reset_mock()
-    hub._probing = True
+    probing, release = threading.Event(), threading.Event()
 
+    def _slow_read_state() -> tuple[int, int]:
+        probing.set()
+        release.wait(5)
+        return (pyads.ADSSTATE_RUN, 0)
+
+    client.read_state.side_effect = _slow_read_state
+    freezer.tick(PROBE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_add_executor_job(probing.wait, 5)
+    freezer.tick(PROBE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    release.set()
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert client.read_state.call_count == 1
+
+
+async def _async_yield() -> None:
+    """Let the event loop hand queued work to the executor, without the clock."""
+    for _ in range(20):
+        await asyncio.sleep(0)
+
+
+def _block_registration(
+    client: MagicMock, device: MockAdsDevice
+) -> tuple[threading.Event, threading.Event]:
+    """Make the next registration wait, returning (started, release)."""
+    started, release = threading.Event(), threading.Event()
+
+    def _add_device_notification(*args: Any) -> tuple[int, int]:
+        started.set()
+        release.wait(5)
+        return device.add_device_notification(*args)
+
+    client.add_device_notification.side_effect = _add_device_notification
+    return started, release
+
+
+async def _async_start_reconnect(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    client: MagicMock,
+    device: MockAdsDevice,
+) -> tuple[threading.Event, threading.Event]:
+    """Drop the connection, then start a reconnect that waits in registration."""
+    client.read_state.return_value = None
+    await _async_advance(hass, freezer, device, PROBE_INTERVAL)
+    client.read_state.return_value = (pyads.ADSSTATE_RUN, 0)
+    started, release = _block_registration(client, device)
+    freezer.tick(timedelta(seconds=5))
+    async_fire_time_changed(hass)
+    await hass.async_add_executor_job(started.wait, 5)
+    return started, release
+
+
+async def test_removal_during_reconnect(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    entity_registry: er.EntityRegistry,
+    mock_pyads_connection: MagicMock,
+    mock_ads_device: MockAdsDevice,
+) -> None:
+    """Test an entity removed while a reconnect registers it leaves nothing behind.
+
+    A notification nobody deletes keeps the PLC pushing to a removed entity,
+    and closing the connection with it registered crashes the ADS library.
+    """
+    await _async_setup_switch(hass, mock_ads_device)
+    client = mock_pyads_connection.return_value
+    _, release = await _async_start_reconnect(hass, freezer, client, mock_ads_device)
+
+    entity_registry.async_remove(SWITCH_ID)
+    await _async_yield()
+    release.set()
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert hass.states.get(SWITCH_ID) is None
+    # The handle the reconnect issued is deleted again.
+    client.del_device_notification.assert_called_with(2, 2)
+
+
+async def test_unload_during_reconnect(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_pyads_connection: MagicMock,
+    mock_ads_device: MockAdsDevice,
+) -> None:
+    """Test unloading while a reconnect registers tears the new connection down."""
+    await _async_setup_switch(hass, mock_ads_device)
+    client = mock_pyads_connection.return_value
+    _, release = await _async_start_reconnect(hass, freezer, client, mock_ads_device)
+    (entry,) = hass.config_entries.async_entries(DOMAIN)
+    client.close.reset_mock()
+
+    unload = hass.async_create_task(hass.config_entries.async_unload(entry.entry_id))
+    await _async_yield()
+    release.set()
+    await unload
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    # The notification the reconnect registered goes before the close.
+    assert client.mock_calls[-3:] == [
+        call.set_timeout(100),
+        call.del_device_notification(2, 2),
+        call.close(),
+    ]
+
+
+async def test_probe_in_flight_during_unload(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_pyads_connection: MagicMock,
+    mock_ads_device: MockAdsDevice,
+) -> None:
+    """Test a probe that finishes after unload schedules no reconnect."""
+    await _async_setup_switch(hass, mock_ads_device)
+    client = mock_pyads_connection.return_value
+    probing, release = threading.Event(), threading.Event()
+
+    def _slow_read_state() -> None:
+        probing.set()
+        release.wait(5)
+
+    client.read_state.side_effect = _slow_read_state
+    freezer.tick(PROBE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_add_executor_job(probing.wait, 5)
+    (entry,) = hass.config_entries.async_entries(DOMAIN)
+    unload = hass.async_create_task(hass.config_entries.async_unload(entry.entry_id))
+    await _async_yield()
+    release.set()
+    await unload
+    client.open.reset_mock()
+
+    await _async_advance(hass, freezer, mock_ads_device, timedelta(minutes=10))
+
+    client.open.assert_not_called()
+
+
+async def test_write_while_lost(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_pyads_connection: MagicMock,
+    mock_ads_device: MockAdsDevice,
+) -> None:
+    """Test a write while the connection is lost fails instead of doing nothing."""
+    await _async_setup_switch(hass, mock_ads_device)
+    client = mock_pyads_connection.return_value
+    client.read_state.return_value = None
     await _async_advance(hass, freezer, mock_ads_device, PROBE_INTERVAL)
 
-    client.read_state.assert_not_called()
+    # Entities are unavailable meanwhile, so only the action can still write.
+    with pytest.raises(HomeAssistantError) as err:
+        await hass.services.async_call(
+            DOMAIN,
+            "write_data_by_name",
+            {"adsvar": "GVL.pump", "adstype": "bool", "value": "1"},
+            blocking=True,
+        )
+
+    assert err.value.translation_key == "not_connected"
+    client.write_by_name.assert_not_called()
 
 
 async def test_platform_waits_for_the_import(
