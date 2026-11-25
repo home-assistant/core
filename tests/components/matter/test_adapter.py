@@ -587,6 +587,41 @@ async def test_pruned_collapsed_child_preserves_disabled_entities(
 
 
 @pytest.mark.parametrize("node_fixture", ["eve_energy_20ecn4101"])
+async def test_pruned_user_disabled_child_keeps_entities_disabled(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test entities of a child device the user disabled stay disabled when moved."""
+    entry_id = hass.config_entries.async_entries(DOMAIN)[0].entry_id
+    parent = device_registry.async_get_device_by_identifier(
+        identifier_for(matter_client, matter_node, 0), entry_id
+    )
+    assert parent is not None
+    switch_entry = entity_registry.async_get("switch.eve_energy_20ecn4101_top")
+    assert switch_entry is not None
+    assert switch_entry.device_id is not None
+    device_registry.async_update_child_device(
+        switch_entry.device_id, disabled_by=dr.DeviceEntryDisabler.USER
+    )
+    await hass.async_block_till_done()
+    switch_entry = entity_registry.async_get("switch.eve_energy_20ecn4101_top")
+    assert switch_entry is not None
+    assert switch_entry.disabled_by is er.RegistryEntryDisabler.DEVICE
+
+    matter_node.endpoints.pop(2)
+    fire_node_updated_event(matter_client, matter_node)
+    await hass.async_block_till_done()
+
+    switch_entry = entity_registry.async_get("switch.eve_energy_20ecn4101_top")
+    assert switch_entry is not None
+    assert switch_entry.device_id == parent.id
+    assert switch_entry.disabled_by is er.RegistryEntryDisabler.USER
+
+
+@pytest.mark.parametrize("node_fixture", ["eve_energy_20ecn4101"])
 async def test_pruned_disabled_entities_dont_reload(
     hass: HomeAssistant,
     matter_client: MagicMock,
@@ -1314,6 +1349,72 @@ async def test_power_topology_disabled_entities_moved_dont_reload(
     power_entry = entity_registry.async_get(TAPO_STRIP_POWER_1)
     assert power_entry is not None
     assert power_entry.disabled_by is er.RegistryEntryDisabler.USER
+
+
+@pytest.mark.parametrize("node_fixture", ["tapo_smart_wi_fi_power_strip"])
+@pytest.mark.parametrize("attributes", [TAPO_STRIP_NUMBER_TAG_ATTRIBUTES])
+async def test_power_topology_user_disabled_outlet_removed(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test measurement entities of a removed outlet the user disabled stay disabled."""
+    entry_id = hass.config_entries.async_entries(DOMAIN)[0].entry_id
+    parent = device_registry.async_get_device_by_identifier(
+        identifier_for(matter_client, matter_node, 0), entry_id
+    )
+    assert parent is not None
+    switch_entry = entity_registry.async_get(TAPO_STRIP_SWITCH_1)
+    assert switch_entry is not None
+    assert switch_entry.device_id is not None
+    device_registry.async_update_child_device(
+        switch_entry.device_id, disabled_by=dr.DeviceEntryDisabler.USER
+    )
+    await hass.async_block_till_done()
+
+    remove_endpoint(matter_client, matter_node, 1)
+    fire_node_updated_event(matter_client, matter_node)
+    await hass.async_block_till_done()
+
+    power_entry = entity_registry.async_get(TAPO_STRIP_POWER_1)
+    assert power_entry is not None
+    assert power_entry.device_id == parent.id
+    assert power_entry.disabled_by is er.RegistryEntryDisabler.USER
+
+
+@pytest.mark.parametrize("node_fixture", ["tapo_smart_wi_fi_power_strip"])
+@pytest.mark.parametrize("attributes", [TAPO_STRIP_NUMBER_TAG_ATTRIBUTES])
+async def test_power_topology_endpoint_gone_while_unloaded(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test entities of a gone measurement endpoint aren't moved to the node device.
+
+    Outlet 1 stops splitting and its measurement endpoint 7 is gone when the
+    config entry is set up again.
+    """
+    entry_id = hass.config_entries.async_entries(DOMAIN)[0].entry_id
+    parent = device_registry.async_get_device_by_identifier(
+        identifier_for(matter_client, matter_node, 0), entry_id
+    )
+    assert parent is not None
+    assert entity_registry.async_get(TAPO_STRIP_POWER_1) is not None
+
+    for endpoint_id in (*range(2, 7), 7):
+        matter_node.endpoints.pop(endpoint_id)
+    assert await hass.config_entries.async_reload(entry_id)
+    await hass.async_block_till_done()
+
+    assert not dr.async_entries_for_parent_device(device_registry, parent.id)
+    assert entity_registry.async_get(TAPO_STRIP_POWER_1) is None
+    switch_entry = entity_registry.async_get(TAPO_STRIP_SWITCH_1)
+    assert switch_entry is not None
+    assert switch_entry.device_id == parent.id
 
 
 @pytest.mark.parametrize("node_fixture", ["tapo_smart_wi_fi_power_strip"])

@@ -106,6 +106,28 @@ def _get_unique_id_prefixes(
     )
 
 
+def _move_entity_to_node_device(
+    entity_registry: er.EntityRegistry,
+    entity_entry: er.RegistryEntry,
+    child_device: dr.ChildDeviceEntry,
+    node_device_id: str,
+) -> None:
+    """Move an entity of a child device to the node device.
+
+    Moving an entity disabled with its device would enable it, so the entities of
+    a child device the user disabled stay disabled by the user.
+    """
+    disabled_by: er.RegistryEntryDisabler | Undefined = Undefined
+    if (
+        entity_entry.disabled_by is er.RegistryEntryDisabler.DEVICE
+        and child_device.disabled_by is dr.DeviceEntryDisabler.USER
+    ):
+        disabled_by = er.RegistryEntryDisabler.USER
+    entity_registry.async_update_entity(
+        entity_entry.entity_id, device_id=node_device_id, disabled_by=disabled_by
+    )
+
+
 def _child_device_unique_id_prefix(child_device: dr.ChildDeviceEntry) -> str | None:
     """Return the unique_id prefix of the entities of a child device's endpoint."""
     if (device_id := get_device_id_from_identifiers(child_device)) is None:
@@ -352,6 +374,10 @@ class MatterAdapter:
             if endpoint_requires_child_device(endpoint):
                 expected_child_identifiers.add(child_identifier)
         entity_registry = er.async_get(self.hass)
+        node_unique_id_prefix = f"{get_device_id(server_info, node.endpoints[0])}-"
+        current_unique_id_prefixes = _get_unique_id_prefixes(
+            server_info, node, node.endpoints
+        )
         moved_entities = False
         for child_device in dr.async_entries_for_parent_device(
             device_registry, node_device.id
@@ -364,8 +390,17 @@ class MatterAdapter:
                 for entity_entry in er.async_entries_for_device(
                     entity_registry, child_device.id, include_disabled_entities=True
                 ):
-                    entity_registry.async_update_entity(
-                        entity_entry.entity_id, device_id=node_device.id
+                    # Entities of an endpoint that vanished while unloaded, e.g. a
+                    # Power Topology measurement endpoint, aren't moved.
+                    if entity_entry.unique_id.startswith(
+                        node_unique_id_prefix
+                    ) and not entity_entry.unique_id.startswith(
+                        current_unique_id_prefixes
+                    ):
+                        entity_registry.async_remove(entity_entry.entity_id)
+                        continue
+                    _move_entity_to_node_device(
+                        entity_registry, entity_entry, child_device, node_device.id
                     )
                     # Disabled entities have no live entity object to rename.
                     if entity_entry.disabled_by is None:
@@ -444,8 +479,8 @@ class MatterAdapter:
                 entity_registry, child_device.id, include_disabled_entities=True
             ):
                 if not entity_entry.unique_id.startswith(unique_id_prefixes):
-                    entity_registry.async_update_entity(
-                        entity_entry.entity_id, device_id=node_device.id
+                    _move_entity_to_node_device(
+                        entity_registry, entity_entry, child_device, node_device.id
                     )
                     # Disabled entities have no live entity object to rename.
                     if entity_entry.disabled_by is None:
