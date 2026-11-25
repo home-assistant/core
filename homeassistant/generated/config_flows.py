@@ -804,6 +804,7 @@ FLOWS = {
         "sonos",
         "sony_infrared",
         "soundtouch",
+        "spacexsi",
         "specialized_turbo",
         "speedtestdotnet",
         "splunk",
