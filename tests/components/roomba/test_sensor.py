@@ -13,6 +13,7 @@ from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
     CONF_HOST,
     CONF_PASSWORD,
+    STATE_UNKNOWN,
     Platform,
     UnitOfArea,
 )
@@ -108,6 +109,48 @@ async def test_robot_without_dock_has_no_dock_sensor(
             await hass.async_block_till_done()
 
     assert len(_dock_tank_level_entities(hass)) == 1
+
+
+@pytest.mark.parametrize(
+    ("reported", "expected"),
+    [
+        pytest.param({"bbchg3": {"nLithChrg": 310}}, "310", id="lithium"),
+        pytest.param({"bbchg3": {"nNimhChrg": 42}}, "42", id="nimh"),
+        pytest.param(
+            {"bbchg3": {"estCap": 1698}, "batInfo": {"cCount": 70}},
+            "70",
+            id="battery_info",
+        ),
+        pytest.param(
+            {"bbchg3": {"nLithChrg": 310}, "batInfo": {"cCount": 70}},
+            "310",
+            id="charge_stats_precedence",
+        ),
+        pytest.param({"batInfo": {"cCount": 0}}, "0", id="new_battery"),
+        pytest.param(
+            {"bbchg3": {"nLithChrg": 0}, "batInfo": {"cCount": 70}},
+            "0",
+            id="zero_charge_stats_precedence",
+        ),
+        pytest.param({}, STATE_UNKNOWN, id="missing"),
+    ],
+)
+async def test_battery_cycles(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_roomba: AsyncMock,
+    reported: dict[str, dict[str, int]],
+    expected: str,
+) -> None:
+    """Test battery cycles falls back to the cycle count of the battery itself."""
+    mock_roomba.master_state["state"]["reported"].update(reported)
+
+    with patch("homeassistant.components.roomba.PLATFORMS", [Platform.SENSOR]):
+        mock_config_entry.add_to_hass(hass)
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert hass.states.get("sensor.test_roomba_battery_cycles").state == expected
 
 
 async def test_rssi_refreshes_on_wifi_only_message(

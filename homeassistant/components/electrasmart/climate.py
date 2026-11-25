@@ -172,7 +172,13 @@ class ElectraClimateEntity(ElectraEntity, ClimateEntity):
                 self._device.__dict__,
             )
 
-        self._update_device_attrs()
+        if self.coordinator.last_refresh_confirmed(self._device.mac):
+            # The library keeps the state a command set on the device before
+            # the cloud confirms it, so only a refresh that fetched this AC
+            # may be published: a paused or failed poll leaves the device
+            # carrying the state of a command that was never confirmed.
+            self._update_device_attrs()
+
         super()._handle_coordinator_update()
 
     @override

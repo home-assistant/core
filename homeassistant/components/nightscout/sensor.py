@@ -1,8 +1,11 @@
 """Support for Nightscout sensors."""
 
+from collections.abc import Callable
+from dataclasses import dataclass
+from datetime import datetime
 from typing import Any, override
 
-from py_nightscout.models import ServerStatus
+from py_nightscout.models import SGV, ServerStatus
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -19,6 +22,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import ATTR_DELTA, ATTR_DEVICE, ATTR_DIRECTION, DOMAIN
@@ -42,6 +46,54 @@ TREND_ICONS = {
     "FortyFiveUp": "mdi:arrow-top-right",
     "DoubleUp": "mdi:chevron-triple-up",
 }
+
+# Nightscout trend directions, see lib/plugins/direction.js
+TRENDS = {
+    "TripleUp": "rising_very_quickly",
+    "DoubleUp": "rising_quickly",
+    "SingleUp": "rising",
+    "FortyFiveUp": "rising_slightly",
+    "Flat": "steady",
+    "FortyFiveDown": "falling_slightly",
+    "SingleDown": "falling",
+    "DoubleDown": "falling_quickly",
+    "TripleDown": "falling_very_quickly",
+    "NOT COMPUTABLE": "not_computable",
+    "RATE OUT OF RANGE": "rate_out_of_range",
+}
+
+
+@dataclass(frozen=True, kw_only=True)
+class NightscoutGlucoseSensorEntityDescription(SensorEntityDescription):
+    """Describes a sensor based on the latest glucose reading."""
+
+    value_fn: Callable[[SGV], StateType | datetime]
+
+
+GLUCOSE_SENSORS: tuple[NightscoutGlucoseSensorEntityDescription, ...] = (
+    NightscoutGlucoseSensorEntityDescription(
+        key="trend",
+        translation_key="glucose_trend",
+        device_class=SensorDeviceClass.ENUM,
+        options=list(TRENDS.values()),
+        value_fn=lambda value: TRENDS.get(value.direction),
+    ),
+    # Nightscout reports the delta in mg/dL, even on mmol/L sites
+    NightscoutGlucoseSensorEntityDescription(
+        key="delta",
+        translation_key="glucose_change",
+        device_class=SensorDeviceClass.BLOOD_GLUCOSE_CONCENTRATION,
+        native_unit_of_measurement=UnitOfBloodGlucoseConcentration.MILLIGRAMS_PER_DECILITER,
+        state_class=SensorStateClass.MEASUREMENT,
+        value_fn=lambda value: value.delta,
+    ),
+    NightscoutGlucoseSensorEntityDescription(
+        key="last_reading",
+        translation_key="glucose_reading_time",
+        device_class=SensorDeviceClass.TIMESTAMP,
+        value_fn=lambda value: value.date,
+    ),
+)
 
 # Nightscout always reports thresholds in mg/dL, even on mmol/L sites
 THRESHOLD_SENSORS: tuple[SensorEntityDescription, ...] = (
@@ -93,6 +145,10 @@ async def async_setup_entry(
     entities: list[SensorEntity] = [
         NightscoutSensor(glucose_coordinator, "Blood Sugar", entry.unique_id)
     ]
+    entities.extend(
+        NightscoutGlucoseSensor(glucose_coordinator, description)
+        for description in GLUCOSE_SENSORS
+    )
     if _get_thresholds(status_coordinator.data) is not None:
         entities.extend(
             NightscoutThresholdSensor(status_coordinator, description)
@@ -158,6 +214,42 @@ class NightscoutSensor(CoordinatorEntity[NightscoutGlucoseCoordinator], SensorEn
         if reading is None:
             return "mdi:cloud-question"
         return TREND_ICONS.get(reading.direction, "mdi:cloud-question")
+
+
+class NightscoutGlucoseSensor(
+    CoordinatorEntity[NightscoutGlucoseCoordinator], SensorEntity
+):
+    """A value of the latest glucose reading."""
+
+    _attr_has_entity_name = True
+    entity_description: NightscoutGlucoseSensorEntityDescription
+
+    def __init__(
+        self,
+        coordinator: NightscoutGlucoseCoordinator,
+        description: NightscoutGlucoseSensorEntityDescription,
+    ) -> None:
+        """Initialize the glucose reading sensor."""
+        super().__init__(coordinator)
+        self.entity_description = description
+        entry = coordinator.config_entry
+        self._attr_unique_id = f"{entry.entry_id}_{description.key}"
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, entry.data[CONF_URL])}
+        )
+
+    @property
+    @override
+    def available(self) -> bool:
+        """Return if a glucose reading is available."""
+        return super().available and self.coordinator.data is not None
+
+    @property
+    @override
+    def native_value(self) -> StateType | datetime:
+        """Return the value of the latest glucose reading."""
+        reading = self.coordinator.data
+        return self.entity_description.value_fn(reading) if reading else None
 
 
 class NightscoutThresholdSensor(

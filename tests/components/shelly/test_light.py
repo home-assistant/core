@@ -56,6 +56,7 @@ from . import (
     register_entity,
 )
 from .conftest import (
+    MOCK_LEDSTRIP_EFFECTS,
     MOCK_LEDSTRIP_STATUS_AURORA,
     MOCK_LEDSTRIP_STATUS_BLINK,
     MOCK_LEDSTRIP_STATUS_RAINBOW,
@@ -1238,7 +1239,7 @@ async def test_rpc_ledstrip_light_device_not_initialized(
 
     assert (state := hass.states.get(entity_id))
     assert state.state == STATE_OFF
-    assert state.attributes[ATTR_EFFECT_LIST] == ["solid", "blink", "fade", "rainbow"]
+    assert state.attributes[ATTR_EFFECT_LIST] == list(MOCK_LEDSTRIP_EFFECTS)
 
     monkeypatch.setattr(mock_ledstrip_rpc_device, "initialized", False)
     mock_ledstrip_rpc_device.mock_disconnected()
@@ -1246,7 +1247,8 @@ async def test_rpc_ledstrip_light_device_not_initialized(
 
     assert (state := hass.states.get(entity_id))
     assert state.state == STATE_UNAVAILABLE
-    assert state.attributes[ATTR_EFFECT_LIST] == []
+    # The effect list should still be available because it comes from the runtime data.
+    assert state.attributes[ATTR_EFFECT_LIST] == list(MOCK_LEDSTRIP_EFFECTS)
 
 
 async def test_rpc_ledstrip_background_light(
