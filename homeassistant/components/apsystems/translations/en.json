@@ -1,0 +1,255 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Device is already configured"
+        },
+        "error": {
+            "cannot_connect": "Failed to connect"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "device_type": "Device generation",
+                    "ip_address": "IP address",
+                    "port": "Port"
+                },
+                "data_description": {
+                    "device_type": "Pick the generation that matches your hardware.",
+                    "port": "Leave empty to use the default for the selected generation: 8050 for EZ1, 80 for Lake series."
+                }
+            }
+        }
+    },
+    "entity": {
+        "binary_sensor": {
+            "battery_calibration": {
+                "name": "Battery Capacity Calibration"
+            },
+            "battery_communication_error": {
+                "name": "Battery Communication Error Alarm"
+            },
+            "battery_internal_error": {
+                "name": "Battery Internal Error Alarm"
+            },
+            "battery_over_current": {
+                "name": "Battery Overcurrent Alarm"
+            },
+            "battery_over_temperature": {
+                "name": "Battery High Temperature Alarm"
+            },
+            "battery_over_voltage": {
+                "name": "Battery Overvoltage Alarm"
+            },
+            "battery_shutdown": {
+                "name": "Battery Shutdown Alarm"
+            },
+            "battery_under_temperature": {
+                "name": "Battery Low Temperature Alarm"
+            },
+            "battery_under_voltage": {
+                "name": "Battery Undervoltage Alarm"
+            },
+            "dc_1_short_circuit_error_status": {
+                "name": "DC 1 short circuit error status"
+            },
+            "dc_2_short_circuit_error_status": {
+                "name": "DC 2 short circuit error status"
+            },
+            "device_system_error": {
+                "name": "Device System Error Alarm"
+            },
+            "device_temperature_protection": {
+                "name": "Device Temperature Protection Alarm"
+            },
+            "grid_anomaly": {
+                "name": "Grid Abnormal Alarm"
+            },
+            "off_grid_status": {
+                "name": "Off-grid status"
+            },
+            "offgrid_over_current": {
+                "name": "Off-grid Side Overcurrent Alarm"
+            },
+            "offgrid_short_circuit": {
+                "name": "Off-grid Side Short Circuit Alarm"
+            },
+            "output_fault_status": {
+                "name": "Output fault status"
+            }
+        },
+        "button": {
+            "manual_control_apply": {
+                "name": "Send Instant Manual Control"
+            },
+            "manual_control_interrupt": {
+                "name": "Stop Instant Manual Control"
+            }
+        },
+        "number": {
+            "depth_of_discharge": {
+                "name": "Backup SOC"
+            },
+            "manual_control_duration": {
+                "name": "Instant Manual Control Duration"
+            },
+            "manual_control_power": {
+                "name": "Instant Manual Control Power"
+            },
+            "max_output": {
+                "name": "Max output"
+            }
+        },
+        "select": {
+            "manual_control_mode": {
+                "name": "Instant Manual Control",
+                "state": {
+                    "charge": "Charge",
+                    "discharge": "Discharge",
+                    "standby": "Standby"
+                }
+            },
+            "operating_mode": {
+                "name": "Device Operating Mode",
+                "state": {
+                    "ai": "AI Mode",
+                    "backup": "Backup Mode",
+                    "self_consumption": "Self-consumption Mode",
+                    "time_of_use": "Time-of-Use Mode"
+                }
+            }
+        },
+        "sensor": {
+            "battery_capacity": {
+                "name": "Battery Capacity"
+            },
+            "battery_charge_energy": {
+                "name": "Battery Accumulated Charge Energy"
+            },
+            "battery_discharge_energy": {
+                "name": "Battery Accumulated Discharge Energy"
+            },
+            "battery_power": {
+                "name": "Battery Side Power"
+            },
+            "battery_soc": {
+                "name": "Battery SOC"
+            },
+            "battery_status": {
+                "name": "Battery Status",
+                "state": {
+                    "charging": "Charging",
+                    "discharging": "Discharging",
+                    "fault": "Fault",
+                    "heating": "Heating",
+                    "idle": "Idle",
+                    "no_communication": "No Communication",
+                    "shutdown": "Shutdown"
+                }
+            },
+            "battery_temperature": {
+                "name": "Battery Temperature"
+            },
+            "device_temperature": {
+                "name": "Device Temperature"
+            },
+            "grid_export_energy": {
+                "name": "On-grid Side Accumulated Output Energy"
+            },
+            "grid_import_energy": {
+                "name": "On-grid Side Accumulated Input Energy"
+            },
+            "grid_power": {
+                "name": "On-grid Side Power"
+            },
+            "lifetime_production": {
+                "name": "Total lifetime production"
+            },
+            "lifetime_production_p1": {
+                "name": "Lifetime production of P1"
+            },
+            "lifetime_production_p2": {
+                "name": "Lifetime production of P2"
+            },
+            "offgrid_export_energy": {
+                "name": "Off-grid Side Accumulated Output Energy"
+            },
+            "offgrid_import_energy": {
+                "name": "Off-grid Side Accumulated Input Energy"
+            },
+            "offgrid_power": {
+                "name": "Off-grid Side Power"
+            },
+            "today_production": {
+                "name": "Production of today"
+            },
+            "today_production_p1": {
+                "name": "Production of today from P1"
+            },
+            "today_production_p2": {
+                "name": "Production of today from P2"
+            },
+            "total_power": {
+                "name": "Total power"
+            },
+            "total_power_p1": {
+                "name": "Power of P1"
+            },
+            "total_power_p2": {
+                "name": "Power of P2"
+            },
+            "wifi_signal": {
+                "name": "Signal Strength"
+            }
+        },
+        "switch": {
+            "eco_mode": {
+                "name": "Economy Mode"
+            },
+            "inverter_status": {
+                "name": "Inverter status"
+            }
+        },
+        "text": {
+            "tou_plan": {
+                "name": "Time-of-Use Plan"
+            }
+        }
+    },
+    "exceptions": {
+        "ai_mode_set_in_app": {
+            "message": "AI mode can only be enabled from the APsystems app"
+        },
+        "inverter_error": {
+            "message": "Inverter returned an error"
+        },
+        "lake6_api_error": {
+            "message": "The device returned an error"
+        },
+        "manual_control_incomplete": {
+            "message": "Manual control is missing {fields}. Fill it in before pressing this button."
+        },
+        "manual_control_not_applied": {
+            "message": "The device accepted the request but did not start the one-time run, so the manual control did not take effect."
+        },
+        "manual_control_still_running": {
+            "message": "The device still reports the one-time run after the stop request."
+        },
+        "tou_invalid_plan": {
+            "message": "Invalid time-of-use plan: {error}. Each rule is time|function|power|weekdays|enabled, rules separated by ;"
+        }
+    },
+    "issues": {
+        "tou_power_dropped": {
+            "description": "Rules {rules} use self-consumption, which carries no power on the device, so their power values were dropped and sent as \"-\".",
+            "title": "Time-of-use plan adjusted"
+        }
+    },
+    "selector": {
+        "device_type": {
+            "options": {
+                "ez1": "EZ1 series (microinverter)",
+                "lake6": "Lake series (battery)"
+            }
+        }
+    }
+}
