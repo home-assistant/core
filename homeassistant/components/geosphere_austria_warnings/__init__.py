@@ -12,7 +12,7 @@ from .const import DOMAIN
 from .coordinator import GeoSphereConfigEntry, GeoSphereUpdateCoordinator
 from .services import async_setup_services
 
-PLATFORMS: list[Platform] = [Platform.SENSOR]
+PLATFORMS: list[Platform] = [Platform.EVENT, Platform.SENSOR]
 
 _LOGGER = logging.getLogger(__name__)
 

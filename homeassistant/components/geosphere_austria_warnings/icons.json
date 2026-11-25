@@ -1,5 +1,10 @@
 {
   "entity": {
+    "event": {
+      "warning": {
+        "default": "mdi:alert-decagram"
+      }
+    },
     "sensor": {
       "active_warning_level": {
         "default": "mdi:alert"

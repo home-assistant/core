@@ -21,6 +21,19 @@
     }
   },
   "entity": {
+    "event": {
+      "warning": {
+        "name": "Warning",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "issued": "Issued",
+              "updated": "Updated"
+            }
+          }
+        }
+      }
+    },
     "sensor": {
       "active_warning_level": {
         "name": "Active warning level",
