@@ -40,6 +40,16 @@ class RoombaSensorEntityDescription(SensorEntityDescription):
     refresh_on_signal: bool = False
 
 
+def _battery_cycles(entity: IRobotEntity) -> int | None:
+    """Return the battery cycles, falling back to the battery's own count."""
+    charges = entity.battery_stats.get("nLithChrg") or entity.battery_stats.get(
+        "nNimhChrg"
+    )
+    if charges or (cycle_count := entity.battery_info.get("cCount")) is None:
+        return charges
+    return cycle_count
+
+
 DOCK_SENSORS: list[RoombaSensorEntityDescription] = [
     RoombaSensorEntityDescription(
         key="dock_tank_level",
@@ -70,11 +80,7 @@ SENSORS: list[RoombaSensorEntityDescription] = [
         translation_key="battery_cycles",
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
-        value_fn=lambda self: (
-            self.battery_stats.get("nLithChrg")
-            or self.battery_stats.get("nNimhChrg")
-            or self.battery_info.get("cCount")
-        ),
+        value_fn=_battery_cycles,
     ),
     RoombaSensorEntityDescription(
         key="total_cleaning_time",
