@@ -148,7 +148,7 @@ class RepairsFlow(
                     )
                 ) is None:
                     raise data_entry_flow.FlowError(
-                        f"issue {repairs_flow['context']['issue_id']} not found in next_flow"
+                        f"issue {repairs_flow['context']['issue_id']} does not exist"
                     )
                 result["result"] = issue
                 result["next_flow"] = next_flow
