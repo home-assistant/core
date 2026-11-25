@@ -25,6 +25,7 @@ from homeassistant.components.vacuum import DOMAIN as VACUUM_DOMAIN, SERVICE_LOC
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.setup import async_setup_component
 
 VACUUM_ENTITY_ID = "vacuum.test_roomba"
@@ -451,3 +452,45 @@ async def test_session_uses_longer_connect_timeout(
         await _advance(hass, freezer, PERIODIC_UPDATE_INTERVAL)
 
     assert call(SESSION_CONNECT_TIMEOUT) in mock_timeout.call_args_list
+
+
+async def test_options_from_before_removal_select_periodic_mode(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_config_entry: MockConfigEntry,
+    periodic_roomba: AsyncMock,
+) -> None:
+    """Test options stored before 2026.11 still turn the periodic mode on."""
+    mock_config_entry.add_to_hass(hass)
+    hass.config_entries.async_update_entry(
+        mock_config_entry, options={CONF_CONTINUOUS: False, "delay": 1}
+    )
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    await _advance(hass, freezer, timedelta(seconds=TELEMETRY_QUIET_SECONDS))
+
+    assert not periodic_roomba.connected
+
+
+async def test_command_fails_cleanly_when_unreachable(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_config_entry: MockConfigEntry,
+    periodic_roomba: AsyncMock,
+) -> None:
+    """Test a command to an unreachable robot raises a translated error."""
+    await _setup(hass, mock_config_entry, continuous=False)
+    await _advance(hass, freezer, timedelta(seconds=TELEMETRY_QUIET_SECONDS))
+    periodic_roomba.connect.side_effect = RoombaConnectionError
+
+    with pytest.raises(HomeAssistantError) as exc_info:
+        await hass.services.async_call(
+            VACUUM_DOMAIN,
+            SERVICE_LOCATE,
+            {ATTR_ENTITY_ID: VACUUM_ENTITY_ID},
+            blocking=True,
+        )
+
+    assert exc_info.value.translation_key == "not_connected"
+    periodic_roomba.send_command.assert_not_awaited()
