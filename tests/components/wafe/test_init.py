@@ -124,9 +124,9 @@ async def test_setup_retries_when_identity_is_refused(
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
+@pytest.mark.usefixtures("init_integration")
 async def test_unit_goes_unavailable_and_recovers(
     hass: HomeAssistant,
-    init_integration: MockConfigEntry,
     mock_unit: MockModbusUnit,
     freezer: FrozenDateTimeFactory,
 ) -> None:

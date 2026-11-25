@@ -39,9 +39,9 @@ async def test_all_entities(
         pytest.param(9, STATE_UNKNOWN, id="undocumented"),
     ],
 )
+@pytest.mark.usefixtures("init_integration")
 async def test_state(
     hass: HomeAssistant,
-    init_integration: MockConfigEntry,
     mock_unit: MockModbusUnit,
     freezer: FrozenDateTimeFactory,
     raw: int,
