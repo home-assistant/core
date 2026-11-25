@@ -40,6 +40,8 @@ from homeassistant.const import (
     SERVICE_TURN_ON,
     STATE_OFF,
     STATE_ON,
+    CommonServiceArgument,
+    TargetKey,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, Unauthorized
@@ -60,7 +62,10 @@ async def test_turn_on(hass: HomeAssistant) -> None:
     await async_setup_component(hass, ha.DOMAIN, {})
     calls = async_mock_service(hass, "light", SERVICE_TURN_ON)
     await hass.services.async_call(
-        ha.DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: "light.Ceiling"}, blocking=True
+        ha.DOMAIN,
+        SERVICE_TURN_ON,
+        {CommonServiceArgument.ENTITY_ID: "light.Ceiling"},
+        blocking=True,
     )
     assert len(calls) == 1
 
@@ -70,7 +75,10 @@ async def test_turn_off(hass: HomeAssistant) -> None:
     await async_setup_component(hass, ha.DOMAIN, {})
     calls = async_mock_service(hass, "light", SERVICE_TURN_OFF)
     await hass.services.async_call(
-        ha.DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: "light.Bowl"}, blocking=True
+        ha.DOMAIN,
+        SERVICE_TURN_OFF,
+        {CommonServiceArgument.ENTITY_ID: "light.Bowl"},
+        blocking=True,
     )
     assert len(calls) == 1
 
@@ -80,7 +88,10 @@ async def test_toggle(hass: HomeAssistant) -> None:
     await async_setup_component(hass, ha.DOMAIN, {})
     calls = async_mock_service(hass, "light", SERVICE_TOGGLE)
     await hass.services.async_call(
-        ha.DOMAIN, SERVICE_TOGGLE, {ATTR_ENTITY_ID: "light.Bowl"}, blocking=True
+        ha.DOMAIN,
+        SERVICE_TOGGLE,
+        {CommonServiceArgument.ENTITY_ID: "light.Bowl"},
+        blocking=True,
     )
     assert len(calls) == 1
 
@@ -371,8 +382,8 @@ async def test_turn_on_exclude(hass: HomeAssistant) -> None:
         ha.DOMAIN,
         SERVICE_TURN_ON,
         {
-            ATTR_ENTITY_ID: ["light.ceiling", "light.kitchen"],
-            CONF_EXCLUDE: {ATTR_ENTITY_ID: "light.kitchen"},
+            TargetKey.ENTITY_ID: ["light.ceiling", "light.kitchen"],
+            CONF_EXCLUDE: {TargetKey.ENTITY_ID: "light.kitchen"},
         },
         blocking=True,
     )
@@ -401,7 +412,10 @@ async def test_turn_on_off_toggle_invalid_exclude(
         await hass.services.async_call(
             ha.DOMAIN,
             service,
-            {ATTR_ENTITY_ID: ["light.ceiling", "light.kitchen"], CONF_EXCLUDE: exclude},
+            {
+                CommonServiceArgument.ENTITY_ID: ["light.ceiling", "light.kitchen"],
+                CONF_EXCLUDE: exclude,
+            },
             blocking=True,
         )
     assert not calls
@@ -462,7 +476,9 @@ async def test_reload_config_entry_by_entity_id(
     assert (
         "Reloading a config entry by target is deprecated and will stop working in "
         "Home Assistant 2027.4, please specify the config entry to reload in the "
-        "'entry_id' parameter instead"
+        "'entry_id' parameter instead. Called from an action outside of automations "
+        "and scripts with target {'entity_id': "
+        f"['{reg_entity1.entity_id}', '{reg_entity2.entity_id}']}}"
     ) in caplog.text
 
     with pytest.raises(ValueError):
@@ -472,6 +488,137 @@ async def test_reload_config_entry_by_entity_id(
             {"entity_id": "unknown.entity_id"},
             blocking=True,
         )
+
+
+@pytest.mark.parametrize(
+    ("domain", "config", "entity_id", "service", "caller"),
+    [
+        pytest.param(
+            "automation",
+            {
+                "automation": {
+                    "id": "kitchen_reload_id",
+                    "alias": "Kitchen reload",
+                    "triggers": {"trigger": "event", "event_type": "test_event"},
+                    "actions": {
+                        "action": "homeassistant.reload_config_entry",
+                        "target": {"entity_id": "binary_sensor.kitchen"},
+                    },
+                }
+            },
+            "automation.kitchen_reload",
+            "trigger",
+            "from automation.kitchen_reload",
+            id="automation",
+        ),
+        pytest.param(
+            "automation",
+            {
+                "automation": {
+                    "alias": "Kitchen reload",
+                    "triggers": {"trigger": "event", "event_type": "test_event"},
+                    "actions": {
+                        "action": "homeassistant.reload_config_entry",
+                        "target": {"entity_id": "binary_sensor.kitchen"},
+                    },
+                }
+            },
+            "automation.kitchen_reload",
+            "trigger",
+            "from an automation or script without an ID",
+            id="automation_without_id",
+        ),
+        pytest.param(
+            "script",
+            {
+                "script": {
+                    "reload_kitchen": {
+                        "sequence": {
+                            "action": "homeassistant.reload_config_entry",
+                            "target": {"entity_id": "binary_sensor.kitchen"},
+                        }
+                    }
+                }
+            },
+            "script.reload_kitchen",
+            "turn_on",
+            "from script.reload_kitchen",
+            id="script",
+        ),
+    ],
+)
+async def test_reload_config_entry_by_target_logs_caller(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    caplog: pytest.LogCaptureFixture,
+    domain: str,
+    config: dict[str, Any],
+    entity_id: str,
+    service: str,
+    caller: str,
+) -> None:
+    """Test the deprecation warning names the automation or script."""
+    await async_setup_component(hass, DOMAIN, {})
+    entry = MockConfigEntry(domain="mockdomain")
+    entry.add_to_hass(hass)
+    entity_registry.async_get_or_create(
+        "binary_sensor",
+        "mockdomain",
+        "kitchen",
+        suggested_object_id="kitchen",
+        config_entry=entry,
+    )
+    assert await async_setup_component(hass, domain, config)
+
+    with patch(
+        "homeassistant.config_entries.ConfigEntries.async_reload",
+        return_value=None,
+    ) as mock_reload:
+        await hass.services.async_call(
+            domain, service, {"entity_id": entity_id}, blocking=True
+        )
+        await hass.async_block_till_done()
+
+    mock_reload.assert_called_once_with(entry.entry_id)
+    assert (
+        f"Called {caller} with target {{'entity_id': ['binary_sensor.kitchen']}}"
+    ) in caplog.text
+
+
+async def test_reload_config_entry_by_target_logs_user(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    hass_admin_user: MockUser,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test the deprecation warning names the user of a direct action call."""
+    await async_setup_component(hass, DOMAIN, {})
+    entry = MockConfigEntry(domain="mockdomain")
+    entry.add_to_hass(hass)
+    entity_registry.async_get_or_create(
+        "binary_sensor",
+        "mockdomain",
+        "kitchen",
+        suggested_object_id="kitchen",
+        config_entry=entry,
+    )
+
+    with patch(
+        "homeassistant.config_entries.ConfigEntries.async_reload",
+        return_value=None,
+    ):
+        await hass.services.async_call(
+            DOMAIN,
+            "reload_config_entry",
+            {"entity_id": "binary_sensor.kitchen"},
+            blocking=True,
+            context=ha.Context(user_id=hass_admin_user.id),
+        )
+
+    assert (
+        "Called by user Mock User outside of automations and scripts with target "
+        "{'entity_id': ['binary_sensor.kitchen']}"
+    ) in caplog.text
 
 
 async def test_reload_config_entry_by_entry_id(

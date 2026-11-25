@@ -58,6 +58,7 @@ def setup_multi_feature_product(category, features, name, model):
     type(product).product = PropertyMock(return_value=model)
     type(product).brand = PropertyMock(return_value="BleBox")
     type(product).firmware_version = PropertyMock(return_value="1.23")
+    type(product).hardware_version = PropertyMock(return_value="0.1")
     type(product).unique_id = PropertyMock(return_value="aabbcc112233")
 
     for feature in features:

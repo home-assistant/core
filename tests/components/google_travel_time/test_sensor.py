@@ -7,6 +7,7 @@ from google_maps_routing_api import (
     ComputeRoutesResponse,
     GoogleMapsRoutingApiAuthError,
     GoogleMapsRoutingApiError,
+    RoutingPreference,
     Units,
 )
 import pytest
@@ -18,6 +19,7 @@ from homeassistant.components.google_travel_time.const import (
     CONF_DEPARTURE_TIME,
     CONF_TRANSIT_MODE,
     CONF_TRANSIT_ROUTING_PREFERENCE,
+    CONF_TRAVEL_ROUTING_PREFERENCE,
     CONF_UNITS,
     DOMAIN,
     UNITS_METRIC,
@@ -170,6 +172,45 @@ async def test_sensor_arrival_time(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize(
+    ("travel_routing_preference", "expected_option"),
+    [
+        (None, RoutingPreference.TRAFFIC_AWARE_OPTIMAL),
+        ("traffic_unaware", RoutingPreference.TRAFFIC_UNAWARE),
+        ("traffic_aware", RoutingPreference.TRAFFIC_AWARE),
+        ("traffic_aware_optimal", RoutingPreference.TRAFFIC_AWARE_OPTIMAL),
+    ],
+)
+async def test_sensor_travel_routing_preference(
+    hass: HomeAssistant,
+    routes_mock: AsyncMock,
+    travel_routing_preference: str | None,
+    expected_option: RoutingPreference,
+) -> None:
+    """Test that the travel_routing_preference option is provided to compute_routes."""
+
+    options = {
+        **DEFAULT_OPTIONS,
+        CONF_MODE: "driving",
+        CONF_TRAVEL_ROUTING_PREFERENCE: travel_routing_preference,
+    }
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data=MOCK_CONFIG,
+        options=options,
+        entry_id="test",
+    )
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    routes_mock.async_compute_routes.assert_called_once()
+    assert (
+        routes_mock.async_compute_routes.call_args.kwargs["routing_preference"]
+        == expected_option
+    )
+
+
+@pytest.mark.parametrize(
     ("unit_system", "expected_unit_option"),
     [
         (METRIC_SYSTEM, Units.METRIC),
@@ -273,8 +314,9 @@ async def test_sensor_auth_error_no_issue(
 ) -> None:
     """Test that a non Routes API disabled auth error does not create an issue."""
     routes_mock.async_compute_routes.side_effect = GoogleMapsRoutingApiAuthError(
-        "API key not valid. Please pass a valid API key.",
-        reason="API_KEY_INVALID",
+        "Requests from referer <empty> are blocked.",
+        status="PERMISSION_DENIED",
+        reason="API_KEY_HTTP_REFERRER_BLOCKED",
     )
     freezer.tick(SCAN_INTERVAL)
     async_fire_time_changed(hass)

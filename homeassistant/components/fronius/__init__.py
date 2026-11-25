@@ -4,14 +4,13 @@ from typing import Final
 
 from fronius_solarapi import FroniusSolarApi
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import CONF_AUTO_REVERT_POWER_LIMIT, CONF_MODBUS_PORT, DEFAULT_MODBUS_PORT
-from .solar_net import FroniusSolarNet
+from .solar_net import FroniusConfigEntry, FroniusSolarNet
 
 PLATFORMS: Final = [
     Platform.BINARY_SENSOR,
@@ -19,8 +18,6 @@ PLATFORMS: Final = [
     Platform.SENSOR,
     Platform.SWITCH,
 ]
-
-type FroniusConfigEntry = ConfigEntry[FroniusSolarNet]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: FroniusConfigEntry) -> None:

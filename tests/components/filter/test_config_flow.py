@@ -75,6 +75,18 @@ from homeassistant.data_entry_flow import FlowResultType
             },
         ),
         (
+            {CONF_FILTER_NAME: FILTER_NAME_RANGE},
+            {
+                CONF_FILTER_LOWER_BOUND: -40.0,
+                CONF_FILTER_UPPER_BOUND: -5.0,
+            },
+            {
+                CONF_FILTER_NAME: FILTER_NAME_RANGE,
+                CONF_FILTER_LOWER_BOUND: -40.0,
+                CONF_FILTER_UPPER_BOUND: -5.0,
+            },
+        ),
+        (
             {CONF_FILTER_NAME: FILTER_NAME_TIME_SMA},
             {
                 CONF_TIME_SMA_TYPE: TIME_SMA_LAST,

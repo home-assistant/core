@@ -1,15 +1,18 @@
 """Test init of Brother integration."""
 
+import logging
 from unittest.mock import AsyncMock
 
-from brother import SnmpError
+from brother import SnmpError, UnsupportedModelError
+from freezegun.api import FrozenDateTimeFactory
 import pytest
-from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components.brother.const import (
     CONF_COMMUNITY,
     DOMAIN,
     SECTION_ADVANCED_SETTINGS,
+    UPDATE_INTERVAL,
 )
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_HOST, CONF_PORT, CONF_TYPE
@@ -56,6 +59,40 @@ async def test_error_on_init(
     await init_integration(hass, mock_config_entry)
 
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+
+
+@pytest.mark.parametrize(
+    ("exc", "level"),
+    [
+        (ConnectionError, logging.INFO),
+        (TimeoutError, logging.INFO),
+        (SnmpError("SNMP Error"), logging.ERROR),
+        (UnsupportedModelError("error"), logging.ERROR),
+    ],
+)
+async def test_update_failure_log_level(
+    hass: HomeAssistant,
+    exc: Exception,
+    level: int,
+    mock_brother_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test an unreachable printer is logged at info level, not as an error."""
+    await init_integration(hass, mock_config_entry)
+
+    mock_brother_client.async_update.side_effect = exc
+    freezer.tick(UPDATE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert [
+        record.levelno
+        for record in caplog.records
+        if record.name.startswith("homeassistant.components.brother")
+        and record.levelno > logging.DEBUG
+    ] == [level]
 
 
 async def test_unload_entry(

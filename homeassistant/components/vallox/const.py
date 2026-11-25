@@ -9,20 +9,16 @@ DEFAULT_NAME = "Vallox"
 
 STATE_SCAN_INTERVAL = timedelta(seconds=60)
 
-# Common metric keys and (default) values.
-METRIC_KEY_MODE = "A_CYC_MODE"
+# Common metric keys.
 METRIC_KEY_PROFILE_FAN_SPEED_HOME = "A_CYC_HOME_SPEED_SETTING"
 METRIC_KEY_PROFILE_FAN_SPEED_AWAY = "A_CYC_AWAY_SPEED_SETTING"
 METRIC_KEY_PROFILE_FAN_SPEED_BOOST = "A_CYC_BOOST_SPEED_SETTING"
-
-MODE_ON = 0
-MODE_OFF = 5
 
 DEFAULT_FAN_SPEED_HOME = 50
 DEFAULT_FAN_SPEED_AWAY = 25
 DEFAULT_FAN_SPEED_BOOST = 65
 
-I18N_KEY_TO_VALLOX_PROFILE = {
+PRESET_MODE_TO_VALLOX_PROFILE = {
     "home": VALLOX_PROFILE.HOME,
     "away": VALLOX_PROFILE.AWAY,
     "boost": VALLOX_PROFILE.BOOST,
@@ -32,23 +28,14 @@ I18N_KEY_TO_VALLOX_PROFILE = {
 }
 
 VALLOX_PROFILE_TO_PRESET_MODE = {
-    VALLOX_PROFILE.HOME: "Home",
-    VALLOX_PROFILE.AWAY: "Away",
-    VALLOX_PROFILE.BOOST: "Boost",
-    VALLOX_PROFILE.FIREPLACE: "Fireplace",
-    VALLOX_PROFILE.EXTRA: "Extra",
-    VALLOX_PROFILE.AUTO: "Auto",
-}
-
-PRESET_MODE_TO_VALLOX_PROFILE = {
-    value: key for (key, value) in VALLOX_PROFILE_TO_PRESET_MODE.items()
+    value: key for (key, value) in PRESET_MODE_TO_VALLOX_PROFILE.items()
 }
 
 VALLOX_CELL_STATE_TO_STR = {
-    0: "Heat Recovery",
-    1: "Cool Recovery",
-    2: "Bypass",
-    3: "Defrosting",
+    0: "heat_recovery",
+    1: "cool_recovery",
+    2: "bypass",
+    3: "defrosting",
 }
 
 # The vallox_websocket_api client uses a hardcoded value of 65535 to

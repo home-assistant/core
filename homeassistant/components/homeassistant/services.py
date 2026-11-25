@@ -12,7 +12,7 @@ from homeassistant import config as conf_util, core_config
 from homeassistant.auth.permissions.const import CAT_ENTITIES, POLICY_CONTROL
 from homeassistant.components import persistent_notification
 from homeassistant.components.notify import DOMAIN as NOTIFY_DOMAIN
-from homeassistant.const import ATTR_ENTITY_ID, CONF_EXCLUDE, SERVICE_RELOAD
+from homeassistant.const import CONF_EXCLUDE, SERVICE_RELOAD, CommonServiceArgument
 from homeassistant.core import (
     HomeAssistant,
     ServiceCall,
@@ -21,7 +21,12 @@ from homeassistant.core import (
     split_entity_id,
 )
 from homeassistant.exceptions import HomeAssistantError, Unauthorized, UnknownUser
-from homeassistant.helpers import config_validation as cv, recorder, restore_state
+from homeassistant.helpers import (
+    config_validation as cv,
+    entity_registry as er,
+    recorder,
+    restore_state,
+)
 from homeassistant.helpers.entity_component import async_update_entity
 from homeassistant.helpers.service import (
     async_extract_config_entry_ids,
@@ -32,6 +37,7 @@ from homeassistant.helpers.target import (
     async_extract_referenced_entity_ids,
 )
 from homeassistant.helpers.template import async_load_custom_templates
+from homeassistant.helpers.trace import trace_id_get
 
 from .const import (
     DATA_STOP_HANDLER,
@@ -42,7 +48,7 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
-SCHEMA_UPDATE_ENTITY = probatio.Schema({ATTR_ENTITY_ID: cv.entity_ids})
+SCHEMA_UPDATE_ENTITY = probatio.Schema({CommonServiceArgument.ENTITY_ID: cv.entity_ids})
 SCHEMA_RELOAD_CONFIG_ENTRY = probatio.All(
     probatio.Schema(
         {
@@ -107,7 +113,7 @@ async def _async_handle_turn_service(service: ServiceCall) -> None:
         data = dict(service.data)
 
         # ent_ids is a generator, convert it to a list.
-        data[ATTR_ENTITY_ID] = list(ent_ids)
+        data[CommonServiceArgument.ENTITY_ID] = list(ent_ids)
 
         tasks.append(
             hass.services.async_call(
@@ -185,7 +191,7 @@ async def _async_handle_update_service(call: ServiceCall) -> None:
                 user_id=call.context.user_id,
             )
 
-        for entity in call.data[ATTR_ENTITY_ID]:
+        for entity in call.data[CommonServiceArgument.ENTITY_ID]:
             if not user.permissions.check_entity(entity, POLICY_CONTROL):
                 raise Unauthorized(
                     context=call.context,
@@ -194,7 +200,10 @@ async def _async_handle_update_service(call: ServiceCall) -> None:
                     perm_category=CAT_ENTITIES,
                 )
 
-    tasks = [async_update_entity(hass, entity) for entity in call.data[ATTR_ENTITY_ID]]
+    tasks = [
+        async_update_entity(hass, entity)
+        for entity in call.data[CommonServiceArgument.ENTITY_ID]
+    ]
 
     if tasks:
         await asyncio.gather(*tasks)
@@ -236,6 +245,23 @@ async def _async_handle_reload_templates(call: ServiceCall) -> None:
     await async_load_custom_templates(hass)
 
 
+async def _async_get_caller(call: ServiceCall) -> str:
+    """Return the automation, script or user that runs the current action."""
+    hass = call.hass
+    if (trace_id := trace_id_get()) is not None:
+        # The trace key is the domain and the unique ID of the automation or script
+        domain, _, unique_id = trace_id[0].partition(".")
+        entity_registry = er.async_get(hass)
+        if entity_id := entity_registry.async_get_entity_id(domain, domain, unique_id):
+            return f"from {entity_id}"
+        return "from an automation or script without an ID"
+    if (user_id := call.context.user_id) and (
+        user := await hass.auth.async_get_user(user_id)
+    ):
+        return f"by user {user.name} outside of automations and scripts"
+    return "from an action outside of automations and scripts"
+
+
 async def _async_handle_reload_config_entry(call: ServiceCall) -> None:
     """Service handler for reloading a config entry."""
     hass = call.hass
@@ -246,7 +272,10 @@ async def _async_handle_reload_config_entry(call: ServiceCall) -> None:
         _LOGGER.warning(
             "Reloading a config entry by target is deprecated and will stop "
             "working in Home Assistant 2027.4, please specify the config entry "
-            "to reload in the 'entry_id' parameter instead"
+            "to reload in the 'entry_id' parameter instead. Called %s with "
+            "target %s",
+            await _async_get_caller(call),
+            {key: value for key, value in call.data.items() if key in cv.TARGET_FIELDS},
         )
     reload_entries.update(await async_extract_config_entry_ids(call))
     if not reload_entries:
@@ -311,7 +340,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
 
     service_schema = probatio.Schema(
         {
-            ATTR_ENTITY_ID: cv.entity_ids,
+            CommonServiceArgument.ENTITY_ID: cv.entity_ids,
             probatio.Optional(CONF_EXCLUDE): cv.TARGET_EXCLUDE_SCHEMA,
         },
         extra=probatio.ALLOW_EXTRA,

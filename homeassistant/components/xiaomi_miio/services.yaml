@@ -128,7 +128,7 @@ switch_set_power_price:
       integration: xiaomi_miio
       domain: switch
   fields:
-    mode:
+    price:
       required: true
       selector:
         number:
@@ -218,10 +218,12 @@ vacuum_clean_zone:
       domain: vacuum
   fields:
     zone:
+      required: true
       example: "[[23510,25311,25110,26362]]"
       selector:
         object:
     repeats:
+      required: true
       selector:
         number:
           min: 1
@@ -234,10 +236,12 @@ vacuum_goto:
       domain: vacuum
   fields:
     x_coord:
+      required: true
       example: 27500
       selector:
         text:
     y_coord:
+      required: true
       example: 32000
       selector:
         text:
@@ -249,6 +253,7 @@ vacuum_clean_segment:
       domain: vacuum
   fields:
     segments:
+      required: true
       example: "[1,2]"
       selector:
         object:
