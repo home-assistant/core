@@ -62,6 +62,9 @@ class HomeKitCamera(AccessoryEntity, Camera):
                     self._async_entry_updated
                 )
             )
+            # The address may have changed before the listener was added, while
+            # the camera registered with its WebRTC provider
+            await self._async_entry_updated(self.hass, self._accessory.config_entry)
 
     async def _async_entry_updated(
         self, hass: HomeAssistant, entry: ConfigEntry

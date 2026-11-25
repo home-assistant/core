@@ -2374,3 +2374,28 @@ async def test_aac_transcode_for_empty_stream_source(
         f"ffmpeg:{identifier}#audio=aac#query=log_level=debug"
         in rest_client.streams.add.call_args[0][1]
     )
+
+
+@pytest.mark.usefixtures("mock_is_docker_env", "mock_get_binary")
+@pytest.mark.parametrize(
+    ("config", "supported"),
+    [
+        ({DOMAIN: {}}, True),
+        ({DOMAIN: {CONF_URL: "http://192.168.1.5:1984/"}}, False),
+    ],
+)
+async def test_homekit_source_only_on_managed_server(
+    hass: HomeAssistant,
+    server: Mock,
+    rest_client: AsyncMock,
+    config: ConfigType,
+    supported: bool,
+) -> None:
+    """Test a homekit:// source, holding the pairing key, stays on the managed server."""
+    rest_client.schemes.list.return_value = {"rtsp", "homekit"}
+    assert await async_setup_component(hass, DOMAIN, config)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    provider = hass.config_entries.async_entries(DOMAIN)[0].runtime_data
+    assert provider.async_is_supported("homekit://192.168.1.50:40129") is supported
+    assert provider.async_is_supported("rtsp://camera") is True

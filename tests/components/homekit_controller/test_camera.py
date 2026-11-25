@@ -2,7 +2,7 @@
 
 import base64
 from collections.abc import Callable
-from unittest.mock import ANY, patch
+from unittest.mock import ANY, Mock, patch
 
 from aiohomekit.model import Accessory
 from aiohomekit.model.characteristics import CharacteristicsTypes
@@ -15,6 +15,7 @@ from homeassistant.components.camera import (
     CameraEntityFeature,
     get_camera_from_entity_id,
 )
+from homeassistant.components.homekit_controller.camera import HomeKitCamera
 from homeassistant.const import ATTR_SUPPORTED_FEATURES
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -274,6 +275,28 @@ async def test_address_change_passed_to_webrtc_provider(
         # Moving back is passed on too
         await _move_camera(hass, helper, TEST_IP_PAIRING_DATA["AccessoryIP"])
         assert source_changed.call_count == 2
+
+
+async def test_address_change_before_listener_passed_on(
+    hass: HomeAssistant,
+) -> None:
+    """Test an address change while the camera registers is passed on."""
+    original = HomeKitCamera.async_added_to_hass
+    source_changed = Mock()
+
+    async def _move_while_registering(self: HomeKitCamera) -> None:
+        # Discovery finds a new address before the listener is added
+        entry = self._accessory.config_entry
+        hass.config_entries.async_update_entry(
+            entry, data={**entry.data, "AccessoryIP": "192.168.1.60"}
+        )
+        with patch.object(self, "async_webrtc_source_changed", source_changed):
+            await original(self)
+
+    with patch.object(HomeKitCamera, "async_added_to_hass", _move_while_registering):
+        await setup_test_component(hass, 1, create_camera, connection="IP")
+
+    source_changed.assert_called_once()
 
 
 async def test_no_stream_for_bridged_camera(hass: HomeAssistant) -> None:

@@ -359,7 +359,12 @@ class WebRTCProvider(CameraWebRTCProvider):
     @override
     def async_is_supported(self, stream_source: str) -> bool:
         """Return if this provider is supports the Camera as source."""
-        return stream_source.partition(":")[0] in self._supported_schemes
+        scheme = stream_source.partition(":")[0]
+        # A homekit:// source holds Home Assistant's pairing key for the
+        # accessory, so it only goes to the server Home Assistant manages
+        if scheme == "homekit" and not self._managed:
+            return False
+        return scheme in self._supported_schemes
 
     @override
     async def async_handle_async_webrtc_offer(
