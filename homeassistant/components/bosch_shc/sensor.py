@@ -5,6 +5,7 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any, override
 
 from boschshcpy import (
+    SHCLightControl,
     SHCLightSwitchBSM,
     SHCMicromoduleShutterControl,
     SHCMotionDetector2,
@@ -56,7 +57,9 @@ class SHCSensorEntityDescription[_DeviceT: SHCDevice](SensorEntityDescription):
     attributes_fn: Callable[[_DeviceT], dict[str, Any]] | None = None
 
 
-type _PowerMeterDevice = SHCSmartPlug | SHCLightSwitchBSM | SHCMicromoduleShutterControl
+type _PowerMeterDevice = (
+    SHCSmartPlug | SHCLightSwitchBSM | SHCLightControl | SHCMicromoduleShutterControl
+)
 
 TEMPERATURE_SENSOR = "temperature"
 HUMIDITY_SENSOR = "humidity"
@@ -416,6 +419,7 @@ async def async_setup_entry(
     power_meter_devices: list[_PowerMeterDevice] = [
         *session.device_helper.smart_plugs,
         *session.device_helper.light_switches_bsm,
+        *session.device_helper.micromodule_light_controls,
         *session.device_helper.micromodule_shutter_controls,
         *session.device_helper.micromodule_blinds,
     ]
