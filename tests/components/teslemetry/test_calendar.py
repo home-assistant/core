@@ -11,16 +11,10 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.calendar import (
     DOMAIN as CALENDAR_DOMAIN,
-    EVENT_END_DATETIME,
-    EVENT_START_DATETIME,
-    SERVICE_GET_EVENTS,
+    CalendarService,
+    CalendarServiceArgument,
 )
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    STATE_UNAVAILABLE,
-    STATE_UNKNOWN,
-    Platform,
-)
+from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN, Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util import dt as dt_util
@@ -205,11 +199,15 @@ async def test_calendar_events(
 
     result = await hass.services.async_call(
         CALENDAR_DOMAIN,
-        SERVICE_GET_EVENTS,
+        CalendarService.GET_EVENTS,
         {
-            ATTR_ENTITY_ID: [entity_id],
-            EVENT_START_DATETIME: dt_util.parse_datetime("2024-01-01T00:00:00Z"),
-            EVENT_END_DATETIME: dt_util.parse_datetime("2024-01-07T00:00:00Z"),
+            TargetKey.ENTITY_ID: [entity_id],
+            CalendarServiceArgument.START_DATE_TIME: dt_util.parse_datetime(
+                "2024-01-01T00:00:00Z"
+            ),
+            CalendarServiceArgument.END_DATE_TIME: dt_util.parse_datetime(
+                "2024-01-07T00:00:00Z"
+            ),
         },
         blocking=True,
         return_response=True,
@@ -351,11 +349,15 @@ async def test_calendar_invalid_season_data(
     # async_get_events also returns empty when no valid seasons
     result = await hass.services.async_call(
         CALENDAR_DOMAIN,
-        SERVICE_GET_EVENTS,
+        CalendarService.GET_EVENTS,
         {
-            ATTR_ENTITY_ID: [ENTITY_BUY],
-            EVENT_START_DATETIME: dt_util.parse_datetime("2024-06-15T00:00:00Z"),
-            EVENT_END_DATETIME: dt_util.parse_datetime("2024-06-17T00:00:00Z"),
+            TargetKey.ENTITY_ID: [ENTITY_BUY],
+            CalendarServiceArgument.START_DATE_TIME: dt_util.parse_datetime(
+                "2024-06-15T00:00:00Z"
+            ),
+            CalendarServiceArgument.END_DATE_TIME: dt_util.parse_datetime(
+                "2024-06-17T00:00:00Z"
+            ),
         },
         blocking=True,
         return_response=True,
@@ -379,11 +381,15 @@ async def test_calendar_week_crossing_get_events(
     # Request events for a full week - only Fri-Mon should have events
     result = await hass.services.async_call(
         CALENDAR_DOMAIN,
-        SERVICE_GET_EVENTS,
+        CalendarService.GET_EVENTS,
         {
-            ATTR_ENTITY_ID: [ENTITY_BUY],
-            EVENT_START_DATETIME: dt_util.parse_datetime("2024-01-01T00:00:00Z"),
-            EVENT_END_DATETIME: dt_util.parse_datetime("2024-01-08T00:00:00Z"),
+            TargetKey.ENTITY_ID: [ENTITY_BUY],
+            CalendarServiceArgument.START_DATE_TIME: dt_util.parse_datetime(
+                "2024-01-01T00:00:00Z"
+            ),
+            CalendarServiceArgument.END_DATE_TIME: dt_util.parse_datetime(
+                "2024-01-08T00:00:00Z"
+            ),
         },
         blocking=True,
         return_response=True,
@@ -417,11 +423,11 @@ async def test_calendar_midnight_crossing_local_start(
 
     result = await hass.services.async_call(
         CALENDAR_DOMAIN,
-        SERVICE_GET_EVENTS,
+        CalendarService.GET_EVENTS,
         {
-            ATTR_ENTITY_ID: [ENTITY_BUY],
-            EVENT_START_DATETIME: start,
-            EVENT_END_DATETIME: end,
+            TargetKey.ENTITY_ID: [ENTITY_BUY],
+            CalendarServiceArgument.START_DATE_TIME: start,
+            CalendarServiceArgument.END_DATE_TIME: end,
         },
         blocking=True,
         return_response=True,
@@ -469,11 +475,15 @@ async def test_calendar_end_of_day_period(
 
     result = await hass.services.async_call(
         CALENDAR_DOMAIN,
-        SERVICE_GET_EVENTS,
+        CalendarService.GET_EVENTS,
         {
-            ATTR_ENTITY_ID: [ENTITY_BUY],
-            EVENT_START_DATETIME: datetime(2024, 1, 7, 0, 0, 0, tzinfo=tz),
-            EVENT_END_DATETIME: datetime(2024, 1, 8, 0, 0, 0, tzinfo=tz),
+            TargetKey.ENTITY_ID: [ENTITY_BUY],
+            CalendarServiceArgument.START_DATE_TIME: datetime(
+                2024, 1, 7, 0, 0, 0, tzinfo=tz
+            ),
+            CalendarServiceArgument.END_DATE_TIME: datetime(
+                2024, 1, 8, 0, 0, 0, tzinfo=tz
+            ),
         },
         blocking=True,
         return_response=True,

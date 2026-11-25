@@ -500,6 +500,7 @@ def _inject_config_changed(
     [
         pytest.param("plugs_ui", {"leds"}, 0, id="plugs_ui"),
         pytest.param("powerstrip_ui", {"leds"}, 0, id="powerstrip_ui"),
+        pytest.param("ui", {"brightness"}, 0, id="wall_display_ui"),
         pytest.param("switch:0", {"in_locked"}, 0, id="switch_state_key"),
         pytest.param("switch:0", set(), 0, id="switch_no_change"),
         pytest.param("switch:0", {"name"}, 1, id="switch_other_key"),

@@ -11,7 +11,7 @@ from victron_mqtt import GenericOnOff, Hub as VictronVenusHub, WritableMetric
 from victron_mqtt.testing import finalize_injection, inject_message
 
 from homeassistant.components.button import ButtonService
-from homeassistant.const import CommonServiceArgument
+from homeassistant.const import TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -62,7 +62,7 @@ async def test_button_press(
         await hass.services.async_call(
             "button",
             ButtonService.PRESS,
-            {CommonServiceArgument.ENTITY_ID: button_entity.entity_id},
+            {TargetKey.ENTITY_ID: button_entity.entity_id},
             blocking=True,
         )
 

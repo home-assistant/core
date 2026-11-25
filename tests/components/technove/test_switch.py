@@ -14,8 +14,8 @@ from homeassistant.const import (
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
     STATE_UNAVAILABLE,
-    CommonServiceArgument,
     Platform,
+    TargetKey,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
@@ -128,7 +128,7 @@ async def test_invalid_response(
         await hass.services.async_call(
             SWITCH_DOMAIN,
             SwitchService.TURN_ON,
-            {CommonServiceArgument.ENTITY_ID: state.entity_id},
+            {TargetKey.ENTITY_ID: state.entity_id},
             blocking=True,
         )
 
@@ -168,7 +168,7 @@ async def test_connection_error(
         await hass.services.async_call(
             SWITCH_DOMAIN,
             SwitchService.TURN_ON,
-            {CommonServiceArgument.ENTITY_ID: state.entity_id},
+            {TargetKey.ENTITY_ID: state.entity_id},
             blocking=True,
         )
 
@@ -197,7 +197,7 @@ async def test_disable_charging_auto_charge(
         await hass.services.async_call(
             SWITCH_DOMAIN,
             SwitchService.TURN_OFF,
-            {CommonServiceArgument.ENTITY_ID: entity_id},
+            {TargetKey.ENTITY_ID: entity_id},
             blocking=True,
         )
 

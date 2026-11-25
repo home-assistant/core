@@ -142,6 +142,30 @@ FIXTURES = [
 ]
 
 
+# An On/Off Light endpoint 3 as a part of the top outlet (endpoint 1).
+EVE_ENERGY_LIGHT_PART_ATTRIBUTES = {
+    "0/29/3": [1, 2, 3],
+    "1/29/3": [3],
+    "3/29/0": [{"0": 256, "1": 1}],
+    "3/29/1": [6, 29],
+    "3/29/2": [],
+    "3/29/3": [],
+    "3/6/0": False,
+    "3/6/65532": 0,
+    "3/6/65531": [0, 65528, 65529, 65531, 65532, 65533],
+}
+
+
+# Common Number tags 1 to 6 on the outlets (endpoints 1 to 6), so they split.
+TAPO_STRIP_NUMBER_TAG_ATTRIBUTES = {
+    **{
+        f"{endpoint_id}/29/4": [{"0": None, "1": 7, "2": endpoint_id}]
+        for endpoint_id in range(1, 7)
+    },
+    **{f"{endpoint_id}/29/65532": 1 for endpoint_id in range(1, 7)},
+}
+
+
 @cache
 def load_node_fixture(fixture: str) -> str:
     """Load a fixture."""

@@ -14,7 +14,7 @@ from homeassistant.components.number import (
     NumberService,
     NumberServiceArgument,
 )
-from homeassistant.const import CommonServiceArgument, Platform
+from homeassistant.const import Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er, json
 from homeassistant.util import json as json_util
@@ -134,7 +134,7 @@ async def test_set_value(
         NUMBER_DOMAIN,
         NumberService.SET_VALUE,
         {
-            CommonServiceArgument.ENTITY_ID: entity_id,
+            TargetKey.ENTITY_ID: entity_id,
             NumberServiceArgument.VALUE: 18,
         },
         blocking=True,
@@ -264,7 +264,7 @@ async def test_temp_unit_convert_number_invalid(
     state = hass.states.get("number.inverter_pool_heat_pump_temperature")
     assert state is not None
     assert state.attributes.get("device_class") is None
-    assert state.attributes.get("unit_of_measurement") == ""
+    assert state.attributes.get("unit_of_measurement") is None
 
 
 @pytest.mark.parametrize("mock_device_code", ["hwsb_ircs2n82vgrozoew"])
@@ -291,7 +291,7 @@ async def test_hwsb_number_with_quirk(
         NUMBER_DOMAIN,
         NumberService.SET_VALUE,
         {
-            CommonServiceArgument.ENTITY_ID: entity_id,
+            TargetKey.ENTITY_ID: entity_id,
             NumberServiceArgument.VALUE: 75,
         },
         blocking=True,

@@ -20,7 +20,7 @@ from homeassistant.components.select import (
     SelectServiceArgument,
 )
 from homeassistant.components.sofar.const import DOMAIN, PACKS_SCAN_INTERVAL
-from homeassistant.const import CommonServiceArgument, Platform
+from homeassistant.const import Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -141,7 +141,7 @@ async def test_select_option(
         SELECT_DOMAIN,
         SelectService.SELECT_OPTION,
         {
-            CommonServiceArgument.ENTITY_ID: entity_id,
+            TargetKey.ENTITY_ID: entity_id,
             SelectServiceArgument.OPTION: option,
         },
         blocking=True,
@@ -166,7 +166,7 @@ async def test_select_option_modbus_error(
             SELECT_DOMAIN,
             SelectService.SELECT_OPTION,
             {
-                CommonServiceArgument.ENTITY_ID: charger_id,
+                TargetKey.ENTITY_ID: charger_id,
                 SelectServiceArgument.OPTION: "feed_in_priority_mode",
             },
             blocking=True,

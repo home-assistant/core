@@ -2,6 +2,7 @@
 
 from unittest.mock import AsyncMock, MagicMock, call
 
+from aiohttp import ClientConnectionError
 from freezegun.api import FrozenDateTimeFactory
 from pybraendstofpriser import Flist
 import pytest
@@ -20,6 +21,7 @@ from homeassistant.config_entries import (
 from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.aiohttp_client import SERVER_SOFTWARE
 
 from . import client_error, setup_integration
 from .conftest import TEST_API_KEY, TEST_COMPANY, TEST_PRICES, TEST_STATION
@@ -28,6 +30,7 @@ from .conftest import TEST_API_KEY, TEST_COMPANY, TEST_PRICES, TEST_STATION
 async def test_setup_and_unload_entry(
     hass: HomeAssistant,
     mock_braendstofpriser: AsyncMock,
+    mock_braendstofpriser_class: MagicMock,
     mock_config_entry: MockConfigEntry,
     freezer: FrozenDateTimeFactory,
 ) -> None:
@@ -35,6 +38,9 @@ async def test_setup_and_unload_entry(
     await setup_integration(hass, mock_config_entry)
 
     assert mock_config_entry.state is ConfigEntryState.LOADED
+    mock_braendstofpriser_class.assert_called_once_with(
+        TEST_API_KEY, user_agent=SERVER_SOFTWARE
+    )
 
     assert await hass.config_entries.async_unload(mock_config_entry.entry_id)
     await hass.async_block_till_done()
@@ -125,12 +131,39 @@ async def test_stations_use_flist(
 
 
 @pytest.mark.parametrize(
-    ("side_effect", "expected_state"),
+    ("side_effect", "expected_state", "expected_translation"),
     [
-        (client_error(401), ConfigEntryState.SETUP_ERROR),
-        (client_error(500), ConfigEntryState.SETUP_RETRY),
+        pytest.param(
+            client_error(401),
+            ConfigEntryState.SETUP_ERROR,
+            (None, None),
+            id="auth_failed",
+        ),
+        pytest.param(
+            client_error(429),
+            ConfigEntryState.SETUP_RETRY,
+            (DOMAIN, "rate_limit_exceeded"),
+            id="rate_limit",
+        ),
+        pytest.param(
+            client_error(500),
+            ConfigEntryState.SETUP_RETRY,
+            (DOMAIN, "server_error"),
+            id="server_error",
+        ),
+        pytest.param(
+            TimeoutError(),
+            ConfigEntryState.SETUP_RETRY,
+            (DOMAIN, "request_timeout"),
+            id="timeout",
+        ),
+        pytest.param(
+            ClientConnectionError("Connection failed"),
+            ConfigEntryState.SETUP_RETRY,
+            (DOMAIN, "cannot_connect"),
+            id="cannot_connect",
+        ),
     ],
-    ids=["auth_failed", "cannot_connect"],
 )
 async def test_setup_error_handling(
     hass: HomeAssistant,
@@ -138,6 +171,7 @@ async def test_setup_error_handling(
     mock_config_entry: MockConfigEntry,
     side_effect: Exception,
     expected_state: ConfigEntryState,
+    expected_translation: tuple[str | None, str | None],
 ) -> None:
     """Test setup handles API errors during the first refresh."""
     mock_braendstofpriser.get_prices_bulk.side_effect = side_effect
@@ -145,6 +179,10 @@ async def test_setup_error_handling(
     await setup_integration(hass, mock_config_entry)
 
     assert mock_config_entry.state is expected_state
+    assert (
+        mock_config_entry.error_reason_translation_domain,
+        mock_config_entry.error_reason_translation_key,
+    ) == expected_translation
 
 
 @pytest.mark.parametrize(
@@ -207,10 +245,10 @@ async def test_api_keys_update_independently(
 ) -> None:
     """Test separate API keys have their own station selections and updates."""
     data = await async_load_json_array_fixture(hass, "bulk_prices.json", DOMAIN)
-    mock_braendstofpriser_class.side_effect = {
-        TEST_API_KEY: mock_braendstofpriser,
-        "other-api-key": mock_other_braendstofpriser,
-    }.__getitem__
+    mock_braendstofpriser_class.side_effect = [
+        mock_braendstofpriser,
+        mock_other_braendstofpriser,
+    ]
     mock_braendstofpriser.get_prices_bulk.return_value = data[:1]
     mock_other_braendstofpriser.get_prices_bulk.return_value = data[1:]
     await setup_integration(hass, mock_config_entry)
@@ -229,8 +267,8 @@ async def test_api_keys_update_independently(
     await setup_integration(hass, other_entry)
 
     assert mock_braendstofpriser_class.call_args_list == [
-        call(TEST_API_KEY),
-        call("other-api-key"),
+        call(TEST_API_KEY, user_agent=SERVER_SOFTWARE),
+        call("other-api-key", user_agent=SERVER_SOFTWARE),
     ]
     mock_braendstofpriser.get_prices_bulk.assert_awaited_once_with([1234])
     mock_other_braendstofpriser.get_prices_bulk.assert_awaited_once_with([4321])

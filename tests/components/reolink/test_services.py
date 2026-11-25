@@ -15,7 +15,7 @@ from homeassistant.components.reolink.services import (
     ReolinkServiceArgument,
 )
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import CommonServiceArgument, Platform
+from homeassistant.const import CommonServiceArgument, Platform, TargetKey
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er
@@ -178,7 +178,7 @@ async def test_snapshot_past_service(
             DOMAIN,
             ReolinkService.SNAPSHOT_PAST,
             {
-                CommonServiceArgument.ENTITY_ID: TEST_CAMERA_ID,
+                TargetKey.ENTITY_ID: TEST_CAMERA_ID,
                 ReolinkServiceArgument.TIMESTAMP: "2025-09-29 14:30:00",
                 ReolinkServiceArgument.FILENAME: TEST_FILE,
             },
@@ -210,7 +210,7 @@ async def test_snapshot_past_service_not_allowed_path(
             DOMAIN,
             ReolinkService.SNAPSHOT_PAST,
             {
-                CommonServiceArgument.ENTITY_ID: TEST_CAMERA_ID,
+                TargetKey.ENTITY_ID: TEST_CAMERA_ID,
                 ReolinkServiceArgument.TIMESTAMP: "2025-09-29 14:30:00",
                 ReolinkServiceArgument.FILENAME: TEST_FILE,
             },
@@ -246,7 +246,7 @@ async def test_snapshot_past_service_errors(
             DOMAIN,
             ReolinkService.SNAPSHOT_PAST,
             {
-                CommonServiceArgument.ENTITY_ID: TEST_CAMERA_ID,
+                TargetKey.ENTITY_ID: TEST_CAMERA_ID,
                 ReolinkServiceArgument.TIMESTAMP: "2025-09-29 14:30:00",
                 ReolinkServiceArgument.FILENAME: TEST_FILE,
             },
@@ -290,7 +290,7 @@ async def test_snapshot_past_service_write_error(
             DOMAIN,
             ReolinkService.SNAPSHOT_PAST,
             {
-                CommonServiceArgument.ENTITY_ID: TEST_CAMERA_ID,
+                TargetKey.ENTITY_ID: TEST_CAMERA_ID,
                 ReolinkServiceArgument.TIMESTAMP: "2025-09-29 14:30:00",
                 ReolinkServiceArgument.FILENAME: TEST_FILE,
             },
