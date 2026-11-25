@@ -488,3 +488,40 @@ async def test_credentials_redacted_from_server_output(
     assert "alice@example.com" not in caplog.text
 
     await server.stop()
+
+
+@pytest.mark.parametrize(
+    ("server_stdout", "expected_stdout"),
+    [
+        (
+            [
+                "09:00:03.467 INF [api] listen addr=127.0.0.1:1984",
+                '10:27:02.625 WRN producer.go:170 > error="nest: wrong query"'
+                " url=nest:?client_id=my-client&client_secret=my-secret"
+                "&refresh_token=my-refresh&device_id=cam",
+            ],
+            [
+                '10:27:02.625 WRN producer.go:170 > error="nest: wrong query"'
+                " url=nest:?client_id=my-client&client_secret=****"
+                "&refresh_token=****&device_id=cam",
+            ],
+        )
+    ],
+)
+@pytest.mark.usefixtures("mock_tempfile", "rest_client")
+async def test_oauth_credentials_redacted_from_server_output(
+    hass: HomeAssistant,
+    mock_create_subprocess: MagicMock,
+    server: Server,
+    caplog: pytest.LogCaptureFixture,
+    expected_stdout: list[str],
+) -> None:
+    """Test OAuth credentials in a nest source are redacted from the output."""
+    await server.start()
+    await hass.async_block_till_done()
+
+    assert_server_output_logged(expected_stdout, caplog, logging.WARNING)
+    assert "my-secret" not in caplog.text
+    assert "my-refresh" not in caplog.text
+
+    await server.stop()

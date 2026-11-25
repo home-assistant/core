@@ -1400,6 +1400,35 @@ async def test_stream_orientation_with_generic_camera(
         )
 
 
+@pytest.mark.usefixtures("init_integration", "ws_client")
+@pytest.mark.parametrize(
+    "test_fn",
+    [
+        _test_camera_orientation_webrtc,
+        _test_camera_orientation_get_image,
+    ],
+)
+async def test_stream_orientation_not_applied_to_nest_source(
+    hass: HomeAssistant,
+    rest_client: AsyncMock,
+    init_test_integration: MockCamera,
+    test_fn: Callable[
+        [HomeAssistant, MockCamera, Orientation, AsyncMock, str], Awaitable[None]
+    ],
+) -> None:
+    """Test orientation is not applied to a nest source, which ffmpeg can't open."""
+    camera = init_test_integration
+    camera.set_stream_source("nest:?device_id=test")
+
+    await test_fn(
+        hass,
+        camera,
+        Orientation.ROTATE_LEFT,
+        rest_client,
+        "nest:?device_id=test",
+    )
+
+
 @pytest.mark.usefixtures(
     "mock_get_binary",
     "mock_is_docker_env",
