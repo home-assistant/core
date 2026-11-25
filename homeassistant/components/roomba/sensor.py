@@ -71,7 +71,9 @@ SENSORS: list[RoombaSensorEntityDescription] = [
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda self: (
-            self.battery_stats.get("nLithChrg") or self.battery_stats.get("nNimhChrg")
+            self.battery_stats.get("nLithChrg")
+            or self.battery_stats.get("nNimhChrg")
+            or self.battery_info.get("cCount")
         ),
     ),
     RoombaSensorEntityDescription(
