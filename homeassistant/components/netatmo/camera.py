@@ -417,16 +417,18 @@ class NetatmoCamera(NetatmoBaseCamera):
         self.async_write_ha_state()
 
     @property
+    def _is_monitoring(self) -> bool:
+        """Return true if native monitoring is desired/enabled on the camera."""
+        if self._override_on is not None:
+            return self._override_on
+        return bool(self.device.monitoring)
+
+    @property
     @override
     def is_on(self) -> bool:
         """Return true if camera is on (monitoring)."""
-        if self._override_on is not None:
-            return (
-                self._override_on
-                and self.device.alim_status == NETATMO_ALIM_STATUS_ONLINE
-            )
         return (
-            bool(self.device.monitoring)
+            self._is_monitoring
             and self.device.alim_status == NETATMO_ALIM_STATUS_ONLINE
         )
 
@@ -448,7 +450,7 @@ class NetatmoCamera(NetatmoBaseCamera):
     async def async_turn_off(self) -> None:
         """Turn off camera."""
         async with self._lock:
-            if not self.is_on:
+            if not self._is_monitoring:
                 return
             try:
                 await self.device.async_monitoring_off()
@@ -461,7 +463,7 @@ class NetatmoCamera(NetatmoBaseCamera):
     async def async_turn_on(self) -> None:
         """Turn on camera."""
         async with self._lock:
-            if self.is_on:
+            if self._is_monitoring:
                 return
             try:
                 await self.device.async_monitoring_on()
