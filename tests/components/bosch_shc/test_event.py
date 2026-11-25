@@ -365,7 +365,6 @@ async def test_universal_switch_key_events(
 
     state = hass.states.get("event.universal_switch_lower_key")
     assert state.attributes["event_type"] == "long_press_start"
-    assert state.attributes["last_time_triggered"] == 1000
     assert hass.states.get("event.universal_switch_upper_key").state == "unknown"
 
 

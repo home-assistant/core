@@ -262,16 +262,10 @@ class UniversalSwitchEvent(SHCEntity, EventEntity):
         if timestamp == self._last_fired_timestamp:
             return
         self._last_fired_timestamp = timestamp
-        self.hass.loop.call_soon_threadsafe(self._dispatch_event, event_type, timestamp)
+        self.hass.loop.call_soon_threadsafe(self._dispatch_event, event_type)
 
     @callback
-    def _dispatch_event(self, event_type: ButtonEventType, timestamp: int) -> None:
+    def _dispatch_event(self, event_type: ButtonEventType) -> None:
         """Trigger the event and write state on the event loop."""
-        event_attributes: dict[str, Any] = {
-            ATTR_DEVICE_ID: self.device_id,
-            ATTR_ID: self._device.id,
-            ATTR_NAME: self._device.name,
-            ATTR_LAST_TIME_TRIGGERED: timestamp,
-        }
-        self._trigger_event(event_type, event_attributes)
+        self._trigger_event(event_type)
         self.async_write_ha_state()
