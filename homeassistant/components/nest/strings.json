@@ -157,6 +157,19 @@
       "title": "Nest Pub/Sub subscription not found"
     }
   },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "webrtc_snapshots": "Camera snapshots over WebRTC"
+        },
+        "data_description": {
+          "webrtc_snapshots": "For cameras that only support WebRTC, get snapshots through go2rtc instead of a placeholder. A snapshot is reused for two minutes. Each new one opens a short WebRTC session to the camera, which may wake a battery camera. Google limits commands per camera (100 an hour for Sandbox projects), shared with any other app that uses the camera through Google's Device Access API. Requires the go2rtc integration, which receives your Nest OAuth client ID, client secret, and refresh token."
+        },
+        "title": "Google Nest options"
+      }
+    }
+  },
   "selector": {
     "subscription_name": {
       "options": {

@@ -7,7 +7,8 @@ import datetime as dt
 import functools
 import logging
 from pathlib import Path
-from typing import override
+from typing import Any, cast, override
+from urllib.parse import urlencode
 
 from google_nest_sdm.camera_traits import (
     CameraLiveStreamTrait,
@@ -22,6 +23,7 @@ from webrtc_models import RTCIceCandidateInit
 from homeassistant.components.camera import (
     Camera,
     CameraEntityFeature,
+    CameraWebRTCProvider,
     WebRTCAnswer,
     WebRTCClientConfiguration,
     WebRTCSendMessage,
@@ -33,6 +35,8 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.util.dt import utcnow
 
+from .api import AsyncConfigEntryAuth
+from .const import CONF_WEBRTC_SNAPSHOTS
 from .device_info import NestDeviceInfo
 from .types import NestConfigEntry
 
@@ -48,6 +52,20 @@ MIN_REFRESH_BACKOFF_INTERVAL = dt.timedelta(minutes=1)
 MAX_REFRESH_BACKOFF_INTERVAL = dt.timedelta(minutes=10)
 BACKOFF_MULTIPLIER = 1.5
 
+# A snapshot fetched over WebRTC is reused for this long, so that repeated
+# requests don't each open a new session to the camera. Each new session is a
+# GenerateWebRtcStream command. Google's published limit for Sandbox projects
+# is 100 commands an hour per camera, counted across all Device Access
+# projects, so a shorter cache can leave other apps that use the camera too
+# few for live view.
+SNAPSHOT_CACHE_DURATION = dt.timedelta(minutes=2)
+# After a failed fetch, wait this long before trying again, doubling the wait
+# after each further failure up to the maximum
+SNAPSHOT_MIN_RETRY_INTERVAL = dt.timedelta(seconds=15)
+SNAPSHOT_MAX_RETRY_INTERVAL = dt.timedelta(minutes=5)
+# Abandon a fetch that takes longer than this
+SNAPSHOT_FETCH_TIMEOUT = 30
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -55,6 +73,9 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the cameras."""
+    snapshot_auth: AsyncConfigEntryAuth | None = None
+    if entry.options.get(CONF_WEBRTC_SNAPSHOTS):
+        snapshot_auth = entry.runtime_data.auth
 
     def devices_added(devices: list[Device]) -> None:
         entities: list[NestCameraBaseEntity] = []
@@ -62,7 +83,7 @@ async def async_setup_entry(
             if (live_stream := device.traits.get(CameraLiveStreamTrait.NAME)) is None:
                 continue
             if StreamingProtocol.WEB_RTC in live_stream.supported_protocols:
-                entities.append(NestWebRTCEntity(device))
+                entities.append(NestWebRTCEntity(device, snapshot_auth))
             elif StreamingProtocol.RTSP in live_stream.supported_protocols:
                 entities.append(NestRTSPEntity(device))
 
@@ -250,17 +271,58 @@ class NestRTSPEntity(NestCameraBaseEntity):
 
 
 class NestWebRTCEntity(NestCameraBaseEntity):
-    """Nest cameras that use WebRTC."""
+    """Nest cameras that use WebRTC.
 
-    def __init__(self, device: Device) -> None:
+    The SDM API has no still image for these cameras, so a placeholder is
+    returned. When snapshots over WebRTC are enabled, the camera gives a
+    WebRTC provider (go2rtc) a source that opens its own WebRTC session to the
+    camera, and fetches still images through it.
+    """
+
+    def __init__(
+        self, device: Device, snapshot_auth: AsyncConfigEntryAuth | None = None
+    ) -> None:
         """Initialize the camera."""
         super().__init__(device)
         self._webrtc_sessions: dict[str, WebRtcStream] = {}
         self._refresh_unsub: dict[str, Callable[[], None]] = {}
+        self._snapshot_auth = snapshot_auth
+        self._snapshot: bytes | None = None
+        self._snapshot_expires_at: dt.datetime | None = None
+        self._snapshot_task: asyncio.Task[bytes | None] | None = None
+        self._snapshot_retry_interval = SNAPSHOT_MIN_RETRY_INTERVAL
+        self._warned_no_provider = False
         # The bundled placeholder is a PNG; the camera platform would otherwise
         # serve it as its default image/jpeg, corrupting the frame for any
-        # client that trusts the Content-Type header.
-        self.content_type = "image/png"
+        # client that trusts the Content-Type header. Snapshots fetched over
+        # WebRTC are JPEG, and the placeholder isn't used then.
+        self.content_type = "image/png" if snapshot_auth is None else "image/jpeg"
+
+    @override
+    async def async_webrtc_provider_stream_source(self) -> str | None:
+        """Return a go2rtc source when snapshots over WebRTC are enabled.
+
+        The source is only for a WebRTC provider. The camera has no
+        stream_source, as the stream component can't play it.
+        """
+        if (auth := self._snapshot_auth) is None:
+            return None
+        match self._device.name.split("/"):
+            case ["enterprises", project_id, "devices", device_id]:
+                pass
+            case _:
+                return None
+        query = urlencode(
+            {
+                "client_id": auth.client_id,
+                "client_secret": auth.client_secret,
+                "refresh_token": auth.refresh_token,
+                "project_id": project_id,
+                "device_id": device_id,
+                "protocols": StreamingProtocol.WEB_RTC.value,
+            }
+        )
+        return f"nest:?{query}"
 
     async def _async_refresh_stream(self, session_id: str) -> dt.datetime | None:
         """Refresh stream to extend expiration time."""
@@ -287,11 +349,72 @@ class NestWebRTCEntity(NestCameraBaseEntity):
     async def async_camera_image(
         self, width: int | None = None, height: int | None = None
     ) -> bytes | None:
-        """Return a placeholder image for WebRTC cameras.
+        """Return a still image.
 
-        WebRTC cameras don't support snapshots.
+        Without snapshots over WebRTC this is a placeholder. Otherwise the
+        image is fetched through the WebRTC provider at full size, and the
+        camera platform scales it.
         """
-        return await self.hass.async_add_executor_job(self.placeholder_image)
+        if self._snapshot_auth is None:
+            return await self.hass.async_add_executor_job(self.placeholder_image)
+        if (provider := self.webrtc_provider) is None:
+            if not self._warned_no_provider:
+                self._warned_no_provider = True
+                _LOGGER.warning(
+                    "Snapshots over WebRTC for %s need a WebRTC provider that "
+                    "supports Nest sources, such as the go2rtc integration",
+                    self.entity_id,
+                )
+            return None
+        if (
+            self._snapshot_expires_at is not None
+            and utcnow() < self._snapshot_expires_at
+        ):
+            return self._snapshot
+        if (task := self._snapshot_task) is None or task.done():
+            assert self.platform.config_entry
+            task = self._snapshot_task = (
+                self.platform.config_entry.async_create_background_task(
+                    self.hass,
+                    self._async_fetch_snapshot(provider),
+                    f"{self.entity_id} snapshot",
+                )
+            )
+        # Shielded, so a caller that times out doesn't cancel the fetch that
+        # other callers are waiting for and that fills the cache
+        try:
+            return await asyncio.shield(task)
+        except asyncio.CancelledError:
+            # The fetch is cancelled when the config entry is unloaded. Only a
+            # caller that is being cancelled itself should see the cancellation.
+            caller = cast(asyncio.Task[Any], asyncio.current_task())
+            if task.cancelled() and not caller.cancelling():
+                return None
+            raise
+
+    async def _async_fetch_snapshot(
+        self, provider: CameraWebRTCProvider
+    ) -> bytes | None:
+        """Fetch a snapshot through the WebRTC provider and cache it."""
+        image: bytes | None = None
+        try:
+            async with asyncio.timeout(SNAPSHOT_FETCH_TIMEOUT):
+                image = await provider.async_get_image(self)
+        except (HomeAssistantError, TimeoutError) as err:
+            _LOGGER.debug("Unable to get snapshot: %r", err)
+        finally:
+            # An empty image is a failure too: go2rtc sends an empty response
+            # when it can't add a consumer to the stream
+            self._snapshot = image or None
+            if image:
+                self._snapshot_expires_at = utcnow() + SNAPSHOT_CACHE_DURATION
+                self._snapshot_retry_interval = SNAPSHOT_MIN_RETRY_INTERVAL
+            else:
+                self._snapshot_expires_at = utcnow() + self._snapshot_retry_interval
+                self._snapshot_retry_interval = min(
+                    self._snapshot_retry_interval * 2, SNAPSHOT_MAX_RETRY_INTERVAL
+                )
+        return image or None
 
     @classmethod
     @functools.cache

@@ -13,7 +13,12 @@ from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 from pytest_homeassistant.typing import ClientSessionGenerator
 
 from homeassistant import config_entries
-from homeassistant.components.nest.const import DOMAIN, OAUTH2_AUTHORIZE, OAUTH2_TOKEN
+from homeassistant.components.nest.const import (
+    CONF_WEBRTC_SNAPSHOTS,
+    DOMAIN,
+    OAUTH2_AUTHORIZE,
+    OAUTH2_TOKEN,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult, FlowResultType
@@ -2159,3 +2164,31 @@ async def test_reconfigure_missing_cloud_project_token_revoked(
     assert config_entry.data["cloud_project_id"] == CLOUD_PROJECT_ID
     assert config_entry.data["topic_name"] == NEW_TOPIC_NAME
     assert config_entry.data["subscription_name"] == NEW_SUBSCRIPTION_NAME
+
+
+@pytest.mark.parametrize("nest_test_config", [TEST_CONFIG_APP_CREDS])
+async def test_options_flow(
+    hass: HomeAssistant,
+    setup_platform: PlatformSetup,
+    config_entry: MockConfigEntry,
+) -> None:
+    """Test enabling snapshots over WebRTC in the options flow reloads the entry."""
+    await setup_platform()
+    assert config_entry.state is config_entries.ConfigEntryState.LOADED
+    assert config_entry.options == {}
+
+    result = await hass.config_entries.options.async_init(config_entry.entry_id)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "init"
+
+    with patch(
+        "homeassistant.components.nest.async_setup_entry", return_value=True
+    ) as mock_setup:
+        result = await hass.config_entries.options.async_configure(
+            result["flow_id"], {CONF_WEBRTC_SNAPSHOTS: True}
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert config_entry.options == {CONF_WEBRTC_SNAPSHOTS: True}
+    assert len(mock_setup.mock_calls) == 1

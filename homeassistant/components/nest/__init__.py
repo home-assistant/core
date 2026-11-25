@@ -339,6 +339,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: NestConfigEntry) -> None
 
     entry.async_on_unload(unsub)
     entry.runtime_data = NestData(
+        auth=auth,
         subscriber=subscriber,
         device_manager=device_manager,
         register_devices_listener=update_callback.register_devices_listener,

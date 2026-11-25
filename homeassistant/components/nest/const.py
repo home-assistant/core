@@ -12,6 +12,7 @@ CONF_SUBSCRIPTION_NAME = "subscription_name"
 CONF_SUBSCRIBER_ID = "subscriber_id"  # Old format
 CONF_SUBSCRIBER_ID_IMPORTED = "subscriber_id_imported"
 CONF_CLOUD_PROJECT_ID = "cloud_project_id"
+CONF_WEBRTC_SNAPSHOTS = "webrtc_snapshots"
 
 # Google-hosted Pub/Sub topics stop receiving events after November 30, 2026
 LEGACY_TOPIC_PREFIX = "projects/sdm-"

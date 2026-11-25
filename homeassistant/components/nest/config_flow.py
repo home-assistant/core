@@ -21,7 +21,9 @@ from homeassistant.config_entries import (
     SOURCE_REAUTH,
     SOURCE_RECONFIGURE,
     ConfigFlowResult,
+    OptionsFlowWithReload,
 )
+from homeassistant.core import callback
 from homeassistant.exceptions import (
     OAuth2TokenRequestBaseError,
     OAuth2TokenRequestReauthError,
@@ -42,11 +44,13 @@ from .const import (
     CONF_SUBSCRIBER_ID_IMPORTED,
     CONF_SUBSCRIPTION_NAME,
     CONF_TOPIC_NAME,
+    CONF_WEBRTC_SNAPSHOTS,
     DATA_SDM,
     DOMAIN,
     OAUTH2_AUTHORIZE,
     SDM_SCOPES,
 )
+from .types import NestConfigEntry
 
 DATA_FLOW_IMPL = "nest_flow_implementation"
 TOPIC_FORMAT = "projects/{cloud_project_id}/topics/home-assistant-{rnd}"
@@ -113,6 +117,13 @@ class NestFlowHandler(
         # Possible name to use for config entry based on the Google Home name
         self._structure_config_title: str | None = None
         self._admin_client: AdminClient | None = None
+
+    @staticmethod
+    @callback
+    @override
+    def async_get_options_flow(config_entry: NestConfigEntry) -> NestOptionsFlow:
+        """Create the options flow."""
+        return NestOptionsFlow()
 
     @property
     @override
@@ -532,3 +543,25 @@ class NestFlowHandler(
                 self._admin_client, old_subscription_name
             )
         return result
+
+
+OPTIONS_SCHEMA = probatio.Schema(
+    {probatio.Required(CONF_WEBRTC_SNAPSHOTS, default=False): bool}
+)
+
+
+class NestOptionsFlow(OptionsFlowWithReload):
+    """Handle Nest options."""
+
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Manage the options."""
+        if user_input is not None:
+            return self.async_create_entry(data=user_input)
+        return self.async_show_form(
+            step_id="init",
+            data_schema=self.add_suggested_values_to_schema(
+                OPTIONS_SCHEMA, self.config_entry.options
+            ),
+        )
