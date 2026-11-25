@@ -11,7 +11,11 @@ from boschshcpy import (
     SHCUniversalSwitch,
 )
 
-from homeassistant.components.event import EventDeviceClass, EventEntity
+from homeassistant.components.event import (
+    ButtonEventType,
+    EventDeviceClass,
+    EventEntity,
+)
 from homeassistant.const import ATTR_DEVICE_ID, ATTR_ID, ATTR_NAME
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -22,6 +26,12 @@ from .entity import SHCEntity
 PARALLEL_UPDATES = 0
 
 ATTR_LAST_TIME_TRIGGERED = "last_time_triggered"
+
+_KEY_EVENT_TYPES = {
+    KeypadService.KeyEvent.PRESS_SHORT: ButtonEventType.SINGLE_PRESS,
+    KeypadService.KeyEvent.PRESS_LONG: ButtonEventType.LONG_PRESS_START,
+    KeypadService.KeyEvent.PRESS_LONG_RELEASED: ButtonEventType.LONG_PRESS_END,
+}
 
 
 async def async_setup_entry(
@@ -208,7 +218,11 @@ class UniversalSwitchEvent(SHCEntity, EventEntity):
     """Representation of one key of a SHC Universal Switch."""
 
     _attr_device_class = EventDeviceClass.BUTTON
-    _attr_event_types = ["press_short", "press_long", "press_long_released"]
+    _attr_event_types = [
+        ButtonEventType.SINGLE_PRESS,
+        ButtonEventType.LONG_PRESS_START,
+        ButtonEventType.LONG_PRESS_END,
+    ]
     _device: SHCUniversalSwitch
 
     def __init__(
@@ -241,23 +255,17 @@ class UniversalSwitchEvent(SHCEntity, EventEntity):
 
     def _event_callback(self) -> None:
         """Handle a Keypad update from the SHC polling thread."""
-        event_type = self._device.eventtype
-        if event_type not in (
-            KeypadService.KeyEvent.PRESS_SHORT,
-            KeypadService.KeyEvent.PRESS_LONG,
-            KeypadService.KeyEvent.PRESS_LONG_RELEASED,
-        ):
+        key_event = self._device.eventtype
+        if key_event is None or (event_type := _KEY_EVENT_TYPES.get(key_event)) is None:
             return
         timestamp = self._device.eventtimestamp
         if timestamp == self._last_fired_timestamp:
             return
         self._last_fired_timestamp = timestamp
-        self.hass.loop.call_soon_threadsafe(
-            self._dispatch_event, event_type.name.lower(), timestamp
-        )
+        self.hass.loop.call_soon_threadsafe(self._dispatch_event, event_type, timestamp)
 
     @callback
-    def _dispatch_event(self, event_type: str, timestamp: int) -> None:
+    def _dispatch_event(self, event_type: ButtonEventType, timestamp: int) -> None:
         """Trigger the event and write state on the event loop."""
         event_attributes: dict[str, Any] = {
             ATTR_DEVICE_ID: self.device_id,

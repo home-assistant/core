@@ -102,40 +102,13 @@
     },
     "event": {
       "lower_button": {
-        "name": "Lower key",
-        "state_attributes": {
-          "event_type": {
-            "state": {
-              "press_long": "Long press",
-              "press_long_released": "Long press released",
-              "press_short": "Short press"
-            }
-          }
-        }
+        "name": "Lower key"
       },
       "lower_left_button": {
-        "name": "Lower left key",
-        "state_attributes": {
-          "event_type": {
-            "state": {
-              "press_long": "Long press",
-              "press_long_released": "Long press released",
-              "press_short": "Short press"
-            }
-          }
-        }
+        "name": "Lower left key"
       },
       "lower_right_button": {
-        "name": "Lower right key",
-        "state_attributes": {
-          "event_type": {
-            "state": {
-              "press_long": "Long press",
-              "press_long_released": "Long press released",
-              "press_short": "Short press"
-            }
-          }
-        }
+        "name": "Lower right key"
       },
       "smoke_detector_alarm": {
         "state_attributes": {
@@ -152,40 +125,13 @@
         }
       },
       "upper_button": {
-        "name": "Upper key",
-        "state_attributes": {
-          "event_type": {
-            "state": {
-              "press_long": "Long press",
-              "press_long_released": "Long press released",
-              "press_short": "Short press"
-            }
-          }
-        }
+        "name": "Upper key"
       },
       "upper_left_button": {
-        "name": "Upper left key",
-        "state_attributes": {
-          "event_type": {
-            "state": {
-              "press_long": "Long press",
-              "press_long_released": "Long press released",
-              "press_short": "Short press"
-            }
-          }
-        }
+        "name": "Upper left key"
       },
       "upper_right_button": {
-        "name": "Upper right key",
-        "state_attributes": {
-          "event_type": {
-            "state": {
-              "press_long": "Long press",
-              "press_long_released": "Long press released",
-              "press_short": "Short press"
-            }
-          }
-        }
+        "name": "Upper right key"
       }
     },
     "light": {

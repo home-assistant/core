@@ -364,7 +364,7 @@ async def test_universal_switch_key_events(
     await hass.async_block_till_done()
 
     state = hass.states.get("event.universal_switch_lower_key")
-    assert state.attributes["event_type"] == "press_long"
+    assert state.attributes["event_type"] == "long_press_start"
     assert state.attributes["last_time_triggered"] == 1000
     assert hass.states.get("event.universal_switch_upper_key").state == "unknown"
 
@@ -453,3 +453,37 @@ async def test_universal_switch_unregisters_callbacks_on_unload(
     await hass.async_block_till_done()
 
     assert not keypad._event_callbacks
+
+
+@pytest.mark.parametrize(
+    "device_buckets",
+    [{"universal_switches": [universal_switch_device()]}],
+    indirect=True,
+)
+@pytest.mark.parametrize(
+    ("key_event", "timestamp", "expected"),
+    [
+        (KeypadService.KeyEvent.PRESS_SHORT, 7001, "single_press"),
+        (KeypadService.KeyEvent.PRESS_LONG, 7002, "long_press_start"),
+        (KeypadService.KeyEvent.PRESS_LONG_RELEASED, 7003, "long_press_end"),
+    ],
+)
+async def test_universal_switch_standard_event_types(
+    hass: HomeAssistant,
+    mock_session: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    key_event: KeypadService.KeyEvent,
+    timestamp: int,
+    expected: str,
+) -> None:
+    """The SHC key events map onto the standard button event types."""
+    await setup_integration(hass, mock_config_entry)
+    device = mock_session.device_helper.universal_switches[0]
+
+    device.eventtype = key_event
+    device.eventtimestamp = timestamp
+    device.device_services[0]._event_callbacks["LOWER_BUTTON"]()
+    await hass.async_block_till_done()
+
+    state = hass.states.get("event.universal_switch_lower_key")
+    assert state.attributes["event_type"] == expected
