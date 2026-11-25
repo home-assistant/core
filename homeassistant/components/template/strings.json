@@ -136,7 +136,6 @@
           "target_temperature": "Defines a template for the target temperature.",
           "temperature_unit": "[%key:component::template::common::temperature_unit_description%]"
         },
-
         "sections": {
           "additional_options": {
             "data": {
@@ -310,7 +309,7 @@
           "set_level": "Actions on set level",
           "set_temperature": "Actions on set color temperature",
           "state": "[%key:component::template::common::state%]",
-          "temperature": "Color temperature",
+          "temperature_kelvin": "Color temperature",
           "turn_off": "[%key:component::template::common::turn_off%]",
           "turn_on": "[%key:component::template::common::turn_on%]"
         },
@@ -322,7 +321,7 @@
           "set_level": "Defines actions to run when the light is given a brightness command. The script will only be called if the `turn_on` call only has `brightness`, and optionally `transition`. Receives variables `brightness` and, optionally, `transition`.",
           "set_temperature": "Defines actions to run when the light is given a color temperature command. Receives variable `color_temp_kelvin`. May also receive variables `brightness` and/or `transition`.",
           "state": "The light is `on` if the template evaluates as `True`, `yes`, `on`, `enable` or a positive number. Any other value will render it as `off`.",
-          "temperature": "Defines a template to get the color temperature of the light.",
+          "temperature_kelvin": "Defines a template to get the color temperature of the light in kelvin.",
           "turn_off": "Defines actions to run when the light is turned off.",
           "turn_on": "Defines actions to run when the light is turned on."
         },
@@ -769,6 +768,18 @@
       "description": "A trigger template configuration needs a trigger and at least one domain when defining an entity. This will be a configuration validation error in Home Assistant Core 2026.5.\n\nPlease remove the orphaned trigger from the configuration.\n\n```\n{config}\n```",
       "title": "Incomplete template configuration"
     },
+    "deprecated_light_mireds_options": {
+      "description": "The template light entity with `{identifier}` uses options in mireds. These options are deprecated and will be removed in a future version of Home Assistant.\n\nUpdate your YAML configuration by replacing the following options and change their templates to render kelvin instead of mireds:\n\n{options}\n\nThe lowest mireds value is the highest kelvin value, so `min_mireds` is replaced by `max_kelvin` and `max_mireds` by `min_kelvin`.\n\nAfter updating the configuration, reload the template entities or restart Home Assistant to fix this issue.",
+      "title": "Template light entity uses deprecated options in mireds ({identifier})"
+    },
+    "deprecated_light_mireds_options_blueprint": {
+      "description": "The template light blueprint `{blueprint}` uses options in mireds. These options are deprecated and will be removed in a future version of Home Assistant.\n\nUpdate the blueprint by replacing the following options and change their templates to render kelvin instead of mireds:\n\n{options}\n\nThe lowest mireds value is the highest kelvin value, so `min_mireds` is replaced by `max_kelvin` and `max_mireds` by `min_kelvin`.\n\nIf the blueprint was imported, re-import it once its author has updated it instead. Then reload the template entities or restart Home Assistant to fix this issue.",
+      "title": "Template light blueprint uses deprecated options in mireds ({blueprint})"
+    },
+    "deprecated_light_temperature": {
+      "description": "The template light helper {name} defines its color temperature in mireds. This is deprecated and will stop working in Home Assistant Core {breaks_in_ha_version}.\n\nTo fix this issue, open the options of the template light helper and define the color temperature in kelvin, or remove the actions on set color temperature if the light should not support a color temperature.",
+      "title": "Template light helper {name} uses a color temperature in mireds"
+    },
     "deprecated_weather_template_options": {
       "description": "The template weather entity with `{identifier}` uses options ending in `_template`. These options are deprecated and will be removed in a future version of Home Assistant.\n\nUpdate your YAML configuration by renaming the following options:\n\n{options}\n\nAfter updating the configuration, reload the template entities or restart Home Assistant to fix this issue.",
       "title": "Template weather entity uses deprecated options ({identifier})"
@@ -897,7 +908,6 @@
           "target_temperature": "[%key:component::template::config::step::climate::data_description::target_temperature%]",
           "temperature_unit": "[%key:component::template::common::temperature_unit_description%]"
         },
-
         "sections": {
           "additional_options": {
             "data": {
@@ -1064,7 +1074,8 @@
           "set_level": "[%key:component::template::config::step::light::data::set_level%]",
           "set_temperature": "[%key:component::template::config::step::light::data::set_temperature%]",
           "state": "[%key:component::template::common::state%]",
-          "temperature": "[%key:component::template::config::step::light::data::temperature%]",
+          "temperature": "Color temperature in mireds (deprecated)",
+          "temperature_kelvin": "[%key:component::template::config::step::light::data::temperature_kelvin%]",
           "turn_off": "[%key:component::template::common::turn_off%]",
           "turn_on": "[%key:component::template::common::turn_on%]"
         },
@@ -1076,7 +1087,8 @@
           "set_level": "[%key:component::template::config::step::light::data_description::set_level%]",
           "set_temperature": "[%key:component::template::config::step::light::data_description::set_temperature%]",
           "state": "[%key:component::template::config::step::light::data_description::state%]",
-          "temperature": "[%key:component::template::config::step::light::data_description::temperature%]",
+          "temperature": "The color temperature template in mireds is deprecated and can no longer be changed. Define the color temperature in kelvin instead, or remove the actions on set color temperature, which removes this template.",
+          "temperature_kelvin": "[%key:component::template::config::step::light::data_description::temperature_kelvin%]",
           "turn_off": "[%key:component::template::config::step::light::data_description::turn_off%]",
           "turn_on": "[%key:component::template::config::step::light::data_description::turn_on%]"
         },

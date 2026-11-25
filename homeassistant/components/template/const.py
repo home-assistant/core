@@ -1,5 +1,7 @@
 """Constants for the Template Platform Components."""
 
+from collections.abc import Mapping
+from dataclasses import dataclass
 from enum import StrEnum
 
 from homeassistant.const import Platform
@@ -91,6 +93,45 @@ WEATHER_DEPRECATED_TEMPLATE_OPTIONS = {
     "wind_gust_speed_template": "wind_gust_speed",
     "wind_speed_template": "wind_speed",
 }
+
+# Light option in mireds to its replacement in kelvin, deprecated in 2026.12
+LIGHT_DEPRECATED_MIREDS_OPTIONS = {
+    "temperature": "temperature_kelvin",
+    "max_mireds": "min_kelvin",
+    "min_mireds": "max_kelvin",
+}
+
+
+@dataclass(frozen=True, kw_only=True)
+class DeprecatedTemplateOptions:
+    """Deprecated YAML options of a template platform that create repairs."""
+
+    platform: Platform
+    # Deprecated option to the option that replaces it
+    options: Mapping[str, str]
+    # Also the prefix of the issue ids
+    translation_key: str
+    blueprint_translation_key: str
+    breaks_in_ha_version: str
+
+
+WEATHER_DEPRECATED_OPTIONS = DeprecatedTemplateOptions(
+    platform=Platform.WEATHER,
+    options=WEATHER_DEPRECATED_TEMPLATE_OPTIONS,
+    translation_key="deprecated_weather_template_options",
+    blueprint_translation_key="deprecated_weather_template_options_blueprint",
+    breaks_in_ha_version="2027.6.0",
+)
+
+LIGHT_DEPRECATED_OPTIONS = DeprecatedTemplateOptions(
+    platform=Platform.LIGHT,
+    options=LIGHT_DEPRECATED_MIREDS_OPTIONS,
+    translation_key="deprecated_light_mireds_options",
+    blueprint_translation_key="deprecated_light_mireds_options_blueprint",
+    breaks_in_ha_version="2027.6.0",
+)
+
+DEPRECATED_TEMPLATE_OPTIONS = (WEATHER_DEPRECATED_OPTIONS, LIGHT_DEPRECATED_OPTIONS)
 
 
 class TemplateConfig(dict):
