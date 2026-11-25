@@ -14,7 +14,13 @@ from homeassistant.components.automation.llm import (
 )
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import llm
+from homeassistant.helpers import (
+    area_registry as ar,
+    category_registry as cr,
+    entity_registry as er,
+    label_registry as lr,
+    llm,
+)
 from homeassistant.setup import async_setup_component
 from homeassistant.util.json import JsonObjectType
 
@@ -32,7 +38,13 @@ def llm_context() -> llm.LLMContext:
 
 
 @pytest.fixture
-async def setup_automations(hass: HomeAssistant) -> None:
+async def setup_automations(
+    hass: HomeAssistant,
+    area_registry: ar.AreaRegistry,
+    category_registry: cr.CategoryRegistry,
+    entity_registry: er.EntityRegistry,
+    label_registry: lr.LabelRegistry,
+) -> None:
     """Set up an automation that ran, one that is off and one with an error."""
     assert await async_setup_component(
         hass,
@@ -62,6 +74,16 @@ async def setup_automations(hass: HomeAssistant) -> None:
                 },
             ]
         },
+    )
+    category = category_registry.async_create(scope=DOMAIN, name="Lighting")
+    labels = {
+        label_registry.async_create(name).label_id for name in ("Kitchen", "Evening")
+    }
+    entity_registry.async_update_entity(
+        "automation.kitchen_lights",
+        area_id=area_registry.async_create("Kitchen").id,
+        categories={DOMAIN: category.category_id},
+        labels=labels,
     )
     hass.bus.async_fire("test_event")
     await hass.async_block_till_done()
@@ -120,6 +142,9 @@ async def test_list_automations(
                 "state": "on",
                 "last_triggered": "2026-11-24T12:00:00+00:00",
                 "description": "Turn on the kitchen lights in the evening",
+                "area": "Kitchen",
+                "category": "Lighting",
+                "labels": ["Evening", "Kitchen"],
             },
         ],
         "total": 3,

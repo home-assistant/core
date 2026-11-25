@@ -8,7 +8,13 @@ import probatio
 from homeassistant.components.llm import LLMTools
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers import (
+    area_registry as ar,
+    category_registry as cr,
+    config_validation as cv,
+    entity_registry as er,
+    label_registry as lr,
+)
 from homeassistant.helpers.json import json_dumps
 from homeassistant.helpers.llm import (
     LLM_API_HOME_ASSISTANT,
@@ -33,7 +39,7 @@ class ListAutomationsTool(Tool):
     title = "List automations"
     description = (
         "List the automations, sorted by name, with their state, when they were "
-        "last triggered and their description. An automation that is off ignores "
+        "last triggered, their description, area, category and labels. An automation that is off ignores "
         "its triggers but can still be run by hand, and one that is unavailable "
         "has an error in its configuration. "
         f"Returns at most {_LIMIT} automations per call."
@@ -66,6 +72,10 @@ class ListAutomationsTool(Tool):
             key=lambda state: (state.name.casefold(), state.entity_id),
         )
         component = hass.data.get(DATA_COMPONENT)
+        ent_reg = er.async_get(hass)
+        area_reg = ar.async_get(hass)
+        cat_reg = cr.async_get(hass)
+        lab_reg = lr.async_get(hass)
 
         automations: list[JsonValueType] = []
         for state in states[offset : offset + _LIMIT]:
@@ -87,6 +97,23 @@ class ListAutomationsTool(Tool):
             ):
                 # The raw configuration is not validated, so it may hold a number
                 automation["description"] = str(description)
+            if entry := ent_reg.async_get(state.entity_id):
+                if (area_id := er.async_get_effective_area_id(hass, entry)) and (
+                    area := area_reg.async_get_area(area_id)
+                ):
+                    automation["area"] = area.name
+                if (category_id := entry.categories.get(DOMAIN)) and (
+                    category := cat_reg.async_get_category(
+                        scope=DOMAIN, category_id=category_id
+                    )
+                ):
+                    automation["category"] = category.name
+                if labels := sorted(
+                    label.name
+                    for label_id in entry.labels
+                    if (label := lab_reg.async_get_label(label_id))
+                ):
+                    automation["labels"] = list[JsonValueType](labels)
             automations.append(automation)
 
         result: JsonObjectType = {"automations": automations, "total": len(states)}
