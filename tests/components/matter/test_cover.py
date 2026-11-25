@@ -3390,3 +3390,63 @@ async def test_closure_cover_set_position_without_panel_raises(
 
     assert exc.value.translation_domain == "matter"
     assert exc.value.translation_key == "closure_no_position_panel"
+
+
+@pytest.mark.parametrize("node_fixture", ["mock_closure_venetian_blinds"])
+async def test_closure_cover_set_tilt_position_without_panel_raises(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """Test setting tilt raises when its Tilt panel can no longer be resolved.
+
+    Same situation as the position case: the Tilt panel's role tag is
+    changed without a subscription update, so the service must raise.
+    """
+    entity_id = hass.states.async_all(Platform.COVER)[0].entity_id
+
+    set_node_attribute(
+        matter_node,
+        3,
+        clusters.Descriptor.id,
+        clusters.Descriptor.Attributes.TagList.attribute_id,
+        [{"0": None, "1": NAMESPACE_CLOSURE_PANEL, "2": 99, "3": "Unknown"}],
+    )
+
+    with pytest.raises(HomeAssistantError) as exc:
+        await hass.services.async_call(
+            "cover",
+            "set_cover_tilt_position",
+            {"entity_id": entity_id, "tilt_position": 30},
+            blocking=True,
+        )
+
+    assert exc.value.translation_domain == "matter"
+    assert exc.value.translation_key == "closure_no_tilt_panel"
+
+
+@pytest.mark.parametrize("node_fixture", ["mock_closure_venetian_blinds"])
+async def test_closure_cover_node_updated_refreshes_panels(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """Test a NODE_UPDATED event refreshes the child panel subscriptions once."""
+    entity_id = hass.states.async_all(Platform.COVER)[0].entity_id
+    platform = next(
+        p for p in async_get_platforms(hass, "matter") if p.domain == "cover"
+    )
+    entity = platform.entities[entity_id]
+    refresh = MagicMock(wraps=entity._refresh_closure_panel_subscriptions)
+    entity._refresh_closure_panel_subscriptions = refresh
+
+    await trigger_subscription_callback(
+        hass,
+        matter_client,
+        event=EventType.NODE_UPDATED,
+        data=matter_node,
+        node_id=matter_node.node_id,
+    )
+    await hass.async_block_till_done()
+
+    assert refresh.call_count == 1
