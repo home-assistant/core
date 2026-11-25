@@ -45,6 +45,7 @@ PLATFORMS = [
     Platform.SCENE,
     Platform.SENSOR,
     Platform.SWITCH,
+    Platform.UPDATE,
 ]
 
 FIBARO_TYPEMAP = {
@@ -338,7 +339,7 @@ class FibaroController:
                     last_endpoint = device.endpoint_id
                 else:
                     _LOGGER.debug("not handling separately")
-            except KeyError, ValueError:
+            except (KeyError, ValueError):
                 pass
 
 

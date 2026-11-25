@@ -34,5 +34,15 @@
         }
       }
     }
+  },
+  "entity": {
+    "update": {
+      "firmware_stable": {
+        "name": "Firmware Stable"
+      },
+      "firmware_beta": {
+        "name": "Firmware Beta"
+      }
+    }
   }
 }
