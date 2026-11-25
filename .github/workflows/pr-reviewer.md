@@ -41,12 +41,7 @@ engine:
     group: "gh-aw-copilot-pr-reviewer-${{ needs.prepare.outputs.pr_number }}"
     queue: max
 max-daily-ai-credits: 10000
-network:
-  allowed:
-    - defaults
-    - python
 tools:
-  web-fetch: {}
   github:
     mode: gh-proxy
     toolsets: [pull_requests, repos]
