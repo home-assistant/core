@@ -379,6 +379,7 @@ class RpcShellyLightBase(ShellyRpcAttributeEntity, LightEntity):
     """Base Entity for RPC based Shelly devices."""
 
     entity_description: RpcLightDescription
+    _id: int
 
     def __init__(
         self,
@@ -424,7 +425,7 @@ class RpcShellyLightBase(ShellyRpcAttributeEntity, LightEntity):
 
     async def _async_set(self, params: dict[str, Any]) -> None:
         """Set the light parameters."""
-        await self.coordinator.device.light_set(get_rpc_key_id(self.key), params)
+        await self.coordinator.device.light_set(self._id, params)
 
     @rpc_call
     @override
@@ -484,7 +485,7 @@ class RpcShellySwitchAsLight(RpcShellyLightBase):
     @override
     async def _async_set(self, params: dict[str, Any]) -> None:
         """Set the switch output."""
-        await self.coordinator.device.switch_set(get_rpc_key_id(self.key), params["on"])
+        await self.coordinator.device.switch_set(self._id, params["on"])
 
 
 class RpcShellyLight(RpcShellyLightBase):
@@ -521,7 +522,7 @@ class RpcShellyCctLight(RpcShellyLightBase):
     @override
     async def _async_set(self, params: dict[str, Any]) -> None:
         """Set the light parameters."""
-        await self.coordinator.device.cct_set(get_rpc_key_id(self.key), params)
+        await self.coordinator.device.cct_set(self._id, params)
 
 
 class RpcShellyRgbCctLight(RpcShellyLightBase):
@@ -544,7 +545,7 @@ class RpcShellyRgbCctLight(RpcShellyLightBase):
     @override
     async def _async_set(self, params: dict[str, Any]) -> None:
         """Set the light parameters."""
-        await self.coordinator.device.rgbcct_set(get_rpc_key_id(self.key), params)
+        await self.coordinator.device.rgbcct_set(self._id, params)
 
 
 class RpcShellyLedStrip(RpcShellyLightBase):
@@ -587,7 +588,7 @@ class RpcShellyLedStrip(RpcShellyLightBase):
     @override
     async def _async_set(self, params: dict[str, Any]) -> None:
         """Set the light parameters."""
-        await self.coordinator.device.ledstrip_set(get_rpc_key_id(self.key), params)
+        await self.coordinator.device.ledstrip_set(self._id, params)
 
 
 class RpcShellyRgbLight(RpcShellyLightBase):
@@ -600,7 +601,7 @@ class RpcShellyRgbLight(RpcShellyLightBase):
     @override
     async def _async_set(self, params: dict[str, Any]) -> None:
         """Set the light parameters."""
-        await self.coordinator.device.rgb_set(get_rpc_key_id(self.key), params)
+        await self.coordinator.device.rgb_set(self._id, params)
 
 
 class RpcShellyRgbwLight(RpcShellyLightBase):
@@ -613,7 +614,7 @@ class RpcShellyRgbwLight(RpcShellyLightBase):
     @override
     async def _async_set(self, params: dict[str, Any]) -> None:
         """Set the light parameters."""
-        await self.coordinator.device.rgbw_set(get_rpc_key_id(self.key), params)
+        await self.coordinator.device.rgbw_set(self._id, params)
 
 
 LIGHTS: Final = (
