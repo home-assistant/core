@@ -4,6 +4,7 @@ from collections.abc import Mapping
 from datetime import UTC, datetime, timedelta
 import logging
 import operator
+import threading
 from typing import TYPE_CHECKING, Any
 
 from pyicloud import PyiCloudService
@@ -14,6 +15,7 @@ from pyicloud.exceptions import (
     PyiCloudAPIResponseException,
     PyiCloudAuthRequiredException,
     PyiCloudConnectionException,
+    PyiCloudException,
     PyiCloudFailedLoginException,
     PyiCloudNoDevicesException,
     PyiCloudServiceNotActivatedException,
@@ -123,6 +125,13 @@ def _is_usable_location(location: dict[str, Any] | None) -> bool:
     )
 
 
+def _is_setup_mfa_challenge(err: BaseException) -> bool:
+    """Return True if iCloud says a verification code is outstanding."""
+    return isinstance(err, PyiCloud2FARequiredException) or (
+        isinstance(err, PyiCloudAPIResponseException) and is_2fa_status(err)
+    )
+
+
 def _is_auth_failure(err: BaseException) -> bool:
     """Return True if iCloud rejected the session rather than the request."""
     if isinstance(
@@ -227,6 +236,8 @@ class IcloudAccount:
         self._family_members_fullname: dict[str, str] = {}
         self._devices: dict[str, IcloudDevice] = {}
         self._retried_fetch = False
+        # Setup and reload can overlap, but only one may replace the session.
+        self._setup_recovery_lock = threading.Lock()
         self._config_entry = config_entry
 
         self._unsub_fetch: CALLBACK_TYPE | None = None
@@ -273,6 +284,7 @@ class IcloudAccount:
                 self._password,
                 self._icloud_dir.path,
                 with_family=self._with_family,
+                authenticate=True,
                 refresh_interval=None,
             )
 
@@ -281,10 +293,12 @@ class IcloudAccount:
             # let the config entry retry instead of asking the user to log in.
             raise _cannot_connect(err) from err
 
-        except PyiCloudFailedLoginException:
+        except PyiCloudFailedLoginException as err:
             # PyiCloudService authenticates while constructing, so this means
-            # the stored password was rejected.
-            self._handle_auth_required(two_factor=False, keep_session=False)
+            # the stored password was rejected. The stored session can still
+            # be good, so give it one silent try before asking the user.
+            if not self._recover_setup_rejection(err, None):
+                self._handle_auth_required(two_factor=False, keep_session=False)
             return
 
         except PyiCloud2FARequiredException:
@@ -297,10 +311,11 @@ class IcloudAccount:
             self._handle_auth_required(two_factor=True, keep_session=False)
             return
 
-        except PyiCloudAuthRequiredException:
+        except PyiCloudAuthRequiredException as err:
             # iCloud rejected the session rather than issuing a challenge, so
             # this is a login to redo, not a code to enter.
-            self._handle_auth_required(two_factor=False, keep_session=False)
+            if not self._recover_setup_rejection(err, None):
+                self._handle_auth_required(two_factor=False, keep_session=False)
             return
 
         except PyiCloudAPIResponseException as err:
@@ -308,11 +323,12 @@ class IcloudAccount:
                 # Anything else is iCloud failing rather than refusing, so let
                 # Home Assistant retry the setup with its own backoff.
                 raise ConfigEntryNotReady from err
-            # self.api was never assigned, so there is no session to send a
-            # code through even when the status asks for one.
-            self._handle_auth_required(
-                two_factor=is_2fa_status(err), keep_session=False
-            )
+            if not self._recover_setup_rejection(err, None):
+                # self.api was never assigned, so there is no session to send a
+                # code through even when the status asks for one.
+                self._handle_auth_required(
+                    two_factor=is_2fa_status(err), keep_session=False
+                )
             return
 
         if self.api.requires_2fa:
@@ -325,15 +341,92 @@ class IcloudAccount:
             self._handle_auth_required(two_factor=True, keep_session=True)
             return
 
+        self._read_account(self.api)
+
+    def _create_setup_recovery_service(self) -> PyiCloudService:
+        """Build a service that reuses the stored session for setup recovery."""
+        return PyiCloudService(
+            self._username,
+            self._password,
+            self._icloud_dir.path,
+            with_family=self._with_family,
+            authenticate=False,
+            refresh_interval=None,
+        )
+
+    def _recover_setup_rejection(
+        self, err: Exception, rejected: PyiCloudService | None
+    ) -> bool:
+        """Try the stored session once before asking the user during setup.
+
+        Return True when the rejection is handled: the replacement was read
+        successfully, or a repair was opened for a rejection it met. The
+        caller then leaves setup without handling the error again.
+        """
+        if (
+            not _is_auth_failure(err)
+            or _is_setup_mfa_challenge(err)
+            or self._reauth_pending()
+        ):
+            return False
+
+        with self._setup_recovery_lock:
+            if rejected is not None and self.api is not rejected:
+                return False
+
+            try:
+                replacement = self._create_setup_recovery_service()
+            except PyiCloudConnectionException:
+                # An outage says nothing about the credentials, so let the
+                # caller decide whether setup should be retried.
+                return False
+            except PyiCloudException as login_err:
+                self.api = None
+                self._handle_auth_required(
+                    two_factor=_is_setup_mfa_challenge(login_err), keep_session=False
+                )
+                return True
+
+            try:
+                replacement.authenticate()
+            except Exception as login_err:
+                if not _is_auth_failure(login_err):
+                    raise
+                if _is_setup_mfa_challenge(login_err):
+                    # The replacement carries the challenge, so keep it for
+                    # the reauth flow to validate a code against.
+                    self.api = replacement
+                    self._handle_auth_required(two_factor=True, keep_session=True)
+                else:
+                    self.api = None
+                    self._handle_auth_required(two_factor=False, keep_session=False)
+                return True
+
+            self.api = replacement
+            # recover=False keeps this single attempt bounded: a second
+            # rejection is reported to the user rather than retried again.
+            try:
+                self._read_account(replacement, recover=False)
+            except ConfigEntryAuthFailed:
+                # setup() cannot reach its own timer scheduling when the
+                # failed read raises, so the repair still needs one poll.
+                if self._unsub_fetch is None:
+                    self._fetch_interval = self._max_interval
+                    self._schedule_next_fetch()
+                raise
+            return True
+
+    def _read_account(self, service: PyiCloudService, *, recover: bool = True) -> None:
+        """Read the account names and devices from a live service."""
         try:
             # Gets device owners infos
-            user_info = self.api.devices.user_info
+            user_info = service.devices.user_info
         except PyiCloud2FARequiredException as err:
             # iCloud issues the challenge when the session is refreshed to read
             # the devices rather than while logging in, and does not set
             # requires_2fa for it, so ask for a code explicitly. The session is
             # kept so the reauth flow can send the code through it.
-            if not code_can_be_delivered(self.api):
+            if not code_can_be_delivered(service):
                 # Nothing for the user to act on, so retry rather than ask for
                 # a code that cannot be sent.
                 raise ConfigEntryNotReady from err
@@ -342,13 +435,15 @@ class IcloudAccount:
             )
             raise ConfigEntryAuthFailed from err
         except (PyiCloudFailedLoginException, PyiCloudAuthRequiredException) as err:
+            if recover and self._recover_setup_rejection(err, service):
+                return
             # Reading the devices refreshes the session, and a stored token
             # that iCloud has since invalidated is only rejected here, not
             # while logging in. Only the user can resolve it, so this fails
             # setup as an authentication failure rather than something to
             # retry: Home Assistant starts the reauth flow and stops
             # re-attempting a login that cannot succeed until they are done.
-            challenged = self.api is not None and self.api.requires_2fa
+            challenged = service.requires_2fa
             self._handle_auth_required(
                 two_factor=challenged, keep_session=challenged, start_reauth=False
             )
@@ -374,10 +469,12 @@ class IcloudAccount:
             # rejections do not: the session has just failed to refresh, so a
             # reauth flow sending a code through it would fail as well.
             challenge = is_2fa_status(err)
-            if challenge and not code_can_be_delivered(self.api):
+            if challenge and not code_can_be_delivered(service):
                 # Nothing for the user to act on, so retry rather than ask for
                 # a code that cannot be sent.
                 raise ConfigEntryNotReady from err
+            if recover and self._recover_setup_rejection(err, service):
+                return
             self._handle_auth_required(
                 two_factor=challenge, keep_session=challenge, start_reauth=False
             )

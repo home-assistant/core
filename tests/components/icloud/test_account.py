@@ -11,6 +11,7 @@ from pyicloud.exceptions import (
     PyiCloud2FARequiredException,
     PyiCloudAcceptTermsException,
     PyiCloudAPIResponseException,
+    PyiCloudAuthRequiredException,
     PyiCloudConnectionException,
     PyiCloudFailedLoginException,
 )
@@ -42,9 +43,14 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers.event import track_point_in_utc_time
 from homeassistant.helpers.storage import Store
 
 from . import MockAppleDevice, MockDevicesContainer
+from .conftest import (
+    MockAppleDevice as MockAppleDeviceWithFeatures,
+    MockDevicesContainer as MockDevicesContainerWithFeatures,
+)
 from .const import (
     DEVICE,
     DEVICE_2,
@@ -1662,3 +1668,257 @@ async def test_a_pending_fetch_keeps_the_devices_it_did_not_list(
     await hass.async_block_till_done()
 
     assert set(account.devices) == {"device1"}
+
+
+def _setup_reauth_flows(hass: HomeAssistant) -> list:
+    """Return reauth flows waiting on the user in setup tests."""
+    return [
+        flow
+        for flow in hass.config_entries.flow.async_progress()
+        if flow["context"]["source"] == "reauth"
+    ]
+
+
+def _setup_service(device: MockAppleDeviceWithFeatures) -> MagicMock:
+    """Build a live service reporting the device the test controls."""
+    api = MagicMock()
+    api.requires_2fa = False
+    api.requires_2sa = False
+    api.two_factor_delivery_method = "trusted_device"
+    api.devices = MockDevicesContainerWithFeatures(USER_INFO, [device])
+    return api
+
+
+class _RejectFirstDeviceRead:
+    """Service that turns down the first devices read of a stored session."""
+
+    def __init__(self, api: MagicMock, device: MockAppleDeviceWithFeatures) -> None:
+        """Wrap a working service with one rejected read."""
+        self._api = api
+        self._device = device
+        self.reads = 0
+
+    @property
+    def devices(self) -> MockDevicesContainerWithFeatures:
+        """Reject once, then report the devices the way iCloud does."""
+        self.reads += 1
+        if self.reads == 1:
+            raise PyiCloudAuthRequiredException(USERNAME, Mock(spec=Response))
+        return MockDevicesContainerWithFeatures(USER_INFO, [self._device])
+
+    def __getattr__(self, name: str) -> Any:
+        """Delegate everything else to the working service."""
+        return getattr(self._api, name)
+
+
+async def _assert_setup_recovered(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    config_entry: MockConfigEntry,
+    device: MockAppleDeviceWithFeatures,
+) -> None:
+    """Check the entry is up on the recovered session and keeps polling it."""
+    assert config_entry.state is ConfigEntryState.LOADED
+    assert not _setup_reauth_flows(hass)
+    account = config_entry.runtime_data
+    assert account.api is not None
+    assert account.owner_fullname == "user name"
+    assert set(account.devices) == {"device1"}
+    assert account.devices["device1"].device is device
+    assert hass.states.get("sensor.iphone_battery").state == "80"
+
+    device._status["batteryLevel"] = 0.5
+    freezer.tick(timedelta(minutes=DEFAULT_MAX_INTERVAL + 1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert hass.states.get("sensor.iphone_battery").state == "50"
+    assert not _setup_reauth_flows(hass)
+
+
+async def test_setup_recovers_a_rejection_at_service_construction(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
+    """A session turned down while building the service is replaced in setup."""
+    device = MockAppleDeviceWithFeatures(dict(DEVICE))
+    fresh_api = _setup_service(device)
+    attempts = 0
+
+    def build_service(*args: Any, **kwargs: Any) -> MagicMock:
+        nonlocal attempts
+        attempts += 1
+        assert kwargs["authenticate"] is (attempts == 1)
+        if attempts == 1:
+            raise PyiCloudAuthRequiredException(USERNAME, Mock(spec=Response))
+        return fresh_api
+
+    config_entry = MockConfigEntry(
+        domain=DOMAIN, data=MOCK_CONFIG, entry_id="test", unique_id=USERNAME
+    )
+    config_entry.add_to_hass(hass)
+
+    with (
+        patch(
+            "homeassistant.components.icloud.account.PyiCloudService",
+            side_effect=build_service,
+        ),
+        patch(
+            "homeassistant.components.icloud.account.track_point_in_utc_time",
+            wraps=track_point_in_utc_time,
+        ) as schedule,
+    ):
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done(wait_background_tasks=True)
+        assert schedule.call_count == 1
+
+    assert attempts == 2
+    await _assert_setup_recovered(hass, freezer, config_entry, device)
+
+
+async def test_setup_recovers_a_rejection_at_device_read(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
+    """A session turned down while reading device info is replaced in setup."""
+    device = MockAppleDeviceWithFeatures(dict(DEVICE))
+    fresh_api = _setup_service(device)
+    first_api = _RejectFirstDeviceRead(_setup_service(device), device)
+    attempts = 0
+
+    def build_service(*args: Any, **kwargs: Any) -> Any:
+        nonlocal attempts
+        attempts += 1
+        assert kwargs["authenticate"] is (attempts == 1)
+        return first_api if attempts == 1 else fresh_api
+
+    config_entry = MockConfigEntry(
+        domain=DOMAIN, data=MOCK_CONFIG, entry_id="test", unique_id=USERNAME
+    )
+    config_entry.add_to_hass(hass)
+
+    with (
+        patch(
+            "homeassistant.components.icloud.account.PyiCloudService",
+            side_effect=build_service,
+        ),
+        patch(
+            "homeassistant.components.icloud.account.track_point_in_utc_time",
+            wraps=track_point_in_utc_time,
+        ) as schedule,
+    ):
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done(wait_background_tasks=True)
+        assert schedule.call_count == 1
+
+    assert attempts == 2
+    assert first_api.reads == 1
+    await _assert_setup_recovered(hass, freezer, config_entry, device)
+
+
+async def test_reload_recovers_a_rejection_at_service_construction(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """A restart-style reload recovers without asking the user to log in again."""
+    device = MockAppleDeviceWithFeatures(dict(DEVICE))
+    fresh_api = _setup_service(device)
+    armed = False
+    failed = False
+
+    def build_service(*args: Any, **kwargs: Any) -> MagicMock:
+        nonlocal failed
+        if armed and not failed:
+            failed = True
+            raise PyiCloudAuthRequiredException(USERNAME, Mock(spec=Response))
+        return fresh_api
+
+    config_entry = MockConfigEntry(
+        domain=DOMAIN, data=MOCK_CONFIG, entry_id="test", unique_id=USERNAME
+    )
+    config_entry.add_to_hass(hass)
+
+    with (
+        patch(
+            "homeassistant.components.icloud.account.PyiCloudService",
+            side_effect=build_service,
+        ),
+        patch(
+            "homeassistant.components.icloud.account.track_point_in_utc_time",
+            wraps=track_point_in_utc_time,
+        ) as schedule,
+    ):
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done(wait_background_tasks=True)
+        assert schedule.call_count == 1
+
+        device_ids = {
+            entry.id
+            for entry in dr.async_entries_for_config_entry(
+                device_registry, config_entry.entry_id
+            )
+        }
+        entity_ids = {
+            entry.entity_id
+            for entry in er.async_entries_for_config_entry(
+                entity_registry, config_entry.entry_id
+            )
+        }
+        assert device_ids and entity_ids
+        schedule.reset_mock()
+
+        armed = True
+        assert await hass.config_entries.async_reload(config_entry.entry_id)
+        await hass.async_block_till_done(wait_background_tasks=True)
+        assert schedule.call_count == 1
+
+    assert failed
+    assert {
+        entry.id
+        for entry in dr.async_entries_for_config_entry(
+            device_registry, config_entry.entry_id
+        )
+    } == device_ids
+    assert {
+        entry.entity_id
+        for entry in er.async_entries_for_config_entry(
+            entity_registry, config_entry.entry_id
+        )
+    } == entity_ids
+    await _assert_setup_recovered(hass, freezer, config_entry, device)
+
+
+async def test_setup_reports_one_repair_when_recovery_fails(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
+    """A rejection the stored session cannot fix reaches the user once."""
+    attempts = 0
+
+    def build_service(*args: Any, **kwargs: Any) -> MagicMock:
+        nonlocal attempts
+        attempts += 1
+        raise PyiCloudAuthRequiredException(USERNAME, Mock(spec=Response))
+
+    config_entry = MockConfigEntry(
+        domain=DOMAIN, data=MOCK_CONFIG, entry_id="test", unique_id=USERNAME
+    )
+    config_entry.add_to_hass(hass)
+
+    with (
+        patch(
+            "homeassistant.components.icloud.account.PyiCloudService",
+            side_effect=build_service,
+        ),
+        patch(
+            "homeassistant.components.icloud.account.track_point_in_utc_time",
+            wraps=track_point_in_utc_time,
+        ) as schedule,
+    ):
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done(wait_background_tasks=True)
+        assert schedule.call_count == 1
+
+    assert attempts == 2
+    assert config_entry.state is ConfigEntryState.LOADED
+    assert len(_setup_reauth_flows(hass)) == 1
+    assert config_entry.runtime_data.api is None
