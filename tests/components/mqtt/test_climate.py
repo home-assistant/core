@@ -172,7 +172,7 @@ async def test_invalid_hvac_mode_in_modes(
     """Test an invalid hvac mode in the modes list is rejected."""
     assert await mqtt_mock_entry()
     assert hass.states.get(ENTITY_CLIMATE) is None
-    assert "value must be one of" in caplog.text
+    assert "expected HVACMode or one of" in caplog.text
     assert "at 'modes[0]'" in caplog.text
 
 
