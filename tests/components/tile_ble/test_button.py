@@ -9,8 +9,8 @@ from pytest_homeassistant.components.bluetooth import inject_bluetooth_service_i
 from syrupy.assertion import SnapshotAssertion
 from tile_ble import TileBleAuthenticationError, TileBleConnectionError, TileBleError
 
-from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
-from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE, Platform
+from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, ButtonService
+from homeassistant.const import STATE_UNAVAILABLE, Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
@@ -29,7 +29,10 @@ def platforms() -> Generator[None]:
 
 async def _press(hass: HomeAssistant) -> None:
     await hass.services.async_call(
-        BUTTON_DOMAIN, SERVICE_PRESS, {ATTR_ENTITY_ID: ENTITY_ID}, blocking=True
+        BUTTON_DOMAIN,
+        ButtonService.PRESS,
+        {TargetKey.ENTITY_ID: ENTITY_ID},
+        blocking=True,
     )
 
 
