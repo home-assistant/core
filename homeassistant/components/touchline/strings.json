@@ -1,13 +1,18 @@
 {
   "config": {
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
+    "flow_title": "{host}",
     "step": {
+      "discovery_confirm": {
+        "description": "Do you want to set up the Roth Touchline controller at {host}?"
+      },
       "user": {
         "data": {
           "host": "[%key:common::config_flow::data::host%]"

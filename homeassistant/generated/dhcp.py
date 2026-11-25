@@ -1195,6 +1195,11 @@ DHCP: Final[list[dict[str, str | bool]]] = [
         "macaddress": "74C63B*",
     },
     {
+        "domain": "touchline",
+        "hostname": "roth-*",
+        "macaddress": "5CC213*",
+    },
+    {
         "domain": "tplink",
         "registered_devices": True,
     },

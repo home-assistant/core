@@ -5,6 +5,12 @@
   "codeowners": ["@mnordseth"],
   "config_flow": true,
   "connectivity": ["network"],
+  "dhcp": [
+    {
+      "hostname": "roth-*",
+      "macaddress": "5CC213*"
+    }
+  ],
   "documentation": "https://www.home-assistant.io/integrations/touchline",
   "integration_type": "hub",
   "iot_class": "local_polling",
