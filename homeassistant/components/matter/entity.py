@@ -22,6 +22,7 @@ from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity, EntityDescription
+from homeassistant.helpers.translation import async_get_cached_translations
 from homeassistant.helpers.typing import Undefined
 
 from .const import DOMAIN, FEATUREMAP_ATTRIBUTE_ID, ID_TYPE_DEVICE_ID
@@ -63,6 +64,108 @@ VENDOR_LABELING_LIST: dict[int, dict[int, list[str] | None]] = {
         32769: ["ha_entitylabel"],
         32770: ["ha_entitylabel"],
     },
+}
+
+NAMESPACE_COMMON_AREA = clusters.Globals.Enums.namespace.kCommonAreaNamespace
+
+# Translation keys (strings.json -> "common") for the Common Area namespace
+# (0x0010) semantic tags, as defined by the Matter specification. The tag
+# value is the room or area the endpoint belongs to (e.g. a Thermostat
+# endpoint tagged "Bedroom" on a bridged device with multiple Thermostats).
+AREA_TAG_TRANSLATION_KEYS: dict[int, str] = {
+    0x00: "area_aisle",
+    0x01: "area_attic",
+    0x02: "area_back_door",
+    0x03: "area_back_yard",
+    0x04: "area_balcony",
+    0x05: "area_ballroom",
+    0x06: "area_bathroom",
+    0x07: "area_bedroom",
+    0x08: "area_border",
+    0x09: "area_boxroom",
+    0x0A: "area_breakfast_room",
+    0x0B: "area_carport",
+    0x0C: "area_cellar",
+    0x0D: "area_cloakroom",
+    0x0E: "area_closet",
+    0x0F: "area_conservatory",
+    0x10: "area_corridor",
+    0x11: "area_craft_room",
+    0x12: "area_cupboard",
+    0x13: "area_deck",
+    0x14: "area_den",
+    0x15: "area_dining",
+    0x16: "area_drawing_room",
+    0x17: "area_dressing_room",
+    0x18: "area_driveway",
+    0x19: "area_elevator",
+    0x1A: "area_ensuite",
+    0x1B: "area_entrance",
+    0x1C: "area_entryway",
+    0x1D: "area_family_room",
+    0x1E: "area_foyer",
+    0x1F: "area_front_door",
+    0x20: "area_front_yard",
+    0x21: "area_game_room",
+    0x22: "area_garage",
+    0x23: "area_garage_door",
+    0x24: "area_garden",
+    0x25: "area_garden_door",
+    0x26: "area_guest_bathroom",
+    0x27: "area_guest_bedroom",
+    0x29: "area_guest_room",
+    0x2A: "area_gym",
+    0x2B: "area_hallway",
+    0x2C: "area_hearth_room",
+    0x2D: "area_kids_room",
+    0x2E: "area_kids_bedroom",
+    0x2F: "area_kitchen",
+    0x31: "area_laundry_room",
+    0x32: "area_lawn",
+    0x33: "area_library",
+    0x34: "area_living_room",
+    0x35: "area_lounge",
+    0x36: "area_media_tv_room",
+    0x37: "area_mud_room",
+    0x38: "area_music_room",
+    0x39: "area_nursery",
+    0x3A: "area_office",
+    0x3B: "area_outdoor_kitchen",
+    0x3C: "area_outside",
+    0x3D: "area_pantry",
+    0x3E: "area_parking_lot",
+    0x3F: "area_parlor",
+    0x40: "area_patio",
+    0x41: "area_play_room",
+    0x42: "area_pool_room",
+    0x43: "area_porch",
+    0x44: "area_primary_bathroom",
+    0x45: "area_primary_bedroom",
+    0x46: "area_ramp",
+    0x47: "area_reception_room",
+    0x48: "area_recreation_room",
+    0x4A: "area_roof",
+    0x4B: "area_sauna",
+    0x4C: "area_scullery",
+    0x4D: "area_sewing_room",
+    0x4E: "area_shed",
+    0x4F: "area_side_door",
+    0x50: "area_side_yard",
+    0x51: "area_sitting_room",
+    0x52: "area_snug",
+    0x53: "area_spa",
+    0x54: "area_staircase",
+    0x55: "area_steam_room",
+    0x56: "area_storage_room",
+    0x57: "area_studio",
+    0x58: "area_study",
+    0x59: "area_sun_room",
+    0x5A: "area_swimming_pool",
+    0x5B: "area_terrace",
+    0x5C: "area_utility_room",
+    0x5D: "area_ward",
+    0x5E: "area_workshop",
+    0x5F: "area_toilet",
 }
 
 
@@ -188,11 +291,30 @@ class MatterEntity(Entity):
         ]
         return found_labels
 
+    def _get_area_tag_name(self) -> str | None:
+        """Get the translation key for the endpoint's Common Area tag, if any."""
+
+        tag_list: list[clusters.Globals.Structs.semtag] = (
+            self.get_matter_attribute_value(clusters.Descriptor.Attributes.TagList)
+            or []
+        )
+        for tag in tag_list:
+            if (
+                tag.mfgCode not in (None, NullValue)
+                or tag.namespaceID != NAMESPACE_COMMON_AREA
+            ):
+                continue
+            if translation_key := AREA_TAG_TRANSLATION_KEYS.get(tag.tag):
+                return translation_key
+        return None
+
     def _get_name_modifier(self) -> str | None:
         """Get the name modifier for the entity."""
 
         if found_labels := self._find_matching_labels():
             return found_labels[0]
+        if area_tag_name := self._get_area_tag_name():
+            return area_tag_name
         return None
 
     @override
@@ -295,7 +417,16 @@ class MatterEntity(Entity):
             return self._attr_name
         name = super().name
         if name and self._name_postfix:
-            name = f"{name} ({self._name_postfix})"
+            # the postfix may be a translation key, e.g. for an area tag name;
+            # a non-translatable postfix (an endpoint number or a vendor label)
+            # is not found in the translations and is used as-is
+            translations = async_get_cached_translations(
+                self.hass, self.hass.config.language, "common", DOMAIN
+            )
+            postfix = translations.get(
+                f"component.{DOMAIN}.common.{self._name_postfix}", self._name_postfix
+            )
+            name = f"{name} ({postfix})"
         return name
 
     @cached_property
