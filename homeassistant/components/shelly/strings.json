@@ -247,6 +247,9 @@
       "mute_alarm": {
         "name": "Mute alarm"
       },
+      "next_effect": {
+        "name": "Next effect"
+      },
       "open": {
         "name": "Open"
       },
@@ -938,6 +941,12 @@
     },
     "rpc_call_error": {
       "message": "RPC call error occurred for {device}"
+    },
+    "storage_unavailable": {
+      "message": "Storage unavailable for {device}"
+    },
+    "unexpected_identifier": {
+      "message": "Unexpected identifier: {identifier}"
     },
     "unsupported_media_content_type": {
       "message": "Unsupported media content type for Shelly device: {media_content_type}"
