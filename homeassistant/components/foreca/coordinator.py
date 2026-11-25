@@ -5,6 +5,7 @@ import logging
 from typing import override
 
 from pyforeca import (
+    AirQualityForecast,
     CurrentWeather,
     DailyForecast,
     ForecaApiClient,
@@ -128,11 +129,44 @@ class ForecaObservationCoordinator(ForecaCoordinator[Observation | None]):
     async def _async_update_data(self) -> Observation | None:
         """Fetch the latest observation, or None where no station reports nearby."""
         try:
-            return await self.client.observation_latest(self.location)
+            return await self.client.observation_latest(
+                self.location, precipitation="hourly", rounding=0
+            )
         except ForecaError as err:
             raise UpdateFailed(
                 f"Error communicating with the Foreca API: {err}"
             ) from err
+
+
+class ForecaAirQualityCoordinator(ForecaCoordinator[AirQualityForecast | None]):
+    """Class to manage fetching the current air quality for one location."""
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        entry: ForecaConfigEntry,
+        subentry: ConfigSubentry,
+        client: ForecaApiClient,
+    ) -> None:
+        """Initialize the coordinator."""
+        super().__init__(
+            hass, entry, subentry, client, f"{DOMAIN} {subentry.title} air quality"
+        )
+
+    @override
+    async def _async_update_data(self) -> AirQualityForecast | None:
+        """Fetch the air quality for the hour in progress.
+
+        The first step of the hourly air quality forecast is the current hour.
+        """
+        try:
+            hours = await self.client.air_quality_hourly(self.location, periods=1)
+        except ForecaError as err:
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="air_quality_update_error",
+            ) from err
+        return hours[0] if hours else None
 
 
 @dataclass(slots=True)
@@ -141,3 +175,4 @@ class ForecaLocationCoordinators:
 
     weather: ForecaUpdateCoordinator
     observation: ForecaObservationCoordinator
+    air_quality: ForecaAirQualityCoordinator

@@ -4,15 +4,23 @@ from datetime import timedelta
 from unittest.mock import patch
 
 from freezegun.api import FrozenDateTimeFactory
-from pylast import LastFMNetwork, WSError
+from pylast import LastFMNetwork, PyLastError, WSError
 import pytest
 from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.lastfm.const import ATTR_LAST_PLAYED, STATE_NOT_SCROBBLING
+from homeassistant.components.lastfm.const import (
+    ATTR_LAST_PLAYED,
+    CONF_API_SECRET,
+    CONF_ENABLE_AUTHENTICATION,
+    DOMAIN,
+    STATE_NOT_SCROBBLING,
+)
+from homeassistant.const import ATTR_ENTITY_PICTURE, CONF_API_KEY
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 
-from . import API_KEY, MockUser
+from . import API_KEY, API_SECRET, SESSION_KEY, MockUser
 from .conftest import ComponentSetup
 
 
@@ -45,6 +53,21 @@ async def test_sensors(
     assert state == snapshot
 
 
+async def test_sensor_without_avatar(
+    hass: HomeAssistant,
+    setup_integration: ComponentSetup,
+    config_entry: MockConfigEntry,
+    default_user: MockUser,
+) -> None:
+    """Test a user without an avatar has no entity picture."""
+    with patch.object(default_user, "get_image", return_value=None):
+        await setup_integration(config_entry, default_user)
+
+    state = hass.states.get("sensor.lastfm_testaccount1")
+    assert state.state == "artist - title"
+    assert ATTR_ENTITY_PICTURE not in state.attributes
+
+
 async def test_sensor_hidden_listening_information(
     hass: HomeAssistant,
     setup_integration: ComponentSetup,
@@ -74,6 +97,83 @@ async def test_sensor_hidden_listening_information(
     )
 
 
+async def test_sensor_now_playing_with_hidden_listening_information(
+    hass: HomeAssistant,
+    setup_integration: ComponentSetup,
+    config_entry: MockConfigEntry,
+    hidden_now_playing_user: MockUser,
+    caplog: pytest.LogCaptureFixture,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test now playing stays available when the recent tracks request fails."""
+    await setup_integration(config_entry, hidden_now_playing_user)
+
+    state = hass.states.get("sensor.lastfm_testaccount1")
+    assert state.state == "artist - title"
+    assert state.attributes[ATTR_LAST_PLAYED] is None
+    warning = (
+        "LastFM user testaccount1 has hidden their recent listening information "
+        "(https://www.last.fm/settings/privacy)"
+    )
+    assert warning in caplog.messages
+
+    with patch("pylast.User", return_value=hidden_now_playing_user) as mock_user:
+        freezer.tick(timedelta(seconds=30))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+    mock_user.assert_called()
+    assert config_entry.runtime_data.last_update_success
+
+    assert caplog.messages.count(warning) == 1
+
+
+@pytest.mark.usefixtures("mock_session_key_generator")
+async def test_reconfigure_unlocks_hidden_listening_information(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    setup_integration: ComponentSetup,
+    config_entry: MockConfigEntry,
+    hidden_user: MockUser,
+    default_user: MockUser,
+) -> None:
+    """Reload the existing sensor with authenticated access to private tracks."""
+    await setup_integration(config_entry, hidden_user)
+    entity_id = "sensor.lastfm_testaccount1"
+    assert hass.states.get(entity_id).attributes[ATTR_LAST_PLAYED] is None
+    original_entity = entity_registry.async_get(entity_id)
+
+    with (
+        patch("pylast.User", return_value=default_user),
+        patch(
+            "homeassistant.components.lastfm.coordinator.LastFMNetwork",
+            wraps=LastFMNetwork,
+        ) as network,
+    ):
+        result = await config_entry.start_reconfigure_flow(hass)
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={
+                CONF_API_KEY: API_KEY,
+                CONF_API_SECRET: API_SECRET,
+                CONF_ENABLE_AUTHENTICATION: True,
+            },
+        )
+        result = await hass.config_entries.flow.async_configure(result["flow_id"])
+        result = await hass.config_entries.flow.async_configure(result["flow_id"])
+        await hass.async_block_till_done()
+
+    assert result["reason"] == "reconfigure_successful"
+    network.assert_called_once_with(
+        api_key=API_KEY, api_secret=API_SECRET, session_key=SESSION_KEY
+    )
+    assert hass.states.get(entity_id).attributes[ATTR_LAST_PLAYED] == "artist - title"
+    entity = entity_registry.async_get(entity_id)
+    assert entity.id == original_entity.id
+    assert entity.device_id == original_entity.device_id
+    assert hass.config_entries.async_entries(DOMAIN) == [config_entry]
+
+
 @pytest.mark.parametrize(
     "error_kwarg",
     [
@@ -81,16 +181,43 @@ async def test_sensor_hidden_listening_information(
         pytest.param("recent_tracks_error", id="recent_tracks"),
     ],
 )
-async def test_update_error_does_not_log_api_key(
-    hass: HomeAssistant,
+@pytest.mark.parametrize(
+    ("error", "message"),
+    [
+        pytest.param(
+            WSError(
+                LastFMNetwork(
+                    api_key=API_KEY,
+                    api_secret=API_SECRET,
+                    session_key=SESSION_KEY,
+                ),
+                "8",
+                "Operation failed",
+            ),
+            "8: Operation failed",
+            id="api_error",
+        ),
+        pytest.param(
+            PyLastError("Something strange"),
+            "Something strange",
+            id="library_error",
+        ),
+    ],
+)
+async def test_error_log_does_not_include_credentials(
     setup_integration: ComponentSetup,
-    config_entry: MockConfigEntry,
+    authenticated_config_entry: MockConfigEntry,
     caplog: pytest.LogCaptureFixture,
     error_kwarg: str,
+    error: PyLastError,
+    message: str,
 ) -> None:
-    """Test the API key in the pylast network repr is not logged."""
-    error = WSError(LastFMNetwork(api_key=API_KEY), "8", "Operation failed")
-    await setup_integration(config_entry, MockUser(**{error_kwarg: error}))
+    """Test API and library error logs exclude authenticated client credentials."""
+    await setup_integration(
+        authenticated_config_entry, MockUser(**{error_kwarg: error})
+    )
 
-    assert "LastFM update for testaccount1 failed: Operation failed" in caplog.text
+    assert f"LastFM update for testaccount1 failed: {message}" in caplog.text
     assert API_KEY not in caplog.text
+    assert API_SECRET not in caplog.text
+    assert SESSION_KEY not in caplog.text

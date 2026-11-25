@@ -10,6 +10,7 @@ from homeassistant.helpers.typing import ConfigType
 
 from .const import DOMAIN, SUBENTRY_TYPE_LOCATION
 from .coordinator import (
+    ForecaAirQualityCoordinator,
     ForecaConfigEntry,
     ForecaLocationCoordinators,
     ForecaObservationCoordinator,
@@ -42,8 +43,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ForecaConfigEntry) -> No
         # observation sensors unavailable instead of failing the setup.
         observation = ForecaObservationCoordinator(hass, entry, subentry, client)
         await observation.async_refresh()
+        air_quality = ForecaAirQualityCoordinator(hass, entry, subentry, client)
+        await air_quality.async_refresh()
         coordinators[subentry.subentry_id] = ForecaLocationCoordinators(
-            weather=weather, observation=observation
+            weather=weather,
+            observation=observation,
+            air_quality=air_quality,
         )
 
     entry.runtime_data = coordinators

@@ -68,7 +68,8 @@ class CasperGlowConfigFlow(ConfigFlow, domain=DOMAIN):
             )
         glow = CasperGlow(self._discovery_info.device)
         try:
-            await glow.handshake()
+            # Unconfirmed discovery: don't hold a connection slot retrying.
+            await glow.handshake(max_attempts=1)
         except CasperGlowError:
             return self.async_abort(reason="cannot_connect")
         except Exception:
