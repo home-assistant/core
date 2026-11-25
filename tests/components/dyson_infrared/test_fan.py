@@ -10,12 +10,10 @@ from homeassistant.components.fan import (
     ATTR_OSCILLATING,
     ATTR_PERCENTAGE,
     DOMAIN as FAN_DOMAIN,
-    SERVICE_OSCILLATE,
-    SERVICE_SET_PERCENTAGE,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
+    FanService,
+    FanServiceArgument,
 )
-from homeassistant.const import ATTR_ENTITY_ID, Platform
+from homeassistant.const import Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
@@ -57,8 +55,8 @@ async def test_turn_on_sends_on_command(
     """Test turning on without a percentage sends the ON code."""
     await hass.services.async_call(
         FAN_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: fan_entity_id},
+        FanService.TURN_ON,
+        {TargetKey.ENTITY_ID: fan_entity_id},
         blocking=True,
     )
 
@@ -78,16 +76,16 @@ async def test_turn_off_sends_off_command(
     """Test turning off sends the OFF code."""
     await hass.services.async_call(
         FAN_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: fan_entity_id},
+        FanService.TURN_ON,
+        {TargetKey.ENTITY_ID: fan_entity_id},
         blocking=True,
     )
     mock_infrared_emitter_entity.send_command_calls.clear()
 
     await hass.services.async_call(
         FAN_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: fan_entity_id},
+        FanService.TURN_OFF,
+        {TargetKey.ENTITY_ID: fan_entity_id},
         blocking=True,
     )
 
@@ -112,8 +110,8 @@ async def test_turn_on_with_percentage_equal_to_current_speed(
     """
     await hass.services.async_call(
         FAN_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: fan_entity_id, ATTR_PERCENTAGE: 50},
+        FanService.TURN_ON,
+        {TargetKey.ENTITY_ID: fan_entity_id, FanServiceArgument.PERCENTAGE: 50},
         blocking=True,
     )
 
@@ -134,16 +132,16 @@ async def test_set_percentage_zero_turns_off(
     """Test setting percentage to zero turns off the fan."""
     await hass.services.async_call(
         FAN_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: fan_entity_id},
+        FanService.TURN_ON,
+        {TargetKey.ENTITY_ID: fan_entity_id},
         blocking=True,
     )
     mock_infrared_emitter_entity.send_command_calls.clear()
 
     await hass.services.async_call(
         FAN_DOMAIN,
-        SERVICE_SET_PERCENTAGE,
-        {ATTR_ENTITY_ID: fan_entity_id, ATTR_PERCENTAGE: 0},
+        FanService.SET_PERCENTAGE,
+        {TargetKey.ENTITY_ID: fan_entity_id, FanServiceArgument.PERCENTAGE: 0},
         blocking=True,
     )
 
@@ -182,16 +180,19 @@ async def test_set_percentage_speed_up(
     """
     await hass.services.async_call(
         FAN_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: fan_entity_id, ATTR_PERCENTAGE: 40},
+        FanService.TURN_ON,
+        {TargetKey.ENTITY_ID: fan_entity_id, FanServiceArgument.PERCENTAGE: 40},
         blocking=True,
     )
     mock_infrared_emitter_entity.send_command_calls.clear()
 
     await hass.services.async_call(
         FAN_DOMAIN,
-        SERVICE_SET_PERCENTAGE,
-        {ATTR_ENTITY_ID: fan_entity_id, ATTR_PERCENTAGE: requested_percentage},
+        FanService.SET_PERCENTAGE,
+        {
+            TargetKey.ENTITY_ID: fan_entity_id,
+            FanServiceArgument.PERCENTAGE: requested_percentage,
+        },
         blocking=True,
     )
 
@@ -211,16 +212,16 @@ async def test_set_percentage_speed_down(
     """Test decreasing percentage sends the correct number of speed_down codes."""
     await hass.services.async_call(
         FAN_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: fan_entity_id, ATTR_PERCENTAGE: 90},
+        FanService.TURN_ON,
+        {TargetKey.ENTITY_ID: fan_entity_id, FanServiceArgument.PERCENTAGE: 90},
         blocking=True,
     )
     mock_infrared_emitter_entity.send_command_calls.clear()
 
     await hass.services.async_call(
         FAN_DOMAIN,
-        SERVICE_SET_PERCENTAGE,
-        {ATTR_ENTITY_ID: fan_entity_id, ATTR_PERCENTAGE: 30},
+        FanService.SET_PERCENTAGE,
+        {TargetKey.ENTITY_ID: fan_entity_id, FanServiceArgument.PERCENTAGE: 30},
         blocking=True,
     )
 
@@ -242,8 +243,8 @@ async def test_oscillate_sends_swing_command(
     """Test oscillating sends the SWING code and updates state."""
     await hass.services.async_call(
         FAN_DOMAIN,
-        SERVICE_OSCILLATE,
-        {ATTR_ENTITY_ID: fan_entity_id, ATTR_OSCILLATING: True},
+        FanService.OSCILLATE,
+        {TargetKey.ENTITY_ID: fan_entity_id, FanServiceArgument.OSCILLATING: True},
         blocking=True,
     )
 

@@ -2,12 +2,19 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from datetime import datetime, timedelta
 import logging
 from typing import override
 
 from pyvesync.base_devices.fryer_base import FryerState
 from pyvesync.base_devices.vesyncbasedevice import VeSyncBaseDevice
-from pyvesync.const import AirFryerFeatures, TemperatureUnits
+from pyvesync.const import (
+    RUNNING_STATUSES,
+    AirFryerFeatures,
+    AirQualityLevel,
+    TemperatureUnits,
+    TimeUnits,
+)
 from pyvesync.device_container import DeviceContainer
 
 from homeassistant.components.sensor import (
@@ -30,8 +37,17 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
+from homeassistant.util import dt as dt_util
+from homeassistant.util.variance import ignore_variance
 
-from .common import is_air_fryer, is_humidifier, is_outlet, is_purifier, rgetattr
+from .common import (
+    is_air_fryer,
+    is_humidifier,
+    is_outlet,
+    is_pedestal_fan,
+    is_purifier,
+    rgetattr,
+)
 from .const import AIR_FRYER_MODE_MAP, VS_DEVICES, VS_DISCOVERY
 from .coordinator import VesyncConfigEntry, VeSyncDataCoordinator
 from .entity import VeSyncBaseEntity
@@ -50,6 +66,8 @@ class VeSyncSensorEntityDescription(SensorEntityDescription):
     value_fn: Callable[[VeSyncBaseDevice], StateType] | None = None
     state_value_fn: Callable[[FryerState], StateType] | None = None
     use_device_temperature_unit: bool = False
+    # The state value is a remaining time in seconds, shown as the time it ends.
+    end_time_from_remaining: bool = False
 
 
 def _get_cook_status(state: FryerState) -> str | None:
@@ -59,6 +77,36 @@ def _get_cook_status(state: FryerState) -> str | None:
 
     cook_status = state.cook_status.lower()
     return AIR_FRYER_MODE_MAP.get(cook_status, cook_status)
+
+
+def _get_cook_time_remaining(state: FryerState) -> int | None:
+    """Return the seconds until the cook finishes, while they count down.
+
+    None when paused or stopped, and in a Sync hold that is not counting down
+    yet (no last timestamp), as the end time keeps moving then.
+    """
+    if state.cook_status not in RUNNING_STATUSES or state.last_timestamp is None:
+        return None
+    return state.total_time_remaining
+
+
+def _end_time(remaining: int) -> datetime:
+    """Return the time a remaining time in seconds ends."""
+    return dt_util.utcnow() + timedelta(seconds=remaining)
+
+
+# Variance of the end time ignored between updates: the poll time jitters, and
+# a fryer reporting minutes steps a whole minute when polled near its boundary.
+END_TIME_VARIANCE_SECONDS = timedelta(seconds=5)
+END_TIME_VARIANCE_MINUTES = timedelta(seconds=90)
+
+
+def _get_air_quality(device: VeSyncBaseDevice) -> str | None:
+    """Return the air quality level, mapping unknown to None."""
+    value = device.state.air_quality_string
+    if value == str(AirQualityLevel.UNKNOWN):
+        return None
+    return value
 
 
 SENSORS: tuple[VeSyncSensorEntityDescription, ...] = (
@@ -72,9 +120,22 @@ SENSORS: tuple[VeSyncSensorEntityDescription, ...] = (
         exists_fn=lambda device: rgetattr(device, "state.filter_life") is not None,
     ),
     VeSyncSensorEntityDescription(
+        key="hepa_filter_life",
+        translation_key="hepa_filter_life",
+        native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=lambda device: device.state.hepa_filter_life,
+        exists_fn=lambda device: (
+            is_humidifier(device) and device.state.hepa_filter_life is not None
+        ),
+    ),
+    VeSyncSensorEntityDescription(
         key="air-quality",
         translation_key="air_quality",
-        value_fn=lambda device: device.state.air_quality_string,
+        device_class=SensorDeviceClass.ENUM,
+        options=["excellent", "good", "moderate", "poor"],
+        value_fn=_get_air_quality,
         exists_fn=(
             lambda device: rgetattr(device, "state.air_quality_string") is not None
         ),
@@ -110,6 +171,13 @@ SENSORS: tuple[VeSyncSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda device: device.state.co2,
         exists_fn=lambda device: is_purifier(device) and device.state.co2 is not None,
+    ),
+    VeSyncSensorEntityDescription(
+        key="voc",
+        translation_key="voc",
+        state_class=SensorStateClass.MEASUREMENT,
+        value_fn=lambda device: device.state.voc,
+        exists_fn=lambda device: is_purifier(device) and device.state.voc is not None,
     ),
     VeSyncSensorEntityDescription(
         key="power",
@@ -186,8 +254,10 @@ SENSORS: tuple[VeSyncSensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfTemperature.FAHRENHEIT,
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda device: device.state.temperature,
+        # pyvesync scales only pedestal fan readings to °F; tower fan scale is unconfirmed.
         exists_fn=lambda device: (
-            is_humidifier(device) and device.state.temperature is not None
+            (is_humidifier(device) or is_pedestal_fan(device))
+            and device.state.temperature is not None
         ),
     ),
     VeSyncSensorEntityDescription(
@@ -234,6 +304,14 @@ SENSORS: tuple[VeSyncSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.DURATION,
         native_unit_of_measurement=UnitOfTime.SECONDS,
         state_value_fn=lambda state: state.cook_set_time,
+        exists_fn=is_air_fryer,
+    ),
+    VeSyncSensorEntityDescription(
+        key="cook_end_time",
+        translation_key="cook_end_time",
+        device_class=SensorDeviceClass.TIMESTAMP,
+        state_value_fn=_get_cook_time_remaining,
+        end_time_from_remaining=True,
         exists_fn=is_air_fryer,
     ),
     VeSyncSensorEntityDescription(
@@ -325,15 +403,32 @@ class VeSyncSensorEntity(VeSyncBaseEntity, SensorEntity):
                 self._attr_translation_placeholders = {"basket": str(chamber)}
             if chamber == 2:
                 self._attr_unique_id += "-chamber_2"
+        self._end_time_variance: timedelta | None = None
+        self._get_end_time: Callable[[int], datetime] | None = None
+        if description.end_time_from_remaining:
+            self._end_time_variance = (
+                END_TIME_VARIANCE_SECONDS
+                if rgetattr(device, "time_units") == TimeUnits.SECONDS
+                else END_TIME_VARIANCE_MINUTES
+            )
 
     @property
     @override
-    def native_value(self) -> StateType:
+    def native_value(self) -> StateType | datetime:
         """Return the state of the sensor."""
         if self.entity_description.state_value_fn is not None:
             if self._fryer_state is None:
                 return None
-            return self.entity_description.state_value_fn(self._fryer_state)
+            value = self.entity_description.state_value_fn(self._fryer_state)
+            if self._end_time_variance is None:
+                return value
+            if value is None:
+                # Paused, stopped or done: the next cook starts from a fresh end time.
+                self._get_end_time = None
+                return None
+            if self._get_end_time is None:
+                self._get_end_time = ignore_variance(_end_time, self._end_time_variance)
+            return self._get_end_time(int(value))
         if self.entity_description.value_fn is None:
             return None
         return self.entity_description.value_fn(self.device)

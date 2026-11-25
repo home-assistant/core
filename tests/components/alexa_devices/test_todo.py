@@ -31,7 +31,7 @@ from homeassistant.components.todo import (
     TodoServices,
 )
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import ATTR_ENTITY_ID, Platform
+from homeassistant.const import Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
@@ -166,7 +166,7 @@ async def test_add_todo_item(
     await hass.services.async_call(
         TODO_DOMAIN,
         TodoServices.ADD_ITEM,
-        {ATTR_ENTITY_ID: entity_id, "item": "New Task"},
+        {TargetKey.ENTITY_ID: entity_id, "item": "New Task"},
         blocking=True,
     )
 
@@ -219,7 +219,7 @@ async def test_concurrent_writes_keep_the_newest_answer(
             hass.services.async_call(
                 TODO_DOMAIN,
                 TodoServices.ADD_ITEM,
-                {ATTR_ENTITY_ID: entity_id, "item": item},
+                {TargetKey.ENTITY_ID: entity_id, "item": item},
                 blocking=True,
             )
             for item in ("First task", "Second task")
@@ -271,7 +271,7 @@ async def test_pushed_event_survives_a_refresh(
         hass.services.async_call(
             TODO_DOMAIN,
             TodoServices.ADD_ITEM,
-            {ATTR_ENTITY_ID: entity_id, "item": "Written task"},
+            {TargetKey.ENTITY_ID: entity_id, "item": "Written task"},
             blocking=True,
         )
     )
@@ -331,7 +331,7 @@ async def test_delete_todo_item(
     await hass.services.async_call(
         TODO_DOMAIN,
         TodoServices.REMOVE_ITEM,
-        {ATTR_ENTITY_ID: entity_id, "item": ["item_2"]},
+        {TargetKey.ENTITY_ID: entity_id, "item": ["item_2"]},
         blocking=True,
     )
 
@@ -374,7 +374,7 @@ async def test_delete_todo_items_partial_failure(
         await hass.services.async_call(
             TODO_DOMAIN,
             TodoServices.REMOVE_ITEM,
-            {ATTR_ENTITY_ID: entity_id, "item": ["item_2", "item_3"]},
+            {TargetKey.ENTITY_ID: entity_id, "item": ["item_2", "item_3"]},
             blocking=True,
         )
 
@@ -404,7 +404,7 @@ async def test_update_todo_item(
         TODO_DOMAIN,
         TodoServices.UPDATE_ITEM,
         {
-            ATTR_ENTITY_ID: entity_id,
+            TargetKey.ENTITY_ID: entity_id,
             "item": "item_2",
             "status": TodoItemStatus.COMPLETED,
         },
@@ -422,7 +422,7 @@ async def test_update_todo_item(
         TODO_DOMAIN,
         TodoServices.UPDATE_ITEM,
         {
-            ATTR_ENTITY_ID: entity_id,
+            TargetKey.ENTITY_ID: entity_id,
             "item": "item_2",
             "rename": "Renamed Task",
         },
@@ -441,7 +441,7 @@ async def test_update_todo_item(
         TODO_DOMAIN,
         TodoServices.UPDATE_ITEM,
         {
-            ATTR_ENTITY_ID: entity_id,
+            TargetKey.ENTITY_ID: entity_id,
             "item": "item_2",
             "rename": "Both Changed",
             "status": TodoItemStatus.COMPLETED,
@@ -462,7 +462,7 @@ async def test_update_todo_item(
         TODO_DOMAIN,
         TodoServices.UPDATE_ITEM,
         {
-            ATTR_ENTITY_ID: entity_id,
+            TargetKey.ENTITY_ID: entity_id,
             "item": "item_2",
             "rename": "Task 1",
             "status": TodoItemStatus.NEEDS_ACTION,
@@ -506,7 +506,7 @@ async def test_update_todo_item_refreshes_state(
         TODO_DOMAIN,
         TodoServices.UPDATE_ITEM,
         {
-            ATTR_ENTITY_ID: entity_id,
+            TargetKey.ENTITY_ID: entity_id,
             "item": "item_2",
             "status": TodoItemStatus.COMPLETED,
         },

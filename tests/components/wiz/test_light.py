@@ -17,6 +17,8 @@ from homeassistant.components.light import (
     ATTR_RGBWW_COLOR,
     DOMAIN as LIGHT_DOMAIN,
     ColorMode,
+    LightService,
+    LightServiceArgument,
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -24,6 +26,8 @@ from homeassistant.const import (
     SERVICE_TURN_ON,
     STATE_OFF,
     STATE_ON,
+    STATE_UNKNOWN,
+    TargetKey,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -63,7 +67,10 @@ async def test_light_operation(
     assert state.state == STATE_ON
 
     await hass.services.async_call(
-        LIGHT_DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: entity_id}, blocking=True
+        LIGHT_DOMAIN,
+        LightService.TURN_OFF,
+        {TargetKey.ENTITY_ID: entity_id},
+        blocking=True,
     )
     bulb.turn_off.assert_called_once()
 
@@ -71,7 +78,10 @@ async def test_light_operation(
     assert hass.states.get(entity_id).state == STATE_OFF
 
     await hass.services.async_call(
-        LIGHT_DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: entity_id}, blocking=True
+        LIGHT_DOMAIN,
+        LightService.TURN_ON,
+        {TargetKey.ENTITY_ID: entity_id},
+        blocking=True,
     )
     bulb.turn_on.assert_called_once()
 
@@ -110,8 +120,11 @@ async def test_rgbww_light(hass: HomeAssistant) -> None:
     entity_id = "light.mock_title"
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: entity_id, ATTR_RGBWW_COLOR: (1, 2, 3, 4, 5)},
+        LightService.TURN_ON,
+        {
+            TargetKey.ENTITY_ID: entity_id,
+            LightServiceArgument.RGBWW_COLOR: (1, 2, 3, 4, 5),
+        },
         blocking=True,
     )
     pilot: PilotBuilder = bulb.turn_on.mock_calls[0][1][0]
@@ -127,8 +140,12 @@ async def test_rgbww_light(hass: HomeAssistant) -> None:
     bulb.turn_on.reset_mock()
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: entity_id, ATTR_COLOR_TEMP_KELVIN: 6535, ATTR_BRIGHTNESS: 128},
+        LightService.TURN_ON,
+        {
+            TargetKey.ENTITY_ID: entity_id,
+            LightServiceArgument.COLOR_TEMP_KELVIN: 6535,
+            LightServiceArgument.BRIGHTNESS: 128,
+        },
         blocking=True,
     )
     pilot: PilotBuilder = bulb.turn_on.mock_calls[0][1][0]
@@ -143,8 +160,12 @@ async def test_rgbww_light(hass: HomeAssistant) -> None:
     bulb.turn_on.reset_mock()
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: entity_id, ATTR_EFFECT: "Ocean", ATTR_BRIGHTNESS: 128},
+        LightService.TURN_ON,
+        {
+            TargetKey.ENTITY_ID: entity_id,
+            LightServiceArgument.EFFECT: "Ocean",
+            LightServiceArgument.BRIGHTNESS: 128,
+        },
         blocking=True,
     )
     pilot: PilotBuilder = bulb.turn_on.mock_calls[0][1][0]
@@ -160,8 +181,8 @@ async def test_rgbww_light(hass: HomeAssistant) -> None:
     bulb.turn_on.reset_mock()
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: entity_id, ATTR_EFFECT: "Forest"},
+        LightService.TURN_ON,
+        {TargetKey.ENTITY_ID: entity_id, LightServiceArgument.EFFECT: "Forest"},
         blocking=True,
     )
     pilot: PilotBuilder = bulb.turn_on.mock_calls[0][1][0]
@@ -177,8 +198,8 @@ async def test_rgbww_light(hass: HomeAssistant) -> None:
     bulb.turn_on.reset_mock()
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: entity_id, ATTR_EFFECT: "Rhythm"},
+        LightService.TURN_ON,
+        {TargetKey.ENTITY_ID: entity_id, LightServiceArgument.EFFECT: "Rhythm"},
         blocking=True,
     )
     pilot: PilotBuilder = bulb.turn_on.mock_calls[0][1][0]
@@ -191,8 +212,8 @@ async def test_rgbw_light(hass: HomeAssistant) -> None:
     entity_id = "light.mock_title"
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: entity_id, ATTR_RGBW_COLOR: (1, 2, 3, 4)},
+        LightService.TURN_ON,
+        {TargetKey.ENTITY_ID: entity_id, LightServiceArgument.RGBW_COLOR: (1, 2, 3, 4)},
         blocking=True,
     )
     pilot: PilotBuilder = bulb.turn_on.mock_calls[0][1][0]
@@ -208,8 +229,12 @@ async def test_rgbw_light(hass: HomeAssistant) -> None:
     bulb.turn_on.reset_mock()
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: entity_id, ATTR_COLOR_TEMP_KELVIN: 6535, ATTR_BRIGHTNESS: 128},
+        LightService.TURN_ON,
+        {
+            TargetKey.ENTITY_ID: entity_id,
+            LightServiceArgument.COLOR_TEMP_KELVIN: 6535,
+            LightServiceArgument.BRIGHTNESS: 128,
+        },
         blocking=True,
     )
     pilot: PilotBuilder = bulb.turn_on.mock_calls[0][1][0]
@@ -222,8 +247,12 @@ async def test_turnable_light(hass: HomeAssistant) -> None:
     entity_id = "light.mock_title"
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: entity_id, ATTR_COLOR_TEMP_KELVIN: 6535, ATTR_BRIGHTNESS: 128},
+        LightService.TURN_ON,
+        {
+            TargetKey.ENTITY_ID: entity_id,
+            LightServiceArgument.COLOR_TEMP_KELVIN: 6535,
+            LightServiceArgument.BRIGHTNESS: 128,
+        },
         blocking=True,
     )
     pilot: PilotBuilder = bulb.turn_on.mock_calls[0][1][0]
@@ -245,8 +274,8 @@ async def test_old_firmware_dimmable_light(hass: HomeAssistant) -> None:
     entity_id = "light.mock_title"
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: entity_id, ATTR_BRIGHTNESS: 128},
+        LightService.TURN_ON,
+        {TargetKey.ENTITY_ID: entity_id, LightServiceArgument.BRIGHTNESS: 128},
         blocking=True,
     )
     pilot: PilotBuilder = bulb.turn_on.mock_calls[0][1][0]
@@ -262,8 +291,8 @@ async def test_old_firmware_dimmable_light(hass: HomeAssistant) -> None:
     bulb.turn_on.reset_mock()
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: entity_id, ATTR_BRIGHTNESS: 255},
+        LightService.TURN_ON,
+        {TargetKey.ENTITY_ID: entity_id, LightServiceArgument.BRIGHTNESS: 255},
         blocking=True,
     )
     pilot: PilotBuilder = bulb.turn_on.mock_calls[0][1][0]
@@ -276,9 +305,19 @@ async def test_light_without_any_color_state(hass: HomeAssistant) -> None:
     # A bulb can report being on without any of the values the color mode is
     # otherwise picked from, and there is no color mode to fall back on for a
     # bulb that supports more than one.
-    bulb.state = PilotParser({"mac": FAKE_MAC, "state": True, "dimming": 100})
+    bulb.state = [PilotParser({"mac": FAKE_MAC, "state": True, "dimming": 100})]
     await async_setup_integration(hass, wizlight=bulb, bulb_type=FAKE_RGBWW_BULB)
 
     state = hass.states.get("light.mock_title")
     assert state.state == STATE_ON
     assert state.attributes[ATTR_COLOR_MODE] == ColorMode.UNKNOWN
+
+
+async def test_light_without_state(hass: HomeAssistant) -> None:
+    """Test a light that has not reported its state yet."""
+    bulb = _mocked_wizlight(None, None, FAKE_RGBWW_BULB)
+    bulb.state = []
+    bulb.status = None
+    await async_setup_integration(hass, wizlight=bulb, bulb_type=FAKE_RGBWW_BULB)
+
+    assert hass.states.get("light.mock_title").state == STATE_UNKNOWN

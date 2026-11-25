@@ -28,13 +28,7 @@ from homeassistant.components.timer.const import (
     STATUS_PAUSED,
 )
 from homeassistant.components.timer.trigger import TRIGGERS
-from homeassistant.const import (
-    ATTR_LABEL_ID,
-    CONF_ENTITY_ID,
-    CONF_OPTIONS,
-    CONF_PLATFORM,
-    CONF_TARGET,
-)
+from homeassistant.const import CONF_OPTIONS, CONF_PLATFORM, CONF_TARGET, TargetKey
 from homeassistant.core import Context, HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er, label_registry as lr
 from homeassistant.helpers.trigger import (
@@ -351,7 +345,7 @@ async def _arm_time_remaining_trigger(
         [
             {
                 CONF_PLATFORM: "timer.remaining_time_reached",
-                CONF_TARGET: target or {CONF_ENTITY_ID: entity_id},
+                CONF_TARGET: target or {TargetKey.ENTITY_ID: entity_id},
                 CONF_OPTIONS: {"remaining": remaining},
             }
         ],
@@ -384,7 +378,7 @@ async def test_time_remaining_trigger_validation(hass: HomeAssistant) -> None:
         [
             {
                 CONF_PLATFORM: "timer.remaining_time_reached",
-                CONF_TARGET: {CONF_ENTITY_ID: "timer.test"},
+                CONF_TARGET: {TargetKey.ENTITY_ID: "timer.test"},
                 CONF_OPTIONS: {"remaining": {"seconds": 30}},
             }
         ],
@@ -397,7 +391,7 @@ async def test_time_remaining_trigger_validation(hass: HomeAssistant) -> None:
             [
                 {
                     CONF_PLATFORM: "timer.remaining_time_reached",
-                    CONF_TARGET: {CONF_ENTITY_ID: "timer.test"},
+                    CONF_TARGET: {TargetKey.ENTITY_ID: "timer.test"},
                     CONF_OPTIONS: {},
                 }
             ],
@@ -777,7 +771,7 @@ async def test_time_remaining_trigger_entity_removed_from_target(
         entry.entity_id,
         {"seconds": 30},
         calls,
-        target={ATTR_LABEL_ID: label.label_id},
+        target={TargetKey.LABEL_ID: label.label_id},
     )
 
     # Start the timer — this schedules a fire via the state-change path
@@ -837,7 +831,7 @@ async def test_time_remaining_trigger_entity_added_to_target(
         entry.entity_id,
         {"seconds": 30},
         calls,
-        target={ATTR_LABEL_ID: label.label_id},
+        target={TargetKey.LABEL_ID: label.label_id},
     )
 
     # Now label the entity so it joins the target

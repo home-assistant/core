@@ -7,7 +7,7 @@ from pytest_homeassistant.common import async_fire_time_changed
 
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, ButtonService
 from homeassistant.components.plex.const import DEBOUNCE_TIMEOUT
-from homeassistant.const import CommonServiceArgument
+from homeassistant.const import TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
 
@@ -31,7 +31,7 @@ async def test_scan_clients_button_schedule(
             BUTTON_DOMAIN,
             ButtonService.PRESS,
             {
-                CommonServiceArgument.ENTITY_ID: "button.plex_server_1_scan_clients",
+                TargetKey.ENTITY_ID: "button.plex_server_1_scan_clients",
             },
             True,
         )

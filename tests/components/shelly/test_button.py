@@ -16,12 +16,7 @@ from syrupy.assertion import SnapshotAssertion
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, ButtonService
 from homeassistant.components.shelly.const import DOMAIN
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
-from homeassistant.const import (
-    STATE_UNAVAILABLE,
-    STATE_UNKNOWN,
-    CommonServiceArgument,
-    Platform,
-)
+from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN, Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import DeviceRegistry
@@ -78,7 +73,7 @@ async def test_block_button(
     await hass.services.async_call(
         BUTTON_DOMAIN,
         ButtonService.PRESS,
-        {CommonServiceArgument.ENTITY_ID: entity_id},
+        {TargetKey.ENTITY_ID: entity_id},
         blocking=True,
     )
     assert mock_block_device.trigger_reboot.call_count == 1
@@ -105,7 +100,7 @@ async def test_rpc_button(
     await hass.services.async_call(
         BUTTON_DOMAIN,
         ButtonService.PRESS,
-        {CommonServiceArgument.ENTITY_ID: entity_id},
+        {TargetKey.ENTITY_ID: entity_id},
         blocking=True,
     )
     assert mock_rpc_device.trigger_reboot.call_count == 1
@@ -141,7 +136,7 @@ async def test_rpc_button_exc(
         await hass.services.async_call(
             BUTTON_DOMAIN,
             ButtonService.PRESS,
-            {CommonServiceArgument.ENTITY_ID: "button.test_name_restart"},
+            {TargetKey.ENTITY_ID: "button.test_name_restart"},
             blocking=True,
         )
 
@@ -157,7 +152,7 @@ async def test_rpc_button_reauth_error(
     await hass.services.async_call(
         BUTTON_DOMAIN,
         ButtonService.PRESS,
-        {CommonServiceArgument.ENTITY_ID: "button.test_name_restart"},
+        {TargetKey.ENTITY_ID: "button.test_name_restart"},
         blocking=True,
     )
 
@@ -202,7 +197,7 @@ async def test_rpc_blu_trv_button(
     await hass.services.async_call(
         BUTTON_DOMAIN,
         ButtonService.PRESS,
-        {CommonServiceArgument.ENTITY_ID: entity_id},
+        {TargetKey.ENTITY_ID: entity_id},
         blocking=True,
     )
     mock_blu_trv.trigger_blu_trv_calibration.assert_called_once_with(200)
@@ -243,7 +238,7 @@ async def test_rpc_blu_trv_button_exc(
         await hass.services.async_call(
             BUTTON_DOMAIN,
             ButtonService.PRESS,
-            {CommonServiceArgument.ENTITY_ID: "button.trv_name_calibrate"},
+            {TargetKey.ENTITY_ID: "button.trv_name_calibrate"},
             blocking=True,
         )
 
@@ -265,7 +260,7 @@ async def test_rpc_blu_trv_button_auth_error(
     await hass.services.async_call(
         BUTTON_DOMAIN,
         ButtonService.PRESS,
-        {CommonServiceArgument.ENTITY_ID: "button.trv_name_calibrate"},
+        {TargetKey.ENTITY_ID: "button.trv_name_calibrate"},
         blocking=True,
     )
 
@@ -314,26 +309,35 @@ async def test_rpc_device_virtual_button(
     await hass.services.async_call(
         BUTTON_DOMAIN,
         ButtonService.PRESS,
-        {CommonServiceArgument.ENTITY_ID: entity_id},
+        {TargetKey.ENTITY_ID: entity_id},
         blocking=True,
     )
     mock_rpc_device.button_trigger.assert_called_once_with(200, "single_push")
 
 
+@pytest.mark.parametrize(
+    ("object_id", "unique_id"),
+    [
+        pytest.param("test_name_button_200", "button:200", id="virtual_button"),
+        pytest.param("test_name_ir_code_99", "ircode:99-ircode", id="ir_code"),
+    ],
+)
 async def test_rpc_remove_virtual_button_when_orphaned(
     hass: HomeAssistant,
     entity_registry: EntityRegistry,
     device_registry: DeviceRegistry,
     mock_rpc_device: Mock,
+    object_id: str,
+    unique_id: str,
 ) -> None:
-    """Test virtual button removal from device configuration."""
+    """Test orphaned button removal from device configuration."""
     config_entry = await init_integration(hass, 3, skip_setup=True)
     device_entry = register_device(device_registry, config_entry)
     entity_id = register_entity(
         hass,
         BUTTON_DOMAIN,
-        "test_name_button_200",
-        "button:200",
+        object_id,
+        unique_id,
         config_entry,
         device_id=device_entry.id,
     )
@@ -376,7 +380,7 @@ async def test_wall_display_virtual_button(
     await hass.services.async_call(
         BUTTON_DOMAIN,
         ButtonService.PRESS,
-        {CommonServiceArgument.ENTITY_ID: entity_id},
+        {TargetKey.ENTITY_ID: entity_id},
         blocking=True,
     )
     mock_rpc_device.button_trigger.assert_called_once_with(200, "single_push")
@@ -419,7 +423,7 @@ async def test_rpc_smoke_mute_alarm_button(
     await hass.services.async_call(
         BUTTON_DOMAIN,
         ButtonService.PRESS,
-        {CommonServiceArgument.ENTITY_ID: entity_id},
+        {TargetKey.ENTITY_ID: entity_id},
         blocking=True,
     )
     mock_rpc_device.mock_update()
@@ -454,7 +458,7 @@ async def test_wall_display_screen_buttons(
     await hass.services.async_call(
         BUTTON_DOMAIN,
         ButtonService.PRESS,
-        {CommonServiceArgument.ENTITY_ID: entity_id},
+        {TargetKey.ENTITY_ID: entity_id},
         blocking=True,
     )
     mock_rpc_device.wall_display_set_screen.assert_called_once_with(value=value)
@@ -515,7 +519,7 @@ async def test_rpc_ircode_buttons(
         await hass.services.async_call(
             BUTTON_DOMAIN,
             ButtonService.PRESS,
-            {CommonServiceArgument.ENTITY_ID: entity_id},
+            {TargetKey.ENTITY_ID: entity_id},
             blocking=True,
         )
 
@@ -579,3 +583,50 @@ async def test_rpc_ircode_button_no_custom_name(
     )
     assert main_device is not None
     assert ir_device.parent_device_id == main_device.id
+
+
+@pytest.mark.usefixtures("mock_ledstrip_rpc_device")
+async def test_rpc_ledstrip_next_effect_button(
+    hass: HomeAssistant,
+    mock_rpc_device: Mock,
+    entity_registry: EntityRegistry,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test RPC LED strip next effect button."""
+    entity_id = "button.test_name_next_effect"
+
+    await init_integration(hass, 4)
+
+    assert (state := hass.states.get(entity_id))
+    assert state == snapshot(name=f"{entity_id}-state")
+
+    assert (entry := entity_registry.async_get(entity_id))
+    assert entry == snapshot(name=f"{entity_id}-entry")
+
+    await hass.services.async_call(
+        BUTTON_DOMAIN,
+        ButtonService.PRESS,
+        {TargetKey.ENTITY_ID: entity_id},
+        blocking=True,
+    )
+
+    mock_rpc_device.ledstrip_next_effect.assert_called_once_with(0)
+
+
+@pytest.mark.usefixtures("mock_ledstrip_rpc_device")
+async def test_rpc_ledstrip_next_effect_button_kept_on_reload(
+    hass: HomeAssistant,
+    entity_registry: EntityRegistry,
+) -> None:
+    """Test the LED strip next effect button is not removed as orphaned on reload."""
+    entity_id = "button.test_name_next_effect"
+
+    config_entry = await init_integration(hass, 4)
+    assert entity_registry.async_get(entity_id)
+
+    await hass.config_entries.async_reload(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert entity_registry.async_get(entity_id)
+    assert (state := hass.states.get(entity_id))
+    assert state.state == STATE_UNKNOWN
