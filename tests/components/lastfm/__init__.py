@@ -116,7 +116,7 @@ class MockUser:
 
     def get_top_tracks(self, limit: int) -> list[MockTopTrack]:
         """Get mock top tracks."""
-        return [MockTopTrack(track) for track in self._recent_tracks]
+        return [MockTopTrack(track) for track in self._top_tracks]
 
     def get_now_playing(self) -> Track:
         """Get mock now playing."""

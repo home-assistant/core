@@ -412,7 +412,65 @@ async def test_long_track_state_truncated(
         MockNetwork("lastfm"),
         info={"image": []},
     )
-    await setup_integration(config_entry, MockUser(recent_tracks=[track]))
+    await setup_integration(
+        config_entry, MockUser(recent_tracks=[track], top_tracks=[track])
+    )
 
     state = hass.states.get(entity_id).state
     assert state == f"artist - {'t' * MAX_LENGTH_STATE_STATE}"[:MAX_LENGTH_STATE_STATE]
+
+
+def _track_with_cover(title: str) -> Track:
+    """Return a track with album art named after its title."""
+    return Track(
+        "artist",
+        title,
+        MockNetwork("lastfm"),
+        info={
+            "image": ["small", "medium", "large", f"https://example.com/{title}.png"]
+        },
+    )
+
+
+@pytest.mark.parametrize(
+    ("entity_id", "state", "picture"),
+    [
+        pytest.param(
+            "sensor.lastfm_testaccount1",
+            "artist - playing",
+            "https://example.com/playing.png",
+            id="now_playing",
+        ),
+        pytest.param(
+            "sensor.lastfm_testaccount1_last_played",
+            "artist - last",
+            "https://example.com/last.png",
+            id="last_played",
+        ),
+        pytest.param(
+            "sensor.lastfm_testaccount1_top_track",
+            "artist - top",
+            "https://example.com/top.png",
+            id="top_track",
+        ),
+    ],
+)
+async def test_distinct_tracks(
+    hass: HomeAssistant,
+    setup_integration: ComponentSetup,
+    config_entry: MockConfigEntry,
+    entity_id: str,
+    state: str,
+    picture: str,
+) -> None:
+    """Test each sensor shows its own track and album art."""
+    user = MockUser(
+        now_playing_result=_track_with_cover("playing"),
+        recent_tracks=[_track_with_cover("last")],
+        top_tracks=[_track_with_cover("top")],
+    )
+    await setup_integration(config_entry, user)
+
+    entity_state = hass.states.get(entity_id)
+    assert entity_state.state == state
+    assert entity_state.attributes[ATTR_ENTITY_PICTURE] == picture

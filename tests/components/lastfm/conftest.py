@@ -144,6 +144,7 @@ def mock_hidden_user() -> MockUser:
     """Return mock user who hides their recent listening information."""
     return MockUser(
         recent_tracks=[mock_track()],
+        top_tracks=[mock_track()],
         recent_tracks_error=LOGIN_REQUIRED_ERROR,
     )
 
