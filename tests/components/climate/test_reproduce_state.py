@@ -81,25 +81,56 @@ async def test_state_with_context(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize(
-    ("service", "attribute"),
+    ("service", "attribute", "argument"),
     [
-        (ClimateService.SET_PRESET_MODE, ClimateEntityStateAttribute.PRESET_MODE),
-        (ClimateService.SET_SWING_MODE, ClimateEntityStateAttribute.SWING_MODE),
+        (
+            ClimateService.SET_PRESET_MODE,
+            ClimateEntityStateAttribute.PRESET_MODE,
+            ClimateServiceArgument.PRESET_MODE,
+        ),
+        (
+            ClimateService.SET_SWING_MODE,
+            ClimateEntityStateAttribute.SWING_MODE,
+            ClimateServiceArgument.SWING_MODE,
+        ),
         (
             ClimateService.SET_SWING_HORIZONTAL_MODE,
             ClimateEntityStateAttribute.SWING_HORIZONTAL_MODE,
+            ClimateServiceArgument.SWING_HORIZONTAL_MODE,
         ),
-        (ClimateService.SET_FAN_MODE, ClimateEntityStateAttribute.FAN_MODE),
-        (ClimateService.SET_HUMIDITY, ClimateEntityStateAttribute.TARGET_HUMIDITY),
+        (
+            ClimateService.SET_FAN_MODE,
+            ClimateEntityStateAttribute.FAN_MODE,
+            ClimateServiceArgument.FAN_MODE,
+        ),
+        (
+            ClimateService.SET_HUMIDITY,
+            ClimateEntityStateAttribute.TARGET_HUMIDITY,
+            ClimateServiceArgument.HUMIDITY,
+        ),
         (
             ClimateService.SET_TEMPERATURE,
             ClimateEntityStateAttribute.TARGET_TEMPERATURE,
+            ClimateServiceArgument.TEMPERATURE,
         ),
-        (ClimateService.SET_TEMPERATURE, ClimateEntityStateAttribute.TARGET_TEMP_HIGH),
-        (ClimateService.SET_TEMPERATURE, ClimateEntityStateAttribute.TARGET_TEMP_LOW),
+        (
+            ClimateService.SET_TEMPERATURE,
+            ClimateEntityStateAttribute.TARGET_TEMP_HIGH,
+            ClimateServiceArgument.TARGET_TEMP_HIGH,
+        ),
+        (
+            ClimateService.SET_TEMPERATURE,
+            ClimateEntityStateAttribute.TARGET_TEMP_LOW,
+            ClimateServiceArgument.TARGET_TEMP_LOW,
+        ),
     ],
 )
-async def test_attribute(hass: HomeAssistant, service, attribute) -> None:
+async def test_attribute(
+    hass: HomeAssistant,
+    service: str,
+    attribute: str,
+    argument: str,
+) -> None:
     """Test that service call is made for each attribute."""
     calls_1 = async_mock_service(hass, DOMAIN, service)
 
@@ -110,7 +141,7 @@ async def test_attribute(hass: HomeAssistant, service, attribute) -> None:
     await hass.async_block_till_done()
 
     assert len(calls_1) == 1
-    assert calls_1[0].data == {"entity_id": ENTITY_1, attribute: value}
+    assert calls_1[0].data == {"entity_id": ENTITY_1, argument: value}
 
 
 @pytest.mark.parametrize(
