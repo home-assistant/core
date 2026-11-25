@@ -17,7 +17,7 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import CONF_ADS_VAR
 from .entity import AdsEntity
-from .hub import AdsHub, async_get_hub
+from .hub import AdsHub, async_wait_for_hub
 
 DEFAULT_NAME = "ADS select"
 
@@ -39,7 +39,7 @@ async def async_setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up an ADS select device."""
-    ads_hub = async_get_hub(hass)
+    ads_hub = await async_wait_for_hub(hass)
 
     ads_var: str = config[CONF_ADS_VAR]
     name: str = config[CONF_NAME]

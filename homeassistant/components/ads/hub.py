@@ -22,7 +22,7 @@ from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.event import async_call_later, async_track_time_interval
 
-from .const import DOMAIN
+from .const import DATA_SETUP_DONE, DOMAIN
 
 if TYPE_CHECKING:
     from .entity import AdsEntity
@@ -33,6 +33,8 @@ _LOGGER = logging.getLogger(__name__)
 ADS_TCP_PORT = 48898
 # How long to wait for the device to accept a TCP connection.
 REACHABLE_TIMEOUT = 5
+# How long a YAML platform waits for the entry's setup attempt to finish.
+HUB_WAIT_TIMEOUT = 30
 
 # A lost connection is noticed at most this long after it happened.
 PROBE_INTERVAL = timedelta(seconds=30)
@@ -558,6 +560,19 @@ def connect(device: str, port: int, ip_address: str | None) -> AdsHub:
 
 
 type AdsConfigEntry = ConfigEntry[AdsHub]
+
+
+async def async_wait_for_hub(hass: HomeAssistant) -> AdsHub:
+    """Return the hub once the entry's setup attempt finished.
+
+    YAML platforms are set up while the entry imported from YAML is still being
+    created and connected; failing at once would leave them retrying on a
+    timer of their own long after the connection is up.
+    """
+    with suppress(TimeoutError):
+        async with asyncio.timeout(HUB_WAIT_TIMEOUT):
+            await hass.data[DATA_SETUP_DONE].wait()
+    return async_get_hub(hass)
 
 
 @callback

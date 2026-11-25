@@ -21,7 +21,7 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.typing import ConfigType
 
-from .const import DATA_ADS, DOMAIN
+from .const import DATA_ADS, DATA_SETUP_DONE, DOMAIN
 from .entity import AdsEntity
 from .hub import AdsConfigEntry, connect
 from .services import async_setup_services
@@ -46,6 +46,7 @@ CONFIG_SCHEMA = probatio.Schema(
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the ADS component."""
     async_setup_services(hass)
+    hass.data[DATA_SETUP_DONE] = asyncio.Event()
 
     if DOMAIN in config:
         hass.async_create_task(_async_import(hass, config[DOMAIN]))
@@ -87,6 +88,14 @@ async def _async_import(hass: HomeAssistant, conf: ConfigType) -> None:
 
 async def async_setup_entry(hass: HomeAssistant, entry: AdsConfigEntry) -> None:
     """Set up ADS from a config entry."""
+    try:
+        await _async_setup_entry(hass, entry)
+    finally:
+        hass.data[DATA_SETUP_DONE].set()
+
+
+async def _async_setup_entry(hass: HomeAssistant, entry: AdsConfigEntry) -> None:
+    """Connect, and hand the entities of an earlier setup to the new hub."""
     try:
         hub = await hass.async_add_executor_job(
             connect,

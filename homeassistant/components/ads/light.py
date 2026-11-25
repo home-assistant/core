@@ -23,7 +23,7 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import CONF_ADS_VAR, STATE_KEY_STATE
 from .entity import AdsEntity
-from .hub import AdsHub, async_get_hub
+from .hub import AdsHub, async_wait_for_hub
 
 CONF_ADS_VAR_BRIGHTNESS = "adsvar_brightness"
 CONF_ADS_VAR_COLOR_TEMP_KELVIN = "adsvar_color_temp_kelvin"
@@ -52,7 +52,7 @@ async def async_setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the light platform for ADS."""
-    ads_hub = async_get_hub(hass)
+    ads_hub = await async_wait_for_hub(hass)
 
     ads_var_enable: str = config[CONF_ADS_VAR]
     ads_var_brightness: str | None = config.get(CONF_ADS_VAR_BRIGHTNESS)

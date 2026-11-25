@@ -21,7 +21,7 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import CONF_ADS_VAR, STATE_KEY_STATE
 from .entity import AdsEntity
-from .hub import AdsHub, async_get_hub
+from .hub import AdsHub, async_wait_for_hub
 
 DEFAULT_NAME = "ADS Cover"
 
@@ -54,7 +54,7 @@ async def async_setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the cover platform for ADS."""
-    ads_hub = async_get_hub(hass)
+    ads_hub = await async_wait_for_hub(hass)
 
     ads_var_is_closed: str = config[CONF_ADS_VAR]
     ads_var_position: str | None = config.get(CONF_ADS_VAR_POSITION)
