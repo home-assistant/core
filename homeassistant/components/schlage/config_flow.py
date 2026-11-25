@@ -9,6 +9,7 @@ from pyschlage.exceptions import NotAuthorizedError
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
+from homeassistant.helpers.service_info.bluetooth import BluetoothServiceInfo
 
 from .const import DOMAIN, LOGGER
 
@@ -27,6 +28,15 @@ class SchlageConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Schlage."""
 
     VERSION = 1
+
+    @override
+    async def async_step_bluetooth(
+        self, discovery_info: BluetoothServiceInfo
+    ) -> ConfigFlowResult:
+        """Handle a lock discovered over Bluetooth."""
+        # An advertisement cannot be tied to an account, so only prompt once.
+        await self._async_handle_discovery_without_unique_id()
+        return await self.async_step_user()
 
     @override
     async def async_step_user(
