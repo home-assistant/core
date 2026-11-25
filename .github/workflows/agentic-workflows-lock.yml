@@ -9,6 +9,7 @@ on:
       - ".github/workflows/*.md"
       - ".github/workflows/*.lock.yml"
       - ".github/workflows/agentic-workflows-lock.yml"
+      - ".github/workflows/aw.json"
   pull_request:
     branches:
       - dev
@@ -16,6 +17,7 @@ on:
       - ".github/workflows/*.md"
       - ".github/workflows/*.lock.yml"
       - ".github/workflows/agentic-workflows-lock.yml"
+      - ".github/workflows/aw.json"
 
 permissions: {}
 
@@ -49,7 +51,7 @@ jobs:
       - name: Compile agentic workflows
         env:
           GH_TOKEN: ${{ github.token }}
-        run: gh aw compile
+        run: gh aw compile --purge
 
       - name: Check that the lock files are up to date
         run: |
