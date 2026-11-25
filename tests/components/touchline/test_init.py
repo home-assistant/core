@@ -42,6 +42,10 @@ async def test_setup_retry_on_connection_error(
     await hass.async_block_till_done()
 
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+    assert (
+        mock_config_entry.reason
+        == "The Touchline controller at 1.2.3.4 cannot be reached"
+    )
 
 
 @pytest.mark.parametrize(
@@ -67,6 +71,10 @@ async def test_setup_retry_on_missing_id(
     await hass.async_block_till_done()
 
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+    assert (
+        mock_config_entry.reason
+        == "The Touchline controller at 1.2.3.4 returned no ID for thermostat 0"
+    )
 
 
 @pytest.mark.usefixtures("init_integration")
