@@ -26,7 +26,7 @@ from homeassistant.components.vacuum import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_NAME, CONF_STATE, CONF_UNIQUE_ID, Platform
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers import config_validation as cv, issue_registry as ir
 from homeassistant.helpers.entity_platform import (
     AddConfigEntryEntitiesCallback,
     AddEntitiesCallback,
@@ -35,7 +35,7 @@ from homeassistant.helpers.restore_state import ExtraStoredData, RestoreEntity
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import validators as tcv
-from .const import DEFAULT_NAMES, DOMAIN
+from .const import DEFAULT_NAMES, DOMAIN, VACUUM_INCOMPLETE_FAN_SPEED_OPTIONS
 from .coordinator import TriggerUpdateCoordinator
 from .entity import AbstractTemplateEntity
 from .helpers import (
@@ -75,6 +75,8 @@ SCRIPT_FIELDS = (
 )
 
 CLEAN_AREA_GROUP = "clean_area_group"
+
+INCOMPLETE_FAN_SPEED_HELPER_ISSUE_ID = "incomplete_vacuum_fan_speed_helper"
 
 VACUUM_COMMON_SCHEMA = probatio.Schema(
     {
@@ -143,6 +145,28 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Initialize config entry."""
+    issue_id = f"{INCOMPLETE_FAN_SPEED_HELPER_ISSUE_ID}_{config_entry.entry_id}"
+    if tcv.inclusive_group_missing(
+        config_entry.options, *VACUUM_INCOMPLETE_FAN_SPEED_OPTIONS.options
+    ):
+        breaks_in_ha_version = VACUUM_INCOMPLETE_FAN_SPEED_OPTIONS.breaks_in_ha_version
+        ir.async_create_issue(
+            hass,
+            DOMAIN,
+            issue_id,
+            breaks_in_ha_version=breaks_in_ha_version,
+            config_entry_id=config_entry.entry_id,
+            is_fixable=False,
+            severity=ir.IssueSeverity.WARNING,
+            translation_key=INCOMPLETE_FAN_SPEED_HELPER_ISSUE_ID,
+            translation_placeholders={
+                "name": config_entry.title,
+                "breaks_in_ha_version": breaks_in_ha_version,
+            },
+        )
+    else:
+        ir.async_delete_issue(hass, DOMAIN, issue_id)
+
     await async_setup_template_entry(
         hass,
         config_entry,
@@ -260,9 +284,6 @@ class AbstractTemplateVacuum(AbstractTemplateEntity, StateVacuumEntity, RestoreE
     _restore_state_extra_data = VacuumExtraStoredData
     _restore_state_properties = ("_attr_activity",)
     _blocked_attributes = _BLOCKED_ATTRIBUTES
-    _deprecated_inclusive_groups = (
-        (CONF_FAN_SPEED, CONF_FAN_SPEED_LIST, SERVICE_SET_FAN_SPEED),
-    )
 
     # The super init is not called because TemplateEntity
     # and TriggerEntity will call

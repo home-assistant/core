@@ -790,9 +790,25 @@
       "description": "The template weather blueprint `{blueprint}` uses options ending in `_template`. These options are deprecated and will be removed in a future version of Home Assistant.\n\nUpdate the blueprint by renaming the following options:\n\n{options}\n\nIf the blueprint was imported, re-import it once its author has updated it instead. Then reload the template entities or restart Home Assistant to fix this issue.",
       "title": "Template weather blueprint uses deprecated options ({blueprint})"
     },
-    "incomplete_option_group": {
-      "description": "The template entity `{entity_id}` sets some of the `{options}` options but is missing `{missing}`. Without all of them, these options do nothing or fail when used. This will be a configuration validation error in Home Assistant Core 2027.6.\n\nAdd the missing options to the entity configuration, or remove the options that are set.",
-      "title": "Incomplete template entity configuration"
+    "incomplete_fan_preset_mode_options": {
+      "description": "The template fan entity with `{identifier}` sets some of the `preset_mode`, `preset_modes` and `set_preset_mode` options but is missing {missing}. Without all of them, these options do nothing or fail when used. This will be a configuration validation error in a future version of Home Assistant.\n\nUpdate your YAML configuration by adding the missing options, or by removing the following options:\n\n{options}\n\nAfter updating the configuration, reload the template entities or restart Home Assistant to fix this issue.",
+      "title": "Template fan entity has incomplete preset mode options ({identifier})"
+    },
+    "incomplete_fan_preset_mode_options_blueprint": {
+      "description": "The template fan blueprint `{blueprint}` sets some of the `preset_mode`, `preset_modes` and `set_preset_mode` options but is missing {missing}. Without all of them, these options do nothing or fail when used. This will be a configuration validation error in a future version of Home Assistant.\n\nUpdate the blueprint by adding the missing options, or by removing the following options:\n\n{options}\n\nIf the blueprint was imported, re-import it once its author has updated it instead. Then reload the template entities or restart Home Assistant to fix this issue.",
+      "title": "Template fan blueprint has incomplete preset mode options ({blueprint})"
+    },
+    "incomplete_vacuum_fan_speed_helper": {
+      "description": "The template vacuum helper {name} sets some of the fan speed options, but the fan speeds and the actions on set fan speed are not both set. Without them, these options do nothing or fail when used. This will stop working in Home Assistant Core {breaks_in_ha_version}.\n\nTo fix this issue, open the options of the template vacuum helper and set both the fan speeds and the actions on set fan speed, or remove the fan speed options.",
+      "title": "Template vacuum helper {name} has incomplete fan speed options"
+    },
+    "incomplete_vacuum_fan_speed_options": {
+      "description": "The template vacuum entity with `{identifier}` sets some of the `fan_speed`, `fan_speeds` and `set_fan_speed` options but is missing {missing}. Without all of them, these options do nothing or fail when used. This will be a configuration validation error in a future version of Home Assistant.\n\nUpdate your YAML configuration by adding the missing options, or by removing the following options:\n\n{options}\n\nAfter updating the configuration, reload the template entities or restart Home Assistant to fix this issue.",
+      "title": "Template vacuum entity has incomplete fan speed options ({identifier})"
+    },
+    "incomplete_vacuum_fan_speed_options_blueprint": {
+      "description": "The template vacuum blueprint `{blueprint}` sets some of the `fan_speed`, `fan_speeds` and `set_fan_speed` options but is missing {missing}. Without all of them, these options do nothing or fail when used. This will be a configuration validation error in a future version of Home Assistant.\n\nUpdate the blueprint by adding the missing options, or by removing the following options:\n\n{options}\n\nIf the blueprint was imported, re-import it once its author has updated it instead. Then reload the template entities or restart Home Assistant to fix this issue.",
+      "title": "Template vacuum blueprint has incomplete fan speed options ({blueprint})"
     }
   },
   "options": {

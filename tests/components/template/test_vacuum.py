@@ -3,6 +3,7 @@
 from dataclasses import asdict
 from enum import StrEnum
 from itertools import chain
+from pathlib import Path
 from typing import Any
 from unittest.mock import patch
 
@@ -14,8 +15,17 @@ from pytest_homeassistant.common import (
 from pytest_homeassistant.typing import WebSocketGenerator
 from syrupy.assertion import SnapshotAssertion
 
+from homeassistant import config as hass_config
 from homeassistant.components import template, vacuum
-from homeassistant.components.template.vacuum import CONF_CLEAN_SEGMENTS, CONF_SEGMENTS
+from homeassistant.components.template.const import (
+    VACUUM_INCOMPLETE_FAN_SPEED_OPTIONS,
+    TemplateService,
+)
+from homeassistant.components.template.vacuum import (
+    CONF_CLEAN_SEGMENTS,
+    CONF_SEGMENTS,
+    INCOMPLETE_FAN_SPEED_HELPER_ISSUE_ID,
+)
 from homeassistant.components.vacuum import (
     ATTR_FAN_SPEED,
     Segment,
@@ -38,6 +48,7 @@ from homeassistant.helpers.entity_component import async_update_entity
 from homeassistant.helpers.restore_state import STORAGE_KEY as RESTORE_STATE_KEY
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.setup import async_setup_component
+from homeassistant.util.yaml import load_yaml_dict
 
 from .conftest import (
     ConfigurationStyle,
@@ -49,6 +60,7 @@ from .conftest import (
     assert_state_and_attributes,
     async_get_flow_preview_state,
     async_trigger,
+    get_issues_with_prefix,
     make_test_action,
     make_test_trigger,
     setup_and_test_nested_unique_id,
@@ -1604,47 +1616,74 @@ async def test_attributes_template_with_blocked_attributes(
     assert error in caplog.text
 
 
+def get_incomplete_fan_speed_options_issues(
+    issue_registry: ir.IssueRegistry,
+) -> list[ir.IssueEntry]:
+    """Return the incomplete vacuum fan speed options issues."""
+    return get_issues_with_prefix(
+        issue_registry, VACUUM_INCOMPLETE_FAN_SPEED_OPTIONS.translation_key
+    )
+
+
 @pytest.mark.parametrize(
     "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
 )
 @pytest.mark.parametrize(
-    ("config", "missing"),
+    ("config", "options", "missing"),
     [
         pytest.param(
             {"fan_speed": "{{ 'high' }}"},
-            "fan_speeds, set_fan_speed",
+            "- `fan_speed`",
+            "`fan_speeds`, `set_fan_speed`",
             id="fan_speed_only",
         ),
         pytest.param(
             {"fan_speed": "{{ 'high' }}", "fan_speeds": ["high"]},
-            "set_fan_speed",
+            "- `fan_speed`\n- `fan_speeds`",
+            "`set_fan_speed`",
             id="fan_speed_without_action",
         ),
-        pytest.param({"fan_speeds": ["high"]}, "set_fan_speed", id="list_only"),
-        pytest.param(SET_FAN_SPEED_ACTION, "fan_speeds", id="action_only"),
+        pytest.param(
+            {"fan_speeds": ["high"]},
+            "- `fan_speeds`",
+            "`set_fan_speed`",
+            id="list_only",
+        ),
+        pytest.param(
+            SET_FAN_SPEED_ACTION,
+            "- `set_fan_speed`",
+            "`fan_speeds`",
+            id="action_only",
+        ),
     ],
 )
-async def test_incomplete_fan_speed_issue(
+async def test_incomplete_fan_speed_options_issue(
     hass: HomeAssistant,
     issue_registry: ir.IssueRegistry,
     style: ConfigurationStyle,
     config: ConfigType,
+    options: str,
     missing: str,
 ) -> None:
-    """Test a repair issue is created for a partially set fan speed group."""
+    """Test a repair issue is created for partially set fan speed options."""
     await setup_entity(
         hass, TEST_VACUUM, style, 1, {**START_ACTION, **config}, "{{ 'docked' }}"
     )
 
-    issue = issue_registry.async_get_issue(
-        template.DOMAIN, f"incomplete_fan_speed_group_{TEST_VACUUM.entity_id}"
+    issues = get_incomplete_fan_speed_options_issues(issue_registry)
+    assert len(issues) == 1
+    assert issues[0].breaks_in_ha_version == "2027.6.0"
+    assert issues[0].is_fixable is False
+    assert issues[0].severity == ir.IssueSeverity.WARNING
+    assert issues[0].learn_more_url == (
+        "https://www.home-assistant.io/integrations/template/#vacuum"
     )
-    assert issue is not None
-    assert issue.breaks_in_ha_version == "2027.6.0"
-    assert issue.translation_key == "incomplete_option_group"
-    assert issue.translation_placeholders == {
-        "entity_id": TEST_VACUUM.entity_id,
-        "options": "fan_speed, fan_speeds, set_fan_speed",
+    assert (
+        issues[0].translation_key == VACUUM_INCOMPLETE_FAN_SPEED_OPTIONS.translation_key
+    )
+    assert issues[0].translation_placeholders == {
+        "identifier": f"name: {TEST_VACUUM.object_id}",
+        "options": options,
         "missing": missing,
     }
 
@@ -1669,221 +1708,187 @@ async def test_incomplete_fan_speed_issue(
         ),
     ],
 )
-async def test_complete_fan_speed_no_issue(
+async def test_no_incomplete_fan_speed_options_issue(
     hass: HomeAssistant,
     issue_registry: ir.IssueRegistry,
     style: ConfigurationStyle,
     config: ConfigType,
 ) -> None:
-    """Test no repair issue is created for a valid fan speed group."""
+    """Test no repair issue is created for complete fan speed options."""
     await setup_entity(
         hass, TEST_VACUUM, style, 1, {**START_ACTION, **config}, "{{ 'docked' }}"
     )
 
-    assert not issue_registry.async_get_issue(
-        template.DOMAIN, f"incomplete_fan_speed_group_{TEST_VACUUM.entity_id}"
+    assert get_incomplete_fan_speed_options_issues(issue_registry) == []
+
+
+INCOMPLETE_FAN_SPEED_YAML = """\
+template:
+  - vacuum:
+      - name: Test
+        start: []
+        set_fan_speed: []
+"""
+
+
+async def _async_reload_yaml(hass: HomeAssistant, yaml_path: Path, yaml: str) -> None:
+    """Write configuration.yaml and reload the template entities from it."""
+    await hass.async_add_executor_job(yaml_path.write_text, yaml)
+    with patch.object(hass_config, "YAML_CONFIG_FILE", str(yaml_path)):
+        await hass.services.async_call(
+            template.DOMAIN, TemplateService.RELOAD, blocking=True
+        )
+    await hass.async_block_till_done()
+
+
+async def test_incomplete_fan_speed_options_issue_file_and_line(
+    hass: HomeAssistant, issue_registry: ir.IssueRegistry, tmp_path: Path
+) -> None:
+    """Test the repair lists file and line, and is removed after a fix."""
+    hass.config.config_dir = str(tmp_path)
+    yaml_path = tmp_path / "configuration.yaml"
+    await hass.async_add_executor_job(yaml_path.write_text, INCOMPLETE_FAN_SPEED_YAML)
+    config = await hass.async_add_executor_job(load_yaml_dict, yaml_path)
+    assert await async_setup_component(hass, template.DOMAIN, config)
+    await hass.async_block_till_done()
+
+    issues = get_incomplete_fan_speed_options_issues(issue_registry)
+    assert len(issues) == 1
+    assert issues[0].translation_placeholders == {
+        "identifier": "name: Test",
+        "options": "- `configuration.yaml:5`: `set_fan_speed`",
+        "missing": "`fan_speeds`",
+    }
+
+    # An ignored repair stays ignored while the configuration is unchanged
+    ir.async_ignore_issue(hass, template.DOMAIN, issues[0].issue_id, True)
+    await _async_reload_yaml(hass, yaml_path, INCOMPLETE_FAN_SPEED_YAML)
+    issue = issue_registry.async_get_issue(template.DOMAIN, issues[0].issue_id)
+    assert issue is not None
+    assert issue.dismissed_version is not None
+
+    await _async_reload_yaml(
+        hass, yaml_path, INCOMPLETE_FAN_SPEED_YAML + "        fan_speeds: [high]\n"
     )
+    assert get_incomplete_fan_speed_options_issues(issue_registry) == []
 
 
-INCOMPLETE_FAN_SPEED_ISSUE_ID = "incomplete_fan_speed_group_vacuum.my_template"
+async def test_incomplete_fan_speed_options_issue_blueprint(
+    hass: HomeAssistant, issue_registry: ir.IssueRegistry
+) -> None:
+    """Test all instances of a vacuum blueprint share one repair."""
+    assert await async_setup_component(
+        hass,
+        template.DOMAIN,
+        {
+            template.DOMAIN: [
+                {
+                    "use_blueprint": {
+                        "path": "test_vacuum_incomplete_fan_speed.yaml",
+                        "input": {"sensor": sensor},
+                    },
+                    "name": name,
+                }
+                for sensor, name in (
+                    ("sensor.first", "First"),
+                    ("sensor.second", "Second"),
+                )
+            ]
+        },
+    )
+    await hass.async_block_till_done()
+
+    issues = get_incomplete_fan_speed_options_issues(issue_registry)
+    assert len(issues) == 1
+    assert (
+        issues[0].translation_key
+        == VACUUM_INCOMPLETE_FAN_SPEED_OPTIONS.blueprint_translation_key
+    )
+    assert issues[0].translation_placeholders == {
+        "blueprint": "test_vacuum_incomplete_fan_speed.yaml",
+        "options": (
+            "- `blueprints/template/test_vacuum_incomplete_fan_speed.yaml:17`: "
+            "`set_fan_speed`"
+        ),
+        "missing": "`fan_speeds`",
+    }
 
 
-def _incomplete_fan_speed_config_entry(hass: HomeAssistant) -> MockConfigEntry:
-    """Add a template vacuum config entry with a partial fan speed group."""
-    template_config_entry = MockConfigEntry(
+async def _async_setup_vacuum_config_entry(
+    hass: HomeAssistant, options: dict[str, Any]
+) -> MockConfigEntry:
+    """Set up a template vacuum helper with the given options."""
+    config_entry = MockConfigEntry(
         data={},
         domain=template.DOMAIN,
         options={
             "name": "My template",
             "state": "{{ 'docked' }}",
             "start": [],
-            "set_fan_speed": [],
             "template_type": vacuum.DOMAIN,
+            **options,
         },
         title="My template",
     )
-    template_config_entry.add_to_hass(hass)
-    return template_config_entry
+    config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+    return config_entry
 
 
-async def test_incomplete_fan_speed_issue_removed_with_entity(
+async def test_incomplete_fan_speed_config_entry_issue(
     hass: HomeAssistant, issue_registry: ir.IssueRegistry
 ) -> None:
-    """Test the repair issue is removed when the entity is removed."""
-    template_config_entry = _incomplete_fan_speed_config_entry(hass)
-    assert await hass.config_entries.async_setup(template_config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    assert issue_registry.async_get_issue(
-        template.DOMAIN, INCOMPLETE_FAN_SPEED_ISSUE_ID
-    )
-
-    assert await hass.config_entries.async_unload(template_config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    assert not issue_registry.async_get_issue(
-        template.DOMAIN, INCOMPLETE_FAN_SPEED_ISSUE_ID
-    )
-
-
-async def test_incomplete_fan_speed_issue_disabled_entity(
-    hass: HomeAssistant,
-    entity_registry: er.EntityRegistry,
-    issue_registry: ir.IssueRegistry,
-) -> None:
-    """Test the repair issue is created for an entity that is disabled at setup."""
-    template_config_entry = _incomplete_fan_speed_config_entry(hass)
-    entity_registry.async_get_or_create(
-        vacuum.DOMAIN,
-        template.DOMAIN,
-        template_config_entry.entry_id,
-        config_entry=template_config_entry,
-        suggested_object_id="my_template",
-        disabled_by=er.RegistryEntryDisabler.USER,
-    )
-    assert await hass.config_entries.async_setup(template_config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    # The entity is not added, it only exists in the registry
-    assert hass.states.get("vacuum.my_template") is None
-    assert issue_registry.async_get_issue(
-        template.DOMAIN, INCOMPLETE_FAN_SPEED_ISSUE_ID
-    )
-
-    # The disabled entity is never removed, the config entry link cleans up its issue
-    assert await hass.config_entries.async_remove(template_config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    assert not issue_registry.async_get_issue(
-        template.DOMAIN, INCOMPLETE_FAN_SPEED_ISSUE_ID
-    )
-
-
-async def test_incomplete_fan_speed_issue_kept_when_disabled(
-    hass: HomeAssistant,
-    entity_registry: er.EntityRegistry,
-    issue_registry: ir.IssueRegistry,
-) -> None:
-    """Test the repair issue is kept when the entity is disabled."""
-    template_config_entry = _incomplete_fan_speed_config_entry(hass)
-    assert await hass.config_entries.async_setup(template_config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    entity_registry.async_update_entity(
-        "vacuum.my_template", disabled_by=er.RegistryEntryDisabler.USER
-    )
-    await hass.async_block_till_done()
-
-    assert hass.states.get("vacuum.my_template") is None
-    assert issue_registry.async_get_issue(
-        template.DOMAIN, INCOMPLETE_FAN_SPEED_ISSUE_ID
-    )
-
-
-async def test_incomplete_fan_speed_issue_follows_entity_id(
-    hass: HomeAssistant,
-    entity_registry: er.EntityRegistry,
-    issue_registry: ir.IssueRegistry,
-) -> None:
-    """Test the repair issue moves to the new entity_id when it changes."""
-    template_config_entry = _incomplete_fan_speed_config_entry(hass)
-    assert await hass.config_entries.async_setup(template_config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    entity_registry.async_update_entity(
-        "vacuum.my_template", new_entity_id="vacuum.renamed"
-    )
-    await hass.async_block_till_done()
-
-    assert not issue_registry.async_get_issue(
-        template.DOMAIN, INCOMPLETE_FAN_SPEED_ISSUE_ID
-    )
-    issue = issue_registry.async_get_issue(
-        template.DOMAIN, "incomplete_fan_speed_group_vacuum.renamed"
-    )
-    assert issue is not None
-    assert issue.translation_placeholders["entity_id"] == "vacuum.renamed"
-
-
-async def test_ignored_incomplete_fan_speed_issue_kept_on_entry_reload(
-    hass: HomeAssistant, issue_registry: ir.IssueRegistry
-) -> None:
-    """Test an ignored repair issue stays ignored when the config entry reloads."""
-    template_config_entry = _incomplete_fan_speed_config_entry(hass)
-    assert await hass.config_entries.async_setup(template_config_entry.entry_id)
-    await hass.async_block_till_done()
-    ir.async_ignore_issue(hass, template.DOMAIN, INCOMPLETE_FAN_SPEED_ISSUE_ID, True)
-
-    assert await hass.config_entries.async_reload(template_config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    issue = issue_registry.async_get_issue(
-        template.DOMAIN, INCOMPLETE_FAN_SPEED_ISSUE_ID
-    )
-    assert issue is not None
-    assert issue.dismissed_version is not None
-
-
-@pytest.mark.parametrize(
-    "config",
-    [
-        pytest.param({}, id="state"),
-        pytest.param(
-            {"triggers": {"trigger": "event", "event_type": "test_event"}},
-            id="trigger",
-        ),
-    ],
-)
-async def test_ignored_incomplete_fan_speed_issue_kept_on_yaml_reload(
-    hass: HomeAssistant, issue_registry: ir.IssueRegistry, config: ConfigType
-) -> None:
-    """Test an ignored repair issue stays ignored when YAML is reloaded."""
-    hass_config = {
-        template.DOMAIN: {
-            **config,
-            vacuum.DOMAIN: {
-                "name": "test",
-                "state": "{{ 'docked' }}",
-                "start": [],
-                "set_fan_speed": [],
-            },
-        }
-    }
-    assert await async_setup_component(hass, template.DOMAIN, hass_config)
-    await hass.async_block_till_done()
-    issue_id = "incomplete_fan_speed_group_vacuum.test"
-    ir.async_ignore_issue(hass, template.DOMAIN, issue_id, True)
-
-    with patch("homeassistant.config.load_yaml_config_file", return_value=hass_config):
-        await hass.services.async_call(template.DOMAIN, "reload", blocking=True)
-        await hass.async_block_till_done()
-
+    """Test a repair issue is tied to a helper with incomplete fan speed options."""
+    config_entry = await _async_setup_vacuum_config_entry(hass, {"set_fan_speed": []})
+    issue_id = f"{INCOMPLETE_FAN_SPEED_HELPER_ISSUE_ID}_{config_entry.entry_id}"
     issue = issue_registry.async_get_issue(template.DOMAIN, issue_id)
     assert issue is not None
-    assert issue.dismissed_version is not None
+    assert issue.breaks_in_ha_version == "2027.6.0"
+    assert issue.config_entry_id == config_entry.entry_id
+    assert issue.translation_key == INCOMPLETE_FAN_SPEED_HELPER_ISSUE_ID
+    assert issue.translation_placeholders == {
+        "name": "My template",
+        "breaks_in_ha_version": "2027.6.0",
+    }
+    # The YAML repairs don't remove the repairs of helpers
+    assert get_incomplete_fan_speed_options_issues(issue_registry) == []
+
+    hass.config_entries.async_update_entry(
+        config_entry, options={**config_entry.options, "fan_speeds": ["high"]}
+    )
+    assert await hass.config_entries.async_reload(config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert issue_registry.async_get_issue(template.DOMAIN, issue_id) is None
 
 
-async def test_ignored_incomplete_fan_speed_issue_kept_on_entity_id_change(
-    hass: HomeAssistant,
-    entity_registry: er.EntityRegistry,
-    issue_registry: ir.IssueRegistry,
+async def test_incomplete_fan_speed_config_entry_removed(
+    hass: HomeAssistant, issue_registry: ir.IssueRegistry
 ) -> None:
-    """Test an ignored repair issue stays ignored when the entity_id changes."""
-    template_config_entry = _incomplete_fan_speed_config_entry(hass)
-    assert await hass.config_entries.async_setup(template_config_entry.entry_id)
-    await hass.async_block_till_done()
-    ir.async_ignore_issue(hass, template.DOMAIN, INCOMPLETE_FAN_SPEED_ISSUE_ID, True)
+    """Test the repair issue is removed with the helper."""
+    config_entry = await _async_setup_vacuum_config_entry(hass, {"set_fan_speed": []})
+    issue_id = f"{INCOMPLETE_FAN_SPEED_HELPER_ISSUE_ID}_{config_entry.entry_id}"
+    assert issue_registry.async_get_issue(template.DOMAIN, issue_id) is not None
 
-    entity_registry.async_update_entity(
-        "vacuum.my_template", new_entity_id="vacuum.renamed"
-    )
+    assert await hass.config_entries.async_remove(config_entry.entry_id)
     await hass.async_block_till_done()
+    assert issue_registry.async_get_issue(template.DOMAIN, issue_id) is None
 
-    issue = issue_registry.async_get_issue(
-        template.DOMAIN, "incomplete_fan_speed_group_vacuum.renamed"
+
+async def test_no_incomplete_fan_speed_config_entry_issue(
+    hass: HomeAssistant, issue_registry: ir.IssueRegistry
+) -> None:
+    """Test no repair issue is created for a helper with complete fan speeds."""
+    config_entry = await _async_setup_vacuum_config_entry(
+        hass, {"fan_speeds": ["high"], "set_fan_speed": []}
     )
-    assert issue is not None
-    assert issue.dismissed_version is not None
+    assert (
+        issue_registry.async_get_issue(
+            template.DOMAIN,
+            f"{INCOMPLETE_FAN_SPEED_HELPER_ISSUE_ID}_{config_entry.entry_id}",
+        )
+        is None
+    )
 
 
 @pytest.mark.parametrize(

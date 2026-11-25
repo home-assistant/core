@@ -22,8 +22,10 @@ from .const import (
     DEPRECATED_TEMPLATE_OPTIONS,
     DOMAIN,
     DeprecatedTemplateOptions,
+    IncompleteTemplateOptionGroup,
     TemplateConfig,
     TemplateConfigSections,
+    TemplateOptionsDeprecation,
 )
 
 
@@ -90,16 +92,33 @@ class CompositeDeviceIdRepairFlow(RepairsFlow):
         )
 
 
+def _get_deprecated_options(
+    deprecation: TemplateOptionsDeprecation, entity_config: TemplateConfig
+) -> tuple[list[str], dict[str, str]]:
+    """Return the options of an entity the repair lists and its extra placeholders."""
+    if not isinstance(deprecation, IncompleteTemplateOptionGroup):
+        return [key for key in entity_config if key in deprecation.options], {}
+    if not (
+        missing := tcv.inclusive_group_missing(entity_config, *deprecation.options)
+    ):
+        return [], {}
+    return [key for key in deprecation.options if key in entity_config], {
+        "missing": ", ".join(f"`{key}`" for key in sorted(missing))
+    }
+
+
 def _format_deprecated_options(
     hass: HomeAssistant,
-    deprecation: DeprecatedTemplateOptions,
+    deprecation: TemplateOptionsDeprecation,
     deprecated: list[str],
     locations: dict[str, tuple[str, int]],
 ) -> str:
-    """Return the deprecated options and their replacements as a markdown list."""
+    """Return the deprecated options, and their replacements, as a markdown list."""
     changes: list[str] = []
     for key in deprecated:
-        change = f"`{key}` → `{deprecation.options[key]}`"
+        change = f"`{key}`"
+        if isinstance(deprecation, DeprecatedTemplateOptions):
+            change = f"{change} → `{deprecation.options[key]}`"
         if (location := locations.get(key)) is not None:
             path = os.path.relpath(location[0], hass.config.config_dir)
             change = f"`{path}:{location[1]}`: {change}"
@@ -119,12 +138,12 @@ def async_update_deprecated_template_options_issues(
 @callback
 def _async_update_deprecated_options_issues(
     hass: HomeAssistant,
-    deprecation: DeprecatedTemplateOptions,
+    deprecation: TemplateOptionsDeprecation,
     config_sections: list[TemplateConfig] | None,
 ) -> None:
     """Create an issue per entity or blueprint of a platform using deprecated options."""
     platform = deprecation.platform
-    # Fingerprint to translation key, label placeholder and options of each entity
+    # Fingerprint to translation key, label placeholders and options of each entity
     issues: dict[str, tuple[str, dict[str, str], list[str]]] = {}
     for section in config_sections or []:
         blueprint_path: str | None = None
@@ -132,7 +151,9 @@ def _async_update_deprecated_options_issues(
             blueprint_path = section.raw_blueprint_inputs[CONF_USE_BLUEPRINT][CONF_PATH]
 
         for index, entity_config in enumerate(section.get(platform, [])):
-            deprecated = [key for key in entity_config if key in deprecation.options]
+            deprecated, placeholders = _get_deprecated_options(
+                deprecation, entity_config
+            )
             if not deprecated:
                 continue
 
@@ -147,7 +168,7 @@ def _async_update_deprecated_options_issues(
                 if fingerprint in issues:
                     continue
                 translation_key = deprecation.blueprint_translation_key
-                label = {"blueprint": blueprint_path}
+                label = {"blueprint": blueprint_path, **placeholders}
             else:
                 fingerprint = "\n".join(
                     [
@@ -163,7 +184,8 @@ def _async_update_deprecated_options_issues(
                 )
                 translation_key = deprecation.translation_key
                 label = {
-                    "identifier": tcv.entity_config_identifier(platform, entity_config)
+                    "identifier": tcv.entity_config_identifier(platform, entity_config),
+                    **placeholders,
                 }
 
             # Identical entities share a fingerprint, one issue lists all of them

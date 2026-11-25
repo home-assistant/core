@@ -20,21 +20,16 @@ from homeassistant.const import (
 )
 from homeassistant.core import Context, HomeAssistant, State, callback
 from homeassistant.exceptions import TemplateError
-from homeassistant.helpers import device_registry as dr, issue_registry as ir
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.entity import Entity, async_generate_entity_id
 from homeassistant.helpers.script import Script, _VarsType
 from homeassistant.helpers.template import Template, TemplateStateFromEntityId
 from homeassistant.helpers.typing import ConfigType
-from homeassistant.util.hass_dict import HassKey
 
-from .const import CONF_ATTRIBUTES, CONF_DEFAULT_ENTITY_ID, CONF_PICTURE, DOMAIN
-from .validators import BlockedTemplateAttributes, inclusive_group_missing
+from .const import CONF_ATTRIBUTES, CONF_DEFAULT_ENTITY_ID, CONF_PICTURE
+from .validators import BlockedTemplateAttributes
 
 _LOGGER = logging.getLogger(__name__)
-# Ignored repair issues of removed entities, ignored again when the entity is re-added
-_DATA_IGNORED_GROUP_ISSUES: HassKey[set[tuple[str, str]]] = HassKey(
-    f"{DOMAIN}_ignored_group_issues"
-)
 _SENTINEL = sentinel("_SENTINEL")
 
 
@@ -84,9 +79,6 @@ class AbstractTemplateEntity(Entity):
     _state_option: str | None = None
     _restore_state_extra_data: Any | None = None
     _blocked_attributes: BlockedTemplateAttributes | None = None
-    # Option groups, as (optional option, *required options), that raise a repair
-    # issue when partially set and become an inclusive group error in 2027.6.
-    _deprecated_inclusive_groups: tuple[tuple[str, ...], ...] = ()
 
     # Restore state properties. The state will be restored if set to None.
     # If a tuple is supplied, all properties must be None for the state to restore.
@@ -347,81 +339,10 @@ class AbstractTemplateEntity(Entity):
             self.async_write_ha_state()
 
     @override
-    async def async_added_to_hass(self) -> None:
-        """Create repair issues for partially set option groups."""
-        await super().async_added_to_hass()
-        self._async_update_inclusive_group_issues(self.hass)
-
-    @callback
-    @override
-    def add_to_platform_abort(self) -> None:
-        """Create repair issues for a disabled entity, which is never added."""
-        hass = self.hass
-        super().add_to_platform_abort()
-        if self.registry_entry and self.registry_entry.disabled:
-            self._async_update_inclusive_group_issues(hass)
-
-    @callback
-    @override
-    def async_entity_id_changed(self, old_entity_id: str) -> None:
-        """Move repair issues to the new entity_id."""
-        super().async_entity_id_changed(old_entity_id)
-        self._async_delete_inclusive_group_issues(old_entity_id)
-        self._async_update_inclusive_group_issues(self.hass)
-
-    @callback
-    def _async_update_inclusive_group_issues(self, hass: HomeAssistant) -> None:
-        ignored = hass.data.setdefault(_DATA_IGNORED_GROUP_ISSUES, set())
-        for optional, *required in self._deprecated_inclusive_groups:
-            issue_id = f"incomplete_{optional}_group_{self.entity_id}"
-            ignored_key = (optional, self.unique_id or self.entity_id)
-            if not (
-                missing := inclusive_group_missing(self._config, optional, *required)
-            ):
-                ignored.discard(ignored_key)
-                ir.async_delete_issue(hass, DOMAIN, issue_id)
-                continue
-            ir.async_create_issue(
-                hass,
-                DOMAIN,
-                issue_id,
-                breaks_in_ha_version="2027.6.0",
-                config_entry_id=(
-                    self.registry_entry.config_entry_id if self.registry_entry else None
-                ),
-                is_fixable=False,
-                severity=ir.IssueSeverity.WARNING,
-                translation_key="incomplete_option_group",
-                translation_placeholders={
-                    "entity_id": self.entity_id,
-                    "options": ", ".join((optional, *required)),
-                    "missing": ", ".join(sorted(missing)),
-                },
-            )
-            if ignored_key in ignored:
-                ignored.discard(ignored_key)
-                ir.async_ignore_issue(hass, DOMAIN, issue_id, True)
-
-    @callback
-    def _async_delete_inclusive_group_issues(self, entity_id: str) -> None:
-        issue_registry = ir.async_get(self.hass)
-        ignored = self.hass.data.setdefault(_DATA_IGNORED_GROUP_ISSUES, set())
-        for optional, *_ in self._deprecated_inclusive_groups:
-            issue_id = f"incomplete_{optional}_group_{entity_id}"
-            if (
-                issue := issue_registry.async_get_issue(DOMAIN, issue_id)
-            ) and issue.dismissed_version:
-                ignored.add((optional, self.unique_id or entity_id))
-            ir.async_delete_issue(self.hass, DOMAIN, issue_id)
-
-    @override
     async def async_will_remove_from_hass(self) -> None:
-        """Clean up scripts and repair issues when removing from Home Assistant."""
+        """Clean up scripts when removing from Home Assistant."""
         for action_script in self._action_scripts.values():
             await action_script.async_unload()
-        # A disabled entity keeps its issue, it is validated again when loaded
-        if not (self.registry_entry and self.registry_entry.disabled):
-            self._async_delete_inclusive_group_issues(self.entity_id)
 
     async def async_run_script(
         self,

@@ -85,9 +85,9 @@ from .const import (
     DEPRECATED_TEMPLATE_OPTIONS,
     DOMAIN,
     PLATFORMS,
-    DeprecatedTemplateOptions,
     TemplateConfig,
     TemplateConfigSections,
+    TemplateOptionsDeprecation,
 )
 from .helpers import async_get_blueprints
 from .validators import entity_config_identifier
@@ -430,7 +430,7 @@ async def _async_validate_triggers_and_conditions(
 
 
 def _merge_deprecated_options(
-    deprecations: Iterable[DeprecatedTemplateOptions],
+    deprecations: Iterable[TemplateOptionsDeprecation],
 ) -> dict[str, Collection[str]]:
     """Return the deprecated options of every deprecation, merged per platform."""
     merged: dict[str, set[str]] = {}

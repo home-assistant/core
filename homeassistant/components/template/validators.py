@@ -1,6 +1,6 @@
 """Template config validation methods."""
 
-from collections.abc import Callable
+from collections.abc import Callable, Mapping
 from enum import StrEnum
 from itertools import chain
 import logging
@@ -525,7 +525,9 @@ def check_conditions(
     return condition_result
 
 
-def inclusive_group_missing(obj: dict, optional: str, *required: str) -> set[str]:
+def inclusive_group_missing(
+    obj: Mapping[str, Any], optional: str, *required: str
+) -> set[str]:
     """Return the required options missing from a partially set inclusive group."""
     _all = {optional, *required}
     _required = set(required)

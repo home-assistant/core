@@ -1,6 +1,6 @@
 """Constants for the Template Platform Components."""
 
-from collections.abc import Mapping
+from collections.abc import Collection, Mapping
 from dataclasses import dataclass
 from enum import StrEnum
 
@@ -103,16 +103,35 @@ LIGHT_DEPRECATED_MIREDS_OPTIONS = {
 
 
 @dataclass(frozen=True, kw_only=True)
-class DeprecatedTemplateOptions:
-    """Deprecated YAML options of a template platform that create repairs."""
+class TemplateOptionsDeprecation:
+    """Deprecated use of YAML options of a template platform that creates repairs."""
 
     platform: Platform
-    # Deprecated option to the option that replaces it
-    options: Mapping[str, str]
+    # The options whose file and line are kept for the repairs
+    options: Collection[str]
     # Also the prefix of the issue ids
     translation_key: str
     blueprint_translation_key: str
     breaks_in_ha_version: str
+
+
+@dataclass(frozen=True, kw_only=True)
+class DeprecatedTemplateOptions(TemplateOptionsDeprecation):
+    """Deprecated YAML options of a template platform that are replaced."""
+
+    # Deprecated option to the option that replaces it
+    options: Mapping[str, str]
+
+
+@dataclass(frozen=True, kw_only=True)
+class IncompleteTemplateOptionGroup(TemplateOptionsDeprecation):
+    """Options of a template platform that will be validated as an inclusive group.
+
+    The first option requires all other options, the other options require each
+    other but not the first option.
+    """
+
+    options: tuple[str, ...]
 
 
 WEATHER_DEPRECATED_OPTIONS = DeprecatedTemplateOptions(
@@ -131,7 +150,28 @@ LIGHT_DEPRECATED_OPTIONS = DeprecatedTemplateOptions(
     breaks_in_ha_version="2027.6.0",
 )
 
-DEPRECATED_TEMPLATE_OPTIONS = (WEATHER_DEPRECATED_OPTIONS, LIGHT_DEPRECATED_OPTIONS)
+FAN_INCOMPLETE_PRESET_MODE_OPTIONS = IncompleteTemplateOptionGroup(
+    platform=Platform.FAN,
+    options=("preset_mode", "preset_modes", "set_preset_mode"),
+    translation_key="incomplete_fan_preset_mode_options",
+    blueprint_translation_key="incomplete_fan_preset_mode_options_blueprint",
+    breaks_in_ha_version="2027.6.0",
+)
+
+VACUUM_INCOMPLETE_FAN_SPEED_OPTIONS = IncompleteTemplateOptionGroup(
+    platform=Platform.VACUUM,
+    options=("fan_speed", "fan_speeds", "set_fan_speed"),
+    translation_key="incomplete_vacuum_fan_speed_options",
+    blueprint_translation_key="incomplete_vacuum_fan_speed_options_blueprint",
+    breaks_in_ha_version="2027.6.0",
+)
+
+DEPRECATED_TEMPLATE_OPTIONS: tuple[TemplateOptionsDeprecation, ...] = (
+    WEATHER_DEPRECATED_OPTIONS,
+    LIGHT_DEPRECATED_OPTIONS,
+    FAN_INCOMPLETE_PRESET_MODE_OPTIONS,
+    VACUUM_INCOMPLETE_FAN_SPEED_OPTIONS,
+)
 
 
 class TemplateConfig(dict):
