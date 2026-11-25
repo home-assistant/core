@@ -1,0 +1,85 @@
+# serializer version: 1
+# name: test_initialization
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'error_mode',
+        'fail_safe',
+        'leakage_protection',
+        'manual_control',
+        'rinse',
+        'self_test',
+        'thermal_disinfection',
+        'update',
+        'water_off',
+        'water_treatment',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('watercryst', '2026123456789123')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.ha_device_device_mode',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Device mode',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Device mode',
+    'platform': 'watercryst',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'mode_id',
+    'unique_id': '2026123456789123_mode_id',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_initialization.1
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'configuration_url': 'https://app.watercryst.com/devices/2026123456789123',
+    'connections': set({
+      tuple(
+        'mac',
+        '00:a2:aa:bb:cc:dd',
+      ),
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': '2',
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'watercryst',
+        '2026123456789123',
+      ),
+    }),
+    'labels': set({
+    }),
+    'manufacturer': 'WATERCryst',
+    'model': 'BIOCAT KLS 3000-C',
+    'model_id': '12000273',
+    'name': 'HA Device',
+    'name_by_user': None,
+    'serial_number': '2026123456789123',
+    'sw_version': 'V01.05.07',
+    'via_device_id': None,
+  })
+# ---

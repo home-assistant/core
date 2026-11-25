@@ -220,3 +220,14 @@ async def mock_api_client() -> AsyncGenerator[AsyncMock]:
         client.get_measurements = AsyncMock(return_value=default_measurement_response())
         client.get_state = AsyncMock(return_value=default_state_response())
         yield client
+
+
+@pytest.fixture
+async def setup_integration(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> MockConfigEntry:
+    """Set up the integration for testing."""
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    return mock_config_entry
