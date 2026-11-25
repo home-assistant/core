@@ -519,7 +519,7 @@ class SensorDeviceClass(StrEnum):
 
     Unit of measurement: UnitOfVolumeFlowRate
     - SI / metric: `m³/h`, `m³/min`, `m³/s`, `L/h`, `L/min`, `L/s`, `mL/s`
-    - USCS / imperial: `ft³/h`, `ft³/min`, `gal/min`, `gal/d`
+    - USCS / imperial: `ft³/h`, `ft³/min`, `gal/h`, `gal/min`, `gal/d`
     """
 
     WATER = "water"
