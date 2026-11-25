@@ -1,8 +1,9 @@
 """The tests for the google calendar platform."""
 
-from collections.abc import Awaitable, Callable
+from collections.abc import Awaitable, Callable, Iterator
 import datetime as dt
 from http import HTTPStatus
+import threading
 from typing import Any
 from unittest.mock import patch
 import urllib
@@ -10,12 +11,15 @@ import urllib
 from aiohttp.client_exceptions import ClientError
 from freezegun.api import FrozenDateTimeFactory
 from gcal_sync.auth import API_BASE_URL
+from gcal_sync.model import Event
+from gcal_sync.timeline import Timeline
 import pytest
 from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 from pytest_homeassistant.typing import ClientSessionGenerator, WebSocketGenerator
 
 from homeassistant.components.google.const import CONF_CALENDAR_ACCESS, DOMAIN
+from homeassistant.components.google.coordinator import _truncate_timeline
 from homeassistant.config_entries import RELOAD_AFTER_UPDATE_DELAY
 from homeassistant.const import STATE_OFF, STATE_ON, Platform
 from homeassistant.core import HomeAssistant
@@ -1992,3 +1996,51 @@ async def test_multiple_calendars_persist_in_shared_store(
     assert list(store_data["event_sync"][second_calendar_id]["items"]) == [
         "cal-2-event"
     ]
+
+
+async def test_timeline_iteration_runs_in_executor(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    mock_events_list_items: Callable[[list[dict[str, Any]]], None],
+    component_setup: ComponentSetup,
+) -> None:
+    """Test that timeline truncation and overlapping iteration run off the event loop."""
+    truncate_threads: list[int] = []
+    overlapping_threads: list[int] = []
+    orig_overlapping = Timeline.overlapping
+
+    def tracked_truncate(timeline: Timeline, max_events: int) -> Timeline:
+        truncate_threads.append(threading.get_ident())
+        return _truncate_timeline(timeline, max_events)
+
+    def tracked_overlapping(
+        self: Timeline,
+        start: dt.date | dt.datetime,
+        end: dt.date | dt.datetime,
+    ) -> Iterator[Event]:
+        for event in orig_overlapping(self, start, end):
+            overlapping_threads.append(threading.get_ident())
+            yield event
+
+    mock_events_list_items([{**TEST_EVENT, **upcoming()}])
+    with (
+        patch(
+            "homeassistant.components.google.coordinator._truncate_timeline",
+            new=tracked_truncate,
+        ),
+        patch.object(
+            Timeline, "overlapping", autospec=True, side_effect=tracked_overlapping
+        ),
+    ):
+        assert await component_setup()
+
+        client = await hass_client()
+        response = await client.get(upcoming_event_url())
+        assert response.status == HTTPStatus.OK
+        events = await response.json()
+
+    assert len(events) == 1
+    assert truncate_threads
+    assert all(tid != hass.loop_thread_id for tid in truncate_threads)
+    assert overlapping_threads
+    assert all(tid != hass.loop_thread_id for tid in overlapping_threads)
