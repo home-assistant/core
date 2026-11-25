@@ -119,13 +119,29 @@ LIGHT_DEPRECATED_MIREDS_OPTIONS = {
     "min_mireds": "max_kelvin",
 }
 
+# Light option to the action it requires, deprecated in 2026.12
+LIGHT_REQUIRED_ACTIONS = {
+    "hs": "set_hs",
+    "level": "set_level",
+    "rgb": "set_rgb",
+    "rgbw": "set_rgbw",
+    "rgbww": "set_rgbww",
+    "temperature": "set_temperature",
+    "temperature_kelvin": "set_temperature",
+    "xy": "set_xy",
+}
+
+# Cover option to the action it requires, deprecated in 2026.12
+COVER_REQUIRED_ACTIONS = {"tilt": "set_cover_tilt_position"}
+
 
 @dataclass(frozen=True, kw_only=True)
 class DeprecatedTemplateOptions:
     """Deprecated YAML options of a template platform that create repairs."""
 
     platform: Platform
-    # Deprecated option to the option that replaces it
+    # Deprecated option to the option that replaces it, or to the option it
+    # requires when requires_mapped_option is set
     options: Mapping[str, str]
     # Also the prefix of the issue ids
     translation_key: str
@@ -133,8 +149,10 @@ class DeprecatedTemplateOptions:
     breaks_in_ha_version: str
     # The entity option holding the deprecated options, the entity config when None
     parent_option: str | None = None
+    # The options are only deprecated while the option they map to is missing
+    requires_mapped_option: bool = False
 
-    def options_config(self, entity_config: ConfigType) -> Mapping[Any, Any]:
+    def options_config(self, entity_config: Mapping[str, Any]) -> Mapping[Any, Any]:
         """Return the config holding the deprecated options of an entity."""
         if self.parent_option is None:
             return entity_config
@@ -142,6 +160,18 @@ class DeprecatedTemplateOptions:
         if isinstance(options := entity_config.get(self.parent_option), dict):
             return options
         return {}
+
+    def deprecated_options(self, entity_config: Mapping[str, Any]) -> list[str]:
+        """Return the deprecated options set in the config of an entity."""
+        options_config = self.options_config(entity_config)
+        return [
+            key
+            for key in options_config
+            if key in self.options
+            and not (
+                self.requires_mapped_option and self.options[key] in options_config
+            )
+        ]
 
 
 WEATHER_DEPRECATED_OPTIONS = DeprecatedTemplateOptions(
@@ -196,6 +226,24 @@ LIGHT_DEPRECATED_OPTIONS = DeprecatedTemplateOptions(
     breaks_in_ha_version="2027.6.0",
 )
 
+LIGHT_REQUIRED_ACTIONS_OPTIONS = DeprecatedTemplateOptions(
+    platform=Platform.LIGHT,
+    options=LIGHT_REQUIRED_ACTIONS,
+    translation_key="deprecated_light_missing_actions",
+    blueprint_translation_key="deprecated_light_missing_actions_blueprint",
+    breaks_in_ha_version="2027.6.0",
+    requires_mapped_option=True,
+)
+
+COVER_REQUIRED_ACTIONS_OPTIONS = DeprecatedTemplateOptions(
+    platform=Platform.COVER,
+    options=COVER_REQUIRED_ACTIONS,
+    translation_key="deprecated_cover_missing_actions",
+    blueprint_translation_key="deprecated_cover_missing_actions_blueprint",
+    breaks_in_ha_version="2027.6.0",
+    requires_mapped_option=True,
+)
+
 DEPRECATED_TEMPLATE_OPTIONS = (
     WEATHER_DEPRECATED_OPTIONS,
     BINARY_SENSOR_DEPRECATED_ATTRIBUTES,
@@ -203,6 +251,8 @@ DEPRECATED_TEMPLATE_OPTIONS = (
     SENSOR_DEPRECATED_ATTRIBUTES,
     VACUUM_DEPRECATED_ATTRIBUTES,
     LIGHT_DEPRECATED_OPTIONS,
+    LIGHT_REQUIRED_ACTIONS_OPTIONS,
+    COVER_REQUIRED_ACTIONS_OPTIONS,
 )
 
 

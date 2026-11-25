@@ -1750,6 +1750,28 @@ REQUIRED_OPTION_ERROR = (
         ("binary_sensor", "{{", {}, {"state": EARLY_END_ERROR}),
         ("sensor", "{{", {}, {"state": EARLY_END_ERROR}),
         (
+            "light",
+            "",
+            {"hs": "{{ (40, 50) }}"},
+            {"hs": REQUIRED_OPTION_ERROR.format("set_hs", "hs")},
+        ),
+        (
+            "light",
+            "",
+            {"level": "{{ 100 }}"},
+            {"level": REQUIRED_OPTION_ERROR.format("set_level", "level")},
+        ),
+        (
+            "light",
+            "",
+            {"temperature_kelvin": "{{ 3000 }}"},
+            {
+                "temperature_kelvin": REQUIRED_OPTION_ERROR.format(
+                    "set_temperature", "temperature_kelvin"
+                )
+            },
+        ),
+        (
             "media_player",
             "",
             {"source": "{{ 'TV' }}"},
@@ -1883,28 +1905,56 @@ async def test_config_flow_preview_bad_input(
     }
 
 
+LIGHT_ACTIONS = {"turn_on": [], "turn_off": []}
+
+
 @pytest.mark.parametrize(
-    ("user_input", "error", "missing_option"),
+    ("template_type", "user_input", "error", "missing_option"),
     [
         pytest.param(
+            "light",
+            {**LIGHT_ACTIONS, "hs": "{{ (40, 50) }}"},
+            "hs_action_required",
+            {"set_hs": []},
+            id="light_hs_without_action",
+        ),
+        pytest.param(
+            "light",
+            {**LIGHT_ACTIONS, "level": "{{ 100 }}"},
+            "level_action_required",
+            {"set_level": []},
+            id="light_level_without_action",
+        ),
+        pytest.param(
+            "light",
+            {**LIGHT_ACTIONS, "temperature_kelvin": "{{ 3000 }}"},
+            "temperature_action_required",
+            {"set_temperature": []},
+            id="light_temperature_kelvin_without_action",
+        ),
+        pytest.param(
+            "media_player",
             {"source": "{{ 'TV' }}"},
             "source_list_required",
             {"source_list": "{{ ['TV'] }}"},
             id="source_without_list",
         ),
         pytest.param(
+            "media_player",
             {"select_source": []},
             "source_list_required",
             {"source_list": "{{ ['TV'] }}"},
             id="select_source_without_list",
         ),
         pytest.param(
+            "media_player",
             {"volume_up": []},
             "volume_up_and_down_required",
             {"volume_down": []},
             id="volume_up_only",
         ),
         pytest.param(
+            "media_player",
             {"volume_down": []},
             "volume_up_and_down_required",
             {"volume_up": []},
@@ -1912,19 +1962,20 @@ async def test_config_flow_preview_bad_input(
         ),
     ],
 )
-async def test_config_flow_media_player_required_options(
+async def test_config_flow_required_options(
     hass: HomeAssistant,
+    template_type: str,
     user_input: dict[str, Any],
     error: str,
     missing_option: dict[str, Any],
 ) -> None:
-    """Test media player options are rejected without the option they require."""
+    """Test options are rejected without the option they require."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {"next_step_id": "media_player"},
+        {"next_step_id": template_type},
     )
 
     result = await hass.config_entries.flow.async_configure(
@@ -1941,7 +1992,62 @@ async def test_config_flow_media_player_required_options(
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["options"] == {
         "name": "My template",
-        "template_type": "media_player",
+        "template_type": template_type,
+        **user_input,
+        **missing_option,
+    }
+
+
+@pytest.mark.parametrize(
+    ("user_input", "error", "missing_option"),
+    [
+        pytest.param(
+            {"hs": "{{ (40, 50) }}"}, "hs_action_required", {"set_hs": []}, id="hs"
+        ),
+        pytest.param(
+            {"level": "{{ 100 }}"},
+            "level_action_required",
+            {"set_level": []},
+            id="level",
+        ),
+        pytest.param(
+            {"temperature_kelvin": "{{ 3000 }}"},
+            "temperature_action_required",
+            {"set_temperature": []},
+            id="temperature_kelvin",
+        ),
+    ],
+)
+async def test_options_light_required_actions(
+    hass: HomeAssistant,
+    user_input: dict[str, Any],
+    error: str,
+    missing_option: dict[str, Any],
+) -> None:
+    """Test the light options flow rejects options without their action."""
+    config_entry = MockConfigEntry(
+        data={}, domain=DOMAIN, options=LIGHT_OPTIONS, title="My template"
+    )
+    config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    result = await hass.config_entries.options.async_init(config_entry.entry_id)
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"], user_input={**LIGHT_ACTIONS, **user_input}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": error}
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={**LIGHT_ACTIONS, **user_input, **missing_option},
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert config_entry.options == {
+        "name": "My template",
+        "template_type": "light",
+        **LIGHT_ACTIONS,
         **user_input,
         **missing_option,
     }
