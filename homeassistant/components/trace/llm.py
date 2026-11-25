@@ -131,9 +131,8 @@ class GetTraceTool(Tool):
     title = "Get trace"
     description = (
         "Get one run of an automation or script: each step in the order it ran, "
-        "with its path in the configuration, result, error and changed variables, "
-        "and the configuration the run used. Use trace__list_traces to find the "
-        "trace_id."
+        "with its path in the configuration, result, error and changed variables. "
+        "Use trace__list_traces to find the trace_id."
     )
     annotations = ToolAnnotations(
         read_only=True, destructive=False, idempotent=True, open_world=False
@@ -192,10 +191,7 @@ class GetTraceTool(Tool):
                 domain, domain, extended["item_id"]
             ),
             "steps": steps,
-            "config": extended["config"],
         }
-        if extended.get("blueprint_inputs"):
-            result["blueprint_inputs"] = extended["blueprint_inputs"]
         # Trace steps hold any variable, so fall back to repr for unknown types
         return ToolResult(
             data=json_loads_object(json.dumps(result, cls=ExtendedJSONEncoder))

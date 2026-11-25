@@ -129,7 +129,7 @@ async def test_get_trace(hass: HomeAssistant, llm_context: llm.LLMContext) -> No
 
     assert {key: result[key] for key in listed["traces"][0]} == listed["traces"][0]
     assert result["entity_id"] == "automation.kitchen"
-    assert result["config"]["id"] == "kitchen"
+    assert "config" not in result
     assert [step["path"] for step in result["steps"]] == [
         "trigger/0",
         "action/0",
