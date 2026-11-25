@@ -4,7 +4,7 @@ from collections import defaultdict
 from collections.abc import Iterable, Iterator, Mapping
 from contextlib import suppress
 import heapq
-from typing import Any, Literal, override
+from typing import TYPE_CHECKING, Any, Literal, override
 
 import probatio
 
@@ -30,6 +30,7 @@ from homeassistant.generated.integration_categories import INTEGRATION_CATEGORIE
 from homeassistant.helpers import (
     area_registry as ar,
     config_validation as cv,
+    device_registry as dr,
     entity_registry as er,
     floor_registry as fr,
     label_registry as lr,
@@ -2008,6 +2009,157 @@ class DeleteAreaTool(Tool):
         return ToolResult(data={"result": {"area_id": area_id}})
 
 
+def _get_device_entry(hass: HomeAssistant, device_id: str) -> dr.AnyDeviceEntry:
+    """Return the registry entry of a device."""
+    if (
+        device := dr.async_get(hass).async_get(
+            device_id, include_composite_devices=False
+        )
+    ) is None:
+        raise HomeAssistantError(f"Device '{device_id}' not found.")
+    return device
+
+
+def _format_device_settings(device: dr.AnyDeviceEntry) -> JsonObjectType:
+    """Format the settings of a device for LLM consumption."""
+    result: JsonObjectType = {
+        "device_id": device.id,
+        "name": device.name,
+        "name_by_user": device.name_by_user,
+        "area_id": device.area_id,
+        "disabled_by": device.disabled_by,
+        "labels": list[JsonValueType](sorted(device.labels)),
+    }
+    if isinstance(device, dr.ChildDeviceEntry):
+        result["parent_device_id"] = device.parent_device_id
+    else:
+        result["manufacturer"] = device.manufacturer
+        result["model"] = device.model
+    return result
+
+
+class GetDeviceSettingsTool(Tool):
+    """LLM Tool to get the settings of a device."""
+
+    name = "config__get_device_settings"
+    title = "Get device settings"
+    description = (
+        "Get the settings of the device with the given device_id. Use "
+        "search__search to find the device_id."
+    )
+    annotations = ToolAnnotations(
+        read_only=True, destructive=False, idempotent=True, open_world=False
+    )
+    integration = DOMAIN
+    parameters = probatio.Schema({probatio.Required("device_id"): _NON_EMPTY_STRING})
+
+    @override
+    async def async_call(
+        self, hass: HomeAssistant, tool_input: ToolInput, llm_context: LLMContext
+    ) -> ToolResult:
+        """Return the settings of the device."""
+        args = self.parameters(tool_input.tool_args)
+        device = _get_device_entry(hass, args["device_id"])
+        return ToolResult(data={"result": _format_device_settings(device)})
+
+
+class UpdateDeviceSettingsTool(Tool):
+    """LLM Tool to update the settings of a device."""
+
+    name = "config__update_device_settings"
+    title = "Update device settings"
+    description = (
+        "Update the settings of the device with the given device_id. Only the "
+        "given settings change. Use search__search to find area and label IDs. "
+        "Returns the new settings."
+    )
+    annotations = ToolAnnotations(
+        read_only=False, destructive=True, idempotent=True, open_world=False
+    )
+    integration = DOMAIN
+    parameters = probatio.Schema(
+        {
+            probatio.Required("device_id"): _NON_EMPTY_STRING,
+            probatio.Optional(
+                "name_by_user",
+                description=(
+                    "The name of the device. null uses the name from the integration."
+                ),
+            ): _NULLABLE_STRING,
+            probatio.Optional(
+                "area_id",
+                description=(
+                    "The area_id. null removes the area, and a child device then "
+                    "uses the area of its parent."
+                ),
+            ): _NULLABLE_STRING,
+            probatio.Optional(
+                "disabled_by",
+                description=(
+                    "'user' disables the device and its entities, null enables it."
+                ),
+            ): probatio.Any(None, dr.DeviceEntryDisabler.USER.value),
+            probatio.Optional(
+                "labels",
+                description="The label_ids. This replaces all labels.",
+            ): [_NON_EMPTY_STRING],
+        }
+    )
+
+    @override
+    async def async_call(
+        self, hass: HomeAssistant, tool_input: ToolInput, llm_context: LLMContext
+    ) -> ToolResult:
+        """Update the settings of the device and return the new settings."""
+        settings = self.parameters(tool_input.tool_args)
+        device_id = settings.pop("device_id")
+        device = _get_device_entry(hass, device_id)
+        if (area_id := settings.get("area_id")) and ar.async_get(hass).async_get_area(
+            area_id
+        ) is None:
+            raise HomeAssistantError(f"Area '{area_id}' not found.")
+        if "labels" in settings:
+            settings["labels"] = set(settings["labels"])
+            if missing := lr.async_get_missing_label_ids(hass, settings["labels"]):
+                raise HomeAssistantError(
+                    f"Labels not found: {', '.join(sorted(missing))}"
+                )
+        if settings.get("disabled_by"):
+            settings["disabled_by"] = dr.DeviceEntryDisabler.USER
+
+        registry = dr.async_get(hass)
+        if (
+            "disabled_by" in settings
+            and settings["disabled_by"] is None
+            and device.disabled_by is not None
+        ):
+            if (
+                config_entry := hass.config_entries.async_get_entry(
+                    device.config_entry_id
+                )
+            ) and config_entry.disabled_by:
+                raise HomeAssistantError(
+                    f"The config entry of device '{device_id}' is disabled. Enable "
+                    "the config entry first."
+                )
+            if isinstance(device, dr.ChildDeviceEntry) and (
+                (parent := registry.async_get(device.parent_device_id))
+                and parent.disabled
+            ):
+                raise HomeAssistantError(
+                    f"The parent device '{device.parent_device_id}' is disabled. "
+                    "Enable the parent device first."
+                )
+        updated: dr.AnyDeviceEntry | None
+        if isinstance(device, dr.ChildDeviceEntry):
+            updated = registry.async_update_child_device(device_id, **settings)
+        else:
+            updated = registry.async_update_device(device_id, **settings)
+        if TYPE_CHECKING:
+            assert updated is not None
+        return ToolResult(data={"result": _format_device_settings(updated)})
+
+
 @callback
 def async_get_tools(
     hass: HomeAssistant, llm_context: LLMContext, api_id: str
@@ -2041,5 +2193,7 @@ def async_get_tools(
             UpdateAreaSettingsTool(),
             CreateAreaTool(),
             DeleteAreaTool(),
+            GetDeviceSettingsTool(),
+            UpdateDeviceSettingsTool(),
         ]
     )
