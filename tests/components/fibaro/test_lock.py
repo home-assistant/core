@@ -5,7 +5,7 @@ from unittest.mock import Mock, patch
 from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.lock import DOMAIN as LOCK_DOMAIN, LockService
-from homeassistant.const import CommonServiceArgument, Platform
+from homeassistant.const import Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -54,7 +54,7 @@ async def test_execute_lock_action(
         await hass.services.async_call(
             LOCK_DOMAIN,
             LockService.LOCK,
-            {CommonServiceArgument.ENTITY_ID: "lock.test_lock_room_1_test_lock"},
+            {TargetKey.ENTITY_ID: "lock.test_lock_room_1_test_lock"},
             blocking=True,
         )
         # Assert
@@ -79,7 +79,7 @@ async def test_execute_unlock_action(
         await hass.services.async_call(
             LOCK_DOMAIN,
             LockService.UNLOCK,
-            {CommonServiceArgument.ENTITY_ID: "lock.test_lock_room_1_test_lock"},
+            {TargetKey.ENTITY_ID: "lock.test_lock_room_1_test_lock"},
             blocking=True,
         )
         # Assert

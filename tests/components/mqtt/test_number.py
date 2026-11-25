@@ -65,7 +65,7 @@ from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_MODE,
     ATTR_UNIT_OF_MEASUREMENT,
-    CommonServiceArgument,
+    TargetKey,
     UnitOfElectricPotential,
     UnitOfTemperature,
 )
@@ -251,7 +251,7 @@ async def test_native_value_validation(
         NUMBER_DOMAIN,
         NumberService.SET_VALUE,
         {
-            CommonServiceArgument.ENTITY_ID: "number.test_number",
+            TargetKey.ENTITY_ID: "number.test_number",
             NumberServiceArgument.VALUE: 68,
         },
         blocking=True,
@@ -451,7 +451,7 @@ async def test_run_number_service_optimistic(
         NUMBER_DOMAIN,
         NumberService.SET_VALUE,
         {
-            CommonServiceArgument.ENTITY_ID: "number.test_number",
+            TargetKey.ENTITY_ID: "number.test_number",
             NumberServiceArgument.VALUE: 30,
         },
         blocking=True,
@@ -469,7 +469,7 @@ async def test_run_number_service_optimistic(
         NUMBER_DOMAIN,
         NumberService.SET_VALUE,
         {
-            CommonServiceArgument.ENTITY_ID: "number.test_number",
+            TargetKey.ENTITY_ID: "number.test_number",
             NumberServiceArgument.VALUE: 42.0,
         },
         blocking=True,
@@ -487,7 +487,7 @@ async def test_run_number_service_optimistic(
         NUMBER_DOMAIN,
         NumberService.SET_VALUE,
         {
-            CommonServiceArgument.ENTITY_ID: "number.test_number",
+            TargetKey.ENTITY_ID: "number.test_number",
             NumberServiceArgument.VALUE: 42.1,
         },
         blocking=True,
@@ -543,7 +543,7 @@ async def test_run_number_service_optimistic_with_command_template(
         NUMBER_DOMAIN,
         NumberService.SET_VALUE,
         {
-            CommonServiceArgument.ENTITY_ID: "number.test_number",
+            TargetKey.ENTITY_ID: "number.test_number",
             NumberServiceArgument.VALUE: 30,
         },
         blocking=True,
@@ -561,7 +561,7 @@ async def test_run_number_service_optimistic_with_command_template(
         NUMBER_DOMAIN,
         NumberService.SET_VALUE,
         {
-            CommonServiceArgument.ENTITY_ID: "number.test_number",
+            TargetKey.ENTITY_ID: "number.test_number",
             NumberServiceArgument.VALUE: 42.0,
         },
         blocking=True,
@@ -579,7 +579,7 @@ async def test_run_number_service_optimistic_with_command_template(
         NUMBER_DOMAIN,
         NumberService.SET_VALUE,
         {
-            CommonServiceArgument.ENTITY_ID: "number.test_number",
+            TargetKey.ENTITY_ID: "number.test_number",
             NumberServiceArgument.VALUE: 42.1,
         },
         blocking=True,
@@ -624,7 +624,7 @@ async def test_run_number_service(
         NUMBER_DOMAIN,
         NumberService.SET_VALUE,
         {
-            CommonServiceArgument.ENTITY_ID: "number.test_number",
+            TargetKey.ENTITY_ID: "number.test_number",
             NumberServiceArgument.VALUE: 30,
         },
         blocking=True,
@@ -668,7 +668,7 @@ async def test_run_number_service_with_command_template(
         NUMBER_DOMAIN,
         NumberService.SET_VALUE,
         {
-            CommonServiceArgument.ENTITY_ID: "number.test_number",
+            TargetKey.ENTITY_ID: "number.test_number",
             NumberServiceArgument.VALUE: 30,
         },
         blocking=True,

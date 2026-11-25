@@ -49,7 +49,7 @@ rules:
 
   # Gold
   devices: done
-  diagnostics: todo
+  diagnostics: done
   discovery-update-info:
     status: exempt
     comment: Modbus devices have no discovery protocol to update connection info from.
@@ -76,7 +76,7 @@ rules:
   repair-issues: todo
   stale-devices:
     status: exempt
-    comment: An entry has a single device, removed together with the entry.
+    comment: An entry is one gateway and its indoor unit, both removed together with the entry.
 
   # Platinum
   async-dependency: done

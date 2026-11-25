@@ -35,6 +35,11 @@
       }
     }
   },
+  "device": {
+    "air_conditioner": {
+      "name": "{gateway} air conditioner"
+    }
+  },
   "entity": {
     "climate": {
       "air_conditioner": {
@@ -84,11 +89,17 @@
     }
   },
   "exceptions": {
+    "gateway_unavailable": {
+      "message": "The gateway does not answer."
+    },
     "modbus_error": {
       "message": "Could not read the gateway."
     },
     "no_component_answered": {
       "message": "The gateway answered none of the register blocks."
+    },
+    "unit_unreachable": {
+      "message": "The gateway cannot reach the air conditioner."
     },
     "write_failed": {
       "message": "The gateway did not accept the command."

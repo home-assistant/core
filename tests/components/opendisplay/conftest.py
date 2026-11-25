@@ -1,8 +1,9 @@
 """OpenDisplay test fixtures."""
 
 from collections.abc import Awaitable, Callable, Generator
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock, create_autospec, patch
 
+from opendisplay import OpenDisplayDevice
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
 from pytest_homeassistant.components.bluetooth import generate_ble_device
@@ -51,34 +52,35 @@ def mock_ble_device() -> Generator[None]:
 
 
 @pytest.fixture
-def mock_opendisplay_device_class() -> Generator[MagicMock]:
-    """Yield the OpenDisplayDevice class mock (for asserting constructor args)."""
+def mock_connect() -> Generator[MagicMock]:
+    """Yield the opendisplay.connect mock (for asserting its arguments)."""
     with (
         patch(
-            "homeassistant.components.opendisplay.OpenDisplayDevice",
+            "homeassistant.components.opendisplay.connect",
             autospec=True,
-        ) as mock_class,
+        ) as mock_connect,
         patch(
-            "homeassistant.components.opendisplay.config_flow.OpenDisplayDevice",
-            new=mock_class,
+            "homeassistant.components.opendisplay.config_flow.connect",
+            new=mock_connect,
         ),
         patch(
-            "homeassistant.components.opendisplay.services.OpenDisplayDevice",
-            new=mock_class,
+            "homeassistant.components.opendisplay.services.connect",
+            new=mock_connect,
         ),
     ):
-        mock_device = mock_class.return_value
+        mock_device = mock_connect.return_value
         mock_device.__aenter__.return_value = mock_device
-        mock_device.read_firmware_version.return_value = FIRMWARE_VERSION
-        mock_device.config = DEVICE_CONFIG
-        mock_device.is_flex = True
-        yield mock_class
+        mock_device.profile.firmware = FIRMWARE_VERSION
+        mock_device.config.cached = DEVICE_CONFIG
+        mock_device.legacy = create_autospec(OpenDisplayDevice, instance=True)
+        mock_device.legacy.is_flex = True
+        yield mock_connect
 
 
 @pytest.fixture(autouse=True)
-def mock_opendisplay_device(mock_opendisplay_device_class: MagicMock) -> MagicMock:
-    """Mock the OpenDisplayDevice for setup entry; yields the instance mock."""
-    return mock_opendisplay_device_class.return_value
+def mock_opendisplay_device(mock_connect: MagicMock) -> MagicMock:
+    """Mock the connected device; yields the device mock."""
+    return mock_connect.return_value
 
 
 @pytest.fixture
@@ -95,7 +97,7 @@ def mock_config_entry() -> MockConfigEntry:
 @pytest.fixture
 def mock_button_config_entry(mock_opendisplay_device: MagicMock) -> MockConfigEntry:
     """Create a mock config entry for a device with one button configured."""
-    mock_opendisplay_device.config = BUTTON_DEVICE_CONFIG
+    mock_opendisplay_device.config.cached = BUTTON_DEVICE_CONFIG
     return MockConfigEntry(
         domain=DOMAIN,
         unique_id=TEST_ADDRESS,
@@ -107,7 +109,7 @@ def mock_button_config_entry(mock_opendisplay_device: MagicMock) -> MockConfigEn
 @pytest.fixture
 def mock_two_button_config_entry(mock_opendisplay_device: MagicMock) -> MockConfigEntry:
     """Create a mock config entry for a device with two buttons configured."""
-    mock_opendisplay_device.config = make_button_device_config(
+    mock_opendisplay_device.config.cached = make_button_device_config(
         [make_binary_inputs(input_flags=0x03)]
     )
     return MockConfigEntry(
@@ -123,7 +125,7 @@ def mock_three_button_config_entry(
     mock_opendisplay_device: MagicMock,
 ) -> MockConfigEntry:
     """Create a mock config entry for a device with three buttons configured."""
-    mock_opendisplay_device.config = make_button_device_config(
+    mock_opendisplay_device.config.cached = make_button_device_config(
         [make_binary_inputs(input_flags=0x07)]
     )
     return MockConfigEntry(
@@ -143,7 +145,7 @@ def mock_multi_instance_config_entry(
     Instance 0: byte_index=0, buttons 0 and 1 active → Button 1, Button 2
     Instance 1: byte_index=1, button 0 active        → Button 3
     """
-    mock_opendisplay_device.config = make_button_device_config(
+    mock_opendisplay_device.config.cached = make_button_device_config(
         [
             make_binary_inputs(instance_number=0, byte_index=0, input_flags=0x03),
             make_binary_inputs(instance_number=1, byte_index=1, input_flags=0x01),

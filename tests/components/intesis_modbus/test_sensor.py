@@ -21,6 +21,7 @@ from homeassistant.helpers import entity_registry as er
 from . import INITIALISING_REGISTERS
 
 PREFIX = "sensor.inmbsmhi001r000_"
+UNIT_PREFIX = PREFIX + "air_conditioner_"
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
@@ -56,13 +57,13 @@ async def test_undervoltage_time_is_disabled_by_default(
 async def test_initialising_gateway_reports_no_values(hass: HomeAssistant) -> None:
     """A gateway that just powered up says so and has no values yet."""
     assert hass.states.get(PREFIX + "error").state == "initialising"
+    assert hass.states.get(PREFIX + "error_code").state == STATE_UNKNOWN
     for key in (
-        "error_code",
         "operation_time",
         "outdoor_intake_temperature",
         "return_path_temperature",
     ):
-        assert hass.states.get(PREFIX + key).state == STATE_UNKNOWN
+        assert hass.states.get(UNIT_PREFIX + key).state == STATE_UNKNOWN
 
 
 @pytest.mark.parametrize("registers", [{11: 5}])
@@ -82,15 +83,15 @@ async def test_failed_block_only_takes_its_own_sensors(
     mock_connection: MockModbusConnection,
 ) -> None:
     """Sensors read from a block that stops answering go unavailable alone."""
-    assert hass.states.get(PREFIX + "outdoor_intake_temperature").state == "12.5"
+    assert hass.states.get(UNIT_PREFIX + "outdoor_intake_temperature").state == "12.5"
     mock_connection.for_unit(1).fail_read(60, IllegalDataAddressError())
     freezer.tick(SCAN_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
     for key in ("outdoor_intake_temperature", "return_path_temperature"):
-        assert hass.states.get(PREFIX + key).state == STATE_UNAVAILABLE
+        assert hass.states.get(UNIT_PREFIX + key).state == STATE_UNAVAILABLE
     assert hass.states.get(PREFIX + "error").state == "none"
-    assert hass.states.get(PREFIX + "operation_time").state == "1234"
+    assert hass.states.get(UNIT_PREFIX + "operation_time").state == "1234"
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default", "init_integration")
@@ -113,10 +114,10 @@ async def test_unreachable_air_conditioner_is_reported_by_the_error_sensor(
         "outdoor_intake_temperature",
         "return_path_temperature",
     ):
-        assert hass.states.get(PREFIX + key).state == STATE_UNAVAILABLE
+        assert hass.states.get(UNIT_PREFIX + key).state == STATE_UNAVAILABLE
     unit.holding[11] = 0
     freezer.tick(SCAN_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
     assert hass.states.get(PREFIX + "error").state == "none"
-    assert hass.states.get(PREFIX + "outdoor_intake_temperature").state == "12.5"
+    assert hass.states.get(UNIT_PREFIX + "outdoor_intake_temperature").state == "12.5"

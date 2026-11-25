@@ -2,6 +2,7 @@
 
 from enum import StrEnum
 
+from pyvesync.base_devices import VeSyncBaseDevice
 from pyvesync.utils.errors import VeSyncError
 
 from homeassistant.config_entries import ConfigEntryState
@@ -40,13 +41,28 @@ async def async_new_device_discovery(call: ServiceCall) -> None:
         raise ServiceValidationError("Entry not loaded")
     manager = config_entry.runtime_data.manager
     known_devices = list(manager.devices)
+    new_devices: list[VeSyncBaseDevice] = []
     try:
         await manager.get_devices()
+        new_devices = [
+            device for device in manager.devices if device not in known_devices
+        ]
+        update_error: VeSyncError | None = None
+        for device in new_devices:
+            try:
+                await device.update()
+            except VeSyncError as err:
+                if update_error is None:
+                    update_error = err
+        if update_error is not None:
+            raise update_error
     except VeSyncError as err:
         raise HomeAssistantError(
             translation_domain=DOMAIN, translation_key="api_response_error"
         ) from err
-    new_devices = [device for device in manager.devices if device not in known_devices]
-
-    if new_devices:
-        async_dispatcher_send(call.hass, VS_DISCOVERY.format(VS_DEVICES), new_devices)
+    finally:
+        # Devices get_devices added count as known on the next call
+        if new_devices:
+            async_dispatcher_send(
+                call.hass, VS_DISCOVERY.format(VS_DEVICES), new_devices
+            )

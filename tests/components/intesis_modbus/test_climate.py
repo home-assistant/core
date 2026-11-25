@@ -17,40 +17,40 @@ from homeassistant.components.climate import (
     ATTR_CURRENT_TEMPERATURE,
     ATTR_FAN_MODE,
     ATTR_FAN_MODES,
-    ATTR_HVAC_MODE,
     ATTR_MAX_TEMP,
     ATTR_MIN_TEMP,
     ATTR_SWING_MODE,
     ATTR_SWING_MODES,
     ATTR_TARGET_TEMP_STEP,
     DOMAIN as CLIMATE_DOMAIN,
-    SERVICE_SET_FAN_MODE,
-    SERVICE_SET_HVAC_MODE,
-    SERVICE_SET_SWING_MODE,
-    SERVICE_SET_TEMPERATURE,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
     ClimateEntityFeature,
+    ClimateService,
+    ClimateServiceArgument,
     HVACMode,
+)
+from homeassistant.components.homeassistant import (
+    DOMAIN as HOMEASSISTANT_DOMAIN,
+    SERVICE_UPDATE_ENTITY,
 )
 from homeassistant.components.intesis_modbus.const import CONF_HAS_VANE, DOMAIN
 from homeassistant.components.intesis_modbus.coordinator import SCAN_INTERVAL
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
-    ATTR_ENTITY_ID,
     ATTR_SUPPORTED_FEATURES,
     ATTR_TEMPERATURE,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
     Platform,
+    TargetKey,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er
+from homeassistant.setup import async_setup_component
 
 from . import INIT_VALUE, INITIALISING_REGISTERS
 
-ENTITY_ID = "climate.inmbsmhi001r000"
+ENTITY_ID = "climate.inmbsmhi001r000_air_conditioner"
 
 
 async def _poll(hass: HomeAssistant, freezer: FrozenDateTimeFactory) -> None:
@@ -97,8 +97,11 @@ async def test_set_unsupported_fan_mode_raises(
     with pytest.raises(ServiceValidationError) as err:
         await hass.services.async_call(
             CLIMATE_DOMAIN,
-            SERVICE_SET_FAN_MODE,
-            {ATTR_ENTITY_ID: ENTITY_ID, ATTR_FAN_MODE: "powerful"},
+            ClimateService.SET_FAN_MODE,
+            {
+                TargetKey.ENTITY_ID: ENTITY_ID,
+                ClimateServiceArgument.FAN_MODE: "powerful",
+            },
             blocking=True,
         )
     assert err.value.translation_domain == CLIMATE_DOMAIN
@@ -119,8 +122,11 @@ async def test_set_hvac_mode_cool_turns_on(
     unit.on_write(writes.append)
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_HVAC_MODE,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_HVAC_MODE: HVACMode.COOL},
+        ClimateService.SET_HVAC_MODE,
+        {
+            TargetKey.ENTITY_ID: ENTITY_ID,
+            ClimateServiceArgument.HVAC_MODE: HVACMode.COOL,
+        },
         blocking=True,
     )
     assert [(w.address, w.values[0]) for w in writes] == [(1, 4), (0, 1)]
@@ -137,8 +143,11 @@ async def test_set_hvac_mode_off(
     mock_connection.for_unit(1).on_write(writes.append)
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_HVAC_MODE,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_HVAC_MODE: HVACMode.OFF},
+        ClimateService.SET_HVAC_MODE,
+        {
+            TargetKey.ENTITY_ID: ENTITY_ID,
+            ClimateServiceArgument.HVAC_MODE: HVACMode.OFF,
+        },
         blocking=True,
     )
     assert [(w.address, w.values[0]) for w in writes] == [(0, 0)]
@@ -155,8 +164,11 @@ async def test_set_hvac_mode_heat_while_on(
     mock_connection.for_unit(1).on_write(writes.append)
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_HVAC_MODE,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_HVAC_MODE: HVACMode.DRY},
+        ClimateService.SET_HVAC_MODE,
+        {
+            TargetKey.ENTITY_ID: ENTITY_ID,
+            ClimateServiceArgument.HVAC_MODE: HVACMode.DRY,
+        },
         blocking=True,
     )
     assert [(w.address, w.values[0]) for w in writes] == [(1, 2), (0, 1)]
@@ -173,20 +185,23 @@ async def test_set_temperature_fan_swing(
     mock_connection.for_unit(1).on_write(writes.append)
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_TEMPERATURE,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_TEMPERATURE: 24.5},
+        ClimateService.SET_TEMPERATURE,
+        {TargetKey.ENTITY_ID: ENTITY_ID, ClimateServiceArgument.TEMPERATURE: 24.5},
         blocking=True,
     )
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_FAN_MODE,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_FAN_MODE: "high"},
+        ClimateService.SET_FAN_MODE,
+        {TargetKey.ENTITY_ID: ENTITY_ID, ClimateServiceArgument.FAN_MODE: "high"},
         blocking=True,
     )
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_SWING_MODE,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_SWING_MODE: "position_2"},
+        ClimateService.SET_SWING_MODE,
+        {
+            TargetKey.ENTITY_ID: ENTITY_ID,
+            ClimateServiceArgument.SWING_MODE: "position_2",
+        },
         blocking=True,
     )
     assert [(w.address, w.values[0]) for w in writes] == [(4, 245), (2, 3), (3, 2)]
@@ -209,11 +224,11 @@ async def test_set_temperature_with_hvac_mode(
     unit.on_write(writes.append)
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_TEMPERATURE,
+        ClimateService.SET_TEMPERATURE,
         {
-            ATTR_ENTITY_ID: ENTITY_ID,
-            ATTR_TEMPERATURE: 22,
-            ATTR_HVAC_MODE: HVACMode.COOL,
+            TargetKey.ENTITY_ID: ENTITY_ID,
+            ClimateServiceArgument.TEMPERATURE: 22,
+            ClimateServiceArgument.HVAC_MODE: HVACMode.COOL,
         },
         blocking=True,
     )
@@ -234,11 +249,11 @@ async def test_set_temperature_with_unsupported_hvac_mode_raises(
     with pytest.raises(ServiceValidationError) as err:
         await hass.services.async_call(
             CLIMATE_DOMAIN,
-            SERVICE_SET_TEMPERATURE,
+            ClimateService.SET_TEMPERATURE,
             {
-                ATTR_ENTITY_ID: ENTITY_ID,
-                ATTR_TEMPERATURE: 22,
-                ATTR_HVAC_MODE: HVACMode.AUTO,
+                TargetKey.ENTITY_ID: ENTITY_ID,
+                ClimateServiceArgument.TEMPERATURE: 22,
+                ClimateServiceArgument.HVAC_MODE: HVACMode.AUTO,
             },
             blocking=True,
         )
@@ -257,8 +272,11 @@ async def test_set_hvac_mode_heat_cool(
     mock_connection.for_unit(1).on_write(writes.append)
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_HVAC_MODE,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_HVAC_MODE: HVACMode.HEAT_COOL},
+        ClimateService.SET_HVAC_MODE,
+        {
+            TargetKey.ENTITY_ID: ENTITY_ID,
+            ClimateServiceArgument.HVAC_MODE: HVACMode.HEAT_COOL,
+        },
         blocking=True,
     )
     assert [(w.address, w.values[0]) for w in writes] == [(1, 0), (0, 1)]
@@ -272,8 +290,8 @@ async def test_set_temperature_out_of_range_raises(
     with pytest.raises(ServiceValidationError) as err:
         await hass.services.async_call(
             CLIMATE_DOMAIN,
-            SERVICE_SET_TEMPERATURE,
-            {ATTR_ENTITY_ID: ENTITY_ID, ATTR_TEMPERATURE: 31},
+            ClimateService.SET_TEMPERATURE,
+            {TargetKey.ENTITY_ID: ENTITY_ID, ClimateServiceArgument.TEMPERATURE: 31},
             blocking=True,
         )
     assert err.value.translation_domain == CLIMATE_DOMAIN
@@ -290,14 +308,32 @@ async def test_write_failure_raises_home_assistant_error(
     with pytest.raises(HomeAssistantError) as err:
         await hass.services.async_call(
             CLIMATE_DOMAIN,
-            SERVICE_SET_TEMPERATURE,
-            {ATTR_ENTITY_ID: ENTITY_ID, ATTR_TEMPERATURE: 22},
+            ClimateService.SET_TEMPERATURE,
+            {TargetKey.ENTITY_ID: ENTITY_ID, ClimateServiceArgument.TEMPERATURE: 22},
             blocking=True,
         )
     assert not isinstance(err.value, ServiceValidationError)
     assert err.value.translation_domain == DOMAIN
     assert err.value.translation_key == "write_failed"
     assert err.value.translation_placeholders is None
+
+
+async def test_manual_update_polls_the_gateway(
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+    mock_connection: MockModbusConnection,
+) -> None:
+    """Updating the entity by hand reads the gateway, without the next poll."""
+    assert await async_setup_component(hass, HOMEASSISTANT_DOMAIN, {})
+    mock_connection.for_unit(1).holding[1] = 4
+    await hass.services.async_call(
+        HOMEASSISTANT_DOMAIN,
+        SERVICE_UPDATE_ENTITY,
+        {TargetKey.ENTITY_ID: ENTITY_ID},
+        blocking=True,
+    )
+    await hass.async_block_till_done(wait_background_tasks=True)
+    assert hass.states.get(ENTITY_ID).state == HVACMode.COOL
 
 
 @pytest.mark.parametrize("registers", [INITIALISING_REGISTERS])
@@ -420,10 +456,16 @@ async def test_turn_on_and_off(
     writes: list[WriteEvent] = []
     mock_connection.for_unit(1).on_write(writes.append)
     await hass.services.async_call(
-        CLIMATE_DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: ENTITY_ID}, blocking=True
+        CLIMATE_DOMAIN,
+        ClimateService.TURN_OFF,
+        {TargetKey.ENTITY_ID: ENTITY_ID},
+        blocking=True,
     )
     await hass.services.async_call(
-        CLIMATE_DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: ENTITY_ID}, blocking=True
+        CLIMATE_DOMAIN,
+        ClimateService.TURN_ON,
+        {TargetKey.ENTITY_ID: ENTITY_ID},
+        blocking=True,
     )
     assert [(w.address, w.values[0]) for w in writes] == [(0, 0), (0, 1)]
 
@@ -471,12 +513,39 @@ async def test_unreachable_indoor_unit_is_logged_once(
     unit.holding[11] = 65535
     await _poll(hass, freezer)
     await _poll(hass, freezer)
-    assert caplog.text.count("cannot reach the air conditioner") == 1
-    assert "reaches the air conditioner again" not in caplog.text
+    assert caplog.text.count("INMBSMHI001R000 air conditioner is unavailable") == 1
+    assert "Error fetching" not in caplog.text
+    assert "data recovered" not in caplog.text
     unit.holding[11] = 0
     await _poll(hass, freezer)
     await _poll(hass, freezer)
-    assert caplog.text.count("reaches the air conditioner again") == 1
+    assert (
+        caplog.text.count("Fetching INMBSMHI001R000 air conditioner data recovered")
+        == 1
+    )
+
+
+async def test_silent_gateway_is_logged_once(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    caplog: pytest.LogCaptureFixture,
+    init_integration: MockConfigEntry,
+    mock_connection: MockModbusConnection,
+) -> None:
+    """A gateway that stops answering takes the air conditioner with it."""
+    mock_connection.for_unit(1).fail_requests(ModbusTimeoutError())
+    await _poll(hass, freezer)
+    await _poll(hass, freezer)
+    assert caplog.text.count("Error fetching INMBSMHI001R000 data") == 1
+    assert caplog.text.count("INMBSMHI001R000 air conditioner is unavailable") == 1
+    mock_connection.for_unit(1).fail_requests(None)
+    await _poll(hass, freezer)
+    await _poll(hass, freezer)
+    assert caplog.text.count("Fetching INMBSMHI001R000 data recovered") == 1
+    assert (
+        caplog.text.count("Fetching INMBSMHI001R000 air conditioner data recovered")
+        == 1
+    )
 
 
 async def test_temperature_format_follows_the_dip_switches(
@@ -500,8 +569,8 @@ async def test_temperature_format_follows_the_dip_switches(
     unit.on_write(writes.append)
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_TEMPERATURE,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_TEMPERATURE: 24},
+        ClimateService.SET_TEMPERATURE,
+        {TargetKey.ENTITY_ID: ENTITY_ID, ClimateServiceArgument.TEMPERATURE: 24},
         blocking=True,
     )
     assert [(w.address, w.values[0]) for w in writes] == [(4, 24)]
