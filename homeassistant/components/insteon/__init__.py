@@ -26,12 +26,9 @@ from .const import (
     DOMAIN,
     INSTEON_PLATFORMS,
 )
+from .ipdb import get_device_platforms
 from .services import async_setup_services
-from .utils import (
-    add_insteon_events,
-    get_device_platforms,
-    register_new_device_callback,
-)
+from .utils import add_insteon_events, register_new_device_callback
 
 _LOGGER = logging.getLogger(__name__)
 

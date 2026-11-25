@@ -6,14 +6,13 @@ from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
 from PIL import Image
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 import respx
 
 from homeassistant import config_entries
 from homeassistant.components.generic.const import DOMAIN
 from homeassistant.config_entries import ConfigFlowResult
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture(scope="package")
@@ -97,7 +96,7 @@ def mock_setup_entry() -> Generator[AsyncMock]:
     """Mock setup entry."""
     with patch(
         "homeassistant.components.generic.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ) as mock_setup_entry:
         yield mock_setup_entry
 

@@ -4,24 +4,20 @@ from datetime import timedelta
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import async_fire_time_changed
+from pytest_homeassistant.components.recorder.common import async_wait_recording_done
 
 from homeassistant.components import media_player
 from homeassistant.components.media_player import (
-    ATTR_ENTITY_PICTURE_LOCAL,
-    ATTR_INPUT_SOURCE_LIST,
-    ATTR_MEDIA_POSITION,
-    ATTR_MEDIA_POSITION_UPDATED_AT,
-    ATTR_SOUND_MODE_LIST,
+    MediaPlayerEntityCapabilityAttribute,
+    MediaPlayerEntityStateAttribute,
 )
 from homeassistant.components.recorder import Recorder
 from homeassistant.components.recorder.history import get_significant_states
-from homeassistant.const import ATTR_ENTITY_PICTURE, ATTR_FRIENDLY_NAME, Platform
+from homeassistant.const import EntityStateAttribute, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
-
-from tests.common import async_fire_time_changed
-from tests.components.recorder.common import async_wait_recording_done
 
 
 @pytest.fixture(autouse=True)
@@ -52,10 +48,24 @@ async def test_exclude_attributes(recorder_mock: Recorder, hass: HomeAssistant) 
     assert len(states) >= 1
     for entity_states in states.values():
         for state in entity_states:
-            assert ATTR_ENTITY_PICTURE not in state.attributes
-            assert ATTR_ENTITY_PICTURE_LOCAL not in state.attributes
-            assert ATTR_FRIENDLY_NAME in state.attributes
-            assert ATTR_INPUT_SOURCE_LIST not in state.attributes
-            assert ATTR_MEDIA_POSITION not in state.attributes
-            assert ATTR_MEDIA_POSITION_UPDATED_AT not in state.attributes
-            assert ATTR_SOUND_MODE_LIST not in state.attributes
+            assert EntityStateAttribute.ENTITY_PICTURE not in state.attributes
+            assert (
+                MediaPlayerEntityStateAttribute.ENTITY_PICTURE_LOCAL
+                not in state.attributes
+            )
+            assert EntityStateAttribute.FRIENDLY_NAME in state.attributes
+            assert (
+                MediaPlayerEntityCapabilityAttribute.INPUT_SOURCE_LIST
+                not in state.attributes
+            )
+            assert (
+                MediaPlayerEntityStateAttribute.MEDIA_POSITION not in state.attributes
+            )
+            assert (
+                MediaPlayerEntityStateAttribute.MEDIA_POSITION_UPDATED_AT
+                not in state.attributes
+            )
+            assert (
+                MediaPlayerEntityCapabilityAttribute.SOUND_MODE_LIST
+                not in state.attributes
+            )

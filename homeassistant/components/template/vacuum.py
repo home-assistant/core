@@ -24,9 +24,9 @@ from homeassistant.components.vacuum import (
     VacuumEntityStateAttribute,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_NAME, CONF_STATE, CONF_UNIQUE_ID
+from homeassistant.const import CONF_NAME, CONF_STATE, CONF_UNIQUE_ID, Platform
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers import config_validation as cv, issue_registry as ir
 from homeassistant.helpers.entity_platform import (
     AddConfigEntryEntitiesCallback,
     AddEntitiesCallback,
@@ -35,7 +35,7 @@ from homeassistant.helpers.restore_state import ExtraStoredData, RestoreEntity
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import validators as tcv
-from .const import DOMAIN
+from .const import DEFAULT_NAMES, DOMAIN, VACUUM_INCOMPLETE_FAN_SPEED_OPTIONS
 from .coordinator import TriggerUpdateCoordinator
 from .entity import AbstractTemplateEntity
 from .helpers import (
@@ -43,6 +43,7 @@ from .helpers import (
     async_setup_template_platform,
     async_setup_template_preview,
 )
+from .repairs import format_deprecated_options
 from .schemas import (
     TEMPLATE_ENTITY_COMMON_CONFIG_ENTRY_SCHEMA,
     TEMPLATE_ENTITY_OPTIMISTIC_SCHEMA,
@@ -59,7 +60,7 @@ CONF_FAN_SPEED_LIST = "fan_speeds"
 CONF_SEGMENTS = "segments"
 CONF_VACUUMS = "vacuums"
 
-DEFAULT_NAME = "Template Vacuum"
+DEFAULT_NAME = DEFAULT_NAMES[Platform.VACUUM]
 
 ENTITY_ID_FORMAT = VACUUM_DOMAIN + ".{}"
 
@@ -76,9 +77,13 @@ SCRIPT_FIELDS = (
 
 CLEAN_AREA_GROUP = "clean_area_group"
 
+DEPRECATED_HELPER_INCOMPLETE_FAN_SPEED_ISSUE_ID = (
+    "deprecated_vacuum_helper_incomplete_fan_speed_options"
+)
+
 VACUUM_COMMON_SCHEMA = probatio.Schema(
     {
-        probatio.Optional(CONF_FAN_SPEED_LIST, default=[]): probatio.EnsureList(),
+        probatio.Optional(CONF_FAN_SPEED_LIST): probatio.EnsureList(),
         probatio.Optional(CONF_FAN_SPEED): cv.template,
         probatio.Optional(CONF_STATE): cv.template,
         probatio.Inclusive(
@@ -143,6 +148,34 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Initialize config entry."""
+    issue_id = (
+        f"{DEPRECATED_HELPER_INCOMPLETE_FAN_SPEED_ISSUE_ID}_{config_entry.entry_id}"
+    )
+    if incomplete := VACUUM_INCOMPLETE_FAN_SPEED_OPTIONS.deprecated_options(
+        config_entry.options
+    ):
+        ir.async_create_issue(
+            hass,
+            DOMAIN,
+            issue_id,
+            breaks_in_ha_version=VACUUM_INCOMPLETE_FAN_SPEED_OPTIONS.breaks_in_ha_version,
+            config_entry_id=config_entry.entry_id,
+            is_fixable=False,
+            severity=ir.IssueSeverity.WARNING,
+            translation_key=DEPRECATED_HELPER_INCOMPLETE_FAN_SPEED_ISSUE_ID,
+            translation_placeholders={
+                "name": config_entry.title,
+                "breaks_in_ha_version": (
+                    VACUUM_INCOMPLETE_FAN_SPEED_OPTIONS.breaks_in_ha_version
+                ),
+                "options": format_deprecated_options(
+                    hass, VACUUM_INCOMPLETE_FAN_SPEED_OPTIONS, incomplete, {}
+                ),
+            },
+        )
+    else:
+        ir.async_delete_issue(hass, DOMAIN, issue_id)
+
     await async_setup_template_entry(
         hass,
         config_entry,
@@ -270,7 +303,7 @@ class AbstractTemplateVacuum(AbstractTemplateEntity, StateVacuumEntity, RestoreE
         """Initialize the features."""
 
         # List of valid fan speeds
-        self._attr_fan_speed_list = config[CONF_FAN_SPEED_LIST]
+        self._attr_fan_speed_list = config.get(CONF_FAN_SPEED_LIST, [])
         self._segments: list[Segment] = []
         self.setup_state_template(
             "_attr_activity",
@@ -280,6 +313,9 @@ class AbstractTemplateVacuum(AbstractTemplateEntity, StateVacuumEntity, RestoreE
             CONF_FAN_SPEED,
             "_attr_fan_speed",
             tcv.item_in_list(self, CONF_FAN_SPEED, self._attr_fan_speed_list),
+        )
+        self.add_assumed_attribute(
+            "_attr_fan_speed", CONF_FAN_SPEED, SERVICE_SET_FAN_SPEED
         )
 
         self.setup_template(
@@ -406,6 +442,8 @@ class AbstractTemplateVacuum(AbstractTemplateEntity, StateVacuumEntity, RestoreE
             await self.async_run_script(
                 script, run_variables={"fan_speed": fan_speed}, context=self._context
             )
+
+        self.write_assumed_attribute(CONF_FAN_SPEED, fan_speed)
 
     @property
     @override

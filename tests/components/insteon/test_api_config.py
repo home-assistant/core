@@ -2,6 +2,9 @@
 
 from unittest.mock import patch
 
+from pytest_homeassistant.common import async_load_json_object_fixture
+from pytest_homeassistant.typing import WebSocketGenerator
+
 from homeassistant.components import insteon
 from homeassistant.components.insteon.api.device import ID, TYPE
 from homeassistant.components.insteon.const import (
@@ -22,9 +25,6 @@ from .const import (
 from .mock_connection import mock_failed_connection, mock_successful_connection
 from .mock_devices import MockDevices
 from .mock_setup import async_mock_setup
-
-from tests.common import async_load_json_object_fixture
-from tests.typing import WebSocketGenerator
 
 
 class MockProtocol:

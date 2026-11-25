@@ -1,8 +1,10 @@
 {
   "domain": "solaredge_modbus",
   "name": "SolarEdge Modbus",
+  "categories": ["energy.solar_batteries"],
   "codeowners": ["@frenck"],
   "config_flow": true,
+  "connectivity": ["modbus"],
   "dependencies": ["modbus", "usb"],
   "documentation": "https://www.home-assistant.io/integrations/solaredge_modbus",
   "integration_type": "device",

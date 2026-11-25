@@ -11,8 +11,10 @@ from opendisplay import (
     BLEConnectionError,
     BLETimeoutError,
     OpenDisplayError,
+    Sec2KeyRequiredError,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant import config_entries
 from homeassistant.components.bluetooth import BluetoothServiceInfoBleak
@@ -29,8 +31,6 @@ from . import (
     VALID_SERVICE_INFO,
     make_service_info,
 )
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 UNSUPPORTED_SERVICE_INFOS = [
     pytest.param(make_service_info(name="Other Device"), id="wrong_name"),
@@ -50,13 +50,13 @@ def mock_setup_entry() -> Generator[None]:
     """Prevent the integration from actually setting up after config flow."""
     with patch(
         "homeassistant.components.opendisplay.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ):
         yield
 
 
 async def test_bluetooth_discovery(
-    hass: HomeAssistant, mock_opendisplay_device_class: MagicMock
+    hass: HomeAssistant, mock_connect: MagicMock
 ) -> None:
     """Test discovery via Bluetooth with a valid device."""
     result = await hass.config_entries.flow.async_init(
@@ -67,7 +67,7 @@ async def test_bluetooth_discovery(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "bluetooth_confirm"
     # Discovery alone must not occupy a BLE connection slot.
-    mock_opendisplay_device_class.assert_not_called()
+    mock_connect.assert_not_called()
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input={}
@@ -82,7 +82,7 @@ async def test_bluetooth_discovery(
 @pytest.mark.parametrize("service_info", UNSUPPORTED_SERVICE_INFOS)
 async def test_bluetooth_discovery_not_opendisplay(
     hass: HomeAssistant,
-    mock_opendisplay_device_class: MagicMock,
+    mock_connect: MagicMock,
     service_info: BluetoothServiceInfoBleak,
 ) -> None:
     """Test discovery aborts for devices that are not OpenDisplay devices."""
@@ -93,7 +93,7 @@ async def test_bluetooth_discovery_not_opendisplay(
     )
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "not_supported"
-    mock_opendisplay_device_class.assert_not_called()
+    mock_connect.assert_not_called()
 
 
 async def test_bluetooth_discovery_already_configured(
@@ -206,7 +206,7 @@ async def test_bluetooth_confirm_connection_timeout(
     async def _never_returns(*args: object, **kwargs: object) -> None:
         await asyncio.Event().wait()
 
-    mock_opendisplay_device.read_firmware_version.side_effect = _never_returns
+    mock_opendisplay_device.__aenter__.side_effect = _never_returns
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -223,7 +223,7 @@ async def test_bluetooth_confirm_connection_timeout(
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "cannot_connect"}
 
-    mock_opendisplay_device.read_firmware_version.side_effect = None
+    mock_opendisplay_device.__aenter__.side_effect = None
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input={}
     )
@@ -418,14 +418,26 @@ async def test_bluetooth_discovery_encrypted_invalid_key_format(
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
+@pytest.mark.parametrize(
+    ("key_required", "wrong_key"),
+    [
+        (
+            AuthenticationRequiredError("auth required"),
+            AuthenticationFailedError("wrong key"),
+        ),
+        (Sec2KeyRequiredError(0), Sec2KeyRequiredError(1)),
+    ],
+)
 async def test_bluetooth_discovery_encrypted_wrong_key(
     hass: HomeAssistant,
     mock_opendisplay_device: MagicMock,
+    key_required: Exception,
+    wrong_key: Exception,
 ) -> None:
     """Test encryption_key step shows error on wrong key, then succeeds."""
     mock_opendisplay_device.__aenter__.side_effect = [
-        AuthenticationRequiredError("auth required"),
-        AuthenticationFailedError("wrong key"),
+        key_required,
+        wrong_key,
         mock_opendisplay_device,
     ]
 

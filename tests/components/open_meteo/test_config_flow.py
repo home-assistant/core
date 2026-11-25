@@ -4,6 +4,7 @@ from unittest.mock import MagicMock
 
 from open_meteo import OpenMeteoConnectionError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.open_meteo.const import DOMAIN
 from homeassistant.components.zone import ENTITY_ID_HOME
@@ -11,8 +12,6 @@ from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_ZONE
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-
-from tests.common import MockConfigEntry
 
 
 @pytest.mark.usefixtures("mock_setup_entry")
@@ -107,3 +106,137 @@ async def test_flow_already_configured(
 
     assert result.get("type") is FlowResultType.ABORT
     assert result.get("reason") == "already_configured"
+
+
+@pytest.mark.usefixtures("mock_setup_entry", "mock_open_meteo")
+async def test_reconfigure_flow_already_configured(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test the reconfigure flow aborts when the new zone is already configured."""
+    mock_config_entry.add_to_hass(hass)
+    other_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_ZONE: "zone.work"},
+        minor_version=2,
+    )
+    other_entry.add_to_hass(hass)
+    hass.states.async_set(
+        "zone.work",
+        0,
+        {"latitude": 37.3861, "longitude": -122.0839, "friendly_name": "Work"},
+    )
+
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+
+    assert result.get("type") is FlowResultType.FORM
+
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={CONF_ZONE: "zone.work"},
+    )
+
+    assert result2.get("type") is FlowResultType.ABORT
+    assert result2.get("reason") == "already_configured"
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_reconfigure_flow(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_open_meteo: MagicMock,
+) -> None:
+    """Test the reconfigure flow updates the zone."""
+    mock_config_entry.add_to_hass(hass)
+    hass.states.async_set(
+        "zone.work",
+        0,
+        {"latitude": 37.3861, "longitude": -122.0839, "friendly_name": "Work"},
+    )
+
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+
+    assert result.get("type") is FlowResultType.FORM
+    assert result.get("step_id") == "reconfigure"
+    schema_keys = {str(k): k for k in result["data_schema"].schema}
+    assert schema_keys[CONF_ZONE].description == {"suggested_value": ENTITY_ID_HOME}
+
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={CONF_ZONE: "zone.work"},
+    )
+
+    assert result2.get("type") is FlowResultType.ABORT
+    assert result2.get("reason") == "reconfigure_successful"
+    assert mock_config_entry.data == {CONF_ZONE: "zone.work"}
+    assert mock_config_entry.title == "Work"
+
+    assert len(mock_open_meteo.forecast.mock_calls) == 1
+    _, _, kwargs = mock_open_meteo.forecast.mock_calls[0]
+    work_zone = hass.states.get("zone.work")
+    assert work_zone is not None
+    assert kwargs["latitude"] == work_zone.attributes["latitude"]
+    assert kwargs["longitude"] == work_zone.attributes["longitude"]
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_reconfigure_flow_cannot_connect(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_open_meteo: MagicMock,
+) -> None:
+    """Test the reconfigure flow shows an error when Open-Meteo can't be reached."""
+    mock_config_entry.add_to_hass(hass)
+    mock_open_meteo.forecast.side_effect = OpenMeteoConnectionError
+
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+
+    assert result.get("type") is FlowResultType.FORM
+
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={CONF_ZONE: ENTITY_ID_HOME},
+    )
+
+    assert result2.get("type") is FlowResultType.FORM
+    assert result2.get("errors") == {"base": "cannot_connect"}
+    schema_keys = {str(k): k for k in result2["data_schema"].schema}
+    assert schema_keys[CONF_ZONE].description == {"suggested_value": ENTITY_ID_HOME}
+
+    mock_open_meteo.forecast.side_effect = None
+    result3 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={CONF_ZONE: ENTITY_ID_HOME},
+    )
+
+    assert result3.get("type") is FlowResultType.ABORT
+    assert result3.get("reason") == "reconfigure_successful"
+
+
+@pytest.mark.usefixtures("mock_setup_entry", "mock_open_meteo")
+async def test_reconfigure_flow_zone_not_found(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test the reconfigure flow shows an error for a zone that does not exist."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+
+    assert result.get("type") is FlowResultType.FORM
+
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={CONF_ZONE: "zone.gone"},
+    )
+
+    assert result2.get("type") is FlowResultType.FORM
+    assert result2.get("errors") == {CONF_ZONE: "zone_not_found"}
+
+    result3 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={CONF_ZONE: ENTITY_ID_HOME},
+    )
+
+    assert result3.get("type") is FlowResultType.ABORT
+    assert result3.get("reason") == "reconfigure_successful"

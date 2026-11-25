@@ -48,7 +48,7 @@ from .generated.ssdp import SSDP
 from .generated.usb import USB
 from .generated.zeroconf import HOMEKIT, ZEROCONF
 from .helpers.json import cached_json_fragment, json_fragment
-from .helpers.typing import UNDEFINED, UndefinedType
+from .helpers.typing import Undefined
 from .util.async_ import create_eager_task, wait_shared_future
 from .util.hass_dict import HassKey
 from .util.json import JSON_DECODE_EXCEPTIONS, json_loads
@@ -317,6 +317,8 @@ class Manifest(TypedDict, total=False):
     issue_tracker: str
     quality_scale: str
     iot_class: str
+    categories: list[str]
+    connectivity: list[str]
     bluetooth: list[dict[str, int | str]]
     mqtt: list[str]
     lorawan: list[tuple[str, int | str]]
@@ -536,7 +538,9 @@ async def async_get_integration_descriptions(
             integration_key = "integration"
 
         metadata = {
+            "categories": integration.categories,
             "config_flow": integration.config_flow,
+            "connectivity": integration.connectivity,
             "integration_type": integration.integration_type,
             "iot_class": integration.iot_class,
             "name": integration.name,
@@ -848,8 +852,8 @@ class Integration:
                     (
                         "The custom integration '%s' does not have a version key in the"
                         " manifest file and was blocked from loading. See"
-                        " https://developers.home-assistant.io"
-                        "/blog/2021/01/29/custom-integration-changes#versions"
+                        " https://contributors.home-assistant.io"
+                        "/blog/2021/01/29/custom-integration-changes/#versions"
                         " for more details"
                     ),
                     integration.domain,
@@ -871,8 +875,8 @@ class Integration:
                     (
                         "The custom integration '%s' does not have a valid version key"
                         " (%s) in the manifest file and was blocked from loading. See"
-                        " https://developers.home-assistant.io"
-                        "/blog/2021/01/29/custom-integration-changes#versions"
+                        " https://contributors.home-assistant.io"
+                        "/blog/2021/01/29/custom-integration-changes/#versions"
                         " for more details"
                     ),
                     integration.domain,
@@ -995,6 +999,19 @@ class Integration:
     def iot_class(self) -> str | None:
         """Return the integration IoT Class."""
         return self.manifest.get("iot_class")
+
+    @cached_property
+    def categories(self) -> list[str]:
+        """Return the integration categories, the primary category first."""
+        return self.manifest.get("categories", [])
+
+    @cached_property
+    def connectivity(self) -> list[str]:
+        """Return the protocols used to reach the devices or service.
+
+        Empty means it is not filled in yet, not that nothing is reached.
+        """
+        return self.manifest.get("connectivity", [])
 
     @cached_property
     def integration_type(
@@ -1671,7 +1688,7 @@ async def _resolve_integrations_dependencies(
     integrations: Iterable[Integration],
     *,
     cache: _ResolveDependenciesCacheProtocol,
-    possible_after_dependencies: set[str] | UndefinedType | None = UNDEFINED,
+    possible_after_dependencies: set[str] | Undefined | None = Undefined,
     ignore_exceptions: bool,
 ) -> dict[str, set[str]]:
     """Resolve all dependencies for integrations.
@@ -1714,14 +1731,14 @@ async def _resolve_integration_dependencies(
     itg: Integration,
     *,
     cache: _ResolveDependenciesCacheProtocol,
-    possible_after_dependencies: set[str] | UndefinedType | None = UNDEFINED,
+    possible_after_dependencies: set[str] | Undefined | None = Undefined,
     ignore_exceptions: bool = False,
 ) -> set[str]:
     """Recursively resolve all dependencies.
 
     Uses `cache` to cache the results.
 
-    If `possible_after_dependencies` is not UNDEFINED,
+    If `possible_after_dependencies` is not Undefined,
     listed after dependencies are also considered.
     If `possible_after_dependencies` is None,
     all the possible after dependencies are considered.
@@ -1754,7 +1771,7 @@ async def _resolve_integration_dependencies(
         resolving.add(domain)
 
         dependencies_domains = set(itg.dependencies)
-        if possible_after_dependencies is not UNDEFINED:
+        if possible_after_dependencies is not Undefined:
             if possible_after_dependencies is None:
                 after_dependencies: Iterable[str] = itg.after_dependencies
             else:

@@ -10,6 +10,8 @@ from aiohttp import ServerDisconnectedError, web
 from aiohttp.test_utils import TestClient
 import probatio
 import pytest
+from pytest_homeassistant.common import CLIENT_ID, MockUser, async_mock_service
+from pytest_homeassistant.typing import ClientSessionGenerator
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant import const, core as ha
@@ -28,9 +30,6 @@ from homeassistant.exceptions import (
 from homeassistant.loader import Integration
 from homeassistant.setup import async_setup_component
 from homeassistant.util.yaml.loader import JSON_TYPE
-
-from tests.common import CLIENT_ID, MockUser, async_mock_service
-from tests.typing import ClientSessionGenerator
 
 
 @pytest.fixture
@@ -980,6 +979,45 @@ async def test_api_call_service_raises(
     resp = await mock_api_client.post("/api/services/test_domain/test_service")
     assert resp.status == status
     assert await resp.json() == {"message": str(error)}
+
+
+@pytest.mark.parametrize(
+    ("body", "log_message"),
+    [
+        pytest.param(
+            {"brightness": 10},
+            "Error during service call to test_domain.test_service: "
+            "device did not respond",
+            id="no_target",
+        ),
+        pytest.param(
+            {"entity_id": "light.kitchen", "brightness": 10},
+            "Error during service call to test_domain.test_service with target "
+            "{'entity_id': 'light.kitchen'}: device did not respond",
+            id="target",
+        ),
+    ],
+)
+async def test_api_call_service_error_logs_target(
+    hass: HomeAssistant,
+    mock_api_client: TestClient,
+    caplog: pytest.LogCaptureFixture,
+    body: dict[str, Any],
+    log_message: str,
+) -> None:
+    """Test the error log of a failed service call names the target."""
+
+    async def handler(service_call: ha.ServiceCall) -> None:
+        """Raise an error."""
+        raise HomeAssistantError("device did not respond")
+
+    hass.services.async_register("test_domain", "test_service", handler)
+
+    resp = await mock_api_client.post(
+        "/api/services/test_domain/test_service", json=body
+    )
+    assert resp.status == HTTPStatus.INTERNAL_SERVER_ERROR
+    assert log_message in caplog.text
 
 
 async def test_api_call_service_unauthorized(

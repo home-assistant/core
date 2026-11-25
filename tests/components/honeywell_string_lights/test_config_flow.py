@@ -1,5 +1,10 @@
 """Test the Honeywell String Lights config flow."""
 
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.components.radio_frequency.common import (
+    MockRadioFrequencyEntity,
+)
+
 from homeassistant.components.honeywell_string_lights.const import (
     CONF_TRANSMITTER,
     DOMAIN,
@@ -12,9 +17,6 @@ from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 
 from .conftest import TRANSMITTER_ENTITY_ID
-
-from tests.common import MockConfigEntry
-from tests.components.radio_frequency.common import MockRadioFrequencyEntity
 
 
 async def test_user_flow(

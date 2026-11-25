@@ -113,6 +113,7 @@ class WithingsMeasurementDataUpdateCoordinator(
         super().__init__(hass, config_entry, client)
         self.notification_categories = {
             NotificationCategory.WEIGHT,
+            NotificationCategory.TEMPERATURE,
             NotificationCategory.PRESSURE,
         }
         self._previous_data: dict[
@@ -187,6 +188,15 @@ class WithingsSleepDataUpdateCoordinator(
                 SleepSummaryDataFields.SNORING_COUNT,
                 SleepSummaryDataFields.WAKE_UP_COUNT,
                 SleepSummaryDataFields.TOTAL_TIME_AWAKE,
+                SleepSummaryDataFields.APNEA_HYPOPNEA_INDEX,
+                SleepSummaryDataFields.TOTAL_SLEEP_TIME,
+                SleepSummaryDataFields.TOTAL_TIME_IN_BED,
+                SleepSummaryDataFields.SLEEP_EFFICIENCY,
+                SleepSummaryDataFields.TIME_AWAKE_DURING_SLEEP,
+                SleepSummaryDataFields.REM_SLEEP_PHASE_COUNT,
+                SleepSummaryDataFields.OUT_OF_BED_COUNT,
+                SleepSummaryDataFields.AVERAGE_HEART_RATE_VARIABILITY_START,
+                SleepSummaryDataFields.AVERAGE_HEART_RATE_VARIABILITY_END,
             ],
         )
         if not response:
@@ -326,7 +336,7 @@ class WithingsWorkoutDataUpdateCoordinator(
         latest_workout = max(workouts, key=lambda workout: workout.end_date)
         if (
             self._previous_data is None
-            or self._previous_data.end_date >= latest_workout.end_date
+            or latest_workout.end_date >= self._previous_data.end_date
         ):
             self._previous_data = latest_workout
             self._last_valid_update = latest_workout.end_date
@@ -340,6 +350,11 @@ class WithingsDeviceDataUpdateCoordinator(
 
     coordinator_name: str = "device"
     _default_update_interval = timedelta(hours=1)
+
+    @override
+    def webhook_subscription_listener(self, connected: bool) -> None:
+        """Call when webhook status changed."""
+        # Webhooks aren't available for this datapoint, so we keep polling.
 
     @override
     async def _internal_update_data(self) -> dict[str, Device]:

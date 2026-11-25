@@ -3,12 +3,11 @@
 from http import HTTPStatus
 
 import pytest
+from pytest_homeassistant.common import load_fixture
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 
 from homeassistant.components.pvpc_hourly_pricing.const import ATTR_TARIFF, DOMAIN
 from homeassistant.const import ATTR_UNIT_OF_MEASUREMENT, CURRENCY_EURO, UnitOfEnergy
-
-from tests.common import load_fixture
-from tests.test_util.aiohttp import AiohttpClientMocker
 
 FIXTURE_JSON_PUBLIC_DATA_2023_01_06 = "PVPC_DATA_2023_01_06.json"
 FIXTURE_JSON_ESIOS_DATA_PVPC_2023_01_06 = "PRICES_ESIOS_1001_2023_01_06.json"

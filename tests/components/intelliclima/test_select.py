@@ -3,24 +3,53 @@
 from collections.abc import AsyncGenerator
 from unittest.mock import AsyncMock, patch
 
+from freezegun.api import FrozenDateTimeFactory
 from pyintelliclima.const import FanMode, FanSpeed
+from pyintelliclima.intelliclima_types import IntelliClimaDevices
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.select import (
-    ATTR_OPTION,
     DOMAIN as SELECT_DOMAIN,
-    SERVICE_SELECT_OPTION,
+    SelectService,
+    SelectServiceArgument,
 )
-from homeassistant.const import ATTR_ENTITY_ID, Platform
+from homeassistant.const import STATE_UNKNOWN, Platform, TargetKey
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers import entity_registry as er
 
-from . import setup_integration
-
-from tests.common import MockConfigEntry, snapshot_platform
+from . import async_poll, setup_integration
 
 SELECT_ENTITY_ID = "select.test_vmc_fan_direction_mode"
+
+
+@pytest.mark.parametrize("option", ["forward", "reverse", "alternate", "sensor"])
+async def test_eco3_select_uses_own_api(
+    hass: HomeAssistant,
+    mock_cloud_interface: AsyncMock,
+    option: str,
+) -> None:
+    """Route ECO3 direction changes to its own API and default auto speed to sleep."""
+    modes = {
+        "forward": FanMode.inward,
+        "reverse": FanMode.outward,
+        "alternate": FanMode.alternate,
+        "sensor": FanMode.sensor,
+    }
+    await hass.services.async_call(
+        SELECT_DOMAIN,
+        SelectService.SELECT_OPTION,
+        {
+            TargetKey.ENTITY_ID: "select.test_vmc_3_fan_direction_mode",
+            SelectServiceArgument.OPTION: option,
+        },
+        blocking=True,
+    )
+    mock_cloud_interface.ecocomfort3.set_mode_speed.assert_awaited_once_with(
+        "AABBCCDD", modes[option], FanSpeed.sleep
+    )
+    mock_cloud_interface.ecocomfort2.set_mode_speed.assert_not_awaited()
 
 
 @pytest.fixture(autouse=True)
@@ -28,8 +57,10 @@ async def setup_intelliclima_select_only(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_cloud_interface: AsyncMock,
+    mixed_eco_devices: IntelliClimaDevices,
 ) -> AsyncGenerator[None]:
     """Set up IntelliClima integration with only the select platform."""
+    mock_cloud_interface.get_all_device_status.return_value = mixed_eco_devices
     with (
         patch("homeassistant.components.intelliclima.PLATFORMS", [Platform.SELECT]),
     ):
@@ -43,25 +74,11 @@ async def test_all_select_entities(
     snapshot: SnapshotAssertion,
     mock_config_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
-    device_registry: dr.DeviceRegistry,
     mock_cloud_interface: AsyncMock,
 ) -> None:
     """Test all entities."""
 
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
-
-    # There should be exactly one select entity
-    select_entries = [
-        entry
-        for entry in entity_registry.entities.values()
-        if entry.platform == "intelliclima" and entry.domain == SELECT_DOMAIN
-    ]
-    assert len(select_entries) == 1
-
-    entity_entry = select_entries[0]
-    assert entity_entry.device_id
-    assert (device_entry := device_registry.async_get(entity_entry.device_id))
-    assert device_entry == snapshot
 
 
 @pytest.mark.parametrize(
@@ -82,8 +99,11 @@ async def test_select_option_keeps_current_speed(
     """Selecting any valid option retains the current speed and calls set_mode_speed."""
     await hass.services.async_call(
         SELECT_DOMAIN,
-        SERVICE_SELECT_OPTION,
-        {ATTR_ENTITY_ID: SELECT_ENTITY_ID, ATTR_OPTION: option},
+        SelectService.SELECT_OPTION,
+        {
+            TargetKey.ENTITY_ID: SELECT_ENTITY_ID,
+            SelectServiceArgument.OPTION: option,
+        },
         blocking=True,
     )
     # Device starts with speed_set=FanSpeed.medium (from single_eco_device in conftest),
@@ -105,8 +125,11 @@ async def test_select_option_when_off_defaults_speed_to_sleep(
 
     await hass.services.async_call(
         SELECT_DOMAIN,
-        SERVICE_SELECT_OPTION,
-        {ATTR_ENTITY_ID: SELECT_ENTITY_ID, ATTR_OPTION: "forward"},
+        SelectService.SELECT_OPTION,
+        {
+            TargetKey.ENTITY_ID: SELECT_ENTITY_ID,
+            SelectServiceArgument.OPTION: "forward",
+        },
         blocking=True,
     )
     mock_cloud_interface.ecocomfort2.set_mode_speed.assert_awaited_once_with(
@@ -126,8 +149,11 @@ async def test_select_option_in_auto_mode_defaults_speed_to_sleep(
 
     await hass.services.async_call(
         SELECT_DOMAIN,
-        SERVICE_SELECT_OPTION,
-        {ATTR_ENTITY_ID: SELECT_ENTITY_ID, ATTR_OPTION: "reverse"},
+        SelectService.SELECT_OPTION,
+        {
+            TargetKey.ENTITY_ID: SELECT_ENTITY_ID,
+            SelectServiceArgument.OPTION: "reverse",
+        },
         blocking=True,
     )
     mock_cloud_interface.ecocomfort2.set_mode_speed.assert_awaited_once_with(
@@ -144,8 +170,11 @@ async def test_select_option_does_not_call_turn_off(
     """Selecting an option should never call turn_off."""
     await hass.services.async_call(
         SELECT_DOMAIN,
-        SERVICE_SELECT_OPTION,
-        {ATTR_ENTITY_ID: SELECT_ENTITY_ID, ATTR_OPTION: option},
+        SelectService.SELECT_OPTION,
+        {
+            TargetKey.ENTITY_ID: SELECT_ENTITY_ID,
+            SelectServiceArgument.OPTION: option,
+        },
         blocking=True,
     )
     mock_cloud_interface.ecocomfort2.turn_off.assert_not_awaited()
@@ -160,9 +189,62 @@ async def test_select_option_triggers_coordinator_refresh(
 
     await hass.services.async_call(
         SELECT_DOMAIN,
-        SERVICE_SELECT_OPTION,
-        {ATTR_ENTITY_ID: SELECT_ENTITY_ID, ATTR_OPTION: "sensor"},
+        SelectService.SELECT_OPTION,
+        {
+            TargetKey.ENTITY_ID: SELECT_ENTITY_ID,
+            SelectServiceArgument.OPTION: "sensor",
+        },
         blocking=True,
     )
     # A refresh must have been requested, so the status fetch count increases.
     assert mock_cloud_interface.get_all_device_status.call_count > initial_call_count
+
+
+@pytest.mark.parametrize(
+    ("device_family", "device_id", "entity_id"),
+    [
+        pytest.param(
+            "ecocomfort2_devices",
+            "56789",
+            "select.test_vmc_fan_direction_mode",
+            id="eco2",
+        ),
+        pytest.param(
+            "ecocomfort3_devices",
+            "33333",
+            "select.test_vmc_3_fan_direction_mode",
+            id="eco3",
+        ),
+    ],
+)
+@pytest.mark.parametrize(
+    ("mode_state", "speed_state", "option"),
+    [
+        pytest.param("0", "0", STATE_UNKNOWN, id="off"),
+        pytest.param("1", "3", "forward", id="forward"),
+        pytest.param("2", "3", "reverse", id="reverse"),
+        pytest.param("3", str(0x40 | 3), "alternate", id="alternate_boost"),
+        pytest.param("4", str(0x10 | 2), "sensor", id="auto"),
+        pytest.param("4", "3", "sensor", id="sensor_manual_speed"),
+        pytest.param("7", "3", STATE_UNKNOWN, id="undefined"),
+    ],
+)
+async def test_select_running_direction(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mixed_eco_devices: IntelliClimaDevices,
+    device_family: str,
+    device_id: str,
+    entity_id: str,
+    mode_state: str,
+    speed_state: str,
+    option: str,
+) -> None:
+    """Test the select reports the running direction rather than the commanded one."""
+    eco = getattr(mixed_eco_devices, device_family)[device_id]
+    eco.mode_state = mode_state
+    eco.speed_state = speed_state
+    await async_poll(hass, freezer)
+
+    assert (state := hass.states.get(entity_id))
+    assert state.state == option

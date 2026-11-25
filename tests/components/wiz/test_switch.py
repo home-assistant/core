@@ -3,25 +3,17 @@
 import datetime as dt
 
 import pytest
+from pytest_homeassistant.common import async_fire_time_changed
 from pywizlight.exceptions import WizLightConnectionError
 
-from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
-    STATE_OFF,
-    STATE_ON,
-    STATE_UNAVAILABLE,
-)
+from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN, SwitchService
+from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNAVAILABLE, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util.dt import utcnow
 
 from . import FAKE_MAC, FAKE_SOCKET, async_push_update, async_setup_integration
-
-from tests.common import async_fire_time_changed
 
 
 async def test_switch_operation(
@@ -34,7 +26,10 @@ async def test_switch_operation(
     assert hass.states.get(entity_id).state == STATE_ON
 
     await hass.services.async_call(
-        SWITCH_DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: entity_id}, blocking=True
+        SWITCH_DOMAIN,
+        SwitchService.TURN_OFF,
+        {TargetKey.ENTITY_ID: entity_id},
+        blocking=True,
     )
     switch.turn_off.assert_called_once()
 
@@ -42,7 +37,10 @@ async def test_switch_operation(
     assert hass.states.get(entity_id).state == STATE_OFF
 
     await hass.services.async_call(
-        SWITCH_DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: entity_id}, blocking=True
+        SWITCH_DOMAIN,
+        SwitchService.TURN_ON,
+        {TargetKey.ENTITY_ID: entity_id},
+        blocking=True,
     )
     switch.turn_on.assert_called_once()
 
@@ -60,7 +58,10 @@ async def test_switch_operation_fails(hass: HomeAssistant) -> None:
         HomeAssistantError, match="Error while communicating with the WiZ device"
     ):
         await hass.services.async_call(
-            SWITCH_DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: entity_id}, blocking=True
+            SWITCH_DOMAIN,
+            SwitchService.TURN_ON,
+            {TargetKey.ENTITY_ID: entity_id},
+            blocking=True,
         )
 
 
@@ -74,7 +75,10 @@ async def test_update_fails(
     assert hass.states.get(entity_id).state == STATE_ON
 
     await hass.services.async_call(
-        SWITCH_DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: entity_id}, blocking=True
+        SWITCH_DOMAIN,
+        SwitchService.TURN_OFF,
+        {TargetKey.ENTITY_ID: entity_id},
+        blocking=True,
     )
     switch.turn_off.assert_called_once()
 

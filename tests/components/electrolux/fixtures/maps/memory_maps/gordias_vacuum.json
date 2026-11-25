@@ -1,0 +1,28 @@
+[
+  {
+    "rooms": [
+      {
+        "id": 11,
+        "name": "Storage"
+      },
+      {
+        "id": 12,
+        "name": "Kitchen"
+      }
+    ],
+    "name": "Map 1",
+    "id": 1,
+    "currentMap": true
+  },
+  {
+    "rooms": [
+      {
+        "id": 11,
+        "name": "Garage"
+      }
+    ],
+    "name": "Map 2",
+    "id": 2,
+    "currentMap": false
+  }
+]

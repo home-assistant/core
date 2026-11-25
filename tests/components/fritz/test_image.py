@@ -5,6 +5,8 @@ from unittest.mock import patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
+from pytest_homeassistant.typing import ClientSessionGenerator
 from requests.exceptions import ReadTimeout
 from syrupy.assertion import SnapshotAssertion
 
@@ -19,13 +21,11 @@ from homeassistant.util import slugify
 
 from .const import (
     MOCK_FB_SERVICES,
+    MOCK_FB_SERVICES_GUEST_WIFI_NOT_ACCESSIBLE,
     MOCK_MESH_MASTER_MAC,
     MOCK_SERIAL_NUMBER,
     MOCK_USER_DATA,
 )
-
-from tests.common import MockConfigEntry, async_fire_time_changed
-from tests.typing import ClientSessionGenerator
 
 GUEST_WIFI_CHANGED: dict[str, dict] = {
     "WLANConfiguration1": {},
@@ -216,6 +216,29 @@ async def test_image_update_unavailable(
 
     assert (state := hass.states.get(entity_id))
     assert state.state != STATE_UNAVAILABLE
+
+
+@pytest.mark.parametrize("fc_data", [MOCK_FB_SERVICES_GUEST_WIFI_NOT_ACCESSIBLE])
+@pytest.mark.usefixtures("fc_class_mock", "fh_class_mock")
+async def test_image_guest_wifi_not_accessible(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test no image entity is created when the guest Wi-Fi is not accessible."""
+
+    with patch(
+        "homeassistant.components.fritz.PLATFORMS",
+        [Platform.IMAGE],
+    ):
+        entry = MockConfigEntry(domain=DOMAIN, data=MOCK_USER_DATA)
+        entry.add_to_hass(hass)
+        await hass.config_entries.async_setup(entry.entry_id)
+
+    await hass.async_block_till_done()
+    assert entry.state is ConfigEntryState.LOADED
+
+    assert hass.states.async_all(IMAGE_DOMAIN) == []
+    assert "is not accessible, skipping guest Wi-Fi entities" in caplog.text
 
 
 async def test_migrate_to_new_unique_id(

@@ -4,17 +4,16 @@ from datetime import timedelta
 
 from freezegun import freeze_time
 import pytest
+from pytest_homeassistant.common import async_mock_service
 
 from homeassistant.components import calendar, llm as llm_component
-from homeassistant.components.calendar import llm as calendar_llm
+from homeassistant.components.calendar import CalendarService, llm as calendar_llm
 from homeassistant.components.calendar.services import SERVICE_GET_EVENTS_SCHEMA
 from homeassistant.components.homeassistant.exposed_entities import async_expose_entity
 from homeassistant.core import Context, HomeAssistant, SupportsResponse
 from homeassistant.helpers import entity_registry as er, llm
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
-
-from tests.common import async_mock_service
 
 ENTITY_ID = "calendar.test_calendar"
 
@@ -72,7 +71,7 @@ async def test_calendar_get_events_tool(hass: HomeAssistant) -> None:
     calls = async_mock_service(
         hass,
         domain=calendar.DOMAIN,
-        service=calendar.SERVICE_GET_EVENTS,
+        service=CalendarService.GET_EVENTS,
         schema=SERVICE_GET_EVENTS_SCHEMA,
         response={
             ENTITY_ID: {
@@ -106,7 +105,7 @@ async def test_calendar_get_events_tool(hass: HomeAssistant) -> None:
     assert len(calls) == 1
     call = calls[0]
     assert call.domain == calendar.DOMAIN
-    assert call.service == calendar.SERVICE_GET_EVENTS
+    assert call.service == CalendarService.GET_EVENTS
     assert call.data == {
         "entity_id": [ENTITY_ID],
         "start_date_time": now,

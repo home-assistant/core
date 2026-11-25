@@ -2,12 +2,19 @@
 
 from probatio import Invalid, to_field_list
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_get_device_automations
 from pytest_unordered import unordered
 
 from homeassistant.components import automation
 from homeassistant.components.device_automation import DeviceAutomationType
-from homeassistant.components.humidifier import DOMAIN, const, device_condition
-from homeassistant.const import ATTR_MODE, STATE_OFF, STATE_ON, EntityCategory
+from homeassistant.components.humidifier import (
+    DOMAIN,
+    HumidifierEntityCapabilityAttribute,
+    HumidifierEntityStateAttribute,
+    const,
+    device_condition,
+)
+from homeassistant.const import STATE_OFF, STATE_ON, EntityCategory
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import (
     config_validation as cv,
@@ -16,8 +23,6 @@ from homeassistant.helpers import (
 )
 from homeassistant.helpers.entity_registry import RegistryEntryHider
 from homeassistant.setup import async_setup_component
-
-from tests.common import MockConfigEntry, async_get_device_automations
 
 
 @pytest.mark.parametrize(
@@ -153,7 +158,11 @@ async def test_if_state(
         DOMAIN, "test", "5678", device_id=device_entry.id
     )
 
-    hass.states.async_set(entry.entity_id, STATE_ON, {ATTR_MODE: const.MODE_AWAY})
+    hass.states.async_set(
+        entry.entity_id,
+        STATE_ON,
+        {HumidifierEntityStateAttribute.MODE: const.MODE_AWAY},
+    )
 
     assert await async_setup_component(
         hass,
@@ -243,7 +252,11 @@ async def test_if_state(
     assert len(service_calls) == 2
     assert service_calls[1].data["some"] == "is_off event - test_event2"
 
-    hass.states.async_set(entry.entity_id, STATE_ON, {ATTR_MODE: const.MODE_AWAY})
+    hass.states.async_set(
+        entry.entity_id,
+        STATE_ON,
+        {HumidifierEntityStateAttribute.MODE: const.MODE_AWAY},
+    )
 
     hass.bus.async_fire("test_event3")
     await hass.async_block_till_done()
@@ -251,7 +264,11 @@ async def test_if_state(
     assert len(service_calls) == 3
     assert service_calls[2].data["some"] == "is_mode - event - test_event3"
 
-    hass.states.async_set(entry.entity_id, STATE_ON, {ATTR_MODE: const.MODE_HOME})
+    hass.states.async_set(
+        entry.entity_id,
+        STATE_ON,
+        {HumidifierEntityStateAttribute.MODE: const.MODE_HOME},
+    )
 
     # Should not fire
     hass.bus.async_fire("test_event3")
@@ -276,7 +293,11 @@ async def test_if_state_legacy(
         DOMAIN, "test", "5678", device_id=device_entry.id
     )
 
-    hass.states.async_set(entry.entity_id, STATE_ON, {ATTR_MODE: const.MODE_AWAY})
+    hass.states.async_set(
+        entry.entity_id,
+        STATE_ON,
+        {HumidifierEntityStateAttribute.MODE: const.MODE_AWAY},
+    )
 
     assert await async_setup_component(
         hass,
@@ -311,7 +332,11 @@ async def test_if_state_legacy(
     await hass.async_block_till_done()
     assert len(service_calls) == 0
 
-    hass.states.async_set(entry.entity_id, STATE_ON, {ATTR_MODE: const.MODE_AWAY})
+    hass.states.async_set(
+        entry.entity_id,
+        STATE_ON,
+        {HumidifierEntityStateAttribute.MODE: const.MODE_AWAY},
+    )
 
     hass.bus.async_fire("test_event1")
     await hass.async_block_till_done()
@@ -345,7 +370,12 @@ async def test_if_state_legacy(
         ),
         (
             False,
-            {const.ATTR_AVAILABLE_MODES: [const.MODE_HOME, const.MODE_AWAY]},
+            {
+                HumidifierEntityCapabilityAttribute.AVAILABLE_MODES: [
+                    const.MODE_HOME,
+                    const.MODE_AWAY,
+                ]
+            },
             {},
             "is_mode",
             [
@@ -402,7 +432,12 @@ async def test_if_state_legacy(
         (
             True,
             {},
-            {const.ATTR_AVAILABLE_MODES: [const.MODE_HOME, const.MODE_AWAY]},
+            {
+                HumidifierEntityCapabilityAttribute.AVAILABLE_MODES: [
+                    const.MODE_HOME,
+                    const.MODE_AWAY,
+                ]
+            },
             "is_mode",
             [
                 {
@@ -519,7 +554,12 @@ async def test_capabilities(
         ),
         (
             False,
-            {const.ATTR_AVAILABLE_MODES: [const.MODE_HOME, const.MODE_AWAY]},
+            {
+                HumidifierEntityCapabilityAttribute.AVAILABLE_MODES: [
+                    const.MODE_HOME,
+                    const.MODE_AWAY,
+                ]
+            },
             {},
             "is_mode",
             [
@@ -576,7 +616,12 @@ async def test_capabilities(
         (
             True,
             {},
-            {const.ATTR_AVAILABLE_MODES: [const.MODE_HOME, const.MODE_AWAY]},
+            {
+                HumidifierEntityCapabilityAttribute.AVAILABLE_MODES: [
+                    const.MODE_HOME,
+                    const.MODE_AWAY,
+                ]
+            },
             "is_mode",
             [
                 {

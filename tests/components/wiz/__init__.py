@@ -7,6 +7,7 @@ import json
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
+from pytest_homeassistant.common import MockConfigEntry
 from pywizlight import SCENES, BulbType, PilotParser, wizlight
 from pywizlight.bulblibrary import BulbClass, Features, KelvinRange
 from pywizlight.discovery import DiscoveredBulb
@@ -15,8 +16,6 @@ from homeassistant.components.wiz.const import DOMAIN
 from homeassistant.const import CONF_HOST, CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
-
-from tests.common import MockConfigEntry
 
 FAKE_STATE = PilotParser(
     {
@@ -256,7 +255,7 @@ def _mocked_wizlight(
     bulb.get_power = AsyncMock(return_value=None)
     bulb.turn_off = AsyncMock()
     bulb.power_monitoring = False
-    bulb.updateState = AsyncMock(return_value=FAKE_STATE)
+    bulb.updateState = AsyncMock(return_value=[FAKE_STATE])
     bulb.getSupportedScenes = AsyncMock(return_value=list(SCENES.values()))
     bulb.start_push = AsyncMock(side_effect=_save_setup_callback)
     bulb.async_close = AsyncMock()
@@ -270,7 +269,7 @@ def _mocked_wizlight(
         "roomId": 123,
         "homeId": 34,
     }
-    bulb.state = FAKE_STATE
+    bulb.state = [FAKE_STATE]
     bulb.mac = FAKE_MAC
     bulb.bulbtype = bulb_type or FAKE_DIMMABLE_BULB
     bulb.get_bulbtype = AsyncMock(return_value=bulb_type or FAKE_DIMMABLE_BULB)
@@ -327,7 +326,8 @@ async def async_setup_integration(
     bulb = wizlight or _mocked_wizlight(device, extended_white_range, bulb_type)
     with _patch_discovery(), _patch_wizlight(device=bulb):
         await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
-        await hass.async_block_till_done()
+        # Let the discovery started by async_setup finish while it is patched.
+        await hass.async_block_till_done(wait_background_tasks=True)
     return bulb, entry
 
 
@@ -335,7 +335,7 @@ async def async_push_update(
     hass: HomeAssistant, device: wizlight, params: dict[str, Any]
 ) -> None:
     """Push an update to the device."""
-    device.state = PilotParser(params)
+    device.state = [PilotParser(params)]
     device.status = params.get("state")
     device.push_callback(device.state)
     await hass.async_block_till_done()

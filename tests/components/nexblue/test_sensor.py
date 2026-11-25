@@ -8,6 +8,11 @@ from unittest.mock import MagicMock, patch
 from freezegun.api import FrozenDateTimeFactory
 from nexblue_api import NexBlueConnectionError, NexBlueDeviceOfflineError, NexBlueError
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN, Platform
@@ -15,8 +20,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from .conftest import CHARGER, CHARGER_STATUS
-
-from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 
 @pytest.fixture(autouse=True)
@@ -39,6 +42,30 @@ async def test_sensor_entities_snapshot(
         snapshot,
         init_integration.entry_id,
     )
+
+
+async def test_missing_enum_values_are_unknown(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_client: MagicMock,
+) -> None:
+    """Test missing charger enum values are exposed as unknown."""
+    mock_client.async_get_charger_status.return_value = replace(
+        CHARGER_STATUS,
+        cable_lock_mode=None,
+        access_level=None,
+        phase_charging=None,
+        network_status=None,
+    )
+    mock_config_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert hass.states.get("sensor.nb123456_cable_lock_mode").state == STATE_UNKNOWN
+    assert hass.states.get("sensor.nb123456_access_level").state == STATE_UNKNOWN
+    assert hass.states.get("sensor.nb123456_phase_charging").state == STATE_UNKNOWN
+    assert hass.states.get("sensor.nb123456_network_status").state == STATE_UNKNOWN
 
 
 async def test_missing_phase_values_are_unknown(

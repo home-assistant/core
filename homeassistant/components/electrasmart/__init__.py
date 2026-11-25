@@ -1,18 +1,19 @@
 """The Electra Air Conditioner integration."""
 
-from electrasmart.api import ElectraAPI, ElectraApiError
+from electrasmart.api import ElectraAPI, ElectraApiError, ElectraIntruderLockoutError
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_TOKEN, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import CONF_IMEI
+from .coordinator import (
+    ElectraSmartConfigEntry as ElectraSmartConfigEntry,
+    ElectraSmartCoordinator,
+)
 
-PLATFORMS: list[Platform] = [Platform.CLIMATE]
-
-type ElectraSmartConfigEntry = ConfigEntry[ElectraAPI]
+PLATFORMS: list[Platform] = [Platform.CLIMATE, Platform.SENSOR]
 
 
 async def async_setup_entry(
@@ -24,11 +25,13 @@ async def async_setup_entry(
     )
     try:
         await api.fetch_devices()
+    except ElectraIntruderLockoutError as exp:
+        raise ConfigEntryAuthFailed(f"Electra account is locked out: {exp}") from exp
     except ElectraApiError as exp:
         raise ConfigEntryNotReady(f"Error communicating with API: {exp}") from exp
 
     entry.async_on_unload(entry.add_update_listener(update_listener))
-    entry.runtime_data = api
+    entry.runtime_data = ElectraSmartCoordinator(hass, entry, api)
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
 

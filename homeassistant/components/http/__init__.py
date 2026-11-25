@@ -13,8 +13,7 @@ from homeassistant.const import EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_S
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, issue_registry as ir
-from homeassistant.helpers.http import (  # noqa: F401
-    KEY_ALLOW_CONFIGURED_CORS,
+from homeassistant.helpers.http import (
     KEY_AUTHENTICATED,
     KEY_HASS,
     HomeAssistantView,
@@ -29,8 +28,13 @@ from homeassistant.setup import (
 )
 from homeassistant.util.async_ import create_eager_task
 
-from .config import ConfData, async_get_and_load_store, async_load_config
-from .const import (  # noqa: F401
+from .config import (
+    ActiveConfigType,
+    ConfData,
+    async_get_and_load_store,
+    async_load_config,
+)
+from .const import (
     CONF_BASE_URL,
     CONF_CORS_ORIGINS,
     CONF_IP_BAN_ENABLED,
@@ -40,6 +44,7 @@ from .const import (  # noqa: F401
     CONF_SSL_CERTIFICATE,
     CONF_SSL_KEY,
     CONF_SSL_PEER_CERTIFICATE,
+    CONF_SSL_PEER_CERTIFICATE_REMOTE,
     CONF_SSL_PROFILE,
     CONF_TRUSTED_PROXIES,
     CONF_USE_X_FORWARDED_FOR,
@@ -55,13 +60,14 @@ from .const import (  # noqa: F401
     SSL_INTERMEDIATE,
     SSL_MODERN,
 )
-from .decorators import require_admin  # noqa: F401
+from .decorators import require_admin
 from .server import (
     DEFAULT_BIND,
     HassioHTTPConfigView,
-    HomeAssistantHTTP,  # noqa: F401
-    HomeAssistantRequest,  # noqa: F401
-    StaticPathConfig,  # noqa: F401
+    HomeAssistantHTTP,
+    HomeAssistantRequest,
+    StaticPathConfig,
+    async_verify_peer_certificate,
     make_server,
 )
 
@@ -106,6 +112,24 @@ HTTP_SCHEMA: Final = probatio.All(
 CONFIG_SCHEMA: Final = probatio.Schema(
     {DOMAIN: HTTP_SCHEMA}, extra=probatio.ALLOW_EXTRA
 )
+
+__all__ = [
+    "CONF_SERVER_PORT",
+    "CONF_TRUSTED_PROXIES",
+    "CONF_USE_X_FORWARDED_FOR",
+    "DOMAIN",
+    "KEY_AUTHENTICATED",
+    "KEY_HASS",
+    "KEY_HASS_REFRESH_TOKEN_ID",
+    "KEY_HASS_USER",
+    "ApiConfig",
+    "HomeAssistantHTTP",
+    "HomeAssistantRequest",
+    "HomeAssistantView",
+    "StaticPathConfig",
+    "current_request",
+    "require_admin",
+]
 
 
 class ApiConfig:
@@ -176,13 +200,24 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 socket_env,
             )
 
+    store = await async_get_and_load_store(hass)
     server = make_server(hass, conf, supervisor_unix_socket_path)
     trial_reverted = False
     while True:
         try:
+            if (
+                store.active_config_type is ActiveConfigType.PENDING
+                and not conf.get(CONF_SSL_CERTIFICATE)
+                and conf[CONF_SSL_PEER_CERTIFICATE_REMOTE]
+            ):
+                # async_bind does not validate peer certificate if SSL certificate
+                # is not set. But it might be in use by remote access, so we
+                # validate the peer file here to revert it if invalid.
+                await async_verify_peer_certificate(
+                    hass, conf[CONF_SSL_PEER_CERTIFICATE]
+                )
             await server.async_bind()
         except (HomeAssistantError, OSError) as err:
-            store = await async_get_and_load_store(hass)
             trial_reverted = store.revert_deadline is not None
             conf = await store.async_get_fallback_config(err)
             server = make_server(hass, conf, supervisor_unix_socket_path)

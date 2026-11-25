@@ -5,20 +5,29 @@ from typing import Any
 from unittest.mock import MagicMock, patch
 
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    MockEntity,
+    MockModule,
+    MockPlatform,
+    async_mock_restore_state_shutdown_restart,
+    mock_config_flow,
+    mock_integration,
+    mock_platform,
+    mock_restore_cache_with_extra_data,
+    setup_test_component_platform,
+)
 
 from homeassistant.components.number import (
     AMBIGUOUS_UNITS,
-    ATTR_MAX,
-    ATTR_MIN,
-    ATTR_MODE,
-    ATTR_STEP,
-    ATTR_VALUE,
     DOMAIN,
-    SERVICE_SET_VALUE,
     NumberDeviceClass,
     NumberEntity,
+    NumberEntityCapabilityAttribute,
     NumberEntityDescription,
     NumberMode,
+    NumberService,
+    NumberServiceArgument,
 )
 from homeassistant.components.number.const import (
     DEVICE_CLASS_UNITS as NUMBER_DEVICE_CLASS_UNITS,
@@ -30,10 +39,10 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.config_entries import ConfigEntry, ConfigFlow
 from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    ATTR_UNIT_OF_MEASUREMENT,
     CONF_PLATFORM,
+    EntityStateAttribute,
     Platform,
+    TargetKey,
     UnitOfTemperature,
     UnitOfVolumeFlowRate,
 )
@@ -46,19 +55,6 @@ from homeassistant.setup import async_setup_component
 from homeassistant.util.unit_system import METRIC_SYSTEM, US_CUSTOMARY_SYSTEM
 
 from . import common
-
-from tests.common import (
-    MockConfigEntry,
-    MockEntity,
-    MockModule,
-    MockPlatform,
-    async_mock_restore_state_shutdown_restart,
-    mock_config_flow,
-    mock_integration,
-    mock_platform,
-    mock_restore_cache_with_extra_data,
-    setup_test_component_platform,
-)
 
 TEST_DOMAIN = "test"
 
@@ -282,10 +278,10 @@ async def test_attributes(hass: HomeAssistant) -> None:
     assert number.unit_of_measurement is None
     assert number.value == 0.5
     assert number.capability_attributes == {
-        ATTR_MAX: 100.0,
-        ATTR_MIN: 0.0,
-        ATTR_MODE: NumberMode.AUTO,
-        ATTR_STEP: 1.0,
+        NumberEntityCapabilityAttribute.MAX: 100.0,
+        NumberEntityCapabilityAttribute.MIN: 0.0,
+        NumberEntityCapabilityAttribute.MODE: NumberMode.AUTO,
+        NumberEntityCapabilityAttribute.STEP: 1.0,
     }
 
     number_2 = MockNumberEntity()
@@ -296,10 +292,10 @@ async def test_attributes(hass: HomeAssistant) -> None:
     assert number_2.unit_of_measurement == "native_cats"
     assert number_2.value == 0.5
     assert number_2.capability_attributes == {
-        ATTR_MAX: 0.5,
-        ATTR_MIN: -0.5,
-        ATTR_MODE: NumberMode.AUTO,
-        ATTR_STEP: 0.1,
+        NumberEntityCapabilityAttribute.MAX: 0.5,
+        NumberEntityCapabilityAttribute.MIN: -0.5,
+        NumberEntityCapabilityAttribute.MODE: NumberMode.AUTO,
+        NumberEntityCapabilityAttribute.STEP: 0.1,
     }
 
     number_3 = MockNumberEntityAttr()
@@ -310,10 +306,10 @@ async def test_attributes(hass: HomeAssistant) -> None:
     assert number_3.unit_of_measurement == "native_dogs"
     assert number_3.value == 500.0
     assert number_3.capability_attributes == {
-        ATTR_MAX: 1000.0,
-        ATTR_MIN: -1000.0,
-        ATTR_MODE: NumberMode.AUTO,
-        ATTR_STEP: 100.0,
+        NumberEntityCapabilityAttribute.MAX: 1000.0,
+        NumberEntityCapabilityAttribute.MIN: -1000.0,
+        NumberEntityCapabilityAttribute.MODE: NumberMode.AUTO,
+        NumberEntityCapabilityAttribute.STEP: 100.0,
     }
 
     number_4 = MockNumberEntityDescr()
@@ -324,10 +320,10 @@ async def test_attributes(hass: HomeAssistant) -> None:
     assert number_4.unit_of_measurement == "native_rabbits"
     assert number_4.value is None
     assert number_4.capability_attributes == {
-        ATTR_MAX: 10.0,
-        ATTR_MIN: -10.0,
-        ATTR_MODE: NumberMode.AUTO,
-        ATTR_STEP: 2.0,
+        NumberEntityCapabilityAttribute.MAX: 10.0,
+        NumberEntityCapabilityAttribute.MIN: -10.0,
+        NumberEntityCapabilityAttribute.MODE: NumberMode.AUTO,
+        NumberEntityCapabilityAttribute.STEP: 2.0,
     }
 
     number_5 = MockNumberEntityAttrWithDescription()
@@ -339,10 +335,10 @@ async def test_attributes(hass: HomeAssistant) -> None:
     assert number_5.unit_of_measurement == "native_dogs"
     assert number_5.value == 500.0
     assert number_5.capability_attributes == {
-        ATTR_MAX: 1000.0,
-        ATTR_MIN: -1000.0,
-        ATTR_MODE: NumberMode.AUTO,
-        ATTR_STEP: 100.0,
+        NumberEntityCapabilityAttribute.MAX: 1000.0,
+        NumberEntityCapabilityAttribute.MIN: -1000.0,
+        NumberEntityCapabilityAttribute.MODE: NumberMode.AUTO,
+        NumberEntityCapabilityAttribute.STEP: 100.0,
     }
 
 
@@ -370,12 +366,12 @@ async def test_set_value(
 
     state = hass.states.get("number.test")
     assert state.state == "50.0"
-    assert state.attributes.get(ATTR_STEP) == 1.0
+    assert state.attributes.get(NumberEntityCapabilityAttribute.STEP) == 1.0
 
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_SET_VALUE,
-        {ATTR_VALUE: 60.0, ATTR_ENTITY_ID: "number.test"},
+        NumberService.SET_VALUE,
+        {NumberServiceArgument.VALUE: 60.0, TargetKey.ENTITY_ID: "number.test"},
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -387,8 +383,8 @@ async def test_set_value(
     with pytest.raises(ServiceValidationError) as exc:
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_SET_VALUE,
-            {ATTR_VALUE: 110.0, ATTR_ENTITY_ID: "number.test"},
+            NumberService.SET_VALUE,
+            {NumberServiceArgument.VALUE: 110.0, TargetKey.ENTITY_ID: "number.test"},
             blocking=True,
         )
     assert exc.value.translation_domain == DOMAIN
@@ -516,15 +512,18 @@ async def test_temperature_conversion(
 
     state = hass.states.get(entity0.entity_id)
     assert float(state.state) == pytest.approx(float(initial_state_value))
-    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == state_unit
-    assert state.attributes[ATTR_MAX] == state_max_value
-    assert state.attributes[ATTR_MIN] == state_min_value
-    assert state.attributes[ATTR_STEP] == state_step
+    assert state.attributes[EntityStateAttribute.UNIT_OF_MEASUREMENT] == state_unit
+    assert state.attributes[NumberEntityCapabilityAttribute.MAX] == state_max_value
+    assert state.attributes[NumberEntityCapabilityAttribute.MIN] == state_min_value
+    assert state.attributes[NumberEntityCapabilityAttribute.STEP] == state_step
 
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_SET_VALUE,
-        {ATTR_VALUE: updated_state_value, ATTR_ENTITY_ID: entity0.entity_id},
+        NumberService.SET_VALUE,
+        {
+            NumberServiceArgument.VALUE: updated_state_value,
+            TargetKey.ENTITY_ID: entity0.entity_id,
+        },
         blocking=True,
     )
 
@@ -537,8 +536,11 @@ async def test_temperature_conversion(
     # Set to the minimum value
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_SET_VALUE,
-        {ATTR_VALUE: state_min_value, ATTR_ENTITY_ID: entity0.entity_id},
+        NumberService.SET_VALUE,
+        {
+            NumberServiceArgument.VALUE: state_min_value,
+            TargetKey.ENTITY_ID: entity0.entity_id,
+        },
         blocking=True,
     )
 
@@ -550,8 +552,11 @@ async def test_temperature_conversion(
     # Set to the maximum value
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_SET_VALUE,
-        {ATTR_VALUE: state_max_value, ATTR_ENTITY_ID: entity0.entity_id},
+        NumberService.SET_VALUE,
+        {
+            NumberServiceArgument.VALUE: state_max_value,
+            TargetKey.ENTITY_ID: entity0.entity_id,
+        },
         blocking=True,
     )
 
@@ -756,7 +761,7 @@ async def test_custom_unit(
 
     state = hass.states.get(entity0.entity_id)
     assert float(state.state) == pytest.approx(float(custom_value))
-    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == state_unit
+    assert state.attributes[EntityStateAttribute.UNIT_OF_MEASUREMENT] == state_unit
 
 
 @pytest.mark.parametrize(
@@ -827,7 +832,7 @@ async def test_custom_unit_change(
     # Default unit conversion according to unit system
     state = hass.states.get(entity0.entity_id)
     assert float(state.state) == pytest.approx(float(default_value))
-    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == default_unit
+    assert state.attributes[EntityStateAttribute.UNIT_OF_MEASUREMENT] == default_unit
 
     entity_registry.async_update_entity_options(
         "number.test", "number", {"unit_of_measurement": custom_unit}
@@ -837,7 +842,9 @@ async def test_custom_unit_change(
     # Unit conversion to the custom unit
     state = hass.states.get(entity0.entity_id)
     assert float(state.state) == pytest.approx(float(custom_value))
-    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == used_custom_unit
+    assert (
+        state.attributes[EntityStateAttribute.UNIT_OF_MEASUREMENT] == used_custom_unit
+    )
 
     entity_registry.async_update_entity_options(
         "number.test", "number", {"unit_of_measurement": native_unit}
@@ -847,7 +854,7 @@ async def test_custom_unit_change(
     # Unit conversion to another custom unit
     state = hass.states.get(entity0.entity_id)
     assert float(state.state) == pytest.approx(float(native_value))
-    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == native_unit
+    assert state.attributes[EntityStateAttribute.UNIT_OF_MEASUREMENT] == native_unit
 
     entity_registry.async_update_entity_options("number.test", "number", None)
     await hass.async_block_till_done()
@@ -855,7 +862,7 @@ async def test_custom_unit_change(
     # Default unit conversion according to unit system
     state = hass.states.get(entity0.entity_id)
     assert float(state.state) == pytest.approx(float(default_value))
-    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == default_unit
+    assert state.attributes[EntityStateAttribute.UNIT_OF_MEASUREMENT] == default_unit
 
 
 async def test_translated_unit(
@@ -888,7 +895,7 @@ async def test_translated_unit(
 
         entity_id = entity0.entity_id
         state = hass.states.get(entity_id)
-        assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == "Tests"
+        assert state.attributes[EntityStateAttribute.UNIT_OF_MEASUREMENT] == "Tests"
 
 
 async def test_translated_unit_with_native_unit_raises(
@@ -947,7 +954,7 @@ async def test_ambiguous_unit_of_measurement_compat(
     # Check compatible unit is applied
     state = hass.states.get(entity0.entity_id)
     assert state.state == "0.0"
-    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == normalized_unit
+    assert state.attributes[EntityStateAttribute.UNIT_OF_MEASUREMENT] == normalized_unit
 
 
 def test_device_classes_aligned() -> None:
@@ -984,12 +991,11 @@ async def test_name(hass: HomeAssistant) -> None:
 
     async def async_setup_entry_init(
         hass: HomeAssistant, config_entry: ConfigEntry
-    ) -> bool:
+    ) -> None:
         """Set up test config entry."""
         await hass.config_entries.async_forward_entry_setups(
             config_entry, [Platform.NUMBER]
         )
-        return True
 
     mock_platform(hass, f"{TEST_DOMAIN}.config_flow")
     mock_integration(

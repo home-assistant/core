@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock, Mock, PropertyMock, call, patch
 
 from freezegun import freeze_time
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components.cloud import GACTIONS_SCHEMA, google_config
 from homeassistant.components.cloud.const import (
@@ -31,11 +32,13 @@ from homeassistant.const import (
     EntityCategory,
 )
 from homeassistant.core import CoreState, HomeAssistant
-from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers import (
+    area_registry as ar,
+    device_registry as dr,
+    entity_registry as er,
+)
 from homeassistant.setup import async_setup_component
 from homeassistant.util.dt import utcnow
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 @pytest.fixture
@@ -277,6 +280,7 @@ async def test_google_entity_registry_sync(
 @pytest.mark.usefixtures("mock_cloud_login")
 async def test_google_device_registry_sync(
     hass: HomeAssistant,
+    area_registry: ar.AreaRegistry,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
     cloud_prefs: CloudPreferences,
@@ -298,8 +302,9 @@ async def test_google_device_registry_sync(
     entity_entry = entity_registry.async_get_or_create(
         "light", "hue", "1234", device_id=device_entry.id, original_name="Light"
     )
+    area = area_registry.async_create("ABCD")
     entity_entry = entity_registry.async_update_entity(
-        entity_entry.entity_id, area_id="ABCD"
+        entity_entry.entity_id, area_id=area.id
     )
 
     with patch.object(config, "async_sync_entities_all"):

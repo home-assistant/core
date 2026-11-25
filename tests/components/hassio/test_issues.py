@@ -1,6 +1,6 @@
 """Test issues from supervisor issues."""
 
-from collections.abc import Generator
+from collections.abc import Awaitable, Callable, Generator
 import os
 from typing import Any
 from unittest.mock import ANY, AsyncMock, patch
@@ -24,6 +24,8 @@ from aiohasupervisor.models import (
     UnsupportedReason,
 )
 import pytest
+from pytest_homeassistant.common import async_capture_events, async_fire_time_changed
+from pytest_homeassistant.typing import MockHAClientWebSocket, WebSocketGenerator
 
 from homeassistant.components.hassio.const import DOMAIN, HASSIO_ISSUES_UPDATE_INTERVAL
 from homeassistant.components.hassio.coordinator import (
@@ -38,9 +40,6 @@ from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
 from .test_init import MOCK_ENVIRON
-
-from tests.common import async_fire_time_changed
-from tests.typing import WebSocketGenerator
 
 
 @pytest.fixture(autouse=True)
@@ -124,12 +123,14 @@ def assert_issue_repair_in_list(
     *,
     reference: str | None = None,
     placeholders: dict[str, str] | None = None,
+    learn_more_url: str | None = None,
+    breaks_in_ha_version: str | None = None,
 ) -> None:
     """Assert repair for unhealthy/unsupported in list."""
     if reference:
         placeholders = (placeholders or {}) | {"reference": reference}
     assert {
-        "breaks_in_ha_version": None,
+        "breaks_in_ha_version": breaks_in_ha_version,
         "created": ANY,
         "dismissed_version": None,
         "domain": "hassio",
@@ -137,7 +138,7 @@ def assert_issue_repair_in_list(
         "is_fixable": fixable,
         "issue_id": uuid,
         "issue_domain": None,
-        "learn_more_url": None,
+        "learn_more_url": learn_more_url,
         "severity": "warning",
         "translation_key": f"issue_{context}_{type_}",
         "translation_placeholders": placeholders,
@@ -1201,6 +1202,61 @@ async def test_supervisor_issues_disk_lifetime(
 
 
 @pytest.mark.usefixtures("all_setup_requests")
+async def test_supervisor_issues_deprecated_tcp_api_request(
+    hass: HomeAssistant,
+    supervisor_client: AsyncMock,
+    hass_supervisor_ws_client: WebSocketGenerator,
+) -> None:
+    """Test supervisor issue for a deprecated TCP API request with Core's token."""
+    mock_resolution_info(supervisor_client)
+
+    result = await async_setup_component(hass, DOMAIN, {})
+    assert result
+
+    client = await hass_supervisor_ws_client()
+
+    await client.send_json(
+        {
+            "id": 1,
+            "type": "supervisor/event",
+            "data": {
+                "event": "issue_changed",
+                "data": {
+                    "uuid": (issue_uuid := uuid4().hex),
+                    "type": "deprecated_tcp_api_request",
+                    "context": "core",
+                    "reference": "/core/info",
+                    "reference_extra": None,
+                },
+            },
+        }
+    )
+    msg = await client.receive_json()
+    assert msg["success"]
+    await hass.async_block_till_done()
+
+    await client.send_json({"id": 2, "type": "repairs/list_issues"})
+    msg = await client.receive_json()
+    assert msg["success"]
+    assert len(msg["result"]["issues"]) == 1
+    assert_issue_repair_in_list(
+        msg["result"]["issues"],
+        uuid=issue_uuid,
+        context="core",
+        type_="deprecated_tcp_api_request",
+        fixable=False,
+        placeholders={
+            "reference": "/core/info",
+            "supervisor_token": "SUPERVISOR_TOKEN",
+            "command_line_url": "https://www.home-assistant.io/integrations/command_line/",
+            "shell_command_url": "https://www.home-assistant.io/integrations/shell_command/",
+        },
+        learn_more_url="https://www.home-assistant.io/more-info/supervisor-token",
+        breaks_in_ha_version="2027.6.0",
+    )
+
+
+@pytest.mark.usefixtures("all_setup_requests")
 async def test_supervisor_issues_free_space(
     hass: HomeAssistant,
     supervisor_client: AsyncMock,
@@ -1789,3 +1845,146 @@ async def test_host_reboot_required_on_startup(
     await hass.async_block_till_done()
 
     assert system_state.async_get(hass).host_reboot_required
+
+
+async def _poll_reasons(
+    hass: HomeAssistant,
+    supervisor_client: AsyncMock,
+    client: MockHAClientWebSocket,
+    unhealthy: list[str],
+) -> None:
+    """Report unhealthy reasons through a periodic poll."""
+    mock_resolution_info(supervisor_client, unhealthy=unhealthy)
+    async_fire_time_changed(hass, dt_util.utcnow() + HASSIO_ISSUES_UPDATE_INTERVAL)
+    await hass.async_block_till_done()
+
+
+async def _push_reasons(
+    hass: HomeAssistant,
+    supervisor_client: AsyncMock,
+    client: MockHAClientWebSocket,
+    unhealthy: list[str],
+) -> None:
+    """Report unhealthy reasons through a supervisor event."""
+    await client.send_json_auto_id(
+        {
+            "type": "supervisor/event",
+            "data": {
+                "event": "health_changed",
+                "data": {"healthy": False, "unhealthy_reasons": unhealthy},
+            },
+        }
+    )
+    assert (await client.receive_json())["success"]
+    await hass.async_block_till_done()
+
+
+@pytest.mark.usefixtures("all_setup_requests")
+@pytest.mark.parametrize(
+    "report_reasons",
+    [pytest.param(_poll_reasons, id="poll"), pytest.param(_push_reasons, id="push")],
+)
+async def test_unhealthy_issue_ignore_kept_on_update(
+    hass: HomeAssistant,
+    supervisor_client: AsyncMock,
+    issue_registry: ir.IssueRegistry,
+    hass_supervisor_ws_client: WebSocketGenerator,
+    report_reasons: Callable[
+        [HomeAssistant, AsyncMock, MockHAClientWebSocket, list[str]],
+        Awaitable[None],
+    ],
+) -> None:
+    """Test an ignored issue still valid is kept and a resolved one is deleted."""
+    mock_resolution_info(
+        supervisor_client, unhealthy=[UnhealthyReason.DOCKER, UnhealthyReason.SETUP]
+    )
+    assert await async_setup_component(hass, DOMAIN, {})
+    await hass.async_block_till_done()
+    client = await hass_supervisor_ws_client()
+
+    ir.async_ignore_issue(hass, DOMAIN, "unhealthy_system_docker", True)
+    events = async_capture_events(hass, ir.EVENT_REPAIRS_ISSUE_REGISTRY_UPDATED)
+
+    await report_reasons(hass, supervisor_client, client, ["docker"])
+
+    issue = issue_registry.async_get_issue(DOMAIN, "unhealthy_system_docker")
+    assert issue is not None
+    assert issue.dismissed_version is not None
+    assert issue_registry.async_get_issue(DOMAIN, "unhealthy_system_setup") is None
+    assert [event.data for event in events] == [
+        {"action": "remove", "domain": DOMAIN, "issue_id": "unhealthy_system_setup"}
+    ]
+
+
+@pytest.mark.usefixtures("all_setup_requests")
+async def test_stale_persisted_reason_issues_deleted_on_first_update(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    supervisor_client: AsyncMock,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test issues stored before a restart are deleted once their reason is gone."""
+    stored_issue = {
+        "config_entry_id": None,
+        "config_subentry_id": None,
+        "created": "2026-01-01T00:00:00+00:00",
+        "domain": DOMAIN,
+        "is_persistent": False,
+    }
+    hass_storage[ir.STORAGE_KEY] = {
+        "version": ir.STORAGE_VERSION_MAJOR,
+        "minor_version": ir.STORAGE_VERSION_MINOR,
+        "data": {
+            "issues": [
+                stored_issue
+                | {"issue_id": "unhealthy_system_docker", "dismissed_version": None},
+                stored_issue
+                | {"issue_id": "unhealthy_system_setup", "dismissed_version": "2026.1"},
+                stored_issue
+                | {"issue_id": "unsupported_system_os", "dismissed_version": None},
+                stored_issue | {"issue_id": "other_issue", "dismissed_version": None},
+            ]
+        },
+    }
+    # Simulate a restart: stored issues are loaded inactive until created again
+    await issue_registry.async_load()
+    mock_resolution_info(supervisor_client, unhealthy=[UnhealthyReason.SETUP])
+
+    assert await async_setup_component(hass, DOMAIN, {})
+    await hass.async_block_till_done()
+
+    assert issue_registry.async_get_issue(DOMAIN, "unhealthy_system_docker") is None
+    assert issue_registry.async_get_issue(DOMAIN, "unsupported_system_os") is None
+    issue = issue_registry.async_get_issue(DOMAIN, "unhealthy_system_setup")
+    assert issue is not None
+    assert issue.active
+    assert issue.dismissed_version == "2026.1"
+    assert issue_registry.async_get_issue(DOMAIN, "other_issue") is not None
+
+
+@pytest.mark.usefixtures("all_setup_requests")
+async def test_health_push_without_data_keeps_unsupported_issues(
+    hass: HomeAssistant,
+    supervisor_client: AsyncMock,
+    resolution_info: AsyncMock,
+    issue_registry: ir.IssueRegistry,
+    hass_supervisor_ws_client: WebSocketGenerator,
+) -> None:
+    """Test a health push before any successful poll keeps unsupported issues."""
+    ir.async_create_issue(
+        hass,
+        DOMAIN,
+        "unsupported_system_os",
+        is_fixable=False,
+        severity=ir.IssueSeverity.WARNING,
+        translation_key="unsupported_os",
+    )
+    resolution_info.side_effect = SupervisorBadRequestError("System is not ready")
+    assert await async_setup_component(hass, DOMAIN, {})
+    await hass.async_block_till_done()
+    client = await hass_supervisor_ws_client()
+
+    await _push_reasons(hass, supervisor_client, client, ["docker"])
+
+    assert issue_registry.async_get_issue(DOMAIN, "unhealthy_system_docker")
+    assert issue_registry.async_get_issue(DOMAIN, "unsupported_system_os")

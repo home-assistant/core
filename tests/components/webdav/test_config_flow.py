@@ -8,6 +8,7 @@ from aiowebdav2.exceptions import (
     UnauthorizedError,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries
 from homeassistant.components.webdav.const import CONF_BACKUP_PATH, DOMAIN
@@ -15,8 +16,6 @@ from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_PASSWORD, CONF_URL, CONF_USERNAME, CONF_VERIFY_SSL
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-
-from tests.common import MockConfigEntry
 
 
 @pytest.mark.usefixtures("mock_setup_entry")
@@ -55,7 +54,7 @@ async def test_form(hass: HomeAssistant, webdav_client: AsyncMock) -> None:
 @pytest.mark.usefixtures("mock_setup_entry")
 async def test_form_fail(hass: HomeAssistant, webdav_client: AsyncMock) -> None:
     """Test to handle exceptions."""
-    webdav_client.check.return_value = False
+    webdav_client.exists.return_value = False
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
@@ -77,7 +76,7 @@ async def test_form_fail(hass: HomeAssistant, webdav_client: AsyncMock) -> None:
     assert result["errors"] == {"base": "cannot_connect"}
 
     # reset and test for success
-    webdav_client.check.return_value = True
+    webdav_client.exists.return_value = True
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
@@ -108,7 +107,7 @@ async def test_form_unauthorized(
     expected_error: str,
 ) -> None:
     """Test to handle unauthorized."""
-    webdav_client.check.side_effect = exception
+    webdav_client.exists.side_effect = exception
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
@@ -130,7 +129,7 @@ async def test_form_unauthorized(
     assert result["errors"] == {"base": expected_error}
 
     # reset and test for success
-    webdav_client.check.side_effect = None
+    webdav_client.exists.side_effect = None
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
@@ -237,8 +236,8 @@ async def test_reauth_errors(
 
     result = await mock_config_entry.start_reauth_flow(hass)
 
-    webdav_client.check.side_effect = exception
-    webdav_client.check.return_value = return_value
+    webdav_client.exists.side_effect = exception
+    webdav_client.exists.return_value = return_value
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], {CONF_PASSWORD: "newpassword"}
     )
@@ -247,8 +246,8 @@ async def test_reauth_errors(
     assert result["step_id"] == "reauth_confirm"
     assert result["errors"] == {"base": expected_error}
 
-    webdav_client.check.side_effect = None
-    webdav_client.check.return_value = True
+    webdav_client.exists.side_effect = None
+    webdav_client.exists.return_value = True
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], {CONF_PASSWORD: "newpassword"}
     )

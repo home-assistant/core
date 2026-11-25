@@ -4,6 +4,9 @@ import datetime as dt
 
 from httpx2 import Response
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.components.diagnostics import get_diagnostics_for_config_entry
+from pytest_homeassistant.typing import ClientSessionGenerator
 import respx
 from syrupy.assertion import SnapshotAssertion
 
@@ -12,10 +15,6 @@ from homeassistant.core import HomeAssistant
 
 from . import setup_integration
 from .conftest import CALENDER_URL
-
-from tests.common import MockConfigEntry
-from tests.components.diagnostics import get_diagnostics_for_config_entry
-from tests.typing import ClientSessionGenerator
 
 
 @respx.mock

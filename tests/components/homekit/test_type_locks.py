@@ -3,6 +3,7 @@
 from unittest.mock import MagicMock
 
 import pytest
+from pytest_homeassistant.common import async_mock_service
 
 from homeassistant.components import lock
 from homeassistant.components.binary_sensor import BinarySensorDeviceClass
@@ -29,8 +30,6 @@ from homeassistant.const import (
 from homeassistant.core import Event, HomeAssistant
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
-
-from tests.common import async_mock_service
 
 
 async def test_lock_unlock(hass: HomeAssistant, hk_driver, events: list[Event]) -> None:

@@ -1,10 +1,10 @@
 """The tests for the native services of Evohome."""
 
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 from typing import Any
 from unittest.mock import patch
 
-from evohomeasync2.const import SZ_DURATION, SZ_MODE, SZ_PERIOD, SZ_SETPOINT, SZ_STATE
+from evohomeasync2 import Zone, exceptions as evo_exc
 from freezegun.api import FrozenDateTimeFactory
 import probatio
 import pytest
@@ -15,12 +15,13 @@ from homeassistant.components.evohome.const import (
     DOMAIN,
     REFRESH_BREAKS_IN_HA_VERSION,
     EvoService,
+    EvoServiceArgument,
 )
 from homeassistant.components.evohome.water_heater import EvoDHW
 from homeassistant.components.water_heater import DOMAIN as WATER_HEATER_DOMAIN
-from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.const import TargetKey
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ServiceValidationError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.entity_platform import DATA_DOMAIN_PLATFORM_ENTITIES
 from homeassistant.setup import async_setup_component
@@ -39,7 +40,10 @@ async def test_refresh_system_deprecated(
     """
 
     # EvoService.REFRESH_SYSTEM
-    with patch("evohomeasync2.location.Location.get_status") as mock_fcn:
+    with (
+        patch("evohomeasync2.location.Location.get_status") as mock_fcn,
+        patch("evohomeasync.EvohomeClient.get_status") as mock_v1,
+    ):
         await hass.services.async_call(
             DOMAIN,
             EvoService.REFRESH_SYSTEM,
@@ -48,6 +52,7 @@ async def test_refresh_system_deprecated(
         )
 
         mock_fcn.assert_awaited_once_with()
+        mock_v1.assert_not_awaited()  # high-precision temps are not refreshed on demand
 
     issue = issue_registry.async_get_issue(DOMAIN, "deprecated_refresh_system_service")
     assert issue is not None
@@ -64,22 +69,26 @@ async def test_update_entity(
 ) -> None:
     """Test that homeassistant.update_entity triggers an appropriate refresh.
 
-    Any evohome entity can be targeted; the API invoked by the shared coordinator
-    refreshes the whole location.
+    Any evohome entity can be targeted; the API invoked by the location coordinator
+    refreshes the whole location (but not the high-precision temperatures).
     """
 
     await async_setup_component(hass, "homeassistant", {})
 
-    with patch("evohomeasync2.location.Location.get_status") as mock_fcn:
+    with (
+        patch("evohomeasync2.location.Location.get_status") as mock_fcn,
+        patch("evohomeasync.EvohomeClient.get_status") as mock_v1,
+    ):
         await hass.services.async_call(
             "homeassistant",
             "update_entity",
             {},
-            target={ATTR_ENTITY_ID: ctl_id},
+            target={TargetKey.ENTITY_ID: ctl_id},
             blocking=True,
         )
 
         mock_fcn.assert_awaited_once_with()
+        mock_v1.assert_not_awaited()
 
 
 @pytest.mark.parametrize("install", ["default"])
@@ -95,7 +104,7 @@ async def test_set_system_mode_untargeted(hass: HomeAssistant) -> None:
             DOMAIN,
             EvoService.SET_SYSTEM_MODE,
             {
-                SZ_MODE: "Auto",
+                EvoServiceArgument.MODE: "Auto",
             },
             blocking=True,
         )
@@ -107,7 +116,6 @@ async def test_set_system_mode_untargeted(hass: HomeAssistant) -> None:
 async def test_set_system_mode(
     hass: HomeAssistant,
     ctl_id: str,
-    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test entity-targeted set_system_mode service calls."""
 
@@ -117,15 +125,13 @@ async def test_set_system_mode(
             DOMAIN,
             EvoService.SET_SYSTEM_MODE,
             {
-                SZ_MODE: "Auto",
+                EvoServiceArgument.MODE: "Auto",
             },
-            target={ATTR_ENTITY_ID: ctl_id},
+            target={TargetKey.ENTITY_ID: ctl_id},
             blocking=True,
         )
 
-        mock_fcn.assert_awaited_once_with("auto", until=None)
-
-    freezer.move_to("2024-07-10T12:00:00+00:00")
+        mock_fcn.assert_awaited_once_with("auto", duration=None)
 
     # EvoService.SET_SYSTEM_MODE: AutoWithEco, hours=12
     with patch("evohomeasync2.control_system.ControlSystem.set_mode") as mock_fcn:
@@ -133,16 +139,14 @@ async def test_set_system_mode(
             DOMAIN,
             EvoService.SET_SYSTEM_MODE,
             {
-                SZ_MODE: "AutoWithEco",
-                SZ_DURATION: {"hours": 12},
+                EvoServiceArgument.MODE: "AutoWithEco",
+                EvoServiceArgument.DURATION: {"hours": 12},
             },
-            target={ATTR_ENTITY_ID: ctl_id},
+            target={TargetKey.ENTITY_ID: ctl_id},
             blocking=True,
         )
 
-        mock_fcn.assert_awaited_once_with(
-            "auto_with_eco", until=datetime(2024, 7, 11, 0, 0, tzinfo=UTC)
-        )
+        mock_fcn.assert_awaited_once_with("auto_with_eco", duration=timedelta(hours=12))
 
     # EvoService.SET_SYSTEM_MODE: Away, days=7
     with patch("evohomeasync2.control_system.ControlSystem.set_mode") as mock_fcn:
@@ -150,16 +154,14 @@ async def test_set_system_mode(
             DOMAIN,
             EvoService.SET_SYSTEM_MODE,
             {
-                SZ_MODE: "Away",
-                SZ_PERIOD: {"days": 7},
+                EvoServiceArgument.MODE: "Away",
+                EvoServiceArgument.PERIOD: {"days": 7},
             },
-            target={ATTR_ENTITY_ID: ctl_id},
+            target={TargetKey.ENTITY_ID: ctl_id},
             blocking=True,
         )
 
-        mock_fcn.assert_awaited_once_with(
-            "away", until=datetime(2024, 7, 16, 23, 0, tzinfo=UTC)
-        )
+        mock_fcn.assert_awaited_once_with("away", period=timedelta(days=7))
 
     # entity_id in the service data, rather than as a target
     with patch("evohomeasync2.control_system.ControlSystem.set_mode") as mock_fcn:
@@ -167,16 +169,115 @@ async def test_set_system_mode(
             DOMAIN,
             EvoService.SET_SYSTEM_MODE,
             {
-                ATTR_ENTITY_ID: ctl_id,
-                SZ_MODE: "Away",
-                SZ_PERIOD: {"days": 7},
+                TargetKey.ENTITY_ID: ctl_id,
+                EvoServiceArgument.MODE: "Away",
+                EvoServiceArgument.PERIOD: {"days": 7},
             },
             blocking=True,
         )
 
-        mock_fcn.assert_awaited_once_with(
-            "away", until=datetime(2024, 7, 16, 23, 0, tzinfo=UTC)
+        mock_fcn.assert_awaited_once_with("away", period=timedelta(days=7))
+
+
+@pytest.mark.usefixtures("evohome")
+@pytest.mark.parametrize("install", ["default"])
+@pytest.mark.parametrize(
+    ("entity_fixture", "service", "service_data", "target", "call_args"),
+    [
+        pytest.param(
+            "zone_id",
+            EvoService.SET_ZONE_OVERRIDE,
+            {EvoServiceArgument.SETPOINT: 19.5},
+            "evohomeasync2.zone.Zone.set_temperature",
+            (19.5,),
+            id="zone_override",
+        ),
+        pytest.param(
+            "dhw_id",
+            EvoService.SET_DHW_OVERRIDE,
+            {EvoServiceArgument.STATE: True},
+            "evohomeasync2.hotwater.HotWater.set_on",
+            (),
+            id="dhw_override",
+        ),
+    ],
+)
+async def test_duration_spans_dst_change(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    request: pytest.FixtureRequest,
+    entity_fixture: str,
+    service: EvoService,
+    service_data: dict[str, Any],
+    target: str,
+    call_args: tuple[Any, ...],
+) -> None:
+    """Test a duration is elapsed time, even if it spans a change to/from DST."""
+
+    entity_id = request.getfixturevalue(entity_fixture)
+
+    await hass.config.async_set_time_zone("Europe/Berlin")
+    freezer.move_to("2026-03-28T23:30:00+00:00")  # the clocks go forward at 01:00Z
+
+    with patch(target) as mock_fcn:
+        await hass.services.async_call(
+            DOMAIN,
+            service,
+            service_data | {EvoServiceArgument.DURATION: {"hours": 3}},
+            target={TargetKey.ENTITY_ID: entity_id},
+            blocking=True,
         )
+
+    mock_fcn.assert_awaited_once_with(
+        *call_args, until=datetime(2026, 3, 29, 2, 30, tzinfo=UTC)
+    )
+
+
+@pytest.mark.parametrize("install", ["default"])
+@pytest.mark.parametrize(
+    ("service_data", "expected_until"),
+    [
+        pytest.param(
+            {
+                EvoServiceArgument.MODE: "AutoWithEco",
+                EvoServiceArgument.DURATION: {"hours": 3},
+            },
+            datetime(2026, 3, 29, 2, 30, tzinfo=UTC),
+            id="duration_spans_dst_change",
+        ),
+        pytest.param(
+            {EvoServiceArgument.MODE: "Away", EvoServiceArgument.PERIOD: {"days": 7}},
+            datetime(2026, 4, 3, 23, 0, tzinfo=UTC),  # not 2026-04-04T22:00Z (Berlin)
+            id="period_ends_at_location_midnight",
+        ),
+    ],
+)
+async def test_set_system_mode_until(
+    hass: HomeAssistant,
+    ctl_id: str,
+    freezer: FrozenDateTimeFactory,
+    service_data: dict[str, Any],
+    expected_until: datetime,
+) -> None:
+    """Test the client works out when a system mode ends.
+
+    A duration is elapsed time (even if it spans a change to/from DST), and a period
+    ends at midnight in the location's time zone (Europe/London), rather than HA's.
+    """
+
+    await hass.config.async_set_time_zone("Europe/Berlin")
+    freezer.move_to("2026-03-28T23:30:00+00:00")  # the clocks go forward at 01:00Z
+
+    with patch("evohomeasync2.control_system.ControlSystem._put_mode") as mock_fcn:
+        await hass.services.async_call(
+            DOMAIN,
+            EvoService.SET_SYSTEM_MODE,
+            service_data,
+            target={TargetKey.ENTITY_ID: ctl_id},
+            blocking=True,
+        )
+
+    assert mock_fcn.await_args.kwargs["time_until"] == expected_until
 
 
 @pytest.mark.parametrize("install", ["default"])
@@ -195,9 +296,9 @@ async def test_set_zone_override(
             DOMAIN,
             EvoService.SET_ZONE_OVERRIDE,
             {
-                SZ_SETPOINT: 19.5,
+                EvoServiceArgument.SETPOINT: 19.5,
             },
-            target={ATTR_ENTITY_ID: zone_id},
+            target={TargetKey.ENTITY_ID: zone_id},
             blocking=True,
         )
 
@@ -209,16 +310,52 @@ async def test_set_zone_override(
             DOMAIN,
             EvoService.SET_ZONE_OVERRIDE,
             {
-                SZ_SETPOINT: 19.5,
-                SZ_DURATION: {"minutes": 135},
+                EvoServiceArgument.SETPOINT: 19.5,
+                EvoServiceArgument.DURATION: {"minutes": 135},
             },
-            target={ATTR_ENTITY_ID: zone_id},
+            target={TargetKey.ENTITY_ID: zone_id},
             blocking=True,
         )
 
         mock_fcn.assert_awaited_once_with(
             19.5, until=datetime(2024, 7, 10, 14, 15, tzinfo=UTC)
         )
+
+
+@pytest.mark.parametrize("install", ["default"])
+async def test_set_zone_override_advance_schedule_fetch_failed(
+    hass: HomeAssistant,
+    zone_id: str,
+) -> None:
+    """Test set_zone_override (duration=0) fails if it can't fetch the schedule.
+
+    The GET is made for the action, so must fail as the action would, rather than
+    let the temporary override become a permanent one.
+    """
+
+    # the schedule has not been fetched since setup, so the action must fetch it
+    with (
+        patch.object(
+            Zone,
+            "get_schedule",
+            side_effect=evo_exc.ApiCallFailedError("API call failed"),
+        ),
+        patch.object(Zone, "set_temperature") as mock_fcn,
+        pytest.raises(HomeAssistantError) as exc_info,
+    ):
+        await hass.services.async_call(
+            DOMAIN,
+            EvoService.SET_ZONE_OVERRIDE,
+            {
+                EvoServiceArgument.SETPOINT: 19.5,
+                EvoServiceArgument.DURATION: {"minutes": 0},
+            },
+            target={TargetKey.ENTITY_ID: zone_id},
+            blocking=True,
+        )
+
+    assert exc_info.value.translation_key == "api_request_failed"
+    mock_fcn.assert_not_awaited()
 
 
 @pytest.mark.parametrize("install", ["default"])
@@ -235,14 +372,13 @@ async def test_set_zone_override_advance(
     freezer.move_to("2024-05-10T12:15:00+00:00")
     expected_until = datetime(2024, 5, 10, 21, 10, tzinfo=UTC)
 
-    # Simulate the schedule not yet having been fetched (e.g. HOMEASSISTANT_START)
+    # the schedule has not been fetched since setup, so the action must fetch it
     entities = hass.data[DATA_DOMAIN_PLATFORM_ENTITIES].get(
         (CLIMATE_DOMAIN, DOMAIN), {}
     )
 
-    zone_entity: EvoZone = entities[zone_id]  # type: ignore[assignment]
-    zone_entity._schedule = None
-    zone_entity._setpoints = {}
+    zone_entity = entities[zone_id]
+    assert isinstance(zone_entity, EvoZone)
 
     # EvoZoneMode.TEMPORARY_OVERRIDE with duration 0 (i.e. until next schedule change)
     with patch("evohomeasync2.zone.Zone.set_temperature") as mock_fcn:
@@ -250,10 +386,10 @@ async def test_set_zone_override_advance(
             DOMAIN,
             EvoService.SET_ZONE_OVERRIDE,
             {
-                SZ_SETPOINT: 19.5,
-                SZ_DURATION: {"minutes": 0},
+                EvoServiceArgument.SETPOINT: 19.5,
+                EvoServiceArgument.DURATION: {"minutes": 0},
             },
-            target={ATTR_ENTITY_ID: zone_id},
+            target={TargetKey.ENTITY_ID: zone_id},
             blocking=True,
         )
 
@@ -278,8 +414,8 @@ async def test_set_zone_override_legacy(
             DOMAIN,
             EvoService.SET_ZONE_OVERRIDE,
             {
-                ATTR_ENTITY_ID: zone_id,
-                SZ_SETPOINT: 19.5,
+                TargetKey.ENTITY_ID: zone_id,
+                EvoServiceArgument.SETPOINT: 19.5,
             },
             blocking=True,
         )
@@ -292,9 +428,9 @@ async def test_set_zone_override_legacy(
             DOMAIN,
             EvoService.SET_ZONE_OVERRIDE,
             {
-                ATTR_ENTITY_ID: zone_id,
-                SZ_SETPOINT: 19.5,
-                SZ_DURATION: {"minutes": 135},
+                TargetKey.ENTITY_ID: zone_id,
+                EvoServiceArgument.SETPOINT: 19.5,
+                EvoServiceArgument.DURATION: {"minutes": 135},
             },
             blocking=True,
         )
@@ -315,8 +451,8 @@ async def test_zone_services_with_ctl_id(
         await hass.services.async_call(
             DOMAIN,
             EvoService.SET_ZONE_OVERRIDE,
-            {SZ_SETPOINT: 19.5},
-            target={ATTR_ENTITY_ID: ctl_id},
+            {EvoServiceArgument.SETPOINT: 19.5},
+            target={TargetKey.ENTITY_ID: ctl_id},
             blocking=True,
         )
 
@@ -338,8 +474,8 @@ async def test_controller_services_with_zone_id(
             DOMAIN,
             EvoService.SET_SYSTEM_MODE,
             {
-                SZ_MODE: "Auto",
-                ATTR_ENTITY_ID: zone_id,
+                EvoServiceArgument.MODE: "Auto",
+                TargetKey.ENTITY_ID: zone_id,
             },
             blocking=True,
         )
@@ -365,9 +501,9 @@ async def test_set_system_mode_entity_not_found(
             DOMAIN,
             EvoService.SET_SYSTEM_MODE,
             {
-                SZ_MODE: "Auto",
+                EvoServiceArgument.MODE: "Auto",
             },
-            target={ATTR_ENTITY_ID: non_existent_entity_id},
+            target={TargetKey.ENTITY_ID: non_existent_entity_id},
             blocking=True,
         )
 
@@ -378,20 +514,38 @@ async def test_set_system_mode_entity_not_found(
 
 _SET_SYSTEM_MODE_VALIDATOR_PARAMS = [
     (
-        {SZ_MODE: "NotARealMode"},
+        {EvoServiceArgument.MODE: "NotARealMode"},
+        "mode_unknown",
+    ),
+    (
+        {EvoServiceArgument.MODE: "FollowSchedule"},  # a zone mode, not a system mode
+        "mode_unknown",
+    ),
+    (
+        {EvoServiceArgument.MODE: "Cool"},  # a valid mode, but not for this system
         "mode_not_supported",
     ),
     (
-        {SZ_MODE: "Auto", SZ_DURATION: {"hours": 1}},
+        {EvoServiceArgument.MODE: "Auto", EvoServiceArgument.DURATION: {"hours": 1}},
         "mode_cant_be_temporary",
     ),
     (
-        {SZ_MODE: "AutoWithEco", SZ_PERIOD: {"days": 1}},
+        {
+            EvoServiceArgument.MODE: "AutoWithEco",
+            EvoServiceArgument.PERIOD: {"days": 1},
+        },
         "mode_cant_have_period",
     ),
     (
-        {SZ_MODE: "DayOff", SZ_DURATION: {"hours": 1}},
+        {EvoServiceArgument.MODE: "DayOff", EvoServiceArgument.DURATION: {"hours": 1}},
         "mode_cant_have_duration",
+    ),
+    (
+        {
+            EvoServiceArgument.MODE: "AutoWithEco",
+            EvoServiceArgument.DURATION: {"hours": 0},
+        },
+        "mode_timespan_not_in_future",
     ),
 ]
 
@@ -415,12 +569,14 @@ async def test_set_system_mode_validator(
             DOMAIN,
             EvoService.SET_SYSTEM_MODE,
             service_data,
-            target={ATTR_ENTITY_ID: ctl_id},
+            target={TargetKey.ENTITY_ID: ctl_id},
             blocking=True,
         )
 
     assert exc_info.value.translation_key == expected_translation_key
-    assert exc_info.value.translation_placeholders == {SZ_MODE: service_data[SZ_MODE]}
+    assert exc_info.value.translation_placeholders == {
+        "mode": service_data[EvoServiceArgument.MODE]
+    }
 
 
 @pytest.mark.parametrize("install", ["default"])
@@ -439,9 +595,9 @@ async def test_set_dhw_override(
             DOMAIN,
             EvoService.SET_DHW_OVERRIDE,
             {
-                SZ_STATE: False,
+                EvoServiceArgument.STATE: False,
             },
-            target={ATTR_ENTITY_ID: dhw_id},
+            target={TargetKey.ENTITY_ID: dhw_id},
             blocking=True,
         )
 
@@ -453,10 +609,10 @@ async def test_set_dhw_override(
             DOMAIN,
             EvoService.SET_DHW_OVERRIDE,
             {
-                SZ_STATE: True,
-                SZ_DURATION: {"minutes": 135},
+                EvoServiceArgument.STATE: True,
+                EvoServiceArgument.DURATION: {"minutes": 135},
             },
-            target={ATTR_ENTITY_ID: dhw_id},
+            target={TargetKey.ENTITY_ID: dhw_id},
             blocking=True,
         )
 
@@ -479,14 +635,13 @@ async def test_set_dhw_override_advance(
     freezer.move_to("2024-05-10T12:15:00+00:00")
     expected_until = datetime(2024, 5, 10, 15, 30, tzinfo=UTC)
 
-    # Simulate the schedule not yet having been fetched (e.g. HOMEASSISTANT_START)
+    # the schedule has not been fetched since setup, so the action must fetch it
     entities = hass.data[DATA_DOMAIN_PLATFORM_ENTITIES].get(
         (WATER_HEATER_DOMAIN, DOMAIN), {}
     )
 
-    dhw_entity: EvoDHW = entities[dhw_id]  # type: ignore[assignment]
-    dhw_entity._schedule = None
-    dhw_entity._setpoints = {}
+    dhw_entity = entities[dhw_id]
+    assert isinstance(dhw_entity, EvoDHW)
 
     # EvoZoneMode.TEMPORARY_OVERRIDE with duration 0 (i.e. until next schedule change)
     with patch("evohomeasync2.hotwater.HotWater.set_on") as mock_fcn:
@@ -494,13 +649,81 @@ async def test_set_dhw_override_advance(
             DOMAIN,
             EvoService.SET_DHW_OVERRIDE,
             {
-                SZ_STATE: True,
-                SZ_DURATION: {"minutes": 0},
+                EvoServiceArgument.STATE: True,
+                EvoServiceArgument.DURATION: {"minutes": 0},
             },
-            target={ATTR_ENTITY_ID: dhw_id},
+            target={TargetKey.ENTITY_ID: dhw_id},
             blocking=True,
         )
 
         mock_fcn.assert_awaited_once_with(until=expected_until)
 
     assert dhw_entity.setpoints["next_sp_from"] == expected_until
+
+
+@pytest.mark.parametrize("install", ["default"])
+@pytest.mark.parametrize(
+    ("entity_fixture", "client_api", "service", "service_data", "reason", "key"),
+    [
+        pytest.param(
+            "zone_id",
+            "evohomeasync2.zone.Zone.set_temperature",
+            EvoService.SET_ZONE_OVERRIDE,
+            {EvoServiceArgument.SETPOINT: 19.5},
+            evo_exc.RequestErrorReason.TIMESPAN_NOT_IN_FUTURE,
+            "override_not_in_future",
+            id="zone_not_in_future",
+        ),
+        pytest.param(
+            "dhw_id",
+            "evohomeasync2.hotwater.HotWater.set_on",
+            EvoService.SET_DHW_OVERRIDE,
+            {EvoServiceArgument.STATE: True},
+            evo_exc.RequestErrorReason.TIMESPAN_NOT_IN_FUTURE,
+            "override_not_in_future",
+            id="dhw_not_in_future",
+        ),
+        pytest.param(
+            "zone_id",
+            "evohomeasync2.zone.Zone.set_temperature",
+            EvoService.SET_ZONE_OVERRIDE,
+            {EvoServiceArgument.SETPOINT: 19.5},
+            None,
+            "override_request_invalid",
+            id="zone_other_reason",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("evohome")
+async def test_override_rejected_by_client(
+    hass: HomeAssistant,
+    request: pytest.FixtureRequest,
+    entity_fixture: str,
+    client_api: str,
+    service: EvoService,
+    service_data: dict[str, Any],
+    reason: evo_exc.RequestErrorReason | None,
+    key: str,
+) -> None:
+    """Test a zone/DHW override rejected by the client raises a translated error."""
+
+    entity_id: str = request.getfixturevalue(entity_fixture)
+
+    with (
+        patch(
+            client_api,
+            side_effect=evo_exc.InvalidSetModeError(
+                "Invalid mode", reason=reason, mode="temporary_override"
+            ),
+        ),
+        pytest.raises(ServiceValidationError) as exc_info,
+    ):
+        await hass.services.async_call(
+            DOMAIN,
+            service,
+            {**service_data, EvoServiceArgument.DURATION: {"hours": 1}},
+            target={TargetKey.ENTITY_ID: entity_id},
+            blocking=True,
+        )
+
+    assert exc_info.value.translation_key == key

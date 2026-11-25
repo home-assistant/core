@@ -8,7 +8,7 @@ from apple_weatherkit.client import (
 
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import CONF_KEY_ID, CONF_KEY_PEM, CONF_SERVICE_ID, CONF_TEAM_ID, DOMAIN
@@ -34,7 +34,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: WeatherKitConfigEntry) -
     try:
         await coordinator.update_supported_data_sets()
     except WeatherKitApiClientAuthenticationError as ex:
-        raise ConfigEntryError(
+        raise ConfigEntryAuthFailed(
             translation_domain=DOMAIN,
             translation_key="authentication_error",
         ) from ex

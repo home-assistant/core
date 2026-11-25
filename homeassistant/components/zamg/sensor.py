@@ -184,7 +184,7 @@ async def async_setup_entry(
     )
 
 
-class ZamgSensor(CoordinatorEntity, SensorEntity):
+class ZamgSensor(CoordinatorEntity[ZamgDataUpdateCoordinator], SensorEntity):
     """Implementation of a ZAMG sensor."""
 
     _attr_attribution = ATTRIBUTION

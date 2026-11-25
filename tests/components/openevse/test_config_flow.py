@@ -5,6 +5,7 @@ from unittest.mock import MagicMock
 
 from openevsehttp.exceptions import AuthenticationError, MissingSerial
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.openevse.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER, SOURCE_ZEROCONF
@@ -12,8 +13,6 @@ from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
-
-from tests.common import MockConfigEntry
 
 
 @pytest.mark.usefixtures("mock_setup_entry")

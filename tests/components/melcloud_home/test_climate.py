@@ -17,6 +17,12 @@ from aiomelcloudhome import (
     UserContext,
 )
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    SnapshotAssertion,
+    async_load_json_object_fixture,
+    snapshot_platform,
+)
 
 from homeassistant.components.climate import (
     ATTR_FAN_MODE,
@@ -32,6 +38,8 @@ from homeassistant.components.climate import (
     SERVICE_SET_SWING_MODE,
     SERVICE_SET_TEMPERATURE,
     ClimateEntityFeature,
+    ClimateService,
+    ClimateServiceArgument,
     HVACAction,
     HVACMode,
 )
@@ -44,19 +52,13 @@ from homeassistant.const import (
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
     Platform,
+    TargetKey,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
-
-from tests.common import (
-    MockConfigEntry,
-    SnapshotAssertion,
-    async_load_json_object_fixture,
-    snapshot_platform,
-)
 
 ATA_ENTITY_ID = "climate.living_room_ac"
 ATW_ZONE1_ENTITY_ID = "climate.heat_pump_zone_1"
@@ -181,8 +183,11 @@ async def test_ata_set_hvac_mode(
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_HVAC_MODE,
-        {ATTR_ENTITY_ID: ATA_ENTITY_ID, ATTR_HVAC_MODE: hvac_mode},
+        ClimateService.SET_HVAC_MODE,
+        {
+            TargetKey.ENTITY_ID: ATA_ENTITY_ID,
+            ClimateServiceArgument.HVAC_MODE: hvac_mode,
+        },
         blocking=True,
     )
 
@@ -215,8 +220,8 @@ async def test_ata_set_fan_mode(
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_FAN_MODE,
-        {ATTR_ENTITY_ID: ATA_ENTITY_ID, ATTR_FAN_MODE: fan_mode},
+        ClimateService.SET_FAN_MODE,
+        {TargetKey.ENTITY_ID: ATA_ENTITY_ID, ClimateServiceArgument.FAN_MODE: fan_mode},
         blocking=True,
     )
 
@@ -304,8 +309,11 @@ async def test_ata_set_swing_mode(
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_SWING_MODE,
-        {ATTR_ENTITY_ID: ATA_ENTITY_ID, ATTR_SWING_MODE: swing_mode},
+        ClimateService.SET_SWING_MODE,
+        {
+            TargetKey.ENTITY_ID: ATA_ENTITY_ID,
+            ClimateServiceArgument.SWING_MODE: swing_mode,
+        },
         blocking=True,
     )
 
@@ -339,8 +347,11 @@ async def test_ata_set_swing_horizontal_mode(
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_SWING_HORIZONTAL_MODE,
-        {ATTR_ENTITY_ID: ATA_ENTITY_ID, ATTR_SWING_HORIZONTAL_MODE: swing_mode},
+        ClimateService.SET_SWING_HORIZONTAL_MODE,
+        {
+            TargetKey.ENTITY_ID: ATA_ENTITY_ID,
+            ClimateServiceArgument.SWING_HORIZONTAL_MODE: swing_mode,
+        },
         blocking=True,
     )
 
@@ -360,8 +371,8 @@ async def test_ata_set_temperature(
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_TEMPERATURE,
-        {ATTR_ENTITY_ID: ATA_ENTITY_ID, ATTR_TEMPERATURE: 22.5},
+        ClimateService.SET_TEMPERATURE,
+        {TargetKey.ENTITY_ID: ATA_ENTITY_ID, ClimateServiceArgument.TEMPERATURE: 22.5},
         blocking=True,
     )
 
@@ -434,8 +445,8 @@ async def test_atw_set_hvac_mode(
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_HVAC_MODE,
-        {ATTR_ENTITY_ID: entity_id, ATTR_HVAC_MODE: hvac_mode},
+        ClimateService.SET_HVAC_MODE,
+        {TargetKey.ENTITY_ID: entity_id, ClimateServiceArgument.HVAC_MODE: hvac_mode},
         blocking=True,
     )
 
@@ -547,8 +558,8 @@ async def test_atw_set_hvac_mode_keeps_strategy(
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_HVAC_MODE,
-        {ATTR_ENTITY_ID: entity_id, ATTR_HVAC_MODE: hvac_mode},
+        ClimateService.SET_HVAC_MODE,
+        {TargetKey.ENTITY_ID: entity_id, ClimateServiceArgument.HVAC_MODE: hvac_mode},
         blocking=True,
     )
 
@@ -577,8 +588,8 @@ async def test_atw_set_temperature(
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_TEMPERATURE,
-        {ATTR_ENTITY_ID: entity_id, ATTR_TEMPERATURE: 23.0},
+        ClimateService.SET_TEMPERATURE,
+        {TargetKey.ENTITY_ID: entity_id, ClimateServiceArgument.TEMPERATURE: 23.0},
         blocking=True,
     )
 
@@ -618,30 +629,34 @@ async def test_atw_turn_on_off(
 
 
 @pytest.mark.parametrize(
-    ("operation_mode", "expected_min", "expected_max"),
+    ("power", "operation_mode", "expected_min", "expected_max"),
     [
-        pytest.param("Cool", 16.0, 31.0, id="cool"),
-        pytest.param("Automatic", 16.0, 31.0, id="auto"),
-        pytest.param("Fan", 7, 35, id="fan_only"),
+        pytest.param("True", "Cool", 16.0, 31.0, id="cool"),
+        pytest.param("True", "Automatic", 16.0, 31.0, id="auto"),
+        pytest.param("True", "Fan", 7, 35, id="fan_only"),
+        pytest.param("False", "Heat", 10.0, 31.0, id="off_heat"),
+        pytest.param("False", "Cool", 16.0, 31.0, id="off_cool"),
     ],
 )
 async def test_ata_temperature_range_by_mode(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_melcloud_client: AsyncMock,
+    power: str,
     operation_mode: str,
     expected_min: float,
     expected_max: float,
 ) -> None:
-    """Test ATA min/max temperature for cool, auto, and fallback HVAC modes."""
+    """Test ATA min/max temperature follows the operation mode, also while off."""
     context: dict[str, Any] = await async_load_json_object_fixture(
         hass, "context.json", DOMAIN
     )
-    next(
-        setting
+    settings = {
+        setting["name"]: setting
         for setting in context["buildings"][0]["airToAirUnits"][0]["settings"]
-        if setting["name"] == "OperationMode"
-    )["value"] = operation_mode
+    }
+    settings["Power"]["value"] = power
+    settings["OperationMode"]["value"] = operation_mode
     mock_melcloud_client.get_context.return_value = UserContext.model_validate(context)
 
     await setup_integration(hass, mock_config_entry)
@@ -761,6 +776,11 @@ async def test_atw_zone_temperature_range(
             {"OperationMode": "FreezeStat"}, HVACAction.HEATING, id="freeze_stat"
         ),
         pytest.param({"OperationMode": "Cooling"}, HVACAction.COOLING, id="cooling"),
+        pytest.param(
+            {"OperationMode": "LegionellaPrevention"},
+            HVACAction.IDLE,
+            id="legionella_prevention",
+        ),
         pytest.param({"OperationMode": "Unknown"}, None, id="unknown"),
         pytest.param(
             {"OperationMode": "Heat", "Power": "False"}, HVACAction.OFF, id="off"
@@ -915,8 +935,8 @@ async def test_action_invalid_auth_starts_reauth(
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             CLIMATE_DOMAIN,
-            SERVICE_TURN_ON,
-            {ATTR_ENTITY_ID: ATA_ENTITY_ID},
+            ClimateService.TURN_ON,
+            {TargetKey.ENTITY_ID: ATA_ENTITY_ID},
             blocking=True,
         )
     await hass.async_block_till_done()

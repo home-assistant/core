@@ -2,14 +2,13 @@
 
 import probatio
 
-from homeassistant.const import ATTR_CODE, SERVICE_LOCK, SERVICE_OPEN, SERVICE_UNLOCK
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
 
-from .const import DATA_COMPONENT, LockEntityFeature
+from .const import DATA_COMPONENT, LockEntityFeature, LockService, LockServiceArgument
 
 LOCK_SERVICE_SCHEMA = cv.make_entity_service_schema(
-    {probatio.Optional(ATTR_CODE): cv.string}
+    {probatio.Optional(LockServiceArgument.CODE): cv.string}
 )
 
 
@@ -19,13 +18,13 @@ def async_setup_services(hass: HomeAssistant) -> None:
     component = hass.data[DATA_COMPONENT]
 
     component.async_register_entity_service(
-        SERVICE_UNLOCK, LOCK_SERVICE_SCHEMA, "async_handle_unlock_service"
+        LockService.UNLOCK, LOCK_SERVICE_SCHEMA, "async_handle_unlock_service"
     )
     component.async_register_entity_service(
-        SERVICE_LOCK, LOCK_SERVICE_SCHEMA, "async_handle_lock_service"
+        LockService.LOCK, LOCK_SERVICE_SCHEMA, "async_handle_lock_service"
     )
     component.async_register_entity_service(
-        SERVICE_OPEN,
+        LockService.OPEN,
         LOCK_SERVICE_SCHEMA,
         "async_handle_open_service",
         [LockEntityFeature.OPEN],

@@ -1,27 +1,26 @@
 """Tests for the Novy Hood light platform."""
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, mock_restore_cache
+from pytest_homeassistant.components.common import (
+    assert_availability_follows_source_entity,
+)
+from pytest_homeassistant.components.radio_frequency.common import (
+    MockRadioFrequencyEntity,
+)
 from rf_protocols.codes.novy.cooker_hood import NovyCookerHoodButton
 
-from homeassistant.components.light import (
-    DOMAIN as LIGHT_DOMAIN,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
-)
+from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN, LightService
 from homeassistant.const import (
     ATTR_ASSUMED_STATE,
-    ATTR_ENTITY_ID,
     STATE_OFF,
     STATE_ON,
     STATE_UNKNOWN,
+    TargetKey,
 )
 from homeassistant.core import Context, HomeAssistant, State
 
 from .conftest import TRANSMITTER_ENTITY_ID
-
-from tests.common import MockConfigEntry, mock_restore_cache
-from tests.components.common import assert_availability_follows_source_entity
-from tests.components.radio_frequency.common import MockRadioFrequencyEntity
 
 ENTITY_ID = "light.novy_cooker_hood_light"
 
@@ -41,8 +40,8 @@ async def test_turn_on_and_off_send_light_once_each(
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: ENTITY_ID},
+        LightService.TURN_ON,
+        {TargetKey.ENTITY_ID: ENTITY_ID},
         context=context,
         blocking=True,
     )
@@ -56,8 +55,8 @@ async def test_turn_on_and_off_send_light_once_each(
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: ENTITY_ID},
+        LightService.TURN_OFF,
+        {TargetKey.ENTITY_ID: ENTITY_ID},
         context=context,
         blocking=True,
     )

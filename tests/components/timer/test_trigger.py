@@ -7,36 +7,8 @@ from typing import Any
 from freezegun.api import FrozenDateTimeFactory
 import probatio
 import pytest
-
-from homeassistant.components.timer import (
-    ATTR_FINISHES_AT,
-    ATTR_LAST_TRANSITION,
-    DOMAIN,
-)
-from homeassistant.components.timer.const import (
-    STATUS_ACTIVE,
-    STATUS_IDLE,
-    STATUS_PAUSED,
-)
-from homeassistant.components.timer.trigger import TRIGGERS
-from homeassistant.const import (
-    ATTR_LABEL_ID,
-    CONF_ENTITY_ID,
-    CONF_OPTIONS,
-    CONF_PLATFORM,
-    CONF_TARGET,
-)
-from homeassistant.core import Context, HomeAssistant, callback
-from homeassistant.helpers import entity_registry as er, label_registry as lr
-from homeassistant.helpers.trigger import (
-    async_initialize_triggers,
-    async_validate_trigger_config,
-)
-from homeassistant.helpers.typing import TemplateVarsType
-from homeassistant.util import dt as dt_util
-
-from tests.common import async_fire_time_changed
-from tests.components.common import (
+from pytest_homeassistant.common import async_fire_time_changed
+from pytest_homeassistant.components.common import (
     TargetSupport,
     TriggerStateDescription,
     assert_trigger_behavior_all,
@@ -48,6 +20,23 @@ from tests.components.common import (
     parametrize_trigger_states,
     target_entities,
 )
+
+from homeassistant.components.timer import DOMAIN, TimerEntityStateAttribute
+from homeassistant.components.timer.const import (
+    STATUS_ACTIVE,
+    STATUS_IDLE,
+    STATUS_PAUSED,
+)
+from homeassistant.components.timer.trigger import TRIGGERS
+from homeassistant.const import CONF_OPTIONS, CONF_PLATFORM, CONF_TARGET, TargetKey
+from homeassistant.core import Context, HomeAssistant, callback
+from homeassistant.helpers import entity_registry as er, label_registry as lr
+from homeassistant.helpers.trigger import (
+    async_initialize_triggers,
+    async_validate_trigger_config,
+)
+from homeassistant.helpers.typing import TemplateVarsType
+from homeassistant.util import dt as dt_util
 
 
 @pytest.fixture
@@ -108,28 +97,51 @@ def test_trigger_target_support() -> None:
     [
         *parametrize_trigger_states(
             trigger="timer.cancelled",
-            target_states=[(STATUS_IDLE, {ATTR_LAST_TRANSITION: "cancelled"})],
-            other_states=[(STATUS_ACTIVE, {ATTR_LAST_TRANSITION: "started"})],
+            target_states=[
+                (STATUS_IDLE, {TimerEntityStateAttribute.LAST_TRANSITION: "cancelled"})
+            ],
+            other_states=[
+                (STATUS_ACTIVE, {TimerEntityStateAttribute.LAST_TRANSITION: "started"})
+            ],
         ),
         *parametrize_trigger_states(
             trigger="timer.finished",
-            target_states=[(STATUS_IDLE, {ATTR_LAST_TRANSITION: "finished"})],
-            other_states=[(STATUS_ACTIVE, {ATTR_LAST_TRANSITION: "started"})],
+            target_states=[
+                (STATUS_IDLE, {TimerEntityStateAttribute.LAST_TRANSITION: "finished"})
+            ],
+            other_states=[
+                (STATUS_ACTIVE, {TimerEntityStateAttribute.LAST_TRANSITION: "started"})
+            ],
         ),
         *parametrize_trigger_states(
             trigger="timer.paused",
-            target_states=[(STATUS_PAUSED, {ATTR_LAST_TRANSITION: "paused"})],
-            other_states=[(STATUS_ACTIVE, {ATTR_LAST_TRANSITION: "started"})],
+            target_states=[
+                (STATUS_PAUSED, {TimerEntityStateAttribute.LAST_TRANSITION: "paused"})
+            ],
+            other_states=[
+                (STATUS_ACTIVE, {TimerEntityStateAttribute.LAST_TRANSITION: "started"})
+            ],
         ),
         *parametrize_trigger_states(
             trigger="timer.restarted",
-            target_states=[(STATUS_ACTIVE, {ATTR_LAST_TRANSITION: "restarted"})],
-            other_states=[(STATUS_ACTIVE, {ATTR_LAST_TRANSITION: "started"})],
+            target_states=[
+                (
+                    STATUS_ACTIVE,
+                    {TimerEntityStateAttribute.LAST_TRANSITION: "restarted"},
+                )
+            ],
+            other_states=[
+                (STATUS_ACTIVE, {TimerEntityStateAttribute.LAST_TRANSITION: "started"})
+            ],
         ),
         *parametrize_trigger_states(
             trigger="timer.started",
-            target_states=[(STATUS_ACTIVE, {ATTR_LAST_TRANSITION: "started"})],
-            other_states=[(STATUS_IDLE, {ATTR_LAST_TRANSITION: "cancelled"})],
+            target_states=[
+                (STATUS_ACTIVE, {TimerEntityStateAttribute.LAST_TRANSITION: "started"})
+            ],
+            other_states=[
+                (STATUS_IDLE, {TimerEntityStateAttribute.LAST_TRANSITION: "cancelled"})
+            ],
         ),
     ],
 )
@@ -165,28 +177,51 @@ async def test_timer_trigger_behavior_each(
     [
         *parametrize_trigger_states(
             trigger="timer.cancelled",
-            target_states=[(STATUS_IDLE, {ATTR_LAST_TRANSITION: "cancelled"})],
-            other_states=[(STATUS_ACTIVE, {ATTR_LAST_TRANSITION: "started"})],
+            target_states=[
+                (STATUS_IDLE, {TimerEntityStateAttribute.LAST_TRANSITION: "cancelled"})
+            ],
+            other_states=[
+                (STATUS_ACTIVE, {TimerEntityStateAttribute.LAST_TRANSITION: "started"})
+            ],
         ),
         *parametrize_trigger_states(
             trigger="timer.finished",
-            target_states=[(STATUS_IDLE, {ATTR_LAST_TRANSITION: "finished"})],
-            other_states=[(STATUS_ACTIVE, {ATTR_LAST_TRANSITION: "started"})],
+            target_states=[
+                (STATUS_IDLE, {TimerEntityStateAttribute.LAST_TRANSITION: "finished"})
+            ],
+            other_states=[
+                (STATUS_ACTIVE, {TimerEntityStateAttribute.LAST_TRANSITION: "started"})
+            ],
         ),
         *parametrize_trigger_states(
             trigger="timer.paused",
-            target_states=[(STATUS_PAUSED, {ATTR_LAST_TRANSITION: "paused"})],
-            other_states=[(STATUS_ACTIVE, {ATTR_LAST_TRANSITION: "started"})],
+            target_states=[
+                (STATUS_PAUSED, {TimerEntityStateAttribute.LAST_TRANSITION: "paused"})
+            ],
+            other_states=[
+                (STATUS_ACTIVE, {TimerEntityStateAttribute.LAST_TRANSITION: "started"})
+            ],
         ),
         *parametrize_trigger_states(
             trigger="timer.restarted",
-            target_states=[(STATUS_ACTIVE, {ATTR_LAST_TRANSITION: "restarted"})],
-            other_states=[(STATUS_ACTIVE, {ATTR_LAST_TRANSITION: "started"})],
+            target_states=[
+                (
+                    STATUS_ACTIVE,
+                    {TimerEntityStateAttribute.LAST_TRANSITION: "restarted"},
+                )
+            ],
+            other_states=[
+                (STATUS_ACTIVE, {TimerEntityStateAttribute.LAST_TRANSITION: "started"})
+            ],
         ),
         *parametrize_trigger_states(
             trigger="timer.started",
-            target_states=[(STATUS_ACTIVE, {ATTR_LAST_TRANSITION: "started"})],
-            other_states=[(STATUS_IDLE, {ATTR_LAST_TRANSITION: "cancelled"})],
+            target_states=[
+                (STATUS_ACTIVE, {TimerEntityStateAttribute.LAST_TRANSITION: "started"})
+            ],
+            other_states=[
+                (STATUS_IDLE, {TimerEntityStateAttribute.LAST_TRANSITION: "cancelled"})
+            ],
         ),
     ],
 )
@@ -222,28 +257,51 @@ async def test_timer_trigger_behavior_first(
     [
         *parametrize_trigger_states(
             trigger="timer.cancelled",
-            target_states=[(STATUS_IDLE, {ATTR_LAST_TRANSITION: "cancelled"})],
-            other_states=[(STATUS_ACTIVE, {ATTR_LAST_TRANSITION: "started"})],
+            target_states=[
+                (STATUS_IDLE, {TimerEntityStateAttribute.LAST_TRANSITION: "cancelled"})
+            ],
+            other_states=[
+                (STATUS_ACTIVE, {TimerEntityStateAttribute.LAST_TRANSITION: "started"})
+            ],
         ),
         *parametrize_trigger_states(
             trigger="timer.finished",
-            target_states=[(STATUS_IDLE, {ATTR_LAST_TRANSITION: "finished"})],
-            other_states=[(STATUS_ACTIVE, {ATTR_LAST_TRANSITION: "started"})],
+            target_states=[
+                (STATUS_IDLE, {TimerEntityStateAttribute.LAST_TRANSITION: "finished"})
+            ],
+            other_states=[
+                (STATUS_ACTIVE, {TimerEntityStateAttribute.LAST_TRANSITION: "started"})
+            ],
         ),
         *parametrize_trigger_states(
             trigger="timer.paused",
-            target_states=[(STATUS_PAUSED, {ATTR_LAST_TRANSITION: "paused"})],
-            other_states=[(STATUS_ACTIVE, {ATTR_LAST_TRANSITION: "started"})],
+            target_states=[
+                (STATUS_PAUSED, {TimerEntityStateAttribute.LAST_TRANSITION: "paused"})
+            ],
+            other_states=[
+                (STATUS_ACTIVE, {TimerEntityStateAttribute.LAST_TRANSITION: "started"})
+            ],
         ),
         *parametrize_trigger_states(
             trigger="timer.restarted",
-            target_states=[(STATUS_ACTIVE, {ATTR_LAST_TRANSITION: "restarted"})],
-            other_states=[(STATUS_ACTIVE, {ATTR_LAST_TRANSITION: "started"})],
+            target_states=[
+                (
+                    STATUS_ACTIVE,
+                    {TimerEntityStateAttribute.LAST_TRANSITION: "restarted"},
+                )
+            ],
+            other_states=[
+                (STATUS_ACTIVE, {TimerEntityStateAttribute.LAST_TRANSITION: "started"})
+            ],
         ),
         *parametrize_trigger_states(
             trigger="timer.started",
-            target_states=[(STATUS_ACTIVE, {ATTR_LAST_TRANSITION: "started"})],
-            other_states=[(STATUS_IDLE, {ATTR_LAST_TRANSITION: "cancelled"})],
+            target_states=[
+                (STATUS_ACTIVE, {TimerEntityStateAttribute.LAST_TRANSITION: "started"})
+            ],
+            other_states=[
+                (STATUS_IDLE, {TimerEntityStateAttribute.LAST_TRANSITION: "cancelled"})
+            ],
         ),
     ],
 )
@@ -287,7 +345,7 @@ async def _arm_time_remaining_trigger(
         [
             {
                 CONF_PLATFORM: "timer.remaining_time_reached",
-                CONF_TARGET: target or {CONF_ENTITY_ID: entity_id},
+                CONF_TARGET: target or {TargetKey.ENTITY_ID: entity_id},
                 CONF_OPTIONS: {"remaining": remaining},
             }
         ],
@@ -320,7 +378,7 @@ async def test_time_remaining_trigger_validation(hass: HomeAssistant) -> None:
         [
             {
                 CONF_PLATFORM: "timer.remaining_time_reached",
-                CONF_TARGET: {CONF_ENTITY_ID: "timer.test"},
+                CONF_TARGET: {TargetKey.ENTITY_ID: "timer.test"},
                 CONF_OPTIONS: {"remaining": {"seconds": 30}},
             }
         ],
@@ -333,7 +391,7 @@ async def test_time_remaining_trigger_validation(hass: HomeAssistant) -> None:
             [
                 {
                     CONF_PLATFORM: "timer.remaining_time_reached",
-                    CONF_TARGET: {CONF_ENTITY_ID: "timer.test"},
+                    CONF_TARGET: {TargetKey.ENTITY_ID: "timer.test"},
                     CONF_OPTIONS: {},
                 }
             ],
@@ -348,7 +406,9 @@ async def test_time_remaining_trigger_fires(
     now = dt_util.utcnow()
     calls: list[dict[str, Any]] = []
 
-    hass.states.async_set("timer.test", STATUS_IDLE, {ATTR_LAST_TRANSITION: None})
+    hass.states.async_set(
+        "timer.test", STATUS_IDLE, {TimerEntityStateAttribute.LAST_TRANSITION: None}
+    )
     await hass.async_block_till_done()
 
     await _arm_time_remaining_trigger(hass, "timer.test", {"seconds": 30}, calls)
@@ -358,7 +418,10 @@ async def test_time_remaining_trigger_fires(
     hass.states.async_set(
         "timer.test",
         STATUS_ACTIVE,
-        {ATTR_LAST_TRANSITION: "started", ATTR_FINISHES_AT: finishes_at.isoformat()},
+        {
+            TimerEntityStateAttribute.LAST_TRANSITION: "started",
+            TimerEntityStateAttribute.FINISHES_AT: finishes_at.isoformat(),
+        },
     )
     await hass.async_block_till_done()
     assert len(calls) == 0
@@ -386,7 +449,9 @@ async def test_time_remaining_trigger_paused_before_threshold(
     now = dt_util.utcnow()
     calls: list[dict[str, Any]] = []
 
-    hass.states.async_set("timer.test", STATUS_IDLE, {ATTR_LAST_TRANSITION: None})
+    hass.states.async_set(
+        "timer.test", STATUS_IDLE, {TimerEntityStateAttribute.LAST_TRANSITION: None}
+    )
     await hass.async_block_till_done()
 
     await _arm_time_remaining_trigger(hass, "timer.test", {"seconds": 30}, calls)
@@ -396,7 +461,10 @@ async def test_time_remaining_trigger_paused_before_threshold(
     hass.states.async_set(
         "timer.test",
         STATUS_ACTIVE,
-        {ATTR_LAST_TRANSITION: "started", ATTR_FINISHES_AT: finishes_at.isoformat()},
+        {
+            TimerEntityStateAttribute.LAST_TRANSITION: "started",
+            TimerEntityStateAttribute.FINISHES_AT: finishes_at.isoformat(),
+        },
     )
     await hass.async_block_till_done()
 
@@ -405,7 +473,7 @@ async def test_time_remaining_trigger_paused_before_threshold(
     hass.states.async_set(
         "timer.test",
         STATUS_PAUSED,
-        {ATTR_LAST_TRANSITION: "paused"},
+        {TimerEntityStateAttribute.LAST_TRANSITION: "paused"},
     )
     await hass.async_block_till_done()
 
@@ -424,7 +492,9 @@ async def test_time_remaining_trigger_cancelled_before_threshold(
     now = dt_util.utcnow()
     calls: list[dict[str, Any]] = []
 
-    hass.states.async_set("timer.test", STATUS_IDLE, {ATTR_LAST_TRANSITION: None})
+    hass.states.async_set(
+        "timer.test", STATUS_IDLE, {TimerEntityStateAttribute.LAST_TRANSITION: None}
+    )
     await hass.async_block_till_done()
 
     await _arm_time_remaining_trigger(hass, "timer.test", {"seconds": 30}, calls)
@@ -434,7 +504,10 @@ async def test_time_remaining_trigger_cancelled_before_threshold(
     hass.states.async_set(
         "timer.test",
         STATUS_ACTIVE,
-        {ATTR_LAST_TRANSITION: "started", ATTR_FINISHES_AT: finishes_at.isoformat()},
+        {
+            TimerEntityStateAttribute.LAST_TRANSITION: "started",
+            TimerEntityStateAttribute.FINISHES_AT: finishes_at.isoformat(),
+        },
     )
     await hass.async_block_till_done()
 
@@ -443,7 +516,7 @@ async def test_time_remaining_trigger_cancelled_before_threshold(
     hass.states.async_set(
         "timer.test",
         STATUS_IDLE,
-        {ATTR_LAST_TRANSITION: "cancelled"},
+        {TimerEntityStateAttribute.LAST_TRANSITION: "cancelled"},
     )
     await hass.async_block_till_done()
 
@@ -462,7 +535,9 @@ async def test_time_remaining_trigger_restarted(
     now = dt_util.utcnow()
     calls: list[dict[str, Any]] = []
 
-    hass.states.async_set("timer.test", STATUS_IDLE, {ATTR_LAST_TRANSITION: None})
+    hass.states.async_set(
+        "timer.test", STATUS_IDLE, {TimerEntityStateAttribute.LAST_TRANSITION: None}
+    )
     await hass.async_block_till_done()
 
     await _arm_time_remaining_trigger(hass, "timer.test", {"seconds": 30}, calls)
@@ -472,7 +547,10 @@ async def test_time_remaining_trigger_restarted(
     hass.states.async_set(
         "timer.test",
         STATUS_ACTIVE,
-        {ATTR_LAST_TRANSITION: "started", ATTR_FINISHES_AT: finishes_at.isoformat()},
+        {
+            TimerEntityStateAttribute.LAST_TRANSITION: "started",
+            TimerEntityStateAttribute.FINISHES_AT: finishes_at.isoformat(),
+        },
     )
     await hass.async_block_till_done()
 
@@ -483,8 +561,8 @@ async def test_time_remaining_trigger_restarted(
         "timer.test",
         STATUS_ACTIVE,
         {
-            ATTR_LAST_TRANSITION: "restarted",
-            ATTR_FINISHES_AT: new_finishes_at.isoformat(),
+            TimerEntityStateAttribute.LAST_TRANSITION: "restarted",
+            TimerEntityStateAttribute.FINISHES_AT: new_finishes_at.isoformat(),
         },
     )
     await hass.async_block_till_done()
@@ -511,7 +589,9 @@ async def test_time_remaining_trigger_short_timer(
     now = dt_util.utcnow()
     calls: list[dict[str, Any]] = []
 
-    hass.states.async_set("timer.test", STATUS_IDLE, {ATTR_LAST_TRANSITION: None})
+    hass.states.async_set(
+        "timer.test", STATUS_IDLE, {TimerEntityStateAttribute.LAST_TRANSITION: None}
+    )
     await hass.async_block_till_done()
 
     await _arm_time_remaining_trigger(hass, "timer.test", {"seconds": 30}, calls)
@@ -521,7 +601,10 @@ async def test_time_remaining_trigger_short_timer(
     hass.states.async_set(
         "timer.test",
         STATUS_ACTIVE,
-        {ATTR_LAST_TRANSITION: "started", ATTR_FINISHES_AT: finishes_at.isoformat()},
+        {
+            TimerEntityStateAttribute.LAST_TRANSITION: "started",
+            TimerEntityStateAttribute.FINISHES_AT: finishes_at.isoformat(),
+        },
     )
     await hass.async_block_till_done()
 
@@ -546,7 +629,10 @@ async def test_time_remaining_trigger_already_active_at_attach(
     hass.states.async_set(
         "timer.test",
         STATUS_ACTIVE,
-        {ATTR_LAST_TRANSITION: "started", ATTR_FINISHES_AT: finishes_at.isoformat()},
+        {
+            TimerEntityStateAttribute.LAST_TRANSITION: "started",
+            TimerEntityStateAttribute.FINISHES_AT: finishes_at.isoformat(),
+        },
     )
     await hass.async_block_till_done()
 
@@ -583,7 +669,10 @@ async def test_time_remaining_trigger_already_active_past_threshold_at_attach(
     hass.states.async_set(
         "timer.test",
         STATUS_ACTIVE,
-        {ATTR_LAST_TRANSITION: "started", ATTR_FINISHES_AT: finishes_at.isoformat()},
+        {
+            TimerEntityStateAttribute.LAST_TRANSITION: "started",
+            TimerEntityStateAttribute.FINISHES_AT: finishes_at.isoformat(),
+        },
     )
     await hass.async_block_till_done()
 
@@ -604,7 +693,9 @@ async def test_time_remaining_trigger_idle_at_attach(
     now = dt_util.utcnow()
     calls: list[dict[str, Any]] = []
 
-    hass.states.async_set("timer.test", STATUS_IDLE, {ATTR_LAST_TRANSITION: None})
+    hass.states.async_set(
+        "timer.test", STATUS_IDLE, {TimerEntityStateAttribute.LAST_TRANSITION: None}
+    )
     await hass.async_block_till_done()
 
     await _arm_time_remaining_trigger(hass, "timer.test", {"seconds": 30}, calls)
@@ -636,7 +727,10 @@ async def test_time_remaining_trigger_active_on_first_state_event(
     hass.states.async_set(
         "timer.test",
         STATUS_ACTIVE,
-        {ATTR_LAST_TRANSITION: "started", ATTR_FINISHES_AT: finishes_at.isoformat()},
+        {
+            TimerEntityStateAttribute.LAST_TRANSITION: "started",
+            TimerEntityStateAttribute.FINISHES_AT: finishes_at.isoformat(),
+        },
     )
     await hass.async_block_till_done()
     assert len(calls) == 0
@@ -667,7 +761,9 @@ async def test_time_remaining_trigger_entity_removed_from_target(
     )
     entity_registry.async_update_entity(entry.entity_id, labels={label.label_id})
 
-    hass.states.async_set(entry.entity_id, STATUS_IDLE, {ATTR_LAST_TRANSITION: None})
+    hass.states.async_set(
+        entry.entity_id, STATUS_IDLE, {TimerEntityStateAttribute.LAST_TRANSITION: None}
+    )
     await hass.async_block_till_done()
 
     await _arm_time_remaining_trigger(
@@ -675,7 +771,7 @@ async def test_time_remaining_trigger_entity_removed_from_target(
         entry.entity_id,
         {"seconds": 30},
         calls,
-        target={ATTR_LABEL_ID: label.label_id},
+        target={TargetKey.LABEL_ID: label.label_id},
     )
 
     # Start the timer — this schedules a fire via the state-change path
@@ -683,7 +779,10 @@ async def test_time_remaining_trigger_entity_removed_from_target(
     hass.states.async_set(
         entry.entity_id,
         STATUS_ACTIVE,
-        {ATTR_LAST_TRANSITION: "started", ATTR_FINISHES_AT: finishes_at.isoformat()},
+        {
+            TimerEntityStateAttribute.LAST_TRANSITION: "started",
+            TimerEntityStateAttribute.FINISHES_AT: finishes_at.isoformat(),
+        },
     )
     await hass.async_block_till_done()
 
@@ -720,7 +819,10 @@ async def test_time_remaining_trigger_entity_added_to_target(
     hass.states.async_set(
         entry.entity_id,
         STATUS_ACTIVE,
-        {ATTR_LAST_TRANSITION: "started", ATTR_FINISHES_AT: finishes_at.isoformat()},
+        {
+            TimerEntityStateAttribute.LAST_TRANSITION: "started",
+            TimerEntityStateAttribute.FINISHES_AT: finishes_at.isoformat(),
+        },
     )
     await hass.async_block_till_done()
 
@@ -729,7 +831,7 @@ async def test_time_remaining_trigger_entity_added_to_target(
         entry.entity_id,
         {"seconds": 30},
         calls,
-        target={ATTR_LABEL_ID: label.label_id},
+        target={TargetKey.LABEL_ID: label.label_id},
     )
 
     # Now label the entity so it joins the target

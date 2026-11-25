@@ -1,7 +1,9 @@
 {
   "domain": "quantum_gateway",
   "name": "Quantum Gateway",
+  "categories": ["presence_location.network_presence"],
   "codeowners": ["@cisasteelersfan"],
+  "connectivity": ["network"],
   "documentation": "https://www.home-assistant.io/integrations/quantum_gateway",
   "iot_class": "local_polling",
   "quality_scale": "legacy",

@@ -8,7 +8,8 @@ from homeassistant.components.device_tracker import (
     ScannerEntity,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -166,14 +167,17 @@ class HuaweiLteScannerEntity(HuaweiLteBaseEntity, ScannerEntity):
 
     @property
     @override
-    def name(self) -> str:
-        """Return the name of the entity."""
-        return self.hostname or self.mac_address
+    def _device_unique_id(self) -> str:
+        return self.mac_address
 
     @property
     @override
-    def _device_unique_id(self) -> str:
-        return self.mac_address
+    def device_info(self) -> DeviceInfo:
+        """Return the device info of the tracked device."""
+        return DeviceInfo(
+            connections={(dr.CONNECTION_NETWORK_MAC, self.mac_address)},
+            name=self._hostname or self.mac_address,
+        )
 
     @property
     @override
@@ -222,6 +226,14 @@ class HuaweiLteScannerEntity(HuaweiLteBaseEntity, ScannerEntity):
             # to which it is fed, parses and expects to see just one.
             self._ip_address = (host.get("IpAddress") or "").split(";", 2)[0] or None
             self._hostname = host.get("HostName")
+            if (
+                self._hostname
+                and (device_entry := self.device_entry)
+                and device_entry.name != self._hostname
+            ):
+                dr.async_get(self.hass).async_update_device(
+                    device_entry.id, name=self._hostname
+                )
             self._extra_state_attributes = {
                 snakecase(k): v
                 for k, v in host.items()

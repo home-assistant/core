@@ -9,6 +9,9 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import aiohttp
 from async_upnp_client.exceptions import UpnpError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_capture_events
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
+from pytest_homeassistant.typing import ClientSessionGenerator
 from wiim.consts import PlayingStatus
 from wiim.exceptions import (
     WiimDeviceException,
@@ -32,9 +35,8 @@ from homeassistant.components.media_player import (
     ATTR_ENTITY_PICTURE_LOCAL,
     ATTR_GROUP_MEMBERS,
     ATTR_INPUT_SOURCE,
+    ATTR_INPUT_SOURCE_LIST,
     ATTR_MEDIA_ALBUM_NAME,
-    ATTR_MEDIA_CONTENT_ID,
-    ATTR_MEDIA_CONTENT_TYPE,
     ATTR_MEDIA_DURATION,
     ATTR_MEDIA_POSITION,
     ATTR_MEDIA_REPEAT,
@@ -43,25 +45,18 @@ from homeassistant.components.media_player import (
     ATTR_MEDIA_VOLUME_LEVEL,
     ATTR_MEDIA_VOLUME_MUTED,
     DOMAIN as MEDIA_PLAYER_DOMAIN,
-    SERVICE_BROWSE_MEDIA,
-    SERVICE_JOIN,
     SERVICE_MEDIA_NEXT_TRACK,
-    SERVICE_MEDIA_PAUSE,
-    SERVICE_MEDIA_PLAY,
     SERVICE_MEDIA_PREVIOUS_TRACK,
-    SERVICE_MEDIA_SEEK,
     SERVICE_MEDIA_STOP,
-    SERVICE_PLAY_MEDIA,
-    SERVICE_REPEAT_SET,
     SERVICE_SELECT_SOURCE,
-    SERVICE_SHUFFLE_SET,
-    SERVICE_UNJOIN,
     SERVICE_VOLUME_MUTE,
     SERVICE_VOLUME_SET,
     BrowseError,
     BrowseMedia,
     MediaClass,
     MediaPlayerEntityFeature,
+    MediaPlayerService,
+    MediaPlayerServiceArgument,
     MediaPlayerState,
     MediaType,
     RepeatMode,
@@ -75,6 +70,7 @@ from homeassistant.const import (
     EVENT_STATE_CHANGED,
     EVENT_STATE_REPORTED,
     STATE_UNAVAILABLE,
+    TargetKey,
 )
 from homeassistant.core import Event, EventStateReportedData, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
@@ -82,10 +78,6 @@ from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from . import fire_general_update, fire_transport_update, setup_integration
-
-from tests.common import MockConfigEntry, async_capture_events
-from tests.test_util.aiohttp import AiohttpClientMocker
-from tests.typing import ClientSessionGenerator
 
 MEDIA_PLAYER_ENTITY_ID = "media_player.test_wiim_device"
 
@@ -113,6 +105,7 @@ def _build_mock_wiim_device(
     device.supports_http_api = False
     device.playing_status = PlayingStatus.STOPPED
     device.play_mode = "Network"
+    device.local_input_mode = "Network"
     device.loop_state = WiimLoopState(
         repeat=WiimRepeatMode.OFF,
         shuffle=False,
@@ -163,7 +156,7 @@ async def test_state_machine_updates_from_device_callbacks(
 
     mock_wiim_device.volume = 60
     mock_wiim_device.playing_status = PlayingStatus.PLAYING
-    mock_wiim_device.play_mode = "Bluetooth"
+    mock_wiim_device.local_input_mode = "Bluetooth"
     mock_wiim_device.output_mode = "optical"
     mock_wiim_device.loop_state = WiimLoopState(
         repeat=WiimRepeatMode.ALL,
@@ -358,7 +351,7 @@ async def test_transport_services_call_device(
             {ATTR_INPUT_SOURCE: "Bluetooth"},
             "async_set_play_mode",
             ("Bluetooth",),
-            {"play_mode": "Bluetooth"},
+            {"local_input_mode": "Bluetooth"},
             ATTR_INPUT_SOURCE,
             "Bluetooth",
         ),
@@ -415,8 +408,8 @@ async def test_command_error_uses_translation(
     with pytest.raises(HomeAssistantError) as exc_info:
         await hass.services.async_call(
             MEDIA_PLAYER_DOMAIN,
-            SERVICE_MEDIA_PLAY,
-            {ATTR_ENTITY_ID: MEDIA_PLAYER_ENTITY_ID},
+            MediaPlayerService.MEDIA_PLAY,
+            {TargetKey.ENTITY_ID: MEDIA_PLAYER_ENTITY_ID},
             blocking=True,
         )
 
@@ -451,8 +444,11 @@ async def test_repeat_and_shuffle_services_update_state_machine(
     mock_wiim_device.build_loop_mode.return_value = repeat_loop_mode
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
-        SERVICE_REPEAT_SET,
-        {ATTR_ENTITY_ID: MEDIA_PLAYER_ENTITY_ID, ATTR_MEDIA_REPEAT: RepeatMode.ALL},
+        MediaPlayerService.REPEAT_SET,
+        {
+            TargetKey.ENTITY_ID: MEDIA_PLAYER_ENTITY_ID,
+            MediaPlayerServiceArgument.REPEAT: RepeatMode.ALL,
+        },
         blocking=True,
     )
     mock_wiim_device.build_loop_mode.assert_called_once_with(WiimRepeatMode.ALL, False)
@@ -472,8 +468,11 @@ async def test_repeat_and_shuffle_services_update_state_machine(
     mock_wiim_device.build_loop_mode.return_value = shuffle_loop_mode
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
-        SERVICE_SHUFFLE_SET,
-        {ATTR_ENTITY_ID: MEDIA_PLAYER_ENTITY_ID, ATTR_MEDIA_SHUFFLE: True},
+        MediaPlayerService.SHUFFLE_SET,
+        {
+            TargetKey.ENTITY_ID: MEDIA_PLAYER_ENTITY_ID,
+            MediaPlayerServiceArgument.SHUFFLE: True,
+        },
         blocking=True,
     )
     mock_wiim_device.build_loop_mode.assert_called_once_with(WiimRepeatMode.ALL, True)
@@ -498,8 +497,8 @@ async def test_play_pause_and_seek_services_update_state_machine(
     await setup_integration(hass, mock_config_entry)
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
-        SERVICE_MEDIA_PLAY,
-        {ATTR_ENTITY_ID: MEDIA_PLAYER_ENTITY_ID},
+        MediaPlayerService.MEDIA_PLAY,
+        {TargetKey.ENTITY_ID: MEDIA_PLAYER_ENTITY_ID},
         blocking=True,
     )
     mock_wiim_device.async_play.assert_awaited_once()
@@ -518,8 +517,8 @@ async def test_play_pause_and_seek_services_update_state_machine(
 
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
-        SERVICE_MEDIA_PAUSE,
-        {ATTR_ENTITY_ID: MEDIA_PLAYER_ENTITY_ID},
+        MediaPlayerService.MEDIA_PAUSE,
+        {TargetKey.ENTITY_ID: MEDIA_PLAYER_ENTITY_ID},
         blocking=True,
     )
     mock_wiim_device.async_pause.assert_awaited_once()
@@ -531,8 +530,8 @@ async def test_play_pause_and_seek_services_update_state_machine(
 
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
-        SERVICE_MEDIA_SEEK,
-        {ATTR_ENTITY_ID: MEDIA_PLAYER_ENTITY_ID, "seek_position": 60},
+        MediaPlayerService.MEDIA_SEEK,
+        {TargetKey.ENTITY_ID: MEDIA_PLAYER_ENTITY_ID, "seek_position": 60},
         blocking=True,
     )
     mock_wiim_device.async_seek.assert_awaited_once_with(60)
@@ -587,8 +586,8 @@ async def test_follower_routes_commands_and_reads_leader_metadata(
 
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
-        SERVICE_MEDIA_PLAY,
-        {ATTR_ENTITY_ID: MEDIA_PLAYER_ENTITY_ID},
+        MediaPlayerService.MEDIA_PLAY,
+        {TargetKey.ENTITY_ID: MEDIA_PLAYER_ENTITY_ID},
         blocking=True,
     )
     leader_device.async_play.assert_awaited_once()
@@ -596,8 +595,8 @@ async def test_follower_routes_commands_and_reads_leader_metadata(
 
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
-        SERVICE_MEDIA_SEEK,
-        {ATTR_ENTITY_ID: MEDIA_PLAYER_ENTITY_ID, "seek_position": 90},
+        MediaPlayerService.MEDIA_SEEK,
+        {TargetKey.ENTITY_ID: MEDIA_PLAYER_ENTITY_ID, "seek_position": 90},
         blocking=True,
     )
     leader_device.async_seek.assert_awaited_once_with(90)
@@ -617,7 +616,7 @@ async def test_follower_routes_commands_and_reads_leader_metadata(
     assert state.state == MediaPlayerState.PLAYING
     assert state.attributes[ATTR_MEDIA_TITLE] == "Leader Song"
     assert state.attributes[ATTR_MEDIA_ALBUM_NAME] == "Leader Album"
-    assert state.attributes[ATTR_INPUT_SOURCE] == "Spotify"
+    assert state.attributes[ATTR_INPUT_SOURCE] == "Network"
     assert state.attributes[ATTR_MEDIA_POSITION] == 90
 
 
@@ -634,6 +633,7 @@ async def test_group_refresh_dispatcher_sends_to_followers_and_refreshes_member(
         ip_address="192.168.1.101",
         base_device=mock_wiim_device,
     )
+    follower_device.supported_input_modes = ("Network", "Line In")
 
     wiim_component.async_create_wiim_device.side_effect = [
         mock_wiim_device,
@@ -669,10 +669,12 @@ async def test_group_refresh_dispatcher_sends_to_followers_and_refreshes_member(
 
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
-        SERVICE_JOIN,
+        MediaPlayerService.JOIN,
         {
-            ATTR_ENTITY_ID: MEDIA_PLAYER_ENTITY_ID,
-            ATTR_GROUP_MEMBERS: ["media_player.follower_wiim_device"],
+            TargetKey.ENTITY_ID: MEDIA_PLAYER_ENTITY_ID,
+            MediaPlayerServiceArgument.GROUP_MEMBERS: [
+                "media_player.follower_wiim_device"
+            ],
         },
         blocking=True,
     )
@@ -684,6 +686,8 @@ async def test_group_refresh_dispatcher_sends_to_followers_and_refreshes_member(
 
     mock_wiim_device.playing_status = PlayingStatus.PLAYING
     mock_wiim_device.play_mode = "Spotify"
+    mock_wiim_device.local_input_mode = "Spotify"
+    follower_device.play_mode = "Spotify"
     mock_wiim_device.current_media = WiimMediaMetadata(
         title="Leader Signal Song",
         album="Leader Signal Album",
@@ -698,17 +702,18 @@ async def test_group_refresh_dispatcher_sends_to_followers_and_refreshes_member(
     assert follower_state.state == MediaPlayerState.PLAYING
     assert follower_state.attributes[ATTR_MEDIA_TITLE] == "Leader Signal Song"
     assert follower_state.attributes[ATTR_MEDIA_ALBUM_NAME] == "Leader Signal Album"
-    assert follower_state.attributes[ATTR_INPUT_SOURCE] == "Spotify"
+    assert follower_state.attributes[ATTR_INPUT_SOURCE] == "Network"
+    assert follower_state.attributes[ATTR_INPUT_SOURCE_LIST] == ["Network", "Line In"]
     assert follower_state.attributes[ATTR_MEDIA_POSITION] == 33
 
 
-async def test_follower_routes_repeat_shuffle_and_source_commands_to_leader(
+async def test_follower_routes_repeat_shuffle_but_keeps_source_local(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_wiim_device: MagicMock,
     mock_wiim_controller: MagicMock,
 ) -> None:
-    """Test follower repeat, shuffle, and source changes are sent to the leader."""
+    """Route follower repeat and shuffle to the leader, but select input locally."""
     await setup_integration(hass, mock_config_entry)
     leader_device = AsyncMock(spec=WiimDevice)
     leader_device.udn = "uuid:leader-1234"
@@ -743,8 +748,11 @@ async def test_follower_routes_repeat_shuffle_and_source_commands_to_leader(
     leader_device.build_loop_mode.return_value = repeat_loop_mode
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
-        SERVICE_REPEAT_SET,
-        {ATTR_ENTITY_ID: MEDIA_PLAYER_ENTITY_ID, ATTR_MEDIA_REPEAT: RepeatMode.ALL},
+        MediaPlayerService.REPEAT_SET,
+        {
+            TargetKey.ENTITY_ID: MEDIA_PLAYER_ENTITY_ID,
+            MediaPlayerServiceArgument.REPEAT: RepeatMode.ALL,
+        },
         blocking=True,
     )
     leader_device.build_loop_mode.assert_called_once_with(WiimRepeatMode.ALL, False)
@@ -757,8 +765,11 @@ async def test_follower_routes_repeat_shuffle_and_source_commands_to_leader(
     leader_device.build_loop_mode.return_value = shuffle_loop_mode
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
-        SERVICE_SHUFFLE_SET,
-        {ATTR_ENTITY_ID: MEDIA_PLAYER_ENTITY_ID, ATTR_MEDIA_SHUFFLE: True},
+        MediaPlayerService.SHUFFLE_SET,
+        {
+            TargetKey.ENTITY_ID: MEDIA_PLAYER_ENTITY_ID,
+            MediaPlayerServiceArgument.SHUFFLE: True,
+        },
         blocking=True,
     )
     leader_device.build_loop_mode.assert_called_once_with(WiimRepeatMode.OFF, True)
@@ -767,12 +778,30 @@ async def test_follower_routes_repeat_shuffle_and_source_commands_to_leader(
 
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
-        SERVICE_SELECT_SOURCE,
-        {ATTR_ENTITY_ID: MEDIA_PLAYER_ENTITY_ID, ATTR_INPUT_SOURCE: "Bluetooth"},
+        MediaPlayerService.SELECT_SOURCE,
+        {
+            TargetKey.ENTITY_ID: MEDIA_PLAYER_ENTITY_ID,
+            MediaPlayerServiceArgument.SOURCE: "Bluetooth",
+        },
         blocking=True,
     )
-    leader_device.async_set_play_mode.assert_awaited_once_with("Bluetooth")
-    mock_wiim_device.async_set_play_mode.assert_not_awaited()
+    mock_wiim_device.async_set_play_mode.assert_awaited_once_with("Bluetooth")
+    leader_device.async_set_play_mode.assert_not_awaited()
+    state = hass.states.get(MEDIA_PLAYER_ENTITY_ID)
+    assert state is not None
+    assert state.attributes[ATTR_INPUT_SOURCE] == "Network"
+    assert leader_device.play_mode == "Network"
+
+    mock_wiim_controller.get_group_snapshot.return_value = WiimGroupSnapshot(
+        role=WiimGroupRole.STANDALONE,
+        leader_udn=mock_wiim_device.udn,
+        member_udns=(mock_wiim_device.udn,),
+    )
+    mock_wiim_device.local_input_mode = "Bluetooth"
+    await fire_general_update(hass, mock_wiim_device)
+    state = hass.states.get(MEDIA_PLAYER_ENTITY_ID)
+    assert state is not None
+    assert state.attributes[ATTR_INPUT_SOURCE] == "Bluetooth"
 
 
 async def test_play_media_services_call_device_commands(
@@ -785,11 +814,11 @@ async def test_play_media_services_call_device_commands(
     await setup_integration(hass, mock_config_entry)
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
-        SERVICE_PLAY_MEDIA,
+        MediaPlayerService.PLAY_MEDIA,
         {
-            ATTR_ENTITY_ID: MEDIA_PLAYER_ENTITY_ID,
-            ATTR_MEDIA_CONTENT_TYPE: MediaType.MUSIC,
-            ATTR_MEDIA_CONTENT_ID: "1",
+            TargetKey.ENTITY_ID: MEDIA_PLAYER_ENTITY_ID,
+            MediaPlayerServiceArgument.MEDIA_CONTENT_TYPE: MediaType.MUSIC,
+            MediaPlayerServiceArgument.MEDIA_CONTENT_ID: "1",
         },
         blocking=True,
     )
@@ -805,11 +834,11 @@ async def test_play_media_services_call_device_commands(
     mock_wiim_device.play_preset.reset_mock()
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
-        SERVICE_PLAY_MEDIA,
+        MediaPlayerService.PLAY_MEDIA,
         {
-            ATTR_ENTITY_ID: MEDIA_PLAYER_ENTITY_ID,
-            ATTR_MEDIA_CONTENT_TYPE: "wiim_library",
-            ATTR_MEDIA_CONTENT_ID: "2",
+            TargetKey.ENTITY_ID: MEDIA_PLAYER_ENTITY_ID,
+            MediaPlayerServiceArgument.MEDIA_CONTENT_TYPE: "wiim_library",
+            MediaPlayerServiceArgument.MEDIA_CONTENT_ID: "2",
         },
         blocking=True,
     )
@@ -817,11 +846,11 @@ async def test_play_media_services_call_device_commands(
 
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
-        SERVICE_PLAY_MEDIA,
+        MediaPlayerService.PLAY_MEDIA,
         {
-            ATTR_ENTITY_ID: MEDIA_PLAYER_ENTITY_ID,
-            ATTR_MEDIA_CONTENT_TYPE: MediaType.TRACK,
-            ATTR_MEDIA_CONTENT_ID: "2",
+            TargetKey.ENTITY_ID: MEDIA_PLAYER_ENTITY_ID,
+            MediaPlayerServiceArgument.MEDIA_CONTENT_TYPE: MediaType.TRACK,
+            MediaPlayerServiceArgument.MEDIA_CONTENT_ID: "2",
         },
         blocking=True,
     )
@@ -874,11 +903,11 @@ async def test_play_media_validation_error_uses_translation(
     with pytest.raises(ServiceValidationError) as exc_info:
         await hass.services.async_call(
             MEDIA_PLAYER_DOMAIN,
-            SERVICE_PLAY_MEDIA,
+            MediaPlayerService.PLAY_MEDIA,
             {
-                ATTR_ENTITY_ID: MEDIA_PLAYER_ENTITY_ID,
-                ATTR_MEDIA_CONTENT_TYPE: media_type,
-                ATTR_MEDIA_CONTENT_ID: media_id,
+                TargetKey.ENTITY_ID: MEDIA_PLAYER_ENTITY_ID,
+                MediaPlayerServiceArgument.MEDIA_CONTENT_TYPE: media_type,
+                MediaPlayerServiceArgument.MEDIA_CONTENT_ID: media_id,
             },
             blocking=True,
         )
@@ -906,11 +935,11 @@ async def test_play_media_url_service_uses_processed_url(
     ):
         await hass.services.async_call(
             MEDIA_PLAYER_DOMAIN,
-            SERVICE_PLAY_MEDIA,
+            MediaPlayerService.PLAY_MEDIA,
             {
-                ATTR_ENTITY_ID: MEDIA_PLAYER_ENTITY_ID,
-                ATTR_MEDIA_CONTENT_TYPE: media_type,
-                ATTR_MEDIA_CONTENT_ID: "http://example.com/song.mp3",
+                TargetKey.ENTITY_ID: MEDIA_PLAYER_ENTITY_ID,
+                MediaPlayerServiceArgument.MEDIA_CONTENT_TYPE: media_type,
+                MediaPlayerServiceArgument.MEDIA_CONTENT_ID: "http://example.com/song.mp3",
             },
             blocking=True,
         )
@@ -945,11 +974,11 @@ async def test_play_media_source_service_uses_resolved_url(
     ):
         await hass.services.async_call(
             MEDIA_PLAYER_DOMAIN,
-            SERVICE_PLAY_MEDIA,
+            MediaPlayerService.PLAY_MEDIA,
             {
-                ATTR_ENTITY_ID: MEDIA_PLAYER_ENTITY_ID,
-                ATTR_MEDIA_CONTENT_TYPE: MediaType.MUSIC,
-                ATTR_MEDIA_CONTENT_ID: "media-source://media_source/local/song.mp3",
+                TargetKey.ENTITY_ID: MEDIA_PLAYER_ENTITY_ID,
+                MediaPlayerServiceArgument.MEDIA_CONTENT_TYPE: MediaType.MUSIC,
+                MediaPlayerServiceArgument.MEDIA_CONTENT_ID: "media-source://media_source/local/song.mp3",
             },
             blocking=True,
         )
@@ -967,8 +996,8 @@ async def test_browse_media_service_returns_wiim_library(
     await setup_integration(hass, mock_config_entry)
     root_result = await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
-        SERVICE_BROWSE_MEDIA,
-        {ATTR_ENTITY_ID: MEDIA_PLAYER_ENTITY_ID},
+        MediaPlayerService.BROWSE_MEDIA,
+        {TargetKey.ENTITY_ID: MEDIA_PLAYER_ENTITY_ID},
         blocking=True,
         return_response=True,
     )
@@ -982,11 +1011,11 @@ async def test_browse_media_service_returns_wiim_library(
     )
     preset_result = await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
-        SERVICE_BROWSE_MEDIA,
+        MediaPlayerService.BROWSE_MEDIA,
         {
-            ATTR_ENTITY_ID: MEDIA_PLAYER_ENTITY_ID,
-            ATTR_MEDIA_CONTENT_TYPE: MediaType.PLAYLIST,
-            ATTR_MEDIA_CONTENT_ID: "wiim_library/library_root/favorites",
+            TargetKey.ENTITY_ID: MEDIA_PLAYER_ENTITY_ID,
+            MediaPlayerServiceArgument.MEDIA_CONTENT_TYPE: MediaType.PLAYLIST,
+            MediaPlayerServiceArgument.MEDIA_CONTENT_ID: "wiim_library/library_root/favorites",
         },
         blocking=True,
         return_response=True,
@@ -1003,11 +1032,11 @@ async def test_browse_media_service_returns_wiim_library(
     )
     queue_result = await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
-        SERVICE_BROWSE_MEDIA,
+        MediaPlayerService.BROWSE_MEDIA,
         {
-            ATTR_ENTITY_ID: MEDIA_PLAYER_ENTITY_ID,
-            ATTR_MEDIA_CONTENT_TYPE: MediaType.PLAYLIST,
-            ATTR_MEDIA_CONTENT_ID: "wiim_library/library_root/playlists",
+            TargetKey.ENTITY_ID: MEDIA_PLAYER_ENTITY_ID,
+            MediaPlayerServiceArgument.MEDIA_CONTENT_TYPE: MediaType.PLAYLIST,
+            MediaPlayerServiceArgument.MEDIA_CONTENT_ID: "wiim_library/library_root/playlists",
         },
         blocking=True,
         return_response=True,
@@ -1032,8 +1061,8 @@ async def test_browse_media_does_not_refresh_entity_state(
 
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
-        SERVICE_BROWSE_MEDIA,
-        {ATTR_ENTITY_ID: MEDIA_PLAYER_ENTITY_ID},
+        MediaPlayerService.BROWSE_MEDIA,
+        {TargetKey.ENTITY_ID: MEDIA_PLAYER_ENTITY_ID},
         blocking=True,
         return_response=True,
     )
@@ -1078,8 +1107,8 @@ async def test_browse_media_service_includes_media_sources_when_supported(
     ):
         result = await hass.services.async_call(
             MEDIA_PLAYER_DOMAIN,
-            SERVICE_BROWSE_MEDIA,
-            {ATTR_ENTITY_ID: MEDIA_PLAYER_ENTITY_ID},
+            MediaPlayerService.BROWSE_MEDIA,
+            {TargetKey.ENTITY_ID: MEDIA_PLAYER_ENTITY_ID},
             blocking=True,
             return_response=True,
         )
@@ -1133,11 +1162,11 @@ async def test_browse_media_error_uses_translation(
     with pytest.raises(BrowseError) as exc_info:
         await hass.services.async_call(
             MEDIA_PLAYER_DOMAIN,
-            SERVICE_BROWSE_MEDIA,
+            MediaPlayerService.BROWSE_MEDIA,
             {
-                ATTR_ENTITY_ID: MEDIA_PLAYER_ENTITY_ID,
-                ATTR_MEDIA_CONTENT_TYPE: media_content_type,
-                ATTR_MEDIA_CONTENT_ID: media_content_id,
+                TargetKey.ENTITY_ID: MEDIA_PLAYER_ENTITY_ID,
+                MediaPlayerServiceArgument.MEDIA_CONTENT_TYPE: media_content_type,
+                MediaPlayerServiceArgument.MEDIA_CONTENT_ID: media_content_id,
             },
             blocking=True,
             return_response=True,
@@ -1197,11 +1226,11 @@ async def test_browse_media_failure_returns_empty_without_changing_state(
     caplog.clear()
     result = await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
-        SERVICE_BROWSE_MEDIA,
+        MediaPlayerService.BROWSE_MEDIA,
         {
-            ATTR_ENTITY_ID: MEDIA_PLAYER_ENTITY_ID,
-            ATTR_MEDIA_CONTENT_TYPE: MediaType.PLAYLIST,
-            ATTR_MEDIA_CONTENT_ID: media_content_id,
+            TargetKey.ENTITY_ID: MEDIA_PLAYER_ENTITY_ID,
+            MediaPlayerServiceArgument.MEDIA_CONTENT_TYPE: MediaType.PLAYLIST,
+            MediaPlayerServiceArgument.MEDIA_CONTENT_ID: media_content_id,
         },
         blocking=True,
         return_response=True,
@@ -1268,10 +1297,10 @@ async def test_join_and_unjoin_services_use_resolved_member_udns(
 
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
-        SERVICE_JOIN,
+        MediaPlayerService.JOIN,
         {
-            ATTR_ENTITY_ID: MEDIA_PLAYER_ENTITY_ID,
-            ATTR_GROUP_MEMBERS: [
+            TargetKey.ENTITY_ID: MEDIA_PLAYER_ENTITY_ID,
+            MediaPlayerServiceArgument.GROUP_MEMBERS: [
                 MEDIA_PLAYER_ENTITY_ID,
                 follower_entity_id,
             ],
@@ -1306,10 +1335,10 @@ async def test_join_and_unjoin_services_use_resolved_member_udns(
 
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
-        SERVICE_JOIN,
+        MediaPlayerService.JOIN,
         {
-            ATTR_ENTITY_ID: MEDIA_PLAYER_ENTITY_ID,
-            ATTR_GROUP_MEMBERS: [
+            TargetKey.ENTITY_ID: MEDIA_PLAYER_ENTITY_ID,
+            MediaPlayerServiceArgument.GROUP_MEMBERS: [
                 MEDIA_PLAYER_ENTITY_ID,
                 second_follower_entity_id,
             ],
@@ -1324,8 +1353,8 @@ async def test_join_and_unjoin_services_use_resolved_member_udns(
 
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
-        SERVICE_UNJOIN,
-        {ATTR_ENTITY_ID: MEDIA_PLAYER_ENTITY_ID},
+        MediaPlayerService.UNJOIN,
+        {TargetKey.ENTITY_ID: MEDIA_PLAYER_ENTITY_ID},
         blocking=True,
     )
 
@@ -1386,10 +1415,10 @@ async def test_join_service_resolves_renamed_member(
 
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
-        SERVICE_JOIN,
+        MediaPlayerService.JOIN,
         {
-            ATTR_ENTITY_ID: MEDIA_PLAYER_ENTITY_ID,
-            ATTR_GROUP_MEMBERS: [new_entity_id],
+            TargetKey.ENTITY_ID: MEDIA_PLAYER_ENTITY_ID,
+            MediaPlayerServiceArgument.GROUP_MEMBERS: [new_entity_id],
         },
         blocking=True,
     )
@@ -1402,10 +1431,10 @@ async def test_join_service_resolves_renamed_member(
     with pytest.raises(ServiceValidationError) as exc_info:
         await hass.services.async_call(
             MEDIA_PLAYER_DOMAIN,
-            SERVICE_JOIN,
+            MediaPlayerService.JOIN,
             {
-                ATTR_ENTITY_ID: MEDIA_PLAYER_ENTITY_ID,
-                ATTR_GROUP_MEMBERS: [old_entity_id],
+                TargetKey.ENTITY_ID: MEDIA_PLAYER_ENTITY_ID,
+                MediaPlayerServiceArgument.GROUP_MEMBERS: [old_entity_id],
             },
             blocking=True,
         )
@@ -1522,10 +1551,10 @@ async def test_join_service_invalid_member_uses_translation(
     with pytest.raises(ServiceValidationError) as exc_info:
         await hass.services.async_call(
             MEDIA_PLAYER_DOMAIN,
-            SERVICE_JOIN,
+            MediaPlayerService.JOIN,
             {
-                ATTR_ENTITY_ID: MEDIA_PLAYER_ENTITY_ID,
-                ATTR_GROUP_MEMBERS: [invalid_entity_id],
+                TargetKey.ENTITY_ID: MEDIA_PLAYER_ENTITY_ID,
+                MediaPlayerServiceArgument.GROUP_MEMBERS: [invalid_entity_id],
             },
             blocking=True,
         )

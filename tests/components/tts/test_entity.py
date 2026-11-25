@@ -4,6 +4,7 @@ from collections.abc import AsyncGenerator
 from typing import Any
 
 import pytest
+from pytest_homeassistant.common import mock_restore_cache
 
 from homeassistant.components import tts
 from homeassistant.config_entries import ConfigEntryState
@@ -17,8 +18,6 @@ from .common import (
     MockTTSEntity,
     mock_config_entry_setup,
 )
-
-from tests.common import mock_restore_cache
 
 
 class DefaultEntity(tts.TextToSpeechEntity):

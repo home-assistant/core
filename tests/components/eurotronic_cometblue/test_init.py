@@ -4,6 +4,7 @@ from unittest.mock import patch
 
 from bleak.exc import BleakError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.eurotronic_cometblue.const import DOMAIN
@@ -13,8 +14,6 @@ from homeassistant.helpers import device_registry as dr
 
 from . import FIXTURE_MAC
 from .conftest import setup_with_selected_platforms
-
-from tests.common import MockConfigEntry
 
 
 async def test_device_registry(

@@ -1,6 +1,7 @@
 """Configuration for GeoNet NZ Quakes tests."""
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.geonetnz_quakes import (
     CONF_MINIMUM_MAGNITUDE,
@@ -14,8 +15,6 @@ from homeassistant.const import (
     CONF_SCAN_INTERVAL,
     CONF_UNIT_SYSTEM,
 )
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture

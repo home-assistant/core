@@ -32,18 +32,18 @@ concurrency:
 jobs:
   deterministic:
     name: Run deterministic requirement checks
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-latest
     permissions:
       contents: read
       pull-requests: read # To fetch the PR diff via gh CLI
     timeout-minutes: 10
     steps:
       - name: Check out code from GitHub
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        uses: actions/checkout@v7.0.1
         with:
           persist-credentials: false
       - name: Set up Python
-        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        uses: actions/setup-python@v7.1.0
         with:
           python-version-file: ".python-version"
           check-latest: true
@@ -71,7 +71,7 @@ jobs:
             --diff deterministic/pr.diff \
             --output deterministic/results.json
       - name: Upload deterministic-results artifact
-        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        uses: actions/upload-artifact@v7.0.2
         with:
           name: check-requirements-deterministic
           path: deterministic/results.json

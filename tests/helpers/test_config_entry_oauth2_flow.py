@@ -1,5 +1,6 @@
 """Tests for the Somfy config flow."""
 
+import asyncio
 from collections.abc import AsyncGenerator, Generator
 from http import HTTPStatus
 import logging
@@ -15,8 +16,21 @@ from aiohttp import (
     RequestInfo,
     ServerTimeoutError,
 )
+from freezegun.api import FrozenDateTimeFactory
 from multidict import CIMultiDict, CIMultiDictProxy
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    MockModule,
+    mock_integration,
+    mock_platform,
+)
+from pytest_homeassistant.test_util.aiohttp import (
+    AiohttpClientMocker,
+    AiohttpClientMockResponse,
+    MockLongPollSideEffect,
+)
+from pytest_homeassistant.typing import ClientSessionGenerator
 from yarl import URL
 
 from homeassistant import config_entries, data_entry_flow, setup
@@ -32,10 +46,6 @@ from homeassistant.exceptions import (
 from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.helpers.network import NoURLAvailableError
 
-from tests.common import MockConfigEntry, MockModule, mock_integration, mock_platform
-from tests.test_util.aiohttp import AiohttpClientMocker, AiohttpClientMockResponse
-from tests.typing import ClientSessionGenerator
-
 TEST_DOMAIN = "oauth2_test"
 CLIENT_SECRET = "5678"
 CLIENT_ID = "1234"
@@ -46,6 +56,25 @@ AUTHORIZE_URL = "https://example.como/auth/authorize"
 TOKEN_URL = "https://example.como/auth/token"
 # Far enough ahead that a token carrying it always counts as unexpired.
 FUTURE_EXPIRES_AT = 2000000000
+DEVICE_CODE = "mock-device-code"
+USER_CODE = "WDJB-MJHT"
+VERIFICATION_URI = "https://example.com/device"
+DEVICE_EXPIRES_IN = 900
+DEVICE_INTERVAL = 5
+DEVICE_AUTHORIZATION_RESPONSE = {
+    "device_code": DEVICE_CODE,
+    "user_code": USER_CODE,
+    "verification_uri": VERIFICATION_URI,
+    "expires_in": DEVICE_EXPIRES_IN,
+    "interval": DEVICE_INTERVAL,
+}
+TOKEN_RESPONSE = {
+    "refresh_token": REFRESH_TOKEN,
+    "access_token": ACCESS_TOKEN_1,
+    "token_type": "bearer",
+    "expires_in": 60,
+}
+JSON_ACCEPT_HEADER = {"Accept": "application/json"}
 MOCK_SECRET_TOKEN_URLSAFE = (
     "token-"
     "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
@@ -105,6 +134,88 @@ def flow_handler(
 
     with patch.dict(config_entries.HANDLERS, {TEST_DOMAIN: TestFlowHandler}):
         yield TestFlowHandler
+
+
+@pytest.fixture
+def device_flow_handler(
+    hass: HomeAssistant,
+) -> Generator[type[config_entry_oauth2_flow.AbstractOAuth2DeviceFlowHandler]]:
+    """Return a registered device config flow."""
+
+    mock_platform(hass, f"{TEST_DOMAIN}.config_flow")
+
+    class TestDeviceFlowHandler(
+        config_entry_oauth2_flow.AbstractOAuth2DeviceFlowHandler
+    ):
+        """Test device flow handler."""
+
+        DOMAIN = TEST_DOMAIN
+
+        @property
+        def logger(self) -> logging.Logger:
+            """Return logger."""
+            return logging.getLogger(__name__)
+
+    with patch.dict(config_entries.HANDLERS, {TEST_DOMAIN: TestDeviceFlowHandler}):
+        yield TestDeviceFlowHandler
+
+
+class ScopedDeviceFlowImplementation(config_entry_oauth2_flow.DeviceFlowImplementation):
+    """Device flow implementation that asks for a scope."""
+
+    @property
+    def extra_authorize_data(self) -> dict:
+        """Extra data for the device authorization request."""
+        return {"scope": "read write", "audience": None}
+
+
+@pytest.fixture
+def device_impl(
+    hass: HomeAssistant,
+) -> config_entry_oauth2_flow.DeviceFlowImplementation:
+    """Device flow implementation."""
+    return ScopedDeviceFlowImplementation(
+        hass, TEST_DOMAIN, CLIENT_ID, AUTHORIZE_URL, TOKEN_URL
+    )
+
+
+@pytest.fixture
+def mock_device_integration(hass: HomeAssistant) -> None:
+    """Mock the integration the device flow creates entries for."""
+    mock_integration(
+        hass,
+        MockModule(domain=TEST_DOMAIN, async_setup_entry=AsyncMock(return_value=True)),
+    )
+
+
+class FakeSleep:
+    """Record the device flow poll waits and advance the frozen clock instead."""
+
+    def __init__(self, freezer: FrozenDateTimeFactory) -> None:
+        """Initialize the fake sleep."""
+        self._freezer = freezer
+        self.delays: list[float] = []
+
+    async def __call__(self, delay: float) -> None:
+        """Advance the clock instead of waiting."""
+        if not delay:
+            await _real_sleep(0)
+            return
+        self.delays.append(delay)
+        self._freezer.tick(delay)
+
+
+_real_sleep = asyncio.sleep
+
+
+@pytest.fixture
+def poll_sleep(freezer: FrozenDateTimeFactory) -> Generator[FakeSleep]:
+    """Patch the device flow poll wait."""
+    fake_sleep = FakeSleep(freezer)
+    with patch(
+        "homeassistant.helpers.config_entry_oauth2_flow.asyncio.sleep", fake_sleep
+    ):
+        yield fake_sleep
 
 
 class MockOAuth2Implementation(config_entry_oauth2_flow.AbstractOAuth2Implementation):
@@ -168,6 +279,41 @@ async def test_abort_if_no_implementation(
     assert result["reason"] == "missing_configuration"
     # Not a shared reason, so it stays with the integration owning the flow
     assert "translation_domain" not in result
+
+
+@pytest.mark.parametrize(
+    ("handler", "implementation"),
+    [
+        pytest.param("flow_handler", "device_impl", id="authorization_code_handler"),
+        pytest.param("device_flow_handler", "local_impl", id="device_flow_handler"),
+    ],
+)
+async def test_abort_if_implementation_of_other_grant(
+    hass: HomeAssistant,
+    request: pytest.FixtureRequest,
+    local_impl: config_entry_oauth2_flow.LocalOAuth2Implementation,
+    device_impl: config_entry_oauth2_flow.DeviceFlowImplementation,
+    handler: str,
+    implementation: str,
+) -> None:
+    """Check flow abort when the picked implementation has another grant type."""
+    request.getfixturevalue(handler)
+    config_entry_oauth2_flow.async_register_implementation(
+        hass,
+        TEST_DOMAIN,
+        {"local_impl": local_impl, "device_impl": device_impl}[implementation],
+    )
+
+    result = await hass.config_entries.flow.async_init(
+        TEST_DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={"implementation": TEST_DOMAIN}
+    )
+
+    assert result["type"] is data_entry_flow.FlowResultType.ABORT
+    assert result["reason"] == "oauth_error"
+    assert result["translation_domain"] == HOMEASSISTANT_DOMAIN
 
 
 async def test_abort_if_oauth_implementation_unavailable(
@@ -625,8 +771,7 @@ async def test_abort_if_oauth_token_error(
         json=error_body,
     )
 
-    with caplog.at_level(logging.DEBUG):
-        result = await hass.config_entries.flow.async_configure(result["flow_id"])
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
     assert (
         f"Token request for {TEST_DOMAIN} failed ({status_code}): {expected_detail}"
         in caplog.text
@@ -689,8 +834,7 @@ async def test_abort_if_oauth_token_closing_error(
         closing=True,
     )
 
-    with caplog.at_level(logging.DEBUG):
-        result = await hass.config_entries.flow.async_configure(result["flow_id"])
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
     assert "Token request for oauth2_test failed (401): unknown" in caplog.text
 
     assert result["type"] is data_entry_flow.FlowResultType.ABORT
@@ -811,6 +955,784 @@ async def test_full_flow(
         )
         is local_impl
     )
+
+
+def test_authorization_code_alias() -> None:
+    """Test the old base class name stays the authorization code base class."""
+    assert (
+        config_entry_oauth2_flow.AbstractOAuth2Implementation
+        is config_entry_oauth2_flow.AbstractAuthorizationCodeImplementation
+    )
+    assert not issubclass(
+        config_entry_oauth2_flow.DeviceFlowImplementation,
+        config_entry_oauth2_flow.AbstractAuthorizationCodeImplementation,
+    )
+    assert issubclass(
+        config_entry_oauth2_flow.DeviceFlowImplementation,
+        config_entry_oauth2_flow.AbstractOAuth2BaseImplementation,
+    )
+
+
+def _device_authorization(
+    expires_in: int = DEVICE_EXPIRES_IN, interval: int = DEVICE_INTERVAL
+) -> config_entry_oauth2_flow.DeviceAuthorization:
+    """Return a device authorization as the server granted it."""
+    return config_entry_oauth2_flow.DeviceAuthorization(
+        device_code=DEVICE_CODE,
+        user_code=USER_CODE,
+        verification_uri=VERIFICATION_URI,
+        verification_uri_complete=None,
+        expires_in=expires_in,
+        interval=interval,
+    )
+
+
+def _mock_token_responses(
+    aioclient_mock: AiohttpClientMocker, responses: list[dict[str, Any]]
+) -> None:
+    """Answer the token endpoint with the given responses in order."""
+    pending = list(responses)
+
+    async def _next_response(
+        method: str, url: URL, data: dict[str, Any]
+    ) -> AiohttpClientMockResponse:
+        return AiohttpClientMockResponse(method=method, url=url, **pending.pop(0))
+
+    aioclient_mock.post(TOKEN_URL, side_effect=_next_response)
+
+
+async def _start_device_flow(hass: HomeAssistant) -> config_entries.ConfigFlowResult:
+    """Start the device flow and pick the test implementation."""
+    result = await hass.config_entries.flow.async_init(
+        TEST_DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result["type"] is data_entry_flow.FlowResultType.FORM
+    assert result["step_id"] == "pick_implementation"
+    return await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={"implementation": TEST_DOMAIN}
+    )
+
+
+@pytest.mark.usefixtures("device_flow_handler", "mock_device_integration")
+async def test_device_flow_full_flow(
+    hass: HomeAssistant,
+    device_impl: config_entry_oauth2_flow.DeviceFlowImplementation,
+    aioclient_mock: AiohttpClientMocker,
+    poll_sleep: FakeSleep,
+) -> None:
+    """Test the device flow from registration to the config entry."""
+    aioclient_mock.post(AUTHORIZE_URL, json=DEVICE_AUTHORIZATION_RESPONSE)
+    token_endpoint = MockLongPollSideEffect()
+    aioclient_mock.post(TOKEN_URL, side_effect=token_endpoint)
+    config_entry_oauth2_flow.async_register_implementation(
+        hass, TEST_DOMAIN, device_impl
+    )
+
+    result = await _start_device_flow(hass)
+
+    assert result["type"] is data_entry_flow.FlowResultType.SHOW_PROGRESS
+    assert result["step_id"] == "device_flow"
+    assert result["progress_action"] == "wait_for_device"
+    assert result["translation_domain"] == HOMEASSISTANT_DOMAIN
+    assert result["description_placeholders"] == {
+        "url": VERIFICATION_URI,
+        "url_complete": VERIFICATION_URI,
+        "code": USER_CODE,
+    }
+
+    # Showing the progress again neither registers again nor finishes the flow
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
+    assert result["type"] is data_entry_flow.FlowResultType.SHOW_PROGRESS
+    assert result["description_placeholders"] == {
+        "url": VERIFICATION_URI,
+        "url_complete": VERIFICATION_URI,
+        "code": USER_CODE,
+    }
+
+    token_endpoint.queue_response(status=400, json={"error": "authorization_pending"})
+    token_endpoint.queue_response(json=TOKEN_RESPONSE)
+    await hass.async_block_till_done()
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
+
+    assert result["type"] is data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result["title"] == "Device authorization"
+    assert result["data"] == {
+        "auth_implementation": TEST_DOMAIN,
+        "token": {**TOKEN_RESPONSE, "expires_at": time.time() + 60},
+    }
+    # The first poll waits the interval too (RFC 8628 section 3.5)
+    assert poll_sleep.delays == [DEVICE_INTERVAL, DEVICE_INTERVAL]
+    poll_request = {
+        "grant_type": "urn:ietf:params:oauth:grant-type:device_code",
+        "device_code": DEVICE_CODE,
+        "client_id": CLIENT_ID,
+    }
+    assert [call[1:] for call in aioclient_mock.mock_calls] == [
+        (
+            URL(AUTHORIZE_URL),
+            {"scope": "read write", "client_id": CLIENT_ID},
+            JSON_ACCEPT_HEADER,
+        ),
+        (URL(TOKEN_URL), poll_request, JSON_ACCEPT_HEADER),
+        (URL(TOKEN_URL), poll_request, JSON_ACCEPT_HEADER),
+    ]
+
+
+@pytest.mark.parametrize(
+    "response",
+    [
+        pytest.param({"text": "not json"}, id="invalid_json"),
+        pytest.param({"json": ["not", "a", "dict"]}, id="not_an_object"),
+        *(
+            pytest.param(
+                {
+                    "json": {
+                        key: value
+                        for key, value in DEVICE_AUTHORIZATION_RESPONSE.items()
+                        if key != missing
+                    }
+                },
+                id=f"missing_{missing}",
+            )
+            for missing in (
+                "device_code",
+                "user_code",
+                "verification_uri",
+                "expires_in",
+            )
+        ),
+        pytest.param(
+            {"json": {**DEVICE_AUTHORIZATION_RESPONSE, "expires_in": "soon"}},
+            id="expires_in_not_a_number",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("device_flow_handler")
+async def test_device_flow_invalid_registration(
+    hass: HomeAssistant,
+    device_impl: config_entry_oauth2_flow.DeviceFlowImplementation,
+    aioclient_mock: AiohttpClientMocker,
+    response: dict[str, Any],
+) -> None:
+    """Test an unusable device authorization response aborts before polling."""
+    aioclient_mock.post(AUTHORIZE_URL, **response)
+    config_entry_oauth2_flow.async_register_implementation(
+        hass, TEST_DOMAIN, device_impl
+    )
+
+    result = await _start_device_flow(hass)
+
+    assert result["type"] is data_entry_flow.FlowResultType.ABORT
+    assert result["reason"] == "oauth_error"
+    assert aioclient_mock.call_count == 1
+
+
+@pytest.mark.parametrize(
+    ("response", "expected"),
+    [
+        pytest.param(
+            {"json": DEVICE_AUTHORIZATION_RESPONSE},
+            _device_authorization(),
+            id="json",
+        ),
+        pytest.param(
+            {
+                "json": {
+                    **DEVICE_AUTHORIZATION_RESPONSE,
+                    "verification_uri_complete": f"{VERIFICATION_URI}?code=1",
+                }
+            },
+            config_entry_oauth2_flow.DeviceAuthorization(
+                device_code=DEVICE_CODE,
+                user_code=USER_CODE,
+                verification_uri=VERIFICATION_URI,
+                verification_uri_complete=f"{VERIFICATION_URI}?code=1",
+                expires_in=DEVICE_EXPIRES_IN,
+                interval=DEVICE_INTERVAL,
+            ),
+            id="verification_uri_complete",
+        ),
+        pytest.param(
+            {
+                "json": {
+                    "device_code": DEVICE_CODE,
+                    "user_code": USER_CODE,
+                    "verification_url": VERIFICATION_URI,
+                    "expires_in": str(DEVICE_EXPIRES_IN),
+                    "interval": "7",
+                }
+            },
+            _device_authorization(interval=7),
+            id="verification_url_and_string_numbers",
+        ),
+        pytest.param(
+            {
+                "json": {
+                    key: value
+                    for key, value in DEVICE_AUTHORIZATION_RESPONSE.items()
+                    if key != "interval"
+                }
+            },
+            _device_authorization(interval=5),
+            id="default_interval",
+        ),
+        pytest.param(
+            {"json": {**DEVICE_AUTHORIZATION_RESPONSE, "interval": 0}},
+            _device_authorization(interval=5),
+            id="interval_below_minimum",
+        ),
+    ],
+)
+async def test_device_flow_register_device(
+    device_impl: config_entry_oauth2_flow.DeviceFlowImplementation,
+    aioclient_mock: AiohttpClientMocker,
+    response: dict[str, Any],
+    expected: config_entry_oauth2_flow.DeviceAuthorization,
+) -> None:
+    """Test the device authorization response is parsed tolerantly."""
+    aioclient_mock.post(AUTHORIZE_URL, **response)
+
+    assert await device_impl.async_register_device() == expected
+
+
+@pytest.mark.parametrize(
+    ("response", "expected_abort_reason"),
+    [
+        pytest.param(
+            {"status": HTTPStatus.TOO_MANY_REQUESTS}, "oauth_failed", id="429"
+        ),
+        pytest.param(
+            {"status": HTTPStatus.INTERNAL_SERVER_ERROR}, "oauth_failed", id="500"
+        ),
+        pytest.param(
+            {"status": HTTPStatus.UNAUTHORIZED}, "oauth_unauthorized", id="401"
+        ),
+        pytest.param(
+            {"status": HTTPStatus.BAD_REQUEST, "json": {"error": "invalid_client"}},
+            "oauth_unauthorized",
+            id="400_invalid_client",
+        ),
+        pytest.param({"exc": ClientError()}, "oauth_failed", id="connection_error"),
+        pytest.param(
+            {"exc": TimeoutError()}, "authorize_url_timeout", id="timeout_error"
+        ),
+    ],
+)
+@pytest.mark.usefixtures("device_flow_handler")
+async def test_device_flow_registration_errors(
+    hass: HomeAssistant,
+    device_impl: config_entry_oauth2_flow.DeviceFlowImplementation,
+    aioclient_mock: AiohttpClientMocker,
+    response: dict[str, Any],
+    expected_abort_reason: str,
+) -> None:
+    """Test a failed device authorization request aborts the flow."""
+    aioclient_mock.post(AUTHORIZE_URL, **response)
+    config_entry_oauth2_flow.async_register_implementation(
+        hass, TEST_DOMAIN, device_impl
+    )
+
+    result = await _start_device_flow(hass)
+
+    assert result["type"] is data_entry_flow.FlowResultType.ABORT
+    assert result["reason"] == expected_abort_reason
+
+
+@pytest.mark.parametrize(
+    ("response", "expected_abort_reason", "placeholders"),
+    [
+        pytest.param(
+            {"status": 400, "json": {"error": "access_denied"}},
+            "user_rejected_authorize",
+            {"error": "access_denied"},
+            id="access_denied",
+        ),
+        pytest.param(
+            {"status": 400, "json": {"error": "expired_token"}},
+            "oauth_timeout",
+            None,
+            id="expired_token",
+        ),
+        pytest.param(
+            {"status": 400, "json": {"error": "invalid_grant"}},
+            "oauth_error",
+            None,
+            id="unknown_error_code",
+        ),
+        pytest.param(
+            {"json": {**TOKEN_RESPONSE, "expires_in": "soon"}},
+            "oauth_error",
+            None,
+            id="invalid_expires_in",
+        ),
+        pytest.param(
+            {"json": {**TOKEN_RESPONSE, "expires_in": ["soon"]}},
+            "oauth_error",
+            None,
+            id="expires_in_not_a_scalar",
+        ),
+        pytest.param(
+            {"exc": RuntimeError("boom")},
+            "oauth_error",
+            None,
+            id="unexpected_exception",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("device_flow_handler", "mock_device_integration", "poll_sleep")
+async def test_device_flow_poll_aborts(
+    hass: HomeAssistant,
+    device_impl: config_entry_oauth2_flow.DeviceFlowImplementation,
+    aioclient_mock: AiohttpClientMocker,
+    response: dict[str, Any],
+    expected_abort_reason: str,
+    placeholders: dict[str, str] | None,
+) -> None:
+    """Test the flow aborts when polling for the token fails."""
+    aioclient_mock.post(AUTHORIZE_URL, json=DEVICE_AUTHORIZATION_RESPONSE)
+    _mock_token_responses(aioclient_mock, [response])
+    config_entry_oauth2_flow.async_register_implementation(
+        hass, TEST_DOMAIN, device_impl
+    )
+
+    result = await _start_device_flow(hass)
+    # Polling already failed while the task started eagerly, the progress
+    # is shown anyway
+    assert result["type"] is data_entry_flow.FlowResultType.SHOW_PROGRESS
+    await hass.async_block_till_done()
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
+
+    assert result["type"] is data_entry_flow.FlowResultType.ABORT
+    assert result["reason"] == expected_abort_reason
+    assert result["description_placeholders"] == placeholders
+
+
+@pytest.mark.usefixtures("poll_sleep")
+async def test_device_flow_handler_authorize_data(
+    hass: HomeAssistant,
+    device_flow_handler: type[config_entry_oauth2_flow.AbstractOAuth2DeviceFlowHandler],
+    device_impl: config_entry_oauth2_flow.DeviceFlowImplementation,
+    aioclient_mock: AiohttpClientMocker,
+) -> None:
+    """Test the flow handler adds its authorize data, such as the scope."""
+    aioclient_mock.post(AUTHORIZE_URL, json=DEVICE_AUTHORIZATION_RESPONSE)
+    _mock_token_responses(
+        aioclient_mock, [{"status": 400, "json": {"error": "access_denied"}}]
+    )
+    config_entry_oauth2_flow.async_register_implementation(
+        hass, TEST_DOMAIN, device_impl
+    )
+
+    with patch.object(
+        device_flow_handler, "extra_authorize_data", {"scope": "repo", "prompt": None}
+    ):
+        await _start_device_flow(hass)
+    await hass.async_block_till_done()
+
+    assert aioclient_mock.mock_calls[0][1:] == (
+        URL(AUTHORIZE_URL),
+        {"scope": "repo", "client_id": CLIENT_ID},
+        JSON_ACCEPT_HEADER,
+    )
+
+
+@pytest.mark.usefixtures("device_flow_handler", "poll_sleep")
+async def test_device_flow_url_complete_placeholder(
+    hass: HomeAssistant,
+    device_impl: config_entry_oauth2_flow.DeviceFlowImplementation,
+    aioclient_mock: AiohttpClientMocker,
+) -> None:
+    """Test the progress links the complete verification uri when given."""
+    aioclient_mock.post(
+        AUTHORIZE_URL,
+        json={
+            **DEVICE_AUTHORIZATION_RESPONSE,
+            "verification_uri_complete": f"{VERIFICATION_URI}?code={USER_CODE}",
+        },
+    )
+    _mock_token_responses(
+        aioclient_mock, [{"status": 400, "json": {"error": "access_denied"}}]
+    )
+    config_entry_oauth2_flow.async_register_implementation(
+        hass, TEST_DOMAIN, device_impl
+    )
+
+    result = await _start_device_flow(hass)
+
+    assert result["type"] is data_entry_flow.FlowResultType.SHOW_PROGRESS
+    assert result["description_placeholders"] == {
+        "url": VERIFICATION_URI,
+        "url_complete": f"{VERIFICATION_URI}?code={USER_CODE}",
+        "code": USER_CODE,
+    }
+    await hass.async_block_till_done()
+
+
+@pytest.mark.parametrize(
+    ("responses", "expected_token"),
+    [
+        pytest.param(
+            [{"status": 400, "json": {"error": "authorization_pending"}}] * 2
+            + [{"json": TOKEN_RESPONSE}],
+            TOKEN_RESPONSE,
+            id="pending_then_success",
+        ),
+        pytest.param(
+            [
+                {"json": {"error": "authorization_pending"}},
+                {"json": TOKEN_RESPONSE},
+            ],
+            TOKEN_RESPONSE,
+            id="error_in_200_response",
+        ),
+        pytest.param(
+            [{"json": {"access_token": ACCESS_TOKEN_1, "token_type": "bearer"}}],
+            {
+                "access_token": ACCESS_TOKEN_1,
+                "token_type": "bearer",
+                "expires_in": config_entry_oauth2_flow.DEVICE_FLOW_DEFAULT_EXPIRES_IN,
+            },
+            id="without_expires_in",
+        ),
+    ],
+)
+async def test_device_flow_check_activation(
+    device_impl: config_entry_oauth2_flow.DeviceFlowImplementation,
+    aioclient_mock: AiohttpClientMocker,
+    poll_sleep: FakeSleep,
+    responses: list[dict[str, Any]],
+    expected_token: dict[str, Any],
+) -> None:
+    """Test polling returns the token once the user authorized the device."""
+    _mock_token_responses(aioclient_mock, responses)
+
+    token = await device_impl.async_check_device_activation(_device_authorization())
+
+    assert token == {
+        **expected_token,
+        "expires_at": time.time() + expected_token["expires_in"],
+    }
+    assert poll_sleep.delays == [DEVICE_INTERVAL] * len(responses)
+    assert aioclient_mock.call_count == len(responses)
+
+
+@pytest.mark.parametrize(
+    ("responses", "expected_exception"),
+    [
+        pytest.param(
+            [{"status": 400, "json": {"error": "access_denied"}}],
+            config_entry_oauth2_flow.DeviceFlowUnauthorized,
+            id="access_denied",
+        ),
+        pytest.param(
+            [{"json": {"error": "access_denied"}}],
+            config_entry_oauth2_flow.DeviceFlowUnauthorized,
+            id="access_denied_in_200_response",
+        ),
+        pytest.param(
+            [{"status": 400, "json": {"error": "expired_token"}}],
+            config_entry_oauth2_flow.DeviceFlowTimeout,
+            id="expired_token",
+        ),
+        pytest.param(
+            [{"status": 400, "json": {"error": "unsupported_grant_type"}}],
+            config_entry_oauth2_flow.DeviceFlowError,
+            id="unknown_error_code",
+        ),
+        pytest.param(
+            [{"status": 400, "json": {"error": 5}}],
+            config_entry_oauth2_flow.DeviceFlowError,
+            id="error_code_not_a_string",
+        ),
+        pytest.param(
+            [{"status": 400, "text": "Bad Request"}],
+            config_entry_oauth2_flow.DeviceFlowError,
+            id="400_without_error_code",
+        ),
+        pytest.param(
+            [{"text": "<html>not json</html>"}],
+            config_entry_oauth2_flow.DeviceFlowError,
+            id="invalid_json",
+        ),
+        pytest.param(
+            [{"json": {"token_type": "bearer"}}],
+            config_entry_oauth2_flow.DeviceFlowError,
+            id="success_without_access_token",
+        ),
+    ],
+)
+async def test_device_flow_check_activation_errors(
+    device_impl: config_entry_oauth2_flow.DeviceFlowImplementation,
+    aioclient_mock: AiohttpClientMocker,
+    poll_sleep: FakeSleep,
+    responses: list[dict[str, Any]],
+    expected_exception: type[config_entry_oauth2_flow.DeviceFlowError],
+) -> None:
+    """Test polling stops on a final error."""
+    _mock_token_responses(aioclient_mock, responses)
+
+    with pytest.raises(expected_exception):
+        await device_impl.async_check_device_activation(_device_authorization())
+
+    assert aioclient_mock.call_count == len(responses)
+
+
+@pytest.mark.parametrize(
+    ("interval", "slow_downs", "expected_delays"),
+    [
+        pytest.param(5, [{"error": "slow_down"}], [5, 10], id="increment"),
+        pytest.param(
+            5,
+            [{"error": "slow_down", "interval": "20"}],
+            [5, 20],
+            id="server_interval",
+        ),
+        pytest.param(
+            5,
+            [{"error": "slow_down", "interval": 7}],
+            [5, 10],
+            id="server_interval_below_increment",
+        ),
+        pytest.param(
+            5,
+            [{"error": "slow_down", "interval": 5}],
+            [5, 10],
+            id="server_interval_equal",
+        ),
+        pytest.param(
+            5,
+            [{"error": "slow_down", "interval": 2}],
+            [5, 10],
+            id="server_interval_lower",
+        ),
+        pytest.param(
+            5,
+            [{"error": "slow_down", "interval": 600}],
+            [5, 600],
+            id="server_interval_above_cap",
+        ),
+        pytest.param(
+            5,
+            [{"error": "slow_down", "interval": "soon"}],
+            [5, 10],
+            id="invalid_server_interval",
+        ),
+        pytest.param(118, [{"error": "slow_down"}], [118, 120], id="increment_capped"),
+        pytest.param(120, [{"error": "slow_down"}], [120, 120], id="increment_at_cap"),
+        pytest.param(
+            5,
+            [{"error": "slow_down", "interval": 130}, {"error": "slow_down"}],
+            [5, 130, 130],
+            id="increment_never_lowers",
+        ),
+        pytest.param(
+            5,
+            [
+                {"error": "slow_down", "interval": 20},
+                {"error": "slow_down", "interval": 10},
+            ],
+            [5, 20, 25],
+            id="server_interval_never_lowers",
+        ),
+    ],
+)
+async def test_device_flow_slow_down(
+    device_impl: config_entry_oauth2_flow.DeviceFlowImplementation,
+    aioclient_mock: AiohttpClientMocker,
+    poll_sleep: FakeSleep,
+    interval: int,
+    slow_downs: list[dict[str, Any]],
+    expected_delays: list[int],
+) -> None:
+    """Test slow_down raises the interval for the next polls."""
+    _mock_token_responses(
+        aioclient_mock,
+        [{"status": 400, "json": slow_down} for slow_down in slow_downs]
+        + [{"json": TOKEN_RESPONSE}],
+    )
+
+    token = await device_impl.async_check_device_activation(
+        _device_authorization(interval=interval)
+    )
+
+    assert token == {**TOKEN_RESPONSE, "expires_at": time.time() + 60}
+    assert poll_sleep.delays == expected_delays
+
+
+@pytest.mark.parametrize(
+    ("interval", "failure", "expected_delays"),
+    [
+        pytest.param(2, {"exc": ClientError()}, [2, 4], id="connection_error"),
+        pytest.param(2, {"exc": TimeoutError()}, [2, 4], id="timeout"),
+        pytest.param(40, {"exc": TimeoutError()}, [40, 60], id="capped"),
+        pytest.param(90, {"exc": TimeoutError()}, [90, 90], id="above_cap"),
+        pytest.param(
+            2,
+            {"status": HTTPStatus.TOO_MANY_REQUESTS},
+            [2, 4],
+            id="too_many_requests",
+        ),
+        pytest.param(
+            2,
+            {
+                "status": HTTPStatus.TOO_MANY_REQUESTS,
+                "json": {"error": "rate_limited"},
+            },
+            [2, 4],
+            id="too_many_requests_with_error_body",
+        ),
+        pytest.param(
+            2,
+            {"status": HTTPStatus.INTERNAL_SERVER_ERROR, "json": {"error": "x"}},
+            [2, 4],
+            id="server_error",
+        ),
+    ],
+)
+async def test_device_flow_connection_failure_backs_off(
+    device_impl: config_entry_oauth2_flow.DeviceFlowImplementation,
+    aioclient_mock: AiohttpClientMocker,
+    poll_sleep: FakeSleep,
+    interval: int,
+    failure: dict[str, Any],
+    expected_delays: list[int],
+) -> None:
+    """Test a poll without a usable response retries with a longer interval."""
+    _mock_token_responses(aioclient_mock, [failure, {"json": TOKEN_RESPONSE}])
+
+    token = await device_impl.async_check_device_activation(
+        _device_authorization(interval=interval)
+    )
+
+    assert token == {**TOKEN_RESPONSE, "expires_at": time.time() + 60}
+    assert poll_sleep.delays == expected_delays
+
+
+async def test_device_flow_deadline(
+    device_impl: config_entry_oauth2_flow.DeviceFlowImplementation,
+    aioclient_mock: AiohttpClientMocker,
+    poll_sleep: FakeSleep,
+) -> None:
+    """Test polling stops when the device code expired."""
+    _mock_token_responses(
+        aioclient_mock,
+        [{"status": 400, "json": {"error": "authorization_pending"}}] * 2,
+    )
+
+    with pytest.raises(config_entry_oauth2_flow.DeviceFlowTimeout):
+        await device_impl.async_check_device_activation(
+            _device_authorization(expires_in=10, interval=4)
+        )
+
+    # The last sleep is capped to the remaining lifetime of the device code.
+    assert poll_sleep.delays == [4, 4, 2]
+    assert aioclient_mock.call_count == 2
+
+
+@pytest.mark.usefixtures("device_flow_handler", "mock_device_integration", "poll_sleep")
+async def test_device_flow_expiry_set_when_token_received(
+    hass: HomeAssistant,
+    device_impl: config_entry_oauth2_flow.DeviceFlowImplementation,
+    aioclient_mock: AiohttpClientMocker,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test the token expiry counts from receipt, not from completing the flow."""
+    aioclient_mock.post(AUTHORIZE_URL, json=DEVICE_AUTHORIZATION_RESPONSE)
+    _mock_token_responses(aioclient_mock, [{"json": TOKEN_RESPONSE}])
+    config_entry_oauth2_flow.async_register_implementation(
+        hass, TEST_DOMAIN, device_impl
+    )
+
+    result = await _start_device_flow(hass)
+    await hass.async_block_till_done()
+    expected_expires_at = time.time() + 60
+    # The user closed the dialog and only reopens it later
+    freezer.tick(45)
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
+
+    assert result["type"] is data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result["data"]["token"]["expires_at"] == expected_expires_at
+
+
+@pytest.mark.usefixtures("device_flow_handler", "mock_device_integration", "poll_sleep")
+async def test_device_flow_token_without_expiry(
+    hass: HomeAssistant,
+    device_impl: config_entry_oauth2_flow.DeviceFlowImplementation,
+    aioclient_mock: AiohttpClientMocker,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a token without expires_in is stored as long lived and refreshes."""
+    aioclient_mock.post(AUTHORIZE_URL, json=DEVICE_AUTHORIZATION_RESPONSE)
+    _mock_token_responses(
+        aioclient_mock,
+        [
+            {
+                "json": {
+                    "access_token": ACCESS_TOKEN_1,
+                    "refresh_token": REFRESH_TOKEN,
+                    "token_type": "bearer",
+                }
+            },
+            {"json": {"access_token": ACCESS_TOKEN_2, "token_type": "bearer"}},
+        ],
+    )
+    config_entry_oauth2_flow.async_register_implementation(
+        hass, TEST_DOMAIN, device_impl
+    )
+
+    result = await _start_device_flow(hass)
+    await hass.async_block_till_done()
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
+
+    assert result["type"] is data_entry_flow.FlowResultType.CREATE_ENTRY
+    default_expires_in = config_entry_oauth2_flow.DEVICE_FLOW_DEFAULT_EXPIRES_IN
+    assert result["data"]["token"] == {
+        "access_token": ACCESS_TOKEN_1,
+        "refresh_token": REFRESH_TOKEN,
+        "token_type": "bearer",
+        "expires_in": default_expires_in,
+        "expires_at": time.time() + default_expires_in,
+    }
+    entry = result["result"]
+    session = config_entry_oauth2_flow.OAuth2Session(hass, entry, device_impl)
+    assert session.valid_token
+
+    freezer.tick(default_expires_in)
+    assert not session.valid_token
+    await session.async_ensure_token_valid()
+
+    assert entry.data["token"] == {
+        "access_token": ACCESS_TOKEN_2,
+        "refresh_token": REFRESH_TOKEN,
+        "token_type": "bearer",
+        "expires_in": default_expires_in,
+        "expires_at": time.time() + default_expires_in,
+    }
+    assert aioclient_mock.mock_calls[-1][1:] == (
+        URL(TOKEN_URL),
+        {
+            "grant_type": "refresh_token",
+            "client_id": CLIENT_ID,
+            "refresh_token": REFRESH_TOKEN,
+        },
+        JSON_ACCEPT_HEADER,
+    )
+
+
+async def test_device_flow_refresh_without_refresh_token(
+    device_impl: config_entry_oauth2_flow.DeviceFlowImplementation,
+    aioclient_mock: AiohttpClientMocker,
+) -> None:
+    """Test a token without refresh_token needs reauth instead of a refresh."""
+    with pytest.raises(ConfigEntryAuthFailed) as exc_info:
+        await device_impl.async_refresh_token(
+            {"access_token": ACCESS_TOKEN_1, "token_type": "bearer"}
+        )
+
+    assert exc_info.value.translation_key == "oauth2_helper_reauth_required"
+    assert aioclient_mock.call_count == 0
 
 
 async def test_local_refresh_token(
@@ -1138,7 +2060,6 @@ async def test_oauth_session_refresh_failure_exceptions(
 
     session = config_entry_oauth2_flow.OAuth2Session(hass, config_entry, local_impl)
     with (
-        caplog.at_level(logging.DEBUG),
         pytest.raises(expected_exception) as err,
     ):
         await session.async_request("post", "https://example.com")
@@ -1184,7 +2105,6 @@ async def test_oauth_session_refresh_connection_error_is_transient(
 
     session = config_entry_oauth2_flow.OAuth2Session(hass, config_entry, local_impl)
     with (
-        caplog.at_level(logging.DEBUG),
         pytest.raises(OAuth2TokenRequestConnectionError) as err,
     ):
         await session.async_ensure_token_valid()
@@ -1539,6 +2459,33 @@ async def test_oauth_session_reauth_error_starts_reauth(
     start_reauth.assert_called_once_with(hass)
 
 
+async def test_oauth_session_device_flow_without_refresh_token_starts_reauth(
+    hass: HomeAssistant,
+    device_impl: config_entry_oauth2_flow.DeviceFlowImplementation,
+    aioclient_mock: AiohttpClientMocker,
+) -> None:
+    """Test an expired device flow token without refresh token starts reauth."""
+    config_entry = MockConfigEntry(
+        domain=TEST_DOMAIN,
+        data={
+            "auth_implementation": TEST_DOMAIN,
+            "token": {"access_token": ACCESS_TOKEN_1, "expires_at": 0},
+        },
+    )
+    config_entry.add_to_hass(hass)
+    config_entry.mock_state(hass, config_entries.ConfigEntryState.LOADED)
+
+    session = config_entry_oauth2_flow.OAuth2Session(hass, config_entry, device_impl)
+    with (
+        patch.object(config_entry, "async_start_reauth_if_available") as start_reauth,
+        pytest.raises(ConfigEntryAuthFailed),
+    ):
+        await session.async_ensure_token_valid()
+
+    start_reauth.assert_called_once_with(hass)
+    assert aioclient_mock.call_count == 0
+
+
 async def test_oauth_session_reauth_error_starts_reauth_when_caller_recovers(
     hass: HomeAssistant,
     local_impl: config_entry_oauth2_flow.LocalOAuth2Implementation,
@@ -1687,7 +2634,7 @@ async def test_oauth_with_pkce_adds_code_verifier_to_token_resolve(
         hass,
         MockModule(
             domain=TEST_DOMAIN,
-            async_setup_entry=AsyncMock(return_value=True),
+            async_setup_entry=AsyncMock(return_value=None),
         ),
     )
     mock_platform(hass, f"{TEST_DOMAIN}.config_flow", None)
@@ -1914,11 +2861,10 @@ async def test_token_error_handled_without_integration_mapping(
 
     async def async_setup_entry(
         hass: HomeAssistant, entry: config_entries.ConfigEntry
-    ) -> bool:
+    ) -> None:
         """Refresh the token without mapping the OAuth errors."""
         session = config_entry_oauth2_flow.OAuth2Session(hass, entry, local_impl)
         await session.async_ensure_token_valid()
-        return True
 
     mock_integration(hass, MockModule(TEST_DOMAIN, async_setup_entry=async_setup_entry))
 
@@ -1953,14 +2899,13 @@ async def test_token_error_integration_can_handle_it_itself(
 
     async def async_setup_entry(
         hass: HomeAssistant, entry: config_entries.ConfigEntry
-    ) -> bool:
+    ) -> None:
         """Treat a reauth error as recoverable instead."""
         session = config_entry_oauth2_flow.OAuth2Session(hass, entry, local_impl)
         try:
             await session.async_ensure_token_valid()
         except OAuth2TokenRequestReauthError as err:
             raise ConfigEntryNotReady from err
-        return True
 
     mock_integration(hass, MockModule(TEST_DOMAIN, async_setup_entry=async_setup_entry))
 
@@ -1968,6 +2913,34 @@ async def test_token_error_integration_can_handle_it_itself(
     await hass.async_block_till_done()
 
     assert config_entry.state is config_entries.ConfigEntryState.SETUP_RETRY
+
+
+@pytest.mark.parametrize(
+    "implementation",
+    [
+        pytest.param("local_impl", id="authorization_code"),
+        pytest.param("device_impl", id="device_flow"),
+    ],
+)
+async def test_config_entry_implementation_any_grant(
+    hass: HomeAssistant,
+    local_impl: config_entry_oauth2_flow.LocalOAuth2Implementation,
+    device_impl: config_entry_oauth2_flow.DeviceFlowImplementation,
+    implementation: str,
+) -> None:
+    """Test the config entry implementation is returned for any grant type."""
+    impl = {"local_impl": local_impl, "device_impl": device_impl}[implementation]
+    config_entry_oauth2_flow.async_register_implementation(hass, TEST_DOMAIN, impl)
+    config_entry = MockConfigEntry(
+        domain=TEST_DOMAIN, data={"auth_implementation": TEST_DOMAIN, "token": {}}
+    )
+
+    assert (
+        await config_entry_oauth2_flow.async_get_config_entry_implementation(
+            hass, config_entry
+        )
+        is impl
+    )
 
 
 async def test_unknown_implementation_asks_for_reauth(hass: HomeAssistant) -> None:
@@ -2009,12 +2982,11 @@ async def test_implementation_unavailable_retries_setup(hass: HomeAssistant) -> 
 
     async def async_setup_entry(
         hass: HomeAssistant, entry: config_entries.ConfigEntry
-    ) -> bool:
+    ) -> None:
         """Resolve the implementation without mapping the error."""
         await config_entry_oauth2_flow.async_get_config_entry_implementation(
             hass, entry
         )
-        return True
 
     mock_integration(hass, MockModule(TEST_DOMAIN, async_setup_entry=async_setup_entry))
 
@@ -2079,7 +3051,7 @@ async def test_pick_implementation_falls_back_when_removed(
     """
     mock_integration(
         hass,
-        MockModule(TEST_DOMAIN, async_setup_entry=AsyncMock(return_value=True)),
+        MockModule(TEST_DOMAIN, async_setup_entry=AsyncMock(return_value=None)),
     )
     flow_handler.async_register_implementation(hass, local_impl)
 

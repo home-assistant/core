@@ -1,13 +1,17 @@
 """Test the habitica module."""
 
 import datetime as dt
-import logging
 from unittest.mock import AsyncMock
 
 from aiohttp import ClientError
 from freezegun.api import FrozenDateTimeFactory
 from habiticalib import HabiticaUserResponse
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    async_load_fixture,
+)
 
 from homeassistant.components.habitica.const import DOMAIN
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
@@ -20,8 +24,6 @@ from .conftest import (
     ERROR_NOT_FOUND,
     ERROR_TOO_MANY_REQUESTS,
 )
-
-from tests.common import MockConfigEntry, async_fire_time_changed, async_load_fixture
 
 
 @pytest.mark.usefixtures("habitica")
@@ -124,12 +126,11 @@ async def test_coordinator_rate_limited(
 
     habitica.get_user.side_effect = ERROR_TOO_MANY_REQUESTS
 
-    with caplog.at_level(logging.DEBUG):
-        freezer.tick(dt.timedelta(seconds=60))
-        async_fire_time_changed(hass)
-        await hass.async_block_till_done()
+    freezer.tick(dt.timedelta(seconds=60))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
 
-        assert "Rate limit exceeded, will try again later" in caplog.text
+    assert "Rate limit exceeded, will try again later" in caplog.text
 
 
 async def test_remove_party_and_reload(

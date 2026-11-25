@@ -5,22 +5,17 @@ import contextlib
 from functools import wraps
 from pathlib import Path
 import socket
-from typing import TYPE_CHECKING, Any, Concatenate, cast
+from typing import TYPE_CHECKING, Any, Concatenate
 
 from aiohttp import CookieJar
 from uiprotect import ProtectApiClient
 from uiprotect.data import (
     Bootstrap,
     ChannelQuality,
-    LightModeEnableType,
-    LightModeType,
+    ModelType,
     ProtectAdoptableDeviceModel,
 )
-from uiprotect.data.public_devices import (
-    PublicDeviceModel,
-    PublicDoorbellSettings,
-    PublicLight,
-)
+from uiprotect.data.public_devices import PublicDoorbellSettings
 from uiprotect.exceptions import ClientError, NotAuthorized
 
 from homeassistant.const import (
@@ -44,7 +39,6 @@ from .const import (
     DEVICES_FOR_SUBSCRIBE,
     DEVICES_WS_SUBSCRIBED_MODELS,
     DOMAIN,
-    ModelType,
 )
 
 if TYPE_CHECKING:
@@ -102,17 +96,6 @@ def async_get_devices(
 
 
 @callback
-def async_get_light_motion_current_public(obj: PublicDeviceModel) -> str | None:
-    """Get light motion mode for a Flood Light from the public API."""
-    settings = cast(PublicLight, obj).light_mode_settings
-    if (mode := settings.mode) is None:
-        return None
-    if mode is LightModeType.MOTION and settings.enable_at is LightModeEnableType.DARK:
-        return f"{LightModeType.MOTION.value}_dark"
-    return mode.value
-
-
-@callback
 def async_get_doorbell_settings_public(
     api: ProtectApiClient,
 ) -> PublicDoorbellSettings:
@@ -149,6 +132,7 @@ def async_create_api_client(
             devices_ws_subscribed_models=DEVICES_WS_SUBSCRIBED_MODELS,
             ignore_unadopted=False,
             override_connection_host=entry.options.get(CONF_OVERRIDE_CHOST, False),
+            alarm_hubs=True,
         )
 
     return _async_create_full_client(hass, entry)
@@ -193,6 +177,7 @@ def _async_create_full_client(
         ignore_unadopted=False,
         cache_dir=Path(hass.config.path(STORAGE_DIR, "unifiprotect")),
         config_dir=Path(hass.config.path(STORAGE_DIR, "unifiprotect")),
+        alarm_hubs=True,
     )
 
 

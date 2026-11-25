@@ -4,17 +4,16 @@ from unittest.mock import AsyncMock
 
 import probatio
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.daikin.const import DOMAIN, KEY_MAC
-from homeassistant.components.daikin.services import ATTR_EN_DEMAND, ATTR_MAX_POW
-from homeassistant.const import ATTR_DEVICE_ID, ATTR_MODE, CONF_HOST
+from homeassistant.components.daikin.services import DaikinServiceArgument
+from homeassistant.const import CONF_HOST, CommonServiceArgument
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr
 
 from .conftest import ZoneDevice
-
-from tests.common import MockConfigEntry
 
 HOST = "127.0.0.1"
 
@@ -60,11 +59,11 @@ async def test_set_demand_control(
         DOMAIN,
         "set_demand_control",
         {
-            ATTR_DEVICE_ID: _device_id(
+            CommonServiceArgument.DEVICE_ID: _device_id(
                 device_registry, config_entry.entry_id, zone_device.mac
             ),
-            ATTR_EN_DEMAND: True,
-            ATTR_MAX_POW: 40,
+            DaikinServiceArgument.EN_DEMAND: True,
+            DaikinServiceArgument.MAX_POW: 40,
         },
         blocking=True,
     )
@@ -98,12 +97,12 @@ async def test_set_demand_control_with_mode(
         DOMAIN,
         "set_demand_control",
         {
-            ATTR_DEVICE_ID: _device_id(
+            CommonServiceArgument.DEVICE_ID: _device_id(
                 device_registry, config_entry.entry_id, zone_device.mac
             ),
-            ATTR_EN_DEMAND: True,
-            ATTR_MAX_POW: 40,
-            ATTR_MODE: mode,
+            DaikinServiceArgument.EN_DEMAND: True,
+            DaikinServiceArgument.MAX_POW: 40,
+            DaikinServiceArgument.MODE: mode,
         },
         blocking=True,
     )
@@ -131,10 +130,10 @@ async def test_set_demand_control_disabled(
         DOMAIN,
         "set_demand_control",
         {
-            ATTR_DEVICE_ID: _device_id(
+            CommonServiceArgument.DEVICE_ID: _device_id(
                 device_registry, config_entry.entry_id, zone_device.mac
             ),
-            ATTR_EN_DEMAND: False,
+            DaikinServiceArgument.EN_DEMAND: False,
         },
         blocking=True,
     )
@@ -162,11 +161,11 @@ async def test_set_demand_control_invalid_max_pow(
             DOMAIN,
             "set_demand_control",
             {
-                ATTR_DEVICE_ID: _device_id(
+                CommonServiceArgument.DEVICE_ID: _device_id(
                     device_registry, config_entry.entry_id, zone_device.mac
                 ),
-                ATTR_EN_DEMAND: True,
-                ATTR_MAX_POW: invalid_max_pow,
+                DaikinServiceArgument.EN_DEMAND: True,
+                DaikinServiceArgument.MAX_POW: invalid_max_pow,
             },
             blocking=True,
         )
@@ -189,11 +188,11 @@ async def test_set_demand_control_unsupported(
             DOMAIN,
             "set_demand_control",
             {
-                ATTR_DEVICE_ID: _device_id(
+                CommonServiceArgument.DEVICE_ID: _device_id(
                     device_registry, config_entry.entry_id, zone_device.mac
                 ),
-                ATTR_EN_DEMAND: True,
-                ATTR_MAX_POW: 40,
+                DaikinServiceArgument.EN_DEMAND: True,
+                DaikinServiceArgument.MAX_POW: 40,
             },
             blocking=True,
         )

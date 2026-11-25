@@ -3,14 +3,11 @@
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries
-from homeassistant.components.rest.data import (  # pylint: disable=home-assistant-component-root-import
-    DEFAULT_TIMEOUT,
-)
-from homeassistant.components.rest.schema import (  # pylint: disable=home-assistant-component-root-import
-    DEFAULT_METHOD,
-)
+from homeassistant.components.rest.data import DEFAULT_TIMEOUT  # pylint: disable=home-assistant-component-root-import
+from homeassistant.components.rest.schema import DEFAULT_METHOD  # pylint: disable=home-assistant-component-root-import
 from homeassistant.components.scrape import DOMAIN
 from homeassistant.components.scrape.const import (
     CONF_ADDITIONAL,
@@ -37,8 +34,6 @@ from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.exceptions import HomeAssistantError
 
 from . import MockRestData
-
-from tests.common import MockConfigEntry
 
 
 async def test_entry_and_subentry(

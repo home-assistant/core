@@ -10,6 +10,8 @@ from unittest.mock import Mock, patch
 from aiohttp import ClientError
 from httplib2 import Response, ServerNotFoundError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 
 from homeassistant.components.google_tasks import DOMAIN
 from homeassistant.components.google_tasks.const import OAUTH2_TOKEN
@@ -20,9 +22,6 @@ from homeassistant.helpers.config_entry_oauth2_flow import (
 )
 
 from .conftest import LIST_TASK_LIST_RESPONSE, LIST_TASKS_RESPONSE_WATER
-
-from tests.common import MockConfigEntry
-from tests.test_util.aiohttp import AiohttpClientMocker
 
 
 @pytest.mark.parametrize(

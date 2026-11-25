@@ -5,13 +5,12 @@ from typing import Any
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.typing import MockHAClientWebSocket, WebSocketGenerator
 
 from homeassistant.components.location.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.generated import locations as generated_locations
 from homeassistant.setup import async_setup_component
-
-from tests.typing import MockHAClientWebSocket, WebSocketGenerator
 
 
 @pytest.fixture(autouse=True)

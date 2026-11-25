@@ -73,6 +73,7 @@ set_hot_water_setpoint:
       selector:
         text:
     temperature:
+      required: true
       selector:
         number:
           min: 0

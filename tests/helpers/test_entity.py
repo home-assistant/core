@@ -13,6 +13,17 @@ from freezegun.api import FrozenDateTimeFactory
 import probatio
 from propcache.api import cached_property
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    MockEntity,
+    MockEntityPlatform,
+    MockModule,
+    MockPlatform,
+    RegistryEntryWithDefaults,
+    async_capture_events,
+    mock_integration,
+    mock_registry,
+)
 from pytest_unordered import unordered
 from syrupy.assertion import SnapshotAssertion
 
@@ -21,13 +32,11 @@ from homeassistant.components.device_tracker import ScannerEntity
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry, ConfigSubentryData
 from homeassistant.const import (
-    ATTR_ATTRIBUTION,
-    ATTR_DEVICE_CLASS,
-    ATTR_FRIENDLY_NAME,
     EVENT_STATE_CHANGED,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
     EntityCategory,
+    EntityStateAttribute,
 )
 from homeassistant.core import (
     Context,
@@ -51,20 +60,8 @@ from homeassistant.helpers.event import (
     async_track_state_removed_domain,
 )
 from homeassistant.helpers.restore_state import RestoreEntity
-from homeassistant.helpers.typing import UNDEFINED, UndefinedType
+from homeassistant.helpers.typing import Undefined
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
-
-from tests.common import (
-    MockConfigEntry,
-    MockEntity,
-    MockEntityPlatform,
-    MockModule,
-    MockPlatform,
-    RegistryEntryWithDefaults,
-    async_capture_events,
-    mock_integration,
-    mock_registry,
-)
 
 
 def test_generate_entity_id_requires_hass_or_ids() -> None:
@@ -144,12 +141,12 @@ async def test_device_class(hass: HomeAssistant) -> None:
     ent.hass = hass
     ent.async_write_ha_state()
     state = hass.states.get(ent.entity_id)
-    assert state.attributes.get(ATTR_DEVICE_CLASS) is None
+    assert state.attributes.get(EntityStateAttribute.DEVICE_CLASS) is None
 
     ent._attr_device_class = "test_class"
     ent.async_write_ha_state()
     state = hass.states.get(ent.entity_id)
-    assert state.attributes.get(ATTR_DEVICE_CLASS) == "test_class"
+    assert state.attributes.get(EntityStateAttribute.DEVICE_CLASS) == "test_class"
 
 
 async def test_warn_slow_update(
@@ -492,6 +489,42 @@ async def test_async_parallel_updates_with_one(hass: HomeAssistant) -> None:
         test_lock.release()
 
 
+async def test_update_cancelled_while_waiting_for_parallel_updates(
+    hass: HomeAssistant,
+) -> None:
+    """Test a cancelled update does not block later updates."""
+    updates = 0
+    semaphore = asyncio.Semaphore(1)
+
+    class AsyncEntity(entity.Entity):
+        """Test entity."""
+
+        def __init__(self) -> None:
+            """Initialize Async test entity."""
+            self.entity_id = "sensor.test"
+            self.hass = hass
+            self.parallel_updates = semaphore
+
+        async def async_update(self) -> None:
+            """Test update."""
+            nonlocal updates
+            updates += 1
+
+    ent = AsyncEntity()
+
+    await semaphore.acquire()
+    task = hass.async_create_task(ent.async_device_update())
+    await asyncio.sleep(0)
+    task.cancel()
+    with pytest.raises(asyncio.CancelledError):
+        await task
+    semaphore.release()
+
+    await ent.async_device_update()
+
+    assert updates == 1
+
+
 async def test_async_parallel_updates_with_two(hass: HomeAssistant) -> None:
     """Test parallel updates with 2 (parallel)."""
     updates = []
@@ -643,6 +676,30 @@ async def test_async_remove_reports_the_original_error(hass: HomeAssistant) -> N
 
     with pytest.raises(ValueError, match="Boom"):
         await ent.async_remove()
+
+
+async def test_async_remove_removes_state_when_will_remove_fails(
+    hass: HomeAssistant,
+) -> None:
+    """Test a failing removal hook still removes the state."""
+
+    class MockEntityFailingRemoval(entity.Entity):
+        """Entity that cannot be removed cleanly."""
+
+        async def async_will_remove_from_hass(self) -> None:
+            """Fail while being removed."""
+            raise ValueError("Boom")
+
+    platform = MockEntityPlatform(hass, domain="test")
+    ent = MockEntityFailingRemoval()
+    ent.entity_id = "test.test"
+    await platform.async_add_entities([ent])
+    assert hass.states.get("test.test") is not None
+
+    with pytest.raises(ValueError, match="Boom"):
+        await ent.async_remove()
+
+    assert hass.states.get("test.test") is None
 
 
 async def test_async_remove_ignores_in_flight_polling(hass: HomeAssistant) -> None:
@@ -991,7 +1048,7 @@ async def test_attribution_attribute(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
 
     state = hass.states.get(mock_entity.entity_id)
-    assert state.attributes.get(ATTR_ATTRIBUTION) == "Home Assistant"
+    assert state.attributes.get(EntityStateAttribute.ATTRIBUTION) == "Home Assistant"
 
 
 async def test_entity_category_property(hass: HomeAssistant) -> None:
@@ -1080,10 +1137,16 @@ async def _test_friendly_name(
 
     assert len(hass.states.async_entity_ids()) == 1
     state = hass.states.async_all()[0]
-    assert state.attributes.get(ATTR_FRIENDLY_NAME) == expected_friendly_name
+    assert (
+        state.attributes.get(EntityStateAttribute.FRIENDLY_NAME)
+        == expected_friendly_name
+    )
 
     await async_update_entity(hass, ent.entity_id)
-    assert state.attributes.get(ATTR_FRIENDLY_NAME) == expected_friendly_name
+    assert (
+        state.attributes.get(EntityStateAttribute.FRIENDLY_NAME)
+        == expected_friendly_name
+    )
 
 
 @pytest.mark.parametrize("has_entity_name", [False, True])
@@ -1107,19 +1170,23 @@ async def test_friendly_name_empty_override_uses_device_name(
 
     entry = entity_registry.async_update_entity(ent.entity_id, name="")
     await hass.async_block_till_done()
-    assert hass.states.get(ent.entity_id).attributes[ATTR_FRIENDLY_NAME] == "Device Bla"
+    assert (
+        hass.states.get(ent.entity_id).attributes[EntityStateAttribute.FRIENDLY_NAME]
+        == "Device Bla"
+    )
 
     assert entry.device_id is not None
     device_registry.async_update_device(entry.device_id, name_by_user="Living room")
     await hass.async_block_till_done()
     assert (
-        hass.states.get(ent.entity_id).attributes[ATTR_FRIENDLY_NAME] == "Living room"
+        hass.states.get(ent.entity_id).attributes[EntityStateAttribute.FRIENDLY_NAME]
+        == "Living room"
     )
 
     entity_registry.async_update_entity(ent.entity_id, name=None)
     await hass.async_block_till_done()
     assert (
-        hass.states.get(ent.entity_id).attributes[ATTR_FRIENDLY_NAME]
+        hass.states.get(ent.entity_id).attributes[EntityStateAttribute.FRIENDLY_NAME]
         == "Living room Temperature"
     )
 
@@ -1137,7 +1204,7 @@ async def test_friendly_name_empty_override_uses_device_name(
         (False, None, "Device Bla", "Device Bla"),
         (True, "Entity Blu", "Device Bla", "Device Bla Entity Blu"),
         (True, None, "Device Bla", "Device Bla"),
-        (True, "Entity Blu", UNDEFINED, "Mock Title Entity Blu"),
+        (True, "Entity Blu", Undefined, "Mock Title Entity Blu"),
         (True, "Entity Blu", None, "Mock Title Entity Blu"),
     ],
 )
@@ -1145,7 +1212,7 @@ async def test_friendly_name_attr(
     hass: HomeAssistant,
     has_entity_name: bool,
     entity_name: str | None,
-    device_name: str | UndefinedType | None,
+    device_name: str | Undefined | None,
     expected_friendly_name: str | None,
 ) -> None:
     """Test friendly name when the entity uses _attr_*."""
@@ -1173,10 +1240,10 @@ async def test_friendly_name_attr(
         (False, "Entity Blu", "Device Bla Entity Blu"),
         (False, "Device Bla Entity Blu", "Device Bla Entity Blu"),
         (False, None, "Device Bla"),
-        (False, UNDEFINED, "Device Bla"),
+        (False, Undefined, "Device Bla"),
         (True, "Entity Blu", "Device Bla Entity Blu"),
         (True, None, "Device Bla"),
-        (True, UNDEFINED, "Device Bla"),
+        (True, Undefined, "Device Bla"),
     ],
 )
 async def test_friendly_name_description(
@@ -1211,10 +1278,10 @@ async def test_friendly_name_description(
         (False, "Entity Blu", "Device Bla Entity Blu"),
         (False, "Device Bla Entity Blu", "Device Bla Entity Blu"),
         (False, None, "Device Bla"),
-        (False, UNDEFINED, "Device Bla"),
+        (False, Undefined, "Device Bla"),
         (True, "Entity Blu", "Device Bla Entity Blu"),
         (True, None, "Device Bla"),
-        (True, UNDEFINED, "Device Bla English cls"),
+        (True, Undefined, "Device Bla English cls"),
     ],
 )
 async def test_friendly_name_description_device_class_name(
@@ -1484,10 +1551,10 @@ async def test_entity_name_translation_placeholder_errors(
         (False, "Entity Blu", "Device Bla Entity Blu"),
         (False, "Device Bla Entity Blu", "Device Bla Entity Blu"),
         (False, None, "Device Bla"),
-        (False, UNDEFINED, "Device Bla"),
+        (False, Undefined, "Device Bla"),
         (True, "Entity Blu", "Device Bla Entity Blu"),
         (True, None, "Device Bla"),
-        (True, UNDEFINED, "Device Bla"),
+        (True, Undefined, "Device Bla"),
     ],
 )
 async def test_friendly_name_property(
@@ -1521,11 +1588,11 @@ async def test_friendly_name_property(
         (False, "Entity Blu", "Device Bla Entity Blu"),
         (False, "Device Bla Entity Blu", "Device Bla Entity Blu"),
         (False, None, "Device Bla"),
-        (False, UNDEFINED, "Device Bla"),
+        (False, Undefined, "Device Bla"),
         (True, "Entity Blu", "Device Bla Entity Blu"),
         (True, None, "Device Bla"),
         # Won't use the device class name because the entity overrides the name property
-        (True, UNDEFINED, "Device Bla"),
+        (True, Undefined, "Device Bla"),
     ],
 )
 async def test_friendly_name_property_device_class_name(
@@ -1729,7 +1796,10 @@ async def test_friendly_name_updated(
 
     assert len(hass.states.async_entity_ids()) == 1
     state = hass.states.async_all()[0]
-    assert state.attributes.get(ATTR_FRIENDLY_NAME) == expected_friendly_name1
+    assert (
+        state.attributes.get(EntityStateAttribute.FRIENDLY_NAME)
+        == expected_friendly_name1
+    )
 
     device = device_registry.async_get_device_by_identifier(
         ("hue", "1234"), config_entry.entry_id
@@ -1738,7 +1808,10 @@ async def test_friendly_name_updated(
     await hass.async_block_till_done()
 
     state = hass.states.async_all()[0]
-    assert state.attributes.get(ATTR_FRIENDLY_NAME) == expected_friendly_name2
+    assert (
+        state.attributes.get(EntityStateAttribute.FRIENDLY_NAME)
+        == expected_friendly_name2
+    )
 
     device = device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
@@ -1749,7 +1822,10 @@ async def test_friendly_name_updated(
     await hass.async_block_till_done()
 
     state = hass.states.async_all()[0]
-    assert state.attributes.get(ATTR_FRIENDLY_NAME) == expected_friendly_name3
+    assert (
+        state.attributes.get(EntityStateAttribute.FRIENDLY_NAME)
+        == expected_friendly_name3
+    )
 
 
 @pytest.mark.parametrize(
@@ -1843,20 +1919,29 @@ async def test_device_updates_follow_device_id_change(
     expected_device = devices[expected_device_identifier]
     assert ent.device_entry == expected_device
     state = hass.states.get(ent.entity_id)
-    assert state.attributes[ATTR_FRIENDLY_NAME] == expected_friendly_name_after_move
+    assert (
+        state.attributes[EntityStateAttribute.FRIENDLY_NAME]
+        == expected_friendly_name_after_move
+    )
 
     # Renaming the previous device must not affect the entity
     device_registry.async_update_device(old_device.id, name_by_user="Old renamed")
     await hass.async_block_till_done()
     assert ent.device_entry == expected_device
     state = hass.states.get(ent.entity_id)
-    assert state.attributes[ATTR_FRIENDLY_NAME] == expected_friendly_name_after_move
+    assert (
+        state.attributes[EntityStateAttribute.FRIENDLY_NAME]
+        == expected_friendly_name_after_move
+    )
 
     # Renaming the new device must update the entity
     device_registry.async_update_device(new_device.id, name_by_user="New renamed")
     await hass.async_block_till_done()
     state = hass.states.get(ent.entity_id)
-    assert state.attributes[ATTR_FRIENDLY_NAME] == expected_friendly_name_final
+    assert (
+        state.attributes[EntityStateAttribute.FRIENDLY_NAME]
+        == expected_friendly_name_final
+    )
 
 
 async def test_device_entry_cleared_when_detached_from_device(

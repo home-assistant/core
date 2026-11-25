@@ -4,6 +4,13 @@ import json
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    load_fixture_bytes,
+    load_json_object_fixture,
+    mock_restore_cache_with_extra_data,
+    snapshot_platform,
+)
 from pyweatherflowudp.aioudp import LocalEndpoint
 from syrupy.assertion import SnapshotAssertion
 
@@ -18,14 +25,6 @@ from homeassistant.util.unit_system import (
 )
 
 from . import HUB_ADDRESS, setup_integration
-
-from tests.common import (
-    MockConfigEntry,
-    load_fixture_bytes,
-    load_json_object_fixture,
-    mock_restore_cache_with_extra_data,
-    snapshot_platform,
-)
 
 LAST_STRIKE_DISTANCE = "sensor.st_00000001_lightning_last_distance"
 LAST_STRIKE_ENERGY = "sensor.st_00000001_lightning_last_energy"

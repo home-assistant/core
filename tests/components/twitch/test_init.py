@@ -5,20 +5,21 @@ import time
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
+from syrupy.assertion import SnapshotAssertion
 from twitchAPI.object.api import TwitchUser
 
 from homeassistant.components.twitch.const import DOMAIN, OAUTH2_TOKEN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import OAuth2TokenRequestConnectionError
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.config_entry_oauth2_flow import (
     ImplementationUnavailableError,
 )
 
 from . import get_generator, setup_integration
-
-from tests.common import MockConfigEntry
-from tests.test_util.aiohttp import AiohttpClientMocker
 
 
 async def test_setup_success(
@@ -157,3 +158,17 @@ async def test_logged_in_user_not_found(
 
     assert config_entry.state is ConfigEntryState.SETUP_RETRY
     assert config_entry.error_reason_translation_key == "user_not_found"
+
+
+async def test_device_per_channel(
+    hass: HomeAssistant,
+    twitch_mock: AsyncMock,
+    config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test a service device is created for each channel."""
+    await setup_integration(hass, config_entry)
+
+    devices = dr.async_entries_for_config_entry(device_registry, config_entry.entry_id)
+    assert devices == snapshot

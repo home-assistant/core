@@ -4,13 +4,16 @@ from unittest.mock import MagicMock, patch
 
 from pylutron import Button
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_capture_events,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
-
-from tests.common import MockConfigEntry, async_capture_events, snapshot_platform
 
 
 @pytest.fixture(autouse=True)

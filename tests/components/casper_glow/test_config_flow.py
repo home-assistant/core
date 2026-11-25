@@ -5,6 +5,12 @@ from unittest.mock import MagicMock, patch
 from bluetooth_data_tools import human_readable_name
 from pycasperglow import CasperGlowError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.components.bluetooth import (
+    generate_advertisement_data,
+    generate_ble_device,
+    inject_bluetooth_service_info,
+)
 
 from homeassistant.components.bluetooth import BluetoothServiceInfoBleak
 from homeassistant.components.casper_glow.const import DOMAIN
@@ -16,15 +22,9 @@ from homeassistant.helpers.device_registry import format_mac
 
 from . import (
     CASPER_GLOW_DISCOVERY_INFO,
+    JAR_NAME_WITHOUT_MANUFACTURER_DISCOVERY_INFO,
     NOT_CASPER_GLOW_DISCOVERY_INFO,
     SAMSUNG_EARBUDS_DISCOVERY_INFO,
-)
-
-from tests.common import MockConfigEntry
-from tests.components.bluetooth import (
-    generate_advertisement_data,
-    generate_ble_device,
-    inject_bluetooth_service_info,
 )
 
 
@@ -39,6 +39,7 @@ async def test_bluetooth_step_success(
     )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "bluetooth_confirm"
+    mock_casper_glow.handshake.assert_awaited_once_with(max_attempts=1)
 
     # Inject before configure so async_setup_entry can find the device via
     # async_ble_device_from_address. The unique_id is already claimed by our
@@ -84,14 +85,26 @@ async def test_bluetooth_confirm_error(
     assert result["reason"] == reason
 
 
+@pytest.mark.parametrize(
+    "discovery_info",
+    [
+        pytest.param(SAMSUNG_EARBUDS_DISCOVERY_INFO, id="samsung_earbuds"),
+        pytest.param(
+            JAR_NAME_WITHOUT_MANUFACTURER_DISCOVERY_INFO,
+            id="jar_name_without_manufacturer_id",
+        ),
+    ],
+)
 async def test_bluetooth_step_ignores_unrecognized_device(
-    hass: HomeAssistant, mock_casper_glow: MagicMock
+    hass: HomeAssistant,
+    mock_casper_glow: MagicMock,
+    discovery_info: BluetoothServiceInfoBleak,
 ) -> None:
     """Test bluetooth discovery aborts before handshaking with unsupported devices."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_BLUETOOTH},
-        data=SAMSUNG_EARBUDS_DISCOVERY_INFO,
+        data=discovery_info,
     )
 
     assert result["type"] is FlowResultType.ABORT
@@ -139,7 +152,10 @@ async def test_user_step_no_devices(hass: HomeAssistant) -> None:
     """Test user step with no devices found."""
     with patch(
         "homeassistant.components.casper_glow.config_flow.async_discovered_service_info",
-        return_value=[NOT_CASPER_GLOW_DISCOVERY_INFO],
+        return_value=[
+            NOT_CASPER_GLOW_DISCOVERY_INFO,
+            JAR_NAME_WITHOUT_MANUFACTURER_DISCOVERY_INFO,
+        ],
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_USER}
@@ -186,7 +202,7 @@ async def test_user_step_error(
         patch("homeassistant.components.casper_glow.config_flow.CasperGlow.handshake"),
         patch(
             "homeassistant.components.casper_glow.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ),
     ):
         result = await hass.config_entries.flow.async_configure(

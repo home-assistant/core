@@ -1,7 +1,9 @@
 """Platform for Lunatone light integration."""
 
+from collections.abc import Callable
 import contextlib
-from typing import Any, override
+from functools import partial
+from typing import TYPE_CHECKING, Any, override
 
 import aiohttp
 from lunatone_rest_api_client import DALIBroadcast
@@ -18,9 +20,7 @@ from homeassistant.components.light import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr
-from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util.color import brightness_to_value, value_to_brightness
 
 from .const import DOMAIN
@@ -29,6 +29,8 @@ from .coordinator import (
     LunatoneDevicesDataUpdateCoordinator,
     LunatoneInfoDataUpdateCoordinator,
 )
+from .entity import LunatoneEntity
+from .helpers import add_entities_from_builder, format_device_identifier
 
 PARALLEL_UPDATES = 0
 
@@ -41,83 +43,121 @@ async def async_setup_entry(
     """Set up the Lunatone Light platform."""
     coordinator_info = config_entry.runtime_data.coordinator_info
     coordinator_devices = config_entry.runtime_data.coordinator_devices
-    auth_api = coordinator_info.info_api.auth
 
-    assert config_entry.unique_id is not None
+    config_entry_unique_id = config_entry.unique_id
+    assert config_entry_unique_id is not None
 
-    entities: list[LightEntity] = [
-        LunatoneLineBroadcastLight(
-            coordinator_devices,
-            coordinator_info,
-            DALIBroadcast(auth_api, int(line_id)),
-            config_entry.unique_id,
+    known_broadcast_entities: set[str] = set()
+
+    @callback
+    def _check_broadcast_entities() -> None:
+        entity_builder: dict[str, Callable[[], LightEntity]] = {}
+        for line_id in map(int, coordinator_info.data.lines):
+            unique_id = format_device_identifier(config_entry_unique_id, line_id)
+            entity_builder[unique_id] = partial(
+                LunatoneLineBroadcastLight,
+                coordinator_devices,
+                coordinator_info,
+                DALIBroadcast(coordinator_info.info_api.auth, line_id),
+                config_entry_unique_id,
+            )
+
+        add_entities_from_builder(
+            entity_builder, known_broadcast_entities, async_add_entities
         )
-        for line_id in coordinator_info.data.lines
-    ]
-    entities.extend(
-        LunatoneLight(coordinator_devices, line_id, device_id, config_entry.unique_id)
-        for line_id, devices in coordinator_devices.data.items()
-        for device_id in devices
+
+    _check_broadcast_entities()
+    config_entry.async_on_unload(
+        coordinator_info.async_add_listener(_check_broadcast_entities)
     )
 
-    async_add_entities(entities)
+    known_light_entities: set[str] = set()
+
+    @callback
+    def _check_light_entities() -> None:
+        entity_builder: dict[str, Callable[[], LightEntity]] = {}
+        for line_id, devices in coordinator_devices.data.items():
+            for device_id in devices:
+                unique_id = LunatoneLight.construct_unique_id(
+                    config_entry_unique_id, device_id
+                )
+                entity_builder[unique_id] = partial(
+                    LunatoneLight,
+                    coordinator_devices,
+                    coordinator_info,
+                    line_id,
+                    device_id,
+                    config_entry_unique_id,
+                )
+
+        add_entities_from_builder(
+            entity_builder, known_light_entities, async_add_entities
+        )
+
+    _check_light_entities()
+    config_entry.async_on_unload(
+        coordinator_devices.async_add_listener(_check_light_entities)
+    )
 
 
-class LunatoneLight(
-    CoordinatorEntity[LunatoneDevicesDataUpdateCoordinator], LightEntity
-):
+class LunatoneLight(LunatoneEntity[LunatoneDevicesDataUpdateCoordinator], LightEntity):
     """Representation of a Lunatone light."""
 
     BRIGHTNESS_SCALE = (1, 100)
 
     _last_brightness = 255
 
-    _attr_has_entity_name = True
     _attr_name = None
-    _attr_should_poll = False
     _attr_min_color_temp_kelvin = 1000
     _attr_max_color_temp_kelvin = 10000
 
     def __init__(
         self,
-        coordinator: LunatoneDevicesDataUpdateCoordinator,
+        coordinator_devices: LunatoneDevicesDataUpdateCoordinator,
+        coordinator_info: LunatoneInfoDataUpdateCoordinator,
         line_id: int,
         device_id: int,
         config_entry_unique_id: str,
     ) -> None:
         """Initialize a Lunatone light."""
-        super().__init__(coordinator)
-        self._line_id = line_id
+        super().__init__(coordinator_devices, coordinator_info, line_id)
         self._device_id = device_id
-        self._config_entry_unique_id = config_entry_unique_id
-        self._device = self.coordinator.data[line_id][device_id]
+        if TYPE_CHECKING:
+            assert self.line_id is not None
+        self._device = self.coordinator.data[self.line_id][device_id]
 
-        self._attr_unique_id = f"{config_entry_unique_id}-device{device_id}"
+        unique_id = self.construct_unique_id(config_entry_unique_id, device_id)
 
-    @property
-    @override
-    def device_info(self) -> DeviceInfo:
-        """Return the device info."""
-        assert self.unique_id
-        return DeviceInfo(
-            identifiers={(DOMAIN, self.unique_id)},
+        device_info = dr.DeviceInfo(
+            identifiers={(DOMAIN, unique_id)},
             name=self._device.data.name,
-            via_device_id=dr.async_get_device_id_by_identifier(
-                self.hass,
+        )
+        with contextlib.suppress(ValueError):
+            device_info.via_device_id = dr.async_get_device_id_by_identifier(
+                self.coordinator.hass,
                 (
                     DOMAIN,
-                    f"{self._config_entry_unique_id}-line{self._device.data.line}",
+                    format_device_identifier(config_entry_unique_id, self.line_id),
                 ),
                 config_entry_id=self.coordinator.config_entry.entry_id,
-            ),
-        )
+            )
+
+        self._attr_device_info = device_info
+        self._attr_unique_id = unique_id
+
+    @staticmethod
+    def construct_unique_id(config_entry_unique_id: str, device_id: int) -> str:
+        """Returns the unique_id for a device ID."""
+        return f"{config_entry_unique_id}-device{device_id}"
 
     @property
     @override
     def available(self) -> bool:
         """Return True if entity is available."""
+        if TYPE_CHECKING:
+            assert self.line_id is not None
         return super().available and self._device_id in self.coordinator.data.get(
-            self._line_id, {}
+            self.line_id, {}
         )
 
     @property
@@ -189,8 +229,10 @@ class LunatoneLight(
     @override
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
+        if TYPE_CHECKING:
+            assert self.line_id is not None
         with contextlib.suppress(KeyError):
-            self._device = self.coordinator.data[self._line_id][self._device_id]
+            self._device = self.coordinator.data[self.line_id][self._device_id]
         self.async_write_ha_state()
 
     @override
@@ -248,14 +290,15 @@ class LunatoneLight(
 
 
 class LunatoneLineBroadcastLight(
-    CoordinatorEntity[LunatoneDevicesDataUpdateCoordinator], LightEntity
+    LunatoneEntity[LunatoneDevicesDataUpdateCoordinator], LightEntity
 ):
     """Representation of a Lunatone line broadcast light."""
 
     BRIGHTNESS_SCALE = (1, 100)
 
+    _last_brightness = 255
+
     _attr_color_mode = ColorMode.BRIGHTNESS
-    _attr_has_entity_name = True
     _attr_name = None
     _attr_supported_color_modes = {ColorMode.BRIGHTNESS}
 
@@ -267,48 +310,62 @@ class LunatoneLineBroadcastLight(
         config_entry_unique_id: str,
     ) -> None:
         """Initialize a Lunatone line broadcast light."""
-        super().__init__(coordinator_devices)
-        self._coordinator_info = coordinator_info
+        super().__init__(coordinator_devices, coordinator_info, broadcast.line)
         self._broadcast = broadcast
 
-        line_unique_id = f"{config_entry_unique_id}-line{broadcast.line}"
-        self._attr_device_info = DeviceInfo(identifiers={(DOMAIN, line_unique_id)})
-        self._attr_unique_id = line_unique_id
-
-    @override
-    async def async_added_to_hass(self) -> None:
-        """Register callbacks."""
-        await super().async_added_to_hass()
-        self.async_on_remove(
-            self._coordinator_info.async_add_listener(self._handle_info_update)
-        )
-
-    @callback
-    def _handle_info_update(self) -> None:
-        self.async_write_ha_state()
+        unique_id = format_device_identifier(config_entry_unique_id, self.line_id)
+        self._attr_device_info = dr.DeviceInfo(identifiers={(DOMAIN, unique_id)})
+        self._attr_unique_id = unique_id
 
     @property
     @override
     def available(self) -> bool:
         """Return True if entity is available."""
-        info_data = self._coordinator_info.data
-        line_id = self._broadcast.line
+        info_data = self.coordinator_info.data
         return (
             super().available
-            and self._coordinator_info.last_update_success
-            and line_id is not None
-            and info_data.is_line_status_ok(line_id)
+            and self.coordinator_info.last_update_success
+            and self.line_id is not None
+            and info_data.is_line_status_ok(self.line_id)
         )
 
     @property
     @override
     def is_on(self) -> bool:
         """Return True if light is on."""
-        line_id = self._broadcast.line
+        devices = (
+            self.coordinator.data.get(self.line_id, {}).values()
+            if self.line_id is not None
+            else (
+                device
+                for devices in self.coordinator.data.values()
+                for device in devices.values()
+            )
+        )
+        return any(device.is_on for device in devices)
+
+    @property
+    @override
+    def brightness(self) -> int | None:
+        """Return the brightness of this light between 0..255."""
+        devices = (
+            self.coordinator.data.get(self.line_id, {}).values()
+            if self.line_id is not None
+            else (
+                device
+                for devices in self.coordinator.data.values()
+                for device in devices.values()
+            )
+        )
+        brightness_values = {
+            device.brightness
+            for device in devices
+            if device.is_on and device.brightness is not None
+        }
         return (
-            any(device.is_on for device in self.coordinator.data[line_id].values())
-            if line_id is not None and line_id in self.coordinator.data
-            else False
+            value_to_brightness(self.BRIGHTNESS_SCALE, next(iter(brightness_values)))
+            if len(brightness_values) == 1
+            else None
         )
 
     @override
@@ -317,7 +374,8 @@ class LunatoneLineBroadcastLight(
         try:
             await self._broadcast.fade_to_brightness(
                 brightness_to_value(
-                    self.BRIGHTNESS_SCALE, kwargs.get(ATTR_BRIGHTNESS, 255)
+                    self.BRIGHTNESS_SCALE,
+                    kwargs.get(ATTR_BRIGHTNESS, self._last_brightness),
                 )
             )
         except aiohttp.ClientConnectionError as ex:
@@ -332,6 +390,8 @@ class LunatoneLineBroadcastLight(
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Instruct the line to turn off."""
         try:
+            if self.is_on and self.brightness:
+                self._last_brightness = self.brightness
             await self._broadcast.fade_to_brightness(0)
         except aiohttp.ClientConnectionError as ex:
             raise HomeAssistantError(

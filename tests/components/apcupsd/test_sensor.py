@@ -4,6 +4,11 @@ from datetime import timedelta
 from unittest.mock import AsyncMock
 
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.apcupsd.const import DOMAIN
@@ -25,8 +30,6 @@ from homeassistant.util import slugify
 from homeassistant.util.dt import utcnow
 
 from . import MOCK_MINIMAL_STATUS, MOCK_STATUS
-
-from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 pytestmark = pytest.mark.usefixtures(
     "entity_registry_enabled_by_default", "init_integration"

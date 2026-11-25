@@ -8,11 +8,19 @@ from unittest.mock import MagicMock, Mock, patch
 
 import probatio
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    MockModule,
+    MockPlatform,
+    mock_integration,
+    mock_platform,
+    setup_test_component_platform,
+)
 import yaml
 
 from homeassistant import config as hass_config
 from homeassistant.components import notify
-from homeassistant.components.notify import DOMAIN
+from homeassistant.components.notify import DOMAIN, NotifyService, NotifyServiceArgument
 from homeassistant.const import SERVICE_RELOAD, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.discovery import async_load_platform
@@ -25,15 +33,6 @@ from .test_init import (
     MockNotifyEntity,
     help_async_setup_entry_init,
     help_async_unload_entry,
-)
-
-from tests.common import (
-    MockConfigEntry,
-    MockModule,
-    MockPlatform,
-    mock_integration,
-    mock_platform,
-    setup_test_component_platform,
 )
 
 
@@ -641,7 +640,7 @@ async def test_sending_none_message(hass: HomeAssistant, tmp_path: Path) -> None
     send_message_mock = await help_setup_notify(hass, tmp_path)
     with pytest.raises(probatio.Invalid) as exc:
         await hass.services.async_call(
-            notify.DOMAIN, notify.SERVICE_NOTIFY, {notify.ATTR_MESSAGE: None}
+            notify.DOMAIN, NotifyService.NOTIFY, {NotifyServiceArgument.MESSAGE: None}
         )
     assert str(exc.value) == "string value is None at 'message'"
     send_message_mock.assert_not_called()
@@ -653,11 +652,11 @@ async def test_method_forwards_correct_data(
     """Test that all data from the service gets forwarded to service."""
     send_message_mock = await help_setup_notify(hass, tmp_path)
     data = {
-        notify.ATTR_MESSAGE: "my message",
-        notify.ATTR_TITLE: "my title",
-        notify.ATTR_DATA: {"hello": "world"},
+        NotifyServiceArgument.MESSAGE: "my message",
+        NotifyServiceArgument.TITLE: "my title",
+        NotifyServiceArgument.DATA: {"hello": "world"},
     }
-    await hass.services.async_call(notify.DOMAIN, notify.SERVICE_NOTIFY, data)
+    await hass.services.async_call(notify.DOMAIN, NotifyService.NOTIFY, data)
     await hass.async_block_till_done()
     send_message_mock.assert_called_once_with(
         "my message", {"title": "my title", "data": {"hello": "world"}}

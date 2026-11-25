@@ -3,23 +3,7 @@
 from typing import Any
 
 import pytest
-
-from homeassistant.components.air_quality.trigger import TRIGGERS
-from homeassistant.components.binary_sensor import BinarySensorDeviceClass
-from homeassistant.components.sensor import SensorDeviceClass
-from homeassistant.const import (
-    ATTR_DEVICE_CLASS,
-    ATTR_UNIT_OF_MEASUREMENT,
-    CONF_ENTITY_ID,
-    STATE_OFF,
-    STATE_ON,
-    UnitOfDensity,
-    UnitOfRadiationConcentration,
-    UnitOfRatio,
-)
-from homeassistant.core import HomeAssistant
-
-from tests.components.common import (
+from pytest_homeassistant.components.common import (
     TargetSupport,
     TriggerStateDescription,
     arm_trigger,
@@ -34,6 +18,21 @@ from tests.components.common import (
     parametrize_trigger_states,
     target_entities,
 )
+
+from homeassistant.components.air_quality.trigger import TRIGGERS
+from homeassistant.components.binary_sensor import BinarySensorDeviceClass
+from homeassistant.components.sensor import SensorDeviceClass
+from homeassistant.const import (
+    ATTR_DEVICE_CLASS,
+    ATTR_UNIT_OF_MEASUREMENT,
+    STATE_OFF,
+    STATE_ON,
+    TargetKey,
+    UnitOfDensity,
+    UnitOfRadiationConcentration,
+    UnitOfRatio,
+)
+from homeassistant.core import HomeAssistant
 
 _UGM3_UNIT_ATTRIBUTES = {
     ATTR_UNIT_OF_MEASUREMENT: UnitOfDensity.MICROGRAMS_PER_CUBIC_METER
@@ -880,7 +879,7 @@ async def test_air_quality_trigger_unit_conversion_co_ppm_to_ugm3(
                 "value": {"number": 1000, "unit_of_measurement": "μg/m³"},
             }
         },
-        {CONF_ENTITY_ID: [entity_id]},
+        {TargetKey.ENTITY_ID: [entity_id]},
         calls,
     )
 

@@ -1,0 +1,19 @@
+# serializer version: 1
+# name: test_diagnostics[ac]
+  dict({
+    'device_type': 'ac',
+    'hvac_modes': list([
+      'cool',
+      'dry',
+    ]),
+    'infrared_entity_id': 'infrared.test_ir_emitter',
+    'infrared_receiver_entity_id': 'infrared.test_ir_receiver',
+  })
+# ---
+# name: test_diagnostics[tv]
+  dict({
+    'device_type': 'tv',
+    'infrared_entity_id': 'infrared.test_ir_emitter',
+    'infrared_receiver_entity_id': 'infrared.test_ir_receiver',
+  })
+# ---
