@@ -107,9 +107,12 @@ class LinkPlayConfigFlow(ConfigFlow, domain=DOMAIN):
                 bridge = await linkplay_factory_httpapi_bridge(
                     user_input[CONF_HOST], session
                 )
-            except LinkPlayRequestException, LinkPlayInvalidDataException:
-                _LOGGER.exception(
-                    "Failed to connect to LinkPlay device at %s", user_input[CONF_HOST]
+            except (LinkPlayRequestException, LinkPlayInvalidDataException) as err:
+                # The form shows cannot_connect, so the traceback adds nothing
+                _LOGGER.debug(
+                    "Failed to connect to LinkPlay device at %s: %s",
+                    user_input[CONF_HOST],
+                    err,
                 )
                 errors["base"] = "cannot_connect"
 
