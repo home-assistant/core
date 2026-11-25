@@ -278,12 +278,19 @@
           'entity_id': 'sensor.test_fan_air_quality',
           'icon': None,
           'name': None,
-          'original_device_class': None,
+          'original_device_class': 'enum',
           'original_icon': None,
           'original_name': 'Air quality',
           'state': dict({
             'attributes': dict({
+              'device_class': 'enum',
               'friendly_name': 'Test Fan Air quality',
+              'options': list([
+                'excellent',
+                'good',
+                'moderate',
+                'poor',
+              ]),
             }),
             'entity_id': 'sensor.test_fan_air_quality',
             'last_changed': str,
