@@ -574,3 +574,31 @@ async def test_rpc_ircode_button_no_custom_name(
     )
     assert main_device is not None
     assert ir_device.parent_device_id == main_device.id
+
+
+@pytest.mark.usefixtures("mock_ledstrip_rpc_device")
+async def test_rpc_ledstrip_next_effect_button(
+    hass: HomeAssistant,
+    mock_rpc_device: Mock,
+    entity_registry: EntityRegistry,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test RPC LED strip next effect button."""
+    entity_id = "button.test_name_next_effect"
+
+    await init_integration(hass, 4)
+
+    assert (state := hass.states.get(entity_id))
+    assert state == snapshot(name=f"{entity_id}-state")
+
+    assert (entry := entity_registry.async_get(entity_id))
+    assert entry == snapshot(name=f"{entity_id}-entry")
+
+    await hass.services.async_call(
+        BUTTON_DOMAIN,
+        ButtonService.PRESS,
+        {TargetKey.ENTITY_ID: entity_id},
+        blocking=True,
+    )
+
+    mock_rpc_device.ledstrip_next_effect.assert_called_once_with(0)

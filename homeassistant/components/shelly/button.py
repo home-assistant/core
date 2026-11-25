@@ -180,6 +180,7 @@ async def async_setup_entry(
             coordinator.mac,
             BUTTON_DOMAIN,
             virtual_button_component_ids,
+            "button",
         )
 
 
@@ -350,6 +351,19 @@ class RpcIrCodeButton(ShellyRpcAttributeEntity, ButtonEntity):
         await self.coordinator.device.ircode_emit(self._id)
 
 
+class RpcLedStripNextEffectButton(ShellyRpcAttributeEntity, ButtonEntity):
+    """Defines a Shelly LED strip next effect button."""
+
+    entity_description: RpcButtonDescription
+    _id: int
+
+    @rpc_call
+    @override
+    async def async_press(self) -> None:
+        """Switch the LED strip to the next effect."""
+        await self.coordinator.device.ledstrip_next_effect(self._id)
+
+
 class RpcSleepingSmokeMuteButton(ShellySleepingRpcAttributeEntity, ButtonEntity):
     """Defines a Shelly RPC Smoke mute alarm button."""
 
@@ -415,5 +429,11 @@ RPC_BUTTONS = (
         key="ircode",
         components=("ircode",),
         entity_class=RpcIrCodeButton,
+    ),
+    RpcButtonDescription(
+        key="ledstrip_next_effect",
+        components=("ledstrip",),
+        translation_key="next_effect",
+        entity_class=RpcLedStripNextEffectButton,
     ),
 )
