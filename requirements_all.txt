@@ -2656,7 +2656,7 @@ pyrisco==0.8.1
 pyroute2==0.9.6
 
 # homeassistant.components.rympro
-pyrympro==0.0.9
+pyrympro==0.0.10
 
 # homeassistant.components.sabnzbd
 pysabnzbd==1.1.1
