@@ -15,7 +15,7 @@ from homeassistant.components.select import (
     SelectService,
     SelectServiceArgument,
 )
-from homeassistant.const import STATE_UNKNOWN, CommonServiceArgument, Platform
+from homeassistant.const import STATE_UNKNOWN, Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
@@ -149,7 +149,7 @@ async def test_select_option_writes_index(
         SELECT_DOMAIN,
         SelectService.SELECT_OPTION,
         {
-            CommonServiceArgument.ENTITY_ID: entity_id,
+            TargetKey.ENTITY_ID: entity_id,
             SelectServiceArgument.OPTION: option,
         },
         blocking=True,
@@ -215,7 +215,7 @@ async def test_select_option_raises_on_api_error(
             SELECT_DOMAIN,
             SelectService.SELECT_OPTION,
             {
-                CommonServiceArgument.ENTITY_ID: "select.my_pool_pump_mode",
+                TargetKey.ENTITY_ID: "select.my_pool_pump_mode",
                 SelectServiceArgument.OPTION: "heat",
             },
             blocking=True,
@@ -334,7 +334,7 @@ async def test_light_mode_select_writes_one_command(
         SELECT_DOMAIN,
         SelectService.SELECT_OPTION,
         {
-            CommonServiceArgument.ENTITY_ID: "select.my_pool_light_mode",
+            TargetKey.ENTITY_ID: "select.my_pool_light_mode",
             SelectServiceArgument.OPTION: option,
         },
         blocking=True,
@@ -389,7 +389,7 @@ async def test_light_schedule_frequency_writes_raw_value(
         SELECT_DOMAIN,
         SelectService.SELECT_OPTION,
         {
-            CommonServiceArgument.ENTITY_ID: "select.my_pool_light_schedule_frequency",
+            TargetKey.ENTITY_ID: "select.my_pool_light_schedule_frequency",
             SelectServiceArgument.OPTION: "weekly",
         },
         blocking=True,
@@ -417,7 +417,7 @@ async def test_select_reflects_choice_before_push(
         SELECT_DOMAIN,
         SelectService.SELECT_OPTION,
         {
-            CommonServiceArgument.ENTITY_ID: "select.my_pool_pump_speed",
+            TargetKey.ENTITY_ID: "select.my_pool_pump_speed",
             SelectServiceArgument.OPTION: "high",
         },
         blocking=True,
@@ -445,7 +445,7 @@ async def test_light_mode_raises_on_api_error(
             SELECT_DOMAIN,
             SelectService.SELECT_OPTION,
             {
-                CommonServiceArgument.ENTITY_ID: "select.my_pool_light_mode",
+                TargetKey.ENTITY_ID: "select.my_pool_light_mode",
                 SelectServiceArgument.OPTION: "on",
             },
             blocking=True,

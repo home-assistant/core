@@ -188,6 +188,52 @@ def _handle_discovery_failure(
     async_dispatcher_send(hass, MQTT_DISCOVERY_DONE.format(*discovery_hash), None)
 
 
+@callback
+def _async_is_unique_id_of_other_disabled_entity(
+    hass: HomeAssistant,
+    domain: str,
+    config: DiscoveryInfoType,
+    discovery_payload: MQTTDiscoveryPayload,
+) -> bool:
+    """Return True if a disabled entity discovered on another topic has the unique ID.
+
+    A disabled entity is not loaded, so the entity platform does not detect its
+    unique ID is used again, and the discoveries would take over the entity
+    registry entry from each other.
+    """
+    if (unique_id := config.get(CONF_UNIQUE_ID)) is None:
+        return False
+    registry_key = (domain, DOMAIN, unique_id)
+    discovered_and_disabled = hass.data[DATA_MQTT].discovery_discovered_and_disabled
+    discovery_data = discovery_payload.discovery_data
+    if (
+        other_discovery_hash := discovered_and_disabled.get_discovery_hash(registry_key)
+    ) is None or other_discovery_hash == discovery_data[ATTR_DISCOVERY_HASH]:
+        return False
+    entity_registry = er.async_get(hass)
+    if (
+        entity_id := entity_registry.async_get_entity_id(*registry_key)
+    ) is None or not entity_registry.entities[entity_id].disabled:
+        return False
+    other_discovery_data = discovered_and_disabled[other_discovery_hash].discovery_data
+    _LOGGER.error(
+        "Ignoring discovered %s on topic %s%s, unique ID '%s' is already used by "
+        "disabled entity %s which was discovered on topic %s%s; to resolve the "
+        "duplicate unique ID, publish an empty retained payload to at least one "
+        "of these discovery topics",
+        domain,
+        discovery_data[ATTR_DISCOVERY_TOPIC],
+        get_origin_log_string(discovery_payload, include_url=False),
+        unique_id,
+        entity_id,
+        other_discovery_data[ATTR_DISCOVERY_TOPIC],
+        get_origin_log_string(
+            other_discovery_data[ATTR_DISCOVERY_PAYLOAD], include_url=False
+        ),
+    )
+    return True
+
+
 def _verify_mqtt_config_entry_enabled_for_discovery(
     hass: HomeAssistant, domain: str, discovery_payload: MQTTDiscoveryPayload
 ) -> bool:
@@ -369,6 +415,10 @@ def async_setup_entity_entry_helper(  # noqa: C901
                     "MQTT discovery skipped, as device exists in subentry, "
                     "and repair flow must be completed first"
                 )
+            elif _async_is_unique_id_of_other_disabled_entity(
+                hass, domain, config, discovery_payload
+            ):
+                _handle_discovery_failure(hass, discovery_payload)
             else:
                 entity = entity_class(
                     hass, config, entry, discovery_payload.discovery_data
@@ -1533,20 +1583,49 @@ def _resolve_via_device_id(
     hass: HomeAssistant,
     specifications: dict[str, Any] | None,
     config_entry: ConfigEntry,
+    device_info: DeviceInfo,
 ) -> str | None:
     """Resolve the referenced via device to its device registry id.
 
-    Best-effort read-only lookup: returns None when no via device is referenced
-    or the referenced device is not (yet) registered. It never raises, so a
-    missing parent cannot abort entity setup given MQTT's non-deterministic
-    discovery order.
+    Best-effort read-only lookup: returns None when no via device is referenced,
+    the referenced device is not (yet) registered or it is the device itself. It
+    never raises, so a missing parent cannot abort entity setup given MQTT's
+    non-deterministic discovery order.
     """
     if (identifier := _via_device_identifier(specifications)) is None:
         return None
-    via_device = dr.async_get(hass).async_get_device_by_identifier(
+    if TYPE_CHECKING:
+        assert specifications is not None
+    device_registry = dr.async_get(hass)
+    via_device = device_registry.async_get_device_by_identifier(
         identifier, config_entry.entry_id
     )
-    return via_device.id if via_device else None
+    if via_device is None:
+        return None
+    # The via device can resolve to the device itself, through an identifier the
+    # device registry retained from an earlier registration or through a matching
+    # connection. A device can not be its own via device, so the reference is ignored.
+    identifiers = device_info.identifiers
+    connections = device_info.connections
+    if any(
+        device.id == via_device.id
+        for device in device_registry.async_get_devices(
+            identifiers=None if identifiers is Undefined else identifiers,
+            connections=None if connections is Undefined else connections,
+            config_entry_id=config_entry.entry_id,
+        )
+    ):
+        _LOGGER.warning(
+            "The device with identifiers %s and connections %s has via_device '%s' "
+            "that references the device itself, the via_device is ignored. A device "
+            "can not be its own via device, update the device configuration to remove "
+            "or correct via_device",
+            specifications[CONF_IDENTIFIERS],
+            specifications[CONF_CONNECTIONS],
+            identifier[1],
+        )
+        return None
+    return via_device.id
 
 
 class MqttEntityDeviceInfo(Entity):
@@ -1678,7 +1757,7 @@ class MqttEntityDeviceInfo(Entity):
         info = device_info_from_specifications(device_specifications)
         if info is not None and (
             via_device_id := _resolve_via_device_id(
-                self.hass, device_specifications, self._config_entry
+                self.hass, device_specifications, self._config_entry, info
             )
         ):
             info.via_device_id = via_device_id
@@ -2169,7 +2248,9 @@ def update_device(
     device_info = device_info_from_specifications(specifications)
 
     if config_entry_id is not None and device_info is not None:
-        if via_device_id := _resolve_via_device_id(hass, specifications, config_entry):
+        if via_device_id := _resolve_via_device_id(
+            hass, specifications, config_entry, device_info
+        ):
             device_info.via_device_id = via_device_id
         device = device_registry.async_get_or_create_from_info(
             config_entry_id=config_entry_id, device_info=device_info

@@ -253,8 +253,10 @@ async def test_camera_off_when_streamer_stopped(
 
     await init_integration(hass, 3, model=MODEL_CAMERA)
 
-    with pytest.raises(HomeAssistantError, match="Camera is off"):
+    with pytest.raises(HomeAssistantError) as exc_info:
         get_camera_from_entity_id(hass, CAMERA_ENTITY_ID)
+
+    assert exc_info.value.translation_key == "camera_off"
 
 
 async def test_camera_properties_when_device_not_initialized(

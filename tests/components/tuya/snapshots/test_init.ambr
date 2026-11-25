@@ -1119,6 +1119,36 @@
     'via_device_id': None,
   })
 # ---
+# name: test_device_registry[6mojdbnjshg3l9jtzdccq]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'configuration_url': None,
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'tuya',
+        '6mojdbnjshg3l9jtzdccq',
+      ),
+    }),
+    'labels': set({
+    }),
+    'manufacturer': 'Tuya',
+    'model': 'AC charging post',
+    'model_id': 'tj9l3ghsjnbdjom6',
+    'name': 'Wallbox',
+    'name_by_user': None,
+    'serial_number': None,
+    'sw_version': None,
+    'via_device_id': None,
+  })
+# ---
 # name: test_device_registry[6o148laaosbf0g4djd]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
@@ -9349,6 +9379,46 @@
     'via_device_id': None,
   })
 # ---
+# name: test_device_registry[u20gvrqvaktexwfvbdnz_channel_1]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'disabled_by': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'tuya',
+        'u20gvrqvaktexwfvbdnz_channel_1',
+      ),
+    }),
+    'labels': set({
+    }),
+    'name': 'Channel 1',
+    'name_by_user': None,
+    'parent_device_id': <DeviceEntry identifiers=[('tuya', 'u20gvrqvaktexwfvbdnz')]>,
+  })
+# ---
+# name: test_device_registry[u20gvrqvaktexwfvbdnz_channel_2]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'disabled_by': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'tuya',
+        'u20gvrqvaktexwfvbdnz_channel_2',
+      ),
+    }),
+    'labels': set({
+    }),
+    'name': 'Channel 2',
+    'name_by_user': None,
+    'parent_device_id': <DeviceEntry identifiers=[('tuya', 'u20gvrqvaktexwfvbdnz')]>,
+  })
+# ---
 # name: test_device_registry[u8h3bty7qgg]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
@@ -10943,6 +11013,36 @@
     'model': 'Smart plug',
     'model_id': 'gjnozsaz',
     'name': 'Raspy4 - Home Assistant',
+    'name_by_user': None,
+    'serial_number': None,
+    'sw_version': None,
+    'via_device_id': None,
+  })
+# ---
+# name: test_device_registry[zcifseq7u6fhlsvvjxsdc]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'configuration_url': None,
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'tuya',
+        'zcifseq7u6fhlsvvjxsdc',
+      ),
+    }),
+    'labels': set({
+    }),
+    'manufacturer': 'Tuya',
+    'model': 'NVS-IPC-I5',
+    'model_id': 'vvslhf6u7qesficz',
+    'name': 'Front Gate Camera',
     'name_by_user': None,
     'serial_number': None,
     'sw_version': None,

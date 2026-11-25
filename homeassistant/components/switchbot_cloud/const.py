@@ -75,6 +75,9 @@ DEVICE_SUPPORT_MAP: Final[dict[str, SwitchbotCloudDeviceConfig]] = {
     "Hub 3": SwitchbotCloudDeviceConfig(
         True, entity_config=(Platform.BINARY_SENSOR, Platform.SENSOR)
     ),
+    "Hub 4": SwitchbotCloudDeviceConfig(
+        True, entity_config=(Platform.BINARY_SENSOR, Platform.SENSOR)
+    ),
     "Home Climate Panel": SwitchbotCloudDeviceConfig(
         True, entity_config=(Platform.BINARY_SENSOR, Platform.SENSOR)
     ),
@@ -176,5 +179,15 @@ DEVICE_SUPPORT_MAP: Final[dict[str, SwitchbotCloudDeviceConfig]] = {
     ),
     "Garage Door Opener": SwitchbotCloudDeviceConfig(
         True, entity_config=(Platform.BINARY_SENSOR, Platform.COVER)
+    ),
+    "Plug": SwitchbotCloudDeviceConfig(False, entity_config=(Platform.SWITCH,)),
+    "Plug Mini (US)": SwitchbotCloudDeviceConfig(
+        True, entity_config=(Platform.SWITCH, Platform.SENSOR)
+    ),
+    "Plug Mini (JP)": SwitchbotCloudDeviceConfig(
+        True, entity_config=(Platform.SWITCH, Platform.SENSOR)
+    ),
+    "Plug Mini (EU)": SwitchbotCloudDeviceConfig(
+        True, entity_config=(Platform.SWITCH, Platform.SENSOR, Platform.BINARY_SENSOR)
     ),
 }
