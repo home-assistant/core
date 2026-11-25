@@ -1,5 +1,6 @@
 """Tests for the Intesis Modbus config flow."""
 
+import asyncio
 from collections.abc import AsyncIterator, Callable
 from contextlib import asynccontextmanager
 from unittest.mock import AsyncMock, MagicMock, _patch, patch
@@ -22,7 +23,7 @@ from homeassistant.components.intesis_modbus.const import (
     DOMAIN,
 )
 from homeassistant.config_entries import SOURCE_USER, ConfigEntryState, ConfigFlowResult
-from homeassistant.const import CONF_DEVICE
+from homeassistant.const import CONF_DEVICE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.exceptions import HomeAssistantError
@@ -547,3 +548,194 @@ async def test_reconfigure_keeps_a_loaded_entry_running_on_another_port(
     assert states == [ConfigEntryState.LOADED]
     assert result["reason"] == "reconfigure_successful"
     assert init_integration.state is ConfigEntryState.LOADED
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_reconfigure_recovers_from_a_port_in_use(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
+    """A port another entry holds with other settings can be tried again."""
+    mock_config_entry.add_to_hass(hass)
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+    with patch(
+        TARGET, return_value=_RaisingTemporaryUnit(HomeAssistantError("in use"))
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], MOVED_INPUT
+        )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+    assert result["errors"] == {"base": "device_in_use"}
+    with _patch_temporary_unit(_seeded(), "/dev/ttyUSB1"):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], MOVED_INPUT
+        )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert mock_config_entry.data == {**MOCK_ENTRY_DATA, CONF_DEVICE: "/dev/ttyUSB1"}
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_reconfigure_recovers_from_another_device_on_the_line(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
+    """A unit ID that reaches another device is corrected in the same flow."""
+    mock_config_entry.add_to_hass(hass)
+    connection = _seeded()
+    connection.for_unit(1).holding[49] = 0x7777
+    seed_single_unit(connection.for_unit(2))
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+    with _patch_temporary_unit(connection, "/dev/ttyUSB1"):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], MOVED_INPUT
+        )
+        assert result["type"] is FlowResultType.FORM
+        assert result["errors"] == {"base": "unsupported_device"}
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {**MOVED_INPUT, CONF_UNIT_ID: 2}
+        )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert mock_config_entry.data == {
+        **MOCK_ENTRY_DATA,
+        CONF_DEVICE: "/dev/ttyUSB1",
+        CONF_UNIT_ID: 2,
+    }
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_reconfigure_recovers_from_a_gateway_that_is_starting(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
+    """A gateway that is still starting up is saved once it reports values."""
+    mock_config_entry.add_to_hass(hass)
+    connection = _seeded(seed_initialising_single_unit)
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+    with _patch_temporary_unit(connection, "/dev/ttyUSB1"):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], MOVED_INPUT
+        )
+        assert result["type"] is FlowResultType.FORM
+        assert result["errors"] == {"base": "gateway_starting"}
+        seed_single_unit(connection.for_unit(1))
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], MOVED_INPUT
+        )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert mock_config_entry.data == {**MOCK_ENTRY_DATA, CONF_DEVICE: "/dev/ttyUSB1"}
+
+
+async def test_reconfigure_puts_a_loaded_entry_back_on_an_unsupported_brand(
+    hass: HomeAssistant, init_integration: MockConfigEntry
+) -> None:
+    """A gateway of another brand at the new baud rate leaves the entry running."""
+    states: list[ConfigEntryState] = []
+    connection = _seeded()
+    connection.for_unit(1).holding[49] = 0x0801
+    result = await init_integration.start_reconfigure_flow(hass)
+    with _patch_temporary_unit(
+        connection,
+        baudrate=19200,
+        on_probe=lambda: states.append(init_integration.state),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], FASTER_INPUT
+        )
+    await hass.async_block_till_done()
+    assert states == [ConfigEntryState.NOT_LOADED]
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "unsupported_brand"
+    assert init_integration.data == MOCK_ENTRY_DATA
+    assert init_integration.state is ConfigEntryState.LOADED
+
+
+async def test_reconfigure_puts_a_loaded_entry_back_when_the_gateway_was_claimed(
+    hass: HomeAssistant, init_integration: MockConfigEntry
+) -> None:
+    """A gateway another flow claimed during the probe leaves the entry running."""
+
+    def _claim() -> None:
+        MockConfigEntry(
+            domain=DOMAIN, data=MOCK_ENTRY_DATA, options=MOCK_ENTRY_OPTIONS
+        ).add_to_hass(hass)
+
+    result = await init_integration.start_reconfigure_flow(hass)
+    with _patch_temporary_unit(_seeded(), baudrate=19200, on_probe=_claim):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], FASTER_INPUT
+        )
+    await hass.async_block_till_done()
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert init_integration.data == MOCK_ENTRY_DATA
+    assert init_integration.state is ConfigEntryState.LOADED
+
+
+async def test_reconfigure_finishes_when_the_request_is_cancelled(
+    hass: HomeAssistant, init_integration: MockConfigEntry
+) -> None:
+    """A request dropped while the entry unloads does not leave it unloaded."""
+    unloading = asyncio.Event()
+    proceed = asyncio.Event()
+
+    unload_platforms = hass.config_entries.async_unload_platforms_or_raise
+
+    async def _slow_unload(entry: MockConfigEntry, platforms: list[Platform]) -> None:
+        unloading.set()
+        await proceed.wait()
+        await unload_platforms(entry, platforms)
+
+    connection = _seeded()
+    connection.for_unit(1).fail_requests(ModbusTimeoutError())
+    result = await init_integration.start_reconfigure_flow(hass)
+    with (
+        patch.object(
+            hass.config_entries, "async_unload_platforms_or_raise", _slow_unload
+        ),
+        _patch_temporary_unit(connection, baudrate=19200),
+    ):
+        request = hass.async_create_task(
+            hass.config_entries.flow.async_configure(result["flow_id"], FASTER_INPUT)
+        )
+        await unloading.wait()
+        request.cancel()
+        with pytest.raises(asyncio.CancelledError):
+            await request
+        proceed.set()
+        await hass.async_block_till_done()
+    assert init_integration.data == MOCK_ENTRY_DATA
+    assert init_integration.state is ConfigEntryState.LOADED
+
+
+async def test_reconfigure_survives_a_reload_during_the_probe(
+    hass: HomeAssistant, init_integration: MockConfigEntry
+) -> None:
+    """An entry something else loaded again during the probe is not an error."""
+    connection = _seeded()
+    connection.for_unit(1).fail_requests(ModbusTimeoutError())
+
+    @asynccontextmanager
+    async def _get_temporary_unit(
+        hass: HomeAssistant, params: ModbusSerialParams, unit_id: int
+    ) -> AsyncIterator[MockModbusUnit]:
+        await hass.config_entries.async_setup(init_integration.entry_id)
+        yield connection.for_unit(unit_id)
+
+    result = await init_integration.start_reconfigure_flow(hass)
+    with patch(TARGET, side_effect=_get_temporary_unit):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], FASTER_INPUT
+        )
+        assert result["type"] is FlowResultType.FORM
+        assert result["errors"] == {"base": "cannot_connect"}
+        assert init_integration.state is ConfigEntryState.LOADED
+
+    with _patch_temporary_unit(_seeded(), baudrate=19200):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], FASTER_INPUT
+        )
+    await hass.async_block_till_done()
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert init_integration.data == {**MOCK_ENTRY_DATA, CONF_BAUDRATE: 19200}

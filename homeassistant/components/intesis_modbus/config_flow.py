@@ -1,5 +1,6 @@
 """Config flow for the Intesis Modbus integration."""
 
+import asyncio
 from typing import TYPE_CHECKING, Any, override
 
 from intesis_gw_modbus import GatewayModel, GatewayProbe, async_probe_gateway
@@ -7,7 +8,12 @@ from modbus_connection import ModbusError
 import probatio
 
 from homeassistant.components.modbus import async_get_temporary_unit
-from homeassistant.config_entries import ConfigEntryState, ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import (
+    ConfigEntry,
+    ConfigEntryState,
+    ConfigFlow,
+    ConfigFlowResult,
+)
 from homeassistant.const import CONF_DEVICE
 from homeassistant.data_entry_flow import AbortFlow
 from homeassistant.exceptions import HomeAssistantError
@@ -111,39 +117,16 @@ class IntesisModbusConfigFlow(ConfigFlow, domain=DOMAIN):
         reconfigure_entry = self._get_reconfigure_entry()
         errors: dict[str, str] = {}
         if user_input is not None:
-            match = {
-                CONF_DEVICE: user_input[CONF_DEVICE],
-                CONF_UNIT_ID: user_input[CONF_UNIT_ID],
-            }
-            self._async_abort_entries_match(match)
-            # A loaded entry holds its port at the old baud rate, which refuses
-            # a probe at another one, so it lets go of the port meanwhile.
-            released = False
-            if reconfigure_entry.state in (
-                ConfigEntryState.LOADED,
-                ConfigEntryState.SETUP_RETRY,
-            ):
-                current = create_modbus_params(reconfigure_entry.data)
-                new = create_modbus_params(user_input)
-                if new.endpoint == current.endpoint and new != current:
-                    released = await self.hass.config_entries.async_unload(
-                        reconfigure_entry.entry_id
-                    )
-            saved = False
-            try:
-                errors, probe = await self._async_validate(user_input)
-                if probe is not None:
-                    # Another flow may have claimed the gateway meanwhile
-                    self._async_abort_entries_match(match)
-                    saved = True
-                    return self.async_update_reload_and_abort(
-                        reconfigure_entry, data_updates=_entry_data(user_input, probe)
-                    )
-            finally:
-                if released and not saved:
-                    await self.hass.config_entries.async_setup(
-                        reconfigure_entry.entry_id
-                    )
+            # The entry may be unloaded for the probe. A request that gets
+            # cancelled half way must not leave it so, hence the shielded task.
+            errors, result = await asyncio.shield(
+                self.hass.async_create_task(
+                    self._async_reconfigure(reconfigure_entry, user_input),
+                    f"{DOMAIN} reconfigure {reconfigure_entry.entry_id}",
+                )
+            )
+            if result is not None:
+                return result
 
         return self.async_show_form(
             step_id="reconfigure",
@@ -152,6 +135,38 @@ class IntesisModbusConfigFlow(ConfigFlow, domain=DOMAIN):
             ),
             errors=errors,
         )
+
+    async def _async_reconfigure(
+        self, entry: ConfigEntry, user_input: dict[str, Any]
+    ) -> tuple[dict[str, str], ConfigFlowResult | None]:
+        """Probe the new link and save it, returning form errors otherwise."""
+        match = {
+            CONF_DEVICE: user_input[CONF_DEVICE],
+            CONF_UNIT_ID: user_input[CONF_UNIT_ID],
+        }
+        self._async_abort_entries_match(match)
+        # A loaded entry holds its port at the old baud rate, which refuses
+        # a probe at another one, so it lets go of the port meanwhile.
+        released = False
+        if entry.state in (ConfigEntryState.LOADED, ConfigEntryState.SETUP_RETRY):
+            current = create_modbus_params(entry.data)
+            new = create_modbus_params(user_input)
+            if new.endpoint == current.endpoint and new != current:
+                released = await self.hass.config_entries.async_unload(entry.entry_id)
+        saved = False
+        try:
+            errors, probe = await self._async_validate(user_input)
+            if probe is not None:
+                # Another flow may have claimed the gateway meanwhile
+                self._async_abort_entries_match(match)
+                saved = True
+                return {}, self.async_update_reload_and_abort(
+                    entry, data_updates=_entry_data(user_input, probe)
+                )
+        finally:
+            if released and not saved:
+                await self.hass.config_entries.async_reload(entry.entry_id)
+        return errors, None
 
     async def _async_validate(
         self, user_input: dict[str, Any]
