@@ -184,6 +184,46 @@ async def test_send_command_rm4_pro(
     assert api.send_data.call_args == call(bytes.fromhex(expected))
 
 
+@pytest.mark.parametrize(
+    ("frequency", "expected"),
+    [
+        pytest.param(305_000_000, "b1c0060068a704000d1a", id="305"),
+        pytest.param(433_000_000, "b1c00600689b06000d1a", id="433_00"),
+        pytest.param(438_000_000, "b1c00600f0ae06000d1a", id="438"),
+    ],
+)
+async def test_send_command_rm4_pro_measured_range(
+    hass: HomeAssistant, frequency: int, expected: str
+) -> None:
+    """An RM4 Pro sends anywhere in its measured range."""
+    api, entity_id = await _setup_rf_device(hass, "Garage")
+
+    command = OOKCommand(frequency=frequency, timings=[400, -800])
+    await radio_frequency.async_send_command(hass, entity_id, command)
+
+    assert api.send_data.call_args == call(bytes.fromhex(expected))
+
+
+@pytest.mark.parametrize(
+    ("device_name", "frequency"),
+    [
+        pytest.param("Garage", 340_000_000, id="rm4_pro_340"),
+        pytest.param("Garage", 440_000_000, id="rm4_pro_440"),
+        pytest.param("Office", 433_000_000, id="rm_pro_433_00"),
+    ],
+)
+async def test_send_command_rejects_outside_model_range(
+    hass: HomeAssistant, device_name: str, frequency: int
+) -> None:
+    """A frequency outside the model's ranges is rejected before send."""
+    api, entity_id = await _setup_rf_device(hass, device_name)
+
+    command = OOKCommand(frequency=frequency, timings=[400, -800])
+    with pytest.raises(HomeAssistantError):
+        await radio_frequency.async_send_command(hass, entity_id, command)
+    api.send_data.assert_not_called()
+
+
 async def test_send_command_rm4_pro_rejects_invalid_timings(
     hass: HomeAssistant,
 ) -> None:

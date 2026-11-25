@@ -764,6 +764,8 @@ async def test_move_todo_item_exception(
         ("duedate_fixture_7.json", None),
         ("duedate_fixture_8.json", None),
         ("duedate_fixture_9.json", None),
+        ("duedate_fixture_10.json", None),
+        ("duedate_fixture_11.json", None),
     ],
     ids=[
         "default",
@@ -775,6 +777,8 @@ async def test_move_todo_item_exception(
         "grey daily",
         "empty nextDue",
         "grey daily no weekdays",
+        "weekly with invalid second nextDue",
+        "invalid first nextDue",
     ],
 )
 @pytest.mark.usefixtures("set_tz")

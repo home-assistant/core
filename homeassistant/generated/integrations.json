@@ -1536,6 +1536,18 @@
         "zigbee"
       ]
     },
+    "benq_projector_infrared": {
+      "name": "BenQ Projector Infrared",
+      "integration_type": "device",
+      "categories": [
+        "media_entertainment.tv_streaming"
+      ],
+      "connectivity": [
+        "infrared"
+      ],
+      "config_flow": true,
+      "iot_class": "assumed_state"
+    },
     "besen": {
       "name": "Besen",
       "integration_type": "device",
@@ -2754,16 +2766,33 @@
       "supported_by": "neopool"
     },
     "daikin": {
-      "name": "Daikin AC",
-      "integration_type": "device",
-      "categories": [
-        "climate.heat_pumps_air_conditioning"
-      ],
-      "connectivity": [
-        "network"
-      ],
-      "config_flow": true,
-      "iot_class": "local_polling"
+      "name": "Daikin",
+      "integrations": {
+        "daikin": {
+          "integration_type": "device",
+          "config_flow": true,
+          "iot_class": "local_polling",
+          "categories": [
+            "climate.heat_pumps_air_conditioning"
+          ],
+          "connectivity": [
+            "network"
+          ],
+          "name": "Daikin AC"
+        },
+        "daikin_infrared": {
+          "integration_type": "device",
+          "config_flow": true,
+          "iot_class": "assumed_state",
+          "categories": [
+            "climate.heat_pumps_air_conditioning"
+          ],
+          "connectivity": [
+            "infrared"
+          ],
+          "name": "Daikin Infrared"
+        }
+      }
     },
     "daikin_onecta": {
       "name": "Daikin Onecta",
@@ -5020,6 +5049,15 @@
             "cloud"
           ],
           "name": "FGLair"
+        },
+        "fujitsu_infrared": {
+          "integration_type": "device",
+          "config_flow": true,
+          "iot_class": "assumed_state",
+          "categories": [
+            "climate.heat_pumps_air_conditioning"
+          ],
+          "name": "Fujitsu Infrared"
         }
       }
     },
@@ -9224,8 +9262,8 @@
           "name": "Azure Storage"
         },
         "microsoft": {
-          "integration_type": "hub",
-          "config_flow": false,
+          "integration_type": "service",
+          "config_flow": true,
           "iot_class": "cloud_push",
           "categories": [
             "ai_voice.speech"
