@@ -947,6 +947,7 @@ async def test_all_entities(
 
 
 OVEN_FINISH_TIME_ENTITY_ID = "sensor.oven_program_finish_time"
+DISHWASHER_FINISH_TIME_ENTITY_ID = "sensor.dishwasher_program_finish_time"
 OVEN_PROGRESS_ENTITY_ID = "sensor.oven_program_progress"
 OVEN_RUNNING_TIME_ENTITY_ID = "sensor.oven_program_running_time"
 PROGRAM_TIMES_TEST_START = "2021-01-09 12:00:00+00:00"
@@ -1596,7 +1597,6 @@ async def test_program_finish_time_with_delayed_start(
     appliance: HomeAppliance,
 ) -> None:
     """Test the finish time includes the time until the delayed start."""
-    entity_id = "sensor.dishwasher_program_finish_time"
     freezer.move_to(PROGRAM_TIMES_TEST_START)
     client.get_status = AsyncMock(
         return_value=create_operation_state_status(BSH_OPERATION_STATE_DELAYED_START)
@@ -1619,7 +1619,9 @@ async def test_program_finish_time_with_delayed_start(
         ]
     )
     await hass.async_block_till_done()
-    assert hass.states.is_state(entity_id, "2021-01-09T15:00:00+00:00")
+    assert hass.states.is_state(
+        DISHWASHER_FINISH_TIME_ENTITY_ID, "2021-01-09T15:00:00+00:00"
+    )
 
     freezer.tick(timedelta(minutes=1))
     await client.add_events(
@@ -1632,7 +1634,9 @@ async def test_program_finish_time_with_delayed_start(
         ]
     )
     await hass.async_block_till_done()
-    assert hass.states.is_state(entity_id, "2021-01-09T15:00:00+00:00")
+    assert hass.states.is_state(
+        DISHWASHER_FINISH_TIME_ENTITY_ID, "2021-01-09T15:00:00+00:00"
+    )
 
     # The start time is postponed while waiting for the delayed start
     await client.add_events(
@@ -1645,7 +1649,9 @@ async def test_program_finish_time_with_delayed_start(
         ]
     )
     await hass.async_block_till_done()
-    assert hass.states.is_state(entity_id, "2021-01-09T16:00:00+00:00")
+    assert hass.states.is_state(
+        DISHWASHER_FINISH_TIME_ENTITY_ID, "2021-01-09T16:00:00+00:00"
+    )
 
     # Once the program runs, the start in relative value is no longer used
     freezer.move_to("2021-01-09 14:00:00+00:00")
@@ -1664,7 +1670,9 @@ async def test_program_finish_time_with_delayed_start(
         ]
     )
     await hass.async_block_till_done()
-    assert hass.states.is_state(entity_id, "2021-01-09T15:59:00+00:00")
+    assert hass.states.is_state(
+        DISHWASHER_FINISH_TIME_ENTITY_ID, "2021-01-09T15:59:00+00:00"
+    )
 
 
 @pytest.mark.parametrize("appliance", [ApplianceType.DISHWASHER], indirect=True)
@@ -1677,7 +1685,6 @@ async def test_program_finish_time_delayed_start_reported_after_times(
     appliance: HomeAppliance,
 ) -> None:
     """Test the finish time when the delayed start is reported after the times."""
-    entity_id = "sensor.dishwasher_program_finish_time"
     freezer.move_to(PROGRAM_TIMES_TEST_START)
     client.get_status = AsyncMock(
         return_value=create_operation_state_status(BSH_OPERATION_STATE_READY)
@@ -1707,7 +1714,9 @@ async def test_program_finish_time_delayed_start_reported_after_times(
         ]
     )
     await hass.async_block_till_done()
-    assert hass.states.is_state(entity_id, "2021-01-09T15:00:00+00:00")
+    assert hass.states.is_state(
+        DISHWASHER_FINISH_TIME_ENTITY_ID, "2021-01-09T15:00:00+00:00"
+    )
 
     # Once the program runs, the time until the start is no longer added
     await client.add_events(
@@ -1720,4 +1729,50 @@ async def test_program_finish_time_delayed_start_reported_after_times(
         ]
     )
     await hass.async_block_till_done()
-    assert hass.states.is_state(entity_id, "2021-01-09T14:00:00+00:00")
+    assert hass.states.is_state(
+        DISHWASHER_FINISH_TIME_ENTITY_ID, "2021-01-09T14:00:00+00:00"
+    )
+
+
+@pytest.mark.parametrize("appliance", [ApplianceType.DISHWASHER], indirect=True)
+async def test_program_finish_time_delayed_start_duration_reported_later(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    client: MagicMock,
+    config_entry: MockConfigEntry,
+    integration_setup: Callable[[MagicMock], Awaitable[bool]],
+    appliance: HomeAppliance,
+) -> None:
+    """Test the start time is kept when the program duration is reported later."""
+    freezer.move_to(PROGRAM_TIMES_TEST_START)
+    client.get_status = AsyncMock(
+        return_value=create_operation_state_status(BSH_OPERATION_STATE_DELAYED_START)
+    )
+    assert await integration_setup(client)
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    await client.add_events(
+        [
+            create_event_message(
+                appliance.ha_id,
+                EventType.NOTIFY,
+                {EventKey.BSH_COMMON_OPTION_START_IN_RELATIVE: 3600},
+            )
+        ]
+    )
+    await hass.async_block_till_done()
+
+    freezer.tick(timedelta(minutes=10))
+    await client.add_events(
+        [
+            create_event_message(
+                appliance.ha_id,
+                EventType.NOTIFY,
+                {EventKey.BSH_COMMON_OPTION_REMAINING_PROGRAM_TIME: 7200},
+            )
+        ]
+    )
+    await hass.async_block_till_done()
+    assert hass.states.is_state(
+        DISHWASHER_FINISH_TIME_ENTITY_ID, "2021-01-09T15:00:00+00:00"
+    )
